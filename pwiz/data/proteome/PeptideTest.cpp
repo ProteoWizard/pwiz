@@ -509,7 +509,87 @@ void modificationTest()
         }
         catch (exception& e)
         {
-            cout << "Unit test " << lexical_cast<string>(i+1) << " on peptide \"" << p.sequence << "\" failed:\n" << e.what() << endl;
+            cout << "Unit test " << lexical_cast<string>(i+1) << " on modified peptide \"" << p.sequence << "\" failed:\n" << e.what() << endl;
+        }
+    }
+}
+
+
+struct TestOperator
+{
+    const char* lhsPeptide;
+    const char* rhsPeptide;
+    int compare; // 0:lhs==rhs -1:lhs<rhs 1:lhs>rhs
+};
+
+const TestOperator testOperators[] =
+{
+    {"PEPTIDE", "PEPTIDE", 0},
+    {"PEPTIDE", "PEPTIDEK", -1},
+    {"PEPTIDEK", "PEPTIDE", 1},
+
+    {"(42)PEPTIDE", "(42)PEPTIDE", 0},
+    {"PEP(42)TIDE", "PEP(42)TIDE", 0},
+    {"PEPTIDE(42)", "PEPTIDE(42)", 0},
+    {"PEPTIDE", "(42)PEPTIDE", -1},
+    {"(42)PEPTIDE", "PEPTIDE", 1},
+    {"PEPTIDE(41)", "PEPTIDE(42)", -1},
+    {"PEPTIDE(42)", "PEPTIDE(41)", 1},
+    {"(42)PEPTIDE(42)", "(42)PEPTIDE(42)", 0},
+    {"(42)PEPTIDE(41)", "(42)PEPTIDE(42)", -1},
+    {"(42)PEPTIDE(42)", "(42)PEPTIDE(41)", 1},
+    {"(42)PEPTIDE", "(42)PEPTIDE(42)", -1},
+    {"(42)PEPTIDE(42)", "PEPTIDE(42)", 1},
+    {"P(42)EPTIDE(42)", "PEPTIDE(42)", 1},
+    {"(42)PEPTIDE", "P(42)EPTIDE", -1},
+    {"P(42)EPTIDE", "(42)PEPTIDE", 1},
+};
+
+const size_t testOperatorsSize = sizeof(testOperators)/sizeof(TestOperator);
+
+void operatorTest()
+{
+    for (size_t i=0; i < testOperatorsSize; ++i)
+    {
+        const TestOperator& p = testOperators[i];
+        try
+        {
+            Peptide lhs(p.lhsPeptide);
+            Peptide rhs(p.rhsPeptide);
+
+            switch(p.compare)
+            {
+                case 0:
+                    unit_assert(lhs == rhs);
+                    unit_assert(!(lhs < rhs));
+                    unit_assert(lhs.modifications() == rhs.modifications());
+                    unit_assert(!(lhs.modifications() < rhs.modifications()));
+                    break;
+
+                case -1:
+                    unit_assert(lhs < rhs);
+                    unit_assert(!(lhs == rhs));
+                    if (!lhs.modifications().empty() || !rhs.modifications().empty())
+                    {
+                        unit_assert(lhs.modifications() < rhs.modifications());
+                        unit_assert(!(lhs.modifications() == rhs.modifications()));
+                    }
+                    break;
+
+                case 1:
+                    unit_assert(!(lhs == rhs));
+                    unit_assert(!(lhs < rhs));
+                    if (!lhs.modifications().empty() || !rhs.modifications().empty())
+                    {
+                        unit_assert(!(lhs.modifications() == rhs.modifications()));
+                        unit_assert(!(lhs.modifications() < rhs.modifications()));
+                    }
+                    break;
+            }
+        }
+        catch (exception& e)
+        {
+            cout << "Unit test " << lexical_cast<string>(i+1) << " comparing \"" << p.lhsPeptide << "\" and \"" << p.rhsPeptide << "\" failed:\n" << e.what() << endl;
         }
     }
 }
@@ -757,6 +837,8 @@ void testThreadSafetyWorker(boost::barrier* testBarrier)
     try
     {
         peptideTest();
+        modificationTest();
+        operatorTest();
         fragmentTest();
     }
     catch (exception& e)

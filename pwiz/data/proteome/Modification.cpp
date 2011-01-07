@@ -123,7 +123,18 @@ PWIZ_API_DECL bool Modification::hasFormula() const {return impl_->hasFormula();
 PWIZ_API_DECL const Formula& Modification::formula() const {return impl_->formula();}
 PWIZ_API_DECL double Modification::monoisotopicDeltaMass() const {return impl_->monoisotopicDeltaMass();}
 PWIZ_API_DECL double Modification::averageDeltaMass() const {return impl_->averageDeltaMass();}
-PWIZ_API_DECL bool Modification::operator==(const Modification& rhs) const {return impl_->monoisotopicDeltaMass() == rhs.impl_->monoisotopicDeltaMass() && impl_->averageDeltaMass() == rhs.impl_->averageDeltaMass();}
+
+PWIZ_API_DECL bool Modification::operator==(const Modification& rhs) const
+{
+    return monoisotopicDeltaMass() == rhs.monoisotopicDeltaMass() &&
+           averageDeltaMass() == rhs.averageDeltaMass();
+}
+
+PWIZ_API_DECL bool Modification::operator<(const Modification& rhs) const
+{
+	return monoisotopicDeltaMass() < rhs.monoisotopicDeltaMass();
+}
+
 
 PWIZ_API_DECL ModificationList::ModificationList()
 {
@@ -153,6 +164,40 @@ PWIZ_API_DECL double ModificationList::averageDeltaMass() const
     for (const_iterator itr = begin(); itr != end(); ++itr)
         mass += itr->averageDeltaMass();
     return mass;
+}
+
+PWIZ_API_DECL bool ModificationList::operator==(const ModificationList& rhs) const
+{
+	if (size() != rhs.size())
+        return false;
+
+	ModificationList::const_iterator itr, rhsItr;
+	for (itr = begin(), rhsItr = rhs.begin();
+         itr != end() && rhsItr != rhs.end();
+         ++itr, ++rhsItr)
+    {
+		if (!(*itr == *rhsItr))
+			return false;
+	}
+	return true; // lists are equal
+}
+
+PWIZ_API_DECL bool ModificationList::operator<(const ModificationList& rhs) const
+{
+	if (size() == rhs.size())
+	{
+	    ModificationList::const_iterator itr, rhsItr;
+	    for (itr = begin(), rhsItr = rhs.begin();
+             itr != end() && rhsItr != rhs.end();
+             ++itr, ++rhsItr)
+        {
+			if (!(*itr == *rhsItr))
+                return *itr < *rhsItr;
+		}
+		return false; // lists are equal
+	} 
+
+	return size() < rhs.size();
 }
 
 
@@ -368,6 +413,50 @@ void ModificationMap::swap(ModificationMap& other)
 {
     throw runtime_error("[ModificationMap::swap()] should not be called");
 }
+
+PWIZ_API_DECL
+bool ModificationMap::operator==(const ModificationMap& rhs) const
+{
+	if (size() != rhs.size())
+        return false;
+
+	ModificationMap::const_iterator itr, rhsItr;
+	for (itr = begin(), rhsItr = rhs.begin();
+         itr != end() && rhsItr != rhs.end();
+         ++itr, ++rhsItr)
+    {
+		// compare positions and modification lists
+		if (itr->first != rhsItr->first || !(itr->second == rhsItr->second))
+			return false;
+	}
+    return true;
+}
+
+PWIZ_API_DECL
+bool ModificationMap::operator<(const ModificationMap& rhs) const
+{
+	if (size() < rhs.size())
+	{
+		ModificationMap::const_iterator itr, rhsItr;
+		for (itr = begin(), rhsItr = rhs.begin();
+			 itr != end() && rhsItr != rhs.end();
+			 ++itr, ++rhsItr)
+		{
+			// compare positions
+			if (itr->first == rhsItr->first)
+			{
+				// compare modification lists
+				return itr->second < rhsItr->second;
+			}
+            else
+				return itr->first < rhsItr->first;
+		}
+        return false;
+	} 
+	
+	return size() < rhs.size();
+}
+
 
 } // namespace proteome
 } // namespace pwiz

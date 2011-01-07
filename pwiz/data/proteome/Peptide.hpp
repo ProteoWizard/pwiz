@@ -101,8 +101,12 @@ class PWIZ_API_DECL Peptide
     /// fragment masses can calculated as mono/avg and as modified/unmodified
     Fragmentation fragmentation(bool monoisotopic = true, bool modified = true) const;
 
-    /// returns true iff peptide sequences and masses are equal
+    /// returns true iff peptide sequences and modifications are equal
     bool operator==(const Peptide& rhs) const;
+
+    /// returns true iff this peptide has a lesser sequence length, sequence,
+    /// modifications length, or modifications
+    bool operator<(const Peptide& rhs) const;
 
     private:
     friend class ModificationMap; // allow ModificationMap to befriend Peptide::Impl

@@ -165,6 +165,12 @@ class Peptide::Impl
         return *mods_;
     }
 
+    inline const ModificationMap& modifications() const
+    {
+        static ModificationMap emptyModMap;
+        return emptyModMap;
+    }
+
     inline Fragmentation fragmentation(const Peptide& peptide, bool mono, bool mods) const
     {
         return Fragmentation(peptide, mono, mods);
@@ -423,8 +429,20 @@ PWIZ_API_DECL Fragmentation Peptide::fragmentation(bool monoisotopic, bool modif
 
 PWIZ_API_DECL bool Peptide::operator==(const Peptide& rhs) const
 {
-    return impl_->sequence() == rhs.impl_->sequence() &&
-           impl_->monoMass(true) == rhs.impl_->monoMass(true);
+    return sequence() == rhs.sequence() && modifications() == rhs.modifications();
+}
+
+PWIZ_API_DECL bool Peptide::operator<(const Peptide& rhs) const
+{
+	if (sequence().length() == rhs.sequence().length())
+    {
+        int cmp = sequence().compare(rhs.sequence());
+        if (cmp == 0)
+		    return modifications() < rhs.modifications();
+        return cmp < 0;
+	}
+	
+	return sequence().length() < rhs.sequence().length();
 }
 
 

@@ -65,6 +65,9 @@ class PWIZ_API_DECL Modification
     /// returns true iff delta masses are equal
     bool operator==(const Modification& rhs) const;
 
+    /// returns true iff this mod has smaller delta masses
+    bool operator<(const Modification& rhs) const;
+
     private:
     class Impl;
     boost::shared_ptr<Impl> impl_;
@@ -86,6 +89,12 @@ class PWIZ_API_DECL ModificationList
 
     /// returns the sum of the average delta masses of all modifications in the list
     double averageDeltaMass() const;
+
+    /// returns true iff the list has equal modifications
+    bool operator==(const ModificationList& rhs) const;
+
+    /// returns true iff the list has fewer modifications or one that's lesser than in the rhs list
+    bool operator<(const ModificationList& rhs) const;
 };
 
 
@@ -164,6 +173,11 @@ class PWIZ_API_DECL ModificationMap
     /// If a value_type with the same key as x is not present in the map, then x is inserted into the map. Otherwise, the pair is not inserted. A position may be supplied as a hint regarding where to do the insertion. If the insertion is done right after position, then it takes amortized constant time. Otherwise it takes O(log N) time.
     virtual iterator insert(iterator position, const value_type& x);
 
+    /// returns true iff the map has the same modifications
+    virtual bool operator==(const ModificationMap& rhs) const;
+
+    /// returns true iff the map has fewer modified positions or one of the positions is less than in the rhs map
+    virtual bool operator<(const ModificationMap& rhs) const;
 
     private:
 
