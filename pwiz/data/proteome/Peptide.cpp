@@ -434,15 +434,15 @@ PWIZ_API_DECL bool Peptide::operator==(const Peptide& rhs) const
 
 PWIZ_API_DECL bool Peptide::operator<(const Peptide& rhs) const
 {
-	if (sequence().length() == rhs.sequence().length())
+    if (sequence().length() == rhs.sequence().length())
     {
         int cmp = sequence().compare(rhs.sequence());
         if (cmp == 0)
-		    return modifications() < rhs.modifications();
+            return modifications() < rhs.modifications();
         return cmp < 0;
-	}
-	
-	return sequence().length() < rhs.sequence().length();
+    }
+
+    return sequence().length() < rhs.sequence().length();
 }
 
 

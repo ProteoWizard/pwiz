@@ -132,7 +132,7 @@ PWIZ_API_DECL bool Modification::operator==(const Modification& rhs) const
 
 PWIZ_API_DECL bool Modification::operator<(const Modification& rhs) const
 {
-	return monoisotopicDeltaMass() < rhs.monoisotopicDeltaMass();
+    return monoisotopicDeltaMass() < rhs.monoisotopicDeltaMass();
 }
 
 
@@ -168,36 +168,36 @@ PWIZ_API_DECL double ModificationList::averageDeltaMass() const
 
 PWIZ_API_DECL bool ModificationList::operator==(const ModificationList& rhs) const
 {
-	if (size() != rhs.size())
+    if (size() != rhs.size())
         return false;
 
-	ModificationList::const_iterator itr, rhsItr;
-	for (itr = begin(), rhsItr = rhs.begin();
+    ModificationList::const_iterator itr, rhsItr;
+    for (itr = begin(), rhsItr = rhs.begin();
          itr != end() && rhsItr != rhs.end();
          ++itr, ++rhsItr)
     {
-		if (!(*itr == *rhsItr))
-			return false;
-	}
-	return true; // lists are equal
+        if (!(*itr == *rhsItr))
+            return false;
+    }
+    return true; // lists are equal
 }
 
 PWIZ_API_DECL bool ModificationList::operator<(const ModificationList& rhs) const
 {
-	if (size() == rhs.size())
-	{
-	    ModificationList::const_iterator itr, rhsItr;
-	    for (itr = begin(), rhsItr = rhs.begin();
+    if (size() == rhs.size())
+    {
+        ModificationList::const_iterator itr, rhsItr;
+        for (itr = begin(), rhsItr = rhs.begin();
              itr != end() && rhsItr != rhs.end();
              ++itr, ++rhsItr)
         {
-			if (!(*itr == *rhsItr))
+            if (!(*itr == *rhsItr))
                 return *itr < *rhsItr;
-		}
-		return false; // lists are equal
-	} 
+        }
+        return false; // lists are equal
+    } 
 
-	return size() < rhs.size();
+    return size() < rhs.size();
 }
 
 
