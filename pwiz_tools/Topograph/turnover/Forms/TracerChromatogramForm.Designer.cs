@@ -61,6 +61,8 @@
             this.btnAdjustPeaks = new System.Windows.Forms.Button();
             this.label5 = new System.Windows.Forms.Label();
             this.tbxRetentionTimeShift = new System.Windows.Forms.TextBox();
+            this.cbxPeaksAsVerticalLines = new System.Windows.Forms.CheckBox();
+            this.cbxPeaksAsHorizontalLines = new System.Windows.Forms.CheckBox();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
@@ -88,23 +90,26 @@
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel1.Controls.Add(this.cbxAutoFindPeak, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.gridViewTracerPercents, 0, 7);
+            this.tableLayoutPanel1.Controls.Add(this.gridViewTracerPercents, 0, 8);
             this.tableLayoutPanel1.Controls.Add(this.cbxShowScore, 1, 0);
-            this.tableLayoutPanel1.Controls.Add(this.label3, 0, 3);
-            this.tableLayoutPanel1.Controls.Add(this.tbxScore, 1, 3);
-            this.tableLayoutPanel1.Controls.Add(this.dataGridView1, 0, 8);
-            this.tableLayoutPanel1.Controls.Add(this.label1, 0, 1);
-            this.tableLayoutPanel1.Controls.Add(this.tbxTracerPercentByAreas, 1, 1);
-            this.tableLayoutPanel1.Controls.Add(this.label2, 0, 2);
-            this.tableLayoutPanel1.Controls.Add(this.tbxTracerPercentBySlopes, 1, 2);
-            this.tableLayoutPanel1.Controls.Add(this.label4, 0, 6);
-            this.tableLayoutPanel1.Controls.Add(this.panel1, 1, 6);
-            this.tableLayoutPanel1.Controls.Add(this.label5, 0, 4);
-            this.tableLayoutPanel1.Controls.Add(this.tbxRetentionTimeShift, 1, 4);
+            this.tableLayoutPanel1.Controls.Add(this.label3, 0, 4);
+            this.tableLayoutPanel1.Controls.Add(this.tbxScore, 1, 4);
+            this.tableLayoutPanel1.Controls.Add(this.dataGridView1, 0, 9);
+            this.tableLayoutPanel1.Controls.Add(this.label1, 0, 2);
+            this.tableLayoutPanel1.Controls.Add(this.tbxTracerPercentByAreas, 1, 2);
+            this.tableLayoutPanel1.Controls.Add(this.label2, 0, 3);
+            this.tableLayoutPanel1.Controls.Add(this.tbxTracerPercentBySlopes, 1, 3);
+            this.tableLayoutPanel1.Controls.Add(this.label4, 0, 7);
+            this.tableLayoutPanel1.Controls.Add(this.panel1, 1, 7);
+            this.tableLayoutPanel1.Controls.Add(this.label5, 0, 5);
+            this.tableLayoutPanel1.Controls.Add(this.tbxRetentionTimeShift, 1, 5);
+            this.tableLayoutPanel1.Controls.Add(this.cbxPeaksAsVerticalLines, 0, 1);
+            this.tableLayoutPanel1.Controls.Add(this.cbxPeaksAsHorizontalLines, 1, 1);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 9;
+            this.tableLayoutPanel1.RowCount = 10;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
@@ -155,7 +160,7 @@
             dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
             this.gridViewTracerPercents.DefaultCellStyle = dataGridViewCellStyle2;
             this.gridViewTracerPercents.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.gridViewTracerPercents.Location = new System.Drawing.Point(3, 178);
+            this.gridViewTracerPercents.Location = new System.Drawing.Point(3, 203);
             this.gridViewTracerPercents.Name = "gridViewTracerPercents";
             this.gridViewTracerPercents.ReadOnly = true;
             dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
@@ -196,7 +201,7 @@
             // 
             this.label3.AutoSize = true;
             this.label3.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label3.Location = new System.Drawing.Point(3, 75);
+            this.label3.Location = new System.Drawing.Point(3, 100);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(183, 25);
             this.label3.TabIndex = 9;
@@ -205,7 +210,7 @@
             // tbxScore
             // 
             this.tbxScore.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tbxScore.Location = new System.Drawing.Point(192, 78);
+            this.tbxScore.Location = new System.Drawing.Point(192, 103);
             this.tbxScore.Name = "tbxScore";
             this.tbxScore.ReadOnly = true;
             this.tbxScore.Size = new System.Drawing.Size(184, 20);
@@ -243,7 +248,7 @@
             dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
             this.dataGridView1.DefaultCellStyle = dataGridViewCellStyle5;
             this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridView1.Location = new System.Drawing.Point(3, 278);
+            this.dataGridView1.Location = new System.Drawing.Point(3, 303);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.ReadOnly = true;
             dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
@@ -254,7 +259,7 @@
             dataGridViewCellStyle6.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle6.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
             this.dataGridView1.RowHeadersDefaultCellStyle = dataGridViewCellStyle6;
-            this.dataGridView1.Size = new System.Drawing.Size(373, 177);
+            this.dataGridView1.Size = new System.Drawing.Size(373, 152);
             this.dataGridView1.TabIndex = 1;
             this.dataGridView1.SelectionChanged += new System.EventHandler(this.dataGridView1_SelectionChanged);
             // 
@@ -303,7 +308,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(3, 25);
+            this.label1.Location = new System.Drawing.Point(3, 50);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(123, 13);
             this.label1.TabIndex = 11;
@@ -312,7 +317,7 @@
             // tbxTracerPercentByAreas
             // 
             this.tbxTracerPercentByAreas.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tbxTracerPercentByAreas.Location = new System.Drawing.Point(192, 28);
+            this.tbxTracerPercentByAreas.Location = new System.Drawing.Point(192, 53);
             this.tbxTracerPercentByAreas.Name = "tbxTracerPercentByAreas";
             this.tbxTracerPercentByAreas.ReadOnly = true;
             this.tbxTracerPercentByAreas.Size = new System.Drawing.Size(184, 20);
@@ -321,7 +326,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(3, 50);
+            this.label2.Location = new System.Drawing.Point(3, 75);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(128, 13);
             this.label2.TabIndex = 13;
@@ -330,7 +335,7 @@
             // tbxTracerPercentBySlopes
             // 
             this.tbxTracerPercentBySlopes.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tbxTracerPercentBySlopes.Location = new System.Drawing.Point(192, 53);
+            this.tbxTracerPercentBySlopes.Location = new System.Drawing.Point(192, 78);
             this.tbxTracerPercentBySlopes.Name = "tbxTracerPercentBySlopes";
             this.tbxTracerPercentBySlopes.ReadOnly = true;
             this.tbxTracerPercentBySlopes.Size = new System.Drawing.Size(184, 20);
@@ -339,7 +344,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(3, 150);
+            this.label4.Location = new System.Drawing.Point(3, 175);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(68, 13);
             this.label4.TabIndex = 15;
@@ -350,7 +355,7 @@
             this.panel1.Controls.Add(this.comboAdjustPeaks);
             this.panel1.Controls.Add(this.btnAdjustPeaks);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.panel1.Location = new System.Drawing.Point(192, 153);
+            this.panel1.Location = new System.Drawing.Point(192, 178);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(184, 19);
             this.panel1.TabIndex = 16;
@@ -385,7 +390,7 @@
             // label5
             // 
             this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(3, 100);
+            this.label5.Location = new System.Drawing.Point(3, 125);
             this.label5.Name = "label5";
             this.label5.Size = new System.Drawing.Size(103, 13);
             this.label5.TabIndex = 17;
@@ -394,11 +399,35 @@
             // tbxRetentionTimeShift
             // 
             this.tbxRetentionTimeShift.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tbxRetentionTimeShift.Location = new System.Drawing.Point(192, 103);
+            this.tbxRetentionTimeShift.Location = new System.Drawing.Point(192, 128);
             this.tbxRetentionTimeShift.Name = "tbxRetentionTimeShift";
             this.tbxRetentionTimeShift.ReadOnly = true;
             this.tbxRetentionTimeShift.Size = new System.Drawing.Size(184, 20);
             this.tbxRetentionTimeShift.TabIndex = 18;
+            // 
+            // cbxPeaksAsVerticalLines
+            // 
+            this.cbxPeaksAsVerticalLines.AutoSize = true;
+            this.cbxPeaksAsVerticalLines.Location = new System.Drawing.Point(3, 28);
+            this.cbxPeaksAsVerticalLines.Name = "cbxPeaksAsVerticalLines";
+            this.cbxPeaksAsVerticalLines.Size = new System.Drawing.Size(137, 17);
+            this.cbxPeaksAsVerticalLines.TabIndex = 19;
+            this.cbxPeaksAsVerticalLines.Text = "Peaks As Vertical Lines";
+            this.cbxPeaksAsVerticalLines.UseVisualStyleBackColor = true;
+            this.cbxPeaksAsVerticalLines.CheckedChanged += new System.EventHandler(this.cbxPeaksAsVerticalLines_CheckedChanged);
+            // 
+            // cbxPeaksAsHorizontalLines
+            // 
+            this.cbxPeaksAsHorizontalLines.AutoSize = true;
+            this.cbxPeaksAsHorizontalLines.Checked = true;
+            this.cbxPeaksAsHorizontalLines.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.cbxPeaksAsHorizontalLines.Location = new System.Drawing.Point(192, 28);
+            this.cbxPeaksAsHorizontalLines.Name = "cbxPeaksAsHorizontalLines";
+            this.cbxPeaksAsHorizontalLines.Size = new System.Drawing.Size(149, 17);
+            this.cbxPeaksAsHorizontalLines.TabIndex = 20;
+            this.cbxPeaksAsHorizontalLines.Text = "Peaks As Horizontal Lines";
+            this.cbxPeaksAsHorizontalLines.UseVisualStyleBackColor = true;
+            this.cbxPeaksAsHorizontalLines.CheckedChanged += new System.EventHandler(this.cbxPeaksAsHorizontalLines_CheckedChanged);
             // 
             // TracerChromatogramForm
             // 
@@ -450,5 +479,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn colTracerPercent;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.TextBox tbxRetentionTimeShift;
+        private System.Windows.Forms.CheckBox cbxPeaksAsVerticalLines;
+        private System.Windows.Forms.CheckBox cbxPeaksAsHorizontalLines;
     }
 }

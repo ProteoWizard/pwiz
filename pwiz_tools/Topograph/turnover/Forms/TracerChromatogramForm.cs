@@ -19,7 +19,7 @@ namespace pwiz.Topograph.ui.Forms
 {
     public partial class TracerChromatogramForm : AbstractChromatogramForm
     {
-        private IDictionary<TracerFormula, LineItem> _peakLines;
+        private IDictionary<TracerFormula, PeakDisplay> _peakLines;
         private PeakResize _peakResize;
 
         public TracerChromatogramForm(PeptideFileAnalysis peptideFileAnalysis) 
@@ -103,8 +103,12 @@ namespace pwiz.Topograph.ui.Forms
         {
             if (_peakResize != null)
             {
-                var lineItem = _peakResize.LineItem;
-                PointPair[] points = new[] {lineItem.Points[0], lineItem.Points[1]};
+                var peakDisplay = _peakResize.PeakDisplay;
+                PointPair[] points = new[]
+                                         {
+                                             new PointPair(peakDisplay.Start, peakDisplay.Height), 
+                                             new PointPair(peakDisplay.End, peakDisplay.Height), 
+                                         };
                 var screenPt = new PointF(e.Location.X - _peakResize.MousePt.X + _peakResize.CoordPt.X, _peakResize.CoordPt.Y);
                 double x, y;
                 msGraphControl.GraphPane.ReverseTransform(screenPt, out x, out y);
@@ -125,10 +129,27 @@ namespace pwiz.Topograph.ui.Forms
                         break;
                 }
                 
-                lineItem.RemovePoint(1);
-                lineItem.RemovePoint(0);
-                lineItem.AddPoint(points[0]);
-                lineItem.AddPoint(points[1]);
+                if (peakDisplay.HorizontalLine != null)
+                {
+                    peakDisplay.HorizontalLine.RemovePoint(1);
+                    peakDisplay.HorizontalLine.RemovePoint(0);
+                    peakDisplay.HorizontalLine.AddPoint(points[0]);
+                    peakDisplay.HorizontalLine.AddPoint(points[1]);
+                }
+                foreach (var lineItemPt in new[] { 
+                    new KeyValuePair<LineItem, PointPair>(peakDisplay.StartVerticalLine, points[0]),
+                    new KeyValuePair<LineItem, PointPair>(peakDisplay.EndVerticalLine, points[1])
+                })
+                {
+                    if (lineItemPt.Key == null)
+                    {
+                        continue;
+                    }
+                    lineItemPt.Key.RemovePoint(1);
+                    lineItemPt.Key.RemovePoint(0);
+                    lineItemPt.Key.AddPoint(new PointPair(lineItemPt.Value.X, peakDisplay.Height));
+                    lineItemPt.Key.AddPoint(new PointPair(lineItemPt.Value.Y, 0));
+                }
                 msGraphControl.Invalidate();
                 sender.Cursor = _peakResize.GetCursor();
                 return true;
@@ -160,36 +181,61 @@ namespace pwiz.Topograph.ui.Forms
                 {
                     continue;
                 }
-                PointF startPt = msGraphControl.GraphPane.GeneralTransform(entry.Value.Points[0], CoordType.AxisXYScale);
-                PointF endPt = msGraphControl.GraphPane.GeneralTransform(entry.Value.Points[1],
-                                                                         CoordType.AxisXYScale);
+                var peakDisplay = entry.Value;
                 var peakResize = new PeakResize
                 {
                     Peak = peak,
                     MousePt = pointF,
-                    LineItem = entry.Value,
+                    PeakDisplay = peakDisplay,
                 };
-                if (Math.Abs(pointF.Y - startPt.Y) <= 2)
+                if (peakDisplay.HorizontalLine != null)
                 {
-                    if (Math.Abs(pointF.X - startPt.X) <= 2)
+                    PointF startPt = msGraphControl.GraphPane.GeneralTransform(peakDisplay.HorizontalLine.Points[0], CoordType.AxisXYScale);
+                    PointF endPt = msGraphControl.GraphPane.GeneralTransform(peakDisplay.HorizontalLine.Points[1],
+                                                                             CoordType.AxisXYScale);
+                    if (Math.Abs(pointF.Y - startPt.Y) <= 2)
                     {
-                        peakResize.LineSegment = LineSegment.Start;
-                        peakResize.CoordPt = startPt;
-                        return peakResize;
+                        if (Math.Abs(pointF.X - startPt.X) <= 2)
+                        {
+                            peakResize.LineSegment = LineSegment.Start;
+                            peakResize.CoordPt = startPt;
+                            return peakResize;
+                        }
+                        if (Math.Abs(pointF.X - endPt.X) <= 2)
+                        {
+                            peakResize.LineSegment = LineSegment.End;
+                            peakResize.CoordPt = endPt;
+                            return peakResize;
+                        }
+                        if (pointF.X > startPt.X && pointF.X < endPt.X)
+                        {
+                            peakResize.LineSegment = LineSegment.Middle;
+                            peakResize.CoordPt = startPt;
+                            return peakResize;
+                        }
                     }
-                    if (Math.Abs(pointF.X - endPt.X) <= 2)
+                }
+                foreach (var lineItemSeg in new[] { new KeyValuePair<LineItem, LineSegment>(peakDisplay.StartVerticalLine, LineSegment.Start),
+                    new KeyValuePair<LineItem, LineSegment>(peakDisplay.EndVerticalLine, LineSegment.End)})
+                {
+                    if (lineItemSeg.Key == null)
                     {
-                        peakResize.LineSegment = LineSegment.End;
-                        peakResize.CoordPt = endPt;
-                        return peakResize;
+                        continue;
                     }
-                    if (pointF.X > startPt.X && pointF.X < endPt.X)
+                    PointF firstPt = msGraphControl.GraphPane.GeneralTransform(lineItemSeg.Key.Points[0],
+                                                                               CoordType.AxisXYScale);
+                    PointF lastPt = msGraphControl.GraphPane.GeneralTransform(lineItemSeg.Key.Points[1],
+                                                                              CoordType.AxisXYScale);
+                    if (Math.Abs(pointF.X - firstPt.X) <= 1
+                        && pointF.Y >= Math.Min(firstPt.Y, lastPt.Y)
+                        && pointF.Y <= Math.Max(firstPt.Y, lastPt.Y))
                     {
-                        peakResize.LineSegment = LineSegment.Middle;
-                        peakResize.CoordPt = startPt;
+                        peakResize.LineSegment = lineItemSeg.Value;
+                        peakResize.CoordPt = new PointF(firstPt.X, pointF.Y);
                         return peakResize;
                     }
                 }
+                
             }
             return null;
         }
@@ -221,7 +267,7 @@ namespace pwiz.Topograph.ui.Forms
             {
                 return;
             }
-            var peakLines = new Dictionary<TracerFormula, LineItem>();
+            var peakLines = new Dictionary<TracerFormula, PeakDisplay>();
             var tracerChromatograms = GetPoints();
             var peaks = PeptideFileAnalysis.Peaks;
             var entries = tracerChromatograms.Points.ToArray();
@@ -275,13 +321,31 @@ namespace pwiz.Topograph.ui.Forms
                     msGraphControl.AddGraphItem(msGraphControl.GraphPane, curve);
                     if (peak != null)
                     {
+                        var peakDisplay = new PeakDisplay();
                         var color = GetColor(iCandidate, entries.Length);
                         var max = MaxInRange(entry.Value, tracerChromatograms.Chromatograms.IndexFromTime(peak.StartTime), 
                             tracerChromatograms.Chromatograms.IndexFromTime(peak.EndTime));
-                        double start = peak.StartTime;
-                        double end = peak.EndTime;
-                        var line = msGraphControl.GraphPane.AddCurve(null, new[] {start, end}, new[] {max, max}, color);
-                        peakLines.Add(entry.Key, line);
+                        peakDisplay.Start = peak.StartTime;
+                        peakDisplay.End = peak.EndTime;
+                        peakDisplay.Height = max;
+                        if (PeaksAsHorizontalLines)
+                        {
+                            peakDisplay.HorizontalLine = msGraphControl.GraphPane.AddCurve(null, new[] { peakDisplay.Start, peakDisplay.End }, new[] { max, max }, color);
+                        }
+                        if (PeaksAsVerticalLines)
+                        {
+                            peakDisplay.StartVerticalLine = msGraphControl.GraphPane.AddCurve(
+                                null,
+                                new[] { peakDisplay.Start, peakDisplay.Start },
+                                new[] {max, 0}, color, SymbolType.None
+                            );
+                            peakDisplay.EndVerticalLine = msGraphControl.GraphPane.AddCurve(
+                                null,
+                                new[] { peakDisplay.End, peakDisplay.End }, 
+                                new[] { max, 0 }, color, SymbolType.None
+                            );
+                        }
+                        peakLines.Add(entry.Key, peakDisplay);
                     }
                 }
             }
@@ -428,7 +492,7 @@ namespace pwiz.Topograph.ui.Forms
         {
             public DbPeak Peak;
             public LineSegment LineSegment;
-            public LineItem LineItem;
+            public PeakDisplay PeakDisplay;
             public PointF MousePt;
             public PointF CoordPt;
             public Cursor GetCursor()
@@ -439,6 +503,16 @@ namespace pwiz.Topograph.ui.Forms
                 }
                 return Cursors.SizeWE;
             }
+        }
+
+        class PeakDisplay
+        {
+            public LineItem HorizontalLine;
+            public LineItem StartVerticalLine;
+            public LineItem EndVerticalLine;
+            public double Start;
+            public double End;
+            public double Height;
         }
 
         enum LineSegment
@@ -469,6 +543,28 @@ namespace pwiz.Topograph.ui.Forms
                 }
             }
             PeptideFileAnalysis.SetDistributions(peaks);
+        }
+
+        private void cbxPeaksAsVerticalLines_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateUi();
+        }
+
+        public bool PeaksAsVerticalLines 
+        { 
+            get { return cbxPeaksAsVerticalLines.Checked; } 
+            set { cbxPeaksAsVerticalLines.Checked = value;}
+        }
+
+        public bool PeaksAsHorizontalLines
+        {
+            get { return cbxPeaksAsHorizontalLines.Checked; }
+            set { cbxPeaksAsHorizontalLines.Checked = value; }
+        }
+
+        private void cbxPeaksAsHorizontalLines_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateUi();
         }
     }
 }
