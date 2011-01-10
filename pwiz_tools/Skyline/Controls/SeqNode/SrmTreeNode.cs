@@ -25,6 +25,7 @@ using System.Diagnostics;
 using System.Drawing.Imaging;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.SeqNode
@@ -172,9 +173,14 @@ namespace pwiz.Skyline.Controls.SeqNode
             if (!Model.Annotations.IsEmpty)
             {
                 var bounds = BoundsMS;
+                int zoomFactor = 0;
+                if (Equals(Settings.Default.TextZoom, TreeViewMS.LRG_TEXT_FACTOR))
+                    zoomFactor = 1;
+                if (Equals(Settings.Default.TextZoom, TreeViewMS.XLRG_TEXT_FACTOR))
+                    zoomFactor = 2;
                 g.FillPolygon(Annotations.COLOR_BRUSHES[Model.Annotations.ColorIndex], new[] {new Point(bounds.Right, bounds.Top), 
-                                                        new Point(bounds.Right-ANNOTATION_WIDTH, bounds.Top),
-                                                        new Point(bounds.Right, bounds.Top+ANNOTATION_WIDTH)});
+                                                        new Point(bounds.Right-(ANNOTATION_WIDTH+zoomFactor), bounds.Top),
+                                                        new Point(bounds.Right, bounds.Top+ANNOTATION_WIDTH+zoomFactor)});
             }
         }
 

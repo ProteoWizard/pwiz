@@ -138,6 +138,7 @@ namespace pwiz.Skyline.Model.DocSettings
         [Flags]
         public enum AnnotationTarget
         {
+            none = 0x00,
             protein = 0x01,
             peptide = 0x02,
             precursor = 0x04,

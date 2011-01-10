@@ -39,6 +39,7 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.btnOrangeRed = new System.Windows.Forms.ToolStripButton();
+            this.btnRed = new System.Windows.Forms.ToolStripButton();
             this.btnOrange = new System.Windows.Forms.ToolStripButton();
             this.btnYellow = new System.Windows.Forms.ToolStripButton();
             this.btnLightGreen = new System.Windows.Forms.ToolStripButton();
@@ -48,7 +49,7 @@
             this.btnBlack = new System.Windows.Forms.ToolStripButton();
             this.btnPurple = new System.Windows.Forms.ToolStripButton();
             this.label2 = new System.Windows.Forms.Label();
-            this.btnRed = new System.Windows.Forms.ToolStripButton();
+            this.btnClearAll = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -71,7 +72,7 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(390, 41);
+            this.btnCancel.Location = new System.Drawing.Point(390, 70);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 3;
@@ -137,6 +138,7 @@
             // 
             // splitContainer1.Panel1
             // 
+            this.splitContainer1.Panel1.Controls.Add(this.btnClearAll);
             this.splitContainer1.Panel1.Controls.Add(this.toolStrip1);
             this.splitContainer1.Panel1.Controls.Add(this.textNote);
             this.splitContainer1.Panel1.Controls.Add(this.btnCancel);
@@ -170,7 +172,7 @@
             this.toolStrip1.Location = new System.Drawing.Point(9, 124);
             this.toolStrip1.Name = "toolStrip1";
             this.toolStrip1.Padding = new System.Windows.Forms.Padding(0);
-            this.toolStrip1.Size = new System.Drawing.Size(263, 25);
+            this.toolStrip1.Size = new System.Drawing.Size(232, 25);
             this.toolStrip1.TabIndex = 4;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -188,6 +190,20 @@
             this.btnOrangeRed.Text = "■";
             this.btnOrangeRed.Paint += new System.Windows.Forms.PaintEventHandler(this.btnColor_Paint);
             this.btnOrangeRed.Click += new System.EventHandler(this.btnColor_Click);
+            // 
+            // btnRed
+            // 
+            this.btnRed.AutoToolTip = false;
+            this.btnRed.BackColor = System.Drawing.SystemColors.Control;
+            this.btnRed.CheckOnClick = true;
+            this.btnRed.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.btnRed.ForeColor = System.Drawing.Color.IndianRed;
+            this.btnRed.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnRed.Name = "btnRed";
+            this.btnRed.Size = new System.Drawing.Size(23, 22);
+            this.btnRed.Text = "■";
+            this.btnRed.Paint += new System.Windows.Forms.PaintEventHandler(this.btnColor_Paint);
+            this.btnRed.Click += new System.EventHandler(this.btnColor_Click);
             // 
             // btnOrange
             // 
@@ -309,19 +325,15 @@
             this.label2.TabIndex = 5;
             this.label2.Text = "Annotations:";
             // 
-            // btnRed
+            // btnClearAll
             // 
-            this.btnRed.AutoToolTip = false;
-            this.btnRed.BackColor = System.Drawing.SystemColors.Control;
-            this.btnRed.CheckOnClick = true;
-            this.btnRed.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            this.btnRed.ForeColor = System.Drawing.Color.IndianRed;
-            this.btnRed.ImageTransparentColor = System.Drawing.Color.Magenta;
-            this.btnRed.Name = "btnRed";
-            this.btnRed.Size = new System.Drawing.Size(23, 22);
-            this.btnRed.Text = "■";
-            this.btnRed.Paint += new System.Windows.Forms.PaintEventHandler(this.btnColor_Paint);
-            this.btnRed.Click += new System.EventHandler(this.btnColor_Click);
+            this.btnClearAll.Location = new System.Drawing.Point(390, 41);
+            this.btnClearAll.Name = "btnClearAll";
+            this.btnClearAll.Size = new System.Drawing.Size(75, 23);
+            this.btnClearAll.TabIndex = 5;
+            this.btnClearAll.Text = "Clear All";
+            this.btnClearAll.UseVisualStyleBackColor = true;
+            this.btnClearAll.Click += new System.EventHandler(this.btnClearAll_Click);
             // 
             // EditNoteDlg
             // 
@@ -371,5 +383,6 @@
         private System.Windows.Forms.ToolStripButton btnBlack;
         private System.Windows.Forms.ToolStripButton btnPurple;
         private System.Windows.Forms.ToolStripButton btnRed;
+        private System.Windows.Forms.Button btnClearAll;
     }
 }

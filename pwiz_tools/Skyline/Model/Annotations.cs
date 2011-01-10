@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model
 {
@@ -36,8 +37,9 @@ namespace pwiz.Skyline.Model
                     Brushes.Green, /*Bright Blue*/ new SolidBrush(Color.FromArgb(3, 184, 252)), Brushes.Blue, Brushes.Black, 
                     /*Purple*/ new SolidBrush(Color.FromArgb(128, 0, 255))};
 
-        public static readonly Annotations EMPTY = new Annotations(null, null, 0);
+        public static readonly Annotations EMPTY = new Annotations(null, null, -1);
         private readonly IDictionary<string, string> _annotations;
+        
         public Annotations(String note, IEnumerable<KeyValuePair<string, string>> annotations, int colorIndex)
         {
             ColorIndex = colorIndex;
@@ -58,6 +60,7 @@ namespace pwiz.Skyline.Model
                 }
             }
         }
+
         public String Note { get; private set; }
 
         public int ColorIndex { get; private set; }
@@ -68,7 +71,7 @@ namespace pwiz.Skyline.Model
                 return Note == null && _annotations == null;
             }
         }
-        public IEnumerable<KeyValuePair<string,string>> ListAnnotations()
+        public KeyValuePair<string,string>[] ListAnnotations()
         {
             if (_annotations == null)
             {
@@ -77,13 +80,12 @@ namespace pwiz.Skyline.Model
             return _annotations.ToArray();
         }
         public String GetAnnotation(String name)
-        {
-            if (_annotations == null)
+        {           
+            string value;
+            if (_annotations == null || !_annotations.TryGetValue(name, out value))
             {
                 return null;
             }
-            string value;
-            _annotations.TryGetValue(name, out value);
             return value;
         }
         public object GetAnnotation(AnnotationDef annotationDef)
@@ -105,21 +107,16 @@ namespace pwiz.Skyline.Model
 
         public Annotations ChangeAnnotation(string name, string value)
         {
-            var newAnnotations = new Dictionary<string, string>();
-            if (_annotations != null)
-            {
-                foreach (var entry in _annotations)
-                {
-                    if (entry.Key == name)
-                    {
-                        continue;
-                    }
-                    newAnnotations.Add(entry.Key, entry.Value);
-                }
-            }
-            newAnnotations[name] = value;
+            var newAnnotations = (_annotations != null ?
+                new Dictionary<string, string>(_annotations) :
+                new Dictionary<string, string>());
+            if (newAnnotations.ContainsKey(name))
+                newAnnotations[name] = value;
+            else
+                newAnnotations.Add(name, value);      
             return new Annotations(Note, newAnnotations, ColorIndex);
         }
+
         public Annotations ChangeAnnotation(AnnotationDef annotationDef, object value)
         {
             string strValue;
@@ -141,11 +138,38 @@ namespace pwiz.Skyline.Model
             return ChangeAnnotation(annotationDef.Name, strValue);
         }
 
+        public Annotations MergeNewAnnotations(string newText, int newColorIndex, IList<KeyValuePair<string, string>> newAnnotations)
+        {
+            IList<KeyValuePair<string, string>> listNodeAnnotations =
+                new List<KeyValuePair<string, string>>(ListAnnotations());
+            var dictNodeAnnotations = listNodeAnnotations.ToDictionary(
+                nodeAnnotation => nodeAnnotation.Key,
+                nodeAnnotation => nodeAnnotation.Value);
+            if (newAnnotations != null)
+            {
+                foreach (KeyValuePair<string, string> annotation in newAnnotations)
+                {
+                    string value;
+                    if (dictNodeAnnotations.TryGetValue(annotation.Key, out value))
+                        dictNodeAnnotations[annotation.Key] = annotation.Value;
+                    else
+                        dictNodeAnnotations.Add(annotation.Key, annotation.Value);
+                }
+            }
+            newColorIndex = newColorIndex != -1 ? newColorIndex : ColorIndex;
+            newText = newText ?? Note;
+            var annotations = new Annotations(newText, dictNodeAnnotations, newColorIndex);
+            if (annotations.IsEmpty)
+                annotations.ColorIndex = -1;
+            return annotations;
+        }
+
         public bool Equals(Annotations other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return EqualsDict(other._annotations, _annotations) && Equals(other.Note, Note);
+            return EqualsDict(other._annotations, _annotations) && Equals(other.Note, Note) 
+                && Equals(other.ColorIndex, ColorIndex);
         }
 
         public override bool Equals(object obj)

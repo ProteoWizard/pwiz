@@ -45,6 +45,7 @@ namespace pwiz.Skyline.Controls
         protected internal const int IMG_WIDTH = 16;
 
         private TreeNodeMS _anchorNode;
+	    private bool _inRightClick;
 
 	    private const int DEFAULT_ITEM_HEIGHT = 16;
 	    private const float DEFAULT_FONT_SIZE = (float) 8.25;
@@ -56,6 +57,7 @@ namespace pwiz.Skyline.Controls
         public TreeViewMS()
         {
             UseKeysOverride = false;
+            _inRightClick = false;
 
             SelectedNodes = new TreeNodeSelectionMS();
 
@@ -159,11 +161,11 @@ namespace pwiz.Skyline.Controls
 
         protected override void OnMouseDown(MouseEventArgs e)
         {
-            if (e.Button == MouseButtons.Right)
+            _inRightClick = e.Button == MouseButtons.Right;
+            if (_inRightClick)
             {
                 TreeNodeMS node = (TreeNodeMS)GetNodeAt(0, e.Y);
-                if (node != null && !node.IsInSelection &&
-                        node.BoundsMS.Contains(e.Location))
+                if (node != null && node.BoundsMS.Contains(e.Location))
                     SelectedNode = node;
             }
             base.OnMouseDown(e);
@@ -171,7 +173,7 @@ namespace pwiz.Skyline.Controls
 
         protected override void OnMouseUp(MouseEventArgs e)
         {
-            if (e.Button != MouseButtons.Right)
+            if (!_inRightClick)
             {
                 TreeNodeMS node = (TreeNodeMS)GetNodeAt(0, e.Y);
                 if (node != null && node.BoundsMS.Contains(e.Location))
@@ -198,6 +200,7 @@ namespace pwiz.Skyline.Controls
                 }
             }
             base.OnMouseUp(e);
+            _inRightClick = false;
         }
 
         protected override void OnBeforeSelect(TreeViewCancelEventArgs e)
@@ -216,7 +219,9 @@ namespace pwiz.Skyline.Controls
 
             TreeNodeMS node = (TreeNodeMS)e.Node;
 
-            if (node != null)
+            // Don't change the selection if this is a right click and the node is in the
+            // selection.
+            if (node != null && !(_inRightClick && node.IsInSelection))
             {
                 if (IsDisjointSelect)
                 {

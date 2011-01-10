@@ -22,6 +22,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -1141,28 +1142,38 @@ namespace pwiz.Skyline
         private void editNoteMenuItem_Click(object sender, EventArgs e) { EditNote(); }
         public void EditNote()
         {
-            SrmTreeNode nodeTree = sequenceTree.SelectedNode as SrmTreeNode;
-            if (nodeTree != null)
+            IList<IdentityPath> selPaths = sequenceTree.SelectedPaths;
+            EditNoteDlg dlg = new EditNoteDlg
             {
-                EditNoteDlg dlg = new EditNoteDlg
-                {
-                    Text = string.Format("Edit Note {0} {1}", nodeTree.Heading, nodeTree.Text)
-                };
-                dlg.Init(nodeTree.Document, nodeTree.Model.AnnotationTarget, nodeTree.Model.Annotations);
+                Text = selPaths.Count > 1 ? "Edit Note" :
+                    string.Format("Edit Note {0} {1}", ((SrmTreeNode)sequenceTree.SelectedNode).Heading, sequenceTree.SelectedNode.Text)
 
-                if (dlg.ShowDialog(this) == DialogResult.OK)
+            };
+            dlg.Init(((SrmTreeNode)sequenceTree.SelectedNode).Document, selPaths);
+
+            if (dlg.ShowDialog(this) == DialogResult.OK)
+            {
+                bool clearAll = dlg.ClearAll;
+                var resultAnnotations = dlg.GetChangedAnnotations();
+                var resultColorIndex = dlg.ColorIndex;
+                string resultText = dlg.GetText();
+                if (resultColorIndex != -1)
+                    Settings.Default.AnnotationColor = dlg.ColorIndex;
+                ModifyDocument("Edit note", doc =>
                 {
-                    var annotations = dlg.GetAnnotations();
-                    Settings.Default.AnnotationColor = annotations.ColorIndex;
-                    ModifyDocument("Edit note", doc =>
+                    foreach (IdentityPath nodePath in selPaths)
                     {
-                        doc = (SrmDocument)
-                            doc.ReplaceChild(nodeTree.Path.Parent,
-                                             nodeTree.Model.ChangeAnnotations(
-                                                 annotations));
-                        return doc;
-                    });
-                }
+                        if (Equals(nodePath.Child, SequenceTree.NODE_INSERT_ID))
+                            continue;
+                        var nodeInDoc = doc.FindNode(nodePath);
+                        var newAnnotations = clearAll ? 
+                            new Annotations(null, new KeyValuePair<string, string>[0], -1) :
+                            nodeInDoc.Annotations.MergeNewAnnotations(resultText, resultColorIndex, resultAnnotations);
+                        doc = (SrmDocument) doc.ReplaceChild(nodePath.Parent, 
+                            nodeInDoc.ChangeAnnotations(newAnnotations));
+                    }
+                    return doc;
+                });
             }
         }
 
@@ -1476,14 +1487,16 @@ namespace pwiz.Skyline
 
         private void contextMenuTreeNode_Opening(object sender, CancelEventArgs e)
         {
-            bool enabled = (sequenceTree.SelectedNode is IClipboardDataProvider);
+            var treeNode = sequenceTree.SelectedNode as TreeNodeMS;
+            bool enabled = (sequenceTree.SelectedNode is IClipboardDataProvider && treeNode != null
+                && treeNode.IsInSelection);
             copyContextMenuItem.Enabled = enabled;
             cutContextMenuItem.Enabled = enabled;
             deleteContextMenuItem.Enabled = enabled;
-            pickChildrenContextMenuItem.Enabled = SequenceTree.CanPickChildren(sequenceTree.SelectedNode);
-            editNoteContextMenuItem.Enabled = (sequenceTree.SelectedNode is SrmTreeNode);
-            removePeakContextMenuItem.Visible = (sequenceTree.SelectedNode is TransitionTreeNode);
-            modifyPeptideContextMenuItem.Visible = (sequenceTree.SelectedNode is PeptideTreeNode);
+            pickChildrenContextMenuItem.Enabled = SequenceTree.CanPickChildren(sequenceTree.SelectedNode) && enabled;
+            editNoteContextMenuItem.Enabled = (sequenceTree.SelectedNode is SrmTreeNode && enabled);
+            removePeakContextMenuItem.Visible = (sequenceTree.SelectedNode is TransitionTreeNode && enabled);
+            modifyPeptideContextMenuItem.Visible = (sequenceTree.SelectedNode is PeptideTreeNode && enabled);
         }
 
         private void pickChildrenContextMenuItem_Click(object sender, EventArgs e) { ShowPickChildren(); }
