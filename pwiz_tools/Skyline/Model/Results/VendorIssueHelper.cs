@@ -20,7 +20,9 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -114,14 +116,14 @@ namespace pwiz.Skyline.Model.Results
                 RedirectStandardOutput = true,
             };
 
+            var sbOut = new StringBuilder();
             var proc = Process.Start(psi);
             if (proc != null)
             {
-                // For debugging mzWiff
-//                var reader = new ProcessStreamReader(proc);
-//                string line;
-//                while ((line = reader.ReadLine()) != null)
-//                    Console.WriteLine(line);
+                var reader = new ProcessStreamReader(proc);
+                string line;
+                while ((line = reader.ReadLine()) != null)
+                    sbOut.AppendLine(line);
 
                 while (!proc.WaitForExit(200))
                 {
@@ -134,11 +136,22 @@ namespace pwiz.Skyline.Model.Results
             }
 
             // Exit code -4 is a compatibility warning but not necessarily an error
-            if (proc == null || (proc.ExitCode != 0 && proc.ExitCode != -4))
+            if (proc == null || (proc.ExitCode != 0 && !IsCompatibilityWarning(proc.ExitCode)))
             {
-                throw new IOException(string.Format("Failure attempting to convert sample {0} in {1} to mzXML to work around a performance issue in the AB Sciex WiffFileDataReader library.",
-                    sampleIndex, filePathWiff));
+                throw new IOException(string.Format("Failure attempting to convert sample {0} in {1} to mzXML to work around a performance issue in the AB Sciex WiffFileDataReader library.\n\n{2}",
+                    sampleIndex, filePathWiff, sbOut));
             }
+        }
+
+        /// <summary>
+        /// True if the mzWiff exit code is non-zero, but only for a warning
+        /// that does not necessarily mean anything is wrong with the output.
+        /// </summary>
+        private static bool IsCompatibilityWarning(int exitCode)
+        {
+            return exitCode == -2 ||
+                   exitCode == -3 ||
+                   exitCode == -4;
         }
     }
 

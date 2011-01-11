@@ -573,9 +573,6 @@ namespace pwiz.Skyline
         {
             switch (keyData)
             {
-                case Keys.F3:
-                    FindNext(false);
-                    return true;
                 case Keys.F3 | Keys.Shift:
                     sequenceTree.UseKeysOverride = true;
                     sequenceTree.KeysOverride = Keys.None;
@@ -1277,6 +1274,11 @@ namespace pwiz.Skyline
                 OwnedForms[index].Activate();
             else
                 ShowFindNodeDlg();
+        }
+
+        private void findNextMenuItem_Click(object sender, EventArgs e)
+        {
+            FindNext(false);
         }
 
         public void ShowFindNodeDlg()

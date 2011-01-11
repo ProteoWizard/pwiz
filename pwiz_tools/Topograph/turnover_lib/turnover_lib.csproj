@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{6ED3F65E-B0A0-48F0-8966-F3E4D146F07F}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -156,7 +156,6 @@
     <Compile Include="Model\WorkspaceSettings.cs" />
     <Compile Include="Model\WorkspaceVersion.cs" />
     <Compile Include="MsData\BackgroundJob.cs" />
-    <Compile Include="MsData\Centroider.cs" />
     <Compile Include="MsData\ChromatogramGenerator.cs" />
     <Compile Include="Data\ArrayConverter.cs" />
     <Compile Include="Data\DbPeptideDistribution.cs" />

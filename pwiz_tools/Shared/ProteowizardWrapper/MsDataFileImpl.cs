@@ -18,11 +18,9 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using pwiz.CLI.cv;
 using pwiz.CLI.data;
-using pwiz.CLI.analysis;
 using pwiz.CLI.msdata;
 
 namespace pwiz.ProteowizardWrapper
@@ -204,18 +202,6 @@ namespace pwiz.ProteowizardWrapper
             }
         }
 
-        private const bool PREFER_VENDOR_PEAK_PICKING = true;
-        private SpectrumList SpectrumListCentroided
-        {
-            get
-            {
-                return _spectrumListCentroided 
-                    = _spectrumListCentroided 
-                    ?? new SpectrumList_PeakPicker(
-                        SpectrumList, new LocalMaximumPeakDetector(3), PREFER_VENDOR_PEAK_PICKING, new[] {1, 2});
-            }
-        }
-
         public int ChromatogramCount
         {
             get { return ChromatogramList != null ? ChromatogramList.size() : 0; }
@@ -300,71 +286,137 @@ namespace pwiz.ProteowizardWrapper
 
         public void GetSpectrum(int scanIndex, out double[] mzArray, out double[] intensityArray)
         {
+            var spectrum = GetSpectrum(scanIndex);
+            mzArray = spectrum.Mzs;
+            intensityArray = spectrum.Intensities;
+        }
+
+        public MsDataSpectrum GetSpectrum(int scanIndex)
+        {
             using (var spectrum = SpectrumList.spectrum(scanIndex, true))
+            {
+                return GetSpectrum(spectrum);
+            }
+        }
+
+        private static MsDataSpectrum GetSpectrum(Spectrum spectrum)
+        {
+            if (spectrum != null)
             {
                 try
                 {
-                    mzArray = ToArray(spectrum.getMZArray().data);
-                    intensityArray = ToArray(spectrum.getIntensityArray().data);
+                    return new MsDataSpectrum
+                               {
+                                   Level = GetMsLevel(spectrum),
+                                   RetentionTime = GetStartTime(spectrum),
+                                   PrecursorMz = GetPrecursorMz(spectrum),
+                                   Centroided = IsCentroided(spectrum),
+                                   Mzs = ToArray(spectrum.getMZArray().data),
+                                   Intensities = ToArray(spectrum.getIntensityArray().data)
+                               };
                 }
                 catch (NullReferenceException)
                 {
-                    mzArray = new double[0];
-                    intensityArray = new double[0];
                 }
             }
+
+            return new MsDataSpectrum
+            {
+                Centroided = true,
+                Mzs = new double[0],
+                Intensities = new double[0]
+            };
         }
 
-        public bool IsCentroided(int scanIndex)
+        public MsDataSpectrum GetCentroidedSpectrum(int scanIndex)
         {
-            using (var spectrum = SpectrumList.spectrum(scanIndex, false))
+            var msDataSpectrum = GetSpectrum(scanIndex);
+            if (!msDataSpectrum.Centroided && msDataSpectrum.Mzs.Length > 0)
             {
-                return spectrum.hasCVParam(CVID.MS_centroid_spectrum);
+                // Spectra from mzWiff files lack zero intensity m/z values necessary for
+                // correct centroiding.
+                if (IsMzWiffXml)
+                    InsertZeros(msDataSpectrum);
+
+                var centroider = new Centroider(msDataSpectrum.Mzs, msDataSpectrum.Intensities);
+                double[] mzArray, intensityArray;
+                centroider.GetCentroidedData(out mzArray, out intensityArray);
+                msDataSpectrum.Mzs = mzArray;
+                msDataSpectrum.Intensities = intensityArray;
             }
+            return msDataSpectrum;
         }
 
-        public void GetCentroidedSpectrum(int scanIndex, out double[] mzArray, out double[] intensityArray)
+        private static void InsertZeros(MsDataSpectrum msDataSpectrum)
         {
-            using (var spectrum = SpectrumListCentroided.spectrum(scanIndex, true))
+            double[] mzs = msDataSpectrum.Mzs;
+            double[] intensities = msDataSpectrum.Intensities;
+            int len = mzs.Length;
+            double minDelta = double.MaxValue;
+            for (int i = 0; i < len - 1; i++)
             {
-                var mzData = spectrum.getMZArray().data;
-                var intensityData = spectrum.getIntensityArray().data;
-                var mzs = new List<double>();
-                var intensities = new List<double>();
-                for (int i = 0; i < mzData.Count(); i++)
+                minDelta = Math.Min(minDelta, mzs[i + 1] - mzs[i]);
+            }
+            double maxGap = minDelta*2;
+            var newMzs = new List<double>(len);
+            var newIntensities = new List<double>(len);
+            for (int i = 0; i < len - 1; i++)
+            {
+                double mz = mzs[i];
+                double mzNext = mzs[i + 1];
+                if (i == 0)
                 {
-                    if (intensityData[i] == 0)
-                    {
-                        continue;
-                    }
-                    mzs.Add(mzData[i]);
-                    intensities.Add(intensityData[i]);
+                    newMzs.Add(mz - minDelta);
+                    newIntensities.Add(0);
                 }
-                mzArray = mzs.ToArray();
-                intensityArray = intensities.ToArray();
+                newMzs.Add(mz);
+                newIntensities.Add(intensities[i]);
+                // If the distance to the next m/z value is greater than the
+                // maximum gap allowed, insert a flanking zero after this peak.
+                if (mzNext - mz > maxGap)
+                {
+                    mz += minDelta;
+                    newMzs.Add(mz);
+                    newIntensities.Add(0);
+
+                    // If the distance is still greater than the maximum gap,
+                    // insert a flanking zero before the next peak.
+                    if (mzNext - mz > maxGap)
+                    {
+                        mz = mzNext - minDelta;
+                        newMzs.Add(mz);
+                        newIntensities.Add(0);
+                    }
+                }
+            }
+            newMzs.Add(mzs[len - 1]);
+            newIntensities.Add(intensities[len - 1]);
+            newMzs.Add(mzs[len - 1] + minDelta);
+            newIntensities.Add(0);
+            msDataSpectrum.Mzs = newMzs.ToArray();
+            msDataSpectrum.Intensities = newIntensities.ToArray();
+        }
+
+        public bool HasSrmSpectra
+        {
+            get
+            {
+                if (SpectrumList.size() == 0)
+                    return false;
+
+                // If the first spectrum is not SRM, the others will not be either
+                using (var spectrum = SpectrumList.spectrum(0, false))
+                {
+                    return IsSrmSpectrum(spectrum);
+                }
             }
         }
 
-        public bool GetSrmSpectrum(int scanIndex, bool fullScanAllowed,
-            out double? time, out double? precursorMz, out double[] mzArray, out double[] intensityArray)
+        public MsDataSpectrum GetSrmSpectrum(int scanIndex)
         {
             using (var spectrum = SpectrumList.spectrum(scanIndex, true))
             {
-                bool isSrm = spectrum.hasCVParam(CVID.MS_SRM_spectrum);
-                if (spectrum.cvParam(CVID.MS_ms_level).value != 2 || (!fullScanAllowed && !isSrm))
-                {
-                    time = null;
-                    precursorMz = null;
-                    mzArray = null;
-                    intensityArray = null;
-                    return false;
-                }
-
-                time = GetStartTime(spectrum);
-                precursorMz = GetPrecursorMz(spectrum);
-                mzArray = ToArray(spectrum.getMZArray().data);
-                intensityArray = ToArray(spectrum.getIntensityArray().data);
-                return isSrm;
+                return GetSpectrum(IsSrmSpectrum(spectrum) ? spectrum : null);
             }
         }
 
@@ -373,15 +425,46 @@ namespace pwiz.ProteowizardWrapper
             using (var spectrum = SpectrumList.spectrum(scanIndex))
             {
                 return spectrum.id;
-            }            
+            }
+        }
+
+        public bool IsCentroided(int scanIndex)
+        {
+            using (var spectrum = SpectrumList.spectrum(scanIndex, false))
+            {
+                return IsCentroided(spectrum);
+            }
+        }
+
+        private static bool IsCentroided(Spectrum spectrum)
+        {
+            return spectrum.hasCVParam(CVID.MS_centroid_spectrum);
+        }
+
+        public bool IsSrmSpectrum(int scanIndex)
+        {
+            using (var spectrum = SpectrumList.spectrum(scanIndex, false))
+            {
+                return IsSrmSpectrum(spectrum);
+            }
+        }
+
+        private static bool IsSrmSpectrum(Spectrum spectrum)
+        {
+            return spectrum.hasCVParam(CVID.MS_SRM_spectrum);
         }
 
         public int GetMsLevel(int scanIndex)
         {
             using (var spectrum = SpectrumList.spectrum(scanIndex))
             {
-                return (int) spectrum.cvParam(CVID.MS_ms_level).value;
+                return GetMsLevel(spectrum);
             }
+        }
+
+        private static int GetMsLevel(Spectrum spectrum)
+        {
+            return (int)spectrum.cvParam(CVID.MS_ms_level).value;
         }
 
         public double? GetStartTime(int scanIndex)
@@ -448,5 +531,15 @@ namespace pwiz.ProteowizardWrapper
         public string IonSource { get; set; }
         public string Analyzer { get; set; }
         public string Detector { get; set; }
+    }
+
+    public sealed class MsDataSpectrum
+    {
+        public int Level { get; set; }
+        public double? PrecursorMz { get; set; }
+        public double? RetentionTime { get; set; }
+        public bool Centroided { get; set; }
+        public double[] Mzs { get; set; }
+        public double[] Intensities { get; set; }
     }
 }
