@@ -7,16 +7,16 @@
 // Copyright 2005 Louis Warschaw Prostate Cancer Center
 //   Cedars Sinai Medical Center, Los Angeles, California  90048
 //
-// Licensed under the Apache License, Version 2.0 (the "License"); 
-// you may not use this file except in compliance with the License. 
-// You may obtain a copy of the License at 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
 // http://www.apache.org/licenses/LICENSE-2.0
 //
-// Unless required by applicable law or agreed to in writing, software 
-// distributed under the License is distributed on an "AS IS" BASIS, 
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-// See the License for the specific language governing permissions and 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
 // limitations under the License.
 //
 
@@ -181,6 +181,15 @@ RawFileImpl::RawFileImpl(const string& filename)
     delete buf;
     if (decimalSeparator != ".")
         throw runtime_error("[RawFile::ctor] Reading Thermo RAW files requires the decimal separator to be '.' - adjust regional/language settings in the Control Panel.");
+
+    // XRawfile requires ',' as a list separator
+    int listSeparatorLength = GetLocaleInfoA(LOCALE_USER_DEFAULT, LOCALE_SLIST, 0, 0);
+    buf = new char[listSeparatorLength];
+    GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SLIST, buf, listSeparatorLength);
+    string listSeparator = buf;
+    delete buf;
+    if (listSeparator != ",")
+        throw runtime_error("[RawFile::ctor] Reading Thermo RAW files requires the list separator to be ',' - adjust regional/language settings in the Control Panel.");
 
     COMInitializer::initialize();
 
@@ -939,7 +948,7 @@ void ScanInfoImpl::initialize()
                                                   &channelCount_,
                                                   &isUniformTime,
                                                   &frequency_);
-    if (hr != 0) 
+    if (hr != 0)
     {
         checkResult(raw_->GetStartTime(&startTime_), "[ScanInfoImpl::initialize(), GetStartTime()]");
     }
@@ -985,7 +994,7 @@ void ScanInfoImpl::initTrailerExtraHelper() const
     trailerExtraValues_ = auto_ptr<VariantStringArray>(new VariantStringArray(variantTrailerExtraValues, trailerExtraSize_));
 
     if (trailerExtraLabels_->size() != trailerExtraValues_->size())
-        throw RawEgg("[ScanInfoImpl::initTrailerExtra()] Trailer Extra sizes do not match."); 
+        throw RawEgg("[ScanInfoImpl::initTrailerExtra()] Trailer Extra sizes do not match.");
 
     for (int i=0; i<trailerExtraLabels_->size(); i++)
         trailerExtraMap_[trailerExtraLabels_->item(i)] = trailerExtraValues_->item(i);
@@ -1035,16 +1044,16 @@ vector<PrecursorInfo> ScanInfoImpl::precursorInfo() const
 
 /*
     This function tries to find any preceeding zoom scans that may be
-    present for the current scan. This function is useful in getting 
+    present for the current scan. This function is useful in getting
     the precursor monoisotopic m/z and charge state information from
     the zoom scans, when the instrument is run in a triple-play mode.
 */
 ScanInfoPtr ScanInfoImpl::findZoomScan() const
 {
 
-    ScanInfoPtr zoomScan_;    
+    ScanInfoPtr zoomScan_;
     try
-    {  
+    {
         // Get the previous scan number
         long prevScanNum = scanNumber_-1;
         // Get the previous msLevel
@@ -1059,14 +1068,14 @@ ScanInfoPtr ScanInfoImpl::findZoomScan() const
             long zoomScanLevel = rawfile_->getMSOrder(prevScanNum);
             ScanType zoomScanType = rawfile_->getScanType(prevScanNum);
             // Check to see if we are at a zoom scan
-            if(zoomScanLevel == prevMSLevel) 
+            if(zoomScanLevel == prevMSLevel)
             {
-                if(zoomScanType == ScanType_Zoom) 
+                if(zoomScanType == ScanType_Zoom)
                 {
                     // Get the scan info and check if the precursor mass of this
                     // MSn scan is with in the window of the zoom scan
                     ScanInfoPtr prevScanInfo = rawfile_->getScanInfo(prevScanNum);
-                    if(prevScanInfo->lowMass() <= currentScanPrecursorMass && 
+                    if(prevScanInfo->lowMass() <= currentScanPrecursorMass &&
                         prevScanInfo->highMass() >= currentScanPrecursorMass)
                     {
                         zoomScan_ = prevScanInfo;
@@ -1079,7 +1088,7 @@ ScanInfoPtr ScanInfoImpl::findZoomScan() const
         }
         return zoomScan_;
 
-    } catch (RawEgg&) 
+    } catch (RawEgg&)
     {
         return zoomScan_;
     }
@@ -1095,7 +1104,7 @@ long ScanInfoImpl::precursorCharge() const
         // zoom scans if and only if there are zoom scans present in the raw file.
         ScanInfoPtr zoomScan_ = findZoomScan();
         if(charge <= 0 && zoomScan_.get() != 0)
-            charge = zoomScan_->trailerExtraValueLong("Charge State:"); 
+            charge = zoomScan_->trailerExtraValueLong("Charge State:");
         return charge;
     }
     catch (RawEgg&)
@@ -1117,7 +1126,7 @@ double ScanInfoImpl::precursorMZ(long index, bool preferMonoisotope) const
             // TODO: Parse out the scan event details in the raw file and look for
             // zoom scans if and only if there are zoom scans present in the raw file.
             ScanInfoPtr zoomScan_ = findZoomScan();
-            if( mz <= 0.0 && zoomScan_.get() != 0 ) 
+            if( mz <= 0.0 && zoomScan_.get() != 0 )
                 mz = zoomScan_->trailerExtraValueDouble("Monoisotopic M/Z:");
             if (mz > 0)
                 return mz;
@@ -1137,7 +1146,7 @@ double ScanInfoImpl::trailerExtraValueDouble(const string& name) const
     _variant_t v;
 
     checkResult(raw_->GetTrailerExtraValueForScanNum(scanNumber_,
-                                                     name.c_str(), 
+                                                     name.c_str(),
                                                      &v),
                                                      "[ScanInfoImpl::trailerExtraValueDouble()] ");
     if (v.vt == VT_R4) return v.fltVal;
@@ -1154,7 +1163,7 @@ long ScanInfoImpl::trailerExtraValueLong(const string& name) const
     _variant_t v;
 
     checkResult(raw_->GetTrailerExtraValueForScanNum(scanNumber_,
-                                                     name.c_str(), 
+                                                     name.c_str(),
                                                      &v),
                                                      "[ScanInfoImpl::trailerExtraValueLong()] ");
     if (v.vt == VT_I4) return v.lVal;
