@@ -326,7 +326,7 @@ rule extract ( tar-filepath : include-patterns * : tar-requirements * : tar-usag
     else
     {
         RM = "rm" ;
-        RMDIR = "rm -fdr" ;
+        RMDIR = "rm -fr" ;
         MKDIR = "mkdir -p" ;
         CS = ";" ;
     }
@@ -402,14 +402,14 @@ rule extract ( tar-filepath : include-patterns * : tar-requirements * : tar-usag
         {
             basepath = [ path.native $(basepath) ] ;
             ECHO "tar.rmdir $(basepath)" ;
-            SHELL "$(RMDIR) $(basepath)" ;
+            SHELL "$(RMDIR) \"$(basepath)\"" ;
         }
 
         for local rootfile in $(rootfiles)
         {
             rootfile = [ path.native $(rootfile) ] ;
             ECHO "tar.rm $(rootfile)" ;
-            SHELL "$(RM) $(rootfile)" ;
+            SHELL "$(RM) \"$(rootfile)\"" ;
         }
     }
     else
@@ -445,7 +445,7 @@ rule extract ( tar-filepath : include-patterns * : tar-requirements * : tar-usag
         else
         {
             ECHO "tar.extract $(tar-filepath:D=): $(include-patterns)" ;
-            if ! [ path.exists $(target-location) ] { SHELL "$(MKDIR) $(target-location)" ; }
+            if ! [ path.exists $(target-location) ] { SHELL "$(MKDIR) \"$(target-location)\"" ; }
             #echo "cd $(target-location) $(CS) \"$(tar-binary-filepath)\" -xf \"$(tar-filepath)\" $(include-patterns)" ;
             SHELL "cd $(target-location) $(CS) \"$(tar-binary-filepath)\" -xf \"$(tar-filepath)\" $(include-patterns)" ;
             RESCAN ;
