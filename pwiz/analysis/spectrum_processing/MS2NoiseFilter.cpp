@@ -198,7 +198,7 @@ FilterSpectrum::FilterSpectrum(const MS2NoiseFilter::Config& params_,
         if (params.relaxLowMass && precursorCharge > 0)
         {
             if (min(precursorCharge, (int) ((precursorMZ * precursorCharge) / *lb)) > 1)
-                numMassesInWindow = params.numMassesInWindow * (factor * min(precursorCharge, (int) ((precursorMZ * precursorCharge) / *lb)));
+                numMassesInWindow = (size_t)(params.numMassesInWindow * (factor * min(precursorCharge, (int) ((precursorMZ * precursorCharge) / *lb))));
         }
 
         if (indexValuePairs.size() > numMassesInWindow)

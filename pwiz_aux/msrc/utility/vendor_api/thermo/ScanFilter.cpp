@@ -456,8 +456,8 @@ ScanFilter::parse(string filterLine)
         boost::trim_if(w, boost::is_any_of("{ }")); // trim flanking brackets and whitespace
 	    vector<string> segmentEventPair;
 	    boost::split(segmentEventPair, w, boost::is_any_of(","));
-		segment_ = lexical_cast<double>(segmentEventPair[0]);
-		event_ = lexical_cast<double>(segmentEventPair[1]);
+		segment_ = (int)lexical_cast<double>(segmentEventPair[0]);
+		event_ = (int)lexical_cast<double>(segmentEventPair[1]);
 		s >> w;
 	}
 
