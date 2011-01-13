@@ -165,6 +165,23 @@ void RAMPAdapter::Impl::getScanHeader(size_t index, ScanHeaderStruct& result, bo
     result.precursorMZ = 0;
     result.precursorCharge = 0;
     result.precursorIntensity = 0;
+    result.compensationVoltage = 0;
+    
+
+    std::string filterLine = scan.cvParam(MS_filter_string).value;
+    
+    size_t found = filterLine.find("cv=");
+    
+    if (found!=string::npos) {
+      filterLine = filterLine.substr(found+3);
+      found = filterLine.find_first_of(" ");
+      if (found!=string::npos) {
+	filterLine = filterLine.substr(0, found);
+	result.compensationVoltage = atof(filterLine.c_str());
+      }
+    }
+
+
 
     if (!spectrum->precursors.empty())
     {

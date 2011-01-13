@@ -155,6 +155,7 @@ struct ScanHeaderStruct
    double basePeakMZ;
    double basePeakIntensity;
    double collisionEnergy;
+   double compensationVoltage;
    double ionisationEnergy;
    double lowMZ;
    double highMZ;
