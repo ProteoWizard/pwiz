@@ -203,7 +203,7 @@ namespace pwiz.SkylineTestFunctional
 
             _libraryName = libraryBaseName + "_cpas2";
             BuildLibraryValid(TestFilesDir.GetTestPath("cpas"), null,
-                false, false, 63);
+                false, false, 100);
 
             // And, since the spectra are really poor, allow lots of
             // possibilities for fragment ions.

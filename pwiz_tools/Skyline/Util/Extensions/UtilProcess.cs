@@ -61,6 +61,7 @@ namespace pwiz.Skyline.Util.Extensions
 
             var reader = new ProcessStreamReader(proc);
             StringBuilder sbError = new StringBuilder();
+            int percentLast = 0;
             string line;
             while ((line = reader.ReadLine()) != null)
             {
@@ -84,7 +85,8 @@ namespace pwiz.Skyline.Util.Extensions
                         string percentPart = parts[parts.Length - 1];
                         if (double.TryParse(percentPart.Substring(0, percentPart.Length - 1), out percent))
                         {
-                            status = status.ChangePercentComplete((int)percent);
+                            percentLast = (int) percent;
+                            status = status.ChangePercentComplete(percentLast);
                             if (percent >= 100 && status.SegmentCount > 0)
                                 status = status.NextSegment();
                             progress.UpdateProgress(status);
@@ -111,6 +113,16 @@ namespace pwiz.Skyline.Util.Extensions
                 if (sbError.Length == 0)
                     throw new Exception("Error occurred running process.");
                 throw new IOException(sbError.ToString());
+            }
+            // Make to complete the status, if the process succeeded, but never
+            // printed 100% to the console
+            else if (percentLast < 100)
+            {
+                status = status.ChangePercentComplete(100);
+                if (status.SegmentCount > 0)
+                    status = status.NextSegment();
+                if (progress != null)
+                    progress.UpdateProgress(status);
             }
         }
     }
