@@ -1,0 +1,72 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2"
+                   assembly ="BumberDash"
+                   namespace ="BumberDash.Model">
+  
+  
+  <class name ="ConfigFile"
+         table="ConfigFile">
+    <id name ="ConfigId">
+      <generator class ="native" />
+    </id>
+    <property name ="Name" not-null ="false" />
+    <property name ="DestinationProgram" not-null ="true" />
+    <property name ="FilePath" not-null ="true" />
+    <property name ="FirstUsedDate" not-null ="true" />
+    <bag name ="UsedByList" table ="HistoryItem" generic ="true" inverse ="true">
+      <key column ="ConfigId" />
+      <one-to-many class ="HistoryItem" />
+    </bag>
+    <bag name ="UsedByList2" table ="HistoryItem" generic ="true" inverse ="true">
+      <key column ="TagConfigId" />
+      <one-to-many class ="HistoryItem" />
+    </bag>
+    <bag name ="PropertyList" table ="ConfigProperty" generic ="true" inverse ="true" cascade = "all-delete-orphan">
+      <key column ="ConfigId" />
+      <one-to-many class ="ConfigProperty"/>
+    </bag>
+  </class>
+
+  <class name ="ConfigProperty"
+         table="ConfigProperty">
+    <id name ="PropertyId">
+      <generator class ="native" />
+    </id>
+    <property name ="Name" column ="PropertyName" not-null ="true" />
+    <property name ="Value" column ="PropertyValue" not-null ="true" />
+    <property name ="Type" column ="PropertyType" not-null ="true" />
+    <many-to-one name ="ConfigAssociation" column ="ConfigId" not-null ="true" class ="ConfigFile" />
+  </class>
+
+  <class name ="HistoryItem"
+         table="HistoryItem">
+    <id name ="HistoryItemId">
+      <generator class ="native" />
+    </id>
+    <property name ="RowNumber" not-null ="true" />
+    <property name ="Cpus" not-null ="true" />
+    <property name ="ProteinDatabase" not-null ="true" />
+    <property name ="JobName" not-null ="true" />
+    <property name ="OutputDirectory" not-null ="true" />
+    <property name ="StartTime" not-null ="false" />
+    <property name ="EndTime" not-null ="false" />
+    <property name ="CurrentStatus" not-null ="true" />
+    <many-to-one name ="InitialConfigFile" column ="ConfigId" not-null ="false" class ="ConfigFile" />
+    <many-to-one name ="TagConfigFile" column ="TagConfigId" not-null ="false" class ="ConfigFile" />
+    <bag name ="FileList" table ="InputFile" generic ="true" inverse ="true" cascade ="all-delete-orphan">
+      <key column ="HistoryItemId" />
+      <one-to-many class ="InputFile" />
+    </bag>
+  </class>
+
+  <class name ="InputFile"
+         table="InputFile">
+    <id name ="InputFileId">
+      <generator class ="native" />
+    </id>
+    <property name ="FilePath" not-null ="true" />
+    <many-to-one name ="HistoryItem" column ="HistoryItemId" not-null ="true" class ="HistoryItem" />
+  </class>
+  
+  
+</hibernate-mapping>

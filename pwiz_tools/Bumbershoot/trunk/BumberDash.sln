@@ -3,10 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BumberDash", "BumberDash\BumberDash.csproj", "{0C577381-C63D-418D-AB7B-5BF97CE76B1A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataMapping", "DataMapping\DataMapping.csproj", "{F512EB76-39C4-422D-B2A8-392731E7E068}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataAccess", "DataAccess\DataAccess.csproj", "{E6FC8881-CEB2-4EFB-AEF3-670BBB75880F}"
-EndProject
 Project("{54435603-DBB4-11D2-8724-00A0C9A8B90C}") = "BumberDashInstall", "BumberDashInstall\BumberDashInstall.vdproj", "{E80D5304-5C39-4B73-999D-CA79ABDEA09B}"
 EndProject
 Global
@@ -19,17 +15,8 @@ Global
 		{0C577381-C63D-418D-AB7B-5BF97CE76B1A}.Debug|Any CPU.Build.0 = Debug|x86
 		{0C577381-C63D-418D-AB7B-5BF97CE76B1A}.Release|Any CPU.ActiveCfg = Release|x86
 		{0C577381-C63D-418D-AB7B-5BF97CE76B1A}.Release|Any CPU.Build.0 = Release|x86
-		{F512EB76-39C4-422D-B2A8-392731E7E068}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F512EB76-39C4-422D-B2A8-392731E7E068}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F512EB76-39C4-422D-B2A8-392731E7E068}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F512EB76-39C4-422D-B2A8-392731E7E068}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E6FC8881-CEB2-4EFB-AEF3-670BBB75880F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E6FC8881-CEB2-4EFB-AEF3-670BBB75880F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E6FC8881-CEB2-4EFB-AEF3-670BBB75880F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E6FC8881-CEB2-4EFB-AEF3-670BBB75880F}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E80D5304-5C39-4B73-999D-CA79ABDEA09B}.Debug|Any CPU.ActiveCfg = Debug
 		{E80D5304-5C39-4B73-999D-CA79ABDEA09B}.Release|Any CPU.ActiveCfg = Release
-		{E80D5304-5C39-4B73-999D-CA79ABDEA09B}.Release|Any CPU.Build.0 = Release
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
