@@ -25,6 +25,7 @@
 #include "MzIdentMLFile.hpp"
 #include "TextWriter.hpp"
 #include "Serializer_mzid.hpp"
+#include "Serializer_pepXML.hpp"
 #include "DefaultReaderList.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
@@ -98,7 +99,7 @@ shared_ptr<ostream> openFile(const string& filename)
 }
 
 
-void writeStream(ostream& os, const MzIdentML& td, const MzIdentMLFile::WriteConfig& config)
+void writeStream(ostream& os, const MzIdentML& td, const string& filename, const MzIdentMLFile::WriteConfig& config)
 {
     switch (config.format)
     {
@@ -115,6 +116,13 @@ void writeStream(ostream& os, const MzIdentML& td, const MzIdentMLFile::WriteCon
             break;
         }
 
+        case MzIdentMLFile::Format_pepXML:
+        {
+            Serializer_pepXML serializer;
+            serializer.write(os, td, filename);
+            break;
+        }
+
         default:
             throw runtime_error("[MzIdentMLFile::write()] Format not implemented.");
     }
@@ -126,11 +134,11 @@ void writeStream(ostream& os, const MzIdentML& td, const MzIdentMLFile::WriteCon
 
 PWIZ_API_DECL
 void MzIdentMLFile::write(const MzIdentML& td,
-                        const string& filename,
-                        const WriteConfig& config)
+                          const string& filename,
+                          const WriteConfig& config)
 {
     shared_ptr<ostream> os = openFile(filename);
-    writeStream(*os, td, config);
+    writeStream(*os, td, filename, config);
 }
 
 
@@ -142,7 +150,10 @@ PWIZ_API_DECL ostream& operator<<(ostream& os, MzIdentMLFile::Format format)
             os << "Text";
             return os;
         case MzIdentMLFile::Format_MzIdentML:
-            os << "traML";
+            os << "mzIdentML";
+            return os;
+        case MzIdentMLFile::Format_pepXML:
+            os << "pepXML";
             return os;
         default:
             os << "Unknown";

@@ -43,7 +43,7 @@ struct PWIZ_API_DECL MzIdentMLFile : public MzIdentML
                  const Reader* reader = 0);
 
     /// data format for write()
-    enum PWIZ_API_DECL Format {Format_Text, Format_MzIdentML};
+    enum PWIZ_API_DECL Format {Format_Text, Format_MzIdentML, Format_pepXML};
 
     /// configuration for write()
     struct PWIZ_API_DECL WriteConfig
