@@ -47,7 +47,7 @@ void writeList(minimxml::XMLWriter& writer, const vector<object_type>& objects,
     if (!objects.empty())
     {
         XMLWriter::Attributes attributes;
-        //attributes.push_back(make_pair("count", lexical_cast<string>(objects.size())));
+        //attributes.add("count", objects.size());
         if (!label.empty())
             writer.startElement(label, attributes);
         for (typename vector<object_type>::const_iterator it=objects.begin(); it!=objects.end(); ++it)
@@ -64,7 +64,7 @@ void writePtrList(minimxml::XMLWriter& writer, const vector<object_type>& object
     if (!objectPtrs.empty())
     {
         XMLWriter::Attributes attributes;
-        //attributes.push_back(make_pair("count", lexical_cast<string>(objectPtrs.size())));
+        //attributes.add("count", objectPtrs.size());
         if (!label.empty())
         writer.startElement(label, attributes);
         for (typename vector<object_type>::const_iterator it=objectPtrs.begin(); it!=objectPtrs.end(); ++it)
@@ -82,10 +82,10 @@ void writePtrList(minimxml::XMLWriter& writer, const vector<object_type>& object
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const CV& cv)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("id", cv.id));
-    attributes.push_back(make_pair("fullName", cv.fullName));
-    attributes.push_back(make_pair("version", cv.version));
-    attributes.push_back(make_pair("URI", cv.URI));
+    attributes.add("id", cv.id);
+    attributes.add("fullName", cv.fullName);
+    attributes.add("version", cv.version);
+    attributes.add("URI", cv.URI);
     writer.startElement("cv", attributes, XMLWriter::EmptyElement);
 }
 
@@ -124,15 +124,15 @@ PWIZ_API_DECL void read(std::istream& is, CV& cv)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const CVParam& cvParam)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("cvRef", cvTermInfo(cvParam.cvid).prefix()));
-    attributes.push_back(make_pair("accession", cvTermInfo(cvParam.cvid).id));
-    attributes.push_back(make_pair("name", cvTermInfo(cvParam.cvid).name));
-    attributes.push_back(make_pair("value", cvParam.value));
+    attributes.add("cvRef", cvTermInfo(cvParam.cvid).prefix());
+    attributes.add("accession", cvTermInfo(cvParam.cvid).id);
+    attributes.add("name", cvTermInfo(cvParam.cvid).name);
+    attributes.add("value", cvParam.value);
     if (cvParam.units != CVID_Unknown)
     {
-        attributes.push_back(make_pair("unitCvRef", cvTermInfo(cvParam.units).prefix()));
-        attributes.push_back(make_pair("unitAccession", cvTermInfo(cvParam.units).id));
-        attributes.push_back(make_pair("unitName", cvTermInfo(cvParam.units).name));
+        attributes.add("unitCvRef", cvTermInfo(cvParam.units).prefix());
+        attributes.add("unitAccession", cvTermInfo(cvParam.units).id);
+        attributes.add("unitName", cvTermInfo(cvParam.units).name);
     }
     writer.startElement("cvParam", attributes, XMLWriter::EmptyElement);
 }
@@ -178,15 +178,15 @@ struct HandlerCVParam : public SAXParser::Handler
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const UserParam& userParam)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("name", userParam.name));
+    attributes.add("name", userParam.name);
     if (!userParam.value.empty())
-        attributes.push_back(make_pair("value", userParam.value));
+        attributes.add("value", userParam.value);
     if (!userParam.type.empty())
-        attributes.push_back(make_pair("type", userParam.type));
+        attributes.add("type", userParam.type);
     if (userParam.units != CVID_Unknown)
     {
-        attributes.push_back(make_pair("unitAccession", cvTermInfo(userParam.units).id));
-        attributes.push_back(make_pair("unitName", cvTermInfo(userParam.units).name));
+        attributes.add("unitAccession", cvTermInfo(userParam.units).id);
+        attributes.add("unitName", cvTermInfo(userParam.units).name);
     }
 
     writer.startElement("userParam", attributes, XMLWriter::EmptyElement);
@@ -313,9 +313,9 @@ struct HandlerNamedParamContainer : public HandlerParamContainer
 // Adds attributes for IdentifiableType child classes.
 void addIdAttributes(const IdentifiableType& id, XMLWriter::Attributes& attributes)
 {
-    attributes.push_back(make_pair("id", id.id));
+    attributes.add("id", id.id);
     if (!id.name.empty())
-        attributes.push_back(make_pair("name", id.name));
+        attributes.add("name", id.name);
 }
 
 //
@@ -390,7 +390,7 @@ PWIZ_API_DECL void read(std::istream& is, IdentifiableType& it)
 void addExternalDataAttributes(const ExternalData& ed, XMLWriter::Attributes& attributes)
 {
     addIdAttributes(ed, attributes);
-    attributes.push_back(make_pair("location", ed.location));
+    attributes.add("location", ed.location);
 }
 //
 // BibliographicReference
@@ -401,15 +401,15 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const BibliographicReferen
 {
     XMLWriter::Attributes attributes;
     addIdAttributes(br, attributes);
-    attributes.push_back(make_pair("authors", br.authors));
-    attributes.push_back(make_pair("publication", br.publication));
-    attributes.push_back(make_pair("publisher", br.publisher));
-    attributes.push_back(make_pair("editor", br.editor));
-    attributes.push_back(make_pair("year", lexical_cast<string>(br.year)));
-    attributes.push_back(make_pair("volume", br.volume));
-    attributes.push_back(make_pair("issue", br.issue));
-    attributes.push_back(make_pair("pages", br.pages));
-    attributes.push_back(make_pair("title", br.title));
+    attributes.add("authors", br.authors);
+    attributes.add("publication", br.publication);
+    attributes.add("publisher", br.publisher);
+    attributes.add("editor", br.editor);
+    attributes.add("year", br.year);
+    attributes.add("volume", br.volume);
+    attributes.add("issue", br.issue);
+    attributes.add("pages", br.pages);
+    attributes.add("title", br.title);
     
     writer.startElement("BibliographicReference", attributes, XMLWriter::EmptyElement);
 }
@@ -467,12 +467,12 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const DBSequence& ds)
 {
     XMLWriter::Attributes attributes;
     addIdAttributes(ds, attributes);
-    //attributes.push_back(make_pair("id", ds.id));
+    //attributes.add("id", ds.id);
     if (ds.length > 0)
-        attributes.push_back(make_pair("length", lexical_cast<string>(ds.length)));
-    attributes.push_back(make_pair("accession", ds.accession));
+        attributes.add("length", ds.length);
+    attributes.add("accession", ds.accession);
     if (ds.searchDatabasePtr.get())
-        attributes.push_back(make_pair("SearchDatabase_ref", ds.searchDatabasePtr->id));
+        attributes.add("SearchDatabase_ref", ds.searchDatabasePtr->id);
     
     if (!ds.paramGroup.empty() || !ds.seq.empty())
     {
@@ -599,13 +599,13 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Modification& mod)
 {
     XMLWriter::Attributes attributes;
     if (mod.location > 0)
-        attributes.push_back(make_pair("location", lexical_cast<string>(mod.location)));
+        attributes.add("location", mod.location);
     if (!mod.residues.empty())
-        attributes.push_back(make_pair("residues", mod.residues));
+        attributes.add("residues", mod.residues);
     if (mod.avgMassDelta > 0)
-        attributes.push_back(make_pair("avgMassDelta", lexical_cast<string>(mod.avgMassDelta)));
+        attributes.add("avgMassDelta", mod.avgMassDelta);
     //if (mod.monoisotopicMassDelta > 0)
-    attributes.push_back(make_pair("monoisotopicMassDelta", lexical_cast<string>(mod.monoisotopicMassDelta)));
+    attributes.add("monoisotopicMassDelta", mod.monoisotopicMassDelta);
 
 
     XMLWriter::EmptyElementTag elementTag = mod.paramGroup.empty() ?
@@ -674,15 +674,15 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SubstitutionModifica
 {
     XMLWriter::Attributes attributes;
     if (!sm.originalResidue.empty())
-        attributes.push_back(make_pair("originalResidue", sm.originalResidue));
+        attributes.add("originalResidue", sm.originalResidue);
     if (!sm.replacementResidue.empty())
-        attributes.push_back(make_pair("replacementResidue", sm.replacementResidue));
+        attributes.add("replacementResidue", sm.replacementResidue);
     if (sm.location != 0)
-        attributes.push_back(make_pair("location", boost::lexical_cast<string>(sm.location)));
+        attributes.add("location", boost::lexical_cast<string>(sm.location));
     if (sm.avgMassDelta != 0)
-        attributes.push_back(make_pair("avgMassDelta", boost::lexical_cast<string>(sm.avgMassDelta)));
+        attributes.add("avgMassDelta", boost::lexical_cast<string>(sm.avgMassDelta));
     if (sm.monoisotopicMassDelta != 0)
-        attributes.push_back(make_pair("monoisotopicMassDelta", boost::lexical_cast<string>(sm.monoisotopicMassDelta)));
+        attributes.add("monoisotopicMassDelta", boost::lexical_cast<string>(sm.monoisotopicMassDelta));
     
     writer.startElement("SubstitutionModification", attributes, XMLWriter::EmptyElement);
 }
@@ -926,15 +926,15 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ContactPtr cp)
     addIdAttributes(*cp, attributes);
 
     if (!cp->address.empty())
-        attributes.push_back(make_pair("address", cp->address));
+        attributes.add("address", cp->address);
     if (!cp->phone.empty())
-        attributes.push_back(make_pair("phone", cp->phone));
+        attributes.add("phone", cp->phone);
     if (!cp->email.empty())
-        attributes.push_back(make_pair("email", cp->email));
+        attributes.add("email", cp->email);
     if (!cp->fax.empty())
-        attributes.push_back(make_pair("fax", cp->fax));
+        attributes.add("fax", cp->fax);
     if (!cp->tollFreePhone.empty())
-        attributes.push_back(make_pair("tollFreePhone", cp->tollFreePhone));
+        attributes.add("tollFreePhone", cp->tollFreePhone);
 
     if (dynamic_cast<Person*>(cp.get()))
     {
@@ -942,9 +942,9 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ContactPtr cp)
         /*
         const Person* pp = (Person*)cp.get();
 
-        attributes.push_back(make_pair("lastName", pp->lastName));
-        attributes.push_back(make_pair("firstName", pp->firstName));
-        attributes.push_back(make_pair("midInitials", pp->midInitials));
+        attributes.add("lastName", pp->lastName);
+        attributes.add("firstName", pp->firstName);
+        attributes.add("midInitials", pp->midInitials);
 
         writer.startElement("Person", attributes,
         XMLWriter::EmptyElement);
@@ -1016,7 +1016,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer,
                          const Affiliations& affiliations)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("Organization_ref", affiliations.organizationPtr->id));
+    attributes.add("Organization_ref", affiliations.organizationPtr->id);
 
     writer.startElement("affiliations", attributes, XMLWriter::EmptyElement);
 }
@@ -1068,19 +1068,19 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer,
     XMLWriter::Attributes attributes;
     addIdAttributes(pp, attributes);
     if (!pp.address.empty())
-        attributes.push_back(make_pair("address", pp.address));
+        attributes.add("address", pp.address);
     if (!pp.phone.empty())
-        attributes.push_back(make_pair("phone", pp.phone));
+        attributes.add("phone", pp.phone);
     if (!pp.email.empty())
-        attributes.push_back(make_pair("email", pp.email));
+        attributes.add("email", pp.email);
     if (!pp.fax.empty())
-        attributes.push_back(make_pair("fax", pp.fax));
+        attributes.add("fax", pp.fax);
     if (!pp.tollFreePhone.empty())
-        attributes.push_back(make_pair("tollFreePhone", pp.tollFreePhone));
+        attributes.add("tollFreePhone", pp.tollFreePhone);
     
-    attributes.push_back(make_pair("lastName", pp.lastName));
-    attributes.push_back(make_pair("firstName", pp.firstName));
-    attributes.push_back(make_pair("midInitials", pp.midInitials));
+    attributes.add("lastName", pp.lastName);
+    attributes.add("firstName", pp.firstName);
+    attributes.add("midInitials", pp.midInitials);
     
     writer.startElement("Person", attributes);
     for(vector<Affiliations>::const_iterator it=pp.affiliations.begin();
@@ -1166,15 +1166,15 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer,
     
     addIdAttributes(op, attributes);
     if (!op.address.empty())
-        attributes.push_back(make_pair("address", op.address));
+        attributes.add("address", op.address);
     if (!op.phone.empty())
-        attributes.push_back(make_pair("phone", op.phone));
+        attributes.add("phone", op.phone);
     if (!op.email.empty())
-        attributes.push_back(make_pair("email", op.email));
+        attributes.add("email", op.email);
     if (!op.fax.empty())
-        attributes.push_back(make_pair("fax", op.fax));
+        attributes.add("fax", op.fax);
     if (!op.tollFreePhone.empty())
-        attributes.push_back(make_pair("tollFreePhone", op.tollFreePhone));
+        attributes.add("tollFreePhone", op.tollFreePhone);
 
     XMLWriter::EmptyElementTag elementTag = op.parent.empty() ?
         XMLWriter::EmptyElement : XMLWriter::NotEmptyElement;
@@ -1273,7 +1273,7 @@ struct HandlerContactVector : public SAXParser::Handler
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ContactRole& cr)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("Contact_ref", cr.contactPtr->id));
+    attributes.add("Contact_ref", cr.contactPtr->id);
 
     writer.startElement("ContactRole", attributes);
     writer.startElement("role");
@@ -1345,9 +1345,9 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const AnalysisSoftware& an
     XMLWriter::Attributes attributes;
     addIdAttributes(anal, attributes);
     if (!anal.version.empty())
-        attributes.push_back(make_pair("version", anal.version));
+        attributes.add("version", anal.version);
     if (!anal.URI.empty())
-        attributes.push_back(make_pair("URI", anal.URI));
+        attributes.add("URI", anal.URI);
 
     writer.startElement("AnalysisSoftware", attributes);
 
@@ -1443,7 +1443,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
     if (sip.spectrumIdentificationListPtr.get())
         attributes.push_back(make_pair("SpectrumIdentificationList_ref",
                                        sip.spectrumIdentificationListPtr->id));
-    attributes.push_back(make_pair("activityDate", sip.activityDate));
+    attributes.add("activityDate", sip.activityDate);
 
     writer.startElement("SpectrumIdentification", attributes);
 
@@ -1453,7 +1453,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
         if (!(*it).get()) continue;
 
         attributes.clear();
-        attributes.push_back(make_pair("SpectraData_ref", (*it)->id));
+        attributes.add("SpectraData_ref", (*it)->id);
         writer.startElement("InputSpectra", attributes, XMLWriter::EmptyElement);
     }
 
@@ -1463,7 +1463,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
         if (!(*it).get()) continue;
         
         attributes.clear();
-        attributes.push_back(make_pair("SearchDatabase_ref", (*it)->id));
+        attributes.add("SearchDatabase_ref", (*it)->id);
         writer.startElement("SearchDatabase", attributes, XMLWriter::EmptyElement);
     }
     
@@ -1536,10 +1536,10 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinDetection& pd
     XMLWriter::Attributes attributes;
     addIdAttributes(pd, attributes);
     if (pd.proteinDetectionProtocolPtr.get())
-        attributes.push_back(make_pair("ProteinDetectionProtocol_ref", pd.proteinDetectionProtocolPtr->id));
+        attributes.add("ProteinDetectionProtocol_ref", pd.proteinDetectionProtocolPtr->id);
     if (pd.proteinDetectionListPtr.get())
-        attributes.push_back(make_pair("ProteinDetectionList_ref", pd.proteinDetectionListPtr->id));
-    attributes.push_back(make_pair("activityDate", pd.activityDate));
+        attributes.add("ProteinDetectionList_ref", pd.proteinDetectionListPtr->id);
+    attributes.add("activityDate", pd.activityDate);
     
     writer.startElement("ProteinDetection", attributes);
 
@@ -1550,7 +1550,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinDetection& pd
             continue;
         
         attributes.clear();
-        attributes.push_back(make_pair("SpectrumIdentificationList_ref", (*it)->id));
+        attributes.add("SpectrumIdentificationList_ref", (*it)->id);
         writer.startElement("InputSpectrumIdentifications", attributes, XMLWriter::EmptyElement);
     }
     
@@ -1762,7 +1762,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Sample::subSample& s
 {
     XMLWriter::Attributes attributes;
     if (sc.samplePtr.get())
-        attributes.push_back(make_pair("Sample_ref", sc.samplePtr->id));
+        attributes.add("Sample_ref", sc.samplePtr->id);
     
     writer.startElement("subSample", attributes, XMLWriter::EmptyElement);
 }
@@ -1845,13 +1845,13 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const EnzymePtr& ez)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Enzyme& ez)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("id", ez.id));
+    attributes.add("id", ez.id);
     if (!ez.cTermGain.empty())
-        attributes.push_back(make_pair("CTermGain", ez.cTermGain));
+        attributes.add("CTermGain", ez.cTermGain);
     if (!ez.nTermGain.empty())
-        attributes.push_back(make_pair("NTermGain", ez.nTermGain));
+        attributes.add("NTermGain", ez.nTermGain);
     if (ez.semiSpecific != indeterminate)
-        attributes.push_back(make_pair("semiSpecific", ez.semiSpecific ? "true" : "false"));
+        attributes.add("semiSpecific", ez.semiSpecific ? "true" : "false");
     if (ez.missedCleavages != 0)
         attributes.push_back(
             make_pair("missedCleavages",
@@ -1976,7 +1976,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Enzymes& ez)
 {
     XMLWriter::Attributes attributes;
     if (!indeterminate(ez.independent))
-        attributes.push_back(make_pair("independent", ez.independent ? "true" : "false"));
+        attributes.add("independent", ez.independent ? "true" : "false");
     
     writer.startElement("Enzymes", attributes);
 
@@ -2041,8 +2041,8 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Residue& residue)
 {
     XMLWriter::Attributes attributes;
 
-    attributes.push_back(make_pair("Code", residue.Code));
-    attributes.push_back(make_pair("Mass", lexical_cast<string>(residue.Mass)));
+    attributes.add("Code", residue.Code);
+    attributes.add("Mass", residue.Mass);
 
     writer.startElement("Residue", attributes, XMLWriter::EmptyElement);
 }
@@ -2099,7 +2099,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const AmbiguousResiduePtr 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const AmbiguousResidue& residue)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("Code", residue.Code));
+    attributes.add("Code", residue.Code);
     
     writer.startElement("AmbiguousResidue", attributes);
     writeParamContainer(writer, residue.params);
@@ -2158,8 +2158,8 @@ PWIZ_API_DECL void read(std::istream& is, AmbiguousResidue& residue)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const MassTable& mt)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("id", mt.id));
-    attributes.push_back(make_pair("msLevel", mt.msLevel));
+    attributes.add("id", mt.id);
+    attributes.add("msLevel", mt.msLevel);
     
     writer.startElement("MassTable", attributes);
 
@@ -2225,8 +2225,8 @@ PWIZ_API_DECL void read(std::istream& is, MassTable& mt)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ModParam& mp)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("massDelta", lexical_cast<string>(mp.massDelta)));
-    attributes.push_back(make_pair("residues", mp.residues));
+    attributes.add("massDelta", mp.massDelta);
+    attributes.add("residues", mp.residues);
 
     if (!mp.cvParams.empty())
     {
@@ -2280,7 +2280,7 @@ PWIZ_API_DECL void read(std::istream& is, ModParam& mp)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SearchModification& sm)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("fixedMod", sm.fixedMod ? "true" : "false"));
+    attributes.add("fixedMod", sm.fixedMod ? "true" : "false");
     
     writer.startElement("SearchModification", attributes);
     write(writer, sm.modParam);
@@ -2514,7 +2514,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const DatabaseTranslation&
 {
     XMLWriter::Attributes attributes;
     if (!dt.frames.empty())
-        attributes.push_back(make_pair("frames", dt.getFrames()));
+        attributes.add("frames", dt.getFrames());
 
     writer.startElement("DatabaseTranslation", attributes);
 
@@ -2590,7 +2590,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
     XMLWriter::Attributes attributes;
     addIdAttributes(si, attributes);
     if (si.analysisSoftwarePtr.get() && !si.analysisSoftwarePtr->empty())
-        attributes.push_back(make_pair("AnalysisSoftware_ref", si.analysisSoftwarePtr->id));
+        attributes.add("AnalysisSoftware_ref", si.analysisSoftwarePtr->id);
 
     writer.startElement("SpectrumIdentificationProtocol", attributes);
 
@@ -2989,7 +2989,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectraData& sd)
 {
     XMLWriter::Attributes attributes;
     addIdAttributes(sd, attributes);
-    attributes.push_back(make_pair("location", sd.location));
+    attributes.add("location", sd.location);
 
     writer.startElement("SpectraData", attributes);
 
@@ -3125,9 +3125,9 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SearchDatabase& sd)
     XMLWriter::Attributes attributes;
     addExternalDataAttributes(sd, attributes);
     if (!sd.version.empty())
-        attributes.push_back(make_pair("version", sd.version));
+        attributes.add("version", sd.version);
     if (!sd.releaseDate.empty())
-        attributes.push_back(make_pair("releaseDate", sd.releaseDate));
+        attributes.add("releaseDate", sd.releaseDate);
     if (sd.numDatabaseSequences>0)
         attributes.push_back(
             make_pair("numDatabaseSequences",
@@ -3243,7 +3243,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SourceFile& sf)
     XMLWriter::Attributes attributes;
     addIdAttributes(sf, attributes);
     if (!sf.location.empty())
-        attributes.push_back(make_pair("location", sf.location));
+        attributes.add("location", sf.location);
 
     writer.startElement("SourceFile", attributes);
 
@@ -3446,8 +3446,8 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinDetectionHypo
     XMLWriter::Attributes attributes;
     addIdAttributes(pdh, attributes);
     if (pdh.dbSequencePtr.get() && !pdh.dbSequencePtr->empty())
-        attributes.push_back(make_pair("DBSequence_ref", pdh.dbSequencePtr->id));
-    attributes.push_back(make_pair("passThreshold", pdh.passThreshold ? "true" : "false"));
+        attributes.add("DBSequence_ref", pdh.dbSequencePtr->id);
+    attributes.add("passThreshold", pdh.passThreshold ? "true" : "false");
 
     writer.startElement("ProteinDetectionHypothesis", attributes);
     for(vector<PeptideEvidencePtr>::const_iterator it=pdh.peptideHypothesis.begin();
@@ -3667,26 +3667,26 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const PeptideEvidence& pep
     XMLWriter::Attributes attributes;
     addIdAttributes(pep, attributes);
     if (pep.dbSequencePtr.get() && !pep.dbSequencePtr->empty())
-        attributes.push_back(make_pair("DBSequence_Ref", pep.dbSequencePtr->id));
+        attributes.add("DBSequence_Ref", pep.dbSequencePtr->id);
 
     // don't output these optional attributes if they haven't been set
     if (pep.start > 0 || pep.end > pep.start)
     {
-        attributes.push_back(make_pair("start", lexical_cast<string>(pep.start)));
-        attributes.push_back(make_pair("end", lexical_cast<string>(pep.end)));
+        attributes.add("start", pep.start);
+        attributes.add("end", pep.end);
     }
 
     if (!pep.pre.empty())
-        attributes.push_back(make_pair("pre", pep.pre));
+        attributes.add("pre", pep.pre);
     if (!pep.post.empty())
-        attributes.push_back(make_pair("post", pep.post));
+        attributes.add("post", pep.post);
     if (pep.translationTablePtr.get() && !pep.translationTablePtr->empty())
-        attributes.push_back(make_pair("TranslationTable_ref", pep.translationTablePtr->id));
+        attributes.add("TranslationTable_ref", pep.translationTablePtr->id);
     if (pep.frame != 0)
-        attributes.push_back(make_pair("frame", lexical_cast<string>(pep.frame)));
-    attributes.push_back(make_pair("isDecoy", pep.isDecoy  ? "true" : "false"));
+        attributes.add("frame", pep.frame);
+    attributes.add("isDecoy", pep.isDecoy  ? "true" : "false");
     if (pep.missedCleavages != 0)
-        attributes.push_back(make_pair("missedCleavages", lexical_cast<string>(pep.missedCleavages)));
+        attributes.add("missedCleavages", pep.missedCleavages);
 
     if (!pep.paramGroup.empty())
     {
@@ -3802,9 +3802,9 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const FragmentArrayPtr fa)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const FragmentArray& fa)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("values", fa.getValues()));
+    attributes.add("values", fa.getValues());
     if (fa.measurePtr.get() && !fa.measurePtr->empty())
-        attributes.push_back(make_pair("Measure_ref", fa.measurePtr->id));
+        attributes.add("Measure_ref", fa.measurePtr->id);
     
     writer.startElement("FragmentArray", attributes, XMLWriter::EmptyElement);
 }
@@ -3865,8 +3865,8 @@ PWIZ_API_DECL void read(std::istream& is, FragmentArray& fa)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const IonType& itype)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("index", itype.getIndex()));
-    attributes.push_back(make_pair("charge", lexical_cast<string>(itype.charge)));
+    attributes.add("index", itype.getIndex());
+    attributes.add("charge", itype.charge);
 
     writer.startElement("IonType", attributes);
 
@@ -3946,19 +3946,19 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
 {
     XMLWriter::Attributes attributes;
     addIdAttributes(siip, attributes);
-    attributes.push_back(make_pair("chargeState", lexical_cast<string>(siip.chargeState)));
-    attributes.push_back(make_pair("experimentalMassToCharge", lexical_cast<string>(siip.experimentalMassToCharge)));
-    attributes.push_back(make_pair("calculatedMassToCharge", lexical_cast<string>(siip.calculatedMassToCharge)));
-    if (siip.calculatedPI > 0)
-        attributes.push_back(make_pair("calculatedPI", lexical_cast<string>(siip.calculatedPI)));
+    attributes.add("rank", siip.rank);
+    attributes.add("chargeState", siip.chargeState);
     if (siip.peptidePtr.get() && !siip.peptidePtr->empty())
-        attributes.push_back(make_pair("Peptide_ref", siip.peptidePtr->id));
-    attributes.push_back(make_pair("rank", lexical_cast<string>(siip.rank)));
-    attributes.push_back(make_pair("passThreshold", (siip.passThreshold ? "true" : "false")));
+        attributes.add("Peptide_ref", siip.peptidePtr->id);
+    attributes.add("experimentalMassToCharge", siip.experimentalMassToCharge);
+    attributes.add("calculatedMassToCharge", siip.calculatedMassToCharge);
+    if (siip.calculatedPI > 0)
+        attributes.add("calculatedPI", siip.calculatedPI);
+    attributes.add("passThreshold", (siip.passThreshold ? "true" : "false"));
     if (siip.massTablePtr.get() && !siip.massTablePtr->empty())
-        attributes.push_back(make_pair("MassTable_ref", siip.massTablePtr->id));
+        attributes.add("MassTable_ref", siip.massTablePtr->id);
     if (siip.samplePtr.get() && !siip.samplePtr->empty())
-        attributes.push_back(make_pair("Sample_ref", siip.samplePtr->id));
+        attributes.add("Sample_ref", siip.samplePtr->id);
 
 
     writer.startElement("SpectrumIdentificationItem", attributes);
@@ -4085,9 +4085,9 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
 {
     XMLWriter::Attributes attributes;
     addIdAttributes(sirp, attributes);
-    attributes.push_back(make_pair("spectrumID", sirp.spectrumID));
+    attributes.add("spectrumID", sirp.spectrumID);
     if (sirp.spectraDataPtr.get() && !sirp.spectraDataPtr->empty())
-        attributes.push_back(make_pair("SpectraData_ref", sirp.spectraDataPtr->id));
+        attributes.add("SpectraData_ref", sirp.spectraDataPtr->id);
 
     if (sirp.paramGroup.empty() && sirp.spectrumIdentificationItem.empty())
         writer.startElement("SpectrumIdentificationResult", attributes, XMLWriter::EmptyElement);
@@ -4239,7 +4239,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
 {
     XMLWriter::Attributes attributes;
     addIdAttributes(silp, attributes);
-    attributes.push_back(make_pair("numSequencesSearched", lexical_cast<string>(silp.numSequencesSearched)));
+    attributes.add("numSequencesSearched", silp.numSequencesSearched);
     
     writer.startElement("SpectrumIdentificationList", attributes);
 
@@ -4509,8 +4509,8 @@ void write(minimxml::XMLWriter& writer, const MzIdentML& mzid)
     XMLWriter::Attributes attributes;
     addIdAttributes(mzid, attributes);
 
-    attributes.push_back(make_pair("creationDate", mzid.creationDate));
-    attributes.push_back(make_pair("version", mzid.version()));
+    attributes.add("creationDate", mzid.creationDate);
+    attributes.add("version", mzid.version());
 
 
     attributes.push_back(make_pair("xsi:schemaLocation",
