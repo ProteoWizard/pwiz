@@ -325,10 +325,12 @@ namespace pwiz.Skyline.Model
                         if (diff.DiffTransitionProps)
                         {
                             var tran = nodeTranResult.Transition;
+                            var annotations = nodeTranResult.Annotations;
                             var losses = nodeTranResult.Losses;
                             double massH = settingsNew.GetFragmentMass(TransitionGroup.LabelType, mods, tran);
                             var info = TransitionDocNode.GetLibInfo(tran, Transition.CalcMass(massH, losses), transitionRanks);
-                            nodeTranResult = new TransitionDocNode(tran, losses, massH, info);
+                            var results = nodeTranResult.Results;
+                            nodeTranResult = new TransitionDocNode(tran, annotations, losses, massH, info, results);
 
                             Helpers.AssignIfEquals(ref nodeTranResult, (TransitionDocNode) existing);
                         }
