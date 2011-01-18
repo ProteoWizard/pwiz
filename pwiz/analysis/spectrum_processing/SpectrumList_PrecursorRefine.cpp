@@ -28,7 +28,7 @@
 
 #include "SpectrumList_PrecursorRefine.hpp"
 #include "pwiz/analysis/passive/MSDataCache.hpp"
-#include "pwiz/chemistry/MZTolerance.hpp"
+#include "pwiz/utility/chemistry/MZTolerance.hpp"
 #include "pwiz/data/vendor_readers/Agilent/SpectrumList_Agilent.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include <fstream>
