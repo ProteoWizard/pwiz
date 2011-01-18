@@ -75,7 +75,7 @@ void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile, i
         for (int iii=1; iii <= experimentCount; ++iii)
         {
             ExperimentPtr msExperiment = wifffile->getExperiment(sample, ii, iii);
-            if (msExperiment->getScanType() != MRM)
+            if (msExperiment->getScanType() != MRM) // TODO: ExperimentType
                 msd.fileDescription.fileContent.set(translateAsSpectrumType(msExperiment->getScanType()));
             else
                 msd.fileDescription.fileContent.set(MS_SRM_chromatogram);
@@ -193,9 +193,9 @@ void copyProteinPilotDLLs()
     if (!bfs::exists(callingExecutablePath / "ABSciex.DataAccess.WiffFileDataReader.dll"))
     {
         // copy the ProteinPilot DLLs if it is installed, else throw an exception informing the user to download it
-        char* programFilesPath = ::getenv("ProgramFiles");
+        string programFilesPath = env::get("ProgramFiles");
         bfs::path proteinPilotPath;
-        if (!programFilesPath)
+        if (programFilesPath.empty())
         {
             if (bfs::exists("C:/Program Files(x86)"))
                 proteinPilotPath = "C:/Program Files(x86)/Applied Biosystems MDS Analytical Technologies/ProteinPilot";
@@ -220,10 +220,10 @@ void copyProteinPilotDLLs()
         else // couldn't find Protein Pilot 3; try finding a Skyline installation
         {
             // Windows Vista/7 have %LOCALAPPDATA%
-            string localAppDataPath = ::getenv("LOCALAPPDATA");
+            string localAppDataPath = env::get("LOCALAPPDATA");
 
             // Windows 2000/XP have %APPDATA%\Local Settings
-            if (localAppDataPath.empty()) localAppDataPath = string(::getenv("USERPROFILE")) + "\\Local Settings";
+            if (localAppDataPath.empty()) localAppDataPath = env::get("USERPROFILE") + "\\Local Settings";
 
             if (localAppDataPath.empty())
                 throw runtime_error("[Reader_ABI::ctor] When trying to find Skyline, the Local Settings directory could not be found!");

@@ -26,6 +26,7 @@
 // note that Filesystem.hpp is not included since it depends on Filesystem.cpp
 
 #include "pwiz/utility/misc/Exception.hpp"
+#include "pwiz/utility/misc/Environment.hpp"
 #include "pwiz/utility/misc/Container.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/utility/misc/Stream.hpp"
