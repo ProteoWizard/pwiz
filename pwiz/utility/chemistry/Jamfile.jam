@@ -28,6 +28,7 @@ lib pwiz_utility_chemistry
         IsotopeCalculator.cpp 
         IsotopeEnvelopeEstimator.cpp 
         IsotopeTable.cpp
+        MZTolerance.cpp
     : # requirements
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
         <library>/ext/boost//thread
@@ -37,6 +38,7 @@ lib pwiz_utility_chemistry
     ;
 
 
+unit-test-if-exists MZToleranceTest : MZToleranceTest.cpp pwiz_utility_chemistry ; 
 unit-test-if-exists ChemistryTest : ChemistryTest.cpp pwiz_utility_chemistry ; 
 unit-test-if-exists IsotopeCalculatorTest : IsotopeCalculatorTest.cpp pwiz_utility_chemistry ; 
 unit-test-if-exists IsotopeEnvelopeEstimatorTest : IsotopeEnvelopeEstimatorTest.cpp pwiz_utility_chemistry ;

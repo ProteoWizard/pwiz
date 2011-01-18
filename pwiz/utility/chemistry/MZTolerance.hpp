@@ -29,7 +29,7 @@
 
 
 namespace pwiz {
-namespace analysis {
+namespace chemistry {
 
 
 ///
@@ -64,7 +64,7 @@ PWIZ_API_DECL bool isWithinTolerance(double a, double b, const MZTolerance& tole
 PWIZ_API_DECL bool lessThanTolerance(double a, double b, const MZTolerance& tolerance);
 
 
-} // namespace analysis
+} // namespace chemistry
 } // namespace pwiz
 
 

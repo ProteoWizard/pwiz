@@ -24,7 +24,6 @@
 #define _PEAKELGROWER_HPP_
 
 
-#include "MZTolerance.hpp"
 #include "MZRTField.hpp"
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/misc/PeakData.hpp"

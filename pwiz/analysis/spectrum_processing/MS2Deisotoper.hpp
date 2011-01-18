@@ -25,11 +25,14 @@
 
 
 #include "pwiz/analysis/common/DataFilter.hpp"
-#include "pwiz/analysis/peakdetect/MZTolerance.hpp"
+#include "pwiz/utility/chemistry/MZTolerance.hpp"
 
 
 namespace pwiz {
 namespace analysis {
+
+
+using chemistry::MZTolerance;
 
 
 // Deisotope high resolution ms2 spectra

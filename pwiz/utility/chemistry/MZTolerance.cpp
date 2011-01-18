@@ -28,7 +28,7 @@
 
 
 namespace pwiz {
-namespace analysis {
+namespace chemistry {
 
 
 PWIZ_API_DECL ostream& operator<<(ostream& os, const MZTolerance& mzt)
@@ -44,10 +44,10 @@ PWIZ_API_DECL istream& operator>>(istream& is, MZTolerance& mzt)
     string temp;
     is >> mzt.value >> temp;
 
-    transform(temp.begin(), temp.end(), temp.begin(), ::toupper);
-    if (temp == "MZ") mzt.units = MZTolerance::MZ;
-    else if (temp == "PPM") mzt.units = MZTolerance::PPM;
-    else throw runtime_error(("[MZTolerance::operator>>] Unable to parse units: " + temp).c_str());
+    bal::to_lower(temp);
+    if (temp == "mz" || temp == "m/z" || bal::starts_with(temp, "da")) mzt.units = MZTolerance::MZ;
+    else if (temp == "ppm") mzt.units = MZTolerance::PPM;
+    else throw runtime_error("[MZTolerance::operator>>] Unable to parse units: " + temp);
 
     return is;
 }
@@ -110,7 +110,5 @@ PWIZ_API_DECL bool lessThanTolerance(double a, double b, const MZTolerance& tole
 }
 
 
-} // namespace analysis
+} // namespace chemistry
 } // namespace pwiz
-
-

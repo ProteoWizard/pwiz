@@ -29,6 +29,7 @@
 
 using namespace pwiz::util;
 using namespace pwiz::analysis;
+using namespace pwiz::chemistry;
 using namespace pwiz::data::peakdata;
 
 

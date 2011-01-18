@@ -25,7 +25,7 @@
 
 
 #include "pwiz/analysis/common/DataFilter.hpp"
-#include "pwiz/analysis/peakdetect/MZTolerance.hpp"
+#include "pwiz/utility/chemistry/MZTolerance.hpp"
 #include "pwiz/utility/chemistry/Chemistry.hpp"
 
 
@@ -99,8 +99,12 @@ static const char* defaultNeutralLossFormulae[] = {
 };
 
 
+using chemistry::MZTolerance;
+
+
 struct PWIZ_API_DECL PrecursorMassFilter : public SpectrumDataFilter
 {
+
     /// PrecursorMassFilter's parameters
     struct PWIZ_API_DECL Config
     {

@@ -25,9 +25,9 @@
 #define _MZRTFIELD_HPP_
 
 
-#include "MZTolerance.hpp"
-#include "pwiz/data/misc/PeakData.hpp"
 #include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/data/misc/PeakData.hpp"
+#include "pwiz/utility/chemistry/MZTolerance.hpp"
 #include "boost/shared_ptr.hpp"
 #include "boost/concept/assert.hpp"
 #include "boost/concept/usage.hpp"
@@ -37,6 +37,9 @@
 
 namespace pwiz {
 namespace analysis {
+
+
+using chemistry::MZTolerance;
 
 
 namespace {
