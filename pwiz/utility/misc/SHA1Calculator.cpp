@@ -140,9 +140,9 @@ PWIZ_API_DECL string SHA1Calculator::hash(istream& is)
     is.clear();
     is.seekg(0);
     unsigned char buffer[65535];
-    size_t bytesRead;
-    while (is && (bytesRead = is.readsome(reinterpret_cast<char*>(buffer), 65535)) > 0)
-        sha1.Update(buffer, static_cast<UINT_32>(bytesRead));
+    while (is && is.read(reinterpret_cast<char*>(buffer), 65535))
+        sha1.Update(buffer, 65535u);
+    sha1.Update(buffer, is.gcount());
     sha1.Final();
     return formatHash(sha1);
 }

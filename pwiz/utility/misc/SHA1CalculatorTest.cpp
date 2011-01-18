@@ -72,7 +72,7 @@ void testStream()
 {
     istringstream is(textBrown_);
     string hash = SHA1Calculator::hash(is);
-    if (os_) *os_ << "hash file: " << hash << endl;
+    if (os_) *os_ << "hash stream: " << hash << endl;
     unit_assert(hash == "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12");
 }
 
@@ -84,9 +84,18 @@ void testFile()
     os << textBrown_; 
     os.close();
 
-    string hash = SHA1Calculator::hashFile(filename);
-    if (os_) *os_ << "hash file: " << hash << endl;
-    unit_assert(hash == "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12");
+    {
+        string hash = SHA1Calculator::hashFile(filename);
+        if (os_) *os_ << "hash file: " << hash << endl;
+        unit_assert(hash == "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12");
+    }
+
+    {
+        ifstream filestream(filename, ios::binary);
+        string hash = SHA1Calculator::hash(filestream);
+        if (os_) *os_ << "hash stream: " << hash << endl;
+        unit_assert(hash == "2fd4e1c67a2d28fced849ee1bb76e7391b93eb12");
+    }
 
     boost::filesystem::remove(filename);
 }
