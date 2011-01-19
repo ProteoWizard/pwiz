@@ -70,12 +70,14 @@ namespace pwiz.Topograph.ui.Forms
         private void btnRegenerateChromatograms_Click(object sender, EventArgs e)
         {
             UpdateWorkspaceVersion(Workspace.SavedWorkspaceVersion.IncMassVersion());
+            Workspace.ChromatogramGenerator.SetRequeryPending();
             RefreshStats();
         }
 
         private void btnRecalculateResults_Click(object sender, EventArgs e)
         {
             UpdateWorkspaceVersion(Workspace.SavedWorkspaceVersion.IncChromatogramPeakVersion());
+            Workspace.ResultCalculator.SetRequeryPending();
             RefreshStats();
         }
 

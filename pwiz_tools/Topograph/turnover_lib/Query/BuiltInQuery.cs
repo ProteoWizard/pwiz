@@ -43,8 +43,8 @@ namespace pwiz.Topograph.Query
             "Peptide Areas",
             string.Join("\n", new[]
             {
-                "Select SUM(P.TotalArea) * MIN(D.Score) AS Area,",
-	            "MIN(D.Score) AS Score,",
+                "Select SUM(P.TotalArea) AS Area,",
+	            "P.PeptideFileAnalysis.DeconvolutionScore as Score,",
 	            "P.PeptideFileAnalysis.MsDataFile.Name AS File,",
 	            "P.PeptideFileAnalysis.MsDataFile.TimePoint AS TimePoint,",
 	            "P.PeptideFileAnalysis.MsDataFile.Cohort AS Cohort,",
