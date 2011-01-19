@@ -21,7 +21,7 @@
 
 
 #include <stdexcept>
-#include <sstream>
+#include <boost/lexical_cast.hpp>
 #include <cstdlib>
 
 
@@ -39,10 +39,7 @@ T get(const char* name, const T& defaultValue)
     T value(defaultValue);
     char* result = ::getenv(name);
     if (result)
-    {
-        std::istringstream ss(result);
-        ss >> value;
-    }
+        value = boost::lexical_cast<T>(result);
     return value;
 }
 
