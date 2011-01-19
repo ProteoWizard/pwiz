@@ -64,6 +64,8 @@ namespace pwiz.Topograph.ui.Forms
 
         private void btnOK_Click(object sender, EventArgs e)
         {
+            int unreadableFiles = 0;
+            int checkedItems = 0;
             TurnoverForm.Instance.EnsureDataDirectory(Workspace);
             var msDataFiles = new List<MsDataFile>();
             for (int i = 0; i < MsDataFiles.Count; i++)
@@ -72,10 +74,47 @@ namespace pwiz.Topograph.ui.Forms
                 {
                     continue;
                 }
+                checkedItems++;
                 var msDataFile = MsDataFiles[i];
                 if (MsDataFileUtil.InitMsDataFile(Workspace, msDataFile))
                 {
                     msDataFiles.Add(msDataFile);
+                }
+                else
+                {
+                    unreadableFiles++;
+                }
+            }
+            if (checkedItems == 0)
+            {
+                return;
+            }
+            if (unreadableFiles > 0)
+            {
+                if (msDataFiles.Count == 0)
+                {
+                    var dlgResult = MessageBox.Show(this,
+                                                    unreadableFiles +
+                                                    " of the data files could not be read.  Do you want to process the remaining files?",
+                                                    Program.AppName, MessageBoxButtons.YesNoCancel);
+                    if (dlgResult == DialogResult.Cancel)
+                    {
+                        return;
+                    }
+                    if (dlgResult == DialogResult.No)
+                    {
+                        Close();
+                        return;
+                    }
+                }
+                else
+                {
+                    var dlgResult = MessageBox.Show("None of the selected files could be read.  Make sure the data directory setting is correct.", Program.AppName, MessageBoxButtons.OKCancel);
+                    if (dlgResult == DialogResult.OK)
+                    {
+                        Close();
+                    }
+                    return;
                 }
             }
             if (msDataFiles.Count > 0)

@@ -423,7 +423,7 @@ namespace pwiz.Topograph.Model
         {
             if (!PeptideFileAnalysis.FirstDetectedScan.HasValue || !PeptideFileAnalysis.LastDetectedScan.HasValue)
             {
-                return double.MaxValue;
+                return 1;
             }
             var tracerChromatograms = GetTracerChromatograms();
             double firstDetectedTime = tracerChromatograms.Chromatograms.TimeFromScanIndex(PeptideFileAnalysis.FirstDetectedScan.Value);

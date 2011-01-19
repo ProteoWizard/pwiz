@@ -35,6 +35,7 @@
             this.colDetail = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.btnClear = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
+            this.btnCopy = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.SuspendLayout();
             // 
@@ -95,11 +96,22 @@
             this.label1.TabIndex = 2;
             this.label1.Text = "These are the errors that have occurred while this program has been running";
             // 
+            // btnCopy
+            // 
+            this.btnCopy.Location = new System.Drawing.Point(105, 34);
+            this.btnCopy.Name = "btnCopy";
+            this.btnCopy.Size = new System.Drawing.Size(124, 23);
+            this.btnCopy.TabIndex = 3;
+            this.btnCopy.Text = "Copy To Clipboard";
+            this.btnCopy.UseVisualStyleBackColor = true;
+            this.btnCopy.Click += new System.EventHandler(this.btnCopy_Click);
+            // 
             // ErrorForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(751, 264);
+            this.Controls.Add(this.btnCopy);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.btnClear);
             this.Controls.Add(this.dataGridView1);
@@ -121,5 +133,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn colDetail;
         private System.Windows.Forms.Button btnClear;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Button btnCopy;
     }
 }

@@ -49,9 +49,9 @@
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.label6 = new System.Windows.Forms.Label();
             this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.btnChoosePercolatorResults = new System.Windows.Forms.Button();
-            this.label7 = new System.Windows.Forms.Label();
             this.tbxMaxQValue = new System.Windows.Forms.TextBox();
+            this.label7 = new System.Windows.Forms.Label();
+            this.btnChoosePercolatorResults = new System.Windows.Forms.Button();
             this.tableLayoutPanel1.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
@@ -294,15 +294,14 @@
             this.groupBox3.TabStop = false;
             this.groupBox3.Text = "Percolator Combined Results";
             // 
-            // btnChoosePercolatorResults
+            // tbxMaxQValue
             // 
-            this.btnChoosePercolatorResults.Location = new System.Drawing.Point(411, 57);
-            this.btnChoosePercolatorResults.Name = "btnChoosePercolatorResults";
-            this.btnChoosePercolatorResults.Size = new System.Drawing.Size(183, 23);
-            this.btnChoosePercolatorResults.TabIndex = 0;
-            this.btnChoosePercolatorResults.Text = "Choose Percolator Results...";
-            this.btnChoosePercolatorResults.UseVisualStyleBackColor = true;
-            this.btnChoosePercolatorResults.Click += new System.EventHandler(this.btnChoosePercolatorResults_Click);
+            this.tbxMaxQValue.Location = new System.Drawing.Point(130, 29);
+            this.tbxMaxQValue.Name = "tbxMaxQValue";
+            this.tbxMaxQValue.Size = new System.Drawing.Size(452, 20);
+            this.tbxMaxQValue.TabIndex = 2;
+            this.tbxMaxQValue.Text = "0.01";
+            this.tbxMaxQValue.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
             // label7
             // 
@@ -313,14 +312,15 @@
             this.label7.TabIndex = 1;
             this.label7.Text = "Maximum Q Value:";
             // 
-            // tbxMaxQValue
+            // btnChoosePercolatorResults
             // 
-            this.tbxMaxQValue.Location = new System.Drawing.Point(130, 29);
-            this.tbxMaxQValue.Name = "tbxMaxQValue";
-            this.tbxMaxQValue.Size = new System.Drawing.Size(452, 20);
-            this.tbxMaxQValue.TabIndex = 2;
-            this.tbxMaxQValue.Text = "0.01";
-            this.tbxMaxQValue.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.btnChoosePercolatorResults.Location = new System.Drawing.Point(411, 57);
+            this.btnChoosePercolatorResults.Name = "btnChoosePercolatorResults";
+            this.btnChoosePercolatorResults.Size = new System.Drawing.Size(183, 23);
+            this.btnChoosePercolatorResults.TabIndex = 0;
+            this.btnChoosePercolatorResults.Text = "Choose Percolator Results...";
+            this.btnChoosePercolatorResults.UseVisualStyleBackColor = true;
+            this.btnChoosePercolatorResults.Click += new System.EventHandler(this.btnChoosePercolatorResults_Click);
             // 
             // AddSearchResultsForm
             // 

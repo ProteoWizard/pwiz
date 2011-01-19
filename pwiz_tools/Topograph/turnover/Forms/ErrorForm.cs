@@ -71,5 +71,24 @@ namespace pwiz.Topograph.ui.Forms
             dataGridView1.Rows.Clear();
             ErrorHandler.ClearErrors();
         }
+
+        private void btnCopy_Click(object sender, EventArgs e)
+        {
+            var str = new StringBuilder();
+            for (int irow = 0; irow < dataGridView1.Rows.Count; irow++)
+            {
+                var row = dataGridView1.Rows[irow];
+                var tab = "";
+                for (int icol = 0; icol < row.Cells.Count; icol++ )
+                {
+                    str.Append(tab);
+                    tab = "\t";
+                    var cell = row.Cells[icol];
+                    str.Append(cell.FormattedValue);
+                }
+                str.Append("\r\n");
+            }
+            Clipboard.SetText(str.ToString());
+        }
     }
 }

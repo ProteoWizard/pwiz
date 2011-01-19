@@ -229,9 +229,14 @@ namespace pwiz.Topograph.MsData
                     dbWorkspace = (DbWorkspace) session.CreateCriteria(typeof (DbWorkspace)).UniqueResult();
                 }
 
-                var peptideAnalysisIdsToSnapshot = new HashSet<long>(activePeptideAnalyses.Keys.Where(id=>activePeptideAnalyses[id].Value && activePeptideAnalyses[id].Key == null));
+                var peptideAnalysisIdsToSnapshot = new HashSet<long>(activePeptideAnalyses.Keys.Where(
+                    id=>activePeptideAnalyses[id].Value && (activePeptideAnalyses[id].Key == null || peptideAnalysisIds.Contains(id))));
                 var peptideAnalysisIdsToSnapshotWithoutChromatograms =
-                    new HashSet<long>(activePeptideAnalyses.Keys.Where(id => !activePeptideAnalyses[id].Value && activePeptideAnalyses[id].Key == null));
+                    new HashSet<long>(
+                        activePeptideAnalyses.Keys.Where(
+                            id =>
+                            !activePeptideAnalyses[id].Value && 
+                            (activePeptideAnalyses[id].Key == null || peptideAnalysisIds.Contains(id))));
                 foreach (var entry in activePeptideAnalyses)
                 {
                     if (entry.Value.Value)
