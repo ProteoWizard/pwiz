@@ -1121,7 +1121,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_48FA651F8AA742F5A71E4242CB83CEBB"
             {
-            "SourcePath" = "8:..\\BumberDash\\obj\\x86\\Debug\\BumberDash.exe"
+            "SourcePath" = "8:..\\BumberDash\\obj\\Release\\BumberDash.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_91D61D268CBE4A548BF3AADB80E64F8B"
