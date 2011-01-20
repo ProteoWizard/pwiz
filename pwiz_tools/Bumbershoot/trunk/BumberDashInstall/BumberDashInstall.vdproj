@@ -586,14 +586,14 @@
         {
         "Name" = "8:Microsoft Visual Studio"
         "ProductName" = "8:BumberDash"
-        "ProductCode" = "8:{2ADD2C2C-FC82-4CDD-998C-DD7B1FFEF138}"
-        "PackageCode" = "8:{135CAD40-3517-4CE9-AA84-00157E993BAE}"
+        "ProductCode" = "8:{9862128D-FAC0-4C52-9EB2-EC32C926F182}"
+        "PackageCode" = "8:{5AE7E6CE-3C62-496C-9A72-5A976BCF1FD4}"
         "UpgradeCode" = "8:{5E0E2BAA-8F65-4B7F-A50B-C81A7EA0A00A}"
         "RestartWWWService" = "11:FALSE"
         "RemovePreviousVersions" = "11:TRUE"
         "DetectNewerInstalledVersion" = "11:FALSE"
         "InstallAllUsers" = "11:TRUE"
-        "ProductVersion" = "8:1.0.2"
+        "ProductVersion" = "8:1.2.1"
         "Manufacturer" = "8:Bumbershoot"
         "ARPHELPTELEPHONE" = "8:"
         "ARPHELPLINK" = "8:"
@@ -1121,7 +1121,7 @@
         {
             "{5259A561-127C-4D43-A0A1-72F10C7B3BF8}:_48FA651F8AA742F5A71E4242CB83CEBB"
             {
-            "SourcePath" = "8:..\\BumberDash\\obj\\Release\\BumberDash.exe"
+            "SourcePath" = "8:..\\BumberDash\\obj\\x86\\Release\\BumberDash.exe"
             "TargetName" = "8:"
             "Tag" = "8:"
             "Folder" = "8:_91D61D268CBE4A548BF3AADB80E64F8B"
