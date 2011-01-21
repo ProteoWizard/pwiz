@@ -248,15 +248,24 @@ namespace pwiz.Skyline.Controls.SeqNode
                 throw new InvalidOperationException("Invalid attempt to get choices for a node that has not been added to the tree yet.");
 
             var listChildrenNew = GetChoices(DocNode, DocSettings, nodePep.ExplicitMods, useFilter);
-            var nodeGroup = (TransitionGroupDocNode) DocNode.ChangeChildrenChecked(listChildrenNew);
+            // Existing transitions must be part of the first settings change to ensure proper
+            // handling of user set peak boundaries.
+            MergeChosen(listChildrenNew, useFilter, node => ((TransitionDocNode)node).Key);
+            var nodeGroup = (TransitionGroupDocNode)DocNode.ChangeChildrenChecked(listChildrenNew);
+            // Update results on the group to correctly handle user set peak boundaries
+            var diff = new SrmSettingsDiff(DocSettings, true);
+            nodeGroup = nodeGroup.UpdateResults(DocSettings, diff, DocNode);
             
             // Make sure any properties that depend on peptide relationships,
             // like ratios get updated.
             nodePep = (PeptideDocNode)nodePep.ReplaceChild(nodeGroup);
             int iGroup = nodePep.Children.IndexOf(nodeGroup);
-            nodePep = nodePep.ChangeSettings(DocSettings, SrmSettingsDiff.PROPS);
+            diff = new SrmSettingsDiff(diff, SrmSettingsDiff.PROPS);
+            nodePep = nodePep.ChangeSettings(DocSettings, diff);
             nodeGroup = (TransitionGroupDocNode) nodePep.Children[iGroup];
             listChildrenNew = new List<DocNode>(nodeGroup.Children);
+            // Merge with existing transitions again to avoid changes based on the settings
+            // updates.
             MergeChosen(listChildrenNew, useFilter, node => ((TransitionDocNode)node).Key);
             return listChildrenNew;
         }

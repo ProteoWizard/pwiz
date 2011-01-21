@@ -22,7 +22,6 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -1799,30 +1798,32 @@ namespace pwiz.Skyline
 
         #region Help menu
 
-        private static void homeMenuItem_Click(object sender, EventArgs e)
+// ReSharper disable MemberCanBeMadeStatic.Local
+        private void homeMenuItem_Click(object sender, EventArgs e)
         {
             Process.Start("http://proteome.gs.washington.edu/software/skyline/");
         }
 
-        private static void videosMenuItem_Click(object sender, EventArgs e)
+        private void videosMenuItem_Click(object sender, EventArgs e)
         {
             Process.Start("http://proteome.gs.washington.edu/software/Skyline/videos.html");
         }
 
-        private static void tutorialsMenuItem_Click(object sender, EventArgs e)
+        private void tutorialsMenuItem_Click(object sender, EventArgs e)
         {
             Process.Start("http://proteome.gs.washington.edu/software/Skyline/tutorials.html");
         }
 
-        private static void supportMenuItem_Click(object sender, EventArgs e)
+        private void supportMenuItem_Click(object sender, EventArgs e)
         {
             Process.Start("http://proteome.gs.washington.edu/software/Skyline/support.html");
         }
 
-        private static void issuesMenuItem_Click(object sender, EventArgs e)
+        private void issuesMenuItem_Click(object sender, EventArgs e)
         {
             Process.Start("http://proteome.gs.washington.edu/software/Skyline/issues.html");
         }
+// ReSharper restore MemberCanBeMadeStatic.Local
 
         private void aboutMenuItem_Click(object sender, EventArgs e)
         {
@@ -1853,10 +1854,12 @@ namespace pwiz.Skyline
             }
         }
 
-        private static void splitMain_SplitterMoved(object sender, SplitterEventArgs e)
+// ReSharper disable MemberCanBeMadeStatic.Local
+        private void splitMain_SplitterMoved(object sender, SplitterEventArgs e)
         {
             Settings.Default.SplitMainX = e.SplitX;
         }
+// ReSharper restore MemberCanBeMadeStatic.Local
 
         private static Control GetFocused(Control.ControlCollection controls)
         {

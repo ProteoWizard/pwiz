@@ -326,10 +326,12 @@ namespace pwiz.Skyline.Model
                         if (diff.DiffTransitionProps)
                         {
                             var tran = nodeTranResult.Transition;
+                            var annotations = nodeTranResult.Annotations;
                             var losses = nodeTranResult.Losses;
                             double massH = settingsNew.GetFragmentMass(TransitionGroup.LabelType, mods, tran);
                             var info = TransitionDocNode.GetLibInfo(tran, Transition.CalcMass(massH, losses), transitionRanks);
-                            nodeTranResult = new TransitionDocNode(tran, losses, massH, info);
+                            var results = nodeTranResult.Results;
+                            nodeTranResult = new TransitionDocNode(tran, annotations, losses, massH, info, results);
 
                             Helpers.AssignIfEquals(ref nodeTranResult, (TransitionDocNode) existing);
                         }
@@ -474,7 +476,7 @@ namespace pwiz.Skyline.Model
             return Children.ToDictionary(child => ((TransitionDocNode) child).Key);
         }
 
-        private TransitionGroupDocNode UpdateResults(SrmSettings settingsNew, SrmSettingsDiff diff,
+        public TransitionGroupDocNode UpdateResults(SrmSettings settingsNew, SrmSettingsDiff diff,
                                                      TransitionGroupDocNode nodePrevious)
         {
             // Make sure no results are present, if the new settings has no results
@@ -521,7 +523,19 @@ namespace pwiz.Skyline.Model
                     }
                 }
 
-                float mzMatchTolerance = (float) settingsNew.TransitionSettings.Instrument.MzMatchTolerance;
+                // Store keys for previous children in a set, if the children have changed due
+                // to a user action, and not simply loading (when nodePrevious may be null).
+                HashSet<TransitionLossKey> setTranPrevious = null;
+                if (nodePrevious != null && !AreEquivalentChildren(Children, nodePrevious.Children) &&
+                    // Only necessry if children were added
+                    Children.Count > nodePrevious.Children.Count)
+                {
+                    setTranPrevious = new HashSet<TransitionLossKey>(
+                        from child in nodePrevious.Children
+                        select ((TransitionDocNode)child).Key);
+                }
+
+                float mzMatchTolerance = (float)settingsNew.TransitionSettings.Instrument.MzMatchTolerance;
                 var measuredResults = settingsNew.MeasuredResults;
                 var listChromSets = measuredResults.Chromatograms;
                 var resultsCalc = new TransitionGroupResultsCalculator(this, listChromSets, dictChromIdIndex);
@@ -539,13 +553,13 @@ namespace pwiz.Skyline.Model
                         // If there is existing results information, and it was set
                         // by the user, then preserve it, and skip automatic peak picking
                         var resultOld = Results != null ? Results[indexOld] : null;
-                        if (resultOld != null && (UserSetResults(resultOld) ||
+                        if (resultOld != null && ((UserSetResults(resultOld) && setTranPrevious == null) ||
                                                   // or this set of results is not yet loaded
                                                   !chromatograms.IsLoaded ||
                                                   // or not forcing a full recalc of all peaks, chromatograms have not
                                                   // changed and the node has not otherwise changed yet.
                                                   // (happens while loading results)
-                                                  (!diff.DiffResultsAll &&
+                                                  (!diff.DiffResultsAll && settingsOld != null &&
                                                    ReferenceEquals(chromatograms, settingsOld.MeasuredResults.Chromatograms[indexOld]) &&
                                                    Equals(this, nodePrevious))))
                         {
@@ -562,7 +576,15 @@ namespace pwiz.Skyline.Model
                         }
                     }
 
-                    if (measuredResults.TryLoadChromatogram(chromatograms, this, mzMatchTolerance, false, out arrayChromInfo))
+                    // Check for any user set transitions in the previous node that
+                    // should be used to set peak boundaries on any new nodes.
+                    Dictionary<int, TransitionChromInfo> dictUserSetInfoBest =
+                        (setTranPrevious != null && indexOld != -1)
+                             ? FindBestUserSetInfo(nodePrevious, indexOld)
+                             : null;
+                    
+                    bool loadPoints = (dictUserSetInfoBest != null);
+                    if (measuredResults.TryLoadChromatogram(chromatograms, this, mzMatchTolerance, loadPoints, out arrayChromInfo))
                     {
                         // Make sure each file only appears once in the list, since downstream
                         // code has problems with multiple measurements in the same file.
@@ -592,7 +614,7 @@ namespace pwiz.Skyline.Model
                             // Use existing information, if it is still equivalent to the
                             // chosen peak.
                             var results = nodeTran.HasResults && indexOld != -1 ?
-                                                                                    nodeTran.Results[indexOld] : null;
+                                nodeTran.Results[indexOld] : null;
 
                             var listTranInfo = new List<TransitionChromInfo>();
                             for (int j = 0; j < countGroupInfos; j++)
@@ -602,7 +624,7 @@ namespace pwiz.Skyline.Model
                                 int fileIndex = fileIndexes[j];
 
                                 ChromatogramInfo[] infos = chromGroupInfo.GetAllTransitionInfo((float)nodeTran.Mz,
-                                                                                               mzMatchTolerance, chromatograms.OptimizationFunction);
+                                    mzMatchTolerance, chromatograms.OptimizationFunction);
 
                                 // Always add the right number of steps to the list, no matter
                                 // how many entries were returned.
@@ -620,13 +642,37 @@ namespace pwiz.Skyline.Model
 
                                     // Check for existing info that was set by the user.
                                     int step = i - numSteps;
+                                    bool userSet = false;
                                     var chromInfo = FindChromInfo(results, fileIndex, step);
                                     if (chromInfo == null || !chromInfo.UserSet)
                                     {
-                                        ChromPeak peak = (info != null && info.BestPeakIndex != -1 ?
-                                                                                                       info.GetPeak(info.BestPeakIndex) : ChromPeak.EMPTY);
-                                        if (!integrateAll && peak.IsForcedIntegration)
-                                            peak = ChromPeak.EMPTY;
+                                        ChromPeak peak = ChromPeak.EMPTY;
+                                        if (info != null)
+                                        {
+                                            // If the peak boundaries have been set by the user, and this transition
+                                            // was not present previously, make sure it gets the same peak boundaries.
+                                            TransitionChromInfo chromInfoBest;
+                                            if (dictUserSetInfoBest != null &&
+                                                    dictUserSetInfoBest.TryGetValue(fileIndex, out chromInfoBest) &&
+                                                    !setTranPrevious.Contains(nodeTran.Key))
+                                            {
+                                                int startIndex = info.IndexOfNearestTime(chromInfoBest.StartRetentionTime);
+                                                int endIndex = info.IndexOfNearestTime(chromInfoBest.EndRetentionTime);
+                                                ChromPeak.FlagValues flags = 0;
+                                                if (settingsNew.MeasuredResults.IsTimeNormalArea)
+                                                    flags = ChromPeak.FlagValues.time_normalized;
+                                                peak = info.CalcPeak(startIndex, endIndex, flags);
+                                                userSet = true;
+                                            }
+                                            // Otherwize use the best peak chosen at import time
+                                            else
+                                            {
+                                                if (info.BestPeakIndex != -1)
+                                                    peak = info.GetPeak(info.BestPeakIndex);
+                                                if (!integrateAll && peak.IsForcedIntegration)
+                                                    peak = ChromPeak.EMPTY;
+                                            }
+                                        }
 
                                         // Avoid creating new info objects that represent the same data
                                         // in use before.
@@ -634,12 +680,10 @@ namespace pwiz.Skyline.Model
                                         {
                                             // Use the old ratio for now, and it will be corrected by the peptide,
                                             // if it is incorrect.
-                                            IList<float?> ratios = (chromInfo != null ?
-                                                                                          chromInfo.Ratios
-                                                                        :
-                                                                            new float?[settingsNew.PeptideSettings.Modifications.InternalStandardTypes.Count]);
+                                            IList<float?> ratios = (chromInfo != null ? chromInfo.Ratios :
+                                                new float?[settingsNew.PeptideSettings.Modifications.InternalStandardTypes.Count]);
 
-                                            chromInfo = new TransitionChromInfo(fileIndex, step, peak, ratios, false);
+                                            chromInfo = new TransitionChromInfo(fileIndex, step, peak, ratios, userSet);
                                         }
                                     }
 
@@ -661,6 +705,41 @@ namespace pwiz.Skyline.Model
 
                 return resultsCalc.UpdateTransitionGroupNode(this);
             }
+        }
+
+        /// <summary>
+        /// Find the <see cref="TransitionChromInfo"/> set by the user with the largest
+        /// peak area for each file represented in a specific result set.
+        /// </summary>
+        private static Dictionary<int, TransitionChromInfo> FindBestUserSetInfo(TransitionGroupDocNode nodeGroup, int indexResult)
+        {
+            Dictionary<int, TransitionChromInfo> dictInfo = null;
+
+            foreach (TransitionDocNode nodeTran in nodeGroup.Children)
+            {
+                if (!nodeTran.HasResults)
+                    continue;
+
+                foreach (var chromInfo in nodeTran.Results[indexResult])
+                {
+                    if (!chromInfo.UserSet || chromInfo.OptimizationStep != 0)
+                        continue;
+
+                    if (dictInfo == null)
+                        dictInfo = new Dictionary<int, TransitionChromInfo>();
+
+                    TransitionChromInfo chromInfoBest;
+                    if (dictInfo.TryGetValue(chromInfo.FileIndex, out chromInfoBest))
+                    {
+                        if (chromInfoBest.Area >= chromInfo.Area)
+                            continue;
+                        dictInfo.Remove(chromInfoBest.FileIndex);
+                    }
+                    dictInfo.Add(chromInfo.FileIndex, chromInfo);
+                }
+            }
+
+            return dictInfo;
         }
 
         private static TransitionChromInfo FindChromInfo(IEnumerable<TransitionChromInfo> results, int fileIndex, int step)
@@ -1131,7 +1210,7 @@ namespace pwiz.Skyline.Model
         }
 
         public DocNode ChangePeak(SrmSettings settings,
-                                  ChromatogramGroupInfo chromInfoGroup,
+                                  ChromatogramGroupInfo chromGroupInfo,
                                   double mzMatchTolerance,
                                   int indexSet,
                                   int indexFile,
@@ -1150,7 +1229,7 @@ namespace pwiz.Skyline.Model
             {
                 if (tranId != null && !ReferenceEquals(tranId, nodeTran.Id))
                     continue;
-                var chromInfo = chromInfoGroup.GetTransitionInfo((float)nodeTran.Mz, (float)mzMatchTolerance);
+                var chromInfo = chromGroupInfo.GetTransitionInfo((float)nodeTran.Mz, (float)mzMatchTolerance);
                 if (chromInfo == null)
                     continue;
                 int indexPeak = chromInfo.IndexOfPeak(retentionTime);
@@ -1172,7 +1251,7 @@ namespace pwiz.Skyline.Model
             double startMin = double.MaxValue, endMax = double.MinValue;
             foreach (TransitionDocNode nodeTran in Children)
             {
-                var chromInfo = chromInfoGroup.GetTransitionInfo((float)nodeTran.Mz, (float)mzMatchTolerance);
+                var chromInfo = chromGroupInfo.GetTransitionInfo((float)nodeTran.Mz, (float)mzMatchTolerance);
                 if (chromInfo == null)
                     continue;
                 ChromPeak peakNew = chromInfo.GetPeak(indexPeakBest);
@@ -1187,7 +1266,7 @@ namespace pwiz.Skyline.Model
             var listChildrenNew = new List<DocNode>();
             foreach (TransitionDocNode nodeTran in Children)
             {
-                var chromInfoArray = chromInfoGroup.GetAllTransitionInfo(
+                var chromInfoArray = chromGroupInfo.GetAllTransitionInfo(
                     (float)nodeTran.Mz, (float)mzMatchTolerance, regression);
                 // Shouldn't need to update a transition with no chrom info
                 if (chromInfoArray.Length == 0)
@@ -1231,7 +1310,7 @@ namespace pwiz.Skyline.Model
         }
 
         public DocNode ChangePeak(SrmSettings settings,
-                                  ChromatogramGroupInfo chromInfoGroup,
+                                  ChromatogramGroupInfo chromGroupInfo,
                                   double mzMatchTolerance,
                                   int indexSet,
                                   int indexFile,
@@ -1244,8 +1323,8 @@ namespace pwiz.Skyline.Model
 
             // Recalculate peaks based on new boundaries
             var listChildrenNew = new List<DocNode>();
-            int startIndex = chromInfoGroup.IndexOfNearestTime((float)startTime);
-            int endIndex = chromInfoGroup.IndexOfNearestTime((float)endTime);
+            int startIndex = chromGroupInfo.IndexOfNearestTime((float)startTime);
+            int endIndex = chromGroupInfo.IndexOfNearestTime((float)endTime);
             ChromPeak.FlagValues flags = 0;
             if (settings.MeasuredResults.IsTimeNormalArea)
                 flags = ChromPeak.FlagValues.time_normalized;
@@ -1255,7 +1334,7 @@ namespace pwiz.Skyline.Model
                     listChildrenNew.Add(nodeTran);
                 else
                 {
-                    var chromInfoArray = chromInfoGroup.GetAllTransitionInfo(
+                    var chromInfoArray = chromGroupInfo.GetAllTransitionInfo(
                         (float)nodeTran.Mz, (float)mzMatchTolerance, regression);
 
                     // Shouldn't need to update a transition with no chrom info
