@@ -753,7 +753,7 @@ namespace pwiz.Skyline.SettingsUI
             this.Load += new System.EventHandler(this.ViewLibraryDlg_Load);
             this.Shown += new System.EventHandler(this.ViewLibraryDlg_Shown);
             this.Activated += new System.EventHandler(this.ViewLibraryDlg_Activated);
-            this.KeyDown += new System.Windows.Forms.KeyEventHandler(ViewLibraryDlg_KeyDown);
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.ViewLibraryDlg_KeyDown);
             this.splitMain.Panel1.ResumeLayout(false);
             this.splitMain.Panel2.ResumeLayout(false);
             this.splitMain.ResumeLayout(false);

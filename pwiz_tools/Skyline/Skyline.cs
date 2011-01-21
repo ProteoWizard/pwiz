@@ -2599,6 +2599,11 @@ namespace pwiz.Skyline
 
         private void spectralLibrariesToolStripMenuItem_Click(object sender, EventArgs e)
         {
+            ViewSpectralLibraries();
+        }
+
+        public void ViewSpectralLibraries()
+        {
             if (Settings.Default.SpectralLibraryList.Count == 0)
             {
                 var result = MessageBox.Show(this, "No libraries to show. Would you like to add a library?",
@@ -2617,11 +2622,10 @@ namespace pwiz.Skyline
                     var libraries = Document.Settings.PeptideSettings.Libraries.Libraries;
                     var indexLib = libraries.IndexOf(library => library.IsLoaded);
                     var libraryName = indexLib != -1 ? libraries[indexLib].Name : "";
-                    var viewLibraryDlg = new ViewLibraryDlg(_libraryManager, libraryName, this) {Owner = this};
+                    var viewLibraryDlg = new ViewLibraryDlg(_libraryManager, libraryName, this) { Owner = this };
                     viewLibraryDlg.Show();
                 }
             }
-
         }
 
         private void defaultToolStripMenuItem_Click(object sender, EventArgs e)

@@ -630,6 +630,11 @@ namespace pwiz.Skyline
 
         private void observedMzValuesContextMenuItem_Click(object sender, EventArgs e)
         {
+            ToggleObservedMzValues();
+        }
+
+        public void ToggleObservedMzValues()
+        {
             Settings.Default.ShowObservedMz = !Settings.Default.ShowObservedMz;
             UpdateSpectrumGraph();
         }

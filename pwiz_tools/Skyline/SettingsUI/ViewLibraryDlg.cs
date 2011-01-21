@@ -124,7 +124,9 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        public int PeptidesCount { get { return _peptides.Count(); } } 
+        public int PeptidesCount { get { return _peptides.Count(); } }
+
+        public int PeptideDisplayCount { get { return listPeptide.Items.Count; } }
 
         /// <summary>
         /// Constructor for the View Library dialog.
@@ -952,13 +954,23 @@ namespace pwiz.Skyline.SettingsUI
 
         private void aionsContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.ShowAIons = !Settings.Default.ShowAIons;
+            SetAIons(!Settings.Default.ShowAIons);
+        }
+
+        public void SetAIons(bool on)
+        {
+            Settings.Default.ShowAIons = on;
             UpdateUI();
         }
 
         private void bionsContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.ShowBIons = !Settings.Default.ShowBIons;
+            SetBIons(!Settings.Default.ShowBIons);
+        }
+
+        public void SetBIons(bool on)
+        {
+            Settings.Default.ShowBIons = on;
             UpdateUI();
         }
 
@@ -988,7 +1000,12 @@ namespace pwiz.Skyline.SettingsUI
 
         private void precursorIonContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.ShowPrecursorIon = !Settings.Default.ShowPrecursorIon;
+            SetPrecursorIon(!Settings.Default.ShowPrecursorIon);
+        }
+
+        public void SetPrecursorIon(bool on)
+        {
+            Settings.Default.ShowPrecursorIon = on;
             UpdateUI();
         }
 
@@ -1000,7 +1017,12 @@ namespace pwiz.Skyline.SettingsUI
 
         private void charge2ContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.ShowCharge2 = !Settings.Default.ShowCharge2;
+            SetCharge2(!Settings.Default.ShowCharge2);
+        }
+
+        public void SetCharge2(bool on)
+        {
+            Settings.Default.ShowCharge2 = on;
             UpdateUI();
         }
 
@@ -1018,7 +1040,12 @@ namespace pwiz.Skyline.SettingsUI
 
         private void observedMzValuesContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.ShowObservedMz = !Settings.Default.ShowObservedMz;
+            SetObservedMzValues(!Settings.Default.ShowObservedMz);
+        }
+
+        public void SetObservedMzValues(bool on)
+        {
+            Settings.Default.ShowObservedMz = on;
             UpdateUI();
         }
 
@@ -1373,7 +1400,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        private static void ViewLibraryDlg_KeyDown(object sender, KeyEventArgs e)
+        private void ViewLibraryDlg_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Control)
             {
@@ -1525,6 +1552,22 @@ namespace pwiz.Skyline.SettingsUI
         private bool IsMatch(ViewLibraryPepInfo pep, string s)
         {
             return GetUnmodifiedDisplayString(pep).StartsWith(s, StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        #endregion
+
+        #region Test helpers
+
+        public string FilterString
+        {
+            get { return textPeptide.Text; }
+            set { textPeptide.Text = value; }            
+        }
+
+        public int SelectedIndex
+        {
+            get { return listPeptide.SelectedIndex; }
+            set { listPeptide.SelectedIndex = value; }
         }
 
         #endregion
