@@ -608,7 +608,7 @@ namespace pwiz.Skyline.Model.DocSettings
             IonTypes = ParseTypes(reader.GetAttribute(ATTR.fragment_types));
             FragmentRangeFirstName = reader.GetAttribute(ATTR.fragment_range_first);
             FragmentRangeLastName = reader.GetAttribute(ATTR.fragment_range_last);
-            PrecursorMzWindow = reader.GetIntAttribute(ATTR.precursor_mz_window);
+            PrecursorMzWindow = reader.GetDoubleAttribute(ATTR.precursor_mz_window);
             // First, try old misspelling of proline
             bool legacyProline = reader.GetBoolAttribute(ATTR.include_n_prolene);
             // Second, try correct spelling
