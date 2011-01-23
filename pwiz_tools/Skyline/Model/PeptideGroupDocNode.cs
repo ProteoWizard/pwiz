@@ -206,7 +206,7 @@ namespace pwiz.Skyline.Model
             return (PeptideGroupDocNode) result.ChangeChildrenChecked(listChildren);
         }
 
-        private static bool AreEquivalentChildren(IList<DocNode> children1, IList<DocNode> children2)
+        public static bool AreEquivalentChildren(IList<DocNode> children1, IList<DocNode> children2)
         {
             if (children1.Count != children2.Count)
                 return false;

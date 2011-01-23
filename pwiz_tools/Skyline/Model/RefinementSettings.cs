@@ -22,9 +22,18 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 
 namespace pwiz.Skyline.Model
 {
+    [Flags]
+    public enum PickLevel
+    {
+        peptides = 0x1,
+        precursors = 0x2,
+        transitions = 0x4
+    }
+
     public sealed class RefinementSettings
     {
         private bool _removeDuplicatePeptides;
@@ -56,6 +65,10 @@ namespace pwiz.Skyline.Model
         public double? RTRegressionThreshold { get; set; }
         public double? DotProductThreshold { get; set; }
         public bool UseBestResult { get; set; }
+        public PickLevel AutoPickChildrenAll { get; set; }
+        public bool AutoPickPeptidesAll { get { return (AutoPickChildrenAll & PickLevel.peptides) != 0; } }
+        public bool AutoPickPrecursorsAll { get { return (AutoPickChildrenAll & PickLevel.precursors) != 0; } }
+        public bool AutoPickTransitionsAll { get { return (AutoPickChildrenAll & PickLevel.transitions) != 0; } }
 
         public SrmDocument Refine(SrmDocument document)
         {
@@ -80,8 +93,21 @@ namespace pwiz.Skyline.Model
             int minPeptides = MinPeptidesPerProtein ?? 0;
             foreach (PeptideGroupDocNode nodePepGroup in document.Children)
             {
-                PeptideGroupDocNode nodePepGroupRefined =
-                    Refine(nodePepGroup, document, outlierIds,
+                PeptideGroupDocNode nodePepGroupRefined = nodePepGroup;
+                // If auto-managing all peptides, make sure this flag is set correctly,
+                // and update the peptides list, if necessary.
+                if (AutoPickPeptidesAll && !nodePepGroup.AutoManageChildren)
+                {
+                    nodePepGroupRefined = (PeptideGroupDocNode) nodePepGroupRefined.ChangeAutoManageChildren(true);
+                    var settings = document.Settings;
+                    if (!settings.PeptideSettings.Filter.AutoSelect)
+                        settings = settings.ChangePeptideFilter(filter => filter.ChangeAutoSelect(true));
+                    nodePepGroupRefined = nodePepGroupRefined.ChangeSettings(settings,
+                        new SrmSettingsDiff(true, false, false, false, false, false));
+                }
+
+                nodePepGroupRefined =
+                    Refine(nodePepGroupRefined, document, outlierIds,
                         includedPeptides, repeatedPeptides, acceptedPeptides);
 
                 if (nodePepGroupRefined.Children.Count < minPeptides)
@@ -160,7 +186,18 @@ namespace pwiz.Skyline.Model
                     }
                 }
 
-                PeptideDocNode nodePepRefined = Refine(nodePep, document, bestResultIndex);
+                PeptideDocNode nodePepRefined = nodePep;
+                if (AutoPickPrecursorsAll && !nodePep.AutoManageChildren)
+                {
+                    nodePepRefined = (PeptideDocNode) nodePepRefined.ChangeAutoManageChildren(true);
+                    var settings = document.Settings;
+                    if (!settings.TransitionSettings.Filter.AutoSelect)
+                        settings = settings.ChangeTransitionFilter(filter => filter.ChangeAutoSelect(true));
+                    nodePepRefined = nodePepRefined.ChangeSettings(settings,
+                        new SrmSettingsDiff(false, false, true, false, false, false));
+                }
+
+                nodePepRefined = Refine(nodePepRefined, document, bestResultIndex);
                 // Always remove peptides if all precursors have been removed by refinement
                 if (!ReferenceEquals(nodePep, nodePepRefined) && nodePepRefined.Children.Count == 0)
                     continue;
@@ -184,7 +221,11 @@ namespace pwiz.Skyline.Model
                 listPeptides.Add(nodePepRefined);
             }
 
-            return (PeptideGroupDocNode)nodePepGroup.ChangeChildrenChecked(listPeptides.ToArray(), true);
+            // Change the children, but only change auto-management, if the child
+            // identities have changed, not if their contents changed.
+            var childrenNew = listPeptides.ToArray();
+            bool updateAutoManage = !PeptideGroupDocNode.AreEquivalentChildren(nodePepGroup.Children, childrenNew);
+            return (PeptideGroupDocNode)nodePepGroup.ChangeChildrenChecked(childrenNew, updateAutoManage);
         }
 
 // ReSharper disable SuggestBaseTypeForParameter
@@ -220,7 +261,17 @@ namespace pwiz.Skyline.Model
                     }
                 }
 
-                TransitionGroupDocNode nodeGroupRefined = Refine(nodeGroup, bestResultIndex);
+                TransitionGroupDocNode nodeGroupRefined = nodeGroup;
+                if (AutoPickTransitionsAll && !nodeGroup.AutoManageChildren)
+                {
+                    nodeGroupRefined = (TransitionGroupDocNode) nodeGroupRefined.ChangeAutoManageChildren(true);
+                    var settings = document.Settings;
+                    if (!settings.TransitionSettings.Filter.AutoSelect)
+                        settings = settings.ChangeTransitionFilter(filter => filter.ChangeAutoSelect(true));
+                    nodeGroupRefined = nodeGroupRefined.ChangeSettings(settings, nodePep.ExplicitMods,
+                        new SrmSettingsDiff(false, false, false, false, true, false));
+                }
+                nodeGroupRefined = Refine(nodeGroupRefined, bestResultIndex);
                 if (nodeGroupRefined.Children.Count < minTrans)
                     continue;
 
@@ -270,7 +321,11 @@ namespace pwiz.Skyline.Model
             if (addedGroups)
                 listGroups.Sort(Peptide.CompareGroups);
 
-            return (PeptideDocNode) nodePep.ChangeChildrenChecked(listGroups.ToArray(), true);
+            // Change the children, but only change auto-management, if the child
+            // identities have changed, not if their contents changed.
+            var childrenNew = listGroups.ToArray();
+            bool updateAutoManage = !PeptideDocNode.AreEquivalentChildren(nodePep.Children, childrenNew);
+            return (PeptideDocNode) nodePep.ChangeChildrenChecked(childrenNew, updateAutoManage);
         }
 
 // ReSharper disable SuggestBaseTypeForParameter

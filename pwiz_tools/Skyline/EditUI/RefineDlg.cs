@@ -195,7 +195,10 @@ namespace pwiz.Skyline.EditUI
                                          RemoveMissingResults = removeMissingResults,
                                          RTRegressionThreshold = rtRegressionThreshold,
                                          DotProductThreshold = dotProductThreshold,
-                                         UseBestResult = useBestResult
+                                         UseBestResult = useBestResult,
+                                         AutoPickChildrenAll = (cbAutoPeptides.Checked ? PickLevel.peptides : 0) |
+                                                               (cbAutoPrecursors.Checked ? PickLevel.precursors : 0) |
+                                                               (cbAutoTransitions.Checked ? PickLevel.transitions : 0)
                                      };
 
             DialogResult = DialogResult.OK;

@@ -61,6 +61,10 @@
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
+            this.label7 = new System.Windows.Forms.Label();
+            this.cbAutoPeptides = new System.Windows.Forms.CheckBox();
+            this.cbAutoPrecursors = new System.Windows.Forms.CheckBox();
+            this.cbAutoTransitions = new System.Windows.Forms.CheckBox();
             this.tabControl1.SuspendLayout();
             this.tabDocument.SuspendLayout();
             this.tabResults.SuspendLayout();
@@ -83,6 +87,10 @@
             // 
             // tabDocument
             // 
+            this.tabDocument.Controls.Add(this.cbAutoTransitions);
+            this.tabDocument.Controls.Add(this.cbAutoPrecursors);
+            this.tabDocument.Controls.Add(this.cbAutoPeptides);
+            this.tabDocument.Controls.Add(this.label7);
             this.tabDocument.Controls.Add(this.cbAdd);
             this.tabDocument.Controls.Add(this.labelLabelType);
             this.tabDocument.Controls.Add(this.comboRefineLabelType);
@@ -95,7 +103,7 @@
             this.tabDocument.Location = new System.Drawing.Point(4, 22);
             this.tabDocument.Name = "tabDocument";
             this.tabDocument.Padding = new System.Windows.Forms.Padding(3);
-            this.tabDocument.Size = new System.Drawing.Size(387, 445);
+            this.tabDocument.Size = new System.Drawing.Size(387, 452);
             this.tabDocument.TabIndex = 0;
             this.tabDocument.Text = "Document";
             this.tabDocument.UseVisualStyleBackColor = true;
@@ -103,10 +111,10 @@
             // cbAdd
             // 
             this.cbAdd.AutoSize = true;
-            this.cbAdd.Location = new System.Drawing.Point(158, 292);
+            this.cbAdd.Location = new System.Drawing.Point(155, 250);
             this.cbAdd.Name = "cbAdd";
             this.cbAdd.Size = new System.Drawing.Size(45, 17);
-            this.cbAdd.TabIndex = 8;
+            this.cbAdd.TabIndex = 12;
             this.cbAdd.Text = "&Add";
             this.cbAdd.UseVisualStyleBackColor = true;
             this.cbAdd.CheckedChanged += new System.EventHandler(this.cbAdd_CheckedChanged);
@@ -114,25 +122,25 @@
             // labelLabelType
             // 
             this.labelLabelType.AutoSize = true;
-            this.labelLabelType.Location = new System.Drawing.Point(19, 271);
+            this.labelLabelType.Location = new System.Drawing.Point(16, 232);
             this.labelLabelType.Name = "labelLabelType";
             this.labelLabelType.Size = new System.Drawing.Size(98, 13);
-            this.labelLabelType.TabIndex = 6;
+            this.labelLabelType.TabIndex = 10;
             this.labelLabelType.Text = "Remove la&bel type:";
             // 
             // comboRefineLabelType
             // 
             this.comboRefineLabelType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboRefineLabelType.FormattingEnabled = true;
-            this.comboRefineLabelType.Location = new System.Drawing.Point(19, 290);
+            this.comboRefineLabelType.Location = new System.Drawing.Point(19, 248);
             this.comboRefineLabelType.Name = "comboRefineLabelType";
             this.comboRefineLabelType.Size = new System.Drawing.Size(121, 21);
-            this.comboRefineLabelType.TabIndex = 7;
+            this.comboRefineLabelType.TabIndex = 11;
             // 
             // cbRemoveRepeatedPeptides
             // 
             this.cbRemoveRepeatedPeptides.AutoSize = true;
-            this.cbRemoveRepeatedPeptides.Location = new System.Drawing.Point(19, 107);
+            this.cbRemoveRepeatedPeptides.Location = new System.Drawing.Point(19, 98);
             this.cbRemoveRepeatedPeptides.Name = "cbRemoveRepeatedPeptides";
             this.cbRemoveRepeatedPeptides.Size = new System.Drawing.Size(154, 17);
             this.cbRemoveRepeatedPeptides.TabIndex = 2;
@@ -144,7 +152,7 @@
             // cbRemoveDuplicatePeptides
             // 
             this.cbRemoveDuplicatePeptides.AutoSize = true;
-            this.cbRemoveDuplicatePeptides.Location = new System.Drawing.Point(203, 107);
+            this.cbRemoveDuplicatePeptides.Location = new System.Drawing.Point(203, 98);
             this.cbRemoveDuplicatePeptides.Name = "cbRemoveDuplicatePeptides";
             this.cbRemoveDuplicatePeptides.Size = new System.Drawing.Size(155, 17);
             this.cbRemoveDuplicatePeptides.TabIndex = 3;
@@ -154,7 +162,7 @@
             // 
             // textMinTransitions
             // 
-            this.textMinTransitions.Location = new System.Drawing.Point(19, 204);
+            this.textMinTransitions.Location = new System.Drawing.Point(19, 176);
             this.textMinTransitions.Name = "textMinTransitions";
             this.textMinTransitions.Size = new System.Drawing.Size(65, 20);
             this.textMinTransitions.TabIndex = 5;
@@ -164,7 +172,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(16, 187);
+            this.label2.Location = new System.Drawing.Point(16, 159);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(142, 13);
             this.label2.TabIndex = 4;
@@ -412,6 +420,45 @@
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(16, 313);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(76, 13);
+            this.label7.TabIndex = 6;
+            this.label7.Text = "Auto-&select all:";
+            // 
+            // cbAutoPeptides
+            // 
+            this.cbAutoPeptides.AutoSize = true;
+            this.cbAutoPeptides.Location = new System.Drawing.Point(19, 333);
+            this.cbAutoPeptides.Name = "cbAutoPeptides";
+            this.cbAutoPeptides.Size = new System.Drawing.Size(67, 17);
+            this.cbAutoPeptides.TabIndex = 7;
+            this.cbAutoPeptides.Text = "&Peptides";
+            this.cbAutoPeptides.UseVisualStyleBackColor = true;
+            // 
+            // cbAutoPrecursors
+            // 
+            this.cbAutoPrecursors.AutoSize = true;
+            this.cbAutoPrecursors.Location = new System.Drawing.Point(19, 356);
+            this.cbAutoPrecursors.Name = "cbAutoPrecursors";
+            this.cbAutoPrecursors.Size = new System.Drawing.Size(76, 17);
+            this.cbAutoPrecursors.TabIndex = 8;
+            this.cbAutoPrecursors.Text = "Pr&ecursors";
+            this.cbAutoPrecursors.UseVisualStyleBackColor = true;
+            // 
+            // cbAutoTransitions
+            // 
+            this.cbAutoTransitions.AutoSize = true;
+            this.cbAutoTransitions.Location = new System.Drawing.Point(19, 379);
+            this.cbAutoTransitions.Name = "cbAutoTransitions";
+            this.cbAutoTransitions.Size = new System.Drawing.Size(77, 17);
+            this.cbAutoTransitions.TabIndex = 9;
+            this.cbAutoTransitions.Text = "Tra&nsitions";
+            this.cbAutoTransitions.UseVisualStyleBackColor = true;
+            // 
             // RefineDlg
             // 
             this.AcceptButton = this.btnOK;
@@ -476,5 +523,9 @@
         private System.Windows.Forms.CheckBox cbPreferLarger;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.ComboBox comboReplicateUse;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.CheckBox cbAutoTransitions;
+        private System.Windows.Forms.CheckBox cbAutoPrecursors;
+        private System.Windows.Forms.CheckBox cbAutoPeptides;
     }
 }
