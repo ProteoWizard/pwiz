@@ -769,7 +769,6 @@ namespace BumberDash.Forms
 
         internal string GetConfigString(bool redundant)
         {
-            //Todo: Fix blosum and UniMod values
 
             #region Group and order list
 

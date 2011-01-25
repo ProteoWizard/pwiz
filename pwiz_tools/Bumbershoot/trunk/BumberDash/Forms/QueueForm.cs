@@ -1084,12 +1084,16 @@ namespace BumberDash.Forms
                     {
                         if (Directory.Exists(hi.OutputDirectory.TrimEnd('*')))
                         {
-                            //Todo: Fix delete on cache files
                             var filesLeft = Directory.GetFileSystemEntries(hi.OutputDirectory.TrimEnd('*'));
-                            if (filesLeft.Length == 0 
-                                || (filesLeft.Length == 1 
-                                    && filesLeft[0] == "directag_intensity_ranksum_bins.cache"))
+                            if (filesLeft.Length == 0)
                                 Directory.Delete(hi.OutputDirectory.TrimEnd('*'));
+                            if (filesLeft.Length == 1 
+                                && filesLeft[0].EndsWith("directag_intensity_ranksum_bins.cache"))
+                            {
+                                File.Delete(filesLeft[0]);
+                                Directory.Delete(hi.OutputDirectory.TrimEnd('*'));
+                            }
+                                
                         }
                     }
 

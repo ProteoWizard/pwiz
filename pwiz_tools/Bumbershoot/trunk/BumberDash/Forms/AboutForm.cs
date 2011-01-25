@@ -30,7 +30,7 @@ namespace BumberDash.Forms
         {
             InitializeComponent();
 
-            const string currentGuiVersion = "1.2";
+            const string currentGuiVersion = "1.2.2";
 
             aboutTextBox.Text = aboutTextBox.Text.Replace("<<version>>", currentGuiVersion);
 
