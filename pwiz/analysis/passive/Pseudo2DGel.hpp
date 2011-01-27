@@ -140,7 +140,7 @@ class PWIZ_API_DECL Pseudo2DGel : public MSDataAnalyzer
     Pseudo2DGel(Pseudo2DGel&);
     Pseudo2DGel& operator=(Pseudo2DGel&);
 
-    friend class prob_comp;
+    friend struct prob_comp;
 };
 
 

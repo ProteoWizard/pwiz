@@ -264,6 +264,7 @@ class Pseudo2DGel::Impl
 
 struct prob_comp
 {
+public:
     Pseudo2DGel::Impl* impl;
     
     prob_comp(Pseudo2DGel::Impl* impl)
