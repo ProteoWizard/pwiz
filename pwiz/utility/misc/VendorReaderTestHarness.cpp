@@ -416,6 +416,20 @@ int testReader(const Reader& reader, const vector<string>& args, bool testAccept
                     testThreadSafety(1, reader, testAcceptOnly, rawpath);
                     testThreadSafety(2, reader, testAcceptOnly, rawpath);
                     testThreadSafety(4, reader, testAcceptOnly, rawpath);*/
+
+                    // test that the reader releases any locks on the data so it can be moved/deleted
+                    try
+                    {
+                        bfs::rename(rawpath, rawpath + ".renamed");
+                        bfs::rename(rawpath + ".renamed", rawpath);
+                    }
+                    catch (...)
+                    {
+                        //string foo;
+                        //cin >> foo;
+                        //throw runtime_error("Cannot rename " + rawpath + ": there are unreleased file locks!");
+                        cerr << "Cannot rename " << rawpath << ": there are unreleased file locks!" << endl;
+                    }
                 }
             }
         return 0;
