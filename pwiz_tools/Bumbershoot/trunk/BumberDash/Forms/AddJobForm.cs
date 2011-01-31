@@ -62,11 +62,12 @@ namespace BumberDash.Forms
                               {
                                   InitialDirectory = OutputDirectoryBox.Text,
                                   RestoreDirectory = true,
-                                  Filter = "FASTA files (.fasta) | *.fasta",
+                                  Filter = "FASTA files|*.fasta;*.fa;*.seq;*.fsa;*.fna;*.ffn;*.faa;*.frn",
+                                  SupportMultiDottedExtensions = true,
                                   CheckFileExists = true,
                                   CheckPathExists = true,
                                   Multiselect = false,
-                                  Title = "Database Location"
+                                  Title = "Database Location"                                  
                               };
             if (fileLoc.ShowDialog() == DialogResult.OK)
                 DatabaseLocBox.Text = fileLoc.FileName;
@@ -104,6 +105,7 @@ namespace BumberDash.Forms
                                       "mzML files (.mzML)|*.mzML|mzXML files (.mzXML)|*.mzXML|RAW files (.raw)|*.raw|WIFF files (.wiff)|*.wiff|YEP files (.yep)|*.yep|MGF files (.mgf)|*.mgf",
                                   CheckFileExists = true,
                                   CheckPathExists = true,
+                                  SupportMultiDottedExtensions = true,
                                   Multiselect = true,
                                   Title = "Data files"
                               };
