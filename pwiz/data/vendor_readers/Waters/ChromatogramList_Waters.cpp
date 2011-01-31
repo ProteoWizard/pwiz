@@ -213,7 +213,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
     IndexEntry& ie = index_[index];
     ChromatogramPtr result = ChromatogramPtr(new Chromatogram);
     if (!result.get())
-        throw std::runtime_error("[ChromatogramList_Thermo::chromatogram()] Allocation error.");
+        throw std::runtime_error("[ChromatogramList_Waters::chromatogram()] Allocation error.");
 
     result->index = index;
     result->id = ie.id;
@@ -270,15 +270,14 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Waters::chromatogram(size_t index
             result->setTimeIntensityArrays(std::vector<double>(), std::vector<double>(), UO_minute, MS_number_of_counts);
 
             vector<float> times;
-            vector< vector<float> > intensities;
-            vector<float> Q3s(1, ie.Q3);
-            rawdata_->ChromatogramReader.ReadMultipleMassChromatograms(ie.function, Q3s, times, intensities, 0.0f);
+            vector<float> intensities;
+            rawdata_->ChromatogramReader.ReadMRMChromatogram(ie.function, ie.offset, times, intensities);
             result->defaultArrayLength = times.size();
 
             if (getBinaryData)
             {
                 result->getTimeArray()->data.assign(times.begin(), times.end());
-                result->getIntensityArray()->data.assign(intensities[0].begin(), intensities[0].end());
+                result->getIntensityArray()->data.assign(intensities.begin(), intensities.end());
             }
         }
         break;

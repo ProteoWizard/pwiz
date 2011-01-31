@@ -50,8 +50,8 @@ if [ path.exists $(API_PATH)/DACServer.dll ] ||
 {
     .hasDLLs = true ;
 }
-        
-        
+
+
 rule vendor-api-requirements ( properties * )
 {
     local result ;

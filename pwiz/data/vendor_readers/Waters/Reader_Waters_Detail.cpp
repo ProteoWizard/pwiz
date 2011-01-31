@@ -142,7 +142,12 @@ PWIZ_API_DECL CVID translateAsIonizationType(PwizIonizationType ionizationType)
 
 PWIZ_API_DECL CVID translate(PwizPolarityType polarityType)
 {
-    return CVID_Unknown;
+    switch (polarityType)
+    {
+        case PolarityType_Positive: return MS_positive_scan;
+        case PolarityType_Negative: return MS_negative_scan;
+        default: return CVID_Unknown;
+    }
 }
 
 
