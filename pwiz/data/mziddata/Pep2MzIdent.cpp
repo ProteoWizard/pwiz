@@ -803,8 +803,8 @@ bool addCvByPath(CVParam param, const std::string& path, MzIdentML& mzid)
     }
 
     // DEBUG Begin
-    path_out po_ed;
-    for_each(parts.begin(), parts.end(), po_ed);
+    //path_out po_ed;
+    //for_each(parts.begin(), parts.end(), po_ed);
     // DEBUG End
     
     string tag = parts.at(0);
@@ -973,22 +973,12 @@ bool fileExtension2Type(const string& file,
     // TODO map the following file formats
     //{MS_Waters_raw_file, MS_mass_spectrometer_file_format},
     //{MS_mass_spectrometer_file_format, MS_file_format},
-    //{MS_ABI_WIFF_file, MS_mass_spectrometer_file_format},
     //{MS_Thermo_RAW_file, MS_mass_spectrometer_file_format},
     //{MS_PSI_mzData_file, MS_mass_spectrometer_file_format},
-    //{MS_Micromass_PKL_file, MS_mass_spectrometer_file_format},
-    //{MS_ISB_mzXML_file, MS_mass_spectrometer_file_format},
     //{MS_Bruker_Agilent_YEP_file, MS_mass_spectrometer_file_format},
-    //{MS_mzML_file, MS_mass_spectrometer_file_format},
-    //{MS_DTA_file, MS_mass_spectrometer_file_format},
     //{MS_ProteinLynx_Global_Server_mass_spectrum_XML_file, MS_mass_spectrometer_file_format},
     //{MS_parameter_file, MS_mass_spectrometer_file_format},
-    //{MS_Bioworks_SRF_file, MS_mass_spectrometer_file_format},
-    //{MS_Bruker_BAF_file, MS_mass_spectrometer_file_format},
     //{MS_Bruker_U2_file, MS_mass_spectrometer_file_format},
-    //{MS_Bruker_FID_file, MS_mass_spectrometer_file_format},
-    //{MS_Mascot_MGF_file, MS_mass_spectrometer_file_format},
-    //{MS_PerSeptive_PKS_file, MS_mass_spectrometer_file_format},
     //{MS_Sciex_API_III_file, MS_mass_spectrometer_file_format},
     //{MS_Bruker_XML_file, MS_mass_spectrometer_file_format},
     //{MS_text_file, MS_mass_spectrometer_file_format},
@@ -1072,9 +1062,7 @@ void Pep2MzIdent::Impl::addSpectraData(const MSMSRunSummary& msmsRunSummary,
     SpectraDataPtr sd(new SpectraData(
                           "SD_"+lexical_cast<string>(indices->sd++)));
 
-    // TODO verify that both of these cvid values are legit.
     sd->location = msmsRunSummary.base_name;
-
 
     CVID fileFormat, spectrumIDFormat;
     if (fileExtension2Type(msmsRunSummary.raw_data, fileFormat, spectrumIDFormat))
@@ -1108,7 +1096,6 @@ void Pep2MzIdent::Impl::translateEnzyme(const SampleEnzyme& sampleEnzyme,
     EnzymePtr enzyme(new Enzyme("E_"+lexical_cast<string>(indices->enzyme++)));
 
     // Cross fingers and pray that the name enzyme matches a cv name.
-    // TODO create a more flexable conversion.
     CVID seCVID = getCVID(sampleEnzyme.name);
     if (seCVID != CVID_Unknown)
         enzyme->enzymeName.set(seCVID);
@@ -1245,15 +1232,6 @@ void Pep2MzIdent::Impl::translateSearch(const SearchSummaryPtr summary,
         {
             as->customizations = join(customizations, ", ");
         }
-
-        // TODO This is invalid, but we need to save the software
-        // somewhere.
-        // Edit: I guess we don't need to safe the software anywhere
-        /*
-        as->softwareName.userParams.push_back(
-            UserParam("search_engine full name",
-            summary->searchEngine));
-        */
     }
     result->analysisSoftwareList.push_back(as);
 
@@ -1993,6 +1971,8 @@ CVID Pep2MzIdent::Impl::getCVID(const string& name)
 {
     CVID id = translator.translate(name);
 
+    // TODO Find a convenient way of extracting this and putting it in
+    // a an external file.
     if (id == CVID_Unknown)
     {
         if (iequals(name, "Mascot"))
