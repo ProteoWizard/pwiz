@@ -142,6 +142,12 @@ exe mascot2mzid
     : <include>../../..
     ;
 
+exe pepcat
+    : pepcat.cpp
+      ../../pwiz/analysis/passive//pwiz_analysis_passive
+      /ext/boost//program_options
+    : <include>../../..
+    ;
 
 alias mstools : msdiff msconvert msdir msaccess mspicture peakaboo chainsaw ;
 

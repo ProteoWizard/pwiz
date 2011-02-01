@@ -63,6 +63,7 @@ struct Config
     bool headers;
     bool verbose;
     bool useStdout;
+    bool useStdin;
     bool toMzid;
 };
 
@@ -118,6 +119,8 @@ Config parseCommandLine(int argc, const char* argv[])
          ": output file")
         ("stdout,s",
          ": Output to standard out instead of file.")
+        ("stdin,i",
+         ": Input from standard in instead of file.")
         ("verbose,v", ": prints extra information.")
         ("help,h",
             ": print this helpful message.")
@@ -178,6 +181,9 @@ Config parseCommandLine(int argc, const char* argv[])
 
     if (vm.count("stdout"))
         config.useStdout = true;
+
+    if (vm.count("stdin"))
+        config.useStdin = true;
 
     if (config.files.size()>0)
         config.firstfile = config.files.at(0);
