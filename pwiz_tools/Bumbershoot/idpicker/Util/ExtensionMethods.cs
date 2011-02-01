@@ -27,11 +27,23 @@ namespace IDPicker
 
         public static IEnumerable<IDataRecord> ExecuteQuery (this IDbCommand cmd, string sql)
         {
-            cmd.CommandText = sql;
-            using (var reader = cmd.ExecuteReader())
-            {
-                return (reader as System.Data.Common.DbDataReader).OfType<IDataRecord>().ToArray();
-            }
+            int retryCount = 0;
+            while (true)
+                try
+                {
+                    cmd.CommandText = sql;
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        return (reader as System.Data.Common.DbDataReader).OfType<IDataRecord>().ToArray();
+                    }
+                }
+                catch (Exception e)
+                {
+                    if (retryCount == 3)
+                        throw e;
+                    System.Threading.Thread.Sleep(100);
+                    ++retryCount;
+                }
         }
     }
 
