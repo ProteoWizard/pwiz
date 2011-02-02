@@ -76,6 +76,8 @@ namespace pwiz.Skyline.Controls.Graphs
             AxisChange();
         }
 
+        public int? SchedulingReplicateIndex { get; set; }
+
         private void AddCurve(SrmDocument document, Color color)
         {
             var predict = document.Settings.PeptideSettings.Prediction;
@@ -91,7 +93,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                 {
                     double timeWindow;
-                    double? retentionTime = predict.PredictRetentionTime(document, nodePep, nodeGroup,
+                    double? retentionTime = predict.PredictRetentionTime(document, nodePep, nodeGroup, SchedulingReplicateIndex,
                         singleWindow, out timeWindow);
                     if (retentionTime.HasValue)
                     {

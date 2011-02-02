@@ -283,11 +283,17 @@ namespace pwiz.SkylineTestTutorial
                 peptideSettingsUI.TimeWindow = 4;
                 peptideSettingsUI.OkDialog();
             });
-            RunDlg<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List), exportMethodDlg =>
+            var exportMethodDlg1 = ShowDialog<ExportMethodDlg>(() =>
+                SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
+            RunUI(() =>
             {
-                exportMethodDlg.MethodType = ExportMethodType.Scheduled;
-                exportMethodDlg.OkDialog(TestFilesDirs[1].FullPath + "\\scheduled");
+                exportMethodDlg1.MethodType = ExportMethodType.Scheduled;
             });
+            // TODO: Update tutorial to mention the scheduling options dialog.
+            RunDlg<SchedulingOptionsDlg>(() =>
+                exportMethodDlg1.OkDialog(TestFilesDirs[1].FullPath + "\\scheduled"),
+                schedulingOptionsDlg => schedulingOptionsDlg.OkDialog());
+            WaitForClosedForm(exportMethodDlg1);
 
             // Reviewing Multi-Replicate Data, p. 22
             RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, manageResultsDlg =>

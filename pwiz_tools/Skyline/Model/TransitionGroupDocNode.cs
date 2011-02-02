@@ -214,17 +214,40 @@ namespace pwiz.Skyline.Model
             return chromInfo.Ratios[indexIS];
         }
 
-        public float? GetSchedulingPeakTime(SrmDocument document)
+        public float? GetSchedulingPeakTime(SrmDocument document, int? replicateIndex)
         {
             if (!HasResults)
                 return null;
+
+            int valCount = 0;
+            double valTotal = 0;
+
+            if (replicateIndex.HasValue)
+            {
+                if (replicateIndex >= Results.Count)
+                    return null;
+
+                foreach (var chromInfo in Results[replicateIndex.Value])
+                {
+                    if (chromInfo == null ||
+//                            chromInfo.PeakCountRatio < 0.5 || - caused problems
+                        !chromInfo.StartRetentionTime.HasValue ||
+                        !chromInfo.EndRetentionTime.HasValue)
+                        continue;
+                    double centerTime = (chromInfo.StartRetentionTime.Value + chromInfo.EndRetentionTime.Value) / 2;
+                    valTotal += centerTime;
+                    valCount++;
+                }
+                if (valCount != 0)
+                    return (float)(valTotal / valCount);
+                // No usable data at all.
+                return null;
+            }
 
             // Try to get a scheduling time from non-optimization data, unless this
             // document contains only optimization data.  This is because optimization
             // data may have been taken under completely different chromatographic
             // condictions.
-            int valCount = 0;
-            double valTotal = 0;
             int valCountOpt = 0;
             double valTotalOpt = 0;
 

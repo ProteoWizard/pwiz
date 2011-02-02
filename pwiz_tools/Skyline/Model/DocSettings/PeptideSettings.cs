@@ -238,6 +238,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public double? PredictRetentionTime(SrmDocument document,
                                             PeptideDocNode nodePep,
                                             TransitionGroupDocNode nodeGroup,
+                                            int? replicateIndex,
                                             bool singleWindow,
                                             out double windowRT)
         {
@@ -248,7 +249,7 @@ namespace pwiz.Skyline.Model.DocSettings
             bool useMeasured = (UseMeasuredRTs && MeasuredRTWindow.HasValue);
             if (useMeasured)
             {
-                predictedRT = nodeGroup.GetSchedulingPeakTime(document);
+                predictedRT = nodeGroup.GetSchedulingPeakTime(document, replicateIndex);
                 if (predictedRT.HasValue)
                     windowRT = MeasuredRTWindow.Value;
                 else if (nodePep.Children.Count > 1)
@@ -259,7 +260,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     {
                         if (!ReferenceEquals(nodeGroup, nodeGroupOther))
                         {
-                            predictedRT = nodeGroupOther.GetSchedulingPeakTime(document);
+                            predictedRT = nodeGroupOther.GetSchedulingPeakTime(document, replicateIndex);
                             if (predictedRT.HasValue)
                             {
                                 windowRT = MeasuredRTWindow.Value;
@@ -315,7 +316,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                 {
                     double windowRT;
-                    if (!PredictRetentionTime(document, nodePep, nodeGroup, singleWindow, out windowRT).HasValue)
+                    if (!PredictRetentionTime(document, nodePep, nodeGroup, null, singleWindow, out windowRT).HasValue)
                         return false;
                 }
             }

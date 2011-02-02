@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
@@ -234,6 +235,9 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        private ExportSchedulingAlgorithm SchedulingAlgorithm { get; set; }
+        private int? SchedulingReplicateIndex { get; set; }
+
         private static bool IsFullScanInstrumentType(string type)
         {
             return Equals(type, ExportInstrumentType.Thermo_LTQ);
@@ -376,6 +380,11 @@ namespace pwiz.Skyline.FileUI
                 textMaxTransitions.Text = (_maxTransitions == null ?
                     "" : _maxTransitions.ToString());
             }
+        }
+
+        public void OkDialog()
+        {
+            OkDialog(null);
         }
 
         public void OkDialog(string outputPath)
@@ -523,6 +532,18 @@ namespace pwiz.Skyline.FileUI
                     return;
             }
 
+            // If export method type is scheduled, and allows multiple schduling options
+            // ask the user which to use.
+            if (_methodType == ExportMethodType.Scheduled && HasMultipleSchedulingOptions(documentExport))
+            {
+                SchedulingOptionsDlg schedulingOptionsDlg = new SchedulingOptionsDlg(documentExport);
+                if (schedulingOptionsDlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    SchedulingAlgorithm = schedulingOptionsDlg.Algorithm;
+                    SchedulingReplicateIndex = schedulingOptionsDlg.ReplicateIndex;
+                }
+            }
+
             if (outputPath == null)
             {
                 SaveFileDialog dlg = new SaveFileDialog
@@ -644,6 +665,22 @@ namespace pwiz.Skyline.FileUI
 
             DialogResult = DialogResult.OK;
             Close();
+        }
+
+        private static bool HasMultipleSchedulingOptions(SrmDocument document)
+        {
+            // No scheduling from data, if no data is present
+            if (!document.Settings.HasResults)
+                return false;
+
+            // If multipe non-optimization data sets are present, allow user to choose.
+            var chromatagrams = document.Settings.MeasuredResults.Chromatograms;
+            int sched = chromatagrams.Count(chromatogramSet => chromatogramSet.OptimizationFunction == null);
+            if (sched > 1)
+                return true;
+            // Otherwise, if no non-optimization data is present, but multiple optimization
+            // sets are available, allow user to choose from them.
+            return (sched == 0 && chromatagrams.Count > 1);
         }
 
         private bool ValidatePrecursorFit(SrmDocument document, int maxTransitions)
@@ -820,6 +857,7 @@ namespace pwiz.Skyline.FileUI
             exporter.OptimizeType = OptimizeType;
             exporter.OptimizeStepSize = OptimizeStepSize;
             exporter.OptimizeStepCount = OptimizeStepCount;
+            exporter.SchedulingReplicateIndex = SchedulingReplicateIndex;
             return exporter;
         }
 

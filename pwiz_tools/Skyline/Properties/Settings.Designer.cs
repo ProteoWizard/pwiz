@@ -1363,5 +1363,17 @@ namespace pwiz.Skyline.Properties {
                 this["ChromatogramTimeRangeRelative"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ScheduleAvergeRT {
+            get {
+                return ((bool)(this["ScheduleAvergeRT"]));
+            }
+            set {
+                this["ScheduleAvergeRT"] = value;
+            }
+        }
     }
 }

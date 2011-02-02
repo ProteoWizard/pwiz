@@ -258,6 +258,11 @@ namespace pwiz.SkylineTestUtil
 
         public static void FieldsEqual(string target, string actual, int countFields)
         {
+            FieldsEqual(target, actual, countFields, null);
+        }
+
+        public static void FieldsEqual(string target, string actual, int countFields, int? exceptIndex)
+        {
             using (StringReader readerTarget = new StringReader(target))
             using (StringReader readerActual = new StringReader(actual))
             {
@@ -280,6 +285,9 @@ namespace pwiz.SkylineTestUtil
                             Assert.Fail(String.Format("Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual));                        
                         for (int i = 0; i < countFields; i++)
                         {
+                            if (exceptIndex.HasValue && exceptIndex.Value == i)
+                                continue;
+
                             if (!Equals(fieldsTarget[i], fieldsActual[i]))
                                 Assert.Fail(String.Format("Diff found at line {0}:\r\n{1}\r\n>\r\n{2}", count, lineTarget, lineActual));
                         }
