@@ -99,6 +99,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private int _chromIndex;
         private AutoZoomChrom _zoomState;
         private double _timeRange;
+        private bool _peakRelativeTime;
         private double _maxIntensity;
         private bool _zoomLocked;
 
@@ -487,10 +488,12 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             else if (forceZoom || changedGroupIds || _zoomState != zoom ||
                     _timeRange != Settings.Default.ChromatogramTimeRange ||
-                    _maxIntensity != Settings.Default.ChromatogramTimeRange)
+                    _peakRelativeTime != Settings.Default.ChromatogramTimeRangeRelative ||
+                    _maxIntensity != Settings.Default.ChromatogramMaxIntensity)
             {
                 _zoomState = zoom;
                 _timeRange = Settings.Default.ChromatogramTimeRange;
+                _peakRelativeTime = Settings.Default.ChromatogramTimeRangeRelative;
                 _maxIntensity = Settings.Default.ChromatogramMaxIntensity;
 
                 ZoomGraph(graphPane, bestStartTime, bestEndTime, listChromGraphs, zoom);
@@ -1090,12 +1093,21 @@ namespace pwiz.Skyline.Controls.Graphs
                 case AutoZoomChrom.peak:
                     if (bestEndTime != 0)
                     {
-                        // If an explicit time range around the best peak is set, then use it.
-                        if (_timeRange != 0 && !Settings.Default.ChromatogramTimeRangeRelative)
+                        // If relative zooming, scale to the best peak
+                        if (_timeRange == 0 || _peakRelativeTime)
                         {
-                            // CONSIDER: Should it be centered on the peak apex?
-                            double mid = (bestStartTime + bestEndTime)/2;
-                            bestStartTime = mid - _timeRange/2;
+                            double multiplier = (_timeRange != 0 ? _timeRange : DEFAULT_PEAK_RELATIVE_WINDOW);
+                            double width = bestEndTime - bestStartTime;
+                            double window = width * multiplier;
+                            double margin = (window - width) / 2;
+                            bestStartTime -= margin;
+                            bestEndTime += margin;
+                        }
+                        // Otherwise, use an absolute peak width
+                        else
+                        {
+                            double mid = (bestStartTime + bestEndTime) / 2;
+                            bestStartTime = mid - _timeRange / 2;
                             bestEndTime = bestStartTime + _timeRange;
                         }
                         ZoomXAxis(graphPane, bestStartTime, bestEndTime);
@@ -1194,14 +1206,6 @@ namespace pwiz.Skyline.Controls.Graphs
             if (end <= 0)
                 return;
             double start = chromInfo.StartRetentionTime;
-            double multiplier = DEFAULT_PEAK_RELATIVE_WINDOW;
-            if (Settings.Default.ChromatogramTimeRange != 0 && Settings.Default.ChromatogramTimeRangeRelative)
-                multiplier = Settings.Default.ChromatogramTimeRange;
-            double width = end - start;
-            double window = width*multiplier;
-            double margin = (window - width)/2;
-            start -= margin;
-            end += margin;
 
             bestStartTime = Math.Min(bestStartTime, start);
             bestEndTime = Math.Max(bestEndTime, end);
