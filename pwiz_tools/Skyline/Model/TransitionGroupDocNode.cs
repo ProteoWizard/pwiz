@@ -743,9 +743,13 @@ namespace pwiz.Skyline.Model
                 if (!nodeTran.HasResults)
                     continue;
 
-                foreach (var chromInfo in nodeTran.Results[indexResult])
+                var chromInfoList = nodeTran.Results[indexResult];
+                if (chromInfoList == null)
+                    continue;
+
+                foreach (var chromInfo in chromInfoList)
                 {
-                    if (!chromInfo.UserSet || chromInfo.OptimizationStep != 0)
+                    if (chromInfo == null || !chromInfo.UserSet || chromInfo.OptimizationStep != 0)
                         continue;
 
                     if (dictInfo == null)
