@@ -6,16 +6,16 @@
 //
 // Copyright 2009 Vanderbilt University - Nashville, TN 37232
 //
-// Licensed under the Apache License, Version 2.0 (the "License"); 
-// you may not use this file except in compliance with the License. 
-// You may obtain a copy of the License at 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
 // http://www.apache.org/licenses/LICENSE-2.0
 //
-// Unless required by applicable law or agreed to in writing, software 
-// distributed under the License is distributed on an "AS IS" BASIS, 
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-// See the License for the specific language governing permissions and 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
 // limitations under the License.
 //
 
@@ -54,7 +54,7 @@ PWIZ_API_DECL size_t SpectrumList_Waters::size() const
 PWIZ_API_DECL const SpectrumIdentity& SpectrumList_Waters::spectrumIdentity(size_t index) const
 {
     if (index>size_)
-        throw runtime_error(("[SpectrumList_Waters::spectrumIdentity()] Bad index: " 
+        throw runtime_error(("[SpectrumList_Waters::spectrumIdentity()] Bad index: "
                             + lexical_cast<string>(index)).c_str());
     return index_[index];
 }
@@ -73,7 +73,7 @@ PWIZ_API_DECL size_t SpectrumList_Waters::find(const string& id) const
 PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBinaryData) const
 {
     if (index >= size_)
-        throw runtime_error(("[SpectrumList_Waters::spectrum()] Bad index: " 
+        throw runtime_error(("[SpectrumList_Waters::spectrum()] Bad index: "
                             + lexical_cast<string>(index)).c_str());
 
     // allocate a new Spectrum
@@ -102,7 +102,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBi
     Scan& scan = result->scanList.scans[0];
     scan.instrumentConfigurationPtr = msd_.run.defaultInstrumentConfigurationPtr;
 
-    //scan.instrumentConfigurationPtr = 
+    //scan.instrumentConfigurationPtr =
         //findInstrumentConfiguration(msd_, translate(scanInfo->massAnalyzerType()));
 
     ScanPtr scanPtr = ie.functionPtr->getScan(ie.process, ie.scan);
@@ -201,7 +201,7 @@ PWIZ_API_DECL void SpectrumList_Waters::createIndex()
 PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBinaryData) const
 {
     if (index >= size_)
-        throw runtime_error(("[SpectrumList_Waters::spectrum()] Bad index: " 
+        throw runtime_error(("[SpectrumList_Waters::spectrum()] Bad index: "
                             + lexical_cast<string>(index)).c_str());
 
     // allocate a new Spectrum
@@ -230,7 +230,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBi
     Scan& scan = result->scanList.scans[0];
     scan.instrumentConfigurationPtr = msd_.run.defaultInstrumentConfigurationPtr;
 
-    //scan.instrumentConfigurationPtr = 
+    //scan.instrumentConfigurationPtr =
         //findInstrumentConfiguration(msd_, translate(scanInfo->massAnalyzerType()));
 
     int msLevel;
@@ -246,7 +246,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBi
     const MSScanStats& scanStats = rawdata_->ScanStatsByFunction[ie.function][ie.scan];
     const RawData::ExtendedScanStatsByName& extendedScanStatsByName = rawdata_->ExtendedScanStatsByFunction[ie.function];
 
-    scan.set(MS_scan_start_time, scanStats.rt, UO_second);
+    scan.set(MS_scan_start_time, scanStats.rt, UO_minute);
 
     PwizPolarityType polarityType = WatersToPwizPolarityType(rawdata_->Info.GetIonMode(ie.function));
     if (polarityType != PolarityType_Unknown)
