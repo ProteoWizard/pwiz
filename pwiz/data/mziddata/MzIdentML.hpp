@@ -637,6 +637,9 @@ struct PWIZ_API_DECL SpectrumIdentificationItem : public IdentifiableType
 
     bool empty() const;
 
+    /// given a protocol and a PeptideEvidence instance, returns the PeptidEvidence as a DigestedPeptide instance
+    proteome::DigestedPeptide digestedPeptide(const SpectrumIdentificationProtocol& sip, const PeptideEvidence& peptideEvidence) const;
+
     /// given a protocol, builds a set of DigestedPeptides for a SpectrumIdentificationItem
     std::vector<proteome::DigestedPeptide> digestedPeptides(const SpectrumIdentificationProtocol& sip) const;
 };

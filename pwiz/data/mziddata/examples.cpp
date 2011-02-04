@@ -265,6 +265,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
     enzyme->semiSpecific = false;
     enzyme->siteRegexp = "(?<=[KR])";
     enzyme->enzymeName.set(MS_Trypsin_P);
+    sip->enzymes.independent = true;
     sip->enzymes.enzymes.push_back(enzyme);
 
     sip->parentTolerance.set(MS_search_tolerance_plus_value, "10", UO_parts_per_million);

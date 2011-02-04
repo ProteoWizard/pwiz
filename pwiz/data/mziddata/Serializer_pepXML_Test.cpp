@@ -98,7 +98,8 @@ void stripUnmappedMetadata(MzIdentML& mzid)
 
 void testSerialize()
 {
-    cerr << "begin testSerialize\n";
+    if (os_) *os_ << "begin testSerialize" << endl;
+
     MzIdentML mzid;
     initializeBasicSpectrumIdentification(mzid);
     stripUnmappedMetadata(mzid);

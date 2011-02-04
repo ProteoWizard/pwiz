@@ -493,6 +493,7 @@ void write_alternative_proteins(XMLWriter& xmlWriter, const SpectrumIdentificati
 
 void write_search_hit(XMLWriter& xmlWriter,
                       CVID analysisSoftwareCVID,
+                      const MzIdentML& mzid,
                       const SpectrumIdentificationResult& sir,
                       const SpectrumIdentificationItem& sii)
 {
@@ -513,8 +514,13 @@ void write_search_hit(XMLWriter& xmlWriter,
     attributes.add("num_tot_proteins", sii.peptideEvidence.size());
     attributes.add("calc_neutral_pep_mass", Ion::neutralMass(sii.calculatedMassToCharge, sii.chargeState));
     attributes.add("massdiff", Ion::neutralMass(sii.calculatedMassToCharge, sii.chargeState) - Ion::neutralMass(sii.experimentalMassToCharge, sii.chargeState));
-    attributes.add("num_tol_term", "2"); // TODO: calculate this if protein sequences are provided?
     attributes.add("num_missed_cleavages", sii.peptideEvidence[0]->missedCleavages);
+
+    // calculate num_tol_term
+    const SpectrumIdentificationProtocol& sip = *mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0];
+    DigestedPeptide digestedPeptide = sii.digestedPeptide(sip, *sii.peptideEvidence[0]);
+    attributes.add("num_tol_term", digestedPeptide.specificTermini());
+
 
     if (sii.paramGroup.hasCVParam(MS_number_of_matched_peaks))
     {
@@ -610,7 +616,7 @@ void write_spectrum_queries(XMLWriter& xmlWriter, const MzIdentML& mzid, const s
                 xmlWriter.startElement("search_result");
             }
 
-            write_search_hit(xmlWriter, analysisSoftware.cvid, sir, sii);
+            write_search_hit(xmlWriter, analysisSoftware.cvid, mzid, sir, sii);
         }
     }
 

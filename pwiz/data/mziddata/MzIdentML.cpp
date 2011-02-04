@@ -305,14 +305,102 @@ PWIZ_API_DECL bool SpectrumIdentificationItem::empty() const
         paramGroup.empty();
 }
 
-PWIZ_API_DECL vector<proteome::DigestedPeptide> SpectrumIdentificationItem::digestedPeptides(const SpectrumIdentificationProtocol& sip) const
+PWIZ_API_DECL proteome::DigestedPeptide SpectrumIdentificationItem::digestedPeptide(const SpectrumIdentificationProtocol& sip, const PeptideEvidence& peptideEvidence) const
 {
     using namespace proteome;
 
     if (!peptidePtr.get() || peptidePtr->empty())
         throw runtime_error("[SpectrumIdentificationItem::digestedPeptide] null or empty Peptide reference");
     if (peptideEvidence.empty())
-        throw runtime_error("[SpectrumIdentificationItem::digestedPeptide] no PeptideEvidence elements");
+        throw runtime_error("[SpectrumIdentificationItem::digestedPeptide] null or empty PeptideEvidence element");
+
+    const Peptide& peptide = *peptidePtr;
+
+    vector<boost::regex> cleavageAgentRegexes;
+    BOOST_FOREACH(const EnzymePtr& enzymePtr, sip.enzymes.enzymes)
+    {
+        const Enzyme& enzyme = *enzymePtr;
+        string regex = enzyme.siteRegexp;
+        if (regex.empty())
+        {
+            CVParam enzymeTerm = enzyme.enzymeName.cvParamChild(MS_cleavage_agent_name);
+
+            if (enzymeTerm.empty())
+                enzymeTerm = CVParam(Digestion::getCleavageAgentByName(enzyme.enzymeName.userParams[0].name));
+
+            try {regex = Digestion::getCleavageAgentRegex(enzymeTerm.cvid);} catch (...) {}
+        }
+
+        if (!regex.empty())
+            cleavageAgentRegexes.push_back(boost::regex(regex));
+    }
+
+    if (cleavageAgentRegexes.empty())
+        throw runtime_error("[SpectrumIdentificationItem::digestedPeptide] unknown cleavage agent");
+
+    const PeptideEvidence& pe = peptideEvidence;
+
+    if (pe.pre.empty() || pe.pre == "?" || pe.post.empty() || pe.post == "?")
+        throw runtime_error("[SpectrumIdentificationItem::digestedPeptide] invalid pre/post on PeptideEvidence element");
+
+    string peptideSequenceInContext = peptide.peptideSequence;
+    if (pe.pre != "-") peptideSequenceInContext = pe.pre + peptideSequenceInContext;
+    if (pe.post != "-") peptideSequenceInContext += pe.post;
+
+    int nTerminusIsSpecific = pe.pre == "-" ? 1 : 0;
+    int cTerminusIsSpecific = pe.post == "-" ? 1 : 0;
+
+    int bestSpecificity = -1;
+    boost::shared_ptr<DigestedPeptide> bestResult;
+
+    BOOST_FOREACH(const boost::regex& regex, cleavageAgentRegexes)
+    {
+        Digestion::Config config;
+        config.minimumSpecificity = Digestion::NonSpecific;
+        Digestion peptideInContext(peptideSequenceInContext, regex, config);
+
+        // if enzymes are independent, both termini of a peptide must be cleaved by the same enzyme
+        if (sip.enzymes.independent)
+        {
+            nTerminusIsSpecific = pe.pre == "-" ? 1 : 0;
+            cTerminusIsSpecific = pe.post == "-" ? 1 : 0;
+        }
+
+        try
+        {
+            DigestedPeptide result = peptideInContext.find_first(peptide.peptideSequence);
+            nTerminusIsSpecific |= result.NTerminusIsSpecific() ? 1 : 0;
+            cTerminusIsSpecific |= result.CTerminusIsSpecific() ? 1 : 0;
+
+            if (nTerminusIsSpecific + cTerminusIsSpecific > bestSpecificity)
+            {
+                bestSpecificity = nTerminusIsSpecific + cTerminusIsSpecific;
+                bestResult.reset(new DigestedPeptide(result,
+                                                     pe.start-1, // offset is 0-based
+                                                     result.missedCleavages(),
+                                                     nTerminusIsSpecific == 1,
+                                                     cTerminusIsSpecific == 1,
+                                                     pe.pre,
+                                                     pe.post));
+            }
+        }
+        catch (runtime_error&)
+        {}
+    }
+
+    if (!bestResult.get())
+        throw runtime_error("[SpectrumIdentificationItem::digestedPeptide] invalid PeptideEvidence element");
+    return *bestResult;
+}
+
+PWIZ_API_DECL vector<proteome::DigestedPeptide> SpectrumIdentificationItem::digestedPeptides(const SpectrumIdentificationProtocol& sip) const
+{
+    using namespace proteome;
+
+    if (!peptidePtr.get() || peptidePtr->empty())
+        throw runtime_error("[SpectrumIdentificationItem::digestedPeptides] null or empty Peptide reference");
+    if (peptideEvidence.empty())
+        throw runtime_error("[SpectrumIdentificationItem::digestedPeptides] no PeptideEvidence elements");
 
     const Peptide& peptide = *peptidePtr;
 
@@ -351,6 +439,12 @@ PWIZ_API_DECL vector<proteome::DigestedPeptide> SpectrumIdentificationItem::dige
         if (pe.pre != "-") peptideSequenceInContext = pe.pre + peptideSequenceInContext;
         if (pe.post != "-") peptideSequenceInContext += pe.post;
 
+        int nTerminusIsSpecific = pe.pre == "-" ? 1 : 0;
+        int cTerminusIsSpecific = pe.post == "-" ? 1 : 0;
+
+        int bestSpecificity = -1;
+        boost::shared_ptr<DigestedPeptide> bestResult;
+
         BOOST_FOREACH(const boost::regex& regex, cleavageAgentRegexes)
         {
             Digestion::Config config;
@@ -358,22 +452,36 @@ PWIZ_API_DECL vector<proteome::DigestedPeptide> SpectrumIdentificationItem::dige
             Digestion peptideInContext(peptideSequenceInContext, regex, config);
 
             // if enzymes are independent, both termini of a peptide must be cleaved by the same enzyme
-            /*if (sip.enzymes.independent)
+            if (sip.enzymes.independent)
             {
-                nTerminusIsSpecific = pe.pre == "-";
-                cTerminusIsSpecific = pe.post == "-";
-            }*/
+                nTerminusIsSpecific = pe.pre == "-" ? 1 : 0;
+                cTerminusIsSpecific = pe.post == "-" ? 1 : 0;
+            }
 
-            DigestedPeptide result = peptideInContext.find_first(peptide.peptideSequence);
-            
-            results.push_back(DigestedPeptide(result,
-                                              pe.start-1, // offset is 0-based
-                                              result.missedCleavages(),
-                                              result.NTerminusIsSpecific(),
-                                              result.CTerminusIsSpecific(),
-                                              pe.pre,
-                                              pe.post));
+            try
+            {
+                DigestedPeptide result = peptideInContext.find_first(peptide.peptideSequence);
+                nTerminusIsSpecific |= result.NTerminusIsSpecific() ? 1 : 0;
+                cTerminusIsSpecific |= result.CTerminusIsSpecific() ? 1 : 0;
+
+                if (nTerminusIsSpecific + cTerminusIsSpecific > bestSpecificity)
+                {
+                    bestSpecificity = nTerminusIsSpecific + cTerminusIsSpecific;
+                    bestResult.reset(new DigestedPeptide(result,
+                                                         pe.start-1, // offset is 0-based
+                                                         result.missedCleavages(),
+                                                         nTerminusIsSpecific == 1,
+                                                         cTerminusIsSpecific == 1,
+                                                         pe.pre,
+                                                         pe.post));
+                }
+            }
+            catch (runtime_error&)
+            {}
         }
+
+        if (bestResult.get())
+            results.push_back(*bestResult);
     }
     return results;
 }
