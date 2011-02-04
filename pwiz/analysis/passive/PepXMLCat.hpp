@@ -33,7 +33,7 @@ namespace pwiz {
 namespace analysis {
 
 
-class PepxmlRecordReader
+class PWIZ_API_DECL PepxmlRecordReader
 {
 public:
 
@@ -122,7 +122,7 @@ private:
     std::string search_engine;
 };
 
-std::ostream& operator<<(std::ostream& os, PepxmlRecordReader& prr);
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, PepxmlRecordReader& prr);
 
 
 } // namespace analysis 

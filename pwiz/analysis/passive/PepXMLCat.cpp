@@ -20,6 +20,8 @@
 // limitations under the License.
 //
 
+#define PWIZ_SOURCE
+
 #include "PepXMLCat.hpp"
 
 #include "pwiz/utility/minimxml/SAXParser.hpp"
@@ -306,12 +308,12 @@ const string header_array[] =
 namespace pwiz {
 namespace analysis {
 
-PepxmlRecordReader::Config::Config()
+PWIZ_API_DECL PepxmlRecordReader::Config::Config()
     : delim('\t'), record('\n'), quote('"'), headers(true)
 {
 }
 
-PepxmlRecordReader::record::record()
+PWIZ_API_DECL PepxmlRecordReader::record::record()
     : index(0), mz(0.), xcorr(0.), deltacn(0.),
       deltacnstar(0.), spscore(0.), sprank(0.),
       ntt(0.)
@@ -319,30 +321,30 @@ PepxmlRecordReader::record::record()
 }
 
 
-PepxmlRecordReader::PepxmlRecordReader(const Config& _config)
+PWIZ_API_DECL PepxmlRecordReader::PepxmlRecordReader(const Config& _config)
     : config(_config)
 {
     if (!config.pepxmlfile.empty())
         parsePepXML(config.pepxmlfile, recordset);
 }
 
-PepxmlRecordReader::~PepxmlRecordReader()
+PWIZ_API_DECL PepxmlRecordReader::~PepxmlRecordReader()
 {
 }
 
-bool PepxmlRecordReader::open(const string& file)
+PWIZ_API_DECL bool PepxmlRecordReader::open(const string& file)
 {
     config.pepxmlfile = file;
     return parsePepXML(file, recordset);
 }
 
-void PepxmlRecordReader::close()
+PWIZ_API_DECL void PepxmlRecordReader::close()
 {
     recordset.clear();
     search_engine.clear();
 }
 
-void PepxmlRecordReader::print_headers(std::ostream& os) const
+PWIZ_API_DECL void PepxmlRecordReader::print_headers(std::ostream& os) const
 {
     string delim(&config.delim, 1);
     string record(&config.record, 1);
@@ -358,27 +360,27 @@ void PepxmlRecordReader::print_headers(std::ostream& os) const
     os << record;
 }
 
-PepxmlRecordReader::const_iterator PepxmlRecordReader::begin() const
+PWIZ_API_DECL PepxmlRecordReader::const_iterator PepxmlRecordReader::begin() const
 {
     return recordset.begin();
 }
 
-PepxmlRecordReader::const_iterator PepxmlRecordReader::end() const
+PWIZ_API_DECL PepxmlRecordReader::const_iterator PepxmlRecordReader::end() const
 {
     return recordset.end();
 }
 
-PepxmlRecordReader::iterator PepxmlRecordReader::begin()
+PWIZ_API_DECL PepxmlRecordReader::iterator PepxmlRecordReader::begin()
 {
     return recordset.begin();
 }
 
-PepxmlRecordReader::iterator PepxmlRecordReader::end()
+PWIZ_API_DECL PepxmlRecordReader::iterator PepxmlRecordReader::end()
 {
     return recordset.end();
 }
 
-std::ostream& operator<<(std::ostream& os, PepxmlRecordReader& prr)
+PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, PepxmlRecordReader& prr)
 {
     string delim(&prr.config.delim, 1);
     string record(&prr.config.record, 1);
