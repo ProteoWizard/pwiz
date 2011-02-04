@@ -153,10 +153,10 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
     sdb->version = "SwissProt_51.6.fasta";
     sdb->releaseDate = "SwissProt_51.6.fasta";
     sdb->location = "file:///C:/inetpub/Mascot/sequence/SwissProt/current/SwissProt_51.6.fasta";
-    sdb->fileFormat.set(MS_FASTA_format);
+    sdb->fileFormat.cvid = MS_FASTA_format;
     sdb->numDatabaseSequences = 5;
     sdb->numResidues = 52;
-    sdb->params.set(MS_database_type_amino_acid);
+    sdb->set(MS_database_type_amino_acid);
     mzid.dataCollection.inputs.searchDatabase.push_back(sdb);
 
     DBSequencePtr dbSequence = DBSequencePtr(new DBSequence);
@@ -187,7 +187,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
     SpectrumIdentificationProtocolPtr sip(new SpectrumIdentificationProtocol);
     sip->id = "SIP";
     sip->analysisSoftwarePtr = as;
-    sip->searchType.set(MS_ms_ms_search);
+    sip->searchType.cvid = MS_ms_ms_search;
     sip->additionalSearchParams.set(MS_parent_mass_type_mono);
     sip->additionalSearchParams.set(MS_fragment_mass_type_mono);
     sip->additionalSearchParams.set(MS_param__a_ion);
@@ -205,54 +205,54 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
     sip->additionalSearchParams.userParams.push_back(UserParam("ITOLU", "Da"));
 
     SearchModificationPtr sm(new SearchModification);
-    sm->modParam.massDelta = acetylation.monoisotopicMass();
-    sm->specificityRules.set(MS_modification_specificity_N_term);
+    sm->massDelta = acetylation.monoisotopicMass();
+    sm->specificityRules.cvid = MS_modification_specificity_N_term;
     sip->modificationParams.push_back(sm);
 
     sm = SearchModificationPtr(new SearchModification);
-    sm->modParam.massDelta = amidation.monoisotopicMass();
-    sm->specificityRules.set(MS_modification_specificity_C_term);
+    sm->massDelta = amidation.monoisotopicMass();
+    sm->specificityRules.cvid = MS_modification_specificity_C_term;
     sip->modificationParams.push_back(sm);
 
     sm = SearchModificationPtr(new SearchModification);
-    sm->modParam.massDelta = deamidation.monoisotopicMass();
-    sm->modParam.residues = "N";
+    sm->massDelta = deamidation.monoisotopicMass();
+    sm->residues = "N";
     sip->modificationParams.push_back(sm);
 
     sm = SearchModificationPtr(new SearchModification);
-    sm->modParam.massDelta = pyroglutQ.monoisotopicMass();
-    sm->specificityRules.set(MS_modification_specificity_N_term);
-    sm->modParam.residues = "Q";
+    sm->massDelta = pyroglutQ.monoisotopicMass();
+    sm->specificityRules.cvid = MS_modification_specificity_N_term;
+    sm->residues = "Q";
     sip->modificationParams.push_back(sm);
 
     sm = SearchModificationPtr(new SearchModification);
-    sm->modParam.massDelta = carbamylation.monoisotopicMass();
-    sm->modParam.residues = "K";
+    sm->massDelta = carbamylation.monoisotopicMass();
+    sm->residues = "K";
     sip->modificationParams.push_back(sm);
 
     sm = SearchModificationPtr(new SearchModification);
-    sm->modParam.massDelta = carbamylation.monoisotopicMass();
-    sm->modParam.residues = "R";
+    sm->massDelta = carbamylation.monoisotopicMass();
+    sm->residues = "R";
     sip->modificationParams.push_back(sm);
 
     sm = SearchModificationPtr(new SearchModification);
-    sm->modParam.massDelta = oxidation.monoisotopicMass();
-    sm->modParam.residues = "M";
+    sm->massDelta = oxidation.monoisotopicMass();
+    sm->residues = "M";
     sip->modificationParams.push_back(sm);
 
     sm = SearchModificationPtr(new SearchModification);
-    sm->modParam.massDelta = phosphorylation.monoisotopicMass();
-    sm->modParam.residues = "S";
+    sm->massDelta = phosphorylation.monoisotopicMass();
+    sm->residues = "S";
     sip->modificationParams.push_back(sm);
 
     sm = SearchModificationPtr(new SearchModification);
-    sm->modParam.massDelta = phosphorylation.monoisotopicMass();
-    sm->modParam.residues = "T";
+    sm->massDelta = phosphorylation.monoisotopicMass();
+    sm->residues = "T";
     sip->modificationParams.push_back(sm);
 
     sm = SearchModificationPtr(new SearchModification);
-    sm->modParam.massDelta = cam.monoisotopicMass();
-    sm->modParam.residues = "C";
+    sm->massDelta = cam.monoisotopicMass();
+    sm->residues = "C";
     sm->fixedMod = true;
     sip->modificationParams.push_back(sm);
 
@@ -280,8 +280,8 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
     sd->id = "SD";
     sd->name = "tiny";
     sd->location = "file:///data/is/here/tiny.mzML";
-    sd->fileFormat.set(MS_mzML_file);
-    sd->spectrumIDFormat.set(MS_Thermo_nativeID_format);
+    sd->fileFormat.cvid = MS_mzML_file;
+    sd->spectrumIDFormat.cvid = MS_Thermo_nativeID_format;
     mzid.dataCollection.inputs.spectraData.push_back(sd);
 
     // Fill in mzid.dataCollection.inputs;
@@ -341,10 +341,10 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sii->experimentalMassToCharge = 420.42;
             sii->calculatedMassToCharge = 420.24;
             sii->peptidePtr = peptide;
-            sii->paramGroup.set(MS_Mascot_score, 42.1);
-            sii->paramGroup.set(MS_Mascot_identity_threshold, 11);
-            sii->paramGroup.set(MS_Mascot_homology_threshold, 21);
-            sii->paramGroup.set(MS_Mascot_expectation_value, 0.01);
+            sii->set(MS_Mascot_score, 42.1);
+            sii->set(MS_Mascot_identity_threshold, 11);
+            sii->set(MS_Mascot_homology_threshold, 21);
+            sii->set(MS_Mascot_expectation_value, 0.01);
             
             pe = PeptideEvidencePtr(new PeptideEvidence);
             pe->dbSequencePtr = mzid.sequenceCollection.dbSequences[0];
@@ -387,10 +387,10 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sii->experimentalMassToCharge = 421.42;
             sii->calculatedMassToCharge = 421.24;
             sii->peptidePtr = peptide;
-            sii->paramGroup.set(MS_Mascot_score, 4.2);
-            sii->paramGroup.set(MS_Mascot_identity_threshold, 11);
-            sii->paramGroup.set(MS_Mascot_homology_threshold, 21);
-            sii->paramGroup.set(MS_Mascot_expectation_value, 0.1);
+            sii->set(MS_Mascot_score, 4.2);
+            sii->set(MS_Mascot_identity_threshold, 11);
+            sii->set(MS_Mascot_homology_threshold, 21);
+            sii->set(MS_Mascot_expectation_value, 0.1);
             
             pe = PeptideEvidencePtr(new PeptideEvidence);
             pe->dbSequencePtr = mzid.sequenceCollection.dbSequences[0];
@@ -433,10 +433,10 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sii->experimentalMassToCharge = 421.42;
             sii->calculatedMassToCharge = 421.24;
             sii->peptidePtr = peptide;
-            sii->paramGroup.set(MS_Mascot_score, 4.2);
-            sii->paramGroup.set(MS_Mascot_identity_threshold, 11);
-            sii->paramGroup.set(MS_Mascot_homology_threshold, 21);
-            sii->paramGroup.set(MS_Mascot_expectation_value, 0.1);
+            sii->set(MS_Mascot_score, 4.2);
+            sii->set(MS_Mascot_identity_threshold, 11);
+            sii->set(MS_Mascot_homology_threshold, 21);
+            sii->set(MS_Mascot_expectation_value, 0.1);
 
             // reuse the same peptide evidence from variant 1
             sii->peptideEvidence.push_back(pe);
@@ -476,10 +476,10 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sii->experimentalMassToCharge = 1420.42;
             sii->calculatedMassToCharge = 1420.24;
             sii->peptidePtr = peptide;
-            sii->paramGroup.set(MS_Mascot_score, 24.1);
-            sii->paramGroup.set(MS_Mascot_identity_threshold, 12);
-            sii->paramGroup.set(MS_Mascot_homology_threshold, 22);
-            sii->paramGroup.set(MS_Mascot_expectation_value, 0.02);
+            sii->set(MS_Mascot_score, 24.1);
+            sii->set(MS_Mascot_identity_threshold, 12);
+            sii->set(MS_Mascot_homology_threshold, 22);
+            sii->set(MS_Mascot_expectation_value, 0.02);
             
             pe = PeptideEvidencePtr(new PeptideEvidence);
             pe->dbSequencePtr = mzid.sequenceCollection.dbSequences[0];
@@ -521,10 +521,10 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sii->experimentalMassToCharge = 422.42;
             sii->calculatedMassToCharge = 422.24;
             sii->peptidePtr = peptide;
-            sii->paramGroup.set(MS_Mascot_score, 2.4);
-            sii->paramGroup.set(MS_Mascot_identity_threshold, 12);
-            sii->paramGroup.set(MS_Mascot_homology_threshold, 22);
-            sii->paramGroup.set(MS_Mascot_expectation_value, 0.2);
+            sii->set(MS_Mascot_score, 2.4);
+            sii->set(MS_Mascot_identity_threshold, 12);
+            sii->set(MS_Mascot_homology_threshold, 22);
+            sii->set(MS_Mascot_expectation_value, 0.2);
             
             pe = PeptideEvidencePtr(new PeptideEvidence);
             pe->dbSequencePtr = mzid.sequenceCollection.dbSequences[0];
@@ -569,10 +569,10 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sii->experimentalMassToCharge = 424.42;
             sii->calculatedMassToCharge = 424.24;
             sii->peptidePtr = peptide;
-            sii->paramGroup.set(MS_Mascot_score, 44);
-            sii->paramGroup.set(MS_Mascot_identity_threshold, 13);
-            sii->paramGroup.set(MS_Mascot_homology_threshold, 23);
-            sii->paramGroup.set(MS_Mascot_expectation_value, 0.03);
+            sii->set(MS_Mascot_score, 44);
+            sii->set(MS_Mascot_identity_threshold, 13);
+            sii->set(MS_Mascot_homology_threshold, 23);
+            sii->set(MS_Mascot_expectation_value, 0.03);
             
             sii->peptideEvidence = sil->spectrumIdentificationResult[1]->spectrumIdentificationItem[0]->peptideEvidence;
 
@@ -591,10 +591,10 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sii->experimentalMassToCharge = 422.42;
             sii->calculatedMassToCharge = 422.24;
             sii->peptidePtr = peptide;
-            sii->paramGroup.set(MS_Mascot_score, 4.4);
-            sii->paramGroup.set(MS_Mascot_identity_threshold, 13);
-            sii->paramGroup.set(MS_Mascot_homology_threshold, 23);
-            sii->paramGroup.set(MS_Mascot_expectation_value, 0.3);
+            sii->set(MS_Mascot_score, 4.4);
+            sii->set(MS_Mascot_identity_threshold, 13);
+            sii->set(MS_Mascot_homology_threshold, 23);
+            sii->set(MS_Mascot_expectation_value, 0.3);
 
             sii->peptideEvidence = sil->spectrumIdentificationResult[1]->spectrumIdentificationItem[1]->peptideEvidence;
 
@@ -669,7 +669,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     dbSequence->searchDatabasePtr = SearchDatabasePtr(new SearchDatabase("SDB_5peptideMix"));
     dbSequence->accession = "Bombessin";
     dbSequence->seq = dbsequenceList[0];
-    dbSequence->paramGroup.set(MS_protein_description, peptideList[0]);
+    dbSequence->set(MS_protein_description, peptideList[0]);
     mzid.sequenceCollection.dbSequences.push_back(dbSequence);
 
     
@@ -679,13 +679,13 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     dbSequence->searchDatabasePtr = SearchDatabasePtr(new SearchDatabase("SDB_5peptideMix"));
     dbSequence->accession = "Neurotensin";
     dbSequence->seq = dbsequenceList[1];
-    dbSequence->paramGroup.set(MS_protein_description, peptideList[1]);
+    dbSequence->set(MS_protein_description, peptideList[1]);
     mzid.sequenceCollection.dbSequences.push_back(dbSequence);
     
     dbSequence = DBSequencePtr(new DBSequence());
-    dbSequence->paramGroup.set(MS_protein_description, HSP71_RAT.description);
-    dbSequence->paramGroup.set(MS_taxonomy__scientific_name, "Rattus norvegicus");
-    dbSequence->paramGroup.set(MS_taxonomy__NCBI_TaxID, "10116");
+    dbSequence->set(MS_protein_description, HSP71_RAT.description);
+    dbSequence->set(MS_taxonomy__scientific_name, "Rattus norvegicus");
+    dbSequence->set(MS_taxonomy__NCBI_TaxID, "10116");
     
     PeptidePtr peptide(new Peptide());
     peptide->id = "peptide_1_1";
@@ -693,7 +693,7 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     ModificationPtr modification(new Modification());
     modification->location = 0;
     modification->monoisotopicMassDelta = -17.026549;
-    modification->paramGroup.set(UNIMOD_Gln__pyro_Glu);
+    modification->set(UNIMOD_Gln__pyro_Glu);
     peptide->modification.push_back(modification);
     mzid.sequenceCollection.peptides.push_back(peptide);
 
@@ -739,9 +739,9 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     sip->additionalSearchParams.set(MS_param__y_ion);
     sip->additionalSearchParams.set(MS_param__y_ion_NH3);
     SearchModificationPtr smp(new SearchModification());
-    smp->modParam.massDelta = -17.026549;
-    smp->modParam.residues = "Q";
-    smp->modParam.cvParams.set(UNIMOD_Gln__pyro_Glu);
+    smp->massDelta = -17.026549;
+    smp->residues = "Q";
+    smp->cvParams.set(UNIMOD_Gln__pyro_Glu);
     // TODO add UNIMOD:28
     // Use ParamContainer in place of vector<CVParam>
     smp->specificityRules.set(MS_modification_specificity_N_term, string(""));
@@ -850,17 +850,17 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     
     MeasurePtr measure(new Measure());
     measure->id = "m_mz";
-    measure->paramGroup.set(MS_product_ion_m_z);
+    measure->set(MS_product_ion_m_z);
     silp->fragmentationTable.push_back(measure);
 
     measure = MeasurePtr(new Measure());
     measure->id = "m_intensity";
-    measure->paramGroup.set(MS_product_ion_intensity);
+    measure->set(MS_product_ion_intensity);
     silp->fragmentationTable.push_back(measure);
 
     measure = MeasurePtr(new Measure());
     measure->id = "m_error";
-    measure->paramGroup.set(MS_product_ion_m_z_error, "", MS_m_z);
+    measure->set(MS_product_ion_m_z_error, "", MS_m_z);
     silp->fragmentationTable.push_back(measure);
 
     SpectrumIdentificationResultPtr sirp(new SpectrumIdentificationResult());
@@ -875,8 +875,8 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     siip->peptidePtr = PeptidePtr(new Peptide("peptide_1_1"));
     siip->rank = 1;
     siip->passThreshold = true;
-    siip->paramGroup.set(MS_Mascot_score, "15.71");
-    siip->paramGroup.set(MS_Mascot_expectation_value, "0.0268534444565851");
+    siip->set(MS_Mascot_score, "15.71");
+    siip->set(MS_Mascot_expectation_value, "0.0268534444565851");
 
     PeptideEvidencePtr pep(new PeptideEvidence());
     pep->id = "PE_1_1_Neurotensin";
@@ -926,12 +926,12 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     pep->dbSequencePtr = DBSequencePtr(new DBSequence("DBSeq_HSP71_RAT"));
     siip->peptideEvidence.push_back(pep);
     
-    siip->paramGroup.set(MS_Mascot_score, "15.71");
-    siip->paramGroup.set(MS_Mascot_expectation_value, 0.0268534444565851);
+    siip->set(MS_Mascot_score, "15.71");
+    siip->set(MS_Mascot_expectation_value, 0.0268534444565851);
 
     IonTypePtr ionType(new IonType());
     ionType->setIndex("2 3 4 5 6 7").charge = 1;
-    ionType->paramGroup.set(MS_frag__a_ion);
+    ionType->set(MS_frag__a_ion);
     siip->fragmentation.push_back(ionType);
     FragmentArrayPtr fap(new FragmentArray());
     fap->setValues("197.055771 360.124878 489.167847 603.244324 731.075562 828.637207 " );
@@ -953,9 +953,9 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     pdhp->passThreshold = true;
     pdhp->peptideHypothesis.push_back(PeptideEvidencePtr(new PeptideEvidence("PE_19_1_Bombessin_0")));
     pdhp->peptideHypothesis.push_back(PeptideEvidencePtr(new PeptideEvidence("PE_20_1_Bombessin_0")));
-    pdhp->paramGroup.set(MS_Mascot_score, "164.4");
-    pdhp->paramGroup.set(MS_sequence_coverage, "100");
-    pdhp->paramGroup.set(MS_distinct_peptide_sequences, "7");
+    pdhp->set(MS_Mascot_score, "164.4");
+    pdhp->set(MS_sequence_coverage, "100");
+    pdhp->set(MS_distinct_peptide_sequences, "7");
     pagp->proteinDetectionHypothesis.push_back(pdhp);
     
     pdhp = ProteinDetectionHypothesisPtr(new ProteinDetectionHypothesis());
@@ -963,10 +963,10 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     pdhp->dbSequencePtr = DBSequencePtr(new DBSequence("DBSeq_HSP71_RAT"));
     pdhp->passThreshold = "false";
     pdhp->peptideHypothesis.push_back(PeptideEvidencePtr(new PeptideEvidence("PE_2_1_HSP71_RAT_0")));
-    pdhp->paramGroup.set(MS_Mascot_score, "40.95");
-    pdhp->paramGroup.set(MS_sequence_coverage, "2");
-    pdhp->paramGroup.set(MS_distinct_peptide_sequences, "1");
-    pdhp->paramGroup.set(MS_manual_validation);
+    pdhp->set(MS_Mascot_score, "40.95");
+    pdhp->set(MS_sequence_coverage, "2");
+    pdhp->set(MS_distinct_peptide_sequences, "1");
+    pdhp->set(MS_manual_validation);
     pagp->proteinDetectionHypothesis.push_back(pdhp);
     
     pdl->proteinAmbiguityGroup.push_back(pagp);

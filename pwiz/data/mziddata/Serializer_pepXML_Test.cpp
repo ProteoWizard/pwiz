@@ -59,7 +59,7 @@ void stripUnmappedMetadata(MzIdentML& mzid)
     // pepXML doesn't reliably store location or file format
     string& location = mzid.analysisCollection.spectrumIdentification[0]->inputSpectra[0]->location;
     location = bfs::path(location).replace_extension("").filename();
-    mzid.analysisCollection.spectrumIdentification[0]->inputSpectra[0]->fileFormat.clear();
+    mzid.analysisCollection.spectrumIdentification[0]->inputSpectra[0]->fileFormat = CVParam();
 
     string& location2 = mzid.analysisCollection.spectrumIdentification[0]->searchDatabase[0]->location;
     location2 = bfs::path(location2).replace_extension("").filename();

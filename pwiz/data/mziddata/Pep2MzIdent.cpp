@@ -435,7 +435,7 @@ bool addToContactRoleCV(CVParam& param, vector<string>& path,
     if (path.size() &&
         path.at(0) == "role")
     {
-        contactRole.role.cvParams.push_back(param);
+        contactRole.CVParam::operator=(param);
         return true;
     }
 
@@ -475,7 +475,7 @@ bool addToContactCV(CVParam& param, vector<string>& path,
     // If we have a place to put the cvParam and no where else to go...
     if (i != contacts.end() && !path.size())
     {
-        (*i)->params.cvParams.push_back(param);
+        (*i)->cvParams.push_back(param);
         return true;
     }
 
@@ -538,7 +538,7 @@ bool addToSample(CVParam& param, vector<string>& path, SamplePtr sample)
 {
     if (!path.size())
     {
-        sample->cvParams.cvParams.push_back(param);
+        sample->cvParams.push_back(param);
         return true;
     }
 
@@ -566,12 +566,12 @@ bool addToSearchModification(CVParam& param, vector<string>& path,
 
     if (iequals(tag, "ModParam"))
     {
-        sm->modParam.cvParams.cvParams.push_back(param);
+        sm->unimodName = param;
         return true;
     }
     else if (iequals(tag, "SpecificityRules"))
     {
-        sm->specificityRules.cvParams.push_back(param);
+        sm->specificityRules = param;
         return true;
     }
     else
@@ -595,7 +595,7 @@ bool addToSpectrumIdentificationProtocol(CVParam& param, vector<string>& path,
 
     if (iequals(tag, "SearchType"))
     {
-        sip->searchType.cvParams.push_back(param);
+        sip->searchType = param;
         result = true;
     }
     else if (iequals(tag, "AdditionalSearchParams"))
@@ -634,7 +634,7 @@ bool addToSpectrumIdentificationProtocol(CVParam& param, vector<string>& path,
                 AmbiguousResiduePtr(new AmbiguousResidue()));
 
         ar = sip->massTable.ambiguousResidue.back();
-        ar->params.cvParams.push_back(param);
+        ar->cvParams.push_back(param);
 
         result = true;
     }
@@ -833,7 +833,7 @@ struct parameter_p
 
 //
 // Searches a vector of shared_pointers holding a child of
-// IdentifiableType for an object with the given id value.
+// Identifiable for an object with the given id value.
 //
 template<typename T>
 shared_ptr<T> find_id(vector< shared_ptr<T> >& list, const string& id)
@@ -1067,13 +1067,13 @@ void Pep2MzIdent::Impl::addSpectraData(const MSMSRunSummary& msmsRunSummary,
     CVID fileFormat, spectrumIDFormat;
     if (fileExtension2Type(msmsRunSummary.raw_data, fileFormat, spectrumIDFormat))
     {
-        sd->fileFormat.set(fileFormat);
-        sd->spectrumIDFormat.set(spectrumIDFormat);
+        sd->fileFormat = fileFormat;
+        sd->spectrumIDFormat = spectrumIDFormat;
     }
     else if (fileExtension2Type(msmsRunSummary.raw_data_type, fileFormat, spectrumIDFormat))
     {
-        sd->fileFormat.set(fileFormat);
-        sd->spectrumIDFormat.set(spectrumIDFormat);
+        sd->fileFormat = fileFormat;
+        sd->spectrumIDFormat = spectrumIDFormat;
     }
     // In some pepXML files both may be blank. In this case the data
     // may be kept in a parameter named "FILE"
@@ -1091,7 +1091,7 @@ void Pep2MzIdent::Impl::translateEnzyme(const SampleEnzyme& sampleEnzyme,
     // DEBUG
     sip->analysisSoftwarePtr = AnalysisSoftwarePtr(new AnalysisSoftware("AS"));
     //sip->analysisSoftwarePtr = result->analysisSoftwareList.back();
-    sip->searchType.set(MS_ms_ms_search);
+    sip->searchType = MS_ms_ms_search;
     sip->threshold.cvParams.push_back(guessThreshold(mzid->analysisSoftwareList));
     EnzymePtr enzyme(new Enzyme("E_"+lexical_cast<string>(indices->enzyme++)));
 
@@ -1138,7 +1138,7 @@ void Pep2MzIdent::Impl::translateEnzyme(const SampleEnzyme& sampleEnzyme,
     // attribute was not set, then don't alter the mzid Enzymes'
     // values.
     if (sampleEnzyme.independent || !sampleEnzyme.independent)
-        sip->enzymes.independent = sampleEnzyme.independent ? "true" : "false";
+        sip->enzymes.independent = sampleEnzyme.independent ? true : false;
         
     result->analysisProtocolCollection.
         spectrumIdentificationProtocol.push_back(sip);
@@ -1249,9 +1249,9 @@ void Pep2MzIdent::Impl::translateSearch(const SearchSummaryPtr summary,
 
     // Select which type of database is indeicated.
     if (summary->searchDatabase.type == "AA")
-        searchDatabase->params.set(MS_database_type_amino_acid);
+        searchDatabase->set(MS_database_type_amino_acid);
     else if (summary->searchDatabase.type == "NA")
-        searchDatabase->params.set(MS_database_type_nucleotide);
+        searchDatabase->set(MS_database_type_nucleotide);
 
     
     // TODO figure out if this is correct
@@ -1409,7 +1409,7 @@ void Pep2MzIdent::Impl::translateQueries(const SpectrumQueryPtr query,
                 throw runtime_error(("No protein found for sequence "+
                                      (*shit)->peptide).c_str());
             
-            dbs->paramGroup.set(MS_protein_description, *protein_desc);
+            dbs->set(MS_protein_description, *protein_desc);
             if (mzid->dataCollection.inputs.searchDatabase.size()>0)
                 dbs->searchDatabasePtr = mzid->dataCollection.inputs.
                     searchDatabase.at(0);
@@ -1424,7 +1424,7 @@ void Pep2MzIdent::Impl::translateQueries(const SpectrumQueryPtr query,
                                              indices->peptideEvidence++)));
             
             // TODO make sure handle the spectrum field
-            //pepEv->paramGroup.userParams.push_back(UserParam("spectrum",
+            //pepEv->userParams.push_back(UserParam("spectrum",
             //                                                 query->spectrum));
 
             pepEv->start = query->startScan;
@@ -1463,9 +1463,9 @@ void Pep2MzIdent::Impl::translateQueries(const SpectrumQueryPtr query,
                 CVParam cvp;
                 cvp = getParamForSearchScore(*ssit);
                 if (cvp.cvid != CVID_Unknown)
-                    sii->paramGroup.set(cvp.cvid, cvp.value);
+                    sii->set(cvp.cvid, cvp.value);
                 else
-                    sii->paramGroup.userParams.
+                    sii->userParams.
                         push_back(UserParam((*ssit)->name, (*ssit)->value));
                     
             }
@@ -1475,12 +1475,12 @@ void Pep2MzIdent::Impl::translateQueries(const SpectrumQueryPtr query,
 
             std::cerr << "ionscore=" << cvp.cvid << "\n";
             if (cvp.cvid != CVID_Unknown)
-                sii->paramGroup.set(cvp.cvid, cvp.value);
+                sii->set(cvp.cvid, cvp.value);
             
             cvp = translateSearchScore("expect", (*shit)->searchScore);
             std::cerr << "expect=" << cvp.cvid << "\n";
             if (cvp.cvid != CVID_Unknown)
-                sii->paramGroup.set(cvp.cvid, cvp.value);
+                sii->set(cvp.cvid, cvp.value);
             
             
             sii->peptideEvidence.push_back(pepEv);
@@ -1719,8 +1719,8 @@ void Pep2MzIdent::Impl::earlyParameters(ParameterPtr parameter,
         
         if (fileExtension2Type(sd->location, fileFormat, spectrumIDFormat))
         {
-            sd->fileFormat.set(fileFormat);
-            sd->spectrumIDFormat.set(spectrumIDFormat);
+            sd->fileFormat = fileFormat;
+            sd->spectrumIDFormat = spectrumIDFormat;
         }
         mzid->dataCollection.inputs.spectraData.push_back(sd);
     }

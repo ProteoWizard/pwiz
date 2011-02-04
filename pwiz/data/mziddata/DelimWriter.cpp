@@ -83,7 +83,7 @@ PWIZ_API_DECL ostream* DelimWriter::write(const SpectrumIdentificationResult& si
     //
     // Retention time should be kept in the cvParams under accession
     // "MS:1001114"
-    CVParam rtParam = sir.paramGroup.cvParam(cvTermInfo(rtCV).cvid);
+    CVParam rtParam = sir.cvParam(cvTermInfo(rtCV).cvid);
     if (rtParam.cvid != CVID_Unknown)
     {
         ostringstream oss;
@@ -101,7 +101,7 @@ PWIZ_API_DECL ostream* DelimWriter::write(const SpectrumIdentificationResult& si
     // that case, current_line will need to be expanded into a vector
     // of line_type. All children will need to do an expansion for
     // child with multiple siblings.
-    CVParam peakParam = sir.paramGroup.cvParam(cvTermInfo(peakCV).cvid);
+    CVParam peakParam = sir.cvParam(cvTermInfo(peakCV).cvid);
     if (peakParam.cvid != CVID_Unknown)
         current_line.push_back(peakParam.value);
 
@@ -126,7 +126,7 @@ PWIZ_API_DECL ostream* DelimWriter::write(const SpectrumIdentificationItem& sii)
     oss << sii.experimentalMassToCharge;
     current_line.push_back(oss.str());
     
-    CVParam cvParam = sii.paramGroup.cvParamChild(
+    CVParam cvParam = sii.cvParamChild(
         MS_search_engine_specific_score_for_peptides);
 
     if (cvParam.cvid != CVID_Unknown)

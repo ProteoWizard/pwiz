@@ -367,7 +367,7 @@ void write_search_summary(XMLWriter& xmlWriter, const MzIdentML& mzid, const str
             attributes.add("size_in_db_entries", sd.numDatabaseSequences);
         if (sd.numResidues > 0)
             attributes.add("size_of_residues", sd.numResidues);
-        attributes.add("type", sd.params.hasCVParam(MS_database_type_amino_acid) ? "AA" : "NA");
+        attributes.add("type", sd.hasCVParam(MS_database_type_amino_acid) ? "AA" : "NA");
         xmlWriter.startElement("search_database", attributes, XMLWriter::EmptyElement);
 
         attributes.clear();
@@ -378,14 +378,12 @@ void write_search_summary(XMLWriter& xmlWriter, const MzIdentML& mzid, const str
 
         BOOST_FOREACH(const SearchModificationPtr& sm, sip.modificationParams)
         {
-            const ModParam& mp = sm->modParam;
-
-            string residues = mp.residues;
+            string residues = sm->residues;
             if (residues.empty())
             {
                 if (sm->specificityRules.empty())
                     throw runtime_error("[write_search_summary] Empty SearchModification.");
-                if (sm->specificityRules.hasCVParam(MS_modification_specificity_N_term))
+                if (sm->specificityRules == MS_modification_specificity_N_term)
                     residues = "n";
                 else
                     residues = "c";
@@ -400,22 +398,22 @@ void write_search_summary(XMLWriter& xmlWriter, const MzIdentML& mzid, const str
                 if (aa > 'Z') // terminal_modification
                 {
                     attributes.add("terminus", string(1, aa));
-                    attributes.add("massdiff", mp.massDelta);
+                    attributes.add("massdiff", sm->massDelta);
 
                     if (aa == 'n')
-                        attributes.add("mass", nTerm.monoisotopicMass() + mp.massDelta);
+                        attributes.add("mass", nTerm.monoisotopicMass() + sm->massDelta);
                     else
-                        attributes.add("mass", cTerm.monoisotopicMass() + mp.massDelta);
+                        attributes.add("mass", cTerm.monoisotopicMass() + sm->massDelta);
                 }
                 else // aminoacid_modificiation
                 {
                     double aaMass = AminoAcid::Info::record(aa).residueFormula.monoisotopicMass();
                     attributes.add("aminoacid", string(1, aa));
-                    attributes.add("massdiff", mp.massDelta);
-                    attributes.add("mass", mp.massDelta + aaMass);
-                    if (sm->specificityRules.hasCVParam(MS_modification_specificity_N_term))
+                    attributes.add("massdiff", sm->massDelta);
+                    attributes.add("mass", sm->massDelta + aaMass);
+                    if (sm->specificityRules == MS_modification_specificity_N_term)
                         attributes.add("peptide_terminus", "n");
-                    if (sm->specificityRules.hasCVParam(MS_modification_specificity_C_term))
+                    if (sm->specificityRules == MS_modification_specificity_C_term)
                         attributes.add("peptide_terminus", "c");
                 }
                 attributes.add("variable", sm->fixedMod ? "N" : "Y");
@@ -522,13 +520,13 @@ void write_search_hit(XMLWriter& xmlWriter,
     attributes.add("num_tol_term", digestedPeptide.specificTermini());
 
 
-    if (sii.paramGroup.hasCVParam(MS_number_of_matched_peaks))
+    if (sii.hasCVParam(MS_number_of_matched_peaks))
     {
-        int matchedPeaks = sii.paramGroup.cvParam(MS_number_of_matched_peaks).valueAs<int>();
+        int matchedPeaks = sii.cvParam(MS_number_of_matched_peaks).valueAs<int>();
         attributes.add("num_matched_ions", matchedPeaks);
 
-        if (sii.paramGroup.hasCVParam(MS_number_of_unmatched_peaks))
-            attributes.add("tot_num_ions", matchedPeaks + sii.paramGroup.cvParam(MS_number_of_unmatched_peaks).valueAs<int>());
+        if (sii.hasCVParam(MS_number_of_unmatched_peaks))
+            attributes.add("tot_num_ions", matchedPeaks + sii.cvParam(MS_number_of_unmatched_peaks).valueAs<int>());
     }
 
     xmlWriter.startElement("search_hit", attributes);
@@ -539,7 +537,7 @@ void write_search_hit(XMLWriter& xmlWriter,
         if (!sii.peptidePtr->modification.empty())
             write_modification_info(xmlWriter, sii);
 
-        BOOST_FOREACH(const CVParam& cvParam, sii.paramGroup.cvParams)
+        BOOST_FOREACH(const CVParam& cvParam, sii.cvParams)
         {
             if (cvIsA(cvParam.cvid, MS_search_engine_specific_score_for_peptides))
             {
@@ -566,7 +564,7 @@ void write_spectrum_queries(XMLWriter& xmlWriter, const MzIdentML& mzid, const s
     string basename = base_name(mzid, filepath);
 
     CVParam analysisSoftware = mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0]->analysisSoftwarePtr->softwareName.cvParamChild(MS_analysis_software);
-    CVID nativeIdFormat = mzid.dataCollection.inputs.spectraData[0]->spectrumIDFormat.cvParamChild(MS_native_spectrum_identifier_format).cvid;
+    CVID nativeIdFormat = mzid.dataCollection.inputs.spectraData[0]->spectrumIDFormat.cvid;
 
     const SpectrumIdentificationList& sil = *mzid.dataCollection.analysisData.spectrumIdentificationList[0];
     BOOST_FOREACH(const SpectrumIdentificationResultPtr& sirPtr, sil.spectrumIdentificationResult)
@@ -640,7 +638,7 @@ void Serializer_pepXML::write(ostream& os, const MzIdentML& mzid, const string& 
     if (mzid.analysisProtocolCollection.spectrumIdentificationProtocol.empty())
         throw runtime_error("[Serializer_pepXML::write] PepXML requires at least one spectrum identification protocol.");
 
-    if (!mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0]->searchType.hasCVParam(MS_ms_ms_search))
+    if (mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0]->searchType != MS_ms_ms_search)
         throw runtime_error("[Serializer_pepXML::write] PepXML can only represent an MS/MS analysis.");
 
     if (mzid.dataCollection.analysisData.spectrumIdentificationList.empty())
@@ -975,7 +973,7 @@ struct HandlerSearchSummary : public SAXParser::Handler
         else if (name == "search_database")
         {
             SearchDatabasePtr searchDatabase = SearchDatabasePtr(new SearchDatabase);
-            searchDatabase->fileFormat.set(MS_FASTA_format);
+            searchDatabase->fileFormat.cvid = MS_FASTA_format;
 
             string databaseReleaseIdentifier, type;
             getAttribute(attributes, "local_path", searchDatabase->location);
@@ -989,9 +987,9 @@ struct HandlerSearchSummary : public SAXParser::Handler
                 searchDatabase->id = searchDatabase->location.empty() ? "DB_1" : bfs::path(searchDatabase->location).filename();
 
             if (type == "aa")
-                searchDatabase->params.set(MS_database_type_amino_acid);
+                searchDatabase->set(MS_database_type_amino_acid);
             else if (type == "na")
-                searchDatabase->params.set(MS_database_type_nucleotide);
+                searchDatabase->set(MS_database_type_nucleotide);
             else
                 throw runtime_error("[HandlerSearchSummary] Invalid database type: " + type);
 
@@ -1016,17 +1014,17 @@ struct HandlerSearchSummary : public SAXParser::Handler
             // TODO: snap masses to unimod
 
             SearchModificationPtr searchModification = SearchModificationPtr(new SearchModification);
-            getAttribute(attributes, "massdiff", searchModification->modParam.massDelta);
-            searchModification->modParam.residues = aminoacid;
+            getAttribute(attributes, "massdiff", searchModification->massDelta);
+            searchModification->residues = aminoacid;
             if (variable == "y" || variable == "n")
                 searchModification->fixedMod = (variable == "n");
             else
                 searchModification->fixedMod = lexical_cast<bool>(variable);
 
             if (bal::icontains(peptideTerminus, "n"))
-                searchModification->specificityRules.set(MS_modification_specificity_N_term);
+                searchModification->specificityRules.cvid = MS_modification_specificity_N_term;
             if (bal::icontains(peptideTerminus, "c"))
-                searchModification->specificityRules.set(MS_modification_specificity_C_term);
+                searchModification->specificityRules.cvid = MS_modification_specificity_C_term;
 
             _sip->modificationParams.push_back(searchModification);
         }
@@ -1037,13 +1035,13 @@ struct HandlerSearchSummary : public SAXParser::Handler
             bal::to_lower(getAttribute(attributes, "variable", variable));
             
             SearchModificationPtr searchModification = SearchModificationPtr(new SearchModification);
-            getAttribute(attributes, "massdiff", searchModification->modParam.massDelta);
+            getAttribute(attributes, "massdiff", searchModification->massDelta);
             searchModification->fixedMod = !(variable == "y" || lexical_cast<bool>(variable));
 
             if (bal::icontains(terminus, "n"))
-                searchModification->specificityRules.set(MS_modification_specificity_N_term);
+                searchModification->specificityRules.cvid = MS_modification_specificity_N_term;
             if (bal::icontains(terminus, "c"))
-                searchModification->specificityRules.set(MS_modification_specificity_C_term);
+                searchModification->specificityRules.cvid = MS_modification_specificity_C_term;
 
             _sip->modificationParams.push_back(searchModification);
         }
@@ -1174,15 +1172,15 @@ struct HandlerSearchResults : public SAXParser::Handler
 
         if (controlledScoreName == CVID_Unknown)
         {
-            sii.paramGroup.userParams.push_back(UserParam());
-            UserParam& score = sii.paramGroup.userParams.back();
+            sii.userParams.push_back(UserParam());
+            UserParam& score = sii.userParams.back();
             swap(scoreName, score.name);
             getAttribute(attributes, "value", score.value);
         }
         else
         {
-            sii.paramGroup.cvParams.push_back(CVParam(controlledScoreName));
-            getAttribute(attributes, "value", sii.paramGroup.cvParams.back().value);
+            sii.cvParams.push_back(CVParam(controlledScoreName));
+            getAttribute(attributes, "value", sii.cvParams.back().value);
         }
     }
 
@@ -1289,11 +1287,11 @@ struct HandlerSearchResults : public SAXParser::Handler
             int matchedIons, totalIons;
             getAttribute(attributes, "num_matched_ions", matchedIons);
             if (matchedIons > 0)
-                sii.paramGroup.set(MS_number_of_matched_peaks, matchedIons);
+                sii.set(MS_number_of_matched_peaks, matchedIons);
 
             getAttribute(attributes, "tot_num_ions", totalIons);
             if (totalIons > 0)
-                sii.paramGroup.set(MS_number_of_unmatched_peaks, totalIons - matchedIons);
+                sii.set(MS_number_of_unmatched_peaks, totalIons - matchedIons);
 
             _currentPeptide = PeptidePtr(new Peptide);
             getAttribute(attributes, "peptide", _currentPeptide->peptideSequence);
@@ -1358,7 +1356,7 @@ struct HandlerSearchResults : public SAXParser::Handler
         {
             // some engines write custom attributes here; we transcode them as UserParams
             BOOST_FOREACH(const Attributes::value_type& attribute, attributes)
-                _sir->paramGroup.userParams.push_back(UserParam(attribute.first, attribute.second));
+                _sir->userParams.push_back(UserParam(attribute.first, attribute.second));
         }
         else
             throw runtime_error("[HandlerSearchResults] Unexpected element name: " + name);
@@ -1406,7 +1404,7 @@ struct Handler_pepXML : public SAXParser::Handler
         SpectrumIdentificationProtocolPtr sipPtr = SpectrumIdentificationProtocolPtr(new SpectrumIdentificationProtocol("SIP"));
         mzid.analysisProtocolCollection.spectrumIdentificationProtocol.push_back(sipPtr);
 
-        sipPtr->searchType.set(MS_ms_ms_search);
+        sipPtr->searchType.cvid = MS_ms_ms_search;
 
         handlerSearchSummary._mzid = &mzid;
         handlerSearchSummary._sip = sipPtr.get();
@@ -1479,7 +1477,7 @@ struct Handler_pepXML : public SAXParser::Handler
             if (nativeIdFormat == CVID_Unknown)
                 nativeIdFormat = MS_scan_number_only_nativeID_format;
 
-            mzid.dataCollection.inputs.spectraData[0]->spectrumIDFormat.set(nativeIdFormat);
+            mzid.dataCollection.inputs.spectraData[0]->spectrumIDFormat.cvid = nativeIdFormat;
 
             handlerSearchResults.nativeIdFormat = nativeIdFormat;
             return Status(Status::Delegate, &handlerSearchResults);

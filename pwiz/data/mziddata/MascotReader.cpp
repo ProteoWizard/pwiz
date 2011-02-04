@@ -420,22 +420,22 @@ public:
             SearchModificationPtr sm(new SearchModification());
             sm->fixedMod = false;
             if (mdelta)
-                sm->modParam.massDelta = mdelta;
+                sm->massDelta = mdelta;
             if (cvt)
             {
-                sm->modParam.cvParams.set(cvt->cvid);
+                sm->cvParams.set(cvt->cvid);
                 if (regex_match(second.c_str(), where, varmodListOfChars))
-                    sm->modParam.residues.assign(where[1].first,
+                    sm->residues.assign(where[1].first,
                                                  where[1].second);
                 
             }
             else
             {
                 // Not legal, but necessary
-                sm->modParam.cvParams.userParams.
+                sm->cvParams.userParams.
                     push_back(UserParam("unknown_mod", what[0].first));
                 if (regex_match(second.c_str(), where, varmodListOfChars))
-                    sm->modParam.residues.assign(where[1].first,
+                    sm->residues.assign(where[1].first,
                                                  where[1].second);
             }
             sip->modificationParams.push_back(sm);

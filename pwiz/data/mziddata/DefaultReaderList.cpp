@@ -111,7 +111,7 @@ AnalysisSoftwarePtr getPwizSoftware(MzIdentML& mzid)
     if (!result->contactRolePtr.get())
     {
         result->contactRolePtr.reset(new ContactRole);
-        result->contactRolePtr->role.set(MS_software_vendor);
+        result->contactRolePtr->cvid = MS_software_vendor;
     }
     result->contactRolePtr->contactPtr = contactPwiz;
 

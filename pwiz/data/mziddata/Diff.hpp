@@ -65,13 +65,6 @@ void diff(const Measure& a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
-void diff(const ModParam& a,
-          const ModParam& b,
-          ModParam& a_b,
-          ModParam& b_a,
-          const DiffConfig& config);
-
-PWIZ_API_DECL
 void diff(const PeptideEvidence& a,
           const PeptideEvidence& b,
           PeptideEvidence& a_b,
@@ -226,15 +219,6 @@ void diff(const Contact& a,
           Contact& b_a,
           const DiffConfig& config);
 
-
-PWIZ_API_DECL
-void diff(const ContactPtr a,
-          const ContactPtr b,
-          ContactPtr& a_b,
-          ContactPtr& b_a,
-          const DiffConfig& config);
-
-
 PWIZ_API_DECL
 void diff(const Affiliations& a,
           const Affiliations& b,
@@ -247,13 +231,6 @@ void diff(const Person& a,
           const Person& b,
           Person& a_b,
           Person& b_a,
-          const DiffConfig& config);
-
-PWIZ_API_DECL
-void diff(const PersonPtr a,
-          const PersonPtr b,
-          PersonPtr a_b,
-          PersonPtr b_a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
@@ -336,10 +313,10 @@ void diff(const SequenceCollection& a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
-void diff(const Sample::subSample& a,
-          const Sample::subSample& b,
-          Sample::subSample& a_b,
-          Sample::subSample& b_a,
+void diff(const Sample::SubSample& a,
+          const Sample::SubSample& b,
+          Sample::SubSample& a_b,
+          Sample::SubSample& b_a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
@@ -406,10 +383,10 @@ void diff(const MzIdentML& a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
-void diff(const IdentifiableType& a,
-          const IdentifiableType& b,
-          IdentifiableType& a_b,
-          IdentifiableType& b_a,
+void diff(const Identifiable& a,
+          const Identifiable& b,
+          Identifiable& a_b,
+          Identifiable& b_a,
           const DiffConfig& config);
 
 } // namespace diff_impl

@@ -29,24 +29,25 @@
 
 using namespace pwiz::util;
 using namespace pwiz::data;
+using namespace pwiz::data::diff_impl;
 using namespace pwiz::mziddata;
 
 
-// TODO: Add IdentifiableType diff to all subclasses of IdentifiableType
+// TODO: Add Identifiable diff to all subclasses of Identifiable
 
 ostream* os_ = 0;
 const double epsilon = numeric_limits<double>::epsilon();
 
-void testIdentifiableType()
+void testIdentifiable()
 {
-    if (os_) *os_ << "testIdentifiableType()\n";
+    if (os_) *os_ << "testIdentifiable()\n";
 
-    IdentifiableType a, b;
+    Identifiable a, b;
     a.id="a";
     a.name="a_name";
     b = a;
 
-    Diff<IdentifiableType, DiffConfig> diff(a, b);
+    Diff<Identifiable, DiffConfig> diff(a, b);
     if (diff && os_) *os_ << diff << endl;
     unit_assert(!diff);
 
@@ -81,8 +82,8 @@ void testFragmentArray()
     unit_assert(diff);
 
     // the values of the diff are correct
-    unit_assert(diff.a_b.params.userParams.size() == 1);
-    unit_assert(diff.b_a.params.userParams.size() == 1);
+    unit_assert(diff.a_b.userParams.size() == 1);
+    unit_assert(diff.b_a.userParams.size() == 1);
     unit_assert(diff.a_b.measurePtr.get());
     unit_assert(diff.a_b.measurePtr->id == "Measure_ref");
     unit_assert(diff.b_a.measurePtr.get());
@@ -98,7 +99,7 @@ void testIonType()
     IonType a, b;
     a.index.push_back(1);
     a.charge = 1;
-    a.paramGroup.set(MS_frag__a_ion);
+    a.set(MS_frag__a_ion);
     a.fragmentArray.push_back(FragmentArrayPtr(new FragmentArray));
 
     b = a;
@@ -109,7 +110,7 @@ void testIonType()
 
     b.index.back() = 2;
     b.charge = 2;
-    b.paramGroup.set(MS_frag__z_ion);
+    b.set(MS_frag__z_ion);
     b.fragmentArray.push_back(FragmentArrayPtr(new FragmentArray));
     b.fragmentArray.back()->measurePtr = MeasurePtr(new Measure("Graduated_cylinder"));
     diff(a, b);
@@ -125,8 +126,8 @@ void testIonType()
     unit_assert_equal(*diff.b_a.index.begin(), 2.0, epsilon);
     unit_assert_equal(diff.a_b.charge, 1.0, epsilon);
     unit_assert_equal(diff.b_a.charge, 2.0, epsilon);
-    unit_assert(diff.a_b.paramGroup.empty());
-    unit_assert(diff.b_a.paramGroup.hasCVParam(MS_frag__z_ion));
+    unit_assert(diff.a_b.ParamContainer::empty());
+    unit_assert(diff.b_a.hasCVParam(MS_frag__z_ion));
     unit_assert(diff.b_a.fragmentArray.size() == 1);
     unit_assert(diff.b_a.fragmentArray.back()->measurePtr.get());
     unit_assert(diff.b_a.fragmentArray.back()->measurePtr->id == "Graduated_cylinder");
@@ -140,7 +141,7 @@ void testMaterial()
     Material a, b;
 
     a.contactRole.contactPtr = ContactPtr(new Person("contactPtr"));
-    a.cvParams.set(MS_sample_number);
+    a.set(MS_sample_number);
     b = a;
 
     Diff<Material, DiffConfig> diff(a, b);
@@ -148,7 +149,7 @@ void testMaterial()
     unit_assert(!diff);
 
     b.contactRole.contactPtr = ContactPtr(new Person("fer_rehto"));
-    b.cvParams.set(MS_sample_name);
+    b.set(MS_sample_name);
 
     diff(a, b);
     if (os_) *os_ << diff << endl;
@@ -157,13 +158,13 @@ void testMaterial()
     unit_assert(diff);
 
     // and correctly
-    unit_assert(diff.a_b.cvParams.cvParams.size() == 0);
-    unit_assert(diff.b_a.cvParams.cvParams.size() == 1);
+    unit_assert(diff.a_b.cvParams.size() == 0);
+    unit_assert(diff.b_a.cvParams.size() == 1);
     unit_assert(diff.a_b.contactRole.contactPtr.get());
     unit_assert(diff.b_a.contactRole.contactPtr.get());
     unit_assert(diff.a_b.contactRole.contactPtr->id == "contactPtr");
     unit_assert(diff.b_a.contactRole.contactPtr->id == "fer_rehto");
-    unit_assert(diff.b_a.cvParams.hasCVParam(MS_sample_name));
+    unit_assert(diff.b_a.hasCVParam(MS_sample_name));
 
 }
 
@@ -173,13 +174,13 @@ void testMeasure()
     if (os_) *os_ << "testMeasure()\n";
 
     Measure a, b;
-    a.paramGroup.set(MS_product_ion_m_z, 200);
+    a.set(MS_product_ion_m_z, 200);
     b = a;
 
     Diff<Measure, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
-    b.paramGroup.set(MS_product_ion_intensity, 1);
+    b.set(MS_product_ion_intensity, 1);
 
     diff(a, b);
     if (os_) *os_ << diff << endl;
@@ -188,28 +189,28 @@ void testMeasure()
     unit_assert(diff);
 
     // and correctly
-    unit_assert(diff.a_b.paramGroup.cvParams.size() == 0);
-    unit_assert(diff.b_a.paramGroup.cvParams.size() == 1);
-    unit_assert(diff.b_a.paramGroup.hasCVParam(MS_product_ion_intensity));
+    unit_assert(diff.a_b.cvParams.size() == 0);
+    unit_assert(diff.b_a.cvParams.size() == 1);
+    unit_assert(diff.b_a.hasCVParam(MS_product_ion_intensity));
 }
 
-void testModParam()
+void testSearchModification()
 {
-    if (os_) *os_ << "testModParam()\n";
+    if (os_) *os_ << "testSearchModification()\n";
 
-    ModParam a, b;
+    SearchModification a, b;
 
     a.massDelta = 1;
     a.residues = "ABCD";
-    a.cvParams.set(UNIMOD_Gln__pyro_Glu);
+    a.unimodName.cvid = UNIMOD_Gln__pyro_Glu;
     b = a;
 
-    Diff<ModParam, DiffConfig> diff(a, b);
+    Diff<SearchModification, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     b.massDelta = 10;
     b.residues = "EFG";
-    b.cvParams.set(UNIMOD_Glu__pyro_Glu);
+    b.unimodName.cvid = UNIMOD_Glu__pyro_Glu;
 
     diff(a, b);
     if (os_) *os_ << diff << endl;
@@ -222,9 +223,10 @@ void testModParam()
     unit_assert_equal(diff.b_a.massDelta, 9, epsilon);
     unit_assert(diff.a_b.residues == "ABCD");
     unit_assert(diff.b_a.residues == "EFG");
-    unit_assert(diff.a_b.cvParams.cvParams.size() == 0);
-    unit_assert(diff.b_a.cvParams.cvParams.size() == 1);
-    unit_assert(diff.b_a.cvParams.hasCVParam(UNIMOD_Glu__pyro_Glu));
+    unit_assert(!diff.a_b.unimodName.empty());
+    unit_assert(diff.a_b.unimodName.cvid == UNIMOD_Gln__pyro_Glu);
+    unit_assert(!diff.b_a.unimodName.empty());
+    unit_assert(diff.b_a.unimodName.cvid == UNIMOD_Glu__pyro_Glu);
 }
 
 
@@ -247,7 +249,7 @@ void testPeptideEvidence()
     a.frame = 0;
     a.isDecoy = true;
     a.missedCleavages = 0;
-    a.paramGroup.set(MS_Mascot_score, 15.71);
+    a.set(MS_Mascot_score, 15.71);
     b = a;
 
     diff(a,b);
@@ -262,7 +264,7 @@ void testPeptideEvidence()
     b.frame = 1;
     b.isDecoy = false;
     b.missedCleavages = 1;
-    b.paramGroup.set(MS_Mascot_expectation_value, 0.0268534444565851);
+    b.set(MS_Mascot_expectation_value, 0.0268534444565851);
 
     diff(a, b);
     if (os_) *os_ << diff << endl;
@@ -293,9 +295,9 @@ void testPeptideEvidence()
     unit_assert(diff.b_a.isDecoy == false);
     unit_assert_equal(diff.a_b.missedCleavages, 0.0, epsilon);
     unit_assert_equal(diff.b_a.missedCleavages, 1.0, epsilon);
-    unit_assert(diff.a_b.paramGroup.cvParams.size() == 0);
-    unit_assert(diff.b_a.paramGroup.cvParams.size() == 1);
-    unit_assert(diff.b_a.paramGroup.hasCVParam(MS_Mascot_expectation_value));
+    unit_assert(diff.a_b.cvParams.size() == 0);
+    unit_assert(diff.b_a.cvParams.size() == 1);
+    unit_assert(diff.b_a.hasCVParam(MS_Mascot_expectation_value));
 
 }
 
@@ -308,14 +310,14 @@ void testProteinAmbiguityGroup()
 
     a.proteinDetectionHypothesis.push_back(ProteinDetectionHypothesisPtr(new ProteinDetectionHypothesis));
     a.proteinDetectionHypothesis.back()->dbSequencePtr = DBSequencePtr(new DBSequence("DBSequence_ref"));
-    a.paramGroup.set(MS_Mascot_score, 164.4);
+    a.set(MS_Mascot_score, 164.4);
     b = a;
 
     Diff<ProteinAmbiguityGroup, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     b.proteinDetectionHypothesis.clear();
-    b.paramGroup.set(MS_Mascot_expectation_value, 0.0268534444565851);
+    b.set(MS_Mascot_expectation_value, 0.0268534444565851);
 
     diff(a, b);
     if (os_) *os_ << diff << endl;
@@ -327,9 +329,9 @@ void testProteinAmbiguityGroup()
     unit_assert(diff.a_b.proteinDetectionHypothesis.size() == 1);
     unit_assert(diff.b_a.proteinDetectionHypothesis.size() == 0);
     unit_assert(diff.a_b.proteinDetectionHypothesis.back()->dbSequencePtr->id == "DBSequence_ref");
-    unit_assert(diff.a_b.paramGroup.cvParams.size() == 0);
-    unit_assert(diff.b_a.paramGroup.cvParams.size() == 1);
-    unit_assert(diff.b_a.paramGroup.hasCVParam(MS_Mascot_expectation_value)); // TODO check vals also?
+    unit_assert(diff.a_b.cvParams.size() == 0);
+    unit_assert(diff.b_a.cvParams.size() == 1);
+    unit_assert(diff.b_a.hasCVParam(MS_Mascot_expectation_value)); // TODO check vals also?
 
 }
 
@@ -348,7 +350,7 @@ void testProteinDetectionHypothesis()
     b.passThreshold = false;
     a.peptideHypothesis.push_back(PeptideEvidencePtr(new PeptideEvidence("marjoram")));
     b.peptideHypothesis.push_back(PeptideEvidencePtr(new PeptideEvidence("thyme")));
-    a.paramGroup.set(MS_Mascot_expectation_value);
+    a.set(MS_Mascot_expectation_value);
 
     diff(a,b);
     if (os_) *os_ << diff << endl;
@@ -367,9 +369,9 @@ void testProteinDetectionHypothesis()
     unit_assert(diff.b_a.peptideHypothesis.size() == 1);
     unit_assert(diff.a_b.peptideHypothesis.back()->id == "marjoram");
     unit_assert(diff.b_a.peptideHypothesis.back()->id ==  "thyme");
-    unit_assert(diff.a_b.paramGroup.cvParams.size() == 1);
-    unit_assert(diff.b_a.paramGroup.cvParams.size() == 0);
-    unit_assert(diff.a_b.paramGroup.hasCVParam(MS_Mascot_expectation_value));
+    unit_assert(diff.a_b.cvParams.size() == 1);
+    unit_assert(diff.b_a.cvParams.size() == 0);
+    unit_assert(diff.a_b.hasCVParam(MS_Mascot_expectation_value));
 
 }
 
@@ -385,11 +387,11 @@ void testSpectrumIdentificationList()
     b.numSequencesSearched = 5;
 
     MeasurePtr testMeasure(new Measure());
-    testMeasure->paramGroup.set(MS_Mascot_expectation_value);
+    testMeasure->set(MS_Mascot_expectation_value);
     a.fragmentationTable.push_back(testMeasure);
 
     SpectrumIdentificationResultPtr testSIRPtr(new SpectrumIdentificationResult());
-    testSIRPtr->paramGroup.set(MS_Mascot_expectation_value);
+    testSIRPtr->set(MS_Mascot_expectation_value);
     a.spectrumIdentificationResult.push_back(testSIRPtr);
 
     diff(a,b);
@@ -403,10 +405,10 @@ void testSpectrumIdentificationList()
     unit_assert_equal(diff.b_a.numSequencesSearched,5.0,epsilon);
     unit_assert(diff.a_b.fragmentationTable.size() == 1);
     unit_assert(diff.b_a.fragmentationTable.size() == 0);
-    unit_assert(diff.a_b.fragmentationTable.back()->paramGroup.hasCVParam(MS_Mascot_expectation_value));
+    unit_assert(diff.a_b.fragmentationTable.back()->hasCVParam(MS_Mascot_expectation_value));
     unit_assert(diff.a_b.spectrumIdentificationResult.size() == 1);
     unit_assert(diff.b_a.spectrumIdentificationResult.size() == 0);
-    unit_assert(diff.a_b.spectrumIdentificationResult.back()->paramGroup.hasCVParam(MS_Mascot_expectation_value));
+    unit_assert(diff.a_b.spectrumIdentificationResult.back()->hasCVParam(MS_Mascot_expectation_value));
 
 }
 
@@ -420,9 +422,9 @@ void testProteinDetectionList()
     unit_assert(!diff);
 
     a.proteinAmbiguityGroup.push_back(ProteinAmbiguityGroupPtr(new ProteinAmbiguityGroup()));
-    a.proteinAmbiguityGroup.back()->paramGroup.set(MS_Mascot_expectation_value, 0.0268534444565851);
-    a.paramGroup.set(MS_frag__z_ion);
-    b.paramGroup.set(MS_frag__b_ion);
+    a.proteinAmbiguityGroup.back()->set(MS_Mascot_expectation_value, 0.0268534444565851);
+    a.set(MS_frag__z_ion);
+    b.set(MS_frag__b_ion);
 
     diff(a,b);
     if (os_) *os_ << diff << endl;
@@ -433,11 +435,11 @@ void testProteinDetectionList()
     // and correctly
     unit_assert(diff.a_b.proteinAmbiguityGroup.size() == 1);
     unit_assert(diff.b_a.proteinAmbiguityGroup.size() == 0);
-    unit_assert(diff.a_b.proteinAmbiguityGroup.back()->paramGroup.hasCVParam(MS_Mascot_expectation_value));
-    unit_assert(diff.a_b.paramGroup.cvParams.size() == 1);
-    unit_assert(diff.b_a.paramGroup.cvParams.size() == 1);
-    unit_assert(diff.a_b.paramGroup.hasCVParam(MS_frag__z_ion));
-    unit_assert(diff.b_a.paramGroup.hasCVParam(MS_frag__b_ion));
+    unit_assert(diff.a_b.proteinAmbiguityGroup.back()->hasCVParam(MS_Mascot_expectation_value));
+    unit_assert(diff.a_b.cvParams.size() == 1);
+    unit_assert(diff.b_a.cvParams.size() == 1);
+    unit_assert(diff.a_b.hasCVParam(MS_frag__z_ion));
+    unit_assert(diff.b_a.hasCVParam(MS_frag__b_ion));
 
 }
 
@@ -497,7 +499,7 @@ void testSearchDatabase()
     a.numResidues = 3;
     b.numResidues = 13;
 
-    a.fileFormat.set(MS_frag__z_ion);
+    a.fileFormat.cvid = MS_frag__z_ion;
     a.DatabaseName.set(MS_frag__z_ion);
 
     diff(a,b);
@@ -515,9 +517,9 @@ void testSearchDatabase()
     unit_assert_equal(diff.b_a.numDatabaseSequences, 15.0, epsilon);
     unit_assert_equal(diff.a_b.numResidues, 3.0, epsilon);
     unit_assert_equal(diff.b_a.numResidues, 13.0, epsilon);
-    unit_assert(diff.a_b.fileFormat.cvParams.size() == 1);
-    unit_assert(diff.b_a.fileFormat.cvParams.size() == 0);
-    unit_assert(diff.a_b.fileFormat.hasCVParam(MS_frag__z_ion));
+    unit_assert(!diff.a_b.fileFormat.empty());
+    unit_assert(diff.b_a.fileFormat.empty());
+    unit_assert(diff.a_b.fileFormat.cvid == MS_frag__z_ion);
     unit_assert(diff.a_b.DatabaseName.cvParams.size() == 1);
     unit_assert(diff.b_a.DatabaseName.cvParams.size() == 0);
     unit_assert(diff.a_b.DatabaseName.hasCVParam(MS_frag__z_ion));
@@ -537,7 +539,7 @@ void testSpectraData()
     b.location = "white_bear_lake";
     a.externalFormatDocumentation.push_back("wikipedia");
     b.externalFormatDocumentation.push_back("ehow");
-    a.fileFormat.set(MS_frag__b_ion);
+    a.fileFormat.cvid = MS_frag__b_ion;
 
     diff(a,b);
     if (os_) *os_ << diff << endl;
@@ -552,9 +554,9 @@ void testSpectraData()
     unit_assert(diff.b_a.externalFormatDocumentation.size() == 1);
     unit_assert(diff.a_b.externalFormatDocumentation.back() == "wikipedia");
     unit_assert(diff.b_a.externalFormatDocumentation.back() == "ehow");
-    unit_assert(diff.a_b.fileFormat.cvParams.size() == 1);
-    unit_assert(diff.b_a.fileFormat.cvParams.size() == 0);
-    unit_assert(diff.a_b.fileFormat.hasCVParam(MS_frag__b_ion));
+    unit_assert(!diff.a_b.fileFormat.empty());
+    unit_assert(diff.b_a.fileFormat.empty());
+    unit_assert(diff.a_b.fileFormat.cvid == MS_frag__b_ion);
 
 }
 
@@ -569,12 +571,11 @@ void testSourceFile()
 
     a.location = "madison";
     b.location = "middleton";
-    a.fileFormat.set(MS_wolf);
-    b.fileFormat.set(MS_ReAdW);
+    a.fileFormat.cvid = MS_wolf;
     a.externalFormatDocumentation.push_back("The Idiot's Guide to External Formats");
     b.externalFormatDocumentation.push_back("External Formats for Dummies");
-    a.paramGroup.set(MS_sample_number);
-    b.paramGroup.set(MS_sample_name);
+    a.set(MS_sample_number);
+    b.set(MS_sample_name);
 
     diff(a,b);
     if (os_) *os_ << diff << endl;
@@ -585,18 +586,17 @@ void testSourceFile()
     // and correctly
     unit_assert(diff.a_b.location == "madison");
     unit_assert(diff.b_a.location == "middleton");
-    unit_assert(diff.a_b.fileFormat.cvParams.size() == 1);
-    unit_assert(diff.b_a.fileFormat.cvParams.size() == 1);
-    unit_assert(diff.a_b.fileFormat.hasCVParam(MS_wolf));
-    unit_assert(diff.b_a.fileFormat.hasCVParam(MS_ReAdW));
+    unit_assert(!diff.a_b.fileFormat.empty());
+    unit_assert(diff.b_a.fileFormat.empty());
+    unit_assert(diff.a_b.fileFormat.cvid == MS_wolf);
     unit_assert(diff.a_b.externalFormatDocumentation.size() == 1);
     unit_assert(diff.b_a.externalFormatDocumentation.size() == 1);
     unit_assert(diff.a_b.externalFormatDocumentation.back() == "The Idiot's Guide to External Formats");
     unit_assert(diff.b_a.externalFormatDocumentation.back() == "External Formats for Dummies");
-    unit_assert(diff.a_b.paramGroup.cvParams.size() == 1);
-    unit_assert(diff.b_a.paramGroup.cvParams.size() == 1);
-    unit_assert(diff.a_b.paramGroup.hasCVParam(MS_sample_number));
-    unit_assert(diff.b_a.paramGroup.hasCVParam(MS_sample_name));
+    unit_assert(diff.a_b.cvParams.size() == 1);
+    unit_assert(diff.b_a.cvParams.size() == 1);
+    unit_assert(diff.a_b.hasCVParam(MS_sample_number));
+    unit_assert(diff.b_a.hasCVParam(MS_sample_name));
 
 }
 
@@ -780,15 +780,15 @@ void testAmbiguousResidue()
     AmbiguousResidue a, b;
 
     a.Code = "Z";
-    a.params.set(MS_alternate_single_letter_codes);
+    a.set(MS_alternate_single_letter_codes);
     b = a;
 
     Diff<AmbiguousResidue, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
     b.Code = "B";
-    b.params.clear();
-    b.params.set(MS_ambiguous_residues);
+    b.clear();
+    b.set(MS_ambiguous_residues);
 
     diff(a, b);
     if (os_) *os_ << diff << endl;
@@ -798,10 +798,10 @@ void testAmbiguousResidue()
     unit_assert(diff.a_b.Code == "Z");
     unit_assert(diff.b_a.Code == "B");
 
-    //unit_assert(diff.a_b.params.cvParams.size() == 1);
-    //unit_assert(diff.b_a.params.cvParams.size() == 1);
-    //unit_assert(diff.a_b.params.hasCVParam(MS_alternate_single_letter_codes));
-    //unit_assert(diff.a_b.params.hasCVParam(MS_ambiguous_residues));
+    //unit_assert(diff.a_b.cvParams.size() == 1);
+    //unit_assert(diff.b_a.cvParams.size() == 1);
+    //unit_assert(diff.a_b.hasCVParam(MS_alternate_single_letter_codes));
+    //unit_assert(diff.a_b.hasCVParam(MS_ambiguous_residues));
 }
 
 void testFilter()
@@ -1035,12 +1035,6 @@ void testSample()
 }
 
 
-void testSearchModification()
-{
-    if (os_) *os_ << "testSearchModification()\n";
-}
-
-
 void testSpectrumIdentificationItem()
 {
     if (os_) *os_ << "testSpectrumIdentificationItem()\n";
@@ -1072,7 +1066,7 @@ void testContactRole()
     ContactRole a, b;
 
     a.contactPtr = ContactPtr(new Person("cid", "cname"));
-    a.role.set(MS_software_vendor);
+    a.cvid = MS_software_vendor;
 
     b = a;
 
@@ -1174,14 +1168,13 @@ void testMzIdentML()
 
 void test()
 {
-    testIdentifiableType();
+    testIdentifiable();
     testContact();
     testContactRole();
     testFragmentArray();
     testIonType();
     testMaterial();
     testMeasure();
-    testModParam();
     testPeptideEvidence();
     testProteinAmbiguityGroup();
     testProteinDetectionHypothesis();

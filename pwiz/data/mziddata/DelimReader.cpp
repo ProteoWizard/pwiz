@@ -58,8 +58,8 @@ struct ExtType
 {
     const char* extension;
     const char* type;
-    const char  field_sep;
-    const char  record_sep;
+    char  field_sep;
+    char  record_sep;
 };
 
 ExtType extType_[] =
@@ -231,10 +231,10 @@ void DelimReader::read(const string& filename,
 
             SpectrumIdentificationResultPtr sir(
                 new SpectrumIdentificationResult());
-            sir->paramGroup.set(MS_retention_time_s_, value, unitsCVID);
+            sir->set(MS_retention_time_s_, value, unitsCVID);
 
             // 2nd field: scan
-            sir->paramGroup.set(MS_peak_list_scans, fields.at(1));
+            sir->set(MS_peak_list_scans, fields.at(1));
             
             SpectrumIdentificationListPtr sil(new SpectrumIdentificationList());
             sil->spectrumIdentificationResult.push_back(sir);
@@ -254,7 +254,7 @@ void DelimReader::read(const string& filename,
             
             // 4th field: score
             CVID scoreType = pimpl->mapScore(get(ScoreType));
-            sii->paramGroup.set(scoreType, fields.at(3));
+            sii->set(scoreType, fields.at(3));
 
             // 5th field: peptide
             PeptideEvidencePtr pe(new PeptideEvidence());

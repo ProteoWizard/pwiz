@@ -108,7 +108,7 @@ PWIZ_API_DECL void resolve(AnalysisSoftwarePtr asp, MzIdentML& mzid)
 PWIZ_API_DECL void resolve(AnalysisSampleCollection& asc, MzIdentML& mzid)
 {
     typedef vector<SamplePtr>::iterator Sit;
-    typedef vector<Sample::subSample>::iterator SubSit;
+    typedef vector<Sample::SubSample>::iterator SubSit;
 
     for (Sit sit = asc.samples.begin(); sit != asc.samples.end(); sit++)
     {

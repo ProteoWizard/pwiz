@@ -85,7 +85,7 @@ void testAnalysisSampleCollection()
     MzIdentML mzid;
     
     SamplePtr sample(new Sample("s1", "Sample No. 1"));
-    sample->subSamples.push_back(Sample::subSample("s2"));
+    sample->subSamples.push_back(Sample::SubSample("s2"));
 
     mzid.analysisSampleCollection.samples.push_back(sample);
 
@@ -93,7 +93,7 @@ void testAnalysisSampleCollection()
     unit_assert(mzid.analysisSampleCollection.samples.at(0)->subSamples.at(0).samplePtr->name.empty());
 
     sample = SamplePtr(new Sample("s2", "Sample No. 2"));
-    sample->subSamples.push_back(Sample::subSample("s1"));
+    sample->subSamples.push_back(Sample::SubSample("s1"));
 
     mzid.analysisSampleCollection.samples.push_back(sample);
 

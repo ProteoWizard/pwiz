@@ -57,18 +57,12 @@ using namespace pwiz::data;
 PWIZ_API_DECL std::vector<CV> defaultCVList();
 
 
-struct PWIZ_API_DECL Element
+struct PWIZ_API_DECL Identifiable
 {
-};
+    Identifiable(const std::string& id_ = "",
+                 const std::string& name_ = "");
+    virtual ~Identifiable() {}
 
-
-struct PWIZ_API_DECL IdentifiableType : public Element
-{
-    //    static const int INVALID_NATURAL = -1;
-    IdentifiableType(const std::string& id_ = "",
-                     const std::string& name_ = "");
-    virtual ~IdentifiableType() {}
-    
     std::string id;
     std::string name;
 
@@ -76,21 +70,21 @@ struct PWIZ_API_DECL IdentifiableType : public Element
 };
 
 
-struct PWIZ_API_DECL ExternalData : public IdentifiableType
+struct PWIZ_API_DECL ExternalData : public Identifiable
 {
     ExternalData(const std::string id_ = "",
                  const std::string name_ = "");
-    
+
     std::string location;
-    
+
     bool empty() const;
 };
 
 
-struct PWIZ_API_DECL BibliographicReference : public IdentifiableType
+struct PWIZ_API_DECL BibliographicReference : public Identifiable
 {
     BibliographicReference();
-    
+
     std::string authors;
     std::string publication;
     std::string publisher;
@@ -107,21 +101,18 @@ struct PWIZ_API_DECL BibliographicReference : public IdentifiableType
 TYPEDEF_SHARED_PTR(BibliographicReference);
 
 
-struct PWIZ_API_DECL Contact : public IdentifiableType
+struct PWIZ_API_DECL Contact : public Identifiable, public ParamContainer
 {
     Contact(const std::string& id_ = "",
             const std::string& name_ = "");
     virtual ~Contact() {}
-    
+
     std::string address;
     std::string phone;
     std::string email;
     std::string fax;
     std::string tollFreePhone;
 
-    // For diff messages
-    ParamContainer params;
-    
     virtual bool empty() const;
 };
 
@@ -133,9 +124,7 @@ struct PWIZ_API_DECL Organization : public Contact
     struct PWIZ_API_DECL Parent
     {
         Parent();
-        
-        //std::string organization_ref;
-        //boost::shared_ptr<Organization> organizationPtr;
+
         ContactPtr organizationPtr;
 
         bool empty() const;
@@ -151,12 +140,10 @@ struct PWIZ_API_DECL Organization : public Contact
 TYPEDEF_SHARED_PTR(Organization);
 
 
-struct PWIZ_API_DECL Affiliations : public Element
+struct PWIZ_API_DECL Affiliations
 {
     Affiliations(const std::string& id_ = "");
-    
-    //std::string organization_ref;
-    //OrganizationPtr organizationPtr;
+
     ContactPtr organizationPtr;
 
     bool empty() const;
@@ -167,11 +154,11 @@ struct PWIZ_API_DECL Person : public Contact
 {
     Person(const std::string& id_ = "",
            const std::string& name_ = "");
-    
+
     std::string lastName;
     std::string firstName;
     std::string midInitials;
-    
+
     std::vector<Affiliations> affiliations;
 
     virtual bool empty() const;
@@ -180,13 +167,11 @@ struct PWIZ_API_DECL Person : public Contact
 TYPEDEF_SHARED_PTR(Person);
 
 
-struct PWIZ_API_DECL ContactRole : public Element
+struct PWIZ_API_DECL ContactRole : public CVParam
 {
     ContactRole();
-    
-    //std::string Contact_ref;
+
     ContactPtr contactPtr;
-    ParamContainer role;
 
     bool empty() const;
 };
@@ -194,11 +179,11 @@ struct PWIZ_API_DECL ContactRole : public Element
 TYPEDEF_SHARED_PTR(ContactRole);
 
 
-struct PWIZ_API_DECL Provider : public IdentifiableType
+struct PWIZ_API_DECL Provider : public Identifiable
 {
     Provider(const std::string id_ = "",
              const std::string name_ = "");
-    
+
     ContactRole contactRole;
 
     bool empty() const;
@@ -207,13 +192,12 @@ struct PWIZ_API_DECL Provider : public IdentifiableType
 TYPEDEF_SHARED_PTR(Provider);
 
 
-struct PWIZ_API_DECL Material : public IdentifiableType
+struct PWIZ_API_DECL Material : public Identifiable, public ParamContainer
 {
     Material(const std::string& id_ = "",
              const std::string& name_ = "");
-    
+
     ContactRole contactRole;
-    ParamContainer cvParams;
 
     virtual bool empty() const;
 };
@@ -222,12 +206,11 @@ struct PWIZ_API_DECL Material : public IdentifiableType
 struct PWIZ_API_DECL Sample : public Material
 {
     // SampleType schema elements
-    struct PWIZ_API_DECL subSample
+    struct PWIZ_API_DECL SubSample
     {
-        subSample(const std::string& id_ = "",
+        SubSample(const std::string& id_ = "",
                   const std::string& name_ = "");
-        
-        //std::string Sample_ref;
+
         boost::shared_ptr<Sample> samplePtr;
 
         bool empty() const;
@@ -235,7 +218,7 @@ struct PWIZ_API_DECL Sample : public Material
 
     Sample(const std::string& id_ = "",
            const std::string& name_ = "");
-    std::vector<subSample> subSamples;
+    std::vector<SubSample> subSamples;
 
     bool empty() const;
 };
@@ -243,11 +226,11 @@ struct PWIZ_API_DECL Sample : public Material
 TYPEDEF_SHARED_PTR(Sample);
 
 
-struct PWIZ_API_DECL AnalysisSoftware : public IdentifiableType
+struct PWIZ_API_DECL AnalysisSoftware : public Identifiable
 {
     AnalysisSoftware(const std::string& id_ = "",
                      const std::string& name_ = "");
-    
+
     // SoftwareType attributes
     std::string version;
     std::string URI;
@@ -273,19 +256,18 @@ struct PWIZ_API_DECL AnalysisSampleCollection
 };
 
 
-struct PWIZ_API_DECL SearchDatabase : public ExternalData
+struct PWIZ_API_DECL SearchDatabase : public ExternalData, public ParamContainer
 {
     SearchDatabase(const std::string& id_ = "",
                    const std::string& name_ = "");
-    
+
     std::string version;
     std::string releaseDate;
     long numDatabaseSequences;
     long numResidues;
 
-    ParamContainer fileFormat;
+    CVParam fileFormat;
     ParamContainer DatabaseName;
-    ParamContainer params;
 
     bool empty() const;
 };
@@ -293,19 +275,16 @@ struct PWIZ_API_DECL SearchDatabase : public ExternalData
 TYPEDEF_SHARED_PTR(SearchDatabase);
 
 
-struct PWIZ_API_DECL DBSequence : public IdentifiableType
+struct PWIZ_API_DECL DBSequence : public Identifiable, public ParamContainer
 {
     DBSequence(const std::string id_ = "",
                const std::string name_ = "");
-    
+
     int length;
     std::string accession;
-    //std::string SearchDatabase_ref;
     SearchDatabasePtr searchDatabasePtr;
 
     std::string seq;
-
-    ParamContainer paramGroup;
 
     bool empty() const;
 };
@@ -313,16 +292,14 @@ struct PWIZ_API_DECL DBSequence : public IdentifiableType
 TYPEDEF_SHARED_PTR(DBSequence);
 
 
-struct PWIZ_API_DECL Modification
+struct PWIZ_API_DECL Modification : public ParamContainer
 {
     Modification();
-    
+
     int location;
     std::string residues;
     double avgMassDelta;
     double monoisotopicMassDelta;
-
-    ParamContainer paramGroup;
 
     bool empty() const;
 };
@@ -344,16 +321,14 @@ struct PWIZ_API_DECL SubstitutionModification
 };
 
 
-struct PWIZ_API_DECL Peptide : public IdentifiableType
+struct PWIZ_API_DECL Peptide : public Identifiable, public ParamContainer
 {
     Peptide(const std::string& id="",
             const std::string& name="");
-    
+
     std::string peptideSequence;
     std::vector<ModificationPtr> modification;
     SubstitutionModification substitutionModification;
-
-    ParamContainer paramGroup;
 
     bool empty() const;
 };
@@ -369,26 +344,16 @@ struct PWIZ_API_DECL SequenceCollection
     bool empty() const;
 };
 
-struct PWIZ_API_DECL ModParam
-{
-    ModParam();
-    
-    double massDelta;
-    std::string residues;
-
-    ParamContainer cvParams;
-
-    bool empty() const;
-};
 
 struct PWIZ_API_DECL SearchModification
 {
     SearchModification();
-    
+
     bool fixedMod;
-    
-    ModParam modParam;
-    ParamContainer specificityRules;
+    double massDelta;
+    std::string residues;
+    CVParam unimodName;
+    CVParam specificityRules;
 
     bool empty() const;
 };
@@ -399,7 +364,7 @@ TYPEDEF_SHARED_PTR(SearchModification);
 struct PWIZ_API_DECL Enzyme
 {
     Enzyme(const std::string id = "");
-    
+
     std::string id;
     std::string nTermGain;
     std::string cTermGain;
@@ -439,11 +404,9 @@ struct PWIZ_API_DECL Residue
 TYPEDEF_SHARED_PTR(Residue);
 
 
-struct PWIZ_API_DECL AmbiguousResidue
+struct PWIZ_API_DECL AmbiguousResidue : public ParamContainer
 {
     std::string Code;
-    
-    ParamContainer params;
 
     bool empty() const;
 };
@@ -454,10 +417,10 @@ TYPEDEF_SHARED_PTR(AmbiguousResidue);
 struct PWIZ_API_DECL MassTable
 {
     MassTable(const std::string id = "");
-    
+
     std::string id;
     std::string msLevel;
-    
+
     std::vector<ResiduePtr> residues;
     std::vector<AmbiguousResiduePtr> ambiguousResidue;
 
@@ -479,12 +442,10 @@ struct PWIZ_API_DECL Filter
 TYPEDEF_SHARED_PTR(Filter);
 
 
-struct PWIZ_API_DECL TranslationTable : public IdentifiableType
+struct PWIZ_API_DECL TranslationTable : public Identifiable, public ParamContainer
 {
     TranslationTable(const std::string& id = "",
                      const std::string& name = "");
-
-    ParamContainer params;
 
     bool empty() const;
 };
@@ -495,7 +456,7 @@ TYPEDEF_SHARED_PTR(TranslationTable);
 struct PWIZ_API_DECL DatabaseTranslation
 {
     std::vector<int> frames;
-    
+
     std::vector<TranslationTablePtr> translationTable;
 
     DatabaseTranslation& setFrames(const std::string& values);
@@ -509,15 +470,14 @@ struct PWIZ_API_DECL DatabaseTranslation
 TYPEDEF_SHARED_PTR(DatabaseTranslation);
 
 
-struct PWIZ_API_DECL SpectrumIdentificationProtocol : public IdentifiableType
+struct PWIZ_API_DECL SpectrumIdentificationProtocol : public Identifiable
 {
     SpectrumIdentificationProtocol(const std::string& id_ = "",
                                    const std::string& name_ = "");
-    
-    //std::string AnalysisSoftware_ref;
+
     AnalysisSoftwarePtr analysisSoftwarePtr;
 
-    ParamContainer searchType; // Only 1 element is allowed.
+    CVParam searchType;
     ParamContainer additionalSearchParams;
     std::vector<SearchModificationPtr> modificationParams;
     Enzymes enzymes;
@@ -527,19 +487,17 @@ struct PWIZ_API_DECL SpectrumIdentificationProtocol : public IdentifiableType
     ParamContainer threshold;
     std::vector<FilterPtr> databaseFilters;
     DatabaseTranslationPtr databaseTranslation;
-    
+
     bool empty() const;
 };
 
 TYPEDEF_SHARED_PTR(SpectrumIdentificationProtocol);
 
 
-struct PWIZ_API_DECL Measure : public IdentifiableType
+struct PWIZ_API_DECL Measure : public Identifiable, public ParamContainer
 {
     Measure(const std::string id = "",
             const std::string name = "");
-    
-    ParamContainer paramGroup;
 
     bool empty() const;
 };
@@ -547,15 +505,11 @@ struct PWIZ_API_DECL Measure : public IdentifiableType
 TYPEDEF_SHARED_PTR(Measure);
 
 
-struct PWIZ_API_DECL FragmentArray
+struct PWIZ_API_DECL FragmentArray : public ParamContainer
 {
     std::vector<double> values;
-    //std::string Measure_ref;
     MeasurePtr measurePtr;
 
-    // Used for diffs.
-    ParamContainer params;
-    
     FragmentArray& setValues(const std::string& values);
     FragmentArray& setValues(const std::vector<double>& values);
     std::string getValues() const;
@@ -566,14 +520,13 @@ struct PWIZ_API_DECL FragmentArray
 TYPEDEF_SHARED_PTR(FragmentArray);
 
 
-struct PWIZ_API_DECL IonType
+struct PWIZ_API_DECL IonType : public ParamContainer
 {
     IonType();
-    
+
     std::vector<int> index;
     int charge;
 
-    ParamContainer paramGroup;
     std::vector<FragmentArrayPtr> fragmentArray;
 
     IonType& setIndex(const std::string& value);
@@ -587,24 +540,20 @@ struct PWIZ_API_DECL IonType
 TYPEDEF_SHARED_PTR(IonType);
 
 
-struct PWIZ_API_DECL PeptideEvidence : public IdentifiableType
+struct PWIZ_API_DECL PeptideEvidence : public Identifiable, public ParamContainer
 {
     PeptideEvidence(const std::string& id = "",
                     const std::string& name = "");
-    
-    //std::string DBSequence_ref;
+
     DBSequencePtr dbSequencePtr;
     int start;
     int end;
     std::string pre;
     std::string post;
-    //std::string TranslationTable_ref;
     TranslationTablePtr translationTablePtr;
     int frame;
     bool isDecoy;
     int missedCleavages;
-    
-    ParamContainer paramGroup;
 
     bool empty() const;
 };
@@ -612,7 +561,7 @@ struct PWIZ_API_DECL PeptideEvidence : public IdentifiableType
 TYPEDEF_SHARED_PTR(PeptideEvidence);
 
 
-struct PWIZ_API_DECL SpectrumIdentificationItem : public IdentifiableType
+struct PWIZ_API_DECL SpectrumIdentificationItem : public Identifiable, public ParamContainer
 {
     SpectrumIdentificationItem(const std::string& id = "",
                                const std::string& name = "");
@@ -621,19 +570,14 @@ struct PWIZ_API_DECL SpectrumIdentificationItem : public IdentifiableType
     double experimentalMassToCharge;
     double calculatedMassToCharge;
     double calculatedPI;
-    // std::string Peptide_ref;
     PeptidePtr peptidePtr;
     int rank;
     bool passThreshold;
-    //std::string MassTable_ref;
     MassTablePtr massTablePtr;
-    //std::string Sample_ref;
     SamplePtr samplePtr;
 
-    
     std::vector<PeptideEvidencePtr> peptideEvidence;
     std::vector<IonTypePtr> fragmentation;
-    ParamContainer paramGroup;
 
     bool empty() const;
 
@@ -647,16 +591,16 @@ struct PWIZ_API_DECL SpectrumIdentificationItem : public IdentifiableType
 TYPEDEF_SHARED_PTR(SpectrumIdentificationItem);
 
 
-struct PWIZ_API_DECL SpectraData : public IdentifiableType
+struct PWIZ_API_DECL SpectraData : public Identifiable
 {
     SpectraData(const std::string id = "",
                 const std::string name = "");
-    
+
     std::string location;
 
     std::vector<std::string> externalFormatDocumentation;
-    ParamContainer fileFormat;
-    ParamContainer spectrumIDFormat;
+    CVParam fileFormat;
+    CVParam spectrumIDFormat;
 
     bool empty() const;
 };
@@ -664,14 +608,12 @@ struct PWIZ_API_DECL SpectraData : public IdentifiableType
 TYPEDEF_SHARED_PTR(SpectraData);
 
 
-struct PWIZ_API_DECL SpectrumIdentificationResult : public IdentifiableType
+struct PWIZ_API_DECL SpectrumIdentificationResult : public Identifiable, public ParamContainer
 {
     std::string spectrumID;
-    //std::string SpectraData_ref;
     SpectraDataPtr spectraDataPtr;
-    
+
     std::vector<SpectrumIdentificationItemPtr> spectrumIdentificationItem;
-    ParamContainer paramGroup;
 
     bool empty() const;
 };
@@ -679,11 +621,11 @@ struct PWIZ_API_DECL SpectrumIdentificationResult : public IdentifiableType
 TYPEDEF_SHARED_PTR(SpectrumIdentificationResult);
 
 
-struct PWIZ_API_DECL SpectrumIdentificationList : public IdentifiableType
+struct PWIZ_API_DECL SpectrumIdentificationList : public Identifiable
 {
     SpectrumIdentificationList(const std::string& id_ = "",
                                const std::string& name_ = "");
-    
+
     long numSequencesSearched;
 
     std::vector<MeasurePtr> fragmentationTable;
@@ -695,14 +637,12 @@ struct PWIZ_API_DECL SpectrumIdentificationList : public IdentifiableType
 TYPEDEF_SHARED_PTR(SpectrumIdentificationList);
 
 
-struct PWIZ_API_DECL SpectrumIdentification : public IdentifiableType
+struct PWIZ_API_DECL SpectrumIdentification : public Identifiable
 {
     SpectrumIdentification(const std::string& id_ = "",
                            const std::string& name_ = "");
-    
-    //std::string SpectrumIdentificationProtocol_ref;
+
     SpectrumIdentificationProtocolPtr spectrumIdentificationProtocolPtr;
-    //std::string SpectrumIdentificationList_ref;
     SpectrumIdentificationListPtr spectrumIdentificationListPtr;
     std::string activityDate;
 
@@ -715,12 +655,11 @@ struct PWIZ_API_DECL SpectrumIdentification : public IdentifiableType
 TYPEDEF_SHARED_PTR(SpectrumIdentification);
 
 
-struct PWIZ_API_DECL ProteinDetectionProtocol : public IdentifiableType
+struct PWIZ_API_DECL ProteinDetectionProtocol : public Identifiable
 {
     ProteinDetectionProtocol(const std::string& id_ = "",
                              const std::string& name_ = "");
-    
-    //std::string AnalysisSoftware_ref;
+
     AnalysisSoftwarePtr analysisSoftwarePtr;
 
     ParamContainer analysisParams;
@@ -732,12 +671,11 @@ struct PWIZ_API_DECL ProteinDetectionProtocol : public IdentifiableType
 TYPEDEF_SHARED_PTR(ProteinDetectionProtocol);
 
 
-struct PWIZ_API_DECL ProteinDetectionHypothesis : public IdentifiableType
+struct PWIZ_API_DECL ProteinDetectionHypothesis : public Identifiable, public ParamContainer
 {
     ProteinDetectionHypothesis(const std::string& id_ = "",
                                const std::string& name_ = "");
 
-    //std::string DBSequence_ref;
     DBSequencePtr dbSequencePtr;
     bool passThreshold;
 
@@ -745,7 +683,6 @@ struct PWIZ_API_DECL ProteinDetectionHypothesis : public IdentifiableType
     // PeptideHypothesis tag
 
     std::vector<PeptideEvidencePtr> peptideHypothesis;
-    ParamContainer paramGroup;
 
     bool empty() const;
 };
@@ -753,12 +690,12 @@ struct PWIZ_API_DECL ProteinDetectionHypothesis : public IdentifiableType
 TYPEDEF_SHARED_PTR(ProteinDetectionHypothesis);
 
 
-struct PWIZ_API_DECL ProteinAmbiguityGroup : public IdentifiableType
+struct PWIZ_API_DECL ProteinAmbiguityGroup : public Identifiable, public ParamContainer
 {
     ProteinAmbiguityGroup(const std::string& id_ = "",
                           const std::string& name_ = "");
+
     std::vector<ProteinDetectionHypothesisPtr> proteinDetectionHypothesis;
-    ParamContainer paramGroup;
 
     bool empty() const;
 };
@@ -766,13 +703,12 @@ struct PWIZ_API_DECL ProteinAmbiguityGroup : public IdentifiableType
 TYPEDEF_SHARED_PTR(ProteinAmbiguityGroup);
 
 
-struct PWIZ_API_DECL ProteinDetectionList : public IdentifiableType
+struct PWIZ_API_DECL ProteinDetectionList : public Identifiable, public ParamContainer
 {
     ProteinDetectionList(const std::string& id_ = "",
                          const std::string& name_ = "");
-    
+
     std::vector<ProteinAmbiguityGroupPtr> proteinAmbiguityGroup;
-    ParamContainer paramGroup;
 
     bool empty() const;
 };
@@ -780,14 +716,12 @@ struct PWIZ_API_DECL ProteinDetectionList : public IdentifiableType
 TYPEDEF_SHARED_PTR(ProteinDetectionList);
 
 
-struct PWIZ_API_DECL ProteinDetection : public IdentifiableType
+struct PWIZ_API_DECL ProteinDetection : public Identifiable
 {
     ProteinDetection(const std::string id_ = "",
                      const std::string name_ = "");
-    
-    //std::string ProteinDetectionProtocol_ref;
+
     ProteinDetectionProtocolPtr proteinDetectionProtocolPtr;
-    //std::string ProteinDetectionList_ref;
     ProteinDetectionListPtr proteinDetectionListPtr;
     std::string activityDate;
 
@@ -813,21 +747,18 @@ struct PWIZ_API_DECL AnalysisProtocolCollection
     std::vector<SpectrumIdentificationProtocolPtr> spectrumIdentificationProtocol;
     std::vector<ProteinDetectionProtocolPtr> proteinDetectionProtocol;
 
-    
     bool empty() const;
 };
 
 TYPEDEF_SHARED_PTR(AnalysisProtocolCollection);
 
 
-struct PWIZ_API_DECL SourceFile : public IdentifiableType
+struct PWIZ_API_DECL SourceFile : public Identifiable, public ParamContainer
 {
     std::string location;
-    ParamContainer fileFormat;
+    CVParam fileFormat;
 
     std::vector<std::string> externalFormatDocumentation;
-
-    ParamContainer paramGroup;
 
     bool empty() const;
 };
@@ -876,7 +807,7 @@ TYPEDEF_SHARED_PTR(DataCollection);
 namespace IO {struct HandlerMzIdentML;} // forward declaration for friend
 
 
-struct PWIZ_API_DECL MzIdentML : public IdentifiableType
+struct PWIZ_API_DECL MzIdentML : public Identifiable
 {
     MzIdentML(const std::string& id_ = "",
               const std::string& creationDate_ = "");
@@ -896,7 +827,7 @@ struct PWIZ_API_DECL MzIdentML : public IdentifiableType
     std::vector<ContactPtr> auditCollection;
 
     AnalysisSampleCollection analysisSampleCollection;
-    
+
     SequenceCollection sequenceCollection;
 
     AnalysisCollection analysisCollection;
@@ -904,7 +835,7 @@ struct PWIZ_API_DECL MzIdentML : public IdentifiableType
     AnalysisProtocolCollection analysisProtocolCollection;
 
     DataCollection dataCollection;
-    
+
     std::vector<BibliographicReferencePtr> bibliographicReference;
 
     bool empty() const;

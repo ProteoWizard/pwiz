@@ -61,11 +61,11 @@ void testObject(const object_type& a)
 }
 
 
-void testIdentifiableType()
+void testIdentifiable()
 {
-    if (os_) *os_ << "testIdentifiableType\n" ;
+    if (os_) *os_ << "testIdentifiable\n" ;
 
-    IdentifiableType a;
+    Identifiable a;
     a.id = "id";
     a.name = "name";
 
@@ -156,7 +156,7 @@ void testContactRole()
     
     ContactRole a;
     a.contactPtr = ContactPtr(new Contact("ref"));
-    a.role.set(MS_software_vendor);
+    a.cvid = MS_software_vendor;
 
     testObject(a);
 }
@@ -181,7 +181,7 @@ void testMaterial()
 
     // Reduced to a previously tested object.
     a.contactRole.contactPtr = ContactPtr(new Contact("abc"));
-    a.cvParams.set(MS_septum);
+    a.set(MS_septum);
 
     testObject(a);
 }
@@ -195,9 +195,9 @@ void testSample()
 
     // Reduced to a previously tested object.
     a.contactRole.contactPtr = ContactPtr(new Contact("abc"));
-    a.cvParams.set(MS_septum);
+    a.set(MS_septum);
 
-    Sample::subSample b;
+    Sample::SubSample b;
     b.samplePtr = SamplePtr(new Sample("subSample_ref"));
     a.subSamples.push_back(b);
 
@@ -215,7 +215,7 @@ void testAnalysisSoftware()
     a.customizations = "hijk";
     ContactRolePtr cont = ContactRolePtr(new ContactRole());
     cont->contactPtr = ContactPtr(new Contact("ref"));
-    cont->role.set(MS_software_vendor);
+    cont->cvid = MS_software_vendor;
     a.contactRolePtr = cont;
     a.softwareName.set(MS_Mascot);
 
@@ -228,7 +228,7 @@ void testAnalysisSampleCollection()
 
     AnalysisSampleCollection a;
     SamplePtr b(new Sample());
-    b->subSamples.push_back(Sample::subSample());
+    b->subSamples.push_back(Sample::SubSample());
 
     testObject(a);
 }
@@ -244,7 +244,7 @@ void testDBSequence()
     a.accession = "abc";
     a.searchDatabasePtr = SearchDatabasePtr(new SearchDatabase("def"));
     a.seq = "ghi";
-    a.paramGroup.set(MS_protein_description, "blahbitty blah blah");
+    a.set(MS_protein_description, "blahbitty blah blah");
 
     testObject(a);
 }
@@ -259,7 +259,7 @@ void testModification()
     a.residues = "sos";
     a.monoisotopicMassDelta = 100.1001;
 
-    a.paramGroup.set(UNIMOD_Gln__pyro_Glu);
+    a.set(UNIMOD_Gln__pyro_Glu);
 
     testObject(a);
 }
@@ -291,7 +291,7 @@ void testPeptide()
     a.modification.push_back(mod);
     a.substitutionModification.location = 2;
     
-    a.paramGroup.set(MS_peptide);
+    a.set(MS_peptide);
 
     testObject(a);
 }
@@ -358,20 +358,6 @@ void testAnalysisCollection()
 }
 
 
-void testModParam()
-{
-    if (os_) *os_ << "testModParam\n" ;
-
-    ModParam a;
-
-    a.massDelta = 2.71;
-    a.residues = "Q";
-    a.cvParams.set(UNIMOD_Gln__pyro_Glu);
-    
-    testObject(a);
-}
-
-
 void testSearchModification()
 {
     if (os_) *os_ << "testSearchModification\n" ;
@@ -379,8 +365,10 @@ void testSearchModification()
     SearchModification a;
 
     a.fixedMod = true;
-    a.modParam.massDelta = 3.14;
-    a.specificityRules.set(MS_modification_specificity_N_term);
+    a.massDelta = 3.14;
+    a.residues = "Q";
+    a.unimodName.cvid = UNIMOD_Gln__pyro_Glu;
+    a.specificityRules.cvid = MS_modification_specificity_N_term;
 
     testObject(a);
 }
@@ -440,7 +428,7 @@ void testAmbiguousResidue()
     AmbiguousResidue a;
 
     a.Code = "B";
-    a.params.set(MS_alternate_single_letter_codes);
+    a.set(MS_alternate_single_letter_codes);
 
     testObject(a);
 }
@@ -485,7 +473,7 @@ void testSpectrumIdentificationProtocol()
     
     a.analysisSoftwarePtr = AnalysisSoftwarePtr(new AnalysisSoftware("ref"));
 
-    a.searchType.set(MS_ms_ms_search);
+    a.searchType.cvid = MS_ms_ms_search;
     a.additionalSearchParams.set(MS_parent_mass_type_mono);
     a.modificationParams.push_back(SearchModificationPtr(new SearchModification()));
     a.enzymes.independent = "no";
@@ -540,7 +528,7 @@ void testSpectraData()
 
     a.location = "here";
     a.externalFormatDocumentation.push_back("there");
-    a.fileFormat.set(MS_mzML_file);
+    a.fileFormat.cvid = MS_mzML_file;
     
     testObject(a);
 }
@@ -558,7 +546,7 @@ void testSearchDatabase()
     a.numDatabaseSequences = 1;
     a.numResidues = 2;
 
-    a.fileFormat.set(MS_FASTA_format);
+    a.fileFormat.cvid = MS_FASTA_format;
     a.DatabaseName.userParams.push_back(UserParam("5peptideMix_20090515.fasta"));
     
     testObject(a);
@@ -572,9 +560,9 @@ void testSourceFile()
     a.id = "id";
 
     a.location = "there";
-    a.fileFormat.set(MS_mzML_file);
+    a.fileFormat.cvid = MS_mzML_file;
     a.externalFormatDocumentation.push_back("somewhere else");
-    a.paramGroup.set(MS_Mascot_DAT_file);
+    a.set(MS_Mascot_DAT_file);
     
     testObject(a);
 }
@@ -605,7 +593,7 @@ void testMeasure()
     Measure a;
 
     a.id = "id";
-    a.paramGroup.set(MS_product_ion_m_z);
+    a.set(MS_product_ion_m_z);
 
     testObject(a);
 }
@@ -638,7 +626,7 @@ void testIonType()
     a.index.push_back(3);
     a.charge = 2;
 
-    a.paramGroup.set(MS_frag__a_ion);
+    a.set(MS_frag__a_ion);
     FragmentArrayPtr b(new FragmentArray());
     a.fragmentArray.push_back(b);
     
@@ -661,7 +649,7 @@ void testPeptideEvidence()
     a.isDecoy = true;
     a.missedCleavages = 4;
     
-    a.paramGroup.set(MS_Mascot_score, "15.71");
+    a.set(MS_Mascot_score, "15.71");
 
     testObject(a);
 }
@@ -692,7 +680,7 @@ void testSpectrumIdentificationItem()
     c->charge = 5;
     a.fragmentation.push_back(c);
 
-    a.paramGroup.set(MS_Mascot_score, "15.71");
+    a.set(MS_Mascot_score, "15.71");
     
     testObject(a);
 }
@@ -711,7 +699,7 @@ void testSpectrumIdentificationResult()
     b->chargeState = 1;
     a.spectrumIdentificationItem.push_back(b);
     
-    a.paramGroup.set(MS_Mascot_score, "15.71");
+    a.set(MS_Mascot_score, "15.71");
 
     testObject(a);
 }
@@ -726,7 +714,7 @@ void testProteinDetectionHypothesis()
     a.passThreshold = "pt";
 
     a.peptideHypothesis.push_back(PeptideEvidencePtr(new PeptideEvidence("test")));
-    a.paramGroup.set(MS_Mascot_score, "164.4");
+    a.set(MS_Mascot_score, "164.4");
 
     testObject(a);
 }
@@ -740,7 +728,7 @@ void testProteinAmbiguityGroup()
     ProteinDetectionHypothesisPtr b(new ProteinDetectionHypothesis());
     b->dbSequencePtr = DBSequencePtr(new DBSequence("dbs_ref"));
     a.proteinDetectionHypothesis.push_back(b);
-    a.paramGroup.set(MS_Mascot_score, "164.4");
+    a.set(MS_Mascot_score, "164.4");
 
     testObject(a);
 }
@@ -754,7 +742,7 @@ void testSpectrumIdentificationList()
     a.numSequencesSearched = 1;
 
     MeasurePtr b(new Measure());
-    b->paramGroup.set(MS_Mascot_score, "164.4");
+    b->set(MS_Mascot_score, "164.4");
     a.fragmentationTable.push_back(b);
     
     SpectrumIdentificationResultPtr c(new SpectrumIdentificationResult());
@@ -774,7 +762,7 @@ void testProteinDetectionList()
     ProteinAmbiguityGroupPtr b(new ProteinAmbiguityGroup());
     a.proteinAmbiguityGroup.push_back(b);
 
-    a.paramGroup.set(MS_Mascot_score, "164.4");
+    a.set(MS_Mascot_score, "164.4");
 
     testObject(a);
 }
@@ -790,7 +778,7 @@ void testAnalysisData()
     a.spectrumIdentificationList.push_back(b);
 
     a.proteinDetectionListPtr = ProteinDetectionListPtr(new ProteinDetectionList("id2"));
-    a.proteinDetectionListPtr->paramGroup.set(MS_Mascot_score, "164.4");
+    a.proteinDetectionListPtr->set(MS_Mascot_score, "164.4");
 
     testObject(a);
 }
@@ -829,7 +817,7 @@ void testMzIdentML()
 void test()
 {
     testCV();
-    testIdentifiableType();
+    testIdentifiable();
     testBibliographicReference();
     testPerson();
     testOrganization();
@@ -846,7 +834,6 @@ void test()
     testSpectrumIdentification();
     testProteinDetection();
     testAnalysisCollection();
-    testModParam();
     testSearchModification();
     testEnzyme();
     testEnzymes();
