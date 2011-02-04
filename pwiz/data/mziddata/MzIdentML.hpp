@@ -27,7 +27,7 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/utility/misc/Exception.hpp"
-#include "pwiz/data/common/cv.hpp"
+#include "pwiz/data/proteome/Digestion.hpp"
 #include "pwiz/data/common/ParamTypes.hpp"
 #include "boost/logic/tribool.hpp"
 #include <vector>
@@ -636,6 +636,9 @@ struct PWIZ_API_DECL SpectrumIdentificationItem : public IdentifiableType
     ParamContainer paramGroup;
 
     bool empty() const;
+
+    /// given a protocol, builds a set of DigestedPeptides for a SpectrumIdentificationItem
+    std::vector<proteome::DigestedPeptide> digestedPeptides(const SpectrumIdentificationProtocol& sip) const;
 };
 
 TYPEDEF_SHARED_PTR(SpectrumIdentificationItem);

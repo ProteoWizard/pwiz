@@ -310,6 +310,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
     SpectrumIdentificationItemPtr sii;
     int distinctPeptides = 0;
 
+    // result 1
     {
         sir = SpectrumIdentificationResultPtr(new SpectrumIdentificationResult);
         sir->id = "SIR_1";
@@ -317,7 +318,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
         sir->spectrumID = "controllerType=0 controllerNumber=1 scan=42";
         sir->spectraDataPtr = sd;
 
-        // rank 1
+        // result 1 rank 1
         {
             peptide = PeptidePtr(new Peptide);
             peptide->id = "PEP_1";
@@ -356,7 +357,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sir->spectrumIdentificationItem.push_back(sii);
         }
 
-        // rank 2 modified variant 1
+        // result 1 rank 2 modified variant 1
         {
             peptide = PeptidePtr(new Peptide);
             peptide->id = "PEP_2";
@@ -402,7 +403,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sir->spectrumIdentificationItem.push_back(sii);
         }
 
-        // rank 2 modified variant 2
+        // result 1 rank 2 modified variant 2
         {
             peptide = PeptidePtr(new Peptide);
             peptide->id = "PEP_3";
@@ -444,6 +445,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
         sil->spectrumIdentificationResult.push_back(sir);
     }
 
+    // result 2
     {
         sir = SpectrumIdentificationResultPtr(new SpectrumIdentificationResult);
         sir->id = "SIR_2";
@@ -451,7 +453,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
         sir->spectrumID = "controllerType=0 controllerNumber=1 scan=420";
         sir->spectraDataPtr = sd;
 
-        // rank 1
+        // result 2 rank 1
         {
             peptide = PeptidePtr(new Peptide);
             peptide->id = "PEP_4";
@@ -490,11 +492,11 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sir->spectrumIdentificationItem.push_back(sii);
         }
 
-        // rank 2
+        // result 2 rank 2
         {
             peptide = PeptidePtr(new Peptide);
             peptide->id = "PEP_5";
-            peptide->peptideSequence = "RNSTIPTK";
+            peptide->peptideSequence = "RNSTIPT";
             mzid.sequenceCollection.peptides.push_back(peptide);
 
             mod = ModificationPtr(new Modification);
@@ -526,18 +528,18 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             pe = PeptideEvidencePtr(new PeptideEvidence);
             pe->dbSequencePtr = mzid.sequenceCollection.dbSequences[0];
             pe->id = pe->dbSequencePtr->accession + "_PEP_" + lexical_cast<string>(++distinctPeptides);
-            pe->start = 416; pe->end = 423;
+            pe->start = 416; pe->end = 422;
             pe->pre = "K";
-            pe->post = "Q";
+            pe->post = "K";
             pe->missedCleavages = 1;
             sii->peptideEvidence.push_back(pe);
             
             pe = PeptideEvidencePtr(new PeptideEvidence);
             pe->dbSequencePtr = mzid.sequenceCollection.dbSequences[1];
             pe->id = pe->dbSequencePtr->accession + "_PEP_" + lexical_cast<string>(distinctPeptides);
-            pe->start = 416; pe->end = 423;
+            pe->start = 416; pe->end = 422;
             pe->pre = "K";
-            pe->post = "Q";
+            pe->post = "K";
             pe->missedCleavages = 1;
             sii->peptideEvidence.push_back(pe);
 
@@ -546,6 +548,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
         sil->spectrumIdentificationResult.push_back(sir);
     }
 
+    // result 3
     {
         sir = SpectrumIdentificationResultPtr(new SpectrumIdentificationResult);
         sir->id = "SIR_3";
@@ -553,7 +556,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
         sir->spectrumID = "controllerType=0 controllerNumber=1 scan=421";
         sir->spectraDataPtr = sd;
 
-        // rank 1
+        // result 3 rank 1
         {
             peptide = mzid.sequenceCollection.peptides[3];
 
@@ -575,7 +578,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sir->spectrumIdentificationItem.push_back(sii);
         }
 
-        // rank 2
+        // result 3 rank 2
         {
             peptide = mzid.sequenceCollection.peptides[4];
 

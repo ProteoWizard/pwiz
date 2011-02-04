@@ -22,9 +22,12 @@
 
 #define PWIZ_SOURCE
 
+#include "pwiz/utility/misc/Std.hpp"
 #include "MzIdentML.hpp"
 #include "boost/date_time/gregorian/gregorian.hpp"
-#include "pwiz/utility/misc/Std.hpp"
+#include "boost/regex.hpp"
+
+
 namespace pwiz {
 namespace mziddata {
 
@@ -300,6 +303,79 @@ PWIZ_API_DECL bool SpectrumIdentificationItem::empty() const
         peptideEvidence.empty() &&
         fragmentation.empty() &&
         paramGroup.empty();
+}
+
+PWIZ_API_DECL vector<proteome::DigestedPeptide> SpectrumIdentificationItem::digestedPeptides(const SpectrumIdentificationProtocol& sip) const
+{
+    using namespace proteome;
+
+    if (!peptidePtr.get() || peptidePtr->empty())
+        throw runtime_error("[SpectrumIdentificationItem::digestedPeptide] null or empty Peptide reference");
+    if (peptideEvidence.empty())
+        throw runtime_error("[SpectrumIdentificationItem::digestedPeptide] no PeptideEvidence elements");
+
+    const Peptide& peptide = *peptidePtr;
+
+    vector<boost::regex> cleavageAgentRegexes;
+    BOOST_FOREACH(const EnzymePtr& enzymePtr, sip.enzymes.enzymes)
+    {
+        const Enzyme& enzyme = *enzymePtr;
+        string regex = enzyme.siteRegexp;
+        if (regex.empty())
+        {
+            CVParam enzymeTerm = enzyme.enzymeName.cvParamChild(MS_cleavage_agent_name);
+
+            if (enzymeTerm.empty())
+                enzymeTerm = CVParam(Digestion::getCleavageAgentByName(enzyme.enzymeName.userParams[0].name));
+
+            try {regex = Digestion::getCleavageAgentRegex(enzymeTerm.cvid);} catch (...) {}
+        }
+
+        if (!regex.empty())
+            cleavageAgentRegexes.push_back(boost::regex(regex));
+    }
+
+    if (cleavageAgentRegexes.empty())
+        throw runtime_error("[SpectrumIdentificationItem::digestedPeptide] unknown cleavage agent");
+
+    vector<proteome::DigestedPeptide> results;
+
+    BOOST_FOREACH(const PeptideEvidencePtr& pePtr, peptideEvidence)
+    {
+        const PeptideEvidence& pe = *pePtr;
+
+        if (pe.pre.empty() || pe.pre == "?" || pe.post.empty() || pe.post == "?")
+            continue;
+
+        string peptideSequenceInContext = peptide.peptideSequence;
+        if (pe.pre != "-") peptideSequenceInContext = pe.pre + peptideSequenceInContext;
+        if (pe.post != "-") peptideSequenceInContext += pe.post;
+
+        BOOST_FOREACH(const boost::regex& regex, cleavageAgentRegexes)
+        {
+            Digestion::Config config;
+            config.minimumSpecificity = Digestion::NonSpecific;
+            Digestion peptideInContext(peptideSequenceInContext, regex, config);
+
+            // if enzymes are independent, both termini of a peptide must be cleaved by the same enzyme
+            /*if (sip.enzymes.independent)
+            {
+                nTerminusIsSpecific = pe.pre == "-";
+                cTerminusIsSpecific = pe.post == "-";
+            }*/
+
+            DigestedPeptide result = peptideInContext.find_first(peptide.peptideSequence);
+            
+            results.push_back(DigestedPeptide(result,
+                                              pe.start-1, // offset is 0-based
+                                              result.missedCleavages(),
+                                              result.NTerminusIsSpecific(),
+                                              result.CTerminusIsSpecific(),
+                                              pe.pre,
+                                              pe.post));
+        }
+    }
+    return results;
 }
 
 

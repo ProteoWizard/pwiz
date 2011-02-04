@@ -527,7 +527,7 @@ class Digestion::Impl
                         sites_.push_back(int(what[0].first-sequence.begin()-1));
 
                         // update search position and flags
-                        start = what[0].second;
+                        start = max(what[0].second, start+1);
                         flags |= boost::match_prev_avail;
                         flags |= boost::match_not_bob;
                     }
