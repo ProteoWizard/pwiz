@@ -55,6 +55,8 @@
             this.label6 = new System.Windows.Forms.Label();
             this.cbxShowRateConstant = new System.Windows.Forms.CheckBox();
             this.cbxShowRSquared = new System.Windows.Forms.CheckBox();
+            this.cbxShowRateConstantStdDev = new System.Windows.Forms.CheckBox();
+            this.cbxShowRateConstantCI = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
@@ -86,7 +88,7 @@
             this.tbxMinScore.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tbxMinScore.Location = new System.Drawing.Point(409, 28);
             this.tbxMinScore.Name = "tbxMinScore";
-            this.tbxMinScore.Size = new System.Drawing.Size(233, 20);
+            this.tbxMinScore.Size = new System.Drawing.Size(232, 20);
             this.tbxMinScore.TabIndex = 2;
             // 
             // dataGridView1
@@ -101,10 +103,10 @@
             this.colProteinDescription,
             this.colProteinName});
             this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridView1.Location = new System.Drawing.Point(0, 150);
+            this.dataGridView1.Location = new System.Drawing.Point(0, 177);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.ReadOnly = true;
-            this.dataGridView1.Size = new System.Drawing.Size(760, 261);
+            this.dataGridView1.Size = new System.Drawing.Size(760, 234);
             this.dataGridView1.TabIndex = 3;
             this.dataGridView1.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellContentClick);
             // 
@@ -139,9 +141,9 @@
             // btnRequery
             // 
             this.btnRequery.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.btnRequery.Location = new System.Drawing.Point(648, 3);
+            this.btnRequery.Location = new System.Drawing.Point(647, 3);
             this.btnRequery.Name = "btnRequery";
-            this.btnRequery.Size = new System.Drawing.Size(109, 19);
+            this.btnRequery.Size = new System.Drawing.Size(110, 19);
             this.btnRequery.TabIndex = 4;
             this.btnRequery.Text = "Recalculate";
             this.btnRequery.UseVisualStyleBackColor = true;
@@ -178,9 +180,9 @@
             // 
             this.btnSave.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnSave.Enabled = false;
-            this.btnSave.Location = new System.Drawing.Point(648, 28);
+            this.btnSave.Location = new System.Drawing.Point(647, 28);
             this.btnSave.Name = "btnSave";
-            this.btnSave.Size = new System.Drawing.Size(109, 19);
+            this.btnSave.Size = new System.Drawing.Size(110, 19);
             this.btnSave.TabIndex = 9;
             this.btnSave.Text = "Save...";
             this.btnSave.UseVisualStyleBackColor = true;
@@ -190,9 +192,9 @@
             // 
             this.label4.AutoSize = true;
             this.label4.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label4.Location = new System.Drawing.Point(309, 125);
+            this.label4.Location = new System.Drawing.Point(309, 150);
             this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(94, 25);
+            this.label4.Size = new System.Drawing.Size(94, 27);
             this.label4.TabIndex = 11;
             this.label4.Text = "Find:";
             this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -204,7 +206,7 @@
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 46.3964F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 100F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 53.6036F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 114F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 115F));
             this.tableLayoutPanel1.Controls.Add(this.label2, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.tbxInitialTracerPercent, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.label3, 0, 1);
@@ -220,23 +222,26 @@
             this.tableLayoutPanel1.Controls.Add(this.cbxShowMinHalfLife, 2, 4);
             this.tableLayoutPanel1.Controls.Add(this.cbxShowMaxHalfLife, 3, 4);
             this.tableLayoutPanel1.Controls.Add(this.cbxShowNumDataPoints, 4, 4);
-            this.tableLayoutPanel1.Controls.Add(this.findBox, 3, 5);
-            this.tableLayoutPanel1.Controls.Add(this.label4, 2, 5);
             this.tableLayoutPanel1.Controls.Add(this.comboCalculationType, 1, 3);
             this.tableLayoutPanel1.Controls.Add(this.label6, 0, 3);
             this.tableLayoutPanel1.Controls.Add(this.cbxShowRateConstant, 0, 5);
-            this.tableLayoutPanel1.Controls.Add(this.cbxShowRSquared, 1, 5);
+            this.tableLayoutPanel1.Controls.Add(this.findBox, 3, 6);
+            this.tableLayoutPanel1.Controls.Add(this.label4, 2, 6);
+            this.tableLayoutPanel1.Controls.Add(this.cbxShowRSquared, 0, 6);
+            this.tableLayoutPanel1.Controls.Add(this.cbxShowRateConstantStdDev, 1, 5);
+            this.tableLayoutPanel1.Controls.Add(this.cbxShowRateConstantCI, 1, 6);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 6;
+            this.tableLayoutPanel1.RowCount = 7;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(760, 150);
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(760, 177);
             this.tableLayoutPanel1.TabIndex = 12;
             // 
             // label2
@@ -309,7 +314,7 @@
             // cbxShowNumDataPoints
             // 
             this.cbxShowNumDataPoints.AutoSize = true;
-            this.cbxShowNumDataPoints.Location = new System.Drawing.Point(648, 103);
+            this.cbxShowNumDataPoints.Location = new System.Drawing.Point(647, 103);
             this.cbxShowNumDataPoints.Name = "cbxShowNumDataPoints";
             this.cbxShowNumDataPoints.Size = new System.Drawing.Size(91, 17);
             this.cbxShowNumDataPoints.TabIndex = 17;
@@ -322,9 +327,9 @@
             this.tableLayoutPanel1.SetColumnSpan(this.findBox, 2);
             this.findBox.DataGridView = this.dataGridView1;
             this.findBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.findBox.Location = new System.Drawing.Point(409, 128);
+            this.findBox.Location = new System.Drawing.Point(409, 153);
             this.findBox.Name = "findBox";
-            this.findBox.Size = new System.Drawing.Size(348, 19);
+            this.findBox.Size = new System.Drawing.Size(348, 21);
             this.findBox.TabIndex = 10;
             // 
             // comboCalculationType
@@ -365,13 +370,35 @@
             // cbxShowRSquared
             // 
             this.cbxShowRSquared.AutoSize = true;
-            this.cbxShowRSquared.Location = new System.Drawing.Point(103, 128);
+            this.cbxShowRSquared.Location = new System.Drawing.Point(3, 153);
             this.cbxShowRSquared.Name = "cbxShowRSquared";
             this.cbxShowRSquared.Size = new System.Drawing.Size(75, 17);
             this.cbxShowRSquared.TabIndex = 24;
             this.cbxShowRSquared.Text = "R-squared";
             this.cbxShowRSquared.UseVisualStyleBackColor = true;
             this.cbxShowRSquared.CheckedChanged += new System.EventHandler(this.cbxShowColumn_CheckedChanged);
+            // 
+            // cbxShowRateConstantStdDev
+            // 
+            this.cbxShowRateConstantStdDev.AutoSize = true;
+            this.cbxShowRateConstantStdDev.Location = new System.Drawing.Point(103, 128);
+            this.cbxShowRateConstantStdDev.Name = "cbxShowRateConstantStdDev";
+            this.cbxShowRateConstantStdDev.Size = new System.Drawing.Size(136, 17);
+            this.cbxShowRateConstantStdDev.TabIndex = 25;
+            this.cbxShowRateConstantStdDev.Text = "Rate Constant Std Dev";
+            this.cbxShowRateConstantStdDev.UseVisualStyleBackColor = true;
+            this.cbxShowRateConstantStdDev.CheckedChanged += new System.EventHandler(this.cbxShowColumn_CheckedChanged);
+            // 
+            // cbxShowRateConstantCI
+            // 
+            this.cbxShowRateConstantCI.AutoSize = true;
+            this.cbxShowRateConstantCI.Location = new System.Drawing.Point(103, 153);
+            this.cbxShowRateConstantCI.Name = "cbxShowRateConstantCI";
+            this.cbxShowRateConstantCI.Size = new System.Drawing.Size(173, 17);
+            this.cbxShowRateConstantCI.TabIndex = 26;
+            this.cbxShowRateConstantCI.Text = "Rate Constant 95% confidence";
+            this.cbxShowRateConstantCI.UseVisualStyleBackColor = true;
+            this.cbxShowRateConstantCI.CheckedChanged += new System.EventHandler(this.cbxShowColumn_CheckedChanged);
             // 
             // HalfLivesForm
             // 
@@ -419,5 +446,7 @@
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.CheckBox cbxShowRateConstant;
         private System.Windows.Forms.CheckBox cbxShowRSquared;
+        private System.Windows.Forms.CheckBox cbxShowRateConstantStdDev;
+        private System.Windows.Forms.CheckBox cbxShowRateConstantCI;
     }
 }

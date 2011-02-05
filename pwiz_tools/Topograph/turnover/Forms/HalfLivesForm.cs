@@ -74,6 +74,8 @@ namespace pwiz.Topograph.ui.Forms
                     dataGridView1.Columns.Remove(entry.Value.MaxHalfLifeColumn);
                     dataGridView1.Columns.Remove(entry.Value.NumDataPointsColumn);
                     dataGridView1.Columns.Remove(entry.Value.RateConstantColumn);
+                    dataGridView1.Columns.Remove(entry.Value.RateConstantStdDevColumn);
+                    dataGridView1.Columns.Remove(entry.Value.RateConstantErrorColumn);
                     dataGridView1.Columns.Remove(entry.Value.RSquaredColumn);
                     _cohortColumns.Remove(entry.Key);
                 }
@@ -110,11 +112,22 @@ namespace pwiz.Topograph.ui.Forms
                                                                           HeaderText = cohort + " # points",
                                                                           SortMode = DataGridViewColumnSortMode.Automatic,
                                                                       },
-                                            RateConstantColumn = new DataGridViewTextBoxColumn()
+                                            RateConstantColumn = new DataGridViewLinkColumn()
                                                                      {
                                                                          HeaderText = cohort + " Rate Constant",
                                                                          SortMode = DataGridViewColumnSortMode.Automatic,
                                                                      },
+                                            RateConstantStdDevColumn = new DataGridViewTextBoxColumn()
+                                                                           {
+                                                                               HeaderText = cohort + " Rate Constant StdDev",
+                                                                         SortMode = DataGridViewColumnSortMode.Automatic,
+
+                                                                           },
+                                            RateConstantErrorColumn = new DataGridViewTextBoxColumn()
+                                                                          {
+                                                                              HeaderText = cohort + " Rate Constant Error",
+                                                                              SortMode = DataGridViewColumnSortMode.Automatic,
+                                                                          },
                                             RSquaredColumn = new DataGridViewTextBoxColumn
                                                                  {
                                                                      HeaderText = cohort + " R Squared",
@@ -127,6 +140,8 @@ namespace pwiz.Topograph.ui.Forms
                     dataGridView1.Columns.Add(cohortColumns.MaxHalfLifeColumn);
                     dataGridView1.Columns.Add(cohortColumns.NumDataPointsColumn);
                     dataGridView1.Columns.Add(cohortColumns.RateConstantColumn);
+                    dataGridView1.Columns.Add(cohortColumns.RateConstantStdDevColumn);
+                    dataGridView1.Columns.Add(cohortColumns.RateConstantErrorColumn);
                     dataGridView1.Columns.Add(cohortColumns.RSquaredColumn);
                     _cohortColumns.Add(cohort, cohortColumns);
                 }
@@ -159,6 +174,8 @@ namespace pwiz.Topograph.ui.Forms
                     row.Cells[cohortColumns.MaxHalfLifeColumn.Index].Value = resultData.MaxHalfLife;
                     row.Cells[cohortColumns.NumDataPointsColumn.Index].Value = resultData.PointCount;
                     row.Cells[cohortColumns.RateConstantColumn.Index].Value = resultData.RateConstant;
+                    row.Cells[cohortColumns.RateConstantStdDevColumn.Index].Value = resultData.RateConstantStdDev;
+                    row.Cells[cohortColumns.RateConstantErrorColumn.Index].Value = resultData.RateConstantError;
                     row.Cells[cohortColumns.RSquaredColumn.Index].Value = resultData.RSquared;
                 }
             }
@@ -173,6 +190,8 @@ namespace pwiz.Topograph.ui.Forms
             public DataGridViewColumn MaxHalfLifeColumn { get; set; }
             public DataGridViewColumn NumDataPointsColumn { get; set; }
             public DataGridViewColumn RateConstantColumn { get; set; }
+            public DataGridViewColumn RateConstantStdDevColumn { get; set; }
+            public DataGridViewColumn RateConstantErrorColumn { get; set; }
             public DataGridViewColumn RSquaredColumn { get; set; }
         }
 
@@ -220,7 +239,7 @@ namespace pwiz.Topograph.ui.Forms
             }
             foreach (var entry in _cohortColumns)
             {
-                if (e.ColumnIndex == entry.Value.HalfLifeColumn.Index)
+                if (e.ColumnIndex == entry.Value.HalfLifeColumn.Index || e.ColumnIndex == entry.Value.RateConstantColumn.Index)
                 {
                     var halfLifeForm = new HalfLifeForm(Workspace)
                                            {
@@ -257,6 +276,8 @@ namespace pwiz.Topograph.ui.Forms
                 cohortColumns.MaxHalfLifeColumn.Visible = cbxShowMaxHalfLife.Checked;
                 cohortColumns.NumDataPointsColumn.Visible = cbxShowNumDataPoints.Checked;
                 cohortColumns.RateConstantColumn.Visible = cbxShowRateConstant.Checked;
+                cohortColumns.RateConstantStdDevColumn.Visible = cbxShowRateConstantStdDev.Checked;
+                cohortColumns.RateConstantErrorColumn.Visible = cbxShowRateConstantCI.Checked;
                 cohortColumns.RSquaredColumn.Visible = cbxShowRSquared.Checked;
             }
         }
