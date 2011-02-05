@@ -55,7 +55,6 @@ namespace pwiz.Topograph.ui.Forms
             this.comboCalculationType = new System.Windows.Forms.ComboBox();
             this.label10 = new System.Windows.Forms.Label();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.colPeptide = new System.Windows.Forms.DataGridViewLinkColumn();
             this.colFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTimePoint = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -67,6 +66,7 @@ namespace pwiz.Topograph.ui.Forms
             this.colPrecursorPool = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTurnoverAvg = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colPrecursorPoolAvg = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
@@ -390,24 +390,6 @@ namespace pwiz.Topograph.ui.Forms
             this.dataGridView1.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellEndEdit);
             this.dataGridView1.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellContentClick);
             // 
-            // splitContainer2
-            // 
-            this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer2.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer2.Name = "splitContainer2";
-            this.splitContainer2.Orientation = System.Windows.Forms.Orientation.Horizontal;
-            // 
-            // splitContainer2.Panel1
-            // 
-            this.splitContainer2.Panel1.Controls.Add(this.splitContainer1);
-            // 
-            // splitContainer2.Panel2
-            // 
-            this.splitContainer2.Panel2.Controls.Add(this.dataGridView1);
-            this.splitContainer2.Size = new System.Drawing.Size(948, 522);
-            this.splitContainer2.SplitterDistance = 299;
-            this.splitContainer2.TabIndex = 1;
-            // 
             // colPeptide
             // 
             this.colPeptide.HeaderText = "Peptide";
@@ -475,6 +457,24 @@ namespace pwiz.Topograph.ui.Forms
             this.colPrecursorPoolAvg.Name = "colPrecursorPoolAvg";
             this.colPrecursorPoolAvg.ReadOnly = true;
             this.colPrecursorPoolAvg.Width = 140;
+            // 
+            // splitContainer2
+            // 
+            this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainer2.Location = new System.Drawing.Point(0, 0);
+            this.splitContainer2.Name = "splitContainer2";
+            this.splitContainer2.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            // 
+            // splitContainer2.Panel1
+            // 
+            this.splitContainer2.Panel1.Controls.Add(this.splitContainer1);
+            // 
+            // splitContainer2.Panel2
+            // 
+            this.splitContainer2.Panel2.Controls.Add(this.dataGridView1);
+            this.splitContainer2.Size = new System.Drawing.Size(948, 522);
+            this.splitContainer2.SplitterDistance = 299;
+            this.splitContainer2.TabIndex = 1;
             // 
             // HalfLifeForm
             // 

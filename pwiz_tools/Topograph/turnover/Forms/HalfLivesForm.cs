@@ -11,6 +11,7 @@ using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.MsData;
 using pwiz.Topograph.ui.Properties;
+using pwiz.Topograph.ui.Util;
 using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.ui.Forms
@@ -72,6 +73,8 @@ namespace pwiz.Topograph.ui.Forms
                     dataGridView1.Columns.Remove(entry.Value.MinHalfLifeColumn);
                     dataGridView1.Columns.Remove(entry.Value.MaxHalfLifeColumn);
                     dataGridView1.Columns.Remove(entry.Value.NumDataPointsColumn);
+                    dataGridView1.Columns.Remove(entry.Value.RateConstantColumn);
+                    dataGridView1.Columns.Remove(entry.Value.RSquaredColumn);
                     _cohortColumns.Remove(entry.Key);
                 }
             }
@@ -106,12 +109,25 @@ namespace pwiz.Topograph.ui.Forms
                                                                       {
                                                                           HeaderText = cohort + " # points",
                                                                           SortMode = DataGridViewColumnSortMode.Automatic,
-                                                                      }
+                                                                      },
+                                            RateConstantColumn = new DataGridViewTextBoxColumn()
+                                                                     {
+                                                                         HeaderText = cohort + " Rate Constant",
+                                                                         SortMode = DataGridViewColumnSortMode.Automatic,
+                                                                     },
+                                            RSquaredColumn = new DataGridViewTextBoxColumn
+                                                                 {
+                                                                     HeaderText = cohort + " R Squared",
+                                                                     SortMode = DataGridViewColumnSortMode.Automatic,
+                                                                 },
+
                                         };
                     dataGridView1.Columns.Add(cohortColumns.HalfLifeColumn);
                     dataGridView1.Columns.Add(cohortColumns.MinHalfLifeColumn);
                     dataGridView1.Columns.Add(cohortColumns.MaxHalfLifeColumn);
                     dataGridView1.Columns.Add(cohortColumns.NumDataPointsColumn);
+                    dataGridView1.Columns.Add(cohortColumns.RateConstantColumn);
+                    dataGridView1.Columns.Add(cohortColumns.RSquaredColumn);
                     _cohortColumns.Add(cohort, cohortColumns);
                 }
             }
@@ -142,6 +158,8 @@ namespace pwiz.Topograph.ui.Forms
                     row.Cells[cohortColumns.MinHalfLifeColumn.Index].Value = resultData.MinHalfLife;
                     row.Cells[cohortColumns.MaxHalfLifeColumn.Index].Value = resultData.MaxHalfLife;
                     row.Cells[cohortColumns.NumDataPointsColumn.Index].Value = resultData.PointCount;
+                    row.Cells[cohortColumns.RateConstantColumn.Index].Value = resultData.RateConstant;
+                    row.Cells[cohortColumns.RSquaredColumn.Index].Value = resultData.RSquared;
                 }
             }
             UpdateColumnVisibility();
@@ -154,6 +172,8 @@ namespace pwiz.Topograph.ui.Forms
             public DataGridViewColumn MinHalfLifeColumn { get; set; }
             public DataGridViewColumn MaxHalfLifeColumn { get; set; }
             public DataGridViewColumn NumDataPointsColumn { get; set; }
+            public DataGridViewColumn RateConstantColumn { get; set; }
+            public DataGridViewColumn RSquaredColumn { get; set; }
         }
 
         private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
@@ -220,59 +240,7 @@ namespace pwiz.Topograph.ui.Forms
 
         private void btnSave_Click(object sender, EventArgs e)
         {
-            Settings.Default.Reload();
-            var dialog = new SaveFileDialog()
-                             {
-                                 Filter = "Tab Separated Values (*.tsv)|*.tsv|All Files|*.*",
-                                 InitialDirectory = Settings.Default.ExportResultsDirectory,
-                             };
-            if (dialog.ShowDialog(this) == DialogResult.Cancel)
-            {
-                return;
-            }
-            String filename = dialog.FileName;
-            Settings.Default.ExportResultsDirectory = Path.GetDirectoryName(filename);
-            Settings.Default.Save();
-            var columns = GetColumnsSortedByDisplayIndex();
-            using (var stream = File.OpenWrite(filename))
-            {
-                var writer = new StreamWriter(stream);
-                var tab = "";
-                foreach (var column in columns)
-                {
-                    if (!column.Visible)
-                    {
-                        continue;
-                    }
-                    writer.Write(tab);
-                    tab = "\t";
-                    writer.Write(column.HeaderText);
-                }
-                writer.WriteLine();
-                for (int iRow = 0; iRow < dataGridView1.Rows.Count; iRow ++)
-                {
-                    var row = dataGridView1.Rows[iRow];
-                    tab = "";
-                    foreach (var column in columns)
-                    {
-                        if (!column.Visible)
-                        {
-                            continue;
-                        }
-                        writer.Write(tab);
-                        tab = "\t";
-                        writer.Write(row.Cells[column.Index].Value);
-                    }
-                    writer.WriteLine();
-                }
-            }
-        }
-        private IList<DataGridViewColumn> GetColumnsSortedByDisplayIndex()
-        {
-            var result = new DataGridViewColumn[dataGridView1.Columns.Count];
-            dataGridView1.Columns.CopyTo(result, 0);
-            Array.Sort(result, (a, b) => a.DisplayIndex.CompareTo(b.DisplayIndex));
-            return result;
+            GridUtil.ExportResults(dataGridView1, "HalfLives");
         }
 
         private void cbxShowColumn_CheckedChanged(object sender, EventArgs e)
@@ -288,6 +256,8 @@ namespace pwiz.Topograph.ui.Forms
                 cohortColumns.MinHalfLifeColumn.Visible = cbxShowMinHalfLife.Checked;
                 cohortColumns.MaxHalfLifeColumn.Visible = cbxShowMaxHalfLife.Checked;
                 cohortColumns.NumDataPointsColumn.Visible = cbxShowNumDataPoints.Checked;
+                cohortColumns.RateConstantColumn.Visible = cbxShowRateConstant.Checked;
+                cohortColumns.RSquaredColumn.Visible = cbxShowRSquared.Checked;
             }
         }
 
@@ -298,12 +268,10 @@ namespace pwiz.Topograph.ui.Forms
                 default:
                     tbxInitialTracerPercent.Enabled = false;
                     tbxFinalTracerPercent.Enabled = false;
-                    cbxFixYIntercept.Enabled = false;
                     break;
                 case HalfLifeCalculationType.TracerPercent:
                     tbxInitialTracerPercent.Enabled = true;
                     tbxFinalTracerPercent.Enabled = true;
-                    cbxFixYIntercept.Enabled = true;
                     break;
             }
         }

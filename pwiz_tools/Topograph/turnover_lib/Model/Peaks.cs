@@ -30,6 +30,7 @@ namespace pwiz.Topograph.Model
 {
     public class Peaks : SimpleChildCollection<DbPeptideFileAnalysis, String, DbPeak>
     {
+        static private bool _smooth_chromatograms = true;
         private TracerChromatograms _tracerChromatograms;
         public Peaks(PeptideFileAnalysis peptideFileAnalysis, DbPeptideFileAnalysis dbPeptideFileAnalysis) : base(peptideFileAnalysis.Workspace, dbPeptideFileAnalysis)
         {
@@ -69,7 +70,7 @@ namespace pwiz.Topograph.Model
         {
             if (_tracerChromatograms == null)
             {
-                _tracerChromatograms = PeptideFileAnalysis.GetTracerChromatograms(true);
+                _tracerChromatograms = PeptideFileAnalysis.GetTracerChromatograms(_smooth_chromatograms);
             }
             return _tracerChromatograms;
         }
@@ -152,12 +153,22 @@ namespace pwiz.Topograph.Model
         {
             var bestPeak = FindBestPeak();
             var tracerChromatograms = GetTracerChromatograms();
-            var basePeak = MakeBasePeak(bestPeak.Key, tracerChromatograms.Times[bestPeak.Value.StartIndex],
-                                        tracerChromatograms.Times[bestPeak.Value.EndIndex]);
-            BasePeakKey = bestPeak.Key.ToString();
+            DbPeak basePeak;
+
+            if (bestPeak.Value != null)
+            {
+                basePeak = MakeBasePeak(bestPeak.Key, tracerChromatograms.Times[bestPeak.Value.StartIndex],
+                             tracerChromatograms.Times[bestPeak.Value.EndIndex]);
+            }
+            else
+            {
+                basePeak = MakeBasePeak(TracerFormula.Empty, tracerChromatograms.Times[0], tracerChromatograms.Times[0]);
+            }
+
+            BasePeakKey = basePeak.TracerFormula.ToString();
             foreach (var tracerFormula in GetTracerChromatograms().ListTracerFormulas())
             {
-                if (Equals(tracerFormula, bestPeak.Key))
+                if (Equals(tracerFormula, basePeak.TracerFormula))
                 {
                     continue;
                 }

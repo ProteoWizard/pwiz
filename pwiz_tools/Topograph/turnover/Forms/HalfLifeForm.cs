@@ -541,13 +541,11 @@ namespace pwiz.Topograph.ui.Forms
                 default:
                     tbxInitialPercent.Enabled = false;
                     tbxFinalPercent.Enabled = false;
-                    cbxFixedInitialPercent.Enabled = false;
                     break;
                 case HalfLifeCalculationType.TracerPercent:
                     tbxInitialPercent.Enabled = true;
                     tbxFinalPercent.Enabled = true;
-                    cbxFixedInitialPercent.Enabled = true;
-                    break;                
+                    break;
             }
             UpdateRows();
         }

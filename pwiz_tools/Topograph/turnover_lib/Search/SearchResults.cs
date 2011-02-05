@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
+using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.Search
 {
@@ -199,8 +200,20 @@ namespace pwiz.Topograph.Search
         {
             var results = new List<SearchResult>();
             var xmlReader = XmlReader.Create(stream);
-            while (xmlReader.ReadToFollowing("psm"))
+            while (true)
             {
+                try
+                {
+                    if (!xmlReader.ReadToFollowing("psm"))
+                    {
+                        break;
+                    }
+                }
+                catch (Exception e)
+                {
+                    ErrorHandler.LogException("Add Search Results", "Error reading XML file", e);
+                    break;
+                }
                 if (!progressMonitor.Invoke((int) (100 * stream.Position / stream.Length)))
                 {
                     return null;

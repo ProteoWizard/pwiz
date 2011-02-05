@@ -55,6 +55,7 @@
             this.cbxShowStdDev = new System.Windows.Forms.CheckBox();
             this.cbxShowStdErr = new System.Windows.Forms.CheckBox();
             this.btnRequery = new System.Windows.Forms.Button();
+            this.btnSave = new System.Windows.Forms.Button();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.dataGridViewSummary = new System.Windows.Forms.DataGridView();
             this.colSummaryQuantity = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -98,6 +99,7 @@
             this.tableLayoutPanel1.Controls.Add(this.cbxShowStdDev, 2, 4);
             this.tableLayoutPanel1.Controls.Add(this.cbxShowStdErr, 4, 4);
             this.tableLayoutPanel1.Controls.Add(this.btnRequery, 4, 2);
+            this.tableLayoutPanel1.Controls.Add(this.btnSave, 4, 3);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -377,6 +379,16 @@
             this.btnRequery.UseVisualStyleBackColor = true;
             this.btnRequery.Click += new System.EventHandler(this.btnRequery_Click);
             // 
+            // btnSave
+            // 
+            this.btnSave.Location = new System.Drawing.Point(657, 78);
+            this.btnSave.Name = "btnSave";
+            this.btnSave.Size = new System.Drawing.Size(75, 19);
+            this.btnSave.TabIndex = 18;
+            this.btnSave.Text = "Save...";
+            this.btnSave.UseVisualStyleBackColor = true;
+            this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
+            // 
             // splitContainer1
             // 
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -514,5 +526,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn colSummaryMeanStdErr;
         private System.Windows.Forms.DataGridViewTextBoxColumn colSummaryValueCount;
         private System.Windows.Forms.DataGridViewTextBoxColumn colSummaryStdDevStdErrCount;
+        private System.Windows.Forms.Button btnSave;
     }
 }

@@ -14,7 +14,8 @@ namespace pwiz.Topograph.Enrichment
         private const float FRACTION_FWHM_LEN = 0.5F;
         private const float DESCENT_TOL = 0.005f;
         private const float ASCENT_TOL = 0.50f;
-
+        private IList<double> _times;
+        private IList<double> _intensities;
 
         public CrawPeakFinderWrapper()
         {
@@ -23,6 +24,8 @@ namespace pwiz.Topograph.Enrichment
 
         public void SetChromatogram(IList<double> times, IList<double> intensities)
         {
+            _times = times;
+            _intensities = intensities;
             _crawdadPeakFinder.SetChromatogram(times, intensities);
         }
 
@@ -64,8 +67,8 @@ namespace pwiz.Topograph.Enrichment
 
         private int ExtendBoundary(CrawdadPeak peakPrimary, bool useRaw, int indexBoundary, int increment, int toleranceLen)
         {
-            var intensities = _crawdadPeakFinder.Intensities1d;
-            int lenIntensities = _crawdadPeakFinder.Intensities1d.Count;
+            var intensities = _intensities;
+            int lenIntensities = intensities.Count;
             var boundaryIntensity = intensities[indexBoundary];
             var maxIntensity = boundaryIntensity;
             // Look for a descent proportional to the height of the peak.  Because, SRM data is
@@ -81,7 +84,7 @@ namespace pwiz.Topograph.Enrichment
                  i > 0 && i < lenIntensities - 1 && Math.Abs(indexBoundary - i) < toleranceLen;
                  i += increment)
             {
-                float maxIntensityCurrent = intensities[i];
+                double maxIntensityCurrent = intensities[i];
 
                 // If intensity goes above the maximum, stop looking
                 if (maxIntensityCurrent > maxHeight)

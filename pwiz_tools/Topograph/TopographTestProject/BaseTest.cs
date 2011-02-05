@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Topograph.Data;
+using pwiz.Topograph.Model;
 
 namespace pwiz.Topograph.Test
 {
@@ -82,6 +84,43 @@ namespace pwiz.Topograph.Test
         {
             String destDirectory = Path.Combine(FindDirectory("TopographTestProject"), "bin\\x86\\Debug");
             FreshenDirectory(Path.Combine(FindDirectory("turnover_lib"), "bin\\x86\\Debug"), destDirectory);
+        }
+
+        protected Workspace CreateWorkspace(string path, DbTracerDef dbTracerDef)
+        {
+            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory(path, SessionFactoryFlags.create_schema))
+            {
+                using (var session = sessionFactory.OpenSession())
+                {
+                    var transaction = session.BeginTransaction();
+                    var dbWorkspace = new DbWorkspace
+                    {
+                        ModificationCount = 1,
+                        TracerDefCount = dbTracerDef == null ? 0 : 1,
+                        SchemaVersion = WorkspaceUpgrader.CurrentVersion,
+                    };
+                    session.Save(dbWorkspace);
+                    if (dbTracerDef != null)
+                    {
+                        dbTracerDef.Workspace = dbWorkspace;
+                        dbTracerDef.Name = "Tracer";
+                        session.Save(dbTracerDef);
+                    }
+
+                    var modification = new DbModification
+                    {
+                        DeltaMass = 57.021461,
+                        Symbol = "C",
+                        Workspace = dbWorkspace
+                    };
+                    session.Save(modification);
+                    transaction.Commit();
+                }
+
+            }
+            var workspace = new Workspace(path);
+            workspace.Reconciler.ReconcileNow();
+            return workspace;
         }
     }
 }

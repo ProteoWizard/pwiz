@@ -11,6 +11,7 @@ using pwiz.Topograph.Model;
 using pwiz.Topograph.Query;
 using pwiz.Topograph.ui.Forms;
 using pwiz.Topograph.ui.Properties;
+using pwiz.Topograph.ui.Util;
 using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.ui.Controls
@@ -282,14 +283,7 @@ namespace pwiz.Topograph.ui.Controls
 
         private static string StripLineBreaks(object value)
         {
-            if (value == null)
-            {
-                return null;
-            }
-            return Convert.ToString(value)
-                .Replace("\r\n", " ")
-                .Replace("\r", " ")
-                .Replace("\n", " ");
+            return GridUtil.StripLineBreaks(value);
         }
     }
 }

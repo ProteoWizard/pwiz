@@ -215,6 +215,7 @@ namespace pwiz.Topograph.MsData
             var statsTimePoints = new Statistics(timePoints.ToArray());
             var statsLogValues = new Statistics(logValues.ToArray());
             double rateConstant, stDevRateConstant, rateConstantError, yIntercept;
+            double? rSquared = null;
             if (FixedInitialPercent)
             {
                 rateConstant = statsLogValues.SlopeWithoutIntercept(statsTimePoints);
@@ -228,14 +229,18 @@ namespace pwiz.Topograph.MsData
                 stDevRateConstant = Statistics.StdDevB(statsLogValues, statsTimePoints);
                 rateConstantError = stDevRateConstant*GetErrorFactor(timePoints.Count - 2);
                 yIntercept = Statistics.Intercept(statsLogValues, statsTimePoints);
+                if (statsTimePoints.Length > 2)
+                {
+                    rSquared = Math.Pow(statsLogValues.R(statsTimePoints), 2);
+                }
             }
-
             return new ResultData
                 {
                     RateConstant = rateConstant,
                     RateConstantError = rateConstantError,
                     PointCount = timePoints.Count,
                     YIntercept = yIntercept,
+                    RSquared = rSquared,
                 };
         }
 
@@ -415,6 +420,7 @@ namespace pwiz.Topograph.MsData
             public double YIntercept { get; set; }
             public double RateConstant { get; set; }
             public double RateConstantError { get; set; }
+            public double? RSquared { get; set; }
             public int PointCount { get; set; }
             public double HalfLife
             {

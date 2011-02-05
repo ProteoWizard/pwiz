@@ -148,7 +148,7 @@ namespace pwiz.Topograph.ui.Forms
                     lineItemPt.Key.RemovePoint(1);
                     lineItemPt.Key.RemovePoint(0);
                     lineItemPt.Key.AddPoint(new PointPair(lineItemPt.Value.X, peakDisplay.Height));
-                    lineItemPt.Key.AddPoint(new PointPair(lineItemPt.Value.Y, 0));
+                    lineItemPt.Key.AddPoint(new PointPair(lineItemPt.Value.X, 0));
                 }
                 msGraphControl.Invalidate();
                 sender.Cursor = _peakResize.GetCursor();

@@ -327,7 +327,14 @@ namespace pwiz.Topograph.MsData
                     }
                     _session.Save(new DbChangeLog(task.PeptideAnalysis));
                     task.FinishLock(_session);
-                    _session.Transaction.Commit();
+                    try
+                    {
+                        _session.Transaction.Commit();
+                    }
+                    catch (Exception e)
+                    {
+                        throw e;
+                    }
                 }
             }
         }

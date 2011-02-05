@@ -104,6 +104,10 @@ namespace pwiz.Topograph.ui.Forms
                     SafeBeginInvoke(Close);
                 }
             }
+            catch (Exception e)
+            {
+                ErrorHandler.LogException("Add Search Results", "Exception occurred while processing search results", e);
+            }
             finally
             {
                 IsRunning = false;

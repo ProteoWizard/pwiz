@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Topograph.Model;
+using pwiz.Topograph.ui.Util;
 using pwiz.Topograph.Util;
 using pwiz.Topograph.Data;
 
@@ -467,6 +468,11 @@ namespace pwiz.Topograph.ui.Forms
         private void cbx_ColumnVisibilityChanged(object sender, EventArgs e)
         {
             UpdateColumnVisibility();
+        }
+
+        private void btnSave_Click(object sender, EventArgs e)
+        {
+            GridUtil.ExportResults(dataGridView1, "TracerAmounts");
         }
     }
 }

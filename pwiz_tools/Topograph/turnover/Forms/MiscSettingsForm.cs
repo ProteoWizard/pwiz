@@ -30,6 +30,7 @@ namespace pwiz.Topograph.ui.Forms
                 Workspace.SetMassAccuracy(Convert.ToDouble(tbxMassAccuracy.Text));
                 Workspace.SetErrOnSideOfLowerAbundance(cbxWeightSignalAbsenceMore.Checked);
                 Workspace.SetProteinDescriptionKey(tbxProteinDescriptionKey.Text);
+                Workspace.SetMinCorrelationCoefficient(double.Parse(tbxMinCorrelationCoefficient.Text));
             }
             Close();
         }

@@ -70,6 +70,7 @@
   <ItemGroup>
     <Compile Include="BaseTest.cs" />
     <Compile Include="PeakFinderTest.cs" />
+    <Compile Include="PrecursorPoolTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ChromatogramGeneratorTest.cs" />
     <Compile Include="Util\PeakDividerTest.cs" />
@@ -78,6 +79,10 @@
     <Content Include="AuthoringTests.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Shared\Common\Common.csproj">
+      <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>
+      <Name>Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Shared\ProteowizardWrapper\ProteowizardWrapper.csproj">
       <Project>{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}</Project>
       <Name>ProteowizardWrapper</Name>
