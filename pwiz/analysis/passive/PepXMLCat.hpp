@@ -38,7 +38,7 @@ class PWIZ_API_DECL PepxmlRecordReader
 {
 public:
 
-    struct Config
+    struct PWIZ_API_DECL Config
     {
         std::string pepxmlfile;
         char   delim;
@@ -49,7 +49,7 @@ public:
         Config();
     };
     
-    struct record
+    struct PWIZ_API_DECL record
     {
         int    index;
         int    hit_rank;
@@ -115,8 +115,7 @@ public:
     iterator begin();
     iterator end();
     
-    friend std::ostream& operator<<(std::ostream& os,
-                                    PepxmlRecordReader& prr);
+    friend PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, PepxmlRecordReader& prr);
 private:
     Config config;
     set recordset;

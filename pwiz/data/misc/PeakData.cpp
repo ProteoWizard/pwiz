@@ -42,12 +42,12 @@ using namespace minimxml::SAXParser;
 //
 
 
-Peak::Peak(double _mz, double _retentionTime)
+PWIZ_API_DECL Peak::Peak(double _mz, double _retentionTime)
 : id(0),  mz(_mz), retentionTime(_retentionTime), intensity(0), area(0), error(0)
 {}
 
 
-double Peak::getAttribute(Attribute attribute) const
+PWIZ_API_DECL double Peak::getAttribute(Attribute attribute) const
 {
     Attributes::const_iterator it = attributes.find(attribute);
     if (it == attributes.end()) 
@@ -56,7 +56,7 @@ double Peak::getAttribute(Attribute attribute) const
 }
 
 
-bool Peak::operator==(const Peak& that) const
+PWIZ_API_DECL bool Peak::operator==(const Peak& that) const
 {
     bool result = (id == that.id &&
                    mz == that.mz &&
@@ -86,7 +86,7 @@ bool Peak::operator==(const Peak& that) const
 }
 
 
-bool Peak::operator!=(const Peak& that) const
+PWIZ_API_DECL bool Peak::operator!=(const Peak& that) const
 {
     return !(*this==that);
 }
@@ -157,7 +157,7 @@ Peak::Attribute stringToAttribute(string name)
 } // namespace
 
 
-void Peak::write(minimxml::XMLWriter& writer) const
+PWIZ_API_DECL void Peak::write(minimxml::XMLWriter& writer) const
 {
     XMLWriter::Attributes xmlAttributes;
     xmlAttributes.push_back(make_pair("id", lexical_cast<string>(id)));
@@ -236,7 +236,7 @@ SAXParser::Handler::Status HandlerPeak::characters(const std::string& text,
 }
 
 
-void Peak::read(istream& is)
+PWIZ_API_DECL void Peak::read(istream& is)
 {
     HandlerPeak handler(this);
     SAXParser::parse(is, handler);
@@ -263,7 +263,7 @@ PWIZ_API_DECL std::istream& operator>>(std::istream& is, Peak& peak)
 //
 
 
-void PeakFamily::write(XMLWriter& writer) const
+PWIZ_API_DECL void PeakFamily::write(XMLWriter& writer) const
 {  
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("mzMonoisotopic", boost::lexical_cast<string>(mzMonoisotopic)));
@@ -341,7 +341,7 @@ private:
     size_t _peaksCount;
 };
 
-void PeakFamily::read(istream& is)
+PWIZ_API_DECL void PeakFamily::read(istream& is)
 {
 
     HandlerPeakFamily handlerPeakFamily(this);
@@ -351,7 +351,7 @@ void PeakFamily::read(istream& is)
 }
 
 
-bool PeakFamily::operator==(const PeakFamily& that) const
+PWIZ_API_DECL bool PeakFamily::operator==(const PeakFamily& that) const
 {
 
     return mzMonoisotopic == that.mzMonoisotopic &&
@@ -361,7 +361,7 @@ bool PeakFamily::operator==(const PeakFamily& that) const
 
 }
 
-bool PeakFamily::operator!=(const PeakFamily& that) const
+PWIZ_API_DECL bool PeakFamily::operator!=(const PeakFamily& that) const
 {
     return !(*this == that);
 }
@@ -387,7 +387,7 @@ PWIZ_API_DECL std::istream& operator>>(std::istream& is, PeakFamily& peakFamily)
 //
 
 
-void Scan::write(XMLWriter& writer) const
+PWIZ_API_DECL void Scan::write(XMLWriter& writer) const
 {
     XMLWriter::Attributes attributes;
 
@@ -489,7 +489,7 @@ private:
 };
 
 
-void Scan::read(istream& is)
+PWIZ_API_DECL void Scan::read(istream& is)
 {
     HandlerScan handlerScan(this);
     parse(is, handlerScan);
@@ -497,7 +497,7 @@ void Scan::read(istream& is)
 }
 
 
-bool Scan::operator==(const Scan& scan) const
+PWIZ_API_DECL bool Scan::operator==(const Scan& scan) const
 {
     return index == scan.index &&
       nativeID == scan.nativeID &&
@@ -511,7 +511,7 @@ bool Scan::operator==(const Scan& scan) const
 }
 
 
-bool Scan::operator!=(const Scan& scan) const
+PWIZ_API_DECL bool Scan::operator!=(const Scan& scan) const
 {
     return !(*this == scan);
 
@@ -538,7 +538,7 @@ PWIZ_API_DECL std::istream& operator>>(std::istream& is, Scan& scan)
 //
 
 
-void Software::Parameter::write(XMLWriter& writer) const
+PWIZ_API_DECL void Software::Parameter::write(XMLWriter& writer) const
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("name", boost::lexical_cast<string>(name)));
@@ -547,7 +547,7 @@ void Software::Parameter::write(XMLWriter& writer) const
 }
 
 
-void Software::write(XMLWriter& writer) const
+PWIZ_API_DECL void Software::write(XMLWriter& writer) const
 
 {
     XMLWriter::Attributes attributes;
@@ -645,7 +645,7 @@ private:
 };
 
 
-void Software::Parameter::read(istream& is) 
+PWIZ_API_DECL void Software::Parameter::read(istream& is) 
 {
     HandlerParameter handlerParameter(this);
     parse(is, handlerParameter);
@@ -653,7 +653,7 @@ void Software::Parameter::read(istream& is)
 }
 
 
-void Software::read(istream& is)
+PWIZ_API_DECL void Software::read(istream& is)
 {
     HandlerSoftware handlerSoftware(this);
     parse(is, handlerSoftware);
@@ -661,7 +661,7 @@ void Software::read(istream& is)
 }
 
 
-bool Software::Parameter::operator==(const Software::Parameter& that) const
+PWIZ_API_DECL bool Software::Parameter::operator==(const Software::Parameter& that) const
 {
     return name == that.name &&
       value == that.value;
@@ -669,14 +669,14 @@ bool Software::Parameter::operator==(const Software::Parameter& that) const
 }
 
 
-bool Software::Parameter::operator!=(const Software::Parameter& that) const
+PWIZ_API_DECL bool Software::Parameter::operator!=(const Software::Parameter& that) const
 {
     return !(*this == that);
 
 }
 
 
-bool Software::operator==(const Software& that) const
+PWIZ_API_DECL bool Software::operator==(const Software& that) const
 {
   return name == that.name &&
     version == that.version &&
@@ -686,7 +686,7 @@ bool Software::operator==(const Software& that) const
 }
 
 
-bool Software::operator!=(const Software& that) const
+PWIZ_API_DECL bool Software::operator!=(const Software& that) const
 {
   return !(*this == that);
 
@@ -698,7 +698,7 @@ bool Software::operator!=(const Software& that) const
 //
 
 
-void PeakData::write(XMLWriter& writer) const
+PWIZ_API_DECL void PeakData::write(XMLWriter& writer) const
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("sourceFilename",sourceFilename));
@@ -774,14 +774,14 @@ private:
 };
 
 
-void PeakData::read(istream& is)
+PWIZ_API_DECL void PeakData::read(istream& is)
 {
     HandlerPeakData handlerPeakData(this);
     SAXParser::parse(is, handlerPeakData);
 }
 
 
-bool PeakData::operator==(const PeakData& that) const
+PWIZ_API_DECL bool PeakData::operator==(const PeakData& that) const
 {
     return sourceFilename == that.sourceFilename &&
       software == that.software &&
@@ -789,7 +789,7 @@ bool PeakData::operator==(const PeakData& that) const
 }
 
 
-bool PeakData::operator!=(const PeakData& that) const
+PWIZ_API_DECL bool PeakData::operator!=(const PeakData& that) const
 {
     return !(*this == that);
 }
@@ -814,7 +814,7 @@ PWIZ_API_DECL std::istream& operator>>(std::istream& is, PeakData& pd)
 ///
 
 
-Peakel::Peakel()
+PWIZ_API_DECL Peakel::Peakel()
 :   mz(0),
     retentionTime(0),
     maxIntensity(0),
@@ -823,7 +823,7 @@ Peakel::Peakel()
 {}
 
 
-Peakel::Peakel(const Peak& peak)
+PWIZ_API_DECL Peakel::Peakel(const Peak& peak)
 :   mz(peak.mz),
     retentionTime(peak.retentionTime),
     maxIntensity(0),
@@ -834,7 +834,7 @@ Peakel::Peakel(const Peak& peak)
 }
 
 
-void Peakel::calculateMetadata()
+PWIZ_API_DECL void Peakel::calculateMetadata()
 {
     // wipe out any metadata that may have been set
     mz = 0;
@@ -880,19 +880,19 @@ void Peakel::calculateMetadata()
 }
 
 
-double Peakel::retentionTimeMin() const
+PWIZ_API_DECL double Peakel::retentionTimeMin() const
 {
     return peaks.empty() ? retentionTime : peaks.front().retentionTime;
 }
 
 
-double Peakel::retentionTimeMax() const
+PWIZ_API_DECL double Peakel::retentionTimeMax() const
 {
     return peaks.empty() ? retentionTime : peaks.back().retentionTime;
 }
 
 
-void Peakel::write(pwiz::minimxml::XMLWriter& xmlWriter) const
+PWIZ_API_DECL void Peakel::write(pwiz::minimxml::XMLWriter& xmlWriter) const
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("mz", boost::lexical_cast<string>(mz)));
@@ -917,14 +917,14 @@ void Peakel::write(pwiz::minimxml::XMLWriter& xmlWriter) const
 }
 
 
-void Peakel::read(istream& is)
+PWIZ_API_DECL void Peakel::read(istream& is)
 {
     HandlerPeakel handlerPeakel(this);
     parse(is, handlerPeakel);
 }
 
 
-bool Peakel::operator==(const Peakel& that) const
+PWIZ_API_DECL bool Peakel::operator==(const Peakel& that) const
 {
     return mz == that.mz &&
       retentionTime == that.retentionTime &&
@@ -936,7 +936,7 @@ bool Peakel::operator==(const Peakel& that) const
 }
 
 
-bool Peakel::operator!=(const Peakel& that) const
+PWIZ_API_DECL bool Peakel::operator!=(const Peakel& that) const
 {
     return !(*this == that);
 
@@ -1005,12 +1005,12 @@ SAXParser::Handler::Status HandlerPeakel::startElement(const string& name, const
 ///
 
 
-Feature::Feature()
+PWIZ_API_DECL Feature::Feature()
 :   mz(0), retentionTime(0), charge(0), totalIntensity(0), rtVariance(0), score(0), error(0)
 {}
 
 
-void Feature::calculateMetadata()
+PWIZ_API_DECL void Feature::calculateMetadata()
 {
     // wipe out any metadata that may have been set
     mz = 0;
@@ -1063,7 +1063,7 @@ const int maxPeakelsToCheck_ = 2;
 } // namespace
 
 
-double Feature::retentionTimeMin() const
+PWIZ_API_DECL double Feature::retentionTimeMin() const
 {
     double result = retentionTime;
     
@@ -1081,7 +1081,7 @@ double Feature::retentionTimeMin() const
 }
 
 
-double Feature::retentionTimeMax() const
+PWIZ_API_DECL double Feature::retentionTimeMax() const
 {
     double result = retentionTime;
     
@@ -1099,7 +1099,7 @@ double Feature::retentionTimeMax() const
 }
 
 
-void Feature::write(pwiz::minimxml::XMLWriter& xmlWriter) const
+PWIZ_API_DECL void Feature::write(pwiz::minimxml::XMLWriter& xmlWriter) const
 {
     XMLWriter::Attributes attributes;
     attributes.push_back(make_pair("id", boost::lexical_cast<string>(id)));
@@ -1172,7 +1172,7 @@ SAXParser::Handler::Status HandlerFeature::startElement(const string& name, cons
         }
 }
 
-Feature::Feature(const MSIHandler::Record& record) 
+PWIZ_API_DECL Feature::Feature(const MSIHandler::Record& record) 
 {
     mz = record.mz;
     retentionTime = record.time;
@@ -1183,14 +1183,14 @@ Feature::Feature(const MSIHandler::Record& record)
     error = 0;
 }
 
-void Feature::read(istream& is)
+PWIZ_API_DECL void Feature::read(istream& is)
 {
     HandlerFeature handlerFeature(this);
     parse(is, handlerFeature);
 }
 
 
-bool Feature::operator==(const Feature& that) const
+PWIZ_API_DECL bool Feature::operator==(const Feature& that) const
 {
     bool result = (id == that.id &&
       mz == that.mz &&
@@ -1212,7 +1212,7 @@ bool Feature::operator==(const Feature& that) const
 }
 
 
-bool Feature::operator!=(const Feature& that) const
+PWIZ_API_DECL bool Feature::operator!=(const Feature& that) const
 {
     return !(*this==that);
 }
@@ -1231,7 +1231,7 @@ PWIZ_API_DECL std::istream& operator>>(std::istream& is, Feature& feature)
     return is;
 }
 
-void FeatureFile::write(pwiz::minimxml::XMLWriter& xmlWriter) const
+PWIZ_API_DECL void FeatureFile::write(pwiz::minimxml::XMLWriter& xmlWriter) const
 
 {
     XMLWriter::Attributes attributes;
@@ -1287,7 +1287,7 @@ private:
 };
 
 
-void FeatureFile::read(istream& is)
+PWIZ_API_DECL void FeatureFile::read(istream& is)
 {
     
   HandlerFeatureFile handlerFeatureFile(this);   

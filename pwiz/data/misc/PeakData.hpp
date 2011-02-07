@@ -24,8 +24,8 @@
 #define _PEAKDATA_HPP_
 
 
-#include "CalibrationParameters.hpp"
 #include "pwiz/utility/misc/Export.hpp"
+#include "CalibrationParameters.hpp"
 #include "pwiz/utility/misc/MSIHandler.hpp"
 #include "pwiz/utility/minimxml/XMLWriter.hpp"
 #include "pwiz/utility/minimxml/SAXParser.hpp"
@@ -162,7 +162,7 @@ struct PWIZ_API_DECL Software
     std::string version;
     std::string source;
 
-    struct Parameter
+    struct PWIZ_API_DECL Parameter
     {
         std::string name;
         std::string value;

@@ -57,12 +57,14 @@ lib pwiz_analysis_passive
         <library>../peptideid//pwiz_analysis_peptideid
         <library>../../utility/misc//pwiz_utility_image
         <library>../../utility/math//pwiz_utility_math
+        <library>../../data/misc//pwiz_data_misc
     : # default-build
     : # usage-requirements
         <library>pwiz_analysis_passive_core
         <library>../peptideid//pwiz_analysis_peptideid
         <library>../../utility/misc//pwiz_utility_image
         <library>../../utility/math//pwiz_utility_math
+        <library>../../data/misc//pwiz_data_misc
     ;
 
 
