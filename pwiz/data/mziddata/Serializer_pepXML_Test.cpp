@@ -96,6 +96,21 @@ void stripUnmappedMetadata(MzIdentML& mzid)
     }
 }
 
+void testTranslation(const string& str)
+{
+    // test that search engine name is written using preferred name
+    unit_assert(bal::contains(str, "search_engine=\"Mascot\""));
+
+    // test that score names are written using preferred name
+    unit_assert(bal::contains(str, "name=\"ionscore\""));
+    unit_assert(bal::contains(str, "name=\"homologyscore\""));
+    unit_assert(bal::contains(str, "name=\"identityscore\""));
+    unit_assert(bal::contains(str, "name=\"expect\""));
+
+    // test that nativeID is preserved
+    unit_assert(bal::contains(str, "spectrumNativeID=\"controllerType=0 controllerNumber=1 scan=420\""));
+}
+
 void testSerialize()
 {
     if (os_) *os_ << "begin testSerialize" << endl;
@@ -108,7 +123,8 @@ void testSerialize()
     ostringstream oss;
     serializer.write(oss, mzid, "tiny.pepXML");
 
-    if (os_) *os_ << "oss:\n" << oss.str() << endl; 
+    if (os_) *os_ << "oss:\n" << oss.str() << endl;
+    testTranslation(oss.str());
 
     shared_ptr<istringstream> iss(new istringstream(oss.str()));
     MzIdentML mzid2;

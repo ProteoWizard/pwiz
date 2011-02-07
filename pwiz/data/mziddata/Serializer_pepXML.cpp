@@ -572,8 +572,10 @@ void write_spectrum_queries(XMLWriter& xmlWriter, const MzIdentML& mzid, const s
         const SpectrumIdentificationResult& sir = *sirPtr;
 
         ++spectrumIndex;
-        ++queryIndex;
         lastChargeState = 0;
+
+        if (!sir.spectrumIdentificationItem.empty())
+          ++queryIndex;
 
         BOOST_FOREACH(const SpectrumIdentificationItemPtr& siiPtr, sir.spectrumIdentificationItem)
         {
