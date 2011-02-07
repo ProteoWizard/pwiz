@@ -24,6 +24,7 @@
 #ifndef _PEPXMLCAT_HPP_
 #define _PEPXMLCAT_HPP_
 
+#include "pwiz/utility/misc/Export.hpp"
 #include <string>
 #include <ostream>
 #include <vector>
