@@ -52,6 +52,10 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Identifiable& it);
 PWIZ_API_DECL void read(std::istream& is, Identifiable& it);
 
 
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const IdentifiableParamContainer& it);
+PWIZ_API_DECL void read(std::istream& is, IdentifiableParamContainer& it);
+
+
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ContactRole& contactRole);
 PWIZ_API_DECL void read(std::istream& writer, ContactRole& contactRole);
 

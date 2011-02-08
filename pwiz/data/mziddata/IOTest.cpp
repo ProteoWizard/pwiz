@@ -73,6 +73,21 @@ void testIdentifiable()
 }
 
 
+void testIdentifiableParamContainer()
+{
+    if (os_) *os_ << "testIdentifiableParamContainer\n" ;
+
+    IdentifiableParamContainer a;
+    a.id = "id";
+    a.name = "name";
+
+    a.set(MS_TIC, 123);
+    a.userParams.push_back(UserParam("abc", "123", "!@#"));
+
+    testObject(a);
+}
+
+
 void testCV()
 {
     if (os_) *os_ << "testCV\n" ;
@@ -818,6 +833,7 @@ void test()
 {
     testCV();
     testIdentifiable();
+    testIdentifiableParamContainer();
     testBibliographicReference();
     testPerson();
     testOrganization();

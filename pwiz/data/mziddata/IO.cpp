@@ -347,6 +347,13 @@ void addIdAttributes(const Identifiable& id, XMLWriter::Attributes& attributes)
         attributes.add("name", id.name);
 }
 
+void addIdAttributes(const IdentifiableParamContainer& id, XMLWriter::Attributes& attributes)
+{
+    attributes.add("id", id.id);
+    if (!id.name.empty())
+        attributes.add("name", id.name);
+}
+
 //
 // HandlerString
 //
@@ -414,13 +421,59 @@ PWIZ_API_DECL void read(std::istream& is, Identifiable& it)
 }
 
 //
-// addExternalDataAttributes
+// IdentifiableParamContainer
 //
-void addExternalDataAttributes(const ExternalData& ed, XMLWriter::Attributes& attributes)
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const IdentifiableParamContainer& it)
 {
-    addIdAttributes(ed, attributes);
-    attributes.add("location", ed.location);
+    XMLWriter::Attributes attributes;
+    addIdAttributes(it, attributes);
+    if (it.ParamContainer::empty())
+        writer.startElement("FakeIdentifiableParamContainer", attributes, XMLWriter::EmptyElement);
+    else
+    {
+        writer.startElement("FakeIdentifiableParamContainer", attributes);
+        writeParamContainer(writer, it);
+        writer.endElement();
+    }
 }
+
+struct HandlerIdentifiableParamContainer : public HandlerParamContainer
+{
+    IdentifiableParamContainer* id;
+    HandlerIdentifiableParamContainer(IdentifiableParamContainer* _id = 0)
+        : HandlerParamContainer(_id), id(_id) {}
+
+    virtual ~HandlerIdentifiableParamContainer() {}
+    
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (!id)
+            throw runtime_error("[IO::HandlerIdentifiableParamContainer] Null IdentifiableParamContainer.");
+
+        if (name == "cvParam" || name == "userParam")
+        {
+            paramContainer = id;
+            return HandlerParamContainer::startElement(name, attributes, position);
+        }
+        else
+        {
+            getAttribute(attributes, "id", id->id);
+            getAttribute(attributes, "name", id->name);
+            return Status::Ok;
+        }
+    }
+};
+
+PWIZ_API_DECL void read(std::istream& is, IdentifiableParamContainer& it)
+{
+    HandlerIdentifiableParamContainer handler(&it);
+    SAXParser::parse(is, handler);
+}
+
+
 //
 // BibliographicReference
 //
@@ -518,7 +571,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const DBSequence& ds)
 }
 
 
-struct HandlerDBSequence : public HandlerIdentifiable
+struct HandlerDBSequence : public HandlerIdentifiableParamContainer
 {
     DBSequence* ds;
     bool inSeq;
@@ -545,21 +598,15 @@ struct HandlerDBSequence : public HandlerIdentifiable
             string value;
             getAttribute(attributes, "SearchDatabase_ref", value);
             ds->searchDatabasePtr = SearchDatabasePtr(new SearchDatabase(value));
-            HandlerIdentifiable::id = ds;
-            return HandlerIdentifiable::startElement(name, attributes, position);
+            HandlerIdentifiableParamContainer::id = ds;
         }
         else if (name == "seq")
         {
             inSeq = true;
-        }
-        else if (name == "cvParam" ||
-                 name == "userParam")
-        {
-            handlerParamContainer_.paramContainer = ds;
-            return handlerParamContainer_.startElement(name, attributes, position);
+            return Status::Ok;
         }
         
-        return Status::Ok;
+        return HandlerIdentifiableParamContainer::startElement(name, attributes, position);
     }
 
     virtual Status characters(const string& text, 
@@ -582,9 +629,6 @@ struct HandlerDBSequence : public HandlerIdentifiable
 
         return Status::Ok;
     }
-
-    private:
-    HandlerParamContainer handlerParamContainer_;
 };
 
 
@@ -624,7 +668,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Modification& mod)
 }
 
 
-struct HandlerModification : public SAXParser::Handler
+struct HandlerModification : public HandlerParamContainer
 {
     Modification* mod;
     HandlerModification(Modification* _mod = 0) : mod(_mod) {}
@@ -639,20 +683,12 @@ struct HandlerModification : public SAXParser::Handler
             getAttribute(attributes, "residues", mod->residues);
             getAttribute(attributes, "avgMassDelta", mod->avgMassDelta);
             getAttribute(attributes, "monoisotopicMassDelta", mod->monoisotopicMassDelta);
+            HandlerParamContainer::paramContainer = mod;
+            return Status::Ok;
         }
-        else if (name == "cvParam" ||
-                 name == "userParam")
-        {
-            handlerParamContainer_.paramContainer = mod;
-            return handlerParamContainer_.startElement(name, attributes, position);
-        }
-        else
-            throw runtime_error(("[IO::HandlerModification] Unknown tag "+name).c_str());
-        
-        return Status::Ok;
+
+        return HandlerParamContainer::startElement(name, attributes, position);
     }
-    private:
-    HandlerParamContainer handlerParamContainer_;
 };
 
 
@@ -746,10 +782,11 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Peptide& peptide)
 }
 
 
-struct HandlerPeptide : public HandlerIdentifiable
+struct HandlerPeptide : public HandlerIdentifiableParamContainer
 {
     bool inPeptideSequence;
     Peptide* peptide;
+
     HandlerPeptide(Peptide* _peptide = 0)
         : inPeptideSequence(false), peptide(_peptide)
     {
@@ -766,11 +803,13 @@ struct HandlerPeptide : public HandlerIdentifiable
         
         if (name == "Peptide")
         {
-            HandlerIdentifiable::id = peptide;
-            return HandlerIdentifiable::startElement(name, attributes, position);
+            HandlerIdentifiableParamContainer::id = peptide;
         }
         else if (name == "peptideSequence")
+        {
             inPeptideSequence = true;
+            return Status::Ok;
+        }
         else if (name == "Modification")
         {
             peptide->modification.push_back(ModificationPtr(new Modification()));
@@ -782,15 +821,8 @@ struct HandlerPeptide : public HandlerIdentifiable
             handlerSubstitutionModification_.subMod = &peptide->substitutionModification;
             return Status(Status::Delegate, &handlerSubstitutionModification_);
         }
-        else if (name == "cvParam" ||
-                 name == "userParam")
-        {
-            handlerParamContainer_.paramContainer = peptide;
-            return handlerParamContainer_.startElement(name, attributes, position);
-        }
-        else
-            throw runtime_error(("[IO::HandlerPeptide] Unexpected element name: " + name).c_str());
-        return Status::Ok;
+
+        return HandlerIdentifiableParamContainer::startElement(name, attributes, position);
     }
 
     virtual Status characters(const string& text, 
@@ -815,7 +847,6 @@ struct HandlerPeptide : public HandlerIdentifiable
     private:
     HandlerModification handlerModification_;
     HandlerSubstitutionModification handlerSubstitutionModification_;
-    HandlerParamContainer handlerParamContainer_;
 };
 
 
@@ -954,7 +985,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ContactPtr cp)
 // Contact
 //
 
-struct HandlerContact : public HandlerIdentifiable
+struct HandlerContact : public HandlerIdentifiableParamContainer
 {
     Contact* c;
     HandlerContact(Contact* _c = 0) : c(_c) {}
@@ -972,8 +1003,8 @@ struct HandlerContact : public HandlerIdentifiable
         getAttribute(attributes, "fax", c->fax);
         getAttribute(attributes, "tollFreePhone", c->tollFreePhone);
 
-        HandlerIdentifiable::id = c;
-        return HandlerIdentifiable::startElement(name, attributes, position);
+        HandlerIdentifiableParamContainer::id = c;
+        return HandlerIdentifiableParamContainer::startElement(name, attributes, position);
     }
 };
 
@@ -1589,7 +1620,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Material& mat)
 }
 
 
-struct HandlerMaterial : public HandlerIdentifiable
+struct HandlerMaterial : public HandlerIdentifiableParamContainer
 {
     Material* mat;
     string tag;
@@ -1605,22 +1636,11 @@ struct HandlerMaterial : public HandlerIdentifiable
             handlerContactRole_.cvParam = handlerContactRole_.cr = &mat->contactRole;
             return Status(Status::Delegate, &handlerContactRole_);
         }
-        else if (name == "cvParam" ||
-            name == "userParam")
-        {
-            handlerParamContainer_.paramContainer = mat;
-            return handlerParamContainer_.startElement(name, attributes, position);
-        }
-        else if (tag.empty() || name == tag)
-        {
-            HandlerIdentifiable::id = mat;
-            return HandlerIdentifiable::startElement(name, attributes, position);
-        }
 
-        return Status::Ok;
+        HandlerIdentifiableParamContainer::id = mat;
+        return HandlerIdentifiableParamContainer::startElement(name, attributes, position);
     }
     private:
-    HandlerParamContainer handlerParamContainer_;
     HandlerContactRole handlerContactRole_;
 };
 
@@ -2072,7 +2092,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const AmbiguousResidue& re
 }
 
 
-struct HandlerAmbiguousResidue : public SAXParser::Handler
+struct HandlerAmbiguousResidue : public HandlerParamContainer
 {
     AmbiguousResidue* residue;
     HandlerAmbiguousResidue(AmbiguousResidue* _residue = 0)
@@ -2085,19 +2105,12 @@ struct HandlerAmbiguousResidue : public SAXParser::Handler
         if (name == "AmbiguousResidue")
         {
             getAttribute(attributes, "Code", residue->Code);
+            HandlerParamContainer::paramContainer = residue;
+            return Status::Ok;
         }
-        else if (name == "cvParam" || name == "userParam")
-        {
-            handlerParamContainer_.paramContainer = residue;
-            return handlerParamContainer_.startElement(name, attributes, position);
-        }
-        else
-            throw runtime_error(("[IO::HandlerAmbiguousResidue] Unexpected element name: " + name).c_str());
 
-        return Status::Ok;
+        return HandlerParamContainer::startElement(name, attributes, position);
     }
-    private:
-    HandlerParamContainer handlerParamContainer_;
 };
 
 
@@ -2224,8 +2237,8 @@ struct HandlerSearchModification : public SAXParser::Handler
     SearchModification* sm;
     HandlerSearchModification(SearchModification* _sm = 0)
         : sm(_sm),
-          handlerModParam_("ModParam"),
-          handlerSpecificityRules_("SpecificityRules")
+          handlerSpecificityRules_("SpecificityRules"),
+          handlerModParam_("ModParam")
     {}
 
     virtual Status startElement(const string& name, 
@@ -2376,7 +2389,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const TranslationTable& tt
     writer.endElement();
 }
 
-struct HandlerTranslationTable : public HandlerIdentifiable
+struct HandlerTranslationTable : public HandlerIdentifiableParamContainer
 {
     TranslationTable* tt;
     HandlerTranslationTable(TranslationTable* _tt = 0)
@@ -2389,22 +2402,11 @@ struct HandlerTranslationTable : public HandlerIdentifiable
     {
         if (name == "TranslationTable")
         {
-            HandlerIdentifiable::id = tt;
-            return HandlerIdentifiable::startElement(name, attributes, position);
+            HandlerIdentifiableParamContainer::id = tt;
         }
-        else if (name == "cvParam" ||
-            name == "userParam")
-        {
-            handlerParams_.paramContainer = tt;
-            return handlerParams_.startElement(name, attributes, position);
-        }
-        else
-            throw runtime_error(("[IO::HandlerFilter] Unexpected element name: " + name).c_str());
 
-        return Status::Ok;
+        return HandlerIdentifiableParamContainer::startElement(name, attributes, position);
     }
-    private:
-    HandlerParamContainer handlerParams_;
 };
 
 
@@ -3050,7 +3052,9 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SearchDatabasePtr sd
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SearchDatabase& sd)
 {
     XMLWriter::Attributes attributes;
-    addExternalDataAttributes(sd, attributes);
+    addIdAttributes(sd, attributes);
+    if (!sd.location.empty())
+        attributes.add("location", sd.location);
     if (!sd.version.empty())
         attributes.add("version", sd.version);
     if (!sd.releaseDate.empty())
@@ -3085,7 +3089,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SearchDatabase& sd)
     writer.endElement();
 }
 
-struct HandlerSearchDatabase : public HandlerIdentifiable
+struct HandlerSearchDatabase : public HandlerIdentifiableParamContainer
 {
     SearchDatabase* sd;
     HandlerSearchDatabase(SearchDatabase* _sd = 0)
@@ -3109,8 +3113,7 @@ struct HandlerSearchDatabase : public HandlerIdentifiable
             getAttribute(attributes, "numDatabaseSequences", sd->numDatabaseSequences);
             getAttribute(attributes, "numResidues", sd->numResidues);
 
-            HandlerIdentifiable::id = sd;
-            return HandlerIdentifiable::startElement(name, attributes, position);
+            HandlerIdentifiableParamContainer::id = sd;
         }
         else if (name == "fileFormat")
         {
@@ -3122,22 +3125,12 @@ struct HandlerSearchDatabase : public HandlerIdentifiable
             handlerDatabaseName_.paramContainer = &sd->DatabaseName;
             return Status(Status::Delegate, &handlerDatabaseName_);
         }
-        else if (name == "cvParam" ||
-                 name == "userParam")
-        {
-            handlerParams_.paramContainer = sd;
-            return handlerParams_.startElement(name, attributes, position);
-        }
-        else
-            throw runtime_error(("[IO::HandlerSearchDatabase] Unknown tag"+
-                                 name).c_str());
-        
-        return Status::Ok;
+
+        return HandlerIdentifiableParamContainer::startElement(name, attributes, position);
     }
     private:
     HandlerNamedCVParam handlerFileFormat_;
     HandlerNamedParamContainer handlerDatabaseName_;
-    HandlerParamContainer handlerParams_;
 };
 
 PWIZ_API_DECL void read(std::istream& is, SearchDatabasePtr sd)
@@ -3197,7 +3190,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SourceFile& sf)
     writer.endElement();
 }
 
-struct HandlerSourceFile : public HandlerIdentifiable
+struct HandlerSourceFile : public HandlerIdentifiableParamContainer
 {
     bool inExternalFormatDocumentation;
     SourceFile* sf;
@@ -3215,8 +3208,7 @@ struct HandlerSourceFile : public HandlerIdentifiable
         if (name == "SourceFile")
         {
             getAttribute(attributes, "location", sf->location);
-            HandlerIdentifiable::id = sf;
-            return HandlerIdentifiable::startElement(name, attributes, position);
+            HandlerIdentifiableParamContainer::id = sf;
         }
         else if (name == "externalFormatDocumentation")
         {
@@ -3227,15 +3219,8 @@ struct HandlerSourceFile : public HandlerIdentifiable
             handlerFileFormat_.cvParam = &sf->fileFormat;
             return Status(Status::Delegate, &handlerFileFormat_);
         }
-        else if (name == "cvParam" || name == "userParam")
-        {
-            handlerParamContainer_.paramContainer = sf;
-            return handlerParamContainer_.startElement(name, attributes, position);
-        }
-        else
-            throw runtime_error(("[IO::HandlerSourceFile] Unknown tag "+name).c_str());
-        
-        return Status::Ok;
+
+        return HandlerIdentifiableParamContainer::startElement(name, attributes, position);
     }
 
     virtual Status characters(const string& text, 
@@ -3264,7 +3249,6 @@ struct HandlerSourceFile : public HandlerIdentifiable
     
     private:
     HandlerNamedCVParam handlerFileFormat_;
-    HandlerParamContainer handlerParamContainer_;
 };
 
 PWIZ_API_DECL void read(std::istream& is, SourceFilePtr sf)
@@ -3390,7 +3374,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinDetectionHypo
     writer.endElement();
 }
 
-struct HandlerProteinDetectionHypothesis : public HandlerIdentifiable
+struct HandlerProteinDetectionHypothesis : public HandlerIdentifiableParamContainer
 {
     ProteinDetectionHypothesis* pdh;
     HandlerProteinDetectionHypothesis(ProteinDetectionHypothesis* _pdh = 0)
@@ -3415,8 +3399,7 @@ struct HandlerProteinDetectionHypothesis : public HandlerIdentifiable
             getAttribute(attributes, "passThreshold", value);
             pdh->passThreshold = (value=="true" ? true : false);
 
-            HandlerIdentifiable::id = pdh;
-            return HandlerIdentifiable::startElement(name, attributes, position);
+            HandlerIdentifiableParamContainer::id = pdh;
         }
         else if (name == "PeptideHypothesis")
         {
@@ -3424,20 +3407,9 @@ struct HandlerProteinDetectionHypothesis : public HandlerIdentifiable
             getAttribute(attributes, "PeptideEvidence_Ref", value);
             pdh->peptideHypothesis.push_back(PeptideEvidencePtr(new PeptideEvidence(value)));
         }
-        else if (name == "cvParam" ||
-            name == "userParam")
-        {
-            handlerParamContainer_.paramContainer = pdh;
-            return handlerParamContainer_.startElement(name, attributes, position);
-        }
-        else
-            throw runtime_error(("[IO::HandlerProteinDetectionHypothesis] Unknown tag "+name).c_str());
-        
-        return Status::Ok;
-    }
 
-    private:
-    HandlerParamContainer handlerParamContainer_;
+        return HandlerIdentifiableParamContainer::startElement(name, attributes, position);
+    }
 };
 
 PWIZ_API_DECL void read(std::istream& is, ProteinDetectionHypothesis& pdh)
@@ -3466,7 +3438,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinAmbiguityGrou
     writer.endElement();
 }
 
-struct HandlerProteinAmbiguityGroup : public HandlerIdentifiable
+struct HandlerProteinAmbiguityGroup : public HandlerIdentifiableParamContainer
 {
     ProteinAmbiguityGroup* pag;
     HandlerProteinAmbiguityGroup(ProteinAmbiguityGroup* _pag = 0) : pag(_pag) {}
@@ -3480,8 +3452,7 @@ struct HandlerProteinAmbiguityGroup : public HandlerIdentifiable
 
         if (name == "ProteinAmbiguityGroup")
         {
-            HandlerIdentifiable::id = pag;
-            return HandlerIdentifiable::startElement(name, attributes, position);
+            HandlerIdentifiableParamContainer::id = pag;
         }
         else if (name == "ProteinDetectionHypothesis")
         {
@@ -3490,20 +3461,11 @@ struct HandlerProteinAmbiguityGroup : public HandlerIdentifiable
             handlerProteinDetectionHypothesis_.pdh = pag->proteinDetectionHypothesis.back().get();
             return Status(Status::Delegate, &handlerProteinDetectionHypothesis_);
         }
-        else if (name == "cvParam" ||
-            name == "userParam")
-        {
-            handlerParamContainer_.paramContainer = pag;
-            return handlerParamContainer_.startElement(name, attributes, position);
-        }
-        else
-            throw runtime_error(("[IO::HandlerProteinAmbiguityGroup] Unknown tag "+name).c_str());
-        
-        return Status::Ok;
+
+        return HandlerIdentifiableParamContainer::startElement(name, attributes, position);
     }
     private:
     HandlerProteinDetectionHypothesis handlerProteinDetectionHypothesis_;
-    HandlerParamContainer handlerParamContainer_;
 };
 
 PWIZ_API_DECL void read(std::istream& is, ProteinAmbiguityGroup& pag)
@@ -3533,7 +3495,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinDetectionList
 }
 
 
-struct HandlerProteinDetectionList : public HandlerIdentifiable
+struct HandlerProteinDetectionList : public HandlerIdentifiableParamContainer
 {
     ProteinDetectionList* pdl;
     HandlerProteinDetectionList(ProteinDetectionList* _pdl = 0) : pdl(_pdl) {}
@@ -3544,14 +3506,7 @@ struct HandlerProteinDetectionList : public HandlerIdentifiable
     {
         if (name == "ProteinDetectionList")
         {
-            HandlerIdentifiable::id = pdl;
-            return HandlerIdentifiable::startElement(name, attributes, position);
-        }
-        else if (name == "cvParam" ||
-            name == "userParam")
-        {
-            handlerParamContainer_.paramContainer = pdl;
-            return handlerParamContainer_.startElement(name, attributes, position);
+            HandlerIdentifiableParamContainer::id = pdl;
         }
         else if (name == "ProteinAmbiguityGroup")
         {
@@ -3560,12 +3515,10 @@ struct HandlerProteinDetectionList : public HandlerIdentifiable
             handlerProteinAmbiguityGroup_.pag = pdl->proteinAmbiguityGroup.back().get();
             return Status(Status::Delegate, &handlerProteinAmbiguityGroup_);
         }
-        else
-            throw runtime_error(("[IO::HandlerProteinDetectionList] Unexpected element name: " + name).c_str());
-        return Status::Ok;
+
+        return HandlerIdentifiableParamContainer::startElement(name, attributes, position);
     }
     private:
-    HandlerParamContainer handlerParamContainer_;
     HandlerProteinAmbiguityGroup handlerProteinAmbiguityGroup_;
 };
 
@@ -3627,7 +3580,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const PeptideEvidence& pep
 }
 
 
-struct HandlerPeptideEvidence : public HandlerIdentifiable
+struct HandlerPeptideEvidence : public HandlerIdentifiableParamContainer
 {
     PeptideEvidence* pep;
     HandlerPeptideEvidence(PeptideEvidence* _pep = 0) : pep(_pep) {}
@@ -3680,22 +3633,11 @@ struct HandlerPeptideEvidence : public HandlerIdentifiable
             if (!value.empty())
                 pep->missedCleavages = lexical_cast<int>(value);
 
-            HandlerIdentifiable::id = pep;
-            return HandlerIdentifiable::startElement(name, attributes, position);
+            HandlerIdentifiableParamContainer::id = pep;
         }
-        else if (name == "cvParam" ||
-                 name == "userParam")
-        {
-            handlerParamContainer_.paramContainer = pep;
-            return handlerParamContainer_.startElement(name, attributes, position);
-        }
-        else
-            throw runtime_error(("[IO::HandlerPeptideEvidence] Unexpected element name: " + name).c_str());
 
-        return Status::Ok;
+        return HandlerIdentifiableParamContainer::startElement(name, attributes, position);
     }
-    private:
-    HandlerParamContainer handlerParamContainer_;
 };
 
 
@@ -3808,10 +3750,10 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const IonType& itype)
 }
 
 
-struct HandlerIonType : public SAXParser::Handler
+struct HandlerIonType : public HandlerParamContainer
 {
     IonType* it;
-    HandlerIonType(IonType* _it = 0) : it(_it) {}
+    HandlerIonType(IonType* _it = 0) : HandlerParamContainer(_it), it(_it) {}
 
     virtual Status startElement(const string& name, 
                                 const Attributes& attributes,
@@ -3826,12 +3768,8 @@ struct HandlerIonType : public SAXParser::Handler
             getAttribute(attributes, "index", values);
             it->setIndex(values);
             getAttribute(attributes, "charge", it->charge);
-        }
-        else if (name == "cvParam" ||
-                 name == "userParam")
-        {
-            handlerParamContainer_.paramContainer = it;
-            return handlerParamContainer_.startElement(name, attributes, position);
+            HandlerParamContainer::paramContainer = it;
+            return Status::Ok;
         }
         else if (name == "FragmentArray")
         {
@@ -3840,12 +3778,10 @@ struct HandlerIonType : public SAXParser::Handler
             handlerFragmentArray_.fa = it->fragmentArray.back().get();
             return handlerFragmentArray_.startElement(name, attributes, position);
         }
-        else
-            throw runtime_error(("[IO::HandlerIonType] Unexpected element name: " + name).c_str());
-        return Status::Ok;
+
+        return HandlerParamContainer::startElement(name, attributes, position);
     }
     private:
-    HandlerParamContainer handlerParamContainer_;
     HandlerFragmentArray handlerFragmentArray_;
 };
 
@@ -3905,7 +3841,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
 }
 
 
-struct HandlerSpectrumIdentificationItem : public HandlerIdentifiable
+struct HandlerSpectrumIdentificationItem : public HandlerIdentifiableParamContainer
 {
     SpectrumIdentificationItem* siip;
     HandlerSpectrumIdentificationItem(SpectrumIdentificationItem* _siip = 0) : siip(_siip) {}
@@ -3944,8 +3880,7 @@ struct HandlerSpectrumIdentificationItem : public HandlerIdentifiable
             if (!value.empty())
                 siip->samplePtr = SamplePtr(new Sample(value));
 
-            HandlerIdentifiable::id = siip;
-            return HandlerIdentifiable::startElement(name, attributes, position);
+            HandlerIdentifiableParamContainer::id = siip;
         }
         else if (name == "PeptideEvidence")
         {
@@ -3953,15 +3888,10 @@ struct HandlerSpectrumIdentificationItem : public HandlerIdentifiable
             handlerPeptideEvidence_.pep = siip->peptideEvidence.back().get();
             return Status(Status::Delegate, &handlerPeptideEvidence_);
         }
-        else if (name == "cvParam" ||
-            name == "userParam")
-        {
-            handlerParamContainer_.paramContainer = siip;
-            return handlerParamContainer_.startElement(name, attributes, position);
-        }
         else if (name =="Fragmentation")
         {
             // Ignore
+            return Status::Ok;
         }
         else if (name == "IonType")
         {
@@ -3969,12 +3899,10 @@ struct HandlerSpectrumIdentificationItem : public HandlerIdentifiable
             handlerIonType_.it = siip->fragmentation.back().get();
             return Status(Status::Delegate, &handlerIonType_);
         }
-        else
-            throw runtime_error(("[IO::HandlerSpectrumIdentificationItem] Unexpected element name: " + name).c_str());
-        return Status::Ok;
+
+        return HandlerIdentifiableParamContainer::startElement(name, attributes, position);
     }
     private:
-    HandlerParamContainer handlerParamContainer_;
     HandlerPeptideEvidence handlerPeptideEvidence_;
     HandlerIonType handlerIonType_;
 };
@@ -4023,7 +3951,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
 }
 
 
-struct HandlerSpectrumIdentificationResult : public HandlerIdentifiable
+struct HandlerSpectrumIdentificationResult : public HandlerIdentifiableParamContainer
 {
     SpectrumIdentificationResult* sirp;
     HandlerSpectrumIdentificationResult(SpectrumIdentificationResult* _sirp = 0) : sirp(_sirp) {}
@@ -4044,8 +3972,7 @@ struct HandlerSpectrumIdentificationResult : public HandlerIdentifiable
             if (!value.empty())
                 sirp->spectraDataPtr = SpectraDataPtr(new SpectraData(value));
 
-            HandlerIdentifiable::id = sirp;
-            return HandlerIdentifiable::startElement(name, attributes, position);
+            HandlerIdentifiableParamContainer::id = sirp;
         }
         else if (name == "SpectrumIdentificationItem")
         {
@@ -4054,18 +3981,10 @@ struct HandlerSpectrumIdentificationResult : public HandlerIdentifiable
             handlerSpectrumIdentificationItem_.siip = sirp->spectrumIdentificationItem.back().get();
             return Status(Status::Delegate, &handlerSpectrumIdentificationItem_);
         }
-        else if (name == "cvParam" ||
-            name == "userParam")
-        {
-            handlerParamContainer_.paramContainer = sirp;
-            return handlerParamContainer_.startElement(name, attributes, position);
-        }
-        else
-            throw runtime_error(("[IO::HandlerSpectrumIdentificationResult] Unexpected element name: " + name).c_str());
-        return Status::Ok;
+
+        return HandlerIdentifiableParamContainer::startElement(name, attributes, position);
     }
     private:
-    HandlerParamContainer handlerParamContainer_;
     HandlerSpectrumIdentificationItem handlerSpectrumIdentificationItem_;
     
 };
@@ -4096,7 +4015,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Measure& measure)
 }
 
 
-struct HandlerMeasure : public HandlerIdentifiable
+struct HandlerMeasure : public HandlerIdentifiableParamContainer
 {
     Measure* measure;
     HandlerMeasure(Measure* _measure = 0) : measure(_measure) {}
@@ -4107,22 +4026,12 @@ struct HandlerMeasure : public HandlerIdentifiable
     {
         if (name == "Measure")
         {
-            HandlerIdentifiable::id = measure;
-            return HandlerIdentifiable::startElement(name, attributes, position);
+            HandlerIdentifiableParamContainer::id = measure;
         }
-        else if (name == "cvParam" ||
-                 name == "userParam")
-        {
-            handlerParamContainer_.paramContainer = measure;
-            return handlerParamContainer_.startElement(name, attributes, position);
-        }
-        else
-            throw runtime_error(("[IO::HandlerMeasure] Unexpected element name: " + name).c_str());
-        
-        return Status::Ok;
+
+        return HandlerIdentifiableParamContainer::startElement(name, attributes, position);
     }
     private:
-    HandlerParamContainer handlerParamContainer_;
 };
 
 

@@ -204,7 +204,7 @@ class PWIZ_API_DECL TextWriter
     TextWriter& operator()(const DBSequence& ds)
     {
         (*this)("DBSequence: ");
-        (*this)((const Identifiable&)ds);
+        (*this)((const IdentifiableParamContainer&)ds);
         if (ds.length!=0)
             child()("length: ", ds.length);
         if (!ds.accession.empty())
@@ -213,7 +213,6 @@ class PWIZ_API_DECL TextWriter
             child()("SearchDatabase_ref: "+ds.searchDatabasePtr->id);
         if (!ds.seq.empty())
             child()("seq: "+ds.seq);
-        (*this)((const ParamContainer&)ds);
 
         return *this;
     }
@@ -326,14 +325,13 @@ class PWIZ_API_DECL TextWriter
     TextWriter& operator()(const SpectrumIdentificationResult& sir)
     {
         (*this)("SpectrumIdentificationResult: ");
-        (*this)((Identifiable)sir);
+        (*this)((const IdentifiableParamContainer&)sir);
         if (!sir.spectrumID.empty())
             child()("spectrumID: "+sir.spectrumID);
         if (sir.spectraDataPtr.get() && !sir.spectraDataPtr->empty())
             child()("SpectraData_ref: "+sir.spectraDataPtr->id);
         if (!sir.spectrumIdentificationItem.empty())
             child()(sir.spectrumIdentificationItem);
-        (*this)((const ParamContainer&)sir);
         
         return *this;
     }
@@ -394,7 +392,7 @@ class PWIZ_API_DECL TextWriter
     {
         //(*this)("sourceFile: ");
 
-        (*this)((Identifiable)sf);
+        (*this)((const IdentifiableParamContainer&)sf);
         if (!sf.location.empty())
             child()("location: " + sf.location);
         if (!sf.fileFormat.empty())
@@ -402,7 +400,6 @@ class PWIZ_API_DECL TextWriter
         if (!sf.externalFormatDocumentation.empty())
             child()("externalFormatDocumentation: ",
                     sf.externalFormatDocumentation);
-        (*this)((const ParamContainer&)sf);
         
         return *this;
     }
@@ -786,7 +783,21 @@ class PWIZ_API_DECL TextWriter
 
         return *this;
     }
-    
+
+
+    TextWriter& operator()(const IdentifiableParamContainer& id)
+    {
+        if (!id.id.empty())
+            child()("id: "+id.id);
+        if (!id.name.empty())
+            child()("name: "+id.name);
+
+        (*this)((const ParamContainer&)id);
+
+        return *this;
+    }
+
+
     TextWriter& operator()(const Residue& res)
     {
         (*this)("Residue: ");
@@ -830,14 +841,13 @@ class PWIZ_API_DECL TextWriter
     {
         (*this)("Peptide: ");
 
-        (*this)((Identifiable)pep);
+        (*this)((const IdentifiableParamContainer&)pep);
         if (!pep.peptideSequence.empty())
             child()("peptideSequence: "+pep.peptideSequence);
         if (!pep.modification.empty())
             child()("modification", pep.modification);
         if (!pep.substitutionModification.empty())
             child()(pep.substitutionModification);
-        (*this)((const ParamContainer&)pep);
         
         return *this;
     }
@@ -847,7 +857,7 @@ class PWIZ_API_DECL TextWriter
     {
         (*this)("PeptideEvidence: ");
 
-        child()((Identifiable)pe);
+        child()((const IdentifiableParamContainer&)pe);
         if (pe.dbSequencePtr.get() && !pe.dbSequencePtr->empty())
             child()("DBSequence_ref: "+pe.dbSequencePtr->id);
         if (pe.start != 0)
@@ -865,8 +875,6 @@ class PWIZ_API_DECL TextWriter
         child()("isDecoy: ", pe.isDecoy);
         if (pe.missedCleavages != 0)
             child()("missedCleavages: ", pe.missedCleavages);
-
-        (*this)((const ParamContainer&)pe);
         
         return *this;
     }

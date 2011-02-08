@@ -53,6 +53,7 @@ void stripUnmappedMetadata(MzIdentML& mzid)
     mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0]->enzymes.enzymes[0]->enzymeName.clear();
 
     // pepXML doesn't map these attributes
+    mzid.analysisCollection.spectrumIdentification[0]->searchDatabase[0]->name.clear();
     mzid.analysisCollection.spectrumIdentification[0]->searchDatabase[0]->version.clear();
     mzid.analysisCollection.spectrumIdentification[0]->searchDatabase[0]->releaseDate.clear();
 

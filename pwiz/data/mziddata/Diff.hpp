@@ -389,6 +389,13 @@ void diff(const Identifiable& a,
           Identifiable& b_a,
           const DiffConfig& config);
 
+PWIZ_API_DECL
+void diff(const IdentifiableParamContainer& a,
+          const IdentifiableParamContainer& b,
+          IdentifiableParamContainer& a_b,
+          IdentifiableParamContainer& b_a,
+          const DiffConfig& config);
+
 } // namespace diff_impl
 } // namespace data
 } // namespace pwiz
