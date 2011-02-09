@@ -515,7 +515,7 @@ namespace IDPicker.Forms
                     kvp.Key.IsVisible = kvp.Value.Visible;
                 treeListView.RebuildColumns();
 
-                if (session != null)
+                if (session != null && session.IsOpen)
                     SetData(session, dataFilter);
             }
         }

@@ -1,5 +1,5 @@
 ﻿//
-// $Id$
+// $Id: LayoutNameBox.cs 239 2010-11-15 17:20:21Z holmanjd $
 //
 // The contents of this file are subject to the Mozilla Public License
 // Version 1.1 (the "License"); you may not use this file except in
@@ -31,27 +31,19 @@ using System.Windows.Forms;
 
 namespace IDPicker.Forms
 {
-    public partial class LayoutNameBox : Form
+    public sealed partial class TextInputPrompt : Form
     {
         private readonly Regex _inputFormat;
 
-        public LayoutNameBox()
+        public TextInputPrompt(string title, bool checkboxShown, string initialText)
         {
             InitializeComponent();
+            Text = title;
+            inputLabel.Text = string.Format("New {0}:", title);
+            if (!checkboxShown)
+                inputCheckBox.Visible = false;
+            inputTextBox.Text = initialText;
             _inputFormat = new Regex(@"\w| ");
-        }
-
-        public LayoutNameBox(string regEx)
-        {
-            InitializeComponent();
-            try
-            {
-                _inputFormat = new Regex(regEx);
-            }
-            catch (Exception)
-            {
-                _inputFormat = new Regex(@"\w| ");
-            }
         }
 
         private void inputTextBox_KeyPress(object sender, KeyPressEventArgs e)
@@ -64,6 +56,16 @@ namespace IDPicker.Forms
         {
             if (string.IsNullOrEmpty(inputTextBox.Text) && okButton.Focused)
                 e.Cancel = true;
+        }
+
+        public string GetText()
+        {
+            return inputTextBox.Text;
+        }
+
+        public bool GetCheckState()
+        {
+            return inputCheckBox.Checked;
         }
     }
 }

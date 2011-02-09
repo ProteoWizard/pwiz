@@ -160,6 +160,12 @@ namespace IDPicker.Controls
             breadCrumbs.ListChanged += new ListChangedEventHandler(breadCrumbs_ListChanged);
         }
 
+        public void ClearBreadcrumbs()
+        {
+            breadCrumbs.Clear();
+            breadCrumbToolStrip.Items.Clear();
+        }
+
         void breadCrumbs_ListChanged (object sender, ListChangedEventArgs e)
         {
             RemoveStaleBread();

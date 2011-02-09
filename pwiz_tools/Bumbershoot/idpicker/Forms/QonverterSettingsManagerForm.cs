@@ -46,6 +46,7 @@ namespace IDPicker.Forms
             IDictionary<string, QonverterSettings> qonverterSettingsByName = QonverterSettings.LoadQonverterSettings();
             foreach (var kvp in qonverterSettingsByName)
                 listView.Items.Add(new ListViewItem(kvp.Key) { Tag = kvp.Value });
+            DecoyPrefixBox.Text = Properties.Settings.Default.DecoyPrefix;
 
             nameColumn.AutoResize(ColumnHeaderAutoResizeStyle.ColumnContent);
 
@@ -56,7 +57,10 @@ namespace IDPicker.Forms
         {
             // immediate cancel
             if (DialogResult == DialogResult.Cancel)
+            {
                 base.OnFormClosing(e);
+                return;
+            }
 
             var buttons = MessageBoxButtons.YesNo;
             if (e.CloseReason == CloseReason.UserClosing)
@@ -80,6 +84,7 @@ namespace IDPicker.Forms
             var qonverterSettingsByName = new Dictionary<string, QonverterSettings>();
             foreach (ListViewItem item in listView.Items)
                 qonverterSettingsByName[item.Text] = item.Tag as QonverterSettings;
+            Properties.Settings.Default.DecoyPrefix = DecoyPrefixBox.Text;
             QonverterSettings.SaveQonverterSettings(qonverterSettingsByName);
 
             base.OnFormClosing(e);
@@ -122,6 +127,45 @@ namespace IDPicker.Forms
         private void listView_KeyPress (object sender, KeyPressEventArgs e)
         {
             // delete the selected row
+        }
+
+        private void AddButton_Click(object sender, EventArgs e)
+        {
+            var textBox = new TextInputPrompt("Setting Name", false, string.Empty);
+            if (textBox.ShowDialog() == DialogResult.OK)
+            {
+                var newSettings = new QonverterSettings()
+                                      {
+                                          QonverterMethod = Qonverter.QonverterMethod.StaticWeighted,
+                                          RerankMatches = false,
+                                          ScoreInfoByName = new Dictionary<string, Qonverter.Settings.ScoreInfo>()
+                                      };
+                listView.Items.Add(new ListViewItem(textBox.GetText()) {Tag = newSettings});
+                listView.Items[listView.Items.Count - 1].Selected = true;
+            }
+        }
+
+        private void RenameButton_Click(object sender, EventArgs e)
+        {
+            if (listView.SelectedItems.Count != 1)
+            {
+                MessageBox.Show("Please select an item to rename");
+                return;
+            }
+
+            var textBox = new TextInputPrompt("Setting Name", false, listView.SelectedItems[0].Text);
+            if (textBox.ShowDialog() == DialogResult.OK)
+                listView.SelectedItems[0].Text = textBox.GetText();
+        }
+
+        private void DeleteButton_Click(object sender, EventArgs e)
+        {
+            if (listView.SelectedItems.Count == 1
+                && MessageBox.Show(
+                    "Are you sure you want to delete the currently selected setting?",
+                    "Delete setting",
+                    MessageBoxButtons.YesNo) == DialogResult.Yes)
+                listView.Items.RemoveAt(listView.SelectedIndices[0]);
         }
     }
 }

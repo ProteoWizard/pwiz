@@ -137,6 +137,9 @@ namespace IDPicker.DataModel
             // The score name is last because it can have spaces in it (and many other potential delimiters).
             foreach(var scoreInfoString in scoreInfoStrings)
             {
+                if (string.IsNullOrEmpty(scoreInfoString))
+                    continue;
+
                 string[] scoreInfoTokens = scoreInfoString.Split(' ');
                 var weight = Convert.ToDouble(scoreInfoTokens[0]);
                 var order = (Qonverter.Settings.Order) Enum.Parse(typeof(Qonverter.Settings.Order), scoreInfoTokens[1]);

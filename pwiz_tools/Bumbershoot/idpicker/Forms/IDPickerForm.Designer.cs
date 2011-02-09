@@ -50,16 +50,24 @@ namespace IDPicker
         /// </summary>
         private void InitializeComponent ()
         {
-            this.components = new System.ComponentModel.Container();
             this.dockPanel = new DigitalRune.Windows.Docking.DockPanel();
-            this.layoutMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.layoutButton = new System.Windows.Forms.Button();
-            this.basicFilterButton = new System.Windows.Forms.Button();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.toolStripStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.toolStripProgressBar = new System.Windows.Forms.ToolStripProgressBar();
             this.breadCrumbPanel = new System.Windows.Forms.Panel();
+            this.menuStrip1 = new System.Windows.Forms.MenuStrip();
+            this.fileToolStripMenuRoot = new System.Windows.Forms.ToolStripMenuItem();
+            this.newToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.importToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.layoutToolStripMenuRoot = new System.Windows.Forms.ToolStripMenuItem();
+            this.dataFiltersToolStripMenuRoot = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip.SuspendLayout();
+            this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
             // dockPanel
@@ -72,35 +80,10 @@ namespace IDPicker
             this.dockPanel.DockLeftPortion = 0.5;
             this.dockPanel.DockRightPortion = 0.5;
             this.dockPanel.DockTopPortion = 0.5;
-            this.dockPanel.Location = new System.Drawing.Point(0, 26);
+            this.dockPanel.Location = new System.Drawing.Point(0, 48);
             this.dockPanel.Name = "dockPanel";
-            this.dockPanel.Size = new System.Drawing.Size(584, 426);
+            this.dockPanel.Size = new System.Drawing.Size(584, 404);
             this.dockPanel.TabIndex = 0;
-            // 
-            // layoutMenuStrip
-            // 
-            this.layoutMenuStrip.Name = "layoutMenuStrip";
-            this.layoutMenuStrip.Size = new System.Drawing.Size(61, 4);
-            // 
-            // layoutButton
-            // 
-            this.layoutButton.Location = new System.Drawing.Point(1, 2);
-            this.layoutButton.Name = "layoutButton";
-            this.layoutButton.Size = new System.Drawing.Size(48, 23);
-            this.layoutButton.TabIndex = 2;
-            this.layoutButton.Text = "Layout";
-            this.layoutButton.UseVisualStyleBackColor = true;
-            this.layoutButton.Click += new System.EventHandler(this.layoutButton_Click);
-            // 
-            // basicFilterButton
-            // 
-            this.basicFilterButton.Location = new System.Drawing.Point(55, 2);
-            this.basicFilterButton.Name = "basicFilterButton";
-            this.basicFilterButton.Size = new System.Drawing.Size(69, 23);
-            this.basicFilterButton.TabIndex = 3;
-            this.basicFilterButton.Text = "Data Filters";
-            this.basicFilterButton.UseVisualStyleBackColor = true;
-            this.basicFilterButton.Click += new System.EventHandler(this.dataFilterButton_Click);
             // 
             // statusStrip
             // 
@@ -134,26 +117,114 @@ namespace IDPicker
             // 
             this.breadCrumbPanel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
-            this.breadCrumbPanel.Location = new System.Drawing.Point(130, 0);
+            this.breadCrumbPanel.Location = new System.Drawing.Point(0, 22);
             this.breadCrumbPanel.Name = "breadCrumbPanel";
-            this.breadCrumbPanel.Size = new System.Drawing.Size(454, 26);
+            this.breadCrumbPanel.Size = new System.Drawing.Size(584, 26);
             this.breadCrumbPanel.TabIndex = 5;
+            // 
+            // menuStrip1
+            // 
+            this.menuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.fileToolStripMenuRoot,
+            this.toolsToolStripMenuItem,
+            this.layoutToolStripMenuRoot,
+            this.dataFiltersToolStripMenuRoot});
+            this.menuStrip1.Location = new System.Drawing.Point(0, 0);
+            this.menuStrip1.Name = "menuStrip1";
+            this.menuStrip1.Size = new System.Drawing.Size(584, 24);
+            this.menuStrip1.TabIndex = 6;
+            this.menuStrip1.Text = "menuStrip1";
+            // 
+            // fileToolStripMenuRoot
+            // 
+            this.fileToolStripMenuRoot.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.newToolStripMenuItem,
+            this.openToolStripMenuItem,
+            this.importToolStripMenuItem,
+            this.toolStripSeparator1,
+            this.exitToolStripMenuItem});
+            this.fileToolStripMenuRoot.Name = "fileToolStripMenuRoot";
+            this.fileToolStripMenuRoot.Size = new System.Drawing.Size(35, 20);
+            this.fileToolStripMenuRoot.Text = "File";
+            // 
+            // newToolStripMenuItem
+            // 
+            this.newToolStripMenuItem.Name = "newToolStripMenuItem";
+            this.newToolStripMenuItem.Size = new System.Drawing.Size(117, 22);
+            this.newToolStripMenuItem.Text = "New";
+            this.newToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
+            // 
+            // openToolStripMenuItem
+            // 
+            this.openToolStripMenuItem.Name = "openToolStripMenuItem";
+            this.openToolStripMenuItem.Size = new System.Drawing.Size(117, 22);
+            this.openToolStripMenuItem.Text = "Open";
+            this.openToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
+            // 
+            // importToolStripMenuItem
+            // 
+            this.importToolStripMenuItem.Name = "importToolStripMenuItem";
+            this.importToolStripMenuItem.Size = new System.Drawing.Size(117, 22);
+            this.importToolStripMenuItem.Text = "Import";
+            this.importToolStripMenuItem.Click += new System.EventHandler(this.openToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(114, 6);
+            // 
+            // exitToolStripMenuItem
+            // 
+            this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(117, 22);
+            this.exitToolStripMenuItem.Text = "Exit";
+            this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
+            // 
+            // toolsToolStripMenuItem
+            // 
+            this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.optionsToolStripMenuItem});
+            this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
+            this.toolsToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
+            this.toolsToolStripMenuItem.Text = "Tools";
+            // 
+            // optionsToolStripMenuItem
+            // 
+            this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
+            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
+            this.optionsToolStripMenuItem.Text = "Options";
+            this.optionsToolStripMenuItem.Click += new System.EventHandler(this.optionsToolStripMenuItem_Click);
+            // 
+            // layoutToolStripMenuRoot
+            // 
+            this.layoutToolStripMenuRoot.Name = "layoutToolStripMenuRoot";
+            this.layoutToolStripMenuRoot.Size = new System.Drawing.Size(52, 20);
+            this.layoutToolStripMenuRoot.Text = "Layout";
+            this.layoutToolStripMenuRoot.DropDownOpening += new System.EventHandler(this.layoutButton_Click);
+            // 
+            // dataFiltersToolStripMenuRoot
+            // 
+            this.dataFiltersToolStripMenuRoot.Name = "dataFiltersToolStripMenuRoot";
+            this.dataFiltersToolStripMenuRoot.Size = new System.Drawing.Size(74, 20);
+            this.dataFiltersToolStripMenuRoot.Text = "Data Filters";
+            this.dataFiltersToolStripMenuRoot.Click += new System.EventHandler(this.dataFilterButton_Click);
             // 
             // IDPickerForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(584, 474);
-            this.Controls.Add(this.breadCrumbPanel);
             this.Controls.Add(this.statusStrip);
-            this.Controls.Add(this.basicFilterButton);
+            this.Controls.Add(this.menuStrip1);
             this.Controls.Add(this.dockPanel);
-            this.Controls.Add(this.layoutButton);
+            this.Controls.Add(this.breadCrumbPanel);
             this.Name = "IDPickerForm";
             this.Text = "IDPicker";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.IDPickerForm_FormClosing);
             this.statusStrip.ResumeLayout(false);
             this.statusStrip.PerformLayout();
+            this.menuStrip1.ResumeLayout(false);
+            this.menuStrip1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -162,13 +233,21 @@ namespace IDPicker
         #endregion
 
         private DigitalRune.Windows.Docking.DockPanel dockPanel;
-        private System.Windows.Forms.ContextMenuStrip layoutMenuStrip;
-        private System.Windows.Forms.Button layoutButton;
-        private System.Windows.Forms.Button basicFilterButton;
         private System.Windows.Forms.StatusStrip statusStrip;
         private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel;
         private System.Windows.Forms.ToolStripProgressBar toolStripProgressBar;
         private System.Windows.Forms.Panel breadCrumbPanel;
+        private System.Windows.Forms.MenuStrip menuStrip1;
+        private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuRoot;
+        private System.Windows.Forms.ToolStripMenuItem layoutToolStripMenuRoot;
+        private System.Windows.Forms.ToolStripMenuItem dataFiltersToolStripMenuRoot;
+        private System.Windows.Forms.ToolStripMenuItem openToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem toolsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem newToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem importToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem optionsToolStripMenuItem;
 
     }
 }

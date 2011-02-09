@@ -52,10 +52,15 @@ namespace IDPicker.Forms
         {
             this.splitContainer = new System.Windows.Forms.SplitContainer();
             this.listView = new System.Windows.Forms.ListView();
+            this.nameColumn = new System.Windows.Forms.ColumnHeader();
+            this.DeleteButton = new System.Windows.Forms.Button();
+            this.RenameButton = new System.Windows.Forms.Button();
+            this.AddButton = new System.Windows.Forms.Button();
+            this.DecoyPrefixLabel = new System.Windows.Forms.Label();
+            this.DecoyPrefixBox = new System.Windows.Forms.TextBox();
             this.cancelButton = new System.Windows.Forms.Button();
             this.okButton = new System.Windows.Forms.Button();
             this.qonverterSettingsControl = new IDPicker.Controls.QonverterSettingsControl();
-            this.nameColumn = new System.Windows.Forms.ColumnHeader();
             this.splitContainer.Panel1.SuspendLayout();
             this.splitContainer.Panel2.SuspendLayout();
             this.splitContainer.SuspendLayout();
@@ -73,6 +78,11 @@ namespace IDPicker.Forms
             // 
             // splitContainer.Panel2
             // 
+            this.splitContainer.Panel2.Controls.Add(this.DeleteButton);
+            this.splitContainer.Panel2.Controls.Add(this.RenameButton);
+            this.splitContainer.Panel2.Controls.Add(this.AddButton);
+            this.splitContainer.Panel2.Controls.Add(this.DecoyPrefixLabel);
+            this.splitContainer.Panel2.Controls.Add(this.DecoyPrefixBox);
             this.splitContainer.Panel2.Controls.Add(this.cancelButton);
             this.splitContainer.Panel2.Controls.Add(this.okButton);
             this.splitContainer.Panel2.Controls.Add(this.qonverterSettingsControl);
@@ -98,9 +108,59 @@ namespace IDPicker.Forms
             this.listView.SelectedIndexChanged += new System.EventHandler(this.listView_SelectedIndexChanged);
             this.listView.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.listView_KeyPress);
             // 
+            // nameColumn
+            // 
+            this.nameColumn.Text = "Name";
+            // 
+            // DeleteButton
+            // 
+            this.DeleteButton.Location = new System.Drawing.Point(224, 346);
+            this.DeleteButton.Name = "DeleteButton";
+            this.DeleteButton.Size = new System.Drawing.Size(104, 23);
+            this.DeleteButton.TabIndex = 7;
+            this.DeleteButton.Text = "Delete Setting";
+            this.DeleteButton.UseVisualStyleBackColor = true;
+            this.DeleteButton.Click += new System.EventHandler(this.DeleteButton_Click);
+            // 
+            // RenameButton
+            // 
+            this.RenameButton.Location = new System.Drawing.Point(114, 346);
+            this.RenameButton.Name = "RenameButton";
+            this.RenameButton.Size = new System.Drawing.Size(104, 23);
+            this.RenameButton.TabIndex = 6;
+            this.RenameButton.Text = "Rename Setting";
+            this.RenameButton.UseVisualStyleBackColor = true;
+            this.RenameButton.Click += new System.EventHandler(this.RenameButton_Click);
+            // 
+            // AddButton
+            // 
+            this.AddButton.Location = new System.Drawing.Point(4, 346);
+            this.AddButton.Name = "AddButton";
+            this.AddButton.Size = new System.Drawing.Size(104, 23);
+            this.AddButton.TabIndex = 5;
+            this.AddButton.Text = "New Setting";
+            this.AddButton.UseVisualStyleBackColor = true;
+            this.AddButton.Click += new System.EventHandler(this.AddButton_Click);
+            // 
+            // DecoyPrefixLabel
+            // 
+            this.DecoyPrefixLabel.AutoSize = true;
+            this.DecoyPrefixLabel.Location = new System.Drawing.Point(3, 380);
+            this.DecoyPrefixLabel.Name = "DecoyPrefixLabel";
+            this.DecoyPrefixLabel.Size = new System.Drawing.Size(70, 13);
+            this.DecoyPrefixLabel.TabIndex = 4;
+            this.DecoyPrefixLabel.Text = "Decoy Prefix:";
+            // 
+            // DecoyPrefixBox
+            // 
+            this.DecoyPrefixBox.Location = new System.Drawing.Point(74, 377);
+            this.DecoyPrefixBox.Name = "DecoyPrefixBox";
+            this.DecoyPrefixBox.Size = new System.Drawing.Size(92, 20);
+            this.DecoyPrefixBox.TabIndex = 3;
+            // 
             // cancelButton
             // 
-            this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.cancelButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.cancelButton.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.cancelButton.Location = new System.Drawing.Point(253, 375);
             this.cancelButton.Name = "cancelButton";
@@ -112,7 +172,7 @@ namespace IDPicker.Forms
             // 
             // okButton
             // 
-            this.okButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.okButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.okButton.Location = new System.Drawing.Point(172, 375);
             this.okButton.Name = "okButton";
             this.okButton.Size = new System.Drawing.Size(75, 23);
@@ -123,17 +183,14 @@ namespace IDPicker.Forms
             // 
             // qonverterSettingsControl
             // 
-            this.qonverterSettingsControl.Anchor = ((System.Windows.Forms.AnchorStyles) ((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            this.qonverterSettingsControl.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.qonverterSettingsControl.Location = new System.Drawing.Point(2, 0);
             this.qonverterSettingsControl.Name = "qonverterSettingsControl";
+            this.qonverterSettingsControl.QonverterSettings = null;
             this.qonverterSettingsControl.Size = new System.Drawing.Size(329, 369);
             this.qonverterSettingsControl.TabIndex = 0;
-            // 
-            // nameColumn
-            // 
-            this.nameColumn.Text = "Name";
             // 
             // QonverterSettingsManagerForm
             // 
@@ -147,6 +204,7 @@ namespace IDPicker.Forms
             this.Text = "Qonverter Settings Manager";
             this.splitContainer.Panel1.ResumeLayout(false);
             this.splitContainer.Panel2.ResumeLayout(false);
+            this.splitContainer.Panel2.PerformLayout();
             this.splitContainer.ResumeLayout(false);
             this.ResumeLayout(false);
 
@@ -160,5 +218,10 @@ namespace IDPicker.Forms
         private System.Windows.Forms.Button okButton;
         private IDPicker.Controls.QonverterSettingsControl qonverterSettingsControl;
         private System.Windows.Forms.ColumnHeader nameColumn;
+        private System.Windows.Forms.Label DecoyPrefixLabel;
+        private System.Windows.Forms.TextBox DecoyPrefixBox;
+        private System.Windows.Forms.Button DeleteButton;
+        private System.Windows.Forms.Button RenameButton;
+        private System.Windows.Forms.Button AddButton;
     }
 }

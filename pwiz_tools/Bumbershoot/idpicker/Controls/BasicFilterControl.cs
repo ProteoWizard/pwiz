@@ -111,5 +111,10 @@ namespace IDPicker.Controls
             if (!settingDataFilter && !String.IsNullOrEmpty((sender as Control).Text) && BasicFilterChanged != null)
                 BasicFilterChanged(this, EventArgs.Empty);
         }
+
+        private void CloseLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            if (Parent != null) Parent.Visible = false;
+        }
     }
 }

@@ -118,6 +118,7 @@ namespace IDPicker.DataModel
         object queueMutex = new object();
         object progressMutex = new object();
         object iomutex = new object();
+        public bool emergencyBreak { get; private set; }
 
         public Parser (string rootInputDirectory, QonverterSettingsHandler qonverterSettingsHandler, bool mergeDirectories, params string[] xmlFilepaths)
         {
@@ -158,6 +159,7 @@ namespace IDPicker.DataModel
 
         public bool Start ()
         {
+            emergencyBreak = false;
             string proteinDatabasePath = "";
             //string lastProteinDatabasePathLocation = Directory.GetCurrentDirectory();
             //string lastSourcePathLocation = Directory.GetCurrentDirectory();
@@ -256,7 +258,7 @@ namespace IDPicker.DataModel
                 {
                     thread.Join(100);
 
-                    if (OnParsingProgress(null))
+                    if (OnParsingProgress(null) || emergencyBreak)
                     {
                         while (workerThreads.Count > 0)
                             workerThreads.Dequeue().Abort();
@@ -1188,8 +1190,8 @@ namespace IDPicker.DataModel
                     {
                         #region pepXML reading
 
-                    curGroup = new SpectrumSourceGroup() { Id = 1, Name = "/" };
-                    bulkInserter.Add(curGroup);
+                        curGroup = new SpectrumSourceGroup() {Id = 1, Name = "/"};
+                        bulkInserter.Add(curGroup);
 
                         while (reader.Read())
                         {
@@ -1253,9 +1255,13 @@ namespace IDPicker.DataModel
                                                 curPeptide = dbPeptides[sequence] = new Peptide(sequence)
                                                                                         {
                                                                                             Id = ++peptideCount,
-                                                                                            MonoisotopicMass = pep.monoisotopicMass(),
-                                                                                            MolecularWeight = pep.molecularWeight(),
-                                                                                            Instances = new List<PeptideInstance>()
+                                                                                            MonoisotopicMass =
+                                                                                                pep.monoisotopicMass(),
+                                                                                            MolecularWeight =
+                                                                                                pep.molecularWeight(),
+                                                                                            Instances =
+                                                                                                new List
+                                                                                                <PeptideInstance>()
                                                                                         };
                                             }
                                             curPeptideIsNew = true;
@@ -1278,10 +1284,11 @@ namespace IDPicker.DataModel
                                             curPeptide.Instances.Add(new PeptideInstance()
                                                                          {
                                                                              Id = ++piCount,
-                                            Peptide = curPeptide,
-                                            Protein = curProtein,
-                                            Offset = (int) curPeptide.Id.Value, // bogus, but keeps the instance unique
-                                            Length = curPeptide.Sequence.Length,
+                                                                             Peptide = curPeptide,
+                                                                             Protein = curProtein,
+                                                                             Offset = (int) curPeptide.Id.Value,
+                                                                             // bogus, but keeps the instance unique
+                                                                             Length = curPeptide.Sequence.Length,
                                                                              NTerminusIsSpecific = true,
                                                                              CTerminusIsSpecific = true
                                                                          });
@@ -1289,8 +1296,9 @@ namespace IDPicker.DataModel
 
                                             //addProteinAndPeptideInstances(dbPeptideInstances, proteinList, curPeptide, bulkInserter,
                                             //                              locus, offset, ref maxProteinLength);
-                                    }
-                                    #endregion
+                                        }
+
+                                        #endregion
 
                                         curPSM.Peptide = curPeptide;
                                         curPSM.Rank = getAttributeAs<int>(reader, "hit_rank");
@@ -1326,9 +1334,10 @@ namespace IDPicker.DataModel
                                                                      {
                                                                          Id = ++piCount,
                                                                          Peptide = curPeptide,
-                                        Protein = curProtein,
-                                        Offset = (int) curPeptide.Id.Value, // bogus, but keeps the instance unique
-                                        Length = curPeptide.Sequence.Length,
+                                                                         Protein = curProtein,
+                                                                         Offset = (int) curPeptide.Id.Value,
+                                                                         // bogus, but keeps the instance unique
+                                                                         Length = curPeptide.Sequence.Length,
                                                                          NTerminusIsSpecific = true,
                                                                          CTerminusIsSpecific = true
                                                                      });
@@ -1359,7 +1368,8 @@ namespace IDPicker.DataModel
                                     {
                                         double modMass = getAttributeAs<double>(reader, "mass");
                                         int position = getAttributeAs<int>(reader, "position");
-                                        Formula aaFormula = AminoAcidInfo.record(curPeptide.Sequence[position - 1]).residueFormula;
+                                        Formula aaFormula =
+                                            AminoAcidInfo.record(curPeptide.Sequence[position - 1]).residueFormula;
                                         curMods.Add(position, modMass - aaFormula.monoisotopicMass());
                                     }
                                         #endregion
@@ -1395,7 +1405,9 @@ namespace IDPicker.DataModel
                                                                                      Index = index,
                                                                                      NativeID = nativeID,
                                                                                      Source = curSource,
-                                                                                     PrecursorMZ = (neutralPrecursorMass + Proton.Mass*z)/z
+                                                                                     PrecursorMZ =
+                                                                                         (neutralPrecursorMass +
+                                                                                          Proton.Mass*z)/z
                                                                                  };
 
                                             bulkInserter.Add(curSpectrum);
@@ -1408,11 +1420,12 @@ namespace IDPicker.DataModel
                                     curSpectrum.numComparisons += getAttributeAs<int>(reader, "decoys");*/
                                     }
                                         #endregion
-                                    #region <msms_run_summary base_name="abc.mzXML" raw_data_type="raw" raw_data="raw">
+                                        #region <msms_run_summary base_name="abc.mzXML" raw_data_type="raw" raw_data="raw">
 
                                     else if (tag == "msms_run_summary")
                                     {
-                                        string sourceName = Path.GetFileNameWithoutExtension(getAttribute(reader, "base_name", true));
+                                        string sourceName =
+                                            Path.GetFileNameWithoutExtension(getAttribute(reader, "base_name", true));
                                         string sourceFilepath = rawDataFilepathByName[sourceName];
 
                                         dbSources.Add(new SpectrumSource()
@@ -1435,19 +1448,23 @@ namespace IDPicker.DataModel
                                                                    });
                                         bulkInserter.Add(dbSourceGroupLinks.Last());
                                     }
-                                    #endregion
-                                    #region <search_summary base_name="abc" search_engine="MyriMatch" precursor_mass_type="monoisotopic" fragment_mass_type="monoisotopic" out_data_type="n/a" out_data="n/a" search_id="1">
+                                        #endregion
+                                        #region <search_summary base_name="abc" search_engine="MyriMatch" precursor_mass_type="monoisotopic" fragment_mass_type="monoisotopic" out_data_type="n/a" out_data="n/a" search_id="1">
 
                                     else if (tag == "search_summary")
                                     {
                                         curAnalysis = new Analysis()
                                                           {
-                                                              Software = new AnalysisSoftware() { Name = getAttribute(reader, "search_engine") },
-                                                              Parameters = new Iesi.Collections.Generic.SortedSet<AnalysisParameter>()
+                                                              Software =
+                                                                  new AnalysisSoftware()
+                                                                      {Name = getAttribute(reader, "search_engine")},
+                                                              Parameters =
+                                                                  new Iesi.Collections.Generic.SortedSet
+                                                                  <AnalysisParameter>()
                                                           };
                                     }
-                                    #endregion
-                                    #region <parameter name="foo" value="bar"/>
+                                        #endregion
+                                        #region <parameter name="foo" value="bar"/>
 
                                     else if (tag == "parameter")
                                     {
@@ -1457,11 +1474,16 @@ namespace IDPicker.DataModel
                                         if (paramName == "SearchEngine: Version")
                                         {
                                             curAnalysis.Software.Version = paramValue;
-                                            curAnalysis.Name = curAnalysis.Software.Name + " " + curAnalysis.Software.Version;
+                                            curAnalysis.Name = curAnalysis.Software.Name + " " +
+                                                               curAnalysis.Software.Version;
                                         }
                                         else if (paramName == "SearchTime: Started")
                                         {
-                                            curAnalysis.StartTime = DateTime.ParseExact(paramValue, "HH:mm:ss 'on' MM/dd/yyyy", System.Globalization.DateTimeFormatInfo.CurrentInfo);
+                                            curAnalysis.StartTime = DateTime.ParseExact(paramValue,
+                                                                                        "HH:mm:ss 'on' MM/dd/yyyy",
+                                                                                        System.Globalization.
+                                                                                            DateTimeFormatInfo.
+                                                                                            CurrentInfo);
                                         }
                                         else if (paramName.Contains("WorkingDirectory") ||
                                                  paramName.Contains("StatusUpdateFrequency"))
@@ -1499,7 +1521,8 @@ namespace IDPicker.DataModel
 
                                     if (tag == "search_hit")
                                     {
-                                        double neutralPrecursorMass = curPSM.Spectrum.PrecursorMZ*curPSM.Charge - (curPSM.Charge*Proton.Mass);
+                                        double neutralPrecursorMass = curPSM.Spectrum.PrecursorMZ*curPSM.Charge -
+                                                                      (curPSM.Charge*Proton.Mass);
 
                                         curPSM.MonoisotopicMassError = neutralPrecursorMass - curPSM.MonoisotopicMass;
                                         curPSM.MolecularWeightError = neutralPrecursorMass - curPSM.MolecularWeight;
@@ -1552,7 +1575,9 @@ namespace IDPicker.DataModel
                                         // an analysis is unique if its name is unique and its parameter set has some
                                         // difference with other analyses
                                         curAnalysis = distinctAnalyses.Single(a => a.Name == curAnalysis.Name &&
-                                                                                   a.Parameters.ExclusiveOr(curAnalysis.Parameters).Count == 0);
+                                                                                   a.Parameters.ExclusiveOr(
+                                                                                       curAnalysis.Parameters).Count ==
+                                                                                   0);
                                         if (!dbAnalyses.Contains(curAnalysis))
                                         {
                                             dbAnalyses.Add(curAnalysis);
@@ -1578,9 +1603,17 @@ namespace IDPicker.DataModel
                         // this preqonversion may have incorrect terminal specificities
                         var qonverter = new Qonverter();
                         qonverter.SettingsByAnalysis[(int) curAnalysis.Id] = qonverterSettings.ToQonverterSettings();
-                        qonverter.Qonvert((conn as SQLiteConnection).GetDbPtr());
-
-                        string postQonvertCleanup = @"
+                        try
+                        {
+                            qonverter.Qonvert((conn as SQLiteConnection).GetDbPtr());
+                        }
+                        catch
+                        {
+                            emergencyBreak = true;
+                        }
+                        
+                        string postQonvertCleanup =
+                            @"
 BEGIN TRANSACTION;
 
 -- Apply a broad QValue filter on top-ranked PSMs

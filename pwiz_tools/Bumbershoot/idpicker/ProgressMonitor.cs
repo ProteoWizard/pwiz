@@ -46,7 +46,7 @@ namespace IDPicker
         public void UpdateProgress (object sender, Parser.ParsingProgressEventArgs e)
         {
             if (e.ParsingException != null)
-                throw new InvalidOperationException("parsing error", e.ParsingException);
+                throw new InvalidOperationException("Parsing error: make sure decoy prefixes match", e.ParsingException);
 
             if (ProgressUpdate == null)
                 return;

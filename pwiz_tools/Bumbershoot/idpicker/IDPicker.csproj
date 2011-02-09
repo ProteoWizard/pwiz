@@ -195,11 +195,11 @@
     <Compile Include="Forms\IDPickerForm.Designer.cs">
       <DependentUpon>IDPickerForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\LayoutNameBox.cs">
+    <Compile Include="Forms\TextInputPrompt.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\LayoutNameBox.designer.cs">
-      <DependentUpon>LayoutNameBox.cs</DependentUpon>
+    <Compile Include="Forms\TextInputPrompt.designer.cs">
+      <DependentUpon>TextInputPrompt.cs</DependentUpon>
     </Compile>
     <Compile Include="LayoutManager.cs" />
     <Compile Include="Program.cs" />
@@ -297,8 +297,8 @@
     <EmbeddedResource Include="Forms\SequenceCoverageForm.resx">
       <DependentUpon>SequenceCoverageForm.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\LayoutNameBox.resx">
-      <DependentUpon>LayoutNameBox.cs</DependentUpon>
+    <EmbeddedResource Include="Forms\TextInputPrompt.resx">
+      <DependentUpon>TextInputPrompt.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

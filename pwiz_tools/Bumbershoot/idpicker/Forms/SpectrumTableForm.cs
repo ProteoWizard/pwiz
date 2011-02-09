@@ -69,20 +69,24 @@ namespace IDPicker.Forms
             #region Constructor
             public TotalCounts (NHibernate.ISession session, DataFilter dataFilter)
             {
-                var total = session.CreateQuery("SELECT " +
-                                                "COUNT(DISTINCT psm.Spectrum.Source.Group), " +
-                                                "COUNT(DISTINCT psm.Spectrum.Source), " +
-                                                "COUNT(DISTINCT psm.Spectrum), " +
-                                                "COUNT(DISTINCT psm.Charge), " +
-                                                "COUNT(DISTINCT psm.Analysis) " +
-                                                dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch))
-                                   .List<object[]>()[0];
+                lock (session)
+                {
+                    var total = session.CreateQuery("SELECT " +
+                                                    "COUNT(DISTINCT psm.Spectrum.Source.Group), " +
+                                                    "COUNT(DISTINCT psm.Spectrum.Source), " +
+                                                    "COUNT(DISTINCT psm.Spectrum), " +
+                                                    "COUNT(DISTINCT psm.Charge), " +
+                                                    "COUNT(DISTINCT psm.Analysis) " +
+                                                    dataFilter.GetFilteredQueryString(
+                                                        DataFilter.FromPeptideSpectrumMatch))
+                        .List<object[]>()[0];
 
-                Groups = Convert.ToInt32(total[0]);
-                Sources = Convert.ToInt32(total[1]);
-                Spectra = Convert.ToInt64(total[2]);
-                Charges = Convert.ToInt32(total[3]);
-                Analyses = Convert.ToInt32(total[4]);
+                    Groups = Convert.ToInt32(total[0]);
+                    Sources = Convert.ToInt32(total[1]);
+                    Spectra = Convert.ToInt64(total[2]);
+                    Charges = Convert.ToInt32(total[3]);
+                    Analyses = Convert.ToInt32(total[4]);
+                }
             }
             #endregion
         }
@@ -1066,16 +1070,19 @@ namespace IDPicker.Forms
                     var rowSettings = listOfSettings.Where(x => x.Name == column.Text).SingleOrDefault() ??
                         listOfSettings.Where(x => x.Type == "Key").SingleOrDefault();
 
-                    _columnSettings[column] = new ColumnProperty
+                    if (rowSettings != null)
                     {
-                        Scope = "SpectrumTableForm",
-                        Name = rowSettings.Name,
-                        Type = rowSettings.Type,
-                        DecimalPlaces = rowSettings.DecimalPlaces,
-                        ColorCode = rowSettings.ColorCode,
-                        Visible = rowSettings.Visible,
-                        Locked = rowSettings.Visible
-                    };
+                        _columnSettings[column] = new ColumnProperty
+                                                      {
+                                                          Scope = "SpectrumTableForm",
+                                                          Name = rowSettings.Name,
+                                                          Type = rowSettings.Type,
+                                                          DecimalPlaces = rowSettings.DecimalPlaces,
+                                                          ColorCode = rowSettings.ColorCode,
+                                                          Visible = rowSettings.Visible,
+                                                          Locked = rowSettings.Visible
+                                                      };
+                    }
                 }
 
                 SetColumnAspectGetters();

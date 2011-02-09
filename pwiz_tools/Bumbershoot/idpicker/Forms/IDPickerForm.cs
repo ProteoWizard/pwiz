@@ -29,15 +29,14 @@ using System.Drawing;
 using System.Linq;
 using System.Security.AccessControl;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.IO;
 using System.Threading;
-
+using DigitalRune.Windows.Docking;
 using IDPicker.Forms;
 using IDPicker.Controls;
 using IDPicker.DataModel;
-
-using DigitalRune.Windows.Docking;
 using pwiz.CLI.cv;
 using seems;
 using NHibernate;
@@ -94,7 +93,7 @@ namespace IDPicker
             progressMonitor = new ProgressMonitor();
             progressMonitor.ProgressUpdate += progressMonitor_ProgressUpdate;
 
-            Shown += new EventHandler(Form1_Load);
+            Shown += new EventHandler(IDPickerForm_Load);
 
             basicFilterControl = new BasicFilterControl();
             basicFilterControl.BasicFilterChanged += basicFilterControl_BasicFilterChanged;
@@ -104,28 +103,6 @@ namespace IDPicker
             breadCrumbControl = new BreadCrumbControl() { Dock = DockStyle.Fill };
             breadCrumbControl.BreadCrumbClicked += breadCrumbControl_BreadCrumbClicked;
             breadCrumbPanel.Controls.Add(breadCrumbControl);
-
-            proteinTableForm = new ProteinTableForm();
-            proteinTableForm.Show(dockPanel, DockState.DockTop);
-
-            peptideTableForm = new PeptideTableForm();
-            peptideTableForm.Show(proteinTableForm.Pane, DockPaneAlignment.Right, 0.7);
-
-            spectrumTableForm = new SpectrumTableForm();
-            spectrumTableForm.Show(dockPanel, DockState.DockLeft);
-
-            modificationTableForm = new ModificationTableForm();
-            modificationTableForm.Show(dockPanel, DockState.Document);
-
-            analysisTableForm = new AnalysisTableForm();
-            analysisTableForm.Show(dockPanel, DockState.Document);
-
-            proteinTableForm.ProteinViewFilter += proteinTableForm_ProteinViewFilter;
-            proteinTableForm.ProteinViewVisualize += proteinTableForm_ProteinViewVisualize;
-            peptideTableForm.PeptideViewFilter += peptideTableForm_PeptideViewFilter; 
-            spectrumTableForm.SpectrumViewFilter += spectrumTableForm_SpectrumViewFilter;
-            spectrumTableForm.SpectrumViewVisualize += spectrumTableForm_SpectrumViewVisualize;
-            modificationTableForm.ModificationViewFilter += modificationTableForm_ModificationViewFilter;
 
             //logForm = new LogForm();
             //Console.SetOut(logForm.LogWriter);
@@ -193,15 +170,17 @@ namespace IDPicker
                 TaskbarManager.Instance.SetProgressState(TaskbarProgressBarState.NoProgress);
         }
 
-        void openToolStripButton_Click (object sender, EventArgs e)
+        void openToolStripMenuItem_Click (object sender, EventArgs e)
         {
             var openFileDialog = new OpenFileDialog()
             {
-                Filter = "IDPicker Files|*.idpDB;*.idpXML;*.pepXML;*.pep.xml|" + 
-                         "PepXML Files|*.pepXML;*.pep.xml|" +
-                         "IDPicker XML|*.idpXML|" +
-                         "IDPicker DB|*.idpDB|" +
-                         "Any File|*.*",
+                Filter = sender == openToolStripMenuItem 
+                         ? "IDPicker DB|*.idpDB"
+                         : "IDPicker Files|*.idpDB;*.idpXML;*.pepXML;*.pep.xml|" +
+                           "PepXML Files|*.pepXML;*.pep.xml|" +
+                           "IDPicker XML|*.idpXML|" +
+                           "IDPicker DB|*.idpDB|" +
+                           "Any File|*.*",
                 SupportMultiDottedExtensions = true,
                 AddExtension = true,
                 CheckFileExists = true,
@@ -210,7 +189,32 @@ namespace IDPicker
 
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
-                OpenFiles(openFileDialog.FileNames);
+                clearData();
+                progressMonitor = new ProgressMonitor();
+                progressMonitor.ProgressUpdate += progressMonitor_ProgressUpdate;
+
+                basicFilterControl = new BasicFilterControl();
+                basicFilterControl.BasicFilterChanged += basicFilterControl_BasicFilterChanged;
+                dataFilterPopup = new Popup(basicFilterControl) { FocusOnOpen = true };
+                dataFilterPopup.Closed += dataFilterPopup_Closed;
+
+                breadCrumbControl.ClearBreadcrumbs();
+
+                var fileNames = openFileDialog.FileNames.ToList();
+
+                if (session != null)
+                {
+                    if (sender == importToolStripMenuItem)
+                    {
+                        var filenameMatch = Regex.Match(session.Connection.ConnectionString, @"Data Source=(?:\w|:|\\| |/|\.)+").ToString().Remove(0,12);
+                        if (!fileNames.Contains(filenameMatch))
+                            fileNames.Add(filenameMatch);
+                    }
+                    session.Close();
+                    session = null;
+                }
+
+                OpenFiles(fileNames.ToArray());
             }
         }
 
@@ -440,11 +444,16 @@ namespace IDPicker
 
         void clearData ()
         {
-            proteinTableForm.ClearData(true);
-            peptideTableForm.ClearData(true);
-            spectrumTableForm.ClearData(true);
-            modificationTableForm.ClearData(true);
-            analysisTableForm.ClearData(true);
+            if (proteinTableForm != null)
+                proteinTableForm.ClearData(true);
+            if (peptideTableForm != null)
+                peptideTableForm.ClearData(true);
+            if (spectrumTableForm != null)
+                spectrumTableForm.ClearData(true);
+            if (modificationTableForm != null)
+                modificationTableForm.ClearData(true);
+            if (analysisTableForm != null)
+                analysisTableForm.ClearData(true);
         }
 
         void setData ()
@@ -456,7 +465,7 @@ namespace IDPicker
             analysisTableForm.SetData(session, viewFilter);
         }
 
-        void Form1_Load (object sender, EventArgs e)
+        void IDPickerForm_Load (object sender, EventArgs e)
         {
             //System.Data.SQLite.SQLiteConnection.SetConfigOption(SQLiteConnection.SQLITE_CONFIG.MULTITHREAD);
             //var filepaths = Directory.GetFiles(@"c:\test\Goldenring_gastric\Metaplasia", "klc*FFPE*.pepXML", SearchOption.AllDirectories);
@@ -473,8 +482,8 @@ namespace IDPicker
 
             if (args != null && args.Length > 0 && args.All(o => File.Exists(o)))
                 OpenFiles(args);
-            else
-                openToolStripButton_Click(this, EventArgs.Empty);
+            //else
+            //    openToolStripMenuItem_Click(this, EventArgs.Empty);
         }
 
         void databaseNotFoundHandler (object sender, Parser.DatabaseNotFoundEventArgs e)
@@ -631,6 +640,7 @@ namespace IDPicker
                 // set main window title
                 Text = commonFilename;
 
+                
                 if (xml_filepaths.Count() > 0)
                 {
                     using (Parser parser = new Parser(".", qonverterSettingsHandler, false, xml_filepaths.ToArray()))
@@ -639,9 +649,20 @@ namespace IDPicker
                         parser.DatabaseNotFound += databaseNotFoundHandler;
                         parser.SourceNotFound += sourceNotFoundOnImportHandler;
                         parser.ParsingProgress += progressMonitor.UpdateProgress;
-
                         if (parser.Start())
+                        {
+                            if (parser.emergencyBreak)
+                            {
+                                MessageBox.Show(
+                                    "An error occurred during parsing of file. " +
+                                    "Please make sure file is valid " +
+                                    "and the decoy prefix is correct.");
+                                if (File.Exists(commonFilename))
+                                    File.Delete(commonFilename);
+                                Text = "IDPicker";
+                            }
                             return;
+                        }
                     }
                     idpDB_filepaths = idpDB_filepaths.Union(xml_filepaths.Select(o => Path.ChangeExtension(o, ".idpDB")));
                 }
@@ -697,6 +718,7 @@ namespace IDPicker
                 _layoutManager.SetSession(session);
 
                 //set or save default layout
+                CheckFormExistance();
                 LoadLayout(_layoutManager.GetCurrentDefault());
 
                 //breadCrumbControl.BreadCrumbs.Clear();
@@ -734,9 +756,54 @@ namespace IDPicker
             }
         }
 
+        private void CheckFormExistance()
+        {
+            if (proteinTableForm == null)
+            {
+                proteinTableForm = new ProteinTableForm();
+                proteinTableForm.Show(dockPanel, DockState.DockTop);
+                proteinTableForm.ProteinViewFilter += proteinTableForm_ProteinViewFilter;
+                proteinTableForm.ProteinViewVisualize += proteinTableForm_ProteinViewVisualize;
+                if (_layoutManager != null)
+                    _layoutManager.SetProteinForm(proteinTableForm);
+            }
+
+            if (peptideTableForm == null)
+            {
+                peptideTableForm = new PeptideTableForm();
+                peptideTableForm.Show(proteinTableForm.Pane, DockPaneAlignment.Right, 0.7);
+                peptideTableForm.PeptideViewFilter += peptideTableForm_PeptideViewFilter;
+                if (_layoutManager != null)
+                    _layoutManager.SetPeptideForm(peptideTableForm);
+            }
+
+            if (spectrumTableForm == null)
+            {
+                spectrumTableForm = new SpectrumTableForm();
+                spectrumTableForm.Show(dockPanel, DockState.DockLeft);
+                spectrumTableForm.SpectrumViewFilter += spectrumTableForm_SpectrumViewFilter;
+                spectrumTableForm.SpectrumViewVisualize += spectrumTableForm_SpectrumViewVisualize;
+                if (_layoutManager != null)
+                    _layoutManager.SetSpectrumForm(spectrumTableForm);
+            }
+
+            if (modificationTableForm == null)
+            {
+                modificationTableForm = new ModificationTableForm();
+                modificationTableForm.Show(dockPanel, DockState.Document);
+                modificationTableForm.ModificationViewFilter += modificationTableForm_ModificationViewFilter;
+            }
+
+            if (analysisTableForm == null)
+            {
+                analysisTableForm = new AnalysisTableForm();
+                analysisTableForm.Show(dockPanel, DockState.Document);
+            }
+        }
+
         internal void LoadLayout(LayoutProperty userLayout)
         {
-            try
+            //try
             {
                 var tempFilepath = Path.GetTempFileName();
                 using (var tempFile = new StreamWriter(tempFilepath, false, Encoding.Unicode))
@@ -762,15 +829,26 @@ namespace IDPicker
                     spectrumTableForm.LoadLayout(columnList.ToList());
                 }
             }
-            catch (Exception)
-            {
-                MessageBox.Show("Error encountered while trying to load saved layout.");
-            }
+            //catch (Exception)
+            //{
+            //    MessageBox.Show("Error encountered while trying to load saved layout.");
+            //}
 
         }
 
         private IDockableForm DeserializeForm(string persistantString)
         {
+            if (persistantString == typeof(ProteinTableForm).ToString())
+                return proteinTableForm;
+            if (persistantString == typeof(PeptideTableForm).ToString())
+                return peptideTableForm;
+            if (persistantString == typeof(SpectrumTableForm).ToString())
+                return spectrumTableForm;
+            if (persistantString == typeof(ModificationTableForm).ToString())
+                return modificationTableForm;
+            if (persistantString == typeof(AnalysisTableForm).ToString())
+                return analysisTableForm;
+            
             return null;
         }
 
@@ -825,16 +903,24 @@ namespace IDPicker
 
         private void layoutButton_Click(object sender, EventArgs e)
         {
-            layoutMenuStrip.Items.Clear();
-            var items = _layoutManager.LoadLayoutMenu();
-            foreach (var item in items)
-                layoutMenuStrip.Items.Add(item);
-            layoutMenuStrip.Show(Cursor.Position);
+            layoutToolStripMenuRoot.DropDownItems.Clear();
+            if (_layoutManager.IsReady())
+            {
+                var items = _layoutManager.LoadLayoutMenu();
+                foreach (var item in items)
+                    layoutToolStripMenuRoot.DropDownItems.Add(item);
+            }
         }
 
         private void dataFilterButton_Click (object sender, EventArgs e)
         {
-            dataFilterPopup.Show(sender as Button);
+            if (session == null)
+                return;
+
+            if (!dataFilterPopup.Visible)
+                dataFilterPopup.Show(new Point(137, 50));
+            else
+                dataFilterPopup.Visible = false;
         }
 
         private void basicFilterControl_BasicFilterChanged (object sender, EventArgs e)
@@ -850,6 +936,17 @@ namespace IDPicker
                 basicFilter = basicFilterControl.DataFilter;
                 ApplyBasicFilter();
             }
+        }
+
+        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+
+        private void optionsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var QOptions = new QonverterSettingsManagerForm();
+            QOptions.ShowDialog();
         }
     }
 

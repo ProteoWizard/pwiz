@@ -66,6 +66,39 @@ namespace IDPicker
         }
 
         /// <summary>
+        /// Informs the layout manager how to access the Peptide Form
+        /// </summary>
+        /// <param name="peptideForm"></param>
+        public void SetPeptideForm(PeptideTableForm peptideForm)
+        {
+            peptideTableForm = peptideForm;
+        }
+
+        /// <summary>
+        /// Informs the layout manager how to access the Protein Form
+        /// </summary>
+        /// <param name="proteinForm"></param>
+        public void SetProteinForm(ProteinTableForm proteinForm)
+        {
+            proteinTableForm = proteinForm;
+        }
+
+        public bool IsReady()
+        {
+            return (peptideTableForm != null && proteinTableForm != null
+                    && spectrumTableForm != null);
+        }
+
+        /// <summary>
+        /// Informs the layout manager how to access the Spectrum Form
+        /// </summary>
+        /// <param name="spectrumForm"></param>
+        public void SetSpectrumForm(SpectrumTableForm spectrumForm)
+        {
+            spectrumTableForm = spectrumForm;
+        }
+
+        /// <summary>
         /// If IDPicker has been run before, sets the bounds of the main form to the last used bounds.
         /// Otherwise, sets defaults appropriate for the current display settings.
         /// </summary>
@@ -416,17 +449,17 @@ namespace IDPicker
                 newLayout.Click +=
                     (s, e) =>
                     {
-                        var textInput = new LayoutNameBox();
+                        var textInput = new TextInputPrompt("Layout Name", true, string.Empty);
                         if (textInput.ShowDialog() == DialogResult.OK)
                         {
                             var customColumnList = new List<ColumnProperty>();
-                            if (textInput.inputCheckBox.Checked)
+                            if (textInput.GetCheckState())
                             {
                                 customColumnList.AddRange(proteinTableForm.GetCurrentProperties(false));
                                 customColumnList.AddRange(peptideTableForm.GetCurrentProperties(false));
                                 customColumnList.AddRange(spectrumTableForm.GetCurrentProperties());
                             }
-                            SaveNewLayout(textInput.inputTextBox.Text, textInput.inputCheckBox.Checked, false, customColumnList);
+                            SaveNewLayout(textInput.GetText(), textInput.GetCheckState(), false, customColumnList);
                         }
                     };
                 currentMenuLevel.RemoveAt(0);
@@ -471,17 +504,17 @@ namespace IDPicker
                     newLayout.Click +=
                         (s, e) =>
                         {
-                            var textInput = new LayoutNameBox();
+                            var textInput = new TextInputPrompt("Layout Name", true, string.Empty);
                             if (textInput.ShowDialog() == DialogResult.OK)
                             {
                                 var customColumnList = new List<ColumnProperty>();
-                                if (textInput.inputCheckBox.Checked)
+                                if (textInput.GetCheckState())
                                 {
                                     customColumnList.AddRange(proteinTableForm.GetCurrentProperties(true));
                                     customColumnList.AddRange(peptideTableForm.GetCurrentProperties(true));
                                     customColumnList.AddRange(spectrumTableForm.GetCurrentProperties());
                                 }
-                                SaveNewLayout(textInput.inputTextBox.Text, textInput.inputCheckBox.Checked, true, customColumnList);
+                                SaveNewLayout(textInput.GetText(), textInput.GetCheckState(), true, customColumnList);
                             }
                         };
                     currentDatabaseMenuLevel.Insert(0, newLayout);

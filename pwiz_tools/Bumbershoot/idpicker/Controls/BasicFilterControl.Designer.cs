@@ -50,7 +50,6 @@ namespace IDPicker.Controls
         /// </summary>
         private void InitializeComponent ()
         {
-            this.components = new System.ComponentModel.Container();
             System.Windows.Forms.Label lblMinDistinctPeptides;
             this.gbProteinDetails = new System.Windows.Forms.GroupBox();
             this.minSpectraTextBox = new System.Windows.Forms.TextBox();
@@ -66,15 +65,12 @@ namespace IDPicker.Controls
             this.lblMaxAmbigIds = new System.Windows.Forms.Label();
             this.maxQValueComboBox = new System.Windows.Forms.ComboBox();
             this.lblMaxFdr = new System.Windows.Forms.Label();
-            this.AppliedBox = new System.Windows.Forms.GroupBox();
-            this.FilterTLV = new BrightIdeasSoftware.TreeListView();
-            this.FilterColumn = new BrightIdeasSoftware.OLVColumn();
-            this.RemoveColumn = new BrightIdeasSoftware.OLVColumn();
+            this.CloseLabel = new System.Windows.Forms.LinkLabel();
+            this.panel1 = new System.Windows.Forms.Panel();
             lblMinDistinctPeptides = new System.Windows.Forms.Label();
             this.gbProteinDetails.SuspendLayout();
             this.gbPeptideDetails.SuspendLayout();
-            this.AppliedBox.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.FilterTLV)).BeginInit();
+            this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // lblMinDistinctPeptides
@@ -269,51 +265,24 @@ namespace IDPicker.Controls
             this.lblMaxFdr.TabIndex = 125;
             this.lblMaxFdr.Text = "Maximum Q Value:";
             // 
-            // AppliedBox
+            // CloseLabel
             // 
-            this.AppliedBox.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.AppliedBox.Controls.Add(this.FilterTLV);
-            this.AppliedBox.Location = new System.Drawing.Point(242, 3);
-            this.AppliedBox.Name = "AppliedBox";
-            this.AppliedBox.Size = new System.Drawing.Size(245, 222);
-            this.AppliedBox.TabIndex = 134;
-            this.AppliedBox.TabStop = false;
-            this.AppliedBox.Text = "Applied Filters";
+            this.CloseLabel.AutoSize = true;
+            this.CloseLabel.Location = new System.Drawing.Point(151, 5);
+            this.CloseLabel.Name = "CloseLabel";
+            this.CloseLabel.Size = new System.Drawing.Size(82, 13);
+            this.CloseLabel.TabIndex = 127;
+            this.CloseLabel.TabStop = true;
+            this.CloseLabel.Text = "Save and Close";
+            this.CloseLabel.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.CloseLabel_LinkClicked);
             // 
-            // FilterTLV
+            // panel1
             // 
-            this.FilterTLV.AllColumns.Add(this.FilterColumn);
-            this.FilterTLV.AllColumns.Add(this.RemoveColumn);
-            this.FilterTLV.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.FilterTLV.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.FilterColumn,
-            this.RemoveColumn});
-            this.FilterTLV.Cursor = System.Windows.Forms.Cursors.Default;
-            this.FilterTLV.Location = new System.Drawing.Point(6, 19);
-            this.FilterTLV.Name = "FilterTLV";
-            this.FilterTLV.OwnerDraw = true;
-            this.FilterTLV.ShowGroups = false;
-            this.FilterTLV.Size = new System.Drawing.Size(233, 185);
-            this.FilterTLV.TabIndex = 4;
-            this.FilterTLV.UseCompatibleStateImageBehavior = false;
-            this.FilterTLV.UseHyperlinks = true;
-            this.FilterTLV.View = System.Windows.Forms.View.Details;
-            this.FilterTLV.VirtualMode = true;
-            // 
-            // FilterColumn
-            // 
-            this.FilterColumn.FillsFreeSpace = true;
-            this.FilterColumn.Text = "Filter";
-            // 
-            // RemoveColumn
-            // 
-            this.RemoveColumn.Hyperlink = true;
-            this.RemoveColumn.MaximumWidth = 62;
-            this.RemoveColumn.MinimumWidth = 62;
-            this.RemoveColumn.Text = "Remove?";
-            this.RemoveColumn.Width = 62;
+            this.panel1.Controls.Add(this.CloseLabel);
+            this.panel1.Location = new System.Drawing.Point(3, 223);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(233, 21);
+            this.panel1.TabIndex = 128;
             // 
             // BasicFilterControl
             // 
@@ -323,17 +292,17 @@ namespace IDPicker.Controls
             this.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
             this.BackColor = System.Drawing.SystemColors.Menu;
             this.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.Controls.Add(this.AppliedBox);
             this.Controls.Add(this.gbPeptideDetails);
             this.Controls.Add(this.gbProteinDetails);
+            this.Controls.Add(this.panel1);
             this.Name = "BasicFilterControl";
-            this.Size = new System.Drawing.Size(490, 228);
+            this.Size = new System.Drawing.Size(239, 247);
             this.gbProteinDetails.ResumeLayout(false);
             this.gbProteinDetails.PerformLayout();
             this.gbPeptideDetails.ResumeLayout(false);
             this.gbPeptideDetails.PerformLayout();
-            this.AppliedBox.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.FilterTLV)).EndInit();
+            this.panel1.ResumeLayout(false);
+            this.panel1.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -354,9 +323,7 @@ namespace IDPicker.Controls
         private System.Windows.Forms.Label lblMaxAmbigIds;
         private System.Windows.Forms.ComboBox maxQValueComboBox;
         private System.Windows.Forms.Label lblMaxFdr;
-        private System.Windows.Forms.GroupBox AppliedBox;
-        private BrightIdeasSoftware.TreeListView FilterTLV;
-        private BrightIdeasSoftware.OLVColumn FilterColumn;
-        private BrightIdeasSoftware.OLVColumn RemoveColumn;
+        private System.Windows.Forms.LinkLabel CloseLabel;
+        private System.Windows.Forms.Panel panel1;
     }
 }

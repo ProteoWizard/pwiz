@@ -1,5 +1,5 @@
 ﻿//
-// $Id$
+// $Id: LayoutNameBox.designer.cs 227 2010-11-09 16:30:55Z holmanjd $
 //
 // The contents of this file are subject to the Mozilla Public License
 // Version 1.1 (the "License"); you may not use this file except in
@@ -22,7 +22,7 @@
 
 namespace IDPicker.Forms
 {
-    partial class LayoutNameBox
+    sealed partial class TextInputPrompt
     {
         /// <summary>
         /// Required designer variable.
@@ -90,9 +90,9 @@ namespace IDPicker.Forms
             this.inputLabel.AutoSize = true;
             this.inputLabel.Location = new System.Drawing.Point(12, 9);
             this.inputLabel.Name = "inputLabel";
-            this.inputLabel.Size = new System.Drawing.Size(98, 13);
+            this.inputLabel.Size = new System.Drawing.Size(101, 13);
             this.inputLabel.TabIndex = 3;
-            this.inputLabel.Text = "New Layout Name:";
+            this.inputLabel.Text = "New <<Category>>:";
             // 
             // inputCheckBox
             // 
@@ -106,7 +106,7 @@ namespace IDPicker.Forms
             this.inputCheckBox.Text = "Save Column Options";
             this.inputCheckBox.UseVisualStyleBackColor = true;
             // 
-            // LayoutNameBox
+            // TextInputBox
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -116,8 +116,8 @@ namespace IDPicker.Forms
             this.Controls.Add(this.inputTextBox);
             this.Controls.Add(this.okButton);
             this.Controls.Add(this.cancelButton);
-            this.Name = "LayoutNameBox";
-            this.Text = "Layout Name";
+            this.Name = "TextInputBox";
+            this.Text = "<<Category>>";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.TextInputBox_FormClosing);
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -128,8 +128,8 @@ namespace IDPicker.Forms
 
         private System.Windows.Forms.Button cancelButton;
         private System.Windows.Forms.Button okButton;
-        internal System.Windows.Forms.TextBox inputTextBox;
-        internal System.Windows.Forms.CheckBox inputCheckBox;
         private System.Windows.Forms.Label inputLabel;
+        private System.Windows.Forms.TextBox inputTextBox;
+        private System.Windows.Forms.CheckBox inputCheckBox;
     }
 }
