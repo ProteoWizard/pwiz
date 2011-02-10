@@ -604,7 +604,7 @@ namespace pwiz.Topograph.Model
             var tracerChromatograms = GetTracerChromatograms();
             foreach (var peak in ListChildren())
             {
-                peak.RelativeAmountValue = peak.Area/totalArea;
+                peak.RelativeAmountValue = totalArea == 0 ? 0 : peak.Area/totalArea;
                 tracerPercent += peak.RelativeAmountValue*peak.TracerPercent;
                 totalScore += peak.Area*
                               tracerChromatograms.GetScore(
@@ -613,7 +613,7 @@ namespace pwiz.Topograph.Model
 
             }
             TracerPercent = tracerPercent;
-            DeconvolutionScore = totalScore/totalArea;
+            DeconvolutionScore = totalArea == 0 ? 0 : totalScore/totalArea;
             IDictionary<TracerFormula, double> bestMatch;
             var peaksDict = ToDictionary();
             double turnover;

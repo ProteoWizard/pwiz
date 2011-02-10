@@ -52,7 +52,7 @@ namespace pwiz.Topograph.ui.Util
                         }
                         writer.Write(tab);
                         tab = "\t";
-                        writer.Write(row.Cells[column.Index].Value);
+                        writer.Write(StripLineBreaks(row.Cells[column.Index].Value));
                     }
                     writer.WriteLine();
                 }
