@@ -57,7 +57,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public interface IStateProvider
         {
-            TreeNode SelectedNode { get; }
+            TreeNodeMS SelectedNode { get; }
 
             IdentityPath SelectedPath { get; set; }
 
@@ -68,7 +68,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private class DefaultStateProvider : IStateProvider
         {
-            public TreeNode SelectedNode { get { return null; } }
+            public TreeNodeMS SelectedNode { get { return null; } }
             public IdentityPath SelectedPath { get { return IdentityPath.ROOT; } set { } }
             public void BuildGraphMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip, Point mousePt, IController controller) { }
             public int SelectedResultsIndex { get; set; }

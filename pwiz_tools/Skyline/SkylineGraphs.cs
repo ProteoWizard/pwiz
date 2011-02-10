@@ -1833,15 +1833,20 @@ namespace pwiz.Skyline
             CopyEmfToolStripMenuItem.AddToContextMenu(zedGraphControl, menuStrip);
         }
 
-        public TreeNode SelectedNode
+        public TreeNodeMS SelectedNode
         {
-            get { return sequenceTree.SelectedNode; }
+            get { return sequenceTree.SelectedNode as TreeNodeMS; }
         }
 
         public IdentityPath SelectedPath
         {
             get { return sequenceTree.SelectedPath; }
             set { sequenceTree.SelectedPath = value; }
+        }
+
+        public IList<TreeNodeMS> SelectedNodes
+        {
+            get { return sequenceTree.SelectedNodes.ToList(); }
         }
 
         public int SelectedResultsIndex

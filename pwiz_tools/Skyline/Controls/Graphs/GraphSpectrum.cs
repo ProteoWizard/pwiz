@@ -50,7 +50,7 @@ namespace pwiz.Skyline.Controls.Graphs
     {
         public interface IStateProvider
         {
-            TreeNode SelectedNode { get; }
+            TreeNodeMS SelectedNode { get; }
             IList<IonType> ShowIonTypes { get; }
             IList<int> ShowIonCharges { get; }
 
@@ -59,7 +59,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private class DefaultStateProvider : IStateProvider
         {
-            public TreeNode SelectedNode { get { return null; } }
+            public TreeNodeMS SelectedNode { get { return null; } }
             public IList<IonType> ShowIonTypes { get { return new[] { IonType.y }; } }
             public IList<int> ShowIonCharges { get { return new[] { 1 }; } }
             public void BuildSpectrumMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip) { }

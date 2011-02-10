@@ -77,14 +77,14 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public interface IStateProvider
         {
-            TreeNode SelectedNode { get; }
+            TreeNodeMS SelectedNode { get; }
 
             void BuildChromatogramMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip);
         }
 
         private class DefaultStateProvider : IStateProvider
         {
-            public TreeNode SelectedNode { get { return null; } }
+            public TreeNodeMS SelectedNode { get { return null; } }
             public void BuildChromatogramMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip) {}
         }
 

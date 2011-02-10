@@ -28,6 +28,7 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
 using pwiz.SkylineTestUtil;
@@ -80,10 +81,14 @@ namespace pwiz.SkylineTestFunctional
                              AnnotationDef.AnnotationTarget.protein |
                              AnnotationDef.AnnotationTarget.protein, 
                              AnnotationDef.AnnotationType.text, null);
+            DefineAnnotation(editListDlg, "precursor transition text",
+                             AnnotationDef.AnnotationTarget.precursor_result |
+                             AnnotationDef.AnnotationTarget.transition_result, AnnotationDef.AnnotationType.text,
+                             new[] {"x", "y", "z"});
             OkDialog(editListDlg, ()=>editListDlg.DialogResult = DialogResult.OK);
             OkDialog(chooseAnnotationsDlg, chooseAnnotationsDlg.Close);
             // Open the .sky file
-            RunUI(() =>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_scheduled_mini.sky")));
+            RunUI(() =>SkylineWindow.OpenFile(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_scheduled_mini_missing_results.sky")));
             // Turn on the annotations
             chooseAnnotationsDlg = ShowDialog<ChooseAnnotationsDlg>(SkylineWindow.ShowAnnotationsDialog);
             RunUI(() =>
@@ -109,6 +114,7 @@ namespace pwiz.SkylineTestFunctional
                       {
                           SkylineWindow.SequenceTree.Nodes[0].Expand();
                           SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Expand();
+                          SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[0].Expand();                          
                       });
             // Select the first Precursor in the SequenceTree
             var precursorTreeNode = (SrmTreeNode) SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[0];
@@ -128,25 +134,108 @@ namespace pwiz.SkylineTestFunctional
             // The annotation is a dropdown with values {blank, "a", "b", "c"}
             Assert.IsNotNull(colPrecursorResultItems);
             Debug.Assert(colPrecursorResultItems != null);  // For ReSharper
-            RunUI(()=>
-                      {
-                          var cell = resultsGrid.Rows[0].Cells[colPrecursorResultItems.Index];
-                          resultsGrid.CurrentCell = cell;
-                          resultsGrid.BeginEdit(true);
-                          ((ComboBox)resultsGrid.EditingControl).SelectedIndex = 2;
-                          resultsGrid.EndEdit();
-                          cell = resultsGrid.Rows[1].Cells[colPrecursorResultItems.Index];
-                          resultsGrid.CurrentCell = cell;
-                          resultsGrid.BeginEdit(true);
-                          ((ComboBox)resultsGrid.EditingControl).SelectedIndex = 1;
-                          resultsGrid.EndEdit();
-                      });
+            DataGridViewCell cell;
+            RunUI(() =>
+            {
+                cell = resultsGrid.Rows[0].Cells[colPrecursorResultItems.Index];
+                resultsGrid.CurrentCell = cell;
+                resultsGrid.BeginEdit(true);
+                ((ComboBox)resultsGrid.EditingControl).SelectedIndex = 2;
+                resultsGrid.EndEdit();
+            });
+            cell = null;
+            RunUI(() =>
+            {
+                cell = resultsGrid.Rows[1].Cells[colPrecursorResultItems.Index];
+                resultsGrid.CurrentCell = cell;
+                resultsGrid.BeginEdit(true);
+                ((ComboBox)resultsGrid.EditingControl).SelectedIndex = 1;
+                resultsGrid.EndEdit();
+            });
+
             // Assert that the annotations have their new values.
-            var precursorDocNode = ((TransitionGroupDocNode) precursorTreeNode.Model);
+            var precursorDocNode = ((TransitionGroupDocNode)precursorTreeNode.Model);
             Assert.AreEqual("b", precursorDocNode.Results[0][0]
                 .Annotations.GetAnnotation(COL_PRECURSOR_RESULTS_ITEMS));
             Assert.AreEqual("a", precursorDocNode.Results[0][1]
                 .Annotations.GetAnnotation(COL_PRECURSOR_RESULTS_ITEMS));
+
+            // Test multiselect here.
+            RunUI(() =>
+            {
+                // Annotations applying to transitions as well as precursors should be visible.
+                DataGridViewColumn col = resultsGrid.Columns[AnnotationDef.GetColumnName("precursor transition text")];
+                Assert.IsNotNull(col);
+                cell = resultsGrid.Rows[0].Cells[col.Index];
+                Assert.IsTrue(cell.Visible);
+                // Select a transition node in addition to the precursor node already selected.
+                SkylineWindow.SequenceTree.KeysOverride = Keys.Control;
+                SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[0].Nodes[0];
+                SkylineWindow.SequenceTree.KeysOverride = Keys.None;
+            });
+            WaitForGraphPanesToUpdate();
+            RunUI(() =>
+            {
+                // Annotations applying to both precursors and transitions should still be 
+                // visible. 
+                Assert.IsTrue(cell.Visible);
+                // Set value for that annotation.
+                resultsGrid.CurrentCell = cell;
+                resultsGrid.BeginEdit(true);
+                resultsGrid.EditingControl.Text = "Test";
+                resultsGrid.EndEdit();
+                // Annotations applying just to precursors should no longer be visible.
+                cell = resultsGrid.Rows[0].Cells[colPrecursorResultItems.Index];
+                Assert.IsFalse(cell.Visible);
+                precursorDocNode = (TransitionGroupDocNode)
+                    ((TransitionGroupTreeNode)SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[0]).Model;
+                // Check all annotations have the new value. 
+                foreach (TransitionGroupChromInfo info in precursorDocNode.Results[0])
+                {
+                    Assert.IsTrue(info.Annotations.ListAnnotations().Count() > 0);
+                }
+            });
+            // Multiselect transitions only.
+            RunUI(() =>
+                      {
+                          SkylineWindow.SequenceTree.KeysOverride = Keys.None;
+                          SkylineWindow.SequenceTree.SelectedNode =
+                              SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[0].Nodes[3];
+                      });
+            WaitForGraphPanesToUpdate();
+            RunUI(() =>
+            {
+                SkylineWindow.SequenceTree.KeysOverride = Keys.Shift;
+                SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[0].Nodes[0];
+            });
+            WaitForGraphPanesToUpdate();
+            RunUI(() =>
+            {
+                // Since only transitions are selected, transition _note column should be visible.
+                cell = resultsGrid.Rows[0].Cells[resultsGrid.TransitionNoteColumn.Index];
+                Assert.IsTrue(cell.Visible);
+                resultsGrid.CurrentCell = cell;
+                resultsGrid.BeginEdit(true);
+                resultsGrid.EditingControl.Text = "Test2";
+                resultsGrid.EndEdit();
+                // Check all nodes have received the correct values.
+                foreach(TransitionTreeNode nodeTree in SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[0].Nodes)
+                {
+                    foreach (TransitionChromInfo info in ((TransitionDocNode) nodeTree.Model).Results[0])
+                    {
+                      Assert.AreEqual("Test2", info.Annotations.Note);
+                    }
+                }
+                // Test multiselect node without results - annotation columns should no longer be visible.
+                TreeNodeMS precursorNoResults = (TreeNodeMS) SkylineWindow.SequenceTree.Nodes[0].Nodes[0].Nodes[1];
+                SkylineWindow.SequenceTree.SelectedPaths = new List<IdentityPath>
+                {
+                    SkylineWindow.SequenceTree.SelectedPath,
+                    SkylineWindow.SequenceTree.GetNodePath(precursorNoResults)
+                };
+                Assert.IsFalse(resultsGrid.GetAvailableColumns().Contains(resultsGrid.PrecursorNoteColumn));
+                SkylineWindow.SequenceTree.KeysOverride = Keys.None;
+            });
         }
 
         private static void DefineAnnotation(EditListDlg<SettingsListBase<AnnotationDef>, AnnotationDef> dialog,
