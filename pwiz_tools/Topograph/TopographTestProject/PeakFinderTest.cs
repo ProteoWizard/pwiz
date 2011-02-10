@@ -218,8 +218,8 @@ namespace pwiz.Topograph.Test
                     LastDetectedScan = 304,
                     MinCharge = 2,
                     MaxCharge = 2,
-                    ExpectedPeakStart = 1.902,
-                    ExpectedPeakEnd = 2.142,
+                    ExpectedPeakStart = 1.935,
+                    ExpectedPeakEnd = 2.154,
                 },
                 new PeakFinderPeptide
                 {
@@ -229,8 +229,8 @@ namespace pwiz.Topograph.Test
                    LastDetectedScan = 137,
                    MinCharge = 3,
                    MaxCharge = 3,
-                   ExpectedPeakStart = .742,
-                   ExpectedPeakEnd = 1.029,
+                   ExpectedPeakStart = .581,
+                   ExpectedPeakEnd = 1.088,
                 },
                 new PeakFinderPeptide
                     {
@@ -240,8 +240,8 @@ namespace pwiz.Topograph.Test
                         LastDetectedScan = 169,
                         MinCharge = 2,
                         MaxCharge = 2,
-                        ExpectedPeakStart = .974,
-                        ExpectedPeakEnd = 2.148,
+                        ExpectedPeakStart = .993,
+                        ExpectedPeakEnd = 2.209,
                     },
                 new PeakFinderPeptide
                     {
@@ -251,8 +251,8 @@ namespace pwiz.Topograph.Test
                         LastDetectedScan = 243,
                         MinCharge = 3,
                         MaxCharge = 3,
-                        ExpectedPeakStart = 1.526,
-                        ExpectedPeakEnd = 1.706,
+                        ExpectedPeakStart = 1.564,
+                        ExpectedPeakEnd = 1.746,
                     },
                 new PeakFinderPeptide
                     {
@@ -262,8 +262,8 @@ namespace pwiz.Topograph.Test
                         LastDetectedScan = 87,
                         MinCharge = 2,
                         MaxCharge = 2,
-                        ExpectedPeakStart = .230,
-                        ExpectedPeakEnd = .580,
+                        ExpectedPeakStart = .268,
+                        ExpectedPeakEnd = .590,
                     }
             };
     }
