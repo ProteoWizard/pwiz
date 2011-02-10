@@ -40,7 +40,7 @@ namespace pwiz.ProteomeDatabase.API
 
         private static readonly Dictionary<String, ProteomeDb> PROTEOME_DBS = new Dictionary<string, ProteomeDb>();
         public const int MIN_SEQUENCE_LENGTH = 4;
-        public const int MAX_SEQUENCE_LENGTH = 8;
+        public const int MAX_SEQUENCE_LENGTH = 7;
         private ProteomeDb(String path)
         {
             Path = path;

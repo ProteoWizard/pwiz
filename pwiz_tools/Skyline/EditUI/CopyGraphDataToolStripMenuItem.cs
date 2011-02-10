@@ -52,7 +52,33 @@ namespace pwiz.Skyline.EditUI
         /// </summary>
         public static void CopyGraphData(ZedGraphControl zedGraphControl)
         {
-            var graphPane = zedGraphControl.GraphPane;
+            var list = new List<string>();
+            foreach (var graphPane in zedGraphControl.MasterPane.PaneList)
+            {
+                var tsvData = GetGraphDataTsv(graphPane);
+                if (tsvData != null)
+                {
+                    list.Add(tsvData);
+                }
+            }
+            if (list.Count == 0)
+            {
+                return;
+            }
+            var allText = string.Join("\r\n", list.ToArray());
+            try
+            {
+                Clipboard.Clear();
+                Clipboard.SetText(allText);
+            }
+            catch (ExternalException)
+            {
+                MessageBox.Show(ClipboardHelper.GetOpenClipboardMessage("Failed setting data to clipboard."), Program.Name);
+            }
+        }
+
+        private static string GetGraphDataTsv(GraphPane graphPane)
+        {
             var curves = new List<CurveItem>();
             foreach (var curve in graphPane.CurveList)
             {
@@ -64,7 +90,7 @@ namespace pwiz.Skyline.EditUI
             }
             if (curves.Count == 0)
             {
-                return;
+                return null;
             }
             double xMin = graphPane.XAxis.Scale.Min;
             double xMax = graphPane.XAxis.Scale.Max;
@@ -73,28 +99,28 @@ namespace pwiz.Skyline.EditUI
             // The Key of the dictionary is either the X value, or, for ordinal axes, the integer index of the point.
             // The Key in the dictionary's Value is either the X value itself, or the ordinal, or the text label.
             var rows = new Dictionary<object, KeyValuePair<object, IList<double?[]>>>();
-            for (int iCurve = 0; iCurve < curves.Count; iCurve ++)
+            for (int iCurve = 0; iCurve < curves.Count; iCurve++)
             {
                 var curve = curves[iCurve];
                 IPointList pointList = curve.Points;
                 if (pointList is MSPointList)
                 {
-                    pointList = ((MSPointList) pointList).FullList;
+                    pointList = ((MSPointList)pointList).FullList;
                 }
                 for (int iPt = 0; iPt < pointList.Count; iPt++)
                 {
                     object label = null;
                     object key;
-                    if (pointList[iPt].X < xMin || pointList[iPt].X > xMax)
-                    {
-                        continue;
-                    }
-                    if (graphPane.XAxis.Scale.IsOrdinal)
+                    if (graphPane.XAxis.Scale.IsOrdinal || graphPane.XAxis.Scale.IsText)
                     {
                         key = iPt;
                     }
                     else
                     {
+                        if (pointList[iPt].X < xMin || pointList[iPt].X > xMax)
+                        {
+                            continue;
+                        }
                         label = key = pointList[iPt].X;
                     }
                     if (graphPane.XAxis.Scale.IsText)
@@ -130,15 +156,7 @@ namespace pwiz.Skyline.EditUI
                     }
                 }
             }
-            try
-            {
-                Clipboard.Clear();
-                Clipboard.SetText(ToTsv(graphPane, curves, rows));
-            }
-            catch (ExternalException)
-            {
-                MessageBox.Show(ClipboardHelper.GetOpenClipboardMessage("Failed setting data to clipboard."), Program.Name);
-            }
+            return ToTsv(graphPane, curves, rows);
         }
 
         private static string ToTsv(GraphPane graphPane, IEnumerable<CurveItem> curves, IDictionary<object, KeyValuePair<object, IList<double?[]>>> dict)
