@@ -31,33 +31,34 @@ namespace pwiz.Topograph.ui.Util
             var columns = GetColumnsSortedByDisplayIndex(dataGridView).Where(c => c.Visible);
             using (var stream = File.OpenWrite(filename))
             {
-                var writer = new StreamWriter(stream);
-                var tab = "";
-                foreach (var column in columns)
+                using (var writer = new StreamWriter(stream))
                 {
-                    writer.Write(tab);
-                    tab = "\t";
-                    writer.Write(column.HeaderText);
-                }
-                writer.WriteLine();
-                for (int iRow = 0; iRow < dataGridView.Rows.Count; iRow++)
-                {
-                    var row = dataGridView.Rows[iRow];
-                    tab = "";
+                    var tab = "";
                     foreach (var column in columns)
                     {
-                        if (!column.Visible)
-                        {
-                            continue;
-                        }
                         writer.Write(tab);
                         tab = "\t";
-                        writer.Write(StripLineBreaks(row.Cells[column.Index].Value));
+                        writer.Write(column.HeaderText);
                     }
                     writer.WriteLine();
+                    for (int iRow = 0; iRow < dataGridView.Rows.Count; iRow++)
+                    {
+                        var row = dataGridView.Rows[iRow];
+                        tab = "";
+                        foreach (var column in columns)
+                        {
+                            if (!column.Visible)
+                            {
+                                continue;
+                            }
+                            writer.Write(tab);
+                            tab = "\t";
+                            writer.Write(StripLineBreaks(row.Cells[column.Index].Value));
+                        }
+                        writer.WriteLine();
+                    }
                 }
             }
-
         }
         public static string StripLineBreaks(object value)
         {

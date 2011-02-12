@@ -258,25 +258,27 @@ namespace pwiz.Topograph.ui.Controls
             }
             using (var stream = File.OpenWrite(filename))
             {
-                var writer = new StreamWriter(stream);
-                var tab = "";
-                foreach (var columnName in columnNames)
+                using (var writer = new StreamWriter(stream))
                 {
-                    writer.Write(tab);
-                    tab = "\t";
-                    writer.Write(columnName);
-                }
-                writer.WriteLine();
-                foreach (var row in rows)
-                {
-                    tab = "";
-                    foreach (var cell in row)
+                    var tab = "";
+                    foreach (var columnName in columnNames)
                     {
                         writer.Write(tab);
                         tab = "\t";
-                        writer.Write(StripLineBreaks(cell));
+                        writer.Write(columnName);
                     }
                     writer.WriteLine();
+                    foreach (var row in rows)
+                    {
+                        tab = "";
+                        foreach (var cell in row)
+                        {
+                            writer.Write(tab);
+                            tab = "\t";
+                            writer.Write(StripLineBreaks(cell));
+                        }
+                        writer.WriteLine();
+                    }
                 }
             }
         }
