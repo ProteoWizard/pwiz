@@ -88,7 +88,7 @@ namespace pwiz.Topograph.ui.Forms
                     {
                         continue;
                     }
-                    vector[(int) (entry.Key * 100)] += entry.Value;
+                    vector[(int) Math.Round(entry.Key * 100)] += entry.Value;
                 }
             }
             var cohortKeys = new List<CohortKey>(values.Keys);
