@@ -221,59 +221,71 @@ namespace pwiz.Skyline.Model
 
             int valCount = 0;
             double valTotal = 0;
-
-            if (replicateIndex.HasValue)
-            {
-                if (replicateIndex >= Results.Count)
-                    return null;
-
-                foreach (var chromInfo in Results[replicateIndex.Value])
-                {
-                    if (chromInfo == null ||
-//                            chromInfo.PeakCountRatio < 0.5 || - caused problems
-                        !chromInfo.StartRetentionTime.HasValue ||
-                        !chromInfo.EndRetentionTime.HasValue)
-                        continue;
-                    double centerTime = (chromInfo.StartRetentionTime.Value + chromInfo.EndRetentionTime.Value) / 2;
-                    valTotal += centerTime;
-                    valCount++;
-                }
-                if (valCount != 0)
-                    return (float)(valTotal / valCount);
-                // No usable data at all.
-                return null;
-            }
-
             // Try to get a scheduling time from non-optimization data, unless this
             // document contains only optimization data.  This is because optimization
             // data may have been taken under completely different chromatographic
-            // condictions.
+            // conditions.
             int valCountOpt = 0;
             double valTotalOpt = 0;
 
-            for (int i = 0; i < Results.Count; i++)
+            if (!replicateIndex.HasValue)
             {
-                var result = Results[i];
-                if (result == null)
-                    continue;
-                var chromatogramSet = document.Settings.MeasuredResults.Chromatograms[i];
-                foreach (var chromInfo in result)
+                // Sum the center times for averaging
+                for (int i = 0; i < Results.Count; i++)
                 {
-                    if (chromInfo == null ||
-//                            chromInfo.PeakCountRatio < 0.5 || - caused problems
-                        !chromInfo.StartRetentionTime.HasValue ||
-                        !chromInfo.EndRetentionTime.HasValue)
-                        continue;
-                    double centerTime = (chromInfo.StartRetentionTime.Value + chromInfo.EndRetentionTime.Value)/2;
+                    var chromatogramSet = document.Settings.MeasuredResults.Chromatograms[i];
                     if (chromatogramSet.OptimizationFunction == null)
-                    {
-                        valTotal += centerTime;
-                        valCount++;                        
-                    }
+                        AddCenterTimes(i, ref valCount, ref valTotal);
                     else
+                        AddCenterTimes(i, ref valCountOpt, ref valTotalOpt);
+                }
+            }
+            else
+            {
+                // Try using the specified index
+                if (replicateIndex.Value < Results.Count)
+                {
+                    AddCenterTimes(replicateIndex.Value, ref valCount, ref valTotal);
+                }
+
+                // If no usable peak found for the specified replicate, try to find a
+                // usable peak in other replicates.
+                if (valCount == 0)
+                {
+                    // Iterate from end to give replicates closer to the end (more recent)
+                    // higher priority over those closer to the beginning, when they are
+                    // equally distant from the original replicate.
+                    int deltaBest = int.MaxValue;
+                    int deltaBestOpt = int.MaxValue;
+                    for (int i = Results.Count - 1; i >= 0; i--)
                     {
-                        valTotalOpt += centerTime;
-                        valCountOpt++;
+                        int deltaRep = Math.Abs(i - replicateIndex.Value);
+                        var chromatogramSet = document.Settings.MeasuredResults.Chromatograms[i];
+                        int deltaBestCompare = (chromatogramSet.OptimizationFunction == null ? deltaBest : deltaBestOpt);
+                        // If the delta of this replicate from the chosen replicate is greater
+                        // than the existing closest replicate, skip it.
+                        if (deltaRep >= deltaBestCompare)
+                            continue;
+
+                        int valCountTmp = 0;
+                        double valTotalTmp = 0;
+                        AddCenterTimes(i, ref valCountTmp, ref valTotalTmp);
+                        if (valCountTmp == 0)
+                            continue;
+
+                        // Make any found peak for this closer replicate the current best.
+                        if (chromatogramSet.OptimizationFunction == null)
+                        {
+                            valCount = valCountTmp;
+                            valTotal = valTotalTmp;
+                            deltaBest = deltaRep;
+                        }
+                        else
+                        {
+                            valCountOpt = valCountTmp;
+                            valTotalOpt = valTotalTmp;
+                            deltaBestOpt = deltaRep;
+                        }
                     }
                 }
             }
@@ -281,11 +293,38 @@ namespace pwiz.Skyline.Model
             // If possible return the scheduling time based on non-optimization data.
             if (valCount != 0)
                 return (float)(valTotal / valCount);
-                // If only optimization was found, then use it.
+            // If only optimization was found, then use it.
             else if (valTotalOpt != 0)
                 return (float)(valTotalOpt / valCountOpt);
             // No usable data at all.
             return null;
+        }
+
+        private void AddCenterTimes(int replicateIndex, ref int valCount, ref double valTotal)
+        {
+            var result = Results[replicateIndex];
+            if (result == null)
+                return;
+
+            foreach (var chromInfo in Results[replicateIndex])
+            {
+                double? centerTime = GetCenterTime(chromInfo);
+                if (!centerTime.HasValue)
+                    continue;
+
+                valTotal += centerTime.Value;
+                valCount++;
+            }            
+        }
+
+        private static double? GetCenterTime(TransitionGroupChromInfo chromInfo)
+        {
+            if (chromInfo == null ||
+//                            chromInfo.PeakCountRatio < 0.5 || - caused problems
+                    !chromInfo.StartRetentionTime.HasValue ||
+                    !chromInfo.EndRetentionTime.HasValue)
+                return null;
+            return (chromInfo.StartRetentionTime.Value + chromInfo.EndRetentionTime.Value) / 2.0;            
         }
 
         private float? GetAverageResultValue(Func<TransitionGroupChromInfo, float?> getVal)

@@ -537,11 +537,11 @@ namespace pwiz.Skyline.FileUI
             if (_methodType == ExportMethodType.Scheduled && HasMultipleSchedulingOptions(documentExport))
             {
                 SchedulingOptionsDlg schedulingOptionsDlg = new SchedulingOptionsDlg(documentExport);
-                if (schedulingOptionsDlg.ShowDialog(this) == DialogResult.OK)
-                {
-                    SchedulingAlgorithm = schedulingOptionsDlg.Algorithm;
-                    SchedulingReplicateIndex = schedulingOptionsDlg.ReplicateIndex;
-                }
+                if (schedulingOptionsDlg.ShowDialog(this) != DialogResult.OK)
+                    return;
+
+                SchedulingAlgorithm = schedulingOptionsDlg.Algorithm;
+                SchedulingReplicateIndex = schedulingOptionsDlg.ReplicateIndex;
             }
 
             if (outputPath == null)
@@ -917,11 +917,11 @@ namespace pwiz.Skyline.FileUI
                 {
                     if (prediction.UseMeasuredRTs)
                         MessageBox.Show(this, "To export a scheduled list, you must first choose " +
-                                        "a retention time regression in Transition Settings / Prediction, or " +
+                                        "a retention time regression in Peptide Settings / Prediction, or " +
                                         "import results for all peptides in the document.", Program.Name);
                     else
                         MessageBox.Show(this, "To export a scheduled list, you must first choose " +
-                                        "a retention time regression in Transition Settings / Prediction.", Program.Name);                    
+                                        "a retention time regression in Peptide Settings / Prediction.", Program.Name);                    
                 }
                 else
                 {

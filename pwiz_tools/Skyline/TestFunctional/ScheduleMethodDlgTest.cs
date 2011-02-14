@@ -18,6 +18,7 @@
  */
 
 using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -91,33 +92,30 @@ namespace pwiz.SkylineTestFunctional
             // Check that by default, Replicate combobox has the last data set showing
             // Use the last data set
 
-            var exportMethodDlg2 = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
-
-            RunUI(() =>
-                      {
-                          exportMethodDlg2.InstrumentType = ExportInstrumentType.Waters;
-                          Assert.AreEqual(ExportStrategy.Single, exportMethodDlg2.ExportStrategy);
-                          Assert.IsNull(exportMethodDlg2.OptimizeType);
-                          Assert.AreEqual(ExportMethodType.Scheduled, exportMethodDlg2.MethodType);
-                      });
-
             string csvPath2 = TestFilesDir.GetTestPath("160109_Mix1_calcurve_scheduled2.csv");
-            RunDlg<SchedulingOptionsDlg>(() => exportMethodDlg2.OkDialog(csvPath2),
-                schedulingOptionsDlg2 =>
-                    {
-                        schedulingOptionsDlg2.Algorithm = ExportSchedulingAlgorithm.Single;
-                        Assert.AreEqual(replicateCount0 - 1, schedulingOptionsDlg2.ReplicateIndex);
-                        schedulingOptionsDlg2.OkDialog();
-                    });
 
-            WaitForClosedForm(exportMethodDlg2);
+            ExportScheduledReplicate(csvPath2, replicateCount0, replicateCount0 - 2, false);
 
             VerifyRetentionTimeChange(csvPath1, csvPath2);
             
             // Document should not have changed
             Assert.AreSame(document, SkylineWindow.Document);
 
-            // Delete last result
+            // Remove a peak from the scheduling replicate
+            RunUI(() => SkylineWindow.RemovePeak(
+                document.GetPathTo((int) SrmDocument.Level.TransitionGroups, 0),
+                document.TransitionGroups.ToArray()[0],
+                null));
+
+            var docRemovedPeak = WaitForDocumentChange(document);
+
+            string csvPath2A = TestFilesDir.GetTestPath("160109_Mix1_calcurve_scheduled2a.csv");
+
+            ExportScheduledReplicate(csvPath2A, replicateCount0, replicateCount0 - 2, true);
+
+            VerifyRetentionTimeChange(csvPath2, csvPath2A);
+
+            // Delete second to last result
             RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, dlg =>
             {
                 var chromatograms = document.Settings.MeasuredResults.Chromatograms;
@@ -126,35 +124,16 @@ namespace pwiz.SkylineTestFunctional
                 dlg.OkDialog();
             });
 
-            var docRemoved1 = WaitForDocumentChange(document);
+            var docRemoved1 = WaitForDocumentChange(docRemovedPeak);
 
-            // Since the last chrmatogram out of the original set just got removed, 
+            // Since the second to last chrmatogram out of the original set just got removed, 
             // there should be the number in the set should be 1 less in the new set...
             int replicateCount1 = docRemoved1.Settings.MeasuredResults.Chromatograms.Count;
             Assert.AreEqual(replicateCount0 - 1, replicateCount1);
 
-            var exportMethodDlg3 = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
-
-            RunUI(() =>
-            {
-                exportMethodDlg3.InstrumentType = ExportInstrumentType.Waters;
-                Assert.AreEqual(ExportStrategy.Single, exportMethodDlg3.ExportStrategy);
-                Assert.IsNull(exportMethodDlg3.OptimizeType);
-                Assert.AreEqual(ExportMethodType.Scheduled, exportMethodDlg3.MethodType);
-            });
-
             string csvPath3 = TestFilesDir.GetTestPath("160109_Mix1_calcurve_scheduled3.csv");
-            RunDlg<SchedulingOptionsDlg>(() => exportMethodDlg3.OkDialog(csvPath3),
-                schedulingOptionsDlg3 =>
-                {
-                    Assert.AreEqual(ExportSchedulingAlgorithm.Single, schedulingOptionsDlg3.Algorithm);
-                    Assert.AreEqual(replicateCount1 - 1, schedulingOptionsDlg3.ReplicateIndex);
 
-                    schedulingOptionsDlg3.ReplicateIndex = 0;
-                    schedulingOptionsDlg3.OkDialog();
-                });
-
-            WaitForClosedForm(exportMethodDlg3);
+            ExportScheduledReplicate(csvPath3, replicateCount1, 0, true);
 
             VerifyRetentionTimeChange(csvPath2, csvPath3);
 
@@ -189,6 +168,36 @@ namespace pwiz.SkylineTestFunctional
             // With only a single replicate scheduling options should not be presented
             Assert.IsNull(FindOpenForm<SchedulingOptionsDlg>());
             Assert.AreEqual(File.ReadAllText(csvPath3), File.ReadAllText(csvPath4));
+        }
+
+        private static void ExportScheduledReplicate(string csvPath2, int replicateCount, int replicateIndex, bool expectSingle)
+        {
+            var exportMethodDlg = ShowDialog<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List));
+
+            RunUI(() =>
+                      {
+                          exportMethodDlg.InstrumentType = ExportInstrumentType.Waters;
+                          Assert.AreEqual(ExportStrategy.Single, exportMethodDlg.ExportStrategy);
+                          Assert.IsNull(exportMethodDlg.OptimizeType);
+                          Assert.AreEqual(ExportMethodType.Scheduled, exportMethodDlg.MethodType);
+                      });
+
+            RunDlg<SchedulingOptionsDlg>(() => exportMethodDlg.OkDialog(csvPath2),
+                                         schedulingOptionsDlg =>
+                                             {
+                                                 if (expectSingle)
+                                                     Assert.AreEqual(schedulingOptionsDlg.Algorithm, ExportSchedulingAlgorithm.Single);
+                                                 else
+                                                    schedulingOptionsDlg.Algorithm = ExportSchedulingAlgorithm.Single;
+
+                                                 Assert.AreEqual(replicateCount - 1, schedulingOptionsDlg.ReplicateIndex);
+                                                 if (replicateIndex != replicateCount - 1)
+                                                    schedulingOptionsDlg.ReplicateIndex = replicateIndex;
+
+                                                 schedulingOptionsDlg.OkDialog();
+                                             });
+
+            WaitForClosedForm(exportMethodDlg);
         }
 
         private static void VerifyRetentionTimeChange(string csvPath1, string csvPath2)
