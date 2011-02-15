@@ -176,37 +176,42 @@ void fillInMetadata(const string& filename, RawFile& rawfile, MSData& msd)
 
     // add file content metadata
 
-    // the +3 offset is because MSOrder_NeutralLoss == -3
-    if (sl->spectraByMSOrder[MSOrder_NeutralLoss+3] > 0)
+    if (sl->numSpectraOfMSOrder(MSOrder_NeutralLoss) > 0)
         msd.fileDescription.fileContent.set(MS_constant_neutral_loss_spectrum);
-    if (sl->spectraByMSOrder[MSOrder_NeutralGain+3] > 0)
+    if (sl->numSpectraOfMSOrder(MSOrder_NeutralGain) > 0)
         msd.fileDescription.fileContent.set(MS_constant_neutral_gain_spectrum);
-    if (sl->spectraByMSOrder[MSOrder_ParentScan+3] > 0)
+    if (sl->numSpectraOfMSOrder(MSOrder_ParentScan) > 0)
         msd.fileDescription.fileContent.set(MS_precursor_ion_spectrum);
 
-    if (sl->spectraByScanType[ScanType_Full] > 0)
-    {
-        int simScanCount = sl->spectraByScanType[ScanType_SIM]; // MS1
-        int srmScanCount = sl->spectraByScanType[ScanType_SRM]; // MS2
+    //if (sl->numSpectraOfScanType(ScanType_Zoom) > 0)
+    //    msd.fileDescription.fileContent.set(MS_zoom_scan);
 
+    int simScanCount = sl->numSpectraOfScanType(ScanType_SIM); // MS1
+    int srmScanCount = sl->numSpectraOfScanType(ScanType_SRM); // MS2
+
+    if (sl->numSpectraOfScanType(ScanType_Full) > 0)
+    {
         // MS can be either Full scans or SIM scans so we compare against the SIM scan count
-        if (sl->spectraByMSOrder[MSOrder_MS+3] > simScanCount)
+        if (sl->numSpectraOfMSOrder(MSOrder_MS) > simScanCount)
             msd.fileDescription.fileContent.set(MS_MS1_spectrum);
 
         // MS2 can be either Full or SRM scans so we compare against the SRM scan count
-        if (sl->spectraByMSOrder[MSOrder_MS2+3] > srmScanCount)
+        if (sl->numSpectraOfMSOrder(MSOrder_MS2) > srmScanCount)
             msd.fileDescription.fileContent.set(MS_MSn_spectrum);
         
         // MS3+ scans are definitely MSn
-        if (std::accumulate(sl->spectraByMSOrder.begin() + MSOrder_MS3 + 3,
-                            sl->spectraByMSOrder.end(), 0) > 0)
-            msd.fileDescription.fileContent.set(MS_MSn_spectrum);
+        for (int msOrder = (int) MSOrder_MS3; msOrder < (int) MSOrder_Count; ++msOrder)
+            if (sl->numSpectraOfMSOrder(static_cast<MSOrder>(msOrder)) > 0)
+            {
+                msd.fileDescription.fileContent.set(MS_MSn_spectrum);
+                break;
+            }
     }
 
     // these scan types should be represented as chromatograms
-    if (sl->spectraByScanType[ScanType_SIM] > 0)
+    if (simScanCount > 0)
         msd.fileDescription.fileContent.set(MS_SIM_chromatogram);
-    if (sl->spectraByScanType[ScanType_SRM] > 0)
+    if (srmScanCount > 0)
         msd.fileDescription.fileContent.set(MS_SRM_chromatogram);
 
     // add instrument configuration metadata

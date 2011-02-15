@@ -44,60 +44,9 @@ namespace detail {
 
 SpectrumList_Thermo::SpectrumList_Thermo(const MSData& msd, RawFilePtr rawfile)
 :   msd_(msd), rawfile_(rawfile),
-    size_(0),
-    indexInitialized_(util::init_once_flag_proxy)
+    size_(0)
 {
-    spectraByScanType.resize(ScanType_Count, 0);
-    spectraByMSOrder.resize(MSOrder_Count+3, 0); // can't use negative index and a std::map would be inefficient
-
-    try
-    {
-        // calculate total spectra count from all controllers
-        for (int controllerType = Controller_MS;
-             controllerType <= Controller_UV;
-             ++controllerType)
-        {
-            // some controllers don't have spectra (even if they have a NumSpectra value!)
-            if (controllerType == Controller_Analog ||
-                controllerType == Controller_ADCard ||
-                controllerType == Controller_UV)
-                continue;
-
-            long numControllers = rawfile_->getNumberOfControllersOfType((ControllerType) controllerType);
-            for (long n=1; n <= numControllers; ++n)
-            {
-                rawfile_->setCurrentController((ControllerType) controllerType, n);
-                long numSpectra = rawfile_->value(NumSpectra);
-                switch (controllerType)
-                {
-                    case Controller_MS:
-                    {
-                        for (long scan=1; scan <= numSpectra; ++scan)
-                        {
-                            ++spectraByScanType[rawfile_->getScanType(scan)];
-                            ++spectraByMSOrder[rawfile_->getMSOrder(scan)+3];
-                        }
-                    }
-                    break;
-
-                    case Controller_PDA:
-                        size_ += numSpectra;
-                        break;
-
-                    default: break;
-                }
-            }
-        }
-    }
-    catch (std::exception& e)
-    {
-        throw std::runtime_error(string("[SpectrumList_Thermo::ctor] ") + e.what());
-    }
-
-    size_ += spectraByScanType[ScanType_Full] +
-             spectraByScanType[ScanType_Zoom] +
-             spectraByScanType[ScanType_Q1MS] +
-             spectraByScanType[ScanType_Q3MS];
+    createIndex();
 }
 
 
@@ -109,7 +58,6 @@ PWIZ_API_DECL size_t SpectrumList_Thermo::size() const
 
 PWIZ_API_DECL const SpectrumIdentity& SpectrumList_Thermo::spectrumIdentity(size_t index) const
 {
-    boost::call_once(indexInitialized_.flag, boost::bind(&SpectrumList_Thermo::createIndex, this));
     if (index>size_)
         throw runtime_error(("[SpectrumList_Thermo::spectrumIdentity()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
@@ -119,7 +67,6 @@ PWIZ_API_DECL const SpectrumIdentity& SpectrumList_Thermo::spectrumIdentity(size
 
 PWIZ_API_DECL size_t SpectrumList_Thermo::find(const string& id) const
 {
-    boost::call_once(indexInitialized_.flag, boost::bind(&SpectrumList_Thermo::createIndex, this));
     try
     {
         size_t scanNumber = lexical_cast<size_t>(id);
@@ -163,12 +110,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const 
 { 
-    boost::call_once(indexInitialized_.flag, boost::bind(&SpectrumList_Thermo::createIndex, this));
     if (index >= size_)
         throw runtime_error(("[SpectrumList_Thermo::spectrum()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
 
-    IndexEntry& ie = index_[index];
+    const IndexEntry& ie = index_[index];
 
     try
     {
@@ -271,7 +217,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
         long msLevel = scanInfo->msLevel();
         ScanType scanType = scanInfo->scanType();
 
-        scanMsLevelCache_[index] = msLevel;
         result->set(MS_ms_level, msLevel);
 
         switch (msLevel)
@@ -387,8 +332,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
                     isolationWidth = rawfile_->getDefaultIsolationWidth(1, msLevel) / 2;
             }
 
-            double isolationMz = scanInfo->precursorMZ(i, false);
-            isolationMzCache_[index] = isolationMz;
+            double isolationMz = ie.isolationMz;
 
             if (msLevel == -1) // precursor ion scan
             {
@@ -405,11 +349,40 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
 
             if (scanInfo->precursorMZ(i) > 0)
             {
-                // add selected ion m/z
-                selectedIon.set(MS_selected_ion_m_z, scanInfo->precursorMZ(i), MS_m_z);
+                double selectedIonMz = scanInfo->precursorMZ(i); // monoisotopic m/z is preferred
+                long precursorCharge = scanInfo->precursorCharge();
+
+                // if an appropriate zoom scan was found, try to get monoisotopic m/z and/or charge from it
+                ScanInfoPtr zoomScanInfo = findPrecursorZoomScan(msLevel-1, isolationMz, index);
+                if (zoomScanInfo.get())
+                {
+                    if (selectedIonMz == isolationMz)
+                    {
+                        try
+                        {
+                            double monoisotopicMz = zoomScanInfo->trailerExtraValueDouble("Monoisotopic M/Z:");
+                            if (monoisotopicMz > 0)
+                                selectedIonMz = monoisotopicMz;
+                        }
+                        catch (RawEgg&)
+                        {}
+                    }
+
+                    if (precursorCharge == 0)
+                    {
+                        try
+                        {
+                            precursorCharge = zoomScanInfo->trailerExtraValueLong("Charge State:");
+                        }
+                        catch (RawEgg&)
+                        {}
+                    }
+                }
+
+                // add selected ion m/z (even if it's still equal to isolation m/z)
+                selectedIon.set(MS_selected_ion_m_z, selectedIonMz, MS_m_z);
 
                 // add charge state if available
-                long precursorCharge = scanInfo->precursorCharge();
                 if (precursorCharge > 0)
                     selectedIon.set(MS_charge_state, precursorCharge);
 
@@ -519,33 +492,56 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
     }
 }
 
-
-PWIZ_API_DECL void SpectrumList_Thermo::createIndex() const
+PWIZ_API_DECL int SpectrumList_Thermo::numSpectraOfScanType(ScanType scanType) const
 {
-    scanMsLevelCache_.resize(size_, 0);
-    isolationMzCache_.resize(size_, 0);
-    index_.reserve(size_);
+    return spectraByScanType[(size_t) scanType];
+}
 
+PWIZ_API_DECL int SpectrumList_Thermo::numSpectraOfMSOrder(MSOrder msOrder) const
+{
+    // the +3 offset is because MSOrder_NeutralLoss == -3
+    return spectraByMSOrder[(size_t) msOrder+3];
+}
+
+PWIZ_API_DECL void SpectrumList_Thermo::createIndex()
+{
+    spectraByScanType.resize(ScanType_Count, 0);
+    spectraByMSOrder.resize(MSOrder_Count+3, 0); // can't use negative index and a std::map would be inefficient
+
+    // calculate total spectra count from all controllers
     for (int controllerType = Controller_MS;
          controllerType <= Controller_UV;
          ++controllerType)
     {
         // some controllers don't have spectra (even if they have a NumSpectra value!)
         if (controllerType == Controller_Analog ||
+            controllerType == Controller_ADCard ||
             controllerType == Controller_UV)
             continue;
 
         long numControllers = rawfile_->getNumberOfControllersOfType((ControllerType) controllerType);
+
+        if (controllerType == Controller_MS && numControllers > 1)
+            throw runtime_error("[SpectrumList_Thermo::createIndex] Unable to handle RAW files with multiple MS controllers, please contact ProteoWizard support!");
+
         for (long n=1; n <= numControllers; ++n)
         {
             rawfile_->setCurrentController((ControllerType) controllerType, n);
+            long numSpectra = rawfile_->value(NumSpectra);
             switch (controllerType)
             {
                 case Controller_MS:
                 {
-                    for (long scan=1, last=rawfile_->value(NumSpectra); scan <= last; ++scan)
+                    for (long scan=1; scan <= numSpectra; ++scan)
                     {
-                        switch (rawfile_->getScanType(scan))
+                        MSOrder msOrder = rawfile_->getMSOrder(scan);
+                        ScanType scanType = rawfile_->getScanType(scan);
+
+                        // the +3 offset is because MSOrder_NeutralLoss == -3
+                        ++spectraByMSOrder[msOrder+3];
+                        ++spectraByScanType[scanType];
+
+                        switch (scanType)
                         {
                             // skip chromatogram-centric scan types
                             case ScanType_SIM:
@@ -565,13 +561,17 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex() const
                                " controllerNumber=" << ie.controllerNumber <<
                                " scan=" << ie.scan;
                         ie.id = oss.str();
+
+                        ie.scanType = scanType;
+                        ie.msOrder = msOrder;
+                        ie.isolationMz = msOrder > MSOrder_MS ? rawfile_->getPrecursorMass(scan) : 0;
                     }
                 }
                 break;
 
                 case Controller_PDA:
                 {
-                    for (long scan=1, last=rawfile_->value(NumSpectra); scan <= last; ++scan)
+                    for (long scan=1; scan <= numSpectra; ++scan)
                     {
                         index_.push_back(IndexEntry());
                         IndexEntry& ie = index_.back();
@@ -586,48 +586,75 @@ PWIZ_API_DECL void SpectrumList_Thermo::createIndex() const
                                " scan=" << ie.scan;
                         ie.id = oss.str();
                     }
-                    break;
                 }
+                break;
+
+                default: break;
             }
         }
     }
+
+    size_ = index_.size();
 }
 
 
 PWIZ_API_DECL size_t SpectrumList_Thermo::findPrecursorSpectrumIndex(int precursorMsLevel, double precursorIsolationMz, size_t index) const
 {
-    // for MSn spectra (n > 1): return first scan with MSn-1
+    // exit early if the precursor MS level doesn't exist (i.e. targeted MSn runs)
+    if (numSpectraOfMSOrder(static_cast<MSOrder>(precursorMsLevel)) == 0)
+        return size_;
+
+    // return first scan with MSn-1 that matches the precursor isolation m/z
 
     while (index > 0)
     {
 	    --index;
-        int& cachedMsLevel = scanMsLevelCache_[index];
-        double& cachedIsolationMz = isolationMzCache_[index];
-        if (cachedMsLevel == 0)
-        {
-            try
-            {
-                ScanInfoPtr scanInfo = rawfile_->getScanInfo(index_[index].scan);
+        const IndexEntry& ie = index_[index];
+        if (ie.msOrder < MSOrder_MS)
+            continue;
 
-                // populate the missing MS level
-	            cachedMsLevel = scanInfo->msLevel();
-
-                // MSn's immediate isolationMz is n-2;
-                // i.e. MS3 has two precursors: index 0 is the MS1 precursor, index 1 is the MS2 precursor
-                cachedIsolationMz = cachedMsLevel > 1 ? scanInfo->precursorMZ(cachedMsLevel - 2, false) : 0;
-            }
-            catch (RawEgg& e)
-            {
-                throw runtime_error(string("[SpectrumList_Thermo::spectrum()] Error retrieving ScanInfo: ") + e.what());
-            }
-        }
-        if (cachedMsLevel == precursorMsLevel &&
+        if (static_cast<int>(ie.msOrder) == precursorMsLevel &&
             (precursorIsolationMz == 0 ||
-             precursorIsolationMz == cachedIsolationMz))
+             precursorIsolationMz == ie.isolationMz))
             return index;
     }
 
     return size_;
+}
+
+
+/*
+    This function tries to find any preceeding zoom scans that may be
+    present for the current scan. This function is useful in getting 
+    the precursor monoisotopic m/z and charge state information from
+    the zoom scans, when the instrument is run in a triple-play mode.
+*/
+PWIZ_API_DECL ScanInfoPtr SpectrumList_Thermo::findPrecursorZoomScan(int precursorMsLevel, double precursorIsolationMz, size_t index) const
+{
+    // exit early if the precursor MS level doesn't exist (i.e. targeted MSn runs) OR no zoom scans exist
+    if (numSpectraOfScanType(ScanType_Zoom) == 0)
+        return ScanInfoPtr();
+
+    // return first zoom scan with MSn-1 that contains the precursor isolation m/z
+
+    while(index > 0)
+    {
+        --index;
+        const IndexEntry& ie = index_[index];
+        if (ie.scanType != ScanType_Zoom || static_cast<int>(ie.msOrder) != precursorMsLevel)
+            continue;
+
+        // Get the scan info and check if the precursor mass of this
+        // MSn scan is with in the window of the zoom scan
+        ScanInfoPtr zoomScanInfo = rawfile_->getScanInfo(index+1);
+        if (precursorIsolationMz < zoomScanInfo->lowMass() ||
+            precursorIsolationMz > zoomScanInfo->highMass())
+            continue;
+
+        return zoomScanInfo;
+    }
+
+    return ScanInfoPtr();
 }
 
 

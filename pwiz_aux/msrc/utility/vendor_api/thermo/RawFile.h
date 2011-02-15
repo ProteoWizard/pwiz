@@ -464,7 +464,7 @@ class PWIZ_API_DECL RawFile
     virtual ScanInfoPtr getScanInfo(long scanNumber) = 0;
 
     virtual MSOrder getMSOrder(long scanNumber) = 0;
-    virtual double getPrecursorMass(long scanNumber) = 0;
+    virtual double getPrecursorMass(long scanNumber, MSOrder msOrder = MSOrder_Any) = 0;
     virtual ScanType getScanType(long scanNumber) = 0;
     virtual ScanFilterMassAnalyzerType getMassAnalyzerType(long scanNumber) = 0;
     virtual ActivationType getActivationType(long scanNumber) = 0;
