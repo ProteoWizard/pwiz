@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -49,11 +50,8 @@ namespace IDPicker
             this.proteinTableForm = proteinTableForm;
             this.spectrumTableForm = spectrumTableForm;
             this.dockPanel = dockPanel;
-
+            
             RefreshUserLayoutList();
-
-            if (_userLayoutList.Count < 2 || _userLayoutList[1].Name != "User Default")
-                ResetUserLayoutSettings();
         }
 
         /// <summary>
@@ -85,8 +83,12 @@ namespace IDPicker
 
         public bool IsReady()
         {
-            return (peptideTableForm != null && proteinTableForm != null
-                    && spectrumTableForm != null);
+            var ready = (peptideTableForm != null && proteinTableForm != null
+                         && spectrumTableForm != null);
+            if (ready)
+                TryResetUserLayoutSettings();
+
+            return ready;
         }
 
         /// <summary>
@@ -108,7 +110,10 @@ namespace IDPicker
             var size = Properties.Settings.Default.IDPickerFormSize;
 
             if (size.IsEmpty)
+            {
                 size = SystemInformation.PrimaryMonitorMaximizedWindowSize;
+                size = new Size(size.Width - 8, size.Height - 8);
+            }
 
             mainForm.Location = location;
             mainForm.Size = size;
@@ -181,16 +186,20 @@ namespace IDPicker
             }
         }
 
-        private void ResetUserLayoutSettings()
+        private void TryResetUserLayoutSettings()
         {
-            _userLayoutList = new List<LayoutProperty>();
-            var customColumnList = new List<ColumnProperty>();
-            customColumnList.AddRange(proteinTableForm.GetCurrentProperties(false));
-            customColumnList.AddRange(peptideTableForm.GetCurrentProperties(false));
-            customColumnList.AddRange(spectrumTableForm.GetCurrentProperties());
+            if (_userLayoutList.Count < 2 || _userLayoutList[1].Name != "User Default")
+            {
+                _userLayoutList = new List<LayoutProperty>();
+                var customColumnList = new List<ColumnProperty>();
+                customColumnList.AddRange(proteinTableForm.GetCurrentProperties(false));
+                customColumnList.AddRange(peptideTableForm.GetCurrentProperties(false));
+                customColumnList.AddRange(spectrumTableForm.GetCurrentProperties());
 
-            SaveNewLayout("System Default", true, false, customColumnList);
-            SaveNewLayout("User Default", true, false, customColumnList);
+                SaveNewLayout("System Default", true, false, customColumnList);
+                SaveNewLayout("User Default", true, false, customColumnList);
+                RefreshUserLayoutList();
+            }
         }
 
         internal void SaveUserLayoutList()
@@ -645,6 +654,8 @@ namespace IDPicker
 
         internal LayoutProperty GetCurrentDefault()
         {
+            if (_userLayoutList.Count < 2 || _userLayoutList[1].Name != "User Default")
+                return null;
             if (_session == null)
                 return _userLayoutList[1];
             

@@ -758,14 +758,20 @@ namespace IDPicker
 
         private void CheckFormExistance()
         {
+            if (spectrumTableForm == null)
+            {
+                spectrumTableForm = new SpectrumTableForm();
+                spectrumTableForm.Show(dockPanel, DockState.DockLeft);
+                spectrumTableForm.SpectrumViewFilter += spectrumTableForm_SpectrumViewFilter;
+                spectrumTableForm.SpectrumViewVisualize += spectrumTableForm_SpectrumViewVisualize;
+            }
+
             if (proteinTableForm == null)
             {
                 proteinTableForm = new ProteinTableForm();
                 proteinTableForm.Show(dockPanel, DockState.DockTop);
                 proteinTableForm.ProteinViewFilter += proteinTableForm_ProteinViewFilter;
                 proteinTableForm.ProteinViewVisualize += proteinTableForm_ProteinViewVisualize;
-                if (_layoutManager != null)
-                    _layoutManager.SetProteinForm(proteinTableForm);
             }
 
             if (peptideTableForm == null)
@@ -773,18 +779,6 @@ namespace IDPicker
                 peptideTableForm = new PeptideTableForm();
                 peptideTableForm.Show(proteinTableForm.Pane, DockPaneAlignment.Right, 0.7);
                 peptideTableForm.PeptideViewFilter += peptideTableForm_PeptideViewFilter;
-                if (_layoutManager != null)
-                    _layoutManager.SetPeptideForm(peptideTableForm);
-            }
-
-            if (spectrumTableForm == null)
-            {
-                spectrumTableForm = new SpectrumTableForm();
-                spectrumTableForm.Show(dockPanel, DockState.DockLeft);
-                spectrumTableForm.SpectrumViewFilter += spectrumTableForm_SpectrumViewFilter;
-                spectrumTableForm.SpectrumViewVisualize += spectrumTableForm_SpectrumViewVisualize;
-                if (_layoutManager != null)
-                    _layoutManager.SetSpectrumForm(spectrumTableForm);
             }
 
             if (modificationTableForm == null)
@@ -799,41 +793,43 @@ namespace IDPicker
                 analysisTableForm = new AnalysisTableForm();
                 analysisTableForm.Show(dockPanel, DockState.Document);
             }
+            if (_layoutManager != null)
+            {
+                _layoutManager.SetProteinForm(proteinTableForm);
+                _layoutManager.SetPeptideForm(peptideTableForm);
+                _layoutManager.SetSpectrumForm(spectrumTableForm);
+                _layoutManager.IsReady();
+            }
         }
 
         internal void LoadLayout(LayoutProperty userLayout)
         {
-            //try
+            if (userLayout == null)
+                return;
+
+            var tempFilepath = Path.GetTempFileName();
+            using (var tempFile = new StreamWriter(tempFilepath, false, Encoding.Unicode))
+                tempFile.Write(userLayout.PaneLocations);
+
+            dockPanel.SuspendLayout();
+            dockPanel.LoadFromXml(tempFilepath, DeserializeForm);
+            dockPanel.ResumeLayout(true, true);
+            File.Delete(tempFilepath);
+
+            if (userLayout.HasCustomColumnSettings &&
+                proteinTableForm != null &&
+                peptideTableForm != null &&
+                spectrumTableForm != null)
             {
-                var tempFilepath = Path.GetTempFileName();
-                using (var tempFile = new StreamWriter(tempFilepath, false, Encoding.Unicode))
-                    tempFile.Write(userLayout.PaneLocations);
+                var columnList = userLayout.SettingsList.Where(o => o.Scope == "ProteinTableForm");
+                proteinTableForm.LoadLayout(columnList.ToList());
 
-                dockPanel.SuspendLayout();
-                dockPanel.LoadFromXml(tempFilepath, DeserializeForm);
-                dockPanel.ResumeLayout(true, true);
-                File.Delete(tempFilepath);
+                columnList = userLayout.SettingsList.Where(o => o.Scope == "PeptideTableForm");
+                peptideTableForm.LoadLayout(columnList.ToList());
 
-                if (userLayout.HasCustomColumnSettings &&
-                    proteinTableForm != null &&
-                    peptideTableForm != null &&
-                    spectrumTableForm != null)
-                {
-                    var columnList = userLayout.SettingsList.Where(o => o.Scope == "ProteinTableForm");
-                    proteinTableForm.LoadLayout(columnList.ToList());
-
-                    columnList = userLayout.SettingsList.Where(o => o.Scope == "PeptideTableForm");
-                    peptideTableForm.LoadLayout(columnList.ToList());
-
-                    columnList = userLayout.SettingsList.Where(o => o.Scope == "SpectrumTableForm");
-                    spectrumTableForm.LoadLayout(columnList.ToList());
-                }
+                columnList = userLayout.SettingsList.Where(o => o.Scope == "SpectrumTableForm");
+                spectrumTableForm.LoadLayout(columnList.ToList());
             }
-            //catch (Exception)
-            //{
-            //    MessageBox.Show("Error encountered while trying to load saved layout.");
-            //}
-
         }
 
         private IDockableForm DeserializeForm(string persistantString)
@@ -896,8 +892,11 @@ namespace IDPicker
 
         private void IDPickerForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            _layoutManager.SaveMainFormSettings();
-            _layoutManager.SaveUserLayoutList();
+            if (_layoutManager != null && _layoutManager.IsReady())
+            {
+                _layoutManager.SaveMainFormSettings();
+                _layoutManager.SaveUserLayoutList();
+            }
         }
 
 
@@ -947,6 +946,39 @@ namespace IDPicker
         {
             var QOptions = new QonverterSettingsManagerForm();
             QOptions.ShowDialog();
+        }
+
+        private void testToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (session == null)
+                return;
+
+            var databaseAnalysis = session.QueryOver<Analysis>().List();
+
+            bool cancel;
+            var qonverterSettings = qonverterSettingsHandler(databaseAnalysis, out cancel);
+            if (cancel)
+                return;
+
+            DataFilter.DropFilters(session.Connection);
+            session.CreateQuery("UPDATE PeptideSpectrumMatch SET QValue = 2").ExecuteUpdate();
+            session.Flush();
+            var qonverter = new Qonverter();
+            qonverterSettingsByAnalysis.ForEach(o => qonverter.SettingsByAnalysis[(int)o.Key.Id] = o.Value.ToQonverterSettings());
+            qonverter.QonversionProgress += progressMonitor.UpdateProgress;
+            //qonverter.LogQonversionDetails = true;
+
+            try
+            {
+                qonverter.Qonvert(Text);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error: " + ex.Message, "Qonversion failed");
+            }
+
+            OpenFiles(new List<string>{Text});
+
         }
     }
 
