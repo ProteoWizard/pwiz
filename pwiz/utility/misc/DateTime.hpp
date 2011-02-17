@@ -77,18 +77,50 @@ namespace pwiz {
 namespace util {
 
 
+/// formats a boost ptime according to a custom format string
+static inline
+std::string format_date_time(const std::string& format, const bpt::ptime& t)
+{
+    bpt::time_facet* output_facet = new bpt::time_facet;
+    output_facet->format(format.c_str());
+    std::ostringstream ss;
+    ss.imbue(std::locale(std::locale::classic(), output_facet));
+    return static_cast<std::ostringstream&>(ss << t).str();
+}
+
+
+/// formats a boost local_date_time according to a custom format string
+static inline
+std::string format_date_time(const std::string& format, const blt::local_date_time& t)
+{
+    blt::local_time_facet* output_facet = new blt::local_time_facet;
+    output_facet->format(format.c_str());
+    std::ostringstream ss;
+    ss.imbue(std::locale(std::locale::classic(), output_facet));
+    return static_cast<std::ostringstream&>(ss << t).str();
+}
+
+
+/// formats a boost time duration according to a custom format string
+static inline
+std::string format_date_time(const std::string& format, const bpt::time_duration& t)
+{
+    bpt::time_facet* output_facet = new bpt::time_facet;
+    output_facet->format(format.c_str());
+    std::ostringstream ss;
+    ss.imbue(std::locale(std::locale::classic(), output_facet));
+    return static_cast<std::ostringstream&>(ss << t).str();
+}
+
+
 /// returns a string representation suitable for an xsd:datetime attribute;
 /// output string is UTC time (as denoted by the 'Z' suffix)
 template<class time_type>
 inline
 std::string encode_xml_datetime(const time_type& t)
 {
-    blt::local_time_facet* output_facet = new blt::local_time_facet;
-    output_facet->format("%Y-%m-%dT%H:%M:%SZ"); // 2007-06-27T15:23:45Z
-    std::stringstream ss;
-    ss.imbue(std::locale(std::locale::classic(), output_facet));
-    ss << blt::local_date_time(t.utc_time(), blt::time_zone_ptr());
-    return ss.str();
+    // 2007-06-27T15:23:45Z
+    return format_date_time("%Y-%m-%dT%H:%M:%SZ", blt::local_date_time(t.utc_time(), blt::time_zone_ptr()));
 }
 
 
