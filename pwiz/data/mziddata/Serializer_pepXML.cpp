@@ -537,9 +537,16 @@ void write_search_hit(XMLWriter& xmlWriter,
         if (!sii.peptidePtr->modification.empty())
             write_modification_info(xmlWriter, sii);
 
+        using namespace boost::xpressive;
+
+        // numeric CVParams and UserParams are written regardless
+        sregex numericRegex = sregex::compile("\\d+(?:\\.\\d*)");
+        smatch what;
+
         BOOST_FOREACH(const CVParam& cvParam, sii.cvParams)
         {
-            if (cvIsA(cvParam.cvid, MS_search_engine_specific_score_for_peptides))
+            if (cvIsA(cvParam.cvid, MS_search_engine_specific_score_for_peptides) ||
+                regex_match(cvParam.value, what, numericRegex))
             {
                 const string& preferredScoreName = ScoreTranslator::instance->translate(analysisSoftwareCVID, cvParam.cvid);
 
@@ -549,6 +556,15 @@ void write_search_hit(XMLWriter& xmlWriter,
                 xmlWriter.startElement("search_score", attributes, XMLWriter::EmptyElement);
             }
         }
+
+        BOOST_FOREACH(const UserParam& userParam, sii.userParams)
+            if (regex_match(userParam.value, what, numericRegex))
+            {
+                attributes.clear();
+                attributes.add("name", userParam.name);
+                attributes.add("value", userParam.value);
+                xmlWriter.startElement("search_score", attributes, XMLWriter::EmptyElement);
+            }
     }
     xmlWriter.endElement();
 }
@@ -1178,6 +1194,7 @@ struct HandlerSearchResults : public SAXParser::Handler
             UserParam& score = sii.userParams.back();
             swap(scoreName, score.name);
             getAttribute(attributes, "value", score.value);
+            score.type = "xsd:float";
         }
         else
         {

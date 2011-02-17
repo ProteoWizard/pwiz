@@ -345,7 +345,8 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sii->set(MS_Mascot_identity_threshold, 11);
             sii->set(MS_Mascot_homology_threshold, 21);
             sii->set(MS_Mascot_expectation_value, 0.01);
-            
+            sii->userParams.push_back(UserParam("an extra score", "1.2345", "xsd:float"));
+
             pe = PeptideEvidencePtr(new PeptideEvidence);
             pe->dbSequencePtr = mzid.sequenceCollection.dbSequences[0];
             pe->id = pe->dbSequencePtr->accession + "_PEP_" + lexical_cast<string>(++distinctPeptides);
@@ -391,6 +392,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sii->set(MS_Mascot_identity_threshold, 11);
             sii->set(MS_Mascot_homology_threshold, 21);
             sii->set(MS_Mascot_expectation_value, 0.1);
+            sii->userParams.push_back(UserParam("an extra score", "1.2345", "xsd:float"));
             
             pe = PeptideEvidencePtr(new PeptideEvidence);
             pe->dbSequencePtr = mzid.sequenceCollection.dbSequences[0];
@@ -437,6 +439,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sii->set(MS_Mascot_identity_threshold, 11);
             sii->set(MS_Mascot_homology_threshold, 21);
             sii->set(MS_Mascot_expectation_value, 0.1);
+            sii->userParams.push_back(UserParam("an extra score", "1.2345", "xsd:float"));
 
             // reuse the same peptide evidence from variant 1
             sii->peptideEvidence.push_back(pe);
@@ -480,7 +483,8 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sii->set(MS_Mascot_identity_threshold, 12);
             sii->set(MS_Mascot_homology_threshold, 22);
             sii->set(MS_Mascot_expectation_value, 0.02);
-            
+            sii->userParams.push_back(UserParam("an extra score", "1.2345", "xsd:float"));
+
             pe = PeptideEvidencePtr(new PeptideEvidence);
             pe->dbSequencePtr = mzid.sequenceCollection.dbSequences[0];
             pe->id = pe->dbSequencePtr->accession + "_PEP_" + lexical_cast<string>(++distinctPeptides);
@@ -525,7 +529,8 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sii->set(MS_Mascot_identity_threshold, 12);
             sii->set(MS_Mascot_homology_threshold, 22);
             sii->set(MS_Mascot_expectation_value, 0.2);
-            
+            sii->userParams.push_back(UserParam("an extra score", "2.3456", "xsd:float"));
+
             pe = PeptideEvidencePtr(new PeptideEvidence);
             pe->dbSequencePtr = mzid.sequenceCollection.dbSequences[0];
             pe->id = pe->dbSequencePtr->accession + "_PEP_" + lexical_cast<string>(++distinctPeptides);
@@ -534,7 +539,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             pe->post = "K";
             pe->missedCleavages = 1;
             sii->peptideEvidence.push_back(pe);
-            
+
             pe = PeptideEvidencePtr(new PeptideEvidence);
             pe->dbSequencePtr = mzid.sequenceCollection.dbSequences[1];
             pe->id = pe->dbSequencePtr->accession + "_PEP_" + lexical_cast<string>(distinctPeptides);
@@ -573,6 +578,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sii->set(MS_Mascot_identity_threshold, 13);
             sii->set(MS_Mascot_homology_threshold, 23);
             sii->set(MS_Mascot_expectation_value, 0.03);
+            sii->userParams.push_back(UserParam("an extra score", "3.", "xsd:float"));
             
             sii->peptideEvidence = sil->spectrumIdentificationResult[1]->spectrumIdentificationItem[0]->peptideEvidence;
 
@@ -595,6 +601,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sii->set(MS_Mascot_identity_threshold, 13);
             sii->set(MS_Mascot_homology_threshold, 23);
             sii->set(MS_Mascot_expectation_value, 0.3);
+            sii->userParams.push_back(UserParam("an extra score", "4.56", "xsd:float"));
 
             sii->peptideEvidence = sil->spectrumIdentificationResult[1]->spectrumIdentificationItem[1]->peptideEvidence;
 

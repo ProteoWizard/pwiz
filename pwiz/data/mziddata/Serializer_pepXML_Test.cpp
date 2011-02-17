@@ -107,6 +107,7 @@ void testTranslation(const string& str)
     unit_assert(bal::contains(str, "name=\"homologyscore\""));
     unit_assert(bal::contains(str, "name=\"identityscore\""));
     unit_assert(bal::contains(str, "name=\"expect\""));
+    unit_assert(bal::contains(str, "name=\"an extra score\""));
 
     // test that nativeID is preserved
     unit_assert(bal::contains(str, "spectrumNativeID=\"controllerType=0 controllerNumber=1 scan=420\""));
