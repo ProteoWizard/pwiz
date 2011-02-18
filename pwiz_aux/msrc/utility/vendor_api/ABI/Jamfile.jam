@@ -131,14 +131,6 @@ install install_pwiz_vendor_api_abi_app
       ClearCore.Storage.dll
     ;
 }
-else if [ path.exists $(ProteinPilot)\\ClearCore.dll ]
-{
-# for application build and install
-install install_pwiz_vendor_api_abi_app
-    : $(ProteinPilot)\\ClearCore.dll
-      $(ProteinPilot)\\ClearCore.Storage.dll
-    ;
-}
 else
 {
 
