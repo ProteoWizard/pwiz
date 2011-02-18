@@ -31,7 +31,7 @@
 #include <boost/iostreams/filter/zlib.hpp>
 #include <pwiz/data/proteome/Serializer_FASTA.hpp>
 
-BOOST_CLASS_IMPLEMENTATION(boost::atomic<size_t>, boost::serialization::primitive_type)
+BOOST_CLASS_IMPLEMENTATION(boost::atomic_uint32_t, boost::serialization::primitive_type)
 BOOST_CLASS_IMPLEMENTATION(boost::atomic_uint64_t, boost::serialization::primitive_type)
 
 namespace freicore

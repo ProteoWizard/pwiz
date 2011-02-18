@@ -79,7 +79,7 @@ namespace myrimatch
             return *this;
         }
 
-        boost::atomic<size_t> numProteinsDigested;
+        boost::atomic_uint32_t numProteinsDigested;
 		boost::atomic_uint64_t numCandidatesGenerated;
 		boost::atomic_uint64_t numCandidatesQueried;
 		boost::atomic_uint64_t numComparisonsDone;

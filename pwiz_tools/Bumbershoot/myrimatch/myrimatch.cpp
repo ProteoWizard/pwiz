@@ -612,7 +612,7 @@ namespace myrimatch
 	void ExecuteSearch()
 	{
 		size_t numProcessors = (size_t) g_numWorkers;
-        size_t numProteins = proteins.size();
+        boost::uint32_t numProteins = (boost::uint32_t) proteins.size();
 
 		for (size_t i=0; i < numProteins; ++i)
 			proteinTasks.enqueue(i);
