@@ -31,6 +31,9 @@
 #include <boost/iostreams/filter/zlib.hpp>
 #include <pwiz/data/proteome/Serializer_FASTA.hpp>
 
+BOOST_CLASS_IMPLEMENTATION(boost::atomic<size_t>, boost::serialization::primitive_type)
+BOOST_CLASS_IMPLEMENTATION(boost::atomic_uint64_t, boost::serialization::primitive_type)
+
 namespace freicore
 {
     
@@ -48,10 +51,6 @@ namespace myrimatch
 			len = (int) g_rtConfig->cfgStr.length();
 			MPI_Send( &len,									1,		MPI_INT,			p+1,	0x00, MPI_COMM_WORLD );
 			MPI_Send( (void*) g_rtConfig->cfgStr.c_str(),	len,	MPI_CHAR,			p+1,	0x01, MPI_COMM_WORLD );
-
-			len = (int) g_residueMap->cfgStr.length();
-			MPI_Send( &len,									1,		MPI_INT,			p+1,	0x02, MPI_COMM_WORLD );
-			MPI_Send( (void*) g_residueMap->cfgStr.c_str(),	len,	MPI_CHAR,			p+1,	0x03, MPI_COMM_WORLD );
 		}
 	}
 
@@ -63,12 +62,6 @@ namespace myrimatch
 		g_rtConfig->cfgStr.resize( len );
 		MPI_Recv( &g_rtConfig->cfgStr[0],					len,	MPI_CHAR,			0,		0x01, MPI_COMM_WORLD, &st );
 		g_rtConfig->initializeFromBuffer( g_rtConfig->cfgStr, "\r\n#" );
-
-		g_residueMap = new ResidueMap();
-		MPI_Recv( &len,										1,		MPI_INT,			0,		0x02, MPI_COMM_WORLD, &st );
-		g_residueMap->cfgStr.resize( len );
-		MPI_Recv( &g_residueMap->cfgStr[0],					len,	MPI_CHAR,			0,		0x03, MPI_COMM_WORLD, &st );
-		g_residueMap->initializeFromBuffer( g_residueMap->cfgStr );
 	}
 
 	int ReceivePreparedSpectraFromChildProcesses()
@@ -323,7 +316,7 @@ namespace myrimatch
 
 				float spectraPerSec = float(i) / totalPrepareTime;
 				float estimatedTimeRemaining = float(numSpectra-i) / spectraPerSec;
-				cout << g_hostString << " has prepared " << i << " of " << numSpectra << " spectra; " << spectraPerSec <<
+				cout << "Prepared " << i << " of " << numSpectra << " spectra; " << spectraPerSec <<
 						" per second, " << estimatedTimeRemaining << " seconds remaining." << endl;
 				lastUpdate = totalPrepareTime;
 			}
@@ -415,7 +408,7 @@ namespace myrimatch
 		string pack = compressedStream.str();
 		int len = (int) pack.length();
 
-		cout << g_hostString << ": " << numSpectra << " spectra packed into " << len << " bytes." << endl;
+		cout << "Packed " << numSpectra << " spectra into " << len << " bytes." << endl;
 
 		Timer PrepareTime( true );
 		float totalPrepareTime = 0.01f;
@@ -440,8 +433,8 @@ namespace myrimatch
 			{
 				float nodesPerSec = float(p+1) / totalPrepareTime;
 				float estimatedTimeRemaining = float(g_numChildren-p-1) / nodesPerSec;
-				cout << g_hostString << " has sent spectra to " << p+1 << " of " << g_numChildren << " worker nodes; " << nodesPerSec <<
-						" per second, " << estimatedTimeRemaining << " seconds remaining." << endl;
+				cout << "Sent spectra to " << p+1 << " of " << g_numChildren << " worker nodes; " << round(nodesPerSec, 1) <<
+						" per second, " << round(estimatedTimeRemaining) << " seconds remaining." << endl;
 				lastUpdate = totalPrepareTime;
 			}
 		}
@@ -455,8 +448,7 @@ namespace myrimatch
 
 		vector< simplethread_handle_t > workerHandles;
 
-		int sourceProcess, batchSize, numChildQueries;
-		int numQueries = 0;
+		int sourceProcess, batchSize;
 		bool IsFinished = false;
 
 		Timer searchTime( true );
@@ -496,8 +488,6 @@ namespace myrimatch
 			#endif
 
 			MPI_Recv( &sourceProcess,			1,		MPI_INT,	MPI_ANY_SOURCE,	0xFF, MPI_COMM_WORLD, &st );
-			MPI_Recv( &numChildQueries,			1,		MPI_INT,	sourceProcess,	0xEE, MPI_COMM_WORLD, &st );
-			numQueries += numChildQueries;
 
 			if( i < numProteins )
 			{
@@ -539,17 +529,12 @@ namespace myrimatch
 					IsFinished = true;
 
 				float proteinsPerSec = float(i+1) / totalSearchTime;
-				float estimatedTimeRemaining = float(numProteins-i) / proteinsPerSec;
+				bpt::time_duration estimatedTimeRemaining(0, 0, round((numProteins - i) / proteinsPerSec));
 
-				cout << g_hostString << " has searched " << i << " of " <<	numProteins << " proteins; " << proteinsPerSec <<
-						" per second, " << totalSearchTime << " elapsed, " << estimatedTimeRemaining << " remaining." << endl;
-					
-				//cout << threadInfo->workerHostString << " has searched " << curProtein << " of " <<	threadInfo->endIndex+1 <<
-				//		" proteins " << i+1 << "; " << proteinsPerSec << " per second, " << estimatedTimeRemaining << " seconds remaining." << endl;
-				//float candidatesPerSec = numQueries / totalSearchTime;
-				//estimatedTimeRemaining = float( numCandidates - numQueries ) / candidatesPerSec;
-				//cout << g_hostString << " has made " << numQueries << " of about " << numCandidates << " comparisons; " <<
-				//		candidatesPerSec << " per second, " << estimatedTimeRemaining << " seconds remaining." << endl;
+		        cout << "Searched " << i << " of " << numProteins << " proteins; "
+                     << round(proteinsPerSec) << " per second, "
+                     << format_date_time("%H:%M:%S", bpt::time_duration(0, 0, round(totalSearchTime))) << " elapsed, "
+                     << format_date_time("%H:%M:%S", estimatedTimeRemaining) << " remaining." << endl;
 
 				lastUpdate = totalSearchTime;
 			}
@@ -558,12 +543,11 @@ namespace myrimatch
 		return 0;
 	}
 
-	int ReceiveProteinBatchFromRootProcess( int lastQueryCount )
+	int ReceiveProteinBatchFromRootProcess()
 	{
 		int batchSize;
 
 		MPI_Ssend( &g_pid,			1,				MPI_INT,	0,	0xFF, MPI_COMM_WORLD );
-		MPI_Ssend( &lastQueryCount,	1,				MPI_INT,	0,	0xEE, MPI_COMM_WORLD );
 
 		MPI_Recv( &batchSize,		1,				MPI_INT,	0,	0x99, MPI_COMM_WORLD, &st );
 
@@ -617,7 +601,7 @@ namespace myrimatch
 		return 1; // don't expect another batch
 	}
 
-	int TransmitResultsToRootProcess( const searchStats& stats )
+	int TransmitResultsToRootProcess()
 	{
 		int numSpectra = (int) spectra.size();
 
@@ -625,7 +609,7 @@ namespace myrimatch
 		binary_oarchive packArchive( packStream );
 
 		packArchive & numSpectra;
-		packArchive & stats;
+		packArchive & searchStatistics;
 		for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
 		{
 			Spectrum* s = (*sItr);
@@ -663,7 +647,7 @@ namespace myrimatch
 		return 0;
 	}
 
-	int ReceiveResultsFromChildProcesses(searchStats& overallSearchStats, bool firstBatch = false)
+	int ReceiveResultsFromChildProcesses(bool firstBatch = false)
 	{
 		int numSpectra;
 		int sourceProcess;
@@ -671,8 +655,6 @@ namespace myrimatch
 		Timer ResultsTime( true );
 		float totalResultsTime = 0.01f;
 		float lastUpdate = 0.0f;
-
-        searchStats batchStats;
 
 		for( int p=0; p < g_numChildren; ++p )
 		{
@@ -702,18 +684,18 @@ namespace myrimatch
 
 			try
 			{
-				searchStats childSearchStats;
+				SearchStatistics childSearchStats;
 				packArchive & numSpectra;
 				packArchive & childSearchStats;
                 if(firstBatch)
                 {
-				    overallSearchStats = overallSearchStats + childSearchStats;
+				    searchStatistics = searchStatistics + childSearchStats;
                 }
                 else 
                 {
-                    overallSearchStats.numCandidatesQueried += childSearchStats.numCandidatesQueried;
-                    overallSearchStats.numComparisonsDone += childSearchStats.numComparisonsDone;
-                    overallSearchStats.numCandidatesSkipped += childSearchStats.numCandidatesSkipped;
+                    searchStatistics.numCandidatesQueried += childSearchStats.numCandidatesQueried;
+                    searchStatistics.numComparisonsDone += childSearchStats.numComparisonsDone;
+                    searchStatistics.numCandidatesSkipped += childSearchStats.numCandidatesSkipped;
                 }
 
 				//cout << g_hostString << " is unpacking results for " << numSpectra << " spectra." << endl;
@@ -725,8 +707,12 @@ namespace myrimatch
 					rootSpectrum->numTargetComparisons += childSpectrum->numTargetComparisons;
                     rootSpectrum->numDecoyComparisons += childSpectrum->numDecoyComparisons;
 					rootSpectrum->processingTime += childSpectrum->processingTime;
-					for( Spectrum::SearchResultSetType::iterator itr = childSpectrum->resultSet.begin(); itr != childSpectrum->resultSet.end(); ++itr )
-						rootSpectrum->resultSet.add( *itr );
+
+                    rootSpectrum->resultsByCharge.resize(childSpectrum->resultsByCharge.size());
+                    for (size_t z=0; z < childSpectrum->resultsByCharge.size(); ++z)
+                        BOOST_FOREACH(const Spectrum::SearchResultPtr& result, childSpectrum->resultsByCharge[z])
+						    rootSpectrum->resultsByCharge[z].add( result );
+
 					for(map<int,int>::iterator itr = childSpectrum->mvhScoreDistribution.begin(); itr != childSpectrum->mvhScoreDistribution.end(); ++itr)
 						rootSpectrum->mvhScoreDistribution[(*itr).first] += (*itr).second;
 					for(map<int,int>::iterator itr = childSpectrum->mzFidelityDistribution.begin(); itr != childSpectrum->mzFidelityDistribution.end(); ++itr)
@@ -751,7 +737,7 @@ namespace myrimatch
 			{
 				float nodesPerSec = float(p+1) / totalResultsTime;
 				float estimatedTimeRemaining = float(g_numChildren-p-1) / nodesPerSec;
-				cout << g_hostString << " has received results from " << p+1 << " of " << g_numChildren << " worker nodes; " << nodesPerSec <<
+				cout << "Received results from " << p+1 << " of " << g_numChildren << " worker nodes; " << nodesPerSec <<
 						" per second, " << estimatedTimeRemaining << " seconds remaining." << endl;
 				lastUpdate = totalResultsTime;
 			}

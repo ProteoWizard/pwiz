@@ -22,8 +22,10 @@
 
 #include "stdafx.h"
 #include "myrimatch.h"
+#include "boost/lockfree/fifo.hpp"
 #include "pwiz/data/msdata/Version.hpp"
 #include "pwiz/data/proteome/Version.hpp"
+#include "pwiz/utility/misc/DateTime.hpp"
 #include "PTMVariantList.h"
 #include "svnrev.hpp"
 
@@ -31,21 +33,18 @@ namespace freicore
 {
 namespace myrimatch
 {
-	WorkerThreadMap					g_workerThreads;
-	simplethread_mutex_t			resourceMutex;
-
-	vector< double>					relativePeakCount;
-	vector< simplethread_mutex_t >	spectraMutexes;
-
 	proteinStore					proteins;
+    boost::lockfree::fifo<size_t>   proteinTasks;
+    SearchStatistics                searchStatistics;
+
 	SpectraList						spectra;
-	SpectraMassMapList				spectraMassMapsByChargeState;
-	float							totalSequenceComparisons;
+    SpectraMassMapList				avgSpectraByChargeState;
+	SpectraMassMapList				monoSpectraByChargeState;
 
 	RunTimeConfig*					g_rtConfig;
 
-    int Version::Major()                {return 1;}
-    int Version::Minor()                {return 6;}
+    int Version::Major()                {return 2;}
+    int Version::Minor()                {return 0;}
     int Version::Revision()             {return SVN_REV;}
     string Version::LastModified()      {return SVN_REVDATE;}
     string Version::str()               
@@ -69,7 +68,6 @@ namespace myrimatch
 
 		g_rtConfig = new RunTimeConfig;
 		g_rtSharedConfig = (BaseRunTimeConfig*) g_rtConfig;
-		g_residueMap = new ResidueMap;
 		g_endianType = GetHostEndianType();
 		g_numWorkers = GetNumProcessors();
 
@@ -99,19 +97,11 @@ namespace myrimatch
 				{
 					if( g_rtConfig->initializeFromFile( args[i+1] ) )
 					{
-						cerr << g_hostString << " could not find runtime configuration at \"" << args[i+1] << "\"." << endl;
+						cerr << "Unable to find runtime configuration at \"" << args[i+1] << "\"." << endl;
 						return 1;
 					}
 					args.erase( args.begin() + i );
 
-				} else if( args[i] == "-rescfg" && i+1 <= args.size() )
-				{
-					if( g_residueMap->initializeFromFile( args[i+1] ) )
-					{
-						cerr << g_hostString << " could not find residue masses at \"" << args[i+1] << "\"." << endl;
-						return 1;
-					}
-					args.erase( args.begin() + i );
 				} else
 					continue;
 
@@ -129,15 +119,7 @@ namespace myrimatch
 			{
 				if( g_rtConfig->initializeFromFile() )
 				{
-					cerr << g_hostString << " could not find the default configuration file (hard-coded defaults in use)." << endl;
-				}
-			}
-
-			if( !g_residueMap->initialized() )
-			{
-				if( g_residueMap->initializeFromFile() )
-				{
-					cerr << g_hostString << " could not find the default residue masses file (hard-coded defaults in use)." << endl;
+					cerr << "Could not find the default configuration file (hard-coded defaults in use)." << endl;
 				}
 			}
 
@@ -195,7 +177,6 @@ namespace myrimatch
 				if( args[i] == "-dump" )
 				{
 					g_rtConfig->dump();
-					g_residueMap->dump();
 					args.erase( args.begin() + i );
 					--i;
 				}
@@ -223,77 +204,81 @@ namespace myrimatch
 			return 0;
 
 		// Determine the maximum seen charge state
-		for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
-		    g_rtConfig->maxChargeStateFromSpectra = max((*sItr)->id.charge, g_rtConfig->maxChargeStateFromSpectra);
+		BOOST_FOREACH(Spectrum* s, spectra)
+		    g_rtConfig->maxChargeStateFromSpectra = max(s->possibleChargeStates.back(), g_rtConfig->maxChargeStateFromSpectra);
 
 		g_rtConfig->maxFragmentChargeState = ( g_rtConfig->MaxFragmentChargeState > 0 ? g_rtConfig->MaxFragmentChargeState+1 : g_rtConfig->maxChargeStateFromSpectra );
-		g_rtConfig->PrecursorMassTolerance.clear();
+
+		g_rtConfig->monoPrecursorMassTolerance.clear();
+        g_rtConfig->avgPrecursorMassTolerance.clear();
 		for( int z=1; z <= g_rtConfig->maxChargeStateFromSpectra; ++z )
-			g_rtConfig->PrecursorMassTolerance.push_back( g_rtConfig->PrecursorMzTolerance * z );
+        {
+            g_rtConfig->monoPrecursorMassTolerance.push_back( MZTolerance(g_rtConfig->MonoPrecursorMzTolerance.value * z,
+                                                                          g_rtConfig->MonoPrecursorMzTolerance.units) );
+			g_rtConfig->avgPrecursorMassTolerance.push_back( MZTolerance(g_rtConfig->AvgPrecursorMzTolerance.value * z,
+                                                                         g_rtConfig->AvgPrecursorMzTolerance.units) );
+        }
 
 		//size_t numSpectra = spectra.size();
 
 		// Create a map of precursor masses to the spectrum indices
-		spectraMassMapsByChargeState.resize( g_rtConfig->maxChargeStateFromSpectra );
+		monoSpectraByChargeState.resize( g_rtConfig->maxChargeStateFromSpectra );
+        avgSpectraByChargeState.resize( g_rtConfig->maxChargeStateFromSpectra );
 		for( int z=0; z < g_rtConfig->maxChargeStateFromSpectra; ++z )
-		{
-			for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
-			{
-				Spectrum* s = *sItr;
+			BOOST_FOREACH(Spectrum* s, spectra)
+				BOOST_FOREACH(const PrecursorMassHypothesis& p, s->precursorMassHypotheses)
+                    if (p.charge != z+1) continue;
+                    else if (g_rtConfig->precursorMzToleranceRule == MzToleranceRule_Mono ||
+                             p.massType == MassType_Monoisotopic && g_rtConfig->precursorMzToleranceRule != MzToleranceRule_Avg)
+                        monoSpectraByChargeState[z].insert(make_pair(p.mass, make_pair(s, p)));
+                    else
+                        avgSpectraByChargeState[z].insert(make_pair(p.mass, make_pair(s, p)));
 
-				if( s->id.charge-1 != z )
-					continue;
-
-				for( size_t i=0; i < s->mOfPrecursorList.size(); ++i )
-					spectraMassMapsByChargeState[z].insert( make_pair( s->mOfPrecursorList[i], sItr ) );
-					//spectraMassMapsByChargeState[z].insert( pair< float, SpectraList::iterator >( s->mOfPrecursor, sItr ) );
-				//cout << i << " " << (*sItr)->mOfPrecursor << endl;
-			}
-		}
-
-		g_rtConfig->curMinSequenceMass = spectra.front()->mOfPrecursor;
-		g_rtConfig->curMaxSequenceMass = 0;
+		g_rtConfig->curMinPeptideMass = spectra.front()->precursorMassHypotheses.front().mass;
+		g_rtConfig->curMaxPeptideMass = 0;
 
 		// find the smallest and largest precursor masses
 		size_t maxPeakBins = (size_t) spectra.front()->totalPeakSpace;
-		for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
+		BOOST_FOREACH(Spectrum* s, spectra)
 		{
-			if( (*sItr)->mOfPrecursor < g_rtConfig->curMinSequenceMass )
-				g_rtConfig->curMinSequenceMass = (*sItr)->mOfPrecursor;
+            g_rtConfig->curMinPeptideMass = min(g_rtConfig->curMinPeptideMass, s->precursorMassHypotheses.front().mass);
+            g_rtConfig->curMaxPeptideMass = max(g_rtConfig->curMaxPeptideMass, s->precursorMassHypotheses.back().mass);
 
-			if( (*sItr)->mOfPrecursor > g_rtConfig->curMaxSequenceMass )
-				g_rtConfig->curMaxSequenceMass = (*sItr)->mOfPrecursor;
-
-			double fragMassError = g_rtConfig->fragmentMzToleranceUnits == PPM ? ((*sItr)->totalPeakSpace/2.0 * g_rtConfig->FragmentMzTolerance * pow(10.0,-6)) : g_rtConfig->FragmentMzTolerance;
-			size_t totalPeakBins = (size_t) round( (*sItr)->totalPeakSpace / ( fragMassError * 2.0 ) );
+            double fragMassError = g_rtConfig->FragmentMzTolerance.units == MZTolerance::PPM ? (s->totalPeakSpace/2.0 * g_rtConfig->FragmentMzTolerance.value * 1e-6) : g_rtConfig->FragmentMzTolerance.value;
+			size_t totalPeakBins = (size_t) round( s->totalPeakSpace / ( fragMassError * 2.0 ) );
 			if( totalPeakBins > maxPeakBins )
 				maxPeakBins = totalPeakBins;
 		}
 
-		g_rtConfig->curMinSequenceMass -= (g_rtConfig->precursorMzToleranceUnits == PPM ? (g_rtConfig->curMinSequenceMass * g_rtConfig->PrecursorMassTolerance.back() * pow(10.0,-6)) : g_rtConfig->PrecursorMassTolerance.back());
-		g_rtConfig->curMaxSequenceMass += (g_rtConfig->precursorMzToleranceUnits == PPM ? (g_rtConfig->curMaxSequenceMass * g_rtConfig->PrecursorMassTolerance.back() * pow(10.0,-6)) : g_rtConfig->PrecursorMassTolerance.back());
+        // adjust for precursor tolerance
+		g_rtConfig->curMinPeptideMass -= g_rtConfig->AvgPrecursorMzTolerance;
+		g_rtConfig->curMaxPeptideMass += g_rtConfig->AvgPrecursorMzTolerance;
 
-        // set the effective minimum and maximum sequence masses based on config and precursors
-        g_rtConfig->curMinSequenceMass = max( g_rtConfig->curMinSequenceMass, g_rtConfig->MinSequenceMass );
-        g_rtConfig->curMaxSequenceMass = min( g_rtConfig->curMaxSequenceMass, g_rtConfig->MaxSequenceMass );
+        // adjust for DynamicMods
+        g_rtConfig->curMinPeptideMass = min( g_rtConfig->curMinPeptideMass, g_rtConfig->curMinPeptideMass - g_rtConfig->largestPositiveDynamicModMass );
+        g_rtConfig->curMaxPeptideMass = max( g_rtConfig->curMaxPeptideMass, g_rtConfig->curMaxPeptideMass - g_rtConfig->largestNegativeDynamicModMass );
+
+        // adjust for user settings
+        g_rtConfig->curMinPeptideMass = max( g_rtConfig->curMinPeptideMass, g_rtConfig->MinPeptideMass );
+        g_rtConfig->curMaxPeptideMass = min( g_rtConfig->curMaxPeptideMass, g_rtConfig->MaxPeptideMass );
 
         double minResidueMass = AminoAcid::Info::record('G').residueFormula.monoisotopicMass();
         double maxResidueMass = AminoAcid::Info::record('W').residueFormula.monoisotopicMass();
 
         // calculate minimum length of a peptide made entirely of tryptophan over the minimum mass
-        int curMinCandidateLength = max( g_rtConfig->MinCandidateLength,
-                                         (int) floor( g_rtConfig->curMinSequenceMass /
+        int curMinPeptideLength = max( g_rtConfig->MinPeptideLength,
+                                         (int) floor( g_rtConfig->curMinPeptideMass /
                                                       maxResidueMass ) );
 
         // calculate maximum length of a peptide made entirely of glycine under the maximum mass
-        int curMaxCandidateLength = min((int) ceil( g_rtConfig->curMaxSequenceMass / minResidueMass ), 
-                                           g_rtConfig->MaxSequenceLength);
+        int curMaxPeptideLength = min((int) ceil( g_rtConfig->curMaxPeptideMass / minResidueMass ), 
+                                           g_rtConfig->MaxPeptideLength);
 
         // set digestion parameters
-        Digestion::Specificity specificity = (Digestion::Specificity) g_rtConfig->NumMinTerminiCleavages;
-        g_rtConfig->digestionConfig = Digestion::Config( g_rtConfig->NumMaxMissedCleavages,
-                                                         curMinCandidateLength,
-                                                         curMaxCandidateLength,
+        Digestion::Specificity specificity = (Digestion::Specificity) g_rtConfig->MinTerminiCleavages;
+        g_rtConfig->digestionConfig = Digestion::Config( g_rtConfig->MaxMissedCleavages,
+                                                         curMinPeptideLength,
+                                                         curMaxPeptideLength,
                                                          specificity );
 
 		//cout << g_hostString << " is precaching factorials up to " << (int) maxPeakSpace << "." << endl;
@@ -302,12 +287,12 @@ namespace myrimatch
 
 		if( !g_numChildren )
 		{
-			cout << "Smallest observed precursor is " << g_rtConfig->curMinSequenceMass << " Da." << endl;
-			cout << "Largest observed precursor is " << g_rtConfig->curMaxSequenceMass << " Da." << endl;
-            cout << "Min. effective sequence mass is " << g_rtConfig->curMinSequenceMass << endl;
-            cout << "Max. effective sequence mass is " << g_rtConfig->curMaxSequenceMass << endl;
-            cout << "Min. effective sequence length is " << curMinCandidateLength << endl;
-            cout << "Max. effective sequence length is " << curMaxCandidateLength << endl;
+			//cout << "Smallest observed precursor is " << g_rtConfig->curMinPeptideMass << " Da." << endl;
+			//cout << "Largest observed precursor is " << g_rtConfig->curMaxPeptideMass << " Da." << endl;
+            cout << "Min. effective peptide mass is " << g_rtConfig->curMinPeptideMass << endl;
+            cout << "Max. effective peptide mass is " << g_rtConfig->curMaxPeptideMass << endl;
+            cout << "Min. effective peptide length is " << curMinPeptideLength << endl;
+            cout << "Max. effective peptide length is " << curMaxPeptideLength << endl;
 		}
 
 		return 0;
@@ -317,51 +302,20 @@ namespace myrimatch
 	{
 	}
 
-    void ComputeXCorrs(string sourceFilepath)
-    {
-        // Get total spectra size
-        int numSpectra = (int) spectra.size();
-        
+    void ComputeXCorrs()
+    {        
         Timer timer;
         timer.Begin();
-        
-        cout << g_hostString << " is reading and preparing " << numSpectra << " spectra for cross-correlation analysis." << endl;
-        spectra.backFillPeaks(sourceFilepath);
-        // Parse each spectrum
-        BOOST_FOREACH(Spectrum* s, spectra)
-        {
-            try
-            {
-                if(s->resultSet.size()==0)
-                    continue;
-                s->parse();
-                s->PreprocessForXCorr();
-            } catch( exception& e )
-            {
-                stringstream msg;
-                msg << "parsing and preprocessing spectrum " << s->id << ": " << e.what();
-                throw runtime_error( msg.str() );
-            } catch( ... )
-            {
-                stringstream msg;
-                msg << "parsing and preprocessing spectrum " << s->id;
-                throw runtime_error( msg.str() );
-            }
-        }
-        cout << g_hostString << " finished reading and preparing spectra; " << timer.End() << " seconds elapsed." << endl;
-        
-        cout << g_hostString << " is computing cross-correlations." << endl;
-        timer.Begin();
+
+		if( g_numChildren == 0 )
+            cout << "Computing cross-correlations." << endl;
+
         // For each spectrum, iterate through its result set and compute the XCorr.
         BOOST_FOREACH(Spectrum* s, spectra)
-        {
-            size_t charge = max(s->id.charge-1,1);
-            BOOST_FOREACH(const SearchResult& result, s->resultSet)
-                s->ComputeXCorr(result,charge);
-            s->peakDataForXCorr.clear();
-        }
-        cout << g_hostString << " finished computing cross-correlations; " << timer.End() << " seconds elapsed." << endl;
+            s->ComputeXCorrs();
 
+        if( g_numChildren == 0 )
+            cout << "Finished computing cross-correlations; " << timer.End() << " seconds elapsed." << endl;
     }
 
 	void WriteOutputToFile(	const string& dataFilename,
@@ -370,49 +324,13 @@ namespace myrimatch
 							float totalSearchTime,
 							vector< size_t > opcs,
 							vector< size_t > fpcs,
-							searchStats& overallStats )
+							SearchStatistics& overallStats )
 	{
 		int numSpectra = 0;
 		int numMatches = 0;
 		int numLoci = 0;
 
 		string filenameAsScanName = basename( MAKE_PATH_FOR_BOOST(dataFilename) );
-
-		map< int, Histogram<double> > meanScoreHistogramsByChargeState;
-		for( int z=1; z <= g_rtConfig->maxChargeStateFromSpectra; ++z )
-			meanScoreHistogramsByChargeState[ z ] = Histogram<double>( g_rtConfig->NumScoreHistogramBins, g_rtConfig->MaxScoreHistogramValues );
-
-		if( g_rtConfig->CalculateRelativeScores )
-		{
-			Timer calculationTime(true);
-			cout << g_hostString << " is calculating relative scores for " << spectra.size() << " spectra." << endl;
-			float lastUpdateTime = 0;
-			size_t n = 0;
-			BOOST_FOREACH(Spectrum* s, spectra)
-			{
-				try
-				{
-					s->CalculateRelativeScores();
-				} catch( std::exception& e )
-				{
-					//throw runtime_error( "calculating relative scores for scan " + string( s->id ) + ": " + e.what() );
-					cerr << "Error: calculating relative scores for scan " << string( s->id ) << ": " << e.what() << endl;
-					continue;
-				} catch( ... )
-				{
-					cerr << "Error: calculating relative scores for scan " << string( s->id ) << endl;
-					continue;
-				}
-
-				if( calculationTime.TimeElapsed() - lastUpdateTime > g_rtConfig->StatusUpdateFrequency )
-				{
-					cout << g_hostString << " has calculated relative scores for " << n << " of " << spectra.size() << " spectra." << endl;
-					lastUpdateTime = calculationTime.TimeElapsed();
-				}
-				PRINT_PROFILERS(cout, s->id.id + " done");
-			}
-			cout << g_hostString << " finished calculating relative scores; " << calculationTime.End() << " seconds elapsed." << endl;
-		}
 
 		BOOST_FOREACH(Spectrum* s, spectra)
 		{
@@ -422,88 +340,7 @@ namespace myrimatch
 
 		
 			s->computeSecondaryScores();
-
-			s->resultSet.calculateRanks();
-            s->resultSet.convertProteinIndexesToNames( proteins );
-
-			if( g_rtConfig->MakeScoreHistograms )
-			{
-				s->scoreHistogram.smooth();
-				for( map<double,int>::iterator itr = s->scores.begin(); itr != s->scores.end(); ++itr )
-					cout << itr->first << "\t" << itr->second << "\n";
-				//cout << std::keys( s->scores ) << endl;
-				//cout << std::values( s->scores ) << endl;
-				//cout << std::keys( s->scoreHistogram.m_bins ) << endl;
-				//cout << std::values( s->scoreHistogram.m_bins ) << endl;
-				//s->scoreHistogram.writeToSvgFile( string( s->id ) + "-histogram.svg", "MVH score", "Density", 800, 600 );
-				meanScoreHistogramsByChargeState[ s->id.charge ] += s->scoreHistogram;
-			}
-
-			BOOST_REVERSE_FOREACH(const SearchResult& r, s->resultSet)
-			{
-                if( r.rank > 1 )
-                    break;
-
-				++ numMatches;
-				numLoci += r.lociByName.size();
-
-				string theSequence = r.sequence();
-
-				if( g_rtConfig->MakeSpectrumGraphs )
-				{
-					vector< double > ionMasses;
-					vector< string > ionNames;
-					CalculateSequenceIons( Peptide(theSequence), s->id.charge, &ionMasses, s->fragmentTypes, g_rtConfig->UseSmartPlusThreeModel, &ionNames, 0 );
-					map< double, string > ionLabels;
-					map< double, string > ionColors;
-					map< double, int > ionWidths;
-
-					for( PeakPreData::iterator itr = s->peakPreData.begin(); itr != s->peakPreData.end(); ++itr )
-						ionWidths[ itr->first ] = 1;
-                    cout << ionMasses << endl << ionNames << endl;
-					for( size_t i=0; i < ionMasses.size(); ++i )
-					{
-						double fragMassError = g_rtConfig->fragmentMzToleranceUnits == PPM ? (ionMasses[i]*g_rtConfig->FragmentMzTolerance*pow(10.0,-6)):g_rtConfig->FragmentMzTolerance;
-						PeakPreData::iterator itr = s->peakPreData.findNear( ionMasses[i], fragMassError );
-						if( itr != s->peakPreData.end() )
-						{
-							ionLabels[ itr->first ] = ionNames[i];
-							ionColors[ itr->first ] = ( ionNames[i].find( "b" ) == 0 ? "red" : "blue" );
-							ionWidths[ itr->first ] = 2;
-						}
-					}
-
-					cout << theSequence << " fragment ions: " << ionLabels << endl;
-
-					s->writeToSvgFile( string( "-" ) + theSequence + g_rtConfig->OutputSuffix, &ionLabels, &ionColors, &ionWidths );
-				}
-
-                if( g_rtConfig->AdjustPrecursorMass )
-                {
-                    // set the precursor mass to be the adjusted one closest to the rank 1 result's exact mass;
-                    // the correct id may not have come from the "best" adjustment
-                    double bestAdjustment = s->mOfPrecursor;
-                    double bestAdjustmentDelta = std::numeric_limits<double>::max();
-                    BOOST_FOREACH(double adjustedMass, s->mOfPrecursorList)
-                    {
-                        double exactMass = g_rtConfig->UseAvgMassOfSequences ? r.molecularWeight() : r.monoisotopicMass();
-                        double adjustmentDelta = fabs(adjustedMass - exactMass);
-                        if( adjustmentDelta < bestAdjustmentDelta )
-                        {
-                            bestAdjustmentDelta = adjustmentDelta;
-                            bestAdjustment = adjustedMass;
-                        }
-                    }
-
-                    s->mOfPrecursor = bestAdjustment;
-			        s->mzOfPrecursor = ( s->mOfPrecursor + ( s->id.charge * PROTON ) ) / s->id.charge;
-                }
-            }
-		}
-
-		if( g_rtConfig->MakeScoreHistograms )
-			for( int z=1; z <= g_rtConfig->maxChargeStateFromSpectra; ++z )
-				meanScoreHistogramsByChargeState[ z ].writeToSvgFile( filenameAsScanName + g_rtConfig->OutputSuffix + "_+" + lexical_cast<string>(z) + "_histogram.svg", "MVH score", "Density", g_rtConfig->ScoreHistogramWidth, g_rtConfig->ScoreHistogramHeight );
+        }
 
 		RunTimeVariableMap vars = g_rtConfig->getVariables();
 		RunTimeVariableMap fileParams;
@@ -527,74 +364,11 @@ namespace myrimatch
 		fileParams["PeakCounts: 3rdQuartile: Original"] = lexical_cast<string>( opcs[4] );
 		fileParams["PeakCounts: 3rdQuartile: Filtered"] = lexical_cast<string>( fpcs[4] );
 
-		string outputFilename = filenameAsScanName + g_rtConfig->OutputSuffix + ".pepXML";
-		cout << g_hostString << " is writing search results to file \"" << outputFilename << "\"." << endl;
+        string extension = g_rtConfig->outputFormat == pwiz::mziddata::MzIdentMLFile::Format_pepXML ? ".pepXML" : ".mzid";
+		string outputFilename = filenameAsScanName + g_rtConfig->OutputSuffix + extension;
+		cout << "Writing search results to file \"" << outputFilename << "\"." << endl;
 
-		spectra.writePepXml( dataFilename, g_rtConfig->OutputSuffix, "MyriMatch", g_dbPath + g_dbFilename, &proteins, fileParams );
-
-		if( g_rtConfig->DeisotopingMode == 3 /*&& g_rtConfig->DeisotopingTestMode != 0*/ )
-		{
-			spectra.calculateFDRs( g_rtConfig->maxChargeStateFromSpectra, 1.0, "rev_" );
-			SpectraList passingSpectra;
-			spectra.filterByFDR( 0.05, &passingSpectra );
-			//g_rtConfig->DeisotopingMode = g_rtConfig->DeisotopingTestMode;
-
-			ofstream deisotopingDetails( (filenameAsScanName+g_rtConfig->OutputSuffix+"-deisotope-test.tsv").c_str() );
-			deisotopingDetails << "Scan\tCharge\tSequence\tPredicted\tMatchesBefore\tMatchesAfter\n";
-			BOOST_FOREACH(Spectrum* s, passingSpectra)
-			{
-				s->Deisotope( g_rtConfig->IsotopeMzTolerance );
-
-				s->resultSet.calculateRanks();
-				BOOST_REVERSE_FOREACH(const SearchResult& r, s->resultSet)
-				{
-					string theSequence =  r.sequence();
-
-					if(  r.rank == 1 )
-					{
-						vector< double > ionMasses;
-						CalculateSequenceIons( Peptide(theSequence), s->id.charge, &ionMasses, s->fragmentTypes, g_rtConfig->UseSmartPlusThreeModel, 0, 0 );
-						int fragmentsPredicted = accumulate(  r.key.begin(),  r.key.end(), 0 );
-						int fragmentsFound = fragmentsPredicted - r.key.back();
-						int fragmentsFoundAfterDeisotoping = 0;
-						for( size_t i=0; i < ionMasses.size(); ++i ) {
-							double fragMassError = g_rtConfig->fragmentMzToleranceUnits == PPM ? (ionMasses[i]*g_rtConfig->FragmentMzTolerance*pow(10.0,-6)):g_rtConfig->FragmentMzTolerance;
-							if( s->peakPreData.findNear( ionMasses[i], fragMassError ) != s->peakPreData.end() )
-								++ fragmentsFoundAfterDeisotoping;
-						}
-						deisotopingDetails << s->id.index << "\t" << s->id.charge << "\t" << theSequence << "\t" << fragmentsPredicted << "\t" << fragmentsFound << "\t" << fragmentsFoundAfterDeisotoping << "\n";
-					}
-				}
-			}
-			passingSpectra.clear(false);
-		}
-
-		if( g_rtConfig->AdjustPrecursorMass == 1 )
-		{
-			spectra.calculateFDRs( g_rtConfig->maxChargeStateFromSpectra, 1.0, "rev_" );
-			SpectraList passingSpectra;
-			spectra.filterByFDR( 0.05, &passingSpectra );
-
-			ofstream adjustmentDetails( (filenameAsScanName+g_rtConfig->OutputSuffix+"-adjustment-test.tsv").c_str() );
-			adjustmentDetails << "Scan\tCharge\tUnadjustedSequenceMass\tAdjustedSequenceMass\tUnadjustedPrecursorMass\tAdjustedPrecursorMass\tUnadjustedError\tAdjustedError\tSequence\n";
-			BOOST_FOREACH(Spectrum* s, passingSpectra)
-			{
-				s->resultSet.calculateRanks();
-				BOOST_REVERSE_FOREACH(const SearchResult& r, s->resultSet)
-				{
-					if( r.rank == 1 )
-					{
-                        double setSeqMass = g_rtConfig->UseAvgMassOfSequences ?  r.molecularWeight() :  r.monoisotopicMass();
-						double monoSeqMass =  r.monoisotopicMass();
-						adjustmentDetails <<	s->id.index << "\t" << s->id.charge << "\t" <<
-												setSeqMass << "\t" << monoSeqMass << "\t" << s->mOfUnadjustedPrecursor << "\t" << s->mOfPrecursor << "\t" <<
-												fabs( setSeqMass - s->mOfUnadjustedPrecursor ) << "\t" <<
-												fabs( monoSeqMass - s->mOfPrecursor ) << "\t" <<  r.sequence() << "\n";
-					}
-				}
-			}
-			passingSpectra.clear(false);
-		}
+		spectra.write( dataFilename, g_rtConfig->outputFormat, g_rtConfig->OutputSuffix, "MyriMatch", g_dbPath + g_dbFilename, g_rtConfig->cleavageAgentRegex, fileParams );
 	}
 
 	void PrepareSpectra()
@@ -605,7 +379,7 @@ namespace myrimatch
 
 		if( g_numChildren == 0 )
 		{
-			cout << g_hostString << " is trimming spectra with less than " << g_rtConfig->minIntensityClassCount << " peaks." << endl;
+			cout << "Trimming spectra with less than " << g_rtConfig->minIntensityClassCount << " peaks." << endl;
 		}
 
 		int preTrimCount = spectra.filterByPeakCount ( g_rtConfig->minIntensityClassCount );
@@ -614,147 +388,91 @@ namespace myrimatch
 
 		if( g_numChildren == 0 )
 		{
-			cout << g_hostString << " trimmed " << preTrimCount << " spectra for being too sparse." << endl;
-			cout << g_hostString << " is determining charge states for " << numSpectra << " spectra." << endl;
+			cout << "Trimmed " << preTrimCount << " spectra for being too sparse." << endl;
+			cout << "Preprocessing " << numSpectra << " spectra." << endl;
 		}
 
 		timer.Begin();
-		SpectraList duplicates;
-		for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
-        {
-			try
-			{
-				if( !g_rtConfig->UseChargeStateFromMS )
-						spectra.setId( (*sItr)->id, SpectrumId( (*sItr)->id.index, 0 ) );
-
-				if( (*sItr)->id.charge == 0 )
-				{
-					SpectrumId preChargeId( (*sItr)->id );
-					(*sItr)->DetermineSpectrumChargeState();
-					SpectrumId postChargeId( (*sItr)->id );
-
-					if( postChargeId.charge == 0 )
-					{
-						postChargeId.setCharge(2);
-
-						if( g_rtConfig->DuplicateSpectra )
-						{
-							for( int z = 3; z <= g_rtConfig->NumChargeStates; ++z )
-							{
-								Spectrum* s = new Spectrum( *(*sItr) );
-								s->id.setCharge(z);
-								duplicates.push_back(s);
-							}
-						}
-					}
-
-					spectra.setId( preChargeId, postChargeId );
-				}
-
-			} catch( std::exception& e )
-			{
-				throw runtime_error( string( "duplicating scan " ) + string( (*sItr)->id ) + ": " + e.what() );
-			} catch( ... )
-			{
-				throw runtime_error( string( "duplicating scan " ) + string( (*sItr)->id ) );
-			}
-		}
-
-		try
-		{
-			spectra.insert( duplicates.begin(), duplicates.end(), spectra.end() );
-			duplicates.clear(false);
-		} catch( std::exception& e )
-		{
-			throw runtime_error( string( "adding duplicated spectra: " ) + e.what() );
-		} catch( ... )
-		{
-			throw runtime_error( "adding duplicated spectra" );
-		}
-
-		//int replicateCount = (int) spectra.size() - numSpectra;
-		numSpectra = (int) spectra.size();
-
-		if( g_numChildren == 0 )
-		{
-			cout << g_hostString << " finished determining charge states for its spectra; " << timer.End() << " seconds elapsed." << endl;
-			cout << g_hostString << " is preprocessing " << numSpectra << " spectra." << endl;
-		}
-
-		timer.Begin();
-		for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
+		BOOST_FOREACH(Spectrum* s, spectra)
 		{
 			try
 			{
-				(*sItr)->Preprocess();
+				s->Preprocess();
 			} catch( std::exception& e )
 			{
 				stringstream msg;
-				msg << "preprocessing spectrum " << (*sItr)->id << ": " << e.what();
+				msg << "preprocessing spectrum " << s->id << ": " << e.what();
 				throw runtime_error( msg.str() );
 			} catch( ... )
 			{
 				stringstream msg;
-				msg << "preprocessing spectrum " << (*sItr)->id;
+				msg << "preprocessing spectrum " << s->id;
 				throw runtime_error( msg.str() );
 			}
 		}
 
 		// Trim spectra that have observed precursor masses outside the user-configured range
 		// (erase the peak list and the trim 0 peaks out)
-		for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
+		BOOST_FOREACH(Spectrum* s, spectra)
 		{
-			if( (*sItr)->mOfPrecursor < g_rtConfig->MinSequenceMass ||
-				(*sItr)->mOfPrecursor > g_rtConfig->MaxSequenceMass )
+			if( s->precursorMassHypotheses.back().mass < g_rtConfig->MinPeptideMass ||
+				s->precursorMassHypotheses.front().mass > g_rtConfig->MaxPeptideMass )
 			{
-				(*sItr)->peakPreData.clear();
-				(*sItr)->peakData.clear();
+				s->peakPreData.clear();
+				s->peakData.clear();
 			}
 		}
 
 		if( g_numChildren == 0 )
 		{
-			cout << g_hostString << " finished preprocessing its spectra; " << timer.End() << " seconds elapsed." << endl;
-			cout << g_hostString << " is trimming spectra with less than " << g_rtConfig->minIntensityClassCount << " peaks." << endl;
-			cout << g_hostString << " is trimming spectra with precursors too small or large: " <<
-					g_rtConfig->MinSequenceMass << " - " << g_rtConfig->MaxSequenceMass << endl;
+			cout << "Finished preprocessing its spectra; " << timer.End() << " seconds elapsed." << endl;
+			cout << "Trimming spectra with less than " << g_rtConfig->minIntensityClassCount << " peaks." << endl;
+			cout << "Trimming spectra with precursors too small or large: " <<
+					g_rtConfig->MinPeptideMass << " - " << g_rtConfig->MaxPeptideMass << endl;
 		}
 
 		int postTrimCount = spectra.filterByPeakCount( g_rtConfig->minIntensityClassCount );
 
 		if( g_numChildren == 0 )
 		{
-			cout << g_hostString << " trimmed " << postTrimCount << " spectra." << endl;
+			cout << "Trimmed " << postTrimCount << " spectra." << endl;
 		}
 
 	}
 
-	vector< int > workerNumbers;
 
-	boost::int64_t QuerySequence( const DigestedPeptide& candidate, int idx, bool isDecoy, bool estimateComparisonsOnly = false )
+	boost::int64_t QuerySequence( const DigestedPeptide& candidate, const string& protein, bool isDecoy, bool estimateComparisonsOnly = false )
 	{
 		boost::int64_t numComparisonsDone = 0;
-		Spectrum* spectrum;
-		SearchResult result(candidate);
-        string sequence = PEPTIDE_N_TERMINUS_STRING + candidate.sequence() + PEPTIDE_C_TERMINUS_STRING;
-        double mass = g_rtConfig->UseAvgMassOfSequences ? candidate.molecularWeight()
-                                                        : candidate.monoisotopicMass();
 
+        string sequence = PEPTIDE_N_TERMINUS_STRING + candidate.sequence() + PEPTIDE_C_TERMINUS_STRING;
+        double monoCalculatedMass = candidate.monoisotopicMass();
+        double avgCalculatedMass = candidate.molecularWeight();
 
 		for( int z = 0; z < g_rtConfig->maxChargeStateFromSpectra; ++z )
 		{
 			int fragmentChargeState = min( z, g_rtConfig->maxFragmentChargeState-1 );
 			vector< double > sequenceIons;
-			// Set the mass error based on mass units.
-			double massError = g_rtConfig->precursorMzToleranceUnits == PPM ? (mass * g_rtConfig->PrecursorMassTolerance[z] * pow(10.0,-6)) : g_rtConfig->PrecursorMassTolerance[z];
-			// Look up the spectra that have precursor masses between mass + massError and mass - massError
-			SpectraMassMap::iterator cur, end = spectraMassMapsByChargeState[z].upper_bound( mass + massError );
-			for( cur = spectraMassMapsByChargeState[z].lower_bound( mass - massError ); cur != end; ++cur )
+
+            // Look up the spectra that have precursor mass hypotheses between mass + massError and mass - massError
+            vector<SpectraMassMap::iterator> candidateHypotheses;
+            SpectraMassMap::iterator cur, end;
+
+            end = monoSpectraByChargeState[z].upper_bound( monoCalculatedMass + g_rtConfig->monoPrecursorMassTolerance[z] );
+			for( cur = monoSpectraByChargeState[z].lower_bound( monoCalculatedMass - g_rtConfig->monoPrecursorMassTolerance[z] ); cur != end; ++cur )
+                candidateHypotheses.push_back(cur);
+
+			end = avgSpectraByChargeState[z].upper_bound( avgCalculatedMass + g_rtConfig->avgPrecursorMassTolerance[z] );
+			for( cur = avgSpectraByChargeState[z].lower_bound( avgCalculatedMass - g_rtConfig->avgPrecursorMassTolerance[z] ); cur != end; ++cur )
+                candidateHypotheses.push_back(cur);
+
+            BOOST_FOREACH(SpectraMassMap::iterator spectrumHypothesisPair, candidateHypotheses)
 			{
-				spectrum = *cur->second;
-				//if( spectrum->mOfPrecursor != cur->first )
-				//	cout << spectrum->id.index << " searching adjusted mass: " << spectrum->mOfPrecursor << " " << cur->first << endl;
-				//if( seq == "AGLLGLLEEMR" ) cout << id.index << " " << i << " -> " << cur->first << endl;
+                Spectrum* spectrum = spectrumHypothesisPair->second.first;
+                PrecursorMassHypothesis& p = spectrumHypothesisPair->second.second;
+
+                boost::shared_ptr<SearchResult> resultPtr(new SearchResult(candidate));
+                SearchResult& result = *resultPtr;
 
 				if( !estimateComparisonsOnly )
 				{
@@ -774,11 +492,11 @@ namespace myrimatch
 					spectrum->ScoreSequenceVsSpectrum( result, sequence, sequenceIons );
 					STOP_PROFILER(3);
 
-                    //cout << (spectrum->id.index+1) << "." << spectrum->id.charge << ":" << result.sequence() << ":" << result << endl;
 					if( result.mvh >= g_rtConfig->MinResultScore )
 					{
 						START_PROFILER(5);
-                        result.lociByIndex.insert( ProteinLocusByIndex( idx + g_rtConfig->ProteinIndexOffset, candidate.offset() ) );	
+                        result.proteins.insert(protein);
+                        result._isDecoy = isDecoy;
 						STOP_PROFILER(5);
 					}
 				}
@@ -788,37 +506,28 @@ namespace myrimatch
 				if( estimateComparisonsOnly )
 					continue;
 
-				//if( spectrum->id.index == 4 && spectrum->id.charge == 2 ) cout << spectrum->id << " -> " << result << endl;
-
 				START_PROFILER(4);
-				if( g_rtConfig->UseMultipleProcessors )
-					simplethread_lock_mutex( &spectrum->mutex );
+                {
+                    boost::lock_guard<boost::mutex> guard(spectrum->mutex);
 
-                START_PROFILER(13)
-                if( isDecoy )
-				    ++ spectrum->numDecoyComparisons;
-                else
-                    ++ spectrum->numTargetComparisons;
-                STOP_PROFILER(13)
+                    if( isDecoy )
+				        ++ spectrum->numDecoyComparisons;
+                    else
+                        ++ spectrum->numTargetComparisons;
 
-				if( result.mvh >= g_rtConfig->MinResultScore && accumulate( result.key.begin(), result.key.end(), 0 ) > 0 )
-				{
-					result.massError = mass - cur->first;
+				    if( result.mvh >= g_rtConfig->MinResultScore )
+				    {
+                        result.precursorMassHypothesis = p;
+					    //result.massError = p.massType == MassType_Monoisotopic ? monoCalculatedMass - p.mass
+                        //                                                       : avgCalculatedMass - p.mass;
 
-					if( g_rtConfig->MakeScoreHistograms )
-					{
-						++ spectrum->scores[ result.mvh ];
-						spectrum->scoreHistogram.add( result.mvh );
-					}
-					
-					// Accumulate score distributions for the spectrum
-					++ spectrum->mvhScoreDistribution[ (int) (result.mvh+0.5) ];
-					++ spectrum->mzFidelityDistribution[ (int) (result.mzFidelity+0.5)];
-					spectrum->resultSet.add( result );
-                    
-				}
-				if( g_rtConfig->UseMultipleProcessors )
-					simplethread_unlock_mutex( &spectrum->mutex );
+					    // Accumulate score distributions for the spectrum
+					    ++ spectrum->mvhScoreDistribution[ (int) (result.mvh+0.5) ];
+					    ++ spectrum->mzFidelityDistribution[ (int) (result.mzFidelity+0.5)];
+
+					    spectrum->resultsByCharge[z].add( resultPtr );         
+				    }
+                }
 				STOP_PROFILER(4);
 			}
 		}
@@ -826,223 +535,141 @@ namespace myrimatch
 		return numComparisonsDone;
 	}
 
-	simplethread_return_t ExecuteSearchThread( simplethread_arg_t threadArg )
+	int ExecuteSearchThread()
 	{
-        
-		simplethread_lock_mutex( &resourceMutex );
-		simplethread_id_t threadId = simplethread_get_id();
-		WorkerThreadMap* threadMap = (WorkerThreadMap*) threadArg;
-		WorkerInfo* threadInfo = reinterpret_cast< WorkerInfo* >( threadMap->find( threadId )->second );
-		int numThreads = (int) threadMap->size();
-		simplethread_unlock_mutex( &resourceMutex );
-
-		bool done;
-		//threadInfo->spectraResults.resize( (int) spectra.size() );
-
-        double largestDynamicModMass = g_rtConfig->dynamicMods.empty() ? 0 : g_rtConfig->dynamicMods.rbegin()->modMass * g_rtConfig->MaxDynamicMods;
-		double smallestDynamicModMass = g_rtConfig->dynamicMods.empty() ? 0 : g_rtConfig->dynamicMods.begin()->modMass * g_rtConfig->MaxDynamicMods;
-
         try
         {
-		    Timer searchTime;
-		    float totalSearchTime = 0;
-		    float lastUpdate = 0;
-		    searchTime.Begin();
+            size_t proteinTask;
 		    while( true )
 		    {
-			    simplethread_lock_mutex( &resourceMutex );
-			    done = workerNumbers.empty();
-			    if( !done )
-			    {
-				    threadInfo->workerNum = workerNumbers.back();
-				    workerNumbers.pop_back();
-			    }
-			    simplethread_unlock_mutex( &resourceMutex );
-
-			    if( done )
+                if (!proteinTasks.dequeue(&proteinTask))
 				    break;
 
-			    int numProteins = (int) proteins.size();
-			    threadInfo->endIndex = ( numProteins / g_numWorkers )-1;
-                
-			    //simplethread_lock_mutex( &resourceMutex );
-			    //cout << threadInfo->workerHostString << " " << numProteins << " " << g_numWorkers << " " <<  threadInfo->workerNum << endl;
-			    //simplethread_unlock_mutex( &resourceMutex );
+			    ++ searchStatistics.numProteinsDigested;
 
-			    /*ifstream inFile( "candidates0.txt", ios::binary );
-			    char* buf = new char[1024*1024];
-			    while( !inFile.eof() )
-			    {
-				    inFile.getline( buf, 1024*1024 );
-				    string sbuf( buf );
-				    stringstream instances( sbuf.substr( sbuf.find_first_of(' ')+1 ) );
-				    int start, i;
-				    string& aSequence = sbuf.substr( 0, sbuf.find_first_of(' ') );
-				    instances >> i >> start;
-				    cout << "Querying sequence " << n+1 << ": \"" << aSequence << "\"\t\t\t\t\r" << flush;
-				    QuerySequence( aSequence, i, start, threadInfo->spectraResults );
-				    ++n;
-			    }
-			    delete [] buf;
-			    continue;*/
+                proteinData p = proteins[proteinTask];
 
-			    int i;
-			    for( i = threadInfo->workerNum; i < numProteins; i += g_numWorkers )
-			    {
-				    //cout << threadInfo->workerHostString <<	" is generating candidates from protein " << i << endl;
-				    ++ threadInfo->stats.numProteinsDigested;
+                if (!g_rtConfig->ProteinListFilters.empty() &&
+                    g_rtConfig->ProteinListFilters.find(p.getName()) == string::npos)
+                {
+                    continue;
+                }
 
-                    //digestedPeptides.clear();
+                Peptide protein(p.getSequence());
+                bool isDecoy = p.isDecoy();
 
-				    START_PROFILER(0);
-                    START_PROFILER(9);
-                    Peptide protein(proteins[i].getSequence());
-                    bool isDecoy = proteins[i].isDecoy();
-                    STOP_PROFILER(9);
-                    START_PROFILER(10);
-                    Digestion digestion( protein, g_rtConfig->cleavageAgentRegex, g_rtConfig->digestionConfig );
-                    STOP_PROFILER(10);
-                    for( Digestion::const_iterator itr = digestion.begin(); itr != digestion.end(); )
+                Digestion digestion( protein, g_rtConfig->cleavageAgentRegex, g_rtConfig->digestionConfig );
+                for( Digestion::const_iterator itr = digestion.begin(); itr != digestion.end(); )
+                {
+                    // a selenopeptide's molecular weight can be lower than its monoisotopic mass!
+                    double minMass = min(itr->monoisotopicMass(), itr->molecularWeight());
+                    double maxMass = max(itr->monoisotopicMass(), itr->molecularWeight());
+
+                    if( minMass > g_rtConfig->curMaxPeptideMass ||
+                        maxMass < g_rtConfig->curMinPeptideMass )
                     {
-                        
-						double mass = g_rtConfig->UseAvgMassOfSequences ? itr->molecularWeight()
-                                                                        : itr->monoisotopicMass();
-                        if( mass /* + smallestDynamicModMass*/ > g_rtConfig->curMaxSequenceMass ||
-                            mass /*+ largestDynamicModMass*/ < g_rtConfig->curMinSequenceMass ) {
-                            START_PROFILER(11);
-                            ++itr;
-                            STOP_PROFILER(11);
-                            continue;
-                        }
-                        
-                        vector<DigestedPeptide> digestedPeptides;
-                        START_PROFILER(12);
-						
-						PTMVariantList variantIterator( (*itr), g_rtConfig->MaxDynamicMods, g_rtConfig->dynamicMods, g_rtConfig->staticMods, g_rtConfig->MaxNumPeptideVariants);
-                        if(variantIterator.isSkipped) {
-                            ++ threadInfo->stats.numCandidatesSkipped;
-                            STOP_PROFILER(12);
-                            ++ itr;
-                            continue;
-                        }
-                        STOP_PROFILER(12);
-                        variantIterator.getVariantsAsList(digestedPeptides);
-                        threadInfo->stats.numCandidatesGenerated += digestedPeptides.size();
-                        
-                        for( size_t j=0; j < digestedPeptides.size(); ++j )
-                        {
-                            //++ threadInfo->stats.numCandidatesGenerated;
-                            START_PROFILER(1);
-                            boost::int64_t queryComparisonCount = QuerySequence( digestedPeptides[j], i, isDecoy, g_rtConfig->EstimateSearchTimeOnly );
-                            STOP_PROFILER(1);
-                            if( queryComparisonCount > 0 )
-                            {
-                                threadInfo->stats.numComparisonsDone += queryComparisonCount;
-                                ++threadInfo->stats.numCandidatesQueried;
-                                //cout << "QC>0" << queryComparisonCount << endl;
-                            }
-                        }
-
-                        START_PROFILER(11);
                         ++itr;
-                        STOP_PROFILER(11);
+                        continue;
+                    }
+                    
+                    vector<DigestedPeptide> digestedPeptides;
+					
+					PTMVariantList variantIterator( (*itr), g_rtConfig->MaxDynamicMods, g_rtConfig->dynamicMods, g_rtConfig->staticMods, g_rtConfig->MaxPeptideVariants);
+                    if(variantIterator.isSkipped)
+                    {
+                        ++ searchStatistics.numCandidatesSkipped;
+                        ++ itr;
+                        continue;
+                    }
 
-                        if( g_rtConfig->EstimateSearchTimeOnly )
+                    variantIterator.getVariantsAsList(digestedPeptides);
+                    searchStatistics.numCandidatesGenerated += digestedPeptides.size();
+                    
+                    for( size_t j=0; j < digestedPeptides.size(); ++j )
+                    {
+                        boost::int64_t queryComparisonCount = QuerySequence( digestedPeptides[j], p.getName(), isDecoy, g_rtConfig->EstimateSearchTimeOnly );
+                        if( queryComparisonCount > 0 )
                         {
-                            totalSearchTime = searchTime.TimeElapsed();
-                            if( totalSearchTime > g_rtConfig->ProteinSamplingTime )
-                                return 0;
+                            searchStatistics.numComparisonsDone += queryComparisonCount;
+                            ++searchStatistics.numCandidatesQueried;
                         }
                     }
-				    STOP_PROFILER(0);
 
-                    if( g_numChildren == 0 )
-					    totalSearchTime = searchTime.TimeElapsed();
-				    //if( g_pid == 1 && !(i%50) )
-				    //	cout << i << ": " << (int) sequenceToSpectraMap.size() << " " << (int) sequenceProteinLoci.size() << endl;
-
-				    if( g_numChildren == 0 && ( ( totalSearchTime - lastUpdate > g_rtConfig->StatusUpdateFrequency ) || i == numProteins ) )
-				    {
-					    float proteinsPerSec = float( threadInfo->stats.numProteinsDigested ) / totalSearchTime;
-					    float estimatedTimeRemaining = float( ( numProteins / numThreads ) - threadInfo->stats.numProteinsDigested ) / proteinsPerSec;
-
-					    simplethread_lock_mutex( &resourceMutex );
-					    cout << threadInfo->workerHostString << " has searched " << threadInfo->stats.numProteinsDigested << " of " << numProteins <<
-							    " proteins; " << proteinsPerSec << " per second, " << totalSearchTime << " elapsed, " << estimatedTimeRemaining << " remaining." << endl;
-
-					    PRINT_PROFILERS(cout, threadInfo->workerHostString + " profiling")
-
-					    //float candidatesPerSec = threadInfo->stats.numComparisonsDone / totalSearchTime;
-					    //float estimatedTimeRemaining = float( numCandidates - threadInfo->stats.numComparisonsDone ) / candidatesPerSec / numThreads;
-					    //cout << threadInfo->workerHostString << " has made " << threadInfo->stats.numComparisonsDone << " of about " << numCandidates << " comparisons; " <<
-					    //		candidatesPerSec << " per second, " << estimatedTimeRemaining << " seconds remaining." << endl;
-					    simplethread_unlock_mutex( &resourceMutex );
-
-					    lastUpdate = totalSearchTime;
-				    }
-			    }
-		    }
+                    ++itr;
+                }
+            }
         } catch( std::exception& e )
         {
-            cerr << threadInfo->workerHostString << " terminated with an error: " << e.what() << endl;
+            cerr << " terminated with an error: " << e.what() << endl;
         } catch(...)
         {
-            cerr << threadInfo->workerHostString << " terminated with an unknown error." << endl;
+            cerr << " terminated with an unknown error." << endl;
         }
-		//i -= g_numWorkers;
-		//cout << threadInfo->workerHostString << " last searched protein " << i-1 << " (" << proteins[i].name << ")." << endl;
+
 		return 0;
 	}
 
-	searchStats ExecuteSearch()
+	void ExecuteSearch()
 	{
-		WorkerThreadMap workerThreads;
+		size_t numProcessors = (size_t) g_numWorkers;
+        size_t numProteins = proteins.size();
 
-		int numProcessors = g_numWorkers;
-		workerNumbers.clear();
+		for (size_t i=0; i < numProteins; ++i)
+			proteinTasks.enqueue(i);
 
-		if( /*!g_singleScanMode &&*/ g_rtConfig->UseMultipleProcessors && g_numWorkers > 1 )
-		{
-			g_numWorkers *= g_rtConfig->ThreadCountMultiplier;
+        bpt::ptime start = bpt::microsec_clock::local_time();
 
-			simplethread_handle_array_t workerHandles;
+        boost::thread_group workerThreadGroup;
+        vector<boost::thread*> workerThreads;
 
-			for( int i=0; i < g_numWorkers; ++i )
-				workerNumbers.push_back(i);
+		for (size_t i = 0; i < numProcessors; ++i)
+            workerThreads.push_back(workerThreadGroup.create_thread(&ExecuteSearchThread));
 
-			simplethread_lock_mutex( &resourceMutex );
-			for( int t = 0; t < numProcessors; ++t )
-			{
-				simplethread_id_t threadId;
-				simplethread_handle_t threadHandle = simplethread_create_thread( &threadId, &ExecuteSearchThread, &workerThreads );
-				workerThreads[ threadId ] = new WorkerInfo( t, 0, 0 );
-				workerHandles.array.push_back( threadHandle );
-			}
-			simplethread_unlock_mutex( &resourceMutex );
+        if (g_numChildren > 0)
+        {
+            // MPI jobs do a simple join_all
+            workerThreadGroup.join_all();
 
-			simplethread_join_all( &workerHandles );
+            // xcorrs are calculated just before sending back results
+        }
+        else
+        {
+            bpt::ptime lastUpdate = start;
 
-			g_numWorkers = numProcessors;
-			//cout << g_hostString << " searched " << numSearched << " proteins." << endl;
-		} else
-		{
-			g_numWorkers = 1;
-			workerNumbers.push_back(0);
-			simplethread_id_t threadId = simplethread_get_id();
-			workerThreads[ threadId ] = new WorkerInfo( 0, 0, 0 );
-			ExecuteSearchThread( &workerThreads );
-			//cout << g_hostString << " searched " << numSearched << " proteins." << endl;
-		}
+            for (size_t i=0; i < numProcessors; ++i)
+            {
+                // returns true if the thread finished before the timeout;
+                // (each thread index is joined until it finishes)
+                if (!workerThreads[i]->timed_join(bpt::seconds(round(g_rtConfig->StatusUpdateFrequency))))
+                    --i;
 
-		searchStats stats;
+                bpt::ptime current = bpt::microsec_clock::local_time();
 
-		for( WorkerThreadMap::iterator itr = workerThreads.begin(); itr != workerThreads.end(); ++itr )
-		{
-			stats = stats + reinterpret_cast< WorkerInfo* >( itr->second )->stats;
-			delete itr->second;
-		}
+                // only make one update per StatusUpdateFrequency seconds
+                if ((current - lastUpdate).total_microseconds() / 1e6 < g_rtConfig->StatusUpdateFrequency)
+                    continue;
 
-		return stats;
+                lastUpdate = current;
+                bpt::time_duration elapsed = current - start;
+
+			    float proteinsPerSec = static_cast<float>(searchStatistics.numProteinsDigested) / elapsed.total_microseconds() * 1e6;
+                bpt::time_duration estimatedTimeRemaining(0, 0, round((numProteins - searchStatistics.numProteinsDigested) / proteinsPerSec));
+
+		        cout << "Searched " << searchStatistics.numProteinsDigested << " of " << numProteins << " proteins; "
+                     << round(proteinsPerSec) << " per second, "
+                     << format_date_time("%H:%M:%S", bpt::time_duration(0, 0, elapsed.total_seconds())) << " elapsed, "
+                     << format_date_time("%H:%M:%S", estimatedTimeRemaining) << " remaining." << endl;
+
+		        //float candidatesPerSec = threadInfo->stats.numComparisonsDone / totalSearchTime;
+		        //float estimatedTimeRemaining = float( numCandidates - threadInfo->stats.numComparisonsDone ) / candidatesPerSec / numThreads;
+		        //cout << threadInfo->workerHostString << " has made " << threadInfo->stats.numComparisonsDone << " of about " << numCandidates << " comparisons; " <<
+		        //		candidatesPerSec << " per second, " << estimatedTimeRemaining << " seconds remaining." << endl;
+		    }
+
+            // compute xcorr for top ranked results
+            if( g_rtConfig->ComputeXCorr )
+                ComputeXCorrs();
+        }
 	}
 
     // Shared pointer to SpectraList.
@@ -1052,7 +679,7 @@ namespace myrimatch
         ResultsPerBatch variable. This function also checks to make sure that the last batch
         is not smaller than 1000 spectra.
     */
-    inline vector<SpectraListPtr> estimateSpectralBatches()
+    vector<SpectraListPtr> estimateSpectralBatches()
     {
         int estimatedResultsSize = 0;
         
@@ -1067,12 +694,12 @@ namespace myrimatch
         {
             // Check the result size, if it exceeds the limit, then push back the
             // current list into the vector and get a fresh list
-            estimatedResultsSize += g_rtConfig->MaxResults;
+            estimatedResultsSize += g_rtConfig->MaxResultRank;
             if(estimatedResultsSize>g_rtConfig->ResultsPerBatch) 
             {
                 batches.push_back(current);
                 current.reset(new SpectraList());
-                estimatedResultsSize = g_rtConfig->MaxResults;
+                estimatedResultsSize = g_rtConfig->MaxResultRank * 2;
             }
             current->push_back((*sItr));
         }
@@ -1093,44 +720,6 @@ namespace myrimatch
         return batches;
     }
 
-    /*inline vector<int> estimateSpectralBatches()
-    {
-        int estimatedResultsSize = 0;
-        int batchSize = 0;
-        int currentIndex = 0;
-        vector<int> batches;
-        vector<int> batchSizes;
-        // For each spectrum
-        for( SpectraList::const_iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr ) 
-        {
-            // Check the result size, if it exceeds the limit, then push back the
-            // current list into the vector and get a fresh list
-            estimatedResultsSize += g_rtConfig->MaxResults;
-            if(estimatedResultsSize>g_rtConfig->ResultsPerBatch) 
-            {
-                batches.push_back(currentIndex-1);
-                batchSize.push_back(batchSize-1);
-                estimatedResultsSize = g_rtConfig->MaxResults;
-                batchSize = 0;
-            }
-            ++currentIndex;
-            ++batchSize;
-        }
-        // Make sure you push back the last batch
-        if(batchSize>0) {
-            batches.push_back(currentIndex);
-            batchSizes.push_back(batchSize);
-        }
-        // Check to see if the last batch is not a tiny batch
-        if(batcheSize.back()<1000 && batches.size()>1) 
-        {
-            int lastIndex = batches.pop_back();
-            int penultimateIndex = batches.pop_back();
-            batches.push_back(lastIndex);
-        }
-        return batches;
-    }*/
-
     /**
         This function is the entry point into the MyriMatch search engine. This
         function process the command line arguments, sets up the search, triggers
@@ -1138,9 +727,6 @@ namespace myrimatch
      */
 	int ProcessHandler( int argc, char* argv[] )
 	{
-        // One thread at a time please...
-		simplethread_create_mutex( &resourceMutex );
-
         // Get the command line arguments and process them
 		vector< string > args;
 		for( int i=0; i < argc; ++i )
@@ -1167,7 +753,7 @@ namespace myrimatch
 
 			if( g_inputFilenames.empty() )
 			{
-				cout << g_hostString << " did not find any spectra matching given filemasks." << endl;
+				cout << "No data sources found with the given filemasks." << endl;
 				return 1;
 			}
 
@@ -1175,7 +761,7 @@ namespace myrimatch
 				return 1;
 
             // Read the protein database
-			cout << g_hostString << " is reading \"" << g_dbFilename << "\"" << endl;
+			cout << "Reading \"" << g_dbFilename << "\"" << endl;
 			Timer readTime(true);
 			try
 			{
@@ -1186,11 +772,11 @@ namespace myrimatch
 				cout << g_hostString << " had an error: " << e.what() << endl;
 				return 1;
 			}
-			cout << g_hostString << " read " << proteins.size() << " proteins; " << readTime.End() << " seconds elapsed." << endl;
-            
+			cout << "Read " << proteins.size() << " proteins; " << readTime.End() << " seconds elapsed." << endl;
+
             // randomize order of the proteins to optimize work distribution
             // in the MPI and multi-threading mode.
-			proteins.random_shuffle(); 
+			proteins.random_shuffle();
 
             // If we are running in clster mode and this is a master process then
             // compute the protein batch size using numer of child processes. Each 
@@ -1200,7 +786,7 @@ namespace myrimatch
 				if( g_numChildren > 0 )
 				{
 					g_rtConfig->ProteinBatchSize = (int) ceil( (float) proteins.size() / (float) g_numChildren / (float) g_rtConfig->NumBatches );
-					cout << g_hostString << " calculates dynamic protein batch size is " << g_rtConfig->ProteinBatchSize << endl;
+					cout << "Dynamic protein batch size is " << g_rtConfig->ProteinBatchSize << endl;
 				}
 			#endif
 
@@ -1211,27 +797,23 @@ namespace myrimatch
 			{
 				Timer fileTime(true);
 
-                // Hold the spectra objects
 				spectra.clear();
-                // Holds the map of parent mass to corresponding spectra
-				spectraMassMapsByChargeState.clear();
+				avgSpectraByChargeState.clear();
+                monoSpectraByChargeState.clear();
 
 				//if( !TestFileType( *fItr, "mzdata" ) )
 				//	continue;
 
-				cout << g_hostString << " is reading spectra from file \"" << *fItr << "\"" << endl;
+				cout << "Reading spectra from file \"" << *fItr << "\"" << endl;
 				finishedFiles.insert( *fItr );
 
 				Timer readTime(true);
-				//long long memoryUsageCap = (int) GetAvailablePhysicalMemory() / 4;
-				//int peakCountCap = (float) memoryUsageCap / ( sizeof( peakPreInfo ) + sizeof( peakInfo ) );
-				//cout << g_hostString << " sets memory usage ceiling at " << memoryUsageCap << ", or about " << peakCountCap << " total peaks." << endl;
-                
+
                 // Read the spectra
 				try
 				{
 					spectra.readPeaks( *fItr,
-                                       g_rtConfig->StartSpectraScanNum, g_rtConfig->EndSpectraScanNum,
+                                       0, -1,
                                        2, // minMsLevel
                                        g_rtConfig->SpectrumListFilters );
 				} catch( std::exception& e )
@@ -1239,20 +821,6 @@ namespace myrimatch
 					cerr << g_hostString << " had an error: " << e.what() << endl;
 					return 1;
 				}
-
-				
-				/*int i = 0;	
-				while( GetAvailablePhysicalMemory() - 2*totalPeakCount*(sizeof(PeakInfo)+sizeof(float)) > 100000000 )
-				{
-					if( DataReader.ReadSpectra( g_rtConfig[ "SpectraBatchSize" ) ) < 1 )
-						break;
-					for( ; i < (int) baseList.size(); ++i )
-						totalPeakCount += baseList[i]->peakCount;
-				}*/
-				//if( g_rtConfig->EndSpectraIndex > 0 )
-					//DataReader.ReadSpectraRange( 1000, 1025 );
-				//else
-				//	DataReader.ReadSpectra( 0, peakCountCap );
                 
                 // Compute the peak counts
                 int totalPeakCount = 0;
@@ -1260,12 +828,12 @@ namespace myrimatch
 				for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
 					totalPeakCount += (*sItr)->peakPreCount;
 
-				cout << g_hostString << " read " << numSpectra << " spectra with " << totalPeakCount << " peaks; " << readTime.End() << " seconds elapsed." << endl;
+				cout << "Read " << numSpectra << " spectra with " << totalPeakCount << " peaks; " << readTime.End() << " seconds elapsed." << endl;
 
 				int skip = 0;
 				if( numSpectra == 0 )
 				{
-					cout << g_hostString << " is skipping a file with no spectra." << endl;
+					cout << "Skipping a file with no spectra." << endl;
 					skip = 1;
 				}
 
@@ -1274,7 +842,7 @@ namespace myrimatch
 					if( g_numChildren > 0 && !g_rtConfig->EstimateSearchTimeOnly )
 					{
 						g_rtConfig->SpectraBatchSize = (int) ceil( (float) numSpectra / (float) g_numChildren / (float) g_rtConfig->NumBatches );
-						cout << g_hostString << " calculates dynamic spectra batch size is " << g_rtConfig->SpectraBatchSize << endl;
+						cout << "Dynamic spectra batch size is " << g_rtConfig->SpectraBatchSize << endl;
 					}
 
 					for( int p=0; p < g_numChildren; ++p )
@@ -1284,7 +852,6 @@ namespace myrimatch
 				Timer searchTime;
 				string startTime;
 				string startDate;
-				searchStats sumSearchStats;
 				vector< size_t > opcs; // original peak count statistics
 				vector< size_t > fpcs; // filtered peak count statistics
 
@@ -1296,7 +863,7 @@ namespace myrimatch
 					{
 						#ifdef USE_MPI
                         // Send some spectra away to the child nodes for processing
-						cout << g_hostString << " is sending spectra to worker nodes to prepare them for search." << endl;
+						cout << "Sending spectra to worker nodes to prepare them for search." << endl;
 						Timer prepareTime(true);
 						TransmitUnpreparedSpectraToChildProcesses();
 						spectra.clear();
@@ -1306,7 +873,7 @@ namespace myrimatch
 						skip = 0;
 						if( numSpectra == 0 )
 						{
-							cout << g_hostString << " is skipping a file with no suitable spectra." << endl;
+							cout << "Skipping a file with no suitable spectra." << endl;
 							skip = 1;
 						}
                         
@@ -1320,18 +887,16 @@ namespace myrimatch
                             // Get peak count stats
 							opcs = spectra.getOriginalPeakCountStatistics();
 							fpcs = spectra.getFilteredPeakCountStatistics();
-							cout << g_hostString << ": mean original (filtered) peak count: " <<
-									opcs[5] << " (" << fpcs[5] << ")" << endl;
-							cout << g_hostString << ": min/max original (filtered) peak count: " <<
-									opcs[0] << " (" << fpcs[0] << ") / " << opcs[1] << " (" << fpcs[1] << ")" << endl;
-							cout << g_hostString << ": original (filtered) peak count at 1st/2nd/3rd quartiles: " <<
+							cout << "Mean original (filtered) peak count: " << opcs[5] << " (" << fpcs[5] << ")" << endl;
+							cout << "Min/max original (filtered) peak count: " << opcs[0] << " (" << fpcs[0] << ") / " << opcs[1] << " (" << fpcs[1] << ")" << endl;
+							cout << "Original (filtered) peak count at 1st/2nd/3rd quartiles: " <<
 									opcs[2] << " (" << fpcs[2] << "), " <<
 									opcs[3] << " (" << fpcs[3] << "), " <<
 									opcs[4] << " (" << fpcs[4] << ")" << endl;
 
 							float filter = 1.0f - ( (float) fpcs[5] / (float) opcs[5] );
-							cout << g_hostString << " filtered out " << filter * 100.0f << "% of peaks." << endl;
-							cout << g_hostString << " has " << numSpectra << " spectra prepared now; " << prepareTime.End() << " seconds elapsed." << endl;
+							cout << "Filtered out " << filter * 100.0f << "% of peaks." << endl;
+							cout << "Prepared " << numSpectra << " spectra; " << prepareTime.End() << " seconds elapsed." << endl;
                             
                             // Init the globals
 							InitWorkerGlobals();
@@ -1341,7 +906,7 @@ namespace myrimatch
                             // Split the spectra into batches if needed
                             vector<SpectraListPtr> batches = estimateSpectralBatches();
                             if(batches.size()>1)
-                                cout << g_hostString << " is splitting spectra into " << batches.size() << " batches for search." << endl;
+                                cout << "Splitting spectra into " << batches.size() << " batches for search." << endl;
                             startTime = GetTimeString(); startDate = GetDateString(); searchTime.Begin();
                             // For each spectral batch
                             size_t batchIndex = 0;
@@ -1362,12 +927,12 @@ namespace myrimatch
                                     lastBatch = 1;
                                 // Transmit spectra to all children. Also tell them if this is
                                 // the last batch of the spectra they would be getting from the parent.
-                                cout << g_hostString << " is sending some prepared spectra to all worker nodes from a pool of " << spectra.size() << " spectra" << batchString.str() << "." << endl;
+                                cout << "Sending some prepared spectra to all worker nodes from a pool of " << spectra.size() << " spectra" << batchString.str() << "." << endl;
                                 try
                                 {
 								    Timer sendTime(true);
 								    numSpectra = TransmitSpectraToChildProcesses(lastBatch);
-								    cout << g_hostString << " is finished sending " << numSpectra << " prepared spectra to all worker nodes; " <<
+								    cout << "Finished sending " << numSpectra << " prepared spectra to all worker nodes; " <<
 										    sendTime.End() << " seconds elapsed." << endl;
                                 } catch( std::exception& e )
                                 {
@@ -1375,30 +940,30 @@ namespace myrimatch
                                     MPI_Abort( MPI_COMM_WORLD, 1 );
                                 }
                                 // Transmit the proteins and start the search.
-								cout << g_hostString << " is commencing database search on " << numSpectra << " spectra" << batchString.str() << "." << endl;
+								cout << "Commencing database search on " << numSpectra << " spectra" << batchString.str() << "." << endl;
                                 try
                                 {
 								    Timer batchTimer(true); batchTimer.Begin();
 								    TransmitProteinsToChildProcesses();
-								    cout << g_hostString << " has finished database search; " << batchTimer.End() << " seconds elapsed" << batchString.str() << "." << endl;
+								    cout << "Finished database search; " << batchTimer.End() << " seconds elapsed" << batchString.str() << "." << endl;
                                 } catch( std::exception& e )
                                 {
                                     cout << g_hostString << " had an error transmitting protein batches: " << e.what() << endl;
                                     MPI_Abort( MPI_COMM_WORLD, 1 );
                                 }
                                 // Get the results
-								cout << g_hostString << " is receiving search results for " << numSpectra << " spectra" << batchString.str() << "." << endl;
+								cout << "Receiving search results for " << numSpectra << " spectra" << batchString.str() << "." << endl;
                                 try
                                 {
 								    Timer receiveTime(true);
-								    ReceiveResultsFromChildProcesses(sumSearchStats, ((*bItr) == batches.front()));
-								    cout << g_hostString << " is finished receiving search results; " << receiveTime.End() << " seconds elapsed." << endl;
+								    ReceiveResultsFromChildProcesses(((*bItr) == batches.front()));
+								    cout << "Finished receiving search results; " << receiveTime.End() << " seconds elapsed." << endl;
                                 } catch( std::exception& e )
                                 {
                                     cout << g_hostString << " had an error receiving results: " << e.what() << endl;
                                     MPI_Abort( MPI_COMM_WORLD, 1 );
                                 }
-								cout << g_hostString << " overall stats: " << (string) sumSearchStats << endl;
+								cout << "Overall stats: " << (string) searchStatistics << endl;
                                 
                                 // Store the searched spectra in a list and clear the 
                                 // master list for next batch
@@ -1407,10 +972,12 @@ namespace myrimatch
                                 (*bItr)->clear( false );
 							}
                             searchTime.End();
+
                             // Move the searched spectra from temporary list to the master list
                             spectra.clear( false );
                             spectra.insert(finishedSpectra.begin(), finishedSpectra.end(), spectra.end() );
 							finishedSpectra.clear(false);
+
                             // Spectra are randomly shuffled for load distribution during batching process
                             // Sort them back by ID.
                             spectra.sort( spectraSortByID() );
@@ -1423,16 +990,16 @@ namespace myrimatch
 					{
                         // If we are not in the MPI mode then prepare the spectra
                         // ourselves
-						cout << g_hostString << " is preparing " << numSpectra << " spectra." << endl;
+						cout << "Preparing " << numSpectra << " spectra." << endl;
 						Timer prepareTime(true);
 						PrepareSpectra();
-						cout << g_hostString << " is finished preparing spectra; " << prepareTime.End() << " seconds elapsed." << endl;
+						cout << "Finished preparing spectra; " << prepareTime.End() << " seconds elapsed." << endl;
 						numSpectra = (int) spectra.size();
 
 						skip = 0;
 						if( numSpectra == 0 )
 						{
-							cout << g_hostString << " is skipping a file with no suitable spectra." << endl;
+							cout << "Skipping a file with no suitable spectra." << endl;
 							skip = 1;
 						}
                         // If the file has spectra to search
@@ -1440,34 +1007,32 @@ namespace myrimatch
 						{
 							opcs = spectra.getOriginalPeakCountStatistics();
 							fpcs = spectra.getFilteredPeakCountStatistics();
-							cout << g_hostString << ": mean original (filtered) peak count: " <<
-									opcs[5] << " (" << fpcs[5] << ")" << endl;
-							cout << g_hostString << ": min/max original (filtered) peak count: " <<
-									opcs[0] << " (" << fpcs[0] << ") / " << opcs[1] << " (" << fpcs[1] << ")" << endl;
-							cout << g_hostString << ": original (filtered) peak count at 1st/2nd/3rd quartiles: " <<
+							cout << "Mean original (filtered) peak count: " << opcs[5] << " (" << fpcs[5] << ")" << endl;
+							cout << "Min/max original (filtered) peak count: " << opcs[0] << " (" << fpcs[0] << ") / " << opcs[1] << " (" << fpcs[1] << ")" << endl;
+							cout << "Original (filtered) peak count at 1st/2nd/3rd quartiles: " <<
 									opcs[2] << " (" << fpcs[2] << "), " <<
 									opcs[3] << " (" << fpcs[3] << "), " <<
 									opcs[4] << " (" << fpcs[4] << ")" << endl;
 							float filter = 1.0f - ( (float) fpcs[5] / (float) opcs[5] );
-							cout << g_hostString << " filtered out " << filter * 100.0f << "% of peaks." << endl;
+							cout << "Filtered out " << filter * 100.0f << "% of peaks." << endl;
 
 							InitWorkerGlobals();
                             // Start the search
 							if( !g_rtConfig->EstimateSearchTimeOnly )
 							{
-								cout << g_hostString << " is commencing database search on " << numSpectra << " spectra." << endl;
+								cout << "Commencing database search on " << numSpectra << " spectra." << endl;
 								startTime = GetTimeString(); startDate = GetDateString(); searchTime.Begin();
-								sumSearchStats = ExecuteSearch();
-								cout << g_hostString << " has finished database search; " << searchTime.End() << " seconds elapsed." << endl;
+								ExecuteSearch();
+								cout << "Finished database search; " << searchTime.End() << " seconds elapsed." << endl;
 				
-								cout << g_hostString << " overall stats: " << (string) sumSearchStats << endl;
+								cout << "Overall stats: " << (string) searchStatistics << endl;
 							} else
                             {
-                                cout << g_hostString << " is estimating the count of sequence comparisons to be done." << endl;
-                                sumSearchStats = ExecuteSearch();
-                                double estimatedComparisonsPerProtein = sumSearchStats.numComparisonsDone / (double) sumSearchStats.numProteinsDigested;
+                                cout << "Estimating the count of sequence comparisons to be done." << endl;
+                                ExecuteSearch();
+                                double estimatedComparisonsPerProtein = searchStatistics.numComparisonsDone / (double) searchStatistics.numProteinsDigested;
                                 boost::int64_t estimatedTotalComparisons = (boost::int64_t) (estimatedComparisonsPerProtein * proteins.size());
-                                cout << g_hostString << " will make an estimated total of " << estimatedTotalComparisons << " sequence comparisons." << endl;
+                                cout << "Will make an estimated total of " << estimatedTotalComparisons << " sequence comparisons." << endl;
                                 //cout << g_hostString << " will make an estimated " << estimatedComparisonsPerProtein << " sequence comparisons per protein." << endl;
 								skip = 1;
                             }
@@ -1476,11 +1041,10 @@ namespace myrimatch
 						DestroyWorkerGlobals();
 					}
                     // Write the output
-                    if( !skip ) {
-                        if(g_rtConfig->ComputeXCorr)
-                            ComputeXCorrs(*fItr);
-                        WriteOutputToFile( *fItr, startTime, startDate, searchTime.End(), opcs, fpcs, sumSearchStats );
-                        cout << g_hostString << " finished file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
+                    if( !skip )
+                    {
+                        WriteOutputToFile( *fItr, startTime, startDate, searchTime.End(), opcs, fpcs, searchStatistics );
+                        cout << "Finished file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
                         //PRINT_PROFILERS(cout,"old");
                     }
 
@@ -1547,16 +1111,13 @@ namespace myrimatch
 							InitWorkerGlobals();
 
 							int numBatches = 0;
-							searchStats sumSearchStats;
-							searchStats lastSearchStats;
                             try
                             {
-							    while( ReceiveProteinBatchFromRootProcess( lastSearchStats.numComparisonsDone ) )
+							    while( ReceiveProteinBatchFromRootProcess() )
 							    {
 								    ++ numBatches;
 
-								    lastSearchStats = ExecuteSearch();
-								    sumSearchStats = sumSearchStats + lastSearchStats;
+								    ExecuteSearch();
 							    }
                             } catch( std::exception& e )
                             {
@@ -1564,11 +1125,15 @@ namespace myrimatch
                                 MPI_Abort( MPI_COMM_WORLD, 1 );
                             }
 
-							cout << g_hostString << " stats: " << numBatches << " batches; " << (string) sumSearchStats << endl;
+							cout << g_hostString << " stats: " << numBatches << " batches; " << (string) searchStatistics << endl;
 
                             try
                             {
-							    TransmitResultsToRootProcess( sumSearchStats );
+                                // compute xcorr for top ranked results
+                                if( g_rtConfig->ComputeXCorr )
+                                    ComputeXCorrs();
+
+							    TransmitResultsToRootProcess();
                             } catch( std::exception& e )
                             {
                                 cout << g_hostString << " had an error transmitting results: " << e.what() << endl;
@@ -1577,7 +1142,8 @@ namespace myrimatch
 
 							DestroyWorkerGlobals();
 							spectra.clear();
-							spectraMassMapsByChargeState.clear();
+                            avgSpectraByChargeState.clear();
+							monoSpectraByChargeState.clear();
 						} while( !done );
 					}
 				}

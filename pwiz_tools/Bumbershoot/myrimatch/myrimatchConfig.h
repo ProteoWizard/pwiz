@@ -26,69 +26,68 @@
 #include "stdafx.h"
 #include "freicore.h"
 #include "BaseRunTimeConfig.h"
-#include "pwiz/utility/math/erf.hpp"
+#include "pwiz/data/mziddata/MzIdentMLFile.hpp"
+
 
 using namespace freicore;
-using namespace pwiz;
-using namespace pwiz::math;
+
 
 #define MYRIMATCH_RUNTIME_CONFIG \
-	COMMON_RTCONFIG SPECTRUM_RTCONFIG SEQUENCE_RTCONFIG MULTITHREAD_RTCONFIG \
-	RTCONFIG_VARIABLE( string,			OutputSuffix,				""				) \
-    RTCONFIG_VARIABLE( string,          ProteinDatabase,            ""              ) \
-    RTCONFIG_VARIABLE( string,          DecoyPrefix,                "rev_"          ) \
-    RTCONFIG_VARIABLE( string,          FragmentationRule,          "cid"           ) \
-    RTCONFIG_VARIABLE( bool,            FragmentationAutoRule,      true            ) \
-	RTCONFIG_VARIABLE( int,				MaxResults,					5				) \
-	RTCONFIG_VARIABLE( int,				NumIntensityClasses,		3				) \
-	RTCONFIG_VARIABLE( int,				NumMzFidelityClasses,		3				) \
-	RTCONFIG_VARIABLE( int,				StartSpectraScanNum,		0				) \
-	RTCONFIG_VARIABLE( int,				EndSpectraScanNum,			-1				) \
-	RTCONFIG_VARIABLE( int,				NumBatches,					50				) \
-	RTCONFIG_VARIABLE( double,			TicCutoffPercentage,		0.98			) \
-	RTCONFIG_VARIABLE( double,			ClassSizeMultiplier,		2.0			    ) \
-	RTCONFIG_VARIABLE( double,			MinResultScore,				0.0			    ) \
-	RTCONFIG_VARIABLE( bool,			AdjustPrecursorMass,		false			) \
-	RTCONFIG_VARIABLE( double,			MinPrecursorAdjustment,		-2.5			) \
-	RTCONFIG_VARIABLE( double,			MaxPrecursorAdjustment,		2.5			    ) \
-	RTCONFIG_VARIABLE( double,			PrecursorAdjustmentStep,	0.1			    ) \
-	RTCONFIG_VARIABLE( int,				NumSearchBestAdjustments,	1				) \
-	RTCONFIG_VARIABLE( double,			MinSequenceMass,			0.0				) \
-	RTCONFIG_VARIABLE( double,			MaxSequenceMass,			10000.0f		) \
-    RTCONFIG_VARIABLE( int,				MaxSequenceLength,	        75				) \
-	RTCONFIG_VARIABLE( bool,			PreferIntenseComplements,	true			) \
-	RTCONFIG_VARIABLE( int,				DeisotopingMode,			0				) \
-	RTCONFIG_VARIABLE( int,				ProteinSamplingTime,		15				) \
-	RTCONFIG_VARIABLE( bool,			EstimateSearchTimeOnly,		false			) \
-	RTCONFIG_VARIABLE( int,				StartProteinIndex,			0				) \
-	RTCONFIG_VARIABLE( int,				EndProteinIndex,			-1				) \
-	RTCONFIG_VARIABLE( string,			CleavageRules,				"trypsin/p"     ) \
-	RTCONFIG_VARIABLE( int,				NumMinTerminiCleavages,		2				) \
-	RTCONFIG_VARIABLE( int,				NumMaxMissedCleavages,		-1				) \
-	RTCONFIG_VARIABLE( int,				MinCandidateLength,			5				) \
-	RTCONFIG_VARIABLE( bool,			CalculateRelativeScores,	false			) \
-	RTCONFIG_VARIABLE( bool,			MakeSpectrumGraphs,			false			) \
-	RTCONFIG_VARIABLE( bool,			MakeScoreHistograms,		false			) \
-	RTCONFIG_VARIABLE( int,				NumScoreHistogramBins,		100				) \
-	RTCONFIG_VARIABLE( int,				MaxScoreHistogramValues,	100				) \
-	RTCONFIG_VARIABLE( int,				ScoreHistogramWidth,		800				) \
-	RTCONFIG_VARIABLE( int,				ScoreHistogramHeight,		600				) \
-	RTCONFIG_VARIABLE( int,				MaxFragmentChargeState,		0				) \
-    RTCONFIG_VARIABLE( int,				ResultsPerBatch, 		    200000		    ) \
-    RTCONFIG_VARIABLE( bool,			ComputeXCorr,		        true			) \
-    RTCONFIG_VARIABLE( int,			    MaxPeakCount,               300   		    ) \
-    RTCONFIG_VARIABLE( string,          SpectrumListFilters,  "peakPicking true 2-" )
-	//RTCONFIG_VARIABLE( int,				DeisotopingTestMode,		0				)
+    COMMON_RTCONFIG MULTITHREAD_RTCONFIG \
+    RTCONFIG_VARIABLE( string,          OutputFormat,                   "pepXML"                ) \
+    RTCONFIG_VARIABLE( string,          OutputSuffix,                   ""                      ) \
+    RTCONFIG_VARIABLE( string,          ProteinDatabase,                ""                      ) \
+    RTCONFIG_VARIABLE( string,          DecoyPrefix,                    "rev_"                  ) \
+    RTCONFIG_VARIABLE( string,          PrecursorMzToleranceRule,       "auto"                  ) \
+    RTCONFIG_VARIABLE( IntegerSet,      MonoisotopeAdjustmentSet,       string("[-1,2]")        ) \
+    RTCONFIG_VARIABLE( MZTolerance,     MonoPrecursorMzTolerance,       string("10 ppm")        ) \
+    RTCONFIG_VARIABLE( MZTolerance,     AvgPrecursorMzTolerance,        string("1.5 mz")        ) \
+    RTCONFIG_VARIABLE( MZTolerance,     FragmentMzTolerance,            string("0.5 mz")        ) \
+    RTCONFIG_VARIABLE( string,          FragmentationRule,              "cid"                   ) \
+    RTCONFIG_VARIABLE( bool,            FragmentationAutoRule,          true                    ) \
+    RTCONFIG_VARIABLE( int,             MaxResultRank,                  2                       ) \
+    RTCONFIG_VARIABLE( int,             NumIntensityClasses,            3                       ) \
+    RTCONFIG_VARIABLE( int,             NumMzFidelityClasses,           3                       ) \
+    RTCONFIG_VARIABLE( int,             NumBatches,                     50                      ) \
+    RTCONFIG_VARIABLE( double,          TicCutoffPercentage,            0.98                    ) \
+    RTCONFIG_VARIABLE( double,          ClassSizeMultiplier,            2.0                     ) \
+    RTCONFIG_VARIABLE( double,          MinResultScore,                 1e-7                    ) \
+    RTCONFIG_VARIABLE( double,          MinPeptideMass,                 0.0                     ) \
+    RTCONFIG_VARIABLE( double,          MaxPeptideMass,                 10000.0                 ) \
+    RTCONFIG_VARIABLE( int,             MinPeptideLength,               5                       ) \
+    RTCONFIG_VARIABLE( int,             MaxPeptideLength,               75                      ) \
+    RTCONFIG_VARIABLE( bool,            PreferIntenseComplements,       true                    ) \
+    RTCONFIG_VARIABLE( int,             ProteinSamplingTime,            15                      ) \
+    RTCONFIG_VARIABLE( bool,            EstimateSearchTimeOnly,         false                   ) \
+    RTCONFIG_VARIABLE( string,          CleavageRules,                  "trypsin/p"             ) \
+    RTCONFIG_VARIABLE( int,             MinTerminiCleavages,            2                       ) \
+    RTCONFIG_VARIABLE( int,             MaxMissedCleavages,             -1                      ) \
+    RTCONFIG_VARIABLE( int,             MaxFragmentChargeState,         0                       ) \
+    RTCONFIG_VARIABLE( int,             ResultsPerBatch,                200000                  ) \
+    RTCONFIG_VARIABLE( bool,            ComputeXCorr,                   true                    ) \
+    RTCONFIG_VARIABLE( int,             MaxPeakCount,                   300                     ) \
+    RTCONFIG_VARIABLE( string,          SpectrumListFilters,            "peakPicking true 2-"   ) \
+    RTCONFIG_VARIABLE( string,          ProteinListFilters,             ""                      ) \
+    RTCONFIG_VARIABLE( bool,            UseSmartPlusThreeModel,         true                    ) \
+    RTCONFIG_VARIABLE( bool,            UseChargeStateFromMS,           false                   ) \
+    RTCONFIG_VARIABLE( string,          StaticMods,                     ""                      ) \
+    RTCONFIG_VARIABLE( string,          DynamicMods,                    ""                      ) \
+    RTCONFIG_VARIABLE( int,             MaxDynamicMods,                 2                       ) \
+    RTCONFIG_VARIABLE( int,             MaxPeptideVariants,             1000000                 )
 
 
 namespace freicore
 {
 namespace myrimatch
 {
-	struct RunTimeConfig : public BaseRunTimeConfig
-	{
-	public:
-		RTCONFIG_DEFINE_MEMBERS( RunTimeConfig, MYRIMATCH_RUNTIME_CONFIG, "\r\n\t ", "myrimatch.cfg", "\r\n#" )
+    // TODO: move to its own class?
+    enum MzToleranceRule { MzToleranceRule_Auto, MzToleranceRule_Mono, MzToleranceRule_Avg };
+
+    struct RunTimeConfig : public BaseRunTimeConfig
+    {
+
+    public:
+        RTCONFIG_DEFINE_MEMBERS( RunTimeConfig, MYRIMATCH_RUNTIME_CONFIG, "\r\n\t ", "myrimatch.cfg", "\r\n#" )
 
         boost::regex cleavageAgentRegex;
         Digestion::Config digestionConfig;
@@ -97,27 +96,41 @@ namespace myrimatch
 
         DynamicModSet   dynamicMods;
         StaticModSet    staticMods;
+        double          largestNegativeDynamicModMass;
+        double          largestPositiveDynamicModMass;
 
-		int				SpectraBatchSize;
-		int				ProteinBatchSize;
-		int				ProteinIndexOffset;
-		double			curMinSequenceMass;
-		double			curMaxSequenceMass;
-		int				minIntensityClassCount;
-		int				minMzFidelityClassCount;
-		int				maxFragmentChargeState;
-		int             maxChargeStateFromSpectra;
-		vector<double>	PrecursorMassTolerance;
-		// Compute the fragment mass error bins and their associated log odds scores
-		vector < double > massErrors;
-		vector < double > mzFidelityLods;
-		// Mass units
-		MassUnits		precursorMzToleranceUnits;
-		MassUnits		fragmentMzToleranceUnits;
+        int             SpectraBatchSize;
+        int             ProteinBatchSize;
+        int             ProteinIndexOffset;
+        double          curMinPeptideMass;
+        double          curMaxPeptideMass;
+        int             minIntensityClassCount;
+        int             minMzFidelityClassCount;
+        int             maxFragmentChargeState;
+        int             maxChargeStateFromSpectra;
 
-	private:
-		void finalize()
-		{
+        MzToleranceRule precursorMzToleranceRule;
+
+        vector<MZTolerance> avgPrecursorMassTolerance;
+        vector<MZTolerance> monoPrecursorMassTolerance;
+
+        // Compute the fragment mass error bins and their associated log odds scores
+        vector<double>  massErrors;
+        vector<double>  mzFidelityLods;
+
+        pwiz::mziddata::MzIdentMLFile::Format outputFormat;
+
+    private:
+        void finalize()
+        {
+            if (bal::iequals(OutputFormat, "pepXML"))
+                outputFormat = pwiz::mziddata::MzIdentMLFile::Format_pepXML;
+            else if (bal::iequals(OutputFormat, "mzIdentML"))
+                outputFormat = pwiz::mziddata::MzIdentMLFile::Format_MzIdentML;
+            else
+                throw runtime_error("invalid output format");
+
+            // TODO: move CleavageRules parsing to its own class
             trim(CleavageRules); // trim flanking whitespace
             if( CleavageRules.find(' ') == string::npos )
             {
@@ -152,20 +165,22 @@ namespace myrimatch
             {
                 // multiple tokens must be a CleavageRuleSet
                 CleavageRuleSet tmpRuleSet;
-			    stringstream CleavageRulesStream( CleavageRules );
-			    CleavageRulesStream >> tmpRuleSet;
+                stringstream CleavageRulesStream( CleavageRules );
+                CleavageRulesStream >> tmpRuleSet;
                 cleavageAgentRegex = boost::regex(tmpRuleSet.asCleavageAgentRegex());
             }
 
-            NumMaxMissedCleavages = NumMaxMissedCleavages < 0 ? 100000 : NumMaxMissedCleavages;
+            MaxMissedCleavages = MaxMissedCleavages < 0 ? 100000 : MaxMissedCleavages;
 
+            // TODO: move fragmentation rule parsing to its own class
             vector<string> fragmentationRuleTokens;
             split( fragmentationRuleTokens, FragmentationRule, is_any_of(":") );
             if( fragmentationRuleTokens.empty() )
                 throw runtime_error("invalid blank fragmentation rule");
 
             const string& mode = fragmentationRuleTokens[0];
-            if( mode == "cid" )
+            defaultFragmentTypes.reset();
+            if( mode.empty() || mode == "cid" )
             {
                 defaultFragmentTypes[FragmentType_B] = true;
                 defaultFragmentTypes[FragmentType_Y] = true;
@@ -205,149 +220,118 @@ namespace myrimatch
             } else
                 throw runtime_error("invalid fragmentation mode \"" + mode + "\"");
 
-			if( ProteinSamplingTime == 0 )
+            if( ProteinSamplingTime == 0 )
             {
                 EstimateSearchTimeOnly = 0;
                 if( g_pid == 0 )
                     cerr << g_hostString << ": ProteinSamplingTime = 0 disables EstimateSearchTimeOnly" << endl;
             }
 
-			ProteinIndexOffset = 0;
+            // TODO: move mzToleranceRule to its own class
+            bal::to_lower(PrecursorMzToleranceRule);
+            if( PrecursorMzToleranceRule == "auto" )
+                precursorMzToleranceRule = MzToleranceRule_Auto;
+            else if( PrecursorMzToleranceRule == "mono" )
+                precursorMzToleranceRule = MzToleranceRule_Mono;
+            else if( PrecursorMzToleranceRule == "avg" )
+                precursorMzToleranceRule = MzToleranceRule_Avg;
 
-			string cwd;
-			cwd.resize( MAX_PATH );
-			getcwd( &cwd[0], MAX_PATH );
-			WorkingDirectory = cwd.c_str();
+            ProteinIndexOffset = 0;
 
-			if( AdjustPrecursorMass )
-			{
-				UseAvgMassOfSequences = false;
-			}
+            string cwd;
+            cwd.resize( MAX_PATH );
+            getcwd( &cwd[0], MAX_PATH );
+            WorkingDirectory = cwd.c_str();
 
-			if( TicCutoffPercentage > 1.0 )
-			{
-				TicCutoffPercentage /= 100.0;
-				if( g_pid == 0 )
-					cerr << g_hostString << ": TicCutoffPercentage > 1.0 (100%) corrected, now at: " << TicCutoffPercentage << endl;
-			}
+            if( TicCutoffPercentage > 1.0 )
+            {
+                TicCutoffPercentage /= 100.0;
+                if( g_pid == 0 )
+                    cerr << g_hostString << ": TicCutoffPercentage > 1.0 (100%) corrected, now at: " << TicCutoffPercentage << endl;
+            }
 
 
-			if( !DynamicMods.empty() )
-			{
-				DynamicMods = TrimWhitespace( DynamicMods );
-				dynamicMods = DynamicModSet( DynamicMods );
-			}
+            if( !DynamicMods.empty() )
+            {
+                DynamicMods = TrimWhitespace( DynamicMods );
+                dynamicMods = DynamicModSet( DynamicMods );
+            }
 
-			if( !StaticMods.empty() )
-			{
-				StaticMods = TrimWhitespace( StaticMods );
-				staticMods = StaticModSet( StaticMods );
-			}
+            if( !StaticMods.empty() )
+            {
+                StaticMods = TrimWhitespace( StaticMods );
+                staticMods = StaticModSet( StaticMods );
+            }
+            
+            BOOST_FOREACH(const DynamicMod& mod, dynamicMods)
+            {
+                largestPositiveDynamicModMass = max(largestPositiveDynamicModMass, mod.modMass * MaxDynamicMods);
+                largestNegativeDynamicModMass = min(largestNegativeDynamicModMass, mod.modMass * MaxDynamicMods);
+            }
 
-			// Setting mass units to unknown.
-			precursorMzToleranceUnits = UNKNOWN;
-			fragmentMzToleranceUnits = UNKNOWN;
-			// Convert the user input to lower case
-			to_lower(PrecursorMzToleranceUnits);
-			to_lower(FragmentMzToleranceUnits);
-			// Set the units approriately
-			if(PrecursorMzToleranceUnits.compare("daltons")==0) 
-			{
-				precursorMzToleranceUnits = DALTONS;
-			} else if(PrecursorMzToleranceUnits.compare("ppm")==0) {
-				precursorMzToleranceUnits = PPM;
-			}
-			if(FragmentMzToleranceUnits.compare("daltons")==0) 
-			{
-				fragmentMzToleranceUnits = DALTONS;
-			} else if(FragmentMzToleranceUnits.compare("ppm")==0) {
-				fragmentMzToleranceUnits = PPM;
-			}
-			// Make sure we know the mass units before we proceed with the search
-			if(precursorMzToleranceUnits == UNKNOWN || fragmentMzToleranceUnits == UNKNOWN) 
-			{
-				cout << "Error: Precursor and Fragment mass units are either unknown. Please set them to either daltons or ppm" << endl;
-				exit(1);
-			}
-			// Sanity checks
-			if((PrecursorMzTolerance-(int)PrecursorMzTolerance) > 0.0 && precursorMzToleranceUnits == PPM) 
-			{
-				cout << "Warning: PrecusorMzTolerance is set to fractional PPM (" << PrecursorMzTolerance << ")" << endl;
-			}
-			if((FragmentMzTolerance-(int)FragmentMzTolerance) > 0.0 && fragmentMzToleranceUnits == PPM) 
-			{
-				cout << "Warning: FragmentMzTolerance is set to fractional PPM (" << FragmentMzTolerance << ")" << endl;
-			}
-
-			// Set the mass tolerances for different charge state precursors
-			vector<double>& precursorMassTolerance = PrecursorMassTolerance;
-			precursorMassTolerance.clear();
-			for( int z=1; z <= NumChargeStates; ++z )
-				precursorMassTolerance.push_back( PrecursorMzTolerance * z );
-
-			if( ClassSizeMultiplier > 1 )
-			{
-				minIntensityClassCount = int( ( pow( ClassSizeMultiplier, NumIntensityClasses ) - 1 ) / ( ClassSizeMultiplier - 1 ) );
-				minMzFidelityClassCount = int( ( pow( ClassSizeMultiplier, NumMzFidelityClasses ) - 1 ) / ( ClassSizeMultiplier - 1 ) );
-			} else
-			{
-				minIntensityClassCount = NumIntensityClasses;
-				minMzFidelityClassCount = NumMzFidelityClasses;
-			}
-			
+            if( ClassSizeMultiplier > 1 )
+            {
+                minIntensityClassCount = int( ( pow( ClassSizeMultiplier, NumIntensityClasses ) - 1 ) / ( ClassSizeMultiplier - 1 ) );
+                minMzFidelityClassCount = int( ( pow( ClassSizeMultiplier, NumMzFidelityClasses ) - 1 ) / ( ClassSizeMultiplier - 1 ) );
+            } else
+            {
+                minIntensityClassCount = NumIntensityClasses;
+                minMzFidelityClassCount = NumMzFidelityClasses;
+            }
+            
             maxChargeStateFromSpectra = 0;
-			maxFragmentChargeState = ( MaxFragmentChargeState > 0 ? MaxFragmentChargeState+1 : NumChargeStates );
-			
-			vector<double> insideProbs;
-			int numBins = 5;
-			// Divide the fragment mass error into half and use it as standard deviation
-			double stdev = FragmentMzTolerance*0.5;
-			massErrors.clear();
-			insideProbs.clear();
-			mzFidelityLods.clear();
-			// Divide the mass error distributions into 10 bins.
-			for(int j = 1; j <= numBins; ++j) 
-			{
-				// Compute the mass error associated with each bin.
-				double massError = FragmentMzTolerance*((double)j/(double)numBins);
-				// Compute the cumulative distribution function of massError 
-				// with mu=0 and sig=stdev
-				double errX = (massError-0)/(stdev*sqrt(2.0));
-				double cdf = 0.5 * (1.0+pwiz::math::erf(errX));
-				// Compute the gaussian inside probability
-				double insideProb = 2.0*cdf-1.0;
-				// Save the mass errors and inside probabilities
-				massErrors.push_back(massError);
-				insideProbs.push_back(insideProb);
-			}
-			// mzFidelity bin probablities are dependent on the number of bin. So,
-			// compute the probabilities only once.
-			// Compute the probability associated with each mass error bin
-			double denom = insideProbs.back();
-			for(int j = 0; j < numBins; ++j) 
-			{
-				double prob;
-				if(j==0) {
-					prob = insideProbs[j]/denom;
-				} else {
-					prob = (insideProbs[j]-insideProbs[j-1])/denom;
-				}
-				// Compute the log odds ratio of GaussianProb to Uniform probability and save it
-				mzFidelityLods.push_back(log(prob*(double)numBins));
-			}
-			/*cout << "Error-Probs:" << endl;
-			for(int j = 0; j < numBins; ++j) 
-			{
-				cout << massErrors[j] << ":" << mzFidelityLods[j] << " ";
-			}
-			cout << endl;*/
-			//exit(1);
+            maxFragmentChargeState = ( MaxFragmentChargeState > 0 ? MaxFragmentChargeState+1 : NumChargeStates );
+            
+            vector<double> insideProbs;
+            int numBins = 5;
+            // Divide the fragment mass error into half and use it as standard deviation
+            double stdev = FragmentMzTolerance.value*0.5;
+            massErrors.clear();
+            insideProbs.clear();
+            mzFidelityLods.clear();
+            // Divide the mass error distributions into 10 bins.
+            for(int j = 1; j <= numBins; ++j) 
+            {
+                // Compute the mass error associated with each bin.
+                double massError = FragmentMzTolerance.value * ((double)j/(double)numBins);
+                // Compute the cumulative distribution function of massError 
+                // with mu=0 and sig=stdev
+                double errX = (massError-0)/(stdev*sqrt(2.0));
+                double cdf = 0.5 * (1.0+pwiz::math::erf(errX));
+                // Compute the gaussian inside probability
+                double insideProb = 2.0*cdf-1.0;
+                // Save the mass errors and inside probabilities
+                massErrors.push_back(massError);
+                insideProbs.push_back(insideProb);
+            }
+            // mzFidelity bin probablities are dependent on the number of bin. So,
+            // compute the probabilities only once.
+            // Compute the probability associated with each mass error bin
+            double denom = insideProbs.back();
+            for(int j = 0; j < numBins; ++j) 
+            {
+                double prob;
+                if(j==0) {
+                    prob = insideProbs[j]/denom;
+                } else {
+                    prob = (insideProbs[j]-insideProbs[j-1])/denom;
+                }
+                // Compute the log odds ratio of GaussianProb to Uniform probability and save it
+                mzFidelityLods.push_back(log(prob*(double)numBins));
+            }
+            /*cout << "Error-Probs:" << endl;
+            for(int j = 0; j < numBins; ++j) 
+            {
+                cout << massErrors[j] << ":" << mzFidelityLods[j] << " ";
+            }
+            cout << endl;*/
+            //exit(1);
 
-			
-		}
-	};
+            
+        }
+    };
 
-	extern RunTimeConfig* g_rtConfig;
+    extern RunTimeConfig* g_rtConfig;
 }
 }
 
