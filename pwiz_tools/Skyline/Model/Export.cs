@@ -92,7 +92,10 @@ namespace pwiz.Skyline.Model
         public string OptimizeType { get; set; }
         public double OptimizeStepSize { get; set; }
         public int OptimizeStepCount { get; set; }
+
         public int? SchedulingReplicateIndex { get; set; }
+        public ExportSchedulingAlgorithm SchedulingAlgorithm { get; set; }
+
 
         // CONSIDER: Should transition lists ever be exported with local culture
         //           CSV format?  This would allow them to be opened directly into
@@ -222,8 +225,8 @@ namespace pwiz.Skyline.Model
                     foreach (TransitionGroupDocNode nodeTranGroup in nodePep.Children)
                     {
                         double timeWindow;
-                        double? retentionTime = predict.PredictRetentionTime(Document, nodePep, nodeTranGroup,
-                            SchedulingReplicateIndex, singleWindow, out timeWindow);
+                        double? retentionTime = predict.PredictRetentionTime(Document, nodePep, nodeTranGroup, SchedulingReplicateIndex,
+                            SchedulingAlgorithm, singleWindow, out timeWindow);
                         if (retentionTime.HasValue)
                             peptideSchedule.Add(new PrecursorSchedule(nodePepGroup, nodePep, nodeTranGroup, retentionTime.Value, timeWindow, OptimizeStepCount));
                         else
@@ -979,7 +982,7 @@ namespace pwiz.Skyline.Model
                 var prediction = Document.Settings.PeptideSettings.Prediction;
                 double windowRT;
                 double? predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
-                    SchedulingReplicateIndex, false, out windowRT);
+                    SchedulingReplicateIndex, SchedulingAlgorithm, false, out windowRT);
                 predictedRT = RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT);
                 if (predictedRT.HasValue)
                 {
@@ -1112,7 +1115,7 @@ namespace pwiz.Skyline.Model
                 var prediction = Document.Settings.PeptideSettings.Prediction;
                 double windowRT;
                 double? predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
-                    SchedulingReplicateIndex, HasResults, out windowRT);
+                    SchedulingReplicateIndex, SchedulingAlgorithm, HasResults, out windowRT);
                 if (predictedRT.HasValue)
                 {
                     RTWindow = windowRT; // Store for later use
@@ -1280,7 +1283,8 @@ namespace pwiz.Skyline.Model
                 var prediction = Document.Settings.PeptideSettings.Prediction;
                 double windowRT;
                 double? predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
-                    SchedulingReplicateIndex, false, out windowRT);
+                    SchedulingReplicateIndex, SchedulingAlgorithm, false, out windowRT);
+
                 if (predictedRT.HasValue)
                 {
                     writer.Write((RetentionTimeRegression.GetRetentionTimeDisplay(predictedRT) ?? 0).ToString(CultureInfo));
@@ -1417,7 +1421,7 @@ namespace pwiz.Skyline.Model
                 var prediction = Document.Settings.PeptideSettings.Prediction;
                 double windowRT;
                 double? predictedRT = prediction.PredictRetentionTime(Document, nodePep, nodeTranGroup,
-                    SchedulingReplicateIndex, HasResults, out windowRT);
+                    SchedulingReplicateIndex, SchedulingAlgorithm, HasResults, out windowRT);
                 if (predictedRT.HasValue)
                 {
                     RTWindow = windowRT;    // Store for later use

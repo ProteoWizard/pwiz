@@ -32,6 +32,9 @@ namespace pwiz.Skyline.Model
     {
         public const int MIN_DOT_PRODUCT_TRANSITIONS = 4;
 
+        public const int MIN_TREND_REPLICATES = 4;
+        public const int MAX_TREND_REPLICATES = 6;
+
         public TransitionGroupDocNode(TransitionGroup id,
                                       double massH,
                                       RelativeRT relativeRT,
@@ -214,7 +217,65 @@ namespace pwiz.Skyline.Model
             return chromInfo.Ratios[indexIS];
         }
 
-        public float? GetSchedulingPeakTime(SrmDocument document, int? replicateIndex)
+        public class ScheduleTimes        
+        {
+            public float CenterTime { get; set; }
+            public float Width { get; set; }
+        }
+
+        // TODO: Test this code.
+        private ScheduleTimes GetSchedulingTrendTimes(int replicateNum)
+        {
+            int valCount = 0;
+            double valTotal = 0;
+            ScheduleTimes scheduleTimes = new ScheduleTimes();
+
+            // Use 6 replicates if results have at least 6 replicates
+            // otherwise use the number of Results available (at least 4)
+            double[] centerTimes = new double[ Math.Min(Results.Count, MAX_TREND_REPLICATES) ];
+            double[] replicateNums = new double[centerTimes.Length];
+            double maxPeakWindowRange = 0;
+            for (int i = 0; i < Results.Count; i++)
+            {
+                var result = Results[i];
+                if (result == null)
+                    continue;
+
+                foreach (var chromInfo in result)
+                {
+                    if (chromInfo == null ||
+                            !chromInfo.StartRetentionTime.HasValue ||
+                            !chromInfo.EndRetentionTime.HasValue)
+                        return null;
+                    // Make an array of the last 4 or 6 (depending on data available) center Times to use for linear regresson
+                    if (i >= Results.Count - centerTimes.Length)
+                    {
+                        valTotal += (chromInfo.StartRetentionTime.Value + chromInfo.EndRetentionTime.Value) / 2.0;
+                        valCount++;
+                        // TODO: This will only work, if all of the final replicates have data.
+                        int timesIndex = i - Results.Count + centerTimes.Length;
+                        centerTimes[timesIndex] = (float)(valTotal / valCount);
+                        replicateNums[timesIndex] = timesIndex;
+                    }
+                    maxPeakWindowRange = Math.Max(maxPeakWindowRange,
+                                                  chromInfo.EndRetentionTime.Value -
+                                                  chromInfo.StartRetentionTime.Value);
+                }
+            }
+            Statistics statCenterTimes = new Statistics(centerTimes);
+            Statistics statReplicateNums = new Statistics(replicateNums);
+            double centerTimesSlope = statCenterTimes.Slope(statReplicateNums);
+            double centerTimesIntercept = statCenterTimes.Intercept(statReplicateNums);
+            var centerTimesResiduals = statCenterTimes.Residuals(statReplicateNums);
+            double centerTimesStdDev = centerTimesResiduals.StdDev();
+            double centerFirstPredict = centerTimesIntercept + (centerTimes.Length + 1) * centerTimesSlope + maxPeakWindowRange / 2 + centerTimesStdDev;
+            double centerLastPredict = centerFirstPredict + replicateNum * centerTimesSlope - maxPeakWindowRange / 2 - centerTimesStdDev;
+            scheduleTimes.CenterTime = (float) (centerTimesIntercept + centerTimesSlope*replicateNums.Length);
+            scheduleTimes.Width = (float) Math.Abs(centerFirstPredict - centerLastPredict);
+            return scheduleTimes;
+        }
+
+        public ScheduleTimes GetSchedulingPeakTimes(SrmDocument document, ExportSchedulingAlgorithm algorithm, int? replicateNum)
         {
             if (!HasResults)
                 return null;
@@ -227,8 +288,10 @@ namespace pwiz.Skyline.Model
             // conditions.
             int valCountOpt = 0;
             double valTotalOpt = 0;
+            ScheduleTimes scheduleTimes = new ScheduleTimes();
 
-            if (!replicateIndex.HasValue)
+            // CONSIDER:  Need to set a width for algorithms other than trends?
+            if (!replicateNum.HasValue || algorithm == ExportSchedulingAlgorithm.Average)
             {
                 // Sum the center times for averaging
                 for (int i = 0; i < Results.Count; i++)
@@ -240,12 +303,12 @@ namespace pwiz.Skyline.Model
                         AddCenterTimes(i, ref valCountOpt, ref valTotalOpt);
                 }
             }
-            else
+            else if (algorithm == ExportSchedulingAlgorithm.Single)
             {
                 // Try using the specified index
-                if (replicateIndex.Value < Results.Count)
+                if (replicateNum.Value < Results.Count)
                 {
-                    AddCenterTimes(replicateIndex.Value, ref valCount, ref valTotal);
+                    AddCenterTimes(replicateNum.Value, ref valCount, ref valTotal);
                 }
 
                 // If no usable peak found for the specified replicate, try to find a
@@ -259,7 +322,7 @@ namespace pwiz.Skyline.Model
                     int deltaBestOpt = int.MaxValue;
                     for (int i = Results.Count - 1; i >= 0; i--)
                     {
-                        int deltaRep = Math.Abs(i - replicateIndex.Value);
+                        int deltaRep = Math.Abs(i - replicateNum.Value);
                         var chromatogramSet = document.Settings.MeasuredResults.Chromatograms[i];
                         int deltaBestCompare = (chromatogramSet.OptimizationFunction == null ? deltaBest : deltaBestOpt);
                         // If the delta of this replicate from the chosen replicate is greater
@@ -278,24 +341,34 @@ namespace pwiz.Skyline.Model
                         {
                             valCount = valCountTmp;
                             valTotal = valTotalTmp;
-                            deltaBest = deltaRep;
+                            deltaBest = deltaBestCompare;
                         }
                         else
                         {
                             valCountOpt = valCountTmp;
                             valTotalOpt = valTotalTmp;
-                            deltaBestOpt = deltaRep;
+                            deltaBestOpt = deltaBestCompare;
                         }
                     }
                 }
             }
+            else // Trends Option
+            {
+                return GetSchedulingTrendTimes(replicateNum.Value);
+            }
 
             // If possible return the scheduling time based on non-optimization data.
             if (valCount != 0)
-                return (float)(valTotal / valCount);
+            {
+                scheduleTimes.CenterTime = (float)(valTotal / valCount);
+                return scheduleTimes;
+            }
             // If only optimization was found, then use it.
             else if (valTotalOpt != 0)
-                return (float)(valTotalOpt / valCountOpt);
+            {
+                scheduleTimes.CenterTime = (float) (valTotalOpt/valCountOpt);
+                return scheduleTimes;
+            }
             // No usable data at all.
             return null;
         }

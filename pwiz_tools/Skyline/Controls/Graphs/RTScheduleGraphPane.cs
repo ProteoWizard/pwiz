@@ -78,6 +78,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public int? SchedulingReplicateIndex { get; set; }
 
+        public ExportSchedulingAlgorithm SchedulingAlgorithm { get; set; }
+
         private void AddCurve(SrmDocument document, Color color)
         {
             var predict = document.Settings.PeptideSettings.Prediction;
@@ -93,8 +95,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                 {
                     double timeWindow;
+
                     double? retentionTime = predict.PredictRetentionTime(document, nodePep, nodeGroup, SchedulingReplicateIndex,
-                        singleWindow, out timeWindow);
+                        
+                        SchedulingAlgorithm, singleWindow, out timeWindow);
+
                     if (retentionTime.HasValue)
                     {
                         var schedule = new PrecursorScheduleBase(nodeGroup, retentionTime.Value, timeWindow, 0);

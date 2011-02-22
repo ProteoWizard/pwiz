@@ -236,7 +236,7 @@ namespace pwiz.Skyline.FileUI
         }
 
         private ExportSchedulingAlgorithm SchedulingAlgorithm { get; set; }
-        private int? SchedulingReplicateIndex { get; set; }
+        private int? SchedulingReplicateNum { get; set; }
 
         private static bool IsFullScanInstrumentType(string type)
         {
@@ -541,7 +541,7 @@ namespace pwiz.Skyline.FileUI
                     return;
 
                 SchedulingAlgorithm = schedulingOptionsDlg.Algorithm;
-                SchedulingReplicateIndex = schedulingOptionsDlg.ReplicateIndex;
+                SchedulingReplicateNum = schedulingOptionsDlg.ReplicateNum;
             }
 
             if (outputPath == null)
@@ -670,12 +670,13 @@ namespace pwiz.Skyline.FileUI
         private static bool HasMultipleSchedulingOptions(SrmDocument document)
         {
             // No scheduling from data, if no data is present
-            if (!document.Settings.HasResults)
+            if (!document.Settings.HasResults || !document.Settings.PeptideSettings.Prediction.UseMeasuredRTs)
                 return false;
 
             // If multipe non-optimization data sets are present, allow user to choose.
             var chromatagrams = document.Settings.MeasuredResults.Chromatograms;
             int sched = chromatagrams.Count(chromatogramSet => chromatogramSet.OptimizationFunction == null);
+
             if (sched > 1)
                 return true;
             // Otherwise, if no non-optimization data is present, but multiple optimization
@@ -857,7 +858,8 @@ namespace pwiz.Skyline.FileUI
             exporter.OptimizeType = OptimizeType;
             exporter.OptimizeStepSize = OptimizeStepSize;
             exporter.OptimizeStepCount = OptimizeStepCount;
-            exporter.SchedulingReplicateIndex = SchedulingReplicateIndex;
+            exporter.SchedulingReplicateIndex = SchedulingReplicateNum;
+            exporter.SchedulingAlgorithm = SchedulingAlgorithm;
             return exporter;
         }
 

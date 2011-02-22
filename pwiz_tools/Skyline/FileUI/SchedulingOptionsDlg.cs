@@ -17,7 +17,9 @@
  * limitations under the License.
  */
 using System;
+using System.IO;
 using System.Windows.Forms;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 
@@ -31,9 +33,13 @@ namespace pwiz.Skyline.FileUI
 
     public partial class SchedulingOptionsDlg : Form
     {
+        private readonly SrmDocument _document;
+
         public SchedulingOptionsDlg(SrmDocument document)
         {
             InitializeComponent();
+
+            _document = document;
 
             foreach (var chromatogramSet in document.Settings.MeasuredResults.Chromatograms)
             {
@@ -44,38 +50,77 @@ namespace pwiz.Skyline.FileUI
             radioSingleDataSet.Checked = !Settings.Default.ScheduleAvergeRT;
         }
 
-        public int? ReplicateIndex
+        private int? _replicateNum;
+        public int? ReplicateNum
         {
             get
             {
-                if (radioSingleDataSet.Checked)
-                    return comboReplicateNames.SelectedIndex;
-                return null;
+                if (Algorithm == ExportSchedulingAlgorithm.Single)
+                    _replicateNum = comboReplicateNames.SelectedIndex;
+                return _replicateNum;
             }
-            set { comboReplicateNames.SelectedIndex = value ?? 0; }
+            set
+            {
+                _replicateNum = value;
+                if (Algorithm == ExportSchedulingAlgorithm.Single)
+                    comboReplicateNames.SelectedIndex = _replicateNum ?? 0;
+            }
         }
 
         public ExportSchedulingAlgorithm Algorithm
         {
             get
             {
-                return (radioSingleDataSet.Checked ?
-                    ExportSchedulingAlgorithm.Single :
-                    ExportSchedulingAlgorithm.Average);
+                if (radioSingleDataSet.Checked)
+                {
+                    return ExportSchedulingAlgorithm.Single;
+                }
+                else if (radioTrends.Checked)
+                {
+                    return ExportSchedulingAlgorithm.Trends;
+                }
+                else
+                {
+                    return ExportSchedulingAlgorithm.Average;
+                }
             }
             set
             {
                 if (value == ExportSchedulingAlgorithm.Single)
+                {
                     radioSingleDataSet.Checked = true;
+                }
+                else if (value == ExportSchedulingAlgorithm.Trends)
+                {
+                    if (!HasMinTrendReplicates())
+                        throw new InvalidDataException(TrendsError);
+
+                    radioTrends.Checked = true;
+                }
                 else
+                {
                     radioRTavg.Checked = true;
+                }
             }
         }
 
+        // TODO: Set properties here
+        // Save document as property
         public void OkDialog()
         {
-            Settings.Default.ScheduleAvergeRT = radioRTavg.Checked;
+            if (Algorithm == ExportSchedulingAlgorithm.Single)
+            {
+                ReplicateNum = comboReplicateNames.SelectedIndex;
+            }
+            // TODO: Show radio botton and complete this code.
+            else if (Algorithm == ExportSchedulingAlgorithm.Trends)
+            {
+                ReplicateNum = _document.Settings.PeptideSettings.Prediction.CalcMaxTrendReplicates(_document);
+                // TODO: check if calc max trend = 0, if so message box, saying can't do it
+                // return
+            }
 
+            Settings.Default.ScheduleAvergeRT = radioRTavg.Checked;
             DialogResult = DialogResult.OK;
         }
 
@@ -89,14 +134,26 @@ namespace pwiz.Skyline.FileUI
         /// </summary>
         private void radioSingleDataSet_CheckedChanged(object sender, EventArgs e)
         {
-            if (radioRTavg.Checked)
+            comboReplicateNames.Enabled = (radioSingleDataSet.Checked);
+
+            if (radioTrends.Checked && !HasMinTrendReplicates())
             {
-                comboReplicateNames.Enabled = false;
+                MessageDlg.Show(this, TrendsError);
             }
-            else
+        }
+
+        private static string TrendsError
+        {
+            get
             {
-                comboReplicateNames.Enabled = true;
+                return string.Format("Using trends in scheduling requires at least {0} replicates.",
+                                     TransitionGroupDocNode.MIN_TREND_REPLICATES);
             }
+        }
+
+        private bool HasMinTrendReplicates()
+        {
+            return comboReplicateNames.Items.Count >= TransitionGroupDocNode.MIN_TREND_REPLICATES;
         }
     }
 }

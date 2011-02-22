@@ -81,7 +81,7 @@ namespace pwiz.SkylineTestFunctional
                         // Check that on default, the radio button selected is Use retention time average
                         // and the Replicate combobox is disabled
                         Assert.AreEqual(ExportSchedulingAlgorithm.Average, schedulingOptionsDlg.Algorithm);
-                        Assert.IsNull(schedulingOptionsDlg.ReplicateIndex);
+                        Assert.IsNull(schedulingOptionsDlg.ReplicateNum);
 
                         schedulingOptionsDlg.OkDialog();
                     });
@@ -190,9 +190,9 @@ namespace pwiz.SkylineTestFunctional
                                                  else
                                                     schedulingOptionsDlg.Algorithm = ExportSchedulingAlgorithm.Single;
 
-                                                 Assert.AreEqual(replicateCount - 1, schedulingOptionsDlg.ReplicateIndex);
+                                                 Assert.AreEqual(replicateCount - 1, schedulingOptionsDlg.ReplicateNum);
                                                  if (replicateIndex != replicateCount - 1)
-                                                    schedulingOptionsDlg.ReplicateIndex = replicateIndex;
+                                                    schedulingOptionsDlg.ReplicateNum = replicateIndex;
 
                                                  schedulingOptionsDlg.OkDialog();
                                              });

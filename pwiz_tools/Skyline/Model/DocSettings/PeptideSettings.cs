@@ -211,6 +211,7 @@ namespace pwiz.Skyline.Model.DocSettings
     [XmlRoot("peptide_prediction")]
     public class PeptidePrediction : Immutable, IValidating, IXmlSerializable
     {
+        public const int MAX_TREND_PREDICTION_REPLICATES = 20;
         public const double MIN_MEASURED_RT_WINDOW = 0.5;
         public const double MAX_MEASURED_RT_WINDOW = 30.0;
         public const double DEFAULT_MEASURED_RT_WINDOW = 2.0;
@@ -235,10 +236,39 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public double? MeasuredRTWindow { get; private set; }
 
+        public int CalcMaxTrendReplicates(SrmDocument document)
+        {
+            if (!UseMeasuredRTs || !MeasuredRTWindow.HasValue)
+                throw new InvalidOperationException("Calculating scheduling from trends requires a retention time window for measured data.");
+
+            int i;
+            for (i = 1; i < MAX_TREND_PREDICTION_REPLICATES; i++)
+            {
+                foreach (var nodePep in document.Peptides)
+                {
+                    foreach(TransitionGroupDocNode nodeGroup in nodePep.Children)
+                    {
+                        double windowRT;
+                        double? centerTime = PredictRetentionTime(document,
+                                                                  nodePep,
+                                                                  nodeGroup,
+                                                                  i,
+                                                                  ExportSchedulingAlgorithm.Trends,
+                                                                  true,
+                                                                  out windowRT);
+                        if (centerTime.HasValue && windowRT > MeasuredRTWindow.Value)
+                            return i - 1;
+                    }
+                }
+            }
+            return i;
+        }
+
         public double? PredictRetentionTime(SrmDocument document,
                                             PeptideDocNode nodePep,
                                             TransitionGroupDocNode nodeGroup,
-                                            int? replicateIndex,
+                                            int? replicateNum,
+                                            ExportSchedulingAlgorithm algorithm,
                                             bool singleWindow,
                                             out double windowRT)
         {
@@ -249,7 +279,9 @@ namespace pwiz.Skyline.Model.DocSettings
             bool useMeasured = (UseMeasuredRTs && MeasuredRTWindow.HasValue);
             if (useMeasured)
             {
-                predictedRT = nodeGroup.GetSchedulingPeakTime(document, replicateIndex);
+                var peakTime = nodeGroup.GetSchedulingPeakTimes(document, algorithm, replicateNum);
+                if (peakTime != null)
+                    predictedRT = peakTime.CenterTime;
                 if (predictedRT.HasValue)
                     windowRT = MeasuredRTWindow.Value;
                 else if (nodePep.Children.Count > 1)
@@ -260,7 +292,10 @@ namespace pwiz.Skyline.Model.DocSettings
                     {
                         if (!ReferenceEquals(nodeGroup, nodeGroupOther))
                         {
-                            predictedRT = nodeGroupOther.GetSchedulingPeakTime(document, replicateIndex);
+                            peakTime = nodeGroupOther.GetSchedulingPeakTimes(document, algorithm, replicateNum);
+                            if (peakTime != null)
+                                predictedRT = peakTime.CenterTime;
+
                             if (predictedRT.HasValue)
                             {
                                 windowRT = MeasuredRTWindow.Value;
@@ -316,7 +351,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                 {
                     double windowRT;
-                    if (!PredictRetentionTime(document, nodePep, nodeGroup, null, singleWindow, out windowRT).HasValue)
+                    if (!PredictRetentionTime(document, nodePep, nodeGroup, null, ExportSchedulingAlgorithm.Average, singleWindow, out windowRT).HasValue)
                         return false;
                 }
             }

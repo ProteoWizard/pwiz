@@ -34,6 +34,7 @@
             this.radioRTavg = new System.Windows.Forms.RadioButton();
             this.radioSingleDataSet = new System.Windows.Forms.RadioButton();
             this.label1 = new System.Windows.Forms.Label();
+            this.radioTrends = new System.Windows.Forms.RadioButton();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -43,7 +44,7 @@
             this.btnCancel.Location = new System.Drawing.Point(234, 42);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 5;
+            this.btnCancel.TabIndex = 6;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
@@ -53,7 +54,7 @@
             this.btnOk.Location = new System.Drawing.Point(234, 12);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
-            this.btnOk.TabIndex = 4;
+            this.btnOk.TabIndex = 5;
             this.btnOk.Text = "OK";
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
@@ -101,13 +102,26 @@
             this.label1.TabIndex = 2;
             this.label1.Text = "Replicate:";
             // 
+            // radioTrends
+            // 
+            this.radioTrends.AutoSize = true;
+            this.radioTrends.Location = new System.Drawing.Point(201, 121);
+            this.radioTrends.Name = "radioTrends";
+            this.radioTrends.Size = new System.Drawing.Size(108, 17);
+            this.radioTrends.TabIndex = 4;
+            this.radioTrends.TabStop = true;
+            this.radioTrends.Text = "Use trends option";
+            this.radioTrends.UseVisualStyleBackColor = true;
+            this.radioTrends.Visible = false;
+            // 
             // SchedulingOptionsDlg
             // 
             this.AcceptButton = this.btnOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(321, 146);
+            this.ClientSize = new System.Drawing.Size(321, 138);
+            this.Controls.Add(this.radioTrends);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.radioSingleDataSet);
             this.Controls.Add(this.radioRTavg);
@@ -134,5 +148,6 @@
         private System.Windows.Forms.RadioButton radioRTavg;
         private System.Windows.Forms.RadioButton radioSingleDataSet;
         private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.RadioButton radioTrends;
     }
 }
