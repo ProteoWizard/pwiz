@@ -206,7 +206,7 @@ class Reader_pepXML : public Reader
         try
         {
             string rootElement = GetXMLRootElement(head);
-            result = (rootElement == "msms_analysis_pipeline" ? getType() : "");
+            result = (rootElement == "msms_pipeline_analysis" ? getType() : "");
         }
         catch (runtime_error&)
         {
