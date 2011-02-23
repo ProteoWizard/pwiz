@@ -27,6 +27,7 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include "DefaultReaderList.hpp"
 #include "Serializer_mzid.hpp"
+#include "Serializer_pepXML.hpp"
 //#include "References.hpp"
 #include "pwiz/data/mziddata/Version.hpp"
 #include "boost/regex.hpp"
@@ -138,7 +139,7 @@ class Reader_mzid : public Reader
 
     virtual void read(const std::string& filename, const std::string& head, MzIdentMLPtr& result) const
     {
-        if (result.get())
+        if (!result.get())
             throw ReaderFail("[Reader_mzid::read] NULL valued MzIdentMLPtr passed in.");
         return read(filename, head, *result);
     }
@@ -197,6 +198,52 @@ class Reader_mzid : public Reader
 };
 
 
+class Reader_pepXML : public Reader
+{
+    virtual std::string identify(const std::string& filename, const std::string& head) const
+    {
+        std::string result;
+        try
+        {
+            string rootElement = GetXMLRootElement(head);
+            result = (rootElement == "msms_analysis_pipeline" ? getType() : "");
+        }
+        catch (runtime_error&)
+        {
+        }
+        return result;
+    }
+
+    virtual void read(const std::string& filename, const std::string& head, MzIdentML& result) const
+    {
+        shared_ptr<istream> is(new pwiz::util::random_access_compressed_ifstream(filename.c_str()));
+        if (!is.get() || !*is)
+            throw runtime_error("[Reader_pepXML::read] Unable to open file " + filename);
+
+        Serializer_pepXML serializer;
+        serializer.read(is, result);
+        fillInCommonMetadata(filename, result);
+    }
+
+    virtual void read(const std::string& filename, const std::string& head, MzIdentMLPtr& result) const
+    {
+        if (!result.get())
+            throw ReaderFail("[Reader_pepXML::read] NULL valued MzIdentMLPtr passed in.");
+        return read(filename, head, *result);
+    }
+
+    virtual void read(const std::string& filename,
+                      const std::string& head,
+                      std::vector<MzIdentMLPtr>& results) const
+    {
+        results.push_back(MzIdentMLPtr(new MzIdentML));
+        read(filename, head, *results.back());
+    }
+
+    virtual const char *getType() const {return "pepXML";}
+};
+
+
 } // namespace
 
 
@@ -204,6 +251,7 @@ class Reader_mzid : public Reader
 PWIZ_API_DECL DefaultReaderList::DefaultReaderList()
 {
     push_back(ReaderPtr(new Reader_mzid));
+    push_back(ReaderPtr(new Reader_pepXML));
 }
 
 
