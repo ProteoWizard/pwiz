@@ -415,7 +415,7 @@ namespace IDPicker.Forms
             this.Controls.Add(this.cancelButton);
             this.Controls.Add(this.splitContainer1);
             this.Name = "GroupingControlForm";
-            this.Text = "GroupingControlForm";
+            this.Text = "Source Grouping";
             this.Load += new System.EventHandler(this.GroupingControlForm_Load);
             this.gbGroups.ResumeLayout(false);
             this.pnlBgGroups.ResumeLayout(false);

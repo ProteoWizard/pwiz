@@ -181,6 +181,28 @@ namespace IDPicker.Forms
 
             SetColumnAspectGetters();
 
+            treeListView.CanExpandGetter += delegate(object x) { return x is PeptideRow; };
+            treeListView.ChildrenGetter += delegate(object x)
+            {
+                var childFilter = new DataFilter(dataFilter) { Peptide = new List<Peptide>() };
+                childFilter.Peptide.Add((x as PeptideRow).Peptide);
+
+                object result;
+                if (radioButton1.Checked)
+                    result = session.CreateQuery("SELECT psm, (psm.Peptide || ' ' || ROUND(psm.MonoisotopicMass)), COUNT(DISTINCT psm.Spectrum) " +
+                                                 childFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
+                                                 "GROUP BY (psm.Peptide || ' ' || ROUND(psm.MonoisotopicMass))")
+                                    .List<object[]>().Select(o => new PeptideSpectrumMatchRow(o));
+                else
+                    return session.CreateQuery("SELECT DISTINCT psm.Peptide.Instances " +
+                                               childFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch)/* +
+                                               " GROUP BY psm.Peptide"*/
+                                                                        )
+                                  .List<object>().Select(o => new PeptideInstanceRow(o));
+
+                return result as System.Collections.IEnumerable;
+            };
+
             #endregion
 
             treeListView.UseCellFormatEvents = true;
@@ -201,7 +223,7 @@ namespace IDPicker.Forms
             };
 
             treeListView.CellClick += new EventHandler<CellClickEventArgs>(treeListView_CellClick);
-
+            treeListView.KeyPress += new KeyPressEventHandler(treeListView_KeyPress);
             radioButton1.CheckedChanged += new EventHandler(radioButton1_CheckedChanged);
         }
 
@@ -359,33 +381,6 @@ namespace IDPicker.Forms
                     return String.Join(";", (x as PeptideRow).Peptide.Instances.Select(o => o.Protein.Accession).Distinct().ToArray());
                 return null;
             };
-
-            treeListView.CanExpandGetter += delegate(object x) { return x is PeptideRow; };
-            treeListView.ChildrenGetter += delegate(object x)
-            {
-                var childFilter = new DataFilter(dataFilter) { Peptide = new List<Peptide>() };
-                childFilter.Peptide.Add((x as PeptideRow).Peptide);
-
-                object result;
-                if (radioButton1.Checked)
-                    result = session.CreateQuery("SELECT psm, (psm.Peptide || ' ' || ROUND(psm.MonoisotopicMass)), COUNT(DISTINCT psm.Spectrum) " +
-                                                 childFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
-                                                 "GROUP BY (psm.Peptide || ' ' || ROUND(psm.MonoisotopicMass))")
-                                    .List<object[]>().Select(o => new PeptideSpectrumMatchRow(o));
-                else
-                    return session.CreateQuery("SELECT DISTINCT psm.Peptide.Instances " +
-                                               childFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch)/* +
-                                               " GROUP BY psm.Peptide"*/
-                                                                        )
-                                  .List<object>().Select(o => new PeptideInstanceRow(o));
-
-                return result as System.Collections.IEnumerable;
-            };
-
-            treeListView.CellClick += new EventHandler<CellClickEventArgs>(treeListView_CellClick);
-            treeListView.KeyPress += new KeyPressEventHandler(treeListView_KeyPress);
-
-            radioButton1.CheckedChanged += new EventHandler(radioButton1_CheckedChanged);
         }
 
 

@@ -67,6 +67,7 @@ namespace IDPicker.Controls
             this.lblMaxFdr = new System.Windows.Forms.Label();
             this.CloseLabel = new System.Windows.Forms.LinkLabel();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.QonverterLabel = new System.Windows.Forms.LinkLabel();
             lblMinDistinctPeptides = new System.Windows.Forms.Label();
             this.gbProteinDetails.SuspendLayout();
             this.gbPeptideDetails.SuspendLayout();
@@ -278,11 +279,23 @@ namespace IDPicker.Controls
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.QonverterLabel);
             this.panel1.Controls.Add(this.CloseLabel);
             this.panel1.Location = new System.Drawing.Point(3, 223);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(233, 21);
             this.panel1.TabIndex = 128;
+            // 
+            // QonverterLabel
+            // 
+            this.QonverterLabel.AutoSize = true;
+            this.QonverterLabel.Location = new System.Drawing.Point(3, 5);
+            this.QonverterLabel.Name = "QonverterLabel";
+            this.QonverterLabel.Size = new System.Drawing.Size(95, 13);
+            this.QonverterLabel.TabIndex = 128;
+            this.QonverterLabel.TabStop = true;
+            this.QonverterLabel.Text = "Qonverter Settings";
+            this.QonverterLabel.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.QonverterLabel_LinkClicked);
             // 
             // BasicFilterControl
             // 
@@ -325,5 +338,6 @@ namespace IDPicker.Controls
         private System.Windows.Forms.Label lblMaxFdr;
         private System.Windows.Forms.LinkLabel CloseLabel;
         private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.LinkLabel QonverterLabel;
     }
 }

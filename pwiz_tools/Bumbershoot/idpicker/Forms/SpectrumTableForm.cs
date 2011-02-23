@@ -1023,6 +1023,16 @@ namespace IDPicker.Forms
             this.session = session;
             this.userFilter = userFilter;
             dataFilter = new DataFilter(userFilter) { Spectrum = null, SpectrumSource = null, SpectrumSourceGroup = null };
+            oldSelectionPath = new List<string>();
+            for (int x = 0; x < treeListView.Items.Count; x++ )
+            {
+                if (treeListView.IsExpanded(treeListView.GetModelObject(x)))
+                    oldSelectionPath.Add(treeListView.Items[x].Text);
+            }
+            oldSelectionPath.Add(treeListView.SelectedItem == null
+                                     ? "<<No Item Selected>>"
+                                     : treeListView.SelectedItem.Text);
+            
 
             checkedGroupings = groupingSetupControl.CheckedGroupings;
 

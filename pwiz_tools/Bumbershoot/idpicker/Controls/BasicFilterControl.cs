@@ -39,6 +39,8 @@ namespace IDPicker.Controls
         /// </summary>
         public event EventHandler BasicFilterChanged;
 
+        public event EventHandler ShowQonverterSettings;
+
         /// <summary>
         /// Gets a basic DataFilter from the filter controls or sets the filter controls from a DataFilter.
         /// </summary>
@@ -115,6 +117,12 @@ namespace IDPicker.Controls
         private void CloseLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             if (Parent != null) Parent.Visible = false;
+        }
+
+        private void QonverterLabel_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            if (ShowQonverterSettings != null)
+                ShowQonverterSettings(null, null);
         }
     }
 }

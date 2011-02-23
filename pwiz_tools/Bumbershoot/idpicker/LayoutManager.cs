@@ -50,8 +50,10 @@ namespace IDPicker
             this.proteinTableForm = proteinTableForm;
             this.spectrumTableForm = spectrumTableForm;
             this.dockPanel = dockPanel;
-            
+
             RefreshUserLayoutList();
+
+            TryResetUserLayoutSettings();
         }
 
         /// <summary>
@@ -61,43 +63,6 @@ namespace IDPicker
         public void SetSession(NHibernate.ISession newSession)
         {
             _session = newSession;
-        }
-
-        /// <summary>
-        /// Informs the layout manager how to access the Peptide Form
-        /// </summary>
-        /// <param name="peptideForm"></param>
-        public void SetPeptideForm(PeptideTableForm peptideForm)
-        {
-            peptideTableForm = peptideForm;
-        }
-
-        /// <summary>
-        /// Informs the layout manager how to access the Protein Form
-        /// </summary>
-        /// <param name="proteinForm"></param>
-        public void SetProteinForm(ProteinTableForm proteinForm)
-        {
-            proteinTableForm = proteinForm;
-        }
-
-        public bool IsReady()
-        {
-            var ready = (peptideTableForm != null && proteinTableForm != null
-                         && spectrumTableForm != null);
-            if (ready)
-                TryResetUserLayoutSettings();
-
-            return ready;
-        }
-
-        /// <summary>
-        /// Informs the layout manager how to access the Spectrum Form
-        /// </summary>
-        /// <param name="spectrumForm"></param>
-        public void SetSpectrumForm(SpectrumTableForm spectrumForm)
-        {
-            spectrumTableForm = spectrumForm;
         }
 
         /// <summary>

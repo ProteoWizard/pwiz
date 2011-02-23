@@ -97,12 +97,41 @@ namespace IDPicker
 
             basicFilterControl = new BasicFilterControl();
             basicFilterControl.BasicFilterChanged += basicFilterControl_BasicFilterChanged;
+            basicFilterControl.ShowQonverterSettings += ShowQonverterSettings;
             dataFilterPopup = new Popup(basicFilterControl) { FocusOnOpen = true };
             dataFilterPopup.Closed += dataFilterPopup_Closed;
 
             breadCrumbControl = new BreadCrumbControl() { Dock = DockStyle.Fill };
             breadCrumbControl.BreadCrumbClicked += breadCrumbControl_BreadCrumbClicked;
             breadCrumbPanel.Controls.Add(breadCrumbControl);
+
+            spectrumTableForm = new SpectrumTableForm();
+            spectrumTableForm.Show(dockPanel, DockState.DockLeft);
+
+            proteinTableForm = new ProteinTableForm();
+            proteinTableForm.Show(dockPanel, DockState.DockTop);
+
+            peptideTableForm = new PeptideTableForm();
+            peptideTableForm.Show(proteinTableForm.Pane, DockPaneAlignment.Right, 0.7);
+
+            modificationTableForm = new ModificationTableForm();
+            modificationTableForm.Show(dockPanel, DockState.Document);
+
+            analysisTableForm = new AnalysisTableForm();
+            analysisTableForm.Show(dockPanel, DockState.Document);
+
+            spectrumTableForm.SpectrumViewFilter += spectrumTableForm_SpectrumViewFilter;
+            spectrumTableForm.SpectrumViewVisualize += spectrumTableForm_SpectrumViewVisualize;
+            proteinTableForm.ProteinViewFilter += proteinTableForm_ProteinViewFilter;
+            proteinTableForm.ProteinViewVisualize += proteinTableForm_ProteinViewVisualize;
+            peptideTableForm.PeptideViewFilter += peptideTableForm_PeptideViewFilter;
+            modificationTableForm.ModificationViewFilter += modificationTableForm_ModificationViewFilter;
+
+            _layoutManager = new LayoutManager(this, peptideTableForm, proteinTableForm, spectrumTableForm, dockPanel);
+
+            // load last or default location and size
+            _layoutManager.LoadMainFormSettings();
+
 
             //logForm = new LogForm();
             //Console.SetOut(logForm.LogWriter);
@@ -195,6 +224,7 @@ namespace IDPicker
 
                 basicFilterControl = new BasicFilterControl();
                 basicFilterControl.BasicFilterChanged += basicFilterControl_BasicFilterChanged;
+                basicFilterControl.ShowQonverterSettings += ShowQonverterSettings;
                 dataFilterPopup = new Popup(basicFilterControl) { FocusOnOpen = true };
                 dataFilterPopup.Closed += dataFilterPopup_Closed;
 
@@ -472,13 +502,10 @@ namespace IDPicker
             //OpenFiles(filepaths);//.Take(10).Union(filepaths.Skip(200).Take(10)).Union(filepaths.Skip(400).Take(10)).ToList());
             //return;
 
-            _layoutManager = new LayoutManager(this, peptideTableForm, proteinTableForm, spectrumTableForm, dockPanel);
-
-            // load last or default location and size
-            _layoutManager.LoadMainFormSettings();
-
             //Get user layout profiles
             LoadLayout(_layoutManager.GetCurrentDefault());
+
+            dockPanel.Visible = false;
 
             if (args != null && args.Length > 0 && args.All(o => File.Exists(o)))
                 OpenFiles(args);
@@ -718,7 +745,7 @@ namespace IDPicker
                 _layoutManager.SetSession(session);
 
                 //set or save default layout
-                CheckFormExistance();
+                dockPanel.Visible = true;
                 LoadLayout(_layoutManager.GetCurrentDefault());
 
                 //breadCrumbControl.BreadCrumbs.Clear();
@@ -753,52 +780,6 @@ namespace IDPicker
             catch (Exception ex)
             {
                 HandleException(this, ex);
-            }
-        }
-
-        private void CheckFormExistance()
-        {
-            if (spectrumTableForm == null)
-            {
-                spectrumTableForm = new SpectrumTableForm();
-                spectrumTableForm.Show(dockPanel, DockState.DockLeft);
-                spectrumTableForm.SpectrumViewFilter += spectrumTableForm_SpectrumViewFilter;
-                spectrumTableForm.SpectrumViewVisualize += spectrumTableForm_SpectrumViewVisualize;
-            }
-
-            if (proteinTableForm == null)
-            {
-                proteinTableForm = new ProteinTableForm();
-                proteinTableForm.Show(dockPanel, DockState.DockTop);
-                proteinTableForm.ProteinViewFilter += proteinTableForm_ProteinViewFilter;
-                proteinTableForm.ProteinViewVisualize += proteinTableForm_ProteinViewVisualize;
-            }
-
-            if (peptideTableForm == null)
-            {
-                peptideTableForm = new PeptideTableForm();
-                peptideTableForm.Show(proteinTableForm.Pane, DockPaneAlignment.Right, 0.7);
-                peptideTableForm.PeptideViewFilter += peptideTableForm_PeptideViewFilter;
-            }
-
-            if (modificationTableForm == null)
-            {
-                modificationTableForm = new ModificationTableForm();
-                modificationTableForm.Show(dockPanel, DockState.Document);
-                modificationTableForm.ModificationViewFilter += modificationTableForm_ModificationViewFilter;
-            }
-
-            if (analysisTableForm == null)
-            {
-                analysisTableForm = new AnalysisTableForm();
-                analysisTableForm.Show(dockPanel, DockState.Document);
-            }
-            if (_layoutManager != null)
-            {
-                _layoutManager.SetProteinForm(proteinTableForm);
-                _layoutManager.SetPeptideForm(peptideTableForm);
-                _layoutManager.SetSpectrumForm(spectrumTableForm);
-                _layoutManager.IsReady();
             }
         }
 
@@ -892,7 +873,7 @@ namespace IDPicker
 
         private void IDPickerForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            if (_layoutManager != null && _layoutManager.IsReady())
+            if (_layoutManager != null)
             {
                 _layoutManager.SaveMainFormSettings();
                 _layoutManager.SaveUserLayoutList();
@@ -903,7 +884,7 @@ namespace IDPicker
         private void layoutButton_Click(object sender, EventArgs e)
         {
             layoutToolStripMenuRoot.DropDownItems.Clear();
-            if (_layoutManager.IsReady())
+            if (dockPanel.Visible)
             {
                 var items = _layoutManager.LoadLayoutMenu();
                 foreach (var item in items)
@@ -917,7 +898,7 @@ namespace IDPicker
                 return;
 
             if (!dataFilterPopup.Visible)
-                dataFilterPopup.Show(new Point(137, 50));
+                dataFilterPopup.Show(new Point(Location.X + 141, Location.Y + 50));
             else
                 dataFilterPopup.Visible = false;
         }
@@ -948,7 +929,7 @@ namespace IDPicker
             QOptions.ShowDialog();
         }
 
-        private void testToolStripMenuItem_Click(object sender, EventArgs e)
+        private void ShowQonverterSettings(object sender, EventArgs e)
         {
             if (session == null)
                 return;
@@ -961,13 +942,23 @@ namespace IDPicker
                 return;
 
             DataFilter.DropFilters(session.Connection);
-            session.CreateQuery("UPDATE PeptideSpectrumMatch SET QValue = 2").ExecuteUpdate();
-            session.Flush();
             var qonverter = new Qonverter();
-            qonverterSettingsByAnalysis.ForEach(o => qonverter.SettingsByAnalysis[(int)o.Key.Id] = o.Value.ToQonverterSettings());
             qonverter.QonversionProgress += progressMonitor.UpdateProgress;
-            //qonverter.LogQonversionDetails = true;
+            qonverterSettingsByAnalysis = session.Query<QonverterSettings>().ToDictionary(o => session.Get<Analysis>(o.Id));
+            session.CreateQuery(@"UPDATE PeptideSpectrumMatch SET QValue = 2").ExecuteUpdate();
+            foreach (var item in qonverterSettings)
+            {
+                qonverter.SettingsByAnalysis[(int)item.Key.Id] = item.Value.ToQonverterSettings();
+                qonverterSettingsByAnalysis[item.Key].DecoyPrefix = item.Value.DecoyPrefix;
+                qonverterSettingsByAnalysis[item.Key].ScoreInfoByName = item.Value.ScoreInfoByName;
+                qonverterSettingsByAnalysis[item.Key].QonverterMethod = item.Value.QonverterMethod;
+                qonverterSettingsByAnalysis[item.Key].RerankMatches = item.Value.RerankMatches;
+                session.Save(qonverterSettingsByAnalysis[item.Key]);
+            }
+            session.Flush();
+            session.Close();
 
+            //qonverter.LogQonversionDetails = true;
             try
             {
                 qonverter.Qonvert(Text);
@@ -977,8 +968,36 @@ namespace IDPicker
                 MessageBox.Show("Error: " + ex.Message, "Qonversion failed");
             }
 
-            OpenFiles(new List<string>{Text});
+            var sessionFactory = DataModel.SessionFactoryFactory.CreateSessionFactory(Text, false, true);
+            session = sessionFactory.OpenSession();
+            //session.CreateSQLQuery("PRAGMA temp_store=MEMORY").ExecuteUpdate();
+            _layoutManager.SetSession(session);
 
+            basicFilter = new DataFilter()
+                              {
+                                  MaximumQValue = 0.02M,
+                                  MinimumDistinctPeptidesPerProtein = 2,
+                                  MinimumSpectraPerProtein = 2,
+                                  MinimumAdditionalPeptidesPerProtein = 1
+                              };
+
+            basicFilterControl.DataFilter = basicFilter;
+
+            viewFilter = basicFilter;
+
+            viewFilter.ApplyBasicFilters(session);
+
+            session.Close();
+
+            clearData();
+            progressMonitor = new ProgressMonitor();
+            progressMonitor.ProgressUpdate += progressMonitor_ProgressUpdate;
+            basicFilterControl = new BasicFilterControl();
+            basicFilterControl.BasicFilterChanged += basicFilterControl_BasicFilterChanged;
+            basicFilterControl.ShowQonverterSettings += ShowQonverterSettings;
+            dataFilterPopup = new Popup(basicFilterControl) { FocusOnOpen = true };
+            dataFilterPopup.Closed += dataFilterPopup_Closed;
+            OpenFiles(new List<string> {Text});
         }
     }
 

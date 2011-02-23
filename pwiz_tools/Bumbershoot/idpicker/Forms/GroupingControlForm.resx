@@ -120,9 +120,6 @@
   <metadata name="msGroups.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>7, 12</value>
   </metadata>
-  <metadata name="msUngroupedFiles.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>92, 12</value>
-  </metadata>
   <data name="tbStartHere.Text" xml:space="preserve">
     <value>Files not assigned to groups are placed here.
 
