@@ -52,6 +52,7 @@ struct PWIZ_API_DECL Term
     id_list parentsIsA;
     id_list parentsPartOf;
     relation_map relations; // other than is_a and part_of
+    std::map<std::string, std::string> propertyValues;
     std::vector<std::string> exactSynonyms;
     bool isObsolete;
 

@@ -210,6 +210,18 @@ void parse_synonym(const string& line, Term& term)
 }
 
 
+void parse_property_value(const string& line, Term& term)
+{
+    static const boost::regex e("property_value: (\\S+)=\"(.*)\".*");
+
+    boost::smatch what;
+    if (!regex_match(line, what, e))
+        throw runtime_error("Error matching term property_value.");
+
+    term.propertyValues[what[1]] = what[2];
+}
+
+
 void parseTagValuePair(const string& line, Term& term)
 {
     string::size_type tagSize = line.find(':'); 
@@ -234,6 +246,8 @@ void parseTagValuePair(const string& line, Term& term)
         parse_exact_synonym(line, term);
     else if (tag == "synonym")
         parse_synonym(line, term);
+    else if (tag == "property_value")
+        parse_property_value(line, term);
     else if (tag == "related_synonym" ||
              tag == "narrow_synonym" ||
              tag == "comment" ||
@@ -243,8 +257,7 @@ void parseTagValuePair(const string& line, Term& term)
              tag == "xref_analog" ||
              tag == "replaced_by" ||
              tag == "created_by" ||
-             tag == "creation_date" ||
-             tag == "property_value")
+             tag == "creation_date")
         ; // ignore these tags
     else
         cerr << "[obo] Unknown tag \"" << tag << "\":\n  " << line << endl;

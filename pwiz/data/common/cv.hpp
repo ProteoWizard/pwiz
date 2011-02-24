@@ -7640,6 +7640,7 @@ struct PWIZ_API_DECL CVTermInfo
     id_list parentsPartOf;
     std::multimap<std::string, CVID> otherRelations;
     std::vector<std::string> exactSynonyms;
+    std::map<std::string, std::string> propertyValues;
 
     CVTermInfo() : cvid((CVID)-1) {}
     const std::string& shortName() const;

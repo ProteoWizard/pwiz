@@ -213,6 +213,7 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "    id_list parentsPartOf;\n"
           "    std::multimap<std::string, CVID> otherRelations;\n"
           "    std::vector<std::string> exactSynonyms;\n"
+          "    std::map<std::string, std::string> propertyValues;\n"
           "\n"
           "    CVTermInfo() : cvid((CVID)-1) {}\n"
           "    const std::string& shortName() const;\n"
@@ -359,8 +360,8 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "};\n\n\n";
 
     os << "CVIDStringPair relationsExactSynonym_[] =\n"
-       << "{\n"
-       << "    {CVID_Unknown, \"Unknown\"},\n";
+          "{\n"
+          "    {CVID_Unknown, \"Unknown\"},\n";
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)    
     BOOST_FOREACH(const Term& term, obo->terms)
     BOOST_FOREACH(const string& synonym, term.exactSynonyms)
@@ -369,6 +370,28 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
 
     os << "const size_t relationsExactSynonymSize_ = sizeof(relationsExactSynonym_)/sizeof(CVIDStringPair);\n\n\n";
 
+    
+    os << "struct PropertyValuePair\n"
+          "{\n"
+          "    CVID term;\n"
+          "    const char* name;\n"
+          "    const char* value;\n"
+          "};\n\n\n";
+
+
+    typedef pair<string, string> NameValuePair;
+    os << "PropertyValuePair propertyValue_[] =\n"
+          "{\n";
+    for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)    
+    BOOST_FOREACH(const Term& term, obo->terms)
+    BOOST_FOREACH(const NameValuePair& nameValuePair, term.propertyValues)
+        os << "    {" << correctedEnumNameMaps[obo-obos.begin()][term.id]
+                      << ", \"" << nameValuePair.first
+                      << "\", \"" << nameValuePair.second
+                      << "\"},\n";
+    os << "}; // propertyValue_\n\n\n";
+
+    os << "const size_t propertyValueSize_ = sizeof(propertyValue_)/sizeof(PropertyValuePair);\n\n\n";
 
     os << "class CVTermData : public boost::singleton<CVTermData>\n"
           "{\n"
@@ -398,6 +421,9 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "\n"
           "        for (const CVIDStringPair* it=relationsExactSynonym_; it!=relationsExactSynonym_+relationsExactSynonymSize_; ++it)\n"
           "            infoMap_[it->first].exactSynonyms.push_back(it->second);\n"
+          "\n"
+          "        for (const PropertyValuePair* it=propertyValue_; it!=propertyValue_+propertyValueSize_; ++it)\n"
+          "            infoMap_[it->term].propertyValues.insert(make_pair(it->name, it->value));\n"
           "\n";
 
     // TODO: is there a way to get these from the OBOs?

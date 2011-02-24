@@ -113,6 +113,16 @@ void testIDTranslation()
 }
 
 
+void testPropertyValues()
+{
+    CVTermInfo deamidation = cvTermInfo(UNIMOD_Deamidated);
+    unit_assert(deamidation.propertyValues["delta_mono_mass"] == "0.984016");
+    unit_assert(deamidation.propertyValues["delta_composition"] == "H(-1) N(-1) O");
+    unit_assert(deamidation.propertyValues["spec_site_1"] == "Q");
+    unit_assert(deamidation.propertyValues["spec_site_2"] == "R");
+}
+
+
 void testThreadSafetyWorker(boost::barrier* testBarrier)
 {
     testBarrier->wait(); // wait until all threads have started
@@ -124,6 +134,7 @@ void testThreadSafetyWorker(boost::barrier* testBarrier)
         testOtherRelations();
         testSynonyms();
         testIDTranslation();
+        testPropertyValues();
     }
     catch (exception& e)
     {
