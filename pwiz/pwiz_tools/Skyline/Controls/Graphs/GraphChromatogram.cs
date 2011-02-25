@@ -165,11 +165,15 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (PickedPeak != null)
             {
+                string filePath = FilePath;
+                if (filePath == null)
+                    return;
+
                 int iGroup = _nodeGroups.IndexOfReference(nodeGroup);
                 var e = new PickedPeakEventArgs(_groupPaths[iGroup],
                                                 nodeTran != null ? nodeTran.Id : null,
                                                 _nameChromatogramSet,
-                                                ChromGroupInfos[0].FilePath,
+                                                filePath,
                                                 peakTime);
                 PickedPeak(this, e);
             }
@@ -186,6 +190,10 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             if (ChangedPeakBounds != null)
             {
+                string filePath = FilePath;
+                if (filePath == null)
+                    return;
+
                 var listChanges = new List<ChangedPeakBoundsEventArgs>();
                 foreach (var dragInfo in _peakBoundDragInfos)
                 {
@@ -203,7 +211,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                            nodeTran != null ? nodeTran.Transition : null,
                                                            _nameChromatogramSet,
                                                            // All active groups should have the same file
-                                                           ChromGroupInfos[0].FilePath,
+                                                           filePath,
                                                            dragInfo.StartTime,
                                                            dragInfo.EndTime,
                                                            dragInfo.ChangeType);
@@ -304,6 +312,9 @@ namespace pwiz.Skyline.Controls.Graphs
 //            graphControl.Refresh();
         }
 
+        /// <summary>
+        /// Gets the set of chomatogram info for the selected file of the groups.
+        /// </summary>
         private ChromatogramGroupInfo[] ChromGroupInfos
         {
             get
@@ -312,8 +323,21 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (toolBar.Visible)
                     iSelected = comboFiles.SelectedIndex;
 
-                // Get the set of chomatogram info for the selected file of the groups.
                 return _arrayChromInfo[iSelected];                
+            }
+        }
+
+        /// <summary>
+        /// Returns the file path for the selected file of the groups.
+        /// </summary>
+        private string FilePath
+        {
+            get
+            {
+                var chromGroupInfos = ChromGroupInfos;
+                int i = chromGroupInfos.IndexOf(info => info != null);
+
+                return (i != -1 ? chromGroupInfos[i].FilePath : null);
             }
         }
 
