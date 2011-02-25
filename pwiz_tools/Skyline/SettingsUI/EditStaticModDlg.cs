@@ -37,15 +37,23 @@ namespace pwiz.Skyline.SettingsUI
         private StaticMod _modification;
         private readonly IEnumerable<StaticMod> _existing;
 
+        private readonly bool _editing;
         private readonly bool _heavy;
         private bool _showLoss = true; // Design mode with loss UI showing
 
-        public EditStaticModDlg(IEnumerable<StaticMod> existing, bool heavy)
+        public EditStaticModDlg(IEnumerable<StaticMod> existing, bool heavy, bool editingExisting)
         {
             _existing = existing;
+            _editing = editingExisting;
             _heavy = heavy;
 
             InitializeComponent();
+
+            ComboNameVisible = !editingExisting;
+            TextNameVisible = editingExisting;
+
+            UniMod.Init();
+            UpdateListAvailableMods();
 
             cbVariableMod.Visible = !heavy;
             labelChemicalFormula.Visible = !heavy;
@@ -85,11 +93,11 @@ namespace pwiz.Skyline.SettingsUI
                 _modification = value;
                 if (_modification == null)
                 {
-                    textName.Text = "";
+                    comboMod.Text = textName.Text = "";
                     comboAA.Text = "";
                     comboTerm.SelectedIndex = 0;
                     cbVariableMod.Checked = false;
-                    textFormula.Text = "";
+                    Formula = "";
                     textMonoMass.Text = "";
                     textAverageMass.Text = "";
                     cb13C.Checked = false;
@@ -102,7 +110,7 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 else
                 {
-                    textName.Text = _modification.Name;
+                    comboMod.Text = textName.Text = _modification.Name;
                     comboAA.Text = _modification.AAs ?? "";
                     if (_modification.Terminus == null)
                         comboTerm.SelectedIndex = 0;
@@ -111,13 +119,13 @@ namespace pwiz.Skyline.SettingsUI
                     cbVariableMod.Checked = _modification.IsVariable;
                     if (_modification.Formula != null)
                     {
-                        textFormula.Text = _modification.Formula;
+                        Formula = _modification.Formula;
                         // Make sure the formula is showing
                         cbChemicalFormula.Checked = true;
                     }
                     else
                     {
-                        textFormula.Text = "";
+                        Formula = "";
                         textMonoMass.Text = (_modification.MonoisotopicMass == null ?
                             "" : _modification.MonoisotopicMass.ToString());
                         textAverageMass.Text = (_modification.AverageMass == null ?
@@ -135,16 +143,21 @@ namespace pwiz.Skyline.SettingsUI
                     if (comboRelativeRT.Items.Count > 0)
                         comboRelativeRT.SelectedItem = _modification.RelativeRT.ToString();
 
+                    listNeutralLosses.Items.Clear();
                     if (_modification.HasLoss)
                     {
                         foreach (var loss in _modification.Losses)
                             listNeutralLosses.Items.Add(loss);
                     }
-                    // Make sure loss values are showing, if they are present
-                    if (listNeutralLosses.Items.Count > 0)
-                        ShowLoss = true;
+                    ShowLoss = listNeutralLosses.Items.Count > 0;
                 }                
             }
+        }
+
+        public string Formula
+        {
+            get { return textFormula.Text; }
+            set { textFormula.Text = value; }
         }
 
         public IEnumerable<FragmentLoss> Losses
@@ -217,24 +230,23 @@ namespace pwiz.Skyline.SettingsUI
             var helper = new MessageBoxHelper(this);
 
             string name;
-            if (!helper.ValidateNameTextBox(e, textName, out name))
+            if (!helper.ValidateNameTextBox(e, _editing ? (Control) textName : comboMod, out name))
                 return;
 
             // Allow updating the original modification
-            if (Modification == null || !Equals(name, Modification.Name))
+            if (!_editing || !Equals(name, Modification.Name))
             {
                 // But not any other existing modification
                 foreach (StaticMod mod in _existing)
                 {
                     if (Equals(name, mod.Name))
                     {
-                        helper.ShowTextBoxError(e, textName, "The modification '{0}' already exists.", name);
+                        helper.ShowTextBoxError(e, comboMod, "The modification '{0}' already exists.", name);
                         return;
                     }
                 }
             }
 
-            ValidateAACombo();
             string aas = comboAA.Text;
             if (string.IsNullOrEmpty(aas))
                 aas = null;
@@ -270,7 +282,7 @@ namespace pwiz.Skyline.SettingsUI
             double? avgMass = null;
             LabelAtoms labelAtoms = LabelAtoms.None;
             if (cbChemicalFormula.Checked)
-                formula = textFormula.Text;
+                formula = Formula;
             else
                 labelAtoms = LabelAtoms;
 
@@ -396,7 +408,7 @@ namespace pwiz.Skyline.SettingsUI
             string formula = null;
             LabelAtoms labelAtoms = LabelAtoms.None;
             if (cbChemicalFormula.Checked)
-                formula = textFormula.Text;
+                formula = Formula;
             else
             {
                 labelAtoms = LabelAtoms;
@@ -433,7 +445,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
-        private static void textFormula_KeyPress(object sender, KeyPressEventArgs e)
+        private void textFormula_KeyPress(object sender, KeyPressEventArgs e)
         {
             // Force uppercase in this control.
             // Atoms have been added containing lower case chars
@@ -455,10 +467,10 @@ namespace pwiz.Skyline.SettingsUI
 
         private void AddFormulaSymbol(string symbol)
         {
-            textFormula.Text += symbol;
+            Formula += symbol;
             textFormula.Focus();
             textFormula.SelectionLength = 0;
-            textFormula.SelectionStart = textFormula.Text.Length;
+            textFormula.SelectionStart = Formula.Length;
         }
 
         private void hContextMenuItem_Click(object sender, EventArgs e)
@@ -513,7 +525,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private const char SEPARATOR_AA = ',';
 
-        private static void comboAA_KeyPress(object sender, KeyPressEventArgs e)
+        private void comboAA_KeyPress(object sender, KeyPressEventArgs e)
         {
             // Force uppercase in this control.
             e.KeyChar = char.ToUpper(e.KeyChar);
@@ -620,5 +632,68 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         #endregion
+
+        private void UpdateListAvailableMods()
+        {
+            comboMod.Items.Clear();
+            comboMod.Items.Add(Settings.Default.StaticModsShowMore ? "<Show common...>" : "<Show all...>");
+            comboMod.Items.AddRange(ListAvailableMods().ToArray());
+        }
+
+        public List<string> ListAvailableMods()
+        {
+            List<string> staticModsNames = new List<string>();
+            staticModsNames.AddRange(_heavy ? UniMod.DictIsotopeModNames.Keys : UniMod.DictStructuralModNames.Keys);
+            if (Settings.Default.StaticModsShowMore)
+                staticModsNames.AddRange(_heavy ? UniMod.DictHiddenIsotopeModNames.Keys : UniMod.DictHiddenStructuralModNames.Keys);
+            staticModsNames.Sort();
+            return staticModsNames;
+        }
+
+        private void comboMod_DropDownClosed(object sender, EventArgs e)
+        {
+            if (comboMod.SelectedIndex == 0)
+                ToggleLessMore();
+        }
+
+        public void SetModification(string modName)
+        {
+            StaticMod mod;
+            var dict = _heavy ? UniMod.DictIsotopeModNames : UniMod.DictStructuralModNames;
+            var hiddenDict = _heavy ? UniMod.DictHiddenIsotopeModNames : UniMod.DictHiddenStructuralModNames;
+            dict.TryGetValue(modName, out mod);
+            if (mod == null)
+                hiddenDict.TryGetValue(modName, out mod);
+            Modification = mod;
+        }
+
+        private void comboMod_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (comboMod.SelectedIndex == 0 && !comboMod.DroppedDown)
+                comboMod.SelectedIndex = 1;
+            else if (comboMod.SelectedIndex == -1)
+                Modification = null;
+            else
+                SetModification(comboMod.SelectedItem.ToString());
+        }
+
+        public void ToggleLessMore()
+        {
+            Settings.Default.StaticModsShowMore = !Settings.Default.StaticModsShowMore;
+            UpdateListAvailableMods();
+            comboMod.DroppedDown = true;
+        }
+
+        public bool TextNameVisible
+        {
+            get { return textName.Visible; }
+            private set { textName.Visible = value; }
+        }
+
+        public bool ComboNameVisible
+        {
+            get { return comboMod.Visible; }
+            private set { comboMod.Visible = value; }
+        }
     }
 }

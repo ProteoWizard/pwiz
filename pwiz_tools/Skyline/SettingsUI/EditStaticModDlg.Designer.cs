@@ -73,6 +73,7 @@
             this.tbbAddLoss = new System.Windows.Forms.ToolStripButton();
             this.tbbEditLoss = new System.Windows.Forms.ToolStripButton();
             this.tbbDeleteLoss = new System.Windows.Forms.ToolStripButton();
+            this.comboMod = new System.Windows.Forms.ComboBox();
             this.contextFormula.SuspendLayout();
             this.panelFormula.SuspendLayout();
             this.panelAtoms.SuspendLayout();
@@ -136,7 +137,7 @@
             this.textFormula.Size = new System.Drawing.Size(160, 20);
             this.textFormula.TabIndex = 0;
             this.textFormula.TextChanged += new System.EventHandler(this.textFormula_TextChanged);
-            this.textFormula.KeyPress += new System.Windows.Forms.KeyPressEventHandler(textFormula_KeyPress);
+            this.textFormula.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textFormula_KeyPress);
             // 
             // label2
             // 
@@ -210,7 +211,7 @@
             this.comboAA.TabIndex = 3;
             this.comboAA.SelectedIndexChanged += new System.EventHandler(this.comboAA_SelectedIndexChanged);
             this.comboAA.Leave += new System.EventHandler(this.comboAA_Leave);
-            this.comboAA.KeyPress += new System.Windows.Forms.KeyPressEventHandler(comboAA_KeyPress);
+            this.comboAA.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.comboAA_KeyPress);
             // 
             // comboTerm
             // 
@@ -523,6 +524,18 @@
             this.tbbDeleteLoss.ToolTipText = "Delete neutral loss";
             this.tbbDeleteLoss.Click += new System.EventHandler(this.tbbDeleteLoss_Click);
             // 
+            // comboMod
+            // 
+            this.comboMod.FormattingEnabled = true;
+            this.comboMod.IntegralHeight = false;
+            this.comboMod.Location = new System.Drawing.Point(9, 28);
+            this.comboMod.MaxDropDownItems = 15;
+            this.comboMod.Name = "comboMod";
+            this.comboMod.Size = new System.Drawing.Size(238, 21);
+            this.comboMod.TabIndex = 1;
+            this.comboMod.SelectedIndexChanged += new System.EventHandler(this.comboMod_SelectedIndexChanged);
+            this.comboMod.DropDownClosed += new System.EventHandler(this.comboMod_DropDownClosed);
+            // 
             // EditStaticModDlg
             // 
             this.AcceptButton = this.btnOk;
@@ -531,6 +544,7 @@
             this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(353, 360);
             this.Controls.Add(this.panelLoss);
+            this.Controls.Add(this.comboMod);
             this.Controls.Add(this.labelLoss);
             this.Controls.Add(this.cbVariableMod);
             this.Controls.Add(this.labelRelativeRT);
@@ -619,5 +633,6 @@
         private System.Windows.Forms.ToolStripButton tbbAddLoss;
         private System.Windows.Forms.ToolStripButton tbbEditLoss;
         private System.Windows.Forms.ToolStripButton tbbDeleteLoss;
+        private System.Windows.Forms.ComboBox comboMod;
     }
 }

@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Controls
             _showMessages = showMessages;
         }
 
-        public bool ValidateNameTextBox(CancelEventArgs e, TextBox control, out string val)
+        public bool ValidateNameTextBox(CancelEventArgs e, Control control, out string val)
         {
             bool valid = false;
             val = control.Text.Trim();
@@ -183,7 +183,7 @@ namespace pwiz.Skyline.Controls
             e.Cancel = true;
         }
 
-        public void ShowTextBoxError(CancelEventArgs e, TextBox control, string message, params object[] vals)
+        public void ShowTextBoxError(CancelEventArgs e, Control control, string message, params object[] vals)
         {
             ShowTextBoxError(control, message, vals);
             e.Cancel = true;
@@ -196,7 +196,7 @@ namespace pwiz.Skyline.Controls
             control.Focus();
         }
 
-        public void ShowTextBoxError(TextBox control, string message)
+        public void ShowTextBoxError(Control control, string message)
         {
             ShowTextBoxError(control, message, new string[] { null });
         }
@@ -210,7 +210,7 @@ namespace pwiz.Skyline.Controls
         /// <param name="control">A text box with a validation error</param>
         /// <param name="message">A message format string</param>
         /// <param name="vals">Objects for use in the format string</param>
-        public void ShowTextBoxError(TextBox control, string message, params object[] vals)
+        public void ShowTextBoxError(Control control, string message, params object[] vals)
         {
             if(!_showMessages)
                 return;
@@ -218,13 +218,15 @@ namespace pwiz.Skyline.Controls
                 vals[0] = GetControlMessage(control);
             MessageBox.Show(_parent, string.Format(message, vals), Program.Name);
             control.Focus();
-            control.SelectAll();
+            var textBox = control as TextBox;
+            if(textBox != null)
+                textBox.SelectAll();
         }
 
         /// <summary>
         /// Gets the text of a control's label, and cleans it for use in a message box.
         /// </summary>
-        /// <param name="control">A control whith a label one tabstop before it</param>
+        /// <param name="control">A control with a label one tabstop before it</param>
         /// <returns>Message box text</returns>
         public string GetControlMessage(Control control)
         {

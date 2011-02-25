@@ -1,87 +1,133 @@
-﻿using System;
+﻿/*
+ * Original author: Alana Killeen <killea .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2010 University of Washington - Seattle, WA
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml.Serialization;
 
 namespace UniModCompiler
 {
+    /// <summary>
+    /// Takes an XML file of modifications,
+    /// We used: http://www.unimod.org/xml/unimod.xml.
+    /// Takes a set of text files that contain line seperated lists of modifications.
+    /// We used: http://www.matrixscience.com/cgi/get_params.pl
+    /// 
+    /// UniModCompiler matches the modification names in the text files to the modification definitions in the XML.
+    /// Modifications are then compiled into lists of static modifications for Skyline, which are output to UniMod.cs
+    /// </summary>
     class Program
     {
         private static Dictionary<string, mod_t> _dictStructuralMods;
         private static Dictionary<string, mod_t> _dictIsotopeMods;
         private static List<Mod> _listedMods;
         private static List<Mod> _listedHiddenMods;
+        private static List<string> _impossibleMods;
 
         static void Main(string[] args)
         {
-            SequenceMassCalc();
-
-            _dictStructuralMods = new Dictionary<string, mod_t>();
-            _dictIsotopeMods = new Dictionary<string, mod_t>();
-             
-            // Read in XML, creating a dictionary of mod titles to mods.
-            StreamReader reader = new StreamReader(args[0]);
-            XmlSerializer serializer = new XmlSerializer(typeof(Modification));
-            var modifications = ((Modification) serializer.Deserialize(reader)).modifications;               
-            reader.Close();
-            foreach(mod_t mod in modifications)
+            if (2 > args.Length)
             {
-                // Only add to the dictionary of isotope mods it is truly an isotope mod.
-                if (Equals(mod.specificity[0].classification, classification_t.Isotopiclabel)
-                    && CheckTrueIsotopeMod(mod.delta.element)) 
-                    _dictIsotopeMods.Add(mod.title, mod);
-                else
-                    _dictStructuralMods.Add(mod.title, mod);
+                Console.Error.WriteLine("Usage: UniModCompiler <input XML file> <input text file> +");
+                Console.Error.WriteLine("       Matches listed modifications to modifications definitions and compiles them to UniMod.Cs");
+                return;
             }
-          
-            _listedMods = new List<Mod>();
-            _listedHiddenMods = new List<Mod>();
-
-            for (int i = 1; i < args.Length; i++)
+            try
             {
-                // Read in line seperated list, creating lists of the modifications we are looking for.
-                reader = new StreamReader(args[i]);
-                string line;
-                while ((line = reader.ReadLine()) != null)
+                SequenceMassCalc();
+
+                _dictStructuralMods = new Dictionary<string, mod_t>();
+                _dictIsotopeMods = new Dictionary<string, mod_t>();
+
+                // Read in XML, creating a dictionary of mod titles to mods.
+                StreamReader reader = new StreamReader(args[0]);
+                XmlSerializer serializer = new XmlSerializer(typeof (Modification));
+                var modifications = ((Modification) serializer.Deserialize(reader)).modifications;
+                reader.Close();
+                foreach (mod_t mod in modifications)
                 {
-                    if (line.Contains("[MODS]"))
-                        _listedMods.AddRange(ReadListedMods(reader));
-                    if (line.Contains("[HIDDEN_MODS]"))
-                        _listedHiddenMods.AddRange(ReadListedMods(reader));
+                    // Only add to the dictionary of isotope mods it is truly an isotope mod.
+                    if (Equals(mod.specificity[0].classification, classification_t.Isotopiclabel)
+                        && CheckTrueIsotopeMod(mod.delta.element))
+                        _dictIsotopeMods.Add(mod.title, mod);
+                    else
+                        _dictStructuralMods.Add(mod.title, mod);
                 }
-            }
 
-            // Writing the output file.
-            StreamWriter writer = new StreamWriter(@"..\..\..\..\Model\DocSettings\UniMod.cs");
-            var templateStream = typeof (Program).Assembly.GetManifestResourceStream("UniModCompiler.UniModTemplate.cs");
-            if (templateStream == null)
-                throw new IOException("Failed to open template");
-            StreamReader templateReader = new StreamReader(templateStream);
-            string templateLine;
-            while((templateLine = templateReader.ReadLine()) != null)
-            {
-                if(templateLine.Contains(@"// INSERT StructuralMods"))
-                    WriteMods(writer, false, false);
-                else if (templateLine.Contains(@"// INSERT IsotopeMods"))
-                    WriteMods(writer, false, true);
-                else if (templateLine.Contains(@"// INSERT HiddenStructuralMods"))
-                    WriteMods(writer, true, false);
-                else if (templateLine.Contains(@"// INSERT HiddenIsotopeMods"))
-                    WriteMods(writer, true, true);
-                else
+                _listedMods = new List<Mod>();
+                _listedHiddenMods = new List<Mod>();
+
+                for (int i = 1; i < args.Length; i++)
                 {
-                    writer.WriteLine(templateLine);
+                    // Read in line seperated list, creating lists of the modifications we are looking for.
+                    reader = new StreamReader(args[i]);
+                    string line;
+                    while ((line = reader.ReadLine()) != null)
+                    {
+                        if (line.Contains("[MODS]"))
+                            _listedMods.AddRange(ReadListedMods(reader));
+                        if (line.Contains("[HIDDEN_MODS]"))
+                            _listedHiddenMods.AddRange(ReadListedMods(reader));
+                    }
                 }
-            }
-            writer.Close();
 
-            foreach (Mod listedMod in _listedMods)
-            {
-                Console.WriteLine("Unable to match: " + listedMod.Name);
+                _impossibleMods = new List<string>();
+
+                // Writing the output file.
+                StreamWriter writer = new StreamWriter(@"..\..\..\..\Model\DocSettings\UniMod.cs");
+                var templateStream =
+                    typeof (Program).Assembly.GetManifestResourceStream("UniModCompiler.UniModTemplate.cs");
+                if (templateStream == null)
+                    throw new IOException("Failed to open template");
+                StreamReader templateReader = new StreamReader(templateStream);
+                string templateLine;
+                while ((templateLine = templateReader.ReadLine()) != null)
+                {
+                    if (!templateLine.Contains(@"// ADD MODS"))
+                        writer.WriteLine(templateLine);
+                    else
+                    {
+                        WriteMods(writer, false, false);
+                        WriteMods(writer, false, true);
+                        WriteMods(writer, true, false);
+                        WriteMods(writer, true, true);
+                    }
+                }
+
+                foreach (string impossibleMod in _impossibleMods)
+                {
+                    writer.WriteLine("//Impossible Modification: " + impossibleMod);
+                }
+                foreach (Mod listedMod in _listedMods)
+                {
+                    writer.WriteLine("//Unable to match: " + listedMod.Name);
+                }
+                foreach (Mod listedMod in _listedHiddenMods)
+                {
+                    writer.WriteLine("//Unable to match: " + listedMod.Name);
+                }
+
+                writer.Close();
             }
-            foreach (Mod listedMod in _listedHiddenMods)
+            catch(Exception x)
             {
-                Console.WriteLine("Unable to match: " + listedMod.Name);
+                Console.Error.WriteLine("ERROR: " + x.Message);
             }
         }
 
@@ -110,6 +156,7 @@ namespace UniModCompiler
                 label13C += Equals(n.symbol, "13C") || Equals(n.symbol, "C") ? 0 : Int32.Parse(n.number);
                 label18O += Equals(n.symbol, "18O") || Equals(n.symbol, "O") ? 0 : Int32.Parse(n.number);
                 label2H += Equals(n.symbol, "2H") || Equals(n.symbol, "H") ? 0 : Int32.Parse(n.number);
+
             }
 
             return (has15N || has13C || has18O || has2H) &&
@@ -128,7 +175,7 @@ namespace UniModCompiler
             string line;
             while ((line = reader.ReadLine()) != null)
             {
-                if (Equals("", line) || line.Contains("["))
+                if (Equals("", line))
                     return listedMods;
                 var splitLine = line.Split(new[] { ' ' }, 2);
                 var title = splitLine[0];
@@ -170,37 +217,85 @@ namespace UniModCompiler
 
                 // For each AA in the listed modifcation, make sure the dictionary mod contains it.
                 bool foundAllAAs = true;
+                List<String> losses = null;
+                List<String> aaLosses = null;
                 foreach (char aa in mod.AAs)
                 {
-                    foundAllAAs = foundAllAAs && ContainsSite(dictMod, aa.ToString());
+                    foundAllAAs = foundAllAAs && ContainsSite(dictMod, aa.ToString(), out aaLosses);
+                    if (losses == null)
+                        losses = aaLosses;
+                    else if (!ListEquals(losses, aaLosses))
+                        foundAllAAs = false;
                 }              
                 // Also check to make sure the dictionary mod contains the terminal, if any.
+                foundAllAAs = foundAllAAs &&
+                    (mod.Terminal == null || !mod.Terminal.Equals(Terminal.C) || ContainsSite(dictMod, "C-term", out aaLosses));
                 foundAllAAs = foundAllAAs && 
-                    (mod.Terminal == null || !mod.Terminal.Equals(Terminal.C) || ContainsSite(dictMod, "C-term"));
-                foundAllAAs = foundAllAAs && 
-                    (mod.Terminal == null || !mod.Terminal.Equals(Terminal.N) || ContainsSite(dictMod, "N-term"));
+                    (mod.Terminal == null || !mod.Terminal.Equals(Terminal.N) || ContainsSite(dictMod, "N-term", out aaLosses));
+                if (losses == null)
+                    losses = aaLosses;
+                else if (!ListEquals(losses, aaLosses))
+                    foundAllAAs = false;               
 
                 // If the dictionary mod does not contain all desired AAs, continue.
                 if (!foundAllAAs)
                     continue;
 
+                // Build string for fragment loss.
+                string lossesStr = "null";
+                if(losses != null && losses.Count > 0)
+                {
+                    lossesStr = @"new [] { ";                    
+                    foreach (string loss in losses)
+                    {
+                        lossesStr += String.Format(@"new FragmentLoss(""{0}""), ", loss);
+                    }
+                    lossesStr += "}";
+                }
+
                 string skylineFormula = BuildFormula(dictMod.delta.element);
                 if(skylineFormula.Length == 0)
                     continue;
-                 
+                bool hasLabelAtoms = isotopic && mod.AAs.Length > 0;
+                string labelAtoms = "LabelAtoms.None";
+                if (hasLabelAtoms && !CheckLabelAtoms(dictMod.delta.element, mod.AAs, out labelAtoms))
+                {
+                    _impossibleMods.Add(mod.Name);
+                    if (hidden)
+                        _listedHiddenMods.Remove(mod);
+                    else
+                        _listedMods.Remove(mod);
+                    continue;
+                }
                 writer.WriteLine(
-                    String.Format(@"                new StaticMod(""{0}"", {1}, {2}, {3}),",
-                                  mod.Name, 
-                                  mod.AAs.Length > 0 ? '"' + BuildAAString(mod.AAs) + '"' : "null",
-                                  mod.Terminal != null ? "ModTerminus." + mod.Terminal : "null",
-                                  isotopic && mod.AAs.Length > 0 ? BuildLabelAtomsString(dictMod.delta.element, mod.AAs) 
-                                    : '"' + BuildFormula(dictMod.delta.element) + '"'));
+                    String.Format(@"            AddMod(""{0}"", {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8});", 
+                                    mod.Name,
+                                    mod.AAs.Length > 0 ? '"' + BuildAAString(mod.AAs) + '"' : "null",
+                                    mod.Terminal != null ? "ModTerminus." + mod.Terminal : "null",
+                                    labelAtoms,                                    
+                                    Equals(labelAtoms, "LabelAtoms.None") ?
+                                        '"' + BuildFormula(dictMod.delta.element) + '"'
+                                        : "null",
+                                    lossesStr,
+                                    dictMod.record_id, 
+                                    (!isotopic).ToString().ToLower(), 
+                                    hidden.ToString().ToLower()));
                 
                 if (hidden)
                     _listedHiddenMods.Remove(mod);
                 else
                     _listedMods.Remove(mod);
             }
+        }
+
+        private static bool ListEquals(List<string> list1, List<string> list2)
+        {
+            for (int i = 0; i < list1.Count; i++)
+            {
+                if (!Equals(list1[i], list2[i]))
+                    return false;
+            }
+            return true;
         }
 
         private static string BuildAAString(char[] aas)
@@ -216,12 +311,26 @@ namespace UniModCompiler
         /// <summary>
         /// Check that an AA from the list of modifications is found in the XML modification.
         /// </summary>
-        private static bool ContainsSite(mod_t modification, string aa)
+        private static bool ContainsSite(mod_t modification, string aa, out List<string> losses)
         {
+            losses = new List<string>();
             foreach (specificity_t specificty in modification.specificity)
             {
-                if (Equals(specificty.site, aa))
+                if (Equals(specificty.site, aa) || 
+                    (aa.Length > 1 && specificty.position.ToString().ToLower().Contains(aa.ToLower().Replace("-", ""))))
+                {
+                    if (specificty.NeutralLoss != null && specificty.NeutralLoss.Length > 0)
+                    {   
+                        foreach(NeutralLoss_t loss in specificty.NeutralLoss)
+                        {
+                            if(loss.avge_mass == 0)
+                                continue;
+                            losses.Add(BuildFormula(loss.element));
+                        }
+                    }
+                    losses.Sort();
                     return true;
+                }
             }
             return false;
         }
@@ -229,32 +338,58 @@ namespace UniModCompiler
         /// <summary>
         /// Check for label atoms in the given sequence matching the given aa, and create a corresponding string if found.
         /// </summary>
-        private static string BuildLabelAtomsString(IEnumerable<elem_ref_t> elements, IEnumerable<char> aas)
+        private static bool CheckLabelAtoms(IEnumerable<elem_ref_t> elements, char[] aas, out string labelAtomsFormula)
         {
-            string labelAtoms = "";
+            labelAtomsFormula = "";
+            bool hasLabelAtoms = true;
             foreach (var element in elements)
             {
                 char elementMatch;
-                if (DICT_HEAVY_LABELS.TryGetValue(element.symbol, out elementMatch))
+                if (hasLabelAtoms && DICT_HEAVY_LABELS.TryGetValue(element.symbol, out elementMatch))
                 {
                     foreach (char aa in aas)
                     {
-                        var formula = AMINO_FORMULAS[aa];
-                        int index = formula.IndexOf(elementMatch);
-                        int numInFormula = (index > formula.Length - 2 || char.IsLetter(formula[index + 1]))
-                                        ? 1
-                                        : Int32.Parse(formula[index + 1].ToString());
+                        int numInFormula = ParseSeqMassCalcFormula(aa, elementMatch);
                         if (element.number != numInFormula.ToString())
-                            return "LabelAtoms.None";
+                        {
+                            labelAtomsFormula = "|LabelAtoms.None";
+                            hasLabelAtoms = false;
+                        }
                     }
                     var symbol = element.symbol;
                     var elementIndex = symbol.IndexOfAny(new[] { 'N', 'C', 'O', 'H' });
-                    labelAtoms += "|LabelAtoms." +
+                    labelAtomsFormula += "|LabelAtoms." +
                                   symbol[elementIndex] + symbol.Remove(elementIndex);
                 }
+                else if(element.symbol.Length == 1 && DICT_HEAVY_LABELS.ContainsValue(element.symbol[0]))
+                {
+                    foreach (char aa in aas)
+                    {
+                        int numInFormula = ParseSeqMassCalcFormula(aa, element.symbol[0]);
+                        if ((Int32.Parse(element.number)*-1) > numInFormula)
+                            return false;
+                    }
+                }
             }
-            return labelAtoms.Length > 0 ? labelAtoms.Substring(1) : "LabelAtoms.None";
+            labelAtomsFormula = labelAtomsFormula.Length > 0 ? labelAtomsFormula.Substring(1) : "LabelAtoms.None";
+            return true;
         }
+
+        private static int ParseSeqMassCalcFormula(char aa, char element)
+        {
+            var formula = AMINO_FORMULAS[aa];
+            int index = formula.IndexOf(element);
+            int numInFormula;
+            if (index > formula.Length - 2 || char.IsLetter(formula[index + 1]))
+                numInFormula = 1;
+            else
+            {
+                int numLength = (index + 2 < formula.Length && char.IsNumber(formula[index + 2])) ? 2 : 1;
+                numInFormula = Int32.Parse(formula.Substring(index + 1, numLength));
+            }
+            return numInFormula;
+        }
+
 
         /// <summary>
         /// Create a Skyline chemical formula given a modification from the XML.

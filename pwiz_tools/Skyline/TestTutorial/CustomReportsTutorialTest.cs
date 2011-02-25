@@ -292,6 +292,7 @@ namespace pwiz.SkylineTestTutorial
                 chooseAnnotationsDlg.AnnotationsCheckedListBox.SetItemChecked(0, true);
                 chooseAnnotationsDlg.OkDialog();
             });
+            WaitForClosedForm(chooseAnnotationsDlg);
         }
     }
 }

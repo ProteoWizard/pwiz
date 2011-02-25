@@ -245,13 +245,13 @@ namespace pwiz.SkylineTestTutorial
             docInitial = SkylineWindow.Document;
 
             var peptideSettingsUI2 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-
-            var phosphoSt = new StaticMod("Phospho (ST)", "S, T", null, true, "HPO3", LabelAtoms.None,
+            const string phosphoModName = "Phospho ST";
+            var phosphoSt = new StaticMod(phosphoModName, "S, T", null, true, "HPO3", LabelAtoms.None,
                                           RelativeRT.Unknown, null, null, new[] { new FragmentLoss("H3PO4"), });
             AddStaticMod(phosphoSt, peptideSettingsUI2);
 
             // Check Phospho (ST) and Carbamidomethyl Cysteine
-            RunUI(() => peptideSettingsUI2.PickedStaticMods = new[] { "Phospho (ST)", "Carbamidomethyl Cysteine" });
+            RunUI(() => peptideSettingsUI2.PickedStaticMods = new[] { phosphoModName, "Carbamidomethyl Cysteine" });
             OkDialog(peptideSettingsUI2, peptideSettingsUI2.OkDialog);
 
             var docPhospho = WaitForDocumentChange(docInitial);

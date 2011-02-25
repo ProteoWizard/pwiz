@@ -1375,5 +1375,17 @@ namespace pwiz.Skyline.Properties {
                 this["ScheduleAvergeRT"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool StaticModsShowMore {
+            get {
+                return ((bool)(this["StaticModsShowMore"]));
+            }
+            set {
+                this["StaticModsShowMore"] = value;
+            }
+        }
     }
 }

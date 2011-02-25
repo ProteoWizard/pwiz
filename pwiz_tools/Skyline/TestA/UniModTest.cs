@@ -32,10 +32,7 @@ namespace pwiz.SkylineTestA
         public void TestUniMod()
         {
             UniMod.Init();
-            TestStaticMods(UniMod.StructuralMods);
-            TestStaticMods(UniMod.IsotopeMods);
-            TestStaticMods(UniMod.HiddenStructuralMods);
-            TestStaticMods(UniMod.HiddenIsotopeMods);
+            TestStaticMods(UniMod.DictUniModIds.Values);
         }
 
         private static void TestStaticMods(IEnumerable<StaticMod> mods)
@@ -62,7 +59,6 @@ namespace pwiz.SkylineTestA
                     Assert.IsTrue(aasAndTermInName.Contains(mod.Terminus.ToString()));
                 if (mod.AAs != null)
                 {
-                    Assert.AreEqual(mod.AminoAcids.Count(), aasAndTermInName.Length - 2);
                     foreach (char aa in mod.AminoAcids)
                     {
                         Assert.IsTrue(aasAndTermInName.Contains(aa));
