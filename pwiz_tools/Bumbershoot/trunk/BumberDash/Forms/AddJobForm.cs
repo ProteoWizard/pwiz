@@ -83,9 +83,8 @@ namespace BumberDash.Forms
             var folderDialog = new FolderBrowserDialog
                                    {
                                        Description = "Working Directory",
-                                       RootFolder = Environment.SpecialFolder.MyComputer,
                                        SelectedPath = OutputDirectoryBox.Text,
-                                       ShowNewFolderButton = false
+                                       ShowNewFolderButton = false                                     
                                    };
             if (folderDialog.ShowDialog() == DialogResult.OK)
                 OutputDirectoryBox.Text = folderDialog.SelectedPath;
@@ -102,7 +101,7 @@ namespace BumberDash.Forms
                               {
                                   RestoreDirectory = true,
                                   Filter =
-                                      "mzML files (.mzML)|*.mzML|mzXML files (.mzXML)|*.mzXML|RAW files (.raw)|*.raw|WIFF files (.wiff)|*.wiff|YEP files (.yep)|*.yep|MGF files (.mgf)|*.mgf",
+                                      "Bumbershoot compatable files|*.mzML;*.mzXML;*.wiff;*.raw;*.yep;*.mgf|mzML files (.mzML)|*.mzML|mzXML files (.mzXML)|*.mzXML|RAW files (.raw)|*.raw|WIFF files (.wiff)|*.wiff|YEP files (.yep)|*.yep|MGF files (.mgf)|*.mgf",
                                   CheckFileExists = true,
                                   CheckPathExists = true,
                                   SupportMultiDottedExtensions = true,
@@ -596,7 +595,7 @@ namespace BumberDash.Forms
             var extensionList = new List<string>
                                         {
                                             ".raw", ".wiff", ".yep",
-                                            ".mzML", ".mgf", ".mzXML"
+                                            ".mzml", ".mgf", ".mzxml"
                                         };
 
 
@@ -604,7 +603,7 @@ namespace BumberDash.Forms
             var inputFiles = InputFilesBox.Text.Split(Environment.NewLine.ToCharArray(),
                                                       StringSplitOptions.RemoveEmptyEntries);
             if (inputFiles.Select(str => str.Trim("\"".ToCharArray()))
-                .Any(fileName => !File.Exists(fileName) || !(extensionList.Contains(Path.GetExtension(fileName)))))
+                .Any(fileName => !File.Exists(fileName) || !(extensionList.Contains(Path.GetExtension(fileName).ToLower()))))
             {
                 allValid = false;
                 InputFilesBox.BackColor = Color.LightPink;
@@ -625,7 +624,7 @@ namespace BumberDash.Forms
 
             // Validate Database Location
             if (File.Exists(DatabaseLocBox.Text) &&
-                Path.GetExtension(DatabaseLocBox.Text) == (".fasta"))
+                Path.GetExtension(DatabaseLocBox.Text).ToLower() == (".fasta"))
                 DatabaseLocBox.BackColor = Color.White;
             else
             {
