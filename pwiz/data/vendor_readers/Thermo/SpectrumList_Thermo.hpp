@@ -53,7 +53,9 @@ class PWIZ_API_DECL SpectrumList_Thermo : public SpectrumListBase
     virtual const SpectrumIdentity& spectrumIdentity(size_t index) const;
     virtual size_t find(const string& id) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
+    virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
+    virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
 
 #ifdef PWIZ_READER_THERMO
     SpectrumList_Thermo(const MSData& msd, pwiz::vendor_api::Thermo::RawFilePtr rawfile);

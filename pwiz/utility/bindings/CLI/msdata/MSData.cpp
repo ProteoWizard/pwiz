@@ -648,6 +648,11 @@ Spectrum^ SpectrumList::spectrum(int index, bool getBinaryData)
     try {return gcnew Spectrum(new b::SpectrumPtr((*base_)->spectrum((size_t) index, getBinaryData)));} CATCH_AND_FORWARD
 }
 
+Spectrum^ SpectrumList::spectrum(int index, DetailLevel detailLevel)
+{
+	try {return gcnew Spectrum(new b::SpectrumPtr((*base_)->spectrum((size_t) index, (b::DetailLevel)detailLevel)));} CATCH_AND_FORWARD
+}
+
 DataProcessing^ SpectrumList::dataProcessing()
 {
     const shared_ptr<const b::DataProcessing> cdp = (*base_)->dataProcessingPtr();

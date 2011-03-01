@@ -257,6 +257,37 @@ PWIZ_API_DECL bool SpectrumList_FilterPredicate_MSLevelSet::accept(const msdata:
 
 
 //
+// SpectrumList_FilterPredicate_PrecursorMzSet 
+//
+
+
+PWIZ_API_DECL SpectrumList_FilterPredicate_PrecursorMzSet::SpectrumList_FilterPredicate_PrecursorMzSet(const std::set<double>& precursorMzSet)
+:   precursorMzSet_(precursorMzSet)
+{}
+
+
+PWIZ_API_DECL bool SpectrumList_FilterPredicate_PrecursorMzSet::accept(const msdata::Spectrum& spectrum) const
+{
+	double precursorMz = getPrecursorMz(spectrum);
+    bool result = precursorMzSet_.count(precursorMz)>0;
+    return result;
+}
+
+PWIZ_API_DECL double SpectrumList_FilterPredicate_PrecursorMzSet::getPrecursorMz(const msdata::Spectrum& spectrum) const
+{
+    for (size_t i=0; i<spectrum.precursors.size(); i++)
+    {
+		for (size_t j=0; j<spectrum.precursors[i].selectedIons.size(); j++)
+		{
+			CVParam param = spectrum.precursors[i].selectedIons[j].cvParam(MS_selected_ion_m_z);
+			if (param.cvid != CVID_Unknown)
+				return lexical_cast<double>(param.value);
+        }
+	}
+	return 0;
+}
+
+//
 // SpectrumList_FilterPredicate_DefaultArrayLengthSet 
 //
 

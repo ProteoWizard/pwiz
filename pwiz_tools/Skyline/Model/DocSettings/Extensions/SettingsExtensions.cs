@@ -92,5 +92,11 @@ namespace pwiz.Skyline.Model.DocSettings.Extensions
         {
             return settings.ChangeTransitionSettings(setT => setT.ChangeInstrument(change(setT.Instrument)));
         }
+
+        public static SrmSettings ChangeTransitionFullScan(this SrmSettings settings,
+            ChangeFunc<TransitionFullScan> change)
+        {
+            return settings.ChangeTransitionSettings(setT => setT.ChangeFullScan(change(setT.FullScan)));
+        }
     }
 }

@@ -728,6 +728,9 @@ namespace pwiz.SkylineTest
                 " mass_monoisotopic=\"" + MeasuredIon.MIN_REPORTER_MASS + "\" mass_average=\"" + (MeasuredIon.MAX_REPORTER_MASS + 0.1) + "\"/>");
         }
 
+        private const string LEGACY_LOW_ACCURACY = "Low Accuracy";
+        private const string LEGACY_HIGH_ACCURACY = "High Accuracy";
+
         /// <summary>
         /// Test error handling in XML deserialization of <see cref="TransitionInstrument"/>.
         /// </summary>
@@ -740,6 +743,7 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"10\" max_mz=\"5000\" mz_match_tolerance=\"0.4\"/>");
             AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"10\" max_mz=\"5000\" mz_match_tolerance=\"0.001\"/>");
             AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"10\" max_mz=\"5000\" dynamic_min=\"true\"/>");
+            // Backward compatibility with v0.7.1
             AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"None\"/>");
             AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
                 FullScanPrecursorFilterType.Single + "\"/>");  // Use defaults
@@ -747,14 +751,14 @@ namespace pwiz.SkylineTest
                 FullScanPrecursorFilterType.Multiple + "\"/>");  // Use defaults
             AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
                 FullScanPrecursorFilterType.Single + "\" precursor_filter=\"0.11\" product_filter_type=\""+
-                FullScanProductFilterType.LOW_ACCURACY + "\" product_filter=\"1\"/>");
+                LEGACY_LOW_ACCURACY + "\" product_filter=\"1\"/>");
             AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
                 FullScanPrecursorFilterType.Multiple + "\" precursor_filter=\"2\" product_filter_type=\"" +
-                FullScanProductFilterType.HIGH_ACCURACY + "\" product_filter=\"10\"/>");
+                LEGACY_HIGH_ACCURACY + "\" product_filter=\"10\"/>");
             // Ignore extra filter values when None specified for precursor filter type
             AssertEx.DeserializeNoError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
                 FullScanPrecursorFilterType.None + "\" precursor_filter=\"0.11\" product_filter_type=\"" +
-                FullScanProductFilterType.LOW_ACCURACY + "\" product_filter=\"1\"/>");
+                LEGACY_LOW_ACCURACY + "\" product_filter=\"1\"/>");
 
             // Empty element
             AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument />");
@@ -764,38 +768,82 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"10\" max_mz=\"5000\" mz_match_tolerance=\"0\"/>");
             AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"10\" max_mz=\"5000\" mz_match_tolerance=\"0.65\"/>");
             AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"10\" max_mz=\"5000\" dynamic_min=\"maybe\"/>");
-            // Full-scan MS/MS filtering
-            AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"0.11\" product_filter_type=\"Unknown\" product_filter=\"1\"/>");
-            AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
-                "Unknown" + "\" precursor_filter=\"0.11\" product_filter_type=\"" +
-                FullScanProductFilterType.LOW_ACCURACY + "\" product_filter=\"1\"/>");
-            AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"" + TransitionInstrument.MAX_PRECURSOR_SINGLE_FILTER*2 + "\" product_filter_type=\"" +
-                FullScanProductFilterType.LOW_ACCURACY + "\" product_filter=\"1\"/>");
-            AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"" + TransitionInstrument.MIN_PRECURSOR_SINGLE_FILTER/2 + "\" product_filter_type=\"" +
-                FullScanProductFilterType.LOW_ACCURACY + "\" product_filter=\"1\"/>");
-            AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Multiple + "\" precursor_filter=\"" + TransitionInstrument.MAX_PRECURSOR_MULTI_FILTER*2 + "\" product_filter_type=\"" +
-                FullScanProductFilterType.LOW_ACCURACY + "\" product_filter=\"1\"/>");
-            AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Multiple + "\" precursor_filter=\"" + TransitionInstrument.MIN_PRECURSOR_MULTI_FILTER/2 + "\" product_filter_type=\"" +
-                FullScanProductFilterType.LOW_ACCURACY + "\" product_filter=\"1\"/>");
-            AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"0.11\" product_filter_type=\"" +
-                FullScanProductFilterType.LOW_ACCURACY + "\" product_filter=\"" + TransitionInstrument.MAX_PRODUCT_LO_FILTER*2 + "\"/>");
-            AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"0.11\" product_filter_type=\"" +
-                FullScanProductFilterType.LOW_ACCURACY + "\" product_filter=\"" + TransitionInstrument.MIN_PRODUCT_LO_FILTER/2 + "\"/>");
-            AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"0.11\" product_filter_type=\"" +
-                FullScanProductFilterType.HIGH_ACCURACY + "\" product_filter=\"" + TransitionInstrument.MAX_PRODUCT_HI_FILTER*2 + "\"/>");
-            AssertEx.DeserializeError<TransitionInstrument>("<transition_instrument min_mz=\"52\" max_mz=\"2000\" dynamic_min=\"true\" precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"0.11\" product_filter_type=\"" +
-                FullScanProductFilterType.HIGH_ACCURACY + "\" product_filter=\"" + TransitionInstrument.MIN_PRODUCT_HI_FILTER/2 + "\"/>");
         }
 
+        /// <summary>
+        /// Test error handling in XML deserialization of <see cref="TransitionInstrument"/>.
+        /// </summary>
+        [TestMethod]
+        public void SerializeTransitionFullScanTest()
+        {
+            const double validLoRes = (TransitionFullScan.MIN_LO_RES + TransitionFullScan.MAX_LO_RES) / 2;
+            const double validHiRes = (TransitionFullScan.MIN_HI_RES + TransitionFullScan.MAX_HI_RES) / 2;
+            const double validHiResMz = (TransitionFullScan.MIN_RES_MZ + TransitionFullScan.MAX_RES_MZ) / 2;
+
+            // Valid first
+            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan />");
+            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_mass_analyzer=\"" + FullScanMassAnalyzerType.qit +"\" " +
+                "precursor_res=\"" + validLoRes + "\"/>");
+            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_mass_analyzer=\"" + FullScanMassAnalyzerType.tof + "\" " +
+                "precursor_res=\"" + validHiRes + "\"/>");
+            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
+                FullScanPrecursorFilterType.Single + "\"/>");  // Use defaults
+            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
+                FullScanPrecursorFilterType.Multiple + "\"/>");  // Use defaults
+            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
+                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"0.11\" product_mass_analyzer=\""+
+                FullScanMassAnalyzerType.qit + "\" product_res=\"" + validLoRes+ "\"/>");
+            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
+                FullScanPrecursorFilterType.Multiple + "\" precursor_filter=\"2\" product_mass_analyzer=\"" +
+                FullScanMassAnalyzerType.ft_icr + "\" product_res=\"" + validHiRes + "\" product_res_mz=\"" + validHiResMz + "\"/>");
+            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
+                FullScanPrecursorFilterType.Multiple + "\" precursor_filter=\"2\" product_mass_analyzer=\"" +
+                FullScanMassAnalyzerType.ft_icr + "\" product_res=\"" + validHiRes + "\"/>");   // Use default res mz
+            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_mass_analyzer=\"" +
+                FullScanMassAnalyzerType.orbitrap + "\" precursor_res=\"" + validHiRes + "\" precursor_res_mz=\"" + validHiResMz + "\" " +
+                "precursor_filter_type=\"" + FullScanPrecursorFilterType.Multiple + "\" precursor_filter=\"2\" product_mass_analyzer=\"" +
+                FullScanMassAnalyzerType.qit + "\" product_res=\"" + validLoRes + "\"/>");
+            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_mass_analyzer=\"" +
+                FullScanMassAnalyzerType.orbitrap + "\" precursor_res=\"" + validHiRes + "\" " +
+                "precursor_filter_type=\"" + FullScanPrecursorFilterType.Multiple + "\" precursor_filter=\"2\" product_mass_analyzer=\"" +
+                FullScanMassAnalyzerType.qit + "\" product_res=\"" + validLoRes + "\"/>");  // Use default res mz
+
+            // Full-scan MS/MS filtering
+            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
+                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"0.11\" product_mass_analyzer=\"Unknown\" " +
+                "product_resolution=\"" + validLoRes + "\"/>");
+            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
+                "Unknown" + "\" precursor_filter=\"0.11\" product_mass_analyzer=\"" +
+                FullScanMassAnalyzerType.qit + "\" product_resoltion=\"" + validLoRes + "\"/>");
+            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
+                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"" + TransitionFullScan.MAX_PRECURSOR_SINGLE_FILTER * 2 + "\" product_mass_analyzer=\"" +
+                FullScanMassAnalyzerType.qit + "\" product_resoltion=\"" + validLoRes + "\"/>");
+            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
+                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"" + TransitionFullScan.MIN_PRECURSOR_SINGLE_FILTER / 2 + "\" product_mass_analyzer=\"" +
+                FullScanMassAnalyzerType.qit + "\" product_resoltion=\"" + validLoRes + "\"/>");
+            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
+                FullScanPrecursorFilterType.Multiple + "\" precursor_filter=\"" + TransitionFullScan.MAX_PRECURSOR_MULTI_FILTER * 2 + "\" product_mass_analyzer=\"" +
+                FullScanMassAnalyzerType.qit + "\" product_resoltion=\"" + validLoRes + "\"/>");
+            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
+                FullScanPrecursorFilterType.Multiple + "\" precursor_filter=\"" + TransitionFullScan.MIN_PRECURSOR_MULTI_FILTER / 2 + "\" product_mass_analyzer=\"" +
+                FullScanMassAnalyzerType.qit + "\" product_resoltion=\"" + validLoRes + "\"/>");
+            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
+                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"0.11\" product_mass_analyzer=\"" +
+                FullScanMassAnalyzerType.qit + "\" product_res=\"" + TransitionFullScan.MIN_LO_RES/2 + "\"/>");
+            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
+                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"0.11\" product_mass_analyzer=\"" +
+                FullScanMassAnalyzerType.qit + "\" product_res=\"" + TransitionFullScan.MAX_LO_RES*2 + "\"/>");
+            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
+                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"0.11\" product_mass_analyzer=\"" +
+                FullScanMassAnalyzerType.ft_icr + "\" product_res=\"" + TransitionFullScan.MIN_HI_RES/2 + "\" product_res_mz=\"" + TransitionFullScan.DEFAULT_RES_MZ + "\"/>");
+            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
+                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"0.11\" product_mass_analyzer=\"" +
+                FullScanMassAnalyzerType.orbitrap + "\" product_res=\"" + TransitionFullScan.MAX_HI_RES * 2 + "\" product_res_mz=\"" + TransitionFullScan.DEFAULT_RES_MZ + "\"/>");
+            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_mass_analyzer=\"" +
+                FullScanMassAnalyzerType.orbitrap + "\" precursor_res=\"" + validHiRes + "\" precursor_res_mz=\"" + TransitionFullScan.MIN_RES_MZ/2 + "\" " +
+                "precursor_filter_type=\"" + FullScanPrecursorFilterType.Multiple + "\" precursor_filter=\"2\" product_mass_analyzer=\"" +
+                FullScanMassAnalyzerType.qit + "\" product_res=\"" + validLoRes + "\"/>");
+        }
         private static void CheckSettingsList<TItem>(SettingsList<TItem> target, SettingsList<TItem> copy)
             where TItem : IKeyContainer<string>, IXmlSerializable
         {

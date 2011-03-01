@@ -31,7 +31,7 @@ namespace pwiz.Skyline.SettingsUI
     public partial class TransitionSettingsUI : Form
     {
 // ReSharper disable InconsistentNaming
-        public enum TABS { Prediction, Filter, Library, Instrument }
+        public enum TABS { Prediction, Filter, Library, Instrument, FullScan }
 // ReSharper restore InconsistentNaming
 
         private readonly SkylineWindow _parent;
@@ -103,6 +103,15 @@ namespace pwiz.Skyline.SettingsUI
             textMzMatchTolerance.Text = Instrument.MzMatchTolerance.ToString();
             if (Instrument.MaxTransitions.HasValue)
                 textMaxTrans.Text = Instrument.MaxTransitions.Value.ToString();
+
+            comboPrecursorAnalyzerType.Items.Add("None");
+            comboPrecursorAnalyzerType.Items.AddRange(TransitionFullScan.MASS_ANALYZERS);
+            var precursorAnalyzerType = FullScan.PrecursorMassAnalyzer;
+            if (precursorAnalyzerType == FullScanMassAnalyzerType.none)
+                comboPrecursorAnalyzerType.SelectedIndex = 0;
+            else
+                comboPrecursorAnalyzerType.SelectedItem = TransitionFullScan.MassAnalyzerToString(precursorAnalyzerType);
+
             comboPrecursorFilterType.Items.AddRange(
                 new[]
                     {
@@ -110,19 +119,18 @@ namespace pwiz.Skyline.SettingsUI
                         FullScanPrecursorFilterType.Single.ToString(),
                         FullScanPrecursorFilterType.Multiple.ToString()
                     });
-            comboProductFilterType.Items.AddRange(
-                new[]
-                    {
-                        FullScanProductFilterType.LOW_ACCURACY,
-                        FullScanProductFilterType.HIGH_ACCURACY
-                    });
-            comboPrecursorFilterType.SelectedItem = Instrument.PrecursorFilterType.ToString();
+            comboProductAnalyzerType.Items.AddRange(TransitionFullScan.MASS_ANALYZERS);            
+            comboPrecursorFilterType.SelectedItem = FullScan.PrecursorFilterType.ToString();
+
+            // Update the product analyzer type in case the SelectedIndex is still -1
+            UpdateProductAnalyzerType();
         }
 
         public TransitionPrediction Prediction { get { return _transitionSettings.Prediction; } }
         public TransitionFilter Filter { get { return _transitionSettings.Filter; } }
         public TransitionLibraries Libraries { get { return _transitionSettings.Libraries; } }
         public TransitionInstrument Instrument { get { return _transitionSettings.Instrument; } }
+        public TransitionFullScan FullScan { get { return _transitionSettings.FullScan; } }
 
         public FullScanPrecursorFilterType PrecursorFilterTypeCurrent
         {
@@ -283,51 +291,108 @@ namespace pwiz.Skyline.SettingsUI
                 maxTrans = maxTransTemp;
             }
 
-            var precursorFilterType = PrecursorFilterTypeCurrent;
-            TransitionInstrument instrument;
-            if (precursorFilterType == FullScanPrecursorFilterType.None)
-                instrument = new TransitionInstrument(minMz, maxMz, isDynamicMin, mzMatchTolerance, maxTrans);
-            else
-            {
-                double precursorFilter, minFilt, maxFilt;
-                if (precursorFilterType == FullScanPrecursorFilterType.Single)
-                {
-                    minFilt = TransitionInstrument.MIN_PRECURSOR_SINGLE_FILTER;
-                    maxFilt = TransitionInstrument.MAX_PRECURSOR_SINGLE_FILTER;                    
-                }
-                else
-                {
-                    minFilt = TransitionInstrument.MIN_PRECURSOR_MULTI_FILTER;
-                    maxFilt = TransitionInstrument.MAX_PRECURSOR_MULTI_FILTER;
-                }
-                if (!helper.ValidateDecimalTextBox(e, tabControl1, (int)TABS.Instrument, textPrecursorFilterMz,
-                        minFilt, maxFilt, out precursorFilter))
-                    return;
-
-                double productFilter;
-                string productFilterType = (string) comboProductFilterType.SelectedItem;
-                if (Equals(productFilterType, FullScanProductFilterType.LOW_ACCURACY))
-                {
-                    minFilt = TransitionInstrument.MIN_PRODUCT_LO_FILTER;
-                    maxFilt = TransitionInstrument.MAX_PRODUCT_LO_FILTER;
-                }
-                else
-                {
-                    minFilt = TransitionInstrument.MIN_PRODUCT_HI_FILTER;
-                    maxFilt = TransitionInstrument.MAX_PRODUCT_HI_FILTER;
-                }
-                if (!helper.ValidateDecimalTextBox(e, tabControl1, (int)TABS.Instrument, textProductFilterMz,
-                        minFilt, maxFilt, out productFilter))
-                    return;
-
-                instrument = new TransitionInstrument(minMz, maxMz, isDynamicMin, mzMatchTolerance, maxTrans,
-                    precursorFilterType, precursorFilter, productFilterType, productFilter);
-            }            
-
+            TransitionInstrument instrument = new TransitionInstrument(minMz, maxMz, isDynamicMin, mzMatchTolerance, maxTrans);
             Helpers.AssignIfEquals(ref instrument, Instrument);
 
+            FullScanPrecursorFilterType precursorFilterType = PrecursorFilterTypeCurrent;
+            double? precursorFilter = null;
+            FullScanMassAnalyzerType productAnalyzerType = FullScanMassAnalyzerType.none;
+            double? productRes = null;
+            double? productResMz = null;
+
+            FullScanMassAnalyzerType precursorAnalyzerType = TransitionFullScan.ParseMassAnalyzer(
+                comboPrecursorAnalyzerType.SelectedItem.ToString());
+            double? precursorRes = null;
+            double? precursorResMz = null;
+            if (precursorAnalyzerType != FullScanMassAnalyzerType.none)
+            {
+                double minFilt, maxFilt;
+                if (precursorAnalyzerType == FullScanMassAnalyzerType.qit)
+                {
+                    minFilt = TransitionFullScan.MIN_LO_RES;
+                    maxFilt = TransitionFullScan.MAX_LO_RES;
+                }
+                else
+                {
+                    minFilt = TransitionFullScan.MIN_HI_RES;
+                    maxFilt = TransitionFullScan.MAX_HI_RES;
+                }
+                double precRes;
+                if (!helper.ValidateDecimalTextBox(e, tabControl1, (int)TABS.FullScan, textPrecursorRes,
+                        minFilt, maxFilt, out precRes))
+                    return;
+                precursorRes = precRes;
+                if (textPrecursorAt.Visible)
+                {
+                    double precResMz;
+                    if (!helper.ValidateDecimalTextBox(e, tabControl1, (int)TABS.FullScan, textPrecursorAt,
+                            TransitionFullScan.MIN_RES_MZ, TransitionFullScan.MAX_RES_MZ, out precResMz))
+                        return;
+                    precursorResMz = precResMz;
+                }
+            }
+
+            if (precursorFilterType != FullScanPrecursorFilterType.None)
+            {
+                double minFilt, maxFilt;
+                if (precursorFilterType == FullScanPrecursorFilterType.Single)
+                {
+                    minFilt = TransitionFullScan.MIN_PRECURSOR_SINGLE_FILTER;
+                    maxFilt = TransitionFullScan.MAX_PRECURSOR_SINGLE_FILTER;                    
+                }
+                else
+                {
+                    minFilt = TransitionFullScan.MIN_PRECURSOR_MULTI_FILTER;
+                    maxFilt = TransitionFullScan.MAX_PRECURSOR_MULTI_FILTER;
+                }
+                double precFilt;
+                if (!helper.ValidateDecimalTextBox(e, tabControl1, (int)TABS.FullScan, textPrecursorFilterMz,
+                        minFilt, maxFilt, out precFilt))
+                    return;
+                precursorFilter = precFilt;
+
+                productAnalyzerType = TransitionFullScan.ParseMassAnalyzer(
+                    comboProductAnalyzerType.SelectedItem.ToString());
+                if (productAnalyzerType == FullScanMassAnalyzerType.qit)
+                {
+                    minFilt = TransitionFullScan.MIN_LO_RES;
+                    maxFilt = TransitionFullScan.MAX_LO_RES;
+                }
+                else
+                {
+                    minFilt = TransitionFullScan.MIN_HI_RES;
+                    maxFilt = TransitionFullScan.MAX_HI_RES;
+                }
+                double prodRes;
+                if (!helper.ValidateDecimalTextBox(e, tabControl1, (int)TABS.FullScan, textProductRes,
+                        minFilt, maxFilt, out prodRes))
+                    return;
+
+                productRes = prodRes;
+
+                if (textProductAt.Visible)
+                {
+                    double prodResMz;
+                    if (!helper.ValidateDecimalTextBox(e, tabControl1, (int)TABS.FullScan, textProductAt,
+                            TransitionFullScan.MIN_RES_MZ, TransitionFullScan.MAX_RES_MZ, out prodResMz))
+                        return;
+                    productResMz = prodResMz;
+                }
+            }
+
+            var fullScan = new TransitionFullScan(precursorFilterType,
+                                                  precursorFilter,
+                                                  productAnalyzerType,
+                                                  productRes,
+                                                  productResMz,
+                                                  precursorAnalyzerType,
+                                                  precursorRes,
+                                                  precursorResMz);
+
+            Helpers.AssignIfEquals(ref fullScan, FullScan);
+
             TransitionSettings settings = new TransitionSettings(prediction,
-                filter, libraries, integration, instrument);
+                filter, libraries, integration, instrument, fullScan);
 
             // Only update, if anything changed
             if (!Equals(settings, _transitionSettings))
@@ -412,62 +477,132 @@ namespace pwiz.Skyline.SettingsUI
                 textPrecursorFilterMz.Text = "";
                 textPrecursorFilterMz.Enabled = false;
                 // Selection change should set filter m/z textbox correctly
-                comboProductFilterType.SelectedIndex = -1;
-                comboProductFilterType.Enabled = false;
+                comboProductAnalyzerType.SelectedIndex = -1;
+                comboProductAnalyzerType.Enabled = false;
             }
             else
             {
-                if (precursorFilterType == Instrument.PrecursorFilterType)
+                if (precursorFilterType == FullScan.PrecursorFilterType)
                 {
-                    textPrecursorFilterMz.Text = Instrument.PrecursorFilter.ToString();
+                    textPrecursorFilterMz.Text = FullScan.PrecursorFilter.ToString();
                     if (!textPrecursorFilterMz.Enabled)
-                        comboProductFilterType.SelectedItem = Instrument.ProductFilterType;
+                        comboProductAnalyzerType.SelectedItem = TransitionFullScan.MassAnalyzerToString(FullScan.ProductMassAnalyzer);
                 }
                 else
                 {
                     if (precursorFilterType == FullScanPrecursorFilterType.Multiple)
-                        textPrecursorFilterMz.Text = TransitionInstrument.DEFAULT_PRECURSOR_MULTI_FILTER.ToString();
+                        textPrecursorFilterMz.Text = TransitionFullScan.DEFAULT_PRECURSOR_MULTI_FILTER.ToString();
                     else
                     {
                         double precursorFilter;
                         if (double.TryParse(textMzMatchTolerance.Text, out precursorFilter))
                             precursorFilter *= 2;
                         else
-                            precursorFilter = TransitionInstrument.DEFAULT_PRECURSOR_SINGLE_FILTER;
+                            precursorFilter = TransitionFullScan.DEFAULT_PRECURSOR_SINGLE_FILTER;
                         textPrecursorFilterMz.Text = precursorFilter.ToString();
                     }
                     if (!textPrecursorFilterMz.Enabled)
-                        comboProductFilterType.SelectedItem = FullScanProductFilterType.LOW_ACCURACY;
+                        comboProductAnalyzerType.SelectedItem = TransitionFullScan.MassAnalyzerToString(FullScanMassAnalyzerType.qit);
                 }
                 textPrecursorFilterMz.Enabled = true;
-                comboProductFilterType.Enabled = true;
-            }
-            
+                comboProductAnalyzerType.Enabled = true;
+            }            
         }
 
-        private void comboProductFilterType_SelectedIndexChanged(object sender, EventArgs e)
+        private void comboProductAnalyzerType_SelectedIndexChanged(object sender, EventArgs e)
         {
-            string productFilterType = (string) comboProductFilterType.SelectedItem;
-            if (productFilterType == null)
+            UpdateProductAnalyzerType();
+        }
+
+        private void UpdateProductAnalyzerType()
+        {
+            var productAnalyzerType = TransitionFullScan.ParseMassAnalyzer((string) comboProductAnalyzerType.SelectedItem);
+            SetAnalyzerType(productAnalyzerType,
+                            FullScan.ProductMassAnalyzer,
+                            FullScan.ProductRes,
+                            FullScan.ProductResMz,
+                            labelProductRes,
+                            textProductRes,
+                            labelProductAt,
+                            textProductAt,
+                            labelProductTh);
+        }
+
+        private void comboPrecursorAnalyzerType_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdatePrecursorAnalyzerType();
+        }
+
+        private void UpdatePrecursorAnalyzerType()
+        {
+            var precursorMassAnalyzer = TransitionFullScan.ParseMassAnalyzer((string)comboPrecursorAnalyzerType.SelectedItem);
+            SetAnalyzerType(precursorMassAnalyzer,
+                            FullScan.PrecursorMassAnalyzer,
+                            FullScan.PrecursorRes,
+                            FullScan.PrecursorResMz,
+                            labelPrecursorRes,
+                            textPrecursorRes,
+                            labelPrecursorAt,
+                            textPrecursorAt,
+                            labelPrecursorTh);
+        }
+
+        private static void SetAnalyzerType(FullScanMassAnalyzerType analyzerTypeNew,
+                                            FullScanMassAnalyzerType analyzerTypeCurrent,
+                                            double? resCurrent,
+                                            double? resMzCurrent,
+                                            Label label,
+                                            TextBox textRes,
+                                            Label labelAt,
+                                            TextBox textAt,
+                                            Label labelTh)
+        {
+            string labelText = "Res&olution:";
+            if (analyzerTypeNew == FullScanMassAnalyzerType.none)
             {
-                textProductFilterMz.Enabled = false;
-                textProductFilterMz.Text = "";
-                labelProductFilter.Text = TransitionInstrument.UNITS_LOW_ACCURACY;
+                textRes.Enabled = false;
+                textRes.Text = "";
+                labelAt.Visible = false;
+                textAt.Visible = false;
+                labelTh.Left = textRes.Right;
             }
             else
             {
-                textProductFilterMz.Enabled = true;
-                if (Equals(productFilterType, Instrument.ProductFilterType))
-                    textProductFilterMz.Text = Instrument.ProductFilter.ToString();
-                else if (Equals(productFilterType, FullScanProductFilterType.LOW_ACCURACY))
-                    textProductFilterMz.Text = TransitionInstrument.DEFAULT_PRODUCT_LO_FILTER.ToString();
+                textRes.Enabled = true;
+                bool variableRes = false;
+                TextBox textMz = null;
+                if (analyzerTypeNew == FullScanMassAnalyzerType.qit)
+                {
+                    textMz = textRes;
+                }
                 else
-                    textProductFilterMz.Text = TransitionInstrument.DEFAULT_PRODUCT_HI_FILTER.ToString();
-                if (Equals(productFilterType, FullScanProductFilterType.LOW_ACCURACY))
-                    labelProductFilter.Text = TransitionInstrument.UNITS_LOW_ACCURACY;
+                {
+                    labelText = "Res&olving power:";
+                    if (analyzerTypeNew != FullScanMassAnalyzerType.tof)
+                    {
+                        variableRes = true;
+                        textMz = textAt;
+                    }
+                }
+
+                const string resolvingPowerFormat = "#,0.####";
+                if (analyzerTypeNew == analyzerTypeCurrent && resCurrent.HasValue)
+                    textRes.Text = resCurrent.Value.ToString(resolvingPowerFormat);
                 else
-                    labelProductFilter.Text = TransitionInstrument.UNITS_HIGH_ACCURACY;
+                    textRes.Text = TransitionFullScan.DEFAULT_RES_VALUES[(int) analyzerTypeNew].ToString(resolvingPowerFormat);
+
+                labelAt.Visible = variableRes;
+                textAt.Visible = variableRes;
+                if (resMzCurrent.HasValue)
+                    textAt.Text = resMzCurrent.ToString();
+                else
+                    textAt.Text = TransitionFullScan.DEFAULT_RES_MZ.ToString();
+
+                labelTh.Visible = (textMz != null);
+                if (textMz != null)
+                    labelTh.Left = textMz.Right;
             }
+            label.Text = labelText;
         }
 
         private void btnOk_Click(object sender, EventArgs e)

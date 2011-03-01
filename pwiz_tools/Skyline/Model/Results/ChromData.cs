@@ -268,8 +268,8 @@ namespace pwiz.Skyline.Model.Results
 
         public void Extend()
         {
-            // Only extend for peak groups with multiple peaks
-            if (Count < 2)
+            // Only extend for peak groups with at least one peak
+            if (Count < 1)
                 return;
 
             var peakPrimary = this[0];
@@ -312,7 +312,7 @@ namespace pwiz.Skyline.Model.Results
 
             // Extend the index in the direction of the increment
             for (int i = indexBoundary + increment;
-                 i > 0 && i < lenIntensities - 1 && Math.Abs(indexBoundary - i) < toleranceLen;
+                 i >= 0 && i < lenIntensities && Math.Abs(indexBoundary - i) < toleranceLen;
                  i += increment)
             {
                 float maxIntensityCurrent, deltaIntensityCurrent;

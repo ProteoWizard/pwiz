@@ -8,16 +8,16 @@
 //   Cedars Sinai Medical Center, Los Angeles, California  90048
 // Copyright 2008 Vanderbilt University - Nashville, TN 37232
 //
-// Licensed under the Apache License, Version 2.0 (the "License"); 
-// you may not use this file except in compliance with the License. 
-// You may obtain a copy of the License at 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
 // http://www.apache.org/licenses/LICENSE-2.0
 //
-// Unless required by applicable law or agreed to in writing, software 
-// distributed under the License is distributed on an "AS IS" BASIS, 
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-// See the License for the specific language governing permissions and 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
 // limitations under the License.
 //
 
@@ -1041,7 +1041,7 @@ public ref class Spectrum : public ParamContainer
         System::UInt64 get();
         void set(System::UInt64 value);
     }
- 
+
     /// <summary>
     /// this attribute can optionally reference the 'id' of the appropriate dataProcessing.
     /// </summary>
@@ -1092,7 +1092,7 @@ public ref class Spectrum : public ParamContainer
         BinaryDataArrayList^ get();
         void set(BinaryDataArrayList^ value);
     }
- 
+
 
     Spectrum();
 
@@ -1117,12 +1117,12 @@ public ref class Spectrum : public ParamContainer
     BinaryDataArray^ getIntensityArray();
 
     /// <summary>
-    /// set binary data arrays 
+    /// set binary data arrays
     /// </summary>
     void setMZIntensityPairs(MZIntensityPairList^ input);
 
     /// <summary>
-    /// set binary data arrays 
+    /// set binary data arrays
     /// </summary>
     void setMZIntensityPairs(MZIntensityPairList^ input, CVID intensityUnits);
 
@@ -1178,7 +1178,7 @@ public ref class Chromatogram : public ParamContainer
         void set(System::UInt64 value);
     }
 
-    
+
     // Chromatogram
     /// <summary>
     /// default length of binary data arrays contained in this element.
@@ -1188,7 +1188,7 @@ public ref class Chromatogram : public ParamContainer
         System::UInt64 get();
         void set(System::UInt64 value);
     }
- 
+
     /// <summary>
     /// this attribute can optionally reference the 'id' of the appropriate dataProcessing.
     /// </summary>
@@ -1224,7 +1224,7 @@ public ref class Chromatogram : public ParamContainer
         BinaryDataArrayList^ get();
         void set(BinaryDataArrayList^ value);
     }
- 
+
 
     Chromatogram();
 
@@ -1239,7 +1239,7 @@ public ref class Chromatogram : public ParamContainer
     void getTimeIntensityPairs(TimeIntensityPairList^% output);
 
     /// <summary>
-    /// set binary data arrays 
+    /// set binary data arrays
     /// </summary>
     void setTimeIntensityPairs(TimeIntensityPairList^ input, CVID timeUnits, CVID intensityUnits);
 };
@@ -1250,6 +1250,17 @@ public ref class Chromatogram : public ParamContainer
 /// </summary>
 public DEFINE_STD_VECTOR_WRAPPER_FOR_VALUE_TYPE(IndexList, size_t, int, NATIVE_VALUE_TO_CLI, CLI_VALUE_TO_NATIVE_VALUE);
 
+/// <summary>
+/// Detail level to use in populating spectrum returned from a specturm list.
+/// Precursor ion and neutral loss/gain scans not yet supported for ms level.
+/// </summary>
+public enum class DetailLevel
+{
+    FullData,
+    FullMetadata,
+    FastMetadata,
+	InstantMetadata
+};
 
 /// <summary>
 /// Interface for accessing spectra, which may be stored in memory
@@ -1259,15 +1270,15 @@ public DEFINE_STD_VECTOR_WRAPPER_FOR_VALUE_TYPE(IndexList, size_t, int, NATIVE_V
 ///   the index linearly. Implementations may provide constant time indexing.</para>
 /// <para/>
 /// <para>- The semantics of spectrum() may vary slightly with implementation.  In particular,
-///   a SpectrumList implementation that is backed by a file may choose either to cache 
-///   or discard the SpectrumPtrs for future access, with the caveat that the client 
+///   a SpectrumList implementation that is backed by a file may choose either to cache
+///   or discard the SpectrumPtrs for future access, with the caveat that the client
 ///   may write to the underlying data.</para>
 /// <para/>
 /// <para>- It is the implementation's responsibility to return a valid Spectrum^ from spectrum().
 ///   If this cannot be done, an exception must be thrown.</para>
 /// <para/>
-/// <para>- The 'getBinaryData' flag is a hint if false: implementations may provide valid 
-///   BinaryDataArrayPtrs on spectrum(index, false); implementations *must* provide 
+/// <para>- The 'getBinaryData' flag is a hint if false: implementations may provide valid
+///   BinaryDataArrayPtrs on spectrum(index, false); implementations *must* provide
 ///   valid BinaryDataArrayPtrs on spectrum(index, true).</para>
 /// </summary>
 public ref class SpectrumList
@@ -1275,7 +1286,7 @@ public ref class SpectrumList
     DEFINE_SHARED_INTERNAL_BASE_CODE(pwiz::msdata, SpectrumList);
 
     public:
-    
+
     /// <summary>
     /// returns the number of spectra
     /// </summary>
@@ -1313,6 +1324,13 @@ public ref class SpectrumList
     /// <para>- client may assume the underlying Spectrum^ is valid</para>
     /// </summary>
     virtual Spectrum^ spectrum(int index, bool getBinaryData);
+
+    /// <summary>
+    /// retrieve a spectrum by index
+    /// <para>- binary data arrays will be provided if (getBinaryData == true)</para>
+    /// <para>- client may assume the underlying Spectrum^ is valid</para>
+    /// </summary>
+    virtual Spectrum^ spectrum(int index, DetailLevel detailLevel);
 
     /// <summary>
     /// returns the data processing affecting spectra retrieved through this interface
@@ -1360,21 +1378,21 @@ public ref class SpectrumListSimple : public SpectrumList
 
 /// <summary>
 /// Interface for accessing chromatograms, which may be stored in memory
-/// or backed by a data file (RAW, mzXML, mzML).  
+/// or backed by a data file (RAW, mzXML, mzML).
 /// <para>- Implementations are expected to keep a chromatogram index in the form of
 ///   List&lt;ChromatogramIdentity&gt; or equivalent. The default find*() functions search
 ///   the index linearly. Implementations may provide constant time indexing.</para>
 /// <para/>
 /// <para>- The semantics of chromatogram() may vary slightly with implementation.  In particular,
-///   a ChromatogramList implementation that is backed by a file may choose either to cache 
-///   or discard the Chromatogram for future access, with the caveat that the client 
+///   a ChromatogramList implementation that is backed by a file may choose either to cache
+///   or discard the Chromatogram for future access, with the caveat that the client
 ///   may write to the underlying data.</para>
 /// <para/>
 /// <para>- It is the implementation's responsibility to return a valid Chromatogram from chromatogram().
 ///   If this cannot be done, an exception must be thrown.</para>
 /// <para/>
-/// <para>- The 'getBinaryData' flag is a hint if false: implementations may provide valid 
-///   BinaryDataArrayPtrs on chromatogram(index, false); implementations *must* provide 
+/// <para>- The 'getBinaryData' flag is a hint if false: implementations may provide valid
+///   BinaryDataArrayPtrs on chromatogram(index, false); implementations *must* provide
 ///   valid BinaryDataArrayPtrs on chromatogram(index, true).</para>
 /// </summary>
 public ref class ChromatogramList
@@ -1382,9 +1400,9 @@ public ref class ChromatogramList
     DEFINE_SHARED_INTERNAL_BASE_CODE(pwiz::msdata, ChromatogramList);
 
     public:
-    
+
     /// <summary>
-    /// returns the number of chromatograms 
+    /// returns the number of chromatograms
     /// </summary>
     virtual int size();
 
@@ -1538,7 +1556,7 @@ public ref class Run : public ParamContainer
     internal:
     // no copying - any implementation must handle:
     // - SpectrumList cloning
-    // - internal cross-references to heap-allocated objects 
+    // - internal cross-references to heap-allocated objects
     //Run(Run&);
     //Run& operator=(Run&);
 };

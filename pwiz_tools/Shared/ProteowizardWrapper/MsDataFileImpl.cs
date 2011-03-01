@@ -33,6 +33,8 @@ namespace pwiz.ProteowizardWrapper
         private SpectrumList _spectrumListCentroided;
         private ChromatogramList _chromatogramList;
 
+        private DetailLevel _detailMsLevel = DetailLevel.InstantMetadata;
+
         private static double[] ToArray(IList<double> list)
         {
             double[] result = new double[list.Count];
@@ -307,9 +309,10 @@ namespace pwiz.ProteowizardWrapper
                 {
                     return new MsDataSpectrum
                                {
-                                   Level = GetMsLevel(spectrum),
+                                   Level = GetMsLevel(spectrum) ?? 0,
                                    RetentionTime = GetStartTime(spectrum),
                                    PrecursorMz = GetPrecursorMz(spectrum),
+                                   IsolationWindow = GetIsolationWindow(spectrum),
                                    Centroided = IsCentroided(spectrum),
                                    Mzs = ToArray(spectrum.getMZArray().data),
                                    Intensities = ToArray(spectrum.getIntensityArray().data)
@@ -456,15 +459,27 @@ namespace pwiz.ProteowizardWrapper
 
         public int GetMsLevel(int scanIndex)
         {
-            using (var spectrum = SpectrumList.spectrum(scanIndex))
+            using (var spectrum = SpectrumList.spectrum(scanIndex, _detailMsLevel))
             {
-                return GetMsLevel(spectrum);
+                int? level = GetMsLevel(spectrum);
+                if (level.HasValue || _detailMsLevel == DetailLevel.FullMetadata)
+                    return level ?? 0;
+
+                // If level is not found with faster metadata methods, try the slower ones.
+                if (_detailMsLevel == DetailLevel.InstantMetadata)
+                    _detailMsLevel = DetailLevel.FastMetadata;
+                else if (_detailMsLevel == DetailLevel.FastMetadata)
+                    _detailMsLevel = DetailLevel.FullMetadata;
+                return GetMsLevel(scanIndex);
             }
         }
 
-        private static int GetMsLevel(Spectrum spectrum)
+        private static int? GetMsLevel(Spectrum spectrum)
         {
-            return (int)spectrum.cvParam(CVID.MS_ms_level).value;
+            CVParam param = spectrum.cvParam(CVID.MS_ms_level);
+            if (param.empty())
+                return null;
+            return (int) param.value;
         }
 
         public double? GetStartTime(int scanIndex)
@@ -498,6 +513,25 @@ namespace pwiz.ProteowizardWrapper
             {
                 foreach (SelectedIon si in p.selectedIons)
                     return si.cvParam(CVID.MS_selected_ion_m_z).value;
+            }
+            return null;
+        }
+
+        public double? GetIsolationWindow(int scanIndex)
+        {
+            using (var spectrum = SpectrumList.spectrum(scanIndex))
+            {
+                return GetIsolationWindow(spectrum);
+            }
+        }
+
+        private static double? GetIsolationWindow(Spectrum spectrum)
+        {
+            foreach (Precursor p in spectrum.precursors)
+            {
+                var term = p.isolationWindow.cvParam(CVID.MS_isolation_window_target_m_z);
+                if (!term.empty())
+                    return term.value;
             }
             return null;
         }
@@ -538,6 +572,7 @@ namespace pwiz.ProteowizardWrapper
         public int Level { get; set; }
         public double? PrecursorMz { get; set; }
         public double? RetentionTime { get; set; }
+        public double? IsolationWindow { get; set; }
         public bool Centroided { get; set; }
         public double[] Mzs { get; set; }
         public double[] Intensities { get; set; }

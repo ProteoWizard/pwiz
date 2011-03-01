@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -70,45 +71,162 @@ namespace pwiz.SkylineTestA.Results
         public void FullScanFilterTest()
         {
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
-            string docPath;
-            SrmDocument doc = InitFullScanDocument(testFilesDir, out docPath);
+            string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            SrmDocument doc = InitFullScanDocument(docPath, 2, 7, 7, 49);
             var docContainer = new ResultsTestDocumentContainer(doc, docPath);
 
-            // Thermo RAW files were way too slow
-//            string rawPath = testFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +
-//                ExtensionTestContext.ExtThermoRaw);
-            string rawPath = testFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2.mzML");
-            const string replicateName = "Single";
+            // Import the first RAW file (or mzML for international)
+            string rawPath = testFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +
+                ExtensionTestContext.ExtThermoRaw);
             var measuredResults = new MeasuredResults(new[]
-                {new ChromatogramSet(replicateName, new[] {rawPath})});
+                {new ChromatogramSet("Single", new[] {rawPath})});
 
-            var docResults = doc.ChangeMeasuredResults(measuredResults);
-            Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
-            docContainer.AssertComplete();
-            docResults = docContainer.Document;
-
-            AssertResult.IsDocumentResultsState(docResults, replicateName, 3, 3, 0, 21, 0);
+            SrmDocument docResults = ChangeMeasuredResults(docContainer, measuredResults, 3, 3, 21);
 
             // Refilter allowing multiple precursors per spectrum
-            SrmDocument docMulti = doc.ChangeSettings(doc.Settings.ChangeTransitionInstrument(
-                inst => inst.ChangePrecursorFilter(FullScanPrecursorFilterType.Multiple, 2)));
+            SrmDocument docMulti = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(
+                fs => fs.ChangePrecursorFilter(FullScanPrecursorFilterType.Multiple, 2)));
+            AssertEx.Serializable(docMulti, AssertEx.DocumentCloned);
             // Release data cache file
             Assert.IsTrue(docContainer.SetDocument(docMulti, docResults));
             // And remove it
             File.Delete(Path.ChangeExtension(docPath, ChromatogramCache.EXT));
 
-            docResults = docMulti.ChangeMeasuredResults(measuredResults);
-            Assert.IsTrue(docContainer.SetDocument(docResults, docMulti, true));
+            ChangeMeasuredResults(docContainer, measuredResults, 6, 6, 38);
+
+            // Import full scan Orbi-Velos data
+            docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_long_acc_template.sky");
+            doc = InitFullScanDocument(docPath, 1, 3, 3, 21);
+            Assert.AreEqual(FullScanMassAnalyzerType.orbitrap, doc.Settings.TransitionSettings.FullScan.ProductMassAnalyzer);
+            // Make sure saving this type of document works
+            AssertEx.Serializable(doc, AssertEx.DocumentCloned);
+            Assert.IsTrue(docContainer.SetDocument(doc, docContainer.Document));
+            rawPath = testFilesDir.GetTestPath("ah_20101029r_BSA_CID_FT_centroid_3uscan_3" +
+                ExtensionTestContext.ExtThermoRaw);
+            measuredResults = new MeasuredResults(new[] { new ChromatogramSet("Accurate", new[] { rawPath }) });
+            
+            ChangeMeasuredResults(docContainer, measuredResults, 3, 3, 21);
+
+            // Import LTQ data with MS1 and MS/MS
+            docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_test4.sky");
+            doc = InitFullScanDocument(docPath, 3, 3, 4, 32);
+            Assert.AreEqual(FullScanMassAnalyzerType.none, doc.Settings.TransitionSettings.FullScan.ProductMassAnalyzer);
+            Assert.AreEqual(FullScanMassAnalyzerType.none, doc.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer);
+            var docBoth = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs =>
+                fs.ChangePrecursorFilter(FullScanPrecursorFilterType.Single, 0.11)
+                  .ChangePrecursorResolution(FullScanMassAnalyzerType.qit, TransitionFullScan.DEFAULT_RES_QIT, null)));
+            AssertEx.Serializable(docBoth, AssertEx.DocumentCloned);
+            Assert.IsTrue(docContainer.SetDocument(docBoth, docContainer.Document));
+
+            string dataPath = testFilesDir.GetTestPath("klc_20100329v_Protea_Peptide_Curve_200fmol_uL_tech1.mzML");
+            var listResults = new List<ChromatogramSet>
+                                  {
+                                      new ChromatogramSet("MS1 and MS/MS", new[] { dataPath }),
+                                  };
+            measuredResults = new MeasuredResults(listResults.ToArray());
+
+            ChangeMeasuredResults(docContainer, measuredResults, 3, 4, 26);
+            // The mzML was filtered for the m/z range 410 to 910.
+            foreach (var nodeTran in docContainer.Document.Transitions)
+            {
+                Assert.IsTrue(nodeTran.HasResults);
+                Assert.IsNotNull(nodeTran.Results[0]);
+                if (410 > nodeTran.Mz || nodeTran.Mz > 910)
+                    Assert.IsTrue(nodeTran.Results[0][0].IsEmpty);
+                else
+                    Assert.IsFalse(nodeTran.Results[0][0].IsEmpty);
+            }
+
+            // Import LTQ data with MS1 and MS/MS using multiple files for a single replicate
+            listResults.Add(new ChromatogramSet("Multi-file", new[]
+                                                                  {
+                                                                      testFilesDir.GetTestPath("both_DRV.mzML"),
+                                                                      testFilesDir.GetTestPath("both_KVP.mzML"),
+                                                                  }));
+            measuredResults = new MeasuredResults(listResults.ToArray());
+            ChangeMeasuredResults(docContainer, measuredResults, 2, 3, 25);
+            int indexResults = listResults.Count - 1;
+            foreach (var nodeTran in docContainer.Document.Transitions)
+            {
+                Assert.IsTrue(nodeTran.HasResults);
+                Assert.AreEqual(listResults.Count, nodeTran.Results.Count);
+                var peptide = nodeTran.Transition.Group.Peptide;
+                // DRV without FASTA sequence should not have data for non-precursor transitions
+                if (!peptide.Sequence.StartsWith("DRV") || !peptide.Begin.HasValue)
+                    Assert.IsFalse(nodeTran.Results[indexResults][0].IsEmpty);
+                else if (nodeTran.Transition.IonType != IonType.precursor)
+                    Assert.IsNull(nodeTran.Results[indexResults]);
+                else
+                {
+                    // Random, bogus peaks chosen in both files
+                    Assert.AreEqual(2, nodeTran.Results[indexResults].Count);
+                    Assert.IsFalse(nodeTran.Results[indexResults][0].IsEmpty);
+                    Assert.IsFalse(nodeTran.Results[indexResults][1].IsEmpty);
+                }
+            }
+
+
+            // Import FT data with only MS1
+            docPath = testFilesDir.GetTestPath("Yeast_HI3 Peptides_test.sky");
+            doc = InitFullScanDocument(docPath, 2, 2, 2, 2);
+            Assert.AreEqual(FullScanMassAnalyzerType.none, doc.Settings.TransitionSettings.FullScan.ProductMassAnalyzer);
+            Assert.AreEqual(FullScanMassAnalyzerType.none, doc.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer);
+            var docMs1 = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs =>
+                fs.ChangePrecursorResolution(FullScanMassAnalyzerType.ft_icr, 50*1000, 400)));
+            AssertEx.Serializable(docMs1, AssertEx.DocumentCloned);
+            Assert.IsTrue(docContainer.SetDocument(docMs1, docContainer.Document));
+            listResults = new List<ChromatogramSet>
+                                  {
+                                      new ChromatogramSet("rep1", new[] {testFilesDir.GetTestPath("S_2_LVN.mzML")}),
+                                  };
+            measuredResults = new MeasuredResults(listResults.ToArray());
+            ChangeMeasuredResults(docContainer, measuredResults, 1, 1, 1);
+            // Because of the way the mzML files were filtered, all of the LVN peaks should be present
+            // in the first replicate, and all of the NVN peaks should be present in the other.
+            foreach (var nodeTran in docContainer.Document.Transitions)
+            {
+                Assert.IsTrue(nodeTran.HasResults);
+                Assert.AreEqual(1, nodeTran.Results.Count);
+                if (nodeTran.Transition.Group.Peptide.Sequence.StartsWith("LVN"))
+                    Assert.IsFalse(nodeTran.Results[0][0].IsEmpty);
+                else
+                    Assert.IsTrue(nodeTran.Results[0][0].IsEmpty);
+            }
+
+            listResults.Add(new ChromatogramSet("rep2", new[] {testFilesDir.GetTestPath("S_2_NVN.mzML")}));
+            measuredResults = new MeasuredResults(listResults.ToArray());
+            ChangeMeasuredResults(docContainer, measuredResults, 1, 1, 1);
+            // Because of the way the mzML files were filtered, all of the LVN peaks should be present
+            // in the first replicate, and all of the NVN peaks should be present in the other.
+            foreach (var nodeTran in docContainer.Document.Transitions)
+            {
+                Assert.IsTrue(nodeTran.HasResults);
+                Assert.AreEqual(2, nodeTran.Results.Count);
+                if (nodeTran.Transition.Group.Peptide.Sequence.StartsWith("LVN"))
+                    Assert.IsTrue(nodeTran.Results[1][0].IsEmpty);
+                else
+                    Assert.IsFalse(nodeTran.Results[1][0].IsEmpty);
+            }
+        }
+
+        private static SrmDocument ChangeMeasuredResults(TestDocumentContainer docContainer, MeasuredResults measuredResults,
+            int peptides, int tranGroups, int transitions)
+        {
+            var doc = docContainer.Document;
+            var docResults = doc.ChangeMeasuredResults(measuredResults);
+            Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
             docContainer.AssertComplete();
             docResults = docContainer.Document;
 
-            AssertResult.IsDocumentResultsState(docResults, replicateName, 6, 6, 0, 38, 0);
+            // Check the result state of the most recently added chromatogram set.
+            var chroms = measuredResults.Chromatograms;
+            AssertResult.IsDocumentResultsState(docResults, chroms[chroms.Count - 1].Name, peptides, tranGroups, 0, transitions, 0);
+
+            return docResults;
         }
 
-        private static SrmDocument InitFullScanDocument(TestFilesDir testFilesDir, out string docPath)
+        private static SrmDocument InitFullScanDocument(string docPath, int prot, int pep, int prec, int tran)
         {
-            docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
-
             SrmDocument doc;
             XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
             try
@@ -121,12 +239,10 @@ namespace pwiz.SkylineTestA.Results
             catch (Exception x)
             {
                 Assert.Fail("Exception thrown: " + x.Message);
-                // ReSharper disable HeuristicUnreachableCode
                 throw;  // Will never happen
-                // ReSharper restore HeuristicUnreachableCode
             }
 
-            AssertEx.IsDocumentState(doc, 0, 2, 7, 7, 49);
+            AssertEx.IsDocumentState(doc, 0, prot, pep, prec, tran);
             return doc;
         }
     }

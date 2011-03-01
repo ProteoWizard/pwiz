@@ -36,13 +36,15 @@ namespace pwiz.Skyline.Model.DocSettings
                                   TransitionFilter filter,
                                   TransitionLibraries libraries,
                                   TransitionIntegration integration,
-                                  TransitionInstrument instrument)
+                                  TransitionInstrument instrument,
+                                  TransitionFullScan fullScan)
         {
             Prediction = prediction;
             Filter = filter;
             Libraries = libraries;
             Integration = integration;
             Instrument = instrument;
+            FullScan = fullScan;
         }
 
         public TransitionPrediction Prediction { get; private set; }
@@ -54,6 +56,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public TransitionIntegration Integration { get; private set; }
 
         public TransitionInstrument Instrument { get; private set; }
+
+        public TransitionFullScan FullScan { get; private set; }
 
         #region Property change methods
 
@@ -81,6 +85,14 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             return ChangeProp(ImClone(this), im => im.Instrument = prop);
         }
+
+        public TransitionSettings ChangeFullScan(TransitionFullScan prop)
+        {
+            return ChangeProp(ImClone(this), im => im.FullScan = prop);
+        }
+
+        
+
 
         #endregion
 
@@ -118,6 +130,20 @@ namespace pwiz.Skyline.Model.DocSettings
                 Libraries = reader.DeserializeElement<TransitionLibraries>();
                 Integration = reader.DeserializeElement<TransitionIntegration>();
                 Instrument = reader.DeserializeElement<TransitionInstrument>();
+                FullScan = reader.DeserializeElement<TransitionFullScan>();
+                // Backward compatibility with v0.7.1
+                if (FullScan == null && Instrument != null && Instrument.PrecursorFilterType != FullScanPrecursorFilterType.None)
+                {
+                    FullScan = new TransitionFullScan(Instrument.PrecursorFilterType,
+                                                      Instrument.PrecursorFilter,
+                                                      FullScanMassAnalyzerType.qit,
+                                                      Instrument.ProductFilter/TransitionFullScan.RES_PER_FILTER,
+                                                      null,
+                                                      FullScanMassAnalyzerType.none,
+                                                      null,
+                                                      null);
+                    Instrument = Instrument.ClearFullScanSettings();
+                }
 
                 reader.ReadEndElement();                
             }
@@ -133,6 +159,13 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteElement(Libraries);
             writer.WriteElement(Integration);
             writer.WriteElement(Instrument);
+            // Avoid breaking documents for older versions, if no full-scan
+            // filtering is in use.
+            if (FullScan.PrecursorFilterType != FullScanPrecursorFilterType.None ||
+                FullScan.PrecursorMassAnalyzer != FullScanMassAnalyzerType.none)
+            {
+                writer.WriteElement(FullScan);
+            }
         }
 
         #endregion
@@ -147,7 +180,8 @@ namespace pwiz.Skyline.Model.DocSettings
                    Equals(obj.Filter, Filter) &&
                    Equals(obj.Libraries, Libraries) &&
                    Equals(obj.Integration, Integration) &&
-                   Equals(obj.Instrument, Instrument);
+                   Equals(obj.Instrument, Instrument) &&
+                   Equals(obj.FullScan, FullScan);
         }
 
         public override bool Equals(object obj)
@@ -167,6 +201,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result * 397) ^ Libraries.GetHashCode();
                 result = (result * 397) ^ Integration.GetHashCode();
                 result = (result * 397) ^ Instrument.GetHashCode();
+                result = (result * 397) ^ FullScan.GetHashCode();
                 return result;
             }
         }
@@ -1157,12 +1192,6 @@ namespace pwiz.Skyline.Model.DocSettings
     public enum FullScanPrecursorFilterType { None, Single, Multiple }
 // ReSharper restore InconsistentNaming
 
-    public sealed class FullScanProductFilterType
-    {
-        public const string LOW_ACCURACY = "Low Accuracy";
-        public const string HIGH_ACCURACY = "High Accuracy";
-    }
-
     [XmlRoot("transition_instrument")]
     public sealed class TransitionInstrument : Immutable, IValidating, IXmlSerializable
     {
@@ -1174,22 +1203,6 @@ namespace pwiz.Skyline.Model.DocSettings
         public const double DEFAULT_MZ_MATCH_TOLERANCE = 0.055;
         public const int MIN_TRANSITION_MAX = 50;
         public const int MAX_TRANSITION_MAX = 10000;
-        // Calculate precursor single filter window values by doubling match tolerance values
-        public const double MIN_PRECURSOR_SINGLE_FILTER = MIN_MZ_MATCH_TOLERANCE*2;
-        public const double MAX_PRECURSOR_SINGLE_FILTER = MAX_MZ_MATCH_TOLERANCE*2;
-        public const double DEFAULT_PRECURSOR_SINGLE_FILTER = DEFAULT_MZ_MATCH_TOLERANCE*2;
-        public const double MIN_PRECURSOR_MULTI_FILTER = 1.0;
-        public const double MAX_PRECURSOR_MULTI_FILTER = 10000;
-        public const double DEFAULT_PRECURSOR_MULTI_FILTER = 2.0;
-        // Calculate product low accuracy filter window values by doubling ion match tolerance values
-        public const double MIN_PRODUCT_LO_FILTER = TransitionLibraries.MIN_MATCH_TOLERANCE*2;
-        public const double MAX_PRODUCT_LO_FILTER = TransitionLibraries.MAX_MATCH_TOLERANCE*2;
-        public const double DEFAULT_PRODUCT_LO_FILTER = 1.0;
-        public const double MIN_PRODUCT_HI_FILTER = 0.01;
-        public const double MAX_PRODUCT_HI_FILTER = 100.0;
-        public const double DEFAULT_PRODUCT_HI_FILTER = 5;
-        public const string UNITS_LOW_ACCURACY = "Th";
-        public const string UNITS_HIGH_ACCURACY = "ppm";
 
 
         public static double GetThermoDynamicMin(double precursorMz)
@@ -1209,6 +1222,7 @@ namespace pwiz.Skyline.Model.DocSettings
                                     bool isDynamicMin,
                                     double mzMatchTolerance,
                                     int? maxTransitions,
+                                    // Backward compatibility with 0.7.1
                                     FullScanPrecursorFilterType precursorFilterType,
                                     double? precursorFilter,
                                     string productFilterType,
@@ -1219,6 +1233,8 @@ namespace pwiz.Skyline.Model.DocSettings
             IsDynamicMin = isDynamicMin;
             MzMatchTolerance = mzMatchTolerance;
             MaxTransitions = maxTransitions;
+
+            // Backward compatibility with 0.7.1
             PrecursorFilterType = precursorFilterType;
             PrecursorFilter = precursorFilter;
             ProductFilterType = productFilterType;
@@ -1260,6 +1276,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public int? MaxTransitions { get; private set; }
 
+        // Backward compatibility with 0.7.1
+
         public FullScanPrecursorFilterType PrecursorFilterType { get; private set; }
 
         public double? PrecursorFilter { get; private set; }
@@ -1295,21 +1313,16 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.MaxTransitions = prop);
         }
 
-        public TransitionInstrument ChangePrecursorFilter(FullScanPrecursorFilterType typeProp, double prop)
-        {
-            return ChangeProp(ImClone(this), im =>
-                                                 {
-                                                     im.PrecursorFilterType = typeProp;
-                                                     im.PrecursorFilter = prop;
-                                                 });
-        }
+        // Backward compatibility with 0.7.1
 
-        public TransitionInstrument ChangeProductFilter(string typeProp, double prop)
+        public TransitionInstrument ClearFullScanSettings()
         {
             return ChangeProp(ImClone(this), im =>
                                                  {
-                                                     im.ProductFilterType = typeProp;
-                                                     im.ProductFilter = prop;
+                                                     im.PrecursorFilterType = FullScanPrecursorFilterType.None;
+                                                     im.PrecursorFilter = null;
+                                                     im.ProductFilterType = null;
+                                                     im.ProductFilter = null;
                                                  });
         }
 
@@ -1331,9 +1344,10 @@ namespace pwiz.Skyline.Model.DocSettings
             dynamic_min,
             mz_match_tolerance,
             max_transitions,
+
+            // Backward compatibility with 0.7.1
             precursor_filter_type,
             precursor_filter,
-            product_filter_type,
             product_filter
         }
 
@@ -1379,40 +1393,17 @@ namespace pwiz.Skyline.Model.DocSettings
                 double minFilter, maxFilter;
                 if (PrecursorFilterType == FullScanPrecursorFilterType.Single)
                 {
-                    minFilter = MIN_PRECURSOR_SINGLE_FILTER;
-                    maxFilter = MAX_PRECURSOR_SINGLE_FILTER;
+                    minFilter = TransitionFullScan.MIN_PRECURSOR_SINGLE_FILTER;
+                    maxFilter = TransitionFullScan.MAX_PRECURSOR_SINGLE_FILTER;
                 }
                 else
                 {
-                    minFilter = MIN_PRECURSOR_MULTI_FILTER;
-                    maxFilter = MAX_PRECURSOR_MULTI_FILTER;
+                    minFilter = TransitionFullScan.MIN_PRECURSOR_MULTI_FILTER;
+                    maxFilter = TransitionFullScan.MAX_PRECURSOR_MULTI_FILTER;
                 }
                 if (!PrecursorFilter.HasValue || minFilter > PrecursorFilter || PrecursorFilter > maxFilter)
                     throw new InvalidDataException(string.Format("The precursor m/z filter must be between {0} and {1}",
                         minFilter, maxFilter));
-
-                string unitAbrev;
-                if (Equals(ProductFilterType, FullScanProductFilterType.LOW_ACCURACY))
-                {
-                    minFilter = MIN_PRODUCT_LO_FILTER;
-                    maxFilter = MAX_PRODUCT_LO_FILTER;
-                    unitAbrev = UNITS_LOW_ACCURACY;
-                }
-                else if (Equals(ProductFilterType, FullScanProductFilterType.HIGH_ACCURACY))
-                {
-                    minFilter = MIN_PRODUCT_HI_FILTER;
-                    maxFilter = MAX_PRODUCT_HI_FILTER;
-                    unitAbrev = UNITS_HIGH_ACCURACY;
-                }
-                else
-                {
-                    throw new InvalidDataException(string.Format("The product filter type must be either '{0}' or '{1}'.",
-                        FullScanProductFilterType.LOW_ACCURACY,
-                        FullScanProductFilterType.HIGH_ACCURACY));
-                }
-                if (!ProductFilter.HasValue || minFilter > ProductFilter || ProductFilter > maxFilter)
-                    throw new InvalidDataException(string.Format("The product m/z filter must be between {0} and {1} {2}",
-                        minFilter, maxFilter, unitAbrev));
             }
         }
 
@@ -1435,21 +1426,18 @@ namespace pwiz.Skyline.Model.DocSettings
             MzMatchTolerance = reader.GetDoubleAttribute(ATTR.mz_match_tolerance, DEFAULT_MZ_MATCH_TOLERANCE);
             MaxTransitions = reader.GetNullableIntAttribute(ATTR.max_transitions);
 
-            // Full-scan filter parameters
+            // Full-scan filter parameters (backward compatibility w/ 0.7.1)
             PrecursorFilterType = reader.GetEnumAttribute(ATTR.precursor_filter_type,
                                                           FullScanPrecursorFilterType.None);
             if (PrecursorFilterType != FullScanPrecursorFilterType.None)
             {
                 PrecursorFilter = reader.GetDoubleAttribute(ATTR.precursor_filter,
-                    PrecursorFilterType == FullScanPrecursorFilterType.Single ?
-                    DEFAULT_PRECURSOR_SINGLE_FILTER : DEFAULT_PRECURSOR_MULTI_FILTER);
+                                                            PrecursorFilterType == FullScanPrecursorFilterType.Single
+                                                                ? TransitionFullScan.DEFAULT_PRECURSOR_SINGLE_FILTER
+                                                                : TransitionFullScan.DEFAULT_PRECURSOR_MULTI_FILTER);
 
-                ProductFilterType = reader.GetAttribute(ATTR.product_filter_type);
-                if (ProductFilterType == null)
-                    ProductFilterType = FullScanProductFilterType.LOW_ACCURACY;
                 ProductFilter = reader.GetDoubleAttribute(ATTR.product_filter,
-                    Equals(ProductFilterType, FullScanProductFilterType.LOW_ACCURACY) ?
-                        DEFAULT_PRODUCT_LO_FILTER : DEFAULT_PRODUCT_HI_FILTER);
+                    TransitionFullScan.DEFAULT_RES_VALUES[(int) FullScanMassAnalyzerType.qit]);
             }
 
             // Consume tag
@@ -1466,13 +1454,6 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteAttribute(ATTR.max_mz, MaxMz);
             writer.WriteAttribute(ATTR.mz_match_tolerance, MzMatchTolerance);
             writer.WriteAttributeNullable(ATTR.max_transitions, MaxTransitions);
-            if (PrecursorFilterType != FullScanPrecursorFilterType.None)
-            {
-                writer.WriteAttribute(ATTR.precursor_filter_type, PrecursorFilterType);
-                writer.WriteAttribute(ATTR.precursor_filter, PrecursorFilter);
-                writer.WriteAttribute(ATTR.product_filter_type, ProductFilterType);
-                writer.WriteAttribute(ATTR.product_filter, ProductFilter);
-            }
         }
 
         #endregion
@@ -1515,6 +1496,374 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ (PrecursorFilter.HasValue ? PrecursorFilter.Value.GetHashCode() : 0);
                 result = (result*397) ^ (ProductFilterType != null ? ProductFilterType.GetHashCode() : 0);
                 result = (result*397) ^ (ProductFilter.HasValue ? ProductFilter.Value.GetHashCode() : 0);
+                return result;
+            }
+        }
+
+        #endregion
+    }
+
+    public enum FullScanMassAnalyzerType { none = -1, qit, tof, orbitrap, ft_icr }
+
+    [XmlRoot("transition_full_scan")]
+    public sealed class TransitionFullScan : Immutable, IValidating, IXmlSerializable
+    {
+        // Calculate precursor single filter window values by doubling match tolerance values
+        public const double MIN_PRECURSOR_SINGLE_FILTER = TransitionInstrument.MIN_MZ_MATCH_TOLERANCE * 2;
+        public const double MAX_PRECURSOR_SINGLE_FILTER = TransitionInstrument.MAX_MZ_MATCH_TOLERANCE * 2;
+        public const double DEFAULT_PRECURSOR_SINGLE_FILTER = TransitionInstrument.DEFAULT_MZ_MATCH_TOLERANCE * 2;
+        public const double MIN_PRECURSOR_MULTI_FILTER = 1.0;
+        public const double MAX_PRECURSOR_MULTI_FILTER = 10*1000;
+        public const double DEFAULT_PRECURSOR_MULTI_FILTER = 2.0;
+        // Calculate product low accuracy filter window values by doubling ion match tolerance values
+        public const double MIN_LO_RES = 0.1;
+        public const double MAX_LO_RES = 2.0;
+        public const double MIN_HI_RES = 1000;
+        public const double MAX_HI_RES = 10*1000*1000;
+        public const double DEFAULT_RES_MZ = 400;
+        public const double MIN_RES_MZ = 50;
+        public const double MAX_RES_MZ = 2000;
+        public const double RES_PER_FILTER = 2;
+
+        public const string QIT = "QIT";
+        public const string ORBITRAP = "Orbitrap";
+        public const string TOF = "TOF";
+        public const string FT_ICR = "FT-ICR";
+
+        public static readonly string[] MASS_ANALYZERS = new[] {QIT, TOF, ORBITRAP, FT_ICR};
+        public static readonly double[] DEFAULT_RES_VALUES = new[] {0.7, 10*1000, 60*1000, 100*1000};
+        public static readonly double DEFAULT_RES_QIT = DEFAULT_RES_VALUES[0];
+
+        private double _cachedPrecursorRes;
+        private double _cachedProductRes;
+
+        public TransitionFullScan()
+        {
+            ProductMassAnalyzer = FullScanMassAnalyzerType.none;
+            PrecursorMassAnalyzer = FullScanMassAnalyzerType.none;
+
+            DoValidate();
+        }
+
+        public TransitionFullScan(FullScanPrecursorFilterType precursorFilterType,
+                                    double? precursorFilter,
+                                    FullScanMassAnalyzerType productMassAnalyzer,
+                                    double? productRes,
+                                    double? productResMz,
+                                    FullScanMassAnalyzerType precursorMassAnalyzer,
+                                    double? precursorRes,
+                                    double? precursorResMz)
+        {
+            PrecursorFilterType = precursorFilterType;
+            PrecursorFilter = precursorFilter;
+            ProductMassAnalyzer = productMassAnalyzer;
+            ProductRes = productRes;
+            ProductResMz = productResMz;
+            PrecursorMassAnalyzer = precursorMassAnalyzer;
+            PrecursorRes = precursorRes;
+            PrecursorResMz = precursorResMz;
+
+            DoValidate();
+        }
+
+        // MS/MS filtering
+
+        public FullScanPrecursorFilterType PrecursorFilterType { get; private set; }
+
+        public double? PrecursorFilter { get; private set; }
+
+        public FullScanMassAnalyzerType ProductMassAnalyzer { get; private set; }
+
+        public double? ProductRes { get; private set; }
+
+        public double? ProductResMz { get; private set; }
+
+        // MS1 filtering
+
+        public FullScanMassAnalyzerType PrecursorMassAnalyzer { get; private set; }
+
+        public double? PrecursorRes { get; private set; }
+
+        public double? PrecursorResMz { get; private set; }
+
+        public double GetPrecursorFilterWindow(double mzQ1)
+        {
+            return GetFilterWindow(PrecursorMassAnalyzer, _cachedPrecursorRes, mzQ1);
+        }
+
+        public double GetProductFilterWindow(double mzQ3)
+        {
+            return GetFilterWindow(ProductMassAnalyzer, _cachedProductRes, mzQ3);
+        }
+
+        private static double GetFilterWindow(FullScanMassAnalyzerType analyzerType, double cached, double mz)
+        {
+            switch (analyzerType)
+            {
+                case FullScanMassAnalyzerType.orbitrap:
+                    return mz * Math.Sqrt(mz) / cached;
+                case FullScanMassAnalyzerType.tof:
+                    return mz / cached;
+                case FullScanMassAnalyzerType.ft_icr:
+                    return mz * mz / cached;
+               default:
+                    return cached;
+            }
+        }
+
+        private static double GetDenominator(FullScanMassAnalyzerType analyzerType, double res, double resMz)
+        {
+            switch (analyzerType)
+            {
+                case FullScanMassAnalyzerType.tof:
+                    return res / RES_PER_FILTER;
+                case FullScanMassAnalyzerType.orbitrap:
+                    return Math.Sqrt(resMz) * res / RES_PER_FILTER;
+                case FullScanMassAnalyzerType.ft_icr:
+                    return resMz * res / RES_PER_FILTER;
+                default:
+                    return res * RES_PER_FILTER;
+            }
+        }
+
+        public static string MassAnalyzerToString(FullScanMassAnalyzerType type)
+        {
+            return (type != FullScanMassAnalyzerType.none ?
+                MASS_ANALYZERS[(int) type] : null);
+        }
+
+        public static FullScanMassAnalyzerType ParseMassAnalyzer(string type)
+        {
+            return (FullScanMassAnalyzerType) MASS_ANALYZERS.IndexOf(s => Equals(s, type));
+        }
+
+        #region Property change methods
+
+        public TransitionFullScan ChangePrecursorFilter(FullScanPrecursorFilterType typeProp, double prop)
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.PrecursorFilterType = typeProp;
+                im.PrecursorFilter = prop;
+                // Make sure the change results in a valid object, or an exception
+                // will be thrown.
+                if (im.ProductMassAnalyzer == FullScanMassAnalyzerType.none)
+                {
+                    im.ProductMassAnalyzer = FullScanMassAnalyzerType.qit;
+                    im.ProductRes = DEFAULT_RES_QIT;
+                }
+            });
+        }
+
+        public TransitionFullScan ChangeProductResolution(FullScanMassAnalyzerType typeProp, double? prop, double? mzProp)
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.ProductMassAnalyzer = typeProp;
+                im.ProductRes = prop;
+                im.ProductResMz = mzProp;
+            });
+        }
+
+        public TransitionFullScan ChangePrecursorResolution(FullScanMassAnalyzerType typeProp, double? prop, double? mzProp)
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.PrecursorMassAnalyzer = typeProp;
+                im.PrecursorRes = prop;
+                im.PrecursorResMz = mzProp;
+            });
+        }
+
+        #endregion
+
+        #region Implementation of IXmlSerializable
+
+        private enum ATTR
+        {
+            precursor_filter_type,
+            precursor_filter,
+            product_mass_analyzer,
+            product_res,
+            product_res_mz,
+            precursor_mass_analyzer,
+            precursor_res,
+            precursor_res_mz
+        }
+
+        void IValidating.Validate()
+        {
+            DoValidate();
+        }
+
+        private void DoValidate()
+        {
+            if (PrecursorMassAnalyzer == FullScanMassAnalyzerType.none)
+            {
+                if (PrecursorRes.HasValue)
+                    throw new InvalidDataException(string.Format("Precursor resolution for full-scan MS1 filtering not allowed when mass analyzer is none."));
+            }
+            else 
+            {
+                _cachedPrecursorRes = ValidateRes(PrecursorMassAnalyzer, PrecursorRes, PrecursorResMz);
+            }
+
+            if (PrecursorFilterType == FullScanPrecursorFilterType.None)
+            {
+                if (ProductMassAnalyzer != FullScanMassAnalyzerType.none || PrecursorFilter.HasValue || ProductRes.HasValue)
+                    throw new InvalidDataException(string.Format("No other full-scan MS/MS filter settings are allowed when precursor filter is none."));
+            }
+            else
+            {
+                double minFilter, maxFilter;
+                if (PrecursorFilterType == FullScanPrecursorFilterType.Single)
+                {
+                    minFilter = MIN_PRECURSOR_SINGLE_FILTER;
+                    maxFilter = MAX_PRECURSOR_SINGLE_FILTER;
+                }
+                else
+                {
+                    minFilter = MIN_PRECURSOR_MULTI_FILTER;
+                    maxFilter = MAX_PRECURSOR_MULTI_FILTER;
+                }
+                if (!PrecursorFilter.HasValue || minFilter > PrecursorFilter || PrecursorFilter > maxFilter)
+                    throw new InvalidDataException(string.Format("The precursor m/z filter must be between {0} and {1}",
+                        minFilter, maxFilter));
+
+                _cachedProductRes = ValidateRes(ProductMassAnalyzer, ProductRes, ProductResMz);
+            }
+        }
+
+        private static double ValidateRes(FullScanMassAnalyzerType analyzerType, double? res, double? resMz)
+        {
+            bool expectMz = false;
+            if (analyzerType == FullScanMassAnalyzerType.qit)
+            {
+                if (!res.HasValue || MIN_LO_RES > res.Value || res.Value > MAX_LO_RES)
+                    throw new InvalidDataException(string.Format("The precursor resolution must be between {0} and {1} for QIT.",
+                                                                 MIN_LO_RES, MAX_LO_RES));
+            }
+            else
+            {
+                if (!res.HasValue || MIN_HI_RES > res.Value || res.Value > MAX_HI_RES)
+                    throw new InvalidDataException(string.Format("The precursor resolving power must be between {0} and {1} for {2}.",
+                                                                 MIN_HI_RES, MAX_HI_RES, MassAnalyzerToString(analyzerType)));
+                expectMz = (analyzerType != FullScanMassAnalyzerType.tof);
+            }
+            if (expectMz)
+            {
+                if (!resMz.HasValue || MIN_RES_MZ > resMz.Value || resMz.Value > MAX_RES_MZ)
+                    throw new InvalidDataException(string.Format("The m/z value at which the resolving power is calibrated is required for {0}.",
+                        MassAnalyzerToString(analyzerType)));
+            }
+            else if (resMz.HasValue)
+            {
+                throw new InvalidDataException(string.Format("Unexpected resolving power m/z value for {0}",
+                    MassAnalyzerToString(analyzerType)));
+            }
+
+            return GetDenominator(analyzerType, res.Value, resMz ?? 0);
+        }
+
+        public static TransitionFullScan Deserialize(XmlReader reader)
+        {
+            return reader.Deserialize(new TransitionFullScan());
+        }
+
+        public XmlSchema GetSchema()
+        {
+            return null;
+        }
+
+        public void ReadXml(XmlReader reader)
+        {
+            // Read start tag attributes
+            PrecursorFilterType = reader.GetEnumAttribute(ATTR.precursor_filter_type,
+                                                          FullScanPrecursorFilterType.None);
+            if (PrecursorFilterType != FullScanPrecursorFilterType.None)
+            {
+                PrecursorFilter = reader.GetDoubleAttribute(ATTR.precursor_filter,
+                    PrecursorFilterType == FullScanPrecursorFilterType.Single ?
+                    DEFAULT_PRECURSOR_SINGLE_FILTER : DEFAULT_PRECURSOR_MULTI_FILTER);
+
+                ProductMassAnalyzer = reader.GetEnumAttribute(ATTR.product_mass_analyzer, FullScanMassAnalyzerType.qit);
+                ProductRes = reader.GetDoubleAttribute(ATTR.product_res,
+                    DEFAULT_RES_VALUES[(int) ProductMassAnalyzer]);
+                if (ProductMassAnalyzer == FullScanMassAnalyzerType.ft_icr || ProductMassAnalyzer == FullScanMassAnalyzerType.orbitrap)
+                    ProductResMz = reader.GetNullableDoubleAttribute(ATTR.product_res_mz) ?? DEFAULT_RES_MZ;
+            }
+            PrecursorMassAnalyzer = reader.GetEnumAttribute(ATTR.precursor_mass_analyzer, FullScanMassAnalyzerType.none);
+            if (PrecursorMassAnalyzer != FullScanMassAnalyzerType.none)
+            {
+                PrecursorRes = reader.GetDoubleAttribute(ATTR.precursor_res,
+                    DEFAULT_RES_VALUES[(int)PrecursorMassAnalyzer]);
+                if (PrecursorMassAnalyzer == FullScanMassAnalyzerType.ft_icr || PrecursorMassAnalyzer == FullScanMassAnalyzerType.orbitrap)
+                    PrecursorResMz = reader.GetNullableDoubleAttribute(ATTR.precursor_res_mz) ?? DEFAULT_RES_MZ;
+            }
+
+            // Consume tag
+            reader.Read();
+
+            DoValidate();
+        }
+
+        public void WriteXml(XmlWriter writer)
+        {
+            // Write attributes
+            if (PrecursorFilterType != FullScanPrecursorFilterType.None)
+            {
+                writer.WriteAttribute(ATTR.precursor_filter_type, PrecursorFilterType);
+                writer.WriteAttribute(ATTR.precursor_filter, PrecursorFilter);
+                writer.WriteAttribute(ATTR.product_mass_analyzer, ProductMassAnalyzer);
+                writer.WriteAttribute(ATTR.product_res, ProductRes);
+                writer.WriteAttributeNullable(ATTR.product_res_mz, ProductResMz);
+            }
+            if (PrecursorMassAnalyzer != FullScanMassAnalyzerType.none)
+            {
+                writer.WriteAttribute(ATTR.precursor_mass_analyzer, PrecursorMassAnalyzer);
+                writer.WriteAttribute(ATTR.precursor_res, PrecursorRes);
+                writer.WriteAttributeNullable(ATTR.precursor_res_mz, PrecursorResMz);
+            }
+        }
+
+        #endregion
+
+        #region object overrides
+
+        public bool Equals(TransitionFullScan other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Equals(other.PrecursorFilterType, PrecursorFilterType) &&
+                other.PrecursorFilter.Equals(PrecursorFilter) &&
+                Equals(other.ProductMassAnalyzer, ProductMassAnalyzer) &&
+                other.ProductRes.Equals(ProductRes) &&
+                other.ProductResMz.Equals(ProductResMz) &&
+                Equals(other.PrecursorMassAnalyzer, PrecursorMassAnalyzer) &&
+                other.PrecursorRes.Equals(PrecursorRes) &&
+                other.PrecursorResMz.Equals(PrecursorResMz);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != typeof (TransitionFullScan)) return false;
+            return Equals((TransitionFullScan) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int result = PrecursorFilterType.GetHashCode();
+                result = (result*397) ^ (PrecursorFilter.HasValue ? PrecursorFilter.Value.GetHashCode() : 0);
+                result = (result*397) ^ ProductMassAnalyzer.GetHashCode();
+                result = (result*397) ^ (ProductRes.HasValue ? ProductRes.Value.GetHashCode() : 0);
+                result = (result*397) ^ (ProductResMz.HasValue ? ProductResMz.Value.GetHashCode() : 0);
+                result = (result*397) ^ PrecursorMassAnalyzer.GetHashCode();
+                result = (result*397) ^ (PrecursorRes.HasValue ? PrecursorRes.Value.GetHashCode() : 0);
+                result = (result*397) ^ (PrecursorResMz.HasValue ? PrecursorResMz.Value.GetHashCode() : 0);
                 return result;
             }
         }

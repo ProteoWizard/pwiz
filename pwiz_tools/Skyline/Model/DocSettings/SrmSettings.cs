@@ -839,7 +839,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             TransitionSettings defTran = defaults.TransitionSettings;
             if (TransitionSettings == null)
-                TransitionSettings = defaults.TransitionSettings;
+                TransitionSettings = defTran;
             else
             {
                 TransitionPrediction prediction = TransitionSettings.Prediction;
@@ -867,11 +867,13 @@ namespace pwiz.Skyline.Model.DocSettings
                 TransitionLibraries libraries = TransitionSettings.Libraries ?? defTran.Libraries;
                 TransitionIntegration integration = TransitionSettings.Integration ?? defTran.Integration;
                 TransitionInstrument instrument = TransitionSettings.Instrument ?? defTran.Instrument;
+                TransitionFullScan fullScan = TransitionSettings.FullScan ?? defTran.FullScan;
                 TransitionSettings transitionSettings = new TransitionSettings(prediction,
                                                                                filter,
                                                                                libraries,
                                                                                integration,
-                                                                               instrument);
+                                                                               instrument,
+                                                                               fullScan);
                 // If the above null checks result in a changed PeptideSettings object,
                 // then use the changed version.
                 if (!Equals(TransitionSettings, transitionSettings))

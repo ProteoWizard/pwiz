@@ -666,6 +666,9 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public const double MIN_PERCENT_OF_MAX = 0.01;
+        public const double MIN_PERCENT_OF_MAX_PRECURSOR = 0.001;
+
         private ChromDataPeakList FindCoelutingPeaks(ChromDataPeak dataPeakMax,
                                                      IList<ChromDataPeak> allPeaks)
         {
@@ -677,6 +680,16 @@ namespace pwiz.Skyline.Model.Results
             int widthMax = peakMax.Length;
             int deltaMax = (int)Math.Round(widthMax / 4.0, 0);
             var listPeaks = new ChromDataPeakList(dataPeakMax);
+
+            // Allow peaks in the group to be smaller, if the max peak is the precursor.
+            // Really this should be checking to see if the precursor data came from MS1
+            // scans, since this is the main case it is intended to handle, where MS1
+            // intensities can be quite a bit higher than MS/MS fragments.
+            var keyMax = dataPeakMax.Data.Key;
+            double minPrecentMax = (keyMax.Precursor != keyMax.Product
+                                        ? MIN_PERCENT_OF_MAX
+                                        : MIN_PERCENT_OF_MAX_PRECURSOR);
+
             foreach (var chromData in _listChromData)
             {
                 if (ReferenceEquals(chromData, dataPeakMax.Data))
@@ -701,8 +714,8 @@ namespace pwiz.Skyline.Model.Results
                     if (startMax >= timeIndex || timeIndex >= endMax ||
                         startPeak == timeIndex || timeIndex == endPeak)
                         continue;
-                    // or peak area is less than 1% of max peak area
-                    if (peak.Peak.Area * 100 < areaMax)
+                    // or peak area is less than 1% of max peak area (or 0.1% if max is precursor)
+                    if (peak.Peak.Area < areaMax * minPrecentMax)
                         continue;
                     // or when FWHM is very narrow, usually a good indicator of noise
                     if (/* peak.Peak.Fwhm < 1.2 too agressive || */ peak.Peak.Fwhm * 12 < widthMax)

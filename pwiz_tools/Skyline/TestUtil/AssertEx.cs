@@ -27,6 +27,7 @@ using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.SkylineTestUtil
 {
@@ -299,11 +300,19 @@ namespace pwiz.SkylineTestUtil
 
         public static void Cloned(object expected, object actual)
         {
+            Cloned(expected, actual, null);
+        }
+
+        public static void Cloned(object expected, object actual, object defaultObj)
+        {
             if (!Equals(expected, actual))
             {
                 Assert.AreEqual(expected, actual);
             }
-            Assert.AreNotSame(expected, actual);
+            if (!ReferenceEquals(defaultObj, actual))
+            {
+                Assert.AreNotSame(expected, actual);
+            }
         }
 
         public static void HasInnerExceptionType(Exception x, Type t)
@@ -391,6 +400,7 @@ namespace pwiz.SkylineTestUtil
             Cloned(target.TransitionSettings.Libraries, copy.TransitionSettings.Libraries);
             Cloned(target.TransitionSettings.Integration, copy.TransitionSettings.Integration);
             Cloned(target.TransitionSettings.Instrument, copy.TransitionSettings.Instrument);
+            Cloned(target.TransitionSettings.FullScan, copy.TransitionSettings.FullScan, SrmSettingsList.GetDefault().TransitionSettings.FullScan);
             Cloned(target.TransitionSettings, copy.TransitionSettings);
             Cloned(target, copy);
         }

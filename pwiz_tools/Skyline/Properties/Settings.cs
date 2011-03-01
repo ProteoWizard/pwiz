@@ -1068,7 +1068,8 @@ namespace pwiz.Skyline.Properties
                         false, // IsDynamicMin
                         TransitionInstrument.DEFAULT_MZ_MATCH_TOLERANCE, // MzMatchTolerance
                         null  // MaxTransitions
-                    )
+                    ),
+                    new TransitionFullScan()
                 ),
                 new DataSettings(new AnnotationDef[0])
             );

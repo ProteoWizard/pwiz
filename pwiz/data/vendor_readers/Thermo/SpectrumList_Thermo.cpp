@@ -107,8 +107,17 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
     return spectrum(index, getBinaryData, pwiz::util::IntegerSet());
 }
 
+PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLevel detailLevel) const 
+{
+    return spectrum(index, detailLevel, pwiz::util::IntegerSet());
+}
 
 PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const 
+{
+	return spectrum(index, getBinaryData ? DetailLevel_FullData : DetailLevel_FullMetadata, msLevelsToCentroid);
+}
+
+PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const 
 { 
     if (index >= size_)
         throw runtime_error(("[SpectrumList_Thermo::spectrum()] Bad index: " 
@@ -127,7 +136,32 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
                             lexical_cast<string>(ie.controllerNumber));
     }
 
-    ScanInfoPtr scanInfo;
+    // allocate a new Spectrum
+    SpectrumPtr result(new Spectrum);
+    if (!result.get())
+        throw runtime_error("[SpectrumList_Thermo::spectrum()] Allocation error.");
+
+    result->index = index;
+    result->id = ie.id;
+
+	// Short-circuit all of the processing below, if all that is required is the scan level.
+	if (detailLevel == DetailLevel_InstantMetadata)
+	{
+	  int level = (int) ie.msOrder;
+	  if (ie.msOrder == MSOrder_ParentScan ||
+		  ie.msOrder == MSOrder_NeutralLoss ||
+		  ie.msOrder == MSOrder_NeutralGain)
+	  {
+		  level = 2;
+	  }
+      result->set(MS_ms_level, (int) level);
+      return result;
+	}
+
+	// Revert to previous behavior for getting binary data or not.
+	bool getBinaryData = (detailLevel == DetailLevel_FullData);
+
+	ScanInfoPtr scanInfo;
     try
     {
         // get rawfile::ScanInfo and translate
@@ -140,13 +174,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
         throw runtime_error(string("[SpectrumList_Thermo::spectrum()] Error retrieving ScanInfo: ") + e.what());
     }
 
-    // allocate a new Spectrum
-    SpectrumPtr result(new Spectrum);
-    if (!result.get())
-        throw runtime_error("[SpectrumList_Thermo::spectrum()] Allocation error.");
-
-    result->index = index;
-    result->id = ie.id;
 
     try
     {
@@ -347,7 +374,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
                 precursor.isolationWindow.set(MS_isolation_window_upper_offset, isolationWidth, MS_m_z);
             }
 
-            if (scanInfo->precursorMZ(i) > 0)
+            if (scanInfo->precursorMZ(i) > 0 && detailLevel != DetailLevel_FastMetadata)
             {
                 double selectedIonMz = scanInfo->precursorMZ(i); // monoisotopic m/z is preferred
                 long precursorCharge = scanInfo->precursorCharge();
@@ -456,33 +483,36 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
                 result->products.push_back(product);
         }
 
-        MassListPtr massList;
+		if (detailLevel != DetailLevel_FastMetadata)
+		{
+			MassListPtr massList;
 
-        if (doCentroid &&
-            (analyzerType == MassAnalyzerType_Orbitrap ||
-             analyzerType == MassAnalyzerType_FTICR))
-        {
-            // use label data for accurate centroids on FT profile data
-            massList = rawfile_->getMassListFromLabelData(ie.scan);
-        }
-        else
-        {
-            massList = rawfile_->getMassList(ie.scan, "", Cutoff_None, 0, 0, doCentroid);
-        }
+			if (doCentroid &&
+				(analyzerType == MassAnalyzerType_Orbitrap ||
+				 analyzerType == MassAnalyzerType_FTICR))
+			{
+				// use label data for accurate centroids on FT profile data
+				massList = rawfile_->getMassListFromLabelData(ie.scan);
+			}
+			else
+			{
+				massList = rawfile_->getMassList(ie.scan, "", Cutoff_None, 0, 0, doCentroid);
+			}
 
-        result->defaultArrayLength = massList->size();
+			result->defaultArrayLength = massList->size();
 
-        if (massList->size() > 0)
-        {
-            result->set(MS_lowest_observed_m_z, massList->data()[0].mass, MS_m_z);
-            result->set(MS_highest_observed_m_z, massList->data()[massList->size()-1].mass, MS_m_z);
-        }
+			if (massList->size() > 0)
+			{
+				result->set(MS_lowest_observed_m_z, massList->data()[0].mass, MS_m_z);
+				result->set(MS_highest_observed_m_z, massList->data()[massList->size()-1].mass, MS_m_z);
+			}
 
-        if (getBinaryData)
-        {
-            result->setMZIntensityPairs(reinterpret_cast<MZIntensityPair*>(massList->data()), 
-                                        massList->size(), MS_number_of_counts);
-        }
+			if (getBinaryData)
+			{
+				result->setMZIntensityPairs(reinterpret_cast<MZIntensityPair*>(massList->data()), 
+											massList->size(), MS_number_of_counts);
+			}
+		}
 
         return result;
     }

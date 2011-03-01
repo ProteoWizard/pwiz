@@ -50,6 +50,7 @@
             this.label8 = new System.Windows.Forms.Label();
             this.cbAutoSelect = new System.Windows.Forms.CheckBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.label28 = new System.Windows.Forms.Label();
             this.textExclusionWindow = new System.Windows.Forms.TextBox();
             this.label19 = new System.Windows.Forms.Label();
             this.btnEditSpecialTransitions = new System.Windows.Forms.Button();
@@ -79,17 +80,6 @@
             this.label26 = new System.Windows.Forms.Label();
             this.label25 = new System.Windows.Forms.Label();
             this.label24 = new System.Windows.Forms.Label();
-            this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.labelProductFilter = new System.Windows.Forms.Label();
-            this.label27 = new System.Windows.Forms.Label();
-            this.textProductFilterMz = new System.Windows.Forms.TextBox();
-            this.label23 = new System.Windows.Forms.Label();
-            this.comboProductFilterType = new System.Windows.Forms.ComboBox();
-            this.label22 = new System.Windows.Forms.Label();
-            this.textPrecursorFilterMz = new System.Windows.Forms.TextBox();
-            this.label21 = new System.Windows.Forms.Label();
-            this.comboPrecursorFilterType = new System.Windows.Forms.ComboBox();
-            this.label20 = new System.Windows.Forms.Label();
             this.cbDynamicMinimum = new System.Windows.Forms.CheckBox();
             this.textMaxTrans = new System.Windows.Forms.TextBox();
             this.label17 = new System.Windows.Forms.Label();
@@ -99,8 +89,29 @@
             this.label11 = new System.Windows.Forms.Label();
             this.textMaxMz = new System.Windows.Forms.TextBox();
             this.textMinMz = new System.Windows.Forms.TextBox();
+            this.tabFullScan = new System.Windows.Forms.TabPage();
+            this.groupBoxMS1 = new System.Windows.Forms.GroupBox();
+            this.labelPrecursorAt = new System.Windows.Forms.Label();
+            this.textPrecursorAt = new System.Windows.Forms.TextBox();
+            this.labelPrecursorTh = new System.Windows.Forms.Label();
+            this.textPrecursorRes = new System.Windows.Forms.TextBox();
+            this.labelPrecursorRes = new System.Windows.Forms.Label();
+            this.comboPrecursorAnalyzerType = new System.Windows.Forms.ComboBox();
+            this.label32 = new System.Windows.Forms.Label();
+            this.groupBoxMS2 = new System.Windows.Forms.GroupBox();
+            this.labelProductAt = new System.Windows.Forms.Label();
+            this.textProductAt = new System.Windows.Forms.TextBox();
+            this.labelProductTh = new System.Windows.Forms.Label();
+            this.label27 = new System.Windows.Forms.Label();
+            this.textProductRes = new System.Windows.Forms.TextBox();
+            this.labelProductRes = new System.Windows.Forms.Label();
+            this.comboProductAnalyzerType = new System.Windows.Forms.ComboBox();
+            this.label22 = new System.Windows.Forms.Label();
+            this.textPrecursorFilterMz = new System.Windows.Forms.TextBox();
+            this.label21 = new System.Windows.Forms.Label();
+            this.comboPrecursorFilterType = new System.Windows.Forms.ComboBox();
+            this.label20 = new System.Windows.Forms.Label();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
-            this.label28 = new System.Windows.Forms.Label();
             this.tabControl1.SuspendLayout();
             this.tabGeneral.SuspendLayout();
             this.tabFilter.SuspendLayout();
@@ -108,7 +119,9 @@
             this.tabLibrary.SuspendLayout();
             this.panelPick.SuspendLayout();
             this.tabInstrument.SuspendLayout();
-            this.groupBox2.SuspendLayout();
+            this.tabFullScan.SuspendLayout();
+            this.groupBoxMS1.SuspendLayout();
+            this.groupBoxMS2.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -142,6 +155,7 @@
             this.tabControl1.Controls.Add(this.tabFilter);
             this.tabControl1.Controls.Add(this.tabLibrary);
             this.tabControl1.Controls.Add(this.tabInstrument);
+            this.tabControl1.Controls.Add(this.tabFullScan);
             this.tabControl1.DataBindings.Add(new System.Windows.Forms.Binding("SelectedIndex", global::pwiz.Skyline.Properties.Settings.Default, "TransitionSettingsTab", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
             this.tabControl1.Location = new System.Drawing.Point(12, 12);
             this.tabControl1.Name = "tabControl1";
@@ -364,6 +378,15 @@
             this.groupBox1.TabIndex = 6;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Product ions";
+            // 
+            // label28
+            // 
+            this.label28.AutoSize = true;
+            this.label28.Location = new System.Drawing.Point(98, 208);
+            this.label28.Name = "label28";
+            this.label28.Size = new System.Drawing.Size(20, 13);
+            this.label28.TabIndex = 9;
+            this.label28.Text = "Th";
             // 
             // textExclusionWindow
             // 
@@ -628,7 +651,6 @@
             this.tabInstrument.Controls.Add(this.label26);
             this.tabInstrument.Controls.Add(this.label25);
             this.tabInstrument.Controls.Add(this.label24);
-            this.tabInstrument.Controls.Add(this.groupBox2);
             this.tabInstrument.Controls.Add(this.cbDynamicMinimum);
             this.tabInstrument.Controls.Add(this.textMaxTrans);
             this.tabInstrument.Controls.Add(this.label17);
@@ -671,116 +693,6 @@
             this.label24.Size = new System.Drawing.Size(20, 13);
             this.label24.TabIndex = 2;
             this.label24.Text = "Th";
-            // 
-            // groupBox2
-            // 
-            this.groupBox2.Controls.Add(this.labelProductFilter);
-            this.groupBox2.Controls.Add(this.label27);
-            this.groupBox2.Controls.Add(this.textProductFilterMz);
-            this.groupBox2.Controls.Add(this.label23);
-            this.groupBox2.Controls.Add(this.comboProductFilterType);
-            this.groupBox2.Controls.Add(this.label22);
-            this.groupBox2.Controls.Add(this.textPrecursorFilterMz);
-            this.groupBox2.Controls.Add(this.label21);
-            this.groupBox2.Controls.Add(this.comboPrecursorFilterType);
-            this.groupBox2.Controls.Add(this.label20);
-            this.groupBox2.Location = new System.Drawing.Point(15, 182);
-            this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(326, 161);
-            this.groupBox2.TabIndex = 12;
-            this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "&Full-scan MS/MS filtering";
-            // 
-            // labelProductFilter
-            // 
-            this.labelProductFilter.AutoSize = true;
-            this.labelProductFilter.Location = new System.Drawing.Point(251, 114);
-            this.labelProductFilter.Name = "labelProductFilter";
-            this.labelProductFilter.Size = new System.Drawing.Size(20, 13);
-            this.labelProductFilter.TabIndex = 9;
-            this.labelProductFilter.Text = "Th";
-            // 
-            // label27
-            // 
-            this.label27.AutoSize = true;
-            this.label27.Location = new System.Drawing.Point(94, 114);
-            this.label27.Name = "label27";
-            this.label27.Size = new System.Drawing.Size(20, 13);
-            this.label27.TabIndex = 4;
-            this.label27.Text = "Th";
-            // 
-            // textProductFilterMz
-            // 
-            this.textProductFilterMz.Enabled = false;
-            this.textProductFilterMz.Location = new System.Drawing.Point(186, 111);
-            this.textProductFilterMz.Name = "textProductFilterMz";
-            this.textProductFilterMz.Size = new System.Drawing.Size(62, 20);
-            this.textProductFilterMz.TabIndex = 8;
-            // 
-            // label23
-            // 
-            this.label23.AutoSize = true;
-            this.label23.Location = new System.Drawing.Point(183, 94);
-            this.label23.Name = "label23";
-            this.label23.Size = new System.Drawing.Size(90, 13);
-            this.label23.TabIndex = 7;
-            this.label23.Text = "Pr&oduct m/z filter:";
-            // 
-            // comboProductFilterType
-            // 
-            this.comboProductFilterType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboProductFilterType.Enabled = false;
-            this.comboProductFilterType.FormattingEnabled = true;
-            this.comboProductFilterType.Location = new System.Drawing.Point(183, 44);
-            this.comboProductFilterType.Name = "comboProductFilterType";
-            this.comboProductFilterType.Size = new System.Drawing.Size(121, 21);
-            this.comboProductFilterType.TabIndex = 6;
-            this.comboProductFilterType.SelectedIndexChanged += new System.EventHandler(this.comboProductFilterType_SelectedIndexChanged);
-            // 
-            // label22
-            // 
-            this.label22.AutoSize = true;
-            this.label22.Location = new System.Drawing.Point(180, 27);
-            this.label22.Name = "label22";
-            this.label22.Size = new System.Drawing.Size(92, 13);
-            this.label22.TabIndex = 5;
-            this.label22.Text = "P&roduct filter type:";
-            // 
-            // textPrecursorFilterMz
-            // 
-            this.textPrecursorFilterMz.Enabled = false;
-            this.textPrecursorFilterMz.Location = new System.Drawing.Point(23, 111);
-            this.textPrecursorFilterMz.Name = "textPrecursorFilterMz";
-            this.textPrecursorFilterMz.Size = new System.Drawing.Size(65, 20);
-            this.textPrecursorFilterMz.TabIndex = 3;
-            // 
-            // label21
-            // 
-            this.label21.AutoSize = true;
-            this.label21.Location = new System.Drawing.Point(20, 95);
-            this.label21.Name = "label21";
-            this.label21.Size = new System.Drawing.Size(98, 13);
-            this.label21.TabIndex = 2;
-            this.label21.Text = "Pr&ecursor m/z filter:";
-            // 
-            // comboPrecursorFilterType
-            // 
-            this.comboPrecursorFilterType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.comboPrecursorFilterType.FormattingEnabled = true;
-            this.comboPrecursorFilterType.Location = new System.Drawing.Point(20, 45);
-            this.comboPrecursorFilterType.Name = "comboPrecursorFilterType";
-            this.comboPrecursorFilterType.Size = new System.Drawing.Size(121, 21);
-            this.comboPrecursorFilterType.TabIndex = 1;
-            this.comboPrecursorFilterType.SelectedIndexChanged += new System.EventHandler(this.comboPrecursorFilterType_SelectedIndexChanged);
-            // 
-            // label20
-            // 
-            this.label20.AutoSize = true;
-            this.label20.Location = new System.Drawing.Point(17, 28);
-            this.label20.Name = "label20";
-            this.label20.Size = new System.Drawing.Size(100, 13);
-            this.label20.TabIndex = 0;
-            this.label20.Text = "&Precursor filter type:";
             // 
             // cbDynamicMinimum
             // 
@@ -865,14 +777,230 @@
             this.textMinMz.TabIndex = 1;
             this.helpTip.SetToolTip(this.textMinMz, "Minimum measurable m/z value for the target instrument");
             // 
-            // label28
+            // tabFullScan
             // 
-            this.label28.AutoSize = true;
-            this.label28.Location = new System.Drawing.Point(98, 208);
-            this.label28.Name = "label28";
-            this.label28.Size = new System.Drawing.Size(20, 13);
-            this.label28.TabIndex = 9;
-            this.label28.Text = "Th";
+            this.tabFullScan.Controls.Add(this.groupBoxMS1);
+            this.tabFullScan.Controls.Add(this.groupBoxMS2);
+            this.tabFullScan.Location = new System.Drawing.Point(4, 22);
+            this.tabFullScan.Name = "tabFullScan";
+            this.tabFullScan.Padding = new System.Windows.Forms.Padding(3);
+            this.tabFullScan.Size = new System.Drawing.Size(363, 364);
+            this.tabFullScan.TabIndex = 4;
+            this.tabFullScan.Text = "Full-Scan";
+            this.tabFullScan.UseVisualStyleBackColor = true;
+            // 
+            // groupBoxMS1
+            // 
+            this.groupBoxMS1.Controls.Add(this.labelPrecursorAt);
+            this.groupBoxMS1.Controls.Add(this.textPrecursorAt);
+            this.groupBoxMS1.Controls.Add(this.labelPrecursorTh);
+            this.groupBoxMS1.Controls.Add(this.textPrecursorRes);
+            this.groupBoxMS1.Controls.Add(this.labelPrecursorRes);
+            this.groupBoxMS1.Controls.Add(this.comboPrecursorAnalyzerType);
+            this.groupBoxMS1.Controls.Add(this.label32);
+            this.groupBoxMS1.Location = new System.Drawing.Point(18, 21);
+            this.groupBoxMS1.Name = "groupBoxMS1";
+            this.groupBoxMS1.Size = new System.Drawing.Size(326, 149);
+            this.groupBoxMS1.TabIndex = 0;
+            this.groupBoxMS1.TabStop = false;
+            this.groupBoxMS1.Text = "&MS1 filtering";
+            // 
+            // labelPrecursorAt
+            // 
+            this.labelPrecursorAt.AutoSize = true;
+            this.labelPrecursorAt.Location = new System.Drawing.Point(107, 94);
+            this.labelPrecursorAt.Name = "labelPrecursorAt";
+            this.labelPrecursorAt.Size = new System.Drawing.Size(20, 13);
+            this.labelPrecursorAt.TabIndex = 4;
+            this.labelPrecursorAt.Text = "&At:";
+            // 
+            // textPrecursorAt
+            // 
+            this.textPrecursorAt.Location = new System.Drawing.Point(105, 110);
+            this.textPrecursorAt.Name = "textPrecursorAt";
+            this.textPrecursorAt.Size = new System.Drawing.Size(44, 20);
+            this.textPrecursorAt.TabIndex = 5;
+            this.helpTip.SetToolTip(this.textPrecursorAt, "The m/z value at which the resolving power\r\nfor MS1 scans is calibrated.");
+            // 
+            // labelPrecursorTh
+            // 
+            this.labelPrecursorTh.AutoSize = true;
+            this.labelPrecursorTh.Location = new System.Drawing.Point(151, 114);
+            this.labelPrecursorTh.Name = "labelPrecursorTh";
+            this.labelPrecursorTh.Size = new System.Drawing.Size(20, 13);
+            this.labelPrecursorTh.TabIndex = 6;
+            this.labelPrecursorTh.Text = "Th";
+            // 
+            // textPrecursorRes
+            // 
+            this.textPrecursorRes.Enabled = false;
+            this.textPrecursorRes.Location = new System.Drawing.Point(14, 111);
+            this.textPrecursorRes.Name = "textPrecursorRes";
+            this.textPrecursorRes.Size = new System.Drawing.Size(85, 20);
+            this.textPrecursorRes.TabIndex = 3;
+            // 
+            // labelPrecursorRes
+            // 
+            this.labelPrecursorRes.AutoSize = true;
+            this.labelPrecursorRes.Location = new System.Drawing.Point(11, 94);
+            this.labelPrecursorRes.Name = "labelPrecursorRes";
+            this.labelPrecursorRes.Size = new System.Drawing.Size(89, 13);
+            this.labelPrecursorRes.TabIndex = 2;
+            this.labelPrecursorRes.Text = "&Resolving power:";
+            // 
+            // comboPrecursorAnalyzerType
+            // 
+            this.comboPrecursorAnalyzerType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboPrecursorAnalyzerType.FormattingEnabled = true;
+            this.comboPrecursorAnalyzerType.Location = new System.Drawing.Point(14, 44);
+            this.comboPrecursorAnalyzerType.Name = "comboPrecursorAnalyzerType";
+            this.comboPrecursorAnalyzerType.Size = new System.Drawing.Size(111, 21);
+            this.comboPrecursorAnalyzerType.TabIndex = 1;
+            this.helpTip.SetToolTip(this.comboPrecursorAnalyzerType, "The mass analyzer used to collect MS1 scans.");
+            this.comboPrecursorAnalyzerType.SelectedIndexChanged += new System.EventHandler(this.comboPrecursorAnalyzerType_SelectedIndexChanged);
+            // 
+            // label32
+            // 
+            this.label32.AutoSize = true;
+            this.label32.Location = new System.Drawing.Point(11, 27);
+            this.label32.Name = "label32";
+            this.label32.Size = new System.Drawing.Size(124, 13);
+            this.label32.TabIndex = 0;
+            this.label32.Text = "&Precursor mass analyzer:";
+            // 
+            // groupBoxMS2
+            // 
+            this.groupBoxMS2.Controls.Add(this.labelProductAt);
+            this.groupBoxMS2.Controls.Add(this.textProductAt);
+            this.groupBoxMS2.Controls.Add(this.labelProductTh);
+            this.groupBoxMS2.Controls.Add(this.label27);
+            this.groupBoxMS2.Controls.Add(this.textProductRes);
+            this.groupBoxMS2.Controls.Add(this.labelProductRes);
+            this.groupBoxMS2.Controls.Add(this.comboProductAnalyzerType);
+            this.groupBoxMS2.Controls.Add(this.label22);
+            this.groupBoxMS2.Controls.Add(this.textPrecursorFilterMz);
+            this.groupBoxMS2.Controls.Add(this.label21);
+            this.groupBoxMS2.Controls.Add(this.comboPrecursorFilterType);
+            this.groupBoxMS2.Controls.Add(this.label20);
+            this.groupBoxMS2.Location = new System.Drawing.Point(18, 188);
+            this.groupBoxMS2.Name = "groupBoxMS2";
+            this.groupBoxMS2.Size = new System.Drawing.Size(326, 150);
+            this.groupBoxMS2.TabIndex = 1;
+            this.groupBoxMS2.TabStop = false;
+            this.groupBoxMS2.Text = "M&S/MS filtering";
+            // 
+            // labelProductAt
+            // 
+            this.labelProductAt.AutoSize = true;
+            this.labelProductAt.Location = new System.Drawing.Point(245, 94);
+            this.labelProductAt.Name = "labelProductAt";
+            this.labelProductAt.Size = new System.Drawing.Size(20, 13);
+            this.labelProductAt.TabIndex = 9;
+            this.labelProductAt.Text = "A&t:";
+            // 
+            // textProductAt
+            // 
+            this.textProductAt.Location = new System.Drawing.Point(244, 111);
+            this.textProductAt.Name = "textProductAt";
+            this.textProductAt.Size = new System.Drawing.Size(44, 20);
+            this.textProductAt.TabIndex = 10;
+            this.helpTip.SetToolTip(this.textProductAt, "The m/z value at which the resolving power\r\nfor MS/MS scans is calibrated.");
+            // 
+            // labelProductTh
+            // 
+            this.labelProductTh.AutoSize = true;
+            this.labelProductTh.Location = new System.Drawing.Point(289, 114);
+            this.labelProductTh.Name = "labelProductTh";
+            this.labelProductTh.Size = new System.Drawing.Size(20, 13);
+            this.labelProductTh.TabIndex = 11;
+            this.labelProductTh.Text = "Th";
+            // 
+            // label27
+            // 
+            this.label27.AutoSize = true;
+            this.label27.Location = new System.Drawing.Point(81, 114);
+            this.label27.Name = "label27";
+            this.label27.Size = new System.Drawing.Size(20, 13);
+            this.label27.TabIndex = 4;
+            this.label27.Text = "Th";
+            // 
+            // textProductRes
+            // 
+            this.textProductRes.Enabled = false;
+            this.textProductRes.Location = new System.Drawing.Point(153, 111);
+            this.textProductRes.Name = "textProductRes";
+            this.textProductRes.Size = new System.Drawing.Size(85, 20);
+            this.textProductRes.TabIndex = 8;
+            // 
+            // labelProductRes
+            // 
+            this.labelProductRes.AutoSize = true;
+            this.labelProductRes.Location = new System.Drawing.Point(150, 94);
+            this.labelProductRes.Name = "labelProductRes";
+            this.labelProductRes.Size = new System.Drawing.Size(89, 13);
+            this.labelProductRes.TabIndex = 7;
+            this.labelProductRes.Text = "Res&olving power:";
+            // 
+            // comboProductAnalyzerType
+            // 
+            this.comboProductAnalyzerType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboProductAnalyzerType.Enabled = false;
+            this.comboProductAnalyzerType.FormattingEnabled = true;
+            this.comboProductAnalyzerType.Location = new System.Drawing.Point(150, 44);
+            this.comboProductAnalyzerType.Name = "comboProductAnalyzerType";
+            this.comboProductAnalyzerType.Size = new System.Drawing.Size(111, 21);
+            this.comboProductAnalyzerType.TabIndex = 6;
+            this.helpTip.SetToolTip(this.comboProductAnalyzerType, "The mass analyzer used to collect MS/MS scans.");
+            this.comboProductAnalyzerType.SelectedIndexChanged += new System.EventHandler(this.comboProductAnalyzerType_SelectedIndexChanged);
+            // 
+            // label22
+            // 
+            this.label22.AutoSize = true;
+            this.label22.Location = new System.Drawing.Point(147, 27);
+            this.label22.Name = "label22";
+            this.label22.Size = new System.Drawing.Size(116, 13);
+            this.label22.TabIndex = 5;
+            this.label22.Text = "Product &mass analyzer:";
+            // 
+            // textPrecursorFilterMz
+            // 
+            this.textPrecursorFilterMz.Enabled = false;
+            this.textPrecursorFilterMz.Location = new System.Drawing.Point(14, 111);
+            this.textPrecursorFilterMz.Name = "textPrecursorFilterMz";
+            this.textPrecursorFilterMz.Size = new System.Drawing.Size(65, 20);
+            this.textPrecursorFilterMz.TabIndex = 3;
+            this.helpTip.SetToolTip(this.textPrecursorFilterMz, "Single - the m/z filter window for a single precursor\r\nMultiple - the isolation w" +
+                    "indow used to collect scans");
+            // 
+            // label21
+            // 
+            this.label21.AutoSize = true;
+            this.label21.Location = new System.Drawing.Point(11, 95);
+            this.label21.Name = "label21";
+            this.label21.Size = new System.Drawing.Size(98, 13);
+            this.label21.TabIndex = 2;
+            this.label21.Text = "Pre&cursor m/z filter:";
+            // 
+            // comboPrecursorFilterType
+            // 
+            this.comboPrecursorFilterType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboPrecursorFilterType.FormattingEnabled = true;
+            this.comboPrecursorFilterType.Location = new System.Drawing.Point(14, 45);
+            this.comboPrecursorFilterType.Name = "comboPrecursorFilterType";
+            this.comboPrecursorFilterType.Size = new System.Drawing.Size(111, 21);
+            this.comboPrecursorFilterType.TabIndex = 1;
+            this.helpTip.SetToolTip(this.comboPrecursorFilterType, "Single - match a single precursor closest to the center of the isolation window\r\n" +
+                    "Multiple - match any precursor within the isolation window");
+            this.comboPrecursorFilterType.SelectedIndexChanged += new System.EventHandler(this.comboPrecursorFilterType_SelectedIndexChanged);
+            // 
+            // label20
+            // 
+            this.label20.AutoSize = true;
+            this.label20.Location = new System.Drawing.Point(11, 28);
+            this.label20.Name = "label20";
+            this.label20.Size = new System.Drawing.Size(100, 13);
+            this.label20.TabIndex = 0;
+            this.label20.Text = "Pr&ecursor filter type:";
             // 
             // TransitionSettingsUI
             // 
@@ -904,8 +1032,11 @@
             this.panelPick.PerformLayout();
             this.tabInstrument.ResumeLayout(false);
             this.tabInstrument.PerformLayout();
-            this.groupBox2.ResumeLayout(false);
-            this.groupBox2.PerformLayout();
+            this.tabFullScan.ResumeLayout(false);
+            this.groupBoxMS1.ResumeLayout(false);
+            this.groupBoxMS1.PerformLayout();
+            this.groupBoxMS2.ResumeLayout(false);
+            this.groupBoxMS2.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -968,20 +1099,31 @@
         private System.Windows.Forms.Label label19;
         private System.Windows.Forms.Button btnEditSpecialTransitions;
         private System.Windows.Forms.ToolTip helpTip;
-        private System.Windows.Forms.Label label21;
-        private System.Windows.Forms.ComboBox comboPrecursorFilterType;
-        private System.Windows.Forms.Label label20;
-        private System.Windows.Forms.GroupBox groupBox2;
-        private System.Windows.Forms.TextBox textProductFilterMz;
-        private System.Windows.Forms.Label label23;
-        private System.Windows.Forms.ComboBox comboProductFilterType;
-        private System.Windows.Forms.Label label22;
-        private System.Windows.Forms.TextBox textPrecursorFilterMz;
         private System.Windows.Forms.Label label26;
         private System.Windows.Forms.Label label25;
         private System.Windows.Forms.Label label24;
-        private System.Windows.Forms.Label labelProductFilter;
-        private System.Windows.Forms.Label label27;
         private System.Windows.Forms.Label label28;
+        private System.Windows.Forms.TabPage tabFullScan;
+        private System.Windows.Forms.GroupBox groupBoxMS2;
+        private System.Windows.Forms.Label labelProductTh;
+        private System.Windows.Forms.Label label27;
+        private System.Windows.Forms.TextBox textProductRes;
+        private System.Windows.Forms.Label labelProductRes;
+        private System.Windows.Forms.ComboBox comboProductAnalyzerType;
+        private System.Windows.Forms.Label label22;
+        private System.Windows.Forms.TextBox textPrecursorFilterMz;
+        private System.Windows.Forms.Label label21;
+        private System.Windows.Forms.ComboBox comboPrecursorFilterType;
+        private System.Windows.Forms.Label label20;
+        private System.Windows.Forms.GroupBox groupBoxMS1;
+        private System.Windows.Forms.Label labelPrecursorTh;
+        private System.Windows.Forms.TextBox textPrecursorRes;
+        private System.Windows.Forms.Label labelPrecursorRes;
+        private System.Windows.Forms.ComboBox comboPrecursorAnalyzerType;
+        private System.Windows.Forms.Label label32;
+        private System.Windows.Forms.TextBox textProductAt;
+        private System.Windows.Forms.Label labelProductAt;
+        private System.Windows.Forms.Label labelPrecursorAt;
+        private System.Windows.Forms.TextBox textPrecursorAt;
     }
 }

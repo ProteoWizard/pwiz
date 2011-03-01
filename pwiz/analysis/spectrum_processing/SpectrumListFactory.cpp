@@ -277,6 +277,30 @@ SpectrumListPtr filterCreator_mzWindow(const MSData& msd, const string& arg)
     return SpectrumListPtr(new SpectrumList_MZWindow(msd.run.spectrumListPtr, mzLow, mzHigh));
 }
 
+SpectrumListPtr filterCreator_mzPrecursors(const MSData& msd, const string& arg)
+{
+    char open='\0', comma='\0', close='\0';
+	std::set<double> setMz;
+
+    istringstream iss(arg);
+    iss >> open;
+	while (isdigit(iss.peek()))
+	{
+		double mz = 0;
+		iss >> mz;
+		setMz.insert(mz);
+		if (iss.peek() == ',')
+			iss >> comma;
+	}
+	iss >> close;
+
+    if (open!='[' || close!=']')
+        return SpectrumListPtr();
+
+    return SpectrumListPtr(new
+		SpectrumList_Filter(msd.run.spectrumListPtr,
+		                    SpectrumList_FilterPredicate_PrecursorMzSet(setMz)));
+}
 
 SpectrumListPtr filterCreator_msLevel(const MSData& msd, const string& arg)
 {
@@ -510,6 +534,7 @@ JumpTableEntry jumpTable_[] =
     {"metadataFixer", " (add/replace TIC/BPI metadata)", filterCreator_metadataFixer},
     {"threshold", "<count|count-after-ties|absolute|bpi-relative|tic-relative|tic-cutoff> <threshold> <most-intense|least-intense> [int_set(MS levels)]", filterCreator_thresholdFilter},
     {"mzWindow", "[mzLow,mzHigh]", filterCreator_mzWindow},
+	{"mzPrecursors", "[mz1,mz2, ... mzn] zero for no precursor m/z", filterCreator_mzPrecursors},
     {"defaultArrayLength", "int_set", filterCreator_defaultArrayLength},
 
     // MSn Spectrum Processing/Filtering

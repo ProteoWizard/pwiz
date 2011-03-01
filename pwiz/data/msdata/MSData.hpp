@@ -610,6 +610,13 @@ typedef boost::shared_ptr<Chromatogram> ChromatogramPtr;
 // note: derived container to support dynamic linking on Windows
 class IndexList : public std::vector<size_t> {};
 
+enum DetailLevel
+{
+    DetailLevel_FullData,
+    DetailLevel_FullMetadata,
+    DetailLevel_FastMetadata,
+	DetailLevel_InstantMetadata
+};
 
 /// 
 /// Interface for accessing spectra, which may be stored in memory
@@ -659,6 +666,18 @@ class PWIZ_API_DECL SpectrumList
     /// - binary data arrays will be provided if (getBinaryData == true);
     /// - client may assume the underlying Spectrum* is valid 
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const = 0;
+
+    /// retrieve a spectrum by index
+    /// - detailLevel determines what fields are guaranteed present on the spectrum after the call
+    /// - client may assume the underlying Spectrum* is valid 
+    virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel) const
+	{
+		// By default faster metadeta access is not implemented
+		if (detailLevel == DetailLevel_FastMetadata || detailLevel == DetailLevel_InstantMetadata)
+			return SpectrumPtr(new Spectrum);
+
+		return spectrum(index, detailLevel == DetailLevel_FullData);
+	}
 
     /// returns the data processing affecting spectra retrieved through this interface
     /// - may return a null shared pointer

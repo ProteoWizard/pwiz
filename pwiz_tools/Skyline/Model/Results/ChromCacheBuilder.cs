@@ -142,11 +142,9 @@ namespace pwiz.Skyline.Model.Results
                         dataFilePath = dataFilePathPart = _tempFileSubsitute;
 
                     // HACK: Force the thread that the writer will use into existence
-                    // This allows Reader_Waters to function normally the first time through.
-                    //
-                    // TODO: Use of Reader_Waters will, however, eventually kill the ThreadPool
-                    // So, something better needs to be worked out, if we can't get a fix
-                    // from Waters.
+                    // This allowed teh DACServer Reader_Waters to function normally the first time through.
+                    // It is no longer necessary for the MassLynxRaw version of Reader_Waters,
+                    // but is kept to avoid destabilizing code changes.
                     //
                     // This does not actually start the loop, but calling the function once,
                     // seems to reserve a thread somehow, so that the next call works.
