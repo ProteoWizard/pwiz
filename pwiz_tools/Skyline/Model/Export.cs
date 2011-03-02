@@ -26,6 +26,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Skyline.Model.DocSettings;
@@ -1144,6 +1145,8 @@ namespace pwiz.Skyline.Model
     public class AbiQtrapMethodExporter : AbiMassListExporter
     {
         public const string EXE_BUILD_QTRAP_METHOD = @"Method\AbSciex\BuildQTRAPMethod";
+        private const string ANALYST_NAME = "Analyst";
+        private const string ANALYST_EXE = ANALYST_NAME + ".exe";
 
         public AbiQtrapMethodExporter(SrmDocument document)
             : base(document)
@@ -1152,7 +1155,9 @@ namespace pwiz.Skyline.Model
 
         public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
         {
-            EnsureLibraries();
+            EnsureAnalyst(progressMonitor);
+            if (progressMonitor.IsCanceled)
+                return;
 
             // First export transition lists to map in memory
             Export(null);
@@ -1167,7 +1172,7 @@ namespace pwiz.Skyline.Model
                 argv, fileName, templateName, MemoryOutput, progressMonitor);
         }
 
-        private static void EnsureLibraries()
+        private static void EnsureAnalyst(IProgressMonitor progressMonitor)
         {
             string analystPath = AdvApi.GetPathFromProgId("Analyst.MassSpecMethod.1");
             string analystDir = (analystPath != null ? Path.GetDirectoryName(analystPath) : null);
@@ -1179,6 +1184,51 @@ namespace pwiz.Skyline.Model
             }
             if (analystDir == null)
                 throw new IOException("Failed to find a valid Analyst 1.5.1 installation.");
+
+            var procAnalyst = AnalystProcess;
+            if (procAnalyst == null)
+                procAnalyst = Process.Start(Path.Combine(analystDir, ANALYST_EXE));
+            // Wait for main window to be present.
+            ProgressStatus status = null;
+            while (!progressMonitor.IsCanceled && !Equals(ANALYST_NAME, procAnalyst.MainWindowTitle))
+            {
+                if (status == null)
+                {
+                    status = new ProgressStatus("Waiting for Analyst to start...").ChangePercentComplete(-1);
+                    progressMonitor.UpdateProgress(status);
+                }
+                Thread.Sleep(500);
+                procAnalyst = AnalystProcess;
+            }
+            if (status != null)
+            {
+                // Wait an extra 1.5 seconds, if the Analyst window was not already present
+                // to make sure it is really completely started.
+                Thread.Sleep(1500);
+                progressMonitor.UpdateProgress(status.ChangeMessage("Working..."));
+            }
+        }
+
+        private static Process AnalystProcess
+        {
+            get
+            {
+                var processList = Process.GetProcesses();
+                int indexAnalyst = processList.IndexOf(proc => Equals(ANALYST_EXE, GetModuleName(proc)));
+                return (indexAnalyst != -1 ? processList[indexAnalyst] : null);
+            }
+        }
+
+        private static string GetModuleName(Process proc)
+        {
+            try
+            {
+                return proc.MainModule.ModuleName;
+            }
+            catch
+            {
+                return null;
+            }
         }
     }
 

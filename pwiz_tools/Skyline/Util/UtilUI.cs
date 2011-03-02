@@ -201,7 +201,9 @@ namespace pwiz.Skyline.Util
                 else
                     prop = ZoomedToPercent(prop);
             }
-            prop = Math.Min(100, Math.Max(0, prop));
+            // Allow -1 as a way of allowing a looping progress indicator
+            if (prop != -1)
+                prop = Math.Min(100, Math.Max(0, prop));
             if (prop == PercentComplete)
                 return this;
 

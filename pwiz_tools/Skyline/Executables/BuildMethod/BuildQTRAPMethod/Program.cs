@@ -2,7 +2,7 @@
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
- * Copyright 2009 University of Washington - Seattle, WA
+ * Copyright 2010-2011 University of Washington - Seattle, WA
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,9 +22,8 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using AcqMethodSvrLib;
-using CreateNewAcqMethod;
+using Analyst;
 using MSMethodSvrLib;
 using ParameterSvrLib;
 
@@ -317,16 +316,19 @@ namespace BuildQTRAPMethod
 
         public void build()
         {
-            IAcqMethodDirClass acqMethod = new IAcqMethodDirClass();
-            var templateAcqMethod = acqMethod.LoadNonUIMethod(TemplateMethod);
-            MassSpecMethod templateMsMethod = null;
+            ApplicationClass analyst = new ApplicationClass();
+
             // Make sure that Analyst is fully started
-            for (int i = 0; i < 6 && templateMsMethod == null; i++)
-            {
-                Thread.Sleep(300);
-                templateAcqMethod = acqMethod.LoadNonUIMethod(TemplateMethod);
-                templateMsMethod = ExtractMSMethod(templateAcqMethod);
-            }
+            IAcqMethodDirConfig acqMethodDir = (IAcqMethodDirConfig)analyst.Acquire();
+            if (acqMethodDir == null)
+                throw new IOException("Failed to initialize.  Analyst may need to be started.");
+
+            object acqMethodObj;
+            acqMethodDir.LoadNonUIMethod(TemplateMethod, out acqMethodObj);
+            IAcqMethod templateAcqMethod = (IAcqMethod)acqMethodObj;
+
+            MassSpecMethod templateMsMethod = ExtractMSMethod(templateAcqMethod);
+
             if (templateMsMethod == null)
                 throw new IOException(string.Format("Failed to open template method {0}.  Analyst may need to be started.", TemplateMethod));
             if (templateMsMethod.PeriodCount != 1)
@@ -395,7 +397,7 @@ namespace BuildQTRAPMethod
             }
         }
 
-        public MassSpecMethod ExtractMSMethod(AcqMethod dataAcqMethod)
+        public MassSpecMethod ExtractMSMethod(IAcqMethod dataAcqMethod)
         {
             if (dataAcqMethod == null)
                 return null;
