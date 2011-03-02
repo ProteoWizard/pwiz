@@ -130,7 +130,7 @@ namespace pwiz.Skyline.Util
             addMass(S, 31.9720707, 32.065);
             addMass(P, 30.97376151, 30.973761);
 
-            addMass(Se, 73.9224766, 78.96);
+            addMass(Se, 79.9165213, 78.96); // Most abundant Se isotope is 80
             addMass(Li, 7.016003, 6.941);
             addMass(F, 18.99840322, 18.9984032);
             addMass(Na, 22.9897677, 22.98977);
