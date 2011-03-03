@@ -581,7 +581,8 @@ void SpectrumListFactory::wrap(MSData& msd, const string& wrapper)
     istringstream iss(wrapper);
     string command;
     iss >> command;
-    string arg = wrapper.substr(command.size() + 1); // skip the first space
+    string arg = wrapper.substr(command.size());
+    bal::trim(arg);
 
     // switch on command, instantiate the filter
 
