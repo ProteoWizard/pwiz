@@ -33,6 +33,7 @@
 #include "pwiz/analysis/spectrum_processing/SpectrumList_PrecursorRefine.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_MZWindow.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_MetadataFixer.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_TitleMaker.hpp"
 #include "pwiz/analysis/spectrum_processing/PrecursorMassFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/ThresholdFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/MS2NoiseFilter.hpp"
@@ -330,6 +331,12 @@ SpectrumListPtr filterCreator_metadataFixer(const MSData& msd, const string& arg
 }
 
 
+SpectrumListPtr filterCreator_titleMaker(const MSData& msd, const string& arg)
+{
+    return SpectrumListPtr(new SpectrumList_TitleMaker(msd, arg));
+}
+
+
 SpectrumListPtr filterCreator_chargeStatePredictor(const MSData& msd, const string& arg)
 {
     istringstream parser(arg);
@@ -532,6 +539,7 @@ JumpTableEntry jumpTable_[] =
     {"scanTime", "[scanTimeLow,scanTimeHigh]", filterCreator_scanTime},
     {"stripIT", " (strip ion trap ms1 scans)", filterCreator_stripIT},
     {"metadataFixer", " (add/replace TIC/BPI metadata)", filterCreator_metadataFixer},
+    {"titleMaker", " (add/replace spectrum title according to user-specified format string; the following keywords are recognized: <RunId> <Index> <Id> <ScanNumber> <ActivationType> <IsolationMz> <SelectedIonMz> <ChargeState> <SpectrumType> <ScanStartTime> <BasePeakMz> <BasePeakIntensity> <TotalIonCurrent>", filterCreator_titleMaker},
     {"threshold", "<count|count-after-ties|absolute|bpi-relative|tic-relative|tic-cutoff> <threshold> <most-intense|least-intense> [int_set(MS levels)]", filterCreator_thresholdFilter},
     {"mzWindow", "[mzLow,mzHigh]", filterCreator_mzWindow},
 	{"mzPrecursors", "[mz1,mz2, ... mzn] zero for no precursor m/z", filterCreator_mzPrecursors},
@@ -573,7 +581,7 @@ void SpectrumListFactory::wrap(MSData& msd, const string& wrapper)
     istringstream iss(wrapper);
     string command;
     iss >> command;
-    string arg = wrapper.substr(command.size());
+    string arg = wrapper.substr(command.size() + 1); // skip the first space
 
     // switch on command, instantiate the filter
 

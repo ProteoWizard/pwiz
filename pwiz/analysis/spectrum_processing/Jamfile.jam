@@ -39,6 +39,7 @@ lib pwiz_analysis_spectrum_processing
         SpectrumList_ChargeStateCalculator.cpp
         SpectrumList_MZWindow.cpp
         SpectrumList_MetadataFixer.cpp
+        SpectrumList_TitleMaker.cpp
 		SpectrumList_PrecursorRefine.cpp
         PrecursorRecalculatorDefault.cpp
         PrecursorMassFilter.cpp

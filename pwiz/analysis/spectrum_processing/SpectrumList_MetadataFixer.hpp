@@ -25,16 +25,15 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
-#include "pwiz/utility/misc/IntegerSet.hpp"
 #include "pwiz/data/msdata/SpectrumListWrapper.hpp"
-#include "pwiz/analysis/common/LocalMaximumPeakDetector.hpp"
 
 
 namespace pwiz {
 namespace analysis {
 
 
-/// SpectrumList implementation to replace peak profiles with picked peaks
+/// SpectrumList implementation to add (or replace) base peak and total ion metadata
+/// with new values calculated from the current binary data.
 class PWIZ_API_DECL SpectrumList_MetadataFixer : public msdata::SpectrumListWrapper
 {
     public:

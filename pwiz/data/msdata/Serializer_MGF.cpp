@@ -76,7 +76,10 @@ void Serializer_MGF::Impl::write(ostream& os, const MSData& msd,
             CVParam scanTimeParam = scan ? scan->cvParam(MS_scan_start_time) : CVParam();
             CVParam chargeParam = si.cvParam(MS_charge_state);
 
-            if (titleIsThermoDTA)
+            CVParam spectrumTitle = s->cvParam(MS_spectrum_title);
+            if (!spectrumTitle.empty())
+                os << "TITLE=" << spectrumTitle.value << '\n';
+            else if (titleIsThermoDTA)
             {
                 string scan = id::value(s->id, "scan");
                 os << "TITLE=" << thermoBasename << '.' << scan << '.' << scan << '.' << chargeParam.value << '\n';
