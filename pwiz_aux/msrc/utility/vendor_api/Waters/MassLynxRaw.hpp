@@ -22,11 +22,14 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/misc/Once.hpp"
 #include <boost/shared_ptr.hpp>
 #include <boost/any.hpp>
 #include <boost/foreach.hpp>
+#include <boost/bind.hpp>
 #include <vector>
 #include <map>
+//#include <iostream>
 
 #include "MassLynxRawDataFile.h"
 #include "MassLynxRawReader.h"
@@ -50,15 +53,12 @@ using namespace ::Waters::Lib::MassLynxRaw;
 
 struct PWIZ_API_DECL RawData
 {
-    MassLynxRawReader Reader;
+    mutable MassLynxRawReader Reader;
     MassLynxRawInfo Info;
     MassLynxRawScanReader ScanReader;
     MassLynxRawChromatogramReader ChromatogramReader;
 
-    vector<vector<MSScanStats> > ScanStatsByFunction;
-
     typedef map<string, vector<boost::any> > ExtendedScanStatsByName;
-    vector<ExtendedScanStatsByName> ExtendedScanStatsByFunction;
 
     const vector<int>& FunctionIndexList() const {return functionIndexList;}
     size_t FunctionCount() const {return functionIndexList.size();}
@@ -67,31 +67,56 @@ struct PWIZ_API_DECL RawData
         : Reader(rawpath),
           Info(Reader),
           ScanReader(Reader),
-          ChromatogramReader(Reader)
+          ChromatogramReader(Reader),
+          scanStatsInitialized(init_once_flag_proxy)
     {
-        MassLynxRawScanStatsReader statsReader(Reader);
-
         // Count the number of _FUNC[0-9]{3}.DAT files, starting with _FUNC001.DAT
+		// For functions over 100, the names become _FUNC0100.DAT
         // Keep track of the maximum function number
-        string functionPathmask = rawpath + "/_FUNC???.DAT";
+        string functionPathmask = rawpath + "/_FUNC*.DAT";
         vector<bfs::path> functionFilepaths;
         expand_pathmask(functionPathmask, functionFilepaths);
         int functionCount = 0;
         for (size_t i=0; i < functionFilepaths.size(); ++i)
         {
-            int number = lexical_cast<int>(bal::trim_left_copy_if(functionFilepaths[i].filename().substr(5, 3), bal::is_any_of("0")));
+			string fileName = functionFilepaths[i].filename();
+            int number = lexical_cast<int>(bal::trim_left_copy_if(fileName.substr(5, fileName.length() - 9), bal::is_any_of("0")));
             functionIndexList.push_back(number-1); // 0-based
             functionCount = std::max(functionCount, number);
         }
+	}
 
-        ScanStatsByFunction.resize(functionCount);
-        ExtendedScanStatsByFunction.resize(functionCount);
+	const MSScanStats& GetScanStats(int functionIndex, int scanIndex) const
+	{
+		boost::call_once(scanStatsInitialized.flag, boost::bind(&RawData::initScanStats, this));
+		return scanStatsByFunction[functionIndex][scanIndex];
+	}
+
+	const ExtendedScanStatsByName& GetExtendedScanStats(int functionIndex) const
+	{
+		boost::call_once(scanStatsInitialized.flag, boost::bind(&RawData::initScanStats, this));
+		return extendedScanStatsByFunction[functionIndex];
+	}
+
+    private:
+    vector<int> functionIndexList;
+
+	mutable once_flag_proxy scanStatsInitialized;
+    mutable vector<vector<MSScanStats>> scanStatsByFunction;
+    mutable vector<ExtendedScanStatsByName> extendedScanStatsByFunction;
+
+	void initScanStats() const
+	{
+        MassLynxRawScanStatsReader statsReader(Reader);
+
+        scanStatsByFunction.resize(FunctionCount());
+        extendedScanStatsByFunction.resize(FunctionCount());
 
         BOOST_FOREACH(int function, functionIndexList)
         {
-            statsReader.readScanStats(function, ScanStatsByFunction[function]);
+            statsReader.readScanStats(function, scanStatsByFunction[function]);
 
-            ExtendedScanStatsByName& extendedScanStatsMap = ExtendedScanStatsByFunction[function];
+            ExtendedScanStatsByName& extendedScanStatsMap = extendedScanStatsByFunction[function];
 
             vector<ExtendedStatsType> extendedStatsTypes;
             statsReader.getExtendedStatsTypes(function, extendedStatsTypes);
@@ -101,7 +126,7 @@ struct PWIZ_API_DECL RawData
                 if(type.name.empty())
                     continue;
 
-                //cout << extendedStatsTypes[i].name << " " << extendedStatsTypes[i].typeCode << endl;
+//				std::cout << extendedStatsTypes[i].name << " " << extendedStatsTypes[i].typeCode << std::endl;
                 switch (type.typeCode)
                 {
                     case CHAR: fillExtendedStatsByName<char>(statsReader, function, type, extendedScanStatsMap); break;
@@ -118,11 +143,8 @@ struct PWIZ_API_DECL RawData
         }
     }
 
-    private:
-    vector<int> functionIndexList;
-
     template <typename T>
-    inline void fillExtendedStatsByName(const MassLynxRawScanStatsReader& statsReader, int function, const ExtendedStatsType& type, ExtendedScanStatsByName& statsMap)
+    inline void fillExtendedStatsByName(const MassLynxRawScanStatsReader& statsReader, int function, const ExtendedStatsType& type, ExtendedScanStatsByName& statsMap) const
     {
         std::pair<ExtendedScanStatsByName::iterator, bool> insertResult =
             statsMap.insert(std::make_pair(type.name, vector<boost::any>()));
