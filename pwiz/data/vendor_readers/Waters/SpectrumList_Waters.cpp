@@ -243,8 +243,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Waters::spectrum(size_t index, bool getBi
     scan.set(MS_preset_scan_configuration, ie.function+1);
 
     using Waters::Lib::MassLynxRaw::MSScanStats;
-    const MSScanStats& scanStats = rawdata_->ScanStatsByFunction[ie.function][ie.scan];
-    const RawData::ExtendedScanStatsByName& extendedScanStatsByName = rawdata_->ExtendedScanStatsByFunction[ie.function];
+    const MSScanStats& scanStats = rawdata_->GetScanStats(ie.function, ie.scan);
+    const RawData::ExtendedScanStatsByName& extendedScanStatsByName = rawdata_->GetExtendedScanStats(ie.function);
 
     scan.set(MS_scan_start_time, scanStats.rt, UO_minute);
 
