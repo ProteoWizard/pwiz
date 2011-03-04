@@ -53,6 +53,9 @@ const char* tempFilename_ = "MSDataAnalyzerApplicationTest.temp.txt";
 
 void test()
 {
+    // cleanup failed tests
+    try {boost::filesystem::remove(tempFilename_);} catch(...) {}
+
     if (os_) *os_ << "test()\n\n"; 
 
     const char* argv[] = 
