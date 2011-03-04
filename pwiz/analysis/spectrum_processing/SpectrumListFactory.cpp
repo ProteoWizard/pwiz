@@ -333,7 +333,7 @@ SpectrumListPtr filterCreator_metadataFixer(const MSData& msd, const string& arg
 
 SpectrumListPtr filterCreator_titleMaker(const MSData& msd, const string& arg)
 {
-    return SpectrumListPtr(new SpectrumList_TitleMaker(msd, arg));
+    return SpectrumListPtr(new SpectrumList_TitleMaker(msd, bal::trim_copy(arg)));
 }
 
 
@@ -582,7 +582,6 @@ void SpectrumListFactory::wrap(MSData& msd, const string& wrapper)
     string command;
     iss >> command;
     string arg = wrapper.substr(command.size());
-    bal::trim(arg);
 
     // switch on command, instantiate the filter
 
