@@ -46,6 +46,7 @@ namespace pwiz.Skyline
         ResultsGrid.IStateProvider
     {
         private GraphSpectrum _graphSpectrum;
+        private readonly GraphSpectrumSettings _graphSpectrumSettings;
         private GraphSummary _graphRetentionTime;
         private GraphSummary _graphPeakArea;
         private ResultsGridForm _resultsGridForm;
@@ -526,54 +527,41 @@ namespace pwiz.Skyline
         #region Spectrum graph
 
         public GraphSpectrum GraphSpectrum { get { return _graphSpectrum; } }
+        public GraphSpectrumSettings GraphSpectrumSettings { get { return _graphSpectrumSettings; } }
 
-        private void aMenuItem_Click(object sender, EventArgs e) { ToggleAIons(); }
-        public void ToggleAIons()
+        private void aMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.ShowAIons = !Settings.Default.ShowAIons;
-            UpdateSpectrumGraph();
+            _graphSpectrumSettings.ShowAIons = !_graphSpectrumSettings.ShowAIons;
         }
 
-        private void bMenuItem_Click(object sender, EventArgs e) { ToggleBIons(); }
-        public void ToggleBIons()
+        private void bMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.ShowBIons = !Settings.Default.ShowBIons;
-            UpdateSpectrumGraph();
+            _graphSpectrumSettings.ShowBIons = !_graphSpectrumSettings.ShowBIons;
         }
 
-        private void cMenuItem_Click(object sender, EventArgs e) { ToggleCIons(); }
-        public void ToggleCIons()
+        private void cMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.ShowCIons = !Settings.Default.ShowCIons;
-            UpdateSpectrumGraph();
+            _graphSpectrumSettings.ShowCIons = !_graphSpectrumSettings.ShowCIons;
         }
 
-        private void xMenuItem_Click(object sender, EventArgs e) { ToggleXIons(); }
-        public void ToggleXIons()
+        private void xMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.ShowXIons = !Settings.Default.ShowXIons;
-            UpdateSpectrumGraph();
+            _graphSpectrumSettings.ShowXIons = !_graphSpectrumSettings.ShowXIons;
         }
 
-        private void yMenuItem_Click(object sender, EventArgs e) { ToggleYIons(); }
-        public void ToggleYIons()
+        private void yMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.ShowYIons = !Settings.Default.ShowYIons;
-            UpdateSpectrumGraph();
+            _graphSpectrumSettings.ShowYIons = !_graphSpectrumSettings.ShowYIons;
         }
 
-        private void zMenuItem_Click(object sender, EventArgs e) { ToggleZIons(); }
-        public void ToggleZIons()
+        private void zMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.ShowZIons = !Settings.Default.ShowZIons;
-            UpdateSpectrumGraph();
+            _graphSpectrumSettings.ShowZIons = !_graphSpectrumSettings.ShowZIons;
         }
 
-        private void precursorIonMenuItem_Click(object sender, EventArgs e) { TogglePrecursorIon(); }
-        public void TogglePrecursorIon()
+        private void precursorIonMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.ShowPrecursorIon = !Settings.Default.ShowPrecursorIon;
-            UpdateSpectrumGraph();
+            _graphSpectrumSettings.ShowPrecursorIon = !_graphSpectrumSettings.ShowPrecursorIon;
         }
 
         private void ionTypesMenuItem_DropDownOpening(object sender, EventArgs e)
@@ -590,25 +578,31 @@ namespace pwiz.Skyline
 
         private void charge1MenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.ShowCharge1 = !Settings.Default.ShowCharge1;
-            UpdateSpectrumGraph();
+            _graphSpectrumSettings.ShowCharge1 = !_graphSpectrumSettings.ShowCharge1;
         }
 
         private void charge2MenuItem_Click(object sender, EventArgs e)
         {
-            ToggleCharge2();
+            _graphSpectrumSettings.ShowCharge2 = !_graphSpectrumSettings.ShowCharge2;
         }
-        public void ToggleCharge2()
+
+        private void charge3MenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.ShowCharge2 = !Settings.Default.ShowCharge2;
-            UpdateSpectrumGraph();
+            _graphSpectrumSettings.ShowCharge3 = !_graphSpectrumSettings.ShowCharge3;
+        }
+
+        private void charge4MenuItem_Click(object sender, EventArgs e)
+        {
+            _graphSpectrumSettings.ShowCharge4 = !_graphSpectrumSettings.ShowCharge4;
         }
 
         private void chargesMenuItem_DropDownOpening(object sender, EventArgs e)
         {
-            var set = Settings.Default;
+            var set = _graphSpectrumSettings;
             charge1MenuItem.Checked = charge1ContextMenuItem.Checked = set.ShowCharge1;
             charge2MenuItem.Checked = charge2ContextMenuItem.Checked = set.ShowCharge2;
+            charge3MenuItem.Checked = charge3ContextMenuItem.Checked = set.ShowCharge3;
+            charge4MenuItem.Checked = charge4ContextMenuItem.Checked = set.ShowCharge4;
         }
 
         private void viewToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
@@ -673,10 +667,17 @@ namespace pwiz.Skyline
             precursorIonContextMenuItem.Checked = set.ShowPrecursorIon;
             menuStrip.Items.Insert(iInsert++, precursorIonContextMenuItem);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator11);
-            charge1ContextMenuItem.Checked = set.ShowCharge1;
-            menuStrip.Items.Insert(iInsert++, charge1ContextMenuItem);
-            charge2ContextMenuItem.Checked = set.ShowCharge2;
-            menuStrip.Items.Insert(iInsert++, charge2ContextMenuItem);
+            menuStrip.Items.Insert(iInsert++, chargesContextMenuItem);
+            if (chargesContextMenuItem.DropDownItems.Count == 0)
+            {
+                chargesContextMenuItem.DropDownItems.AddRange(new[]
+                    {
+                        charge1ContextMenuItem,
+                        charge2ContextMenuItem,
+                        charge3ContextMenuItem,
+                        charge4ContextMenuItem,
+                    });
+            }
             menuStrip.Items.Insert(iInsert++, toolStripSeparator12);
             ranksContextMenuItem.Checked = set.ShowRanks;
             menuStrip.Items.Insert(iInsert++, ranksContextMenuItem);
@@ -828,26 +829,7 @@ namespace pwiz.Skyline
 
         IList<IonType> GraphSpectrum.IStateProvider.ShowIonTypes
         {
-            get
-            {
-                // Priority ordered
-                var types = new List<IonType>();
-                if (Settings.Default.ShowYIons)
-                    types.Add(IonType.y);
-                if (Settings.Default.ShowBIons)
-                    types.Add(IonType.b);
-                if (Settings.Default.ShowZIons)
-                    types.Add(IonType.z);
-                if (Settings.Default.ShowCIons)
-                    types.Add(IonType.c);
-                if (Settings.Default.ShowXIons)
-                    types.Add(IonType.x);
-                if (Settings.Default.ShowAIons)
-                    types.Add(IonType.a);
-                if (Settings.Default.ShowPrecursorIon)
-                    types.Add(IonType.precursor);
-                return types;
-            }
+            get { return _graphSpectrumSettings.ShowIonTypes; }
         }
 
         private void CheckIonTypes(IEnumerable<IonType> types, bool check)
@@ -872,16 +854,7 @@ namespace pwiz.Skyline
 
         IList<int> GraphSpectrum.IStateProvider.ShowIonCharges
         {
-            get
-            {
-                // Priority ordered
-                var charges = new List<int>();
-                if (Settings.Default.ShowCharge1)
-                    charges.Add(1);
-                if (Settings.Default.ShowCharge2)
-                    charges.Add(2);
-                return charges;
-            }
+            get { return _graphSpectrumSettings.ShowIonCharges; }
         }
 
         private void CheckIonCharges(IEnumerable<int> charges, bool check)
@@ -892,11 +865,14 @@ namespace pwiz.Skyline
 
         private void CheckIonCharge(int charge, bool check)
         {
+            // Set charge settings without causing UI to update
             var set = Settings.Default;
             switch (charge)
             {
                 case 1: set.ShowCharge1 = charge1MenuItem.Checked = check; break;
                 case 2: set.ShowCharge2 = charge2MenuItem.Checked = check; break;
+                case 3: set.ShowCharge3 = charge3MenuItem.Checked = check; break;
+                case 4: set.ShowCharge4 = charge4MenuItem.Checked = check; break;
             }
         }
 

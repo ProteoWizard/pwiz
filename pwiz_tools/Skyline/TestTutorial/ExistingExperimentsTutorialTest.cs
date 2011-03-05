@@ -21,7 +21,6 @@ using System.Data.OleDb;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -137,10 +136,8 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(SkylineWindow.GraphSpectrum.IonLabels.Contains(ionLabel => ionLabel.Contains("y7")));
             RunUI(() =>
             {
-                if (!Settings.Default.ShowBIons)
-                    SkylineWindow.ToggleBIons();
-                if (!Settings.Default.ShowCharge2)
-                    SkylineWindow.ToggleCharge2();
+                SkylineWindow.GraphSpectrumSettings.ShowBIons = true;
+                SkylineWindow.GraphSpectrumSettings.ShowCharge2 = true;
             });
 
             // Importing Data, p. 10.

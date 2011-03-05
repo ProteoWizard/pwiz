@@ -123,6 +123,8 @@ namespace pwiz.Skyline
             this.chargesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.charge1MenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.charge2MenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.charge3MenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.charge4MenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ranksMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator9 = new System.Windows.Forms.ToolStripSeparator();
             this.chromatogramsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -214,8 +216,11 @@ namespace pwiz.Skyline
             this.zionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.precursorIonContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator11 = new System.Windows.Forms.ToolStripSeparator();
+            this.chargesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.charge1ContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.charge2ContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.charge3ContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.charge4ContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator12 = new System.Windows.Forms.ToolStripSeparator();
             this.ranksContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ionMzValuesContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1038,7 +1043,7 @@ namespace pwiz.Skyline
             // 
             this.aMenuItem.CheckOnClick = true;
             this.aMenuItem.Name = "aMenuItem";
-            this.aMenuItem.Size = new System.Drawing.Size(124, 22);
+            this.aMenuItem.Size = new System.Drawing.Size(152, 22);
             this.aMenuItem.Text = "&A";
             this.aMenuItem.Click += new System.EventHandler(this.aMenuItem_Click);
             // 
@@ -1046,7 +1051,7 @@ namespace pwiz.Skyline
             // 
             this.bMenuItem.CheckOnClick = true;
             this.bMenuItem.Name = "bMenuItem";
-            this.bMenuItem.Size = new System.Drawing.Size(124, 22);
+            this.bMenuItem.Size = new System.Drawing.Size(152, 22);
             this.bMenuItem.Text = "&B";
             this.bMenuItem.Click += new System.EventHandler(this.bMenuItem_Click);
             // 
@@ -1054,7 +1059,7 @@ namespace pwiz.Skyline
             // 
             this.cMenuItem.CheckOnClick = true;
             this.cMenuItem.Name = "cMenuItem";
-            this.cMenuItem.Size = new System.Drawing.Size(124, 22);
+            this.cMenuItem.Size = new System.Drawing.Size(152, 22);
             this.cMenuItem.Text = "&C";
             this.cMenuItem.Click += new System.EventHandler(this.cMenuItem_Click);
             // 
@@ -1062,7 +1067,7 @@ namespace pwiz.Skyline
             // 
             this.xMenuItem.CheckOnClick = true;
             this.xMenuItem.Name = "xMenuItem";
-            this.xMenuItem.Size = new System.Drawing.Size(124, 22);
+            this.xMenuItem.Size = new System.Drawing.Size(152, 22);
             this.xMenuItem.Text = "&X";
             this.xMenuItem.Click += new System.EventHandler(this.xMenuItem_Click);
             // 
@@ -1072,7 +1077,7 @@ namespace pwiz.Skyline
             this.yMenuItem.CheckOnClick = true;
             this.yMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.yMenuItem.Name = "yMenuItem";
-            this.yMenuItem.Size = new System.Drawing.Size(124, 22);
+            this.yMenuItem.Size = new System.Drawing.Size(152, 22);
             this.yMenuItem.Text = "&Y";
             this.yMenuItem.Click += new System.EventHandler(this.yMenuItem_Click);
             // 
@@ -1080,14 +1085,14 @@ namespace pwiz.Skyline
             // 
             this.zMenuItem.CheckOnClick = true;
             this.zMenuItem.Name = "zMenuItem";
-            this.zMenuItem.Size = new System.Drawing.Size(124, 22);
+            this.zMenuItem.Size = new System.Drawing.Size(152, 22);
             this.zMenuItem.Text = "&Z";
             this.zMenuItem.Click += new System.EventHandler(this.zMenuItem_Click);
             // 
             // precursorIonMenuItem
             // 
             this.precursorIonMenuItem.Name = "precursorIonMenuItem";
-            this.precursorIonMenuItem.Size = new System.Drawing.Size(124, 22);
+            this.precursorIonMenuItem.Size = new System.Drawing.Size(152, 22);
             this.precursorIonMenuItem.Text = "&Precursor";
             this.precursorIonMenuItem.Click += new System.EventHandler(this.precursorIonMenuItem_Click);
             // 
@@ -1095,7 +1100,9 @@ namespace pwiz.Skyline
             // 
             this.chargesMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.charge1MenuItem,
-            this.charge2MenuItem});
+            this.charge2MenuItem,
+            this.charge3MenuItem,
+            this.charge4MenuItem});
             this.chargesMenuItem.Enabled = false;
             this.chargesMenuItem.Name = "chargesMenuItem";
             this.chargesMenuItem.Size = new System.Drawing.Size(191, 22);
@@ -1108,7 +1115,7 @@ namespace pwiz.Skyline
             this.charge1MenuItem.CheckOnClick = true;
             this.charge1MenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.charge1MenuItem.Name = "charge1MenuItem";
-            this.charge1MenuItem.Size = new System.Drawing.Size(80, 22);
+            this.charge1MenuItem.Size = new System.Drawing.Size(152, 22);
             this.charge1MenuItem.Text = "&1";
             this.charge1MenuItem.Click += new System.EventHandler(this.charge1MenuItem_Click);
             // 
@@ -1116,9 +1123,23 @@ namespace pwiz.Skyline
             // 
             this.charge2MenuItem.CheckOnClick = true;
             this.charge2MenuItem.Name = "charge2MenuItem";
-            this.charge2MenuItem.Size = new System.Drawing.Size(80, 22);
+            this.charge2MenuItem.Size = new System.Drawing.Size(152, 22);
             this.charge2MenuItem.Text = "&2";
             this.charge2MenuItem.Click += new System.EventHandler(this.charge2MenuItem_Click);
+            // 
+            // charge3MenuItem
+            // 
+            this.charge3MenuItem.Name = "charge3MenuItem";
+            this.charge3MenuItem.Size = new System.Drawing.Size(152, 22);
+            this.charge3MenuItem.Text = "&3";
+            this.charge3MenuItem.Click += new System.EventHandler(this.charge3MenuItem_Click);
+            // 
+            // charge4MenuItem
+            // 
+            this.charge4MenuItem.Name = "charge4MenuItem";
+            this.charge4MenuItem.Size = new System.Drawing.Size(152, 22);
+            this.charge4MenuItem.Text = "&4";
+            this.charge4MenuItem.Click += new System.EventHandler(this.charge4MenuItem_Click);
             // 
             // ranksMenuItem
             // 
@@ -1856,8 +1877,7 @@ namespace pwiz.Skyline
             this.zionsContextMenuItem,
             this.precursorIonContextMenuItem,
             this.toolStripSeparator11,
-            this.charge1ContextMenuItem,
-            this.charge2ContextMenuItem,
+            this.chargesContextMenuItem,
             this.toolStripSeparator12,
             this.ranksContextMenuItem,
             this.ionMzValuesContextMenuItem,
@@ -1933,21 +1953,45 @@ namespace pwiz.Skyline
             this.toolStripSeparator11.Name = "toolStripSeparator11";
             this.toolStripSeparator11.Size = new System.Drawing.Size(182, 6);
             // 
+            // chargesContextMenuItem
+            // 
+            this.chargesContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.charge1ContextMenuItem,
+            this.charge2ContextMenuItem,
+            this.charge3ContextMenuItem,
+            this.charge4ContextMenuItem});
+            this.chargesContextMenuItem.Name = "chargesContextMenuItem";
+            this.chargesContextMenuItem.Size = new System.Drawing.Size(185, 22);
+            this.chargesContextMenuItem.Text = "Charges";
+            this.chargesContextMenuItem.DropDownOpening += new System.EventHandler(this.chargesMenuItem_DropDownOpening);
+            // 
             // charge1ContextMenuItem
             // 
-            this.charge1ContextMenuItem.CheckOnClick = true;
             this.charge1ContextMenuItem.Name = "charge1ContextMenuItem";
-            this.charge1ContextMenuItem.Size = new System.Drawing.Size(185, 22);
-            this.charge1ContextMenuItem.Text = "Charge 1";
+            this.charge1ContextMenuItem.Size = new System.Drawing.Size(80, 22);
+            this.charge1ContextMenuItem.Text = "1";
             this.charge1ContextMenuItem.Click += new System.EventHandler(this.charge1MenuItem_Click);
             // 
             // charge2ContextMenuItem
             // 
-            this.charge2ContextMenuItem.CheckOnClick = true;
             this.charge2ContextMenuItem.Name = "charge2ContextMenuItem";
-            this.charge2ContextMenuItem.Size = new System.Drawing.Size(185, 22);
-            this.charge2ContextMenuItem.Text = "Charge 2";
+            this.charge2ContextMenuItem.Size = new System.Drawing.Size(80, 22);
+            this.charge2ContextMenuItem.Text = "2";
             this.charge2ContextMenuItem.Click += new System.EventHandler(this.charge2MenuItem_Click);
+            // 
+            // charge3ContextMenuItem
+            // 
+            this.charge3ContextMenuItem.Name = "charge3ContextMenuItem";
+            this.charge3ContextMenuItem.Size = new System.Drawing.Size(80, 22);
+            this.charge3ContextMenuItem.Text = "3";
+            this.charge3ContextMenuItem.Click += new System.EventHandler(this.charge3MenuItem_Click);
+            // 
+            // charge4ContextMenuItem
+            // 
+            this.charge4ContextMenuItem.Name = "charge4ContextMenuItem";
+            this.charge4ContextMenuItem.Size = new System.Drawing.Size(80, 22);
+            this.charge4ContextMenuItem.Text = "4";
+            this.charge4ContextMenuItem.Click += new System.EventHandler(this.charge4MenuItem_Click);
             // 
             // toolStripSeparator12
             // 
@@ -2904,8 +2948,6 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem yionsContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem zionsContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator11;
-        private System.Windows.Forms.ToolStripMenuItem charge1ContextMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem charge2ContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator12;
         private System.Windows.Forms.ToolStripMenuItem ranksContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator13;
@@ -3113,6 +3155,13 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem findNextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator42;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator43;
+        private System.Windows.Forms.ToolStripMenuItem charge3MenuItem;
+        private System.Windows.Forms.ToolStripMenuItem charge4MenuItem;
+        private System.Windows.Forms.ToolStripMenuItem chargesContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem charge1ContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem charge2ContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem charge3ContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem charge4ContextMenuItem;
     }
 }
 

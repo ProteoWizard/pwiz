@@ -313,7 +313,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private bool IsVisibleIon(IonType type, int ordinal, int charge)
         {
-            return ordinal > 0 && ShowTypes.Contains(type) && ShowCharges.Contains(charge);
+            // Show precursor ions when they are supposed to be shown, regardless of charge
+            return ordinal > 0 && ShowTypes.Contains(type) && (type == IonType.precursor || ShowCharges.Contains(charge));
         }
     }
 

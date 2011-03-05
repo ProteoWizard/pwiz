@@ -164,9 +164,9 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 // Check to see if the list of files has changed.
                 var listNames = new List<String>();
-                for (int idx = 0; idx < spectra.Count; idx++)
+                foreach (SpectrumInfo spectrum in spectra)
                 {
-                    listNames.Add(spectra[idx].Identity);
+                    listNames.Add(spectrum.Identity);
                 }
 
                 var listExisting = new List<string>();
@@ -422,6 +422,130 @@ namespace pwiz.Skyline.Controls.Graphs
         private void comboSpectrum_SelectedIndexChanged(object sender, EventArgs e)
         {
             UpdateUI();
+        }
+    }
+
+    public class GraphSpectrumSettings
+    {
+        private readonly Action _update;
+
+        public GraphSpectrumSettings(Action update)
+        {
+            _update = update;
+        }
+
+        private void ActAndUpdate(Action act)
+        {
+            act();
+            _update();
+        }
+
+        private static Settings Set
+        {
+            get { return Settings.Default; }
+        }
+
+        public bool ShowAIons
+        {
+            get { return Set.ShowAIons; }
+            set { ActAndUpdate(() => Set.ShowAIons = value); }
+        }
+
+        public bool ShowBIons
+        {
+            get { return Set.ShowBIons; }
+            set { ActAndUpdate(() => Set.ShowBIons = value); }
+        }
+
+        public bool ShowCIons
+        {
+            get { return Set.ShowCIons; }
+            set { ActAndUpdate(() => Set.ShowCIons = value); }
+        }
+
+        public bool ShowXIons
+        {
+            get { return Set.ShowXIons; }
+            set { ActAndUpdate(() => Set.ShowXIons = value); }
+        }
+
+        public bool ShowYIons
+        {
+            get { return Set.ShowAIons; }
+            set { ActAndUpdate(() => Set.ShowYIons = value); }
+        }
+
+        public bool ShowZIons
+        {
+            get { return Set.ShowZIons; }
+            set { ActAndUpdate(() => Set.ShowZIons = value); }
+        }
+
+        public bool ShowPrecursorIon
+        {
+            get { return Set.ShowPrecursorIon; }
+            set { ActAndUpdate(() => Set.ShowPrecursorIon = value); }
+        }
+
+        public bool ShowCharge1
+        {
+            get { return Set.ShowCharge1; }
+            set { ActAndUpdate(() => Set.ShowCharge1 = value); }
+        }
+
+        public bool ShowCharge2
+        {
+            get { return Set.ShowCharge2; }
+            set { ActAndUpdate(() => Set.ShowCharge2 = value); }
+        }
+
+        public bool ShowCharge3
+        {
+            get { return Set.ShowCharge3; }
+            set { ActAndUpdate(() => Set.ShowCharge3 = value); }
+        }
+
+        public bool ShowCharge4
+        {
+            get { return Set.ShowCharge4; }
+            set { ActAndUpdate(() => Set.ShowCharge4 = value); }
+        }
+
+        public IList<IonType> ShowIonTypes
+        {
+            get
+            {
+                // Priority ordered
+                var types = new List<IonType>();
+                AddItem(types, IonType.y, Set.ShowYIons);
+                AddItem(types, IonType.b, Set.ShowBIons);
+                AddItem(types, IonType.z, Set.ShowZIons);
+                AddItem(types, IonType.c, Set.ShowCIons);
+                AddItem(types, IonType.x, Set.ShowXIons);
+                AddItem(types, IonType.a, Set.ShowAIons);
+                AddItem(types, IonType.precursor, Set.ShowPrecursorIon);
+                return types;
+            }
+        }
+
+        public IList<int> ShowIonCharges
+        {
+            get
+            {
+                // Priority ordered
+                var charges = new List<int>();
+                AddItem(charges, 1, ShowCharge1);
+                AddItem(charges, 2, ShowCharge2);
+                AddItem(charges, 3, ShowCharge3);
+                AddItem(charges, 4, ShowCharge4);
+                return charges;
+            }
+        }
+
+        private static void AddItem<TItem>(ICollection<TItem> items, TItem item, bool add)
+        {
+            if (add)
+                items.Add(item);
         }
     }
 }

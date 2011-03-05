@@ -895,9 +895,8 @@ namespace pwiz.Skyline.Model.Lib
 
             RankedMI[] arrayResult = new RankedMI[ionMatchCount != -1 ? ionMatchCount : arrayRMI.Length];
 
-            for (int i = 0; i < arrayRMI.Length; i++)
+            foreach (RankedMI rmi in arrayRMI)
             {
-                RankedMI rmi = arrayRMI[i];
                 rmi.CalculateRank(rp);
 
                 // If not filtering for only the highest ionMatchCount ranks
@@ -907,7 +906,7 @@ namespace pwiz.Skyline.Model.Lib
                     // m/z ordering to avoid a second sort.
                     arrayResult[rmi.IndexMz] = rmi;
                 }
-                // Otherwise, if this ion was ranked, add it to the result array
+                    // Otherwise, if this ion was ranked, add it to the result array
                 else if (rmi.Rank > 0)
                 {
                     int countRanks = rmi.Rank;

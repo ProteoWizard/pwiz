@@ -29,6 +29,7 @@ using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
@@ -90,6 +91,8 @@ namespace pwiz.Skyline
                 undoMenuItem, undoToolBarButton,
                 redoMenuItem, redoToolBarButton);
             _undoRedoButtons.AttachEventHandlers();
+
+            _graphSpectrumSettings = new GraphSpectrumSettings(UpdateSpectrumGraph);
 
             _listProgress = new List<ProgressStatus>();
             _timerProgress = new Timer { Interval = 750 };

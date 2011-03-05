@@ -94,7 +94,8 @@ namespace pwiz.Skyline.SettingsUI
         private SrmDocument Document { get { return _documentUiContainer.Document; }  }
         private readonly Bitmap _peptideImg;
         private MSGraphPane GraphPane { get { return (MSGraphPane)graphControl.MasterPane[0]; } }
-        public ViewLibSpectrumGraphItem GraphItem { get; set; }
+        public ViewLibSpectrumGraphItem GraphItem { get; private set; }
+        public GraphSpectrumSettings GraphSettings { get; private set; }
         public int LineWidth { get; set; }
         public float FontSize { get; set; }
 
@@ -151,6 +152,7 @@ namespace pwiz.Skyline.SettingsUI
             graphPane.Border.IsVisible = false;
             graphPane.Title.IsVisible = true;
             graphPane.AllowCurveOverlap = true;
+            GraphSettings = new GraphSpectrumSettings(UpdateUI);
 
             Icon = Resources.Skyline;
             ModFonts = new ModFontHolder(listPeptide);
@@ -619,6 +621,7 @@ namespace pwiz.Skyline.SettingsUI
                         graphControl.IsEnableVPan = graphControl.IsEnableVZoom =
                                                     !Settings.Default.LockYAxis;
                         AddGraphItem(graphPane, GraphItem);
+
                         available = true;
                     }
                 }
@@ -688,40 +691,12 @@ namespace pwiz.Skyline.SettingsUI
 
         public IList<IonType> ShowIonTypes
         {
-            get
-            {
-                // Priority ordered
-                var types = new List<IonType>();
-                if (Settings.Default.ShowYIons)
-                    types.Add(IonType.y);
-                if (Settings.Default.ShowBIons)
-                    types.Add(IonType.b);
-                if (Settings.Default.ShowZIons)
-                    types.Add(IonType.z);
-                if (Settings.Default.ShowCIons)
-                    types.Add(IonType.c);
-                if (Settings.Default.ShowXIons)
-                    types.Add(IonType.x);
-                if (Settings.Default.ShowAIons)
-                    types.Add(IonType.a);
-                if (Settings.Default.ShowPrecursorIon)
-                    types.Add(IonType.precursor);
-                return types;
-            }
+            get { return GraphSettings.ShowIonTypes; }
         }
 
         public IList<int> ShowIonCharges
         {
-            get
-            {
-                // Priority ordered
-                var charges = new List<int>();
-                if (Settings.Default.ShowCharge1)
-                    charges.Add(1);
-                if (Settings.Default.ShowCharge2)
-                    charges.Add(2);
-                return charges;
-            }
+            get { return GraphSettings.ShowIonCharges; }
         }
 
         public void BuildSpectrumMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip)
@@ -758,10 +733,17 @@ namespace pwiz.Skyline.SettingsUI
             precursorIonContextMenuItem.Checked = set.ShowPrecursorIon;
             menuStrip.Items.Insert(iInsert++, precursorIonContextMenuItem);
             menuStrip.Items.Insert(iInsert++, toolStripSeparator11);
-            charge1ContextMenuItem.Checked = set.ShowCharge1;
-            menuStrip.Items.Insert(iInsert++, charge1ContextMenuItem);
-            charge2ContextMenuItem.Checked = set.ShowCharge2;
-            menuStrip.Items.Insert(iInsert++, charge2ContextMenuItem);
+            menuStrip.Items.Insert(iInsert++, chargesContextMenuItem);
+            if (chargesContextMenuItem.DropDownItems.Count == 0)
+            {
+                chargesContextMenuItem.DropDownItems.AddRange(new[]
+                    {
+                        charge1ContextMenuItem,
+                        charge2ContextMenuItem,
+                        charge3ContextMenuItem,
+                        charge4ContextMenuItem,
+                    });
+            }
             menuStrip.Items.Insert(iInsert++, toolStripSeparator12);
             ranksContextMenuItem.Checked = set.ShowRanks;
             menuStrip.Items.Insert(iInsert++, ranksContextMenuItem);
@@ -954,76 +936,66 @@ namespace pwiz.Skyline.SettingsUI
 
         private void aionsContextMenuItem_Click(object sender, EventArgs e)
         {
-            SetAIons(!Settings.Default.ShowAIons);
-        }
-
-        public void SetAIons(bool on)
-        {
-            Settings.Default.ShowAIons = on;
-            UpdateUI();
+            GraphSettings.ShowAIons = !GraphSettings.ShowAIons;
         }
 
         private void bionsContextMenuItem_Click(object sender, EventArgs e)
         {
-            SetBIons(!Settings.Default.ShowBIons);
-        }
-
-        public void SetBIons(bool on)
-        {
-            Settings.Default.ShowBIons = on;
-            UpdateUI();
+            GraphSettings.ShowBIons = !GraphSettings.ShowBIons;
         }
 
         private void cionsContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.ShowCIons = !Settings.Default.ShowCIons;
-            UpdateUI();
+            GraphSettings.ShowCIons = !GraphSettings.ShowCIons;
         }
 
         private void xionsContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.ShowXIons = !Settings.Default.ShowXIons;
-            UpdateUI();
+            GraphSettings.ShowXIons = !GraphSettings.ShowXIons;
         }
 
         private void yionsContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.ShowYIons = !Settings.Default.ShowYIons;
-            UpdateUI();
+            GraphSettings.ShowYIons = !GraphSettings.ShowYIons;
         }
 
         private void zionsContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.ShowZIons = !Settings.Default.ShowZIons;
-            UpdateUI();
+            GraphSettings.ShowZIons = !GraphSettings.ShowZIons;
         }
 
         private void precursorIonContextMenuItem_Click(object sender, EventArgs e)
         {
-            SetPrecursorIon(!Settings.Default.ShowPrecursorIon);
-        }
-
-        public void SetPrecursorIon(bool on)
-        {
-            Settings.Default.ShowPrecursorIon = on;
-            UpdateUI();
+            GraphSettings.ShowPrecursorIon = !GraphSettings.ShowPrecursorIon;
         }
 
         private void charge1ContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.ShowCharge1 = !Settings.Default.ShowCharge1;
-            UpdateUI();
+            GraphSettings.ShowCharge1 = !GraphSettings.ShowCharge1;
         }
 
         private void charge2ContextMenuItem_Click(object sender, EventArgs e)
         {
-            SetCharge2(!Settings.Default.ShowCharge2);
+            GraphSettings.ShowCharge2 = !GraphSettings.ShowCharge2;
         }
 
-        public void SetCharge2(bool on)
+        private void charge3ContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.ShowCharge2 = on;
-            UpdateUI();
+            GraphSettings.ShowCharge3 = !GraphSettings.ShowCharge3;
+        }
+
+        private void charge4ContextMenuItem_Click(object sender, EventArgs e)
+        {
+            GraphSettings.ShowCharge4 = !GraphSettings.ShowCharge4;
+        }
+
+        private void chargesMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            var set = GraphSettings;
+            charge1ContextMenuItem.Checked = set.ShowCharge1;
+            charge2ContextMenuItem.Checked = set.ShowCharge2;
+            charge3ContextMenuItem.Checked = set.ShowCharge3;
+            charge4ContextMenuItem.Checked = set.ShowCharge4;
         }
 
         private void ranksContextMenuItem_Click(object sender, EventArgs e)
@@ -1400,6 +1372,7 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+// ReSharper disable MemberCanBeMadeStatic.Local
         private void ViewLibraryDlg_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Control)
@@ -1410,6 +1383,7 @@ namespace pwiz.Skyline.SettingsUI
                     Program.MainWindow.Redo();
             }
         }
+// ReSharper restore MemberCanBeMadeStatic.Local
 
         #endregion
 

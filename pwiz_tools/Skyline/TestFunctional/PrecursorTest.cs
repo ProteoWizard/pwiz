@@ -19,7 +19,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.FileUI;
@@ -64,7 +63,7 @@ namespace pwiz.SkylineTestFunctional
             WaitForGraphs();
             int ionCount = 0;
             RunUI(() => ionCount = SkylineWindow.GraphSpectrum.PeaksMatchedCount);
-            RunUI(SkylineWindow.TogglePrecursorIon);
+            RunUI(() => SkylineWindow.GraphSpectrumSettings.ShowPrecursorIon = true);
             WaitForGraphs();
             RunUI(() => Assert.AreEqual(ionCount + 1, SkylineWindow.GraphSpectrum.PeaksMatchedCount));
 

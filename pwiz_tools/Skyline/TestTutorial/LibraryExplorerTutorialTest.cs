@@ -87,10 +87,8 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 Assert.AreEqual(11, viewLibraryDlg.GraphItem.IonLabels.Count());
-                if (!Settings.Default.ShowBIons)
-                    viewLibraryDlg.SetBIons(true);
-                if (!Settings.Default.ShowCharge2)
-                    viewLibraryDlg.SetCharge2(true);
+                viewLibraryDlg.GraphSettings.ShowBIons = true;
+                viewLibraryDlg.GraphSettings.ShowCharge2 = true;
                 Assert.AreEqual(24, viewLibraryDlg.GraphItem.IonLabels.Count());
             });
             
@@ -269,8 +267,7 @@ namespace pwiz.SkylineTestTutorial
                 viewLibraryDlg1.SelectedIndex = 0;
                 Assert.AreEqual(countLabels1 + countLossLabels1, viewLibraryDlg1.GraphItem.IonLabels.Count());
 
-                if (!Settings.Default.ShowPrecursorIon)
-                    viewLibraryDlg1.SetPrecursorIon(true);
+                viewLibraryDlg1.GraphSettings.ShowPrecursorIon = true;
 
                 // Make sure the precursor -98 ion was added
                 var labelsFinal = viewLibraryDlg1.GraphItem.IonLabels;
