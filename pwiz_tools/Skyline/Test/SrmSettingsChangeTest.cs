@@ -354,12 +354,20 @@ namespace pwiz.SkylineTest
             docFasta2 = CheckTranstions(docFastaNoP, "ion 3", "last ion - 2", 5);
             CheckTranstions(docFasta2, "ion 4", "last ion - 3", 7);
 
+            // Check ion types including precursor
+            var docPrec = docFasta2.ChangeSettings(docFasta2.Settings.ChangeTransitionFilter(f =>
+                f.ChangeIonTypes(new[] { IonType.y, IonType.precursor })));
+            Assert.AreEqual(docFasta2.TransitionCount + docFasta2.TransitionGroupCount, docPrec.TransitionCount);
+            docPrec = docFasta2.ChangeSettings(docFasta2.Settings.ChangeTransitionFilter(f =>
+                f.ChangeIonTypes(new[] { IonType.precursor })));
+            Assert.AreEqual(docFasta2.TransitionGroupCount, docPrec.TransitionCount);
+            AssertEx.Serializable(docPrec, AssertEx.DocumentCloned);
+
             // TODO: Finish this test
         }
 
         private static SrmDocument CheckTranstions(SrmDocument document, string startName, string endName, int ionDiff)
         {
-            // All y-ions
             SrmSettings settings = document.Settings;
             SrmDocument docNew = document.ChangeSettings(settings.ChangeTransitionFilter(
                     f => f.ChangeFragmentRangeFirstName(startName). ChangeFragmentRangeLastName(endName)).

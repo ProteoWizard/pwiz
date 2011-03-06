@@ -77,7 +77,7 @@ namespace pwiz.Skyline.SettingsUI
             // Initialize filter settings
             textPrecursorCharges.Text = Filter.PrecursorCharges.ToArray().ToString(", ");
             textIonCharges.Text = Filter.ProductCharges.ToArray().ToString(", ");
-            textIonTypes.Text = Filter.IonTypes.ToArray().ToString(", ");
+            textIonTypes.Text = Filter.ToStringIonTypes(true);
             comboRangeFrom.SelectedItem = Filter.FragmentRangeFirst.GetKey();
             comboRangeTo.SelectedItem = Filter.FragmentRangeLast.GetKey();
             textExclusionWindow.Text = Filter.PrecursorMzWindow != 0 ? Filter.PrecursorMzWindow.ToString() : "";            
@@ -194,12 +194,11 @@ namespace pwiz.Skyline.SettingsUI
                 return;
             productCharges = productCharges.Distinct().ToArray();
 
-            IonType[] types = ArrayUtil.Parse(textIonTypes.Text.ToLower(),
-                                              v => (IonType) Enum.Parse(typeof (IonType), v), ',', new IonType[0]);
+            IonType[] types = TransitionFilter.ParseTypes(textIonTypes.Text, new IonType[0]);
             if (types.Length == 0)
             {
                 helper.ShowTextBoxError(tabControl1, (int) TABS.Filter, textIonTypes,
-                                         "Ion types must contain a comma separated list of ion types a, b, c, x, y and z.");
+                                         "Ion types must contain a comma separated list of ion types a, b, c, x, y z and p (for precursor).");
                 e.Cancel = true;
                 return;
             }
@@ -322,7 +321,8 @@ namespace pwiz.Skyline.SettingsUI
                         minFilt, maxFilt, out precRes))
                     return;
                 precursorRes = precRes;
-                if (textPrecursorAt.Visible)
+                if (precursorAnalyzerType != FullScanMassAnalyzerType.qit ||
+                    precursorAnalyzerType != FullScanMassAnalyzerType.tof)
                 {
                     double precResMz;
                     if (!helper.ValidateDecimalTextBox(e, tabControl1, (int)TABS.FullScan, textPrecursorAt,
@@ -370,7 +370,8 @@ namespace pwiz.Skyline.SettingsUI
 
                 productRes = prodRes;
 
-                if (textProductAt.Visible)
+                if (productAnalyzerType != FullScanMassAnalyzerType.qit &&
+                    productAnalyzerType != FullScanMassAnalyzerType.tof)
                 {
                     double prodResMz;
                     if (!helper.ValidateDecimalTextBox(e, tabControl1, (int)TABS.FullScan, textProductAt,

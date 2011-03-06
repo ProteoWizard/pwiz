@@ -640,7 +640,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // Read start tag attributes
             PrecursorCharges = ParseInts(reader.GetAttribute(ATTR.precursor_charges));
             ProductCharges = ParseInts(reader.GetAttribute(ATTR.product_charges));
-            IonTypes = ParseTypes(reader.GetAttribute(ATTR.fragment_types));
+            IonTypes = ParseTypes(reader.GetAttribute(ATTR.fragment_types), new[] { IonType.y });
             FragmentRangeFirstName = reader.GetAttribute(ATTR.fragment_range_first);
             FragmentRangeLastName = reader.GetAttribute(ATTR.fragment_range_last);
             PrecursorMzWindow = reader.GetDoubleAttribute(ATTR.precursor_mz_window);
@@ -676,7 +676,7 @@ namespace pwiz.Skyline.Model.DocSettings
             // Write attributes
             writer.WriteAttributeString(ATTR.precursor_charges, PrecursorCharges.ToString(","));
             writer.WriteAttributeString(ATTR.product_charges, ProductCharges.ToString(","));
-            writer.WriteAttributeString(ATTR.fragment_types, IonTypes.ToString(","));
+            writer.WriteAttributeString(ATTR.fragment_types, ToStringIonTypes(false));
             writer.WriteAttributeString(ATTR.fragment_range_first, FragmentRangeFirstName);
             writer.WriteAttributeString(ATTR.fragment_range_last, FragmentRangeLastName);
             writer.WriteAttribute(ATTR.precursor_mz_window, PrecursorMzWindow);
@@ -684,15 +684,20 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteElements(MeasuredIons);
         }
 
+        public string ToStringIonTypes(bool spaces)
+        {
+            return IonTypes.ToString(spaces ? ", " : ",").Replace(IonType.precursor.ToString(), "p");
+        }
+
         private static int[] ParseInts(string s)
         {
             return ArrayUtil.Parse(s, Convert.ToInt32, ',', new int[0]);
         }
 
-        private static IonType[] ParseTypes(string s)
+        public static IonType[] ParseTypes(string s, IonType[] defaultTypes)
         {
-            return ArrayUtil.Parse(s, v => (IonType)Enum.Parse(typeof(IonType), v.ToLower()), ',',
-                new[] { IonType.y });
+            return ArrayUtil.Parse(s, v => (IonType)Enum.Parse(typeof(IonType), v.ToLower().Replace("p", IonType.precursor.ToString())), ',',
+                defaultTypes);
         }
 
         #endregion

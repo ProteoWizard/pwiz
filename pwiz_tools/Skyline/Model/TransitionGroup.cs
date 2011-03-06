@@ -95,6 +95,12 @@ namespace pwiz.Skyline.Model
             }
 
             var tranSettings = settings.TransitionSettings;
+            var filter = tranSettings.Filter;
+            var charges = filter.ProductCharges;
+            var startFinder = filter.FragmentRangeFirst;
+            var endFinder = filter.FragmentRangeLast;
+            double precursorMzWindow = filter.PrecursorMzWindow;
+            var types = filter.IonTypes;
             MassType massType = tranSettings.Prediction.FragmentMassType;
             int minMz = tranSettings.Instrument.GetMinMz(precursorMz);
             int maxMz = tranSettings.Instrument.MaxMz;
@@ -104,7 +110,7 @@ namespace pwiz.Skyline.Model
                 massType);
             // Return the precursor ion
             double precursorMassPredict = calcPredict.GetPrecursorFragmentMass(sequence);
-            if (!useFilter)
+            if (!useFilter || types.Contains(IonType.precursor))
             {
                 foreach (var losses in CalcTransitionLosses(IonType.precursor, 0, massType, potentialLosses))
                 {
@@ -134,14 +140,6 @@ namespace pwiz.Skyline.Model
                 massesFilter = calcFilter.GetFragmentIonMasses(sequence);
             }
 
-            var filter = tranSettings.Filter;
-
-            // Get filter settings
-            var charges = filter.ProductCharges;
-            var types = filter.IonTypes;
-            var startFinder = filter.FragmentRangeFirst;
-            var endFinder = filter.FragmentRangeLast;
-            double precursorMzWindow = filter.PrecursorMzWindow;
             // A start m/z will need to be calculated if the start fragment
             // finder uses m/z and their are losses to consider.  If the filter
             // is set to only consider fragments with m/z greater than the
@@ -176,6 +174,10 @@ namespace pwiz.Skyline.Model
             // Loop over potential product ions picking transitions
             foreach (IonType type in types)
             {
+                // Precursor type is handled above.
+                if (type == IonType.precursor)
+                    continue;
+
                 foreach (int charge in charges)
                 {
                     // Precursor charge can never be lower than product ion charge.

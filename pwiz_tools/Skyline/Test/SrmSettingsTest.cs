@@ -622,11 +622,15 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeNoError<TransitionFilter>("<transition_filter precursor_charges=\"2\" product_charges=\"1\" " +
                 "fragment_range_first=\"y1\" fragment_range_last=\"last y-ion\" " +
                 "include_n_prolene=\"true\" include_c_glu_asp=\"true\" auto_select=\"true\" />");
-            AssertEx.DeserializeNoError<TransitionFilter>("<transition_filter precursor_charges=\"1,2,3,4,5\" product_charges=\"1,2\" " +
+            AssertEx.DeserializeNoError<TransitionFilter>("<transition_filter precursor_charges=\"1,2,3,4,5,6,7,8,9\" product_charges=\"1,2,3,4,5\" " +
                 "fragment_range_first=\"(m/z > precursor) - 2\" fragment_range_last=\"start + 4\" " +
                 "include_n_prolene=\"false\" include_c_glu_asp=\"false\" auto_select=\"false\" />");
             AssertEx.DeserializeNoError<TransitionFilter>("<transition_filter precursor_charges=\"2\" product_charges=\"1\" " +
                 "fragment_range_first=\"m/z > precursor\" fragment_range_last=\"last y-ion - 3\" />");
+            AssertEx.DeserializeNoError<TransitionFilter>("<transition_filter precursor_charges=\"2\" product_charges=\"1\" " +
+                "fragment_types=\"P,Y,Z\" fragment_range_first=\"m/z > precursor\" fragment_range_last=\"last y-ion - 3\" />");
+            AssertEx.DeserializeNoError<TransitionFilter>("<transition_filter precursor_charges=\"2\" product_charges=\"1\" " +
+                "fragment_types=\"y,b,c,z,a,x,p\" fragment_range_first=\"m/z > precursor\" fragment_range_last=\"last y-ion - 3\" />");
             // v0.7 measured_ion examples
             AssertEx.DeserializeNoError<TransitionFilter>("<transition_filter precursor_charges=\"2\" product_charges=\"1\" " +
                 "fragment_range_first=\"m/z > precursor\" fragment_range_last=\"last y-ion - 3\">" +
@@ -651,6 +655,11 @@ namespace pwiz.SkylineTest
                 "fragment_range_first=\"y1\" fragment_range_last=\"last y-ion\" />");
             AssertEx.DeserializeError<TransitionFilter>("<transition_filter " +
                 "fragment_range_first=\"y1\" fragment_range_last=\"last y-ion\" />");
+            // Bad ion type
+            AssertEx.DeserializeNoError<TransitionFilter>("<transition_filter precursor_charges=\"2\" product_charges=\"1\" " +
+                "fragment_types=\"precursor\" fragment_range_first=\"m/z > precursor\" fragment_range_last=\"last y-ion - 3\" />");
+            AssertEx.DeserializeNoError<TransitionFilter>("<transition_filter precursor_charges=\"2\" product_charges=\"1\" " +
+                "fragment_types=\"d,w\" fragment_range_first=\"m/z > precursor\" fragment_range_last=\"last y-ion - 3\" />");
             // Bad fragments
             AssertEx.DeserializeError<TransitionFilter>("<transition_filter precursor_charges=\"2\" product_charges=\"1\" " +
                 "fragment_range_first=\"b10\" fragment_range_last=\"last y-ion\" />");

@@ -335,8 +335,8 @@
             this.textIonTypes.Name = "textIonTypes";
             this.textIonTypes.Size = new System.Drawing.Size(76, 20);
             this.textIonTypes.TabIndex = 5;
-            this.helpTip.SetToolTip(this.textIonTypes, "A list of comma separated product ion types (a, b, c, x, y or z) to use\r\nfor calc" +
-                    "ulating potential product ions");
+            this.helpTip.SetToolTip(this.textIonTypes, "A list of comma separated product ion types (a, b, c, x, y, z, p for precursor) t" +
+                    "o use\r\nfor calculating potential product ions");
             // 
             // label8
             // 
