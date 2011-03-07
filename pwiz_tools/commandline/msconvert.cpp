@@ -42,6 +42,17 @@ using namespace pwiz::analysis;
 using namespace pwiz::util;
 
 
+class usage_exception : public std::exception
+{
+    public: usage_exception(const string& usage) : exception(usage.c_str()) {}
+};
+
+class user_error : public std::exception
+{
+    public: user_error(const string& what) : exception(what.c_str()) {}
+};
+
+
 struct Config
 {
     vector<string> filenames;
@@ -291,7 +302,7 @@ Config parseCommandLine(int argc, const char* argv[])
           << "Build date: " << __DATE__ << " " << __TIME__ << endl;
 
     if (argc <= 1)
-        throw runtime_error(usage.str().c_str());
+        throw usage_exception(usage.str().c_str());
 
     // handle positional arguments
 
@@ -344,7 +355,7 @@ Config parseCommandLine(int argc, const char* argv[])
             expand_pathmask(bfs::path(filename), globbedFilenames);
             if (!globbedFilenames.size())
             {
-                cout <<  "[msconvert] no files found matching \"" << filename << "\"";
+                cout <<  "[msconvert] no files found matching \"" << filename << "\"" << endl;
             }
         }
 
@@ -369,10 +380,10 @@ Config parseCommandLine(int argc, const char* argv[])
     // check stuff
 
     if (config.filenames.empty())
-        throw runtime_error("[msconvert] No files specified.");
+        throw user_error("[msconvert] No files specified.");
 
     int count = format_text + format_mzML + format_mzXML + format_MGF + format_MS2 + format_CMS2;
-    if (count > 1) throw runtime_error("[msconvert] Multiple format flags specified.");
+    if (count > 1) throw user_error("[msconvert] Multiple format flags specified.");
     if (format_text) config.writeConfig.format = MSDataFile::Format_Text;
     if (format_mzML) config.writeConfig.format = MSDataFile::Format_mzML;
     if (format_mzXML) config.writeConfig.format = MSDataFile::Format_mzXML;
@@ -405,7 +416,7 @@ Config parseCommandLine(int argc, const char* argv[])
                 config.extension = ".cms2";
                 break;
             default:
-                throw runtime_error("[msconvert] Unsupported format."); 
+                throw user_error("[msconvert] Unsupported format."); 
         }
         if (config.writeConfig.gzipped) 
         {
@@ -424,7 +435,7 @@ Config parseCommandLine(int argc, const char* argv[])
     if (precision_32 && precision_64 ||
         mz_precision_32 && mz_precision_64 ||
         intensity_precision_32 && intensity_precision_64)
-        throw runtime_error("[msconvert] Incompatible precision flags.");
+        throw user_error("[msconvert] Incompatible precision flags.");
 
     if (precision_32)
     {
@@ -656,6 +667,16 @@ int main(int argc, const char* argv[])
         Config config = parseCommandLine(argc, argv);        
         return go(config);
     }
+    catch (usage_exception& e)
+    {
+        cerr << e.what() << endl;
+        return 0;
+    }
+    catch (user_error& e)
+    {
+        cerr << e.what() << endl;
+        return 1;
+    }
     catch (exception& e)
     {
         cerr << e.what() << endl;
@@ -664,6 +685,14 @@ int main(int argc, const char* argv[])
     {
         cerr << "[" << argv[0] << "] Caught unknown exception.\n";
     }
+
+    cerr << "Please report this error to support@proteowizard.org.\n"
+         << "Attach the command output and this version information in your report:\n"
+         << "\n"
+         << "ProteoWizard release: " << pwiz::Version::str() << " (" << pwiz::Version::LastModified() << ")" << endl
+         << "ProteoWizard MSData: " << pwiz::msdata::Version::str() << " (" << pwiz::msdata::Version::LastModified() << ")" << endl
+         << "ProteoWizard Analysis: " << pwiz::analysis::Version::str() << " (" << pwiz::analysis::Version::LastModified() << ")" << endl
+         << "Build date: " << __DATE__ << " " << __TIME__ << endl;
 
     return 1;
 }
