@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
@@ -142,7 +143,6 @@ namespace pwiz.Skyline.SettingsUI
             var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this, showMessages);
 
-
             // Validate and hold digestion settings
             Enzyme enzyme = Settings.Default.GetEnzymeByName(comboEnzyme.SelectedItem.ToString());
             Helpers.AssignIfEquals(ref enzyme, _peptideSettings.Enzyme);
@@ -208,12 +208,22 @@ namespace pwiz.Skyline.SettingsUI
             PeptideExcludeRegex[] exclusions = _driverExlusion.Chosen;
 
             bool autoSelect = cbAutoSelect.Checked;
-            PeptideFilter filter = new PeptideFilter(excludeNTermAAs,
-                                                        minPeptideLength,
-                                                        maxPeptideLength,
-                                                        exclusions,
-                                                        autoSelect
-                                                        );
+            PeptideFilter filter;
+            try
+            {
+                filter = new PeptideFilter(excludeNTermAAs,
+                                           minPeptideLength,
+                                           maxPeptideLength,
+                                           exclusions,
+                                           autoSelect);
+            }
+            catch (InvalidDataException x)
+            {
+                if (showMessages)
+                    MessageDlg.Show(this, x.Message);
+                return null;
+            }
+
             Helpers.AssignIfEquals(ref filter, Filter);
 
             // Validate and hold libraries

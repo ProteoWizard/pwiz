@@ -399,6 +399,10 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeNoError<PeptideFilter>("<peptide_filter start=\"0\" min_length=\"100\" max_length=\"100\" min_transtions=\"20\" auto_select=\"false\"/>");
             AssertEx.DeserializeNoError<PeptideFilter>("<peptide_filter start=\"100\" min_length=\"2\" max_length=\"5\" auto_select=\"true\"/>");
             AssertEx.DeserializeNoError<PeptideFilter>("<peptide_filter start=\"25\" min_length=\"8\" max_length=\"25\" auto_select=\"true\"><peptide_exclusions/></peptide_filter>");
+            AssertEx.DeserializeNoError<PeptideFilter>("<peptide_filter start=\"25\" min_length=\"8\" max_length=\"25\">" +
+                            "<peptide_exclusions><exclusion name=\"Valid\" regex=\"^[^C]$\"/></peptide_exclusions></peptide_filter>");
+            AssertEx.DeserializeNoError<PeptideFilter>("<peptide_filter start=\"25\" min_length=\"8\" max_length=\"25\">" +
+                            "<peptide_exclusions><exclusion name=\"Valid\" regex=\"M\\[\" include=\"true\" match_mod_sequence=\"true\"/></peptide_exclusions></peptide_filter>");
 
             // Missing parameters
             AssertEx.DeserializeError<PeptideFilter>("<peptide_filter/>");
@@ -414,9 +418,13 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeError<PeptideFilter>("<peptide_filter start=\"50000\" min_length=\"8\" max_length=\"25\"/>");
             // bad exclusions
             AssertEx.DeserializeError<PeptideFilter>("<peptide_filter start=\"25\" min_length=\"8\" max_length=\"25\">" +
-                            "<peptide_exclusions><exclusion name=\"Noex\"/></peptide_exclusions></peptide_exclusions></peptide_filter>");
+                            "<peptide_exclusions><exclusion name=\"Noex\"/></peptide_exclusions></peptide_filter>");
             AssertEx.DeserializeError<PeptideFilter>("<peptide_filter start=\"25\" min_length=\"8\" max_length=\"25\">" +
-                            "<peptide_exclusions><exclusion regex=\"PX\"/></peptide_exclusions></peptide_exclusions></peptide_filter");
+                            "<peptide_exclusions><exclusion regex=\"PX\"/></peptide_exclusions></peptide_filter>");
+            AssertEx.DeserializeError<PeptideFilter>("<peptide_filter start=\"25\" min_length=\"8\" max_length=\"25\">" +
+                            "<peptide_exclusions><exclusion name=\"Invalid\" regex=\"!(M[)\" match_mod_sequence=\"true\"/></peptide_exclusions></peptide_filter>");
+            AssertEx.DeserializeError<PeptideFilter>("<peptide_filter start=\"25\" min_length=\"8\" max_length=\"25\">" +
+                            "<peptide_exclusions><exclusion name=\"Invalid\" regex=\"M\\[\" include=\"T\" match_mod_sequence=\"T\"/></peptide_exclusions></peptide_filter>");
         }
 
         /// <summary>

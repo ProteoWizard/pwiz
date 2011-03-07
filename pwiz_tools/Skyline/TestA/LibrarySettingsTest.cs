@@ -287,7 +287,10 @@ namespace pwiz.SkylineTestA
                 if (it != null)
                 {
                     if (!it.MoveNext() || it.Current == null)
+                    {
                         Assert.Fail("Unexpected end of peptides.");
+                        break;  // For ReSharper
+                    }
                     if (!Equals(nodePeptide.Rank, it.Current.Rank))
                         equalRanks = false;
                 }

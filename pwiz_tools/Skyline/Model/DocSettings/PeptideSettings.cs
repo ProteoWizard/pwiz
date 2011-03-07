@@ -75,37 +75,37 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public PeptideSettings ChangeEnzyme(Enzyme prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.Enzyme = v, prop);
+            return ChangeProp(ImClone(this), im => im.Enzyme = prop);
         }
 
         public PeptideSettings ChangeDigestSettings(DigestSettings prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.DigestSettings = v, prop);
+            return ChangeProp(ImClone(this), im => im.DigestSettings = prop);
         }
 
         public PeptideSettings ChangeBackgroundProteome(BackgroundProteome prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.BackgroundProteome = v, prop);
+            return ChangeProp(ImClone(this), im => im.BackgroundProteome = prop);
         }
 
         public PeptideSettings ChangePrediction(PeptidePrediction prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.Prediction = v, prop);
+            return ChangeProp(ImClone(this), im => im.Prediction = prop);
         }
 
         public PeptideSettings ChangeFilter(PeptideFilter prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.Filter = v, prop);
+            return ChangeProp(ImClone(this), im => im.Filter = prop);
         }
 
         public PeptideSettings ChangeLibraries(PeptideLibraries prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.Libraries = v, prop);
+            return ChangeProp(ImClone(this), im => im.Libraries = prop);
         }
 
         public PeptideSettings ChangeModifications(PeptideModifications prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.Modifications = v, prop);
+            return ChangeProp(ImClone(this), im => im.Modifications = prop);
         }
 
         #endregion
@@ -362,17 +362,17 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public PeptidePrediction ChangeRetentionTime(RetentionTimeRegression prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.RetentionTime = v, prop);
+            return ChangeProp(ImClone(this), im => im.RetentionTime = prop);
         }
 
         public PeptidePrediction ChangeUseMeasuredRTs(bool prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.UseMeasuredRTs = v, prop);
+            return ChangeProp(ImClone(this), im => im.UseMeasuredRTs = prop);
         }
 
         public PeptidePrediction ChangeMeasuredRTWindow(double? prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.MeasuredRTWindow = v, prop);
+            return ChangeProp(ImClone(this), im => im.MeasuredRTWindow = prop);
         }
 
         #endregion
@@ -509,12 +509,13 @@ namespace pwiz.Skyline.Model.DocSettings
         /// Returns true, if a peptide should be included in an enzyme
         /// digestion list for a sequence.
         /// </summary>
+        /// <param name="settings">Settings under which filtering is requested</param>
         /// <param name="peptide">The peptide being considered</param>
         /// <param name="explicitMods">Any modifications which will be applied to the peptide, or null for none</param>
         /// <param name="allowVariableMods">True if variable modifications of this peptide may produce
         /// acceptable variants of this peptide</param>
         /// <returns>True if the peptide should be included</returns>
-        bool Accept(Peptide peptide, ExplicitMods explicitMods, out bool allowVariableMods);
+        bool Accept(SrmSettings settings, Peptide peptide, ExplicitMods explicitMods, out bool allowVariableMods);
     }
 
     [XmlRoot("peptide_filter")]
@@ -530,7 +531,12 @@ namespace pwiz.Skyline.Model.DocSettings
         public static readonly IPeptideFilter UNFILTERED = new AllPeptidesFilter();
 
         private ReadOnlyCollection<PeptideExcludeRegex> _exclusions;
+
+        // Cached regular expressions for fast matching
         private Regex _regexExclude;
+        private Regex _regexExcludeMod;
+        private Regex _regexInclude;
+        private Regex _regexIncludeMod;
 
         public PeptideFilter(int excludeNTermAAs, int minPeptideLength,
                              int maxPeptideLength, IList<PeptideExcludeRegex> exclusions, bool autoSelect)
@@ -557,7 +563,9 @@ namespace pwiz.Skyline.Model.DocSettings
             private set
             {
                 _exclusions = MakeReadOnly(value);
-                _regexExclude = null;
+
+                _regexExclude = _regexExcludeMod =
+                    _regexInclude = _regexIncludeMod = null;
             }
         }
 
@@ -565,45 +573,40 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public PeptideFilter ChangeExcludeNTermAAs(int prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.ExcludeNTermAAs = v, prop);
+            return ChangeProp(ImClone(this), im => im.ExcludeNTermAAs = prop);
         }
 
         public PeptideFilter ChangeMinPeptideLength(int prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.MinPeptideLength = v, prop);
+            return ChangeProp(ImClone(this), im => im.MinPeptideLength = prop);
         }
 
         public PeptideFilter ChangeMaxPeptideLength(int prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.MaxPeptideLength = v, prop);
+            return ChangeProp(ImClone(this), im => im.MaxPeptideLength = prop);
         }
 
         public PeptideFilter ChangeAutoSelect(bool prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.AutoSelect = v, prop);
+            return ChangeProp(ImClone(this), im => im.AutoSelect = prop);
         }
 
         public PeptideFilter ChangeExclusions(IList<PeptideExcludeRegex> prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.Exclusions = v, prop);
+            return ChangeProp(ImClone(this), im => im.Exclusions = prop);
         }
         #endregion
 
-        public bool Accept(Peptide peptide, ExplicitMods explicitMods, out bool allowVariableMods)
+        public bool Accept(SrmSettings settings, Peptide peptide, ExplicitMods explicitMods, out bool allowVariableMods)
         {
-            // Any peptide that is rejected from this filter, will likewise be rejected
-            // with any variable modifications.
-            bool accept = allowVariableMods = Accept(peptide.Sequence, peptide.Begin);
-            return accept;
-        }
+            allowVariableMods = false;
 
-        private bool Accept(string sequence, int? begin)
-        {
             // Must begin after excluded C-terminal AAs
-            if (begin.HasValue && begin.Value < ExcludeNTermAAs)
+            if (peptide.Begin.HasValue && peptide.Begin.Value < ExcludeNTermAAs)
                 return false;
 
             // Must be within acceptable length range
+            string sequence = peptide.Sequence;
             int len = sequence.Length;
             if (MinPeptideLength > len || len > MaxPeptideLength)
                 return false;
@@ -611,6 +614,24 @@ namespace pwiz.Skyline.Model.DocSettings
             // No exclusion matches allowed
             if (_regexExclude != null && _regexExclude.Match(sequence).Success)
                 return false;
+            if (_regexInclude != null && !_regexInclude.Match(sequence).Success)
+                return false;
+
+            // Allow variable mods beyond this point, since filtering occurs based
+            // on the modification state of the peptide.
+            allowVariableMods = true;
+
+            if (_regexExcludeMod != null || _regexIncludeMod != null)
+            {
+                var calcMod = settings.GetPrecursorCalc(IsotopeLabelType.light, explicitMods);
+                // Use narrow format, since this is mostly what is presented to
+                // the user creating the exclusion expressions.
+                string sequenceMod = calcMod.GetModifiedSequence(sequence, true);
+                if (_regexExcludeMod != null && _regexExcludeMod.Match(sequenceMod).Success)
+                    return false;
+                if (_regexIncludeMod != null && !_regexIncludeMod.Match(sequenceMod).Success)
+                    return false;
+            }
 
             return true;
         }
@@ -657,6 +678,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
             // Build and validate the exclusion regular expression
             StringBuilder sb = new StringBuilder();
+            StringBuilder sbMod = new StringBuilder();
+            StringBuilder sbInc = new StringBuilder();
+            StringBuilder sbIncMod = new StringBuilder();
             foreach (PeptideExcludeRegex exclude in _exclusions)
             {
                 if (!string.IsNullOrEmpty(exclude.Regex))
@@ -674,23 +698,39 @@ namespace pwiz.Skyline.Model.DocSettings
 
                     // Add this expression to the single expression that will be used
                     // in filtering.
-                    if (sb.Length > 0)
-                        sb.Append('|');
-                    sb.Append(exclude.Regex);
+                    if (exclude.IsIncludeMatch)
+                        AddRegEx(exclude.IsMatchMod ? sbIncMod : sbInc, exclude.Regex);
+                    else
+                        AddRegEx(exclude.IsMatchMod ? sbMod : sb, exclude.Regex);
                 }
             }
 
+            // Hold the constructed Regex expressions for use in filtering.
+            _regexExclude = ExcludeExprToRegEx(sb.ToString());
+            _regexExcludeMod = ExcludeExprToRegEx(sbMod.ToString());
+            _regexInclude = ExcludeExprToRegEx(sbInc.ToString());
+            _regexIncludeMod = ExcludeExprToRegEx(sbIncMod.ToString());
+        }
+
+        private static void AddRegEx(StringBuilder sb, string regex)
+        {
             if (sb.Length > 0)
+                sb.Append('|');
+            sb.Append(regex);
+        }
+
+        private static Regex ExcludeExprToRegEx(string expression)
+        {
+            if (string.IsNullOrEmpty(expression))
+                return null;
+
+            try
             {
-                try
-                {
-                    // Hold the constructed Regex expression for use in filtering.
-                    _regexExclude = new Regex(sb.ToString());
-                }
-                catch (ArgumentException x)
-                {                    
-                    throw new InvalidDataException("Invalid exclusion list.", x);
-                }
+                return new Regex(expression);
+            }
+            catch (ArgumentException x)
+            {
+                throw new InvalidDataException("Invalid exclusion list.", x);
             }
         }
 
@@ -792,7 +832,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             #region Implementation of IPeptideFilter
 
-            public bool Accept(Peptide peptide, ExplicitMods explicitMods, out bool allowVariableMods)
+            public bool Accept(SrmSettings settings, Peptide peptide, ExplicitMods explicitMods, out bool allowVariableMods)
             {
                 allowVariableMods = true;
                 return true;

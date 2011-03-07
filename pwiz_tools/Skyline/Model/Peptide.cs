@@ -120,7 +120,7 @@ namespace pwiz.Skyline.Model
 
             foreach (int charge in precursorCharges)
             {
-                if (useFilter && !settings.Accept(this, mods, charge))
+                if (useFilter && !settings.Accept(settings, this, mods, charge))
                     continue;
 
                 for (int i = 0; i < listPrecursorMasses.Count; i++)
@@ -144,7 +144,7 @@ namespace pwiz.Skyline.Model
             // Always return the unmodified peptide doc node first
             var nodePepUnmod = new PeptideDocNode(this, new TransitionGroupDocNode[0]);
             bool allowVariableMods;
-            if (filter.Accept(this, null, out allowVariableMods))
+            if (filter.Accept(settings, this, null, out allowVariableMods))
                 yield return nodePepUnmod;
 
             // Stop if no variable modifications are allowed for this peptide.
@@ -191,7 +191,7 @@ namespace pwiz.Skyline.Model
                 var modStateMachine = new VariableModStateMachine(nodePepUnmod, modCount, listListMods);
                 foreach (var nodePep in modStateMachine.GetStates())
                 {
-                    if (filter.Accept(nodePep.Peptide, nodePep.ExplicitMods, out allowVariableMods))
+                    if (filter.Accept(settings, nodePep.Peptide, nodePep.ExplicitMods, out allowVariableMods))
                         yield return nodePep;
                 }
             }

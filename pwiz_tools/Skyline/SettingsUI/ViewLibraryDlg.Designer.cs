@@ -577,7 +577,7 @@ namespace pwiz.Skyline.SettingsUI
             this.zoomSpectrumContextMenuItem,
             this.toolStripSeparator27});
             this.contextMenuSpectrum.Name = "contextMenuSpectrum";
-            this.contextMenuSpectrum.Size = new System.Drawing.Size(186, 392);
+            this.contextMenuSpectrum.Size = new System.Drawing.Size(186, 370);
             // 
             // aionsContextMenuItem
             // 
@@ -654,28 +654,28 @@ namespace pwiz.Skyline.SettingsUI
             // charge1ContextMenuItem
             // 
             this.charge1ContextMenuItem.Name = "charge1ContextMenuItem";
-            this.charge1ContextMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.charge1ContextMenuItem.Size = new System.Drawing.Size(80, 22);
             this.charge1ContextMenuItem.Text = "1";
             this.charge1ContextMenuItem.Click += new System.EventHandler(this.charge1ContextMenuItem_Click);
             // 
             // charge2ContextMenuItem
             // 
             this.charge2ContextMenuItem.Name = "charge2ContextMenuItem";
-            this.charge2ContextMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.charge2ContextMenuItem.Size = new System.Drawing.Size(80, 22);
             this.charge2ContextMenuItem.Text = "2";
             this.charge2ContextMenuItem.Click += new System.EventHandler(this.charge2ContextMenuItem_Click);
             // 
             // charge3ContextMenuItem
             // 
             this.charge3ContextMenuItem.Name = "charge3ContextMenuItem";
-            this.charge3ContextMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.charge3ContextMenuItem.Size = new System.Drawing.Size(80, 22);
             this.charge3ContextMenuItem.Text = "3";
             this.charge3ContextMenuItem.Click += new System.EventHandler(this.charge3ContextMenuItem_Click);
             // 
             // charge4ContextMenuItem
             // 
             this.charge4ContextMenuItem.Name = "charge4ContextMenuItem";
-            this.charge4ContextMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.charge4ContextMenuItem.Size = new System.Drawing.Size(80, 22);
             this.charge4ContextMenuItem.Text = "4";
             this.charge4ContextMenuItem.Click += new System.EventHandler(this.charge4ContextMenuItem_Click);
             // 

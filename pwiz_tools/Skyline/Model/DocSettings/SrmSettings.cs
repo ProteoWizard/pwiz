@@ -520,9 +520,10 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #region Implementation of IPeptideFilter
 
-        public bool Accept(Peptide peptide, ExplicitMods explicitMods, out bool allowVariableMods)
+        public bool Accept(SrmSettings settings, Peptide peptide, ExplicitMods explicitMods, out bool allowVariableMods)
         {
-            return Accept(peptide,
+            return Accept(settings,
+                          peptide,
                           explicitMods,
                           TransitionSettings.Filter.PrecursorCharges,
                           PeptideFilterType.fasta,
@@ -552,10 +553,10 @@ namespace pwiz.Skyline.Model.DocSettings
         /// itself has already been screened.  For this reason, it only applies library
         /// filtering.
         /// </summary>
-        public bool Accept(Peptide peptide, ExplicitMods mods, int charge)
+        public bool Accept(SrmSettings settings, Peptide peptide, ExplicitMods mods, int charge)
         {
             bool allowVariableMods;
-            return Accept(peptide, mods, new[] { charge }, PeptideFilterType.library, out allowVariableMods);
+            return Accept(settings, peptide, mods, new[] { charge }, PeptideFilterType.library, out allowVariableMods);
         }
 
         private enum PeptideFilterType
@@ -565,7 +566,8 @@ namespace pwiz.Skyline.Model.DocSettings
             library // Only filter with library settings
         }
 
-        private bool Accept(Peptide peptide,
+        private bool Accept(SrmSettings settings,
+                            Peptide peptide,
                             ExplicitMods mods,
                             IEnumerable<int> precursorCharges,
                             PeptideFilterType filterType,
@@ -587,7 +589,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     allowVariableMods = true;
                     return true;
                 }
-                return PeptideSettings.Filter.Accept(peptide, null, out allowVariableMods);
+                return PeptideSettings.Filter.Accept(settings, peptide, mods, out allowVariableMods);
             }
 
             // Check if the peptide is in the library for one of the
@@ -614,9 +616,9 @@ namespace pwiz.Skyline.Model.DocSettings
                 case PeptidePick.library:
                     return inLibrary;
                 case PeptidePick.both:
-                    return inLibrary && (!useFilter || PeptideSettings.Filter.Accept(peptide, null, out allowVariableMods));
+                    return inLibrary && (!useFilter || PeptideSettings.Filter.Accept(settings, peptide, mods, out allowVariableMods));
                 default:
-                    return inLibrary || (!useFilter || PeptideSettings.Filter.Accept(peptide, null, out allowVariableMods));
+                    return inLibrary || (!useFilter || PeptideSettings.Filter.Accept(settings, peptide, mods, out allowVariableMods));
             }
         }
 

@@ -19,6 +19,8 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.DocSettings;
@@ -30,17 +32,12 @@ namespace pwiz.Skyline.SettingsUI
     {
         private PeptideExcludeRegex _exclusion;
         private readonly IEnumerable<PeptideExcludeRegex> _existing;
-        private bool _clickedOk;
-
-        private readonly MessageBoxHelper _helper;
 
         public EditExclusionDlg(IEnumerable<PeptideExcludeRegex> existing)
         {
-            _existing = existing;
-
             InitializeComponent();
 
-            _helper = new MessageBoxHelper(this);
+            _existing = existing;
         }
 
         public PeptideExcludeRegex Exclusion
@@ -57,47 +54,69 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     textName.Text = "";
                     textExclusionRegex.Text = "";
+                    radioSequence.Checked = true;
+                    radioMatching.Checked = true;
                 }
                 else
                 {
                     textName.Text = _exclusion.Name;
                     textExclusionRegex.Text = _exclusion.Regex;
+                    if (_exclusion.IsMatchMod)
+                        radioModSequence.Checked = true;
+                    else
+                        radioSequence.Checked = true;
+                    if (_exclusion.IsIncludeMatch)
+                        radioNotMatching.Checked = true;
+                    else
+                        radioMatching.Checked = true;
                 }
             }
         }
 
-        protected override void OnClosing(CancelEventArgs e)
+        public void OkDialog()
         {
-            // If the user is accepting these settings, then validate
-            // and hold them in dialog member variables.
-            if (_clickedOk)
+            var helper = new MessageBoxHelper(this);
+            var e = new CancelEventArgs();
+
+            string name;
+            if (!helper.ValidateNameTextBox(e, textName, out name))
+                return;
+
+            if (_existing.Contains(exc => !ReferenceEquals(_exclusion, exc) && Equals(name, exc.Name)))
             {
-                _clickedOk = false; // Reset in case of failure
-
-                string name;
-                if (!_helper.ValidateNameTextBox(e, textName, out name))
-                    return;
-
-                if (_existing.Contains(exc => !ReferenceEquals(_exclusion, exc) && Equals(name, exc.Name)))
-                {
-                    _helper.ShowTextBoxError(textName, "The peptide exclusion '{0}' already exists.", name);
-                    e.Cancel = true;
-                    return;
-                }
-
-                string exRegex = textExclusionRegex.Text.Trim();
-
-                PeptideExcludeRegex exclusion = new PeptideExcludeRegex(name, exRegex);
-
-                _exclusion = exclusion;
+                helper.ShowTextBoxError(textName, "The peptide exclusion '{0}' already exists.", name);
+                return;
             }
 
-            base.OnClosing(e);
+            string exRegex = textExclusionRegex.Text.Trim();
+            try
+            {
+                new Regex(exRegex);
+            }
+            catch (Exception)
+            {
+                helper.ShowTextBoxError(textExclusionRegex, "The text '{0}' is not a valid regular expression.", exRegex);
+                return;
+            }
+            bool includeMatch = radioNotMatching.Checked;
+            bool matchMod = radioModSequence.Checked;
+
+            PeptideExcludeRegex exclusion = new PeptideExcludeRegex(name, exRegex, includeMatch, matchMod);
+
+            _exclusion = exclusion;
+            DialogResult = DialogResult.OK;
         }
 
         private void btnOk_Click(object sender, EventArgs e)
         {
-            _clickedOk = true;
+            OkDialog();
         }
+
+// ReSharper disable MemberCanBeMadeStatic.Local
+        private void linkRegex_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            Process.Start("http://www.regular-expressions.info/reference.html");
+        }
+// ReSharper restore MemberCanBeMadeStatic.Local
     }
 }

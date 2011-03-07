@@ -398,9 +398,16 @@ namespace pwiz.Skyline.Model.DocSettings
     public sealed class PeptideExcludeRegex : XmlNamedElement
     {
         public PeptideExcludeRegex(string name, string regex)
+            :  this(name, regex, false, false)
+        {
+        }
+
+        public PeptideExcludeRegex(string name, string regex, bool includeMatch, bool matchMod)
             : base(name)
         {
             Regex = regex;
+            IsIncludeMatch = includeMatch;
+            IsMatchMod = matchMod;
 
             Validate();
         }
@@ -410,6 +417,14 @@ namespace pwiz.Skyline.Model.DocSettings
         /// sequence matches
         /// </summary>
         public string Regex { get; private set; }
+
+        public bool IsIncludeMatch { get; private set; }
+
+        /// <summary>
+        /// True if the filter should be applied to the light strutural
+        /// modified sequence string.
+        /// </summary>
+        public bool IsMatchMod { get; private set; }
 
         #region Implementation of IXmlSerializable
 
@@ -422,7 +437,9 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private enum ATTR
         {
-            regex
+            regex,
+            include,
+            match_mod_sequence
         }
 
         private void Validate()
@@ -441,6 +458,8 @@ namespace pwiz.Skyline.Model.DocSettings
             // Read tag attributes
             base.ReadXml(reader);
             Regex = reader.GetAttribute(ATTR.regex);
+            IsIncludeMatch = reader.GetBoolAttribute(ATTR.include);
+            IsMatchMod = reader.GetBoolAttribute(ATTR.match_mod_sequence);
             // Consume tag
             reader.Read();
 
@@ -452,32 +471,39 @@ namespace pwiz.Skyline.Model.DocSettings
             // Write tag attributes
             base.WriteXml(writer);
             writer.WriteAttributeString(ATTR.regex, Regex);
+            writer.WriteAttribute(ATTR.include, IsIncludeMatch);
+            writer.WriteAttribute(ATTR.match_mod_sequence, IsMatchMod);
         }
 
         #endregion
 
         #region object overrides
 
-        public bool Equals(PeptideExcludeRegex obj)
+        public bool Equals(PeptideExcludeRegex other)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            return Equals(obj.Name, Name) && Equals(obj.Regex, Regex);
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return base.Equals(other) && Equals(other.Regex, Regex) &&
+                other.IsIncludeMatch.Equals(IsIncludeMatch) &&
+                other.IsMatchMod.Equals(IsMatchMod);
         }
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != typeof (PeptideExcludeRegex)) return false;
-            return Equals((PeptideExcludeRegex) obj);
+            return Equals(obj as PeptideExcludeRegex);
         }
 
         public override int GetHashCode()
         {
             unchecked
             {
-                return (Name.GetHashCode()*397) ^ Regex.GetHashCode();
+                int result = base.GetHashCode();
+                result = (result*397) ^ Regex.GetHashCode();
+                result = (result*397) ^ IsIncludeMatch.GetHashCode();
+                result = (result*397) ^ IsMatchMod.GetHashCode();
+                return result;
             }
         }
 

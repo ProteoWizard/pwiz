@@ -112,6 +112,19 @@ namespace pwiz.SkylineTestA
             Assert.AreEqual(21, GetVariableModCount(docMoYeast));
             AssertEx.IsDocumentState(docMoYeast, 2, 2, 119, 374);
 
+            // Exclude unmodified peptides
+            var docNoMoExclude = docMoYeast.ChangeSettings(docMoYeast.Settings.ChangePeptideFilter(f =>
+                f.ChangeExclusions(new[] { new PeptideExcludeRegex("Non-Oxidized Meth", "M\\[", true, true) })));
+            Assert.AreEqual(GetVariableModCount(docMoYeast), GetVariableModCount(docNoMoExclude));
+            Assert.AreEqual(docNoMoExclude.PeptideCount, GetVariableModCount(docNoMoExclude));
+            AssertEx.IsDocumentState(docNoMoExclude, 3, 2, 21, 63);
+
+            // Exclude multiply modified peptides
+            var docMultMoExclude = docNoMoExclude.ChangeSettings(docNoMoExclude.Settings.ChangePeptideFilter(f =>
+                f.ChangeExclusions(new List<PeptideExcludeRegex>(f.Exclusions) { new PeptideExcludeRegex("Multi-Oxidized Meth", "M\\[.*M\\[", false, true) })));
+            Assert.AreEqual(docMultMoExclude.PeptideCount, GetVariableModCount(docMultMoExclude));
+            AssertEx.IsDocumentState(docMultMoExclude, 4, 2, 18, 56);
+
             // And that removing the variable modification removes the variably modifide peptides
             var docYeast2 = docMoYeast.ChangeSettings(docMoYeast.Settings.ChangePeptideModifications(mods => modsDefault));
             Assert.AreEqual(0, GetVariableModCount(docYeast2));
