@@ -98,6 +98,45 @@ void test_format_date_time()
 }
 
 
+void test_parse_date_time()
+{
+    typedef blt::local_date_time datetime;
+
+    string encoded;
+
+    encoded = "1942-04-02";
+    datetime decoded = parse_date_time("%Y-%m-%d", encoded);
+    if (os_) *os_ << encoded << " -> " << bpt::to_simple_string(decoded.local_time()) << endl;
+    unit_assert(decoded.local_time().date().year() == 1942);
+    unit_assert(decoded.local_time().date().month() == 4);
+    unit_assert(decoded.local_time().date().day() == 2);
+
+    encoded = "1400-12-11";
+    decoded = parse_date_time("%Y-%d-%m", encoded);
+    if (os_) *os_ << encoded << " -> " << bpt::to_simple_string(decoded.local_time()) << endl;
+    unit_assert(decoded.local_time().date().year() == 1400);
+    unit_assert(decoded.local_time().date().month() == 11);
+    unit_assert(decoded.local_time().date().day() == 12);
+
+    encoded = "124221";
+    decoded = parse_date_time("%H%M%S", encoded);
+    if (os_) *os_ << encoded << " -> " << bpt::to_simple_string(decoded.local_time()) << endl;
+    unit_assert(decoded.local_time().time_of_day().hours() == 12);
+    unit_assert(decoded.local_time().time_of_day().minutes() == 42);
+    unit_assert(decoded.local_time().time_of_day().seconds() == 21);
+
+    encoded = "16:42:21 on 01-02-2011";
+    decoded = parse_date_time("%H:%M:%S on %m-%d-%Y", encoded);
+    if (os_) *os_ << encoded << " -> " << bpt::to_simple_string(decoded.local_time()) << endl;
+    unit_assert(decoded.local_time().date().year() == 2011);
+    unit_assert(decoded.local_time().date().month() == 1);
+    unit_assert(decoded.local_time().date().day() == 2);
+    unit_assert(decoded.local_time().time_of_day().hours() == 16);
+    unit_assert(decoded.local_time().time_of_day().minutes() == 42);
+    unit_assert(decoded.local_time().time_of_day().seconds() == 21);
+}
+
+
 void test_xml_datetime()
 {
     using bpt::ptime;
@@ -196,6 +235,7 @@ int main(int argc, const char* argv[])
         test_time_from_OADATE<boost::posix_time::ptime>();
         //test_time_from_OADATE<boost::local_time::local_date_time>();
         test_format_date_time();
+        test_parse_date_time();
         test_xml_datetime();
         return 0;
     }

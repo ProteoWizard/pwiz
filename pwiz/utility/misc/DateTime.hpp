@@ -78,8 +78,7 @@ namespace util {
 
 
 /// formats a boost ptime according to a custom format string
-static inline
-std::string format_date_time(const std::string& format, const bpt::ptime& t)
+inline std::string format_date_time(const std::string& format, const bpt::ptime& t)
 {
     bpt::time_facet* output_facet = new bpt::time_facet;
     output_facet->format(format.c_str());
@@ -90,8 +89,7 @@ std::string format_date_time(const std::string& format, const bpt::ptime& t)
 
 
 /// formats a boost local_date_time according to a custom format string
-static inline
-std::string format_date_time(const std::string& format, const blt::local_date_time& t)
+inline std::string format_date_time(const std::string& format, const blt::local_date_time& t)
 {
     blt::local_time_facet* output_facet = new blt::local_time_facet;
     output_facet->format(format.c_str());
@@ -102,14 +100,27 @@ std::string format_date_time(const std::string& format, const blt::local_date_ti
 
 
 /// formats a boost time duration according to a custom format string
-static inline
-std::string format_date_time(const std::string& format, const bpt::time_duration& t)
+inline std::string format_date_time(const std::string& format, const bpt::time_duration& t)
 {
     bpt::time_facet* output_facet = new bpt::time_facet;
     output_facet->format(format.c_str());
     std::ostringstream ss;
     ss.imbue(std::locale(std::locale::classic(), output_facet));
     return static_cast<std::ostringstream&>(ss << t).str();
+}
+
+
+/// converts a custom formatted datetime string to a boost local_date_time
+inline blt::local_date_time parse_date_time(const std::string& format, const std::string& t)
+{
+    blt::local_time_input_facet* input_facet = new blt::local_time_input_facet;
+    input_facet->format(format.c_str());
+    std::istringstream ss(t);
+    ss.imbue(std::locale(std::locale::classic(), input_facet));
+
+    blt::local_date_time result(bdt::not_a_date_time);
+    ss >> result;
+    return result;
 }
 
 
