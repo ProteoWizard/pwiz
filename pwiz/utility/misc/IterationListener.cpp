@@ -69,20 +69,20 @@ class IterationListenerRegistry::Impl
             time_t now;
             time(&now);
 
+            CallbackInfo::PeriodType periodType = callbackInfo_[*it].periodType;
+
             bool shouldUpdate = 
                 updateMessage.iterationIndex == 0 ||
-                updateMessage.iterationIndex+1 >= updateMessage.iterationCount ||
-                callbackInfo_[*it].periodType == CallbackInfo::PeriodType_Iteration &&
-                    (updateMessage.iterationIndex+1) % callbackInfo_[*it].iterationPeriod == 0 ||
-                callbackInfo_[*it].periodType == CallbackInfo::PeriodType_Time &&
-                    difftime(now, callbackInfo_[*it].timestamp) >= callbackInfo_[*it].timePeriod;
+                (updateMessage.iterationCount > 0 && updateMessage.iterationIndex+1 >= updateMessage.iterationCount) ||
+                (periodType == CallbackInfo::PeriodType_Iteration && (updateMessage.iterationIndex+1) % callbackInfo_[*it].iterationPeriod == 0) ||
+                (periodType == CallbackInfo::PeriodType_Time && difftime(now, callbackInfo_[*it].timestamp) >= callbackInfo_[*it].timePeriod);
 
             if (shouldUpdate)
             {
                 IterationListener::Status status = (*it)->update(updateMessage);
                 if (status == IterationListener::Status_Cancel) result = status;
 
-                if (callbackInfo_[*it].periodType == CallbackInfo::PeriodType_Time)
+                if (periodType == CallbackInfo::PeriodType_Time)
                     callbackInfo_[*it].timestamp = now;
             }
         }
