@@ -415,13 +415,22 @@ namespace pwiz.Skyline.FileUI
                     string name = driveInfo.Name;
                     if (label != "")
                         name = string.Format("{0} ({1})", label, name);
-                    listSourceInfo.Add(new SourceInfo
-                                           {
-                                               type = SourceInfo.FOLDER_TYPE,
-                                               imageIndex = imageIndex,
-                                               name = name,
-                                               dateModified = driveInfo.RootDirectory.LastWriteTime
-                                           });
+
+                    try
+                    {
+                        listSourceInfo.Add(new SourceInfo
+                        {
+                            type = SourceInfo.FOLDER_TYPE,
+                            imageIndex = imageIndex,
+                            name = name,
+                            dateModified = driveInfo.RootDirectory.LastWriteTime
+                        });
+                    }
+                    catch (IOException)
+                    {
+                        // Ignore IOException, which may occur if network drive not connected
+                        // CONSIDER: Show the drive with a discconnected icon as Explorer would?
+                    }
                 }
             }
             else
