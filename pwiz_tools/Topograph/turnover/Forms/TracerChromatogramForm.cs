@@ -436,7 +436,7 @@ namespace pwiz.Topograph.ui.Forms
                                             Color.FromArgb(66,109,161),
                                             Color.FromArgb(164,67,64),
                                             Color.FromArgb(132,159,75),
-                                            Color.FromArgb(108,84,138),
+                                            Color.FromArgb(108,84,138),//10
                                             Color.FromArgb(63,146,169),
                                             Color.FromArgb(211,127,58),
                                             Color.FromArgb(75,123,180),
@@ -446,7 +446,7 @@ namespace pwiz.Topograph.ui.Forms
                                             Color.FromArgb(71,164,189),
                                             Color.FromArgb(236,143,66),
                                             Color.FromArgb(115,148,197),
-                                            Color.FromArgb(200,115,114),
+                                            Color.FromArgb(200,115,114),//20
                                             Color.FromArgb(169,195,121),
                                             Color.FromArgb(148,128,174),
                                             Color.FromArgb(112,183,205),
@@ -456,22 +456,51 @@ namespace pwiz.Topograph.ui.Forms
                                             Color.FromArgb(192,210,164),
                                             Color.FromArgb(179,168,196),
                                             Color.FromArgb(160,202,217),
-                                            Color.FromArgb(249,190,158),
+                                            Color.FromArgb(249,190,158),//30
                                             Color.FromArgb(194,205,225),
                                             Color.FromArgb(226,194,194),
+                                            Color.FromArgb(192,80,77),
+                                            Color.FromArgb(155,187,89),
+                                            Color.FromArgb(128,100,162),
+                                            Color.FromArgb(75,172,198),
+                                            Color.FromArgb(247,150,70),
+                                            Color.FromArgb(118,150,198),
+                                            Color.FromArgb(200,118,116),
+                                            Color.FromArgb(170,196,123),//40
+                                            Color.FromArgb(149,130,176),
+                                            Color.FromArgb(248,166,113),
+                                            Color.FromArgb(147,169,207),
+                                            Color.FromArgb(209,147,146),
+                                            Color.FromArgb(185,205,150),
+                                            Color.FromArgb(169,155,189),
+                                            Color.FromArgb(145,195,213),
+                                            Color.FromArgb(249,181,144),
+                                            Color.FromArgb(170,186,215),
+                                            Color.FromArgb(217,170,169),//50
+                                            Color.FromArgb(198,214,172),
+                                            Color.FromArgb(186,176,201),
+                                            Color.FromArgb(169,206,220),
+                                            Color.FromArgb(250,195,168),
+                                            Color.FromArgb(209,222,190),
+                                            Color.FromArgb(200,192,212),
+                                            Color.FromArgb(187,215,227),
+                                            Color.FromArgb(251,207,186),
+                                            Color.FromArgb(205,214,230),
                                        };
-            if (candidateCount <= colors.Length && iCandidate < colors.Length)
-            {
-                return colors[iCandidate];
-            }
+            return colors[iCandidate % colors.Length];
+        }
 
-            if (candidateCount == 1)
-            {
-                return Color.FromArgb(0, 0, 255);
-            }
-            return Color.FromArgb(0, 255 * iCandidate / (candidateCount - 1),
-                           255 * (candidateCount - iCandidate - 1) / (candidateCount - 1));
-
+        public static DashStyle GetDashStyle(int i)
+        {
+            var dashStyles = new[]
+                                 {
+                                     DashStyle.Solid,
+                                     DashStyle.Dash,
+                                     DashStyle.DashDot,
+                                     DashStyle.DashDotDot,
+                                     DashStyle.Dot,
+                                 };
+            return dashStyles[i%dashStyles.Length];
         }
 
         protected override void OnHandleCreated(EventArgs e)

@@ -24,6 +24,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Topograph.Model;
+using pwiz.Topograph.ui.Forms;
 
 namespace pwiz.Topograph.ui.Controls
 {
@@ -309,7 +310,7 @@ namespace pwiz.Topograph.ui.Controls
                     {
                         entry.Value.Visible = false;
                     }
-                    cell.Style.BackColor = GetColor(mzKey);
+                    //cell.Style.BackColor = GetColor(mzKey);
                 }
                 double massDifference = masses[iMass].Center - monoisotopicMass;
 
@@ -321,6 +322,7 @@ namespace pwiz.Topograph.ui.Controls
                 label = "M" + label;
                 row.Cells[MassColumn.Index].Value = label;
                 row.Cells[MassColumn.Index].ToolTipText = "Mass:" + masses[iMass];
+                row.Cells[MassColumn.Index].Style.BackColor = TracerChromatogramForm.GetColor(iRow, Rows.Count);
                 row.Cells[ExcludedColumn.Index].Value = ExcludedMzs.IsMassExcluded(iMass);
                 double totalIntensity = 0;
                 var intensityCount = 0;
@@ -392,18 +394,6 @@ namespace pwiz.Topograph.ui.Controls
                 }
             }
             return result;
-        }
-        public Color GetColor(MzKey mzKey)
-        {
-            int cCharge = PeptideAnalysis.MaxCharge - PeptideAnalysis.MinCharge;
-            int iCharge = mzKey.Charge - PeptideAnalysis.MinCharge;
-            int red = cCharge == 0 ? 0 : 128*iCharge/cCharge;
-            int c = PeptideAnalysis.GetMassCount() - 1;
-            if (c == 0)
-            {
-                return Color.FromArgb(red, 0, 255);
-            }
-            return Color.FromArgb(red, 255*mzKey.MassIndex/c, 255*(c - mzKey.MassIndex)/c);
         }
     }
 }

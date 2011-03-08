@@ -66,7 +66,7 @@ namespace pwiz.Topograph.ui.Forms
                         continue;
                     }
                     var graphItem = new ChromatogramGraphItem();
-                    graphItem.Color = GetColor(mzKey);
+                    graphItem.Color = TracerChromatogramForm.GetColor(iMass, PeptideAnalysis.GetMassCount());
                     var intensities = chromatogram.GetIntensities().ToArray();
                     if (Smooth)
                     {
@@ -74,14 +74,10 @@ namespace pwiz.Topograph.ui.Forms
                     }
                     PointPairList points = new PointPairList(chromatogram.Times, intensities);
                     graphItem.Points = points;
-                    msGraphControl.AddGraphItem(msGraphControl.GraphPane, graphItem);
+                    var lineItem = (LineItem) msGraphControl.AddGraphItem(msGraphControl.GraphPane, graphItem);
+                    lineItem.Line.Style = TracerChromatogramForm.GetDashStyle(charge);
                 }
             }
-        }
-
-        protected Color GetColor(MzKey mzKey)
-        {
-            return gridIntensities.GetColor(mzKey);
         }
 
         public ExcludedMzs ExcludedMzs
