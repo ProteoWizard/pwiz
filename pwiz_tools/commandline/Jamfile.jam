@@ -75,15 +75,6 @@ exe mspicture
     ;
 
 
-exe mzidtxt
-    : mzidtxt.cpp
-      ../../pwiz//pwiz_version
-      ../../pwiz/data/mziddata//pwiz_data_mzid
-      /ext/boost//program_options
-    : <include>../../..
-    ;
-
-
 exe pepsum
     : pepsum.cpp
       ../../pwiz/analysis/peptideid//pwiz_analysis_peptideid
@@ -131,13 +122,13 @@ exe idconvert
     ;
 
 
-exe mascot2mzid
-    : mascot2mzid.cpp
-      ../../pwiz/data/mziddata//pwiz_data_mzid
-      ../../pwiz//pwiz_version
-      /ext/boost//program_options
-    : <include>../../..
-    ;
+#exe mascot2mzid
+#    : mascot2mzid.cpp
+#      ../../pwiz/data/mziddata//pwiz_data_mzid
+#      ../../pwiz//pwiz_version
+#      /ext/boost//program_options
+#    : <include>../../..
+#    ;
 
 exe pepcat
     : pepcat.cpp
