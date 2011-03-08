@@ -233,9 +233,6 @@
     <Setting Name="ShowPeakAreaGraph" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
-    <Setting Name="AreaPercentView" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
     <Setting Name="ShowResultsGrid" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
@@ -296,9 +293,6 @@
     <Setting Name="LicenseVersionAccepted" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
-    <Setting Name="AreaRatioView" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">False</Value>
-    </Setting>
     <Setting Name="AutoZoomAllChromatograms" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
     </Setting>
@@ -349,6 +343,9 @@
     </Setting>
     <Setting Name="ShowCharge4" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="AreaNormalizeToView" Type="System.String" Scope="User">
+      <Value Profile="(Default)">none</Value>
     </Setting>
   </Settings>
 </SettingsFile>

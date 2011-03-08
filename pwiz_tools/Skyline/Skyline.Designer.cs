@@ -1,4 +1,5 @@
 
+using System;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline
@@ -317,8 +318,8 @@ namespace pwiz.Skyline
             this.peptideOrderDocumentContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptideOrderRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptideOrderAreaContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.areaPercentViewContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaNormalizeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.areaNormalizeMaximumContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.areaNormalizeTotalContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator40 = new System.Windows.Forms.ToolStripSeparator();
             this.areaNormalizeNoneContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -2697,7 +2698,6 @@ namespace pwiz.Skyline
             this.contextMenuPeakAreas.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.areaGraphContextMenuItem,
             this.peptideOrderContextMenuItem,
-            this.areaPercentViewContextMenuItem,
             this.areaNormalizeContextMenuItem,
             this.peptideLogScaleContextMenuItem,
             this.peptideCvsContextMenuItem,
@@ -2762,17 +2762,10 @@ namespace pwiz.Skyline
             this.peptideOrderAreaContextMenuItem.Text = "Peak Area";
             this.peptideOrderAreaContextMenuItem.Click += new System.EventHandler(this.peptideOrderAreaContextMenuItem_Click);
             // 
-            // areaPercentViewContextMenuItem
-            // 
-            this.areaPercentViewContextMenuItem.CheckOnClick = true;
-            this.areaPercentViewContextMenuItem.Name = "areaPercentViewContextMenuItem";
-            this.areaPercentViewContextMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.areaPercentViewContextMenuItem.Text = "Normalize";
-            this.areaPercentViewContextMenuItem.Click += new System.EventHandler(this.areaPercentViewContextMenuItem_Click);
-            // 
             // areaNormalizeContextMenuItem
             // 
             this.areaNormalizeContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.areaNormalizeMaximumContextMenuItem,
             this.areaNormalizeTotalContextMenuItem,
             this.toolStripSeparator40,
             this.areaNormalizeNoneContextMenuItem});
@@ -2781,22 +2774,29 @@ namespace pwiz.Skyline
             this.areaNormalizeContextMenuItem.Text = "Normalized To";
             this.areaNormalizeContextMenuItem.DropDownOpening += new System.EventHandler(this.areaNormalizeContextMenuItem_DropDownOpening);
             // 
+            // areaNormalizeMaximumContextMenuItem
+            // 
+            this.areaNormalizeMaximumContextMenuItem.Name = "areaNormalizeMaximumContextMenuItem";
+            this.areaNormalizeMaximumContextMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.areaNormalizeMaximumContextMenuItem.Text = "Maximum";
+            this.areaNormalizeMaximumContextMenuItem.Click += new System.EventHandler(this.areaNormalizeMaximumContextMenuItem_Click);
+            // 
             // areaNormalizeTotalContextMenuItem
             // 
             this.areaNormalizeTotalContextMenuItem.Name = "areaNormalizeTotalContextMenuItem";
-            this.areaNormalizeTotalContextMenuItem.Size = new System.Drawing.Size(103, 22);
+            this.areaNormalizeTotalContextMenuItem.Size = new System.Drawing.Size(152, 22);
             this.areaNormalizeTotalContextMenuItem.Text = "Total";
             this.areaNormalizeTotalContextMenuItem.Click += new System.EventHandler(this.areaNormalizeTotalContextMenuItem_Click);
             // 
             // toolStripSeparator40
             // 
             this.toolStripSeparator40.Name = "toolStripSeparator40";
-            this.toolStripSeparator40.Size = new System.Drawing.Size(100, 6);
+            this.toolStripSeparator40.Size = new System.Drawing.Size(149, 6);
             // 
             // areaNormalizeNoneContextMenuItem
             // 
             this.areaNormalizeNoneContextMenuItem.Name = "areaNormalizeNoneContextMenuItem";
-            this.areaNormalizeNoneContextMenuItem.Size = new System.Drawing.Size(103, 22);
+            this.areaNormalizeNoneContextMenuItem.Size = new System.Drawing.Size(152, 22);
             this.areaNormalizeNoneContextMenuItem.Text = "None";
             this.areaNormalizeNoneContextMenuItem.Click += new System.EventHandler(this.areaNormalizeNoneContextMenuItem_Click);
             // 
@@ -3127,7 +3127,6 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripSeparator toolStripSeparatorRatios;
         private System.Windows.Forms.ToolStripMenuItem placeholderToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem areaNormalizeTotalContextMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem areaPercentViewContextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator40;
         private System.Windows.Forms.ToolStripMenuItem areaNormalizeNoneContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem synchronizeZoomingContextMenuItem;
@@ -3155,6 +3154,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem findNextMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator42;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator43;
+        private System.Windows.Forms.ToolStripMenuItem areaNormalizeMaximumContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem charge3MenuItem;
         private System.Windows.Forms.ToolStripMenuItem charge4MenuItem;
         private System.Windows.Forms.ToolStripMenuItem chargesContextMenuItem;

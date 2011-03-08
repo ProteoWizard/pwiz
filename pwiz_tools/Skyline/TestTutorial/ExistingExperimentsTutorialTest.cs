@@ -324,7 +324,7 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
             {
                 SkylineWindow.SequenceTree.SelectedNode = SkylineWindow.SequenceTree.SelectedNode.Nodes[0];
-                SkylineWindow.NormalizeAreaGraphToTotal(true);
+                SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view);
                 SkylineWindow.ShowRTPeptideGraph();
                 SkylineWindow.ShowTotalTransitions();
                 SkylineWindow.ShowCVValues();
@@ -338,7 +338,7 @@ namespace pwiz.SkylineTestTutorial
                   TestFilesDir.GetTestPath(@"ExistingQuant\Study 7\Study II\Study 7ii (site 52).sky"));
                 SkylineWindow.ShowPeakAreaReplicateComparison();
                 NormalizeGraphToHeavy();
-                SkylineWindow.NormalizeAreaGraphToTotal(false);
+                SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.none);
             });
             FindNode("HGFLPR");
             RunUI(() =>
@@ -361,8 +361,8 @@ namespace pwiz.SkylineTestTutorial
 
         private static void NormalizeGraphToHeavy()
         {
-            Settings.Default.AreaRatioView = true;
-            Settings.Default.AreaPercentView = Settings.Default.AreaLogScale = false;
+            AreaGraphController.AreaView = AreaNormalizeToView.area_ratio_view;
+            Settings.Default.AreaLogScale = false;
             SkylineWindow.UpdatePeakAreaGraph();
         }
 

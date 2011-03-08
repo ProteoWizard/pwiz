@@ -6,26 +6,35 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public enum GraphTypeArea { replicate, peptide }
 
+    public enum AreaNormalizeToView{ area_percent_view, area_maximum_view, area_ratio_view, none}
+
     public sealed class AreaGraphController : GraphSummary.IController
     {
         public static GraphTypeArea GraphType
         {
             get
             {
-                try
-                {
-                    return (GraphTypeArea)Enum.Parse(typeof(GraphTypeArea),
-                                                   Settings.Default.AreaGraphType);
-                }
-                catch (Exception)
-                {
-                    return GraphTypeArea.replicate;
-                }
+                return (GraphTypeArea)Enum.Parse(typeof(GraphTypeArea),
+                                               Settings.Default.AreaGraphType);
             }
 
             set
             {
                 Settings.Default.AreaGraphType = value.ToString();
+            }
+        }
+
+        public static AreaNormalizeToView AreaView
+        {
+            get
+            {
+                return (AreaNormalizeToView)Enum.Parse(typeof(AreaNormalizeToView),
+                                                       Settings.Default.AreaNormalizeToView);
+            }
+
+            set
+            {
+                Settings.Default.AreaNormalizeToView = value.ToString();
             }
         }
 

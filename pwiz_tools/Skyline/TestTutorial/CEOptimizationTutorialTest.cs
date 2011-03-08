@@ -128,7 +128,7 @@ namespace pwiz.SkylineTestTutorial
                 findPeptideDlg.FindNext();
                 findPeptideDlg.Close();
             });
-            RunUI(() => SkylineWindow.NormalizeAreaGraphToTotal(true));
+            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view));
 
             // Creating a New Equation for CE, p. 9
             var transitionSettingsUI1 = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);

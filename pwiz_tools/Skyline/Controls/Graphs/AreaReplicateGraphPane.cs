@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using pwiz.Skyline.Controls.SeqNode;
@@ -42,9 +43,9 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
-                if (Settings.Default.AreaRatioView)
+                if (AreaGraphController.AreaView == AreaNormalizeToView.area_ratio_view)
                     return BarType.Cluster;
-                if (Settings.Default.AreaPercentView)
+                if (AreaGraphController.AreaView == AreaNormalizeToView.area_percent_view)
                     return BarType.PercentStack;
                 return BarType.Stack;
             }
@@ -133,20 +134,36 @@ namespace pwiz.Skyline.Controls.Graphs
                 else
                     BarSettings.Type = BarType.Cluster;
             }
-
-            // Normalize optimization data, if it is being shown, and normalization has been chosen.
-            bool normalizeOpt = (optimizationPresent && displayType == DisplayTypeChrom.single &&
-                                 Settings.Default.AreaPercentView);
             int ratioIndex = -1;
             var standardType = IsotopeLabelType.light;
-            if (Settings.Default.AreaRatioView)
+
+            if (AreaGraphController.AreaView == AreaNormalizeToView.area_ratio_view)
             {
                 ratioIndex = GraphSummary.RatioIndex;
                 standardType = document.Settings.PeptideSettings.Modifications.InternalStandardTypes[ratioIndex];                
             }
 
-            GraphData graphData = new AreaGraphData(parentNode, displayType, ratioIndex, normalizeOpt);
+            // Sets normalizeData to optimization, maximum_stack, maximum, total, or none
+            AreaNormalizeToData normalizeData;
+            if (optimizationPresent && displayType == DisplayTypeChrom.single && 
+                AreaGraphController.AreaView == AreaNormalizeToView.area_percent_view)
+                normalizeData = AreaNormalizeToData.optimization;
+            else if (AreaGraphController.AreaView == AreaNormalizeToView.area_maximum_view)
+            {
+                if (BarSettings.Type == BarType.Stack)
+                    normalizeData = AreaNormalizeToData.maximum_stack;
+                else
+                    normalizeData = AreaNormalizeToData.maximum;
+            }
+            else if(BarSettings.Type == BarType.PercentStack)
+                normalizeData = AreaNormalizeToData.total;
+            else
+                normalizeData = AreaNormalizeToData.none;
 
+            // Calculate graph data points
+            GraphData graphData = new AreaGraphData(parentNode, displayType, ratioIndex, normalizeData);
+
+            // Add data to the graph
             int selectedReplicateIndex = GraphSummary.ResultsIndex;
             double maxArea = -double.MaxValue;
             double sumArea = 0;
@@ -175,7 +192,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                     iColor++;
                     // If showing ratios, do not add the standard type to the graph,
-                    // since it wiall always be empty, but make sure the colors still
+                    // since it will always be empty, but make sure the colors still
                     // correspond with the other graphs.
                     var nodeGroup = docNode as TransitionGroupDocNode;
                     if (nodeGroup != null && ratioIndex != -1)
@@ -205,6 +222,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     CurveList.Add(curveItem);
                 }
             }
+
             // Draw a box around the currently selected replicate
             if (ShowSelection && maxArea >  -double.MaxValue)
             {
@@ -212,7 +230,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 switch (BarSettings.Type)
                 {
                     case BarType.Stack:
-                        yValue = sumArea;
+                        yValue = (AreaGraphController.AreaView == AreaNormalizeToView.area_maximum_view ? 1 : sumArea);
                         break;
                     case BarType.PercentStack:
                         yValue = 99.99;
@@ -234,6 +252,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 XAxis.Scale.MaxAuto = XAxis.Scale.MinAuto = true;
                 YAxis.Scale.MaxAuto = true;
             }
+
             if (BarSettings.Type == BarType.PercentStack)
             {
                 YAxis.Scale.Max = 100;
@@ -245,13 +264,22 @@ namespace pwiz.Skyline.Controls.Graphs
             }
             else
             {
-                if (normalizeOpt)
+                if (normalizeData == AreaNormalizeToData.optimization)
                 {
-                    // If currently log scale, reset the y-axis max
-                    if (YAxis.Type == AxisType.Log)
+                    // If currently log scale or normalized to max, reset the y-axis max
+                    if (YAxis.Type == AxisType.Log || YAxis.Scale.Max == 1)
                         YAxis.Scale.MaxAuto = true;
 
                     YAxis.Title.Text = "Percent of Regression Peak Area";
+                    YAxis.Type = AxisType.Linear;
+                    YAxis.Scale.MinAuto = false;
+                    FixedYMin = YAxis.Scale.Min = 0;
+                }
+                else if (AreaGraphController.AreaView == AreaNormalizeToView.area_maximum_view)
+                {
+                    YAxis.Scale.Max = 1;
+                    YAxis.Scale.MaxAuto = false;
+                    YAxis.Title.Text = "Peak Area Normalized";
                     YAxis.Type = AxisType.Linear;
                     YAxis.Scale.MinAuto = false;
                     FixedYMin = YAxis.Scale.Min = 0;
@@ -286,8 +314,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         YAxis.Scale.MaxAuto = true;
                     }
-
-                    if (Settings.Default.AreaRatioView)
+                      if(AreaGraphController.AreaView == AreaNormalizeToView.area_ratio_view)
                         YAxis.Title.Text = string.Format("Peak Area Ratio To {0}", standardType.Title);
                     else
                         YAxis.Title.Text = "Peak Area";
@@ -295,11 +322,14 @@ namespace pwiz.Skyline.Controls.Graphs
                     YAxis.Scale.MinAuto = false;
                     FixedYMin = YAxis.Scale.Min = 0;
                 }
+                // Handle a switch from percent stack
                 if (!YAxis.Scale.MaxAuto && YAxis.Scale.Max == 100)
                     YAxis.Scale.MaxAuto = true;
             }
             AxisChange();
         }
+
+        private enum AreaNormalizeToData { none, optimization, maximum_stack, maximum, total }
 
         /// <summary>
         /// Holds the data that is currently displayed in the graph.
@@ -314,9 +344,9 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             private readonly int _ratioIndex;
-            private readonly bool _normalize;
+            private readonly AreaNormalizeToData _normalize;
 
-            public AreaGraphData(DocNode docNode, DisplayTypeChrom displayType, int ratioIndex, bool normalize)
+            public AreaGraphData(DocNode docNode, DisplayTypeChrom displayType, int ratioIndex, AreaNormalizeToData normalize)
                 : base(docNode, displayType)
             {
                 _ratioIndex = ratioIndex;
@@ -327,11 +357,27 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 base.InitData();
 
-                if (_normalize)
-                    Normalize();
+                switch (_normalize)
+                {
+                    case AreaNormalizeToData.optimization:
+                        NormalizeOpt();
+                        break;
+                    case AreaNormalizeToData.maximum:
+                        NormalizeMax();
+                        break;
+                    case AreaNormalizeToData.maximum_stack:
+                        NormalizeMaxStack();
+                        break;
+                    case AreaNormalizeToData.total:
+                        FixupForTotals();
+                        break;
+                }
             }
 
-            private void Normalize()
+            /// <summary>
+            /// Normalize optimization data to the regression predicted value.
+            /// </summary>
+            private void NormalizeOpt()
             {
                 foreach (var pointPairLists in PointPairLists)
                 {
@@ -367,6 +413,98 @@ namespace pwiz.Skyline.Controls.Graphs
                             regression.Y = 100;
                     }
                 }                
+            }
+
+            /// <summary>
+            /// Divides each Y value by some factor and makes missing values zeros:
+            /// for NormalizeMax: denominator is the maxHeight
+            /// for NormalizeMaxStack: maxBarHeight
+            /// for FixupForTotals: 1
+            /// </summary>
+            /// <param name="denominator">Divide all point y values by this number</param>
+            private void NormalizeTo(double denominator)
+            {
+                foreach (var pointPairLists in PointPairLists)
+                {
+                    if (pointPairLists.Count == 0)
+                        continue;
+
+                    foreach (var pointPairList in pointPairLists)
+                    {
+                        foreach (PointPair pointPair in pointPairList)
+                        {
+                            if (pointPair.Y != PointPairBase.Missing)
+                                pointPair.Y /= denominator;
+                            else
+                                pointPair.Y = 0;
+                        }
+                    }
+                }
+            }
+
+            // Goes through each pointPairLists and finds the one with the maximum height
+            // Then normalizes the data to that maximum height
+            private void NormalizeMax()
+            {
+                double maxHeight = -double.MaxValue;
+                foreach (var pointPairLists in PointPairLists)
+                {
+                    if (pointPairLists.Count == 0)
+                        continue;
+
+                    foreach (var pointPairList in pointPairLists)
+                    {
+                        foreach (PointPair t in pointPairList)
+                        {
+                            if (t.Y != PointPairBase.Missing)
+                            {
+                                maxHeight = Math.Max(maxHeight, t.Y);
+                            }
+                        }
+                    }
+                }
+
+                // Normalizes each non-missing point by max bar height
+                NormalizeTo(maxHeight);
+            }
+
+            // Goes through each pointPairLists and finds the maximum stacked bar height
+            // Then normalizes the data to the maximum stacked bar height
+            private void NormalizeMaxStack()
+            {
+                var listTotals = new List<double>();
+                // Populates a list storing each of the bar heights
+                foreach (var pointPairLists in PointPairLists)
+                {
+                    if (pointPairLists.Count == 0)
+                        continue;
+
+                    foreach (var pointPairList in pointPairLists)
+                    {
+                        for (int i = 0; i < pointPairList.Count; i++)
+                        {
+                            while (listTotals.Count < pointPairList.Count)
+                                listTotals.Add(0);
+
+                            if (pointPairList[i].Y != PointPairBase.Missing)
+                            {
+                                listTotals[i] += pointPairList[i].Y;
+                            }
+                        }
+                    }
+                }
+
+                // Finds the maximum bar height from the list of bar heights
+                double maxBarHeight = listTotals.Aggregate(Math.Max);
+
+                // Normalizes each non-missing point by mas bar height
+                NormalizeTo(maxBarHeight);
+            }
+
+            // Sets each missing point to be 0, so that the percent stack will show
+            private void FixupForTotals()
+            {
+                NormalizeTo(1);
             }
 
             public override PointPair PointPairMissing(int xValue)
