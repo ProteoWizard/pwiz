@@ -150,15 +150,15 @@ public:
     void fillFragmentationTable(vector<MeasurePtr>& fragmentationTable)
     {
         MeasurePtr measure(new Measure(mz_id));
-        measure->paramGroup.set(MS_product_ion_m_z);
+        measure->set(MS_product_ion_m_z);
         fragmentationTable.push_back(measure);
 
         measure = MeasurePtr(new Measure(intensity_id));
-        measure->paramGroup.set(MS_product_ion_intensity);
+        measure->set(MS_product_ion_intensity);
         fragmentationTable.push_back(measure);
 
         measure = MeasurePtr(new Measure(error_id));
-        measure->paramGroup.set(MS_product_ion_m_z_error);
+        measure->set(MS_product_ion_m_z_error);
         fragmentationTable.push_back(measure);
     }
     
@@ -307,7 +307,7 @@ public:
         mzid.provider.contactRole.contactPtr = user;
 
         // TODO Is this right?
-        mzid.provider.contactRole.role.set(MS_researcher);
+        mzid.provider.contactRole.cvid = MS_researcher;
     }
 
     void addMassTable(ms_searchparams& p, MzIdentML& mzid)
@@ -363,14 +363,14 @@ public:
                                    p.getITOL(), fragTolU);
 
         if (file.anyMSMS())
-            sip->searchType.set(MS_ms_ms_search);
+            sip->searchType = MS_ms_ms_search;
 
         if (file.anyPMF())
-            sip->searchType.set(MS_pmf_search);
+            sip->searchType = MS_pmf_search;
 
         // TODO Is SQ == MIS as documented?
         if (file.anySQ())
-            sip->searchType.set(MS_ms_ms_search);
+            sip->searchType = MS_ms_ms_search;
 
         // TODO add taxonomy search mod
         if (p.getTAXONOMY().size()>0)
@@ -397,7 +397,7 @@ public:
         sourceFile->location = p.getFILENAME();
         if (p.getFORMAT() == "Mascot generic")
         {
-            sourceFile->fileFormat.set(MS_Mascot_MGF_file);
+            sourceFile->fileFormat = MS_Mascot_MGF_file;
         }
         mzid.dataCollection.inputs.sourceFile.push_back(sourceFile); 
     }
@@ -423,7 +423,7 @@ public:
                 sm->massDelta = mdelta;
             if (cvt)
             {
-                sm->cvParams.set(cvt->cvid);
+                sm->unimodName = cvt->cvid;
                 if (regex_match(second.c_str(), where, varmodListOfChars))
                     sm->residues.assign(where[1].first,
                                                  where[1].second);
@@ -431,9 +431,12 @@ public:
             }
             else
             {
+                // Just drop it into the bit bucket - UserParam has
+                // beed removed.
+                
                 // Not legal, but necessary
-                sm->cvParams.userParams.
-                    push_back(UserParam("unknown_mod", what[0].first));
+                //sm->cvParams.userParams.
+                //    push_back(UserParam("unknown_mod", what[0].first));
                 if (regex_match(second.c_str(), where, varmodListOfChars))
                     sm->residues.assign(where[1].first,
                                                  where[1].second);
@@ -540,7 +543,7 @@ public:
                 
                 if (cvt)
                 {
-                    modification->paramGroup.set(cvt->cvid);
+                    modification->set(cvt->cvid);
                     if (regex_match(second.c_str(), where, varmodListOfChars))
                         modification->residues.assign(where[1].first,
                                                       where[1].second);
@@ -551,7 +554,7 @@ public:
                     
                     // TODO create a laundry list of known Mascot mod
                     // names and patterns
-                    modification->paramGroup.userParams.
+                    modification->userParams.
                     push_back(UserParam("unknown_mod", what[0].first));
                     if (regex_match(second.c_str(), where, varmodListOfChars))
                         modification->residues.assign(where[1].first,
@@ -600,8 +603,8 @@ public:
             new ProteinDetectionHypothesis(
                 indices.makeIndex("PDH_", indices.proteindetectionhypothesis)));
 
-        pdh->paramGroup.set(MS_Mascot_score, prot->getScore());
-        pdh->paramGroup.set(MS_sequence_coverage, prot->getCoverage());
+        pdh->set(MS_Mascot_score, prot->getScore());
+        pdh->set(MS_sequence_coverage, prot->getCoverage());
 
         ProteinAmbiguityGroupPtr pag(
             new ProteinAmbiguityGroup(
@@ -676,7 +679,7 @@ public:
                     dbseq->seq = pep->getPeptideStr();
                     dbseq->length = dbseq->seq.size();
                     dbseq->accession = prot->getAccession();
-                    dbseq->paramGroup.set(
+                    dbseq->set(
                         MS_protein_description,
                         r.getProteinDescription(dbseq->accession.c_str()));
                     mzid.sequenceCollection.dbSequences.push_back(dbseq);
