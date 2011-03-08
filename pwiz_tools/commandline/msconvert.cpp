@@ -42,14 +42,14 @@ using namespace pwiz::analysis;
 using namespace pwiz::util;
 
 
-class usage_exception : public std::exception
+class usage_exception : public std::runtime_error
 {
-    public: usage_exception(const string& usage) : exception(usage.c_str()) {}
+    public: usage_exception(const string& usage) : runtime_error(usage) {}
 };
 
-class user_error : public std::exception
+class user_error : public std::runtime_error
 {
-    public: user_error(const string& what) : exception(what.c_str()) {}
+    public: user_error(const string& what) : runtime_error(what) {}
 };
 
 
