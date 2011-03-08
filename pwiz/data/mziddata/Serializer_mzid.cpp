@@ -49,7 +49,7 @@ void Serializer_mzIdentML::write(ostream& os, const MzIdentML& mzid,
     string xmlData = "version=\"1.0\" encoding=\"ISO-8859-1\"";
     xmlWriter.processingInstruction("xml", xmlData);
 
-    IO::write(xmlWriter, mzid);
+    IO::write(xmlWriter, mzid, iterationListenerRegistry);
 }
 
 
@@ -61,7 +61,9 @@ void Serializer_mzIdentML::read(shared_ptr<istream> is, MzIdentML& mzid,
 
     is->seekg(0);
 
-    IO::read(*is, mzid);
+    IO::read(*is, mzid, iterationListenerRegistry,
+             config_.readSequenceCollection ? IO::ReadSequenceCollection : IO::IgnoreSequenceCollection,
+             config_.readAnalysisData ? IO::ReadAnalysisData : IO::IgnoreAnalysisData);
 }
 
 } // namespace pwiz 

@@ -119,17 +119,14 @@ exe chainsaw
     ;
 
 
-#exe tab2mzid
-#    : tab2mzid.cpp
-#      ../../pwiz/data/mziddata//pwiz_data_mzid
-#    : <include>../../..
-#    ;
+alias idtool-requirements : : : :
+        <library>../../pwiz/data/mziddata//pwiz_data_mzid
+        <library>/ext/boost//program_options ;
 
 
-exe pep2mzid
-    : pep2mzid.cpp
-      ../../pwiz/data/mziddata//pwiz_data_mzid
-      /ext/boost//program_options
+exe idconvert
+    : idconvert.cpp
+     idtool-requirements
     : <include>../../..
     ;
 
@@ -150,12 +147,13 @@ exe pepcat
     ;
 
 alias mstools : msdiff msconvert msdir msaccess mspicture peakaboo chainsaw ;
+alias idtools : idconvert ;
 
 
 # local install for testing
 
 install bin 
-    : mstools
+    : mstools idtools
     : <location>bin ;
 
 explicit bin ;
@@ -171,7 +169,7 @@ if [ modules.peek : NT ] {
 
 package.install install
     : $(install-requirements) release
-    : mstools
+    : mstools idtools
     : # no libraries
     : # no headers
     ;

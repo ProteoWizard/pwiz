@@ -826,6 +826,58 @@ void testMzIdentML()
     examples::initializeTiny(a);
 
     testObject(a);
+
+    // test ignoring sequence collection
+    {
+        // write 'a' out to a stream
+
+        ostringstream oss;
+        XMLWriter writer(oss);
+        IO::write(writer, a);
+        if (os_) *os_ << oss.str() << endl;
+
+        // read 'b' in from stream
+
+        MzIdentML b; 
+        istringstream iss(oss.str());
+        IO::read(iss, b, 0, IO::IgnoreSequenceCollection);
+
+        // clear the original SequenceCollection
+        a.sequenceCollection.dbSequences.clear();
+        a.sequenceCollection.peptides.clear();
+
+        // compare 'a' and 'b'
+
+        Diff<MzIdentML, DiffConfig> diff(a,b);
+        if (diff && os_) *os_ << "diff:\n" << diff << endl;
+        unit_assert(!diff);
+    }
+
+    // test ignoring sequence collection and analysis data
+    {
+        // write 'a' out to a stream
+
+        ostringstream oss;
+        XMLWriter writer(oss);
+        IO::write(writer, a);
+        if (os_) *os_ << oss.str() << endl;
+
+        // read 'b' in from stream
+
+        MzIdentML b; 
+        istringstream iss(oss.str());
+        IO::read(iss, b, 0, IO::IgnoreSequenceCollection, IO::IgnoreAnalysisData);
+
+        // clear the original analysis data
+        a.dataCollection.analysisData.spectrumIdentificationList.clear();
+        a.dataCollection.analysisData.proteinDetectionListPtr.reset();
+
+        // compare 'a' and 'b'
+
+        Diff<MzIdentML, DiffConfig> diff(a,b);
+        if (diff && os_) *os_ << "diff:\n" << diff << endl;
+        unit_assert(!diff);
+    }
 }
 
 

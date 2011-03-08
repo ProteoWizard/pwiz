@@ -26,6 +26,7 @@
 #include "pwiz/utility/misc/Export.hpp"
 #include "MzIdentML.hpp"
 #include "pwiz/utility/minimxml/XMLWriter.hpp"
+#include "pwiz/utility/misc/IterationListener.hpp"
 
 
 namespace pwiz {
@@ -104,16 +105,16 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Filter& filter);
 PWIZ_API_DECL void read(std::istream& is, Filter& filter);
 
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const TranslationTable& filter);
-PWIZ_API_DECL void read(std::istream& is, TranslationTable& filter);
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const TranslationTable& tt);
+PWIZ_API_DECL void read(std::istream& is, TranslationTable& tt);
 
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const DatabaseTranslation& filter);
-PWIZ_API_DECL void read(std::istream& is, DatabaseTranslation& filter);
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const DatabaseTranslation& dt);
+PWIZ_API_DECL void read(std::istream& is, DatabaseTranslation& dt);
 
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificationProtocol& si);
-PWIZ_API_DECL void read(std::istream& is, SpectrumIdentificationProtocol& si);
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificationProtocol& sip);
+PWIZ_API_DECL void read(std::istream& is, SpectrumIdentificationProtocol& sip);
 
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinDetectionProtocol& pdp);
@@ -136,12 +137,12 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Enzymes& ez);
 PWIZ_API_DECL void read(std::istream& is, Enzymes& ez);
 
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Residue& ez);
-PWIZ_API_DECL void read(std::istream& is, Residue& ez);
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Residue& r);
+PWIZ_API_DECL void read(std::istream& is, Residue& r);
 
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const AmbiguousResidue& residue);
-PWIZ_API_DECL void read(std::istream& is, AmbiguousResidue& residue);
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const AmbiguousResidue& ar);
+PWIZ_API_DECL void read(std::istream& is, AmbiguousResidue& ar);
 
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const MassTable& mt);
@@ -180,12 +181,14 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinDetectionHypo
 PWIZ_API_DECL void read(std::istream& is, ProteinDetectionHypothesis& pdh);
 
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinAmbiguityGroup& pdh);
-PWIZ_API_DECL void read(std::istream& is, ProteinAmbiguityGroup& pdh);
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinAmbiguityGroup& pag);
+PWIZ_API_DECL void read(std::istream& is, ProteinAmbiguityGroup& pag);
 
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificationList& pdh);
-PWIZ_API_DECL void read(std::istream& is, SpectrumIdentificationList& pdh);
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificationList& sil,
+                         const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0);
+PWIZ_API_DECL void read(std::istream& is, SpectrumIdentificationList& sil,
+                        const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0);
 
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificationResult& sir);
@@ -196,16 +199,24 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinDetectionList
 PWIZ_API_DECL void read(std::istream& is, ProteinDetectionList& pdl);
 
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const AnalysisData& pdl);
-PWIZ_API_DECL void read(std::istream& is, AnalysisData& pdl);
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const AnalysisData& pdl,
+                         const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0);
+PWIZ_API_DECL void read(std::istream& is, AnalysisData& pdl,
+                        const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0);
 
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const BibliographicReference& bibliographicReference);
 PWIZ_API_DECL void read(std::istream& is, BibliographicReference& bibliographicReference);
 
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const DataCollection& dataCollection);
-PWIZ_API_DECL void read(std::istream& is, DataCollection& dataCollection);
+enum PWIZ_API_DECL AnalysisDataFlag {IgnoreAnalysisData, ReadAnalysisData};
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const DataCollection& dataCollection,
+                         const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0);
+PWIZ_API_DECL void read(std::istream& is, DataCollection& dataCollection,
+                        const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0,
+                        AnalysisDataFlag analysisDataFlag = ReadAnalysisData);
 
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const AnalysisSoftware& analysisSoftware);
@@ -232,16 +243,25 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SubstitutionModifica
 PWIZ_API_DECL void read(std::istream& is, SubstitutionModification& sm);
 
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SequenceCollection& sc);
-PWIZ_API_DECL void read(std::istream& is, SequenceCollection& sc);
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SequenceCollection& sc,
+                         const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0);
+PWIZ_API_DECL void read(std::istream& is, SequenceCollection& sc,
+                        const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0);
 
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const AnalysisSampleCollection& asc);
 PWIZ_API_DECL void read(std::istream& is, AnalysisSampleCollection& asc);
 
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const MzIdentML& mzidDataPtr);
-PWIZ_API_DECL void read(std::istream& is, MzIdentML& mziddata);
+enum PWIZ_API_DECL SequenceCollectionFlag {IgnoreSequenceCollection, ReadSequenceCollection};
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const MzIdentML& mziddata,
+                         const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0);
+PWIZ_API_DECL void read(std::istream& is, MzIdentML& mziddata,
+                        const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0,
+                        SequenceCollectionFlag sequenceCollectionFlag = ReadSequenceCollection,
+                        AnalysisDataFlag analysisDataFlag = ReadAnalysisData);
 
 
 } // namespace IO

@@ -137,6 +137,29 @@ void testSerialize()
     Diff<MzIdentML, DiffConfig> diff(mzid, mzid2);
     if (os_ && diff) *os_ << diff << endl; 
     unit_assert(!diff);
+
+    // test with readSpectrumQueries == false
+    {
+        Serializer_pepXML serializer2(Serializer_pepXML::Config(false));
+        shared_ptr<istringstream> iss(new istringstream(oss.str()));
+        MzIdentML mzid2;
+        serializer2.read(iss, mzid2);
+
+        References::resolve(mzid2);
+
+        // clear the original SequenceCollection
+        mzid.sequenceCollection.dbSequences.clear();
+        mzid.sequenceCollection.peptides.clear();
+
+        // clear the original analysis data
+        mzid.analysisCollection.spectrumIdentification[0]->spectrumIdentificationListPtr.reset();
+        mzid.dataCollection.analysisData.spectrumIdentificationList.clear();
+        mzid.dataCollection.analysisData.proteinDetectionListPtr.reset();
+
+        Diff<MzIdentML, DiffConfig> diff(mzid, mzid2);
+        if (os_ && diff) *os_ << diff << endl; 
+        unit_assert(!diff);
+    }
 }
 
 void test()

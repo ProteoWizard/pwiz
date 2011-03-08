@@ -225,11 +225,15 @@ PWIZ_API_DECL void resolve(SpectrumIdentificationListPtr si, MzIdentML& mzid)
         {
             if ((*iit)->peptidePtr.get())
             {
-                ResolvePE rpe(&mzid);
-                for_each((*iit)->peptideEvidence.begin(),
-                         (*iit)->peptideEvidence.end(),
-                         rpe);
-                resolve((*iit)->peptidePtr, mzid.sequenceCollection.peptides);
+                if ((*iit)->peptidePtr->peptideSequence.empty())
+                {
+                    ResolvePE rpe(&mzid);
+                    for_each((*iit)->peptideEvidence.begin(),
+                             (*iit)->peptideEvidence.end(),
+                             rpe);
+                    resolve((*iit)->peptidePtr, mzid.sequenceCollection.peptides);
+                }
+
                 resolve((*iit)->massTablePtr, mzid.analysisProtocolCollection.
                         spectrumIdentificationProtocol);
                 resolve((*iit)->samplePtr, mzid.analysisSampleCollection.samples);

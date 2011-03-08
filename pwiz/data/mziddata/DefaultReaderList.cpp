@@ -137,14 +137,14 @@ class Reader_mzid : public Reader
         return std::string((type(iss) != Type_Unknown)?getType():"");
     }
 
-    virtual void read(const std::string& filename, const std::string& head, MzIdentMLPtr& result) const
+    virtual void read(const std::string& filename, const std::string& head, MzIdentMLPtr& result, const Config& config) const
     {
         if (!result.get())
             throw ReaderFail("[Reader_mzid::read] NULL valued MzIdentMLPtr passed in.");
-        return read(filename, head, *result);
+        return read(filename, head, *result, config);
     }
     
-    virtual void read(const std::string& filename, const std::string& head, MzIdentML& result) const
+    virtual void read(const std::string& filename, const std::string& head, MzIdentML& result, const Config& config) const
     {
         shared_ptr<istream> is(new pwiz::util::random_access_compressed_ifstream(filename.c_str()));
         if (!is.get() || !*is)
@@ -154,8 +154,11 @@ class Reader_mzid : public Reader
         {
             case Type_mzid:
             {
-                Serializer_mzIdentML serializer;
-                serializer.read(is, result);
+                Serializer_mzIdentML::Config serializerConfig;
+                serializerConfig.readSequenceCollection = !config.ignoreSequenceCollectionAndAnalysisData;
+                serializerConfig.readAnalysisData = !config.ignoreSequenceCollectionAndAnalysisData;
+                Serializer_mzIdentML serializer(serializerConfig);
+                serializer.read(is, result, config.iterationListenerRegistry);
                 break;
             }
             case Type_Unknown:
@@ -170,10 +173,11 @@ class Reader_mzid : public Reader
 
     virtual void read(const std::string& filename,
                       const std::string& head,
-                      std::vector<MzIdentMLPtr>& results) const
+                      std::vector<MzIdentMLPtr>& results,
+                      const Config& config) const
     {
         results.push_back(MzIdentMLPtr(new MzIdentML));
-        read(filename, head, *results.back());
+        read(filename, head, *results.back(), config);
     }
 
     virtual const char *getType() const {return "mzIdentML";}
@@ -214,30 +218,31 @@ class Reader_pepXML : public Reader
         return result;
     }
 
-    virtual void read(const std::string& filename, const std::string& head, MzIdentML& result) const
+    virtual void read(const std::string& filename, const std::string& head, MzIdentML& result, const Config& config) const
     {
         shared_ptr<istream> is(new pwiz::util::random_access_compressed_ifstream(filename.c_str()));
         if (!is.get() || !*is)
             throw runtime_error("[Reader_pepXML::read] Unable to open file " + filename);
 
-        Serializer_pepXML serializer;
-        serializer.read(is, result);
+        Serializer_pepXML serializer(Serializer_pepXML::Config(!config.ignoreSequenceCollectionAndAnalysisData));
+        serializer.read(is, result, config.iterationListenerRegistry);
         fillInCommonMetadata(filename, result);
     }
 
-    virtual void read(const std::string& filename, const std::string& head, MzIdentMLPtr& result) const
+    virtual void read(const std::string& filename, const std::string& head, MzIdentMLPtr& result, const Config& config) const
     {
         if (!result.get())
             throw ReaderFail("[Reader_pepXML::read] NULL valued MzIdentMLPtr passed in.");
-        return read(filename, head, *result);
+        return read(filename, head, *result, config);
     }
 
     virtual void read(const std::string& filename,
                       const std::string& head,
-                      std::vector<MzIdentMLPtr>& results) const
+                      std::vector<MzIdentMLPtr>& results,
+                      const Config& config) const
     {
         results.push_back(MzIdentMLPtr(new MzIdentML));
-        read(filename, head, *results.back());
+        read(filename, head, *results.back(), config);
     }
 
     virtual const char *getType() const {return "pepXML";}

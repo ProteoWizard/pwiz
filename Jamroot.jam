@@ -565,7 +565,7 @@ install package_docs
     ;
 
 
-# convenient test target
+# convenient test targets
 install msconvert
     : pwiz_tools/commandline//msconvert
     : <conditional>@install-type
@@ -574,6 +574,16 @@ install msconvert
       <conditional>@gcc-install-dll-path
     ;
 explicit msconvert ;
+
+install idconvert
+    : pwiz_tools/commandline//idconvert
+    : <conditional>@install-type
+      <conditional>@install-location
+      <conditional>@install-vendor-api-dependencies
+      <conditional>@gcc-install-dll-path
+    ;
+explicit idconvert ;
+
 
 # for copying all libraries and headers to one dir each
 alias libraries : install-pwiz-lib install-boost-headers ;

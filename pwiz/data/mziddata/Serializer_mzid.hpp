@@ -36,7 +36,17 @@ namespace mziddata {
 class PWIZ_API_DECL Serializer_mzIdentML
 {
     public:
-    Serializer_mzIdentML() {}
+
+    /// Serializer_mzIdentML configuration
+    struct PWIZ_API_DECL Config
+    {
+        bool readSequenceCollection;
+        bool readAnalysisData;
+
+        Config() : readSequenceCollection(true), readAnalysisData(true) {}
+    };
+
+    Serializer_mzIdentML(const Config& config = Config()) : config_(config) {}
 
     /// write MZIDData object to ostream as mzIdentML
     void write(std::ostream& os, const MzIdentML& mzid,
@@ -47,6 +57,7 @@ class PWIZ_API_DECL Serializer_mzIdentML
               const pwiz::util::IterationListenerRegistry* = 0) const;
 
     private:
+    const Config config_;
     Serializer_mzIdentML(Serializer_mzIdentML&);
     Serializer_mzIdentML& operator=(Serializer_mzIdentML&);
 };

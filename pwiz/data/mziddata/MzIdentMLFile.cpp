@@ -45,12 +45,20 @@ using namespace pwiz::util;
 namespace {
 
 
-void readFile(const string& filename, MzIdentML& mzid, const Reader& reader, const string& head)
+void readFile(const string& filename,
+              MzIdentML& mzid,
+              const Reader& reader,
+              const string& head,
+              const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
+              bool ignoreSequenceCollectionAndAnalysisData)
 {
     if (!reader.accept(filename, head))
         throw runtime_error("[MzIdentMLFile::readFile()] Unsupported file format.");
 
-    reader.read(filename, head, mzid);
+    Reader::Config config;
+    config.ignoreSequenceCollectionAndAnalysisData = ignoreSequenceCollectionAndAnalysisData;
+    config.iterationListenerRegistry = iterationListenerRegistry;
+    reader.read(filename, head, mzid, config);
 }
 
 
@@ -60,28 +68,43 @@ shared_ptr<DefaultReaderList> defaultReaderList_;
 } // namespace
 
 
-PWIZ_API_DECL MzIdentMLFile::MzIdentMLFile(const string& filename, const Reader* reader)
+PWIZ_API_DECL MzIdentMLFile::MzIdentMLFile(const string& filename,
+                                           const Reader* reader,
+                                           const pwiz::util::IterationListenerRegistry* iterationListenerRegistry,
+                                           bool ignoreSequenceCollectionAndAnalysisData)
 {
     // peek at head of file 
     string head = read_file_header(filename, 512);
 
     if (reader)
     {
-        readFile(filename, *this, *reader, head); 
+        readFile(filename, *this, *reader, head, iterationListenerRegistry, ignoreSequenceCollectionAndAnalysisData);
     }
     else
     {
         if (!defaultReaderList_.get())
             defaultReaderList_ = shared_ptr<DefaultReaderList>(new DefaultReaderList);
-        readFile(filename, *this, *defaultReaderList_, head);
+        readFile(filename, *this, *defaultReaderList_, head, iterationListenerRegistry, ignoreSequenceCollectionAndAnalysisData);
     }
 }
 
 
 PWIZ_API_DECL
-void MzIdentMLFile::write(const string& filename, const WriteConfig& config)
+void MzIdentMLFile::write(const string& filename,
+                          const WriteConfig& config,
+                          const IterationListenerRegistry* iterationListenerRegistry)
 {
-    write(*this, filename, config); 
+    write(*this, filename, config, iterationListenerRegistry); 
+}
+
+
+PWIZ_API_DECL
+void MzIdentMLFile::write(ostream& os,
+                          const std::string& filename,
+                          const WriteConfig& config,
+                          const IterationListenerRegistry* iterationListenerRegistry)
+{
+    write(*this, filename, os, config, iterationListenerRegistry); 
 }
 
 
@@ -99,27 +122,29 @@ shared_ptr<ostream> openFile(const string& filename)
 }
 
 
-void writeStream(ostream& os, const MzIdentML& td, const string& filename, const MzIdentMLFile::WriteConfig& config)
+void writeStream(ostream& os, const MzIdentML& idd, const string& filename,
+                 const MzIdentMLFile::WriteConfig& config,
+                 const IterationListenerRegistry* iterationListenerRegistry)
 {
     switch (config.format)
     {
         case MzIdentMLFile::Format_Text:
         {
-            TextWriter(os,0)(td);
+            TextWriter(os,0)(idd);
             break;
         }
 
         case MzIdentMLFile::Format_MzIdentML:
         {
             Serializer_mzIdentML serializer;
-            serializer.write(os, td);
+            serializer.write(os, idd, iterationListenerRegistry);
             break;
         }
 
         case MzIdentMLFile::Format_pepXML:
         {
             Serializer_pepXML serializer;
-            serializer.write(os, td, filename);
+            serializer.write(os, idd, filename, iterationListenerRegistry);
             break;
         }
 
@@ -133,12 +158,26 @@ void writeStream(ostream& os, const MzIdentML& td, const string& filename, const
 
 
 PWIZ_API_DECL
-void MzIdentMLFile::write(const MzIdentML& td,
+void MzIdentMLFile::write(const MzIdentML& idd,
                           const string& filename,
-                          const WriteConfig& config)
+                          const WriteConfig& config,
+                          const IterationListenerRegistry* iterationListenerRegistry)
 {
     shared_ptr<ostream> os = openFile(filename);
-    writeStream(*os, td, filename, config);
+    writeStream(*os, idd, filename, config, iterationListenerRegistry);
+}
+
+
+PWIZ_API_DECL
+void MzIdentMLFile::write(const MzIdentML& idd,
+                          const string& filename,
+                          ostream& os,
+                          const WriteConfig& config,
+                          const IterationListenerRegistry* iterationListenerRegistry)
+{
+    WriteConfig config2(config);
+    //config2.gzipped = false;
+    writeStream(os, idd, filename, config2, iterationListenerRegistry);
 }
 
 
@@ -171,5 +210,3 @@ PWIZ_API_DECL ostream& operator<<(ostream& os, const MzIdentMLFile::WriteConfig&
 
 } // namespace mziddata
 } // namespace pwiz
-
-

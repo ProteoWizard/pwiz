@@ -35,7 +35,16 @@ namespace mziddata {
 class PWIZ_API_DECL Serializer_pepXML
 {
     public:
-    Serializer_pepXML() {}
+
+    /// Serializer_pepXML configuration
+    struct PWIZ_API_DECL Config
+    {
+        bool readSpectrumQueries;
+
+        Config(bool readSpectrumQueries = true) : readSpectrumQueries(readSpectrumQueries) {}
+    };
+
+    Serializer_pepXML(const Config& config = Config()) : config_(config) {}
 
     /// write MZIDData object to ostream as pepXML
     void write(std::ostream& os, const MzIdentML& mzid, const std::string& filepath,
@@ -46,6 +55,7 @@ class PWIZ_API_DECL Serializer_pepXML
               const pwiz::util::IterationListenerRegistry* = 0) const;
 
     private:
+    const Config config_;
     Serializer_pepXML(Serializer_pepXML&);
     Serializer_pepXML& operator=(Serializer_pepXML&);
 };

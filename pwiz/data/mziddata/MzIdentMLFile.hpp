@@ -28,6 +28,7 @@
 #include "pwiz/utility/misc/Export.hpp"
 #include "MzIdentML.hpp"
 #include "Reader.hpp"
+#include "pwiz/utility/misc/IterationListener.hpp"
 
 
 namespace pwiz {
@@ -38,9 +39,11 @@ namespace mziddata {
 struct PWIZ_API_DECL MzIdentMLFile : public MzIdentML
 {
     /// constructs Mziddata object backed by file;
-    /// reader==0 -> use DefaultReaderList 
-    MzIdentMLFile(const std::string& filename, 
-                 const Reader* reader = 0);
+    /// reader==0 -> use DefaultReaderList
+    MzIdentMLFile(const std::string& filename,
+                  const Reader* reader = 0,
+                  const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0,
+                  bool ignoreSequenceCollectionAndAnalysisData = false);
 
     /// data format for write()
     enum PWIZ_API_DECL Format {Format_Text, Format_MzIdentML, Format_pepXML};
@@ -58,11 +61,26 @@ struct PWIZ_API_DECL MzIdentMLFile : public MzIdentML
     /// static write function for any Mziddata object;
     static void write(const MzIdentML& mzid,
                       const std::string& filename,
-                      const WriteConfig& config = WriteConfig());
+                      const WriteConfig& config = WriteConfig(),
+                      const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0);
 
     /// member write function 
     void write(const std::string& filename,
-               const WriteConfig& config = WriteConfig());
+               const WriteConfig& config = WriteConfig(),
+               const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0);
+
+    /// static write function for any Mziddata object;
+    static void write(const MzIdentML& mzid,
+                      const std::string& filename,
+                      std::ostream& os,
+                      const WriteConfig& config = WriteConfig(),
+                      const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0);
+
+    /// member write function 
+    void write(std::ostream& os,
+               const std::string& filename,
+               const WriteConfig& config = WriteConfig(),
+               const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0);
 };
 
 

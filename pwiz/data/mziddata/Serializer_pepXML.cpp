@@ -29,6 +29,7 @@
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz/utility/chemistry/Ion.hpp"
+#include "pwiz/utility/chemistry/MZTolerance.hpp"
 #include "pwiz/data/msdata/MSData.hpp"
 #include "pwiz/data/proteome/AminoAcid.hpp"
 #include "pwiz/data/common/CVTranslator.hpp"
@@ -569,7 +570,8 @@ void write_search_hit(XMLWriter& xmlWriter,
     xmlWriter.endElement();
 }
 
-void write_spectrum_queries(XMLWriter& xmlWriter, const MzIdentML& mzid, const string& filepath)
+void write_spectrum_queries(XMLWriter& xmlWriter, const MzIdentML& mzid, const string& filepath,
+                            const pwiz::util::IterationListenerRegistry* ilr)
 {
     XMLWriter::Attributes attributes;
 
@@ -583,9 +585,12 @@ void write_spectrum_queries(XMLWriter& xmlWriter, const MzIdentML& mzid, const s
     CVID nativeIdFormat = mzid.dataCollection.inputs.spectraData[0]->spectrumIDFormat.cvid;
 
     const SpectrumIdentificationList& sil = *mzid.dataCollection.analysisData.spectrumIdentificationList[0];
+    int iterationCount = sil.spectrumIdentificationResult.size();
     BOOST_FOREACH(const SpectrumIdentificationResultPtr& sirPtr, sil.spectrumIdentificationResult)
     {
         const SpectrumIdentificationResult& sir = *sirPtr;
+
+        if (ilr) ilr->broadcastUpdateMessage(IterationListener::UpdateMessage(spectrumIndex, iterationCount, "writing spectrum queries"));
 
         ++spectrumIndex;
         lastChargeState = 0;
@@ -684,7 +689,7 @@ void Serializer_pepXML::write(ostream& os, const MzIdentML& mzid, const string& 
 
     write_sample_enzyme(xmlWriter, mzid);
     write_search_summary(xmlWriter, mzid, filepath);
-    write_spectrum_queries(xmlWriter, mzid, filepath);
+    write_spectrum_queries(xmlWriter, mzid, filepath, iterationListenerRegistry);
 
     xmlWriter.endElement(); // msms_run_summary
     xmlWriter.endElement(); // msms_pipeline_analysis
@@ -897,8 +902,20 @@ struct HandlerSearchSummary : public SAXParser::Handler
                 // we depend on PrecursorMzTolerance being parsed before PrecursorMzToleranceUnits
                 if (bal::iends_with(name, "PrecursorMzTolerance"))
                 {
-                    _sip->parentTolerance.set(MS_search_tolerance_minus_value, value);
-                    _sip->parentTolerance.set(MS_search_tolerance_plus_value, value);
+                    // newest MyriMatch uses a single MZTolerance variable with magnitude and units (e.g. 10ppm)
+                    try
+                    {
+                        MZTolerance parentTolerance = lexical_cast<MZTolerance>(value);
+                        _sip->parentTolerance.set(MS_search_tolerance_minus_value, parentTolerance.value);
+                        _sip->parentTolerance.set(MS_search_tolerance_plus_value, parentTolerance.value);
+                        _sip->parentTolerance.cvParams[0].units = 
+                        _sip->parentTolerance.cvParams[1].units = parentTolerance.units == MZTolerance::MZ ? UO_dalton : UO_parts_per_million;
+                    }
+                    catch(runtime_error&)
+                    {
+                        _sip->parentTolerance.set(MS_search_tolerance_minus_value, value);
+                        _sip->parentTolerance.set(MS_search_tolerance_plus_value, value);
+                    }
                 }
                 else if (bal::iends_with(name, "PrecursorMzToleranceUnits"))
                 {
@@ -907,8 +924,20 @@ struct HandlerSearchSummary : public SAXParser::Handler
                 }
                 else if (bal::iends_with(name, "FragmentMzTolerance"))
                 {
-                    _sip->fragmentTolerance.set(MS_search_tolerance_minus_value, value);
-                    _sip->fragmentTolerance.set(MS_search_tolerance_plus_value, value);
+                    // newest MyriMatch uses a single MZTolerance variable with magnitude and units (e.g. 10ppm)
+                    try
+                    {
+                        MZTolerance fragmentTolerance = lexical_cast<MZTolerance>(value);
+                        _sip->fragmentTolerance.set(MS_search_tolerance_minus_value, fragmentTolerance.value);
+                        _sip->fragmentTolerance.set(MS_search_tolerance_plus_value, fragmentTolerance.value);
+                        _sip->fragmentTolerance.cvParams[0].units = 
+                        _sip->fragmentTolerance.cvParams[1].units = fragmentTolerance.units == MZTolerance::MZ ? UO_dalton : UO_parts_per_million;
+                    }
+                    catch(runtime_error&)
+                    {
+                        _sip->fragmentTolerance.set(MS_search_tolerance_minus_value, value);
+                        _sip->fragmentTolerance.set(MS_search_tolerance_plus_value, value);
+                    }
                 }
                 else if (bal::iends_with(name, "FragmentMzToleranceUnits"))
                 {
@@ -1332,7 +1361,7 @@ struct HandlerSearchResults : public SAXParser::Handler
         }
         else if (name == "spectrum_query")
         {
-            if (ilr) ilr->broadcastUpdateMessage(IterationListener::UpdateMessage(1, siiCount, "Reading spectrum queries"));
+            if (ilr) ilr->broadcastUpdateMessage(IterationListener::UpdateMessage(_sil->spectrumIdentificationResult.size(), 0, "reading spectrum queries"));
 
             string spectrum, spectrumWithoutCharge;
             getAttribute(attributes, "spectrum", spectrum);
@@ -1409,18 +1438,21 @@ struct Handler_pepXML : public SAXParser::Handler
 {
     MzIdentML& mzid;
 
-    Handler_pepXML(MzIdentML& mzid, const IterationListenerRegistry* iterationListenerRegistry)
+    Handler_pepXML(MzIdentML& mzid,
+                   bool readSpectrumQueries,
+                   const IterationListenerRegistry* iterationListenerRegistry)
     :   mzid(mzid),
         handlerSampleEnzyme(cvTranslator),
         handlerSearchSummary(cvTranslator),
         handlerSearchResults(cvTranslator, iterationListenerRegistry),
+        readSpectrumQueries(readSpectrumQueries),
         ilr(iterationListenerRegistry)
     {
         // add default CVs
         mzid.cvs = defaultCVList();
 
         // add the SpectrumIdentificationProtocol
-        SpectrumIdentificationProtocolPtr sipPtr = SpectrumIdentificationProtocolPtr(new SpectrumIdentificationProtocol("SIP"));
+        SpectrumIdentificationProtocolPtr sipPtr(new SpectrumIdentificationProtocol("SIP"));
         mzid.analysisProtocolCollection.spectrumIdentificationProtocol.push_back(sipPtr);
 
         sipPtr->searchType.cvid = MS_ms_ms_search;
@@ -1428,17 +1460,21 @@ struct Handler_pepXML : public SAXParser::Handler
         handlerSearchSummary._mzid = &mzid;
         handlerSearchSummary._sip = sipPtr.get();
         handlerSampleEnzyme._sip = sipPtr.get();
-
-        // add the SpectrumIdentificationList
-        SpectrumIdentificationListPtr silPtr = SpectrumIdentificationListPtr(new SpectrumIdentificationList("SIL"));
-        mzid.dataCollection.analysisData.spectrumIdentificationList.push_back(silPtr);
-
         handlerSearchResults._mzid = &mzid;
         handlerSearchResults._sip = sipPtr.get();
-        handlerSearchResults._sil = silPtr.get();
+
+        SpectrumIdentificationListPtr silPtr;
+
+        if (readSpectrumQueries)
+        {
+            // add the SpectrumIdentificationList
+            silPtr.reset(new SpectrumIdentificationList("SIL"));
+            mzid.dataCollection.analysisData.spectrumIdentificationList.push_back(silPtr);
+            handlerSearchResults._sil = silPtr.get();
+        }
 
         // add the SpectrumIdentification
-        SpectrumIdentificationPtr siPtr = SpectrumIdentificationPtr(new SpectrumIdentification("SI"));
+        SpectrumIdentificationPtr siPtr(new SpectrumIdentification("SI"));
         siPtr->spectrumIdentificationListPtr = silPtr;
         siPtr->spectrumIdentificationProtocolPtr = sipPtr;
         mzid.analysisCollection.spectrumIdentification.push_back(siPtr);
@@ -1450,8 +1486,6 @@ struct Handler_pepXML : public SAXParser::Handler
     {
         if (name == "msms_pipeline_analysis")
         {
-            if (ilr) ilr->broadcastUpdateMessage(IterationListener::UpdateMessage(1, 0, "Reading header..."));
-
             string summaryXml;
             getAttribute(attributes, "date", mzid.creationDate);
             getAttribute(attributes, "summary_xml", summaryXml);
@@ -1468,7 +1502,7 @@ struct Handler_pepXML : public SAXParser::Handler
         }
         else if (name == "msms_run_summary")
         {
-            SpectraDataPtr spectraData = SpectraDataPtr(new SpectraData("SD"));
+            SpectraDataPtr spectraData(new SpectraData("SD"));
             getAttribute(attributes, "base_name", spectraData->location);
             spectraData->name = bfs::path(spectraData->location).filename();
 
@@ -1498,18 +1532,14 @@ struct Handler_pepXML : public SAXParser::Handler
 
             mzid.dataCollection.inputs.spectraData[0]->spectrumIDFormat.cvid = nativeIdFormat;
 
-            handlerSearchResults.nativeIdFormat = nativeIdFormat;
-            return Status(Status::Delegate, &handlerSearchResults);
+            if (readSpectrumQueries)
+            {
+                handlerSearchResults.nativeIdFormat = nativeIdFormat;
+                return Status(Status::Delegate, &handlerSearchResults);
+            }
+            return Status::Done;
         }
         throw runtime_error("[Handler_pepXML] Unexpected element name: " + name);
-    }
-
-    virtual Status endElement(const std::string& name, stream_offset position)
-    {
-        if (name == "msms_run_summary")
-            if (ilr) ilr->broadcastUpdateMessage(IterationListener::UpdateMessage(1, 0, "Finished reading spectrum queries."));
-
-        return Status::Ok;
     }
 
     private:
@@ -1518,6 +1548,7 @@ struct Handler_pepXML : public SAXParser::Handler
     HandlerSearchResults handlerSearchResults;
 
     CVTranslator cvTranslator;
+    bool readSpectrumQueries;
     const IterationListenerRegistry* ilr;
 };
 
@@ -1532,7 +1563,7 @@ void Serializer_pepXML::read(boost::shared_ptr<std::istream> is, MzIdentML& mzid
 
     is->seekg(0);
 
-    Handler_pepXML handler(mzid, iterationListenerRegistry);
+    Handler_pepXML handler(mzid, config_.readSpectrumQueries, iterationListenerRegistry);
     SAXParser::parse(*is, handler);
 }
 
