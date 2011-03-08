@@ -264,6 +264,10 @@ namespace pwiz.Topograph.ui.Forms
             {
                 return toolStripMenuItemSmooth.Checked;
             }
+            set
+            {
+                toolStripMenuItemSmooth.Checked = value;
+            }
         }
 
         protected void UpdateUi()
@@ -350,11 +354,6 @@ namespace pwiz.Topograph.ui.Forms
             end,
         }
 
-        private void toolStripMenuItemSmooth_Click(object sender, EventArgs e)
-        {
-            Recalc();
-        }
-
         private void toolStripMenuItemShowSpectrum_Click(object sender, EventArgs e)
         {
             double x, y;
@@ -377,6 +376,11 @@ namespace pwiz.Topograph.ui.Forms
                 PeptideFileAnalysis.SetDistributions(newPeaks);
             }
 
+        }
+
+        private void toolStripMenuItemSmooth_CheckedChanged(object sender, EventArgs e)
+        {
+            Recalc();
         }
 
     }

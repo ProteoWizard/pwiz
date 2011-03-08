@@ -33,12 +33,6 @@ namespace pwiz.Topograph.ui.Forms
         {
             this.components = new System.ComponentModel.Container();
             this.dataGridView = new System.Windows.Forms.DataGridView();
-            this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.deleteMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.btnAnalyzePeptides = new System.Windows.Forms.Button();
-            this.findBox = new pwiz.Common.Controls.FindBox();
-            this.label1 = new System.Windows.Forms.Label();
             this.colPeptide = new System.Windows.Forms.DataGridViewLinkColumn();
             this.colStatus = new pwiz.Topograph.ui.Controls.ValidationStatusColumn();
             this.colNote = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -48,6 +42,12 @@ namespace pwiz.Topograph.ui.Forms
             this.colDataFileCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colMinScore = new System.Windows.Forms.DataGridViewLinkColumn();
             this.colMaxScore = new System.Windows.Forms.DataGridViewLinkColumn();
+            this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.deleteMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+            this.btnAnalyzePeptides = new System.Windows.Forms.Button();
+            this.findBox = new pwiz.Common.Controls.FindBox();
+            this.label1 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.contextMenuStrip1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
@@ -77,67 +77,6 @@ namespace pwiz.Topograph.ui.Forms
             this.dataGridView.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView_CellEndEdit);
             this.dataGridView.RowHeaderMouseDoubleClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView_RowHeaderMouseDoubleClick);
             this.dataGridView.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView_CellContentClick);
-            // 
-            // contextMenuStrip1
-            // 
-            this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.deleteMenuItem});
-            this.contextMenuStrip1.Name = "contextMenuStrip1";
-            this.contextMenuStrip1.Size = new System.Drawing.Size(117, 26);
-            // 
-            // deleteMenuItem
-            // 
-            this.deleteMenuItem.Name = "deleteMenuItem";
-            this.deleteMenuItem.Size = new System.Drawing.Size(116, 22);
-            this.deleteMenuItem.Text = "Delete...";
-            // 
-            // tableLayoutPanel1
-            // 
-            this.tableLayoutPanel1.ColumnCount = 3;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 149F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 83F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel1.Controls.Add(this.btnAnalyzePeptides, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.findBox, 2, 0);
-            this.tableLayoutPanel1.Controls.Add(this.label1, 1, 0);
-            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Top;
-            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
-            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 1;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(1251, 29);
-            this.tableLayoutPanel1.TabIndex = 1;
-            // 
-            // btnAnalyzePeptides
-            // 
-            this.btnAnalyzePeptides.Location = new System.Drawing.Point(3, 3);
-            this.btnAnalyzePeptides.Name = "btnAnalyzePeptides";
-            this.btnAnalyzePeptides.Size = new System.Drawing.Size(137, 23);
-            this.btnAnalyzePeptides.TabIndex = 1;
-            this.btnAnalyzePeptides.Text = "Analyze Peptides...";
-            this.btnAnalyzePeptides.UseVisualStyleBackColor = true;
-            this.btnAnalyzePeptides.Click += new System.EventHandler(this.btnAnalyzePeptides_Click);
-            // 
-            // findBox
-            // 
-            this.findBox.DataGridView = this.dataGridView;
-            this.findBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.findBox.Location = new System.Drawing.Point(235, 3);
-            this.findBox.Name = "findBox";
-            this.findBox.Size = new System.Drawing.Size(1013, 23);
-            this.findBox.TabIndex = 2;
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label1.Location = new System.Drawing.Point(152, 0);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(77, 29);
-            this.label1.TabIndex = 3;
-            this.label1.Text = "Find:";
-            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // colPeptide
             // 
@@ -199,6 +138,67 @@ namespace pwiz.Topograph.ui.Forms
             this.colMaxScore.Name = "colMaxScore";
             this.colMaxScore.ReadOnly = true;
             this.colMaxScore.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            // 
+            // contextMenuStrip1
+            // 
+            this.contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.deleteMenuItem});
+            this.contextMenuStrip1.Name = "contextMenuStrip1";
+            this.contextMenuStrip1.Size = new System.Drawing.Size(117, 26);
+            // 
+            // deleteMenuItem
+            // 
+            this.deleteMenuItem.Name = "deleteMenuItem";
+            this.deleteMenuItem.Size = new System.Drawing.Size(116, 22);
+            this.deleteMenuItem.Text = "Delete...";
+            // 
+            // tableLayoutPanel1
+            // 
+            this.tableLayoutPanel1.ColumnCount = 3;
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 149F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 83F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel1.Controls.Add(this.btnAnalyzePeptides, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.findBox, 2, 0);
+            this.tableLayoutPanel1.Controls.Add(this.label1, 1, 0);
+            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Top;
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
+            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
+            this.tableLayoutPanel1.RowCount = 1;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(1251, 29);
+            this.tableLayoutPanel1.TabIndex = 1;
+            // 
+            // btnAnalyzePeptides
+            // 
+            this.btnAnalyzePeptides.Location = new System.Drawing.Point(3, 3);
+            this.btnAnalyzePeptides.Name = "btnAnalyzePeptides";
+            this.btnAnalyzePeptides.Size = new System.Drawing.Size(137, 23);
+            this.btnAnalyzePeptides.TabIndex = 1;
+            this.btnAnalyzePeptides.Text = "Analy&ze Peptides...";
+            this.btnAnalyzePeptides.UseVisualStyleBackColor = true;
+            this.btnAnalyzePeptides.Click += new System.EventHandler(this.btnAnalyzePeptides_Click);
+            // 
+            // findBox
+            // 
+            this.findBox.DataGridView = this.dataGridView;
+            this.findBox.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.findBox.Location = new System.Drawing.Point(235, 3);
+            this.findBox.Name = "findBox";
+            this.findBox.Size = new System.Drawing.Size(1013, 23);
+            this.findBox.TabIndex = 2;
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.label1.Location = new System.Drawing.Point(152, 0);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(77, 29);
+            this.label1.TabIndex = 3;
+            this.label1.Text = "Find:";
+            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             // 
             // PeptideAnalysesForm
             // 

@@ -427,15 +427,40 @@ namespace pwiz.Topograph.ui.Forms
         {
             var colors = new[]
                                        {
-                                            Color.FromArgb(69,114,167),
-                                            Color.FromArgb(170,70,67),
-                                            Color.FromArgb(137,165,78),
-                                            Color.FromArgb(113,88,143),
-                                            Color.FromArgb(65,152,175),
-                                            Color.FromArgb(219,132,61),
-                                            Color.FromArgb(147,169,207),
+                                            Color.FromArgb(56,93,138),
+                                            Color.FromArgb(140,56,54),
+                                            Color.FromArgb(113,137,63),
+                                            Color.FromArgb(92,71,118),
+                                            Color.FromArgb(53,125,145),
+                                            Color.FromArgb(182,109,49),
+                                            Color.FromArgb(66,109,161),
+                                            Color.FromArgb(164,67,64),
+                                            Color.FromArgb(132,159,75),
+                                            Color.FromArgb(108,84,138),
+                                            Color.FromArgb(63,146,169),
+                                            Color.FromArgb(211,127,58),
+                                            Color.FromArgb(75,123,180),
+                                            Color.FromArgb(183,76,73),
+                                            Color.FromArgb(148,178,85),
+                                            Color.FromArgb(122,95,154),
+                                            Color.FromArgb(71,164,189),
+                                            Color.FromArgb(236,143,66),
+                                            Color.FromArgb(115,148,197),
+                                            Color.FromArgb(200,115,114),
+                                            Color.FromArgb(169,195,121),
+                                            Color.FromArgb(148,128,174),
+                                            Color.FromArgb(112,183,205),
+                                            Color.FromArgb(248,165,110),
+                                            Color.FromArgb(161,180,212),
+                                            Color.FromArgb(214,161,160),
+                                            Color.FromArgb(192,210,164),
+                                            Color.FromArgb(179,168,196),
+                                            Color.FromArgb(160,202,217),
+                                            Color.FromArgb(249,190,158),
+                                            Color.FromArgb(194,205,225),
+                                            Color.FromArgb(226,194,194),
                                        };
-            if (iCandidate < colors.Length)
+            if (candidateCount <= colors.Length && iCandidate < colors.Length)
             {
                 return colors[iCandidate];
             }
@@ -565,6 +590,11 @@ namespace pwiz.Topograph.ui.Forms
         private void cbxPeaksAsHorizontalLines_CheckedChanged(object sender, EventArgs e)
         {
             UpdateUi();
+        }
+
+        private void cbxSmooth_CheckedChanged(object sender, EventArgs e)
+        {
+            Smooth = cbxSmooth.Checked;
         }
     }
 }

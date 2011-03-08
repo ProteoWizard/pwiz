@@ -61,19 +61,7 @@ namespace pwiz.Topograph.Model
             WorkspaceLock = new ReaderWriterLockSlim(LockRecursionPolicy.SupportsRecursion);
             WorkspaceVersion = new WorkspaceVersion();
             SavedWorkspaceVersion = new WorkspaceVersion();
-            if (Path.GetExtension(path) == TpgLinkDef.Extension)
-            {
-                TpgLinkDef = TpgLinkDef.Load(path);
-                SessionFactory = SessionFactoryFactory.CreateSessionFactory(TpgLinkDef, 0);
-                QuerySessionFactory = SessionFactoryFactory.CreateSessionFactory(
-                    TpgLinkDef, SessionFactoryFlags.remove_binary_columns);
-            }
-            else
-            {
-                SessionFactory = SessionFactoryFactory.CreateSessionFactory(path, 0);
-                QuerySessionFactory = SessionFactoryFactory.CreateSessionFactory(
-                    path, SessionFactoryFlags.remove_binary_columns);
-            }
+            OpenSessionFactory();
             _chromatogramGenerator = new ChromatogramGenerator(this);
             _resultCalculator = new ResultCalculator(this);
             _reconciler = new Reconciler(this);
@@ -124,6 +112,39 @@ namespace pwiz.Topograph.Model
         public ISessionFactory QuerySessionFactory
         {
             get; private set;
+        }
+        private void OpenSessionFactory()
+        {
+            if (SessionFactory != null || QuerySessionFactory != null)
+            {
+                throw new InvalidOperationException("SessionFactorty is already open");
+            }
+            if (Path.GetExtension(DatabasePath) == TpgLinkDef.Extension)
+            {
+                TpgLinkDef = TpgLinkDef.Load(DatabasePath);
+                SessionFactory = SessionFactoryFactory.CreateSessionFactory(TpgLinkDef, 0);
+                QuerySessionFactory = SessionFactoryFactory.CreateSessionFactory(
+                    TpgLinkDef, SessionFactoryFlags.remove_binary_columns);
+            }
+            else
+            {
+                SessionFactory = SessionFactoryFactory.CreateSessionFactory(DatabasePath, 0);
+                QuerySessionFactory = SessionFactoryFactory.CreateSessionFactory(
+                    DatabasePath, SessionFactoryFlags.remove_binary_columns);
+            }
+        }
+        private void CloseSessionFactory()
+        {
+            if (SessionFactory != null)
+            {
+                SessionFactory.Close();
+                SessionFactory = null;
+            }
+            if (QuerySessionFactory != null)
+            {
+                QuerySessionFactory.Close();
+                QuerySessionFactory = null;
+            }
         }
 
         public ReaderWriterLockSlim DatabaseLock
@@ -655,6 +676,10 @@ namespace pwiz.Topograph.Model
             }
             if (actionInvoker != null) 
             {
+                if (SessionFactory == null)
+                {
+                    OpenSessionFactory();
+                }
                 _reconciler.Start();
                 _resultCalculator.Start();
                 _chromatogramGenerator.Start();
@@ -664,6 +689,7 @@ namespace pwiz.Topograph.Model
                 _chromatogramGenerator.Stop();
                 _resultCalculator.Stop();
                 _reconciler.Stop();
+                CloseSessionFactory();
             }
         }
 

@@ -49,7 +49,7 @@ namespace pwiz.Topograph.ui.Forms
             this.toolStripMenuItemShowSpectrum});
             this.contextMenuStrip1.Name = "contextMenuStrip1";
             this.contextMenuStrip1.ShowCheckMargin = true;
-            this.contextMenuStrip1.Size = new System.Drawing.Size(180, 48);
+            this.contextMenuStrip1.Size = new System.Drawing.Size(180, 70);
             // 
             // toolStripMenuItemSmooth
             // 
@@ -57,7 +57,7 @@ namespace pwiz.Topograph.ui.Forms
             this.toolStripMenuItemSmooth.Name = "toolStripMenuItemSmooth";
             this.toolStripMenuItemSmooth.Size = new System.Drawing.Size(179, 22);
             this.toolStripMenuItemSmooth.Text = "Smooth";
-            this.toolStripMenuItemSmooth.Click += new System.EventHandler(this.toolStripMenuItemSmooth_Click);
+            this.toolStripMenuItemSmooth.CheckedChanged += new System.EventHandler(this.toolStripMenuItemSmooth_CheckedChanged);
             // 
             // toolStripMenuItemShowSpectrum
             // 
