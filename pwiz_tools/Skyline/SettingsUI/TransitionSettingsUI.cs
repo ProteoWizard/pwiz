@@ -321,7 +321,7 @@ namespace pwiz.Skyline.SettingsUI
                         minFilt, maxFilt, out precRes))
                     return;
                 precursorRes = precRes;
-                if (precursorAnalyzerType != FullScanMassAnalyzerType.qit ||
+                if (precursorAnalyzerType != FullScanMassAnalyzerType.qit &&
                     precursorAnalyzerType != FullScanMassAnalyzerType.tof)
                 {
                     double precResMz;
