@@ -156,7 +156,7 @@ namespace pwiz.Topograph.ui.Forms
             this.label2.Location = new System.Drawing.Point(3, 25);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(144, 25);
-            this.label2.TabIndex = 1;
+            this.label2.TabIndex = 2;
             this.label2.Text = "Protein Name";
             this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
@@ -167,7 +167,7 @@ namespace pwiz.Topograph.ui.Forms
             this.tbxPeptide.Name = "tbxPeptide";
             this.tbxPeptide.ReadOnly = true;
             this.tbxPeptide.Size = new System.Drawing.Size(128, 20);
-            this.tbxPeptide.TabIndex = 3;
+            this.tbxPeptide.TabIndex = 1;
             // 
             // tbxProtein
             // 
@@ -176,7 +176,7 @@ namespace pwiz.Topograph.ui.Forms
             this.tbxProtein.Name = "tbxProtein";
             this.tbxProtein.ReadOnly = true;
             this.tbxProtein.Size = new System.Drawing.Size(128, 20);
-            this.tbxProtein.TabIndex = 4;
+            this.tbxProtein.TabIndex = 3;
             // 
             // label3
             // 
@@ -185,7 +185,7 @@ namespace pwiz.Topograph.ui.Forms
             this.label3.Location = new System.Drawing.Point(3, 75);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(144, 25);
-            this.label3.TabIndex = 2;
+            this.label3.TabIndex = 6;
             this.label3.Text = "Cohort";
             this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
@@ -197,7 +197,7 @@ namespace pwiz.Topograph.ui.Forms
             this.comboCohort.Location = new System.Drawing.Point(153, 78);
             this.comboCohort.Name = "comboCohort";
             this.comboCohort.Size = new System.Drawing.Size(128, 21);
-            this.comboCohort.TabIndex = 5;
+            this.comboCohort.TabIndex = 7;
             this.comboCohort.SelectedIndexChanged += new System.EventHandler(this.comboCohort_SelectedIndexChanged);
             // 
             // tbxProteinDescription
@@ -207,7 +207,7 @@ namespace pwiz.Topograph.ui.Forms
             this.tbxProteinDescription.Name = "tbxProteinDescription";
             this.tbxProteinDescription.ReadOnly = true;
             this.tbxProteinDescription.Size = new System.Drawing.Size(128, 20);
-            this.tbxProteinDescription.TabIndex = 6;
+            this.tbxProteinDescription.TabIndex = 5;
             // 
             // label4
             // 
@@ -216,7 +216,7 @@ namespace pwiz.Topograph.ui.Forms
             this.label4.Location = new System.Drawing.Point(3, 50);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(144, 25);
-            this.label4.TabIndex = 7;
+            this.label4.TabIndex = 4;
             this.label4.Text = "Protein Description";
             this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
@@ -247,7 +247,7 @@ namespace pwiz.Topograph.ui.Forms
             this.label6.Location = new System.Drawing.Point(3, 175);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(144, 25);
-            this.label6.TabIndex = 11;
+            this.label6.TabIndex = 13;
             this.label6.Text = "Initial Percent";
             this.label6.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
@@ -258,7 +258,7 @@ namespace pwiz.Topograph.ui.Forms
             this.label7.Location = new System.Drawing.Point(3, 200);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(144, 25);
-            this.label7.TabIndex = 12;
+            this.label7.TabIndex = 15;
             this.label7.Text = "Final Percent";
             this.label7.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
@@ -268,7 +268,7 @@ namespace pwiz.Topograph.ui.Forms
             this.tbxInitialPercent.Location = new System.Drawing.Point(153, 178);
             this.tbxInitialPercent.Name = "tbxInitialPercent";
             this.tbxInitialPercent.Size = new System.Drawing.Size(128, 20);
-            this.tbxInitialPercent.TabIndex = 13;
+            this.tbxInitialPercent.TabIndex = 14;
             this.tbxInitialPercent.TextChanged += new System.EventHandler(this.tbxInitialPercent_TextChanged);
             // 
             // tbxFinalPercent
@@ -277,7 +277,7 @@ namespace pwiz.Topograph.ui.Forms
             this.tbxFinalPercent.Location = new System.Drawing.Point(153, 203);
             this.tbxFinalPercent.Name = "tbxFinalPercent";
             this.tbxFinalPercent.Size = new System.Drawing.Size(128, 20);
-            this.tbxFinalPercent.TabIndex = 14;
+            this.tbxFinalPercent.TabIndex = 16;
             this.tbxFinalPercent.TextChanged += new System.EventHandler(this.tbxFinalPercent_TextChanged);
             // 
             // label8
@@ -286,7 +286,7 @@ namespace pwiz.Topograph.ui.Forms
             this.label8.Location = new System.Drawing.Point(3, 225);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(75, 13);
-            this.label8.TabIndex = 15;
+            this.label8.TabIndex = 17;
             this.label8.Text = "Rate Constant";
             // 
             // label9
@@ -295,7 +295,7 @@ namespace pwiz.Topograph.ui.Forms
             this.label9.Location = new System.Drawing.Point(3, 250);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(46, 13);
-            this.label9.TabIndex = 16;
+            this.label9.TabIndex = 19;
             this.label9.Text = "Half Life";
             // 
             // tbxRateConstant
@@ -305,7 +305,7 @@ namespace pwiz.Topograph.ui.Forms
             this.tbxRateConstant.Name = "tbxRateConstant";
             this.tbxRateConstant.ReadOnly = true;
             this.tbxRateConstant.Size = new System.Drawing.Size(128, 20);
-            this.tbxRateConstant.TabIndex = 17;
+            this.tbxRateConstant.TabIndex = 18;
             // 
             // tbxHalfLife
             // 
@@ -314,7 +314,7 @@ namespace pwiz.Topograph.ui.Forms
             this.tbxHalfLife.Name = "tbxHalfLife";
             this.tbxHalfLife.ReadOnly = true;
             this.tbxHalfLife.Size = new System.Drawing.Size(128, 20);
-            this.tbxHalfLife.TabIndex = 18;
+            this.tbxHalfLife.TabIndex = 20;
             // 
             // cbxFixedInitialPercent
             // 
@@ -324,7 +324,7 @@ namespace pwiz.Topograph.ui.Forms
             this.cbxFixedInitialPercent.Location = new System.Drawing.Point(3, 278);
             this.cbxFixedInitialPercent.Name = "cbxFixedInitialPercent";
             this.cbxFixedInitialPercent.Size = new System.Drawing.Size(278, 19);
-            this.cbxFixedInitialPercent.TabIndex = 19;
+            this.cbxFixedInitialPercent.TabIndex = 21;
             this.cbxFixedInitialPercent.Text = "Hold Initial Percent Constant";
             this.cbxFixedInitialPercent.UseVisualStyleBackColor = true;
             this.cbxFixedInitialPercent.CheckedChanged += new System.EventHandler(this.cbxFixedInitialPercent_CheckedChanged);
@@ -352,7 +352,7 @@ namespace pwiz.Topograph.ui.Forms
             this.comboCalculationType.Location = new System.Drawing.Point(153, 153);
             this.comboCalculationType.Name = "comboCalculationType";
             this.comboCalculationType.Size = new System.Drawing.Size(128, 21);
-            this.comboCalculationType.TabIndex = 20;
+            this.comboCalculationType.TabIndex = 12;
             this.comboCalculationType.SelectedIndexChanged += new System.EventHandler(this.comboCalculationType_SelectedIndexChanged);
             // 
             // label10
@@ -361,7 +361,7 @@ namespace pwiz.Topograph.ui.Forms
             this.label10.Location = new System.Drawing.Point(3, 150);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(86, 13);
-            this.label10.TabIndex = 21;
+            this.label10.TabIndex = 11;
             this.label10.Text = "Calculation Type";
             // 
             // dataGridView1
@@ -386,7 +386,7 @@ namespace pwiz.Topograph.ui.Forms
             this.dataGridView1.Location = new System.Drawing.Point(0, 0);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.Size = new System.Drawing.Size(948, 219);
-            this.dataGridView1.TabIndex = 1;
+            this.dataGridView1.TabIndex = 0;
             this.dataGridView1.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellEndEdit);
             this.dataGridView1.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellContentClick);
             // 
@@ -408,6 +408,7 @@ namespace pwiz.Topograph.ui.Forms
             // 
             this.colTimePoint.HeaderText = "Time Point";
             this.colTimePoint.Name = "colTimePoint";
+            this.colTimePoint.ReadOnly = true;
             // 
             // colStatus
             // 
@@ -421,16 +422,19 @@ namespace pwiz.Topograph.ui.Forms
             // 
             this.colCohort.HeaderText = "Cohort";
             this.colCohort.Name = "colCohort";
+            this.colCohort.ReadOnly = true;
             // 
             // colTracerPercent
             // 
             this.colTracerPercent.HeaderText = "Tracer %";
             this.colTracerPercent.Name = "colTracerPercent";
+            this.colTracerPercent.ReadOnly = true;
             // 
             // colScore
             // 
             this.colScore.HeaderText = "Score";
             this.colScore.Name = "colScore";
+            this.colScore.ReadOnly = true;
             // 
             // colTurnover
             // 
@@ -442,6 +446,7 @@ namespace pwiz.Topograph.ui.Forms
             // 
             this.colPrecursorPool.HeaderText = "Precursor Pool (Ind)";
             this.colPrecursorPool.Name = "colPrecursorPool";
+            this.colPrecursorPool.ReadOnly = true;
             this.colPrecursorPool.Width = 140;
             // 
             // colTurnoverAvg
@@ -460,6 +465,7 @@ namespace pwiz.Topograph.ui.Forms
             // 
             // splitContainer2
             // 
+            this.splitContainer2.Cursor = System.Windows.Forms.Cursors.IBeam;
             this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitContainer2.Location = new System.Drawing.Point(0, 0);
             this.splitContainer2.Name = "splitContainer2";

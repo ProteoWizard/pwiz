@@ -260,6 +260,7 @@ namespace pwiz.Topograph.ui.Forms
         protected override void Recalc()
         {
             cbxAutoFindPeak.Checked = PeptideFileAnalysis.AutoFindPeak;
+            cbxSmooth.Checked = Smooth;
             msGraphControl.GraphPane.GraphObjList.Clear();
             msGraphControl.GraphPane.CurveList.Clear();
             _peakLines = null;

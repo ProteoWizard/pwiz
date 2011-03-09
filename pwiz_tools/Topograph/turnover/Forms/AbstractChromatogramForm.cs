@@ -45,6 +45,7 @@ namespace pwiz.Topograph.ui.Forms
         private Point _ptClick;
         private WorkspaceVersion _workspaceVersion;
         private bool _updatePending;
+        private bool _smooth;
         private AbstractChromatogramForm() : base(null)
         {
             
@@ -262,11 +263,17 @@ namespace pwiz.Topograph.ui.Forms
         {
             get
             {
-                return toolStripMenuItemSmooth.Checked;
+                return _smooth;
             }
             set
             {
-                toolStripMenuItemSmooth.Checked = value;
+                if (_smooth == value)
+                {
+                    return;
+                }
+                _smooth = value;
+                toolStripMenuItemSmooth.Checked = _smooth;
+                Recalc();
             }
         }
 
@@ -378,12 +385,12 @@ namespace pwiz.Topograph.ui.Forms
 
         }
 
-        private void toolStripMenuItemSmooth_CheckedChanged(object sender, EventArgs e)
+        private void toolStripMenuItemSmooth_Click(object sender, EventArgs e)
         {
-            Recalc();
+            Smooth = toolStripMenuItemSmooth.Checked;
         }
-
     }
+
     public class ChromatogramGraphItem : IMSGraphItemInfo
     {
         public string Title { get; set; }

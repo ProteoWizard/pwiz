@@ -57,7 +57,7 @@ namespace pwiz.Topograph.ui.Forms
             this.toolStripMenuItemSmooth.Name = "toolStripMenuItemSmooth";
             this.toolStripMenuItemSmooth.Size = new System.Drawing.Size(179, 22);
             this.toolStripMenuItemSmooth.Text = "Smooth";
-            this.toolStripMenuItemSmooth.CheckedChanged += new System.EventHandler(this.toolStripMenuItemSmooth_CheckedChanged);
+            this.toolStripMenuItemSmooth.Click += new System.EventHandler(this.toolStripMenuItemSmooth_Click);
             // 
             // toolStripMenuItemShowSpectrum
             // 

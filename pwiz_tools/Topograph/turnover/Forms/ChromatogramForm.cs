@@ -75,7 +75,7 @@ namespace pwiz.Topograph.ui.Forms
                     PointPairList points = new PointPairList(chromatogram.Times, intensities);
                     graphItem.Points = points;
                     var lineItem = (LineItem) msGraphControl.AddGraphItem(msGraphControl.GraphPane, graphItem);
-                    lineItem.Line.Style = TracerChromatogramForm.GetDashStyle(charge);
+                    lineItem.Line.Style = TracerChromatogramForm.GetDashStyle(charge - PeptideAnalysis.MinCharge);
                 }
             }
         }
@@ -96,6 +96,7 @@ namespace pwiz.Topograph.ui.Forms
         {
             cbxAutoFindPeak.Checked = PeptideFileAnalysis.AutoFindPeak;
             cbxOverrideExcludedMzs.Checked = PeptideFileAnalysis.OverrideExcludedMzs;
+            cbxSmooth.Checked = Smooth;
             if (msGraphControl.GraphPane == null)
             {
                 // TODO(nicksh): listeners should have been detached.
@@ -160,6 +161,11 @@ namespace pwiz.Topograph.ui.Forms
 
         private void ChromatogramForm_ResizeEnd(object sender, EventArgs e)
         {
+        }
+
+        private void cbxSmooth_CheckedChanged(object sender, EventArgs e)
+        {
+            Smooth = cbxSmooth.Checked;
         }
     }
 }

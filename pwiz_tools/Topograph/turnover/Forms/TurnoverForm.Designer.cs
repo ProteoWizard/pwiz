@@ -63,8 +63,8 @@
             this.runningJobsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.databaseLocksToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.errorsToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
-            this.debuggingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.recalculateResultsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.debuggingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -108,7 +108,7 @@
             this.exitToolStripMenuItem});
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             this.fileToolStripMenuItem.Size = new System.Drawing.Size(37, 20);
-            this.fileToolStripMenuItem.Text = "File";
+            this.fileToolStripMenuItem.Text = "&File";
             // 
             // newWorkspaceToolStripMenuItem
             // 
@@ -205,7 +205,7 @@
             this.precursorEnrichmentsToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
-            this.viewToolStripMenuItem.Text = "View";
+            this.viewToolStripMenuItem.Text = "&View";
             // 
             // peptidesToolStripMenuItem
             // 
@@ -281,7 +281,7 @@
             this.dataDirectoryToolStripMenuItem});
             this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
             this.settingsToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
-            this.settingsToolStripMenuItem.Text = "Settings";
+            this.settingsToolStripMenuItem.Text = "&Settings";
             // 
             // enrichmentToolStripMenuItem
             // 
@@ -332,7 +332,7 @@
             this.recalculateResultsToolStripMenuItem});
             this.debuggingToolStripMenuItem1.Name = "debuggingToolStripMenuItem1";
             this.debuggingToolStripMenuItem1.Size = new System.Drawing.Size(78, 20);
-            this.debuggingToolStripMenuItem1.Text = "Debugging";
+            this.debuggingToolStripMenuItem1.Text = "&Debugging";
             // 
             // runningJobsToolStripMenuItem
             // 
@@ -357,12 +357,6 @@
             this.errorsToolStripMenuItem1.Text = "Errors";
             this.errorsToolStripMenuItem1.Click += new System.EventHandler(this.errorsToolStripMenuItem_Click);
             // 
-            // debuggingToolStripMenuItem
-            // 
-            this.debuggingToolStripMenuItem.Name = "debuggingToolStripMenuItem";
-            this.debuggingToolStripMenuItem.Size = new System.Drawing.Size(32, 19);
-            this.debuggingToolStripMenuItem.Text = "Debugging";
-            // 
             // recalculateResultsToolStripMenuItem
             // 
             this.recalculateResultsToolStripMenuItem.Enabled = false;
@@ -370,6 +364,12 @@
             this.recalculateResultsToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
             this.recalculateResultsToolStripMenuItem.Text = "Recalculate Results...";
             this.recalculateResultsToolStripMenuItem.Click += new System.EventHandler(this.recalculateResultsToolStripMenuItem_Click);
+            // 
+            // debuggingToolStripMenuItem
+            // 
+            this.debuggingToolStripMenuItem.Name = "debuggingToolStripMenuItem";
+            this.debuggingToolStripMenuItem.Size = new System.Drawing.Size(32, 19);
+            this.debuggingToolStripMenuItem.Text = "Debugging";
             // 
             // TurnoverForm
             // 

@@ -284,6 +284,7 @@ namespace pwiz.Topograph.ui.Forms
                         peptideFileAnalyses.Add(peptideFileAnalysis);
                     }
                     row.Cells[colPeptide.Index].Value = peptideFileAnalysis.Peptide.Sequence;
+                    row.Cells[colFile.Index].Value = peptideFileAnalysis.MsDataFile.Label;
                     row.Cells[colStatus.Index].Value = peptideFileAnalysis.ValidationStatus;
                     row.Cells[colTimePoint.Index].Value = peptideFileAnalysis.MsDataFile.TimePoint;
                     row.Cells[colCohort.Index].Value = peptideFileAnalysis.MsDataFile.Cohort;

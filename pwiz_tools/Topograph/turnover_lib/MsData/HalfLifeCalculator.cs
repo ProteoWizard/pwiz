@@ -51,8 +51,7 @@ namespace pwiz.Topograph.MsData
                        + "\nF.PeptideAnalysis.Peptide.Id, "
                        + "\nF.MsDataFile.Id "
                        + "\nFROM " + typeof (DbPeptideFileAnalysis) + " F"
-                       + "\nWHERE F.MsDataFile.TimePoint IS NOT NULL"
-                       + "\nAND F.DeconvolutionScore > :minScore"
+                       + "\nWHERE F.DeconvolutionScore > :minScore"
                        + "\nAND F.ValidationStatus != " + (int) ValidationStatus.reject
                        + "\nAND F.TracerPercent IS NOT NULL");
             var query = Session.CreateQuery(hql.ToString())
