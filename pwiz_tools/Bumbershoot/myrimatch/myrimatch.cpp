@@ -800,6 +800,7 @@ namespace myrimatch
 				spectra.clear();
 				avgSpectraByChargeState.clear();
                 monoSpectraByChargeState.clear();
+                searchStatistics = SearchStatistics();
 
 				//if( !TestFileType( *fItr, "mzdata" ) )
 				//	continue;
