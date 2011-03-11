@@ -120,8 +120,8 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, bool getBi
 PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const 
 { 
     if (index >= size_)
-        throw runtime_error(("[SpectrumList_Thermo::spectrum()] Bad index: " 
-                            + lexical_cast<string>(index)).c_str());
+        throw runtime_error("[SpectrumList_Thermo::spectrum()] Bad index: " 
+                            + lexical_cast<string>(index));
 
     const IndexEntry& ie = index_[index];
 
@@ -144,19 +144,33 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
     result->index = index;
     result->id = ie.id;
 
-	// Short-circuit all of the processing below, if all that is required is the scan level.
-	if (detailLevel == DetailLevel_InstantMetadata)
-	{
-	  int level = (int) ie.msOrder;
-	  if (ie.msOrder == MSOrder_ParentScan ||
-		  ie.msOrder == MSOrder_NeutralLoss ||
-		  ie.msOrder == MSOrder_NeutralGain)
-	  {
-		  level = 2;
-	  }
-      result->set(MS_ms_level, (int) level);
-      return result;
-	}
+    ScanType scanType = ie.scanType;
+
+    int msLevel = (int) ie.msOrder;
+
+    if (ie.controllerType == Controller_MS)
+    {
+        switch (ie.msOrder)
+        {
+            case MSOrder_NeutralLoss:   result->set(MS_constant_neutral_loss_spectrum); msLevel = 2; break;
+            case MSOrder_NeutralGain:   result->set(MS_constant_neutral_gain_spectrum); msLevel = 2; break;
+            case MSOrder_ParentScan:    result->set(MS_precursor_ion_spectrum); msLevel = 2; break;
+            case MSOrder_MS:            result->set(MS_MS1_spectrum); break;
+            default:                    result->set(MS_MSn_spectrum); break;
+        }
+        result->set(MS_ms_level, msLevel);
+    }
+    else
+        result->set(MS_EMR_spectrum);
+
+    result->scanList.set(MS_no_combination);
+    result->scanList.scans.push_back(Scan());
+    Scan& scan = result->scanList.scans[0];
+    scan.set(MS_scan_start_time, rawfile_->rt(ie.scan), UO_minute);
+
+    // Parsing scanInfo is not instant.
+    if (detailLevel == DetailLevel_InstantMetadata)
+        return result;
 
 	// Revert to previous behavior for getting binary data or not.
 	bool getBinaryData = (detailLevel == DetailLevel_FullData);
@@ -177,16 +191,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
 
     try
     {
-        result->scanList.set(MS_no_combination);
-        result->scanList.scans.push_back(Scan());
-        Scan& scan = result->scanList.scans[0];
-        scan.set(MS_scan_start_time, scanInfo->startTime(), UO_minute);
-
         // special handling for non-MS scans
         if (ie.controllerType != Controller_MS)
-        {
-            result->set(MS_EMR_spectrum);
-            
+        {            
             result->set(MS_base_peak_m_z, scanInfo->basePeakMass(), UO_nanometer);
             result->set(MS_base_peak_intensity, scanInfo->basePeakIntensity());
             result->set(MS_total_ion_current, scanInfo->totalIonCurrent());
@@ -239,18 +246,6 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
         {
             scan.set(MS_preset_scan_configuration, scanEventStr);
             scanEvent = lexical_cast<int>(scanEventStr);
-        }
-
-        long msLevel = scanInfo->msLevel();
-        ScanType scanType = scanInfo->scanType();
-
-        result->set(MS_ms_level, msLevel);
-
-        switch (msLevel)
-        {
-            case -1:    result->set(MS_precursor_ion_spectrum); break;
-            case 1:     result->set(MS_MS1_spectrum); break;
-            default:    result->set(MS_MSn_spectrum); break;
         }
 
         if (scanType == ScanType_Zoom || scanInfo->isEnhanced())
@@ -444,26 +439,29 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
                         selectedIon.set(MS_peak_intensity, peakIntensity, MS_number_of_counts);
                     */
 
-                    // add precursor intensity
-                    // retrieve the intensity of the base peak within the isolation window
-                    // TODO: determine correct window around precursor m/z
-                    ostringstream massRangeStream;
-                    if (isolationWidth == 0)
-                        massRangeStream << setprecision(7) << (isolationMz-1.5) << '-' << (isolationMz+2.5);
-                    else
-                        massRangeStream << setprecision(7) << (isolationMz-isolationWidth) << '-' << (isolationMz+isolationWidth);
-                    double precursorScanTime = rawfile_->rt(index_[precursorScanIndex].scan);
-                    ChromatogramDataPtr c = rawfile_->getChromatogramData(Type_BasePeak, Operator_None, Type_MassRange,
-                                                                          "",
-                                                                          massRangeStream.str(), "",
-                                                                          0,
-                                                                          precursorScanTime, precursorScanTime,
-                                                                          Smoothing_None, 0);
-                    if (c->size() == 0)
-                        throw runtime_error("[SpectrumList_Thermo::spectrum()] No chromatogram time points for the scan time.");
+                    if (detailLevel >= DetailLevel_FullMetadata)
+                    {
+                        // add precursor intensity
+                        // retrieve the intensity of the base peak within the isolation window
+                        // TODO: determine correct window around precursor m/z
+                        ostringstream massRangeStream;
+                        if (isolationWidth == 0)
+                            massRangeStream << setprecision(7) << (isolationMz-1.5) << '-' << (isolationMz+2.5);
+                        else
+                            massRangeStream << setprecision(7) << (isolationMz-isolationWidth) << '-' << (isolationMz+isolationWidth);
+                        double precursorScanTime = rawfile_->rt(index_[precursorScanIndex].scan);
+                        ChromatogramDataPtr c = rawfile_->getChromatogramData(Type_BasePeak, Operator_None, Type_MassRange,
+                                                                              "",
+                                                                              massRangeStream.str(), "",
+                                                                              0,
+                                                                              precursorScanTime, precursorScanTime,
+                                                                              Smoothing_None, 0);
+                        if (c->size() == 0)
+                            throw runtime_error("[SpectrumList_Thermo::spectrum()] No chromatogram time points for the scan time.");
 
-                    if (c->data()[0].intensity > 0)
-                        selectedIon.set(MS_peak_intensity, c->data()[0].intensity, MS_number_of_counts);
+                        if (c->data()[0].intensity > 0)
+                            selectedIon.set(MS_peak_intensity, c->data()[0].intensity, MS_number_of_counts);
+                    }
                 }
             }
 
@@ -474,16 +472,16 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
             if ((activationType & ActivationType_CID) || (activationType & ActivationType_HCD))
                 precursor.activation.set(MS_collision_energy, scanInfo->precursorActivationEnergy(i), UO_electronvolt);
 
-            if (msLevel != -1)
+            if (ie.msOrder != MSOrder_ParentScan)
                 precursor.selectedIons.push_back(selectedIon);
 
             result->precursors.push_back(precursor);
 
-            if (msLevel == -1)
+            if (ie.msOrder == MSOrder_ParentScan)
                 result->products.push_back(product);
         }
 
-		if (detailLevel != DetailLevel_FastMetadata)
+		if (detailLevel >= DetailLevel_FullMetadata)
 		{
 			MassListPtr massList;
 
