@@ -878,7 +878,7 @@ namespace pwiz.Skyline
                         dataFilePaths.Add(sourcePath);
                 }
                 // If no new paths added, just return without changing.
-                if (dataFilePaths.Count == chrom.MSDataFilePaths.Count)
+                if (dataFilePaths.Count == chrom.FileCount)
                     return doc;
 
                 int replaceIndex = results.Chromatograms.IndexOf(chrom);

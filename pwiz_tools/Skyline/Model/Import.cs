@@ -971,8 +971,8 @@ namespace pwiz.Skyline.Model
                 string invDecimalSep = CultureInfo.InvariantCulture.NumberFormat.NumberDecimalSeparator;
                 if (!Equals(localDecimalSep, invDecimalSep))
                 {
-                    if (line.Split(new[] { localDecimalSep }, StringSplitOptions.None).Length >
-                            line.Split(new[] { invDecimalSep }, StringSplitOptions.None).Length)
+                    if (CountDecimals(columns, CultureInfo.CurrentCulture) >
+                            CountDecimals(columns, CultureInfo.InvariantCulture))
                         provider = CultureInfo.CurrentCulture;
                 }
                 sep = '\t';
@@ -1005,6 +1005,20 @@ namespace pwiz.Skyline.Model
             }
             columnTypes = (nonSeqFound ? listColumnTypes.ToArray() : new Type[0]);
             return nonSeqFound;
+        }
+
+        private static int CountDecimals(IEnumerable<string> values, IFormatProvider provider)
+        {
+            int n = 0;
+            foreach (string value in values)
+            {
+                double result;
+                if (double.TryParse(value, NumberStyles.Number, provider, out result) && result != Math.Round(result))
+                {
+                    n++;                    
+                }
+            }
+            return n;
         }
 
         private static bool TrySplitColumns(string line, char sep, out string[] columns)

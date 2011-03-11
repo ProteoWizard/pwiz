@@ -28,7 +28,10 @@ namespace pwiz.Skyline.Model.Hibernate
         public virtual DbResultFile ResultFile { get; set; }
         public virtual String ReplicateName { get; set; }
         public virtual String ReplicatePath { get; set; }
+        // Duplicated properties of the DbResultFile
         public virtual String FileName { get; set; }
         public virtual String SampleName { get; set; }
+        public virtual DateTime? ModifiedTime { get; set; }
+        public virtual DateTime? AcquisitionTime { get; set; }
     }
 }

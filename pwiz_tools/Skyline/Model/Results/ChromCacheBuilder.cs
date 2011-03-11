@@ -29,10 +29,21 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results
 {
+    internal sealed class FileBuildInfo
+    {
+        public FileBuildInfo(MsDataFileImpl file)
+        {
+            StartTime = file.RunStartTime;
+        }
+
+        public DateTime? StartTime { get; private set; }
+    }
+
     internal sealed class ChromCacheBuilder : ChromCacheWriter
     {
         private readonly SrmDocument _document;
         private int _currentFileIndex = -1;
+        private FileBuildInfo _currentFileInfo;
         private string _tempFileSubsitute;
         private readonly List<PeptideChromDataSets> _chromDataSets = new List<PeptideChromDataSets>();
         private bool _writerStarted;
@@ -160,7 +171,7 @@ namespace pwiz.Skyline.Model.Results
                     {
                         using (var inFile = new MsDataFileImpl(dataFilePathPart, sampleIndex))
                         {
-                            // Check for cancelation
+                            // Check for cancelation);
                             if (_loader.IsCanceled)
                             {
                                 _loader.UpdateProgress(_status = _status.Cancel());
@@ -169,6 +180,8 @@ namespace pwiz.Skyline.Model.Results
                             }
                             if (_outStream == null)
                                 _outStream = _loader.StreamManager.CreateStream(_fs.SafeName, FileMode.Create, true);
+
+                            _currentFileInfo = new FileBuildInfo(inFile);
 
                             // Read and write the mass spec data
                             ChromDataProvider provider;
@@ -576,7 +589,9 @@ namespace pwiz.Skyline.Model.Results
                                 return;
 
                             string dataFilePath = MSDataFilePaths[_currentFileIndex];
-                            _listCachedFiles.Add(new ChromCachedFile(dataFilePath));
+                            DateTime fileWriteTime = ChromCachedFile.GetLastWriteTime(dataFilePath);
+                            DateTime? runStartTime = _currentFileInfo.StartTime;
+                            _listCachedFiles.Add(new ChromCachedFile(dataFilePath, fileWriteTime, runStartTime));
                             _currentFileIndex++;
 
                             // Allow the reader thread to exit

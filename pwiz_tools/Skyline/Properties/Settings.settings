@@ -347,5 +347,8 @@
     <Setting Name="AreaNormalizeToView" Type="System.String" Scope="User">
       <Value Profile="(Default)">none</Value>
     </Setting>
+    <Setting Name="ReplicateOrderEnum" Type="System.String" Scope="User">
+      <Value Profile="(Default)">document</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

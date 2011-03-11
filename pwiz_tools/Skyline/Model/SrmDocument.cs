@@ -676,7 +676,7 @@ namespace pwiz.Skyline.Model
             if (!Settings.HasResults || !Settings.MeasuredResults.TryGetChromatogramSet(nameSet, out chromatograms, out indexSet))
                 throw new ArgumentOutOfRangeException(string.Format("No replicate named {0} was found", nameSet));
             // Calculate the file index that supplied the chromatograms
-            int indexFile = chromatograms.MSDataFilePaths.IndexOf(filePath);
+            int indexFile = chromatograms.MSDataFileInfos.IndexOf(info => Equals(info.FilePath, filePath));
             if (indexFile == -1)
                 throw new ArgumentOutOfRangeException(string.Format("The file {0} was not found in the replicate {1}.", filePath, nameSet));
             // Get all chromatograms for this transition group
@@ -2171,7 +2171,7 @@ namespace pwiz.Skyline.Model
                     }
                     writer.WriteStartElement(startChild);
                     writer.WriteAttribute(ATTR.replicate, name);
-                    if (chromatogramSet.MSDataFilePaths.Count > 1)
+                    if (chromatogramSet.FileCount > 1)
                         writer.WriteAttribute(ATTR.file, chromatogramSet.GetFileSaveId(chromInfo.FileIndex));
                     writeChromInfo(writer, chromInfo);
                     writer.WriteEndElement();

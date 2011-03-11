@@ -206,8 +206,8 @@ namespace pwiz.SkylineTestTutorial
             RunUI(() =>
                       {
                           settingsUI.PickedStaticMods = new[] { "Carbamidomethyl Cysteine" };
-                          settingsUI.PickedHeavyMods = new[] { "" };
-                          settingsUI.PickedLibraries = new[] { "" };
+                          settingsUI.PickedHeavyMods = new string[0];
+                          settingsUI.PickedLibraries = new string[0];
                       });
             var editListUI1 =
                 ShowDialog<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(settingsUI.EditLibraryList);

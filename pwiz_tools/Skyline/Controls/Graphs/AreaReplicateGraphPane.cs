@@ -57,25 +57,18 @@ namespace pwiz.Skyline.Controls.Graphs
             var results = document.Settings.MeasuredResults;
             bool resultsAvailable = results != null;
             Clear();
-            string[] resultNames = GraphData.GetReplicateNames(document).ToArray();
-            XAxis.Scale.TextLabels = resultNames;
-            ScaleAxisLabels();
 
             if (!resultsAvailable)
             {
                 Title.Text = "No results available";
-                AxisChange();
+                EmptyGraph(document);
                 return;
             }
 
             var selectedTreeNode = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
             if (selectedTreeNode == null)
             {
-                // Add a missing point for each replicate name.
-                PointPairList pointPairList = new PointPairList();
-                for (int i = 0; i < resultNames.Length; i++)
-                    pointPairList.Add(AreaGraphData.AreaPointPairMissing(i));
-                AxisChange();
+                EmptyGraph(document);
                 return;
             }
 
@@ -161,10 +154,12 @@ namespace pwiz.Skyline.Controls.Graphs
                 normalizeData = AreaNormalizeToData.none;
 
             // Calculate graph data points
-            GraphData graphData = new AreaGraphData(parentNode, displayType, ratioIndex, normalizeData);
+            GraphData graphData = new AreaGraphData(document, parentNode, displayType, ratioIndex, normalizeData);
+
+            InitFromData(graphData);
 
             // Add data to the graph
-            int selectedReplicateIndex = GraphSummary.ResultsIndex;
+            int selectedReplicateIndex = SelectedIndex;
             double maxArea = -double.MaxValue;
             double sumArea = 0;
             int iColor = 0;
@@ -329,6 +324,18 @@ namespace pwiz.Skyline.Controls.Graphs
             AxisChange();
         }
 
+        private void EmptyGraph(SrmDocument document)
+        {
+            string[] resultNames = GraphData.GetReplicateNames(document).ToArray();
+            XAxis.Scale.TextLabels = resultNames;
+            ScaleAxisLabels();
+            // Add a missing point for each replicate name.
+            PointPairList pointPairList = new PointPairList();
+            for (int i = 0; i < resultNames.Length; i++)
+                pointPairList.Add(AreaGraphData.AreaPointPairMissing(i));
+            AxisChange();
+        }
+
         private enum AreaNormalizeToData { none, optimization, maximum_stack, maximum, total }
 
         /// <summary>
@@ -346,8 +353,12 @@ namespace pwiz.Skyline.Controls.Graphs
             private readonly int _ratioIndex;
             private readonly AreaNormalizeToData _normalize;
 
-            public AreaGraphData(DocNode docNode, DisplayTypeChrom displayType, int ratioIndex, AreaNormalizeToData normalize)
-                : base(docNode, displayType)
+            public AreaGraphData(SrmDocument document,
+                                 DocNode docNode,
+                                 DisplayTypeChrom displayType,
+                                 int ratioIndex,
+                                 AreaNormalizeToData normalize)
+                : base(document, docNode, displayType)
             {
                 _ratioIndex = ratioIndex;
                 _normalize = normalize;

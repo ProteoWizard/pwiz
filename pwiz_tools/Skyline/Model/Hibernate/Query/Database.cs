@@ -213,6 +213,8 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                                                                     Protein = dbProtein,
                                                                     FileName = replicateFile.FileName,
                                                                     SampleName = replicateFile.SampleName,
+                                                                    ModifiedTime = replicateFile.ModifiedTime,
+                                                                    AcquisitionTime = replicateFile.AcquisitionTime,
                                                                     ReplicateName = replicateFile.Replicate.Replicate,
                                                                     ReplicatePath = replicateFile.Replicate.ReplicatePath
                                                                 };
@@ -260,13 +262,16 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 var listResultFiles = new List<DbResultFile>();
                 docInfo.ReplicateResultFiles.Add(listResultFiles);
 
-                foreach (string filePath in chromatogramSet.MSDataFilePaths)
+                foreach (var fileInfo in chromatogramSet.MSDataFileInfos)
                 {
+                    string filePath = fileInfo.FilePath;
                     DbResultFile dbResultFile = new DbResultFile
                                                     {
                                                         Replicate = dbReplicate,
                                                         FileName = SampleHelp.GetFileName(filePath),
-                                                        SampleName = SampleHelp.GetFileSampleName(filePath)
+                                                        SampleName = SampleHelp.GetFileSampleName(filePath),
+                                                        ModifiedTime = fileInfo.FileWriteTime,
+                                                        AcquisitionTime = fileInfo.RunStartTime
                                                     };
                     session.Save(dbResultFile);
                     

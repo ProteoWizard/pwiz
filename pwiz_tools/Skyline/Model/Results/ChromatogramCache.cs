@@ -29,7 +29,8 @@ namespace pwiz.Skyline.Model.Results
 {
     public sealed class ChromatogramCache : Immutable, IDisposable
     {
-        public const int FORMAT_VERSION_CACHE = 2;
+        public const int FORMAT_VERSION_CACHE = 3;
+        public const int FORMAT_VERSION_CACHE_2 = 2;
 
         public const string EXT = ".skyd";
 
@@ -117,9 +118,12 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        /// <summary>
+        /// True if cache version is acceptable for current use.
+        /// </summary>
         public bool IsCurrentVersion
         {
-            get { return (Version == FORMAT_VERSION_CACHE); }
+            get { return (Version == FORMAT_VERSION_CACHE || Version == FORMAT_VERSION_CACHE_2); }
         }
 
         public bool IsCurrentDisk
@@ -154,7 +158,7 @@ namespace pwiz.Skyline.Model.Results
 
         private ChromatogramCache ChangeCachePath(string prop)
         {
-            return ChangeProp(ImClone(this), (im, v) => im.CachePath = v, prop);
+            return ChangeProp(ImClone(this), im => im.CachePath = prop);
         }        
 
         public void Dispose()
@@ -249,8 +253,12 @@ namespace pwiz.Skyline.Model.Results
             modified_lo,
             modified_hi,
             len_path,
+            // Version 3 file header addition
+            runstart_lo,
+            runstart_hi,
 
-            count
+            count,
+            count2 = runstart_lo
         }
         // ReSharper restore UnusedMember.Local
 
@@ -330,7 +338,7 @@ namespace pwiz.Skyline.Model.Results
             ReadComplete(stream, cacheHeader, countHeader);
 
             formatVersion = GetInt32(cacheHeader, (int)Header.format_version);
-            if (formatVersion != FORMAT_VERSION_CACHE)
+            if (formatVersion < FORMAT_VERSION_CACHE_2)
             {
                 chromCacheFiles = new ChromCachedFile[0];
                 chromatogramEntries = new ChromGroupHeaderInfo[0];
@@ -351,7 +359,8 @@ namespace pwiz.Skyline.Model.Results
             // Read list of files cached
             stream.Seek(locationFiles, SeekOrigin.Begin);
             chromCacheFiles = new ChromCachedFile[numFiles];
-            const int countFileHeader = (int)FileHeader.count * 4;
+            int countFileHeader = (int) (formatVersion == FORMAT_VERSION_CACHE ?
+                FileHeader.count : FileHeader.count2) * 4;
             byte[] fileHeader = new byte[countFileHeader];
             byte[] filePathBuffer = new byte[1024];
             for (int i = 0; i < numFiles; i++)
@@ -360,8 +369,13 @@ namespace pwiz.Skyline.Model.Results
                 long modifiedBinary = BitConverter.ToInt64(fileHeader, ((int)FileHeader.modified_lo) * 4);
                 int lenPath = GetInt32(fileHeader, (int)FileHeader.len_path);
                 ReadComplete(stream, filePathBuffer, lenPath);
+                long runstartBinary = (formatVersion == FORMAT_VERSION_CACHE
+                                           ? BitConverter.ToInt64(fileHeader, ((int) FileHeader.runstart_lo)*4)
+                                           : 0);
                 string filePath = Encoding.Default.GetString(filePathBuffer, 0, lenPath);
-                chromCacheFiles[i] = new ChromCachedFile(filePath, DateTime.FromBinary(modifiedBinary));
+                DateTime modifiedTime = DateTime.FromBinary(modifiedBinary);
+                DateTime? runstartTime = runstartBinary != 0 ? DateTime.FromBinary(runstartBinary) : (DateTime?) null;
+                chromCacheFiles[i] = new ChromCachedFile(filePath, modifiedTime, runstartTime);
             }
 
             // Read list of chromatogram group headers
@@ -445,6 +459,10 @@ namespace pwiz.Skyline.Model.Results
                 int len = cachedFile.FilePath.Length;
                 Encoding.Default.GetBytes(cachedFile.FilePath, 0, len, pathBuffer, 0);
                 outStream.Write(BitConverter.GetBytes(len), 0, sizeof(int));
+                // Version 3 write modified time
+                var runStartTime = cachedFile.RunStartTime;
+                time = (runStartTime.HasValue ? runStartTime.Value.ToBinary() : 0);
+                outStream.Write(BitConverter.GetBytes(time), 0, sizeof(long));
                 outStream.Write(pathBuffer, 0, len);
             }
 

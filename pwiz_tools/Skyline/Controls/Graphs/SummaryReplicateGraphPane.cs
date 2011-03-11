@@ -17,21 +17,37 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
+    public enum SummaryReplicateOrder { document, time }
+
     /// <summary>
     /// Graph pane which shows the comparison of retention times across the replicates.
     /// </summary>
     internal abstract class SummaryReplicateGraphPane : SummaryBarGraphPaneBase
     {
+        public static SummaryReplicateOrder ReplicateOrder
+        {
+            get
+            {
+                return Helpers.ParseEnum(Settings.Default.ReplicateOrderEnum, SummaryReplicateOrder.document);
+            }
+
+            set { Settings.Default.ReplicateOrderEnum = value.ToString(); }
+        }
+
         protected DocNode _parentNode;
+        protected IList<int> _replicateIndices;
 
         protected SummaryReplicateGraphPane(GraphSummary graphSummary)
             : base(graphSummary)
@@ -40,9 +56,20 @@ namespace pwiz.Skyline.Controls.Graphs
             XAxis.Type = AxisType.Text;
         }
 
+        protected void InitFromData(GraphData graphData)
+        {
+            string[] resultNamesOrdered = graphData.GetReplicateNames().ToArray();
+            if (!ArrayUtil.EqualsDeep(resultNamesOrdered, XAxis.Scale.TextLabels))
+            {
+                XAxis.Scale.TextLabels = resultNamesOrdered;
+                ScaleAxisLabels();
+            }
+            _replicateIndices = graphData.ReplicateIndices;
+        }
+
         protected override int SelectedIndex
         {
-            get { return GraphSummary.ResultsIndex; }
+            get { return (_replicateIndices != null ? _replicateIndices.IndexOf(GraphSummary.ResultsIndex) : -1); }
         }
 
         protected override IdentityPath GetIdentityPath(CurveItem curveItem, int barIndex)
@@ -57,23 +84,34 @@ namespace pwiz.Skyline.Controls.Graphs
             // is already selected.  This keeps the UI from drilling in too
             // deep when the user just wants to see a different replicate
             // at the same level currently being view (e.g. peptide)
-            if (GraphSummary.ResultsIndex != selectedIndex ||
+            int iResult = IndexOfReplicate(selectedIndex);
+            if (GraphSummary.ResultsIndex != iResult ||
                     GraphChromatogram.DisplayType == DisplayTypeChrom.single)
-                ChangeSelectedIndex(selectedIndex);
+            {
+                ChangeSelectedIndex(iResult);                
+            }
             else if (identityPath != null)
+            {
                 GraphSummary.StateProvider.SelectedPath = identityPath;
+            }
         }
 
-        protected void ChangeSelectedIndex(int index)
+        protected void ChangeSelectedIndex(int iResult)
         {
-            if (index < 0)
+            if (iResult < 0)
                 return;
             var document = GraphSummary.DocumentUIContainer.DocumentUI;
-            if (!document.Settings.HasResults || index >= document.Settings.MeasuredResults.Chromatograms.Count)
+            if (!document.Settings.HasResults || iResult >= document.Settings.MeasuredResults.Chromatograms.Count)
                 return;
-            GraphSummary.StateProvider.SelectedResultsIndex = index;
+            GraphSummary.StateProvider.SelectedResultsIndex = iResult;
             GraphSummary.Focus();
         }
+
+        public int IndexOfReplicate(int index)
+        {
+            return (_replicateIndices != null ? _replicateIndices[index] : -1);
+        }
+
 
         /// <summary>
         /// Holds the data that is currently displayed in the graph.
@@ -82,15 +120,18 @@ namespace pwiz.Skyline.Controls.Graphs
         /// </summary>
         internal abstract class GraphData : Immutable
         {
+            private readonly SrmDocument _document;
             private readonly DocNode _docNode;
             private readonly DisplayTypeChrom _displayType;
 
             private ReadOnlyCollection<DocNode> _docNodes;
             private ReadOnlyCollection<String> _docNodeLabels;
             private ReadOnlyCollection<List<PointPairList>> _pointPairLists;
+            private ReadOnlyCollection<int> _replicateIndices;
 
-            protected GraphData(DocNode docNode, DisplayTypeChrom displayType)
+            protected GraphData(SrmDocument document, DocNode docNode, DisplayTypeChrom displayType)
             {
+                _document = document;
                 _docNode = docNode;
                 _displayType = displayType;
             }
@@ -112,23 +153,25 @@ namespace pwiz.Skyline.Controls.Graphs
                 List<String> docNodeLabels = new List<string>();
                 if (_docNode is TransitionDocNode)
                 {
-                    TransitionDocNode transitionDocNode = (TransitionDocNode)_docNode;
-                    docNodes.Add(transitionDocNode);
-                    pointPairLists.Add(GetPointPairLists(transitionDocNode, _displayType));
-                    docNodeLabels.Add(ChromGraphItem.GetTitle(transitionDocNode));
+                    var nodeTran = (TransitionDocNode)_docNode;
+                    ReplicateIndices = GetReplicateIndices(nodeTran).ToArray();
+                    docNodes.Add(nodeTran);
+                    pointPairLists.Add(GetPointPairLists(nodeTran, _displayType));
+                    docNodeLabels.Add(ChromGraphItem.GetTitle(nodeTran));
                 }
                 else if (_docNode is TransitionGroupDocNode)
                 {
+                    var nodeGroup = (TransitionGroupDocNode)_docNode;
+                    ReplicateIndices = GetReplicateIndices(nodeGroup).ToArray();
                     if (_displayType != DisplayTypeChrom.all)
                     {
-                        TransitionGroupDocNode transitionGroup = (TransitionGroupDocNode)_docNode;
-                        docNodes.Add(transitionGroup);
-                        pointPairLists.Add(GetPointPairLists(transitionGroup, _displayType));
-                        docNodeLabels.Add(ChromGraphItem.GetTitle(transitionGroup));
+                        docNodes.Add(nodeGroup);
+                        pointPairLists.Add(GetPointPairLists(nodeGroup, _displayType));
+                        docNodeLabels.Add(ChromGraphItem.GetTitle(nodeGroup));
                     }
                     else
                     {
-                        foreach (TransitionDocNode transitionDocNode in ((TransitionGroupDocNode)_docNode).Children)
+                        foreach (TransitionDocNode transitionDocNode in nodeGroup.Children)
                         {
                             docNodes.Add(transitionDocNode);
                             pointPairLists.Add(GetPointPairLists(transitionDocNode, _displayType));
@@ -138,17 +181,34 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 else if (_docNode is PeptideDocNode)
                 {
-                    foreach (TransitionGroupDocNode transitionGroup in ((PeptideDocNode)_docNode).Children)
+                    var nodePep = (PeptideDocNode) _docNode;
+                    ReplicateIndices = GetReplicateIndices(nodePep).ToArray();
+                    foreach (TransitionGroupDocNode transitionGroup in nodePep.Children)
                     {
                         docNodes.Add(transitionGroup);
                         pointPairLists.Add(GetPointPairLists(transitionGroup, DisplayTypeChrom.total));
                         docNodeLabels.Add(ChromGraphItem.GetTitle(transitionGroup));
                     }
-
                 }
                 PointPairLists = pointPairLists;
                 DocNodes = docNodes;
                 DocNodeLabels = docNodeLabels;
+            }
+
+            public IList<int> ReplicateIndices
+            {
+                get { return _replicateIndices; }
+                set { _replicateIndices = MakeReadOnly(value); }
+            }
+
+            public IEnumerable<string> GetReplicateNames()
+            {
+                EnsureData();
+                if (ReplicateIndices == null || !_document.Settings.HasResults)
+                    return GetReplicateNames(_document);
+
+                return from iResult in ReplicateIndices
+                       select _document.Settings.MeasuredResults.Chromatograms[iResult].Name;
             }
 
             public static IEnumerable<string> GetReplicateNames(SrmDocument document)
@@ -201,11 +261,11 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public abstract PointPair PointPairMissing(int xValue);
 
-            private List<PointPairList> GetPointPairLists(TransitionDocNode transition,
+            private List<PointPairList> GetPointPairLists(TransitionDocNode nodeTran,
                                                                  DisplayTypeChrom displayType)
             {
                 var pointPairLists = new List<PointPairList>();
-                if (!transition.HasResults)
+                if (!nodeTran.HasResults)
                 {
                     pointPairLists.Add(new PointPairList());
                     return pointPairLists;                    
@@ -214,20 +274,20 @@ namespace pwiz.Skyline.Controls.Graphs
                 bool allowSteps = (displayType == DisplayTypeChrom.single);
                 if (allowSteps)
                 {
-                    foreach (var result in transition.Results)
+                    foreach (var result in nodeTran.Results)
                         maxSteps = Math.Max(maxSteps, GetCountSteps(result));                    
                 }
                 for (int i = 0; i < maxSteps; i++)
                     pointPairLists.Add(new PointPairList());
 
                 int numSteps = maxSteps/2;
-                for (int iResult = 0; iResult < transition.Results.Count; iResult++)
+                foreach (int iResult in GetReplicateIndices(nodeTran))
                 {
                     // Fill everything with missing data until filled for real
                     for (int i = 0; i < maxSteps; i++)
                         pointPairLists[i].Add(PointPairMissing(iResult));
 
-                    var result = transition.Results[iResult];
+                    var result = nodeTran.Results[iResult];
                     if (result == null || result.Count == 0)
                         continue;
 
@@ -269,11 +329,20 @@ namespace pwiz.Skyline.Controls.Graphs
                 return maxStep*2 + 1;
             }
 
-            private List<PointPairList> GetPointPairLists(TransitionGroupDocNode transitionGroupDocNode,
+            private IEnumerable<int> GetReplicateIndices(TransitionDocNode nodeTran)
+            {
+                return GetReplicateIndices(i =>
+                                               {
+                                                   var result = nodeTran.Results[i];
+                                                   return (result != null ? result[0].FileIndex : (int?) null);
+                                               });
+            }
+
+            private List<PointPairList> GetPointPairLists(TransitionGroupDocNode nodeGroup,
                                                          DisplayTypeChrom displayType)
             {
                 var pointPairLists = new List<PointPairList>();
-                if (!transitionGroupDocNode.HasResults)
+                if (!nodeGroup.HasResults)
                 {
                     pointPairLists.Add(new PointPairList());
                     return pointPairLists;
@@ -282,20 +351,20 @@ namespace pwiz.Skyline.Controls.Graphs
                 bool allowSteps = (displayType == DisplayTypeChrom.single);
                 if (allowSteps)
                 {
-                    foreach (var result in transitionGroupDocNode.Results)
+                    foreach (var result in nodeGroup.Results)
                         maxSteps = Math.Max(maxSteps, GetCountSteps(result));
                 }
                 for (int i = 0; i < maxSteps; i++)
                     pointPairLists.Add(new PointPairList());
 
                 int numSteps = maxSteps / 2;
-                for (int iResult = 0; iResult < transitionGroupDocNode.Results.Count; iResult++)
+                foreach (int iResult in GetReplicateIndices(nodeGroup))
                 {
                     // Fill everything with missing data until filled for real
                     for (int i = 0; i < maxSteps; i++)
                         pointPairLists[i].Add(PointPairMissing(iResult));
 
-                    var result = transitionGroupDocNode.Results[iResult];
+                    var result = nodeGroup.Results[iResult];
                     if (result == null || result.Count == 0)
                         continue;
 
@@ -335,6 +404,69 @@ namespace pwiz.Skyline.Controls.Graphs
                     maxStep = Math.Max(maxStep, chromInfo.OptimizationStep);
                 }
                 return maxStep * 2 + 1;
+            }
+
+            private IEnumerable<int> GetReplicateIndices(TransitionGroupDocNode nodeGroup)
+            {
+                return GetReplicateIndices(i =>
+                                               {
+                                                   var result = nodeGroup.Results[i];
+                                                   return (result != null ? result[0].FileIndex : (int?) null);
+                                               });
+            }
+
+            private IEnumerable<int> GetReplicateIndices(PeptideDocNode nodePep)
+            {
+                return GetReplicateIndices(i =>
+                                               {
+                                                   var result = nodePep.Results[i];
+                                                   return (result != null ? result[0].FileIndex : (int?) null);
+                                               });
+            }
+
+            private IEnumerable<int> GetReplicateIndices(Func<int, int?> getFileIndex)
+            {
+                var chromatograms = _document.Settings.MeasuredResults.Chromatograms;
+                var order = ReplicateOrder;
+                if (order == SummaryReplicateOrder.document)
+                {
+                    for (int iResult = 0; iResult < chromatograms.Count; iResult++)
+                        yield return iResult;
+                }
+                else
+                {
+                    var listIndexFile = new List<KeyValuePair<int, ChromFileInfo>>();
+                    for (int iResult = 0; iResult < chromatograms.Count; iResult++)
+                    {
+                        var chromSet = _document.Settings.MeasuredResults.Chromatograms[iResult];
+                        
+                        int? iFile = getFileIndex(iResult);
+                        ChromFileInfo fileInfo = null;
+                        if (iFile.HasValue)
+                            fileInfo = chromSet.MSDataFileInfos[iFile.Value];
+
+                        listIndexFile.Add(new KeyValuePair<int, ChromFileInfo>(iResult, fileInfo));
+                    }
+
+                    // Sort by acquisition time, followed by document order for entries with
+                    // an acquisition time
+                    listIndexFile.Sort((p1, p2) =>
+                                           {
+                                               var t1 = p1.Value != null ? p1.Value.RunStartTime : null;
+                                               var t2 = p2.Value != null ? p2.Value.RunStartTime : null;
+                                               if (t1 != null && t2 != null)
+                                                   return Comparer.Default.Compare(t1, t2);
+                                               // Put all null values at the end, in document order
+                                               if (t1 != null)
+                                                   return -1;
+                                               if (t2 != null)
+                                                   return 1;
+                                               return Comparer.Default.Compare(p1.Key, p2.Key);
+                                           });
+
+                    foreach (var pair in listIndexFile)
+                        yield return pair.Key;
+                }
             }
         }
     }

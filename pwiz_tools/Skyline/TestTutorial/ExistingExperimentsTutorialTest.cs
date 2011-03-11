@@ -127,7 +127,7 @@ namespace pwiz.SkylineTestTutorial
                 Assert.IsTrue(((PeptideDocNode)((PeptideTreeNode)SkylineWindow.SelectedNode).Model).HasChildType(IsotopeLabelType.heavy));
                 SkylineWindow.ExpandPrecursors();
             });
-            FindNode("854.400");
+            FindNode(string.Format("{0:F03}",854.4));   // I18N
             WaitForGraphs();
             // Unfornunately, label hiding may mean that the selected ion is not labeled
             if (SkylineWindow.GraphSpectrum.SelectedIonLabel != null)
@@ -168,14 +168,14 @@ namespace pwiz.SkylineTestTutorial
             });
             
             // Removing a Transition with Interference, p. 13.
-            FindNode("504.2664");
+            FindNode(string.Format("{0:F04}", 504.2664));   // I18N
             RunUI(() =>
             {
                 TransitionTreeNode selNode = (TransitionTreeNode)SkylineWindow.SequenceTree.SelectedNode;
                 SkylineWindow.RemovePeak(SkylineWindow.SequenceTree.SelectedPath.GetPathTo((int)SrmDocument.Level.TransitionGroups),
                 ((TransitionGroupTreeNode)selNode.Parent).DocNode, selNode.DocNode);
                 Assert.IsTrue(Equals(SkylineWindow.SequenceTree.SelectedNode.StateImageIndex,
-                    (int)SequenceTree.StateImageId.no_peak) && SkylineWindow.SequenceTree.SelectedNode.Parent.Text.Contains("0.24"));
+                    (int)SequenceTree.StateImageId.no_peak) && SkylineWindow.SequenceTree.SelectedNode.Parent.Text.Contains((0.24).ToString()));
             });
 
             // Adjusting Peak Boundaries to Exclude Interference, p. 14.
@@ -267,10 +267,10 @@ namespace pwiz.SkylineTestTutorial
             var openDataSourceDialog1 = ShowDialog<OpenDataSourceDialog>(() => importResultsDlg1.NamedPathSets =
                                                                         importResultsDlg1.GetDataSourcePathsFile(null));
             RunUI(() =>
-           {
+            {
                openDataSourceDialog1.CurrentDirectory = TestFilesDir.GetTestPath(@"ExistingQuant\Study 7");
                openDataSourceDialog1.SelectAllFileType(".wiff");
-           });
+            });
             RunDlg<ImportResultsSamplesDlg>(openDataSourceDialog1.Open, importResultsSamplesDlg =>
             {
                 importResultsSamplesDlg.CheckAll(false);
@@ -328,7 +328,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowRTPeptideGraph();
                 SkylineWindow.ShowTotalTransitions();
                 SkylineWindow.ShowCVValues();
-                SkylineWindow.ShowPeptideOrderDocument();
+                SkylineWindow.ShowPeptideOrder(SummaryPeptideOrder.document);
             });
 
             // Further Exploration, p. 33.

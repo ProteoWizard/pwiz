@@ -29,5 +29,7 @@ namespace pwiz.Skyline.Model.Hibernate
         public virtual DbReplicate Replicate { get; set; }
         public virtual string FileName { get; set; }
         public virtual string SampleName { get; set; }
+        public virtual DateTime? ModifiedTime { get; set; }
+        public virtual DateTime? AcquisitionTime { get; set; }
     }
 }

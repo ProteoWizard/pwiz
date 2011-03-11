@@ -44,24 +44,17 @@ namespace pwiz.Skyline.Controls.Graphs
             var results = document.Settings.MeasuredResults;
             bool resultsAvailable = results != null;
             Clear();
-            string[] resultNames = GraphData.GetReplicateNames(document).ToArray();
-            XAxis.Scale.TextLabels = resultNames;
-            ScaleAxisLabels();
 
             if (!resultsAvailable)
             {
                 Title.Text = "No results available";
-                AxisChange();
+                EmptyGraph(document);
                 return;
             }
             var selectedTreeNode = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
             if (selectedTreeNode == null)
             {
-                // Add a missing point for each replicate name.
-                PointPairList pointPairList = new PointPairList();
-                for (int i = 0; i < resultNames.Length; i++)
-                    pointPairList.Add(RTGraphData.RTPointPairMissing(i));
-                AxisChange();
+                EmptyGraph(document);
                 return;
             }
 
@@ -106,9 +99,11 @@ namespace pwiz.Skyline.Controls.Graphs
                     displayType = DisplayTypeChrom.all;
             }
 
-            GraphData graphData = new RTGraphData(parentNode, displayType);
+            GraphData graphData = new RTGraphData(document, parentNode, displayType);
 
-            int selectedReplicateIndex = GraphSummary.ResultsIndex;
+            InitFromData(graphData);
+
+            int selectedReplicateIndex = SelectedIndex;
             double minRetentionTime = double.MaxValue;
             double maxRetentionTime = -double.MaxValue;
             int iColor = 0;
@@ -174,6 +169,18 @@ namespace pwiz.Skyline.Controls.Graphs
             AxisChange();
         }
 
+        private void EmptyGraph(SrmDocument document)
+        {
+            string[] resultNames = GraphData.GetReplicateNames(document).ToArray();
+            XAxis.Scale.TextLabels = resultNames;
+            ScaleAxisLabels();
+            // Add a missing point for each replicate name.
+            PointPairList pointPairList = new PointPairList();
+            for (int i = 0; i < resultNames.Length; i++)
+                pointPairList.Add(RTGraphData.RTPointPairMissing(i));
+            AxisChange();
+        }
+
         /// <summary>
         /// Holds the data that is currently displayed in the graph.
         /// Currently, we don't hold onto this object, because we never need to look
@@ -187,8 +194,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     PointPairBase.Missing, PointPairBase.Missing, PointPairBase.Missing, 0);
             }
 
-            public RTGraphData(DocNode docNode, DisplayTypeChrom displayType)
-                : base(docNode, displayType)
+            public RTGraphData(SrmDocument document, DocNode docNode, DisplayTypeChrom displayType)
+                : base(document, docNode, displayType)
             {
             }
 
@@ -221,9 +228,9 @@ namespace pwiz.Skyline.Controls.Graphs
             protected override PointPair CreatePointPair(int iResult, TransitionGroupChromInfo chromInfo)
             {
                 return HiLowMiddleErrorBarItem.MakePointPair(iResult,
-                                                             chromInfo.EndRetentionTime.Value,
-                                                             chromInfo.StartRetentionTime.Value,
-                                                             chromInfo.RetentionTime.Value,
+                                                             chromInfo.EndRetentionTime ?? 0,
+                                                             chromInfo.StartRetentionTime ?? 0,
+                                                             chromInfo.RetentionTime ?? 0,
                                                              chromInfo.Fwhm ?? 0);
             }
         }

@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using pwiz.CLI.cv;
 using pwiz.CLI.data;
@@ -83,6 +84,19 @@ namespace pwiz.ProteowizardWrapper
         }
 
         public string RunId { get { return _msDataFile.run.id; } }
+
+        public DateTime? RunStartTime
+        {
+            get
+            {
+                string stampText = _msDataFile.run.startTimeStamp;
+                DateTime runStartTime;
+                if (!DateTime.TryParse(stampText, CultureInfo.InvariantCulture, DateTimeStyles.None, out runStartTime) &&
+                    !DateTime.TryParse(stampText, out runStartTime))
+                    return null;
+                return runStartTime;
+            }
+        }
 
         public MsDataConfigInfo ConfigInfo
         {

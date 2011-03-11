@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -139,24 +140,14 @@ namespace pwiz.Skyline.Model.Results
     public sealed class ChromatogramSet : XmlNamedIdElement
     {
         /// <summary>
-        /// Paths of all files contained in this replicate
+        /// Info for all files contained in this replicate
         /// </summary>
-        private string[] _msDataFilePaths;
+        private ReadOnlyCollection<ChromFileInfo> _msDataFileInfo;
 
         /// <summary>
         /// Ids used in XML to refer to the files in this replicate
         /// </summary>
         private string[] _fileLoadIds;
-
-        /// <summary>
-        /// Used before all files are fully loaded.  There is an array entry
-        /// for each file, and the value is true if the file is cached.
-        /// When all files have been cached, the array is set to null.
-        /// This guarantees that the <see cref="ChromatogramSet"/> changes
-        /// as each of its files is cached, which is very important, as other
-        /// code checks reference equality to know if updats are required.
-        /// </summary>
-        private bool[] _fileCacheFlags;
 
         public ChromatogramSet(string name, IEnumerable<string> msDataFileNames)
             : this(name, msDataFileNames, null)
@@ -167,28 +158,32 @@ namespace pwiz.Skyline.Model.Results
                 OptimizableRegression optimizationFunction)
             : base(new ChromatogramSetId(), name)
         {
-            _msDataFilePaths = msDataFileNames.ToArray();
-            // Make sure data file names are stored in a consistent order.
-            // CONSIDER: Or maybe not.  This is confusing, and probably not the right
-            //           thing to do when the file view is added, and file order is
-            //           changeable.
-            // Array.Sort(_msDataFilePaths);
-            // New cach flags with everything set as not cached.
-            _fileCacheFlags = new bool[_msDataFilePaths.Length];
+            MSDataFileInfos = msDataFileNames.ToList().ConvertAll(path => new ChromFileInfo(path));
 
             OptimizationFunction = optimizationFunction;
         }
 
-        public IList<string> MSDataFilePaths { get { return _msDataFilePaths; } }
+        public IList<ChromFileInfo> MSDataFileInfos
+        {
+            get { return _msDataFileInfo; }
+            set
+            {
+                // Make sure paths are unique
+                _msDataFileInfo = MakeReadOnly(value.Distinct(ChromFileInfo.PATH_COMPARER).ToArray());
+            }
+        }
 
-        public IList<bool> FileCachFlags { get { return _fileCacheFlags; } }
-        public bool IsLoaded { get { return _fileCacheFlags == null; } }
+        public int FileCount { get { return _msDataFileInfo.Count; } }
+
+        public IEnumerable<string> MSDataFilePaths { get { return MSDataFileInfos.Select(info => info.FilePath); } }
+
+        public bool IsLoaded { get { return !MSDataFileInfos.Contains(info => !info.FileWriteTime.HasValue); } }
 
         public OptimizableRegression OptimizationFunction { get; private set; }
 
-        public int IndexOfFile(ChromatogramGroupInfo info)
+        public int IndexOfFile(ChromatogramGroupInfo chromGroupInfo)
         {
-            return Array.IndexOf(_msDataFilePaths, info.FilePath);
+            return MSDataFileInfos.IndexOf(info => Equals(info.FilePath, chromGroupInfo.FilePath));
         }
 
         public int IndexOfId(string id)
@@ -200,28 +195,22 @@ namespace pwiz.Skyline.Model.Results
 
         public ChromatogramSet ChangeMSDataFilePaths(IList<string> prop)
         {
-            var set = ChangeProp(ImClone(this), (im, v) => im._msDataFilePaths = v.ToArray(), prop);
+            var set = ImClone(this);
 
-            // Create a set with all the currently cached files
-            var cachedPaths = new HashSet<string>();
-            for (int i = 0; i < _msDataFilePaths.Length; i++)
-            {
-                if (_fileCacheFlags == null || _fileCacheFlags[i])
-                    cachedPaths.Add(_msDataFilePaths[i]);
-            }
-
-            set.CalcCachedFlags(cachedPaths, null, null);
+            set.MSDataFileInfos = prop.ToList().ConvertAll(path => new ChromFileInfo(path));
+            set.CalcCachedFlags(MSDataFileInfos.ToDictionary(info => info.FilePath), null, null);
             
             return set;
         }
 
-        public ChromatogramSet ChangeFileCacheFlags(ICollection<string> cachedPaths,
-            ICollection<string> cachedFileNames, string cachePath)
+        public ChromatogramSet ChangeFileCacheFlags(IDictionary<string, ChromFileInfo> cachedPaths,
+            HashSet<string> cachedFileNames, string cachePath)
         {
             var set = ImClone(this);
+
             set.CalcCachedFlags(cachedPaths, cachedFileNames, cachePath);
-            if (ReferenceEquals(_fileCacheFlags, set._fileCacheFlags) &&
-                    ReferenceEquals(_msDataFilePaths, set._msDataFilePaths))
+
+            if (ReferenceEquals(MSDataFileInfos, set.MSDataFileInfos))
                 return this;
 
             return set;
@@ -239,44 +228,32 @@ namespace pwiz.Skyline.Model.Results
         /// <param name="cachedPaths">Set of known cached paths</param>
         /// <param name="cachedFileNames">Set of known cached file names</param>
         /// <param name="cachePath">Final cache path</param>
-        private void CalcCachedFlags(ICollection<string> cachedPaths,
+        private void CalcCachedFlags(IDictionary<string, ChromFileInfo> cachedPaths,
             ICollection<string> cachedFileNames, string cachePath)
         {
-            bool cached = true; // Assume all cached until proven otherwise
-
-            bool[] fileCacheFlags = new bool[_msDataFilePaths.Length];
-            string[] msDataFilePaths = new string[_msDataFilePaths.Length];
-            for (int i = 0; i < _msDataFilePaths.Length; i++)
+            ChromFileInfo[] fileInfos = new ChromFileInfo[FileCount];
+            for (int i = 0; i < fileInfos.Length; i++)
             {
-                string path = msDataFilePaths[i] = _msDataFilePaths[i];
-                if (cachedPaths.Contains(path))
-                    fileCacheFlags[i] = true;
-                else if (cachedFileNames != null && !cachedFileNames.Contains(SampleHelp.GetFileName(path)))
-                    cached = false;
-                else
+                fileInfos[i] = MSDataFileInfos[i];
+                
+                string path = fileInfos[i].FilePath;
+
+                ChromFileInfo fileInfo;
+                if (cachedPaths.TryGetValue(path, out fileInfo))
+                    fileInfos[i] = fileInfo;
+                else if (cachedFileNames == null || cachedFileNames.Contains(SampleHelp.GetFileName(path)))
                 {
                     // If the name but not the file was found, check for an
                     // existing file in the cache file's directory.
                     string dataFilePathPart;
                     string dataFilePath = GetExistingDataFilePath(cachePath, path, out dataFilePathPart);
-                    if (!cachedPaths.Contains(dataFilePath))
-                        cached = false;
-                    else
-                    {
-                        msDataFilePaths[i] = dataFilePath;
-                        fileCacheFlags[i] = true;
-                    }
+                    if (cachedPaths.TryGetValue(dataFilePath, out fileInfo))
+                        fileInfos[i] = fileInfo;
                 }
             }
 
-            // If all the files are cached, then set the cache flags to null
-            if (cached)
-                _fileCacheFlags = null;
-            else if (_fileCacheFlags == null || !ArrayUtil.EqualsDeep(_fileCacheFlags, fileCacheFlags))
-                _fileCacheFlags = fileCacheFlags;
-
-            if (!ArrayUtil.EqualsDeep(_msDataFilePaths, msDataFilePaths))
-                _msDataFilePaths = msDataFilePaths;
+            if (!ArrayUtil.EqualsDeep(MSDataFileInfos, fileInfos))
+                MSDataFileInfos = fileInfos;
         }
 
         public ChromatogramSet ChangeOptimizationFunction(OptimizableRegression prop)
@@ -371,9 +348,8 @@ namespace pwiz.Skyline.Model.Results
                 reader.Read();
             }
 
-            _msDataFilePaths = msDataFilePaths.ToArray();
+            MSDataFileInfos = msDataFilePaths.ConvertAll(path => new ChromFileInfo(path));
             _fileLoadIds = fileLoadIds.ToArray();
-            _fileCacheFlags = new bool[_msDataFilePaths.Length];
 
             // Consume end tag
             reader.ReadEndElement();
@@ -394,7 +370,7 @@ namespace pwiz.Skyline.Model.Results
                 writer.WriteElement(helper.ElementNames[0], OptimizationFunction);                
             }
 
-            int i = 0, countFiles = MSDataFilePaths.Count;
+            int i = 0, countFiles = FileCount;
             foreach (var path in MSDataFilePaths)
             {
                 writer.WriteStartElement(EL.sample_file);
@@ -418,7 +394,7 @@ namespace pwiz.Skyline.Model.Results
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return base.Equals(obj) && ArrayUtil.EqualsDeep(obj.MSDataFilePaths, MSDataFilePaths);
+            return base.Equals(obj) && ArrayUtil.EqualsDeep(obj.MSDataFileInfos, MSDataFileInfos);
         }
 
         public override bool Equals(object obj)
@@ -432,7 +408,7 @@ namespace pwiz.Skyline.Model.Results
         {
             unchecked
             {
-                return (base.GetHashCode()*397) ^ MSDataFilePaths.GetHashCodeDeep();
+                return (base.GetHashCode()*397) ^ MSDataFileInfos.GetHashCodeDeep();
             }
         }
 
@@ -443,6 +419,89 @@ namespace pwiz.Skyline.Model.Results
     /// Identity class to allow identity equality on <see cref="ChromatogramSetId"/>.
     /// </summary>
     public sealed class ChromatogramSetId : Identity
+    {        
+    }
+
+    public sealed class ChromFileInfo : Immutable
+    {
+        public ChromFileInfo(string filePath)
+            : this(filePath, null, null)
+        {            
+        }
+
+        public ChromFileInfo(ChromCachedFile cachedFile)
+            : this(cachedFile.FilePath, cachedFile.FileWriteTime, cachedFile.RunStartTime)
+        {            
+        }
+
+        private ChromFileInfo(string filePath, DateTime? fileWriteTime, DateTime? runStartTime)
+        {
+            Id = new ChromFileInfoId();
+            FilePath = filePath;
+            FileWriteTime = fileWriteTime;
+            RunStartTime = runStartTime;
+        }
+
+        public Identity Id { get; private set; }
+        public string FilePath { get; private set; }
+        public DateTime? FileWriteTime { get; private set; }
+        public DateTime? RunStartTime { get; private set; }
+
+        #region object overrides
+
+        public bool Equals(ChromFileInfo other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Equals(other.Id, Id) &&
+                Equals(other.FilePath, FilePath) &&
+                other.FileWriteTime.Equals(FileWriteTime) &&
+                other.RunStartTime.Equals(RunStartTime);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != typeof (ChromFileInfo)) return false;
+            return Equals((ChromFileInfo) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int result = Id.GetHashCode();
+                result = (result*397) ^ FilePath.GetHashCode();
+                result = (result*397) ^ (FileWriteTime.HasValue ? FileWriteTime.Value.GetHashCode() : 0);
+                result = (result*397) ^ (RunStartTime.HasValue ? RunStartTime.Value.GetHashCode() : 0);
+                return result;
+            }
+        }
+
+        #endregion
+
+        #region FilePath comparer
+        
+        public static readonly PathComparer PATH_COMPARER = new PathComparer();
+
+        public class PathComparer : IEqualityComparer<ChromFileInfo>
+        {
+            public bool Equals(ChromFileInfo f1, ChromFileInfo f2)
+            {
+                return Equals(f1.FilePath, f2.FilePath);
+            }
+
+            public int GetHashCode(ChromFileInfo f)
+            {
+                return f.GetHashCode();
+            }
+        }
+
+        #endregion
+    }
+
+    public sealed class ChromFileInfoId : Identity
     {        
     }
 

@@ -502,25 +502,22 @@ namespace pwiz.Skyline.Model.Results
 
     public struct ChromCachedFile
     {
-        private static DateTime GetLastWriteTime(string filePath)
+        public static DateTime GetLastWriteTime(string filePath)
         {
             return File.GetLastWriteTime(SampleHelp.GetPathFilePart(filePath));
         }
 
-        public ChromCachedFile(string filePath)
-            : this(filePath, GetLastWriteTime(filePath))
-        {
-        }
-
-        public ChromCachedFile(string filePath, DateTime fileWriteTime)
+        public ChromCachedFile(string filePath, DateTime fileWriteTime, DateTime? runStartTime)
             : this()
         {
             FilePath = filePath;
             FileWriteTime = fileWriteTime;
+            RunStartTime = runStartTime;
         }
 
         public string FilePath { get; private set; }
         public DateTime FileWriteTime { get; private set; }
+        public DateTime? RunStartTime { get; private set; }
 
         public bool IsCurrent
         {
@@ -651,6 +648,8 @@ namespace pwiz.Skyline.Model.Results
 
         public double PrecursorMz { get { return _groupHeaderInfo.Precursor; } }
         public string FilePath { get { return _allFiles[_groupHeaderInfo.FileIndex].FilePath; } }
+        public DateTime FileWriteTime { get { return _allFiles[_groupHeaderInfo.FileIndex].FileWriteTime; } }
+        public DateTime? RunStartTime { get { return _allFiles[_groupHeaderInfo.FileIndex].RunStartTime; } }
         public int NumTransitions { get { return _groupHeaderInfo.NumTransitions; } }
         public int NumPeaks { get { return _groupHeaderInfo.NumPeaks; } }
         public int MaxPeakIndex { get { return _groupHeaderInfo.MaxPeakIndex; } }

@@ -1818,15 +1818,15 @@ namespace pwiz.Skyline.Model.DocSettings
             if (PrecursorFilterType != FullScanPrecursorFilterType.None)
             {
                 writer.WriteAttribute(ATTR.precursor_filter_type, PrecursorFilterType);
-                writer.WriteAttribute(ATTR.precursor_filter, PrecursorFilter);
+                writer.WriteAttributeNullable(ATTR.precursor_filter, PrecursorFilter);
                 writer.WriteAttribute(ATTR.product_mass_analyzer, ProductMassAnalyzer);
-                writer.WriteAttribute(ATTR.product_res, ProductRes);
+                writer.WriteAttributeNullable(ATTR.product_res, ProductRes);
                 writer.WriteAttributeNullable(ATTR.product_res_mz, ProductResMz);
             }
             if (PrecursorMassAnalyzer != FullScanMassAnalyzerType.none)
             {
                 writer.WriteAttribute(ATTR.precursor_mass_analyzer, PrecursorMassAnalyzer);
-                writer.WriteAttribute(ATTR.precursor_res, PrecursorRes);
+                writer.WriteAttributeNullable(ATTR.precursor_res, PrecursorRes);
                 writer.WriteAttributeNullable(ATTR.precursor_res_mz, PrecursorResMz);
             }
         }

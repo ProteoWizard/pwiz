@@ -39,6 +39,8 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return Helpers.ParseEnum(Settings.Default.AreaPeptideOrderEnum, SummaryPeptideOrder.document);
             }
+
+            set { Settings.Default.AreaPeptideOrderEnum = value.ToString(); }
         }
 
         protected GraphData _graphData;

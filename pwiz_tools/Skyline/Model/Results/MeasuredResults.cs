@@ -73,32 +73,22 @@ namespace pwiz.Skyline.Model.Results
 
         public IEnumerable<IPooledStream> ReadStreams
         {
-            get
-            {
-                foreach (var cache in Caches)
-                    yield return cache.ReadStream;
-            }
+            get { return Caches.Select(cache => cache.ReadStream); }
         }
 
         public IEnumerable<string> CachePaths
         {
-            get
-            {
-                foreach (var cache in Caches)
-                    yield return cache.CachePath;
-            }
+            get { return Caches.Select(cache => cache.CachePath); }
         }
 
         public IEnumerable<string> CachedFilePaths
         {
-            get
-            {
-                foreach (var cache in Caches)
-                {
-                    foreach (var path in cache.CachedFilePaths)
-                        yield return path;
-                }
-            }
+            get { return Caches.SelectMany(cache => cache.CachedFilePaths); }
+        }
+
+        public IEnumerable<ChromCachedFile> CachedFileInfos
+        {
+            get { return Caches.SelectMany(cache => cache.CachedFiles); }
         }
 
         private IEnumerable<ChromatogramCache> Caches
@@ -190,15 +180,15 @@ namespace pwiz.Skyline.Model.Results
             }
 
             string cachePath = ChromatogramCache.FinalPathForName(documentPath, null);
-            var setCachedFiles = new HashSet<string>(results.CachedFilePaths);
-            var listCachedNames = new List<string>(setCachedFiles).ConvertAll(
-                path => SampleHelp.GetFileName(path));
-            var setCachedFileNames = new HashSet<string>(listCachedNames);
+            var enumCachedFiles = results.CachedFileInfos.Select(f => new ChromFileInfo(f)).Distinct(ChromFileInfo.PATH_COMPARER);
+            var dictCachedFiles = enumCachedFiles.ToDictionary(cachedFile => cachedFile.FilePath);
+            var enumCachedNames = enumCachedFiles.Select(cachedFile => SampleHelp.GetFileName(cachedFile.FilePath));
+            var setCachedFileNames = new HashSet<string>(enumCachedNames);
             var chromatogramSets = new List<ChromatogramSet>();
             foreach (var chromSet in results.Chromatograms)
             {
                 chromatogramSets.Add(chromSet.ChangeFileCacheFlags(
-                    setCachedFiles, setCachedFileNames, cachePath));
+                    dictCachedFiles, setCachedFileNames, cachePath));
             }
 
             if (!ArrayUtil.ReferencesEqual(chromatogramSets, results.Chromatograms))
@@ -351,7 +341,8 @@ namespace pwiz.Skyline.Model.Results
                 if (!dicExistingIdToSet.TryGetValue(chromSet.Id.GlobalIndex, out chromSetExisting))
                     return true;
                 // If a previously existing set has changed files, then updat the cache
-                if (!ArrayUtil.EqualsDeep(chromSet.MSDataFilePaths, chromSetExisting.MSDataFilePaths))
+                if (!ArrayUtil.EqualsDeep(chromSet.MSDataFilePaths.ToArray(),
+                                          chromSetExisting.MSDataFilePaths.ToArray()))
                     return true;
             }
             return false;
@@ -643,6 +634,9 @@ namespace pwiz.Skyline.Model.Results
 
                 // This would mean that there were not data files
                 Debug.Assert(_setClone._listPartialCaches != null);
+                // Keep ReSharper happy
+                if (_setClone._listPartialCaches == null)
+                    return;
 
                 // Once everything is represented, if there is only one cache, then it is final
                 if (_setClone._listPartialCaches.Count == 1)

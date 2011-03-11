@@ -1531,7 +1531,7 @@ namespace pwiz.Skyline
                 {
                     var chromatogramSet = settings.MeasuredResults.Chromatograms[iResult];
                     if (fileIndex != -1)
-                        filePath = chromatogramSet.MSDataFilePaths[fileIndex];
+                        filePath = chromatogramSet.MSDataFileInfos[fileIndex].FilePath;
                     return chromatogramSet.Name;                    
                 }
             }
@@ -1936,7 +1936,19 @@ namespace pwiz.Skyline
                         totalTranContextMenuItem
                     });
                 }
-                if (graphType == GraphTypeRT.peptide)
+                if (graphType == GraphTypeRT.replicate)
+                {
+                    menuStrip.Items.Insert(iInsert++, replicateOrderContextMenuItem);
+                    if (replicateOrderContextMenuItem.DropDownItems.Count == 0)
+                    {
+                        replicateOrderContextMenuItem.DropDownItems.AddRange(new[]
+                        {
+                            replicateOrderDocumentContextMenuItem,
+                            replicateOrderAcqTimeContextMenuItem
+                        });
+                    }
+                }
+                else if (graphType == GraphTypeRT.peptide)
                 {
                     menuStrip.Items.Insert(iInsert++, peptideOrderContextMenuItem);
                     if (peptideOrderContextMenuItem.DropDownItems.Count == 0)
@@ -2308,6 +2320,15 @@ namespace pwiz.Skyline
 
             if (graphType == GraphTypeArea.replicate)
             {
+                menuStrip.Items.Insert(iInsert++, replicateOrderContextMenuItem);
+                if (replicateOrderContextMenuItem.DropDownItems.Count == 0)
+                {
+                    replicateOrderContextMenuItem.DropDownItems.AddRange(new[]
+                        {
+                            replicateOrderDocumentContextMenuItem,
+                            replicateOrderAcqTimeContextMenuItem
+                        });
+                }
                 areaNormalizeTotalContextMenuItem.Checked = 
                     (AreaGraphController.AreaView == AreaNormalizeToView.area_percent_view);
                 menuStrip.Items.Insert(iInsert++, areaNormalizeContextMenuItem);
@@ -2381,6 +2402,29 @@ namespace pwiz.Skyline
             UpdatePeakAreaGraph();
         }
 
+        private void replicateOrderContextMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            SummaryReplicateOrder replicateOrder = SummaryReplicateGraphPane.ReplicateOrder;
+            replicateOrderDocumentContextMenuItem.Checked = (replicateOrder == SummaryReplicateOrder.document);
+            replicateOrderAcqTimeContextMenuItem.Checked = (replicateOrder == SummaryReplicateOrder.time);
+        }
+
+        private void replicateOrderDocumentContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowReplicateOrder(SummaryReplicateOrder.document);
+        }
+
+        private void replicateOrderAcqTimeContextMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowReplicateOrder(SummaryReplicateOrder.time);
+        }
+
+        public void ShowReplicateOrder(SummaryReplicateOrder order)
+        {
+            SummaryReplicateGraphPane.ReplicateOrder = order;
+            UpdateSummaryGraphs();
+        }
+
         private void peptideOrderContextMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             SummaryPeptideOrder peptideOrder = SummaryPeptideGraphPane.PeptideOrder;
@@ -2391,24 +2435,22 @@ namespace pwiz.Skyline
 
         private void peptideOrderDocumentContextMenuItem_Click(object sender, EventArgs e)
         {
-            ShowPeptideOrderDocument();
-        }
-        
-        public void ShowPeptideOrderDocument()
-        {
-            Settings.Default.AreaPeptideOrderEnum = SummaryPeptideOrder.document.ToString();
-            UpdateSummaryGraphs();
+            ShowPeptideOrder(SummaryPeptideOrder.document);
         }
 
         private void peptideOrderRTContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.AreaPeptideOrderEnum = SummaryPeptideOrder.time.ToString();
-            UpdateSummaryGraphs();
+            ShowPeptideOrder(SummaryPeptideOrder.time);
         }
 
         private void peptideOrderAreaContextMenuItem_Click(object sender, EventArgs e)
         {
-            Settings.Default.AreaPeptideOrderEnum = SummaryPeptideOrder.area.ToString();
+            ShowPeptideOrder(SummaryPeptideOrder.area);
+        }
+
+        public void ShowPeptideOrder(SummaryPeptideOrder order)
+        {
+            SummaryPeptideGraphPane.PeptideOrder = order;
             UpdateSummaryGraphs();
         }
 

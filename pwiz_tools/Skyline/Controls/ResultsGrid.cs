@@ -1027,13 +1027,13 @@ namespace pwiz.Skyline.Controls
             for (int iReplicate = 0; iReplicate < settings.MeasuredResults.Chromatograms.Count; iReplicate++)
             {
                 var results = settings.MeasuredResults.Chromatograms[iReplicate];
-                for (int iFile = 0; iFile < results.MSDataFilePaths.Count; iFile++)
+                for (int iFile = 0; iFile < results.FileCount; iFile++)
                 {
                     var rowIdZero = new RowIdentifier(iReplicate, iFile, 0);
                     ICollection<RowIdentifier> optStepRowIds;
                     if (!replicateRowDict.TryGetValue(rowIdZero, out optStepRowIds))
                         continue;
-                    var filePath = results.MSDataFilePaths[iFile];
+                    var filePath = results.MSDataFileInfos[iFile].FilePath;
                     var fileName = SampleHelp.GetFileName(filePath);
                     var sampleName = SampleHelp.GetFileSampleName(filePath);
                     foreach (var rowId in optStepRowIds)
