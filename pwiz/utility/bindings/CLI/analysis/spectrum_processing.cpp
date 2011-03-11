@@ -96,7 +96,7 @@ class SpectrumList_FilterPredicate_Custom : public b::SpectrumList_Filter::Predi
 
     virtual boost::logic::tribool accept(const pwiz::msdata::SpectrumIdentity& spectrumIdentity) const;
 
-    virtual bool accept(const pwiz::msdata::Spectrum& spectrum) const;
+    virtual boost::logic::tribool accept(const pwiz::msdata::Spectrum& spectrum) const;
 
     virtual bool done();
 };
@@ -111,7 +111,7 @@ boost::logic::tribool SpectrumList_FilterPredicate_Custom::accept(const pwiz::ms
     return boost::logic::tribool(boost::logic::indeterminate);
 }
 
-bool SpectrumList_FilterPredicate_Custom::accept(const pwiz::msdata::Spectrum& spectrum) const
+boost::logic::tribool SpectrumList_FilterPredicate_Custom::accept(const pwiz::msdata::Spectrum& spectrum) const
 {
     return filterDelegatePtr(&spectrum);
 }
@@ -169,7 +169,7 @@ bool SpectrumList_Filter::marshal(const pwiz::msdata::Spectrum* s)
     // use null deallocator because this spectrum pointer comes from a const reference
     pwiz::msdata::SpectrumPtr* s2 = new pwiz::msdata::SpectrumPtr(const_cast<pwiz::msdata::Spectrum*>(s), nullDeallocate);
     msdata::Spectrum^ s3 = gcnew msdata::Spectrum(s2);
-    return userManagedPredicate(s3);
+    return (bool) userManagedPredicate(s3);
 }
 
 SpectrumList_Filter::SpectrumList_Filter(msdata::SpectrumList^ inner,
