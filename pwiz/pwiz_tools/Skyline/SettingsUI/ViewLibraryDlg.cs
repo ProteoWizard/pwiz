@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -1503,7 +1504,7 @@ namespace pwiz.Skyline.SettingsUI
                     break;
                 // NIST libraries sometimes use [?] when modification cannot be identified
                 double massDiff;
-                if (double.TryParse(sequence.Substring(i, iEnd - i), out massDiff))
+                if (double.TryParse(sequence.Substring(i, iEnd - i), NumberStyles.Number, CultureInfo.InvariantCulture, out massDiff))
                 {
                     modList.Add(new ModificationInfo(iMod, sequence[iAa], massDiff * signVal));
                 }
