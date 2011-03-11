@@ -78,7 +78,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_MetadataFixer::spectrum(size_t index, boo
     double tic = 0;
     if (!mzs.empty())
     {
-        double bpmz, bpi = 0;
+        double bpmz, bpi = -1;
         for (size_t i=0, end=mzs.size(); i < end; ++i)
         {
             tic += intensities[i];
