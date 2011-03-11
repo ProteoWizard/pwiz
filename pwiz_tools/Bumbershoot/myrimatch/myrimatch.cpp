@@ -219,12 +219,13 @@ namespace myrimatch
                                                                          g_rtConfig->AvgPrecursorMzTolerance.units) );
         }
 
-		//size_t numSpectra = spectra.size();
+		size_t monoPrecursorHypotheses = 0, avgPrecursorHypotheses = 0;
 
 		// Create a map of precursor masses to the spectrum indices
 		monoSpectraByChargeState.resize( g_rtConfig->maxChargeStateFromSpectra );
         avgSpectraByChargeState.resize( g_rtConfig->maxChargeStateFromSpectra );
 		for( int z=0; z < g_rtConfig->maxChargeStateFromSpectra; ++z )
+        {
 			BOOST_FOREACH(Spectrum* s, spectra)
 				BOOST_FOREACH(const PrecursorMassHypothesis& p, s->precursorMassHypotheses)
                     if (p.charge != z+1) continue;
@@ -233,6 +234,14 @@ namespace myrimatch
                         monoSpectraByChargeState[z].insert(make_pair(p.mass, make_pair(s, p)));
                     else
                         avgSpectraByChargeState[z].insert(make_pair(p.mass, make_pair(s, p)));
+
+            monoPrecursorHypotheses += monoSpectraByChargeState[z].size();
+            avgPrecursorHypotheses += avgSpectraByChargeState[z].size();
+        }
+
+		if( !g_numChildren )
+            cout << "Monoisotopic mass precursor hypotheses: " << monoPrecursorHypotheses << endl
+                 << "Average mass precursor hypotheses: " << avgPrecursorHypotheses << endl;
 
 		g_rtConfig->curMinPeptideMass = spectra.front()->precursorMassHypotheses.front().mass;
 		g_rtConfig->curMaxPeptideMass = 0;
@@ -561,6 +570,12 @@ namespace myrimatch
                 Digestion digestion( protein, g_rtConfig->cleavageAgentRegex, g_rtConfig->digestionConfig );
                 for( Digestion::const_iterator itr = digestion.begin(); itr != digestion.end(); )
                 {
+                    if (itr->sequence().find_first_of("BXZ") != string::npos)
+                    {
+                        ++itr;
+                        continue;
+                    }
+
                     // a selenopeptide's molecular weight can be lower than its monoisotopic mass!
                     double minMass = min(itr->monoisotopicMass(), itr->molecularWeight());
                     double maxMass = max(itr->monoisotopicMass(), itr->molecularWeight());

@@ -52,7 +52,7 @@ namespace myrimatch
 			return;
 
         // calculate precursor mass hypotheses
-        if (precursorMzType == MassType_Monoisotopic)
+        if (precursorMzType == MassType_Monoisotopic || g_rtConfig->precursorMzToleranceRule == MzToleranceRule_Mono)
         {
             // for monoisotopic precursors, create a hypothesis for each adjustment and possible charge state
             IntegerSet::const_iterator itr = g_rtConfig->MonoisotopeAdjustmentSet.begin();
