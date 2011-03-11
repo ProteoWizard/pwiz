@@ -85,8 +85,9 @@ void testWrapScanTimeRange()
     ostringstream oss;
     oss << "scanTime [0," << timeHighInSeconds << "]";
     SpectrumListFactory::wrap(msd, oss.str());
-    unit_assert(sl->size() == 1);
+    unit_assert(sl->size() == 2);
     unit_assert(sl->spectrumIdentity(0).id == "scan=19");
+    unit_assert(sl->spectrumIdentity(1).id == "sample=1 period=1 cycle=23 experiment=1"); // not in scan time order (42 seconds)
 }
 
 
@@ -133,7 +134,7 @@ void testWrapMSLevel()
 
 void testWrapDefaultArrayLength()
 {
-    // test no effect
+    // test that the minimum length is 1 (due to 0 being the "unset" value)
     {
         MSData msd;
         examples::initializeTiny(msd);
@@ -143,7 +144,8 @@ void testWrapDefaultArrayLength()
         unit_assert(sl->size() == 5);
 
         SpectrumListFactory::wrap(msd, "defaultArrayLength 0-");
-        unit_assert(sl->size() == 5);
+        unit_assert(sl->size() == 4);
+        unit_assert(sl->find("scan=21") == sl->size());
     }
 
     // test filtering out all spectra
@@ -197,10 +199,11 @@ void testWrapActivation()
     {
         MSData msd;
         examples::initializeTiny(msd);
+        SpectrumListFactory::wrap(msd, "msLevel 2-");
 
         SpectrumListPtr& sl = msd.run.spectrumListPtr;
         unit_assert(sl.get());
-        unit_assert(sl->size() == 5);
+        unit_assert(sl->size() == 2);
 
         SpectrumListFactory::wrap(msd, "activation CID");
         unit_assert(sl->size() == 1);
@@ -209,10 +212,11 @@ void testWrapActivation()
     {
         MSData msd;
         examples::initializeTiny(msd);
+        SpectrumListFactory::wrap(msd, "msLevel 2-");
 
         SpectrumListPtr& sl = msd.run.spectrumListPtr;
         unit_assert(sl.get());
-        unit_assert(sl->size() == 5);
+        unit_assert(sl->size() == 2);
 
         SpectrumListFactory::wrap(msd, "activation ETD");
         unit_assert(sl->size() == 1);
@@ -221,10 +225,11 @@ void testWrapActivation()
     {
         MSData msd;
         examples::initializeTiny(msd);
+        SpectrumListFactory::wrap(msd, "msLevel 2-");
 
         SpectrumListPtr& sl = msd.run.spectrumListPtr;
         unit_assert(sl.get());
-        unit_assert(sl->size() == 5);
+        unit_assert(sl->size() == 2);
 
         unit_assert_throws(SpectrumListFactory::wrap(msd, "activation UNEXPECTED_INPUT"), runtime_error);
     }
@@ -243,7 +248,6 @@ void testWrapMassAnalyzer()
         unit_assert(sl->size() == 5);
 
         SpectrumListFactory::wrap(msd, "analyzerType ITMS");
-        size_t siz = sl->size();
         unit_assert(sl->size() == 5);
     }
     // test filter by FTMS analyzer type
@@ -282,7 +286,6 @@ void testWrapPolarity()
         unit_assert(sl->size() == 5);
 
         SpectrumListFactory::wrap(msd, "polarity positive");
-        size_t siz = sl->size();
         unit_assert(sl->size() == 3);
     }
     // test filter by + polarity
@@ -295,7 +298,6 @@ void testWrapPolarity()
         unit_assert(sl->size() == 5);
 
         SpectrumListFactory::wrap(msd, "polarity +");
-        size_t siz = sl->size();
         unit_assert(sl->size() == 3);
     }
     // test filter by negative polarity

@@ -612,10 +612,10 @@ class IndexList : public std::vector<size_t> {};
 
 enum DetailLevel
 {
-    DetailLevel_FullData,
-    DetailLevel_FullMetadata,
+	DetailLevel_InstantMetadata,
     DetailLevel_FastMetadata,
-	DetailLevel_InstantMetadata
+    DetailLevel_FullMetadata,
+    DetailLevel_FullData
 };
 
 /// 

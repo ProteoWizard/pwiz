@@ -1256,10 +1256,10 @@ public DEFINE_STD_VECTOR_WRAPPER_FOR_VALUE_TYPE(IndexList, size_t, int, NATIVE_V
 /// </summary>
 public enum class DetailLevel
 {
-    FullData,
-    FullMetadata,
+	InstantMetadata,
     FastMetadata,
-	InstantMetadata
+    FullMetadata,
+    FullData
 };
 
 /// <summary>

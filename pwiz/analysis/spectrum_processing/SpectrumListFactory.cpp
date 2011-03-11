@@ -237,7 +237,7 @@ struct StripIonTrapSurveyScans : public SpectrumList_Filter::Predicate
         return boost::logic::indeterminate; // need full Spectrum
     }
 
-    virtual bool accept(const Spectrum& spectrum) const
+    virtual boost::logic::tribool accept(const Spectrum& spectrum) const
     {
         SpectrumInfo info(spectrum);
         return !(info.msLevel==1 && cvIsA(info.massAnalyzerType, MS_ion_trap));

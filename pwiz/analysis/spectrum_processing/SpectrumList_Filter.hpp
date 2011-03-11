@@ -52,7 +52,7 @@ class PWIZ_API_DECL SpectrumList_Filter : public msdata::SpectrumListWrapper
         virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const = 0;
 
         /// return true iff Spectrum is accepted
-        virtual bool accept(const msdata::Spectrum& spectrum) const {return false;}
+        virtual boost::logic::tribool accept(const msdata::Spectrum& spectrum) const {return false;}
 
         /// return true iff done accepting spectra; 
         /// this allows early termination of the iteration through the original
@@ -112,7 +112,7 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_ScanEventSet : public SpectrumL
     public:
     SpectrumList_FilterPredicate_ScanEventSet(const util::IntegerSet& scanEventSet);
     virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const {return boost::logic::indeterminate;}
-    virtual bool accept(const msdata::Spectrum& spectrum) const;
+    virtual boost::logic::tribool accept(const msdata::Spectrum& spectrum) const;
 
     private:
     util::IntegerSet scanEventSet_;
@@ -124,13 +124,11 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_ScanTimeRange : public Spectrum
     public:
     SpectrumList_FilterPredicate_ScanTimeRange(double scanTimeLow, double scanTimeHigh);
     virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const;
-    virtual bool accept(const msdata::Spectrum& spectrum) const;
-    virtual bool done() const;
+    virtual boost::logic::tribool accept(const msdata::Spectrum& spectrum) const;
 
     private:
     double scanTimeLow_;
     double scanTimeHigh_;
-    mutable bool done_;
 };
 
 
@@ -139,7 +137,7 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_MSLevelSet : public SpectrumLis
     public:
     SpectrumList_FilterPredicate_MSLevelSet(const util::IntegerSet& msLevelSet);
     virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const {return boost::logic::indeterminate;}
-    virtual bool accept(const msdata::Spectrum& spectrum) const;
+    virtual boost::logic::tribool accept(const msdata::Spectrum& spectrum) const;
 
     private:
     util::IntegerSet msLevelSet_;
@@ -151,7 +149,7 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_PrecursorMzSet : public Spectru
     public:
 	SpectrumList_FilterPredicate_PrecursorMzSet(const std::set<double>& precursorMzSet);
     virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const {return boost::logic::indeterminate;}
-    virtual bool accept(const msdata::Spectrum& spectrum) const;
+    virtual boost::logic::tribool accept(const msdata::Spectrum& spectrum) const;
 
     private:
 	std::set<double> precursorMzSet_;
@@ -165,7 +163,7 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_DefaultArrayLengthSet : public 
     public:
     SpectrumList_FilterPredicate_DefaultArrayLengthSet(const util::IntegerSet& defaultArrayLengthSet);
     virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const {return boost::logic::indeterminate;}
-    virtual bool accept(const msdata::Spectrum& spectrum) const;
+    virtual boost::logic::tribool accept(const msdata::Spectrum& spectrum) const;
 
     private:
     util::IntegerSet defaultArrayLengthSet_;
@@ -177,7 +175,7 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_MS2ActivationType : public Spec
     public:
     SpectrumList_FilterPredicate_MS2ActivationType(const std::set<pwiz::cv::CVID> filterItem, bool hasNoneOf_ = false);
     virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const {return boost::logic::indeterminate;}
-    virtual bool accept(const msdata::Spectrum& spectrum) const;
+    virtual boost::logic::tribool accept(const msdata::Spectrum& spectrum) const;
 
     private:
     std::set<pwiz::cv::CVID> cvFilterItems;
@@ -190,7 +188,7 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_AnalyzerType : public SpectrumL
     public:
     SpectrumList_FilterPredicate_AnalyzerType(const std::set<pwiz::cv::CVID> filterItem);
     virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const {return boost::logic::indeterminate;}
-    virtual bool accept(const msdata::Spectrum& spectrum) const;
+    virtual boost::logic::tribool accept(const msdata::Spectrum& spectrum) const;
 
     private:
     std::set<pwiz::cv::CVID> cvFilterItems;
@@ -202,7 +200,7 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_Polarity : public SpectrumList_
     public:
     SpectrumList_FilterPredicate_Polarity(pwiz::cv::CVID polarity);
     virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const {return boost::logic::indeterminate;}
-    virtual bool accept(const msdata::Spectrum& spectrum) const;
+    virtual boost::logic::tribool accept(const msdata::Spectrum& spectrum) const;
 
     private:
     pwiz::cv::CVID polarity;

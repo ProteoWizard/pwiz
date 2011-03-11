@@ -66,7 +66,10 @@ SpectrumListPtr createSpectrumList()
         spectrum->id = "scan=" + lexical_cast<string>(100+i);
         vector<MZIntensityPair> pairs(i);
         spectrum->setMZIntensityPairs(pairs, MS_number_of_counts);
-        spectrum->set(MS_ms_level, i%3==0?1:2);
+
+        bool isMS1 = i%3==0;
+        spectrum->set(MS_ms_level, isMS1 ? 1 : 2);
+        spectrum->set(isMS1 ? MS_MS1_spectrum : MS_MSn_spectrum);
 
         // outfit the spectra with mass analyzer definitions to test the massAnalyzer filter
         spectrum->scanList.scans.push_back(Scan());
@@ -85,43 +88,26 @@ SpectrumListPtr createSpectrumList()
                 p->componentList.push_back(Component(MS_radial_ejection_linear_ion_trap, 0/*order*/));
         }
 
+        if (i%3 != 0)
+            spectrum->precursors.push_back(Precursor(500, 3));
+
         // add precursors and activation types to the MS2 spectra
         if (i==1 || i ==5) // ETD
         {
-            spectrum->set(MS_MSn_spectrum);
-            spectrum->precursors.resize(1);
             spectrum->precursors[0].activation.set(MS_electron_transfer_dissociation);
-            spectrum->precursors[0].selectedIons.resize(1);
-            spectrum->precursors[0].selectedIons[0].set(MS_selected_ion_m_z, 500., MS_m_z);
-            spectrum->precursors[0].selectedIons[0].set(MS_charge_state, 3);
         }
         else if (i==2) // CID
         {
-            spectrum->set(MS_MSn_spectrum);
-            spectrum->precursors.resize(1);
             spectrum->precursors[0].activation.set(MS_collision_induced_dissociation);
-            spectrum->precursors[0].selectedIons.resize(1);
-            spectrum->precursors[0].selectedIons[0].set(MS_selected_ion_m_z, 500., MS_m_z);
-            spectrum->precursors[0].selectedIons[0].set(MS_charge_state, 3);
         }
         else if (i==4 || i==8) // HCD
         {
-            spectrum->set(MS_MSn_spectrum);
-            spectrum->precursors.resize(1);
             spectrum->precursors[0].activation.set(MS_high_energy_collision_induced_dissociation);
-            spectrum->precursors[0].selectedIons.resize(1);
-            spectrum->precursors[0].selectedIons[0].set(MS_selected_ion_m_z, 500., MS_m_z);
-            spectrum->precursors[0].selectedIons[0].set(MS_charge_state, 3);
         }
         else if (i==7) // ETD + SA
         {
-            spectrum->set(MS_MSn_spectrum);
-            spectrum->precursors.resize(1);
             spectrum->precursors[0].activation.set(MS_electron_transfer_dissociation);
             spectrum->precursors[0].activation.set(MS_collision_induced_dissociation);
-            spectrum->precursors[0].selectedIons.resize(1);
-            spectrum->precursors[0].selectedIons[0].set(MS_selected_ion_m_z, 500., MS_m_z);
-            spectrum->precursors[0].selectedIons[0].set(MS_charge_state, 3);
         }
 
         spectrum->scanList.scans.push_back(Scan());
@@ -185,9 +171,17 @@ struct EvenMS2Predicate : public SpectrumList_Filter::Predicate
         return boost::logic::indeterminate;
     }
 
-    virtual bool accept(const Spectrum& spectrum) const
+    virtual tribool accept(const Spectrum& spectrum) const
     {
-        return (spectrum.cvParam(MS_ms_level).valueAs<int>() == 2);
+        CVParam param = spectrum.cvParamChild(MS_spectrum_type);
+        if (param.cvid == CVID_Unknown) return boost::logic::indeterminate;
+        if (!cvIsA(param.cvid, MS_mass_spectrum))
+            return true; // MS level filter doesn't affect non-MS spectra
+
+        param = spectrum.cvParam(MS_ms_level);
+        if (param.cvid == CVID_Unknown) return boost::logic::indeterminate;
+
+        return (param.valueAs<int>() == 2);
     }
 };
 
@@ -398,11 +392,13 @@ void testMS2Activation(SpectrumListPtr sl)
 {
     if (os_) *os_ << "testMS2Activation:\n";
 
+    SpectrumListPtr ms2filter(new SpectrumList_Filter(sl, SpectrumList_FilterPredicate_MSLevelSet(IntegerSet(2))));
+
     set<CVID> cvIDs;
     // CID
     cvIDs.insert(MS_electron_transfer_dissociation);
     cvIDs.insert(MS_high_energy_collision_induced_dissociation);
-    SpectrumList_Filter filter(sl, 
+    SpectrumList_Filter filter(ms2filter,
                         SpectrumList_FilterPredicate_MS2ActivationType(cvIDs, true));
 
     if (os_) 
@@ -418,7 +414,7 @@ void testMS2Activation(SpectrumListPtr sl)
     cvIDs.clear();
     cvIDs.insert(MS_electron_transfer_dissociation);
     cvIDs.insert(MS_collision_induced_dissociation);
-    SpectrumList_Filter filter1(sl, 
+    SpectrumList_Filter filter1(ms2filter, 
                         SpectrumList_FilterPredicate_MS2ActivationType(cvIDs, false));
     if (os_) 
     {
@@ -432,7 +428,7 @@ void testMS2Activation(SpectrumListPtr sl)
     // ETD
     cvIDs.clear();
     cvIDs.insert(MS_electron_transfer_dissociation);
-    SpectrumList_Filter filter2(sl, 
+    SpectrumList_Filter filter2(ms2filter, 
                         SpectrumList_FilterPredicate_MS2ActivationType(cvIDs, false));
     if (os_) 
     {
@@ -448,7 +444,7 @@ void testMS2Activation(SpectrumListPtr sl)
     // HCD
     cvIDs.clear();
     cvIDs.insert(MS_high_energy_collision_induced_dissociation);
-    SpectrumList_Filter filter3(sl, 
+    SpectrumList_Filter filter3(ms2filter, 
                         SpectrumList_FilterPredicate_MS2ActivationType(cvIDs, false));
     if (os_) 
     {
