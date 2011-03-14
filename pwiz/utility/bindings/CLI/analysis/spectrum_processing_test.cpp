@@ -31,9 +31,11 @@ using namespace System;
 using namespace System::Collections::Generic;
 
 
-bool isIndexEven(Spectrum^ s)
+Nullable<bool> isIndexEven(Spectrum^ s)
 {
-    return (s->index % 2) == 0;
+    if (String::IsNullOrEmpty(s->id))
+        return Nullable<bool>();
+    return Nullable<bool>((s->index % 2) == 0);
 }
 
 void testFilter()
@@ -50,6 +52,9 @@ void testFilter()
 
     SpectrumList_FilterAcceptSpectrum^ fas = gcnew SpectrumList_FilterAcceptSpectrum(isIndexEven);
     SpectrumList_Filter^ slf = gcnew SpectrumList_Filter(sl, fas);
+
+    for (int i=0; i < slf->size(); ++i)
+        System::Console::WriteLine("{0}: {1} {2}", i, slf->spectrum(i)->index, slf->spectrum(i)->id);
 
     unit_assert(slf->size() == 5);
     for (int i=0; i < 5; ++i)
@@ -96,6 +101,31 @@ void testPeakFilter()
     unit_assert(intensityListFiltered[4] == 4);
 }
 
+
+bool indexGreaterThan(Spectrum^ lhs, Spectrum^ rhs)
+{
+    return lhs->index > rhs->index;
+}
+
+void testSorter()
+{
+    SpectrumListSimple^ sl = gcnew SpectrumListSimple();
+
+    for (int i=0; i < 5; ++i)
+    {
+        Spectrum^ s = gcnew Spectrum();
+        s->index = i;
+        s->set(CVID::MS_ms_level, 2);
+        sl->spectra->Add(s);
+    }
+
+    SpectrumList_Sorter_LessThan^ sllt = gcnew SpectrumList_Sorter_LessThan(indexGreaterThan);
+    SpectrumList_Sorter^ sls = gcnew SpectrumList_Sorter(sl, sllt);
+
+    for (int i=0; i < 5; ++i)
+        unit_assert(sls->spectrum(i)->index == 4-i);
+}
+
 // TODO: test more filters
 
 int main()
@@ -104,6 +134,7 @@ int main()
     {
         testFilter();
         testPeakFilter();
+        //FIXME: testSorter();
         return 0;
     }
     catch (std::exception& e)

@@ -109,9 +109,7 @@ public ref class SpectrumListFactory abstract
 /// <summary>
 /// Delegate for filtering spectra in SpectrumList_Filter
 /// </summary>
-public delegate bool SpectrumList_FilterAcceptSpectrum(msdata::Spectrum^);
-private delegate bool SpectrumList_FilterAcceptSpectrumWrapper(const pwiz::msdata::Spectrum*);
-
+public delegate System::Nullable<bool> SpectrumList_FilterAcceptSpectrum(msdata::Spectrum^);
 
 public ref class SpectrumList_FilterPredicate abstract
 {
@@ -187,10 +185,8 @@ public ref class SpectrumList_Filter : public msdata::SpectrumList
 
     private:
 
-    SpectrumList_FilterAcceptSpectrum^ userManagedPredicate;
-    SpectrumList_FilterAcceptSpectrumWrapper^ userManagedPredicateWrapper;
-    SpectrumList_FilterPredicate^ managedPredicate;
-    bool marshal(const pwiz::msdata::Spectrum* s);
+    ref class Impl;
+    Impl^ impl_;
 };
 
 
@@ -198,24 +194,7 @@ public ref class SpectrumList_Filter : public msdata::SpectrumList
 /// Delegate for comparing spectra in SpectrumList_Sorter
 /// </summary>
 public delegate bool SpectrumList_Sorter_LessThan(msdata::Spectrum^, msdata::Spectrum^);
-private delegate bool SpectrumList_Sorter_LessThanWrapper(const pwiz::msdata::Spectrum*, const pwiz::msdata::Spectrum*);
 
-/// <summary>
-/// Base predicate intended to be overriden with custom predicate for comparing spectra in SpectrumList_Sorter
-/// </summary>
-class SpectrumList_SorterPredicate : public pwiz::analysis::SpectrumList_Sorter::Predicate
-{
-    bool(*sorterDelegatePtr)(const pwiz::msdata::Spectrum*, const pwiz::msdata::Spectrum*);
-
-    public:
-    SpectrumList_SorterPredicate(void* sorterDelegatePtr);
-
-    virtual boost::logic::tribool accept(const pwiz::msdata::SpectrumIdentity& lhsIdentity,
-                                         const pwiz::msdata::SpectrumIdentity& rhsIdentity) const;
-
-    virtual bool accept(const pwiz::msdata::Spectrum& lhs,
-                        const pwiz::msdata::Spectrum& rhs) const;
-};
 
 /// <summary>
 /// SpectrumList implementation sorted by a user's predicate
