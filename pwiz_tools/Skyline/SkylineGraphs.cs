@@ -1983,10 +1983,10 @@ namespace pwiz.Skyline
         private void timeGraphMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             GraphTypeRT graphType = RTGraphController.GraphType;
-            linearRegressionContextMenuItem.Checked = (graphType == GraphTypeRT.regression);
-            replicateComparisonContextMenuItem.Checked = (graphType == GraphTypeRT.replicate);
-            timePeptideComparisonMenuItem.Checked = (graphType == GraphTypeRT.peptide);
-            schedulingContextMenuItem.Checked = (graphType == GraphTypeRT.schedule);
+            linearRegressionMenuItem.Checked = linearRegressionContextMenuItem.Checked = (graphType == GraphTypeRT.regression);
+            replicateComparisonMenuItem.Checked = replicateComparisonContextMenuItem.Checked = (graphType == GraphTypeRT.replicate);
+            timePeptideComparisonMenuItem.Checked = timePeptideComparisonContextMenuItem.Checked = (graphType == GraphTypeRT.peptide);
+            schedulingMenuItem.Checked = schedulingContextMenuItem.Checked = (graphType == GraphTypeRT.schedule);
         }
 
         private void linearRegressionMenuItem_Click(object sender, EventArgs e)
@@ -2379,8 +2379,8 @@ namespace pwiz.Skyline
         private void areaGraphMenuItem_DropDownOpening(object sender, EventArgs e)
         {
             GraphTypeArea graphType = AreaGraphController.GraphType;
-            areaReplicateComparisonContextMenuItem.Checked = (graphType == GraphTypeArea.replicate);
-            areaPeptideComparisonContextMenuItem.Checked = (graphType == GraphTypeArea.peptide);
+            areaReplicateComparisonMenuItem.Checked = areaReplicateComparisonContextMenuItem.Checked = (graphType == GraphTypeArea.replicate);
+            areaPeptideComparisonMenuItem.Checked = areaPeptideComparisonContextMenuItem.Checked = (graphType == GraphTypeArea.peptide);
         }
 
         private void areaReplicateComparisonMenuItem_Click(object sender, EventArgs e)

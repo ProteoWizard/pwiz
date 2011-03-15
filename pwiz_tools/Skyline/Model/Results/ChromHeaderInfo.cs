@@ -314,16 +314,18 @@ namespace pwiz.Skyline.Model.Results
         [Flags]
         public enum FlagValues
         {
-            degenerate_fwhm = 0x1,
-            forced_integration = 0x2,
-            time_normalized = 0x4,
+            degenerate_fwhm =       0x01,
+            forced_integration =    0x02,
+            time_normalized =       0x04,
+            peak_truncation_known = 0x08,
+            peak_truncated =        0x10
         }
 
 // ReSharper disable InconsistentNaming
         public static ChromPeak EMPTY;
 // ReSharper restore InconsistentNaming
 
-        public ChromPeak(CrawdadPeak peak, FlagValues flags, float[] times)
+        public ChromPeak(CrawdadPeak peak, FlagValues flags, IList<float> times, IList<float> intensities)
             : this()
         {
             // Get the interval being used to convert from Crawdad index based numbers
@@ -354,6 +356,16 @@ namespace pwiz.Skyline.Model.Results
             Flags = flags;
             if (peak.FwhmDegenerate)
                 Flags |= FlagValues.degenerate_fwhm;
+
+            // Calculate peak truncation as a peak extent at either end of the
+            // recorded values, where the intensity is higher than the other extent
+            // by more than 1% of the peak height.
+            Flags |= FlagValues.peak_truncation_known;
+            const double truncationTolerance = 0.01;
+            double deltaIntensityExtents = (intensities[peak.EndIndex] - intensities[peak.StartIndex]) / Height;
+            if ((peak.StartIndex == 0 && deltaIntensityExtents < -truncationTolerance) ||
+                    (peak.EndIndex == times.Count - 1 && deltaIntensityExtents > truncationTolerance))
+                Flags |= FlagValues.peak_truncated;
         }
 
         public float RetentionTime { get; private set; }
@@ -380,6 +392,16 @@ namespace pwiz.Skyline.Model.Results
         public bool IsForcedIntegration
         {
             get { return (Flags & FlagValues.forced_integration) != 0; }
+        }
+
+        public bool? IsTruncated
+        {
+            get
+            {
+                if ((Flags & FlagValues.peak_truncation_known) == 0)
+                    return null;
+                return (Flags & FlagValues.peak_truncated) != 0;
+            }
         }
 
         public static float Intersect(ChromPeak peak1, ChromPeak peak2)
@@ -879,7 +901,7 @@ namespace pwiz.Skyline.Model.Results
             CrawdadPeakFinder finder = new CrawdadPeakFinder();
             finder.SetChromatogram(Times, Intensities);
             var peak = finder.GetPeak(startIndex, endIndex);
-            return new ChromPeak(peak, flags, Times);
+            return new ChromPeak(peak, flags, Times, Intensities);
         }
 
         public int IndexOfPeak(double retentionTime)

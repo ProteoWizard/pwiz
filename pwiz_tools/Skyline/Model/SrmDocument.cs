@@ -868,6 +868,7 @@ namespace pwiz.Skyline.Model
             height,
             fwhm,
             fwhm_degenerate,
+            truncated,
             user_set,
             peak_count_ratio,
             library_dotp,
@@ -1395,6 +1396,7 @@ namespace pwiz.Skyline.Model
             float? fwhm = reader.GetNullableFloatAttribute(ATTR.fwhm);
             float? area = reader.GetNullableFloatAttribute(ATTR.area);
             float? backgroundArea = reader.GetNullableFloatAttribute(ATTR.background);
+            int? truncated = reader.GetNullableIntAttribute(ATTR.truncated);
             float? libraryDotProduct = reader.GetNullableFloatAttribute(ATTR.library_dotp);
             var annotations = Annotations.EMPTY;
             if (!reader.IsEmptyElement)
@@ -1418,6 +1420,7 @@ namespace pwiz.Skyline.Model
                                                 backgroundArea,
                                                 new float?[countRatios],
                                                 new float?[countRatios],
+                                                truncated,
                                                 libraryDotProduct,
                                                 annotations,
                                                 userSet);
@@ -1680,6 +1683,7 @@ namespace pwiz.Skyline.Model
                 float height = reader.GetFloatAttribute(ATTR.height);
                 float fwhm = reader.GetFloatAttribute(ATTR.fwhm);
                 bool fwhmDegenerate = reader.GetBoolAttribute(ATTR.fwhm_degenerate);
+                bool? truncated = reader.GetNullableBoolAttribute(ATTR.truncated);
                 bool userSet = reader.GetBoolAttribute(ATTR.user_set);
                 var annotations = Annotations.EMPTY;
                 if (!reader.IsEmptyElement)
@@ -1698,6 +1702,7 @@ namespace pwiz.Skyline.Model
                                                height,
                                                fwhm,
                                                fwhmDegenerate,
+                                               truncated,
                                                new float?[countRatios],
                                                annotations,
                                                userSet);
@@ -2017,6 +2022,7 @@ namespace pwiz.Skyline.Model
             writer.WriteAttributeNullable(ATTR.fwhm, chromInfo.Fwhm);
             writer.WriteAttributeNullable(ATTR.area, chromInfo.Area);
             writer.WriteAttributeNullable(ATTR.background, chromInfo.BackgroundArea);
+            writer.WriteAttributeNullable(ATTR.truncated, chromInfo.Truncated);
             writer.WriteAttributeNullable(ATTR.library_dotp, chromInfo.LibraryDotProduct);
             WriteAnnotations(writer, chromInfo.Annotations);
         }
@@ -2113,6 +2119,7 @@ namespace pwiz.Skyline.Model
                 writer.WriteAttribute(ATTR.height, chromInfo.Height);
                 writer.WriteAttribute(ATTR.fwhm, chromInfo.Fwhm);
                 writer.WriteAttribute(ATTR.fwhm_degenerate, chromInfo.IsFwhmDegenerate);
+                writer.WriteAttributeNullable(ATTR.truncated, chromInfo.IsTruncated);
                 writer.WriteAttribute(ATTR.rank, chromInfo.Rank);
             }
             writer.WriteAttribute(ATTR.user_set, chromInfo.UserSet);

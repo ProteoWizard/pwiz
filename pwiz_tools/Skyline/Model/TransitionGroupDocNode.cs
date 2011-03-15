@@ -1240,6 +1240,7 @@ namespace pwiz.Skyline.Model
             private float? Fwhm { get; set; }
             private float? Area { get; set; }
             private float? BackgroundArea { get; set; }
+            private int? Truncated { get; set; }
             private float? LibraryDotProduct { get; set; }
             private IList<float?> Ratios { get; set; }
             private IList<float?> RatioStdevs { get; set; }
@@ -1276,7 +1277,14 @@ namespace pwiz.Skyline.Model
                     if (info.EndRetentionTime != 0)
                         EndTime = Math.Max(info.EndRetentionTime, EndTime ?? float.MinValue);
                     if (!info.IsFwhmDegenerate)
-                        Fwhm = Math.Max(info.Fwhm, Fwhm ?? float.MinValue);                        
+                        Fwhm = Math.Max(info.Fwhm, Fwhm ?? float.MinValue);
+                    if (info.IsTruncated.HasValue)
+                    {
+                        if (!Truncated.HasValue)
+                            Truncated = 0;
+                        if (info.IsTruncated.Value)
+                            Truncated++;
+                    }                        
                 }
 
                 if (info.UserSet)
@@ -1309,6 +1317,7 @@ namespace pwiz.Skyline.Model
                                                     BackgroundArea,
                                                     Ratios,
                                                     RatioStdevs,
+                                                    Truncated,
                                                     LibraryDotProduct,
                                                     Annotations,
                                                     UserSet);

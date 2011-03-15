@@ -16,7 +16,7 @@
     <property name="FileName" />
     <property name="SampleName" />
     <property name="ModifiedTime" />
-    <property name="AcquisitionTime" />
+    <property name="AcquiredTime" />
   </class>
   <class name="DbProtein">
     <id name="Id">
@@ -50,7 +50,7 @@
     <property name="FileName"/>
     <property name="SampleName"/>
     <property name="ModifiedTime" />
-    <property name="AcquisitionTime" />
+    <property name="AcquiredTime" />
   </class>
   <class name="DbPeptideResult">
     <id name="Id">
@@ -104,6 +104,7 @@
     <property name="TotalAreaRatio" />
     <!-- <property name="StdevAreaRatio" /> -->
     <property name="TotalAreaNormalized" />
+    <property name="CountTruncated" />
     <property name="LibraryDotProduct" />
     <!-- <property name="TotalSignalToNoise" /> -->
     <property name="UserSetTotal" />
@@ -173,6 +174,7 @@
     <property name="AreaNormalized" />
     <!--    <property name="SignalToNoise" /> -->
     <property name="Height" />
+    <property name="Truncated" />
     <property name="PeakRank" />
     <property name="UserSetPeak" />
     <property name="Note" length="10000" />

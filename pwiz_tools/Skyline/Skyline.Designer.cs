@@ -1387,6 +1387,7 @@ namespace pwiz.Skyline
             this.peakAreasMenuItem.Name = "peakAreasMenuItem";
             this.peakAreasMenuItem.Size = new System.Drawing.Size(191, 22);
             this.peakAreasMenuItem.Text = "&Peak Areas";
+            this.peakAreasMenuItem.DropDownOpening += new System.EventHandler(this.areaGraphMenuItem_DropDownOpening);
             // 
             // areaReplicateComparisonMenuItem
             // 
@@ -2779,15 +2780,15 @@ namespace pwiz.Skyline
             // replicateOrderDocumentContextMenuItem
             // 
             this.replicateOrderDocumentContextMenuItem.Name = "replicateOrderDocumentContextMenuItem";
-            this.replicateOrderDocumentContextMenuItem.Size = new System.Drawing.Size(164, 22);
+            this.replicateOrderDocumentContextMenuItem.Size = new System.Drawing.Size(152, 22);
             this.replicateOrderDocumentContextMenuItem.Text = "Document";
             this.replicateOrderDocumentContextMenuItem.Click += new System.EventHandler(this.replicateOrderDocumentContextMenuItem_Click);
             // 
             // replicateOrderAcqTimeContextMenuItem
             // 
             this.replicateOrderAcqTimeContextMenuItem.Name = "replicateOrderAcqTimeContextMenuItem";
-            this.replicateOrderAcqTimeContextMenuItem.Size = new System.Drawing.Size(164, 22);
-            this.replicateOrderAcqTimeContextMenuItem.Text = "Acquisition Time";
+            this.replicateOrderAcqTimeContextMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.replicateOrderAcqTimeContextMenuItem.Text = "Acquired Time";
             this.replicateOrderAcqTimeContextMenuItem.Click += new System.EventHandler(this.replicateOrderAcqTimeContextMenuItem_Click);
             // 
             // areaNormalizeContextMenuItem

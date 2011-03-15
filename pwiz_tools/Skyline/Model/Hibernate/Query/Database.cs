@@ -214,7 +214,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                                                                     FileName = replicateFile.FileName,
                                                                     SampleName = replicateFile.SampleName,
                                                                     ModifiedTime = replicateFile.ModifiedTime,
-                                                                    AcquisitionTime = replicateFile.AcquisitionTime,
+                                                                    AcquiredTime = replicateFile.AcquiredTime,
                                                                     ReplicateName = replicateFile.Replicate.Replicate,
                                                                     ReplicatePath = replicateFile.Replicate.ReplicatePath
                                                                 };
@@ -271,7 +271,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                                                         FileName = SampleHelp.GetFileName(filePath),
                                                         SampleName = SampleHelp.GetFileSampleName(filePath),
                                                         ModifiedTime = fileInfo.FileWriteTime,
-                                                        AcquisitionTime = fileInfo.RunStartTime
+                                                        AcquiredTime = fileInfo.RunStartTime
                                                     };
                     session.Save(dbResultFile);
                     
@@ -498,6 +498,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                             TotalBackground = chromInfo.BackgroundArea,
                             TotalAreaRatio = chromInfo.Ratios[0],
                             // StdevAreaRatio = chromInfo.RatioStdevs[0],
+                            CountTruncated = chromInfo.Truncated,
                             LibraryDotProduct = chromInfo.LibraryDotProduct,
                             // TotalSignalToNoise = SignalToNoise(chromInfo.Area, chromInfo.BackgroundArea),
                             Note = chromInfo.Annotations.Note,
@@ -663,6 +664,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                             transitionResult.Height = chromInfo.Height;
                             transitionResult.Fwhm = chromInfo.Fwhm;
                             transitionResult.FwhmDegenerate = chromInfo.IsFwhmDegenerate;
+                            transitionResult.Truncated = chromInfo.IsTruncated;
                             transitionResult.PeakRank = chromInfo.Rank;
                         }
                         session.Save(transitionResult);

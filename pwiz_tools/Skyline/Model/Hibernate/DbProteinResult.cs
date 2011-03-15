@@ -32,6 +32,6 @@ namespace pwiz.Skyline.Model.Hibernate
         public virtual String FileName { get; set; }
         public virtual String SampleName { get; set; }
         public virtual DateTime? ModifiedTime { get; set; }
-        public virtual DateTime? AcquisitionTime { get; set; }
+        public virtual DateTime? AcquiredTime { get; set; }
     }
 }

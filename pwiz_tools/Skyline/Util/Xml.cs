@@ -157,10 +157,13 @@ namespace pwiz.Skyline.Util
                 writer.WriteAttributeString(name, value.ToString());
         }
 
+        /// <summary>
+        /// Always writes a bool value, if one is present, or nothing for a null value.
+        /// </summary>
         public static void WriteAttributeNullable(this XmlWriter writer, Enum name, bool? value)
         {
             if (value.HasValue)
-                writer.WriteAttribute(name, value.Value);
+                writer.WriteAttribute(name, value.Value, !value.Value);
         }
 
         public static void WriteAttributeNullable(this XmlWriter writer, Enum name, int? value)

@@ -115,7 +115,7 @@ namespace pwiz.Skyline.Model.Results
                 return ChromPeak.EMPTY;
 
             var peak = CalcPeak(peakMax.StartIndex, peakMax.EndIndex);
-            return new ChromPeak(peak, flags, Times);
+            return new ChromPeak(peak, flags, Times, Intensities);
         }
 
         public void Interpolate(float[] timesNew, double intervalDelta, bool inferZeros)

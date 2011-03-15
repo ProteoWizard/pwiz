@@ -151,6 +151,7 @@ namespace pwiz.Skyline.Model.Results
                                         float? backgroundArea,
                                         IList<float?> ratios,
                                         IList<float?> stdevs,
+                                        int? truncated,
                                         float? libraryDotProduct,
                                         Annotations annotations,
                                         bool userSet)
@@ -166,6 +167,7 @@ namespace pwiz.Skyline.Model.Results
             BackgroundArea = backgroundArea;
             Ratios = ratios;
             RatioStdevs = stdevs;
+            Truncated = truncated;
             LibraryDotProduct = libraryDotProduct;
             Annotations = annotations;
             UserSet = userSet;
@@ -192,6 +194,7 @@ namespace pwiz.Skyline.Model.Results
             get { return _ratioStdevs; }
             private set { _ratioStdevs = MakeReadOnly(value); }
         }
+        public int? Truncated { get; private set; }
         public float? LibraryDotProduct { get; private set; }
         public Annotations Annotations { get; private set; }
 
@@ -236,6 +239,7 @@ namespace pwiz.Skyline.Model.Results
                    other.Fwhm.Equals(Fwhm) &&
                    ArrayUtil.EqualsDeep(other.Ratios, Ratios) &&
                    ArrayUtil.EqualsDeep(other.RatioStdevs, RatioStdevs) &&
+                   other.Truncated.Equals(Truncated) &&
                    other.LibraryDotProduct.Equals(LibraryDotProduct) &&
                    other.Annotations.Equals(Annotations) &&
                    other.UserSet.Equals(UserSet);
@@ -260,6 +264,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ (Fwhm.HasValue ? Fwhm.Value.GetHashCode() : 0);
                 result = (result*397) ^ Ratios.GetHashCodeDeep();
                 result = (result*397) ^ RatioStdevs.GetHashCodeDeep();
+                result = (result*397) ^ (Truncated.HasValue ? Truncated.Value.GetHashCode() : 0);
                 result = (result*397) ^ (LibraryDotProduct.HasValue ? LibraryDotProduct.Value.GetHashCode() : 0);
                 result = (result*397) ^ UserSet.GetHashCode();
                 return result;
@@ -281,15 +286,15 @@ namespace pwiz.Skyline.Model.Results
             IList<float?> ratios, bool userSet)
             : this(fileIndex, optimizationStep, peak.RetentionTime, peak.StartTime, peak.EndTime,
                    peak.Area, peak.BackgroundArea, peak.Height, peak.Fwhm,
-                   peak.IsFwhmDegenerate, ratios, Annotations.EMPTY, userSet)
+                   peak.IsFwhmDegenerate, peak.IsTruncated, ratios, Annotations.EMPTY, userSet)
         {            
         }
 
         public TransitionChromInfo(int fileIndex, int optimizationStep, float retentionTime,
                                    float startRetentionTime, float endRetentionTime,
                                    float area, float backgroundArea, float height,
-                                   float fwhm, bool fwhmDegenerate, IList<float?> ratios,
-                                   Annotations annotations, bool userSet)
+                                   float fwhm, bool fwhmDegenerate, bool? truncated,
+                                   IList<float?> ratios, Annotations annotations, bool userSet)
             : base(fileIndex)
         {
             OptimizationStep = optimizationStep;
@@ -301,6 +306,7 @@ namespace pwiz.Skyline.Model.Results
             Height = height;
             Fwhm = fwhm;
             IsFwhmDegenerate = fwhmDegenerate;
+            IsTruncated = truncated;
             Ratios = ratios;
             Annotations = annotations;
             UserSet = userSet;
@@ -321,6 +327,7 @@ namespace pwiz.Skyline.Model.Results
         public float Height { get; private set; }
         public float Fwhm { get; private set; }
         public bool IsFwhmDegenerate { get; private set; }
+        public bool? IsTruncated { get; private set; }
         public int Rank { get; private set; }
 
         /// <summary>
@@ -369,6 +376,7 @@ namespace pwiz.Skyline.Model.Results
             chromInfo.Height = peak.Height;
             chromInfo.Fwhm = peak.Fwhm;
             chromInfo.IsFwhmDegenerate = peak.IsFwhmDegenerate;
+            chromInfo.IsTruncated = peak.IsTruncated;
             chromInfo.UserSet = userSet;
             return chromInfo;
         }
@@ -409,6 +417,7 @@ namespace pwiz.Skyline.Model.Results
                    other.Height == Height &&
                    other.Fwhm == Fwhm &&
                    other.IsFwhmDegenerate.Equals(IsFwhmDegenerate) &&
+                   Equals(other.IsTruncated, IsTruncated) &&
                    other.Rank == Rank &&
                    ArrayUtil.EqualsDeep(other.Ratios, Ratios) &&
                    other.OptimizationStep.Equals(OptimizationStep) &&
@@ -436,6 +445,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ Height.GetHashCode();
                 result = (result*397) ^ Fwhm.GetHashCode();
                 result = (result*397) ^ IsFwhmDegenerate.GetHashCode();
+                result = (result*397) ^ (IsTruncated.HasValue ? IsTruncated.Value.GetHashCode() : 0);
                 result = (result*397) ^ Rank;
                 result = (result*397) ^ Ratios.GetHashCodeDeep();
                 result = (result*397) ^ OptimizationStep.GetHashCode();

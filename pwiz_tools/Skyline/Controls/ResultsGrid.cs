@@ -85,6 +85,20 @@ namespace pwiz.Skyline.Controls
                         HeaderText = "Sample Name",
                         ReadOnly = true
                     });
+            Columns.Add(ModifiedTimeColumn
+                = new DataGridViewTextBoxColumn
+                {
+                    Name = "ModifiedTime",
+                    HeaderText = "Modified Time",
+                    ReadOnly = true
+                });
+            Columns.Add(AcquiredTimeColumn
+                = new DataGridViewTextBoxColumn
+                {
+                    Name = "AcquiredTime",
+                    HeaderText = "Acquired Time",
+                    ReadOnly = true
+                });
             Columns.Add(OptStepColumn
                 = new DataGridViewTextBoxColumn
                     {
@@ -190,6 +204,13 @@ namespace pwiz.Skyline.Controls
                           ReadOnly = true,
                           DefaultCellStyle = {Format = Formats.STANDARD_RATIO}
                       });
+            Columns.Add(CountTruncatedColumn
+                = new DataGridViewTextBoxColumn
+                      {
+                          Name = "CountTruncated",
+                          HeaderText = "Count Truncated",
+                          ReadOnly = true
+                      });
             Columns.Add(LibraryDotProductColumn
                 = new DataGridViewTextBoxColumn
                       {
@@ -200,12 +221,12 @@ namespace pwiz.Skyline.Controls
                       });
             Columns.Add(OptCollisionEnergyColumn
                 = new DataGridViewTextBoxColumn
-                {
-                    Name = "OptCollisionEnergy",
-                    HeaderText = "Opt Collision Energy",
-                    ReadOnly = true,
-                    DefaultCellStyle = { Format = Formats.OPT_PARAMETER }
-                });
+                      {
+                          Name = "OptCollisionEnergy",
+                          HeaderText = "Opt Collision Energy",
+                          ReadOnly = true,
+                          DefaultCellStyle = { Format = Formats.OPT_PARAMETER }
+                      });
             Columns.Add(OptDeclusteringPotentialColumn
                 = new DataGridViewTextBoxColumn
                 {
@@ -284,6 +305,13 @@ namespace pwiz.Skyline.Controls
                           HeaderText = "Height",
                           ReadOnly = true,
                           DefaultCellStyle = {Format = Formats.PEAK_AREA}
+                      });
+            Columns.Add(TruncatedColumn
+                = new DataGridViewTextBoxColumn
+                      {
+                          Name = "Truncated",
+                          HeaderText = "Truncated",
+                          ReadOnly = true,
                       });
             Columns.Add(PeakRankColumn
                 = new DataGridViewTextBoxColumn
@@ -535,6 +563,7 @@ namespace pwiz.Skyline.Controls
                                 BackgroundColumn,
                                 AreaRatioColumn,
                                 HeightColumn,
+                                TruncatedColumn,
                                 PeakRankColumn,
                            };
             }
@@ -555,6 +584,7 @@ namespace pwiz.Skyline.Controls
                                TotalAreaColumn,
                                TotalBackgroundColumn,
                                TotalAreaRatioColumn,
+                               CountTruncatedColumn,
                                LibraryDotProductColumn,
                                OptCollisionEnergyColumn,
                                OptDeclusteringPotentialColumn,
@@ -584,6 +614,8 @@ namespace pwiz.Skyline.Controls
                                ReplicateNameColumn,
                                FileNameColumn,
                                SampleNameColumn,
+                               ModifiedTimeColumn,
+                               AcquiredTimeColumn,
                                OptStepColumn,
                            };
             }
@@ -603,6 +635,9 @@ namespace pwiz.Skyline.Controls
             {
                 row = _unassignedRows.Pop();
                 row.Tag = rowIdentifier;
+                // To be extra safe, make sure the row is actually part of the grid.
+                if (!ReferenceEquals(this, row.DataGridView))
+                    Rows.Add(row);
             }
             row.Cells[OptStepColumn.Index].Value = rowIdentifier.OptimizationStep;
             _chromInfoRows.Add(rowIdentifier, row);
@@ -1033,7 +1068,8 @@ namespace pwiz.Skyline.Controls
                     ICollection<RowIdentifier> optStepRowIds;
                     if (!replicateRowDict.TryGetValue(rowIdZero, out optStepRowIds))
                         continue;
-                    var filePath = results.MSDataFileInfos[iFile].FilePath;
+                    var fileInfo = results.MSDataFileInfos[iFile];
+                    var filePath = fileInfo.FilePath;
                     var fileName = SampleHelp.GetFileName(filePath);
                     var sampleName = SampleHelp.GetFileSampleName(filePath);
                     foreach (var rowId in optStepRowIds)
@@ -1042,6 +1078,8 @@ namespace pwiz.Skyline.Controls
                         row.Cells[ReplicateNameColumn.Index].Value = results.Name;
                         row.Cells[FileNameColumn.Index].Value = fileName;
                         row.Cells[SampleNameColumn.Index].Value = sampleName;
+                        row.Cells[ModifiedTimeColumn.Index].Value = fileInfo.FileWriteTime;
+                        row.Cells[AcquiredTimeColumn.Index].Value = fileInfo.RunStartTime;
                     }
                 }
             }
@@ -1083,7 +1121,10 @@ namespace pwiz.Skyline.Controls
             }
             while (_unassignedRows.Count > 0)
             {
-                Rows.Remove(_unassignedRows.Pop());
+                var row = _unassignedRows.Pop();
+                // To be extra safe, make sure the row is actually part of the grid before removing it.
+                if (ReferenceEquals(this, row.DataGridView))
+                    Rows.Remove(row);
             }
 
             // Update column visibility from the settings.  This has to be done
@@ -1162,6 +1203,7 @@ namespace pwiz.Skyline.Controls
                     row.Cells[TotalBackgroundColumn.Index].Value =
                     row.Cells[TotalAreaRatioColumn.Index].Value =
                     row.Cells[LibraryDotProductColumn.Index].Value =
+                    row.Cells[CountTruncatedColumn.Index].Value =
                     row.Cells[PrecursorNoteColumn.Index].Value =
                     row.Cells[OptCollisionEnergyColumn.Index].Value =
                     row.Cells[OptDeclusteringPotentialColumn.Index].Value = null;
@@ -1176,6 +1218,7 @@ namespace pwiz.Skyline.Controls
                 row.Cells[TotalAreaColumn.Index].Value = chromInfo.Area;
                 row.Cells[TotalBackgroundColumn.Index].Value = chromInfo.BackgroundArea;
                 row.Cells[TotalAreaRatioColumn.Index].Value = chromInfo.Ratios[0];
+                row.Cells[CountTruncatedColumn.Index].Value = chromInfo.Truncated;
                 row.Cells[LibraryDotProductColumn.Index].Value = chromInfo.LibraryDotProduct;
                 row.Cells[PrecursorNoteColumn.Index].Value = chromInfo.Annotations.Note;
                 row.Cells[OptCollisionEnergyColumn.Index].Value = null;
@@ -1239,6 +1282,7 @@ namespace pwiz.Skyline.Controls
                     row.Cells[BackgroundColumn.Index].Value =
                     row.Cells[AreaRatioColumn.Index].Value =
                     row.Cells[HeightColumn.Index].Value =
+                    row.Cells[TruncatedColumn.Index].Value =
                     row.Cells[PeakRankColumn.Index].Value =
                     row.Cells[TransitionNoteColumn.Index].Value = null;
             }
@@ -1252,6 +1296,7 @@ namespace pwiz.Skyline.Controls
                 row.Cells[BackgroundColumn.Index].Value = chromInfo.BackgroundArea;
                 row.Cells[AreaRatioColumn.Index].Value = chromInfo.Ratios[0];
                 row.Cells[HeightColumn.Index].Value = chromInfo.Height;
+                row.Cells[TruncatedColumn.Index].Value = chromInfo.IsTruncated;
                 row.Cells[PeakRankColumn.Index].Value = chromInfo.Rank;
                 row.Cells[TransitionNoteColumn.Index].Value = chromInfo.Annotations.Note;
             }
@@ -1401,7 +1446,9 @@ namespace pwiz.Skyline.Controls
             var result = new HashSet<DataGridViewColumn> {ReplicateNameColumn};
             if (SelectedTransitionDocNode != null)
             {
-                result.UnionWith(TransitionColumns);
+                result.UnionWith(from column in TransitionColumns
+                                     where !ReferenceEquals(column, TruncatedColumn)
+                                     select column);
             }
             // If only transition nodes are selected, the TransitionNoteColumn should be 
             // available.
@@ -1410,7 +1457,8 @@ namespace pwiz.Skyline.Controls
             else if (SelectedTransitionGroupDocNode != null)
             {
                 result.UnionWith(from column in PrecursorColumns
-                                     where !ReferenceEquals(column, OptCollisionEnergyColumn) &&
+                                     where !ReferenceEquals(column, CountTruncatedColumn) &&
+                                           !ReferenceEquals(column, OptCollisionEnergyColumn) &&
                                            !ReferenceEquals(column, OptDeclusteringPotentialColumn)
                                      select column);
             }
@@ -1528,6 +1576,8 @@ namespace pwiz.Skyline.Controls
         public DataGridViewTextBoxColumn ReplicateNameColumn { get; private set; }
         public DataGridViewTextBoxColumn FileNameColumn { get; private set; }
         public DataGridViewTextBoxColumn SampleNameColumn { get; private set; }
+        public DataGridViewTextBoxColumn ModifiedTimeColumn { get; private set; }
+        public DataGridViewTextBoxColumn AcquiredTimeColumn { get; private set; }
         public DataGridViewTextBoxColumn OptStepColumn { get; private set; }
         // Peptide Columns
         public DataGridViewTextBoxColumn PeptidePeakFoundRatioColumn { get; private set; }
@@ -1542,6 +1592,7 @@ namespace pwiz.Skyline.Controls
         public DataGridViewTextBoxColumn TotalAreaColumn { get; private set; }
         public DataGridViewTextBoxColumn TotalBackgroundColumn { get; private set; }
         public DataGridViewTextBoxColumn TotalAreaRatioColumn { get; private set; }
+        public DataGridViewTextBoxColumn CountTruncatedColumn { get; private set; }
         public DataGridViewTextBoxColumn LibraryDotProductColumn { get; private set; }
         public DataGridViewTextBoxColumn OptCollisionEnergyColumn { get; private set; }
         public DataGridViewTextBoxColumn OptDeclusteringPotentialColumn { get; private set; }
@@ -1555,6 +1606,7 @@ namespace pwiz.Skyline.Controls
         public DataGridViewTextBoxColumn BackgroundColumn { get; private set; }
         public DataGridViewTextBoxColumn AreaRatioColumn { get; private set; }
         public DataGridViewTextBoxColumn HeightColumn { get; private set; }
+        public DataGridViewTextBoxColumn TruncatedColumn { get; private set; }
         public DataGridViewTextBoxColumn PeakRankColumn { get; private set; }
         public DataGridViewTextBoxColumn TransitionNoteColumn { get; private set; }
 
