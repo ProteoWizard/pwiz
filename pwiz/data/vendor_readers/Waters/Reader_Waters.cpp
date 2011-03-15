@@ -22,6 +22,7 @@
 #define PWIZ_SOURCE
 
 #include "Reader_Waters.hpp"
+#include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/String.hpp"
 #include "pwiz/data/msdata/Version.hpp"
@@ -40,7 +41,7 @@ PWIZ_API_DECL std::string pwiz::msdata::Reader_Waters::identify(const std::strin
         return result;
 
     // Count the number of _FUNC[0-9]{3}.DAT files, starting with _FUNC001.DAT
-    string functionPathmask = filename + "/_FUNC???.DAT";
+    string functionPathmask = filename + "/_FUNC*.DAT";
     vector<bfs::path> functionFilepaths;
     pwiz::util::expand_pathmask(functionPathmask, functionFilepaths);
     if (!functionFilepaths.empty())
@@ -76,7 +77,7 @@ void fillInMetadata(const string& rawpath, RawDataPtr rawdata, MSData& msd)
 {
     msd.cvs = defaultCVList();
 
-    string functionPathmask = rawpath + "/_FUNC???.DAT";
+    string functionPathmask = rawpath + "/_FUNC*.DAT";
     vector<bfs::path> functionFilepaths;
     expand_pathmask(functionPathmask, functionFilepaths);
 
@@ -143,7 +144,17 @@ void fillInMetadata(const string& rawpath, RawDataPtr rawdata, MSData& msd)
 
     msd.id = bfs::basename(p);
     msd.run.id = msd.id;
-    //msd.run.startTimeStamp = creationDateToStartTimeStamp(rawfile.getCreationDate());
+    string dateStamp = rawdata->GetHeaderProp("Acquired Date");
+    if (!dateStamp.empty())
+    {
+        string timeStamp = rawdata->GetHeaderProp("Acquired Time");
+        if (!timeStamp.empty())
+            dateStamp += " " + timeStamp;
+
+        blt::local_date_time dateTime = parse_date_time("%d-%b-%Y %H:%M:%S", dateStamp);
+        if (!dateTime.is_not_a_date_time())
+            msd.run.startTimeStamp = encode_xml_datetime(dateTime);
+    }
 }
 
 } // namespace

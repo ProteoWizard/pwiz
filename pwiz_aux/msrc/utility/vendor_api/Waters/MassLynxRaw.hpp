@@ -29,7 +29,8 @@
 #include <boost/bind.hpp>
 #include <vector>
 #include <map>
-//#include <iostream>
+#include <iostream>
+#include <fstream>
 
 #include "MassLynxRawDataFile.h"
 #include "MassLynxRawReader.h"
@@ -46,7 +47,9 @@ namespace Waters {
 using boost::shared_ptr;
 using std::vector;
 using std::map;
+using std::pair;
 using std::string;
+using std::ifstream;
 using namespace pwiz::util;
 using namespace ::Waters::Lib::MassLynxRaw;
 
@@ -84,6 +87,8 @@ struct PWIZ_API_DECL RawData
             functionIndexList.push_back(number-1); // 0-based
             functionCount = std::max(functionCount, number);
         }
+
+        initHeaderProps(rawpath);
 	}
 
 	const MSScanStats& GetScanStats(int functionIndex, int scanIndex) const
@@ -98,12 +103,44 @@ struct PWIZ_API_DECL RawData
 		return extendedScanStatsByFunction[functionIndex];
 	}
 
+    const string GetHeaderProp(string name) const
+    {
+        if (headerProps.count(name) == 0)
+            return "";
+        return headerProps.find(name)->second;
+    }
+
     private:
     vector<int> functionIndexList;
+    map<string, string> headerProps;
 
 	mutable once_flag_proxy scanStatsInitialized;
     mutable vector<vector<MSScanStats>> scanStatsByFunction;
     mutable vector<ExtendedScanStatsByName> extendedScanStatsByFunction;
+
+    void initHeaderProps(string rawpath)
+    {
+        string headerTextPath = rawpath + "/_HEADER.TXT";
+        ifstream in(headerTextPath.c_str());
+
+        if (!in.is_open())
+            return;
+
+        string line;
+        while(getline(in, line))
+        {
+            size_t c_pos = line.find(": ");
+            if (line.find("$$ ") != 0 || c_pos == string::npos)
+                continue;
+
+            string name = line.substr(3, c_pos - 3);
+            string value = line.substr(c_pos + 2, line.size() - (c_pos + 2));
+            headerProps.insert(pair<string, string>(name, value));
+//            std::cout << name << " = " << value << std::endl;
+        }
+
+        in.close();
+    }
 
 	void initScanStats() const
 	{
