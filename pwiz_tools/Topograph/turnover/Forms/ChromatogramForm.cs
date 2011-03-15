@@ -37,6 +37,8 @@ namespace pwiz.Topograph.ui.Forms
             var selectedCharges = gridIntensities.GetSelectedCharges();
             var selectedMasses = gridIntensities.GetSelectedMasses();
             var chromatograms = PeptideFileAnalysis.Chromatograms;
+            var mzRanges = PeptideFileAnalysis.TurnoverCalculator.GetMzs(0);
+            var monoisotopicMass = Workspace.GetAminoAcidFormulas().GetMonoisotopicMass(PeptideAnalysis.Peptide.Sequence);
             for (int charge = PeptideAnalysis.MinCharge; charge <= PeptideAnalysis.MaxCharge; charge++)
             {
                 if (selectedCharges.Count > 0 && !selectedCharges.Contains(charge))
@@ -46,6 +48,16 @@ namespace pwiz.Topograph.ui.Forms
                 for (int iMass = 0; iMass < PeptideAnalysis.GetMassCount(); iMass++)
                 {
                     var mzKey = new MzKey(charge, iMass);
+                    double massDifference = mzRanges[iMass].Center - monoisotopicMass;
+
+                    var label = massDifference.ToString("0.#");
+                    if (label[0] != '-')
+                    {
+                        label = "+" + label;
+                    }
+                    label = "M" + label;
+                    label += new string('+', charge);
+
                     if (selectedMasses.Count > 0)
                     {
                         if (!selectedMasses.Contains(iMass))
@@ -65,7 +77,10 @@ namespace pwiz.Topograph.ui.Forms
                     {
                         continue;
                     }
-                    var graphItem = new ChromatogramGraphItem();
+                    var graphItem = new ChromatogramGraphItem
+                                        {
+                                            Title = label,
+                                        };
                     graphItem.Color = TracerChromatogramForm.GetColor(iMass, PeptideAnalysis.GetMassCount());
                     var intensities = chromatogram.GetIntensities().ToArray();
                     if (Smooth)
@@ -76,6 +91,7 @@ namespace pwiz.Topograph.ui.Forms
                     graphItem.Points = points;
                     var lineItem = (LineItem) msGraphControl.AddGraphItem(msGraphControl.GraphPane, graphItem);
                     lineItem.Line.Style = TracerChromatogramForm.GetDashStyle(charge - PeptideAnalysis.MinCharge);
+                    lineItem.Label.IsVisible = false;
                 }
             }
         }

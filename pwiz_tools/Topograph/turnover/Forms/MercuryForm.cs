@@ -10,6 +10,7 @@ using pwiz.MSGraph;
 using pwiz.Common.Chemistry;
 using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Model;
+using pwiz.Topograph.ui.Controls;
 using ZedGraph;
 
 namespace pwiz.Topograph.ui.Forms
@@ -22,7 +23,7 @@ namespace pwiz.Topograph.ui.Forms
         public MercuryForm(Workspace workspace) : base(workspace)
         {
             InitializeComponent();
-            _msGraphControl = new MSGraphControl() {Dock = DockStyle.Fill};
+            _msGraphControl = new MSGraphControlEx() {Dock = DockStyle.Fill};
             _msGraphControl.GraphPane.XAxis.Title.Text = "M/Z";
             _msGraphControl.GraphPane.YAxis.Title.Text = "Intensity";
             colMass.DefaultCellStyle.Format = "0.######";
@@ -38,112 +39,129 @@ namespace pwiz.Topograph.ui.Forms
         }
 
 
+        private static bool _inUpdateGraph;
         private void UpdateGraph()
         {
-            _msGraphControl.GraphPane.GraphObjList.Clear();
-            _msGraphControl.GraphPane.CurveList.Clear();
-            dataGridView1.Rows.Clear();
-            
-            int charge;
-            try
-            {
-                charge = Convert.ToInt32(tbxCharge.Text);
-                tbxCharge.BackColor = Color.White;
-            }
-            catch
-            {
-                charge = 0;
-                tbxCharge.BackColor = Color.Red;
-            }
-            double massResolution;
-            try
-            {
-                massResolution = double.Parse(tbxMassResolution.Text);
-                tbxMassResolution.BackColor = Color.White;
-            }
-            catch
-            {
-                tbxMassResolution.BackColor = Color.Red;
-                massResolution = .01;
-            }
-
-            var sequence = tbxSequence.Text;
-            MassDistribution spectrum;
-            if (string.IsNullOrEmpty(sequence))
-            {
-                var formula = tbxFormula.Text;
-                var molecule = Molecule.Parse(formula);
-                if (molecule.Values.Sum() > 10000000)
-                {
-                    tbxFormula.BackColor = Color.Red;
-                    return;
-                }
-                try
-                {
-                    spectrum = Workspace.GetAminoAcidFormulas().GetMassDistribution(molecule, charge);
-                    tbxFormula.BackColor = Color.White;
-                }
-                catch
-                {
-                    tbxFormula.BackColor = Color.Red;
-                    return;
-                }
-            }
-            else
-            {
-                tbxFormula.Text = Workspace.GetAminoAcidFormulas().GetFormula(sequence).ToString();
-                var turnoverCalculator = new TurnoverCalculator(Workspace, sequence);
-                var aminoAcidFormulas = Workspace.GetAminoAcidFormulasWithTracers();
-                aminoAcidFormulas = aminoAcidFormulas.SetMassResolution(massResolution);
-                try
-                {
-                    if (cbxTracerPercents.Checked)
-                    {
-                        var tracerPercentFormula = TracerPercentFormula.Parse(tbxTracerFormula.Text);
-                        spectrum = turnoverCalculator.GetAminoAcidFormulas(tracerPercentFormula)
-                            .GetMassDistribution(sequence, charge);
-                    }
-                    else
-                    {
-                        var tracerFormula = TracerFormula.Parse(tbxTracerFormula.Text);
-                        spectrum = aminoAcidFormulas.GetMassDistribution(
-                            turnoverCalculator.MoleculeFromTracerFormula(tracerFormula), charge);
-                        double massShift = aminoAcidFormulas.GetMassShift(sequence);
-                        if (charge > 0)
-                        {
-                            massShift /= charge;
-                        }
-                        spectrum = spectrum.OffsetAndDivide(massShift, 1);
-                    }
-                    tbxTracerFormula.BackColor = Color.White;
-                }
-                catch
-                {
-                    tbxTracerFormula.BackColor = Color.Red;
-                    spectrum = aminoAcidFormulas.GetMassDistribution(sequence, charge);
-                }
-            }
-            if (spectrum == null)
+            if (_inUpdateGraph)
             {
                 return;
             }
-            _msGraphControl.AddGraphItem(_msGraphControl.GraphPane, new GraphItem()
-                                                                        {
-                                                                            Color = Color.Black,
-                                                                            Points =
-                                                                                new PointPairList(
-                                                                                spectrum.Keys.ToArray(),
-                                                                                spectrum.Values.ToArray())
-                                                                        });
-            _msGraphControl.AxisChange();
-            _msGraphControl.Invalidate();
-            var entries = spectrum.ToArray();
-            dataGridView1.Rows.Add(entries.Length);
-            for (int i = 0; i < entries.Count(); i++)
+            try
             {
-                var row = dataGridView1.Rows[i];
-                row.Cells[colMass.Index].Value = entries[i].Key;
-                row.Cells[colIntensity.Index].Value = entries[i].Value;
+                _inUpdateGraph = true;
+                _msGraphControl.GraphPane.GraphObjList.Clear();
+                _msGraphControl.GraphPane.CurveList.Clear();
+                dataGridView1.Rows.Clear();
+
+                int charge;
+                try
+                {
+                    charge = Convert.ToInt32(tbxCharge.Text);
+                    tbxCharge.BackColor = Color.White;
+                }
+                catch
+                {
+                    charge = 0;
+                    tbxCharge.BackColor = Color.Red;
+                }
+                double massResolution;
+                try
+                {
+                    massResolution = double.Parse(tbxMassResolution.Text);
+                    tbxMassResolution.BackColor = Color.White;
+                }
+                catch
+                {
+                    tbxMassResolution.BackColor = Color.Red;
+                    massResolution = .01;
+                }
+
+                var sequence = tbxSequence.Text;
+                MassDistribution spectrum;
+                if (string.IsNullOrEmpty(sequence))
+                {
+                    var formula = tbxFormula.Text;
+                    var molecule = Molecule.Parse(formula);
+                    if (molecule.Values.Sum() > 10000000)
+                    {
+                        tbxFormula.BackColor = Color.Red;
+                        return;
+                    }
+                    try
+                    {
+                        spectrum = Workspace.GetAminoAcidFormulas().GetMassDistribution(molecule, charge);
+                        tbxFormula.BackColor = Color.White;
+                    }
+                    catch
+                    {
+                        tbxFormula.BackColor = Color.Red;
+                        return;
+                    }
+                }
+                else
+                {
+                    tbxFormula.Text = Workspace.GetAminoAcidFormulas().GetFormula(sequence).ToString();
+                    var turnoverCalculator = new TurnoverCalculator(Workspace, sequence);
+                    var aminoAcidFormulas = Workspace.GetAminoAcidFormulasWithTracers();
+                    aminoAcidFormulas = aminoAcidFormulas.SetMassResolution(massResolution);
+                    try
+                    {
+                        if (cbxTracerPercents.Checked)
+                        {
+                            var tracerPercentFormula = TracerPercentFormula.Parse(tbxTracerFormula.Text);
+                            spectrum = turnoverCalculator.GetAminoAcidFormulas(tracerPercentFormula)
+                                .GetMassDistribution(sequence, charge);
+                        }
+                        else
+                        {
+                            var tracerFormula = TracerFormula.Parse(tbxTracerFormula.Text);
+                            spectrum = aminoAcidFormulas.GetMassDistribution(
+                                turnoverCalculator.MoleculeFromTracerFormula(tracerFormula), charge);
+                            double massShift = aminoAcidFormulas.GetMassShift(sequence);
+                            if (charge > 0)
+                            {
+                                massShift /= charge;
+                            }
+                            spectrum = spectrum.OffsetAndDivide(massShift, 1);
+                        }
+                        tbxTracerFormula.BackColor = Color.White;
+                    }
+                    catch
+                    {
+                        tbxTracerFormula.BackColor = Color.Red;
+                        spectrum = aminoAcidFormulas.GetMassDistribution(sequence, charge);
+                    }
+                }
+                if (spectrum == null)
+                {
+                    return;
+                }
+                var curveItem = _msGraphControl.AddGraphItem(_msGraphControl.GraphPane, new GraphItem()
+                                                                                            {
+                                                                                                Title = "Intensity",
+                                                                                                Color = Color.Black,
+                                                                                                Points =
+                                                                                                    new PointPairList(
+                                                                                                    spectrum.Keys.
+                                                                                                        ToArray(),
+                                                                                                    spectrum.Values.
+                                                                                                        ToArray())
+                                                                                            });
+                curveItem.Label.IsVisible = false;
+                _msGraphControl.AxisChange();
+                _msGraphControl.Invalidate();
+                var entries = spectrum.ToArray();
+                dataGridView1.Rows.Add(entries.Length);
+                for (int i = 0; i < entries.Count(); i++)
+                {
+                    var row = dataGridView1.Rows[i];
+                    row.Cells[colMass.Index].Value = entries[i].Key;
+                    row.Cells[colIntensity.Index].Value = entries[i].Value;
+                }
+            }
+            finally
+            {
+                _inUpdateGraph = false;
             }
         }
 

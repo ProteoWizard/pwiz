@@ -8,6 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 using NHibernate;
 using pwiz.Topograph.Model;
+using pwiz.Topograph.ui.Controls;
 using pwiz.Topograph.Util;
 using ZedGraph;
 
@@ -20,7 +21,7 @@ namespace pwiz.Topograph.ui.Forms
         public PrecursorEnrichmentForm(Workspace workspace) : base(workspace)
         {
             InitializeComponent();
-            _zedGraphControl = new ZedGraphControl
+            _zedGraphControl = new ZedGraphControlEx
                                    {
                                        Dock = DockStyle.Fill,
                                    };

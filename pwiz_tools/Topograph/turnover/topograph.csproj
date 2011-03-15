@@ -54,7 +54,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>137</ApplicationRevision>
+    <ApplicationRevision>138</ApplicationRevision>
     <ApplicationVersion>0.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -120,11 +120,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controls\CopyGraphDataToolStripMenuItem.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Controls\DockPanelEx.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Controls\ExcludedMzsGrid.cs">
       <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\MsGraphControlEx.cs">
+      <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Controls\QueryGrid.cs">
       <SubType>Component</SubType>
@@ -132,6 +138,9 @@
     <Compile Include="Controls\ValidationStatusColumn.cs" />
     <Compile Include="Controls\CopyEmfToolStripMenuItem.cs">
       <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\ZedGraphControlEx.cs">
+      <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Forms\AbstractChromatogramForm.cs">
       <SubType>Form</SubType>

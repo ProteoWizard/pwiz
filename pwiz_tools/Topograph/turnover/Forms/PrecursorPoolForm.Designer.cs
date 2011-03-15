@@ -36,7 +36,7 @@
             this.dataGridViewPrecursorPool = new System.Windows.Forms.DataGridView();
             this.colTracer = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colPercent = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.zedGraphControl = new ZedGraph.ZedGraphControl();
+            this.zedGraphControl = new pwiz.Topograph.ui.Controls.ZedGraphControlEx();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();

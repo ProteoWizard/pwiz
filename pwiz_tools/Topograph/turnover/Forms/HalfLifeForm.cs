@@ -11,6 +11,7 @@ using pwiz.Topograph.Data;
 using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.MsData;
+using pwiz.Topograph.ui.Controls;
 using pwiz.Topograph.Util;
 using ZedGraph;
 
@@ -24,7 +25,7 @@ namespace pwiz.Topograph.ui.Forms
         public HalfLifeForm(Workspace workspace) : base(workspace)
         {
             InitializeComponent();
-            _zedGraphControl = new ZedGraphControl
+            _zedGraphControl = new ZedGraphControlEx
                                    {
                                        Dock = DockStyle.Fill,
                                        GraphPane = { Title = {Text = null}}
@@ -349,22 +350,23 @@ namespace pwiz.Topograph.ui.Forms
                 xValues.Add(peptideFileAnalysis.MsDataFile.TimePoint.Value);
                 yValues.Add(value.Value);
             }
-            var pointsCurve = _zedGraphControl.GraphPane.AddCurve(null, xValues.ToArray(), yValues.ToArray(), Color.Black);
+            var pointsCurve = _zedGraphControl.GraphPane.AddCurve("Data Points", xValues.ToArray(), yValues.ToArray(), Color.Black);
             pointsCurve.Line.IsVisible = false;
+            pointsCurve.Label.IsVisible = false;
             Func<double,double> funcMiddle = x => halfLife.YIntercept + halfLife.RateConstant*x;
             Func<double, double> funcMin = x => halfLife.YIntercept + (halfLife.RateConstant - halfLife.RateConstantError) * x;
             Func<double, double> funcMax = x => halfLife.YIntercept + (halfLife.RateConstant + halfLife.RateConstantError) * x;
             if (LogPlot)
             {
-                AddFunction(funcMiddle, Color.Black);
-                AddFunction(funcMin, Color.LightBlue);
-                AddFunction(funcMax, Color.LightGreen);
+                AddFunction("Best Fit", funcMiddle, Color.Black);
+                AddFunction("Minimum Bound", funcMin, Color.LightBlue);
+                AddFunction("Maximum Bound", funcMax, Color.LightGreen);
             }
             else
             {
-                AddFunction(x => halfLifeCalculator.InvertLogValue(funcMiddle(x)), Color.Black);
-                AddFunction(x => halfLifeCalculator.InvertLogValue(funcMin(x)), Color.LightBlue);
-                AddFunction(x => halfLifeCalculator.InvertLogValue(funcMax(x)), Color.LightGreen);
+                AddFunction("Best Fit", x => halfLifeCalculator.InvertLogValue(funcMiddle(x)), Color.Black);
+                AddFunction("Minimum Bound", x => halfLifeCalculator.InvertLogValue(funcMin(x)), Color.LightBlue);
+                AddFunction("Maximum Bound", x => halfLifeCalculator.InvertLogValue(funcMax(x)), Color.LightGreen);
             }
             if (LogPlot)
             {
@@ -398,7 +400,7 @@ namespace pwiz.Topograph.ui.Forms
             return halfLifeCalculator;
         }
 
-        private CurveItem AddFunction(Func<double,double> func, Color color)
+        private CurveItem AddFunction(string name, Func<double,double> func, Color color)
         {
             double minTime = 0;
             double maxTime = 0;
@@ -419,7 +421,8 @@ namespace pwiz.Topograph.ui.Forms
                 xValues.Add(time);
                 yValues.Add(func.Invoke(time));
             }
-            var curve = _zedGraphControl.GraphPane.AddCurve(null, xValues.ToArray(), yValues.ToArray(), color, SymbolType.None);
+            var curve = _zedGraphControl.GraphPane.AddCurve(name, xValues.ToArray(), yValues.ToArray(), color, SymbolType.None);
+            curve.Label.IsVisible = false;
             return curve;
         }
 

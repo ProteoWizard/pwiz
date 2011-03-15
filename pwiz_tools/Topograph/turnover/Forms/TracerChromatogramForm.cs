@@ -316,10 +316,12 @@ namespace pwiz.Topograph.ui.Forms
                 {
                     var curve = new ChromatogramGraphItem
                     {
+                        Title = label,
                         Color = GetColor(iCandidate, entries.Length),
                         Points = new PointPairList(tracerChromatograms.Times, entry.Value),
                     };
-                    msGraphControl.AddGraphItem(msGraphControl.GraphPane, curve);
+                    var chromCurveItem = msGraphControl.AddGraphItem(msGraphControl.GraphPane, curve);
+                    chromCurveItem.Label.IsVisible = false;
                     if (peak != null)
                     {
                         var peakDisplay = new PeakDisplay();

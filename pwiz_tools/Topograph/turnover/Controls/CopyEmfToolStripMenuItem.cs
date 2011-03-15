@@ -8,7 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 using ZedGraph;
 
-namespace pwiz.Topograph.Controls
+namespace pwiz.Topograph.ui.Controls
 {
     /// <summary>
     /// Menu item which copies a metafile to the clipboard.
@@ -65,25 +65,6 @@ namespace pwiz.Topograph.Controls
                     MessageBox.Show(zedGraphControl, "Unable to copy metafile image to the clipboard.");
                 }
             }
-        }
-
-        /// <summary>
-        /// Adds a new "copy metafile" menu item right below the existing "copy" command
-        /// on the context menu.
-        /// </summary>
-        public static void AddToContextMenu(ZedGraphControl zedGraphControl, ContextMenuStrip contextMenuStrip)
-        {
-            int index = contextMenuStrip.Items.Count;
-            for (int i = 0; i < contextMenuStrip.Items.Count; i++)
-            {
-                var item = contextMenuStrip.Items[i];
-                if (item.Text == "Copy")
-                {
-                    index = i + 1;
-                    break;
-                }
-            }
-            contextMenuStrip.Items.Insert(index, new CopyEmfToolStripMenuItem(zedGraphControl));
         }
 	}
 }

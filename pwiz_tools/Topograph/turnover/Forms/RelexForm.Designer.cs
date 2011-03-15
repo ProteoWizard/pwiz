@@ -31,7 +31,7 @@
             this.components = new System.ComponentModel.Container();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.barGraphControl = new pwiz.MSGraph.MSGraphControl();
+            this.barGraphControl = new pwiz.Topograph.ui.Controls.MSGraphControlEx();
             this.label1 = new System.Windows.Forms.Label();
             this.comboPrimary = new System.Windows.Forms.ComboBox();
             this.label2 = new System.Windows.Forms.Label();
@@ -66,7 +66,7 @@
             this.btnOtherEndRight = new System.Windows.Forms.Button();
             this.label11 = new System.Windows.Forms.Label();
             this.tbxWidthRatio = new System.Windows.Forms.TextBox();
-            this.msGraphControl = new pwiz.MSGraph.MSGraphControl();
+            this.msGraphControl = new pwiz.Topograph.ui.Controls.MSGraphControlEx();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
