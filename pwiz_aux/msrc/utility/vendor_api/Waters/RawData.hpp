@@ -233,6 +233,8 @@ class PWIZ_API_DECL RawData
     virtual const FunctionList& functions() const = 0;
 
     //virtual ScanPtr getScan(int function, int process, int scan) const = 0;
+
+    virtual const std::string GetHeaderProp(std::string name) const = 0;
 };
 
 typedef RawData::Ptr RawDataPtr;

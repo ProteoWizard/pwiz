@@ -272,6 +272,7 @@ class RawDataImpl : public RawData
         COMInitializer::initialize();
         dacHeaderPtr = IDACHeaderPtr(CLSID_DACHeader);
         dacHeaderPtr->GetHeader(rawpath_);
+        initHeaderProps(rawpath_);
     }
 
     virtual ~RawDataImpl()
@@ -313,9 +314,41 @@ class RawDataImpl : public RawData
 
     //virtual ScanPtr getScan(int function, int process, int scan) const = 0;
 
+    virtual const string GetHeaderProp(string name)
+    {
+        if (headerProps.count(name) == 0)
+            return "";
+        return headerProps.find(name)->second;
+    }
+
     private:
     bstr_t rawpath_;
     IDACHeaderPtr dacHeaderPtr;
+    map<string, string> headerProps;
+
+    void initHeaderProps(string rawpath)
+    {
+        string headerTextPath = rawpath + "/_HEADER.TXT";
+        ifstream in(headerTextPath.c_str());
+
+        if (!in.is_open())
+            return;
+
+        string line;
+        while(getline(in, line))
+        {
+            size_t c_pos = line.find(": ");
+            if (line.find("$$ ") != 0 || c_pos == string::npos)
+                continue;
+
+            string name = line.substr(3, c_pos - 3);
+            string value = line.substr(c_pos + 2, line.size() - (c_pos + 2));
+            headerProps.insert(pair<string, string>(name, value));
+//            std::cout << name << " = " << value << std::endl;
+        }
+
+        in.close();
+    }
 
     mutable FunctionList functions_;
 };
