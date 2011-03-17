@@ -37,8 +37,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>2512</ApplicationRevision>
-    <ApplicationVersion>0.7.1.2512</ApplicationVersion>
+    <ApplicationRevision>2567</ApplicationRevision>
+    <ApplicationVersion>0.7.1.2567</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -1253,6 +1253,8 @@
     <Content Include="mzWiff.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Resources\PeptideStandard.bmp" />
+    <EmbeddedResource Include="Resources\PeptideLibStandard.bmp" />
     <Content Include="Resources\RedXTransparentBackground.bmp" />
     <Content Include="SkylineData.ico" />
     <Content Include="SkylineDoc.ico" />

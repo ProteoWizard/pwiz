@@ -1234,19 +1234,15 @@ namespace pwiz.Skyline.Model
                         finalGroups[iGroup] = (TransitionGroupDocNode) finalGroups[iGroup].Add(nodeTran);
                 }
             }
+
             // If anything changed, make sure transitions are sorted
             if (!ArrayUtil.ReferencesEqual(groups, finalGroups))
             {
                 for (int i = 0; i < finalGroups.Count; i++)
                 {
                     var nodeGroup = finalGroups[i];
-                    var listTran = new List<TransitionDocNode>();
-                    foreach (TransitionDocNode nodeTran in finalGroups[i].Children)
-                        listTran.Add(nodeTran);
-                    listTran.Sort(TransitionGroup.CompareTransitions);
-
-                    finalGroups[i] = (TransitionGroupDocNode)
-                        nodeGroup.ChangeChildrenChecked(listTran.ToArray());
+                    var arrayTran = CompleteTransitions(nodeGroup.Children.Cast<TransitionDocNode>());
+                    finalGroups[i] = (TransitionGroupDocNode) nodeGroup.ChangeChildrenChecked(arrayTran);
                 }
             }
             return finalGroups.ToArray();
@@ -1254,12 +1250,24 @@ namespace pwiz.Skyline.Model
 
         private void CompleteTransitionGroup()
         {
-            _transitions.Sort(TransitionGroup.CompareTransitions);
             // m/z calculated later
-            _transitionGroups.Add(new TransitionGroupDocNode(_activeTransitionGroup, 0, RelativeRT.Matching, _transitions.ToArray(), false));
+            _transitionGroups.Add(new TransitionGroupDocNode(_activeTransitionGroup, 0, RelativeRT.Matching,
+                CompleteTransitions(_transitions), false));
 
             _activeTransitionGroup = null;
             _transitions = null;
+        }
+
+        /// <summary>
+        /// Remove duplicates and sort a set of transitions.
+        /// </summary>
+        /// <param name="transitions">The set of transitions</param>
+        /// <returns>An array of sorted, distinct transitions</returns>
+        private static TransitionDocNode[] CompleteTransitions(IEnumerable<TransitionDocNode> transitions)
+        {
+            var arrayTran = transitions.Distinct().ToArray();
+            Array.Sort(arrayTran, TransitionGroup.CompareTransitions);
+            return arrayTran;
         }
 
         public PeptideGroupDocNode ToDocNode()

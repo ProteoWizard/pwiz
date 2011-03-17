@@ -39,7 +39,8 @@ namespace pwiz.Skyline.SettingsUI
                 BiblioSpecLiteBuilder.EXT_XTAN_XML,
                 BiblioSpecLiteBuilder.EXT_PILOT_XML,
                 BiblioSpecLiteBuilder.EXT_IDP_XML,
-                BiblioSpecLiteBuilder.EXT_SQT
+                BiblioSpecLiteBuilder.EXT_SQT,
+                BiblioSpecLiteBuilder.EXT_WATERS_MSE,
             };
 
         private BiblioSpecLiteBuilder _builder;

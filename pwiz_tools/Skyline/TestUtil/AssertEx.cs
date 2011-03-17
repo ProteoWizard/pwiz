@@ -193,7 +193,7 @@ namespace pwiz.SkylineTestUtil
             var docExport = exporter.Document;
             var docImport = new SrmDocument(docExport.Settings);
             string transitionList = exporter.MemoryOutput.Values.ToArray()[0].ToString();
-            using (var readerImport = new StringReader(ReverseLines(transitionList, exporter.HasHeaders)))
+            using (var readerImport = new StringReader(DuplicateAndReverseLines(transitionList, exporter.HasHeaders)))
             {
                 IdentityPath pathAdded;
                 IFormatProvider provider = CultureInfo.InvariantCulture;
@@ -209,19 +209,27 @@ namespace pwiz.SkylineTestUtil
             return docImport;
         }
 
-        private static string ReverseLines(string transitionList, bool hasHeader)
+        /// <summary>
+        /// Duplicates and reverses lines of a transition list.  The transition list import code
+        /// should be able to deal with this, producing a correctly sorted, distinct set of transitions.
+        /// </summary>
+        private static string DuplicateAndReverseLines(string transitionList, bool hasHeader)
         {
             var listLines = new List<string>();
             using (var readerList = new StringReader(transitionList))
             {
                 string line;
                 while ((line = readerList.ReadLine()) != null)
+                {
+                    // Add each line twice
                     listLines.Add(line);
+                    listLines.Add(line);
+                }
             }
 
             string lineHeader = (hasHeader ? listLines[0] : null);
             if (hasHeader)
-                listLines.RemoveAt(0);
+                listLines.RemoveRange(0, 2);                
 
             listLines.Reverse();
 
