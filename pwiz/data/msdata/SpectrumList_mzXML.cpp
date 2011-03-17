@@ -385,7 +385,10 @@ class HandlerScan : public SAXParser::Handler
             }
 
             // TODO: make this more robust
-            bool hasCentroidDataProcessing = msd_.dataProcessingPtrs[0]->processingMethods[0].hasCVParam(MS_peak_picking);
+            bool hasCentroidDataProcessing = true;
+            if (!msd_.dataProcessingPtrs.empty() && !msd_.dataProcessingPtrs[0]->processingMethods.empty())
+                hasCentroidDataProcessing = msd_.dataProcessingPtrs[0]->processingMethods[0].hasCVParam(MS_peak_picking);
+
             if (centroided.empty())
                 spectrum_.set(hasCentroidDataProcessing ? MS_centroid_spectrum : MS_profile_spectrum);
             else if (centroided == "1")
