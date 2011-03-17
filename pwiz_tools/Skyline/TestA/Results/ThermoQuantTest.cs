@@ -30,7 +30,7 @@ using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTest.Results
+namespace pwiz.SkylineTestA.Results
 {
     /// <summary>
     /// Summary description for ThermoQuantTest
@@ -68,7 +68,7 @@ namespace pwiz.SkylineTest.Results
 
         #endregion
 
-        private const string ZIP_FILE = @"Test\Results\ThermoQuant.zip";
+        private const string ZIP_FILE = @"TestA\Results\ThermoQuant.zip";
 
         /// <summary>
         /// Verifies that canceling an import cleans up correctly.

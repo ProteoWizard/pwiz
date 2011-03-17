@@ -80,10 +80,6 @@
     <Compile Include="Proteome\ProteomeDbTest.cs" />
     <Compile Include="Reporting\PivotTypeTest.cs" />
     <Compile Include="Reporting\ReportTest.cs" />
-    <Compile Include="Results\AgilentMixTest.cs" />
-    <Compile Include="Results\SmallWiffTest.cs" />
-    <Compile Include="Results\ThermoQuantTest.cs" />
-    <Compile Include="Results\WatersCalcurveTest.cs" />
     <Compile Include="SrmDocEditTest.cs" />
     <Compile Include="SrmDocumentTest.cs" />
     <Compile Include="SrmSettingsChangeTest.cs" />
@@ -124,10 +120,9 @@
   <ItemGroup>
     <None Include="Proteome\high_ipi.Human.20060111.zip" />
     <EmbeddedResource Include="Reporting\Study9p_template_0721_2009_v3.skyr" />
-    <None Include="Results\AgilentMix.zip" />
-    <None Include="Results\SmallWiff.zip" />
-    <None Include="Results\ThermoQuant.zip" />
-    <None Include="Results\WatersCalcurve.zip" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Results\" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

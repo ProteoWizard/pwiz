@@ -27,7 +27,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTest.Results
+namespace pwiz.SkylineTestA.Results
 {
     /// <summary>
     /// Summary description for SmallWiffTest
@@ -65,7 +65,7 @@ namespace pwiz.SkylineTest.Results
 
         #endregion
 
-        private const string ZIP_FILE = @"Test\Results\WatersCalcurve.zip";
+        private const string ZIP_FILE = @"TestA\Results\WatersCalcurve.zip";
 
         [TestMethod]
         public void WatersMultiReplicateTest()
