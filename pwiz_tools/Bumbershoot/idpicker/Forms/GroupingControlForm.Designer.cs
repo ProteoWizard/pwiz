@@ -59,7 +59,8 @@ namespace IDPicker.Forms
             this.miResetFiles = new System.Windows.Forms.ToolStripMenuItem();
             this.miExpandGroups = new System.Windows.Forms.ToolStripMenuItem();
             this.miCollapseGroups = new System.Windows.Forms.ToolStripMenuItem();
-            this.tvGroups = new System.Windows.Forms.TreeView();
+            this.tlvGroupedFiles = new BrightIdeasSoftware.TreeListView();
+            this.tlvGroups = new BrightIdeasSoftware.OLVColumn();
             this.gbFiles = new System.Windows.Forms.GroupBox();
             this.pnlUngroupedFiles = new System.Windows.Forms.Panel();
             this.pnlUngroupedSpacer = new System.Windows.Forms.Panel();
@@ -79,6 +80,7 @@ namespace IDPicker.Forms
             this.gbGroups.SuspendLayout();
             this.pnlBgGroups.SuspendLayout();
             this.msGroups.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.tlvGroupedFiles)).BeginInit();
             this.gbFiles.SuspendLayout();
             this.pnlUngroupedFiles.SuspendLayout();
             this.msUngroupedFiles.SuspendLayout();
@@ -102,7 +104,7 @@ namespace IDPicker.Forms
             this.gbGroups.Size = new System.Drawing.Size(340, 465);
             this.gbGroups.TabIndex = 127;
             this.gbGroups.TabStop = false;
-            this.gbGroups.Text = "Group Hierarchy";
+            this.gbGroups.Text = "tlvBranch Hierarchy";
             // 
             // pnlBgGroups
             // 
@@ -112,7 +114,7 @@ namespace IDPicker.Forms
             this.pnlBgGroups.BackColor = System.Drawing.SystemColors.InactiveCaption;
             this.pnlBgGroups.Controls.Add(this.pnlGroupsSpacer);
             this.pnlBgGroups.Controls.Add(this.msGroups);
-            this.pnlBgGroups.Controls.Add(this.tvGroups);
+            this.pnlBgGroups.Controls.Add(this.tlvGroupedFiles);
             this.pnlBgGroups.Location = new System.Drawing.Point(13, 22);
             this.pnlBgGroups.Name = "pnlBgGroups";
             this.pnlBgGroups.Size = new System.Drawing.Size(314, 431);
@@ -179,30 +181,43 @@ namespace IDPicker.Forms
             this.miCollapseGroups.ToolTipText = "Collapse groups";
             this.miCollapseGroups.Click += new System.EventHandler(this.miCollapseGroups_Click);
             // 
-            // tvGroups
+            // tlvGroupedFiles
             // 
-            this.tvGroups.AllowDrop = true;
-            this.tvGroups.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            this.tlvGroupedFiles.AllColumns.Add(this.tlvGroups);
+            this.tlvGroupedFiles.AlternateRowBackColor = System.Drawing.Color.White;
+            this.tlvGroupedFiles.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
-            this.tvGroups.BackColor = System.Drawing.SystemColors.Window;
-            this.tvGroups.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.tvGroups.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.tvGroups.HideSelection = false;
-            this.tvGroups.LabelEdit = true;
-            this.tvGroups.Location = new System.Drawing.Point(1, 31);
-            this.tvGroups.Name = "tvGroups";
-            this.tvGroups.PathSeparator = "/";
-            this.tvGroups.ShowNodeToolTips = true;
-            this.tvGroups.Size = new System.Drawing.Size(312, 399);
-            this.tvGroups.TabIndex = 10;
-            this.tvGroups.AfterLabelEdit += new System.Windows.Forms.NodeLabelEditEventHandler(this.tvGroups_AfterLabelEdit);
-            this.tvGroups.DragDrop += new System.Windows.Forms.DragEventHandler(this.tvGroups_DragDrop);
-            this.tvGroups.MouseDown += new System.Windows.Forms.MouseEventHandler(this.tvGroups_MouseDown);
-            this.tvGroups.BeforeLabelEdit += new System.Windows.Forms.NodeLabelEditEventHandler(this.tvGroups_BeforeLabelEdit);
-            this.tvGroups.KeyDown += new System.Windows.Forms.KeyEventHandler(this.tvGroups_KeyDown);
-            this.tvGroups.ItemDrag += new System.Windows.Forms.ItemDragEventHandler(this.tvGroups_ItemDrag);
-            this.tvGroups.DragOver += new System.Windows.Forms.DragEventHandler(this.tvGroups_DragOver);
+            this.tlvGroupedFiles.CellEditActivation = BrightIdeasSoftware.ObjectListView.CellEditActivateMode.F2Only;
+            this.tlvGroupedFiles.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.tlvGroups});
+            this.tlvGroupedFiles.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+            this.tlvGroupedFiles.IsSimpleDragSource = true;
+            this.tlvGroupedFiles.IsSimpleDropSink = true;
+            this.tlvGroupedFiles.Location = new System.Drawing.Point(0, 29);
+            this.tlvGroupedFiles.Name = "tlvGroupedFiles";
+            this.tlvGroupedFiles.OwnerDraw = true;
+            this.tlvGroupedFiles.ShowGroups = false;
+            this.tlvGroupedFiles.Size = new System.Drawing.Size(314, 402);
+            this.tlvGroupedFiles.TabIndex = 11;
+            this.tlvGroupedFiles.UseCompatibleStateImageBehavior = false;
+            this.tlvGroupedFiles.UseHotItem = true;
+            this.tlvGroupedFiles.UseTranslucentHotItem = true;
+            this.tlvGroupedFiles.View = System.Windows.Forms.View.Details;
+            this.tlvGroupedFiles.VirtualMode = true;
+            this.tlvGroupedFiles.CellEditStarting += new BrightIdeasSoftware.CellEditEventHandler(this.tlvGroupedFiles_CellEditStarting);
+            this.tlvGroupedFiles.MouseDown += new System.Windows.Forms.MouseEventHandler(this.tvGroups_MouseDown);
+            this.tlvGroupedFiles.KeyDown += new System.Windows.Forms.KeyEventHandler(this.tvGroups_KeyDown);
+            this.tlvGroupedFiles.CellEditFinishing += new BrightIdeasSoftware.CellEditEventHandler(this.tlvGroupedFiles_CellEditFinishing);
+            this.tlvGroupedFiles.CanDrop += new System.EventHandler<BrightIdeasSoftware.OlvDropEventArgs>(this.tlvGroupedFiles_CanDrop);
+            this.tlvGroupedFiles.Dropped += new System.EventHandler<BrightIdeasSoftware.OlvDropEventArgs>(this.tlvGroupedFiles_Dropped);
+            // 
+            // tlvGroups
+            // 
+            this.tlvGroups.AspectName = "";
+            this.tlvGroups.FillsFreeSpace = true;
+            this.tlvGroups.Text = "Groups / Sources";
+            this.tlvGroups.Width = 300;
             // 
             // gbFiles
             // 
@@ -285,6 +300,7 @@ namespace IDPicker.Forms
             this.miDefaultGroups.Size = new System.Drawing.Size(28, 20);
             this.miDefaultGroups.Text = "Reset files";
             this.miDefaultGroups.ToolTipText = "Apply default groups";
+            this.miDefaultGroups.Click += new System.EventHandler(this.ApplyDefaultGroups);
             // 
             // lvNonGroupedFiles
             // 
@@ -331,7 +347,6 @@ namespace IDPicker.Forms
             this.cancelButton.TabIndex = 130;
             this.cancelButton.Text = "Cancel";
             this.cancelButton.UseVisualStyleBackColor = true;
-            this.cancelButton.Click += new System.EventHandler(this.cancelButton_Click);
             // 
             // cmRightClickGroupNode
             // 
@@ -416,11 +431,11 @@ namespace IDPicker.Forms
             this.Controls.Add(this.splitContainer1);
             this.Name = "GroupingControlForm";
             this.Text = "Source Grouping";
-            this.Load += new System.EventHandler(this.GroupingControlForm_Load);
             this.gbGroups.ResumeLayout(false);
             this.pnlBgGroups.ResumeLayout(false);
             this.msGroups.ResumeLayout(false);
             this.msGroups.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.tlvGroupedFiles)).EndInit();
             this.gbFiles.ResumeLayout(false);
             this.pnlUngroupedFiles.ResumeLayout(false);
             this.pnlUngroupedFiles.PerformLayout();
@@ -444,7 +459,6 @@ namespace IDPicker.Forms
         private System.Windows.Forms.ToolStripMenuItem miResetFiles;
         private System.Windows.Forms.ToolStripMenuItem miExpandGroups;
         private System.Windows.Forms.ToolStripMenuItem miCollapseGroups;
-        private System.Windows.Forms.TreeView tvGroups;
         private System.Windows.Forms.GroupBox gbFiles;
         private System.Windows.Forms.Panel pnlUngroupedFiles;
         private System.Windows.Forms.Panel pnlUngroupedSpacer;
@@ -461,6 +475,8 @@ namespace IDPicker.Forms
         private System.Windows.Forms.ContextMenuStrip cmRightClickFileNode;
         private System.Windows.Forms.ToolStripMenuItem removeFileNodeToolStripMenuItem;
         private System.Windows.Forms.SplitContainer splitContainer1;
+        private BrightIdeasSoftware.TreeListView tlvGroupedFiles;
+        private BrightIdeasSoftware.OLVColumn tlvGroups;
 
     }
 }

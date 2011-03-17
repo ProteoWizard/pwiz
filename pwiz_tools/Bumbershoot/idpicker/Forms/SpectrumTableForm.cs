@@ -431,9 +431,10 @@ namespace IDPicker.Forms
         {
             keyColumn.AspectGetter += delegate(object x)
             {
-
                 if (x is SpectrumSourceGroupRow)
-                    return Path.GetFileName((x as SpectrumSourceGroupRow).SpectrumSourceGroup.Name) + '/';
+                    return (x as SpectrumSourceGroupRow).SpectrumSourceGroup.Name == "/"
+                               ? "/"
+                               : Path.GetFileName((x as SpectrumSourceGroupRow).SpectrumSourceGroup.Name);
                 else if (x is SpectrumSourceRow)
                     return (x as SpectrumSourceRow).SpectrumSource.Name;
                 else if (x is AnalysisRow)
@@ -447,9 +448,23 @@ namespace IDPicker.Forms
                 else if (x is PeptideSpectrumMatchRow)
                     return (x as PeptideSpectrumMatchRow).Key;
                 else if (x is PeptideSpectrumMatchScoreRow)
-                    return String.Format("{0}: {1}", (x as PeptideSpectrumMatchScoreRow).Name, (x as PeptideSpectrumMatchScoreRow).Value);
+                    return String.Format("{0}: {1}", (x as PeptideSpectrumMatchScoreRow).Name,
+                                         (x as PeptideSpectrumMatchScoreRow).Value);
                 return null;
             };
+
+            keyColumn.ImageGetter += delegate(object x)
+                                         {
+                                             if (x is SpectrumSourceGroupRow)
+                                                 return Properties.Resources.XPfolder_closed;
+                                             if (x is SpectrumSourceRow)
+                                                 return Properties.Resources.file;
+                                             if (x is SpectrumRow)
+                                                 return Properties.Resources.SpecrumIcon;
+                                             if (x is PeptideSpectrumMatchRow)
+                                                 return Properties.Resources.PSMIcon;
+                                             return null;
+                                         };
 
             totalSpectraColumn.AspectGetter += delegate(object x)
             {

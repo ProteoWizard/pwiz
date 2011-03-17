@@ -21,13 +21,15 @@
 //
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
+using BrightIdeasSoftware;
 using NHibernate.Linq;
 using IDPicker.DataModel;
 
@@ -35,11 +37,19 @@ namespace IDPicker.Forms
 {
     public partial class GroupingControlForm : Form
     {
+        private class tlvBranch
+        {
+            public string Text;
+            public object Data;
+            public tlvBranch Parent;
+            public List<object> Children;
+            public ContextMenuStrip cms;
+        }
+
         NHibernate.ISession session;
-        private delegate void SortGroupsTreeDelegate();
-        private Point groupsTreeViewRightClickPointToClient;
-        List<TreeNode> _itemsRemoved = new List<TreeNode>();
-        int _numberNewNodes = 0;
+        private OLVListItem _clickedItem;
+        int _numberNewNodes;
+        private tlvBranch _rootNode;
 
         public GroupingControlForm(NHibernate.ISession session)
         {
@@ -47,55 +57,49 @@ namespace IDPicker.Forms
 
             this.session = session;
 
-            var groupsDone = new List<SpectrumSourceGroup>();
-            var sourcesByGroup = session.Query<SpectrumSource>().Where(o => o.Group != null)
-                                                                .ToLookup(o => (int) o.Group.Id.Value)
-                                                                .ToDictionary(o => o.Key, o => o.ToList());
+            tlvGroupedFiles.CanExpandGetter += x => (((tlvBranch)x).Data is SpectrumSourceGroup && ((tlvBranch)x).Children.Any());
+            tlvGroupedFiles.ChildrenGetter += getChildren;
+            tlvGroups.AspectGetter += x =>
+                                          {
+                                              var nodeTracker = ((tlvBranch) x);
+                                              var offsetCorrection = 0;
+                                              while (nodeTracker.Parent.Text != null)
+                                              {
+                                                  offsetCorrection++;
+                                                  nodeTracker = nodeTracker.Parent;
+                                              }
+                                              return ((tlvBranch) x).Text + new string(' ',offsetCorrection*7);
+                                          };
+            tlvGroups.ImageGetter += delegate(object x) { return (((tlvBranch)x).Data is SpectrumSourceGroup) ? Properties.Resources.XPfolder_closed : Properties.Resources.file; };
 
-            var groups = session.Query<SpectrumSourceGroup>().ToList();
-            var groupNode = new TreeNode();
-
-            groupNode.Tag = (from g in groups where g.Name == "/" select g).Single();
-            groups.Remove(groupNode.Tag as SpectrumSourceGroup);
-            groupNode.Text = (groupNode.Tag as SpectrumSourceGroup).Name;
-            groupNode.ContextMenuStrip = cmRightClickGroupNode;
-
-            AddAssociatedSpectra(ref groupNode, sourcesByGroup);
-
-            groupNode = FillBranch(groupNode, groups, sourcesByGroup);
-
-            tvGroups.Nodes.Add(groupNode);
-
-            tvGroups.ExpandAll();
-
-            // add ungrouped sources
-            foreach (SpectrumSource ss in session.Query<SpectrumSource>().Where(g => g.Group == null))
-            {
-                var lvi = new ListViewItem();
-                lvi.Text = ss.Name;
-                lvi.Tag = ss;
-                lvNonGroupedFiles.Items.Add(lvi);
-            }
+            ApplyDefaultGroups(null, null);
         }
 
-        private void AddAssociatedSpectra(ref TreeNode groupNode, Dictionary<int, List<SpectrumSource>> spectraDictionary)
+        private IEnumerable getChildren(object model)
+        {
+            var branch = (tlvBranch)model;
+            return branch.Children;
+        }
+
+        private void AddAssociatedSpectra(ref tlvBranch groupNode, Dictionary<int, List<SpectrumSource>> spectraDictionary)
         {
             try
             {
-                int groupID = (int)(groupNode.Tag as SpectrumSourceGroup).Id;
+                int groupID = (int)(groupNode.Data as SpectrumSourceGroup).Id;
 
                 if (spectraDictionary.ContainsKey(groupID))
                 {
                     foreach (SpectrumSource ss in spectraDictionary[groupID])
                     {
-                        var newNode = new TreeNode();
+                        var newNode = new tlvBranch
+                                          {
+                                              Text = Path.GetFileName(ss.Name),
+                                              Parent = groupNode,
+                                              Data = ss,
+                                              cms = cmRightClickFileNode
+                                          };
 
-                        newNode.Text = ss.Name;
-                        newNode.Tag = ss;
-                        newNode.ImageIndex = 1;
-                        newNode.SelectedImageIndex = 1;
-                        newNode.ContextMenuStrip = cmRightClickFileNode;
-                        groupNode.Nodes.Add(newNode);
+                        groupNode.Children.Add(newNode);
                     }
                 }
             }
@@ -105,65 +109,68 @@ namespace IDPicker.Forms
             }
         }
 
-        private TreeNode FillBranch(TreeNode groupNode, IList<SpectrumSourceGroup> groups, Dictionary<int, List<SpectrumSource>> spectraDictionary)
+        private tlvBranch FillBranch(tlvBranch groupNode, IList<SpectrumSourceGroup> groups, Dictionary<int, List<SpectrumSource>> spectraDictionary)
         {
             List<SpectrumSourceGroup> potentialChildren;
-            string fullPath = (groupNode.Tag as SpectrumSourceGroup).Name;
+            string fullPath = (groupNode.Data as SpectrumSourceGroup).Name;
 
             if (fullPath == "/")
                 potentialChildren = (from g in groups
                                      where g.Name != fullPath &&
                                      !g.Name.Remove(0,1).Contains("/")
-                                     select g).ToList<SpectrumSourceGroup>();
+                                     select g).ToList();
             else
                 potentialChildren = (from g in groups
                                      where g.Name.Contains(fullPath + "/") &&
                                      !g.Name.Remove(0,fullPath.Length+1).Contains("/")
-                                     select g).ToList<SpectrumSourceGroup>();
+                                     select g).ToList();
 
             foreach (SpectrumSourceGroup ssg in potentialChildren)
             {
-                var newNode = new TreeNode();
-                newNode.Text = ssg.Name.Substring(ssg.Name.LastIndexOf("/")+1);
-                newNode.Tag = ssg;
-                newNode.ImageIndex = 0;
-                newNode.SelectedImageIndex = 0;
-                groups.Remove(newNode.Tag as SpectrumSourceGroup);
-                newNode.ContextMenuStrip = cmRightClickGroupNode;
+                var newNode = new tlvBranch
+                                  {
+                                      Text = Path.GetFileName(ssg.Name),
+                                      Children = new List<object>(),
+                                      Data = ssg,
+                                      Parent = groupNode,
+                                      cms = cmRightClickGroupNode
+                                  };
+                groups.Remove(newNode.Data as SpectrumSourceGroup);
 
                 AddAssociatedSpectra(ref newNode, spectraDictionary);
 
-                groupNode.Nodes.Add(this.FillBranch(newNode, groups, spectraDictionary));
+                groupNode.Children.Add(FillBranch(newNode, groups, spectraDictionary));
             }
 
+            OrganizeNode(groupNode);
             return groupNode;
         }
 
         private void saveButton_Click(object sender, EventArgs e)
         {
-            var spectraLocations= new List<TreeNode>();
-            var groupsToSave = new List<TreeNode>();
+            var spectraLocations = new List<tlvBranch>();
+            var groupsToSave = new List<tlvBranch>();
 
             var transaction = session.BeginTransaction();
 
             // find all groups still present
-            getSprectrumSourceGroupsRecursively(tvGroups.Nodes[0], groupsToSave);
+            getSprectrumSourceGroupsRecursively(_rootNode, groupsToSave,string.Empty);
 
             // remove old groups and links
             session.CreateQuery("DELETE SpectrumSourceGroupLink").ExecuteUpdate();
             var unusedGroups = session.Query<SpectrumSourceGroup>().ToList();
-            
-            foreach (TreeNode tn in groupsToSave)
-                unusedGroups.Remove((tn.Tag as SpectrumSourceGroup));
+
+            foreach (tlvBranch tn in groupsToSave)
+                unusedGroups.Remove((tn.Data as SpectrumSourceGroup));
             foreach (SpectrumSourceGroup ssg in unusedGroups)
                 session.Delete(ssg);
-
+               
             // save group layout
-            foreach (TreeNode treeNode in groupsToSave)
-                session.SaveOrUpdate(treeNode.Tag as SpectrumSourceGroup);
+            foreach (tlvBranch treeNode in groupsToSave)
+                session.SaveOrUpdate(treeNode.Data as SpectrumSourceGroup);
 
             // get new spectra locations
-            getListOfSprectrumSourcesRecursively(tvGroups.Nodes[0], ref spectraLocations);
+            getListOfSprectrumSourcesRecursively(_rootNode, ref spectraLocations);
 
             // update SpectrumSource.Group_ and insert new SpectrumSourceGroupLinks;
             // using prepared SQL commands for speed
@@ -184,17 +191,17 @@ namespace IDPicker.Forms
             cmd1.Prepare();
             cmd2.Prepare();
 
-            foreach (TreeNode tn in spectraLocations)
+            foreach (tlvBranch tn in spectraLocations)
             {
-                parameters1[0].Value = (tn.Parent.Tag as SpectrumSourceGroup).Id;
-                parameters1[1].Value = (tn.Tag as SpectrumSource).Id;
+                parameters1[0].Value = ((SpectrumSourceGroup)tn.Parent.Data).Id;
+                parameters1[1].Value = ((SpectrumSource)tn.Data).Id;
                 cmd1.ExecuteNonQuery();
 
                 var tempNode = tn;
-                while (tempNode.Parent != null)
+                while (tempNode.Parent.Text != null)
                 {
-                    parameters2[0].Value = (tempNode.Parent.Tag as SpectrumSourceGroup).Id;
-                    parameters2[1].Value = (tn.Tag as SpectrumSource).Id;
+                    parameters2[0].Value = ((SpectrumSourceGroup)tempNode.Parent.Data).Id;
+                    parameters2[1].Value = ((SpectrumSource)tn.Data).Id;
                     tempNode = tempNode.Parent;
                     cmd2.ExecuteNonQuery();
                 }
@@ -203,236 +210,12 @@ namespace IDPicker.Forms
             // save ungrouped spectrum sources
             foreach (ListViewItem lvi in lvNonGroupedFiles.Items)
             {
-                var ss = lvi.Tag as SpectrumSource;
+                var ss = (SpectrumSource)lvi.Tag;
                 ss.Group = null;
                 session.Update(ss);
             }
 
             transaction.Commit();
-        }
-
-        /// <summary>
-        /// DragDropEffects.Move only
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void tvGroups_ItemDrag(object sender, ItemDragEventArgs e)
-        {
-            try
-            {
-                DoDragDrop(e.Item, DragDropEffects.Move);
-            }
-            catch (Exception exc)
-            {
-                //HandleExceptions(exc, ExceptionsDialogForm.ExceptionType.Error);
-                MessageBox.Show(exc.ToString());
-            }
-        }
-
-        /// <summary>
-        /// Sort treeview after adding nodes - see GroupNodeSorter class
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void tvGroups_AfterLabelEdit(object sender, NodeLabelEditEventArgs e)
-        {
-            try
-            {
-                // for some reason the default group name is not copied to the
-                // e.label property in the event
-                // so this is case for user adds node and accepts default name
-                if (e.Label == null && e.Node.Text.StartsWith("New Group"))
-                {
-                    if (e.Node.Tag is SpectrumSourceGroup)
-                        (e.Node.Tag as SpectrumSourceGroup).Name = e.Node.Text;
-                    BeginInvoke(new SortGroupsTreeDelegate(sortGroupsTreeView));
-                }
-                else if (e.Label != null)
-                {
-                    if (e.Label != string.Empty && e.Label.IndexOfAny(new char[] { '/' }) == -1)
-                    {
-                        if (e.Node.Tag is SpectrumSourceGroup)
-                            (e.Node.Tag as SpectrumSourceGroup).Name = e.Node.Text;
-                        BeginInvoke(new SortGroupsTreeDelegate(sortGroupsTreeView));
-                    }
-                    else
-                    {
-                        e.CancelEdit = true;
-
-                        throw new Exception("Invalid group name.\r\n\r\nGroup names cannot be empty or contain the following chars: '/'.");
-                    }
-                }
-
-            }
-            catch (Exception exc)
-            {
-                //HandleExceptions(exc, ExceptionsDialogForm.ExceptionType.Error);
-                MessageBox.Show(exc.ToString());
-            }
-
-
-        }
-
-        /// <summary>
-        /// Used for delegate sort of groups treeview (afterlabeledit)
-        /// </summary>
-        private void sortGroupsTreeView()
-        {
-            try
-            {
-                tvGroups.Sort();
-            }
-            catch (Exception exc)
-            {
-                throw new Exception("Error sorting groups treeview\r\n", exc);
-            }
-
-        }
-
-        /// <summary>
-        /// Drop from within treevew, Drop from listviewbox
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void tvGroups_DragDrop(object sender, DragEventArgs e)
-        {
-            if (e.Effect == DragDropEffects.Move)
-            {
-
-                if (e.Data.GetDataPresent("System.Windows.Forms.TreeNode", true))
-                {
-                    var pt = tvGroups.PointToClient(new Point(e.X, e.Y));
-                    var destNode = tvGroups.GetNodeAt(pt);
-                    var dragNode = e.Data.GetData("System.Windows.Forms.TreeNode", true) as TreeNode;
-
-                    //InputFileTag destNodeTag = (destNode.Tag as InputFileTag);
-                    //InputFileTag dragNodeTag = (dragNode.Tag as InputFileTag);
-
-                    var newNode = dragNode.Clone() as TreeNode;
-
-                    if (destNode != null && dragNode != null)
-                    {
-
-                        destNode.Nodes.Add(newNode);
-
-                        newNode.ExpandAll();
-
-                        if (destNode.Nodes.Count == 1)
-                            destNode.Expand();
-
-                        dragNode.Remove();
-
-                        tvGroups.Sort();
-                    }
-
-                }
-
-                else if (e.Data.GetDataPresent("System.Windows.Forms.ListViewItem", true))
-                {
-                    var pt = tvGroups.PointToClient(new Point(e.X, e.Y));
-
-                    var destNode = tvGroups.GetNodeAt(pt);
-
-                    if (destNode != null && destNode.Tag is SpectrumSourceGroup)
-                    {
-                        foreach (ListViewItem lvi in lvNonGroupedFiles.SelectedItems)
-                        {
-                            var newNode = new TreeNode(lvi.Text);
-
-                            newNode.Tag = lvi.Tag;
-                            newNode.ImageIndex = 1;
-                            newNode.SelectedImageIndex = 1;
-                            newNode.ContextMenuStrip = cmRightClickFileNode;
-
-                            destNode.Nodes.Add(newNode);
-
-                            if (destNode.Nodes.Count == 1)
-                            {
-                                destNode.Expand();
-                            }
-
-                            lvNonGroupedFiles.Items.Remove(lvi);
-                        } //end foreach selected ListViewItem
-
-                        tvGroups.Sort();
-                    }
-                } //end check for coming from list box
-            } // end check for movement available
-        }
-
-        /// <summary>
-        /// Drag over tvGroups - Drag from within, Drag from listviewbox
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void tvGroups_DragOver(object sender, DragEventArgs e)
-        {
-            try
-            {
-                if (e.Data.GetDataPresent("System.Windows.Forms.TreeNode", true))
-                {
-                    var pt = tvGroups.PointToClient(new Point(e.X, e.Y));
-                    var destNode = tvGroups.GetNodeAt(pt);
-                    var dragNode = e.Data.GetData("System.Windows.Forms.TreeNode", true) as TreeNode;
-                    var newNode = dragNode.Clone() as TreeNode;
-
-                    if (destNode != null && dragNode != null && destNode != dragNode)
-                    {
-                        //InputFileTag destTag = (destNode.Tag as InputFileTag);
-                        //InputFileTag dragTag = (dragNode.Tag as InputFileTag);
-
-                        // cannot drop onto files
-                        if (destNode.Tag is SpectrumSource)
-                        {
-                            e.Effect = DragDropEffects.None;
-
-                        }
-                        else if (checkIfDestGroupAChildNodeOfMe(destNode, dragNode))
-                        {
-                            e.Effect = DragDropEffects.None;
-                        }
-                        else
-                        {
-                            e.Effect = DragDropEffects.Move;
-                        }
-                    }
-                    else
-                    {
-                        e.Effect = DragDropEffects.None;
-                    }
-
-                }
-
-                else if (e.Data.GetDataPresent("System.Windows.Forms.ListViewItem", true))
-                {
-                    var pt = tvGroups.PointToClient(new Point(e.X, e.Y));
-                    var destNode = tvGroups.GetNodeAt(pt);
-
-                    if (destNode != null)
-                    {
-                        //InputFileTag destTag = destNode.Tag as InputFileTag;
-
-                        if (destNode.Tag is SpectrumSourceGroup)
-                        {
-                            e.Effect = DragDropEffects.Move;
-                        }
-                        else
-                        {
-                            e.Effect = DragDropEffects.None;
-                        }
-                    }
-                }
-
-                else
-                {
-                    e.Effect = DragDropEffects.None;
-                }
-            }
-            catch (Exception exc)
-            {
-                throw new Exception("Error handling drag and drop\r\n", exc);
-            }
-
         }
 
         /// <summary>
@@ -442,18 +225,12 @@ namespace IDPicker.Forms
         /// <param name="e"></param>
         private void tvGroups_KeyDown(object sender, KeyEventArgs e)
         {
-            var selNode = tvGroups.SelectedNode;
+            var selNode = (tlvBranch)tlvGroupedFiles.SelectedObject;
 
             try
             {
                 if (e.KeyCode == Keys.Delete)
-                {
                     RemoveGroupNode(selNode);
-                }
-                else if (e.KeyCode == Keys.F2 && (selNode.Tag is SpectrumSourceGroup))
-                {
-                    selNode.BeginEdit();
-                }
             }
             catch (Exception exc)
             {
@@ -473,7 +250,14 @@ namespace IDPicker.Forms
             {
                 if (e.Button == MouseButtons.Right)
                 {
-                    groupsTreeViewRightClickPointToClient = e.Location;
+                    var column = (OLVColumn)tlvGroupedFiles.Columns[0].Clone();
+                    _clickedItem = tlvGroupedFiles.GetItemAt(e.X, e.Y, out column); ;
+                    if (_clickedItem != null)
+                    {
+                        var selNode = (tlvBranch)tlvGroupedFiles.GetModelObject(_clickedItem.Index);
+                        if (selNode != null)
+                            selNode.cms.Show(tlvGroupedFiles, e.Location.X, e.Location.Y);
+                    }
                 }
             }
             catch (Exception exc)
@@ -483,41 +267,19 @@ namespace IDPicker.Forms
             }
         }
 
-
         /// <summary>
         /// Check to prevent group nodes from being dragged into their children
         /// group nodes.
         /// </summary>
         /// <returns></returns>
-        private bool checkIfDestGroupAChildNodeOfMe(TreeNode destNode, TreeNode dragNode)
+        private bool checkIfDestGroupAChildNodeOfMe(tlvBranch destNode, tlvBranch dragNode)
         {
-            //InputFileTag destTag = (destNode.Tag as InputFileTag);
-            //InputFileTag dragTag = (dragNode.Tag as InputFileTag);
-
             try
             {
-                if (destNode.Tag is SpectrumSourceGroup && dragNode.Tag is SpectrumSourceGroup && destNode.Level > dragNode.Level)
-                {
-                    var currNode = destNode;
-
-                    while (currNode.Parent != null)
-                    {
-                        if (currNode.Parent == dragNode)
-                        {
-                            return true;
-                        }
-
-                        currNode = currNode.Parent;
-                    }
-
-                    return false;
-
-                }
-                else
-                {
-                    return false;
-                }
-
+                return destNode.Data is SpectrumSourceGroup
+                       && dragNode.Data is SpectrumSourceGroup
+                       && destNode.Text
+                              .Contains(dragNode.Text);
             }
             catch (Exception exc)
             {
@@ -526,21 +288,15 @@ namespace IDPicker.Forms
 
         }
 
-        private void getListOfSprectrumSourcesRecursively(TreeNode treeNode, ref List<TreeNode> spectraNodes)
+        private void getListOfSprectrumSourcesRecursively(tlvBranch treeNode, ref List<tlvBranch> spectraNodes)
         {
             try
             {
-                if (treeNode.Tag is SpectrumSource)
-                {
+                if (treeNode.Data is SpectrumSource)
                     spectraNodes.Add(treeNode);
-                }
                 else
-                {
-                    foreach (TreeNode subNode in treeNode.Nodes)
-                    {
+                    foreach (tlvBranch subNode in treeNode.Children)
                         getListOfSprectrumSourcesRecursively(subNode, ref spectraNodes);
-                    }
-                }
             }
             catch (Exception exc)
             {
@@ -549,101 +305,98 @@ namespace IDPicker.Forms
 
         }
 
-        private void getSprectrumSourceGroupsRecursively(TreeNode treeNode, List<TreeNode> nodeList)
+        private void getSprectrumSourceGroupsRecursively(tlvBranch treeNode, List<tlvBranch> nodeList, string rootname)
         {
-            if (treeNode.Tag is SpectrumSourceGroup)
+            if (treeNode.Data is SpectrumSourceGroup)
             {
-                if (treeNode.FullPath.Length > 1)
-                    (treeNode.Tag as SpectrumSourceGroup).Name = treeNode.FullPath.Replace("//","/").TrimEnd('/');
-                else
-                    (treeNode.Tag as SpectrumSourceGroup).Name = treeNode.FullPath;
+                (treeNode.Data as SpectrumSourceGroup).Name =
+                    (rootname + treeNode.Text)
+                        .Replace("//", "/");
 
                 nodeList.Add(treeNode);
 
-                foreach (TreeNode subNode in treeNode.Nodes)
-                {
-                    getSprectrumSourceGroupsRecursively(subNode, nodeList);
-                }
+                foreach (tlvBranch subNode in treeNode.Children)
+                    getSprectrumSourceGroupsRecursively(subNode, nodeList, (treeNode.Data as SpectrumSourceGroup).Name);
             }
-        }
-
-        private void cancelButton_Click(object sender, EventArgs e)
-        {
-            
         }
 
         private void addGroupToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var selNode = tvGroups.GetNodeAt(groupsTreeViewRightClickPointToClient);
+            var selNode = (tlvBranch)tlvGroupedFiles.GetModelObject(_clickedItem.Index);
 
             _numberNewNodes++;
 
             var ssg = new SpectrumSourceGroup();
-            ssg.Name = string.Format("New Group({0})", _numberNewNodes);
+            ssg.Name = (string.Format("{0}/New tlvBranch({1})", selNode.Text, _numberNewNodes).Replace(@"//",@"/"));
 
-            var newNode = new TreeNode(string.Format("New Group({0})", _numberNewNodes));
-            newNode.ImageIndex = 0;
-            newNode.SelectedImageIndex = 0;
-            newNode.ContextMenuStrip = cmRightClickGroupNode;
-            newNode.Tag = ssg;
+            var newNode = new tlvBranch
+                              {
+                                  Text = Path.GetFileName(ssg.Name),
+                                  cms = cmRightClickGroupNode,
+                                  Parent = selNode,
+                                  Children = new List<object>(),
+                                  Data = ssg
+                              };
 
-            selNode.Nodes.Add(newNode);
-            newNode.BeginEdit();
-        }
-
-        private void GroupingControlForm_Load(object sender, EventArgs e)
-        {
-            var imageList = new ImageList();
-
-            imageList.Images.Add(Properties.Resources.XPfolder_closed);
-            imageList.Images.Add(Properties.Resources.file);
-
-            tvGroups.ImageList = imageList;
+            selNode.Children.Add(newNode);
+            OrganizeNode(selNode);
+            tlvGroupedFiles.RefreshObject(selNode);
+            if (selNode.Children.Count == 1)
+                tlvGroupedFiles.Expand(selNode);
+            tlvGroupedFiles.EditSubItem(tlvGroupedFiles.ModelToItem(newNode),0);
         }
 
         private void renameGroupToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var selNode = tvGroups.GetNodeAt(groupsTreeViewRightClickPointToClient);
-            selNode.BeginEdit();
+            var selNode = (tlvBranch)tlvGroupedFiles.GetModelObject(_clickedItem.Index);
+
+
+            if (selNode.Parent.Text != null)
+                tlvGroupedFiles.EditSubItem(_clickedItem, 0);
         }
 
         private void removeGroupToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            RemoveGroupNode(tvGroups.GetNodeAt(groupsTreeViewRightClickPointToClient));
+            var selNode = (tlvBranch)tlvGroupedFiles.GetModelObject(_clickedItem.Index);
+            RemoveGroupNode(selNode);
         }
 
-        private void RemoveGroupNode(TreeNode selNode)
+        private void RemoveGroupNode(tlvBranch selNode)
         {
-            var abandonedSpectraSources = new List<TreeNode>();
+            var abandonedSpectraSources = new List<tlvBranch>();
             getListOfSprectrumSourcesRecursively(selNode, ref abandonedSpectraSources);
 
-            if (selNode.Parent != null)
-                selNode.Parent.Nodes.Remove(selNode);
-            else
-                selNode.Nodes.Clear();
-
-            foreach (TreeNode tn in abandonedSpectraSources)
+            if (selNode.Parent.Text != null)
             {
-                var lvi = new ListViewItem();
-                lvi.Text = tn.Text;
-                lvi.Tag = tn.Tag;
+                selNode.Parent.Children.Remove(selNode);
+                tlvGroupedFiles.RefreshObject(selNode.Parent);
+            }
+            else
+            {
+                selNode.Children.Clear();
+                tlvGroupedFiles.RefreshObject(selNode);
+            }
+
+            foreach (tlvBranch tn in abandonedSpectraSources)
+            {
+                var lvi = new ListViewItem {Text = Path.GetFileName(tn.Text), Tag = tn};
                 lvNonGroupedFiles.Items.Add(lvi);
             }
         }
 
-        private void RemoveFileNode(TreeNode selNode)
+        private void RemoveFileNode(tlvBranch selNode)
         {
-            selNode.Parent.Nodes.Remove(selNode);
+            selNode.Parent.Children.Remove(selNode);
+            tlvGroupedFiles.RefreshObject(selNode.Parent);
 
-            var lvi = new ListViewItem();
-            lvi.Text = selNode.Text;
-            lvi.Tag = selNode.Tag;
+            var lvi = new ListViewItem {Text = Path.GetFileName(selNode.Text), Tag = selNode};
             lvNonGroupedFiles.Items.Add(lvi);
         }
 
         private void removeFileNodeToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            RemoveFileNode(tvGroups.GetNodeAt(groupsTreeViewRightClickPointToClient));
+            var selNode = (tlvBranch)tlvGroupedFiles.GetModelObject(_clickedItem.Index);
+            RemoveFileNode(selNode);
         }
 
         private void lvNonGroupedFiles_ItemDrag(object sender, ItemDragEventArgs e)
@@ -653,15 +406,22 @@ namespace IDPicker.Forms
 
         private void lvNonGroupedFiles_DragDrop(object sender, DragEventArgs e)
         {
-            if (e.Data.GetDataPresent("System.Windows.Forms.TreeNode", true))
+            if (e.Data.GetDataPresent("System.String", true))
             {
-                var dragNode = (TreeNode)e.Data.GetData("System.Windows.Forms.TreeNode");
+                var dragSources = from tlvBranch branch in tlvGroupedFiles.SelectedObjects
+                                where !(branch.Data is SpectrumSourceGroup)
+                                select branch;
 
-                RemoveGroupNode(dragNode);
-
-                tvGroups.Sort();
-                //tvGroups.ExpandAll();
-
+                var remaining = from tlvBranch branch in tlvGroupedFiles.SelectedObjects
+                                where (branch.Data is SpectrumSourceGroup)
+                                select branch;
+                
+                foreach (var item in dragSources)
+                    RemoveGroupNode(item);
+                foreach (var item in remaining)
+                    RemoveGroupNode(item);
+                
+                tlvGroupedFiles.Sort();
             }
         }
 
@@ -677,60 +437,217 @@ namespace IDPicker.Forms
 
         private void lvNonGroupedFiles_KeyDown(object sender, KeyEventArgs e)
         {
-            if ((e.Modifiers & Keys.Control) == Keys.Control)
-            {
-                if (e.KeyCode == Keys.A)
-                {
-                    foreach (ListViewItem lvi in lvNonGroupedFiles.Items)
-                    {
-                        lvi.Selected = true;
-                    }
-
-                }
-
-            }
-        }
-
-        private void tvGroups_BeforeLabelEdit(object sender, NodeLabelEditEventArgs e)
-        {
-            if (e.Node.Text == "/")
-            {
-                MessageBox.Show("Cannot change name of root group");
-                e.CancelEdit = true;
-            }
+            if ((e.Modifiers & Keys.Control) == Keys.Control && e.KeyCode == Keys.A)
+                foreach (ListViewItem lvi in lvNonGroupedFiles.Items)
+                    lvi.Selected = true;
         }
 
         private void miResetFiles_Click(object sender, EventArgs e)
         {
             if (MessageBox.Show("Are you sure you want to remove all groups?","Remove All",MessageBoxButtons.YesNo) == DialogResult.Yes)
-                RemoveGroupNode(tvGroups.Nodes[0]);
+                RemoveGroupNode((tlvBranch)tlvGroupedFiles.GetModelObject(0));
         }
 
         private void miExpandGroups_Click(object sender, EventArgs e)
         {
-            if (tvGroups.SelectedNode != null)
-            {
-                if (tvGroups.SelectedNode.Tag is SpectrumSourceGroup)
-                    tvGroups.SelectedNode.Expand();
-            }
+            tlvGroupedFiles.ExpandAll();
         }
 
         private void miCollapseGroups_Click(object sender, EventArgs e)
         {
-            if (tvGroups.SelectedNode != null)
+            tlvGroupedFiles.CollapseAll();
+        }
+
+        private void tlvGroupedFiles_CanDrop(object sender, OlvDropEventArgs e)
+        {
+            if (e.DataObject.GetType().ToString() == "System.Windows.Forms.DataObject")
+                e.Effect = DragDropEffects.Move;
+            else if (e.DataObject is OLVDataObject
+                     && (e.DropTargetItem.RowObject is tlvBranch
+                         && ((e.DropTargetItem.RowObject as tlvBranch).Data is SpectrumSourceGroup
+                              || (e.DropTargetItem.RowObject as tlvBranch).Data is SpectrumSource)))
             {
-                if (tvGroups.SelectedNode.Tag is SpectrumSourceGroup)
-                    tvGroups.SelectedNode.Collapse();
+                var target = e.DropTargetItem.RowObject as tlvBranch;
+                var dragging = (e.DataObject as OLVDataObject).ModelObjects;
+                var isValid = true;
+                foreach (var item in dragging)
+                {
+                    if (checkIfDestGroupAChildNodeOfMe(target,item as tlvBranch))
+                    {
+                        isValid = false;
+                        break;
+                    }
+                }
+                if (isValid)
+                    e.Effect = DragDropEffects.Move;
             }
         }
 
+        private void tlvGroupedFiles_Dropped(object sender, OlvDropEventArgs e)
+        {
+            var target = (tlvBranch)e.DropTargetItem.RowObject;
+            var index = -1;
+            if (target.Data is SpectrumSource)
+            {
+                index = target.Parent.Children.IndexOf(target);
+                target = target.Parent;
+            }
+            if (e.DataObject.GetType().ToString() == "System.Windows.Forms.DataObject")
+            {
+                var sources = from ListViewItem item in lvNonGroupedFiles.SelectedItems
+                              select (tlvBranch) item.Tag;
 
+                foreach (var source in sources)
+                {
+                    if (index >= 0)
+                        target.Children.Insert(index, source);
+                    else
+                        target.Children.Add(source);
+                    source.Parent = target;
+                }
 
+                tlvGroupedFiles.RefreshObject(target);
 
+                var usedItems = from ListViewItem item in lvNonGroupedFiles.SelectedItems
+                                select item;
+                foreach (var item in usedItems)
+                    lvNonGroupedFiles.Items.Remove(item);
+            }
+            else if (e.DataObject is OLVDataObject)
+            {
+                var dragging = e.DataObject as OLVDataObject;
+                var sources = from tlvBranch item in dragging.ModelObjects
+                              where item.Data is SpectrumSource
+                              select item;
+                var groups = from tlvBranch item in dragging.ModelObjects
+                             where (item.Data is SpectrumSourceGroup
+                             && (item.Data as SpectrumSourceGroup).Name != "\\")
+                             select item;
+                var sourcesToIgnore = new List<tlvBranch>();
 
+                foreach (var group in groups)
+                {
+                    //find and ignore spectra in group
+                    getListOfSprectrumSourcesRecursively(group, ref sourcesToIgnore);
 
+                    group.Parent.Children.Remove(group);
+                    tlvGroupedFiles.RefreshObject(group.Parent);
+                    group.Parent = target;
+                    if (target.Children.Any())
+                        target.Children.Insert(0, group);
+                    else
+                        target.Children.Add(group);
+                }
 
+                sources = from tlvBranch s in sources where !sourcesToIgnore.Contains(s) select s;
+                foreach (var source in sources)
+                {
+                    source.Parent.Children.Remove(source);
+                    tlvGroupedFiles.RefreshObject(source.Parent);
+                    source.Parent = target;
+                    if (index >= 0)
+                        target.Children.Insert(index, source);
+                    else
+                        target.Children.Add(source);
+                }
 
+                tlvGroupedFiles.RefreshObject(target);
+                tlvGroupedFiles.Expand(target);
+            }
+            OrganizeNode(target);
+        }
+
+        private void tlvGroupedFiles_CellEditFinishing(object sender, CellEditEventArgs e)
+        {
+            if (e.NewValue.ToString().Contains("/"))
+            {
+                e.Cancel = true;
+                return;
+            }
+
+            foreach (tlvBranch item in ((tlvBranch) e.RowObject).Parent.Children)
+                if (item.Text == (string)e.NewValue)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+            ((tlvBranch)e.RowObject).Text = (string)e.NewValue;
+        }
+
+        private void tlvGroupedFiles_CellEditStarting(object sender, CellEditEventArgs e)
+        {
+            if (((tlvBranch)e.RowObject).Data is SpectrumSource ||(string)e.Value == "/")
+            {
+                e.Cancel = true;
+            }
+
+        }
+
+        private void ApplyDefaultGroups(object sender, EventArgs e)
+        {
+            if (sender == miDefaultGroups &&
+                MessageBox.Show("Are you sure you want to reset the groups to their initial values?",
+                "Reset Groups?", MessageBoxButtons.YesNo) != DialogResult.Yes)
+                return;
+
+            var obj = tlvGroupedFiles.Objects;
+            foreach(var item in obj)
+                tlvGroupedFiles.RemoveObject(item);
+            lvNonGroupedFiles.Items.Clear();
+
+            var sourcesByGroup = session.Query<SpectrumSource>().Where(o => o.Group != null)
+                                                                .ToLookup(o => (int)o.Group.Id.Value)
+                                                                .ToDictionary(o => o.Key, o => o.ToList());
+
+            var groups = session.Query<SpectrumSourceGroup>().ToList();
+            var groupNode = new tlvBranch
+            {
+                Text = "/",
+                Parent = new tlvBranch { Text = null },
+                Children = new List<object>(),
+                Data = (from g in groups where g.Name == "/" select g).Single()
+            };
+
+            groups.Remove(groupNode.Data as SpectrumSourceGroup);
+            groupNode.Text = (groupNode.Data as SpectrumSourceGroup).Name;
+            groupNode.cms = cmRightClickGroupNode;
+
+            AddAssociatedSpectra(ref groupNode, sourcesByGroup);
+
+            groupNode = FillBranch(groupNode, groups, sourcesByGroup);
+
+            tlvGroupedFiles.AddObject(groupNode);
+            _rootNode = groupNode;
+
+            tlvGroupedFiles.ExpandAll();
+
+            // add ungrouped sources
+            foreach (var ss in session.Query<SpectrumSource>().Where(g => g.Group == null))
+            {
+                var lvi = new ListViewItem { Text = ss.Name, Tag = ss };
+                lvNonGroupedFiles.Items.Add(lvi);
+            }
+        }
+
+        private int OrganizeNode(tlvBranch target)
+        {
+            var sources = from tlvBranch item in target.Children
+                           where item.Data is SpectrumSource
+                           select item;
+            var groups = from tlvBranch item in target.Children
+                          where item.Data is SpectrumSourceGroup
+                          select item;
+            if (!sources.Any() && !groups.Any())
+                return -1;
+            
+            target.Children = new List<object>();
+            foreach (var item in groups)
+                target.Children.Add(item);
+            foreach (var item in sources)
+                target.Children.Add(item);
+
+            return groups.Count();
+        }
 
     }
 }

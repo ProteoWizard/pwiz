@@ -120,6 +120,9 @@
   <metadata name="msGroups.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>7, 12</value>
   </metadata>
+  <metadata name="msUngroupedFiles.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <value>92, 12</value>
+  </metadata>
   <data name="tbStartHere.Text" xml:space="preserve">
     <value>Files not assigned to groups are placed here.
 
@@ -131,10 +134,10 @@ Right click on a control label for further help.</value>
     <value>92, 12</value>
   </metadata>
   <metadata name="cmRightClickGroupNode.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>444, 11</value>
+    <value>331, 12</value>
   </metadata>
   <metadata name="cmRightClickFileNode.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>615, 13</value>
+    <value>502, 12</value>
   </metadata>
   <metadata name="splitContainer1.Locked" type="System.Boolean, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089">
     <value>True</value>
