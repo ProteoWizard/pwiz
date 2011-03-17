@@ -21,6 +21,7 @@ using System.IO;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest.Results
@@ -63,28 +64,37 @@ namespace pwiz.SkylineTest.Results
 
         private const string ZIP_FILE = @"Test\Results\AgilentMix.zip";
 
-        // [TestMethod]
+        [TestMethod]
         public void AgilentFormatsTest()
         {
             var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
 
             string docPath;
             SrmDocument doc = InitAgilentDocument(testFilesDir, out docPath);
+
             var docContainer = new ResultsTestDocumentContainer(doc, docPath);
-            // Verify mzXML and RAW contain same results
-            AssertResult.MatchChromatograms(docContainer,
-                                            testFilesDir.GetTestPath("MixC-dMRM-06.d"),
-                                            testFilesDir.GetTestPath("MixC-dMRM-06.mzXML"),
-                                            4, 0);
+            const string replicateName = "AgilentTest";
+            var chromSets = new[]
+                                {
+                                    new ChromatogramSet(replicateName, new[]
+                                        { testFilesDir.GetTestPath("081809_100fmol-MichromMix-05.d") }),
+                                };
+            var docResults = doc.ChangeMeasuredResults(new MeasuredResults(chromSets));
+            Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
+            docContainer.AssertComplete();
+            docResults = docContainer.Document;
+            AssertResult.IsDocumentResultsState(docResults, replicateName,
+                doc.PeptideCount, doc.TransitionGroupCount, 0, doc.TransitionCount, 0);
+
             // Release file handles
-            docContainer.SetDocument(doc, docContainer.Document);
+            docContainer.SetDocument(doc, docResults);
 
             testFilesDir.Dispose();
         }
 
         private static SrmDocument InitAgilentDocument(TestFilesDir testFilesDir, out string docPath)
         {
-            docPath = testFilesDir.GetTestPath("MixC-dMRM-06.sky");
+            docPath = testFilesDir.GetTestPath("Bovine_std_curated_seq_small2.sky");
 
             SrmDocument doc;
             XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
@@ -98,12 +108,10 @@ namespace pwiz.SkylineTest.Results
             catch (Exception x)
             {
                 Assert.Fail("Exception thrown: " + x.Message);
-// ReSharper disable HeuristicUnreachableCode
                 throw;  // Will never happen, but is necessary to keep ReSharper happy
-// ReSharper restore HeuristicUnreachableCode
             }
 
-            AssertEx.IsDocumentState(doc, 0, 1, 30, 31, 93);
+            AssertEx.IsDocumentState(doc, 0, 4, 5, 20);
             return doc;
         }
     }
