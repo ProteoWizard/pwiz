@@ -84,11 +84,7 @@
     <Compile Include="SrmDocumentTest.cs" />
     <Compile Include="SrmSettingsChangeTest.cs" />
     <Compile Include="SrmSettingsTest.cs" />
-    <Compile Include="SSRCalc3Test.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="StatisticsTest.cs" />
-    <Compile Include="UndoManagerTest.cs" />
-    <Compile Include="UtilTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="AuthoringTests.txt" />

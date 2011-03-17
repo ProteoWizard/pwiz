@@ -19,7 +19,8 @@
 using System.Collections.Generic;
 using pwiz.Skyline.Util;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-namespace pwiz.SkylineTest
+
+namespace pwiz.SkylineTestA
 {    
     /// <summary>
     /// This is a test class for the Statistics class and contains
