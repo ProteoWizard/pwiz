@@ -272,7 +272,7 @@ class RawDataImpl : public RawData
         COMInitializer::initialize();
         dacHeaderPtr = IDACHeaderPtr(CLSID_DACHeader);
         dacHeaderPtr->GetHeader(rawpath_);
-        initHeaderProps(rawpath_);
+        initHeaderProps(rawpath);
     }
 
     virtual ~RawDataImpl()
@@ -314,7 +314,7 @@ class RawDataImpl : public RawData
 
     //virtual ScanPtr getScan(int function, int process, int scan) const = 0;
 
-    virtual const string GetHeaderProp(string name)
+    virtual const string GetHeaderProp(string name) const
     {
         if (headerProps.count(name) == 0)
             return "";
