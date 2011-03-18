@@ -36,6 +36,8 @@
             this.dataGridViewPrecursorPool = new System.Windows.Forms.DataGridView();
             this.colTracer = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colPercent = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.label2 = new System.Windows.Forms.Label();
+            this.tbxTurnoverScore = new System.Windows.Forms.TextBox();
             this.zedGraphControl = new pwiz.Topograph.ui.Controls.ZedGraphControlEx();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
@@ -69,6 +71,8 @@
             this.tableLayoutPanel1.Controls.Add(this.label1, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.tbxTurnover, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.dataGridViewPrecursorPool, 0, 2);
+            this.tableLayoutPanel1.Controls.Add(this.label2, 0, 1);
+            this.tableLayoutPanel1.Controls.Add(this.tbxTurnoverScore, 1, 1);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -126,6 +130,24 @@
             this.colPercent.Name = "colPercent";
             this.colPercent.ReadOnly = true;
             // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(3, 25);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(81, 13);
+            this.label2.TabIndex = 3;
+            this.label2.Text = "Turnover Score";
+            // 
+            // tbxTurnoverScore
+            // 
+            this.tbxTurnoverScore.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tbxTurnoverScore.Location = new System.Drawing.Point(142, 28);
+            this.tbxTurnoverScore.Name = "tbxTurnoverScore";
+            this.tbxTurnoverScore.ReadOnly = true;
+            this.tbxTurnoverScore.Size = new System.Drawing.Size(134, 20);
+            this.tbxTurnoverScore.TabIndex = 4;
+            // 
             // zedGraphControl
             // 
             this.zedGraphControl.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -170,9 +192,11 @@
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox tbxTurnover;
-        private ZedGraph.ZedGraphControl zedGraphControl;
         private System.Windows.Forms.DataGridView dataGridViewPrecursorPool;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTracer;
         private System.Windows.Forms.DataGridViewTextBoxColumn colPercent;
+        private pwiz.Topograph.ui.Controls.ZedGraphControlEx zedGraphControl;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.TextBox tbxTurnoverScore;
     }
 }

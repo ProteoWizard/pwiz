@@ -210,6 +210,7 @@
     <!--<property name="TimesBytes" length="1000000" type="BinaryBlob" />
     <property name="ScanIndexesBytes" length="1000000" type="BinaryBlob"/>-->
     <property name="ExcludedMasses" type="BinaryBlob" />
+    <property name="TurnoverScore"/>
   </class>
   <class name="DbPeptideAnalysis">
     <id name="Id">

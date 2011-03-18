@@ -50,8 +50,9 @@ namespace pwiz.Topograph.Test
             dict.Add(TracerFormula.Parse("Tracer1"), 2 * .58 * .42 * .7);
             dict.Add(TracerFormula.Empty, 1- dict.Values.Sum());
             double turnover;
+            double turnoverScore;
             IDictionary<TracerFormula, double> bestMatch;
-            var precursorEnrichment = turnoverCalculator.ComputePrecursorEnrichmentAndTurnover(dict, out turnover, out bestMatch);
+            var precursorEnrichment = turnoverCalculator.ComputePrecursorEnrichmentAndTurnover(dict, out turnover, out turnoverScore, out bestMatch);
             Assert.AreEqual(.7, turnover);
             Assert.AreEqual(58, precursorEnrichment["Tracer"]);
         }

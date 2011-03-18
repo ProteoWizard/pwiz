@@ -100,6 +100,7 @@ namespace pwiz.Topograph.Model
             PrecursorEnrichment = parent.PrecursorEnrichment;
             PrecursorEnrichmentFormula = parent.PrecursorEnrichmentFormula;
             Turnover = parent.Turnover;
+            TurnoverScore = parent.TurnoverScore;
             AutoFindPeak = parent.AutoFindPeak;
         }
 
@@ -112,6 +113,7 @@ namespace pwiz.Topograph.Model
             result.PrecursorEnrichment = PrecursorEnrichment;
             result.PrecursorEnrichmentFormula = PrecursorEnrichmentFormula;
             result.Turnover = Turnover;
+            result.TurnoverScore = TurnoverScore;
             result.AutoFindPeak = AutoFindPeak;
             return result;
         }
@@ -135,6 +137,7 @@ namespace pwiz.Topograph.Model
         public double? PrecursorEnrichment { get; set; }
         public string PrecursorEnrichmentFormula { get; set; }
         public double? Turnover { get; set; }
+        public double? TurnoverScore { get; set; }
         public double? StartTime
         {
             get
@@ -617,12 +620,14 @@ namespace pwiz.Topograph.Model
             IDictionary<TracerFormula, double> bestMatch;
             var peaksDict = ToDictionary();
             double turnover;
-            var precursorEnrichment = PeptideAnalysis.GetTurnoverCalculator().ComputePrecursorEnrichmentAndTurnover(peaksDict, out turnover, out bestMatch);
+            double turnoverScore;
+            var precursorEnrichment = PeptideAnalysis.GetTurnoverCalculator().ComputePrecursorEnrichmentAndTurnover(peaksDict, out turnover, out turnoverScore, out bestMatch);
             if (precursorEnrichment != null)
             {
                 PrecursorEnrichmentFormula = precursorEnrichment.ToString();
                 PrecursorEnrichment = precursorEnrichment.Values.Sum() / 100.0;
                 Turnover = turnover;
+                TurnoverScore = turnoverScore;
             }
         }
 

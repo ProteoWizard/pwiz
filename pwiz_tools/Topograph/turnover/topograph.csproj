@@ -54,7 +54,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>141</ApplicationRevision>
+    <ApplicationRevision>142</ApplicationRevision>
     <ApplicationVersion>0.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -328,6 +328,12 @@
     <Compile Include="Forms\RelexForm.Designer.cs">
       <DependentUpon>RelexForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\ResultsPerReplicateForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\ResultsPerReplicateForm.Designer.cs">
+      <DependentUpon>ResultsPerReplicateForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\StatusForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -511,6 +517,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\RelexForm.resx">
       <DependentUpon>RelexForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\ResultsPerReplicateForm.resx">
+      <DependentUpon>ResultsPerReplicateForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\SpectrumForm.resx">

@@ -53,6 +53,7 @@ namespace pwiz.Topograph.Data
         public virtual double? PrecursorEnrichment { get; set; }
         public virtual string PrecursorEnrichmentFormula { get; set; }
         public virtual double? Turnover { get; set; }
+        public virtual double? TurnoverScore { get; set; }
         public virtual bool IsCalculated { get { return PeakCount != 0 && TracerPercent.HasValue; } }
         public virtual double[] Times 
         { 

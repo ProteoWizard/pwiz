@@ -29,6 +29,7 @@ namespace pwiz.Topograph.Query
 	            "F.DeconvolutionScore,",
             	"F.PrecursorEnrichment,",
             	"F.Turnover,",
+                "F.TurnoverScore",                
 	            "F.MsDataFile.Name AS File,",
 	            "F.MsDataFile.TimePoint AS TimePoint,",
 	            "F.MsDataFile.Cohort AS Cohort,",

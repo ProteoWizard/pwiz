@@ -65,6 +65,7 @@
             this.errorsToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.recalculateResultsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.debuggingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.resultsByReplicateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -202,7 +203,8 @@
             this.mercuryToolStripMenuItem,
             this.halfLivesToolStripMenuItem,
             this.tracerAmountsToolStripMenuItem,
-            this.precursorEnrichmentsToolStripMenuItem});
+            this.precursorEnrichmentsToolStripMenuItem,
+            this.resultsByReplicateToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.viewToolStripMenuItem.Text = "&View";
@@ -260,7 +262,7 @@
             this.tracerAmountsToolStripMenuItem.Enabled = false;
             this.tracerAmountsToolStripMenuItem.Name = "tracerAmountsToolStripMenuItem";
             this.tracerAmountsToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
-            this.tracerAmountsToolStripMenuItem.Text = "Tracer Amounts";
+            this.tracerAmountsToolStripMenuItem.Text = "Results By Cohort";
             this.tracerAmountsToolStripMenuItem.Click += new System.EventHandler(this.tracerAmountsToolStripMenuItem_Click);
             // 
             // precursorEnrichmentsToolStripMenuItem
@@ -371,6 +373,14 @@
             this.debuggingToolStripMenuItem.Size = new System.Drawing.Size(32, 19);
             this.debuggingToolStripMenuItem.Text = "Debugging";
             // 
+            // resultsByReplicateToolStripMenuItem
+            // 
+            this.resultsByReplicateToolStripMenuItem.Enabled = false;
+            this.resultsByReplicateToolStripMenuItem.Name = "resultsByReplicateToolStripMenuItem";
+            this.resultsByReplicateToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.resultsByReplicateToolStripMenuItem.Text = "Results By Replicate";
+            this.resultsByReplicateToolStripMenuItem.Click += new System.EventHandler(this.resultsByReplicateToolStripMenuItem_Click);
+            // 
             // TurnoverForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -427,5 +437,6 @@
         private System.Windows.Forms.ToolStripMenuItem tracerAmountsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem precursorEnrichmentsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem recalculateResultsToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem resultsByReplicateToolStripMenuItem;
     }
 }

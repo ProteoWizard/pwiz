@@ -50,10 +50,10 @@
             this.cbxShowMinHalfLife = new System.Windows.Forms.CheckBox();
             this.cbxShowMaxHalfLife = new System.Windows.Forms.CheckBox();
             this.cbxShowNumDataPoints = new System.Windows.Forms.CheckBox();
-            this.findBox = new pwiz.Common.Controls.FindBox();
             this.comboCalculationType = new System.Windows.Forms.ComboBox();
             this.label6 = new System.Windows.Forms.Label();
             this.cbxShowRateConstant = new System.Windows.Forms.CheckBox();
+            this.findBox = new pwiz.Common.Controls.FindBox();
             this.cbxShowRSquared = new System.Windows.Forms.CheckBox();
             this.cbxShowRateConstantStdDev = new System.Windows.Forms.CheckBox();
             this.cbxShowRateConstantCI = new System.Windows.Forms.CheckBox();
@@ -88,7 +88,7 @@
             this.tbxMinScore.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tbxMinScore.Location = new System.Drawing.Point(409, 28);
             this.tbxMinScore.Name = "tbxMinScore";
-            this.tbxMinScore.Size = new System.Drawing.Size(232, 20);
+            this.tbxMinScore.Size = new System.Drawing.Size(231, 20);
             this.tbxMinScore.TabIndex = 2;
             // 
             // dataGridView1
@@ -141,9 +141,9 @@
             // btnRequery
             // 
             this.btnRequery.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.btnRequery.Location = new System.Drawing.Point(647, 3);
+            this.btnRequery.Location = new System.Drawing.Point(646, 3);
             this.btnRequery.Name = "btnRequery";
-            this.btnRequery.Size = new System.Drawing.Size(110, 19);
+            this.btnRequery.Size = new System.Drawing.Size(111, 19);
             this.btnRequery.TabIndex = 4;
             this.btnRequery.Text = "Recalculate";
             this.btnRequery.UseVisualStyleBackColor = true;
@@ -180,9 +180,9 @@
             // 
             this.btnSave.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnSave.Enabled = false;
-            this.btnSave.Location = new System.Drawing.Point(647, 28);
+            this.btnSave.Location = new System.Drawing.Point(646, 28);
             this.btnSave.Name = "btnSave";
-            this.btnSave.Size = new System.Drawing.Size(110, 19);
+            this.btnSave.Size = new System.Drawing.Size(111, 19);
             this.btnSave.TabIndex = 9;
             this.btnSave.Text = "Save...";
             this.btnSave.UseVisualStyleBackColor = true;
@@ -206,7 +206,7 @@
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 46.3964F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 100F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 53.6036F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 115F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 116F));
             this.tableLayoutPanel1.Controls.Add(this.label2, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.tbxInitialTracerPercent, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.label3, 0, 1);
@@ -314,23 +314,13 @@
             // cbxShowNumDataPoints
             // 
             this.cbxShowNumDataPoints.AutoSize = true;
-            this.cbxShowNumDataPoints.Location = new System.Drawing.Point(647, 103);
+            this.cbxShowNumDataPoints.Location = new System.Drawing.Point(646, 103);
             this.cbxShowNumDataPoints.Name = "cbxShowNumDataPoints";
             this.cbxShowNumDataPoints.Size = new System.Drawing.Size(91, 17);
             this.cbxShowNumDataPoints.TabIndex = 17;
             this.cbxShowNumDataPoints.Text = "# Data Points";
             this.cbxShowNumDataPoints.UseVisualStyleBackColor = true;
             this.cbxShowNumDataPoints.CheckedChanged += new System.EventHandler(this.cbxShowColumn_CheckedChanged);
-            // 
-            // findBox
-            // 
-            this.tableLayoutPanel1.SetColumnSpan(this.findBox, 2);
-            this.findBox.DataGridView = this.dataGridView1;
-            this.findBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.findBox.Location = new System.Drawing.Point(409, 153);
-            this.findBox.Name = "findBox";
-            this.findBox.Size = new System.Drawing.Size(348, 21);
-            this.findBox.TabIndex = 10;
             // 
             // comboCalculationType
             // 
@@ -340,7 +330,8 @@
             this.comboCalculationType.Items.AddRange(new object[] {
             "Tracer %",
             "Individual Precursor Pool",
-            "Avg Precursor Pool"});
+            "Avg Precursor Pool",
+            "Avg Precursor Pool (Old Way)"});
             this.comboCalculationType.Location = new System.Drawing.Point(103, 78);
             this.comboCalculationType.Name = "comboCalculationType";
             this.comboCalculationType.Size = new System.Drawing.Size(200, 21);
@@ -366,6 +357,16 @@
             this.cbxShowRateConstant.Text = "Rate Constant";
             this.cbxShowRateConstant.UseVisualStyleBackColor = true;
             this.cbxShowRateConstant.CheckedChanged += new System.EventHandler(this.cbxShowColumn_CheckedChanged);
+            // 
+            // findBox
+            // 
+            this.tableLayoutPanel1.SetColumnSpan(this.findBox, 2);
+            this.findBox.DataGridView = this.dataGridView1;
+            this.findBox.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.findBox.Location = new System.Drawing.Point(409, 153);
+            this.findBox.Name = "findBox";
+            this.findBox.Size = new System.Drawing.Size(348, 21);
+            this.findBox.TabIndex = 10;
             // 
             // cbxShowRSquared
             // 

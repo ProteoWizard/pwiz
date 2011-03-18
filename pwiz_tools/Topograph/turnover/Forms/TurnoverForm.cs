@@ -117,6 +117,7 @@ namespace pwiz.Topograph.ui.Forms
                                dataDirectoryToolStripMenuItem,
                                tracerAmountsToolStripMenuItem,
                                precursorEnrichmentsToolStripMenuItem,
+                               resultsByReplicateToolStripMenuItem,
                            };
             }
         }
@@ -372,7 +373,8 @@ namespace pwiz.Topograph.ui.Forms
             {
                 var result =
                     MessageBox.Show(
-                        "This workspace needs to be upgraded to this version of Topograph.  Do you want to do that now?", 
+                        "This workspace needs to be upgraded from version " + version 
+                        + " to this version of Topograph (" +  WorkspaceUpgrader.CurrentVersion +").  Do you want to do that now?", 
                         Program.AppName, MessageBoxButtons.OKCancel);
                 if (result == DialogResult.Cancel)
                 {
@@ -876,6 +878,12 @@ namespace pwiz.Topograph.ui.Forms
             {
                 f.Activate();
             }
+        }
+
+        private void resultsByReplicateToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var resultsPerReplicateForm = new ResultsPerReplicateForm(Workspace);
+            resultsPerReplicateForm.Show(dockPanel, DockState.Document);
         }
     }
 }

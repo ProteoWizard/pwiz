@@ -13,6 +13,8 @@ namespace pwiz.Topograph.MsData
     public class HalfLifeCalculator : ILongOperationJob
     {
         private IDictionary<long, double> _precursorPools;
+        private readonly IDictionary<string, TurnoverCalculator> _turnoverCalculators 
+            = new Dictionary<string, TurnoverCalculator>();
         public HalfLifeCalculator(Workspace workspace, HalfLifeCalculationType halfLifeCalculationType)
         {
             Workspace = workspace;
@@ -41,7 +43,16 @@ namespace pwiz.Topograph.MsData
             get; set;
         }
 
-        private List<RowData> Query()
+        private bool RequiresPrecursorPool
+        {
+            get
+            {
+                return HalfLifeCalculationType == HalfLifeCalculationType.OldGroupPrecursorPool
+                       || HalfLifeCalculationType == HalfLifeCalculationType.GroupPrecursorPool;
+            }
+        }
+
+        private List<RowData> QueryRowDatas()
         {
             var hql = new StringBuilder();
             hql.Append("SELECT"
@@ -49,29 +60,52 @@ namespace pwiz.Topograph.MsData
                        +"\nF.TracerPercent,"
                        +"\nF.DeconvolutionScore, "
                        + "\nF.PeptideAnalysis.Peptide.Id, "
-                       + "\nF.MsDataFile.Id "
+                       + "\nF.MsDataFile.Id, "
+                       + "\nF.Id,"
+                       + "\nF.PrecursorEnrichment,"
+                       + "\nF.TurnoverScore"
                        + "\nFROM " + typeof (DbPeptideFileAnalysis) + " F"
-                       + "\nWHERE F.DeconvolutionScore > :minScore"
+                       + "\nWHERE F.DeconvolutionScore >= :minScore"
                        + "\nAND F.ValidationStatus != " + (int) ValidationStatus.reject
                        + "\nAND F.TracerPercent IS NOT NULL");
             var query = Session.CreateQuery(hql.ToString())
                 .SetParameter("minScore", MinScore);
-
+            var peaksQuery = Session.CreateQuery("SELECT P.PeptideFileAnalysis.Id, P.Name, P.TotalArea"
+                                                 + "\nFROM " + typeof (DbPeak) + " P");
+            var peaksDict = new Dictionary<long, IDictionary<TracerFormula, double>>();
+            foreach (object[] row in peaksQuery.List())
+            {
+                var peptideFileAnalysisId = Convert.ToInt32(row[0]);
+                IDictionary<TracerFormula, double> dict;
+                if (!peaksDict.TryGetValue(peptideFileAnalysisId, out dict))
+                {
+                    dict = new Dictionary<TracerFormula, double>();
+                    peaksDict.Add(peptideFileAnalysisId, dict);
+                }
+                dict.Add(TracerFormula.Parse(Convert.ToString(row[1])), Convert.ToDouble(row[2]));
+            }
             var result = new List<RowData>();
             foreach (object[] row in query.List())
             {
                 try
                 {
-                    
-                var rowData = new RowData
-                                  {
-                                      Turnover = (double?) row[0],
-                                      TracerPercent = (double) row[1],
-                                      Score = (double) row[2],
-                                      PeptideId = (long) row[3],
-                                      DataFileId = (long) row[4],
-                                  };
-                result.Add(rowData);
+                    var peptideFileAnalysisId = Convert.ToInt32(row[5]);
+                    IDictionary<TracerFormula, double> peaks;
+                    peaksDict.TryGetValue(peptideFileAnalysisId, out peaks);
+                    var rowData = new RowData
+                                      {
+                                          IndTurnover = (double?) row[0],
+                                          IndPrecursorEnrichment =  (double?) row[6],
+                                          IndTurnoverScore = (double?) row[7],
+                                          TracerPercent = (double) row[1],
+                                          DeconvolutionScore = (double) row[2],
+                                          Peptide = Workspace.Peptides.GetChild((long) row[3]),
+                                          MsDataFile = Workspace.MsDataFiles.GetChild((long) row[4]),
+                                          Peaks = peaks,
+                                          PeptideFileAnalysisId = peptideFileAnalysisId,
+                                      };
+                    ComputeAvgTurnover(rowData);
+                    result.Add(rowData);
                 }
                 catch (Exception e)
                 {
@@ -79,6 +113,32 @@ namespace pwiz.Topograph.MsData
                 }
             }
             return result;
+        }
+
+        private void ComputeAvgTurnover(RowData rowData)
+        {
+            if (!RequiresPrecursorPool)
+            {
+                return;
+            }
+            double precursorEnrichment;
+            if (_precursorPools.TryGetValue(rowData.MsDataFile.Id.Value, out precursorEnrichment))
+            {
+                rowData.AvgPrecursorEnrichment = precursorEnrichment;
+                if (HalfLifeCalculationType == HalfLifeCalculationType.GroupPrecursorPool)
+                {
+                    var turnoverCalculator = GetTurnoverCalculator(rowData.Peptide.Sequence);
+                    double? turnover;
+                    double? turnoverScore;
+                    turnoverCalculator.ComputeTurnover(precursorEnrichment, rowData.Peaks, out turnover, out turnoverScore);
+                    rowData.AvgTurnover = turnover * 100;
+                    rowData.AvgTurnoverScore = turnoverScore;
+                }
+                else if (HalfLifeCalculationType == HalfLifeCalculationType.OldGroupPrecursorPool)
+                {
+                    rowData.AvgTurnover = 100 * (rowData.TracerPercent - InitialPercent) / (precursorEnrichment - InitialPercent);
+                }
+            }
         }
 
         private IDictionary<long, double> GetPrecursorPools(ISession session)
@@ -106,38 +166,29 @@ namespace pwiz.Topograph.MsData
 
         public void Run(LongOperationBroker longOperationBroker)
         {
-            List<RowData> rowDatas;
             using (Session = Workspace.OpenSession())
             {
-                if (HalfLifeCalculationType == HalfLifeCalculationType.GroupPrecursorPool)
+                if (RequiresPrecursorPool)
                 {
                     longOperationBroker.UpdateStatusMessage("Querying precursor pools");
                     _precursorPools = GetPrecursorPools(Session);
                 }
                 longOperationBroker.UpdateStatusMessage("Querying database");
-                rowDatas = Query();
+                RowDatas = QueryRowDatas();
             }
             var groupedRowDatas = new Dictionary<String, List<RowData>>();
             var cohorts = new HashSet<String> {""};
             longOperationBroker.UpdateStatusMessage("Grouping results");
             using (Workspace.GetReadLock())
             {
-                foreach (var rowData in rowDatas)
+                foreach (var rowData in RowDatas)
                 {
                     if (longOperationBroker.WasCancelled)
                     {
                         return;
                     }
-                    var peptide = Workspace.Peptides.GetChild(rowData.PeptideId);
-                    if (peptide == null)
-                    {
-                        continue;
-                    }
                     cohorts.Add(GetCohort(rowData));
-                    rowData.PeptideSequence = peptide.Sequence;
-                    rowData.ProteinName = peptide.ProteinName;
-                    rowData.ProteinDescription = peptide.ProteinDescription;
-                    var key = ByProtein ? rowData.ProteinName : rowData.PeptideSequence;
+                    var key = ByProtein ? rowData.ProteinName : rowData.Peptide.Sequence;
                     List<RowData> list;
                     if (!groupedRowDatas.TryGetValue(key, out list))
                     {
@@ -164,12 +215,12 @@ namespace pwiz.Topograph.MsData
 
         private String GetCohort(RowData rowData)
         {
-            return Workspace.MsDataFiles.GetChild(rowData.DataFileId).Cohort;
+            return rowData.MsDataFile.Cohort ?? "";
         }
 
         private double? GetTimePoint(RowData rowData)
         {
-            return Workspace.MsDataFiles.GetChild(rowData.DataFileId).TimePoint;
+            return rowData.MsDataFile.TimePoint;
         }
 
         private ResultRow CalculateResultRow(List<RowData> rowDatas)
@@ -182,7 +233,7 @@ namespace pwiz.Topograph.MsData
                                 };
             if (!ByProtein)
             {
-                resultRow.PeptideSequence = first.PeptideSequence;
+                resultRow.PeptideSequence = first.Peptide.Sequence;
             }
             foreach (var cohort in Cohorts)
             {
@@ -250,8 +301,9 @@ namespace pwiz.Topograph.MsData
             return 100*(1 - Math.Exp(logValue));
         }
 
-        private double? GetValue(RowData rowData)
+        private double? GetValue(RowData rowData, out double? score)
         {
+            score = null;
             if (rowData == null)
             {
                 return null;
@@ -261,14 +313,10 @@ namespace pwiz.Topograph.MsData
                 case HalfLifeCalculationType.TracerPercent:
                     return rowData.TracerPercent;
                 case HalfLifeCalculationType.IndividualPrecursorPool:
-                    return rowData.Turnover;
+                    return rowData.IndTurnover;
+                case HalfLifeCalculationType.OldGroupPrecursorPool:
                 case HalfLifeCalculationType.GroupPrecursorPool:
-                    double precursorPool;
-                    if (!_precursorPools.TryGetValue(rowData.DataFileId, out precursorPool))
-                    {
-                        return null;
-                    }
-                    return 100 * (rowData.TracerPercent - InitialPercent) / (precursorPool - InitialPercent);
+                    return rowData.AvgTurnover;    
                 default:
                     throw new ArgumentException();
                 
@@ -287,7 +335,8 @@ namespace pwiz.Topograph.MsData
 
         private double? GetLogValue(RowData rowData)
         {
-            double? value = GetValue(rowData);
+            double? score;
+            double? value = GetValue(rowData, out score);
             if (!value.HasValue)
             {
                 return null;
@@ -308,22 +357,25 @@ namespace pwiz.Topograph.MsData
             {
                 return null;
             }
-            return new RowData
+            var rowData = new RowData
                        {
-                           DataFileId = peptideFileAnalysis.MsDataFile.Id.Value,
-                           PeptideId = peptideFileAnalysis.Peptide.Id.Value,
-                           PeptideSequence = peptideFileAnalysis.Peptide.Sequence,
-                           ProteinDescription = peptideFileAnalysis.Peptide.ProteinDescription,
-                           ProteinName = peptideFileAnalysis.Peptide.ProteinName,
-                           Score = peptideFileAnalysis.Peaks.DeconvolutionScore.Value,
+                           MsDataFile = peptideFileAnalysis.MsDataFile,
+                           Peptide = peptideFileAnalysis.Peptide,
+                           DeconvolutionScore = peptideFileAnalysis.Peaks.DeconvolutionScore.Value,
                            TracerPercent = peptideFileAnalysis.Peaks.TracerPercent.Value,
-                           Turnover = peptideFileAnalysis.Peaks.Turnover * 100,
+                           IndTurnover = peptideFileAnalysis.Peaks.Turnover*100,
+                           IndTurnoverScore = peptideFileAnalysis.Peaks.TurnoverScore,
+                           IndPrecursorEnrichment = peptideFileAnalysis.Peaks.PrecursorEnrichment,
+                           Peaks = peptideFileAnalysis.Peaks.ToDictionary(),
                        };
+            ComputeAvgTurnover(rowData);
+            return rowData;
         }
 
         public double? GetValue(PeptideFileAnalysis peptideFileAnalysis)
         {
-            return GetValue(ToRowData(peptideFileAnalysis));
+            double? score;
+            return GetValue(ToRowData(peptideFileAnalysis), out score);
         }
 
         public double? GetLogValue(PeptideFileAnalysis peptideFileAnalysis)
@@ -388,16 +440,34 @@ namespace pwiz.Topograph.MsData
         public double MinScore { get; set; }
         ISession Session { get; set; }
         public IList<ResultRow> ResultRows { get; private set; }
-        class RowData
+        public IList<RowData> RowDatas { get; private set; }
+        public class RowData
         {
             public double TracerPercent { get; set; }
-            public double Score { get; set; }
-            public double? Turnover { get; set; }
-            public long PeptideId { get; set; }
-            public String PeptideSequence { get; set; }
-            public String ProteinName { get; set; }
-            public String ProteinDescription { get; set; }
-            public long DataFileId { get; set; }
+            public double DeconvolutionScore { get; set; }
+            public double? IndPrecursorEnrichment { get; set; }
+            public double? IndTurnover { get; set; }
+            public double? IndTurnoverScore { get; set; }
+            public double? AvgPrecursorEnrichment { get; set; }
+            public double? AvgTurnover { get; set; }
+            public double? AvgTurnoverScore { get; set; }
+            public Peptide Peptide { get; set; }
+            public String ProteinName { get { return Peptide.ProteinName; } }
+            public String ProteinDescription { get { return Peptide.ProteinDescription; } }
+            public MsDataFile MsDataFile { get; set; }
+            public long PeptideFileAnalysisId { get; set; }
+            public IDictionary<TracerFormula, double> Peaks { get; set; }
+            public double? AreaUnderCurve
+            {
+                get
+                {
+                    if (Peaks == null)
+                    {
+                        return null;
+                    }
+                    return Peaks.Values.Sum();
+                }
+            }
         }
 
         public class ResultRow
@@ -490,12 +560,24 @@ namespace pwiz.Topograph.MsData
             degreesOfFreedom = Math.Min(values.Length - 1, degreesOfFreedom);
             return values[degreesOfFreedom];
         }
-
+        public TurnoverCalculator GetTurnoverCalculator(string peptideSequence)
+        {
+            peptideSequence = Peptide.TrimSequence(peptideSequence);
+            TurnoverCalculator turnoverCalculator;
+            if (_turnoverCalculators.TryGetValue(peptideSequence, out turnoverCalculator))
+            {
+                return turnoverCalculator;
+            }
+            turnoverCalculator = new TurnoverCalculator(Workspace, peptideSequence);
+            _turnoverCalculators.Add(peptideSequence, turnoverCalculator);
+            return turnoverCalculator;
+        }
     }
     public enum HalfLifeCalculationType
     {
         TracerPercent,
         IndividualPrecursorPool,
         GroupPrecursorPool,
+        OldGroupPrecursorPool,
     }
 }

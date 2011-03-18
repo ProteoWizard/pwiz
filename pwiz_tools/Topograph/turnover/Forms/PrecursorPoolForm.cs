@@ -43,16 +43,19 @@ namespace pwiz.Topograph.ui.Forms
             var peaksDict = peaks.ToDictionary();
             var peaksDictList = peaksDict.ToList();
             double turnover;
-            var precursorEnrichment = PeptideAnalysis.GetTurnoverCalculator().ComputePrecursorEnrichmentAndTurnover(peaksDict, out turnover, out bestMatch);
+            double turnoverScore;
+            var precursorEnrichment = PeptideAnalysis.GetTurnoverCalculator().ComputePrecursorEnrichmentAndTurnover(peaksDict, out turnover, out turnoverScore, out bestMatch);
             dataGridViewPrecursorPool.Rows.Clear();
             if (precursorEnrichment == null)
             {
                 tbxTurnover.Text = "";
+                tbxTurnoverScore.Text = "";
                 dataGridViewPrecursorPool.Rows.Clear();
             }
             else
             {
                 tbxTurnover.Text = turnover.ToString("0.##%");
+                tbxTurnoverScore.Text = turnoverScore.ToString();
                 var tracerDefs = Workspace.GetTracerDefs();
                 if (dataGridViewPrecursorPool.Rows.Count != tracerDefs.Count)
                 {

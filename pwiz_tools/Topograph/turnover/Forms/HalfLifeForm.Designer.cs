@@ -348,7 +348,8 @@ namespace pwiz.Topograph.ui.Forms
             this.comboCalculationType.Items.AddRange(new object[] {
             "Tracer %",
             "Individual Precursor Pool",
-            "Avg Precursor Pool"});
+            "Avg Precursor Pool",
+            "Avg Precursor Pool (Old Way)"});
             this.comboCalculationType.Location = new System.Drawing.Point(153, 153);
             this.comboCalculationType.Name = "comboCalculationType";
             this.comboCalculationType.Size = new System.Drawing.Size(128, 21);
