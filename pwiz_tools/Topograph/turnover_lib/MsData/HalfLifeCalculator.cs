@@ -386,6 +386,13 @@ namespace pwiz.Topograph.MsData
 
         public ResultData CalculateHalfLife(IEnumerable<PeptideFileAnalysis> peptideFileAnalyses)
         {
+            if (RequiresPrecursorPool && _precursorPools == null)
+            {
+                using (var session = Workspace.OpenSession())
+                {
+                    _precursorPools = GetPrecursorPools(session);
+                }
+            }
             var rowDatas = new List<RowData>();
             foreach (var peptideFileAnalysis in peptideFileAnalyses)
             {
@@ -395,13 +402,6 @@ namespace pwiz.Topograph.MsData
                     continue;
                 }
                 rowDatas.Add(rowData);
-            }
-            if (HalfLifeCalculationType == HalfLifeCalculationType.GroupPrecursorPool && _precursorPools == null)
-            {
-                using (var session = Workspace.OpenSession())
-                {
-                    _precursorPools = GetPrecursorPools(session);
-                }
             }
             return CalculateHalfLife(rowDatas);
         }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
@@ -165,7 +166,7 @@ namespace pwiz.Topograph.ui.Forms
 
         private void btnSave_Click(object sender, EventArgs e)
         {
-            GridUtil.ExportResults(dataGridView1, "ResultsPerReplicate");
+            GridUtil.ExportResults(dataGridView1, Path.GetFileNameWithoutExtension(Workspace.DatabasePath) + "ResultsPerReplicate");
         }
 
         private void dataGridView1_RowHeaderMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)

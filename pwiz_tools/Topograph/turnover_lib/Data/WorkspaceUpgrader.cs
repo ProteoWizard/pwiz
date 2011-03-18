@@ -66,7 +66,7 @@ namespace pwiz.Topograph.Data
                     throw new JobCancelledException();
                 }
                 _currentCommand = connection.CreateCommand();
-                _currentCommand.CommandTimeout = 600;
+                _currentCommand.CommandTimeout = 1800;
                 _currentCommand.CommandText = commandText;
                 return _currentCommand;
             }
@@ -140,7 +140,7 @@ namespace pwiz.Topograph.Data
                 }
                 if (dbVersion < 6)
                 {
-                    broker.UpdateStatusMessage("Upgrading from version 5 to version 6");
+                    broker.UpdateStatusMessage("Upgrading from version 5 to 6");
                     if (IsSqlite)
                     {
                         CreateCommand(connection, "DROP TABLE DbPeak")
@@ -206,11 +206,13 @@ namespace pwiz.Topograph.Data
                 }
                 if (dbVersion < 7)
                 {
+                    broker.UpdateStatusMessage("Upgrading from version 6 to 7");
                     CreateCommand(connection, "ALTER TABLE DbMsDataFile ADD Column Sample TEXT")
                         .ExecuteNonQuery();
                 }
                 if (dbVersion < 8)
                 {
+                    broker.UpdateStatusMessage("Upgrading from version 7 to 8");
                     CreateCommand(connection, "ALTER TABLE DbPeptideFileAnalysis ADD Column TurnoverScore DOUBLE")
                         .ExecuteNonQuery();
                 }
