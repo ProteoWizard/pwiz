@@ -87,6 +87,14 @@ namespace pwiz.Topograph.ui.Forms
         {
             var dataFile = (MsDataFile) row.Tag;
             row.Cells[colName.Index].Value = dataFile.Name;
+            if (Workspace.IsRejected(dataFile))
+            {
+                row.Cells[colName.Index].Style.BackColor = Color.Red;
+            }
+            else
+            {
+                row.Cells[colName.Index].Style.BackColor = Color.Empty;
+            }
             row.Cells[colLabel.Index].Value = dataFile.Label;
             row.Cells[colCohort.Index].Value = dataFile.Cohort;
             row.Cells[colTimePoint.Index].Value = dataFile.TimePoint;

@@ -137,6 +137,17 @@ namespace pwiz.Topograph.Model
         {
             if (SessionFactory != null)
             {
+                using (var session = SessionFactory.OpenSession())
+                {
+                    session.BeginTransaction();
+                    var criteria = session.CreateCriteria(typeof (DbLock))
+                        .Add(Restrictions.Eq("InstanceIdBytes", InstanceId.ToByteArray()));
+                    foreach (DbLock dbLock in criteria.List())
+                    {
+                        session.Delete(dbLock);
+                    }
+                    session.Transaction.Commit();
+                }
                 SessionFactory.Close();
                 SessionFactory = null;
             }

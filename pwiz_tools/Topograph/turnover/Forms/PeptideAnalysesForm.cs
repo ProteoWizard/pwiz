@@ -24,6 +24,7 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using NHibernate;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.Util;
@@ -37,6 +38,7 @@ namespace pwiz.Topograph.ui.Forms
         private bool _initialQueryCompleted;
         private readonly Dictionary<long, DataGridViewRow> _peptideAnalysisRows = new Dictionary<long, DataGridViewRow>();
         private readonly object _requeryLock = new object();
+        private ISession _session;
 
         private HashSet<long> _peptideAnalysisIdsToRequery;
 
@@ -131,6 +133,24 @@ namespace pwiz.Topograph.ui.Forms
             new Action(RequeryPeptideAnalyses).BeginInvoke(null, null);
         }
 
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            lock(this)
+            {
+                if (_session != null)
+                {
+                    try
+                    {
+                        _session.CancelQuery();
+                    }
+                    catch
+                    {
+                        
+                    }
+                }
+            }
+        }
+
         private void AddPeptideAnalysesToRequery(ICollection<long> ids)
         {
             if (ids.Count == 0)
@@ -174,62 +194,70 @@ namespace pwiz.Topograph.ui.Forms
                 }
 
                 var peptideAnalysisRows = new Dictionary<long, PeptideAnalysisRow>();
-                using (var session = Workspace.OpenSession())
+                try 
                 {
-                    String hql = "SELECT pa.Id, pa.Peptide.Id, pa.Note, pa.FileAnalysisCount "
-                                 + "\nFROM " + typeof(DbPeptideAnalysis) + " pa";
+                    using (_session = Workspace.OpenSession())
+                    {
+                        String hql = "SELECT pa.Id, pa.Peptide.Id, pa.Note, pa.FileAnalysisCount "
+                                     + "\nFROM " + typeof (DbPeptideAnalysis) + " pa";
 
+                        if (idsToRequery != null)
+                        {
+                            hql += "\nWHERE pa.Id IN " + idList;
+                        }
+                        var query = _session.CreateQuery(hql);
+                        foreach (object[] rowData in query.List())
+                        {
+                            PeptideAnalysisRow peptideAnalysisRow;
+                            var id = (long) rowData[0];
+                            if (!peptideAnalysisRows.TryGetValue(id, out peptideAnalysisRow))
+                            {
+                                peptideAnalysisRow = new PeptideAnalysisRow {Id = id};
+                                peptideAnalysisRows.Add(id, peptideAnalysisRow);
+                            }
+                            peptideAnalysisRow.PeptideId = (long) rowData[1];
+                            peptideAnalysisRow.Note = (string) rowData[2];
+                            peptideAnalysisRow.DataFileCount = (int) rowData[3];
+                        }
+                        var hql2 = "SELECT pfa.PeptideAnalysis.Id, Min(pfa.DeconvolutionScore), Max(pfa.DeconvolutionScore), Min(pfa.ValidationStatus), Max(pfa.ValidationStatus) "
+                                   + "\nfrom " + typeof (DbPeptideFileAnalysis) +
+                                   " pfa ";
+                        if (idsToRequery != null)
+                        {
+                            hql2 += "\nWHERE pfa.PeptideAnalysis.Id IN " + idList;
+                        }
+                        hql2 += "\nGROUP BY pfa.PeptideAnalysis.Id";
+                        var query2 = _session.CreateQuery(hql2);
+                        foreach (object[] rowData in query2.List())
+                        {
+                            PeptideAnalysisRow peptideAnalysisRow;
+                            var id = (long) rowData[0];
+                            if (!peptideAnalysisRows.TryGetValue(id, out peptideAnalysisRow))
+                            {
+                                continue;
+                            }
+                            peptideAnalysisRow.MinScore = (double?) rowData[1];
+                            peptideAnalysisRow.MaxScore = (double?) rowData[2];
+                            peptideAnalysisRow.MinValidationStatus = (ValidationStatus?) rowData[3];
+                            peptideAnalysisRow.MaxValidationStatus = (ValidationStatus?) rowData[4];
+                        }
+                    }
                     if (idsToRequery != null)
                     {
-                        hql += "\nWHERE pa.Id IN " + idList;
-                    }
-                    var query = session.CreateQuery(hql);
-                    foreach (object[] rowData in query.List())
-                    {
-                        PeptideAnalysisRow peptideAnalysisRow;
-                        var id = (long)rowData[0];
-                        if (!peptideAnalysisRows.TryGetValue(id, out peptideAnalysisRow))
+                        foreach (var id in idsToRequery)
                         {
-                            peptideAnalysisRow = new PeptideAnalysisRow { Id = id };
-                            peptideAnalysisRows.Add(id, peptideAnalysisRow);
+                            if (!peptideAnalysisRows.ContainsKey(id))
+                            {
+                                peptideAnalysisRows.Add(id, null);
+                            }
                         }
-                        peptideAnalysisRow.PeptideId = (long)rowData[1];
-                        peptideAnalysisRow.Note = (string)rowData[2];
-                        peptideAnalysisRow.DataFileCount = (int) rowData[3];
-                    }
-                    var hql2 = "SELECT pfa.PeptideAnalysis.Id, Min(pfa.DeconvolutionScore), Max(pfa.DeconvolutionScore), Min(pfa.ValidationStatus), Max(pfa.ValidationStatus) "
-                               + "\nfrom " + typeof(DbPeptideFileAnalysis) +
-                               " pfa ";
-                    if (idsToRequery != null)
-                    {
-                        hql2 += "\nWHERE pfa.PeptideAnalysis.Id IN " + idList;
-                    }
-                    hql2 += "\nGROUP BY pfa.PeptideAnalysis.Id";
-                    var query2 = session.CreateQuery(hql2);
-                    foreach (object[] rowData in query2.List())
-                    {
-                        PeptideAnalysisRow peptideAnalysisRow;
-                        var id = (long)rowData[0];
-                        if (!peptideAnalysisRows.TryGetValue(id, out peptideAnalysisRow))
-                        {
-                            continue;
-                        }
-                        peptideAnalysisRow.MinScore = (double?)rowData[1];
-                        peptideAnalysisRow.MaxScore = (double?)rowData[2];
-                        peptideAnalysisRow.MinValidationStatus = (ValidationStatus?) rowData[3];
-                        peptideAnalysisRow.MaxValidationStatus = (ValidationStatus?) rowData[4];
                     }
                 }
-                if (idsToRequery != null)
+                    finally
                 {
-                    foreach (var id in idsToRequery)
-                    {
-                        if (!peptideAnalysisRows.ContainsKey(id))
-                        {
-                            peptideAnalysisRows.Add(id, null);
-                        }
-                    }
+                    _session = null;
                 }
+
                 BeginInvoke(new Action<Dictionary<long, PeptideAnalysisRow>>(UpdateRows), peptideAnalysisRows);
             }
         }

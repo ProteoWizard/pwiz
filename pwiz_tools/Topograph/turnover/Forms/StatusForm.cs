@@ -47,6 +47,10 @@ namespace pwiz.Topograph.ui.Forms
                 {
                     tbxChromatogramMessage.Text += " (Requery pending)";
                 }
+                if (string.IsNullOrEmpty(Workspace.GetDataDirectory()))
+                {
+                    tbxChromatogramMessage.Text += " (No data directory)";
+                }
             }
             else
             {

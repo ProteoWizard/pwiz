@@ -69,6 +69,11 @@ namespace pwiz.Topograph.ui.Forms
 
         private void btnRegenerateChromatograms_Click(object sender, EventArgs e)
         {
+            if (MessageBox.Show(this, "Are you sure you want to delete all of the chromatograms in this workspace?  Regenerating chromatograms can take a really long time.", Program.AppName, MessageBoxButtons.OKCancel) != DialogResult.OK)
+            {
+                return;
+            }
+
             UpdateWorkspaceVersion(Workspace.SavedWorkspaceVersion.IncMassVersion());
             Workspace.ChromatogramGenerator.SetRequeryPending();
             RefreshStats();
