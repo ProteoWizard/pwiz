@@ -31,22 +31,22 @@ namespace pwiz.Skyline.Model
     public class PeptideDocNode : DocNodeParent
     {
         public PeptideDocNode(Peptide id, TransitionGroupDocNode[] children)
-            : this(id, children, true)
-        {
-        }
-
-        public PeptideDocNode(Peptide id, TransitionGroupDocNode[] children, bool autoManageChildren)
-            : this(id, null, Annotations.EMPTY, null, null, children, autoManageChildren)
+            : this(id, null, children, true)
         {
         }
 
         public PeptideDocNode(Peptide id, ExplicitMods mods)
-            : this(id, null, Annotations.EMPTY, mods, null, new TransitionGroupDocNode[0], true)
+            : this(id, mods, null, Annotations.EMPTY, null, new TransitionGroupDocNode[0], true)
         {
         }
 
-        public PeptideDocNode(Peptide id, int? rank, Annotations annotations, ExplicitMods mods,
-                              Results<PeptideChromInfo> results, TransitionGroupDocNode[] children, bool autoManageChildren)
+        public PeptideDocNode(Peptide id, ExplicitMods mods, TransitionGroupDocNode[] children, bool autoManageChildren)
+            : this(id, mods, null, Annotations.EMPTY, null, children, autoManageChildren)
+        {
+        }
+
+        public PeptideDocNode(Peptide id, ExplicitMods mods, int? rank, Annotations annotations,
+            Results<PeptideChromInfo> results, TransitionGroupDocNode[] children, bool autoManageChildren)
             : base(id, annotations, children, autoManageChildren)
         {
             ExplicitMods = mods;
@@ -405,7 +405,7 @@ namespace pwiz.Skyline.Model
         /// not allow certain states (e.g. label types that to not exist in the target).
         /// </summary>
         public PeptideDocNode EnsureChildren(SrmSettings settings, bool peptideList)
-       {
+        {
             var result = this;
 
             // Make a first attempt at changing to the new settings to figure out
@@ -431,7 +431,7 @@ namespace pwiz.Skyline.Model
             if (peptideList && Peptide.FastaSequence != null)
             {
                 result = new PeptideDocNode(new Peptide(null, Peptide.Sequence, null, null, Peptide.MissedCleavages),
-                                            new TransitionGroupDocNode[0], result.AutoManageChildren); 
+                                            result.ExplicitMods, new TransitionGroupDocNode[0], result.AutoManageChildren); 
             }
             // Create a new child list, using existing children where GlobalIndexes match.
             var dictIndexToChild = Children.ToDictionary(child => child.Id.GlobalIndex);

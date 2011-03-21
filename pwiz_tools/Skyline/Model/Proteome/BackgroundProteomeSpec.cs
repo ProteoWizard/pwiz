@@ -110,6 +110,9 @@ namespace pwiz.Skyline.Model.Proteome
 
         public FastaSequence GetFastaSequence(String proteinName)
         {
+            if (IsNone)
+                return null;
+
             Protein protein = OpenProteomeDb().GetProteinByName(proteinName);
             if (protein == null)
             {

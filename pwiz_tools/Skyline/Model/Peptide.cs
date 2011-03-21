@@ -198,6 +198,17 @@ namespace pwiz.Skyline.Model
         }
 
         /// <summary>
+        /// Returns all possible variably modified <see cref="PeptideDocNode"/> objects
+        /// for a peptide sequence under specific settings.
+        /// </summary>
+        public static IEnumerable<PeptideDocNode> CreateAllDocNodes(SrmSettings settings, string sequence)
+        {
+            var peptide = new Peptide(null, sequence, null, null,
+                settings.PeptideSettings.Enzyme.CountCleavagePoints(sequence));
+            return peptide.CreateDocNodes(settings, PeptideFilter.UNFILTERED);
+        }
+
+        /// <summary>
         /// State machine that provides a <see cref="IEnumerable{PeptideDocNode}"/> for
         /// enumerating all modified states of a peptide, given the peptide, a number of
         /// possible modifications, and the set of possible modifications.

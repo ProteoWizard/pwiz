@@ -731,13 +731,11 @@ namespace pwiz.Skyline.Model
                 if (createCopy)
                 {
                     nodePeptide = new PeptideDocNode((Peptide)nodePeptide.Peptide.Copy(),
-                                                        nodePeptide.Rank,
-                                                        Annotations.EMPTY,
                                                         nodePeptide.ExplicitMods,
-                                                        null,   // Results
-                                                        nodePeptide.Children.ToList().ConvertAll(node =>
-                                                            (TransitionGroupDocNode)node).ToArray(),
-                                                        nodePeptide.AutoManageChildren);
+                                                        nodePeptide.Rank,   // Results
+                                                        Annotations.EMPTY,
+                                                        null, nodePeptide.Children.ToList().ConvertAll(node =>
+                                                                                                       (TransitionGroupDocNode)node).ToArray(), nodePeptide.AutoManageChildren);
                     nodePeptide = nodePeptide.ChangeExplicitMods(mods).ChangeSettings(Settings, SrmSettingsDiff.ALL);
                     docResult = (SrmDocument)docResult.Insert(peptidePath, nodePeptide, true);
                 }
@@ -1186,8 +1184,8 @@ namespace pwiz.Skyline.Model
                 reader.ReadEndElement();
             }
 
-            return new PeptideDocNode(peptide, rank, annotations, mods, results,
-                children ?? new TransitionGroupDocNode[0], autoManageChildren);
+            return new PeptideDocNode(peptide, mods, rank,
+                annotations, results, children ?? new TransitionGroupDocNode[0], autoManageChildren);
         }
 
         private ExplicitMods ReadExplicitMods(XmlReader reader, Peptide peptide)

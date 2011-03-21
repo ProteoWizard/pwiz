@@ -328,6 +328,7 @@ namespace pwiz.Skyline.Model
 
             public string ProteinName { get; set; }
             public string PeptideSequence { get; set; }
+            public ExplicitMods VariableMods { get; set; }
             public int? ProductCharge { get; set; }
             public IonType? IonType { get; set; }
             public int? FragmentOrdinal { get; set; }
@@ -362,6 +363,7 @@ namespace pwiz.Skyline.Model
             public string ProteinName { get; private set; }
             // Peptide
             public string PeptideSequence { get; private set; }
+            public ExplicitMods VariableMods { get; private set; }
             // TransitionGrup
             public int PrecursorCharge { get; private set; }
             public IsotopeLabelType LabelType { get; private set; }
@@ -388,21 +390,33 @@ namespace pwiz.Skyline.Model
                 if (!info.LabelType.IsLight && !IsHeavyAllowed)
                     throw new InvalidDataException(string.Format("Isotope labeled entry found without matching settings, line {0}.\nCheck the Modifications tab in Transition Settings.", lineNum));
 
-                string seq = info.PeptideSequence;
-                double precursorMassH = Settings.GetPrecursorMass(info.LabelType, info.PeptideSequence, null);
-                double precursorMz = ColumnMz(Fields, PrecursorColumn, FormatProvider);
                 var instrument = Settings.TransitionSettings.Instrument;
-                if (!instrument.IsMeasurable(precursorMz))
-                    throw new InvalidDataException(string.Format("The precursor m/z {0} is out of range for the instrument settings, line {1}.\nCheck the Instrument tab in the Transition Settings.", precursorMz, lineNum));
+                string sequence = info.PeptideSequence;
+                double precursorMz = ColumnMz(Fields, PrecursorColumn, FormatProvider);
+                double precursorMassH = 0;
+                int precursorCharge = 0;
+                ExplicitMods mods = null;
+                foreach (var nodePep in Peptide.CreateAllDocNodes(Settings, sequence))
+                {
+                    mods = nodePep.ExplicitMods;
+                    precursorMassH = Settings.GetPrecursorMass(info.LabelType, info.PeptideSequence, mods);
+                    precursorCharge = CalcPrecursorCharge(precursorMassH, precursorMz, MzMatchTolerance);
+                    if (precursorCharge > 0)
+                    {
+                        if (!instrument.IsMeasurable(precursorMz))
+                            throw new InvalidDataException(string.Format("The precursor m/z {0} is out of range for the instrument settings, line {1}.\nCheck the Instrument tab in the Transition Settings.", precursorMz, lineNum));
 
-                int precursorCharge = CalcPrecursorCharge(precursorMassH, precursorMz, MzMatchTolerance);
+                        break;
+                    }
+                }
+
                 if (precursorCharge < 1)
                 {
                     double nearestMz = SequenceMassCalc.GetMZ(precursorMassH, -precursorCharge);
                     if (!info.LabelType.IsLight && !info.LabelTypeExplicit)
                     {
                         // Need to check the light version also for the closest possible value
-                        precursorMassH = Settings.GetPrecursorMass(IsotopeLabelType.light, info.PeptideSequence, null);
+                        precursorMassH = Settings.GetPrecursorMass(IsotopeLabelType.light, info.PeptideSequence, VariableMods);
                         precursorCharge = CalcPrecursorCharge(precursorMassH, precursorMz, 0);
                         double nearestMzLight = SequenceMassCalc.GetMZ(precursorMassH, -precursorCharge);
                         if (Math.Abs(nearestMzLight - precursorMz) < Math.Abs(nearestMz - precursorMz))
@@ -420,21 +434,20 @@ namespace pwiz.Skyline.Model
                 if (!instrument.IsMeasurable(productMz, precursorMz))
                     throw new InvalidDataException(string.Format("The product m/z value {0} is out of range for the instrument settings, line {1}.\nCheck the Instrument tab in the Transition Settings.", productMz, lineNum));
 
-                var calc = Settings.GetFragmentCalc(info.LabelType, null);
+                var calc = Settings.GetFragmentCalc(info.LabelType, mods);
                 if (info.ProductCharge.HasValue && info.IonType.HasValue && info.FragmentOrdinal.HasValue)
                 {
-                    double productMassHTry = calc.GetFragmentMass(seq, info.IonType.Value, info.FragmentOrdinal.Value);
+                    double productMassHTry = calc.GetFragmentMass(sequence, info.IonType.Value, info.FragmentOrdinal.Value);
                     double productMzTry = SequenceMassCalc.GetMZ(productMassHTry, info.ProductCharge.Value);
                     if (!MatchMz(productMz, productMzTry, MzMatchTolerance))
                         info.ProductCharge = 0;
                 }
                 else
                 {
-                    double productPrecursorMass = calc.GetPrecursorFragmentMass(seq);
-                    double[,] productMasses = calc.GetFragmentIonMasses(seq);
-                    // TODO: Allow variable modifications
-                    var potentialLosses = TransitionGroup.CalcPotentialLosses(seq,
-                        Settings.PeptideSettings.Modifications, null, calc.MassType);
+                    double productPrecursorMass = calc.GetPrecursorFragmentMass(sequence);
+                    double[,] productMasses = calc.GetFragmentIonMasses(sequence);
+                    var potentialLosses = TransitionGroup.CalcPotentialLosses(sequence,
+                        Settings.PeptideSettings.Modifications, mods, calc.MassType);
                     
                     IonType? ionType;
                     int? ordinal;
@@ -463,6 +476,7 @@ namespace pwiz.Skyline.Model
 
                 ProteinName = info.ProteinName;
                 PeptideSequence = info.PeptideSequence;
+                VariableMods = mods;
                 PrecursorCharge = precursorCharge;
                 IonType = info.IonType.Value;
                 Ordinal = info.FragmentOrdinal.Value;
@@ -500,42 +514,53 @@ namespace pwiz.Skyline.Model
                 }                
             }
 
-            protected static int FindPrecursor(string[] fields, string sequence,
-                IsotopeLabelType labelType, int iSequence, double tolerance,
-                IFormatProvider provider, SrmSettings settings, out int precursorCharge)
+            protected static int FindPrecursor(string[] fields,
+                                               string sequence,
+                                               IsotopeLabelType labelType,
+                                               int iSequence,
+                                               double tolerance,
+                                               IFormatProvider provider,
+                                               SrmSettings settings,
+                                               out int precursorCharge,
+                                               out ExplicitMods mods)
             {
-                double precursorMassH = settings.GetPrecursorMass(labelType, sequence, null);
-
-                for (int i = 0; i < fields.Length; i++)
+                foreach (PeptideDocNode nodePep in Peptide.CreateAllDocNodes(settings, sequence))
                 {
-                    if (i == iSequence)
-                        continue;
+                    mods = nodePep.ExplicitMods;
+                    double precursorMassH = settings.GetPrecursorMass(labelType, sequence, nodePep.ExplicitMods);
 
-                    double precursorMz = ColumnMz(fields, i, provider);
-                    if (precursorMz == 0)
-                        continue;
-
-                    int charge = CalcPrecursorCharge(precursorMassH, precursorMz, tolerance);
-                    if (charge > 0)
+                    for (int i = 0; i < fields.Length; i++)
                     {
-                        precursorCharge = charge;
-                        return i;
+                        if (i == iSequence)
+                            continue;
+
+                        double precursorMz = ColumnMz(fields, i, provider);
+                        if (precursorMz == 0)
+                            continue;
+
+                        int charge = CalcPrecursorCharge(precursorMassH, precursorMz, tolerance);
+                        if (charge > 0)
+                        {
+                            precursorCharge = charge;
+                            return i;
+                        }
                     }
                 }
+                mods = null;
                 precursorCharge = 0;
                 return -1;
             }
 
-            protected static int FindProduct(string[] fields, string sequence,
+            protected static int FindProduct(string[] fields, string sequence, ExplicitMods mods,
                 IsotopeLabelType labelType, int iSequence, int iPrecursor, int precursoCharge, double tolerance,
                 IFormatProvider provider, SrmSettings settings)
             {
-                var calc = settings.GetFragmentCalc(labelType, null);
+                var calc = settings.GetFragmentCalc(labelType, mods);
                 double productPrecursorMass = calc.GetPrecursorFragmentMass(sequence);
                 double[,] productMasses = calc.GetFragmentIonMasses(sequence);
                 // TODO: Allow variable modifications
                 var potentialLosses = TransitionGroup.CalcPotentialLosses(sequence,
-                    settings.PeptideSettings.Modifications, null, calc.MassType);
+                    settings.PeptideSettings.Modifications, mods, calc.MassType);
 
                 for (int i = 0; i < fields.Length; i++)
                 {
@@ -594,24 +619,30 @@ namespace pwiz.Skyline.Model
                 }
                 else
                 {
-                    // If no isotope label type can be found, and the current
-                    // precursor m/z column does not match with no label, try heavy types.
-                    double precursorMassH = Settings.GetPrecursorMass(info.LabelType, info.PeptideSequence, null);
-                    double precursorMz = ColumnMz(Fields, PrecursorColumn, FormatProvider);
-
-                    int precursorCharge = CalcPrecursorCharge(precursorMassH, precursorMz, MzMatchTolerance);
-                    if (IsHeavyAllowed && precursorCharge < 1)
+                    var peptideMods = Settings.PeptideSettings.Modifications;
+                    foreach (var nodePep in Peptide.CreateAllDocNodes(Settings, info.PeptideSequence))
                     {
-                        var modifications = Settings.PeptideSettings.Modifications;
-                        foreach (var typeMods in modifications.GetHeavyModifications())
+                        // If no isotope label type can be found, and the current
+                        // precursor m/z column does not match with no label, try heavy types.
+                        info.VariableMods = nodePep.ExplicitMods;
+                        double precursorMassH = Settings.GetPrecursorMass(info.LabelType, info.PeptideSequence, info.VariableMods);
+                        double precursorMz = ColumnMz(Fields, PrecursorColumn, FormatProvider);
+                        int precursorCharge = CalcPrecursorCharge(precursorMassH, precursorMz, MzMatchTolerance);
+                        if (precursorCharge > 0)
+                            return info;
+
+                        if (!IsHeavyAllowed)
+                            continue;
+
+                        foreach (var typeMods in peptideMods.GetHeavyModifications())
                         {
                             info.LabelType = typeMods.LabelType;
                             precursorMassH = Settings.GetPrecursorMass(info.LabelType, info.PeptideSequence, null);
-                            precursorCharge = TransitionCalc.CalcPrecursorCharge(precursorMassH, precursorMz, MzMatchTolerance);
+                            precursorCharge = TransitionCalc.CalcPrecursorCharge(precursorMassH, precursorMz,
+                                                                                 MzMatchTolerance);
                             if (precursorCharge > 0)
-                                break;
+                                return info;
                         }
-                        
                     }
                 }
 
@@ -629,6 +660,7 @@ namespace pwiz.Skyline.Model
 
                 // Look for sequence column
                 string sequence;
+                ExplicitMods mods;
                 int iSequence = -1;
                 int iPrecursor;
                 int precursorCharge;
@@ -652,18 +684,19 @@ namespace pwiz.Skyline.Model
                     if (iLabelType != -1)
                         labelType = GetLabelType(fields[iLabelType]);
                     iPrecursor = FindPrecursor(fields, sequence, labelType, iSequence,
-                        tolerance, provider, settings, out precursorCharge);
+                        tolerance, provider, settings, out precursorCharge, out mods);
                     // If no match, and no specific label type, then try heavy.
                     if (settings.PeptideSettings.Modifications.HasHeavyModifications &&
                             iPrecursor == -1 && iLabelType == -1)
                     {
-                        var modifications = settings.PeptideSettings.Modifications;
-                        foreach (var typeMods in modifications.GetHeavyModifications())
+                        var peptideMods = settings.PeptideSettings.Modifications;
+                        foreach (var typeMods in peptideMods.GetHeavyModifications())
                         {
                             if (settings.GetPrecursorCalc(labelType, null) != null)
                             {
                                 iPrecursor = FindPrecursor(fields, sequence, typeMods.LabelType, iSequence,
-                                                           tolerance, provider, settings, out precursorCharge);
+                                    tolerance, provider, settings, out precursorCharge, out mods);
+
                                 if (iPrecursor != -1)
                                 {
                                     labelType = typeMods.LabelType;
@@ -675,7 +708,7 @@ namespace pwiz.Skyline.Model
                 }
                 while (iPrecursor == -1);
 
-                int iProduct = FindProduct(fields, sequence, labelType, iSequence, iPrecursor, precursorCharge,
+                int iProduct = FindProduct(fields, sequence, mods, labelType, iSequence, iPrecursor, precursorCharge,
                     tolerance, provider, settings);
                 if (iProduct == -1)
                     throw new MzMatchException("No valid product m/z column found.");
@@ -904,14 +937,14 @@ namespace pwiz.Skyline.Model
                 if (!labelType.IsLight && !modSettings.HasHeavyImplicitModifications)
                     throw new InvalidDataException("Isotope labelled entry found without matching settings.\nCheck the Modifications tab in Transition Settings.");
 
-
+                ExplicitMods mods;
                 int precursorCharge;
                 int iPrecursor = FindPrecursor(fields, sequence, labelType, iExPeptide,
-                    tolerance, provider, settings, out precursorCharge);
+                    tolerance, provider, settings, out precursorCharge, out mods);
                 if (iPrecursor == -1)
                     throw new MzMatchException("No valid precursor m/z column found.");
 
-                int iProduct = FindProduct(fields, sequence, labelType, iExPeptide, iPrecursor,
+                int iProduct = FindProduct(fields, sequence, mods, labelType, iExPeptide, iPrecursor,
                     precursorCharge, tolerance, provider, settings);
                 if (iProduct == -1)
                     throw new MzMatchException("No valid product m/z column found.");
@@ -1049,6 +1082,7 @@ namespace pwiz.Skyline.Model
         string ProteinName { get; }
         // Peptide
         string PeptideSequence { get; }
+        ExplicitMods VariableMods { get; }
         // TransitionGrup
         int PrecursorCharge { get; }
         IsotopeLabelType LabelType { get; }
@@ -1080,6 +1114,7 @@ namespace pwiz.Skyline.Model
 
         private FastaSequence _activeFastaSeq;
         private Peptide _activePeptide;
+        private ExplicitMods _activeVariableMods;
         private List<TransitionGroupDocNode> _transitionGroups;
         private TransitionGroup _activeTransitionGroup;
         private List<TransitionDocNode> _transitions;
@@ -1176,8 +1211,9 @@ namespace pwiz.Skyline.Model
             if (_activeFastaSeq == null && AA.Length > 0)
                 _activeFastaSeq = new FastaSequence(Name, Description, Alternatives, AA);
 
-            string seq = row.PeptideSequence;
-            if (_activePeptide != null && !seq.Equals(_activePeptide.Sequence))
+            string sequence = row.PeptideSequence;
+            var mods = row.VariableMods;
+            if (_activePeptide != null && (!Equals(sequence, _activePeptide.Sequence) || !Equals(mods, _activeVariableMods)))
                 CompletePeptide();
             if (_activePeptide == null)
             {
@@ -1185,13 +1221,14 @@ namespace pwiz.Skyline.Model
                 int? end = null;
                 if (_activeFastaSeq != null)
                 {
-                    begin = _activeFastaSeq.Sequence.IndexOf(seq);
+                    begin = _activeFastaSeq.Sequence.IndexOf(sequence);
                     if (begin == -1)
                         // CONSIDER: Use fasta sequence format code currently in SrmDocument to show formatted sequence.
-                        throw new InvalidDataException(string.Format("The peptide {0} was not found in the sequence {1}.", seq, _activeFastaSeq.Name));
-                    end = begin + seq.Length;
+                        throw new InvalidDataException(string.Format("The peptide {0} was not found in the sequence {1}.", sequence, _activeFastaSeq.Name));
+                    end = begin + sequence.Length;
                 }
-                _activePeptide = new Peptide(_activeFastaSeq, seq, begin, end, _enzyme.CountCleavagePoints(seq));
+                _activePeptide = new Peptide(_activeFastaSeq, sequence, begin, end, _enzyme.CountCleavagePoints(sequence));
+                _activeVariableMods = mods;
                 _transitionGroups = new List<TransitionGroupDocNode>();
             }
             if (_activeTransitionGroup != null &&
@@ -1213,7 +1250,8 @@ namespace pwiz.Skyline.Model
             CompleteTransitionGroup();
 
             _transitionGroups.Sort(Peptide.CompareGroups);
-            _peptides.Add(new PeptideDocNode(_activePeptide, FinalizeTransitionGroups(_transitionGroups), false));
+            _peptides.Add(new PeptideDocNode(_activePeptide, _activeVariableMods,
+                FinalizeTransitionGroups(_transitionGroups), false));
 
             _activePeptide = null;
             _transitionGroups = null;
