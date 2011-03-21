@@ -27,7 +27,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model.V01;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTest
+namespace pwiz.SkylineTestA
 {
     /// <summary>
     /// This is a test class for SrmDocumentTest and is intended

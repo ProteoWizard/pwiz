@@ -64,6 +64,7 @@
   <ItemGroup>
     <Compile Include="ExplicitModTest.cs" />
     <Compile Include="FindNodeTest.cs" />
+    <Compile Include="IdentityTest.cs" />
     <Compile Include="IsotypeModTest.cs" />
     <Compile Include="LibraryLoadTest.cs" />
     <Compile Include="LibrarySettingsTest.cs" />
@@ -76,6 +77,9 @@
     <Compile Include="Results\SmallWiffTest.cs" />
     <Compile Include="Results\ThermoQuantTest.cs" />
     <Compile Include="Results\WatersCalcurveTest.cs" />
+    <Compile Include="SrmDocEditTest.cs" />
+    <Compile Include="SrmDocumentTest.cs" />
+    <Compile Include="SrmSettingsChangeTest.cs" />
     <Compile Include="SrmSettingsTest.cs" />
     <Compile Include="SSRCalc3Test.cs" />
     <Compile Include="StatisticsTest.cs" />

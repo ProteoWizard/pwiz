@@ -29,7 +29,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTest
+namespace pwiz.SkylineTestA
 {
     /// <summary>
     /// Tests of changing <see cref="SrmSettings"/> on a <see cref="SrmDocument"/>.

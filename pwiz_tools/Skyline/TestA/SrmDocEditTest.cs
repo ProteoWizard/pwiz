@@ -24,7 +24,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTest
+namespace pwiz.SkylineTestA
 {
     /// <summary>
     /// Summary description for SrmDocEditTest

@@ -23,7 +23,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTest
+namespace pwiz.SkylineTestA
 {
     /// <summary>
     /// Tests for <see cref="Identity"/> and <see cref="IdentityPath"/>.

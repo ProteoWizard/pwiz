@@ -76,13 +76,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="IdentityTest.cs" />
     <Compile Include="Proteome\ProteomeDbTest.cs" />
     <Compile Include="Reporting\PivotTypeTest.cs" />
     <Compile Include="Reporting\ReportTest.cs" />
-    <Compile Include="SrmDocEditTest.cs" />
-    <Compile Include="SrmDocumentTest.cs" />
-    <Compile Include="SrmSettingsChangeTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
