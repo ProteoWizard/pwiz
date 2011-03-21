@@ -76,6 +76,7 @@
     <Compile Include="Results\SmallWiffTest.cs" />
     <Compile Include="Results\ThermoQuantTest.cs" />
     <Compile Include="Results\WatersCalcurveTest.cs" />
+    <Compile Include="SrmSettingsTest.cs" />
     <Compile Include="SSRCalc3Test.cs" />
     <Compile Include="StatisticsTest.cs" />
     <Compile Include="TransitionSettings07Test.cs" />

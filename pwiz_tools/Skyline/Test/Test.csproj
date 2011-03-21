@@ -83,7 +83,6 @@
     <Compile Include="SrmDocEditTest.cs" />
     <Compile Include="SrmDocumentTest.cs" />
     <Compile Include="SrmSettingsChangeTest.cs" />
-    <Compile Include="SrmSettingsTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
