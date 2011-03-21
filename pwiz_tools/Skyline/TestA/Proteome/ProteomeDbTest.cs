@@ -24,7 +24,7 @@ using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTest.Proteome
+namespace pwiz.SkylineTestA.Proteome
 {
     /// <summary>
     /// Summary description for ProteomeDbTest
@@ -60,7 +60,7 @@ namespace pwiz.SkylineTest.Proteome
         //
         #endregion
 
-        private const string ZIP_FILE = @"Test\Proteome\high_ipi.Human.20060111.zip";
+        private const string ZIP_FILE = @"TestA\Proteome\high_ipi.Human.20060111.zip";
 
         /// <summary>
         /// Tests creating a proteome database, adding a FASTA file to it, and digesting it with trypsin.

@@ -31,7 +31,7 @@ using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
-namespace pwiz.SkylineTest.Reporting
+namespace pwiz.SkylineTestA.Reporting
 {
     /// <summary>
     /// Tests for reports
@@ -105,7 +105,7 @@ namespace pwiz.SkylineTest.Reporting
         public void TestIsotopeLabelPivot()
         {
             XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
-            var stream = typeof(ReportTest).Assembly.GetManifestResourceStream("pwiz.SkylineTest.Reporting.silac_1_to_4.sky");
+            var stream = typeof(ReportTest).Assembly.GetManifestResourceStream(GetType().Namespace + ".silac_1_to_4.sky");
             Assert.IsNotNull(stream);
             Debug.Assert(stream != null);   // Keep ReSharper from warning
             SrmDocument srmDocument = (SrmDocument)xmlSerializer.Deserialize(stream);
@@ -150,7 +150,7 @@ namespace pwiz.SkylineTest.Reporting
         public void TestColumnsFromResultsTables()
         {
             XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
-            var stream = typeof(ReportTest).Assembly.GetManifestResourceStream("pwiz.SkylineTest.Reporting.silac_1_to_4.sky");
+            var stream = typeof(ReportTest).Assembly.GetManifestResourceStream(GetType().Namespace + ".silac_1_to_4.sky");
             Assert.IsNotNull(stream);
             Debug.Assert(stream != null);   // Keep ReSharper from warning
             SrmDocument srmDocument = (SrmDocument)xmlSerializer.Deserialize(stream);
@@ -186,7 +186,7 @@ namespace pwiz.SkylineTest.Reporting
             SrmDocument srmDocument;
             Database database;
 
-            using (var stream = typeof(ReportTest).Assembly.GetManifestResourceStream("pwiz.SkylineTest.Reporting.silac_1_to_4.sky"))
+            using (var stream = typeof(ReportTest).Assembly.GetManifestResourceStream(GetType().Namespace + ".silac_1_to_4.sky"))
             {
                 Assert.IsNotNull(stream);
                 Debug.Assert(stream != null); // Keep ReSharper from warning
@@ -196,7 +196,7 @@ namespace pwiz.SkylineTest.Reporting
                 database.AddSrmDocument(srmDocument);                
             }
 
-            using (var streamR = typeof(ReportTest).Assembly.GetManifestResourceStream("pwiz.SkylineTest.Reporting.Study9p_template_0721_2009_v3.skyr"))
+            using (var streamR = typeof(ReportTest).Assembly.GetManifestResourceStream(GetType().Namespace + ".Study9p_template_0721_2009_v3.skyr"))
             {
                 Assert.IsNotNull(streamR);
                 Debug.Assert(streamR != null); // Keep ReSharper from warning

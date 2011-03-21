@@ -247,10 +247,10 @@ namespace pwiz.SkylineTestA
             _study7Doc = _study7DocReadOnly;
         }
 
-        private static SrmDocument CreateStudy7Doc()
+        private SrmDocument CreateStudy7Doc()
         {
             XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
-            var stream = typeof(PasteTest).Assembly.GetManifestResourceStream("pwiz.SkylineTestA.Study7_0-7.sky");
+            var stream = typeof(PasteTest).Assembly.GetManifestResourceStream(GetType().Namespace + ".Study7_0-7.sky");
             Assert.IsNotNull(stream);
             Debug.Assert(stream != null);   // Keep ReSharper from warning
             SrmDocument docStudy7 = (SrmDocument)xmlSerializer.Deserialize(stream);

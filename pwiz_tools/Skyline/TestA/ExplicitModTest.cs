@@ -356,10 +356,10 @@ namespace pwiz.SkylineTestA
                 peptide.ExplicitMods.HeavyModifications.Count > 0));
         }
 
-        private static SrmDocument CreateStudy7Doc()
+        private SrmDocument CreateStudy7Doc()
         {
             XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
-            var stream = typeof(ExplicitModTest).Assembly.GetManifestResourceStream("pwiz.SkylineTestA.Study7.sky");
+            var stream = typeof(ExplicitModTest).Assembly.GetManifestResourceStream(GetType().Namespace + ".Study7.sky");
             Assert.IsNotNull(stream);
             Debug.Assert(stream != null);   // Keep ReSharper from warning
             SrmDocument docStudy7 = (SrmDocument)xmlSerializer.Deserialize(stream);
