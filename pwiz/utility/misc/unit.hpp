@@ -53,7 +53,14 @@ inline std::string unit_assert_message(const char* filename, int line, const cha
     return oss.str();
 }
 
-inline std::string unit_assert_equal_message(const char* filename, int line, double x, double y, double epsilon)
+inline std::string unit_assert_equal_message(const char* filename, int line, const std::string& x, const std::string& y, const char* expression)
+{
+    std::ostringstream oss;
+    oss << "[" << filename << ":" << line << "] Assertion failed: expected \"" << x << "\" but got \"" << y << "\" (" << expression << ")";
+    return oss.str();
+}
+
+inline std::string unit_assert_numeric_equal_message(const char* filename, int line, double x, double y, double epsilon)
 {
     std::ostringstream oss;
     oss.precision(10);
@@ -68,12 +75,17 @@ inline std::string unit_assert_exception_message(const char* filename, int line,
     return oss.str();
 }
 
+
 #define unit_assert(x) \
     (!(x) ? throw std::runtime_error(unit_assert_message(__FILE__, __LINE__, #x)) : 0) 
 
 
+#define unit_assert_operator_equal(expected, actual) \
+    (!(expected == actual) ? throw std::runtime_error(unit_assert_equal_message(__FILE__, __LINE__, lexical_cast<string>(expected), lexical_cast<string>(actual), #actual)) : 0)
+
+
 #define unit_assert_equal(x, y, epsilon) \
-    (!(fabs((x)-(y)) <= (epsilon)) ? throw std::runtime_error(unit_assert_equal_message(__FILE__, __LINE__, (x), (y), (epsilon))) : 0)
+    (!(fabs((x)-(y)) <= (epsilon)) ? throw std::runtime_error(unit_assert_numeric_equal_message(__FILE__, __LINE__, (x), (y), (epsilon))) : 0)
 
 
 #define unit_assert_throws(x, exception) \
