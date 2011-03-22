@@ -267,6 +267,9 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
             }
         }
 
+        if (!getBinaryData)
+            spectrum.binaryDataArrayPtrs.clear();
+
         spectrum.set(MS_lowest_observed_m_z, lowMZ);
         spectrum.set(MS_highest_observed_m_z, highMZ);
         spectrum.set(MS_total_ion_current, tic);

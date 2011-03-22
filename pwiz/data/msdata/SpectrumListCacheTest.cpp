@@ -20,10 +20,12 @@
 //
 
 
+#include "pwiz/utility/misc/unit.hpp"
 #include "MemoryMRUCache.hpp"
 #include "SpectrumListCache.hpp"
-#include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include "Serializer_MGF.hpp"
+
 
 using namespace pwiz::util;
 using namespace pwiz::cv;
@@ -51,32 +53,32 @@ void testMemoryMRUCache()
 {
     MemoryMRUCache<pair<size_t, SpectrumPtr> > cache(MemoryMRUCacheMode_Off, 2);
 
-    unit_assert(cache.max_size() == 2);
+    unit_assert_operator_equal(2, cache.max_size());
     unit_assert(cache.empty());
-    unit_assert(cache.size() == 0);
+    unit_assert_operator_equal(0, cache.size());
 
     cache.insert(make_pair(0, SpectrumPtr()));
 
     unit_assert(!cache.empty());
-    unit_assert(cache.size() == 1);
+    unit_assert_operator_equal(1, cache.size());
 
     cache.insert(make_pair(1, SpectrumPtr()));
 
-    unit_assert(cache.size() == 2);
-    unit_assert(cache.mru().first == 1);
-    unit_assert(cache.lru().first == 0);
+    unit_assert_operator_equal(2, cache.size());
+    unit_assert_operator_equal(1, cache.mru().first);
+    unit_assert_operator_equal(0, cache.lru().first);
 
     cache.insert(make_pair(0, SpectrumPtr()));
 
-    unit_assert(cache.size() == 2);
-    unit_assert(cache.mru().first == 0);
-    unit_assert(cache.lru().first == 1);
+    unit_assert_operator_equal(2, cache.size());
+    unit_assert_operator_equal(0, cache.mru().first);
+    unit_assert_operator_equal(1, cache.lru().first);
 
     cache.insert(make_pair(2, SpectrumPtr()));
 
-    unit_assert(cache.size() == 2);
-    unit_assert(cache.mru().first == 2);
-    unit_assert(cache.lru().first == 0);
+    unit_assert_operator_equal(2, cache.size());
+    unit_assert_operator_equal(2, cache.mru().first);
+    unit_assert_operator_equal(0, cache.lru().first);
 }
 
 
@@ -86,11 +88,17 @@ SpectrumPtr makeSpectrumPtr(size_t index, const string& id)
     spectrum->id = id;
     spectrum->index = index;
     spectrum->set(MS_MSn_spectrum);
-    spectrum->set(MS_ms_level, index+1);
-    BinaryDataArrayPtr bda(new BinaryDataArray);
+    spectrum->set(MS_ms_level, 2);
+    spectrum->precursors.push_back(Precursor(123.4));
+    spectrum->setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_counts);
+    BinaryDataArray& mzArray = *spectrum->getMZArray();
+    BinaryDataArray& intensityArray = *spectrum->getIntensityArray();
     for (size_t i=0; i < (index+1)*10; ++i)
-        bda->data.push_back(i);
-    spectrum->binaryDataArrayPtrs.push_back(bda);
+    {
+        mzArray.data.push_back(i);
+        intensityArray.data.push_back(i*100);
+    }
+    spectrum->defaultArrayLength = mzArray.data.size();
     return spectrum;
 }
 
@@ -142,11 +150,20 @@ void testModeOff()
 void testModeMetaDataOnly()
 {
     // initialize list
+    MSData msd;
     shared_ptr<SpectrumListSimple> sl(new SpectrumListSimple);
     sl->spectra.push_back(makeSpectrumPtr(0, "S1"));
     sl->spectra.push_back(makeSpectrumPtr(1, "S2"));
     sl->spectra.push_back(makeSpectrumPtr(2, "S3"));
     sl->spectra.push_back(makeSpectrumPtr(3, "S4"));
+    msd.run.spectrumListPtr = sl;
+
+    // SpectrumListSimple returns the same shared_ptrs regardless of caching;
+    // serializing to MGF and back will produce different shared_ptrs
+    boost::shared_ptr<stringstream> ss(new stringstream);
+    Serializer_MGF serializer;
+    serializer.write(*ss, msd, 0);
+    serializer.read(ss, msd);
 
     // access a series of spectra and make sure the cache behaves appropriately:
     // in metadata-only mode, entries in the cache should:
@@ -155,55 +172,63 @@ void testModeMetaDataOnly()
 
     SpectrumPtr s;
 
-    SpectrumListCache slc(sl, MemoryMRUCacheMode_MetaDataOnly, 2);
+    SpectrumListCache slc(msd.run.spectrumListPtr, MemoryMRUCacheMode_MetaDataOnly, 2);
     SpectrumListCache::CacheType& cache = slc.spectrumCache();
 
     unit_assert(cache.empty());
-    unit_assert(cache.max_size() == 2);
+    unit_assert_operator_equal(2, cache.max_size());
 
     s = slc.spectrum(0, false);
 
+    // pointers should be equal
+    unit_assert_operator_equal(slc.spectrum(0, false), s);
+
     if (os_) *os_ << cache << endl;
     unit_assert(!cache.empty());
-    unit_assert(cache.size() == 1);
-    unit_assert(cache.mru().second->index == 0);
+    unit_assert_operator_equal(1, cache.size());
+    unit_assert_operator_equal(0, cache.mru().second->index);
 
     // with-binary-data access should return the binary data, but only cache the metadata
     s = slc.spectrum(1, true);
 
     if (os_) *os_ << cache << endl;
-    unit_assert(cache.size() == 2);
-    unit_assert(cache.mru().second->index == 1);
+    unit_assert_operator_equal(2, cache.size());
+    unit_assert_operator_equal(1, cache.mru().second->index);
     unit_assert(spectrumHasMetadata(*cache.mru().second));
     unit_assert(!spectrumHasBinaryData(*cache.mru().second));
     unit_assert(spectrumHasMetadata(*cache.lru().second));
-    unit_assert(cache.lru().second->index == 0);
+    unit_assert_operator_equal(0, cache.lru().second->index);
 
     s = slc.spectrum(2, false);
 
+    // pointers should be equal
+    unit_assert_operator_equal(slc.spectrum(2, false), s);
+
     if (os_) *os_ << cache << endl;
-    unit_assert(cache.size() == 2);
-    unit_assert(cache.mru().second->index == 2);
-    unit_assert(cache.lru().second->index == 1);
+    unit_assert_operator_equal(2, cache.size());
+    unit_assert_operator_equal(2, cache.mru().second->index);
+    unit_assert(spectrumHasMetadata(*cache.mru().second));
+    unit_assert(!spectrumHasBinaryData(*cache.mru().second));
+    unit_assert_operator_equal(1, cache.lru().second->index);
 
     s = slc.spectrum(3, true);
 
     if (os_) *os_ << cache << endl;
-    unit_assert(cache.size() == 2);
-    unit_assert(cache.mru().second->index == 3);
+    unit_assert_operator_equal(2, cache.size());
+    unit_assert_operator_equal(3, cache.mru().second->index);
     unit_assert(spectrumHasMetadata(*cache.mru().second));
     unit_assert(!spectrumHasBinaryData(*cache.mru().second));
+    unit_assert_operator_equal(2, cache.lru().second->index);
     unit_assert(spectrumHasMetadata(*cache.lru().second));
-    unit_assert(cache.lru().second->index == 2);
 
     s = slc.spectrum(2, true);
 
     if (os_) *os_ << cache << endl;
-    unit_assert(cache.size() == 2);
-    unit_assert(cache.mru().second->index == 2);
+    unit_assert_operator_equal(2, cache.size());
+    unit_assert_operator_equal(2, cache.mru().second->index);
     unit_assert(spectrumHasMetadata(*cache.mru().second));
     unit_assert(!spectrumHasBinaryData(*cache.mru().second));
-    unit_assert(cache.lru().second->index == 3);
+    unit_assert_operator_equal(3, cache.lru().second->index);
     unit_assert(spectrumHasMetadata(*cache.lru().second));
 }
 
@@ -211,11 +236,20 @@ void testModeMetaDataOnly()
 void testModeBinaryDataOnly()
 {
     // initialize list
+    MSData msd;
     shared_ptr<SpectrumListSimple> sl(new SpectrumListSimple);
     sl->spectra.push_back(makeSpectrumPtr(0, "S1"));
     sl->spectra.push_back(makeSpectrumPtr(1, "S2"));
     sl->spectra.push_back(makeSpectrumPtr(2, "S3"));
     sl->spectra.push_back(makeSpectrumPtr(3, "S4"));
+    msd.run.spectrumListPtr = sl;
+
+    // SpectrumListSimple returns the same shared_ptrs regardless of caching;
+    // serializing to MGF and back will produce different shared_ptrs
+    boost::shared_ptr<stringstream> ss(new stringstream);
+    Serializer_MGF serializer;
+    serializer.write(*ss, msd, 0);
+    serializer.read(ss, msd);
 
     // access a series of spectra and make sure the cache behaves appropriately:
     // in binary-data-only mode, entries in the cache should:
@@ -224,55 +258,55 @@ void testModeBinaryDataOnly()
 
     SpectrumPtr s;
 
-    SpectrumListCache slc(sl, MemoryMRUCacheMode_BinaryDataOnly, 2);
+    SpectrumListCache slc(msd.run.spectrumListPtr, MemoryMRUCacheMode_BinaryDataOnly, 2);
     SpectrumListCache::CacheType& cache = slc.spectrumCache();
 
     unit_assert(cache.empty());
-    unit_assert(cache.max_size() == 2);
+    unit_assert_operator_equal(2, cache.max_size());
 
     // metadata-only access should not affect the cache
     s = slc.spectrum(0, false);
 
     if (os_) *os_ << cache << endl;
     unit_assert(cache.empty());
-    unit_assert(cache.size() == 0);
+    unit_assert_operator_equal(0, cache.size());
 
     // with-binary-data access should be cached without the metadata
     s = slc.spectrum(1, true);
 
     if (os_) *os_ << cache << endl;
-    unit_assert(cache.size() == 1);
-    unit_assert(cache.mru().second->index == 1);
+    unit_assert_operator_equal(1, cache.size());
+    unit_assert_operator_equal(1, cache.mru().second->index);
     unit_assert(!spectrumHasMetadata(*cache.mru().second));
     unit_assert(spectrumHasBinaryData(*cache.mru().second));
 
     s = slc.spectrum(2, false);
 
     if (os_) *os_ << cache << endl;
-    unit_assert(cache.size() == 1);
-    unit_assert(cache.mru().second->index == 1);
+    unit_assert_operator_equal(1, cache.size());
+    unit_assert_operator_equal(1, cache.mru().second->index);
     unit_assert(!spectrumHasMetadata(*cache.mru().second));
     unit_assert(spectrumHasBinaryData(*cache.mru().second));
 
     s = slc.spectrum(3, true);
 
     if (os_) *os_ << cache << endl;
-    unit_assert(cache.size() == 2);
-    unit_assert(cache.mru().second->index == 3);
+    unit_assert_operator_equal(2, cache.size());
+    unit_assert_operator_equal(3, cache.mru().second->index);
     unit_assert(!spectrumHasMetadata(*cache.mru().second));
     unit_assert(spectrumHasBinaryData(*cache.mru().second));
-    unit_assert(cache.lru().second->index == 1);
+    unit_assert_operator_equal(1, cache.lru().second->index);
     unit_assert(!spectrumHasMetadata(*cache.lru().second));
     unit_assert(spectrumHasBinaryData(*cache.lru().second));
 
     s = slc.spectrum(1, true);
 
     if (os_) *os_ << cache << endl;
-    unit_assert(cache.size() == 2);
-    unit_assert(cache.mru().second->index == 1);
+    unit_assert_operator_equal(2, cache.size());
+    unit_assert_operator_equal(1, cache.mru().second->index);
     unit_assert(!spectrumHasMetadata(*cache.mru().second));
     unit_assert(spectrumHasBinaryData(*cache.mru().second));
-    unit_assert(cache.lru().second->index == 3);
+    unit_assert_operator_equal(3, cache.lru().second->index);
     unit_assert(!spectrumHasMetadata(*cache.lru().second));
     unit_assert(spectrumHasBinaryData(*cache.lru().second));
 }
@@ -281,11 +315,20 @@ void testModeBinaryDataOnly()
 void testModeMetaDataAndBinaryData()
 {
     // initialize list
+    MSData msd;
     shared_ptr<SpectrumListSimple> sl(new SpectrumListSimple);
     sl->spectra.push_back(makeSpectrumPtr(0, "S1"));
     sl->spectra.push_back(makeSpectrumPtr(1, "S2"));
     sl->spectra.push_back(makeSpectrumPtr(2, "S3"));
     sl->spectra.push_back(makeSpectrumPtr(3, "S4"));
+    msd.run.spectrumListPtr = sl;
+
+    // SpectrumListSimple returns the same shared_ptrs regardless of caching;
+    // serializing to MGF and back will produce different shared_ptrs
+    boost::shared_ptr<stringstream> ss(new stringstream);
+    Serializer_MGF serializer;
+    serializer.write(*ss, msd, 0);
+    serializer.read(ss, msd);
 
     // access a series of spectra and make sure the cache behaves appropriately:
     // in metadata-and-binary-data mode, entries in the cache should:
@@ -294,54 +337,60 @@ void testModeMetaDataAndBinaryData()
 
     SpectrumPtr s;
 
-    SpectrumListCache slc(sl, MemoryMRUCacheMode_MetaDataAndBinaryData, 2);
+    SpectrumListCache slc(msd.run.spectrumListPtr, MemoryMRUCacheMode_MetaDataAndBinaryData, 2);
     SpectrumListCache::CacheType& cache = slc.spectrumCache();
 
     unit_assert(cache.empty());
-    unit_assert(cache.max_size() == 2);
+    unit_assert_operator_equal(2, cache.max_size());
 
     // metadata-only access should not affect the cache
     s = slc.spectrum(0, false);
 
     if (os_) *os_ << cache << endl;
     unit_assert(cache.empty());
-    unit_assert(cache.size() == 0);
+    unit_assert_operator_equal(0, cache.size());
 
     s = slc.spectrum(1, true);
 
+    // pointers should be equal
+    unit_assert_operator_equal(slc.spectrum(1, true), s);
+
     if (os_) *os_ << cache << endl;
-    unit_assert(cache.size() == 1);
-    unit_assert(cache.mru().second->index == 1);
+    unit_assert_operator_equal(1, cache.size());
+    unit_assert_operator_equal(1, cache.mru().second->index);
     unit_assert(spectrumHasMetadata(*cache.mru().second));
     unit_assert(spectrumHasBinaryData(*cache.mru().second));
 
     s = slc.spectrum(2, false);
 
     if (os_) *os_ << cache << endl;
-    unit_assert(cache.size() == 1);
-    unit_assert(cache.mru().second->index == 1);
+    unit_assert_operator_equal(1, cache.size());
+    unit_assert_operator_equal(1, cache.mru().second->index);
     unit_assert(spectrumHasMetadata(*cache.mru().second));
     unit_assert(spectrumHasBinaryData(*cache.mru().second));
 
     s = slc.spectrum(3, true);
 
+    // pointers should be equal
+    unit_assert_operator_equal(slc.spectrum(3, true), s);
+
     if (os_) *os_ << cache << endl;
-    unit_assert(cache.size() == 2);
-    unit_assert(cache.mru().second->index == 3);
+    unit_assert_operator_equal(2, cache.size());
+    unit_assert_operator_equal(3, cache.mru().second->index);
     unit_assert(spectrumHasMetadata(*cache.mru().second));
     unit_assert(spectrumHasBinaryData(*cache.mru().second));
-    unit_assert(cache.lru().second->index == 1);
+    unit_assert_operator_equal(1, cache.lru().second->index);
     unit_assert(spectrumHasMetadata(*cache.lru().second));
     unit_assert(spectrumHasBinaryData(*cache.lru().second));
 
     s = slc.spectrum(2, true);
 
     if (os_) *os_ << cache << endl;
-    unit_assert(cache.size() == 2);
-    unit_assert(cache.mru().second->index == 2);
+    unit_assert_operator_equal(2, cache.size());
+    unit_assert_operator_equal(2, cache.mru().second->index);
     unit_assert(spectrumHasMetadata(*cache.mru().second));
     unit_assert(spectrumHasBinaryData(*cache.mru().second));
-    unit_assert(cache.lru().second->index == 3);
+    unit_assert_operator_equal(3, cache.lru().second->index);
     unit_assert(spectrumHasMetadata(*cache.lru().second));
     unit_assert(spectrumHasBinaryData(*cache.lru().second));
 }

@@ -25,6 +25,8 @@
 #include <boost/multi_index_container.hpp>
 #include <boost/multi_index/hashed_index.hpp>
 #include <boost/multi_index/identity.hpp>
+#include <boost/multi_index/member.hpp>
+#include <boost/multi_index/mem_fun.hpp>
 #include <boost/multi_index/sequenced_index.hpp>
 #include <fstream>
 #include <iostream>
@@ -43,7 +45,7 @@ namespace util {
  * appear twice, the MRU list relocates it to the first position.
  */
 
-template <typename Item>
+template <typename Item, typename KeyExtractor = boost::multi_index::identity<Item> >
 class mru_list
 {
     typedef boost::multi_index::multi_index_container
@@ -52,7 +54,7 @@ class mru_list
         boost::multi_index::indexed_by
         <
             boost::multi_index::sequenced<>,
-            boost::multi_index::hashed_unique<boost::multi_index::identity<Item> >
+            boost::multi_index::hashed_unique<KeyExtractor>
         >
     > item_list;
 
