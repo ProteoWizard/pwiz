@@ -41,12 +41,12 @@ enum PWIZ_API_DECL MemoryMRUCacheMode
 
 
 /// an MRU cache for SpectrumPtrs or ChromatogramPtrs
-template <typename PtrType>
-class PWIZ_API_DECL MemoryMRUCache : public pwiz::util::mru_list<PtrType>
+template <typename PtrType, typename KeyExtractor = boost::multi_index::identity<PtrType> >
+class PWIZ_API_DECL MemoryMRUCache : public pwiz::util::mru_list<PtrType, KeyExtractor>
 {
     public:
     MemoryMRUCache(MemoryMRUCacheMode mode, size_t size)
-    : pwiz::util::mru_list<PtrType>(size), mode_(mode)
+    : pwiz::util::mru_list<PtrType, KeyExtractor>(size), mode_(mode)
     {}
 
     /// set the caching mode
@@ -54,7 +54,7 @@ class PWIZ_API_DECL MemoryMRUCache : public pwiz::util::mru_list<PtrType>
     void setMode(MemoryMRUCacheMode mode)
     {
         if (mode != mode_)
-            pwiz::util::mru_list<PtrType>::clear();
+            pwiz::util::mru_list<PtrType, KeyExtractor>::clear();
         mode_ = mode;
     }
 
