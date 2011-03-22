@@ -27,7 +27,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTestA
+namespace pwiz.SkylineTest
 {        
     /// <summary>
     /// This is a test class for SrmSettingsTest and is intended

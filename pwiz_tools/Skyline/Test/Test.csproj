@@ -63,7 +63,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MimimalTest.cs" />
+    <Compile Include="IdentityTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Proteome\ProteomeDbTest.cs" />
     <Compile Include="Reporting\PivotTypeTest.cs" />
@@ -72,6 +72,14 @@
     <Compile Include="Results\SmallWiffTest.cs" />
     <Compile Include="Results\ThermoQuantTest.cs" />
     <Compile Include="Results\WatersCalcurveTest.cs" />
+    <Compile Include="SrmDocEditTest.cs" />
+    <Compile Include="SrmDocumentTest.cs" />
+    <Compile Include="SrmSettingsChangeTest.cs" />
+    <Compile Include="SrmSettingsTest.cs" />
+    <Compile Include="SSRCalc3Test.cs" />
+    <Compile Include="StatisticsTest.cs" />
+    <Compile Include="UndoManagerTest.cs" />
+    <Compile Include="UtilTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Shared\ProteomeDb\ProteomeDb.csproj">

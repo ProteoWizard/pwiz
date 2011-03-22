@@ -21,7 +21,7 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 
-namespace pwiz.SkylineTestA
+namespace pwiz.SkylineTest
 {
     /// <summary>
     /// This is a test class for UndoManagerTest and is intended

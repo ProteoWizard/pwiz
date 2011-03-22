@@ -22,7 +22,7 @@ using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
-namespace pwiz.SkylineTestA
+namespace pwiz.SkylineTest
 {
     /// <summary>
     /// Summary description for UtilTest

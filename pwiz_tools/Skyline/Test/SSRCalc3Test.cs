@@ -20,7 +20,7 @@ using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Util;
 
-namespace pwiz.SkylineTestA
+namespace pwiz.SkylineTest
 {
     /// <summary>
     /// Summary description for SSRCalc3Test
