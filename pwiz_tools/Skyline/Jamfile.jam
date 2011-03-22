@@ -62,11 +62,11 @@ if [ modules.peek : NT ]
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:Skyline /nologo /verbosity:minimal
         # HACK: Removed the switch /verbosity:minimal because TeamCity failures can be avoided by doing so
         echo Building Skyline Test in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:Test /nologo
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:Test /nologo /verbosity:minimal
         echo Building Skyline Test A in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:TestA /nologo
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:TestA /nologo /verbosity:minimal
         echo Building Skyline TestFunctional in $(CONFIGURATION:L) configuration...
-        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:TestFunctional /nologo        
+        msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:TestFunctional /nologo /verbosity:minimal        
     }
     
     rule do_skyline_test ( targets + : sources * : properties * )
