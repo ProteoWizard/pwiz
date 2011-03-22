@@ -29,7 +29,7 @@ using pwiz.Skyline.Properties;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTestA.Results
+namespace pwiz.SkylineTest.Results
 {
     /// <summary>
     /// Summary description for SmallWiffTest
@@ -70,7 +70,7 @@ namespace pwiz.SkylineTestA.Results
         [TestMethod]
         public void WiffResultsTest()
         {
-            TestFilesDir testFilesDir = new TestFilesDir(TestContext, @"TestA\Results\SmallWiff.zip");
+            TestFilesDir testFilesDir = new TestFilesDir(TestContext, @"Test\Results\SmallWiff.zip");
 
             SrmDocument doc = InitWiffDocument(testFilesDir);
             var docContainer = new ResultsTestDocumentContainer(doc,

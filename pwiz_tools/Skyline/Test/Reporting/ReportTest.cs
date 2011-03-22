@@ -31,7 +31,7 @@ using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
-namespace pwiz.SkylineTestA.Reporting
+namespace pwiz.SkylineTest.Reporting
 {
     /// <summary>
     /// Tests for reports

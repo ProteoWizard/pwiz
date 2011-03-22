@@ -23,7 +23,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Hibernate.Query;
 
-namespace pwiz.SkylineTestA.Reporting
+namespace pwiz.SkylineTest.Reporting
 {
     /// <summary>
     /// Summary description for PivotTypeTest

@@ -24,7 +24,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.SkylineTestUtil;
 
-namespace pwiz.SkylineTestA.Results
+namespace pwiz.SkylineTest.Results
 {
     /// <summary>
     /// Summary description for AgilentMixTest
@@ -62,7 +62,7 @@ namespace pwiz.SkylineTestA.Results
 
         #endregion
 
-        private const string ZIP_FILE = @"TestA\Results\AgilentMix.zip";
+        private const string ZIP_FILE = @"Test\Results\AgilentMix.zip";
 
         [TestMethod]
         public void AgilentFormatsTest()
