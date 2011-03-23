@@ -28,6 +28,7 @@
 #include "DefaultReaderList.hpp"
 #include "Serializer_mzid.hpp"
 #include "Serializer_pepXML.hpp"
+#include "MascotReader.hpp"
 //#include "References.hpp"
 #include "pwiz/data/mziddata/Version.hpp"
 #include "boost/regex.hpp"
@@ -257,6 +258,7 @@ PWIZ_API_DECL DefaultReaderList::DefaultReaderList()
 {
     push_back(ReaderPtr(new Reader_mzid));
     push_back(ReaderPtr(new Reader_pepXML));
+    push_back(ReaderPtr(new MascotReader));
 }
 
 

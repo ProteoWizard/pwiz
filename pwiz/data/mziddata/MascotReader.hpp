@@ -41,15 +41,18 @@ public:
 
     virtual void read(const std::string& filename,
                       const std::string& head,
-                      MzIdentML& result) const;
+                      MzIdentML& result,
+                      const Reader::Config&) const;
 
     virtual void read(const std::string& filename,
                       const std::string& head,
-                      MzIdentMLPtr& result) const;
+                      MzIdentMLPtr& result,
+                      const Reader::Config&) const;
 
     virtual void read(const std::string& filename,
                       const std::string& head,
-                      std::vector<MzIdentMLPtr>& results) const;
+                      std::vector<MzIdentMLPtr>& results,
+                      const Reader::Config&) const;
 
     virtual const char *getType() const;
 

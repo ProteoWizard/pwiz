@@ -1,3 +1,4 @@
+
 //
 // $Id$
 //
@@ -148,7 +149,7 @@ int main(int argc, const char**argv)
         
         ReaderPtr  mr(new MascotReader());
         MzIdentML mzid;
-        mr->read(config.mascotfile, mzid);
+        mr->read(config.mascotfile, mzid, Reader::Config());
 
         MzIdentMLFile::write(mzid, config.mzidfile);
         

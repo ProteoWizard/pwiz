@@ -854,7 +854,8 @@ string MascotReader::identify(const string& filename,
 //
 void MascotReader::read(const string& filename,
                         const string& head,
-                        MzIdentML& result) const
+                        MzIdentML& result,
+                        const Reader::Config& config) const
 {
     pimpl->read(filename, head, result);
 }
@@ -864,10 +865,11 @@ void MascotReader::read(const string& filename,
 //
 void MascotReader::read(const string& filename,
                         const string& head,
-                        MzIdentMLPtr& result) const
+                        MzIdentMLPtr& result,
+                        const Reader::Config& config) const
 {
     if (result.get())
-        read(filename, head, *result);
+        read(filename, head, *result, config);
 }
 
 //
@@ -875,14 +877,11 @@ void MascotReader::read(const string& filename,
 //
 void MascotReader::read(const string& filename,
                         const string& head,
-                        vector<MzIdentMLPtr>& results) const
+                        vector<MzIdentMLPtr>& results,
+                        const Reader::Config& config) const
 {
-    // Might be useful some day...
-    vector<MzIdentMLPtr>::iterator it;
-    for (it = results.begin(); it != results.end(); it++)
-    {
-        read(filename, head, *it);
-    }
+    results.push_back(MzIdentMLPtr(new MzIdentML));
+    read(filename, head, results.back(), config);
 }
 
 //
