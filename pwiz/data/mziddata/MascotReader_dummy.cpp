@@ -43,21 +43,24 @@ PWIZ_API_DECL std::string MascotReader::identify(const std::string& filename,
 
 PWIZ_API_DECL void MascotReader::read(const std::string& filename,
                         const std::string& head,
-                        MzIdentML& result) const
+                        MzIdentML& result,
+                        const Reader::Config& config) const
 {
     throw runtime_error("[MascotReader::identify] no mascot support enabled.");
 }
 
 PWIZ_API_DECL void MascotReader::read(const std::string& filename,
                         const std::string& head,
-                        MzIdentMLPtr& result) const
+                        MzIdentMLPtr& result,
+                        const Reader::Config& config) const
 {
     throw runtime_error("[MascotReader::read] no mascot support enabled.");
 }
 
 PWIZ_API_DECL void MascotReader::read(const std::string& filename,
                         const std::string& head,
-                        std::vector<MzIdentMLPtr>& results) const
+                        std::vector<MzIdentMLPtr>& results,
+                        const Reader::Config& config) const
 {
     throw runtime_error("[MascotReader::read] no mascot support enabled.");
 }
