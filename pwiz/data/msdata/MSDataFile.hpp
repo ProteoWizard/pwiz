@@ -90,6 +90,9 @@ struct PWIZ_API_DECL MSDataFile : public MSData
 /// calculates and adds a CV term for the SHA1 checksum of a source file element
 PWIZ_API_DECL void calculateSourceFileSHA1(SourceFile& sourceFile);
 
+/// Iterate and calculate SHA-1 for all source files
+PWIZ_API_DECL void calculateSHA1Checksums(const MSData& msd);
+
 PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, MSDataFile::Format format);
 PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const MSDataFile::WriteConfig& config);
 

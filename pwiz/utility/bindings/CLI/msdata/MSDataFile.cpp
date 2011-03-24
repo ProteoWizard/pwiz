@@ -24,9 +24,6 @@
 #include "MSDataFile.hpp"
 #include "pwiz/utility/misc/Exception.hpp"
 #include "pwiz/utility/misc/random_access_compressed_ifstream.hpp"
-//#include "boost/system/error_code.hpp"
-#include <WinError.h>
-
 #include "pwiz_tools/common/FullReaderList.hpp"
 
 namespace b = pwiz::msdata;
@@ -88,7 +85,7 @@ void MSDataFile::write(MSData^ msd, System::String^ filename, WriteConfig^ confi
         config2.binaryDataEncoderConfig.precision = (b::BinaryDataEncoder::Precision) config->precision;
         config2.binaryDataEncoderConfig.byteOrder = (b::BinaryDataEncoder::ByteOrder) config->byteOrder;
         config2.binaryDataEncoderConfig.compression = (b::BinaryDataEncoder::Compression) config->compression;
-        b::MSDataFile::write(**msd->base_, ToStdString(filename), config2);
+        b::MSDataFile::write(msd->base(), ToStdString(filename), config2);
     }
     catch(exception& e)
     {
@@ -121,7 +118,7 @@ void MSDataFile::write(System::String^ filename, WriteConfig^ config)
         config2.binaryDataEncoderConfig.precision = (b::BinaryDataEncoder::Precision) config->precision;
         config2.binaryDataEncoderConfig.byteOrder = (b::BinaryDataEncoder::ByteOrder) config->byteOrder;
         config2.binaryDataEncoderConfig.compression = (b::BinaryDataEncoder::Compression) config->compression;
-        (*base_)->write(ToStdString(filename), config2);
+        base().write(ToStdString(filename), config2);
     }
     catch(exception& e)
     {
@@ -131,6 +128,12 @@ void MSDataFile::write(System::String^ filename, WriteConfig^ config)
     {
         throw gcnew System::Exception(gcnew System::String("[MSDataFile::write()] Unhandled exception"));
     }
+}
+
+
+void MSDataFile::calculateSHA1Checksums(MSData^ msd)
+{
+	b::calculateSHA1Checksums(msd->base());
 }
 
 

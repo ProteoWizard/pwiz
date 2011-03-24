@@ -62,6 +62,12 @@ void readFile(const string& filename, MSData& msd, const Reader& reader, const s
 shared_ptr<DefaultReaderList> defaultReaderList_;
 
 
+void calculateSourceFilePtrSHA1(const SourceFilePtr& sourceFilePtr)
+{
+    calculateSourceFileSHA1(*sourceFilePtr);
+}
+
+
 } // namespace
 
 
@@ -230,6 +236,15 @@ PWIZ_API_DECL void calculateSourceFileSHA1(SourceFile& sourceFile)
 
     string sha1 = SHA1Calculator::hashFile(p.string());
     sourceFile.set(MS_SHA_1, sha1); 
+}
+
+
+PWIZ_API_DECL
+void calculateSHA1Checksums(const MSData& msd)
+{
+    for_each(msd.fileDescription.sourceFilePtrs.begin(),
+                 msd.fileDescription.sourceFilePtrs.end(),
+                 calculateSourceFilePtrSHA1);
 }
 
 

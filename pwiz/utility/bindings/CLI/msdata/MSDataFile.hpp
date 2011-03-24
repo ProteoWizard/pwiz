@@ -102,6 +102,11 @@ public ref class MSDataFile : public MSData
     /// member write function with the specified configuration
     /// </summary>
     void write(System::String^ filename, WriteConfig^ config);
+
+	/// <summary>
+    /// calculate SHA1 checksums for all source files
+    /// </summary>
+    static void calculateSHA1Checksums(MSData^ msd);
 };
 
 } // namespace msdata
