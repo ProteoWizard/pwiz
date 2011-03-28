@@ -590,7 +590,8 @@ void write_spectrum_queries(XMLWriter& xmlWriter, const MzIdentML& mzid, const s
     {
         const SpectrumIdentificationResult& sir = *sirPtr;
 
-        if (ilr) ilr->broadcastUpdateMessage(IterationListener::UpdateMessage(spectrumIndex, iterationCount, "writing spectrum queries"));
+        if (ilr && ilr->broadcastUpdateMessage(IterationListener::UpdateMessage(spectrumIndex, iterationCount, "writing spectrum queries")) == IterationListener::Status_Cancel)
+            return;
 
         ++spectrumIndex;
         lastChargeState = 0;
@@ -1361,7 +1362,8 @@ struct HandlerSearchResults : public SAXParser::Handler
         }
         else if (name == "spectrum_query")
         {
-            if (ilr) ilr->broadcastUpdateMessage(IterationListener::UpdateMessage(_sil->spectrumIdentificationResult.size(), 0, "reading spectrum queries"));
+            if (ilr && ilr->broadcastUpdateMessage(IterationListener::UpdateMessage(_sil->spectrumIdentificationResult.size(), 0, "reading spectrum queries")) == IterationListener::Status_Cancel)
+                return Status::Done;
 
             string spectrum, spectrumWithoutCharge;
             getAttribute(attributes, "spectrum", spectrum);

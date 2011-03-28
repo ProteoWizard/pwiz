@@ -882,7 +882,9 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SequenceCollection& 
     int iterationCount = sc.dbSequences.size();
     BOOST_FOREACH(const DBSequencePtr& dbSequence, sc.dbSequences)
     {
-        if (ilr) ilr->broadcastUpdateMessage(IterationListener::UpdateMessage(iterationIndex++, iterationCount, "writing protein sequences"));
+        if (ilr && ilr->broadcastUpdateMessage(IterationListener::UpdateMessage(iterationIndex++, iterationCount, "writing protein sequences")) == IterationListener::Status_Cancel)
+            return;
+
         write(writer, *dbSequence);
     }
 
@@ -890,7 +892,9 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SequenceCollection& 
     iterationCount = sc.peptides.size();
     BOOST_FOREACH(const PeptidePtr& peptide, sc.peptides)
     {
-        if (ilr) ilr->broadcastUpdateMessage(IterationListener::UpdateMessage(iterationIndex++, iterationCount, "writing peptide sequences"));
+        if (ilr && ilr->broadcastUpdateMessage(IterationListener::UpdateMessage(iterationIndex++, iterationCount, "writing peptide sequences")) == IterationListener::Status_Cancel)
+            return;
+
         write(writer, *peptide);
     }
 
@@ -930,7 +934,8 @@ struct HandlerSequenceCollection : public SAXParser::Handler
         }
         else if (name == "DBSequence")
         {
-            if (ilr_) ilr_->broadcastUpdateMessage(IterationListener::UpdateMessage(sc->dbSequences.size(), 0, "reading protein sequences"));
+            if (ilr_ && ilr_->broadcastUpdateMessage(IterationListener::UpdateMessage(sc->dbSequences.size(), 0, "reading protein sequences")) == IterationListener::Status_Cancel)
+                return Status::Done;
 
             string id; getAttribute(attributes, "id", id);
             sc->dbSequences.push_back(DBSequencePtr(new DBSequence(id)));
@@ -940,7 +945,8 @@ struct HandlerSequenceCollection : public SAXParser::Handler
         }
         else if (name == "Peptide")
         {
-            if (ilr_) ilr_->broadcastUpdateMessage(IterationListener::UpdateMessage(sc->peptides.size(), 0, "reading peptide sequences"));
+            if (ilr_ && ilr_->broadcastUpdateMessage(IterationListener::UpdateMessage(sc->peptides.size(), 0, "reading peptide sequences")) == IterationListener::Status_Cancel)
+                return Status::Done;
 
             string id; getAttribute(attributes, "id", id);
             sc->peptides.push_back(PeptidePtr(new Peptide(id)));
@@ -3996,7 +4002,9 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
     int iterationCount = silp.spectrumIdentificationResult.size();
     BOOST_FOREACH(const SpectrumIdentificationResultPtr& result, silp.spectrumIdentificationResult)
     {
-        if (ilr) ilr->broadcastUpdateMessage(IterationListener::UpdateMessage(iterationIndex++, iterationCount, "writing spectrum identification results"));
+        if (ilr && ilr->broadcastUpdateMessage(IterationListener::UpdateMessage(iterationIndex++, iterationCount, "writing spectrum identification results")) == IterationListener::Status_Cancel)
+            return;
+
         write(writer, result);
     }
     
@@ -4042,7 +4050,8 @@ struct HandlerSpectrumIdentificationList : public HandlerIdentifiable
         }
         else if (name == "SpectrumIdentificationResult")
         {
-            if (ilr_) ilr_->broadcastUpdateMessage(IterationListener::UpdateMessage(silp->spectrumIdentificationResult.size(), 0, "reading spectrum identification results"));
+            if (ilr_ && ilr_->broadcastUpdateMessage(IterationListener::UpdateMessage(silp->spectrumIdentificationResult.size(), 0, "reading spectrum identification results")) == IterationListener::Status_Cancel)
+                return Status::Done;
 
             SpectrumIdentificationResultPtr sirp(new SpectrumIdentificationResult());
             silp->spectrumIdentificationResult.push_back(sirp);
