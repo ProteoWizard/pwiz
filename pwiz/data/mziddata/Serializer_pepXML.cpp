@@ -86,7 +86,7 @@ const AnalysisSoftwareTranslation analysisSoftwareTranslationTable[] =
     {MS_MyriMatch, "MyriMatch"},
     {MS_TagRecon, "TagRecon"},
     {MS_Pepitome, "Pepitome"},
-    {MS_X_Tandem, "X! Tandem;X!Tandem;xtandem"},
+    {MS_X_Tandem, "X! Tandem;X!Tandem;xtandem;X! Tandem (k-score)"},
     {MS_Spectrum_Mill_for_MassHunter_Workstation, "Spectrum Mill;SpectrumMill"},
     {MS_Proteios, "Proteios"},
     // TODO: Comet, PROBID, InsPecT, Crux, Tide need CV terms
@@ -784,11 +784,16 @@ struct HandlerSearchSummary : public SAXParser::Handler
             preferredName = &AnalysisSoftwareTranslator::instance->translate(result);
 
         AnalysisSoftwarePtr software = AnalysisSoftwarePtr(new AnalysisSoftware("AS_" + *preferredName, *preferredName));
-        software->softwareName.set(result);
+
+        // TODO if MS_analysis_software log warning that search engine could not be translated
+        if (result == MS_analysis_software)
+            software->softwareName.set(MS_analysis_software, *preferredName);
+        else
+            software->softwareName.set(result);
+
         _mzid->analysisSoftwareList.push_back(software);
         _sip->analysisSoftwarePtr = software;
 
-        // TODO if MS_analysis_software log warning that search engine could not be translated
         return result;
     }
 
