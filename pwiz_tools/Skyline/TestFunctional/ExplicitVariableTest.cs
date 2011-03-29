@@ -210,7 +210,11 @@ namespace pwiz.SkylineTestFunctional
             var docExplicitVarMod = WaitForDocumentChange(docNoStaticMods);
             var peptideExplicitVarMod = (PeptideDocNode) docExplicitVarMod.FindNode(pathPeptideFirst);
             Assert.IsTrue(peptideExplicitVarMod.HasExplicitMods);
-            Assert.IsTrue(peptideExplicitVarMod.ExplicitMods.StaticModifications != null);
+            if (peptideExplicitVarMod.ExplicitMods.StaticModifications == null)
+            {
+                Assert.IsNotNull(peptideExplicitVarMod.ExplicitMods.StaticModifications);
+                return; // For ReSharper
+            }
             var varModPeptide = peptideExplicitVarMod.ExplicitMods.StaticModifications[0].Modification;
             Assert.AreEqual(variableMod.Name, varModPeptide.Name);
             // The modification instance on the peptide should not be marked as variable

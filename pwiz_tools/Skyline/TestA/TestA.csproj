@@ -103,10 +103,6 @@
     <None Include="Results\FullScan.zip" />
     <EmbeddedResource Include="Study7.sky" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Proteome\" />
-    <Folder Include="Reporting\" />
-  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
