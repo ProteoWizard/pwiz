@@ -158,7 +158,7 @@ namespace IDPicker.DataModel
             foreach (string sql in createSql)
                 cmd.ExecuteNonQuery(sql);
 
-            cmd.ExecuteNonQuery(@"CREATE TABLE PeptideSpectrumMatchScoreNames (Id INTEGER PRIMARY KEY, Name TEXT UNIQUE NOT NULL);
+            cmd.ExecuteNonQuery(@"CREATE TABLE PeptideSpectrumMatchScoreName (Id INTEGER PRIMARY KEY, Name TEXT UNIQUE NOT NULL);
                                   CREATE TABLE IntegerSet (Value INTEGER PRIMARY KEY);");
             CreateIndexes(conn);
             transaction.Commit();

@@ -21,11 +21,9 @@
 //
 
 
-#include "../Qonverter.hpp"
-
 #pragma warning( push )
 #pragma warning( disable : 4634 4635 )
-#include "../../freicore/pwiz_src/pwiz/utility/bindings/CLI/common/SharedCLI.hpp"
+#include "pwiz/utility/bindings/CLI/common/SharedCLI.hpp"
 #using <system.dll>
 #pragma warning( pop )
 
@@ -47,7 +45,6 @@ namespace IDPicker {
 
 
 using namespace System;
-using namespace System::ComponentModel;
 using namespace System::Collections::Generic;
 
 
@@ -56,8 +53,41 @@ public ref struct Qonverter
     enum class QonverterMethod
     {
         StaticWeighted,
-        OptimizedMonteCarlo,
-        OptimizedPercolator
+        SVM
+    };
+
+    enum class Kernel
+    {
+        Linear,
+        Polynomial,
+        RBF,
+        Sigmoid
+    };
+
+    enum class ChargeStateHandling
+    {
+        Ignore,
+        Partition,
+        Feature // SVM only
+    };
+
+    enum class TerminalSpecificityHandling
+    {
+        Ignore,
+        Partition,
+        Feature // SVM only
+    };
+
+    enum class MissedCleavagesHandling
+    {
+        Ignore,
+        Feature // SVM only
+    };
+
+    enum class MassErrorHandling
+    {
+        Ignore,
+        Feature // SVM only
     };
 
     ref struct Settings
@@ -84,17 +114,37 @@ public ref struct Qonverter
 
         property QonverterMethod QonverterMethod;
         property String^ DecoyPrefix;
+
+        /// should ranks within a spectrum be rearranged based on the total score?
         property bool RerankMatches;
+        
+        /// how should charge state be used during qonversion?
+        property ChargeStateHandling ChargeStateHandling;
+
+        /// how should terminal specificity be used during qonversion?
+        property TerminalSpecificityHandling TerminalSpecificityHandling;
+
+        /// how should missed cleavages be used during qonversion?
+        property MissedCleavagesHandling MissedCleavagesHandling;
+
+        /// how should mass error be used during qonversion?
+        property MassErrorHandling MassErrorHandling;
+
+        /// for SVM qonversion, what kind of kernel should be used?
+        property Kernel Kernel;
+
+        /// what score names are expected and how should they be weighted and normalized?
         property IDictionary<String^, ScoreInfo^>^ ScoreInfoByName;
     };
 
     property IDictionary<int, Settings^>^ SettingsByAnalysis;
     property bool LogQonversionDetails;
 
-    ref struct QonversionProgressEventArgs : CancelEventArgs
+    ref struct QonversionProgressEventArgs : EventArgs
     {
         property int QonvertedAnalyses;
         property int TotalAnalyses;
+        property bool Cancel;
     };
 
     delegate void QonversionProgressEventHandler(Object^ sender, QonversionProgressEventArgs^ e);
@@ -105,6 +155,9 @@ public ref struct Qonverter
 
     void Qonvert(String^ idpDbFilepath);
     void Qonvert(System::IntPtr idpDb);
+
+    void Reset(String^ idpDbFilepath);
+    void Reset(System::IntPtr idpDb);
 
     internal: void marshal(int qonvertedAnalyses, int totalAnalyses, bool& cancel);
 };

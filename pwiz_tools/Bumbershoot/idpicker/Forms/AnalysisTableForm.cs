@@ -150,7 +150,7 @@ namespace IDPicker.Forms
         public void SetData (NHibernate.ISession session, DataFilter dataFilter)
         {
             this.session = session;
-            this.dataFilter = new DataFilter(dataFilter) { Peptide = null };
+            this.dataFilter = new DataFilter(dataFilter);
 
             /*if (treeListView.SelectedObject is PeptideRow)
                 oldSelectionPath = new string[] { treeListView.SelectedItem.Text };

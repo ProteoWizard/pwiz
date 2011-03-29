@@ -42,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				PreprocessorDefinitions="WIN32;_DEBUG"
+				PreprocessorDefinitions="WIN32;_DEBUG;USE_RAW_PTR"
 				RuntimeLibrary="3"
 				UsePrecompiledHeader="2"
 				WarningLevel="3"
@@ -199,11 +199,27 @@
 			>
 		</File>
 		<File
+			RelativePath=".\Jamfile.jam"
+			>
+		</File>
+		<File
 			RelativePath=".\CLI\Jamfile.jam"
 			>
 		</File>
 		<File
-			RelativePath=".\Jamfile.jam"
+			RelativePath=".\Parser.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\CLI\Parser.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\Parser.hpp"
+			>
+		</File>
+		<File
+			RelativePath=".\CLI\Parser.hpp"
 			>
 		</File>
 		<File
@@ -223,7 +239,19 @@
 			>
 		</File>
 		<File
+			RelativePath=".\StaticWeightQonverter.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\StaticWeightQonverter.hpp"
+			>
+		</File>
+		<File
+			RelativePath=".\SVMQonverter.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\SVMQonverter.hpp"
 			>
 		</File>
 	</Files>

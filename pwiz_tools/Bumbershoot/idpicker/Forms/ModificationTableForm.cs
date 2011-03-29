@@ -83,7 +83,7 @@ namespace IDPicker.Forms
                 site = this.siteColumnNameToSite[cell.OwningColumn.HeaderText];
 
             if (site != null)
-                newDataFilter.ModifiedSite = new List<char?> {site};
+                newDataFilter.ModifiedSite = new List<char> {site.Value};
 
             newDataFilter.Modifications = session.CreateQuery(
                                                 "SELECT pm.Modification " +
@@ -106,7 +106,7 @@ namespace IDPicker.Forms
             var newDataFilter = new DataFilter
             {
                 FilterSource = this,
-                ModifiedSite = new List<char?>()
+                ModifiedSite = new List<char>()
             };
 
             foreach (DataGridViewCell cell in dataGridView.SelectedCells)
@@ -122,15 +122,17 @@ namespace IDPicker.Forms
                 if (cell.ColumnIndex > 0 && siteColumnNameToSite.Contains(cell.OwningColumn.HeaderText))
                     newSite = siteColumnNameToSite[cell.OwningColumn.HeaderText];
 
-                if (newSite != null && !newDataFilter.ModifiedSite.Contains(newSite))
+                if (newSite != null && !newDataFilter.ModifiedSite.Contains(newSite.Value))
                 {
                     siteList.Add("pm.Site='" + newSite.ToString() + "'");
-                    newDataFilter.ModifiedSite.Add(newSite);
+                    newDataFilter.ModifiedSite.Add(newSite.Value);
                 }
                 if (!modList.Contains(cell.OwningRow.Cells[0].Value.ToString()))
                     modList.Add("ROUND(pm.Modification.MonoMassDelta)=" + cell.OwningRow.Cells[0].Value.ToString());
             }
 
+            if (newDataFilter.ModifiedSite.Count == 0)
+                newDataFilter.ModifiedSite = null;
 
             newDataFilter.Modifications = session.CreateQuery(
                 "SELECT pm.Modification " +
@@ -219,7 +221,7 @@ namespace IDPicker.Forms
         {
             this.session = session;
             viewFilter = dataFilter;
-            this.dataFilter = new DataFilter(dataFilter) { Modifications = new List<DataModel.Modification>(), ModifiedSite = null };
+            this.dataFilter = new DataFilter(dataFilter) { Modifications = null, ModifiedSite = null };
 
             if (dataGridView.SelectedCells.Count > 0)
                 oldSelectedAddress = new Pair<int, string>()
@@ -271,7 +273,7 @@ namespace IDPicker.Forms
                                                 "GROUP BY pm.Site, ROUND(pm.Modification.MonoMassDelta) " +
                                                 "ORDER BY ROUND(pm.Modification.MonoMassDelta)");
                 query.SetReadOnly(true);
-                if (dataFilter.IsBasicFilter || viewFilter.Modifications.Count > 0 || viewFilter.ModifiedSite != null)
+                if (dataFilter.IsBasicFilter || viewFilter.Modifications != null || viewFilter.ModifiedSite != null)
                 {
                     // refresh basic data when basicDataFilter is unset or when the basic filter values have changed
                     if (basicDataFilter == null || (dataFilter.IsBasicFilter && dataFilter != basicDataFilter))

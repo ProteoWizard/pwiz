@@ -15,11 +15,39 @@
 #
 # The Initial Developer of the Original Code is Matt Chambers.
 #
-# Copyright 2009 Vanderbilt University
+# Copyright 2011 Vanderbilt University
 #
 # Contributor(s): Surendra Dasaris
 #
 
-lib Qonverter : Qonverter.cpp ../Lib/SQLite ;
+lib Qonverter
+    : # sources
+        [ glob *Qonverter.cpp ]
+    : # requirements
+        <library>../Lib/SQLite//sqlite3pp
+        <library>..//svm
+    : # default-build
+    : # usage-requirements
+        <library>../Lib/SQLite//sqlite3pp
+        <library>..//svm
+    ;
 
-exe idpQonvert : idpQonvert.cpp Qonverter ../freicore ;
+lib Parser
+    : # sources
+        Parser.cpp
+    : # requirements
+        <library>Qonverter
+        <library>$(PWIZ_SOURCE)/pwiz_tools/common//pwiz_tools_common
+        <library>$(PWIZ_SOURCE)/pwiz/data/proteome//pwiz_data_proteome
+        <library>$(PWIZ_SOURCE)/pwiz/data/mziddata//pwiz_data_mzid
+        <library>$(PWIZ_SOURCE)/pwiz/analysis/proteome_processing//pwiz_analysis_proteome_processing
+    : # default-build
+    : # usage-requirements
+        <library>Qonverter
+        <library>$(PWIZ_SOURCE)/pwiz_tools/common//pwiz_tools_common
+        <library>$(PWIZ_SOURCE)/pwiz/data/proteome//pwiz_data_proteome
+        <library>$(PWIZ_SOURCE)/pwiz/data/mziddata//pwiz_data_mzid
+        <library>$(PWIZ_SOURCE)/pwiz/analysis/proteome_processing//pwiz_analysis_proteome_processing
+    ;
+
+exe idpQonvert : idpQonvert.cpp Parser ../freicore ;

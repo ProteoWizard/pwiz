@@ -68,9 +68,10 @@ if --without-secure-scl in [ modules.peek : ARGV ]
 
 project bumbershoot
 	: requirements
-	  <include>freicore/pwiz_src
-	  <include>freicore/libraries/boost_aux
-	  <include>freicore/libraries/boost_$(BOOST_VERSION_PATH)
+	  <include>$(PWIZ_SOURCE)
+	  <include>$(LIBRARIES_PATH)/boost_aux
+	  <include>$(LIBRARIES_PATH)/boost_$(BOOST_VERSION_PATH)
+	  <include>$(LIBRARIES_PATH)/libsvm-3.0
 
       <toolset>gcc,<link>shared:<runtime-link>shared
       
@@ -138,6 +139,7 @@ if ! $(expat_src)
      error "This build requires the Expat source code. Specify the path to the Expat source distribution with '--expat-src=<path>'" ;
 }
 
+alias svm : $(LIBRARIES_PATH)/libsvm-3.0//svm ;
 
 tmp = [ modules.peek : BOOST_BUILD_PATH ] ;
 tmp += freicore/ext freicore/libraries ;
@@ -220,6 +222,7 @@ $(using-namespace) System$(namespace-delimiter)Runtime$(namespace-delimiter)Inte
 [assembly: AssemblyCopyright$(attribute-suffix)(\"$(AssemblyCopyright)\")]$(attribute-line-terminator)
 [assembly: AssemblyVersion$(attribute-suffix)(\"$(MAJOR).$(MINOR).$(revision-info[1])\")]$(attribute-line-terminator)
 [assembly: AssemblyFileVersion$(attribute-suffix)(\"$(MAJOR).$(MINOR).$(revision-info[1])\")]$(attribute-line-terminator)
+[assembly: ComVisible$(attribute-suffix)(false)]$(attribute-line-terminator)
 " ;
 
         header-text = @($(filepath):E=$(header-text)) ;
@@ -257,7 +260,7 @@ local revision-info = [ generate-AssemblyInfo.cs Properties\\AssemblyInfo.cs :
                          *.cs
                          #*.html
                          #*.vdproj
-      : freicore build-*-* ]
+      : freicore build-*-* _Resharper.* ]
     : warn-on-missing : : "IDPicker" "Filtering, assembling, and reporting of parsimonious protein identifications." $(COMPANY_AND_PRODUCT) ] ;
 
 # revision-info is a sequence: <max revision> <max year> <max month> <max day> <number of modified files in working copy>

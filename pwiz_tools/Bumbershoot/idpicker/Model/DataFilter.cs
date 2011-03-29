@@ -94,7 +94,6 @@ namespace IDPicker.DataModel
             MinimumDistinctPeptidesPerProtein = 2;
             MinimumSpectraPerProtein = 2;
             MinimumAdditionalPeptidesPerProtein = 1;
-            Modifications = new List<Modification>();
         }
 
         public DataFilter (DataFilter other)
@@ -103,17 +102,17 @@ namespace IDPicker.DataModel
             MinimumDistinctPeptidesPerProtein = other.MinimumDistinctPeptidesPerProtein;
             MinimumSpectraPerProtein = other.MinimumSpectraPerProtein;
             MinimumAdditionalPeptidesPerProtein = other.MinimumAdditionalPeptidesPerProtein;
-            Modifications = new List<Modification>(other.Modifications);
-            Cluster = other.Cluster;
-            Protein = other.Protein;
-            Peptide = other.Peptide;
-            DistinctPeptideKey = other.DistinctPeptideKey;
-            ModifiedSite = other.ModifiedSite;
-            Charge = other.Charge;
-            Analysis = other.Analysis;
-            Spectrum = other.Spectrum;
-            SpectrumSource = other.SpectrumSource;
-            SpectrumSourceGroup = other.SpectrumSourceGroup;
+            Cluster = other.Cluster == null ? null : new List<long>(other.Cluster);
+            Protein = other.Protein == null ? null : new List<Protein>(other.Protein);
+            Peptide = other.Peptide == null ? null : new List<Peptide>(other.Peptide);
+            DistinctPeptideKey = other.DistinctPeptideKey == null ? null : new List<DistinctPeptideFormat>(other.DistinctPeptideKey);
+            Modifications = other.Modifications == null ? null : new List<Modification>(other.Modifications);
+            ModifiedSite = other.ModifiedSite == null ? null : new List<char>(other.ModifiedSite);
+            Charge = other.Charge == null ? null : new List<int>(other.Charge);
+            Analysis = other.Analysis == null ? null : new List<Analysis>(other.Analysis);
+            Spectrum = other.Spectrum == null ? null : new List<Spectrum>(other.Spectrum);
+            SpectrumSource = other.SpectrumSource == null ? null : new List<SpectrumSource>(other.SpectrumSource);
+            SpectrumSourceGroup = other.SpectrumSourceGroup == null ? null : new List<SpectrumSourceGroup>(other.SpectrumSourceGroup);
         }
 
         public decimal MaximumQValue { get; set; }
@@ -121,17 +120,27 @@ namespace IDPicker.DataModel
         public int MinimumSpectraPerProtein { get; set; }
         public int MinimumAdditionalPeptidesPerProtein { get; set; }
 
-        public IList<long?> Cluster { get; set; }
+        public IList<long> Cluster { get; set; }
         public IList<Protein> Protein { get; set; }
         public IList<Peptide> Peptide { get; set; }
         public IList<DistinctPeptideFormat> DistinctPeptideKey { get; set; }
         public IList<Modification> Modifications { get; set; }
-        public IList<char?> ModifiedSite { get; set; }
-        public IList<int?> Charge { get; set; }
+        public IList<char> ModifiedSite { get; set; }
+        public IList<int> Charge { get; set; }
         public IList<SpectrumSourceGroup> SpectrumSourceGroup { get; set; }
         public IList<SpectrumSource> SpectrumSource { get; set; }
         public IList<Spectrum> Spectrum { get; set; }
         public IList<Analysis> Analysis { get; set; }
+
+        /// <summary>
+        /// A regular expression for filtering peptide sequences based on amino-acid composition.
+        /// </summary>
+        /// <example>To match peptides with at least one histidine: "*H*"</example>
+        /// <example>To match peptides with at least two histidines: "*H*H*</example>
+        /// <example>To match peptides with two adjacent histidines: "*HH*</example>
+        /// <example>To match peptides starting with glutamine: "Q*"</example>
+        /// <example>To match peptides with a  histidines: "*H*H*</example>
+        public string Composition { get; set; }
 
         public object FilterSource { get; set; }
 
@@ -140,8 +149,9 @@ namespace IDPicker.DataModel
             get
             {
                 return Cluster == null && Protein == null && Peptide == null && DistinctPeptideKey == null &&
-                       Modifications.Count == 0 && ModifiedSite == null && Charge == null &&
-                       SpectrumSource == null && Spectrum == null && Analysis == null;
+                       Modifications == null && ModifiedSite == null && Charge == null &&
+                       SpectrumSource == null && Spectrum == null && Analysis == null &&
+                       String.IsNullOrEmpty(Composition);
             }
         }
 
@@ -151,6 +161,30 @@ namespace IDPicker.DataModel
                    MinimumDistinctPeptidesPerProtein.GetHashCode() ^
                    MinimumSpectraPerProtein.GetHashCode() ^
                    MinimumAdditionalPeptidesPerProtein.GetHashCode();
+        }
+
+        private static bool NullSafeSequenceEqual<T> (IEnumerable<T> lhs, IEnumerable<T> rhs)
+        {
+            if (lhs == rhs)
+                return true;
+            else if (lhs == null || rhs == null)
+                return false;
+            else
+                return lhs.SequenceEqual<T>(rhs);
+        }
+
+        private static IList<T> NullSafeSequenceUnion<T> (IEnumerable<T> lhs, IEnumerable<T> rhs)
+        {
+            if (lhs == null && rhs == null)
+                return null;
+            else if (lhs == null)
+                return rhs.ToList();
+            else if (rhs == null)
+                return lhs.ToList();
+            else if (lhs == rhs)
+                return lhs.ToList();
+            else
+                return lhs.Union<T>(rhs).ToList();
         }
 
         public override bool Equals (object obj)
@@ -163,33 +197,35 @@ namespace IDPicker.DataModel
                    MinimumDistinctPeptidesPerProtein == other.MinimumDistinctPeptidesPerProtein &&
                    MinimumSpectraPerProtein == other.MinimumSpectraPerProtein &&
                    MinimumAdditionalPeptidesPerProtein == other.MinimumAdditionalPeptidesPerProtein &&
-                   Cluster == other.Cluster &&
-                   Protein == other.Protein &&
-                   Peptide == other.Peptide &&
-                   DistinctPeptideKey == other.DistinctPeptideKey &&
-                   Modifications.SequenceEqual(other.Modifications) &&
-                   ModifiedSite == other.ModifiedSite &&
-                   Charge == other.Charge &&
-                   Analysis == other.Analysis &&
-                   Spectrum == other.Spectrum &&
-                   SpectrumSource == other.SpectrumSource &&
-                   SpectrumSourceGroup == other.SpectrumSourceGroup;
+                   NullSafeSequenceEqual(Cluster, other.Cluster) &&
+                   NullSafeSequenceEqual(Protein, other.Protein) &&
+                   NullSafeSequenceEqual(Peptide, other.Peptide) &&
+                   NullSafeSequenceEqual(DistinctPeptideKey, other.DistinctPeptideKey) &&
+                   NullSafeSequenceEqual(Modifications, other.Modifications) &&
+                   NullSafeSequenceEqual(ModifiedSite, other.ModifiedSite) &&
+                   NullSafeSequenceEqual(Charge, other.Charge) &&
+                   NullSafeSequenceEqual(Analysis, other.Analysis) &&
+                   NullSafeSequenceEqual(Spectrum, other.Spectrum) &&
+                   NullSafeSequenceEqual(SpectrumSource, other.SpectrumSource) &&
+                   NullSafeSequenceEqual(SpectrumSourceGroup, other.SpectrumSourceGroup) &&
+                   Composition == other.Composition;
         }
 
         public static DataFilter operator + (DataFilter lhs, DataFilter rhs)
         {
             var newFilter = new DataFilter(lhs);
-            if (rhs.Cluster != null) newFilter.Cluster = rhs.Cluster;
-            if (rhs.Protein != null) newFilter.Protein = rhs.Protein;
-            if (rhs.Peptide != null) newFilter.Peptide = rhs.Peptide;
-            if (rhs.DistinctPeptideKey != null) newFilter.DistinctPeptideKey = rhs.DistinctPeptideKey;
-            if (rhs.Modifications != null) newFilter.Modifications = newFilter.Modifications.Union(rhs.Modifications).ToList();
-            if (rhs.ModifiedSite != null) newFilter.ModifiedSite = rhs.ModifiedSite;
-            if (rhs.Charge != null) newFilter.Charge = rhs.Charge;
-            if (rhs.Analysis != null) newFilter.Analysis = rhs.Analysis;
-            if (rhs.Spectrum != null) newFilter.Spectrum = rhs.Spectrum;
-            if (rhs.SpectrumSource != null) newFilter.SpectrumSource = rhs.SpectrumSource;
-            if (rhs.SpectrumSourceGroup != null) newFilter.SpectrumSourceGroup = rhs.SpectrumSourceGroup;
+            newFilter.Cluster = NullSafeSequenceUnion(newFilter.Cluster, rhs.Cluster);
+            newFilter.Protein = NullSafeSequenceUnion(newFilter.Protein, rhs.Protein);
+            newFilter.Peptide = NullSafeSequenceUnion(newFilter.Peptide, rhs.Peptide);
+            newFilter.DistinctPeptideKey = NullSafeSequenceUnion(newFilter.DistinctPeptideKey, rhs.DistinctPeptideKey);
+            newFilter.Modifications = NullSafeSequenceUnion(newFilter.Modifications, rhs.Modifications);
+            newFilter.ModifiedSite = NullSafeSequenceUnion(newFilter.ModifiedSite, rhs.ModifiedSite);
+            newFilter.Charge = NullSafeSequenceUnion(newFilter.Charge, rhs.Charge);
+            newFilter.Analysis = NullSafeSequenceUnion(newFilter.Analysis, rhs.Analysis);
+            newFilter.Spectrum = NullSafeSequenceUnion(newFilter.Spectrum, rhs.Spectrum);
+            newFilter.SpectrumSource = NullSafeSequenceUnion(newFilter.SpectrumSource, rhs.SpectrumSource);
+            newFilter.SpectrumSourceGroup = NullSafeSequenceUnion(newFilter.SpectrumSourceGroup, rhs.SpectrumSourceGroup);
+            newFilter.Composition = rhs.Composition;
             return newFilter;
         }
 
@@ -215,10 +251,11 @@ namespace IDPicker.DataModel
             if (Analysis != null)
                 return "Analysis (" + Analysis.Count + ")";
             if (Charge != null)
-            {
                 return "Charge (" + Charge.Count + ")";
-            }
-            if (ModifiedSite == null && Modifications.Count == 0)
+            if (!String.IsNullOrEmpty(Composition))
+                return "Composition (" + Composition + ")";
+
+            if (ModifiedSite == null && Modifications == null)
                 return String.Format("Q-value ≤ {0}; " +
                                      "Min. distinct peptides per protein ≥ {1}; " +
                                      "Min. spectra per protein ≥ {2}; ",
@@ -234,17 +271,14 @@ namespace IDPicker.DataModel
                 if (ModifiedSite != null)
                     result.AppendFormat("Modified site ({0})", ModifiedSite.Count);
 
-                if (Modifications.Count == 0)
+                if (Modifications == null)
                     return result.ToString();
 
                 if (ModifiedSite != null)
                     result.Append("; ");
 
-                var distinctModMasses = (from mod in Modifications
-                                         select Math.Round(mod.MonoMassDelta).ToString())
-                    .Distinct();
-                result.AppendFormat("Mass shift ({0})",
-                                    distinctModMasses.Count());
+                var distinctModMasses = (from mod in Modifications select Math.Round(mod.MonoMassDelta).ToString()).Distinct();
+                result.AppendFormat("Mass shift ({0})", distinctModMasses.Count());
                 return result.ToString();
             }
         }
@@ -373,6 +407,7 @@ namespace IDPicker.DataModel
                   FROM PeptideSpectrumMatch psm
                   JOIN PeptideInstance pi ON psm.Peptide = pi.Peptide
                   JOIN Protein pro ON pi.Protein = pro.Id
+                  JOIN ProteinData pd ON pi.Protein = pd.Id
                   JOIN Spectrum s ON psm.Spectrum = s.Id
                   JOIN SpectrumSource ss ON s.Source = ss.Id
                   -- filter out ungrouped spectrum sources
@@ -749,7 +784,7 @@ namespace IDPicker.DataModel
                             joins.Add(branch);
                 }
 
-                if (Modifications.Count > 0 || ModifiedSite != null)
+                if (Modifications != null || ModifiedSite != null)
                     foreach (var branch in ProteinToPeptideModification.Split(';'))
                         if (!joins.Contains(branch))
                             joins.Add(branch);
@@ -795,7 +830,7 @@ namespace IDPicker.DataModel
                     conditions.Add("(" + string.Join(" OR ", temp) + ")");
                 }
 
-                if (Modifications.Count > 0 || ModifiedSite != null)
+                if (Modifications != null || ModifiedSite != null)
                     foreach (var branch in PeptideSpectrumMatchToPeptideModification.Split(';'))
                         if (!joins.Contains(branch))
                             joins.Add(branch);
@@ -823,7 +858,7 @@ namespace IDPicker.DataModel
                 conditions.Add("(" + string.Join(" OR ", temp) + ")");
             }
 
-            if (Modifications.Count > 0)
+            if (Modifications != null)
                 conditions.Add(String.Format("pm.Modification.id IN ({0})",
                     String.Join(",", (from mod in Modifications
                                       select mod.Id.ToString()).Distinct().ToArray())));
@@ -860,14 +895,94 @@ namespace IDPicker.DataModel
 
             var query = new StringBuilder();
 
-            query.AppendFormat("FROM {0} ", fromTable);
+            query.AppendFormat(" FROM {0} ", fromTable);
             foreach (var join in joins)
                 query.AppendFormat("{0} ", join);
             query.Append(" ");
 
             if (conditions.Count > 0)
             {
-                query.Append("WHERE ");
+                query.Append(" WHERE ");
+                query.Append(String.Join(" AND ", conditions.ToArray()));
+                query.Append(" ");
+            }
+
+            return query.ToString();
+        }
+
+        public string GetFilteredWhereClauseSQL ()
+        {
+            var conditions = new List<string>();
+
+            if (Cluster != null)
+            {
+                var temp = Cluster.Select(item => String.Format("pro.Cluster = {0}", item.ToString())).ToArray();
+                conditions.Add("(" + string.Join(" OR ", temp) + ")");
+            }
+
+            if (Protein != null)
+            {
+                var temp = Protein.Select(item => String.Format("pi.Protein = {0}", item.Id)).ToArray();
+                conditions.Add("(" + string.Join(" OR ", temp) + ")");
+            }
+
+            if (Peptide != null)
+            {
+                var temp = Peptide.Select(item => String.Format("psm.Peptide = {0}", item.Id)).ToArray();
+                conditions.Add("(" + string.Join(" OR ", temp) + ")");
+            }
+
+            /*if (DistinctPeptideKey != null)
+            {
+                var temp = DistinctPeptideKey.Select(item => String.Format("{0} = '{1}'", item.Expression, item.Key)).ToArray();
+                conditions.Add("(" + string.Join(" OR ", temp) + ")");
+            }*/
+
+            if (ModifiedSite != null)
+            {
+                var temp = ModifiedSite.Select(item => String.Format("pm.Site = '{0}'", item.ToString())).ToArray();
+                conditions.Add("(" + string.Join(" OR ", temp) + ")");
+            }
+
+            if (Modifications != null)
+                conditions.Add(String.Format("pm.Modification IN ({0})",
+                                             String.Join(",", Modifications.Select(o=> o.Id.ToString()).ToArray())));
+
+            if (Charge != null)
+            {
+                var temp = Charge.Select(item => String.Format("psm.Charge = {0}", item)).ToArray();
+                conditions.Add("(" + string.Join(" OR ", temp) + ")");
+            }
+
+            if (Analysis != null)
+            {
+                var temp = Analysis.Select(item => String.Format("psm.Analysis = {0}", item.Id)).ToArray();
+                conditions.Add("(" + string.Join(" OR ", temp) + ")");
+            }
+
+            if (Spectrum != null)
+            {
+                var temp = Spectrum.Select(item => String.Format("psm.Spectrum = {0}", item.Id)).ToArray();
+                conditions.Add("(" + string.Join(" OR ", temp) + ")");
+            }
+
+            if (SpectrumSource != null)
+            {
+                var temp = SpectrumSource.Select(item => String.Format("s.Source = {0}", item.Id)).ToArray();
+                conditions.Add("(" + string.Join(" OR ", temp) + ")");
+            }
+
+            if (SpectrumSourceGroup != null)
+            {
+                var temp = SpectrumSourceGroup.Select(item => String.Format("ssgl.Group_ = {0}", item.Id)).ToArray();
+                conditions.Add("(" + string.Join(" OR ", temp) + ")");
+            }
+
+            var query = new StringBuilder();
+
+            if (conditions.Count > 0)
+            {
+                query.Append(" WHERE ");
                 query.Append(String.Join(" AND ", conditions.ToArray()));
                 query.Append(" ");
             }

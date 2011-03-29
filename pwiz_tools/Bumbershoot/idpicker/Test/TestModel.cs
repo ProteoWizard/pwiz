@@ -509,7 +509,7 @@ namespace Test
             var qonverterSettings2 = new QonverterSettings()
             {
                 Analysis = session.UniqueResult<Analysis>(o => o.Software.Name == "Engine 2"),
-                QonverterMethod = Qonverter.QonverterMethod.OptimizedMonteCarlo,
+                QonverterMethod = Qonverter.QonverterMethod.SVM,
                 DecoyPrefix = "___---",
                 RerankMatches = false,
                 ScoreInfoByName = new Dictionary<string, Qonverter.Settings.ScoreInfo>()
@@ -978,7 +978,7 @@ namespace Test
             Assert.AreEqual(Qonverter.Settings.NormalizationMethod.Quantile, qonverterSettings1.ScoreInfoByName["score2"].NormalizationMethod);
 
             var qonverterSettings2 = session.UniqueResult<QonverterSettings>(o => o.Analysis.Software.Name == "Engine 2");
-            Assert.AreEqual(Qonverter.QonverterMethod.OptimizedMonteCarlo, qonverterSettings2.QonverterMethod);
+            Assert.AreEqual(Qonverter.QonverterMethod.SVM, qonverterSettings2.QonverterMethod);
             Assert.AreEqual("___---", qonverterSettings2.DecoyPrefix);
             Assert.AreEqual(false, qonverterSettings2.RerankMatches);
             Assert.AreEqual(2, qonverterSettings2.ScoreInfoByName.Count);

@@ -150,7 +150,7 @@ namespace Test
 
              var qonverterSettings2 = new QonverterSettings()
              {
-                 QonverterMethod = Qonverter.QonverterMethod.OptimizedMonteCarlo,
+                 QonverterMethod = Qonverter.QonverterMethod.SVM,
                  DecoyPrefix = "___---",
                  RerankMatches = false,
                  ScoreInfoByName = new Dictionary<string, Qonverter.Settings.ScoreInfo>()

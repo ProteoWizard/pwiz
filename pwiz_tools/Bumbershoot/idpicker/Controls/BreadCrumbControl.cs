@@ -146,7 +146,8 @@ namespace IDPicker.Controls
             breadCrumbToolStrip = new BreadCrumbToolStrip()
             {
                 Dock = DockStyle.Fill,
-                GripStyle = ToolStripGripStyle.Hidden
+                GripStyle = ToolStripGripStyle.Hidden,
+                Cursor = DefaultCursor
             };
             breadCrumbToolStrip.OverflowButton.Alignment = ToolStripItemAlignment.Left;
 
@@ -646,54 +647,43 @@ namespace IDPicker.Controls
 
                 if (breadCrumbs[x].Text.Contains("Q-value"))
                     breadCrumbs.RemoveAt(x); //Sometimes bugs and gets extra-long breadcrumb
-                else if (item.Cluster != null)
+                else if (item.Cluster != null || item.Protein != null)
                 {
-                    if (overallData.Cluster == null)
-                        overallData.Cluster = item.Cluster;
-                    else
+                    if (overallData.Cluster != null || overallData.Protein != null)
                         breadCrumbs.RemoveAt(x);
+                    else
+                    {
+                        if (overallData.Cluster == null)
+                            overallData.Cluster = item.Cluster;
+                        if (overallData.Protein == null)
+                            overallData.Protein = item.Protein;
+                    }
                 }
-                else if (item.Protein != null)
+                else if (item.Peptide != null || item.DistinctPeptideKey != null)
                 {
-                    if (overallData.Protein == null)
-                        overallData.Protein = item.Protein;
-                    else
+                    if (overallData.Peptide != null || overallData.DistinctPeptideKey != null)
                         breadCrumbs.RemoveAt(x);
+                    else
+                    {
+                        if (overallData.Peptide == null)
+                            overallData.Peptide = item.Peptide;
+                        if (overallData.DistinctPeptideKey == null)
+                            overallData.DistinctPeptideKey = item.DistinctPeptideKey;
+                    }
                 }
-                else if (item.Peptide != null)
+                else if (item.SpectrumSourceGroup != null || item.SpectrumSource != null || item.Spectrum != null)
                 {
-                    if (overallData.Peptide == null)
-                        overallData.Peptide = item.Peptide;
-                    else
+                    if (overallData.SpectrumSourceGroup != null || overallData.SpectrumSource != null || overallData.Spectrum != null)
                         breadCrumbs.RemoveAt(x);
-                }
-                else if (item.DistinctPeptideKey != null)
-                {
-                    if (overallData.DistinctPeptideKey == null)
-                        overallData.DistinctPeptideKey = item.DistinctPeptideKey;
                     else
-                        breadCrumbs.RemoveAt(x);
-                }
-                else if (item.SpectrumSourceGroup != null)
-                {
-                    if (overallData.SpectrumSourceGroup == null)
-                        overallData.SpectrumSourceGroup = item.SpectrumSourceGroup;
-                    else
-                        breadCrumbs.RemoveAt(x);
-                }
-                else if (item.SpectrumSource != null)
-                {
-                    if (overallData.SpectrumSource == null)
-                        overallData.SpectrumSource = item.SpectrumSource;
-                    else
-                        breadCrumbs.RemoveAt(x);
-                }
-                else if (item.Spectrum != null)
-                {
-                    if (overallData.Spectrum == null)
-                        overallData.Spectrum = item.Spectrum;
-                    else
-                        breadCrumbs.RemoveAt(x);
+                    {
+                        if (overallData.SpectrumSourceGroup == null)
+                            overallData.SpectrumSourceGroup = item.SpectrumSourceGroup;
+                        if (overallData.SpectrumSource == null)
+                            overallData.SpectrumSource = item.SpectrumSource;
+                        if (overallData.Spectrum == null)
+                            overallData.Spectrum = item.Spectrum;
+                    }
                 }
                 else if (item.Analysis != null)
                 {
@@ -709,20 +699,20 @@ namespace IDPicker.Controls
                     else
                         breadCrumbs.RemoveAt(x);
                 }
-                else if (item.ModifiedSite == null && item.Modifications.Count == 0)
+                else if (item.ModifiedSite != null || item.Modifications != null)
                 {
-                    if (overallData.MaximumQValue != (decimal)-3.1415926535)
-                        overallData.MaximumQValue = (decimal)-3.1415926535;
-                    else
+                    if (overallData.Modifications != null || overallData.ModifiedSite != null)
                         breadCrumbs.RemoveAt(x);
-                }
-                else
-                {
-                    if (overallData.ModifiedSite == null)
-                        overallData.ModifiedSite = new List<char?>();
                     else
-                        breadCrumbs.RemoveAt(x);
+                    {
+                        if (overallData.ModifiedSite == null)
+                            overallData.ModifiedSite = item.ModifiedSite;
+                        if (overallData.Modifications == null)
+                            overallData.Modifications = item.Modifications;
+                    }
                 }
+                //else
+                //    breadCrumbs.RemoveAt(x);
             }
         }
 

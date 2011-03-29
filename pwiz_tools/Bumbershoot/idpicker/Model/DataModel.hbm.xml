@@ -83,7 +83,7 @@
 			<property name="Version" column="SoftwareVersion"/>
 		</component>
 		<property name="Type"/>
-		<property name="StartTime"/>
+		<property name="StartTime" type="UtcDateTime"/>
 		<set name="Parameters" inverse="true" batch-size="50">
 			<key column="Analysis"/>
 			<one-to-many class="AnalysisParameter"/>
@@ -183,7 +183,7 @@
 		<property name="MolecularWeightError"/>
 		<property name="Rank"/>
 		<property name="Charge"/>
-		<map name="Scores" table="PeptideSpectrumMatchScores">
+		<map name="Scores" table="PeptideSpectrumMatchScore">
 			<key column="Id">
 				<column name="PsmId"/>
 			</key>
@@ -223,8 +223,8 @@
 		<load-collection alias="scores" role="PeptideSpectrumMatch.Scores"/>
 		SELECT {scores.*}
 		FROM (	SELECT PsmId, Name AS ScoreNameId, Value
-				FROM PeptideSpectrumMatchScores
-				JOIN PeptideSpectrumMatchScoreNames ON ScoreNameId = Id
+				FROM PeptideSpectrumMatchScore
+				JOIN PeptideSpectrumMatchScoreName ON ScoreNameId = Id
 				WHERE PsmId = ?
 			 ) scores
 	</sql-query>

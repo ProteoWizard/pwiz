@@ -131,7 +131,7 @@ namespace IDPicker.DataModel
 
                 string outputSuffix = ".idpXML";
                 if (multiAnalyzedSources.Contains(ss.Id.GetValueOrDefault()))
-                    outputSuffix = "-" + a.Software.Name + "-" + a.StartTime.ToUniversalTime().ToString("yyyyMMddTHHmmss'Z'") + outputSuffix;
+                    outputSuffix = "-" + a.Software.Name + "-" + a.StartTime.GetValueOrDefault().ToUniversalTime().ToString("yyyyMMddTHHmmss'Z'") + outputSuffix;
                 outputPaths.Add(ss.Name + outputSuffix);
 
                 var writer = XmlWriter.Create(outputPaths.Last(), settings);
@@ -204,8 +204,8 @@ namespace IDPicker.DataModel
                         {
                             writer.WriteStartElement("processingEvent");
                             writer.WriteAttribute("type", "identification");
-                            writer.WriteAttribute("start", a.StartTime.ToString("MM/dd/yyyy@HH:mm:ss"));
-                            writer.WriteAttribute("end", a.StartTime.ToString("MM/dd/yyyy@HH:mm:ss")); // TODO: do we need end time?
+                            writer.WriteAttribute("start", a.StartTime.GetValueOrDefault().ToString("MM/dd/yyyy@HH:mm:ss"));
+                            writer.WriteAttribute("end", a.StartTime.GetValueOrDefault().ToString("MM/dd/yyyy@HH:mm:ss")); // TODO: do we need end time?
                             writer.WriteAttribute("params", a.Parameters.Count);
 
                             if (a.Software != null)

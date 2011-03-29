@@ -21,11 +21,12 @@
 //
 
 
+#include "../Lib/SQLite/sqlite3pp.h"
+#include "pwiz/utility/misc/Std.hpp"
 #include "Qonverter.hpp"
-#include "../freicore/pwiz_src/pwiz/utility/misc/Std.hpp"
-#include "boost/tuple/tuple.hpp"
+#include "StaticWeightQonverter.hpp"
+#include "SVMQonverter.hpp"
 
-#pragma unmanaged
 
 #define CHECK_SQLITE_RESULT(x) \
     { /* anonymous scope to prevent name conflicts */ \
@@ -39,68 +40,19 @@
                 error = errorBuf; \
                 sqlite3_free(errorBuf); \
             } \
-            throw runtime_error(error.c_str()); \
+            throw runtime_error(string("[SQLite (") + __FILE__ + ":" + lexical_cast<string>(__LINE__) + ")] " + error); \
         } \
     }
 
 
 //namespace {
 
+using namespace IDPICKER_NAMESPACE;
+namespace sqlite = sqlite3pp;
+
 const static string defaultDecoyPrefix = "rev_";
 
-namespace DecoyState
-{
-    typedef char Type;
-    const static Type Target = 'T';
-    const static Type Decoy = 'D';
-    const static Type Ambiguous = 'B';
-}
-
-struct sqlite3_wrapper
-{
-    sqlite3_wrapper(const string& filepath)
-    {
-        CHECK_SQLITE_RESULT(sqlite3_open(filepath.c_str(), &db));
-    }
-
-    ~sqlite3_wrapper()
-    {
-        CHECK_SQLITE_RESULT(sqlite3_close(db));
-    }
-
-    operator sqlite3* () {return db;}
-
-    private:
-    sqlite3* db;
-};
-
-typedef boost::tuple<string, string, string, string> AnalysisSourceChargeTuple;
-
-struct PsmRow
-{
-    sqlite_int64 id;
-    sqlite_int64 spectrum;
-    DecoyState::Type decoyState;
-    vector<double> scores;
-    double totalScore;
-};
-
-struct SpectrumTopRank
-{
-    sqlite_int64 spectrum;
-    double totalScore;
-    DecoyState::Type decoyState;
-    vector<size_t> psmIndexes;
-    double qValue;
-};
-
-struct SpectrumTopRankGreaterThan
-{
-    bool operator() (const SpectrumTopRank& lhs, const SpectrumTopRank& rhs) const
-    {
-        return lhs.totalScore > rhs.totalScore;
-    }
-};
+typedef pair<string, string> AnalysisSourcePair;
 
 int getStringVector(void* data, int columnCount, char** columnValues, char** columnNames)
 {
@@ -112,13 +64,13 @@ int getStringVector(void* data, int columnCount, char** columnValues, char** col
     return 0;
 }
 
-int getAnalysisSourceChargeTuples(void* data, int columnCount, char** columnValues, char** columnNames)
+int getAnalysisSourcePairs(void* data, int columnCount, char** columnValues, char** columnNames)
 {
-    if (columnCount != 5)
-        throw runtime_error("[Qonverter::getAnalysisSourceChargeTuples] result must have 5 columns");
+    if (columnCount != 3)
+        throw runtime_error("[Qonverter::getAnalysisSourcePairs] result must have 3 columns");
 
-    vector<AnalysisSourceChargeTuple>* tuples = static_cast<vector<AnalysisSourceChargeTuple>*>(data);
-    tuples->push_back(boost::make_tuple(columnValues[0], columnValues[1], columnValues[2], columnValues[3]));
+    vector<AnalysisSourcePair>* pairs = static_cast<vector<AnalysisSourcePair>*>(data);
+    pairs->push_back(make_pair(columnValues[0], columnValues[1]));
 
     return 0;
 }
@@ -145,122 +97,89 @@ int verifyDecoyPrefixOccurs(void* data, int columnCount, char** columnValues, ch
     return 0;
 }
 
-int addPsmRow(void* data, int columnCount, char** columnValues, char** columnNames)
+struct PsmRowReader
 {
-    if (columnCount != 4)
-        throw runtime_error("[StaticWeightQonverter::addPsmRow] result must have 4 columns");
+    vector<PeptideSpectrumMatch> psmRows;
 
-    PsmRow row;
-    row.id = lexical_cast<sqlite_int64>(columnValues[0]);
-    row.spectrum = lexical_cast<sqlite_int64>(columnValues[1]);
+    PsmRowReader(const vector<string>& scoreIdSet) : scoresSize(scoreIdSet.size()) {}
 
-    switch (columnValues[2][0])
+    int operator() (int columnCount, char** columnValues, char** columnNames)
     {
-        case '0': row.decoyState = DecoyState::Target; break;
-        case '1': row.decoyState = DecoyState::Decoy; break;
-        case '2': row.decoyState = DecoyState::Ambiguous; break;
+        if (columnCount != 8 + scoresSize)
+            throw runtime_error("[Qonverter::PsmRowReader()] result has incorrect column count");
+
+        psmRows.push_back(PeptideSpectrumMatch());
+        PeptideSpectrumMatch& psm = psmRows.back();
+
+        psm.id = lexical_cast<sqlite_int64>(columnValues[0]);
+        psm.spectrum = lexical_cast<sqlite_int64>(columnValues[1]);
+        psm.originalRank = lexical_cast<sqlite_int64>(columnValues[2]);
+
+        switch (columnValues[3][0])
+        {
+            case '0': psm.decoyState = DecoyState::Target; break;
+            case '1': psm.decoyState = DecoyState::Decoy; break;
+            case '2': psm.decoyState = DecoyState::Ambiguous; break;
+        }
+
+        psm.chargeState = lexical_cast<int>(columnValues[4]);
+        psm.bestSpecificity = lexical_cast<int>(columnValues[5]);
+        psm.missedCleavages = lexical_cast<int>(columnValues[6]);
+        psm.massError = lexical_cast<double>(columnValues[7]);
+
+        psm.scores.resize(scoresSize);
+        for (size_t i=0; i < scoresSize; ++i)
+            psm.scores[i] = lexical_cast<double>(columnValues[8+i]);
+
+        psm.totalScore = 0;
+        psm.qValue = 2;
+
+        return 0;
     }
 
-    vector<string> scores;
-    bal::split(scores, columnValues[3], bal::is_any_of(","));
-    row.scores.resize(scores.size());
-    for (size_t i=0; i < scores.size(); ++i)
-        row.scores[i] = lexical_cast<double>(scores[i]);
+    private:
+    size_t scoresSize;
+};
 
-    static_cast<vector<PsmRow>*>(data)->push_back(row);
-    return 0;
+int addPsmRows(void* data, int columnCount, char** columnValues, char** columnNames)
+{
+    return (*static_cast<PsmRowReader*>(data))(columnCount, columnValues, columnNames);
 }
 
-void qonvertPsmSubset(sqlite3* db, vector<PsmRow>& psmRows, const vector<double>& scoreWeights, bool logQonversionDetails)
+void validateSettings(const Qonverter::Settings& settings)
 {
-    if (psmRows.empty())
-        return;
+    // sanity checks
+    if (settings.decoyPrefix.empty()) throw runtime_error("[Qonverter::validateSettings] no decoy prefix");
+    if (settings.scoreInfoByName.empty()) throw runtime_error("[Qonverter::validateSettings] no score info");
 
-    // calculate total scores for each PSM and keep track of the top ranked PSM(s) for each spectrum
-    vector<SpectrumTopRank> spectrumTopRanks;
-    for (size_t i=0; i < psmRows.size(); ++i)
+    // check that qonverter method agrees with non-score handling
+    if (settings.qonverterMethod != Qonverter::QonverterMethod::SVM)
     {
-        PsmRow& row = psmRows[i];
-
-        row.totalScore = 0;
-        for (size_t j=0; j < scoreWeights.size(); ++j)
-            row.totalScore += scoreWeights[j] * row.scores[j];
-
-        // add a new SpectrumTopRank if this PSM comes from a different spectrum
-        if (spectrumTopRanks.empty() || row.spectrum > spectrumTopRanks.back().spectrum)
-        {
-            spectrumTopRanks.push_back(SpectrumTopRank());
-            SpectrumTopRank& topRank = spectrumTopRanks.back();
-            topRank.spectrum = row.spectrum;
-            topRank.decoyState = row.decoyState;
-            topRank.totalScore = row.totalScore;
-            topRank.psmIndexes.assign(1, i);
-        }
-        else
-        {
-            SpectrumTopRank& topRank = spectrumTopRanks.back();
-            if (row.totalScore > topRank.totalScore)
-            {
-                // replace the top rank with this PSM
-                topRank.totalScore = row.totalScore;
-                topRank.decoyState = row.decoyState;
-                topRank.psmIndexes.assign(1, i);
-            }
-            else if (row.totalScore == topRank.totalScore)
-            {
-                // add this PSM to the top rank
-                if (topRank.decoyState != row.decoyState)
-                    topRank.decoyState = DecoyState::Ambiguous;
-                topRank.psmIndexes.push_back(i);
-            }
-        }
+        if (settings.chargeStateHandling == Qonverter::ChargeStateHandling::Feature)
+            throw runtime_error("[Qonverter::validateSettings] charge state can only be used as a feature with the SVM qonverter");
+        if (settings.massErrorHandling == Qonverter::MassErrorHandling::Feature)
+            throw runtime_error("[Qonverter::validateSettings] mass error can only be used as a feature with the SVM qonverter");
+        if (settings.missedCleavagesHandling == Qonverter::MissedCleavagesHandling::Feature)
+            throw runtime_error("[Qonverter::validateSettings] charge state can only be used as a feature with the SVM qonverter");
+        if (settings.terminalSpecificityHandling == Qonverter::TerminalSpecificityHandling::Feature)
+            throw runtime_error("[Qonverter::validateSettings] terminal specificity can only be used as a feature with the SVM qonverter");
     }
+}
 
-    // sort the top ranks in descending order by total score
-    sort(spectrumTopRanks.begin(), spectrumTopRanks.end(), SpectrumTopRankGreaterThan());
-
-    int numTargets = 0;
-    int numDecoys = 0;
-    int numAmbiguous = 0;
-
-    // calculate Q value for each PSM
-    BOOST_FOREACH(SpectrumTopRank& topRank, spectrumTopRanks)
-    {
-        switch (topRank.decoyState)
-        {
-            case DecoyState::Target: ++numTargets; break;
-            case DecoyState::Decoy: ++numDecoys; break;
-            case DecoyState::Ambiguous: ++numAmbiguous; break;
-        }
-
-        if( numTargets + numDecoys > 0 )
-		{
-			topRank.qValue = double(numDecoys * 2 /*targetToDecoyRatio*/) /
-                             double(numTargets + numDecoys);
-        }
-        else
-            topRank.qValue = 0;
-    }
-
+void updatePsmRows(sqlite3* db, bool logQonversionDetails, const vector<PeptideSpectrumMatch>& psmRows)
+{
     CHECK_SQLITE_RESULT(sqlite3_exec(db, "BEGIN TRANSACTION", NULL, NULL, &errorBuf));
 
     if (logQonversionDetails)
     {
-        CHECK_SQLITE_RESULT(sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS TotalScores (PsmId, Spectrum, TotalScore, DecoyState)", NULL, NULL, &errorBuf));
-        BOOST_FOREACH(const PsmRow& row, psmRows)
-            CHECK_SQLITE_RESULT(sqlite3_exec(db, ("INSERT INTO TotalScores VALUES (" + \
+        CHECK_SQLITE_RESULT(sqlite3_exec(db, "DROP TABLE IF EXISTS QonversionDetails; CREATE TABLE QonversionDetails (PsmId, Spectrum, TotalScore, QValue, DecoyState)", NULL, NULL, &errorBuf));
+        BOOST_FOREACH(const PeptideSpectrumMatch& row, psmRows)
+            CHECK_SQLITE_RESULT(sqlite3_exec(db, ("INSERT INTO QonversionDetails VALUES (" + \
                                                  lexical_cast<string>(row.id) + "," + \
                                                  lexical_cast<string>(row.spectrum) + "," + \
-                                                 lexical_cast<string>(row.totalScore) + ",'" + \
-                                                 lexical_cast<string>(row.decoyState) + "')").c_str(), NULL, NULL, &errorBuf));
-
-        CHECK_SQLITE_RESULT(sqlite3_exec(db, "CREATE TABLE IF NOT EXISTS QonversionDetails (Spectrum, TotalScore, DecoyState, QValue)", NULL, NULL, &errorBuf));
-        BOOST_FOREACH(SpectrumTopRank& topRank, spectrumTopRanks)
-            CHECK_SQLITE_RESULT(sqlite3_exec(db, ("INSERT INTO QonversionDetails VALUES (" + \
-                                                 lexical_cast<string>(topRank.spectrum) + "," + \
-                                                 lexical_cast<string>(topRank.totalScore) + ",'" + \
-                                                 lexical_cast<string>(topRank.decoyState) + "'," + \
-                                                 lexical_cast<string>(topRank.qValue) + ")").c_str(), NULL, NULL, &errorBuf));
+                                                 lexical_cast<string>(row.totalScore) + "," + \
+                                                 lexical_cast<string>(row.qValue) + ",'" + \
+                                                 DecoyState::Symbol[row.decoyState] + "')").c_str(), NULL, NULL, &errorBuf));
     }
 
     // update QValue column for each top-ranked PSM (non-top-ranked PSMs keep the default QValue)
@@ -268,15 +187,12 @@ void qonvertPsmSubset(sqlite3* db, vector<PsmRow>& psmRows, const vector<double>
 
     sqlite3_stmt* updateStmt;
     CHECK_SQLITE_RESULT(sqlite3_prepare_v2(db, sql.c_str(), -1, &updateStmt, NULL));
-    BOOST_FOREACH(SpectrumTopRank& topRank, spectrumTopRanks)
+    BOOST_FOREACH(const PeptideSpectrumMatch& row, psmRows)
     {
-        for (size_t i=0; i < topRank.psmIndexes.size(); ++i)
-        {
-            CHECK_SQLITE_RESULT(sqlite3_bind_double(updateStmt, 1, topRank.qValue));
-            CHECK_SQLITE_RESULT(sqlite3_bind_int64(updateStmt, 2, psmRows[topRank.psmIndexes[i]].id));
-            CHECK_SQLITE_RESULT(sqlite3_step(updateStmt));
-            CHECK_SQLITE_RESULT(sqlite3_reset(updateStmt));
-        }
+        CHECK_SQLITE_RESULT(sqlite3_bind_double(updateStmt, 1, row.qValue));
+        CHECK_SQLITE_RESULT(sqlite3_bind_int64(updateStmt, 2, row.id));
+        CHECK_SQLITE_RESULT(sqlite3_step(updateStmt));
+        CHECK_SQLITE_RESULT(sqlite3_reset(updateStmt));
     }
     CHECK_SQLITE_RESULT(sqlite3_finalize(updateStmt));
 
@@ -294,50 +210,52 @@ Qonverter::Qonverter()
     logQonversionDetails = false;
 }
 
-
-void Qonverter::Qonvert(const string& idpDbFilepath, const ProgressMonitor& progressMonitor)
+void Qonverter::qonvert(const string& idpDbFilepath, const ProgressMonitor& progressMonitor)
 {
-    sqlite3_wrapper db(idpDbFilepath);
+    sqlite::database db(idpDbFilepath);
 
-    sqlite3_exec(db, "PRAGMA journal_mode=OFF; PRAGMA synchronous=OFF", NULL, NULL, NULL);
+    db.execute("PRAGMA journal_mode=OFF; PRAGMA synchronous=OFF");
 
-    Qonvert(db, progressMonitor);
+    qonvert(db.connected(), progressMonitor);
 }
 
-void Qonverter::Qonvert(sqlite3* db, const ProgressMonitor& progressMonitor)
+void Qonverter::qonvert(sqlite3* db, const ProgressMonitor& progressMonitor)
 {
     string sql;
 
-    // get the set of distinct analysis/source/charge/specificity tuples
-    sql = "CREATE TEMP TABLE MostSpecificInstance (Peptide INTEGER PRIMARY KEY, Specificity INT);"
-          "INSERT INTO MostSpecificInstance SELECT Peptide, MAX(NTerminusIsSpecific+CTerminusIsSpecific) FROM PeptideInstance GROUP BY Peptide;"
-          "SELECT psm.Analysis, s.Source, psm.Charge, mostSpecificInstance.Specificity, COUNT(DISTINCT psm.Id) "
+    // get the set of distinct analysis/source pairs
+    sql = //"CREATE TEMP TABLE MostSpecificInstance (Peptide INTEGER PRIMARY KEY, Specificity INT);"
+          //"INSERT INTO MostSpecificInstance SELECT Peptide, MAX(NTerminusIsSpecific+CTerminusIsSpecific) FROM PeptideInstance GROUP BY Peptide;"
+          //"SELECT psm.Analysis, s.Source, psm.Charge, mostSpecificInstance.Specificity, COUNT(DISTINCT psm.Id) "
+          "SELECT psm.Analysis, s.Source, COUNT(DISTINCT psm.Id) "
           "FROM PeptideSpectrumMatch psm "
-          "JOIN MostSpecificInstance mostSpecificInstance ON psm.Peptide=mostSpecificInstance.Peptide "
+          //"JOIN MostSpecificInstance mostSpecificInstance ON psm.Peptide=mostSpecificInstance.Peptide "
           "JOIN Spectrum s ON psm.Spectrum=s.Id "
           "WHERE psm.QValue > 1 AND Rank = 1 "
           //(rerankMatches ? string() : string("AND Rank = 1 ")) +
-          "GROUP BY psm.Analysis, s.Source, psm.Charge, mostSpecificInstance.Specificity";
+          "GROUP BY psm.Analysis, s.Source";
 
-    vector<AnalysisSourceChargeTuple> analysisSourceChargeTuples;
-    CHECK_SQLITE_RESULT(sqlite3_exec(db, sql.c_str(), getAnalysisSourceChargeTuples, &analysisSourceChargeTuples, &errorBuf));
+    vector<AnalysisSourcePair> analysisSourcePairs;
+    CHECK_SQLITE_RESULT(sqlite3_exec(db, sql.c_str(), getAnalysisSourcePairs, &analysisSourcePairs, &errorBuf));
 
     // send initial progress update to indicate how many qonversion steps there are
     ProgressMonitor::UpdateMessage updateMessage;
-    updateMessage.QonvertedAnalyses = 0;
-    updateMessage.TotalAnalyses = analysisSourceChargeTuples.size();
-    updateMessage.Cancel = false;
+    updateMessage.qonvertedAnalyses = 0;
+    updateMessage.totalAnalyses = analysisSourcePairs.size();
+    updateMessage.cancel = false;
     progressMonitor(updateMessage);
-    if (updateMessage.Cancel)
+    if (updateMessage.cancel)
         return;
 
-    // qonvert each analysis/source/charge tuple independently
-    BOOST_FOREACH(const AnalysisSourceChargeTuple& analysisSourceChargeTuple, analysisSourceChargeTuples)
+    // validate global settings
+    if (settingsByAnalysis.count(0) > 0)
+        validateSettings(settingsByAnalysis[0]);
+
+    // validate settings for each analysis/source pair
+    BOOST_FOREACH(const AnalysisSourcePair& analysisSourcePair, analysisSourcePairs)
     {
-        const string& analysisId = analysisSourceChargeTuple.get<0>();
-        const string& spectrumSourceId = analysisSourceChargeTuple.get<1>();
-        const string& psmChargeState = analysisSourceChargeTuple.get<2>();
-        const string& specificity = analysisSourceChargeTuple.get<3>();
+        const string& analysisId = analysisSourcePair.first;
+        const string& spectrumSourceId = analysisSourcePair.second;
 
         // if no settings are provided for this analysis, try to use the global settings (id == 0)
         int analysis = lexical_cast<int>(analysisId);
@@ -347,15 +265,24 @@ void Qonverter::Qonvert(sqlite3* db, const ProgressMonitor& progressMonitor)
                 throw runtime_error("[Qonverter::Qonvert] no global or analysis-specific qonverter settings for analysis " + analysisId);
             settingsByAnalysis[analysis] = settingsByAnalysis[0];
         }
-            
-        const Settings& qonverterSettings = settingsByAnalysis[analysis];
+        else
+            validateSettings(settingsByAnalysis[analysis]);
+    }
+
+    // qonvert each analysis/source pair independently
+    BOOST_FOREACH(const AnalysisSourcePair& analysisSourcePair, analysisSourcePairs)
+    {
+        const string& analysisId = analysisSourcePair.first;
+        const string& spectrumSourceId = analysisSourcePair.second;
+        const Settings& qonverterSettings = settingsByAnalysis[lexical_cast<int>(analysisId)];
         const string& decoyPrefix = qonverterSettings.decoyPrefix;
         bool rerankMatches = qonverterSettings.rerankMatches;
         const map<string, Settings::ScoreInfo>& scoreInfoByName = qonverterSettings.scoreInfoByName;
 
-        // sanity checks
-        if (decoyPrefix.empty()) throw runtime_error("[Qonverter::Qonvert] no decoy prefix provided for analysis " + analysisId);
-        if (scoreInfoByName.empty()) throw runtime_error("[Qonverter::Qonvert] no score info provided for analysis " + analysisId);
+        vector<string> strings;
+        sql = "SELECT Name FROM SpectrumSource WHERE Id=" + spectrumSourceId;
+        CHECK_SQLITE_RESULT(sqlite3_exec(db, sql.c_str(), getStringVector, &strings, &errorBuf));
+        const string& sourceName = strings[0];
 
         // verify that the decoyPrefix occurs in the PSM subset
         sql = "SELECT COUNT(*) "
@@ -379,9 +306,9 @@ void Qonverter::Qonvert(sqlite3* db, const ProgressMonitor& progressMonitor)
             expectedScoreNames.insert(bal::to_lower_copy(itr.first));
 
         // get the set of actual score ids and names
-        sql = "SELECT GROUP_CONCAT(scoreNames.Name || ' ' || scoreNames.Id) "
-              "FROM PeptideSpectrumMatchScores psmScore "
-              "JOIN PeptideSpectrumMatchScoreNames scoreNames ON ScoreNameId=scoreNames.Id "
+        sql = "SELECT GROUP_CONCAT(scoreName.Name || ' ' || scoreName.Id) "
+              "FROM PeptideSpectrumMatchScore psmScore "
+              "JOIN PeptideSpectrumMatchScoreName scoreName ON ScoreNameId=scoreName.Id "
               "JOIN (SELECT psm.Id "
               "      FROM PeptideSpectrumMatch psm "
               "      JOIN Spectrum s ON Spectrum=s.Id "
@@ -406,9 +333,9 @@ void Qonverter::Qonvert(sqlite3* db, const ProgressMonitor& progressMonitor)
 
         if (actualScoreNames.empty())
         {
-            ++updateMessage.QonvertedAnalyses;
+            ++updateMessage.qonvertedAnalyses;
             progressMonitor(updateMessage);
-            if (updateMessage.Cancel)
+            if (updateMessage.cancel)
                 return;
             
             throw runtime_error("[Qonverter::Qonvert] no scores in the PSMs of analysis " + analysisId);
@@ -423,7 +350,13 @@ void Qonverter::Qonvert(sqlite3* db, const ProgressMonitor& progressMonitor)
                          std::back_inserter(scoreNameIntersection));
 
         if (scoreNameIntersection.empty())
-            throw runtime_error("[Qonverter::Qonvert] expected scores do not exist in the PSMs of analysis " + analysisId);
+        {
+            string expectedScores = "(" + bal::join(expectedScoreNames, ", ") + ")";
+            string actualScores = "(" + bal::join(actualScoreNames, ", ") + ")";
+            throw runtime_error("[Qonverter::Qonvert] expected scores " + expectedScores +
+                                " do not match the actual scores " + actualScores +
+                                " of analysis " + analysisId);
+        }
 
         // get the set of weights to use for calculating each PSM's total score;
         // if an actual score is not mapped in scoreWeights, it gets the default value of 0
@@ -432,15 +365,27 @@ void Qonverter::Qonvert(sqlite3* db, const ProgressMonitor& progressMonitor)
         BOOST_FOREACH(const string& name, scoreNameIntersection)
         {
             const Settings::ScoreInfo& scoreInfo = scoreInfoByName.find(name)->second;
-            scoreWeightsVector.push_back(scoreInfo.order == Settings::Order_Ascending ? scoreInfo.weight : -scoreInfo.weight);
+            scoreWeightsVector.push_back(scoreInfo.order == Settings::Order::Ascending ? scoreInfo.weight : -scoreInfo.weight);
             scoreIdSet.push_back(actualScoreIdByName[name]);
         }
 
         // e.g. (1,2)
-        string scoreIdSetString = "(" + bal::join(scoreIdSet, ",") + ")";
+        //string scoreIdSetString = "(" + bal::join(scoreIdSet, ",") + ")";
+
+        // e.g. "score1.Value, score2.Value, score3.Value"
+        string scoreSelects = "score" + bal::join(scoreIdSet, ".Value, score") + ".Value ";
+
+        string scoreJoins;
+        BOOST_FOREACH(const string& id, scoreIdSet)
+        {
+            // e.g. "JOIN PeptideSpectrumMatchScore scoreX ON psm.Id=scoreX.PsmId AND X=scoreX.ScoreNameId "
+            scoreJoins += "JOIN PeptideSpectrumMatchScore score" + id +
+                          " ON psm.Id=score" + id + ".PsmId"
+                          " AND " + id + "=score" + id + ".ScoreNameId ";
+        }
 
         // retrieve triplets of psm id, decoy state, and score list (with the same order retrieved above)
-        sql = "SELECT psm.Id, psm.Spectrum, "
+        /*sql = "SELECT psm.Id, psm.Spectrum, "
               "      CASE WHEN SUM(DISTINCT CASE WHEN pro.Accession LIKE '" + decoyPrefix + "%' THEN 1 ELSE 0 END) + SUM(DISTINCT CASE WHEN pro.Accession NOT LIKE '" + decoyPrefix + "%' THEN 1 ELSE 0 END) = 2 THEN 2 " +
               "           ELSE SUM(DISTINCT CASE WHEN pro.Accession LIKE '" + decoyPrefix + "%' THEN 1 ELSE 0 END) " +
               "           END AS DecoyState, "
@@ -448,7 +393,7 @@ void Qonverter::Qonvert(sqlite3* db, const ProgressMonitor& progressMonitor)
               "FROM Spectrum s "
               "JOIN PeptideInstance pi ON psm.Peptide=pi.Peptide "
               "JOIN PeptideSpectrumMatch psm ON s.Id=psm.Spectrum "
-              "JOIN PeptideSpectrumMatchScores psmScore ON psm.Id=psmScore.PsmId "
+              "JOIN PeptideSpectrumMatchScore psmScore ON psm.Id=psmScore.PsmId "
               "JOIN Protein pro ON pi.Protein=pro.Id "
               "WHERE s.Source=" + spectrumSourceId +
               "  AND psm.Analysis=" + analysisId +
@@ -457,24 +402,167 @@ void Qonverter::Qonvert(sqlite3* db, const ProgressMonitor& progressMonitor)
               (rerankMatches ? "" : " AND Rank = 1 ") +
               "  AND psmScore.ScoreNameId IN " + scoreIdSetString + " " +
               "GROUP BY psm.Id "
-              "ORDER BY psm.Spectrum";
+              "ORDER BY psm.Spectrum";*/
 
-        // for all tuples in decreasing order of charge: 
-        // if the psm subset is too small, push it into overflow
-        // for all qonverters, normalize scores 
+        sql = "SELECT psm.Id, psm.Spectrum, psm.Rank, "
+              "       CASE WHEN SUM(DISTINCT CASE WHEN pro.Accession LIKE '" + decoyPrefix + "%' THEN 1 ELSE 0 END) + SUM(DISTINCT CASE WHEN pro.Accession NOT LIKE '" + decoyPrefix + "%' THEN 1 ELSE 0 END) = 2 THEN 2 " +
+              "            ELSE SUM(DISTINCT CASE WHEN pro.Accession LIKE '" + decoyPrefix + "%' THEN 1 ELSE 0 END) " +
+              "            END AS DecoyState, "
+              "       psm.Charge, "
+              "       MAX(NTerminusIsSpecific+CTerminusIsSpecific), "
+              "       MissedCleavages, "
+              "       ABS(MonoisotopicMassError), " +
+              scoreSelects +
+              "FROM Spectrum s "
+              "JOIN PeptideInstance pi ON psm.Peptide=pi.Peptide "
+              "JOIN PeptideSpectrumMatch psm ON s.Id=psm.Spectrum " +
+              scoreJoins +
+              "JOIN Protein pro ON pi.Protein=pro.Id "
+              "WHERE s.Source=" + spectrumSourceId +
+              "  AND psm.Analysis=" + analysisId +
+              //(rerankMatches ? "" : " AND Rank = 1 ") +
+              " GROUP BY psm.Id";
 
-        // if static weights, each source/analysis/charge/specificity tuple is qonverted separately
+        PsmRowReader psmRowReader(scoreIdSet);
+        CHECK_SQLITE_RESULT(sqlite3_exec(db, sql.c_str(), addPsmRows, &psmRowReader, &errorBuf));
 
-        vector<PsmRow> psmRows;
-        CHECK_SQLITE_RESULT(sqlite3_exec(db, sql.c_str(), addPsmRow, &psmRows, &errorBuf));
+        switch (qonverterSettings.qonverterMethod.index())
+        {
+            default:
+            case Qonverter::QonverterMethod::StaticWeighted:
+                StaticWeightQonverter::Qonvert(psmRowReader.psmRows, qonverterSettings, scoreWeightsVector);
+                break;
+            case Qonverter::QonverterMethod::SVM:
+                SVMQonverter::Qonvert(sourceName, psmRowReader.psmRows, qonverterSettings);
+                break;
+        }
 
-        qonvertPsmSubset(db, psmRows, scoreWeightsVector, logQonversionDetails);
+        // update the database with the new Q values
+        updatePsmRows(db, logQonversionDetails, psmRowReader.psmRows);
 
-        ++updateMessage.QonvertedAnalyses;
+        ++updateMessage.qonvertedAnalyses;
         progressMonitor(updateMessage);
-        if (updateMessage.Cancel)
+        if (updateMessage.cancel)
             return;
     }
+}
+
+
+void Qonverter::reset(const string& idpDbFilepath)
+{
+    sqlite::database db(idpDbFilepath);
+
+    db.execute("PRAGMA journal_mode=OFF; PRAGMA synchronous=OFF");
+
+    reset(db.connected());
+}
+
+void Qonverter::reset(sqlite3* idpDb)
+{
+    // drop FilteringCriteria
+    CHECK_SQLITE_RESULT(sqlite3_exec(idpDb, "DROP TABLE IF EXISTS FilteringCriteria", NULL, NULL, &errorBuf));
+
+    // drop old QonversionDetails
+    CHECK_SQLITE_RESULT(sqlite3_exec(idpDb, "DROP TABLE IF EXISTS QonversionDetails", NULL, NULL, &errorBuf));
+
+    // drop Filtered* tables
+    string dropFilteredTables = "DROP TABLE IF EXISTS FilteredProtein;"
+                                "DROP TABLE IF EXISTS FilteredPeptideInstance;"
+                                "DROP TABLE IF EXISTS FilteredPeptide;"
+                                "DROP TABLE IF EXISTS FilteredPeptideSpectrumMatch";
+    CHECK_SQLITE_RESULT(sqlite3_exec(idpDb, dropFilteredTables.c_str(), NULL, NULL, &errorBuf));
+
+    // restore Unfiltered* tables as the main tables
+    try
+    {
+        // if unfiltered tables have not been created, this will throw and skip the rest of the block
+        CHECK_SQLITE_RESULT(sqlite3_exec(idpDb, "SELECT Id FROM UnfilteredProtein LIMIT 1", NULL, NULL, &errorBuf));
+
+        // drop filtered tables and rename unfiltered tables
+        string renameUnfilteredTables = "DROP TABLE IF EXISTS Protein;"
+                                        "DROP TABLE IF EXISTS PeptideInstance;"
+                                        "DROP TABLE IF EXISTS Peptide;"
+                                        "DROP TABLE IF EXISTS PeptideSpectrumMatch;"
+                                        "ALTER TABLE UnfilteredProtein RENAME TO Protein;"
+                                        "ALTER TABLE UnfilteredPeptideInstance RENAME TO PeptideInstance;"
+                                        "ALTER TABLE UnfilteredPeptide RENAME TO Peptide;"
+                                        "ALTER TABLE UnfilteredPeptideSpectrumMatch RENAME TO PeptideSpectrumMatch";
+        CHECK_SQLITE_RESULT(sqlite3_exec(idpDb, renameUnfilteredTables.c_str(), NULL, NULL, &errorBuf));
+    }
+    catch (runtime_error&)
+    {
+    }
+
+    // reset Q values
+    CHECK_SQLITE_RESULT(sqlite3_exec(idpDb, "UPDATE PeptideSpectrumMatch SET QValue = 2", NULL, NULL, &errorBuf));
+}
+
+
+vector<PSMIteratorRange> partition(const Qonverter::Settings& settings, const PSMIteratorRange& psmRows)
+{
+    if (settings.chargeStateHandling != Qonverter::ChargeStateHandling::Partition &&
+        settings.terminalSpecificityHandling != Qonverter::TerminalSpecificityHandling::Partition)
+        return vector<PSMIteratorRange>(1, PSMIteratorRange(psmRows.begin(), psmRows.end()));
+
+    vector<PSMIteratorRange> psmPartitionedRows;
+
+    if (settings.chargeStateHandling == Qonverter::ChargeStateHandling::Partition &&
+        settings.terminalSpecificityHandling == Qonverter::TerminalSpecificityHandling::Partition)
+    {
+        sort(psmRows.begin(), psmRows.end(), ChargeAndSpecificityLessThan());
+
+        // split the matches into a range for each charge state and terminal specificity
+        PSMIterator begin = psmRows.begin(), cur = begin;
+        while (cur != psmRows.end())
+        {
+            int lastCharge = cur->chargeState;
+            int lastSpecificity = cur->bestSpecificity;
+            ++cur;
+            if (cur == psmRows.end() ||
+                cur->chargeState != lastCharge ||
+                cur->bestSpecificity != lastSpecificity)
+            {
+                psmPartitionedRows.push_back(PSMIteratorRange(begin, cur));
+                begin = cur;
+            }
+        }
+    }
+    else if (settings.chargeStateHandling == Qonverter::ChargeStateHandling::Partition)
+    {
+        sort(psmRows.begin(), psmRows.end(), ChargeStateLessThan());
+
+        // split the matches into a range for each charge state
+        PSMIterator begin = psmRows.begin(), cur = begin;
+        while (cur != psmRows.end())
+        {
+            int lastCharge = cur->chargeState;
+            ++cur;
+            if (cur == psmRows.end() || cur->chargeState != lastCharge)
+            {
+                psmPartitionedRows.push_back(PSMIteratorRange(begin, cur));
+                begin = cur;
+            }
+        }
+    }
+    else
+    {
+        sort(psmRows.begin(), psmRows.end(), SpecificityBetterThan());
+
+        // split the matches into a range for each terminal specificity
+        PSMIterator begin = psmRows.begin(), cur = begin;
+        while (cur != psmRows.end())
+        {
+            int lastSpecificity = cur->bestSpecificity;
+            ++cur;
+            if (cur == psmRows.end() || cur->bestSpecificity != lastSpecificity)
+            {
+                psmPartitionedRows.push_back(PSMIteratorRange(begin, cur));
+                begin = cur;
+            }
+        }
+    }
+
+    return psmPartitionedRows;
 }
 
 

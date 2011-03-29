@@ -27,6 +27,7 @@ using System.Text;
 using System.ComponentModel;
 using Stopwatch = System.Diagnostics.Stopwatch;
 using IDPicker.DataModel;
+using pwiz.CLI.util;
 
 namespace IDPicker
 {
@@ -43,33 +44,43 @@ namespace IDPicker
 
         private Stopwatch stopwatch = new Stopwatch();
 
-        public void UpdateProgress (object sender, Parser.ParsingProgressEventArgs e)
+        public void UpdateProgress (object sender, IterationEventArgs e)
         {
-            if (e.ParsingException != null)
-                throw new InvalidOperationException("Parsing error: make sure decoy prefixes match", e.ParsingException);
-
             if (ProgressUpdate == null)
                 return;
 
-            if (e.ParsedBytes == 0)
+            int iteration = e.IterationIndex + 1;
+
+            if (iteration == 1)
                 stopwatch = System.Diagnostics.Stopwatch.StartNew();
 
             var progressUpdate = new ProgressUpdateEventArgs();
 
-            progressUpdate.Total = 1000;
-            progressUpdate.Current = e.TotalBytes == 0 ? 0 : Math.Min(progressUpdate.Total, (int) Math.Round((double) e.ParsedBytes / e.TotalBytes * 1000.0));
-            double progressRate = stopwatch.Elapsed.TotalSeconds > 0 ? e.ParsedBytes / stopwatch.Elapsed.TotalSeconds : 0;
-            long bytesRemaining = e.TotalBytes - e.ParsedBytes;
-            TimeSpan timeRemaining = progressRate == 0 ? TimeSpan.Zero
-                                                       : TimeSpan.FromSeconds(bytesRemaining / progressRate);
-            progressUpdate.Message = String.Format("{0} ({1}/{2}) - {3} per second, {4}h{5}m{6}s remaining",
-                                                   e.ParsingStage,
-                                                   Util.GetFileSizeByteString(e.ParsedBytes),
-                                                   Util.GetFileSizeByteString(e.TotalBytes),
-                                                   Util.GetFileSizeByteString((long) progressRate),
-                                                   timeRemaining.Hours,
-                                                   timeRemaining.Minutes,
-                                                   timeRemaining.Seconds);
+            if (e.IterationCount > 0)
+            {
+                progressUpdate.Total = 1000;
+                progressUpdate.Current = e.IterationCount == 0 ? 0 : Math.Min(progressUpdate.Total, (int) Math.Round((double) iteration / e.IterationCount * 1000.0));
+                double progressRate = stopwatch.Elapsed.TotalSeconds > 0 ? iteration / stopwatch.Elapsed.TotalSeconds : 0;
+                long iterationsRemaining = e.IterationCount - iteration;
+                TimeSpan timeRemaining = progressRate == 0 ? TimeSpan.Zero
+                                                           : TimeSpan.FromSeconds(iterationsRemaining / progressRate);
+                progressUpdate.Message = String.Format("{0} ({1}/{2}) - {3} per second, {4}h{5}m{6}s remaining",
+                                                       e.Message,
+                                                       iteration,
+                                                       e.IterationCount,
+                                                       (long) progressRate,
+                                                       timeRemaining.Hours,
+                                                       timeRemaining.Minutes,
+                                                       timeRemaining.Seconds);
+            }
+            else
+            {
+                progressUpdate.Total = 0;
+                progressUpdate.Current = iteration;
+                progressUpdate.Message = String.Format("{0} ({1})",
+                                                       e.Message,
+                                                       iteration);
+            }
 
             ProgressUpdate(this, progressUpdate);
             e.Cancel = progressUpdate.Cancel;
@@ -115,6 +126,10 @@ namespace IDPicker
 
             progressUpdate.Total = e.TotalAnalyses;
             progressUpdate.Current = e.QonvertedAnalyses;
+
+            progressUpdate.Message = String.Format("Calculating Q values... ({0}/{1})",
+                                                   e.QonvertedAnalyses,
+                                                   e.TotalAnalyses);
 
             ProgressUpdate(this, progressUpdate);
             e.Cancel = progressUpdate.Cancel;

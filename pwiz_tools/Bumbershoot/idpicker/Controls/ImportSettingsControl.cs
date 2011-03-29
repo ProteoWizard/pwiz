@@ -34,24 +34,30 @@ using IDPicker.DataModel;
 namespace IDPicker.Controls
 {
     /// <summary>
+    /// Represents the method called when a user wants to view or manipulate their QonverterSettings presets.
+    /// </summary>
+    public delegate void QonverterSettingsManagerNeeded();
+
+    /// <summary>
     /// Allows a user to assign QonverterSettings presets to Analysis instances.
     /// </summary>
-    public partial class QonverterSettingsByAnalysisControl : UserControl
+    public partial class ImportSettingsControl : UserControl
     {
-        IDictionary<Analysis, QonverterSettings> qonverterSettingsByAnalysis;
+        IEnumerable<Parser.Analysis> distinctAnalyses;
+
         QonverterSettingsManagerNeeded qonverterSettingsManagerNeeded;
 
         IDictionary<string, QonverterSettings> qonverterSettingsByName;
 
-        public QonverterSettingsByAnalysisControl (IDictionary<Analysis, QonverterSettings> qonverterSettingsByAnalysis,
-                                                   QonverterSettingsManagerNeeded qonverterSettingsManagerNeeded)
+        public ImportSettingsControl (IEnumerable<Parser.Analysis> distinctAnalyses,
+                                      QonverterSettingsManagerNeeded qonverterSettingsManagerNeeded)
         {
             InitializeComponent();
 
             if (qonverterSettingsManagerNeeded == null)
                 throw new NullReferenceException();
 
-            this.qonverterSettingsByAnalysis = qonverterSettingsByAnalysis;
+            this.distinctAnalyses = distinctAnalyses;
             this.qonverterSettingsManagerNeeded = qonverterSettingsManagerNeeded;
 
             qonverterSettingsByName = QonverterSettings.LoadQonverterSettings();
@@ -59,42 +65,47 @@ namespace IDPicker.Controls
             qonverterSettingsByName.Keys.ToList().ForEach(o => qonverterSettingsColumn.Items.Add(o));
             qonverterSettingsColumn.Items.Add("Edit...");
 
-            foreach (var a in qonverterSettingsByAnalysis.Keys)
+            foreach (var a in distinctAnalyses)
             {
                 var row = new DataGridViewRow();
                 row.CreateCells(dataGridView);
 
-                ISet<AnalysisParameter> diffParameters = new SortedSet<AnalysisParameter>();
-                foreach (var a2 in qonverterSettingsByAnalysis.Keys)
+                var parameterSet = new SortedSet<string>(a.parameters.Select(o => o.Key + "=" + o.Value).ToArray() as ICollection<string>);
+                ISet<string> diffParameters = new SortedSet<string>();
+                foreach (var a2 in distinctAnalyses)
                 {
-                    if (a.Software.Name != a2.Software.Name)
+                    if (a.softwareName != a2.softwareName)
                         continue;
 
-                    diffParameters = diffParameters.Union(a.Parameters.Minus(a2.Parameters));
+                    var parameterSet2 = new SortedSet<string>(a.parameters.Select(o => o.Key + "=" + o.Value).ToArray() as ICollection<string>);
+                    diffParameters = diffParameters.Union(parameterSet.Minus(parameterSet2));
                 }
 
-                string key = a.Id + ": " + a.Name;
+                string key = a.name;
                 foreach (var p in diffParameters)
-                    key += String.Format("; {0}={1}", p.Name, p.Value);
+                    key += p;
 
                 row.Tag = a;
                 row.Cells[0].Value = key;
-                row.Cells[1].Value = Properties.Settings.Default.DecoyPrefix;
-                var comboBox = row.Cells[2] as DataGridViewComboBoxCell;
-                var firstSoftwarePreset = qonverterSettingsByName.Keys.FirstOrDefault(o => o.ToLower().Contains(a.Software.Name.ToLower()));
+                row.Cells[1].Value = System.IO.Path.GetFileName(a.importSettings.proteinDatabaseFilepath);
+                row.Cells[2].Value = Properties.Settings.Default.DecoyPrefix;
+                var comboBox = row.Cells[3] as DataGridViewComboBoxCell;
+                var firstSoftwarePreset = qonverterSettingsByName.Keys.FirstOrDefault(o => o.ToLower().Contains(a.softwareName.ToLower()));
                 comboBox.Value = firstSoftwarePreset == null ? qonverterSettingsByName.Keys.FirstOrDefault() : firstSoftwarePreset;
                 dataGridView.Rows.Add(row);
             }
 
             foreach (DataGridViewRow row in dataGridView.Rows)
             {
-                qonverterSettingsByAnalysis[row.Tag as Analysis] = qonverterSettingsByName[(string) row.Cells[2].Value];
-                qonverterSettingsByAnalysis[row.Tag as Analysis].Analysis = row.Tag as Analysis;
-                qonverterSettingsByAnalysis[row.Tag as Analysis].DecoyPrefix = (string) row.Cells[1].Value;
+                var analysis = row.Tag as Parser.Analysis;
+                analysis.importSettings.qonverterSettings = qonverterSettingsByName[(string) row.Cells[3].Value].ToQonverterSettings();
+                analysis.importSettings.qonverterSettings.DecoyPrefix = (string) row.Cells[2].Value;
             }
 
-            dataGridView.CellBeginEdit += new DataGridViewCellCancelEventHandler(dataGridView_CellBeginEdit);
-            dataGridView.CurrentCellDirtyStateChanged += new EventHandler(dataGridView_CurrentCellDirtyStateChanged);
+            dataGridView.CellBeginEdit += dataGridView_CellBeginEdit;
+            dataGridView.CellEndEdit += dataGridView_CellEndEdit;
+            dataGridView.CurrentCellDirtyStateChanged += dataGridView_CurrentCellDirtyStateChanged;
+            dataGridView.EditingControlShowing += dataGridView_EditingControlShowing;
         }
 
         string uneditedQonverterSettingsValue = null;
@@ -102,6 +113,15 @@ namespace IDPicker.Controls
         {
             //throw new NotImplementedException();
             uneditedQonverterSettingsValue = (string) dataGridView[e.ColumnIndex, e.RowIndex].Value;
+        }
+
+        void dataGridView_CellEndEdit (object sender, DataGridViewCellEventArgs e)
+        {
+            var row = dataGridView.Rows[e.RowIndex];
+            var analysis = row.Tag as Parser.Analysis;
+            analysis.importSettings.qonverterSettings = qonverterSettingsByName[(string) row.Cells[3].Value].ToQonverterSettings();
+            analysis.importSettings.qonverterSettings.DecoyPrefix = (string) row.Cells[2].Value;
+            analysis.importSettings.proteinDatabaseFilepath = (string) row.Cells[1].Value;
         }
 
         void dataGridView_CurrentCellDirtyStateChanged (object sender, EventArgs e)
@@ -121,9 +141,17 @@ namespace IDPicker.Controls
                 cell.Value = uneditedQonverterSettingsValue;
                 dataGridView.RefreshEdit();
             }
+        }
 
-            qonverterSettingsByAnalysis[row.Tag as Analysis] = qonverterSettingsByName[(string) row.Cells[2].Value];
-            qonverterSettingsByAnalysis[row.Tag as Analysis].DecoyPrefix = (string) row.Cells[1].Value;
+        void dataGridView_EditingControlShowing (object sender, DataGridViewEditingControlShowingEventArgs e)
+        {
+            if (dataGridView.CurrentCell.OwningColumn == databaseColumn)
+            {
+                var textBox = e.Control as TextBox;
+                textBox.Multiline = false;
+                textBox.AutoCompleteMode = AutoCompleteMode.Suggest;
+                textBox.AutoCompleteSource = AutoCompleteSource.FileSystem;
+            }
         }
     }
 }

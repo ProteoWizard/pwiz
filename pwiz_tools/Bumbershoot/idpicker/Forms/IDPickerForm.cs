@@ -38,6 +38,7 @@ using IDPicker.Forms;
 using IDPicker.Controls;
 using IDPicker.DataModel;
 using pwiz.CLI.cv;
+using pwiz.CLI.proteome;
 using seems;
 using NHibernate;
 using NHibernate.Linq;
@@ -58,6 +59,8 @@ namespace IDPicker
         SpectrumTableForm spectrumTableForm;
         ModificationTableForm modificationTableForm;
         AnalysisTableForm analysisTableForm;
+        FragmentationStatisticsForm fragmentationStatisticsForm;
+        PeakStatisticsForm peakStatisticsForm;
 
         //LogForm logForm;
         //SpyEventLogForm spyEventLogForm;
@@ -105,6 +108,12 @@ namespace IDPicker
             breadCrumbControl.BreadCrumbClicked += breadCrumbControl_BreadCrumbClicked;
             breadCrumbPanel.Controls.Add(breadCrumbControl);
 
+            fragmentationStatisticsForm = new FragmentationStatisticsForm(this);
+            fragmentationStatisticsForm.Show(dockPanel, DockState.Document);
+
+            peakStatisticsForm = new PeakStatisticsForm(this);
+            peakStatisticsForm.Show(dockPanel, DockState.Document);
+
             spectrumTableForm = new SpectrumTableForm();
             spectrumTableForm.Show(dockPanel, DockState.DockLeft);
 
@@ -136,6 +145,7 @@ namespace IDPicker
             //logForm = new LogForm();
             //Console.SetOut(logForm.LogWriter);
             //logForm.Show(dockPanel, DockState.DockBottomAutoHide);
+            Console.SetOut(TextWriter.Null);
 
             /*spyEventLogForm = new SpyEventLogForm();
             spyEventLogForm.AddEventSpy(new EventSpy("proteinTableForm", proteinTableForm));
@@ -153,10 +163,23 @@ namespace IDPicker
                 return;
             }
 
+            if (IsDisposed || toolStripProgressBar.IsDisposed)
+            {
+                e.Cancel = true;
+                return;
+            }
+
             toolStripStatusLabel.Text = e.Message;
             toolStripProgressBar.Visible = true;
-            toolStripProgressBar.Maximum = e.Total;
-            toolStripProgressBar.Value = e.Current;
+
+            if (e.Total == 0)
+                toolStripProgressBar.Style = ProgressBarStyle.Marquee;
+            else
+            {
+                toolStripProgressBar.Style = ProgressBarStyle.Continuous;
+                toolStripProgressBar.Maximum = e.Total;
+                toolStripProgressBar.Value = e.Current;
+            }
 
             if (TaskbarManager.IsPlatformSupported)
             {
@@ -169,7 +192,7 @@ namespace IDPicker
             // TODO: add a cancel option: e.Cancel
 
             // if the work is done, schedule a delayed return to the "Ready" state
-            if (e.Total == e.Current)
+            if (e.Total == 0 || e.Total == e.Current)
             {
                 var clearProgressInvoker = new BackgroundWorker();
                 clearProgressInvoker.DoWork += delegate
@@ -206,10 +229,10 @@ namespace IDPicker
                 Filter = sender == openToolStripMenuItem 
                          ? "IDPicker DB|*.idpDB"
                          : "IDPicker Files|*.idpDB;*.idpXML;*.pepXML;*.pep.xml|" +
-                           "PepXML Files|*.pepXML;*.pep.xml|" +
-                           "IDPicker XML|*.idpXML|" +
-                           "IDPicker DB|*.idpDB|" +
-                           "Any File|*.*",
+                         "PepXML Files|*.pepXML;*.pep.xml|" +
+                         "IDPicker XML|*.idpXML|" +
+                         "IDPicker DB|*.idpDB|" +
+                         "Any File|*.*",
                 SupportMultiDottedExtensions = true,
                 AddExtension = true,
                 CheckFileExists = true,
@@ -239,10 +262,10 @@ namespace IDPicker
                         var filenameMatch = Regex.Match(session.Connection.ConnectionString, @"Data Source=(?:\w|:|\\| |/|\.)+").ToString().Remove(0,12);
                         if (!fileNames.Contains(filenameMatch))
                             fileNames.Add(filenameMatch);
-                    }
+            }
                     session.Close();
                     session = null;
-                }
+        }
 
                 OpenFiles(fileNames.ToArray());
             }
@@ -279,7 +302,7 @@ namespace IDPicker
                     catch
                     {
                         // prompt user to find the source
-                        var eventArgs = new Parser.SourceNotFoundEventArgs() { SourcePath = spectrum.Source.Name };
+                        var eventArgs = new SourceNotFoundEventArgs() { SourcePath = spectrum.Source.Name };
                         sourceNotFoundOnVisualizeHandler(this, eventArgs);
 
                         if (eventArgs.SourcePath == spectrum.Source.Name)
@@ -475,15 +498,17 @@ namespace IDPicker
         void clearData ()
         {
             if (proteinTableForm != null)
-                proteinTableForm.ClearData(true);
+            proteinTableForm.ClearData(true);
             if (peptideTableForm != null)
-                peptideTableForm.ClearData(true);
+            peptideTableForm.ClearData(true);
             if (spectrumTableForm != null)
-                spectrumTableForm.ClearData(true);
+            spectrumTableForm.ClearData(true);
             if (modificationTableForm != null)
-                modificationTableForm.ClearData(true);
+            modificationTableForm.ClearData(true);
             if (analysisTableForm != null)
-                analysisTableForm.ClearData(true);
+            analysisTableForm.ClearData(true);
+            fragmentationStatisticsForm.ClearData(true);
+            peakStatisticsForm.ClearData(true);
         }
 
         void setData ()
@@ -493,6 +518,8 @@ namespace IDPicker
             spectrumTableForm.SetData(session, viewFilter);
             modificationTableForm.SetData(session, viewFilter);
             analysisTableForm.SetData(session, viewFilter);
+            fragmentationStatisticsForm.SetData(session, viewFilter);
+            peakStatisticsForm.SetData(session, viewFilter);
         }
 
         void IDPickerForm_Load (object sender, EventArgs e)
@@ -513,7 +540,7 @@ namespace IDPicker
             //    openToolStripMenuItem_Click(this, EventArgs.Empty);
         }
 
-        void databaseNotFoundHandler (object sender, Parser.DatabaseNotFoundEventArgs e)
+        /*void databaseNotFoundHandler (object sender, Parser.DatabaseNotFoundEventArgs e)
         {
             if (String.IsNullOrEmpty(e.DatabasePath))
                 return;
@@ -545,11 +572,11 @@ namespace IDPicker
                     // couldn't find the database in that directory; prompt user again
                 }
             }
-        }
+        }*/
 
         bool promptForSourceNotFound = true;
         bool promptToSkipSourceImport = false;
-        void sourceNotFoundOnImportHandler (object sender, Parser.SourceNotFoundEventArgs e)
+        void sourceNotFoundOnImportHandler (object sender, SourceNotFoundEventArgs e)
         {
             if (String.IsNullOrEmpty(e.SourcePath) || !promptForSourceNotFound)
                 return;
@@ -600,7 +627,7 @@ namespace IDPicker
             }
         }
 
-        void sourceNotFoundOnVisualizeHandler (object sender, Parser.SourceNotFoundEventArgs e)
+        void sourceNotFoundOnVisualizeHandler (object sender, SourceNotFoundEventArgs e)
         {
             if (String.IsNullOrEmpty(e.SourcePath))
                 return;
@@ -668,7 +695,7 @@ namespace IDPicker
                 Text = commonFilename;
 
                 
-                if (xml_filepaths.Count() > 0)
+                /*if (xml_filepaths.Count() > 0)
                 {
                     using (Parser parser = new Parser(".", qonverterSettingsHandler, false, xml_filepaths.ToArray()))
                     {
@@ -677,20 +704,20 @@ namespace IDPicker
                         parser.SourceNotFound += sourceNotFoundOnImportHandler;
                         parser.ParsingProgress += progressMonitor.UpdateProgress;
                         if (parser.Start())
-                        {
-                            if (parser.emergencyBreak)
-                            {
-                                MessageBox.Show(
-                                    "An error occurred during parsing of file. " +
-                                    "Please make sure file is valid " +
-                                    "and the decoy prefix is correct.");
-                                if (File.Exists(commonFilename))
-                                    File.Delete(commonFilename);
-                                Text = "IDPicker";
-                            }
                             return;
-                        }
                     }
+                    idpDB_filepaths = idpDB_filepaths.Union(xml_filepaths.Select(o => Path.ChangeExtension(o, ".idpDB")));
+                }*/
+
+                if (xml_filepaths.Count() > 0)
+                {
+                    importCancelled = false;
+                    var parser = new Parser();
+                    parser.ImportSettings += importSettingsHandler;
+                    parser.ParsingProgress += progressMonitor.UpdateProgress;
+                    parser.Parse(xml_filepaths);
+                    if (importCancelled)
+                        return;
                     idpDB_filepaths = idpDB_filepaths.Union(xml_filepaths.Select(o => Path.ChangeExtension(o, ".idpDB")));
                 }
 
@@ -708,7 +735,7 @@ namespace IDPicker
                 long ramBytesAvailable = (long) new System.Diagnostics.PerformanceCounter("Memory", "Available Bytes").NextValue();
                 if (ramBytesAvailable > new FileInfo(commonFilename).Length)
                 {
-                    using (var fs = new FileStream(commonFilename, FileMode.Open, FileSystemRights.ReadData, FileShare.Read, (1 << 15), FileOptions.SequentialScan))
+                    using (var fs = new FileStream(commonFilename, FileMode.Open, FileSystemRights.ReadData, FileShare.ReadWrite, (1 << 15), FileOptions.SequentialScan))
                     {
                         var buffer = new byte[UInt16.MaxValue];
                         while (fs.Read(buffer, 0, UInt16.MaxValue) > 0) { }
@@ -717,29 +744,10 @@ namespace IDPicker
 
                 var sessionFactory = DataModel.SessionFactoryFactory.CreateSessionFactory(commonFilename, false, true);
 
-                toolStripStatusLabel.Text = "Initializing Qonverter...";
-
-                var qonverter = new Qonverter();
-
                 // reload qonverter settings because the ids may change after merging
                 session = sessionFactory.OpenSession();
                 qonverterSettingsByAnalysis = session.Query<QonverterSettings>().ToDictionary(o => session.Get<Analysis>(o.Id));
-                session.Close();
 
-                qonverterSettingsByAnalysis.ForEach(o => qonverter.SettingsByAnalysis[(int) o.Key.Id] = o.Value.ToQonverterSettings());
-                qonverter.QonversionProgress += progressMonitor.UpdateProgress;
-                //qonverter.LogQonversionDetails = true;
-
-                try
-                {
-                    qonverter.Qonvert(commonFilename);
-                }
-                catch (Exception e)
-                {
-                    MessageBox.Show("Error: " + e.Message, "Qonversion failed");
-                }
-
-                session = sessionFactory.OpenSession();
                 session.CreateSQLQuery("PRAGMA temp_store=MEMORY").ExecuteUpdate();
 
                 _layoutManager.SetSession(session);
@@ -829,6 +837,13 @@ namespace IDPicker
             return null;
         }
 
+        bool importCancelled = false;
+        void importSettingsHandler (object sender, Parser.ImportSettingsEventArgs e)
+        {
+            var result = UserDialog.Show(this, "Import Settings", new ImportSettingsControl(e.DistinctAnalyses, showQonverterSettingsManager));
+            importCancelled = e.Cancel = result == DialogResult.Cancel;
+        }
+
         IDictionary<Analysis, QonverterSettings> qonverterSettingsHandler (IList<Analysis> analyses, out bool cancel)
         {
             qonverterSettingsByAnalysis = new Dictionary<Analysis, QonverterSettings>();
@@ -875,9 +890,9 @@ namespace IDPicker
         {
             if (_layoutManager != null)
             {
-                _layoutManager.SaveMainFormSettings();
-                _layoutManager.SaveUserLayoutList();
-            }
+            _layoutManager.SaveMainFormSettings();
+            _layoutManager.SaveUserLayoutList();
+        }
         }
 
 
@@ -886,10 +901,10 @@ namespace IDPicker
             layoutToolStripMenuRoot.DropDownItems.Clear();
             if (dockPanel.Visible)
             {
-                var items = _layoutManager.LoadLayoutMenu();
-                foreach (var item in items)
+            var items = _layoutManager.LoadLayoutMenu();
+            foreach (var item in items)
                     layoutToolStripMenuRoot.DropDownItems.Add(item);
-            }
+        }
         }
 
         private void dataFilterButton_Click (object sender, EventArgs e)
@@ -921,7 +936,7 @@ namespace IDPicker
         private void exitToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Close();
-        }
+    }
 
         private void optionsToolStripMenuItem_Click(object sender, EventArgs e)
         {
@@ -999,6 +1014,11 @@ namespace IDPicker
             dataFilterPopup.Closed += dataFilterPopup_Closed;
             OpenFiles(new List<string> {Text});
         }
+    }
+
+    public class SourceNotFoundEventArgs : EventArgs
+    {
+        public string SourcePath { get; set; }
     }
 
     public static class StopwatchExtensions

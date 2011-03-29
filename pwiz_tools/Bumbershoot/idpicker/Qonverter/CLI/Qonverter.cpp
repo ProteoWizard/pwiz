@@ -22,18 +22,20 @@
 
 
 #include "Qonverter.hpp"
+#include "../Qonverter.hpp"
 
 
 namespace IDPicker {
 
 
 using namespace System::Runtime::InteropServices;
+//using namespace pwiz::CLI::util;
+typedef NativeIDPicker::Qonverter NativeQonverter;
 
-typedef void (__stdcall *QonversionProgressCallback)(int, int, bool&);
 
-
-struct ProgressMonitorForwarder : public NativeIDPicker::Qonverter::ProgressMonitor
+struct ProgressMonitorForwarder : public NativeQonverter::ProgressMonitor
 {
+    typedef void (__stdcall *QonversionProgressCallback)(int, int, bool&);
     QonversionProgressCallback managedFunctionPtr;
 
     ProgressMonitorForwarder(void* managedFunctionPtr)
@@ -44,9 +46,9 @@ struct ProgressMonitorForwarder : public NativeIDPicker::Qonverter::ProgressMoni
     {
         if (managedFunctionPtr != NULL)
         {
-            managedFunctionPtr(updateMessage.QonvertedAnalyses,
-                               updateMessage.TotalAnalyses,
-                               updateMessage.Cancel);
+            managedFunctionPtr(updateMessage.qonvertedAnalyses,
+                               updateMessage.totalAnalyses,
+                               updateMessage.cancel);
         }
     }
 };
@@ -79,22 +81,22 @@ Qonverter::Qonverter()
 
 void Qonverter::Qonvert(String^ idpDbFilepath)
 {
-    NativeIDPicker::Qonverter qonverter;
+    NativeQonverter qonverter;
     qonverter.logQonversionDetails = LogQonversionDetails;
 
     for each (KeyValuePair<int, Settings^> itr in SettingsByAnalysis)
     {
-        NativeIDPicker::Qonverter::Settings& qonverterSettings = qonverter.settingsByAnalysis[itr.Key];
+        NativeQonverter::Settings& qonverterSettings = qonverter.settingsByAnalysis[itr.Key];
         qonverterSettings.decoyPrefix = ToStdString(itr.Value->DecoyPrefix);
-        qonverterSettings.qonverterMethod = (NativeIDPicker::Qonverter::QonverterMethod) itr.Value->QonverterMethod;
+        qonverterSettings.qonverterMethod = NativeQonverter::QonverterMethod::get_by_index((size_t) itr.Value->QonverterMethod).get();
         qonverterSettings.rerankMatches = itr.Value->RerankMatches;
 
         for each (KeyValuePair<String^, Settings::ScoreInfo^> itr2 in itr.Value->ScoreInfoByName)
         {
-            NativeIDPicker::Qonverter::Settings::ScoreInfo& scoreInfo = qonverterSettings.scoreInfoByName[ToStdString(itr2.Key)];
+            NativeQonverter::Settings::ScoreInfo& scoreInfo = qonverterSettings.scoreInfoByName[ToStdString(itr2.Key)];
             scoreInfo.weight = itr2.Value->Weight;
-            scoreInfo.order = (NativeIDPicker::Qonverter::Settings::Order) itr2.Value->Order;
-            scoreInfo.normalizationMethod = (NativeIDPicker::Qonverter::Settings::NormalizationMethod) itr2.Value->NormalizationMethod;
+            scoreInfo.order = NativeQonverter::Settings::Order::get_by_index((size_t) itr2.Value->Order).get();
+            scoreInfo.normalizationMethod = NativeQonverter::Settings::NormalizationMethod::get_by_index((size_t) itr2.Value->NormalizationMethod).get();
         }
     }
 
@@ -104,7 +106,7 @@ void Qonverter::Qonvert(String^ idpDbFilepath)
         ProgressMonitorForwarder* progressMonitor = new ProgressMonitorForwarder(
             Marshal::GetFunctionPointerForDelegate(handler).ToPointer());
 
-        try {qonverter.Qonvert(ToStdString(idpDbFilepath), *progressMonitor);} CATCH_AND_FORWARD
+        try {qonverter.qonvert(ToStdString(idpDbFilepath), *progressMonitor);} CATCH_AND_FORWARD
         delete progressMonitor;
 
         GC::KeepAlive(handler);
@@ -115,22 +117,22 @@ void Qonverter::Qonvert(String^ idpDbFilepath)
 
 void Qonverter::Qonvert(System::IntPtr idpDb)
 {
-    NativeIDPicker::Qonverter qonverter;
+    NativeQonverter qonverter;
     qonverter.logQonversionDetails = LogQonversionDetails;
 
     for each (KeyValuePair<int, Settings^> itr in SettingsByAnalysis)
     {
-        NativeIDPicker::Qonverter::Settings& qonverterSettings = qonverter.settingsByAnalysis[itr.Key];
+        NativeQonverter::Settings& qonverterSettings = qonverter.settingsByAnalysis[itr.Key];
         qonverterSettings.decoyPrefix = ToStdString(itr.Value->DecoyPrefix);
-        qonverterSettings.qonverterMethod = (NativeIDPicker::Qonverter::QonverterMethod) itr.Value->QonverterMethod;
+        qonverterSettings.qonverterMethod = NativeQonverter::QonverterMethod::get_by_index((size_t) itr.Value->QonverterMethod).get();
         qonverterSettings.rerankMatches = itr.Value->RerankMatches;
 
         for each (KeyValuePair<String^,Settings::ScoreInfo^> itr2 in itr.Value->ScoreInfoByName)
         {
-            NativeIDPicker::Qonverter::Settings::ScoreInfo& scoreInfo = qonverterSettings.scoreInfoByName[ToStdString(itr2.Key)];
+            NativeQonverter::Settings::ScoreInfo& scoreInfo = qonverterSettings.scoreInfoByName[ToStdString(itr2.Key)];
             scoreInfo.weight = itr2.Value->Weight;
-            scoreInfo.order = (NativeIDPicker::Qonverter::Settings::Order) itr2.Value->Order;
-            scoreInfo.normalizationMethod = (NativeIDPicker::Qonverter::Settings::NormalizationMethod) itr2.Value->NormalizationMethod;
+            scoreInfo.order = NativeQonverter::Settings::Order::get_by_index((size_t) itr2.Value->Order).get();
+            scoreInfo.normalizationMethod = NativeQonverter::Settings::NormalizationMethod::get_by_index((size_t) itr2.Value->NormalizationMethod).get();
         }
     }
 
@@ -142,13 +144,29 @@ void Qonverter::Qonvert(System::IntPtr idpDb)
 
         sqlite3* foo = (sqlite3*) idpDb.ToPointer();
         pin_ptr<sqlite3> idpDbPtr = foo;
-        try {qonverter.Qonvert(idpDbPtr, *progressMonitor);} CATCH_AND_FORWARD
+        try {qonverter.qonvert(idpDbPtr, *progressMonitor);} CATCH_AND_FORWARD
         delete progressMonitor;
 
         GC::KeepAlive(handler);
     }
     //else
     //    try {swq.Qonvert(ToStdString(idpDbFilepath));} CATCH_AND_FORWARD
+}
+
+void Qonverter::Reset(String^ idpDbFilepath)
+{
+    NativeQonverter qonverter;
+
+    try {qonverter.reset(ToStdString(idpDbFilepath));} CATCH_AND_FORWARD
+}
+
+void Qonverter::Reset(System::IntPtr idpDb)
+{
+    NativeQonverter qonverter;
+
+    sqlite3* foo = (sqlite3*) idpDb.ToPointer();
+    pin_ptr<sqlite3> idpDbPtr = foo;
+    try {qonverter.reset(idpDbPtr);} CATCH_AND_FORWARD
 }
 
 

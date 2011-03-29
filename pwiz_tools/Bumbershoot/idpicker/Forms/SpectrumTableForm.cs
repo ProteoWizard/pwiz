@@ -761,7 +761,7 @@ namespace IDPicker.Forms
             {
                 var row = x as ChargeRow;
                 var parentFilter = row.DataFilter ?? dataFilter;
-                var childFilter = new DataFilter(parentFilter) {Charge = new List<int?>()};
+                var childFilter = new DataFilter(parentFilter) {Charge = new List<int>()};
                 childFilter.Charge.Add(row.Charge);
                 var childGrouping = GroupingSetupControl<GroupBy>.GetChildGrouping(checkedGroupings, GroupBy.Charge);
                 return getChildren(childGrouping, childFilter);
@@ -802,7 +802,7 @@ namespace IDPicker.Forms
             else if (e.Item.RowObject is PeptideRow)
                 newDataFilter.Peptide = new List<Peptide> { (e.Item.RowObject as PeptideRow).Peptide };
             else if (e.Item.RowObject is ChargeRow)
-                newDataFilter.Charge = new List<int?> { (e.Item.RowObject as ChargeRow).Charge };
+                newDataFilter.Charge = new List<int> { (e.Item.RowObject as ChargeRow).Charge };
             else if (e.Item.RowObject is PeptideSpectrumMatchRow)
             {
                 if (SpectrumViewVisualize != null)
@@ -869,7 +869,7 @@ namespace IDPicker.Forms
                 else if (item is ChargeRow)
                 {
                     if (newDataFilter.Charge == null)
-                        newDataFilter.Charge = new List<int?> { (item as ChargeRow).Charge };
+                        newDataFilter.Charge = new List<int> { (item as ChargeRow).Charge };
                     else
                         newDataFilter.Charge.Add((item as ChargeRow).Charge);
                 }

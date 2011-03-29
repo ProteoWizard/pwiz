@@ -21,9 +21,12 @@
 //
 
 
-#include "../freicore/pwiz_src/pwiz/utility/misc/Std.hpp"
+#include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/data/common/diff_std.hpp"
 #include "../freicore/freicore.h"
 
+#include "Parser.hpp"
 #include "idpQonvert.hpp"
 #include <iomanip>
 //#include "svnrev.hpp"
@@ -37,8 +40,8 @@ using boost::format;
 
 BEGIN_IDPICKER_NAMESPACE
 
-int Version::Major()                {return 2;}
-int Version::Minor()                {return 6;}
+int Version::Major()                {return 3;}
+int Version::Minor()                {return 0;}
 int Version::Revision()             {return 0;}//SVN_REV;}
 string Version::LastModified()      {return "";}//SVN_REVDATE;}
 string Version::str()
@@ -58,9 +61,6 @@ int InitProcess( argList_t& args )
 
 	g_rtConfig = new RunTimeConfig;
 	g_rtSharedConfig = (BaseRunTimeConfig*) g_rtConfig;
-	g_residueMap = new ResidueMap;
-	g_endianType = GetHostEndianType();
-	g_numWorkers = GetNumProcessors();
 	g_hostString = "Process #" + lexical_cast<string>( g_pid ) + " (" + GetHostname() + ")";
 
 	// First set the working directory, if provided
@@ -169,6 +169,90 @@ int InitProcess( argList_t& args )
 	return 0;
 }
 
+struct ImportSettingsHandler : public Parser::ImportSettingsCallback
+{
+    virtual void operator() (const vector<Parser::ConstAnalysisPtr>& distinctAnalyses, bool& cancel) const
+    {
+        typedef pair<string, string> AnalysisParameter;
+
+        if (distinctAnalyses.size() > 1)
+        {
+            ostringstream error;
+            error << "Command-line idpQonvert only supports qonverting a single distinct analysis at a time." << endl;
+
+            for (size_t i=0; i < distinctAnalyses.size(); ++i)
+            {
+                const Parser::Analysis& analysis = *distinctAnalyses[i];
+                error << "Analysis " << analysis.name << " (" << analysis.softwareName << " " << analysis.softwareVersion << ")" << endl;
+                error << "\tstartTime: " << analysis.startTime << endl;
+
+                if (i == 0)
+                {
+                    vector<string> firstParameters, secondParameters;
+                    BOOST_FOREACH(const AnalysisParameter& kvp, analysis.parameters)
+                        firstParameters.push_back(kvp.first + ": " + kvp.second);
+                    BOOST_FOREACH(const AnalysisParameter& kvp, distinctAnalyses[1]->parameters)
+                        secondParameters.push_back(kvp.first + ": " + kvp.second);
+
+                    vector<string> a_b, b_a;
+                    pwiz::data::diff_impl::vector_diff(firstParameters, secondParameters, a_b, b_a);
+
+                    error << "\tdistinct parameters in first analysis: " << bal::join(a_b, ", ") << endl;
+                    error << "\tdistinct parameters in second analysis: " << bal::join(b_a, ", ") << endl;
+                    //BOOST_FOREACH(const AnalysisParameter& kvp, analysis.parameters)
+                    //    cerr << "\t\t" << kvp.first << ": " << kvp.second << endl;
+                    //error << endl;
+                }
+            }
+            throw runtime_error(error.str());
+        }
+
+        // verify the protein database from the imported files matches ProteinDatabase
+        const Parser::Analysis& analysis = *distinctAnalyses[0];
+        if (!bal::iequals(bfs::path(analysis.importSettings.proteinDatabaseFilepath).replace_extension("").filename(),
+                          bfs::path(g_rtConfig->ProteinDatabase).replace_extension("").filename()))
+            throw runtime_error("ProteinDatabase " + bfs::path(g_rtConfig->ProteinDatabase).filename() +
+                                " does not match " + bfs::path(analysis.importSettings.proteinDatabaseFilepath).filename());
+
+        analysis.importSettings.proteinDatabaseFilepath = g_rtConfig->ProteinDatabase;
+
+        Qonverter::Settings& settings = analysis.importSettings.qonverterSettings;
+        settings.qonverterMethod = g_rtConfig->QonverterMethod;
+        settings.kernel = g_rtConfig->Kernel;
+        settings.chargeStateHandling = g_rtConfig->ChargeStateHandling;
+        settings.terminalSpecificityHandling = g_rtConfig->TerminalSpecificityHandling;
+        settings.missedCleavagesHandling = g_rtConfig->MissedCleavagesHandling;
+        settings.massErrorHandling = g_rtConfig->MassErrorHandling;
+        settings.decoyPrefix = g_rtConfig->DecoyPrefix;
+        settings.scoreInfoByName = g_rtConfig->scoreInfoByName;
+    }
+};
+
+struct UserFeedbackIterationListener : public IterationListener
+{
+    virtual Status update(const UpdateMessage& updateMessage)
+    {
+        int index = updateMessage.iterationIndex;
+        int count = updateMessage.iterationCount;
+
+        // when the index is 0, create a new line
+        if (index == 0)
+            cout << endl;
+
+        cout << updateMessage.message;
+        if (index > 0)
+        {
+            cout << ": " << index+1;
+            if (count > 0)
+                cout << "/" << count;
+        }
+
+        // add tabs to erase all of the previous line
+        cout << "\t\t\t\r" << flush;
+
+        return Status_Ok;
+    }
+};
 
 END_IDPICKER_NAMESPACE
 
@@ -190,17 +274,27 @@ int main( int argc, char* argv[] )
 		return QONVERT_ERROR_NO_INPUT_FILES_FOUND;
 	}
 
-    BOOST_FOREACH(const string& filepath, g_rtConfig->inputFilepaths)
+    try
     {
-        Qonverter qonverter;
-        qonverter.logQonversionDetails = g_rtConfig->WriteQonversionDetails;
+        Parser parser;
 
-        Qonverter::Settings& settings = qonverter.settingsByAnalysis[0];
-        settings.qonverterMethod = Qonverter::QonverterMethod_StaticWeighted;
-        settings.decoyPrefix = g_rtConfig->DecoyPrefix;
-        settings.scoreInfoByName = g_rtConfig->scoreInfoByName;
+        // update on the first spectrum, the last spectrum, the 100th spectrum, the 200th spectrum, etc.
+        const size_t iterationPeriod = 100;
+        UserFeedbackIterationListener feedback;
+        parser.iterationListenerRegistry.addListener(feedback, iterationPeriod);
 
-        qonverter.Qonvert(filepath);
+        parser.importSettingsCallback = Parser::ImportSettingsCallbackPtr(new ImportSettingsHandler);
+        parser.parse(vector<string>(g_rtConfig->inputFilepaths.begin(), g_rtConfig->inputFilepaths.end()));
+    }
+    catch (exception& e)
+    {
+        cerr << "Error: " << e.what() << endl;
+        return QONVERT_ERROR_UNHANDLED_EXCEPTION;
+    }
+    catch (...)
+    {
+        cerr << "Error: unhandled exception." << endl;
+        return QONVERT_ERROR_UNHANDLED_EXCEPTION;
     }
 
 	return 0;

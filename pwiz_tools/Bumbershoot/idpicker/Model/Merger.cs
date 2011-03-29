@@ -96,7 +96,7 @@ namespace IDPicker.DataModel
                                (SELECT IFNULL(MAX(Id),0) FROM merged.PeptideInstance),
                                (SELECT IFNULL(MAX(Id),0) FROM merged.Peptide),
                                (SELECT IFNULL(MAX(Id),0) FROM merged.PeptideSpectrumMatch),
-                               (SELECT IFNULL(MAX(Id),0) FROM merged.PeptideSpectrumMatchScoreNames),
+                               (SELECT IFNULL(MAX(Id),0) FROM merged.PeptideSpectrumMatchScoreName),
                                (SELECT IFNULL(MAX(Id),0) FROM merged.PeptideModification),
                                (SELECT IFNULL(MAX(Id),0) FROM merged.Modification),
                                (SELECT IFNULL(MAX(Id),0) FROM merged.SpectrumSourceGroup),
@@ -306,11 +306,11 @@ namespace IDPicker.DataModel
                 SELECT newAnalysis.Id, IFNULL(oldAnalysis.Id, newAnalysis.Id+{1})
                 FROM (SELECT a.Id, SoftwareName || ' ' || SoftwareVersion || ' ' || GROUP_CONCAT(ap.Name || ' ' || ap.Value) AS DistinctKey
                       FROM {0}.Analysis a
-                      JOIN {0}.AnalysisParameter ap ON a.Id = Analysis
+                      LEFT JOIN {0}.AnalysisParameter ap ON a.Id = Analysis
                       GROUP BY a.Id) newAnalysis
                 LEFT JOIN (SELECT a.Id, SoftwareName || ' ' || SoftwareVersion || ' ' || GROUP_CONCAT(ap.Name || ' ' || ap.Value) AS DistinctKey
                            FROM merged.Analysis a
-                           JOIN merged.AnalysisParameter ap ON a.Id = Analysis
+                           LEFT JOIN merged.AnalysisParameter ap ON a.Id = Analysis
                            GROUP BY a.Id) oldAnalysis ON newAnalysis.DistinctKey = oldAnalysis.DistinctKey;
                ";
         void mergeAnalyses (IDbConnection conn) { conn.ExecuteNonQuery(String.Format(mergeAnalysesSql, mergeSourceDatabase, MaxAnalysisId)); }
@@ -383,8 +383,8 @@ namespace IDPicker.DataModel
                 CREATE TABLE PeptideSpectrumMatchScoreNameMergeMap (BeforeMergeId INTEGER PRIMARY KEY, AfterMergeId INT);
                 INSERT INTO PeptideSpectrumMatchScoreNameMergeMap
                 SELECT newName.Id, IFNULL(oldName.Id, newName.Id+{1})
-                FROM {0}.PeptideSpectrumMatchScoreNames newName
-                LEFT JOIN merged.PeptideSpectrumMatchScoreNames oldName ON newName.Name = oldName.Name
+                FROM {0}.PeptideSpectrumMatchScoreName newName
+                LEFT JOIN merged.PeptideSpectrumMatchScoreName oldName ON newName.Name = oldName.Name
                ";
         void mergePeptideSpectrumMatchScoreNames (IDbConnection conn) { conn.ExecuteNonQuery(String.Format(mergePeptideSpectrumMatchScoreNamesSql, mergeSourceDatabase, MaxPeptideSpectrumMatchScoreNameId)); }
 
@@ -512,9 +512,9 @@ namespace IDPicker.DataModel
 
 
         static string addNewPeptideSpectrumMatchScoreNamesSql =
-              @"INSERT INTO merged.PeptideSpectrumMatchScoreNames
+              @"INSERT INTO merged.PeptideSpectrumMatchScoreName
                 SELECT AfterMergeId, newName.Name
-                FROM {0}.PeptideSpectrumMatchScoreNames newName
+                FROM {0}.PeptideSpectrumMatchScoreName newName
                 JOIN PeptideSpectrumMatchScoreNameMergeMap nameMerge ON newName.Id = BeforeMergeId
                 WHERE AfterMergeId > {1}
                ";
@@ -522,9 +522,9 @@ namespace IDPicker.DataModel
 
 
         static string addNewPeptideSpectrumMatchScoresSql =
-              @"INSERT INTO merged.PeptideSpectrumMatchScores
+              @"INSERT INTO merged.PeptideSpectrumMatchScore
                 SELECT PsmId+{1}, Value, AfterMergeId
-                FROM {0}.PeptideSpectrumMatchScores newScore
+                FROM {0}.PeptideSpectrumMatchScore newScore
                 JOIN PeptideSpectrumMatchScoreNameMergeMap nameMerge ON newScore.ScoreNameId = BeforeMergeId
                ";
         void addNewPeptideSpectrumMatchScores (IDbConnection conn) { conn.ExecuteNonQuery(String.Format(addNewPeptideSpectrumMatchScoresSql, mergeSourceDatabase, MaxPeptideSpectrumMatchId)); }
@@ -550,8 +550,8 @@ namespace IDPicker.DataModel
 
 
         static string addNewAnalysisParametersSql =
-              @"INSERT INTO merged.AnalysisParameter
-                SELECT AfterMergeId * 1000 + Id, AfterMergeId, Name, Value
+              @"INSERT INTO merged.AnalysisParameter (Analysis, Name, Value)
+                SELECT AfterMergeId, Name, Value
                 FROM {0}.AnalysisParameter newAP
                 JOIN AnalysisMergeMap aMerge ON Analysis = BeforeMergeId
                 WHERE AfterMergeId > {1}
@@ -574,7 +574,7 @@ namespace IDPicker.DataModel
                        (SELECT IFNULL(MAX(Id),0) FROM {0}.PeptideInstance),
                        (SELECT IFNULL(MAX(Id),0) FROM {0}.Peptide),
                        (SELECT IFNULL(MAX(Id),0) FROM {0}.PeptideSpectrumMatch),
-                       (SELECT IFNULL(MAX(Id),0) FROM {0}.PeptideSpectrumMatchScoreNames),
+                       (SELECT IFNULL(MAX(Id),0) FROM {0}.PeptideSpectrumMatchScoreName),
                        (SELECT IFNULL(MAX(Id),0) FROM {0}.PeptideModification),
                        (SELECT IFNULL(MAX(Id),0) FROM {0}.Modification),
                        (SELECT IFNULL(MAX(Id),0) FROM {0}.SpectrumSourceGroup),

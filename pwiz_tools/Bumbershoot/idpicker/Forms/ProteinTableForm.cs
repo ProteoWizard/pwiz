@@ -184,7 +184,7 @@ namespace IDPicker.Forms
             {
                 if (currentCell.Item.RowObject is ProteinGroupRow &&
                     (viewFilter.Protein != null && viewFilter.Protein.Count(x => x.Id == (currentCell.Item.RowObject as ProteinGroupRow).FirstProteinId) == 0||
-                     viewFilter.Cluster != null && viewFilter.Cluster.Contains((currentCell.Item.RowObject as ProteinGroupRow).Cluster)))
+                     viewFilter.Cluster != null && viewFilter.Cluster.Contains((currentCell.Item.RowObject as ProteinGroupRow).Cluster.Value)))
                     currentCell.SubItem.ForeColor = SystemColors.GrayText;
                 else if (currentCell.Item.RowObject is ProteinRow &&
                          (viewFilter.Protein != null && viewFilter.Protein.Count(x => x.Id == (currentCell.Item.RowObject as ProteinRow).Protein.Id) == 0||
@@ -337,8 +337,8 @@ namespace IDPicker.Forms
                 };
 
                 if (newDataFilter.Cluster == null)
-                    newDataFilter.Cluster = new List<long?>();
-                newDataFilter.Cluster.Add((e.Item.RowObject as ProteinGroupRow).Cluster);
+                    newDataFilter.Cluster = new List<long>();
+                newDataFilter.Cluster.Add((e.Item.RowObject as ProteinGroupRow).Cluster.Value);
                 if (ProteinViewFilter != null)
                     ProteinViewFilter(this, newDataFilter);
             }
