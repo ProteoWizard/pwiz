@@ -123,10 +123,10 @@ namespace pwiz.SkylineTestTutorial
                                           RelativeRT.Unknown, null, null, null);
             AddStaticMod(glnPyroGlu, peptideSettingsUI1);
             RunUI(() => peptideSettingsUI1.PickedStaticMods = new[] {"Gln->pyro-Glu"});
-            var mod15N = new StaticMod("All 15N", null, null, false, null, LabelAtoms.N15,
+            var mod15N = new StaticMod("Label:15N", null, null, false, null, LabelAtoms.N15,
                               RelativeRT.Matching, null, null, null);
             AddHeavyMod(mod15N, peptideSettingsUI1);
-            RunUI(() => peptideSettingsUI1.PickedHeavyMods = new[] { "All 15N" });
+            RunUI(() => peptideSettingsUI1.PickedHeavyMods = new[] { "Label:15N" });
             OkDialog(peptideSettingsUI1, peptideSettingsUI1.OkDialog);
 
             Assert.IsTrue(WaitForCondition(() =>

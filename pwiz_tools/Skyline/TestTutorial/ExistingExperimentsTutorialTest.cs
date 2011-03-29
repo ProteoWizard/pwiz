@@ -51,8 +51,8 @@ namespace pwiz.SkylineTestTutorial
             RunFunctionalTest();
         }
 
-        private const string HEAVY_R = "Heavy R";
-        private const string HEAVY_K = "Heavy K";
+        private const string HEAVY_R = "Label:13C(6)15N(4) (C-term R)";
+        private const string HEAVY_K = "Label:13C(6)15N(2) (C-term K)";
 
         protected override void DoTest()
         {
@@ -378,14 +378,14 @@ namespace pwiz.SkylineTestTutorial
                 if(removeCTerminalMod)
                     editPepModsDlg.SelectModification(IsotopeLabelType.heavy, sequence.Length - 1, "");
             });
-            if(Settings.Default.HeavyModList.Contains(mod => Equals(mod.Name, "13C")))
-                RunUI(() => editPepModsDlg.SelectModification(IsotopeLabelType.heavy, sequence.IndexOf(aa13C), "13C"));
+            if(Settings.Default.HeavyModList.Contains(mod => Equals(mod.Name, "Label:13C")))
+                RunUI(() => editPepModsDlg.SelectModification(IsotopeLabelType.heavy, sequence.IndexOf(aa13C), "Label:13C"));
             else
             {
                 RunDlg<EditStaticModDlg>(() => editPepModsDlg.AddNewModification(sequence.IndexOf(aa13C), IsotopeLabelType.heavy),
                     editStaticModDlg =>
                 {
-                    editStaticModDlg.Modification = new StaticMod("13C", null, null, LabelAtoms.C13);
+                    editStaticModDlg.Modification = new StaticMod("Label:13C", null, null, LabelAtoms.C13);
                     editStaticModDlg.OkDialog();
                 });
             }

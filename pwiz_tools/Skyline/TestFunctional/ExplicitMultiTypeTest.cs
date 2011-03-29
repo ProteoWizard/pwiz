@@ -112,7 +112,7 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(heavyLabelNames[i], heavyLabelTypes[i].Name);
 
             // Add new heavy modifications
-            var mod15N = new StaticMod("All 15N", null, null, null, LabelAtoms.N15, null, null);
+            var mod15N = new StaticMod("Label:15N", null, null, null, LabelAtoms.N15, null, null);
             AddHeavyMod(mod15N, peptideSettingsUI);
 //            var mod13C = new StaticMod("All 13C", null, null, null, LabelAtoms.C13, null, null);
 //            AddHeavyMod(mod13C, peptideSettingsUI);
@@ -120,7 +120,7 @@ namespace pwiz.SkylineTestFunctional
             AddHeavyMod(modK13C, peptideSettingsUI);
             var modR13C = new StaticMod("13C R", "R", ModTerminus.C, null, LabelAtoms.C13, null, null);
             AddHeavyMod(modR13C, peptideSettingsUI);
-            var modV13C = new StaticMod("Heavy V", "V", null, null, LabelAtoms.C13|LabelAtoms.N15, null, null);
+            var modV13C = new StaticMod("Label:13C(5)15N(1) (V)", "V", null, null, LabelAtoms.C13 | LabelAtoms.N15, null, null);
             AddHeavyMod(modV13C, peptideSettingsUI);
 
             // Set heavy modification for the peptides

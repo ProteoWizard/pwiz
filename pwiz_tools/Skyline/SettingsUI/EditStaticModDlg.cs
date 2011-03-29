@@ -35,22 +35,23 @@ namespace pwiz.Skyline.SettingsUI
     public partial class EditStaticModDlg : Form
     {
         private StaticMod _modification;
+        private StaticMod _originalModification;
         private readonly IEnumerable<StaticMod> _existing;
 
         private readonly bool _editing;
         private readonly bool _heavy;
         private bool _showLoss = true; // Design mode with loss UI showing
 
-        public EditStaticModDlg(IEnumerable<StaticMod> existing, bool heavy, bool editingExisting)
+        public EditStaticModDlg(StaticMod modEditing, IEnumerable<StaticMod> existing, bool heavy)
         {
             _existing = existing;
-            _editing = editingExisting;
+            _editing = modEditing != null;
             _heavy = heavy;
 
             InitializeComponent();
 
-            ComboNameVisible = !editingExisting;
-            TextNameVisible = editingExisting;
+            ComboNameVisible = !_editing;
+            TextNameVisible = _editing;
 
             UniMod.Init();
             UpdateListAvailableMods();
@@ -83,6 +84,9 @@ namespace pwiz.Skyline.SettingsUI
             ShowLoss = false;
             if (heavy)
                 btnLoss.Visible = false;
+
+
+            Modification = _originalModification = modEditing;
         }
 
         public StaticMod Modification
@@ -91,9 +95,14 @@ namespace pwiz.Skyline.SettingsUI
             set
             {
                 _modification = value;
+
+                // Update the dialog.
                 if (_modification == null)
                 {
-                    comboMod.Text = textName.Text = "";
+                    if (_editing) 
+                        textName.Text = "";
+                    else
+                        comboMod.Text = "";
                     comboAA.Text = "";
                     comboTerm.SelectedIndex = 0;
                     cbVariableMod.Checked = false;
@@ -110,7 +119,10 @@ namespace pwiz.Skyline.SettingsUI
                 }
                 else
                 {
-                    comboMod.Text = textName.Text = _modification.Name;
+                    if (_editing)
+                        textName.Text = _modification.Name;
+                    else
+                        comboMod.Text = _modification.Name;
                     comboAA.Text = _modification.AAs ?? "";
                     if (_modification.Terminus == null)
                         comboTerm.SelectedIndex = 0;
@@ -236,14 +248,11 @@ namespace pwiz.Skyline.SettingsUI
             // Allow updating the original modification
             if (!_editing || !Equals(name, Modification.Name))
             {
-                // But not any other existing modification
-                foreach (StaticMod mod in _existing)
+                if(!ModNameAvailable(name))
                 {
-                    if (Equals(name, mod.Name))
-                    {
-                        helper.ShowTextBoxError(e, comboMod, "The modification '{0}' already exists.", name);
-                        return;
-                    }
+                    helper.ShowTextBoxError(e, _editing ? (Control)textName : comboMod, 
+                        "The modification '{0}' already exists.", name);
+                    return;
                 }
             }
 
@@ -342,8 +351,12 @@ namespace pwiz.Skyline.SettingsUI
                 relativeRT = (RelativeRT)Enum.Parse(typeof(RelativeRT),
                     comboRelativeRT.SelectedItem.ToString());
             }
+            
+            // Store state of the chemical formula checkbox for next use.
+            if (cbChemicalFormula.Visible)
+                Settings.Default.ShowHeavyFormula = panelFormula.Visible;
 
-            Modification = new StaticMod(name,
+            var newMod = new StaticMod(name,
                                          aas,
                                          term,
                                          cbVariableMod.Checked,
@@ -354,11 +367,83 @@ namespace pwiz.Skyline.SettingsUI
                                          avgMass,
                                          losses);
 
-            // Store state of the chemical formula checkbox for next use.
-            if (cbChemicalFormula.Visible)
-                Settings.Default.ShowHeavyFormula = panelFormula.Visible;
+            foreach (StaticMod mod in _existing)
+            {
+                if(newMod.Equivalent(mod) && !(_editing && mod.Equals(_originalModification)))
+                {
+                    MultiButtonMsgDlg dlg = new MultiButtonMsgDlg(
+                        string.Format("There is an existing modification with the same settings:\n'{0}'."
+                        + "\n\nContinue?", mod.Name), "OK");
+                    var result = dlg.ShowDialog(this);
+                    if(result == DialogResult.OK)
+                    {
+                        Modification = newMod;
+                        DialogResult = DialogResult.OK;
+                    }
+                    return;
+                }
+            }
+            
+            var uniMod = GetModification(name);
+            // If the modification name is not found in Unimod, check if there exists a modification in Unimod that matches
+            // the dialog modification, and prompt the user to to use the Unimod modification instead.
+            if (uniMod == null)
+            {
+                var matchingMod = UniMod.FindMatchingStaticMod(_heavy, newMod);
+                if (matchingMod != null && ModNameAvailable(matchingMod.Name))
+                {
+                    MultiButtonMsgDlg dlg =
+                        new MultiButtonMsgDlg(
+                            string.Format(
+                                "There is a Unimod modification with the same settings."
+                                + "\n\nClick 'Unimod' to use the name '{0}'."
+                                + "\nClick 'Custom' to use the name '{1}'.",
+                                matchingMod.Name, name),
+                            "Unimod", "Custom");
+                    var result = dlg.ShowDialog(this);
+                    if (result == DialogResult.Yes)
+                        newMod = matchingMod;
+                    if (result == DialogResult.Cancel)
+                        return;
+                }
+            }
+            else
+            {
+                // If the dialog modification matches the modification of the same name in Unimod, 
+                // use the UnimodId.
+                if (newMod.Equivalent(uniMod))
+                    newMod = uniMod.ChangeVariable(newMod.IsVariable);
+                else
+                {
+                    // Finally, if the modification name is found in Unimod, but the modification in Unimod does not 
+                    // match the dialog modification, prompt the user to use the Unimod modification definition instead.
+                    MultiButtonMsgDlg dlg =
+                        new MultiButtonMsgDlg(
+                            string.Format("This modification does not match the Unimod specifications for\n'{0}'."
+                            + "\n\nUse non-standard settings for this name?", name),
+                            "OK");
+                    var result = dlg.ShowDialog(this);
+                    if (result != DialogResult.OK)
+                        return;
+                }
+            }
+
+            _modification = newMod;
 
             DialogResult = DialogResult.OK;
+        }
+
+        private bool ModNameAvailable(string name)
+        {
+            // But not any other existing modification
+            foreach (StaticMod mod in _existing)
+            {
+                if (Equals(name, mod.Name))
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         private void btnOk_Click(object sender, EventArgs e)
@@ -658,13 +743,18 @@ namespace pwiz.Skyline.SettingsUI
 
         public void SetModification(string modName)
         {
+            Modification = GetModification(modName);
+        }
+
+        private StaticMod GetModification(string modName)
+        {
             StaticMod mod;
             var dict = _heavy ? UniMod.DictIsotopeModNames : UniMod.DictStructuralModNames;
             var hiddenDict = _heavy ? UniMod.DictHiddenIsotopeModNames : UniMod.DictHiddenStructuralModNames;
             dict.TryGetValue(modName, out mod);
             if (mod == null)
                 hiddenDict.TryGetValue(modName, out mod);
-            Modification = mod;
+            return mod;
         }
 
         private void comboMod_SelectedIndexChanged(object sender, EventArgs e)

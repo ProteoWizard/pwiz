@@ -230,7 +230,9 @@ namespace pwiz.Skyline.Controls
         /// <returns>Message box text</returns>
         public string GetControlMessage(Control control)
         {
-            Control label = _parent.GetNextControl(control, false);
+            Control label = control;
+            while(!(label is Label))
+                label = _parent.GetNextControl(label, false);
             string message = (label == null ? "Field" : label.Text);
             message = message.Replace("&", "");
             if (message.Length > 0 && message[message.Length - 1] == ':')

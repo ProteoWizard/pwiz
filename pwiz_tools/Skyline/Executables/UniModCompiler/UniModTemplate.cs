@@ -69,7 +69,7 @@ namespace pwiz.Skyline.Model.DocSettings
             int id, bool structural, bool hidden)
         {
             var newMod =
-                new StaticMod(name, aas, terminus, false, formula, labelAtoms, RelativeRT.Matching, null, null, losses);
+                new StaticMod(name, aas, terminus, false, formula, labelAtoms, RelativeRT.Matching, null, null, losses, id);
             AddMod(newMod, id, structural, hidden);
         }
 
@@ -138,6 +138,23 @@ namespace pwiz.Skyline.Model.DocSettings
                     DictModMasses.Add(massKey, mod);
                 }
             }
+        }
+
+        public static StaticMod FindMatchingStaticMod(bool isotope, StaticMod modToMatch)
+        {
+            var dict = isotope ? DictIsotopeModNames : DictStructuralModNames;
+            var hiddenDict = isotope ? DictHiddenIsotopeModNames : DictHiddenStructuralModNames;
+            foreach (StaticMod mod in dict.Values)
+            {
+                if (mod.Equivalent(modToMatch, false, false))
+                    return mod;
+            }
+            foreach (StaticMod mod in hiddenDict.Values)
+            {
+                if (mod.Equivalent(modToMatch, false, false))
+                    return mod;
+            }
+            return null;
         }
 
         public static bool ShowMatchedModDlg(List<StaticMod> structuralMods, List<StaticMod> isotopeMods, string action)

@@ -65,7 +65,14 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public StaticMod(string name, string aas, ModTerminus? term,
             string formula, LabelAtoms labelAtoms, double? monoMass, double? avgMass)
-            : this(name, aas, term, false, formula, labelAtoms, RelativeRT.Matching, monoMass, avgMass, null)
+            : this(name, aas, term, false, formula, labelAtoms, RelativeRT.Matching, monoMass, avgMass, null, null)
+        {
+            
+        }
+
+        public StaticMod(string name, string aas, ModTerminus? term, bool isVariable, string formula,
+                         LabelAtoms labelAtoms, RelativeRT relativeRT, double? monoMass, double? avgMass, IList<FragmentLoss> losses)
+            : this(name, aas, term, isVariable, formula, labelAtoms, RelativeRT.Matching, monoMass, avgMass, losses, null)
         {
             
         }
@@ -79,7 +86,8 @@ namespace pwiz.Skyline.Model.DocSettings
                          RelativeRT relativeRT,
                          double? monoMass,
                          double? avgMass,
-                         IList<FragmentLoss> losses)
+                         IList<FragmentLoss> losses,
+                         int? uniModId)
             : base(name)
         {
             AAs = aas;
@@ -92,6 +100,8 @@ namespace pwiz.Skyline.Model.DocSettings
             AverageMass = avgMass;                
 
             Losses = losses;
+
+            UnimodId = uniModId;
 
             Validate();
         }
@@ -130,6 +140,8 @@ namespace pwiz.Skyline.Model.DocSettings
                     yield return aaPart.Trim()[0];
             }
         }
+
+        public int? UnimodId { get; private set; }
 
         /// <summary>
         /// True if the modification must be declared on a peptide to have
@@ -242,7 +254,8 @@ namespace pwiz.Skyline.Model.DocSettings
             relative_rt,
             massdiff_monoisotopic,
             massdiff_average,
-            explicit_decl
+            explicit_decl, 
+            unimod_id
         }
 
         private void Validate()
@@ -349,6 +362,8 @@ namespace pwiz.Skyline.Model.DocSettings
             if (!IsVariable)
                 IsExplicit = reader.GetBoolAttribute(ATTR.explicit_decl);
 
+            UnimodId = reader.GetNullableIntAttribute(ATTR.unimod_id);
+
             // Consume tag
             reader.Read();
 
@@ -384,6 +399,8 @@ namespace pwiz.Skyline.Model.DocSettings
             if (!IsVariable)
                 writer.WriteAttribute(ATTR.explicit_decl, IsExplicit);
 
+            writer.WriteAttributeNullable(ATTR.unimod_id, UnimodId);
+
             if (Losses != null)
                 writer.WriteElements(Losses);
         }
@@ -395,14 +412,24 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <summary>
         /// Equality minus the <see cref="IsExplicit"/> flag.
         /// </summary>
+        public bool EquivalentAll(StaticMod obj)
+        {
+            return Equivalent(obj) 
+                && base.Equals(obj) 
+                && obj.IsVariable.Equals(IsVariable) 
+                && Equals(obj.UnimodId, UnimodId);
+        }
+
+        /// <summary>
+        /// Equality minus <see cref="IsExplicit"/>, <see cref="UnimodId"/>, <see cref="IsVariable"/> and <see cref="XmlNamedElement.Equals(object)"/>.
+        /// Used checking for matches between user defined modifications and UniMod modifications.
+        /// </summary>
         public bool Equivalent(StaticMod obj)
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return base.Equals(obj) &&
-                Equals(obj.AAs, AAs) &&
+            return Equals(obj.AAs, AAs) &&
                 obj.Terminus.Equals(Terminus) &&
-                obj.IsVariable.Equals(IsVariable) &&
                 obj.AverageMass.Equals(AverageMass) &&
                 Equals(obj.Formula, Formula) &&
                 Equals(obj.LabelAtoms, LabelAtoms) &&
@@ -415,7 +442,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return Equivalent(obj) &&
+            return EquivalentAll(obj) &&
                 obj.IsExplicit.Equals(IsExplicit);
         }
 
@@ -767,7 +794,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (iStaticMod == -1)
                     continue;
                 var staticMod = staticMods[iStaticMod];
-                if (mod.Modification.Equivalent(staticMod))
+                if (mod.Modification.EquivalentAll(staticMod))
                     modsNew.Add(mod);
                 else
                     modsNew.Add(mod.ChangeModification(staticMod));

@@ -689,7 +689,7 @@ namespace pwiz.Skyline.Properties
         public override StaticMod EditItem(Control owner, StaticMod item,
             IEnumerable<StaticMod> existing, object tag)
         {
-            EditStaticModDlg editMod = new EditStaticModDlg(existing ?? this, false, item != null) { Modification = item };
+            EditStaticModDlg editMod = new EditStaticModDlg(item, existing ?? this, false);
             if (editMod.ShowDialog(owner) == DialogResult.OK)
                 return editMod.Modification;
 
@@ -721,10 +721,9 @@ namespace pwiz.Skyline.Properties
         public override StaticMod EditItem(Control owner, StaticMod item,
             IEnumerable<StaticMod> existing, object tag)
         {
-            EditStaticModDlg editMod = new EditStaticModDlg(existing ?? this, true, item != null)
+            EditStaticModDlg editMod = new EditStaticModDlg(item, existing ?? this, true)
                                            {
-                                               Text = "Edit Isotope Modification",
-                                               Modification = item
+                                               Text = "Edit Isotope Modification"
                                            };
             if (editMod.ShowDialog(owner) == DialogResult.OK)
                 return editMod.Modification;
