@@ -347,7 +347,9 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             public static PointPair AreaPointPairMissing(int xValue)
             {
-                return new PointPair(xValue, PointPairBase.Missing);                
+                // Using PointPairBase.Missing caused too many problems in area graphs
+                // Zero is essentially missing for column graphs, unlike the retention time hi-lo graphs
+                return new PointPair(xValue, 0);
             }
 
             private readonly int _ratioIndex;

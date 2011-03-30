@@ -252,7 +252,7 @@ namespace pwiz.SkylineTestTutorial
             });
             var importResultsNameDlg = ShowDialog<ImportResultsNameDlg>(importResultsDlg0.OkDialog);
             RunUI(importResultsNameDlg.NoDialog);
-            WaitForCondition(240*1000, () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+            WaitForCondition(300*1000, () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
             var docCurrent = SkylineWindow.Document;
             RunUI(SkylineWindow.RemoveMissingResults);
             WaitForDocumentChange(docCurrent);
