@@ -848,10 +848,8 @@ namespace pwiz.Skyline
                 {
                     if (string.IsNullOrEmpty(textCsv))
                         Paste(text);
-                    else if (!text.StartsWith(">"))
-                        Paste(textCsv);
                     else
-                        Paste(textCsv, text);
+                        Paste(textCsv);
                 }
                 catch (InvalidDataException x)
                 {
@@ -861,11 +859,6 @@ namespace pwiz.Skyline
         }
 
         public void Paste(string text)
-        {
-            Paste(text, null);
-        }
-
-        public void Paste(string text, string textSeq)
         {
             bool peptideList = false;
             Type[] columnTypes;
@@ -885,8 +878,7 @@ namespace pwiz.Skyline
                     {
                         if (i > 0 && aa == 0)
                         {
-                            MessageBox.Show(string.Format("Empty sequence found at line {0}.", i + 1));
-                            return;
+                            throw new InvalidDataException(string.Format("Empty sequence found at line {0}.", i + 1));
                         }
                         aa = 0;
                         continue;
@@ -898,8 +890,7 @@ namespace pwiz.Skyline
                             aa++;
                         else if (!char.IsWhiteSpace(c) && c != '*')
                         {
-                            MessageBox.Show(this, string.Format("Unexpected character '{0}' found on line {1}.", c, i + 1), Program.Name);
-                            return;
+                            throw new InvalidDataException(string.Format("Unexpected character '{0}' found on line {1}.", c, i + 1));
                         }
                     }
                 }
@@ -922,12 +913,20 @@ namespace pwiz.Skyline
                 }
 
                 if (MassListImporter.HasNumericColumn(columnTypes))
-                    ImportMassList(new StringReader(text), provider, separator, textSeq, "Paste mass list");
+                    ImportMassList(new StringReader(text), provider, separator, "Paste transition list");
                 else if (columnTypes[columnTypes.Length - 1] != typeof(FastaSequence))
                     throw new InvalidDataException("Protein sequence not found.\nThe protein sequence must be the last value in each line.");
                 else
                 {
-                    string textFasta = FastaImporter.ToFasta(text, separator);
+                    string textFasta;
+                    try
+                    {
+                         textFasta = FastaImporter.ToFasta(text, separator);
+                    }
+                    catch (LineColNumberedIoException x)
+                    {                        
+                        throw new InvalidDataException(x.Message, x);
+                    }
                     ImportFasta(new StringReader(textFasta), Helpers.CountLinesInString(textFasta),
                         false, "Paste proteins");
                 }
@@ -993,7 +992,7 @@ namespace pwiz.Skyline
                 }
 
                 // Choose an unused ID
-                string seqId = GetPeptideGroupId(Document, peptideList);
+                string seqId = Document.GetPeptideGroupId(peptideList);
 
                 // Construct valid FASTA format (with >> to indicate custom name)
                 text = ">>" + seqId + "\n" + text;
@@ -1002,19 +1001,6 @@ namespace pwiz.Skyline
             string description = (peptideList ? "Paste peptide list" : "Paste FASTA");
             ImportFasta(new StringReader(text), Helpers.CountLinesInString(text),
                 peptideList, description);
-        }
-
-        public static string GetPeptideGroupId(SrmDocument document, bool peptideList)
-        {
-            HashSet<string> ids = new HashSet<string>();
-            foreach (PeptideGroupDocNode nodeGroup in document.Children)
-                ids.Add(nodeGroup.Name);
-
-            string baseId = (peptideList ? "peptides" : "sequence");
-            int i = 1;
-            while (ids.Contains(baseId + i))
-                i++;
-            return baseId + i;
         }
 
         private string FilterPeptideList(string text)
@@ -2048,7 +2034,7 @@ namespace pwiz.Skyline
 
                             if (oldPeptideGroupDocNode == null)
                             {
-                                peptideGroupName = GetPeptideGroupId(Document, true);
+                                peptideGroupName = Document.GetPeptideGroupId(true);
                                 peptideGroup = new PeptideGroup();
                             }
                             else

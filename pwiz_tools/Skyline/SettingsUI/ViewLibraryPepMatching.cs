@@ -540,7 +540,7 @@ namespace pwiz.Skyline.SettingsUI
                             }
                             peptideGroupDocNode = new PeptideGroupDocNode(
                                     new FastaSequence(name, protein.Description, alternativeProteins, protein.Sequence),
-                                    SkylineWindow.GetPeptideGroupId(document, true), null, new PeptideDocNode[0]);
+                                    document.GetPeptideGroupId(true), null, new PeptideDocNode[0]);
                         }
                     }
                     // Create a new peptide that matches this protein.

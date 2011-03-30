@@ -1547,6 +1547,24 @@ namespace pwiz.Skyline.Model
             return nodeResult.ChangeSettings(settings, nodePep.ExplicitMods, SrmSettingsDiff.ALL);
         }
 
+        /// <summary>
+        /// Merges the transitions of another <see cref="TransitionGroupDocNode"/> into this one,
+        /// giving this node precedence when both nodes have matching transitions.
+        /// </summary>
+        /// <param name="nodeGroup">The node from which transitions are merged</param>
+        /// <returns>A new copy of this node with merged children, or this node if all children match</returns>
+        public TransitionGroupDocNode Merge(TransitionGroupDocNode nodeGroup)
+        {
+            var childrenNew = new List<TransitionDocNode>(Children.Cast<TransitionDocNode>());
+            var setExisting = new HashSet<TransitionLossKey>(childrenNew.Select(n => n.Key));
+            // CONSIDER: This code prefers existing doc nodes as long as the key is the same
+            //           This works for the PasteDlg case for which it was written, but it is
+            //           conceivable that a call would expect the merged doc node to take precedence.
+            childrenNew.AddRange(nodeGroup.Children.Cast<TransitionDocNode>().Where(n => !setExisting.Contains(n.Key)));
+            childrenNew.Sort(TransitionGroup.CompareTransitions);
+            return (TransitionGroupDocNode)ChangeChildrenChecked(childrenNew.Cast<DocNode>().ToArray());
+        }
+
         #endregion
 
         #region object overrides

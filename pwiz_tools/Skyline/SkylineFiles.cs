@@ -738,7 +738,7 @@ namespace pwiz.Skyline
 
                         using (var readerList = new StreamReader(dlg.FileName))
                         {
-                            ImportMassList(readerList, provider, sep, null, "Import mass list");
+                            ImportMassList(readerList, provider, sep, "Import transition list");
                         }                        
                     }
                 }
@@ -749,14 +749,14 @@ namespace pwiz.Skyline
             }
         }
 
-        private void ImportMassList(TextReader reader, IFormatProvider provider,
-            char separator, string textSeq, string description)
+        private void ImportMassList(TextReader reader, IFormatProvider provider, char separator, string description)
         {
             SrmTreeNode nodePaste = sequenceTree.SelectedNode as SrmTreeNode;
 
             IdentityPath selectPath = null;
 
-            ModifyDocument(description, doc => doc.ImportMassList(reader, provider, separator, textSeq,
+            // TODO: Support long wait dialog
+            ModifyDocument(description, doc => doc.ImportMassList(reader, null, -1, provider, separator,
                 nodePaste == null ? null : nodePaste.Path, out selectPath));
 
             if (selectPath != null)

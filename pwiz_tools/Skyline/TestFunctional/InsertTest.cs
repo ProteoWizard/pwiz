@@ -58,7 +58,6 @@ namespace pwiz.SkylineTestFunctional
                 return backgroundProteome.GetDigestion(peptideSettings) != null;
             });
 
-
             SetClipboardTextUI(PEPTIDES_CLIPBOARD_TEXT);
             var insertPeptidesDlg = ShowDialog<PasteDlg>(SkylineWindow.ShowPastePeptidesDlg);
             // Keep all peptides.
@@ -66,7 +65,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.AreEqual(10, insertPeptidesDlg.PeptideRowCount);
             Assert.IsTrue(insertPeptidesDlg.PeptideRowsContainProtein(protein => string.IsNullOrEmpty(protein)));
             Assert.IsFalse(insertPeptidesDlg.PeptideRowsContainPeptide(peptide => string.IsNullOrEmpty(peptide)));
-            RunUI(insertPeptidesDlg.OkDialog);
+            OkDialog(insertPeptidesDlg, insertPeptidesDlg.OkDialog);
             // Test adding to document.
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 6, 9, 9, 28);
             // Keep only first protein.

@@ -297,6 +297,19 @@ namespace pwiz.Skyline.Model
                 return path;
             }
         }
+
+        public string GetPeptideGroupId(bool peptideList)
+        {
+            HashSet<string> ids = new HashSet<string>();
+            foreach (PeptideGroupDocNode nodeGroup in Children)
+                ids.Add(nodeGroup.Name);
+
+            string baseId = (peptideList ? "peptides" : "sequence");
+            int i = 1;
+            while (ids.Contains(baseId + i))
+                i++;
+            return baseId + i;
+        }
         
         /// <summary>
         /// Make sure every new copy of a document gets an incremented value
@@ -504,10 +517,16 @@ namespace pwiz.Skyline.Model
         }
 
         public SrmDocument ImportMassList(TextReader reader, IFormatProvider provider, char separator,
-            string textSeq, IdentityPath to, out IdentityPath firstAdded)
+            IdentityPath to, out IdentityPath firstAdded)
+        {
+            return ImportMassList(reader, null, -1, provider, separator, to, out firstAdded);
+        }
+
+        public SrmDocument ImportMassList(TextReader reader, ILongWaitBroker longWaitBroker, long lines,
+            IFormatProvider provider, char separator, IdentityPath to, out IdentityPath firstAdded)
         {
             MassListImporter importer = new MassListImporter(this, provider, separator);
-            return AddPeptideGroups(importer.Import(reader, textSeq), false, to, out firstAdded);
+            return AddPeptideGroups(importer.Import(reader, longWaitBroker, lines), false, to, out firstAdded);
         }
 
         public SrmDocument AddPeptideGroups(IEnumerable<PeptideGroupDocNode> peptideGroupsNew, bool peptideList, IdentityPath to, out IdentityPath firstAdded)

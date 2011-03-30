@@ -18,6 +18,7 @@
  */
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -122,13 +123,7 @@ namespace pwiz.SkylineTestA
 
         private static int GetLossCount(SrmDocument document, int minLosses)
         {
-            int count = 0;
-            foreach (var nodeTran in document.Transitions)
-            {
-                if (nodeTran.HasLoss && nodeTran.Losses.Losses.Count >= minLosses)
-                    count++;
-            }
-            return count;
+            return document.Transitions.Count(nodeTran => nodeTran.HasLoss && nodeTran.Losses.Losses.Count >= minLosses);
         }
     }
 }

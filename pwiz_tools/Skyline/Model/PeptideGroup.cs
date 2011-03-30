@@ -21,6 +21,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
+using System.Text;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Model.Lib;
@@ -141,6 +143,30 @@ namespace pwiz.Skyline.Model
         public override string Description { get { return _description; } }
         public override string Sequence { get { return _sequence; } }
         public IList<AlternativeProtein> Alternatives { get; private set; }
+        public IEnumerable<string> AlternativesText
+        {
+            get { return Alternatives.Select(alt => string.Format("{0} {1}", alt.Name, alt.Description)); }
+        }
+
+        public string FastaFileText
+        {
+            get
+            {
+                StringBuilder sb = new StringBuilder();
+                sb.Append(">").Append(Name).Append(" ").Append(Description);
+                foreach (var alt in Alternatives)
+                    sb.Append((char)1).Append(alt.Name).Append(" ").Append(alt.Description);
+
+                for (int i = 0; i < Sequence.Length; i++)
+                {
+                    if (i % 60 == 0)
+                        sb.AppendLine();
+                    sb.Append(Sequence[i]);
+                }
+                sb.Append("*");
+                return sb.ToString();
+            }
+        }
 
         public IEnumerable<PeptideDocNode> CreatePeptideDocNodes(SrmSettings settings, bool useFilter)
         {

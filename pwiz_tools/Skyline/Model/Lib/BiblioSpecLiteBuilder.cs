@@ -97,8 +97,6 @@ namespace pwiz.Skyline.Model.Lib
                 argv.Add("-i");
                 argv.Add(Id);
             }
-            // TODO: Need to allow files on stdin to avoid overflowing command-line length limit
-            //       For now, use a working directory as close to the input files as possible
             string dirCommon = PathEx.GetCommonRoot(InputFiles);
             var stdinBuilder = new StringBuilder();
             foreach (string fileName in InputFiles)

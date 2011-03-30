@@ -184,6 +184,33 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public PeptideGroupDocNode Merge(PeptideGroupDocNode nodePepGroup)
+        {
+            var childrenNew = new List<PeptideDocNode>(Children.Cast<PeptideDocNode>());
+            // Remember where all the existing children are
+            var dictPepIndex = new Dictionary<PeptideModKey, int>();
+            for (int i = 0; i < childrenNew.Count; i++)
+            {
+                var key = childrenNew[i].Key;
+                if (!dictPepIndex.ContainsKey(key))
+                    dictPepIndex[key] = i;
+            }
+            // Add the new children to the end, or merge when the peptide is already present
+            foreach (PeptideDocNode nodePep in nodePepGroup.Children)
+            {
+                int i;
+                if (dictPepIndex.TryGetValue(nodePep.Key, out i))
+                    childrenNew[i] = childrenNew[i].Merge(nodePep);
+                else
+                    childrenNew.Add(nodePep);
+                    
+            }
+            // If it is a FASTA sequence, make sure new peptides are sorted into place
+            if (PeptideGroup is FastaSequence && childrenNew.Count > Children.Count)
+                childrenNew.Sort(FastaSequence.ComparePeptides);
+            return (PeptideGroupDocNode) ChangeChildrenChecked(childrenNew.Cast<DocNode>().ToArray());
+        }
+
         public PeptideGroupDocNode EnsureChildren(SrmSettings settings, bool peptideList)
         {
             var result = this;

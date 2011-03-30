@@ -250,8 +250,7 @@ namespace pwiz.SkylineTest
                 {
                     IdentityPath pathAdded;
                     IFormatProvider provider = CultureInfo.InvariantCulture;
-                    docImport = docImport.ImportMassList(readerImport, provider, ',',
-                        null, IdentityPath.ROOT, out pathAdded);
+                    docImport = docImport.ImportMassList(readerImport, provider, ',', IdentityPath.ROOT, out pathAdded);
                 }
             }
 

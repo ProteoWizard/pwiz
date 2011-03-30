@@ -131,7 +131,7 @@ namespace pwiz.Skyline.EditUI
             this.tabControl1.Size = new System.Drawing.Size(805, 429);
             this.tabControl1.TabIndex = 0;
             this.tabControl1.TabStop = false;
-            this.tabControl1.Selecting += new System.Windows.Forms.TabControlCancelEventHandler(tabControl1_Selecting);
+            this.tabControl1.Selecting += new System.Windows.Forms.TabControlCancelEventHandler(this.tabControl1_Selecting);
             // 
             // tabPageFasta
             // 

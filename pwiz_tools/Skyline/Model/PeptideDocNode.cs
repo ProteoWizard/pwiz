@@ -269,6 +269,31 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public PeptideDocNode Merge(PeptideDocNode nodePep)
+        {
+            var childrenNew = new List<TransitionGroupDocNode>(Children.Cast<TransitionGroupDocNode>());
+            // Remember where all the existing children are
+            var dictPepIndex = new Dictionary<TransitionGroup, int>();
+            for (int i = 0; i < childrenNew.Count; i++)
+            {
+                var key = childrenNew[i].TransitionGroup;
+                if (!dictPepIndex.ContainsKey(key))
+                    dictPepIndex[key] = i;
+            }
+            // Add the new children to the end, or merge when the peptide is already present
+            foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
+            {
+                int i;
+                if (dictPepIndex.TryGetValue(nodeGroup.TransitionGroup, out i))
+                    childrenNew[i] = childrenNew[i].Merge(nodeGroup);
+                else
+                    childrenNew.Add(nodeGroup);
+
+            }
+            childrenNew.Sort(Peptide.CompareGroups);
+            return (PeptideDocNode)ChangeChildrenChecked(childrenNew.Cast<DocNode>().ToArray());
+        }
+
         public PeptideDocNode ChangeSettings(SrmSettings settingsNew, SrmSettingsDiff diff)
         {
             return ChangeSettings(settingsNew, diff, true);
@@ -1089,6 +1114,5 @@ namespace pwiz.Skyline.Model
         }
 
         #endregion
-
     }
 }

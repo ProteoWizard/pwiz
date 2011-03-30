@@ -153,13 +153,13 @@ namespace pwiz.SkylineTest.Results
                 // Product m/z out of range
                 var docError = doc;
                 AssertEx.ThrowsException<InvalidDataException>(
-                    () => docError.ImportMassList(reader, provider, ',', null, null, out selectPath));
+                    () => docError.ImportMassList(reader, provider, ',', null, out selectPath));
             }
 
             using (var reader = new StreamReader(path))
             {
                 doc = doc.ChangeSettings(settings.ChangeTransitionInstrument(inst => inst.ChangeMaxMz(1800)));
-                doc = doc.ImportMassList(reader, provider, ',', null, null, out selectPath);
+                doc = doc.ImportMassList(reader, provider, ',', null, out selectPath);
             }
 
             AssertEx.IsDocumentState(doc, 2, 9, 9, 18, 54);

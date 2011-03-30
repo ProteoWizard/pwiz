@@ -330,8 +330,8 @@ namespace pwiz.Skyline.Controls.SeqNode
                     FastaSequence fastaSeq = DocNode.Id as FastaSequence;
                     if (fastaSeq != null)
                     {
-                        foreach (AlternativeProtein alternative in fastaSeq.Alternatives)
-                            yield return string.Format("{0} {1}", alternative.Name, alternative.Description);
+                        foreach (string altText in fastaSeq.AlternativesText)
+                            yield return altText;
                     }
                 }
             }
@@ -415,22 +415,9 @@ namespace pwiz.Skyline.Controls.SeqNode
                 return base.GetNodeData();
 
             DataObject data = new DataObject();
-            StringBuilder sb = new StringBuilder();
-            sb.Append(">").Append(Model.Id).Append(" ");
-            foreach (string desc in Descriptions)
-                sb.Append(desc).Append((char)1);
+            data.SetData(DataFormats.Text, fastaSeq.FastaFileText);
 
-            string aa = fastaSeq.Sequence;
-            for (int i = 0; i < aa.Length; i++)
-            {
-                if (i % 60 == 0)
-                    sb.AppendLine();
-                sb.Append(aa[i]);
-            }
-            sb.Append("*");
-            data.SetData(DataFormats.Text, sb.ToString());
-
-            sb = new StringBuilder();
+            var sb = new StringBuilder();
             sb.Append("<b>").Append(Model.Id).Append("</b> ");
             sb.Append("<i>");
             if (string.IsNullOrEmpty(DocNode.Description))
@@ -448,6 +435,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             bool chosen = (nodePep != null ? peptidesChosen.Contains(nodePep) : false);
 
             bool inPeptide = false;
+            string aa = fastaSeq.Sequence;
             for (int i = 0; i < aa.Length; i++)
             {
                 if (nodePep != null)

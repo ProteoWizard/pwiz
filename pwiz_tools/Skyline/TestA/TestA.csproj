@@ -64,6 +64,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ExplicitModTest.cs" />
+    <Compile Include="FastaImporterTest.cs" />
     <Compile Include="FindNodeTest.cs" />
     <Compile Include="IsotypeModTest.cs" />
     <Compile Include="LibraryLoadTest.cs" />
