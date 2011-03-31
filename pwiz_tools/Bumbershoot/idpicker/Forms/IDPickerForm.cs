@@ -956,17 +956,21 @@ namespace IDPicker
             if (cancel)
                 return;
 
-            DataFilter.DropFilters(session.Connection);
             var qonverter = new Qonverter();
             qonverter.QonversionProgress += progressMonitor.UpdateProgress;
             qonverterSettingsByAnalysis = session.Query<QonverterSettings>().ToDictionary(o => session.Get<Analysis>(o.Id));
-            session.CreateQuery(@"UPDATE PeptideSpectrumMatch SET QValue = 2").ExecuteUpdate();
             foreach (var item in qonverterSettings)
             {
+                // TODO: move updating of QonverterSettings to native Qonverter?
                 qonverter.SettingsByAnalysis[(int)item.Key.Id] = item.Value.ToQonverterSettings();
                 qonverterSettingsByAnalysis[item.Key].DecoyPrefix = item.Value.DecoyPrefix;
                 qonverterSettingsByAnalysis[item.Key].ScoreInfoByName = item.Value.ScoreInfoByName;
                 qonverterSettingsByAnalysis[item.Key].QonverterMethod = item.Value.QonverterMethod;
+                qonverterSettingsByAnalysis[item.Key].Kernel = item.Value.Kernel;
+                qonverterSettingsByAnalysis[item.Key].MassErrorHandling = item.Value.MassErrorHandling;
+                qonverterSettingsByAnalysis[item.Key].MissedCleavagesHandling = item.Value.MissedCleavagesHandling;
+                qonverterSettingsByAnalysis[item.Key].TerminalSpecificityHandling = item.Value.TerminalSpecificityHandling;
+                qonverterSettingsByAnalysis[item.Key].ChargeStateHandling = item.Value.ChargeStateHandling;
                 qonverterSettingsByAnalysis[item.Key].RerankMatches = item.Value.RerankMatches;
                 session.Save(qonverterSettingsByAnalysis[item.Key]);
             }
@@ -976,6 +980,7 @@ namespace IDPicker
             //qonverter.LogQonversionDetails = true;
             try
             {
+                qonverter.Reset(Text);
                 qonverter.Qonvert(Text);
             }
             catch (Exception ex)

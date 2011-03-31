@@ -657,12 +657,26 @@ struct ParserImpl
         }
         string scoreInfo = bal::join(scoreInfoStrings, ";");
 
-        idpDb.execute("CREATE TABLE QonverterSettings (Id INTEGER PRIMARY KEY, QonverterMethod INT, DecoyPrefix TEXT, RerankMatches INT, ScoreInfoByName TEXT);");
+        idpDb.execute("CREATE TABLE QonverterSettings (Id INTEGER PRIMARY KEY,"
+                      "                                QonverterMethod INT,"
+                      "                                DecoyPrefix TEXT,"
+                      "                                RerankMatches INT,"
+                      "                                Kernel INT,"
+                      "                                MassErrorHandling INT,"
+                      "                                MissedCleavagesHandling INT,"
+                      "                                TerminalSpecificityHandling INT,"
+                      "                                ChargeStateHandling INT,"
+                      "                                ScoreInfoByName TEXT);");
 
-        sqlite::command insertQonverterSettings(idpDb, "INSERT INTO QonverterSettings VALUES (1,?,?,?,?)");
+        sqlite::command insertQonverterSettings(idpDb, "INSERT INTO QonverterSettings VALUES (1,?,?,?,?,?,?,?,?,?)");
         insertQonverterSettings.binder() << (int) settings.qonverterMethod.index()
                                          << settings.decoyPrefix
                                          << (settings.rerankMatches ? 1 : 0)
+                                         << (int) settings.kernel.index()
+                                         << (int) settings.massErrorHandling.index()
+                                         << (int) settings.missedCleavagesHandling.index()
+                                         << (int) settings.terminalSpecificityHandling.index()
+                                         << (int) settings.chargeStateHandling.index()
                                          << scoreInfo;
         insertQonverterSettings.execute();
 
@@ -717,6 +731,9 @@ void Parser::ImportSettingsCallback::operator() (const vector<ConstAnalysisPtr>&
 
 void Parser::parse(const vector<string>& inputFilepaths) const
 {
+    if (inputFilepaths.empty())
+        return;
+
     // get the set of distinct analyses in the input files
     DistinctAnalysisMap distinctAnalysisByFilepath;
     findDistinctAnalyses(inputFilepaths, distinctAnalysisByFilepath);

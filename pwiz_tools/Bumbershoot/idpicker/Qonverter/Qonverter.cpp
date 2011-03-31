@@ -306,7 +306,7 @@ void Qonverter::qonvert(sqlite3* db, const ProgressMonitor& progressMonitor)
             expectedScoreNames.insert(bal::to_lower_copy(itr.first));
 
         // get the set of actual score ids and names
-        sql = "SELECT GROUP_CONCAT(scoreName.Name || ' ' || scoreName.Id) "
+        sql = "SELECT GROUP_CONCAT(scoreName.Name || ';' || scoreName.Id) "
               "FROM PeptideSpectrumMatchScore psmScore "
               "JOIN PeptideSpectrumMatchScoreName scoreName ON ScoreNameId=scoreName.Id "
               "JOIN (SELECT psm.Id "
@@ -326,7 +326,7 @@ void Qonverter::qonvert(sqlite3* db, const ProgressMonitor& progressMonitor)
         BOOST_FOREACH(const string& idName, actualScoreIdNamePairs)
         {
             vector<string> idNamePair;
-            bal::split(idNamePair, idName, bal::is_space());
+            bal::split(idNamePair, idName, bal::is_any_of(";"));
             actualScoreNames.push_back(idNamePair[0]);
             actualScoreIdByName[idNamePair[0]] = idNamePair[1];
         }
@@ -369,9 +369,6 @@ void Qonverter::qonvert(sqlite3* db, const ProgressMonitor& progressMonitor)
             scoreIdSet.push_back(actualScoreIdByName[name]);
         }
 
-        // e.g. (1,2)
-        //string scoreIdSetString = "(" + bal::join(scoreIdSet, ",") + ")";
-
         // e.g. "score1.Value, score2.Value, score3.Value"
         string scoreSelects = "score" + bal::join(scoreIdSet, ".Value, score") + ".Value ";
 
@@ -383,26 +380,6 @@ void Qonverter::qonvert(sqlite3* db, const ProgressMonitor& progressMonitor)
                           " ON psm.Id=score" + id + ".PsmId"
                           " AND " + id + "=score" + id + ".ScoreNameId ";
         }
-
-        // retrieve triplets of psm id, decoy state, and score list (with the same order retrieved above)
-        /*sql = "SELECT psm.Id, psm.Spectrum, "
-              "      CASE WHEN SUM(DISTINCT CASE WHEN pro.Accession LIKE '" + decoyPrefix + "%' THEN 1 ELSE 0 END) + SUM(DISTINCT CASE WHEN pro.Accession NOT LIKE '" + decoyPrefix + "%' THEN 1 ELSE 0 END) = 2 THEN 2 " +
-              "           ELSE SUM(DISTINCT CASE WHEN pro.Accession LIKE '" + decoyPrefix + "%' THEN 1 ELSE 0 END) " +
-              "           END AS DecoyState, "
-              "      GROUP_CONCAT(psmScore.Value) " // scores are ordered by ascending ScoreNameId
-              "FROM Spectrum s "
-              "JOIN PeptideInstance pi ON psm.Peptide=pi.Peptide "
-              "JOIN PeptideSpectrumMatch psm ON s.Id=psm.Spectrum "
-              "JOIN PeptideSpectrumMatchScore psmScore ON psm.Id=psmScore.PsmId "
-              "JOIN Protein pro ON pi.Protein=pro.Id "
-              "WHERE s.Source=" + spectrumSourceId +
-              "  AND psm.Analysis=" + analysisId +
-              "  AND psm.Charge=" + psmChargeState +
-              "  AND NTerminusIsSpecific+CTerminusIsSpecific=" + specificity +
-              (rerankMatches ? "" : " AND Rank = 1 ") +
-              "  AND psmScore.ScoreNameId IN " + scoreIdSetString + " " +
-              "GROUP BY psm.Id "
-              "ORDER BY psm.Spectrum";*/
 
         sql = "SELECT psm.Id, psm.Spectrum, psm.Rank, "
               "       CASE WHEN SUM(DISTINCT CASE WHEN pro.Accession LIKE '" + decoyPrefix + "%' THEN 1 ELSE 0 END) + SUM(DISTINCT CASE WHEN pro.Accession NOT LIKE '" + decoyPrefix + "%' THEN 1 ELSE 0 END) = 2 THEN 2 " +

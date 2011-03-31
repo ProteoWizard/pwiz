@@ -387,29 +387,108 @@ namespace IDPicker.Properties {
             }
         }
         
-        [global::System.Configuration.ApplicationScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute(@"<?xml version=""1.0"" encoding=""utf-16""?>
-<ArrayOfString xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:xsd=""http://www.w3.org/2001/XMLSchema"">
-  <string>MyriMatch MVH;StaticWeighted;False;1 Ascending Off mvh</string>
-  <string>MyriMatch XCorr;StaticWeighted;False;1 Ascending Off xcorr</string>
-  <string>Sequest XCorr;StaticWeighted;False;1 Ascending Off xcorr</string>
-  <string>Mascot ionscore;StaticWeighted;False;1 Ascending Off ionscore</string>
-  <string>Mascot ionscore-identityscore;StaticWeighted;False;1 Ascending Off ionscore;1 Descending Off identityscore</string>
-  <string>X! Tandem hyperscore;StaticWeighted;False;1 Ascending Off hyperscore</string>
-  <string>X! Tandem expect;StaticWeighted;False;1 Descending Off expect</string>
-</ArrayOfString>")]
-        public global::System.Collections.Specialized.StringCollection DefaultQonverterSettings {
-            get {
-                return ((global::System.Collections.Specialized.StringCollection)(this["DefaultQonverterSettings"]));
-            }
-        }
-        
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("<?xml version=\"1.0\" encoding=\"utf-16\"?>\r\n<ArrayOfString xmlns:xsi=\"http://www.w3." +
             "org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\r\n  <s" +
-            "tring>&lt;RootInputDirectory&gt;</string>\r\n</ArrayOfString>")]
+            "tring>System Default|&lt;?xml version=\"1.0\" encoding=\"utf-16\"?&gt;&lt;!--Digital" +
+            "Rune Docking Windows configuration file.--&gt;&lt;!--!!! AUTOMATICALLY GENERATED" +
+            " CONTENT. DO NOT MODIFY !!!--&gt;&lt;DockPanel FormatVersion=\"1.0\" DockLeftPorti" +
+            "on=\"0.340729001584786\" DockRightPortion=\"0.5\" DockTopPortion=\"0.474828375286041\"" +
+            " DockBottomPortion=\"0.25\" ActiveDocumentPane=\"2\" ActivePane=\"2\"&gt;  &lt;Content" +
+            "s Count=\"7\"&gt;    &lt;Content ID=\"0\" PersistString=\"IDPicker.Forms.Fragmentatio" +
+            "nStatisticsForm\" AutoHidePortion=\"0.25\" IsHidden=\"False\" IsFloating=\"False\" /&gt" +
+            ";    &lt;Content ID=\"1\" PersistString=\"IDPicker.Forms.PeakStatisticsForm\" AutoHi" +
+            "dePortion=\"0.25\" IsHidden=\"False\" IsFloating=\"False\" /&gt;    &lt;Content ID=\"2\"" +
+            " PersistString=\"IDPicker.Forms.SpectrumTableForm\" AutoHidePortion=\"0.25\" IsHidde" +
+            "n=\"False\" IsFloating=\"False\" /&gt;    &lt;Content ID=\"3\" PersistString=\"IDPicker" +
+            ".Forms.ProteinTableForm\" AutoHidePortion=\"0.25\" IsHidden=\"False\" IsFloating=\"Fal" +
+            "se\" /&gt;    &lt;Content ID=\"4\" PersistString=\"IDPicker.Forms.PeptideTableForm\" " +
+            "AutoHidePortion=\"0.25\" IsHidden=\"False\" IsFloating=\"False\" /&gt;    &lt;Content " +
+            "ID=\"5\" PersistString=\"IDPicker.Forms.ModificationTableForm\" AutoHidePortion=\"0.2" +
+            "5\" IsHidden=\"False\" IsFloating=\"False\" /&gt;    &lt;Content ID=\"6\" PersistString" +
+            "=\"IDPicker.Forms.AnalysisTableForm\" AutoHidePortion=\"0.25\" IsHidden=\"False\" IsFl" +
+            "oating=\"False\" /&gt;  &lt;/Contents&gt;  &lt;Panes Count=\"6\"&gt;    &lt;Pane ID=" +
+            "\"0\" DockState=\"DockBottomAutoHide\" ActiveContent=\"1\"&gt;      &lt;Contents Count" +
+            "=\"1\"&gt;        &lt;Content ID=\"0\" RefID=\"1\" /&gt;      &lt;/Contents&gt;    &lt" +
+            ";/Pane&gt;    &lt;Pane ID=\"1\" DockState=\"DockBottomAutoHide\" ActiveContent=\"0\"&g" +
+            "t;      &lt;Contents Count=\"1\"&gt;        &lt;Content ID=\"0\" RefID=\"0\" /&gt;    " +
+            "  &lt;/Contents&gt;    &lt;/Pane&gt;    &lt;Pane ID=\"2\" DockState=\"Document\" Act" +
+            "iveContent=\"2\"&gt;      &lt;Contents Count=\"1\"&gt;        &lt;Content ID=\"0\" Ref" +
+            "ID=\"2\" /&gt;      &lt;/Contents&gt;    &lt;/Pane&gt;    &lt;Pane ID=\"3\" DockStat" +
+            "e=\"DockTop\" ActiveContent=\"3\"&gt;      &lt;Contents Count=\"1\"&gt;        &lt;Con" +
+            "tent ID=\"0\" RefID=\"3\" /&gt;      &lt;/Contents&gt;    &lt;/Pane&gt;    &lt;Pane " +
+            "ID=\"4\" DockState=\"DockTop\" ActiveContent=\"4\"&gt;      &lt;Contents Count=\"1\"&gt;" +
+            "        &lt;Content ID=\"0\" RefID=\"4\" /&gt;      &lt;/Contents&gt;    &lt;/Pane&g" +
+            "t;    &lt;Pane ID=\"5\" DockState=\"Document\" ActiveContent=\"6\"&gt;      &lt;Conten" +
+            "ts Count=\"2\"&gt;        &lt;Content ID=\"0\" RefID=\"5\" /&gt;        &lt;Content ID" +
+            "=\"1\" RefID=\"6\" /&gt;      &lt;/Contents&gt;    &lt;/Pane&gt;  &lt;/Panes&gt;  &l" +
+            "t;DockZones&gt;    &lt;DockZone ID=\"0\" DockState=\"Document\" ZOrderIndex=\"1\"&gt; " +
+            "     &lt;NestedPanes Count=\"2\"&gt;        &lt;Pane ID=\"0\" RefID=\"5\" PrevPane=\"-1" +
+            "\" Alignment=\"Right\" Proportion=\"0.5\" /&gt;        &lt;Pane ID=\"1\" RefID=\"2\" Prev" +
+            "Pane=\"5\" Alignment=\"Left\" Proportion=\"0.5\" /&gt;      &lt;/NestedPanes&gt;    &l" +
+            "t;/DockZone&gt;    &lt;DockZone ID=\"1\" DockState=\"DockLeft\" ZOrderIndex=\"3\"&gt; " +
+            "     &lt;NestedPanes Count=\"0\" /&gt;    &lt;/DockZone&gt;    &lt;DockZone ID=\"2\"" +
+            " DockState=\"DockRight\" ZOrderIndex=\"4\"&gt;      &lt;NestedPanes Count=\"0\" /&gt; " +
+            "   &lt;/DockZone&gt;    &lt;DockZone ID=\"3\" DockState=\"DockTop\" ZOrderIndex=\"2\"&" +
+            "gt;      &lt;NestedPanes Count=\"2\"&gt;        &lt;Pane ID=\"0\" RefID=\"3\" PrevPane" +
+            "=\"-1\" Alignment=\"Right\" Proportion=\"0.5\" /&gt;        &lt;Pane ID=\"1\" RefID=\"4\" " +
+            "PrevPane=\"3\" Alignment=\"Right\" Proportion=\"0.7\" /&gt;      &lt;/NestedPanes&gt; " +
+            "   &lt;/DockZone&gt;    &lt;DockZone ID=\"4\" DockState=\"DockBottom\" ZOrderIndex=\"" +
+            "5\"&gt;      &lt;NestedPanes Count=\"2\"&gt;        &lt;Pane ID=\"0\" RefID=\"0\" PrevP" +
+            "ane=\"-1\" Alignment=\"Right\" Proportion=\"0.5\" /&gt;        &lt;Pane ID=\"1\" RefID=\"" +
+            "1\" PrevPane=\"0\" Alignment=\"Right\" Proportion=\"0.5\" /&gt;      &lt;/NestedPanes&g" +
+            "t;    &lt;/DockZone&gt;  &lt;/DockZones&gt;  &lt;FloatingWindows Count=\"0\" /&gt;" +
+            "&lt;/DockPanel&gt;|True</string>\r\n  <string>User Default|&lt;?xml version=\"1.0\" " +
+            "encoding=\"utf-16\"?&gt;&lt;!--DigitalRune Docking Windows configuration file.--&g" +
+            "t;&lt;!--!!! AUTOMATICALLY GENERATED CONTENT. DO NOT MODIFY !!!--&gt;&lt;DockPan" +
+            "el FormatVersion=\"1.0\" DockLeftPortion=\"0.340729001584786\" DockRightPortion=\"0.5" +
+            "\" DockTopPortion=\"0.474828375286041\" DockBottomPortion=\"0.25\" ActiveDocumentPane" +
+            "=\"2\" ActivePane=\"2\"&gt;  &lt;Contents Count=\"7\"&gt;    &lt;Content ID=\"0\" Persis" +
+            "tString=\"IDPicker.Forms.FragmentationStatisticsForm\" AutoHidePortion=\"0.25\" IsHi" +
+            "dden=\"False\" IsFloating=\"False\" /&gt;    &lt;Content ID=\"1\" PersistString=\"IDPic" +
+            "ker.Forms.PeakStatisticsForm\" AutoHidePortion=\"0.25\" IsHidden=\"False\" IsFloating" +
+            "=\"False\" /&gt;    &lt;Content ID=\"2\" PersistString=\"IDPicker.Forms.SpectrumTable" +
+            "Form\" AutoHidePortion=\"0.25\" IsHidden=\"False\" IsFloating=\"False\" /&gt;    &lt;Co" +
+            "ntent ID=\"3\" PersistString=\"IDPicker.Forms.ProteinTableForm\" AutoHidePortion=\"0." +
+            "25\" IsHidden=\"False\" IsFloating=\"False\" /&gt;    &lt;Content ID=\"4\" PersistStrin" +
+            "g=\"IDPicker.Forms.PeptideTableForm\" AutoHidePortion=\"0.25\" IsHidden=\"False\" IsFl" +
+            "oating=\"False\" /&gt;    &lt;Content ID=\"5\" PersistString=\"IDPicker.Forms.Modific" +
+            "ationTableForm\" AutoHidePortion=\"0.25\" IsHidden=\"False\" IsFloating=\"False\" /&gt;" +
+            "    &lt;Content ID=\"6\" PersistString=\"IDPicker.Forms.AnalysisTableForm\" AutoHide" +
+            "Portion=\"0.25\" IsHidden=\"False\" IsFloating=\"False\" /&gt;  &lt;/Contents&gt;  &lt" +
+            ";Panes Count=\"6\"&gt;    &lt;Pane ID=\"0\" DockState=\"DockBottomAutoHide\" ActiveCon" +
+            "tent=\"1\"&gt;      &lt;Contents Count=\"1\"&gt;        &lt;Content ID=\"0\" RefID=\"1\"" +
+            " /&gt;      &lt;/Contents&gt;    &lt;/Pane&gt;    &lt;Pane ID=\"1\" DockState=\"Doc" +
+            "kBottomAutoHide\" ActiveContent=\"0\"&gt;      &lt;Contents Count=\"1\"&gt;        &l" +
+            "t;Content ID=\"0\" RefID=\"0\" /&gt;      &lt;/Contents&gt;    &lt;/Pane&gt;    &lt;" +
+            "Pane ID=\"2\" DockState=\"Document\" ActiveContent=\"2\"&gt;      &lt;Contents Count=\"" +
+            "1\"&gt;        &lt;Content ID=\"0\" RefID=\"2\" /&gt;      &lt;/Contents&gt;    &lt;/" +
+            "Pane&gt;    &lt;Pane ID=\"3\" DockState=\"DockTop\" ActiveContent=\"3\"&gt;      &lt;C" +
+            "ontents Count=\"1\"&gt;        &lt;Content ID=\"0\" RefID=\"3\" /&gt;      &lt;/Conten" +
+            "ts&gt;    &lt;/Pane&gt;    &lt;Pane ID=\"4\" DockState=\"DockTop\" ActiveContent=\"4\"" +
+            "&gt;      &lt;Contents Count=\"1\"&gt;        &lt;Content ID=\"0\" RefID=\"4\" /&gt;  " +
+            "    &lt;/Contents&gt;    &lt;/Pane&gt;    &lt;Pane ID=\"5\" DockState=\"Document\" A" +
+            "ctiveContent=\"6\"&gt;      &lt;Contents Count=\"2\"&gt;        &lt;Content ID=\"0\" R" +
+            "efID=\"5\" /&gt;        &lt;Content ID=\"1\" RefID=\"6\" /&gt;      &lt;/Contents&gt; " +
+            "   &lt;/Pane&gt;  &lt;/Panes&gt;  &lt;DockZones&gt;    &lt;DockZone ID=\"0\" DockS" +
+            "tate=\"Document\" ZOrderIndex=\"1\"&gt;      &lt;NestedPanes Count=\"2\"&gt;        &l" +
+            "t;Pane ID=\"0\" RefID=\"5\" PrevPane=\"-1\" Alignment=\"Right\" Proportion=\"0.5\" /&gt;  " +
+            "      &lt;Pane ID=\"1\" RefID=\"2\" PrevPane=\"5\" Alignment=\"Left\" Proportion=\"0.5\" /" +
+            "&gt;      &lt;/NestedPanes&gt;    &lt;/DockZone&gt;    &lt;DockZone ID=\"1\" DockS" +
+            "tate=\"DockLeft\" ZOrderIndex=\"3\"&gt;      &lt;NestedPanes Count=\"0\" /&gt;    &lt;" +
+            "/DockZone&gt;    &lt;DockZone ID=\"2\" DockState=\"DockRight\" ZOrderIndex=\"4\"&gt;  " +
+            "    &lt;NestedPanes Count=\"0\" /&gt;    &lt;/DockZone&gt;    &lt;DockZone ID=\"3\" " +
+            "DockState=\"DockTop\" ZOrderIndex=\"2\"&gt;      &lt;NestedPanes Count=\"2\"&gt;      " +
+            "  &lt;Pane ID=\"0\" RefID=\"3\" PrevPane=\"-1\" Alignment=\"Right\" Proportion=\"0.5\" /&g" +
+            "t;        &lt;Pane ID=\"1\" RefID=\"4\" PrevPane=\"3\" Alignment=\"Right\" Proportion=\"0" +
+            ".7\" /&gt;      &lt;/NestedPanes&gt;    &lt;/DockZone&gt;    &lt;DockZone ID=\"4\" " +
+            "DockState=\"DockBottom\" ZOrderIndex=\"5\"&gt;      &lt;NestedPanes Count=\"2\"&gt;   " +
+            "     &lt;Pane ID=\"0\" RefID=\"0\" PrevPane=\"-1\" Alignment=\"Right\" Proportion=\"0.5\" " +
+            "/&gt;        &lt;Pane ID=\"1\" RefID=\"1\" PrevPane=\"0\" Alignment=\"Right\" Proportion" +
+            "=\"0.5\" /&gt;      &lt;/NestedPanes&gt;    &lt;/DockZone&gt;  &lt;/DockZones&gt; " +
+            " &lt;FloatingWindows Count=\"0\" /&gt;&lt;/DockPanel&gt;|True</string>\r\n</ArrayOfS" +
+            "tring>")]
         public global::System.Collections.Specialized.StringCollection UserLayouts {
             get {
                 return ((global::System.Collections.Specialized.StringCollection)(this["UserLayouts"]));
@@ -440,6 +519,47 @@ namespace IDPicker.Properties {
             }
             set {
                 this["IDPickerFormSize"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("12/01/2010 14:21:00")]
+        public global::System.DateTime LastUpdated {
+            get {
+                return ((global::System.DateTime)(this["LastUpdated"]));
+            }
+            set {
+                this["LastUpdated"] = value;
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("12/01/2010 14:23:00")]
+        public global::System.DateTime DefaultLastUpdated {
+            get {
+                return ((global::System.DateTime)(this["DefaultLastUpdated"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute(@"<?xml version=""1.0"" encoding=""utf-16""?>
+<ArrayOfString xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:xsd=""http://www.w3.org/2001/XMLSchema"">
+  <string>MyriMatch MVH;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off myrimatch:mvh</string>
+  <string>MyriMatch XCorr;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off xcorr</string>
+  <string>Sequest XCorr;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off sequest:xcorr</string>
+  <string>Mascot ionscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off mascot:score</string>
+  <string>Mascot ionscore-identityscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off mascot:score;1 Descending Off mascot:identity threshold</string>
+  <string>X! Tandem expect;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Descending Off x!tandem:expect</string>
+  <string>X! Tandem hyperscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off x!tandem:hyperscore</string>
+  <string>OMSSA expect;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Descending Off expect</string>
+  <string>Phenyx zscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off zscore</string>
+</ArrayOfString>")]
+        public global::System.Collections.Specialized.StringCollection DefaultQonverterSettings {
+            get {
+                return ((global::System.Collections.Specialized.StringCollection)(this["DefaultQonverterSettings"]));
             }
         }
     }

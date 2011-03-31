@@ -117,18 +117,6 @@
     <Setting Name="QonverterSettings" Type="System.Collections.Specialized.StringCollection" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="DefaultQonverterSettings" Type="System.Collections.Specialized.StringCollection" Scope="Application">
-      <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
-&lt;ArrayOfString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"&gt;
-  &lt;string&gt;MyriMatch MVH;StaticWeighted;False;1 Ascending Off mvh&lt;/string&gt;
-  &lt;string&gt;MyriMatch XCorr;StaticWeighted;False;1 Ascending Off xcorr&lt;/string&gt;
-  &lt;string&gt;Sequest XCorr;StaticWeighted;False;1 Ascending Off xcorr&lt;/string&gt;
-  &lt;string&gt;Mascot ionscore;StaticWeighted;False;1 Ascending Off ionscore&lt;/string&gt;
-  &lt;string&gt;Mascot ionscore-identityscore;StaticWeighted;False;1 Ascending Off ionscore;1 Descending Off identityscore&lt;/string&gt;
-  &lt;string&gt;X! Tandem hyperscore;StaticWeighted;False;1 Ascending Off hyperscore&lt;/string&gt;
-  &lt;string&gt;X! Tandem expect;StaticWeighted;False;1 Descending Off expect&lt;/string&gt;
-&lt;/ArrayOfString&gt;</Value>
-    </Setting>
     <Setting Name="UserLayouts" Type="System.Collections.Specialized.StringCollection" Scope="User">
       <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
 &lt;ArrayOfString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"&gt;
@@ -140,6 +128,20 @@
     </Setting>
     <Setting Name="IDPickerFormSize" Type="System.Drawing.Size" Scope="User">
       <Value Profile="(Default)">0, 0</Value>
+    </Setting>
+    <Setting Name="DefaultQonverterSettings" Type="System.Collections.Specialized.StringCollection" Scope="Application">
+      <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
+&lt;ArrayOfString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"&gt;
+  &lt;string&gt;MyriMatch MVH;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off myrimatch:mvh&lt;/string&gt;
+  &lt;string&gt;MyriMatch XCorr;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off xcorr&lt;/string&gt;
+  &lt;string&gt;Sequest XCorr;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off sequest:xcorr&lt;/string&gt;
+  &lt;string&gt;Mascot ionscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off mascot:score&lt;/string&gt;
+  &lt;string&gt;Mascot ionscore-identityscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off mascot:score;1 Descending Off mascot:identity threshold&lt;/string&gt;
+  &lt;string&gt;X! Tandem expect;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Descending Off x!tandem:expect&lt;/string&gt;
+  &lt;string&gt;X! Tandem hyperscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off x!tandem:hyperscore&lt;/string&gt;
+  &lt;string&gt;OMSSA expect;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Descending Off expect&lt;/string&gt;
+  &lt;string&gt;Phenyx zscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off zscore&lt;/string&gt;
+&lt;/ArrayOfString&gt;</Value>
     </Setting>
   </Settings>
 </SettingsFile>

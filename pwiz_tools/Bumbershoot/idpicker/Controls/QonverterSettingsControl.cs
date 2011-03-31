@@ -57,6 +57,11 @@ namespace IDPicker.Controls
                     return;
 
                 qonvertMethodComboBox.SelectedIndex = (int) value.QonverterMethod;
+                chargeStateHandlingComboBox.SelectedIndex = (int) value.ChargeStateHandling;
+                terminalSpecificityHandlingComboBox.SelectedIndex = (int) value.TerminalSpecificityHandling;
+                massErrorHandlingComboBox.SelectedIndex = (int) value.MassErrorHandling;
+                missedCleavagesComboBox.SelectedIndex = (int) value.MissedCleavagesHandling;
+                kernelComboBox.SelectedIndex = (int) value.Kernel;
                 rerankingCheckbox.Checked = value.RerankMatches;
 
                 scoreGridView.Rows.Clear();
@@ -77,6 +82,11 @@ namespace IDPicker.Controls
                 var qonverterSettings = new QonverterSettings()
                 {
                     QonverterMethod = (Qonverter.QonverterMethod) qonvertMethodComboBox.SelectedIndex,
+                    ChargeStateHandling = (Qonverter.ChargeStateHandling) chargeStateHandlingComboBox.SelectedIndex,
+                    TerminalSpecificityHandling = (Qonverter.TerminalSpecificityHandling) terminalSpecificityHandlingComboBox.SelectedIndex,
+                    MassErrorHandling = (Qonverter.MassErrorHandling) massErrorHandlingComboBox.SelectedIndex,
+                    MissedCleavagesHandling = (Qonverter.MissedCleavagesHandling) missedCleavagesComboBox.SelectedIndex,
+                    Kernel = (Qonverter.Kernel) kernelComboBox.SelectedIndex,
                     RerankMatches = rerankingCheckbox.Checked,
                     ScoreInfoByName = new Dictionary<string, Qonverter.Settings.ScoreInfo>()
                 };
@@ -112,6 +122,11 @@ namespace IDPicker.Controls
 
                 var editedQonverterSettings = EditedQonverterSettings;
                 bool isDirty = qonverterSettings.QonverterMethod != editedQonverterSettings.QonverterMethod ||
+                               qonverterSettings.ChargeStateHandling != editedQonverterSettings.ChargeStateHandling ||
+                               qonverterSettings.TerminalSpecificityHandling != editedQonverterSettings.TerminalSpecificityHandling ||
+                               qonverterSettings.MassErrorHandling != editedQonverterSettings.MassErrorHandling ||
+                               qonverterSettings.MissedCleavagesHandling != editedQonverterSettings.MissedCleavagesHandling ||
+                               qonverterSettings.Kernel != editedQonverterSettings.Kernel ||
                                qonverterSettings.RerankMatches != editedQonverterSettings.RerankMatches ||
                                qonverterSettings.ScoreInfoByName.Count != editedQonverterSettings.ScoreInfoByName.Count;
 
@@ -139,6 +154,15 @@ namespace IDPicker.Controls
         private void flowLayoutPanel_Resize (object sender, EventArgs e)
         {
             scoreGridView.Width = flowLayoutPanel.Width;
+        }
+
+        private void qonvertMethodComboBox_SelectedIndexChanged (object sender, EventArgs e)
+        {
+            // hide kernel and non-score-feature options for StaticWeighted method
+            bool showNonScoreOptions = qonvertMethodComboBox.SelectedIndex == (int) Qonverter.QonverterMethod.SVM;
+            kernelComboBox.Visible = label4.Visible = label5.Visible = label6.Visible =
+                massErrorHandlingComboBox.Visible =
+                    missedCleavagesComboBox.Visible = showNonScoreOptions;
         }
     }
 }

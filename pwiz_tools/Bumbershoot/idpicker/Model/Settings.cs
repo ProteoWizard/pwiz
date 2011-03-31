@@ -57,6 +57,12 @@ namespace IDPicker.DataModel
         /// </summary>
         public virtual bool RerankMatches { get; set; }
 
+        public virtual Qonverter.Kernel Kernel { get; set; }
+        public virtual Qonverter.MassErrorHandling MassErrorHandling { get; set; }
+        public virtual Qonverter.MissedCleavagesHandling MissedCleavagesHandling { get; set; }
+        public virtual Qonverter.TerminalSpecificityHandling TerminalSpecificityHandling { get; set; }
+        public virtual Qonverter.ChargeStateHandling ChargeStateHandling { get; set; }
+
         /// <summary>
         /// A description of scores keyed by score name.
         /// </summary>
@@ -72,6 +78,11 @@ namespace IDPicker.DataModel
                 QonverterMethod = QonverterMethod,
                 DecoyPrefix = DecoyPrefix,
                 RerankMatches = RerankMatches,
+                Kernel = Kernel,
+                MassErrorHandling = MassErrorHandling,
+                MissedCleavagesHandling = MissedCleavagesHandling,
+                TerminalSpecificityHandling = TerminalSpecificityHandling,
+                ChargeStateHandling = ChargeStateHandling,
                 ScoreInfoByName = ScoreInfoByName
             };
         }
@@ -84,6 +95,9 @@ namespace IDPicker.DataModel
         public static IDictionary<string, QonverterSettings> LoadQonverterSettings ()
         {
             IDictionary<string, QonverterSettings> qonverterSettingsByName = null;
+
+            //if (Properties.Settings.Default.LastUpdated < Properties.Settings.Default.DefaultLastUpdated)
+            //    Properties.Settings.Default.QonverterSettings = Properties.Settings.Default.DefaultQonverterSettings;
 
             try
             {
@@ -107,10 +121,15 @@ namespace IDPicker.DataModel
         {
             var qonverterSettingsCollection = new StringCollection();
             foreach (var kvp in qonverterSettingsByName)
-                qonverterSettingsCollection.Add(String.Format("{0};{1};{2};{3}",
+                qonverterSettingsCollection.Add(String.Format("{0};{1};{2};{3};{4};{5};{6};{7};{8}",
                                                               kvp.Key,
                                                               kvp.Value.QonverterMethod,
                                                               kvp.Value.RerankMatches,
+                                                              kvp.Value.Kernel,
+                                                              kvp.Value.MassErrorHandling,
+                                                              kvp.Value.MissedCleavagesHandling,
+                                                              kvp.Value.TerminalSpecificityHandling,
+                                                              kvp.Value.ChargeStateHandling,
                                                               assembleScoreInfo(kvp.Value.ScoreInfoByName)));
 
             Properties.Settings.Default.QonverterSettings = qonverterSettingsCollection;
@@ -163,7 +182,9 @@ namespace IDPicker.DataModel
                 return qonverterSettingsByName;
 
             // Zero or more strings like:
-            // SettingsName;QonverterMethod;RerankMatches;ScoreInfo1;ScoreInfo2;...etc...
+            // SettingsName;QonverterMethod;RerankMatches;
+            // Kernel;MassErrorHandling;MissedCleavagesHandling;TerminalSpecificityHandling;ChargeStateHandling;
+            // ScoreInfo1;ScoreInfo2;...etc... (no line breaks)
             foreach (var row in serializedSettings)
             {
                 string[] tokens = row.Split(';');
@@ -172,11 +193,16 @@ namespace IDPicker.DataModel
                 {
                     QonverterMethod = (Qonverter.QonverterMethod) Enum.Parse(typeof(Qonverter.QonverterMethod), tokens[1]),
                     RerankMatches = Convert.ToBoolean(tokens[2]),
+                    Kernel = (Qonverter.Kernel) Enum.Parse(typeof(Qonverter.Kernel), tokens[3]),
+                    MassErrorHandling = (Qonverter.MassErrorHandling) Enum.Parse(typeof(Qonverter.MassErrorHandling), tokens[4]),
+                    MissedCleavagesHandling = (Qonverter.MissedCleavagesHandling) Enum.Parse(typeof(Qonverter.MissedCleavagesHandling), tokens[5]),
+                    TerminalSpecificityHandling = (Qonverter.TerminalSpecificityHandling) Enum.Parse(typeof(Qonverter.TerminalSpecificityHandling), tokens[6]),
+                    ChargeStateHandling = (Qonverter.ChargeStateHandling) Enum.Parse(typeof(Qonverter.ChargeStateHandling), tokens[7]),
                     ScoreInfoByName = new Dictionary<string, Qonverter.Settings.ScoreInfo>()
                 };
 
                 // The rest of the tokens are score info
-                parseScoreInfo(tokens.Skip(3), qonverterSettings.ScoreInfoByName);
+                parseScoreInfo(tokens.Skip(8), qonverterSettings.ScoreInfoByName);
             }
 
             return qonverterSettingsByName;

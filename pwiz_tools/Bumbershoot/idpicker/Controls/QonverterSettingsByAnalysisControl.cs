@@ -114,9 +114,16 @@ namespace IDPicker.Controls
 
             if ((string) cell.EditedFormattedValue == "Edit..." || (string) cell.Value == "Edit...")
             {
+                // open the qonverter settings manager
                 qonverterSettingsManagerNeeded();
 
+                // refresh qonverter settings from settings
                 qonverterSettingsByName = QonverterSettings.LoadQonverterSettings();
+
+                // refresh combobox items
+                qonverterSettingsColumn.Items.Clear();
+                qonverterSettingsByName.Keys.ToList().ForEach(o => qonverterSettingsColumn.Items.Add(o));
+                qonverterSettingsColumn.Items.Add("Edit...");
 
                 cell.Value = uneditedQonverterSettingsValue;
                 dataGridView.RefreshEdit();

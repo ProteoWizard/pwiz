@@ -561,7 +561,7 @@ namespace IDPicker.DataModel
 
         static string addNewQonverterSettingsSql =
               @"INSERT INTO merged.QonverterSettings
-                SELECT AfterMergeId, QonverterMethod, DecoyPrefix, RerankMatches, ScoreInfoByName
+                SELECT AfterMergeId, QonverterMethod, DecoyPrefix, RerankMatches, Kernel, MassErrorHandling, MissedCleavagesHandling, TerminalSpecificityHandling, ChargeStateHandling, ScoreInfoByName
                 FROM {0}.QonverterSettings newQS
                 JOIN AnalysisMergeMap aMerge ON Id = BeforeMergeId
                 WHERE AfterMergeId > {1}

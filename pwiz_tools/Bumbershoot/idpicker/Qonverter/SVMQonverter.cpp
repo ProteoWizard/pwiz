@@ -134,7 +134,7 @@ void calculateBestSingleScoreDiscrimination(const PSMIteratorRange& psmRows, dou
         }
 
         if (!currentPSMs.empty())
-            {
+        {
             switch (currentDecoyState)
             {
                 case DecoyState::Target: ++numTargets; break;
@@ -522,35 +522,14 @@ void testModel(const Qonverter::Settings& settings,
 } // training and prediction functions
 
 
+// debugging functions
+namespace {
 
-namespace IDPICKER_NAMESPACE
+void writeFeatureDetails(const string& sourceName, const Qonverter::Settings& settings,
+                         PSMIteratorRange fullRange, PSMIteratorRange truePositives)
 {
-
-void SVMQonverter::Qonvert(const string& sourceName, vector<PeptideSpectrumMatch>& psmRows, const Qonverter::Settings& settings)
-{
-    PSMIteratorRange fullRange(psmRows.begin(), psmRows.end());
-
-    sort(fullRange.begin(), fullRange.end(), OriginalRankLessThan());
-
-    for (PSMIterator itr = fullRange.begin(); itr != fullRange.end(); ++itr)
-        if (itr->originalRank > 1)
-        {
-            fullRange = PSMIteratorRange(fullRange.begin(), itr);
-            break;
-        }
-
-    // partition the data by charge and/or terminal specificity (depending on qonverter settings)
-    vector<PSMIteratorRange> psmPartitionedRows = partition(settings, fullRange);
-
-    // for all charge states, scale the non-score features linearly between -1 and 1
-    scaleNonScoreFeatures(settings, fullRange);
-
-    set<int> totalConfidentSingleScoreSpectra;
-    set<int> totalPossibleSpectra;
-    set<int> totalSVMSpectra;
-
-    ofstream psmDetails(("d:/idpicker/branches/idpicker-3/" + sourceName + "-details.txt").c_str());
-    ofstream psmFeatures(("d:/idpicker/branches/idpicker-3/" + sourceName + "-scaled-features.tsv").c_str());
+    ofstream psmDetails((sourceName + "-details.txt").c_str());
+    ofstream psmFeatures((sourceName + "-scaled-features.tsv").c_str());
 
     using std::left;
     psmDetails  << setw(9) << left << "Ordinal"
@@ -579,139 +558,8 @@ void SVMQonverter::Qonvert(const string& sourceName, vector<PeptideSpectrumMatch
         psmFeatures << '\t' << ++featureIndex << ":score" << (j+1);
     psmFeatures << endl;
 
-    // for each charge state, scale the scores linearly between -1 and 1
-    BOOST_FOREACH(const PSMIteratorRange& range, psmPartitionedRows)
-    {
-        // skip sparsely populated categories
-        if (range.size() < 10) 
-            continue;
-
-        scaleScoreFeatures(range);
-    //}
-        fullRange = range;
-        cout << range.front().chargeState << " " << range.front().bestSpecificity << endl;
-
-    // for each charge state, find the single score which provides the most discrimination under a given Q value
-    //BOOST_FOREACH(const PSMIteratorRange& range, psmPartitionedRows)
-        calculateBestSingleScoreDiscrimination(range, 0.01); // TODO: make threshold a variable
-
-    // we cannot sort on QValue unless 
-    //sort(fullRange.begin(), fullRange.end(), QValueLessThan());
-
-    // sort PSMs by the SVM probability
-    stable_sort(fullRange.begin(), fullRange.end(), TotalScoreBetterThan());
-
-    /*int ordinal = 0;
-    
-    int numTargets = 0;
-    int numDecoys = 0;
-    int numAmbiguous = 0;
-
-    sqlite3_int64 currentSpectrumId = fullRange.front().spectrum;
-    DecoyState::Type currentDecoyState = fullRange.front().decoyState;
-    const PeptideSpectrumMatch* currentPSM = &fullRange.front();
-
-    BOOST_FOREACH(const PeptideSpectrumMatch& psm, fullRange)
-    {
-        if (psm.originalRank > 1) continue;
-
-        qonversionDetails << ">>" << setw(9) << psm.spectrum
-                          << setw(9) << psm.chargeState
-                          << setw(9) << psm.bestSpecificity
-                          << setw(9) << DecoyState::Symbol[psm.decoyState]
-                          << setw(12) << psm.qValue
-				          << setw(12) << left << psm.totalScore << endl;
-
-        // only count the 
-        if (currentSpectrumId != psm.spectrum)
-        {
-            switch (currentDecoyState)
-            {
-                case DecoyState::Target: ++numTargets; break;
-                case DecoyState::Decoy: ++numDecoys; break;
-                default: ++numAmbiguous; break;
-            }
-
-            const PeptideSpectrumMatch& cpsm = *currentPSM;
-            qonversionDetails   << setw(9) << left << ++ordinal
-				                << setw(14) << left << cpsm.spectrum
-				                << setw(7) << left << cpsm.originalRank
-				                << setw(8) << left << cpsm.chargeState
-                                << setw(8) << left << cpsm.bestSpecificity
-                                << setw(12) << left << DecoyState::Symbol[currentDecoyState]
-				                << setw(11) << left << numTargets
-				                << setw(12) << left << numDecoys
-				                << setw(14) << left << numAmbiguous
-				                << setw(12) << left << cpsm.totalScore
-				                << setw(8) << left << cpsm.qValue;
-            //for (size_t i=0; i < psm.scores.size(); ++i)
-            //    qonversionDetails << (5+i) << ":" << setw(11) << std::left << psm.scores[i];
-            qonversionDetails << "\n";
-
-            // reset the current spectrum
-            currentSpectrumId = psm.spectrum;
-            currentDecoyState = psm.decoyState;
-            currentPSM = &psm;
-        }
-        else
-            currentDecoyState = static_cast<DecoyState::Type>(currentDecoyState | psm.decoyState);
-    }
-
-    switch (currentDecoyState)
-    {
-        case DecoyState::Target: ++numTargets; break;
-        case DecoyState::Decoy: ++numDecoys; break;
-        default: break;
-    }
-
-    const PeptideSpectrumMatch& cpsm = *currentPSM;
-    qonversionDetails   << setw(9) << left << ++ordinal
-		                << setw(14) << left << cpsm.spectrum
-		                << setw(7) << left << cpsm.originalRank
-		                << setw(8) << left << cpsm.chargeState
-                        << setw(8) << left << cpsm.bestSpecificity
-                        << setw(12) << left << DecoyState::Symbol[currentDecoyState]
-		                << setw(11) << left << numTargets
-		                << setw(12) << left << numDecoys
-		                << setw(14) << left << numAmbiguous
-		                << setw(12) << left << cpsm.totalScore
-		                << setw(8) << left << cpsm.qValue << endl;*/
-
-    // HACK: we should be able to use default constructor here, but MSVC/boost bug triggers
-    //       a debug assertion about incompatible iterators
-    PSMIteratorRange truePositiveRange(fullRange.end(), fullRange.end());
-
-    // search from the worst to best Q value to find the first one inside the threshold
-    for (boost::reverse_iterator<PSMIterator>
-         itr = boost::rbegin(fullRange),
-         end = boost::rend(fullRange);
-         itr != end;
-         ++itr)
-    {
-        BOOST_ASSERT(itr->originalRank == 1 || itr->qValue == 2);
-        if (itr->qValue <= 0.01)
-        {
-            truePositiveRange = PSMIteratorRange(fullRange.begin(), itr.base());
-            break;
-        }
-    }
-
-    {
-        set<sqlite3_int64> uniqueSpectra;
-        BOOST_FOREACH(const PeptideSpectrumMatch& psm, truePositiveRange)
-            uniqueSpectra.insert(psm.spectrum);
-        cout << uniqueSpectra.size() << " confident spectra using a single score at maximum 1% FDR." << endl;
-        totalConfidentSingleScoreSpectra.insert(uniqueSpectra.begin(), uniqueSpectra.end());
-    }
-
-    PSMIteratorRange falsePositiveRange = PSMIteratorRange(truePositiveRange.end(), fullRange.end());
-
-    if (truePositiveRange.empty()) {cerr << "No true positives." << endl; continue;}
-    if (falsePositiveRange.empty()) {cerr << "No false positives." << endl; continue;}
-
-
     map<const PeptideSpectrumMatch*, bool> truePositiveByPointer;
-    BOOST_FOREACH(const PeptideSpectrumMatch& psm, truePositiveRange)
+    BOOST_FOREACH(const PeptideSpectrumMatch& psm, truePositives)
         truePositiveByPointer[&psm] = true; 
 
     int ordinal = 0;
@@ -758,81 +606,130 @@ void SVMQonverter::Qonvert(const string& sourceName, vector<PeptideSpectrumMatch
             psmFeatures << '\t' << psm.scores[j];
         psmFeatures << "\n";
     }
+}
 
-    // sort by rank
-    sort(falsePositiveRange.begin(), falsePositiveRange.end(), OriginalRankLessThan());
-    
-    set<sqlite3_int64> totalUniqueSpectra;
-    BOOST_FOREACH(const PeptideSpectrumMatch& psm, truePositiveRange)
-        totalUniqueSpectra.insert(psm.spectrum);
-    BOOST_FOREACH(const PeptideSpectrumMatch& psm, falsePositiveRange)
-        if (psm.originalRank > 1)
-            break;
-        else
-            totalUniqueSpectra.insert(psm.spectrum);
-    cout << totalUniqueSpectra.size() << " possible spectra." << endl;
-    totalPossibleSpectra.insert(totalUniqueSpectra.begin(), totalUniqueSpectra.end());
+} // debugging functions
 
-    // select the false positive range from all matches over a given Q value and under a given rank
-    for (PSMIterator itr = falsePositiveRange.begin();
-         itr != falsePositiveRange.end();
-         ++itr)
-    {
+
+
+
+namespace IDPICKER_NAMESPACE
+{
+
+void SVMQonverter::Qonvert(const string& sourceName, vector<PeptideSpectrumMatch>& psmRows, const Qonverter::Settings& settings)
+{
+    PSMIteratorRange fullRange(psmRows.begin(), psmRows.end());
+
+    sort(fullRange.begin(), fullRange.end(), OriginalRankLessThan());
+
+    for (PSMIterator itr = fullRange.begin(); itr != fullRange.end(); ++itr)
         if (itr->originalRank > 1)
         {
-            falsePositiveRange = PSMIteratorRange(falsePositiveRange.begin(), itr);
+            fullRange = PSMIteratorRange(fullRange.begin(), itr);
             break;
         }
-    }
 
-    // make libsvm quiet
-    svm_set_print_string_function(&print_null);
+    // partition the data by charge and/or terminal specificity (depending on qonverter settings)
+    vector<PSMIteratorRange> psmPartitionedRows = partition(settings, fullRange);
 
-    // train a model
-    svm_model* trainedModel = trainModel(settings, truePositiveRange, falsePositiveRange);
+    // for all partitions, scale the non-score features linearly between -1 and 1
+    scaleNonScoreFeatures(settings, fullRange);
 
-    // use the model to predict probabilities for all matches
-    testModel(settings, trainedModel, fullRange);
-
-    //svm_save_model("d:/idpicker/branches/idpicker-3/svm.model", trainedModel);
-
-    // the model isn't needed anymore
-    svm_free_and_destroy_model(&trainedModel);
-
-    // calculate new Q values for matches under a given rank
-    calculateProbabilityDiscrimination(fullRange, 1); // TODO: make threshold a variable
-
-    //sort(fullRange.begin(), fullRange.end(), TotalScoreBetterThan());
-
-    // HACK: we should be able to use default constructor here, but MSVC/boost bug triggers
-    //       a debug assertion about incompatible iterators
-    PSMIteratorRange svmTruePositiveRange(fullRange.end(), fullRange.end());
-
-    // search from the worst to best Q value to find the first one inside the threshold
-    for (boost::reverse_iterator<PSMIterator> itr = boost::rbegin(fullRange);
-         itr != boost::rend(fullRange);
-         ++itr)
+    // for each partition, scale the scores linearly between -1 and 1
+    BOOST_FOREACH(const PSMIteratorRange& range, psmPartitionedRows)
     {
-        BOOST_ASSERT(itr->originalRank == 1 || itr->qValue == 2);
-        if (itr->qValue <= 0.01)
+        // skip sparsely populated categories
+        if (range.size() < 10) 
+            continue;
+
+        scaleScoreFeatures(range);
+
+        fullRange = range;
+
+        // find the single score which provides the most discrimination under a given Q value
+        calculateBestSingleScoreDiscrimination(range, 0.01); // TODO: make threshold a variable
+
+        // sort PSMs by the SVM probability
+        //stable_sort(fullRange.begin(), fullRange.end(), TotalScoreBetterThan());
+
+        // HACK: we should be able to use default constructor here, but MSVC/boost bug triggers
+        //       a debug assertion about incompatible iterators
+        PSMIteratorRange truePositiveRange(fullRange.end(), fullRange.end());
+
+        // search from the worst to best Q value to find the first one inside the threshold
+        for (boost::reverse_iterator<PSMIterator>
+             itr = boost::rbegin(fullRange),
+             end = boost::rend(fullRange);
+             itr != end;
+             ++itr)
         {
-            svmTruePositiveRange = PSMIteratorRange(fullRange.begin(), itr.base());
-            break;
+            BOOST_ASSERT(itr->originalRank == 1 || itr->qValue == 2);
+            if (itr->qValue <= 0.01)
+            {
+                truePositiveRange = PSMIteratorRange(fullRange.begin(), itr.base());
+                break;
+            }
         }
-    }
 
-    {
-        set<sqlite3_int64> uniqueSpectra;
-        BOOST_FOREACH(const PeptideSpectrumMatch& psm, svmTruePositiveRange)
-            uniqueSpectra.insert(psm.spectrum);
-        cout << uniqueSpectra.size() << " confident spectra using SVM probability with a maximum rank of 1." << endl;
-        totalSVMSpectra.insert(uniqueSpectra.begin(), uniqueSpectra.end());
-    }
+        PSMIteratorRange falsePositiveRange = PSMIteratorRange(truePositiveRange.end(), fullRange.end());
 
-    }
-    cout << "Single score: " << totalConfidentSingleScoreSpectra.size() << endl <<
-            "Possible: " << totalPossibleSpectra.size() << endl <<
-            "SVM: " << totalSVMSpectra.size() << endl;
+        if (truePositiveRange.empty()) {/*cerr << "No true positives." << endl;*/ continue;}
+        if (falsePositiveRange.empty()) {/*cerr << "No false positives." << endl;*/ continue;}
+
+        //writeFeatureDetails(sourceName, settings, fullRange, truePositiveRange);
+
+        // sort by rank
+        sort(falsePositiveRange.begin(), falsePositiveRange.end(), OriginalRankLessThan());
+
+        // select the false positive range from all matches over a given Q value and under a given rank
+        for (PSMIterator itr = falsePositiveRange.begin();
+             itr != falsePositiveRange.end();
+             ++itr)
+        {
+            if (itr->originalRank > 1)
+            {
+                falsePositiveRange = PSMIteratorRange(falsePositiveRange.begin(), itr);
+                break;
+            }
+        }
+
+        // make libsvm quiet
+        svm_set_print_string_function(&print_null);
+
+        // train a model
+        svm_model* trainedModel = trainModel(settings, truePositiveRange, falsePositiveRange);
+
+        // use the model to predict probabilities for all matches
+        testModel(settings, trainedModel, fullRange);
+
+        //svm_save_model("d:/idpicker/branches/idpicker-3/svm.model", trainedModel);
+
+        // the model isn't needed anymore
+        svm_free_and_destroy_model(&trainedModel);
+
+        // calculate new Q values for matches under a given rank
+        calculateProbabilityDiscrimination(fullRange, 1); // TODO: make threshold a variable
+
+        //sort(fullRange.begin(), fullRange.end(), TotalScoreBetterThan());
+
+        // HACK: we should be able to use default constructor here, but MSVC/boost bug triggers
+        //       a debug assertion about incompatible iterators
+        PSMIteratorRange svmTruePositiveRange(fullRange.end(), fullRange.end());
+
+        // search from the worst to best Q value to find the first one inside the threshold
+        for (boost::reverse_iterator<PSMIterator> itr = boost::rbegin(fullRange);
+             itr != boost::rend(fullRange);
+             ++itr)
+        {
+            BOOST_ASSERT(itr->originalRank == 1 || itr->qValue == 2);
+            if (itr->qValue <= 0.01)
+            {
+                svmTruePositiveRange = PSMIteratorRange(fullRange.begin(), itr.base());
+                break;
+            }
+        }
+
+    } // for each partition
 }
 
 } // namespace IDPicker

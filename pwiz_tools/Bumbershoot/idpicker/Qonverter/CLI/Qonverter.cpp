@@ -90,6 +90,11 @@ void Qonverter::Qonvert(String^ idpDbFilepath)
         qonverterSettings.decoyPrefix = ToStdString(itr.Value->DecoyPrefix);
         qonverterSettings.qonverterMethod = NativeQonverter::QonverterMethod::get_by_index((size_t) itr.Value->QonverterMethod).get();
         qonverterSettings.rerankMatches = itr.Value->RerankMatches;
+        qonverterSettings.kernel = NativeQonverter::Kernel::get_by_index((size_t) itr.Value->Kernel).get();
+        qonverterSettings.massErrorHandling = NativeQonverter::MassErrorHandling::get_by_index((size_t) itr.Value->MassErrorHandling).get();
+        qonverterSettings.missedCleavagesHandling = NativeQonverter::MissedCleavagesHandling::get_by_index((size_t) itr.Value->MissedCleavagesHandling).get();
+        qonverterSettings.terminalSpecificityHandling = NativeQonverter::TerminalSpecificityHandling::get_by_index((size_t) itr.Value->TerminalSpecificityHandling).get();
+        qonverterSettings.chargeStateHandling = NativeQonverter::ChargeStateHandling::get_by_index((size_t) itr.Value->ChargeStateHandling).get();
 
         for each (KeyValuePair<String^, Settings::ScoreInfo^> itr2 in itr.Value->ScoreInfoByName)
         {
@@ -126,6 +131,12 @@ void Qonverter::Qonvert(System::IntPtr idpDb)
         qonverterSettings.decoyPrefix = ToStdString(itr.Value->DecoyPrefix);
         qonverterSettings.qonverterMethod = NativeQonverter::QonverterMethod::get_by_index((size_t) itr.Value->QonverterMethod).get();
         qonverterSettings.rerankMatches = itr.Value->RerankMatches;
+        qonverterSettings.kernel = NativeQonverter::Kernel::get_by_index((size_t) itr.Value->Kernel).get();
+        qonverterSettings.massErrorHandling = NativeQonverter::MassErrorHandling::get_by_index((size_t) itr.Value->MassErrorHandling).get();
+        qonverterSettings.missedCleavagesHandling = NativeQonverter::MissedCleavagesHandling::get_by_index((size_t) itr.Value->MissedCleavagesHandling).get();
+        qonverterSettings.terminalSpecificityHandling = NativeQonverter::TerminalSpecificityHandling::get_by_index((size_t) itr.Value->TerminalSpecificityHandling).get();
+        qonverterSettings.chargeStateHandling = NativeQonverter::ChargeStateHandling::get_by_index((size_t) itr.Value->ChargeStateHandling).get();
+
 
         for each (KeyValuePair<String^,Settings::ScoreInfo^> itr2 in itr.Value->ScoreInfoByName)
         {
