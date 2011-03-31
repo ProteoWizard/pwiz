@@ -404,13 +404,19 @@ namespace pwiz.Skyline.FileUI
                 templateName = textTemplateFile.Text;
                 if (string.IsNullOrEmpty(templateName))
                 {
-                    MessageDlg.Show(this, "A template file is required to export a method.");
+                    helper.ShowTextBoxError(textTemplateFile, "A template file is required to export a method.");
                     return;
                 }
                 else if (Equals(InstrumentType, ExportInstrumentType.Agilent6400) ?
                         !Directory.Exists(templateName) : !File.Exists(templateName))
                 {
-                    MessageDlg.Show(this, string.Format("The template file {0} does not exist.", templateName));
+                    helper.ShowTextBoxError(textTemplateFile, "The template file {0} does not exist.", templateName);
+                    return;
+                }
+                else if (Equals(InstrumentType, ExportInstrumentType.Agilent6400) &&
+                        !AgilentMethodExporter.IsAgilentMethodPath(templateName))
+                {
+                    helper.ShowTextBoxError(textTemplateFile, "The folder {0} does not appear to contain an Agilent QQQ method template.  The folder is expected to have a .m extension, and contain the file qqqacqmethod.xsd.", templateName);
                     return;
                 }
             }
@@ -996,7 +1002,13 @@ namespace pwiz.Skyline.FileUI
                 
                 if (chooseDirDialog.ShowDialog(this) == DialogResult.OK)
                 {
-                    textTemplateFile.Text = chooseDirDialog.SelectedPath;
+                    templateName = chooseDirDialog.SelectedPath;
+                    if (!AgilentMethodExporter.IsAgilentMethodPath(templateName))
+                    {
+                        MessageDlg.Show(this, "The chosen folder does not appear to contain an Agilent QQQ method template.  The folder is expected to have a .m extension, and contain the file qqqacqmethod.xsd.");
+                        return;
+                    }
+                    textTemplateFile.Text = templateName;
                 }
 
                 return;

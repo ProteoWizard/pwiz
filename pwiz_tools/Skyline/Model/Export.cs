@@ -1377,6 +1377,11 @@ namespace pwiz.Skyline.Model
             MethodExporter.ExportMethod(EXE_BUILD_AGILENT_METHOD,
                 new List<string>(), fileName, templateName, MemoryOutput, progressMonitor);
         }
+
+        public static bool IsAgilentMethodPath(string methodPath)
+        {
+            return methodPath.EndsWith(".m") && File.Exists(Path.Combine(methodPath, "qqqacqmeth.xsd"));
+        }
     }
 
     public class WatersMassListExporter : MassListExporter
