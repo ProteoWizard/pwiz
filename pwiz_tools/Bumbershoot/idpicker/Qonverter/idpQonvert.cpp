@@ -28,11 +28,13 @@
 
 #include "Parser.hpp"
 #include "idpQonvert.hpp"
+#include "../Lib/SQLite/sqlite3pp.h"
 #include <iomanip>
 //#include "svnrev.hpp"
 
 using namespace freicore;
 using namespace IDPicker;
+namespace sqlite = sqlite3pp;
 using std::setw;
 using std::setfill;
 using boost::format;
@@ -259,23 +261,49 @@ END_IDPICKER_NAMESPACE
 
 int main( int argc, char* argv[] )
 {
-	argList_t args( argv, argv+argc );
-
-	int rv;
-    if( ( rv = InitProcess(args) ) > 0 )
-		return rv;
-
-	for( size_t i = 1; i < args.size(); ++i )
-		FindFilesByMask( args[i], g_rtConfig->inputFilepaths );
-
-	if( g_rtConfig->inputFilepaths.empty() )
-	{
-		cout << "Error: no files found matching input filemasks." << endl;
-		return QONVERT_ERROR_NO_INPUT_FILES_FOUND;
-	}
-
     try
     {
+	    argList_t args( argv, argv+argc );
+
+	    int rv;
+        if( ( rv = InitProcess(args) ) > 0 )
+		    return rv;
+
+	    for( size_t i = 1; i < args.size(); ++i )
+		    FindFilesByMask( args[i], g_rtConfig->inputFilepaths );
+
+	    if( g_rtConfig->inputFilepaths.empty() )
+	    {
+		    cout << "Error: no files found matching input filemasks." << endl;
+		    return QONVERT_ERROR_NO_INPUT_FILES_FOUND;
+	    }
+
+        vector<string> idpDbFilepaths, parserFilepaths;
+        BOOST_FOREACH(const string& filepath, g_rtConfig->inputFilepaths)
+            if (bfs::path(filepath).extension() == ".idpDB")
+                idpDbFilepaths.push_back(filepath);
+            else
+                parserFilepaths.push_back(filepath);
+
+        BOOST_FOREACH(const string& filepath, idpDbFilepaths)
+        {
+            Qonverter qonverter;
+            qonverter.logQonversionDetails = g_rtConfig->WriteQonversionDetails;
+                
+            Qonverter::Settings& settings = qonverter.settingsByAnalysis[0];
+            settings.qonverterMethod = g_rtConfig->QonverterMethod;
+            settings.kernel = g_rtConfig->Kernel;
+            settings.chargeStateHandling = g_rtConfig->ChargeStateHandling;
+            settings.terminalSpecificityHandling = g_rtConfig->TerminalSpecificityHandling;
+            settings.missedCleavagesHandling = g_rtConfig->MissedCleavagesHandling;
+            settings.massErrorHandling = g_rtConfig->MassErrorHandling;
+            settings.decoyPrefix = g_rtConfig->DecoyPrefix;
+            settings.scoreInfoByName = g_rtConfig->scoreInfoByName;
+
+            qonverter.reset(filepath);
+            qonverter.qonvert(filepath);
+        }
+
         Parser parser;
 
         // update on the first spectrum, the last spectrum, the 100th spectrum, the 200th spectrum, etc.
@@ -284,7 +312,33 @@ int main( int argc, char* argv[] )
         parser.iterationListenerRegistry.addListener(feedback, iterationPeriod);
 
         parser.importSettingsCallback = Parser::ImportSettingsCallbackPtr(new ImportSettingsHandler);
-        parser.parse(vector<string>(g_rtConfig->inputFilepaths.begin(), g_rtConfig->inputFilepaths.end()));
+        parser.parse(parserFilepaths);
+
+        // add the parserFilepaths to idpDbFilepaths
+        BOOST_FOREACH(const string& filepath, parserFilepaths)
+            idpDbFilepaths.push_back(bfs::path(filepath).replace_extension(".idpDB").string());
+
+        // output summary statistics for each input file
+        cout << "\nSpectra Peptides Filepath\n"
+                "-------------------------\n";
+
+        BOOST_FOREACH(const string& filepath, idpDbFilepaths)
+        {
+            sqlite::database idpDb(filepath);
+
+            string sql = "SELECT COUNT(DISTINCT Spectrum),"
+                         "       COUNT(DISTINCT Peptide)"
+                         "  FROM PeptideSpectrumMatch"
+                         " WHERE QValue < " + lexical_cast<string>(g_rtConfig->MaxFDR);
+
+            sqlite::query summaryQuery(idpDb, sql.c_str());
+
+            int spectra, peptides;
+            boost::tie(spectra, peptides)= summaryQuery.begin()->get_columns<int, int>(0, 1);
+            cout << left << setw(8) << spectra
+                 << left << setw(9) << peptides
+                 << filepath << endl;
+        }
     }
     catch (exception& e)
     {
