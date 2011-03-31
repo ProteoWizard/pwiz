@@ -578,10 +578,12 @@ namespace pwiz.Skyline.SettingsUI
                         continue;
                     }
                     // Otherwise, add it to the list of children for the PeptideGroupNode.
-                    var newChildren = peptideGroupDocNode.Children.ToList();
+                    var newChildren = peptideGroupDocNode.Children.Cast<PeptideDocNode>().ToList();
                     newChildren.Add(newNodePep);
+                    newChildren.Sort(FastaSequence.ComparePeptides);
+
                     // Store modified proteins by global index in a HashSet for second pass.
-                    var newPeptideGroupDocNode = peptideGroupDocNode.ChangeChildren(newChildren)
+                    var newPeptideGroupDocNode = peptideGroupDocNode.ChangeChildren(newChildren.Cast<DocNode>().ToList())
                         .ChangeAutoManageChildren(false);
                     // If the protein was already in the document, replace with the new PeptideGroupDocNode.
                     if (foundInDoc)
@@ -614,10 +616,10 @@ namespace pwiz.Skyline.SettingsUI
             {
                 var newChildren = nodePepGroup.Children.ToList();
                 // Have to cast all children to PeptideDocNodes in order to sort.
-                var newChildrenNodePeps = newChildren.ConvertAll(docNode => (PeptideDocNode)docNode);
+                var newChildrenNodePeps = newChildren.Cast<PeptideDocNode>().ToList();
                 newChildrenNodePeps.Sort(FastaSequence.ComparePeptides);
                 nodePepGroupsSortedChildren.Add((PeptideGroupDocNode) 
-                    nodePepGroup.ChangeChildren(newChildrenNodePeps.ConvertAll(nodePep => (DocNode)nodePep)));
+                    nodePepGroup.ChangeChildren(newChildrenNodePeps.Cast<DocNode>().ToList()));
             }
             // Sort the proteins.
             nodePepGroupsSortedChildren.Sort((node1, node2) => Comparer<string>.Default.Compare(node1.Name, node2.Name));
