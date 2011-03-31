@@ -54,6 +54,7 @@
             this.colAvgPrecursorEnrichment = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colAvgTurnover = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colAvgTurnoverScore = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colStatus = new pwiz.Topograph.ui.Controls.ValidationStatusColumn();
             this.label1 = new System.Windows.Forms.Label();
             this.btnSave = new System.Windows.Forms.Button();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -174,7 +175,8 @@
             this.colProteinDescription,
             this.colAvgPrecursorEnrichment,
             this.colAvgTurnover,
-            this.colAvgTurnoverScore});
+            this.colAvgTurnoverScore,
+            this.colStatus});
             dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
             dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -297,6 +299,15 @@
             this.colAvgTurnoverScore.Name = "colAvgTurnoverScore";
             this.colAvgTurnoverScore.ReadOnly = true;
             // 
+            // colStatus
+            // 
+            this.colStatus.DisplayMember = "Display";
+            this.colStatus.HeaderText = "Status";
+            this.colStatus.Name = "colStatus";
+            this.colStatus.ReadOnly = true;
+            this.colStatus.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            this.colStatus.ValueMember = "Value";
+            // 
             // label1
             // 
             this.label1.AutoSize = true;
@@ -365,5 +376,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn colAvgPrecursorEnrichment;
         private System.Windows.Forms.DataGridViewTextBoxColumn colAvgTurnover;
         private System.Windows.Forms.DataGridViewTextBoxColumn colAvgTurnoverScore;
+        private pwiz.Topograph.ui.Controls.ValidationStatusColumn colStatus;
     }
 }

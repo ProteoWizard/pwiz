@@ -65,7 +65,7 @@
             // 
             this.cbxByProtein.AutoSize = true;
             this.cbxByProtein.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.cbxByProtein.Location = new System.Drawing.Point(308, 3);
+            this.cbxByProtein.Location = new System.Drawing.Point(307, 3);
             this.cbxByProtein.Name = "cbxByProtein";
             this.cbxByProtein.Size = new System.Drawing.Size(94, 19);
             this.cbxByProtein.TabIndex = 0;
@@ -76,7 +76,7 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label1.Location = new System.Drawing.Point(308, 25);
+            this.label1.Location = new System.Drawing.Point(307, 25);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(94, 25);
             this.label1.TabIndex = 1;
@@ -86,9 +86,9 @@
             // tbxMinScore
             // 
             this.tbxMinScore.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tbxMinScore.Location = new System.Drawing.Point(408, 28);
+            this.tbxMinScore.Location = new System.Drawing.Point(407, 28);
             this.tbxMinScore.Name = "tbxMinScore";
-            this.tbxMinScore.Size = new System.Drawing.Size(231, 20);
+            this.tbxMinScore.Size = new System.Drawing.Size(229, 20);
             this.tbxMinScore.TabIndex = 2;
             // 
             // dataGridView1
@@ -141,9 +141,9 @@
             // btnRequery
             // 
             this.btnRequery.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.btnRequery.Location = new System.Drawing.Point(645, 3);
+            this.btnRequery.Location = new System.Drawing.Point(642, 3);
             this.btnRequery.Name = "btnRequery";
-            this.btnRequery.Size = new System.Drawing.Size(112, 19);
+            this.btnRequery.Size = new System.Drawing.Size(115, 19);
             this.btnRequery.TabIndex = 4;
             this.btnRequery.Text = "Recalculate";
             this.btnRequery.UseVisualStyleBackColor = true;
@@ -154,7 +154,7 @@
             this.tbxInitialTracerPercent.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tbxInitialTracerPercent.Location = new System.Drawing.Point(103, 3);
             this.tbxInitialTracerPercent.Name = "tbxInitialTracerPercent";
-            this.tbxInitialTracerPercent.Size = new System.Drawing.Size(199, 20);
+            this.tbxInitialTracerPercent.Size = new System.Drawing.Size(198, 20);
             this.tbxInitialTracerPercent.TabIndex = 5;
             // 
             // tbxFinalTracerPercent
@@ -162,7 +162,7 @@
             this.tbxFinalTracerPercent.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tbxFinalTracerPercent.Location = new System.Drawing.Point(103, 28);
             this.tbxFinalTracerPercent.Name = "tbxFinalTracerPercent";
-            this.tbxFinalTracerPercent.Size = new System.Drawing.Size(199, 20);
+            this.tbxFinalTracerPercent.Size = new System.Drawing.Size(198, 20);
             this.tbxFinalTracerPercent.TabIndex = 7;
             // 
             // label3
@@ -180,9 +180,9 @@
             // 
             this.btnSave.Dock = System.Windows.Forms.DockStyle.Fill;
             this.btnSave.Enabled = false;
-            this.btnSave.Location = new System.Drawing.Point(645, 28);
+            this.btnSave.Location = new System.Drawing.Point(642, 28);
             this.btnSave.Name = "btnSave";
-            this.btnSave.Size = new System.Drawing.Size(112, 19);
+            this.btnSave.Size = new System.Drawing.Size(115, 19);
             this.btnSave.TabIndex = 9;
             this.btnSave.Text = "Save...";
             this.btnSave.UseVisualStyleBackColor = true;
@@ -192,7 +192,7 @@
             // 
             this.label4.AutoSize = true;
             this.label4.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label4.Location = new System.Drawing.Point(308, 150);
+            this.label4.Location = new System.Drawing.Point(307, 150);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(94, 27);
             this.label4.TabIndex = 11;
@@ -206,7 +206,7 @@
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 46.3964F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 100F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 53.6036F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 117F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 120F));
             this.tableLayoutPanel1.Controls.Add(this.label2, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.tbxInitialTracerPercent, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.label3, 0, 1);
@@ -262,7 +262,7 @@
             this.cbxFixYIntercept.Dock = System.Windows.Forms.DockStyle.Fill;
             this.cbxFixYIntercept.Location = new System.Drawing.Point(3, 53);
             this.cbxFixYIntercept.Name = "cbxFixYIntercept";
-            this.cbxFixYIntercept.Size = new System.Drawing.Size(299, 19);
+            this.cbxFixYIntercept.Size = new System.Drawing.Size(298, 19);
             this.cbxFixYIntercept.TabIndex = 12;
             this.cbxFixYIntercept.Text = "Hold Initial Tracer % Constant";
             this.cbxFixYIntercept.UseVisualStyleBackColor = true;
@@ -292,7 +292,7 @@
             // cbxShowMinHalfLife
             // 
             this.cbxShowMinHalfLife.AutoSize = true;
-            this.cbxShowMinHalfLife.Location = new System.Drawing.Point(308, 103);
+            this.cbxShowMinHalfLife.Location = new System.Drawing.Point(307, 103);
             this.cbxShowMinHalfLife.Name = "cbxShowMinHalfLife";
             this.cbxShowMinHalfLife.Size = new System.Drawing.Size(85, 17);
             this.cbxShowMinHalfLife.TabIndex = 15;
@@ -303,7 +303,7 @@
             // cbxShowMaxHalfLife
             // 
             this.cbxShowMaxHalfLife.AutoSize = true;
-            this.cbxShowMaxHalfLife.Location = new System.Drawing.Point(408, 103);
+            this.cbxShowMaxHalfLife.Location = new System.Drawing.Point(407, 103);
             this.cbxShowMaxHalfLife.Name = "cbxShowMaxHalfLife";
             this.cbxShowMaxHalfLife.Size = new System.Drawing.Size(88, 17);
             this.cbxShowMaxHalfLife.TabIndex = 16;
@@ -314,7 +314,7 @@
             // cbxShowNumDataPoints
             // 
             this.cbxShowNumDataPoints.AutoSize = true;
-            this.cbxShowNumDataPoints.Location = new System.Drawing.Point(645, 103);
+            this.cbxShowNumDataPoints.Location = new System.Drawing.Point(642, 103);
             this.cbxShowNumDataPoints.Name = "cbxShowNumDataPoints";
             this.cbxShowNumDataPoints.Size = new System.Drawing.Size(91, 17);
             this.cbxShowNumDataPoints.TabIndex = 17;
@@ -334,7 +334,7 @@
             "Avg Precursor Pool (Old Way)"});
             this.comboCalculationType.Location = new System.Drawing.Point(103, 78);
             this.comboCalculationType.Name = "comboCalculationType";
-            this.comboCalculationType.Size = new System.Drawing.Size(199, 21);
+            this.comboCalculationType.Size = new System.Drawing.Size(198, 21);
             this.comboCalculationType.TabIndex = 21;
             this.comboCalculationType.SelectedIndexChanged += new System.EventHandler(this.comboCalculationType_SelectedIndexChanged);
             // 
@@ -363,9 +363,9 @@
             this.tableLayoutPanel1.SetColumnSpan(this.findBox, 2);
             this.findBox.DataGridView = this.dataGridView1;
             this.findBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.findBox.Location = new System.Drawing.Point(408, 153);
+            this.findBox.Location = new System.Drawing.Point(407, 153);
             this.findBox.Name = "findBox";
-            this.findBox.Size = new System.Drawing.Size(349, 21);
+            this.findBox.Size = new System.Drawing.Size(350, 21);
             this.findBox.TabIndex = 10;
             // 
             // cbxShowRSquared

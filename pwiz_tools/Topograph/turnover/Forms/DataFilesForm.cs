@@ -169,17 +169,6 @@ namespace pwiz.Topograph.ui.Forms
 
         private void gridView_RowHeaderMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
         {
-            var dataFile = (MsDataFile) gridView.Rows[e.RowIndex].Tag;
-            var dataFileFrame = Program.FindOpenEntityForm<DataFileSummary>(dataFile);
-            if (dataFileFrame == null)
-            {
-                dataFileFrame = new DataFileSummary(dataFile);
-                dataFileFrame.Show(DockPanel, DockState.Document);
-            }
-            else
-            {
-                dataFileFrame.Activate();
-            }
         }
 
         private void gridView_RowsRemoved(object sender, DataGridViewRowsRemovedEventArgs e)
@@ -287,6 +276,37 @@ namespace pwiz.Topograph.ui.Forms
                 session.Transaction.Commit();
             }
             
+        }
+
+        private void gridView_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex < 0)
+            {
+                return;
+            }
+            if (e.ColumnIndex == colName.Index)
+            {
+                var dataFile = (MsDataFile)gridView.Rows[e.RowIndex].Tag;
+                DataFileSummary dataFileSummaryForm = null;
+                foreach (var form in Application.OpenForms)
+                {
+                    if (form is DataFileSummary && dataFile.Equals(((DataFileSummary)form).MsDataFile))
+                    {
+                        dataFileSummaryForm = (DataFileSummary)form;
+                        break;
+                    }
+                }
+
+                if (dataFileSummaryForm == null)
+                {
+                    dataFileSummaryForm = new DataFileSummary(dataFile);
+                    dataFileSummaryForm.Show(DockPanel, DockState.Document);
+                }
+                else
+                {
+                    dataFileSummaryForm.Activate();
+                }
+            }
         }
     }
 }

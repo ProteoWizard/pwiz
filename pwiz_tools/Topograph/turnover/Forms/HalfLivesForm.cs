@@ -146,16 +146,16 @@ namespace pwiz.Topograph.ui.Forms
                     _cohortColumns.Add(cohort, cohortColumns);
                 }
             }
-            dataGridView1.Rows.Clear();
-            if (calculator.ResultRows.Count == 0)
-            {
-                MessageBox.Show(this, "No results.  The problem might be that you have not set the time point on any data files.", Program.AppName);
-                return;
-            }
             // Filter out rows that have zero data points
             var filteredResultRows =
                 new List<HalfLifeCalculator.ResultRow>(
                     calculator.ResultRows.Where(r => r.ResultDatas.Select(rd => rd.Value.PointCount).Sum() > 0));
+            dataGridView1.Rows.Clear();
+            if (filteredResultRows.Count == 0)
+            {
+                MessageBox.Show(this, "No results.  The problem might be that you have not set the time point on any data files.", Program.AppName);
+                return;
+            }
             dataGridView1.Rows.Add(filteredResultRows.Count);
             for (int iRow = 0; iRow < filteredResultRows.Count; iRow++) 
             {

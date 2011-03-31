@@ -63,10 +63,10 @@ namespace pwiz.Topograph.MsData
                        + "\nF.MsDataFile.Id, "
                        + "\nF.Id,"
                        + "\nF.PrecursorEnrichment,"
-                       + "\nF.TurnoverScore"
+                       + "\nF.TurnoverScore,"
+                       + "\nF.ValidationStatus"
                        + "\nFROM " + typeof (DbPeptideFileAnalysis) + " F"
                        + "\nWHERE F.DeconvolutionScore >= :minScore"
-                       + "\nAND F.ValidationStatus != " + (int) ValidationStatus.reject
                        + "\nAND F.TracerPercent IS NOT NULL");
             var query = Session.CreateQuery(hql.ToString())
                 .SetParameter("minScore", MinScore);
@@ -103,6 +103,7 @@ namespace pwiz.Topograph.MsData
                                           MsDataFile = Workspace.MsDataFiles.GetChild((long) row[4]),
                                           Peaks = peaks,
                                           PeptideFileAnalysisId = peptideFileAnalysisId,
+                                          ValidationStatus = (ValidationStatus) row[8],
                                       };
                     ComputeAvgTurnover(rowData);
                     result.Add(rowData);
@@ -186,6 +187,10 @@ namespace pwiz.Topograph.MsData
                     if (longOperationBroker.WasCancelled)
                     {
                         return;
+                    }
+                    if (rowData.ValidationStatus == ValidationStatus.reject)
+                    {
+                        continue;
                     }
                     cohorts.Add(GetCohort(rowData));
                     var key = ByProtein ? rowData.ProteinName : rowData.Peptide.Sequence;
@@ -351,7 +356,7 @@ namespace pwiz.Topograph.MsData
         }
 
 
-        private RowData ToRowData(PeptideFileAnalysis peptideFileAnalysis)
+        public RowData ToRowData(PeptideFileAnalysis peptideFileAnalysis)
         {
             if (!peptideFileAnalysis.Peaks.IsCalculated)
             {
@@ -452,6 +457,7 @@ namespace pwiz.Topograph.MsData
             public double? AvgTurnover { get; set; }
             public double? AvgTurnoverScore { get; set; }
             public Peptide Peptide { get; set; }
+            public ValidationStatus ValidationStatus { get; set; }
             public String ProteinName { get { return Peptide.ProteinName; } }
             public String ProteinDescription { get { return Peptide.ProteinDescription; } }
             public MsDataFile MsDataFile { get; set; }

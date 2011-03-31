@@ -30,6 +30,9 @@ namespace pwiz.Topograph.ui.Forms
         /// </summary>
         private void InitializeComponent()
         {
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.label1 = new System.Windows.Forms.Label();
@@ -62,10 +65,12 @@ namespace pwiz.Topograph.ui.Forms
             this.colCohort = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTracerPercent = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colScore = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colTurnover = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colPrecursorPool = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colTurnoverAvg = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colTurnover = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colTurnoverScore = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colPrecursorPoolAvg = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colTurnoverAvg = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colTurnoverScoreAvg = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -370,6 +375,14 @@ namespace pwiz.Topograph.ui.Forms
             this.dataGridView1.AllowUserToAddRows = false;
             this.dataGridView1.AllowUserToDeleteRows = false;
             this.dataGridView1.AllowUserToOrderColumns = true;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridView1.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colPeptide,
@@ -379,13 +392,31 @@ namespace pwiz.Topograph.ui.Forms
             this.colCohort,
             this.colTracerPercent,
             this.colScore,
-            this.colTurnover,
             this.colPrecursorPool,
+            this.colTurnover,
+            this.colTurnoverScore,
+            this.colPrecursorPoolAvg,
             this.colTurnoverAvg,
-            this.colPrecursorPoolAvg});
+            this.colTurnoverScoreAvg});
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dataGridView1.DefaultCellStyle = dataGridViewCellStyle2;
             this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView1.Location = new System.Drawing.Point(0, 0);
             this.dataGridView1.Name = "dataGridView1";
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridView1.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
             this.dataGridView1.Size = new System.Drawing.Size(948, 219);
             this.dataGridView1.TabIndex = 0;
             this.dataGridView1.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellEndEdit);
@@ -437,18 +468,31 @@ namespace pwiz.Topograph.ui.Forms
             this.colScore.Name = "colScore";
             this.colScore.ReadOnly = true;
             // 
-            // colTurnover
-            // 
-            this.colTurnover.HeaderText = "Turnover (Ind)";
-            this.colTurnover.Name = "colTurnover";
-            this.colTurnover.ReadOnly = true;
-            // 
             // colPrecursorPool
             // 
             this.colPrecursorPool.HeaderText = "Precursor Pool (Ind)";
             this.colPrecursorPool.Name = "colPrecursorPool";
             this.colPrecursorPool.ReadOnly = true;
             this.colPrecursorPool.Width = 140;
+            // 
+            // colTurnover
+            // 
+            this.colTurnover.HeaderText = "Turnover (Ind)";
+            this.colTurnover.Name = "colTurnover";
+            this.colTurnover.ReadOnly = true;
+            // 
+            // colTurnoverScore
+            // 
+            this.colTurnoverScore.HeaderText = "Turnover Score (Ind)";
+            this.colTurnoverScore.Name = "colTurnoverScore";
+            this.colTurnoverScore.ReadOnly = true;
+            // 
+            // colPrecursorPoolAvg
+            // 
+            this.colPrecursorPoolAvg.HeaderText = "Precursor Pool (Avg)";
+            this.colPrecursorPoolAvg.Name = "colPrecursorPoolAvg";
+            this.colPrecursorPoolAvg.ReadOnly = true;
+            this.colPrecursorPoolAvg.Width = 140;
             // 
             // colTurnoverAvg
             // 
@@ -457,12 +501,11 @@ namespace pwiz.Topograph.ui.Forms
             this.colTurnoverAvg.ReadOnly = true;
             this.colTurnoverAvg.Width = 105;
             // 
-            // colPrecursorPoolAvg
+            // colTurnoverScoreAvg
             // 
-            this.colPrecursorPoolAvg.HeaderText = "Precursor Pool (Avg)";
-            this.colPrecursorPoolAvg.Name = "colPrecursorPoolAvg";
-            this.colPrecursorPoolAvg.ReadOnly = true;
-            this.colPrecursorPoolAvg.Width = 140;
+            this.colTurnoverScoreAvg.HeaderText = "Turnover Score (Avg)";
+            this.colTurnoverScoreAvg.Name = "colTurnoverScoreAvg";
+            this.colTurnoverScoreAvg.ReadOnly = true;
             // 
             // splitContainer2
             // 
@@ -539,9 +582,11 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.DataGridViewTextBoxColumn colCohort;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTracerPercent;
         private System.Windows.Forms.DataGridViewTextBoxColumn colScore;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colTurnover;
         private System.Windows.Forms.DataGridViewTextBoxColumn colPrecursorPool;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colTurnoverAvg;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colTurnover;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colTurnoverScore;
         private System.Windows.Forms.DataGridViewTextBoxColumn colPrecursorPoolAvg;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colTurnoverAvg;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colTurnoverScoreAvg;
     }
 }

@@ -293,25 +293,30 @@ namespace pwiz.Topograph.ui.Forms
                     row.Cells[colScore.Index].Value = peptideFileAnalysis.Peaks.DeconvolutionScore;
                     row.Cells[colTurnover.Index].Value = peptideFileAnalysis.Peaks.Turnover;
                     row.Cells[colPrecursorPool.Index].Value = peptideFileAnalysis.Peaks.PrecursorEnrichment;
+                    row.Cells[colTurnoverScore.Index].Value = peptideFileAnalysis.Peaks.TurnoverScore;
                 }
                 var halfLifeCalculator = UpdateGraph(peptideFileAnalyses);
-                if (HalfLifeCalculationType == HalfLifeCalculationType.GroupPrecursorPool)
+                if (HalfLifeCalculationType == HalfLifeCalculationType.GroupPrecursorPool || HalfLifeCalculationType == HalfLifeCalculationType.OldGroupPrecursorPool)
                 {
                     colTurnoverAvg.Visible = true;
+                    colPrecursorPoolAvg.Visible = true;
+                    colTurnoverScoreAvg.Visible = HalfLifeCalculationType != HalfLifeCalculationType.OldGroupPrecursorPool;
                     for (int iRow = 0; iRow < dataGridView1.Rows.Count; iRow++)
                     {
                         var row = dataGridView1.Rows[iRow];
                         var peptideFileAnalysis = (PeptideFileAnalysis) row.Tag;
-
-                        row.Cells[colTurnoverAvg.Index].Value = halfLifeCalculator.GetValue(peptideFileAnalysis);
+                        var rowData = halfLifeCalculator.ToRowData(peptideFileAnalysis);
+                        row.Cells[colTurnoverAvg.Index].Value = rowData.AvgTurnover;
                         row.Cells[colPrecursorPoolAvg.Index].Value =
-                            halfLifeCalculator.GetPrecursorPool(peptideFileAnalysis.MsDataFile);
+                            rowData.AvgPrecursorEnrichment;
+                        row.Cells[colTurnoverScoreAvg.Index].Value = rowData.AvgTurnoverScore;
                     }
                 }
                 else
                 {
                     colTurnoverAvg.Visible = false;
                     colPrecursorPoolAvg.Visible = false;
+                    colTurnoverScoreAvg.Visible = false;
                 }
             }
         }

@@ -100,6 +100,31 @@ namespace pwiz.Topograph.ui.Forms
             var analysisForm = PeptideAnalysisFrame.ShowPeptideAnalysis(peptideFileAnalysis.PeptideAnalysis);
             return ActivatePeptideDataForm<T>(analysisForm.PeptideAnalysisSummary, peptideFileAnalysis);
         }
+
+        public static PeptideFileAnalysisFrame ShowPeptideFileAnalysis(Workspace workspace, long? peptideFileAnalysisId)
+        {
+            if (peptideFileAnalysisId == null)
+            {
+                return null;
+            }
+            using (var session = workspace.OpenSession())
+            {
+                var dbPeptideFileAnalysis = session.Get<DbPeptideFileAnalysis>(peptideFileAnalysisId);
+                if (dbPeptideFileAnalysis == null)
+                {
+                    return null;
+                }
+                var peptideAnalysis = TurnoverForm.Instance.LoadPeptideAnalysis(dbPeptideFileAnalysis.PeptideAnalysis.Id.Value);
+                if (peptideAnalysis == null)
+                {
+                    return null;
+                }
+                var peptideFileAnalysis = peptideAnalysis.GetFileAnalysis(peptideFileAnalysisId.Value);
+                return PeptideFileAnalysisFrame.ShowFileAnalysisForm<TracerChromatogramForm>(peptideFileAnalysis);
+            }
+        }
+
+
         public T ShowForm<T>() where T : PeptideFileAnalysisForm
         {
             Activate();

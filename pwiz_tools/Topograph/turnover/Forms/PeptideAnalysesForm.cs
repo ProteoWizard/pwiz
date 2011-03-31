@@ -32,17 +32,10 @@ using pwiz.Topograph.ui.Controls;
 
 namespace pwiz.Topograph.ui.Forms
 {
-    public partial class PeptideAnalysesForm : WorkspaceForm
+    public partial class PeptideAnalysesForm : BasePeptideAnalysesForm
     {
         private const string Title = "Peptide Analyses";
-        private bool _initialQueryCompleted;
         private readonly Dictionary<long, DataGridViewRow> _peptideAnalysisRows = new Dictionary<long, DataGridViewRow>();
-        private readonly object _requeryLock = new object();
-        private ISession _session;
-
-        private HashSet<long> _peptideAnalysisIdsToRequery;
-
-        private WorkspaceVersion _workspaceVersion;
 
         public PeptideAnalysesForm(Workspace workspace) : base(workspace)
         {
@@ -127,139 +120,70 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
-        protected override void OnHandleCreated(EventArgs e)
+        protected override void Requery(ISession session, ICollection<long> peptideAnalysisIds)
         {
-            base.OnHandleCreated(e);
-            new Action(RequeryPeptideAnalyses).BeginInvoke(null, null);
-        }
-
-        protected override void OnHandleDestroyed(EventArgs e)
-        {
-            lock(this)
+            String idList = null;
+            if (peptideAnalysisIds != null)
             {
-                if (_session != null)
-                {
-                    try
-                    {
-                        _session.CancelQuery();
-                    }
-                    catch
-                    {
-                        
-                    }
-                }
+                idList = "(" + Lists.Join(peptideAnalysisIds, ",") + ")";
             }
-        }
 
-        private void AddPeptideAnalysesToRequery(ICollection<long> ids)
-        {
-            if (ids.Count == 0)
-            {
-                return;
-            }
-            lock(this)
-            {
-                if (_peptideAnalysisIdsToRequery == null)
+            var peptideAnalysisRows = new Dictionary<long, PeptideAnalysisRow>();
+                String hql = "SELECT pa.Id, pa.Peptide.Id, pa.Note, pa.FileAnalysisCount "
+                             + "\nFROM " + typeof(DbPeptideAnalysis) + " pa";
+
+                if (idList != null)
                 {
-                    _peptideAnalysisIdsToRequery = new HashSet<long>();
-                    new Action(RequeryPeptideAnalyses).BeginInvoke(null, null);
+                    hql += "\nWHERE pa.Id IN " + idList;
                 }
-                _peptideAnalysisIdsToRequery.UnionWith(ids);
-            }
-        }
-
-        private void RequeryPeptideAnalyses()
-        {
-            lock(_requeryLock)
-            {
-                ICollection<long> idsToRequery;
-                String idList = null;
-                lock (this)
+                var query = session.CreateQuery(hql);
+                foreach (object[] rowData in query.List())
                 {
-                    if (_initialQueryCompleted)
+                    PeptideAnalysisRow peptideAnalysisRow;
+                    var id = (long)rowData[0];
+                    if (!peptideAnalysisRows.TryGetValue(id, out peptideAnalysisRow))
                     {
-                        idsToRequery = _peptideAnalysisIdsToRequery;
-                        _peptideAnalysisIdsToRequery = null;
-                        if (idsToRequery == null || idsToRequery.Count == 0)
-                        {
-                            return;
-                        }
-                        idList = "(" + Lists.Join(idsToRequery, ",") + ")";
+                        peptideAnalysisRow = new PeptideAnalysisRow { Id = id };
+                        peptideAnalysisRows.Add(id, peptideAnalysisRow);
                     }
-                    else
-                    {
-                        idsToRequery = null;
-                    }
-                    _initialQueryCompleted = true;
+                    peptideAnalysisRow.PeptideId = (long)rowData[1];
+                    peptideAnalysisRow.Note = (string)rowData[2];
+                    peptideAnalysisRow.DataFileCount = (int)rowData[3];
                 }
-
-                var peptideAnalysisRows = new Dictionary<long, PeptideAnalysisRow>();
-                try 
-                {
-                    using (_session = Workspace.OpenSession())
-                    {
-                        String hql = "SELECT pa.Id, pa.Peptide.Id, pa.Note, pa.FileAnalysisCount "
-                                     + "\nFROM " + typeof (DbPeptideAnalysis) + " pa";
-
-                        if (idsToRequery != null)
-                        {
-                            hql += "\nWHERE pa.Id IN " + idList;
-                        }
-                        var query = _session.CreateQuery(hql);
-                        foreach (object[] rowData in query.List())
-                        {
-                            PeptideAnalysisRow peptideAnalysisRow;
-                            var id = (long) rowData[0];
-                            if (!peptideAnalysisRows.TryGetValue(id, out peptideAnalysisRow))
-                            {
-                                peptideAnalysisRow = new PeptideAnalysisRow {Id = id};
-                                peptideAnalysisRows.Add(id, peptideAnalysisRow);
-                            }
-                            peptideAnalysisRow.PeptideId = (long) rowData[1];
-                            peptideAnalysisRow.Note = (string) rowData[2];
-                            peptideAnalysisRow.DataFileCount = (int) rowData[3];
-                        }
-                        var hql2 = "SELECT pfa.PeptideAnalysis.Id, Min(pfa.DeconvolutionScore), Max(pfa.DeconvolutionScore), Min(pfa.ValidationStatus), Max(pfa.ValidationStatus) "
-                                   + "\nfrom " + typeof (DbPeptideFileAnalysis) +
-                                   " pfa ";
-                        if (idsToRequery != null)
-                        {
-                            hql2 += "\nWHERE pfa.PeptideAnalysis.Id IN " + idList;
-                        }
-                        hql2 += "\nGROUP BY pfa.PeptideAnalysis.Id";
-                        var query2 = _session.CreateQuery(hql2);
-                        foreach (object[] rowData in query2.List())
-                        {
-                            PeptideAnalysisRow peptideAnalysisRow;
-                            var id = (long) rowData[0];
-                            if (!peptideAnalysisRows.TryGetValue(id, out peptideAnalysisRow))
-                            {
-                                continue;
-                            }
-                            peptideAnalysisRow.MinScore = (double?) rowData[1];
-                            peptideAnalysisRow.MaxScore = (double?) rowData[2];
-                            peptideAnalysisRow.MinValidationStatus = (ValidationStatus?) rowData[3];
-                            peptideAnalysisRow.MaxValidationStatus = (ValidationStatus?) rowData[4];
-                        }
-                    }
-                    if (idsToRequery != null)
-                    {
-                        foreach (var id in idsToRequery)
-                        {
-                            if (!peptideAnalysisRows.ContainsKey(id))
-                            {
-                                peptideAnalysisRows.Add(id, null);
-                            }
-                        }
-                    }
-                }
-                    finally
-                {
-                    _session = null;
-                }
-
                 BeginInvoke(new Action<Dictionary<long, PeptideAnalysisRow>>(UpdateRows), peptideAnalysisRows);
+                var hql2 = "SELECT pfa.PeptideAnalysis.Id, Min(pfa.DeconvolutionScore), Max(pfa.DeconvolutionScore), Min(pfa.ValidationStatus), Max(pfa.ValidationStatus) "
+                           + "\nfrom " + typeof(DbPeptideFileAnalysis) +
+                           " pfa ";
+                if (idList != null)
+                {
+                    hql2 += "\nWHERE pfa.PeptideAnalysis.Id IN " + idList;
+                }
+                hql2 += "\nGROUP BY pfa.PeptideAnalysis.Id";
+                var query2 = session.CreateQuery(hql2);
+                foreach (object[] rowData in query2.List())
+                {
+                    PeptideAnalysisRow peptideAnalysisRow;
+                    var id = (long)rowData[0];
+                    if (!peptideAnalysisRows.TryGetValue(id, out peptideAnalysisRow))
+                    {
+                        continue;
+                    }
+                    peptideAnalysisRow.MinScore = (double?)rowData[1];
+                    peptideAnalysisRow.MaxScore = (double?)rowData[2];
+                    peptideAnalysisRow.MinValidationStatus = (ValidationStatus?)rowData[3];
+                    peptideAnalysisRow.MaxValidationStatus = (ValidationStatus?)rowData[4];
+                }
+            if (peptideAnalysisIds != null)
+            {
+                foreach (var id in peptideAnalysisIds)
+                {
+                    if (!peptideAnalysisRows.ContainsKey(id))
+                    {
+                        peptideAnalysisRows.Add(id, null);
+                    }
+                }
             }
+            BeginInvoke(new Action<Dictionary<long, PeptideAnalysisRow>>(UpdateRows), peptideAnalysisRows);
         }
 
         private void UpdateRows(Dictionary<long, PeptideAnalysisRow> rows)
@@ -333,17 +257,6 @@ namespace pwiz.Topograph.ui.Forms
             {
                 dataGridView.ResumeLayout();
             }
-        }
-
-        protected override void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)
-        {
-            base.OnWorkspaceEntitiesChanged(args);
-            var changedPeptideAnalysisIds = new HashSet<long>(args.GetChangedPeptideAnalyses().Keys);
-            foreach (var peptideFileAnalysis in args.GetEntities<PeptideFileAnalysis>())
-            {
-                changedPeptideAnalysisIds.Add(peptideFileAnalysis.PeptideAnalysis.Id.Value);
-            }
-            AddPeptideAnalysesToRequery(changedPeptideAnalysisIds);
         }
 
         private void dataGridView_RowHeaderMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)

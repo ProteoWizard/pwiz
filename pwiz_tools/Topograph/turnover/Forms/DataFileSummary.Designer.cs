@@ -35,7 +35,7 @@ namespace pwiz.Topograph.ui.Forms
             this.btnCreateFileAnalyses = new System.Windows.Forms.Button();
             this.dataGridView = new System.Windows.Forms.DataGridView();
             this.colStatus = new pwiz.Topograph.ui.Controls.ValidationStatusColumn();
-            this.colSequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colSequence = new System.Windows.Forms.DataGridViewLinkColumn();
             this.colPeakStart = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colPeakEnd = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTurnover = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -108,11 +108,12 @@ namespace pwiz.Topograph.ui.Forms
             this.dataGridView.Size = new System.Drawing.Size(398, 264);
             this.dataGridView.TabIndex = 0;
             this.dataGridView.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView_CellEndEdit);
-            this.dataGridView.CellMouseDoubleClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView_CellMouseDoubleClick);
+            this.dataGridView.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView_CellContentClick);
             // 
             // colStatus
             // 
             this.colStatus.DisplayMember = "Display";
+            this.colStatus.HeaderText = "Status";
             this.colStatus.Name = "colStatus";
             this.colStatus.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             this.colStatus.ValueMember = "Value";
@@ -121,6 +122,8 @@ namespace pwiz.Topograph.ui.Forms
             // 
             this.colSequence.HeaderText = "Sequence";
             this.colSequence.Name = "colSequence";
+            this.colSequence.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.colSequence.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             // 
             // colPeakStart
             // 
@@ -167,12 +170,12 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.DataGridView dataGridView;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colSequence;
+        private System.Windows.Forms.Button btnCreateFileAnalyses;
+        private ValidationStatusColumn colStatus;
+        private System.Windows.Forms.DataGridViewLinkColumn colSequence;
         private System.Windows.Forms.DataGridViewTextBoxColumn colPeakStart;
         private System.Windows.Forms.DataGridViewTextBoxColumn colPeakEnd;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTurnover;
         private System.Windows.Forms.DataGridViewTextBoxColumn colApe;
-        private ValidationStatusColumn colStatus;
-        private System.Windows.Forms.Button btnCreateFileAnalyses;
     }
 }

@@ -80,25 +80,7 @@ namespace pwiz.Topograph.ui.Forms
 
         private PeptideFileAnalysisFrame ShowPeptideFileAnalysis(long? peptideFileAnalysisId)
         {
-            if (peptideFileAnalysisId == null)
-            {
-                return null;
-            }
-            using (var session = Workspace.OpenSession())
-            {
-                var dbPeptideFileAnalysis = session.Get<DbPeptideFileAnalysis>(peptideFileAnalysisId);
-                if (dbPeptideFileAnalysis == null)
-                {
-                    return null;
-                }
-                var peptideAnalysis = TurnoverForm.Instance.LoadPeptideAnalysis(dbPeptideFileAnalysis.PeptideAnalysis.Id.Value);
-                if (peptideAnalysis == null)
-                {
-                    return null;
-                }
-                var peptideFileAnalysis = peptideAnalysis.GetFileAnalysis(peptideFileAnalysisId.Value);
-                return PeptideFileAnalysisFrame.ShowFileAnalysisForm<TracerChromatogramForm>(peptideFileAnalysis);
-            }
+            return PeptideFileAnalysisFrame.ShowPeptideFileAnalysis(Workspace, peptideFileAnalysisId);
         }
 
         private class ColumnListItem
@@ -161,6 +143,7 @@ namespace pwiz.Topograph.ui.Forms
                 row.Cells[colIndTurnover.Index].Value = rowData.IndTurnover;
                 row.Cells[colIndTurnoverScore.Index].Value = rowData.IndTurnoverScore;
                 row.Cells[colTracerPercent.Index].Value = rowData.TracerPercent;
+                row.Cells[colStatus.Index].Value = rowData.ValidationStatus;
             }
         }
 

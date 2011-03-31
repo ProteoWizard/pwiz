@@ -37,7 +37,7 @@ namespace pwiz.Topograph.ui.Forms
             this.findBox1 = new pwiz.Common.Controls.FindBox();
             this.gridView = new System.Windows.Forms.DataGridView();
             this.label2 = new System.Windows.Forms.Label();
-            this.colName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colName = new System.Windows.Forms.DataGridViewLinkColumn();
             this.colLabel = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTimePoint = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colCohort = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -124,6 +124,7 @@ namespace pwiz.Topograph.ui.Forms
             this.gridView.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridView_CellEndEdit);
             this.gridView.RowHeaderMouseDoubleClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.gridView_RowHeaderMouseDoubleClick);
             this.gridView.RowsRemoved += new System.Windows.Forms.DataGridViewRowsRemovedEventHandler(this.gridView_RowsRemoved);
+            this.gridView.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridView_CellContentClick);
             // 
             // label2
             // 
@@ -140,6 +141,8 @@ namespace pwiz.Topograph.ui.Forms
             this.colName.HeaderText = "Name";
             this.colName.Name = "colName";
             this.colName.ReadOnly = true;
+            this.colName.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.colName.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             // 
             // colLabel
             // 
@@ -188,7 +191,7 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.Label label1;
         private pwiz.Common.Controls.FindBox findBox1;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colName;
+        private System.Windows.Forms.DataGridViewLinkColumn colName;
         private System.Windows.Forms.DataGridViewTextBoxColumn colLabel;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTimePoint;
         private System.Windows.Forms.DataGridViewTextBoxColumn colCohort;
