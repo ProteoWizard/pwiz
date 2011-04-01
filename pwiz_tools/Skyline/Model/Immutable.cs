@@ -16,8 +16,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace pwiz.Skyline.Model
 {
@@ -51,7 +53,9 @@ namespace pwiz.Skyline.Model
         /// <returns>A read-only list</returns>
         protected static ReadOnlyCollection<TItem> MakeReadOnly<TItem>(IList<TItem> list)
         {
-            return list as ReadOnlyCollection<TItem> ?? new ReadOnlyCollection<TItem>(list);
+            // If not already read-only, make readonly, and if not already an array
+            // convert to an array for minimum allocation overhead.
+            return list as ReadOnlyCollection<TItem> ?? new ReadOnlyCollection<TItem>(list is Array ? list : list.ToArray());
         }
 
         /// <summary>

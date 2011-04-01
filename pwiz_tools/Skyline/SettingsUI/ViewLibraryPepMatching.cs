@@ -583,7 +583,7 @@ namespace pwiz.Skyline.SettingsUI
                     newChildren.Sort(FastaSequence.ComparePeptides);
 
                     // Store modified proteins by global index in a HashSet for second pass.
-                    var newPeptideGroupDocNode = peptideGroupDocNode.ChangeChildren(newChildren.Cast<DocNode>().ToList())
+                    var newPeptideGroupDocNode = peptideGroupDocNode.ChangeChildren(newChildren.Cast<DocNode>().ToArray())
                         .ChangeAutoManageChildren(false);
                     // If the protein was already in the document, replace with the new PeptideGroupDocNode.
                     if (foundInDoc)
@@ -619,7 +619,7 @@ namespace pwiz.Skyline.SettingsUI
                 var newChildrenNodePeps = newChildren.Cast<PeptideDocNode>().ToList();
                 newChildrenNodePeps.Sort(FastaSequence.ComparePeptides);
                 nodePepGroupsSortedChildren.Add((PeptideGroupDocNode) 
-                    nodePepGroup.ChangeChildren(newChildrenNodePeps.Cast<DocNode>().ToList()));
+                    nodePepGroup.ChangeChildren(newChildrenNodePeps.Cast<DocNode>().ToArray()));
             }
             // Sort the proteins.
             nodePepGroupsSortedChildren.Sort((node1, node2) => Comparer<string>.Default.Compare(node1.Name, node2.Name));
