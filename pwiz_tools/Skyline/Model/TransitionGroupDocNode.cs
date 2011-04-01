@@ -553,11 +553,13 @@ namespace pwiz.Skyline.Model
             }
 
             // One final check for a library info change
-            if (!Equals(libInfo, nodeResult.LibInfo))
+            bool libInfoChange = !Equals(libInfo, nodeResult.LibInfo);
+            if (libInfoChange)
                 nodeResult = nodeResult.ChangeLibInfo(libInfo);
 
             // A change in the precursor m/z may impact which results match this node
-            if (diff.DiffResults || ChangedResults(nodeResult) || precursorMz != PrecursorMz)
+            // If lib info changed, the dot-products may need to be recalculated
+            if (diff.DiffResults || ChangedResults(nodeResult) || precursorMz != PrecursorMz || libInfoChange)
                 nodeResult = nodeResult.UpdateResults(settingsNew, diff, this);
 
             return nodeResult;

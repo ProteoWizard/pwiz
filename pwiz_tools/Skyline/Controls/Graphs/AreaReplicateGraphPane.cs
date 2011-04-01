@@ -66,7 +66,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             var selectedTreeNode = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
-            if (selectedTreeNode == null)
+            if (selectedTreeNode == null || document.FindNode(selectedTreeNode.Path) == null)
             {
                 EmptyGraph(document);
                 return;

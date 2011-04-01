@@ -287,6 +287,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     for (int i = 0; i < maxSteps; i++)
                         pointPairLists[i].Add(PointPairMissing(iResult));
 
+                    if (iResult >= nodeTran.Results.Count)
+                        continue;
                     var result = nodeTran.Results[iResult];
                     if (result == null || result.Count == 0)
                         continue;
@@ -333,7 +335,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return GetReplicateIndices(i =>
                                                {
-                                                   var result = nodeTran.Results[i];
+                                                   var result = i < nodeTran.Results.Count ? nodeTran.Results[i] : null;
                                                    return (result != null ? result[0].FileIndex : (int?) null);
                                                });
             }
@@ -410,7 +412,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return GetReplicateIndices(i =>
                                                {
-                                                   var result = nodeGroup.Results[i];
+                                                   var result = i < nodeGroup.Results.Count ? nodeGroup.Results[i] : null;
                                                    return (result != null ? result[0].FileIndex : (int?) null);
                                                });
             }
@@ -419,7 +421,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return GetReplicateIndices(i =>
                                                {
-                                                   var result = nodePep.Results[i];
+                                                   var result = i < nodePep.Results.Count ? nodePep.Results[i] : null;
                                                    return (result != null ? result[0].FileIndex : (int?) null);
                                                });
             }

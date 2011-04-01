@@ -52,7 +52,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
             }
             var selectedTreeNode = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
-            if (selectedTreeNode == null)
+            if (selectedTreeNode == null || document.FindNode(selectedTreeNode.Path) == null)
             {
                 EmptyGraph(document);
                 return;
