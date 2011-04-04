@@ -263,6 +263,14 @@ namespace pwiz.Skyline.Model.Results
 
         #endregion
 
+        /// <summary>
+        /// Gets a full MSDataFile path to an existing file.  If the original path is not found to
+        /// exist, the folder containing the chromatogram cache is tried with the filename part.
+        /// </summary>
+        /// <param name="cachePath">The path to the cache file</param>
+        /// <param name="dataFilePath">A full MSDataFile path, potentially including a sample part</param>
+        /// <param name="dataFilePathPart">A file path only to an existing file</param>
+        /// <returns>A full MSDataFile path, potentially including a sample part, to an existing file, or null if no file is found</returns>
         public static string GetExistingDataFilePath(string cachePath, string dataFilePath, out string dataFilePathPart)
         {
             dataFilePathPart = SampleHelp.GetPathFilePart(dataFilePath);

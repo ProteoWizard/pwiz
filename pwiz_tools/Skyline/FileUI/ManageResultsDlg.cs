@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -28,29 +29,37 @@ namespace pwiz.Skyline.FileUI
 {
     public partial class ManageResultsDlg : Form
     {
-        public ManageResultsDlg(SrmDocument document)
+        public ManageResultsDlg(IDocumentUIContainer documentUIContainer)
         {
             InitializeComponent();
 
             Icon = Resources.Skyline;
 
-            if (document.Settings.HasResults)
+            DocumentUIContainer = documentUIContainer;
+            var settings = DocumentUIContainer.Document.Settings;
+            if (settings.HasResults)
             {
-                listResults.DisplayMember = "Name";
-                foreach (var chromatogramSet in document.Settings.MeasuredResults.Chromatograms)
+                foreach (var chromatogramSet in settings.MeasuredResults.Chromatograms)
                 {
-                    listResults.Items.Add(chromatogramSet);
+                    listResults.Items.Add(new ManageResultsAction(chromatogramSet));
                 }
                 listResults.SelectedIndices.Add(0);
             }
         }
 
+        public IDocumentUIContainer DocumentUIContainer { get; private set; }
+
         public IEnumerable<ChromatogramSet> Chromatograms
+        {
+            get { return listResults.Items.Cast<ManageResultsAction>().Select(a => a.Chromatograms); }
+        }
+
+        public IEnumerable<ChromatogramSet> ReimportChromatograms
         {
             get
             {
-                foreach (ChromatogramSet chromatogramSet in listResults.Items)
-                    yield return chromatogramSet;
+                return listResults.Items.Cast<ManageResultsAction>()
+                    .Where(a => a.IsReimport).Select(a => a.Chromatograms);
             }
         }
 
@@ -58,15 +67,18 @@ namespace pwiz.Skyline.FileUI
         {
             get
             {
-                foreach (var i in SelectedIndices)
-                    yield return (ChromatogramSet) listResults.Items[i];
+                return SelectedIndices.Select(i => listResults.Items[i])
+                    .Cast<ManageResultsAction>().Select(a => a.Chromatograms);
             }
 
             set
             {
                 listResults.SelectedItems.Clear();
-                foreach (var chromSet in value)
-                    listResults.SelectedItems.Add(chromSet);
+                foreach (var action in listResults.Items.Cast<ManageResultsAction>()
+                        .Where(action => value.Contains(action.Chromatograms)).ToArray())
+                {
+                    listResults.SelectedItems.Add(action);
+                }
             }
         }
 
@@ -109,15 +121,15 @@ namespace pwiz.Skyline.FileUI
         /// Removes all selected items from the list.
         /// </summary>
         /// <returns>A list containing the removed items in reverse order</returns>
-        private List<ChromatogramSet> RemoveSelected()
+        private List<object> RemoveSelected()
         {
             // Remove all selected items
-            var listRemovedItems = new List<ChromatogramSet>();
+            var listRemovedItems = new List<object>();
             var selectedIndices = SelectedIndices;
             for (int i = selectedIndices.Length - 1; i >= 0; i--)
             {
                 int iRemove = selectedIndices[i];
-                listRemovedItems.Add((ChromatogramSet) listResults.Items[iRemove]);
+                listRemovedItems.Add(listResults.Items[iRemove]);
                 listResults.Items.RemoveAt(iRemove);
             }
             // Select the same position that had the focus, unless it was beyond
@@ -216,22 +228,84 @@ namespace pwiz.Skyline.FileUI
 
         public void RenameResult()
         {
+            var selectedIndices = SelectedIndices;
+            if (selectedIndices.Length == 0)
+                return;
+
             int iFirst = SelectedIndices[0];
             listResults.SelectedIndices.Clear();
             listResults.SelectedIndices.Add(iFirst);
 
-            var chromSetSelected = (ChromatogramSet) listResults.Items[iFirst];
-            var listExisting = from chromSet in Chromatograms
-                               where !ReferenceEquals(chromSet, chromSetSelected)
+            var selected = (ManageResultsAction) listResults.Items[iFirst];
+            var listExistingNames = from chromSet in Chromatograms
+                               where !ReferenceEquals(chromSet, selected.Chromatograms)
                                select chromSet.Name;
 
-            var dlg = new RenameResultDlg(chromSetSelected.Name, listExisting);
+            var dlg = new RenameResultDlg(selected.Chromatograms.Name, listExistingNames);
             if (dlg.ShowDialog(this) == DialogResult.OK)
             {
-                listResults.Items[iFirst] = chromSetSelected.ChangeName(dlg.ReplicateName);
+                selected.Chromatograms = (ChromatogramSet) selected.Chromatograms.ChangeName(dlg.ReplicateName);
+                listResults.Items[iFirst] = selected;
             }
 
             listResults.Focus();
+        }
+
+        private void btnReimport_Click(object sender, EventArgs e)
+        {
+            ReimportResults();
+        }
+
+        public void ReimportResults()
+        {
+            if (!DocumentUIContainer.DocumentUI.Settings.MeasuredResults.IsLoaded)
+            {
+                MessageDlg.Show(this, "All results must be completely imported before any can be re-imported.");
+                return;
+            }
+
+            var missingFiles = FindMissingFiles(SelectedChromatograms);
+            if (missingFiles.Length > 0)
+            {
+                MessageDlg.Show(this, string.Format("Unable to find the following files, either in their original locations or in the folder of the current document:\n\n{0}", string.Join("\n", missingFiles)));
+                return;
+            }
+
+            using(new UpdateList(this))
+            {
+                foreach (int selectedIndex in SelectedIndices)
+                {
+                    var selected = (ManageResultsAction) listResults.Items[selectedIndex];
+                    selected.IsReimport = true;
+                    listResults.Items[selectedIndex] = selected;
+                    // Make sure the selected items stay selected
+                    listResults.SelectedItems.Add(selected);
+                }
+            }
+            listResults.Focus();
+        }
+
+        private string[] FindMissingFiles(IEnumerable<ChromatogramSet> chromatogramSets)
+        {
+            string documentPath = DocumentUIContainer.DocumentFilePath;
+            string cachePath = ChromatogramCache.FinalPathForName(documentPath, null);
+
+            // Collect all missing paths
+            var listPathsMissing = new List<string>();
+            // Avoid checking paths multiple times for existence
+            var setPaths = new HashSet<string>();
+            foreach (var filePath in chromatogramSets.SelectMany(set => set.MSDataFilePaths))
+            {
+                string filePathPart = SampleHelp.GetPathFilePart(filePath);
+                if (setPaths.Contains(filePathPart))
+                    continue;
+                setPaths.Add(filePathPart);
+                if (ChromatogramSet.GetExistingDataFilePath(cachePath, filePath, out filePathPart) != null)
+                    continue;
+                listPathsMissing.Add(filePathPart);
+            }
+            listPathsMissing.Sort();
+            return listPathsMissing.ToArray();
         }
 
         private bool InListUpdate { get; set; }
@@ -246,6 +320,7 @@ namespace pwiz.Skyline.FileUI
         {
             bool enable = listResults.SelectedIndices.Count > 0;
             btnRemove.Enabled = enable;
+            btnReimport.Enabled = enable;
             btnUp.Enabled = enable;
             btnDown.Enabled = enable;
             btnRename.Enabled = enable;
@@ -268,6 +343,22 @@ namespace pwiz.Skyline.FileUI
                 _dlg.listResults.EndUpdate();
                 _dlg.InListUpdate = false;
                 _dlg.listResults.Focus();
+            }
+        }
+
+        private sealed class ManageResultsAction
+        {
+            public ManageResultsAction(ChromatogramSet chromatograms)
+            {
+                Chromatograms = chromatograms;
+            }
+
+            public ChromatogramSet Chromatograms { get; set; }
+            public bool IsReimport { get; set; }
+
+            public override string ToString()
+            {
+                return (IsReimport ? "*" : "") + Chromatograms.Name;
             }
         }
     }

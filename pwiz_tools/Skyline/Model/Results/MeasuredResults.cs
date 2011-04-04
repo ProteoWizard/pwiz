@@ -142,12 +142,12 @@ namespace pwiz.Skyline.Model.Results
         public MeasuredResults OptimizeCache(string documentPath, IStreamManager streamManager)
         {
             if (!IsLoaded)
-                throw new InvalidOperationException("The ChromatogramCache must be loaded before it is optimized.");
+                throw new InvalidOperationException("The chromatogram cache must be loaded before it is optimized.");
 
             var cacheOptimized = _cacheFinal.Optimize(documentPath, MSDataFilePaths, streamManager);
             if (ReferenceEquals(cacheOptimized, _cacheFinal))
                 return this;
-            return ChangeProp(ImClone(this), (im, v) => im._cacheFinal = v, cacheOptimized);
+            return ChangeProp(ImClone(this), im => im._cacheFinal = cacheOptimized);
         }
 
         public MeasuredResults UpdateCaches(string documentPath, MeasuredResults resultsCache)

@@ -340,11 +340,7 @@ namespace pwiz.Skyline.Model.Results
             formatVersion = GetInt32(cacheHeader, (int)Header.format_version);
             if (formatVersion < FORMAT_VERSION_CACHE_2)
             {
-                chromCacheFiles = new ChromCachedFile[0];
-                chromatogramEntries = new ChromGroupHeaderInfo[0];
-                chromTransitions = new ChromTransition[0];
-                chromatogramPeaks = new ChromPeak[0];
-                return 0;
+                return EmptyCache(out chromCacheFiles, out chromatogramEntries, out chromTransitions, out chromatogramPeaks);
             }
 
             int numPeaks = GetInt32(cacheHeader, (int)Header.num_peaks);
@@ -355,6 +351,12 @@ namespace pwiz.Skyline.Model.Results
             long locationTrans = BitConverter.ToInt64(cacheHeader, ((int)Header.location_trans_lo) * 4);
             int numFiles = GetInt32(cacheHeader, (int)Header.num_files);
             long locationFiles = BitConverter.ToInt64(cacheHeader, ((int)Header.location_files_lo) * 4);
+
+            // Unexpected empty cache.  Return values that will force it to be completely rebuild.
+            if (numFiles == 0)
+            {
+                return EmptyCache(out chromCacheFiles, out chromatogramEntries, out chromTransitions, out chromatogramPeaks);
+            }
 
             // Read list of files cached
             stream.Seek(locationFiles, SeekOrigin.Begin);
@@ -389,6 +391,18 @@ namespace pwiz.Skyline.Model.Results
             chromatogramPeaks = ChromPeak.ReadArray(stream, numPeaks);
 
             return locationPeaks;
+        }
+
+        private static long EmptyCache(out ChromCachedFile[] chromCacheFiles,
+                                       out ChromGroupHeaderInfo[] chromatogramEntries,
+                                       out ChromTransition[] chromTransitions,
+                                       out ChromPeak[] chromatogramPeaks)
+        {
+            chromCacheFiles = new ChromCachedFile[0];
+            chromatogramEntries = new ChromGroupHeaderInfo[0];
+            chromTransitions = new ChromTransition[0];
+            chromatogramPeaks = new ChromPeak[0];
+            return 0;
         }
 
         private static int GetInt32(byte[] bytes, int index)

@@ -17,9 +17,11 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.FileUI;
@@ -183,6 +185,44 @@ namespace pwiz.SkylineTestFunctional
                 dictGraphPositionsNew.Add(ptLeftTop, graphChrom);
             }
 
+            // Test Reimport error message with missing file
+            var manageResultsDlg2 = ShowDialog<ManageResultsDlg>(SkylineWindow.ManageResults);
+            var missingFileMessage = ShowDialog<MessageDlg>(manageResultsDlg2.ReimportResults);
+            Assert.IsTrue(missingFileMessage.Message.Contains(
+                docRename.Settings.MeasuredResults.Chromatograms[0].MSDataFilePaths.ToArray()[0]));
+            RunUI(() =>
+            {
+                missingFileMessage.OkDialog();
+                manageResultsDlg2.OkDialog();
+            });
+            WaitForClosedForm(manageResultsDlg2);
+
+            // Reimport data for a replicate
+            RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, dlg =>
+            {
+                var chromatograms = docRename.Settings.MeasuredResults.Chromatograms;
+                dlg.SelectedChromatograms = new[] { chromatograms[1] };
+                dlg.ReimportResults();
+                dlg.OkDialog();
+            });
+
+            var docReimport = WaitForDocumentChange(docRename);
+            Assert.IsFalse(docReimport.Settings.MeasuredResults.IsLoaded);
+
+            WaitForConditionUI(() => SkylineWindow.DocumentUI.Settings.MeasuredResults.IsLoaded);
+            docReimport = SkylineWindow.Document;
+            Assert.AreNotSame(docRename.Settings.MeasuredResults, docReimport.Settings.MeasuredResults);
+            Assert.IsFalse(ArrayUtil.ReferencesEqual(docRename.Settings.MeasuredResults.Chromatograms,
+                docReimport.Settings.MeasuredResults.Chromatograms));
+            Assert.AreSame(docRename.Settings.MeasuredResults.Chromatograms[0],
+                docReimport.Settings.MeasuredResults.Chromatograms[0]);
+            Assert.AreSame(docRename.Settings.MeasuredResults.Chromatograms[2],
+                docReimport.Settings.MeasuredResults.Chromatograms[2]);
+            Assert.AreSame(docRename.Settings.MeasuredResults.Chromatograms[3],
+                docReimport.Settings.MeasuredResults.Chromatograms[3]);
+            Assert.AreEqual(TestFilesDir.GetTestPath("160109_Mix1_calcurve_073.mzML"),
+                docReimport.Settings.MeasuredResults.Chromatograms[1].MSDataFilePaths.ToArray()[0]);
+
             // Remove the last 2 replicates
             RunDlg<ManageResultsDlg>(SkylineWindow.ManageResults, dlg =>
             {
@@ -192,7 +232,7 @@ namespace pwiz.SkylineTestFunctional
                 dlg.OkDialog();
             });
 
-            CheckResultsEquivalent(docRename, false);
+            CheckResultsEquivalent(docReimport, false);
 
             var docRemoved = SkylineWindow.Document;
             Assert.AreEqual(2, docRemoved.Settings.MeasuredResults.Chromatograms.Count);
@@ -234,6 +274,11 @@ namespace pwiz.SkylineTestFunctional
 
         private static void CheckResultsEquivalent(SrmDocument docOrig, bool allowNameChanges)
         {
+            CheckResultsEquivalent(docOrig, 1, allowNameChanges);
+        }
+
+        private static void CheckResultsEquivalent(SrmDocument docOrig, int revisionInc, bool allowNameChanges)
+        {
             // Wait for the document to be different from what it was before
             WaitForDocumentChange(docOrig);
 
@@ -241,7 +286,7 @@ namespace pwiz.SkylineTestFunctional
 
             // Should have only required a single revision.  No reloading should
             // occurred.
-            Assert.AreEqual(docOrig.RevisionIndex + 1, docNew.RevisionIndex);
+            Assert.AreEqual(docOrig.RevisionIndex + revisionInc, docNew.RevisionIndex);
 
             Assert.IsTrue(docOrig.Settings.HasResults);
             Assert.IsTrue(docNew.Settings.HasResults);

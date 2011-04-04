@@ -113,7 +113,7 @@ namespace pwiz.SkylineTestA.Results
             Assert.AreEqual(FullScanMassAnalyzerType.none, doc.Settings.TransitionSettings.FullScan.ProductMassAnalyzer);
             Assert.AreEqual(FullScanMassAnalyzerType.none, doc.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer);
             var docBoth = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs =>
-                fs.ChangePrecursorFilter(FullScanPrecursorFilterType.Single, 0.11)
+                fs.ChangePrecursorFilter(FullScanPrecursorFilterType.Single, null)
                   .ChangePrecursorResolution(FullScanMassAnalyzerType.qit, TransitionFullScan.DEFAULT_RES_QIT, null)));
             AssertEx.Serializable(docBoth, AssertEx.DocumentCloned);
             Assert.IsTrue(docContainer.SetDocument(docBoth, docContainer.Document));

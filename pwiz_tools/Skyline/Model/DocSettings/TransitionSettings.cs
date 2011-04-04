@@ -1393,19 +1393,10 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (ProductFilterType != null || PrecursorFilter.HasValue || ProductFilter.HasValue)
                     throw new InvalidDataException(string.Format("No other full-scan MS/MS filter settings are allowed when precursor filter is none."));
             }
-            else
+            else if (PrecursorFilterType == FullScanPrecursorFilterType.Multiple)
             {
-                double minFilter, maxFilter;
-                if (PrecursorFilterType == FullScanPrecursorFilterType.Single)
-                {
-                    minFilter = TransitionFullScan.MIN_PRECURSOR_SINGLE_FILTER;
-                    maxFilter = TransitionFullScan.MAX_PRECURSOR_SINGLE_FILTER;
-                }
-                else
-                {
-                    minFilter = TransitionFullScan.MIN_PRECURSOR_MULTI_FILTER;
-                    maxFilter = TransitionFullScan.MAX_PRECURSOR_MULTI_FILTER;
-                }
+                const double minFilter = TransitionFullScan.MIN_PRECURSOR_MULTI_FILTER;
+                const double maxFilter = TransitionFullScan.MAX_PRECURSOR_MULTI_FILTER;
                 if (!PrecursorFilter.HasValue || minFilter > PrecursorFilter || PrecursorFilter > maxFilter)
                     throw new InvalidDataException(string.Format("The precursor m/z filter must be between {0} and {1}",
                         minFilter, maxFilter));
@@ -1436,10 +1427,11 @@ namespace pwiz.Skyline.Model.DocSettings
                                                           FullScanPrecursorFilterType.None);
             if (PrecursorFilterType != FullScanPrecursorFilterType.None)
             {
-                PrecursorFilter = reader.GetDoubleAttribute(ATTR.precursor_filter,
-                                                            PrecursorFilterType == FullScanPrecursorFilterType.Single
-                                                                ? TransitionFullScan.DEFAULT_PRECURSOR_SINGLE_FILTER
-                                                                : TransitionFullScan.DEFAULT_PRECURSOR_MULTI_FILTER);
+                if (PrecursorFilterType == FullScanPrecursorFilterType.Multiple)
+                {
+                    PrecursorFilter = reader.GetDoubleAttribute(ATTR.precursor_filter,
+                                                                TransitionFullScan.DEFAULT_PRECURSOR_MULTI_FILTER);
+                }
 
                 ProductFilter = reader.GetDoubleAttribute(ATTR.product_filter,
                     TransitionFullScan.DEFAULT_RES_VALUES[(int) FullScanMassAnalyzerType.qit]);
@@ -1514,9 +1506,6 @@ namespace pwiz.Skyline.Model.DocSettings
     public sealed class TransitionFullScan : Immutable, IValidating, IXmlSerializable
     {
         // Calculate precursor single filter window values by doubling match tolerance values
-        public const double MIN_PRECURSOR_SINGLE_FILTER = TransitionInstrument.MIN_MZ_MATCH_TOLERANCE * 2;
-        public const double MAX_PRECURSOR_SINGLE_FILTER = TransitionInstrument.MAX_MZ_MATCH_TOLERANCE * 2;
-        public const double DEFAULT_PRECURSOR_SINGLE_FILTER = TransitionInstrument.DEFAULT_MZ_MATCH_TOLERANCE * 2;
         public const double MIN_PRECURSOR_MULTI_FILTER = 1.0;
         public const double MAX_PRECURSOR_MULTI_FILTER = 10*1000;
         public const double DEFAULT_PRECURSOR_MULTI_FILTER = 2.0;
@@ -1644,7 +1633,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         #region Property change methods
 
-        public TransitionFullScan ChangePrecursorFilter(FullScanPrecursorFilterType typeProp, double prop)
+        public TransitionFullScan ChangePrecursorFilter(FullScanPrecursorFilterType typeProp, double? prop)
         {
             return ChangeProp(ImClone(this), im =>
             {
@@ -1720,20 +1709,19 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             else
             {
-                double minFilter, maxFilter;
                 if (PrecursorFilterType == FullScanPrecursorFilterType.Single)
                 {
-                    minFilter = MIN_PRECURSOR_SINGLE_FILTER;
-                    maxFilter = MAX_PRECURSOR_SINGLE_FILTER;
+                    if (PrecursorFilter.HasValue)
+                        throw new InvalidDataException(string.Format("An isolation window width value is not allowed when filtering MS/MS in single precursor mode."));
                 }
                 else
                 {
-                    minFilter = MIN_PRECURSOR_MULTI_FILTER;
-                    maxFilter = MAX_PRECURSOR_MULTI_FILTER;
+                    const double minFilter = MIN_PRECURSOR_MULTI_FILTER;
+                    const double maxFilter = MAX_PRECURSOR_MULTI_FILTER;
+                    if (!PrecursorFilter.HasValue || minFilter > PrecursorFilter || PrecursorFilter > maxFilter)
+                        throw new InvalidDataException(string.Format("The precursor m/z filter must be between {0} and {1}",
+                            minFilter, maxFilter));
                 }
-                if (!PrecursorFilter.HasValue || minFilter > PrecursorFilter || PrecursorFilter > maxFilter)
-                    throw new InvalidDataException(string.Format("The precursor m/z filter must be between {0} and {1}",
-                        minFilter, maxFilter));
 
                 _cachedProductRes = ValidateRes(ProductMassAnalyzer, ProductRes, ProductResMz);
             }
@@ -1787,9 +1775,8 @@ namespace pwiz.Skyline.Model.DocSettings
                                                           FullScanPrecursorFilterType.None);
             if (PrecursorFilterType != FullScanPrecursorFilterType.None)
             {
-                PrecursorFilter = reader.GetDoubleAttribute(ATTR.precursor_filter,
-                    PrecursorFilterType == FullScanPrecursorFilterType.Single ?
-                    DEFAULT_PRECURSOR_SINGLE_FILTER : DEFAULT_PRECURSOR_MULTI_FILTER);
+                if (PrecursorFilterType == FullScanPrecursorFilterType.Multiple)
+                    PrecursorFilter = reader.GetDoubleAttribute(ATTR.precursor_filter, DEFAULT_PRECURSOR_MULTI_FILTER);
 
                 ProductMassAnalyzer = reader.GetEnumAttribute(ATTR.product_mass_analyzer, FullScanMassAnalyzerType.qit);
                 ProductRes = reader.GetDoubleAttribute(ATTR.product_res,

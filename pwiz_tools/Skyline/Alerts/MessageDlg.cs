@@ -53,7 +53,6 @@ namespace pwiz.Skyline.Alerts
         public void OkDialog()
         {
             DialogResult = DialogResult.OK;
-            Close();
         }
 
         private void btnOk_Click(object sender, EventArgs e)

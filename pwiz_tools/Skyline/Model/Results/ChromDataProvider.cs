@@ -457,6 +457,7 @@ namespace pwiz.Skyline.Model.Results
 //        private const double MILLION = 1000000;
 
         private readonly TransitionFullScan _fullScan;
+        private readonly TransitionInstrument _instrument;
         private readonly FullScanPrecursorFilterType _precursorFilterType;
         private readonly double _precursorFilterWindow;
         private readonly bool _isHighAccMsFilter;
@@ -466,6 +467,7 @@ namespace pwiz.Skyline.Model.Results
         public SpectrumFilter(SrmDocument document)
         {
             _fullScan = document.Settings.TransitionSettings.FullScan;
+            _instrument = document.Settings.TransitionSettings.Instrument;
             _precursorFilterType = _fullScan.PrecursorFilterType;
             if (EnabledMs || EnabledMsMs)
             {
@@ -474,9 +476,9 @@ namespace pwiz.Skyline.Model.Results
                     _isHighAccMsFilter = !Equals(_fullScan.PrecursorMassAnalyzer,
                                                  FullScanMassAnalyzerType.qit);
                 }
-                if (EnabledMsMs && _fullScan.PrecursorFilter.HasValue)
+                if (EnabledMsMs)
                 {
-                    _precursorFilterWindow = _fullScan.PrecursorFilter.Value;
+                    _precursorFilterWindow = _fullScan.PrecursorFilter ?? _instrument.MzMatchTolerance*2;
                     _isHighAccProductFilter = !Equals(_fullScan.ProductMassAnalyzer,
                                                       FullScanMassAnalyzerType.qit);
                 }

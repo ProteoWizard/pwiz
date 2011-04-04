@@ -335,21 +335,16 @@ namespace pwiz.Skyline.SettingsUI
             if (precursorFilterType != FullScanPrecursorFilterType.None)
             {
                 double minFilt, maxFilt;
-                if (precursorFilterType == FullScanPrecursorFilterType.Single)
-                {
-                    minFilt = TransitionFullScan.MIN_PRECURSOR_SINGLE_FILTER;
-                    maxFilt = TransitionFullScan.MAX_PRECURSOR_SINGLE_FILTER;                    
-                }
-                else
+                if (precursorFilterType == FullScanPrecursorFilterType.Multiple)
                 {
                     minFilt = TransitionFullScan.MIN_PRECURSOR_MULTI_FILTER;
                     maxFilt = TransitionFullScan.MAX_PRECURSOR_MULTI_FILTER;
+                    double precFilt;
+                    if (!helper.ValidateDecimalTextBox(e, tabControl1, (int) TABS.FullScan, textPrecursorFilterMz,
+                                                       minFilt, maxFilt, out precFilt))
+                        return;
+                    precursorFilter = precFilt;
                 }
-                double precFilt;
-                if (!helper.ValidateDecimalTextBox(e, tabControl1, (int)TABS.FullScan, textPrecursorFilterMz,
-                        minFilt, maxFilt, out precFilt))
-                    return;
-                precursorFilter = precFilt;
 
                 productAnalyzerType = TransitionFullScan.ParseMassAnalyzer(
                     comboProductAnalyzerType.SelectedItem.ToString());
@@ -483,31 +478,29 @@ namespace pwiz.Skyline.SettingsUI
             }
             else
             {
+                // If the combo is being set to the type it started with, use the starting values
                 if (precursorFilterType == FullScan.PrecursorFilterType)
                 {
-                    textPrecursorFilterMz.Text = FullScan.PrecursorFilter.ToString();
-                    if (!textPrecursorFilterMz.Enabled)
+                    EnablePrecursorFilterMz(precursorFilterType == FullScanPrecursorFilterType.Multiple,
+                                            FullScan.PrecursorFilter.ToString());
+                    if (!comboProductAnalyzerType.Enabled)
                         comboProductAnalyzerType.SelectedItem = TransitionFullScan.MassAnalyzerToString(FullScan.ProductMassAnalyzer);
                 }
                 else
                 {
-                    if (precursorFilterType == FullScanPrecursorFilterType.Multiple)
-                        textPrecursorFilterMz.Text = TransitionFullScan.DEFAULT_PRECURSOR_MULTI_FILTER.ToString();
-                    else
-                    {
-                        double precursorFilter;
-                        if (double.TryParse(textMzMatchTolerance.Text, out precursorFilter))
-                            precursorFilter *= 2;
-                        else
-                            precursorFilter = TransitionFullScan.DEFAULT_PRECURSOR_SINGLE_FILTER;
-                        textPrecursorFilterMz.Text = precursorFilter.ToString();
-                    }
-                    if (!textPrecursorFilterMz.Enabled)
+                    EnablePrecursorFilterMz(precursorFilterType == FullScanPrecursorFilterType.Multiple,
+                                            TransitionFullScan.DEFAULT_PRECURSOR_MULTI_FILTER.ToString());
+                    if (!comboProductAnalyzerType.Enabled)
                         comboProductAnalyzerType.SelectedItem = TransitionFullScan.MassAnalyzerToString(FullScanMassAnalyzerType.qit);
                 }
-                textPrecursorFilterMz.Enabled = true;
                 comboProductAnalyzerType.Enabled = true;
             }            
+        }
+
+        private void EnablePrecursorFilterMz(bool enable, string text)
+        {
+            textPrecursorFilterMz.Text = (enable ? text : "");
+            textPrecursorFilterMz.Enabled = enable;            
         }
 
         private void comboProductAnalyzerType_SelectedIndexChanged(object sender, EventArgs e)

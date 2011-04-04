@@ -977,9 +977,9 @@
             this.label21.AutoSize = true;
             this.label21.Location = new System.Drawing.Point(11, 95);
             this.label21.Name = "label21";
-            this.label21.Size = new System.Drawing.Size(98, 13);
+            this.label21.Size = new System.Drawing.Size(116, 13);
             this.label21.TabIndex = 2;
-            this.label21.Text = "Pre&cursor m/z filter:";
+            this.label21.Text = "Isolation window &width:";
             // 
             // comboPrecursorFilterType
             // 

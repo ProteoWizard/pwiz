@@ -809,7 +809,7 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
                 FullScanPrecursorFilterType.Multiple + "\"/>");  // Use defaults
             AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"0.11\" product_mass_analyzer=\""+
+                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"0.11\"  product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.qit + "\" product_res=\"" + validLoRes+ "\"/>");
             AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
                 FullScanPrecursorFilterType.Multiple + "\" precursor_filter=\"2\" product_mass_analyzer=\"" +
@@ -827,8 +827,6 @@ namespace pwiz.SkylineTest
                 FullScanMassAnalyzerType.qit + "\" product_res=\"" + validLoRes + "\"/>");  // Use default res mz
 
             // Errors
-            string overMaxSingle = (TransitionFullScan.MAX_PRECURSOR_SINGLE_FILTER * 2).ToString(CultureInfo.InvariantCulture);
-            string underMinSingle = (TransitionFullScan.MIN_PRECURSOR_SINGLE_FILTER / 2).ToString(CultureInfo.InvariantCulture);
             string overMaxMulti = (TransitionFullScan.MAX_PRECURSOR_MULTI_FILTER * 2).ToString(CultureInfo.InvariantCulture);
             string underMinMulti = (TransitionFullScan.MIN_PRECURSOR_MULTI_FILTER / 2).ToString(CultureInfo.InvariantCulture);
             string underMinLoRes = (TransitionFullScan.MIN_LO_RES/2).ToString(CultureInfo.InvariantCulture);
@@ -838,16 +836,10 @@ namespace pwiz.SkylineTest
             string underMinResMz = (TransitionFullScan.MIN_RES_MZ/2).ToString(CultureInfo.InvariantCulture);
 
             AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"0.11\" product_mass_analyzer=\"Unknown\" " +
+                FullScanPrecursorFilterType.Single + "\" product_mass_analyzer=\"Unknown\" " +
                 "product_resolution=\"" + validLoRes + "\"/>");
             AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
-                "Unknown" + "\" precursor_filter=\"0.11\" product_mass_analyzer=\"" +
-                FullScanMassAnalyzerType.qit + "\" product_resoltion=\"" + validLoRes + "\"/>");
-            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"" + overMaxSingle + "\" product_mass_analyzer=\"" +
-                FullScanMassAnalyzerType.qit + "\" product_resoltion=\"" + validLoRes + "\"/>");
-            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"" + underMinSingle + "\" product_mass_analyzer=\"" +
+                "Unknown" + "\" product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.qit + "\" product_resoltion=\"" + validLoRes + "\"/>");
             AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
                 FullScanPrecursorFilterType.Multiple + "\" precursor_filter=\"" + overMaxMulti + "\" product_mass_analyzer=\"" +
@@ -856,16 +848,16 @@ namespace pwiz.SkylineTest
                 FullScanPrecursorFilterType.Multiple + "\" precursor_filter=\"" + underMinMulti + "\" product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.qit + "\" product_resoltion=\"" + validLoRes + "\"/>");
             AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"0.11\" product_mass_analyzer=\"" +
+                FullScanPrecursorFilterType.Single + "\" product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.qit + "\" product_res=\"" + underMinLoRes + "\"/>");
             AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"0.11\" product_mass_analyzer=\"" +
+                FullScanPrecursorFilterType.Single + "\" product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.qit + "\" product_res=\"" + overMaxLoRes + "\"/>");
             AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"0.11\" product_mass_analyzer=\"" +
+                FullScanPrecursorFilterType.Single + "\" product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.ft_icr + "\" product_res=\"" + underMinHiRes + "\" product_res_mz=\"" + TransitionFullScan.DEFAULT_RES_MZ + "\"/>");
             AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
-                FullScanPrecursorFilterType.Single + "\" precursor_filter=\"0.11\" product_mass_analyzer=\"" +
+                FullScanPrecursorFilterType.Single + "\" product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.orbitrap + "\" product_res=\"" + overMaxHiRes + "\" product_res_mz=\"" + TransitionFullScan.DEFAULT_RES_MZ + "\"/>");
             AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.orbitrap + "\" precursor_res=\"" + validHiRes + "\" precursor_res_mz=\"" + underMinResMz + "\" " +

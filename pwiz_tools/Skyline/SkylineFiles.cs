@@ -448,9 +448,7 @@ namespace pwiz.Skyline
                         do
                         {
                             docCurrent = Document;
-                            docNew = new SrmDocument(docCurrent,
-                                                     docCurrent.Settings.ChangeMeasuredResults(resultsNew),
-                                                     docCurrent.Children);
+                            docNew = docCurrent.ChangeMeasuredResults(resultsNew);
                         }
                         while (!SetDocument(docNew, docCurrent));
                     }
@@ -938,9 +936,22 @@ namespace pwiz.Skyline
             if (!documentUI.Settings.HasResults)
                 return;
 
-            ManageResultsDlg dlg = new ManageResultsDlg(documentUI);
+            ManageResultsDlg dlg = new ManageResultsDlg(this);
             if (dlg.ShowDialog() == DialogResult.OK)
             {
+                // Remove from the cache chromatogram data to be reimported.  This done before changing
+                // anything else to avoid making other changes to the results cause cache changes before
+                // the document is saved.
+                try
+                {
+                    ReimportChromatograms(documentUI, dlg.ReimportChromatograms);
+                }
+                catch (Exception)
+                {
+                    MessageDlg.Show(this, "A failure occurred attempting to re-import results.");
+                }
+
+                // And update the document to reflect real changes to the results structure
                 ModifyDocument("Manage results", doc =>
                 {
                     var results = doc.Settings.MeasuredResults;
@@ -952,6 +963,35 @@ namespace pwiz.Skyline
                     results = listChrom.Count > 0 ? results.ChangeChromatograms(listChrom.ToArray()) : null;
                     return doc.ChangeMeasuredResults(results);
                 });
+            }
+        }
+
+        private void ReimportChromatograms(SrmDocument document, IEnumerable<ChromatogramSet> chromatogramSets)
+        {
+            var setReimport = new HashSet<ChromatogramSet>(chromatogramSets);
+            if (setReimport.Count == 0)
+                return;
+            
+            using (new LongOp(this))
+            {
+                // Remove all replicates to be re-imported
+                var results = document.Settings.MeasuredResults;
+                var chromRemaining = results.Chromatograms.Where(chrom => !setReimport.Contains(chrom)).ToArray();
+                var resultsNew = results.ChangeChromatograms(chromRemaining);
+                // Optimize the cache using this reduced set to remove their data from the cache
+                resultsNew = resultsNew.OptimizeCache(DocumentFilePath, _chromatogramManager.StreamManager);
+                // Restore the original set unchanged
+                resultsNew = resultsNew.ChangeChromatograms(results.Chromatograms);
+
+                // Update the document without adding an undo record, because the only information
+                // to change should be cache related.
+                SrmDocument docNew, docCurrent;
+                do
+                {
+                    docCurrent = Document;
+                    docNew = docCurrent.ChangeMeasuredResults(resultsNew);
+                }
+                while (!SetDocument(docNew, docCurrent));
             }
         }
 
