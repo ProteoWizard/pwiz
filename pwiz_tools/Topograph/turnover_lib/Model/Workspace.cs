@@ -328,6 +328,7 @@ namespace pwiz.Topograph.Model
             {
                 return proteinName;
             }
+            proteinDescription = proteinDescription ?? "";
             var regex = new Regex(strRegex);
             var parts = new List<String>();
             for (Match match = regex.Match(proteinDescription); match.Success; match = match.NextMatch())
