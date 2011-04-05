@@ -43,6 +43,8 @@
 #endif
 using namespace TSQEZMethodLib;
 
+#define EXPERIMENT_TYPE_NOT_SUPPORTED _HRESULT_TYPEDEF_(0x80002106)
+
 enum Fields
 {
     precursor_mz,
@@ -109,7 +111,7 @@ BuildTSQEZMethod::BuildTSQEZMethod()
     }
     catch (_com_error&)
     {
-        Verbosity::error("Failure during initialization, TSQ-EZ method support may not be installed");
+        Verbosity::error("Failure during initialization, TSQ-EZ method support may not be installed. Method export for a TSQ should be performed on the TSQ instrument control computer.");
     }
 }
 
@@ -125,9 +127,12 @@ void BuildTSQEZMethod::createMethod(string templateMethod, string outputMethod, 
 
         _methodPtr->Open(outputMethodW);
     }
-    catch (_com_error&)
+    catch (_com_error& err)
     {
-        Verbosity::error("Failure opening template method %s", templateMethod.c_str());
+        if (err.Error() == EXPERIMENT_TYPE_NOT_SUPPORTED)
+            Verbosity::error("Failure opening template method %s. Make sure the template is an EZ Method and not a Regular Method in the TSQ menu of the Instrument Setup application.", templateMethod.c_str());
+        else
+            Verbosity::error("Failure opening template method %s. Make sure the template is a valid TSQ EZ Method.", templateMethod.c_str());
     }
 
     // Get the template transition list

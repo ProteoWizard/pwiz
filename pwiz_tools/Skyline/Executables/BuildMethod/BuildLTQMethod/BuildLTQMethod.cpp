@@ -121,7 +121,7 @@ BuildLTQMethod::BuildLTQMethod()
     }
     catch (_com_error&)
     {
-        Verbosity::error("Failure during initialization, LTQ method support may not be installed");
+        Verbosity::error("Failure during initialization, LTQ method support may not be installed. Method export for a LTQ should be performed on the LTQ instrument control computer.");
     }
 }
 
