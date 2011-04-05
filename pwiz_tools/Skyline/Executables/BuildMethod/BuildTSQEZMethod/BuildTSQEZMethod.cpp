@@ -111,7 +111,7 @@ BuildTSQEZMethod::BuildTSQEZMethod()
     }
     catch (_com_error&)
     {
-        Verbosity::error("Failure during initialization, TSQ-EZ method support may not be installed. Method export for a TSQ should be performed on the TSQ instrument control computer.");
+        Verbosity::error("Failure during initialization, TSQ-EZ method support may not be installed. Method export for a TSQ should be performed on the TSQ instrument control computer, and requires TSQ version 2.3 or better.");
     }
 }
 
