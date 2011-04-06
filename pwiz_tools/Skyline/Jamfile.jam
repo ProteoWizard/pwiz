@@ -54,13 +54,13 @@ if [ modules.peek : NT ]
         return [ build-properties $(targets) : $(sources) : $(properties) ] ;
     }
 
+    # HACK: Removed the switch /verbosity:minimal because TeamCity failures can be avoided by doing so
     actions do_skyline_build
     {
         IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
         IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
         echo Building Skyline in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:Skyline /nologo /verbosity:minimal
-        # HACK: Removed the switch /verbosity:minimal because TeamCity failures can be avoided by doing so
         echo Building Skyline Test in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:Test /nologo /verbosity:minimal
         echo Building Skyline Test A in $(CONFIGURATION:L) configuration...
@@ -68,7 +68,7 @@ if [ modules.peek : NT ]
         echo Building Skyline TestFunctional in $(CONFIGURATION:L) configuration...
         msbuild $(SKYLINE_PATH)/Skyline.sln /p:Configuration=$(CONFIGURATION);OutDir=$(OUTPUT_PATH) /t:TestFunctional /nologo /verbosity:minimal        
     }
-    
+
     rule do_skyline_test ( targets + : sources * : properties * )
     {
         return [ build-properties $(targets) : $(sources) : $(properties) ] ;
