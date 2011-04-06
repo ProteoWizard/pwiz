@@ -1208,6 +1208,9 @@ void RawFileImpl::parseInstrumentMethod()
     string instrumentMethods;
 
     auto_ptr<LabelValueArray> labelValueArray = getInstrumentMethods();
+    if (!labelValueArray.get())
+        return;
+
     for (int i=0; i < labelValueArray->size(); ++i)
         instrumentMethods += labelValueArray->value(i) + "\n";
 
@@ -1452,7 +1455,15 @@ auto_ptr<LabelValueArray> RawFileImpl::getInstrumentMethods()
     _variant_t variantLabels;
     long size = 0;
 
-    checkResult(raw_->GetInstMethodNames(&size, &variantLabels), "[RawFileImpl::GetInstMethodNames()] ");
+    try
+    {
+        checkResult(raw_->GetInstMethodNames(&size, &variantLabels), "[RawFileImpl::GetInstMethodNames()] ");
+    }
+    catch (exception&)
+    {
+        // TODO: log warning?
+        return auto_ptr<LabelValueArray>();
+    }
 
     auto_ptr<InstrumentMethodLabelValueArray> a(
         new InstrumentMethodLabelValueArray(variantLabels, size, raw_));

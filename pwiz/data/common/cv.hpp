@@ -35,34 +35,32 @@
 
 // [psi-ms.obo]
 //   format-version: 1.2
-//   date: 19:07:2010 12:00
-//   saved-by: edeutsch
-//   auto-generated-by: OBO-Edit 1.101
+//   date: 04:05:2011 14:00
+//   saved-by: gmayer
+//   auto-generated-by: OBO-Edit 2.1-beta 10
 //   default-namespace: MS
 //   remark: namespace: MS
-//   remark: version: 2.39.0
-//   remark: release date: 2010-12-22
+//   data-version: 2.50.0
+//   remark: version: 2.50.0
+//   remark: release date: 2011-04-05
 //   remark: coverage: Mass spectrometer output files and spectra interpretation
 //   remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 //   remark: creator: Andreas Bertsch <bertsch <-at-> informatik.uni-tuebingen.de>
 //   remark: creator: Marius Kallhardt <Marius.Kallhardt <-at-> bdal.de>
 //   remark: creator: Eric Deutsch <edeutsch <-at-> systemsbiology.org>
 //   remark: creator: Fredrik Levander <fredrik.levander <-at-> immun.lth.se>
+//   remark: creator: Gerhard Mayer <mayerg97 <-at-> rub.de>
 //   remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group and HUPO Proteomics Standards Initiative Proteomics Informatics Working Group 
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html.
 //   import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo?revision=1.21
 //
 // [unit.obo]
 //   format-version: 1.2
-//   date: 14:03:2010 10:12
+//   date: 18:03:2011 15:34
 //   saved-by: George Gkoutos
-//   auto-generated-by: OBO-Edit 2.000-beta55
-//   subsetdef: abnormal_slim "Abnormal/normal slim"
-//   subsetdef: absent_slim "Absent/present slim"
-//   subsetdef: attribute_slim "Attribute slim"
-//   subsetdef: cell_quality "cell_quality"
-//   subsetdef: relational_slim "Relational slim: types of quality that require an additional entity in order to exist"
-//   subsetdef: value_slim "Value slim"
+//   auto-generated-by: OBO-Edit 2.1-beta6
+//   subsetdef: unit_group_slim "unit group slim"
+//   subsetdef: unit_slim "unit slim"
 //   default-namespace: unit.ontology
 //   namespace-id-rule: * UO:$sequence(7,0,9999999)$
 //   import: http://purl.org/obo/obo-all/quality/quality.obo
@@ -867,8 +865,8 @@ enum PWIZ_API_DECL CVID
     /// ionization cross section: A measure of the probability that a given ionization process will occur when an atom or molecule interacts with a photon, electron, atom or molecule.
     MS_ionization_cross_section = 1000217,
 
-    /// ioniazation efficiency: The ratio of the number of ions formed to the number of electrons, molecules or photons used.
-    MS_ioniazation_efficiency_OBSOLETE = 1000218,
+    /// ionization efficiency: The ratio of the number of ions formed to the number of electrons, molecules or photons used.
+    MS_ionization_efficiency_OBSOLETE = 1000218,
 
     /// ionization energy: The minimum energy required to remove an electron from an atom or molecule to produce a positive ion.
     MS_ionization_energy = 1000219,
@@ -3477,7 +3475,7 @@ enum PWIZ_API_DECL CVID
     /// Sequest:sort_by_RSp: 
     MS_Sequest_sort_by_RSp = 1001059,
 
-    /// quality estimation method details: Method for quality estimation (manually or wih decoy database).
+    /// quality estimation method details: Method for quality estimation (manually or with decoy database).
     MS_quality_estimation_method_details = 1001060,
 
     /// neutral loss: OBSOLETE: replaced by MS:1000336 (neutral loss): Leave this to PSI-MOD?
@@ -4989,31 +4987,511 @@ enum PWIZ_API_DECL CVID
     /// Pepitome:mzFidelity (MyriMatch:mzFidelity): The negative natural log probability that predicted peaks match to experimental peaks by random chance by scoring the m/z delta of the matches in a multinomial distribution.
     MS_Pepitome_mzFidelity = MS_MyriMatch_mzFidelity,
 
+    /// anchor protein: A representative protein selected from a set of sequence same-set or spectrum same-set proteins.
+    MS_anchor_protein = 1001591,
+
+    /// family member protein: A protein with significant homology to another protein, but some distinguishing peptide matches.
+    MS_family_member_protein = 1001592,
+
+    /// group member with undefined relationship OR ortholog protein: TO ENDETAIL: a really generic relationship OR ortholog protein.
+    MS_group_member_with_undefined_relationship_OR_ortholog_protein = 1001593,
+
+    /// sequence same-set protein: A protein which is indistinguishable or equivalent to another protein, having matches to an identical set of peptide sequences.
+    MS_sequence_same_set_protein = 1001594,
+
+    /// spectrum same-set protein: A protein which is indistinguishable or equivalent to another protein, having matches to a set of peptide sequences that cannot be distinguished using the evidence in the mass spectra.
+    MS_spectrum_same_set_protein = 1001595,
+
+    /// sequence sub-set protein: A protein with a sub-set of the peptide sequence matches for another protein, and no distinguishing peptide matches.
+    MS_sequence_sub_set_protein = 1001596,
+
     /// ProteinScape:ProfoundProbability: The Profound probability score stored by ProteinScape.
     MS_ProteinScape_ProfoundProbability = 1001597,
+
+    /// sequence subsumable protein: A sequence same-set or sequence sub-set protein where the matches are distributed across two or more proteins.
+    MS_sequence_subsumable_protein = 1001598,
+
+    /// spectrum subsumable protein: A spectrum same-set or spectrum sub-set protein where the matches are distributed across two or more proteins.
+    MS_spectrum_subsumable_protein = 1001599,
+
+    /// Protein Inference Confidence Category: Confidence category of inferred protein (conclusive, non conclusive, ambiguous group or indistinguishable).
+    MS_Protein_Inference_Confidence_Category = 1001600,
+
+    /// ProteomeDiscoverer:Spectrum Files:Raw File names: Name and location of the .raw file or files.
+    MS_ProteomeDiscoverer_Spectrum_Files_Raw_File_names = 1001601,
+
+    /// ProteomeDiscoverer:SRF File Selector:SRF File Path: Path and name of the .srf (Sequest Result Format) file.
+    MS_ProteomeDiscoverer_SRF_File_Selector_SRF_File_Path = 1001602,
+
+    /// ProteomeDiscoverer:Spectrum Selector:Ionization Source: Ionization source (electro-, nano-, thermospray, electron impact, APCI, MALDI, FAB, ...).
+    MS_ProteomeDiscoverer_Spectrum_Selector_Ionization_Source = 1001603,
+
+    /// ProteomeDiscoverer:Activation Type: Fragmentation method used (CID, MPD, ECD, PQD, ETD, HCD, Any).
+    MS_ProteomeDiscoverer_Activation_Type = 1001604,
+
+    /// ProteomeDiscoverer:Spectrum Selector:Lower RT Limit: Lower retention-time limit.
+    MS_ProteomeDiscoverer_Spectrum_Selector_Lower_RT_Limit = 1001605,
+
+    /// ProteomeDiscoverer:Mass Analyzer: Type of mass spectrometer used (ITMS, FTMS, TOFMS, SQMS, TQMS, SectorMS).
+    MS_ProteomeDiscoverer_Mass_Analyzer = 1001606,
+
+    /// ProteomeDiscoverer:Max Precursor Mass: Maximum mass limit of a singly charged precursor ion.
+    MS_ProteomeDiscoverer_Max_Precursor_Mass = 1001607,
+
+    /// ProteomeDiscoverer:Min Precursor Mass: Minimum mass limit of a singly charged precursor ion.
+    MS_ProteomeDiscoverer_Min_Precursor_Mass = 1001608,
+
+    /// ProteomeDiscoverer:Minimum Peak Count: Minimum number of peaks in a tandem mass spectrum that is allowed to pass the filter and to be subjected to further processing in the workflow.
+    MS_ProteomeDiscoverer_Minimum_Peak_Count = 1001609,
+
+    /// ProteomeDiscoverer:MS Order: Level of the mass spectrum (MS/MS=MS2 ... MS10).
+    MS_ProteomeDiscoverer_MS_Order = 1001610,
+
+    /// ProteomeDiscoverer:Polarity Mode: Polarity mode (positive or negative).
+    MS_ProteomeDiscoverer_Polarity_Mode = 1001611,
+
+    /// ProteomeDiscoverer:Spectrum Selector:Precursor Selection: Determines which precursor mass to use for a given MSn scan. This option applies only to higher-order MSn scans (n >= 3).
+    MS_ProteomeDiscoverer_Spectrum_Selector_Precursor_Selection = 1001612,
+
+    /// ProteomeDiscoverer:SN Threshold: Signal-to-Noise ratio below which peaks are removed.
+    MS_ProteomeDiscoverer_SN_Threshold = 1001613,
+
+    /// ProteomeDiscoverer:Scan Type: Scan type for the precursor ion (full, Single Ion Monitoring (SIM), Single Reaction Monitoring (SRM)).
+    MS_ProteomeDiscoverer_Scan_Type = 1001614,
+
+    /// ProteomeDiscoverer:Total Intensity Threshold: Used to filter out tandem mass spectra that have a total intensity current(sum of the intensities of all peaks in a spectrum) below the specified value.
+    MS_ProteomeDiscoverer_Total_Intensity_Threshold = 1001615,
+
+    /// ProteomeDiscoverer:Spectrum Selector:Unrecognized Activation Type Replacements: Specifies the fragmentation method to use in the search algorithm if it is not included in the scan header.
+    MS_ProteomeDiscoverer_Spectrum_Selector_Unrecognized_Activation_Type_Replacements = 1001616,
+
+    /// ProteomeDiscoverer:Spectrum Selector:Unrecognized Charge Replacements: Specifies the charge state of the precursor ions, if it is not defined in the scan header.
+    MS_ProteomeDiscoverer_Spectrum_Selector_Unrecognized_Charge_Replacements = 1001617,
+
+    /// ProteomeDiscoverer:Spectrum Selector:Unrecognized Mass Analyzer Replacements: Specifies the mass spectrometer to use to produce the spectra, if it is not included in the scan header.
+    MS_ProteomeDiscoverer_Spectrum_Selector_Unrecognized_Mass_Analyzer_Replacements = 1001618,
+
+    /// ProteomeDiscoverer:Spectrum Selector:Unrecognized MS Order Replacements: Specifies the MS scan order used to produce the product spectra, if it is not included in the scan header.
+    MS_ProteomeDiscoverer_Spectrum_Selector_Unrecognized_MS_Order_Replacements = 1001619,
+
+    /// ProteomeDiscoverer:Spectrum Selector:Unrecognized Polarity Replacements: Specifies the polarity of the ions monitored if it is not included in the scan header.
+    MS_ProteomeDiscoverer_Spectrum_Selector_Unrecognized_Polarity_Replacements = 1001620,
+
+    /// ProteomeDiscoverer:Spectrum Selector:Upper RT Limit: Upper retention-time limit.
+    MS_ProteomeDiscoverer_Spectrum_Selector_Upper_RT_Limit = 1001621,
+
+    /// ProteomeDiscoverer:Non-Fragment Filter:Mass Window Offset: Specifies the size of the mass-to-charge ratio (m/z) window in daltons used to remove precursors.
+    MS_ProteomeDiscoverer_Non_Fragment_Filter_Mass_Window_Offset = 1001622,
+
+    /// ProteomeDiscoverer:Non-Fragment Filter:Maximum Neutral Loss Mass: Maximum allowed mass of a neutral loss.
+    MS_ProteomeDiscoverer_Non_Fragment_Filter_Maximum_Neutral_Loss_Mass = 1001623,
+
+    /// ProteomeDiscoverer:Non-Fragment Filter:Remove Charge Reduced Precursor: Determines whether the charge-reduced precursor peaks found in an ETD or ECD spectrum are removed.
+    MS_ProteomeDiscoverer_Non_Fragment_Filter_Remove_Charge_Reduced_Precursor = 1001624,
+
+    /// ProteomeDiscoverer:Non-Fragment Filter:Remove Neutral Loss Peaks: Determines whether neutral loss peaks are removed from ETD and ECD spectra.
+    MS_ProteomeDiscoverer_Non_Fragment_Filter_Remove_Neutral_Loss_Peaks = 1001625,
+
+    /// ProteomeDiscoverer:Non-Fragment Filter:Remove Only Known Masses: Determines whether overtone peaks are removed from LTQ FT or LTQ FT Ultra ECD spectra.
+    MS_ProteomeDiscoverer_Non_Fragment_Filter_Remove_Only_Known_Masses = 1001626,
+
+    /// ProteomeDiscoverer:Non-Fragment Filter:Remove Precursor Overtones: Determines whether precursor overtone peaks in the spectrum are removed from the input spectrum.
+    MS_ProteomeDiscoverer_Non_Fragment_Filter_Remove_Precursor_Overtones = 1001627,
+
+    /// ProteomeDiscoverer:Non-Fragment Filter:Remove Precursor Peak: Determines whether precursor artifact peaks from the MS/MS input spectra are removed.
+    MS_ProteomeDiscoverer_Non_Fragment_Filter_Remove_Precursor_Peak = 1001628,
+
+    /// ProteomeDiscoverer:Spectrum Grouper:Allow Mass Analyzer Mismatch: Determines whether the fragment spectrum for scans with the same precursor mass is grouped, regardless of mass analyzer and activation type.
+    MS_ProteomeDiscoverer_Spectrum_Grouper_Allow_Mass_Analyzer_Mismatch = 1001629,
+
+    /// ProteomeDiscoverer:Spectrum Grouper:Allow MS Order Mismatch: Determines whether spectra from different MS order scans can be grouped together.
+    MS_ProteomeDiscoverer_Spectrum_Grouper_Allow_MS_Order_Mismatch = 1001630,
+
+    /// ProteomeDiscoverer:Spectrum Grouper:Max RT Difference: Chromatographic window where precursors to be grouped must reside to be considered the same species.
+    MS_ProteomeDiscoverer_Spectrum_Grouper_Max_RT_Difference = 1001631,
+
+    /// ProteomeDiscoverer:Spectrum Grouper:Precursor Mass Criterion: Groups spectra measured within the given mass and retention-time tolerances into a single spectrum for analysis.
+    MS_ProteomeDiscoverer_Spectrum_Grouper_Precursor_Mass_Criterion = 1001632,
+
+    /// ProteomeDiscoverer:Xtract:Highest Charge: Highest charge state that is allowed for the deconvolution of multiply charged data.
+    MS_ProteomeDiscoverer_Xtract_Highest_Charge = 1001633,
+
+    /// ProteomeDiscoverer:Xtract:Highest MZ: Highest mass-to-charge (mz) value for spectral peaks in the measured spectrum that are considered for Xtract.
+    MS_ProteomeDiscoverer_Xtract_Highest_MZ = 1001634,
+
+    /// ProteomeDiscoverer:Xtract:Lowest Charge: Lowest charge state that is allowed for the deconvolution of multiply charged data.
+    MS_ProteomeDiscoverer_Xtract_Lowest_Charge = 1001635,
+
+    /// ProteomeDiscoverer:Xtract:Lowest MZ: Lowest mass-to-charge (mz) value for spectral peaks in the measured spectrum that are considered for Xtract.
+    MS_ProteomeDiscoverer_Xtract_Lowest_MZ = 1001636,
+
+    /// ProteomeDiscoverer:Xtract:Monoisotopic Mass Only: Determines whether the isotopic pattern, i.e. all isotopes of a mass are removed from the spectrum.
+    MS_ProteomeDiscoverer_Xtract_Monoisotopic_Mass_Only = 1001637,
+
+    /// ProteomeDiscoverer:Xtract:Overlapping Remainder: Fraction of the more abundant peak that an overlapping multiplet must exceed in order to be processed (deconvoluted).
+    MS_ProteomeDiscoverer_Xtract_Overlapping_Remainder = 1001638,
+
+    /// ProteomeDiscoverer:Xtract:Required Fitting Accuracy: Accuracy required for a pattern fit to be considered valid.
+    MS_ProteomeDiscoverer_Xtract_Required_Fitting_Accuracy = 1001639,
+
+    /// ProteomeDiscoverer:Xtract:Resolution At 400: Resolution at mass 400.
+    MS_ProteomeDiscoverer_Xtract_Resolution_At_400 = 1001640,
+
+    /// ProteomeDiscoverer:Lowest Charge State: Minimum charge state below which peptides are filtered out.
+    MS_ProteomeDiscoverer_Lowest_Charge_State = 1001641,
+
+    /// ProteomeDiscoverer:Highest Charge State: Maximum charge above which peptides are filtered out.
+    MS_ProteomeDiscoverer_Highest_Charge_State = 1001642,
+
+    /// ProteomeDiscoverer:Spectrum Score Filter:Let Pass Above Scores: Determines whether spectra with scores above the threshold score are retained rather than filtered out.
+    MS_ProteomeDiscoverer_Spectrum_Score_Filter_Let_Pass_Above_Scores = 1001643,
+
+    /// ProteomeDiscoverer:Dynamic Modifications: Determine dynamic post-translational modifications (PTMs).
+    MS_ProteomeDiscoverer_Dynamic_Modifications = 1001644,
+
+    /// ProteomeDiscoverer:Static Modifications: Static Modification to all occurrences of a named amino acid.
+    MS_ProteomeDiscoverer_Static_Modifications = 1001645,
+
+    /// ProteomeDiscoverer:Mascot:Decoy Search: Determines whether the Proteome Discoverer application searches an additional decoy database.
+    MS_ProteomeDiscoverer_Mascot_Decoy_Search = 1001646,
+
+    /// ProteomeDiscoverer:Mascot:Error tolerant Search: Determines whether to search error-tolerant.
+    MS_ProteomeDiscoverer_Mascot_Error_tolerant_Search = 1001647,
+
+    /// ProteomeDiscoverer:Mascot:Max MGF File Size: Maximum size of the .mgf (Mascot Generic Format) file in MByte.
+    MS_ProteomeDiscoverer_Mascot_Max_MGF_File_Size = 1001648,
+
+    /// ProteomeDiscoverer:Mascot:Mascot Server URL: URL (Uniform resource Locator) of the Mascot server.
+    MS_ProteomeDiscoverer_Mascot_Mascot_Server_URL = 1001649,
+
+    /// ProteomeDiscoverer:Mascot:Number of attempts to submit the search: Number of attempts to submit the Mascot search.
+    MS_ProteomeDiscoverer_Mascot_Number_of_attempts_to_submit_the_search = 1001650,
+
+    /// ProteomeDiscoverer:Mascot:X Static Modification: Number of attempts to submit the Mascot search.
+    MS_ProteomeDiscoverer_Mascot_X_Static_Modification = 1001651,
+
+    /// ProteomeDiscoverer:Mascot:User Name: Number of attempts to submit the Mascot search.
+    MS_ProteomeDiscoverer_Mascot_User_Name = 1001652,
+
+    /// ProteomeDiscoverer:Mascot:Time interval between attempts to submit a search: Time interval between attempts to submit a search in seconds.
+    MS_ProteomeDiscoverer_Mascot_Time_interval_between_attempts_to_submit_a_search = 1001653,
+
+    /// ProteomeDiscoverer:Enzyme Name: Specifies the enzyme reagent used for protein digestion.
+    MS_ProteomeDiscoverer_Enzyme_Name = 1001654,
+
+    /// ProteomeDiscoverer:Fragment Mass Tolerance: Mass tolerance used for matching fragment peaks in Da or mmu.
+    MS_ProteomeDiscoverer_Fragment_Mass_Tolerance = 1001655,
+
+    /// ProteomeDiscoverer:Mascot:Instrument: type of instrument used to acquire the data in the .raw file.
+    MS_ProteomeDiscoverer_Mascot_Instrument = 1001656,
+
+    /// ProteomeDiscoverer:Maximum Missed Cleavage Sites: Maximum number of missed cleavage sites to consider during the digest.
+    MS_ProteomeDiscoverer_Maximum_Missed_Cleavage_Sites = 1001657,
+
+    /// ProteomeDiscoverer:Mascot:Peptide CutOff Score: Minimum score in the IonScore column that each peptide must exceed in order to be reported.
+    MS_ProteomeDiscoverer_Mascot_Peptide_CutOff_Score = 1001658,
+
+    /// ProteomeDiscoverer:Precursor Mass Tolerance: Mass window for which precursor ions are considered to be the same species.
+    MS_ProteomeDiscoverer_Precursor_Mass_Tolerance = 1001659,
+
+    /// ProteomeDiscoverer:Mascot:Protein CutOff Score: Minimum protein score in the IonScore column that each protein must exceed in order to be reported.
+    MS_ProteomeDiscoverer_Mascot_Protein_CutOff_Score = 1001660,
+
+    /// ProteomeDiscoverer:Protein Database: Database to use in the search (configured on the Mascot server).
+    MS_ProteomeDiscoverer_Protein_Database = 1001661,
+
+    /// ProteomeDiscoverer:Mascot:Protein Relevance Factor: Specifies a factor that is used in calculating a threshold that determines whether a protein appears in the results report.
+    MS_ProteomeDiscoverer_Mascot_Protein_Relevance_Factor = 1001662,
+
+    /// ProteomeDiscoverer:Target FDR Relaxed: Specifies the relaxed target false discovery rate (FDR, 0.0 ... 1.0) for peptide hits with moderate confidence.
+    MS_ProteomeDiscoverer_Target_FDR_Relaxed = 1001663,
+
+    /// ProteomeDiscoverer:Use Average Precursor Mass: Use average mass for the precursor.
+    MS_ProteomeDiscoverer_Use_Average_Precursor_Mass = 1001666,
+
+    /// ProteomeDiscoverer:Mascot:Use MudPIT Scoring: Determines whether to use MudPIT scoring (used by Mascot for generating the protein score from data sets with a large numbers of peptide matches) or normal scoring.
+    MS_ProteomeDiscoverer_Mascot_Use_MudPIT_Scoring = 1001667,
+
+    /// ProteomeDiscoverer:Absolute XCorr Threshold: Minimum cross-correlation threshold that determines whether peptides in an .srf file are imported.
+    MS_ProteomeDiscoverer_Absolute_XCorr_Threshold = 1001668,
+
+    /// ProteomeDiscoverer:SEQUEST:Calculate Probability Score: Determines whether to calculate a probability score for every peptide match.
+    MS_ProteomeDiscoverer_SEQUEST_Calculate_Probability_Score = 1001669,
+
+    /// ProteomeDiscoverer:SEQUEST:CTerminal Modification: Dynamic C-terminal modification that is used during the search.
+    MS_ProteomeDiscoverer_SEQUEST_CTerminal_Modification = 1001670,
+
+    /// ProteomeDiscoverer:SEQUEST:Fragment Ion Cutoff Percentage: Percentage of the theoretical ions that must be found in order for a peptide to be scored and retained.
+    MS_ProteomeDiscoverer_SEQUEST_Fragment_Ion_Cutoff_Percentage = 1001671,
+
+    /// ProteomeDiscoverer:SEQUEST:Max Identical Modifications Per Peptide: Maximum number of identical modifications that a single peptide can have.
+    MS_ProteomeDiscoverer_SEQUEST_Max_Identical_Modifications_Per_Peptide = 1001672,
+
+    /// ProteomeDiscoverer:Max Modifications Per Peptide: Maximum number of different modifications that a peptide can have, e.g. because of steric hindrance.
+    MS_ProteomeDiscoverer_Max_Modifications_Per_Peptide = 1001673,
+
+    /// ProteomeDiscoverer:SEQUEST:Maximum Peptides Considered: Maximum number of peptides that are searched and scored per spectrum.
+    MS_ProteomeDiscoverer_SEQUEST_Maximum_Peptides_Considered = 1001674,
+
+    /// ProteomeDiscoverer:Maximum Peptides Output: Maximum number of peptide matches reported per spectrum.
+    MS_ProteomeDiscoverer_Maximum_Peptides_Output = 1001675,
+
+    /// ProteomeDiscoverer:Maximum Protein References Per Peptide: Maximum number of proteins that a single identified peptide can be associated with during protein assembly.
+    MS_ProteomeDiscoverer_Maximum_Protein_References_Per_Peptide = 1001676,
+
+    /// ProteomeDiscoverer:SEQUEST:NTerminal Modification: Dynamic N-terminal modification that is used during the search.
+    MS_ProteomeDiscoverer_SEQUEST_NTerminal_Modification = 1001677,
+
+    /// ProteomeDiscoverer:Peptide CTerminus: Static modification for the C terminal of the peptide used during the search.
+    MS_ProteomeDiscoverer_Peptide_CTerminus = 1001678,
+
+    /// ProteomeDiscoverer:Peptide NTerminus: Static modification for the N terminal of the peptide used during the search.
+    MS_ProteomeDiscoverer_Peptide_NTerminus = 1001679,
+
+    /// ProteomeDiscoverer:SEQUEST:Peptide Relevance Factor: Specifies a factor to apply to the protein score.
+    MS_ProteomeDiscoverer_SEQUEST_Peptide_Relevance_Factor = 1001680,
+
+    /// ProteomeDiscoverer:Protein Relevance Threshold: Specifies a peptide threshold that determines whether the protein that it is a part of is scored and retained in the report.
+    MS_ProteomeDiscoverer_Protein_Relevance_Threshold = 1001681,
+
+    /// ProteomeDiscoverer:Search Against Decoy Database: Determines whether the Proteome Discoverer application searches against a decoy database.
+    MS_ProteomeDiscoverer_Search_Against_Decoy_Database = 1001682,
+
+    /// ProteomeDiscoverer:SEQUEST:Use Average Fragment Masses: Use average masses for the fragments.
+    MS_ProteomeDiscoverer_SEQUEST_Use_Average_Fragment_Masses = 1001683,
+
+    /// ProteomeDiscoverer:Use Neutral Loss a Ions: Determines whether a ions with neutral loss are used for spectrum matching.
+    MS_ProteomeDiscoverer_Use_Neutral_Loss_a_Ions = 1001684,
+
+    /// ProteomeDiscoverer:Use Neutral Loss b Ions: Determines whether b ions with neutral loss are used for spectrum matching.
+    MS_ProteomeDiscoverer_Use_Neutral_Loss_b_Ions = 1001685,
+
+    /// ProteomeDiscoverer:Use Neutral Loss y Ions: Determines whether y ions with neutral loss are used for spectrum matching.
+    MS_ProteomeDiscoverer_Use_Neutral_Loss_y_Ions = 1001686,
+
+    /// ProteomeDiscoverer:Use Neutral Loss z Ions: Determines whether z ions with neutral loss are used for spectrum matching.
+    MS_ProteomeDiscoverer_Use_Neutral_Loss_z_Ions = 1001687,
+
+    /// ProteomeDiscoverer:SEQUEST:Weight of a Ions: Uses a ions for spectrum matching with this relative factor.
+    MS_ProteomeDiscoverer_SEQUEST_Weight_of_a_Ions = 1001688,
+
+    /// ProteomeDiscoverer:SEQUEST:Weight of b Ions: Uses b ions for spectrum matching with this relative factor.
+    MS_ProteomeDiscoverer_SEQUEST_Weight_of_b_Ions = 1001689,
+
+    /// ProteomeDiscoverer:SEQUEST:Weight of c Ions: Uses c ions for spectrum matching with this relative factor.
+    MS_ProteomeDiscoverer_SEQUEST_Weight_of_c_Ions = 1001690,
+
+    /// ProteomeDiscoverer:SEQUEST:Weight of d Ions: Uses c ions for spectrum matching with this relative factor.
+    MS_ProteomeDiscoverer_SEQUEST_Weight_of_d_Ions = 1001691,
+
+    /// ProteomeDiscoverer:SEQUEST:Weight of v Ions: Uses c ions for spectrum matching with this relative factor.
+    MS_ProteomeDiscoverer_SEQUEST_Weight_of_v_Ions = 1001692,
+
+    /// ProteomeDiscoverer:SEQUEST:Weight of w Ions: Uses c ions for spectrum matching with this relative factor.
+    MS_ProteomeDiscoverer_SEQUEST_Weight_of_w_Ions = 1001693,
+
+    /// ProteomeDiscoverer:SEQUEST:Weight of x Ions: Uses x ions for spectrum matching with this relative factor.
+    MS_ProteomeDiscoverer_SEQUEST_Weight_of_x_Ions = 1001694,
+
+    /// ProteomeDiscoverer:SEQUEST:Weight of y Ions: Uses y ions for spectrum matching with this relative factor.
+    MS_ProteomeDiscoverer_SEQUEST_Weight_of_y_Ions = 1001695,
+
+    /// ProteomeDiscoverer:SEQUEST:Weight of z Ions: Uses z ions for spectrum matching with this relative factor.
+    MS_ProteomeDiscoverer_SEQUEST_Weight_of_z_Ions = 1001696,
+
+    /// ProteomeDiscoverer:ZCore:Protein Score Cutoff: Sets a minimum protein score that each protein must exceed in order to be reported.
+    MS_ProteomeDiscoverer_ZCore_Protein_Score_Cutoff = 1001697,
+
+    /// ProteomeDiscoverer:Reporter Ions Quantizer:Integration Method: Specifies which peak to select if more than one peak is found inside the integration window.
+    MS_ProteomeDiscoverer_Reporter_Ions_Quantizer_Integration_Method = 1001698,
+
+    /// ProteomeDiscoverer:Reporter Ions Quantizer:Integration Window Tolerance: Specifies the mass-to-charge window that enables one to look for the reporter peaks.
+    MS_ProteomeDiscoverer_Reporter_Ions_Quantizer_Integration_Window_Tolerance = 1001699,
+
+    /// ProteomeDiscoverer:Reporter Ions Quantizer:Quantitation Method: Quantitation method for isobarically labeled quantitation.
+    MS_ProteomeDiscoverer_Reporter_Ions_Quantizer_Quantitation_Method = 1001700,
+
+    /// ProteomeDiscoverer:Spectrum Exporter:Export Format: Format of the exported spectra (*.dta, *.mgf or *.mzData.)
+    MS_ProteomeDiscoverer_Spectrum_Exporter_Export_Format = 1001701,
+
+    /// ProteomeDiscoverer:Spectrum Exporter:File name: Name of the output file that contains the exported data.
+    MS_ProteomeDiscoverer_Spectrum_Exporter_File_name = 1001702,
+
+    /// ProteomeDiscoverer:Search Modifications Only For Identified Proteins: Influences the modifications search.
+    MS_ProteomeDiscoverer_Search_Modifications_Only_For_Identified_Proteins = 1001703,
+
+    /// ProteomeDiscoverer:Std High Confidence XCorr Charge1: Standard high confidence XCorr parameter for charge = 1.
+    MS_ProteomeDiscoverer_Std_High_Confidence_XCorr_Charge1 = 1001704,
+
+    /// ProteomeDiscoverer:Std High Confidence XCorr Charge2: Standard high confidence XCorr parameter for charge = 2.
+    MS_ProteomeDiscoverer_Std_High_Confidence_XCorr_Charge2 = 1001705,
+
+    /// ProteomeDiscoverer:Std High Confidence XCorr Charge3: Standard high confidence XCorr parameter for charge = 3.
+    MS_ProteomeDiscoverer_Std_High_Confidence_XCorr_Charge3 = 1001706,
+
+    /// ProteomeDiscoverer:Std High Confidence XCorr Charge4: Standard high confidence XCorr parameter for charge >= 4.
+    MS_ProteomeDiscoverer_Std_High_Confidence_XCorr_Charge4 = 1001707,
+
+    /// ProteomeDiscoverer:Std Medium Confidence XCorr Charge1: Standard medium confidence XCorr parameter for charge = 1.
+    MS_ProteomeDiscoverer_Std_Medium_Confidence_XCorr_Charge1 = 1001708,
+
+    /// ProteomeDiscoverer:Std Medium Confidence XCorr Charge2: Standard medium confidence XCorr parameter for charge = 2.
+    MS_ProteomeDiscoverer_Std_Medium_Confidence_XCorr_Charge2 = 1001709,
+
+    /// ProteomeDiscoverer:Std Medium Confidence XCorr Charge3: Standard medium confidence XCorr parameter for charge = 3.
+    MS_ProteomeDiscoverer_Std_Medium_Confidence_XCorr_Charge3 = 1001710,
+
+    /// ProteomeDiscoverer:Std Medium Confidence XCorr Charge4: Standard medium confidence XCorr parameter for charge >= 4.
+    MS_ProteomeDiscoverer_Std_Medium_Confidence_XCorr_Charge4 = 1001711,
+
+    /// ProteomeDiscoverer:FT High Confidence XCorr Charge1: FT high confidence XCorr parameter for charge = 1.
+    MS_ProteomeDiscoverer_FT_High_Confidence_XCorr_Charge1 = 1001712,
+
+    /// ProteomeDiscoverer:FT High Confidence XCorr Charge2: FT high confidence XCorr parameter for charge = 2.
+    MS_ProteomeDiscoverer_FT_High_Confidence_XCorr_Charge2 = 1001713,
+
+    /// ProteomeDiscoverer:FT High Confidence XCorr Charge3: FT high confidence XCorr parameter for charge = 3.
+    MS_ProteomeDiscoverer_FT_High_Confidence_XCorr_Charge3 = 1001714,
+
+    /// ProteomeDiscoverer:FT High Confidence XCorr Charge4: FT high confidence XCorr parameter for charge >= 4.
+    MS_ProteomeDiscoverer_FT_High_Confidence_XCorr_Charge4 = 1001715,
+
+    /// ProteomeDiscoverer:FT Medium Confidence XCorr Charge1: FT medium confidence XCorr parameter for charge = 1.
+    MS_ProteomeDiscoverer_FT_Medium_Confidence_XCorr_Charge1 = 1001716,
+
+    /// ProteomeDiscoverer:FT Medium Confidence XCorr Charge2: FT medium confidence XCorr parameter for charge = 2.
+    MS_ProteomeDiscoverer_FT_Medium_Confidence_XCorr_Charge2 = 1001717,
+
+    /// ProteomeDiscoverer:FT Medium Confidence XCorr Charge3: FT medium confidence XCorr parameter for charge = 3.
+    MS_ProteomeDiscoverer_FT_Medium_Confidence_XCorr_Charge3 = 1001718,
+
+    /// ProteomeDiscoverer:FT Medium Confidence XCorr Charge4: FT medium confidence XCorr parameter for charge >= 4.
+    MS_ProteomeDiscoverer_FT_Medium_Confidence_XCorr_Charge4 = 1001719,
+
+    /// ProteomeDiscoverer:1. Dynamic Modification: Determine 1st dynamic post-translational modifications (PTMs).
+    MS_ProteomeDiscoverer_1__Dynamic_Modification = 1001720,
+
+    /// ProteomeDiscoverer:2. Dynamic Modification: Determine 2nd dynamic post-translational modifications (PTMs).
+    MS_ProteomeDiscoverer_2__Dynamic_Modification = 1001721,
+
+    /// ProteomeDiscoverer:3. Dynamic Modification: Determine 3rd dynamic post-translational modifications (PTMs).
+    MS_ProteomeDiscoverer_3__Dynamic_Modification = 1001722,
+
+    /// ProteomeDiscoverer:4. Dynamic Modification: Determine 4th dynamic post-translational modifications (PTMs).
+    MS_ProteomeDiscoverer_4__Dynamic_Modification = 1001723,
+
+    /// ProteomeDiscoverer:Static Modification for X: Static Modification for X.
+    MS_ProteomeDiscoverer_Static_Modification_for_X = 1001724,
+
+    /// ProteomeDiscoverer:Initial minimal peptide probability: Minimal initial peptide probability to contribute to analysis.
+    MS_ProteomeDiscoverer_Initial_minimal_peptide_probability = 1001725,
+
+    /// ProteomeDiscoverer:Minimal peptide probability: Minimum adjusted peptide probability contributing to protein probability.
+    MS_ProteomeDiscoverer_Minimal_peptide_probability = 1001726,
+
+    /// ProteomeDiscoverer:Minimal peptide weight: Minimum peptide weight contributing to protein probability.
+    MS_ProteomeDiscoverer_Minimal_peptide_weight = 1001727,
+
+    /// ProteomeDiscoverer:Number of input1 spectra: Number of spectra from 1+ precursor ions.
+    MS_ProteomeDiscoverer_Number_of_input1_spectra = 1001728,
+
+    /// ProteomeDiscoverer:Number of input2 spectra: Number of spectra from 2+ precursor ions.
+    MS_ProteomeDiscoverer_Number_of_input2_spectra = 1001729,
+
+    /// ProteomeDiscoverer:Number of input3 spectra: Number of spectra from 3+ precursor ions.
+    MS_ProteomeDiscoverer_Number_of_input3_spectra = 1001730,
+
+    /// ProteomeDiscoverer:Number of input4 spectra: Number of spectra from 4+ precursor ions.
+    MS_ProteomeDiscoverer_Number_of_input4_spectra = 1001731,
+
+    /// ProteomeDiscoverer:Number of input5 spectra: Number of spectra from 5+ precursor ions.
+    MS_ProteomeDiscoverer_Number_of_input5_spectra = 1001732,
+
+    /// ProteomeDiscoverer:Number of predicted correct proteins: Total number of predicted correct protein ids (sum of probabilities).
+    MS_ProteomeDiscoverer_Number_of_predicted_correct_proteins = 1001733,
+
+    /// ProteomeDiscoverer:Organism: Sample organism (used for annotation purposes).
+    MS_ProteomeDiscoverer_Organism = 1001734,
+
+    /// ProteomeDiscoverer:Reference Database: Full path database name.
+    MS_ProteomeDiscoverer_Reference_Database = 1001735,
+
+    /// ProteomeDiscoverer:Residue substitution list: Residues considered equivalent when comparing peptides.
+    MS_ProteomeDiscoverer_Residue_substitution_list = 1001736,
+
+    /// ProteomeDiscoverer:Source file extension: File type (if not pepXML).
+    MS_ProteomeDiscoverer_Source_file_extension = 1001737,
+
+    /// ProteomeDiscoverer:Source Files: Input pepXML files.
+    MS_ProteomeDiscoverer_Source_Files = 1001738,
+
+    /// ProteomeDiscoverer:Source Files old: Input pepXML files (old).
+    MS_ProteomeDiscoverer_Source_Files_old = 1001739,
+
+    /// ProteomeDiscoverer:WinCyg reference database: Windows full path for database.
+    MS_ProteomeDiscoverer_WinCyg_reference_database = 1001740,
+
+    /// ProteomeDiscoverer:WinCyg source files: Windows pepXML file names.
+    MS_ProteomeDiscoverer_WinCyg_source_files = 1001741,
+
+    /// LTQ Orbitrap Velos: Finnigan LTQ Orbitrap Velos MS.
+    MS_LTQ_Orbitrap_Velos = 1001742,
+
+    /// ProteomeDiscoverer:Mascot:Weight of A Ions: Determines if to use A ions for spectrum matching.
+    MS_ProteomeDiscoverer_Mascot_Weight_of_A_Ions = 1001743,
+
+    /// ProteomeDiscoverer:Mascot:Weight of B Ions: Determines if to use B ions for spectrum matching.
+    MS_ProteomeDiscoverer_Mascot_Weight_of_B_Ions = 1001744,
+
+    /// ProteomeDiscoverer:Mascot:Weight of C Ions: Determines if to use C ions for spectrum matching.
+    MS_ProteomeDiscoverer_Mascot_Weight_of_C_Ions = 1001745,
+
+    /// ProteomeDiscoverer:Mascot:Weight of D Ions: Determines if to use D ions for spectrum matching.
+    MS_ProteomeDiscoverer_Mascot_Weight_of_D_Ions = 1001746,
+
+    /// ProteomeDiscoverer:Mascot:Weight of V Ions: Determines if to use V ions for spectrum matching.
+    MS_ProteomeDiscoverer_Mascot_Weight_of_V_Ions = 1001747,
+
+    /// ProteomeDiscoverer:Mascot:Weight of W Ions: Determines if to use W ions for spectrum matching.
+    MS_ProteomeDiscoverer_Mascot_Weight_of_W_Ions = 1001748,
+
+    /// ProteomeDiscoverer:Mascot:Weight of X Ions: Determines if to use X ions for spectrum matching.
+    MS_ProteomeDiscoverer_Mascot_Weight_of_X_Ions = 1001749,
+
+    /// ProteomeDiscoverer:Mascot:Weight of Y Ions: Determines if to use Y ions for spectrum matching.
+    MS_ProteomeDiscoverer_Mascot_Weight_of_Y_Ions = 1001750,
+
+    /// ProteomeDiscoverer:Mascot:Weight of Z Ions: Determines if to use z ions for spectrum matching.
+    MS_ProteomeDiscoverer_Mascot_Weight_of_Z_Ions = 1001751,
+
+    /// ProteomeDiscoverer:Target FDR Strict: Specifies the strict target false discovery rate (FDR, 0.0 ... 1.0) for peptide hits with high confidence.
+    MS_ProteomeDiscoverer_Target_FDR_Strict = 10001664,
+
+    /// ProteomeDiscoverer:Mascot:Taxonomy: Limits searches to entries from a particular species or group of species.
+    MS_ProteomeDiscoverer_Mascot_Taxonomy = 10001665,
 
     /// unit: A unit of measurement is a standardized quantity of a physical quality.
     UO_unit = 100000000,
 
-    /// length unit: A base unit which is a standard measure of the distance between two points.
+    /// length unit: A unit which is a standard measure of the distance between two points.
     UO_length_unit = 100000001,
 
-    /// mass unit: A base unit which is a standard measure of the amount of matter/energy of a physical object.
+    /// mass unit: A unit which is a standard measure of the amount of matter/energy of a physical object.
     UO_mass_unit = 100000002,
 
-    /// time unit: A base unit which is a standard measure of the dimension in which events occur in sequence.
+    /// time unit: A unit which is a standard measure of the dimension in which events occur in sequence.
     UO_time_unit = 100000003,
 
-    /// electric current unit: A base unit which is a standard measure of the flow of electric charge.
+    /// electric current unit: A unit which is a standard measure of the flow of electric charge.
     UO_electric_current_unit = 100000004,
 
-    /// temperature unit: A base unit which is a standard measure of the average kinetic energy of the particles in a sample of matter.
+    /// temperature unit: A unit which is a standard measure of the average kinetic energy of the particles in a sample of matter.
     UO_temperature_unit = 100000005,
 
-    /// substance unit: A base unit which is a standardized quantity of an element or compound with uniform composition.
+    /// substance unit: A unit which is a standardised quantity of an element or compound with uniform composition.
     UO_substance_unit = 100000006,
 
-    /// luminous intensity unit: A base unit which is a standard measure of the wavelength-weighted power emitted by a light source in a particular direction.
+    /// luminous intensity unit: A unit which is a standard measure of the wavelength-weighted power emitted by a light source in a particular direction.
     UO_luminous_intensity_unit = 100000007,
 
     /// meter: A length unit which is equal to the length of the path traveled by light in vacuum during a time interval of 1/299 792 458 of a second.
@@ -5073,7 +5551,7 @@ enum PWIZ_API_DECL CVID
     /// femtogram: A mass unit which is equal to 10^[-15] g.
     UO_femtogram = 100000026,
 
-    /// degree celsius: A temperature derived unit which is equal to one Kelvin degree. However, they have their zeros at different points. The Centigrade scale has its zero at 273.15 K.
+    /// degree celsius: A temperature unit which is equal to one Kelvin degree. However, they have their zeros at different points. The Centigrade scale has its zero at 273.15 K.
     UO_degree_celsius = 100000027,
 
     /// millisecond: A time unit which is equal to one thousandth of a second or 10^[-3] s.
@@ -5131,51 +5609,51 @@ enum PWIZ_API_DECL CVID
     UO_base_unit = 100000045,
 
     /// derived unit: A unit which is derived from base units.
-    UO_derived_unit = 100000046,
+    UO_derived_unit_OBSOLETE = 100000046,
 
-    /// area unit: A derived unit which is a standard measure of the amount of a 2-dimensional flat surface.
+    /// area unit: A unit which is a standard measure of the amount of a 2-dimensional flat surface.
     UO_area_unit = 100000047,
 
-    /// acceleration unit: A derived unit which is a standard measure of the rate of change of velocity in either speed or direction.
+    /// acceleration unit: A unit which is a standard measure of the rate of change of velocity in either speed or direction.
     UO_acceleration_unit = 100000048,
 
-    /// angular velocity unit: A derived unit which is a standard measure of the rate of angular movement about an axis; the angle rotated in a given time.
+    /// angular velocity unit: A unit which is a standard measure of the rate of angular movement about an axis; the angle rotated in a given time.
     UO_angular_velocity_unit = 100000049,
 
-    /// angular acceleration unit: A derived unit which is a standard measure of the rate of change of angular velocity.
+    /// angular acceleration unit: A unit which is a standard measure of the rate of change of angular velocity.
     UO_angular_acceleration_unit = 100000050,
 
-    /// concentration unit: A derived unit which represents a standard measurement of how much of a given substance there is mixed with another substance.
+    /// concentration unit: A unit which represents a standard measurement of how much of a given substance there is mixed with another substance.
     UO_concentration_unit = 100000051,
 
     /// mass density unit: A density unit which is a standard measure of the mass of a substance in a given volume.
     UO_mass_density_unit = 100000052,
 
-    /// luminance unit: A derived unit which is a standard measure of the luminous intensity impinging on a given area.
+    /// luminance unit: A unit which is a standard measure of the luminous intensity impinging on a given area.
     UO_luminance_unit = 100000053,
 
     /// area density unit: A density unit which is a standard measure of the mass exerting an influence on a given area.
     UO_area_density_unit = 100000054,
 
-    /// molar mass unit: A derived unit which is a standard measure of the mass of a homogeneous substance containing 6.02 x 1023 atoms or molecules.
+    /// molar mass unit: A unit which is a standard measure of the mass of a homogeneous substance containing 6.02 x 1023 atoms or molecules.
     UO_molar_mass_unit = 100000055,
 
-    /// molar volume unit: A derived unit which is a standard measure of the volume of a homogeneous substance containing 6.02 x 1023 atoms or molecules.
+    /// molar volume unit: A unit which is a standard measure of the volume of a homogeneous substance containing 6.02 x 1023 atoms or molecules.
     UO_molar_volume_unit = 100000056,
 
-    /// momentum unit: A derived unit which is a standard measure of the quantity of motion measured by the product of mass and velocity.
+    /// momentum unit: A unit which is a standard measure of the quantity of motion measured by the product of mass and velocity.
     UO_momentum_unit = 100000057,
 
-    /// rotational frequency unit: A derived unit which is a standard measure of the number of rotations in a given time.
+    /// rotational frequency unit: A unit which is a standard measure of the number of rotations in a given time.
     UO_rotational_frequency_unit = 100000058,
 
-    /// specific volume unit: A derived unit which is a standard measure of the volume of a given mass of substance (the reciprocal of density).
+    /// specific volume unit: A unit which is a standard measure of the volume of a given mass of substance (the reciprocal of density).
     UO_specific_volume_unit = 100000059,
 
-    /// speed/velocity unit: A derived unit which is a standard measure of the rate of movement. Speed is measured in the same physical units of measurement as velocity, but does not contain the element of direction that velocity has. Speed is thus the magnitude component of velocity.
+    /// speed/velocity unit: A unit which is a standard measure of the rate of movement. Speed is measured in the same physical units of measurement as velocity, but does not contain the element of direction that velocity has. Speed is thus the magnitude component of velocity.
     UO_speed_velocity_unit = 100000060,
 
-    /// unit of molarity: A derived concentration unit which is a standard measure of the number of moles of a given substance per liter of solution.
+    /// unit of molarity: A concentration unit which is a standard measure of the number of moles of a given substance per liter of solution.
     UO_unit_of_molarity = 100000061,
 
     /// molar: A unit of concentration which expresses a concentration of 1 mole of solute per liter of solution (mol/L).
@@ -5193,7 +5671,7 @@ enum PWIZ_API_DECL CVID
     /// picomolar: A unit of molarity which is equal to 10^[-12] M.
     UO_picomolar = 100000066,
 
-    /// unit of molality: A derived concentration unit which is a standard measure of the number of moles of a given substance per kilogram of solvent.
+    /// unit of molality: A concentration unit which is a standard measure of the number of moles of a given substance per kilogram of solvent.
     UO_unit_of_molality = 100000067,
 
     /// molal: A unit of concentration which expresses a concentration of a solution of 1 mole per kilogram of solvent (mol/kg).
@@ -5268,8 +5746,8 @@ enum PWIZ_API_DECL CVID
     /// kilogram meter per second: A momentum unit which is equal to the momentum of a one kilogram mass object with a speed of one meter per second.
     UO_kilogram_meter_per_second = 100000091,
 
-    /// one turn per second: A rotational frequency unit which is equal to 1 complete turn in a period of time that equals to 1 second.
-    UO_one_turn_per_second = 100000092,
+    /// turns per second: A rotational frequency unit which is equal to the number complete turn in a period of time that equals to 1 second.
+    UO_turns_per_second = 100000092,
 
     /// cubic meter per kilogram: A specific volume unit which is equal to one cubic meter volume occupied by one kilogram of a particular substance.
     UO_cubic_meter_per_kilogram = 100000093,
@@ -5277,7 +5755,7 @@ enum PWIZ_API_DECL CVID
     /// meter per second: A speed/velocity unit which is equal to the speed of an object traveling 1 meter distance in one second.
     UO_meter_per_second = 100000094,
 
-    /// volume unit: A derived unit which is a standard measure of the amount of space occupied by any substance, whether solid, liquid, or gas.
+    /// volume unit: A unit which is a standard measure of the amount of space occupied by any substance, whether solid, liquid, or gas.
     UO_volume_unit = 100000095,
 
     /// cubic meter: A volume unit which is equal to the volume of a cube with edges one meter in length. One cubic meter equals to 1000 liters.
@@ -5307,85 +5785,82 @@ enum PWIZ_API_DECL CVID
     /// femtoliter: A volume unit which is equal to 10^[-15] L.
     UO_femtoliter = 100000104,
 
-    /// frequency unit: A derived unit which is a standard measure of the number of repetitive actions in a particular time.
+    /// frequency unit: A unit which is a standard measure of the number of repetitive actions in a particular time.
     UO_frequency_unit = 100000105,
 
     /// hertz: A frequency unit which is equal to 1 complete cycle of a recurring phenomenon in 1 second.
     UO_hertz = 100000106,
 
-    /// force unit: A derived unit which is a standard measure of the force is applied when a mass is accelerated.
+    /// force unit: A unit which is a standard measure of the force is applied when a mass is accelerated.
     UO_force_unit = 100000107,
 
     /// newton: A force unit which is equal to the force required to cause an acceleration of 1m/s2 of a mass of 1 Kg in the direction of the force.
     UO_newton = 100000108,
 
-    /// pressure unit: A derived unit which is a standard measure of the force applied to a given area.
+    /// pressure unit: A unit which is a standard measure of the force applied to a given area.
     UO_pressure_unit = 100000109,
 
     /// pascal: A pressure unit which is equal to the pressure or stress on a surface caused by a force of 1 newton spread over a surface of 1 m^[2].
     UO_pascal = 100000110,
 
-    /// energy unit: A derived unit which is a standard measure of the work done by a certain force (gravitational, electric, magnetic, force of inertia, etc).
+    /// energy unit: A unit which is a standard measure of the work done by a certain force (gravitational, electric, magnetic, force of inertia, etc).
     UO_energy_unit = 100000111,
 
     /// joule: An energy unit which is equal to the energy required when a force of 1 newton moves an object 1 meter in the direction of the force.
     UO_joule = 100000112,
 
-    /// power unit: A derived unit which is a standard measure power or the rate of doing work.
+    /// power unit: A unit which is a standard measure power or the rate of doing work.
     UO_power_unit = 100000113,
 
     /// watt: A power unit which is equal to the power used when work is done at the rate of 1 joule per second.
     UO_watt = 100000114,
 
-    /// illuminance unit: A derived unit which is a standard measure of the luminous flux incident on a unit area.
+    /// illuminance unit: A unit which is a standard measure of the luminous flux incident on a unit area.
     UO_illuminance_unit = 100000115,
 
     /// lux: An illuminance unit which is equal to the illuminance produced by 1 lumen evenly spread over an area 1 m^[2].
     UO_lux = 100000116,
 
-    /// luminous flux unit: A derived unit which is a standard measure of the flow of radiant energy.
+    /// luminous flux unit: A unit which is a standard measure of the flow of radiant energy.
     UO_luminous_flux_unit = 100000117,
 
     /// lumen: A luminous flux unit which is equal to the luminous flux emitted into 1 steradian by a point source of 1 candela.
     UO_lumen = 100000118,
 
-    /// catalytic activity unit: A derived unit which is a standard measure of the amount of the action of a catalyst.
+    /// catalytic activity unit: A unit which is a standard measure of the amount of the action of a catalyst.
     UO_catalytic_activity_unit = 100000119,
 
     /// katal: A catalytic unit activity which is equal to the activity of a catalyst in moles per second, such as the amount of an enzyme needed to transform one mole of substrate per second.
     UO_katal = 100000120,
 
-    /// angle unit: A derived unit which is a standard measure of the figure or space formed by the junction of two lines or planes.
+    /// angle unit: A unit which is a standard measure of the figure or space formed by the junction of two lines or planes.
     UO_angle_unit = 100000121,
 
-    /// plane angle unit: A derived unit which is a standard measure of the angle formed by two straight lines in the same plane.
+    /// plane angle unit: A unit which is a standard measure of the angle formed by two straight lines in the same plane.
     UO_plane_angle_unit = 100000122,
 
     /// radian: A plane angle unit which is equal to the angle subtended at the center of a circle by an arc equal in length to the radius of the circle, approximately 57 degrees 17 minutes and 44.6 seconds.
     UO_radian = 100000123,
 
-    /// solid angle unit: A derived unit which is a standard measure of the angle formed by three or more planes intersecting at a common point.
+    /// solid angle unit: A unit which is a standard measure of the angle formed by three or more planes intersecting at a common point.
     UO_solid_angle_unit = 100000124,
 
     /// steradian: A solid angle unit which is equal to the solid angle subtended at the center of a sphere by an area on the surface of the sphere that is equal to the radius squared.
     UO_steradian = 100000125,
 
-    /// temperature derived unit: A derived unit which represents a standard measurement of temperature in a particular temperature scale.
-    UO_temperature_derived_unit = 100000126,
-
-    /// radiation unit: A derived unit which is a standard measure of the amount of radiation emitted by a given radiation source as well as the amount of radiation absorbed or deposited in a specific material by a radiation source.
+    /// radiation unit: A unit which is a standard measure of the amount of radiation emitted by a given radiation source as well as the amount of radiation absorbed or deposited in a specific material by a radiation source.
     UO_radiation_unit = 100000127,
 
-    /// activity (of a radionuclide) unit: A derived unit which is a standard measure of the transformation (disintegration) rate of a radioactive substance.
+    /// activity (of a radionuclide) unit: A unit which is a standard measure of the transformation (disintegration) rate of a radioactive substance.
     UO_activity__of_a_radionuclide__unit = 100000128,
 
-    /// absorbed dose unit: A derived unit which is a standard measure of the energy imparted by ionizing radiation to unit mass of matter such as tissue.
+    /// absorbed dose unit: A unit which is a standard measure of the energy imparted by ionizing radiation to unit mass of matter such as tissue.
     UO_absorbed_dose_unit = 100000129,
 
-    /// dose equivalent unit: A derived unit which is a standard measure of the expression of dose in terms of its biological effect.
+    /// dose equivalent unit: A unit which is a standard measure of the expression of dose in terms of its biological effect.
     UO_dose_equivalent_unit = 100000130,
 
-    /// exposure unit: A derived unit which is a standard measure of the quantity that expresses the ability of radiation to ionize air and thereby create electric charges which can be collected and measured.
+    /// exposure unit: A unit which is a standard measure of the quantity that expresses the ability of radiation to ionize air and thereby create electric charges which can be collected and measured.
     UO_exposure_unit = 100000131,
 
     /// becquerel: An activity (of a radionuclide) unit which is equal to the activity of a quantity of radioactive material in which one nucleus decays per second or there is one atom disintegration per second (dps).
@@ -5439,9 +5914,6 @@ enum PWIZ_API_DECL CVID
     /// counts per minute: An activity (of a radionuclide) unit which is equal to the number of light emissions produced by ionizing radiation in one minute.
     UO_counts_per_minute = 100000148,
 
-    /// time derived unit: A derived unit which is a standard measure of the dimension in which events occur in sequence.
-    UO_time_derived_unit = 100000149,
-
     /// nanosecond: A time unit which is equal to one thousandth of one millionth of a second or 10^[-9] s.
     UO_nanosecond = 100000150,
 
@@ -5454,7 +5926,7 @@ enum PWIZ_API_DECL CVID
     /// foot candle: An illuminance unit which is equal to the illuminance produced by 1 lumen evenly spread over an area 1 foot^[2]. One footcandle is equal to 10.76 lux.
     UO_foot_candle = 100000153,
 
-    /// irradiance unit: A derived unit which is a standard measure of the power of electromagnetic radiation at a surface, per unit area.
+    /// irradiance unit: A unit which is a standard measure of the power of electromagnetic radiation at a surface, per unit area.
     UO_irradiance_unit = 100000154,
 
     /// watt per square meter: An irradiance unit which is equal to 1 watt of radiant power incident per one square meter surface area.
@@ -5463,19 +5935,19 @@ enum PWIZ_API_DECL CVID
     /// einstein per square meter per second: An irradiance unit which is equal to one einstein per square meter per second. One einstein is one mole of photons, regardless of their frequency. Therefore, the number of photons in an einstein is Avogadro's number.
     UO_einstein_per_square_meter_per_second = 100000156,
 
-    /// light unit: A derived unit which is a standard measure of the intensity of light.
+    /// light unit: A unit which is a standard measure of the intensity of light.
     UO_light_unit = 100000157,
 
     /// watt per steradian per square meter: A radiance unit which is equal to one watt of radiant power incident per steradian solid angle per one square meter projected area of the source, as viewed from the given direction.
     UO_watt_per_steradian_per_square_meter = 100000158,
 
-    /// radiant intensity unit: A derived unit which is a standard measure of the intensity of electromagnetic radiation.
+    /// radiant intensity unit: A unit which is a standard measure of the intensity of electromagnetic radiation.
     UO_radiant_intensity_unit = 100000159,
 
     /// microeinstein per square meter per second: An irradiance unit which is equal to one microeinstein per square meter per second or 10^[-6] microeinstein/sm^[2].
     UO_microeinstein_per_square_meter_per_second = 100000160,
 
-    /// radiance unit: A derived unit which is a standard measure of the power of electromagnetic radiation through space or through a material medium in the form of electromagnetic waves.
+    /// radiance unit: A unit which is a standard measure of the power of electromagnetic radiation through space or through a material medium in the form of electromagnetic waves.
     UO_radiance_unit = 100000161,
 
     /// watt per steradian: A radiant intensity unit which is equal to one kilogram meter squared per second cubed per steradian.
@@ -5490,8 +5962,8 @@ enum PWIZ_API_DECL CVID
     /// volume percentage: A dimensionless concentration unit which denotes the volume of the solute in mL per 100 mL of the resulting solution.
     UO_volume_percentage = 100000165,
 
-    /// parts per notation: A dimensionless concentration notation which describes the amount of one substance in another. It is the ratio of the amount of the substance of interest to the amount of that substance plus the amount of the substance.
-    UO_parts_per_notation = 100000166,
+    /// parts per notation unit: A dimensionless concentration notation which describes the amount of one substance in another. It is the ratio of the amount of the substance of interest to the amount of that substance plus the amount of the substance.
+    UO_parts_per_notation_unit = 100000166,
 
     /// parts per hundred: A dimensionless concentration notation which denotes the amount of a given substance in a total amount of 100 regardless of the units of measure as long as they are the same.
     UO_parts_per_hundred = 100000167,
@@ -5523,7 +5995,7 @@ enum PWIZ_API_DECL CVID
     /// milligram per milliliter: A mass unit density which is equal to mass of an object in milligrams divided by the volume in milliliters.
     UO_milligram_per_milliliter = 100000176,
 
-    /// unit per volume unit: A derived concentration unit which is a standard measure of the number of units, as an agreed arbitrary amount, of a given substance per a specific volume of solution.
+    /// unit per volume unit: A concentration unit which is a standard measure of the number of units, as an agreed arbitrary amount, of a given substance per a specific volume of solution.
     UO_unit_per_volume_unit = 100000177,
 
     /// unit per milliliter: A unit per milliliter unit which is equal to one unit of an agreed arbitrary amount per one milliliter.
@@ -5538,7 +6010,7 @@ enum PWIZ_API_DECL CVID
     /// enzyme unit: A catalytic unit activity which is equal to the amount of the enzyme that catalyzes the conversion of 1 micro mole of substrate per minute.
     UO_enzyme_unit = 100000181,
 
-    /// density unit: A derived unit which is a standard measure of the influence exerted by some mass.
+    /// density unit: A unit which is a standard measure of the influence exerted by some mass.
     UO_density_unit = 100000182,
 
     /// linear density unit: A density unit which is a standard measure of the mass exerting an influence on a one-dimensional object.
@@ -5550,7 +6022,7 @@ enum PWIZ_API_DECL CVID
     /// degree: A plane angle unit which is equal to 1/360 of a full rotation or 1.7453310^[-2] rad.
     UO_degree = 100000185,
 
-    /// dimensionless unit: A derived unit which is a standard measure of physical quantity consisting of only a numerical number without any units.
+    /// dimensionless unit: A unit which is a standard measure of physical quantity consisting of only a numerical number without any units.
     UO_dimensionless_unit = 100000186,
 
     /// percent: A dimensionless ratio unit which denotes numbers as fractions of 100.
@@ -5577,7 +6049,7 @@ enum PWIZ_API_DECL CVID
     /// confluence percentage: A dimensionless percent unit which denotes the density of an attached or monolayer culture (e.g., cell culture).
     UO_confluence_percentage = 100000194,
 
-    /// degree fahrenheit: A temperature derived unit which is equal to 5/9ths of a kelvin. Negative 40 degrees Fahrenheit is equal to negative 40 degrees Celsius.
+    /// degree fahrenheit: A temperature unit which is equal to 5/9ths of a kelvin. Negative 40 degrees Fahrenheit is equal to negative 40 degrees Celsius.
     UO_degree_fahrenheit = 100000195,
 
     /// pH: A dimensionless concentration notation which denotes the acidity of a solution in terms of activity of hydrogen ions (H+).
@@ -5643,13 +6115,13 @@ enum PWIZ_API_DECL CVID
     /// disintegrations per second: An activity (of a radionuclide) unit which is equal to the activity of a quantity of radioactive material in which one nucleus decays per second or there is one atom disintegration per second.
     UO_disintegrations_per_second = 100000216,
 
-    /// electric potential difference: A derived unit which is a standard measure of the work done per unit charge as a charge is moved between two points in an electric field.
-    UO_electric_potential_difference = 100000217,
+    /// electric potential difference unit: A unit which is a standard measure of the work done per unit charge as a charge is moved between two points in an electric field.
+    UO_electric_potential_difference_unit = 100000217,
 
     /// volt: An electric potential difference unit which is equal to the work per unit charge. One volt is the potential difference required to move one coulomb of charge between two points in a circuit while using one joule of energy.
     UO_volt = 100000218,
 
-    /// electric charge: A derived unit which is a standard measure of the quantity of unbalanced electricity in a body (either positive or negative) and construed as an excess or deficiency of electrons.
+    /// electric charge: A unit which is a standard measure of the quantity of unbalanced electricity in a body (either positive or negative) and construed as an excess or deficiency of electrons.
     UO_electric_charge = 100000219,
 
     /// coulomb: An electrical charge unit which is equal to the amount of charge transferred by a current of 1 ampere in 1 second.
@@ -5667,13 +6139,13 @@ enum PWIZ_API_DECL CVID
     /// kilowatt-hour: An energy unit which is equal to 1,000 watt-hours.
     UO_kilowatt_hour = 100000224,
 
-    /// magnetic flux unit: A derived unit which is a standard measure of quantity of magnetism, taking account of the strength and the extent of a magnetic field.
+    /// magnetic flux unit: A unit which is a standard measure of quantity of magnetism, taking account of the strength and the extent of a magnetic field.
     UO_magnetic_flux_unit = 100000225,
 
     /// weber: A magnetic flux unit which is equal to the amount of flux that when linked with a single turn of wire for an interval of one second will induce an electromotive force of one volt.
     UO_weber = 100000226,
 
-    /// magnetic flux density unit: A derived unit which is a standard measure of the strength of a magnetic field.
+    /// magnetic flux density unit: A unit which is a standard measure of the strength of a magnetic field.
     UO_magnetic_flux_density_unit = 100000227,
 
     /// tesla: A magnetic flux density unit which is equal to one weber per square meter.
@@ -5760,7 +6232,7 @@ enum PWIZ_API_DECL CVID
     /// dyne per cm: A surface tension unit which is equal to one dyne per centimeter.
     UO_dyne_per_cm = 100000255,
 
-    /// viscosity unit: A derived unit which is a standard measure of the internal resistance of fluids to flow.
+    /// viscosity unit: A unit which is a standard measure of the internal resistance of fluids to flow.
     UO_viscosity_unit = 100000256,
 
     /// pascal second: A viscosity unit which is equal to one pascale per second.
@@ -5772,16 +6244,16 @@ enum PWIZ_API_DECL CVID
     /// decibel: An ratio unit which is an indicator of sound power per unit area.
     UO_decibel = 100000259,
 
-    /// effective dose unit: A derived unit which is a standard measure of the estimate of the stochastic effect that a non-uniform radiation dose has on a human.
+    /// effective dose unit: A unit which is a standard measure of the estimate of the stochastic effect that a non-uniform radiation dose has on a human.
     UO_effective_dose_unit = 100000260,
 
-    /// conduction unit: A derived unit which represents a standard measurement of the transmission of an entity through a medium.
+    /// conduction unit: A unit which represents a standard measurement of the transmission of an entity through a medium.
     UO_conduction_unit = 100000261,
 
-    /// electrical conduction unit: A derived unit which represents a standard measurement of the movement of electrically charged particles through a transmission medium (electrical conductor).
+    /// electrical conduction unit: A unit which represents a standard measurement of the movement of electrically charged particles through a transmission medium (electrical conductor).
     UO_electrical_conduction_unit = 100000262,
 
-    /// heat conduction unit: A derived unit which represents a standard measurement of the spontaneous transfer of thermal energy through matter, from a region of higher temperature to a region of lower temperature.
+    /// heat conduction unit: A unit which represents a standard measurement of the spontaneous transfer of thermal energy through matter, from a region of higher temperature to a region of lower temperature.
     UO_heat_conduction_unit = 100000263,
 
     /// siemens: An electrical conduction unit which is equal to A/V.
@@ -5793,7 +6265,7 @@ enum PWIZ_API_DECL CVID
     /// electronvolt: A non-SI unit of energy (eV) defined as the energy acquired by a single unbound electron when it passes through an electrostatic potential difference of one volt. An electronvolt is equal to 1.602 176 53(14) x 10^-19 J.
     UO_electronvolt = 100000266,
 
-    /// electric field strength unit: The electric field strength is a derived unit which is a measure of the potential difference between two points some distance apart.
+    /// electric field strength unit: The electric field strength is a unit which is a measure of the potential difference between two points some distance apart.
     UO_electric_field_strength_unit = 100000267,
 
     /// volt per meter: The volt per meter is a unit of electric field strength equal to the a potential difference of 1 volt existing between two points that are 1 meter apart.
@@ -5802,7 +6274,7 @@ enum PWIZ_API_DECL CVID
     /// absorbance unit: A dimensionless logarithmic unit assigned to a measure of absorbance of light through a partially absorbing substance, defined as -log10(I/I_0) where I = transmitted light and I_0 = incident light.
     UO_absorbance_unit = 100000269,
 
-    /// volumetric flow rate unit: A derived unit which is a standard measure of the volume of fluid which passes through a given surface per unit time .
+    /// volumetric flow rate unit: A unit which is a standard measure of the volume of fluid which passes through a given surface per unit time .
     UO_volumetric_flow_rate_unit = 100000270,
 
     /// microliters per minute: A volumetric flow rate unit which is equal to one microliter volume through a given surface in one minute.
@@ -5810,6 +6282,27 @@ enum PWIZ_API_DECL CVID
 
     /// millimetres of mercury: A unit of pressure equal to the amount of fluid pressure one millimeter deep in mercury at zero degrees centigrade on Earth.
     UO_millimetres_of_mercury = 100000272,
+
+    /// milligram per liter: A mass unit density which is equal to mass of an object in milligrams divided by the volume in liters.
+    UO_milligram_per_liter = 100000273,
+
+    /// microgram per milliliter: A mass unit density which is equal to mass of an object in micrograms divided by the volume in millliters.
+    UO_microgram_per_milliliter = 100000274,
+
+    /// nanogram per milliliter: A mass unit density which is equal to mass of an object in nanograms divided by the volume in milliliters.
+    UO_nanogram_per_milliliter = 100000275,
+
+    /// amount per container: A concentration unit which is a standard measure of the amount of a substance in a given container.
+    UO_amount_per_container = 100000276,
+
+    /// ug/disk: A unit which is equal to one microgram per disk, where a disk is some physical surface/container upon which the substance is deposited.
+    UO_ug_disk_100000277 = 100000277,
+
+    /// ug/disk: A unit which is equal to one nanomole per disk, where a disk is some physical surface/container upon which the substance is deposited.
+    UO_ug_disk_100000278 = 100000278,
+
+    /// milliunits per milliliter: A unit per milliliter unit which is equal to one thousandth of a unit of an agreed arbitrary amount per one milliliter.
+    UO_milliunits_per_milliliter = 100000279,
 
     /// microgram per liter: A mass unit density which is equal to mass of an object in micrograms divided by the volume in liters.
     UO_microgram_per_liter = 100000301,
