@@ -17,27 +17,36 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Xml;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestA
 {
     [TestClass]
     public class UniModTest
     {
+        private const string STATIC_LIST_FILE = "UniModStaticList.xml";
+        private const string HEAVY_LIST_FILE = "UniModHeavyList.xml";
+
         [TestMethod]
         public void TestUniMod()
         {
             UniMod.Init();
-            TestStaticMods(UniMod.DictUniModIds.Values);
-        }
 
-        private static void TestStaticMods(IEnumerable<StaticMod> mods)
-        {
-            foreach (StaticMod mod in mods)
+            // UpdateTestXML is used to update the test files if the modifications in UniMod.cs
+            // have changed. Before UpdateTestXML is called, TestUniMod should pass with the new changes 
+            // to make sure we haven't lost/broken any modifications from earlier versions of UniMod.cs.
+            // Note: The test will always run against the last build XML. Run twice when updating.
+            UpdateTestXML();
+
+            foreach (StaticMod mod in UniMod.DictUniModIds.Values)
             {
                 // UniModCompiler should not set the masses.
                 if (mod.Formula == null)
@@ -68,6 +77,53 @@ namespace pwiz.SkylineTestA
                 if(!Equals(mod.LabelAtoms, LabelAtoms.None))
                     Assert.IsTrue(mod.AAs != null);
             }
+
+            // Testing ValidateID.
+            var phospho = UniMod.DictStructuralModNames["Phospho (ST)"];
+            Assert.IsTrue(UniMod.ValidateID(phospho.ChangeExplicit(true)));
+            Assert.IsTrue(UniMod.ValidateID(phospho.ChangeVariable(true)));
+            Assert.IsFalse(UniMod.ValidateID((StaticMod)phospho.ChangeName("Phospho")));
+
+            StreamReader staticReader = new StreamReader(GetTestStream(STATIC_LIST_FILE));
+            string staticMods = staticReader.ReadToEnd();
+            staticReader.Close();
+            AssertEx.DeserializeNoError<StaticModList>(staticMods);
+
+            StreamReader heavyReader = new StreamReader(GetTestStream(HEAVY_LIST_FILE));
+            string heavyMods = heavyReader.ReadToEnd();
+            heavyReader.Close();
+            AssertEx.DeserializeNoError<HeavyModList>(heavyMods);
+        }
+
+        public Stream GetTestStream(string fileName)
+        {
+            return typeof (UniModTest).Assembly.GetManifestResourceStream(GetType().Namespace + "." + fileName);
+        }
+
+        public void UpdateTestXML()
+        {
+            WriteModListXml(STATIC_LIST_FILE, "StaticModList", new[] { UniMod.DictStructuralModNames, UniMod.DictHiddenStructuralModNames });
+            WriteModListXml(HEAVY_LIST_FILE, "HeavyModList", new[] { UniMod.DictIsotopeModNames, UniMod.DictHiddenIsotopeModNames });
+        }
+
+        private static void WriteModListXml(string name, string tagName, IEnumerable<Dictionary<string, StaticMod>> dicts)
+        {
+            FileStream fileStream = File.Create(string.Format(@"..\..\..\TestA\{0}", name));
+
+            XmlWriterSettings settings = new XmlWriterSettings
+            {
+                ConformanceLevel = ConformanceLevel.Fragment,
+                Indent = true
+            };
+            XmlWriter xmlWriter = XmlWriter.Create(fileStream, settings);
+            xmlWriter.WriteStartElement(tagName);
+            foreach (var dict in dicts)
+            {
+                xmlWriter.WriteElements(dict.Values);
+            }
+            xmlWriter.WriteEndElement();
+            xmlWriter.Close();
+            fileStream.Close();
         }
     }
 }

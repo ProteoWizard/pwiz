@@ -309,6 +309,8 @@ namespace pwiz.Skyline.Model.DocSettings
                     AverageMass = SequenceMassCalc.ParseModMass(BioMassCalc.AVERAGE, Formula);
                 }
             }
+            if (!UniMod.ValidateID(this))
+                throw new InvalidDataException("UniMod id does not match modification settings.");
         }
 
         private static ModTerminus ToModTerminus(String value)

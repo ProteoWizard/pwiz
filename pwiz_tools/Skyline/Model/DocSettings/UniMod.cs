@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -41,6 +42,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'Y'
             };
 
+        private static bool _initializing;
+
         public static void Init()
         {
             DictStructuralModNames = new Dictionary<string, StaticMod>();
@@ -51,6 +54,8 @@ namespace pwiz.Skyline.Model.DocSettings
             DictModMasses = new Dictionary<ModMassKey, StaticMod>();
             UserDefModMosses = new Dictionary<ModMassKey, StaticMod>();
 
+            _initializing = true;
+            
             AddMod("Acetyl (K)", "K", null, LabelAtoms.None, "H2C2O", null, 1, true, false);
             AddMod("Acetyl (N-term)", null, ModTerminus.N, LabelAtoms.None, "H2C2O", null, 1, true, false);
             AddMod("Amidated (C-term)", null, ModTerminus.C, LabelAtoms.None, "HN - O", null, 2, true, false);
@@ -967,26 +972,28 @@ namespace pwiz.Skyline.Model.DocSettings
             AddMod("Label:2H(9)13C(6)15N(2) (K)", "K", null, LabelAtoms.None|LabelAtoms.H2, null, null, 696, false, true);
 
             // Hardcoded Skyline Mods
-            AddMod("Label:15N", null, null, LabelAtoms.N15, null, null, -1, false, false);
-            AddMod("Label:13C", null, null, LabelAtoms.C13, null, null, -1, false, false);
-            AddMod("Label:13C15N", null, null, LabelAtoms.N15 | LabelAtoms.C13, null, null, -1, false, false);
-            AddMod("Label:13C(6)15N(2) (C-term K)", "K", ModTerminus.C, LabelAtoms.C13 | LabelAtoms.N15, null, null, -1, false, false);
-            AddMod("Label:13C(6)15N(4) (C-term R)", "R", ModTerminus.C, LabelAtoms.C13 | LabelAtoms.N15, null, null, -1, false, false);
-            AddMod("Label:13C(6) (C-term KR)", "K, R", ModTerminus.C, LabelAtoms.C13, null, null, -1, false, false);
+            AddMod("Label:15N", null, null, LabelAtoms.N15, null, null, null, false, false);
+            AddMod("Label:13C", null, null, LabelAtoms.C13, null, null, null, false, false);
+            AddMod("Label:13C15N", null, null, LabelAtoms.N15 | LabelAtoms.C13, null, null, null, false, false);
+            AddMod("Label:13C(6)15N(2) (C-term K)", "K", ModTerminus.C, LabelAtoms.C13 | LabelAtoms.N15, null, null, null, false, false);
+            AddMod("Label:13C(6)15N(4) (C-term R)", "R", ModTerminus.C, LabelAtoms.C13 | LabelAtoms.N15, null, null, null, false, false);
+            AddMod("Label:13C(6) (C-term KR)", "K, R", ModTerminus.C, LabelAtoms.C13, null, null, null, false, false);
+
+            _initializing = false;
 
             SetUserDefinedMods();
 
         }
         
         private static void AddMod(string name, string aas, ModTerminus? terminus, LabelAtoms labelAtoms, string formula, FragmentLoss[] losses,
-            int id, bool structural, bool hidden)
+            int? id, bool structural, bool hidden)
         {
             var newMod =
                 new StaticMod(name, aas, terminus, false, formula, labelAtoms, RelativeRT.Matching, null, null, losses, id);
             AddMod(newMod, id, structural, hidden);
         }
 
-        private static void AddMod(StaticMod mod, int id, bool structural, bool hidden)
+        private static void AddMod(StaticMod mod, int? id, bool structural, bool hidden)
         {
             // Add to dictionary by name.
             Dictionary<string, StaticMod> dictNames;
@@ -996,13 +1003,15 @@ namespace pwiz.Skyline.Model.DocSettings
                 dictNames = hidden ? DictHiddenIsotopeModNames : DictIsotopeModNames;
             dictNames.Add(mod.Name, mod);
             
-            IEnumerable<char> aas = mod.AAs == null ? AMINO_ACIDS : mod.AminoAcids;
+            bool allAas = mod.AAs == null;
+            IEnumerable<char> aas = allAas ? AMINO_ACIDS : mod.AminoAcids;
             foreach(char aa in aas)
             {
                 // Add to dictionary by mass.
                 var massKey = new ModMassKey
                      {
                           Aa = aa, 
+                          AllAas = allAas,
                           Mass = Math.Round(CALC.GetModMass(aa, mod), 1),
                           Structural = structural,
                           Terminus = mod.Terminus
@@ -1012,13 +1021,13 @@ namespace pwiz.Skyline.Model.DocSettings
                     DictModMasses.Add(massKey, mod);
                 
                 // Add to dictionary by ID.
-                if (id == -1)
-                    return;
+                if (id == null)
+                    continue;
                 var idKey = new UniModIdKey
                 {
-                    Id = id,
+                    Id = (int) id,
                     Aa = aa,
-                    Structural = structural,
+                    AllAas = allAas,
                     Terminus = mod.Terminus
                 };
                 if (!DictUniModIds.ContainsKey(idKey))
@@ -1037,12 +1046,14 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             foreach (StaticMod mod in mods)
             {
-                IEnumerable<char> aas = mod.AAs == null ? AMINO_ACIDS : mod.AminoAcids;
+                bool allAas = mod.AAs == null;
+                IEnumerable<char> aas = allAas ? AMINO_ACIDS : mod.AminoAcids;
                 foreach (char aa in aas)
                 {
                     var massKey = new ModMassKey
                     {
                         Aa = aa,
+                        AllAas = allAas,
                         Mass = Math.Round(CALC.GetModMass(aa, mod), 1),
                         Structural = structural,
                         Terminus = mod.Terminus
@@ -1084,11 +1095,28 @@ namespace pwiz.Skyline.Model.DocSettings
             return result == DialogResult.OK;
         }
 
+        public static bool ValidateID(StaticMod mod)
+        {
+            if (_initializing || mod.UnimodId == null)
+                return true;
+            var idKey = new UniModIdKey
+            {
+                Aa = mod.AAs == null ? 'A' : mod.AminoAcids.First(),
+                AllAas = mod.AAs == null,
+                Id = (int)mod.UnimodId,
+                Terminus = mod.Terminus
+            };
+            StaticMod unimod;
+            return DictUniModIds.TryGetValue(idKey, out unimod) 
+                && Equals(mod.Name, unimod.Name) 
+                && mod.Equivalent(unimod);
+        }
+
         public struct UniModIdKey
         {
             public int Id { get; set; }
             public char Aa { get; set; }
-            public bool Structural { get; set; }
+            public bool AllAas { get; set; }
             public ModTerminus? Terminus { get; set; }
         }
 
@@ -1096,6 +1124,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             public double Mass { get; set; }
             public char Aa { get; set; }
+            public bool AllAas { get; set; }
             public bool Structural { get; set; }
             public ModTerminus? Terminus { get; set; }
         }

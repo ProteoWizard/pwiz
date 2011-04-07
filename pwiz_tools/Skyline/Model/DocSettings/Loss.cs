@@ -31,7 +31,7 @@ namespace pwiz.Skyline.Model.DocSettings
     public sealed class FragmentLoss : Immutable, IXmlSerializable
     {
         public const double MIN_LOSS_MASS = 0.0001;
-        public const double MAX_LOSS_MASS = 500;
+        public const double MAX_LOSS_MASS = 600;
 
         private string _formula;
 
@@ -45,6 +45,8 @@ namespace pwiz.Skyline.Model.DocSettings
             MonoisotopicMass = monoisotopicMass ?? 0;
             AverageMass = averageMass ?? 0;
             Formula = formula;
+
+            Validate();
         }
 
         public string Formula
