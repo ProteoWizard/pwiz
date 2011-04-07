@@ -39,26 +39,6 @@ using namespace pwiz::util;
 ostream* os_;
 
 
-void testCreation()
-{
-    MzIdentML mzid;
-    initializeTiny(mzid);
-
-    Serializer_mzIdentML ser;
-    ostringstream oss;
-    ser.write(oss, mzid);
-
-    if (os_) *os_ << oss.str() << endl;
-
-    MzIdentML mzid2;
-    boost::shared_ptr<istream> iss(new istringstream(oss.str()));
-    ser.read(iss, mzid2);
-    Diff<MzIdentML, DiffConfig> diff(mzid, mzid2);
-
-    if (os_ && diff) *os_ << diff << endl;
-    unit_assert(!diff);
-}
-
 void testDigestedPeptides()
 {
     using namespace pwiz::proteome;
@@ -259,7 +239,6 @@ int main(int argc, char** argv)
 
     try
     {
-        testCreation();
         testDigestedPeptides();
         return 0;
     }

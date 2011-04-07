@@ -22,22 +22,24 @@
 
 #define PWIZ_SOURCE
 
+#include "pwiz/utility/misc/unit.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "MzIdentML.hpp"
 #include "Serializer_mzid.hpp"
 #include "examples.hpp"
-#include "pwiz/utility/misc/Std.hpp"
-#include <cstring>
+#include "Diff.hpp"
 
 
 using namespace pwiz::mziddata;
 using namespace pwiz::mziddata::examples;
+using namespace pwiz::util;
+
 
 ostream* os_ = 0;
 
 
 void testSerialize()
 {
-    /*
     cerr << "begin testSerialize\n";
     MzIdentML mzid;
     initializeTiny(mzid);
@@ -46,9 +48,15 @@ void testSerialize()
     ostringstream oss;
     ser.write(oss, mzid);
 
-    //cout << oss.str();
-    // TODO finish adding something useful
-    */
+    if (os_) *os_ << oss.str() << endl;
+
+    MzIdentML mzid2;
+    boost::shared_ptr<istream> iss(new istringstream(oss.str()));
+    ser.read(iss, mzid2);
+    Diff<MzIdentML, DiffConfig> diff(mzid, mzid2);
+
+    if (os_ && diff) *os_ << diff << endl;
+    unit_assert(!diff);
 }
 
 void test()

@@ -71,23 +71,23 @@ namespace {
     }; \
     name##_attribute name;
 
-ATTRIBUTE_NAME(analysisSoftware_ref, "AnalysisSoftware_ref", "analysisSoftware_ref");
-ATTRIBUTE_NAME(organization_ref, "Organization_ref", "organization_ref");
-ATTRIBUTE_NAME(Role_element, "role", "Role");
-ATTRIBUTE_NAME(contact_ref, "Contact_ref", "contact_ref");
-ATTRIBUTE_NAME(spectraData_ref, "SpectraData_ref", "spectraData_ref");
-ATTRIBUTE_NAME(searchDatabase_ref, "SearchDatabase_ref", "searchDatabase_ref");
-ATTRIBUTE_NAME(dBSequence_ref, "DBSequence_Ref", "dBSequence_ref");
-ATTRIBUTE_NAME(peptideEvidence_ref, "PeptideEvidence_Ref", "peptideEvidence_ref");
-ATTRIBUTE_NAME(peptide_ref, "Peptide_ref", "peptide_ref");
-ATTRIBUTE_NAME(sample_ref, "Sample_ref", "sample_ref");
-ATTRIBUTE_NAME(measure_ref, "Measure_ref", "measure_ref");
-ATTRIBUTE_NAME(massTable_ref, "MassTable_ref", "massTable_ref");
-ATTRIBUTE_NAME(translationTable_ref, "TranslationTable_ref", "translationTable_ref");
-ATTRIBUTE_NAME(spectrumIdentificationProtocol_ref, "SpectrumIdentificationProtocol_ref", "spectrumIdentificationProtocol_ref");
-ATTRIBUTE_NAME(spectrumIdentificationList_ref, "SpectrumIdentificationList_ref", "spectrumIdentificationList_ref");
-ATTRIBUTE_NAME(proteinDetectionProtocol_ref, "ProteinDetectionProtocol_ref", "proteinDetectionProtocol_ref");
-ATTRIBUTE_NAME(proteinDetectionList_ref, "ProteinDetectionList_ref", "proteinDetectionList_ref");
+ATTRIBUTE_NAME(analysisSoftware_ref, "AnalysisSoftware_ref", "analysisSoftware_ref")
+ATTRIBUTE_NAME(organization_ref, "Organization_ref", "organization_ref")
+ATTRIBUTE_NAME(Role_element, "role", "Role")
+ATTRIBUTE_NAME(contact_ref, "Contact_ref", "contact_ref")
+ATTRIBUTE_NAME(spectraData_ref, "SpectraData_ref", "spectraData_ref")
+ATTRIBUTE_NAME(searchDatabase_ref, "SearchDatabase_ref", "searchDatabase_ref")
+ATTRIBUTE_NAME(dBSequence_ref, "DBSequence_Ref", "dBSequence_ref")
+ATTRIBUTE_NAME(peptideEvidence_ref, "PeptideEvidence_Ref", "peptideEvidence_ref")
+ATTRIBUTE_NAME(peptide_ref, "Peptide_ref", "peptide_ref")
+ATTRIBUTE_NAME(sample_ref, "Sample_ref", "sample_ref")
+ATTRIBUTE_NAME(measure_ref, "Measure_ref", "measure_ref")
+ATTRIBUTE_NAME(massTable_ref, "MassTable_ref", "massTable_ref")
+ATTRIBUTE_NAME(translationTable_ref, "TranslationTable_ref", "translationTable_ref")
+ATTRIBUTE_NAME(spectrumIdentificationProtocol_ref, "SpectrumIdentificationProtocol_ref", "spectrumIdentificationProtocol_ref")
+ATTRIBUTE_NAME(spectrumIdentificationList_ref, "SpectrumIdentificationList_ref", "spectrumIdentificationList_ref")
+ATTRIBUTE_NAME(proteinDetectionProtocol_ref, "ProteinDetectionProtocol_ref", "proteinDetectionProtocol_ref")
+ATTRIBUTE_NAME(proteinDetectionList_ref, "ProteinDetectionList_ref", "proteinDetectionList_ref")
 
 } // namespace
 

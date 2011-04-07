@@ -57,7 +57,7 @@ void testObject(const object_type& a)
     // compare 'a' and 'b'
 
     Diff<object_type, DiffConfig> diff(a,b);
-    if (diff && os_) *os_ << "diff:\n" << diff.string<TextWriter>() << endl;
+    if (diff && os_) *os_ << "diff:\n" << diff_string<TextWriter>(diff) << endl;
     unit_assert(!diff);
 }
 
