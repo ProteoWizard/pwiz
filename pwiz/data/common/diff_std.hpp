@@ -157,6 +157,27 @@ struct Diff
         return *this;
     }
 
+    template <typename textwriter_type>
+    std::string string() const
+    {
+        ostringstream os;
+        textwriter_type write(os, 1);
+
+        if (!a_b.empty())
+        {            
+            os << "+\n";
+            write(a_b);
+        }
+
+        if (!b_a.empty())
+        {            
+            os << "-\n";
+            write(b_a);
+        }
+
+        return os.str();
+    }
+
     private:
     config_type config_;
 };
