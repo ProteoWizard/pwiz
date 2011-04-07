@@ -284,7 +284,7 @@ void DelimReader::read(const string& filename,
 
             pe->dbSequencePtr = dbSeq;
                         
-            sii->peptideEvidence.push_back(pe);
+            sii->peptideEvidencePtr.push_back(pe);
         }
     }    
 }

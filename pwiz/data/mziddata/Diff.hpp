@@ -79,12 +79,18 @@ void diff(const ProteinAmbiguityGroup& a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
+void diff(const PeptideHypothesis& a,
+          const PeptideHypothesis& b,
+          PeptideHypothesis& a_b,
+          PeptideHypothesis& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
 void diff(const ProteinDetectionHypothesis& a,
           const ProteinDetectionHypothesis& b,
           ProteinDetectionHypothesis& a_b,
           ProteinDetectionHypothesis& b_a,
           const DiffConfig& config);
-
 
 PWIZ_API_DECL
 void diff(const DataCollection& a,
@@ -303,6 +309,13 @@ void diff(const Peptide& a,
           const Peptide& b,
           Peptide& a_b,
           Peptide& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
+void diff(const PeptideEvidenceList& a,
+          const PeptideEvidenceList& b,
+          PeptideEvidenceList& a_b,
+          PeptideEvidenceList& b_a,
           const DiffConfig& config);
 
 PWIZ_API_DECL

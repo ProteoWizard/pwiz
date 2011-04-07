@@ -103,7 +103,7 @@ struct PWIZ_API_DECL BibliographicReference : public Identifiable
 TYPEDEF_SHARED_PTR(BibliographicReference);
 
 
-struct PWIZ_API_DECL Contact : public IdentifiableParamContainer
+struct PWIZ_API_DECL Contact : public Identifiable
 {
     Contact(const std::string& id_ = "",
             const std::string& name_ = "");
@@ -144,7 +144,7 @@ TYPEDEF_SHARED_PTR(Organization);
 
 struct PWIZ_API_DECL Affiliations
 {
-    Affiliations(const std::string& id_ = "");
+    Affiliations(const std::string& organizationId = "");
 
     ContactPtr organizationPtr;
 
@@ -339,23 +339,13 @@ struct PWIZ_API_DECL Peptide : public IdentifiableParamContainer
 TYPEDEF_SHARED_PTR(Peptide);
 
 
-struct PWIZ_API_DECL SequenceCollection
-{
-    std::vector<DBSequencePtr> dbSequences;
-    std::vector<PeptidePtr> peptides;
-
-    bool empty() const;
-};
-
-
-struct PWIZ_API_DECL SearchModification
+struct PWIZ_API_DECL SearchModification : public ParamContainer
 {
     SearchModification();
 
     bool fixedMod;
     double massDelta;
     std::string residues;
-    CVParam unimodName;
     CVParam specificityRules;
 
     bool empty() const;
@@ -364,11 +354,11 @@ struct PWIZ_API_DECL SearchModification
 TYPEDEF_SHARED_PTR(SearchModification);
 
 
-struct PWIZ_API_DECL Enzyme
+struct PWIZ_API_DECL Enzyme : public Identifiable
 {
-    Enzyme(const std::string id = "");
+    Enzyme(const std::string& id = "",
+           const std::string& name = "");
 
-    std::string id;
     std::string nTermGain;
     std::string cTermGain;
     boost::logic::tribool semiSpecific;
@@ -543,11 +533,17 @@ struct PWIZ_API_DECL IonType : public ParamContainer
 TYPEDEF_SHARED_PTR(IonType);
 
 
+// forward declaration needed for PeptideEvidence to refer to its parent list for enzyme information
+struct PeptideEvidenceList;
+TYPEDEF_SHARED_PTR(PeptideEvidenceList);
+
+
 struct PWIZ_API_DECL PeptideEvidence : public IdentifiableParamContainer
 {
     PeptideEvidence(const std::string& id = "",
                     const std::string& name = "");
 
+    PeptideEvidenceListPtr peptideEvidenceListPtr;
     DBSequencePtr dbSequencePtr;
     int start;
     int end;
@@ -562,6 +558,28 @@ struct PWIZ_API_DECL PeptideEvidence : public IdentifiableParamContainer
 };
 
 TYPEDEF_SHARED_PTR(PeptideEvidence);
+
+
+struct PWIZ_API_DECL PeptideEvidenceList : public Identifiable
+{
+    PeptideEvidenceList(const std::string& id = "",
+                        const std::string& name = "");
+
+    std::vector<PeptideEvidencePtr> peptideEvidence;
+    std::vector<EnzymePtr> enzymePtr;
+    ParamContainer additionalParams;
+
+    bool empty() const;
+};
+
+
+struct PWIZ_API_DECL SequenceCollection
+{
+    std::vector<DBSequencePtr> dbSequences;
+    std::vector<PeptidePtr> peptides;
+    std::vector<PeptideEvidenceListPtr> peptideEvidenceList;
+    bool empty() const;
+};
 
 
 struct PWIZ_API_DECL SpectrumIdentificationItem : public IdentifiableParamContainer
@@ -579,12 +597,12 @@ struct PWIZ_API_DECL SpectrumIdentificationItem : public IdentifiableParamContai
     MassTablePtr massTablePtr;
     SamplePtr samplePtr;
 
-    std::vector<PeptideEvidencePtr> peptideEvidence;
+    std::vector<PeptideEvidencePtr> peptideEvidencePtr;
     std::vector<IonTypePtr> fragmentation;
 
     bool empty() const;
 
-    /// given a protocol and a PeptideEvidence instance, returns the PeptidEvidence as a DigestedPeptide instance
+    /// given a protocol and a PeptideEvidence instance, returns the PeptideEvidence as a DigestedPeptide instance
     proteome::DigestedPeptide digestedPeptide(const SpectrumIdentificationProtocol& sip, const PeptideEvidence& peptideEvidence) const;
 
     /// given a protocol, builds a set of DigestedPeptides for a SpectrumIdentificationItem
@@ -674,6 +692,15 @@ struct PWIZ_API_DECL ProteinDetectionProtocol : public Identifiable
 TYPEDEF_SHARED_PTR(ProteinDetectionProtocol);
 
 
+struct PWIZ_API_DECL PeptideHypothesis
+{
+    PeptideEvidencePtr peptideEvidencePtr;
+    std::vector<SpectrumIdentificationItemPtr> spectrumIdentificationItemPtr;
+
+    bool empty() const;
+};
+
+
 struct PWIZ_API_DECL ProteinDetectionHypothesis : public IdentifiableParamContainer
 {
     ProteinDetectionHypothesis(const std::string& id_ = "",
@@ -681,11 +708,7 @@ struct PWIZ_API_DECL ProteinDetectionHypothesis : public IdentifiableParamContai
 
     DBSequencePtr dbSequencePtr;
     bool passThreshold;
-
-    // written out in the PeptideEvidence_Ref attribute of the
-    // PeptideHypothesis tag
-
-    std::vector<PeptideEvidencePtr> peptideHypothesis;
+    std::vector<PeptideHypothesis> peptideHypothesis;
 
     bool empty() const;
 };

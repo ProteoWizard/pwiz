@@ -23,6 +23,7 @@
 
 #include "IO.hpp"
 #include "Diff.hpp"
+#include "TextWriter.hpp"
 #include "examples.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/utility/misc/Std.hpp"
@@ -56,7 +57,7 @@ void testObject(const object_type& a)
     // compare 'a' and 'b'
 
     Diff<object_type, DiffConfig> diff(a,b);
-    if (diff && os_) *os_ << "diff:\n" << diff << endl;
+    if (diff && os_) *os_ << "diff:\n" << diff.string<TextWriter>() << endl;
     unit_assert(!diff);
 }
 
@@ -312,14 +313,29 @@ void testPeptide()
 }
 
 
+void testPeptideEvidenceList()
+{
+    PeptideEvidenceList a;
+    a.id = "id";
+    a.name = "name";
+    a.peptideEvidence.push_back(PeptideEvidencePtr(new PeptideEvidence("pe1")));
+    a.peptideEvidence.push_back(PeptideEvidencePtr(new PeptideEvidence("pe2")));
+    a.enzymePtr.push_back(EnzymePtr(new Enzyme("ez1")));
+    a.enzymePtr.push_back(EnzymePtr(new Enzyme("ez2")));
+    a.additionalParams.set(MS_peptide);
+
+    testObject(a);
+}
+
+
 void testSequenceCollection()
 {
     SequenceCollection a;
 
-    a.dbSequences.push_back(DBSequencePtr(new DBSequence()));
-    a.dbSequences.back()->id = "db_id";
-    a.peptides.push_back(PeptidePtr(new Peptide()));
-    a.peptides.back()->id = "pep_id";
+    a.dbSequences.push_back(DBSequencePtr(new DBSequence("db_id")));
+    a.peptides.push_back(PeptidePtr(new Peptide("pep_id")));
+    a.peptideEvidenceList.push_back(PeptideEvidenceListPtr(new PeptideEvidenceList("pel_id")));
+    a.peptideEvidenceList.back()->peptideEvidence.push_back(PeptideEvidencePtr(new PeptideEvidence("pe1")));
     
     testObject(a);
 }
@@ -382,7 +398,7 @@ void testSearchModification()
     a.fixedMod = true;
     a.massDelta = 3.14;
     a.residues = "Q";
-    a.unimodName.cvid = UNIMOD_Gln__pyro_Glu;
+    a.set(UNIMOD_Gln__pyro_Glu);
     a.specificityRules.cvid = MS_modification_specificity_N_term;
 
     testObject(a);
@@ -685,11 +701,7 @@ void testSpectrumIdentificationItem()
     a.passThreshold = true;
     a.massTablePtr = MassTablePtr(new MassTable("mt_ref"));
     a.samplePtr = SamplePtr(new Sample("s_ref"));
-
-
-    PeptideEvidencePtr b(new PeptideEvidence());
-    b->dbSequencePtr = DBSequencePtr(new DBSequence("db_ref"));
-    a.peptideEvidence.push_back(b);
+    a.peptideEvidencePtr.push_back(PeptideEvidencePtr(new PeptideEvidence("pe_ref")));
 
     IonTypePtr c(new IonType());
     c->charge = 5;
@@ -720,6 +732,18 @@ void testSpectrumIdentificationResult()
 }
 
 
+PeptideHypothesis testPeptideHypothesis()
+{
+    PeptideHypothesis a;
+
+    a.peptideEvidencePtr.reset(new PeptideEvidence("pe1"));
+    a.spectrumIdentificationItemPtr.push_back(SpectrumIdentificationItemPtr(new SpectrumIdentificationItem("sii1")));
+
+    testObject(a);
+    return a;
+}
+
+
 void testProteinDetectionHypothesis()
 {
     ProteinDetectionHypothesis a;
@@ -727,8 +751,7 @@ void testProteinDetectionHypothesis()
     a.id = "id";
     a.dbSequencePtr = DBSequencePtr(new DBSequence("dbs_ref"));
     a.passThreshold = "pt";
-
-    a.peptideHypothesis.push_back(PeptideEvidencePtr(new PeptideEvidence("test")));
+    a.peptideHypothesis.push_back(testPeptideHypothesis());
     a.set(MS_Mascot_score, "164.4");
 
     testObject(a);
@@ -827,32 +850,6 @@ void testMzIdentML()
 
     testObject(a);
 
-    // test ignoring sequence collection
-    {
-        // write 'a' out to a stream
-
-        ostringstream oss;
-        XMLWriter writer(oss);
-        IO::write(writer, a);
-        if (os_) *os_ << oss.str() << endl;
-
-        // read 'b' in from stream
-
-        MzIdentML b; 
-        istringstream iss(oss.str());
-        IO::read(iss, b, 0, IO::IgnoreSequenceCollection);
-
-        // clear the original SequenceCollection
-        a.sequenceCollection.dbSequences.clear();
-        a.sequenceCollection.peptides.clear();
-
-        // compare 'a' and 'b'
-
-        Diff<MzIdentML, DiffConfig> diff(a,b);
-        if (diff && os_) *os_ << "diff:\n" << diff << endl;
-        unit_assert(!diff);
-    }
-
     // test ignoring sequence collection and analysis data
     {
         // write 'a' out to a stream
@@ -868,7 +865,15 @@ void testMzIdentML()
         istringstream iss(oss.str());
         IO::read(iss, b, 0, IO::IgnoreSequenceCollection, IO::IgnoreAnalysisData);
 
+        // clear the original SequenceCollection
+        a.sequenceCollection.dbSequences.clear();
+        a.sequenceCollection.peptides.clear();
+        a.sequenceCollection.peptideEvidenceList.clear();
+
         // clear the original analysis data
+        BOOST_FOREACH(SpectrumIdentificationPtr& si, a.analysisCollection.spectrumIdentification)
+            si->spectrumIdentificationListPtr.reset();
+        a.analysisCollection.proteinDetection = b.analysisCollection.proteinDetection = ProteinDetection();
         a.dataCollection.analysisData.spectrumIdentificationList.clear();
         a.dataCollection.analysisData.proteinDetectionListPtr.reset();
 
@@ -898,6 +903,7 @@ void test()
     testModification();
     testSubstitutionModification();
     testPeptide();
+    testPeptideEvidenceList();
     testSequenceCollection();
     testSpectrumIdentification();
     testProteinDetection();

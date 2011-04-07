@@ -21,6 +21,7 @@
 //
 
 #include "Diff.hpp"
+#include "TextWriter.hpp"
 #include "examples.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/utility/misc/Std.hpp"
@@ -48,14 +49,14 @@ void testIdentifiable()
     b = a;
 
     Diff<Identifiable, DiffConfig> diff(a, b);
-    if (diff && os_) *os_ << diff << endl;
+    if (diff && os_) *os_ << diff.string<TextWriter>() << endl;
     unit_assert(!diff);
 
     b.id="b";
     b.name="b_name";
 
     diff(a, b);
-    if (os_) *os_ << diff << endl;
+    if (os_) *os_ << diff.string<TextWriter>() << endl;
     unit_assert(diff);
 }
 
@@ -71,7 +72,7 @@ void testFragmentArray()
 
     Diff<FragmentArray, DiffConfig> diff(a, b);
     unit_assert(!diff);
-    if (os_) *os_ << diff << endl;
+    if (os_) *os_ << diff.string<TextWriter>() << endl;
 
     a.values.push_back(2.1);
     b.values.push_back(2.0);
@@ -89,7 +90,7 @@ void testFragmentArray()
     unit_assert(diff.b_a.measurePtr.get());
     unit_assert(diff.b_a.measurePtr->id == "fer_erusaeM");
 
-    if (os_) *os_ << diff << endl;
+    if (os_) *os_ << diff.string<TextWriter>() << endl;
 }
 
 void testIonType()
@@ -106,7 +107,7 @@ void testIonType()
 
     Diff<IonType, DiffConfig> diff(a, b);
     unit_assert(!diff);
-    if (os_ && diff) *os_ << diff << endl;
+    if (os_ && diff) *os_ << diff.string<TextWriter>() << endl;
 
     b.index.back() = 2;
     b.charge = 2;
@@ -117,7 +118,7 @@ void testIonType()
 
     // a diff was found
     unit_assert(diff);
-    if (os_) *os_ << diff << endl;
+    if (os_) *os_ << diff.string<TextWriter>() << endl;
 
     // and correctly
     unit_assert(diff.a_b.index.size() == 1);
@@ -145,14 +146,14 @@ void testMaterial()
     b = a;
 
     Diff<Material, DiffConfig> diff(a, b);
-    if (os_) *os_ << diff << endl;
+    if (os_) *os_ << diff.string<TextWriter>() << endl;
     unit_assert(!diff);
 
     b.contactRole.contactPtr = ContactPtr(new Person("fer_rehto"));
     b.set(MS_sample_name);
 
     diff(a, b);
-    if (os_) *os_ << diff << endl;
+    if (os_) *os_ << diff.string<TextWriter>() << endl;
 
     // a diff was found
     unit_assert(diff);
@@ -183,7 +184,7 @@ void testMeasure()
     b.set(MS_product_ion_intensity, 1);
 
     diff(a, b);
-    if (os_) *os_ << diff << endl;
+    if (os_) *os_ << diff.string<TextWriter>() << endl;
 
     // diff was found
     unit_assert(diff);
@@ -202,7 +203,7 @@ void testSearchModification()
 
     a.massDelta = 1;
     a.residues = "ABCD";
-    a.unimodName.cvid = UNIMOD_Gln__pyro_Glu;
+    a.set(UNIMOD_Gln__pyro_Glu);
     b = a;
 
     Diff<SearchModification, DiffConfig> diff(a, b);
@@ -210,10 +211,11 @@ void testSearchModification()
 
     b.massDelta = 10;
     b.residues = "EFG";
-    b.unimodName.cvid = UNIMOD_Glu__pyro_Glu;
+    b.cvParams.clear();
+    b.set(UNIMOD_Oxidation);
 
     diff(a, b);
-    if (os_) *os_ << diff << endl;
+    if (os_) *os_ << diff.string<TextWriter>() << endl;
 
     // diff was found
     unit_assert(diff);
@@ -223,10 +225,10 @@ void testSearchModification()
     unit_assert_equal(diff.b_a.massDelta, 9, epsilon);
     unit_assert(diff.a_b.residues == "ABCD");
     unit_assert(diff.b_a.residues == "EFG");
-    unit_assert(!diff.a_b.unimodName.empty());
-    unit_assert(diff.a_b.unimodName.cvid == UNIMOD_Gln__pyro_Glu);
-    unit_assert(!diff.b_a.unimodName.empty());
-    unit_assert(diff.b_a.unimodName.cvid == UNIMOD_Glu__pyro_Glu);
+    unit_assert(!diff.a_b.cvParams.empty());
+    unit_assert(diff.a_b.cvParams[0].cvid == UNIMOD_Gln__pyro_Glu);
+    unit_assert(!diff.b_a.cvParams.empty());
+    unit_assert(diff.b_a.cvParams[0].cvid == UNIMOD_Oxidation);
 }
 
 
@@ -237,7 +239,7 @@ void testPeptideEvidence()
     PeptideEvidence a, b;
 
     Diff<PeptideEvidence, DiffConfig> diff(a, b);
-    if (os_) *os_ << diff << endl;
+    if (os_) *os_ << diff.string<TextWriter>() << endl;
     unit_assert(!diff);
 
     a.dbSequencePtr = DBSequencePtr(new DBSequence("DBSequence_ref"));
@@ -267,7 +269,7 @@ void testPeptideEvidence()
     b.set(MS_Mascot_expectation_value, 0.0268534444565851);
 
     diff(a, b);
-    if (os_) *os_ << diff << endl;
+    if (os_) *os_ << diff.string<TextWriter>() << endl;
 
     // a diff was found
     unit_assert(diff);
@@ -320,7 +322,7 @@ void testProteinAmbiguityGroup()
     b.set(MS_Mascot_expectation_value, 0.0268534444565851);
 
     diff(a, b);
-    if (os_) *os_ << diff << endl;
+    if (os_) *os_ << diff.string<TextWriter>() << endl;
 
     // a diff was found
     unit_assert(diff);
@@ -336,6 +338,37 @@ void testProteinAmbiguityGroup()
 }
 
 
+void testPeptideHypothesis()
+{
+    if (os_) *os_ << "testPeptideHypothesis()\n";
+
+    PeptideHypothesis a, b;
+    Diff<PeptideHypothesis, DiffConfig> diff(a,b);
+    unit_assert(!diff);
+
+    a.peptideEvidencePtr = PeptideEvidencePtr(new PeptideEvidence("pe_a"));
+    a.spectrumIdentificationItemPtr.push_back(SpectrumIdentificationItemPtr(new SpectrumIdentificationItem("sii_a")));
+    b.peptideEvidencePtr = PeptideEvidencePtr(new PeptideEvidence("pe_b"));
+    b.spectrumIdentificationItemPtr.push_back(SpectrumIdentificationItemPtr(new SpectrumIdentificationItem("sii_b")));
+
+    diff(a,b);
+    if (os_) *os_ << diff.string<TextWriter>() << endl;
+    
+    // a diff was found
+    unit_assert(diff);
+
+    // and correctly
+    unit_assert(diff.a_b.peptideEvidencePtr.get());
+    unit_assert(diff.a_b.peptideEvidencePtr->id =="pe_a");
+    unit_assert(diff.b_a.peptideEvidencePtr.get());
+    unit_assert(diff.b_a.peptideEvidencePtr->id == "pe_b");
+    unit_assert(diff.a_b.spectrumIdentificationItemPtr.size() == 1);
+    unit_assert(diff.a_b.spectrumIdentificationItemPtr.back()->id =="sii_a");
+    unit_assert(diff.b_a.spectrumIdentificationItemPtr.size() == 1);
+    unit_assert(diff.b_a.spectrumIdentificationItemPtr.back()->id == "sii_b");
+}
+
+
 void testProteinDetectionHypothesis()
 {
     if (os_) *os_ << "testProteinDetectionHypothesis()\n";
@@ -348,12 +381,18 @@ void testProteinDetectionHypothesis()
     b.dbSequencePtr = DBSequencePtr(new DBSequence("fer_ecneuqeSBD"));
     a.passThreshold = true;
     b.passThreshold = false;
-    a.peptideHypothesis.push_back(PeptideEvidencePtr(new PeptideEvidence("marjoram")));
-    b.peptideHypothesis.push_back(PeptideEvidencePtr(new PeptideEvidence("thyme")));
+    a.peptideHypothesis.push_back(PeptideHypothesis());
+    b.peptideHypothesis.push_back(PeptideHypothesis());
+    
+    a.peptideHypothesis.back().peptideEvidencePtr = PeptideEvidencePtr(new PeptideEvidence("pe_a"));
+    a.peptideHypothesis.back().spectrumIdentificationItemPtr.push_back(SpectrumIdentificationItemPtr(new SpectrumIdentificationItem("sii_a")));
+    b.peptideHypothesis.back().peptideEvidencePtr = PeptideEvidencePtr(new PeptideEvidence("pe_b"));
+    b.peptideHypothesis.back().spectrumIdentificationItemPtr.push_back(SpectrumIdentificationItemPtr(new SpectrumIdentificationItem("sii_b")));
+
     a.set(MS_Mascot_expectation_value);
 
     diff(a,b);
-    if (os_) *os_ << diff << endl;
+    if (os_) *os_ << diff.string<TextWriter>() << endl;
 
     // a diff was found
     unit_assert(diff);
@@ -367,8 +406,12 @@ void testProteinDetectionHypothesis()
     unit_assert(diff.b_a.passThreshold == false);
     unit_assert(diff.a_b.peptideHypothesis.size() == 1);
     unit_assert(diff.b_a.peptideHypothesis.size() == 1);
-    unit_assert(diff.a_b.peptideHypothesis.back()->id == "marjoram");
-    unit_assert(diff.b_a.peptideHypothesis.back()->id ==  "thyme");
+    unit_assert(diff.a_b.peptideHypothesis.back().peptideEvidencePtr->id == "pe_a");
+    unit_assert(diff.b_a.peptideHypothesis.back().peptideEvidencePtr->id ==  "pe_b");
+    unit_assert(diff.a_b.peptideHypothesis.back().spectrumIdentificationItemPtr.size() == 1);
+    unit_assert(diff.a_b.peptideHypothesis.back().spectrumIdentificationItemPtr.back()->id =="sii_a");
+    unit_assert(diff.b_a.peptideHypothesis.back().spectrumIdentificationItemPtr.size() == 1);
+    unit_assert(diff.b_a.peptideHypothesis.back().spectrumIdentificationItemPtr.back()->id == "sii_b");
     unit_assert(diff.a_b.cvParams.size() == 1);
     unit_assert(diff.b_a.cvParams.size() == 0);
     unit_assert(diff.a_b.hasCVParam(MS_Mascot_expectation_value));
@@ -395,7 +438,7 @@ void testSpectrumIdentificationList()
     a.spectrumIdentificationResult.push_back(testSIRPtr);
 
     diff(a,b);
-    if (os_) *os_ << diff << endl;
+    if (os_) *os_ << diff.string<TextWriter>() << endl;
 
     // a diff was found
     unit_assert(diff);
@@ -427,7 +470,7 @@ void testProteinDetectionList()
     b.set(MS_frag__b_ion);
 
     diff(a,b);
-    if (os_) *os_ << diff << endl;
+    if (os_) *os_ << diff.string<TextWriter>() << endl;
 
     // a diff was found
     unit_assert(diff);
@@ -461,7 +504,7 @@ void testAnalysisData()
     b.proteinDetectionListPtr = ProteinDetectionListPtr(new ProteinDetectionList("sage"));
 
     diff(a,b);
-    if (os_) *os_ << diff << endl;
+    if (os_) *os_ << diff.string<TextWriter>() << endl;
 
     // a diff was found
     unit_assert(diff);
@@ -503,7 +546,7 @@ void testSearchDatabase()
     a.DatabaseName.set(MS_frag__z_ion);
 
     diff(a,b);
-    if (os_) *os_ << diff << endl;
+    if (os_) *os_ << diff.string<TextWriter>() << endl;
 
     // a diff was found
     unit_assert(diff);
@@ -542,7 +585,7 @@ void testSpectraData()
     a.fileFormat.cvid = MS_frag__b_ion;
 
     diff(a,b);
-    if (os_) *os_ << diff << endl;
+    if (os_) *os_ << diff.string<TextWriter>() << endl;
 
     // a diff was found
     unit_assert(diff);
@@ -578,7 +621,7 @@ void testSourceFile()
     b.set(MS_sample_name);
 
     diff(a,b);
-    if (os_) *os_ << diff << endl;
+    if (os_) *os_ << diff.string<TextWriter>() << endl;
 
     // a diff was found
     unit_assert(diff);
@@ -620,7 +663,7 @@ void testInputs()
     a.spectraData.back()->location = "Cloud 9";
 
     diff(a,b);
-    if (os_) *os_ << diff << endl;
+    if (os_) *os_ << diff.string<TextWriter>() << endl;
 
     // a diff was found
     unit_assert(diff);
@@ -645,7 +688,7 @@ void testEnzyme()
 
     Enzyme a,b;
     Diff<Enzyme, DiffConfig> diff(a,b);
-    if (diff && os_) *os_ << diff << endl;
+    if (diff && os_) *os_ << diff.string<TextWriter>() << endl;
     unit_assert(!diff);
 
     a.id = "Donald Trump";
@@ -665,7 +708,7 @@ void testEnzyme()
     a.enzymeName.set(MS_Trypsin);
 
     diff(a,b);
-    if (os_) *os_ << diff << endl;
+    if (os_) *os_ << diff.string<TextWriter>() << endl;
 
     // a diff was found
     unit_assert(diff);
@@ -698,7 +741,7 @@ void testEnzymes()
 
     Enzymes a, b;
     Diff<Enzymes, DiffConfig> diff(a, b);
-    if (diff && os_) *os_ << diff << endl;
+    if (diff && os_) *os_ << diff.string<TextWriter>() << endl;
 
     a.independent = "indep";
     b.enzymes.push_back(EnzymePtr(new Enzyme()));
@@ -762,7 +805,7 @@ void testResidue()
     b.Mass = 2.0;
 
     diff(a, b);
-    if (os_) *os_ << diff << endl;
+    if (os_) *os_ << diff.string<TextWriter>() << endl;
 
     unit_assert(diff);
 
@@ -791,7 +834,7 @@ void testAmbiguousResidue()
     b.set(MS_ambiguous_residues);
 
     diff(a, b);
-    if (os_) *os_ << diff << endl;
+    if (os_) *os_ << diff.string<TextWriter>() << endl;
 
     unit_assert(diff);
 
@@ -826,7 +869,7 @@ void testFilter()
     b.exclude.set(MS_DB_MW_filter);
 
     diff(a, b);
-    if (os_) *os_ << diff << endl;
+    if (os_) *os_ << diff.string<TextWriter>() << endl;
 
     unit_assert(diff);
 
@@ -883,7 +926,7 @@ void testContact()
     b.name = "b_name";
 
     diff(a, b);
-    if (os_) *os_ << diff << endl;
+    if (os_) *os_ << diff.string<TextWriter>() << endl;
 
     unit_assert(diff);
 
@@ -894,7 +937,7 @@ void testContact()
     b.tollFreePhone = "b_tollFreePhone";
 
     diff(a, b);
-    if (os_) *os_ << diff << endl;
+    if (os_) *os_ << diff.string<TextWriter>() << endl;
 
     unit_assert(diff);
 
@@ -912,13 +955,13 @@ void testAffiliations()
     b = a;
 
     Diff<Affiliations, DiffConfig> diff(a, b);
-    if (os_) *os_ << diff << endl;
+    if (os_) *os_ << diff.string<TextWriter>() << endl;
     unit_assert(!diff);
 
     b.organizationPtr = OrganizationPtr(new Organization("id2"));
 
     diff(a, b);
-    if (os_) *os_ << diff << endl;
+    if (os_) *os_ << diff.string<TextWriter>() << endl;
 
     unit_assert(diff);
 }
@@ -1071,14 +1114,14 @@ void testContactRole()
     b = a;
 
     Diff<ContactRole, DiffConfig> diff(a, b);
-    if (os_) *os_ << diff << endl;
+    if (os_) *os_ << diff.string<TextWriter>() << endl;
     unit_assert(!diff);
 
     b.contactPtr = ContactPtr(new Organization("cid2", "cname2"));
 
     diff(a, b);
 
-    if (os_) *os_ << diff << endl;
+    if (os_) *os_ << diff.string<TextWriter>() << endl;
     unit_assert(diff);
 
     unit_assert(diff.b_a.contactPtr.get());
@@ -1129,7 +1172,7 @@ void testDataCollection()
     b.analysisData.spectrumIdentificationList.push_back(SpectrumIdentificationListPtr(new SpectrumIdentificationList()));
 
     diff(a, b);
-    if (os_) *os_ << diff << endl;
+    if (os_) *os_ << diff.string<TextWriter>() << endl;
 
 }
 
@@ -1158,7 +1201,7 @@ void testMzIdentML()
     // b.bibliographicReference
 
     diff(a, b);
-    if (os_) *os_ << diff << endl;
+    if (os_) *os_ << diff.string<TextWriter>() << endl;
 
     unit_assert(diff);
 

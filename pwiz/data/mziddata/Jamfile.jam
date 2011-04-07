@@ -96,7 +96,7 @@ lib pwiz_data_mzid
         IO.cpp
         Serializer_mzid.cpp
         Serializer_pepXML.cpp
-        Pep2MzIdent.cpp
+        #Pep2MzIdent.cpp
         DelimWriter.cpp
         DelimReader.cpp
         References.cpp

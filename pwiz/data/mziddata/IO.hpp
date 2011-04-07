@@ -21,7 +21,7 @@
 //
 
 #ifndef _MZIDDATA_IO_HPP_
-#define  _MZIDDATA_IO_HPP_
+#define _MZIDDATA_IO_HPP_
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "MzIdentML.hpp"
@@ -32,7 +32,10 @@
 namespace pwiz {
 namespace mziddata {
 
+enum SchemaVersion { SchemaVersion_1_1 = 0, SchemaVersion_1_0 }; // 0 is the default
+
 namespace IO {
+
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const CV& cv);
 PWIZ_API_DECL void read(std::istream& is, CV& cv);
@@ -177,6 +180,10 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
 PWIZ_API_DECL void read(std::istream& is, SpectrumIdentificationItem& sir);
 
 
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const PeptideHypothesis& ph);
+PWIZ_API_DECL void read(std::istream& is, PeptideHypothesis& ph);
+
+
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinDetectionHypothesis& pdh);
 PWIZ_API_DECL void read(std::istream& is, ProteinDetectionHypothesis& pdh);
 
@@ -229,6 +236,12 @@ PWIZ_API_DECL void read(std::istream& is, DBSequence& dbSequence);
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Peptide& peptide);
 PWIZ_API_DECL void read(std::istream& is, Peptide& peptide);
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const PeptideEvidenceList& pel,
+                         const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0);
+PWIZ_API_DECL void read(std::istream& is, PeptideEvidenceList& pel,
+                        const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0);
 
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const PeptideEvidence& pe);

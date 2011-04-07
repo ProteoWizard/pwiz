@@ -45,12 +45,19 @@ void stripUnmappedMetadata(MzIdentML& mzid)
     mzid.provider = Provider();
     mzid.dataCollection.inputs.sourceFile.clear();
 
-    // TODO: add serialization of the analysis_summary element
-    mzid.analysisSoftwareList[0]->version.clear();
-    mzid.analysisCollection.spectrumIdentification[0]->activityDate.clear();
+    BOOST_FOREACH(AnalysisSoftwarePtr& as, mzid.analysisSoftwareList)
+    {
+        as->URI.clear();
+        as->customizations.clear();
+        as->contactRolePtr.reset();
+    }
 
     // HACK: fix the enzyme mapping!
     mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0]->enzymes.enzymes[0]->enzymeName.clear();
+    mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0]->massTable = MassTable();
+    mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0]->threshold.clear();
+    mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0]->databaseFilters.clear();
+    mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0]->databaseTranslation.reset();
 
     // pepXML doesn't map these attributes
     mzid.analysisCollection.spectrumIdentification[0]->searchDatabase[0]->name.clear();
@@ -78,23 +85,35 @@ void stripUnmappedMetadata(MzIdentML& mzid)
     BOOST_FOREACH(ModificationPtr& mod, peptide->modification)
         mod->monoisotopicMassDelta = mod->avgMassDelta = max(mod->monoisotopicMassDelta, mod->avgMassDelta);
 
+    // pepXML doesn't support fragment metadata
+    mzid.dataCollection.analysisData.spectrumIdentificationList[0]->fragmentationTable.clear();
+
     BOOST_FOREACH(SpectrumIdentificationResultPtr& sir, mzid.dataCollection.analysisData.spectrumIdentificationList[0]->spectrumIdentificationResult)
     BOOST_FOREACH(SpectrumIdentificationItemPtr& sii, sir->spectrumIdentificationItem)
-    for (size_t i=0; i < sii->peptideEvidence.size(); ++i)
     {
-        PeptideEvidence& pe = *sii->peptideEvidence[i];
+        // pepXML doesn't support fragment metadata
+        sii->fragmentation.clear();
 
-        // pepXML does not store peptide start and end offsets
-        pe.start = pe.end = 0;
-
-        // pepXML's alternative_proteins do not store prev/next AA or missed cleavages
-        if (i > 0)
+        for (size_t i=0; i < sii->peptideEvidencePtr.size(); ++i)
         {
-            pe.pre.clear();
-            pe.post.clear();
-            pe.missedCleavages = 0;
+            PeptideEvidence& pe = *sii->peptideEvidencePtr[i];
+
+            // pepXML does not store peptide start and end offsets
+            pe.start = pe.end = 0;
+
+            // pepXML's alternative_proteins do not store prev/next AA or missed cleavages
+            if (i > 0)
+            {
+                pe.pre.clear();
+                pe.post.clear();
+                pe.missedCleavages = 0;
+            }
         }
     }
+
+    // pepXML doesn't have protein assembly
+    mzid.analysisCollection.proteinDetection = ProteinDetection();
+    mzid.dataCollection.analysisData.proteinDetectionListPtr.reset();
 }
 
 void testTranslation(const string& str)
@@ -150,6 +169,8 @@ void testSerialize()
         // clear the original SequenceCollection
         mzid.sequenceCollection.dbSequences.clear();
         mzid.sequenceCollection.peptides.clear();
+        BOOST_FOREACH(PeptideEvidenceListPtr& pel, mzid.sequenceCollection.peptideEvidenceList)
+            pel->peptideEvidence.clear();
 
         // clear the original analysis data
         mzid.analysisCollection.spectrumIdentification[0]->spectrumIdentificationListPtr.reset();

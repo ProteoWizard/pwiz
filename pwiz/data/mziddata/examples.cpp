@@ -133,21 +133,55 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
     mzid.creationDate = "2009-06-23T11:04:10";
     mzid.cvs = defaultCVList();
 
-    AnalysisSoftwarePtr as;/* = AnalysisSoftwarePtr(new AnalysisSoftware);
-    as->id = "AS ProteoWizard " + Version::str();
-    as->name = "ProteoWizard MzIdentML";
+    AnalysisSoftwarePtr as(new AnalysisSoftware);
+    as->id = "AS_ProteoWizard_" + Version::str();
+    as->name = "ProteoWizard";
     as->softwareName.set(MS_pwiz);
     as->version = Version::str();
-    mzid.analysisSoftwareList.push_back(as);*/
-
-    as = AnalysisSoftwarePtr(new AnalysisSoftware);
-    as->id = "AS_Mascot";
-    as->name = "Mascot";
-    as->version = "2.2.101";
-    as->softwareName.set(MS_Mascot);
     mzid.analysisSoftwareList.push_back(as);
 
-    SearchDatabasePtr sdb = SearchDatabasePtr(new SearchDatabase);
+    OrganizationPtr pwizOrg(new Organization("ORG_PWIZ", "ProteoWizard"));
+    pwizOrg->email = "support@proteowizard.org";
+    mzid.auditCollection.push_back(pwizOrg);
+
+    as->contactRolePtr.reset(new ContactRole);
+    as->contactRolePtr->cvid = MS_software_vendor;
+    as->contactRolePtr->contactPtr = pwizOrg;
+
+    as.reset(new AnalysisSoftware("AS_Mascot_2.2.101", "Mascot"));
+    as->version = "2.2.101";
+    as->softwareName.set(MS_Mascot);
+    as->URI = "http://www.matrixscience.com/search_form_select.html";
+    mzid.analysisSoftwareList.push_back(as);
+
+    OrganizationPtr mslOrg(new Organization("ORG_MSL", "Matrix Science Limited"));
+    mslOrg->address = "64 Baker Street, London W1U 7GB, UK";
+    mslOrg->email = "support@matrixscience.com";
+    mslOrg->fax = "+44 (0)20 7224 1344";
+    mslOrg->phone = "+44 (0)20 7486 1050";
+    mzid.auditCollection.push_back(mslOrg);
+
+    as->contactRolePtr.reset(new ContactRole);
+    as->contactRolePtr->cvid = MS_software_vendor;
+    as->contactRolePtr->contactPtr = mslOrg;
+
+    OrganizationPtr ownerOrg(new Organization("ORG_DOC_OWNER", "Some Lab Owner"));
+    mzid.auditCollection.push_back(ownerOrg);
+
+    PersonPtr owner = PersonPtr(new Person("PERSON_DOC_OWNER"));
+    owner->firstName = "Some";
+    owner->lastName = "Person";
+    owner->email = "somebody@somewhere.com";
+    Affiliations aff;
+    aff.organizationPtr = ownerOrg;
+    owner->affiliations.push_back(aff);
+    mzid.auditCollection.push_back(owner);
+
+    mzid.provider.id = "PROVIDER";
+    mzid.provider.contactRole.contactPtr = owner;
+    mzid.provider.contactRole.cvid = MS_researcher;
+
+    SearchDatabasePtr sdb(new SearchDatabase);
     sdb->id = "SDB_SwissProt";
     sdb->name = "SwissProt";
     sdb->version = "SwissProt_51.6.fasta";
@@ -159,7 +193,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
     sdb->set(MS_database_type_amino_acid);
     mzid.dataCollection.inputs.searchDatabase.push_back(sdb);
 
-    DBSequencePtr dbSequence = DBSequencePtr(new DBSequence);
+    DBSequencePtr dbSequence(new DBSequence);
     dbSequence->accession = HSP71_RAT.accession;
     dbSequence->seq = HSP71_RAT.sequence;
     dbSequence->id = "DBSeq_"  + dbSequence->accession;
@@ -167,7 +201,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
     dbSequence->searchDatabasePtr = sdb;
     mzid.sequenceCollection.dbSequences.push_back(dbSequence);
 
-    dbSequence = DBSequencePtr(new DBSequence);
+    dbSequence.reset(new DBSequence);
     dbSequence->accession = HSP71_HUMAN.accession;
     dbSequence->seq = HSP71_HUMAN.sequence;
     dbSequence->id = "DBSeq_"  + dbSequence->accession;
@@ -276,6 +310,10 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
 
     mzid.analysisProtocolCollection.spectrumIdentificationProtocol.push_back(sip);
 
+    PeptideEvidenceListPtr pel(new PeptideEvidenceList);
+    pel->enzymePtr.push_back(enzyme);
+    mzid.sequenceCollection.peptideEvidenceList.push_back(pel);
+
     SpectraDataPtr sd(new SpectraData);
     sd->id = "SD";
     sd->name = "tiny";
@@ -286,7 +324,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
 
     // Fill in mzid.dataCollection.inputs;
     // Add SourceFilePtr
-    /*SourceFilePtr sourceFile(new SourceFile());
+    /*SourceFilePtr sourceFile(new SourceFile);
     sourceFile->id = "SF_1";
     sourceFile->location = "file:///../data/Mascot_mzml_example.dat";
     sourceFile->fileFormat.set(MS_Mascot_DAT_file);
@@ -303,6 +341,50 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
     si->inputSpectra.push_back(sd);
     si->searchDatabase.push_back(sdb);
     mzid.analysisCollection.spectrumIdentification.push_back(si);
+
+    sip->massTable.id = "MT";
+    sip->massTable.msLevel = "1 2";
+
+    ResiduePtr rp(new Residue);
+    rp->Code = "A"; rp->Mass = 71.037114;
+    sip->massTable.residues.push_back(rp);
+
+    AmbiguousResiduePtr arp(new AmbiguousResidue);
+    arp->Code = "B";
+    arp->set(MS_alternate_single_letter_codes);
+    sip->massTable.ambiguousResidue.push_back(arp);
+
+    sip->threshold.set(MS_Mascot_SigThreshold, "0.05");
+    
+    FilterPtr fp(new Filter);
+    fp->filterType.set(MS_DB_filter_taxonomy);
+    sip->databaseFilters.push_back(fp);
+
+    // Fill in mzid.analysisData
+    MeasurePtr measure(new Measure);
+    measure->id = "m_mz";
+    measure->set(MS_product_ion_m_z);
+    sil->fragmentationTable.push_back(measure);
+
+    measure = MeasurePtr(new Measure);
+    measure->id = "m_intensity";
+    measure->set(MS_product_ion_intensity);
+    sil->fragmentationTable.push_back(measure);
+
+    measure = MeasurePtr(new Measure);
+    measure->id = "m_error";
+    measure->set(MS_product_ion_m_z_error, "", MS_m_z);
+    sil->fragmentationTable.push_back(measure);
+
+    /*IonTypePtr ionType(new IonType);
+    ionType->setIndex("2 3 4 5 6 7").charge = 1;
+    ionType->set(MS_frag__a_ion);
+    siip->fragmentation.push_back(ionType);
+    FragmentArrayPtr fap(new FragmentArray);
+    fap->setValues("197.055771 360.124878 489.167847 603.244324 731.075562 828.637207 " );
+    fap->measurePtr = MeasurePtr(new Measure("m_mz"));
+    ionType->fragmentArray.push_back(fap);
+    sirp->spectrumIdentificationItem.push_back(siip);*/
 
     PeptidePtr peptide;
     ModificationPtr mod;
@@ -354,7 +436,8 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             pe->pre = "-";
             pe->post = "V";
             pe->missedCleavages = 2;
-            sii->peptideEvidence.push_back(pe);
+            pel->peptideEvidence.push_back(pe);
+            sii->peptideEvidencePtr.push_back(pe);
 
             sir->spectrumIdentificationItem.push_back(sii);
         }
@@ -401,7 +484,8 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             pe->pre = "K";
             pe->post = "V";
             pe->missedCleavages = 0;
-            sii->peptideEvidence.push_back(pe);
+            pel->peptideEvidence.push_back(pe);
+            sii->peptideEvidencePtr.push_back(pe);
 
             sir->spectrumIdentificationItem.push_back(sii);
         }
@@ -442,7 +526,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sii->userParams.push_back(UserParam("an extra score", "1.2345", "xsd:float"));
 
             // reuse the same peptide evidence from variant 1
-            sii->peptideEvidence.push_back(pe);
+            sii->peptideEvidencePtr.push_back(pe);
 
             sir->spectrumIdentificationItem.push_back(sii);
         }
@@ -492,7 +576,8 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             pe->pre = "K";
             pe->post = "A";
             pe->missedCleavages = 0;
-            sii->peptideEvidence.push_back(pe);
+            pel->peptideEvidence.push_back(pe);
+            sii->peptideEvidencePtr.push_back(pe);
 
             sir->spectrumIdentificationItem.push_back(sii);
         }
@@ -538,7 +623,8 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             pe->pre = "K";
             pe->post = "K";
             pe->missedCleavages = 1;
-            sii->peptideEvidence.push_back(pe);
+            pel->peptideEvidence.push_back(pe);
+            sii->peptideEvidencePtr.push_back(pe);
 
             pe = PeptideEvidencePtr(new PeptideEvidence);
             pe->dbSequencePtr = mzid.sequenceCollection.dbSequences[1];
@@ -547,7 +633,8 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             pe->pre = "K";
             pe->post = "K";
             pe->missedCleavages = 1;
-            sii->peptideEvidence.push_back(pe);
+            pel->peptideEvidence.push_back(pe);
+            sii->peptideEvidencePtr.push_back(pe);
 
             sir->spectrumIdentificationItem.push_back(sii);
         }
@@ -564,7 +651,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
 
         // result 3 rank 1
         {
-            peptide = mzid.sequenceCollection.peptides[3];
+            peptide = mzid.sequenceCollection.peptides[4];
 
             sii = SpectrumIdentificationItemPtr(new SpectrumIdentificationItem);
             sii->id = "SII_6";
@@ -580,14 +667,14 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sii->set(MS_Mascot_expectation_value, 0.03);
             sii->userParams.push_back(UserParam("an extra score", "3.", "xsd:float"));
             
-            sii->peptideEvidence = sil->spectrumIdentificationResult[1]->spectrumIdentificationItem[0]->peptideEvidence;
+            sii->peptideEvidencePtr = sil->spectrumIdentificationResult[1]->spectrumIdentificationItem[1]->peptideEvidencePtr;
 
             sir->spectrumIdentificationItem.push_back(sii);
         }
 
         // result 3 rank 2
         {
-            peptide = mzid.sequenceCollection.peptides[4];
+            peptide = mzid.sequenceCollection.peptides[3];
 
             sii = SpectrumIdentificationItemPtr(new SpectrumIdentificationItem);
             sii->id = "SII_7";
@@ -603,7 +690,60 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sii->set(MS_Mascot_expectation_value, 0.3);
             sii->userParams.push_back(UserParam("an extra score", "4.56", "xsd:float"));
 
-            sii->peptideEvidence = sil->spectrumIdentificationResult[1]->spectrumIdentificationItem[1]->peptideEvidence;
+            sii->peptideEvidencePtr = sil->spectrumIdentificationResult[1]->spectrumIdentificationItem[0]->peptideEvidencePtr;
+
+            sir->spectrumIdentificationItem.push_back(sii);
+        }
+        sil->spectrumIdentificationResult.push_back(sir);
+    }
+
+    // result 4
+    {
+        sir = SpectrumIdentificationResultPtr(new SpectrumIdentificationResult);
+        sir->id = "SIR_4";
+        sir->name = "tiny.422.422";
+        sir->spectrumID = "controllerType=0 controllerNumber=1 scan=422";
+        sir->spectraDataPtr = sd;
+
+        // result 4 rank 1
+        {
+            peptide = PeptidePtr(new Peptide);
+            peptide->id = "PEP_6";
+            peptide->peptideSequence = "VEIIANDQGNR";
+            mzid.sequenceCollection.peptides.push_back(peptide);
+
+            sii = SpectrumIdentificationItemPtr(new SpectrumIdentificationItem);
+            sii->id = "SII_8";
+            sii->rank = 1;
+            sii->chargeState = 3;
+            sii->passThreshold = true;
+            sii->experimentalMassToCharge = 424.42;
+            sii->calculatedMassToCharge = 424.24;
+            sii->peptidePtr = peptide;
+            sii->set(MS_Mascot_score, 54);
+            sii->set(MS_Mascot_identity_threshold, 23);
+            sii->set(MS_Mascot_homology_threshold, 33);
+            sii->set(MS_Mascot_expectation_value, 0.003);
+
+            pe = PeptideEvidencePtr(new PeptideEvidence);
+            pe->dbSequencePtr = mzid.sequenceCollection.dbSequences[0];
+            pe->id = pe->dbSequencePtr->accession + "_PEP_" + lexical_cast<string>(++distinctPeptides);
+            pe->start = 26; pe->end = 37;
+            pe->pre = "K";
+            pe->post = "T";
+            pe->missedCleavages = 1;
+            pel->peptideEvidence.push_back(pe);
+            sii->peptideEvidencePtr.push_back(pe);
+
+            pe = PeptideEvidencePtr(new PeptideEvidence);
+            pe->dbSequencePtr = mzid.sequenceCollection.dbSequences[1];
+            pe->id = pe->dbSequencePtr->accession + "_PEP_" + lexical_cast<string>(distinctPeptides);
+            pe->start = 26; pe->end = 37;
+            pe->pre = "K";
+            pe->post = "T";
+            pe->missedCleavages = 1;
+            pel->peptideEvidence.push_back(pe);
+            sii->peptideEvidencePtr.push_back(pe);
 
             sir->spectrumIdentificationItem.push_back(sii);
         }
@@ -613,186 +753,18 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
 
 PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
 {
-    /*mzid.id = "";
+    initializeBasicSpectrumIdentification(mzid);
 
-    ContactPtr contactPwiz(new Organization("ORG_PWIZ", "ProteoWizard"));
-    contactPwiz->email = "support@proteowizard.org";
-    mzid.auditCollection.push_back(contactPwiz);
+    SpectrumIdentificationListPtr& sil = mzid.dataCollection.analysisData.spectrumIdentificationList[0];
+    PeptideEvidenceListPtr& pel = mzid.sequenceCollection.peptideEvidenceList[0];
 
-    analysisSoftwarePtr->contactRolePtr.reset(new ContactRole);
-    analysisSoftwarePtr->contactRolePtr->role.set(MS_software_vendor);
-    analysisSoftwarePtr->contactRolePtr->contactPtr = contactPwiz;
-
-    analysisSoftwarePtr->URI = "http://www.matrixscience.com/search_form_select.html";
-    ContactRolePtr aspCont = ContactRolePtr(new ContactRole());
-    aspCont->contactPtr = ContactPtr(new Contact("ORG_MSL"));
-    aspCont->role.set(MS_software_vendor);
-    analysisSoftwarePtr->contactRolePtr = aspCont;
-
-    analysisSoftwarePtr = AnalysisSoftwarePtr(new AnalysisSoftware());
-    analysisSoftwarePtr->id = "AS_Mascot_parser";
-    analysisSoftwarePtr->name = "Mascot Parser";
-    analysisSoftwarePtr->softwareName.set(MS_Mascot_Parser);
-    mzid.analysisSoftwareList.push_back(analysisSoftwarePtr);
-
-    mzid.provider.id = "PROVIDER";
-    mzid.provider.contactRole.contactPtr = ContactPtr(new Contact("PERSON_DOC_OWNER"));
-    mzid.provider.contactRole.role.set(MS_researcher);
-
-    PersonPtr person(new Person());
-    Affiliations aff;
-    aff.organizationPtr = OrganizationPtr(new Organization("ORG_MSL"));
-    person->affiliations.push_back(aff);
-    mzid.auditCollection.push_back(person);
-
-    person = PersonPtr(new Person());
-    person->id = "PERSON_DOC_OWNER";
-    person->firstName = "";
-    person->lastName = "David Creasy";
-    person->email = "dcreasy@matrixscience.com";
-    aff.organizationPtr = OrganizationPtr(new Organization("ORG_DOC_OWNER"));
-    person->affiliations.push_back(aff);
-    mzid.auditCollection.push_back(person);
-
-    OrganizationPtr organization(new Organization());
-    organization->id = "ORG_MSL";
-    organization->name = "Matrix Science Limited";
-    organization->address = "64 Baker Street, London W1U 7GB, UK";
-    organization->email = "support@matrixscience.com";
-    organization->fax = "+44 (0)20 7224 1344";
-    organization->phone = "+44 (0)20 7486 1050";
-    mzid.auditCollection.push_back(organization);
-
-    organization = OrganizationPtr(new Organization());
-    organization->id = "ORG_DOC_OWNER";
-    mzid.auditCollection.push_back(organization);
+    mzid.id = "";
     
-    //SamplePtr sample(new Sample());
+    //SamplePtr sample(new Sample);
     //mzid.analysisSampleCollection.samples.push_back(sample);
-    
-    DBSequencePtr dbSequence(new DBSequence());
-    dbSequence->id = "DBSeq_Bombessin";
-    dbSequence->length = 14;
-    dbSequence->searchDatabasePtr = SearchDatabasePtr(new SearchDatabase("SDB_5peptideMix"));
-    dbSequence->accession = "Bombessin";
-    dbSequence->seq = dbsequenceList[0];
-    dbSequence->set(MS_protein_description, peptideList[0]);
-    mzid.sequenceCollection.dbSequences.push_back(dbSequence);
 
-    
-    dbSequence = DBSequencePtr(new DBSequence());
-    dbSequence->id = "DBSeq_Neurotensin";
-    dbSequence->length = 13;
-    dbSequence->searchDatabasePtr = SearchDatabasePtr(new SearchDatabase("SDB_5peptideMix"));
-    dbSequence->accession = "Neurotensin";
-    dbSequence->seq = dbsequenceList[1];
-    dbSequence->set(MS_protein_description, peptideList[1]);
-    mzid.sequenceCollection.dbSequences.push_back(dbSequence);
-    
-    dbSequence = DBSequencePtr(new DBSequence());
-    dbSequence->set(MS_protein_description, HSP71_RAT.description);
-    dbSequence->set(MS_taxonomy__scientific_name, "Rattus norvegicus");
-    dbSequence->set(MS_taxonomy__NCBI_TaxID, "10116");
-    
-    PeptidePtr peptide(new Peptide());
-    peptide->id = "peptide_1_1";
-    peptide->peptideSequence = "QLYENKPRRPYIL";
-    ModificationPtr modification(new Modification());
-    modification->location = 0;
-    modification->monoisotopicMassDelta = -17.026549;
-    modification->set(UNIMOD_Gln__pyro_Glu);
-    peptide->modification.push_back(modification);
-    mzid.sequenceCollection.peptides.push_back(peptide);
-
-    peptide = PeptidePtr(new Peptide());
-    peptide->id = "peptide_11_1";
-    peptide->peptideSequence = "RPKPQQFFGLM";
-    mzid.sequenceCollection.peptides.push_back(peptide);
-    
-    peptide = PeptidePtr(new Peptide());    
-    peptide->id = "peptide_13_1";
-    peptide->peptideSequence = "RPKPQQFFGLM";
-    mzid.sequenceCollection.peptides.push_back(peptide);
-    
-    SpectrumIdentificationPtr spectrumIdentificationPtr(
-        new SpectrumIdentification());
-    spectrumIdentificationPtr->id = "SI";
-    spectrumIdentificationPtr->spectrumIdentificationProtocolPtr = 
-        SpectrumIdentificationProtocolPtr(new SpectrumIdentificationProtocol("SIP"));
-    spectrumIdentificationPtr->spectrumIdentificationListPtr = 
-        SpectrumIdentificationListPtr(new SpectrumIdentificationList("SIL_1"));
-    spectrumIdentificationPtr->activityDate = "2009-05-21T17:01:53";
-    spectrumIdentificationPtr->inputSpectra.push_back(SpectraDataPtr(new SpectraData("SD_1")));;
-    spectrumIdentificationPtr->searchDatabase.push_back(SearchDatabasePtr(new SearchDatabase("SDB_5peptideMix")));
-    mzid.analysisCollection.spectrumIdentification.push_back(spectrumIdentificationPtr);
-
-    mzid.analysisCollection.proteinDetection.id = "PD_1";
-    mzid.analysisCollection.proteinDetection.proteinDetectionProtocolPtr = ProteinDetectionProtocolPtr(new ProteinDetectionProtocol("PDP_MascotParser_1"));
-    mzid.analysisCollection.proteinDetection.proteinDetectionListPtr = ProteinDetectionListPtr(new ProteinDetectionList("PDL_1"));
-    mzid.analysisCollection.proteinDetection.activityDate = "2009-06-30T15:36:35";
-
-    SpectrumIdentificationListPtr silp(new SpectrumIdentificationList("SIL_1"));
-    mzid.analysisCollection.proteinDetection.inputSpectrumIdentifications.push_back(silp);
-
-    SpectrumIdentificationProtocolPtr sip(new SpectrumIdentificationProtocol());
-    sip->id = "SIP";
-    sip->analysisSoftwarePtr = AnalysisSoftwarePtr(new AnalysisSoftware("AS_Mascot_server"));
-    sip->searchType.set(MS_ms_ms_search);
-    sip->additionalSearchParams.set(MS_parent_mass_type_mono);
-    sip->additionalSearchParams.set(MS_param__a_ion);
-    sip->additionalSearchParams.set(MS_param__a_ion_NH3);
-    sip->additionalSearchParams.set(MS_param__b_ion);
-    sip->additionalSearchParams.set(MS_param__b_ion_NH3);
-    sip->additionalSearchParams.set(MS_param__y_ion);
-    sip->additionalSearchParams.set(MS_param__y_ion_NH3);
-    SearchModificationPtr smp(new SearchModification());
-    smp->massDelta = -17.026549;
-    smp->residues = "Q";
-    smp->cvParams.set(UNIMOD_Gln__pyro_Glu);
-    // TODO add UNIMOD:28
-    // Use ParamContainer in place of vector<CVParam>
-    smp->specificityRules.set(MS_modification_specificity_N_term, string(""));
-    sip->modificationParams.push_back(smp);
-
-    EnzymePtr ep(new Enzyme());
-    ep->id = "ENZ_0";
-    ep->cTermGain = "OH";
-    ep->nTermGain = "H";
-    ep->missedCleavages = 1;
-    ep->semiSpecific = false;
-    ep->siteRegexp = "(?< = [KR])(?!P)";
-    ep->enzymeName.set(MS_Trypsin);
-    sip->enzymes.enzymes.push_back(ep);
-
-    sip->massTable.id = "MT";
-    sip->massTable.msLevel = "1 2";
-
-    ResiduePtr rp(new Residue());
-    rp->Code = "A"; rp->Mass = 71.037114;
-    sip->massTable.residues.push_back(rp);
-
-    AmbiguousResiduePtr arp(new AmbiguousResidue());
-    arp->Code = "B";
-    arp->params.set(MS_alternate_single_letter_codes);
-    sip->massTable.ambiguousResidue.push_back(arp);
-
-    sip->fragmentTolerance.set(MS_search_tolerance_plus_value, "0.6", UO_dalton);
-    sip->fragmentTolerance.set(MS_search_tolerance_minus_value, "0.6", UO_dalton);
-
-    sip->parentTolerance.set(MS_search_tolerance_plus_value, "3", UO_dalton);
-    sip->parentTolerance.set(MS_search_tolerance_minus_value, "3", UO_dalton);
-
-    sip->threshold.set(MS_Mascot_SigThreshold, "0.05");
-    
-    FilterPtr fp(new Filter());
-    fp->filterType.set(MS_DB_filter_taxonomy);
-    sip->databaseFilters.push_back(fp);
-
-    mzid.analysisProtocolCollection.spectrumIdentificationProtocol.push_back(sip);
-
-    ProteinDetectionProtocolPtr pdp(new ProteinDetectionProtocol());
-    pdp->id = "PDP_MascotParser_1";
-    pdp->analysisSoftwarePtr = AnalysisSoftwarePtr(new AnalysisSoftware("AS_Mascot_parser"));
+    ProteinDetectionProtocolPtr pdp(new ProteinDetectionProtocol("PDP_Mascot_1"));
+    pdp->analysisSoftwarePtr = mzid.analysisSoftwareList[1];
     pdp->analysisParams.set(MS_Mascot_SigThreshold, "0.05");
     pdp->analysisParams.set(MS_Mascot_MaxProteinHits, "Auto");
     pdp->analysisParams.set(MS_Mascot_ProteinScoringMethod, "MudPIT");
@@ -806,180 +778,63 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
     pdp->threshold.set(MS_Mascot_SigThreshold, "0.05", CVID_Unknown);
     mzid.analysisProtocolCollection.proteinDetectionProtocol.push_back(pdp);
 
+    ProteinDetectionListPtr pdl(new ProteinDetectionList("PDL_1"));
+    ProteinAmbiguityGroupPtr pag(new ProteinAmbiguityGroup("PAG_1"));
 
-    // Fill in mzid.dataCollection.inputs;
-    // Add SourceFilePtr
-    SourceFilePtr sourceFile(new SourceFile());
-    sourceFile->id = "SF_1";
-    sourceFile->location = "file:///../data/Mascot_mzml_example.dat";
-    sourceFile->fileFormat.set(MS_Mascot_DAT_file);
-    mzid.dataCollection.inputs.sourceFile.push_back(sourceFile);
+    ProteinDetectionHypothesisPtr pdh(new ProteinDetectionHypothesis("PDH_HSP71_RAT"));
+    pdh->dbSequencePtr = mzid.sequenceCollection.dbSequences[0];
+    pdh->passThreshold = true;
+    pdh->peptideHypothesis.resize(4, PeptideHypothesis());
 
-    // Add SearchDatabasePtr
-    SearchDatabasePtr searchDb(new SearchDatabase());
-    searchDb->id = "SDB_5peptideMix";
-    searchDb->name = "5peptideMix";
-    searchDb->location = "file:///c:/inetpub/Mascot/sequence/5peptideMix/current/5peptideMix_20090515.fasta";
-    searchDb->numDatabaseSequences = 5;
-    searchDb->numResidues = 52;
-    searchDb->releaseDate = "5peptideMix_20090515.fasta";
-    searchDb->version = "5peptideMix_20090515.fasta";
-    searchDb->fileFormat.set(MS_FASTA_format);
-    searchDb->DatabaseName.userParams.push_back(UserParam("5peptideMix_20090515.fasta"));
-    mzid.dataCollection.inputs.searchDatabase.push_back(searchDb);
+    pdh->peptideHypothesis[0].peptideEvidencePtr = pel->peptideEvidence[0];
+    pdh->peptideHypothesis[0].spectrumIdentificationItemPtr.push_back(
+        sil->spectrumIdentificationResult[0]->spectrumIdentificationItem[0]);
 
-    searchDb = SearchDatabasePtr(new SearchDatabase());
-    searchDb->id = "SDB_SwissProt";
-    searchDb->name = "SwissProt";
-    searchDb->location = "file:///C:/inetpub/Mascot/sequence/SwissProt/current/SwissProt_51.6.fasta";
-    searchDb->numDatabaseSequences = 5;
-    searchDb->numResidues = 52;
-    searchDb->releaseDate = "SwissProt_51.6.fasta";
-    searchDb->version = "SwissProt_51.6.fasta";
-    searchDb->fileFormat.set(MS_FASTA_format);
-    searchDb->DatabaseName.userParams.push_back(UserParam("SwissProt_51.6.fasta"));
-    searchDb->params.set(MS_database_type_amino_acid);
-    mzid.dataCollection.inputs.searchDatabase.push_back(searchDb);
+    pdh->peptideHypothesis[1].peptideEvidencePtr = pel->peptideEvidence[2];
+    pdh->peptideHypothesis[1].spectrumIdentificationItemPtr.push_back(
+        sil->spectrumIdentificationResult[1]->spectrumIdentificationItem[0]);
 
-    // Add SpectraDataPtr
-    SpectraDataPtr spectraData(new SpectraData());
-    spectraData->id = "SD_1";
-    spectraData->location = "file:///small.pwiz.1.1.mzML";
-    spectraData->fileFormat.set(MS_mzML_file);
-    spectraData->spectrumIDFormat.set(MS_multiple_peak_list_nativeID_format);
-    mzid.dataCollection.inputs.spectraData.push_back(spectraData);
+    pdh->peptideHypothesis[2].peptideEvidencePtr = pel->peptideEvidence[4];
+    pdh->peptideHypothesis[2].spectrumIdentificationItemPtr.push_back(
+        sil->spectrumIdentificationResult[2]->spectrumIdentificationItem[0]);
+
+    pdh->peptideHypothesis[3].peptideEvidencePtr = pel->peptideEvidence[6];
+    pdh->peptideHypothesis[3].spectrumIdentificationItemPtr.push_back(
+        sil->spectrumIdentificationResult[3]->spectrumIdentificationItem[0]);
+
+    pdh->set(MS_Mascot_score, "164.4");
+    pdh->set(MS_sequence_coverage, "20");
+    pdh->set(MS_distinct_peptide_sequences, "4");
+    pag->proteinDetectionHypothesis.push_back(pdh);
     
-    // Fill in mzid.analysisData
-    // Add SpectrumIdentificationListPtr
-    silp = SpectrumIdentificationListPtr(new SpectrumIdentificationList());
-    silp->id = "SIL_1";
-    silp->numSequencesSearched = 5;
+    pdh = ProteinDetectionHypothesisPtr(new ProteinDetectionHypothesis("PDH_HSP71_HUMAN"));
+    pdh->dbSequencePtr = mzid.sequenceCollection.dbSequences[1];
+    pdh->passThreshold = false;
+    pdh->peptideHypothesis.resize(2, PeptideHypothesis());    
+
+    pdh->peptideHypothesis[0].peptideEvidencePtr = pel->peptideEvidence[4];
+    pdh->peptideHypothesis[0].spectrumIdentificationItemPtr.push_back(
+        sil->spectrumIdentificationResult[2]->spectrumIdentificationItem[0]);
+
+    pdh->peptideHypothesis[1].peptideEvidencePtr = pel->peptideEvidence[6];
+    pdh->peptideHypothesis[1].spectrumIdentificationItemPtr.push_back(
+        sil->spectrumIdentificationResult[3]->spectrumIdentificationItem[0]);
+
+    pdh->set(MS_Mascot_score, "40.95");
+    pdh->set(MS_sequence_coverage, "10");
+    pdh->set(MS_distinct_peptide_sequences, "2");
+    pag->proteinDetectionHypothesis.push_back(pdh);
     
-    MeasurePtr measure(new Measure());
-    measure->id = "m_mz";
-    measure->set(MS_product_ion_m_z);
-    silp->fragmentationTable.push_back(measure);
-
-    measure = MeasurePtr(new Measure());
-    measure->id = "m_intensity";
-    measure->set(MS_product_ion_intensity);
-    silp->fragmentationTable.push_back(measure);
-
-    measure = MeasurePtr(new Measure());
-    measure->id = "m_error";
-    measure->set(MS_product_ion_m_z_error, "", MS_m_z);
-    silp->fragmentationTable.push_back(measure);
-
-    SpectrumIdentificationResultPtr sirp(new SpectrumIdentificationResult());
-    sirp->id = "SIR_1";
-    sirp->spectrumID = "controllerType = 0 controllerNumber = 1 scan = 33" ;
-    sirp->spectraDataPtr = SpectraDataPtr(new SpectraData("SD_1"));
-    SpectrumIdentificationItemPtr siip(new SpectrumIdentificationItem());
-    siip->id = "SII_1_1";
-    siip->calculatedMassToCharge = 557.303212333333;
-    siip->chargeState = 3;
-    siip->experimentalMassToCharge = 558.75;
-    siip->peptidePtr = PeptidePtr(new Peptide("peptide_1_1"));
-    siip->rank = 1;
-    siip->passThreshold = true;
-    siip->set(MS_Mascot_score, "15.71");
-    siip->set(MS_Mascot_expectation_value, "0.0268534444565851");
-
-    PeptideEvidencePtr pep(new PeptideEvidence());
-    pep->id = "PE_1_1_Neurotensin";
-    pep->start = 1;
-    pep->end = 13;
-    pep->pre = "-";
-    pep->post = "-" ;
-    pep->missedCleavages = 1;
-    pep->frame = 0;
-    pep->isDecoy = false;
-    pep->dbSequencePtr = DBSequencePtr(new DBSequence("DBSeq_Neurotensin"));
-    siip->peptideEvidence.push_back(pep);
-
-    pep = PeptideEvidencePtr(new PeptideEvidence());
-    pep->id = "PE_19_1_Bombessin_0";
-    pep->start = 1;
-    pep->end = 14;
-    pep->pre = "-";
-    pep->post = "-" ;
-    pep->missedCleavages = 1;
-    pep->frame = 0;
-    pep->isDecoy = false;
-    pep->dbSequencePtr = DBSequencePtr(new DBSequence("DBSeq_Bombessin"));
-    siip->peptideEvidence.push_back(pep);
-
-    pep = PeptideEvidencePtr(new PeptideEvidence());
-    pep->id = "PE_20_1_Bombessin_0";
-    pep->start = 1;
-    pep->end = 14;
-    pep->pre = "-";
-    pep->post = "-" ;
-    pep->missedCleavages = 1;
-    pep->frame = 0;
-    pep->isDecoy = false;
-    pep->dbSequencePtr = DBSequencePtr(new DBSequence("DBSeq_Bombessin"));
-    siip->peptideEvidence.push_back(pep);
-
-    pep = PeptideEvidencePtr(new PeptideEvidence());
-    pep->id = "PE_2_1_HSP71_RAT_0";
-    pep->start = 37;
-    pep->end = 49;
-    pep->pre = "R";
-    pep->post = "L" ;
-    pep->missedCleavages = 1;
-    pep->frame = 0;
-    pep->isDecoy = false;
-    pep->dbSequencePtr = DBSequencePtr(new DBSequence("DBSeq_HSP71_RAT"));
-    siip->peptideEvidence.push_back(pep);
-    
-    siip->set(MS_Mascot_score, "15.71");
-    siip->set(MS_Mascot_expectation_value, 0.0268534444565851);
-
-    IonTypePtr ionType(new IonType());
-    ionType->setIndex("2 3 4 5 6 7").charge = 1;
-    ionType->set(MS_frag__a_ion);
-    siip->fragmentation.push_back(ionType);
-    FragmentArrayPtr fap(new FragmentArray());
-    fap->setValues("197.055771 360.124878 489.167847 603.244324 731.075562 828.637207 " );
-    fap->measurePtr = MeasurePtr(new Measure("m_mz"));
-    ionType->fragmentArray.push_back(fap);
-    sirp->spectrumIdentificationItem.push_back(siip);
-    
-    silp->spectrumIdentificationResult.push_back(sirp);
-    mzid.dataCollection.analysisData.spectrumIdentificationList.push_back(silp);
-
-    // Fill in proteinDetectionList
-    ProteinDetectionListPtr pdl(new ProteinDetectionList());
-    pdl->id = "PDL_1";
-    ProteinAmbiguityGroupPtr pagp(new ProteinAmbiguityGroup());
-    pagp->id = "PAG_hit_1";
-    ProteinDetectionHypothesisPtr pdhp(new ProteinDetectionHypothesis());
-    pdhp->id = "PDH_Bombessin";
-    pdhp->dbSequencePtr = DBSequencePtr(new DBSequence("DBSeq_Bombessin"));
-    pdhp->passThreshold = true;
-    pdhp->peptideHypothesis.push_back(PeptideEvidencePtr(new PeptideEvidence("PE_19_1_Bombessin_0")));
-    pdhp->peptideHypothesis.push_back(PeptideEvidencePtr(new PeptideEvidence("PE_20_1_Bombessin_0")));
-    pdhp->set(MS_Mascot_score, "164.4");
-    pdhp->set(MS_sequence_coverage, "100");
-    pdhp->set(MS_distinct_peptide_sequences, "7");
-    pagp->proteinDetectionHypothesis.push_back(pdhp);
-    
-    pdhp = ProteinDetectionHypothesisPtr(new ProteinDetectionHypothesis());
-    pdhp->id = "PDH_HSP71_RAT";
-    pdhp->dbSequencePtr = DBSequencePtr(new DBSequence("DBSeq_HSP71_RAT"));
-    pdhp->passThreshold = "false";
-    pdhp->peptideHypothesis.push_back(PeptideEvidencePtr(new PeptideEvidence("PE_2_1_HSP71_RAT_0")));
-    pdhp->set(MS_Mascot_score, "40.95");
-    pdhp->set(MS_sequence_coverage, "2");
-    pdhp->set(MS_distinct_peptide_sequences, "1");
-    pdhp->set(MS_manual_validation);
-    pagp->proteinDetectionHypothesis.push_back(pdhp);
-    
-    pdl->proteinAmbiguityGroup.push_back(pagp);
+    pdl->proteinAmbiguityGroup.push_back(pag);
     mzid.dataCollection.analysisData.proteinDetectionListPtr = pdl;
+    
+    mzid.analysisCollection.proteinDetection.id = "PD_1";
+    mzid.analysisCollection.proteinDetection.proteinDetectionProtocolPtr = pdp;
+    mzid.analysisCollection.proteinDetection.proteinDetectionListPtr = pdl;
+    mzid.analysisCollection.proteinDetection.activityDate = "2009-06-30T15:36:35";
+    mzid.analysisCollection.proteinDetection.inputSpectrumIdentifications.push_back(sil);
 
-    References::resolve(mzid); */
+    References::resolve(mzid);
 }
 
 } // namespace pwiz

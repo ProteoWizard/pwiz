@@ -29,25 +29,67 @@
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 
+
 namespace pwiz {
 namespace mziddata {
 namespace IO {
+
 
 using namespace minimxml;
 using namespace minimxml::SAXParser;
 using namespace boost::logic;
 using namespace util;
 
-static const int MZIDENTML_VERSION_1_0 = 0;
-
 
 // indexes the SequenceCollection so that SpectrumIdentificationItems and PeptideEvidences
 // can resolve references immediately
 struct SequenceIndex
 {
+    // maps dBSequence_ref to DBSequence
     map<string, DBSequencePtr> dbSequences;
+
+    // maps peptide_ref to Peptide
     map<string, PeptidePtr> peptides;
+
+    // maps peptideEvidence_ref to PeptideEvidence
+    map<string, PeptideEvidencePtr> peptideEvidence;
+
+    // maps spectrumIdentificationItem_ref to SpectrumIdentificationItem
+    map<string, SpectrumIdentificationItemPtr> spectrumIdentificationItems;
 };
+
+
+// convenience to support attribute name changes between schema versions
+namespace {
+
+#define ATTRIBUTE_NAME(name, v1_0_name, v1_1_name) \
+    struct name##_attribute \
+    { \
+        name##_attribute() : v1_0_(v1_0_name), v1_1_(v1_1_name) {} \
+        const string& operator() (int version) const {return version == (int) SchemaVersion_1_0 ? v1_0_ : v1_1_;} \
+        private: const string v1_0_, v1_1_; \
+    }; \
+    name##_attribute name;
+
+ATTRIBUTE_NAME(analysisSoftware_ref, "AnalysisSoftware_ref", "analysisSoftware_ref");
+ATTRIBUTE_NAME(organization_ref, "Organization_ref", "organization_ref");
+ATTRIBUTE_NAME(Role_element, "role", "Role");
+ATTRIBUTE_NAME(contact_ref, "Contact_ref", "contact_ref");
+ATTRIBUTE_NAME(spectraData_ref, "SpectraData_ref", "spectraData_ref");
+ATTRIBUTE_NAME(searchDatabase_ref, "SearchDatabase_ref", "searchDatabase_ref");
+ATTRIBUTE_NAME(dBSequence_ref, "DBSequence_Ref", "dBSequence_ref");
+ATTRIBUTE_NAME(peptideEvidence_ref, "PeptideEvidence_Ref", "peptideEvidence_ref");
+ATTRIBUTE_NAME(peptide_ref, "Peptide_ref", "peptide_ref");
+ATTRIBUTE_NAME(sample_ref, "Sample_ref", "sample_ref");
+ATTRIBUTE_NAME(measure_ref, "Measure_ref", "measure_ref");
+ATTRIBUTE_NAME(massTable_ref, "MassTable_ref", "massTable_ref");
+ATTRIBUTE_NAME(translationTable_ref, "TranslationTable_ref", "translationTable_ref");
+ATTRIBUTE_NAME(spectrumIdentificationProtocol_ref, "SpectrumIdentificationProtocol_ref", "spectrumIdentificationProtocol_ref");
+ATTRIBUTE_NAME(spectrumIdentificationList_ref, "SpectrumIdentificationList_ref", "spectrumIdentificationList_ref");
+ATTRIBUTE_NAME(proteinDetectionProtocol_ref, "ProteinDetectionProtocol_ref", "proteinDetectionProtocol_ref");
+ATTRIBUTE_NAME(proteinDetectionList_ref, "ProteinDetectionList_ref", "proteinDetectionList_ref");
+
+} // namespace
 
 
 template <typename object_type>
@@ -307,7 +349,7 @@ private:
 
 struct HandlerNamedCVParam : public HandlerCVParam
 {
-    const string name_;
+    string name_;
 
     HandlerNamedCVParam(const string& name, CVParam* _cvParam = 0)
         :   HandlerCVParam(_cvParam), name_(name)
@@ -557,7 +599,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const DBSequence& ds)
         attributes.add("length", ds.length);
     attributes.add("accession", ds.accession);
     if (ds.searchDatabasePtr.get())
-        attributes.add("SearchDatabase_ref", ds.searchDatabasePtr->id);
+        attributes.add("searchDatabase_ref", ds.searchDatabasePtr->id);
     
     if (!ds.ParamContainer::empty() || !ds.seq.empty())
     {
@@ -605,7 +647,7 @@ struct HandlerDBSequence : public HandlerIdentifiableParamContainer
             getAttribute(attributes, "accession", ds->accession);
 
             string value;
-            getAttribute(attributes, "SearchDatabase_ref", value);
+            getAttribute(attributes, searchDatabase_ref(version), value);
             ds->searchDatabasePtr = SearchDatabasePtr(new SearchDatabase(value));
             HandlerIdentifiableParamContainer::id = ds;
         }
@@ -660,7 +702,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Modification& mod)
         attributes.add("location", mod.location);
     if (!mod.residues.empty())
         attributes.add("residues", mod.residues);
-    if (mod.avgMassDelta > 0)
+    if (mod.avgMassDelta != 0)
         attributes.add("avgMassDelta", mod.avgMassDelta);
     //if (mod.monoisotopicMassDelta > 0)
     attributes.add("monoisotopicMassDelta", mod.monoisotopicMassDelta);
@@ -822,11 +864,13 @@ struct HandlerPeptide : public HandlerIdentifiableParamContainer
         else if (name == "Modification")
         {
             peptide->modification.push_back(ModificationPtr(new Modification()));
+            handlerModification_.version = version;
             handlerModification_.mod = peptide->modification.back().get();
             return Status(Status::Delegate, &handlerModification_);
         }
         else if (name == "SubstitutionModification")
         {
+            handlerSubstitutionModification_.version = version;
             handlerSubstitutionModification_.subMod = &peptide->substitutionModification;
             return Status(Status::Delegate, &handlerSubstitutionModification_);
         }
@@ -867,6 +911,238 @@ PWIZ_API_DECL void read(std::istream& is, Peptide& peptide)
 
 
 //
+// PeptideEvidence
+//
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const PeptideEvidence& pep)
+{
+    XMLWriter::Attributes attributes;
+    addIdAttributes(pep, attributes);
+    if (pep.dbSequencePtr.get() && !pep.dbSequencePtr->empty())
+        attributes.add("dBSequence_ref", pep.dbSequencePtr->id);
+
+    // don't output these optional attributes if they haven't been set
+    if (pep.start > 0 || pep.end > pep.start)
+    {
+        attributes.add("start", pep.start);
+        attributes.add("end", pep.end);
+    }
+
+    if (!pep.pre.empty())
+        attributes.add("pre", pep.pre);
+    if (!pep.post.empty())
+        attributes.add("post", pep.post);
+    if (pep.translationTablePtr.get() && !pep.translationTablePtr->empty())
+        attributes.add("translationTable_ref", pep.translationTablePtr->id);
+    if (pep.frame != 0)
+        attributes.add("frame", pep.frame);
+    attributes.add("isDecoy", pep.isDecoy  ? "true" : "false");
+    if (pep.missedCleavages != 0)
+        attributes.add("missedCleavages", pep.missedCleavages);
+
+    if (!pep.ParamContainer::empty())
+    {
+        writer.startElement("PeptideEvidence", attributes);
+        writeParamContainer(writer, pep);
+        writer.endElement();
+    }
+    else
+        writer.startElement("PeptideEvidence", attributes, XMLWriter::EmptyElement);
+}
+
+
+struct HandlerPeptideEvidence : public HandlerIdentifiableParamContainer
+{
+    PeptideEvidence* pep;
+    SequenceIndex& sequenceIndex;
+
+    HandlerPeptideEvidence(SequenceIndex& sequenceIndex, PeptideEvidence* _pep = 0)
+    : pep(_pep), sequenceIndex(sequenceIndex)
+    {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (!pep)
+            throw runtime_error("[IO::HandlerPeptideEvidence] Null PeptideEvidence.");
+        
+        if (name == "PeptideEvidence")
+        {
+            string value;
+            getAttribute(attributes, dBSequence_ref(version), value);
+            map<string, DBSequencePtr>::const_iterator findItr = sequenceIndex.dbSequences.find(value);
+            if (findItr == sequenceIndex.dbSequences.end())
+                pep->dbSequencePtr = DBSequencePtr(new DBSequence(value));
+            else
+                pep->dbSequencePtr = findItr->second;
+
+            value.clear();
+            getAttribute(attributes, "start", value);
+            if (!value.empty())
+                pep->start = lexical_cast<int>(value);
+
+            value.clear();
+            getAttribute(attributes, "end", value);
+            if (!value.empty())
+                pep->end = lexical_cast<int>(value);
+
+            getAttribute(attributes, "pre", pep->pre);
+
+            getAttribute(attributes, "post", pep->post);
+
+            value.clear();
+            getAttribute(attributes, translationTable_ref(version), value);
+            if (!value.empty())
+                pep->translationTablePtr = TranslationTablePtr(new TranslationTable(value));
+
+            value.clear();
+            getAttribute(attributes, "frame", value);
+            if (!value.empty())
+                pep->frame = lexical_cast<int>(value);
+            
+            value.clear();
+            getAttribute(attributes, "isDecoy", value);
+            if (!value.empty())
+                pep->isDecoy = (value=="true" ? true : false);
+
+            value.clear();
+            getAttribute(attributes, "missedCleavages", value);
+            if (!value.empty())
+                pep->missedCleavages = lexical_cast<int>(value);
+
+            HandlerIdentifiableParamContainer::id = pep;
+        }
+
+        return HandlerIdentifiableParamContainer::startElement(name, attributes, position);
+    }
+};
+
+
+PWIZ_API_DECL void read(std::istream& is, PeptideEvidence& pep)
+{
+    SequenceIndex dummy;
+    HandlerPeptideEvidence handler(dummy, &pep);
+    SAXParser::parse(is, handler);
+}
+
+
+//
+// PeptideEvidenceList
+//
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const PeptideEvidenceList& pel,
+                         const IterationListenerRegistry* ilr)
+{
+    XMLWriter::Attributes attributes;
+    //addIdAttributes(pel, attributes);
+    
+    writer.startElement("PeptideEvidenceList", attributes);
+
+    int iterationIndex = 0;
+    int iterationCount = pel.peptideEvidence.size();
+    BOOST_FOREACH(const PeptideEvidencePtr& peptideEvidence, pel.peptideEvidence)
+    {
+        if (ilr && ilr->broadcastUpdateMessage(IterationListener::UpdateMessage(iterationIndex++, iterationCount, "writing peptide evidence")) == IterationListener::Status_Cancel)
+            return;
+
+        write(writer, *peptideEvidence);
+    }
+
+    BOOST_FOREACH(const EnzymePtr& ez, pel.enzymePtr)
+    {
+        attributes.clear();
+        attributes.add("enzyme_ref", ez->id);
+        writer.startElement("EnzymeRef", attributes, XMLWriter::EmptyElement);
+    }
+
+    if (!pel.additionalParams.empty())
+    {
+        writer.startElement("AdditionalParams");
+        writeParamContainer(writer, pel.additionalParams);
+        writer.endElement();
+    }
+
+    writer.endElement();
+}
+
+
+struct HandlerPeptideEvidenceList : public SAXParser::Handler
+{
+    PeptideEvidenceListPtr pel;
+    SequenceIndex& sequenceIndex;
+
+    HandlerPeptideEvidenceList(SequenceIndex& sequenceIndex,
+                               PeptideEvidenceListPtr pel,
+                               const IterationListenerRegistry* iterationListenerRegistry = 0)
+        : pel(pel),
+          sequenceIndex(sequenceIndex),
+          ilr_(iterationListenerRegistry),
+          handlerPeptideEvidence_(sequenceIndex),
+          handlerAdditionalParams_("AdditionalParams")
+    {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (!pel.get())
+            throw runtime_error("[IO::PeptideEvidenceList] Null PeptideEvidenceList.");
+        
+        if (name == "PeptideEvidenceList")
+        {
+            return Status::Ok;
+        }
+        else if (name == "PeptideEvidence")
+        {
+            if (ilr_ && ilr_->broadcastUpdateMessage(IterationListener::UpdateMessage(pel->peptideEvidence.size(), 0, "reading peptide evidence")) == IterationListener::Status_Cancel)
+                return Status::Done;
+
+            string id; getAttribute(attributes, "id", id);
+            pel->peptideEvidence.push_back(PeptideEvidencePtr(new PeptideEvidence(id)));
+            pel->peptideEvidence.back()->peptideEvidenceListPtr = pel;
+            sequenceIndex.peptideEvidence[id] = pel->peptideEvidence.back();
+            handlerPeptideEvidence_.version = version;
+            handlerPeptideEvidence_.pep = pel->peptideEvidence.back().get();
+            return Status(Status::Delegate, &handlerPeptideEvidence_);
+        }
+        else if (name == "EnzymeRef")
+        {
+            string value;
+            getAttribute(attributes, "enzyme_ref", value);
+            pel->enzymePtr.push_back(EnzymePtr(new Enzyme(value))); // placeholder
+            return Status::Ok;
+        }
+        else if (name == "AdditionalParams")
+        {
+            handlerAdditionalParams_.paramContainer = &pel->additionalParams;
+            return Status(Status::Delegate, &handlerAdditionalParams_);
+        }
+
+        throw runtime_error("[IO::HandlerPeptideEvidenceList] Unknown element " + name); 
+    }
+
+    private:
+    const IterationListenerRegistry* ilr_;
+    HandlerPeptideEvidence handlerPeptideEvidence_;
+    HandlerNamedParamContainer handlerAdditionalParams_;
+};
+
+
+struct null_deleter {void operator()(void const *) const {}};
+PWIZ_API_DECL void read(std::istream& is, PeptideEvidenceList& pel,
+                        const IterationListenerRegistry* ilr)
+{
+    SequenceIndex dummy;
+    PeptideEvidenceListPtr dummyPtr(&pel, null_deleter());
+    HandlerPeptideEvidenceList handler(dummy, dummyPtr, ilr);
+    SAXParser::parse(is, handler);
+}
+
+
+//
 // SequenceCollection
 //
 
@@ -898,6 +1174,9 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SequenceCollection& 
         write(writer, *peptide);
     }
 
+    BOOST_FOREACH(const PeptideEvidenceListPtr& pel, sc.peptideEvidenceList)
+        write(writer, *pel, ilr);
+
     writer.endElement();
 }
 
@@ -915,7 +1194,8 @@ struct HandlerSequenceCollection : public SAXParser::Handler
     : sc(_sc),
       sequenceIndex(sequenceIndex),
       sequenceCollectionFlag(sequenceCollectionFlag),
-      ilr_(iterationListenerRegistry)      
+      ilr_(iterationListenerRegistry),
+      handlerPeptideEvidenceList_(sequenceIndex, PeptideEvidenceListPtr(), iterationListenerRegistry)
     {}
 
     virtual Status startElement(const string& name, 
@@ -940,6 +1220,7 @@ struct HandlerSequenceCollection : public SAXParser::Handler
             string id; getAttribute(attributes, "id", id);
             sc->dbSequences.push_back(DBSequencePtr(new DBSequence(id)));
             sequenceIndex.dbSequences[id] = sc->dbSequences.back();
+            handlerDBSequence_.version = version;
             handlerDBSequence_.ds = sc->dbSequences.back().get();
             return Status(Status::Delegate, &handlerDBSequence_); 
         }
@@ -951,8 +1232,16 @@ struct HandlerSequenceCollection : public SAXParser::Handler
             string id; getAttribute(attributes, "id", id);
             sc->peptides.push_back(PeptidePtr(new Peptide(id)));
             sequenceIndex.peptides[id] = sc->peptides.back();
+            handlerPeptide_.version = version;
             handlerPeptide_.peptide = sc->peptides.back().get();
             return Status(Status::Delegate, &handlerPeptide_);
+        }
+        else if (name == "PeptideEvidenceList")
+        {
+            sc->peptideEvidenceList.push_back(PeptideEvidenceListPtr(new PeptideEvidenceList));
+            handlerPeptideEvidenceList_.version = version;
+            handlerPeptideEvidenceList_.pel = sc->peptideEvidenceList.back();
+            return Status(Status::Delegate, &handlerPeptideEvidenceList_);
         }
         else
             throw runtime_error("[IO::HandlerSequenceCollection] Unexpected element name: " + name);
@@ -963,6 +1252,7 @@ struct HandlerSequenceCollection : public SAXParser::Handler
     const IterationListenerRegistry* ilr_;
     HandlerDBSequence handlerDBSequence_;
     HandlerPeptide handlerPeptide_;
+    HandlerPeptideEvidenceList handlerPeptideEvidenceList_;
 };
 
 
@@ -980,63 +1270,16 @@ PWIZ_API_DECL void read(std::istream& is, SequenceCollection& sc,
 //
 
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ContactPtr cp)
+void write(minimxml::XMLWriter& writer, const Contact& c)
 {
-    if (!cp.get())
-        throw runtime_error("[IO::write] Null valued ContactPtr.");
-    
-    XMLWriter::Attributes attributes;
-    addIdAttributes(*cp, attributes);
-
-    if (!cp->address.empty())
-        attributes.add("address", cp->address);
-    if (!cp->phone.empty())
-        attributes.add("phone", cp->phone);
-    if (!cp->email.empty())
-        attributes.add("email", cp->email);
-    if (!cp->fax.empty())
-        attributes.add("fax", cp->fax);
-    if (!cp->tollFreePhone.empty())
-        attributes.add("tollFreePhone", cp->tollFreePhone);
-
-    if (dynamic_cast<Person*>(cp.get()))
-    {
-        write(writer, (const Person&)*cp);
-        /*
-        const Person* pp = (Person*)cp.get();
-
-        attributes.add("lastName", pp->lastName);
-        attributes.add("firstName", pp->firstName);
-        attributes.add("midInitials", pp->midInitials);
-
-        writer.startElement("Person", attributes,
-        XMLWriter::EmptyElement);
-        */
-    }
-    if (dynamic_cast<Organization*>(cp.get()))
-    {
-        write(writer, (const Organization&)*cp);
-        /*
-        const Organization* opp = (Organization*)cp.get();
-        writer.startElement("Organization", attributes);
-        if (opp->parent.organizationPtr.get())
-        {
-            XMLWriter::Attributes oppAttributes;
-            oppAttributes.push_back(make_pair("Organization_ref",
-                                              opp->parent.organizationPtr->id));
-            writer.startElement("Parent", oppAttributes, XMLWriter::EmptyElement);
-        }
-        writer.endElement();
-        */
-    }
+    if (dynamic_cast<const Organization*>(&c))
+        write(writer, static_cast<const Organization&>(c));
+    else if (dynamic_cast<const Person*>(&c))
+        write(writer, static_cast<const Person&>(c));
 }
 
 
-//
-// Contact
-//
-
-struct HandlerContact : public HandlerIdentifiableParamContainer
+struct HandlerContact : public HandlerIdentifiable
 {
     Contact* c;
     HandlerContact(Contact* _c = 0) : c(_c) {}
@@ -1054,20 +1297,10 @@ struct HandlerContact : public HandlerIdentifiableParamContainer
         getAttribute(attributes, "fax", c->fax);
         getAttribute(attributes, "tollFreePhone", c->tollFreePhone);
 
-        HandlerIdentifiableParamContainer::id = c;
-        return HandlerIdentifiableParamContainer::startElement(name, attributes, position);
+        HandlerIdentifiable::id = c;
+        return HandlerIdentifiable::startElement(name, attributes, position);
     }
 };
-
-PWIZ_API_DECL void read(std::istream& is, ContactPtr cp)
-{
-    if (!cp.get())
-        throw runtime_error("[read(istream&,ContactPtr)] NULL value "
-            "ContactPtr passed in.");
-    
-    HandlerContact handler(cp.get());
-    SAXParser::parse(is, handler);
-}
 
 
 //
@@ -1075,13 +1308,12 @@ PWIZ_API_DECL void read(std::istream& is, ContactPtr cp)
 //
 
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer,
-                         const Affiliations& affiliations)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Affiliations& affiliations)
 {
     XMLWriter::Attributes attributes;
-    attributes.add("Organization_ref", affiliations.organizationPtr->id);
+    attributes.add("organization_ref", affiliations.organizationPtr->id);
 
-    writer.startElement("affiliations", attributes, XMLWriter::EmptyElement);
+    writer.startElement("Affiliations", attributes, XMLWriter::EmptyElement);
 }
 
 
@@ -1094,10 +1326,10 @@ struct HandlerAffiliations : public SAXParser::Handler
                                 const Attributes& attributes,
                                 stream_offset position)
     {
-        if (name != "affiliations")
+        if (name != "Affiliations")
             throw runtime_error("[IO::HandlerAffiliations] Unexpected element name: " + name);
 
-        getAttribute(attributes, "Organization_ref", aff->organizationPtr->id);
+        getAttribute(attributes, organization_ref(version), aff->organizationPtr->id);
         
         return Status::Ok;
     }
@@ -1115,18 +1347,8 @@ PWIZ_API_DECL void read(std::istream& is, Affiliations& aff)
 // Person
 //
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer,
-                         //XMLWriter::Attributes attributes,
-                         const PersonPtr pp)
-{
-    if (!pp.get())
-        throw runtime_error("[IO::write] PersonPtr has Null value.");
 
-    write(writer, *pp);
-}
-
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer,
-                         const Person& pp)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Person& pp)
 {
     XMLWriter::Attributes attributes;
     addIdAttributes(pp, attributes);
@@ -1143,7 +1365,9 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer,
     
     attributes.add("lastName", pp.lastName);
     attributes.add("firstName", pp.firstName);
-    attributes.add("midInitials", pp.midInitials);
+
+    if (!pp.midInitials.empty())
+        attributes.add("midInitials", pp.midInitials);
     
     writer.startElement("Person", attributes);
     for(vector<Affiliations>::const_iterator it=pp.affiliations.begin();
@@ -1175,9 +1399,10 @@ struct HandlerPerson : public HandlerContact
             HandlerContact::c = per;
             return HandlerContact::startElement(name, attributes, position);
         }
-        else if (name == "affiliations")
+        else if (name == "Affiliations")
         {
             per->affiliations.push_back(Affiliations());
+            handlerAffiliations_.version = version;
             handlerAffiliations_.aff = &per->affiliations.back();
             return Status(Status::Delegate, &handlerAffiliations_);
         }
@@ -1191,14 +1416,6 @@ struct HandlerPerson : public HandlerContact
 };
 
 
-PWIZ_API_DECL void read(std::istream& is, PersonPtr pp)
-{
-    if (!pp.get())
-        throw runtime_error("[IO::read] PersonPtr has Null value.");
-        
-    read(is, *pp);
-}
-
 PWIZ_API_DECL void read(std::istream& is, Person& pp)
 {
     HandlerPerson handler(&pp);
@@ -1211,19 +1428,7 @@ PWIZ_API_DECL void read(std::istream& is, Person& pp)
 //
 
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer,
-                         //XMLWriter::Attributes attributes,
-                         const OrganizationPtr op)
-{
-    if (!op.get())
-        throw runtime_error("[IO::write] OrganizationPtr has Null value.");
-
-    write(writer, *op);
-}
-
-
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer,
-                         const Organization& op)
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Organization& op)
 {
     XMLWriter::Attributes attributes;
     
@@ -1244,9 +1449,9 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer,
     writer.startElement("Organization", attributes, elementTag);
     if (op.parent.organizationPtr.get())
     {
-        XMLWriter::Attributes opAttrs;
-        opAttrs.push_back(make_pair("Organization_ref", op.parent.organizationPtr->id));
-        writer.startElement("parent", opAttrs, XMLWriter::EmptyElement);
+        attributes.clear();
+        attributes.add("organization_ref", op.parent.organizationPtr->id);
+        writer.startElement("parent", attributes, XMLWriter::EmptyElement);
     }
     if (!op.parent.empty())
         writer.endElement();
@@ -1274,7 +1479,7 @@ struct HandlerOrganization : public HandlerContact
         else if (name == "parent")
         {
             string Organization_ref;
-            getAttribute(attributes, "Organization_ref", Organization_ref);
+            getAttribute(attributes, organization_ref(version), Organization_ref);
             org->parent.organizationPtr = OrganizationPtr(new Organization(Organization_ref));
         }
         else
@@ -1282,12 +1487,6 @@ struct HandlerOrganization : public HandlerContact
         return Status::Ok;
     }
 };
-
-
-PWIZ_API_DECL void read(std::istream& is, OrganizationPtr op)
-{
-    read(is, *op);
-}
 
 
 PWIZ_API_DECL void read(std::istream& is, Organization& op)
@@ -1309,12 +1508,14 @@ struct HandlerContactVector : public SAXParser::Handler
         if (name == "Person")
         {
             c->push_back(PersonPtr(new Person()));
+            handlerPerson_.version = version;
             handlerPerson_.per = (Person*)c->back().get();
             return Status(Status::Delegate, &handlerPerson_);
         }
         else if (name == "Organization")
         {
             c->push_back(OrganizationPtr(new Organization()));
+            handlerOrganization_.version = version;
             handlerOrganization_.org = (Organization*)c->back().get();
             return Status(Status::Delegate, &handlerOrganization_);
         }
@@ -1336,10 +1537,10 @@ struct HandlerContactVector : public SAXParser::Handler
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ContactRole& cr)
 {
     XMLWriter::Attributes attributes;
-    attributes.add("Contact_ref", cr.contactPtr->id);
+    attributes.add("contact_ref", cr.contactPtr->id);
 
     writer.startElement("ContactRole", attributes);
-    writer.startElement("role");
+    writer.startElement("Role");
     write(writer, (const CVParam&)cr);
     writer.endElement();
 
@@ -1351,7 +1552,7 @@ struct HandlerContactRole : public HandlerNamedCVParam
 {
     ContactRole* cr;
     HandlerContactRole(ContactRole* _cr = 0)
-    : HandlerNamedCVParam("role", _cr),
+    : HandlerNamedCVParam("Role", _cr),
       cr(_cr)
     {}
 
@@ -1365,8 +1566,11 @@ struct HandlerContactRole : public HandlerNamedCVParam
         if (name == "ContactRole")
         {
             string Contact_ref;
-            getAttribute(attributes, "Contact_ref", Contact_ref);
+            getAttribute(attributes, contact_ref(version), Contact_ref);
             cr->contactPtr = ContactPtr(new Contact(Contact_ref));
+
+            // "role" or "Role"
+            name_ = Role_element(version);
         }
         else
             return HandlerNamedCVParam::startElement(name, attributes, position);
@@ -1386,6 +1590,7 @@ PWIZ_API_DECL void read(std::istream& is, ContactRole& cr)
 //
 // AnalysisSoftware
 //
+
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const AnalysisSoftware& anal)
 {
@@ -1446,6 +1651,7 @@ struct HandlerAnalysisSoftware : public HandlerIdentifiable
         else if (name == "ContactRole")
         {
             anal->contactRolePtr = ContactRolePtr(new ContactRole());
+            handlerContactRole_.version = version;
             handlerContactRole_.cvParam = handlerContactRole_.cr = anal->contactRolePtr.get();
             return Status(Status::Delegate, &handlerContactRole_);
         }
@@ -1480,16 +1686,17 @@ PWIZ_API_DECL void read(std::istream& is, AnalysisSoftware& anal)
 // SpectrumIdentification 
 //
 
+
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentification& sip)
 {
     XMLWriter::Attributes attributes;
     addIdAttributes(sip, attributes);
     if (sip.spectrumIdentificationProtocolPtr.get())
-        attributes.push_back(make_pair("SpectrumIdentificationProtocol_ref",
-                                       sip.spectrumIdentificationProtocolPtr->id));
+        attributes.add("spectrumIdentificationProtocol_ref",
+                       sip.spectrumIdentificationProtocolPtr->id);
     if (sip.spectrumIdentificationListPtr.get())
-        attributes.push_back(make_pair("SpectrumIdentificationList_ref",
-                                       sip.spectrumIdentificationListPtr->id));
+        attributes.add("spectrumIdentificationList_ref",
+                       sip.spectrumIdentificationListPtr->id);
     attributes.add("activityDate", sip.activityDate);
 
     writer.startElement("SpectrumIdentification", attributes);
@@ -1500,7 +1707,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
         if (!(*it).get()) continue;
 
         attributes.clear();
-        attributes.add("SpectraData_ref", (*it)->id);
+        attributes.add("spectraData_ref", (*it)->id);
         writer.startElement("InputSpectra", attributes, XMLWriter::EmptyElement);
     }
 
@@ -1510,7 +1717,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
         if (!(*it).get()) continue;
         
         attributes.clear();
-        attributes.add("SearchDatabase_ref", (*it)->id);
+        attributes.add("searchDatabase_ref", (*it)->id);
         writer.startElement("SearchDatabase", attributes, XMLWriter::EmptyElement);
     }
     
@@ -1533,11 +1740,11 @@ struct HandlerSpectrumIdentification : public HandlerIdentifiable
         if (name == "SpectrumIdentification")
         {
             string  value;
-            getAttribute(attributes, "SpectrumIdentificationProtocol_ref", value);
+            getAttribute(attributes, spectrumIdentificationProtocol_ref(version), value);
             spectrumId->spectrumIdentificationProtocolPtr = SpectrumIdentificationProtocolPtr(new SpectrumIdentificationProtocol(value));
 
             value.clear();
-            getAttribute(attributes, "SpectrumIdentificationList_ref", value);
+            getAttribute(attributes, spectrumIdentificationList_ref(version), value);
             spectrumId->spectrumIdentificationListPtr = SpectrumIdentificationListPtr(new SpectrumIdentificationList(value));
             getAttribute(attributes, "activityDate", spectrumId->activityDate);
 
@@ -1547,14 +1754,14 @@ struct HandlerSpectrumIdentification : public HandlerIdentifiable
         else if (name == "InputSpectra")
         {
             string value;
-            getAttribute(attributes, "SpectraData_ref", value);
+            getAttribute(attributes, spectraData_ref(version), value);
             spectrumId->inputSpectra.push_back(
                 SpectraDataPtr(new SpectraData(value)));
         }
         else if (name == "SearchDatabase")
         {
             string value;
-            getAttribute(attributes, "SearchDatabase_ref", value);
+            getAttribute(attributes, searchDatabase_ref(version), value);
             spectrumId->searchDatabase.push_back(
                 SearchDatabasePtr(new SearchDatabase(value)));
         }
@@ -1583,9 +1790,9 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinDetection& pd
     XMLWriter::Attributes attributes;
     addIdAttributes(pd, attributes);
     if (pd.proteinDetectionProtocolPtr.get())
-        attributes.add("ProteinDetectionProtocol_ref", pd.proteinDetectionProtocolPtr->id);
+        attributes.add("proteinDetectionProtocol_ref", pd.proteinDetectionProtocolPtr->id);
     if (pd.proteinDetectionListPtr.get())
-        attributes.add("ProteinDetectionList_ref", pd.proteinDetectionListPtr->id);
+        attributes.add("proteinDetectionList_ref", pd.proteinDetectionListPtr->id);
     attributes.add("activityDate", pd.activityDate);
     
     writer.startElement("ProteinDetection", attributes);
@@ -1597,7 +1804,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinDetection& pd
             continue;
         
         attributes.clear();
-        attributes.add("SpectrumIdentificationList_ref", (*it)->id);
+        attributes.add("spectrumIdentificationList_ref", (*it)->id);
         writer.startElement("InputSpectrumIdentifications", attributes, XMLWriter::EmptyElement);
     }
     
@@ -1620,10 +1827,10 @@ struct HandlerProteinDetection : public HandlerIdentifiable
         if (name == "ProteinDetection")
         {
             string value;
-            getAttribute(attributes, "ProteinDetectionProtocol_ref", value);
+            getAttribute(attributes, proteinDetectionProtocol_ref(version), value);
             pd->proteinDetectionProtocolPtr = ProteinDetectionProtocolPtr(new ProteinDetectionProtocol(value));
             value.clear();
-            getAttribute(attributes, "ProteinDetectionList_ref", value);
+            getAttribute(attributes, proteinDetectionList_ref(version), value);
             pd->proteinDetectionListPtr = ProteinDetectionListPtr(new ProteinDetectionList(value));
             getAttribute(attributes, "activityDate", pd->activityDate);
 
@@ -1633,7 +1840,7 @@ struct HandlerProteinDetection : public HandlerIdentifiable
         else if (name == "InputSpectrumIdentifications")
         {
             string value;
-            getAttribute(attributes, "SpectrumIdentificationList_ref",value);
+            getAttribute(attributes, spectrumIdentificationList_ref(version),value);
             pd->inputSpectrumIdentifications.push_back(
                 SpectrumIdentificationListPtr(
                     new SpectrumIdentificationList(value)));
@@ -1684,6 +1891,7 @@ struct HandlerMaterial : public HandlerIdentifiableParamContainer
     {
         if (name == "ContactRole")
         {
+            handlerContactRole_.version = version;
             handlerContactRole_.cvParam = handlerContactRole_.cr = &mat->contactRole;
             return Status(Status::Delegate, &handlerContactRole_);
         }
@@ -1752,7 +1960,7 @@ struct HandlerSample : public HandlerMaterial
         {
             sample->subSamples.push_back(Sample::SubSample());
             string Sample_ref;
-            getAttribute(attributes, "Sample_ref", Sample_ref);
+            getAttribute(attributes, sample_ref(version), Sample_ref);
             sample->subSamples.back().samplePtr=SamplePtr(new Sample(Sample_ref));
         }
         else
@@ -1765,14 +1973,6 @@ struct HandlerSample : public HandlerMaterial
     HandlerContactRole handlerContactRole_;
 };
 
-
-PWIZ_API_DECL void read(std::istream& is, SamplePtr sample)
-{
-    if (!sample.get())
-        throw runtime_error("[IO::read] Null SamplePtr value.");
-
-    read(is, *sample);
-}
 
 PWIZ_API_DECL void read(std::istream& is, Sample& sample)
 {
@@ -1790,7 +1990,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Sample::SubSample& s
 {
     XMLWriter::Attributes attributes;
     if (sc.samplePtr.get())
-        attributes.add("Sample_ref", sc.samplePtr->id);
+        attributes.add("sample_ref", sc.samplePtr->id);
     
     writer.startElement("subSample", attributes, XMLWriter::EmptyElement);
 }
@@ -1832,11 +2032,13 @@ struct HandlerAnalysisCollection : public SAXParser::Handler
         else if (name == "SpectrumIdentification")
         {
             anal->spectrumIdentification.push_back(SpectrumIdentificationPtr(new SpectrumIdentification()));
+            handlerSpectrumIdentification_.version = version;
             handlerSpectrumIdentification_.spectrumId = anal->spectrumIdentification.back().get();
             return Status(Status::Delegate, &handlerSpectrumIdentification_);
         }
         else if (name == "ProteinDetection")
         {
+            handlerProteinDetection_.version = version;
             handlerProteinDetection_.pd = &anal->proteinDetection;
             return Status(Status::Delegate, &handlerProteinDetection_);
         }
@@ -1865,7 +2067,7 @@ PWIZ_API_DECL void read(std::istream& is, AnalysisCollection& anal)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Enzyme& ez)
 {
     XMLWriter::Attributes attributes;
-    attributes.add("id", ez.id);
+    addIdAttributes(ez, attributes);
     if (!ez.cTermGain.empty())
         attributes.add("CTermGain", ez.cTermGain);
     if (!ez.nTermGain.empty())
@@ -1903,7 +2105,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Enzyme& ez)
 }
 
 
-struct HandlerEnzyme : public SAXParser::Handler
+struct HandlerEnzyme : public HandlerIdentifiable
 {
     Enzyme* ez;
     bool inSiteRegexp;
@@ -1934,6 +2136,9 @@ struct HandlerEnzyme : public SAXParser::Handler
             getAttribute(attributes, "missedCleavages", ez->missedCleavages);
             ez->minDistance = 0;
             getAttribute(attributes, "minDistance", ez->minDistance);
+            
+            HandlerIdentifiable::id = ez;
+            return HandlerIdentifiable::startElement(name, attributes, position);
         }
         else if (name == "SiteRegexp")
             inSiteRegexp = true;
@@ -1971,14 +2176,6 @@ struct HandlerEnzyme : public SAXParser::Handler
     HandlerNamedParamContainer handlerNamedParamContainer_;
 };
 
-
-PWIZ_API_DECL void read(std::istream& is, EnzymePtr ez)
-{
-    if (!ez.get())
-        throw runtime_error("read: Null EnzymePtr value");
-    
-    read(is, *ez);
-}
 
 PWIZ_API_DECL void read(std::istream& is, Enzyme& ez)
 {
@@ -2023,6 +2220,7 @@ struct HandlerEnzymes : public SAXParser::Handler
         else if (name == "Enzyme")
         {
             ez->enzymes.push_back(EnzymePtr(new Enzyme()));
+            handlerEnzyme_.version = version;
             handlerEnzyme_.ez = ez->enzymes.back().get();
             return Status(Status::Delegate, &handlerEnzyme_);
         }
@@ -2080,14 +2278,6 @@ struct HandlerResidue : public SAXParser::Handler
 };
 
 
-PWIZ_API_DECL void read(std::istream& is, ResiduePtr residue)
-{
-    if (!residue.get())
-        throw runtime_error("read: Null ResiduePtr value");
-
-    read(is, *residue);
-}
-
 PWIZ_API_DECL void read(std::istream& is, Residue& residue)
 {
     HandlerResidue handler(&residue);
@@ -2132,14 +2322,6 @@ struct HandlerAmbiguousResidue : public HandlerParamContainer
     }
 };
 
-
-PWIZ_API_DECL void read(std::istream& is, AmbiguousResiduePtr residue)
-{
-    if (!residue.get())
-        throw runtime_error("write: Null AmbiguousResiduePtr value");
-
-    read(is, *residue);
-}
 
 PWIZ_API_DECL void read(std::istream& is, AmbiguousResidue& residue)
 {
@@ -2187,13 +2369,14 @@ struct HandlerMassTable : public SAXParser::Handler
         else if (name == "Residue")
         {
             mt->residues.push_back(ResiduePtr(new Residue()));
+            handlerResidue_.version = version;
             handlerResidue_.residue = mt->residues.back().get();
             return handlerResidue_.startElement(name, attributes, position);
         }
         else if (name == "AmbiguousResidue")
         {
-            mt->ambiguousResidue.push_back(
-                AmbiguousResiduePtr(new AmbiguousResidue()));
+            mt->ambiguousResidue.push_back(AmbiguousResiduePtr(new AmbiguousResidue()));
+            handlerAmbiguousResidue_.version = version;
             handlerAmbiguousResidue_.residue = mt->ambiguousResidue.back().get();
             return Status(Status::Delegate, &handlerAmbiguousResidue_);
         }
@@ -2224,40 +2407,37 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SearchModification& 
 {
     XMLWriter::Attributes attributes;
     attributes.add("fixedMod", sm.fixedMod ? "true" : "false");
-    
-    writer.startElement("SearchModification", attributes);
+    attributes.add("massDelta", sm.massDelta);
+    attributes.add("residues", sm.residues);
 
-    XMLWriter::Attributes modAttributes;
-    modAttributes.add("massDelta", sm.massDelta);
-    modAttributes.add("residues", sm.residues);
+    bool emptyElement = sm.specificityRules.empty() && static_cast<const ParamContainer&>(sm).empty();
 
-    if (!sm.unimodName.empty())
+    if (!emptyElement)
     {
-        writer.startElement("ModParam", modAttributes);
-        write(writer, sm.unimodName);
+        writer.startElement("SearchModification", attributes);
+
+        if (!sm.specificityRules.empty())
+        {
+            writer.startElement("SpecificityRules");
+            write(writer, sm.specificityRules);
+            writer.endElement();
+        }
+
+        writeParamContainer(writer, sm);
+        
         writer.endElement();
     }
     else
-        writer.startElement("ModParam", modAttributes, XMLWriter::EmptyElement);
-
-    if (!sm.specificityRules.empty())
-    {
-        writer.startElement("SpecificityRules");
-        write(writer, sm.specificityRules);
-        writer.endElement();
-    }
-    
-    writer.endElement();
+        writer.startElement("SearchModification", attributes, XMLWriter::EmptyElement);
 }
 
 
-struct HandlerSearchModification : public SAXParser::Handler
+struct HandlerSearchModification : public HandlerParamContainer
 {
     SearchModification* sm;
     HandlerSearchModification(SearchModification* _sm = 0)
         : sm(_sm),
-          handlerSpecificityRules_("SpecificityRules"),
-          handlerModParam_("ModParam")
+          handlerSpecificityRules_("SpecificityRules")
     {}
 
     virtual Status startElement(const string& name, 
@@ -2269,26 +2449,33 @@ struct HandlerSearchModification : public SAXParser::Handler
             string value;
             getAttribute(attributes, "fixedMod", value);
             sm->fixedMod = value == "true" ? true : false;
+
+            if (version != SchemaVersion_1_0)
+            {
+                getAttribute(attributes, "massDelta", sm->massDelta);
+                getAttribute(attributes, "residues", sm->residues);
+            }
+
+            HandlerParamContainer::paramContainer = sm;
+            return Status::Ok;
         }
-        else if (name == "ModParam")
+        else if (version == SchemaVersion_1_0 && name == "ModParam")
         {
             getAttribute(attributes, "massDelta", sm->massDelta);
             getAttribute(attributes, "residues", sm->residues);
-            handlerModParam_.cvParam = &sm->unimodName;
-            return Status(Status::Delegate, &handlerModParam_);
+
+            return Status::Ok;
         }
         else if (name == "SpecificityRules")
         {
             handlerSpecificityRules_.cvParam = &sm->specificityRules;
             return Status(Status::Delegate, &handlerSpecificityRules_);
         }
-        else
-            throw runtime_error("[IO::HandlerSearchModification] Unexpected element name: " + name);
 
-        return Status::Ok;
+        return HandlerParamContainer::startElement(name, attributes, position);
     }
     private:
-    HandlerNamedCVParam handlerSpecificityRules_, handlerModParam_;
+    HandlerNamedCVParam handlerSpecificityRules_;
 };
 
 
@@ -2422,14 +2609,6 @@ struct HandlerTranslationTable : public HandlerIdentifiableParamContainer
 };
 
 
-PWIZ_API_DECL void read(std::istream& is, TranslationTablePtr tt)
-{
-    if (!tt.get())
-        throw runtime_error("[IO::read] TranslationTablePtr has Null value.");
-
-    read(is, *tt);
-}
-
 PWIZ_API_DECL void read(std::istream& is, TranslationTable& tt)
 {
     HandlerTranslationTable handler(&tt);
@@ -2478,6 +2657,7 @@ struct HandlerDatabaseTranslation : SAXParser::Handler
         else if (name == "TranslationTable")
         {
             dt->translationTable.push_back(TranslationTablePtr(new TranslationTable()));
+            handlerTranslationTable_.version = version;
             handlerTranslationTable_.tt = dt->translationTable.back().get();
             return Status(Status::Delegate, &handlerTranslationTable_);
         }
@@ -2490,14 +2670,6 @@ struct HandlerDatabaseTranslation : SAXParser::Handler
     HandlerTranslationTable handlerTranslationTable_;
 };
 
-
-PWIZ_API_DECL void read(std::istream& is, DatabaseTranslationPtr dt)
-{
-    if (!dt.get())
-        throw runtime_error("[IO::read] DatabaseTranslationPtr has Null value.");
-
-    read(is, *dt);
-}
 
 PWIZ_API_DECL void read(std::istream& is, DatabaseTranslation& dt)
 {
@@ -2516,7 +2688,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
     XMLWriter::Attributes attributes;
     addIdAttributes(si, attributes);
     if (si.analysisSoftwarePtr.get() && !si.analysisSoftwarePtr->empty())
-        attributes.add("AnalysisSoftware_ref", si.analysisSoftwarePtr->id);
+        attributes.add("analysisSoftware_ref", si.analysisSoftwarePtr->id);
 
     writer.startElement("SpectrumIdentificationProtocol", attributes);
 
@@ -2589,7 +2761,7 @@ struct HandlerSpectrumIdentificationProtocol : public HandlerIdentifiable
         if (name == "SpectrumIdentificationProtocol")
         {
             string value;
-            getAttribute(attributes, "AnalysisSoftware_ref", value);
+            getAttribute(attributes, analysisSoftware_ref(version), value);
             if (!value.empty())
                 sip->analysisSoftwarePtr = AnalysisSoftwarePtr(new AnalysisSoftware(value));
             
@@ -2612,16 +2784,19 @@ struct HandlerSpectrumIdentificationProtocol : public HandlerIdentifiable
         else if (name == "SearchModification")
         {
             sip->modificationParams.push_back(SearchModificationPtr(new SearchModification()));
+            handlerModificationParams_.version = version;
             handlerModificationParams_.sm = sip->modificationParams.back().get();
             return Status(Status::Delegate, &handlerModificationParams_);
         }
         else if (name == "Enzymes")
         {
+            handlerEnzymes_.version = version;
             handlerEnzymes_.ez = &sip->enzymes;
             return Status(Status::Delegate, &handlerEnzymes_);
         }
         else if (name == "MassTable")
         {
+            handlerMassTable_.version = version;
             handlerMassTable_.mt = &sip->massTable;
             return Status(Status::Delegate, &handlerMassTable_);
         }
@@ -2646,12 +2821,14 @@ struct HandlerSpectrumIdentificationProtocol : public HandlerIdentifiable
         else if (name == "Filter")
         {
             sip->databaseFilters.push_back(FilterPtr(new Filter()));
+            handlerFilter_.version = version;
             handlerFilter_.filter = sip->databaseFilters.back().get();
             return Status(Status::Delegate, &handlerFilter_);
         }
         else if (name == "DatabaseTranslation")
         {
             sip->databaseTranslation = DatabaseTranslationPtr(new DatabaseTranslation());
+            handlerDatabaseTranslation_.version = version;
             handlerDatabaseTranslation_.dt = sip->databaseTranslation.get();
             return Status(Status::Delegate, &handlerDatabaseTranslation_);
         }
@@ -2673,14 +2850,6 @@ struct HandlerSpectrumIdentificationProtocol : public HandlerIdentifiable
     HandlerDatabaseTranslation handlerDatabaseTranslation_;
 };
 
-PWIZ_API_DECL void read(std::istream& is, SpectrumIdentificationProtocolPtr sip)
-{
-    if (!sip.get())
-        throw runtime_error("[IO::read] SpectrumIdentificationProtocolPtr has Null value.");
-    read(is, *sip);
-}
-
-
 PWIZ_API_DECL void read(std::istream& is, SpectrumIdentificationProtocol& sip)
 {
     HandlerSpectrumIdentificationProtocol handler(&sip);
@@ -2698,8 +2867,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinDetectionProt
     XMLWriter::Attributes attributes;
     addIdAttributes(pd, attributes);
     if (pd.analysisSoftwarePtr.get())
-        attributes.push_back(make_pair("AnalysisSoftware_ref",
-                                        pd.analysisSoftwarePtr->id));
+        attributes.add("analysisSoftware_ref", pd.analysisSoftwarePtr->id);
     
     writer.startElement("ProteinDetectionProtocol", attributes);
 
@@ -2739,7 +2907,7 @@ struct HandlerProteinDetectionProtocol : public HandlerIdentifiable
         {
             string value;
 
-            getAttribute(attributes, "AnalysisSoftware_ref", value);
+            getAttribute(attributes, analysisSoftware_ref(version), value);
             pdp->analysisSoftwarePtr = AnalysisSoftwarePtr(new AnalysisSoftware(value));
             HandlerIdentifiable::id = pdp;
             return HandlerIdentifiable::startElement(name, attributes, position);
@@ -2763,14 +2931,6 @@ struct HandlerProteinDetectionProtocol : public HandlerIdentifiable
     HandlerNamedParamContainer handlerThreshold_;
 };
 
-PWIZ_API_DECL void read(std::istream& is, ProteinDetectionProtocolPtr pdp)
-{
-    if (!pdp.get())
-        throw runtime_error("[IO::read] ProteinDetectionProtocolPtr has Null value.");
-
-    read(is, *pdp);
-}
-
 PWIZ_API_DECL void read(std::istream& is, ProteinDetectionProtocol& pd)
 {
     HandlerProteinDetectionProtocol handler(&pd);
@@ -2780,6 +2940,7 @@ PWIZ_API_DECL void read(std::istream& is, ProteinDetectionProtocol& pd)
 //
 // AnalysisProtocolCollection
 //
+
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const AnalysisProtocolCollection& anal)
 {
@@ -2815,12 +2976,14 @@ struct HandlerAnalysisProtocolCollection : public SAXParser::Handler
         else if (name == "SpectrumIdentificationProtocol")
         {
             anal->spectrumIdentificationProtocol.push_back(SpectrumIdentificationProtocolPtr(new SpectrumIdentificationProtocol()));
+            handlerSpectrumIdentificationProtocol_.version = version;
             handlerSpectrumIdentificationProtocol_.sip = anal->spectrumIdentificationProtocol.back().get();
             return Status(Status::Delegate, &handlerSpectrumIdentificationProtocol_);
         }
         else if (name == "ProteinDetectionProtocol")
         {
             anal->proteinDetectionProtocol.push_back(ProteinDetectionProtocolPtr(new ProteinDetectionProtocol()));
+            handlerProteinDetectionProtocol_.version = version;
             handlerProteinDetectionProtocol_.pdp = anal->proteinDetectionProtocol.back().get();
             return Status(Status::Delegate, &handlerProteinDetectionProtocol_);
         }
@@ -2843,6 +3006,7 @@ PWIZ_API_DECL void read(std::istream& is, AnalysisProtocolCollection& anal)
 //
 // AnalysisSampleCollection
 //
+
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const AnalysisSampleCollection& asc)
 {
@@ -2872,6 +3036,7 @@ struct HandlerAnalysisSampleCollection : public SAXParser::Handler
         else if (name == "Sample")
         {
             asc->samples.push_back(SamplePtr(new Sample()));
+            handlerSample_.version = version;
             handlerSample_.sample = asc->samples.back().get();
             return Status(Status::Delegate, &handlerSample_);
         }
@@ -3004,15 +3169,6 @@ struct HandlerSpectraData : public HandlerIdentifiable
     HandlerNamedCVParam handlerSpectrumIDFormat_;
 };
 
-PWIZ_API_DECL void read(std::istream& is, SpectraDataPtr sd)
-{
-    if (!sd.get())
-        throw runtime_error("read: SpectraDataPtr has NULL value.");
-
-    read(is, *sd);
-}
-
-
 PWIZ_API_DECL void read(std::istream& is, SpectraData& sd)
 {
     HandlerSpectraData handler(&sd);
@@ -3109,14 +3265,6 @@ struct HandlerSearchDatabase : public HandlerIdentifiableParamContainer
     HandlerNamedParamContainer handlerDatabaseName_;
 };
 
-PWIZ_API_DECL void read(std::istream& is, SearchDatabasePtr sd)
-{
-    if (!sd.get())
-        throw runtime_error("writer: SearchDatabasePtr has NULL value.");
-
-    read(is, *sd);
-}
-
 PWIZ_API_DECL void read(std::istream& is, SearchDatabase& sd)
 {
     HandlerSearchDatabase handler(&sd);
@@ -3126,6 +3274,7 @@ PWIZ_API_DECL void read(std::istream& is, SearchDatabase& sd)
 //
 // SourceFile
 //
+
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SourceFile& sf)
 {
@@ -3219,14 +3368,6 @@ struct HandlerSourceFile : public HandlerIdentifiableParamContainer
     HandlerNamedCVParam handlerFileFormat_;
 };
 
-PWIZ_API_DECL void read(std::istream& is, SourceFilePtr sf)
-{
-    if (!sf.get())
-        throw runtime_error("read: SourceFilePtr has NULL value.");
-
-    read(is, sf);
-}
-
 PWIZ_API_DECL void read(std::istream& is, SourceFile& sf)
 {
     HandlerSourceFile handler(&sf);
@@ -3236,6 +3377,7 @@ PWIZ_API_DECL void read(std::istream& is, SourceFile& sf)
 //
 // Inputs
 //
+
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Inputs& inputs)
 {
@@ -3284,18 +3426,21 @@ struct HandlerInputs : public SAXParser::Handler
         else if (name == "SourceFile")
         {
             inputs->sourceFile.push_back(SourceFilePtr(new SourceFile()));
+            handlerSourceFile_.version = version;
             handlerSourceFile_.sf = inputs->sourceFile.back().get();
             return Status(Status::Delegate, &handlerSourceFile_);
         }
         else if (name == "SearchDatabase")
         {
             inputs->searchDatabase.push_back(SearchDatabasePtr(new SearchDatabase()));
+            handlerSearchDatabase_.version = version;
             handlerSearchDatabase_.sd = inputs->searchDatabase.back().get();
             return Status(Status::Delegate, &handlerSearchDatabase_);
         }
         else if (name == "SpectraData")
         {
             inputs->spectraData.push_back(SpectraDataPtr(new SpectraData()));
+            handlerSpectraData_.version = version;
             handlerSpectraData_.sd = inputs->spectraData.back().get();
             return Status(Status::Delegate, &handlerSpectraData_);
         }
@@ -3318,25 +3463,95 @@ PWIZ_API_DECL void read(std::istream& is, Inputs& inputs)
 
 
 //
+// PeptideHypothesis
+//
+
+
+PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const PeptideHypothesis& ph)
+{
+    XMLWriter::Attributes attributes;
+    if (ph.peptideEvidencePtr.get())
+        attributes.add("peptideEvidence_ref", ph.peptideEvidencePtr->id);
+
+    writer.startElement("PeptideHypothesis", attributes);
+    BOOST_FOREACH(const SpectrumIdentificationItemPtr& sii, ph.spectrumIdentificationItemPtr)
+    {
+        attributes.clear();
+        attributes.add("spectrumIdentificationItem_ref", sii->id);
+        writer.startElement("SpectrumIdentificationItemRef", attributes, XMLWriter::EmptyElement);
+    }
+    writer.endElement();
+}
+
+struct HandlerPeptideHypothesis : public SAXParser::Handler
+{
+    PeptideHypothesis* ph;
+    const SequenceIndex& sequenceIndex;
+
+    HandlerPeptideHypothesis(const SequenceIndex& sequenceIndex, PeptideHypothesis* _ph = 0)
+        : ph(_ph), sequenceIndex(sequenceIndex)
+    {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (!ph)
+            throw runtime_error("[IO::HandlerPeptideHypothesis] Null PeptideHypothesis value.");
+
+        if (name == "PeptideHypothesis")
+        {
+            string value;
+            getAttribute(attributes, peptideEvidence_ref(version), value);
+
+            map<string, PeptideEvidencePtr>::const_iterator findItr = sequenceIndex.peptideEvidence.find(value);
+            if (findItr == sequenceIndex.peptideEvidence.end())
+                ph->peptideEvidencePtr = PeptideEvidencePtr(new PeptideEvidence(value));
+            else
+                ph->peptideEvidencePtr = findItr->second;
+        }
+        else if (name == "SpectrumIdentificationItemRef")
+        {
+            string value;
+            getAttribute(attributes, "spectrumIdentificationItem_ref", value);
+
+            map<string, SpectrumIdentificationItemPtr>::const_iterator findItr = sequenceIndex.spectrumIdentificationItems.find(value);
+            if (findItr == sequenceIndex.spectrumIdentificationItems.end())
+                ph->spectrumIdentificationItemPtr.push_back(SpectrumIdentificationItemPtr(new SpectrumIdentificationItem(value)));
+            else
+                ph->spectrumIdentificationItemPtr.push_back(findItr->second);
+        }
+        else
+            throw runtime_error("[IO::HandlerPeptideHypothesis] Unexpected element name: " + name);
+
+        return Status::Ok;
+    }
+};
+
+PWIZ_API_DECL void read(std::istream& is, PeptideHypothesis& ph)
+{
+    SequenceIndex dummy;
+    HandlerPeptideHypothesis handler(dummy, &ph);
+    SAXParser::parse(is, handler);
+}
+
+
+//
 // ProteinDetectionHypothesis
 //
+
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinDetectionHypothesis& pdh)
 {
     XMLWriter::Attributes attributes;
     addIdAttributes(pdh, attributes);
     if (pdh.dbSequencePtr.get() && !pdh.dbSequencePtr->empty())
-        attributes.add("DBSequence_ref", pdh.dbSequencePtr->id);
+        attributes.add("dBSequence_ref", pdh.dbSequencePtr->id);
     attributes.add("passThreshold", pdh.passThreshold ? "true" : "false");
 
     writer.startElement("ProteinDetectionHypothesis", attributes);
-    for(vector<PeptideEvidencePtr>::const_iterator it=pdh.peptideHypothesis.begin();
-        it != pdh.peptideHypothesis.end(); it++)
-    {
-        XMLWriter::Attributes pepAttrs;
-        pepAttrs.push_back(make_pair("PeptideEvidence_Ref", (*it)->id));
-        writer.startElement("PeptideHypothesis", pepAttrs, XMLWriter::EmptyElement);
-    }
+
+    writeList(writer, pdh.peptideHypothesis);
     writeParamContainer(writer, pdh);
     
     writer.endElement();
@@ -3345,8 +3560,10 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinDetectionHypo
 struct HandlerProteinDetectionHypothesis : public HandlerIdentifiableParamContainer
 {
     ProteinDetectionHypothesis* pdh;
-    HandlerProteinDetectionHypothesis(ProteinDetectionHypothesis* _pdh = 0)
-        : pdh(_pdh)
+    const SequenceIndex& sequenceIndex;
+
+    HandlerProteinDetectionHypothesis(const SequenceIndex& sequenceIndex, ProteinDetectionHypothesis* _pdh = 0)
+        : pdh(_pdh), sequenceIndex(sequenceIndex), handlerPeptideHypothesis_(sequenceIndex)
     {}
 
     virtual Status startElement(const string& name, 
@@ -3359,9 +3576,15 @@ struct HandlerProteinDetectionHypothesis : public HandlerIdentifiableParamContai
         if (name == "ProteinDetectionHypothesis")
         {
             string value;
-            getAttribute(attributes, "DBSequence_ref", value);
+            getAttribute(attributes, dBSequence_ref(version), value);
             if (!value.empty())
-                pdh->dbSequencePtr = DBSequencePtr(new DBSequence(value));
+            {
+                map<string, DBSequencePtr>::const_iterator findItr = sequenceIndex.dbSequences.find(value);
+                if (findItr == sequenceIndex.dbSequences.end())
+                    pdh->dbSequencePtr = DBSequencePtr(new DBSequence(value));
+                else
+                    pdh->dbSequencePtr = findItr->second;
+            }
 
             value.clear();
             getAttribute(attributes, "passThreshold", value);
@@ -3371,18 +3594,22 @@ struct HandlerProteinDetectionHypothesis : public HandlerIdentifiableParamContai
         }
         else if (name == "PeptideHypothesis")
         {
-            string value;
-            getAttribute(attributes, "PeptideEvidence_Ref", value);
-            pdh->peptideHypothesis.push_back(PeptideEvidencePtr(new PeptideEvidence(value)));
+            pdh->peptideHypothesis.push_back(PeptideHypothesis());
+            handlerPeptideHypothesis_.version = version;
+            handlerPeptideHypothesis_.ph = &pdh->peptideHypothesis.back();
+            return Status(Status::Delegate, &handlerPeptideHypothesis_);
         }
 
         return HandlerIdentifiableParamContainer::startElement(name, attributes, position);
     }
+    private:
+    HandlerPeptideHypothesis handlerPeptideHypothesis_;
 };
 
 PWIZ_API_DECL void read(std::istream& is, ProteinDetectionHypothesis& pdh)
 {
-    HandlerProteinDetectionHypothesis handler(&pdh);
+    SequenceIndex dummy;
+    HandlerProteinDetectionHypothesis handler(dummy, &pdh);
     SAXParser::parse(is, handler);
 }
 
@@ -3390,6 +3617,7 @@ PWIZ_API_DECL void read(std::istream& is, ProteinDetectionHypothesis& pdh)
 //
 // ProteinAmbiguityGroup
 //
+
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinAmbiguityGroup& pag)
 {
@@ -3409,7 +3637,9 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinAmbiguityGrou
 struct HandlerProteinAmbiguityGroup : public HandlerIdentifiableParamContainer
 {
     ProteinAmbiguityGroup* pag;
-    HandlerProteinAmbiguityGroup(ProteinAmbiguityGroup* _pag = 0) : pag(_pag) {}
+    HandlerProteinAmbiguityGroup(const SequenceIndex& sequenceIndex, ProteinAmbiguityGroup* _pag = 0)
+        : pag(_pag), handlerProteinDetectionHypothesis_(sequenceIndex)
+    {}
 
     virtual Status startElement(const string& name, 
                                 const Attributes& attributes,
@@ -3438,7 +3668,8 @@ struct HandlerProteinAmbiguityGroup : public HandlerIdentifiableParamContainer
 
 PWIZ_API_DECL void read(std::istream& is, ProteinAmbiguityGroup& pag)
 {
-    HandlerProteinAmbiguityGroup handler(&pag);
+    SequenceIndex dummy;
+    HandlerProteinAmbiguityGroup handler(dummy, &pag);
     SAXParser::parse(is, handler);
 }
 
@@ -3466,7 +3697,9 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProteinDetectionList
 struct HandlerProteinDetectionList : public HandlerIdentifiableParamContainer
 {
     ProteinDetectionList* pdl;
-    HandlerProteinDetectionList(ProteinDetectionList* _pdl = 0) : pdl(_pdl) {}
+    HandlerProteinDetectionList(const SequenceIndex& sequenceIndex, ProteinDetectionList* _pdl = 0)
+        : pdl(_pdl), handlerProteinAmbiguityGroup_(sequenceIndex)
+    {}
 
     virtual Status startElement(const string& name, 
                                 const Attributes& attributes,
@@ -3480,6 +3713,7 @@ struct HandlerProteinDetectionList : public HandlerIdentifiableParamContainer
         {
             ProteinAmbiguityGroupPtr pag(new ProteinAmbiguityGroup());
             pdl->proteinAmbiguityGroup.push_back(pag);
+            handlerProteinAmbiguityGroup_.version = version;
             handlerProteinAmbiguityGroup_.pag = pdl->proteinAmbiguityGroup.back().get();
             return Status(Status::Delegate, &handlerProteinAmbiguityGroup_);
         }
@@ -3493,127 +3727,12 @@ struct HandlerProteinDetectionList : public HandlerIdentifiableParamContainer
 
 PWIZ_API_DECL void read(std::istream& is, ProteinDetectionList& pdl)
 {
-    HandlerProteinDetectionList handler(&pdl);
-    SAXParser::parse(is, handler);
-}
-
-
-//
-// PeptideEvidence
-//
-
-
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const PeptideEvidence& pep)
-{
-    XMLWriter::Attributes attributes;
-    addIdAttributes(pep, attributes);
-    if (pep.dbSequencePtr.get() && !pep.dbSequencePtr->empty())
-        attributes.add("DBSequence_Ref", pep.dbSequencePtr->id);
-
-    // don't output these optional attributes if they haven't been set
-    if (pep.start > 0 || pep.end > pep.start)
-    {
-        attributes.add("start", pep.start);
-        attributes.add("end", pep.end);
-    }
-
-    if (!pep.pre.empty())
-        attributes.add("pre", pep.pre);
-    if (!pep.post.empty())
-        attributes.add("post", pep.post);
-    if (pep.translationTablePtr.get() && !pep.translationTablePtr->empty())
-        attributes.add("TranslationTable_ref", pep.translationTablePtr->id);
-    if (pep.frame != 0)
-        attributes.add("frame", pep.frame);
-    attributes.add("isDecoy", pep.isDecoy  ? "true" : "false");
-    if (pep.missedCleavages != 0)
-        attributes.add("missedCleavages", pep.missedCleavages);
-
-    if (!pep.ParamContainer::empty())
-    {
-        writer.startElement("PeptideEvidence", attributes);
-        writeParamContainer(writer, pep);
-        writer.endElement();
-    }
-    else
-        writer.startElement("PeptideEvidence", attributes, XMLWriter::EmptyElement);
-}
-
-
-struct HandlerPeptideEvidence : public HandlerIdentifiableParamContainer
-{
-    PeptideEvidence* pep;
-    const SequenceIndex& sequenceIndex;
-
-    HandlerPeptideEvidence(const SequenceIndex& sequenceIndex, PeptideEvidence* _pep = 0)
-    : pep(_pep), sequenceIndex(sequenceIndex)
-    {}
-
-    virtual Status startElement(const string& name, 
-                                const Attributes& attributes,
-                                stream_offset position)
-    {
-        if (!pep)
-            throw runtime_error("[IO::HandlerPeptideEvidence] Null PeptideEvidence.");
-        
-        if (name == "PeptideEvidence")
-        {
-            string value;
-            getAttribute(attributes, "DBSequence_Ref", value);
-            map<string, DBSequencePtr>::const_iterator findItr = sequenceIndex.dbSequences.find(value);
-            if (findItr == sequenceIndex.dbSequences.end())
-                pep->dbSequencePtr = DBSequencePtr(new DBSequence(value));
-            else
-                pep->dbSequencePtr = findItr->second;
-
-            value.clear();
-            getAttribute(attributes, "start", value);
-            if (!value.empty())
-                pep->start = lexical_cast<int>(value);
-
-            value.clear();
-            getAttribute(attributes, "end", value);
-            if (!value.empty())
-                pep->end = lexical_cast<int>(value);
-
-            getAttribute(attributes, "pre", pep->pre);
-
-            getAttribute(attributes, "post", pep->post);
-
-            value.clear();
-            getAttribute(attributes, "TranslationTable_ref", value);
-            if (!value.empty())
-                pep->translationTablePtr = TranslationTablePtr(new TranslationTable(value));
-
-            value.clear();
-            getAttribute(attributes, "frame", value);
-            if (!value.empty())
-                pep->frame = lexical_cast<int>(value);
-            
-            value.clear();
-            getAttribute(attributes, "isDecoy", value);
-            if (!value.empty())
-                pep->isDecoy = (value=="true" ? true : false);
-
-            value.clear();
-            getAttribute(attributes, "missedCleavages", value);
-            if (!value.empty())
-                pep->missedCleavages = lexical_cast<int>(value);
-
-            HandlerIdentifiableParamContainer::id = pep;
-        }
-
-        return HandlerIdentifiableParamContainer::startElement(name, attributes, position);
-    }
-};
-
-
-PWIZ_API_DECL void read(std::istream& is, PeptideEvidence& pep)
-{
     SequenceIndex dummy;
-    HandlerPeptideEvidence handler(dummy, &pep);
+    HandlerProteinDetectionList handler(dummy, &pdl);
     SAXParser::parse(is, handler);
 }
+
+
 
 
 //
@@ -3626,7 +3745,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const FragmentArray& fa)
     XMLWriter::Attributes attributes;
     attributes.add("values", fa.getValues());
     if (fa.measurePtr.get() && !fa.measurePtr->empty())
-        attributes.add("Measure_ref", fa.measurePtr->id);
+        attributes.add("measure_ref", fa.measurePtr->id);
     
     writer.startElement("FragmentArray", attributes, XMLWriter::EmptyElement);
 }
@@ -3651,7 +3770,7 @@ struct HandlerFragmentArray : public SAXParser::Handler
             fa->setValues(values);
 
             values.clear();
-            getAttribute(attributes, "Measure_ref", values);
+            getAttribute(attributes, measure_ref(version), values);
             if (!values.empty())
                 fa->measurePtr = MeasurePtr(new Measure(values));
         }
@@ -3718,6 +3837,7 @@ struct HandlerIonType : public HandlerParamContainer
         {
             FragmentArrayPtr fa(new FragmentArray());
             it->fragmentArray.push_back(fa);
+            handlerFragmentArray_.version = version;
             handlerFragmentArray_.fa = it->fragmentArray.back().get();
             return handlerFragmentArray_.startElement(name, attributes, position);
         }
@@ -3748,24 +3868,25 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
     attributes.add("rank", siip.rank);
     attributes.add("chargeState", siip.chargeState);
     if (siip.peptidePtr.get() && !siip.peptidePtr->empty())
-        attributes.add("Peptide_ref", siip.peptidePtr->id);
+        attributes.add("peptide_ref", siip.peptidePtr->id);
     attributes.add("experimentalMassToCharge", siip.experimentalMassToCharge);
     attributes.add("calculatedMassToCharge", siip.calculatedMassToCharge);
     if (siip.calculatedPI > 0)
         attributes.add("calculatedPI", siip.calculatedPI);
     attributes.add("passThreshold", (siip.passThreshold ? "true" : "false"));
     if (siip.massTablePtr.get() && !siip.massTablePtr->empty())
-        attributes.add("MassTable_ref", siip.massTablePtr->id);
+        attributes.add("massTable_ref", siip.massTablePtr->id);
     if (siip.samplePtr.get() && !siip.samplePtr->empty())
-        attributes.add("Sample_ref", siip.samplePtr->id);
+        attributes.add("sample_ref", siip.samplePtr->id);
 
 
     writer.startElement("SpectrumIdentificationItem", attributes);
 
-    for(vector<PeptideEvidencePtr>::const_iterator it=siip.peptideEvidence.begin();
-        it!=siip.peptideEvidence.end(); it++)
+    BOOST_FOREACH(const PeptideEvidencePtr& pe, siip.peptideEvidencePtr)
     {
-        write(writer, *it);
+        attributes.clear();
+        attributes.add("peptideEvidence_ref", pe->id);
+        writer.startElement("PeptideEvidenceRef", attributes, XMLWriter::EmptyElement);
     }
 
     writeParamContainer(writer, siip);
@@ -3779,9 +3900,9 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
 struct HandlerSpectrumIdentificationItem : public HandlerIdentifiableParamContainer
 {
     SpectrumIdentificationItem* siip;
-    const SequenceIndex& sequenceIndex;
+    SequenceIndex& sequenceIndex;
 
-    HandlerSpectrumIdentificationItem(const SequenceIndex& sequenceIndex, SpectrumIdentificationItem* _siip = 0)
+    HandlerSpectrumIdentificationItem(SequenceIndex& sequenceIndex, SpectrumIdentificationItem* _siip = 0)
     : siip(_siip),
       sequenceIndex(sequenceIndex),
       handlerPeptideEvidence_(sequenceIndex)
@@ -3802,7 +3923,7 @@ struct HandlerSpectrumIdentificationItem : public HandlerIdentifiableParamContai
             getAttribute(attributes, "calculatedPI", siip->calculatedPI);
 
             string value;
-            getAttribute(attributes, "Peptide_ref", value);
+            getAttribute(attributes, peptide_ref(version), value);
             map<string, PeptidePtr>::const_iterator findItr = sequenceIndex.peptides.find(value);
             if (findItr == sequenceIndex.peptides.end())
                 siip->peptidePtr = PeptidePtr(new Peptide(value));
@@ -3816,21 +3937,34 @@ struct HandlerSpectrumIdentificationItem : public HandlerIdentifiableParamContai
             siip->passThreshold = (value=="true" ? true : false);
 
             value.clear();
-            getAttribute(attributes, "MassTable_ref", value);
+            getAttribute(attributes, massTable_ref(version), value);
             if (!value.empty())
                 siip->massTablePtr = MassTablePtr(new MassTable(value));
 
             value.clear();
-            getAttribute(attributes, "Sample_ref", value);
+            getAttribute(attributes, sample_ref(version), value);
             if (!value.empty())
                 siip->samplePtr = SamplePtr(new Sample(value));
 
             HandlerIdentifiableParamContainer::id = siip;
         }
-        else if (name == "PeptideEvidence")
+        else if (version != SchemaVersion_1_0 && name == "PeptideEvidenceRef")
         {
-            siip->peptideEvidence.push_back(PeptideEvidencePtr(new PeptideEvidence()));
-            handlerPeptideEvidence_.pep = siip->peptideEvidence.back().get();
+            string value;
+            getAttribute(attributes, peptideEvidence_ref(version), value);
+            map<string, PeptideEvidencePtr>::const_iterator findItr = sequenceIndex.peptideEvidence.find(value);
+            if (findItr == sequenceIndex.peptideEvidence.end())
+                siip->peptideEvidencePtr.push_back(PeptideEvidencePtr(new PeptideEvidence(value)));
+            else
+                siip->peptideEvidencePtr.push_back(findItr->second);
+
+            return Status::Ok;
+        }
+        else if (version == SchemaVersion_1_0 && name == "PeptideEvidence")
+        {
+            siip->peptideEvidencePtr.push_back(PeptideEvidencePtr(new PeptideEvidence()));
+            handlerPeptideEvidence_.version = version;
+            handlerPeptideEvidence_.pep = siip->peptideEvidencePtr.back().get();
             return Status(Status::Delegate, &handlerPeptideEvidence_);
         }
         else if (name =="Fragmentation")
@@ -3841,6 +3975,7 @@ struct HandlerSpectrumIdentificationItem : public HandlerIdentifiableParamContai
         else if (name == "IonType")
         {
             siip->fragmentation.push_back(IonTypePtr(new IonType()));
+            handlerIonType_.version = version;
             handlerIonType_.it = siip->fragmentation.back().get();
             return Status(Status::Delegate, &handlerIonType_);
         }
@@ -3871,7 +4006,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
     addIdAttributes(sirp, attributes);
     attributes.add("spectrumID", sirp.spectrumID);
     if (sirp.spectraDataPtr.get() && !sirp.spectraDataPtr->empty())
-        attributes.add("SpectraData_ref", sirp.spectraDataPtr->id);
+        attributes.add("spectraData_ref", sirp.spectraDataPtr->id);
 
     if (sirp.ParamContainer::empty() && sirp.spectrumIdentificationItem.empty())
         writer.startElement("SpectrumIdentificationResult", attributes, XMLWriter::EmptyElement);
@@ -3891,9 +4026,11 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
 struct HandlerSpectrumIdentificationResult : public HandlerIdentifiableParamContainer
 {
     SpectrumIdentificationResult* sirp;
-    HandlerSpectrumIdentificationResult(const SequenceIndex& sequenceIndex,
+    SequenceIndex& sequenceIndex;
+
+    HandlerSpectrumIdentificationResult(SequenceIndex& sequenceIndex,
                                         SpectrumIdentificationResult* _sirp = 0)
-    : sirp(_sirp), handlerSpectrumIdentificationItem_(sequenceIndex)
+    : sirp(_sirp), sequenceIndex(sequenceIndex), handlerSpectrumIdentificationItem_(sequenceIndex)
     {}
 
     virtual Status startElement(const string& name, 
@@ -3908,7 +4045,7 @@ struct HandlerSpectrumIdentificationResult : public HandlerIdentifiableParamCont
             getAttribute(attributes, "spectrumID", sirp->spectrumID);
 
             string value;
-            getAttribute(attributes, "SpectraData_ref", value);
+            getAttribute(attributes, spectraData_ref(version), value);
             if (!value.empty())
                 sirp->spectraDataPtr = SpectraDataPtr(new SpectraData(value));
 
@@ -3916,8 +4053,11 @@ struct HandlerSpectrumIdentificationResult : public HandlerIdentifiableParamCont
         }
         else if (name == "SpectrumIdentificationItem")
         {
+            string id; getAttribute(attributes, "id", id);
             SpectrumIdentificationItemPtr siip(new SpectrumIdentificationItem());
             sirp->spectrumIdentificationItem.push_back(siip);
+            sequenceIndex.spectrumIdentificationItems[id] = sirp->spectrumIdentificationItem.back();
+            handlerSpectrumIdentificationItem_.version = version;
             handlerSpectrumIdentificationItem_.siip = sirp->spectrumIdentificationItem.back().get();
             return Status(Status::Delegate, &handlerSpectrumIdentificationItem_);
         }
@@ -4015,7 +4155,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
 struct HandlerSpectrumIdentificationList : public HandlerIdentifiable
 {
     SpectrumIdentificationList* silp;
-    HandlerSpectrumIdentificationList(const SequenceIndex& sequenceIndex,
+    HandlerSpectrumIdentificationList(SequenceIndex& sequenceIndex,
                                       SpectrumIdentificationList* _silp = 0,
                                       const IterationListenerRegistry* iterationListenerRegistry = 0)
     : silp(_silp), ilr_(iterationListenerRegistry), handlerSpectrumIdentificationResult_(sequenceIndex)
@@ -4044,6 +4184,7 @@ struct HandlerSpectrumIdentificationList : public HandlerIdentifiable
             MeasurePtr measure(new Measure());
 
             silp->fragmentationTable.push_back(measure);
+            handlerMeasure_.version = version;
             handlerMeasure_.measure = silp->fragmentationTable.back().get();
 
             return Status(Status::Delegate, &handlerMeasure_);
@@ -4055,6 +4196,7 @@ struct HandlerSpectrumIdentificationList : public HandlerIdentifiable
 
             SpectrumIdentificationResultPtr sirp(new SpectrumIdentificationResult());
             silp->spectrumIdentificationResult.push_back(sirp);
+            handlerSpectrumIdentificationResult_.version = version;
             handlerSpectrumIdentificationResult_.sirp = silp->spectrumIdentificationResult.back().get();
             return Status(Status::Delegate, &handlerSpectrumIdentificationResult_);
         }
@@ -4105,13 +4247,14 @@ struct HandlerAnalysisData : public SAXParser::Handler
     AnalysisData* ad;
     AnalysisDataFlag analysisDataFlag;
 
-    HandlerAnalysisData(const SequenceIndex& sequenceIndex,
+    HandlerAnalysisData(SequenceIndex& sequenceIndex,
                         AnalysisData* _ad = 0,
                         const IterationListenerRegistry* iterationListenerRegistry = 0,
                         AnalysisDataFlag analysisDataFlag = ReadAnalysisData)
     : ad(_ad),
       analysisDataFlag(analysisDataFlag),
-      handlerSpectrumIdentificationList_(sequenceIndex, 0, iterationListenerRegistry)
+      handlerSpectrumIdentificationList_(sequenceIndex, 0, iterationListenerRegistry),
+      handlerProteinDetectionList_(sequenceIndex)
     {}
 
     virtual Status startElement(const string& name, 
@@ -4132,12 +4275,14 @@ struct HandlerAnalysisData : public SAXParser::Handler
         {
             SpectrumIdentificationListPtr silp(new SpectrumIdentificationList());
             ad->spectrumIdentificationList.push_back(silp);
+            handlerSpectrumIdentificationList_.version = version;
             handlerSpectrumIdentificationList_.silp = ad->spectrumIdentificationList.back().get();
             return Status(Status::Delegate, &handlerSpectrumIdentificationList_);
         }
         else if (name == "ProteinDetectionList")
         {
             ad->proteinDetectionListPtr = ProteinDetectionListPtr(new ProteinDetectionList());
+            handlerProteinDetectionList_.version = version;
             handlerProteinDetectionList_.pdl = ad->proteinDetectionListPtr.get();
             return Status(Status::Delegate, &handlerProteinDetectionList_);
         }
@@ -4181,7 +4326,7 @@ struct HandlerDataCollection : public SAXParser::Handler
 {
     DataCollection* dc;
 
-    HandlerDataCollection(const SequenceIndex& sequenceIndex,
+    HandlerDataCollection(SequenceIndex& sequenceIndex,
                           DataCollection* _dc = 0,
                           const IterationListenerRegistry* iterationListenerRegistry = 0,
                           AnalysisDataFlag analysisDataFlag = ReadAnalysisData)
@@ -4197,11 +4342,13 @@ struct HandlerDataCollection : public SAXParser::Handler
         }
         else if (name == "Inputs")
         {
+            handlerInputs_.version = version;
             handlerInputs_.inputs = &dc->inputs;
             return Status(Status::Delegate, &handlerInputs_);
         }
         else if (name == "AnalysisData")
         {
+            handlerAnalysisData_.version = version;
             handlerAnalysisData_.ad = &dc->analysisData;
             return Status(Status::Delegate, &handlerAnalysisData_);
         }
@@ -4255,6 +4402,7 @@ struct HandlerProvider : public HandlerIdentifiable
         }
         else if (name == "ContactRole")
         {
+            handlerContactRole_.version = version;
             handlerContactRole_.cvParam = handlerContactRole_.cr = &p->contactRole;
             return Status(Status::Delegate, &handlerContactRole_);
         }
@@ -4372,7 +4520,7 @@ struct HandlerMzIdentML : public HandlerIdentifiable
             }
 
             if (mzid->version_.find("1.0.0") == 0)
-                version = MZIDENTML_VERSION_1_0;
+                version = (int) SchemaVersion_1_0;
 
             HandlerIdentifiable::id = mzid;
             return HandlerIdentifiable::startElement(name, attributes, position);
@@ -4396,41 +4544,49 @@ struct HandlerMzIdentML : public HandlerIdentifiable
         else if (name == "AnalysisSoftware")
         {
             mzid->analysisSoftwareList.push_back(AnalysisSoftwarePtr(new AnalysisSoftware()));
+            handlerAnalysisSoftware_.version = version;
             handlerAnalysisSoftware_.anal = mzid->analysisSoftwareList.back().get();
             return Status(Status::Delegate, &handlerAnalysisSoftware_);
         }
         else if (name == "Provider")
         {
+            handlerProvider_.version = version;
             handlerProvider_.p = &mzid->provider;
             return Status(Status::Delegate, &handlerProvider_);
         }
         else if (name == "AuditCollection")
         {
+            handlerContact_.version = version;
             handlerContact_.c = &mzid->auditCollection;
             return Status(Status::Delegate, &handlerContact_);
         }
         else if (name == "AnalysisSampleCollection")
         {
+            handlerAnalysisSampleCollection_.version = version;
             handlerAnalysisSampleCollection_.asc = &mzid->analysisSampleCollection;
             return Status(Status::Delegate, &handlerAnalysisSampleCollection_);
         }
         else if (name == "SequenceCollection")
         {
+            handlerSequenceCollection_.version = version;
             handlerSequenceCollection_.sc = &mzid->sequenceCollection;
             return Status(Status::Delegate, &handlerSequenceCollection_);
         }
         else if (name == "AnalysisCollection")
         {
+            handlerAnalysisCollection_.version = version;
             handlerAnalysisCollection_.anal = &mzid->analysisCollection;
             return Status(Status::Delegate, &handlerAnalysisCollection_);
         }
         else if (name == "AnalysisProtocolCollection")
         {
+            handlerAnalysisProtocolCollection_.version = version;
             handlerAnalysisProtocolCollection_.anal = &mzid->analysisProtocolCollection;
             return Status(Status::Delegate, &handlerAnalysisProtocolCollection_);
         }
         else if (name == "DataCollection")
         {
+            handlerDataCollection_.version = version;
             handlerDataCollection_.dc = &mzid->dataCollection;
             return Status(Status::Delegate, &handlerDataCollection_);
             
@@ -4439,6 +4595,7 @@ struct HandlerMzIdentML : public HandlerIdentifiable
         {
             mzid->bibliographicReference.push_back(
                 BibliographicReferencePtr(new BibliographicReference));
+            handlerBibliographicReference_.version = version;
             handlerBibliographicReference_.br = mzid->bibliographicReference.back().get();
             return Status(Status::Delegate, &handlerBibliographicReference_);
         }

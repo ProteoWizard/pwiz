@@ -135,8 +135,8 @@ PWIZ_API_DECL ostream* DelimWriter::write(const SpectrumIdentificationItem& sii)
         // Using an empty string as the null character
         current_line.push_back("");
     
-    if (sii.peptideEvidence.size())
-        write(sii.peptideEvidence);
+    if (sii.peptideEvidencePtr.size())
+        write(sii.peptideEvidencePtr);
 
     return os_;
 }
