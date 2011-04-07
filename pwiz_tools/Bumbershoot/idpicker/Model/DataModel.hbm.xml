@@ -83,7 +83,7 @@
 			<property name="Version" column="SoftwareVersion"/>
 		</component>
 		<property name="Type"/>
-		<property name="StartTime" type="UtcDateTime"/>
+		<property name="StartTime"/>
 		<set name="Parameters" inverse="true" batch-size="50">
 			<key column="Analysis"/>
 			<one-to-many class="AnalysisParameter"/>
