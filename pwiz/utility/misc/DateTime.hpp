@@ -125,13 +125,22 @@ inline blt::local_date_time parse_date_time(const std::string& format, const std
 
 
 /// returns a string representation suitable for an xsd:datetime attribute;
+/// input is assumed to be UTC time;
 /// output string is UTC time (as denoted by the 'Z' suffix)
-template<class time_type>
-inline
-std::string encode_xml_datetime(const time_type& t)
+inline std::string encode_xml_datetime(const bpt::ptime& t)
 {
     // 2007-06-27T15:23:45Z
-    return format_date_time("%Y-%m-%dT%H:%M:%SZ", blt::local_date_time(t.utc_time(), blt::time_zone_ptr()));
+    return format_date_time("%Y-%m-%dT%H:%M:%SZ", t);
+}
+
+
+/// returns a string representation suitable for an xsd:datetime attribute;
+/// time zone is assumed to be correct;
+/// output string is UTC time (as denoted by the 'Z' suffix)
+inline std::string encode_xml_datetime(const blt::local_date_time& t)
+{
+    // 2007-06-27T15:23:45Z
+    return encode_xml_datetime(t.utc_time());
 }
 
 
