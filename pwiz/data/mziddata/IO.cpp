@@ -91,6 +91,13 @@ ATTRIBUTE_NAME(proteinDetectionList_ref, "ProteinDetectionList_ref", "proteinDet
 
 } // namespace
 
+void write(minimxml::XMLWriter& writer, const Contact& c)
+{
+    if (dynamic_cast<const Organization*>(&c))
+        write(writer, static_cast<const Organization&>(c));
+    else if (dynamic_cast<const Person*>(&c))
+        write(writer, static_cast<const Person&>(c));
+}
 
 template <typename object_type>
 void write(minimxml::XMLWriter& writer, const boost::shared_ptr<object_type>& objectPtr)
@@ -125,7 +132,7 @@ void writePtrList(minimxml::XMLWriter& writer, const vector<object_type>& object
         XMLWriter::Attributes attributes;
         //attributes.add("count", objectPtrs.size());
         if (!label.empty())
-        writer.startElement(label, attributes);
+            writer.startElement(label, attributes);
         for (typename vector<object_type>::const_iterator it=objectPtrs.begin(); it!=objectPtrs.end(); ++it)
             write(writer, **it);
         if (!label.empty())
@@ -1268,15 +1275,6 @@ PWIZ_API_DECL void read(std::istream& is, SequenceCollection& sc,
 //
 // Contact
 //
-
-
-void write(minimxml::XMLWriter& writer, const Contact& c)
-{
-    if (dynamic_cast<const Organization*>(&c))
-        write(writer, static_cast<const Organization&>(c));
-    else if (dynamic_cast<const Person*>(&c))
-        write(writer, static_cast<const Person&>(c));
-}
 
 
 struct HandlerContact : public HandlerIdentifiable
