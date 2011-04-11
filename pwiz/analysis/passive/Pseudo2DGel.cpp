@@ -31,6 +31,7 @@
 #include "boost/filesystem/fstream.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include <cmath>
+#include <algorithm>
 
 
 namespace pwiz {
@@ -40,6 +41,8 @@ namespace analysis {
 namespace bfs = boost::filesystem;
 using namespace pwiz::util;
 using namespace pwiz::peptideid;
+using std::max;
+using std::min;
 
 //
 // Pseudo2DGel::Config
@@ -94,7 +97,9 @@ void Pseudo2DGel::Config::process(const std::string& args)
         else if (*it == "binSum")
             binSum = true; 
         else if (*it == "ms2locs")
+        {
             ms2 = true;
+        }
         else if (*it == "shape")
             markupShape = (it->substr(6) == "square" ? square : circle);
         else if (it->find("pepxml=") == 0)
@@ -397,7 +402,8 @@ double Pseudo2DGel::Impl::getScore(size_t cachedIndex)
 {
     if (cachedIndex >= cache_.size())
         throw out_of_range("ms2 index out of bounds");
-    
+
+    // Set score to 
     double score = -1;
 
     if (cache_[cachedIndex].precursors.size() == 0)
@@ -417,10 +423,15 @@ double Pseudo2DGel::Impl::getScore(size_t cachedIndex)
 
     PeptideID::Location locMs2(nativeID, mz,retentionTime);
 
+    bool noRecord = true;
     try
     {
-        PeptideID::Record rMs2 = config_.peptide_id->record(locMs2);
-        score = rMs2.normalizedScore;
+        if (config_.peptide_id.get())
+        {
+            PeptideID::Record rMs2 = config_.peptide_id->record(locMs2);
+            score = rMs2.normalizedScore;
+            noRecord = false;
+        }
     }
     catch(...)
     {
@@ -432,9 +443,17 @@ double Pseudo2DGel::Impl::getScore(size_t cachedIndex)
         
         PeptideID::Location locMs1(id_ms1, mz, retentionTime);
 
-        PeptideID::Record rMs1 = config_.peptide_id->record(locMs1);
-        score = rMs1.normalizedScore;
+        if (config_.peptide_id.get())
+        {
+            PeptideID::Record rMs1 = config_.peptide_id->record(locMs1);
+            score = rMs1.normalizedScore;
+            noRecord = false;
+        }
     }
+
+    // DEBUG -- setting score to max for ms2locs
+    if (noRecord)
+        score = 1.0;
 
     return score;
 }
@@ -874,6 +893,7 @@ Image::Color Pseudo2DGel::Impl::circleColor(float intensity) const
     if (!circleColorMap_.get())
         throw runtime_error("[Pseudo2DGel::Impl::color()] Circle Color map not instantiated.");
 
+    intensity = min(1.f, max(0.f, intensity));
     float r=0, g=0, b=0;
     (*circleColorMap_)(intensity, r, g, b);
     return Image::Color(int(r*255), int(g*255), int(b*255));
@@ -1083,8 +1103,9 @@ void Pseudo2DGel::Impl::writeImage(const DataInfo& dataInfo, const string& label
         drawTimes(*image, scanInfo, *intensityFunction, Image::Point(x1, y1), Image::Point(x2, y2));
         drawTimeTIC(*image, scans, Image::Point(0, y1), Image::Point(x1, y2));
     }
-    if (config_.ms2)
-        drawMS2Legend(*image, scanInfo, *intensityFunction, Image::Point(x1, titleBarHeight), Image::Point(x2, y1));
+    // The MS2 legend was removed when the MS2 became uniformly white.
+    //if (config_.ms2)
+    //    drawMS2Legend(*image, scanInfo, *intensityFunction, Image::Point(x1, titleBarHeight), Image::Point(x2, y1));
     drawTMZ(*image, scans, Image::Point(x1, titleBarHeight+150), Image::Point(x2, y1));
 
     // separator lines
@@ -1361,20 +1382,27 @@ void Pseudo2DGel::Impl::drawMS2(Image& image, const ScanInfo& scansInfo,
         
         Image::Point lineBegin = graphBegin + Image::Point(0, (int)yPixel);
         
-        double sc = -1;
-        try {
-            sc = getScore(ms2Scans_.scans[j]);
-        }
-        catch(...)
-        {
-        }
+        double sc = 1;
+        // The score is removed b/c it just doesn't make sense here.
+        //try {
+        //    sc = getScore(ms2Scans_.scans[j]);
+        //}
+        //catch(...)
+        //{
+        //}
 
         if (config_.positiveMs2Only && sc <= 0)
             continue;
         
         Image::Point center = lineBegin + Image::Point(ms2Scans_.bin[j],0);
         
-        Image::Color color = chooseMarkupColor(ms2Scans_.scans[j]);
+        //Image::Color color = chooseMarkupColor(ms2Scans_.scans[j]);
+        Image::Color color;
+        if (config_.grey)
+            color = Image::Color(255, 0, 0);
+        else
+            color = Image::white();
+            
 
         if (config_.markupShape == circle)
             image.circle(center, 3, color, false);
