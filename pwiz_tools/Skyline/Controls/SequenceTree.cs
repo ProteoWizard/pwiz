@@ -654,6 +654,13 @@ namespace pwiz.Skyline.Controls
             }
         }
 
+        protected Rectangle GetNoteRect(TreeNode node)
+        {
+            Rectangle rectNode = ((TreeNodeMS)node).BoundsMS;
+            int halfHeight = rectNode.Height - 2;
+            return new Rectangle(rectNode.X + rectNode.Width - halfHeight, rectNode.Y, halfHeight, halfHeight);
+        }
+
         protected Rectangle GetDropRect(TreeNode node)
         {
             // Size for arrowhead image, centered on the node
@@ -733,6 +740,8 @@ namespace pwiz.Skyline.Controls
             TreeNodeMS node = (TreeNodeMS) GetNodeAt(pt);
             var picker = GetPicker(node);
             var tipProvider = node as ITipProvider;
+            if (tipProvider != null)
+                ((SrmTreeNode) node).ShowAnnotationTipOnly = GetNoteRect(node).Contains(pt);
             if (tipProvider != null && !tipProvider.HasTip)
                 tipProvider = null;
             if (_focus &&  (picker != null || tipProvider != null))

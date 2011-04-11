@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
 using System.Diagnostics;
 using System.Drawing;
 using pwiz.Skyline.Model;
@@ -23,7 +24,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.SeqNode
 {
-    public class TransitionTreeNode : SrmTreeNode, ITipProvider
+    public class TransitionTreeNode : SrmTreeNode
     {
         public const string TITLE = "Transition";
 
@@ -171,11 +172,17 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         #region Implementation of ITipProvider
 
-        public bool HasTip { get { return true; } }
+        public override bool HasTip { get { return base.HasTip || !ShowAnnotationTipOnly; } }
 
-        public Size RenderTip(Graphics g, Size sizeMax, bool draw)
+        public override Size RenderTip(Graphics g, Size sizeMax, bool draw)
         {
-            return RenderTip(DocNode, g, sizeMax, draw);
+            var size = base.RenderTip(g, sizeMax, draw);
+            if(ShowAnnotationTipOnly)
+                return size;
+            g.TranslateTransform(0, size.Height);
+            Size sizeMaxNew = new Size(sizeMax.Width, sizeMax.Height - size.Height);
+            var sizeNew = RenderTip(DocNode, g, sizeMaxNew, draw);
+            return new Size(Math.Max(size.Width, sizeNew.Width), size.Height + sizeNew.Height);
         }
 
         public static Size RenderTip(TransitionDocNode nodeTran, Graphics g, Size sizeMax, bool draw)
@@ -206,8 +213,6 @@ namespace pwiz.Skyline.Controls.SeqNode
                     float intensity = nodeTran.LibInfo.Intensity;
                     table.AddDetailRow("Library intensity", MathEx.RoundAboveZero(intensity, (intensity < 10 ? 1 : 0), 4).ToString(), rt);
                 }
-                if (!string.IsNullOrEmpty(nodeTran.Note))
-                    table.AddDetailRow("Note", nodeTran.Note, rt);
 
                 SizeF size = table.CalcDimensions(g);
                 if (draw)

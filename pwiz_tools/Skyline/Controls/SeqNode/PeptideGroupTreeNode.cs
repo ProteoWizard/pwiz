@@ -31,7 +31,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.SeqNode
 {
-    public class PeptideGroupTreeNode : SrmTreeNodeParent, ITipProvider
+    public class PeptideGroupTreeNode : SrmTreeNodeParent
     {
         public const string PROTEIN_TITLE = "Protein";
         public const string PEPTIDE_LIST_TITLE = "Peptide List";
@@ -219,16 +219,20 @@ namespace pwiz.Skyline.Controls.SeqNode
         private const string X80 =
             "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 
-        public bool HasTip
+        public override bool HasTip
         {
-            get { return DocNode.Id is FastaSequence; }
+            get { return base.HasTip || (!ShowAnnotationTipOnly && DocNode.Id is FastaSequence); }
         }
 
-        public Size RenderTip(Graphics g, Size sizeMax, bool draw)
+        public override Size RenderTip(Graphics g, Size sizeMax, bool draw)
         {
+            var sizeInitial = base.RenderTip(g, sizeMax, draw);
+            if (ShowAnnotationTipOnly)
+                return sizeInitial;
+            g.TranslateTransform(0, sizeInitial.Height);
             FastaSequence fastaSeq = DocNode.Id as FastaSequence;
             if (fastaSeq == null)
-                return new Size(0, 0);
+                return sizeInitial;
 
             using (RenderTools rt = new RenderTools())
             {
@@ -316,7 +320,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                     }
                 }
 
-                return TipSize(widthLine, heightTotal);
+                return TipSize(Math.Max(widthLine, sizeInitial.Width), heightTotal + sizeInitial.Height);
             }
         }
 

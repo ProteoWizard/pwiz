@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Controls.SeqNode
     /// <summary>
     /// Base class for all tree node to document node mapping in the <see cref="SequenceTree"/>.
     /// </summary>
-    public abstract class SrmTreeNode : TreeNodeMS, IClipboardDataProvider
+    public abstract class SrmTreeNode : TreeNodeMS, IClipboardDataProvider, ITipProvider
     {
         private const int ANNOTATION_WIDTH = 5;
 
@@ -184,6 +184,45 @@ namespace pwiz.Skyline.Controls.SeqNode
             }
         }
 
+        public bool ShowAnnotationTipOnly { get; set; }
+
+        public virtual bool HasTip
+        {
+            get { return !Model.Annotations.IsEmpty; }
+        }
+
+        public virtual Size RenderTip(Graphics g, Size sizeMax, bool draw)
+        {
+            var table = new TableDesc();
+            using (RenderTools rt = new RenderTools())
+            {
+                var annotations = Model.Annotations;
+                if (!String.IsNullOrEmpty(annotations.Note))
+                {
+                    table.AddDetailRowLineWrap(g, "Note", annotations.Note, rt);
+                }
+                foreach (var annotation in annotations.ListAnnotations())
+                {
+                    KeyValuePair<string, string> annotation1 = annotation;
+                    var def = Document.Settings.DataSettings.AnnotationDefs.First(annotationDef => Equals(annotationDef.Name, annotation1.Key));
+                    var value = annotation1.Value;
+                    if (def.Type == AnnotationDef.AnnotationType.true_false)
+                        value = value != null ? "True" : "False";
+                    table.AddDetailRowLineWrap(g, annotation.Key, value, rt);
+                }
+                SizeF size = table.CalcDimensions(g);
+                if (draw)
+                    table.Draw(g);
+                if (size.Height > 0)
+                {
+                    size.Height += TableDesc.TABLE_SPACING;
+                }
+                var width = Math.Min(sizeMax.Width, size.Width);
+                var height = Math.Min(sizeMax.Height, size.Height);
+                return new Size((int) width, (int) height);
+            }
+        }
+
         #region object overrides
 
         /// <summary>
@@ -227,6 +266,7 @@ namespace pwiz.Skyline.Controls.SeqNode
         }
 
         #endregion // object overrides
+
     }
 
     /// <summary>
@@ -841,28 +881,20 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         public void SetTipProvider(ITipProvider tipProvider, Rectangle rectItem, Point cursorPos)
         {
-            if (_tipProvider != tipProvider)
+            if (!_moveThreshold.Moved(cursorPos)) 
+                return;
+            _timer.Stop();
+            if (Visible)
             {
-                _timer.Stop();
-                if (Visible)
-                {
-                    AnimateMode animate = (Y < _rectItem.Y ?
-                        AnimateMode.SlideTopToBottom : AnimateMode.SlideBottomToTop);
-                    HideAnimate(animate);
-                }
-                _tipProvider = tipProvider;
-                _rectItem = _tipDisplayer.RectToScreen(rectItem);
-                _moveThreshold.Location = cursorPos;
-                if (tipProvider != null)
-                    _timer.Start();
+                AnimateMode animate = (Y < _rectItem.Y ?
+                AnimateMode.SlideTopToBottom : AnimateMode.SlideBottomToTop);
+                HideAnimate(animate);
             }
-            else if (_timer.Enabled && _moveThreshold.Moved(cursorPos))
-            {
-                _timer.Stop();
-                _moveThreshold.Location = cursorPos;
-                if (_tipProvider != null)
-                    _timer.Start();
-            }
+            _tipProvider = tipProvider;
+            _rectItem = _tipDisplayer.RectToScreen(rectItem);
+            _moveThreshold.Location = cursorPos;
+            if (tipProvider != null)
+                _timer.Start();
         }
 
         public override void OnPaint(PaintEventArgs e)
@@ -978,6 +1010,31 @@ namespace pwiz.Skyline.Controls.SeqNode
             Add(row);
         }
 
+        private const string X80 =
+        "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+
+        public void AddDetailRowLineWrap(Graphics g, string name, string value, RenderTools rt)
+        {
+            SizeF sizeX80 = g.MeasureString(X80, rt.FontNormal);
+            float widthLine = sizeX80.Width;
+            var words = value.Split(' ');
+            string line = "";
+            bool firstRow = true;
+            for (int i = 0; i < words.Length; i++)
+            {
+                if (g.MeasureString(line + words[i] + " ", rt.FontNormal).Width > widthLine)
+                {
+                    AddDetailRow(firstRow ? name : "", line, rt);
+                    line = "";
+                    firstRow = false;
+                }
+                line += words[i] + " ";
+            }
+            AddDetailRow(firstRow ? name : "", line, rt);
+            if(!firstRow)
+                AddDetailRow(" ", " ", rt);
+        }
+
         public SizeF CalcDimensions(Graphics g)
         {
             SizeF size = new SizeF(0, 0);
@@ -995,8 +1052,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                     SizeF sizeCell = row[i].SizeF;
                     colWidths[i] = Math.Max(colWidths[i], sizeCell.Width);
                     // Add spacing, if this is not the last column
-                    if (i < row.Count - 1)
-                        colWidths[i] += row.ColumnSpacing;
+                    colWidths[i] += i < row.Count - 1 ? row.ColumnSpacing : 1;
                     heightMax = Math.Max(heightMax, sizeCell.Height);
                 }
 

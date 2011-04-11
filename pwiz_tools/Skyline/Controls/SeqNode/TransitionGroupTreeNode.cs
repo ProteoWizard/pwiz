@@ -30,7 +30,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.SeqNode
 {
-    public class TransitionGroupTreeNode : SrmTreeNodeParent, ITipProvider
+    public class TransitionGroupTreeNode : SrmTreeNodeParent
     {
         public const string TITLE = "Precursor";
 
@@ -338,14 +338,20 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         #region ITipProvider Members
 
-        public bool HasTip { get { return true; } }
+        public override bool HasTip { get { return base.HasTip || !ShowAnnotationTipOnly; } }
 
-        public Size RenderTip(Graphics g, Size sizeMax, bool draw)
+        public override Size RenderTip(Graphics g, Size sizeMax, bool draw)
         {
+            var size = base.RenderTip(g, sizeMax, draw);
+            if(ShowAnnotationTipOnly)
+                return size;
+            g.TranslateTransform(0, size.Height);
+            Size sizeMaxNew = new Size(sizeMax.Width, sizeMax.Height - size.Height);
             var nodePep = (Parent != null ? ((PeptideTreeNode) Parent).DocNode : null);
             var nodeTranTree = SequenceTree.GetNodeOfType<TransitionTreeNode>();
             var nodeTranSelected = (nodeTranTree != null ? nodeTranTree.DocNode : null);
-            return RenderTip(nodePep, DocNode, nodeTranSelected, DocSettings, g, sizeMax, draw);
+            var sizeNew = RenderTip(nodePep, DocNode, nodeTranSelected, DocSettings, g, sizeMaxNew, draw);
+            return new Size(Math.Min(sizeMax.Width, Math.Max(size.Width, sizeNew.Width)), size.Height + sizeNew.Height);
         }
 
         public static Size RenderTip(PeptideDocNode nodePep,
@@ -405,10 +411,6 @@ namespace pwiz.Skyline.Controls.SeqNode
                 {
                     foreach (KeyValuePair<PeptideRankId, string> pair in nodeGroup.LibInfo.RankValues)
                         tableDetails.AddDetailRow(pair.Key.Label, pair.Value, rt);
-                }
-                if (!string.IsNullOrEmpty(nodeGroup.Note))
-                {
-                    tableDetails.AddDetailRow("Note", nodeGroup.Note, rt);
                 }
 
                 var headers = new RowDesc

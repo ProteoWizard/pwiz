@@ -30,7 +30,7 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls.SeqNode
 {
-    public class PeptideTreeNode : SrmTreeNodeParent, ITipProvider
+    public class PeptideTreeNode : SrmTreeNodeParent
     {
         public const string TITLE = "Peptide";
 
@@ -557,9 +557,9 @@ namespace pwiz.Skyline.Controls.SeqNode
 
         #region ITipProvider Members
 
-        public bool HasTip
+        public override bool HasTip
         {
-            get { return HasPeptideTip(DocNode, DocSettings); }
+            get { return base.HasTip || (!ShowAnnotationTipOnly && HasPeptideTip(DocNode, DocSettings)); }
         }
 
         public static bool HasPeptideTip(PeptideDocNode nodePep, SrmSettings settings)
@@ -573,11 +573,17 @@ namespace pwiz.Skyline.Controls.SeqNode
                    GetTypedModifiedSequences(nodePep, settings).Count() > 0;
         }
 
-        public Size RenderTip(Graphics g, Size sizeMax, bool draw)
+        public override Size RenderTip(Graphics g, Size sizeMax, bool draw)
         {
+            var size = base.RenderTip(g, sizeMax, draw);
+            if(ShowAnnotationTipOnly)
+                return size;
+            g.TranslateTransform(0, size.Height);
+            Size sizeMaxNew = new Size(sizeMax.Width, sizeMax.Height - size.Height);
             var nodeTranTree = SequenceTree.GetNodeOfType<TransitionTreeNode>();
             var nodeTranSelected = (nodeTranTree != null ? nodeTranTree.DocNode : null);
-            return RenderTip(DocNode, nodeTranSelected, DocSettings, g, sizeMax, draw);
+            var sizeNew = RenderTip(DocNode, nodeTranSelected, DocSettings, g, sizeMaxNew, draw);
+            return new Size(Math.Max(size.Width, sizeNew.Width), size.Height + sizeNew.Height);
         }
 
         public static Size RenderTip(PeptideDocNode nodePep,
@@ -596,14 +602,13 @@ namespace pwiz.Skyline.Controls.SeqNode
                 {
                     foreach (var typedModSequence in GetTypedModifiedSequences(nodePep, settings))
                         table.AddDetailRow(typedModSequence.Key.Title, typedModSequence.Value, rt);
-
-                    // Add a spacing row, if anything was added
-                    if (table.Count > 0)
-                        table.AddDetailRow(" ", " ", rt);
                 }
 
                 if (peptide.Begin.HasValue)
                 {
+                    // Add a spacing row, if anything was added
+                    if (table.Count > 0)
+                        table.AddDetailRow(" ", " ", rt);
                     table.AddDetailRow("Previous", peptide.PrevAA.ToString(), rt);
                     table.AddDetailRow("First", peptide.Begin.ToString(), rt);
                     table.AddDetailRow("Last", ((peptide.End ?? 1) - 1).ToString(), rt);
@@ -611,9 +616,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 }
                 if (nodePep.Rank.HasValue)
                     table.AddDetailRow("Rank", nodePep.Rank.ToString(), rt);
-                if (!string.IsNullOrEmpty(nodePep.Note))
-                    table.AddDetailRow("Note", nodePep.Note, rt);
-
+               
                 SizeF size = table.CalcDimensions(g);
                 if (draw)
                     table.Draw(g);
