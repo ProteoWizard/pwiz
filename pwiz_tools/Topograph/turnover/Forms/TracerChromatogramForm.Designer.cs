@@ -64,6 +64,8 @@
             this.cbxPeaksAsVerticalLines = new System.Windows.Forms.CheckBox();
             this.cbxPeaksAsHorizontalLines = new System.Windows.Forms.CheckBox();
             this.cbxSmooth = new System.Windows.Forms.CheckBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.comboOverlay = new System.Windows.Forms.ComboBox();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
@@ -91,11 +93,11 @@
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.tableLayoutPanel1.Controls.Add(this.cbxAutoFindPeak, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.gridViewTracerPercents, 0, 8);
+            this.tableLayoutPanel1.Controls.Add(this.gridViewTracerPercents, 0, 9);
             this.tableLayoutPanel1.Controls.Add(this.cbxShowScore, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.label3, 0, 4);
             this.tableLayoutPanel1.Controls.Add(this.tbxScore, 1, 4);
-            this.tableLayoutPanel1.Controls.Add(this.dataGridView1, 0, 9);
+            this.tableLayoutPanel1.Controls.Add(this.dataGridView1, 0, 10);
             this.tableLayoutPanel1.Controls.Add(this.label1, 0, 2);
             this.tableLayoutPanel1.Controls.Add(this.tbxTracerPercentByAreas, 1, 2);
             this.tableLayoutPanel1.Controls.Add(this.label2, 0, 3);
@@ -107,10 +109,13 @@
             this.tableLayoutPanel1.Controls.Add(this.cbxPeaksAsVerticalLines, 0, 1);
             this.tableLayoutPanel1.Controls.Add(this.cbxPeaksAsHorizontalLines, 1, 1);
             this.tableLayoutPanel1.Controls.Add(this.cbxSmooth, 1, 6);
+            this.tableLayoutPanel1.Controls.Add(this.label6, 0, 8);
+            this.tableLayoutPanel1.Controls.Add(this.comboOverlay, 1, 8);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 10;
+            this.tableLayoutPanel1.RowCount = 11;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
@@ -162,7 +167,7 @@
             dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
             this.gridViewTracerPercents.DefaultCellStyle = dataGridViewCellStyle2;
             this.gridViewTracerPercents.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.gridViewTracerPercents.Location = new System.Drawing.Point(3, 203);
+            this.gridViewTracerPercents.Location = new System.Drawing.Point(3, 228);
             this.gridViewTracerPercents.Name = "gridViewTracerPercents";
             this.gridViewTracerPercents.ReadOnly = true;
             dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
@@ -250,7 +255,7 @@
             dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
             this.dataGridView1.DefaultCellStyle = dataGridViewCellStyle5;
             this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridView1.Location = new System.Drawing.Point(3, 303);
+            this.dataGridView1.Location = new System.Drawing.Point(3, 328);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.ReadOnly = true;
             dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
@@ -261,7 +266,7 @@
             dataGridViewCellStyle6.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle6.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
             this.dataGridView1.RowHeadersDefaultCellStyle = dataGridViewCellStyle6;
-            this.dataGridView1.Size = new System.Drawing.Size(373, 152);
+            this.dataGridView1.Size = new System.Drawing.Size(373, 127);
             this.dataGridView1.TabIndex = 15;
             this.dataGridView1.SelectionChanged += new System.EventHandler(this.dataGridView1_SelectionChanged);
             // 
@@ -442,6 +447,26 @@
             this.cbxSmooth.UseVisualStyleBackColor = true;
             this.cbxSmooth.CheckedChanged += new System.EventHandler(this.cbxSmooth_CheckedChanged);
             // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(3, 200);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(43, 13);
+            this.label6.TabIndex = 17;
+            this.label6.Text = "Overlay";
+            // 
+            // comboOverlay
+            // 
+            this.comboOverlay.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.comboOverlay.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboOverlay.FormattingEnabled = true;
+            this.comboOverlay.Location = new System.Drawing.Point(192, 203);
+            this.comboOverlay.Name = "comboOverlay";
+            this.comboOverlay.Size = new System.Drawing.Size(184, 21);
+            this.comboOverlay.TabIndex = 18;
+            this.comboOverlay.SelectedIndexChanged += new System.EventHandler(this.comboOverlay_SelectedIndexChanged);
+            // 
             // TracerChromatogramForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -495,5 +520,7 @@
         private System.Windows.Forms.CheckBox cbxPeaksAsVerticalLines;
         private System.Windows.Forms.CheckBox cbxPeaksAsHorizontalLines;
         private System.Windows.Forms.CheckBox cbxSmooth;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.ComboBox comboOverlay;
     }
 }

@@ -276,7 +276,12 @@ namespace pwiz.Topograph.MsData
             var peaksList = new List<Peaks>();
             using (_workspace.GetReadLock())
             {
-                foreach (var peptideFileAnalysis in task.PeptideAnalysis.FileAnalyses.ListChildren())
+                var peptideFileAnalyses = task.PeptideAnalysis.FileAnalyses.ListChildren().ToArray();
+                Array.Sort(peptideFileAnalyses, 
+                    (f1, f2) => (!f1.FirstDetectedScan.HasValue)
+                        .CompareTo(!f2.FirstDetectedScan.HasValue)
+                );
+                foreach (var peptideFileAnalysis in peptideFileAnalyses)
                 {
                     if (!peptideFileAnalysis.Peaks.IsCalculated && 
                         (peptideFileAnalysis.Chromatograms.ChildCount == 0
@@ -288,7 +293,7 @@ namespace pwiz.Topograph.MsData
                     if (!peaks.IsCalculated)
                     {
                         peaks = new Peaks(peptideFileAnalysis);
-                        peaks.CalcIntensities();
+                        peaks.CalcIntensities(peaksList);
                         if (peaks.ChildCount != 0)
                         {
                             peaksList.Add(peaks);

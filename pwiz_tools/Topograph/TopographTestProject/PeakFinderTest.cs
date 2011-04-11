@@ -183,7 +183,7 @@ namespace pwiz.Topograph.Test
                 peptideFileAnalysis = peptideAnalysis.GetFileAnalysis(dbPeptideFileAnalysis.Id.Value);
             }
             var peaks = new Peaks(peptideFileAnalysis);
-            peaks.CalcIntensities();
+            peaks.CalcIntensities(new Peaks[0]);
             const string format = "0.000";
             Assert.AreEqual(
                 peakFinderPeptide.ExpectedPeakStart.ToString(format) + "-" + peakFinderPeptide.ExpectedPeakEnd.ToString(format),
@@ -229,7 +229,7 @@ namespace pwiz.Topograph.Test
                    LastDetectedScan = 137,
                    MinCharge = 3,
                    MaxCharge = 3,
-                   ExpectedPeakStart = .581,
+                   ExpectedPeakStart = .594,
                    ExpectedPeakEnd = 1.088,
                 },
                 new PeakFinderPeptide

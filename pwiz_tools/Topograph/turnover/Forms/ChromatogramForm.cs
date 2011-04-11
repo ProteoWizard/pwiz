@@ -121,8 +121,11 @@ namespace pwiz.Topograph.ui.Forms
             using (PeptideFileAnalysis.GetReadLock())
             {
                 ShowChromatograms();
-                var backgroundLine = new LineObj(Color.DarkGray, times[0], PeptideFileAnalysis.Background, times[times.Count - 1], PeptideFileAnalysis.Background);
-                msGraphControl.GraphPane.GraphObjList.Add(backgroundLine);
+                if (times.Count > 0)
+                {
+                    var backgroundLine = new LineObj(Color.DarkGray, times[0], PeptideFileAnalysis.Background, times[times.Count - 1], PeptideFileAnalysis.Background);
+                    msGraphControl.GraphPane.GraphObjList.Add(backgroundLine);
+                }
                 double detectedLineHeight = msGraphControl.GraphPane.YAxis.Scale.Max * .9;
                 if (PeptideFileAnalysis.FirstDetectedScan.HasValue)
                 {

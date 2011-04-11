@@ -158,7 +158,7 @@ namespace pwiz.Topograph.ui.Forms
                         DbPeptideSearchResult searchResult;
                         searchResults.TryGetValue(msDataFile.Id.Value, out searchResult);
                         var dbPeptideFileAnalysis = PeptideFileAnalysis.CreatePeptideFileAnalysis(
-                            session, msDataFile, peptideAnalysis, searchResult);
+                            session, msDataFile, peptideAnalysis, searchResult, true);
                         session.Save(dbPeptideFileAnalysis);
                         peptideAnalysis.FileAnalysisCount++;
                     }

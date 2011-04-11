@@ -22,6 +22,8 @@ namespace pwiz.Topograph.ui.Forms
         private readonly List<PeptideAnalysis> _peptideAnalyses = new List<PeptideAnalysis>();
         private WorkspaceVersion _workspaceVersion;
         private ZedGraphControl _zedGraphControl;
+        private LineItem _pointsCurve;
+        private IList<PeptideFileAnalysis> _peptideFileAnalysisPoints;
         public HalfLifeForm(Workspace workspace) : base(workspace)
         {
             InitializeComponent();
@@ -31,6 +33,7 @@ namespace pwiz.Topograph.ui.Forms
                                        GraphPane = { Title = {Text = null}}
                                    };
             _zedGraphControl.GraphPane.XAxis.Title.Text = "Time";
+            _zedGraphControl.MouseDownEvent += new ZedGraphControl.ZedMouseEventHandler(_zedGraphControl_MouseDownEvent);
             splitContainer1.Panel2.Controls.Add(_zedGraphControl);
             var tracerDef = Workspace.GetTracerDefs()[0];
             tbxInitialPercent.Text = tracerDef.InitialApe.ToString();
@@ -38,6 +41,31 @@ namespace pwiz.Topograph.ui.Forms
             colTurnover.DefaultCellStyle.Format = "#.##%";
             colPrecursorPool.DefaultCellStyle.Format = "#.##%";
             comboCalculationType.SelectedIndex = 0;
+        }
+
+        bool _zedGraphControl_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
+        {
+            if (_pointsCurve == null)
+            {
+                return false;
+            }
+            CurveItem nearestCurve;
+            int nearestIndex;
+            if (!sender.GraphPane.FindNearestPoint(e.Location, _pointsCurve, out nearestCurve, out nearestIndex))
+            {
+                return false;
+            }
+            var nearestPeptideFileAnalysis = _peptideFileAnalysisPoints[nearestIndex];
+            for (int i = 0; i < dataGridView1.Rows.Count; i++)
+            {
+                var row = dataGridView1.Rows[i];
+                if (Equals(nearestPeptideFileAnalysis, row.Tag))
+                {
+                    dataGridView1.CurrentCell = row.Cells[0];
+                    return true;
+                }
+            }
+            return false;
         }
         public String Peptide { 
             get
@@ -306,10 +334,19 @@ namespace pwiz.Topograph.ui.Forms
                         var row = dataGridView1.Rows[iRow];
                         var peptideFileAnalysis = (PeptideFileAnalysis) row.Tag;
                         var rowData = halfLifeCalculator.ToRowData(peptideFileAnalysis);
-                        row.Cells[colTurnoverAvg.Index].Value = rowData.AvgTurnover;
-                        row.Cells[colPrecursorPoolAvg.Index].Value =
-                            rowData.AvgPrecursorEnrichment;
-                        row.Cells[colTurnoverScoreAvg.Index].Value = rowData.AvgTurnoverScore;
+                        if (rowData != null)
+                        {
+                            row.Cells[colTurnoverAvg.Index].Value = rowData.AvgTurnover;
+                            row.Cells[colPrecursorPoolAvg.Index].Value =
+                                rowData.AvgPrecursorEnrichment;
+                            row.Cells[colTurnoverScoreAvg.Index].Value = rowData.AvgTurnoverScore;
+                        }
+                        else
+                        {
+                            row.Cells[colTurnoverAvg.Index].Value = null;
+                            row.Cells[colPrecursorPoolAvg.Index].Value = null;
+                            row.Cells[colTurnoverScoreAvg.Index].Value = null;
+                        }
                     }
                 }
                 else
@@ -331,8 +368,11 @@ namespace pwiz.Topograph.ui.Forms
             var halfLife = halfLifeCalculator.CalculateHalfLife(peptideFileAnalyses);
             _zedGraphControl.GraphPane.CurveList.Clear();
             _zedGraphControl.GraphPane.GraphObjList.Clear();
+            _pointsCurve = null;
+            _peptideFileAnalysisPoints = null;
             var xValues = new List<double>();
             var yValues = new List<double>();
+            var fileAnalysisPoints = new List<PeptideFileAnalysis>();
             foreach (var peptideFileAnalysis in peptideFileAnalyses)
             {
                 double? value;
@@ -354,6 +394,7 @@ namespace pwiz.Topograph.ui.Forms
                 }
                 xValues.Add(peptideFileAnalysis.MsDataFile.TimePoint.Value);
                 yValues.Add(value.Value);
+                fileAnalysisPoints.Add(peptideFileAnalysis);
             }
             var pointsCurve = _zedGraphControl.GraphPane.AddCurve("Data Points", xValues.ToArray(), yValues.ToArray(), Color.Black);
             pointsCurve.Line.IsVisible = false;
@@ -398,6 +439,8 @@ namespace pwiz.Topograph.ui.Forms
             _zedGraphControl.GraphPane.XAxis.IsAxisSegmentVisible = !LogPlot;
             _zedGraphControl.GraphPane.AxisChange();
             _zedGraphControl.Invalidate();
+            _pointsCurve = pointsCurve;
+            _peptideFileAnalysisPoints = fileAnalysisPoints;
             tbxRateConstant.Text = halfLife.RateConstant.ToString("0.##E0") + "+/-" +
                                    halfLife.RateConstantError.ToString("0.##E0");
             tbxHalfLife.Text = halfLife.HalfLife.ToString("0.##") + "(" + halfLife.MinHalfLife.ToString("0.##") + "-" +

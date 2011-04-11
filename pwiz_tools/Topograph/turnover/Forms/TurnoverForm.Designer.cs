@@ -53,6 +53,7 @@
             this.halfLivesToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tracerAmountsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.precursorEnrichmentsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.resultsByReplicateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.settingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.enrichmentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.modificationsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -65,7 +66,7 @@
             this.errorsToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.recalculateResultsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.debuggingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.resultsByReplicateToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.alignmentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -204,7 +205,8 @@
             this.halfLivesToolStripMenuItem,
             this.tracerAmountsToolStripMenuItem,
             this.precursorEnrichmentsToolStripMenuItem,
-            this.resultsByReplicateToolStripMenuItem});
+            this.resultsByReplicateToolStripMenuItem,
+            this.alignmentToolStripMenuItem});
             this.viewToolStripMenuItem.Name = "viewToolStripMenuItem";
             this.viewToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.viewToolStripMenuItem.Text = "&View";
@@ -272,6 +274,14 @@
             this.precursorEnrichmentsToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
             this.precursorEnrichmentsToolStripMenuItem.Text = "Precursor Enrichments";
             this.precursorEnrichmentsToolStripMenuItem.Click += new System.EventHandler(this.precursorEnrichmentsToolStripMenuItem_Click);
+            // 
+            // resultsByReplicateToolStripMenuItem
+            // 
+            this.resultsByReplicateToolStripMenuItem.Enabled = false;
+            this.resultsByReplicateToolStripMenuItem.Name = "resultsByReplicateToolStripMenuItem";
+            this.resultsByReplicateToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.resultsByReplicateToolStripMenuItem.Text = "Results By Replicate";
+            this.resultsByReplicateToolStripMenuItem.Click += new System.EventHandler(this.resultsByReplicateToolStripMenuItem_Click);
             // 
             // settingsToolStripMenuItem
             // 
@@ -373,13 +383,13 @@
             this.debuggingToolStripMenuItem.Size = new System.Drawing.Size(32, 19);
             this.debuggingToolStripMenuItem.Text = "Debugging";
             // 
-            // resultsByReplicateToolStripMenuItem
+            // alignmentToolStripMenuItem
             // 
-            this.resultsByReplicateToolStripMenuItem.Enabled = false;
-            this.resultsByReplicateToolStripMenuItem.Name = "resultsByReplicateToolStripMenuItem";
-            this.resultsByReplicateToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
-            this.resultsByReplicateToolStripMenuItem.Text = "Results By Replicate";
-            this.resultsByReplicateToolStripMenuItem.Click += new System.EventHandler(this.resultsByReplicateToolStripMenuItem_Click);
+            this.alignmentToolStripMenuItem.Enabled = false;
+            this.alignmentToolStripMenuItem.Name = "alignmentToolStripMenuItem";
+            this.alignmentToolStripMenuItem.Size = new System.Drawing.Size(213, 22);
+            this.alignmentToolStripMenuItem.Text = "Alignment";
+            this.alignmentToolStripMenuItem.Click += new System.EventHandler(this.alignmentToolStripMenuItem_Click);
             // 
             // TurnoverForm
             // 
@@ -438,5 +448,6 @@
         private System.Windows.Forms.ToolStripMenuItem precursorEnrichmentsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem recalculateResultsToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem resultsByReplicateToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem alignmentToolStripMenuItem;
     }
 }

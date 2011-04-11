@@ -42,7 +42,7 @@ namespace pwiz.Topograph.Model
             SetId(peptideFileAnalysis.Id);
             BasePeakKey = peptideFileAnalysis.Peaks.BasePeakKey;
             IsDirty = true;
-            AutoFindPeak = true;
+            AutoFindPeak = peptideFileAnalysis.Peaks == null ? true : peptideFileAnalysis.Peaks.AutoFindPeak;
         }
 
         public new bool IsDirty { get; set; }
@@ -152,9 +152,9 @@ namespace pwiz.Topograph.Model
                 return ChildCount == 0 ? (double?)null : ListChildren().Max(p => p.EndTime);
             }
         }
-        private void FindPeak()
+        private void FindPeak(IEnumerable<Peaks> otherPeaks)
         {
-            var bestPeak = FindBestPeak();
+            var bestPeak = FindBestPeak(otherPeaks);
             var tracerChromatograms = GetTracerChromatograms();
             DbPeak basePeak;
 
@@ -383,7 +383,7 @@ namespace pwiz.Topograph.Model
                 double nextTime = chromatograms.TimesArray[index];
                 if (index > 0)
                 {
-                    prevTime = chromatograms.TimesArray[i - 1];
+                    prevTime = chromatograms.TimesArray[index - 1];
                 }
                 else
                 {
@@ -405,19 +405,43 @@ namespace pwiz.Topograph.Model
             return points;
         }
 
-        private KeyValuePair<TracerFormula, CrawdadPeak> FindBestPeak()
+        private KeyValuePair<TracerFormula, CrawdadPeak> FindBestPeak(IEnumerable<Peaks> otherPeaks)
         {
             TracerChromatograms tracerChromatograms = GetTracerChromatograms();
             double bestScore = 0;
             var bestPeak = new KeyValuePair<TracerFormula, CrawdadPeak>();
             double bestDistance = double.MaxValue;
+            double firstDetectedTime, lastDetectedTime;
+            GetFirstLastTimes(otherPeaks, out firstDetectedTime, out lastDetectedTime);
+
             foreach (var entry in tracerChromatograms.ListPeaks())
             {
                 if (entry.Value.TimeIndex <= entry.Value.StartIndex || entry.Value.TimeIndex >= entry.Value.EndIndex)
                 {
                     continue;
                 }
-                double distance = Distance(entry.Value);
+                double distance;
+                if (firstDetectedTime > lastDetectedTime)
+                {
+                    distance = 1;
+                }
+                else
+                {
+                    double startTime = tracerChromatograms.Chromatograms.TimesArray[entry.Value.StartIndex];
+                    double endTime = tracerChromatograms.Chromatograms.TimesArray[entry.Value.EndIndex];
+                    if (startTime > lastDetectedTime)
+                    {
+                        distance = startTime - lastDetectedTime;
+                    }
+                    else if (endTime < firstDetectedTime)
+                    {
+                        distance = firstDetectedTime - endTime;
+                    }
+                    else
+                    {
+                        distance = 0;
+                    }
+                }
                 double score = tracerChromatograms.GetScore(entry.Value.StartIndex, entry.Value.EndIndex);
                 if (distance < bestDistance || distance == bestDistance && score > bestScore)
                 {
@@ -433,33 +457,72 @@ namespace pwiz.Topograph.Model
             return bestPeak;
         }
 
-        private double Distance(CrawdadPeak crawdadPeak)
+        private void GetFirstLastTimes(IEnumerable<Peaks> otherPeaks, out double firstDetectedTime, out double lastDetectedTime)
         {
-            if (!PeptideFileAnalysis.FirstDetectedScan.HasValue || !PeptideFileAnalysis.LastDetectedScan.HasValue)
-            {
-                return 1;
-            }
             var tracerChromatograms = GetTracerChromatograms();
-            double firstDetectedTime = tracerChromatograms.Chromatograms.TimeFromScanIndex(PeptideFileAnalysis.FirstDetectedScan.Value);
-            double lastDetectedTime = tracerChromatograms.Chromatograms.TimeFromScanIndex(PeptideFileAnalysis.LastDetectedScan.Value);
-            double startTime = tracerChromatograms.Chromatograms.TimesArray[crawdadPeak.StartIndex];
-            double endTime = tracerChromatograms.Chromatograms.TimesArray[crawdadPeak.EndIndex];
-            if (startTime > lastDetectedTime)
+
+            if (PeptideFileAnalysis.FirstDetectedScan.HasValue && PeptideFileAnalysis.LastDetectedScan.HasValue)
             {
-                return startTime - lastDetectedTime;
+                firstDetectedTime =
+                    tracerChromatograms.Chromatograms.TimeFromScanIndex(PeptideFileAnalysis.FirstDetectedScan.Value);
+                lastDetectedTime =
+                    tracerChromatograms.Chromatograms.TimeFromScanIndex(PeptideFileAnalysis.LastDetectedScan.Value);
+                return;
             }
-            if (endTime < firstDetectedTime)
+            firstDetectedTime = double.MaxValue;
+            lastDetectedTime = double.MinValue;
+            foreach (var otherPeak in otherPeaks)
             {
-                return firstDetectedTime - endTime;
+                var peptideFileAnalysis = otherPeak.PeptideFileAnalysis;
+                if (peptideFileAnalysis.ValidationStatus == ValidationStatus.reject)
+                {
+                    continue;
+                }
+                if (!peptideFileAnalysis.FirstDetectedScan.HasValue || !peptideFileAnalysis.LastDetectedScan.HasValue)
+                {
+                    continue;
+                }
+                var startTime = peptideFileAnalysis.PeakStartTime;
+                var endTime = peptideFileAnalysis.PeakEndTime;
+                if (!startTime.HasValue || !endTime.HasValue)
+                {
+                    continue;
+                }
+                var timeMap = peptideFileAnalysis.MsDataFile.AlignTimes(PeptideFileAnalysis.MsDataFile);
+                double firstTime, lastTime;
+                if (timeMap.TryGetValue(startTime.Value, out firstTime))
+                {
+                    firstDetectedTime = Math.Min(firstDetectedTime, firstTime);
+                }
+                if (timeMap.TryGetValue(endTime.Value, out lastTime))
+                {
+                    lastDetectedTime = Math.Max(lastDetectedTime, lastTime);
+                }
             }
-            return 0;
         }
 
-        public void CalcIntensities()
+        public void CalcIntensities(IEnumerable<Peaks> otherPeaks)
         {
-            if (GetChildCount() == 0 || PeptideFileAnalysis.AutoFindPeak)
+            if (GetChildCount() == 0 || AutoFindPeak)
             {
-                FindPeak();
+                var origPeaks = PeptideFileAnalysis.Peaks;
+                if (AutoFindPeak || origPeaks == null || origPeaks.GetChildCount() == 0)
+                {
+                    FindPeak(otherPeaks);
+                }
+                else
+                {
+                    MakeBasePeak(origPeaks.BaseTracerFormula, origPeaks.GetBasePeak().StartTime,
+                                 origPeaks.GetBasePeak().EndTime);
+                    foreach (var peak in origPeaks.ListChildren())
+                    {
+                        if (peak.TracerFormula.Equals(BaseTracerFormula))
+                        {
+                            continue;
+                        }
+                        MakePeak(peak.TracerFormula, peak.StartTime, peak.EndTime);
+                    }
+                }
             }
             FinishCalculation();
         }

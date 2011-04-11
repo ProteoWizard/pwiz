@@ -148,6 +148,12 @@
     <Compile Include="Forms\AbstractChromatogramForm.Designer.cs">
       <DependentUpon>AbstractChromatogramForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\AlignmentForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\AlignmentForm.Designer.cs">
+      <DependentUpon>AlignmentForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\AnalyzePeptidesForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -408,6 +414,10 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\AddSearchResultsForm.resx">
       <DependentUpon>AddSearchResultsForm.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\AlignmentForm.resx">
+      <DependentUpon>AlignmentForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\AnalyzePeptidesForm.resx">

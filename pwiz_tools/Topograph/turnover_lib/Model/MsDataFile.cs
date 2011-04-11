@@ -24,6 +24,7 @@ using System.Linq;
 using System.Text;
 using NHibernate;
 using NHibernate.Criterion;
+using pwiz.Common.DataAnalysis;
 using pwiz.ProteowizardWrapper;
 using pwiz.Topograph.Data;
 
@@ -35,6 +36,11 @@ namespace pwiz.Topograph.Model
         private String _cohort;
         private String _sample;
         private double? _timePoint;
+        private IDictionary<long, IDictionary<double, double>> _alignments 
+            = new Dictionary<long, IDictionary<double, double>>();
+
+        private IList<SearchResultInfo> _searchResults;
+
         public MsDataFile(Workspace workspace, DbMsDataFile msDataFile) : base(workspace, msDataFile)
         {
         }
@@ -163,6 +169,87 @@ namespace pwiz.Topograph.Model
                 }
             }
             return result;
+        }
+        public IDictionary<double, double> AlignTimes(MsDataFile other)
+        {
+            var alignments = _alignments;
+            lock (alignments)
+            {
+                IDictionary<double, double> result;
+                if (alignments.TryGetValue(other.Id.Value, out result))
+                {
+                    return result;
+                }
+                var lstMySearchResults = ListSearchResults();
+                var lstOtherSearchResults = other.ListSearchResults();
+                var otherSearchResults = lstOtherSearchResults.ToDictionary(s => s.PeptideId, s => s);
+                var dict = new Dictionary<double, double>();
+                foreach (var searchResult1 in lstMySearchResults)
+                {
+                    SearchResultInfo searchResult2;
+                    if (!otherSearchResults.TryGetValue(searchResult1.PeptideId, out searchResult2))
+                    {
+                        continue;
+                    }
+                    if (searchResult1.FirstTracerCount == searchResult2.FirstTracerCount)
+                    {
+                        dict[GetTime(searchResult1.FirstDetectedScan)] =
+                            other.GetTime(searchResult2.FirstDetectedScan);
+                    }
+                    if (searchResult1.LastTracerCount == searchResult2.LastTracerCount)
+                    {
+                        dict[GetTime(searchResult1.LastDetectedScan)] = other.GetTime(searchResult2.LastDetectedScan);
+                    }
+                }
+                var xValues = dict.Keys.ToArray();
+                Array.Sort(xValues);
+                var yValues = xValues.Select(x => dict[x]).ToArray();
+                var loessInterpolator = new LoessInterpolator(.1, 0);
+                var weights = Enumerable.Repeat(1.0, xValues.Count()).ToArray();
+                var smoothedPoints = loessInterpolator.Smooth(xValues, yValues, weights);
+                result = new Dictionary<double, double>();
+                for (int i = 0; i < MsDataFileData.GetSpectrumCount(); i++)
+                {
+                    var time = MsDataFileData.GetTime(i);
+                    result.Add(time, LoessInterpolator.Interpolate(time, xValues, smoothedPoints));
+                }
+                alignments.Add(other.Id.Value, result);
+                return result;
+            }
+        }
+        private IList<SearchResultInfo> ListSearchResults()
+        {
+            if (_searchResults != null)
+            {
+                return _searchResults;
+            }
+            var searchResults = new List<DbPeptideSearchResult>();
+            using (var session = Workspace.OpenSession())
+            {
+                session.CreateCriteria(typeof (DbPeptideSearchResult))
+                    .Add(Restrictions.Eq("MsDataFile", session.Load<DbMsDataFile>(Id)))
+                    .List(searchResults);
+            }
+            return _searchResults = searchResults.Select(s=>new SearchResultInfo(s)).ToArray();
+        }
+
+        private class SearchResultInfo
+        {
+            public SearchResultInfo(DbPeptideSearchResult dbPeptideSearchResult)
+            {
+                PeptideId = dbPeptideSearchResult.Peptide.Id.Value;
+                MsDataFileId = dbPeptideSearchResult.MsDataFile.Id.Value;
+                FirstDetectedScan = dbPeptideSearchResult.FirstDetectedScan;
+                FirstTracerCount = dbPeptideSearchResult.LastTracerCount;
+                LastDetectedScan = dbPeptideSearchResult.LastDetectedScan;
+                LastTracerCount = dbPeptideSearchResult.LastTracerCount;
+            }
+            public long PeptideId { get; private set; }
+            public long MsDataFileId { get; private set; }
+            public int FirstDetectedScan { get; private set; }
+            public int FirstTracerCount { get; private set; }
+            public int LastDetectedScan { get; private set; }
+            public int LastTracerCount { get; private set; }
         }
     }
 }

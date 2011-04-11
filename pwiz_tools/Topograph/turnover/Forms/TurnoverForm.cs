@@ -118,6 +118,7 @@ namespace pwiz.Topograph.ui.Forms
                                tracerAmountsToolStripMenuItem,
                                precursorEnrichmentsToolStripMenuItem,
                                resultsByReplicateToolStripMenuItem,
+                               alignmentToolStripMenuItem,
                            };
             }
         }
@@ -884,6 +885,11 @@ namespace pwiz.Topograph.ui.Forms
         {
             var resultsPerReplicateForm = new ResultsPerReplicateForm(Workspace);
             resultsPerReplicateForm.Show(dockPanel, DockState.Document);
+        }
+
+        private void alignmentToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            new AlignmentForm(Workspace).Show(dockPanel, DockState.Document);
         }
     }
 }

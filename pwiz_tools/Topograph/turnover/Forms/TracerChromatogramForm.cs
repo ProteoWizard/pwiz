@@ -8,6 +8,7 @@ using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.Common.DataAnalysis;
 using pwiz.MSGraph;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Enrichment;
@@ -268,8 +269,17 @@ namespace pwiz.Topograph.ui.Forms
             {
                 return;
             }
+            var overlayFileAnalysis = UpdateDataFileCombo(comboOverlay);
             var peakLines = new Dictionary<TracerFormula, PeakDisplay>();
             var tracerChromatograms = GetPoints();
+            TracerChromatograms overlayTracerChromatograms = null;
+            double[] mappedTimes = null;
+            if (overlayFileAnalysis != null)
+            {
+                overlayTracerChromatograms = overlayFileAnalysis.GetTracerChromatograms(Smooth);
+                var mapDict = overlayFileAnalysis.MsDataFile.AlignTimes(PeptideFileAnalysis.MsDataFile);
+                mappedTimes = overlayTracerChromatograms.Times.Select(t => mapDict[t]).ToArray();
+            }
             var peaks = PeptideFileAnalysis.Peaks;
             var entries = tracerChromatograms.Points.ToArray();
             if (dataGridView1.Rows.Count != entries.Length)
@@ -322,6 +332,20 @@ namespace pwiz.Topograph.ui.Forms
                     };
                     var chromCurveItem = msGraphControl.AddGraphItem(msGraphControl.GraphPane, curve);
                     chromCurveItem.Label.IsVisible = false;
+                    if (overlayTracerChromatograms != null)
+                    {
+                        var overlayCurve = new ChromatogramGraphItem
+                                               {
+                                                   Title = overlayFileAnalysis.MsDataFile.Label + " " + label,
+                                                   Color = GetColor(iCandidate, entries.Length),
+                                                   Points =
+                                                       new PointPairList(mappedTimes,
+                                                                         overlayTracerChromatograms.Points[entry.Key])
+                                               };
+                        var overlayCurveItem = (LineItem) msGraphControl.AddGraphItem(msGraphControl.GraphPane, overlayCurve);
+                        overlayCurveItem.Label.IsVisible = false;
+                        overlayCurveItem.Line.Style = DashStyle.Dash;
+                    }
                     if (peak != null)
                     {
                         var peakDisplay = new PeakDisplay();
@@ -627,6 +651,11 @@ namespace pwiz.Topograph.ui.Forms
         private void cbxSmooth_CheckedChanged(object sender, EventArgs e)
         {
             Smooth = cbxSmooth.Checked;
+        }
+
+        private void comboOverlay_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateUi();
         }
     }
 }

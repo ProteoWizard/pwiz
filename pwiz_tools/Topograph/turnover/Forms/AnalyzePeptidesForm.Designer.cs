@@ -37,6 +37,7 @@
             this.btnCancel = new System.Windows.Forms.Button();
             this.tbxStatus = new System.Windows.Forms.TextBox();
             this.progressBar = new System.Windows.Forms.ProgressBar();
+            this.cbxIncludeMissingMS2 = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // label1
@@ -111,6 +112,16 @@
             this.progressBar.TabIndex = 7;
             this.progressBar.Visible = false;
             // 
+            // cbxIncludeMissingMS2
+            // 
+            this.cbxIncludeMissingMS2.AutoSize = true;
+            this.cbxIncludeMissingMS2.Location = new System.Drawing.Point(16, 67);
+            this.cbxIncludeMissingMS2.Name = "cbxIncludeMissingMS2";
+            this.cbxIncludeMissingMS2.Size = new System.Drawing.Size(183, 17);
+            this.cbxIncludeMissingMS2.TabIndex = 8;
+            this.cbxIncludeMissingMS2.Text = "Include Samples Without MS2 ID";
+            this.cbxIncludeMissingMS2.UseVisualStyleBackColor = true;
+            // 
             // AnalyzePeptidesForm
             // 
             this.AcceptButton = this.btnCreateAnalyses;
@@ -118,6 +129,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(287, 264);
+            this.Controls.Add(this.cbxIncludeMissingMS2);
             this.Controls.Add(this.progressBar);
             this.Controls.Add(this.tbxStatus);
             this.Controls.Add(this.btnCancel);
@@ -146,6 +158,7 @@
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.TextBox tbxStatus;
         private System.Windows.Forms.ProgressBar progressBar;
+        private System.Windows.Forms.CheckBox cbxIncludeMissingMS2;
 
     }
 }

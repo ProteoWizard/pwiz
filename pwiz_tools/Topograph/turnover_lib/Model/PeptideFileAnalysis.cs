@@ -132,7 +132,7 @@ namespace pwiz.Topograph.Model
         public double? PeakStartTime { get { return Peaks.StartTime; } }
         public double? PeakEndTime { get { return Peaks.EndTime; } }
         
-        public static DbPeptideFileAnalysis CreatePeptideFileAnalysis(ISession session, MsDataFile msDataFile, DbPeptideAnalysis dbPeptideAnalysis, DbPeptideSearchResult peptideSearchResult)
+        public static DbPeptideFileAnalysis CreatePeptideFileAnalysis(ISession session, MsDataFile msDataFile, DbPeptideAnalysis dbPeptideAnalysis, DbPeptideSearchResult peptideSearchResult, bool queryStartEndTime)
         {
             var dbMsDataFile = session.Load<DbMsDataFile>(msDataFile.Id);
             double chromatogramStartTime, chromatogramEndTime;
@@ -146,16 +146,24 @@ namespace pwiz.Topograph.Model
             }
             else
             {
-                var query = session.CreateQuery("SELECT MIN(T.ChromatogramStartTime),MAX(T.ChromatogramEndTime) FROM " +
-                                    typeof (DbPeptideFileAnalysis) + " T WHERE T.PeptideAnalysis = :peptideAnalysis")
-                    .SetParameter("peptideAnalysis", dbPeptideAnalysis);
-                var result = (object[]) query.UniqueResult();
-                if (result[0] == null)
+                if (queryStartEndTime)
                 {
-                    return null;
+                    var query = session.CreateQuery(
+                        "SELECT MIN(T.ChromatogramStartTime),MAX(T.ChromatogramEndTime) FROM " +
+                        typeof (DbPeptideFileAnalysis) + " T WHERE T.PeptideAnalysis = :peptideAnalysis")
+                        .SetParameter("peptideAnalysis", dbPeptideAnalysis);
+                    var result = (object[]) query.UniqueResult();
+                    if (result[0] == null)
+                    {
+                        return null;
+                    }
+                    chromatogramStartTime = Convert.ToDouble(result[0]);
+                    chromatogramEndTime = Convert.ToDouble(result[1]);
                 }
-                chromatogramStartTime = Convert.ToDouble(result[0]);
-                chromatogramEndTime = Convert.ToDouble(result[1]);
+                else
+                {
+                    chromatogramStartTime = chromatogramEndTime = 0;
+                }
                 firstDetectedScan = lastDetectedScan = null;
             }
             return new DbPeptideFileAnalysis
@@ -196,11 +204,12 @@ namespace pwiz.Topograph.Model
                     .Add(Restrictions.Eq("Peptide", dbPeptideAnalysis.Peptide))
                     .Add(Restrictions.Eq("MsDataFile", dbMsDataFile));
                 var searchResult = (DbPeptideSearchResult) searchResultCriteria.UniqueResult();
-                var dbPeptideFileAnalysis = CreatePeptideFileAnalysis(session, msDataFile, dbPeptideAnalysis, searchResult);
+                var dbPeptideFileAnalysis = CreatePeptideFileAnalysis(session, msDataFile, dbPeptideAnalysis, searchResult, true);
                 if (dbPeptideFileAnalysis == null)
                 {
                     return null;
                 }
+
                 session.BeginTransaction();
                 session.Save(dbPeptideFileAnalysis);
                 dbPeptideAnalysis.FileAnalysisCount++;
@@ -219,14 +228,21 @@ namespace pwiz.Topograph.Model
             }
         }
 
-        private void Recalculate()
+        private void Recalculate(bool autoFindPeak)
         {
             using (GetWriteLock())
             {
-                Peaks = new Peaks(this);
+                Peaks = new Peaks(this)
+                            {
+                                AutoFindPeak = autoFindPeak
+                            };
                 if (Chromatograms.ChildCount > 0)
                 {
-                    Peaks.CalcIntensities();
+                    var otherPeaks = PeptideAnalysis.FileAnalyses.ListChildren()
+                        .Where(f => (!Equals(f)) && f.Peaks.IsCalculated)
+                        .Select(f => f.Peaks);
+                        
+                    Peaks.CalcIntensities(otherPeaks);
                 }
             }
         }
@@ -284,7 +300,7 @@ namespace pwiz.Topograph.Model
         public void OnExcludedMzsChanged()
         {
             ClearTracerChromatograms();
-            Recalculate();
+            Recalculate(AutoFindPeak);
         }
         public void InvalidateChromatograms()
         {
@@ -293,7 +309,11 @@ namespace pwiz.Topograph.Model
             {
                 Chromatograms = new Chromatograms(this, new double[0], new int[0]);
             }
-            Recalculate();
+            Recalculate(AutoFindPeak);
+        }
+        public void SetAutoFindPeak()
+        {
+            Recalculate(true);
         }
         private void ExcludedMzs_Changed(ExcludedMzs excludedMzs)
         {
@@ -402,7 +422,7 @@ namespace pwiz.Topograph.Model
                     Chromatograms.AddChild(chromatogramData.MzKey, chromatogramData);
                 }
                 ClearTracerChromatograms();
-                Recalculate();
+                Recalculate(AutoFindPeak);
                 Workspace.EntityChanged(PeptideAnalysis);
                 return true;
             }

@@ -127,6 +127,9 @@ namespace pwiz.Topograph.ui.Forms
                 row.Cells[colTracerPercent.Index].Value = null;
             }
             row.Cells[colScore.Index].Value = peptideFileAnalysis.Peaks.DeconvolutionScore;
+            row.Cells[colScore.Index].Style.BackColor
+                = peptideFileAnalysis.FirstDetectedScan.HasValue ? Color.White : Color.LightGray;
+
             if (Workspace.GetTracerDefs().Count > 1)
             {
                 row.Cells[colPrecursorEnrichment.Index].Value = peptideFileAnalysis.Peaks.PrecursorEnrichmentFormula;

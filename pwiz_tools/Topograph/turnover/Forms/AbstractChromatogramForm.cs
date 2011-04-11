@@ -371,9 +371,7 @@ namespace pwiz.Topograph.ui.Forms
         {
             if (autoFindPeak)
             {
-                var newPeaks = new Peaks(PeptideFileAnalysis);
-                newPeaks.CalcIntensities();
-                PeptideFileAnalysis.SetDistributions(newPeaks);
+                PeptideFileAnalysis.SetAutoFindPeak();
             }
             else
             {
@@ -388,6 +386,33 @@ namespace pwiz.Topograph.ui.Forms
         {
             Smooth = toolStripMenuItemSmooth.Checked;
         }
+        protected PeptideFileAnalysis UpdateDataFileCombo(ComboBox comboBox)
+        {
+            var selectedItem = comboBox.SelectedItem as AlignmentForm.MsDataFileListItem;
+            MsDataFile selectedFile = null;
+            if (selectedItem != null)
+            {
+                selectedFile = selectedItem.MsDataFile;
+            }
+            comboBox.Items.Clear();
+            comboBox.Items.Add("");
+            PeptideFileAnalysis selectedPeptideFileAnalysis = null;
+            foreach (var peptideFileAnalysis in PeptideAnalysis.FileAnalyses.ListChildren())
+            {
+                if (peptideFileAnalysis.Equals(PeptideFileAnalysis))
+                {
+                    continue;
+                }
+                comboBox.Items.Add(new AlignmentForm.MsDataFileListItem(peptideFileAnalysis.MsDataFile));
+                if (peptideFileAnalysis.MsDataFile.Equals(selectedFile))
+                {
+                    selectedPeptideFileAnalysis = peptideFileAnalysis;
+                    comboBox.SelectedIndex = comboBox.Items.Count - 1;
+                }
+            }
+            return selectedPeptideFileAnalysis;
+        }
+
     }
 
     public class ChromatogramGraphItem : IMSGraphItemInfo
@@ -434,7 +459,6 @@ namespace pwiz.Topograph.ui.Forms
             axis.Scale.MaxAuto = true;
             CustomizeAxis(axis);
         }
-
 
         public IPointList Points
         {

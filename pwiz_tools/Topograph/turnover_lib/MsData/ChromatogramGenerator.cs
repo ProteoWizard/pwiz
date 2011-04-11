@@ -107,6 +107,19 @@ namespace pwiz.Topograph.MsData
             progress = _progress;
         }
 
+        private bool IsLowOnMemory()
+        {
+            try
+            {
+                var bytes = new byte[20000000];
+            }
+            catch (OutOfMemoryException outOfMemoryException)
+            {
+                return true;
+            }
+            return false;
+        }
+
         private ChromatogramTask GetTaskList()
         {
             WorkspaceVersion workspaceVersion;
@@ -342,7 +355,7 @@ namespace pwiz.Topograph.MsData
                     {
 
                         ErrorHandler.LogException("Chromatogram Generator", "Exception generating chromatograms", exception);
-                        if (exception is OutOfMemoryException)
+                        if (exception is OutOfMemoryException && maxConcurrentAnalyses > 1)
                         {
                             maxConcurrentAnalyses /= 2;
                             maxConcurrentAnalyses = Math.Max(maxConcurrentAnalyses, 1);
@@ -453,9 +466,11 @@ namespace pwiz.Topograph.MsData
                         iScan = Math.Max(iScan, nextScan - 1);
                         continue;
                     }
+                    bool lowMemory = IsLowOnMemory();
                     // If we have exceeded the number of analyses we should be working on at once,
                     // throw out any that we haven't started.
-                    for (int iAnalysis = activeAnalyses.Count - 1; iAnalysis >= 0 && activeAnalyses.Count > maxConcurrentAnalyses; iAnalysis--)
+                    for (int iAnalysis = activeAnalyses.Count - 1; iAnalysis >= 0 
+                        && (activeAnalyses.Count > maxConcurrentAnalyses || lowMemory); iAnalysis--)
                     {
                         var analysis = activeAnalyses[iAnalysis];
                         if (analysis.Times.Count > 0)
