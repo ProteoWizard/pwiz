@@ -148,6 +148,10 @@ namespace pwiz.Topograph.MsData
                         {
                             continue;
                         }
+                        if (!peptideFileAnalysis.PeptideAnalysis.ChromatogramsWereLoaded)
+                        {
+                            continue;
+                        }
                         if (!peptideFileAnalysis.IsMzKeySetComplete(peptideFileAnalysis.Chromatograms.GetKeys()))
                         {
                             if (msDataFileId == null)
