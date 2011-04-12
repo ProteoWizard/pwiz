@@ -342,9 +342,6 @@ struct UserFeedbackIterationListener : public IterationListener
 
         return Status_Ok;
     }
-
-    private:
-    string lastMessage;
 };
 
 
@@ -420,10 +417,9 @@ void processFile(const string& filename, const Config& config, const ReaderList&
     // handle progress updates if requested
 
     IterationListenerRegistry iterationListenerRegistry;
-    UserFeedbackIterationListener feedback;
     // update on the first spectrum, the last spectrum, the 100th spectrum, the 200th spectrum, etc.
     const size_t iterationPeriod = 100;
-    iterationListenerRegistry.addListener(feedback, iterationPeriod);
+    iterationListenerRegistry.addListener(IterationListenerPtr(new UserFeedbackIterationListener), iterationPeriod);
     IterationListenerRegistry* pILR = config.verbose ? &iterationListenerRegistry : 0; 
 
     // read in data file
@@ -450,7 +446,7 @@ void processFile(const string& filename, const Config& config, const ReaderList&
             cout << "writing output file: " << outputFilename << endl;
 
             if (config.outputPath == "-")
-                MzIdentMLFile::write(idd, outputFilename, cout, config.writeConfig, pILR);
+                MzIdentMLFile::write(idd, outputFilename, cout, config.writeConfig);
             else
                 MzIdentMLFile::write(idd, outputFilename, config.writeConfig, pILR);
         }

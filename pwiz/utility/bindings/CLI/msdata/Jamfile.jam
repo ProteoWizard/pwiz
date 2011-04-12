@@ -41,6 +41,5 @@ project
 unit-test-if-exists MSDataTest : MSDataTest.cpp : <conditional>@unit-test-requirements ;
 unit-test-if-exists DiffTest : DiffTest.cpp : <conditional>@unit-test-requirements ;
 unit-test-if-exists MSDataFileTest : MSDataFileTest.cpp : <conditional>@unit-test-requirements ;
-explicit MSDataFileTest ;
 
 }

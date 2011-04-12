@@ -101,7 +101,8 @@ path-constant DOC_PATH : $(PWIZ_BUILD_PATH)/pwiz/utility/bindings/CLI/doc ;
 SHELL "if not exist \"$(DOC_PATH)\\\" mkdir \"$(DOC_PATH)\"" ;
 
 
-obj ParamTypes       : common/ParamTypes.cpp   : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/ParamTypes.xdc" ;
+obj ParamTypes        : common/ParamTypes.cpp        : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/ParamTypes.xdc" ;
+obj IterationListener : common/IterationListener.cpp : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/IterationListener.xdc" ;
 
 obj MSDataDiff       : msdata/Diff.cpp       : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/MSDataDiff.xdc" ;
 obj MSData           : msdata/MSData.cpp     : $(bound_libs) <cxxflags>"/doc$(DOC_PATH)/MSData.xdc" ;
@@ -131,6 +132,7 @@ obj TraData_examples  : tradata/examples.cpp    : $(bound_libs) <cxxflags>"/doc$
 lib pwiz_bindings_cli
     : # sources
         ParamTypes
+        IterationListener
         MSDataDiff
         MSData
         MSDataFile

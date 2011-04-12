@@ -79,6 +79,12 @@ class CancelListener : public IterationListener
 };
 
 
+// null deallactor to create shared_ptrs that do not delete when reset
+void nullDeallocate(IterationListener* s)
+{
+    // do nothing
+}
+
 void test()
 {
     if (os_) *os_ << "test()\n";
@@ -90,10 +96,10 @@ void test()
     TestListener test5("test5");
     TestListener test6("test6");
 
-    registry.addListener(test3, 3);
-    registry.addListener(test4, 4);
-    registry.addListener(test5, 5);
-    registry.addListener(test6, 6);
+    registry.addListener(IterationListenerPtr(&test3, nullDeallocate), 3);
+    registry.addListener(IterationListenerPtr(&test4, nullDeallocate), 4);
+    registry.addListener(IterationListenerPtr(&test5, nullDeallocate), 5);
+    registry.addListener(IterationListenerPtr(&test6, nullDeallocate), 6);
 
     size_t iterationCount = 24;
     for (size_t i=0; i<iterationCount; i++)
@@ -121,10 +127,10 @@ void testCancel()
     TestListener test4("test4");
     TestListener test6("test6");
 
-    registry.addListener(cancelListener, 1);
-    registry.addListener(test3, 3);
-    registry.addListener(test4, 4);
-    registry.addListener(test6, 5);
+    registry.addListener(IterationListenerPtr(&cancelListener, nullDeallocate), 1);
+    registry.addListener(IterationListenerPtr(&test3, nullDeallocate), 3);
+    registry.addListener(IterationListenerPtr(&test4, nullDeallocate), 4);
+    registry.addListener(IterationListenerPtr(&test6, nullDeallocate), 5);
 
     // typical use of IterationListenerRegistry, with proper Status_Cancel handling
 
@@ -180,9 +186,11 @@ void testRemove()
     TestListener test3("test3");
     TestListener test4("test4");
 
-    registry.addListener(test3, 3);
-    registry.addListener(bad, 1);
-    registry.addListener(test4, 4);
+    IterationListenerPtr badPtr(&bad, nullDeallocate);
+
+    registry.addListener(IterationListenerPtr(&test3, nullDeallocate), 3);
+    registry.addListener(badPtr, 1);
+    registry.addListener(IterationListenerPtr(&test4, nullDeallocate), 4);
 
     // sanity check -- verify that broadcast throws if BadListener is in the registry    
     
@@ -201,7 +209,7 @@ void testRemove()
 
     // remove BadListener -- broadcast will throw if not removed properly
 
-    registry.removeListener(bad);
+    registry.removeListener(badPtr);
     registry.broadcastUpdateMessage(IterationListener::UpdateMessage(0,0));
 
     if (os_) *os_ << endl;
@@ -217,8 +225,8 @@ void testTime()
     TestListener test_iteration("test_iteration");
     TestListener test_time("test_time");
 
-    registry.addListener(test_iteration, 1000000);
-    registry.addListenerWithTimer(test_time, 1.0); 
+    registry.addListener(IterationListenerPtr(&test_iteration, nullDeallocate), 1000000);
+    registry.addListenerWithTimer(IterationListenerPtr(&test_time, nullDeallocate), 1.0); 
 
     time_t start;
     time(&start);

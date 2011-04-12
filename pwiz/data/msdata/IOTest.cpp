@@ -737,9 +737,10 @@ void testSpectrumListWriteProgress()
     ostringstream oss;
     XMLWriter writer(oss);
 
-    TestIterationListener listener;
+    IterationListenerPtr listenerPtr(new TestIterationListener);
+    TestIterationListener& listener = *boost::static_pointer_cast<TestIterationListener>(listenerPtr);
     IterationListenerRegistry registry;
-    registry.addListener(listener, 3); // callbacks: 0,2,5,8,10
+    registry.addListener(listenerPtr, 3); // callbacks: 0,2,5,8,10
 
     MSData dummy;
     IO::write(writer, a, dummy, BinaryDataEncoder::Config(), 0, &registry);
@@ -761,9 +762,10 @@ void testSpectrumListWriteProgress()
 
     // test #2, this time with cancel at index 6
 
-    TestIterationListener_WithCancel cancelListener;
+    IterationListenerPtr cancelListenerPtr(new TestIterationListener_WithCancel);
+    TestIterationListener_WithCancel& cancelListener = *boost::static_pointer_cast<TestIterationListener_WithCancel>(cancelListenerPtr);
     IterationListenerRegistry registry2;
-    registry2.addListener(cancelListener, 3); // callbacks: 0,2, cancel at 5
+    registry2.addListener(cancelListenerPtr, 3); // callbacks: 0,2, cancel at 5
     
     ostringstream oss2;
     XMLWriter writer2(oss2);

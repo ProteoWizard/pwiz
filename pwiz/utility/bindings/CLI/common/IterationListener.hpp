@@ -34,40 +34,41 @@ namespace CLI {
 namespace util {
 
 
-public ref struct IterationEventArgs : System::EventArgs
+public ref struct IterationListener
 {
-    property System::String^ Message;
-    property int IterationIndex;
-    property int IterationCount;
-    property bool Cancel;
+    enum class Status {Ok, Cancel};
+
+    ref struct UpdateMessage
+    {
+        UpdateMessage(int iterationIndex, int iterationCount, System::String^ message);
+
+        property System::String^ message;
+        property int iterationIndex;
+        property int iterationCount;
+    };
+
+    IterationListener();
+
+    virtual Status update(UpdateMessage^ updateMessage) {return Status::Ok;}
 };
 
-public delegate void IterationEventHandler(System::Object^ sender, IterationEventArgs^ e);
+public delegate IterationListener::Status IterationListenerUpdate(IterationListener::UpdateMessage^ updateMessage);
 
 
-struct IterationListenerForwarder : public pwiz::util::IterationListener
+public ref class IterationListenerRegistry
 {
-    typedef void (__stdcall *IterationListenerCallback)(System::Object^ sender, IterationEventArgs^ e);
-    IterationListenerCallback managedFunctionPtr;
+    DEFINE_INTERNAL_BASE_CODE(IterationListenerRegistry, pwiz::util::IterationListenerRegistry);
+    System::Collections::Generic::Dictionary<pwiz::CLI::util::IterationListener^, System::IntPtr>^ _listeners;
 
-    IterationListenerForwarder(void* managedFunctionPtr)
-        : managedFunctionPtr(static_cast<IterationListenerCallback>(managedFunctionPtr))
-    {}
+    public:
 
-    virtual Status update(const UpdateMessage& updateMessage)
-    {
-        if (managedFunctionPtr != NULL)
-        {
-            IterationEventArgs^ args = gcnew IterationEventArgs();
-            args->Message = ToSystemString(updateMessage.message);
-            args->IterationIndex = updateMessage.iterationIndex;
-            args->IterationCount = updateMessage.iterationCount;
-            managedFunctionPtr(nullptr, args);
-            return args->Cancel ? Status_Cancel : Status_Ok;
-        }
+    IterationListenerRegistry();
 
-        return Status_Ok;
-    }
+    void addListener(IterationListener^ listener, System::UInt32 iterationPeriod);
+    void addListenerWithTimer(IterationListener^ listener, double timePeriod); // seconds
+    void removeListener(IterationListener^ listener);
+
+    IterationListener::Status broadcastUpdateMessage(IterationListener::UpdateMessage^ updateMessage);
 };
 
 

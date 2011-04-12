@@ -57,6 +57,8 @@ class PWIZ_API_DECL IterationListener
     virtual ~IterationListener(){}
 };
 
+typedef boost::shared_ptr<IterationListener> IterationListenerPtr;
+
 
 /// handles registration of IterationListeners and broadcast of update messages
 class PWIZ_API_DECL IterationListenerRegistry
@@ -64,9 +66,9 @@ class PWIZ_API_DECL IterationListenerRegistry
     public:
 
     IterationListenerRegistry();
-    void addListener(IterationListener& listener, size_t iterationPeriod);
-    void addListenerWithTimer(IterationListener& listener, double timePeriod); // seconds
-    void removeListener(IterationListener& listener);
+    void addListener(const IterationListenerPtr& listener, size_t iterationPeriod);
+    void addListenerWithTimer(const IterationListenerPtr& listener, double timePeriod); // seconds
+    void removeListener(const IterationListenerPtr& listener);
 
     IterationListener::Status broadcastUpdateMessage(
         const IterationListener::UpdateMessage& updateMessage) const;

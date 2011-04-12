@@ -43,6 +43,8 @@ using namespace pwiz::util;
     pwiz::CLI::util::ObjectStructorLog::WriteLine("In " + msg + \
                                                   " destructor (will delete: " + \
                                                   ((willDelete) ? "yes" : "no") + ").\n");
+#define LOG_FINALIZE(msg) \
+    pwiz::CLI::util::ObjectStructorLog::WriteLine("In " + msg + " finalizer.\n");
 #define LOG_CONSTRUCT(msg) \
     pwiz::CLI::util::ObjectStructorLog::WriteLine("In " + msg + " constructor.\n");
 
@@ -86,6 +88,7 @@ public ref class ObjectStructorLog
 
 #else // !defined GC_DEBUG
 #define LOG_DESTRUCT(msg, willDelete)
+#define LOG_FINALIZE(msg)
 #define LOG_CONSTRUCT(msg)
 #endif
 
@@ -147,7 +150,7 @@ public ref class ObjectStructorLog
 INTERNAL: CLIType(NATIVE_POINTER_ARG(NativeType) base, System::Object^ owner) : base_(NATIVE_POINTER_CAST(NativeType, base)), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CLIType))} \
           CLIType(NATIVE_POINTER_ARG(NativeType) base) : base_(NATIVE_POINTER_CAST(NativeType, base)), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CLIType))} \
           virtual ~CLIType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(CLIType), (owner_ == nullptr)) if (owner_ == nullptr) {SAFEDELETE(base_);}} \
-          !CLIType() {delete this;} \
+          !CLIType() {LOG_FINALIZE(BOOST_PP_STRINGIZE(CLIType)) delete this;} \
           NativeType* base_; \
           System::Object^ owner_; \
           NativeType& base() {return *base_;}
@@ -157,7 +160,7 @@ INTERNAL: CLIType(NATIVE_POINTER_ARG(NativeType) base, System::Object^ owner) : 
 INTERNAL: ClassType(NATIVE_POINTER_ARG(ns::ClassType) base, System::Object^ owner) : BaseClassType(base), base_(NATIVE_POINTER_CAST(ns::ClassType, base)) {owner_ = owner; LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
           ClassType(NATIVE_POINTER_ARG(ns::ClassType) base) : BaseClassType(base), base_(NATIVE_POINTER_CAST(ns::ClassType, base)) {owner_ = nullptr; LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
           virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType), (owner_ == nullptr)) if (owner_ == nullptr) {SAFEDELETE(base_); BaseClassType::base_ = NULL;}} \
-          !ClassType() {delete this;} \
+          !ClassType() {LOG_FINALIZE(BOOST_PP_STRINGIZE(ClassType)) delete this;} \
           ns::ClassType* base_; \
           ns::ClassType& base() new {return *base_;}
 
@@ -166,7 +169,7 @@ INTERNAL: ClassType(NATIVE_POINTER_ARG(ns::ClassType) base, System::Object^ owne
 INTERNAL: ClassType(NATIVE_POINTER_ARG(boost::shared_ptr<ns::ClassType>) base, System::Object^ owner) : base_(NATIVE_POINTER_CAST(boost::shared_ptr<ns::ClassType>, base)), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
           ClassType(NATIVE_POINTER_ARG(boost::shared_ptr<ns::ClassType>) base) : base_(NATIVE_POINTER_CAST(boost::shared_ptr<ns::ClassType>, base)), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
           virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType), true) SAFEDELETE(base_);} \
-          !ClassType() {delete this;} \
+          !ClassType() {LOG_FINALIZE(BOOST_PP_STRINGIZE(ClassType)) delete this;} \
           boost::shared_ptr<ns::ClassType>* base_; \
           System::Object^ owner_; \
           ns::ClassType& base() {return **base_;}
@@ -175,7 +178,7 @@ INTERNAL: ClassType(NATIVE_POINTER_ARG(boost::shared_ptr<ns::ClassType>) base, S
 #define DEFINE_SHARED_DERIVED_INTERNAL_BASE_CODE(ns, ClassType, BaseClassType) \
 INTERNAL: ClassType(NATIVE_POINTER_ARG(boost::shared_ptr<ns::ClassType>) base) : BaseClassType(&**NATIVE_POINTER_CAST(boost::shared_ptr<ns::ClassType>, base)), base_(NATIVE_POINTER_CAST(boost::shared_ptr<ns::ClassType>, base)) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
           virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType), true) SAFEDELETE(base_); BaseClassType::base_ = NULL;} \
-          !ClassType() {delete this;} \
+          !ClassType() {LOG_FINALIZE(BOOST_PP_STRINGIZE(ClassType)) delete this;} \
           boost::shared_ptr<ns::ClassType>* base_; \
           ns::ClassType& base() new {return **base_;}
 
@@ -184,7 +187,7 @@ INTERNAL: ClassType(NATIVE_POINTER_ARG(boost::shared_ptr<ns::ClassType>) base) :
 #define DEFINE_SHARED_DERIVED_INTERNAL_SHARED_BASE_CODE(ns, ClassType, BaseClassType) \
 INTERNAL: ClassType(NATIVE_POINTER_ARG(boost::shared_ptr<ns::ClassType>) base) : BaseClassType(NATIVE_POINTER_DOWNCAST(boost::shared_ptr<ns::BaseClassType>, base)), base_(NATIVE_POINTER_CAST(boost::shared_ptr<ns::ClassType>, base)) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
           virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType), true) SAFEDELETE(base_); BaseClassType::base_ = NULL;} \
-          !ClassType() {delete this;} \
+          !ClassType() {LOG_FINALIZE(BOOST_PP_STRINGIZE(ClassType)) delete this;} \
           boost::shared_ptr<ns::ClassType>* base_; \
           ns::ClassType& base() new {return **base_;}
 

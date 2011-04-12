@@ -1337,6 +1337,11 @@ public ref class SpectrumList
     /// <para>- may return a null shared pointer</para>
     /// </summary>
     virtual DataProcessing^ dataProcessing();
+
+    /// <summary>
+    /// set DataProcessing
+    /// </summary>
+    virtual void setDataProcessing(DataProcessing^ dp);
 };
 
 
@@ -1439,6 +1444,11 @@ public ref class ChromatogramList
     /// <para>- may return a null shared pointer</para>
     /// </summary>
     virtual DataProcessing^ dataProcessing();
+
+    /// <summary>
+    /// set DataProcessing
+    /// </summary>
+    virtual void setDataProcessing(DataProcessing^ dp);
 };
 
 

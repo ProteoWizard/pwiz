@@ -30,8 +30,7 @@
 #pragma warning( disable : 4634 4635 )
 #include "MSData.hpp"
 #include "pwiz/data/msdata/MSDataFile.hpp"
-//#include "Reader.hpp"
-//#include "BinaryDataEncoder.hpp"
+#include "../common/IterationListener.hpp"
 #pragma warning( pop )
 
 
@@ -45,7 +44,12 @@ namespace msdata {
 /// </summary>
 public ref class MSDataFile : public MSData
 {
-    DEFINE_SHARED_DERIVED_INTERNAL_SHARED_BASE_CODE(pwiz::msdata, MSDataFile, MSData);
+    INTERNAL:
+    MSDataFile(NATIVE_POINTER_ARG(boost::shared_ptr<pwiz::msdata::MSDataFile>) base);
+    virtual ~MSDataFile();
+    !MSDataFile();
+    boost::shared_ptr<pwiz::msdata::MSDataFile>* base_;
+    pwiz::msdata::MSDataFile& base() new;
 
     public:
 
@@ -53,6 +57,11 @@ public ref class MSDataFile : public MSData
     /// constructs MSData object backed by file
     /// </summary>
     MSDataFile(System::String^ path);
+
+    /// <summary>
+    /// constructs MSData object backed by file with callbacks to an IterationListener
+    /// </summary>
+    MSDataFile(System::String^ path, util::IterationListenerRegistry^ iterationListenerRegistry);
 
     /// <summary>
     /// supported data formats for write()
@@ -94,6 +103,14 @@ public ref class MSDataFile : public MSData
     static void write(MSData^ msd, System::String^ filename, WriteConfig^ config);
 
     /// <summary>
+    /// static write function for any MSData object with the specified configuration
+    /// </summary>
+    static void write(MSData^ msd,
+                      System::String^ filename,
+                      WriteConfig^ config,
+                      util::IterationListenerRegistry^ iterationListenerRegistry);
+
+    /// <summary>
     /// member write function with the default configuration (mzML, 64-bit, no compression)
     /// </summary>
     void write(System::String^ filename);
@@ -102,6 +119,13 @@ public ref class MSDataFile : public MSData
     /// member write function with the specified configuration
     /// </summary>
     void write(System::String^ filename, WriteConfig^ config);
+
+    /// <summary>
+    /// member write function with the specified configuration
+    /// </summary>
+    void write(System::String^ filename,
+               WriteConfig^ config,
+               util::IterationListenerRegistry^ iterationListenerRegistry);
 
 	/// <summary>
     /// calculate SHA1 checksums for all source files

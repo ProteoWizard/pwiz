@@ -533,10 +533,9 @@ int mergeFiles(const vector<string>& filenames, const Config& config, const Read
     // handle progress updates if requested
 
     IterationListenerRegistry iterationListenerRegistry;
-    UserFeedbackIterationListener feedback;
     // update on the first spectrum, the last spectrum, the 100th spectrum, the 200th spectrum, etc.
     const size_t iterationPeriod = 100;
-    iterationListenerRegistry.addListener(feedback, iterationPeriod);
+    iterationListenerRegistry.addListener(IterationListenerPtr(new UserFeedbackIterationListener), iterationPeriod);
     IterationListenerRegistry* pILR = config.verbose ? &iterationListenerRegistry : 0;
 
     try
@@ -558,7 +557,7 @@ int mergeFiles(const vector<string>& filenames, const Config& config, const Read
         cout << "writing output file: " << outputFilename << endl;
 
         if (config.outputPath == "-")
-            MSDataFile::write(msd, cout, config.writeConfig, pILR);
+            MSDataFile::write(msd, cout, config.writeConfig);
         else
             MSDataFile::write(msd, outputFilename, config.writeConfig, pILR);
     }
@@ -601,10 +600,9 @@ void processFile(const string& filename, const Config& config, const ReaderList&
             // handle progress updates if requested
 
             IterationListenerRegistry iterationListenerRegistry;
-            UserFeedbackIterationListener feedback;
             // update on the first spectrum, the last spectrum, the 100th spectrum, the 200th spectrum, etc.
             const size_t iterationPeriod = 100;
-            iterationListenerRegistry.addListener(feedback, iterationPeriod);
+            iterationListenerRegistry.addListener(IterationListenerPtr(new UserFeedbackIterationListener), iterationPeriod);
             IterationListenerRegistry* pILR = config.verbose ? &iterationListenerRegistry : 0; 
 
             // write out the new data file
@@ -612,7 +610,7 @@ void processFile(const string& filename, const Config& config, const ReaderList&
             cout << "writing output file: " << outputFilename << endl;
 
             if (config.outputPath == "-")
-                MSDataFile::write(msd, cout, config.writeConfig, pILR);
+                MSDataFile::write(msd, cout, config.writeConfig);
             else
                 MSDataFile::write(msd, outputFilename, config.writeConfig, pILR);
         }

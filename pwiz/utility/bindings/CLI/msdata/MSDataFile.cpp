@@ -45,23 +45,49 @@ namespace CLI {
 namespace msdata {
 
 
+MSDataFile::MSDataFile(NATIVE_POINTER_ARG(boost::shared_ptr<b::MSDataFile>) base)
+: MSData(NATIVE_POINTER_DOWNCAST(boost::shared_ptr<b::MSData>, base)),
+  base_(NATIVE_POINTER_CAST(boost::shared_ptr<b::MSDataFile>, base))
+{LOG_CONSTRUCT("MSDataFile")}
+
+MSDataFile::~MSDataFile()
+{
+    LOG_DESTRUCT("MSDataFile", true) SAFEDELETE(base_);
+    MSData::base_ = NULL;
+
+    // MCC: forcing garbage collection is the best way I know of to try to clean up 
+    //      reclaimable SpectrumList handles which hold on to SpectrumListPtrs
+    System::GC::Collect();
+    System::GC::WaitForPendingFinalizers();
+}
+
+MSDataFile::!MSDataFile() {LOG_FINALIZE("MSDataFile") delete this;}
+b::MSDataFile& MSDataFile::base() {return **base_;}
+
 MSDataFile::MSDataFile(System::String^ path)
 : MSData(0)
 {
+    LOG_CONSTRUCT("MSDataFile")
     try
     {
         initializeReaderList();
         base_ = new boost::shared_ptr<b::MSDataFile>(new b::MSDataFile(ToStdString(path), (b::Reader*) readerList.get()));
         MSData::base_ = reinterpret_cast<boost::shared_ptr<b::MSData>*>(base_);
     }
-    catch(exception& e)
+    CATCH_AND_FORWARD
+}
+
+MSDataFile::MSDataFile(System::String^ path, util::IterationListenerRegistry^ ilr)
+: MSData(0)
+{
+    LOG_CONSTRUCT("MSDataFile")
+    try
     {
-        throw gcnew System::Exception(gcnew System::String(e.what()));
+        initializeReaderList();
+        base_ = new boost::shared_ptr<b::MSDataFile>(new b::MSDataFile(ToStdString(path), (b::Reader*) readerList.get()/*, ilr->base()*/));
+        MSData::base_ = reinterpret_cast<boost::shared_ptr<b::MSData>*>(base_);
     }
-    catch(...)
-    {
-        throw gcnew System::Exception("[MSDataFile::MSDataFile()] Unhandled exception");
-    }
+    CATCH_AND_FORWARD
 }
 
 
@@ -78,6 +104,15 @@ void MSDataFile::write(MSData^ msd, System::String^ filename)
 
 void MSDataFile::write(MSData^ msd, System::String^ filename, WriteConfig^ config)
 {
+    write(msd, filename, config, nullptr);
+}
+
+
+void MSDataFile::write(MSData^ msd,
+                       System::String^ filename,
+                       WriteConfig^ config,
+                       util::IterationListenerRegistry^ ilr)
+{
     try
     {
         b::MSDataFile::WriteConfig config2((b::MSDataFile::Format) config->format);
@@ -85,16 +120,9 @@ void MSDataFile::write(MSData^ msd, System::String^ filename, WriteConfig^ confi
         config2.binaryDataEncoderConfig.precision = (b::BinaryDataEncoder::Precision) config->precision;
         config2.binaryDataEncoderConfig.byteOrder = (b::BinaryDataEncoder::ByteOrder) config->byteOrder;
         config2.binaryDataEncoderConfig.compression = (b::BinaryDataEncoder::Compression) config->compression;
-        b::MSDataFile::write(msd->base(), ToStdString(filename), config2);
+        b::MSDataFile::write(msd->base(), ToStdString(filename), config2, &ilr->base());
     }
-    catch(exception& e)
-    {
-        throw gcnew System::Exception(gcnew System::String(e.what()));
-    }
-    catch(...)
-    {
-        throw gcnew System::Exception(gcnew System::String("[MSDataFile::write()] Unhandled exception"));
-    }
+    CATCH_AND_FORWARD
 }
 
 
@@ -111,6 +139,14 @@ void MSDataFile::write(System::String^ filename)
 
 void MSDataFile::write(System::String^ filename, WriteConfig^ config)
 {
+    write(filename, config, nullptr);
+}
+
+
+void MSDataFile::write(System::String^ filename,
+                       WriteConfig^ config,
+                       util::IterationListenerRegistry^ ilr)
+{
     try
     {
         b::MSDataFile::WriteConfig config2((b::MSDataFile::Format) config->format);
@@ -118,22 +154,15 @@ void MSDataFile::write(System::String^ filename, WriteConfig^ config)
         config2.binaryDataEncoderConfig.precision = (b::BinaryDataEncoder::Precision) config->precision;
         config2.binaryDataEncoderConfig.byteOrder = (b::BinaryDataEncoder::ByteOrder) config->byteOrder;
         config2.binaryDataEncoderConfig.compression = (b::BinaryDataEncoder::Compression) config->compression;
-        base().write(ToStdString(filename), config2);
+        base().write(ToStdString(filename), config2, &ilr->base());
     }
-    catch(exception& e)
-    {
-        throw gcnew System::Exception(gcnew System::String(e.what()));
-    }
-    catch(...)
-    {
-        throw gcnew System::Exception(gcnew System::String("[MSDataFile::write()] Unhandled exception"));
-    }
+    CATCH_AND_FORWARD
 }
 
 
 void MSDataFile::calculateSHA1Checksums(MSData^ msd)
 {
-	b::calculateSHA1Checksums(msd->base());
+    try {b::calculateSHA1Checksums(msd->base());} CATCH_AND_FORWARD
 }
 
 

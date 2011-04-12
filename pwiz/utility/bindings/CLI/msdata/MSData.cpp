@@ -22,7 +22,8 @@
 //
 
 #include "MSData.hpp"
-//#include "../../../data/msdata/MSData.hpp"
+#include "pwiz/data/msdata/SpectrumListBase.hpp"
+#include "pwiz/data/msdata/ChromatogramListBase.hpp"
 
 
 using System::Exception;
@@ -54,24 +55,24 @@ public ref class Version
 
 FileContent::FileContent()
 : ParamContainer(new b::FileContent())
-{owner_ = nullptr; base_ = static_cast<b::FileContent*>(ParamContainer::base_);}
+{owner_ = nullptr; base_ = static_cast<b::FileContent*>(ParamContainer::base_); LOG_CONSTRUCT(__FUNCTION__)}
 
 
 SourceFile::SourceFile()
 : ParamContainer(new b::SourceFile())
-{base_ = new boost::shared_ptr<b::SourceFile>(static_cast<b::SourceFile*>(ParamContainer::base_));}
+{base_ = new boost::shared_ptr<b::SourceFile>(static_cast<b::SourceFile*>(ParamContainer::base_)); LOG_CONSTRUCT(__FUNCTION__)}
 
 SourceFile::SourceFile(System::String^ _id)
 : ParamContainer(new b::SourceFile(ToStdString(_id)))
-{base_ = new boost::shared_ptr<b::SourceFile>(static_cast<b::SourceFile*>(ParamContainer::base_));}
+{base_ = new boost::shared_ptr<b::SourceFile>(static_cast<b::SourceFile*>(ParamContainer::base_)); LOG_CONSTRUCT(__FUNCTION__)}
 
 SourceFile::SourceFile(System::String^ _id, System::String^ _name)
 : ParamContainer(new b::SourceFile(ToStdString(_id), ToStdString(_name)))
-{base_ = new boost::shared_ptr<b::SourceFile>(static_cast<b::SourceFile*>(ParamContainer::base_));}
+{base_ = new boost::shared_ptr<b::SourceFile>(static_cast<b::SourceFile*>(ParamContainer::base_)); LOG_CONSTRUCT(__FUNCTION__)}
 
 SourceFile::SourceFile(System::String^ _id, System::String^ _name, System::String^ _location)
 : ParamContainer(new b::SourceFile(ToStdString(_id), ToStdString(_name), ToStdString(_location)))
-{base_ = new boost::shared_ptr<b::SourceFile>(static_cast<b::SourceFile*>(ParamContainer::base_));}
+{base_ = new boost::shared_ptr<b::SourceFile>(static_cast<b::SourceFile*>(ParamContainer::base_)); LOG_CONSTRUCT(__FUNCTION__)}
 
 System::String^ SourceFile::id::get() {return gcnew System::String((*base_)->id.c_str());}
 void SourceFile::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
@@ -90,12 +91,12 @@ bool SourceFile::empty()
 
 Contact::Contact()
 : ParamContainer(new b::Contact())
-{owner_ = nullptr; base_ = static_cast<b::Contact*>(ParamContainer::base_);}
+{owner_ = nullptr; base_ = static_cast<b::Contact*>(ParamContainer::base_); LOG_CONSTRUCT(__FUNCTION__)}
 
 
 FileDescription::FileDescription()
 : base_(new b::FileDescription())
-{owner_ = nullptr;}
+{owner_ = nullptr; LOG_CONSTRUCT(__FUNCTION__)}
 
 FileContent^ FileDescription::fileContent::get() {return gcnew FileContent(&base_->fileContent, this);}
 SourceFileList^ FileDescription::sourceFiles::get() {return gcnew SourceFileList(&base_->sourceFilePtrs, this);}
@@ -109,15 +110,15 @@ bool FileDescription::empty()
 
 Sample::Sample()
 : ParamContainer(new b::Sample())
-{base_ = new boost::shared_ptr<b::Sample>(static_cast<b::Sample*>(ParamContainer::base_));}
+{base_ = new boost::shared_ptr<b::Sample>(static_cast<b::Sample*>(ParamContainer::base_)); LOG_CONSTRUCT(__FUNCTION__)}
 
 Sample::Sample(System::String^ _id)
 : ParamContainer(new b::Sample(ToStdString(_id)))
-{base_ = new boost::shared_ptr<b::Sample>(static_cast<b::Sample*>(ParamContainer::base_));}
+{base_ = new boost::shared_ptr<b::Sample>(static_cast<b::Sample*>(ParamContainer::base_)); LOG_CONSTRUCT(__FUNCTION__)}
 
 Sample::Sample(System::String^ _id, System::String^ _name)
 : ParamContainer(new b::Sample(ToStdString(_id), ToStdString(_name)))
-{base_ = new boost::shared_ptr<b::Sample>(static_cast<b::Sample*>(ParamContainer::base_));}
+{base_ = new boost::shared_ptr<b::Sample>(static_cast<b::Sample*>(ParamContainer::base_)); LOG_CONSTRUCT(__FUNCTION__)}
 
 System::String^ Sample::id::get() {return gcnew System::String((*base_)->id.c_str());}
 void Sample::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
@@ -133,15 +134,15 @@ bool Sample::empty()
 
 Component::Component()
 : ParamContainer(new b::Component())
-{owner_ = nullptr; base_ = static_cast<b::Component*>(ParamContainer::base_);}
+{owner_ = nullptr; base_ = static_cast<b::Component*>(ParamContainer::base_); LOG_CONSTRUCT(__FUNCTION__)}
 
 Component::Component(ComponentType type, int order)
 : ParamContainer(new b::Component((b::ComponentType) type, order))
-{owner_ = nullptr; base_ = static_cast<b::Component*>(ParamContainer::base_);}
+{owner_ = nullptr; base_ = static_cast<b::Component*>(ParamContainer::base_); LOG_CONSTRUCT(__FUNCTION__)}
 
 Component::Component(CVID cvid, int order)
 : ParamContainer(new b::Component((pwiz::cv::CVID) cvid, order))
-{owner_ = nullptr; base_ = static_cast<b::Component*>(ParamContainer::base_);}
+{owner_ = nullptr; base_ = static_cast<b::Component*>(ParamContainer::base_); LOG_CONSTRUCT(__FUNCTION__)}
 
 ComponentType Component::type::get() {return (ComponentType) base_->type;}
 void Component::type::set(ComponentType value) {base_->type = (pwiz::msdata::ComponentType) value;}
@@ -162,7 +163,7 @@ bool Component::empty()
 
 ComponentList::ComponentList()
 : ComponentBaseList(new b::ComponentList())
-{owner_ = nullptr; base_ = static_cast<b::ComponentList*>(ComponentBaseList::base_);}
+{owner_ = nullptr; base_ = static_cast<b::ComponentList*>(ComponentBaseList::base_); LOG_CONSTRUCT(__FUNCTION__)}
 
 Component^ ComponentList::source(int index)
 {
@@ -182,15 +183,15 @@ Component^ ComponentList::detector(int index)
 
 Software::Software()
 : base_(new boost::shared_ptr<b::Software>(new b::Software()))
-{}
+{LOG_CONSTRUCT(__FUNCTION__)}
 
 Software::Software(System::String^ _id)
 : base_(new boost::shared_ptr<b::Software>(new b::Software(ToStdString(_id))))
-{}
+{LOG_CONSTRUCT(__FUNCTION__)}
 
 Software::Software(System::String^ _id, CVParam^ _softwareParam, System::String^ _softwareParamVersion)
 : base_(new boost::shared_ptr<b::Software>(new b::Software(ToStdString(_id), _softwareParam->base(), ToStdString(_softwareParamVersion))))
-{}
+{LOG_CONSTRUCT(__FUNCTION__)}
 
 System::String^ Software::id::get() {return gcnew System::String((*base_)->id.c_str());}
 void Software::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
@@ -206,11 +207,11 @@ bool Software::empty()
 
 InstrumentConfiguration::InstrumentConfiguration()
 : ParamContainer(new b::InstrumentConfiguration())
-{base_ = new boost::shared_ptr<b::InstrumentConfiguration>(static_cast<b::InstrumentConfiguration*>(ParamContainer::base_));}
+{base_ = new boost::shared_ptr<b::InstrumentConfiguration>(static_cast<b::InstrumentConfiguration*>(ParamContainer::base_)); LOG_CONSTRUCT(__FUNCTION__)}
 
 InstrumentConfiguration::InstrumentConfiguration(System::String^ _id)
 : ParamContainer(new b::InstrumentConfiguration(ToStdString(_id)))
-{base_ = new boost::shared_ptr<b::InstrumentConfiguration>(static_cast<b::InstrumentConfiguration*>(ParamContainer::base_));}
+{base_ = new boost::shared_ptr<b::InstrumentConfiguration>(static_cast<b::InstrumentConfiguration*>(ParamContainer::base_)); LOG_CONSTRUCT(__FUNCTION__)}
 
 System::String^ InstrumentConfiguration::id::get() {return gcnew System::String((*base_)->id.c_str());}
 void InstrumentConfiguration::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
@@ -226,7 +227,7 @@ bool InstrumentConfiguration::empty()
 
 ProcessingMethod::ProcessingMethod()
 : ParamContainer(new b::ProcessingMethod())
-{owner_ = nullptr; base_ = static_cast<b::ProcessingMethod*>(ParamContainer::base_);}
+{owner_ = nullptr; base_ = static_cast<b::ProcessingMethod*>(ParamContainer::base_); LOG_CONSTRUCT(__FUNCTION__)}
 
 int ProcessingMethod::order::get() {return base_->order;}
 void ProcessingMethod::order::set(int value) {base_->order = value;}
@@ -240,11 +241,11 @@ bool ProcessingMethod::empty()
 
 DataProcessing::DataProcessing()
 : base_(new boost::shared_ptr<b::DataProcessing>(new b::DataProcessing()))
-{}
+{LOG_CONSTRUCT(__FUNCTION__)}
 
 DataProcessing::DataProcessing(System::String^ _id)
 : base_(new boost::shared_ptr<b::DataProcessing>(new b::DataProcessing(ToStdString(_id))))
-{}
+{LOG_CONSTRUCT(__FUNCTION__)}
 
 System::String^ DataProcessing::id::get() {return gcnew System::String((*base_)->id.c_str());}
 void DataProcessing::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
@@ -259,16 +260,16 @@ bool DataProcessing::empty()
 
 Target::Target()
 : ParamContainer(new b::Target())
-{owner_ = nullptr; base_ = static_cast<b::Target*>(ParamContainer::base_);}
+{owner_ = nullptr; base_ = static_cast<b::Target*>(ParamContainer::base_); LOG_CONSTRUCT(__FUNCTION__)}
 
 
 ScanSettings::ScanSettings()
 : base_(new boost::shared_ptr<b::ScanSettings>(new b::ScanSettings()))
-{}
+{LOG_CONSTRUCT(__FUNCTION__)}
 
 ScanSettings::ScanSettings(System::String^ _id)
 : base_(new boost::shared_ptr<b::ScanSettings>(new b::ScanSettings(ToStdString(_id))))
-{}
+{LOG_CONSTRUCT(__FUNCTION__)}
 
 System::String^ ScanSettings::id::get() {return gcnew System::String((*base_)->id.c_str());}
 void ScanSettings::id::set(System::String^ value) {(*base_)->id = ToStdString(value);}
@@ -288,16 +289,16 @@ ScanWindowList^ Scan::scanWindows::get() {return gcnew ScanWindowList(&base_->sc
 
 ScanWindow::ScanWindow()
 : ParamContainer(new b::ScanWindow())
-{owner_ = nullptr; base_ = static_cast<b::ScanWindow*>(ParamContainer::base_);}
+{owner_ = nullptr; base_ = static_cast<b::ScanWindow*>(ParamContainer::base_); LOG_CONSTRUCT(__FUNCTION__)}
 
 ScanWindow::ScanWindow(double low, double high, CVID unit)
 : ParamContainer(new b::ScanWindow(low, high, (pwiz::cv::CVID) unit))
-{owner_ = nullptr; base_ = static_cast<b::ScanWindow*>(ParamContainer::base_);}
+{owner_ = nullptr; base_ = static_cast<b::ScanWindow*>(ParamContainer::base_); LOG_CONSTRUCT(__FUNCTION__)}
 
 
 Scan::Scan()
 : ParamContainer(new b::Scan())
-{owner_ = nullptr; base_ = static_cast<b::Scan*>(ParamContainer::base_);}
+{owner_ = nullptr; base_ = static_cast<b::Scan*>(ParamContainer::base_); LOG_CONSTRUCT(__FUNCTION__)}
 
 SourceFile^ Scan::sourceFile::get() {return NATIVE_SHARED_PTR_TO_CLI(b::SourceFilePtr, SourceFile, base_->sourceFilePtr);}
 void Scan::sourceFile::set(SourceFile^ value) {base_->sourceFilePtr = CLI_TO_NATIVE_SHARED_PTR(b::SourceFilePtr, value);}
@@ -319,7 +320,7 @@ bool Scan::empty()
 
 ScanList::ScanList()
 : ParamContainer(new b::ScanList())
-{owner_ = nullptr; base_ = static_cast<b::ScanList*>(ParamContainer::base_);}
+{owner_ = nullptr; base_ = static_cast<b::ScanList*>(ParamContainer::base_); LOG_CONSTRUCT(__FUNCTION__)}
 	
 Scans^ ScanList::scans::get() {return gcnew Scans(&base_->scans, this);}
 
@@ -331,22 +332,22 @@ bool ScanList::empty()
 
 IsolationWindow::IsolationWindow()
 : ParamContainer(new b::IsolationWindow())
-{owner_ = nullptr; base_ = static_cast<b::IsolationWindow*>(ParamContainer::base_);}
+{owner_ = nullptr; base_ = static_cast<b::IsolationWindow*>(ParamContainer::base_); LOG_CONSTRUCT(__FUNCTION__)}
 
 
 SelectedIon::SelectedIon()
 : ParamContainer(new b::SelectedIon())
-{owner_ = nullptr; base_ = static_cast<b::SelectedIon*>(ParamContainer::base_);}
+{owner_ = nullptr; base_ = static_cast<b::SelectedIon*>(ParamContainer::base_); LOG_CONSTRUCT(__FUNCTION__)}
 
 
 Activation::Activation()
 : ParamContainer(new b::Activation())
-{owner_ = nullptr; base_ = static_cast<b::Activation*>(ParamContainer::base_);}
+{owner_ = nullptr; base_ = static_cast<b::Activation*>(ParamContainer::base_); LOG_CONSTRUCT(__FUNCTION__)}
 
 
 Precursor::Precursor()
 : ParamContainer(new b::Precursor())
-{owner_ = nullptr; base_ = static_cast<b::Precursor*>(ParamContainer::base_);}
+{owner_ = nullptr; base_ = static_cast<b::Precursor*>(ParamContainer::base_); LOG_CONSTRUCT(__FUNCTION__)}
 
 SourceFile^ Precursor::sourceFile::get() {return NATIVE_SHARED_PTR_TO_CLI(b::SourceFilePtr, SourceFile, base_->sourceFilePtr);}
 void Precursor::sourceFile::set(SourceFile^ value) {base_->sourceFilePtr = CLI_TO_NATIVE_SHARED_PTR(b::SourceFilePtr, value);}
@@ -373,7 +374,7 @@ bool Precursor::empty()
 
 Product::Product()
 : base_(new b::Product())
-{owner_ = nullptr;}
+{owner_ = nullptr; LOG_CONSTRUCT(__FUNCTION__)}
 
 IsolationWindow^ Product::isolationWindow::get() {return gcnew IsolationWindow(&base_->isolationWindow, this);}
 void Product::isolationWindow::set(IsolationWindow^ value) {base_->isolationWindow = *value->base_;}
@@ -386,7 +387,7 @@ bool Product::empty()
 
 BinaryDataArray::BinaryDataArray()
 : ParamContainer(new b::BinaryDataArray())
-{base_ = new boost::shared_ptr<b::BinaryDataArray>(static_cast<b::BinaryDataArray*>(ParamContainer::base_));}
+{base_ = new boost::shared_ptr<b::BinaryDataArray>(static_cast<b::BinaryDataArray*>(ParamContainer::base_)); LOG_CONSTRUCT(__FUNCTION__)}
 
 DataProcessing^ BinaryDataArray::dataProcessing::get() {return NATIVE_SHARED_PTR_TO_CLI(b::DataProcessingPtr, DataProcessing, (*base_)->dataProcessingPtr);}
 void BinaryDataArray::dataProcessing::set(DataProcessing^ value) {(*base_)->dataProcessingPtr = CLI_TO_NATIVE_SHARED_PTR(b::DataProcessingPtr, value);}
@@ -401,10 +402,10 @@ bool BinaryDataArray::empty()
 
 
 MZIntensityPair::MZIntensityPair()
-: base_(new pwiz::msdata::MZIntensityPair()) {}
+: base_(new pwiz::msdata::MZIntensityPair()) {LOG_CONSTRUCT(__FUNCTION__)}
 
 MZIntensityPair::MZIntensityPair(double mz, double intensity)
-: base_(new pwiz::msdata::MZIntensityPair(mz, intensity)) {}
+: base_(new pwiz::msdata::MZIntensityPair(mz, intensity)) {LOG_CONSTRUCT(__FUNCTION__)}
 
 double MZIntensityPair::mz::get() {return base_->mz;}
 void MZIntensityPair::mz::set(double value) {base_->mz = value;}
@@ -414,10 +415,10 @@ void MZIntensityPair::intensity::set(double value) {base_->intensity = value;}
 
 
 TimeIntensityPair::TimeIntensityPair()
-: base_(new pwiz::msdata::TimeIntensityPair()) {}
+: base_(new pwiz::msdata::TimeIntensityPair()) {LOG_CONSTRUCT(__FUNCTION__)}
 
 TimeIntensityPair::TimeIntensityPair(double mz, double intensity)
-: base_(new pwiz::msdata::TimeIntensityPair(mz, intensity)) {}
+: base_(new pwiz::msdata::TimeIntensityPair(mz, intensity)) {LOG_CONSTRUCT(__FUNCTION__)}
 
 double TimeIntensityPair::time::get() {return base_->time;}
 void TimeIntensityPair::time::set(double value) {base_->time = value;}
@@ -427,7 +428,7 @@ void TimeIntensityPair::intensity::set(double value) {base_->intensity = value;}
 
 
 SpectrumIdentity::SpectrumIdentity()
-: base_(new pwiz::msdata::SpectrumIdentity()) {}
+: base_(new pwiz::msdata::SpectrumIdentity()) {LOG_CONSTRUCT(__FUNCTION__)}
 
 int SpectrumIdentity::index::get() {return (int) base_->index;}
 void SpectrumIdentity::index::set(int value) {base_->index = (size_t) value;}
@@ -443,7 +444,7 @@ void SpectrumIdentity::sourceFilePosition::set(System::UInt64 value) {base_->sou
 
 
 ChromatogramIdentity::ChromatogramIdentity()
-: base_(new pwiz::msdata::ChromatogramIdentity()) {}
+: base_(new pwiz::msdata::ChromatogramIdentity()) {LOG_CONSTRUCT(__FUNCTION__)}
 
 int ChromatogramIdentity::index::get() {return (int) base_->index;}
 void ChromatogramIdentity::index::set(int value) {base_->index = (size_t) value;}
@@ -457,7 +458,7 @@ void ChromatogramIdentity::sourceFilePosition::set(System::UInt64 value) {base_-
 
 Spectrum::Spectrum()
 : ParamContainer(new b::Spectrum())
-{base_ = new boost::shared_ptr<b::Spectrum>(static_cast<b::Spectrum*>(ParamContainer::base_));}
+{base_ = new boost::shared_ptr<b::Spectrum>(static_cast<b::Spectrum*>(ParamContainer::base_)); LOG_CONSTRUCT(__FUNCTION__)}
 
 int Spectrum::index::get() {return (int) (*base_)->index;}
 void Spectrum::index::set(int value) {(*base_)->index = (size_t) value;}
@@ -557,7 +558,7 @@ bool Spectrum::empty()
 
 Chromatogram::Chromatogram()
 : ParamContainer(new b::Chromatogram())
-{base_ = new boost::shared_ptr<b::Chromatogram>(static_cast<b::Chromatogram*>(ParamContainer::base_));}
+{base_ = new boost::shared_ptr<b::Chromatogram>(static_cast<b::Chromatogram*>(ParamContainer::base_)); LOG_CONSTRUCT(__FUNCTION__)}
 
 int Chromatogram::index::get() {return (int) (*base_)->index;}
 void Chromatogram::index::set(int value) {(*base_)->index = (size_t) value;}
@@ -662,10 +663,16 @@ DataProcessing^ SpectrumList::dataProcessing()
     return NATIVE_SHARED_PTR_TO_CLI(b::DataProcessingPtr, DataProcessing, dp);
 }
 
+void SpectrumList::setDataProcessing(DataProcessing^ dp)
+{
+    b::SpectrumListBase* sl = dynamic_cast<b::SpectrumListBase*>((*base_).get());
+    if (sl) sl->setDataProcessingPtr(CLI_TO_NATIVE_SHARED_PTR(b::DataProcessingPtr, dp));
+}
+
 
 SpectrumListSimple::SpectrumListSimple()
 : SpectrumList(new boost::shared_ptr<b::SpectrumList>(new b::SpectrumListSimple()))
-{base_ = reinterpret_cast<boost::shared_ptr<b::SpectrumListSimple>*>(SpectrumList::base_);}
+{base_ = reinterpret_cast<boost::shared_ptr<b::SpectrumListSimple>*>(SpectrumList::base_); LOG_CONSTRUCT(__FUNCTION__)}
 
 Spectra^ SpectrumListSimple::spectra::get() {return gcnew Spectra(&(*base_)->spectra, this);}
 void SpectrumListSimple::spectra::set(Spectra^ value) {(*base_)->spectra = *value->base_;}
@@ -735,10 +742,16 @@ DataProcessing^ ChromatogramList::dataProcessing()
     return NATIVE_SHARED_PTR_TO_CLI(b::DataProcessingPtr, DataProcessing, dp);
 }
 
+void ChromatogramList::setDataProcessing(DataProcessing^ dp)
+{
+    b::ChromatogramListBase* cl = dynamic_cast<b::ChromatogramListBase*>((*base_).get());
+    if (cl) cl->setDataProcessingPtr(CLI_TO_NATIVE_SHARED_PTR(b::DataProcessingPtr, dp));
+}
+
 
 ChromatogramListSimple::ChromatogramListSimple()
 : ChromatogramList(new boost::shared_ptr<b::ChromatogramList>(new b::ChromatogramListSimple()))
-{base_ = reinterpret_cast<boost::shared_ptr<b::ChromatogramListSimple>*>(ChromatogramList::base_);}
+{base_ = reinterpret_cast<boost::shared_ptr<b::ChromatogramListSimple>*>(ChromatogramList::base_); LOG_CONSTRUCT(__FUNCTION__)}
 
 Chromatograms^ ChromatogramListSimple::chromatograms::get() {return gcnew Chromatograms(&(*base_)->chromatograms, this);}
 void ChromatogramListSimple::chromatograms::set(Chromatograms^ value) {(*base_)->chromatograms = *value->base_;}
@@ -771,7 +784,7 @@ Chromatogram^ ChromatogramListSimple::chromatogram(int index, bool getBinaryData
 
 Run::Run()
 : ParamContainer(new b::Run())
-{owner_ = nullptr; base_ = static_cast<b::Run*>(ParamContainer::base_);}
+{owner_ = nullptr; base_ = static_cast<b::Run*>(ParamContainer::base_); LOG_CONSTRUCT(__FUNCTION__)}
 
 System::String^ Run::id::get() {return gcnew System::String(base_->id.c_str());}
 void Run::id::set(System::String^ value) {base_->id = ToStdString(value);}
@@ -802,8 +815,7 @@ bool Run::empty()
 
 MSData::MSData()
 : base_(new boost::shared_ptr<b::MSData>(new b::MSData())), owner_(nullptr)
-{
-}
+{LOG_CONSTRUCT(__FUNCTION__)}
 
 System::String^ MSData::accession::get() {return gcnew System::String(base().accession.c_str());}
 void MSData::accession::set(System::String^ value) {base().accession = ToStdString(value);}

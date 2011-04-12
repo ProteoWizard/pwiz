@@ -73,5 +73,6 @@ explicit cv.hpp ;
 
 unit-test-if-exists SharedCLITest : SharedCLITest.cpp : <conditional>@unit-test-requirements ;
 unit-test-if-exists ParamTypesTest : ParamTypesTest.cpp : <conditional>@unit-test-requirements ;
+unit-test-if-exists IterationListenerTest : IterationListenerTest.cpp : <conditional>@unit-test-requirements ;
 
 }
