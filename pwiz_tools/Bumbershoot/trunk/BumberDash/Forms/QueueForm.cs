@@ -47,14 +47,53 @@ namespace BumberDash.Forms
             _jobLog = new LogForm();
 
 
-            //Initialize program handler
-            JobProcess = new ProgramHandler(this)
+            #region Initialize program handler
+            JobProcess = new ProgramHandler
                              {
-                                 JobFinished = IndicateJobDone,
-                                 StatusUpdate = UpdateStatusText,
-                                 LogUpdate = AddLogLine,
-                                 PercentageUpdate = SetPercentage                                 
+                                 JobFinished = (x, y) =>
+                                                   {
+                                                       if (InvokeRequired)
+                                                       {
+                                                           ProgramHandler.ExitDelegate jobdelegate = IndicateJobDone;
+                                                           Invoke(jobdelegate, x, y);
+                                                       }
+                                                       else
+                                                           IndicateJobDone(x, y);
+                                                   },
+                                 StatusUpdate = (x, y) =>
+                                                    {
+                                                        if (InvokeRequired)
+                                                        {
+                                                            ProgramHandler.StatusDelegate statusdelegate =
+                                                                UpdateStatusText;
+                                                            Invoke(statusdelegate, x, y);
+                                                        }
+                                                        else
+                                                            UpdateStatusText(x, y);
+                                                    },
+                                 LogUpdate = x =>
+                                                 {
+                                                     if (InvokeRequired)
+                                                     {
+                                                         ProgramHandler.LogDelegate logdelegate = AddLogLine;
+                                                         Invoke(logdelegate, x);
+                                                     }
+                                                     else
+                                                         AddLogLine(x);
+                                                 },
+                                 PercentageUpdate = x =>
+                                                        {
+                                                            if (InvokeRequired)
+                                                            {
+                                                                ProgramHandler.PercentageDelegate percentdelegate =
+                                                                    SetPercentage;
+                                                                Invoke(percentdelegate, x);
+                                                            }
+                                                            else
+                                                                SetPercentage(x);
+                                                        }
                              };
+            #endregion
 
             //Load all jobs from database
             var historyItemList = _session.QueryOver<HistoryItem>().OrderBy(x => x.RowNumber).Asc.List();
@@ -1504,11 +1543,10 @@ namespace BumberDash.Forms
             progressCell.MarqueeMode = marqueeMode;
         }
 
-        private void SetPercentage(int value, int maxvalue)
+        private void SetPercentage(int value)
         {
             var progressCell = (DataGridViewProgressCell)JobQueueDGV[5, LastCompleted + 1];
             TrayIcon.Text = string.Format("BumberDash - {0} ({1}%)", JobQueueDGV[0, LastCompleted + 1].Value, value);
-            progressCell.MaxValue = maxvalue;
             progressCell.Value = value;
         }
 
@@ -1518,7 +1556,8 @@ namespace BumberDash.Forms
         /// <param name="line"></param>
         internal void AddLogLine(string line)
         {
-            _jobLog.logText.AppendText(Environment.NewLine + line);
+            var editedLine = line.Replace("<<JobName>>", ((HistoryItem)JobQueueDGV[0, LastCompleted + 1].Tag).JobName);
+            _jobLog.logText.AppendText(Environment.NewLine + editedLine);
             var lineList = _jobLog.logText.Text.Split(Environment.NewLine.ToCharArray(),StringSplitOptions.RemoveEmptyEntries);
             var buildingString = string.Empty;
             if (lineList.Count() > 5)

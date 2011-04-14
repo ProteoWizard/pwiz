@@ -15,7 +15,7 @@ namespace BumberDash.lib
     {
         #region Globals
 
-        public delegate void PercentageDelegate(int value, int maxValue);
+        public delegate void PercentageDelegate(int value);
         public delegate void LogDelegate(string status);
         public delegate void StatusDelegate(string status, bool marqueeMode);
         public delegate void ExitDelegate(bool runNext, bool jobError);
@@ -34,21 +34,11 @@ namespace BumberDash.lib
         private int _filesToProcess; //Files in current job that have been completed
         private double _minPercentage; //Highest completion percentage seen (thus minimum reportable)
         private string _destinationProgram = string.Empty; //Process (Name) ProgramHandler is currently working with
-        private readonly Form _mainForm; //Reference to main to enable reporting
         private Thread _workThread;
         private Process _runningProgram;
         internal List<string> _completedFiles = new List<string>();
 
         #endregion
-
-        /// <summary>
-        /// Allows job to run in the background as updates are displayed to the user
-        /// </summary>
-        /// <param name="parentForm"></param>
-        public ProgramHandler(Form parentForm)
-        {
-            _mainForm = parentForm;
-        }
 
         /// <summary>
         /// Tells if ProgramHandler is active
@@ -261,20 +251,8 @@ namespace BumberDash.lib
         {
             var newInt = (int) Math.Round((decimal) percentage);
 
-            if (_mainForm == null || StatusUpdate == null || PercentageUpdate == null)
-                return;
-
-            try
-            {
-                _mainForm.Invoke(PercentageUpdate, newInt, 100);
-            }
-            catch
-            {
-                //For some reason program does not detect that _mainForm
-                //has been disposed even after error caught
-                //if (_mainForm != null && !_mainForm.IsDisposed)
-                //    throw;
-            }
+            if (PercentageUpdate != null)
+                PercentageUpdate(newInt);
         }
 
         /// <summary>
@@ -283,24 +261,16 @@ namespace BumberDash.lib
         /// <param name="data"></param>
         private void SendToLog(string data)
         {
-            try
+            if (LogUpdate != null)
             {
                 if (data == "BumberDash- Job has started")
-                    _mainForm.Invoke(LogUpdate,
-                                     string.Format("{0}{1}{1}{1}{0}" +
-                                                   "{0}   Starting job \"{2}\" {0}{0}",
-                                                   Environment.NewLine,
-                                                   new string('-', 50),
-                                                   "<<JobName>>"));
+                    LogUpdate(string.Format("{0}{1}{1}{1}{0}" +
+                                            "{0}   Starting job \"{2}\" {0}{0}",
+                                            Environment.NewLine,
+                                            new string('-', 50),
+                                            "<<JobName>>"));
                 else
-                    _mainForm.Invoke(LogUpdate, data);
-            }
-            catch
-            {
-                //For some reason program does not detect that _mainForm
-                //has been disposed even after error caught
-                //if (_mainForm != null && !_mainForm.IsDisposed)
-                //    throw;
+                    LogUpdate(data);
             }
         }
 
@@ -311,17 +281,8 @@ namespace BumberDash.lib
         /// <param name="marqueeMode"></param>
         private void SetRunStatus(string status, bool marqueeMode)
         {
-            try
-            {
-                _mainForm.Invoke(StatusUpdate, status, marqueeMode);
-            }
-            catch
-            {
-                //For some reason program does not detect that _mainForm
-                //has been disposed even after error caught
-                //if (_mainForm != null && !_mainForm.IsDisposed)
-                //    throw;
-            }
+            if (StatusUpdate != null)
+                StatusUpdate(status, marqueeMode);
         }
 
         /// <summary>
@@ -334,33 +295,27 @@ namespace BumberDash.lib
 
             if (_runningProgram == null || _runningProgram.HasExited)
             {
-                try
+                _scanning = false;
+                if (e.Data != null)
+                    SendToLog(e.Data);
+
+                if (!_killed && _runningProgram != null && JobFinished != null)
                 {
-                    _scanning = false;
-                    if (e.Data != null)
-                        SendToLog(e.Data);
+                    _runningProgram.Close();
 
-                    if (!_killed && _runningProgram != null)
-                    {
-                        _runningProgram.Close();
-
-                        if (_barMode)
-                            _mainForm.Invoke(JobFinished, false, true);
-                        else if (_destinationProgram == "DirecTag")
-                            _mainForm.Invoke(JobFinished, true, false);
-                        else
-                        {
-                            _destinationProgram = string.Empty;
-                            _mainForm.Invoke(JobFinished, false, false);
-                        }
-                    }
+                    if (_barMode)
+                        JobFinished(false, true);
+                    else if (_destinationProgram == "DirecTag")
+                        JobFinished(true, false);
                     else
+                    {
                         _destinationProgram = string.Empty;
+                        JobFinished(false, false);
+                    }
                 }
-                catch (InvalidOperationException)
-                {
-                    
-                }
+                else
+                    _destinationProgram = string.Empty;
+
             }
             else
             {
