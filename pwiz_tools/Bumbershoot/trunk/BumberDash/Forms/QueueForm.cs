@@ -7,15 +7,13 @@ using System.Text;
 using System.Windows.Forms;
 using BumberDash.lib;
 using BumberDash.Model;
+using CustomProgressCell;
 
 namespace BumberDash.Forms
 {
     public partial class QueueForm : Form
     {
         #region Globals
-
-        //TODO: Get rid of CE-Full and replace with modified OldConfigForm
-        private readonly string _configLocation = String.Format(@"{0}\ConfigEditor\ConfigEditor.exe", Application.StartupPath);
 
         private Rectangle _dragBoxFromMouseDown; //Created on valid mousedown
         internal ProgramHandler JobProcess; //eventual implememtation of program running
@@ -25,7 +23,7 @@ namespace BumberDash.Forms
         internal int LastCompleted = -1; //keeps track of where the scanner is in the list
         private bool _programmaticallyPaused; //indicates if a job can run
         private bool _manuallyPaused; //indicates if a job can run (set by user)
-        private NHibernate.ISession _session;
+        private readonly NHibernate.ISession _session;
 
         #endregion
         
@@ -50,7 +48,13 @@ namespace BumberDash.Forms
 
 
             //Initialize program handler
-            JobProcess = new ProgramHandler(this);
+            JobProcess = new ProgramHandler(this)
+                             {
+                                 JobFinished = IndicateJobDone,
+                                 StatusUpdate = UpdateStatusText,
+                                 LogUpdate = AddLogLine,
+                                 PercentageUpdate = SetPercentage                                 
+                             };
 
             //Load all jobs from database
             var historyItemList = _session.QueryOver<HistoryItem>().OrderBy(x => x.RowNumber).Asc.List();
@@ -69,13 +73,18 @@ namespace BumberDash.Forms
             JobQueueDGV.Rows.Add(values);
             JobQueueDGV.Rows[JobQueueDGV.Rows.Count - 1].DefaultCellStyle.BackColor = Color.LightGray;
 
+            
             for (int x = JobQueueDGV.Rows.Count - 2; x >= 0; x--)
             {
-                if ((string) JobQueueDGV.Rows[x].Tag == "Finished" || (string) JobQueueDGV.Rows[x].Tag == "Unsuccessful")
+                var progressCell = (DataGridViewProgressCell)JobQueueDGV[5, x];
+                if ((string)JobQueueDGV.Rows[x].Tag == "Finished" || (string)JobQueueDGV.Rows[x].Tag == "Unsuccessful")
                 {
-                    LastCompleted = x;
-                    break;
+                    progressCell.Message = (string)JobQueueDGV.Rows[x].Tag == "Finished" ? "Finished" : "Unsuccessful";
+                    if (LastCompleted == -1)
+                        LastCompleted = x;
                 }
+                else if ((string)JobQueueDGV.Rows[x].Tag == "Locked")
+                    progressCell.Message = "Locked";
             }
 
             //Configure IDPicker Location
@@ -88,7 +97,6 @@ namespace BumberDash.Forms
 
 
         }
-
 
         #region Events
 
@@ -295,16 +303,6 @@ namespace BumberDash.Forms
         }
 
         /// <summary>
-        /// Change displayed text when a different row has been selected
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void JobQueueDGV_SelectionChanged(object sender, EventArgs e)
-        {
-            UpdateStatusText();
-        }
-
-        /// <summary>
         /// Open output older if a job is double clicked
         /// </summary>
         /// <param name="sender"></param>
@@ -391,6 +389,9 @@ namespace BumberDash.Forms
                     _session.SaveOrUpdate(JobQueueDGV.SelectedRows[0].Cells[0].Tag);
                     for (var x = 0; x < 6; x++)
                         JobQueueDGV.SelectedRows[0].Cells[x].Style.BackColor = Color.Wheat;
+                    var progressCell = (DataGridViewProgressCell)JobQueueDGV.SelectedRows[0].Cells[5];
+                    progressCell.Message = "Locked";
+                    progressCell.MarqueeMode = false;
                 }
             }
             else
@@ -400,6 +401,9 @@ namespace BumberDash.Forms
                 _session.SaveOrUpdate(JobQueueDGV.SelectedRows[0].Cells[0].Tag);
                 for (var x = 0; x < 6; x++)
                     JobQueueDGV.SelectedRows[0].Cells[x].Style.BackColor = Color.White;
+                var progressCell = (DataGridViewProgressCell)JobQueueDGV.SelectedRows[0].Cells[5];
+                progressCell.Message = string.Empty;
+                progressCell.MarqueeMode = false;
                 IsValidJob(JobQueueDGV.SelectedRows[0].Index);
             }
             _session.Flush();
@@ -740,7 +744,7 @@ namespace BumberDash.Forms
         private bool IsValidJob(int row)
         {
             var allValid = true;
-            var hi = (HistoryItem)JobQueueDGV.Rows[row].Cells[0].Tag;
+            var hi = (HistoryItem) JobQueueDGV.Rows[row].Cells[0].Tag;
 
             //only need to check if it is unlocked (Check fires automatically on unlock)
             //Prevents validation from removing visual indication of lock
@@ -776,7 +780,13 @@ namespace BumberDash.Forms
                 JobQueueDGV.Rows[row].Cells[2].Style.BackColor = Color.LightPink;
             }
 
-            JobQueueDGV.Rows[row].Tag = allValid ? string.Empty : "Invalid";
+            if (!allValid)
+            {
+                var progressCell = (DataGridViewProgressCell) JobQueueDGV[5, LastCompleted + 1];
+                JobQueueDGV.Rows[row].Tag = "Invalid";
+                progressCell.Message = "Invalid";
+            }
+
             return allValid;
         }
 
@@ -802,19 +812,31 @@ namespace BumberDash.Forms
         /// Called from ProgramHandler to indicate to form 
         /// and database that a job has been completed
         /// </summary>
-        internal void InidcateJobDone()
+        private void IndicateJobDone(bool runNext, bool jobError)
         {
-            var unsuccessful = JobQueueDGV.Rows[LastCompleted + 1].Tag.ToString() == "Unsuccessful";
+            if (runNext)
+            {
+                JobProcess.StartNewJob(LastCompleted + 1, (HistoryItem)JobQueueDGV[0, LastCompleted + 1].Tag);
+                return;
+            }
 
-            if (unsuccessful)
-                JobQueueDGV[5, LastCompleted + 1].Value = 0;
+            var progressCell = (DataGridViewProgressCell) JobQueueDGV[5, LastCompleted + 1];
+
+            if (jobError)
+            {
+                UpdateStatusText("Unsuccessful", false);
+                progressCell.Value = 0;
+                JobQueueDGV.Rows[LastCompleted + 1].Tag = "Unsuccessful";
+            }
             else
+            {
+                UpdateStatusText("Finished", false);
+                progressCell.Value = 100;
                 JobQueueDGV.Rows[LastCompleted + 1].Tag = "Finished";
-            TrayIcon.Text = "BumberDash";
-            
+            }
 
             ((HistoryItem) JobQueueDGV[0, LastCompleted + 1].Tag).CurrentStatus =
-                unsuccessful ? "Unsuccessful" : "Finished";
+                jobError ? "Unsuccessful" : "Finished";
             ((HistoryItem) JobQueueDGV[0, LastCompleted + 1].Tag).EndTime = DateTime.Now;
             _session.SaveOrUpdate(JobQueueDGV[0, LastCompleted + 1].Tag);
             _session.Flush();
@@ -972,10 +994,16 @@ namespace BumberDash.Forms
                             Equals(DialogResult.Yes))
                     {
                         if (JobProcess != null && JobQueueDGV.Rows[row].Tag.ToString() == "Finished")
+                        {
                             JobProcess.DeletedAbove();
+                            LastCompleted--;
+                        }
                         JobQueueDGV.Rows[row].Cells[5].Value = 0;
                         JobQueueDGV.Rows[row].Tag = "Locked";
                         ((HistoryItem) JobQueueDGV[0, row].Tag).CurrentStatus = "Locked";
+                        var progressCell = (DataGridViewProgressCell)JobQueueDGV[5, row];
+                        progressCell.Message = "Locked";
+                        progressCell.MarqueeMode = false;
                         _session.SaveOrUpdate(JobQueueDGV[0, row].Tag);
                         _session.Flush();
                         for (var x = 0; x < 6; x++)
@@ -984,7 +1012,10 @@ namespace BumberDash.Forms
                     else
                     {
                         if (JobProcess != null && JobQueueDGV.Rows[row].Tag.ToString() == "Finished")
+                        {
                             JobProcess.DeletedAbove();
+                            LastCompleted--;
+                        }
                         _session.Delete(JobQueueDGV[0, row].Tag);
                         _session.Flush();
                         JobQueueDGV.Rows.RemoveAt(row);
@@ -998,10 +1029,16 @@ namespace BumberDash.Forms
                             Equals(DialogResult.Yes))
                     {
                         if (JobProcess != null && JobQueueDGV.Rows[row].Tag.ToString() == "Finished")
+                        {
                             JobProcess.DeletedAbove();
+                            LastCompleted--;
+                        }
                         JobQueueDGV.Rows[row].Cells[5].Value = 0;
                         JobQueueDGV.Rows[row].Tag = "Locked";
                         ((HistoryItem) JobQueueDGV[0, row].Tag).CurrentStatus = "Locked";
+                        var progressCell = (DataGridViewProgressCell)JobQueueDGV[5, row];
+                        progressCell.Message = "Locked";
+                        progressCell.MarqueeMode = false;
                         _session.SaveOrUpdate(JobQueueDGV[0, row].Tag);
                         _session.Flush();
                         for (var x = 0; x < 6; x++)
@@ -1010,7 +1047,10 @@ namespace BumberDash.Forms
                     else
                     {
                         if (JobProcess != null && JobQueueDGV.Rows[row].Tag.ToString() == "Finished")
+                        {
                             JobProcess.DeletedAbove();
+                            LastCompleted--;
+                        }
                         _session.Delete(JobQueueDGV[0, row].Tag);
                         _session.Flush();
                         JobQueueDGV.Rows.RemoveAt(row);
@@ -1098,7 +1138,10 @@ namespace BumberDash.Forms
                     }
 
                     if (JobProcess != null && JobQueueDGV.Rows[row].Tag.ToString() == "Finished")
+                    {
                         JobProcess.DeletedAbove();
+                        LastCompleted--;
+                    }
                     _session.Delete(JobQueueDGV[0, row].Tag);
                     _session.Flush();
                     JobQueueDGV.Rows.RemoveAt(row);
@@ -1106,7 +1149,10 @@ namespace BumberDash.Forms
 
                 case DialogResult.No:
                     if (JobProcess != null && JobQueueDGV.Rows[row].Tag.ToString() == "Finished")
+                    {
                         JobProcess.DeletedAbove();
+                        LastCompleted--;
+                    }
                     _session.Delete(JobQueueDGV[0, row].Tag);
                     _session.Flush();
                     JobQueueDGV.Rows.RemoveAt(row);
@@ -1332,51 +1378,47 @@ namespace BumberDash.Forms
         /// </summary>
         private void CheckForRunableJob()
         {
-            if (!_programmaticallyPaused && !_manuallyPaused && JobProcess != null &&
-                !JobProcess.JobIsRunning() && LastCompleted < JobQueueDGV.Rows.Count - 2 &&
-                CanArrangeToNextJob())
+            if (_programmaticallyPaused || _manuallyPaused || JobProcess == null || JobProcess.JobIsRunning() ||
+                LastCompleted >= JobQueueDGV.Rows.Count - 2 || !CanArrangeToNextJob())
+                return;
+            
+            var hi = (HistoryItem) JobQueueDGV[0, LastCompleted + 1].Tag;
+            //reload config to make sure current state is recorded
+            ReloadConfig(hi.InitialConfigFile);
+            ReloadConfigTooltip(LastCompleted + 1);             
+
+            //if job is set to add new folder, adjust outputFolder accordingly
+            if (hi.OutputDirectory.EndsWith("+"))
             {
-                var hi = (HistoryItem) JobQueueDGV[0, LastCompleted + 1].Tag;
-                //reload config to make sure current state is recorded
-                ReloadConfig(hi.InitialConfigFile);
-                ReloadConfigTooltip(LastCompleted + 1);             
+                var baseOutputDirectory =
+                    hi.OutputDirectory.TrimEnd('+');
+                var baseNewFolder = hi.JobName;
+                var newFolderPath = Path.Combine(baseOutputDirectory, baseNewFolder);
 
-                //if job is set to add new folder, adjust outputFolder accordingly
-                if (hi.OutputDirectory.EndsWith("+"))
+                if (Directory.Exists(newFolderPath))
                 {
-                    var baseOutputDirectory =
-                        hi.OutputDirectory.TrimEnd('+');
-                    var baseNewFolder = hi.JobName;
-                    var newFolderPath = Path.Combine(baseOutputDirectory, baseNewFolder);
-
-                    if (Directory.Exists(newFolderPath))
-                    {
-                        var x = 2;
-                        while (Directory.Exists(newFolderPath + x))
-                            x++;
-                        newFolderPath += x;
-                        baseNewFolder += x;
-                    }
-                    
-                    Directory.CreateDirectory(newFolderPath);
-                    newFolderPath += "*";
-                    JobQueueDGV[1, LastCompleted + 1].Value = baseNewFolder;
-                    JobQueueDGV[1, LastCompleted + 1].ToolTipText = newFolderPath;
-                    hi.OutputDirectory = newFolderPath;
-                    _session.SaveOrUpdate(JobQueueDGV[0, LastCompleted + 1].Tag);
-                    _session.Flush();
+                    var x = 2;
+                    while (Directory.Exists(newFolderPath + x))
+                        x++;
+                    newFolderPath += x;
+                    baseNewFolder += x;
                 }
-
-                hi.StartTime = DateTime.Now;
+                    
+                Directory.CreateDirectory(newFolderPath);
+                newFolderPath += "*";
+                JobQueueDGV[1, LastCompleted + 1].Value = baseNewFolder;
+                JobQueueDGV[1, LastCompleted + 1].ToolTipText = newFolderPath;
+                hi.OutputDirectory = newFolderPath;
                 _session.SaveOrUpdate(JobQueueDGV[0, LastCompleted + 1].Tag);
                 _session.Flush();
-                JobQueueDGV.Rows[LastCompleted + 1].Tag = "Running";
-                JobQueueDGV.Rows[LastCompleted + 1].Cells[5].Tag = string.Empty;
-                JobProcess.StartNewJob(LastCompleted + 1);
             }
 
-            if (JobQueueDGV.SelectedRows.Count > 0)
-                UpdateStatusText();
+            hi.StartTime = DateTime.Now;
+            _session.SaveOrUpdate(JobQueueDGV[0, LastCompleted + 1].Tag);
+            _session.Flush();
+            JobQueueDGV.Rows[LastCompleted + 1].Tag = "Running";
+            JobQueueDGV.Rows[LastCompleted + 1].Cells[5].Tag = string.Empty;
+            JobProcess.StartNewJob(LastCompleted + 1, hi);
         }
 
         /// <summary>
@@ -1454,14 +1496,20 @@ namespace BumberDash.Forms
         /// <summary>
         /// Sets the rowStatusLabel text to reflect the state of the currently selected row
         /// </summary>
-        internal void UpdateStatusText()
+        internal void UpdateStatusText(string status, bool marqueeMode)
         {
-            if (JobQueueDGV.SelectedRows.Count > 0)
-            {
-                rowStatusLabel.Text = (string) JobQueueDGV.SelectedRows[0].Tag;
-                if (rowStatusLabel.Text == "Running")
-                    rowStatusLabel.Text = (string) JobQueueDGV.SelectedRows[0].Cells[5].Tag;
-            }
+            var progressCell = (DataGridViewProgressCell)JobQueueDGV[5, LastCompleted + 1];
+            var editedStatus = status.Replace("<<JobName>>", ((HistoryItem)JobQueueDGV[0, LastCompleted + 1].Tag).JobName);
+            progressCell.Message = editedStatus;
+            progressCell.MarqueeMode = marqueeMode;
+        }
+
+        private void SetPercentage(int value, int maxvalue)
+        {
+            var progressCell = (DataGridViewProgressCell)JobQueueDGV[5, LastCompleted + 1];
+            TrayIcon.Text = string.Format("BumberDash - {0} ({1}%)", JobQueueDGV[0, LastCompleted + 1].Value, value);
+            progressCell.MaxValue = maxvalue;
+            progressCell.Value = value;
         }
 
         /// <summary>
@@ -1480,16 +1528,6 @@ namespace BumberDash.Forms
                 MiniLogBox.Text =
                     buildingString.Trim();
             }
-        }
-
-        /// <summary>
-        /// Indicates that an error appeared partway though running the job
-        /// </summary>
-        /// <param name="row"></param>
-        public void IndicateRowError(int row)
-        {
-            JobQueueDGV[5, row].Style.BackColor = Color.LightPink;
-            JobQueueDGV.Rows[row].Tag = "Unsuccessful";
         }
 
         private bool DetectLatestIDPicker()

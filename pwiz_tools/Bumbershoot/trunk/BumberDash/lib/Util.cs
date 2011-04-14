@@ -58,6 +58,7 @@ namespace BumberDash.lib
                                                                           {"MzFidelityScoreWeight", "double"},
                                                                           {"ComplementScoreWeight", "double"},
                                                                           {"MaxTagScore", "double"},
+                                                                          {"PrecursorAdjustmentStep", "double"},
                                                                           {"Name", "string"},
                                                                           {"CleavageRules", "string"},
                                                                           {"PrecursorMzToleranceUnits", "string"},

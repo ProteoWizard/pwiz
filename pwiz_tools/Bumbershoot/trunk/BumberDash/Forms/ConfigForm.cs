@@ -584,6 +584,8 @@ namespace BumberDash.Forms
                     ((NumericUpDown)control).Value = decimal.Parse(value);
                 else if (control is CheckBox)
                     ((CheckBox)control).Checked = bool.Parse(value);
+
+                CheckForChange(control, null);
             }
 
         }
@@ -786,6 +788,7 @@ namespace BumberDash.Forms
                                      "AdjustPrecursorMass",
                                      "MaxPrecursorAdjustment",
                                      "MinPrecursorAdjustment",
+                                     "PrecursorAdjustmentStep",
                                      "NumSearchBestAdjustments",
                                      Environment.NewLine,
                                      "DuplicateSpectra",
@@ -949,7 +952,7 @@ namespace BumberDash.Forms
                     MyriAdvPanel.Visible = true;
                     break;
                 case "DirecTag":
-                    Size = new Size(550, 540);
+                    Size = new Size(555, 540);
                     DTGenPanel.Visible = true;
                     DTAdvPanel.Visible = true;
                     break;

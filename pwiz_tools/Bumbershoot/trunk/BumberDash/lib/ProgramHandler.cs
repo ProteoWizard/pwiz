@@ -5,14 +5,25 @@ using System.IO;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using BumberDash.Forms;
+using System.Windows.Forms;
 using BumberDash.Model;
+using CustomProgressCell;
 
 namespace BumberDash.lib
 {
     class ProgramHandler
     {
         #region Globals
+
+        public delegate void PercentageDelegate(int value, int maxValue);
+        public delegate void LogDelegate(string status);
+        public delegate void StatusDelegate(string status, bool marqueeMode);
+        public delegate void ExitDelegate(bool runNext, bool jobError);
+
+        public PercentageDelegate PercentageUpdate;
+        public LogDelegate LogUpdate;
+        public StatusDelegate StatusUpdate;
+        public ExitDelegate JobFinished;
 
         private bool _scanning; //Tells if ProgramHandler is active
         private bool _killed; //Indicates if a forced stop has been put into place
@@ -23,11 +34,10 @@ namespace BumberDash.lib
         private int _filesToProcess; //Files in current job that have been completed
         private double _minPercentage; //Highest completion percentage seen (thus minimum reportable)
         private string _destinationProgram = string.Empty; //Process (Name) ProgramHandler is currently working with
-        private readonly QueueForm _mainForm; //Reference to main to enable reporting
+        private readonly Form _mainForm; //Reference to main to enable reporting
         private Thread _workThread;
         private Process _runningProgram;
         internal List<string> _completedFiles = new List<string>();
-        delegate void NoParamDelegate();
 
         #endregion
 
@@ -35,7 +45,7 @@ namespace BumberDash.lib
         /// Allows job to run in the background as updates are displayed to the user
         /// </summary>
         /// <param name="parentForm"></param>
-        public ProgramHandler(QueueForm parentForm)
+        public ProgramHandler(Form parentForm)
         {
             _mainForm = parentForm;
         }
@@ -52,10 +62,9 @@ namespace BumberDash.lib
         /// <summary>
         /// Starts Bumbershoot utility based on current row and destination program
         /// </summary>
-        private void ProcessJob()
+        private void ProcessJob(HistoryItem hi)
         {
             var argumentString = new StringBuilder();
-            var hi = (HistoryItem) _mainForm.JobQueueDGV[0, _currentRow].Tag;
             string configString;
 
             _killed = false;
@@ -69,7 +78,7 @@ namespace BumberDash.lib
                 case "MyriMatch":
                     //Set  location of the program
                     psi = new ProcessStartInfo(String.Format(@"""{0}\lib\Bumbershoot\myrimatch.exe""",
-                                                             System.Windows.Forms.Application.StartupPath));
+                                                             Application.StartupPath));
 
                     //determine configuration
                     configString = hi.InitialConfigFile.FilePath == "--Custom--"
@@ -91,7 +100,7 @@ namespace BumberDash.lib
                 case "DirecTag":
                     //Set  location of the program
                     psi = new ProcessStartInfo(String.Format(@"""{0}\lib\Bumbershoot\directag.exe""",
-                                                             System.Windows.Forms.Application.StartupPath));
+                                                             Application.StartupPath));
 
                     //determine configuration
                     configString = hi.InitialConfigFile.FilePath == "--Custom--"
@@ -111,7 +120,7 @@ namespace BumberDash.lib
                 case "TagRecon":
                     //Set  location of the program
                     psi = new ProcessStartInfo(String.Format(@"""{0}\lib\Bumbershoot\tagrecon.exe""",
-                                                             System.Windows.Forms.Application.StartupPath));
+                                                             Application.StartupPath));
 
                     //determine configuration
                     if (hi.TagConfigFile.FilePath == "--Custom--")
@@ -121,12 +130,12 @@ namespace BumberDash.lib
                         if (!configString.Contains("Blosum"))
                             configString += string.Format("-{0} \"{1}\" ", "Blosum",
                                                           Path.Combine(
-                                                              System.Windows.Forms.Application.StartupPath,
+                                                              Application.StartupPath,
                                                               @"lib\Bumbershoot\blosum62.fas"));
                         if (!configString.Contains("UnimodXML"))
                             configString += string.Format("-{0} \"{1}\" ", "UnimodXML",
                                                           Path.Combine(
-                                                              System.Windows.Forms.Application.StartupPath,
+                                                              Application.StartupPath,
                                                               @"lib\Bumbershoot\unimod.xml"));
 
                     }
@@ -140,12 +149,12 @@ namespace BumberDash.lib
                         if (!entireFile.Contains("Blosum ="))
                             configString += string.Format("-{0} \"{1}\" ", "Blosum",
                                                           Path.Combine(
-                                                              System.Windows.Forms.Application.StartupPath,
+                                                              Application.StartupPath,
                                                               @"lib\Bumbershoot\blosum62.fas"));
                         if (!entireFile.Contains("UnimodXML ="))
                             configString += string.Format("-{0} \"{1}\" ", "UnimodXML",
                                                           Path.Combine(
-                                                              System.Windows.Forms.Application.StartupPath,
+                                                              Application.StartupPath,
                                                               @"lib\Bumbershoot\unimod.xml"));
                     }
 
@@ -205,7 +214,8 @@ namespace BumberDash.lib
         /// Selects the destination program and sets it to run in the background
         /// </summary>
         /// <param name="rowNumber"></param>
-        internal void StartNewJob(int rowNumber)
+        /// <param name="hi"></param>
+        internal void StartNewJob(int rowNumber, HistoryItem hi)
         {
             _scanning = true;
             _versionCaught = false;
@@ -213,11 +223,9 @@ namespace BumberDash.lib
             _minPercentage = 0;
             _fileProcessing = 0;
             _filesToProcess = 0;
-            var hi = (HistoryItem)_mainForm.JobQueueDGV[0, _currentRow].Tag;
 
-
-            NoParamDelegate forkDelegate = ProcessJob;
-            _workThread = new Thread(new ThreadStart(forkDelegate))
+            ThreadStart ts = () => ProcessJob(hi);
+            _workThread = new Thread(ts)
                               {
                                   Name = "Program Handler",
                                   IsBackground = true
@@ -251,32 +259,22 @@ namespace BumberDash.lib
         /// <param name="percentage"></param>
         private void SetPercentage(double percentage)
         {
-            double newPercentage;
-            int newInt;
+            var newInt = (int) Math.Round((decimal) percentage);
 
-            switch (_destinationProgram)
+            if (_mainForm == null || StatusUpdate == null || PercentageUpdate == null)
+                return;
+
+            try
             {
-                case "MyriMatch":
-                    newPercentage = (percentage/_filesToProcess) + ((_fileProcessing - 1)*(100/_filesToProcess));
-                    newInt = (int) Math.Round((decimal) newPercentage);
-                    break;
-                case "DirecTag":
-                    newPercentage = ((percentage/_filesToProcess) + ((_fileProcessing - 1)*(100/_filesToProcess)))/2;
-                    newInt = (int) Math.Round((decimal) newPercentage);
-                    break;
-                case "TagRecon":
-                    newPercentage = ((percentage/_filesToProcess) + ((_fileProcessing - 1)*(100/_filesToProcess)))/2 +
-                                    50;
-                    newInt = (int) Math.Round((decimal) newPercentage);
-                    break;
-                default:
-                    newInt = (int) Math.Round((decimal) percentage);
-                    break;
+                _mainForm.Invoke(PercentageUpdate, newInt, 100);
             }
-
-            _mainForm.TrayIcon.Text = string.Format("BumberDash - {0} ({1}%)",
-                                                    _mainForm.JobQueueDGV[0, _currentRow].Value, newInt);
-            _mainForm.JobQueueDGV.Rows[_currentRow].Cells[5].Value = newInt;
+            catch
+            {
+                //For some reason program does not detect that _mainForm
+                //has been disposed even after error caught
+                //if (_mainForm != null && !_mainForm.IsDisposed)
+                //    throw;
+            }
         }
 
         /// <summary>
@@ -285,23 +283,17 @@ namespace BumberDash.lib
         /// <param name="data"></param>
         private void SendToLog(string data)
         {
-            NoParamDelegate testDel = () =>
-                                          {
-                                              if (data == "BumberDash- Job has started")
-                                              {
-                                                  _mainForm.AddLogLine(string.Format("{0}{1}{1}{1}{0}" +
-                                                                                     "{0}   Starting job \"{2}\" {0}{0}",
-                                                                                     Environment.NewLine,
-                                                                                     new string('-',50),
-                                                                                     _mainForm.JobQueueDGV[0, _currentRow].Value));
-                                              }
-                                              else
-                                                  _mainForm.AddLogLine(data);
-                                          };
-
             try
             {
-                _mainForm.Invoke(testDel);
+                if (data == "BumberDash- Job has started")
+                    _mainForm.Invoke(LogUpdate,
+                                     string.Format("{0}{1}{1}{1}{0}" +
+                                                   "{0}   Starting job \"{2}\" {0}{0}",
+                                                   Environment.NewLine,
+                                                   new string('-', 50),
+                                                   "<<JobName>>"));
+                else
+                    _mainForm.Invoke(LogUpdate, data);
             }
             catch
             {
@@ -316,17 +308,12 @@ namespace BumberDash.lib
         /// Sets row's status text and instructs main form to refresh
         /// </summary>
         /// <param name="status"></param>
-        private void SetRunStatus(string status)
+        /// <param name="marqueeMode"></param>
+        private void SetRunStatus(string status, bool marqueeMode)
         {
-            NoParamDelegate testDel = () =>
-                                          {
-                                              _mainForm.JobQueueDGV.Rows[_currentRow].Cells[5].Tag = status;
-                                              _mainForm.UpdateStatusText();
-                                          };
-
             try
             {
-                _mainForm.Invoke(testDel);
+                _mainForm.Invoke(StatusUpdate, status, marqueeMode);
             }
             catch
             {
@@ -344,17 +331,35 @@ namespace BumberDash.lib
         /// <param name="e"></param>
         private void DataReceived(object sender, DataReceivedEventArgs e)
         {
-            if (e.Data == null || _runningProgram == null || _runningProgram.HasExited)
+
+            if (_runningProgram == null || _runningProgram.HasExited)
             {
                 try
                 {
-                    NoParamDelegate testDel = ExitDetected;
-                    _mainForm.Invoke(testDel);
+                    _scanning = false;
+                    if (e.Data != null)
+                        SendToLog(e.Data);
+
+                    if (!_killed && _runningProgram != null)
+                    {
+                        _runningProgram.Close();
+
+                        if (_barMode)
+                            _mainForm.Invoke(JobFinished, false, true);
+                        else if (_destinationProgram == "DirecTag")
+                            _mainForm.Invoke(JobFinished, true, false);
+                        else
+                        {
+                            _destinationProgram = string.Empty;
+                            _mainForm.Invoke(JobFinished, false, false);
+                        }
+                    }
+                    else
+                        _destinationProgram = string.Empty;
                 }
-                catch
+                catch (InvalidOperationException)
                 {
-                    //This is triggered when the main form has exited but
-                    //the program is still recieving data
+                    
                 }
             }
             else
@@ -392,7 +397,7 @@ namespace BumberDash.lib
                     SetPercentage(100);
                     _barMode = false;
                     _minPercentage = 0;
-                    SetRunStatus("--- Performing cross-correlation analysis ---");
+                    SetRunStatus("Preparing cross-correlation",true);
                 }
                 else
                 {
@@ -423,28 +428,30 @@ namespace BumberDash.lib
             }
             else if (recievedLine.ToLower().Contains(".fasta\""))
             {
-                SetRunStatus("--- Reading Database File ---");
+                SetRunStatus("Reading Database File", true);
             }
             else if (recievedLine.Contains("is reading spectra"))
             {
                 _fileProcessing++;
-                SetRunStatus(String.Format("--- Reading File {0} of {1} ---", _fileProcessing, _filesToProcess));
+                SetRunStatus(String.Format("Reading File {0} of {1}", _fileProcessing, _filesToProcess), true);
 
             }
             else if (recievedLine.Contains("is preparing"))
             {
-                SetRunStatus(String.Format("--- Preprocessing File {0} of {1} ---", _fileProcessing, _filesToProcess));
+                SetRunStatus(String.Format("Preprocessing File {0} of {1}", _fileProcessing, _filesToProcess), true);
             }
             else if (recievedLine.Contains("is commencing database search"))
             {
-                SetRunStatus(String.Format("--- Searching File {0} of {1} ---", _fileProcessing, _filesToProcess));
+                SetRunStatus(
+                    String.Format("Searching File {0} of {1} ({2})", _fileProcessing, _filesToProcess,
+                                  DataGridViewProgressCell.MessageSpecialValue.Percentage), false);
                 _barMode = true;
             }
             else if (recievedLine.Contains("is writing search results to file"))
             {
                 var delimiter = new string[1];
 
-                SetRunStatus("--- Writing Results ---");
+                SetRunStatus("Writing Results", true);
 
                 delimiter[0] = "is writing search results to file \"";
                 var brokenLine = recievedLine.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
@@ -517,23 +524,25 @@ namespace BumberDash.lib
             else if (recievedLine.Contains("is reading spectra from file \""))
             {
                 _fileProcessing++;
-                SetRunStatus(String.Format("--- Reading File {0} of {1} ---", _fileProcessing.ToString(), _filesToProcess.ToString()));
+                SetRunStatus(String.Format("Reading File {0} of {1}", _fileProcessing, _filesToProcess), true);
 
             }
             else if (recievedLine.Contains("is trimming spectra"))
             {
-                SetRunStatus(String.Format("--- Preprocessing File {0} of {1} ---", _fileProcessing.ToString(), _filesToProcess.ToString()));
+                SetRunStatus(String.Format("Preprocessing File {0} of {1}", _fileProcessing, _filesToProcess), true);
             }
             else if (recievedLine.Contains("has sequence tagged"))
             {
-                SetRunStatus(String.Format("--- Searching File {0} of {1} ---", _fileProcessing.ToString(), _filesToProcess.ToString()));
+                SetRunStatus(
+                    String.Format("Searching File {0} of {1} ({2})", _fileProcessing, _filesToProcess,
+                                  DataGridViewProgressCell.MessageSpecialValue.Percentage), false);
                 _barMode = true;
             }
             else if (recievedLine.Contains("is writing tags to \""))
             {
                 var delimiter = new string[1];
 
-                SetRunStatus("--- Writing Results ---");
+                SetRunStatus("Writing Results", true);
 
                 delimiter[0] = "is writing tags to \"";
                 var brokenLine = recievedLine.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
@@ -568,7 +577,7 @@ namespace BumberDash.lib
                 if (recievedLine.Contains("has finished database search"))
                 {
                     SetPercentage(100);
-                    SetRunStatus("--- Performing cross-correlation analysis ---");
+                    SetRunStatus("Preparing cross-correlation", true);
                     _barMode = false;
                     _minPercentage = 0;
                 }
@@ -605,28 +614,28 @@ namespace BumberDash.lib
             else if (recievedLine.ToLower().Contains(".fasta\""))
             {
 
-                SetRunStatus("--- Reading Database File ---");
+                SetRunStatus("Reading Database File", true);
             }
             else if (recievedLine.Contains("is reading spectra"))
             {
                 _fileProcessing++;
-                SetRunStatus(String.Format("--- Reading Tag File {0} of {1} ---", _fileProcessing,_filesToProcess));
+                SetRunStatus(String.Format("Reading Tag File {0} of {1}", _fileProcessing,_filesToProcess), true);
 
             }
             else if (recievedLine.Contains("is parsing"))
             {
-                SetRunStatus(String.Format("--- Preprocessing Tag File {0} of {1} ---", _fileProcessing, _filesToProcess));
+                SetRunStatus(String.Format("Preprocessing Tag File {0} of {1}", _fileProcessing, _filesToProcess), true);
             }
             else if (recievedLine.Contains("is commencing database search"))
             {
-                SetRunStatus(String.Format("--- Searching Tag File {0} of {1} ---", _fileProcessing, _filesToProcess));
+                SetRunStatus(String.Format("Searching Tag File {0} of {1} ({2})", _fileProcessing, _filesToProcess, DataGridViewProgressCell.MessageSpecialValue.Percentage), false);
                 _barMode = true;
             }
             else if (recievedLine.Contains("is writing search results to file"))
             {
                 var delimiter = new string[1];
 
-                SetRunStatus("--- Writing Results ---");
+                SetRunStatus("Writing Results", true);
 
                 delimiter[0] = "is writing search results to file \"";
                 var brokenLine = recievedLine.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
@@ -647,49 +656,19 @@ namespace BumberDash.lib
         }
 
         /// <summary>
-        /// Occurs when Bumbershoot utility closes
-        /// </summary>
-        private void ExitDetected()
-        {
-            _scanning = false;
-
-            if (_barMode)
-            {
-                _barMode = false;
-                _mainForm.IndicateRowError(_currentRow);
-            }
-
-            if (!_killed)
-            {
-                _runningProgram.Close();
-
-                if (_destinationProgram == "DirecTag")
-                {
-                    _mainForm.JobProcess.StartNewJob(_currentRow);
-                }
-                else
-                {
-                    _destinationProgram = string.Empty;
-                    SetPercentage(100);
-                    _mainForm.InidcateJobDone();
-                }
-            }
-            else
-                _destinationProgram = string.Empty;
-        }
-
-        /// <summary>
         /// Forces the Bumbershoot utility to close and aborts teh tread it is being run in
         /// </summary>
         internal void ForceKill()
         {
             _killed = true;
             _barMode = false;
+            _scanning = false;
             if (_runningProgram != null && !_runningProgram.HasExited)
             {
+                _runningProgram.OutputDataReceived -= DataReceived;
                 _runningProgram.Kill();
                 _runningProgram.Close();
-                _runningProgram.Dispose();
+                _runningProgram = null;
             }
             if (_workThread != null)
                 _workThread.Abort();
@@ -702,7 +681,6 @@ namespace BumberDash.lib
         {
             if (_scanning)
                 _currentRow--;
-            _mainForm.LastCompleted--;
         }
 
     }

@@ -20,6 +20,7 @@
 // Contributor(s): Surendra Dasaris
 //
 
+using System.Reflection;
 using System.Windows.Forms;
 
 namespace BumberDash.Forms
@@ -30,7 +31,7 @@ namespace BumberDash.Forms
         {
             InitializeComponent();
 
-            const string currentGuiVersion = "1.2.4";
+            var currentGuiVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString(3);
 
             aboutTextBox.Text = aboutTextBox.Text.Replace("<<version>>", currentGuiVersion);
 

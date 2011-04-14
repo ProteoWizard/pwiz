@@ -31,13 +31,6 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(QueueForm));
             this.JobQueueDGV = new System.Windows.Forms.DataGridView();
-            this.JQName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.JQOutputDirectory = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.JQDatabaseFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.JQConfigFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.JQScanType = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.JQProgress = new MSDNSample.DataGridViewProgressColumn();
-            this.Kill = new System.Windows.Forms.DataGridViewButtonColumn();
             this.JQRowMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.lockToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -52,6 +45,7 @@
             this.confiToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
             this.setIDPickerLocationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.resetIDPickerLocationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.newJobToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -59,19 +53,24 @@
             this.documentationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.rowStatusLabel = new System.Windows.Forms.Label();
             this.pauseButton = new System.Windows.Forms.Button();
             this.LogButton = new System.Windows.Forms.Button();
             this.TrayIcon = new System.Windows.Forms.NotifyIcon(this.components);
             this.TrayMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.showToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.dataGridViewProgressColumn1 = new MSDNSample.DataGridViewProgressColumn();
-            this.dataGridViewProgressColumn2 = new MSDNSample.DataGridViewProgressColumn();
-            this.dataGridViewProgressColumn3 = new MSDNSample.DataGridViewProgressColumn();
+            this.dataGridViewProgressColumn1 = new CustomProgressCell.DataGridViewProgressColumn();
+            this.dataGridViewProgressColumn2 = new CustomProgressCell.DataGridViewProgressColumn();
+            this.dataGridViewProgressColumn3 = new CustomProgressCell.DataGridViewProgressColumn();
             this.dataGridViewImageColumn1 = new System.Windows.Forms.DataGridViewImageColumn();
             this.LogLabel = new System.Windows.Forms.Label();
             this.MiniLogBox = new System.Windows.Forms.TextBox();
-            this.resetIDPickerLocationToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.JQName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.JQOutputDirectory = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.JQDatabaseFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.JQConfigFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.JQScanType = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.JQProgress = new CustomProgressCell.DataGridViewProgressColumn();
+            this.Kill = new System.Windows.Forms.DataGridViewButtonColumn();
             ((System.ComponentModel.ISupportInitialize)(this.JobQueueDGV)).BeginInit();
             this.JQRowMenu.SuspendLayout();
             this.menuStrip1.SuspendLayout();
@@ -102,7 +101,7 @@
             this.JobQueueDGV.Name = "JobQueueDGV";
             this.JobQueueDGV.RowHeadersVisible = false;
             this.JobQueueDGV.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.JobQueueDGV.Size = new System.Drawing.Size(718, 288);
+            this.JobQueueDGV.Size = new System.Drawing.Size(768, 288);
             this.JobQueueDGV.TabIndex = 0;
             this.JobQueueDGV.MouseDown += new System.Windows.Forms.MouseEventHandler(this.JobQueueDGV_MouseDown);
             this.JobQueueDGV.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.JobQueueDGV_CellBeginEdit);
@@ -111,69 +110,9 @@
             this.JobQueueDGV.DragOver += new System.Windows.Forms.DragEventHandler(this.JobQueueDGV_DragOver);
             this.JobQueueDGV.MouseUp += new System.Windows.Forms.MouseEventHandler(this.JobQueueDGV_MouseUp);
             this.JobQueueDGV.CellPainting += new System.Windows.Forms.DataGridViewCellPaintingEventHandler(this.JobQueueDGV_CellPainting);
-            this.JobQueueDGV.SelectionChanged += new System.EventHandler(this.JobQueueDGV_SelectionChanged);
             this.JobQueueDGV.Click += new System.EventHandler(this.JobQueueDGV_Click);
             this.JobQueueDGV.DragDrop += new System.Windows.Forms.DragEventHandler(this.JobQueueDGV_DragDrop);
             this.JobQueueDGV.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.JobQueueDGV_CellContentClick);
-            // 
-            // JQName
-            // 
-            this.JQName.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.JQName.HeaderText = "Name";
-            this.JQName.MinimumWidth = 45;
-            this.JQName.Name = "JQName";
-            this.JQName.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Programmatic;
-            // 
-            // JQOutputDirectory
-            // 
-            this.JQOutputDirectory.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.JQOutputDirectory.HeaderText = "Output Directory";
-            this.JQOutputDirectory.MinimumWidth = 110;
-            this.JQOutputDirectory.Name = "JQOutputDirectory";
-            this.JQOutputDirectory.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Programmatic;
-            // 
-            // JQDatabaseFile
-            // 
-            this.JQDatabaseFile.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.JQDatabaseFile.HeaderText = "Database File";
-            this.JQDatabaseFile.MinimumWidth = 95;
-            this.JQDatabaseFile.Name = "JQDatabaseFile";
-            this.JQDatabaseFile.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Programmatic;
-            // 
-            // JQConfigFile
-            // 
-            this.JQConfigFile.HeaderText = "Config File";
-            this.JQConfigFile.MinimumWidth = 80;
-            this.JQConfigFile.Name = "JQConfigFile";
-            this.JQConfigFile.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Programmatic;
-            this.JQConfigFile.Width = 115;
-            // 
-            // JQScanType
-            // 
-            this.JQScanType.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.JQScanType.HeaderText = "Search Type";
-            this.JQScanType.Items.AddRange(new object[] {
-            "Database Search",
-            "Sequence Tagging"});
-            this.JQScanType.MinimumWidth = 75;
-            this.JQScanType.Name = "JQScanType";
-            // 
-            // JQProgress
-            // 
-            this.JQProgress.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.JQProgress.HeaderText = "Progress";
-            this.JQProgress.MinimumWidth = 50;
-            this.JQProgress.Name = "JQProgress";
-            this.JQProgress.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            // 
-            // Kill
-            // 
-            this.Kill.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            this.Kill.HeaderText = "";
-            this.Kill.MinimumWidth = 15;
-            this.Kill.Name = "Kill";
-            this.Kill.Resizable = System.Windows.Forms.DataGridViewTriState.False;
-            this.Kill.Width = 25;
             // 
             // JQRowMenu
             // 
@@ -236,7 +175,7 @@
             this.helpToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.Name = "menuStrip1";
-            this.menuStrip1.Size = new System.Drawing.Size(742, 24);
+            this.menuStrip1.Size = new System.Drawing.Size(792, 24);
             this.menuStrip1.TabIndex = 1;
             this.menuStrip1.Text = "menuStrip1";
             // 
@@ -260,27 +199,27 @@
             this.setIDPickerLocationToolStripMenuItem,
             this.resetIDPickerLocationToolStripMenuItem});
             this.runToolStripMenuItem.Name = "runToolStripMenuItem";
-            this.runToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.runToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
             this.runToolStripMenuItem.Text = "Run";
             // 
             // iDPickerToolStripMenuItem
             // 
             this.iDPickerToolStripMenuItem.Name = "iDPickerToolStripMenuItem";
-            this.iDPickerToolStripMenuItem.Size = new System.Drawing.Size(216, 22);
+            this.iDPickerToolStripMenuItem.Size = new System.Drawing.Size(231, 22);
             this.iDPickerToolStripMenuItem.Text = "IDPicker";
             this.iDPickerToolStripMenuItem.Click += new System.EventHandler(this.iDPickerToolStripMenuItem_Click);
             // 
             // confiToolStripMenuItem
             // 
             this.confiToolStripMenuItem.Name = "confiToolStripMenuItem";
-            this.confiToolStripMenuItem.Size = new System.Drawing.Size(216, 22);
+            this.confiToolStripMenuItem.Size = new System.Drawing.Size(231, 22);
             this.confiToolStripMenuItem.Text = "Instrument Template Editor";
             this.confiToolStripMenuItem.Click += new System.EventHandler(this.confiToolStripMenuItem_Click);
             // 
             // toolStripSeparator3
             // 
             this.toolStripSeparator3.Name = "toolStripSeparator3";
-            this.toolStripSeparator3.Size = new System.Drawing.Size(213, 6);
+            this.toolStripSeparator3.Size = new System.Drawing.Size(228, 6);
             // 
             // setIDPickerLocationToolStripMenuItem
             // 
@@ -289,22 +228,29 @@
             this.setIDPickerLocationToolStripMenuItem.Text = "Manually Set IDPicker Location";
             this.setIDPickerLocationToolStripMenuItem.Click += new System.EventHandler(this.setIDPickerLocationToolStripMenuItem_Click);
             // 
+            // resetIDPickerLocationToolStripMenuItem
+            // 
+            this.resetIDPickerLocationToolStripMenuItem.Name = "resetIDPickerLocationToolStripMenuItem";
+            this.resetIDPickerLocationToolStripMenuItem.Size = new System.Drawing.Size(231, 22);
+            this.resetIDPickerLocationToolStripMenuItem.Text = "Reset IDPicker Location";
+            this.resetIDPickerLocationToolStripMenuItem.Click += new System.EventHandler(this.resetIDPickerLocationToolStripMenuItem_Click);
+            // 
             // newJobToolStripMenuItem
             // 
             this.newJobToolStripMenuItem.Name = "newJobToolStripMenuItem";
-            this.newJobToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.newJobToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
             this.newJobToolStripMenuItem.Text = "New Job";
             this.newJobToolStripMenuItem.Click += new System.EventHandler(this.newJobToolStripMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(149, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(123, 6);
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
@@ -337,21 +283,10 @@
             this.aboutToolStripMenuItem.Text = "About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.aboutToolStripMenuItem_Click);
             // 
-            // rowStatusLabel
-            // 
-            this.rowStatusLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.rowStatusLabel.BackColor = System.Drawing.SystemColors.Control;
-            this.rowStatusLabel.Location = new System.Drawing.Point(436, 4);
-            this.rowStatusLabel.Name = "rowStatusLabel";
-            this.rowStatusLabel.Size = new System.Drawing.Size(294, 20);
-            this.rowStatusLabel.TabIndex = 2;
-            this.rowStatusLabel.Text = "Status label";
-            this.rowStatusLabel.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
             // pauseButton
             // 
-            this.pauseButton.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
-            this.pauseButton.Location = new System.Drawing.Point(655, 321);
+            this.pauseButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.pauseButton.Location = new System.Drawing.Point(705, 321);
             this.pauseButton.Name = "pauseButton";
             this.pauseButton.Size = new System.Drawing.Size(75, 23);
             this.pauseButton.TabIndex = 3;
@@ -361,7 +296,7 @@
             // 
             // LogButton
             // 
-            this.LogButton.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.LogButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.LogButton.Location = new System.Drawing.Point(12, 321);
             this.LogButton.Name = "LogButton";
             this.LogButton.Size = new System.Drawing.Size(75, 23);
@@ -429,7 +364,7 @@
             // 
             // LogLabel
             // 
-            this.LogLabel.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.LogLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.LogLabel.AutoSize = true;
             this.LogLabel.Location = new System.Drawing.Point(12, 347);
             this.LogLabel.Name = "LogLabel";
@@ -439,36 +374,93 @@
             // 
             // MiniLogBox
             // 
-            this.MiniLogBox.Anchor = System.Windows.Forms.AnchorStyles.Bottom;
+            this.MiniLogBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.MiniLogBox.BackColor = System.Drawing.SystemColors.Window;
             this.MiniLogBox.ForeColor = System.Drawing.SystemColors.WindowText;
             this.MiniLogBox.Location = new System.Drawing.Point(15, 363);
             this.MiniLogBox.Multiline = true;
             this.MiniLogBox.Name = "MiniLogBox";
             this.MiniLogBox.ReadOnly = true;
-            this.MiniLogBox.Size = new System.Drawing.Size(715, 74);
+            this.MiniLogBox.Size = new System.Drawing.Size(765, 74);
             this.MiniLogBox.TabIndex = 6;
             this.MiniLogBox.WordWrap = false;
             // 
-            // resetIDPickerLocationToolStripMenuItem
+            // JQName
             // 
-            this.resetIDPickerLocationToolStripMenuItem.Name = "resetIDPickerLocationToolStripMenuItem";
-            this.resetIDPickerLocationToolStripMenuItem.Size = new System.Drawing.Size(231, 22);
-            this.resetIDPickerLocationToolStripMenuItem.Text = "Reset IDPicker Location";
-            this.resetIDPickerLocationToolStripMenuItem.Click += new System.EventHandler(this.resetIDPickerLocationToolStripMenuItem_Click);
+            this.JQName.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.JQName.FillWeight = 80F;
+            this.JQName.HeaderText = "Name";
+            this.JQName.MinimumWidth = 45;
+            this.JQName.Name = "JQName";
+            this.JQName.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Programmatic;
+            // 
+            // JQOutputDirectory
+            // 
+            this.JQOutputDirectory.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.JQOutputDirectory.FillWeight = 70F;
+            this.JQOutputDirectory.HeaderText = "Output Directory";
+            this.JQOutputDirectory.MinimumWidth = 110;
+            this.JQOutputDirectory.Name = "JQOutputDirectory";
+            this.JQOutputDirectory.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Programmatic;
+            // 
+            // JQDatabaseFile
+            // 
+            this.JQDatabaseFile.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.JQDatabaseFile.FillWeight = 80F;
+            this.JQDatabaseFile.HeaderText = "Database File";
+            this.JQDatabaseFile.MinimumWidth = 95;
+            this.JQDatabaseFile.Name = "JQDatabaseFile";
+            this.JQDatabaseFile.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Programmatic;
+            // 
+            // JQConfigFile
+            // 
+            this.JQConfigFile.HeaderText = "Config File";
+            this.JQConfigFile.MinimumWidth = 80;
+            this.JQConfigFile.Name = "JQConfigFile";
+            this.JQConfigFile.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Programmatic;
+            this.JQConfigFile.Width = 115;
+            // 
+            // JQScanType
+            // 
+            this.JQScanType.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.JQScanType.FillWeight = 75F;
+            this.JQScanType.HeaderText = "Search Type";
+            this.JQScanType.Items.AddRange(new object[] {
+            "Database Search",
+            "Sequence Tagging"});
+            this.JQScanType.MinimumWidth = 105;
+            this.JQScanType.Name = "JQScanType";
+            // 
+            // JQProgress
+            // 
+            this.JQProgress.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.JQProgress.FillWeight = 125F;
+            this.JQProgress.HeaderText = "Progress";
+            this.JQProgress.MinimumWidth = 50;
+            this.JQProgress.Name = "JQProgress";
+            this.JQProgress.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            // 
+            // Kill
+            // 
+            this.Kill.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.Kill.HeaderText = "";
+            this.Kill.MinimumWidth = 15;
+            this.Kill.Name = "Kill";
+            this.Kill.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+            this.Kill.Width = 25;
             // 
             // QueueForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ControlLight;
-            this.ClientSize = new System.Drawing.Size(742, 446);
+            this.ClientSize = new System.Drawing.Size(792, 446);
             this.Controls.Add(this.MiniLogBox);
             this.Controls.Add(this.LogLabel);
             this.Controls.Add(this.LogButton);
             this.Controls.Add(this.pauseButton);
             this.Controls.Add(this.JobQueueDGV);
-            this.Controls.Add(this.rowStatusLabel);
             this.Controls.Add(this.menuStrip1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MainMenuStrip = this.menuStrip1;
@@ -493,7 +485,7 @@
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.DataGridViewImageColumn dataGridViewImageColumn1;
-        private MSDNSample.DataGridViewProgressColumn dataGridViewProgressColumn1;
+        private CustomProgressCell.DataGridViewProgressColumn dataGridViewProgressColumn1;
         private System.Windows.Forms.ContextMenuStrip JQRowMenu;
         private System.Windows.Forms.ToolStripMenuItem cloneToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem lockToolStripMenuItem;
@@ -502,7 +494,6 @@
         private System.Windows.Forms.ToolStripMenuItem newJobToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem;
-        private System.Windows.Forms.Label rowStatusLabel;
         private System.Windows.Forms.ToolStripMenuItem editToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2;
         internal System.Windows.Forms.DataGridView JobQueueDGV;
@@ -520,17 +511,17 @@
         private System.Windows.Forms.ToolStripMenuItem documentationToolStripMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator4;
         private System.Windows.Forms.ToolStripMenuItem aboutToolStripMenuItem;
-        private MSDNSample.DataGridViewProgressColumn dataGridViewProgressColumn2;
-        private MSDNSample.DataGridViewProgressColumn dataGridViewProgressColumn3;
+        private CustomProgressCell.DataGridViewProgressColumn dataGridViewProgressColumn2;
+        private CustomProgressCell.DataGridViewProgressColumn dataGridViewProgressColumn3;
+        private System.Windows.Forms.Label LogLabel;
+        private System.Windows.Forms.TextBox MiniLogBox;
+        private System.Windows.Forms.ToolStripMenuItem resetIDPickerLocationToolStripMenuItem;
         private System.Windows.Forms.DataGridViewTextBoxColumn JQName;
         private System.Windows.Forms.DataGridViewTextBoxColumn JQOutputDirectory;
         private System.Windows.Forms.DataGridViewTextBoxColumn JQDatabaseFile;
         private System.Windows.Forms.DataGridViewTextBoxColumn JQConfigFile;
         private System.Windows.Forms.DataGridViewComboBoxColumn JQScanType;
-        private MSDNSample.DataGridViewProgressColumn JQProgress;
+        private CustomProgressCell.DataGridViewProgressColumn JQProgress;
         private System.Windows.Forms.DataGridViewButtonColumn Kill;
-        private System.Windows.Forms.Label LogLabel;
-        private System.Windows.Forms.TextBox MiniLogBox;
-        private System.Windows.Forms.ToolStripMenuItem resetIDPickerLocationToolStripMenuItem;
     }
 }
