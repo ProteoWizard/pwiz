@@ -369,6 +369,10 @@ namespace pwiz.Topograph.ui.Forms
         }
         protected void SetAutoFindPeak(bool autoFindPeak)
         {
+            if (autoFindPeak == PeptideFileAnalysis.AutoFindPeak)
+            {
+                return;
+            }
             if (autoFindPeak)
             {
                 PeptideFileAnalysis.SetAutoFindPeak();

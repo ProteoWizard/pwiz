@@ -232,7 +232,7 @@ namespace pwiz.Topograph.Model
         {
             using (GetWriteLock())
             {
-                Peaks = new Peaks(this)
+                var peaks = new Peaks(this)
                             {
                                 AutoFindPeak = autoFindPeak
                             };
@@ -242,8 +242,9 @@ namespace pwiz.Topograph.Model
                         .Where(f => (!Equals(f)) && f.Peaks.IsCalculated)
                         .Select(f => f.Peaks);
                         
-                    Peaks.CalcIntensities(otherPeaks);
+                    peaks.CalcIntensities(otherPeaks);
                 }
+                SetDistributions(peaks);
             }
         }
 

@@ -65,6 +65,7 @@ namespace pwiz.Topograph.ui.Forms
             {
                 return;
             }
+            colPeptide.Visible = !calculator.ByProtein;
             foreach (var entry in _cohortColumns.ToArray())
             {
                 if (!calculator.Cohorts.Contains(entry.Key))
