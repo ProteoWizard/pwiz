@@ -358,30 +358,44 @@ void write_search_summary(XMLWriter& xmlWriter, const MzIdentML& mzid, const str
 
     attributes.add("base_name", base_name(mzid, filepath));
 
-    const SpectrumIdentificationProtocol& sip = *mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0];
+    const SpectrumIdentificationProtocol& sip =
+        *mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0];
 
     if (!sip.analysisSoftwarePtr.get())
-        throw runtime_error("[write_search_summary] PepXML requires the analysis software to be known.");
+        throw runtime_error("[write_search_summary] PepXML requires the "
+                            "analysis software to be known.");
 
-    CVParam searchEngine = sip.analysisSoftwarePtr->softwareName.cvParamChild(MS_analysis_software);
+    CVParam searchEngine = sip.analysisSoftwarePtr->
+        softwareName.cvParamChild(MS_analysis_software);
     if (!searchEngine.empty())
         attributes.add("search_engine", searchEngine.name());
     else if (!sip.analysisSoftwarePtr->softwareName.userParams.empty())
-        attributes.add("search_engine", sip.analysisSoftwarePtr->softwareName.userParams[0].name);
+        attributes.add("search_engine",
+                       sip.analysisSoftwarePtr->
+                       softwareName.userParams[0].name);
     else
-        throw runtime_error("[write_search_summary] PepXML requires the analysis software to be known.");
+        throw runtime_error("[write_search_summary] PepXML requires the "
+                            "analysis software to be known.");
 
-    attributes.add("precursor_mass_type", sip.additionalSearchParams.hasCVParam(MS_parent_mass_type_average) ? "average" : "monoisotopic");
-    attributes.add("fragment_mass_type", sip.additionalSearchParams.hasCVParam(MS_fragment_mass_type_average) ? "average" : "monoisotopic");
+    attributes.add("precursor_mass_type",
+                   sip.additionalSearchParams.hasCVParam(
+                       MS_parent_mass_type_average) ?
+                   "average" : "monoisotopic");
+    attributes.add("fragment_mass_type",
+                   sip.additionalSearchParams.hasCVParam(
+                       MS_fragment_mass_type_average) ?
+                   "average" : "monoisotopic");
     attributes.add("out_data_type", "");
     attributes.add("out_data", "");
 
     xmlWriter.startElement("search_summary", attributes);
     {
         if (mzid.dataCollection.inputs.searchDatabase.empty())
-            throw runtime_error("[write_search_summary] PepXML requires the searched database to be known.");
+            throw runtime_error("[write_search_summary] PepXML requires "
+                                "the searched database to be known.");
 
-        const SearchDatabase& sd = *mzid.dataCollection.inputs.searchDatabase[0];
+        const SearchDatabase& sd = *mzid.dataCollection.inputs.
+            searchDatabase[0];
         attributes.clear();
         attributes.add("local_path", sd.location);
         attributes.add("database_name", sd.id);
@@ -390,14 +404,19 @@ void write_search_summary(XMLWriter& xmlWriter, const MzIdentML& mzid, const str
             attributes.add("size_in_db_entries", sd.numDatabaseSequences);
         if (sd.numResidues > 0)
             attributes.add("size_of_residues", sd.numResidues);
-        attributes.add("type", sd.hasCVParam(MS_database_type_amino_acid) ? "AA" : "NA");
-        xmlWriter.startElement("search_database", attributes, XMLWriter::EmptyElement);
+        attributes.add("type", sd.hasCVParam(MS_database_type_amino_acid) ?
+                       "AA" : "NA");
+        xmlWriter.startElement("search_database", attributes,
+                               XMLWriter::EmptyElement);
 
         attributes.clear();
         attributes.add("enzyme", "Trypsin"); // TODO: use the combined name from sample_enzyme
-        attributes.add("max_num_internal_cleavages", sip.enzymes.enzymes[0]->missedCleavages);
-        attributes.add("min_number_termini", sip.enzymes.enzymes[0]->semiSpecific ? "1" : "2");
-        xmlWriter.startElement("enzymatic_search_constraint", attributes, XMLWriter::EmptyElement);
+        attributes.add("max_num_internal_cleavages",
+                       sip.enzymes.enzymes[0]->missedCleavages);
+        attributes.add("min_number_termini", sip.enzymes.enzymes[0]->
+                       semiSpecific ? "1" : "2");
+        xmlWriter.startElement("enzymatic_search_constraint", attributes,
+                               XMLWriter::EmptyElement);
 
         BOOST_FOREACH(const SearchModificationPtr& sm, sip.modificationParams)
         {
@@ -405,7 +424,8 @@ void write_search_summary(XMLWriter& xmlWriter, const MzIdentML& mzid, const str
             if (residues.empty())
             {
                 if (sm->specificityRules.empty())
-                    throw runtime_error("[write_search_summary] Empty SearchModification.");
+                    throw runtime_error("[write_search_summary] Empty "
+                                        "SearchModification.");
                 if (sm->specificityRules == MS_modification_specificity_N_term)
                     residues = "n";
                 else
@@ -424,13 +444,16 @@ void write_search_summary(XMLWriter& xmlWriter, const MzIdentML& mzid, const str
                     attributes.add("massdiff", sm->massDelta);
 
                     if (aa == 'n')
-                        attributes.add("mass", nTerm.monoisotopicMass() + sm->massDelta);
+                        attributes.add("mass", nTerm.monoisotopicMass() +
+                                       sm->massDelta);
                     else
-                        attributes.add("mass", cTerm.monoisotopicMass() + sm->massDelta);
+                        attributes.add("mass", cTerm.monoisotopicMass() +
+                                       sm->massDelta);
                 }
                 else // aminoacid_modificiation
                 {
-                    double aaMass = AminoAcid::Info::record(aa).residueFormula.monoisotopicMass();
+                    double aaMass = AminoAcid::Info::record(aa).
+                        residueFormula.monoisotopicMass();
                     attributes.add("aminoacid", string(1, aa));
                     attributes.add("massdiff", sm->massDelta);
                     attributes.add("mass", sm->massDelta + aaMass);
@@ -652,9 +675,19 @@ void write_spectrum_queries(XMLWriter& xmlWriter, const MzIdentML& mzid, const s
                     attributes.add("spectrumNativeID", sir.spectrumID);
                 attributes.add("start_scan", scanNumber);
                 attributes.add("end_scan", scanNumber);
-                attributes.add("precursor_neutral_mass", Ion::neutralMass(sii.experimentalMassToCharge, sii.chargeState));
+                attributes.add("precursor_neutral_mass",
+                               Ion::neutralMass(sii.experimentalMassToCharge,
+                                                sii.chargeState));
                 attributes.add("assumed_charge", sii.chargeState);
                 attributes.add("index", queryIndex);
+
+                CVParam cvp = sir.cvParamChild(MS_retention_time);
+                // TODO convert from non-seconds to seconds if
+                // needed. No instance has been found in the wild of a
+                // non-second RT, but this should be covered for
+                // correct coding.
+                if (cvp.cvid != CVID_Unknown)
+                    attributes.add("retention_time_sec", cvp.value);
 
                 xmlWriter.startElement("spectrum_query", attributes);
                 xmlWriter.startElement("search_result");
@@ -1451,6 +1484,10 @@ struct HandlerSearchResults : public SAXParser::Handler
             getAttribute(attributes, "assumed_charge", _sii.chargeState);
             _sii.experimentalMassToCharge = Ion::mz(precursorNeutralMass, _sii.chargeState);
             _sii.passThreshold = true;
+
+            double retentionTimeSec;
+            getAttribute(attributes, "retention_time_sec", retentionTimeSec);
+            _sir->set(MS_retention_time, retentionTimeSec, UO_second);
         }
         else if (name == "search_result")
         {
