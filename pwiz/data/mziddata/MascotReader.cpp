@@ -423,7 +423,7 @@ public:
                 sm->massDelta = mdelta;
             if (cvt)
             {
-                sm->unimodName = cvt->cvid;
+                sm->cvParams.push_back(CVParam(cvt->cvid));;
                 if (regex_match(second.c_str(), where, varmodListOfChars))
                     sm->residues.assign(where[1].first,
                                                  where[1].second);
@@ -702,8 +702,10 @@ public:
                     pe->end = r.getTagEnd(q, i, 1);
                 }
 
-                sii->peptideEvidence.push_back(pe);
-                pdh->peptideHypothesis.push_back(pe);
+                sii->peptideEvidencePtr.push_back(pe);
+                PeptideHypothesis ph;
+                ph.peptideEvidencePtr = pe;
+                pdh->peptideHypothesis.push_back(ph);
                 
                 // TODO finish.
                 
