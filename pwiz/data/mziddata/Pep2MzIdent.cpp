@@ -566,7 +566,8 @@ bool addToSearchModification(CVParam& param, vector<string>& path,
 
     if (iequals(tag, "ModParam"))
     {
-        sm->unimodName = param;
+
+        sm->cvParams.push_back(param);
         return true;
     }
     else if (iequals(tag, "SpecificityRules"))
@@ -1435,7 +1436,7 @@ void Pep2MzIdent::Impl::translateQueries(const SpectrumQueryPtr query,
                 new SpectrumIdentificationItem(
                     "SII_"+lexical_cast<string>(indices->sii++)));
 
-            sii->peptideEvidence.push_back(pepEv);
+            sii->peptideEvidencePtr.push_back(pepEv);
             sii->rank = (*shit)->hitRank;
             
             // TODO find out if this use of assumedCharge is right.
@@ -1492,6 +1493,8 @@ void Pep2MzIdent::Impl::translateQueries(const SpectrumQueryPtr query,
             SpectrumIdentificationResultPtr sirp(
                 new SpectrumIdentificationResult());
             sirp->id = "SIR_"+lexical_cast<string>(indices->sir++);
+            sirp->set(MS_retention_time, query->retentionTimeSec, UO_second);
+                      
             
             sirp->spectrumID = query->spectrum;
             sirp->spectrumIdentificationItem.push_back(sii);
