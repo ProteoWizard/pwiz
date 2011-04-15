@@ -52,7 +52,7 @@ struct Config
     string usageOptions;
     string peptideFilename;
     string shape;
-    vector<string> commands;
+    string commands;
     Pseudo2DGel::Config pseudo2dConfig;
     bool verbose;
 
@@ -165,6 +165,9 @@ Config parseCommandArgs(int argc, const char* argv[])
         ("flat,f",
             po::value<string>(&config.peptideFilename),
             ": peptide file location (nativeID rt mz score seq)")
+        ("commands,x",
+         po::value<string>(&config.commands),
+            ": processes commands")
         ("verbose,v", ": prints extra information.")
         ("help,h",
             ": print this helpful message.")
@@ -265,6 +268,17 @@ Config parseCommandArgs(int argc, const char* argv[])
         config.pseudo2dConfig.markupShape = Pseudo2DGel::circle;
     
     config.pseudo2dConfig.positiveMs2Only = !vm.count("ms2locs") && ids;
+
+    if (vm.count("config"))
+    {
+        ifstream is(config.configFilename.c_str());
+        ostringstream oss;
+        string line;
+        while(getline(is, line).good())
+            oss << line << " ";
+
+        config.pseudo2dConfig.process(oss.str());
+    }
     
     config.usageOptions = usageOptions;
 
@@ -281,9 +295,9 @@ void initializeAnalyzers(MSDataAnalyzerContainer& analyzers,
     shared_ptr<MSDataCache> cache(new MSDataCache);
     analyzers.push_back(cache);
     
-            MSDataAnalyzerPtr anal(new Pseudo2DGel(*cache,
-                                                   config.pseudo2dConfig));
-            analyzers.push_back(anal);
+    MSDataAnalyzerPtr anal(new Pseudo2DGel(*cache,
+                                           config.pseudo2dConfig));
+    analyzers.push_back(anal);
 }
 
 struct testOut
@@ -332,7 +346,10 @@ int main(int argc, const char* argv[])
         
         dataInfo.sourceFilename = path(config.filenames.at(0)).leaf();
         dataInfo.outputDirectory = config.outputDirectory;
-        dataInfo.log = NULL;
+        if (config.verbose)
+            dataInfo.log = &cout;
+        else
+            dataInfo.log = NULL;
 
         MSDataAnalyzerDriver driver(analyzers);
         
