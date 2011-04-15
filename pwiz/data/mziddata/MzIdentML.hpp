@@ -103,7 +103,7 @@ struct PWIZ_API_DECL BibliographicReference : public Identifiable
 TYPEDEF_SHARED_PTR(BibliographicReference);
 
 
-struct PWIZ_API_DECL Contact : public Identifiable
+struct PWIZ_API_DECL Contact : public IdentifiableParamContainer
 {
     Contact(const std::string& id_ = "",
             const std::string& name_ = "");

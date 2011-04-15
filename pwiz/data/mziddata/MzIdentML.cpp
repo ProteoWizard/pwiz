@@ -129,14 +129,14 @@ PWIZ_API_DECL bool ContactRole::empty() const
 
 PWIZ_API_DECL Contact::Contact(const string& id_,
                                const string& name_)
-    : Identifiable(id_, name_)
+    : IdentifiableParamContainer(id_, name_)
 {
 }
 
 
 PWIZ_API_DECL bool Contact::empty() const
 {
-    return Identifiable::empty() &&
+    return IdentifiableParamContainer::empty() &&
            address.empty() &&
            phone.empty() &&
            email.empty() &&

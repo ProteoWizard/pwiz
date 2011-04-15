@@ -544,7 +544,7 @@ void diff(const Contact& a,
           Contact& b_a,
           const DiffConfig& config)
 {
-    diff(static_cast<const Identifiable&>(a), b, a_b, b_a, config);
+    diff(static_cast<const IdentifiableParamContainer&>(a), b, a_b, b_a, config);
     diff(a.address, b.address, a_b.address, b_a.address, config);
     diff(a.phone, b.phone, a_b.phone, b_a.phone, config);
     diff(a.email, b.email, a_b.email, b_a.email, config);

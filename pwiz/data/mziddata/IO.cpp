@@ -1277,7 +1277,7 @@ PWIZ_API_DECL void read(std::istream& is, SequenceCollection& sc,
 //
 
 
-struct HandlerContact : public HandlerIdentifiable
+struct HandlerContact : public HandlerIdentifiableParamContainer
 {
     Contact* c;
     HandlerContact(Contact* _c = 0) : c(_c) {}
@@ -1295,8 +1295,8 @@ struct HandlerContact : public HandlerIdentifiable
         getAttribute(attributes, "fax", c->fax);
         getAttribute(attributes, "tollFreePhone", c->tollFreePhone);
 
-        HandlerIdentifiable::id = c;
-        return HandlerIdentifiable::startElement(name, attributes, position);
+        HandlerIdentifiableParamContainer::id = c;
+        return HandlerIdentifiableParamContainer::startElement(name, attributes, position);
     }
 };
 
