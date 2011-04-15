@@ -321,7 +321,7 @@ PWIZ_API_DECL boost::logic::tribool SpectrumList_FilterPredicate_DefaultArrayLen
 //
 
 
-PWIZ_API_DECL SpectrumList_FilterPredicate_MS2ActivationType::SpectrumList_FilterPredicate_MS2ActivationType(const set<CVID> cvFilterItems_, bool hasNoneOf_)
+PWIZ_API_DECL SpectrumList_FilterPredicate_ActivationType::SpectrumList_FilterPredicate_ActivationType(const set<CVID> cvFilterItems_, bool hasNoneOf_)
 : hasNoneOf(hasNoneOf_)
 {
     BOOST_FOREACH(const CVID cvid, cvFilterItems_)
@@ -337,7 +337,7 @@ PWIZ_API_DECL SpectrumList_FilterPredicate_MS2ActivationType::SpectrumList_Filte
 
 }
 
-PWIZ_API_DECL boost::logic::tribool SpectrumList_FilterPredicate_MS2ActivationType::accept(const msdata::Spectrum& spectrum) const
+PWIZ_API_DECL boost::logic::tribool SpectrumList_FilterPredicate_ActivationType::accept(const msdata::Spectrum& spectrum) const
 {
     CVParam param = spectrum.cvParamChild(MS_spectrum_type);
     if (param.cvid == CVID_Unknown) return boost::logic::indeterminate;

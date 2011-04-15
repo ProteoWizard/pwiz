@@ -170,18 +170,18 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_DefaultArrayLengthSet : public 
 };
 
 
-class PWIZ_API_DECL SpectrumList_FilterPredicate_MS2ActivationType : public SpectrumList_Filter::Predicate
+class PWIZ_API_DECL SpectrumList_FilterPredicate_ActivationType : public SpectrumList_Filter::Predicate
 {
     public:
-    SpectrumList_FilterPredicate_MS2ActivationType(const std::set<pwiz::cv::CVID> filterItem, bool hasNoneOf_ = false);
+    SpectrumList_FilterPredicate_ActivationType(const std::set<pwiz::cv::CVID> filterItem, bool hasNoneOf_ = false);
     virtual boost::logic::tribool accept(const msdata::SpectrumIdentity& spectrumIdentity) const {return boost::logic::indeterminate;}
     virtual boost::logic::tribool accept(const msdata::Spectrum& spectrum) const;
 
     private:
     std::set<pwiz::cv::CVID> cvFilterItems;
     bool                     hasNoneOf;
-
 };
+
 
 class PWIZ_API_DECL SpectrumList_FilterPredicate_AnalyzerType : public SpectrumList_Filter::Predicate
 {
@@ -192,8 +192,8 @@ class PWIZ_API_DECL SpectrumList_FilterPredicate_AnalyzerType : public SpectrumL
 
     private:
     std::set<pwiz::cv::CVID> cvFilterItems;
-
 };
+
 
 class PWIZ_API_DECL SpectrumList_FilterPredicate_Polarity : public SpectrumList_Filter::Predicate
 {

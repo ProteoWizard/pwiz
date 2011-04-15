@@ -100,9 +100,13 @@ SpectrumListPtr createSpectrumList()
         {
             spectrum->precursors[0].activation.set(MS_collision_induced_dissociation);
         }
-        else if (i==4 || i==8) // HCD
+        else if (i==4) // HCD
         {
             spectrum->precursors[0].activation.set(MS_high_energy_collision_induced_dissociation);
+        }
+        else if (i==8) // IRMPD
+        {
+            spectrum->precursors[0].activation.set(MS_IRMPD);
         }
         else if (i==7) // ETD + SA
         {
@@ -398,8 +402,9 @@ void testMS2Activation(SpectrumListPtr sl)
     // CID
     cvIDs.insert(MS_electron_transfer_dissociation);
     cvIDs.insert(MS_high_energy_collision_induced_dissociation);
+    cvIDs.insert(MS_IRMPD);
     SpectrumList_Filter filter(ms2filter,
-                        SpectrumList_FilterPredicate_MS2ActivationType(cvIDs, true));
+                        SpectrumList_FilterPredicate_ActivationType(cvIDs, true));
 
     if (os_) 
     {
@@ -415,7 +420,7 @@ void testMS2Activation(SpectrumListPtr sl)
     cvIDs.insert(MS_electron_transfer_dissociation);
     cvIDs.insert(MS_collision_induced_dissociation);
     SpectrumList_Filter filter1(ms2filter, 
-                        SpectrumList_FilterPredicate_MS2ActivationType(cvIDs, false));
+                        SpectrumList_FilterPredicate_ActivationType(cvIDs, false));
     if (os_) 
     {
         printSpectrumList(filter1, *os_);
@@ -429,7 +434,7 @@ void testMS2Activation(SpectrumListPtr sl)
     cvIDs.clear();
     cvIDs.insert(MS_electron_transfer_dissociation);
     SpectrumList_Filter filter2(ms2filter, 
-                        SpectrumList_FilterPredicate_MS2ActivationType(cvIDs, false));
+                        SpectrumList_FilterPredicate_ActivationType(cvIDs, false));
     if (os_) 
     {
         printSpectrumList(filter2, *os_);
@@ -445,16 +450,29 @@ void testMS2Activation(SpectrumListPtr sl)
     cvIDs.clear();
     cvIDs.insert(MS_high_energy_collision_induced_dissociation);
     SpectrumList_Filter filter3(ms2filter, 
-                        SpectrumList_FilterPredicate_MS2ActivationType(cvIDs, false));
+                        SpectrumList_FilterPredicate_ActivationType(cvIDs, false));
     if (os_) 
     {
         printSpectrumList(filter3, *os_);
         *os_ << endl;
     }
 
-    unit_assert(filter3.size() == 2);
+    unit_assert(filter3.size() == 1);
     unit_assert(filter3.spectrumIdentity(0).id == "scan=104");
-    unit_assert(filter3.spectrumIdentity(1).id == "scan=108");
+
+    // IRMPD
+    cvIDs.clear();
+    cvIDs.insert(MS_IRMPD);
+    SpectrumList_Filter filter4(ms2filter, 
+                        SpectrumList_FilterPredicate_ActivationType(cvIDs, false));
+    if (os_) 
+    {
+        printSpectrumList(filter4, *os_);
+        *os_ << endl;
+    }
+
+    unit_assert(filter4.size() == 1);
+    unit_assert(filter4.spectrumIdentity(0).id == "scan=108");
 
 }
  

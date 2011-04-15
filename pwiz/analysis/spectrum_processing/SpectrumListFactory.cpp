@@ -357,14 +357,15 @@ SpectrumListPtr filterCreator_chargeStatePredictor(const MSData& msd, const stri
   *  filter on the basis of ms2 activation type
   *
   *   handler for --filter Activation option.  Use it to create
-  *   output files containing only ETD or CID ms2 data where both activation modes have been
+  *   output files containing only ETD or CID MSn data where both activation modes have been
   *   interleaved within a given input vendor data file (eg: Thermo's Decision Tree acquisition mode).
   */ 
 SpectrumListPtr filterCreator_ActivationType(const MSData& msd, const string& arg)
 {
     istringstream parser(arg);
-    string sActivationType;
-    parser >> sActivationType;
+    string activationType;
+    parser >> activationType;
+    bal::to_upper(activationType);
 
     // MS_collision_induced_dissociation gets used together with MS_electron_transfer_dissociation
     // for the ETD/Supplemental Activation mode.  Our filter is for separating B/Y from C/Z ions.  
@@ -376,73 +377,75 @@ SpectrumListPtr filterCreator_ActivationType(const MSData& msd, const string& ar
     //  HCD                No          Yes             B/Y
     //  ETD/SA             Yes         Yes             C/Z
     //
-    // Check for presence or absense of ETD flag only.
+    // Check for presence or absence of ETD flag only.
 
     set<CVID> cvIDs;
 
     bool hasNot = false;
 
-    if (sActivationType == "CID") // HACK: CID means neither of HCD or ETD
+    // TODO: replace hand-written code with CVTranslator
+
+    if (activationType == "CID") // HACK: CID means neither of HCD or ETD
     {
         hasNot = true;
-        cvIDs.insert(MS_electron_transfer_dissociation);
         cvIDs.insert(MS_high_energy_collision_induced_dissociation);
+        cvIDs.insert(MS_BIRD);
+        cvIDs.insert(MS_ECD);
+        cvIDs.insert(MS_ETD);
+        cvIDs.insert(MS_IRMPD);
+        cvIDs.insert(MS_PD);
+        cvIDs.insert(MS_PSD);
+        cvIDs.insert(MS_PQD);
+        cvIDs.insert(MS_SID);
+        cvIDs.insert(MS_SORI);
     }
-    else if (sActivationType == "SA")
+    else if (activationType == "SA")
     {
-        cvIDs.insert(MS_electron_transfer_dissociation);
-        cvIDs.insert(MS_collision_induced_dissociation);
+        cvIDs.insert(MS_ETD);
+        cvIDs.insert(MS_CID);
     }
-    else if (sActivationType == "HCD")
-    {
-        cvIDs.insert(MS_high_energy_collision_induced_dissociation);
-    }
-    else if (sActivationType == "ETD")
-    {
-        cvIDs.insert(MS_electron_transfer_dissociation);
-    }
+    else if (activationType == "HCD") cvIDs.insert(MS_high_energy_collision_induced_dissociation);
+    else if (activationType == "BIRD") cvIDs.insert(MS_BIRD);
+    else if (activationType == "ECD") cvIDs.insert(MS_ECD);
+    else if (activationType == "ETD") cvIDs.insert(MS_ETD);
+    else if (activationType == "IRMPD") cvIDs.insert(MS_IRMPD);
+    else if (activationType == "PD") cvIDs.insert(MS_PD);
+    else if (activationType == "PSD") cvIDs.insert(MS_PSD);
+    else if (activationType == "PQD") cvIDs.insert(MS_PQD);
+    else if (activationType == "SID") cvIDs.insert(MS_SID);
+    else if (activationType == "SORI") cvIDs.insert(MS_SORI);
     else
-    {
-        throw runtime_error("[SpectrumListFactory::filterCreator_ActivationType()] invalid filter argument.");
-    }
+        throw runtime_error("[SpectrumListFactory::filterCreator_ActivationType()] invalid activation type \"" + activationType + "\"");
 
-    return SpectrumListPtr(new 
-    SpectrumList_Filter(msd.run.spectrumListPtr, 
-                        SpectrumList_FilterPredicate_MS2ActivationType(cvIDs, hasNot)));
-
+    return SpectrumListPtr(new SpectrumList_Filter(msd.run.spectrumListPtr, 
+                                                   SpectrumList_FilterPredicate_ActivationType(cvIDs, hasNot)));
 }
 
-/**
- *  Handler for --filter "analyzerType".  TODO: this should probably be extended to other
- *  mass analyzer types (like quadrupole and TOF) - basic implementation serves thermo orbitrap
- *  sorting of high resolution (Orbitrap) and low resolution (ITMS) scans.
- */
 
 SpectrumListPtr filterCreator_AnalyzerType(const MSData& msd, const string& arg)
 {
     istringstream parser(arg);
-    string sAnalyzerType;
-    parser >> sAnalyzerType;
+    string analyzerType;
+    parser >> analyzerType;
+    bal::to_upper(analyzerType);
 
     set<CVID> cvIDs;
 
-    if (sAnalyzerType == "FTMS")
+    // sometimes people use FT and Orbi interchangeably, which is OK because there are no hybrid FT+Orbi instruments
+    if (bal::starts_with(analyzerType, "FT") ||
+        bal::starts_with(analyzerType, "ORBI"))
     {
         cvIDs.insert(MS_orbitrap);
-        cvIDs.insert(MS_fourier_transform_ion_cyclotron_resonance_mass_spectrometer);
+        cvIDs.insert(MS_FT_ICR);
     }
-    else if (sAnalyzerType == "ITMS")
-    {
-        cvIDs.insert(MS_ion_trap);
-    }
+    else if (bal::starts_with(analyzerType, "IT")) cvIDs.insert(MS_ion_trap);
+    else if (bal::starts_with(analyzerType, "QUAD")) cvIDs.insert(MS_quadrupole);
+    else if (analyzerType == "TOF") cvIDs.insert(MS_TOF);
     else
-    {
         throw runtime_error("[SpectrumListFactory::filterCreator_AnalyzerType()] invalid filter argument.");
-    }
 
-    return SpectrumListPtr(new 
-    SpectrumList_Filter(msd.run.spectrumListPtr, 
-                        SpectrumList_FilterPredicate_AnalyzerType(cvIDs)));
+    return SpectrumListPtr(new SpectrumList_Filter(msd.run.spectrumListPtr,
+                                                   SpectrumList_FilterPredicate_AnalyzerType(cvIDs)));
 
 }
 
@@ -550,8 +553,9 @@ JumpTableEntry jumpTable_[] =
     {"MS2Deisotope", "deisotope ms2 spectra using Markey method", filterCreator_MS2Deisotope},
     {"ETDFilter", "removePrecursor:<default:true|false>  removeChargeReduced:<default:true|false>  removeNeutralLoss:<default:true|false>  blanketRemoval:<default:true|false>  MatchingTolerance:(val <PPM|MZ>) (default:3.1 MZ)", filterCreator_ETDFilter},
     {"chargeStatePredictor", "overrideExistingCharge:<default:true|false>  maxMultipleCharge:<int>(3)  minMultipleCharge:<int>(2)  singleChargeFractionTIC:<real>(0.9)", filterCreator_chargeStatePredictor},
-    {"activation", "<ETD|CID|SA|HCD> (filter by precursor activation type)", filterCreator_ActivationType},
-    {"analyzerType", "<FTMS|ITMS> (filter by mass analyzer type)", filterCreator_AnalyzerType},
+    {"activation", "<ETD|CID|SA|HCD|BIRD|ECD|IRMPD|PD|PSD|PQD|SID|SORI> (filter by precursor activation type)", filterCreator_ActivationType},
+    {"analyzerType", "<FTMS|ITMS> (deprecated syntax for filtering by mass analyzer type)", filterCreator_AnalyzerType},
+    {"analyzer", "<quad|orbi|FT|IT|TOF> (filter by mass analyzer type)", filterCreator_AnalyzerType},
     {"polarity", "<positive|negative|+|-> (filter by scan polarity)", filterCreator_polarityFilter}
 };
 
