@@ -112,18 +112,68 @@ namespace pwiz.Skyline.Model
             double precursorMassPredict = calcPredict.GetPrecursorFragmentMass(sequence);
             if (!useFilter || types.Contains(IonType.precursor))
             {
+                var fullScan = tranSettings.FullScan;
+                bool precursorMS1 = (fullScan.PrecursorIsotopes != FullScanPrecursorIsotopes.None);
+                int precursorIsotopeStart = 0;
+                int precursorIsotopeEnd = 1;
+                if (fullScan.PrecursorIsotopes == FullScanPrecursorIsotopes.Count)
+                    precursorIsotopeEnd = (int)(fullScan.PrecursorIsotopeFilter ?? 1);
+                else if (fullScan.PrecursorIsotopes == FullScanPrecursorIsotopes.Percent)
+                {
+                    double minAbundancePercent = fullScan.PrecursorIsotopeFilter ?? 0;
+                    var massDistribution = calcFilterPre.GetMassDistribution(sequence, fullScan.IsotopeAbundances);
+                    double basePeakAbundance = massDistribution[massDistribution.MostAbundanceMass];
+                    precursorIsotopeStart = precursorIsotopeEnd = -1;
+                    int i = 0;
+                    foreach (var massProbability in massDistribution)
+                    {
+                        Console.WriteLine("{0:F06} - {1:F01}%", massProbability.Key, massProbability.Value*100);
+
+                        bool includePeak = massProbability.Value*100/basePeakAbundance > minAbundancePercent;
+                        if (precursorIsotopeStart == -1)
+                        {
+                            if (includePeak)
+                                precursorIsotopeStart = i;
+                        }
+                        else if (precursorIsotopeEnd == -1)
+                        {
+                            if (!includePeak)
+                                break;
+                        }
+                        i++;
+                    }
+                    precursorIsotopeEnd = i;
+                }
+
                 foreach (var losses in CalcTransitionLosses(IonType.precursor, 0, massType, potentialLosses))
                 {
+                    if (losses == null)
+                    {
+                        if (precursorMS1)
+                        {
+                            var calcPrecursorMS1 = settings.GetPrecursorCalc(LabelType, mods);
+                            for (int i = precursorIsotopeStart; i < precursorIsotopeEnd; i++)
+                            {
+                                double precursorMS1Mass = calcPrecursorMS1.GetPrecursorMass(sequence, i);
+                                Console.WriteLine("{0:F06}", precursorMS1Mass);
+                                double ionMz = SequenceMassCalc.GetMZ(Transition.CalcMass(precursorMS1Mass, null), PrecursorCharge);
+                                if (minMz > ionMz)
+                                    continue;
+                                yield return CreateTransitionNode(i, precursorMS1Mass, null, transitionRanks);
+                            }
+                            continue;
+                        }
+                    }
                     // If there was loss, it is possible (though not likely) that the ion m/z value
                     // will now fall below the minimum measurable value for the instrument
-                    if (losses != null)
+                    else
                     {
                         double ionMz = SequenceMassCalc.GetMZ(Transition.CalcMass(precursorMassPredict, losses), PrecursorCharge);
                         if (minMz > ionMz)
                             continue;
                     }
 
-                    yield return CreateTransitionNode(precursorMassPredict, losses, transitionRanks);                    
+                    yield return CreateTransitionNode(0, precursorMassPredict, losses, transitionRanks);                    
                 }
             }
 
@@ -345,10 +395,10 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private TransitionDocNode CreateTransitionNode(double precursorMassH, TransitionLosses losses,
+        private TransitionDocNode CreateTransitionNode(int massIndex, double precursorMassH, TransitionLosses losses,
             IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks)
         {
-            Transition transition = new Transition(this);
+            Transition transition = new Transition(this, massIndex);
             var info = TransitionDocNode.GetLibInfo(transition, Transition.CalcMass(precursorMassH, losses), transitionRanks);
             return new TransitionDocNode(transition, losses, precursorMassH, info);
         }
@@ -356,7 +406,7 @@ namespace pwiz.Skyline.Model
         private TransitionDocNode CreateTransitionNode(IonType type, int cleavageOffset, int charge, double massH,
             TransitionLosses losses, IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks)
         {
-            Transition transition = new Transition(this, type, cleavageOffset, charge);
+            Transition transition = new Transition(this, type, cleavageOffset, 0, charge);
             var info = TransitionDocNode.GetLibInfo(transition, Transition.CalcMass(massH, losses), transitionRanks);
             return new TransitionDocNode(transition, losses, massH, info);
         }
@@ -535,10 +585,10 @@ namespace pwiz.Skyline.Model
 
         public override string ToString()
         {
-            if (LabelType == IsotopeLabelType.heavy)
-                return string.Format("Charge {0} (heavy)", PrecursorCharge);
-            else
+            if (LabelType.IsLight)
                 return string.Format("Charge {0}", PrecursorCharge);
+            else
+                return string.Format("Charge {0} ({1})", PrecursorCharge, LabelType);
         }
 
         #endregion

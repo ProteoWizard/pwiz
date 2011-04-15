@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -196,6 +197,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (!labelType.IsLight && !mods.HasModifications(labelType))
                     return null;
                 return new ExplicitSequenceMassCalc(massCalcBase,
+                                                    mods.GetModifications(labelType),
                                                     mods.GetModMasses(massCalcBase.MassType, labelType).ToArray(),
                                                     mods.IsVariableStaticMods);
             }
@@ -219,6 +221,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (!labelType.IsLight && !mods.HasModifications(labelType))
                     return null;
                 return new ExplicitSequenceMassCalc(massCalcBase,
+                                                    mods.GetModifications(labelType),
                                                     mods.GetModMasses(massCalcBase.MassType, labelType),
                                                     mods.IsVariableStaticMods);
             }
@@ -956,8 +959,10 @@ namespace pwiz.Skyline.Model.DocSettings
     {
         MassType MassType { get;}
         double GetPrecursorMass(string seq);
+        double GetPrecursorMass(string seq, int massIndex);
         bool IsModified(string seq);
         string GetModifiedSequence(string seq, bool formatNarrow);
+        MassDistribution GetMassDistribution(string seq, IsotopeAbundances abundances);
     }
 
     public interface IFragmentMassCalc
@@ -965,7 +970,6 @@ namespace pwiz.Skyline.Model.DocSettings
         MassType MassType { get; }
         double[,] GetFragmentIonMasses(string seq);
         double GetFragmentMass(Transition transition);
-        double GetFragmentMass(string seq, IonType type, int ordinal);
         double GetPrecursorFragmentMass(string seq);
     }
 
@@ -1183,7 +1187,11 @@ namespace pwiz.Skyline.Model.DocSettings
                               // If loss modifications changed
                               newPep.Modifications.MaxNeutralLosses != oldPep.Modifications.MaxNeutralLosses ||
                               !ArrayUtil.EqualsDeep(newPep.Modifications.NeutralLossModifications.ToArray(),
-                                                    oldPep.Modifications.NeutralLossModifications.ToArray());
+                                                    oldPep.Modifications.NeutralLossModifications.ToArray()) ||
+                              // MS1 filtering changed select peaks
+                              newTran.FullScan.PrecursorIsotopes != oldTran.FullScan.PrecursorIsotopes ||
+                              newTran.FullScan.PrecursorIsotopeFilter != oldTran.FullScan.PrecursorIsotopeFilter
+                              ;
 
             // Any change in modifications or fragment mass-type forces a recalc
             // of transition m/z values, as
@@ -1192,7 +1200,12 @@ namespace pwiz.Skyline.Model.DocSettings
                                  (libraryChange && DiffTransitionGroupProps) ||
                                  // Any change in transitions can change transition rankings
                                  // if a library is in use.
-                                 (newLib.HasLibraries && DiffTransitions);
+                                 (newLib.HasLibraries && DiffTransitions) ||
+                                 // If full-scan MS1 filtering is enabled, then changing precursor mass type
+                                 // can change precursor transition m/z values
+                                 (newTran.FullScan.PrecursorIsotopes != FullScanPrecursorIsotopes.None  &&
+                                    !newTran.Prediction.PrecursorMassType.Equals(oldTran.Prediction.PrecursorMassType))
+                                 ;
 
             // If the results changed, then update the results information which has changed
             DiffResults = !ReferenceEquals(settingsNew.MeasuredResults, settingsOld.MeasuredResults);

@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using pwiz.Common.Collections;
 
@@ -26,6 +25,7 @@ namespace pwiz.Common.Chemistry
 {
     public class AminoAcidFormulas
     {
+// ReSharper disable InconsistentNaming
         public static readonly double ProtonMass = 1.00727649;
 
         public static readonly IDictionary<String, char> LongNames = new ImmutableDictionary<String,char>(
@@ -88,7 +88,9 @@ namespace pwiz.Common.Chemistry
                                                                    IsotopeAbundances = IsotopeAbundances.Default,
                                                                    MassResolution = .001,
                                                                };
-        public double MassResolution { get; private set;}
+// ReSharper restore InconsistentNaming
+
+        public double MassResolution { get; private set; }
         public IDictionary<char, double> MassShifts { get; private set; }
         public IDictionary<char, String> Formulas { get; private set; }
         public IsotopeAbundances IsotopeAbundances { get; private set; }

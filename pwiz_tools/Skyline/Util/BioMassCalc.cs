@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text.RegularExpressions;
+using pwiz.Common.Chemistry;
 
 namespace pwiz.Skyline.Util
 {
@@ -52,6 +53,7 @@ namespace pwiz.Skyline.Util
         public const string N = "N";    // Nitrogen
         public const string N15 = "N'"; // Nitrogen15
         public const string O = "O";    // Oxygen
+        public const string O17 = "O\"";// Oxygen17
         public const string O18 = "O'"; // Oxygen18
         public const string P = "P";    // Phosphorus
         public const string S = "S";    // Sulfur
@@ -81,6 +83,47 @@ namespace pwiz.Skyline.Util
         public const string Mn = "Mn";  // Manganese
         public const string Mg = "Mg";  // Magnesium
 // ReSharper restore InconsistentNaming
+
+        /// <summary>
+        /// A dictionary mapping heavy isotope symbols to their correspoding
+        /// indices within the mass distributions of <see cref="IsotopeAbundances.Default"/>.
+        /// </summary>
+        private static readonly IDictionary<string, int> DICT_SYMBOL_TO_ISOTOPE_INDEX =
+            new Dictionary<string, int>
+                {
+                    { H2, 1 },
+                    { C13, 1 },
+                    { N15, 1 },
+                    { O17, 1 },
+                    { O18, 2 },
+                };
+
+        public static IEnumerable<string> HeavySymbols { get { return DICT_SYMBOL_TO_ISOTOPE_INDEX.Keys; } }
+
+        /// <summary>
+        /// Returns the index of an atomic symbol the mass distribution
+        /// from <see cref="IsotopeAbundances.Default"/>.
+        /// </summary>
+        public static int GetIsotopeDistributionIndex(string symbol)
+        {
+            int index;
+            if (DICT_SYMBOL_TO_ISOTOPE_INDEX.TryGetValue(symbol, out index))
+                return index;
+            return 0;
+        }
+
+        /// <summary>
+        /// Returns the monoisotopic symbol for the atomic symbols associated
+        /// with <see cref="BioMassCalc"/>.
+        /// </summary>
+        /// <param name="symbol"></param>
+        /// <returns></returns>
+        public static string GetMonoisotopicSymbol(string symbol)
+        {
+            if (DICT_SYMBOL_TO_ISOTOPE_INDEX.ContainsKey(symbol))
+                return symbol.Substring(0, symbol.Length - 1);
+            return symbol;
+        }
 
         public static double MassProton
         {
@@ -119,43 +162,44 @@ namespace pwiz.Skyline.Util
         public BioMassCalc(MassType type)
         {
             MassType = type;
-            addMass(H, 1.007825035, 1.00794);
-            addMass(H2, 2.01355321270, 2.01355321270);
-            addMass(O, 15.99491463, 15.9994);
-            addMass(O18, 17.9991604, 17.9991604);
-            addMass(N, 14.003074, 14.0067);
-            addMass(N15, 15.0001088984, 15.0001088984);
-            addMass(C, 12.0, 12.01085);
-            addMass(C13, 13.0033548378, 13.0033548378);
-            addMass(S, 31.9720707, 32.065);
-            addMass(P, 30.97376151, 30.973761);
+            AddMass(H, 1.007825035, 1.00794);
+            AddMass(H2, 2.01355321270, 2.01355321270);
+            AddMass(O, 15.99491463, 15.9994);
+            AddMass(O17, 16.9991322, 16.9991322);
+            AddMass(O18, 17.9991604, 17.9991604);
+            AddMass(N, 14.003074, 14.0067);
+            AddMass(N15, 15.0001088984, 15.0001088984);
+            AddMass(C, 12.0, 12.01085);
+            AddMass(C13, 13.0033548378, 13.0033548378);
+            AddMass(S, 31.9720707, 32.065);
+            AddMass(P, 30.97376151, 30.973761);
 
-            addMass(Se, 79.9165213, 78.96); // Most abundant Se isotope is 80
-            addMass(Li, 7.016003, 6.941);
-            addMass(F, 18.99840322, 18.9984032);
-            addMass(Na, 22.9897677, 22.98977);
-            addMass(P, 30.973762, 30.973761);
-            addMass(S, 31.9720707, 32.065);
-            addMass(Cl, 34.96885272, 35.453);
-            addMass(K, 38.9637074, 39.0983);
-            addMass(Ca, 39.9625906, 40.078);
-            addMass(Fe, 55.9349393, 55.845);
-            addMass(Ni, 57.9353462, 58.6934);
-            addMass(Cu, 62.9295989, 63.546);
-            addMass(Zn, 63.9291448, 65.409);
-            addMass(Br, 78.9183361, 79.904);
-            addMass(Mo, 97.9054073, 95.94);
-            addMass(Ag, 106.905092, 107.8682);
-            addMass(I, 126.904473, 126.90447);
-            addMass(Au, 196.966543, 196.96655);
-            addMass(Hg, 201.970617, 200.59);
-            addMass(B, 11.0093055, 10.811);
-            addMass(As, 74.9215942, 74.9215942);
-            addMass(Cd, 113.903357, 112.411);
-            addMass(Cr, 51.9405098, 51.9961);
-            addMass(Co, 58.9331976, 58.933195);
-            addMass(Mn, 54.9380471, 54.938045);
-            addMass(Mg, 23.9850423, 24.305);
+            AddMass(Se, 79.9165213, 78.96); // Most abundant Se isotope is 80
+            AddMass(Li, 7.016003, 6.941);
+            AddMass(F, 18.99840322, 18.9984032);
+            AddMass(Na, 22.9897677, 22.98977);
+            AddMass(P, 30.973762, 30.973761);
+            AddMass(S, 31.9720707, 32.065);
+            AddMass(Cl, 34.96885272, 35.453);
+            AddMass(K, 38.9637074, 39.0983);
+            AddMass(Ca, 39.9625906, 40.078);
+            AddMass(Fe, 55.9349393, 55.845);
+            AddMass(Ni, 57.9353462, 58.6934);
+            AddMass(Cu, 62.9295989, 63.546);
+            AddMass(Zn, 63.9291448, 65.409);
+            AddMass(Br, 78.9183361, 79.904);
+            AddMass(Mo, 97.9054073, 95.94);
+            AddMass(Ag, 106.905092, 107.8682);
+            AddMass(I, 126.904473, 126.90447);
+            AddMass(Au, 196.966543, 196.96655);
+            AddMass(Hg, 201.970617, 200.59);
+            AddMass(B, 11.0093055, 10.811);
+            AddMass(As, 74.9215942, 74.9215942);
+            AddMass(Cd, 113.903357, 112.411);
+            AddMass(Cr, 51.9405098, 51.9961);
+            AddMass(Co, 58.9331976, 58.933195);
+            AddMass(Mn, 54.9380471, 54.938045);
+            AddMass(Mg, 23.9850423, 24.305);
         }
 
         public MassType MassType { get; private set; }
@@ -196,7 +240,7 @@ namespace pwiz.Skyline.Util
             while (desc.Length > 0)
             {
                 string sym = NextSymbol(desc);
-                double massAtom = getMass(sym);
+                double massAtom = GetMass(sym);
 
                 // Stop if unrecognized atom found.
                 if (massAtom == 0)
@@ -222,11 +266,54 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
+        /// Add or subtract the atom counts from a molecular formula to a <see cref="IDictionary{TKey,TValue}"/>
+        /// of atomic symbols and counts.
+        /// </summary>
+        /// <param name="desc">Molecular formula</param>
+        /// <param name="dictAtomCounts">Dictionary of atomic symbols and counts (may already contain counts from other formulas)</param>
+        /// <param name="negative">True if counts should be subtracted</param>
+        public void ParseCounts(ref string desc, IDictionary<string, int> dictAtomCounts, bool negative)
+        {
+            desc = desc.Trim();
+            while (desc.Length > 0)
+            {
+                string sym = NextSymbol(desc);
+                double massAtom = GetMass(sym);
+
+                // Stop if unrecognized atom found.
+                if (massAtom == 0)
+                {
+                    // CONSIDER: Throw with a useful message?
+                    break;
+                }
+
+                desc = desc.Substring(sym.Length);
+                int endCount = 0;
+                while (endCount < desc.Length && Char.IsDigit(desc[endCount]))
+                    endCount++;
+
+                int count = 1;
+                if (endCount > 0)
+                    count = int.Parse(desc.Substring(0, endCount), CultureInfo.InvariantCulture);
+
+                if (negative)
+                    count = -count;
+
+                if (dictAtomCounts.ContainsKey(sym))
+                    dictAtomCounts[sym] += count;
+                else
+                    dictAtomCounts.Add(sym, count);
+
+                desc = desc.Substring(endCount).TrimStart();
+            }
+        }
+
+        /// <summary>
         /// Get the mass of a single atom.
         /// </summary>
         /// <param name="sym">Character specifying the atom</param>
         /// <returns>The mass of the single atom</returns>
-        private double getMass(string sym)
+        public double GetMass(string sym)
         {
             double mass;
             if (_atomicMasses.TryGetValue(sym, out mass))
@@ -240,9 +327,88 @@ namespace pwiz.Skyline.Util
         /// <param name="sym">Atomic symbol character</param>
         /// <param name="mono">Monoisotopic mass</param>
         /// <param name="ave">Average mass</param>
-        private void addMass(string sym, double mono, double ave)
+        private void AddMass(string sym, double mono, double ave)
         {
             _atomicMasses[sym] = (MassType == MassType.Monoisotopic ? mono : ave);
+        }
+
+        /// <summary>
+        /// Synchronizes the masses of an <see cref="IsotopeAbundances"/> object with
+        /// the masses of this <see cref="BioMassCalc"/>, ensuring compatible mass calculations
+        /// using the different classes.  This is only allowed with a monoisotopic mass calculator.
+        /// </summary>
+        /// <param name="abundances">An existing <see cref="IsotopeAbundances"/> object to be synchronized</param>
+        /// <returns>An <see cref="IsotopeAbundances"/> object synchronized with this <see cref="BioMassCalc"/></returns>
+        public IsotopeAbundances SynchMasses(IsotopeAbundances abundances)
+        {
+            if (MassType != MassType.Monoisotopic)
+                throw new InvalidOperationException("Fixing isotope abundance masses requires a monoisotopic mass calculator");
+
+            var dictFixes = new Dictionary<string, MassDistribution>();
+            foreach (var atomAbundance in abundances)
+            {
+                double monoMassCalc;
+                if (!_atomicMasses.TryGetValue(atomAbundance.Key, out monoMassCalc))
+                    continue;
+                double secondMassCalc, thirdMassCalc;
+                _atomicMasses.TryGetValue(atomAbundance.Key + "'", out secondMassCalc);
+                _atomicMasses.TryGetValue(atomAbundance.Key + "\"", out thirdMassCalc);
+                var massDist = atomAbundance.Value;
+                var massDistFixed = SynchDist(massDist, monoMassCalc, secondMassCalc, thirdMassCalc);
+                if (!ReferenceEquals(massDist, massDistFixed))
+                    dictFixes.Add(atomAbundance.Key, massDistFixed);
+            }
+            return abundances.SetAbundances(dictFixes);
+        }
+
+        /// <summary>
+        /// Synchronizes a single <see cref="MassDistribution"/> object with corresponding
+        /// masses from a <see cref="BioMassCalc"/>.
+        /// </summary>
+        private static MassDistribution SynchDist(MassDistribution massDist,
+            double monoMassCalc, double secondMassCalc, double thirdMassCalc)
+        {
+            var massDistOrdered = massDist.MassesSortedByAbundance();
+            if (EqualDistMasses(massDistOrdered, monoMassCalc, secondMassCalc, thirdMassCalc))
+                return massDist;
+            var dictFixDist = new Dictionary<double, double>(massDist);
+            ReplaceMass(dictFixDist, massDistOrdered, 0, monoMassCalc);
+            ReplaceMass(dictFixDist, massDistOrdered, 1, secondMassCalc);
+            ReplaceMass(dictFixDist, massDistOrdered, 2, thirdMassCalc);
+            return MassDistribution.NewInstance(dictFixDist, 0, 0);
+        }
+
+        /// <summary>
+        /// Returns true if an ordered list of mass-distribution pairs are all
+        /// equal to corresponding masses from a <see cref="BioMassCalc"/>.
+        /// </summary>
+        private static bool EqualDistMasses(IList<KeyValuePair<double, double>> massDistOrdered,
+            double monoMassCalc, double secondMassCalc, double thirdMassCalc)
+        {
+            if (monoMassCalc != massDistOrdered[0].Key)
+                return false;
+            if (secondMassCalc != 0 && secondMassCalc != massDistOrdered[1].Key)
+                return false;
+            if (thirdMassCalc != 0 && thirdMassCalc != massDistOrdered[2].Key)
+                return false;
+            return true;
+        }
+
+        /// <summary>
+        /// Replaces a mass from a <see cref="MassDistribution"/> with a corresponding
+        /// mass from a <see cref="BioMassCalc"/>.
+        /// </summary>
+        /// <param name="dictFixDist">A mass-distribution dictionary in which to replace the mass</param>
+        /// <param name="massDistOrdered">A distribution ordered list of masses-distribution pairs</param>
+        /// <param name="massIndex">The index of the mass in the ordered list which should be replaced</param>
+        /// <param name="massCalc">The mass to use as the replacement</param>
+        private static void ReplaceMass(IDictionary<double, double> dictFixDist,
+            IList<KeyValuePair<double, double>> massDistOrdered, int massIndex, double massCalc)
+        {
+            if (massCalc == 0 || massCalc == massDistOrdered[massIndex].Key)
+                return;
+            dictFixDist[massCalc] = massDistOrdered[massIndex].Value;
+            dictFixDist.Remove(massDistOrdered[massIndex].Key);
         }
     }
 }

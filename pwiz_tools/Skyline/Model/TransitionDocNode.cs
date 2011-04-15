@@ -230,7 +230,7 @@ namespace pwiz.Skyline.Model
         {
             // Make sure node points to correct parent.
             return ReferenceEquals(parent.TransitionGroup, Transition.Group) ? this
-                       : new TransitionDocNode(new Transition(parent.TransitionGroup, Transition.IonType, Transition.CleavageOffset, Transition.Charge), Annotations,
+                       : new TransitionDocNode(new Transition(parent.TransitionGroup, Transition.IonType, Transition.CleavageOffset, 0, Transition.Charge), Annotations,
                                                Losses, 0.0, LibInfo, null) { Mz = Mz };
         }
 

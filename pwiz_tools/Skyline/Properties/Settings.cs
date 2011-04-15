@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Serialization;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -334,6 +335,43 @@ namespace pwiz.Skyline.Properties
             }
         }
 
+        public RetentionTimeRegression GetRetentionTimeByName(string name)
+        {
+            // Null return is valid for this list, and means no retention time
+            // calculation should be applied.
+            RetentionTimeRegression regression;
+            if (RetentionTimeList.TryGetValue(name, out regression))
+            {
+                if (regression.GetKey() == RetentionTimeList.GetDefault().GetKey())
+                    regression = null;
+            }
+            return regression;
+        }
+
+        [System.Configuration.UserScopedSettingAttribute]
+        public RetentionTimeList RetentionTimeList
+        {
+            get
+            {
+                RetentionTimeList list = (RetentionTimeList)this[typeof(RetentionTimeList).Name];
+                if (list == null)
+                {
+                    list = new RetentionTimeList();
+                    list.AddDefaults();
+                    RetentionTimeList = list;
+                }
+                else
+                {
+                    list.EnsureDefault();
+                }
+                return list;
+            }
+            set
+            {
+                this[typeof(RetentionTimeList).Name] = value;
+            }
+        }
+
         public MeasuredIon GetMeasuredIonByName(string name)
         {
             MeasuredIon ion;
@@ -362,40 +400,31 @@ namespace pwiz.Skyline.Properties
             }
         }
 
-        public RetentionTimeRegression GetRetentionTimeByName(string name)
+        public IsotopeEnrichments GetIsotopeEnrichmentsByName(string name)
         {
-            // Null return is valid for this list, and means no retention time
-            // calculation should be applied.
-            RetentionTimeRegression regression;
-            if (RetentionTimeList.TryGetValue(name, out regression))
-            {
-                if (regression.GetKey() == RetentionTimeList.GetDefault().GetKey())
-                    regression = null;
-            }
-            return regression;
+            IsotopeEnrichments enrichments;
+            if (!IsotopeEnrichmentsList.TryGetValue(name, out enrichments))
+                return null;
+            return enrichments;
         }
 
         [System.Configuration.UserScopedSettingAttribute]
-        public RetentionTimeList RetentionTimeList
+        public IsotopeEnrichmentsList IsotopeEnrichmentsList 
         {
             get
             {
-                RetentionTimeList list = (RetentionTimeList) this[typeof(RetentionTimeList).Name];
+                IsotopeEnrichmentsList list = (IsotopeEnrichmentsList)this[typeof(IsotopeEnrichmentsList).Name];
                 if (list == null)
                 {
-                    list = new RetentionTimeList();
+                    list = new IsotopeEnrichmentsList();
                     list.AddDefaults();
-                    RetentionTimeList = list;
-                }
-                else
-                {
-                    list.EnsureDefault();
+                    IsotopeEnrichmentsList = list;
                 }
                 return list;
             }
             set
             {
-                this[typeof(RetentionTimeList).Name] = value;
+                this[typeof(IsotopeEnrichmentsList).Name] = value;
             }
         }
 
@@ -996,6 +1025,41 @@ namespace pwiz.Skyline.Properties
         public override string Label { get { return "&Special ion:"; } }
     }
 
+    public sealed class IsotopeEnrichmentsList : SettingsList<IsotopeEnrichments>
+    {
+        private static readonly IsotopeEnrichments DEFAULT = new IsotopeEnrichments("Default",
+            BioMassCalc.HeavySymbols.Select(sym => new IsotopeEnrichmentItem(sym)).ToArray());
+
+        public static IsotopeEnrichments GetDefault()
+        {
+            return DEFAULT;
+        }
+
+        public override IEnumerable<IsotopeEnrichments> GetDefaults(int revisionIndex)
+        {
+            return new[] { DEFAULT };
+        }
+
+        public override IsotopeEnrichments EditItem(Control owner, IsotopeEnrichments item,
+            IEnumerable<IsotopeEnrichments> existing, object tag)
+        {
+            EditIsotopeEnrichmentDlg editEnrichment = new EditIsotopeEnrichmentDlg(existing ?? this) { Enrichments = item };
+            if (editEnrichment.ShowDialog() == DialogResult.OK)
+                return editEnrichment.Enrichments;
+
+            return null;
+        }
+
+        public override IsotopeEnrichments CopyItem(IsotopeEnrichments item)
+        {
+            return (IsotopeEnrichments)item.ChangeName(string.Empty);
+        }
+
+        public override string Title { get { return "Edit Isotope Enrichments"; } }
+
+        public override string Label { get { return "&Isotope entrichment:"; } }        
+    }
+
     public sealed class SrmSettingsList : SettingsListBase<SrmSettings>, IListSerializer<SrmSettings>
     {
         private static readonly SrmSettings DEFAULT = new SrmSettings
@@ -1173,13 +1237,20 @@ namespace pwiz.Skyline.Properties
         {
             PivotReportDlg editReport = new PivotReportDlg(existing ?? this);
 
-            var databaseProvider = tag as IReportDatabaseProvider;
-            if (databaseProvider != null)
-                editReport.SetDatabase(databaseProvider.GetDatabase(owner));
-            editReport.SetReportSpec(item);
-            if (editReport.ShowDialog(owner) == DialogResult.OK)
+            try
             {
-                return editReport.GetReportSpec();
+                var databaseProvider = tag as IReportDatabaseProvider;
+                if (databaseProvider != null)
+                    editReport.SetDatabase(databaseProvider.GetDatabase(owner));
+                editReport.SetReportSpec(item);
+                if (editReport.ShowDialog(owner) == DialogResult.OK)
+                {
+                    return editReport.GetReportSpec();
+                }
+            }
+            catch (Exception x)
+            {
+                MessageDlg.Show(owner, string.Format("An unexpected error occurred while analyzing the current document.\n{0}", x.Message));
             }
 
             return null;

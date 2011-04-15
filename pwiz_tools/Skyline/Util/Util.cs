@@ -948,8 +948,8 @@ namespace pwiz.Skyline.Util
                 // Must start with a letter or digit
                 else if (lastC != '\0')
                 {
-                    // After the start _ and - are okay
-                    if (c == '_' || c == '-')
+                    // After the start _ okay (dashes turned out to be problematic)
+                    if (c == '_' /* || c == '-'*/)
                         sb.Append(lastC = c);
                     // All other characters are replaced with _, but once the next
                     // letter or number is seen.

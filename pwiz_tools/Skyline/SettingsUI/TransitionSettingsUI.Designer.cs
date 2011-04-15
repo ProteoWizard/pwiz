@@ -91,6 +91,13 @@
             this.textMinMz = new System.Windows.Forms.TextBox();
             this.tabFullScan = new System.Windows.Forms.TabPage();
             this.groupBoxMS1 = new System.Windows.Forms.GroupBox();
+            this.comboEnrichments = new System.Windows.Forms.ComboBox();
+            this.label29 = new System.Windows.Forms.Label();
+            this.labelPrecursorIsotopeFilterPercent = new System.Windows.Forms.Label();
+            this.textPrecursorIsotopeFilter = new System.Windows.Forms.TextBox();
+            this.labelPrecursorIsotopeFilter = new System.Windows.Forms.Label();
+            this.label23 = new System.Windows.Forms.Label();
+            this.comboPrecursorIsotopes = new System.Windows.Forms.ComboBox();
             this.labelPrecursorAt = new System.Windows.Forms.Label();
             this.textPrecursorAt = new System.Windows.Forms.TextBox();
             this.labelPrecursorTh = new System.Windows.Forms.Label();
@@ -128,7 +135,7 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(308, 410);
+            this.btnCancel.Location = new System.Drawing.Point(308, 477);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 2;
@@ -138,7 +145,7 @@
             // btnOk
             // 
             this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOk.Location = new System.Drawing.Point(227, 410);
+            this.btnOk.Location = new System.Drawing.Point(227, 477);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
             this.btnOk.TabIndex = 1;
@@ -160,7 +167,7 @@
             this.tabControl1.Location = new System.Drawing.Point(12, 12);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = global::pwiz.Skyline.Properties.Settings.Default.TransitionSettingsTab;
-            this.tabControl1.Size = new System.Drawing.Size(371, 390);
+            this.tabControl1.Size = new System.Drawing.Size(371, 457);
             this.tabControl1.TabIndex = 0;
             // 
             // tabGeneral
@@ -179,7 +186,7 @@
             this.tabGeneral.Location = new System.Drawing.Point(4, 22);
             this.tabGeneral.Name = "tabGeneral";
             this.tabGeneral.Padding = new System.Windows.Forms.Padding(3);
-            this.tabGeneral.Size = new System.Drawing.Size(363, 364);
+            this.tabGeneral.Size = new System.Drawing.Size(363, 431);
             this.tabGeneral.TabIndex = 0;
             this.tabGeneral.Text = "Prediction";
             this.tabGeneral.UseVisualStyleBackColor = true;
@@ -324,7 +331,7 @@
             this.tabFilter.Location = new System.Drawing.Point(4, 22);
             this.tabFilter.Name = "tabFilter";
             this.tabFilter.Padding = new System.Windows.Forms.Padding(3);
-            this.tabFilter.Size = new System.Drawing.Size(363, 364);
+            this.tabFilter.Size = new System.Drawing.Size(363, 431);
             this.tabFilter.TabIndex = 1;
             this.tabFilter.Text = "Filter";
             this.tabFilter.UseVisualStyleBackColor = true;
@@ -523,7 +530,7 @@
             this.tabLibrary.Location = new System.Drawing.Point(4, 22);
             this.tabLibrary.Name = "tabLibrary";
             this.tabLibrary.Padding = new System.Windows.Forms.Padding(3);
-            this.tabLibrary.Size = new System.Drawing.Size(363, 364);
+            this.tabLibrary.Size = new System.Drawing.Size(363, 431);
             this.tabLibrary.TabIndex = 3;
             this.tabLibrary.Text = "Library";
             this.tabLibrary.UseVisualStyleBackColor = true;
@@ -662,7 +669,7 @@
             this.tabInstrument.Controls.Add(this.textMinMz);
             this.tabInstrument.Location = new System.Drawing.Point(4, 22);
             this.tabInstrument.Name = "tabInstrument";
-            this.tabInstrument.Size = new System.Drawing.Size(363, 364);
+            this.tabInstrument.Size = new System.Drawing.Size(363, 431);
             this.tabInstrument.TabIndex = 2;
             this.tabInstrument.Text = "Instrument";
             this.tabInstrument.UseVisualStyleBackColor = true;
@@ -784,13 +791,20 @@
             this.tabFullScan.Location = new System.Drawing.Point(4, 22);
             this.tabFullScan.Name = "tabFullScan";
             this.tabFullScan.Padding = new System.Windows.Forms.Padding(3);
-            this.tabFullScan.Size = new System.Drawing.Size(363, 364);
+            this.tabFullScan.Size = new System.Drawing.Size(363, 431);
             this.tabFullScan.TabIndex = 4;
             this.tabFullScan.Text = "Full-Scan";
             this.tabFullScan.UseVisualStyleBackColor = true;
             // 
             // groupBoxMS1
             // 
+            this.groupBoxMS1.Controls.Add(this.comboEnrichments);
+            this.groupBoxMS1.Controls.Add(this.label29);
+            this.groupBoxMS1.Controls.Add(this.labelPrecursorIsotopeFilterPercent);
+            this.groupBoxMS1.Controls.Add(this.textPrecursorIsotopeFilter);
+            this.groupBoxMS1.Controls.Add(this.labelPrecursorIsotopeFilter);
+            this.groupBoxMS1.Controls.Add(this.label23);
+            this.groupBoxMS1.Controls.Add(this.comboPrecursorIsotopes);
             this.groupBoxMS1.Controls.Add(this.labelPrecursorAt);
             this.groupBoxMS1.Controls.Add(this.textPrecursorAt);
             this.groupBoxMS1.Controls.Add(this.labelPrecursorTh);
@@ -800,72 +814,137 @@
             this.groupBoxMS1.Controls.Add(this.label32);
             this.groupBoxMS1.Location = new System.Drawing.Point(18, 21);
             this.groupBoxMS1.Name = "groupBoxMS1";
-            this.groupBoxMS1.Size = new System.Drawing.Size(326, 149);
+            this.groupBoxMS1.Size = new System.Drawing.Size(326, 217);
             this.groupBoxMS1.TabIndex = 0;
             this.groupBoxMS1.TabStop = false;
             this.groupBoxMS1.Text = "&MS1 filtering";
             // 
+            // comboEnrichments
+            // 
+            this.comboEnrichments.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboEnrichments.FormattingEnabled = true;
+            this.comboEnrichments.Location = new System.Drawing.Point(14, 176);
+            this.comboEnrichments.Name = "comboEnrichments";
+            this.comboEnrichments.Size = new System.Drawing.Size(111, 21);
+            this.comboEnrichments.TabIndex = 6;
+            this.comboEnrichments.SelectedIndexChanged += new System.EventHandler(this.comboEnrichments_SelectedIndexChanged);
+            // 
+            // label29
+            // 
+            this.label29.AutoSize = true;
+            this.label29.Location = new System.Drawing.Point(14, 160);
+            this.label29.Name = "label29";
+            this.label29.Size = new System.Drawing.Size(105, 13);
+            this.label29.TabIndex = 5;
+            this.label29.Text = "Isotope e&nrichments:";
+            // 
+            // labelPrecursorIsotopeFilterPercent
+            // 
+            this.labelPrecursorIsotopeFilterPercent.AutoSize = true;
+            this.labelPrecursorIsotopeFilterPercent.Location = new System.Drawing.Point(81, 114);
+            this.labelPrecursorIsotopeFilterPercent.Name = "labelPrecursorIsotopeFilterPercent";
+            this.labelPrecursorIsotopeFilterPercent.Size = new System.Drawing.Size(15, 13);
+            this.labelPrecursorIsotopeFilterPercent.TabIndex = 4;
+            this.labelPrecursorIsotopeFilterPercent.Text = "%";
+            this.labelPrecursorIsotopeFilterPercent.Visible = false;
+            // 
+            // textPrecursorIsotopeFilter
+            // 
+            this.textPrecursorIsotopeFilter.Location = new System.Drawing.Point(14, 111);
+            this.textPrecursorIsotopeFilter.Name = "textPrecursorIsotopeFilter";
+            this.textPrecursorIsotopeFilter.Size = new System.Drawing.Size(65, 20);
+            this.textPrecursorIsotopeFilter.TabIndex = 3;
+            // 
+            // labelPrecursorIsotopeFilter
+            // 
+            this.labelPrecursorIsotopeFilter.AutoSize = true;
+            this.labelPrecursorIsotopeFilter.Location = new System.Drawing.Point(11, 94);
+            this.labelPrecursorIsotopeFilter.Name = "labelPrecursorIsotopeFilter";
+            this.labelPrecursorIsotopeFilter.Size = new System.Drawing.Size(40, 13);
+            this.labelPrecursorIsotopeFilter.TabIndex = 2;
+            this.labelPrecursorIsotopeFilter.Text = "Pea&ks:";
+            // 
+            // label23
+            // 
+            this.label23.AutoSize = true;
+            this.label23.Location = new System.Drawing.Point(11, 28);
+            this.label23.Name = "label23";
+            this.label23.Size = new System.Drawing.Size(120, 13);
+            this.label23.TabIndex = 0;
+            this.label23.Text = "&Isotope peaks included:";
+            // 
+            // comboPrecursorIsotopes
+            // 
+            this.comboPrecursorIsotopes.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboPrecursorIsotopes.FormattingEnabled = true;
+            this.comboPrecursorIsotopes.Location = new System.Drawing.Point(14, 45);
+            this.comboPrecursorIsotopes.Name = "comboPrecursorIsotopes";
+            this.comboPrecursorIsotopes.Size = new System.Drawing.Size(111, 21);
+            this.comboPrecursorIsotopes.TabIndex = 1;
+            this.comboPrecursorIsotopes.SelectedIndexChanged += new System.EventHandler(this.comboPrecursorIsotopes_SelectedIndexChanged);
+            // 
             // labelPrecursorAt
             // 
             this.labelPrecursorAt.AutoSize = true;
-            this.labelPrecursorAt.Location = new System.Drawing.Point(107, 94);
+            this.labelPrecursorAt.Location = new System.Drawing.Point(246, 95);
             this.labelPrecursorAt.Name = "labelPrecursorAt";
             this.labelPrecursorAt.Size = new System.Drawing.Size(20, 13);
-            this.labelPrecursorAt.TabIndex = 4;
+            this.labelPrecursorAt.TabIndex = 11;
             this.labelPrecursorAt.Text = "&At:";
             // 
             // textPrecursorAt
             // 
-            this.textPrecursorAt.Location = new System.Drawing.Point(105, 110);
+            this.textPrecursorAt.Location = new System.Drawing.Point(244, 111);
             this.textPrecursorAt.Name = "textPrecursorAt";
             this.textPrecursorAt.Size = new System.Drawing.Size(44, 20);
-            this.textPrecursorAt.TabIndex = 5;
+            this.textPrecursorAt.TabIndex = 12;
             this.helpTip.SetToolTip(this.textPrecursorAt, "The m/z value at which the resolving power\r\nfor MS1 scans is calibrated.");
             // 
             // labelPrecursorTh
             // 
             this.labelPrecursorTh.AutoSize = true;
-            this.labelPrecursorTh.Location = new System.Drawing.Point(151, 114);
+            this.labelPrecursorTh.Location = new System.Drawing.Point(290, 114);
             this.labelPrecursorTh.Name = "labelPrecursorTh";
             this.labelPrecursorTh.Size = new System.Drawing.Size(20, 13);
-            this.labelPrecursorTh.TabIndex = 6;
+            this.labelPrecursorTh.TabIndex = 13;
             this.labelPrecursorTh.Text = "Th";
             // 
             // textPrecursorRes
             // 
             this.textPrecursorRes.Enabled = false;
-            this.textPrecursorRes.Location = new System.Drawing.Point(14, 111);
+            this.textPrecursorRes.Location = new System.Drawing.Point(153, 111);
             this.textPrecursorRes.Name = "textPrecursorRes";
             this.textPrecursorRes.Size = new System.Drawing.Size(85, 20);
-            this.textPrecursorRes.TabIndex = 3;
+            this.textPrecursorRes.TabIndex = 10;
             // 
             // labelPrecursorRes
             // 
             this.labelPrecursorRes.AutoSize = true;
-            this.labelPrecursorRes.Location = new System.Drawing.Point(11, 94);
+            this.labelPrecursorRes.Location = new System.Drawing.Point(150, 95);
             this.labelPrecursorRes.Name = "labelPrecursorRes";
             this.labelPrecursorRes.Size = new System.Drawing.Size(89, 13);
-            this.labelPrecursorRes.TabIndex = 2;
+            this.labelPrecursorRes.TabIndex = 9;
             this.labelPrecursorRes.Text = "&Resolving power:";
             // 
             // comboPrecursorAnalyzerType
             // 
             this.comboPrecursorAnalyzerType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboPrecursorAnalyzerType.Enabled = false;
             this.comboPrecursorAnalyzerType.FormattingEnabled = true;
-            this.comboPrecursorAnalyzerType.Location = new System.Drawing.Point(14, 44);
+            this.comboPrecursorAnalyzerType.Location = new System.Drawing.Point(153, 45);
             this.comboPrecursorAnalyzerType.Name = "comboPrecursorAnalyzerType";
             this.comboPrecursorAnalyzerType.Size = new System.Drawing.Size(111, 21);
-            this.comboPrecursorAnalyzerType.TabIndex = 1;
+            this.comboPrecursorAnalyzerType.TabIndex = 8;
             this.helpTip.SetToolTip(this.comboPrecursorAnalyzerType, "The mass analyzer used to collect MS1 scans.");
             this.comboPrecursorAnalyzerType.SelectedIndexChanged += new System.EventHandler(this.comboPrecursorAnalyzerType_SelectedIndexChanged);
             // 
             // label32
             // 
             this.label32.AutoSize = true;
-            this.label32.Location = new System.Drawing.Point(11, 27);
+            this.label32.Location = new System.Drawing.Point(150, 28);
             this.label32.Name = "label32";
             this.label32.Size = new System.Drawing.Size(124, 13);
-            this.label32.TabIndex = 0;
+            this.label32.TabIndex = 7;
             this.label32.Text = "&Precursor mass analyzer:";
             // 
             // groupBoxMS2
@@ -882,7 +961,7 @@
             this.groupBoxMS2.Controls.Add(this.label21);
             this.groupBoxMS2.Controls.Add(this.comboPrecursorFilterType);
             this.groupBoxMS2.Controls.Add(this.label20);
-            this.groupBoxMS2.Location = new System.Drawing.Point(18, 188);
+            this.groupBoxMS2.Location = new System.Drawing.Point(18, 257);
             this.groupBoxMS2.Name = "groupBoxMS2";
             this.groupBoxMS2.Size = new System.Drawing.Size(326, 150);
             this.groupBoxMS2.TabIndex = 1;
@@ -946,7 +1025,7 @@
             this.comboProductAnalyzerType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboProductAnalyzerType.Enabled = false;
             this.comboProductAnalyzerType.FormattingEnabled = true;
-            this.comboProductAnalyzerType.Location = new System.Drawing.Point(150, 44);
+            this.comboProductAnalyzerType.Location = new System.Drawing.Point(150, 45);
             this.comboProductAnalyzerType.Name = "comboProductAnalyzerType";
             this.comboProductAnalyzerType.Size = new System.Drawing.Size(111, 21);
             this.comboProductAnalyzerType.TabIndex = 6;
@@ -956,7 +1035,7 @@
             // label22
             // 
             this.label22.AutoSize = true;
-            this.label22.Location = new System.Drawing.Point(147, 27);
+            this.label22.Location = new System.Drawing.Point(147, 28);
             this.label22.Name = "label22";
             this.label22.Size = new System.Drawing.Size(116, 13);
             this.label22.TabIndex = 5;
@@ -975,7 +1054,7 @@
             // label21
             // 
             this.label21.AutoSize = true;
-            this.label21.Location = new System.Drawing.Point(11, 95);
+            this.label21.Location = new System.Drawing.Point(11, 94);
             this.label21.Name = "label21";
             this.label21.Size = new System.Drawing.Size(116, 13);
             this.label21.TabIndex = 2;
@@ -998,9 +1077,9 @@
             this.label20.AutoSize = true;
             this.label20.Location = new System.Drawing.Point(11, 28);
             this.label20.Name = "label20";
-            this.label20.Size = new System.Drawing.Size(100, 13);
+            this.label20.Size = new System.Drawing.Size(101, 13);
             this.label20.TabIndex = 0;
-            this.label20.Text = "Pr&ecursor filter type:";
+            this.label20.Text = "Pr&ecursor matching:";
             // 
             // TransitionSettingsUI
             // 
@@ -1008,7 +1087,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(395, 445);
+            this.ClientSize = new System.Drawing.Size(395, 512);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.tabControl1);
@@ -1125,5 +1204,12 @@
         private System.Windows.Forms.Label labelProductAt;
         private System.Windows.Forms.Label labelPrecursorAt;
         private System.Windows.Forms.TextBox textPrecursorAt;
+        private System.Windows.Forms.Label labelPrecursorIsotopeFilterPercent;
+        private System.Windows.Forms.TextBox textPrecursorIsotopeFilter;
+        private System.Windows.Forms.Label labelPrecursorIsotopeFilter;
+        private System.Windows.Forms.Label label23;
+        private System.Windows.Forms.ComboBox comboPrecursorIsotopes;
+        private System.Windows.Forms.ComboBox comboEnrichments;
+        private System.Windows.Forms.Label label29;
     }
 }

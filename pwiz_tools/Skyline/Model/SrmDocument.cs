@@ -168,7 +168,7 @@ namespace pwiz.Skyline.Model
 
         public const double FORMAT_VERSION_0_1 = 0.1;
         public const double FORMAT_VERSION_0_2 = 0.2;
-        public const double FORMAT_VERSION = 0.7;
+        public const double FORMAT_VERSION = 0.8;
 
         public const int MAX_PEPTIDE_COUNT = 50000;
         public const int MAX_TRANSITION_COUNT = 100000;
@@ -867,6 +867,7 @@ namespace pwiz.Skyline.Model
             isotope_label,
             fragment_type,
             fragment_ordinal,
+            mass_index,
             calc_neutral_mass,
             charge,
             precursor_charge,   // backware compatibility with v0.1
@@ -1496,7 +1497,7 @@ namespace pwiz.Skyline.Model
                 int offset = Transition.OrdinalToOffset(info.IonType,
                     info.Ordinal, peptide.Length);
                 Transition transition = new Transition(curGroup, info.IonType,
-                    offset, info.Charge);
+                    offset, info.MassIndex, info.Charge);
 
                 // No heavy transition support in v0.1
                 double massH = Settings.GetFragmentMass(IsotopeLabelType.light, mods, transition);
@@ -1548,12 +1549,12 @@ namespace pwiz.Skyline.Model
 
             Transition transition;
             if (Transition.IsPrecursor(info.IonType))
-                transition = new Transition(group);
+                transition = new Transition(group, info.MassIndex);
             else
             {
                 int offset = Transition.OrdinalToOffset(info.IonType,
                     info.Ordinal, group.Peptide.Length);
-                transition = new Transition(group, info.IonType, offset, info.Charge);
+                transition = new Transition(group, info.IonType, offset, info.MassIndex, info.Charge);
             }
 
             double massH = Settings.GetFragmentMass(group.LabelType, mods, transition);
@@ -1590,6 +1591,7 @@ namespace pwiz.Skyline.Model
         {
             public IonType IonType { get; private set; }
             public int Ordinal { get; private set; }
+            public int MassIndex { get; private set; }
             public int PrecursorCharge { get; private set; }
             public int Charge { get; private set; }
             public TransitionLosses Losses { get; private set; }
@@ -1602,6 +1604,7 @@ namespace pwiz.Skyline.Model
                 // Accept uppercase and lowercase for backward compatibility with v0.1
                 IonType = reader.GetEnumAttribute(ATTR.fragment_type, IonType.y, true);
                 Ordinal = reader.GetIntAttribute(ATTR.fragment_ordinal);
+                MassIndex = reader.GetIntAttribute(ATTR.mass_index);
                 PrecursorCharge = reader.GetIntAttribute(ATTR.precursor_charge);
                 Charge = reader.GetIntAttribute(ATTR.product_charge);
 
@@ -2055,6 +2058,8 @@ namespace pwiz.Skyline.Model
         {
             Transition transition = nodeTransition.Transition;
             writer.WriteAttribute(ATTR.fragment_type, transition.IonType);
+            if (transition.MassIndex != 0)
+                writer.WriteAttribute(ATTR.mass_index, transition.MassIndex);
             if (!transition.IsPrecursor())
             {
                 writer.WriteAttribute(ATTR.fragment_ordinal, transition.Ordinal);

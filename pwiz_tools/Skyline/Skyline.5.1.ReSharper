@@ -81,6 +81,7 @@
       <Abbreviation Text="POM" />
       <Abbreviation Text="IS" />
       <Abbreviation Text="DC" />
+      <Abbreviation Text="XY" />
     </Naming2>
   </CodeStyleSettings>
 </Configuration>

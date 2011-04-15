@@ -24,6 +24,7 @@ using System.IO;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -137,10 +138,9 @@ namespace pwiz.Skyline.Model.DocSettings
                     FullScan = new TransitionFullScan(Instrument.PrecursorFilterType,
                                                       Instrument.PrecursorFilter,
                                                       FullScanMassAnalyzerType.qit,
-                                                      Instrument.ProductFilter/TransitionFullScan.RES_PER_FILTER,
-                                                      null,
-                                                      FullScanMassAnalyzerType.none,
-                                                      null,
+                                                      Instrument.ProductFilter/TransitionFullScan.RES_PER_FILTER, null,
+                                                      FullScanPrecursorIsotopes.None, null,
+                                                      FullScanMassAnalyzerType.none, null, null,
                                                       null);
                     Instrument = Instrument.ClearFullScanSettings();
                 }
@@ -161,11 +161,8 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteElement(Instrument);
             // Avoid breaking documents for older versions, if no full-scan
             // filtering is in use.
-            if (FullScan.PrecursorFilterType != FullScanPrecursorFilterType.None ||
-                FullScan.PrecursorMassAnalyzer != FullScanMassAnalyzerType.none)
-            {
+            if (FullScan.IsEnabled)
                 writer.WriteElement(FullScan);
-            }
         }
 
         #endregion
@@ -1067,6 +1064,8 @@ namespace pwiz.Skyline.Model.DocSettings
             IonMatchTolerance = ionMatchTolerance;
             IonCount = ionCount;
             Pick = pick;
+
+            DoValidate();
         }
 
         public double IonMatchTolerance { get; private set; }
@@ -1195,6 +1194,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
 // ReSharper disable InconsistentNaming
     public enum FullScanPrecursorFilterType { None, Single, Multiple }
+    public enum FullScanPrecursorIsotopes { None, Count, Percent }
 // ReSharper restore InconsistentNaming
 
     [XmlRoot("transition_instrument")]
@@ -1518,6 +1518,12 @@ namespace pwiz.Skyline.Model.DocSettings
         public const double MIN_RES_MZ = 50;
         public const double MAX_RES_MZ = 2000;
         public const double RES_PER_FILTER = 2;
+        public const double MIN_ISOTOPE_PERCENT = 0.1;
+        public const double MAX_ISOTOPE_PERCENT = 90;
+        public const double DEFAULT_ISOTOPE_PERCENT = 10;
+        public const int MIN_ISOTOPE_COUNT = 1;
+        public const int MAX_ISOTOPE_COUNT = 5;
+        public const int DEFAULT_ISOTOPE_COUNT = 3;
 
         public const string QIT = "QIT";
         public const string ORBITRAP = "Orbitrap";
@@ -1544,18 +1550,25 @@ namespace pwiz.Skyline.Model.DocSettings
                                     FullScanMassAnalyzerType productMassAnalyzer,
                                     double? productRes,
                                     double? productResMz,
+                                    FullScanPrecursorIsotopes precursorIsotopes,
+                                    double? precursorIsotopeFilter,
                                     FullScanMassAnalyzerType precursorMassAnalyzer,
                                     double? precursorRes,
-                                    double? precursorResMz)
+                                    double? precursorResMz,
+                                    IsotopeEnrichments isotopeEnrichments)
         {
             PrecursorFilterType = precursorFilterType;
             PrecursorFilter = precursorFilter;
             ProductMassAnalyzer = productMassAnalyzer;
             ProductRes = productRes;
             ProductResMz = productResMz;
+            PrecursorIsotopes = precursorIsotopes;
+            PrecursorIsotopeFilter = precursorIsotopeFilter;
             PrecursorMassAnalyzer = precursorMassAnalyzer;
             PrecursorRes = precursorRes;
             PrecursorResMz = precursorResMz;
+
+            IsotopeEnrichments = isotopeEnrichments;
 
             DoValidate();
         }
@@ -1574,11 +1587,31 @@ namespace pwiz.Skyline.Model.DocSettings
 
         // MS1 filtering
 
+        public FullScanPrecursorIsotopes PrecursorIsotopes { get; private set; }
+
+        public double? PrecursorIsotopeFilter { get; private set; }
+
         public FullScanMassAnalyzerType PrecursorMassAnalyzer { get; private set; }
 
         public double? PrecursorRes { get; private set; }
 
         public double? PrecursorResMz { get; private set; }
+
+        public IsotopeEnrichments IsotopeEnrichments { get; private set; }
+
+        public IsotopeAbundances IsotopeAbundances
+        {
+            get { return IsotopeEnrichments != null ? IsotopeEnrichments.IsotopeAbundances : null; }
+        }
+
+        public bool IsEnabled
+        {
+            get
+            {
+                return PrecursorFilterType != FullScanPrecursorFilterType.None ||
+                       PrecursorIsotopes != FullScanPrecursorIsotopes.None;
+            }
+        }
 
         public double GetPrecursorFilterWindow(double mzQ1)
         {
@@ -1641,7 +1674,12 @@ namespace pwiz.Skyline.Model.DocSettings
                 im.PrecursorFilter = prop;
                 // Make sure the change results in a valid object, or an exception
                 // will be thrown.
-                if (im.ProductMassAnalyzer == FullScanMassAnalyzerType.none)
+                if (im.PrecursorFilterType == FullScanPrecursorFilterType.None)
+                {
+                    im.ProductMassAnalyzer = FullScanMassAnalyzerType.none;
+                    im.ProductRes = im.ProductResMz = null;
+                }
+                else if (im.ProductMassAnalyzer == FullScanMassAnalyzerType.none)
                 {
                     im.ProductMassAnalyzer = FullScanMassAnalyzerType.qit;
                     im.ProductRes = DEFAULT_RES_QIT;
@@ -1656,6 +1694,39 @@ namespace pwiz.Skyline.Model.DocSettings
                 im.ProductMassAnalyzer = typeProp;
                 im.ProductRes = prop;
                 im.ProductResMz = mzProp;
+                // Make sure the change results in a valid object, or an exception
+                // will be thrown.
+                if (im.PrecursorFilterType == FullScanPrecursorFilterType.None)
+                    im.PrecursorFilterType = FullScanPrecursorFilterType.Single;
+            });
+        }
+
+        public TransitionFullScan ChangePrecursorIsotopes(FullScanPrecursorIsotopes typeProp, double? prop)
+        {
+            return ChangeProp(ImClone(this), im =>
+            {
+                im.PrecursorIsotopes = typeProp;
+                im.PrecursorIsotopeFilter = prop;
+                // Make sure the change results in a valid object, or an exception
+                // will be thrown.
+                if (im.PrecursorIsotopes == FullScanPrecursorIsotopes.None)
+                {
+                    im.PrecursorMassAnalyzer = FullScanMassAnalyzerType.none;
+                    im.PrecursorRes = im.PrecursorResMz = null;
+                }
+                else if (im.PrecursorMassAnalyzer == FullScanMassAnalyzerType.none)
+                {
+                    if (im.PrecursorIsotopes == FullScanPrecursorIsotopes.Count && im.PrecursorIsotopeFilter == 1)
+                    {
+                        im.PrecursorMassAnalyzer = FullScanMassAnalyzerType.qit;
+                        im.PrecursorRes = DEFAULT_RES_QIT;
+                    }
+                    else
+                    {
+                        im.PrecursorMassAnalyzer = FullScanMassAnalyzerType.tof;
+                        im.PrecursorRes = DEFAULT_RES_VALUES[(int) FullScanMassAnalyzerType.tof];
+                    }
+                }
             });
         }
 
@@ -1666,6 +1737,13 @@ namespace pwiz.Skyline.Model.DocSettings
                 im.PrecursorMassAnalyzer = typeProp;
                 im.PrecursorRes = prop;
                 im.PrecursorResMz = mzProp;
+                // Make sure the change results in a valid object, or an exception
+                // will be thrown.
+                if (im.PrecursorIsotopes == FullScanPrecursorIsotopes.None)
+                {
+                    im.PrecursorIsotopes = FullScanPrecursorIsotopes.Count;
+                    im.PrecursorIsotopeFilter = 1;
+                }
             });
         }
 
@@ -1680,6 +1758,8 @@ namespace pwiz.Skyline.Model.DocSettings
             product_mass_analyzer,
             product_res,
             product_res_mz,
+            precursor_isotopes,
+            precursor_isotope_filter,
             precursor_mass_analyzer,
             precursor_res,
             precursor_res_mz
@@ -1692,39 +1772,59 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private void DoValidate()
         {
-            if (PrecursorMassAnalyzer == FullScanMassAnalyzerType.none)
+            if (PrecursorIsotopes == FullScanPrecursorIsotopes.None)
             {
-                if (PrecursorRes.HasValue)
-                    throw new InvalidDataException(string.Format("Precursor resolution for full-scan MS1 filtering not allowed when mass analyzer is none."));
+                if (PrecursorMassAnalyzer != FullScanMassAnalyzerType.none || PrecursorIsotopeFilter.HasValue || PrecursorRes.HasValue || PrecursorResMz.HasValue)
+                    throw new InvalidDataException("No other full-scan MS1 filter settings are allowed when no precursor isotopes are included.");
             }
-            else 
+            else
             {
+                if (PrecursorMassAnalyzer == FullScanMassAnalyzerType.qit)
+                {
+                    if (PrecursorIsotopes != FullScanPrecursorIsotopes.Count || PrecursorIsotopeFilter != 1)
+                    {
+                        throw new InvalidDataException("For MS1 filtering with a QIT mass analyzer only 1 isotope peak is supported.");
+                    }
+                }
+                else if (PrecursorIsotopes == FullScanPrecursorIsotopes.Count)
+                {
+                    ValidateRange(PrecursorIsotopeFilter, MIN_ISOTOPE_COUNT, MAX_ISOTOPE_COUNT,
+                                  "The precursor isotope count for MS1 filtering must be between {0} and {1} peaks.");
+                }
+                else
+                {
+                    ValidateRange(PrecursorIsotopeFilter, MIN_ISOTOPE_PERCENT, MAX_ISOTOPE_PERCENT,
+                                  "The precursor isotope percent for MS1 filtering must be between {0}% and {1}% of the base peak.");
+                }
                 _cachedPrecursorRes = ValidateRes(PrecursorMassAnalyzer, PrecursorRes, PrecursorResMz);
             }
 
             if (PrecursorFilterType == FullScanPrecursorFilterType.None)
             {
-                if (ProductMassAnalyzer != FullScanMassAnalyzerType.none || PrecursorFilter.HasValue || ProductRes.HasValue)
-                    throw new InvalidDataException(string.Format("No other full-scan MS/MS filter settings are allowed when precursor filter is none."));
+                if (ProductMassAnalyzer != FullScanMassAnalyzerType.none || PrecursorFilter.HasValue || ProductRes.HasValue || ProductResMz.HasValue)
+                    throw new InvalidDataException("No other full-scan MS/MS filter settings are allowed when precursor filter is none.");
             }
             else
             {
                 if (PrecursorFilterType == FullScanPrecursorFilterType.Single)
                 {
                     if (PrecursorFilter.HasValue)
-                        throw new InvalidDataException(string.Format("An isolation window width value is not allowed when filtering MS/MS in single precursor mode."));
+                        throw new InvalidDataException("An isolation window width value is not allowed when filtering MS/MS in single precursor mode.");
                 }
                 else
                 {
-                    const double minFilter = MIN_PRECURSOR_MULTI_FILTER;
-                    const double maxFilter = MAX_PRECURSOR_MULTI_FILTER;
-                    if (!PrecursorFilter.HasValue || minFilter > PrecursorFilter || PrecursorFilter > maxFilter)
-                        throw new InvalidDataException(string.Format("The precursor m/z filter must be between {0} and {1}",
-                            minFilter, maxFilter));
+                    ValidateRange(PrecursorFilter, MIN_PRECURSOR_MULTI_FILTER, MAX_PRECURSOR_MULTI_FILTER,
+                                  "The precursor m/z filter must be between {0} and {1}");
                 }
 
                 _cachedProductRes = ValidateRes(ProductMassAnalyzer, ProductRes, ProductResMz);
             }
+        }
+
+        public static void ValidateRange(double? value, double min, double max, string messageFormat)
+        {
+            if (!value.HasValue || min > value.Value || value.Value > max)
+                throw new InvalidDataException(string.Format(messageFormat, min, max));
         }
 
         private static double ValidateRes(FullScanMassAnalyzerType analyzerType, double? res, double? resMz)
@@ -1784,13 +1884,33 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (ProductMassAnalyzer == FullScanMassAnalyzerType.ft_icr || ProductMassAnalyzer == FullScanMassAnalyzerType.orbitrap)
                     ProductResMz = reader.GetNullableDoubleAttribute(ATTR.product_res_mz) ?? DEFAULT_RES_MZ;
             }
-            PrecursorMassAnalyzer = reader.GetEnumAttribute(ATTR.precursor_mass_analyzer, FullScanMassAnalyzerType.none);
-            if (PrecursorMassAnalyzer != FullScanMassAnalyzerType.none)
+            
+            PrecursorIsotopes = reader.GetEnumAttribute(ATTR.precursor_isotopes,
+                                             FullScanPrecursorIsotopes.None);
+            if (PrecursorIsotopes != FullScanPrecursorIsotopes.None)
             {
+                PrecursorIsotopeFilter = reader.GetDoubleAttribute(ATTR.precursor_isotope_filter,
+                    PrecursorIsotopes == FullScanPrecursorIsotopes.Count ? DEFAULT_ISOTOPE_COUNT : DEFAULT_ISOTOPE_PERCENT);
+
+                PrecursorMassAnalyzer = reader.GetEnumAttribute(ATTR.precursor_mass_analyzer, FullScanMassAnalyzerType.none);
                 PrecursorRes = reader.GetDoubleAttribute(ATTR.precursor_res,
                     DEFAULT_RES_VALUES[(int)PrecursorMassAnalyzer]);
                 if (PrecursorMassAnalyzer == FullScanMassAnalyzerType.ft_icr || PrecursorMassAnalyzer == FullScanMassAnalyzerType.orbitrap)
                     PrecursorResMz = reader.GetNullableDoubleAttribute(ATTR.precursor_res_mz) ?? DEFAULT_RES_MZ;
+            }
+            else
+            {
+                // Backward compatibility with before PrecursorIsotopes were added.
+                PrecursorMassAnalyzer = reader.GetEnumAttribute(ATTR.precursor_mass_analyzer, FullScanMassAnalyzerType.none);
+                if (PrecursorMassAnalyzer != FullScanMassAnalyzerType.none)
+                {
+                    PrecursorIsotopes = FullScanPrecursorIsotopes.Count;
+                    PrecursorIsotopeFilter = 1;
+                    PrecursorRes = reader.GetDoubleAttribute(ATTR.precursor_res,
+                        DEFAULT_RES_VALUES[(int)PrecursorMassAnalyzer]);
+                    if (PrecursorMassAnalyzer == FullScanMassAnalyzerType.ft_icr || PrecursorMassAnalyzer == FullScanMassAnalyzerType.orbitrap)
+                        PrecursorResMz = reader.GetNullableDoubleAttribute(ATTR.precursor_res_mz) ?? DEFAULT_RES_MZ;
+                }
             }
 
             // Consume tag
@@ -1810,8 +1930,10 @@ namespace pwiz.Skyline.Model.DocSettings
                 writer.WriteAttributeNullable(ATTR.product_res, ProductRes);
                 writer.WriteAttributeNullable(ATTR.product_res_mz, ProductResMz);
             }
-            if (PrecursorMassAnalyzer != FullScanMassAnalyzerType.none)
+            if (PrecursorIsotopes != FullScanPrecursorIsotopes.None)
             {
+                writer.WriteAttribute(ATTR.precursor_isotopes, PrecursorIsotopes);
+                writer.WriteAttributeNullable(ATTR.precursor_isotope_filter, PrecursorIsotopeFilter);
                 writer.WriteAttribute(ATTR.precursor_mass_analyzer, PrecursorMassAnalyzer);
                 writer.WriteAttributeNullable(ATTR.precursor_res, PrecursorRes);
                 writer.WriteAttributeNullable(ATTR.precursor_res_mz, PrecursorResMz);
@@ -1831,6 +1953,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 Equals(other.ProductMassAnalyzer, ProductMassAnalyzer) &&
                 other.ProductRes.Equals(ProductRes) &&
                 other.ProductResMz.Equals(ProductResMz) &&
+                Equals(other.PrecursorIsotopes, PrecursorIsotopes) &&
+                other.PrecursorIsotopeFilter.Equals(PrecursorIsotopeFilter) &&
                 Equals(other.PrecursorMassAnalyzer, PrecursorMassAnalyzer) &&
                 other.PrecursorRes.Equals(PrecursorRes) &&
                 other.PrecursorResMz.Equals(PrecursorResMz);
@@ -1853,6 +1977,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ ProductMassAnalyzer.GetHashCode();
                 result = (result*397) ^ (ProductRes.HasValue ? ProductRes.Value.GetHashCode() : 0);
                 result = (result*397) ^ (ProductResMz.HasValue ? ProductResMz.Value.GetHashCode() : 0);
+                result = (result*397) ^ PrecursorIsotopes.GetHashCode();
+                result = (result*397) ^ (PrecursorIsotopeFilter.HasValue ? PrecursorIsotopeFilter.Value.GetHashCode() : 0);
                 result = (result*397) ^ PrecursorMassAnalyzer.GetHashCode();
                 result = (result*397) ^ (PrecursorRes.HasValue ? PrecursorRes.Value.GetHashCode() : 0);
                 result = (result*397) ^ (PrecursorResMz.HasValue ? PrecursorResMz.Value.GetHashCode() : 0);

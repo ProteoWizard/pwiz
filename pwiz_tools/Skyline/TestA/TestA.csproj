@@ -70,6 +70,7 @@
     <Compile Include="LibraryLoadTest.cs" />
     <Compile Include="LibrarySettingsTest.cs" />
     <Compile Include="LossesTest.cs" />
+    <Compile Include="MassCalcTest.cs" />
     <Compile Include="PasteTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RefineTest.cs" />
@@ -82,6 +83,10 @@
     <EmbeddedResource Include="Study7_0-7.sky" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Shared\Common\Common.csproj">
+      <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>
+      <Name>Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Shared\ProteomeDb\ProteomeDb.csproj">
       <Project>{09FC3CB3-FCCD-4906-A370-160B28725936}</Project>
       <Name>ProteomeDb</Name>

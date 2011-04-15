@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using pwiz.Common.Collections;
 
 namespace pwiz.Common.Chemistry
@@ -39,6 +38,13 @@ namespace pwiz.Common.Chemistry
             : this(new SortedDictionary<double, double>{{0,1}},massResolution,minimumAbundance)
         {
         }
+
+        /// <summary>
+        /// Private constructor used by <see cref="NewInstance"/> to create all useful MassDistributions.
+        /// </summary>
+        /// <param name="dictionary">Dictionary of masses to abundances</param>
+        /// <param name="massResolution">Resolution used to merge masses and their abundances</param>
+        /// <param name="minimumAbundance">Minimum abundance used to filter the masses</param>
         private MassDistribution(
             SortedDictionary<double,double> dictionary, 
             double massResolution, 
@@ -74,6 +80,7 @@ namespace pwiz.Common.Chemistry
             }
             return NewInstance(map, MassResolution, MinimumAbundance);
         }
+
         /// <summary>
         /// Returns the result of adding this MassDistribution to itself the specified number of times.
         /// </summary>
@@ -94,6 +101,7 @@ namespace pwiz.Common.Chemistry
             }
             return result;
         }
+
         /// <summary>
         /// Returns a MassDistribution which is the result of adding the specified
         /// value to each mass value, and dividing by the scale.
@@ -106,10 +114,12 @@ namespace pwiz.Common.Chemistry
             }
             return new MassDistribution(map, MassResolution, MinimumAbundance);
         }
+
         public MassDistribution SetCharge(int charge)
         {
             return OffsetAndDivide(AminoAcidFormulas.ProtonMass*charge, charge);
         }
+
         /// <summary>
         /// Performs a weighted average of this MassDistribution with another.
         /// </summary>
@@ -128,6 +138,7 @@ namespace pwiz.Common.Chemistry
             }
             return NewInstance(dict, MassResolution, MinimumAbundance);
         }
+
         public double AverageMass
         { 
             get
@@ -142,30 +153,17 @@ namespace pwiz.Common.Chemistry
                 return average / totalAbundance;
             }
         }
+
         public double MinMass
         { 
-            get
-            {
-                double minMass = double.MaxValue;
-                foreach (var key in Keys)
-                {
-                    minMass = Math.Min(minMass, key);
-                }
-                return minMass;
-            }
+            get { return Keys.Aggregate(double.MaxValue, Math.Min); }
         }
+
         public double MaxMass
         { 
-            get
-            {
-                double maxMass = 0;
-                foreach (var mass in Keys)
-                {
-                    maxMass = Math.Max(maxMass, mass);
-                }
-                return maxMass;
-            }
+            get { return Keys.Aggregate(0.0, Math.Max); }
         }
+
         public double MostAbundanceMass
         {
             get
@@ -183,7 +181,15 @@ namespace pwiz.Common.Chemistry
                 return monoMass;
             }
         }
-        
+
+        /// <summary>
+        /// Increases the abundance of a specified mass within the distribution,
+        /// adjusting the abundance of the other isotopes based on their existing
+        /// proportions.
+        /// </summary>
+        /// <param name="mass">The mass to adjust</param>
+        /// <param name="abundance">The amount by which to increase its existing abundance</param>
+        /// <returns>A new adjusted mass distribution</returns>
         public MassDistribution Enrich(double mass, double abundance)
         {
             double totalAbundance = Values.Sum();
@@ -201,6 +207,21 @@ namespace pwiz.Common.Chemistry
             return NewInstance(map, MassResolution, MinimumAbundance);
         }
 
+        /// <summary>
+        /// Enriches a specified mass within the distribution to a specified
+        /// abundance level, adjusting the abundance of the other isotopes based on
+        /// their existing proportions
+        /// </summary>
+        /// <param name="mass">The mass to adjust</param>
+        /// <param name="abundance">The desired final abundance for the mass</param>
+        /// <returns>A new adjusted mass distribution</returns>
+        public MassDistribution SetAbundance(double mass, double abundance)
+        {
+            double currentAbundance;
+            TryGetValue(mass, out currentAbundance);
+            return Enrich(mass, abundance - currentAbundance);
+        }
+
         public List<KeyValuePair<double,double>> MassesSortedByAbundance()
         {
             var result = new List<KeyValuePair<double, double>>(this);
@@ -211,8 +232,11 @@ namespace pwiz.Common.Chemistry
         public static MassDistribution NewInstance(IDictionary<double,double> values, 
             double massResolution, double minimumAbundance)
         {
+            // Sort masses
             var sortedKeys = values.Keys.ToArray();
             Array.Sort(sortedKeys);
+
+            // Filter masses by resolution and abundance
             double curMass = 0.0;
             double curFrequency = 0.0;
             double totalAbundance = 0;
@@ -221,30 +245,37 @@ namespace pwiz.Common.Chemistry
             {
                 var frequency = values[mass];
                 if (frequency == 0)
-                {
                     continue;
-                }
+
+                // If the delta between the next mass and the current center of mass is
+                // greater than the mass resolution
                 if (mass - curMass > massResolution)
                 {
+                    // If the abundance of the current center of mass is greater than
+                    // the minimum, add it to the new set
                     if (curFrequency > minimumAbundance)
                     {
                         map.Add(curMass, curFrequency);
                         totalAbundance += curFrequency;
                     }
+                    // Reset the current center of mass
                     curMass = mass;
                     curFrequency = frequency;
                 }
                 else
                 {
+                    // Add the new mass and adjust the current center of mass
                     curMass = (curMass * curFrequency + mass * frequency) / (curFrequency + frequency);
                     curFrequency += frequency;
                 }
             }
+            // Include the last center of mass
             if (curFrequency > minimumAbundance)
             {
                 map.Add(curMass, curFrequency);
                 totalAbundance += curFrequency;
             }
+            // If filtered abundances do not total 100%, recalculate the proportions
             if (totalAbundance != 1)
             {
                 foreach (var entry in map.ToArray())

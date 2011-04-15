@@ -20,6 +20,7 @@ using System;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -40,6 +41,7 @@ namespace pwiz.Skyline.SettingsUI
         private readonly SettingsListComboDriver<CollisionEnergyRegression> _driverCE;
         private readonly SettingsListComboDriver<DeclusteringPotentialRegression> _driverDP;
         private readonly SettingsListBoxDriver<MeasuredIon> _driverIons;
+        private readonly SettingsListComboDriver<IsotopeEnrichments> _driverEnrichments;
 
         public TransitionSettingsUI(SkylineWindow parent)
         {
@@ -104,13 +106,22 @@ namespace pwiz.Skyline.SettingsUI
             if (Instrument.MaxTransitions.HasValue)
                 textMaxTrans.Text = Instrument.MaxTransitions.Value.ToString();
 
-            comboPrecursorAnalyzerType.Items.Add("None");
+            comboPrecursorIsotopes.Items.AddRange(
+                new[]
+                    {
+                        FullScanPrecursorIsotopes.None.ToString(),
+                        FullScanPrecursorIsotopes.Count.ToString(),
+                        FullScanPrecursorIsotopes.Percent.ToString()
+                    });
             comboPrecursorAnalyzerType.Items.AddRange(TransitionFullScan.MASS_ANALYZERS);
-            var precursorAnalyzerType = FullScan.PrecursorMassAnalyzer;
-            if (precursorAnalyzerType == FullScanMassAnalyzerType.none)
-                comboPrecursorAnalyzerType.SelectedIndex = 0;
-            else
-                comboPrecursorAnalyzerType.SelectedItem = TransitionFullScan.MassAnalyzerToString(precursorAnalyzerType);
+            comboPrecursorIsotopes.SelectedItem = FullScan.PrecursorIsotopes.ToString();
+
+            _driverEnrichments = new SettingsListComboDriver<IsotopeEnrichments>(comboEnrichments, Settings.Default.IsotopeEnrichmentsList);
+            sel = (FullScan.IsotopeEnrichments != null ? FullScan.IsotopeEnrichments.Name : null);
+            _driverEnrichments.LoadList(sel);
+
+            // Update the precursor analyzer type in case the SelectedIndex is still -1
+            UpdatePrecursorAnalyzerType();
 
             comboPrecursorFilterType.Items.AddRange(
                 new[]
@@ -138,6 +149,15 @@ namespace pwiz.Skyline.SettingsUI
             {
                 return Helpers.ParseEnum((string)comboPrecursorFilterType.SelectedItem,
                     FullScanPrecursorFilterType.None);
+            }
+        }
+
+        public FullScanPrecursorIsotopes PrecursorIsotopesCurrent
+        {
+            get
+            {
+                return Helpers.ParseEnum((string)comboPrecursorIsotopes.SelectedItem,
+                    FullScanPrecursorIsotopes.None);
             }
         }
 
@@ -199,7 +219,6 @@ namespace pwiz.Skyline.SettingsUI
             {
                 helper.ShowTextBoxError(tabControl1, (int) TABS.Filter, textIonTypes,
                                          "Ion types must contain a comma separated list of ion types a, b, c, x, y z and p (for precursor).");
-                e.Cancel = true;
                 return;
             }
             types = types.Distinct().ToArray();
@@ -293,21 +312,47 @@ namespace pwiz.Skyline.SettingsUI
             TransitionInstrument instrument = new TransitionInstrument(minMz, maxMz, isDynamicMin, mzMatchTolerance, maxTrans);
             Helpers.AssignIfEquals(ref instrument, Instrument);
 
+            // Validate and store full-scan settings
             FullScanPrecursorFilterType precursorFilterType = PrecursorFilterTypeCurrent;
             double? precursorFilter = null;
             FullScanMassAnalyzerType productAnalyzerType = FullScanMassAnalyzerType.none;
             double? productRes = null;
             double? productResMz = null;
 
-            FullScanMassAnalyzerType precursorAnalyzerType = TransitionFullScan.ParseMassAnalyzer(
-                comboPrecursorAnalyzerType.SelectedItem.ToString());
+            FullScanPrecursorIsotopes precursorIsotopes = PrecursorIsotopesCurrent;
+            double? precursorIsotopeFilter = null;
+            FullScanMassAnalyzerType precursorAnalyzerType = FullScanMassAnalyzerType.none;
             double? precursorRes = null;
             double? precursorResMz = null;
-            if (precursorAnalyzerType != FullScanMassAnalyzerType.none)
+            if (precursorIsotopes != FullScanPrecursorIsotopes.None)
             {
                 double minFilt, maxFilt;
+                if (precursorIsotopes == FullScanPrecursorIsotopes.Count)
+                {
+                    minFilt = TransitionFullScan.MIN_ISOTOPE_COUNT;
+                    maxFilt = TransitionFullScan.MAX_ISOTOPE_COUNT;
+                }
+                else
+                {
+                    minFilt = TransitionFullScan.MIN_ISOTOPE_PERCENT;
+                    maxFilt = TransitionFullScan.MAX_ISOTOPE_PERCENT;
+                }
+                double precIsotopeFilt;
+                if (!helper.ValidateDecimalTextBox(e, tabControl1, (int)TABS.FullScan, textPrecursorIsotopeFilter,
+                                                   minFilt, maxFilt, out precIsotopeFilt))
+                    return;
+                precursorIsotopeFilter = precIsotopeFilt;
+
+                precursorAnalyzerType = TransitionFullScan.ParseMassAnalyzer(
+                    comboPrecursorAnalyzerType.SelectedItem.ToString());
                 if (precursorAnalyzerType == FullScanMassAnalyzerType.qit)
                 {
+                    if (precursorIsotopes != FullScanPrecursorIsotopes.Count || precursorIsotopeFilter != 1)
+                    {
+                        helper.ShowTextBoxError(tabControl1, (int)TABS.FullScan, textPrecursorIsotopeFilter,
+                                                 "For MS1 filtering with a QIT mass analyzer only 1 isotope peak is supported.");
+                        return;
+                    }
                     minFilt = TransitionFullScan.MIN_LO_RES;
                     maxFilt = TransitionFullScan.MAX_LO_RES;
                 }
@@ -376,14 +421,32 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
 
+            IsotopeEnrichments enrichments = null;
+            if (precursorIsotopes != FullScanPrecursorIsotopes.None &&
+                    precursorAnalyzerType != FullScanMassAnalyzerType.qit)
+            {
+                string nameEnrichments = comboEnrichments.SelectedItem.ToString();
+                enrichments = Settings.Default.GetIsotopeEnrichmentsByName(nameEnrichments);
+                if (enrichments == null)
+                {
+                    MessageDlg.Show(this, "Isotope enrichment settings are required for MS1 filtering on high resolution mass spectrometers.");
+                    tabControl1.SelectedIndex = (int) TABS.FullScan;
+                    comboEnrichments.Focus();
+                    return;
+                }
+            }
+
             var fullScan = new TransitionFullScan(precursorFilterType,
                                                   precursorFilter,
                                                   productAnalyzerType,
                                                   productRes,
                                                   productResMz,
+                                                  precursorIsotopes,
+                                                  precursorIsotopeFilter,
                                                   precursorAnalyzerType,
                                                   precursorRes,
-                                                  precursorResMz);
+                                                  precursorResMz,
+                                                  enrichments);
 
             Helpers.AssignIfEquals(ref fullScan, FullScan);
 
@@ -455,6 +518,11 @@ namespace pwiz.Skyline.SettingsUI
             _driverDP.SelectedIndexChangedEvent(sender, e);
         }
 
+        private void comboEnrichments_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            _driverEnrichments.SelectedIndexChangedEvent(sender, e);
+        }
+
         private void cbUseOptimized_CheckedChanged(object sender, EventArgs e)
         {
             labelOptimizeType.Visible = comboOptimizeType.Visible = cbUseOptimized.Checked;
@@ -522,6 +590,55 @@ namespace pwiz.Skyline.SettingsUI
                             labelProductTh);
         }
 
+        private void comboPrecursorIsotopes_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            var precursorIsotopes = PrecursorIsotopesCurrent;
+
+            bool percentType = (precursorIsotopes == FullScanPrecursorIsotopes.Percent);
+            labelPrecursorIsotopeFilter.Text = percentType ? "Min % of base pea&k:" : "Pea&ks:";
+            labelPrecursorIsotopeFilterPercent.Visible = percentType;
+            
+            if (precursorIsotopes == FullScanPrecursorIsotopes.None)
+            {
+                textPrecursorIsotopeFilter.Text = "";
+                textPrecursorIsotopeFilter.Enabled = false;
+                comboEnrichments.SelectedIndex = -1;
+                comboEnrichments.Enabled = false;
+                // Selection change should set filter m/z textbox correctly
+                comboPrecursorAnalyzerType.SelectedIndex = -1;
+                comboPrecursorAnalyzerType.Enabled = false;
+            }
+            else
+            {
+                // If the combo is being set to the type it started with, use the starting values
+                if (precursorIsotopes == FullScan.PrecursorIsotopes)
+                {
+                    textPrecursorIsotopeFilter.Text = FullScan.PrecursorIsotopeFilter.ToString();
+                    if (FullScan.IsotopeEnrichments != null)
+                        comboEnrichments.SelectedItem = FullScan.IsotopeEnrichments.Name;
+                    if (!comboPrecursorAnalyzerType.Enabled)
+                        comboPrecursorAnalyzerType.SelectedItem = TransitionFullScan.MassAnalyzerToString(FullScan.PrecursorMassAnalyzer);
+                }
+                else
+                {
+                    textPrecursorIsotopeFilter.Text = (percentType
+                                                           ? TransitionFullScan.DEFAULT_ISOTOPE_PERCENT
+                                                           : TransitionFullScan.DEFAULT_ISOTOPE_COUNT).ToString();
+                    
+                    var precursorMassAnalyzer = TransitionFullScan.ParseMassAnalyzer((string)comboPrecursorAnalyzerType.SelectedItem);
+                    if (!comboPrecursorAnalyzerType.Enabled || (percentType && precursorMassAnalyzer == FullScanMassAnalyzerType.qit))
+                    {
+                        comboPrecursorAnalyzerType.SelectedItem = TransitionFullScan.MassAnalyzerToString(FullScanMassAnalyzerType.tof);
+                        comboEnrichments.SelectedItem = IsotopeEnrichmentsList.GetDefault().Name;
+                    }
+                }
+
+                comboEnrichments.Enabled = (comboEnrichments.SelectedIndex != -1);
+                textPrecursorIsotopeFilter.Enabled = true;
+                comboPrecursorAnalyzerType.Enabled = true;
+            }
+        }
+
         private void comboPrecursorAnalyzerType_SelectedIndexChanged(object sender, EventArgs e)
         {
             UpdatePrecursorAnalyzerType();
@@ -539,6 +656,20 @@ namespace pwiz.Skyline.SettingsUI
                             labelPrecursorAt,
                             textPrecursorAt,
                             labelPrecursorTh);
+
+            // For QIT, only 1 isotope peak is allowed
+            if (precursorMassAnalyzer == FullScanMassAnalyzerType.qit)
+            {
+                comboPrecursorIsotopes.SelectedItem = FullScanPrecursorIsotopes.Count.ToString();
+                textPrecursorIsotopeFilter.Text = 1.ToString();
+                comboEnrichments.SelectedIndex = -1;
+                comboEnrichments.Enabled = false;
+            }
+            else if (!comboEnrichments.Enabled)
+            {
+                comboEnrichments.SelectedIndex = 0;
+                comboEnrichments.Enabled = true;
+            }
         }
 
         private static void SetAnalyzerType(FullScanMassAnalyzerType analyzerTypeNew,
@@ -679,6 +810,21 @@ namespace pwiz.Skyline.SettingsUI
         public void EditDPList()
         {
             _driverDP.EditList();
+        }
+
+        public void AddToDPList()
+        {
+            _driverDP.AddItem();
+        }
+
+        public void EditEnrichmentsList()
+        {
+            _driverEnrichments.EditList();
+        }
+
+        public void AddToEnrichmentsList()
+        {
+            _driverEnrichments.AddItem();
         }
 
         public bool UseOptimized

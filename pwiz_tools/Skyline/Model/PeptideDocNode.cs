@@ -574,7 +574,10 @@ namespace pwiz.Skyline.Model
                 var transition = nodeTran.Transition;
                 var losses = nodeTran.Losses;
                 var tranNew = new Transition(tranGroup,
-                                             transition.IonType, transition.CleavageOffset, transition.Charge);
+                                             transition.IonType,
+                                             transition.CleavageOffset,
+                                             0,
+                                             transition.Charge);
                 double massH = settings.GetFragmentMass(tranGroup.LabelType, explicitMods, tranNew);
                 listTrans.Add(new TransitionDocNode(tranNew, losses, massH, null));
             }

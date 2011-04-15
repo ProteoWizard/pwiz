@@ -1512,7 +1512,7 @@ namespace pwiz.Skyline.Model
                     var ionType = productExp.IonType;
                     var ordinal = productExp.FragmentOrdinal;
                     int offset = Transition.OrdinalToOffset(ionType, ordinal, _activePeptide.Sequence.Length);
-                    var tran = new Transition(transitionGroup, ionType, offset, productExp.Charge);
+                    var tran = new Transition(transitionGroup, ionType, offset, 0, productExp.Charge);
                     // m/z and library info calculated later
                     return new TransitionDocNode(tran, productExp.Losses, 0, null);
                 });

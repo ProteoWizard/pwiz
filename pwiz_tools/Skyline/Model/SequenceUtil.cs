@@ -20,7 +20,9 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 
@@ -170,6 +172,42 @@ namespace pwiz.Skyline.Model
             return Math.Round(totalMass, MassPrecision);
         }
 
+        public static string[] ParseModParts(BioMassCalc calc, string desc)
+        {
+            string parse = desc;
+            calc.ParseMass(ref parse);
+
+            string part1 = desc.Substring(0, desc.Length - parse.Length).Trim();
+            string part2 = string.Empty;
+
+            if (parse.Length > 0 && parse[0] == '-')
+            {
+                parse = parse.Substring(1);
+                part2 = parse.Trim();
+
+                calc.ParseMass(ref parse);
+            }
+
+            if ((part1.Length == 0 && part2.Length == 0) || parse.Length > 0)
+                throw new ArgumentException(string.Format("The expression '{0}' is not a valid chemical formula.", desc));
+
+            return new[] { part1, part2 };
+        }
+
+        public static void ParseModCounts(BioMassCalc calc, string desc, IDictionary<string, int> dictAtomCounts)
+        {
+            string parse = desc;
+            calc.ParseCounts(ref parse, dictAtomCounts, false);
+            if (parse.Length > 0 && parse[0] == '-')
+            {
+                parse = parse.Substring(1);
+                calc.ParseCounts(ref parse, dictAtomCounts, true);
+            }
+
+            if (parse.Length > 0)
+                throw new ArgumentException(string.Format("The expression '{0}' is not a valid chemical formula.", desc));
+        }
+
         public static string GetModDiffDescription(double massDiff)
         {
             return GetModDiffDescription(massDiff, false);
@@ -197,6 +235,18 @@ namespace pwiz.Skyline.Model
             public readonly double[] _aminoCTermModMasses = new double[128];
             public double _massModCleaveC;
             public double _massModCleaveN;
+
+            // Formula help
+            public readonly double[] _aminoModMassesExtra = new double[128];
+            public readonly double[] _aminoNTermModMassesExtra = new double[128];
+            public readonly double[] _aminoCTermModMassesExtra = new double[128];
+            public double _massModCleaveCExtra;
+            public double _massModCleaveNExtra;
+            public readonly string[] _aminoModFormulas = new string[128];
+            public readonly string[] _aminoNTermModFormulas = new string[128];
+            public readonly string[] _aminoCTermModFormulas = new string[128];
+            public string _massModCleaveCFormula;
+            public string _massModCleaveNFormula;
         }
 
         /// <summary>
@@ -222,6 +272,12 @@ namespace pwiz.Skyline.Model
         private readonly double _massCleaveC;
         private readonly double _massCleaveN;
 
+        private readonly double _massDiff13C;
+
+        // For mass distributions
+        private readonly double _massResolution;
+        private readonly double _minimumAbundance;
+
         public SequenceMassCalc(MassType type)
         {
             _massCalc = new BioMassCalc(type);
@@ -239,6 +295,16 @@ namespace pwiz.Skyline.Model
 
             _massCleaveN = _massCalc.CalculateMass("H");
             _massCleaveC = _massCalc.CalculateMass("OH");
+
+            // Mass difference between isotope peaks
+            // The difference between 12C and 13C is quite close to 14N and 15N
+            _massDiff13C = ParseModMass("C' - C");
+
+            // These numbers are set intentionally smaller than any known instrument
+            // can measure.  Filters are then applied to resulting distributions
+            // to get more useful numbers.
+            _massResolution = 0.001;
+            _minimumAbundance = 0.00001;    // 0.001%
 
             InitAminoAcidMasses();
         }
@@ -267,6 +333,26 @@ namespace pwiz.Skyline.Model
             return 0;
         }
 
+        public string GetModFormula(char aa, StaticMod mod, out double unexplainedMass)
+        {
+            unexplainedMass = 0;
+            if (!string.IsNullOrEmpty(mod.Formula))
+                return mod.Formula;
+            else if (mod.LabelAtoms != LabelAtoms.None)
+                return GetHeavyFormula(aa, mod.LabelAtoms);
+            if (_massCalc.MassType == MassType.Monoisotopic)
+            {
+                if (mod.MonoisotopicMass.HasValue)
+                    unexplainedMass = mod.MonoisotopicMass.Value;
+            }
+            else
+            {
+                if (mod.AverageMass.HasValue)
+                    unexplainedMass = mod.AverageMass.Value;
+            }
+            return "";
+        }
+
         public void AddStaticModifications(IEnumerable<StaticMod> mods)
         {
             AddModifications(mods, _modMasses);
@@ -289,10 +375,20 @@ namespace pwiz.Skyline.Model
                     if (mod.Terminus != null)
                     {
                         double mass = GetModMass('\0', mod);
+                        double unexplainedMass;
+                        string formula = GetModFormula('\0', mod, out unexplainedMass);
                         if (mod.Terminus == ModTerminus.C)
+                        {
                             modMasses._massModCleaveC += mass;
+                            modMasses._massModCleaveCExtra += unexplainedMass;
+                            modMasses._massModCleaveCFormula = CombineFormulas(modMasses._massModCleaveCFormula, formula);
+                        }
                         else
+                        {
                             modMasses._massModCleaveN += mass;
+                            modMasses._massModCleaveNExtra += unexplainedMass;
+                            modMasses._massModCleaveNFormula = CombineFormulas(modMasses._massModCleaveNFormula, formula);
+                        }
                     }
                     else
                     {
@@ -300,7 +396,7 @@ namespace pwiz.Skyline.Model
                         for (char aa = 'A'; aa <= 'Z'; aa++)
                         {
                             if (AMINO_FORMULAS[aa] != null)
-                                modMasses._aminoModMasses[aa] = modMasses._aminoModMasses[char.ToLower(aa)] += GetModMass(aa, mod);
+                                AddMod(aa, mod, modMasses._aminoModMasses, modMasses._aminoModMassesExtra, modMasses._aminoModFormulas);
                         }
                     }
                 }
@@ -308,22 +404,49 @@ namespace pwiz.Skyline.Model
                 {
                     foreach (var aa in mod.AminoAcids)
                     {
-                        double mass = GetModMass(aa, mod);
                         switch (mod.Terminus)
                         {
                             default:
-                                modMasses._aminoModMasses[aa] = modMasses._aminoModMasses[char.ToLower(aa)] += mass;
+                                AddMod(aa, mod, modMasses._aminoModMasses, modMasses._aminoModMassesExtra, modMasses._aminoModFormulas);
                                 break;
                             case ModTerminus.N:
-                                modMasses._aminoNTermModMasses[aa] = modMasses._aminoNTermModMasses[char.ToLower(aa)] += mass;
+                                AddMod(aa, mod, modMasses._aminoNTermModMasses, modMasses._aminoNTermModMassesExtra, modMasses._aminoNTermModFormulas);
                                 break;
                             case ModTerminus.C:
-                                modMasses._aminoCTermModMasses[aa] = modMasses._aminoCTermModMasses[char.ToLower(aa)] += mass;
+                                AddMod(aa, mod, modMasses._aminoCTermModMasses, modMasses._aminoCTermModMassesExtra, modMasses._aminoCTermModFormulas);
                                 break;
                         }
                     }
                 }
             }            
+        }
+
+        private void AddMod(char aa, StaticMod mod, double[] modMasses, double[] modMassesExtra, string[] modFormulas)
+        {
+            modMasses[aa] = modMasses[char.ToLower(aa)] += GetModMass(aa, mod);
+            
+            // Deal with formulas and unexplained masses
+            double unexplainedMass;
+            string formula = GetModFormula(aa, mod, out unexplainedMass);
+            modFormulas[aa] = modFormulas[char.ToLower(aa)] = CombineFormulas(modFormulas[aa], formula);
+            modMassesExtra[aa] = modMassesExtra[char.ToLower(aa)] += unexplainedMass;
+        }
+
+        private string CombineFormulas(string formula1, string formula2)
+        {
+            if (formula1 == null)
+                return formula2;
+            if (formula2 == null)
+                return formula1;
+
+            var parts1 = ParseModParts(_massCalc, formula1);
+            var parts2 = ParseModParts(_massCalc, formula1);
+
+            var sb = new StringBuilder();
+            sb.Append(parts1[0]).Append(parts2[0]);
+            if (parts1[1].Length > 0 || parts2[1].Length > 0)
+                sb.Append('-').Append(parts1[1]).Append(parts2[1]);
+            return sb.ToString();
         }
 
         public bool IsModified(string seq)
@@ -335,12 +458,7 @@ namespace pwiz.Skyline.Model
             int len = seq.Length;
             if (_modMasses._aminoNTermModMasses[seq[0]] + _modMasses._aminoCTermModMasses[seq[len - 1]] != 0)
                 return true;
-            foreach (char c in seq)
-            {
-                if (_modMasses._aminoModMasses[c] != 0)
-                    return true;
-            }
-            return false;
+            return seq.Any(c => _modMasses._aminoModMasses[c] != 0);
         }
 
         public string GetModifiedSequence(string seq, bool formatNarrow)
@@ -363,8 +481,8 @@ namespace pwiz.Skyline.Model
 
                 double mod = modMasses._aminoModMasses[c];
                 // Explicit modifications
-                if (mods != null && i < mods.Mods.Count)
-                    mod += mods.Mods[i];
+                if (mods != null && i < mods.ModMasses.Count)
+                    mod += mods.ModMasses[i];
                 // Terminal modifications
                 if (i == 0)
                     mod += modMasses._massModCleaveN + modMasses._aminoNTermModMasses[c];
@@ -376,6 +494,117 @@ namespace pwiz.Skyline.Model
                     sb.Append(GetModDiffDescription(mod, formatNarrow));
             }
             return sb.ToString();
+        }
+
+        public MassDistribution GetMassDistribution(string seq, IsotopeAbundances abundances)
+        {
+            return GetMassDistribution(seq, abundances, null);
+        }
+
+        public MassDistribution GetMassDistribution(string seq, IsotopeAbundances abundances, ExplicitSequenceMods mods)
+        {
+            double unexplainedMass;
+            Molecule molecule = GetFormula(seq, mods, out unexplainedMass);
+            // Low resolution to get back only peaks at Dalton (i.e. neutron) boundaries
+            var md = new MassDistribution(_massResolution, _minimumAbundance);
+            var result = md;
+            foreach (var element in molecule)
+            {
+                result = result.Add(md.Add(abundances[element.Key]).Multiply(element.Value));
+            }
+            return result.OffsetAndDivide(unexplainedMass + BioMassCalc.MassProton, 1);
+        }
+
+// ReSharper disable ReturnTypeCanBeEnumerable.Local
+        private Molecule GetFormula(string seq, ExplicitSequenceMods mods, out double unexplainedMass)
+// ReSharper restore ReturnTypeCanBeEnumerable.Local
+        {
+            var formula = new FormulaBuilder(_massCalc);
+            var modMasses = GetModMasses(mods);
+            for (int i = 0, len = seq.Length; i < len; i++)
+            {
+                char c = seq[i];
+
+                formula.Append(AMINO_FORMULAS[c])
+                       .Append(modMasses._aminoModFormulas[c], modMasses._aminoModMassesExtra[c]);
+                // Terminal modifications
+                if (i == 0)
+                    formula.Append(modMasses._aminoNTermModFormulas[c], modMasses._aminoNTermModMassesExtra[c]);
+                else if (i == len - 1)
+                {
+                    formula.Append(modMasses._aminoCTermModFormulas[c],
+                                   modMasses._massModCleaveCExtra + modMasses._aminoCTermModMassesExtra[c]);
+                }
+            }
+            if (mods != null)
+            {
+                foreach (ExplicitMod mod in mods.Mods)
+                {
+                    double modUnexplainedMass;
+                    string modFormula = GetModFormula(seq[mod.IndexAA], mod.Modification, out modUnexplainedMass);
+                    formula.Append(modFormula, modUnexplainedMass);
+                }
+            }
+            formula.Append("H2O"); // N-term = H, C-term = OH
+            unexplainedMass = formula.UnexplainedMass;
+            // CONSIDER: More efficient translation between builder and Molecure.
+            //           Both contain a dictionary for atom counts.
+            return Molecule.Parse(formula.ToString());
+        }
+
+        private sealed class FormulaBuilder
+        {
+            private readonly BioMassCalc _massCalc;
+            private readonly Dictionary<string, int> _dictAtomCounts;
+            private double _unexplainedMass;
+
+            public FormulaBuilder(BioMassCalc massCalc)
+            {
+                _massCalc = massCalc;
+                _dictAtomCounts = new Dictionary<string, int>();
+            }
+
+            public FormulaBuilder Append(string formula)
+            {
+                return Append(formula, 0);
+            }
+
+            public FormulaBuilder Append(string formula, double unexplainedMass)
+            {
+                _unexplainedMass += unexplainedMass;
+                if (formula != null)
+                    ParseModCounts(_massCalc, formula, _dictAtomCounts);
+                return this;
+            }
+
+            /// <summary>
+            /// Returns any accumulated unexplained mass, plus the mass of any atoms with
+            /// negative counts.
+            /// </summary>
+            public double UnexplainedMass
+            {
+                get
+                {
+                    double unexplainedMass = _unexplainedMass;
+                    foreach (var atomCount in _dictAtomCounts.Where(p => p.Value < 0))
+                    {
+                        unexplainedMass += _massCalc.CalculateMass(atomCount.Key + (-atomCount.Value));
+                    }
+                    return unexplainedMass;
+                }
+            }
+
+            public override string ToString()
+            {
+                var formulaText = new StringBuilder();
+                foreach (var atomCount in _dictAtomCounts.OrderBy(p => p.Key).Where(p => p.Value > 0))
+                {
+                    formulaText.Append(atomCount.Key);
+                    if (atomCount.Value > 1)
+                        formulaText.Append(atomCount.Value);
+                }
+                return formulaText.ToString();
+            }
         }
 
         private ModMasses GetModMasses(ExplicitSequenceMods mods)
@@ -395,10 +624,15 @@ namespace pwiz.Skyline.Model
 
         public double GetPrecursorMass(string seq)
         {
-            return GetPrecursorMass(seq, null);
+            return GetPrecursorMass(seq, 0, null);
         }
 
-        public double GetPrecursorMass(string seq, ExplicitSequenceMods mods)
+        public double GetPrecursorMass(string seq, int massIndex)
+        {
+            return GetPrecursorMass(seq, massIndex, null);
+        }
+
+        public double GetPrecursorMass(string seq, int massIndex, ExplicitSequenceMods mods)
         {
             var modMasses = GetModMasses(mods);
             double mass = _massCleaveN + modMasses._massModCleaveN +
@@ -416,9 +650,13 @@ namespace pwiz.Skyline.Model
             {
                 char c = seq[i];
                 mass += _aminoMasses[c] + modMasses._aminoModMasses[c];
-                if (mods != null && i < mods.Mods.Count)
-                    mass += mods.Mods[i];
+                if (mods != null && i < mods.ModMasses.Count)
+                    mass += mods.ModMasses[i];
             }
+
+            // Add isotope mass shift
+            mass += _massDiff13C*massIndex;
+ 
             return mass;                
         }
 
@@ -455,8 +693,8 @@ namespace pwiz.Skyline.Model
             {
                 char aa = seq[iN];
                 nTermMassB += _aminoMasses[aa] + modMasses._aminoModMasses[aa];
-                if (mods != null && iN < mods.Mods.Count)
-                    nTermMassB += mods.Mods[iN];
+                if (mods != null && iN < mods.ModMasses.Count)
+                    nTermMassB += mods.ModMasses[iN];
                 masses[a, iN] = nTermMassB + deltaA;
                 masses[b, iN] = nTermMassB;
                 masses[c, iN] = nTermMassB + deltaC;
@@ -464,8 +702,8 @@ namespace pwiz.Skyline.Model
 
                 aa = seq[iC];
                 cTermMassY += _aminoMasses[aa] + modMasses._aminoModMasses[aa];
-                if (mods != null && iC < mods.Mods.Count)
-                    cTermMassY += mods.Mods[iC];
+                if (mods != null && iC < mods.ModMasses.Count)
+                    cTermMassY += mods.ModMasses[iC];
                 iC--;
                 masses[x, iC] = cTermMassY + deltaX;
                 masses[y, iC] = cTermMassY;
@@ -499,7 +737,7 @@ namespace pwiz.Skyline.Model
         public double GetFragmentMass(Transition transition, ExplicitSequenceMods mods)
         {
             return GetFragmentMass(transition.Group.Peptide.Sequence,
-                transition.IonType, transition.Ordinal, mods);
+                transition.IonType, transition.Ordinal, transition.MassIndex, mods);
         }
 
         public double GetPrecursorFragmentMass(string seq)
@@ -509,18 +747,13 @@ namespace pwiz.Skyline.Model
 
         public double GetPrecursorFragmentMass(string seq, ExplicitSequenceMods mods)
         {
-            return GetFragmentMass(seq, IonType.precursor, seq.Length, mods);
+            return GetFragmentMass(seq, IonType.precursor, seq.Length, 0, mods);
         }
 
-        public double GetFragmentMass(string seq, IonType type, int ordinal)
-        {
-            return GetFragmentMass(seq, type, ordinal, null);
-        }
-
-        public double GetFragmentMass(string seq, IonType type, int ordinal, ExplicitSequenceMods mods)
+        public double GetFragmentMass(string seq, IonType type, int ordinal, int massIndex, ExplicitSequenceMods mods)
         {
             if (Transition.IsPrecursor(type))
-                return GetPrecursorMass(seq, mods);
+                return GetPrecursorMass(seq, massIndex, mods);
 
             int len = seq.Length - 1;
 
@@ -536,8 +769,8 @@ namespace pwiz.Skyline.Model
             {
                 char aa = seq[iA];
                 mass += _aminoMasses[aa] + modMasses._aminoModMasses[aa];
-                if (mods != null && iA < mods.Mods.Count)
-                    mass += mods.Mods[iA];
+                if (mods != null && iA < mods.ModMasses.Count)
+                    mass += mods.ModMasses[iA];
                 iA += inc;
             }
 
@@ -659,11 +892,11 @@ namespace pwiz.Skyline.Model
         private readonly ExplicitSequenceMods _mods;
 
         public ExplicitSequenceMassCalc(SequenceMassCalc massCalcBase,
-            IList<double> mods, bool requiresAllCalcMods)
+            IList<ExplicitMod> mods, IList<double> modMasses, bool requiresAllCalcMods)
         {
             _massCalcBase = massCalcBase;
             _mods = new ExplicitSequenceMods
-                { Mods = mods, RequiresAllCalcMods = requiresAllCalcMods};
+                { Mods = mods, ModMasses = modMasses, RequiresAllCalcMods = requiresAllCalcMods};
         }
 
         public MassType MassType
@@ -673,18 +906,28 @@ namespace pwiz.Skyline.Model
 
         public double GetPrecursorMass(string seq)
         {
-            return _massCalcBase.GetPrecursorMass(seq, _mods);
+            return _massCalcBase.GetPrecursorMass(seq, 0, _mods);
+        }
+
+        public double GetPrecursorMass(string seq, int massIndex)
+        {
+            return _massCalcBase.GetPrecursorMass(seq, massIndex, _mods);
         }
 
         public bool IsModified(string seq)
         {
             return _massCalcBase.IsModified(seq) ||
-                _mods.Mods.IndexOf(m => m != 0) != -1; // If any non-zero modification values
+                _mods.ModMasses.IndexOf(m => m != 0) != -1; // If any non-zero modification values
         }
 
         public string GetModifiedSequence(string seq, bool formatNarrow)
         {
             return _massCalcBase.GetModifiedSequence(seq, _mods, formatNarrow);
+        }
+
+        public MassDistribution GetMassDistribution(string seq, IsotopeAbundances abundances)
+        {
+            return _massCalcBase.GetMassDistribution(seq, abundances, _mods);
         }
 
         public double[,] GetFragmentIonMasses(string seq)
@@ -697,11 +940,6 @@ namespace pwiz.Skyline.Model
             return _massCalcBase.GetFragmentMass(transition, _mods);
         }
 
-        public double GetFragmentMass(string seq, IonType type, int ordinal)
-        {
-            return _massCalcBase.GetFragmentMass(seq, type, ordinal, _mods);
-        }
-
         public double GetPrecursorFragmentMass(string seq)
         {
             return _massCalcBase.GetPrecursorFragmentMass(seq, _mods);
@@ -710,7 +948,8 @@ namespace pwiz.Skyline.Model
 
     public class ExplicitSequenceMods
     {
-        public IList<double> Mods { get; set; }
+        public IList<ExplicitMod> Mods { get; set; }
+        public IList<double> ModMasses { get; set; }
         public bool RequiresAllCalcMods { get; set; }
     }
 }

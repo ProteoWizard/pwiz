@@ -450,6 +450,9 @@ namespace pwiz.Skyline.Model.Results
             long locationHeaders = outStream.Position;
             foreach (var info in chromatogramEntries)
             {
+                long lastPeak = info.StartPeakIndex + info.NumPeaks*info.NumTransitions;
+                if (lastPeak > chromatogramPeaks.Count)
+                    throw new InvalidDataException(string.Format("Failure writing cache.  Specified {0} peaks exceed total peak count {1}", lastPeak, chromatogramPeaks.Count));
                 outStream.Write(BitConverter.GetBytes(info.Precursor), 0, sizeof(float));
                 outStream.Write(BitConverter.GetBytes(info.FileIndex), 0, sizeof(int));
                 outStream.Write(BitConverter.GetBytes(info.NumTransitions), 0, sizeof(int));

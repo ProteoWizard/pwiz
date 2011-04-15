@@ -113,17 +113,19 @@ namespace pwiz.Skyline.Model
         /// Creates a precursor transition
         /// </summary>
         /// <param name="group">The <see cref="TransitionGroup"/> which the transition represents</param>
-        public Transition(TransitionGroup group)
-            : this(group, IonType.precursor, group.Peptide.Length - 1, group.PrecursorCharge)
+        /// <param name="massIndex">Isotope mass shift</param>
+        public Transition(TransitionGroup group, int massIndex)
+            : this(group, IonType.precursor, group.Peptide.Length - 1, massIndex, group.PrecursorCharge)
         {            
         }
 
-        public Transition(TransitionGroup group, IonType type, int offset, int charge)
+        public Transition(TransitionGroup group, IonType type, int offset, int massIndex, int charge)
         {
             _group = group;
 
             IonType = type;
             CleavageOffset = offset;
+            MassIndex = massIndex;
             Charge = charge;
 
             // Derived values
@@ -143,6 +145,7 @@ namespace pwiz.Skyline.Model
         public int Charge { get; private set; }
         public IonType IonType { get; private set; }
         public int CleavageOffset { get; private set; }
+        public int MassIndex { get; private set; }
 
         // Derived values
         public int Ordinal { get; private set; }
@@ -240,6 +243,7 @@ namespace pwiz.Skyline.Model
             return Equals(obj._group, _group) &&
                 Equals(obj.IonType, IonType) &&
                 obj.CleavageOffset == CleavageOffset &&
+                obj.MassIndex == MassIndex &&
                 obj.Charge == Charge;
         }
 
@@ -258,6 +262,7 @@ namespace pwiz.Skyline.Model
                 int result = _group.GetHashCode();
                 result = (result*397) ^ IonType.GetHashCode();
                 result = (result*397) ^ CleavageOffset;
+                result = (result*397) ^ MassIndex;
                 result = (result*397) ^ Charge;
                 return result;
             }
@@ -266,10 +271,22 @@ namespace pwiz.Skyline.Model
         public override string ToString()
         {
             if (IsPrecursor())
-                return "precursor" + GetChargeIndicator(Charge);
+            {
+                string text = "precursor" + GetChargeIndicator(Charge);
+                if (MassIndex > 0)
+                {
+                    // CONSIDER: Should this be based on the true neutral mass shift from the
+                    //           monoisotopic mass?
+                    text += string.Format(" [M+{0}]", MassIndex);
+                }
+                return  text;
+            }
 
-            return string.Format("{0} - {1}{2}{3}", AA,
-                IonType.ToString().ToLower(), Ordinal, GetChargeIndicator(Charge));
+            return string.Format("{0} - {1}{2}{3}",
+                                 AA,
+                                 IonType.ToString().ToLower(),
+                                 Ordinal,
+                                 GetChargeIndicator(Charge));
         }
 
         #endregion // object overrides

@@ -843,7 +843,7 @@ namespace pwiz.Skyline.Model.DocSettings
     }
 
     [XmlRoot("peptide_modifications")]
-    public class PeptideModifications : Immutable, IXmlSerializable
+    public class PeptideModifications : Immutable, IValidating, IXmlSerializable
     {
         public const int DEFAULT_MAX_VARIABLE_MODS = 3;
         public const int MIN_MAX_VARIABLE_MODS = 1;
@@ -890,6 +890,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
             Debug.Assert(internalStandardTypes.Count > 0);
             InternalStandardTypes = internalStandardTypes;
+
+            DoValidate();
         }
 
         public int MaxVariableMods { get; private set; }
@@ -1148,6 +1150,25 @@ namespace pwiz.Skyline.Model.DocSettings
             isotope_label,
             internal_standard,
             name
+        }
+
+        void IValidating.Validate()
+        {
+            DoValidate();
+        }
+
+        private void DoValidate()
+        {
+            if (MIN_MAX_VARIABLE_MODS > MaxVariableMods || MaxVariableMods > MAX_MAX_VARIABLE_MODS)
+            {
+                throw new InvalidDataException(string.Format("Maximum variable modifications {0} must be between {1} and {2}",
+                    MaxVariableMods, MIN_MAX_VARIABLE_MODS, MAX_MAX_VARIABLE_MODS));
+            }
+            if (MIN_MAX_NEUTRAL_LOSSES > MaxNeutralLosses || MaxNeutralLosses > MAX_MAX_NEUTRAL_LOSSES)
+            {
+                throw new InvalidDataException(string.Format("Maximum neutral losses {0} must be between {1} and {2}",
+                    MaxNeutralLosses, MIN_MAX_NEUTRAL_LOSSES, MAX_MAX_NEUTRAL_LOSSES));
+            }
         }
 
         public static PeptideModifications Deserialize(XmlReader reader)

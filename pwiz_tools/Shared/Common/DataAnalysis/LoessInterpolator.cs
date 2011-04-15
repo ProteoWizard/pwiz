@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace pwiz.Common.DataAnalysis
 {
@@ -44,7 +43,7 @@ namespace pwiz.Common.DataAnalysis
          * <p/>
          * A sensible value is usually 0.25 to 0.5.
          */
-        private readonly double bandwidth;
+        private readonly double _bandwidth;
 
         /**
          * The number of robustness iterations parameter: this many
@@ -53,13 +52,13 @@ namespace pwiz.Common.DataAnalysis
          * A sensible value is usually 0 (just the initial fit without any
          * robustness iterations) to 4.
          */
-        private readonly int robustnessIters;
+        private readonly int _robustnessIters;
 
         /**
          * If the median residual at a certain robustness iteration
          * is less than this amount, no more iterations are done.
          */
-        private readonly double accuracy;
+        private readonly double _accuracy;
 
         /**
          * Constructs a new {@link LoessInterpolator}
@@ -71,9 +70,9 @@ namespace pwiz.Common.DataAnalysis
          */
         public LoessInterpolator()
         {
-            bandwidth = DEFAULT_BANDWIDTH;
-            robustnessIters = DEFAULT_ROBUSTNESS_ITERS;
-            accuracy = DEFAULT_ACCURACY;
+            _bandwidth = DEFAULT_BANDWIDTH;
+            _robustnessIters = DEFAULT_ROBUSTNESS_ITERS;
+            _accuracy = DEFAULT_ACCURACY;
         }
 
         /**
@@ -131,13 +130,13 @@ namespace pwiz.Common.DataAnalysis
             {
                 throw new ArgumentException("Bandwidth must be between 0 and 1");
             }
-            this.bandwidth = bandwidth;
+            _bandwidth = bandwidth;
             if (robustnessIters < 0)
             {
                 throw new ArgumentException("RobustnessIters must be non-negative");
             }
-            this.robustnessIters = robustnessIters;
-            this.accuracy = accuracy;
+            _robustnessIters = robustnessIters;
+            _accuracy = accuracy;
         }
 
         /**
@@ -177,15 +176,15 @@ namespace pwiz.Common.DataAnalysis
 
             if (n == 1)
             {
-                return new double[] { yval[0] };
+                return new[] { yval[0] };
             }
 
             if (n == 2)
             {
-                return new double[] { yval[0], yval[1] };
+                return new[] { yval[0], yval[1] };
             }
 
-            int bandwidthInPoints = (int)(bandwidth * n);
+            int bandwidthInPoints = (int)(_bandwidth * n);
 
             if (bandwidthInPoints < 2)
             {
@@ -202,7 +201,7 @@ namespace pwiz.Common.DataAnalysis
             // starting with all robustness weights set to 1.
             double[] robustnessWeights = Enumerable.Repeat(1.0, n).ToArray();
 
-            for (int iter = 0; iter <= robustnessIters; ++iter)
+            for (int iter = 0; iter <= _robustnessIters; ++iter)
             {
                 int[] bandwidthInterval = { 0, bandwidthInPoints - 1 };
                 // At each x, compute a local weighted linear regression
@@ -265,7 +264,7 @@ namespace pwiz.Common.DataAnalysis
                     double meanXSquared = sumXSquared / sumWeights;
 
                     double beta;
-                    if (Math.Sqrt(Math.Abs(meanXSquared - meanX * meanX)) < accuracy)
+                    if (Math.Sqrt(Math.Abs(meanXSquared - meanX * meanX)) < _accuracy)
                     {
                         beta = 0;
                     }
@@ -282,7 +281,7 @@ namespace pwiz.Common.DataAnalysis
 
                 // No need to recompute the robustness weights at the last
                 // iteration, they won't be needed anymore
-                if (iter == robustnessIters)
+                if (iter == _robustnessIters)
                 {
                     break;
                 }
@@ -296,7 +295,7 @@ namespace pwiz.Common.DataAnalysis
                 Array.Sort(sortedResiduals);
                 double medianResidual = sortedResiduals[n / 2];
 
-                if (Math.Abs(medianResidual) < accuracy)
+                if (Math.Abs(medianResidual) < _accuracy)
                 {
                     break;
                 }
@@ -413,15 +412,11 @@ namespace pwiz.Common.DataAnalysis
          * @param pattern pattern of the error message
          * @throws MathException if one of the values is not a finite real number
          */
-        private static void CheckAllFiniteReal(double[] values)
+        private static void CheckAllFiniteReal(IEnumerable<double> values)
         {
-            for (int i = 0; i < values.Length; i++)
+            if (values.Any(x => double.IsInfinity(x) || Double.IsNaN(x)))
             {
-                double x = values[i];
-                if (double.IsInfinity(x) || Double.IsNaN(x))
-                {
-                    throw new ArgumentException("Not a real number");
-                }
+                throw new ArgumentException("Not a real number");
             }
         }
 

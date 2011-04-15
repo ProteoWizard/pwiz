@@ -330,6 +330,8 @@ namespace pwiz.Skyline
             this.peptideCvsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator28 = new System.Windows.Forms.ToolStripSeparator();
             this.areaPropsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator44 = new System.Windows.Forms.ToolStripSeparator();
+            this.closeAllChromatogramsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuMain.SuspendLayout();
             this.statusStrip.SuspendLayout();
             this.contextMenuTreeNode.SuspendLayout();
@@ -1167,7 +1169,9 @@ namespace pwiz.Skyline
             this.showChromMenuItem,
             this.toolStripSeparatorReplicates,
             this.previousReplicateMenuItem,
-            this.nextReplicateMenuItem});
+            this.nextReplicateMenuItem,
+            this.toolStripSeparator44,
+            this.closeAllChromatogramsMenuItem});
             this.chromatogramsMenuItem.Enabled = false;
             this.chromatogramsMenuItem.Name = "chromatogramsMenuItem";
             this.chromatogramsMenuItem.Size = new System.Drawing.Size(191, 22);
@@ -2857,6 +2861,18 @@ namespace pwiz.Skyline
             this.areaPropsContextMenuItem.Text = "Properties...";
             this.areaPropsContextMenuItem.Click += new System.EventHandler(this.areaPropsContextMenuItem_Click);
             // 
+            // toolStripSeparator44
+            // 
+            this.toolStripSeparator44.Name = "toolStripSeparator44";
+            this.toolStripSeparator44.Size = new System.Drawing.Size(216, 6);
+            // 
+            // closeAllChromatogramsMenuItem
+            // 
+            this.closeAllChromatogramsMenuItem.Name = "closeAllChromatogramsMenuItem";
+            this.closeAllChromatogramsMenuItem.Size = new System.Drawing.Size(219, 22);
+            this.closeAllChromatogramsMenuItem.Text = "Close &All";
+            this.closeAllChromatogramsMenuItem.Click += new System.EventHandler(this.closeAllChromatogramsMenuItem_Click);
+            // 
             // SkylineWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -3194,6 +3210,8 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem replicateOrderContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem replicateOrderDocumentContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem replicateOrderAcqTimeContextMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator44;
+        private System.Windows.Forms.ToolStripMenuItem closeAllChromatogramsMenuItem;
     }
 }
 

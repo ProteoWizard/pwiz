@@ -135,7 +135,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (step != 0)
                         label = string.Format("Step {0}", step);
                     var curveItem = new HiLowMiddleErrorBarItem(label, pointPairList, color, Color.Black);
-                    if (selectedReplicateIndex < pointPairList.Count)
+                    if (selectedReplicateIndex != -1 && selectedReplicateIndex < pointPairList.Count)
                     {
                         PointPair pointPair = pointPairList[selectedReplicateIndex];
                         if (!pointPair.IsInvalid)

@@ -239,6 +239,16 @@ namespace pwiz.Skyline.Util
             writer.WriteElement(helper.ElementNames[0], child);
         }
 
+        public static void WriteElementString(this XmlWriter writer, Enum name, double child)
+        {
+            writer.WriteElementString(name, child.ToString(CultureInfo.InvariantCulture));
+        }
+
+        public static void WriteElementString(this XmlWriter writer, Enum name, float child)
+        {
+            writer.WriteElementString(name, child.ToString(CultureInfo.InvariantCulture));
+        }
+
         public static void WriteElementString<TChild>(this XmlWriter writer, Enum name, TChild child)
         {
             writer.WriteStartElement(name);
@@ -458,9 +468,9 @@ namespace pwiz.Skyline.Util
             reader.ReadStartElement(name.ToString());
         }
 
-        public static void ReadElementContentAsDoubleInvariant(this XmlReader reader)
+        public static double ReadElementContentAsDoubleInvariant(this XmlReader reader)
         {
-            Convert.ToDouble(reader.ReadElementContentAsString(), CultureInfo.InvariantCulture);
+            return Convert.ToDouble(reader.ReadElementContentAsString(), CultureInfo.InvariantCulture);
         }
 
         public static void ReadElementList<TItem>(this XmlReader reader, Enum name, List<TItem> list)

@@ -16,31 +16,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using pwiz.Common.Collections;
 
 namespace pwiz.Common.Chemistry
 {
-    public class IsotopeAbundances : ImmutableDictionary<String, MassDistribution>
+    public class IsotopeAbundances : ImmutableDictionary<string, MassDistribution>
     {
+// ReSharper disable InconsistentNaming
         public static readonly IsotopeAbundances Default;
-        private IsotopeAbundances(IDictionary<String, MassDistribution> dictionary)
+// ReSharper restore InconsistentNaming
+
+        private IsotopeAbundances(IDictionary<string, MassDistribution> dictionary)
             : base(dictionary)
         {
         }
-        public IsotopeAbundances SetAbundances(IDictionary<String, MassDistribution> abundances)
+
+        public IsotopeAbundances SetAbundances(IDictionary<string, MassDistribution> abundances)
         {
-            var dict = new Dictionary<String, MassDistribution>(this);
+            var dict = new Dictionary<string, MassDistribution>(this);
             foreach (var entry in abundances)
             {
                 dict[entry.Key] = entry.Value;
             }
             return new IsotopeAbundances(dict);
         }
-        public IsotopeAbundances SetAbundances(String element, MassDistribution massDistribution)
+
+        public IsotopeAbundances SetAbundances(string element, MassDistribution massDistribution)
         {
             return SetAbundances(new Dictionary<string, MassDistribution> {{element, massDistribution}});
         }
@@ -153,7 +155,7 @@ namespace pwiz.Common.Chemistry
                 {"No",new []{259.0,1.0,}},
                 {"Lr",new []{260.0,1.0,}},
             };
-            var dict = new Dictionary<String, MassDistribution>();
+            var dict = new Dictionary<string, MassDistribution>();
             foreach (var entry in defaults)
             {
                 var isotopes = new Dictionary<double, double>();

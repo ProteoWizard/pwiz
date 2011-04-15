@@ -75,15 +75,17 @@ namespace pwiz.Skyline.SettingsUI
             var setLabelTypeNames = new HashSet<string>();
             foreach (var labelType in LabelTypes)
             {
-                if (Equals(labelType.Name, IsotopeLabelType.light.Name))
+                string labelTypeNameLower = labelType.Name.ToLower();
+                if (Equals(labelTypeNameLower, IsotopeLabelType.light.Name))
                 {
-                    MessageDlg.Show(this, string.Format("The name '{0}' is not allowed for an isotope label type.", IsotopeLabelType.light));
+                    MessageDlg.Show(this, string.Format("The name '{0}' is not allowed for a custom isotope label type.", labelType.Name));
+                    textLabelTypes.Focus();
                     return;
                 }
-                string labelTypeNameLower = labelType.Name.ToLower();
                 if (setLabelTypeNames.Contains(labelTypeNameLower))
                 {
                     MessageDlg.Show(this, string.Format("The label name '{0}' may not be used more than once.", labelType.Name));
+                    textLabelTypes.Focus();
                     return;
                 }
                 setLabelTypeNames.Add(labelTypeNameLower);

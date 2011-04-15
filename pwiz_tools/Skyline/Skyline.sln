@@ -26,6 +26,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestUtil", "TestUtil\TestUt
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestA", "TestA\TestA.csproj", "{F1A6D016-7608-4A7B-8D68-FB32B8344D4B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "..\Shared\Common\Common.csproj", "{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}"
+EndProject
 Global
 	GlobalSection(TestCaseManagementSettings) = postSolution
 		CategoryFile = Skyline.vsmdi
@@ -154,6 +156,18 @@ Global
 		{F1A6D016-7608-4A7B-8D68-FB32B8344D4B}.Release|Mixed Platforms.Build.0 = Release|x86
 		{F1A6D016-7608-4A7B-8D68-FB32B8344D4B}.Release|x86.ActiveCfg = Release|x86
 		{F1A6D016-7608-4A7B-8D68-FB32B8344D4B}.Release|x86.Build.0 = Release|x86
+		{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}.Debug|x86.ActiveCfg = Debug|x86
+		{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}.Debug|x86.Build.0 = Debug|x86
+		{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}.Release|Mixed Platforms.Build.0 = Release|x86
+		{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}.Release|x86.ActiveCfg = Release|x86
+		{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

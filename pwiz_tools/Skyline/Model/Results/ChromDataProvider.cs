@@ -500,16 +500,16 @@ namespace pwiz.Skyline.Model.Results
                     else if (!EnabledMsMs)
                     {
                         filter.AddQ1FilterValues(from TransitionDocNode nodeTran in nodeGroup.Children
-                                                 where nodeTran.Mz == filter.Q1
+                                                 where IsMS1Precursor(nodeTran)
                                                  select nodeTran.Mz, calcWindowsQ1);
                     }
                     else
                     {
                         filter.AddQ1FilterValues(from TransitionDocNode nodeTran in nodeGroup.Children
-                                                 where nodeTran.Mz == filter.Q1
+                                                 where IsMS1Precursor(nodeTran)
                                                  select nodeTran.Mz, calcWindowsQ1);
                         filter.AddQ3FilterValues(from TransitionDocNode nodeTran in nodeGroup.Children
-                                                 where nodeTran.Mz != filter.Q1
+                                                 where !IsMS1Precursor(nodeTran)
                                                  select nodeTran.Mz, calcWindowsQ3);
                     }
 
@@ -519,7 +519,12 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
-        public bool EnabledMs { get { return _fullScan.PrecursorMassAnalyzer != FullScanMassAnalyzerType.none; } }
+        public bool IsMS1Precursor(TransitionDocNode nodeTran)
+        {
+            return Transition.IsPrecursor(nodeTran.Transition.IonType) && !nodeTran.HasLoss;
+        }
+
+        public bool EnabledMs { get { return _fullScan.PrecursorIsotopes != FullScanPrecursorIsotopes.None; } }
         public bool IsHighAccMsFilter { get { return _isHighAccMsFilter; } }
         public bool EnabledMsMs { get { return _precursorFilterType != FullScanPrecursorFilterType.None; } }
         public bool IsHighAccProductFilter { get { return _isHighAccProductFilter; } }

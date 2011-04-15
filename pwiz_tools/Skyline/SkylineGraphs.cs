@@ -1716,6 +1716,14 @@ namespace pwiz.Skyline
                 graphChrom.UpdateUI();
         }
 
+        private void closeAllChromatogramsMenuItem_Click(object sender, EventArgs e)
+        {
+            foreach (var graphChromatogram in _listGraphChrom)
+            {
+                graphChromatogram.Hide();
+            }
+        }
+
         #endregion
 
         #region Retention time graph

@@ -1,26 +1,45 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2009 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using System.Text;
 using pwiz.Common.Collections;
 
 namespace pwiz.Common.Chemistry
 {
-    public abstract class AbstractFormula<T,N> : ImmutableDictionary<String, N>, IComparable<T>
-        where T : AbstractFormula<T, N>, new()
-        where N : IComparable<N>
+    public abstract class AbstractFormula<T,TKey> : ImmutableDictionary<String, TKey>, IComparable<T>
+        where T : AbstractFormula<T, TKey>, new()
+        where TKey : IComparable<TKey>
     {
-        public static readonly T Empty = new T { Dictionary = new SortedDictionary<string, N>() };
+// ReSharper disable InconsistentNaming
+        public static readonly T Empty = new T { Dictionary = new SortedDictionary<string, TKey>() };
+// ReSharper restore InconsistentNaming
         public override abstract string ToString();
         public virtual String ToDisplayString()
         {
             return ToString();
         }
-        public T SetElementCount(String element, N count)
+
+        public T SetElementCount(String element, TKey count)
         {
-            var dict = new SortedDictionary<String, N>(this);
-            if (count.Equals(default(N)))
+            var dict = new SortedDictionary<String, TKey>(this);
+            if (count.Equals(default(TKey)))
             {
                 dict.Remove(element);
             }
@@ -30,12 +49,14 @@ namespace pwiz.Common.Chemistry
             }
             return new T { Dictionary = dict };
         }
-        public N GetElementCount(String element)
+
+        public TKey GetElementCount(String element)
         {
-            N atomCount;
+            TKey atomCount;
             TryGetValue(element, out atomCount);
             return atomCount;
         }
+
         public override int GetHashCode()
         {
             int result = 0;
@@ -45,6 +66,7 @@ namespace pwiz.Common.Chemistry
             }
             return result;
         }
+
         public override bool Equals(Object o)
         {
             if (o == this)
@@ -62,7 +84,7 @@ namespace pwiz.Common.Chemistry
             }
             foreach (var entry in this)
             {
-                N thatValue;
+                TKey thatValue;
                 if (!that.TryGetValue(entry.Key, out thatValue))
                 {
                     return false;
@@ -74,6 +96,7 @@ namespace pwiz.Common.Chemistry
             }
             return true;
         }
+
         public int CompareTo(T that)
         {
             var thisEnumerator = GetEnumerator();
@@ -98,17 +121,17 @@ namespace pwiz.Common.Chemistry
             return thatEnumerator.MoveNext() ? -1 : 0;
         }
     }
+
     public class Formula<T> : AbstractFormula<T, int>
         where T : Formula<T>, new()
     {
         public static T Parse(String formula)
         {
-            var result = new SortedDictionary<String, int>();
-            String currentElement = null;
+            var result = new SortedDictionary<string, int>();
+            string currentElement = null;
             int currentQuantity = 0;
-            for (int ich = 0; ich < formula.Length; ich++)
+            foreach (char ch in formula)
             {
-                char ch = formula[ich];
                 if (Char.IsDigit(ch))
                 {
                     currentQuantity = currentQuantity * 10 + (ch - '0');
@@ -133,7 +156,8 @@ namespace pwiz.Common.Chemistry
                     currentQuantity = 0;
                     currentElement = "" + ch;
                 }
-                else if (Char.IsLower(ch))
+                // Allow apostrophe for heavy isotopes (e.g. C' for 13C)
+                else if (!Char.IsWhiteSpace(ch))
                 {
                     currentElement = currentElement + ch;
                 }
@@ -155,7 +179,8 @@ namespace pwiz.Common.Chemistry
             }
             return new T {Dictionary = result};
         }
-        public override String ToString()
+
+        public override string ToString()
         {
             var result = new StringBuilder();
             foreach (var entry in this)
