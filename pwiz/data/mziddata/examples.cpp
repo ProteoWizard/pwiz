@@ -196,6 +196,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
     DBSequencePtr dbSequence(new DBSequence);
     dbSequence->accession = HSP71_RAT.accession;
     dbSequence->seq = HSP71_RAT.sequence;
+    dbSequence->set(MS_protein_description, HSP71_RAT.description);
     dbSequence->id = "DBSeq_"  + dbSequence->accession;
     dbSequence->length = dbSequence->seq.length();
     dbSequence->searchDatabasePtr = sdb;
@@ -204,6 +205,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
     dbSequence.reset(new DBSequence);
     dbSequence->accession = HSP71_HUMAN.accession;
     dbSequence->seq = HSP71_HUMAN.sequence;
+    dbSequence->set(MS_protein_description, HSP71_HUMAN.description);
     dbSequence->id = "DBSeq_"  + dbSequence->accession;
     dbSequence->length = dbSequence->seq.length();
     dbSequence->searchDatabasePtr = sdb;
@@ -400,6 +402,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
         sir->name = "tiny.42.42";
         sir->spectrumID = "controllerType=0 controllerNumber=1 scan=42";
         sir->spectraDataPtr = sd;
+        sir->set(MS_retention_time, "100.1", UO_second);
 
         // result 1 rank 1
         {
@@ -540,6 +543,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
         sir->name = "tiny.420.420";
         sir->spectrumID = "controllerType=0 controllerNumber=1 scan=420";
         sir->spectraDataPtr = sd;
+        sir->set(MS_retention_time, "200.2", UO_second);
 
         // result 2 rank 1
         {
@@ -648,6 +652,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
         sir->name = "tiny.421.421";
         sir->spectrumID = "controllerType=0 controllerNumber=1 scan=421";
         sir->spectraDataPtr = sd;
+        sir->set(MS_retention_time, "300.3", UO_second);
 
         // result 3 rank 1
         {
@@ -704,6 +709,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
         sir->name = "tiny.422.422";
         sir->spectrumID = "controllerType=0 controllerNumber=1 scan=422";
         sir->spectraDataPtr = sd;
+        sir->set(MS_retention_time, "400.4", UO_second);
 
         // result 4 rank 1
         {
