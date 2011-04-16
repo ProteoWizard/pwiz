@@ -17,30 +17,29 @@ IF EXIST libraries\gd-2.0.33 rmdir /s /q libraries\gd-2.0.33
 IF EXIST libraries\zlib-1.2.3 rmdir /s /q libraries\zlib-1.2.3
 IF EXIST libraries\fftw-3.1.2 rmdir /s /q libraries\fftw-3.1.2
 
-IF EXIST libraries\libfftw3-3.def del /q libraries\libfftw3-3.def
-IF EXIST libraries\libfftw3-3.dll del /q libraries\libfftw3-3.dll
+del /q libraries\libfftw3-3.d* > nul 2>&1
 
-IF EXIST pwiz\Version.cpp del /q pwiz\Version.cpp
-IF EXIST pwiz\data\msdata\Version.cpp del /q pwiz\data\msdata\Version.cpp
-IF EXIST pwiz\data\mziddata\Version.cpp del /q pwiz\data\mziddata\Version.cpp
-IF EXIST pwiz\data\tradata\Version.cpp del /q pwiz\data\tradata\Version.cpp
-IF EXIST pwiz\data\proteome\Version.cpp del /q pwiz\data\proteome\Version.cpp
-IF EXIST pwiz\analysis\Version.cpp del /q pwiz\analysis\Version.cpp
+del /q pwiz\Version.cpp > nul 2>&1
+del /q pwiz\data\msdata\Version.cpp > nul 2>&1
+del /q pwiz\data\mziddata\Version.cpp > nul 2>&1
+del /q pwiz\data\tradata\Version.cpp > nul 2>&1
+del /q pwiz\data\proteome\Version.cpp > nul 2>&1
+del /q pwiz\analysis\Version.cpp > nul 2>&1
 
-IF EXIST pwiz_aux\msrc\utility\vendor_api\thermo\MSFileReader.XRawfile2.dll del /q pwiz_aux\msrc\utility\vendor_api\thermo\MSFileReader.XRawfile2.dll
-IF EXIST pwiz_aux\msrc\utility\vendor_api\thermo\fregistry.dll del /q pwiz_aux\msrc\utility\vendor_api\thermo\fregistry.dll
-IF EXIST pwiz_aux\msrc\utility\vendor_api\thermo\fileio.dll del /q pwiz_aux\msrc\utility\vendor_api\thermo\fileio.dll
-IF EXIST pwiz_aux\msrc\utility\vendor_api\ABI\ABSciex.DataAccess.WiffFileDataReader.dll del /q pwiz_aux\msrc\utility\vendor_api\ABI\ABSciex.DataAccess.WiffFileDataReader.dll
-IF EXIST pwiz_aux\msrc\utility\vendor_api\ABI\Clearcore.dll del /q pwiz_aux\msrc\utility\vendor_api\ABI\Clearcore.dll
-IF EXIST pwiz_aux\msrc\utility\vendor_api\ABI\Clearcore.Storage.dll del /q pwiz_aux\msrc\utility\vendor_api\ABI\Clearcore.Storage.dll
-IF EXIST pwiz_aux\msrc\utility\vendor_api\ABI\rscoree.dll del /q pwiz_aux\msrc\utility\vendor_api\ABI\rscoree.dll
+del /q pwiz_aux\msrc\utility\vendor_api\ABI\*.dll > nul 2>&1
+del /q pwiz_aux\msrc\utility\vendor_api\Agilent\*.dll > nul 2>&1
+del /q pwiz_aux\msrc\utility\vendor_api\Bruker\*.dll > nul 2>&1
+del /q pwiz_aux\msrc\utility\vendor_api\Thermo\*.dll > nul 2>&1
+del /q pwiz_aux\msrc\utility\vendor_api\Waters\*.dll > nul 2>&1
+del /q pwiz_aux\msrc\utility\vendor_api\Waters\*.lib > nul 2>&1
+del /q pwiz_aux\msrc\utility\vendor_api\Waters\*.h > nul 2>&1
 
-IF EXIST pwiz\data\vendor_readers\Thermo\Reader_Thermo_Test.data rmdir /s /q pwiz\data\vendor_readers\Thermo\Reader_Thermo_Test.data
-IF EXIST pwiz\data\vendor_readers\Agilent\Reader_Agilent_Test.data rmdir /s /q pwiz\data\vendor_readers\Agilent\Reader_Agilent_Test.data
-IF EXIST pwiz\data\vendor_readers\ABI\Reader_ABI_Test.data rmdir /s /q pwiz\data\vendor_readers\ABI\Reader_ABI_Test.data
-IF EXIST pwiz\data\vendor_readers\ABI\T2D\Reader_ABI_T2D_Test.data rmdir /s /q pwiz\data\vendor_readers\ABI\T2D\Reader_ABI_T2D_Test.data
-IF EXIST pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data rmdir /s /q pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data
-IF EXIST pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data rmdir /s /q pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data
+rmdir /s /q pwiz\data\vendor_readers\Thermo\Reader_Thermo_Test.data > nul 2>&1
+rmdir /s /q pwiz\data\vendor_readers\Agilent\Reader_Agilent_Test.data > nul 2>&1
+rmdir /s /q pwiz\data\vendor_readers\ABI\Reader_ABI_Test.data > nul 2>&1
+rmdir /s /q pwiz\data\vendor_readers\ABI\T2D\Reader_ABI_T2D_Test.data > nul 2>&1
+rmdir /s /q pwiz\data\vendor_readers\Waters\Reader_Waters_Test.data > nul 2>&1
+rmdir /s /q pwiz\data\vendor_readers\Bruker\Reader_Bruker_Test.data > nul 2>&1
 
 IF EXIST pwiz_tools\SeeMS\CleanSeeMS.bat call pwiz_tools\SeeMS\CleanSeeMS.bat
 IF EXIST pwiz_tools\Skyline\CleanSkyline.bat call pwiz_tools\Skyline\CleanSkyline.bat
