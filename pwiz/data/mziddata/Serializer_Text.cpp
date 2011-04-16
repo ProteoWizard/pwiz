@@ -316,7 +316,7 @@ void Serializer_Text::Impl::write(ostream& os, const TextRecord& tr,
     const IterationListenerRegistry* iterationListenerRegistry) const
 {
     Serializer_Text::IdField last = Last;
-    uint numFields = last;
+    size_t numFields = last;
 
     vector<IdField> fields;
 
@@ -324,11 +324,11 @@ void Serializer_Text::Impl::write(ostream& os, const TextRecord& tr,
         copy(config.fields.begin(), config.fields.end(), fields.begin());
     else
     {
-        for (uint i=1;i<=Last; i++)
+        for (size_t i=1;i<=Last; i++)
             fields.push_back((IdField)i);
     }
     
-    for (uint i=0; i<numFields; i++)
+    for (size_t i=0; i<numFields; i++)
     {
         writeField(os, tr, fields.at(i));
         if (i<fields.size()-1)
