@@ -702,8 +702,7 @@ rule binary-tarball-requirements ( properties * )
     location = $(location:G=) ;
 
     local non-redistributables =
-        *ABSciex.DataAccess.WiffFileDataReader.dll *Clear?ore*.dll *rscoree.dll         # ABI API
-        *DACServer.dll *genutil.dll *raw.dll *RawCsm.dll *Security*.dll *MetaGD32.dll *MassLynxRaw.dll ; # Waters API
+        *ABSciex.DataAccess.WiffFileDataReader.dll *Clear?ore*.dll *rscoree.dll ; # ABI API
 
     if $(variants[1]) = "release"
     {
