@@ -39,7 +39,7 @@ rule masslynxraw-dll-location ( properties * )
        <runtime-debugging>off
     {
         if <toolset-msvc:version>9.0 in $(properties) ||
-           <toolset-msvc:version>9.0express in $(properties:G=)
+           <toolset-msvc:version>9.0express in $(properties)
         {
             if <secure-scl>on in $(properties)
             {
