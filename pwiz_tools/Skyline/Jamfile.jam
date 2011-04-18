@@ -185,7 +185,7 @@ if [ modules.peek : NT ]
             <dependency>../../pwiz_aux/msrc/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo_eula/<location>$(SKYLINE_PATH)
             <dependency>../../pwiz_aux/msrc/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo_mfc/<location>$(SKYLINE_PATH)/Microsoft.VC90.MFC
             <dependency>../../pwiz_aux/msrc/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo_mfc/<location>$(PWIZ_WRAPPER_PATH)/Microsoft.VC90.MFC
-            <dependency>../../pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters_masslynxraw/<location>$(SKYLINE_PATH)
+            <dependency>../../pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters/<location>$(SKYLINE_PATH)
         ;
         
     make Test.dll

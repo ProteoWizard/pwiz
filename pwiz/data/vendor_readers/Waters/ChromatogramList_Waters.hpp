@@ -50,15 +50,6 @@ class PWIZ_API_DECL ChromatogramList_Waters : public ChromatogramListBase
 
     mutable util::once_flag_proxy indexInitialized_;
 
-#ifdef PWIZ_READER_WATERS_LEGACY
-    struct IndexEntry : public ChromatogramIdentity
-    {
-        CVID chromatogramType;
-        vendor_api::Waters::SRMTarget target;
-        vendor_api::Waters::FunctionPtr functionPtr;
-        size_t SRMIndex;
-    };
-#else
     struct IndexEntry : public ChromatogramIdentity
     {
         CVID chromatogramType;
@@ -66,7 +57,6 @@ class PWIZ_API_DECL ChromatogramList_Waters : public ChromatogramListBase
         int offset;
         float Q1, Q3;
     };
-#endif // PWIZ_READER_WATERS_LEGACY
 
     mutable std::vector<IndexEntry> index_;
     mutable std::map<std::string, size_t> idToIndexMap_;

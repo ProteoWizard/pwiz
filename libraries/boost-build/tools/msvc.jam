@@ -1250,6 +1250,7 @@ local rule register-toolset-really ( )
     {
         feature.feature debug-store         : object database       : propagated ;
         feature.feature pch-source          :                       : dependency free ;
+        feature.feature secure-scl          : on off                : propagated ;
         feature.feature assembly            :                       : free dependency ;
         feature.feature assembly-dependency :                       : free dependency ;
         feature.feature manifest-dependency :                       : free dependency ;
@@ -1305,6 +1306,12 @@ local rule register-toolset-really ( )
     #
     # Declare flags for compilation.
     #
+
+    # By default 10.0 sets _SECURE_SCL=0 for release builds while prior versions set _SECURE_SCL=1.
+    # We enable or disable it explicitly so we do not have to depend on this
+    # default behaviour.
+    toolset.flags msvc.compile CFLAGS <secure-scl>on/<debug-symbols>off : -D_SECURE_SCL=1 ;
+    toolset.flags msvc.compile CFLAGS <secure-scl>off : -D_SECURE_SCL=0 ;
 
     toolset.flags msvc.compile CFLAGS <optimization>speed : /O2 ;
     toolset.flags msvc.compile CFLAGS <optimization>space : /O1 ;

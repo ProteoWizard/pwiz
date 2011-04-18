@@ -45,8 +45,7 @@ constant READER_PATH : "pwiz/data/vendor_readers/Waters" ;
 constant READER_NAME : "Reader_Waters" ;
 
 
-if [ path.exists $(API_PATH)/DACServer.dll ] ||
-   [ path.exists $(API_PATH)/MassLynxRaw.dll ]
+if [ glob $(API_PATH)/vc9_scl-0/MassLynxRaw*.dll ]
 {
     .hasDLLs = true ;
 }
@@ -118,20 +117,11 @@ rule test-requirements ( properties * )
 {
     # decompress test data if available (on any platform)
 
-    if [ path.exists $(API_PATH)/MassLynxRaw.dll ]
-    {
-        path-constant TEST_DATA_LEGACY_PATH : $(TEST_DATA_PATH) ;
-    }
-    else
-    {
-        path-constant TEST_DATA_LEGACY_PATH : ./Reader_Waters_Test_Legacy.data ;
-    }
-
-    if ! $(.extract-once) && [ path.exists $(TEST_DATA_LEGACY_PATH).tar.bz2 ]
+    if ! $(.extract-once) && [ path.exists $(TEST_DATA_PATH).tar.bz2 ]
     {
         .extract-once = true ;
         import tar ;
-        tar.extract $(TEST_DATA_LEGACY_PATH).tar.bz2 : : : : check-last-file-only ;
+        tar.extract $(TEST_DATA_PATH).tar.bz2 : : : : check-last-file-only ;
     }
 
     local result ;

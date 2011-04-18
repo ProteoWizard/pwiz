@@ -28,12 +28,7 @@
 #include <vector>
 
 #ifdef PWIZ_READER_WATERS
-
-#ifdef PWIZ_READER_WATERS_LEGACY
-#include "pwiz_aux/msrc/utility/vendor_api/Waters/RawData.hpp"
-#else
 #include "pwiz_aux/msrc/utility/vendor_api/Waters/MassLynxRaw.hpp"
-#endif // PWIZ_READER_WATERS_LEGACY
 
 namespace pwiz {
 namespace msdata {

@@ -64,7 +64,7 @@ struct PWIZ_API_DECL RawData
     typedef map<string, vector<boost::any> > ExtendedScanStatsByName;
 
     const vector<int>& FunctionIndexList() const {return functionIndexList;}
-    size_t FunctionCount() const {return functionIndexList.size();}
+    size_t FunctionCount() const {return functionIndexList.back() + 1;}
 
     RawData(const string& rawpath)
         : Reader(rawpath),
