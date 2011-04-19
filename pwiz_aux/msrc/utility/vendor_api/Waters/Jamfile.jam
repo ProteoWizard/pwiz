@@ -106,7 +106,7 @@ explicit RawDataTest ;
 rule install-requirements ( properties * )
 {
     local result = [ masslynxraw-dll-location $(properties) ] ;
-    if $(result)
+    if $(result) && [ path.exists $(result)\\MassLynxRaw.dll ]
     {
         return <source>$(result)\\MassLynxRaw.dll ;
     }
