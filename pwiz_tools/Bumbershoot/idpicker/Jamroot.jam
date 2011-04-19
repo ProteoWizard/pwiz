@@ -378,7 +378,14 @@ rule build-location ( properties * )
 
 
 import tar ;
-using tar : bsdtar.exe ;
+if [ os.on-windows ]
+{
+    using tar : bsdtar.exe ;
+}
+else
+{
+    using tar ;
+}
 
 local pwiz_src_tarball = [ SORT [ glob $(ROOT_PATH)/freicore/pwiz-src*.tar.bz2 ] ] ;
 pwiz_src_tarball = $(pwiz_src_tarball[-1]) ; # take the last (latest) tarball
