@@ -259,6 +259,25 @@ struct UserFeedbackIterationListener : public IterationListener
 END_IDPICKER_NAMESPACE
 
 
+void summarizeQonversion(const string& filepath)
+{
+    sqlite::database idpDb(filepath);
+
+    string sql = "SELECT COUNT(DISTINCT Spectrum),"
+                 "       COUNT(DISTINCT Peptide)"
+                 "  FROM PeptideSpectrumMatch"
+                 " WHERE QValue < " + lexical_cast<string>(g_rtConfig->MaxFDR);
+
+    sqlite::query summaryQuery(idpDb, sql.c_str());
+
+    int spectra, peptides;
+    boost::tie(spectra, peptides)= summaryQuery.begin()->get_columns<int, int>(0, 1);
+    cout << left << setw(8) << spectra
+         << left << setw(9) << peptides
+         << filepath << endl;
+}
+
+
 int main( int argc, char* argv[] )
 {
     try
@@ -285,6 +304,23 @@ int main( int argc, char* argv[] )
             else
                 parserFilepaths.push_back(filepath);
 
+        Parser parser;
+
+        // update on the first spectrum, the last spectrum, the 100th spectrum, the 200th spectrum, etc.
+        const size_t iterationPeriod = 100;
+        UserFeedbackIterationListener feedback;
+        parser.iterationListenerRegistry.addListener(feedback, iterationPeriod);
+
+        parser.importSettingsCallback = Parser::ImportSettingsCallbackPtr(new ImportSettingsHandler);
+        parser.parse(parserFilepaths);
+
+        // output summary statistics for each input file
+        cout << "\nSpectra Peptides Filepath\n"
+                "-------------------------\n";
+
+        BOOST_FOREACH(const string& filepath, parserFilepaths)
+            summarizeQonversion(bfs::path(filepath).replace_extension(".idpDB").string());
+
         BOOST_FOREACH(const string& filepath, idpDbFilepaths)
         {
             Qonverter qonverter;
@@ -302,42 +338,8 @@ int main( int argc, char* argv[] )
 
             qonverter.reset(filepath);
             qonverter.qonvert(filepath);
-        }
 
-        Parser parser;
-
-        // update on the first spectrum, the last spectrum, the 100th spectrum, the 200th spectrum, etc.
-        const size_t iterationPeriod = 100;
-        UserFeedbackIterationListener feedback;
-        parser.iterationListenerRegistry.addListener(feedback, iterationPeriod);
-
-        parser.importSettingsCallback = Parser::ImportSettingsCallbackPtr(new ImportSettingsHandler);
-        parser.parse(parserFilepaths);
-
-        // add the parserFilepaths to idpDbFilepaths
-        BOOST_FOREACH(const string& filepath, parserFilepaths)
-            idpDbFilepaths.push_back(bfs::path(filepath).replace_extension(".idpDB").string());
-
-        // output summary statistics for each input file
-        cout << "\nSpectra Peptides Filepath\n"
-                "-------------------------\n";
-
-        BOOST_FOREACH(const string& filepath, idpDbFilepaths)
-        {
-            sqlite::database idpDb(filepath);
-
-            string sql = "SELECT COUNT(DISTINCT Spectrum),"
-                         "       COUNT(DISTINCT Peptide)"
-                         "  FROM PeptideSpectrumMatch"
-                         " WHERE QValue < " + lexical_cast<string>(g_rtConfig->MaxFDR);
-
-            sqlite::query summaryQuery(idpDb, sql.c_str());
-
-            int spectra, peptides;
-            boost::tie(spectra, peptides)= summaryQuery.begin()->get_columns<int, int>(0, 1);
-            cout << left << setw(8) << spectra
-                 << left << setw(9) << peptides
-                 << filepath << endl;
+            summarizeQonversion(filepath);
         }
     }
     catch (exception& e)
