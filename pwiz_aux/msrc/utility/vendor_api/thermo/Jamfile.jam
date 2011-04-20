@@ -35,20 +35,27 @@ import os common ;
 local ProgramFiles = [ os.environ ProgramFiles ] ;
 ProgramFiles ?= "C:\\Program Files" ;
 local MSFileReader = "$(ProgramFiles)\\Thermo\\MSFileReader" ;
-if [ path.exists $(API_PATH)\\MSFileReader.XRawfile2.dll ]
+if ! --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
 {
-    .hasDLLs = true ;
+    # ignore vendor DLLs even if they're available
 }
-
-if ! $(.hasDLLs) && [ path.exists $(MSFileReader)\\XRawfile2.dll ]
+else
 {
-    .hasDLLs = true ;
-    local destination = [ path.native $(API_PATH) ] ;
-    echo "Copying MSFileReader DLLs from \"$(MSFileReader)\" to \"$(destination)\"." ;
-    echo [ SHELL "copy \"$(MSFileReader)\\XRawfile2.dll \" \"$(destination)\\MSFileReader.XRawfile2.dll" ] ;
-    echo [ SHELL "copy \"$(MSFileReader)\\fileio.dll\" \"$(destination)\"" ] ;
-    echo [ SHELL "copy \"$(MSFileReader)\\fregistry.dll\" \"$(destination)\"" ] ;
-    RESCAN ;
+    if [ path.exists $(API_PATH)\\MSFileReader.XRawfile2.dll ]
+    {
+        .hasDLLs = true ;
+    }
+
+    if ! $(.hasDLLs) && [ path.exists $(MSFileReader)\\XRawfile2.dll ]
+    {
+        .hasDLLs = true ;
+        local destination = [ path.native $(API_PATH) ] ;
+        echo "Copying MSFileReader DLLs from \"$(MSFileReader)\" to \"$(destination)\"." ;
+        echo [ SHELL "copy \"$(MSFileReader)\\XRawfile2.dll \" \"$(destination)\\MSFileReader.XRawfile2.dll" ] ;
+        echo [ SHELL "copy \"$(MSFileReader)\\fileio.dll\" \"$(destination)\"" ] ;
+        echo [ SHELL "copy \"$(MSFileReader)\\fregistry.dll\" \"$(destination)\"" ] ;
+        RESCAN ;
+    }
 }
 
 rule vendor-api-requirements ( properties * )

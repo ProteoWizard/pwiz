@@ -652,7 +652,11 @@ rule find-wiff-dlls ( api-path )
     local ProgramFiles = [ os.environ ProgramFiles ] ;
     ProgramFiles ?= "C:\\Program Files" ;
     local ProteinPilot = "$(ProgramFiles)\\Applied Biosystems MDS Analytical Technologies\\ProteinPilot" ;
-    if [ path.exists $(api-path)\\ABSciex.DataAccess.WiffFileDataReader.dll ]
+    if ! --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
+    {
+        return ; # skip these vendor APIs even if they're available
+    }
+    else if [ path.exists $(api-path)\\ABSciex.DataAccess.WiffFileDataReader.dll ]
     {
         return $(api-path) ;
     }

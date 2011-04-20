@@ -31,26 +31,33 @@ if [ modules.peek : NT ]
 {
 
 local .dllPath = [ find-wiff-dlls $(API_PATH) ] ;
-if $(API_PATH) in $(.dllPath)
+if ! --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
 {
-    # DLLs are already copied
-    .hasDLLs = true ;
+    # ignore vendor DLLs even if they're available
 }
-else if $(.dllPath)
+else
 {
-    # need to copy DLLs
-    .hasDLLs = true ;
-    local destination = [ path.native $(API_PATH) ] ;
-    echo "Copying WiffFileDataReader DLLs from \"$(.dllPath)\" to \"$(destination)\"" ;
-    echo [ SHELL "copy \"$(.dllPath)\\ABSciex.DataAccess.WiffFileDataReader.dll \"  \"$(destination)\"" ] ;
-    echo [ SHELL "copy \"$(.dllPath)\\Clearcore.dll\"  \"$(destination)\"" ] ;
-    echo [ SHELL "copy \"$(.dllPath)\\ClearCore.Storage.dll\" \"$(destination)\"" ] ;
-    echo [ SHELL "copy \"$(.dllPath)\\rscoree.dll\" \"$(destination)\"" ] ;
-    RESCAN ;
-}
-else if --require-vendor-support in [ modules.peek : ARGV ]
-{
-    exit "Unable to find ABI DLLs; --require-vendor-support makes this a fatal error." ;
+    if $(API_PATH) in $(.dllPath)
+    {
+        # DLLs are already copied
+        .hasDLLs = true ;
+    }
+    else if $(.dllPath)
+    {
+        # need to copy DLLs
+        .hasDLLs = true ;
+        local destination = [ path.native $(API_PATH) ] ;
+        echo "Copying WiffFileDataReader DLLs from \"$(.dllPath)\" to \"$(destination)\"" ;
+        echo [ SHELL "copy \"$(.dllPath)\\ABSciex.DataAccess.WiffFileDataReader.dll \"  \"$(destination)\"" ] ;
+        echo [ SHELL "copy \"$(.dllPath)\\Clearcore.dll\"  \"$(destination)\"" ] ;
+        echo [ SHELL "copy \"$(.dllPath)\\ClearCore.Storage.dll\" \"$(destination)\"" ] ;
+        echo [ SHELL "copy \"$(.dllPath)\\rscoree.dll\" \"$(destination)\"" ] ;
+        RESCAN ;
+    }
+    else if --require-vendor-support in [ modules.peek : ARGV ]
+    {
+        exit "Unable to find ABI DLLs; --require-vendor-support makes this a fatal error." ;
+    }
 }
 
 
