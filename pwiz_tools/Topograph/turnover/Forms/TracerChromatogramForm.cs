@@ -13,6 +13,7 @@ using pwiz.MSGraph;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Model;
+using pwiz.Topograph.ui.Properties;
 using pwiz.Topograph.Util;
 using ZedGraph;
 
@@ -32,6 +33,9 @@ namespace pwiz.Topograph.ui.Forms
             colSlopePct.DefaultCellStyle.Format = "0.##%";
             colTracerPercent.DefaultCellStyle.Format = "0.##%";
             comboAdjustPeaks.SelectedIndex = 0;
+            cbxPeaksAsVerticalLines.Checked = Settings.Default.PeaksAsVerticalLines;
+            cbxPeaksAsHorizontalLines.Checked = Settings.Default.PeaksAsHorizontalLines;
+            cbxShowScore.Checked = Settings.Default.ShowChromatogramScore;
         }
 
         protected override bool msGraphControl_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
@@ -289,8 +293,9 @@ namespace pwiz.Topograph.ui.Forms
             }
             if (cbxShowScore.Checked)
             {
-                msGraphControl.GraphPane.AddCurve("Score", tracerChromatograms.Times.ToArray(), tracerChromatograms.Scores.ToArray(), Color.Black, SymbolType.None)
-                    .IsY2Axis = true;
+                var scoreLine = msGraphControl.GraphPane.AddCurve("Score", tracerChromatograms.Times.ToArray(), tracerChromatograms.Scores.ToArray(), Color.Black, SymbolType.None);
+                scoreLine.IsY2Axis = true;
+                scoreLine.Line.Width = Settings.Default.ChromatogramLineWidth;
             }
             double totalAmount = peaks.ListChildren().Sum(p => p.Area);
             double totalSlope = peaks.ListChildren().Sum(p => p.RatioToBase);
@@ -330,8 +335,9 @@ namespace pwiz.Topograph.ui.Forms
                         Color = GetColor(iCandidate, entries.Length),
                         Points = new PointPairList(tracerChromatograms.Times, entry.Value),
                     };
-                    var chromCurveItem = msGraphControl.AddGraphItem(msGraphControl.GraphPane, curve);
+                    var chromCurveItem = (LineItem) msGraphControl.AddGraphItem(msGraphControl.GraphPane, curve);
                     chromCurveItem.Label.IsVisible = false;
+                    chromCurveItem.Line.Width = Settings.Default.ChromatogramLineWidth;
                     if (overlayTracerChromatograms != null)
                     {
                         var overlayCurve = new ChromatogramGraphItem
@@ -345,6 +351,7 @@ namespace pwiz.Topograph.ui.Forms
                         var overlayCurveItem = (LineItem) msGraphControl.AddGraphItem(msGraphControl.GraphPane, overlayCurve);
                         overlayCurveItem.Label.IsVisible = false;
                         overlayCurveItem.Line.Style = DashStyle.Dash;
+                        overlayCurveItem.Line.Width = Settings.Default.ChromatogramLineWidth;
                     }
                     if (peak != null)
                     {
@@ -358,6 +365,7 @@ namespace pwiz.Topograph.ui.Forms
                         if (PeaksAsHorizontalLines)
                         {
                             peakDisplay.HorizontalLine = msGraphControl.GraphPane.AddCurve(null, new[] { peakDisplay.Start, peakDisplay.End }, new[] { max, max }, color);
+                            peakDisplay.HorizontalLine.Line.Width = Settings.Default.ChromatogramLineWidth;
                         }
                         if (PeaksAsVerticalLines)
                         {
@@ -366,11 +374,13 @@ namespace pwiz.Topograph.ui.Forms
                                 new[] { peakDisplay.Start, peakDisplay.Start },
                                 new[] {max, 0}, color, SymbolType.None
                             );
+                            peakDisplay.StartVerticalLine.Line.Width = Settings.Default.ChromatogramLineWidth;
                             peakDisplay.EndVerticalLine = msGraphControl.GraphPane.AddCurve(
                                 null,
                                 new[] { peakDisplay.End, peakDisplay.End }, 
                                 new[] { max, 0 }, color, SymbolType.None
                             );
+                            peakDisplay.EndVerticalLine.Line.Width = Settings.Default.ChromatogramLineWidth;
                         }
                         peakLines.Add(entry.Key, peakDisplay);
                     }

@@ -8,6 +8,7 @@ using System.Text;
 using System.Windows.Forms;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.ui.Controls;
+using pwiz.Topograph.ui.Properties;
 using ZedGraph;
 
 namespace pwiz.Topograph.ui.Forms
@@ -91,6 +92,7 @@ namespace pwiz.Topograph.ui.Forms
                     graphItem.Points = points;
                     var lineItem = (LineItem) msGraphControl.AddGraphItem(msGraphControl.GraphPane, graphItem);
                     lineItem.Line.Style = TracerChromatogramForm.GetDashStyle(charge - PeptideAnalysis.MinCharge);
+                    lineItem.Line.Width = Settings.Default.ChromatogramLineWidth;
                     lineItem.Label.IsVisible = false;
                 }
             }

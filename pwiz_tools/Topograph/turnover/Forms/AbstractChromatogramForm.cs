@@ -33,6 +33,7 @@ using pwiz.Topograph.ui.Controls;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.ui.Controls;
+using pwiz.Topograph.ui.Properties;
 using ZedGraph;
 
 namespace pwiz.Topograph.ui.Forms
@@ -63,6 +64,7 @@ namespace pwiz.Topograph.ui.Forms
             msGraphControl.MouseDownEvent += msGraphControl_MouseDownEvent;
             msGraphControl.MouseUpEvent += msGraphControl_MouseUpEvent;
             msGraphControl.ContextMenuBuilder += msGraphControl_ContextMenuBuilder;
+            Smooth = Settings.Default.SmoothChromatograms;
         }
 
         void msGraphControl_ContextMenuBuilder(ZedGraphControl sender, ContextMenuStrip menuStrip, Point mousePt, ZedGraphControl.ContextMenuObjectState objState)
@@ -272,12 +274,16 @@ namespace pwiz.Topograph.ui.Forms
                 }
                 _smooth = value;
                 toolStripMenuItemSmooth.Checked = _smooth;
-                Recalc();
+                UpdateUi();
             }
         }
 
         protected void UpdateUi()
         {
+            if (!IsHandleCreated)
+            {
+                return;
+            }
             if (_updatePending)
             {
                 return;

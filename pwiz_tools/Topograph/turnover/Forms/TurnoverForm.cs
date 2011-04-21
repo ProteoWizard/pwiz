@@ -117,8 +117,6 @@ namespace pwiz.Topograph.ui.Forms
                                dataDirectoryToolStripMenuItem,
                                tracerAmountsToolStripMenuItem,
                                precursorEnrichmentsToolStripMenuItem,
-                               resultsByReplicateToolStripMenuItem,
-                               alignmentToolStripMenuItem,
                            };
             }
         }
@@ -183,6 +181,22 @@ namespace pwiz.Topograph.ui.Forms
                     }
                 }
                 UpdateWindowTitle();
+                if (_workspace != null)
+                {
+                    Settings.Default.Reload();
+                    var path = _workspace.DatabasePath;
+                    // Store the path in the MRU.
+                    List<string> mruList = Settings.Default.MruList;
+                    if (mruList.Count == 0 || !Equals(path, mruList[0]))
+                    {
+                        mruList.Remove(path);
+                        mruList.Insert(0, path);
+                        int len = Settings.Default.MruLength;
+                        if (mruList.Count > len)
+                            mruList.RemoveRange(len, mruList.Count - len);
+                        Settings.Default.Save();
+                    }
+                }
             }
         }
 
@@ -374,8 +388,7 @@ namespace pwiz.Topograph.ui.Forms
             {
                 var result =
                     MessageBox.Show(
-                        "This workspace needs to be upgraded from version " + version 
-                        + " to this version of Topograph (" +  WorkspaceUpgrader.CurrentVersion +").  Do you want to do that now?", 
+                        "This workspace needs to be upgraded to this version of Topograph.  Do you want to do that now?", 
                         Program.AppName, MessageBoxButtons.OKCancel);
                 if (result == DialogResult.Cancel)
                 {
@@ -881,15 +894,68 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
-        private void resultsByReplicateToolStripMenuItem_Click(object sender, EventArgs e)
+        private void displayToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var resultsPerReplicateForm = new ResultsPerReplicateForm(Workspace);
-            resultsPerReplicateForm.Show(dockPanel, DockState.Document);
+            var settingsForm = new DisplaySettingsForm();
+            settingsForm.ShowDialog(this);
         }
 
-        private void alignmentToolStripMenuItem_Click(object sender, EventArgs e)
+        private void fileToolStripMenuItem_DropDownOpening(object sender, EventArgs e)
         {
-            new AlignmentForm(Workspace).Show(dockPanel, DockState.Document);
+            ToolStripMenuItem menu = fileToolStripMenuItem;
+            List<string> mruList = Settings.Default.MruList;
+            string curDir = Settings.Default.WorkspaceDirectory;
+
+            int start = menu.DropDownItems.IndexOf(mruBeforeToolStripSeparator) + 1;
+            while (!ReferenceEquals(menu.DropDownItems[start], mruAfterToolStripSeparator))
+                menu.DropDownItems.RemoveAt(start);
+            for (int i = 0; i < mruList.Count; i++)
+            {
+                MruChosenHandler handler = new MruChosenHandler(this, mruList[i]);
+                ToolStripMenuItem item = new ToolStripMenuItem(GetMruName(i, mruList[i], curDir), null,
+                    handler.ToolStripMenuItemClick);
+                menu.DropDownItems.Insert(start + i, item);
+            }
+            mruAfterToolStripSeparator.Visible = (mruList.Count > 0);
+
         }
+
+        private static string GetMruName(int index, string path, string curDir)
+        {
+            string name = path;
+            if (curDir == Path.GetDirectoryName(path))
+                name = Path.GetFileName(path);
+            // Make index 1-based
+            index++;
+            if (index < 9)
+                name = string.Format("&{0} {1}", index, name);
+            return name;
+        }
+
+        private class MruChosenHandler
+        {
+            private readonly TurnoverForm _turnoverForm;
+            private readonly string _path;
+
+            public MruChosenHandler(TurnoverForm turnoverForm, string path)
+            {
+                _turnoverForm = turnoverForm;
+                _path = path;
+            }
+
+            public void ToolStripMenuItemClick(object sender, EventArgs e)
+            {
+                if (!_turnoverForm.PromptToSaveWorkspace())
+                {
+                    return;
+                }
+                var workspace = _turnoverForm.OpenWorkspace(_path);
+                if (workspace != null)
+                {
+                    _turnoverForm.Workspace = workspace;
+                }
+            }
+        }
+
     }
 }
