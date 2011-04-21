@@ -69,9 +69,9 @@ struct SharedStringFastLessThan
 
 struct AminoAcidTranslator
 {
-    static size_t size() {return 26;}
-    static size_t translate(char aa) {return aa - 'A';};
-    static char translate(size_t index) {return static_cast<char>(index) + 'A';}
+    static int size() {return 26;}
+    static int translate(char aa) {return aa - 'A';};
+    static char translate(int index) {return static_cast<char>(index) + 'A';}
 };
 
 struct IsNotAnalysisParameter

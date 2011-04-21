@@ -81,7 +81,10 @@ int getScoreNames(void* data, int columnCount, char** columnValues, char** colum
         throw runtime_error("[Qonverter::getScoreNames] result must have 1 column");
 
     if (columnValues[0] != NULL)
-        bal::split(*static_cast<vector<string>*>(data), bal::to_lower_copy(string(columnValues[0])), bal::is_any_of(","));
+    {
+        string scoreNames = bal::to_lower_copy(string(columnValues[0]));
+        bal::split(*static_cast<vector<string>*>(data), scoreNames, bal::is_any_of(","));
+    }
 
     return 0;
 }
@@ -492,8 +495,8 @@ vector<PSMIteratorRange> partition(const Qonverter::Settings& settings, const PS
         PSMIterator begin = psmRows.begin(), cur = begin;
         while (cur != psmRows.end())
         {
-            int lastCharge = cur->chargeState;
-            int lastSpecificity = cur->bestSpecificity;
+            int lastCharge = (int) cur->chargeState;
+            int lastSpecificity = (int) cur->bestSpecificity;
             ++cur;
             if (cur == psmRows.end() ||
                 cur->chargeState != lastCharge ||
@@ -512,7 +515,7 @@ vector<PSMIteratorRange> partition(const Qonverter::Settings& settings, const PS
         PSMIterator begin = psmRows.begin(), cur = begin;
         while (cur != psmRows.end())
         {
-            int lastCharge = cur->chargeState;
+            int lastCharge = (int) cur->chargeState;
             ++cur;
             if (cur == psmRows.end() || cur->chargeState != lastCharge)
             {
@@ -529,7 +532,7 @@ vector<PSMIteratorRange> partition(const Qonverter::Settings& settings, const PS
         PSMIterator begin = psmRows.begin(), cur = begin;
         while (cur != psmRows.end())
         {
-            int lastSpecificity = cur->bestSpecificity;
+            int lastSpecificity = (int) cur->bestSpecificity;
             ++cur;
             if (cur == psmRows.end() || cur->bestSpecificity != lastSpecificity)
             {

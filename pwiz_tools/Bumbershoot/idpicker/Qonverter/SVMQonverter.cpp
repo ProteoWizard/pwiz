@@ -26,6 +26,7 @@
 #include "SVMQonverter.hpp"
 #include "Qonverter.hpp"
 #include <climits>
+#include <cfloat>
 
 
 using namespace IDPICKER_NAMESPACE;
@@ -334,10 +335,10 @@ struct MinMaxPair
     T min, max;
 };
 
-    MinMaxPair<double> bestSpecificity(2, 0);
-    MinMaxPair<double> chargeState(DBL_MAX, 0);
-    MinMaxPair<double> missedCleavages(DBL_MAX, 0);
-    MinMaxPair<double> massError(DBL_MAX, 0);
+MinMaxPair<double> bestSpecificity(2, 0);
+MinMaxPair<double> chargeState(DBL_MAX, 0);
+MinMaxPair<double> missedCleavages(DBL_MAX, 0);
+MinMaxPair<double> massError(DBL_MAX, 0);
 void scaleNonScoreFeatures(const Qonverter::Settings& settings, const PSMIteratorRange& range)
 {
     // first pass: calculate extrema

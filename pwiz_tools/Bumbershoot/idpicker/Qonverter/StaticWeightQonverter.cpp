@@ -34,17 +34,17 @@ struct StaticWeightedTotalScoreBetterThan
 {
     StaticWeightedTotalScoreBetterThan(const vector<double>& scoreWeights) : scoreWeights(scoreWeights) {}
 
-    double getTotalScore(PeptideSpectrumMatch& psm) const
+    double getTotalScore(const PeptideSpectrumMatch& psm) const
     {
         BOOST_ASSERT(psm.scores.size() == scoreWeights.size());
 
         if (psm.totalScore == 0)
             for (size_t i=0, end=psm.scores.size(); i < end; ++i)
-                psm.totalScore += psm.scores[i] * scoreWeights[i];
+                const_cast<PeptideSpectrumMatch&>(psm).totalScore += psm.scores[i] * scoreWeights[i];
         return psm.totalScore;
     }
 
-    bool operator() (PeptideSpectrumMatch& lhs, PeptideSpectrumMatch& rhs) const
+    bool operator() (const PeptideSpectrumMatch& lhs, const PeptideSpectrumMatch& rhs) const
     {
         double lhsTotalScore = getTotalScore(lhs);
         double rhsTotalScore = getTotalScore(rhs);
