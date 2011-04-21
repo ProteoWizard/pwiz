@@ -396,6 +396,7 @@ namespace pwiz.Topograph.ui.Forms
                 yValues.Add(value.Value);
                 fileAnalysisPoints.Add(peptideFileAnalysis);
             }
+            UpdateStatsGrid(xValues, yValues);
             var pointsCurve = _zedGraphControl.GraphPane.AddCurve("Data Points", xValues.ToArray(), yValues.ToArray(), Color.Black);
             pointsCurve.Line.IsVisible = false;
             pointsCurve.Label.IsVisible = false;
@@ -446,6 +447,37 @@ namespace pwiz.Topograph.ui.Forms
             tbxHalfLife.Text = halfLife.HalfLife.ToString("0.##") + "(" + halfLife.MinHalfLife.ToString("0.##") + "-" +
                                halfLife.MaxHalfLife.ToString("0.##") + ")";
             return halfLifeCalculator;
+        }
+
+        private void UpdateStatsGrid(IList<double> xValues, IList<double> yValues)
+        {
+            var timeToValuesDict = new Dictionary<double, IList<double>>();
+            for (var i = 0; i < xValues.Count(); i ++)
+            {
+                var time = xValues[i];
+                var value = yValues[i];
+                IList<double> values;
+                if (!timeToValuesDict.TryGetValue(time, out values))
+                {
+                    values = new List<double>();
+                    timeToValuesDict.Add(time, values);
+                }
+                values.Add(value);
+            }
+            var times = timeToValuesDict.Keys.ToArray();
+            Array.Sort(times);
+            gridViewStats.Rows.Clear();
+            for (int i = 0; i < times.Length; i++)
+            {
+                var row = gridViewStats.Rows[gridViewStats.Rows.Add()];
+                var time = times[i];
+                var values = timeToValuesDict[time];
+                var stats = new Statistics(values.ToArray());
+                row.Cells[colStatsTime.Index].Value = time;
+                row.Cells[colStatsMean.Index].Value = stats.Mean();
+                row.Cells[colStatsMedian.Index].Value = stats.Median();
+                row.Cells[colStatsStdDev.Index].Value = stats.StdDev();
+            }
         }
 
         private CurveItem AddFunction(string name, Func<double,double> func, Color color)
