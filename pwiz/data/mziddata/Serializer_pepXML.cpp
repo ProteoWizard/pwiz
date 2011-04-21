@@ -531,6 +531,12 @@ void write_alternative_proteins(XMLWriter& xmlWriter, const SpectrumIdentificati
     {
         attributes.clear();
         attributes.add("protein", sii.peptideEvidencePtr[i]->dbSequencePtr->accession);
+        if (sii.peptideEvidencePtr[i]->
+            dbSequencePtr->hasCVParam(MS_protein_description))
+            attributes.add("protein_descr",
+                           sii.peptideEvidencePtr[i]->dbSequencePtr->
+                           cvParam(MS_protein_description).value);
+        
         xmlWriter.startElement("alternative_protein", attributes, XMLWriter::EmptyElement);
     }
 }
@@ -550,16 +556,22 @@ void write_search_hit(XMLWriter& xmlWriter,
 
     XMLWriter::Attributes attributes;
 
+    DBSequencePtr dbseq =  sii.peptideEvidencePtr[0]->dbSequencePtr;
     attributes.add("hit_rank", sii.rank);
     attributes.add("peptide", sii.peptidePtr->peptideSequence);
     attributes.add("peptide_prev_aa", sii.peptideEvidencePtr[0]->pre);
     attributes.add("peptide_next_aa", sii.peptideEvidencePtr[0]->post);
-    attributes.add("protein", sii.peptideEvidencePtr[0]->dbSequencePtr->accession);
+    attributes.add("protein", dbseq->accession);
     attributes.add("num_tot_proteins", sii.peptideEvidencePtr.size());
     attributes.add("calc_neutral_pep_mass", Ion::neutralMass(sii.calculatedMassToCharge, sii.chargeState));
     attributes.add("massdiff", Ion::neutralMass(sii.calculatedMassToCharge, sii.chargeState) - Ion::neutralMass(sii.experimentalMassToCharge, sii.chargeState));
     attributes.add("num_missed_cleavages", sii.peptideEvidencePtr[0]->missedCleavages);
 
+    // Add the protein description, if present
+    if (dbseq->hasCVParam(MS_protein_description))
+        attributes.add("protein_descr",
+                       dbseq->cvParam(MS_protein_description).value);
+    
     // calculate num_tol_term
     const SpectrumIdentificationProtocol& sip = *mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0];
     DigestedPeptide digestedPeptide = sii.digestedPeptide(sip, *sii.peptideEvidencePtr[0]);
@@ -1270,6 +1282,22 @@ struct HandlerSearchResults : public SAXParser::Handler
         conventionalSpectrumIdRegex = boost::xpressive::sregex::compile("([^.]*\\.\\d+\\.\\d+).*");
     }
 
+    bool setDBSequenceParams(const string& accession,
+                             const ParamContainer& params)
+    {
+        map<string, DBSequencePtr>::iterator result =
+            _dbSequences.find(accession);
+
+        if (result == _dbSequences.end())
+            return false;
+        
+        copy(params.cvParams.begin(), params.cvParams.end(),
+             (*result).second->cvParams.begin());
+
+        copy(params.userParams.begin(), params.userParams.end(),
+             (*result).second->userParams.begin());
+    }
+    
     DBSequencePtr getDBSequence(const string& accession)
     {
         pair<map<string, DBSequencePtr>::iterator, bool> insertResult = _dbSequences.insert(make_pair(accession, DBSequencePtr()));
@@ -1404,7 +1432,13 @@ struct HandlerSearchResults : public SAXParser::Handler
                 sii.peptideEvidencePtr.push_back(pe);
 
                 getAttribute(attributes, "protein", pe->id);
+
                 pe->dbSequencePtr = getDBSequence(pe->id);
+
+                string proteinDescr;
+                getAttribute(attributes, "protein_descr", proteinDescr);
+
+                pe->dbSequencePtr->set(MS_protein_description, proteinDescr);
             }
         }
         else if (name == "search_hit")
@@ -1437,7 +1471,13 @@ struct HandlerSearchResults : public SAXParser::Handler
                 sii.peptideEvidencePtr.push_back(pe);
 
                 getAttribute(attributes, "protein", pe->id);
+
                 pe->dbSequencePtr = getDBSequence(pe->id);
+
+                string proteinDescr;
+                getAttribute(attributes, "protein_descr", proteinDescr);
+                pe->dbSequencePtr->set(MS_protein_description, proteinDescr);
+
                 getAttribute(attributes, "num_missed_cleavages", pe->missedCleavages);
                 getAttribute(attributes, "peptide_prev_aa", pe->pre);
                 getAttribute(attributes, "peptide_next_aa", pe->post);

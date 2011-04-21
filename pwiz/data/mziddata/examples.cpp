@@ -402,7 +402,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
         sir->name = "tiny.42.42";
         sir->spectrumID = "controllerType=0 controllerNumber=1 scan=42";
         sir->spectraDataPtr = sd;
-        sir->set(MS_retention_time, "100.1", UO_second);
+        sir->set(MS_retention_time, "100", UO_second);
 
         // result 1 rank 1
         {
@@ -543,7 +543,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
         sir->name = "tiny.420.420";
         sir->spectrumID = "controllerType=0 controllerNumber=1 scan=420";
         sir->spectraDataPtr = sd;
-        sir->set(MS_retention_time, "200.2", UO_second);
+        sir->set(MS_retention_time, "200", UO_second);
 
         // result 2 rank 1
         {
@@ -652,7 +652,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
         sir->name = "tiny.421.421";
         sir->spectrumID = "controllerType=0 controllerNumber=1 scan=421";
         sir->spectraDataPtr = sd;
-        sir->set(MS_retention_time, "300.3", UO_second);
+        sir->set(MS_retention_time, "300", UO_second);
 
         // result 3 rank 1
         {
@@ -709,7 +709,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
         sir->name = "tiny.422.422";
         sir->spectrumID = "controllerType=0 controllerNumber=1 scan=422";
         sir->spectraDataPtr = sd;
-        sir->set(MS_retention_time, "400.4", UO_second);
+        sir->set(MS_retention_time, "400", UO_second);
 
         // result 4 rank 1
         {
