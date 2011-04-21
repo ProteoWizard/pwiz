@@ -155,7 +155,7 @@ unit-test-if-exists DiffTest : DiffTest.cpp pwiz_data_mzid pwiz_data_mzid_exampl
 unit-test-if-exists ReferencesTest : ReferencesTest.cpp pwiz_data_mzid ;
 unit-test-if-exists IOTest : IOTest.cpp pwiz_data_mzid pwiz_data_mzid_examples ;
 unit-test-if-exists Serializer_mzid_Test : Serializer_mzid_Test.cpp pwiz_data_mzid pwiz_data_mzid_examples ;
-#unit-test-if-exists Serializer_pepXML_Test : Serializer_pepXML_Test.cpp pwiz_data_mzid pwiz_data_mzid_examples ;
+unit-test-if-exists Serializer_pepXML_Test : Serializer_pepXML_Test.cpp pwiz_data_mzid pwiz_data_mzid_examples ;
 unit-test-if-exists Serializer_Text_Test : Serializer_Text_Test.cpp pwiz_data_mzid pwiz_data_mzid_examples ;
 unit-test-if-exists KwCVMapTest : KwCVMapTest.cpp pwiz_data_mzid pwiz_data_mzid_examples ;
 #unit-test-if-exists Pep2MzIdent : Pep2MzIdentTest.cpp pwiz_data_mzid ;
