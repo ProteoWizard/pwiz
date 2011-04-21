@@ -226,7 +226,7 @@ namespace pwiz.Topograph.ui.Forms
                     var sqlStatementBuilder = new SqlStatementBuilder(session.GetSessionImplementation().Factory.Dialect);
                     var insertStatements = new List<string>();
                     var entries = searchResults.ToArray();
-                    Array.Sort(entries, (e1,e2)=>(e1.Key == null).CompareTo(e2.Key == null));
+                    Array.Sort(entries, (e1,e2)=>(e1.Value == null).CompareTo(e2.Value == null));
                     foreach (var entry in entries)
                     {
                         var msDataFile = entry.Key;
