@@ -178,7 +178,7 @@ namespace pwiz.Topograph.ui.Forms
                     var dataFileIds = new HashSet<long>(idList);
                     var searchResults = peptide.SearchResults
                         .Where(peptideSearchResult => !dataFileIds.Contains(peptideSearchResult.MsDataFile.Id.Value))
-                        .ToDictionary(peptideSearchResult => Workspace.MsDataFiles.GetChild(peptideSearchResult.Id.Value));
+                        .ToDictionary(peptideSearchResult => Workspace.MsDataFiles.GetChild(peptideSearchResult.MsDataFile.Id.Value));
                     if (includeMissingMs2)
                     {
                         foreach (var msDataFile in Workspace.MsDataFiles.ListChildren())
