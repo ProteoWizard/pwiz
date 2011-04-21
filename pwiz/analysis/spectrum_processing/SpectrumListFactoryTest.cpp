@@ -337,6 +337,43 @@ void testWrapPolarity()
     }
 }
 
+void testWrapTitleMaker()
+{
+    MSData msd;
+    examples::initializeTiny(msd);
+
+    {
+        SpectrumListFactory::wrap(msd, "titleMaker <Id>");
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+        unit_assert_operator_equal("scan=19", sl->spectrum(0)->cvParam(MS_spectrum_title).value);
+        unit_assert_operator_equal("scan=20", sl->spectrum(1)->cvParam(MS_spectrum_title).value);
+        unit_assert_operator_equal("scan=21", sl->spectrum(2)->cvParam(MS_spectrum_title).value);
+        unit_assert_operator_equal("scan=22", sl->spectrum(3)->cvParam(MS_spectrum_title).value);
+        unit_assert_operator_equal("sample=1 period=1 cycle=23 experiment=1", sl->spectrum(4)->cvParam(MS_spectrum_title).value);
+    }
+
+    {
+        // the outer titleMaker overrides the inner one
+        SpectrumListFactory::wrap(msd, "titleMaker <Index>; <SpectrumType>, <MsLevel>");
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+        unit_assert_operator_equal("0; MS1 spectrum, 1", sl->spectrum(0)->cvParam(MS_spectrum_title).value);
+        unit_assert_operator_equal("1; MSn spectrum, 2", sl->spectrum(1)->cvParam(MS_spectrum_title).value);
+        unit_assert_operator_equal("2; MS1 spectrum, 1", sl->spectrum(2)->cvParam(MS_spectrum_title).value);
+        unit_assert_operator_equal("3; MSn spectrum, 2", sl->spectrum(3)->cvParam(MS_spectrum_title).value);
+        unit_assert_operator_equal("4; MS1 spectrum, 1", sl->spectrum(4)->cvParam(MS_spectrum_title).value);
+    }
+
+    {
+        SpectrumListFactory::wrap(msd, "titleMaker <ScanNumber> <MsLevel> <ActivationType> <ChargeState> <PrecursorSpectrumId>");
+        SpectrumListPtr& sl = msd.run.spectrumListPtr;
+        unit_assert_operator_equal("19 1   ", sl->spectrum(0)->cvParam(MS_spectrum_title).value);
+        unit_assert_operator_equal("20 2 CID 2 scan=19", sl->spectrum(1)->cvParam(MS_spectrum_title).value);
+        unit_assert_operator_equal("21 1   ", sl->spectrum(2)->cvParam(MS_spectrum_title).value);
+        unit_assert_operator_equal("22 2 ETD/CID 2 scan=19", sl->spectrum(3)->cvParam(MS_spectrum_title).value);
+        unit_assert_operator_equal("5 1   ", sl->spectrum(4)->cvParam(MS_spectrum_title).value);
+    }
+}
+
 void test()
 {
     testUsage(); 
@@ -348,6 +385,7 @@ void test()
     testWrapActivation();
     testWrapMassAnalyzer();
     testWrapPolarity();
+    testWrapTitleMaker();
 }
 
 

@@ -74,7 +74,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_TitleMaker::spectrum(size_t index, bool g
     /// <IsolationMz> - for the first precursor, IsolationWindow::cvParam("isolation target m/z")
     /// <SelectedIonMz> - for the first selected ion of the first precursor, SelectedIon::cvParam("selected ion m/z")
     /// <ChargeState> - for the first selected ion of the first precursor, SelectedIon::cvParam("charge state")
+    /// <PrecursorSpectrumId> - for the first precursor, Precursor::spectrumID or Precursor::externalSpectrumID
     /// <SpectrumType> - Spectrum::cvParamChild("spectrum type")
+    /// <MsLevel> - Spectrum::cvParam("ms level")
     /// <ScanStartTime> - for the first scan, Scan::cvParam("scan start time")
     /// <BasePeakMz> - Spectrum::cvParam("base peak m/z")
     /// <BasePeakIntensity> - Spectrum::cvParam("base peak intensity")
@@ -112,6 +114,11 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_TitleMaker::spectrum(size_t index, bool g
             bal::replace_all(title, "<SelectedIonMz>", "");
             bal::replace_all(title, "<ChargeState>", "");
         }
+
+        if (!p.spectrumID.empty())
+            bal::replace_all(title, "<PrecursorSpectrumId>", p.spectrumID);
+        else if (!p.externalSpectrumID.empty())
+            bal::replace_all(title, "<PrecursorSpectrumId>", p.externalSpectrumID);
     }
     else
     {
@@ -119,6 +126,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_TitleMaker::spectrum(size_t index, bool g
         bal::replace_all(title, "<IsolationMz>", "");
         bal::replace_all(title, "<SelectedIonMz>", "");
         bal::replace_all(title, "<ChargeState>", "");
+        bal::replace_all(title, "<PrecursorSpectrumId>", "");
     }
 
     double scanStartTimeInSeconds = s->scanList.scans.empty() ? 0 : s->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds();
@@ -126,6 +134,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_TitleMaker::spectrum(size_t index, bool g
     bal::replace_all(title, "<ScanStartTimeInMinutes>", lexical_cast<string>(scanStartTimeInSeconds / 60));
 
     bal::replace_all(title, "<SpectrumType>", s->cvParamChild(MS_spectrum_type).name());
+    bal::replace_all(title, "<MsLevel>", s->cvParam(MS_ms_level).value);
     bal::replace_all(title, "<BasePeakMz>", s->cvParam(MS_base_peak_m_z).value);
     bal::replace_all(title, "<BasePeakIntensity>", s->cvParam(MS_base_peak_intensity).value);
     bal::replace_all(title, "<TotalIonCurrent>", s->cvParam(MS_TIC).value);
