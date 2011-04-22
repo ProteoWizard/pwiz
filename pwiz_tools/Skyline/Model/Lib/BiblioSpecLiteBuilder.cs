@@ -44,6 +44,7 @@ namespace pwiz.Skyline.Model.Lib
         public const string EXT_DAT = ".dat";
         public const string EXT_XTAN_XML = ".xtan.xml";
         public const string EXT_PILOT_XML = ".group.xml";
+        public const string EXT_PERCOLATOR_XML = "results.xml";
         public const string EXT_WATERS_MSE = "final_fragment.csv";
         public const string EXT_SQLITE_JOURNAL = "-journal";
 

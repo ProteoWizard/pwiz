@@ -834,9 +834,9 @@
             this.label29.AutoSize = true;
             this.label29.Location = new System.Drawing.Point(14, 160);
             this.label29.Name = "label29";
-            this.label29.Size = new System.Drawing.Size(105, 13);
+            this.label29.Size = new System.Drawing.Size(139, 13);
             this.label29.TabIndex = 5;
-            this.label29.Text = "Isotope e&nrichments:";
+            this.label29.Text = "Isotope la&beling enrichment:";
             // 
             // labelPrecursorIsotopeFilterPercent
             // 

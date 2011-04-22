@@ -391,7 +391,7 @@ namespace pwiz.Skyline.Model.Results
                     {
                         var chromData = arrayChromData[j];
                         if (setChromData.Contains(chromData))
-                            arrayChromData[j] = chromData.Clone();
+                            arrayChromData[j] = chromData.CloneForWrite();
                         setChromData.Add(chromData);
                     }
                     var chromDataPart = new ChromDataSet(isTimeNormalArea, arrayChromData);
@@ -623,9 +623,9 @@ namespace pwiz.Skyline.Model.Results
                         // Write the raw chromatogram points
                         byte[] points = ChromatogramCache.TimeIntensitiesToBytes(times, intensities);
                         // Compress the data (can be huge for AB data with lots of zeros)
-                        byte[] peaksCompressed = points.Compress(3);
-                        int lenCompressed = peaksCompressed.Length;
-                        _outStream.Write(peaksCompressed, 0, lenCompressed);
+                        byte[] pointsCompressed = points.Compress(3);
+                        int lenCompressed = pointsCompressed.Length;
+                        _outStream.Write(pointsCompressed, 0, lenCompressed);
 
                         // Add to header list
 //                        Debug.Assert(headData.MaxPeakIndex != -1);
@@ -641,9 +641,16 @@ namespace pwiz.Skyline.Model.Results
                                                               lenCompressed,
                                                               location);
 
+                        int? transitionPeakCount = null;
                         foreach (var chromData in chromDataSet.Chromatograms)
                         {
                             _listTransitions.Add(new ChromTransition(chromData.Key.Product));
+
+                            // Make sure all transitions have the same number of peaks, as this is a cache requirement
+                            if (!transitionPeakCount.HasValue)
+                                transitionPeakCount = chromData.Peaks.Count;
+                            else if (transitionPeakCount.Value != chromData.Peaks.Count)
+                                throw new InvalidDataException(string.Format("Transitions of the same precursor found with different peak counts {0} and {1}", transitionPeakCount, chromData.Peaks.Count));
 
                             // Add to peaks list
                             foreach (var peak in chromData.Peaks)

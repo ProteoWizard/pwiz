@@ -106,6 +106,10 @@ namespace pwiz.Skyline.SettingsUI
             if (Instrument.MaxTransitions.HasValue)
                 textMaxTrans.Text = Instrument.MaxTransitions.Value.ToString();
 
+            _driverEnrichments = new SettingsListComboDriver<IsotopeEnrichments>(comboEnrichments, Settings.Default.IsotopeEnrichmentsList);
+            sel = (FullScan.IsotopeEnrichments != null ? FullScan.IsotopeEnrichments.Name : null);
+            _driverEnrichments.LoadList(sel);
+
             comboPrecursorIsotopes.Items.AddRange(
                 new[]
                     {
@@ -115,10 +119,6 @@ namespace pwiz.Skyline.SettingsUI
                     });
             comboPrecursorAnalyzerType.Items.AddRange(TransitionFullScan.MASS_ANALYZERS);
             comboPrecursorIsotopes.SelectedItem = FullScan.PrecursorIsotopes.ToString();
-
-            _driverEnrichments = new SettingsListComboDriver<IsotopeEnrichments>(comboEnrichments, Settings.Default.IsotopeEnrichmentsList);
-            sel = (FullScan.IsotopeEnrichments != null ? FullScan.IsotopeEnrichments.Name : null);
-            _driverEnrichments.LoadList(sel);
 
             // Update the precursor analyzer type in case the SelectedIndex is still -1
             UpdatePrecursorAnalyzerType();
@@ -421,10 +421,19 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
 
+            // If high resolution MS1 filtering is enabled, make sure precursor m/z type
+            // is monoisotopic and isotope enrichments are set
             IsotopeEnrichments enrichments = null;
             if (precursorIsotopes != FullScanPrecursorIsotopes.None &&
                     precursorAnalyzerType != FullScanMassAnalyzerType.qit)
             {
+                if (precursorMassType != MassType.Monoisotopic)
+                {
+                    MessageDlg.Show(this, "High resolution MS1 filtering requires use of monoisotopic precursor masses.");
+                    tabControl1.SelectedIndex = (int)TABS.Prediction;
+                    comboPrecursorMass.Focus();
+                    return;
+                }
                 string nameEnrichments = comboEnrichments.SelectedItem.ToString();
                 enrichments = Settings.Default.GetIsotopeEnrichmentsByName(nameEnrichments);
                 if (enrichments == null)
@@ -665,7 +674,7 @@ namespace pwiz.Skyline.SettingsUI
                 comboEnrichments.SelectedIndex = -1;
                 comboEnrichments.Enabled = false;
             }
-            else if (!comboEnrichments.Enabled)
+            else if (precursorMassAnalyzer != FullScanMassAnalyzerType.none && !comboEnrichments.Enabled)
             {
                 comboEnrichments.SelectedIndex = 0;
                 comboEnrichments.Enabled = true;

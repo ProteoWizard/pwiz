@@ -75,14 +75,19 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        private string SelectedString
+        {
+            get { return Combo.SelectedItem != null ? Combo.SelectedItem.ToString() : string.Empty; }
+        }
+
         public bool AddItemSelected()
         {
-            return (ADD_ITEM == Combo.SelectedItem.ToString());
+            return Equals(ADD_ITEM, SelectedString);
         }
 
         public bool EditListSelected()
         {
-            return (EDIT_LIST_ITEM == Combo.SelectedItem.ToString());
+            return Equals(EDIT_LIST_ITEM, SelectedString);
         }
 
         public void SelectedIndexChangedEvent(object sender, EventArgs e)

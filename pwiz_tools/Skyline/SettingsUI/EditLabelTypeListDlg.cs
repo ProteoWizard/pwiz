@@ -22,6 +22,7 @@ using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -72,26 +73,32 @@ namespace pwiz.Skyline.SettingsUI
 
         public void OkDialog()
         {
-            var setLabelTypeNames = new HashSet<string>();
+            // All names must produce unique (case insensitive) IDs, since IDs are used
+            // for the names in reports, and the SQL column names used in reports are case insensitive.
+            var dictIdsToNames = new Dictionary<string, string>();
             foreach (var labelType in LabelTypes)
             {
-                string labelTypeNameLower = labelType.Name.ToLower();
-                if (Equals(labelTypeNameLower, IsotopeLabelType.light.Name))
+                string lowerCaseId = Helpers.MakeId(labelType.Name).ToLower();
+                if (Equals(lowerCaseId, IsotopeLabelType.light.Name))
                 {
-                    MessageDlg.Show(this, string.Format("The name '{0}' is not allowed for a custom isotope label type.", labelType.Name));
+                    MessageDlg.Show(this, string.Format("The name '{0}' conflicts with the default light isotope label type.", labelType.Name));
                     textLabelTypes.Focus();
                     return;
                 }
-                if (setLabelTypeNames.Contains(labelTypeNameLower))
+                string nameExisting;
+                if (dictIdsToNames.TryGetValue(lowerCaseId, out nameExisting))
                 {
-                    MessageDlg.Show(this, string.Format("The label name '{0}' may not be used more than once.", labelType.Name));
+                    if (Equals(nameExisting, labelType.Name))
+                        MessageDlg.Show(this, string.Format("The label name '{0}' may not be used more than once.", labelType.Name));
+                    else
+                        MessageDlg.Show(this, string.Format("The label names '{0}' and '{1}' conflict.  Use more unique names.", nameExisting, labelType.Name));
                     textLabelTypes.Focus();
                     return;
                 }
-                setLabelTypeNames.Add(labelTypeNameLower);
+                dictIdsToNames.Add(lowerCaseId, labelType.Name);
             }
             // If everything was deleted, force at least the default heavy label name
-            if (setLabelTypeNames.Count == 0)
+            if (dictIdsToNames.Count == 0)
                 textLabelTypes.Text = IsotopeLabelType.heavy.Name;
 
             DialogResult = DialogResult.OK;

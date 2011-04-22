@@ -491,7 +491,7 @@ namespace pwiz.Skyline.Model.Results
                 // Discard peaks that occur at the edge of their range.
                 // These are not useful in SRM.
                 // TODO: Fix Crawdad peak detection to make this unnecessary
-                if (maxPeak.StartIndex != maxPeak.TimeIndex && maxPeak.EndIndex != maxPeak.TimeIndex)
+                if (maxPeak != null && maxPeak.StartIndex != maxPeak.TimeIndex && maxPeak.EndIndex != maxPeak.TimeIndex)
                     allPeaks.Add(new ChromDataPeak(maxData, maxPeak));
                 if (!maxEnumerator.MoveNext())
                 {

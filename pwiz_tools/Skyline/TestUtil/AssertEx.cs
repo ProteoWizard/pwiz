@@ -33,6 +33,16 @@ namespace pwiz.SkylineTestUtil
 {
     public class AssertEx
     {
+        public static void AreEqualDeep<TItem>(IList<TItem> l1, IList<TItem> l2)
+        {
+            Assert.AreEqual(l1.Count, l2.Count);
+            for (int i = 0; i < l1.Count; i++)
+            {
+                if (!Equals(l1[i], l2[i]))
+                    Assert.AreEqual(l1[i], l2[i]);  // For setting breakpoint
+            }
+        }
+
         public static void ThrowsException<TEx>(Action throwEx)
             where TEx : Exception
         {

@@ -16,7 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
@@ -62,7 +61,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         private void Validate()
         {
-            var isotopes = BioMassCalc.MONOISOTOPIC.SynchMasses(IsotopeAbundances.Default);
+            var isotopes = BioMassCalc.DEFAULT_ABUNDANCES;
             var dictSymDist = _isotopeEnrichments.ToDictionary(e => e.IsotopeSymbol,
                                                                e => e.CalcDistribution(isotopes));
 

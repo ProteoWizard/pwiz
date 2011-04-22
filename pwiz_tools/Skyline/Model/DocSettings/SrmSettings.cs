@@ -1190,7 +1190,9 @@ namespace pwiz.Skyline.Model.DocSettings
                                                     oldPep.Modifications.NeutralLossModifications.ToArray()) ||
                               // MS1 filtering changed select peaks
                               newTran.FullScan.PrecursorIsotopes != oldTran.FullScan.PrecursorIsotopes ||
-                              newTran.FullScan.PrecursorIsotopeFilter != oldTran.FullScan.PrecursorIsotopeFilter
+                              newTran.FullScan.PrecursorIsotopeFilter != oldTran.FullScan.PrecursorIsotopeFilter ||
+                              (newTran.FullScan.PrecursorIsotopes == FullScanPrecursorIsotopes.Percent &&
+                              !ReferenceEquals(newTran.FullScan.IsotopeEnrichments, oldTran.FullScan.IsotopeEnrichments))
                               ;
 
             // Any change in modifications or fragment mass-type forces a recalc

@@ -31,7 +31,7 @@ using pwiz.Skyline.Util;
 namespace pwiz.Skyline.Model.DocSettings
 {
     [XmlRoot("transition_settings")]
-    public class TransitionSettings : Immutable, IXmlSerializable
+    public class TransitionSettings : Immutable, IValidating, IXmlSerializable
     {
         public TransitionSettings(TransitionPrediction prediction,
                                   TransitionFilter filter,
@@ -46,6 +46,8 @@ namespace pwiz.Skyline.Model.DocSettings
             Integration = integration;
             Instrument = instrument;
             FullScan = fullScan;
+
+            DoValidate();
         }
 
         public TransitionPrediction Prediction { get; private set; }
@@ -106,6 +108,22 @@ namespace pwiz.Skyline.Model.DocSettings
         {
         }
 
+        void IValidating.Validate()
+        {
+            DoValidate();
+        }
+
+        private void DoValidate()
+        {
+            // Be careful in this validate function, since it occurs before SrmSettings.ValidateLoad()
+            // This means any of the sub-settings objects may be null, and they will get the defaults
+            if (FullScan != null && FullScan.IsHighResPrecursor &&
+                    Prediction != null && Prediction.PrecursorMassType != MassType.Monoisotopic)
+            {
+                throw new InvalidDataException("High resolution MS1 filtering requires use of monoisotopic precursor masses.");
+            }
+        }
+
         public static TransitionSettings Deserialize(XmlReader reader)
         {
             return reader.Deserialize(new TransitionSettings());
@@ -148,7 +166,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 reader.ReadEndElement();                
             }
 
-            // Defer validation to the SrmSettings object
+            DoValidate();
         }
 
         public void WriteXml(XmlWriter writer)
@@ -1611,6 +1629,16 @@ namespace pwiz.Skyline.Model.DocSettings
                 return PrecursorFilterType != FullScanPrecursorFilterType.None ||
                        PrecursorIsotopes != FullScanPrecursorIsotopes.None;
             }
+        }
+
+        public bool IsHighResPrecursor { get { return IsHighResAnalyzer(PrecursorMassAnalyzer); } }
+
+        public bool IsHighResProduct { get { return IsHighResAnalyzer(ProductMassAnalyzer); } }
+
+        public static bool IsHighResAnalyzer(FullScanMassAnalyzerType analyzerType)
+        {
+            return analyzerType != FullScanMassAnalyzerType.none &&
+                   analyzerType != FullScanMassAnalyzerType.qit;
         }
 
         public double GetPrecursorFilterWindow(double mzQ1)

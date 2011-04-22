@@ -1055,9 +1055,9 @@ namespace pwiz.Skyline.Properties
             return (IsotopeEnrichments)item.ChangeName(string.Empty);
         }
 
-        public override string Title { get { return "Edit Isotope Enrichments"; } }
+        public override string Title { get { return "Edit Isotope Labeling Enrichments"; } }
 
-        public override string Label { get { return "&Isotope entrichment:"; } }        
+        public override string Label { get { return "&Isotope labeling entrichment:"; } }        
     }
 
     public sealed class SrmSettingsList : SettingsListBase<SrmSettings>, IListSerializer<SrmSettings>

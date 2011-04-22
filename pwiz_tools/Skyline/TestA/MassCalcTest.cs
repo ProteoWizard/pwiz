@@ -62,9 +62,7 @@ namespace pwiz.SkylineTestA
         [TestMethod]
         public void BioMassCalcTest()
         {
-            var isotopeAbundances = BioMassCalc.MONOISOTOPIC.SynchMasses(IsotopeAbundances.Default);
-
-            foreach (var atomAbundance in isotopeAbundances)
+            foreach (var atomAbundance in BioMassCalc.DEFAULT_ABUNDANCES)
             {
                 string symbol = atomAbundance.Key;
                 var massDistOrdered = atomAbundance.Value.MassesSortedByAbundance();

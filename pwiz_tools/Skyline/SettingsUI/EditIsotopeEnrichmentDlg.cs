@@ -29,6 +29,9 @@ namespace pwiz.Skyline.SettingsUI
 {
     public partial class EditIsotopeEnrichmentDlg : Form
     {
+        private const int COL_SYMBOL = 1;
+        private const int COL_ENRICHMENT = 2;
+
         private static readonly IList<KeyValuePair<string, string>> LIST_NAME_SYMBOL =
             new[]
                 {
@@ -49,10 +52,7 @@ namespace pwiz.Skyline.SettingsUI
             InitializeComponent();
 
             foreach (var nameSymbol in LIST_NAME_SYMBOL)
-            {
-                int iRow = gridEnrichments.Rows.Add(nameSymbol.Key);
-                gridEnrichments.Rows[iRow].Tag = nameSymbol.Value;
-            }
+                gridEnrichments.Rows.Add(nameSymbol.Key, nameSymbol.Value);
         }
 
         public string EnrichmentsName
@@ -75,14 +75,14 @@ namespace pwiz.Skyline.SettingsUI
                     double? enrichmentValue = null;
                     if (_enrichments != null)
                     {
-                        string isotopeSymbol = (string) row.Tag;
+                        string isotopeSymbol = (string) row.Cells[COL_SYMBOL].Value;
                         int iEnrichment = _enrichments.Enrichments.IndexOf(e =>
                             Equals(e.IsotopeSymbol, isotopeSymbol));
                         enrichmentValue = iEnrichment != -1
                             ? _enrichments.Enrichments[iEnrichment].AtomPercentEnrichment
                             : IsotopeEnrichmentItem.DEFAULT_ATOM_PERCENT_ENRICHMENT;
                     }
-                    row.Cells[1].Value = enrichmentValue.HasValue
+                    row.Cells[COL_ENRICHMENT].Value = enrichmentValue.HasValue
                         ? (enrichmentValue * 100).ToString()
                         : string.Empty;
                 }

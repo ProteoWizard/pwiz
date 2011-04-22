@@ -19,8 +19,10 @@
 using System;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
@@ -789,14 +791,14 @@ namespace pwiz.SkylineTest
         }
 
         /// <summary>
-        /// Test error handling in XML deserialization of <see cref="TransitionInstrument"/>.
+        /// Test error handling in XML deserialization of <see cref="TransitionFullScan"/>.
         /// </summary>
         [TestMethod]
         public void SerializeTransitionFullScanTest()
         {
-            string validLoRes = ((TransitionFullScan.MIN_LO_RES + TransitionFullScan.MAX_LO_RES) / 2).ToString(CultureInfo.InvariantCulture);
-            string validHiRes = ((TransitionFullScan.MIN_HI_RES + TransitionFullScan.MAX_HI_RES) / 2).ToString(CultureInfo.InvariantCulture);
-            string validHiResMz = ((TransitionFullScan.MIN_RES_MZ + TransitionFullScan.MAX_RES_MZ) / 2).ToString(CultureInfo.InvariantCulture);
+            string validLoRes = ToXml((TransitionFullScan.MIN_LO_RES + TransitionFullScan.MAX_LO_RES) / 2);
+            string validHiRes = ToXml((TransitionFullScan.MIN_HI_RES + TransitionFullScan.MAX_HI_RES) / 2);
+            string validHiResMz = ToXml((TransitionFullScan.MIN_RES_MZ + TransitionFullScan.MAX_RES_MZ) / 2);
 
             // Valid first
             AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan />");
@@ -825,15 +827,19 @@ namespace pwiz.SkylineTest
                 FullScanMassAnalyzerType.orbitrap + "\" precursor_res=\"" + validHiRes + "\" " +
                 "precursor_filter_type=\"" + FullScanPrecursorFilterType.Multiple + "\" precursor_filter=\"2\" product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.qit + "\" product_res=\"" + validLoRes + "\"/>");  // Use default res mz
+            // Isotope enrichments
+            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_mass_analyzer=\"" + FullScanMassAnalyzerType.tof + "\" " +
+                "precursor_res=\"" + validHiRes + "\">" + VALID_ISOTOPE_ENRICHMENT_XML + "</transition_full_scan>");
 
             // Errors
-            string overMaxMulti = (TransitionFullScan.MAX_PRECURSOR_MULTI_FILTER * 2).ToString(CultureInfo.InvariantCulture);
-            string underMinMulti = (TransitionFullScan.MIN_PRECURSOR_MULTI_FILTER / 2).ToString(CultureInfo.InvariantCulture);
-            string underMinLoRes = (TransitionFullScan.MIN_LO_RES/2).ToString(CultureInfo.InvariantCulture);
-            string overMaxLoRes = (TransitionFullScan.MAX_LO_RES*2).ToString(CultureInfo.InvariantCulture);
-            string underMinHiRes = (TransitionFullScan.MIN_HI_RES/2).ToString(CultureInfo.InvariantCulture);
-            string overMaxHiRes = (TransitionFullScan.MAX_HI_RES*2).ToString(CultureInfo.InvariantCulture);
-            string underMinResMz = (TransitionFullScan.MIN_RES_MZ/2).ToString(CultureInfo.InvariantCulture);
+            string overMaxMulti = ToXml(TransitionFullScan.MAX_PRECURSOR_MULTI_FILTER * 2);
+            string underMinMulti = ToXml(TransitionFullScan.MIN_PRECURSOR_MULTI_FILTER / 2);
+            string underMinLoRes = ToXml(TransitionFullScan.MIN_LO_RES/2);
+            string overMaxLoRes = ToXml(TransitionFullScan.MAX_LO_RES * 2);
+            string underMinHiRes = ToXml(TransitionFullScan.MIN_HI_RES / 2);
+            string overMaxHiRes = ToXml(TransitionFullScan.MAX_HI_RES * 2);
+            string underMinResMz = ToXml(TransitionFullScan.MIN_RES_MZ / 2);
+            string defaultResMz = ToXml(TransitionFullScan.DEFAULT_RES_MZ);
 
             AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
                 FullScanPrecursorFilterType.Single + "\" product_mass_analyzer=\"Unknown\" " +
@@ -855,15 +861,91 @@ namespace pwiz.SkylineTest
                 FullScanMassAnalyzerType.qit + "\" product_res=\"" + overMaxLoRes + "\"/>");
             AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
                 FullScanPrecursorFilterType.Single + "\" product_mass_analyzer=\"" +
-                FullScanMassAnalyzerType.ft_icr + "\" product_res=\"" + underMinHiRes + "\" product_res_mz=\"" + TransitionFullScan.DEFAULT_RES_MZ + "\"/>");
+                FullScanMassAnalyzerType.ft_icr + "\" product_res=\"" + underMinHiRes + "\" product_res_mz=\"" + defaultResMz + "\"/>");
             AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
                 FullScanPrecursorFilterType.Single + "\" product_mass_analyzer=\"" +
-                FullScanMassAnalyzerType.orbitrap + "\" product_res=\"" + overMaxHiRes + "\" product_res_mz=\"" + TransitionFullScan.DEFAULT_RES_MZ + "\"/>");
+                FullScanMassAnalyzerType.orbitrap + "\" product_res=\"" + overMaxHiRes + "\" product_res_mz=\"" + defaultResMz + "\"/>");
             AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.orbitrap + "\" precursor_res=\"" + validHiRes + "\" precursor_res_mz=\"" + underMinResMz + "\" " +
                 "precursor_filter_type=\"" + FullScanPrecursorFilterType.Multiple + "\" precursor_filter=\"2\" product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.qit + "\" product_res=\"" + validLoRes + "\"/>");
+            // Isotope enrichments with low res
+            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_mass_analyzer=\"" + FullScanMassAnalyzerType.qit + "\" " +
+                "precursor_res=\"" + validLoRes + "\">" + VALID_ISOTOPE_ENRICHMENT_XML + "</transition_full_scan>");
         }
+
+        /// <summary>
+        /// Test error handling in XML deserialization of <see cref="IsotopeEnrichments"/>.
+        /// </summary>
+        [TestMethod]
+        public void SerializeIsotopeEnrichmentsTest()
+        {
+            // Valid first
+            AssertEx.DeserializeNoError<IsotopeEnrichmentItem>("<atom_percent_enrichment symbol=\"H&apos;\">0.9</atom_percent_enrichment>");
+            AssertEx.DeserializeNoError<IsotopeEnrichmentItem>("<atom_percent_enrichment symbol=\"C&apos;\">" + ToXml(IsotopeEnrichmentItem.MAX_ATOM_PERCENT_ENRICHMENT) + "</atom_percent_enrichment>");
+            AssertEx.DeserializeNoError<IsotopeEnrichmentItem>("<atom_percent_enrichment symbol=\"N&apos;\">" + ToXml(IsotopeEnrichmentItem.MAX_ATOM_PERCENT_ENRICHMENT / 2) + "</atom_percent_enrichment>");
+            AssertEx.DeserializeNoError<IsotopeEnrichmentItem>("<atom_percent_enrichment symbol=\"O&apos;\">" + ToXml(IsotopeEnrichmentItem.MIN_ATOM_PERCENT_ENRICHMENT) + "</atom_percent_enrichment>");
+            AssertEx.DeserializeNoError<IsotopeEnrichmentItem>("<atom_percent_enrichment symbol=\"O&quot;\">" + ToXml(IsotopeEnrichmentItem.MIN_ATOM_PERCENT_ENRICHMENT * 2) + "</atom_percent_enrichment>");
+
+            // Invalid
+            for (char c = 'A'; c <= 'Z'; c++)
+            {
+                AssertEx.DeserializeError<IsotopeEnrichmentItem>("<atom_percent_enrichment symbol=\"" + c + "\">0.9</atom_percent_enrichment>");
+            }
+            AssertEx.DeserializeError<IsotopeEnrichmentItem>("<atom_percent_enrichment symbol=\"N&apos;\">" + ToXml(IsotopeEnrichmentItem.MAX_ATOM_PERCENT_ENRICHMENT+1) + "</atom_percent_enrichment>");
+            AssertEx.DeserializeError<IsotopeEnrichmentItem>("<atom_percent_enrichment symbol=\"O&quot;\">" + ToXml(IsotopeEnrichmentItem.MIN_ATOM_PERCENT_ENRICHMENT-1) + "</atom_percent_enrichment>");
+
+            // Valid enrichments
+            AssertEx.DeserializeNoError<IsotopeEnrichments>(VALID_ISOTOPE_ENRICHMENT_XML);
+
+            // Invalid enrichments
+            AssertEx.DeserializeNoError<IsotopeEnrichments>("<isotope_enrichments name=\"Cambridge Isotope Labs\">" +
+                "<atom_percent_enrichment symbol=\"H&apos;\">0.9</atom_percent_enrichment>" +
+                "<atom_percent_enrichment symbol=\"C&apos;\">0.91</atom_percent_enrichment>" +
+                "<atom_percent_enrichment symbol=\"N&apos;\">0.92</atom_percent_enrichment>" +
+                "<atom_percent_enrichment symbol=\"O&apos;\">0.93</atom_percent_enrichment>" +
+                "</isotope_enrichments>");  // Missing label atom O"
+
+            string expected = null;
+            var enrichments = AssertEx.RoundTrip(IsotopeEnrichmentsList.GetDefault(), ref expected);
+            foreach (var symbol in BioMassCalc.HeavySymbols)
+            {
+                string isotopeSymbol = symbol;
+                double expectedEnrichment = BioMassCalc.GetIsotopeEnrichmentDefault(isotopeSymbol);
+                // Make sure the distribution in the IsotopeAbundances object got set correctly
+                int indexEnrichment = BioMassCalc.GetIsotopeDistributionIndex(isotopeSymbol);
+                Assert.IsTrue(enrichments.IsotopeAbundances.ContainsKey(isotopeSymbol));
+                MassDistribution massDistribution;
+                Assert.IsTrue(enrichments.IsotopeAbundances.TryGetValue(isotopeSymbol, out massDistribution));
+                Assert.AreEqual(expectedEnrichment, massDistribution.ToArray()[indexEnrichment].Value, 0.000001);
+                // Make sure the enrichments are set correctly
+                indexEnrichment = enrichments.Enrichments.IndexOf(item => Equals(item.IsotopeSymbol, isotopeSymbol));
+                Assert.AreNotEqual(-1, indexEnrichment);
+                Assert.AreEqual(expectedEnrichment, enrichments.Enrichments[indexEnrichment].AtomPercentEnrichment);
+            }
+
+            foreach (var symDist in BioMassCalc.DEFAULT_ABUNDANCES)
+            {
+                var distDefault = symDist.Value;
+                var distEnriched = enrichments.IsotopeAbundances[symDist.Key];
+                AssertEx.AreEqualDeep(distDefault.ToArray(), distEnriched.ToArray());
+            }
+        }
+
+        private const string VALID_ISOTOPE_ENRICHMENT_XML =
+            "<isotope_enrichments name=\"Cambridge Isotope Labs\">" +
+            "<atom_percent_enrichment symbol=\"H&apos;\">0.9</atom_percent_enrichment>" +
+            "<atom_percent_enrichment symbol=\"C&apos;\">0.91</atom_percent_enrichment>" +
+            "<atom_percent_enrichment symbol=\"N&apos;\">0.92</atom_percent_enrichment>" +
+            "<atom_percent_enrichment symbol=\"O&apos;\">0.93</atom_percent_enrichment>" +
+            "<atom_percent_enrichment symbol=\"O&quot;\">0.94</atom_percent_enrichment>" +
+            "</isotope_enrichments>";
+
+        private static string ToXml(double value)
+        {
+            return value.ToString(CultureInfo.InvariantCulture);
+        }
+
         private static void CheckSettingsList<TItem>(SettingsList<TItem> target, SettingsList<TItem> copy)
             where TItem : IKeyContainer<string>, IXmlSerializable
         {

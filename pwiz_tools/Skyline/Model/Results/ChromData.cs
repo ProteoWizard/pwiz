@@ -38,9 +38,16 @@ namespace pwiz.Skyline.Model.Results
             MaxPeakIndex = -1;
         }
 
-        public ChromData Clone()
+        /// <summary>
+        /// Clone the object, and create a new list of peaks, since the peaks are
+        /// calculated on the write thread, and may be calulated differently for multiple
+        /// transition groups.
+        /// </summary>
+        public ChromData CloneForWrite()
         {
-            return (ChromData)MemberwiseClone();
+            var clone = (ChromData)MemberwiseClone();
+            clone.Peaks = new List<ChromPeak>(Peaks);
+            return clone;
         }
 
         public void Load(ChromDataProvider provider)

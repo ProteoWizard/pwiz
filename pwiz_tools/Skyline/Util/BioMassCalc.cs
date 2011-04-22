@@ -46,6 +46,9 @@ namespace pwiz.Skyline.Util
         public static readonly BioMassCalc MONOISOTOPIC = new BioMassCalc(MassType.Monoisotopic);
         public static readonly BioMassCalc AVERAGE = new BioMassCalc(MassType.Average);
 
+        public static readonly IsotopeAbundances DEFAULT_ABUNDANCES =
+            MONOISOTOPIC.SynchMasses(IsotopeAbundances.Default);
+
         public const string H = "H";    // Hydrogen
         public const string H2 = "H'";  // Deuterium
         public const string C = "C";    // Carbon
@@ -88,14 +91,14 @@ namespace pwiz.Skyline.Util
         /// A dictionary mapping heavy isotope symbols to their correspoding
         /// indices within the mass distributions of <see cref="IsotopeAbundances.Default"/>.
         /// </summary>
-        private static readonly IDictionary<string, int> DICT_SYMBOL_TO_ISOTOPE_INDEX =
-            new Dictionary<string, int>
+        private static readonly IDictionary<string, KeyValuePair<int, double>> DICT_SYMBOL_TO_ISOTOPE_INDEX =
+            new Dictionary<string, KeyValuePair<int, double>>
                 {
-                    { H2, 1 },
-                    { C13, 1 },
-                    { N15, 1 },
-                    { O17, 1 },
-                    { O18, 2 },
+                    { H2, new KeyValuePair<int, double>(1, 0.99) },
+                    { C13, new KeyValuePair<int, double>(1, 0.99) },
+                    { N15, new KeyValuePair<int, double>(1, 0.99) },
+                    { O17, new KeyValuePair<int, double>(1, 0.99) },
+                    { O18, new KeyValuePair<int, double>(1, 0.99) },
                 };
 
         public static IEnumerable<string> HeavySymbols { get { return DICT_SYMBOL_TO_ISOTOPE_INDEX.Keys; } }
@@ -106,9 +109,20 @@ namespace pwiz.Skyline.Util
         /// </summary>
         public static int GetIsotopeDistributionIndex(string symbol)
         {
-            int index;
-            if (DICT_SYMBOL_TO_ISOTOPE_INDEX.TryGetValue(symbol, out index))
-                return index;
+            KeyValuePair<int, double> pair;
+            if (DICT_SYMBOL_TO_ISOTOPE_INDEX.TryGetValue(symbol, out pair))
+                return pair.Key;
+            return 0;
+        }
+
+        /// <summary>
+        /// Returns the default atom percent enrichment for a heavy labeled atom.
+        /// </summary>
+        public static double GetIsotopeEnrichmentDefault(string symbol)
+        {
+            KeyValuePair<int, double> pair;
+            if (DICT_SYMBOL_TO_ISOTOPE_INDEX.TryGetValue(symbol, out pair))
+                return pair.Value;
             return 0;
         }
 
