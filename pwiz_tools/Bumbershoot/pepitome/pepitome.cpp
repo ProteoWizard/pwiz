@@ -24,27 +24,26 @@
 #include "pepitome.h"
 #include "pwiz/data/msdata/Version.hpp"
 #include "pwiz/data/proteome/Version.hpp"
+#include "pwiz/utility/misc/DateTime.hpp"
 #include "PTMVariantList.h"
 #include "svnrev.hpp"
 #include "WuManber.h"
 #include "boost/tuple/tuple.hpp"
+#include "boost/lockfree/fifo.hpp"
 
 namespace freicore
 {
     namespace pepitome
     {
-        WorkerThreadMap					g_workerThreads;
-        simplethread_mutex_t			resourceMutex;
-
-        vector< double>					relativePeakCount;
-        vector< simplethread_mutex_t >	spectraMutexes;
-
         proteinStore					proteins;
-        SpectraStore                    librarySpectra;
-        SpectraList						spectra;
-        SpectraMassMapList				spectraMassMapsByChargeState;
-        float							totalSequenceComparisons;
+        boost::lockfree::fifo<size_t>   libraryTasks;
+        SearchStatistics                searchStatistics;
 
+        SpectraList						spectra;
+        SpectraMassMapList				avgSpectraByChargeState;
+	    SpectraMassMapList				monoSpectraByChargeState;
+        
+        SpectraStore                    librarySpectra;
         RunTimeConfig*					g_rtConfig;
 
         int Version::Major()                {return 1;}
@@ -60,6 +59,9 @@ namespace freicore
 
         int InitProcess( argList_t& args )
         {
+
+            static const string usageString = " -SpectralLibrary <spectral library path> <input spectra filemask 1> [-ProteinDatabase <FASTA protein database filepath>] [input spectra filemask 2] ..." ;
+
             //cout << g_hostString << " is initializing." << endl;
             if( g_pid == 0 )
             {
@@ -72,7 +74,6 @@ namespace freicore
 
             g_rtConfig = new RunTimeConfig;
             g_rtSharedConfig = (BaseRunTimeConfig*) g_rtConfig;
-            g_residueMap = new ResidueMap;
             g_endianType = GetHostEndianType();
             g_numWorkers = GetNumProcessors();
 
@@ -122,9 +123,9 @@ namespace freicore
                     --i;
                 }
 
-                if( args.size() < 4 )
+                if( args.size() < 3 )
                 {
-                    cerr << "Not enough arguments.\nUsage: " << args[0] << " -ProteinDatabase <FASTA protein database filepath> -SpectralLibrary <spectral library path> <input spectra filemask 1> [input spectra filemask 2] ..." << endl;
+                    cerr << "Not enough arguments.\nUsage: " << args[0] << usageString << endl;
                     return 1;
                 }
 
@@ -135,15 +136,6 @@ namespace freicore
                         cerr << g_hostString << " could not find the default configuration file (hard-coded defaults in use)." << endl;
                     }
                 }
-
-                if( !g_residueMap->initialized() )
-                {
-                    if( g_residueMap->initializeFromFile() )
-                    {
-                        cerr << g_hostString << " could not find the default residue masses file (hard-coded defaults in use)." << endl;
-                    }
-                }
-
             } 
             // Command line overrides happen after config file has been distributed but before PTM parsing
             RunTimeVariableMap vars = g_rtConfig->getVariables();
@@ -176,13 +168,13 @@ namespace freicore
 
             if( g_rtConfig->ProteinDatabase.empty() )
             {
-                cerr << "No FASTA protein database specified.\nUsage: " << args[0] << " -ProteinDatabase <FASTA protein database filepath> -SpectralLibrary <spectral library path> <input spectra filemask 1> [input spectra filemask 2] ..." << endl;
+                cerr << "No FASTA protein database specified.\nUsage: " << args[0] << usageString << endl;
                 return 1;
             }
 
             if( g_rtConfig->SpectralLibrary.empty() )
             {
-                cerr << "No spectral library specified.\nUsage: " << args[0] << " -ProteinDatabase <FASTA protein database filepath> -SpectralLibrary <spectral library path> <input spectra filemask 1> [input spectra filemask 2] ..." << endl;
+                cerr << "No spectral library specified.\nUsage: " << args[0] << usageString << endl;
                 return 1;
             }
 
@@ -193,7 +185,6 @@ namespace freicore
                     if( args[i] == "-dump" )
                     {
                         g_rtConfig->dump();
-                        g_residueMap->dump();
                         args.erase( args.begin() + i );
                         --i;
                     }
@@ -219,88 +210,101 @@ namespace freicore
 
             if( spectra.empty() )
                 return 0;
+
             // Determine the maximum seen charge state
-            for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
-                g_rtConfig->maxChargeStateFromSpectra = max((*sItr)->id.charge, g_rtConfig->maxChargeStateFromSpectra);
-            g_rtConfig->maxFragmentChargeState = ( g_rtConfig->MaxFragmentChargeState > 0 ? g_rtConfig->MaxFragmentChargeState+1 : g_rtConfig->maxChargeStateFromSpectra );
-            g_rtConfig->PrecursorMassTolerance.clear();
+            BOOST_FOREACH(Spectrum* s, spectra)
+		        g_rtConfig->maxChargeStateFromSpectra = max(s->possibleChargeStates.back(), g_rtConfig->maxChargeStateFromSpectra);
+
+		    g_rtConfig->maxFragmentChargeState = ( g_rtConfig->MaxFragmentChargeState > 0 ? g_rtConfig->MaxFragmentChargeState+1 : g_rtConfig->maxChargeStateFromSpectra );
+
+            g_rtConfig->monoPrecursorMassTolerance.clear();
+            g_rtConfig->avgPrecursorMassTolerance.clear();
             for( int z=1; z <= g_rtConfig->maxChargeStateFromSpectra; ++z )
-                g_rtConfig->PrecursorMassTolerance.push_back( g_rtConfig->PrecursorMzTolerance * z );
+            {
+                g_rtConfig->monoPrecursorMassTolerance.push_back( MZTolerance(g_rtConfig->MonoPrecursorMzTolerance.value * z,
+                    g_rtConfig->MonoPrecursorMzTolerance.units) );
+                g_rtConfig->avgPrecursorMassTolerance.push_back( MZTolerance(g_rtConfig->AvgPrecursorMzTolerance.value * z,
+                    g_rtConfig->AvgPrecursorMzTolerance.units) );
+            }
+
+            size_t monoPrecursorHypotheses = 0, avgPrecursorHypotheses = 0;
 
             // Create a map of precursor masses to the spectrum indices
-            spectraMassMapsByChargeState.resize( g_rtConfig->maxChargeStateFromSpectra );
+            monoSpectraByChargeState.resize( g_rtConfig->maxChargeStateFromSpectra );
+            avgSpectraByChargeState.resize( g_rtConfig->maxChargeStateFromSpectra );
             for( int z=0; z < g_rtConfig->maxChargeStateFromSpectra; ++z )
             {
-                for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
-                {
-                    Spectrum* s = *sItr;
+                BOOST_FOREACH(Spectrum* s, spectra)
+                    BOOST_FOREACH(const PrecursorMassHypothesis& p, s->precursorMassHypotheses)
+                    if (p.charge != z+1) continue;
+                    else if (g_rtConfig->precursorMzToleranceRule == MzToleranceRule_Mono ||
+                        p.massType == MassType_Monoisotopic && g_rtConfig->precursorMzToleranceRule != MzToleranceRule_Avg)
+                        monoSpectraByChargeState[z].insert(make_pair(p.mass, make_pair(s, p)));
+                    else
+                        avgSpectraByChargeState[z].insert(make_pair(p.mass, make_pair(s, p)));
 
-                    if( s->id.charge-1 != z )
-                        continue;
-
-                    for( size_t i=0; i < s->mOfPrecursorList.size(); ++i )
-                        spectraMassMapsByChargeState[z].insert( make_pair( s->mOfPrecursorList[i], sItr ) );
-                    //spectraMassMapsByChargeState[z].insert( pair< float, SpectraList::iterator >( s->mOfPrecursor, sItr ) );
-                    //cout << i << " " << (*sItr)->mOfPrecursor << endl;
-                }
+                    monoPrecursorHypotheses += monoSpectraByChargeState[z].size();
+                    avgPrecursorHypotheses += avgSpectraByChargeState[z].size();
             }
-            g_rtConfig->curMinSequenceMass = spectra.front()->mOfPrecursor;
-            g_rtConfig->curMaxSequenceMass = 0;
+
+            cout << "Monoisotopic mass precursor hypotheses: " << monoPrecursorHypotheses << endl
+                << "Average mass precursor hypotheses: " << avgPrecursorHypotheses << endl;
+
+            g_rtConfig->curMinPeptideMass = spectra.front()->precursorMassHypotheses.front().mass;
+		    g_rtConfig->curMaxPeptideMass = 0;
 
             // find the smallest and largest precursor masses
             size_t maxPeakBins = (size_t) spectra.front()->totalPeakSpace;
-            for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
+            BOOST_FOREACH(Spectrum* s, spectra)
             {
-                if( (*sItr)->mOfPrecursor < g_rtConfig->curMinSequenceMass )
-                    g_rtConfig->curMinSequenceMass = (*sItr)->mOfPrecursor;
+                g_rtConfig->curMinPeptideMass = min(g_rtConfig->curMinPeptideMass, s->precursorMassHypotheses.front().mass);
+                g_rtConfig->curMaxPeptideMass = max(g_rtConfig->curMaxPeptideMass, s->precursorMassHypotheses.back().mass);
 
-                if( (*sItr)->mOfPrecursor > g_rtConfig->curMaxSequenceMass )
-                    g_rtConfig->curMaxSequenceMass = (*sItr)->mOfPrecursor;
-
-                double fragMassError = g_rtConfig->fragmentMzToleranceUnits == PPM ? ((*sItr)->totalPeakSpace/2.0 * g_rtConfig->FragmentMzTolerance * pow(10.0,-6)) : g_rtConfig->FragmentMzTolerance;
-                size_t totalPeakBins = (size_t) round( (*sItr)->totalPeakSpace / ( fragMassError * 2.0 ) );
+                double fragMassError = g_rtConfig->FragmentMzTolerance.units == MZTolerance::PPM ? (s->totalPeakSpace/2.0 * g_rtConfig->FragmentMzTolerance.value * 1e-6) : g_rtConfig->FragmentMzTolerance.value;
+                size_t totalPeakBins = (size_t) round( s->totalPeakSpace / ( fragMassError * 2.0 ) );
                 if( totalPeakBins > maxPeakBins )
                     maxPeakBins = totalPeakBins;
             }
-            g_rtConfig->curMinSequenceMass -= (g_rtConfig->precursorMzToleranceUnits == PPM ? (g_rtConfig->curMinSequenceMass * g_rtConfig->PrecursorMassTolerance.back() * pow(10.0,-6)) : g_rtConfig->PrecursorMassTolerance.back());
-            g_rtConfig->curMaxSequenceMass += (g_rtConfig->precursorMzToleranceUnits == PPM ? (g_rtConfig->curMaxSequenceMass * g_rtConfig->PrecursorMassTolerance.back() * pow(10.0,-6)) : g_rtConfig->PrecursorMassTolerance.back());
 
-            // set the effective minimum and maximum sequence masses based on config and precursors
-            g_rtConfig->curMinSequenceMass = max( g_rtConfig->curMinSequenceMass, g_rtConfig->MinSequenceMass );
-            g_rtConfig->curMaxSequenceMass = min( g_rtConfig->curMaxSequenceMass, g_rtConfig->MaxSequenceMass );
+            // adjust for precursor tolerance
+            g_rtConfig->curMinPeptideMass -= g_rtConfig->AvgPrecursorMzTolerance;
+            g_rtConfig->curMaxPeptideMass += g_rtConfig->AvgPrecursorMzTolerance;
+
+            // adjust for DynamicMods
+            g_rtConfig->curMinPeptideMass = min( g_rtConfig->curMinPeptideMass, g_rtConfig->curMinPeptideMass - g_rtConfig->largestPositiveDynamicModMass );
+            g_rtConfig->curMaxPeptideMass = max( g_rtConfig->curMaxPeptideMass, g_rtConfig->curMaxPeptideMass - g_rtConfig->largestNegativeDynamicModMass );
+
+            // adjust for user settings
+            g_rtConfig->curMinPeptideMass = max( g_rtConfig->curMinPeptideMass, g_rtConfig->MinPeptideMass );
+            g_rtConfig->curMaxPeptideMass = min( g_rtConfig->curMaxPeptideMass, g_rtConfig->MaxPeptideMass );
 
             double minResidueMass = AminoAcid::Info::record('G').residueFormula.monoisotopicMass();
             double maxResidueMass = AminoAcid::Info::record('W').residueFormula.monoisotopicMass();
 
             // calculate minimum length of a peptide made entirely of tryptophan over the minimum mass
-            int curMinCandidateLength = max( g_rtConfig->MinCandidateLength,
-                (int) floor( g_rtConfig->curMinSequenceMass /
+            int curMinPeptideLength = max( g_rtConfig->MinPeptideLength,
+                (int) floor( g_rtConfig->curMinPeptideMass /
                 maxResidueMass ) );
 
             // calculate maximum length of a peptide made entirely of glycine under the maximum mass
-            int curMaxCandidateLength = min((int) ceil( g_rtConfig->curMaxSequenceMass / minResidueMass ), 
-                g_rtConfig->MaxSequenceLength);
+            int curMaxPeptideLength = min((int) ceil( g_rtConfig->curMaxPeptideMass / minResidueMass ), 
+                g_rtConfig->MaxPeptideLength);
 
             // set digestion parameters
-            Digestion::Specificity specificity = (Digestion::Specificity) g_rtConfig->NumMinTerminiCleavages;
-            g_rtConfig->digestionConfig = Digestion::Config( g_rtConfig->NumMaxMissedCleavages,
-                curMinCandidateLength,
-                curMaxCandidateLength,
-                specificity );
+            Digestion::Specificity specificity = (Digestion::Specificity) g_rtConfig->MinTerminiCleavages;
+            g_rtConfig->digestionConfig = Digestion::Config( g_rtConfig->MaxMissedCleavages,
+                                                             curMinPeptideLength,
+                                                             curMaxPeptideLength,
+                                                             specificity );
 
             //cout << g_hostString << " is precaching factorials up to " << (int) maxPeakBins << "." << endl;
             g_lnFactorialTable.resize( maxPeakBins );
             //cout << g_hostString << " finished precaching factorials." << endl;
 
-            if( !g_numChildren )
-            {
-                cout << "Smallest observed precursor is " << g_rtConfig->curMinSequenceMass << " Da." << endl;
-                cout << "Largest observed precursor is " << g_rtConfig->curMaxSequenceMass << " Da." << endl;
-                cout << "Min. effective sequence mass is " << g_rtConfig->curMinSequenceMass << endl;
-                cout << "Max. effective sequence mass is " << g_rtConfig->curMaxSequenceMass << endl;
-                cout << "Min. effective sequence length is " << curMinCandidateLength << endl;
-                cout << "Max. effective sequence length is " << curMaxCandidateLength << endl;
-            }
+            cout << "Min. effective peptide mass is " << g_rtConfig->curMinPeptideMass << endl;
+            cout << "Max. effective peptide mass is " << g_rtConfig->curMaxPeptideMass << endl;
+            cout << "Min. effective peptide length is " << curMinPeptideLength << endl;
+            cout << "Max. effective peptide length is " << curMaxPeptideLength << endl;
 
             return 0;
         }
@@ -310,127 +314,22 @@ namespace freicore
         }
 
         void WriteOutputToFile(	const string& dataFilename,
-            string startTime,
-            string startDate,
-            float totalSearchTime,
-            vector< size_t > opcs,
-            vector< size_t > fpcs,
-            searchStats& overallStats )
+                                string startTime,
+                                string startDate,
+                                float totalSearchTime,
+                                vector< size_t > opcs,
+                                vector< size_t > fpcs,
+                                SearchStatistics& overallStats )
         {
             int numSpectra = 0;
-            int numMatches = 0;
-            int numLoci = 0;
 
             string filenameAsScanName = basename( MAKE_PATH_FOR_BOOST(dataFilename) );
-
-            map< int, Histogram<double> > meanScoreHistogramsByChargeState;
-            for( int z=1; z <= g_rtConfig->maxChargeStateFromSpectra; ++z )
-                meanScoreHistogramsByChargeState[ z ] = Histogram<double>( g_rtConfig->NumScoreHistogramBins, g_rtConfig->MaxScoreHistogramValues );
-
-            if( g_rtConfig->CalculateRelativeScores )
-            {
-                Timer calculationTime(true);
-                cout << g_hostString << " is calculating relative scores for " << spectra.size() << " spectra." << endl;
-                float lastUpdateTime = 0;
-                size_t n = 0;
-                for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr, ++n )
-                {
-                    Spectrum* s = (*sItr);
-
-                    try
-                    {
-                        s->CalculateRelativeScores();
-                    } catch( std::exception& e )
-                    {
-                        //throw runtime_error( "calculating relative scores for scan " + string( s->id ) + ": " + e.what() );
-                        cerr << "Error: calculating relative scores for scan " << string( s->id ) << ": " << e.what() << endl;
-                        continue;
-                    } catch( ... )
-                    {
-                        cerr << "Error: calculating relative scores for scan " << string( s->id ) << endl;
-                        continue;
-                    }
-
-                    if( calculationTime.TimeElapsed() - lastUpdateTime > g_rtConfig->StatusUpdateFrequency )
-                    {
-                        cout << g_hostString << " has calculated relative scores for " << n << " of " << spectra.size() << " spectra." << endl;
-                        lastUpdateTime = calculationTime.TimeElapsed();
-                    }
-                    PRINT_PROFILERS(cout, s->id.id + " done");
-                }
-                cout << g_hostString << " finished calculating relative scores; " << calculationTime.End() << " seconds elapsed." << endl;
-            }
-
-            for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
+            BOOST_FOREACH(Spectrum* s, spectra)
             {
                 ++ numSpectra;
-                Spectrum* s = (*sItr);
-
                 spectra.setId( s->id, SpectrumId( filenameAsScanName, s->id.index, s->id.charge ) );
-
-
                 s->computeSecondaryScores();
-
-                s->resultSet.calculateRanks();
-                //s->resultSet.convertProteinIndexesToNames( proteins.indexToName );
-                s->resultSet.convertProteinIndexesToNames( proteins );
-
-                if( g_rtConfig->MakeScoreHistograms )
-                {
-                    s->scoreHistogram.smooth();
-                    for( map<double,int>::iterator itr = s->scores.begin(); itr != s->scores.end(); ++itr )
-                        cout << itr->first << "\t" << itr->second << "\n";
-                    //cout << std::keys( s->scores ) << endl;
-                    //cout << std::values( s->scores ) << endl;
-                    //cout << std::keys( s->scoreHistogram.m_bins ) << endl;
-                    //cout << std::values( s->scoreHistogram.m_bins ) << endl;
-                    //s->scoreHistogram.writeToSvgFile( string( s->id ) + "-histogram.svg", "MVH score", "Density", 800, 600 );
-                    meanScoreHistogramsByChargeState[ s->id.charge ] += s->scoreHistogram;
-                }
-
-                for( Spectrum::SearchResultSetType::reverse_iterator itr = s->resultSet.rbegin(); itr != s->resultSet.rend(); ++itr )
-                {
-                    ++ numMatches;
-                    numLoci += itr->lociByName.size();
-
-                    string theSequence = itr->sequence();
-
-                    if( itr->rank == 1 && g_rtConfig->MakeSpectrumGraphs )
-                    {
-                        vector< double > ionMasses;
-                        vector< string > ionNames;
-                        CalculateSequenceIons( Peptide(theSequence), s->id.charge, &ionMasses, s->fragmentTypes, g_rtConfig->UseSmartPlusThreeModel, &ionNames, 0 );
-                        map< double, string > ionLabels;
-                        map< double, string > ionColors;
-                        map< double, int > ionWidths;
-
-                        for( PeakPreData::iterator itr = s->peakPreData.begin(); itr != s->peakPreData.end(); ++itr )
-                            ionWidths[ itr->first ] = 1;
-                        cout << ionMasses << endl << ionNames << endl;
-                        for( size_t i=0; i < ionMasses.size(); ++i )
-                        {
-                            double fragMassError = g_rtConfig->fragmentMzToleranceUnits == PPM ? (ionMasses[i]*g_rtConfig->FragmentMzTolerance*pow(10.0,-6)):g_rtConfig->FragmentMzTolerance;
-                            PeakPreData::iterator itr = s->peakPreData.findNear( ionMasses[i], fragMassError );
-                            if( itr != s->peakPreData.end() )
-                            {
-                                ionLabels[ itr->first ] = ionNames[i];
-                                ionColors[ itr->first ] = ( ionNames[i].find( "b" ) == 0 ? "red" : "blue" );
-                                ionWidths[ itr->first ] = 2;
-                            }
-                        }
-
-                        cout << theSequence << " fragment ions: " << ionLabels << endl;
-
-                        s->writeToSvgFile( string( "-" ) + theSequence + g_rtConfig->OutputSuffix, &ionLabels, &ionColors, &ionWidths );
-                    }
-
-
-                }
             }
-
-            if( g_rtConfig->MakeScoreHistograms )
-                for( int z=1; z <= g_rtConfig->maxChargeStateFromSpectra; ++z )
-                    meanScoreHistogramsByChargeState[ z ].writeToSvgFile( filenameAsScanName + g_rtConfig->OutputSuffix + "_+" + lexical_cast<string>(z) + "_histogram.svg", "MVH score", "Density", g_rtConfig->ScoreHistogramWidth, g_rtConfig->ScoreHistogramHeight );
 
             RunTimeVariableMap vars = g_rtConfig->getVariables();
             RunTimeVariableMap fileParams;
@@ -453,78 +352,12 @@ namespace freicore
             fileParams["PeakCounts: 2ndQuartile: Filtered"] = lexical_cast<string>( fpcs[3] );
             fileParams["PeakCounts: 3rdQuartile: Original"] = lexical_cast<string>( opcs[4] );
             fileParams["PeakCounts: 3rdQuartile: Filtered"] = lexical_cast<string>( fpcs[4] );
+            
+            string extension = g_rtConfig->outputFormat == pwiz::mziddata::MzIdentMLFile::Format_pepXML ? ".pepXML" : ".mzid";
+		    string outputFilename = filenameAsScanName + g_rtConfig->OutputSuffix + extension;
+		    cout << "Writing search results to file \"" << outputFilename << "\"." << endl;
 
-            string outputFilename = filenameAsScanName + g_rtConfig->OutputSuffix + ".pepXML";
-            cout << g_hostString << " is writing search results to file \"" << outputFilename << "\"." << endl;
-
-            spectra.writePepXml( dataFilename, g_rtConfig->OutputSuffix, "Pepitome", g_dbPath + g_dbFilename, &proteins, fileParams );
-
-            if( g_rtConfig->DeisotopingMode == 3 /*&& g_rtConfig->DeisotopingTestMode != 0*/ )
-            {
-                spectra.calculateFDRs( g_rtConfig->maxChargeStateFromSpectra, 1.0, "rev_" );
-                SpectraList passingSpectra;
-                spectra.filterByFDR( 0.05, &passingSpectra );
-                //g_rtConfig->DeisotopingMode = g_rtConfig->DeisotopingTestMode;
-
-                ofstream deisotopingDetails( (filenameAsScanName+g_rtConfig->OutputSuffix+"-deisotope-test.tsv").c_str() );
-                deisotopingDetails << "Scan\tCharge\tSequence\tPredicted\tMatchesBefore\tMatchesAfter\n";
-                for( SpectraList::iterator sItr = passingSpectra.begin(); sItr != passingSpectra.end(); ++sItr )
-                {
-                    Spectrum* s = (*sItr);
-                    s->Deisotope( g_rtConfig->IsotopeMzTolerance );
-
-                    s->resultSet.calculateRanks();
-                    for( Spectrum::SearchResultSetType::reverse_iterator itr = s->resultSet.rbegin(); itr != s->resultSet.rend(); ++itr )
-                    {
-                        string theSequence = itr->sequence();
-
-                        if( itr->rank == 1 )
-                        {
-                            vector< double > ionMasses;
-                            CalculateSequenceIons( Peptide(theSequence), s->id.charge, &ionMasses, s->fragmentTypes, g_rtConfig->UseSmartPlusThreeModel, 0, 0 );
-                            int fragmentsPredicted = accumulate( itr->key.begin(), itr->key.end(), 0 );
-                            int fragmentsFound = fragmentsPredicted - itr->key.back();
-                            int fragmentsFoundAfterDeisotoping = 0;
-                            for( size_t i=0; i < ionMasses.size(); ++i ) {
-                                double fragMassError = g_rtConfig->fragmentMzToleranceUnits == PPM ? (ionMasses[i]*g_rtConfig->FragmentMzTolerance*pow(10.0,-6)):g_rtConfig->FragmentMzTolerance;
-                                if( s->peakPreData.findNear( ionMasses[i], fragMassError ) != s->peakPreData.end() )
-                                    ++ fragmentsFoundAfterDeisotoping;
-                            }
-                            deisotopingDetails << s->id.index << "\t" << s->id.charge << "\t" << theSequence << "\t" << fragmentsPredicted << "\t" << fragmentsFound << "\t" << fragmentsFoundAfterDeisotoping << "\n";
-                        }
-                    }
-                }
-                passingSpectra.clear(false);
-            }
-
-            if( g_rtConfig->AdjustPrecursorMass == 1 )
-            {
-                spectra.calculateFDRs( g_rtConfig->maxChargeStateFromSpectra, 1.0, "rev_" );
-                SpectraList passingSpectra;
-                spectra.filterByFDR( 0.05, &passingSpectra );
-
-                ofstream adjustmentDetails( (filenameAsScanName+g_rtConfig->OutputSuffix+"-adjustment-test.tsv").c_str() );
-                adjustmentDetails << "Scan\tCharge\tUnadjustedSequenceMass\tAdjustedSequenceMass\tUnadjustedPrecursorMass\tAdjustedPrecursorMass\tUnadjustedError\tAdjustedError\tSequence\n";
-                for( SpectraList::iterator sItr = passingSpectra.begin(); sItr != passingSpectra.end(); ++sItr )
-                {
-                    Spectrum* s = (*sItr);
-
-                    s->resultSet.calculateRanks();
-                    for( Spectrum::SearchResultSetType::reverse_iterator itr = s->resultSet.rbegin(); itr != s->resultSet.rend(); ++itr )
-                    {
-                        if( itr->rank == 1 )
-                        {
-                            double setSeqMass = g_rtConfig->UseAvgMassOfSequences ? itr->molecularWeight() : itr->monoisotopicMass();
-                            double monoSeqMass = itr->monoisotopicMass();
-                            adjustmentDetails <<	s->id.index << "\t" << s->id.charge << "\t" <<
-                                setSeqMass << "\t" << monoSeqMass << "\t" << s->mOfUnadjustedPrecursor << "\t" << s->mOfPrecursor << "\t" <<
-                                fabs( setSeqMass - s->mOfUnadjustedPrecursor ) << "\t" <<
-                                fabs( monoSeqMass - s->mOfPrecursor ) << "\t" << itr->sequence() << "\n";
-                        }
-                    }
-                }
-                passingSpectra.clear(false);
-            }
+		    spectra.write( dataFilename, g_rtConfig->outputFormat, g_rtConfig->OutputSuffix, "Pepitome", g_dbPath + g_dbFilename, g_rtConfig->cleavageAgentRegex, fileParams );
         }
 
         void PrepareSpectra()
@@ -533,343 +366,221 @@ namespace freicore
 
             Timer timer;
 
-            if( g_numChildren == 0 )
-            {
-                cout << g_hostString << " is trimming spectra with less than " << g_rtConfig->minIntensityClassCount << " peaks." << endl;
-            }
+            cout << "Trimming spectra with less than " << g_rtConfig->minIntensityClassCount << " peaks." << endl;
 
             int preTrimCount = spectra.filterByPeakCount ( g_rtConfig->minIntensityClassCount );
             //int preTrimCount = spectra.filterByPeakCount( 10 );
             numSpectra = (int) spectra.size();
 
-            if( g_numChildren == 0 )
-            {
-                cout << g_hostString << " trimmed " << preTrimCount << " spectra for being too sparse." << endl;
-                cout << g_hostString << " is determining charge states for " << numSpectra << " spectra." << endl;
-            }
-
+            cout << "Trimmed " << preTrimCount << " spectra for being too sparse." << endl;
+            cout << "Preprocessing " << numSpectra << " spectra." << endl;
+            
             timer.Begin();
-            SpectraList duplicates;
-            for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
-            {
-                try
-                {
-                    if( !g_rtConfig->UseChargeStateFromMS )
-                        spectra.setId( (*sItr)->id, SpectrumId( (*sItr)->id.index, 0 ) );
+		    BOOST_FOREACH(Spectrum* s, spectra)
+		    {
+			    try
+			    {
+				    s->Preprocess();
+			    } catch( std::exception& e )
+			    {
+				    stringstream msg;
+				    msg << "preprocessing spectrum " << s->id << ": " << e.what();
+				    throw runtime_error( msg.str() );
+			    } catch( ... )
+			    {
+				    stringstream msg;
+				    msg << "preprocessing spectrum " << s->id;
+				    throw runtime_error( msg.str() );
+			    }
+		    }
 
-                    if( (*sItr)->id.charge == 0 )
-                    {
-                        SpectrumId preChargeId( (*sItr)->id );
-                        (*sItr)->DetermineSpectrumChargeState();
-                        SpectrumId postChargeId( (*sItr)->id );
+		    // Trim spectra that have observed precursor masses outside the user-configured range
+		    // (erase the peak list and the trim 0 peaks out)
+		    BOOST_FOREACH(Spectrum* s, spectra)
+		    {
+			    if( s->precursorMassHypotheses.back().mass < g_rtConfig->MinPeptideMass ||
+				    s->precursorMassHypotheses.front().mass > g_rtConfig->MaxPeptideMass )
+			    {
+				    s->peakPreData.clear();
+				    s->peakData.clear();
+			    }
+		    }
 
-                        if( postChargeId.charge == 0 )
-                        {
-                            postChargeId.setCharge(2);
+            cout << "Finished preprocessing its spectra; " << timer.End() << " seconds elapsed." << endl;
+            cout << "Trimming spectra with less than " << g_rtConfig->minIntensityClassCount << " peaks." << endl;
+            cout << "Trimming spectra with precursors too small or large: " <<
+                g_rtConfig->MinPeptideMass << " - " << g_rtConfig->MaxPeptideMass << endl;
 
-                            if( g_rtConfig->DuplicateSpectra )
-                            {
-                                for( int z = 3; z <= g_rtConfig->NumChargeStates; ++z )
-                                {
-                                    Spectrum* s = new Spectrum( *(*sItr) );
-                                    s->id.setCharge(z);
-                                    duplicates.push_back(s);
-                                }
-                            }
-                        }
-
-                        spectra.setId( preChargeId, postChargeId );
-                    }
-
-                } catch( std::exception& e )
-                {
-                    throw runtime_error( string( "duplicating scan " ) + string( (*sItr)->id ) + ": " + e.what() );
-                } catch( ... )
-                {
-                    throw runtime_error( string( "duplicating scan " ) + string( (*sItr)->id ) );
-                }
-            }
-
-            try
-            {
-                spectra.insert( duplicates.begin(), duplicates.end(), spectra.end() );
-                duplicates.clear(false);
-            } catch( std::exception& e )
-            {
-                throw runtime_error( string( "adding duplicated spectra: " ) + e.what() );
-            } catch( ... )
-            {
-                throw runtime_error( "adding duplicated spectra" );
-            }
-
-            //int replicateCount = (int) spectra.size() - numSpectra;
-            numSpectra = (int) spectra.size();
-
-            if( g_numChildren == 0 )
-            {
-                cout << g_hostString << " finished determining charge states for its spectra; " << timer.End() << " seconds elapsed." << endl;
-                cout << g_hostString << " is preprocessing " << numSpectra << " spectra." << endl;
-            }
-
-            timer.Begin();
-            for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
-            {
-                try
-                {
-                    (*sItr)->Preprocess();
-                } catch( std::exception& e )
-                {
-                    stringstream msg;
-                    msg << "preprocessing spectrum " << (*sItr)->id << ": " << e.what();
-                    throw runtime_error( msg.str() );
-                } catch( ... )
-                {
-                    stringstream msg;
-                    msg << "preprocessing spectrum " << (*sItr)->id;
-                    throw runtime_error( msg.str() );
-                }
-            }
-
-            // Trim spectra that have observed precursor masses outside the user-configured range
-            // (erase the peak list and the trim 0 peaks out)
-            for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
-            {
-                if( (*sItr)->mOfPrecursor < g_rtConfig->MinSequenceMass ||
-                    (*sItr)->mOfPrecursor > g_rtConfig->MaxSequenceMass )
-                {
-                    (*sItr)->peakPreData.clear();
-                    (*sItr)->peakData.clear();
-                }
-            }
-
-            if( g_numChildren == 0 )
-            {
-                cout << g_hostString << " finished preprocessing its spectra; " << timer.End() << " seconds elapsed." << endl;
-                cout << g_hostString << " is trimming spectra with less than " << g_rtConfig->minIntensityClassCount << " peaks." << endl;
-                cout << g_hostString << " is trimming spectra with precursors too small or large: " <<
-                    g_rtConfig->MinSequenceMass << " - " << g_rtConfig->MaxSequenceMass << endl;
-            }
-
-            int postTrimCount = spectra.filterByPeakCount( g_rtConfig->minIntensityClassCount );
-
-            if( g_numChildren == 0 )
-            {
-                cout << g_hostString << " trimmed " << postTrimCount << " spectra." << endl;
-            }
+		    int postTrimCount = spectra.filterByPeakCount( g_rtConfig->minIntensityClassCount );
+            cout << "Trimmed " << postTrimCount << " spectra." << endl;
 
         }
 
-        vector< int > workerNumbers;
-
+        typedef pair<string,size_t> Protein;
         /*
          * This function takes a library spectrum index and searches it against  the experimental spectra
         */
         boost::int64_t QuerySpectrum( int libSpectrumIndex, bool estimateComparisonsOnly = false )
         {
             boost::int64_t numComparisonsDone = 0;
-            Spectrum* spectrum;
-            double mass = librarySpectra[libSpectrumIndex].neutralMass;
-            int z = librarySpectra[libSpectrumIndex].id.charge-1;
 
-            // Set the mass error based on mass units.
-            double massError = g_rtConfig->precursorMzToleranceUnits == PPM ? (mass * g_rtConfig->PrecursorMassTolerance[z] * pow(10.0,-6)) : g_rtConfig->PrecursorMassTolerance[z];
-            // Look up the spectra that have precursor masses between mass + massError and mass - massError
-            SpectraMassMap::iterator begin, end;
-            begin = spectraMassMapsByChargeState[z].lower_bound( mass - massError );
-            end = spectraMassMapsByChargeState[z].upper_bound( mass + massError );
-            if(begin == end)
-            {
+            if(librarySpectra[libSpectrumIndex]->id.charge > g_rtConfig->maxChargeStateFromSpectra)
                 return numComparisonsDone;
-            }
-            // Load the library spectra from the file, if we have candidate matches
-            librarySpectra[libSpectrumIndex].readSpectrum();
-            SearchResult result(*librarySpectra[libSpectrumIndex].matchedPeptide);
-            for( ; begin != end; ++begin )
+            double libraryMass = librarySpectra[libSpectrumIndex]->libraryMass;
+            if(libraryMass < g_rtConfig->curMinPeptideMass || libraryMass > g_rtConfig->curMaxPeptideMass)
+                return numComparisonsDone;
+            int z = librarySpectra[libSpectrumIndex]->id.charge-1;
+
+            // Look up the spectra that have precursor mass hypotheses between mass + massError and mass - massError
+            vector<SpectraMassMap::iterator> candidateHypotheses;
+            SpectraMassMap::iterator cur, end;
+            if(g_rtConfig->RecalculateLibPepMasses)
             {
-                spectrum = *begin->second;
+                double monoCalculatedMass = librarySpectra[libSpectrumIndex]->monoisotopicMass;
+                double avgCalculatedMass = librarySpectra[libSpectrumIndex]->averageMass;
+
+                end = monoSpectraByChargeState[z].upper_bound( monoCalculatedMass + g_rtConfig->monoPrecursorMassTolerance[z] );
+                for( cur = monoSpectraByChargeState[z].lower_bound( monoCalculatedMass - g_rtConfig->monoPrecursorMassTolerance[z] ); cur != end; ++cur )
+                    candidateHypotheses.push_back(cur);
+
+                end = avgSpectraByChargeState[z].upper_bound( avgCalculatedMass + g_rtConfig->avgPrecursorMassTolerance[z] );
+                for( cur = avgSpectraByChargeState[z].lower_bound( avgCalculatedMass - g_rtConfig->avgPrecursorMassTolerance[z] ); cur != end; ++cur )
+                    candidateHypotheses.push_back(cur);
+            } 
+            else
+            {
+                end = monoSpectraByChargeState[z].upper_bound( libraryMass + g_rtConfig->monoPrecursorMassTolerance[z] );
+                for( cur = monoSpectraByChargeState[z].lower_bound( libraryMass - g_rtConfig->monoPrecursorMassTolerance[z] ); cur != end; ++cur )
+                    candidateHypotheses.push_back(cur);
+
+                end = avgSpectraByChargeState[z].upper_bound( libraryMass + g_rtConfig->avgPrecursorMassTolerance[z] );
+                for( cur = avgSpectraByChargeState[z].lower_bound( libraryMass - g_rtConfig->avgPrecursorMassTolerance[z] ); cur != end; ++cur )
+                    candidateHypotheses.push_back(cur);
+            }
+
+            if(candidateHypotheses.size()==0)
+                return numComparisonsDone;
+            
+            // Load the library spectra from the file, if we have candidate matches
+            librarySpectra[libSpectrumIndex]->readSpectrum(g_rtConfig->LibTicCutoffPercentage, g_rtConfig->LibMaxPeakCount, g_rtConfig->CleanLibSpectra);
+            int libPeptideLength = librarySpectra[libSpectrumIndex]->matchedPeptide->sequence().length();
+            if(libPeptideLength < g_rtConfig->MinPeptideLength || libPeptideLength > g_rtConfig->MaxPeptideLength)
+                return numComparisonsDone;
+            
+            BOOST_FOREACH(SpectraMassMap::iterator spectrumHypothesisPair, candidateHypotheses)
+			{
+                Spectrum* spectrum = spectrumHypothesisPair->second.first;
+                PrecursorMassHypothesis& p = spectrumHypothesisPair->second.second;
+                
+                boost::shared_ptr<SearchResult> resultPtr(new SearchResult(*librarySpectra[libSpectrumIndex]->matchedPeptide));
+                SearchResult& result = *resultPtr;
 
                 if( !estimateComparisonsOnly )
                 {
-
-                    spectrum->ScoreSpectrumVsSpectrum(result, librarySpectra[libSpectrumIndex].peakPreData);
-                    if(false) 
-                    {
-                        cout << spectrum->id.index << " vs " << librarySpectra[libSpectrumIndex].id.index;
-                        cout << " " << spectrum->mOfPrecursor << " vs " << librarySpectra[libSpectrumIndex].neutralMass \
-                            << " (" << librarySpectra[libSpectrumIndex].id.charge << ", " \
-                            << fabs(spectrum->mOfPrecursor-librarySpectra[libSpectrumIndex].neutralMass) \
-                            << "," << massError << ") " \
-                            << "#Peaks:" << librarySpectra[libSpectrumIndex].peakPreData.size() \
-                            << " " << result.mvh << ", " << result.mzFidelity << flush << endl;
-                    }
+                    spectrum->ScoreSpectrumVsSpectrum(result, librarySpectra[libSpectrumIndex]->peakData);
+                    if( result.mvh >= g_rtConfig->MinResultScore )
+                        BOOST_FOREACH(Protein p, librarySpectra[libSpectrumIndex]->matchedProteins)
+                            result.proteins.insert(p.first);
                 }
 
-                ++ numComparisonsDone;
+                ++numComparisonsDone;
 
                 if( estimateComparisonsOnly )
                     continue;
 
                 START_PROFILER(4);
-                if( g_rtConfig->UseMultipleProcessors )
-                    simplethread_lock_mutex( &spectrum->mutex );
-
-                /*if( proteins[idx].isDecoy() )
-                ++ spectrum->numDecoyComparisons;
-                else*/
-                ++ spectrum->numTargetComparisons;
-
-                if( result.mvh >= g_rtConfig->MinResultScore && accumulate( result.key.begin(), result.key.end(), 0 ) > 0 )
                 {
-                    result.massError = mass - begin->first;
+                    boost::lock_guard<boost::mutex> guard(spectrum->mutex);
+                    
+                    ++spectrum->numTargetComparisons;
 
-                    if( g_rtConfig->MakeScoreHistograms )
+                    if( result.mvh >= g_rtConfig->MinResultScore )
                     {
-                        ++ spectrum->scores[ result.mvh ];
-                        spectrum->scoreHistogram.add( result.mvh );
+                        result.precursorMassHypothesis = p;
+                        // Accumulate score distributions for the spectrum
+                        ++ spectrum->mvhScoreDistribution[ (int) (result.mvh+0.5) ];
+                        ++ spectrum->mzFidelityDistribution[ (int) (result.mzFidelity+0.5)];
+                        spectrum->resultsByCharge[z].add( resultPtr );   
                     }
-
-                    // Accumulate score distributions for the spectrum
-                    ++ spectrum->mvhScoreDistribution[ (int) (result.mvh+0.5) ];
-                    ++ spectrum->mzFidelityDistribution[ (int) (result.mzFidelity+0.5)];
-                    spectrum->resultSet.add( result );
                 }
-                if( g_rtConfig->UseMultipleProcessors )
-                    simplethread_unlock_mutex( &spectrum->mutex );
                 STOP_PROFILER(4);
             }
             // Clear the spectrum to keep memory in bounds.
-            librarySpectra[libSpectrumIndex].clearSpectrum();
+            librarySpectra[libSpectrumIndex]->clearSpectrum();
 
             return numComparisonsDone;
         }
 
-        simplethread_return_t ExecuteSearchThread( simplethread_arg_t threadArg )
+        int ExecuteSearchThread()
         {
-            simplethread_lock_mutex( &resourceMutex );
-            simplethread_id_t threadId = simplethread_get_id();
-            WorkerThreadMap* threadMap = (WorkerThreadMap*) threadArg;
-            WorkerInfo* threadInfo = reinterpret_cast< WorkerInfo* >( threadMap->find( threadId )->second );
-            int numThreads = (int) threadMap->size();
-            simplethread_unlock_mutex( &resourceMutex );
-
-            bool done;
-            //threadInfo->spectraResults.resize( (int) spectra.size() );
-
-            double largestDynamicModMass = g_rtConfig->dynamicMods.empty() ? 0 : g_rtConfig->dynamicMods.rbegin()->modMass * g_rtConfig->MaxDynamicMods;
-            double smallestDynamicModMass = g_rtConfig->dynamicMods.empty() ? 0 : g_rtConfig->dynamicMods.begin()->modMass * g_rtConfig->MaxDynamicMods;
 
             try
             {
-                Timer searchTime;
-                float totalSearchTime = 0;
-                float lastUpdate = 0;
-                searchTime.Begin();
+                size_t libraryTask;
                 while( true )
                 {
-                    simplethread_lock_mutex( &resourceMutex );
-                    done = workerNumbers.empty();
-                    if( !done )
-                    {
-                        threadInfo->workerNum = workerNumbers.back();
-                        workerNumbers.pop_back();
-                    }
-                    simplethread_unlock_mutex( &resourceMutex );
-
-                    if( done )
+                    if (!libraryTasks.dequeue(&libraryTask))
                         break;
 
-                    int numLibSpectra = (int) librarySpectra.size();
-                    threadInfo->endIndex = ( numLibSpectra / g_numWorkers )-1;
-
-                    int i;
-                    for( i = threadInfo->workerNum; i < numLibSpectra; i += g_numWorkers )
-                    {
-                        ++ threadInfo->stats.numSpectraSearched;
-
-                        boost::int64_t numComps = QuerySpectrum(i);
-                        if(numComps>0)
-                            ++ threadInfo->stats.numSpectraQueried;
-                        threadInfo->stats.numComparisonsDone += numComps;
-
-                        if( g_numChildren == 0 )
-                            totalSearchTime = searchTime.TimeElapsed();
-
-                        if( g_numChildren == 0 && ( ( totalSearchTime - lastUpdate > g_rtConfig->StatusUpdateFrequency ) || i == numLibSpectra ) )
-                        {
-                            float spectraPerSec = float( threadInfo->stats.numSpectraSearched ) / totalSearchTime;
-                            float estimatedTimeRemaining = float( ( numLibSpectra / numThreads ) - threadInfo->stats.numSpectraSearched ) / spectraPerSec;
-
-                            simplethread_lock_mutex( &resourceMutex );
-                            cout << threadInfo->workerHostString << " has searched " << threadInfo->stats.numSpectraSearched << " of " << numLibSpectra <<
-                                " spectra; " << spectraPerSec << " per second, " << totalSearchTime << " elapsed, " << estimatedTimeRemaining << " remaining." << endl;
-
-                            PRINT_PROFILERS(cout, threadInfo->workerHostString + " profiling")
-
-                                simplethread_unlock_mutex( &resourceMutex );
-
-                            lastUpdate = totalSearchTime;
-                        }
-                    }
+                    ++searchStatistics.numSpectraSearched;
+                    boost::int64_t numComps = QuerySpectrum(libraryTask);
+                    if(numComps>0)
+                        ++searchStatistics.numSpectraQueried;
+                    searchStatistics.numComparisonsDone += numComps;
                 }
             } catch( std::exception& e )
             {
-                cerr << threadInfo->workerHostString << " terminated with an error: " << e.what() << endl;
+                cerr << " terminated with an error: " << e.what() << endl;
             } catch(...)
             {
-                cerr << threadInfo->workerHostString << " terminated with an unknown error." << endl;
+                cerr << " terminated with an unknown error." << endl;
             }
-            //i -= g_numWorkers;
-            //cout << threadInfo->workerHostString << " last searched protein " << i-1 << " (" << proteins[i].name << ")." << endl;
 
             return 0;
         } 
 
-        searchStats ExecuteSearch()
+        void ExecuteSearch()
         {
-            WorkerThreadMap workerThreads;
+            size_t numProcessors = (size_t) g_numWorkers;
+            boost::uint32_t numLibSpectra = (boost::uint32_t) librarySpectra.size();
+            
+            for (size_t i=0; i < numLibSpectra; ++i)
+			    libraryTasks.enqueue(i);
 
-            int numProcessors = g_numWorkers;
-            workerNumbers.clear();
-            if( g_rtConfig->UseMultipleProcessors && g_numWorkers > 1 )
+            bpt::ptime start = bpt::microsec_clock::local_time();
+
+            boost::thread_group workerThreadGroup;
+            vector<boost::thread*> workerThreads;
+
+            for (size_t i = 0; i < numProcessors; ++i)
+                workerThreads.push_back(workerThreadGroup.create_thread(&ExecuteSearchThread));
+            
+            bpt::ptime lastUpdate = start;
+            for (size_t i=0; i < numProcessors; ++i)
             {
-                g_numWorkers *= g_rtConfig->ThreadCountMultiplier;
+                // returns true if the thread finished before the timeout;
+                // (each thread index is joined until it finishes)
+                if (!workerThreads[i]->timed_join(bpt::seconds(round(g_rtConfig->StatusUpdateFrequency))))
+                    --i;
 
-                simplethread_handle_array_t workerHandles;
+                bpt::ptime current = bpt::microsec_clock::local_time();
 
-                for( int i=0; i < g_numWorkers; ++i )
-                    workerNumbers.push_back(i);
+                // only make one update per StatusUpdateFrequency seconds
+                if ((current - lastUpdate).total_microseconds() / 1e6 < g_rtConfig->StatusUpdateFrequency)
+                    continue;
 
-                simplethread_lock_mutex( &resourceMutex );
-                for( int t = 0; t < numProcessors; ++t )
-                {
-                    simplethread_id_t threadId;
-                    simplethread_handle_t threadHandle = simplethread_create_thread( &threadId, &ExecuteSearchThread, &workerThreads );
-                    workerThreads[ threadId ] = new WorkerInfo( t, 0, 0 );
-                    workerHandles.array.push_back( threadHandle );
-                }
-                simplethread_unlock_mutex( &resourceMutex );
-                simplethread_join_all( &workerHandles );
-                g_numWorkers = numProcessors;
-                //cout << g_hostString << " searched " << numSearched << " proteins." << endl;
-            } else
-            {
-                g_numWorkers = 1;
-                workerNumbers.push_back(0);
-                simplethread_id_t threadId = simplethread_get_id();
-                workerThreads[ threadId ] = new WorkerInfo( 0, 0, 0 );
-                ExecuteSearchThread( &workerThreads );
-                //cout << g_hostString << " searched " << numSearched << " proteins." << endl;
+                lastUpdate = current;
+                bpt::time_duration elapsed = current - start;
+
+                float spectraPerSec = static_cast<float>(searchStatistics.numSpectraSearched) / elapsed.total_microseconds() * 1e6;
+                bpt::time_duration estimatedTimeRemaining(0, 0, round((numLibSpectra - searchStatistics.numSpectraSearched) / spectraPerSec));
+
+                cout << "Searched " << searchStatistics.numSpectraSearched << " of " << numLibSpectra << " spectra; "
+                    << round(spectraPerSec) << " per second, "
+                    << format_date_time("%H:%M:%S", bpt::time_duration(0, 0, elapsed.total_seconds())) << " elapsed, "
+                    << format_date_time("%H:%M:%S", estimatedTimeRemaining) << " remaining." << endl;
             }
-
-            searchStats stats;
-
-            for( WorkerThreadMap::iterator itr = workerThreads.begin(); itr != workerThreads.end(); ++itr )
-            {
-                stats = stats + reinterpret_cast< WorkerInfo* >( itr->second )->stats;
-                delete itr->second;
-            }
-
-            return stats;
+            workerThreadGroup.join_all();
         }
 
         // A tuple to hold the NTerminusIsSpecific, CTerminusIsSpecific,
@@ -952,8 +663,10 @@ namespace freicore
             AllResults results;
             // Map peptide sequences to their corresponding results
             for(SpectraList::const_iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr)
-                BOOST_FOREACH(const SearchResult& r, (*sItr)->resultSet)  
-                    results[r.sequence()].push_back(&const_cast<SearchResult&>(r));
+                for (int z=0; z < (int) (*sItr)->resultsByCharge.size(); ++z)
+                    BOOST_FOREACH(const Spectrum::SearchResultPtr& result, (*sItr)->resultsByCharge[z])
+                        results[result->sequence()].push_back(&const_cast<SearchResult&>(*result));
+
             // Use the peptide sequences as patterns for pattern-matching
             vector<const char*> patterns;
             for(AllResults::const_iterator rItr = results.begin(); rItr!= results.end(); ++rItr)
@@ -991,7 +704,7 @@ namespace freicore
                             oldPep = newPep;
                         }
                         if((*rItr)->mvh >= g_rtConfig->MinResultScore) 
-                            (*rItr)->lociByIndex.insert( ProteinLocusByIndex( i + g_rtConfig->ProteinIndexOffset, (*mItr).second ) );	
+                            (*rItr)->proteins.insert( proteins[i].getName() );	
                     }
                 }
             }
@@ -1004,19 +717,23 @@ namespace freicore
         void purgeOrphanResults()
         {
             size_t numOrphanResults = 0;
-            for(SpectraList::const_iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr) {
-                vector<SearchResult> resultsToPurge;
-                BOOST_FOREACH(SearchResult r, (*sItr)->resultSet)
-                    if(r.lociByIndex.size()==0)
-                        resultsToPurge.push_back(r);
-                numOrphanResults += resultsToPurge.size();
-                for(vector<SearchResult>::const_iterator rItr = resultsToPurge.begin(); rItr != resultsToPurge.end(); ++rItr)
-                    (*sItr)->resultSet.erase(*rItr);
+            for(SpectraList::const_iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr) 
+            {
+                for(int z = 0; z < (int) (*sItr)->resultsByCharge.size(); ++z)
+                {
+                    vector<Spectrum::SearchResultPtr> resultsToPurge;
+                    BOOST_FOREACH(const Spectrum::SearchResultPtr& r, (*sItr)->resultsByCharge[z])
+                        if(r->proteins.size()==0)
+                            resultsToPurge.push_back(r);
+                    numOrphanResults += resultsToPurge.size();
+                    BOOST_FOREACH(const Spectrum::SearchResultPtr& r, resultsToPurge)
+                        (*sItr)->resultsByCharge[z].erase(r);
+                }
             }
             if(numOrphanResults>0) 
             {
-                cout << g_hostString << " " << numOrphanResults << " orphan results purged." << endl;
-                cout << g_hostString << " orphan results have no associated proteins in the given FASTA database" << endl;
+                cout << "Purged " << numOrphanResults << " orphan results." << endl;
+                cout << "Orphan results have no associated proteins in the given FASTA database" << endl;
             }
         }
 
@@ -1042,12 +759,12 @@ namespace freicore
             {
                 // Check the result size, if it exceeds the limit, then push back the
                 // current list into the vector and get a fresh list
-                estimatedResultsSize += g_rtConfig->MaxResults;
+                estimatedResultsSize += g_rtConfig->MaxResultRank;
                 if(estimatedResultsSize>g_rtConfig->ResultsPerBatch) 
                 {
                     batches.push_back(current);
                     current.reset(new SpectraList());
-                    estimatedResultsSize = g_rtConfig->MaxResults;
+                    estimatedResultsSize = g_rtConfig->MaxResultRank * 2;
                 }
                 current->push_back((*sItr));
             }
@@ -1075,9 +792,6 @@ namespace freicore
         */
         int ProcessHandler( int argc, char* argv[] )
         {
-            // One thread at a time please...
-            simplethread_create_mutex( &resourceMutex );
-
             // Get the command line arguments and process them
             vector< string > args;
             for( int i=0; i < argc; ++i )
@@ -1106,7 +820,7 @@ namespace freicore
 
                     if( g_inputFilenames.empty() )
                     {
-                        cout << g_hostString << " did not find any spectra matching given filemasks." << endl;
+                        cout << "No data sources found with the given filemasks." << endl;
                         return 1;
                     }
 
@@ -1114,41 +828,47 @@ namespace freicore
                         return 1;
 
                     // Read the protein database
-                    cout << g_hostString << " is reading \"" << g_dbFilename << "\"" << endl;
+			        cout << "Reading \"" << g_dbFilename << "\"" << endl;
                     Timer readTime(true);
                     try
                     {
-                        //proteins.readFASTA( g_dbFilename, g_rtConfig->StartProteinIndex, g_rtConfig->EndProteinIndex );
+                        proteins = proteinStore( g_rtConfig->DecoyPrefix );
                         proteins.readFASTA( g_dbFilename );
                     } catch( std::exception& e )
                     {
-                        cout << g_hostString << " had an error: " << e.what() << endl;
+                        cout << "Encountered an error: " << e.what() << endl;
                         return 1;
                     }
-                    cout << g_hostString << " read " << proteins.size() << " proteins; " << readTime.End() << " seconds elapsed." << endl;
+                    cout << "Read " << proteins.size() << " proteins; " << readTime.End() << " seconds elapsed." << endl;
 
                     // Read the associated spectral library
                     try
                     {
-                        librarySpectra.loadLibraryFromMGF(g_spectralLibName);
+                        librarySpectra.loadLibrary(g_spectralLibName);
+                        //librarySpectra.readSpectra(true, g_rtConfig->LibTicCutoffPercentage, g_rtConfig->LibMaxPeakCount, g_rtConfig->CleanLibSpectra);
+                        //librarySpectra.printSpectra();
+                        //exit(1);
                     } catch( std::exception& e)
                     {
-                        cout << g_hostString << " had an error: " << e.what() << endl;
+                        cout << "Encountered an error: " << e.what() << endl;
                         return 1;
                     }
 
-                    // Recalcuate the precusor masses for all spectra in the library
-                    cout << g_hostString << " is recalculating precursor masses for library spectra." << endl;
-                    Timer recalTime(true);
-                    try
+                    if(g_rtConfig->RecalculateLibPepMasses)
                     {
-                        librarySpectra.recalculatePrecursorMasses(g_rtConfig->UseAvgMassOfSequences);
-                    } catch( std::exception& e)
-                    {
-                        cout << g_hostString << " had an error: " << e.what() << endl;
-                        return 1;
+                        // Recalcuate the precusor masses for all spectra in the library
+                        cout << "Recalculating precursor masses for library spectra." << endl;
+                        Timer recalTime(true);
+                        try
+                        {
+                            librarySpectra.recalculatePrecursorMasses();
+                        } catch( std::exception& e)
+                        {
+                            cout << g_hostString << "Encountered an error: " << e.what() << endl;
+                            return 1;
+                        }
+                        cout << "Finished recalcuation; " <<  recalTime.End() << " seconds elapsed." << endl;
                     }
-                    cout << g_hostString << " finished recalcuation; " <<  recalTime.End() << " seconds elapsed." << endl;
                     // randomize order of the spectra to optimize work 
                     // distribution in the multi-threading mode.
                     librarySpectra.random_shuffle();
@@ -1163,9 +883,11 @@ namespace freicore
                         // Hold the spectra objects
                         spectra.clear();
                         // Holds the map of parent mass to corresponding spectra
-                        spectraMassMapsByChargeState.clear();
+                        avgSpectraByChargeState.clear();
+                        monoSpectraByChargeState.clear();
+                        searchStatistics = SearchStatistics();
 
-                        cout << g_hostString << " is reading spectra from file \"" << *fItr << "\"" << endl;
+                        cout << "Reading spectra from file \"" << *fItr << "\"" << endl;
                         finishedFiles.insert( *fItr );
 
                         Timer readTime(true);
@@ -1173,10 +895,13 @@ namespace freicore
                         // Read the spectra
                         try
                         {
-                            spectra.readPeaks( *fItr, g_rtConfig->StartSpectraScanNum, g_rtConfig->EndSpectraScanNum );
+                            spectra.readPeaks( *fItr,
+                                       0, -1,
+                                       2, // minMsLevel
+                                       g_rtConfig->SpectrumListFilters );
                         } catch( std::exception& e )
                         {
-                            cerr << g_hostString << " had an error: " << e.what() << endl;
+                            cerr << "Encountered an error: " << e.what() << endl;
                             return 1;
                         }
 
@@ -1186,19 +911,18 @@ namespace freicore
                         for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
                             totalPeakCount += (*sItr)->peakPreCount;
 
-                        cout << g_hostString << " read " << numSpectra << " spectra with " << totalPeakCount << " peaks; " << readTime.End() << " seconds elapsed." << endl;
+                        cout << "Read " << numSpectra << " spectra with " << totalPeakCount << " peaks; " << readTime.End() << " seconds elapsed." << endl;
 
                         int skip = 0;
                         if( numSpectra == 0 )
                         {
-                            cout << g_hostString << " is skipping a file with no spectra." << endl;
+                            cout << "Skipping a file with no spectra." << endl;
                             skip = 1;
                         }
 
                         Timer searchTime;
                         string startTime;
                         string startDate;
-                        searchStats sumSearchStats;
                         vector< size_t > opcs; // original peak count statistics
                         vector< size_t > fpcs; // filtered peak count statistics
 
@@ -1206,16 +930,16 @@ namespace freicore
                         if( !skip )
                         {
                             // prepare the spectra
-                            cout << g_hostString << " is preparing " << numSpectra << " spectra." << endl;
+                            cout << "Preparing " << numSpectra << " spectra." << endl;
                             Timer prepareTime(true);
                             PrepareSpectra();
-                            cout << g_hostString << " is finished preparing spectra; " << prepareTime.End() << " seconds elapsed." << endl;
+                            cout << "Finished preparing spectra; " << prepareTime.End() << " seconds elapsed." << endl;
                             numSpectra = (int) spectra.size();
 
                             skip = 0;
                             if( numSpectra == 0 )
                             {
-                                cout << g_hostString << " is skipping a file with no suitable spectra." << endl;
+                                cout << "Skipping a file with no suitable spectra." << endl;
                                 skip = 1;
                             }
                             // If the file has spectra to search
@@ -1223,34 +947,31 @@ namespace freicore
                             {
                                 opcs = spectra.getOriginalPeakCountStatistics();
                                 fpcs = spectra.getFilteredPeakCountStatistics();
-                                cout << g_hostString << ": mean original (filtered) peak count: " <<
-                                    opcs[5] << " (" << fpcs[5] << ")" << endl;
-                                cout << g_hostString << ": min/max original (filtered) peak count: " <<
-                                    opcs[0] << " (" << fpcs[0] << ") / " << opcs[1] << " (" << fpcs[1] << ")" << endl;
-                                cout << g_hostString << ": original (filtered) peak count at 1st/2nd/3rd quartiles: " <<
+                                cout << "Mean original (filtered) peak count: " << opcs[5] << " (" << fpcs[5] << ")" << endl;
+                                cout << "Min/max original (filtered) peak count: " << opcs[0] << " (" << fpcs[0] << ") / " << opcs[1] << " (" << fpcs[1] << ")" << endl;
+                                cout << "Original (filtered) peak count at 1st/2nd/3rd quartiles: " <<
                                     opcs[2] << " (" << fpcs[2] << "), " <<
                                     opcs[3] << " (" << fpcs[3] << "), " <<
                                     opcs[4] << " (" << fpcs[4] << ")" << endl;
                                 float filter = 1.0f - ( (float) fpcs[5] / (float) opcs[5] );
-                                cout << g_hostString << " filtered out " << filter * 100.0f << "% of peaks." << endl;
+                                cout << "Filtered out " << filter * 100.0f << "% of peaks." << endl;
 
                                 InitWorkerGlobals();
                                 // Start the search
                                 if( !g_rtConfig->EstimateSearchTimeOnly )
                                 {
-                                    cout << g_hostString << " is commencing library search on " << numSpectra << " spectra." << endl;
+                                    cout << "Commencing library search on " << numSpectra << " spectra." << endl;
                                     startTime = GetTimeString(); startDate = GetDateString(); searchTime.Begin();
-                                    sumSearchStats = ExecuteSearch();
-                                    cout << g_hostString << " has finished library search; " << searchTime.End() << " seconds elapsed." << endl;
-
-                                    cout << g_hostString << " overall stats: " << (string) sumSearchStats << endl;
+                                    ExecuteSearch();
+                                    cout << "Finished database search; " << searchTime.End() << " seconds elapsed." << endl;
+								    cout << "Overall stats: " << (string) searchStatistics << endl;
                                 } else
                                 {
-                                    cout << g_hostString << " is estimating the count of spectral comparisons to be done." << endl;
-                                    sumSearchStats = ExecuteSearch();
-                                    double estimatedComparisonsPerProtein = sumSearchStats.numComparisonsDone / (double) sumSearchStats.numSpectraQueried;
-                                    boost::int64_t estimatedTotalComparisons = (boost::int64_t) (estimatedComparisonsPerProtein * proteins.size());
-                                    cout << g_hostString << " will make an estimated total of " << estimatedTotalComparisons << " spectral comparisons." << endl;
+                                    cout << "Estimating the count of sequence comparisons to be done." << endl;
+                                    ExecuteSearch();
+                                    double estimatedComparisonsPerSpectrum = searchStatistics.numComparisonsDone / (double) searchStatistics.numSpectraQueried;
+                                    boost::int64_t estimatedTotalComparisons = (boost::int64_t) (estimatedComparisonsPerSpectrum * librarySpectra.size());
+                                    cout << "Will make an estimated total of " << estimatedTotalComparisons << " spectrum comparisons." << endl;
                                     skip = 1;
                                 }
                             }
@@ -1258,13 +979,16 @@ namespace freicore
                             DestroyWorkerGlobals();
                             // Write the output
                             if( !skip ) {
-                                Timer mapTimer(true);
-                                cout << g_hostString << " mapping library peptide matches to fasta database." << endl;
-                                findProteinMatches();
-                                cout << g_hostString << " finished mapping; " << mapTimer.End() << " seconds elapsed." << endl;
-                                purgeOrphanResults();
-                                WriteOutputToFile( *fItr, startTime, startDate, searchTime.End(), opcs, fpcs, sumSearchStats );
-                                cout << g_hostString << " finished file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
+                                if ( g_rtConfig->FASTARefreshResults )
+                                {
+                                    Timer mapTimer(true);
+                                    cout << "Mapping library peptide matches to fasta database." << endl;
+                                    findProteinMatches();
+                                    purgeOrphanResults();
+                                    cout << "Finished mapping; " << mapTimer.End() << " seconds elapsed." << endl;
+                                }
+                                WriteOutputToFile( *fItr, startTime, startDate, searchTime.End(), opcs, fpcs, searchStatistics );
+                                cout << "Finished file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
                                 //PRINT_PROFILERS(cout,"old");
                             }
 
@@ -1285,8 +1009,6 @@ int main( int argc, char* argv[] )
 
     g_numProcesses = 1;
     g_pid = 0;
-
-    g_numChildren = g_numProcesses - 1;
 
     ostringstream str;
     str << "Process #" << g_pid << " (" << buf << ")";

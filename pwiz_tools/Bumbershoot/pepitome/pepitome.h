@@ -27,8 +27,9 @@
 #include "freicore.h"
 #include "base64.h"
 #include "pepitomeSpectrum.h"
+#include "spectraStore.h"
+#include <boost/atomic.hpp>
 #include <boost/cstdint.hpp>
-
 
 #define PEPITOME_LICENSE			COMMON_LICENSE
 
@@ -48,62 +49,34 @@ namespace pepitome
         static std::string LastModified();
     };
 
-	struct PrecursorMassChargeKey
+	typedef multimap< double, pair<Spectrum*, PrecursorMassHypothesis> >   SpectraMassMap;
+	typedef vector< SpectraMassMap >									   SpectraMassMapList;
+
+	struct SearchStatistics
 	{
-		PrecursorMassChargeKey( double m, int z ) : mass(m), charge(z) {}
-		bool operator< ( const PrecursorMassChargeKey& rhs ) const
+		SearchStatistics()
+        :   numSpectraSearched(0), numSpectraQueried(0),
+			numComparisonsDone(0), numCandidatesSkipped (0)  
+        {}
+
+        SearchStatistics(const SearchStatistics& other)
+        {
+            operator=(other);
+        }
+
+        SearchStatistics& operator=(const SearchStatistics& other)
 		{
-			if( charge == rhs.charge )
-				return mass < rhs.mass;
-			else
-				return charge < rhs.charge;
-		}
+            numSpectraSearched.store(other.numSpectraSearched);
+            numSpectraQueried.store(other.numSpectraQueried);
+            numComparisonsDone.store(other.numComparisonsDone);
+            numCandidatesSkipped.store(other.numCandidatesSkipped);
+            return *this;
+        }
 
-		double mass;
-		int charge;
-	};
-
-	/**
-		This class takes a mass tolerance and mass units and uses them to compare
-		two precursor masses.
-	*/
-	class SpectraMassMapComparator {
-		// Mass Tol
-		double massTolerance;
-		// Daltons or PPM
-		MassUnits units;
-	public:
-		SpectraMassMapComparator(){}
-		
-		// Init
-		SpectraMassMapComparator(double tol, MassUnits unts) 
-		{
-			massTolerance = tol;
-			units = unts;
-		}
-		
-		bool operator()(const double lhs, const double rhs) const {
-			float delta = ComputeMassError(lhs,rhs,units);
-			if(delta > massTolerance) {
-				return lhs < rhs;
-			} else {
-				return false;
-			}
-		}
-	};
-
-	typedef multimap< double, SpectraList::iterator >					SpectraMassMap;
-	typedef vector< SpectraMassMap >									SpectraMassMapList;
-
-	struct searchStats
-	{
-		searchStats() :
-			numSpectraSearched(0), numSpectraQueried(0),
-			numComparisonsDone(0), numCandidatesSkipped (0)  {}
-        boost::int64_t numSpectraSearched;
-		boost::int64_t numSpectraQueried;
-		boost::int64_t numComparisonsDone;
-        boost::int64_t numCandidatesSkipped;
+        boost::atomic_uint32_t numSpectraSearched;
+		boost::atomic_uint32_t numSpectraQueried;
+		boost::atomic_uint32_t numComparisonsDone;
+        boost::atomic_uint32_t numCandidatesSkipped;
 
 		template< class Archive >
 		void serialize( Archive& ar, const unsigned int version )
@@ -111,13 +84,13 @@ namespace pepitome
 			ar & numSpectraSearched & numSpectraQueried & numComparisonsDone & numCandidatesSkipped;
 		}
 
-		searchStats operator+ ( const searchStats& rhs )
+        SearchStatistics operator+ ( const SearchStatistics& rhs )
 		{
-			searchStats tmp;
-			tmp.numSpectraSearched = numSpectraSearched + rhs.numSpectraSearched;
-			tmp.numSpectraQueried = numSpectraQueried + rhs.numSpectraQueried;
-			tmp.numComparisonsDone = numComparisonsDone + rhs.numComparisonsDone;
-            tmp.numCandidatesSkipped = numCandidatesSkipped + rhs.numCandidatesSkipped;
+			SearchStatistics tmp(*this);
+			tmp.numSpectraSearched.fetch_add(rhs.numSpectraSearched);
+			tmp.numSpectraQueried.fetch_add(rhs.numSpectraQueried);
+			tmp.numComparisonsDone.fetch_add(rhs.numComparisonsDone);
+			tmp.numCandidatesSkipped.fetch_add(rhs.numCandidatesSkipped);
 			return tmp;
 		}
 
@@ -132,24 +105,9 @@ namespace pepitome
 		}
 	};
 
-	struct WorkerInfo : public BaseWorkerInfo
-	{
-		WorkerInfo( int num, int start, int end ) : BaseWorkerInfo( num, start, end ) {}
-		searchStats stats;
-	};
-
-	extern WorkerThreadMap					g_workerThreads;
-	extern simplethread_mutex_t				resourceMutex;
-
-	extern vector< double >					relativePeakCount;
-	extern vector< simplethread_mutex_t >	spectraMutexes;
-
 	extern proteinStore						proteins;
     extern SpectraStore                     librarySpectra;
 	extern SpectraList						spectra;
-	extern SpectraMassMapList				spectraMassMapsByChargeState;
-	extern float							totalSequenceComparisons;
-
 }
 }
 
