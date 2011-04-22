@@ -162,7 +162,7 @@ local month = $(revision-info[3]) ;
 local day = $(revision-info[4]) ;
 
 constant MAJOR : 1 ;
-constant MINOR : 6 ;
+constant MINOR : 0 ;
 constant SVNREV : $(revision-info[1]) ;
 constant SVNREVDATE : "(last modified $(year)-$(month)-$(day))" ;
 
