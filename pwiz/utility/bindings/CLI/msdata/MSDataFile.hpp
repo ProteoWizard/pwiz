@@ -45,7 +45,7 @@ namespace msdata {
 public ref class MSDataFile : public MSData
 {
     INTERNAL:
-    MSDataFile(NATIVE_POINTER_ARG(boost::shared_ptr<pwiz::msdata::MSDataFile>) base);
+    MSDataFile(boost::shared_ptr<pwiz::msdata::MSDataFile>* base);
     virtual ~MSDataFile();
     !MSDataFile();
     boost::shared_ptr<pwiz::msdata::MSDataFile>* base_;

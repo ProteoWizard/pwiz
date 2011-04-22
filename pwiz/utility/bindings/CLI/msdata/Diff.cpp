@@ -77,12 +77,8 @@ Diff::Diff(MSData^ a, MSData^ b, DiffConfig^ config)
 {}
 
 
-// for shared ptrs to non-heap objects, this deallocator does nothing
-namespace { void nullDeallocator(b::MSData* p) {} }
-
-
-MSData^ Diff::a_b::get() {return gcnew MSData(new boost::shared_ptr<b::MSData>(&base_->a_b, nullDeallocator), this);}
-MSData^ Diff::b_a::get() {return gcnew MSData(new boost::shared_ptr<b::MSData>(&base_->b_a, nullDeallocator), this);}
+MSData^ Diff::a_b::get() {return gcnew MSData(new boost::shared_ptr<b::MSData>(&base_->a_b, nullDelete));}
+MSData^ Diff::b_a::get() {return gcnew MSData(new boost::shared_ptr<b::MSData>(&base_->b_a, nullDelete));}
 
 
 Diff^ Diff::apply(MSData^ a, MSData^ b)

@@ -812,9 +812,25 @@ bool Run::empty()
     return base_->empty();
 }
 
+MSData::MSData(boost::shared_ptr<b::MSData>* base)
+: base_(base)
+{LOG_CONSTRUCT("MSData")}
+
+MSData::~MSData()
+{
+    LOG_DESTRUCT("MSData", true) SAFEDELETE(base_);
+
+    // MCC: forcing garbage collection is the best way I know of to try to clean up 
+    //      reclaimable SpectrumList handles which hold on to SpectrumListPtrs
+    System::GC::Collect();
+    System::GC::WaitForPendingFinalizers();
+}
+
+MSData::!MSData() {LOG_FINALIZE("MSData") delete this;}
+b::MSData& MSData::base() {return **base_;}
 
 MSData::MSData()
-: base_(new boost::shared_ptr<b::MSData>(new b::MSData())), owner_(nullptr)
+: base_(new boost::shared_ptr<b::MSData>(new b::MSData))
 {LOG_CONSTRUCT(__FUNCTION__)}
 
 System::String^ MSData::accession::get() {return gcnew System::String(base().accession.c_str());}

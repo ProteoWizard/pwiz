@@ -1608,7 +1608,12 @@ public DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(ScanSettingsList, pwiz::msda
 /// </summary>
 public ref class MSData
 {
-    DEFINE_SHARED_INTERNAL_BASE_CODE(pwiz::msdata, MSData);
+    INTERNAL:
+    MSData(boost::shared_ptr<pwiz::msdata::MSData>* base);
+    virtual ~MSData();
+    !MSData();
+    boost::shared_ptr<pwiz::msdata::MSData>* base_;
+    pwiz::msdata::MSData& base();
 
     public:
 

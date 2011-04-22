@@ -45,15 +45,14 @@ namespace CLI {
 namespace msdata {
 
 
-MSDataFile::MSDataFile(NATIVE_POINTER_ARG(boost::shared_ptr<b::MSDataFile>) base)
-: MSData(NATIVE_POINTER_DOWNCAST(boost::shared_ptr<b::MSData>, base)),
-  base_(NATIVE_POINTER_CAST(boost::shared_ptr<b::MSDataFile>, base))
+MSDataFile::MSDataFile(boost::shared_ptr<b::MSDataFile>* base)
+: MSData(new boost::shared_ptr<b::MSData>(base->get(), nullDelete)),
+  base_(base)
 {LOG_CONSTRUCT("MSDataFile")}
 
 MSDataFile::~MSDataFile()
 {
     LOG_DESTRUCT("MSDataFile", true) SAFEDELETE(base_);
-    MSData::base_ = NULL;
 
     // MCC: forcing garbage collection is the best way I know of to try to clean up 
     //      reclaimable SpectrumList handles which hold on to SpectrumListPtrs
@@ -72,7 +71,7 @@ MSDataFile::MSDataFile(System::String^ path)
     {
         initializeReaderList();
         base_ = new boost::shared_ptr<b::MSDataFile>(new b::MSDataFile(ToStdString(path), (b::Reader*) readerList.get()));
-        MSData::base_ = reinterpret_cast<boost::shared_ptr<b::MSData>*>(base_);
+        MSData::base_ = new boost::shared_ptr<b::MSData>(base_->get(), nullDelete);
     }
     CATCH_AND_FORWARD
 }
@@ -120,7 +119,7 @@ void MSDataFile::write(MSData^ msd,
         config2.binaryDataEncoderConfig.precision = (b::BinaryDataEncoder::Precision) config->precision;
         config2.binaryDataEncoderConfig.byteOrder = (b::BinaryDataEncoder::ByteOrder) config->byteOrder;
         config2.binaryDataEncoderConfig.compression = (b::BinaryDataEncoder::Compression) config->compression;
-        b::MSDataFile::write(msd->base(), ToStdString(filename), config2, &ilr->base());
+        b::MSDataFile::write(msd->base(), ToStdString(filename), config2, ilr == nullptr ? 0 : &ilr->base());
     }
     CATCH_AND_FORWARD
 }
@@ -154,7 +153,7 @@ void MSDataFile::write(System::String^ filename,
         config2.binaryDataEncoderConfig.precision = (b::BinaryDataEncoder::Precision) config->precision;
         config2.binaryDataEncoderConfig.byteOrder = (b::BinaryDataEncoder::ByteOrder) config->byteOrder;
         config2.binaryDataEncoderConfig.compression = (b::BinaryDataEncoder::Compression) config->compression;
-        base().write(ToStdString(filename), config2, &ilr->base());
+        base().write(ToStdString(filename), config2, ilr == nullptr ? 0 : &ilr->base());
     }
     CATCH_AND_FORWARD
 }

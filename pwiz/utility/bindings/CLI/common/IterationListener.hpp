@@ -58,7 +58,9 @@ public delegate IterationListener::Status IterationListenerUpdate(IterationListe
 public ref class IterationListenerRegistry
 {
     DEFINE_INTERNAL_BASE_CODE(IterationListenerRegistry, pwiz::util::IterationListenerRegistry);
-    System::Collections::Generic::Dictionary<pwiz::CLI::util::IterationListener^, System::IntPtr>^ _listeners;
+    System::Collections::Generic::Dictionary<IterationListener^,
+                                             System::Collections::Generic::KeyValuePair<IterationListenerUpdate^,
+                                                                                        System::IntPtr> >^ _listeners;
 
     public:
 

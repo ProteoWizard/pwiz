@@ -255,7 +255,7 @@ ParamContainer::ParamContainer(b::ParamContainer* base)
 {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ParamContainer))}
 
 ParamContainer::~ParamContainer()
-{/*LOG_DESTRUCT(BOOST_PP_STRINGIZE(ParamContainer), (owner_ == nullptr)) if (owner_ == nullptr) SAFEDELETE(base_);*/}
+{LOG_DESTRUCT(BOOST_PP_STRINGIZE(ParamContainer), (owner_ == nullptr)) if (owner_ == nullptr) SAFEDELETE(base_);}
 
 ParamContainer::ParamContainer() : base_(new b::ParamContainer()) {}
 ParamGroupList^ ParamContainer::paramGroups::get() {return gcnew ParamGroupList(&base_->paramGroupPtrs, this);}

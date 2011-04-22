@@ -131,6 +131,32 @@ void validateWriteRead(IterationListenerRegistry^ ilr)
     unit_assert(IterationListenerCollector::updateMessages[4]->iterationIndex == 0);
     unit_assert(IterationListenerCollector::updateMessages[5]->iterationIndex == 1);
     unit_assert(IterationListenerCollector::updateMessages[6]->iterationIndex == 0);
+
+    // create MSData object in memory
+    MSData tiny;
+    examples::initializeTiny(%tiny);
+
+    // write to file #1 (static)
+    MSDataFile::write(%tiny, filename1, %writeConfig, ilr);
+
+    for (int i=0; i < 100; ++i)
+    {
+        // read back into an MSDataFile object
+        MSDataFile^ msd1 = gcnew MSDataFile(filename1, ilr);
+        hackInMemoryMSData(msd1);
+
+        // compare
+        Diff diff(%tiny, msd1, %diffConfig);
+        if ((bool)diff && Log::writer != nullptr) Log::writer->WriteLine((string)diff);
+        unit_assert(!(bool)diff);
+    }
+    
+    System::GC::Collect();
+    System::GC::WaitForPendingFinalizers();
+
+    // remove temp files
+    System::IO::File::Delete(filename1);
+    System::IO::File::Delete(filename2);
 }
 
 

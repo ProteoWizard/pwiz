@@ -94,6 +94,9 @@ public ref class ObjectStructorLog
 
 #define SAFEDELETE(x) if(x) {delete x; x = NULL;}
 
+// null deleter to create shared_ptrs that do not delete when reset
+namespace { void nullDelete(void* s) {} }
+
 // catch a C++ or COM exception and rethrow it as a .NET Exception
 // invalid_argument and runtime_error have probably been rethrown by pwiz so don't prepend the forwarding function
 #undef CATCH_AND_FORWARD
@@ -111,15 +114,9 @@ public ref class ObjectStructorLog
 #define INTERNAL internal
 #endif
 
-#ifdef PWIZ_BINDINGS_CLI_COMBINED
-#define NATIVE_POINTER_ARG(NativeType) NativeType*
-#define NATIVE_POINTER_CAST(NativeType, x) x
-#define NATIVE_POINTER_DOWNCAST(NativeType, x) ((NativeType*) (x))
-#else
-#define NATIVE_POINTER_ARG(NativeType) void*
-#define NATIVE_POINTER_CAST(NativeType, x) static_cast< NativeType* >(x)
-#define NATIVE_POINTER_DOWNCAST(NativeType, x) x
-#endif
+/*#define NativeType* NativeType*
+#define x x
+#define static_cast<NativeType*>(x) ((NativeType*) (x))*/
 
 #include "vector.hpp"
 #include "map.hpp"
@@ -147,8 +144,8 @@ public ref class ObjectStructorLog
 
 // defines internal members for wrapping a raw pointer to a non-derived native class with a managed wrapper class
 #define DEFINE_INTERNAL_BASE_CODE(CLIType, NativeType) \
-INTERNAL: CLIType(NATIVE_POINTER_ARG(NativeType) base, System::Object^ owner) : base_(NATIVE_POINTER_CAST(NativeType, base)), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CLIType))} \
-          CLIType(NATIVE_POINTER_ARG(NativeType) base) : base_(NATIVE_POINTER_CAST(NativeType, base)), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CLIType))} \
+INTERNAL: CLIType(NativeType* base, System::Object^ owner) : base_(base), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CLIType))} \
+          CLIType(NativeType* base) : base_(base), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(CLIType))} \
           virtual ~CLIType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(CLIType), (owner_ == nullptr)) if (owner_ == nullptr) {SAFEDELETE(base_);}} \
           !CLIType() {LOG_FINALIZE(BOOST_PP_STRINGIZE(CLIType)) delete this;} \
           NativeType* base_; \
@@ -157,8 +154,8 @@ INTERNAL: CLIType(NATIVE_POINTER_ARG(NativeType) base, System::Object^ owner) : 
 
 // defines internal members for wrapping a raw pointer to a derived native class with a managed wrapper class
 #define DEFINE_DERIVED_INTERNAL_BASE_CODE(ns, ClassType, BaseClassType) \
-INTERNAL: ClassType(NATIVE_POINTER_ARG(ns::ClassType) base, System::Object^ owner) : BaseClassType(base), base_(NATIVE_POINTER_CAST(ns::ClassType, base)) {owner_ = owner; LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
-          ClassType(NATIVE_POINTER_ARG(ns::ClassType) base) : BaseClassType(base), base_(NATIVE_POINTER_CAST(ns::ClassType, base)) {owner_ = nullptr; LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
+INTERNAL: ClassType(ns::ClassType* base, System::Object^ owner) : BaseClassType(base), base_(base) {owner_ = owner; LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
+          ClassType(ns::ClassType* base) : BaseClassType(base), base_(base) {owner_ = nullptr; LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
           virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType), (owner_ == nullptr)) if (owner_ == nullptr) {SAFEDELETE(base_); BaseClassType::base_ = NULL;}} \
           !ClassType() {LOG_FINALIZE(BOOST_PP_STRINGIZE(ClassType)) delete this;} \
           ns::ClassType* base_; \
@@ -166,8 +163,8 @@ INTERNAL: ClassType(NATIVE_POINTER_ARG(ns::ClassType) base, System::Object^ owne
 
 // defines internal members for wrapping a shared_ptr to a non-derived native class with a managed wrapper class
 #define DEFINE_SHARED_INTERNAL_BASE_CODE(ns, ClassType) \
-INTERNAL: ClassType(NATIVE_POINTER_ARG(boost::shared_ptr<ns::ClassType>) base, System::Object^ owner) : base_(NATIVE_POINTER_CAST(boost::shared_ptr<ns::ClassType>, base)), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
-          ClassType(NATIVE_POINTER_ARG(boost::shared_ptr<ns::ClassType>) base) : base_(NATIVE_POINTER_CAST(boost::shared_ptr<ns::ClassType>, base)), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
+INTERNAL: ClassType(boost::shared_ptr<ns::ClassType>* base, System::Object^ owner) : base_(base), owner_(owner) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
+          ClassType(boost::shared_ptr<ns::ClassType>* base) : base_(base), owner_(nullptr) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
           virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType), true) SAFEDELETE(base_);} \
           !ClassType() {LOG_FINALIZE(BOOST_PP_STRINGIZE(ClassType)) delete this;} \
           boost::shared_ptr<ns::ClassType>* base_; \
@@ -176,7 +173,7 @@ INTERNAL: ClassType(NATIVE_POINTER_ARG(boost::shared_ptr<ns::ClassType>) base, S
 
 // defines internal members for wrapping a shared_ptr to a derived native class with a managed wrapper class
 #define DEFINE_SHARED_DERIVED_INTERNAL_BASE_CODE(ns, ClassType, BaseClassType) \
-INTERNAL: ClassType(NATIVE_POINTER_ARG(boost::shared_ptr<ns::ClassType>) base) : BaseClassType(&**NATIVE_POINTER_CAST(boost::shared_ptr<ns::ClassType>, base)), base_(NATIVE_POINTER_CAST(boost::shared_ptr<ns::ClassType>, base)) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
+INTERNAL: ClassType(boost::shared_ptr<ns::ClassType>* base) : BaseClassType(base->get()), base_(base) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
           virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType), true) SAFEDELETE(base_); BaseClassType::base_ = NULL;} \
           !ClassType() {LOG_FINALIZE(BOOST_PP_STRINGIZE(ClassType)) delete this;} \
           boost::shared_ptr<ns::ClassType>* base_; \
@@ -185,7 +182,7 @@ INTERNAL: ClassType(NATIVE_POINTER_ARG(boost::shared_ptr<ns::ClassType>) base) :
 // defines internal members for wrapping a shared_ptr to a derived native class with a managed wrapper class
 // TODO: explain why SpectrumList/MSData derivatives need this but ParamContainer derivatives don't
 #define DEFINE_SHARED_DERIVED_INTERNAL_SHARED_BASE_CODE(ns, ClassType, BaseClassType) \
-INTERNAL: ClassType(NATIVE_POINTER_ARG(boost::shared_ptr<ns::ClassType>) base) : BaseClassType(NATIVE_POINTER_DOWNCAST(boost::shared_ptr<ns::BaseClassType>, base)), base_(NATIVE_POINTER_CAST(boost::shared_ptr<ns::ClassType>, base)) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
+INTERNAL: ClassType(boost::shared_ptr<ns::ClassType>* base) : BaseClassType(new boost::shared_ptr<ns::BaseClassType>(base->get(), nullDelete)), base_(base) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
           virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType), true) SAFEDELETE(base_); BaseClassType::base_ = NULL;} \
           !ClassType() {LOG_FINALIZE(BOOST_PP_STRINGIZE(ClassType)) delete this;} \
           boost::shared_ptr<ns::ClassType>* base_; \
