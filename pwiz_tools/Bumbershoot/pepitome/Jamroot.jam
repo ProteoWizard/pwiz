@@ -58,16 +58,48 @@
 .os = [ modules.peek : OS ] ; # NT, LINUX, MACOSX
 .platform = [ modules.peek : OSPLAT ] ; # X86, X86_64, POWERPC
 
+constant BOOST_VERSION : 1 43 0 ;
+
+local default_libraries_path = "./freicore/libraries" ;
+local libraries_path = [ MATCH --libraries-path=(.*) : [ modules.peek : ARGV ] ] ;
+libraries_path ?= $(default_libraries_path) ; # set default path in absence of command-line path
+
+local default_boost_src = "$(libraries_path)/boost_$(BOOST_VERSION:J=_)" ;
+local boost_src = [ MATCH --boost-src=(.*) : [ modules.peek : ARGV ] ] ;
+boost_src ?= $(default_boost_src) ; # set default path in absence of command-line path
+
+local default_zlib_src = "$(libraries_path)/zlib-1.2.3" ;
+local zlib_src = [ MATCH --zlib-src=(.*) : [ modules.peek : ARGV ] ] ;
+zlib_src ?= $(default_zlib_src) ; # set default path in absence of command-line path
+
+local expat_src = [ MATCH --expat-src=(.*) : [ modules.peek : ARGV ] ] ;
+expat_src ?= [ glob "freicore/ext/src/expat*" : "freicore/ext/src/*.tar.gz" ] ;
+expat_src = $(expat_src[0]) ;
+
+if ! $(expat_src)
+{
+     error "This build requires the Expat source code. Specify the path to the Expat source distribution with '--expat-src=<path>'" ;
+}
+
 
 path-constant ROOT_PATH : . ;
 path-constant BUILD_PATH : build-$(.os:L)-$(.platform:L) ;
-path-constant LIBRARIES_PATH : ./freicore/libraries ;
+path-constant LIBRARIES_PATH : $(libraries_path) ;
 path-constant PWIZ_SOURCE : ./freicore/pwiz_src ;
 
 
 # this makes pwiz use freicore's libraries directory
 local argv = [ modules.peek : ARGV ] ;
 modules.poke : ARGV : $(argv) --libraries-path="$(LIBRARIES_PATH)" ;
+
+
+local msvc-secure-scl = ;
+if --without-secure-scl in [ modules.peek : ARGV ]
+{
+    # TODO: change this from a <define> to a feature in msvc.jam
+    # disable checked iterators (on by default in VC8/9)
+    msvc-secure-scl = <toolset>msvc,<variant>release:<define>_SECURE_SCL=0 ;
+}
 
 
 import os ;
@@ -85,10 +117,14 @@ project bumbershoot
 	    <include>freicore/libraries/boost_aux
 
       <toolset>gcc,<link>shared:<runtime-link>shared
-      
-      # using pwiz_wifffile (compiled with /clr) requires the shared runtime,
-      # regardless of how pwiz_wifffile is linked
+        <toolset>darwin,<link>shared:<runtime-link>shared
+
+        # any module which links with .NET (either dynamically or statically) must use the shared runtime
       <toolset>msvc:<runtime-link>shared
+
+        # SEH exceptions crossing native/managed boundaries are problematic with this set to off;
+        # also, catch(...) will catch SEH exceptions with this on
+        <toolset>msvc:<asynch-exceptions>on
 
       # special msvc hacks
       <toolset>msvc:<define>WIN32                     # windows
@@ -105,6 +141,12 @@ project bumbershoot
       <toolset>msvc:<cxxflags>/wd4267	                # warning: conversion from 'type1' to 'type2', possible loss of data (boost::lexical_cast)
       <toolset>msvc:<cxxflags>/wd4244                 # warning: conversion from 'int' to 'unsigned short', possible loss of data (boost/date_time/microsec_time_clock.hpp)
       <toolset>msvc:<cxxflags>/wd4275                 # warning: non dll-interface class 'base' used as base for dll-interface class 'derived'
+        <toolset>msvc:<cxxflags>/wd4702                 # warning: unreachable code (boost::lexical_cast)
+
+        # warning: _SECURE_SCL_THROWS is deprecated
+        <toolset>msvc:<define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
+
+        $(msvc-secure-scl)
 
       # special gcc hack - Cygwin gcc 3.4.4, Ubuntu gcc 4.1.2 
       # warning: '__cur' might be used uninitialized in this function 
@@ -119,10 +161,14 @@ project bumbershoot
       <toolset>gcc:<cxxflags>-Wno-long-long
       <toolset>darwin:<cxxflags>-Wno-long-long
 
+        # any GCC executable that uses shared libraries must have all its code built with -fPIC
+        <conditional>@static-with-fpic
+
       # don't call 'strip' -- causes 'Bus error' in some cases
       #  e.g. find_if with inline predicate
       <toolset>darwin:<debug-symbols>on
 
+        # use of boost::thread requires multithreaded runtime
       <threading>multi
 
   : build-dir $(BUILD_PATH)
@@ -131,16 +177,6 @@ project bumbershoot
       <link>static
       <runtime-link>static
 	;
-
-
-local expat_src = [ MATCH --expat-src=(.*) : [ modules.peek : ARGV ] ] ;
-expat_src ?= [ glob "freicore/ext/src/expat*" : "freicore/ext/src/*.tar.gz" ] ;
-expat_src = $(expat_src[0]) ;
-
-if ! $(expat_src)
-{
-     error "This build requires the Expat source code. Specify the path to the Expat source distribution with '--expat-src=<path>'" ;
-}
 
 
 tmp = [ modules.peek : BOOST_BUILD_PATH ] ;
@@ -179,28 +215,53 @@ echo $(application-name) $(version-tag:J=.) $(SVNREVDATE:J=) ;
 
 
 path-constant EXPAT_SOURCE : $(expat_src) ;
-path-constant BOOST_SOURCE : "freicore/libraries/boost_1_43_0" ;
+path-constant BOOST_SOURCE : $(boost_src) ;
+path-constant ZLIB_SOURCE : $(zlib_src) ;
 
 using expat : 2.0 : $(EXPAT_SOURCE) ;
-using ext-boost : 1.43.0 : $(BOOST_SOURCE) ;
+
+local .has-boost = [ MATCH "(.+)" : [ modules.peek : BOOST_VERSION ] ] ;
+if ! $(.has-boost)
+{
+    modules.poke : BOOST_VERSION : $(BOOST_VERSION) ;
+    using ext-boost : $(BOOST_VERSION:J=.) : $(BOOST_SOURCE) : <zlib-src-location>$(ZLIB_SOURCE) ;
+}
 
 
 rule install-location ( properties * )
 {
     local toolsets = [ feature.get-values <toolset> : $(properties) ] ;
     local variants = [ feature.get-values <variant> : $(properties) ] ;
+    if <link>shared in $(properties)
+    {
+        return <location>$(BUILD_PATH)/$(toolsets[1])-$(variants[1])-shared ;
+    }
+    else
+    {
     return <location>$(BUILD_PATH)/$(toolsets[1])-$(variants[1]) ;
+    }
+}
+
+rule install-type ( properties * )
+{
+    local result = <install-type>EXE ;
+    if <link>shared in $(properties)
+    {
+        result += <install-dependencies>on <install-type>SHARED_LIB <install-type>MANIFEST ;
+    }
+    return $(result) ;
 }
 
 rule install-vendor-api-dependencies ( properties * )
 {
     local location = [ install-location $(properties) ] ;
     local dependencies ;
-    if <toolset>msvc in $(properties)
+    if <toolset>msvc in $(properties) && <link>static in $(properties)
     {
-        if [ path.exists $(PWIZ_SOURCE)/pwiz/utility/vendor_api/thermo ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo/$(location) ; }
-        if [ path.exists $(PWIZ_SOURCE)/pwiz/utility/vendor_api/Agilent ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz/utility/vendor_api/Agilent//install_pwiz_vendor_api_agilent/$(location) ; }
+        if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/thermo ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo/$(location) ; }
+        if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Agilent ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Agilent//install_pwiz_vendor_api_agilent/$(location) ; }
         if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI//install_pwiz_vendor_api_abi/$(location) ; }
+        if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI/T2D ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/ABI/T2D//install_pwiz_vendor_api_abi_t2d/$(location) ; }
         if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Bruker ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Bruker//install_pwiz_vendor_api_bruker/$(location) ; }
         if [ path.exists $(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Waters ] { dependencies += <dependency>$(PWIZ_SOURCE)/pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters/$(location) ; }
     }
@@ -215,6 +276,14 @@ rule with-mpi ( properties * )
     }
 }
 
+rule gcc-install-dll-path ( properties * )
+{
+    if <toolset>gcc in $(properties) && <link>shared in $(properties) && <target-os>linux in $(properties)
+    {
+        return <dll-path>'$ORIGIN' ;
+    }
+}
+
 
 exe $(application-name:L)
   : # sources
@@ -226,10 +295,23 @@ exe $(application-name:L)
 
 install install
     : $(application-name:L)
-    : <install-type>EXE
+    : <conditional>@install-type
       <conditional>@install-location
       <conditional>@install-vendor-api-dependencies
+      <conditional>@gcc-install-dll-path
     ;
+
+
+# any GCC executable that uses shared libraries must have all its code built with -fPIC
+rule static-with-fpic ( properties * )
+{
+    if ( <toolset>gcc in $(properties) || <toolset>darwin in $(properties) ) &&
+       <link>static in $(properties)
+    {
+        return <cflags>-fPIC <linkflags>-fPIC ;
+    }
+}
+
 
 # any source tree can build binary tarballs
 
@@ -251,10 +333,10 @@ rule binary-tarball-requirements ( properties * )
 {
     local toolsets = [ feature.get-values <toolset> : $(properties) ] ;
     local variants = [ feature.get-values <variant> : $(properties) ] ;
-    local location = $(BUILD_PATH)/$(toolsets[1])-$(variants[1]) ;
+    local location = [ install-location $(properties) ] ;
+    location = $(location:G=) ;
 
     local non-redistributables =
-        *MSFileReader.XRawfile2.dll *fregistry.dll *fileio.dll                          # Thermo API
         *ABSciex.DataAccess.WiffFileDataReader.dll *Clear?ore*.dll *rscoree.dll         # ABI API
         *DACServer.dll *genutil.dll *raw.dll *RawCsm.dll *Security*.dll *MetaGD32.dll ; # Waters API
 
@@ -266,14 +348,12 @@ rule binary-tarball-requirements ( properties * )
 
     non-redistributables = [ sequence.join $(non-redistributables) : "&&exclude:" ] ;
     local result = <tar-source>path-anchor:$(location)&&exclude:$(non-redistributables)&&$(location) ;
-    if ! <architecture> in $(properties:G)
-    {
-        if $(.platform:L) = "x86_64" && <address-model>32 in $(properties) { properties += <architecture>x86 ; }
-        else { properties += <architecture>$(.platform:L) ; }
-    }
-    local name = [ common.format-name <base> <property:target-os> <property:architecture> <toolset> <runtime> -$(version-tag:J=_)
+    if ! <architecture> in $(properties:G) { properties += <architecture>$(.platform:L) ; }
+    local linkage ;
+    if <link>shared in $(properties) { linkage = "-shared" ; }
+    local name = [ common.format-name <base> <property:target-os> <property:architecture> <toolset> <property:variant> $(linkage) -$(version-tag:J=_)
                                       : $(bin-tarball-basename) : TBZ2 : [ property-set.create $(properties) ] ] ;
-    result += <name>$(name) ;
+    result += <name>$(name) <dependency>install <location>$(BUILD_PATH) ;
     return $(result) ;
 }
 
@@ -283,8 +363,6 @@ tar.create $(bin-tarball-basename).tar.bz2
 
   : # requirements
       <conditional>@binary-tarball-requirements
-      <location>$(BUILD_PATH)
-      <dependency>install
   ;
 
 
@@ -313,11 +391,11 @@ bcp.copy-boost-dependencies copy_boost_subset
     $(ROOT_PATH)//$(application-name:L)
 
   : # requirements
-    <location>$(BOOST_SUBSET_PATH)/boost_1_43_0
+    <location>$(BOOST_SUBSET_PATH)/boost_$(BOOST_VERSION:J=_)
   ;
 
 
-tar.create boost_1_43_0.tar.bz2
+tar.create boost_$(BOOST_VERSION:J=_).tar.bz2
   : # sources
 
       path-anchor:$(BOOST_SUBSET_PATH)
@@ -331,7 +409,8 @@ tar.create boost_1_43_0.tar.bz2
 .exclusion-list =
   exclude:.svn
   exclude:*.bak
-  exclude:svnrev.*
+  exclude:svnrev.hpp
+  exclude:Version.cpp
   exclude:Reader_*_Test.data*
   exclude:site-config.jam exclude:user-config.jam # user should provide these
   exclude:bootstrap exclude:bin.* # boost-build intermediate directories
@@ -386,7 +465,8 @@ tar.create $(application-name:L)-src.tar.bz2
   : # requirements
     <name>$(application-name:L)-src-$(version-tag:J=_).tar.bz2
     <location>$(BUILD_PATH)
-    <dependency>boost_1_43_0.tar.bz2
+    <dependency>boost_$(BOOST_VERSION:J=_).tar.bz2
+    <dependency>SUBSET
   ;
 
 } # if SUBSET
