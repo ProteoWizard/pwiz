@@ -84,7 +84,7 @@ MSDataFile::MSDataFile(System::String^ path, util::IterationListenerRegistry^ il
     {
         initializeReaderList();
         base_ = new boost::shared_ptr<b::MSDataFile>(new b::MSDataFile(ToStdString(path), (b::Reader*) readerList.get()/*, ilr->base()*/));
-        MSData::base_ = reinterpret_cast<boost::shared_ptr<b::MSData>*>(base_);
+        MSData::base_ = new boost::shared_ptr<b::MSData>(base_->get(), nullDelete);
     }
     CATCH_AND_FORWARD
 }
