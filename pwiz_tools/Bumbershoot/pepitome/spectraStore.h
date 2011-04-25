@@ -393,7 +393,7 @@ namespace pepitome
 
         void readSpectrum(float TICCutoff = 1.0f, size_t maxPeakCount = 150, bool cleanSpectrum = false)
         {
-            ifstream library(id.source.c_str(), ios::in);
+            ifstream library(id.source.c_str(), ios::binary);
             readPeaks(library, cleanSpectrum);
             readHeader(library);
             preprocessSpectrum(TICCutoff, maxPeakCount);
@@ -499,8 +499,6 @@ namespace pepitome
                 matchedPeptide.reset(new DigestedPeptide(peptide.begin(), peptide.end(), 0, numMissedCleavages, false, false));
             else
                 matchedPeptide.reset(new DigestedPeptide(peptide.begin(), peptide.end(), 0, numMissedCleavages, true, true));
-            //cout << input << endl;
-            //cout << modStr << "," << nmcStr << "," << nttStr << endl;
             //cout << getInterpretation(*matchedPeptide) << "," << peptide << endl;
 
             // Parse out the modifications [2/0,A,Acetyl/11,M,Oxidation]
@@ -549,7 +547,6 @@ namespace pepitome
                 matchedProteins.insert(pair<string,size_t>(proteinAnn,0));
                 return;
             }
-            
             tokenizer protParser(proteinAnn, backslash);
             tokenizer::iterator protsItr = protParser.begin();
             ++protsItr;
@@ -572,7 +569,7 @@ namespace pepitome
 
         void readSpectrum(float TICCutoff = 1.0f, size_t maxPeakCount = 150, bool cleanSpectrum = false)
         {
-            ifstream library(id.source.c_str(), ios::in);
+            ifstream library(id.source.c_str(), ios::binary);
             readPeaks(library, cleanSpectrum);
             readHeader(library);
             preprocessSpectrum(TICCutoff, maxPeakCount);
@@ -715,7 +712,7 @@ namespace pepitome
 
         void readSpectrum(float TICCutoff = 1.0f, size_t maxPeakCount = 150, bool cleanSpectrum = false)
         {
-            ifstream library(id.source.c_str(), ios::in);
+            ifstream library(id.source.c_str(), ios::binary);
             readPeaks(library, cleanSpectrum);
             readHeader(library);
             preprocessSpectrum(TICCutoff, maxPeakCount);
@@ -755,7 +752,7 @@ namespace pepitome
         {
             cout << "Reading \"" << libraryName << "\"" << endl;
             Timer libReadTime(true);
-            ifstream library(libraryName.c_str(), ios::in);
+            ifstream library(libraryName.c_str(), ios::binary);
             size_t spectrumIndex = 0;
             if(library)
             {
@@ -764,7 +761,7 @@ namespace pepitome
                 int charge;
                 unsigned long headerIndex = 0;
                 unsigned long peakIndex = 0;
-                size_t readBytes = 0;
+                unsigned long readBytes = 0;
                 size_t numPeaks;
                 while(getline(library,input)) 
                 {
@@ -815,7 +812,7 @@ namespace pepitome
                         parentMass = lexical_cast<double>(value);
                     } else if(boost::starts_with(input, "FullName"))
                     {
-                        headerIndex = ((unsigned long) library.tellg())-((unsigned long)input.length()+1) ;
+                        headerIndex = ((unsigned long) library.tellg()) -((unsigned long)input.length()+1) ;
                         peakIndex = 0;
                     } else if(input.length() > 2 && isdigit(input[0]) && peakIndex == 0)
                     {
@@ -830,7 +827,7 @@ namespace pepitome
         {
             cout << "Reading \"" << libraryName << "\"" << endl;
             Timer libReadTime(true);
-            ifstream library(libraryName.c_str(), ios::in);
+            ifstream library(libraryName.c_str(), ios::binary);
             size_t spectrumIndex = 0;
             if(library)
             {
@@ -903,7 +900,7 @@ namespace pepitome
 
             cout << "Reading \"" << libraryName << "\"" << endl;
             Timer libReadTime(true);
-            ifstream library(libraryName.c_str(), ios::in);
+            ifstream library(libraryName.c_str(), ios::binary);
             int spectrumIndex = 0;
             if(library)
             {
@@ -962,7 +959,7 @@ namespace pepitome
 
             cout << "Reading \"" << libraryName << "\"" << endl;
             Timer libReadTime(true);
-            ifstream library(libraryName.c_str(), ios::in);
+            ifstream library(libraryName.c_str(), ios::binary);
             int spectrumIndex = 0;
             if(library)
             {
@@ -1018,14 +1015,14 @@ namespace pepitome
 
         void readSpectra(float TICCutoff = 1.0f, size_t maxPeakCount = 100, bool cleanSpectrum = false)
         {
-            ifstream library(libraryName.c_str(), ios::in);
+            ifstream library(libraryName.c_str(), ios::binary);
             for(vector<shared_ptr<BaseLibrarySpectrum> >::iterator sItr = begin(); sItr != end(); ++sItr )
                 (*sItr)->readSpectrum(TICCutoff,maxPeakCount,cleanSpectrum);
         }
 
         void recalculatePrecursorMasses()
         {
-            ifstream library(libraryName.c_str(), ios::in);
+            ifstream library(libraryName.c_str(), ios::binary);
             size_t spectraIndex = 0;
             size_t totalSpectra = size();
             for(vector<shared_ptr<BaseLibrarySpectrum> >::iterator sItr = begin(); sItr != end(); ++sItr )
