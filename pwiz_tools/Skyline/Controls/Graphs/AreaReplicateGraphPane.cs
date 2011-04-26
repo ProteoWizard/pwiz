@@ -39,15 +39,12 @@ namespace pwiz.Skyline.Controls.Graphs
         {
         }
 
-        // If replicates have library info and the Show Library option is checked
-        // and AreaView is not area ratio view, 
-        // add an XAxis label of "Library" at the left most column
         protected override void InitFromData(GraphData graphData)
         {
             base.InitFromData(graphData);
-
             if (IsLibraryVisible)
             {
+                // add an XAxis label of "Library" at the left most column
                 string[] labels = XAxis.Scale.TextLabels;
                 string[] withLibLabel = new string[labels.Length + 1];
                 withLibLabel[0] = "Library";
