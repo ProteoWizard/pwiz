@@ -56,6 +56,7 @@ rule vendor-api-requirements ( properties * )
     local result ;
     if <toolset>msvc in $(properties) &&
        ! ( <address-model>64 in $(properties) ) &&
+       <runtime-debugging>off in $(properties) &&
        [ project-exists $(API_PATH) ] &&
        $(.hasDLLs)
     {
@@ -69,6 +70,7 @@ rule vendor-api-usage-requirements ( properties * )
     local result ;
     if <toolset>msvc in $(properties) &&
        ! ( <address-model>64 in $(properties) ) &&
+       <runtime-debugging>off in $(properties) &&
        [ project-exists $(API_PATH) ] &&
        $(.hasDLLs)
     {
@@ -85,6 +87,10 @@ rule vendor-api-usage-requirements ( properties * )
         else if <address-model>64 in $(properties)
         {
             echo "[$(READER_PATH)] 64-bit MSVC build: $(READER_NAME) can only identify files, not read them." ;
+        }
+        else if <runtime-debugging>on in $(properties)
+        {
+            echo "[$(READER_PATH)] Debug build: $(READER_NAME) can only identify files, not read them." ;
         }
         else if ! [ project-exists $(API_PATH) ]
         {
@@ -141,6 +147,10 @@ rule test-requirements ( properties * )
         else if <address-model>64 in $(properties)
         {
             echo "[$(READER_PATH)] 64-bit MSVC build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+        }
+        else if <runtime-debugging>on in $(properties)
+        {
+            echo "[$(READER_PATH)] Debug build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
         }
         else if ! [ project-exists $(API_PATH) ]
         {
