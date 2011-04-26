@@ -12,8 +12,11 @@ IF EXIST obj rmdir /s /q obj
 IF EXIST Microsoft.VC90.MFC rmdir /s /q Microsoft.VC90.MFC
 IF EXIST ClearCore.dll del /q ClearCore.dll
 IF EXIST ClearCore.Storage.dll del /q ClearCore.Storage.dll
+IF EXIST EULA.MHDAC del /q EULA.MHDAC
+IF EXIST EULA.MSFileReader del /q EULA.MSFileReader
 IF EXIST Interop.EDAL.SxS.manifest del /q Interop.EDAL.SxS.manifest
 IF EXIST MassLynxRaw.dll del /q MassLynxRaw.dll
+IF EXIST Skyline.sln.cache del /q Skyline.sln.cache
 IF EXIST Test\bin rmdir /s /q Test\bin
 IF EXIST Test\obj rmdir /s /q Test\obj
 IF EXIST TestA\bin rmdir /s /q TestA\bin

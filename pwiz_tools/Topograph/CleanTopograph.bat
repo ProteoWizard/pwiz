@@ -9,9 +9,12 @@ pushd %PWIZ_ROOT%
 
 IF EXIST bin rmdir /s /q bin
 IF EXIST obj rmdir /s /q obj
+IF EXIST topograph.sln.cache rmdir /s /q topograph.sln.cache
 IF EXIST turnover\Microsoft.VC90.MFC rmdir /s /q turnover\Microsoft.VC90.MFC
 IF EXIST turnover\ClearCore.dll del /q turnover\ClearCore.dll
 IF EXIST turnover\ClearCore.Storage.dll del /q turnover\ClearCore.Storage.dll
+IF EXIST turnover\EULA.MHDAC del /q turnover\EULA.MHDAC
+IF EXIST turnover\EULA.MSFileReader del /q turnover\EULA.MSFileReader
 IF EXIST turnover\Interop.EDAL.SxS.manifest del /q turnover\Interop.EDAL.SxS.manifest
 IF EXIST turnover\MassLynxRaw.dll del /q turnover\MassLynxRaw.dll
 IF EXIST TestResults rmdir /s /q TestResults
