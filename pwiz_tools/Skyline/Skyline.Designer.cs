@@ -326,6 +326,7 @@ namespace pwiz.Skyline
             this.areaNormalizeTotalContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator40 = new System.Windows.Forms.ToolStripSeparator();
             this.areaNormalizeNoneContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showLibraryPeakAreaContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptideLogScaleContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptideCvsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator28 = new System.Windows.Forms.ToolStripSeparator();
@@ -2708,12 +2709,13 @@ namespace pwiz.Skyline
             this.peptideOrderContextMenuItem,
             this.replicateOrderContextMenuItem,
             this.areaNormalizeContextMenuItem,
+            this.showLibraryPeakAreaContextMenuItem,
             this.peptideLogScaleContextMenuItem,
             this.peptideCvsContextMenuItem,
             this.toolStripSeparator28,
             this.areaPropsContextMenuItem});
             this.contextMenuPeakAreas.Name = "contextMenuStrip1";
-            this.contextMenuPeakAreas.Size = new System.Drawing.Size(153, 164);
+            this.contextMenuPeakAreas.Size = new System.Drawing.Size(153, 186);
             // 
             // areaGraphContextMenuItem
             // 
@@ -2832,6 +2834,14 @@ namespace pwiz.Skyline
             this.areaNormalizeNoneContextMenuItem.Size = new System.Drawing.Size(128, 22);
             this.areaNormalizeNoneContextMenuItem.Text = "None";
             this.areaNormalizeNoneContextMenuItem.Click += new System.EventHandler(this.areaNormalizeNoneContextMenuItem_Click);
+            // 
+            // showLibraryPeakAreaContextMenuItem
+            // 
+            this.showLibraryPeakAreaContextMenuItem.CheckOnClick = true;
+            this.showLibraryPeakAreaContextMenuItem.Name = "showLibraryPeakAreaContextMenuItem";
+            this.showLibraryPeakAreaContextMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.showLibraryPeakAreaContextMenuItem.Text = "Show Library";
+            this.showLibraryPeakAreaContextMenuItem.Click += new System.EventHandler(this.showLibraryPeakAreaContextMenuItem_Click);
             // 
             // peptideLogScaleContextMenuItem
             // 
@@ -3207,6 +3217,7 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem charge2ContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem charge3ContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem charge4ContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem showLibraryPeakAreaContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem replicateOrderContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem replicateOrderDocumentContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem replicateOrderAcqTimeContextMenuItem;

@@ -77,6 +77,13 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        public void OnActiveLibraryChanged()
+        {
+            if (GraphSummary.GraphPane is RTReplicateGraphPane ||
+                    RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single)
+                GraphSummary.UpdateUI();
+        }
+
         public void OnResultsIndexChanged()
         {
             if (GraphSummary.GraphPane is RTReplicateGraphPane ||

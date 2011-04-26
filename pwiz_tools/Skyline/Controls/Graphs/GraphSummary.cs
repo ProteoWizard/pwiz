@@ -47,6 +47,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             GraphSummary GraphSummary { get; set; }
 
+            void OnActiveLibraryChanged();
             void OnResultsIndexChanged();
             void OnRatioIndexChanged();
 
@@ -63,6 +64,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
             int SelectedResultsIndex { get; set; }
 
+            void ActivateSpectrum();
+
             void BuildGraphMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip, Point mousPt, IController controller);
         }
 
@@ -72,12 +75,14 @@ namespace pwiz.Skyline.Controls.Graphs
             public IdentityPath SelectedPath { get { return IdentityPath.ROOT; } set { } }
             public void BuildGraphMenu(ZedGraphControl zedGraphControl, ContextMenuStrip menuStrip, Point mousePt, IController controller) { }
             public int SelectedResultsIndex { get; set; }
+            public void ActivateSpectrum() {}
         }
 
         private readonly IDocumentUIContainer _documentContainer;
         private readonly IStateProvider _stateProvider;
         private readonly IController _controller;
 
+        private bool _activeLibrary;
         private int _resultsIndex;
         private int _ratioIndex;
 
@@ -98,6 +103,20 @@ namespace pwiz.Skyline.Controls.Graphs
                              new DefaultStateProvider();
 
             UpdateUI();
+        }
+
+        public bool ActiveLibrary
+        {
+            get { return _activeLibrary;  }
+            set
+            {
+                if(_activeLibrary != value)
+                {
+                    _activeLibrary = value;
+
+                    _controller.OnActiveLibraryChanged();
+                }
+            }
         }
 
         public int ResultsIndex

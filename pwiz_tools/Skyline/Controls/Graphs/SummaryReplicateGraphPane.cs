@@ -56,7 +56,7 @@ namespace pwiz.Skyline.Controls.Graphs
             XAxis.Type = AxisType.Text;
         }
 
-        protected void InitFromData(GraphData graphData)
+        protected virtual void InitFromData(GraphData graphData)
         {
             string[] resultNamesOrdered = graphData.GetReplicateNames().ToArray();
             if (!ArrayUtil.EqualsDeep(resultNamesOrdered, XAxis.Scale.TextLabels))
@@ -84,6 +84,9 @@ namespace pwiz.Skyline.Controls.Graphs
             // is already selected.  This keeps the UI from drilling in too
             // deep when the user just wants to see a different replicate
             // at the same level currently being view (e.g. peptide)
+            if (0 > selectedIndex || selectedIndex >= _replicateIndices.Count)
+                return;
+
             int iResult = IndexOfReplicate(selectedIndex);
             if (GraphSummary.ResultsIndex != iResult ||
                     GraphChromatogram.DisplayType == DisplayTypeChrom.single)

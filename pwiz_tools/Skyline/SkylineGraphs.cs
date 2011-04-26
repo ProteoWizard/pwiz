@@ -85,6 +85,14 @@ namespace pwiz.Skyline
                 return;
 
             var activeForm = dockPanel.ActiveDocument;
+
+            bool activeLibrary = ReferenceEquals(_graphSpectrum, activeForm);
+            if (_graphPeakArea != null)
+                _graphPeakArea.ActiveLibrary = activeLibrary;
+
+            if (_graphRetentionTime != null)
+                _graphRetentionTime.ActiveLibrary = activeLibrary;
+
             foreach (var graphChrom in _listGraphChrom)
             {
                 if (ReferenceEquals(graphChrom, activeForm))
@@ -735,7 +743,8 @@ namespace pwiz.Skyline
             {
                 if (_graphSpectrum != null)
                 {
-                    _graphSpectrum.Show();
+                    _graphSpectrum.Activate();
+                    _graphSpectrum.Focus();
                 }
                 else
                 {
@@ -1488,7 +1497,10 @@ namespace pwiz.Skyline
             if (graphChrom != null)
             {
                 if (show)
-                    graphChrom.Show();
+                {
+                    graphChrom.Activate();
+                    graphChrom.Focus();
+                }
                 else
                     graphChrom.Hide();
             }
@@ -1736,7 +1748,7 @@ namespace pwiz.Skyline
             {
                 if (_graphRetentionTime != null)
                 {
-                    _graphRetentionTime.Show();
+                    _graphRetentionTime.Activate();
                 }
                 else
                 {
@@ -1846,6 +1858,11 @@ namespace pwiz.Skyline
                         focusStart.Focus();
                 }
             }
+        }
+
+        public void ActivateSpectrum()
+        {
+            ShowGraphSpectrum(true);
         }
 
         private void BuildRTGraphMenu(ToolStrip menuStrip, Point mousePt,
@@ -2213,7 +2230,7 @@ namespace pwiz.Skyline
             {
                 if (_graphPeakArea != null)
                 {
-                    _graphPeakArea.Show();
+                    _graphPeakArea.Activate();
                 }
                 else
                 {
@@ -2349,6 +2366,14 @@ namespace pwiz.Skyline
                             (ToolStripItem)toolStripSeparator40,
                             areaNormalizeNoneContextMenuItem
                         });                 
+                }
+                // If the area replicate graph is being displayed and it can show a library
+                // column, display the "Show Library" option
+                var areaReplicateGraphPane = _graphPeakArea.GraphPane as AreaReplicateGraphPane;
+                if (areaReplicateGraphPane != null && areaReplicateGraphPane.CanShowLibrary)
+                {
+                    showLibraryPeakAreaContextMenuItem.Checked = set.ShowLibraryPeakArea;
+                    menuStrip.Items.Insert(iInsert++, showLibraryPeakAreaContextMenuItem);
                 }
             }
             else if (graphType == GraphTypeArea.peptide)
@@ -2537,7 +2562,7 @@ namespace pwiz.Skyline
 
             protected override void OnMenuItemClick()
             {
-                  AreaGraphController.AreaView = AreaNormalizeToView.area_ratio_view;
+                AreaGraphController.AreaView = AreaNormalizeToView.area_ratio_view;
 
                 base.OnMenuItemClick();
 
@@ -2558,6 +2583,13 @@ namespace pwiz.Skyline
         private void areaNormalizeMaximumContextMenuItem_Click(object sender, EventArgs e)
         {
             NormalizeAreaGraphTo(AreaNormalizeToView.area_maximum_view);
+        }
+
+        private void showLibraryPeakAreaContextMenuItem_Click(object sender, EventArgs e)
+        {
+            // Show/hide the library column in the peak area view.
+            Settings.Default.ShowLibraryPeakArea = !Settings.Default.ShowLibraryPeakArea;
+            UpdateSummaryGraphs();
         }
 
         public void UpdatePeakAreaGraph()
@@ -2587,7 +2619,7 @@ namespace pwiz.Skyline
             {
                 if (_resultsGridForm != null)
                 {
-                    _resultsGridForm.Show();
+                    _resultsGridForm.Activate();
                 }
                 else
                 {

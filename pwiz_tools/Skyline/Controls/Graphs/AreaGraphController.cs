@@ -40,6 +40,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public GraphSummary GraphSummary { get; set; }
 
+        public void OnActiveLibraryChanged()
+        {
+            if (GraphSummary.GraphPane is AreaReplicateGraphPane)
+                GraphSummary.UpdateUI();
+        }
+
         public void OnResultsIndexChanged()
         {
             if (GraphSummary.GraphPane is AreaReplicateGraphPane /* || !Settings.Default.AreaAverageReplicates */)

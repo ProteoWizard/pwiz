@@ -39,6 +39,25 @@ namespace pwiz.Skyline.Controls.Graphs
         {
         }
 
+        // If replicates have library info and the Show Library option is checked
+        // and AreaView is not area ratio view, 
+        // add an XAxis label of "Library" at the left most column
+        protected override void InitFromData(GraphData graphData)
+        {
+            base.InitFromData(graphData);
+
+            if (IsLibraryVisible)
+            {
+                string[] labels = XAxis.Scale.TextLabels;
+                string[] withLibLabel = new string[labels.Length + 1];
+                withLibLabel[0] = "Library";
+                Array.Copy(labels, 0, withLibLabel, 1, labels.Length);
+
+                XAxis.Scale.TextLabels = withLibLabel;
+                ScaleAxisLabels();
+            }
+        }
+
         private static BarType BarType
         {
             get
@@ -50,6 +69,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 return BarType.Stack;
             }
         }
+
+        public bool CanShowLibrary { get; private set; }
+
+        public bool IsLibraryVisible { get { return CanShowLibrary && Settings.Default.ShowLibraryPeakArea; } }
 
         public override void UpdateGraph(bool checkData)
         {
@@ -117,6 +140,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
             }
 
+            var selectedGroupNode = selectedNode as TransitionGroupDocNode;
+            CanShowLibrary = selectedGroupNode != null && selectedGroupNode.HasLibInfo &&
+               AreaGraphController.AreaView != AreaNormalizeToView.area_ratio_view;
+            
             // If a precursor is going to be displayed with display type single
             if (parentNode is TransitionGroupDocNode && displayType == DisplayTypeChrom.single)
             {
@@ -154,12 +181,18 @@ namespace pwiz.Skyline.Controls.Graphs
                 normalizeData = AreaNormalizeToData.none;
 
             // Calculate graph data points
-            GraphData graphData = new AreaGraphData(document, parentNode, displayType, ratioIndex, normalizeData);
+            GraphData graphData = new AreaGraphData(document, parentNode, displayType, ratioIndex, normalizeData, IsLibraryVisible);
 
             InitFromData(graphData);
 
             // Add data to the graph
             int selectedReplicateIndex = SelectedIndex;
+            if (IsLibraryVisible)
+            {
+                if (GraphSummary.ActiveLibrary)
+                    selectedReplicateIndex = 0;
+            }
+            
             double maxArea = -double.MaxValue;
             double sumArea = 0;
             int iColor = 0;
@@ -225,13 +258,17 @@ namespace pwiz.Skyline.Controls.Graphs
                 switch (BarSettings.Type)
                 {
                     case BarType.Stack:
-                        yValue = (AreaGraphController.AreaView == AreaNormalizeToView.area_maximum_view ? 1 : sumArea);
+                        // The Math.Min(sumArea, .999) makes sure that if graph is in normalized view
+                        // height of the selection rectangle does not exceed 1, so that top of the rectangle
+                        // can be viewed when y-axis scale maximum is at 1
+                        yValue = (AreaGraphController.AreaView == AreaNormalizeToView.area_maximum_view ? Math.Min(sumArea, .999) : sumArea);
                         break;
                     case BarType.PercentStack:
                         yValue = 99.99;
                         break;
                     default:
-                        yValue = maxArea;
+                        // Scale the selection box to fit exactly the bar height
+                        yValue = (AreaGraphController.AreaView == AreaNormalizeToView.area_maximum_view ? Math.Min(maxArea, .999) : maxArea);
                         break;
                 }
                 GraphObjList.Add(new BoxObj(selectedReplicateIndex + .5, yValue, 0.99,
@@ -336,6 +373,47 @@ namespace pwiz.Skyline.Controls.Graphs
             AxisChange();
         }
 
+        protected override int SelectedIndex
+        {
+            get
+            {
+                // If library is showing
+                if (IsLibraryVisible)
+                {
+                    // If the MS/MS Spectrum document is selected, 
+                    // the seletion box is currently on library column,
+                    // so return a selectionIndex of 0
+                    if (GraphSummary.ActiveLibrary)
+                        return 0;
+                    else
+                        // otherwise, offset the index by 1
+                        return base.SelectedIndex + 1;
+                }
+                return base.SelectedIndex;
+            }
+        }
+
+        protected override void ChangeSelection(int selectedIndex, IdentityPath identityPath)
+        {
+            if (IsLibraryVisible)
+            {
+                if (selectedIndex < 0)
+                    return;
+                if (selectedIndex == 0)
+                {
+                    // Show MS/MS Spectrum tab and keep focus on the graph
+                    GraphSummary.ActiveLibrary = true;
+                    GraphSummary.StateProvider.ActivateSpectrum();
+                    GraphSummary.Focus();
+                    return;
+                }
+                GraphSummary.ActiveLibrary = false;
+                selectedIndex--;
+            }
+
+            base.ChangeSelection(selectedIndex, identityPath);
+        }
+
         private enum AreaNormalizeToData { none, optimization, maximum_stack, maximum, total }
 
         /// <summary>
@@ -352,26 +430,56 @@ namespace pwiz.Skyline.Controls.Graphs
                 return new PointPair(xValue, 0);
             }
 
+            private readonly DocNode _docNode;
             private readonly int _ratioIndex;
             private readonly AreaNormalizeToData _normalize;
+            private readonly bool _isLibraryVisible;
 
             public AreaGraphData(SrmDocument document,
                                  DocNode docNode,
                                  DisplayTypeChrom displayType,
                                  int ratioIndex,
-                                 AreaNormalizeToData normalize)
+                                 AreaNormalizeToData normalize,
+                                 bool isLibraryVisible)
                 : base(document, docNode, displayType)
             {
+                _docNode = docNode;
                 _ratioIndex = ratioIndex;
                 _normalize = normalize;
+                _isLibraryVisible = isLibraryVisible;
             }
 
             protected override void InitData()
             {
                 base.InitData();
+         
+                if (_isLibraryVisible)
+                {
+                    var nodeGroup = (TransitionGroupDocNode) _docNode;
+                    var libIntensities = from nodeTran in nodeGroup.Children.Cast<TransitionDocNode>()
+                                         select nodeTran.HasLibInfo ? nodeTran.LibInfo.Intensity : 0;
+                    var intensityArray = libIntensities.ToArray();
+
+                    for (int i = 0; i < PointPairLists.Count; i++)
+                    {
+                        if (i >= intensityArray.Length)
+                            continue;
+
+                        var pointPairLists2 = PointPairLists[i];
+                        foreach (var pointPairList in pointPairLists2)
+                        {
+                            pointPairList.Insert(0, 0, intensityArray[i]);
+                        }
+                    }
+                }
 
                 switch (_normalize)
                 {
+                    case AreaNormalizeToData.none:
+                        // If library column is showing, make library column as tall as the tallest stack
+                        if (_isLibraryVisible)
+                            NormalizeMaxStack();
+                        break;
                     case AreaNormalizeToData.optimization:
                         NormalizeOpt();
                         break;
@@ -435,7 +543,8 @@ namespace pwiz.Skyline.Controls.Graphs
             /// for FixupForTotals: 1
             /// </summary>
             /// <param name="denominator">Divide all point y values by this number</param>
-            private void NormalizeTo(double denominator)
+            /// <param name="libraryHeight">Total height of the library column</param>
+            private void NormalizeTo(double denominator, double libraryHeight)
             {
                 foreach (var pointPairLists in PointPairLists)
                 {
@@ -444,12 +553,20 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     foreach (var pointPairList in pointPairLists)
                     {
-                        foreach (PointPair pointPair in pointPairList)
+                        for (int i = 0; i < pointPairList.Count; i++ )
                         {
-                            if (pointPair.Y != PointPairBase.Missing)
-                                pointPair.Y /= denominator;
+                            if (pointPairList[i].Y != PointPairBase.Missing)
+                            {
+                                // If library is displayed and the set of data to plot is at
+                                // index 0 (where we store library intensity data)
+                                // calculate the proportion of the denominator for each point
+                                if (_isLibraryVisible && i == 0)
+                                    pointPairList[i].Y *= (denominator/libraryHeight);
+                                if(_normalize != AreaNormalizeToData.none)
+                                    pointPairList[i].Y /= denominator;
+                            }
                             else
-                                pointPair.Y = 0;
+                                pointPairList[i].Y = 0;
                         }
                     }
                 }
@@ -460,6 +577,7 @@ namespace pwiz.Skyline.Controls.Graphs
             private void NormalizeMax()
             {
                 double maxHeight = -double.MaxValue;
+                double libraryHeight = 0;
                 foreach (var pointPairLists in PointPairLists)
                 {
                     if (pointPairLists.Count == 0)
@@ -467,18 +585,21 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     foreach (var pointPairList in pointPairLists)
                     {
-                        foreach (PointPair t in pointPairList)
+                        for (int i = 0; i < pointPairList.Count; i++)
                         {
-                            if (t.Y != PointPairBase.Missing)
+                            if (pointPairList[i].Y != PointPairBase.Missing)
                             {
-                                maxHeight = Math.Max(maxHeight, t.Y);
+                                if (_isLibraryVisible && i == 0)
+                                    libraryHeight += pointPairList[i].Y;
+                                else
+                                    maxHeight = Math.Max(maxHeight, pointPairList[i].Y);
                             }
                         }
                     }
                 }
 
                 // Normalizes each non-missing point by max bar height
-                NormalizeTo(maxHeight);
+                NormalizeTo(maxHeight, libraryHeight);
             }
 
             // Goes through each pointPairLists and finds the maximum stacked bar height
@@ -508,16 +629,22 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
 
                 // Finds the maximum bar height from the list of bar heights
-                double maxBarHeight = listTotals.Aggregate(Math.Max);
+                if (listTotals.Count != 0)
+                {
+                    double maxBarHeight = listTotals.Aggregate(Math.Max);
 
-                // Normalizes each non-missing point by mas bar height
-                NormalizeTo(maxBarHeight);
+                    // Normalizes each non-missing point by max bar height
+                    if (_isLibraryVisible)
+                        NormalizeTo(maxBarHeight, listTotals[0]);
+                    else
+                        NormalizeTo(maxBarHeight, 0);
+                }
             }
 
             // Sets each missing point to be 0, so that the percent stack will show
             private void FixupForTotals()
             {
-                NormalizeTo(1);
+                NormalizeTo(1, 1);
             }
 
             public override PointPair PointPairMissing(int xValue)
