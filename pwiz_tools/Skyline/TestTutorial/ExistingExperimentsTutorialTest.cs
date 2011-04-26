@@ -340,6 +340,14 @@ namespace pwiz.SkylineTestTutorial
                 NormalizeGraphToHeavy();
                 SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.none);
             });
+            WaitForCondition(() => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+            RunUI(() =>
+            {
+                SkylineWindow.ShowPeakAreaReplicateComparison();
+                NormalizeGraphToHeavy();
+                SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.none);
+            });
+            WaitForGraphs();
             FindNode("HGFLPR");
             RunUI(() =>
             {
@@ -347,6 +355,7 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.ShowAllTransitions();
                 NormalizeGraphToHeavy();
             });
+            WaitForGraphs();
         }
 
         private static void FindNode(string searchText)
