@@ -343,9 +343,10 @@ local revision-info =
                              $(PWIZ_ROOT_PATH)/pwiz_tools/common
                              $(PWIZ_ROOT_PATH)/pwiz_tools/examples
                              $(PWIZ_ROOT_PATH)/pwiz_tools/SeeMS
+                             $(PWIZ_ROOT_PATH)/pwiz_tools/MSConvertGUI
                              $(PWIZ_ROOT_PATH)/pwiz_tools/sld
                 : *.?pp *.jam *.cs
-                : tar.excluded Version.cpp
+                : tar.excluded Version.cpp Resources.Designer.cs Settings.Designer.cs AssemblyInfo.cs
             ]
         : warn-on-missing
         #: print-revision-info
@@ -529,12 +530,13 @@ rule pwiz-bindings-dependency ( properties * )
            <dependency>$(PWIZ_ROOT_PATH)/pwiz/utility/bindings/CLI//pwiz_bindings_cli.xml/$(location) ;
 }
 
-rule seems-dependency ( properties * )
+rule dotNET-dependencies ( properties * )
 {
-    local location = [ install-location $(properties) ] ;
     if <toolset>msvc in $(properties)
     {
-        return <dependency>pwiz_tools/SeeMS//seems.exe/$(location) ;
+        local location = [ install-location $(properties) ] ;
+        return <dependency>pwiz_tools/MSConvertGUI//MSConvertGUI.exe/$(location) 
+               <dependency>pwiz_tools/SeeMS//seems.exe/$(location) ;
     }
 }
 
@@ -555,7 +557,7 @@ install executables
     : <conditional>@install-type
       <conditional>@install-location
       <conditional>@install-vendor-api-dependencies
-      <conditional>@seems-dependency
+      <conditional>@dotNET-dependencies
       <conditional>@gcc-install-dll-path
       <dependency>VERSION
     ;
