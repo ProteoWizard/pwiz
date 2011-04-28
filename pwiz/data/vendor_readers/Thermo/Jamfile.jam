@@ -54,7 +54,7 @@ local MSFileReader = "$(ProgramFiles)\\Thermo\\MSFileReader" ;
 if [ path.exists $(API_PATH)\\MSFileReader.XRawfile2.dll ] ||
    [ path.exists $(MSFileReader)\\XRawfile2.dll ]
 {
-    if ! --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
+    if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
     {
         .hasDLLs = true ;
     }
