@@ -777,7 +777,10 @@ struct HandlerSampleEnzyme : public SAXParser::Handler
 {
     SpectrumIdentificationProtocol* _sip;
 
-    HandlerSampleEnzyme(const CVTranslator& cvTranslator) : _cvTranslator(cvTranslator) {}
+    HandlerSampleEnzyme(const CVTranslator& cvTranslator,
+                        bool strict)
+        : _cvTranslator(cvTranslator), strict(strict)
+    {}
 
     virtual Status startElement(const string& name, const Attributes& attributes, stream_offset position)
     {
@@ -824,13 +827,17 @@ struct HandlerSampleEnzyme : public SAXParser::Handler
             _sip->enzymes.enzymes.push_back(enzyme);
             return Handler::Status::Ok;
         }
-        else
-            throw runtime_error("[HandlerSampleEnzyme] Unexpected element name: " + name);
+        else if (strict)
+            throw runtime_error("[HandlerSampleEnzyme] Unexpected element "
+                                "name: " + name);
+
+        return Status::Ok;
     }
 
     private:
     string _name, _description, _fidelity;
     const CVTranslator& _cvTranslator;
+    bool strict;
 };
 
 
@@ -839,7 +846,10 @@ struct HandlerSearchSummary : public SAXParser::Handler
     MzIdentML* _mzid;
     SpectrumIdentificationProtocol* _sip;
 
-    HandlerSearchSummary(const CVTranslator& cvTranslator) : _cvTranslator(cvTranslator) {}
+    HandlerSearchSummary(const CVTranslator& cvTranslator,
+                         bool strict)
+        : _cvTranslator(cvTranslator), strict(strict)
+    {}
 
     CVID translateSearchEngine(const string& name)
     {
@@ -1193,14 +1203,16 @@ struct HandlerSearchSummary : public SAXParser::Handler
 
             translateParameter(name, value);
         }
-        else
-            throw runtime_error("[HandlerSearchSummary] Unexpected element name: " + name);
+        else if (strict)
+            throw runtime_error("[HandlerSearchSummary] Unexpected element "
+                                "name: " + name);
 
         return Handler::Status::Ok;
     }
 
     private:
     const CVTranslator& _cvTranslator;
+    bool strict;
 };
 
 
@@ -1271,12 +1283,14 @@ struct HandlerSearchResults : public SAXParser::Handler
     CVID nativeIdFormat;
 
     HandlerSearchResults(const CVTranslator& cvTranslator,
-                         const IterationListenerRegistry* iterationListenerRegistry)
+                         const IterationListenerRegistry* iterationListenerRegistry,
+                         bool strict)
     :   _nTerm("H1"),
         _cTerm("O1H1"),
         siiCount(0), peptideCount(0),
         _cvTranslator(cvTranslator),
-        ilr(iterationListenerRegistry)
+        ilr(iterationListenerRegistry),
+        strict(strict)
     {
         // (basename.scanNumber.scanNumber).charge
         conventionalSpectrumIdRegex = boost::xpressive::sregex::compile("([^.]*\\.\\d+\\.\\d+).*");
@@ -1535,8 +1549,9 @@ struct HandlerSearchResults : public SAXParser::Handler
             BOOST_FOREACH(const Attributes::value_type& attribute, attributes)
                 _sir->userParams.push_back(UserParam(attribute.first, attribute.second));
         }
-        else
-            throw runtime_error("[HandlerSearchResults] Unexpected element name: " + name);
+        else if (strict)
+            throw runtime_error("[HandlerSearchResults] Unexpected element "
+                                "name: " + name);
 
         return Status::Ok;
     }
@@ -1552,6 +1567,7 @@ struct HandlerSearchResults : public SAXParser::Handler
     int siiCount, peptideCount;
     const CVTranslator& _cvTranslator;
     const IterationListenerRegistry* ilr;
+    bool strict;
 
     // stores evidence and modified forms of a distinct peptide
     struct PeptideIndexEntry
@@ -1569,13 +1585,15 @@ struct Handler_pepXML : public SAXParser::Handler
 
     Handler_pepXML(MzIdentML& mzid,
                    bool readSpectrumQueries,
-                   const IterationListenerRegistry* iterationListenerRegistry)
+                   const IterationListenerRegistry* iterationListenerRegistry,
+                   bool strict)
     :   mzid(mzid),
-        handlerSampleEnzyme(cvTranslator),
-        handlerSearchSummary(cvTranslator),
-        handlerSearchResults(cvTranslator, iterationListenerRegistry),
+        handlerSampleEnzyme(cvTranslator, strict),
+        handlerSearchSummary(cvTranslator, strict),
+        handlerSearchResults(cvTranslator, iterationListenerRegistry, strict),
         readSpectrumQueries(readSpectrumQueries),
-        ilr(iterationListenerRegistry)
+        ilr(iterationListenerRegistry),
+        strict(strict)
     {
         // add default CVs
         mzid.cvs = defaultCVList();
@@ -1706,7 +1724,11 @@ struct Handler_pepXML : public SAXParser::Handler
             }
             return Status::Done;
         }
-        throw runtime_error("[Handler_pepXML] Unexpected element name: " + name);
+        else if (strict)
+            throw runtime_error("[Handler_pepXML] Unexpected element name: " +
+                                name);
+
+        return Status::Ok;
     }
 
     private:
@@ -1717,6 +1739,7 @@ struct Handler_pepXML : public SAXParser::Handler
     CVTranslator cvTranslator;
     bool readSpectrumQueries;
     const IterationListenerRegistry* ilr;
+    bool strict;
 };
 
 } // namespace
@@ -1725,12 +1748,15 @@ struct Handler_pepXML : public SAXParser::Handler
 void Serializer_pepXML::read(boost::shared_ptr<std::istream> is, MzIdentML& mzid,
                              const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const
 {
+    bool strict = false;
+    
     if (!is.get() || !*is)
         throw runtime_error("[Serializer_pepXML::read()] Bad istream.");
 
     is->seekg(0);
 
-    Handler_pepXML handler(mzid, config_.readSpectrumQueries, iterationListenerRegistry);
+    Handler_pepXML handler(mzid, config_.readSpectrumQueries,
+                           iterationListenerRegistry, strict);
     SAXParser::parse(*is, handler);
 }
 
