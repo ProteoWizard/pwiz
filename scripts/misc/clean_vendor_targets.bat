@@ -22,7 +22,9 @@ IF EXIST build-nt-x86\pwiz\analysis\chromatogram_processing rmdir /s /q build-nt
 del /q pwiz_aux\msrc\utility\vendor_api\ABI\*.dll > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Agilent\*.dll > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Bruker\*.dll > nul 2>&1
+del /q pwiz_aux\msrc\utility\vendor_api\Bruker\*.manifest > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Thermo\*.dll > nul 2>&1
+del /q pwiz_aux\msrc\utility\vendor_api\Thermo\*.manifest > nul 2>&1
 del /q /s pwiz_aux\msrc\utility\vendor_api\Waters\*.dll > nul 2>&1
 del /q /s pwiz_aux\msrc\utility\vendor_api\Waters\*.lib > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Waters\*.h > nul 2>&1

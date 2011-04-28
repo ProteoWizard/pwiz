@@ -31,6 +31,9 @@ path-constant API_PATH : . ;
 if [ modules.peek : NT ]
 {
 
+SHELL "copy \"$(API_PATH)\\Interop.EDAL.SxS.manifest.dummy\" \"$(API_PATH)\\Interop.EDAL.SxS.manifest\"" ;
+RESCAN ;
+
 rule vendor-api-requirements ( properties * )
 {
     local result ;

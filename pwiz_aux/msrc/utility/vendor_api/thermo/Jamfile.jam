@@ -38,6 +38,8 @@ local MSFileReader = "$(ProgramFiles)\\Thermo\\MSFileReader" ;
 if ! --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
 {
     # ignore vendor DLLs even if they're available
+    SHELL "copy \"$(API_PATH)\\MSFileReader.XRawfile2.SxS.manifest.dummy\" \"$(API_PATH)\\MSFileReader.XRawfile2.SxS.manifest\"" ;
+    RESCAN ;
 }
 else
 {
