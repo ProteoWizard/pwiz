@@ -31,8 +31,11 @@ path-constant API_PATH : . ;
 if [ modules.peek : NT ]
 {
 
-SHELL "copy \"$(API_PATH)\\Interop.EDAL.SxS.manifest.dummy\" \"$(API_PATH)\\Interop.EDAL.SxS.manifest\"" ;
-RESCAN ;
+if ! --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
+{
+    SHELL "copy \"$(API_PATH)\\Interop.EDAL.SxS.manifest.dummy\" \"$(API_PATH)\\Interop.EDAL.SxS.manifest\"" ;
+    RESCAN ;
+}
 
 rule vendor-api-requirements ( properties * )
 {
