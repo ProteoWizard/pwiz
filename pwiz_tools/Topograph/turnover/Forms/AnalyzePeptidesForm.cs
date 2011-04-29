@@ -227,6 +227,11 @@ namespace pwiz.Topograph.ui.Forms
                     var insertStatements = new List<string>();
                     var entries = searchResults.ToArray();
                     Array.Sort(entries, (e1,e2)=>(e1.Value == null).CompareTo(e2.Value == null));
+                    // If no entries at all have a PeptideSearchResult, skip this peptide.
+                    if (entries.Length == 0 || entries[0].Value == null)
+                    {
+                        continue;
+                    }
                     foreach (var entry in entries)
                     {
                         var msDataFile = entry.Key;

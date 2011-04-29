@@ -57,6 +57,11 @@ namespace pwiz.Topograph.ui.Forms
             this.cbxLogPlot = new System.Windows.Forms.CheckBox();
             this.comboCalculationType = new System.Windows.Forms.ComboBox();
             this.label10 = new System.Windows.Forms.Label();
+            this.gridViewStats = new System.Windows.Forms.DataGridView();
+            this.colStatsTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colStatsMean = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colStatsMedian = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colStatsStdDev = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.colPeptide = new System.Windows.Forms.DataGridViewLinkColumn();
             this.colFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -72,19 +77,14 @@ namespace pwiz.Topograph.ui.Forms
             this.colTurnoverAvg = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTurnoverScoreAvg = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
-            this.gridViewStats = new System.Windows.Forms.DataGridView();
-            this.colStatsTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colStatsMean = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colStatsMedian = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colStatsStdDev = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.gridViewStats)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.splitContainer2.Panel1.SuspendLayout();
             this.splitContainer2.Panel2.SuspendLayout();
             this.splitContainer2.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.gridViewStats)).BeginInit();
             this.SuspendLayout();
             // 
             // splitContainer1
@@ -378,6 +378,49 @@ namespace pwiz.Topograph.ui.Forms
             this.label10.TabIndex = 11;
             this.label10.Text = "Calculation Type";
             // 
+            // gridViewStats
+            // 
+            this.gridViewStats.AllowUserToAddRows = false;
+            this.gridViewStats.AllowUserToDeleteRows = false;
+            this.gridViewStats.AllowUserToOrderColumns = true;
+            this.gridViewStats.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.gridViewStats.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.colStatsTime,
+            this.colStatsMean,
+            this.colStatsMedian,
+            this.colStatsStdDev});
+            this.tableLayoutPanel1.SetColumnSpan(this.gridViewStats, 2);
+            this.gridViewStats.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.gridViewStats.Location = new System.Drawing.Point(3, 303);
+            this.gridViewStats.Name = "gridViewStats";
+            this.gridViewStats.ReadOnly = true;
+            this.gridViewStats.Size = new System.Drawing.Size(449, 89);
+            this.gridViewStats.TabIndex = 22;
+            // 
+            // colStatsTime
+            // 
+            this.colStatsTime.HeaderText = "Time";
+            this.colStatsTime.Name = "colStatsTime";
+            this.colStatsTime.ReadOnly = true;
+            // 
+            // colStatsMean
+            // 
+            this.colStatsMean.HeaderText = "Mean";
+            this.colStatsMean.Name = "colStatsMean";
+            this.colStatsMean.ReadOnly = true;
+            // 
+            // colStatsMedian
+            // 
+            this.colStatsMedian.HeaderText = "Median";
+            this.colStatsMedian.Name = "colStatsMedian";
+            this.colStatsMedian.ReadOnly = true;
+            // 
+            // colStatsStdDev
+            // 
+            this.colStatsStdDev.HeaderText = "StdDev";
+            this.colStatsStdDev.Name = "colStatsStdDev";
+            this.colStatsStdDev.ReadOnly = true;
+            // 
             // dataGridView1
             // 
             this.dataGridView1.AllowUserToAddRows = false;
@@ -534,49 +577,6 @@ namespace pwiz.Topograph.ui.Forms
             this.splitContainer2.SplitterDistance = 395;
             this.splitContainer2.TabIndex = 1;
             // 
-            // gridViewStats
-            // 
-            this.gridViewStats.AllowUserToAddRows = false;
-            this.gridViewStats.AllowUserToDeleteRows = false;
-            this.gridViewStats.AllowUserToOrderColumns = true;
-            this.gridViewStats.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.gridViewStats.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.colStatsTime,
-            this.colStatsMean,
-            this.colStatsMedian,
-            this.colStatsStdDev});
-            this.tableLayoutPanel1.SetColumnSpan(this.gridViewStats, 2);
-            this.gridViewStats.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.gridViewStats.Location = new System.Drawing.Point(3, 303);
-            this.gridViewStats.Name = "gridViewStats";
-            this.gridViewStats.ReadOnly = true;
-            this.gridViewStats.Size = new System.Drawing.Size(449, 89);
-            this.gridViewStats.TabIndex = 22;
-            // 
-            // colStatsTime
-            // 
-            this.colStatsTime.HeaderText = "Time";
-            this.colStatsTime.Name = "colStatsTime";
-            this.colStatsTime.ReadOnly = true;
-            // 
-            // colStatsMean
-            // 
-            this.colStatsMean.HeaderText = "Mean";
-            this.colStatsMean.Name = "colStatsMean";
-            this.colStatsMean.ReadOnly = true;
-            // 
-            // colStatsMedian
-            // 
-            this.colStatsMedian.HeaderText = "Median";
-            this.colStatsMedian.Name = "colStatsMedian";
-            this.colStatsMedian.ReadOnly = true;
-            // 
-            // colStatsStdDev
-            // 
-            this.colStatsStdDev.HeaderText = "StdDev";
-            this.colStatsStdDev.Name = "colStatsStdDev";
-            this.colStatsStdDev.ReadOnly = true;
-            // 
             // HalfLifeForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -590,11 +590,11 @@ namespace pwiz.Topograph.ui.Forms
             this.splitContainer1.ResumeLayout(false);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.gridViewStats)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.splitContainer2.Panel1.ResumeLayout(false);
             this.splitContainer2.Panel2.ResumeLayout(false);
             this.splitContainer2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.gridViewStats)).EndInit();
             this.ResumeLayout(false);
 
         }

@@ -244,6 +244,10 @@ namespace pwiz.Topograph.ui.Forms
                         msDataFileName = null;
                         searchResults = SearchResults.ReadPercolatorOutput(stream, _maxQValue, ProgressMonitor);
                         break;
+                    case SearchResultFileType.ListOfPeptides:
+                        msDataFileName = null;
+                        searchResults = SearchResults.ReadListOfPeptides(stream, ProgressMonitor);
+                        break;
                 }
             }
             if (searchResults == null)
@@ -624,6 +628,25 @@ namespace pwiz.Topograph.ui.Forms
             Settings.Default.Save();
             AddSearchResults(openFileDialog.FileNames, SearchResultFileType.Percolator);
         }
+
+        private void btnChoosePeptideList_Click(object sender, EventArgs e)
+        {
+            Settings.Default.Reload();
+            var openFileDialog = new OpenFileDialog
+            {
+                Filter =
+                    "All Files|*.*",
+                Multiselect = true,
+                InitialDirectory = Settings.Default.SearchResultsDirectory
+            };
+            if (openFileDialog.ShowDialog(this) == DialogResult.Cancel)
+            {
+                return;
+            }
+            Settings.Default.SearchResultsDirectory = Path.GetDirectoryName(openFileDialog.FileName);
+            Settings.Default.Save();
+            AddSearchResults(openFileDialog.FileNames, SearchResultFileType.ListOfPeptides);
+        }
     }
 
     enum SearchResultFileType
@@ -631,5 +654,6 @@ namespace pwiz.Topograph.ui.Forms
         Dtaselect,
         Percolator,
         Sequest,
+        ListOfPeptides,
     }
 }

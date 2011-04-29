@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Xml;
 using pwiz.Topograph.Util;
 
@@ -252,6 +253,31 @@ namespace pwiz.Topograph.Search
                                     Protein = protein,
                                     QValue = qValue,
                                 });
+            }
+            return results;
+        }
+        public static List<SearchResult> ReadListOfPeptides(Stream stream, Func<int, bool> progressMonitor)
+        {
+            var results = new List<SearchResult>();
+            var reader = new StreamReader(stream);
+            var rePeptide = new Regex(@"([A-Z-]\.)?[A-Z][A-Z][A-Z][A-Z]+(\.[A-Z-])?");
+            while (true)
+            {
+                if (!progressMonitor.Invoke((int)(100 * stream.Position / stream.Length)))
+                {
+                    return null;
+                }
+                var line = reader.ReadLine();
+                if (line == null)
+                {
+                    break;
+                }
+                var match = rePeptide.Match(line);
+                if (!match.Success)
+                {
+                    continue;
+                }
+                results.Add(new SearchResult(match.ToString()));
             }
             return results;
         }
