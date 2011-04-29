@@ -543,10 +543,7 @@ int mergeFiles(const vector<string>& filenames, const Config& config, const Read
         MSDataMerger msd(msdList);
 
         cout << "calculating source file checksums" << endl;
-        // calculate SHA1 checksums
-        for_each(msd.fileDescription.sourceFilePtrs.begin(),
-                 msd.fileDescription.sourceFilePtrs.end(),
-                 &calculateSourceFilePtrSHA1);
+        calculateSHA1Checksums(msd);
 
         if (!config.contactFilename.empty())
             addContactInfo(msd, config.contactFilename);
@@ -586,9 +583,7 @@ void processFile(const string& filename, const Config& config, const ReaderList&
         try
         {
             // calculate SHA1 checksums
-            for_each(msd.fileDescription.sourceFilePtrs.begin(),
-                     msd.fileDescription.sourceFilePtrs.end(),
-                     &calculateSourceFilePtrSHA1);
+            calculateSHA1Checksums(msd);
 
             // process the data 
 
