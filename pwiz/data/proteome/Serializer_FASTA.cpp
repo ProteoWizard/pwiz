@@ -67,6 +67,7 @@ class ProteinList_FASTA : public ProteinList
 
         // find offsets for all entries in the FASTA stream
         deque<Index::Entry> index;
+        set<string> idSet;
 
         Index::stream_offset indexOffset = 0;
         while (getline(*fsPtr_, buf))
@@ -97,11 +98,17 @@ class ProteinList_FASTA : public ProteinList
                 if (ie.id.empty())
                     throw runtime_error("[ProteinList_FASTA::createIndex] could not parse id from entry \"" + buf + "\"");
 
+                // note: We could silently skip the duplicates, but that would only be
+                //       reasonable after checking that the sequences are equal.
+                if (!idSet.insert(ie.id).second)
+                    throw runtime_error("[ProteinList_FASTA::createIndex] duplicate protein id \"" + ie.id + "\"");
+
                 ie.index = index.size()-1;
                 ie.offset = indexOffset - bufLength;
 			}
 		}
 
+        idSet.clear();
         vector<Index::Entry> tmp(index.begin(), index.end());
         indexPtr_->create(tmp);
     }

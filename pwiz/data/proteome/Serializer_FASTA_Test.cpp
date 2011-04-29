@@ -109,6 +109,33 @@ void testThreadSafety(const int& testThreadCount)
     testThreadGroup.join_all();
 }
 
+void testDuplicateId()
+{
+    ProteomeData pd;
+    pd.id = "tiny";
+
+    shared_ptr<ProteinListSimple> proteinListPtr(new ProteinListSimple);
+    pd.proteinListPtr = proteinListPtr;
+
+    proteinListPtr->proteins.push_back(ProteinPtr(new Protein("ABC123", 0, "One two three.", "ELVISLIVES")));
+    proteinListPtr->proteins.push_back(ProteinPtr(new Protein("ZEBRA", 1, "Has stripes:", "BLACKANDWHITE")));
+    proteinListPtr->proteins.push_back(ProteinPtr(new Protein("DEFCON42", 2, "", "DNTPANIC")));
+    proteinListPtr->proteins.push_back(ProteinPtr(new Protein("ZEBRA", 1, "Black and white", "STRIPES")));
+
+    Serializer_FASTA serializer;
+
+    ostringstream oss;
+    serializer.write(oss, pd, NULL);
+
+    if (os_) *os_ << "oss:\n" << oss.str() << endl; 
+
+    shared_ptr<istringstream> iss(new istringstream(oss.str()));
+    ProteomeData pd2;
+
+    unit_assert_throws_what(serializer.read(iss, pd2), runtime_error,
+                            "[ProteinList_FASTA::createIndex] duplicate protein id \"ZEBRA\"");
+}
+
 
 int main(int argc, char* argv[])
 {
@@ -119,6 +146,7 @@ int main(int argc, char* argv[])
         testThreadSafety(2);
         testThreadSafety(4);
         testThreadSafety(8);
+        testDuplicateId();
         return 0;
     }
     catch (exception& e)
