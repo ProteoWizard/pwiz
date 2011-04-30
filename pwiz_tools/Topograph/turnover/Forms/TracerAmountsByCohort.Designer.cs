@@ -65,6 +65,7 @@
             this.colSummaryMeanStdErr = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colSummaryValueCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colSummaryStdDevStdErrCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.cbxAreaUnderCurve = new System.Windows.Forms.CheckBox();
             this.tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -100,6 +101,7 @@
             this.tableLayoutPanel1.Controls.Add(this.cbxShowStdErr, 4, 4);
             this.tableLayoutPanel1.Controls.Add(this.btnRequery, 4, 2);
             this.tableLayoutPanel1.Controls.Add(this.btnSave, 4, 3);
+            this.tableLayoutPanel1.Controls.Add(this.cbxAreaUnderCurve, 3, 5);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -470,6 +472,17 @@
             this.colSummaryStdDevStdErrCount.Name = "colSummaryStdDevStdErrCount";
             this.colSummaryStdDevStdErrCount.ReadOnly = true;
             // 
+            // cbxAreaUnderCurve
+            // 
+            this.cbxAreaUnderCurve.AutoSize = true;
+            this.cbxAreaUnderCurve.Location = new System.Drawing.Point(430, 128);
+            this.cbxAreaUnderCurve.Name = "cbxAreaUnderCurve";
+            this.cbxAreaUnderCurve.Size = new System.Drawing.Size(111, 17);
+            this.cbxAreaUnderCurve.TabIndex = 19;
+            this.cbxAreaUnderCurve.Text = "Area Under Curve";
+            this.cbxAreaUnderCurve.UseVisualStyleBackColor = true;
+            this.cbxAreaUnderCurve.CheckedChanged += new System.EventHandler(this.cbx_ColumnVisibilityChanged);
+            // 
             // TracerAmountsByCohort
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -527,5 +540,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn colSummaryValueCount;
         private System.Windows.Forms.DataGridViewTextBoxColumn colSummaryStdDevStdErrCount;
         private System.Windows.Forms.Button btnSave;
+        private System.Windows.Forms.CheckBox cbxAreaUnderCurve;
     }
 }

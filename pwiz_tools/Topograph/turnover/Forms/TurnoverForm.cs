@@ -117,6 +117,8 @@ namespace pwiz.Topograph.ui.Forms
                                dataDirectoryToolStripMenuItem,
                                tracerAmountsToolStripMenuItem,
                                precursorEnrichmentsToolStripMenuItem,
+                               resultsByReplicateToolStripMenuItem,
+                               alignmentToolStripMenuItem,
                            };
             }
         }
@@ -957,5 +959,15 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
+        private void resultsByReplicateToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var resultsPerReplicateForm = new ResultsPerReplicateForm(Workspace);
+            resultsPerReplicateForm.Show(dockPanel, DockState.Document);
+        }
+
+        private void alignmentToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            new AlignmentForm(Workspace).Show(dockPanel, DockState.Document);
+        }
     }
 }

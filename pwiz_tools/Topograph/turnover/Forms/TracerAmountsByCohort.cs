@@ -42,6 +42,7 @@ namespace pwiz.Topograph.ui.Forms
             public DataColumns TracerAmountsBySlopeColumns { get; set; }
             public DataColumns PrecursorEnrichmentColumns { get; set; }
             public DataColumns TurnoverColumns { get; set; }
+            public DataColumns AreaUnderCurveColumns { get; set; }
             public DataGridViewColumn ReplicateCountColumn { get; set; }
         }
 
@@ -72,6 +73,7 @@ namespace pwiz.Topograph.ui.Forms
             public double TracerPercentBySlope { get; set; }
             public double? Turnover { get; set; }
             public double? PrecursorEnrichment { get; set; }
+            public double AreaUnderCurve { get; set; }
         }
 
         class ResultData
@@ -80,6 +82,7 @@ namespace pwiz.Topograph.ui.Forms
             public Statistics TracerPercentBySlope { get; set; }
             public Statistics Turnover { get; set; }
             public Statistics PrecursorEnrichment { get; set; }
+            public Statistics AreaUnderCurve { get; set; }
         }
 
         class ResultRow
@@ -201,6 +204,7 @@ namespace pwiz.Topograph.ui.Forms
                             SetColumnValues(columns.TracerAmountsBySlopeColumns, row, entry.Value.TracerPercentBySlope);
                             SetColumnValues(columns.PrecursorEnrichmentColumns, row, entry.Value.PrecursorEnrichment);
                             SetColumnValues(columns.TurnoverColumns, row, entry.Value.Turnover);
+                            SetColumnValues(columns.AreaUnderCurveColumns, row, entry.Value.AreaUnderCurve);
                             lstResultData.Add(entry.Value);
                             activeCohortKeys.Add(entry.Key);
                         }
@@ -212,6 +216,7 @@ namespace pwiz.Topograph.ui.Forms
             SetSummary("Tracer % (slope)", lstResultData.Select(r => r.TracerPercentBySlope));
             SetSummary("Precursor Enrichment", lstResultData.Select(r => r.PrecursorEnrichment));
             SetSummary("Turnover", lstResultData.Select(r => r.Turnover));
+            SetSummary("Area Under Curve", lstResultData.Select(r => r.AreaUnderCurve));
             foreach (var entry in _columnsDict.ToArray())
             {
                 if (!activeCohortKeys.Contains(entry.Key))
@@ -221,6 +226,7 @@ namespace pwiz.Topograph.ui.Forms
                     RemoveDataColumns(entry.Value.TracerAmountsBySlopeColumns);
                     RemoveDataColumns(entry.Value.PrecursorEnrichmentColumns);
                     RemoveDataColumns(entry.Value.TurnoverColumns);
+                    RemoveDataColumns(entry.Value.AreaUnderCurveColumns);
                     _columnsDict.Remove(entry.Key);
                 }
             }
@@ -243,6 +249,7 @@ namespace pwiz.Topograph.ui.Forms
                 SetDataColumnVisibility(columns.TracerAmountsBySlopeColumns, cbxTracerPercentSlope.Checked);
                 SetDataColumnVisibility(columns.PrecursorEnrichmentColumns, cbxShowPrecursorEnrichment.Checked);
                 SetDataColumnVisibility(columns.TurnoverColumns, cbxShowTurnover.Checked);
+                SetDataColumnVisibility(columns.AreaUnderCurveColumns, cbxAreaUnderCurve.Checked);
             }
         }
 
@@ -260,6 +267,7 @@ namespace pwiz.Topograph.ui.Forms
             columns.TracerAmountsBySlopeColumns = AddDataColumns(prefix, "Tracer % (slope)");
             columns.PrecursorEnrichmentColumns = AddDataColumns(prefix, "Precursor Enrichment");
             columns.TurnoverColumns = AddDataColumns(prefix, "Turnover");
+            columns.AreaUnderCurveColumns = AddDataColumns(prefix, "Area Under Curve");
             dataGridView1.Columns.Add(columns.ReplicateCountColumn = new DataGridViewTextBoxColumn
                                                {
                                                    HeaderText = prefix + "Count",
@@ -362,6 +370,7 @@ namespace pwiz.Topograph.ui.Forms
                            TracerPercentBySlope = totalTracerPercentRatio/totalRatio,
                            Turnover = first.Turnover,
                            PrecursorEnrichment = first.PrecursorEnrichment,
+                           AreaUnderCurve = totalArea,
                        };
         }
 
@@ -405,6 +414,9 @@ namespace pwiz.Topograph.ui.Forms
                 new Statistics(rowDatas.Where(r => r.Turnover.HasValue).Select(r => r.Turnover.Value).ToArray());
             var statsPrecursorEnrichment =
                 new Statistics(rowDatas.Where(r => r.PrecursorEnrichment.HasValue).Select(r => r.PrecursorEnrichment.Value).ToArray());
+            var statsAreaUnderCurve = new Statistics(rowDatas.Select(r => r.AreaUnderCurve).ToArray());
+
+                
 
             return new ResultData
                        {
@@ -412,6 +424,7 @@ namespace pwiz.Topograph.ui.Forms
                            TracerPercentBySlope = statsSlope,
                            Turnover = statsTurnover,
                            PrecursorEnrichment = statsPrecursorEnrichment,
+                           AreaUnderCurve = statsAreaUnderCurve,
                        };
         }
 
