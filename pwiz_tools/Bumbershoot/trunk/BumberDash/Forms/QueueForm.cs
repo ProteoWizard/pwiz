@@ -32,6 +32,9 @@ namespace BumberDash.Forms
         /// </summary>
         public QueueForm()
         {
+            Properties.Settings.Default.Reset();
+            Properties.Settings.Default.Save();
+
             InitializeComponent();
             var sessionFactory = SessionManager.CreateSessionFactory();
             _session = sessionFactory.OpenSession();
@@ -1576,6 +1579,8 @@ namespace BumberDash.Forms
             {
                 var DI = new DirectoryInfo(basePath);
                 var dirList = DI.GetDirectories("IDPicker*").OrderByDescending(x => x.Name).ToList();
+                if (!dirList.Any())
+                    return false;
                 if (File.Exists(Path.Combine(dirList[0].FullName, "IDPicker.exe")))
                 {
                     Properties.Settings.Default.IDPickerLocation = Path.Combine(dirList[0].FullName, "IDPicker.exe");
