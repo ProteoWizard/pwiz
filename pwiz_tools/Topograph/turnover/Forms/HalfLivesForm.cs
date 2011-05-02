@@ -27,6 +27,7 @@ namespace pwiz.Topograph.ui.Forms
             tbxInitialTracerPercent.Text = tracerDef.InitialApe.ToString();
             tbxFinalTracerPercent.Text = tracerDef.FinalApe.ToString();
             comboCalculationType.SelectedIndex = 0;
+            UpdateTimePoints();
         }
 
         public double MinScore
@@ -58,6 +59,7 @@ namespace pwiz.Topograph.ui.Forms
                                      InitialPercent = double.Parse(tbxInitialTracerPercent.Text),
                                      FinalPercent = double.Parse(tbxFinalTracerPercent.Text),
                                      FixedInitialPercent = cbxFixYIntercept.Checked,
+                                     ExcludedTimePoints = UpdateTimePoints(),
                                  };
             var longOperationBroker = new LongOperationBroker(calculator,
                                                               new LongWaitDialog(this, "Calculating Half Lives"));
@@ -298,7 +300,37 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
-
+        /// <summary>
+        /// Updates the list of time points in the "time points" checked list box.
+        /// Returns the set of time points that are unchecked (and therefore excluded).
+        /// </summary>
+        /// <returns></returns>
+        private ICollection<double> UpdateTimePoints()
+        {
+            var existingListItems = new double[checkedListBoxTimePoints.Items.Count];
+            for (int i = 0; i < checkedListBoxTimePoints.Items.Count; i++)
+            {
+                existingListItems[i] = (double) checkedListBoxTimePoints.Items[i];
+            }            
+            var allTimePoints = new HashSet<double>(Workspace.MsDataFiles.ListChildren()
+                                                        .Where(d => d.TimePoint.HasValue)
+                                                        .Select(d => d.TimePoint.Value))
+                                                        .ToArray();
+            Array.Sort(allTimePoints);
+            var excludedTimePoints =
+                existingListItems.Where((d, index) => !checkedListBoxTimePoints.GetItemChecked(index)).ToArray();
+            if (!Lists.EqualsDeep(existingListItems, allTimePoints))
+            {
+                checkedListBoxTimePoints.Items.Clear();
+                foreach (var time in allTimePoints)
+                {
+                    checkedListBoxTimePoints.Items.Add(time);
+                    checkedListBoxTimePoints
+                        .SetItemChecked(checkedListBoxTimePoints.Items.Count - 1, !excludedTimePoints.Contains(time));
+                }
+            }
+            return new HashSet<double>(excludedTimePoints.Where(t => allTimePoints.Contains(t)));
+        }
 
         public HalfLifeCalculationType HalfLifeCalculationType
         {

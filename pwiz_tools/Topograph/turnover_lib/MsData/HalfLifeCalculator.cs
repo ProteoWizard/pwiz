@@ -21,6 +21,7 @@ namespace pwiz.Topograph.MsData
             HalfLifeCalculationType = halfLifeCalculationType;
             InitialPercent = 0;
             FinalPercent = 100;
+            ExcludedTimePoints = new double[0];
         }
 
         public HalfLifeCalculationType HalfLifeCalculationType
@@ -51,6 +52,8 @@ namespace pwiz.Topograph.MsData
                        || HalfLifeCalculationType == HalfLifeCalculationType.GroupPrecursorPool;
             }
         }
+
+        public ICollection<double> ExcludedTimePoints { get; set; }
 
         private List<RowData> QueryRowDatas()
         {
@@ -260,7 +263,7 @@ namespace pwiz.Topograph.MsData
                     continue;
                 }
                 double? timePoint = GetTimePoint(rowData);
-                if (!timePoint.HasValue)
+                if (!timePoint.HasValue || ExcludedTimePoints.Contains(timePoint.Value))
                 {
                     continue;
                 }
