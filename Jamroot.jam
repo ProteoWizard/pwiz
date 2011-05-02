@@ -393,7 +393,7 @@ else
 }
 
 
-tar.extract $(PWIZ_LIBRARIES_PATH)/gd-2.0.33.tar.bz2 : *.h : <location>$(PWIZ_LIBRARIES_PATH) ;
+    tar.extract $(PWIZ_LIBRARIES_PATH)/gd-2.0.33.tar.bz2 : *.h : <location>$(PWIZ_LIBRARIES_PATH) ;
 
 path-constant BOOST_SOURCE : $(boost_src) ;
 path-constant ZLIB_SOURCE : $(zlib_src) ;
@@ -407,8 +407,11 @@ if [ modules.peek : NT ]
     # extract the vendor APIs if the user agrees to the licenses
     if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
     {
-        echo "Extracting vendor APIs..." ;
-        SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api.7z" ;
+        if ! --incremental in [ modules.peek : ARGV ]
+	{
+            echo "Extracting vendor APIs..." ;
+            SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api.7z" ;
+        }
     }
     else
     {

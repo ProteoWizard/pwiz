@@ -28,12 +28,18 @@ del /q pwiz\analysis\Version.cpp > nul 2>&1
 
 del /q pwiz_aux\msrc\utility\vendor_api\ABI\*.dll > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Agilent\*.dll > nul 2>&1
+del /q pwiz_aux\msrc\utility\vendor_api\Agilent\EULA.* > nul 2>&1
+rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Agilent\Documents > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Bruker\*.dll > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Bruker\*.manifest > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Thermo\*.dll > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Thermo\*.manifest > nul 2>&1
+del /q pwiz_aux\msrc\utility\vendor_api\Thermo\EULA.* > nul 2>&1
+rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Thermo\Microsoft.VC90.MFC > nul 2>&1
 del /q /s pwiz_aux\msrc\utility\vendor_api\Waters\*.dll > nul 2>&1
 del /q /s pwiz_aux\msrc\utility\vendor_api\Waters\*.lib > nul 2>&1
+rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc9_scl-0 > nul 2>&1
+rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Waters\vc9_scl-1 > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Waters\*.h > nul 2>&1
 
 rmdir /s /q pwiz\data\vendor_readers\Thermo\Reader_Thermo_Test.data > nul 2>&1
