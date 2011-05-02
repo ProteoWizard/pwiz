@@ -306,7 +306,9 @@ namespace pwiz.Skyline.Model
             // If the peptide has explicit modifications, and the modifications have
             // changed, see if any of the explicit modifications have changed
             var explicitMods = ExplicitMods;
-            if (HasExplicitMods && diff.SettingsOld != null &&
+            if (HasExplicitMods &&
+                !diff.IsUnexplainedExplicitModificationAllowed &&
+                diff.SettingsOld != null &&
                 !ReferenceEquals(settingsNew.PeptideSettings.Modifications,
                                  diff.SettingsOld.PeptideSettings.Modifications))
             {
@@ -658,9 +660,9 @@ namespace pwiz.Skyline.Model
                     for (int i = 0; i < countResults; i++)
                     {
                         var calc = _listResultCalcs[i];
-                        calc.AddChromInfoList(nodeGroup, nodeGroup.Results[i]);
+                        calc.AddChromInfoList(nodeGroup);
                         foreach (TransitionDocNode nodeTran in nodeGroup.Children)
-                            calc.AddChromInfoList(nodeTran, nodeTran.Results[i]);
+                            calc.AddChromInfoList(nodeTran);
                     }
                 }
             }
@@ -717,9 +719,9 @@ namespace pwiz.Skyline.Model
             private SrmSettings Settings { get; set; }
             private Dictionary<int, PeptideChromInfoCalculator> Calculators { get; set; }
 
-            public void AddChromInfoList(TransitionGroupDocNode nodeGroup,
-                                         IEnumerable<TransitionGroupChromInfo> listInfo)
+            public void AddChromInfoList(TransitionGroupDocNode nodeGroup)
             {
+                var listInfo = nodeGroup.Results[ResultsIndex];
                 if (listInfo == null)
                     return;
 
@@ -731,16 +733,16 @@ namespace pwiz.Skyline.Model
                     PeptideChromInfoCalculator calc;
                     if (!Calculators.TryGetValue(info.FileIndex, out calc))
                     {
-                        calc = new PeptideChromInfoCalculator(Settings);
+                        calc = new PeptideChromInfoCalculator(Settings, ResultsIndex);
                         Calculators.Add(info.FileIndex, calc);
                     }
                     calc.AddChromInfo(nodeGroup, info);
                 }
             }
 
-            public void AddChromInfoList(TransitionDocNode nodeTran,
-                                         IEnumerable<TransitionChromInfo> listInfo)
+            public void AddChromInfoList(TransitionDocNode nodeTran)
             {
+                var listInfo = nodeTran.Results[ResultsIndex];
                 if (listInfo == null)
                     return;
 
@@ -752,7 +754,7 @@ namespace pwiz.Skyline.Model
                     PeptideChromInfoCalculator calc;
                     if (!Calculators.TryGetValue(info.FileIndex, out calc))
                     {
-                        calc = new PeptideChromInfoCalculator(Settings);
+                        calc = new PeptideChromInfoCalculator(Settings, ResultsIndex);
                         Calculators.Add(info.FileIndex, calc);
                     }
                     calc.AddChromInfo(nodeTran, info);
@@ -765,7 +767,7 @@ namespace pwiz.Skyline.Model
                     return null;
 
                 var listCalc = new List<PeptideChromInfoCalculator>(Calculators.Values);
-                listCalc.Sort((c1, c2) => c1.FileIndex - c2.FileIndex);
+                listCalc.Sort((c1, c2) => c1.FileOrder - c2.FileOrder);
 
                 var listInfo = listCalc.ConvertAll(calc => calc.CalcChromInfo(transitionGroupCount));
                 return (listInfo[0] != null ? listInfo : null);
@@ -845,15 +847,17 @@ namespace pwiz.Skyline.Model
 
         private sealed class PeptideChromInfoCalculator
         {
-            public PeptideChromInfoCalculator(SrmSettings settings)
+            public PeptideChromInfoCalculator(SrmSettings settings, int resultsIndex)
             {
-                FileIndex = -1;
                 Settings = settings;
+                ResultsIndex = resultsIndex;
                 TranAreas = new Dictionary<TransitionKey, float>();
             }
 
-            public int FileIndex { get; private set; }
             private SrmSettings Settings { get; set; }
+            private int ResultsIndex { get; set; }
+            private ChromFileInfoId FileId { get; set; }
+            public int FileOrder { get; private set; }
             private double PeakCountRatioTotal { get; set; }
             private int ResultsCount { get; set; }
             private int RetentionTimesMeasured { get; set; }
@@ -862,14 +866,16 @@ namespace pwiz.Skyline.Model
             private Dictionary<TransitionKey, float> TranAreas { get; set; }
 
 // ReSharper disable UnusedParameter.Local
-            public void AddChromInfo(TransitionGroupDocNode nodeGroup, TransitionGroupChromInfo info)
+            public void AddChromInfo(TransitionGroupDocNode nodeGroup,
+                                     TransitionGroupChromInfo info)
 // ReSharper restore UnusedParameter.Local
             {
                 if (info == null)
                     return;
 
-                Debug.Assert(FileIndex == -1 || info.FileIndex == FileIndex);
-                FileIndex = info.FileIndex;
+                Debug.Assert(FileId == null || ReferenceEquals(info.FileId, FileId));
+                FileId = info.FileId;
+                FileOrder = Settings.MeasuredResults.Chromatograms[ResultsIndex].IndexOfId(FileId);
 
                 ResultsCount++;
                 PeakCountRatioTotal += info.PeakCountRatio;
@@ -919,7 +925,7 @@ namespace pwiz.Skyline.Model
                     }                    
                 }
 
-                return new PeptideChromInfo(FileIndex, peakCountRatio, retentionTime, listRatios.ToArray());
+                return new PeptideChromInfo(FileId, peakCountRatio, retentionTime, listRatios.ToArray());
             }
 
             public float? CalcTransitionRatio(TransitionDocNode nodeTran,

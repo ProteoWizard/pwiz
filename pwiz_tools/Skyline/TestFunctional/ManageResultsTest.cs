@@ -349,7 +349,7 @@ namespace pwiz.SkylineTestFunctional
                 }
             }
 
-            // Make sure goup nodes have equal chromatogram info to ensure user modifications
+            // Make sure group nodes have equal chromatogram info to ensure user modifications
             // are preserved.
             var enumTranGroupOrig = docOrig.TransitionGroups.GetEnumerator();
             foreach (var nodeGroup in docNew.TransitionGroups)
@@ -365,6 +365,7 @@ namespace pwiz.SkylineTestFunctional
                 {
                     if (!ArrayUtil.EqualsDeep(nodeGroup.Results[i], nodeGroupOrig.Results[arrayIndexOld[i]]))
                     {
+                        Assert.AreEqual(nodeGroupOrig.Results[arrayIndexOld[i]].Count, nodeGroup.Results[i].Count);
                         Assert.Fail("Transition chromatogram information changed.");
                     }
                 }

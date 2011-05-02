@@ -61,6 +61,7 @@ namespace pwiz.Skyline.Model
         public Annotations Annotations { get; private set; }
 
         public abstract AnnotationDef.AnnotationTarget AnnotationTarget { get; }
+
         /// <summary>
         /// User supplied comment of this node.  All <see cref="DocNode"/> objects
         /// in the document support user notes.
@@ -553,7 +554,8 @@ namespace pwiz.Skyline.Model
         /// <exception cref="IdentityNotFoundException"/>
         public DocNodeParent InsertAll(Identity idBefore, IEnumerable<DocNode> childrenAdd, bool after)
         {
-            Debug.Assert(Children != null); // SetChildren required
+            if (Children == null)
+                throw new InvalidOperationException("Invalid operation InsertAll before children set.");
 
             List<DocNode> childrenNew = new List<DocNode>(Children);
             List<int> nodeCountStack = new List<int>(_nodeCountStack);
@@ -722,7 +724,8 @@ namespace pwiz.Skyline.Model
         /// <exception cref="IdentityNotFoundException"/>
         public DocNodeParent ReplaceChild(DocNode childReplace)
         {
-            Debug.Assert(Children != null); // SetChildren required
+            if (Children == null)
+                throw new InvalidOperationException("Invalid operation ReplaceChild before children set.");
 
             DocNode[] childrenNew = new DocNode[Children.Count];
             List<int> nodeCountStack = new List<int>(_nodeCountStack);
@@ -765,7 +768,8 @@ namespace pwiz.Skyline.Model
         /// <exception cref="IdentityNotFoundException"/>
         public DocNodeParent RemoveChild(DocNode childRemove)
         {
-            Debug.Assert(Children != null); // Set children required
+            if (Children == null)
+                throw new InvalidOperationException("Invalid operation RemoveChild before children set.");
 
             List<DocNode> childrenNew = new List<DocNode>();
             List<int> nodeCountStack = new List<int>(_nodeCountStack);
@@ -801,7 +805,8 @@ namespace pwiz.Skyline.Model
         /// <returns>A node with the desendents removed</returns>
         public DocNodeParent RemoveAll(ICollection<int> descendentsRemoveIds)
         {
-            Debug.Assert(Children != null); // SetChildren required
+            if (Children == null)
+                return this;
 
             List<DocNode> childrenNew = new List<DocNode>();
             List<int> nodeCountStack = new List<int> { 0 };

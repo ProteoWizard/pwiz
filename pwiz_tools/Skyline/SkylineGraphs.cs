@@ -1287,7 +1287,7 @@ namespace pwiz.Skyline
                 return;
 
             string filePath;
-            string name = GetGraphChromStrings(iResults, chromInfo.FileIndex, out filePath);
+            string name = GetGraphChromStrings(iResults, chromInfo.FileId, out filePath);
             if (name == null)
                 return;
 
@@ -1529,11 +1529,11 @@ namespace pwiz.Skyline
             get
             {
                 string temp;
-                return GetGraphChromStrings(comboResults.SelectedIndex, -1, out temp);
+                return GetGraphChromStrings(comboResults.SelectedIndex, null, out temp);
             }
         }
 
-        private string GetGraphChromStrings(int iResult, int fileIndex, out string filePath)
+        private string GetGraphChromStrings(int iResult, ChromFileInfoId fileId, out string filePath)
         {
             filePath = null;
             if (iResult != -1)
@@ -1542,8 +1542,8 @@ namespace pwiz.Skyline
                 if (settings.HasResults && iResult < settings.MeasuredResults.Chromatograms.Count)
                 {
                     var chromatogramSet = settings.MeasuredResults.Chromatograms[iResult];
-                    if (fileIndex != -1)
-                        filePath = chromatogramSet.MSDataFileInfos[fileIndex].FilePath;
+                    if (fileId != null)
+                        filePath = chromatogramSet.GetFileInfo(fileId).FilePath;
                     return chromatogramSet.Name;                    
                 }
             }

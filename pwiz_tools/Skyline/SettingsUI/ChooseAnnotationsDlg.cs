@@ -144,6 +144,7 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         private static bool StripAnnotationValues<TItem>(ICollection<string> annotationNamesToKeep, ref Results<TItem> results)
+            where TItem : ChromInfo
         {
             if (results == null)
             {

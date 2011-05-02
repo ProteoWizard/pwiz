@@ -32,9 +32,9 @@ namespace pwiz.Skyline.Model.Results
     {
         private ReadOnlyCollection<PeptideLabelRatio> _labelRatios;
 
-        public PeptideChromInfo(int fileIndex, float peakCountRatio, float? retentionTime,
+        public PeptideChromInfo(ChromFileInfoId fileId, float peakCountRatio, float? retentionTime,
                 IList<PeptideLabelRatio> labelRatios)
-            : base(fileIndex)
+            : base(fileId)
         {
             PeakCountRatio = peakCountRatio;
             RetentionTime = retentionTime;
@@ -140,7 +140,7 @@ namespace pwiz.Skyline.Model.Results
         private ReadOnlyCollection<float?> _ratios;
         private ReadOnlyCollection<float?> _ratioStdevs;
 
-        public TransitionGroupChromInfo(int fileIndex,
+        public TransitionGroupChromInfo(ChromFileInfoId fileId,
                                         int optimizationStep,
                                         float peakCountRatio,
                                         float? retentionTime,
@@ -155,7 +155,7 @@ namespace pwiz.Skyline.Model.Results
                                         float? libraryDotProduct,
                                         Annotations annotations,
                                         bool userSet)
-            : base(fileIndex)
+            : base(fileId)
         {
             OptimizationStep = optimizationStep;
             PeakCountRatio = peakCountRatio;
@@ -282,20 +282,20 @@ namespace pwiz.Skyline.Model.Results
     {
         private ReadOnlyCollection<float?> _ratios;
 
-        public TransitionChromInfo(int fileIndex, int optimizationStep, ChromPeak peak,
+        public TransitionChromInfo(ChromFileInfoId fileId, int optimizationStep, ChromPeak peak,
             IList<float?> ratios, bool userSet)
-            : this(fileIndex, optimizationStep, peak.RetentionTime, peak.StartTime, peak.EndTime,
+            : this(fileId, optimizationStep, peak.RetentionTime, peak.StartTime, peak.EndTime,
                    peak.Area, peak.BackgroundArea, peak.Height, peak.Fwhm,
                    peak.IsFwhmDegenerate, peak.IsTruncated, ratios, Annotations.EMPTY, userSet)
         {            
         }
 
-        public TransitionChromInfo(int fileIndex, int optimizationStep, float retentionTime,
+        public TransitionChromInfo(ChromFileInfoId fileId, int optimizationStep, float retentionTime,
                                    float startRetentionTime, float endRetentionTime,
                                    float area, float backgroundArea, float height,
                                    float fwhm, bool fwhmDegenerate, bool? truncated,
                                    IList<float?> ratios, Annotations annotations, bool userSet)
-            : base(fileIndex)
+            : base(fileId)
         {
             OptimizationStep = optimizationStep;
             RetentionTime = retentionTime;
@@ -349,9 +349,9 @@ namespace pwiz.Skyline.Model.Results
 
         public bool IsEmpty { get { return EndRetentionTime == 0; } }
 
-        public bool Equivalent(int fileIndex, int step, ChromPeak peak)
+        public bool Equivalent(ChromFileInfoId fileId, int step, ChromPeak peak)
         {
-            return fileIndex == FileIndex &&
+            return ReferenceEquals(fileId, FileId) &&
                    step == OptimizationStep &&
                    peak.RetentionTime == RetentionTime &&
                    peak.StartTime == StartRetentionTime &&
@@ -471,8 +471,8 @@ namespace pwiz.Skyline.Model.Results
     /// number of items as the chromatograms list.
     /// </summary>
     public class Results<TItem> : OneOrManyList<ChromInfoList<TItem>>
-//        VS Issue: https://connect.microsoft.com/VisualStudio/feedback/ViewFeedback.aspx?FeedbackID=324473
-//        where T : ChromInfo
+//        VS Issue: https://connect.microsoft.com/VisualStudio/feedback/ViewFeedback.aspx?FeedbackID=324473 (seems fixed)
+        where TItem : ChromInfo
     {
         public Results(params ChromInfoList<TItem>[] elements)
             : base(elements)
@@ -492,7 +492,7 @@ namespace pwiz.Skyline.Model.Results
             {
                 for (int i = 0, len = Math.Min(resultsOld.Count, chromInfoSet.Count); i < len; i++)
                 {
-                    if (ArrayUtil.EqualsDeep(chromInfoSet[i], resultsOld[i]))
+                    if (EqualsDeep(resultsOld[i], chromInfoSet[i]))
                         chromInfoSet[i] = resultsOld[i];
                 }
             }
@@ -502,6 +502,22 @@ namespace pwiz.Skyline.Model.Results
                 return resultsOld;
 
             return new Results<TItem>(listInfo);
+        }
+
+        private static bool EqualsDeep(IList<TItem> chromInfosOld, IList<TItem> chromInfos)
+        {
+            if (!ArrayUtil.EqualsDeep(chromInfosOld, chromInfos))
+                return false;
+            if (chromInfos == null)
+                return true;
+
+            // If the arrays are otherwise equal, check the FileIds
+            for (int i = 0; i < chromInfos.Count; i++)
+            {
+                if (!ReferenceEquals(chromInfosOld[i].FileId, chromInfos[i].FileId))
+                    return false;
+            }
+            return true;
         }
 
         public float? GetAverageValue(Func<TItem, float?> getVal)
@@ -598,12 +614,13 @@ namespace pwiz.Skyline.Model.Results
     /// </summary>
     public abstract class ChromInfo : Immutable
     {
-        protected ChromInfo(int fileIndex)
+        protected ChromInfo(ChromFileInfoId fileId)
         {
-            FileIndex = fileIndex;
+            FileId = fileId;
         }
 
-        public int FileIndex { get; private set; }
+        public ChromFileInfoId FileId { get; private set; }
+        public int FileIndex { get { return FileId.GlobalIndex; } }
 
         #region object overrides
 
@@ -611,7 +628,7 @@ namespace pwiz.Skyline.Model.Results
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return other.FileIndex == FileIndex;
+            return Equals(other.FileId, FileId);
         }
 
         public override bool Equals(object obj)
@@ -624,7 +641,7 @@ namespace pwiz.Skyline.Model.Results
 
         public override int GetHashCode()
         {
-            return FileIndex;
+            return FileId.GetHashCode();
         }
 
         #endregion

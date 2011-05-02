@@ -45,7 +45,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public IList<IsotopeEnrichmentItem> Enrichments
         {
             get { return _isotopeEnrichments; }
-            set { _isotopeEnrichments = MakeReadOnly(value); }
+            private set { _isotopeEnrichments = MakeReadOnly(value); }
         }
 
         public IsotopeAbundances IsotopeAbundances { get; private set; }

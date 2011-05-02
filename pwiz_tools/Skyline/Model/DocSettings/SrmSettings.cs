@@ -930,7 +930,8 @@ namespace pwiz.Skyline.Model.DocSettings
             return base.Equals(obj) &&
                 Equals(obj.PeptideSettings, PeptideSettings) &&
                 Equals(obj.TransitionSettings, TransitionSettings) &&
-                Equals(obj.DataSettings, DataSettings);
+                Equals(obj.DataSettings, DataSettings) &&
+                Equals(obj.MeasuredResults, MeasuredResults);
         }
 
         public override bool Equals(object obj)
@@ -948,6 +949,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ PeptideSettings.GetHashCode();
                 result = (result*397) ^ TransitionSettings.GetHashCode();
                 result = (result*397) ^ DataSettings.GetHashCode();
+                result = (result*397) ^ (MeasuredResults != null ? MeasuredResults.GetHashCode() : 0);
                 return result;
             }
         }
@@ -1004,6 +1006,8 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 // ReSharper restore InconsistentNaming
 
+        private bool _isUnexplainedExplicitModificationAllowed;
+
         /// <summary>
         /// For use in creating new nodes, where everything should be created
         /// from scratch with the current settings.
@@ -1053,6 +1057,12 @@ namespace pwiz.Skyline.Model.DocSettings
             DiffTransitionProps = diffTransitionProps;
         }
 
+        /// <summary>
+        /// Used for changes that involve only results changes.  Usually used to force recalculation of
+        /// all results information.
+        /// </summary>
+        /// <param name="settingsCurrent">The current settings which are used as <see cref="SettingsOld"/></param>
+        /// <param name="allResults">True if all results information should be recalculated</param>
         public SrmSettingsDiff(SrmSettings settingsCurrent, bool allResults)
         {
             SettingsOld = settingsCurrent;
@@ -1061,8 +1071,28 @@ namespace pwiz.Skyline.Model.DocSettings
             DiffResultsAll = allResults;
         }
 
+        /// <summary>
+        /// Calculates the differences between the settings for two document states.
+        /// </summary>
+        /// <param name="settingsOld">The previous document settings</param>
+        /// <param name="settingsNew">New document settings to chage to</param>
         public SrmSettingsDiff(SrmSettings settingsOld, SrmSettings settingsNew)
+            : this(settingsOld, settingsNew, false)
         {
+        }
+
+        /// <summary>
+        /// Calculates the differences between the settings for two document states.
+        /// </summary>
+        /// <param name="settingsOld">The previous document settings</param>
+        /// <param name="settingsNew">New document settings to chage to</param>
+        /// <param name="isUnexplainedExplicitModificationAllowed">True if this settings change should not check
+        /// explicit modifications against the global settings to make sure they are present</param>
+        public SrmSettingsDiff(SrmSettings settingsOld, SrmSettings settingsNew,
+            bool isUnexplainedExplicitModificationAllowed)
+        {
+            _isUnexplainedExplicitModificationAllowed = isUnexplainedExplicitModificationAllowed;
+
             SettingsOld = settingsOld;
 
             PeptideSettings newPep = settingsNew.PeptideSettings;
@@ -1271,6 +1301,20 @@ namespace pwiz.Skyline.Model.DocSettings
                        DiffTransitions || DiffTransitionProps ||
                        DiffResults;
             }
+        }
+
+        /// <summary>
+        /// Adding nodes to a document with explicit modifications can be tricky, since they must
+        /// be added before the document can be interrogated about what explicit modifications it
+        /// containes.  And, usually nodes experience a ChangeSettings function call before they
+        /// are added to the document with the existing settings for the document, which may not
+        /// yet contain the required explicit modifications.  This flag prevents these unexplained
+        /// explicit modifications from being stripped before a node can be added to the document
+        /// to recalculate the explicit modifications on the document.
+        /// </summary>
+        public bool IsUnexplainedExplicitModificationAllowed
+        {
+            get { return SettingsOld == null || _isUnexplainedExplicitModificationAllowed; }
         }
     }
 }

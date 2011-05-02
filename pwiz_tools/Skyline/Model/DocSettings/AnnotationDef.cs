@@ -145,6 +145,8 @@ namespace pwiz.Skyline.Model.DocSettings
             transition = 0x08,
             precursor_result = 0x10,
             transition_result = 0x20,
+
+            result_file = 0x40,
         }
 
         public enum AnnotationType
@@ -183,7 +185,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// Converts free-text annotation name to a format that can be used
         /// as a column name in HQL.
         /// </summary>
-        private static string escape(string annotationName)
+        private static string escape(IEnumerable<char> annotationName)
         {
             StringBuilder result = new StringBuilder();
             foreach (char c in annotationName)

@@ -201,7 +201,7 @@ namespace pwiz.Skyline.Controls.Graphs
             public IList<int> ReplicateIndices
             {
                 get { return _replicateIndices; }
-                set { _replicateIndices = MakeReadOnly(value); }
+                private set { _replicateIndices = MakeReadOnly(value); }
             }
 
             public IEnumerable<string> GetReplicateNames()

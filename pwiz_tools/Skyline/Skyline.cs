@@ -820,12 +820,18 @@ namespace pwiz.Skyline
                         pasteToPeptideList = !(nodePaste.Path.GetIdentity((int) SrmDocument.Level.PeptideGroups) is FastaSequence);
                 }
 
-                IdentityPath selectPath = null;
+                IdentityPath selectPath = null, nextAdd;
 
                 ModifyDocument("Paste " + (pasteToPeptideList ? "peptides" : "proteins"), doc =>
                     doc.ImportDocumentXml(new StringReader(dataObjectSkyline.Substring(dataObjectSkyline.IndexOf('<'))),
-                        Settings.Default.StaticModList, Settings.Default.HeavyModList,
-                        nodePaste == null ? null : nodePaste.Path, out selectPath, pasteToPeptideList));
+                        null,
+                        MeasuredResults.MergeAction.remove,
+                        Settings.Default.StaticModList,
+                        Settings.Default.HeavyModList,
+                        nodePaste == null ? null : nodePaste.Path,
+                        out selectPath,
+                        out nextAdd,
+                        pasteToPeptideList));
 
                 if (selectPath != null)
                     sequenceTree.SelectedPath = selectPath;

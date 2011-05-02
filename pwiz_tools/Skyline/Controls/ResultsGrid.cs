@@ -644,16 +644,17 @@ namespace pwiz.Skyline.Controls
             return row;
         }
 
-        DataGridViewRow EnsureRow(int iReplicate, int iFile, int step, ICollection<RowIdentifier> rowIds)
+        DataGridViewRow EnsureRow(int iReplicate, int fileIndex, int step, ICollection<RowIdentifier> rowIds)
         {
-            var rowId = new RowIdentifier(iReplicate, iFile, step);
+            var rowId = new RowIdentifier(iReplicate, fileIndex, step);
             rowIds.Add(rowId);
             return EnsureRow(rowId);
         }
 
-        DataGridViewRow EnsureRow(int iReplicate, ICollection<RowIdentifier> rowIds)
+        DataGridViewRow EnsureRow(int iReplicate, MeasuredResults results, ICollection<RowIdentifier> rowIds)
         {
-            return EnsureRow(iReplicate, 0, 0, rowIds);
+            int fileIndex = results.Chromatograms[iReplicate].MSDataFileInfos[0].FileIndex;
+            return EnsureRow(iReplicate, fileIndex, 0, rowIds);
         }
 
         /// <summary>
@@ -959,7 +960,9 @@ namespace pwiz.Skyline.Controls
             {
                 return;
             }
-            if (Document.Settings.MeasuredResults == null)
+            var settings = Document.Settings;
+            var measuredResults = settings.MeasuredResults;
+            if (measuredResults == null)
             {
                 return;
             }
@@ -968,7 +971,6 @@ namespace pwiz.Skyline.Controls
             // Remember the set of rowIds that have data in them.  After updating the data, rows
             // that are not in this set will be deleted from the grid
             var rowIds = new HashSet<RowIdentifier>();
-            var settings = Document.Settings;
 
             if (SelectedTransitionDocNode != null && SelectedTransitionDocNode.HasResults)
             {
@@ -977,7 +979,7 @@ namespace pwiz.Skyline.Controls
                     var results = SelectedTransitionDocNode.Results[iReplicate];
                     if (results == null)
                     {
-                        var row = EnsureRow(iReplicate, rowIds);
+                        var row = EnsureRow(iReplicate, measuredResults, rowIds);
                         FillTransitionRow(row, null);
                         continue;
                     }
@@ -994,12 +996,12 @@ namespace pwiz.Skyline.Controls
             {
                 for (int iReplicate = 0; iReplicate < SelectedTransitionGroupDocNode.Results.Count; iReplicate++)
                 {
-                    var optFunc = settings.MeasuredResults.Chromatograms[iReplicate].OptimizationFunction;
+                    var optFunc = measuredResults.Chromatograms[iReplicate].OptimizationFunction;
 
                     var results = SelectedTransitionGroupDocNode.Results[iReplicate];
                     if (results == null)
                     {
-                        var row = EnsureRow(iReplicate, rowIds);
+                        var row = EnsureRow(iReplicate, measuredResults, rowIds);
                         FillTransitionGroupRow(row, settings, optFunc, null);
                         continue;
                     }
@@ -1020,7 +1022,7 @@ namespace pwiz.Skyline.Controls
                     // Just a blank set of replicate rows
                     for (int iReplicate = 0; iReplicate < settings.MeasuredResults.Chromatograms.Count; iReplicate++)
                     {
-                        var row = EnsureRow(iReplicate, rowIds);
+                        var row = EnsureRow(iReplicate, measuredResults, rowIds);
                         FillMultiSelectRow(row, iReplicate);
                     }
                 }
@@ -1032,7 +1034,7 @@ namespace pwiz.Skyline.Controls
                         var results = SelectedPeptideDocNode.Results[iReplicate];
                         if (results == null)
                         {
-                            EnsureRow(iReplicate, rowIds);
+                            EnsureRow(iReplicate, measuredResults, rowIds);
                             continue;
                         }
 
@@ -1059,16 +1061,16 @@ namespace pwiz.Skyline.Controls
             }
 
             // Update columns that do not depend on optimization step
-            for (int iReplicate = 0; iReplicate < settings.MeasuredResults.Chromatograms.Count; iReplicate++)
+            for (int iReplicate = 0; iReplicate < measuredResults.Chromatograms.Count; iReplicate++)
             {
                 var results = settings.MeasuredResults.Chromatograms[iReplicate];
                 for (int iFile = 0; iFile < results.FileCount; iFile++)
                 {
-                    var rowIdZero = new RowIdentifier(iReplicate, iFile, 0);
+                    var fileInfo = results.MSDataFileInfos[iFile];
+                    var rowIdZero = new RowIdentifier(iReplicate, fileInfo.FileIndex, 0);
                     ICollection<RowIdentifier> optStepRowIds;
                     if (!replicateRowDict.TryGetValue(rowIdZero, out optStepRowIds))
                         continue;
-                    var fileInfo = results.MSDataFileInfos[iFile];
                     var filePath = fileInfo.FilePath;
                     var fileName = SampleHelp.GetFileName(filePath);
                     var sampleName = SampleHelp.GetFileSampleName(filePath);
@@ -1091,7 +1093,7 @@ namespace pwiz.Skyline.Controls
                     var results = SelectedPeptideDocNode.Results[iReplicate];
                     if (results == null)
                     {
-                        var row = EnsureRow(iReplicate, rowIds);
+                        var row = EnsureRow(iReplicate, measuredResults, rowIds);
                         FillPeptideRow(row, null);                        
                         continue;
                     }

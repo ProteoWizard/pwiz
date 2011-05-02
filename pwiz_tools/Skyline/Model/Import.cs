@@ -294,7 +294,7 @@ namespace pwiz.Skyline.Model
                     seqBuilder = new PeptideGroupBuilder(fastaSeq, Document.Settings);
                 else
                 {
-                    string safeName = GetSafeGroupName(name, dictNameSeq.Keys);
+                    string safeName = Helpers.GetUniqueName(name, dictNameSeq.Keys);
                     seqBuilder = new PeptideGroupBuilder(">>" + safeName, true, Document.Settings) {BaseName = name};
                 }
             }
@@ -307,20 +307,6 @@ namespace pwiz.Skyline.Model
                 throw new LineColNumberedIoException(x.Message, lineNum, -1, x);
             }
             return seqBuilder;
-        }
-
-        private static string GetSafeGroupName(string name, ICollection<string> set)
-        {
-            if (set.Contains(name))
-                return GetSafeGroupName(name, 1, set);
-            return name;
-        }
-
-        private static string GetSafeGroupName(string name, int num, ICollection<string> set)
-        {
-            while (set.Contains(name + num))
-                num++;
-            return name + num;
         }
 
         private void AddPeptideGroup(ICollection<PeptideGroupDocNode> listGroups, PeptideGroupBuilder builder)

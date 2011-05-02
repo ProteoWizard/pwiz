@@ -251,19 +251,19 @@ namespace pwiz.Skyline.Model
             return ChangeProp(ImClone(this), (im, v) => im.Results = v, prop);
         }
 
-        public DocNode ChangePeak(int indexSet, int indexFile, int step, ChromPeak peak, int ratioCount)
+        public DocNode ChangePeak(int indexSet, ChromFileInfoId fileId, int step, ChromPeak peak, int ratioCount)
         {
             var listChromInfo = Results[indexSet];
             var listChromInfoNew = new List<TransitionChromInfo>();
             if (listChromInfo == null)
-                listChromInfoNew.Add(new TransitionChromInfo(indexFile, step, peak, new float?[ratioCount], true));
+                listChromInfoNew.Add(new TransitionChromInfo(fileId, step, peak, new float?[ratioCount], true));
             else
             {
                 bool peakAdded = false;
                 foreach (var chromInfo in listChromInfo)
                 {
                     // Replace an existing entry with same index values
-                    if (chromInfo.FileIndex == indexFile && chromInfo.OptimizationStep == step)
+                    if (ReferenceEquals(chromInfo.FileId, fileId) && chromInfo.OptimizationStep == step)
                     {
                         // Something is wrong, if the value has already been added (duplicate peak? out of order?)
                         Debug.Assert(!peakAdded);
@@ -275,10 +275,10 @@ namespace pwiz.Skyline.Model
                         // Entries should be ordered, so if the new entry has not been added
                         // when an entry past it is seen, then add the new entry.
                         if (!peakAdded &&
-                            chromInfo.FileIndex >= indexFile &&
+                            chromInfo.FileIndex >= fileId.GlobalIndex &&
                             chromInfo.OptimizationStep > step)
                         {
-                            listChromInfoNew.Add(new TransitionChromInfo(indexFile, step, peak, new float?[ratioCount], true));
+                            listChromInfoNew.Add(new TransitionChromInfo(fileId, step, peak, new float?[ratioCount], true));
                             peakAdded = true;
                         }
                         listChromInfoNew.Add(chromInfo);
@@ -286,14 +286,14 @@ namespace pwiz.Skyline.Model
                 }                
                 // Finally, make sure the peak is added
                 if (!peakAdded)
-                    listChromInfoNew.Add(new TransitionChromInfo(indexFile, step, peak, new float?[ratioCount], true));
+                    listChromInfoNew.Add(new TransitionChromInfo(fileId, step, peak, new float?[ratioCount], true));
             }
 
             return ChangeResults((Results<TransitionChromInfo>)
                                  Results.ChangeAt(indexSet, new ChromInfoList<TransitionChromInfo>(listChromInfoNew)));
         }
 
-        public DocNode RemovePeak(int indexSet, int indexFile)
+        public DocNode RemovePeak(int indexSet, ChromFileInfoId fileId)
         {
             var listChromInfo = Results[indexSet];
             if (listChromInfo == null)
@@ -301,7 +301,7 @@ namespace pwiz.Skyline.Model
             var listChromInfoNew = new List<TransitionChromInfo>();
             foreach (var chromInfo in listChromInfo)
             {
-                if (chromInfo.FileIndex != indexFile)
+                if (!ReferenceEquals(chromInfo.FileId, fileId))
                     listChromInfoNew.Add(chromInfo);
                 else if (chromInfo.OptimizationStep == 0)
                     listChromInfoNew.Add(chromInfo.ChangePeak(ChromPeak.EMPTY, true));

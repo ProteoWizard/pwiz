@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using pwiz.Skyline.Util;
 
@@ -129,6 +130,26 @@ namespace pwiz.Skyline.Model.Results
         public bool IsCurrentDisk
         {
             get { return CachedFiles.IndexOf(cachedFile => !cachedFile.IsCurrent) == -1; }
+        }
+
+        /// <summary>
+        /// Returns true if the cached file paths in this cache are completely covered
+        /// by an existing set of caches.
+        /// </summary>
+        /// <param name="caches">Existing caches to check for paths in this cache that are missing</param>
+        /// <returns>True if all paths in this cache are covered</returns>
+        public bool IsCovered(IEnumerable<ChromatogramCache> caches)
+        {
+            // True if there are not any paths that are not covered
+            return !CachedFilePaths.Any(path => !IsCovered(path, caches));
+        }
+
+        /// <summary>
+        /// Returns true, if a single path can be found in a set of caches.
+        /// </summary>
+        private static bool IsCovered(string path, IEnumerable<ChromatogramCache> caches)
+        {
+            return caches.Any(cache => cache.CachedFilePaths.Contains(path));
         }
 
         public bool TryLoadChromatogramInfo(TransitionGroupDocNode nodeGroup, float tolerance,

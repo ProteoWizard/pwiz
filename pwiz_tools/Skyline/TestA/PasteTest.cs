@@ -28,6 +28,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
@@ -243,11 +244,16 @@ namespace pwiz.SkylineTestA
                 XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
                 ser.Serialize(writer, sourceDoc);
             }
-            IdentityPath newPath;
+            IdentityPath newPath, nextAdd;
             targetDoc = targetDoc.ImportDocumentXml(new StringReader(stringWriter.ToString()),
+                                                    null,
+                                                    MeasuredResults.MergeAction.remove,
                                                     Settings.Default.StaticModList,
                                                     Settings.Default.HeavyModList,
-                                                    to, out newPath, false);
+                                                    to,
+                                                    out newPath,
+                                                    out nextAdd,
+                                                    false);
             return targetDoc;
         }
 

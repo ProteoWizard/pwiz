@@ -755,10 +755,106 @@ namespace pwiz.Skyline
 
             // TODO: Support long wait dialog
             ModifyDocument(description, doc => doc.ImportMassList(reader, null, -1, provider, separator,
-                nodePaste == null ? null : nodePaste.Path, out selectPath));
+                nodePaste != null ? nodePaste.Path : null, out selectPath));
 
             if (selectPath != null)
                 sequenceTree.SelectedPath = selectPath;
+        }
+
+        private void importDocumentMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog dlg = new OpenFileDialog
+            {
+                Title = "Import Skyline Document",
+                
+                InitialDirectory = Settings.Default.ActiveDirectory,
+                CheckPathExists = true,
+                Multiselect = true,
+                SupportMultiDottedExtensions = true,
+                DefaultExt = SrmDocument.EXT,
+                Filter = string.Join("|", new[]
+                    {
+                        "Skyline Documents (*." + SrmDocument.EXT + ")|*." + SrmDocument.EXT,
+                        "All Files (*.*)|*.*"
+                    })
+            };
+
+            if (dlg.ShowDialog(this) == DialogResult.OK)
+            {
+                ImportFiles(dlg.FileNames);
+            }
+        }
+
+        public void ImportFiles(IEnumerable<string> filePaths)
+        {
+            var resultsAction = MeasuredResults.MergeAction.remove;
+            if (HasResults(filePaths))
+            {
+                var dlgResults = new ImportDocResultsDlg();
+                if (dlgResults.ShowDialog(this) != DialogResult.OK)
+                    return;
+                resultsAction = dlgResults.Action;
+            }
+            SrmTreeNode nodeSel = sequenceTree.SelectedNode as SrmTreeNode;
+            IdentityPath selectPath = null;
+
+            ModifyDocument("Import Skyline document data", doc =>
+                ImportFiles(doc, filePaths, resultsAction, nodeSel != null ? nodeSel.Path : null, out selectPath));
+
+            if (selectPath != null)
+                sequenceTree.SelectedPath = selectPath;
+        }
+
+        private static bool HasResults(IEnumerable<string> filePaths)
+        {
+            char[] buffer = new char[4096];
+            foreach (string filePath in filePaths)
+            {
+                try
+                {
+                    using (var reader = new StreamReader(filePath))
+                    {
+                        int readChars = reader.Read(buffer, 0, buffer.Length);
+                        string headerText = new string(buffer, 0, readChars);
+                        if (headerText.Contains("<measured_results"))
+                            return true;
+                    }
+                }
+                catch (IOException)
+                {
+                }
+            }
+            return false;
+        }
+
+        private static SrmDocument ImportFiles(SrmDocument doc, IEnumerable<string> filePaths,
+            MeasuredResults.MergeAction resultsAction, IdentityPath to, out IdentityPath firstAdded)
+        {
+            firstAdded = null;
+
+            // Add files in reverse order, so their nodes will end up in the right order.
+            foreach (var filePath in filePaths)
+            {
+                using (var reader = new StreamReader(filePath))
+                {
+                    IdentityPath firstAddedForFile, nextAdd;
+                    doc = doc.ImportDocumentXml(reader,
+                                                filePath,
+                                                resultsAction,
+                                                Settings.Default.StaticModList,
+                                                Settings.Default.HeavyModList,
+                                                to,
+                                                out firstAddedForFile,
+                                                out nextAdd,
+                                                false);
+                    // Add the next document at the specified location
+                    to = nextAdd;
+                    // Store the first added node only for the first document
+                    if (firstAdded == null)
+                        firstAdded = firstAddedForFile;
+                }
+            }
+            return doc;
         }
 
         private void importResultsMenuItem_Click(object sender, EventArgs e)
@@ -886,37 +982,6 @@ namespace pwiz.Skyline
                 results = results.ChangeChromatograms(arrayChrom);
             }
             return doc.ChangeMeasuredResults(results);
-        }
-
-        private void importDocumentMenuItem_Click(object sender, EventArgs e)
-        {
-            OpenFileDialog dlg = new OpenFileDialog
-            {
-                Title = "Import Skyline Document",
-                InitialDirectory = Settings.Default.ActiveDirectory,
-                CheckPathExists = true,
-                SupportMultiDottedExtensions = true,
-                DefaultExt = SrmDocument.EXT,
-                Filter = string.Join("|", new[]
-                    {
-                        "Skyline Documents (*." + SrmDocument.EXT + ")|*." + SrmDocument.EXT,
-                        "All Files (*.*)|*.*"
-                    })
-            };
-            if (dlg.ShowDialog(this) == DialogResult.OK)
-            {
-                SrmTreeNode nodeSel = sequenceTree.SelectedNode as SrmTreeNode;
-                IdentityPath selectPath = null;
-                TextReader reader = new StreamReader(dlg.OpenFile());
-                
-                ModifyDocument("Import Skyline document data", doc =>
-                    doc.ImportDocumentXml(reader,
-                        Settings.Default.StaticModList, Settings.Default.HeavyModList,
-                        nodeSel == null ? null : nodeSel.Path, out selectPath, false));
-
-                if (selectPath != null)
-                    sequenceTree.SelectedPath = selectPath;
-            }
         }
 
         private static ChromatogramSet GetChromatogramByName(string name, MeasuredResults results)

@@ -508,9 +508,10 @@ namespace pwiz.Skyline.EditUI
             {
                 var reader = new StringReader(tbxFasta.Text);
                 IdentityPath to = SelectedPath;
-                IdentityPath firstAdded;
+                IdentityPath firstAdded, nextAdd;
                 // TODO: support long-wait broker
-                document = document.AddPeptideGroups(importer.Import(reader, null, -1), false, to, out firstAdded);
+                document = document.AddPeptideGroups(importer.Import(reader, null, -1), false,
+                    to, out firstAdded, out nextAdd);
                 SelectedPath = firstAdded;
             }
             catch (Exception exception)

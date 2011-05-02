@@ -554,7 +554,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // Get info for the one group
             var nodeGroup = _nodeGroups[0];
             var chromGroupInfo = ChromGroupInfos[0];
-            int fileIndex = chromatograms.IndexOfFile(chromGroupInfo);
+            ChromFileInfoId fileId = chromatograms.FindFile(chromGroupInfo);
 
             // Get points for all transitions, and pick maximum peaks.
             ChromatogramInfo[] arrayChromInfo;
@@ -639,7 +639,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 info.Transform(transform);
 
                 int step = (numSteps > 0 ? i - numSteps : 0);
-                var transitionChromInfo = GetTransitionChromInfo(nodeTran, _chromIndex, fileIndex, step);
+                var transitionChromInfo = GetTransitionChromInfo(nodeTran, _chromIndex, fileId, step);
 
                 for (int j = 0; j < numPeaks; j++)
                 {
@@ -679,7 +679,7 @@ namespace pwiz.Skyline.Controls.Graphs
             double bestProduct = 0;
             if (peakAreas != null)
             {
-                var tranGroupChromInfo = GetTransitionGroupChromInfo(nodeGroup, fileIndex, _chromIndex);
+                var tranGroupChromInfo = GetTransitionGroupChromInfo(nodeGroup, fileId, _chromIndex);
                 if (tranGroupChromInfo != null)
                 {
                     bestProduct = tranGroupChromInfo.LibraryDotProduct ?? 0;
@@ -769,7 +769,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // Get the one and only group
             var nodeGroup = _nodeGroups[0];
             var chromGroupInfo = ChromGroupInfos[0];
-            int fileIndex = chromatograms.IndexOfFile(chromGroupInfo);
+            ChromFileInfoId fileId = chromatograms.FindFile(chromGroupInfo);
 
             int numPeaks = chromGroupInfo.NumPeaks;
 
@@ -797,7 +797,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 int offset = totalOptCount/2 - steps;
                 for (int i = 0; i < infos.Length; i++)
                 {
-                    transitionChromInfos[i + offset] = GetTransitionChromInfo(nodeTran, _chromIndex, fileIndex, i - steps);
+                    transitionChromInfos[i + offset] = GetTransitionChromInfo(nodeTran, _chromIndex, fileId, i - steps);
                 }
                 listTranisitionChromInfoSets.Add(transitionChromInfos);
             }
@@ -1011,7 +1011,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (chromGroupInfo == null)
                     continue;
 
-                int fileIndex = chromatograms.IndexOfFile(chromGroupInfo);
+                ChromFileInfoId fileId = chromatograms.FindFile(chromGroupInfo);
 
                 // Collect the chromatogram info for the transition children
                 // of this transition group.
@@ -1029,7 +1029,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     // Keep track of which chromatogram owns the tallest member of
                     // the peak on the document tree.
-                    var transitionChromInfo = GetTransitionChromInfo(nodeTran, _chromIndex, fileIndex, 0);
+                    var transitionChromInfo = GetTransitionChromInfo(nodeTran, _chromIndex, fileId, 0);
                     if (transitionChromInfo == null)
                         continue;
 
@@ -1191,7 +1191,9 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         private static TransitionChromInfo GetTransitionChromInfo(TransitionDocNode nodeTran,
-                                                                  int indexChrom, int fileIndex, int step)
+                                                                  int indexChrom,
+                                                                  ChromFileInfoId fileId,
+                                                                  int step)
         {
             if (!nodeTran.HasResults)            
                 return null;
@@ -1200,14 +1202,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 return null;
             foreach (var tranChromInfo in tranChromInfoList)
             {
-                if (tranChromInfo.FileIndex == fileIndex && tranChromInfo.OptimizationStep == step)
+                if (ReferenceEquals(tranChromInfo.FileId, fileId) && tranChromInfo.OptimizationStep == step)
                     return tranChromInfo;
             }
             return null;
         }
 
         private static TransitionGroupChromInfo GetTransitionGroupChromInfo(TransitionGroupDocNode nodeGroup,
-                                                                            int fileIndex, int indexChrom)
+                                                                            ChromFileInfoId fileId,
+                                                                            int indexChrom)
         {
             if (!nodeGroup.HasResults)
                 return null;
@@ -1216,7 +1219,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return null;
             foreach (var tranGroupChromInfo in tranGroupChromInfoList)
             {
-                if (tranGroupChromInfo.FileIndex == fileIndex)
+                if (ReferenceEquals(tranGroupChromInfo.FileId, fileId))
                     return tranGroupChromInfo;
             }
             return null;

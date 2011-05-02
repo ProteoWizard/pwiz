@@ -435,10 +435,13 @@ namespace pwiz.Skyline.Model
         }
 
         public SrmDocument ImportDocumentXml(TextReader reader,
+                                             string filePath,
+                                             MeasuredResults.MergeAction resultsAction,
                                              MappedList<string, StaticMod> staticMods,
                                              MappedList<string, StaticMod> heavyMods,
                                              IdentityPath to,
                                              out IdentityPath firstAdded,
+                                             out IdentityPath nextAdd,
                                              bool pasteToPeptideList)
         {
             try
@@ -446,57 +449,82 @@ namespace pwiz.Skyline.Model
                 PeptideModifications.SetSerializationContext(Settings.PeptideSettings.Modifications);
 
                 XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
-                SrmDocument clipboardDocument = (SrmDocument) ser.Deserialize(reader);
+                SrmDocument docImport = (SrmDocument) ser.Deserialize(reader);
 
-                // Add clipboard modifications to default modifications.
-                clipboardDocument.Settings.UpdateDefaultModifications(false);
+                // Add import modifications to default modifications.
+                docImport.Settings.UpdateDefaultModifications(false);
                 
-                var newDocument = this;
+                var docNew = this;
+                var settingsNew = docNew.Settings;
+                var settingsOld = docImport.Settings;
 
-                // Merge library specs from clipboard document with current document.
-                var settings = Settings.ChangePeptideLibraries(lib =>
-                    lib.MergeLibrarySpecs(clipboardDocument.Settings.PeptideSettings.Libraries));   
-                if(!Equals(settings, newDocument.Settings))
-                    newDocument = newDocument.ChangeSettings(settings);
+                // Merge results from import document with current document.
+                MeasuredResults resultsBase, resultsNew;
+                if (settingsNew.HasResults)
+                {
+                    resultsNew = settingsNew.MeasuredResults.MergeResults(docImport.Settings.MeasuredResults,
+                        filePath, resultsAction, out resultsBase);
+                }
+                else
+                {
+                    resultsBase = settingsOld.MeasuredResults;
+                    resultsNew = (resultsAction != MeasuredResults.MergeAction.remove ? resultsBase : null);
+                }
 
-                List<PeptideGroupDocNode> peptideGroups = clipboardDocument.PeptideGroups.ToList();
-                if(pasteToPeptideList)
+                if (!ReferenceEquals(resultsNew, settingsNew.MeasuredResults))
+                    settingsNew = settingsNew.ChangeMeasuredResults(resultsNew);
+                if (!ReferenceEquals(resultsBase, settingsOld.MeasuredResults))
+                    settingsOld = settingsOld.ChangeMeasuredResults(resultsBase);
+
+                // Merge library specs from import document with current document.
+                settingsNew = settingsNew.ChangePeptideLibraries(lib =>
+                    lib.MergeLibrarySpecs(docImport.Settings.PeptideSettings.Libraries));
+
+                if(!Equals(settingsNew, docNew.Settings))
+                {
+                    // Use internal settings change to preserve any changes to the measured results
+                    docNew = docNew.ChangeSettingsInternal(settingsNew);                    
+                }
+
+                var settingsDiff = new SrmSettingsDiff(settingsOld, settingsNew, true);
+
+                IList<PeptideGroupDocNode> peptideGroups = docImport.PeptideGroups.ToList();
+                if (pasteToPeptideList)
                 {
                     PeptideGroupDocNode peptideGroupDocNode = new PeptideGroupDocNode(new PeptideGroup(), null, null, new PeptideDocNode[0]);
-                    IList<DocNode> peptides = new List<DocNode>();
-                    foreach(PeptideDocNode peptide in clipboardDocument.Peptides)
-                        peptides.Add(peptide);
+                    IList<DocNode> peptides = docImport.Peptides.Cast<DocNode>().ToList();
                     peptideGroupDocNode = (PeptideGroupDocNode) peptideGroupDocNode.ChangeChildren(peptides);
                     peptideGroups = new List<PeptideGroupDocNode> {peptideGroupDocNode};
                 }
                 // Create new explicit modifications for peptides and set auto-manage children
                 // when necessary for nodes pasted in from the clipboard. 
                 IList<PeptideGroupDocNode> peptideGroupsNew = new List<PeptideGroupDocNode>();
-               foreach (PeptideGroupDocNode groupNode in peptideGroups)
+                foreach (PeptideGroupDocNode nodePepGroup in peptideGroups)
                 {
                     // Set explicit modifications first, since it may impact which
                     // children will be present.
                     IList<DocNode> peptidesNew = new List<DocNode>();
-                    foreach (PeptideDocNode nodePep in groupNode.Children)
+                    foreach (PeptideDocNode nodePep in nodePepGroup.Children)
                     {
                         PeptideDocNode nodePepModified = nodePep.EnsureMods(
-                            clipboardDocument.Settings.PeptideSettings.Modifications,
-                            newDocument.Settings.PeptideSettings.Modifications,
+                            docImport.Settings.PeptideSettings.Modifications,
+                            docNew.Settings.PeptideSettings.Modifications,
                             staticMods, heavyMods);
-                       peptidesNew.Add(nodePepModified);
+                        peptidesNew.Add(nodePepModified);
                     }
-                    var groupNodeEnsured = (PeptideGroupDocNode)groupNode.ChangeChildrenChecked(peptidesNew.ToArray());
-                    groupNodeEnsured = groupNodeEnsured.EnsureChildren(newDocument.Settings, pasteToPeptideList);
-                    peptideGroupsNew.Add(groupNodeEnsured.ChangeSettings(newDocument.Settings, SrmSettingsDiff.ALL));
+                    var nodePepGroupNew = (PeptideGroupDocNode)nodePepGroup.ChangeChildrenChecked(peptidesNew.ToArray());
+                    nodePepGroupNew = nodePepGroupNew.EnsureChildren(docNew.Settings, pasteToPeptideList);
+                    // Change settings to update everything in the peptide group to the settings of the
+                    // new document, including results and peak integration
+                    nodePepGroupNew = nodePepGroupNew.ChangeSettings(docNew.Settings, settingsDiff);
+                    peptideGroupsNew.Add(nodePepGroupNew);
                 }
-                newDocument = newDocument.AddPeptideGroups(peptideGroupsNew, pasteToPeptideList, to, out firstAdded);
-                var modifications = Settings.PeptideSettings.Modifications.DeclareExplicitMods(newDocument, staticMods,
-                                                                                               heavyMods);
-                newDocument = newDocument.ChangeSettings(Settings.ChangePeptideSettings(Settings.PeptideSettings.ChangeModifications(modifications)));
+                var docMerge = docNew.AddPeptideGroups(peptideGroupsNew, pasteToPeptideList, to, out firstAdded, out nextAdd);
+                docNew = docMerge.ChangeSettings(docMerge.Settings.ChangePeptideModifications(mods => mods.DeclareExplicitMods(docMerge,
+                    staticMods, heavyMods)));
                 
-                return newDocument;
+                return docNew;
             }
-
             finally
             {
                 PeptideModifications.SetSerializationContext(null);
@@ -513,7 +541,9 @@ namespace pwiz.Skyline.Model
                 IdentityPath to, out IdentityPath firstAdded)
         {
             FastaImporter importer = new FastaImporter(this, peptideList);
-            return AddPeptideGroups(importer.Import(reader, longWaitBroker, lines), peptideList, to, out firstAdded);
+            IdentityPath nextAdd;
+            return AddPeptideGroups(importer.Import(reader, longWaitBroker, lines), peptideList,
+                to, out firstAdded, out nextAdd);
         }
 
         public SrmDocument ImportMassList(TextReader reader, IFormatProvider provider, char separator,
@@ -526,11 +556,17 @@ namespace pwiz.Skyline.Model
             IFormatProvider provider, char separator, IdentityPath to, out IdentityPath firstAdded)
         {
             MassListImporter importer = new MassListImporter(this, provider, separator);
-            return AddPeptideGroups(importer.Import(reader, longWaitBroker, lines), false, to, out firstAdded);
+            IdentityPath nextAdd;
+            return AddPeptideGroups(importer.Import(reader, longWaitBroker, lines), false,
+                to, out firstAdded, out nextAdd);
         }
 
-        public SrmDocument AddPeptideGroups(IEnumerable<PeptideGroupDocNode> peptideGroupsNew, bool peptideList, IdentityPath to, out IdentityPath firstAdded)
+        public SrmDocument AddPeptideGroups(IEnumerable<PeptideGroupDocNode> peptideGroupsNew,
+            bool peptideList, IdentityPath to, out IdentityPath firstAdded, out IdentityPath nextAdd)
         {
+            // For multiple add operations, make the next addtion at the same location by default
+            nextAdd = to;
+
             var peptideGroupsAdd = peptideGroupsNew.ToArray();
 
             // If there are no new groups to add, as in the case where already added
@@ -544,7 +580,7 @@ namespace pwiz.Skyline.Model
             firstAdded = new IdentityPath(peptideGroupsAdd[0].Id);
 
             // Add to the end, if no insert node
-            if (to == null || to.Length - 1 < (int)Level.PeptideGroups)
+            if (to == null || to.Depth < (int)Level.PeptideGroups)
                 return (SrmDocument) AddAll(peptideGroupsAdd);
             
             IdentityPath pathGroup = to.GetPathTo((int)Level.PeptideGroups);
@@ -586,7 +622,10 @@ namespace pwiz.Skyline.Model
                     docNew = InsertAll(to, listAdd);
                     // Otherise, insert after the peptide of the child that was selected
                 else
+                {
+                    nextAdd = FindNextInsertNode(to, (int) Level.Peptides);
                     docNew = InsertAll(to.GetPathTo((int)Level.Peptides), listAdd, true);
+                }
 
                 // Change the selection path to point to the first peptide pasted.
                 firstAdded = new IdentityPath(pathGroup, listAdd[0].Id);
@@ -597,7 +636,33 @@ namespace pwiz.Skyline.Model
                 return (SrmDocument)InsertAll(pathGroup, peptideGroupsAdd);
                 // Or after, if a group child is selected
             else
+            {
+                nextAdd = FindNextInsertNode(to, (int)Level.PeptideGroups);
                 return (SrmDocument)InsertAll(pathGroup, peptideGroupsAdd, true);
+            }
+        }
+
+        private IdentityPath FindNextInsertNode(IdentityPath identityPath, int depth)
+        {
+            if (identityPath == null)
+                return null;
+
+            // Get the path to the desired level
+            while (identityPath.Depth > depth)
+                identityPath = identityPath.Parent;
+
+            // Get the index to the node at that level and add 1
+            int iNode = FindNodeIndex(identityPath) + 1;
+            // If the next node exists, get the path to it
+            IdentityPath identityPathNext = null;
+            if (iNode < GetCount(depth))
+                identityPathNext = GetPathTo(depth, iNode);
+            // If no next node was available, or the next node belongs to a new parent
+            // return the parent, or null if at the root.
+            if (identityPathNext == null || !Equals(identityPath.Parent, identityPathNext.Parent))
+                return (depth != 0 ? identityPath.Parent : null);
+            // Return the path to the next node.
+            return identityPathNext;
         }
 
         public bool IsValidMove(IdentityPath from, IdentityPath to)
@@ -667,21 +732,21 @@ namespace pwiz.Skyline.Model
             Identity tranId, double retentionTime)
         {
             return ChangePeak(groupPath, nameSet, filePath, false,
-                (node, info, tol, iSet, iFile, reg) =>
-                    node.ChangePeak(Settings, info, tol, iSet, iFile, reg, tranId, retentionTime));
+                (node, info, tol, iSet, fileId, reg) =>
+                    node.ChangePeak(Settings, info, tol, iSet, fileId, reg, tranId, retentionTime));
         }
 
         public SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, string filePath,
             Transition transition, double startTime, double endTime)
         {
             return ChangePeak(groupPath, nameSet, filePath, true,
-                (node, info, tol, iSet, iFile, reg) =>
-                    node.ChangePeak(Settings, info, tol, iSet, iFile, reg, transition, startTime, endTime));
+                (node, info, tol, iSet, fileId, reg) =>
+                    node.ChangePeak(Settings, info, tol, iSet, fileId, reg, transition, startTime, endTime));
         }
 
         private delegate DocNode ChangeNodePeak(TransitionGroupDocNode nodeGroup,
-            ChromatogramGroupInfo chromInfoGroup, double mzMatchTolerance, int indexSet, int indexFile,
-            OptimizableRegression regression);
+            ChromatogramGroupInfo chromInfoGroup, double mzMatchTolerance, int indexSet,
+            ChromFileInfoId indexFile, OptimizableRegression regression);
 
         private SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, string filePath, bool loadPoints,
             ChangeNodePeak change)
@@ -695,8 +760,8 @@ namespace pwiz.Skyline.Model
             if (!Settings.HasResults || !Settings.MeasuredResults.TryGetChromatogramSet(nameSet, out chromatograms, out indexSet))
                 throw new ArgumentOutOfRangeException(string.Format("No replicate named {0} was found", nameSet));
             // Calculate the file index that supplied the chromatograms
-            int indexFile = chromatograms.MSDataFileInfos.IndexOf(info => Equals(info.FilePath, filePath));
-            if (indexFile == -1)
+            ChromFileInfoId fileId = chromatograms.FindFile(filePath);
+            if (fileId == null)
                 throw new ArgumentOutOfRangeException(string.Format("The file {0} was not found in the replicate {1}.", filePath, nameSet));
             // Get all chromatograms for this transition group
             double mzMatchTolerance = Settings.TransitionSettings.Instrument.MzMatchTolerance;
@@ -708,7 +773,7 @@ namespace pwiz.Skyline.Model
             if (indexInfo == -1)
                 throw new ArgumentOutOfRangeException(string.Format("No results found for the precursor {0} in the file {1}", this, filePath));
             var chromInfoGroup = arrayChromInfo[indexInfo];
-            var nodeGroupNew = change(nodeGroup, chromInfoGroup, mzMatchTolerance, indexSet, indexFile,
+            var nodeGroupNew = change(nodeGroup, chromInfoGroup, mzMatchTolerance, indexSet, fileId,
                 chromatograms.OptimizationFunction);
             if (ReferenceEquals(nodeGroup, nodeGroupNew))
                 return this;
@@ -1313,11 +1378,12 @@ namespace pwiz.Skyline.Model
             return null;
         }
 
-        private static PeptideChromInfo ReadPeptideChromInfo(XmlReader reader, SrmSettings settings, int indexFile)
+        private static PeptideChromInfo ReadPeptideChromInfo(XmlReader reader,
+            SrmSettings settings, ChromFileInfoId fileId)
         {
             float peakCountRatio = reader.GetFloatAttribute(ATTR.peak_count_ratio);
             float? retentionTime = reader.GetNullableFloatAttribute(ATTR.retention_time);
-            return new PeptideChromInfo(indexFile, peakCountRatio, retentionTime, new PeptideLabelRatio[0]);
+            return new PeptideChromInfo(fileId, peakCountRatio, retentionTime, new PeptideLabelRatio[0]);
         }
 
         /// <summary>
@@ -1404,7 +1470,8 @@ namespace pwiz.Skyline.Model
             return null;
         }
 
-        private static TransitionGroupChromInfo ReadTransitionGroupChromInfo(XmlReader reader, SrmSettings settings, int indexFile)
+        private static TransitionGroupChromInfo ReadTransitionGroupChromInfo(XmlReader reader,
+            SrmSettings settings, ChromFileInfoId fileId)
         {
             int optimizationStep = reader.GetIntAttribute(ATTR.step);
             float peakCountRatio = reader.GetFloatAttribute(ATTR.peak_count_ratio);
@@ -1427,7 +1494,7 @@ namespace pwiz.Skyline.Model
 //            bool userSet = reader.GetBoolAttribute(ATTR.user_set);
             const bool userSet = false;
             int countRatios = settings.PeptideSettings.Modifications.InternalStandardTypes.Count;
-            return new TransitionGroupChromInfo(indexFile,
+            return new TransitionGroupChromInfo(fileId,
                                                 optimizationStep,
                                                 peakCountRatio,
                                                 retentionTime,
@@ -1690,7 +1757,8 @@ namespace pwiz.Skyline.Model
                 return null;
             }
 
-            private static TransitionChromInfo ReadTransitionPeak(XmlReader reader, SrmSettings settings, int indexFile)
+            private static TransitionChromInfo ReadTransitionPeak(XmlReader reader,
+                SrmSettings settings, ChromFileInfoId fileId)
             {
                 int optimizationStep = reader.GetIntAttribute(ATTR.step);
                 float retentionTime = reader.GetFloatAttribute(ATTR.retention_time);
@@ -1712,7 +1780,7 @@ namespace pwiz.Skyline.Model
                     annotations = ReadAnnotations(reader);
                 }
                 int countRatios = settings.PeptideSettings.Modifications.InternalStandardTypes.Count;
-                return new TransitionChromInfo(indexFile,
+                return new TransitionChromInfo(fileId,
                                                optimizationStep,
                                                retentionTime,
                                                startRetentionTime,
@@ -1730,7 +1798,7 @@ namespace pwiz.Skyline.Model
         }
 
         private static Results<TItem> ReadResults<TItem>(XmlReader reader, SrmSettings settings, Enum start,
-                Func<XmlReader, SrmSettings, int, TItem> readInfo)
+                Func<XmlReader, SrmSettings, ChromFileInfoId, TItem> readInfo)
             where TItem : ChromInfo
         {
             // If the results element is empty, then there are no results to read.
@@ -1757,11 +1825,13 @@ namespace pwiz.Skyline.Model
                         throw new InvalidDataException(string.Format("No replicate named {0} found in measured results", name));
                 }
                 string fileId = reader.GetAttribute(ATTR.file);
-                int indexFile = (fileId != null ? chromatogramSet.IndexOfId(fileId) : 0);
-                if (indexFile == -1)
+                var fileInfoId = (fileId != null
+                    ? chromatogramSet.FindFileById(fileId)
+                    : chromatogramSet.MSDataFileInfos[0].FileId);
+                if (fileInfoId == null)
                     throw new InvalidDataException(string.Format("No file with id {0} found in the replicate {1}", fileId, name));
 
-                TItem chromInfo = readInfo(reader, settings, indexFile);
+                TItem chromInfo = readInfo(reader, settings, fileInfoId);
                 // Consume the tag
                 reader.Read();
 
@@ -2201,7 +2271,7 @@ namespace pwiz.Skyline.Model
                     writer.WriteStartElement(startChild);
                     writer.WriteAttribute(ATTR.replicate, name);
                     if (chromatogramSet.FileCount > 1)
-                        writer.WriteAttribute(ATTR.file, chromatogramSet.GetFileSaveId(chromInfo.FileIndex));
+                        writer.WriteAttribute(ATTR.file, chromatogramSet.GetFileSaveId(chromInfo.FileId));
                     writeChromInfo(writer, chromInfo);
                     writer.WriteEndElement();
                 }

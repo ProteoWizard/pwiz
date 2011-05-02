@@ -77,17 +77,27 @@ namespace pwiz.SkylineTestTutorial
                 exportMethodDlg.OkDialog(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_unscheduled.csv"));
             });
 
+            const string unscheduledName = "Unscheduled";
             RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults, importResultsDlg =>
             {
                 importResultsDlg.RadioAddNewChecked = true;
                 var path =
-                    new[] {new KeyValuePair<string, string[]>("Unscheduled",
+                    new[] {new KeyValuePair<string, string[]>(unscheduledName,
+                        // This is not actually a valid file path (missing OptimizeCE)
+                        // but Skyline should correctly find the file in the same folder
+                        // as the document.
                         new[] { TestFilesDir.GetTestPath("CE_Vantage_15mTorr_unscheduled" + ExtensionTestContext.ExtThermoRaw)})};
                 importResultsDlg.NamedPathSets = path;
                 importResultsDlg.OkDialog();
             });
             WaitForCondition(120 * 1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 7, 27, 30, 120);
+            var docUnsched = SkylineWindow.Document;
+            AssertResult.IsDocumentResultsState(SkylineWindow.Document,
+                                                unscheduledName,
+                                                docUnsched.PeptideCount,
+                                                docUnsched.TransitionGroupCount, 0,
+                                                docUnsched.TransitionCount - 1, 0);
 
             // Creating Optimization Methods, p. 5
             RunDlg<ExportMethodDlg>(() => SkylineWindow.ShowExportMethodDialog(ExportFileType.List), exportMethodDlg =>

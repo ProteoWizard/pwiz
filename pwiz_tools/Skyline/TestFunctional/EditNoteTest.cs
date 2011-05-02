@@ -100,6 +100,7 @@ namespace pwiz.SkylineTestFunctional
                 editNoteDlg4.NoteText = "Text";
                 editNoteDlg4.OkDialog();
             });
+            WaitForClosedForm(editNoteDlg4);
             RunDlg<EditNoteDlg>(SkylineWindow.EditNote, editNoteDlg0 =>
             {
                 // Test annotations set correctly.

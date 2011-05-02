@@ -152,6 +152,12 @@
     <Compile Include="Alerts\FilterMatchedPeptidesDlg.Designer.cs">
       <DependentUpon>FilterMatchedPeptidesDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="Alerts\ImportDocResultsDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Alerts\ImportDocResultsDlg.Designer.cs">
+      <DependentUpon>ImportDocResultsDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="Alerts\MultiButtonMsgDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -976,6 +982,9 @@
     <Content Include="Microsoft.VC90.MFC\Microsoft.VC90.MFC.manifest">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Alerts\ImportDocResultsDlg.resx">
+      <DependentUpon>ImportDocResultsDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Alerts\MultiButtonMsgDlg.resx">
       <DependentUpon>MultiButtonMsgDlg.cs</DependentUpon>
     </EmbeddedResource>

@@ -623,8 +623,9 @@ namespace pwiz.Skyline.SettingsUI
             }
             // Sort the proteins.
             nodePepGroupsSortedChildren.Sort((node1, node2) => Comparer<string>.Default.Compare(node1.Name, node2.Name));
-            var selPathTemp = selectedPath;
-            document = document.AddPeptideGroups(nodePepGroupsSortedChildren, false, toPath, out selectedPath);
+            IdentityPath selPathTemp = selectedPath, nextAdd;
+            document = document.AddPeptideGroups(nodePepGroupsSortedChildren, false,
+                toPath, out selectedPath, out nextAdd);
             selectedPath = PeptideMatches.Count == 1 ? selPathTemp : selectedPath;
             return document;
         }
@@ -676,7 +677,9 @@ namespace pwiz.Skyline.SettingsUI
             else
             {
                 nodePepGroupNew = new PeptideGroupDocNode(new PeptideGroup(), "Library Peptides", "", listPeptides.ToArray());
-                document = document.AddPeptideGroups(new[] { nodePepGroupNew }, true, toPath, out selectedPath);
+                IdentityPath nextAdd;
+                document = document.AddPeptideGroups(new[] { nodePepGroupNew }, true,
+                    toPath, out selectedPath, out nextAdd);
                 selectedPath = new IdentityPath(selectedPath, nodePepGroupNew.Children[0].Id);
                 return document;
             }

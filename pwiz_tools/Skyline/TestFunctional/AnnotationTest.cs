@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
@@ -31,6 +30,7 @@ using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -133,7 +133,7 @@ namespace pwiz.SkylineTestFunctional
             // Set the annotation value on the first two rows in the ResultsGrid.
             // The annotation is a dropdown with values {blank, "a", "b", "c"}
             Assert.IsNotNull(colPrecursorResultItems);
-            Debug.Assert(colPrecursorResultItems != null);  // For ReSharper
+            if (colPrecursorResultItems== null) return;  // For ReSharper
             DataGridViewCell cell;
             RunUI(() =>
             {
@@ -176,13 +176,14 @@ namespace pwiz.SkylineTestFunctional
             WaitForGraphPanesToUpdate();
             RunUI(() =>
             {
+                const string annotationTestText = "Test";
                 // Annotations applying to both precursors and transitions should still be 
                 // visible. 
                 Assert.IsTrue(cell.Visible);
                 // Set value for that annotation.
                 resultsGrid.CurrentCell = cell;
                 resultsGrid.BeginEdit(true);
-                resultsGrid.EditingControl.Text = "Test";
+                resultsGrid.EditingControl.Text = annotationTestText;
                 resultsGrid.EndEdit();
                 // Annotations applying just to precursors should no longer be visible.
                 cell = resultsGrid.Rows[0].Cells[colPrecursorResultItems.Index];
@@ -192,7 +193,8 @@ namespace pwiz.SkylineTestFunctional
                 // Check all annotations have the new value. 
                 foreach (TransitionGroupChromInfo info in precursorDocNode.Results[0])
                 {
-                    Assert.IsTrue(info.Annotations.ListAnnotations().Count() > 0);
+                    Assert.IsTrue(info.Annotations.ListAnnotations().Contains(pair =>
+                        Equals(pair.Value, annotationTestText)));
                 }
             });
             // Multiselect transitions only.

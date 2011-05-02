@@ -1003,6 +1003,50 @@ namespace pwiz.Skyline.Util
         }
 
         /// <summary>
+        /// Given a proposed name and a set of existing names, returns a unique name by adding
+        /// or incrementing an integer suffix.
+        /// </summary>
+        /// <param name="name">A proposed name to add</param>
+        /// <param name="set">A set of existing names</param>
+        /// <returns>A new unique name that can be safely added to the existing set without name conflict</returns>
+        public static string GetUniqueName(string name, ICollection<string> set)
+        {
+            if (!set.Contains(name))
+                return name;
+
+            int num = 1;
+            // If the name has an integer suffix, start searching with the base name
+            // and the integer suffix incremented by 1.
+            int i = GetIntSuffixStart(name);
+            if (i < name.Length)
+            {
+                num = int.Parse(name.Substring(i)) + 1;
+                name = name.Substring(0, i);
+            }
+            // Loop until a unique base name and integer suffix combination is found.
+            while (set.Contains(name + num))
+                num++;
+            return name + num;
+        }
+
+        /// <summary>
+        /// Given a name returns the start index of an integer suffix, if the name has one,
+        /// or the length of the string, if no integer suffix is present.
+        /// </summary>
+        /// <param name="name">A name to analyze</param>
+        /// <returns>The starting position of an integer suffix or the length of the string, if the name does not have one</returns>
+        private static int GetIntSuffixStart(string name)
+        {
+            for (int i = name.Length; i > 0; i--)
+            {
+                int num;
+                if (!int.TryParse(name.Substring(i - 1), out num))
+                    return i;
+            }
+            return 0;
+        }
+
+        /// <summary>
         /// Count the number of lines in the file specified.
         /// </summary>
         /// <param name="f">The filename to count lines in.</param>

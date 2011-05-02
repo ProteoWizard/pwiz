@@ -166,10 +166,10 @@ namespace pwiz.Skyline.Model.Results
         public IList<ChromFileInfo> MSDataFileInfos
         {
             get { return _msDataFileInfo; }
-            set
+            private set
             {
                 // Make sure paths are unique
-                _msDataFileInfo = MakeReadOnly(value.Distinct(ChromFileInfo.PATH_COMPARER).ToArray());
+                _msDataFileInfo = MakeReadOnly(value.Distinct(new PathComparer<ChromFileInfo>()).ToArray());
             }
         }
 
@@ -181,29 +181,68 @@ namespace pwiz.Skyline.Model.Results
 
         public OptimizableRegression OptimizationFunction { get; private set; }
 
-        public int IndexOfFile(ChromatogramGroupInfo chromGroupInfo)
+        public ChromFileInfo GetFileInfo(ChromFileInfoId fileId)
         {
-            return MSDataFileInfos.IndexOf(info => Equals(info.FilePath, chromGroupInfo.FilePath));
+            int ordinalIndex = IndexOfId(fileId);
+            return (ordinalIndex != -1 ? MSDataFileInfos[ordinalIndex] : null);
         }
 
-        public int IndexOfId(string id)
+        public int IndexOfId(ChromFileInfoId fileId)
         {
-            return Array.IndexOf(_fileLoadIds, id);
+            return MSDataFileInfos.IndexOf(info => ReferenceEquals(info.Id, fileId));
+        }
+
+        public ChromFileInfoId FindFile(ChromatogramGroupInfo chromGroupInfo)
+        {
+            return FindFile(chromGroupInfo.FilePath);
+        }
+
+        public ChromFileInfoId FindFile(string filePath)
+        {
+            return GetFileId(MSDataFileInfos.IndexOf(info => Equals(filePath, info.FilePath)));
+        }
+
+        public ChromFileInfoId FindFileById(string id)
+        {
+            return GetFileId(Array.IndexOf(_fileLoadIds, id));
+        }
+
+        private ChromFileInfoId GetFileId(int ordinalIndex)
+        {
+            return (ChromFileInfoId) (ordinalIndex != -1 ? MSDataFileInfos[ordinalIndex].Id : null);
         }
 
         #region Property change methods
+
+        public ChromatogramSet ChangeMSDataFileInfos(IList<ChromFileInfo> prop)
+        {
+            return ChangeProp(ImClone(this), im => im.MSDataFileInfos = prop);
+        }
 
         public ChromatogramSet ChangeMSDataFilePaths(IList<string> prop)
         {
             var set = ImClone(this);
 
-            set.MSDataFileInfos = prop.ToList().ConvertAll(path => new ChromFileInfo(path));
-            set.CalcCachedFlags(MSDataFileInfos.ToDictionary(info => info.FilePath), null, null);
-            
+            // Be sure to preserve existing file info objects
+            var dictPathToFileInfo = MSDataFileInfos.ToDictionary(info => info.FilePath);
+            var listFileInfos = new List<ChromFileInfo>();
+            foreach (string filePath in prop)
+            {
+                ChromFileInfo chromFileInfo;
+                if (!dictPathToFileInfo.TryGetValue(filePath, out chromFileInfo))
+                    chromFileInfo = new ChromFileInfo(filePath);
+                listFileInfos.Add(chromFileInfo);
+            }
+
+            set.MSDataFileInfos = listFileInfos;
+
+            if (ReferenceEquals(MSDataFileInfos, set.MSDataFileInfos))
+                return this;
+
             return set;
         }
 
-        public ChromatogramSet ChangeFileCacheFlags(IDictionary<string, ChromFileInfo> cachedPaths,
+        public ChromatogramSet ChangeFileCacheFlags(IDictionary<string, ChromCachedFile> cachedPaths,
             HashSet<string> cachedFileNames, string cachePath)
         {
             var set = ImClone(this);
@@ -228,7 +267,7 @@ namespace pwiz.Skyline.Model.Results
         /// <param name="cachedPaths">Set of known cached paths</param>
         /// <param name="cachedFileNames">Set of known cached file names</param>
         /// <param name="cachePath">Final cache path</param>
-        private void CalcCachedFlags(IDictionary<string, ChromFileInfo> cachedPaths,
+        private void CalcCachedFlags(IDictionary<string, ChromCachedFile> cachedPaths,
             ICollection<string> cachedFileNames, string cachePath)
         {
             ChromFileInfo[] fileInfos = new ChromFileInfo[FileCount];
@@ -238,17 +277,17 @@ namespace pwiz.Skyline.Model.Results
                 
                 string path = fileInfos[i].FilePath;
 
-                ChromFileInfo fileInfo;
+                ChromCachedFile fileInfo;
                 if (cachedPaths.TryGetValue(path, out fileInfo))
-                    fileInfos[i] = fileInfo;
+                    fileInfos[i] = fileInfos[i].ChangeInfo(fileInfo);
                 else if (cachedFileNames == null || cachedFileNames.Contains(SampleHelp.GetFileName(path)))
                 {
                     // If the name but not the file was found, check for an
                     // existing file in the cache file's directory.
                     string dataFilePathPart;
                     string dataFilePath = GetExistingDataFilePath(cachePath, path, out dataFilePathPart);
-                    if (cachedPaths.TryGetValue(dataFilePath, out fileInfo))
-                        fileInfos[i] = fileInfo;
+                    if (dataFilePath != null && cachedPaths.TryGetValue(dataFilePath, out fileInfo))
+                        fileInfos[i] = fileInfos[i].ChangeInfo(fileInfo);
                 }
             }
 
@@ -351,7 +390,7 @@ namespace pwiz.Skyline.Model.Results
                     reader.IsStartElement(EL.chromatogram_file))
             {
                 msDataFilePaths.Add(reader.GetAttribute(ATTR.file_path));
-                string id = reader.GetAttribute(ATTR.id) ?? GetFileSaveId(fileLoadIds.Count);
+                string id = reader.GetAttribute(ATTR.id) ?? GetOrdinalSaveId(fileLoadIds.Count);
                 fileLoadIds.Add(id);
                 reader.Read();
             }
@@ -383,15 +422,20 @@ namespace pwiz.Skyline.Model.Results
             {
                 writer.WriteStartElement(EL.sample_file);
                 if (countFiles > 1)
-                    writer.WriteAttribute(ATTR.id, GetFileSaveId(i++));
+                    writer.WriteAttribute(ATTR.id, GetOrdinalSaveId(i++));
                 writer.WriteAttribute(ATTR.file_path, path);
                 writer.WriteEndElement();
             }
         }
 
-        public string GetFileSaveId(int index)
+        private string GetOrdinalSaveId(int ordinalIndex)
         {
-            return string.Format("{0}_f{1}", Helpers.MakeXmlId(Name), index);
+            return string.Format("{0}_f{1}", Helpers.MakeXmlId(Name), ordinalIndex);
+        }
+
+        public string GetFileSaveId(ChromFileInfoId fileId)
+        {
+            return GetOrdinalSaveId(IndexOfId(fileId));
         }
 
         #endregion
@@ -430,30 +474,43 @@ namespace pwiz.Skyline.Model.Results
     {        
     }
 
-    public sealed class ChromFileInfo : Immutable
+    public sealed class ChromFileInfo : DocNode, IPathContainer
     {
         public ChromFileInfo(string filePath)
-            : this(filePath, null, null)
-        {            
-        }
-
-        public ChromFileInfo(ChromCachedFile cachedFile)
-            : this(cachedFile.FilePath, cachedFile.FileWriteTime, cachedFile.RunStartTime)
-        {            
-        }
-
-        private ChromFileInfo(string filePath, DateTime? fileWriteTime, DateTime? runStartTime)
+            : base(new ChromFileInfoId())            
         {
-            Id = new ChromFileInfoId();
             FilePath = filePath;
-            FileWriteTime = fileWriteTime;
-            RunStartTime = runStartTime;
         }
 
-        public Identity Id { get; private set; }
+        public ChromFileInfoId FileId { get { return (ChromFileInfoId) Id; }}
+        public int FileIndex { get { return Id.GlobalIndex; } }
         public string FilePath { get; private set; }
         public DateTime? FileWriteTime { get; private set; }
         public DateTime? RunStartTime { get; private set; }
+
+        public override AnnotationDef.AnnotationTarget AnnotationTarget
+        {
+            get { return AnnotationDef.AnnotationTarget.result_file; }
+        }
+
+        #region Property change methods
+
+        public ChromFileInfo ChangeFilePath(string prop)
+        {
+            return ChangeProp(ImClone(this), im => im.FilePath = prop);
+        }
+
+        public ChromFileInfo ChangeInfo(ChromCachedFile fileInfo)
+        {
+            return ChangeProp(ImClone(this), im =>
+                                                 {
+                                                     im.FilePath = fileInfo.FilePath;
+                                                     im.FileWriteTime = fileInfo.FileWriteTime;
+                                                     im.RunStartTime = fileInfo.RunStartTime;
+                                                 });
+        }
+
+        #endregion
 
         #region object overrides
 
@@ -488,27 +545,16 @@ namespace pwiz.Skyline.Model.Results
         }
 
         #endregion
-
-        #region FilePath comparer
-        
-        public static readonly PathComparer PATH_COMPARER = new PathComparer();
-
-        public class PathComparer : IEqualityComparer<ChromFileInfo>
-        {
-            public bool Equals(ChromFileInfo f1, ChromFileInfo f2)
-            {
-                return Equals(f1.FilePath, f2.FilePath);
-            }
-
-            public int GetHashCode(ChromFileInfo f)
-            {
-                return f.GetHashCode();
-            }
-        }
-
-        #endregion
     }
 
+    /// <summary>
+    /// Identity class to allow identity equality on <see cref="ChromFileInfo"/>.
+    /// This ID is used in peak integration objects.  Since a change in this ID will
+    /// cause the loss of all manual integration and annotations associated with the
+    /// file, there is no suitable content information for this ID, since it is desirable
+    /// to allow the path to a result file to change without losing manually entered
+    /// information.
+    /// </summary>
     public sealed class ChromFileInfoId : Identity
     {        
     }

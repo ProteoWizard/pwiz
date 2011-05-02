@@ -522,7 +522,7 @@ namespace pwiz.Skyline.Model.Results
         #endregion
     }
 
-    public struct ChromCachedFile
+    public struct ChromCachedFile : IPathContainer
     {
         public static DateTime GetLastWriteTime(string filePath)
         {
@@ -544,6 +544,25 @@ namespace pwiz.Skyline.Model.Results
         public bool IsCurrent
         {
             get { return Equals(FileWriteTime, GetLastWriteTime(FilePath)); }
+        }
+    }
+
+    public interface IPathContainer
+    {
+        string FilePath { get; }
+    }
+
+    public class PathComparer<TItem> : IEqualityComparer<TItem>
+        where TItem : IPathContainer
+    {
+        public bool Equals(TItem f1, TItem f2)
+        {
+            return Equals(f1.FilePath, f2.FilePath);
+        }
+
+        public int GetHashCode(TItem f)
+        {
+            return f.FilePath.GetHashCode();
         }
     }
 
