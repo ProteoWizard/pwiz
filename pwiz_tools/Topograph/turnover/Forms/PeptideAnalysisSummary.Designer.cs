@@ -301,7 +301,7 @@ namespace pwiz.Topograph.ui.Forms
             this.btnShowGraph.Name = "btnShowGraph";
             this.btnShowGraph.Size = new System.Drawing.Size(130, 19);
             this.btnShowGraph.TabIndex = 22;
-            this.btnShowGraph.Text = "Show Graph";
+            this.btnShowGraph.Text = "Half Lives";
             this.btnShowGraph.UseVisualStyleBackColor = true;
             this.btnShowGraph.Click += new System.EventHandler(this.btnShowGraph_Click);
             // 

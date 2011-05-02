@@ -24,6 +24,7 @@ namespace pwiz.Topograph.ui.Forms
         private ZedGraphControl _zedGraphControl;
         private LineItem _pointsCurve;
         private IList<PeptideFileAnalysis> _peptideFileAnalysisPoints;
+        private ICollection<double> _excludedTimePoints = new double[0];
         public HalfLifeForm(Workspace workspace) : base(workspace)
         {
             InitializeComponent();
@@ -464,19 +465,27 @@ namespace pwiz.Topograph.ui.Forms
                 }
                 values.Add(value);
             }
-            var times = timeToValuesDict.Keys.ToArray();
-            Array.Sort(times);
+            var allTimePoints = new HashSet<double>(Workspace.MsDataFiles.ListChildren()
+                                            .Where(d => d.TimePoint.HasValue)
+                                            .Select(d => d.TimePoint.Value))
+                                            .ToArray();
+            Array.Sort(allTimePoints);
             gridViewStats.Rows.Clear();
-            for (int i = 0; i < times.Length; i++)
+            gridViewStats.Rows.Add(allTimePoints.Length);
+            for (int i = 0; i < allTimePoints.Length; i++)
             {
-                var row = gridViewStats.Rows[gridViewStats.Rows.Add()];
-                var time = times[i];
-                var values = timeToValuesDict[time];
-                var stats = new Statistics(values.ToArray());
+                var row = gridViewStats.Rows[i];
+                var time = allTimePoints[i];
                 row.Cells[colStatsTime.Index].Value = time;
-                row.Cells[colStatsMean.Index].Value = stats.Mean();
-                row.Cells[colStatsMedian.Index].Value = stats.Median();
-                row.Cells[colStatsStdDev.Index].Value = stats.StdDev();
+                row.Cells[colStatsInclude.Index].Value = !IsTimePointExcluded(time);
+                IList<double> values;
+                if (timeToValuesDict.TryGetValue(time, out values))
+                {
+                    var stats = new Statistics(values.ToArray());
+                    row.Cells[colStatsMean.Index].Value = stats.Mean();
+                    row.Cells[colStatsMedian.Index].Value = stats.Median();
+                    row.Cells[colStatsStdDev.Index].Value = stats.StdDev();
+                }
             }
         }
 
@@ -520,6 +529,10 @@ namespace pwiz.Topograph.ui.Forms
                 return false;
             }
             if (peptideFileAnalysis.MsDataFile.TimePoint == null)
+            {
+                return false;
+            }
+            if (IsTimePointExcluded(peptideFileAnalysis.MsDataFile.TimePoint.Value))
             {
                 return false;
             }
@@ -644,6 +657,46 @@ namespace pwiz.Topograph.ui.Forms
             {
                 comboCalculationType.SelectedIndex = (int) value;
             }
+        }
+
+        private bool IsTimePointExcluded(double timePoint)
+        {
+            return _excludedTimePoints.Contains(timePoint);
+        }
+        public void SetTimePointExcluded(double time, bool excluded)
+        {
+            if (_excludedTimePoints.Contains(time) == excluded)
+            {
+                return;
+            }
+            var excludedTimePoints = new HashSet<double>(_excludedTimePoints);
+            if (excluded)
+            {
+                excludedTimePoints.Add(time);
+            }
+            else
+            {
+                excludedTimePoints.Remove(time);
+            }
+            _excludedTimePoints = excludedTimePoints;
+            BeginInvoke(new Action(UpdateRows));
+        }
+
+        private void gridViewStats_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
+        {
+            gridViewStats.EndEdit();
+        }
+
+        private void gridViewStats_CellValueChanged(object sender, DataGridViewCellEventArgs e)
+        {
+            gridViewStats.EndEdit();
+        }
+        private void gridViewStats_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        {
+            var row = gridViewStats.Rows[e.RowIndex];
+            var time = (double)row.Cells[colStatsTime.Index].Value;
+            var excluded = !(bool)row.Cells[colStatsInclude.Index].Value;
+            SetTimePointExcluded(time, excluded);
         }
     }
 }
