@@ -1423,5 +1423,17 @@ namespace pwiz.Skyline.Properties {
                 this["ReplicateOrderEnum"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ShowDotProductPeakArea {
+            get {
+                return ((bool)(this["ShowDotProductPeakArea"]));
+            }
+            set {
+                this["ShowDotProductPeakArea"] = value;
+            }
+        }
     }
 }

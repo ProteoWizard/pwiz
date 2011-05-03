@@ -2370,11 +2370,20 @@ namespace pwiz.Skyline
                 // If the area replicate graph is being displayed and it can show a library
                 // column, display the "Show Library" option
                 var areaReplicateGraphPane = _graphPeakArea.GraphPane as AreaReplicateGraphPane;
-                if (areaReplicateGraphPane != null && areaReplicateGraphPane.CanShowLibrary)
+                if (areaReplicateGraphPane != null)
                 {
-                    showLibraryPeakAreaContextMenuItem.Checked = set.ShowLibraryPeakArea;
-                    menuStrip.Items.Insert(iInsert++, showLibraryPeakAreaContextMenuItem);
-                }
+                    if (areaReplicateGraphPane.CanShowLibrary)
+                    {
+                        showLibraryPeakAreaContextMenuItem.Checked = set.ShowLibraryPeakArea;
+                        menuStrip.Items.Insert(iInsert++, showLibraryPeakAreaContextMenuItem);
+                    }
+
+                    if (areaReplicateGraphPane.CanShowDotProduct)
+                    {
+                        showDotProductToolStripMenuItem.Checked = set.ShowDotProductPeakArea;
+                        menuStrip.Items.Insert(iInsert++, showDotProductToolStripMenuItem);
+                    }
+                } 
             }
             else if (graphType == GraphTypeArea.peptide)
             {
@@ -2490,7 +2499,8 @@ namespace pwiz.Skyline
         public void NormalizeAreaGraphTo(AreaNormalizeToView areaView)
         {
             AreaGraphController.AreaView = areaView;
-            if (AreaGraphController.AreaView == AreaNormalizeToView.area_percent_view)
+            if (AreaGraphController.AreaView == AreaNormalizeToView.area_percent_view ||
+                AreaGraphController.AreaView == AreaNormalizeToView.area_maximum_view)
                 Settings.Default.AreaLogScale = false;
             UpdatePeakAreaGraph();
         }
@@ -2589,6 +2599,12 @@ namespace pwiz.Skyline
         {
             // Show/hide the library column in the peak area view.
             Settings.Default.ShowLibraryPeakArea = !Settings.Default.ShowLibraryPeakArea;
+            UpdateSummaryGraphs();
+        }
+
+        private void showDotProductToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowDotProductPeakArea = !Settings.Default.ShowDotProductPeakArea;
             UpdateSummaryGraphs();
         }
 

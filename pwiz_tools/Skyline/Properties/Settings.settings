@@ -353,5 +353,8 @@
     <Setting Name="ReplicateOrderEnum" Type="System.String" Scope="User">
       <Value Profile="(Default)">document</Value>
     </Setting>
+    <Setting Name="ShowDotProductPeakArea" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

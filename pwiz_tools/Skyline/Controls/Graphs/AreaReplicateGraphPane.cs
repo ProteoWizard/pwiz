@@ -71,6 +71,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public bool IsLibraryVisible { get { return CanShowLibrary && Settings.Default.ShowLibraryPeakArea; } }
 
+        public bool CanShowDotProduct { get; private set; }
+
+        public bool IsDotProductVisible { get { return CanShowDotProduct && Settings.Default.ShowDotProductPeakArea; } }
+
         public override void UpdateGraph(bool checkData)
         {
             SrmDocument document = GraphSummary.DocumentUIContainer.DocumentUI;
@@ -137,12 +141,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
             }
 
-            var selectedGroupNode = selectedNode as TransitionGroupDocNode;
-            CanShowLibrary = selectedGroupNode != null && selectedGroupNode.HasLibInfo &&
+            var parentGroupNode = parentNode as TransitionGroupDocNode;
+            CanShowLibrary = parentGroupNode != null && parentGroupNode.HasLibInfo &&
                AreaGraphController.AreaView != AreaNormalizeToView.area_ratio_view;
+
+            CanShowDotProduct = CanShowLibrary && 
+                AreaGraphController.AreaView != AreaNormalizeToView.area_percent_view;
             
             // If a precursor is going to be displayed with display type single
-            if (parentNode is TransitionGroupDocNode && displayType == DisplayTypeChrom.single)
+            if (parentGroupNode != null && displayType == DisplayTypeChrom.single)
             {
                 // If no optimization data, then show all the transitions
                 if (!optimizationPresent)
@@ -192,6 +199,10 @@ namespace pwiz.Skyline.Controls.Graphs
             
             double maxArea = -double.MaxValue;
             double sumArea = 0;
+            // An array to keep track of height of all bars to determine 
+            // where each dot product annotation (if showing) should be placed
+            double[] sumAreas = new double[results.Chromatograms.Count];
+
             int iColor = 0;
             for (int i = 0; i < graphData.DocNodes.Count; i++)
             {
@@ -241,12 +252,19 @@ namespace pwiz.Skyline.Controls.Graphs
                             maxArea = Math.Max(maxArea, pointPair.Y);
                         }
                     }
+
+                    // Add area for this transition to each area entry
+                    AddAreasToSums(pointPairList, sumAreas);
+
                     curveItem.Bar.Border.IsVisible = false;
                     curveItem.Bar.Fill.Brush = new SolidBrush(color);
                     curveItem.Tag = new IdentityPath(identityPath, docNode.Id);
                     CurveList.Add(curveItem);
                 }
             }
+
+            if (IsDotProductVisible)
+                AddDotProductLabels(parentGroupNode, sumAreas);
 
             // Draw a box around the currently selected replicate
             if (ShowSelection && maxArea >  -double.MaxValue)
@@ -307,6 +325,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 else if (AreaGraphController.AreaView == AreaNormalizeToView.area_maximum_view)
                 {
                     YAxis.Scale.Max = 1;
+                    if (IsDotProductVisible)
+                        // Make YAxis Scale Max a little higher to accommodate for the dot products
+                        YAxis.Scale.Max = 1.1;
                     YAxis.Scale.MaxAuto = false;
                     YAxis.Title.Text = "Peak Area Normalized";
                     YAxis.Type = AxisType.Linear;
@@ -356,6 +377,66 @@ namespace pwiz.Skyline.Controls.Graphs
                     YAxis.Scale.MaxAuto = true;
             }
             AxisChange();
+        }
+
+        private void AddAreasToSums(PointPairList pointPairList, IList<double> sumAreas)
+        {
+            for (int i = 0; i < pointPairList.Count; i++)
+            {
+                PointPair pointPair = pointPairList[i];
+                int index = i;
+                if (pointPair.IsInvalid)
+                    continue;
+
+                if (IsLibraryVisible)
+                {
+                    // Skip finding the sumArea for the first bar if the library is showing
+                    if (i == 0)
+                        continue;
+
+                    // offset index by 1, since (n + 1)th bar corresponds to the nth replicate
+                    index--;
+                }
+                sumAreas[index] += pointPair.Y;
+            }
+        }
+
+        private void AddDotProductLabels(TransitionGroupDocNode nodeGroup, IList<double> sumAreas)
+        {
+            // x shift of the dot product labels
+            var xShift = 1;
+            if (IsLibraryVisible)
+                // shift dot product labels over by 1 more, if library is visible
+                xShift++;
+            // y shift of the dot product labels when scale is 1
+            var yShift = .04;
+            if (AreaGraphController.AreaView == AreaNormalizeToView.none)
+            {
+                // If scale is not 1, then use maximum bar heigh to scale the space
+                // to the curren y-scale
+                double maxBarHeight = sumAreas.Aggregate(Math.Max);
+                yShift = .04 * maxBarHeight;
+            }
+
+            for (int i = 0; i < sumAreas.Count; i++)
+            {
+                TextObj text = new TextObj(GetDotProductResultsText(nodeGroup, i),
+                                           i + xShift, sumAreas[i] + yShift)
+                                   {
+                                       IsClippedToChartRect = true,
+                                       ZOrder = ZOrder.F_BehindGrid
+                                   };
+                text.FontSpec.Border.IsVisible = false;
+                GraphObjList.Add(text);
+            }
+        }
+
+        private static string GetDotProductResultsText(TransitionGroupDocNode nodeTran, int indexResult)
+        {
+            float? libraryProduct = nodeTran.GetLibraryDotProduct(indexResult);
+            if (libraryProduct.HasValue)
+                return (string.Format("dotp\n{0:F02}", libraryProduct.Value));
+            return "";
         }
 
         private void EmptyGraph(SrmDocument document)
