@@ -113,8 +113,9 @@ import mpi ;
 
 project bumbershoot
 	: requirements
-	    <include>freicore/pwiz_src
-	    <include>freicore/libraries/boost_aux
+	    <include>$(PWIZ_SOURCE)
+	    <include>$(LIBRARIES_PATH)/boost_aux
+		<include>$(boost_src)
 
       <toolset>gcc,<link>shared:<runtime-link>shared
         <toolset>darwin,<link>shared:<runtime-link>shared
@@ -185,7 +186,7 @@ modules.poke : BOOST_BUILD_PATH : $(tmp) ;
 
 
 local application-name = "Pepitome" ;
-
+local utility-name = "librarybabelfish" ;
 
 # set version info (used for tarball filenames)
 import svnrev ;
@@ -291,7 +292,16 @@ exe $(application-name:L)
   : # requirements
       <conditional>@with-mpi
       <library>freicore
+	  <library>sqlite//sqlite3pp
   ;
+
+exe $(utility-name:L)
+   : # sources
+     [ glob LibraryBabelFish* spectraStore.h ]
+   : # requirements
+	 <library>freicore
+     <library>sqlite//sqlite3pp
+   ;
 
 install install
     : $(application-name:L)

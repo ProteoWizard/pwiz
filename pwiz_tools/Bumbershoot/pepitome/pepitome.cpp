@@ -580,7 +580,6 @@ namespace freicore
                     << format_date_time("%H:%M:%S", bpt::time_duration(0, 0, elapsed.total_seconds())) << " elapsed, "
                     << format_date_time("%H:%M:%S", estimatedTimeRemaining) << " remaining." << endl;
             }
-            workerThreadGroup.join_all();
         }
 
         // A tuple to hold the NTerminusIsSpecific, CTerminusIsSpecific,

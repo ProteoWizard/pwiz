@@ -5,10 +5,24 @@
 #ifndef _SPECTRASTORE_H
 #define _SPECTRASTORE_H
 
+#ifdef _MSC_VER // Compiling with MSVC compiler
+#define file_seek _fseeki64_nolock
+#define file_tell _ftelli64_nolock
+#elif __MINGW || defined(__MINGW32__)
+#define file_seek fseeko64
+#define file_tell ftello64
+#else // assume POSIX
+#define file_seek fseeko
+#define file_tell ftello
+#endif
+
 #include "stdafx.h"
 #include "freicore.h"
 #include "PeakSpectrum.h"
 #include "shared_types.h"
+
+#include "sqlite/sqlite3pp.h"
+
 #include <boost/tokenizer.hpp>
 #include <boost/assign.hpp>
 #include <boost/algorithm/string.hpp>
@@ -16,12 +30,24 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+
+#include <boost/iostreams/copy.hpp>
+#include <boost/iostreams/compose.hpp>
+#include <boost/iostreams/filter/zlib.hpp> 
+#include <boost/iostreams/filtering_stream.hpp> 
+#include <boost/iostreams/detail/config/zlib.hpp> 
+#include <boost/iostreams/filter/base64.hpp>
+
+#include <boost/lexical_cast.hpp>
+
 #include <iostream>
 #include <ctype.h>
 #include <fstream>
 
 using namespace boost::assign;
 using namespace boost::algorithm;
+
+namespace sqlite = sqlite3pp;
 
 namespace freicore
 {
@@ -45,6 +71,9 @@ namespace pepitome
     typedef multimap<string, unsigned int> ProteinMap;
 
     typedef BasePeakData< PeakInfo > PeakData;
+    typedef map<float, string>       PeakAnnotations;
+    typedef boost::uint64_t stream_offset;
+    typedef int file_handle;
 
     // Modification values taken from http://chemdata.nist.gov/mass-spc/ftp/mass-spc/PepLib.pdf    
     static map<string,double> ModNamesToMasses = map_list_of ("Oxidation", 15.994915) ("Carbamidomethyl", 57.02146) \
@@ -56,6 +85,57 @@ namespace pepitome
         ("Gln->pyro-Glu", -17.0265) ("Glu->pyro-Glu", -18.0106) ("Carboxymethyl", 58.005479) \
         ("Deamidated", 0.984016);
 
+    // This is used to random access the library file. 
+    struct NativeFileReader
+    {
+        FILE * handle;
+        string filename;
+        bool isOpen;
+        
+        NativeFileReader(string name)
+        {
+           handle = fopen(name.c_str(), "rb");
+            isOpen = (handle == NULL) ? false : true;
+            if(!isOpen)
+                throw runtime_error("[NativeFileReader] Failed to open file " + name);
+        }
+
+        ~NativeFileReader()
+        {
+            if(isOpen)
+               fclose(handle);
+            isOpen = false;
+        }
+        
+        int getline(string& out)
+        {
+            stringstream s;
+            char currChar;
+            while(true)
+            {
+                currChar = fgetc(handle);
+                if(currChar == EOF)
+                {
+                    if(ferror(handle))
+                        throw runtime_error("[NativeFileReader] Failed while reading a file.");
+                    else
+                        break;
+                } else if(currChar == '\n')
+                    break;
+                s << currChar;
+            }
+            out = s.str();
+            if(s.str().size()==0)
+                return 0;
+            return 1;
+        }
+
+        void seek(stream_offset pos)
+        {
+            file_seek(handle, pos, SEEK_SET);
+        }
+    };
+
     struct BaseLibrarySpectrum
     {
         // Peptide seqeunce
@@ -66,19 +146,20 @@ namespace pepitome
         SpectrumId id;
         PeakPreData peakPreData;
         PeakData    peakData;
+        PeakAnnotations peakAnns;
         int peakPreCount;
         // Neutral mass
         double libraryMass;
         double monoisotopicMass;
         double averageMass;
         // Data indices
-        unsigned long peakPreDataIndex;
-        unsigned long headerIndex;
+        stream_offset peakDataOffset;
+        stream_offset headerOffset;
         // Peptide data
         size_t numMissedCleavages;
         int NTT;
 
-        BaseLibrarySpectrum() : peakPreCount(0), libraryMass(0.0), peakPreDataIndex(0), headerIndex(0), numMissedCleavages(0), NTT(-1) {}
+        BaseLibrarySpectrum() : peakPreCount(0), libraryMass(0.0), peakDataOffset(0), headerOffset(0), numMissedCleavages(0), NTT(-1) {}
         BaseLibrarySpectrum( const BaseLibrarySpectrum& old )
         {
             matchedPeptide = old.matchedPeptide;
@@ -86,10 +167,11 @@ namespace pepitome
             id = old.id;
             peakPreData = old.peakPreData;
             peakData = old.peakData;
+            peakAnns = old.peakAnns;
             peakPreCount = old.peakPreCount;
             libraryMass = old.libraryMass;
-            peakPreDataIndex = old.peakPreDataIndex;
-            headerIndex = old.headerIndex;
+            peakDataOffset = old.peakDataOffset;
+            headerOffset = old.headerOffset;
             numMissedCleavages = old.numMissedCleavages;
             NTT = old.NTT;
         }
@@ -100,38 +182,78 @@ namespace pepitome
             matchedProteins.clear(); 
             peakPreData.clear();
             peakData.clear();
+            peakAnns.clear();
         }
 
-        virtual void readHeader(ifstream & library) {}
-        virtual void readSpectrum(float TICCutoff = 1.0f, size_t maxPeakCount = 100, bool cleanLibSpectra = false) {}
+        virtual void readHeader(NativeFileReader& library) {}
 
-        virtual void readPeaks(ifstream & library, bool cleanSpectrum = false)
+        virtual void readSpectrum(float TICCutoff = 1.0f, size_t maxPeakCount = 100, bool cleanLibSpectra = false)
         {
-            library.seekg(0,ios::beg);
-            library.seekg(peakPreDataIndex);
-            string input;
-            peakPreData.clear();
-            while(getline(library, input))
+            //cout << "querying " << id.source << "," << id.index << endl;
+            sqlite::database db(id.source);
+            string queryStr = "SELECT NumPeaks, SpectrumData FROM LibSpectrumData WHERE Id = " + boost::lexical_cast<string>(id.index);
+            sqlite::query qry(db, queryStr.c_str() );
+            int numPeaks;
+            string data;
+            for (sqlite::query::iterator qItr = qry.begin(); qItr != qry.end(); ++qItr) 
             {
-                if(input.size() < 5)
-                    break;
-                tokenizer parser(input, peakDelim);
-                tokenizer::iterator itr = parser.begin();
-                string attribute = *(itr);
-                string value = *(++itr);
-                //Skip the peak annotations
-                string peakAnn = *(++itr);
-                bool isotopeOrUnannotated = (icontains(peakAnn, "i") || icontains(peakAnn, "?"));
-                if(cleanSpectrum && isotopeOrUnannotated)
-                    continue;
-                if(isdigit(attribute[0]))
+                (*qItr).getter() >> numPeaks >> data;
+                stringstream encoded(data);
+                stringstream decoded;
+                bio::copy(bio::compose(bio::zlib_decompressor(), bio::compose(bio::base64_decoder(), encoded)), decoded);
+                text_iarchive packArchive( decoded );
+                packArchive & *this;
+            }
+
+            if(cleanLibSpectra && peakAnns.size()>0)
+            {
+                typedef pair<float,string> PeakAnnotation;
+                BOOST_FOREACH(PeakAnnotation p, peakAnns)
                 {
-                    float peakMass = lexical_cast<float>(attribute);
-                    float intensity = lexical_cast<float>(value);
-                    peakPreData.insert(pair<float,float>(peakMass,intensity));
+                    if(icontains(p.second, "i") || icontains(p.second, "?"))
+                    {
+                        PeakPreData::iterator begin = peakPreData.lower_bound(p.first);
+                        PeakPreData::iterator end = peakPreData.upper_bound(p.first);
+                        while(begin != end)
+                            peakPreData.erase(begin++);
+                    }
                 }
             }
+            preprocessSpectrum(TICCutoff, maxPeakCount);
         }
+
+        virtual void readPeaks(NativeFileReader& library, bool cleanSpectrum = false) {}
+
+        // Indexing functions
+        virtual void readSpectrumForIndexing() {}
+        virtual void readPeaksForIndexing(NativeFileReader& library) {}
+
+        template<class Archive>
+        void save(Archive& ar, const unsigned int version) const
+        {
+            ar << NTT;
+            ar << numMissedCleavages;
+            ar << matchedProteins;
+            ar << peakPreData;
+            ar << peakAnns;
+            ar << (*matchedPeptide);
+        }
+
+        template <class Archive>
+        void load(Archive& ar, const unsigned int version)
+        {
+            ar >> NTT;
+            ar >> numMissedCleavages;
+            ar >> matchedProteins;
+            ar >> peakPreData;
+            ar >> peakAnns;
+            // Nasty hack to accomplish non-intrusive serialize of 
+            // objects containing no default constructors.
+            DigestedPeptide tmp("A");
+            ar >> tmp;
+            matchedPeptide.reset(new DigestedPeptide(tmp));
+        }
+        BOOST_SERIALIZATION_SPLIT_MEMBER()
 
         virtual void clearSpectrum()
         {
@@ -139,6 +261,7 @@ namespace pepitome
             matchedProteins.clear();
             peakPreData.clear();
             peakData.clear();
+            peakAnns.clear();
         }
 
         virtual void clearHeader()
@@ -151,6 +274,7 @@ namespace pepitome
         {
             peakPreData.clear();
             peakData.clear();
+            peakAnns.clear();
         }
 
         // Filters out the peaks with the lowest intensities until only <ticCutoffPercentage> of the total ion current remains
@@ -291,115 +415,6 @@ namespace pepitome
         }
     };
 
-    struct XHunterSpectrum : public virtual BaseLibrarySpectrum 
-    {
-
-        XHunterSpectrum() : BaseLibrarySpectrum(){}
-
-        XHunterSpectrum( const XHunterSpectrum& old ) : BaseLibrarySpectrum( old ) {}
-
-        ~XHunterSpectrum()
-        {
-            BaseLibrarySpectrum::clearSpectrum();
-        }
-
-        void readPeaks(ifstream & library, bool ignoreIsotopesAndUnannotated = false)
-        {
-            library.seekg(0,ios::beg);
-            library.seekg(peakPreDataIndex);
-            string input;
-            peakPreData.clear();
-            while(getline(library, input))
-            {
-                if(input.length() > 2 && isdigit(input[0]))
-                {
-                    tokenizer parser(input, delim);
-                    tokenizer::iterator itr = parser.begin();
-                    string attribute = *(itr);
-                    string value = *(++itr);
-                    float peakMass = lexical_cast<float>(attribute);
-                    float intensity = lexical_cast<float>(value);
-                    peakPreData.insert(pair<float,float>(peakMass,intensity));
-                } else if(boost::starts_with(input,"END"))
-                {
-                    break;
-                }
-            }
-        }
-
-        void clearHeader()
-        {
-            BaseLibrarySpectrum::clearHeader();
-        }
-
-        void clearSpectrum()
-        {
-            BaseLibrarySpectrum::clearSpectrum();
-        }
-
-        void readHeader(ifstream & library)
-        {
-            library.seekg(0,ios::beg);
-            library.seekg(headerIndex);
-            string input;
-            matchedProteins.clear();
-            string peptide;
-            ModMap mods;
-            while(getline(library, input))
-            {
-                if(boost::starts_with(input,"PEPSEQ"))
-                {
-                    tokenizer parser(input, delim);
-                    tokenizer::iterator itr = parser.begin();
-                    string attribute = *(itr);
-                    string value = *(++itr);
-                    peptide = value;
-                } else if(boost::starts_with(input,"PEPMOD"))
-                {
-                    tokenizer parser(input, delim);
-                    tokenizer::iterator itr = parser.begin();
-                    string attribute = *(itr);
-                    string value = *(++itr);
-                    tokenizer modsParser(value, modsDelim);
-                    tokenizer::iterator modsIter = modsParser.begin();
-                    double mass = lexical_cast<double>(*(modsIter));
-                    int location = lexical_cast<int>(*(++modsIter));
-                    mods.insert(pair<int,double>(location,mass));
-                } else if(boost::starts_with(input,"PEPACC"))
-                {
-                    tokenizer parser(input, delim);
-                    tokenizer::iterator itr = parser.begin();
-                    string attribute = *(itr);
-                    string value = *(++itr);
-                    tokenizer protParser(value, modsDelim);
-                    tokenizer::iterator protIter = protParser.begin();
-                    string protAcc = *(protIter);
-                    size_t location = lexical_cast<size_t>(*(++protIter));
-                    matchedProteins.insert(pair<string,size_t>(protAcc,location));
-                } else if(input.length()>1 && isdigit(input[0]))
-                {
-                    matchedPeptide.reset(new DigestedPeptide(peptide));
-                    ModificationMap& modMap = matchedPeptide->modifications();
-                    for(ModMap::const_iterator modIter = mods.begin(); modIter != mods.end(); ++modIter)
-                    {
-                        char aa = matchedPeptide->sequence()[(*modIter).first-1];
-                        DynamicMod mod(aa,aa,(*modIter).second);
-                        modMap.insert(make_pair<int,DynamicMod>((*modIter).first-1,mod));
-                    }
-                    break;
-                }
-            }
-        }
-
-        void readSpectrum(float TICCutoff = 1.0f, size_t maxPeakCount = 150, bool cleanSpectrum = false)
-        {
-            ifstream library(id.source.c_str(), ios::binary);
-            readPeaks(library, cleanSpectrum);
-            readHeader(library);
-            preprocessSpectrum(TICCutoff, maxPeakCount);
-        }
-    };
-
     struct SpectraSTSpectrum : public virtual BaseLibrarySpectrum {
 
         size_t numPeaks;
@@ -413,9 +428,76 @@ namespace pepitome
             BaseLibrarySpectrum::clearSpectrum();
         }
 
-        void readPeaks(ifstream & library, bool cleanSpectrum = false)
+        void readPeaks(NativeFileReader& library, bool cleanSpectrum = false)
         {
-            BaseLibrarySpectrum::readPeaks(library, cleanSpectrum);
+            library.seek(peakDataOffset);
+
+            peakPreData.clear();
+            
+            string buffer;
+            
+            while(library.getline(buffer))
+            {
+                bal::trim_right_if(buffer, bal::is_any_of(" \r"));
+                if(buffer.empty()) // Break for empty line
+                    break;
+                
+                if(!buffer.empty() && !isdigit(buffer[0]))
+                    throw runtime_error("[SpectrumStore::readPeaks] Invalid index offset");
+
+                tokenizer parser(buffer, peakDelim);
+                tokenizer::iterator itr = parser.begin();
+                string attribute = *(itr);
+                string value = *(++itr);
+                string peakAnn;
+                //Skip the peak annotations if they exist
+                if(++itr != parser.end())
+                    peakAnn = *itr;
+                bool isotopeOrUnannotated = (icontains(peakAnn, "i") || icontains(peakAnn, "?"));
+                if(cleanSpectrum && isotopeOrUnannotated)
+                    continue;
+                if(isdigit(attribute[0]))
+                {
+                    float peakMass = lexical_cast<float>(attribute);
+                    float intensity = lexical_cast<float>(value);
+                    peakPreData.insert(pair<float,float>(peakMass,intensity));
+                }
+            }
+        }
+        
+        void readPeaksForIndexing(NativeFileReader& library)
+        {
+            library.seek(peakDataOffset);
+
+            peakPreData.clear();
+            peakAnns.clear();
+
+            string buffer;
+            while(library.getline(buffer))
+            {
+                bal::trim_right_if(buffer, bal::is_any_of(" \r"));
+                if(buffer.empty()) // Break for empty line
+                    break;
+                
+                if(!buffer.empty() && !isdigit(buffer[0]))
+                    throw runtime_error("[SpectrumStore::readPeaks] Invalid index offset");
+
+                tokenizer parser(buffer, peakDelim);
+                tokenizer::iterator itr = parser.begin();
+                string attribute = *(itr);
+                string value = *(++itr);
+                string peakAnn;
+                //Skip the peak annotations if they exist
+                if(++itr != parser.end())
+                    peakAnn = *itr;
+                if(isdigit(attribute[0]))
+                {
+                    float peakMass = lexical_cast<float>(attribute);
+                    float intensity = lexical_cast<float>(value);
+                    peakPreData.insert(pair<float,float>(peakMass,intensity));
+                    peakAnns.insert(pair<float,string>(peakMass,peakAnn));
+                }
+            }
         }
 
         void clearHeader()
@@ -428,21 +510,22 @@ namespace pepitome
             BaseLibrarySpectrum::clearSpectrum();
         }
 
-        void readHeader(ifstream & library)
+        void readHeader(NativeFileReader& library)
         {
-            //cout << headerIndex << "," << peakPreDataIndex << endl;
-            library.seekg(0,ios::beg);
-            library.seekg(headerIndex);
-            string input;
+            //cout << headerOffset << "," << peakDataOffset << endl;
+            library.seek(headerOffset);
+            string buffer;
             matchedProteins.clear();
             ModMap mods;
-
             // First parse out the peptide FullName: -.n[43]AASC[160]VLLHTGQK.M/2
-            getline(library,input);
-            //cout << input << endl;
-            string::size_type pepStart = input.find(".");
-            string::size_type pepEnd = input.find(".",pepStart+1);
-            string peptide = input.substr(pepStart+1, pepEnd-pepStart-1);
+            library.getline(buffer);
+            if(!boost::starts_with(buffer,"FullName:"))
+                throw runtime_error("[SpectraStore::readHeader]: Invalid header offset");
+            
+            bal::trim_right_if(buffer, bal::is_any_of(" \r"));
+            string::size_type pepStart = buffer.find(".");
+            string::size_type pepEnd = buffer.find(".",pepStart+1);
+            string peptide = buffer.substr(pepStart+1, pepEnd-pepStart-1);
             if(peptide[0]=='n')
                 peptide.erase(0,1);
 
@@ -455,7 +538,7 @@ namespace pepitome
 
             //cout << peptide << endl;
             if(peptide.length() == 0)
-                throw "Failed to parse header entry for the spectrum";
+                throw runtime_error("[SpectraStore::readHeader]: Failed to parse peptide the spectrum");
 
             // Get the "Comment:" line. See below for an example string (all in one line). Yuck!
             /* Comment: Spec=Consensus Pep=Tryptic/miss_bad_unconfirmed Fullname=-.AAAAAAGAGPEM(O)VRGQVFDVGPR.Y/3 \
@@ -468,16 +551,19 @@ namespace pepitome
             Parent_med=752.7136/0.00 Max2med_orig=53.6/12.4 Dotfull=0.796/0.012 Dot_cons=0.842/0.005
             Unassign_all=0.096 Unassigned=0.026 Dotbest=0.85 Flags=0,1,0 Naa=23 DUScorr=3.4/2.1/4.2 
             Dottheory=0.82 Pfin=2.4e+022 Probcorr=0.001 Tfratio=2.2e+012 Pfract=0 */
-            getline(library, input);
-            if(istarts_with(input,"Comment: "))
-                erase_head(input,9);
+            library.getline(buffer);
+            bal::trim_right_if(buffer, bal::is_any_of(" \r"));
+            if(!istarts_with(buffer,"Comment: "))
+                throw runtime_error("[SpectraStore::readHeader]: Failed to parse peptide data.");
+            else
+                erase_head(buffer,9);
 
             string modStr;
             string nmcStr;
             string nttStr;
             typedef vector<string> SplitVec;
             SplitVec splitVec;
-            split(splitVec, input, is_any_of("= "));
+            split(splitVec, buffer, is_any_of("= "));
             for(size_t index=0; index < splitVec.size(); ++index)
             {
                 if(iequals(splitVec[index],"mods") && modStr.length()==0 )
@@ -538,9 +624,9 @@ namespace pepitome
             }
 
             // Parse out the protein
-            string::size_type proteinStart = input.find(" Protein=");
-            string::size_type proteinEnd = input.find(" ",proteinStart+1);
-            string proteinAnn = input.substr(proteinStart + 9, proteinEnd - proteinStart - 9);
+            string::size_type proteinStart = buffer.find(" Protein=");
+            string::size_type proteinEnd = buffer.find(" ",proteinStart+1);
+            string proteinAnn = buffer.substr(proteinStart + 9, proteinEnd - proteinStart - 9);
             //cout << proteinStart << "," << proteinEnd << "," << proteinAnn << endl;
             if(proteinAnn.find("/") == string::npos)
             {
@@ -569,10 +655,24 @@ namespace pepitome
 
         void readSpectrum(float TICCutoff = 1.0f, size_t maxPeakCount = 150, bool cleanSpectrum = false)
         {
-            ifstream library(id.source.c_str(), ios::binary);
-            readPeaks(library, cleanSpectrum);
+            if(bal::ends_with(id.source,".index"))
+            {
+                BaseLibrarySpectrum::readSpectrum(TICCutoff, maxPeakCount, cleanSpectrum);
+                return;
+            }
+            NativeFileReader library(id.source);
             readHeader(library);
+            readPeaks(library, cleanSpectrum);
             preprocessSpectrum(TICCutoff, maxPeakCount);
+        }
+
+        void readSpectrumForIndexing()
+        {
+            NativeFileReader library(id.source);
+            readHeader(library);
+            averageMass = matchedPeptide->molecularWeight();
+            monoisotopicMass = matchedPeptide->monoisotopicMass();
+            readPeaksForIndexing(library);
         }
     };
 
@@ -589,9 +689,75 @@ namespace pepitome
             BaseLibrarySpectrum::clearSpectrum();
         }
 
-        void readPeaks(ifstream & library, bool cleanSpectrum = false)
+        void readPeaks(NativeFileReader& library, bool cleanSpectrum = false)
         {
-            BaseLibrarySpectrum::readPeaks(library, cleanSpectrum);
+            library.seek(peakDataOffset);
+            peakPreData.clear();
+            
+            string buffer;
+            
+            while(library.getline(buffer))
+            {
+                bal::trim_right_if(buffer, bal::is_any_of(" \r"));
+                if(buffer.empty()) // Break for empty line
+                    break;
+                
+                if(!buffer.empty() && !isdigit(buffer[0]))
+                    throw runtime_error("[SpectrumStore::readPeaks] Invalid index offset");
+
+                tokenizer parser(buffer, peakDelim);
+                tokenizer::iterator itr = parser.begin();
+                string attribute = *(itr);
+                string value = *(++itr);
+                string peakAnn;
+                //Skip the peak annotations if they exist
+                if(++itr != parser.end())
+                    peakAnn = *itr;
+                bool isotopeOrUnannotated = (icontains(peakAnn, "i") || icontains(peakAnn, "?"));
+                if(cleanSpectrum && isotopeOrUnannotated)
+                    continue;
+                if(isdigit(attribute[0]))
+                {
+                    float peakMass = lexical_cast<float>(attribute);
+                    float intensity = lexical_cast<float>(value);
+                    peakPreData.insert(pair<float,float>(peakMass,intensity));
+                }
+            }
+        }
+        
+        void readPeaksForIndexing(NativeFileReader& library)
+        {
+            library.seek(peakDataOffset);
+
+            peakPreData.clear();
+            peakAnns.clear();
+
+            string buffer;
+            while(library.getline(buffer))
+            {
+                bal::trim_right_if(buffer, bal::is_any_of(" \r"));
+                if(buffer.empty()) // Break for empty line
+                    break;
+                
+                if(!buffer.empty() && !isdigit(buffer[0]))
+                    throw runtime_error("[SpectrumStore::readPeaks] Invalid index offset");
+
+                tokenizer parser(buffer, peakDelim);
+                tokenizer::iterator itr = parser.begin();
+                string attribute = *(itr);
+                string value = *(++itr);
+                string peakAnn;
+                //Skip the peak annotations if they exist
+                if(++itr != parser.end())
+                    peakAnn = *itr;
+                if(isdigit(attribute[0]))
+                {
+                    float peakMass = lexical_cast<float>(attribute);
+                    float intensity = lexical_cast<float>(value);
+                    peakPreData.insert(pair<float,float>(peakMass,intensity));
+                    peakAnns.insert(pair<float,string>(peakMass,peakAnn));
+                }
+            }
         }
 
         void clearHeader()
@@ -604,10 +770,9 @@ namespace pepitome
             BaseLibrarySpectrum::clearSpectrum();
         }
 
-        void readHeader(ifstream & library)
+        void readHeader(NativeFileReader& library)
         {
-            library.seekg(0,ios::beg);
-            library.seekg(headerIndex);
+            library.seek(headerOffset);
             string input;
             matchedProteins.clear();
             ModMap mods;
@@ -624,7 +789,7 @@ namespace pepitome
             Unassign_all=0.096 Unassigned=0.026 Dotbest=0.85 Flags=0,1,0 Naa=23 DUScorr=3.4/2.1/4.2 
             Dottheory=0.82 Pfin=2.4e+022 Probcorr=0.001 Tfratio=2.2e+012 Pfract=0 */
 
-            getline(library, input);
+            library.getline(input);
             // Get the spectrum type, interact style peptide sequence, and the modification string
             //cout << input << endl;
             size_t specStart = input.find("Spec=");
@@ -712,10 +877,24 @@ namespace pepitome
 
         void readSpectrum(float TICCutoff = 1.0f, size_t maxPeakCount = 150, bool cleanSpectrum = false)
         {
-            ifstream library(id.source.c_str(), ios::binary);
+            if(bal::ends_with(id.source,".index"))
+            {
+                BaseLibrarySpectrum::readSpectrum(TICCutoff, maxPeakCount, cleanSpectrum);
+                return;
+            }
+            NativeFileReader library(id.source);
             readPeaks(library, cleanSpectrum);
             readHeader(library);
             preprocessSpectrum(TICCutoff, maxPeakCount);
+        }
+
+        void readSpectrumForIndexing()
+        {
+            NativeFileReader library(id.source);
+            readHeader(library);
+            averageMass = matchedPeptide->molecularWeight();
+            monoisotopicMass = matchedPeptide->monoisotopicMass();
+            readPeaksForIndexing(library);
         }
     };
 
@@ -738,14 +917,44 @@ namespace pepitome
         void loadLibrary(const string& libName)
         {
             libraryName = libName;
-            if(hasEnding(libraryName,".mgf"))
-                loadXHunterLibraryFromMGF();
-            else if (hasEnding(libraryName,".hlf"))
-                loadXHunterLibraryFromBin();
-            else if(hasEnding(libraryName,".msp"))
+            if(bal::ends_with(libraryName,".msp"))
                 loadNISTLibraryFromMSP();
-            else if(hasEnding(libraryName,".sptxt"))
+            else if(bal::ends_with(libraryName,".sptxt"))
                 loadSpectraSTLibraryFromSptxt();
+            else if(bal::ends_with(libraryName, ".index"))
+                loadIndexedLibrary();
+        }
+
+        void loadIndexedLibrary()
+        {
+            cout << "Reading \"" << libraryName << "\"" << endl;
+            Timer libReadTime(true);
+            size_t spectrumIndex = 0;
+            sqlite::database library(libraryName);
+            sqlite::query qry(library, "SELECT Id, Peptide, LibraryMass, MonoMass, AvgMass, Charge FROM LibMetaData");
+            for (sqlite::query::iterator qItr = qry.begin(); qItr != qry.end(); ++qItr) 
+            {
+                ++spectrumIndex;
+                if(!(spectrumIndex % 10000)) 
+                    cout << ">> " << spectrumIndex << '\r' << flush;
+
+                int id, charge;
+                string peptide;
+                double libMass, monoMass, avgMass;
+                (*qItr).getter() >> id >> peptide >> libMass >> monoMass >> avgMass >> charge;
+                
+                shared_ptr<SpectraSTSpectrum> spectrum(new SpectraSTSpectrum);
+                spectrum->id.charge = charge; 
+                spectrum->id.source = libraryName;
+                spectrum->id.index = id;
+                spectrum->libraryMass = libMass;
+                spectrum->monoisotopicMass = monoMass;
+                spectrum->averageMass = avgMass;
+                spectrum->peakDataOffset = 0;
+                spectrum->headerOffset = 0;
+                push_back(spectrum);
+            }
+            cout << "Read " << spectrumIndex << " spectra from the library. " << libReadTime.End() << " seconds elapsed." << endl;;
         }
 
         void loadSpectraSTLibraryFromSptxt()
@@ -754,69 +963,74 @@ namespace pepitome
             Timer libReadTime(true);
             ifstream library(libraryName.c_str(), ios::binary);
             size_t spectrumIndex = 0;
+            stream_offset headerOffset = 0;
+            stream_offset peakOffset = 0;
+            stream_offset dataOffset = 0;
             if(library)
             {
-                string input;
+                string buf;
                 double parentMass;
                 int charge;
-                unsigned long headerIndex = 0;
-                unsigned long peakIndex = 0;
-                unsigned long readBytes = 0;
                 size_t numPeaks;
-                while(getline(library,input)) 
+                while(getline(library,buf)) 
                 {
-                    readBytes += input.length();
-                    // Skip the comments
-                    if( boost::starts_with(input, "#") )
+                    size_t bufLength = buf.length()+1;
+                    dataOffset += bufLength;
+                    bal::trim_right_if(buf, bal::is_any_of(" \r"));
+                    // Skip empty lines and comments
+                    if (boost::starts_with(buf, "#") )
                         continue;
 
-                    if(input.length() < 2 && headerIndex != 0 && peakIndex != 0)
+                    if(buf.empty() && headerOffset != 0 && peakOffset != 0)
                     {
                         shared_ptr<SpectraSTSpectrum> spectrum(new SpectraSTSpectrum);
                         spectrum->id.charge = charge; 
                         spectrum->id.source = libraryName;
                         spectrum->id.index = spectrumIndex;
                         spectrum->libraryMass = (parentMass * charge) - (charge * 1.00727);
-                        spectrum->peakPreDataIndex = peakIndex;
-                        spectrum->headerIndex = headerIndex;
+                        spectrum->peakDataOffset = peakOffset;
+                        spectrum->headerOffset = headerOffset;
                         push_back(spectrum);
                         continue;
                     }
 
-                    if(boost::starts_with(input, "Name:"))
+                    if(buf.empty())
+                        continue;
+
+                    if(boost::starts_with(buf, "Name:"))
                     {
-                        tokenizer parser(input, colon);
+                        tokenizer parser(buf, colon);
                         tokenizer::iterator itr = parser.begin();
                         string attribute = *(itr);
                         string value = *(++itr);
                         ++spectrumIndex;
                         if(!(spectrumIndex % 10000)) 
-                            cout << spectrumIndex << ": " << readBytes << '\r' << flush;
+                            cout << spectrumIndex << ": " << dataOffset << '\r' << flush;
                         tokenizer splitter(value, backslash);
                         tokenizer::iterator pItr = splitter.begin();
                         ++pItr;
                         charge = lexical_cast<int>(*pItr);
-                    } else if(boost::starts_with(input, "NumPeaks"))
+                    } else if(boost::starts_with(buf, "NumPeaks"))
                     {
-                        tokenizer parser(input, colon);
+                        tokenizer parser(buf, colon);
                         tokenizer::iterator itr = parser.begin();
                         string attribute = *(itr);
                         string value = *(++itr);
                         numPeaks = lexical_cast<size_t>(value);
-                    } else if(boost::starts_with(input, "PrecursorMZ"))
+                    } else if(boost::starts_with(buf, "PrecursorMZ"))
                     {
-                        tokenizer parser(input, colon);
+                        tokenizer parser(buf, colon);
                         tokenizer::iterator itr = parser.begin();
                         string attribute = *(itr);
                         string value = *(++itr);
                         parentMass = lexical_cast<double>(value);
-                    } else if(boost::starts_with(input, "FullName"))
+                    } else if(boost::starts_with(buf, "FullName"))
                     {
-                        headerIndex = ((unsigned long) library.tellg()) -((unsigned long)input.length()+1) ;
-                        peakIndex = 0;
-                    } else if(input.length() > 2 && isdigit(input[0]) && peakIndex == 0)
+                        headerOffset = dataOffset - bufLength ;
+                        peakOffset = 0;
+                    } else if(!buf.empty() && isdigit(buf[0]) && peakOffset == 0)
                     {
-                        peakIndex = ((unsigned long) library.tellg())-((unsigned long)input.length()+1);
+                        peakOffset = dataOffset-bufLength;
                     }
                 }
             }
@@ -829,184 +1043,68 @@ namespace pepitome
             Timer libReadTime(true);
             ifstream library(libraryName.c_str(), ios::binary);
             size_t spectrumIndex = 0;
+            stream_offset headerOffset = 0;
+            stream_offset peakOffset = 0;
+            stream_offset dataOffset = 0;
             if(library)
             {
-                string input;
+                string buf;
                 double parentMass;
                 int charge;
-                unsigned long headerIndex = 0;
-                unsigned long peakIndex = 0;
-                size_t readBytes = 0;
                 size_t numPeaks;
-                while(getline(library,input)) 
+                while(getline(library,buf)) 
                 {
-                    readBytes += input.length();
+                    size_t bufLength = buf.length()+1;
+                    dataOffset += bufLength;
+                    bal::trim_right_if(buf, bal::is_any_of(" \r"));
                     // Skip the comments
-                    if( boost::starts_with(input, "#") )
+                    if( boost::starts_with(buf, "#") )
                         continue;
 
-                    if(input.length() < 2 && headerIndex != 0 && peakIndex != 0)
+                    if(buf.empty() && headerOffset != 0 && peakOffset != 0)
                     {
                         shared_ptr<NISTSpectrum> spectrum(new NISTSpectrum);
                         spectrum->id.charge = charge; 
                         spectrum->id.source = libraryName;
                         spectrum->id.index = spectrumIndex;
                         spectrum->libraryMass = (parentMass * charge) - (charge * 1.00727);
-                        spectrum->peakPreDataIndex = peakIndex;
-                        spectrum->headerIndex = headerIndex;
+                        spectrum->peakDataOffset = peakOffset;
+                        spectrum->headerOffset = headerOffset;
                         push_back(spectrum);
                         continue;
                     }
 
-                    if(boost::starts_with(input, "Name:"))
+                    if(boost::starts_with(buf, "Name:"))
                     {
-                        tokenizer parser(input, colon);
+                        tokenizer parser(buf, colon);
                         tokenizer::iterator itr = parser.begin();
                         string attribute = *(itr);
                         string value = *(++itr);
                         ++spectrumIndex;
                         if(!(spectrumIndex % 10000)) 
-                            cout << spectrumIndex << ": " << readBytes << '\r' << flush;
+                            cout << spectrumIndex << ": " << dataOffset << '\r' << flush;
                         tokenizer splitter(value, backslash);
                         tokenizer::iterator pItr = splitter.begin();
                         ++pItr;
                         charge = lexical_cast<int>(*pItr);
-                    } else if(boost::starts_with(input, "Num peaks"))
+                    } else if(boost::starts_with(buf, "Num peaks"))
                     {
-                        tokenizer parser(input, colon);
+                        tokenizer parser(buf, colon);
                         tokenizer::iterator itr = parser.begin();
                         string attribute = *(itr);
                         string value = *(++itr);
                         numPeaks = lexical_cast<size_t>(value);
-                    } else if(boost::starts_with(input, "Comment"))
+                    } else if(boost::starts_with(buf, "Comment"))
                     {
-                        headerIndex = ((unsigned long) library.tellg())-((unsigned long) input.length()+1) ;
-                        peakIndex = 0;
+                        headerOffset = dataOffset- bufLength ;
+                        peakOffset = 0;
                         // Parse out the parent mass
-                        size_t pStart = input.find("Parent=");
-                        size_t pEnd = input.find("Inst=");
-                        parentMass = lexical_cast<double>(input.substr(pStart + 7, pEnd-pStart-8));
-                    } else if (input.length() > 2 && isdigit(input[0]) && peakIndex == 0)
+                        size_t pStart = buf.find("Parent=");
+                        size_t pEnd = buf.find("Inst=");
+                        parentMass = lexical_cast<double>(buf.substr(pStart + 7, pEnd-pStart-8));
+                    } else if (!buf.empty() && isdigit(buf[0]) && peakOffset == 0)
                     {
-                        peakIndex = ((unsigned long) library.tellg())-((unsigned long)input.length()+1);
-                    }
-                }
-            }
-            cout << "Read " << (spectrumIndex+1) << " spectra from library; " << libReadTime.End() << " seconds elapsed." << endl;
-        }
-
-        void loadXHunterLibraryFromBin() 
-        {
-
-            cout << "Reading \"" << libraryName << "\"" << endl;
-            Timer libReadTime(true);
-            ifstream library(libraryName.c_str(), ios::binary);
-            int spectrumIndex = 0;
-            if(library)
-            {
-                string input;
-                double MHPlusMass;
-                int charge;
-                unsigned long headerIndex = 0;
-                unsigned long peakIndex = 0;
-                size_t readBytes = 0;
-
-                while(getline(library,input)) 
-                {
-                    readBytes += input.length();
-                    if(boost::starts_with(input, "PEPMASS"))
-                    {
-                        tokenizer parser(input, delim);
-                        tokenizer::iterator itr = parser.begin();
-                        string attribute = *(itr);
-                        string value = *(++itr);
-                        MHPlusMass = lexical_cast<double>(value);
-                    } else if(boost::starts_with(input, "CHARGE"))
-                    {
-                        tokenizer parser(input, delim);
-                        tokenizer::iterator itr = parser.begin();
-                        string attribute = *(itr);
-                        string value = *(++itr);
-                        charge = lexical_cast<int>(value);
-                    } else if(boost::starts_with(input, "END"))
-                    {
-                        shared_ptr<XHunterSpectrum> spectrum(new XHunterSpectrum);
-                        spectrum->id.charge = charge; 
-                        spectrum->id.source = libraryName;
-                        spectrum->id.index = spectrumIndex;
-                        spectrum->libraryMass = MHPlusMass - 1.00727;
-                        spectrum->peakPreDataIndex = peakIndex;
-                        spectrum->headerIndex = headerIndex;
-                        push_back(spectrum);
-                    } else if(boost::starts_with(input,"BEGIN"))
-                    {
-                        ++spectrumIndex;
-                        headerIndex = library.tellg();
-                        peakIndex = 0;
-                        if(!(spectrumIndex % 10000)) 
-                            cout << spectrumIndex << ": " << readBytes << '\r' << flush;
-                    } else if(input.length() > 2 && isdigit(input[0]) && peakIndex == 0)
-                    {
-                        peakIndex = ((unsigned long) library.tellg())-((unsigned long)input.length()+1);
-                    }
-                }
-            }
-            cout << "Read " << (spectrumIndex+1) << " spectra from library; " << libReadTime.End() << " seconds elapsed." << endl;
-        }
-
-        void loadXHunterLibraryFromMGF()
-        {
-
-            cout << "Reading \"" << libraryName << "\"" << endl;
-            Timer libReadTime(true);
-            ifstream library(libraryName.c_str(), ios::binary);
-            int spectrumIndex = 0;
-            if(library)
-            {
-                string input;
-                double MHPlusMass;
-                int charge;
-                unsigned long headerIndex = 0;
-                unsigned long peakIndex = 0;
-                size_t readBytes = 0;
-
-                while(getline(library,input)) 
-                {
-                    readBytes += input.length();
-                    if(boost::starts_with(input, "PEPMASS"))
-                    {
-                        tokenizer parser(input, delim);
-                        tokenizer::iterator itr = parser.begin();
-                        string attribute = *(itr);
-                        string value = *(++itr);
-                        MHPlusMass = lexical_cast<double>(value);
-                    } else if(boost::starts_with(input, "CHARGE"))
-                    {
-                        tokenizer parser(input, delim);
-                        tokenizer::iterator itr = parser.begin();
-                        string attribute = *(itr);
-                        string value = *(++itr);
-                        charge = lexical_cast<int>(value);
-                    } else if(boost::starts_with(input, "END"))
-                    {
-                        shared_ptr<XHunterSpectrum> spectrum(new XHunterSpectrum);
-                        spectrum->id.charge = charge; 
-                        spectrum->id.source = libraryName;
-                        spectrum->id.index = spectrumIndex;
-                        spectrum->libraryMass = MHPlusMass - 1.00727;
-                        spectrum->peakPreDataIndex = peakIndex;
-                        spectrum->headerIndex = headerIndex;
-                        push_back(spectrum);
-                    } else if(boost::starts_with(input,"BEGIN"))
-                    {
-                        ++spectrumIndex;
-                        headerIndex = library.tellg();
-                        peakIndex = 0;
-                        if(!(spectrumIndex % 10000)) 
-                            cout << spectrumIndex << ": " << readBytes << '\r' << flush;
-                    } else if(input.length() > 2 && isdigit(input[0]) && peakIndex == 0)
-                    {
-                        peakIndex = ((unsigned long) library.tellg())-((unsigned long)input.length()+1);
+                        peakOffset = dataOffset-bufLength;
                     }
                 }
             }
@@ -1015,14 +1113,13 @@ namespace pepitome
 
         void readSpectra(float TICCutoff = 1.0f, size_t maxPeakCount = 100, bool cleanSpectrum = false)
         {
-            ifstream library(libraryName.c_str(), ios::binary);
             for(vector<shared_ptr<BaseLibrarySpectrum> >::iterator sItr = begin(); sItr != end(); ++sItr )
                 (*sItr)->readSpectrum(TICCutoff,maxPeakCount,cleanSpectrum);
         }
 
         void recalculatePrecursorMasses()
         {
-            ifstream library(libraryName.c_str(), ios::binary);
+            NativeFileReader library(libraryName.c_str());
             size_t spectraIndex = 0;
             size_t totalSpectra = size();
             for(vector<shared_ptr<BaseLibrarySpectrum> >::iterator sItr = begin(); sItr != end(); ++sItr )
@@ -1051,20 +1148,8 @@ namespace pepitome
                     cout << (*pItr).first << "," << (*pItr).second << endl;
             }
         }
-
-        static bool hasEnding (std::string const &fullString, std::string const &ending)
-        {
-            size_t lastMatchPos = fullString.rfind(ending); // Find the last occurrence of ending
-            bool isEnding = lastMatchPos != std::string::npos; // Make sure it's found at least once
-
-            // If the string was found, make sure that any characters that follow it are the ones we're trying to ignore
-            for( size_t i = lastMatchPos + ending.length(); (i < fullString.length()) && isEnding; i++)
-                if( (fullString[i] != '\n') && (fullString[i] != '\r') )
-                    isEnding = false;
-            return isEnding;
-        }
-
     };
 }
 }
+
 #endif
