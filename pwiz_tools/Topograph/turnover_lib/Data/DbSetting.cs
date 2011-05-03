@@ -41,5 +41,6 @@ namespace pwiz.Topograph.Data
         protein_description_key,
         max_isotope_retention_time_shift,
         min_correlation_coeff,
+        min_deconvolution_score_for_avg_precursor_pool,
     }
 }

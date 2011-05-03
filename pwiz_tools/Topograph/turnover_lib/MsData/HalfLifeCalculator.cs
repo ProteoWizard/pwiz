@@ -151,7 +151,7 @@ namespace pwiz.Topograph.MsData
                         + "\nWHERE F.TracerPercent IS NOT NULL"
                         + "\nAND F.PrecursorEnrichment IS NOT NULL"
                         + "\nAND F.ValidationStatus <> " + (int) ValidationStatus.reject
-                        + "\nAND F.DeconvolutionScore > :minScore").SetParameter("minScore", MinScore);
+                        + "\nAND F.DeconvolutionScore >= :minScore").SetParameter("minScore", Workspace.GetMinDeconvolutionScoreForAvgPrecursorPool());
             var valueLists = new Dictionary<long, IList<double>>();
             foreach (object[] row in query.List())
             {

@@ -311,6 +311,14 @@ namespace pwiz.Topograph.Model
         {
             _settings.SetSetting(SettingEnum.min_correlation_coeff, value);
         }
+        public double GetMinDeconvolutionScoreForAvgPrecursorPool()
+        {
+            return _settings.GetSetting(SettingEnum.min_deconvolution_score_for_avg_precursor_pool, 0.0);
+        }
+        public void SetMinDeconvolutionScoreForAvgPrecursorPool(double value)
+        {
+            _settings.SetSetting(SettingEnum.min_deconvolution_score_for_avg_precursor_pool, value);
+        }
 
         public void SetProteinDescriptionKey(String proteinDescriptionKey)
         {

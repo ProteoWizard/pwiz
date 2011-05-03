@@ -120,9 +120,6 @@
   <data name="label2.Text" xml:space="preserve">
     <value>Specify the mass accuracy of the mass spectrometer.  This value is used to determine whether a spectrum peak belongs to the peptide of interest.  Setting the value too high will result in chromatograms that have zeroes in them.  Setting it too low will result in chromatograms that continue beyond where the peptide was eluting.</value>
   </data>
-  <data name="label6.Text" xml:space="preserve">
-    <value>When computing the amount of tracers that are present in a sample, it is usually the case that there is a choice of M/Z values that could be considered.  Topograph can be configured so that it weights the absence of a signal in one M/Z more heavily than the presence of signal in another M/Z.</value>
-  </data>
   <assembly alias="System.Drawing" name="System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
   <data name="$this.Icon" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
     <value>

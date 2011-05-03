@@ -34,8 +34,6 @@ namespace pwiz.Topograph.ui.Forms
             this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
-            this.label6 = new System.Windows.Forms.Label();
-            this.cbxWeightSignalAbsenceMore = new System.Windows.Forms.CheckBox();
             this.label5 = new System.Windows.Forms.Label();
             this.label7 = new System.Windows.Forms.Label();
             this.tbxProteinDescriptionKey = new System.Windows.Forms.TextBox();
@@ -43,6 +41,8 @@ namespace pwiz.Topograph.ui.Forms
             this.tbxMaxRetentionTimeShift = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.tbxMinCorrelationCoefficient = new System.Windows.Forms.TextBox();
+            this.label6 = new System.Windows.Forms.Label();
+            this.tbxMinDeconvolutionScoreForAvgPrecursorPool = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // label1
@@ -91,24 +91,6 @@ namespace pwiz.Topograph.ui.Forms
             this.label2.Size = new System.Drawing.Size(503, 74);
             this.label2.TabIndex = 3;
             this.label2.Text = resources.GetString("label2.Text");
-            // 
-            // label6
-            // 
-            this.label6.Location = new System.Drawing.Point(20, 226);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(503, 76);
-            this.label6.TabIndex = 8;
-            this.label6.Text = resources.GetString("label6.Text");
-            // 
-            // cbxWeightSignalAbsenceMore
-            // 
-            this.cbxWeightSignalAbsenceMore.AutoSize = true;
-            this.cbxWeightSignalAbsenceMore.Location = new System.Drawing.Point(23, 285);
-            this.cbxWeightSignalAbsenceMore.Name = "cbxWeightSignalAbsenceMore";
-            this.cbxWeightSignalAbsenceMore.Size = new System.Drawing.Size(249, 17);
-            this.cbxWeightSignalAbsenceMore.TabIndex = 9;
-            this.cbxWeightSignalAbsenceMore.Text = "Weight absence of signal higher than presence";
-            this.cbxWeightSignalAbsenceMore.UseVisualStyleBackColor = true;
             // 
             // label5
             // 
@@ -167,6 +149,23 @@ namespace pwiz.Topograph.ui.Forms
             this.tbxMinCorrelationCoefficient.Size = new System.Drawing.Size(144, 20);
             this.tbxMinCorrelationCoefficient.TabIndex = 16;
             // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(33, 220);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(444, 13);
+            this.label6.TabIndex = 17;
+            this.label6.Text = "Minimum Deconvolution Score for peptides to be used in average precursor pool cal" +
+                "culations";
+            // 
+            // tbxMinDeconvolutionScoreForAvgPrecursorPool
+            // 
+            this.tbxMinDeconvolutionScoreForAvgPrecursorPool.Location = new System.Drawing.Point(339, 254);
+            this.tbxMinDeconvolutionScoreForAvgPrecursorPool.Name = "tbxMinDeconvolutionScoreForAvgPrecursorPool";
+            this.tbxMinDeconvolutionScoreForAvgPrecursorPool.Size = new System.Drawing.Size(138, 20);
+            this.tbxMinDeconvolutionScoreForAvgPrecursorPool.TabIndex = 18;
+            // 
             // MiscSettingsForm
             // 
             this.AcceptButton = this.btnOK;
@@ -174,6 +173,8 @@ namespace pwiz.Topograph.ui.Forms
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(534, 564);
+            this.Controls.Add(this.tbxMinDeconvolutionScoreForAvgPrecursorPool);
+            this.Controls.Add(this.label6);
             this.Controls.Add(this.tbxMinCorrelationCoefficient);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.tbxMaxRetentionTimeShift);
@@ -181,8 +182,6 @@ namespace pwiz.Topograph.ui.Forms
             this.Controls.Add(this.tbxProteinDescriptionKey);
             this.Controls.Add(this.label7);
             this.Controls.Add(this.label5);
-            this.Controls.Add(this.cbxWeightSignalAbsenceMore);
-            this.Controls.Add(this.label6);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.btnCancel);
@@ -205,8 +204,6 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label label6;
-        private System.Windows.Forms.CheckBox cbxWeightSignalAbsenceMore;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.TextBox tbxProteinDescriptionKey;
@@ -214,5 +211,7 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.TextBox tbxMaxRetentionTimeShift;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TextBox tbxMinCorrelationCoefficient;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.TextBox tbxMinDeconvolutionScoreForAvgPrecursorPool;
     }
 }

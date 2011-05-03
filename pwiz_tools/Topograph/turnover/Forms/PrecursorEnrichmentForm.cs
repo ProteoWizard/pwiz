@@ -29,6 +29,7 @@ namespace pwiz.Topograph.ui.Forms
             _zedGraphControl.GraphPane.XAxis.Title.Text = "Precursor Enrichment (%)";
             _zedGraphControl.GraphPane.YAxis.Title.Text = "# of peptide replicates";
             splitContainer1.Panel2.Controls.Add(_zedGraphControl);
+            tbxMinScore.Text = workspace.GetMinDeconvolutionScoreForAvgPrecursorPool().ToString();
         }
 
         private void btnRefresh_Click(object sender, EventArgs e)

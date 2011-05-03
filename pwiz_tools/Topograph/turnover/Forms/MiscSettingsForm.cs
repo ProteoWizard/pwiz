@@ -17,10 +17,10 @@ namespace pwiz.Topograph.ui.Forms
         {
             InitializeComponent();
             tbxMassAccuracy.Text = workspace.GetMassAccuracy().ToString();
-            cbxWeightSignalAbsenceMore.Checked = Workspace.GetErrOnSideOfLowerAbundance();
             tbxProteinDescriptionKey.Text = workspace.GetProteinDescriptionKey();
             tbxMaxRetentionTimeShift.Text = workspace.GetMaxIsotopeRetentionTimeShift().ToString();
             tbxMinCorrelationCoefficient.Text = workspace.GetMinCorrelationCoefficient().ToString();
+            tbxMinDeconvolutionScoreForAvgPrecursorPool.Text = workspace.GetMinDeconvolutionScoreForAvgPrecursorPool().ToString();
         }
 
         private void btnOK_Click(object sender, EventArgs e)
@@ -28,9 +28,10 @@ namespace pwiz.Topograph.ui.Forms
             using (Workspace.GetWriteLock())
             {
                 Workspace.SetMassAccuracy(Convert.ToDouble(tbxMassAccuracy.Text));
-                Workspace.SetErrOnSideOfLowerAbundance(cbxWeightSignalAbsenceMore.Checked);
                 Workspace.SetProteinDescriptionKey(tbxProteinDescriptionKey.Text);
+                Workspace.SetMaxIsotopeRetentionTimeShift(Convert.ToDouble(tbxMaxRetentionTimeShift.Text));
                 Workspace.SetMinCorrelationCoefficient(double.Parse(tbxMinCorrelationCoefficient.Text));
+                Workspace.SetMinDeconvolutionScoreForAvgPrecursorPool(double.Parse(tbxMinDeconvolutionScoreForAvgPrecursorPool.Text));
             }
             Close();
         }
