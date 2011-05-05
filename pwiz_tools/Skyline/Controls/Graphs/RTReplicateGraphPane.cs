@@ -22,6 +22,7 @@ using System.Linq;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
 
@@ -37,6 +38,8 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             YAxis.Title.Text = "Measured Time";
         }
+
+        public bool CanShowRTLegend { get; private set; }
 
         public override void UpdateGraph(bool checkData)
         {
@@ -88,6 +91,7 @@ namespace pwiz.Skyline.Controls.Graphs
             else if (!(selectedTreeNode is TransitionGroupTreeNode))
             {
                 Title.Text = "Select a peptide to see the retention time graph";
+                CanShowRTLegend = false;
                 return;
             }
 
@@ -100,7 +104,7 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             GraphData graphData = new RTGraphData(document, parentNode, displayType);
-
+            CanShowRTLegend = graphData.DocNodes.Count != 0;
             InitFromData(graphData);
 
             int selectedReplicateIndex = SelectedIndex;
@@ -166,6 +170,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 XAxis.Scale.MaxAuto = XAxis.Scale.MinAuto = true;
                 YAxis.Scale.MaxAuto = YAxis.Scale.MinAuto = true;
             }
+            Legend.IsVisible = Settings.Default.ShowRetentionTimesLegend;
             AxisChange();
         }
 

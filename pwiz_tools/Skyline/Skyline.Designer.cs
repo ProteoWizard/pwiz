@@ -292,6 +292,7 @@ namespace pwiz.Skyline
             this.timeRTValueContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fwhmRTValueContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fwbRTValueContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showRTLegendContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.selectionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.refineRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.predictionRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -326,6 +327,7 @@ namespace pwiz.Skyline
             this.areaNormalizeTotalContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator40 = new System.Windows.Forms.ToolStripSeparator();
             this.areaNormalizeNoneContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showPeakAreaLegendContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showLibraryPeakAreaContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showDotProductToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.peptideLogScaleContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -2478,9 +2480,11 @@ namespace pwiz.Skyline
             // 
             // contextMenuRetentionTimes
             // 
+            this.contextMenuRetentionTimes.AllowMerge = false;
             this.contextMenuRetentionTimes.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.timeGraphContextMenuItem,
             this.peptideRTValueMenuItem,
+            this.showRTLegendContextMenuItem,
             this.selectionContextMenuItem,
             this.refineRTContextMenuItem,
             this.predictionRTContextMenuItem,
@@ -2497,7 +2501,7 @@ namespace pwiz.Skyline
             this.zoomOutRTContextMenuItem,
             this.toolStripSeparator25});
             this.contextMenuRetentionTimes.Name = "contextMenuRetentionTimes";
-            this.contextMenuRetentionTimes.Size = new System.Drawing.Size(178, 298);
+            this.contextMenuRetentionTimes.Size = new System.Drawing.Size(178, 342);
             // 
             // timeGraphContextMenuItem
             // 
@@ -2580,6 +2584,13 @@ namespace pwiz.Skyline
             this.fwbRTValueContextMenuItem.Size = new System.Drawing.Size(155, 22);
             this.fwbRTValueContextMenuItem.Text = "FWB";
             this.fwbRTValueContextMenuItem.Click += new System.EventHandler(this.fwbRTValueContextMenuItem_Click);
+            // 
+            // showRTLegendToolStripMenuItem
+            // 
+            this.showRTLegendContextMenuItem.Name = "showRTLegendToolStripMenuItem";
+            this.showRTLegendContextMenuItem.Size = new System.Drawing.Size(177, 22);
+            this.showRTLegendContextMenuItem.Text = "Legend";
+            this.showRTLegendContextMenuItem.Click += new System.EventHandler(this.showRTLegendContextMenuItem_Click);
             // 
             // selectionContextMenuItem
             // 
@@ -2710,6 +2721,7 @@ namespace pwiz.Skyline
             this.peptideOrderContextMenuItem,
             this.replicateOrderContextMenuItem,
             this.areaNormalizeContextMenuItem,
+            this.showPeakAreaLegendContextMenuItem,
             this.showLibraryPeakAreaContextMenuItem,
             this.showDotProductToolStripMenuItem,
             this.peptideLogScaleContextMenuItem,
@@ -2814,28 +2826,35 @@ namespace pwiz.Skyline
             // areaNormalizeMaximumContextMenuItem
             // 
             this.areaNormalizeMaximumContextMenuItem.Name = "areaNormalizeMaximumContextMenuItem";
-            this.areaNormalizeMaximumContextMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.areaNormalizeMaximumContextMenuItem.Size = new System.Drawing.Size(128, 22);
             this.areaNormalizeMaximumContextMenuItem.Text = "Maximum";
             this.areaNormalizeMaximumContextMenuItem.Click += new System.EventHandler(this.areaNormalizeMaximumContextMenuItem_Click);
             // 
             // areaNormalizeTotalContextMenuItem
             // 
             this.areaNormalizeTotalContextMenuItem.Name = "areaNormalizeTotalContextMenuItem";
-            this.areaNormalizeTotalContextMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.areaNormalizeTotalContextMenuItem.Size = new System.Drawing.Size(128, 22);
             this.areaNormalizeTotalContextMenuItem.Text = "Total";
             this.areaNormalizeTotalContextMenuItem.Click += new System.EventHandler(this.areaNormalizeTotalContextMenuItem_Click);
             // 
             // toolStripSeparator40
             // 
             this.toolStripSeparator40.Name = "toolStripSeparator40";
-            this.toolStripSeparator40.Size = new System.Drawing.Size(149, 6);
+            this.toolStripSeparator40.Size = new System.Drawing.Size(125, 6);
             // 
             // areaNormalizeNoneContextMenuItem
             // 
             this.areaNormalizeNoneContextMenuItem.Name = "areaNormalizeNoneContextMenuItem";
-            this.areaNormalizeNoneContextMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.areaNormalizeNoneContextMenuItem.Size = new System.Drawing.Size(128, 22);
             this.areaNormalizeNoneContextMenuItem.Text = "None";
             this.areaNormalizeNoneContextMenuItem.Click += new System.EventHandler(this.areaNormalizeNoneContextMenuItem_Click);
+            // 
+            // showPeakAreaLegendToolStripMenuItem
+            // 
+            this.showPeakAreaLegendContextMenuItem.Name = "showPeakAreaLegendToolStripMenuItem";
+            this.showPeakAreaLegendContextMenuItem.Size = new System.Drawing.Size(170, 22);
+            this.showPeakAreaLegendContextMenuItem.Text = "Legend";
+            this.showPeakAreaLegendContextMenuItem.Click += new System.EventHandler(this.showPeakAreaLegendContextMenuItem_Click);
             // 
             // showLibraryPeakAreaContextMenuItem
             // 
@@ -3233,6 +3252,8 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator44;
         private System.Windows.Forms.ToolStripMenuItem closeAllChromatogramsMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showDotProductToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem showPeakAreaLegendContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem showRTLegendContextMenuItem;
     }
 }
 

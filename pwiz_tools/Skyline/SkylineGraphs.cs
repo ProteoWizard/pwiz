@@ -1972,6 +1972,12 @@ namespace pwiz.Skyline
                             replicateOrderAcqTimeContextMenuItem
                         });
                     }
+                    var rtReplicateGraphPane = _graphRetentionTime.GraphPane as RTReplicateGraphPane;
+                    if (rtReplicateGraphPane != null && rtReplicateGraphPane.CanShowRTLegend)
+                    {
+                        showRTLegendContextMenuItem.Checked = set.ShowRetentionTimesLegend;
+                        menuStrip.Items.Insert(iInsert++, showRTLegendContextMenuItem);
+                    }
                 }
                 else if (graphType == GraphTypeRT.peptide)
                 {
@@ -2035,6 +2041,12 @@ namespace pwiz.Skyline
         {
             Settings.Default.RTGraphType = GraphTypeRT.peptide.ToString();
             ShowGraphRetentionTime(true);
+            UpdateRetentionTimeGraph();
+        }
+
+        private void showRTLegendContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowRetentionTimesLegend = !Settings.Default.ShowRetentionTimesLegend;
             UpdateRetentionTimeGraph();
         }
 
@@ -2367,17 +2379,27 @@ namespace pwiz.Skyline
                             areaNormalizeNoneContextMenuItem
                         });                 
                 }
-                // If the area replicate graph is being displayed and it can show a library
-                // column, display the "Show Library" option
                 var areaReplicateGraphPane = _graphPeakArea.GraphPane as AreaReplicateGraphPane;
                 if (areaReplicateGraphPane != null)
                 {
+                    // If the area replicate graph is being displayed and it shows a legend, 
+                    // display the "Legend" option
+                    if (areaReplicateGraphPane.CanShowPeakAreaLegend)
+                    {
+                        showPeakAreaLegendContextMenuItem.Checked = set.ShowPeakAreaLegend;
+                        menuStrip.Items.Insert(iInsert++, showPeakAreaLegendContextMenuItem);
+                    }
+
+                    // If the area replicate graph is being displayed and it can show a library,
+                    // display the "Show Library" option
                     if (areaReplicateGraphPane.CanShowLibrary)
                     {
                         showLibraryPeakAreaContextMenuItem.Checked = set.ShowLibraryPeakArea;
                         menuStrip.Items.Insert(iInsert++, showLibraryPeakAreaContextMenuItem);
                     }
 
+                    // If the area replicate graph is being displayed and it can show dot products,
+                    // display the "Show Dot Product" option
                     if (areaReplicateGraphPane.CanShowDotProduct)
                     {
                         showDotProductToolStripMenuItem.Checked = set.ShowDotProductPeakArea;
@@ -2605,6 +2627,12 @@ namespace pwiz.Skyline
         private void showDotProductToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.ShowDotProductPeakArea = !Settings.Default.ShowDotProductPeakArea;
+            UpdateSummaryGraphs();
+        }
+
+        private void showPeakAreaLegendContextMenuItem_Click(object sender, EventArgs e)
+        {
+            Settings.Default.ShowPeakAreaLegend = !Settings.Default.ShowPeakAreaLegend;
             UpdateSummaryGraphs();
         }
 

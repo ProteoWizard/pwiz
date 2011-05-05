@@ -75,6 +75,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public bool IsDotProductVisible { get { return CanShowDotProduct && Settings.Default.ShowDotProductPeakArea; } }
 
+        public bool CanShowPeakAreaLegend { get; private set; }
+
         public override void UpdateGraph(bool checkData)
         {
             SrmDocument document = GraphSummary.DocumentUIContainer.DocumentUI;
@@ -138,15 +140,11 @@ namespace pwiz.Skyline.Controls.Graphs
             else if (!(selectedTreeNode is TransitionGroupTreeNode))
             {
                 Title.Text = "Select a peptide to see the peak area graph";
+                CanShowPeakAreaLegend = false;
                 return;
             }
 
             var parentGroupNode = parentNode as TransitionGroupDocNode;
-            CanShowLibrary = parentGroupNode != null && parentGroupNode.HasLibInfo &&
-               AreaGraphController.AreaView != AreaNormalizeToView.area_ratio_view;
-
-            CanShowDotProduct = CanShowLibrary && 
-                AreaGraphController.AreaView != AreaNormalizeToView.area_percent_view;
             
             // If a precursor is going to be displayed with display type single
             if (parentGroupNode != null && displayType == DisplayTypeChrom.single)
@@ -185,7 +183,16 @@ namespace pwiz.Skyline.Controls.Graphs
                 normalizeData = AreaNormalizeToData.none;
 
             // Calculate graph data points
+            CanShowLibrary = parentGroupNode != null && parentGroupNode.HasLibInfo &&
+               AreaGraphController.AreaView != AreaNormalizeToView.area_ratio_view;  // IsLibraryVisible depends on this
+
             GraphData graphData = new AreaGraphData(document, parentNode, displayType, ratioIndex, normalizeData, IsLibraryVisible);
+
+            int countNodes = graphData.DocNodes.Count;
+            CanShowLibrary = CanShowLibrary && countNodes != 0;
+            CanShowDotProduct = CanShowLibrary &&
+                AreaGraphController.AreaView != AreaNormalizeToView.area_percent_view;
+            CanShowPeakAreaLegend = countNodes != 0;
 
             InitFromData(graphData);
 
@@ -204,7 +211,7 @@ namespace pwiz.Skyline.Controls.Graphs
             double[] sumAreas = new double[results.Chromatograms.Count];
 
             int iColor = 0;
-            for (int i = 0; i < graphData.DocNodes.Count; i++)
+            for (int i = 0; i < countNodes; i++)
             {
                 var docNode = graphData.DocNodes[i];
                 var pointPairLists = graphData.PointPairLists[i];
@@ -376,6 +383,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (!YAxis.Scale.MaxAuto && YAxis.Scale.Max == 100)
                     YAxis.Scale.MaxAuto = true;
             }
+            Legend.IsVisible = Settings.Default.ShowPeakAreaLegend;
             AxisChange();
         }
 

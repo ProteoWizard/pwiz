@@ -1435,5 +1435,29 @@ namespace pwiz.Skyline.Properties {
                 this["ShowDotProductPeakArea"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ShowPeakAreaLegend {
+            get {
+                return ((bool)(this["ShowPeakAreaLegend"]));
+            }
+            set {
+                this["ShowPeakAreaLegend"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ShowRetentionTimesLegend {
+            get {
+                return ((bool)(this["ShowRetentionTimesLegend"]));
+            }
+            set {
+                this["ShowRetentionTimesLegend"] = value;
+            }
+        }
     }
 }
