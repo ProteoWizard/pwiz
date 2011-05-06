@@ -8,6 +8,7 @@ using NHibernate.SqlCommand;
 using NHibernate.Cfg;
 using NHibernate.Dialect;
 using NHibernate.Dialect.Function;
+using Environment = System.Environment;
 
 namespace BumberDash.Model
 {
@@ -61,8 +62,10 @@ namespace BumberDash.Model
         static object mutex = new object();
         public static ISessionFactory CreateSessionFactory()
         {
-            var root = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName) ?? string.Empty;
-            return CreateSessionFactory(Path.Combine(root, "lib\\Bumbershoot.db"));
+            var root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),"Bumberdash");
+            if (!Directory.Exists(root))
+                Directory.CreateDirectory(root);
+            return CreateSessionFactory(Path.Combine(root, "Bumbershoot.db"));
         }
 
         public static ISessionFactory CreateSessionFactory(string filePath)
