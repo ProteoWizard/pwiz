@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.Windows.Forms;
 
 namespace pwiz.Common.Controls
@@ -24,12 +25,40 @@ namespace pwiz.Common.Controls
     public partial class FindBox : UserControl
     {
         private Timer _timer;
+        private bool _filtering;
+        private DataGridView _dataGridView;
+
         public FindBox()
         {
             InitializeComponent();
         }
 
-        public DataGridView DataGridView { get; set; }
+        public DataGridView DataGridView
+        {
+            get
+            {
+                return _dataGridView;
+            }
+            set
+            {
+                _dataGridView = value;
+                if (_dataGridView != null)
+                {
+                    _dataGridView.RowsAdded += _dataGridView_RowsAdded;
+                    _dataGridView.RowsRemoved += _dataGridView_RowsRemoved;
+                }
+            }
+        }
+
+        void _dataGridView_RowsRemoved(object sender, DataGridViewRowsRemovedEventArgs e)
+        {
+            StartTimer();
+        }
+
+        void _dataGridView_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
+        {
+            StartTimer();
+        }
 
         protected override void OnHandleDestroyed(EventArgs e)
         {
@@ -43,12 +72,21 @@ namespace pwiz.Common.Controls
 
         private void textBox1_TextChanged(object sender, EventArgs e)
         {
+            StartTimer();
+        }
+
+        private void StartTimer()
+        {
+            if (_filtering)
+            {
+                return;
+            }
             if (_timer == null)
             {
                 _timer = new Timer
-                             {
-                                 Interval = 2000,
-                             };
+                {
+                    Interval = 2000,
+                };
                 _timer.Tick += _timer_Tick;
             }
             _timer.Start();
@@ -66,49 +104,63 @@ namespace pwiz.Common.Controls
             {
                 return;
             }
-            var text = textBox1.Text;
-            var rows = new DataGridViewRow[dataGridView.Rows.Count];
-            var rowsRemoved = false;
-            dataGridView.Rows.CopyTo(rows, 0);
-            foreach (var row in rows)
+            try
             {
-                var visible = false;
-                if (string.IsNullOrEmpty(text))
+                _filtering = true;
+                var filteredRowIndexes = new List<int>();
+                var text = textBox1.Text;
+                var rows = new DataGridViewRow[dataGridView.Rows.Count];
+                var rowsRemoved = false;
+                dataGridView.Rows.CopyTo(rows, 0);
+                for (int rowIndex = 0; rowIndex < rows.Length; rowIndex++)
                 {
-                    visible = true;
-                }
-                else
-                {
-                    for (int iCol = 0; iCol < row.Cells.Count; iCol++)
+                    var row = rows[rowIndex];
+                    var visible = false;
+                    if (string.IsNullOrEmpty(text))
                     {
-                        var cell = row.Cells[iCol];
-                        if (cell.Value == null)
+                        filteredRowIndexes.Add(rowIndex);
+                        visible = true;
+                    }
+                    else
+                    {
+                        for (int iCol = 0; iCol < row.Cells.Count; iCol++)
                         {
-                            continue;
-                        }
-                        var strValue = cell.Value.ToString();
-                        if (strValue.IndexOf(text) >= 0)
-                        {
-                            visible = true;
-                            break;
+                            var cell = row.Cells[iCol];
+                            if (cell.Value == null)
+                            {
+                                continue;
+                            }
+                            var strValue = cell.Value.ToString();
+                            if (strValue.IndexOf(text) >= 0)
+                            {
+                                filteredRowIndexes.Add(rowIndex);
+                                visible = true;
+                                break;
+                            }
                         }
                     }
+                    if (visible == row.Visible)
+                    {
+                        continue;
+                    }
+                    if (!rowsRemoved)
+                    {
+                        dataGridView.Rows.Clear();
+                        rowsRemoved = true;
+                    }
+                    row.Visible = visible;
                 }
-                if (visible == row.Visible)
+                if (rowsRemoved)
                 {
-                    continue;
+                    dataGridView.Rows.AddRange(rows);
                 }
-                if (!rowsRemoved)
-                {
-                    dataGridView.Rows.Clear();
-                    rowsRemoved = true;
-                }
-                row.Visible = visible;
+                FilteredRowIndexes = filteredRowIndexes.ToArray();
             }
-            if (rowsRemoved)
+            finally
             {
-                dataGridView.Rows.AddRange(rows);
+                _filtering = false;
             }
         }
+        public int[] FilteredRowIndexes { get; private set; }
     }
 }

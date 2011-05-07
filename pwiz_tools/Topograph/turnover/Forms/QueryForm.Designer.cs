@@ -51,8 +51,7 @@ namespace pwiz.Topograph.ui.Forms
             this.btnSaveQuery = new System.Windows.Forms.Button();
             this.btnExecuteQuery = new System.Windows.Forms.Button();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-            this.findBox = new pwiz.Common.Controls.FindBox();
-            this.label2 = new System.Windows.Forms.Label();
+            this.recordNavBar1 = new pwiz.Common.Controls.RecordNavBar();
             this.tabControl1.SuspendLayout();
             this.pageDesign.SuspendLayout();
             this.splitContainer2.Panel1.SuspendLayout();
@@ -296,12 +295,10 @@ namespace pwiz.Topograph.ui.Forms
             // 
             // tableLayoutPanel1
             // 
-            this.tableLayoutPanel1.ColumnCount = 2;
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 83F));
+            this.tableLayoutPanel1.ColumnCount = 1;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel1.Controls.Add(this.findBox, 1, 0);
-            this.tableLayoutPanel1.Controls.Add(this.label2, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.recordNavBar1, 0, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 165);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -310,25 +307,14 @@ namespace pwiz.Topograph.ui.Forms
             this.tableLayoutPanel1.Size = new System.Drawing.Size(653, 29);
             this.tableLayoutPanel1.TabIndex = 2;
             // 
-            // findBox
+            // recordNavBar1
             // 
-            this.findBox.DataGridView = this.dataGridView1;
-            this.findBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.findBox.Location = new System.Drawing.Point(86, 3);
-            this.findBox.Name = "findBox";
-            this.findBox.Size = new System.Drawing.Size(564, 23);
-            this.findBox.TabIndex = 2;
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label2.Location = new System.Drawing.Point(3, 0);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(77, 29);
-            this.label2.TabIndex = 3;
-            this.label2.Text = "Find:";
-            this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.recordNavBar1.DataGridView = this.dataGridView1;
+            this.recordNavBar1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.recordNavBar1.Location = new System.Drawing.Point(3, 3);
+            this.recordNavBar1.Name = "recordNavBar1";
+            this.recordNavBar1.Size = new System.Drawing.Size(647, 23);
+            this.recordNavBar1.TabIndex = 0;
             // 
             // QueryForm
             // 
@@ -356,7 +342,6 @@ namespace pwiz.Topograph.ui.Forms
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.panel1.ResumeLayout(false);
             this.tableLayoutPanel1.ResumeLayout(false);
-            this.tableLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -384,7 +369,6 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.Button btnExport;
         private System.Windows.Forms.Button btnSaveQuery;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
-        private pwiz.Common.Controls.FindBox findBox;
-        private System.Windows.Forms.Label label2;
+        private pwiz.Common.Controls.RecordNavBar recordNavBar1;
     }
 }

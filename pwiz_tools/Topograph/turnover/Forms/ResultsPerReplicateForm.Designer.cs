@@ -35,8 +35,9 @@
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.checkedListBoxColumns = new System.Windows.Forms.CheckedListBox();
             this.btnRequery = new System.Windows.Forms.Button();
-            this.label2 = new System.Windows.Forms.Label();
-            this.findBox1 = new pwiz.Common.Controls.FindBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.btnSave = new System.Windows.Forms.Button();
+            this.recordNavBar1 = new pwiz.Common.Controls.RecordNavBar();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.colPeptide = new System.Windows.Forms.DataGridViewLinkColumn();
             this.colDataFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -55,8 +56,6 @@
             this.colAvgTurnover = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colAvgTurnoverScore = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colStatus = new pwiz.Topograph.ui.Controls.ValidationStatusColumn();
-            this.label1 = new System.Windows.Forms.Label();
-            this.btnSave = new System.Windows.Forms.Button();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -91,10 +90,9 @@
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 25F));
             this.tableLayoutPanel1.Controls.Add(this.checkedListBoxColumns, 0, 2);
             this.tableLayoutPanel1.Controls.Add(this.btnRequery, 3, 0);
-            this.tableLayoutPanel1.Controls.Add(this.label2, 2, 3);
-            this.tableLayoutPanel1.Controls.Add(this.findBox1, 3, 3);
             this.tableLayoutPanel1.Controls.Add(this.label1, 0, 1);
             this.tableLayoutPanel1.Controls.Add(this.btnSave, 3, 1);
+            this.tableLayoutPanel1.Controls.Add(this.recordNavBar1, 0, 3);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -128,22 +126,37 @@
             this.btnRequery.UseVisualStyleBackColor = true;
             this.btnRequery.Click += new System.EventHandler(this.btnRequery_Click);
             // 
-            // label2
+            // label1
             // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(371, 202);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(27, 13);
-            this.label2.TabIndex = 3;
-            this.label2.Text = "Find";
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(3, 25);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(80, 13);
+            this.label1.TabIndex = 5;
+            this.label1.Text = "Show Columns:";
             // 
-            // findBox1
+            // btnSave
             // 
-            this.findBox1.DataGridView = this.dataGridView1;
-            this.findBox1.Location = new System.Drawing.Point(555, 205);
-            this.findBox1.Name = "findBox1";
-            this.findBox1.Size = new System.Drawing.Size(178, 19);
-            this.findBox1.TabIndex = 4;
+            this.btnSave.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.btnSave.Enabled = false;
+            this.btnSave.Location = new System.Drawing.Point(552, 25);
+            this.btnSave.Margin = new System.Windows.Forms.Padding(0);
+            this.btnSave.Name = "btnSave";
+            this.btnSave.Size = new System.Drawing.Size(184, 25);
+            this.btnSave.TabIndex = 6;
+            this.btnSave.Text = "Save...";
+            this.btnSave.UseVisualStyleBackColor = true;
+            this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
+            // 
+            // recordNavBar1
+            // 
+            this.tableLayoutPanel1.SetColumnSpan(this.recordNavBar1, 4);
+            this.recordNavBar1.DataGridView = this.dataGridView1;
+            this.recordNavBar1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.recordNavBar1.Location = new System.Drawing.Point(3, 205);
+            this.recordNavBar1.Name = "recordNavBar1";
+            this.recordNavBar1.Size = new System.Drawing.Size(730, 19);
+            this.recordNavBar1.TabIndex = 7;
             // 
             // dataGridView1
             // 
@@ -308,28 +321,6 @@
             this.colStatus.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             this.colStatus.ValueMember = "Value";
             // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(3, 25);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(80, 13);
-            this.label1.TabIndex = 5;
-            this.label1.Text = "Show Columns:";
-            // 
-            // btnSave
-            // 
-            this.btnSave.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.btnSave.Enabled = false;
-            this.btnSave.Location = new System.Drawing.Point(552, 25);
-            this.btnSave.Margin = new System.Windows.Forms.Padding(0);
-            this.btnSave.Name = "btnSave";
-            this.btnSave.Size = new System.Drawing.Size(184, 25);
-            this.btnSave.TabIndex = 6;
-            this.btnSave.Text = "Save...";
-            this.btnSave.UseVisualStyleBackColor = true;
-            this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
-            // 
             // ResultsPerReplicateForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -356,8 +347,6 @@
         private System.Windows.Forms.DataGridView dataGridView1;
         private System.Windows.Forms.CheckedListBox checkedListBoxColumns;
         private System.Windows.Forms.Button btnRequery;
-        private System.Windows.Forms.Label label2;
-        private pwiz.Common.Controls.FindBox findBox1;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnSave;
         private System.Windows.Forms.DataGridViewLinkColumn colPeptide;
@@ -377,5 +366,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn colAvgTurnover;
         private System.Windows.Forms.DataGridViewTextBoxColumn colAvgTurnoverScore;
         private pwiz.Topograph.ui.Controls.ValidationStatusColumn colStatus;
+        private pwiz.Common.Controls.RecordNavBar recordNavBar1;
     }
 }

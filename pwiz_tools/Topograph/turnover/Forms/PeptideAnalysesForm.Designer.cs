@@ -46,8 +46,7 @@ namespace pwiz.Topograph.ui.Forms
             this.deleteMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.btnAnalyzePeptides = new System.Windows.Forms.Button();
-            this.findBox = new pwiz.Common.Controls.FindBox();
-            this.label1 = new System.Windows.Forms.Label();
+            this.recordNavBar1 = new pwiz.Common.Controls.RecordNavBar();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.contextMenuStrip1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
@@ -154,14 +153,12 @@ namespace pwiz.Topograph.ui.Forms
             // 
             // tableLayoutPanel1
             // 
-            this.tableLayoutPanel1.ColumnCount = 3;
+            this.tableLayoutPanel1.ColumnCount = 2;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 149F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 83F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel1.Controls.Add(this.btnAnalyzePeptides, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.findBox, 2, 0);
-            this.tableLayoutPanel1.Controls.Add(this.label1, 1, 0);
+            this.tableLayoutPanel1.Controls.Add(this.recordNavBar1, 1, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -180,25 +177,14 @@ namespace pwiz.Topograph.ui.Forms
             this.btnAnalyzePeptides.UseVisualStyleBackColor = true;
             this.btnAnalyzePeptides.Click += new System.EventHandler(this.btnAnalyzePeptides_Click);
             // 
-            // findBox
+            // recordNavBar1
             // 
-            this.findBox.DataGridView = this.dataGridView;
-            this.findBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.findBox.Location = new System.Drawing.Point(235, 3);
-            this.findBox.Name = "findBox";
-            this.findBox.Size = new System.Drawing.Size(1013, 23);
-            this.findBox.TabIndex = 2;
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label1.Location = new System.Drawing.Point(152, 0);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(77, 29);
-            this.label1.TabIndex = 3;
-            this.label1.Text = "Find:";
-            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.recordNavBar1.DataGridView = this.dataGridView;
+            this.recordNavBar1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.recordNavBar1.Location = new System.Drawing.Point(152, 3);
+            this.recordNavBar1.Name = "recordNavBar1";
+            this.recordNavBar1.Size = new System.Drawing.Size(1096, 23);
+            this.recordNavBar1.TabIndex = 2;
             // 
             // PeptideAnalysesForm
             // 
@@ -213,7 +199,6 @@ namespace pwiz.Topograph.ui.Forms
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
             this.contextMenuStrip1.ResumeLayout(false);
             this.tableLayoutPanel1.ResumeLayout(false);
-            this.tableLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -225,8 +210,6 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.Button btnAnalyzePeptides;
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
         private System.Windows.Forms.ToolStripMenuItem deleteMenuItem;
-        private FindBox findBox;
-        private System.Windows.Forms.Label label1;
         private System.Windows.Forms.DataGridViewLinkColumn colPeptide;
         private ValidationStatusColumn colStatus;
         private System.Windows.Forms.DataGridViewTextBoxColumn colNote;
@@ -236,5 +219,6 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.DataGridViewTextBoxColumn colDataFileCount;
         private System.Windows.Forms.DataGridViewLinkColumn colMinScore;
         private System.Windows.Forms.DataGridViewLinkColumn colMaxScore;
+        private RecordNavBar recordNavBar1;
     }
 }

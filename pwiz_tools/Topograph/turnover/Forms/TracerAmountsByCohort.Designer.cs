@@ -35,13 +35,6 @@
             this.cbxByProtein = new System.Windows.Forms.CheckBox();
             this.label1 = new System.Windows.Forms.Label();
             this.tbxMinScore = new System.Windows.Forms.TextBox();
-            this.label2 = new System.Windows.Forms.Label();
-            this.findBox1 = new pwiz.Common.Controls.FindBox();
-            this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            this.colPeptide = new System.Windows.Forms.DataGridViewLinkColumn();
-            this.colProteinKey = new System.Windows.Forms.DataGridViewLinkColumn();
-            this.colProteinDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colProteinName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.cbxShowTurnover = new System.Windows.Forms.CheckBox();
             this.cbxShowCount = new System.Windows.Forms.CheckBox();
             this.cbxTracerPercentSlope = new System.Windows.Forms.CheckBox();
@@ -56,6 +49,12 @@
             this.cbxShowStdErr = new System.Windows.Forms.CheckBox();
             this.btnRequery = new System.Windows.Forms.Button();
             this.btnSave = new System.Windows.Forms.Button();
+            this.cbxAreaUnderCurve = new System.Windows.Forms.CheckBox();
+            this.dataGridView1 = new System.Windows.Forms.DataGridView();
+            this.colPeptide = new System.Windows.Forms.DataGridViewLinkColumn();
+            this.colProteinKey = new System.Windows.Forms.DataGridViewLinkColumn();
+            this.colProteinDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colProteinName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.dataGridViewSummary = new System.Windows.Forms.DataGridView();
             this.colSummaryQuantity = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -65,7 +64,7 @@
             this.colSummaryMeanStdErr = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colSummaryValueCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colSummaryStdDevStdErrCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.cbxAreaUnderCurve = new System.Windows.Forms.CheckBox();
+            this.recordNavBar1 = new pwiz.Common.Controls.RecordNavBar();
             this.tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.splitContainer1.Panel1.SuspendLayout();
@@ -85,8 +84,6 @@
             this.tableLayoutPanel1.Controls.Add(this.cbxByProtein, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.label1, 0, 1);
             this.tableLayoutPanel1.Controls.Add(this.tbxMinScore, 1, 1);
-            this.tableLayoutPanel1.Controls.Add(this.label2, 2, 1);
-            this.tableLayoutPanel1.Controls.Add(this.findBox1, 3, 1);
             this.tableLayoutPanel1.Controls.Add(this.cbxShowTurnover, 0, 5);
             this.tableLayoutPanel1.Controls.Add(this.cbxShowCount, 2, 5);
             this.tableLayoutPanel1.Controls.Add(this.cbxTracerPercentSlope, 3, 4);
@@ -143,98 +140,6 @@
             this.tbxMinScore.Size = new System.Drawing.Size(100, 20);
             this.tbxMinScore.TabIndex = 3;
             this.tbxMinScore.Text = "0";
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label2.Location = new System.Drawing.Point(330, 25);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(94, 25);
-            this.label2.TabIndex = 4;
-            this.label2.Text = "Find:";
-            this.label2.TextAlign = System.Drawing.ContentAlignment.TopRight;
-            // 
-            // findBox1
-            // 
-            this.findBox1.DataGridView = this.dataGridView1;
-            this.findBox1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.findBox1.Location = new System.Drawing.Point(430, 28);
-            this.findBox1.Name = "findBox1";
-            this.findBox1.Size = new System.Drawing.Size(221, 19);
-            this.findBox1.TabIndex = 5;
-            // 
-            // dataGridView1
-            // 
-            this.dataGridView1.AllowUserToAddRows = false;
-            this.dataGridView1.AllowUserToDeleteRows = false;
-            this.dataGridView1.AllowUserToOrderColumns = true;
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dataGridView1.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
-            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.colPeptide,
-            this.colProteinKey,
-            this.colProteinDescription,
-            this.colProteinName});
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.dataGridView1.DefaultCellStyle = dataGridViewCellStyle2;
-            this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridView1.Location = new System.Drawing.Point(0, 0);
-            this.dataGridView1.Name = "dataGridView1";
-            this.dataGridView1.ReadOnly = true;
-            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dataGridView1.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
-            this.dataGridView1.Size = new System.Drawing.Size(754, 173);
-            this.dataGridView1.TabIndex = 1;
-            this.dataGridView1.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellContentClick);
-            // 
-            // colPeptide
-            // 
-            this.colPeptide.HeaderText = "Peptide";
-            this.colPeptide.Name = "colPeptide";
-            this.colPeptide.ReadOnly = true;
-            this.colPeptide.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.colPeptide.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            // 
-            // colProteinKey
-            // 
-            this.colProteinKey.HeaderText = "Protein";
-            this.colProteinKey.Name = "colProteinKey";
-            this.colProteinKey.ReadOnly = true;
-            this.colProteinKey.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.colProteinKey.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            // 
-            // colProteinDescription
-            // 
-            this.colProteinDescription.HeaderText = "Protein Description";
-            this.colProteinDescription.Name = "colProteinDescription";
-            this.colProteinDescription.ReadOnly = true;
-            // 
-            // colProteinName
-            // 
-            this.colProteinName.HeaderText = "Protein Name";
-            this.colProteinName.Name = "colProteinName";
-            this.colProteinName.ReadOnly = true;
-            this.colProteinName.Visible = false;
             // 
             // cbxShowTurnover
             // 
@@ -391,6 +296,89 @@
             this.btnSave.UseVisualStyleBackColor = true;
             this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
             // 
+            // cbxAreaUnderCurve
+            // 
+            this.cbxAreaUnderCurve.AutoSize = true;
+            this.cbxAreaUnderCurve.Location = new System.Drawing.Point(430, 128);
+            this.cbxAreaUnderCurve.Name = "cbxAreaUnderCurve";
+            this.cbxAreaUnderCurve.Size = new System.Drawing.Size(111, 17);
+            this.cbxAreaUnderCurve.TabIndex = 19;
+            this.cbxAreaUnderCurve.Text = "Area Under Curve";
+            this.cbxAreaUnderCurve.UseVisualStyleBackColor = true;
+            this.cbxAreaUnderCurve.CheckedChanged += new System.EventHandler(this.cbx_ColumnVisibilityChanged);
+            // 
+            // dataGridView1
+            // 
+            this.dataGridView1.AllowUserToAddRows = false;
+            this.dataGridView1.AllowUserToDeleteRows = false;
+            this.dataGridView1.AllowUserToOrderColumns = true;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridView1.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.colPeptide,
+            this.colProteinKey,
+            this.colProteinDescription,
+            this.colProteinName});
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dataGridView1.DefaultCellStyle = dataGridViewCellStyle2;
+            this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dataGridView1.Location = new System.Drawing.Point(0, 0);
+            this.dataGridView1.Name = "dataGridView1";
+            this.dataGridView1.ReadOnly = true;
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridView1.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
+            this.dataGridView1.Size = new System.Drawing.Size(754, 173);
+            this.dataGridView1.TabIndex = 1;
+            this.dataGridView1.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellContentClick);
+            // 
+            // colPeptide
+            // 
+            this.colPeptide.HeaderText = "Peptide";
+            this.colPeptide.Name = "colPeptide";
+            this.colPeptide.ReadOnly = true;
+            this.colPeptide.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.colPeptide.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            // 
+            // colProteinKey
+            // 
+            this.colProteinKey.HeaderText = "Protein";
+            this.colProteinKey.Name = "colProteinKey";
+            this.colProteinKey.ReadOnly = true;
+            this.colProteinKey.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.colProteinKey.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            // 
+            // colProteinDescription
+            // 
+            this.colProteinDescription.HeaderText = "Protein Description";
+            this.colProteinDescription.Name = "colProteinDescription";
+            this.colProteinDescription.ReadOnly = true;
+            // 
+            // colProteinName
+            // 
+            this.colProteinName.HeaderText = "Protein Name";
+            this.colProteinName.Name = "colProteinName";
+            this.colProteinName.ReadOnly = true;
+            this.colProteinName.Visible = false;
+            // 
             // splitContainer1
             // 
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -404,6 +392,7 @@
             // 
             // splitContainer1.Panel2
             // 
+            this.splitContainer1.Panel2.Controls.Add(this.recordNavBar1);
             this.splitContainer1.Panel2.Controls.Add(this.dataGridView1);
             this.splitContainer1.Size = new System.Drawing.Size(754, 271);
             this.splitContainer1.SplitterDistance = 94;
@@ -472,16 +461,14 @@
             this.colSummaryStdDevStdErrCount.Name = "colSummaryStdDevStdErrCount";
             this.colSummaryStdDevStdErrCount.ReadOnly = true;
             // 
-            // cbxAreaUnderCurve
+            // recordNavBar1
             // 
-            this.cbxAreaUnderCurve.AutoSize = true;
-            this.cbxAreaUnderCurve.Location = new System.Drawing.Point(430, 128);
-            this.cbxAreaUnderCurve.Name = "cbxAreaUnderCurve";
-            this.cbxAreaUnderCurve.Size = new System.Drawing.Size(111, 17);
-            this.cbxAreaUnderCurve.TabIndex = 19;
-            this.cbxAreaUnderCurve.Text = "Area Under Curve";
-            this.cbxAreaUnderCurve.UseVisualStyleBackColor = true;
-            this.cbxAreaUnderCurve.CheckedChanged += new System.EventHandler(this.cbx_ColumnVisibilityChanged);
+            this.recordNavBar1.DataGridView = this.dataGridView1;
+            this.recordNavBar1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.recordNavBar1.Location = new System.Drawing.Point(0, 152);
+            this.recordNavBar1.Name = "recordNavBar1";
+            this.recordNavBar1.Size = new System.Drawing.Size(754, 21);
+            this.recordNavBar1.TabIndex = 2;
             // 
             // TracerAmountsByCohort
             // 
@@ -512,8 +499,6 @@
         private System.Windows.Forms.Button btnRequery;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox tbxMinScore;
-        private System.Windows.Forms.Label label2;
-        private pwiz.Common.Controls.FindBox findBox1;
         private System.Windows.Forms.DataGridViewLinkColumn colPeptide;
         private System.Windows.Forms.DataGridViewLinkColumn colProteinKey;
         private System.Windows.Forms.DataGridViewTextBoxColumn colProteinDescription;
@@ -541,5 +526,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn colSummaryStdDevStdErrCount;
         private System.Windows.Forms.Button btnSave;
         private System.Windows.Forms.CheckBox cbxAreaUnderCurve;
+        private pwiz.Common.Controls.RecordNavBar recordNavBar1;
     }
 }

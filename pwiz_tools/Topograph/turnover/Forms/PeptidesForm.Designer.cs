@@ -37,8 +37,7 @@
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.btnAnalyzePeptides = new System.Windows.Forms.Button();
             this.btnAddSearchResults = new System.Windows.Forms.Button();
-            this.label1 = new System.Windows.Forms.Label();
-            this.findBox1 = new pwiz.Common.Controls.FindBox();
+            this.recordNavBar1 = new pwiz.Common.Controls.RecordNavBar();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
@@ -98,16 +97,14 @@
             // 
             // tableLayoutPanel1
             // 
-            this.tableLayoutPanel1.ColumnCount = 4;
+            this.tableLayoutPanel1.ColumnCount = 3;
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 152F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 124F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 46F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel1.Controls.Add(this.btnAnalyzePeptides, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.btnAddSearchResults, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.label1, 2, 0);
-            this.tableLayoutPanel1.Controls.Add(this.findBox1, 3, 0);
+            this.tableLayoutPanel1.Controls.Add(this.recordNavBar1, 2, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -137,25 +134,14 @@
             this.btnAddSearchResults.UseVisualStyleBackColor = true;
             this.btnAddSearchResults.Click += new System.EventHandler(this.btnAddSearchResults_Click);
             // 
-            // label1
+            // recordNavBar1
             // 
-            this.label1.AutoSize = true;
-            this.label1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label1.Location = new System.Drawing.Point(279, 0);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(40, 30);
-            this.label1.TabIndex = 7;
-            this.label1.Text = "Find:";
-            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            // 
-            // findBox1
-            // 
-            this.findBox1.DataGridView = this.dataGridView;
-            this.findBox1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.findBox1.Location = new System.Drawing.Point(325, 3);
-            this.findBox1.Name = "findBox1";
-            this.findBox1.Size = new System.Drawing.Size(613, 24);
-            this.findBox1.TabIndex = 8;
+            this.recordNavBar1.DataGridView = this.dataGridView;
+            this.recordNavBar1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.recordNavBar1.Location = new System.Drawing.Point(279, 3);
+            this.recordNavBar1.Name = "recordNavBar1";
+            this.recordNavBar1.Size = new System.Drawing.Size(659, 24);
+            this.recordNavBar1.TabIndex = 7;
             // 
             // PeptidesForm
             // 
@@ -169,7 +155,6 @@
             this.Text = "PeptidesForm";
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
             this.tableLayoutPanel1.ResumeLayout(false);
-            this.tableLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -185,8 +170,7 @@
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Button btnAnalyzePeptides;
         private System.Windows.Forms.Button btnAddSearchResults;
-        private System.Windows.Forms.Label label1;
-        private pwiz.Common.Controls.FindBox findBox1;
+        private pwiz.Common.Controls.RecordNavBar recordNavBar1;
 
     }
 }
