@@ -41,22 +41,51 @@ namespace pwiz.Common.Controls
             }
             set
             {
-                _dataGridView = value;
-                if (_dataGridView != null)
+                if (_dataGridView == value)
                 {
-                    _dataGridView.RowsAdded += _dataGridView_RowsAdded;
-                    _dataGridView.RowsRemoved += _dataGridView_RowsRemoved;
+                    return;
                 }
+                DetachEvents();
+                _dataGridView = value;
+                AttachEvents();
             }
         }
 
-        void _dataGridView_RowsRemoved(object sender, DataGridViewRowsRemovedEventArgs e)
+        private void DetachEvents()
+        {
+            if (DataGridView != null)
+            {
+                DataGridView.RowsAdded -= DataGridView_RowsAdded;
+                DataGridView.RowsRemoved -= DataGridView_RowsRemoved;
+            }
+        }
+        private void AttachEvents()
+        {
+            if (!IsHandleCreated)
+            {
+                return;
+            }
+            if (DataGridView != null)
+            {
+                DataGridView.RowsAdded += DataGridView_RowsAdded;
+                DataGridView.RowsRemoved += DataGridView_RowsRemoved;
+            }
+        }
+
+        void DataGridView_RowsRemoved(object sender, DataGridViewRowsRemovedEventArgs e)
         {
             StartTimer();
         }
 
-        void _dataGridView_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
+        void DataGridView_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
         {
+            StartTimer();
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            AttachEvents();
             StartTimer();
         }
 
@@ -68,6 +97,7 @@ namespace pwiz.Common.Controls
                 _timer.Dispose();
                 _timer = null;
             }
+            DetachEvents();
         }
 
         private void textBox1_TextChanged(object sender, EventArgs e)
@@ -154,13 +184,13 @@ namespace pwiz.Common.Controls
                 {
                     dataGridView.Rows.AddRange(rows);
                 }
-                FilteredRowIndexes = filteredRowIndexes.ToArray();
+                VisibleRowIndexes = filteredRowIndexes.ToArray();
             }
             finally
             {
                 _filtering = false;
             }
         }
-        public int[] FilteredRowIndexes { get; private set; }
+        public int[] VisibleRowIndexes { get; private set; }
     }
 }

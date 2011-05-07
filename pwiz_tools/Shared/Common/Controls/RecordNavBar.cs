@@ -30,40 +30,62 @@ namespace pwiz.Common.Controls
                 {
                     return;
                 }
-                if (_dataGridView != null)
-                {
-                    _dataGridView.RowsAdded -= _dataGridView_RowsAdded;
-                    _dataGridView.RowsRemoved -= _dataGridView_RowsRemoved;
-                    _dataGridView.CurrentCellChanged -= _dataGridView_CurrentCellChanged;
-                }
+                DetachEvents();
                 _dataGridView = value;
                 findBox.DataGridView = value;
-                if (_dataGridView != null)
-                {
-                    _dataGridView.RowsAdded += _dataGridView_RowsAdded;
-                    _dataGridView.RowsRemoved += _dataGridView_RowsRemoved;
-                    _dataGridView.CurrentCellChanged += _dataGridView_CurrentCellChanged;
-                }
+                AttachEvents();
             }
         }
 
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
+            AttachEvents();
             UpdateAll();
         }
 
-        void _dataGridView_CurrentCellChanged(object sender, EventArgs e)
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            base.OnHandleDestroyed(e);
+            DetachEvents();
+        }
+
+        private void AttachEvents()
+        {
+            if (!IsHandleCreated)
+            {
+                return;
+            }
+            if (DataGridView != null)
+            {
+                DataGridView.RowsAdded += DataGridView_RowsAdded;
+                DataGridView.RowsRemoved += DataGridView_RowsRemoved;
+                DataGridView.CurrentCellChanged += DataGridView_CurrentCellChanged;
+            }
+        }
+
+        private void DetachEvents()
+        {
+            if (DataGridView != null)
+            {
+                DataGridView.RowsAdded -= DataGridView_RowsAdded;
+                DataGridView.RowsRemoved -= DataGridView_RowsRemoved;
+                DataGridView.CurrentCellChanged -= DataGridView_CurrentCellChanged;
+                
+            }
+        }
+
+        void DataGridView_CurrentCellChanged(object sender, EventArgs e)
         {
             UpdateAll();
         }
 
-        void _dataGridView_RowsRemoved(object sender, DataGridViewRowsRemovedEventArgs e)
+        void DataGridView_RowsRemoved(object sender, DataGridViewRowsRemovedEventArgs e)
         {
             UpdateAll();
         }
 
-        void _dataGridView_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
+        void DataGridView_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
         {
             UpdateAll();
         }
@@ -141,16 +163,16 @@ namespace pwiz.Common.Controls
 
         private int GetVisibleRowCount()
         {
-            return findBox.FilteredRowIndexes == null ? DataGridView.Rows.Count : findBox.FilteredRowIndexes.Length;
+            return findBox.VisibleRowIndexes == null ? DataGridView.Rows.Count : findBox.VisibleRowIndexes.Length;
         }
 
         private int GetVisibleRowIndex(int absoluteRowIndex)
         {
-            if (findBox.FilteredRowIndexes == null)
+            if (findBox.VisibleRowIndexes == null)
             {
                 return absoluteRowIndex;
             }
-            int visibleIndex = Array.BinarySearch(findBox.FilteredRowIndexes, absoluteRowIndex);
+            int visibleIndex = Array.BinarySearch(findBox.VisibleRowIndexes, absoluteRowIndex);
             if (visibleIndex < 0)
             {
                 return -1;
@@ -160,7 +182,7 @@ namespace pwiz.Common.Controls
 
         private int GetAbsoluteRowIndex(int visibleRowIndex)
         {
-            if (findBox.FilteredRowIndexes == null)
+            if (findBox.VisibleRowIndexes == null)
             {
                 return visibleRowIndex;
             }
@@ -168,11 +190,11 @@ namespace pwiz.Common.Controls
             {
                 return 0;
             }
-            if (visibleRowIndex >= findBox.FilteredRowIndexes.Length)
+            if (visibleRowIndex >= findBox.VisibleRowIndexes.Length)
             {
                 return DataGridView.Rows.Count;
             }
-            return findBox.FilteredRowIndexes[visibleRowIndex];
+            return findBox.VisibleRowIndexes[visibleRowIndex];
         }
 
         private int GetCurrentRowIndex()
