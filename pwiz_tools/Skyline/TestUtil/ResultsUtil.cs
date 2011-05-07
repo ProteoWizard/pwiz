@@ -16,15 +16,68 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 
 namespace pwiz.SkylineTestUtil
 {
+    public static class ResultsUtil
+    {
+        public static SrmDocument DeserializeDocument(string path)
+        {
+            try
+            {
+                using (var stream = new FileStream(path, FileMode.Open))
+                {
+                    return DeserializeDocument(stream);
+                }
+            }
+            catch (Exception x)
+            {
+                Assert.Fail("Exception thrown: " + x.Message);
+                throw;  // Will never happen, but is necessary to compile
+            }
+        }
+
+        public static SrmDocument DeserializeDocument(string fileName, Type classType)
+        {
+            try
+            {
+                using (var stream = classType.Assembly.GetManifestResourceStream(classType.Namespace + "." + fileName))
+                {
+                    return DeserializeDocument(stream);
+                }
+            }
+            catch (Exception x)
+            {
+                Assert.Fail("Exception thrown: " + x.Message);
+                throw;  // Will never happen, but is necessary to compile
+            }
+        }
+
+        public static SrmDocument DeserializeDocument(Stream stream)
+        {
+            Assert.IsNotNull(stream);
+
+            XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
+            try
+            {
+                return (SrmDocument)xmlSerializer.Deserialize(stream);
+            }
+            catch (Exception x)
+            {
+                Assert.Fail("Exception thrown: " + x.Message);
+                throw;  // Will never happen, but is necessary to compile
+            }
+        }
+    }
+
     public class ResultsTestDocumentContainer : TestDocumentContainer
     {
         public ResultsTestDocumentContainer(SrmDocument docInitial, string pathInitial)

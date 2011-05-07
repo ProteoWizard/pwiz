@@ -219,6 +219,18 @@ namespace pwiz.SkylineTestUtil
             return SkylineWindow.Document;
         }
 
+        public static SrmDocument WaitForDocumentLoaded()
+        {
+            WaitForConditionUI(() => SkylineWindow.DocumentUI.Settings.IsLoaded);
+            return SkylineWindow.Document;
+        }
+
+        public static SrmDocument WaitForDocumentChangeLoaded(SrmDocument docCurrent)
+        {
+            WaitForDocumentChange(docCurrent);
+            return WaitForDocumentLoaded();
+        }
+
         public static bool WaitForCondition(Func<bool> func)
         {
             return WaitForCondition(WAIT_TIME, func);

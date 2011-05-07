@@ -18,12 +18,11 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
+using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestA
 {
@@ -115,12 +114,7 @@ namespace pwiz.SkylineTestA
 
         private SrmDocument CreateStudy7Doc()
         {
-            XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
-            var stream = typeof(PasteTest).Assembly.GetManifestResourceStream(GetType().Namespace + ".Study7_0-7.sky");
-            Assert.IsNotNull(stream);
-            Debug.Assert(stream != null);   // Keep ReSharper from warning
-            SrmDocument docStudy7 = (SrmDocument)xmlSerializer.Deserialize(stream);
-            return docStudy7;
+            return ResultsUtil.DeserializeDocument("Study7_0-7.sky", GetType());
         }
     }
 }

@@ -334,15 +334,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 return maxStep*2 + 1;
             }
 
-            private IEnumerable<int> GetReplicateIndices(TransitionDocNode nodeTran)
-            {
-                return GetReplicateIndices(i =>
-                                               {
-                                                   var result = i < nodeTran.Results.Count ? nodeTran.Results[i] : null;
-                                                   return (result != null ? result[0].FileIndex : (int?) null);
-                                               });
-            }
-
             private List<PointPairList> GetPointPairLists(TransitionGroupDocNode nodeGroup,
                                                          DisplayTypeChrom displayType)
             {
@@ -411,25 +402,34 @@ namespace pwiz.Skyline.Controls.Graphs
                 return maxStep * 2 + 1;
             }
 
-            private IEnumerable<int> GetReplicateIndices(TransitionGroupDocNode nodeGroup)
-            {
-                return GetReplicateIndices(i =>
-                                               {
-                                                   var result = i < nodeGroup.Results.Count ? nodeGroup.Results[i] : null;
-                                                   return (result != null ? result[0].FileIndex : (int?) null);
-                                               });
-            }
-
             private IEnumerable<int> GetReplicateIndices(PeptideDocNode nodePep)
             {
                 return GetReplicateIndices(i =>
                                                {
-                                                   var result = i < nodePep.Results.Count ? nodePep.Results[i] : null;
-                                                   return (result != null ? result[0].FileIndex : (int?) null);
+                                                   var result = nodePep.HasResults && i < nodePep.Results.Count ? nodePep.Results[i] : null;
+                                                   return (result != null ? result[0].FileId : null);
                                                });
             }
 
-            private IEnumerable<int> GetReplicateIndices(Func<int, int?> getFileIndex)
+            private IEnumerable<int> GetReplicateIndices(TransitionDocNode nodeTran)
+            {
+                return GetReplicateIndices(i =>
+                {
+                    var result = nodeTran.HasResults && i < nodeTran.Results.Count ? nodeTran.Results[i] : null;
+                    return (result != null ? result[0].FileId : null);
+                });
+            }
+
+            private IEnumerable<int> GetReplicateIndices(TransitionGroupDocNode nodeGroup)
+            {
+                return GetReplicateIndices(i =>
+                {
+                    var result = nodeGroup.HasResults && i < nodeGroup.Results.Count ? nodeGroup.Results[i] : null;
+                    return (result != null ? result[0].FileId : null);
+                });
+            }
+
+            private IEnumerable<int> GetReplicateIndices(Func<int, ChromFileInfoId> getFileId)
             {
                 var chromatograms = _document.Settings.MeasuredResults.Chromatograms;
                 var order = ReplicateOrder;
@@ -445,10 +445,8 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         var chromSet = _document.Settings.MeasuredResults.Chromatograms[iResult];
                         
-                        int? iFile = getFileIndex(iResult);
-                        ChromFileInfo fileInfo = null;
-                        if (iFile.HasValue)
-                            fileInfo = chromSet.MSDataFileInfos[iFile.Value];
+                        ChromFileInfoId fileId = getFileId(iResult);
+                        ChromFileInfo fileInfo = (fileId != null ? chromSet.GetFileInfo(fileId) : null);
 
                         listIndexFile.Add(new KeyValuePair<int, ChromFileInfo>(iResult, fileInfo));
                     }

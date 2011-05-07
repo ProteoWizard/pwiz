@@ -690,7 +690,9 @@ namespace pwiz.Skyline.Model
                         // If there is existing results information, and it was set
                         // by the user, then preserve it, and skip automatic peak picking
                         var resultOld = Results != null ? Results[iResultOld] : null;
-                        if (resultOld != null && ((UserSetResults(resultOld) && setTranPrevious == null) ||
+                        if (resultOld != null && (// Unfortunately, it is always possible that new results need
+                                                  // to be added from other files.  So this must be handled below.
+                                                  //(UserSetResults(resultOld) && setTranPrevious == null) ||
                                                   // or this set of results is not yet loaded
                                                   !chromatograms.IsLoaded ||
                                                   // or not forcing a full recalc of all peaks, chromatograms have not

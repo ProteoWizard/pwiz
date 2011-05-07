@@ -14,7 +14,7 @@
     <FileAlignment>512</FileAlignment>
     <ApplicationIcon>Skyline.ico</ApplicationIcon>
     <IsWebBootstrapper>true</IsWebBootstrapper>
-    <ManifestCertificateThumbprint>9B59D8A1FA666DB75CDBC395071C07E09298DFA7</ManifestCertificateThumbprint>
+    <ManifestCertificateThumbprint>F7D224CC7D3E98266EA4DF66D755CB4ED628320A</ManifestCertificateThumbprint>
     <ManifestKeyFile>MacCossLab_CodeSigning.p12</ManifestKeyFile>
     <GenerateManifests>true</GenerateManifests>
     <TargetZone>LocalIntranet</TargetZone>
@@ -37,8 +37,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>2608</ApplicationRevision>
-    <ApplicationVersion>0.7.1.2608</ApplicationVersion>
+    <ApplicationRevision>2679</ApplicationRevision>
+    <ApplicationVersion>0.7.1.2679</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -972,7 +972,6 @@
     <Content Include="EULA.MSFileReader">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="MacCossLab_CodeSigning.p12" />
     <Content Include="Method\Waters\BuildWatersMethod.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

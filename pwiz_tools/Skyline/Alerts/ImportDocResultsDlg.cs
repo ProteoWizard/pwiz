@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.Results;
 
@@ -23,12 +24,16 @@ namespace pwiz.Skyline.Alerts
 {
     public partial class ImportDocResultsDlg : Form
     {
-        public ImportDocResultsDlg()
+        public ImportDocResultsDlg(bool canImportResults)
         {
             InitializeComponent();
 
             Text = Program.Name;
+
+            CanImportResults = canImportResults;
         }
+
+        public bool CanImportResults { get; private set; }
 
         public MeasuredResults.MergeAction Action
         {
@@ -43,6 +48,44 @@ namespace pwiz.Skyline.Alerts
 
                 return MeasuredResults.MergeAction.remove;
             }
+
+            set
+            {
+                switch (value)
+                {
+                    case MeasuredResults.MergeAction.remove:
+                        radioRemove.Checked = true;
+                        break;
+                    case MeasuredResults.MergeAction.merge_names:
+                        radioMergeByName.Checked = true;
+                        break;
+                    case MeasuredResults.MergeAction.merge_indices:
+                        radioMergeByIndex.Checked = true;
+                        break;
+                    case MeasuredResults.MergeAction.add:
+                        radioAdd.Checked = true;
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException("value");
+                }
+            }
+        }
+
+        public void OkDialog()
+        {
+            if (!CanImportResults && Action != MeasuredResults.MergeAction.remove)
+            {
+                MessageDlg.Show(this, "The document must be saved before results may be imported.");
+                Action = MeasuredResults.MergeAction.remove;
+                return;
+            }
+
+            DialogResult = DialogResult.OK;
+        }
+
+        private void btnOK_Click(object sender, EventArgs e)
+        {
+            OkDialog();
         }
     }
 }

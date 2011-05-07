@@ -71,7 +71,7 @@ namespace pwiz.Skyline.Model
                 linesRead++;
                 if (longWaitBroker != null)
                 {
-                    if (longWaitBroker.IsCanceled)
+                    if (longWaitBroker.IsCanceled || longWaitBroker.IsDocumentChanged(Document))
                         return new PeptideGroupDocNode[0];
                     int progressNew = (int) (linesRead*100/lineCount);
                     if (progressPercent != progressNew)

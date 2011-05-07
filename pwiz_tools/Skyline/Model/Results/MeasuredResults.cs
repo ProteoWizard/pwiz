@@ -106,9 +106,15 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        private IList<string> SharedCachePaths
+        {
+            get { return _listSharedCachePaths; }
+            set { _listSharedCachePaths = MakeReadOnly(value); }
+        }
+
         private bool IsSharedCache(ChromatogramCache cache)
         {
-            return _listSharedCachePaths != null && _listSharedCachePaths.Contains(cache.CachePath);
+            return SharedCachePaths != null && SharedCachePaths.Contains(cache.CachePath);
         }
 
         private bool IsCachePath(string cachePath)
@@ -362,7 +368,37 @@ namespace pwiz.Skyline.Model.Results
             return false;
         }
 
+        public MeasuredResults ChangeSharedCachePaths(params string[] prop)
+        {
+            return ChangeProp(ImClone(this), im => im.SharedCachePaths = prop);
+        }
+
         public enum MergeAction { remove, merge_names, merge_indices, add }
+
+        public static MeasuredResults MergeResults(MeasuredResults resultsOrig, MeasuredResults resultsImport,
+            string documentPath, MergeAction mergeAction, out MeasuredResults resultsBase)
+        {
+            MeasuredResults resultsNew;
+            if (resultsOrig != null)
+            {
+                resultsNew = resultsOrig.MergeResults(resultsImport, documentPath, mergeAction, out resultsBase);
+            }
+            else
+            {
+                resultsBase = resultsImport;
+
+                if (mergeAction == MergeAction.remove)
+                    resultsNew = null;
+                else if (resultsBase._cacheFinal != null || resultsBase._listPartialCaches != null)
+                    resultsNew = resultsBase;
+                else
+                {
+                    resultsNew = resultsBase.ChangeSharedCachePaths(
+                        ChromatogramCache.FinalPathForName(documentPath, null));
+                }
+            }
+            return resultsNew;
+        }
 
         public MeasuredResults MergeResults(MeasuredResults resultsImport, string documentPath,
             MergeAction mergeAction, out MeasuredResults resultsBase)
@@ -457,20 +493,32 @@ namespace pwiz.Skyline.Model.Results
                         chromatogramsNew.Add(chromatogramSetNew);
                     }
                 }
-                // Add all imported chromatogram sets not merged
+                // Add all imported chromatogram sets not merged.  The need
+                // to be added in their original order, with preference given to sets
+                // that have been merged, over the original sets.
+                var dictNameToChromatogramsBase = chromatogramsBase.ToDictionary(chrom => chrom.Name);
+                chromatogramsBase.Clear();
                 foreach (var chromatogramSetImport in resultsImport.Chromatograms)
                 {
-                    if (dictNameToChromatograms.ContainsKey(chromatogramSetImport.Name))
-                        continue;
+                    ChromatogramSet chromatogramSetBase;
+                    if (!dictNameToChromatogramsBase.TryGetValue(chromatogramSetImport.Name, out chromatogramSetBase))
+                    {
+                        chromatogramsNew.Add(chromatogramSetImport);
+                        chromatogramSetBase = chromatogramSetImport;
+                    }
 
-                    chromatogramsBase.Add(chromatogramSetImport);
-                    chromatogramsNew.Add(chromatogramSetImport);
+                    chromatogramsBase.Add(chromatogramSetBase);
                 }
             }
             else
             {
-                chromatogramsBase = resultsImport.Chromatograms.Select(chromatogramSet =>
-                    EnsureUniqueSetName(chromatogramSet, dictNameToChromatograms.Keys)).ToList();
+                chromatogramsBase = new List<ChromatogramSet>();
+                foreach (var chromatogramSet in resultsImport.Chromatograms)
+                {
+                    var chromatogramSetBase = EnsureUniqueSetName(chromatogramSet, dictNameToChromatograms.Keys);
+                    chromatogramsBase.Add(chromatogramSetBase);
+                    dictNameToChromatograms.Add(chromatogramSetBase.Name, chromatogramSetBase);
+                }
                 chromatogramsNew = Chromatograms.ToList();
                 chromatogramsNew.AddRange(chromatogramsBase);
             }
@@ -833,7 +881,9 @@ namespace pwiz.Skyline.Model.Results
                     return;
 
                 // Once everything is represented, if there is only one cache, then it is final
-                if (_resultsClone._listPartialCaches.Count == 1)
+                // As long as it is not a shared cache
+                if (_resultsClone._listPartialCaches.Count == 1 &&
+                        !_resultsClone.IsSharedCache(_resultsClone._listPartialCaches[0]))
                 {
                     _resultsClone._cacheFinal = _resultsClone._listPartialCaches[0];
                     _resultsClone._listPartialCaches = null;

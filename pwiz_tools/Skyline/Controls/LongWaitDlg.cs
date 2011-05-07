@@ -19,6 +19,7 @@
 using System;
 using System.Threading;
 using System.Windows.Forms;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls
@@ -33,9 +34,22 @@ namespace pwiz.Skyline.Controls
         private int _progressValue = -1;
         private string _message;
 
+        /// <summary>
+        /// For operations where a change in the active document should
+        /// cause the operation to fail.
+        /// </summary>
+        private readonly IDocumentContainer _documentContainer;
+
         public LongWaitDlg()
+            : this(null)
+        {
+        }
+
+        public LongWaitDlg(IDocumentContainer documentContainer)
         {
             InitializeComponent();
+
+            _documentContainer = documentContainer;
         }
 
         public string Message
@@ -48,6 +62,11 @@ namespace pwiz.Skyline.Controls
         {
             get { return Interlocked.Exchange(ref _progressValue, _progressValue); }
             set { Interlocked.Exchange(ref _progressValue, value); }
+        }
+
+        public bool IsDocumentChanged(SrmDocument docOrig)
+        {
+            return _documentContainer != null && !ReferenceEquals(docOrig, _documentContainer.Document);
         }
 
         public DialogResult ShowDialog(Func<IWin32Window, DialogResult> show)

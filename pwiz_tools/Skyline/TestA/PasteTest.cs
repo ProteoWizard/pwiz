@@ -18,7 +18,6 @@
  */
 
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
@@ -277,12 +276,7 @@ namespace pwiz.SkylineTestA
 
         private SrmDocument CreateStudy7Doc()
         {
-            XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
-            var stream = typeof(PasteTest).Assembly.GetManifestResourceStream(GetType().Namespace + ".Study7_0-7.sky");
-            Assert.IsNotNull(stream);
-            Debug.Assert(stream != null);   // Keep ReSharper from warning
-            SrmDocument docStudy7 = (SrmDocument)xmlSerializer.Deserialize(stream);
-            return docStudy7;
+            return ResultsUtil.DeserializeDocument("Study7_0-7.sky", GetType());
         }
     }
 }

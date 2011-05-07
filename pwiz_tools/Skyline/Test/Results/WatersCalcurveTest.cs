@@ -20,7 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -564,24 +563,7 @@ namespace pwiz.SkylineTest.Results
         private static SrmDocument InitWatersDocument(TestFilesDir testFilesDir, string fileName, out string docPath)
         {
             docPath = testFilesDir.GetTestPath(fileName);
-
-            SrmDocument doc;
-            XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
-            try
-            {
-                using (var stream = new FileStream(docPath, FileMode.Open))
-                {
-                    doc = (SrmDocument)xmlSerializer.Deserialize(stream);
-                }
-            }
-            catch (Exception x)
-            {
-                Assert.Fail("Exception thrown: " + x.Message);
-// ReSharper disable HeuristicUnreachableCode
-                throw;  // Will never happen, but it is necessary to keep ReSharper happy
-// ReSharper restore HeuristicUnreachableCode
-            }
-
+            SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
             AssertEx.IsDocumentState(doc, 0, 1, 12, 12, 24);
             return doc;
         }

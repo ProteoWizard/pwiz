@@ -30,6 +30,7 @@ using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest.Reporting
 {
@@ -104,11 +105,7 @@ namespace pwiz.SkylineTest.Reporting
         [TestMethod]
         public void TestIsotopeLabelPivot()
         {
-            XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
-            var stream = typeof(ReportTest).Assembly.GetManifestResourceStream(GetType().Namespace + ".silac_1_to_4.sky");
-            Assert.IsNotNull(stream);
-            Debug.Assert(stream != null);   // Keep ReSharper from warning
-            SrmDocument srmDocument = (SrmDocument)xmlSerializer.Deserialize(stream);
+            SrmDocument srmDocument = ResultsUtil.DeserializeDocument("silac_1_to_4.sky", GetType());
             Database database = new Database();
             database.AddSrmDocument(srmDocument);
             PivotReport pivotReport = new PivotReport
@@ -149,11 +146,7 @@ namespace pwiz.SkylineTest.Reporting
         [TestMethod]
         public void TestColumnsFromResultsTables()
         {
-            XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
-            var stream = typeof(ReportTest).Assembly.GetManifestResourceStream(GetType().Namespace + ".silac_1_to_4.sky");
-            Assert.IsNotNull(stream);
-            Debug.Assert(stream != null);   // Keep ReSharper from warning
-            SrmDocument srmDocument = (SrmDocument)xmlSerializer.Deserialize(stream);
+            SrmDocument srmDocument = ResultsUtil.DeserializeDocument("silac_1_to_4.sky", GetType());
             Database database = new Database();
             database.AddSrmDocument(srmDocument);
             SimpleReport report = new SimpleReport
@@ -183,23 +176,13 @@ namespace pwiz.SkylineTest.Reporting
         [TestMethod]
         public void TestLoadReportFile()
         {
-            SrmDocument srmDocument;
-            Database database;
+            SrmDocument srmDocument = ResultsUtil.DeserializeDocument("silac_1_to_4.sky", GetType());
+            Database database = new Database();
+            database.AddSrmDocument(srmDocument);                
 
-            using (var stream = typeof(ReportTest).Assembly.GetManifestResourceStream(GetType().Namespace + ".silac_1_to_4.sky"))
-            {
-                Assert.IsNotNull(stream);
-                Debug.Assert(stream != null); // Keep ReSharper from warning
-                var xmlSerializer = new XmlSerializer(typeof(SrmDocument));
-                srmDocument = (SrmDocument)xmlSerializer.Deserialize(stream);
-                database = new Database();
-                database.AddSrmDocument(srmDocument);                
-            }
-
-            using (var streamR = typeof(ReportTest).Assembly.GetManifestResourceStream(GetType().Namespace + ".Study9p_template_0721_2009_v3.skyr"))
+            using (var streamR = GetType().Assembly.GetManifestResourceStream(GetType().Namespace + ".Study9p_template_0721_2009_v3.skyr"))
             {
                 Assert.IsNotNull(streamR);
-                Debug.Assert(streamR != null); // Keep ReSharper from warning
                 ReportSpecList reportSpecList = new ReportSpecList();
                 var xmlSerializer = new XmlSerializer(reportSpecList.SerialType);
                 reportSpecList = (ReportSpecList)xmlSerializer.Deserialize(streamR);

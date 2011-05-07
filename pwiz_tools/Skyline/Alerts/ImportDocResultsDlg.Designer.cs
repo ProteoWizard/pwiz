@@ -40,13 +40,13 @@
             // btnOK
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btnOK.Location = new System.Drawing.Point(205, 158);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(75, 23);
             this.btnOK.TabIndex = 5;
             this.btnOK.Text = "OK";
             this.btnOK.UseVisualStyleBackColor = true;
+            this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
             // 
             // btnCancel
             // 
@@ -95,9 +95,9 @@
             this.radioMergeByIndex.AutoSize = true;
             this.radioMergeByIndex.Location = new System.Drawing.Point(16, 87);
             this.radioMergeByIndex.Name = "radioMergeByIndex";
-            this.radioMergeByIndex.Size = new System.Drawing.Size(233, 17);
+            this.radioMergeByIndex.Size = new System.Drawing.Size(232, 17);
             this.radioMergeByIndex.TabIndex = 3;
-            this.radioMergeByIndex.Text = "Merge with existing results by replicate index";
+            this.radioMergeByIndex.Text = "Merge with existing results by replicate order";
             this.radioMergeByIndex.UseVisualStyleBackColor = true;
             // 
             // radioAdd

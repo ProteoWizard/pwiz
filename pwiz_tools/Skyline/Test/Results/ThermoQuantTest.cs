@@ -16,12 +16,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -318,24 +316,7 @@ namespace pwiz.SkylineTest.Results
         private static SrmDocument InitThermoDocument(TestFilesDir testFilesDir, out string docPath)
         {
             docPath = testFilesDir.GetTestPath("Site20_Study9p.sky");
-
-            SrmDocument doc;
-            XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
-            try
-            {
-                using (var stream = new FileStream(docPath, FileMode.Open))
-                {
-                    doc = (SrmDocument)xmlSerializer.Deserialize(stream);
-                }
-            }
-            catch (Exception x)
-            {
-                Assert.Fail("Exception thrown: " + x.Message);
-// ReSharper disable HeuristicUnreachableCode
-                throw;  // Will never happen, but it is necessary to keep ReSharper happy
-// ReSharper restore HeuristicUnreachableCode
-            }
-
+            SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
             AssertEx.IsDocumentState(doc, 0, 2, 10, 18, 54);
             return doc;
         }

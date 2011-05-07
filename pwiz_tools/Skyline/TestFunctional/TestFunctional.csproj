@@ -86,6 +86,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AnnotationTest.cs" />
+    <Compile Include="ImportDocTest.cs" />
     <Compile Include="CopyPasteTest.cs" />
     <Compile Include="EditNoteTest.cs" />
     <Compile Include="EditStaticModTest.cs" />
@@ -135,6 +136,7 @@
     <None Include="BackgroundProteomeTest.zip" />
     <None Include="CopyPasteTest.zip" />
     <None Include="EditNoteTest.zip" />
+    <None Include="ImportDocTest.zip" />
     <None Include="InsertTest.zip" />
     <None Include="LibraryBuildTest.zip" />
     <None Include="LibraryExplorerTest.zip" />

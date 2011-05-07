@@ -96,6 +96,12 @@ namespace pwiz.Skyline.Util
         string Message { set; }
 
         /// <summary>
+        /// Returns true if the given original document is no longer the active
+        /// document for this operation.
+        /// </summary>
+        bool IsDocumentChanged(SrmDocument docOrig);
+
+        /// <summary>
         /// Shows a dialog box on the right thread, parented to the progress form
         /// </summary>
         DialogResult ShowDialog(Func<IWin32Window, DialogResult> show);

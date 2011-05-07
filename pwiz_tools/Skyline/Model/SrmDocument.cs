@@ -459,17 +459,9 @@ namespace pwiz.Skyline.Model
                 var settingsOld = docImport.Settings;
 
                 // Merge results from import document with current document.
-                MeasuredResults resultsBase, resultsNew;
-                if (settingsNew.HasResults)
-                {
-                    resultsNew = settingsNew.MeasuredResults.MergeResults(docImport.Settings.MeasuredResults,
-                        filePath, resultsAction, out resultsBase);
-                }
-                else
-                {
-                    resultsBase = settingsOld.MeasuredResults;
-                    resultsNew = (resultsAction != MeasuredResults.MergeAction.remove ? resultsBase : null);
-                }
+                MeasuredResults resultsBase;
+                MeasuredResults resultsNew = MeasuredResults.MergeResults(settingsNew.MeasuredResults,
+                    settingsOld.MeasuredResults, filePath, resultsAction, out resultsBase);
 
                 if (!ReferenceEquals(resultsNew, settingsNew.MeasuredResults))
                     settingsNew = settingsNew.ChangeMeasuredResults(resultsNew);
@@ -519,10 +511,11 @@ namespace pwiz.Skyline.Model
                     nodePepGroupNew = nodePepGroupNew.ChangeSettings(docNew.Settings, settingsDiff);
                     peptideGroupsNew.Add(nodePepGroupNew);
                 }
-                var docMerge = docNew.AddPeptideGroups(peptideGroupsNew, pasteToPeptideList, to, out firstAdded, out nextAdd);
-                docNew = docMerge.ChangeSettings(docMerge.Settings.ChangePeptideModifications(mods => mods.DeclareExplicitMods(docMerge,
-                    staticMods, heavyMods)));
-                
+                docNew = docNew.AddPeptideGroups(peptideGroupsNew, pasteToPeptideList, to, out firstAdded, out nextAdd);
+                var modsNew = docNew.Settings.PeptideSettings.Modifications.DeclareExplicitMods(docNew,
+                    staticMods, heavyMods);
+                if (!ReferenceEquals(modsNew, docNew.Settings.PeptideSettings.Modifications))
+                    docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptideModifications(mods => modsNew));                
                 return docNew;
             }
             finally
@@ -2253,8 +2246,10 @@ namespace pwiz.Skyline.Model
             var enumReplicates = settings.MeasuredResults.Chromatograms.GetEnumerator();
             foreach (var listChromInfo in results)
             {
+// ReSharper disable RedundantAssignment
                 bool success = enumReplicates.MoveNext();
                 Debug.Assert(success);
+// ReSharper restore RedundantAssignment
                 if (listChromInfo == null)
                     continue;
                 var chromatogramSet = enumReplicates.Current;

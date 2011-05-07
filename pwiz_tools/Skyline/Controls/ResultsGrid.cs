@@ -211,6 +211,13 @@ namespace pwiz.Skyline.Controls
                           HeaderText = "Count Truncated",
                           ReadOnly = true
                       });
+            Columns.Add(UserSetTotalColumn
+                = new DataGridViewTextBoxColumn
+                {
+                    Name = "UserSetTotal",
+                    HeaderText = "User Set Total",
+                    ReadOnly = true
+                });
             Columns.Add(LibraryDotProductColumn
                 = new DataGridViewTextBoxColumn
                       {
@@ -320,6 +327,13 @@ namespace pwiz.Skyline.Controls
                           HeaderText = "Peak Rank",
                           ReadOnly = true,
                       });
+            Columns.Add(UserSetColumn
+                = new DataGridViewTextBoxColumn
+                {
+                    Name = "UserSet",
+                    HeaderText = "User Set",
+                    ReadOnly = true,
+                });
             KeyDown += ResultsGrid_KeyDown;
             CellEndEdit += ResultsGrid_CellEndEdit;
             CurrentCellChanged += ResultsGrid_CurrentCellChanged;
@@ -564,6 +578,7 @@ namespace pwiz.Skyline.Controls
                                 AreaRatioColumn,
                                 HeightColumn,
                                 TruncatedColumn,
+                                UserSetColumn,
                                 PeakRankColumn,
                            };
             }
@@ -585,6 +600,7 @@ namespace pwiz.Skyline.Controls
                                TotalBackgroundColumn,
                                TotalAreaRatioColumn,
                                CountTruncatedColumn,
+                               UserSetTotalColumn,
                                LibraryDotProductColumn,
                                OptCollisionEnergyColumn,
                                OptDeclusteringPotentialColumn,
@@ -1206,6 +1222,7 @@ namespace pwiz.Skyline.Controls
                     row.Cells[TotalAreaRatioColumn.Index].Value =
                     row.Cells[LibraryDotProductColumn.Index].Value =
                     row.Cells[CountTruncatedColumn.Index].Value =
+                    row.Cells[UserSetTotalColumn.Index].Value =
                     row.Cells[PrecursorNoteColumn.Index].Value =
                     row.Cells[OptCollisionEnergyColumn.Index].Value =
                     row.Cells[OptDeclusteringPotentialColumn.Index].Value = null;
@@ -1221,6 +1238,7 @@ namespace pwiz.Skyline.Controls
                 row.Cells[TotalBackgroundColumn.Index].Value = chromInfo.BackgroundArea;
                 row.Cells[TotalAreaRatioColumn.Index].Value = chromInfo.Ratios[0];
                 row.Cells[CountTruncatedColumn.Index].Value = chromInfo.Truncated;
+                row.Cells[UserSetTotalColumn.Index].Value = chromInfo.UserSet;
                 row.Cells[LibraryDotProductColumn.Index].Value = chromInfo.LibraryDotProduct;
                 row.Cells[PrecursorNoteColumn.Index].Value = chromInfo.Annotations.Note;
                 row.Cells[OptCollisionEnergyColumn.Index].Value = null;
@@ -1286,6 +1304,7 @@ namespace pwiz.Skyline.Controls
                     row.Cells[HeightColumn.Index].Value =
                     row.Cells[TruncatedColumn.Index].Value =
                     row.Cells[PeakRankColumn.Index].Value =
+                    row.Cells[UserSetColumn.Index].Value =
                     row.Cells[TransitionNoteColumn.Index].Value = null;
             }
             else
@@ -1300,6 +1319,7 @@ namespace pwiz.Skyline.Controls
                 row.Cells[HeightColumn.Index].Value = chromInfo.Height;
                 row.Cells[TruncatedColumn.Index].Value = chromInfo.IsTruncated;
                 row.Cells[PeakRankColumn.Index].Value = chromInfo.Rank;
+                row.Cells[UserSetColumn.Index].Value = chromInfo.UserSet;
                 row.Cells[TransitionNoteColumn.Index].Value = chromInfo.Annotations.Note;
             }
             foreach (var column in _ratioColumns.Values)
@@ -1449,7 +1469,8 @@ namespace pwiz.Skyline.Controls
             if (SelectedTransitionDocNode != null)
             {
                 result.UnionWith(from column in TransitionColumns
-                                     where !ReferenceEquals(column, TruncatedColumn)
+                                     where !ReferenceEquals(column, TruncatedColumn) &&
+                                           !ReferenceEquals(column, UserSetColumn)
                                      select column);
             }
             // If only transition nodes are selected, the TransitionNoteColumn should be 
@@ -1460,6 +1481,7 @@ namespace pwiz.Skyline.Controls
             {
                 result.UnionWith(from column in PrecursorColumns
                                      where !ReferenceEquals(column, CountTruncatedColumn) &&
+                                           !ReferenceEquals(column, UserSetTotalColumn) &&
                                            !ReferenceEquals(column, OptCollisionEnergyColumn) &&
                                            !ReferenceEquals(column, OptDeclusteringPotentialColumn)
                                      select column);
@@ -1595,6 +1617,7 @@ namespace pwiz.Skyline.Controls
         public DataGridViewTextBoxColumn TotalBackgroundColumn { get; private set; }
         public DataGridViewTextBoxColumn TotalAreaRatioColumn { get; private set; }
         public DataGridViewTextBoxColumn CountTruncatedColumn { get; private set; }
+        public DataGridViewTextBoxColumn UserSetTotalColumn { get; private set; }
         public DataGridViewTextBoxColumn LibraryDotProductColumn { get; private set; }
         public DataGridViewTextBoxColumn OptCollisionEnergyColumn { get; private set; }
         public DataGridViewTextBoxColumn OptDeclusteringPotentialColumn { get; private set; }
@@ -1610,6 +1633,7 @@ namespace pwiz.Skyline.Controls
         public DataGridViewTextBoxColumn HeightColumn { get; private set; }
         public DataGridViewTextBoxColumn TruncatedColumn { get; private set; }
         public DataGridViewTextBoxColumn PeakRankColumn { get; private set; }
+        public DataGridViewTextBoxColumn UserSetColumn { get; private set; }
         public DataGridViewTextBoxColumn TransitionNoteColumn { get; private set; }
 
         private SrmDocument Document { get; set; }

@@ -17,10 +17,8 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
-using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -358,11 +356,7 @@ namespace pwiz.SkylineTestA
 
         private SrmDocument CreateStudy7Doc()
         {
-            XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
-            var stream = typeof(ExplicitModTest).Assembly.GetManifestResourceStream(GetType().Namespace + ".Study7.sky");
-            Assert.IsNotNull(stream);
-            Debug.Assert(stream != null);   // Keep ReSharper from warning
-            SrmDocument docStudy7 = (SrmDocument)xmlSerializer.Deserialize(stream);
+            SrmDocument docStudy7 = ResultsUtil.DeserializeDocument("Study7.sky", GetType());
             AssertEx.IsDocumentState(docStudy7, 0, 7, 11, 22, 66);
             return docStudy7;
         }

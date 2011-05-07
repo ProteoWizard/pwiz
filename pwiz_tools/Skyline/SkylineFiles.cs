@@ -641,7 +641,7 @@ namespace pwiz.Skyline
             IdentityPath selectPath = null;
 
             var docCurrent = DocumentUI;
-            LongWaitDlg longWaitDlg = new LongWaitDlg
+            var longWaitDlg = new LongWaitDlg(this)
             {
                 Text = description,
             };
@@ -655,6 +655,11 @@ namespace pwiz.Skyline
                                                 out selectPath));
             if (docNew == null)
                 return;
+
+            if (longWaitDlg.IsDocumentChanged(docCurrent))
+            {
+                MessageDlg.Show(this, "Unexpected document change during operation.");                
+            }
 
             // If importing the FASTA produced any childless proteins
             int countEmpty = docNew.PeptideGroups.Count(nodePepGroup => nodePepGroup.Children.Count == 0);
@@ -785,12 +790,12 @@ namespace pwiz.Skyline
             }
         }
 
-        public void ImportFiles(IEnumerable<string> filePaths)
+        public void ImportFiles(params string[] filePaths)
         {
             var resultsAction = MeasuredResults.MergeAction.remove;
             if (HasResults(filePaths))
             {
-                var dlgResults = new ImportDocResultsDlg();
+                var dlgResults = new ImportDocResultsDlg(!string.IsNullOrEmpty(DocumentFilePath));
                 if (dlgResults.ShowDialog(this) != DialogResult.OK)
                     return;
                 resultsAction = dlgResults.Action;
@@ -798,8 +803,36 @@ namespace pwiz.Skyline
             SrmTreeNode nodeSel = sequenceTree.SelectedNode as SrmTreeNode;
             IdentityPath selectPath = null;
 
-            ModifyDocument("Import Skyline document data", doc =>
-                ImportFiles(doc, filePaths, resultsAction, nodeSel != null ? nodeSel.Path : null, out selectPath));
+            const string description = "Import Skyline document data";
+
+            var docCurrent = DocumentUI;
+            var longWaitDlg = new LongWaitDlg(this)
+            {
+                Text = description,
+            };
+            SrmDocument docNew = null;
+            longWaitDlg.PerformWork(this, 1000, () =>
+                docNew = ImportFiles(docCurrent,
+                                     longWaitDlg,
+                                     filePaths,
+                                     resultsAction,
+                                     nodeSel != null ? nodeSel.Path : null,
+                                     out selectPath));
+
+            if (docNew == null || ReferenceEquals(docNew, docCurrent))
+                return;
+
+            if (longWaitDlg.IsDocumentChanged(docCurrent))
+            {
+                MessageDlg.Show(this, "Unexpected document change during operation.");                
+            }
+
+            ModifyDocument(description, doc =>
+            {
+                if (doc != docCurrent)
+                    throw new InvalidDataException("Unexpected document change during operation.");
+                return docNew;
+            });
 
             if (selectPath != null)
                 sequenceTree.SelectedPath = selectPath;
@@ -827,18 +860,34 @@ namespace pwiz.Skyline
             return false;
         }
 
-        private static SrmDocument ImportFiles(SrmDocument doc, IEnumerable<string> filePaths,
-            MeasuredResults.MergeAction resultsAction, IdentityPath to, out IdentityPath firstAdded)
+        private static SrmDocument ImportFiles(SrmDocument docOrig,
+                                               ILongWaitBroker longWaitBroker,
+                                               IList<string> filePaths,
+                                               MeasuredResults.MergeAction resultsAction,
+                                               IdentityPath to,
+                                               out IdentityPath firstAdded)
         {
             firstAdded = null;
 
+            var docResult = docOrig;
+            int filesRead = 0;
+
             // Add files in reverse order, so their nodes will end up in the right order.
+            IdentityPath first = null;
             foreach (var filePath in filePaths)
             {
+                if (longWaitBroker != null)
+                {
+                    if (longWaitBroker.IsCanceled || longWaitBroker.IsDocumentChanged(docOrig))
+                        return docOrig;
+                    longWaitBroker.ProgressValue = filesRead*100/filePaths.Count;
+                    longWaitBroker.Message = string.Format("Importing {0}", Path.GetFileName(filePath));
+                }
+
                 using (var reader = new StreamReader(filePath))
                 {
                     IdentityPath firstAddedForFile, nextAdd;
-                    doc = doc.ImportDocumentXml(reader,
+                    docResult = docResult.ImportDocumentXml(reader,
                                                 filePath,
                                                 resultsAction,
                                                 Settings.Default.StaticModList,
@@ -850,11 +899,14 @@ namespace pwiz.Skyline
                     // Add the next document at the specified location
                     to = nextAdd;
                     // Store the first added node only for the first document
-                    if (firstAdded == null)
-                        firstAdded = firstAddedForFile;
+                    if (first == null)
+                        first = firstAddedForFile;
                 }
+
+                filesRead++;
             }
-            return doc;
+            firstAdded = first;
+            return docResult;
         }
 
         private void importResultsMenuItem_Click(object sender, EventArgs e)
