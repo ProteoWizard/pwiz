@@ -337,9 +337,9 @@
     <Content Include="lib\Bumbershoot\MSFileReader.XRawfile2.SxS.manifest">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot.db">
+    <None Include="lib\Bumbershoot.db">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
+    </None>
     <Content Include="lib\BumberDash Help 2_files\themedata.thmx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

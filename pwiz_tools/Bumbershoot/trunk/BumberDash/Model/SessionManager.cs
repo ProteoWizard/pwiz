@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Collections;
 using System.Diagnostics;
@@ -65,7 +66,51 @@ namespace BumberDash.Model
             var root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),"Bumberdash");
             if (!Directory.Exists(root))
                 Directory.CreateDirectory(root);
-            return CreateSessionFactory(Path.Combine(root, "Bumbershoot.db"));
+            var dataFile = Path.Combine(root, "Bumbershoot.db");
+            var newfactory = CreateSessionFactory(dataFile);
+            var session = newfactory.OpenSession();
+            if (session.QueryOver<ConfigFile>().List().Count<12)
+            {
+                var baseRoot = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+                if (baseRoot == null)
+                    throw new Exception("Cannot find base database file");
+                var baseFactory = CreateSessionFactory(Path.Combine(baseRoot, "lib\\Bumbershoot.db"));
+                var baseSession = baseFactory.OpenSession();
+                var baseConfigs = baseSession.QueryOver<ConfigFile>().List();
+                foreach (var config in baseConfigs)
+                {
+                    ConfigFile config1 = config;
+                    var deleteList = session.QueryOver<ConfigFile>()
+                        .Where(x => x.Name == config1.Name &&
+                                    x.DestinationProgram == config1.DestinationProgram)
+                        .List();
+                    foreach (var item in deleteList)
+                        session.Delete(item);
+                    session.Flush();
+                    var newInstrument = new ConfigFile()
+                                          {
+                                              Name = config.Name,
+                                              DestinationProgram = config.DestinationProgram,
+                                              FilePath = config.FilePath
+                                          };
+                    session.SaveOrUpdate(newInstrument);
+                    session.Flush();
+                    foreach (var property in config.PropertyList)
+                    {
+                        var newProperty = new ConfigProperty()
+                                              {
+                                                  ConfigAssociation = newInstrument,
+                                                  Name = property.Name,
+                                                  Type = property.Type,
+                                                  Value = property.Value
+                                              };
+                        session.SaveOrUpdate(newProperty);
+                    }
+                    session.Flush();
+                }
+            }
+            session.Close();
+            return newfactory;
         }
 
         public static ISessionFactory CreateSessionFactory(string filePath)
