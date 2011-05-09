@@ -45,7 +45,7 @@ namespace BumberDash.Forms
 
             try
             {
-                var manager = SessionManager.CreateSessionFactory(fileToImport);
+                var manager = SessionManager.CreateSessionFactory(fileToImport,true);
                 _tempSession = manager.OpenSession();
                 var templateList = _tempSession.QueryOver<ConfigFile>().Where(x => x.FilePath == "Template").List();
                 foreach (var item in templateList)

@@ -67,16 +67,42 @@ namespace BumberDash.Model
             if (!Directory.Exists(root))
                 Directory.CreateDirectory(root);
             var dataFile = Path.Combine(root, "Bumbershoot.db");
-            var newfactory = CreateSessionFactory(dataFile);
+            var newfactory = CreateSessionFactory(dataFile, true);
             var session = newfactory.OpenSession();
             if (session.QueryOver<ConfigFile>().List().Count<12)
             {
                 var baseRoot = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
                 if (baseRoot == null)
                     throw new Exception("Cannot find base database file");
-                var baseFactory = CreateSessionFactory(Path.Combine(baseRoot, "lib\\Bumbershoot.db"));
+                if (!File.Exists(Path.Combine(baseRoot, "lib\\Bumbershoot.db")))
+                    throw new Exception("Looking for \"" + Path.Combine(baseRoot, "lib\\Bumbershoot.db") + "\", however I cant find it");
+                var baseFactory = CreateSessionFactory(Path.Combine(baseRoot, "lib\\Bumbershoot.db"), false);
                 var baseSession = baseFactory.OpenSession();
-                var baseConfigs = baseSession.QueryOver<ConfigFile>().List();
+                var connectedBaseConfigs = baseSession.QueryOver<ConfigFile>().List();
+                var baseConfigs = new List<ConfigFile>();
+                foreach (var config in connectedBaseConfigs)
+                {
+                    var newInstrument = new ConfigFile
+                                            {
+                                                Name = config.Name,
+                                                DestinationProgram = config.DestinationProgram,
+                                                FilePath = config.FilePath,
+                                                PropertyList = new List<ConfigProperty>()
+                                            };
+                    foreach (var property in config.PropertyList)
+                    {
+                        var newProperty = new ConfigProperty
+                                              {
+                                                  ConfigAssociation = newInstrument,
+                                                  Name = property.Name,
+                                                  Type = property.Type,
+                                                  Value = property.Value
+                                              };
+                        newInstrument.PropertyList.Add(newProperty);
+                    }
+                    baseConfigs.Add(newInstrument);
+                }
+
                 foreach (var config in baseConfigs)
                 {
                     ConfigFile config1 = config;
@@ -113,7 +139,7 @@ namespace BumberDash.Model
             return newfactory;
         }
 
-        public static ISessionFactory CreateSessionFactory(string filePath)
+        public static ISessionFactory CreateSessionFactory(string filePath, bool mainSession)
         {
             Configuration configuration = new Configuration()
                 .SetProperty("dialect", typeof(CustomSQLiteDialect).AssemblyQualifiedName)
@@ -132,11 +158,14 @@ namespace BumberDash.Model
             lock (mutex)
                 sessionFactory = configuration.BuildSessionFactory();
 
-            sessionFactory.OpenStatelessSession().CreateSQLQuery(@"PRAGMA default_cache_size=500000;
+            if (mainSession)
+            {
+                sessionFactory.OpenStatelessSession().CreateSQLQuery(@"PRAGMA default_cache_size=500000;
                                                                    PRAGMA temp_store=MEMORY").ExecuteUpdate();
 
-            var schema = new NHibernate.Tool.hbm2ddl.SchemaUpdate(configuration);
-            schema.Execute(false, true);
+                var schema = new NHibernate.Tool.hbm2ddl.SchemaUpdate(configuration);
+                schema.Execute(false, true);
+            }
 
             return sessionFactory;
         }
@@ -145,8 +174,6 @@ namespace BumberDash.Model
         {
             return configuration.AddAssembly(typeof(SessionManager).Assembly);
         }
-
-        
 
     }
 }

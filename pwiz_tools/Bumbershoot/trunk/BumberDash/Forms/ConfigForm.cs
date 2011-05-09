@@ -1345,7 +1345,7 @@ namespace BumberDash.Forms
                 {
                     ResidueBox.Text = ModList.SelectedItems[0].SubItems[1].Text;
                     ModMassBox.Text = ModList.SelectedItems[0].SubItems[2].Text;
-                    ModTypeBox.SelectedIndex = (ResidueBox.Text.Length == 1) ? 0 : 1;
+                    ModTypeBox.SelectedIndex = (ResidueBox.Text == "C") ? 0 : 1;
                 }
             }
             catch
@@ -1607,7 +1607,7 @@ namespace BumberDash.Forms
             if (!string.IsNullOrEmpty(exportFile) && exportForm.ShowDialog() == DialogResult.OK)
             {
                 var configList = exportForm.GetConfigs();
-                var manager = SessionManager.CreateSessionFactory(exportFile);
+                var manager = SessionManager.CreateSessionFactory(exportFile, true);
                 var tempSession = manager.OpenSession();
                 foreach (var config in configList)
                     tempSession.SaveOrUpdate(config);

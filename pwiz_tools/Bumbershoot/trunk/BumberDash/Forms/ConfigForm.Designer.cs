@@ -29,60 +29,60 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.ListViewItem listViewItem14 = new System.Windows.Forms.ListViewItem(new string[] {
-            "Carbamidomethylated Cysteine",
-            "C",
-            "57.021464"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem15 = new System.Windows.Forms.ListViewItem(new string[] {
-            "Carboxymethylated Cysteine",
+            System.Windows.Forms.ListViewItem listViewItem1 = new System.Windows.Forms.ListViewItem(new string[] {
+            "Carboxyamidomethylation of Cysteine",
             "C",
             "58.005"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem16 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem2 = new System.Windows.Forms.ListViewItem(new string[] {
             "Oxidized Methione",
             "M",
             "15.9949"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem17 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem3 = new System.Windows.Forms.ListViewItem(new string[] {
             "Phosphorylated Serine",
             "S",
             "79.966"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem18 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem4 = new System.Windows.Forms.ListViewItem(new string[] {
             "N terminal deamidation of glutamine",
             "(Q",
             "-17.026549"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem19 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem5 = new System.Windows.Forms.ListViewItem(new string[] {
             "Carboxymethylated Cysteine",
             "C",
             "57"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem20 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem6 = new System.Windows.Forms.ListViewItem(new string[] {
             "Oxidized Methione",
             "M",
             "15.995"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem21 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem7 = new System.Windows.Forms.ListViewItem(new string[] {
             "Phosphorylated Serine",
             "S",
             "79.966"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem22 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem8 = new System.Windows.Forms.ListViewItem(new string[] {
             "N terminal deamidation of glutamine",
             "(Q",
             "-17"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem23 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem9 = new System.Windows.Forms.ListViewItem(new string[] {
             "Carboxymethylated Cysteine",
             "C",
             "57"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem24 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem10 = new System.Windows.Forms.ListViewItem(new string[] {
             "Oxidized Methione",
             "M",
             "15.995"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem25 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem11 = new System.Windows.Forms.ListViewItem(new string[] {
             "Phosphorylated Serine",
             "S",
             "79.966"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem26 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem12 = new System.Windows.Forms.ListViewItem(new string[] {
             "N terminal deamidation of glutamine",
             "(Q",
             "-17"}, -1);
             this.mainTabControl = new System.Windows.Forms.TabControl();
             this.Gentab = new System.Windows.Forms.TabPage();
+            this.SlowFadePanel = new System.Windows.Forms.Panel();
+            this.label3 = new System.Windows.Forms.Label();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
             this.TRGenPanel = new System.Windows.Forms.Panel();
             this.TRToleranceGB = new System.Windows.Forms.GroupBox();
             this.TRCTerminusMzToleranceBox = new System.Windows.Forms.TextBox();
@@ -499,12 +499,9 @@
             this.exportInstrumentsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.renameInstrumentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.deleteInstrumentToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.SlowFadePanel = new System.Windows.Forms.Panel();
-            this.label1 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
             this.mainTabControl.SuspendLayout();
             this.Gentab.SuspendLayout();
+            this.SlowFadePanel.SuspendLayout();
             this.TRGenPanel.SuspendLayout();
             this.TRToleranceGB.SuspendLayout();
             this.TRDigestionGB.SuspendLayout();
@@ -608,7 +605,6 @@
             this.ConfigModePanel.SuspendLayout();
             this.TemplateModePanel.SuspendLayout();
             this.MoreContextMenu.SuspendLayout();
-            this.SlowFadePanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // mainTabControl
@@ -637,6 +633,51 @@
             this.Gentab.TabIndex = 0;
             this.Gentab.Text = "General";
             this.Gentab.UseVisualStyleBackColor = true;
+            // 
+            // SlowFadePanel
+            // 
+            this.SlowFadePanel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.SlowFadePanel.Controls.Add(this.label3);
+            this.SlowFadePanel.Controls.Add(this.label2);
+            this.SlowFadePanel.Controls.Add(this.label1);
+            this.SlowFadePanel.Location = new System.Drawing.Point(0, 528);
+            this.SlowFadePanel.Name = "SlowFadePanel";
+            this.SlowFadePanel.Size = new System.Drawing.Size(542, 26);
+            this.SlowFadePanel.TabIndex = 5;
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label3.ForeColor = System.Drawing.Color.DarkViolet;
+            this.label3.Location = new System.Drawing.Point(373, 6);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(153, 13);
+            this.label3.TabIndex = 2;
+            this.label3.Text = "Non-Default or Template Value";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label2.ForeColor = System.Drawing.Color.Blue;
+            this.label2.Location = new System.Drawing.Point(147, 6);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(186, 13);
+            this.label2.TabIndex = 1;
+            this.label2.Text = "Program Default, Non-Template Value";
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label1.ForeColor = System.Drawing.Color.Green;
+            this.label1.Location = new System.Drawing.Point(8, 6);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(94, 13);
+            this.label1.TabIndex = 0;
+            this.label1.Text = "Non-Default Value";
             // 
             // TRGenPanel
             // 
@@ -1361,11 +1402,10 @@
             this.columnHeader2});
             this.TRModList.FullRowSelect = true;
             this.TRModList.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
-            listViewItem14,
-            listViewItem15,
-            listViewItem16,
-            listViewItem17,
-            listViewItem18});
+            listViewItem1,
+            listViewItem2,
+            listViewItem3,
+            listViewItem4});
             this.TRModList.Location = new System.Drawing.Point(7, 59);
             this.TRModList.MultiSelect = false;
             this.TRModList.Name = "TRModList";
@@ -1977,10 +2017,10 @@
             this.Description});
             this.MyriModList.FullRowSelect = true;
             this.MyriModList.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
-            listViewItem19,
-            listViewItem20,
-            listViewItem21,
-            listViewItem22});
+            listViewItem5,
+            listViewItem6,
+            listViewItem7,
+            listViewItem8});
             this.MyriModList.Location = new System.Drawing.Point(7, 32);
             this.MyriModList.MultiSelect = false;
             this.MyriModList.Name = "MyriModList";
@@ -2475,10 +2515,10 @@
             this.columnHeader1});
             this.DTModList.FullRowSelect = true;
             this.DTModList.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
-            listViewItem23,
-            listViewItem24,
-            listViewItem25,
-            listViewItem26});
+            listViewItem9,
+            listViewItem10,
+            listViewItem11,
+            listViewItem12});
             this.DTModList.Location = new System.Drawing.Point(7, 32);
             this.DTModList.MultiSelect = false;
             this.DTModList.Name = "DTModList";
@@ -6015,51 +6055,6 @@
             this.deleteInstrumentToolStripMenuItem.Text = "Delete Template";
             this.deleteInstrumentToolStripMenuItem.Click += new System.EventHandler(this.deleteInstrumentToolStripMenuItem_Click);
             // 
-            // SlowFadePanel
-            // 
-            this.SlowFadePanel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.SlowFadePanel.Controls.Add(this.label3);
-            this.SlowFadePanel.Controls.Add(this.label2);
-            this.SlowFadePanel.Controls.Add(this.label1);
-            this.SlowFadePanel.Location = new System.Drawing.Point(0, 528);
-            this.SlowFadePanel.Name = "SlowFadePanel";
-            this.SlowFadePanel.Size = new System.Drawing.Size(542, 26);
-            this.SlowFadePanel.TabIndex = 5;
-            // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.ForeColor = System.Drawing.Color.Green;
-            this.label1.Location = new System.Drawing.Point(8, 6);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(94, 13);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "Non-Default Value";
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.ForeColor = System.Drawing.Color.Blue;
-            this.label2.Location = new System.Drawing.Point(147, 6);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(186, 13);
-            this.label2.TabIndex = 1;
-            this.label2.Text = "Program Default, Non-Template Value";
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label3.ForeColor = System.Drawing.Color.DarkViolet;
-            this.label3.Location = new System.Drawing.Point(373, 6);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(153, 13);
-            this.label3.TabIndex = 2;
-            this.label3.Text = "Non-Default or Template Value";
-            // 
             // ConfigForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -6075,6 +6070,8 @@
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.ConfigForm_FormClosing);
             this.mainTabControl.ResumeLayout(false);
             this.Gentab.ResumeLayout(false);
+            this.SlowFadePanel.ResumeLayout(false);
+            this.SlowFadePanel.PerformLayout();
             this.TRGenPanel.ResumeLayout(false);
             this.TRToleranceGB.ResumeLayout(false);
             this.TRToleranceGB.PerformLayout();
@@ -6210,8 +6207,6 @@
             this.TemplateModePanel.ResumeLayout(false);
             this.TemplateModePanel.PerformLayout();
             this.MoreContextMenu.ResumeLayout(false);
-            this.SlowFadePanel.ResumeLayout(false);
-            this.SlowFadePanel.PerformLayout();
             this.ResumeLayout(false);
 
         }
