@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Iesi.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -85,9 +86,27 @@ namespace IDPicker.Controls
                 foreach (var p in diffParameters)
                     key += p;
 
+                //try to find valid protein database location
+                var databaseLoc = a.importSettings.proteinDatabaseFilepath;
+                if (!File.Exists(databaseLoc))
+                {
+                    var databaseName = Path.GetFileName(databaseLoc);
+                    if (databaseName != null)
+                        foreach (var item in a.filepaths)
+                        {
+                            var possibleLocation = Path.Combine(Path.GetDirectoryName(item) ?? string.Empty,
+                                                                databaseName);
+                            if (File.Exists(possibleLocation))
+                            {
+                                databaseLoc = possibleLocation;
+                                break;
+                            }
+                        }
+                }
+
                 row.Tag = a;
                 row.Cells[0].Value = key;
-                row.Cells[1].Value = System.IO.Path.GetFileName(a.importSettings.proteinDatabaseFilepath);
+                row.Cells[1].Value = databaseLoc;
                 row.Cells[2].Value = Properties.Settings.Default.DecoyPrefix;
                 var comboBox = row.Cells[3] as DataGridViewComboBoxCell;
                 var firstSoftwarePreset = qonverterSettingsByName.Keys.FirstOrDefault(o => o.ToLower().Contains(a.softwareName.ToLower()));
@@ -122,6 +141,7 @@ namespace IDPicker.Controls
             analysis.importSettings.qonverterSettings = qonverterSettingsByName[(string) row.Cells[3].Value].ToQonverterSettings();
             analysis.importSettings.qonverterSettings.DecoyPrefix = (string) row.Cells[2].Value;
             analysis.importSettings.proteinDatabaseFilepath = (string) row.Cells[1].Value;
+            row.Cells[1].Style.BackColor = File.Exists((string)row.Cells[1].Value) ? SystemColors.Window : Color.LightSalmon;
         }
 
         void dataGridView_CurrentCellDirtyStateChanged (object sender, EventArgs e)

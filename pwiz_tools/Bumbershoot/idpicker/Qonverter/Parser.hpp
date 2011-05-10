@@ -98,6 +98,8 @@ struct Parser
     void parse(const vector<string>& inputFilepaths) const;
 
     void parse(const string& inputFilepath) const;
+	
+	static string parseSource(const string& inputFilepath);
 };
 
 

@@ -75,6 +75,8 @@ public ref struct Parser
     void Parse(IEnumerable<String^>^ inputFilepaths);
 
     void Parse(String^ inputFilepath);
+	
+	static String^ ParseSource(String^ inputFilepath);
 
 
     internal:

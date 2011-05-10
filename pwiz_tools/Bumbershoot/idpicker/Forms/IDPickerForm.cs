@@ -33,6 +33,7 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.IO;
 using System.Threading;
+using CustomDataSourceDialog;
 using DigitalRune.Windows.Docking;
 using IDPicker.Forms;
 using IDPicker.Controls;
@@ -46,6 +47,9 @@ using NHibernate.Criterion;
 using BrightIdeasSoftware;
 using PopupControl;
 using Microsoft.WindowsAPICodePack.Taskbar;
+using BreadCrumbControl = IDPicker.Controls.BreadCrumbControl;
+using SpectrumSource = IDPicker.DataModel.SpectrumSource;
+
 //using SpyTools;
 
 namespace IDPicker
@@ -83,6 +87,9 @@ namespace IDPicker
         public IDPickerForm (string[] args)
         {
             InitializeComponent();
+
+            Properties.Settings.Default.Reset();
+            Properties.Settings.Default.Save();
 
             this.args = args;
 
@@ -224,23 +231,29 @@ namespace IDPicker
 
         void openToolStripMenuItem_Click (object sender, EventArgs e)
         {
-            var openFileDialog = new OpenFileDialog()
+            var fileTypeList = new List<string>
             {
-                Filter = sender == openToolStripMenuItem 
-                         ? "IDPicker DB|*.idpDB"
-                         : "IDPicker Files|*.idpDB;*.idpXML;*.pepXML;*.pep.xml|" +
-                         "PepXML Files|*.pepXML;*.pep.xml|" +
-                         "IDPicker XML|*.idpXML|" +
-                         "IDPicker DB|*.idpDB|" +
-                         "Any File|*.*",
-                SupportMultiDottedExtensions = true,
-                AddExtension = true,
-                CheckFileExists = true,
-                Multiselect = true  
+                "IDPicker Files|.idpDB;.idpXML;.pepXML;.pep.xml",
+                "PepXML Files|.pepXML;.pep.xml",
+                "IDPicker XML|.idpXML",
+                "IDPicker DB|.idpDB"
             };
+            if (sender == openToolStripMenuItem)
+                fileTypeList = new List<string> {"IDPicker DB|.idpDB"};
+
+            var openFileDialog = new IDPOpenDialog(fileTypeList);
 
             if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
+                var fileNames = openFileDialog.GetFileNames();
+                var treeStructure = openFileDialog.GetTreeStructure();
+                if (!fileNames.Any())
+                    return;
+
+                ////Was used to set the directory in the same way the old Open File Dialog would
+                //Directory.SetCurrentDirectory(Path.GetDirectoryName(fileNames[0])
+                //    ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
+
                 clearData();
                 progressMonitor = new ProgressMonitor();
                 progressMonitor.ProgressUpdate += progressMonitor_ProgressUpdate;
@@ -252,8 +265,6 @@ namespace IDPicker
                 dataFilterPopup.Closed += dataFilterPopup_Closed;
 
                 breadCrumbControl.ClearBreadcrumbs();
-
-                var fileNames = openFileDialog.FileNames.ToList();
 
                 if (session != null)
                 {
@@ -267,7 +278,7 @@ namespace IDPicker
                     session = null;
         }
 
-                OpenFiles(fileNames.ToArray());
+                OpenFiles(fileNames.ToArray(),treeStructure);
             }
         }
 
@@ -535,9 +546,26 @@ namespace IDPicker
             dockPanel.Visible = false;
 
             if (args != null && args.Length > 0 && args.All(o => File.Exists(o)))
-                OpenFiles(args);
-            //else
-            //    openToolStripMenuItem_Click(this, EventArgs.Empty);
+            {
+                var grouping = CreateGroupingFromArgs(args);
+                OpenFiles(args,grouping);
+            }
+        }
+
+        private TreeNode CreateGroupingFromArgs(IEnumerable<string> sources)
+        {
+            var fileTypeList = new List<string>
+            {
+                "IDPicker Files|.idpDB;.idpXML;.pepXML;.pep.xml",
+                "PepXML Files|.pepXML;.pep.xml",
+                "IDPicker XML|.idpXML",
+                "IDPicker DB|.idpDB"
+            };
+            var ofd = new IDPOpenDialog(fileTypeList){Visible = false};
+            ofd.Show();
+            var structure = ofd.GetTreeStructure(sources);
+            ofd.Close();
+            return structure;
         }
 
         /*void databaseNotFoundHandler (object sender, Parser.DatabaseNotFoundEventArgs e)
@@ -661,7 +689,7 @@ namespace IDPicker
             }
         }
 
-        void OpenFiles (IList<string> filepaths)
+        void OpenFiles (IList<string> filepaths, TreeNode rootNode)
         {
             try
             {
@@ -676,6 +704,7 @@ namespace IDPicker
                     return;
                 }
 
+                //try to determine if merged filepath exists already
                 string commonFilename = Util.GetCommonFilename(filepaths);
                 
                 if (!idpDB_filepaths.Contains(commonFilename) &&
@@ -689,6 +718,34 @@ namespace IDPicker
                                         MessageBoxDefaultButton.Button2) != DialogResult.Yes)
                         return;
                     File.Delete(commonFilename);
+                }
+
+                //determine if merged filepath can exist, get new path if not
+                DirectoryInfo newDi = null;
+                var possibledirectory = Path.GetDirectoryName(commonFilename);
+                if (possibledirectory != null && Directory.Exists(possibledirectory))
+                    newDi = new DirectoryInfo(possibledirectory);
+                while (newDi == null || (newDi.Attributes == (newDi.Attributes | FileAttributes.ReadOnly)))
+                {
+                    if (newDi == null)
+                        MessageBox.Show("Automatic output folder cannot be found, " +
+                                        "please specify a new output name and location.");
+                    else
+                        MessageBox.Show("Output folder is readonly, " +
+                                        "please specify a new output name and location.");
+                    var sfd = new SaveFileDialog
+                                  {
+                                      AddExtension = true,
+                                      RestoreDirectory = true,
+                                      DefaultExt = "idpDB",
+                                      Filter = "IDPicker Database|*.idpDB"
+                                  };
+                    if (sfd.ShowDialog() != DialogResult.OK)
+                        return;
+                    commonFilename = sfd.FileName;
+                    possibledirectory = Path.GetDirectoryName(commonFilename);
+                    if (possibledirectory != null && Directory.Exists(possibledirectory))
+                        newDi = new DirectoryInfo(possibledirectory);
                 }
 
                 // set main window title
@@ -755,6 +812,7 @@ namespace IDPicker
                 //set or save default layout
                 dockPanel.Visible = true;
                 LoadLayout(_layoutManager.GetCurrentDefault());
+                SetStructure(rootNode);
 
                 //breadCrumbControl.BreadCrumbs.Clear();
 
@@ -788,6 +846,35 @@ namespace IDPicker
             catch (Exception ex)
             {
                 HandleException(this, ex);
+            }
+        }
+
+        private void SetStructure(TreeNode node)
+        {
+            if (node == null)
+                return;
+
+            var ssg = new SpectrumSourceGroup {Name = node.Text};
+            if (node.Text != "/")
+                session.SaveOrUpdate(ssg);
+
+            foreach (TreeNode childNode in node.Nodes)
+            {
+                if (childNode.Tag.ToString() == "Source")
+                {
+                    var node1 = childNode;
+                    var sources = session.QueryOver<SpectrumSource>().Where(x => x.Name == node1.Text).List();
+                    foreach (var item in sources)
+                    {
+                        var ssgl = new SpectrumSourceGroupLink { Group = ssg, Source = item };
+                        item.Group = ssg;
+                        session.SaveOrUpdate(item);
+                        session.SaveOrUpdate(ssgl);
+                        session.Flush();
+                    }
+                }
+                else
+                    SetStructure(childNode);
             }
         }
 
@@ -883,7 +970,7 @@ namespace IDPicker
                               in (new System.Text.RegularExpressions.Regex(@"\w:(?:\\(?:\w| |_|-)+)+.idpDB"))
                               .Matches(ses.Connection.ConnectionString) select m.Value).SingleOrDefault<string>());
             if (File.Exists(database[0]))
-                OpenFiles(database);
+                OpenFiles(database, null);
         }
 
         private void IDPickerForm_FormClosing(object sender, FormClosingEventArgs e)
@@ -1017,7 +1104,7 @@ namespace IDPicker
             basicFilterControl.ShowQonverterSettings += ShowQonverterSettings;
             dataFilterPopup = new Popup(basicFilterControl) { FocusOnOpen = true };
             dataFilterPopup.Closed += dataFilterPopup_Closed;
-            OpenFiles(new List<string> {Text});
+            OpenFiles(new List<string> {Text}, null);
         }
     }
 

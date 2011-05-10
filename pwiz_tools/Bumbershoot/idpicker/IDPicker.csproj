@@ -260,6 +260,10 @@
       <Project>{8EFCC46A-7415-4BB5-AF34-5E71EF4BEEB0}</Project>
       <Name>Controls</Name>
     </ProjectReference>
+    <ProjectReference Include="CustomDataSourceDialog\CustomDataSourceDialog.csproj">
+      <Project>{6B7B0771-4D09-469F-AEFA-00E4FA06D017}</Project>
+      <Name>CustomDataSourceDialog</Name>
+    </ProjectReference>
     <ProjectReference Include="freicore\pwiz_src\pwiz_tools\SeeMS\seems.csproj">
       <Project>{2399F68B-D886-4D94-AB4B-700FE3E46849}</Project>
       <Name>seems</Name>

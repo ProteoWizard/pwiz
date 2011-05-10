@@ -833,5 +833,20 @@ void Parser::parse(const string& inputFilepath) const
     parse(vector<string>(1, inputFilepath));
 }
 
+string Parser::parseSource(const string& inputFilepath)
+{
+	MzIdentMLFile mzid(inputFilepath, 0, 0, true);
+	
+	string spectraDataName = mzid.dataCollection.inputs.spectraData[0]->name;
+        if (spectraDataName.empty())
+        {
+            spectraDataName = bfs::path(mzid.dataCollection.inputs.spectraData[0]->location).replace_extension("").filename();
+            if (spectraDataName.empty())
+                throw runtime_error("no spectrum source name or location");
+        }
+
+	return spectraDataName;
+}
+
 
 END_IDPICKER_NAMESPACE
