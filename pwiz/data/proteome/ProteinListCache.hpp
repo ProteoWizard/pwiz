@@ -48,7 +48,8 @@ class PWIZ_API_DECL ProteinListCache : public ProteinListWrapper
 
     /// a cache mapping spectrum indices to ProteinPtrs
     typedef std::pair<size_t, ProteinPtr> KeyValuePair;
-    typedef pwiz::util::mru_list<KeyValuePair, boost::multi_index::member<KeyValuePair, size_t, &KeyValuePair::first> > CacheType;
+    BOOST_STATIC_CONSTANT(unsigned, first_offset = offsetof(KeyValuePair, first));
+    typedef pwiz::util::mru_list<KeyValuePair, boost::multi_index::member_offset<KeyValuePair, size_t, first_offset> > CacheType;
 
     ProteinListCache(const ProteinListPtr& inner,
                      ProteinListCacheMode cacheMode,

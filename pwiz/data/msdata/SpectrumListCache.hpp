@@ -40,7 +40,8 @@ class PWIZ_API_DECL SpectrumListCache : public SpectrumListWrapper
 
     /// a cache mapping spectrum indices to SpectrumPtrs
     typedef std::pair<size_t, SpectrumPtr> KeyValuePair;
-    typedef MemoryMRUCache<KeyValuePair, boost::multi_index::member<KeyValuePair, size_t, &KeyValuePair::first> > CacheType;
+    BOOST_STATIC_CONSTANT(unsigned, first_offset = offsetof(KeyValuePair, first));
+    typedef MemoryMRUCache<KeyValuePair, boost::multi_index::member_offset<KeyValuePair, size_t, first_offset> > CacheType;
 
     SpectrumListCache(const SpectrumListPtr& inner,
                       MemoryMRUCacheMode cacheMode,
