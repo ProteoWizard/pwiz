@@ -250,7 +250,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         label = string.Format("Step {0}", step);
                     var curveItem = new BarItem(label, pointPairList, color);
 
-                    if (selectedReplicateIndex < pointPairList.Count)
+                    if (0 <= selectedReplicateIndex && selectedReplicateIndex < pointPairList.Count)
                     {
                         PointPair pointPair = pointPairList[selectedReplicateIndex];
                         if (!pointPair.IsInvalid)
