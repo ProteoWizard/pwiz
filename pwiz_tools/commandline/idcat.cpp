@@ -205,7 +205,7 @@ Config parseCommandLine(int argc, const char* argv[])
     {
         // For now, add 'em all.
         Serializer_Text::IdField last = Serializer_Text::Last;
-        for (uint i=1; i<(uint)last; i++)
+        for (size_t i=1; i<(size_t)last; i++)
         {
             config.fields.push_back(Serializer_Text::IdFieldNames[i]);
         }
