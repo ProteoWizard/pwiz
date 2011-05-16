@@ -122,6 +122,12 @@ exe idconvert
     ;
 
 
+exe idcat
+    : idcat.cpp
+     idtool-requirements
+    : <include>../../..
+    ;
+
 #exe mascot2mzid
 #    : mascot2mzid.cpp
 #      ../../pwiz/data/mziddata//pwiz_data_mzid

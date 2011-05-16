@@ -29,6 +29,7 @@
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/algorithm/string/join.hpp>
 #include <boost/foreach.hpp>
+#include <boost/regex.hpp>
 #include <algorithm>
 #include <iostream>
 
@@ -47,18 +48,19 @@ struct TextRecord
     string scan;
     string rt;
     string mz;
+    string charge;
     string score;
     string scoretype;
     string peptide;
     string protein;
 
     TextRecord()
-        : none(""), scan(""), rt(""), mz(""),
+        : none(""), scan(""), rt(""), mz(""), charge(""),
           score(""), scoretype(""), peptide(""), protein("")
     {}
     TextRecord(const TextRecord& tr)
         : none(tr.none),scan(tr.scan),rt(tr.rt),mz(tr.mz),
-          score(tr.score),scoretype(tr.scoretype),
+          charge(tr.charge), score(tr.score),scoretype(tr.scoretype),
           peptide(tr.peptide),protein(tr.protein)
     {}
 
@@ -97,7 +99,7 @@ ostream& operator<<(ostream& os, const TextRecord& tr)
 } // anonymous namespace
 
 PWIZ_API_DECL Serializer_Text::Config::Config()
-    : recordDelim("\n"),fieldDelim("\t")
+    : headers(true), sort(Scan), recordDelim("\n"),fieldDelim("\t")
 {
 }
 
@@ -140,7 +142,7 @@ private:
 
 void parseHeaders(shared_ptr<istream> is, vector<string> fields)
 {
-    
+    // TODO add haeder parsing & field identification.
 }
 
 vector<TextRecord> fetchPeptideEvidence(const vector<PeptideEvidencePtr>& peps,
@@ -153,21 +155,19 @@ vector<TextRecord> fetchPeptideEvidence(const vector<PeptideEvidencePtr>& peps,
         TextRecord tr(record);
         ostringstream oss;
 
+        /*
         if (pep->start != pep->end)
-        {
             oss << pep->start << "-" << pep->end;
-        }
         else
-        {
             oss << pep->start;
-        }
         tr.scan = oss.str();
-
+        */
+        
         // Fetch the peptide sequence by way of the DBSequence
         // reference.
         if (pep->dbSequencePtr.get())
             tr.peptide = pep->dbSequencePtr->seq;
-
+        
         // Fetch the protein name by way of the "protein description"
         // CVParam
         CVParam cvp = pep->dbSequencePtr->cvParam(MS_protein_description);
@@ -195,6 +195,20 @@ vector<TextRecord> fetchSpectrumIdItem(
         ostringstream oss;
         oss << sii->experimentalMassToCharge;
         tr.mz = oss.str();
+
+        oss.str("");
+        oss << sii->chargeState;
+        tr.charge = oss.str();
+
+        CVParam score = sii->cvParamChild(MS_search_engine_specific_score);
+        if (score.cvid != CVID_Unknown)
+        {
+            tr.score = score.value;
+            CVTermInfo info = cvTermInfo(score.cvid);
+            tr.scoretype = info.name;
+        }
+
+        tr.peptide = sii->peptidePtr->peptideSequence;
         
         vector<TextRecord> pepsRecords =
             fetchPeptideEvidence(sii->peptideEvidencePtr, tr);
@@ -210,6 +224,9 @@ vector<TextRecord> fetchSpectrumIdItem(
 vector<TextRecord> fetchSpectrumIdResults(
     const vector<SpectrumIdentificationResultPtr>& sirl)
 {
+    const string spectrumIDPattern = "[^=]*=([0-9\\.]+)";
+    regex spectrumIDExp(spectrumIDPattern);
+
     vector<TextRecord> records;
 
     if (!sirl.size())
@@ -237,6 +254,14 @@ vector<TextRecord> fetchSpectrumIdResults(
             tr.rt=oss.str();
         }
 
+        // Check for a keyword/numerical value match int he spectrumID
+        cmatch what;
+        if (regex_match(sir->spectrumID.c_str(), what, spectrumIDExp))
+        {
+            // Use the numerical value as the scan
+            tr.scan.assign(what[1].first, what[1].second);
+        }
+        
         vector<TextRecord> siiResults =fetchSpectrumIdItem(
             sir->spectrumIdentificationItem, tr);
         BOOST_FOREACH(TextRecord t, siiResults)
@@ -290,6 +315,10 @@ void Serializer_Text::Impl::writeField(ostream& os, const TextRecord& tr,
     case Mz:
         os << tr.mz;
         break;
+
+    case Charge:
+        os << tr.charge;
+        break;
         
     case Score:
         os << tr.score;
@@ -315,20 +344,20 @@ void Serializer_Text::Impl::writeField(ostream& os, const TextRecord& tr,
 void Serializer_Text::Impl::write(ostream& os, const TextRecord& tr,
     const IterationListenerRegistry* iterationListenerRegistry) const
 {
-    Serializer_Text::IdField last = Last;
-    size_t numFields = last;
-
     vector<IdField> fields;
 
     if (config.fields.size())
+    {
+        fields.resize(config.fields.size());
         copy(config.fields.begin(), config.fields.end(), fields.begin());
+    }
     else
     {
         for (size_t i=1;i<=Last; i++)
             fields.push_back((IdField)i);
     }
     
-    for (size_t i=0; i<numFields; i++)
+    for (size_t i=0; i<fields.size(); i++)
     {
         writeField(os, tr, fields.at(i));
         if (i<fields.size()-1)
@@ -378,10 +407,13 @@ string Serializer_Text::Impl::getHeaders() const
     }
     else
     {
-        BOOST_FOREACH(string name, idNames)
+
+        headerList.resize(idNames.size()-1);
+        copy(idNames.begin()+1, idNames.end(), headerList.begin());
+        
+        BOOST_FOREACH(string name, headerList)
             headerList.push_back(name);
 
-        copy(idNames.begin(), idNames.end(), headerList.begin());
     }
     
     return join(headerList, config.fieldDelim);
@@ -418,7 +450,8 @@ PWIZ_API_DECL const string Serializer_Text::IdFieldNames[] =
     "score",
     "scoretype",
     "peptide",
-    "protein"
+    "protein",
+    ""
 };
 
 PWIZ_API_DECL Serializer_Text::Serializer_Text(const Config& config)
