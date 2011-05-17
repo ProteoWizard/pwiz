@@ -240,8 +240,13 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
         string filterString = scanInfo->filter();
         scan.set(MS_filter_string, filterString);
 
+        int scanSegment = 1, scanEvent = 1;
+
+        string scanSegmentStr = scanInfo->trailerExtraValue("Scan Segment:");
+        if (!scanSegmentStr.empty())
+            scanSegment = lexical_cast<int>(scanSegmentStr);
+
         string scanEventStr = scanInfo->trailerExtraValue("Scan Event:");
-        int scanEvent = 1;
         if (!scanEventStr.empty())
         {
             scan.set(MS_preset_scan_configuration, scanEventStr);
@@ -349,9 +354,9 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
             // if scan trailer did not have isolation width, try the instrument method
             if (isolationWidth == 0)
             {
-                isolationWidth = rawfile_->getIsolationWidth(1, scanEvent) / 2;
+                isolationWidth = rawfile_->getIsolationWidth(scanSegment, scanEvent) / 2;
                 if (isolationWidth == 0)
-                    isolationWidth = rawfile_->getDefaultIsolationWidth(1, msLevel) / 2;
+                    isolationWidth = rawfile_->getDefaultIsolationWidth(scanSegment, msLevel) / 2;
             }
 
             double isolationMz = ie.isolationMz;
