@@ -1201,6 +1201,7 @@ void RawFileImpl::parseInstrumentMethod()
     sregex scanSegmentRegex = sregex::compile("\\s*Segment (\\d+) Information\\s*");
     sregex scanEventRegex = sregex::compile("\\s*(\\d+):.*");
     sregex scanEventIsolationWidthRegex = sregex::compile("\\s*Isolation Width:\\s*(\\S+)\\s*");
+	sregex scanEventIsoWRegex = sregex::compile("\\s*MS.*:.*\\s+IsoW\\s+(\\S+)\\s*");
     sregex repeatedEventRegex = sregex::compile("\\s*Scan Event (\\d+) repeated for top (\\d+)\\s*");
     sregex defaultIsolationWidthRegex = sregex::compile("\\s*MS(\\d+) Isolation Width:\\s*(\\S+)\\s*");
 
@@ -1237,7 +1238,7 @@ void RawFileImpl::parseInstrumentMethod()
                 continue;
             }
 
-            if (regex_match(line, what, scanEventIsolationWidthRegex))
+            if (regex_match(line, what, scanEventIsolationWidthRegex) || regex_match(line, what, scanEventIsoWRegex))
             {
                 isolationWidthBySegmentAndScanEvent[scanSegment][scanEvent] = lexical_cast<double>(what[1]);
                 continue;
