@@ -1056,9 +1056,9 @@
             this.label21.AutoSize = true;
             this.label21.Location = new System.Drawing.Point(11, 94);
             this.label21.Name = "label21";
-            this.label21.Size = new System.Drawing.Size(116, 13);
+            this.label21.Size = new System.Drawing.Size(77, 13);
             this.label21.TabIndex = 2;
-            this.label21.Text = "Isolation window &width:";
+            this.label21.Text = "Isolation &width:";
             // 
             // comboPrecursorFilterType
             // 

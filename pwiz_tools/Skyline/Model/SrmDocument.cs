@@ -1421,12 +1421,10 @@ namespace pwiz.Skyline.Model
                 reader.ReadEndElement();
             }
 
-            double precursorMassH = Settings.GetPrecursorMass(group.LabelType, peptide.Sequence, mods);
-            RelativeRT relativeRT = Settings.GetRelativeRT(group.LabelType, peptide.Sequence, mods);
             return new TransitionGroupDocNode(group,
                                               annotations,
-                                              precursorMassH,
-                                              relativeRT,
+                                              Settings,
+                                              mods,
                                               libInfo,
                                               results,
                                               children ?? new TransitionDocNode[0],
@@ -1565,15 +1563,12 @@ namespace pwiz.Skyline.Model
                 curList.Add(new TransitionDocNode(transition, info.Losses, massH, null));
             }
 
-            double precursorMassH = Settings.GetPrecursorMass(IsotopeLabelType.light, peptide.Sequence, mods);
-            RelativeRT relativeRT = Settings.GetRelativeRT(IsotopeLabelType.light, peptide.Sequence, mods);
-
             // Use collected information to create the DocNodes.
             var list = new List<TransitionGroupDocNode>();
             foreach (TransitionGroup group in listGroups)
             {
-                list.Add(new TransitionGroupDocNode(group, precursorMassH, relativeRT,
-                    mapGroupToList[group].ToArray()));
+                list.Add(new TransitionGroupDocNode(group, Annotations.EMPTY,
+                    Settings, mods, null, null, mapGroupToList[group].ToArray(), true));
             }
             return list.ToArray();
         }

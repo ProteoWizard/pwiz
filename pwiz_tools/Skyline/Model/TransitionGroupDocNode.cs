@@ -36,46 +36,54 @@ namespace pwiz.Skyline.Model
         public const int MIN_TREND_REPLICATES = 4;
         public const int MAX_TREND_REPLICATES = 6;
 
-        public TransitionGroupDocNode(TransitionGroup id,
-                                      double massH,
-                                      RelativeRT relativeRT,
-                                      TransitionDocNode[] children)
-            : this(id, Annotations.EMPTY, massH, relativeRT, null, null, children, true)
-        {
-        }
-
-        public TransitionGroupDocNode(TransitionGroup id,
-                                      double massH,
-                                      RelativeRT relativeRT,
-                                      TransitionDocNode[] children,
-                                      bool autoManageChildren)
-            : this(id, Annotations.EMPTY, massH, relativeRT, null, null, children, autoManageChildren)
+        /// <summary>
+        /// General use constructor.  A call to <see cref="ChangeSettings"/> is expected before the
+        /// node is put into real use in a document.
+        /// </summary>
+        /// <param name="id">The <see cref="TransitionGroup"/> identity for this node</param>
+        /// <param name="children">A set of explicit children, or null if children should be auto-managed</param>
+        public TransitionGroupDocNode(TransitionGroup id, TransitionDocNode[] children)
+            : this(id,
+                   Annotations.EMPTY,
+                   null,
+                   null,
+                   null,
+                   null,
+                   children ?? new TransitionDocNode[0],
+                   children == null)
         {
         }
 
         public TransitionGroupDocNode(TransitionGroup id,
                                       Annotations annotations,
-                                      double massH,
-                                      RelativeRT relativeRT,
+                                      SrmSettings settings,
+                                      ExplicitMods mods,
                                       SpectrumHeaderInfo libInfo,
                                       Results<TransitionGroupChromInfo> results,
                                       TransitionDocNode[] children,
                                       bool autoManageChildren)
             : base(id, annotations, children, autoManageChildren)
         {
-            PrecursorMz = SequenceMassCalc.GetMZ(massH, id.PrecursorCharge);
-            RelativeRT = relativeRT;
+            if (settings != null)
+            {
+                IsotopePeakInfo isotopePeaks;
+                PrecursorMz = CalcPrecursorMZ(settings, mods, out isotopePeaks);
+                IsotopePeaks = isotopePeaks;
+                RelativeRT = CalcRelativeRT(settings, mods);
+            }
             LibInfo = libInfo;
             Results = results;
         }
 
-        public TransitionGroupDocNode(TransitionGroupDocNode group,
+        private TransitionGroupDocNode(TransitionGroupDocNode group,
                                        double precursorMz,
+                                       IsotopePeakInfo isotopePeaks,
                                        RelativeRT relativeRT,
                                        IList<DocNode> children)
             : base(group.TransitionGroup, group.Annotations, children, group.AutoManageChildren)
         {
             PrecursorMz = precursorMz;
+            IsotopePeaks = isotopePeaks;
             RelativeRT = relativeRT;
             LibInfo = group.LibInfo;
             Results = group.Results;
@@ -90,6 +98,8 @@ namespace pwiz.Skyline.Model
         public override AnnotationDef.AnnotationTarget AnnotationTarget { get { return AnnotationDef.AnnotationTarget.precursor; } }
 
         public double PrecursorMz { get; private set; }
+
+        public IsotopePeakInfo IsotopePeaks { get; private set; }
 
         public SpectrumHeaderInfo LibInfo { get; private set; }
 
@@ -415,18 +425,57 @@ namespace pwiz.Skyline.Model
 
         public int TransitionCount { get { return GetCount((int)Level.Transitions); } }
 
+        private double CalcPrecursorMZ(SrmSettings settings, ExplicitMods mods, out IsotopePeakInfo isotopePeaks)
+        {
+            string seq = TransitionGroup.Peptide.Sequence;
+            int charge = TransitionGroup.PrecursorCharge;
+            IsotopeLabelType labelType = TransitionGroup.LabelType;
+            var calc = settings.GetPrecursorCalc(labelType, mods);
+            double massH = calc.GetPrecursorMass(seq);
+            double mz = SequenceMassCalc.GetMZ(massH, charge);
+
+            isotopePeaks = null;
+            var fullScan = settings.TransitionSettings.FullScan;
+            if (fullScan.IsHighResPrecursor)
+            {
+                var massDist = calc.GetMzDistribution(seq, charge, fullScan.IsotopeAbundances);
+                isotopePeaks = new IsotopePeakInfo(massDist, massH, charge,
+                    settings.TransitionSettings.FullScan.GetPrecursorFilterWindow,
+                    TransitionFullScan.MIN_ISOTOPE_PEAK_ABUNDANCE);
+            }
+            return mz;
+        }
+
+        private RelativeRT CalcRelativeRT(SrmSettings settings, ExplicitMods mods)
+        {
+            return settings.GetRelativeRT(TransitionGroup.LabelType, TransitionGroup.Peptide.Sequence, mods);
+        }
+
+        public TransitionGroupDocNode ChangePrecursorMz(SrmSettings settings, ExplicitMods mods)
+        {
+            return ChangeProp(ImClone(this), im =>
+                                                 {
+                                                     IsotopePeakInfo isotopePeaks;
+                                                     im.PrecursorMz = CalcPrecursorMZ(settings, mods, out isotopePeaks);
+                                                     // Preserve reference equality, if no change to isotope peaks
+                                                     Helpers.AssignIfEquals(ref isotopePeaks, IsotopePeaks);
+                                                     im.IsotopePeaks = isotopePeaks;
+                                                 });
+        }
+
         public TransitionGroupDocNode ChangeSettings(SrmSettings settingsNew, ExplicitMods mods, SrmSettingsDiff diff)
         {
             double precursorMz = PrecursorMz;
+            IsotopePeakInfo isotopePeaks = IsotopePeaks;
             RelativeRT relativeRT = RelativeRT;
             SpectrumHeaderInfo libInfo = LibInfo;
             var transitionRanks = new Dictionary<double, LibraryRankedSpectrumInfo.RankedMI>();
             if (diff.DiffTransitionGroupProps)
             {
-                string seq = TransitionGroup.Peptide.Sequence;
-                double massH = settingsNew.GetPrecursorMass(TransitionGroup.LabelType, seq, mods);
-                precursorMz = SequenceMassCalc.GetMZ(massH, TransitionGroup.PrecursorCharge);
-                relativeRT = settingsNew.GetRelativeRT(TransitionGroup.LabelType, seq, mods);
+                precursorMz = CalcPrecursorMZ(settingsNew, mods, out isotopePeaks);
+                // Preserve reference equality if no change
+                Helpers.AssignIfEquals(ref isotopePeaks, IsotopePeaks);
+                relativeRT = CalcRelativeRT(settingsNew, mods);
             }
 
             bool autoSelectTransitions = diff.DiffTransitions &&
@@ -450,7 +499,8 @@ namespace pwiz.Skyline.Model
 
                 // TODO: Use TransitionLossKey
                 Dictionary<TransitionLossKey, DocNode> mapIdToChild = CreateTransitionLossToChildMap();
-                foreach (TransitionDocNode nodeTran in TransitionGroup.GetTransitions(settingsNew, mods, precursorMz, libInfo, transitionRanks, true))
+                foreach (TransitionDocNode nodeTran in TransitionGroup.GetTransitions(settingsNew, mods,
+                        precursorMz, isotopePeaks, libInfo, transitionRanks, true))
                 {
                     TransitionDocNode nodeTranResult;
 
@@ -483,11 +533,11 @@ namespace pwiz.Skyline.Model
                 }
 
                 if (!ArrayUtil.ReferencesEqual(childrenNew, Children))
-                    nodeResult = new TransitionGroupDocNode(this, precursorMz, relativeRT, childrenNew);
+                    nodeResult = new TransitionGroupDocNode(this, precursorMz, isotopePeaks, relativeRT, childrenNew);
                 else
                 {
-                    if (precursorMz != PrecursorMz)
-                        nodeResult = new TransitionGroupDocNode(this, precursorMz, relativeRT, Children);
+                    if (precursorMz != PrecursorMz || !Equals(isotopePeaks, IsotopePeaks) || relativeRT != RelativeRT)
+                        nodeResult = new TransitionGroupDocNode(this, precursorMz, isotopePeaks, relativeRT, Children);
                     else
                     {
                         // If nothing changed, use this node.
@@ -543,13 +593,13 @@ namespace pwiz.Skyline.Model
 
                     // Change as little as possible
                     if (!ArrayUtil.ReferencesEqual(childrenNew, Children))
-                        nodeResult = new TransitionGroupDocNode(nodeResult, precursorMz, relativeRT, childrenNew);
-                    else if (precursorMz != PrecursorMz || relativeRT != RelativeRT)
-                        nodeResult = new TransitionGroupDocNode(nodeResult, precursorMz, relativeRT, Children);
+                        nodeResult = new TransitionGroupDocNode(nodeResult, precursorMz, isotopePeaks, relativeRT, childrenNew);
+                    else if (precursorMz != PrecursorMz || !Equals(isotopePeaks, IsotopePeaks) || relativeRT != RelativeRT)
+                        nodeResult = new TransitionGroupDocNode(nodeResult, precursorMz, isotopePeaks, relativeRT, Children);
                 }
                 else if (diff.DiffTransitionGroupProps)
                 {
-                    nodeResult = new TransitionGroupDocNode(nodeResult, precursorMz, relativeRT, Children);
+                    nodeResult = new TransitionGroupDocNode(nodeResult, precursorMz, isotopePeaks, relativeRT, Children);
                 }
             }
 
@@ -579,9 +629,8 @@ namespace pwiz.Skyline.Model
             // Make sure node points to correct parent.
             if (!ReferenceEquals(parent.Peptide, TransitionGroup.Peptide))
             {
-                result = new TransitionGroupDocNode(new TransitionGroup(parent.Peptide, TransitionGroup.PrecursorCharge, TransitionGroup.LabelType),
-                                                    Annotations, 0.0, RelativeRT, LibInfo, Results, new TransitionDocNode[0], result.AutoManageChildren);
-                result = new TransitionGroupDocNode(result, PrecursorMz, RelativeRT, new List<DocNode>());
+                result = (TransitionGroupDocNode) ChangeId(new TransitionGroup(parent.Peptide,
+                    TransitionGroup.PrecursorCharge, TransitionGroup.LabelType));
             }
             // Match children resulting from ChangeSettings to current children
             var dictIndexToChild = Children.ToDictionary(child => child.Id.GlobalIndex);
@@ -897,6 +946,7 @@ namespace pwiz.Skyline.Model
             return null;
         }
 
+// ReSharper disable UnusedMember.Local
         /// <summary>
         /// Determine if all <see cref="TransitionGroupChromInfo"/> elements in a list
         /// were set by the user.  Usually there will only be one to check.
@@ -907,6 +957,7 @@ namespace pwiz.Skyline.Model
         {
             return results.IndexOf(info => info != null && !info.UserSet) == -1;
         }
+// ReSharper restore UnusedMember.Local
 
         private bool ChangedResults(DocNodeParent nodeGroup)
         {

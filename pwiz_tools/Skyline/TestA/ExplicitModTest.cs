@@ -152,11 +152,8 @@ namespace pwiz.SkylineTestA
                 if (tranGroup.PrecursorCharge == nodeGroupLight.TransitionGroup.PrecursorCharge &&
                         !tranGroup.LabelType.IsLight)
                 {
-                    double massH = settings.GetPrecursorMass(tranGroup.LabelType, seq, mods);
-                    RelativeRT relativeRT = settings.GetRelativeRT(tranGroup.LabelType, seq, mods);
                     TransitionDocNode[] transitions = nodePep.GetMatchingTransitions(tranGroup, settings, mods);
-                    var nodeGroup = new TransitionGroupDocNode(tranGroup, massH, relativeRT,
-                        transitions, false);
+                    var nodeGroup = new TransitionGroupDocNode(tranGroup, transitions);
                     nodeGroup = nodeGroup.ChangeSettings(settings, mods, SrmSettingsDiff.ALL);
                     docStudy7 = (SrmDocument) docStudy7.Add(pepPath, nodeGroup);
                     break;

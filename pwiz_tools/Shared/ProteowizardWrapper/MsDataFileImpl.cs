@@ -326,7 +326,9 @@ namespace pwiz.ProteowizardWrapper
                                    Level = GetMsLevel(spectrum) ?? 0,
                                    RetentionTime = GetStartTime(spectrum),
                                    PrecursorMz = GetPrecursorMz(spectrum),
-                                   IsolationWindow = GetIsolationWindow(spectrum),
+                                   IsolationWindowTargetMz = GetIsolationWindowTargetMz(spectrum),
+                                   IsolationWindowUpper = GetIsolationWindowUpper(spectrum),
+                                   IsolationWindowLower = GetIsolationWindowLower(spectrum),
                                    Centroided = IsCentroided(spectrum),
                                    Mzs = ToArray(spectrum.getMZArray().data),
                                    Intensities = ToArray(spectrum.getIntensityArray().data)
@@ -531,19 +533,26 @@ namespace pwiz.ProteowizardWrapper
             return null;
         }
 
-        public double? GetIsolationWindow(int scanIndex)
+        private static double? GetIsolationWindowTargetMz(Spectrum spectrum)
         {
-            using (var spectrum = SpectrumList.spectrum(scanIndex))
-            {
-                return GetIsolationWindow(spectrum);
-            }
+            return GetIsolationWindowValue(spectrum, CVID.MS_isolation_window_target_m_z);
         }
 
-        private static double? GetIsolationWindow(Spectrum spectrum)
+        private static double? GetIsolationWindowUpper(Spectrum spectrum)
+        {
+            return GetIsolationWindowValue(spectrum, CVID.MS_isolation_window_upper_offset);
+        }
+
+        private static double? GetIsolationWindowLower(Spectrum spectrum)
+        {
+            return GetIsolationWindowValue(spectrum, CVID.MS_isolation_window_lower_offset);
+        }
+
+        private static double? GetIsolationWindowValue(Spectrum spectrum, CVID cvid)
         {
             foreach (Precursor p in spectrum.precursors)
             {
-                var term = p.isolationWindow.cvParam(CVID.MS_isolation_window_target_m_z);
+                var term = p.isolationWindow.cvParam(cvid);
                 if (!term.empty())
                     return term.value;
             }
@@ -586,7 +595,35 @@ namespace pwiz.ProteowizardWrapper
         public int Level { get; set; }
         public double? PrecursorMz { get; set; }
         public double? RetentionTime { get; set; }
-        public double? IsolationWindow { get; set; }
+        public double? IsolationWindowTargetMz { get; set; }
+        public double? IsolationWindowUpper { get; set; }
+        public double? IsolationWindowLower { get; set; }
+        public double? IsolationMz
+        {
+            get
+            {
+                double? targetMz = IsolationWindowTargetMz ?? PrecursorMz;
+                // If the isolation window is not centered around the target m/z, then return a
+                // m/z value that is centered in the isolation window.
+                if (targetMz.HasValue && IsolationWindowUpper.HasValue && IsolationWindowLower.HasValue &&
+                        IsolationWindowUpper.Value != IsolationWindowLower.Value)
+                    return (targetMz.Value*2 + IsolationWindowUpper.Value - IsolationWindowLower.Value)/2.0;
+                return targetMz;
+            }
+        }
+        public double? IsolationWidth
+        {
+            get
+            {
+                if (IsolationWindowUpper.HasValue && IsolationWindowLower.HasValue)
+                {
+                    double width = IsolationWindowUpper.Value + IsolationWindowLower.Value;
+                    if (width > 0)
+                        return width;
+                }
+                return null;
+            }
+        }
         public bool Centroided { get; set; }
         public double[] Mzs { get; set; }
         public double[] Intensities { get; set; }

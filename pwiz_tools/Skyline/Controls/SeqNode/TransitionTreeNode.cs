@@ -144,13 +144,7 @@ namespace pwiz.Skyline.Controls.SeqNode
             string labelPrefix;
             if (tran.IsPrecursor())
             {
-                labelPrefix = nodeTran.FragmentIonName;
-                if (tran.MassIndex > 0)
-                {
-                    // CONSIDER: Should this be based on the true neutral mass shift from the
-                    //           monoisotopic mass?
-                    labelPrefix += string.Format(" [M+{0}]", tran.MassIndex);
-                }
+                labelPrefix = nodeTran.FragmentIonName + Transition.GetMassIndexText(tran.MassIndex);
             }
             else
             {

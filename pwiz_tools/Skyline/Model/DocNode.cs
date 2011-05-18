@@ -69,6 +69,22 @@ namespace pwiz.Skyline.Model
         public string Note { get { return Annotations.Note;} }
 
         /// <summary>
+        /// Creates a new copy of this node with a new copy of its ID.
+        /// </summary>
+        public DocNode CopyId()
+        {
+            return ChangeId(Id.Copy());
+        }
+
+        /// <summary>
+        /// ID property change method for use by derived classes.
+        /// </summary>
+        protected DocNode ChangeId(Identity id)
+        {
+            return ChangeProp(ImClone(this), im => im.Id = id);
+        }
+
+        /// <summary>
         /// Returns a clone of this with a different property value.
         /// </summary>
         /// <returns>New instance</returns>

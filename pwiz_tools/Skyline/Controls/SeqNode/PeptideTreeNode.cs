@@ -532,14 +532,10 @@ namespace pwiz.Skyline.Controls.SeqNode
         private DocNode CreateChoice(Identity childId, ExplicitMods mods)
         {
             TransitionGroup tranGroup = (TransitionGroup)childId;
-            string seq = tranGroup.Peptide.Sequence;
-            double massH = DocSettings.GetPrecursorMass(tranGroup.LabelType, seq, mods);
-            RelativeRT relativeRT = DocSettings.GetRelativeRT(tranGroup.LabelType, seq, mods);
             TransitionDocNode[] transitions = DocNode.GetMatchingTransitions(
                 tranGroup, DocSettings, mods);
 
-            var nodeGroup = new TransitionGroupDocNode(tranGroup, massH, relativeRT,
-                transitions ?? new TransitionDocNode[0], transitions == null);
+            var nodeGroup = new TransitionGroupDocNode(tranGroup, transitions);
             return nodeGroup.ChangeSettings(DocSettings, mods, SrmSettingsDiff.ALL);
         }
 

@@ -181,9 +181,10 @@ namespace pwiz.Skyline.Controls.Graphs
         public static string GetTitle(TransitionDocNode nodeTran)
         {
             var tran = nodeTran.Transition;
-            string massIndexText = tran.MassIndex > 0 ? string.Format(" [M+{0}]", tran.MassIndex) : "";
-            return string.Format("{0}{1} - {2:F04}{3}", nodeTran.FragmentIonName, massIndexText,
-                                 nodeTran.Mz, Transition.GetChargeIndicator(tran.Charge));            
+            return string.Format("{0}{1} - {2:F04}{3}", nodeTran.FragmentIonName,
+                                 Transition.GetMassIndexText(tran.MassIndex),
+                                 nodeTran.Mz,
+                                 Transition.GetChargeIndicator(tran.Charge));
         }
 
         public static string GetTitle(TransitionGroupDocNode nodeGroup)

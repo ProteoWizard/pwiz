@@ -18,7 +18,6 @@
  */
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using pwiz.Common.Chemistry;
 using pwiz.Skyline.Util;
 
 namespace pwiz.SkylineTestA
@@ -59,8 +58,12 @@ namespace pwiz.SkylineTestA
 
         #endregion
 
+        /// <summary>
+        /// Test the masses in the <see cref="BioMassCalc.DEFAULT_ABUNDANCES"/> object to make
+        /// sure they match the base symbol mass values in <see cref="BioMassCalc"/>.
+        /// </summary>
         [TestMethod]
-        public void BioMassCalcTest()
+        public void BioMassCalcAbundanceMassesTest()
         {
             foreach (var atomAbundance in BioMassCalc.DEFAULT_ABUNDANCES)
             {
@@ -72,6 +75,13 @@ namespace pwiz.SkylineTestA
             }
         }
 
+        /// <summary>
+        /// Test that the mass at a specific index in a mass distribution matches the expected
+        /// mass for the symbol in the <see cref="BioMassCalc.MONOISOTOPIC"/> mass calculator.
+        /// </summary>
+        /// <param name="symbol">Symbol for the atom</param>
+        /// <param name="massDistOrdered">Mass distribution to test</param>
+        /// <param name="indexMass">Index of the mass to test within the mass distribution</param>
         private static void TestMass(string symbol, IList<KeyValuePair<double, double>> massDistOrdered, int indexMass)
         {
             double massExpected = BioMassCalc.MONOISOTOPIC.GetMass(symbol);

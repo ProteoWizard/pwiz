@@ -30,8 +30,11 @@ using pwiz.Skyline.Util;
 namespace pwiz.Skyline.Model.DocSettings
 {
     [XmlRoot("isotope_enrichments")]
-    public sealed class IsotopeEnrichments : XmlNamedElement
+    public sealed class IsotopeEnrichments : XmlNamedElement, IValidating
     {
+        public static readonly IsotopeEnrichments DEFAULT = new IsotopeEnrichments("Default",
+            BioMassCalc.HeavySymbols.Select(sym => new IsotopeEnrichmentItem(sym)).ToArray());
+
         private ReadOnlyCollection<IsotopeEnrichmentItem> _isotopeEnrichments;
 
         public IsotopeEnrichments(string name, IList<IsotopeEnrichmentItem> isotopeEnrichments)
@@ -39,7 +42,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             Enrichments = isotopeEnrichments;
 
-            Validate();
+            DoValidate();
         }
 
         public IList<IsotopeEnrichmentItem> Enrichments
@@ -50,6 +53,16 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public IsotopeAbundances IsotopeAbundances { get; private set; }
 
+        #region Property change methods
+
+        public IsotopeEnrichments ChangeEnrichment(IsotopeEnrichmentItem item)
+        {
+            return ChangeProp(ImClone(this), im => im.Enrichments = im.Enrichments.Select(e =>
+                Equals(e.IsotopeSymbol, item.IsotopeSymbol) ? item : e).ToArray());
+        }
+
+        #endregion
+
         #region Implementation of IXmlSerializable
 
         /// <summary>
@@ -59,7 +72,12 @@ namespace pwiz.Skyline.Model.DocSettings
         {
         }
 
-        private void Validate()
+        void IValidating.Validate()
+        {
+            DoValidate();
+        }
+
+        private void DoValidate()
         {
             var isotopes = BioMassCalc.DEFAULT_ABUNDANCES;
             var dictSymDist = _isotopeEnrichments.ToDictionary(e => e.IsotopeSymbol,
@@ -93,7 +111,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             reader.ReadEndElement();
 
-            Validate();
+            DoValidate();
         }
 
         public override void WriteXml(XmlWriter writer)
@@ -143,10 +161,9 @@ namespace pwiz.Skyline.Model.DocSettings
     {
         public const double MIN_ATOM_PERCENT_ENRICHMENT = 0;
         public const double MAX_ATOM_PERCENT_ENRICHMENT = 1.0;
-        public const double DEFAULT_ATOM_PERCENT_ENRICHMENT = 0.99;
 
         public IsotopeEnrichmentItem(string isotopeSymbol)
-            : this(isotopeSymbol, DEFAULT_ATOM_PERCENT_ENRICHMENT)
+            : this(isotopeSymbol, BioMassCalc.GetIsotopeEnrichmentDefault(isotopeSymbol))
         {
         }
 

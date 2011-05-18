@@ -1027,17 +1027,14 @@ namespace pwiz.Skyline.Properties
 
     public sealed class IsotopeEnrichmentsList : SettingsList<IsotopeEnrichments>
     {
-        private static readonly IsotopeEnrichments DEFAULT = new IsotopeEnrichments("Default",
-            BioMassCalc.HeavySymbols.Select(sym => new IsotopeEnrichmentItem(sym)).ToArray());
-
         public static IsotopeEnrichments GetDefault()
         {
-            return DEFAULT;
+            return IsotopeEnrichments.DEFAULT;
         }
 
         public override IEnumerable<IsotopeEnrichments> GetDefaults(int revisionIndex)
         {
-            return new[] { DEFAULT };
+            return new[] { GetDefault() };
         }
 
         public override IsotopeEnrichments EditItem(Control owner, IsotopeEnrichments item,

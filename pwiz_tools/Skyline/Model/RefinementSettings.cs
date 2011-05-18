@@ -294,15 +294,12 @@ namespace pwiz.Skyline.Model
                     var tranGroup = new TransitionGroup(nodePep.Peptide, nodeGroup.TransitionGroup.PrecursorCharge,
                                                         RefineLabelType);
                     var settings = document.Settings;
-                    string sequence = nodePep.Peptide.Sequence;
+//                    string sequence = nodePep.Peptide.Sequence;
                     var explicitMods = nodePep.ExplicitMods;
                     TransitionDocNode[] transitions = nodePep.GetMatchingTransitions(
                         tranGroup, settings, explicitMods);
 
-                    var nodeGroupMatch = new TransitionGroupDocNode(tranGroup,
-                        settings.GetPrecursorMass(tranGroup.LabelType, sequence, explicitMods),
-                        settings.GetRelativeRT(tranGroup.LabelType, sequence, explicitMods),
-                        transitions ?? new TransitionDocNode[0], transitions == null);
+                    var nodeGroupMatch = new TransitionGroupDocNode(tranGroup, transitions);
 
                     nodeGroupMatch = nodeGroupMatch.ChangeSettings(settings, explicitMods, SrmSettingsDiff.ALL);
 

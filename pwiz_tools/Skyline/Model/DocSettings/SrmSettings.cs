@@ -678,6 +678,13 @@ namespace pwiz.Skyline.Model.DocSettings
                         defSet.MeasuredIonList.Add(measuredIon);
                 }
             }
+            if (TransitionSettings.FullScan.IsotopeEnrichments != null)
+            {
+                if (!defSet.IsotopeEnrichmentsList.ContainsKey(TransitionSettings.FullScan.IsotopeEnrichments.Name))
+                {
+                    defSet.IsotopeEnrichmentsList.Add(TransitionSettings.FullScan.IsotopeEnrichments);
+                }
+            }
             foreach (var annotationDef in DataSettings.AnnotationDefs)
             {
                 if (!defSet.AnnotationDefList.ContainsKey(annotationDef.Name))
@@ -964,7 +971,7 @@ namespace pwiz.Skyline.Model.DocSettings
         double GetPrecursorMass(string seq, int massIndex);
         bool IsModified(string seq);
         string GetModifiedSequence(string seq, bool formatNarrow);
-        MassDistribution GetMassDistribution(string seq, IsotopeAbundances abundances);
+        MassDistribution GetMzDistribution(string seq, int charge, IsotopeAbundances abundances);
     }
 
     public interface IFragmentMassCalc
@@ -1006,7 +1013,7 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 // ReSharper restore InconsistentNaming
 
-        private bool _isUnexplainedExplicitModificationAllowed;
+        private readonly bool _isUnexplainedExplicitModificationAllowed;
 
         /// <summary>
         /// For use in creating new nodes, where everything should be created
@@ -1196,7 +1203,14 @@ namespace pwiz.Skyline.Model.DocSettings
             // Any change in modifications or precursor mass-type forces a recalc
             // of precursor m/z values, as
             DiffTransitionGroupProps = diffStaticMods || diffHeavyMods ||
-                                 !newTran.Prediction.PrecursorMassType.Equals(oldTran.Prediction.PrecursorMassType);
+                                 !newTran.Prediction.PrecursorMassType.Equals(oldTran.Prediction.PrecursorMassType) ||
+                                 // Or changes to MS1 filtering that change the expected isotope distribution
+                                 !newTran.FullScan.PrecursorMassAnalyzer.Equals(oldTran.FullScan.PrecursorMassAnalyzer) ||
+                                 !Equals(newTran.FullScan.PrecursorRes, oldTran.FullScan.PrecursorRes) ||
+                                 !Equals(newTran.FullScan.PrecursorResMz, oldTran.FullScan.PrecursorResMz) ||
+                                 // Or isotope enrichments
+                                 !Equals(newTran.FullScan.IsotopeEnrichments, oldTran.FullScan.IsotopeEnrichments)
+                                 ;
 
             if (!DiffTransitionGroupProps && libraryChange)
             {

@@ -91,7 +91,7 @@ namespace pwiz.SkylineTestA
             var nodeGroup = (TransitionGroupDocNode) nodePep.Children[0];
             var listChildren = new List<DocNode>(nodeGroup.Children);
             foreach (var nodeTran in nodeGroup.TransitionGroup.GetTransitions(docFasta.Settings,
-                nodePep.ExplicitMods, nodeGroup.PrecursorMz, null, null, false))
+                nodePep.ExplicitMods, nodeGroup.PrecursorMz))
             {
                 if (!nodeTran.HasLoss)
                     continue;

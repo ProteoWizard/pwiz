@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.IO;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
@@ -77,9 +78,20 @@ namespace pwiz.Skyline.Model
             return Comparer<double>.Default.Compare(node1.LostMass, node2.LostMass);
         }
 
-        public IEnumerable<TransitionDocNode> GetTransitions(SrmSettings settings, ExplicitMods mods, double precursorMz,
-            SpectrumHeaderInfo libInfo, IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks,
-            bool useFilter)
+        public IEnumerable<TransitionDocNode> GetTransitions(SrmSettings settings,
+                                                             ExplicitMods mods,
+                                                             double precursorMz)
+        {
+            return GetTransitions(settings, mods, precursorMz, null, null, null, false);
+        }
+
+        public IEnumerable<TransitionDocNode> GetTransitions(SrmSettings settings,
+                                                             ExplicitMods mods,
+                                                             double precursorMz,
+                                                             IsotopePeakInfo isotopePeaks,
+                                                             SpectrumHeaderInfo libInfo,
+                                                             IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks,
+                                                             bool useFilter)
         {
             // Get necessary mass calculators and masses
             var calcFilterPre = settings.GetPrecursorCalc(IsotopeLabelType.light, mods);
@@ -106,89 +118,7 @@ namespace pwiz.Skyline.Model
             int maxMz = tranSettings.Instrument.MaxMz;
 
             var pepMods = settings.PeptideSettings.Modifications;
-            var potentialLosses = CalcPotentialLosses(sequence, pepMods, mods,
-                massType);
-            // Return the precursor ion
-            double precursorMassPredict = calcPredict.GetPrecursorFragmentMass(sequence);
-            if (!useFilter || types.Contains(IonType.precursor))
-            {
-                var fullScan = tranSettings.FullScan;
-                bool precursorMS1 = (fullScan.PrecursorIsotopes != FullScanPrecursorIsotopes.None);
-                int precursorIsotopeStart = 0;
-                int precursorIsotopeEnd = 1;
-                if (fullScan.PrecursorIsotopes == FullScanPrecursorIsotopes.Count)
-                    precursorIsotopeEnd = (int)(fullScan.PrecursorIsotopeFilter ?? 1);
-                else if (fullScan.PrecursorIsotopes == FullScanPrecursorIsotopes.Percent)
-                {
-                    double minAbundancePercent = fullScan.PrecursorIsotopeFilter ?? 0;
-                    var massDistribution = calcFilterPre.GetMassDistribution(sequence, fullScan.IsotopeAbundances);
-                    double basePeakAbundance = massDistribution[massDistribution.MostAbundanceMass];
-                    precursorIsotopeStart = precursorIsotopeEnd = -1;
-                    int i = 0;
-                    foreach (var massProbability in massDistribution)
-                    {
-                        Console.WriteLine("{0:F06} - {1:F01}%", massProbability.Key, massProbability.Value*100);
-
-                        bool includePeak = massProbability.Value*100/basePeakAbundance > minAbundancePercent;
-                        if (precursorIsotopeStart == -1)
-                        {
-                            if (includePeak)
-                                precursorIsotopeStart = i;
-                        }
-                        else if (precursorIsotopeEnd == -1)
-                        {
-                            if (!includePeak)
-                                break;
-                        }
-                        i++;
-                    }
-                    precursorIsotopeEnd = i;
-                }
-
-                foreach (var losses in CalcTransitionLosses(IonType.precursor, 0, massType, potentialLosses))
-                {
-                    if (losses == null)
-                    {
-                        if (precursorMS1)
-                        {
-                            var calcPrecursorMS1 = settings.GetPrecursorCalc(LabelType, mods);
-                            for (int i = precursorIsotopeStart; i < precursorIsotopeEnd; i++)
-                            {
-                                double precursorMS1Mass = calcPrecursorMS1.GetPrecursorMass(sequence, i);
-                                Console.WriteLine("{0:F06}", precursorMS1Mass);
-                                double ionMz = SequenceMassCalc.GetMZ(Transition.CalcMass(precursorMS1Mass, null), PrecursorCharge);
-                                if (minMz > ionMz)
-                                    continue;
-                                yield return CreateTransitionNode(i, precursorMS1Mass, null, transitionRanks);
-                            }
-                            continue;
-                        }
-                    }
-                    // If there was loss, it is possible (though not likely) that the ion m/z value
-                    // will now fall below the minimum measurable value for the instrument
-                    else
-                    {
-                        double ionMz = SequenceMassCalc.GetMZ(Transition.CalcMass(precursorMassPredict, losses), PrecursorCharge);
-                        if (minMz > ionMz)
-                            continue;
-                    }
-
-                    yield return CreateTransitionNode(0, precursorMassPredict, losses, transitionRanks);                    
-                }
-            }
-
-            double[,] massesPredict = calcPredict.GetFragmentIonMasses(sequence);
-            int len = massesPredict.GetLength(1);
-            if (len == 0)
-                yield break;
-
-            double[,] massesFilter = massesPredict;
-            if (!ReferenceEquals(calcFilter, calcPredict))
-            {
-                // Get the normal m/z values for filtering, so that light and heavy
-                // ion picks will match.
-                massesFilter = calcFilter.GetFragmentIonMasses(sequence);
-            }
+            var potentialLosses = CalcPotentialLosses(sequence, pepMods, mods, massType);
 
             // A start m/z will need to be calculated if the start fragment
             // finder uses m/z and their are losses to consider.  If the filter
@@ -220,6 +150,27 @@ namespace pwiz.Skyline.Model
             // If filtering without library picking, then don't include the losses
             if (pick == TransitionLibraryPick.none)
                 potentialLosses = null;
+
+            // Return precursor ions
+            if (!useFilter || types.Contains(IonType.precursor))
+            {
+                foreach (var nodeTran in GetPrecursorTransitions(settings, mods, calcFilterPre, calcPredict,
+                        precursorMz, isotopePeaks, potentialLosses, transitionRanks, useFilter))
+                    yield return nodeTran;
+            }
+
+            double[,] massesPredict = calcPredict.GetFragmentIonMasses(sequence);
+            int len = massesPredict.GetLength(1);
+            if (len == 0)
+                yield break;
+
+            double[,] massesFilter = massesPredict;
+            if (!ReferenceEquals(calcFilter, calcPredict))
+            {
+                // Get the normal m/z values for filtering, so that light and heavy
+                // ion picks will match.
+                massesFilter = calcFilter.GetFragmentIonMasses(sequence);
+            }
 
             // Loop over potential product ions picking transitions
             foreach (IonType type in types)
@@ -293,6 +244,57 @@ namespace pwiz.Skyline.Model
                     }
                 }
             }
+        }
+
+        public IEnumerable<TransitionDocNode> GetPrecursorTransitions(SrmSettings settings,
+                                                             ExplicitMods mods,
+                                                             IPrecursorMassCalc calcFilterPre,
+                                                             IFragmentMassCalc calcPredict,
+                                                             double precursorMz,
+                                                             IsotopePeakInfo isotopePeaks,
+                                                             IList<IList<ExplicitLoss>> potentialLosses,
+                                                             IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks,
+                                                             bool useFilter)
+        {
+            string sequence = Peptide.Sequence;
+
+            var tranSettings = settings.TransitionSettings;
+            var fullScan = tranSettings.FullScan;
+            MassType massType = tranSettings.Prediction.FragmentMassType;
+            int minMz = tranSettings.Instrument.GetMinMz(precursorMz);
+            int maxMz = tranSettings.Instrument.MaxMz;
+            bool precursorMS1 = (fullScan.PrecursorIsotopes != FullScanPrecursorIsotopes.None);
+            double precursorMassPredict = calcPredict.GetPrecursorFragmentMass(sequence);
+
+            foreach (var losses in CalcTransitionLosses(IonType.precursor, 0, massType, potentialLosses))
+            {
+                if (losses == null)
+                {
+                    if (precursorMS1)
+                    {
+                        var calcPrecursorMS1 = settings.GetPrecursorCalc(LabelType, mods);
+                        foreach (int i in fullScan.SelectIsotopePeakIndices(isotopePeaks, useFilter))
+                        {
+                            double precursorMS1Mass = calcPrecursorMS1.GetPrecursorMass(sequence, i);
+                            double ionMz = SequenceMassCalc.GetMZ(Transition.CalcMass(precursorMS1Mass, null), PrecursorCharge);
+                            if (minMz > ionMz || ionMz > maxMz)
+                                continue;
+                            yield return CreateTransitionNode(i, precursorMS1Mass, null, transitionRanks);
+                        }
+                        continue;
+                    }
+                }
+                // If there was loss, it is possible (though not likely) that the ion m/z value
+                // will now fall below the minimum measurable value for the instrument
+                else
+                {
+                    double ionMz = SequenceMassCalc.GetMZ(Transition.CalcMass(precursorMassPredict, losses), PrecursorCharge);
+                    if (minMz > ionMz)
+                        continue;
+                }
+
+                yield return CreateTransitionNode(0, precursorMassPredict, losses, transitionRanks);
+            }            
         }
 
         public static IList<IList<ExplicitLoss>> CalcPotentialLosses(string sequence,

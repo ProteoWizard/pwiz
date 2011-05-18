@@ -346,16 +346,17 @@ namespace pwiz.Skyline.Model
                         TransitionDocNode[] transitions = GetMatchingTransitions(
                             tranGroup, settingsNew, explicitMods);
 
-                        nodeGroup = new TransitionGroupDocNode(tranGroup,
-                                                               settingsNew.GetPrecursorMass(tranGroup.LabelType, Peptide.Sequence, explicitMods),
-                                                               settingsNew.GetRelativeRT(tranGroup.LabelType, Peptide.Sequence, explicitMods),
-                                                               transitions ?? new TransitionDocNode[0], transitions == null);
+                        nodeGroup = new TransitionGroupDocNode(tranGroup, transitions);
+                        // If not recursing, then ChangeSettings will not be called on nodeGroup.  So, make
+                        // sure its precursor m/z is set correctly.
+                        if (!recurse)
+                            nodeGroup = nodeGroup.ChangePrecursorMz(settingsNew, explicitMods);
                         diffNode = SrmSettingsDiff.ALL;
                     }
 
                     if (nodeGroup != null)
                     {
-                        TransitionGroupDocNode nodeChanged = recurse? nodeGroup.ChangeSettings(settingsNew, explicitMods, diffNode) : nodeGroup;
+                        TransitionGroupDocNode nodeChanged = recurse ? nodeGroup.ChangeSettings(settingsNew, explicitMods, diffNode) : nodeGroup;
                         if (instrument.IsMeasurable(nodeChanged.PrecursorMz))
                             childrenNew.Add(nodeChanged);
                     }

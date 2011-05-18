@@ -1503,8 +1503,7 @@ namespace pwiz.Skyline.Model
                     return new TransitionDocNode(tran, productExp.Losses, 0, null);
                 });
             // m/z calculated later
-            _transitionGroups.Add(new TransitionGroupDocNode(transitionGroup, 0, RelativeRT.Matching,
-                CompleteTransitions(transitions), false));
+            _transitionGroups.Add(new TransitionGroupDocNode(transitionGroup, CompleteTransitions(transitions)));
 
             _activePrecursorMz = 0;
             _activePrecursorExps.Clear();

@@ -712,10 +712,28 @@ namespace pwiz.Skyline.Util
         /// <typeparam name="TItem">Type of item in the array</typeparam>
         /// <param name="values">The Array to search</param>
         /// <param name="found">Delegate accepting an item, and returning true if it matches</param>
-        /// <returns>The index in the Array of the specified reference, or -1 if not found</returns>
+        /// <returns>The index in the Array of the match, or -1 if not found</returns>
         public static int IndexOf<TItem>(this IList<TItem> values, Predicate<TItem> found)
         {
             for (int i = 0; i < values.Count; i++)
+            {
+                if (found(values[i]))
+                    return i;
+            }
+            return -1;
+        }
+
+        /// <summary>
+        /// Searches backward in an Array for an item that matches criteria specified
+        /// through a delegate function.
+        /// </summary>
+        /// <typeparam name="TItem">Type of item in the array</typeparam>
+        /// <param name="values">The Array to search</param>
+        /// <param name="found">Delegate accepting an item, and returning true if it matches</param>
+        /// <returns>The index in the Array of the last match, or -1 if not found</returns>
+        public static int LastIndexOf<TItem>(this IList<TItem> values, Predicate<TItem> found)
+        {
+            for (int i = values.Count -1; i >= 0; i--)
             {
                 if (found(values[i]))
                     return i;

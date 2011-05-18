@@ -273,9 +273,7 @@ namespace pwiz.SkylineTest.Results
             DocNode[] lightChildrenOrig = nodeGroupLightOrig.Children.ToArray();
             foreach (var nodeTran in nodeGroupLightOrig.TransitionGroup.GetTransitions(docResults.Settings,
                                                                                        null,
-                                                                                       nodeGroupLightOrig.
-                                                                                           PrecursorMz, null, null,
-                                                                                       false))
+                                                                                       nodeGroupLightOrig.PrecursorMz))
             {
                 var transition = nodeTran.Transition;
                 if (!firstAdd && lightChildrenOrig.IndexOf(node => Equals(node.Id, transition)) == -1)

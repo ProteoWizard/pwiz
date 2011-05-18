@@ -544,6 +544,7 @@
     <Compile Include="Model\Results\ChromHeaderInfo.cs" />
     <Compile Include="Model\Results\DocNodeChromInfo.cs" />
     <Compile Include="Model\Results\Exception.cs" />
+    <Compile Include="Model\Results\IsotopePeakInfo.cs" />
     <Compile Include="Model\Results\MeasuredResults.cs" />
     <Compile Include="Model\Results\PeptideChromData.cs" />
     <Compile Include="Model\Results\VendorIssueHelper.cs" />

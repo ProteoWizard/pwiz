@@ -16,13 +16,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestA.Results
@@ -65,6 +68,9 @@ namespace pwiz.SkylineTestA.Results
 
         private const string ZIP_FILE = @"TestA\Results\FullScan.zip";
 
+        /// <summary>
+        /// Tests various modes of filtering full-scan results data.
+        /// </summary>
         [TestMethod]
         public void FullScanFilterTest()
         {
@@ -170,12 +176,14 @@ namespace pwiz.SkylineTestA.Results
             Assert.AreEqual(FullScanMassAnalyzerType.none, doc.Settings.TransitionSettings.FullScan.ProductMassAnalyzer);
             Assert.AreEqual(FullScanMassAnalyzerType.none, doc.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer);
             var docMs1 = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs =>
-                fs.ChangePrecursorResolution(FullScanMassAnalyzerType.ft_icr, 50*1000, 400)));
+                fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Count, 1, IsotopeEnrichments.DEFAULT)
+                  .ChangePrecursorResolution(FullScanMassAnalyzerType.ft_icr, 50 * 1000, 400)));
             AssertEx.Serializable(docMs1, AssertEx.DocumentCloned);
             Assert.IsTrue(docContainer.SetDocument(docMs1, docContainer.Document));
+            const string rep1 = "rep1";
             listResults = new List<ChromatogramSet>
                                   {
-                                      new ChromatogramSet("rep1", new[] {testFilesDir.GetTestPath("S_2_LVN.mzML")}),
+                                      new ChromatogramSet(rep1, new[] {testFilesDir.GetTestPath("S_2_LVN.mzML")}),
                                   };
             measuredResults = new MeasuredResults(listResults.ToArray());
             ChangeMeasuredResults(docContainer, measuredResults, 1, 1, 1);
@@ -191,7 +199,8 @@ namespace pwiz.SkylineTestA.Results
                     Assert.IsTrue(nodeTran.Results[0][0].IsEmpty);
             }
 
-            listResults.Add(new ChromatogramSet("rep2", new[] {testFilesDir.GetTestPath("S_2_NVN.mzML")}));
+            const string rep2 = "rep2";
+            listResults.Add(new ChromatogramSet(rep2, new[] {testFilesDir.GetTestPath("S_2_NVN.mzML")}));
             measuredResults = new MeasuredResults(listResults.ToArray());
             ChangeMeasuredResults(docContainer, measuredResults, 1, 1, 1);
             // Because of the way the mzML files were filtered, all of the LVN peaks should be present
@@ -205,6 +214,35 @@ namespace pwiz.SkylineTestA.Results
                 else
                     Assert.IsFalse(nodeTran.Results[1][0].IsEmpty);
             }
+
+            // Chromatograms should be present in the cache for a number of isotopes.
+            var docMs1Isotopes = docContainer.Document.ChangeSettings(doc.Settings
+                .ChangeTransitionFullScan(fs => fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Count,
+                                                                           3, IsotopeEnrichments.DEFAULT))
+                .ChangeTransitionFilter(filter => filter.ChangeIonTypes(new[] {IonType.precursor})));
+            AssertEx.IsDocumentState(docMs1Isotopes, null, 2, 2, 2 );   // Need to reset auto-manage for transitions
+            var refineAutoSelect = new RefinementSettings { AutoPickChildrenAll = PickLevel.transitions };
+            docMs1Isotopes = refineAutoSelect.Refine(docMs1Isotopes);
+            AssertEx.IsDocumentState(docMs1Isotopes, null, 2, 2, 6);
+            AssertResult.IsDocumentResultsState(docMs1Isotopes, rep1, 1, 1, 0, 3, 0);
+            AssertResult.IsDocumentResultsState(docMs1Isotopes, rep2, 1, 1, 0, 3, 0);
+
+            // Add M-1 transitions, and verify that they have chromatogram data also, but
+            // empty peaks in all cases
+            var docMs1All = docMs1Isotopes.ChangeSettings(docMs1Isotopes.Settings.ChangeTransitionFullScan(fs =>
+                fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Percent, 0, IsotopeEnrichments.DEFAULT)));
+            AssertEx.IsDocumentState(docMs1All, null, 2, 2, 10);
+            AssertResult.IsDocumentResultsState(docMs1All, rep1, 1, 1, 0, 4, 0);
+            AssertResult.IsDocumentResultsState(docMs1All, rep2, 1, 1, 0, 4, 0);
+            var ms1AllTranstions = docMs1All.Transitions.ToArray();
+            var tranM1 = ms1AllTranstions[0];
+            Assert.AreEqual(-1, tranM1.Transition.MassIndex);
+            Assert.IsTrue(tranM1.Results[0] != null && tranM1.Results[1] != null);
+            Assert.IsTrue(tranM1.Results[0][0].IsEmpty && tranM1.Results[1][0].IsEmpty);
+            tranM1 = ms1AllTranstions[5];
+            Assert.AreEqual(-1, tranM1.Transition.MassIndex);
+            Assert.IsTrue(tranM1.Results[0] != null && tranM1.Results[1] != null);
+            Assert.IsTrue(tranM1.Results[0][0].IsEmpty && tranM1.Results[1][0].IsEmpty);
         }
 
         private static SrmDocument ChangeMeasuredResults(TestDocumentContainer docContainer, MeasuredResults measuredResults,
@@ -228,6 +266,115 @@ namespace pwiz.SkylineTestA.Results
             SrmDocument doc = ResultsUtil.DeserializeDocument(docPath);
             AssertEx.IsDocumentState(doc, 0, prot, pep, prec, tran);
             return doc;
+        }
+
+        /// <summary>
+        /// Tests full-scan settings changes and their impact on the document.
+        /// </summary>
+        [TestMethod]
+        public void FullScanSettingsTest()
+        {
+            var doc = ResultsUtil.DeserializeDocument("MultiLabel.sky", GetType());
+            Assert.IsFalse(doc.TransitionGroups.Any(nodeGroup => nodeGroup.IsotopePeaks != null));
+
+            // Verify isotope distributions calculated when MS1 filtering enabled
+            var enrichments = IsotopeEnrichments.DEFAULT;
+            var docIsotopes = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs =>
+                fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Count, 3, enrichments)));
+            Assert.AreEqual(FullScanMassAnalyzerType.tof,
+                docIsotopes.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer);
+
+            foreach (var nodeGroup in docIsotopes.TransitionGroups)
+            {
+                Assert.AreEqual(3, nodeGroup.Children.Count);
+                var isotopePeaks = nodeGroup.IsotopePeaks;
+                Assert.IsNotNull(isotopePeaks);
+                // The peaks should always includ at least M-1
+                Assert.IsTrue(isotopePeaks.MonoMassIndex > 0);
+                Assert.AreEqual(1.0, isotopePeaks.ExpectedPeaks.Sum(), 0.025);
+            }
+            AssertEx.Serializable(docIsotopes, AssertEx.Cloned);
+
+            // Narrow the resolution, and verify that predicted proportion of the isotope
+            // envelope captured is reduced for all precursors
+            var docIsotopesFt = docIsotopes.ChangeSettings(docIsotopes.Settings.ChangeTransitionFullScan(fs =>
+                fs.ChangePrecursorResolution(FullScanMassAnalyzerType.ft_icr, 500 * 1000, 400)));
+            var tranGroupsOld = docIsotopes.TransitionGroups.ToArray();
+            var tranGroupsNew = docIsotopesFt.TransitionGroups.ToArray();
+            Assert.AreEqual(tranGroupsOld.Length, tranGroupsNew.Length);
+            for (int i = 0; i < tranGroupsOld.Length; i++)
+            {
+                Assert.AreNotSame(tranGroupsOld[i], tranGroupsNew[i]);
+                Assert.AreNotSame(tranGroupsOld[i].IsotopePeaks, tranGroupsNew[i].IsotopePeaks);
+                Assert.IsTrue(tranGroupsOld[i].IsotopePeaks.ExpectedPeaks.Sum() >
+                    tranGroupsNew[i].IsotopePeaks.ExpectedPeaks.Sum());
+            }
+
+            // Use Min % of base peak and verify variation in transitions used
+            const float minPercent1 = 20;
+            var docIsotopesP1 = docIsotopes.ChangeSettings(docIsotopes.Settings.ChangeTransitionFullScan(fs =>
+                fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Percent, minPercent1, enrichments)));
+            tranGroupsNew = docIsotopesP1.TransitionGroups.ToArray();
+            int maxTran = 0;
+            for (int i = 0; i < tranGroupsOld.Length; i++)
+            {
+                // Isotope distributions should not have changed
+                var isotopePeaks = tranGroupsNew[i].IsotopePeaks;
+                Assert.AreSame(tranGroupsOld[i].IsotopePeaks, isotopePeaks);
+                // Expected transitions should be present
+                maxTran = Math.Max(maxTran, tranGroupsNew[i].Children.Count);
+                foreach (TransitionDocNode nodeTran in tranGroupsNew[i].Children)
+                {
+                    int massIndex = nodeTran.Transition.MassIndex + isotopePeaks.MonoMassIndex;
+                    Assert.IsTrue(0 <= massIndex);
+                    Assert.IsTrue(minPercent1 <= isotopePeaks.ExpectedPeaks[massIndex]*100.0/isotopePeaks.BaseMassPercent);
+                }
+            }
+            Assert.AreEqual(5, maxTran);
+
+            // Use 10%, and check that 15N modifications all have M-1
+            const float minPercent2 = 10;
+            var docIsotopesP2 = docIsotopesP1.ChangeSettings(docIsotopesP1.Settings.ChangeTransitionFullScan(fs =>
+                fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Percent, minPercent2, enrichments)));
+            foreach (var nodeGroup in docIsotopesP2.TransitionGroups)
+            {
+                var firstChild = (TransitionDocNode) nodeGroup.Children[0];
+                if (nodeGroup.TransitionGroup.LabelType.Name.EndsWith("15N"))
+                    Assert.AreEqual(-1, firstChild.Transition.MassIndex);
+                else
+                    Assert.AreNotEqual(-1, firstChild.Transition.MassIndex);
+            }
+
+            // Use lower enrichment of 13C, and verify that this add M-1 for 13C labeled precursors
+            var enrichmentsLow13C = enrichments.ChangeEnrichment(new IsotopeEnrichmentItem(BioMassCalc.C13, 0.9));
+            var docIsotopesLow13C = docIsotopesP1.ChangeSettings(docIsotopesP1.Settings.ChangeTransitionFullScan(fs =>
+                fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Percent, minPercent2, enrichmentsLow13C)));
+            tranGroupsNew = docIsotopesLow13C.TransitionGroups.ToArray();
+            for (int i = 0; i < tranGroupsOld.Length; i++)
+            {
+                var nodeGroup = tranGroupsNew[i];
+                if (!Equals(nodeGroup.TransitionGroup.LabelType.Name, "heavy"))
+                    Assert.AreSame(tranGroupsOld[i].IsotopePeaks, nodeGroup.IsotopePeaks);
+                else
+                {
+                    var firstChild = (TransitionDocNode)nodeGroup.Children[0];
+                    Assert.IsTrue(firstChild.Transition.MassIndex < 0);
+                }
+            }
+
+            // Use 0%, and check that everything has M-1 and lower
+            var enrichmentsLow = enrichmentsLow13C.ChangeEnrichment(new IsotopeEnrichmentItem(BioMassCalc.N15, 0.97));
+            var docIsotopesLowP0 = docIsotopesP1.ChangeSettings(docIsotopesP1.Settings.ChangeTransitionFullScan(fs =>
+                fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Percent, 0, enrichmentsLow)));
+            foreach (var nodeGroup in docIsotopesLowP0.TransitionGroups)
+            {
+                Assert.AreEqual(nodeGroup.IsotopePeaks.ExpectedPeaks.Count, nodeGroup.Children.Count);
+                var firstChild = (TransitionDocNode)nodeGroup.Children[0];
+                if (nodeGroup.TransitionGroup.LabelType.IsLight)
+                    Assert.AreEqual(-1, firstChild.Transition.MassIndex);
+                else
+                    Assert.IsTrue(-1 > firstChild.Transition.MassIndex);
+            }
         }
     }
 }

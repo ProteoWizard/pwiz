@@ -419,10 +419,7 @@ namespace pwiz.Skyline.SettingsUI
                                 {
                                     // If we may be adding this specific node to the document more than once, create a copy of it so that
                                     // we don't have two nodes with the same global id.
-                                    var nodeGroupChargeNew = new TransitionGroupDocNode((TransitionGroup)nodeGroupCharge.Id.Copy(),
-                                        0.0, nodeGroupCharge.RelativeRT, new TransitionDocNode[0]);
-                                    nodeGroupCharge = new TransitionGroupDocNode(nodeGroupChargeNew, nodeGroupCharge.PrecursorMz,
-                                        nodeGroupCharge.RelativeRT, nodeGroupCharge.Children);
+                                    nodeGroupCharge = (TransitionGroupDocNode) nodeGroupCharge.CopyId();
                                 }
                                 nodeGroupChargeId = nodeGroupCharge.Id;
                                 newChildren.Add(nodeGroupCharge);
@@ -562,11 +559,7 @@ namespace pwiz.Skyline.SettingsUI
                                     var nodeTranGroup = (TransitionGroupDocNode) nodeGroup;
                                     if(match.Proteins != null && match.Proteins.Count() > 1)
                                     {
-                                        var nodeTranGroupNew = new TransitionGroupDocNode((TransitionGroup)nodeTranGroup.Id.Copy(),
-                                        0.0, nodeTranGroup.RelativeRT, new TransitionDocNode[0]);
-                                        nodeTranGroup =
-                                            new TransitionGroupDocNode(nodeTranGroupNew, nodeTranGroup.PrecursorMz,
-                                                                       nodeTranGroup.RelativeRT, nodeTranGroup.Children);
+                                        nodeTranGroup = (TransitionGroupDocNode) nodeTranGroup.CopyId();
                                     }
                                     return (DocNode) nodeTranGroup;
                                 })).ChangeAutoManageChildren(false)).ChangeSettings(document.Settings, SrmSettingsDiff.ALL);

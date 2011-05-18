@@ -280,7 +280,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
             var listChoices = new List<DocNode>();
             foreach (TransitionDocNode nodeTran in group.GetTransitions(settings, mods,
-                    nodeGroup.PrecursorMz, libInfo, transitionRanks, useFilter))
+                    nodeGroup.PrecursorMz, nodeGroup.IsotopePeaks, libInfo, transitionRanks, useFilter))
             {
                 listChoices.Add(nodeTran);               
             }
@@ -380,13 +380,15 @@ namespace pwiz.Skyline.Controls.SeqNode
             var filter = settings.TransitionSettings.Filter;
 
             // Get charges and type pairs, making sure all chosen charges are included
-            HashSet<int> setCharges = new HashSet<int>(filter.ProductCharges);
+            HashSet<int> setCharges = new HashSet<int>(filter.ProductCharges.Where(charge =>
+                charge <= nodeGroup.TransitionGroup.PrecursorCharge));
             HashSet<IonType> setTypes = new HashSet<IonType>(filter.IonTypes);
             foreach (TransitionDocNode nodTran in chosen)
             {
                 setCharges.Add(nodTran.Transition.Charge);
                 setTypes.Add(nodTran.Transition.IonType);
             }
+            setTypes.Remove(IonType.precursor);
             int[] charges = setCharges.ToArray();
             Array.Sort(charges);
             IonType[] types = Transition.GetTypePairs(setTypes);
@@ -413,69 +415,72 @@ namespace pwiz.Skyline.Controls.SeqNode
                         tableDetails.AddDetailRow(pair.Key.Label, pair.Value, rt);
                 }
 
-                var headers = new RowDesc
+                if (charges.Length > 0 && types.Length > 0)
+                {
+                    var headers = new RowDesc
                                   {
                                       CreateHead("#", rt),
                                       CreateHead("AA", rt),
                                       CreateHead("#", rt)
                                   };
-                foreach (int charge in charges)
-                {
-                    string plusSub = Transition.GetChargeIndicator(charge);
-                    foreach (IonType type in types)
+                    foreach (int charge in charges)
                     {
-                        CellDesc cell = CreateHead(type.ToString().ToLower() + plusSub, rt);
-                        if (Transition.IsNTerminal(type))
-                            headers.Insert(0, cell);
-                        else
-                            headers.Add(cell);
+                        string plusSub = Transition.GetChargeIndicator(charge);
+                        foreach (IonType type in types)
+                        {
+                            CellDesc cell = CreateHead(type.ToString().ToLower() + plusSub, rt);
+                            if (Transition.IsNTerminal(type))
+                                headers.Insert(0, cell);
+                            else
+                                headers.Add(cell);
+                        }
                     }
-                }
-                table.Add(headers);
+                    table.Add(headers);
 
-                int len = aa.Length;
-                for (int i = 0; i < len; i++)
-                {
-                    CellDesc cellAA = CreateRowLabel(aa.Substring(i, 1), rt);
-                    cellAA.Align = StringAlignment.Center;
+                    int len = aa.Length;
+                    for (int i = 0; i < len; i++)
+                    {
+                        CellDesc cellAA = CreateRowLabel(aa.Substring(i, 1), rt);
+                        cellAA.Align = StringAlignment.Center;
 
-                    var row = new RowDesc
+                        var row = new RowDesc
                                   {
                                       CreateRowLabel(i == len - 1 ? "" : (i + 1).ToString(), rt),
                                       cellAA,
                                       CreateRowLabel(i == 0 ? "" : (len - i).ToString(), rt)
                                   };
 
-                    foreach (int charge in charges)
-                    {
-                        foreach (IonType type in types)
+                        foreach (int charge in charges)
                         {
-                            CellDesc cell;
-                            if (Transition.IsNTerminal(type))
+                            foreach (IonType type in types)
                             {
-                                if (i == len - 1)
-                                    cell = CreateData("", rt);
+                                CellDesc cell;
+                                if (Transition.IsNTerminal(type))
+                                {
+                                    if (i == len - 1)
+                                        cell = CreateData("", rt);
+                                    else
+                                    {
+                                        double massH = masses[(int)type, i];
+                                        cell = CreateIon(type, i + 1, massH, charge, choices, chosen, tranSelected, rt);
+                                    }
+                                    row.Insert(0, cell);
+                                }
                                 else
                                 {
-                                    double massH = masses[(int)type, i];
-                                    cell = CreateIon(type, i + 1, massH, charge, choices, chosen, tranSelected, rt);
+                                    if (i == 0)
+                                        cell = CreateData("", rt);
+                                    else
+                                    {
+                                        double massH = masses[(int)type, i - 1];
+                                        cell = CreateIon(type, len - i, massH, charge, choices, chosen, tranSelected, rt);
+                                    }
+                                    row.Add(cell);
                                 }
-                                row.Insert(0, cell);
-                            }
-                            else
-                            {
-                                if (i == 0)
-                                    cell = CreateData("", rt);
-                                else
-                                {
-                                    double massH = masses[(int)type, i - 1];
-                                    cell = CreateIon(type, len - i, massH, charge, choices, chosen, tranSelected, rt);
-                                }
-                                row.Add(cell);
                             }
                         }
+                        table.Add(row);
                     }
-                    table.Add(row);
                 }
 
                 SizeF sizeDetails = tableDetails.CalcDimensions(g);

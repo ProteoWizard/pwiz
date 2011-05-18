@@ -80,7 +80,7 @@ namespace pwiz.Skyline.SettingsUI
                             Equals(e.IsotopeSymbol, isotopeSymbol));
                         enrichmentValue = iEnrichment != -1
                             ? _enrichments.Enrichments[iEnrichment].AtomPercentEnrichment
-                            : IsotopeEnrichmentItem.DEFAULT_ATOM_PERCENT_ENRICHMENT;
+                            : BioMassCalc.GetIsotopeEnrichmentDefault(isotopeSymbol);
                     }
                     row.Cells[COL_ENRICHMENT].Value = enrichmentValue.HasValue
                         ? (enrichmentValue * 100).ToString()
@@ -109,10 +109,10 @@ namespace pwiz.Skyline.SettingsUI
             foreach (DataGridViewRow row in gridEnrichments.Rows.Cast<DataGridViewRow>().Where(row => !row.IsNewRow))
             {
                 double enrichment;
-                if (!ValidateEnrichment(e, row.Cells[1], out enrichment))
+                if (!ValidateEnrichment(e, row.Cells[COL_ENRICHMENT], out enrichment))
                     return;
 
-                listEnrichments.Add(new IsotopeEnrichmentItem((string) row.Tag, enrichment/100));
+                listEnrichments.Add(new IsotopeEnrichmentItem(row.Cells[COL_SYMBOL].Value.ToString(), enrichment/100));
             }
 
             _enrichments = new IsotopeEnrichments(name, listEnrichments);

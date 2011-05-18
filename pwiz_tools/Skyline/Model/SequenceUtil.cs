@@ -156,6 +156,19 @@ namespace pwiz.Skyline.Model
             return mz*charge - (charge - 1)*BioMassCalc.MassProton;
         }
 
+        private static readonly double MASS_DIFF_13_C = BioMassCalc.MONOISOTOPIC.GetMass("C'") -
+                                                       BioMassCalc.MONOISOTOPIC.GetMass("C");
+
+        public static double GetMassI(double massH, int massIndex)
+        {
+            return massH + MASS_DIFF_13_C*massIndex;
+        }
+
+        public static double GetMZI (double massH, int massIndex, int charge)
+        {
+            return GetMZ(GetMassI(massH, massIndex), charge);
+        }
+
         public static double ParseModMass(BioMassCalc calc, string desc)
         {
             string parse = desc;
@@ -272,8 +285,6 @@ namespace pwiz.Skyline.Model
         private readonly double _massCleaveC;
         private readonly double _massCleaveN;
 
-        private readonly double _massDiff13C;
-
         // For mass distributions
         private readonly double _massResolution;
         private readonly double _minimumAbundance;
@@ -295,10 +306,6 @@ namespace pwiz.Skyline.Model
 
             _massCleaveN = _massCalc.CalculateMass("H");
             _massCleaveC = _massCalc.CalculateMass("OH");
-
-            // Mass difference between isotope peaks
-            // The difference between 12C and 13C is quite close to 14N and 15N
-            _massDiff13C = ParseModMass("C' - C");
 
             // These numbers are set intentionally smaller than any known instrument
             // can measure.  Filters are then applied to resulting distributions
@@ -496,12 +503,12 @@ namespace pwiz.Skyline.Model
             return sb.ToString();
         }
 
-        public MassDistribution GetMassDistribution(string seq, IsotopeAbundances abundances)
+        public MassDistribution GetMzDistribution(string seq, int charge, IsotopeAbundances abundances)
         {
-            return GetMassDistribution(seq, abundances, null);
+            return GetMzDistribution(seq, charge, abundances, null);
         }
 
-        public MassDistribution GetMassDistribution(string seq, IsotopeAbundances abundances, ExplicitSequenceMods mods)
+        public MassDistribution GetMzDistribution(string seq, int charge, IsotopeAbundances abundances, ExplicitSequenceMods mods)
         {
             double unexplainedMass;
             Molecule molecule = GetFormula(seq, mods, out unexplainedMass);
@@ -512,7 +519,7 @@ namespace pwiz.Skyline.Model
             {
                 result = result.Add(md.Add(abundances[element.Key]).Multiply(element.Value));
             }
-            return result.OffsetAndDivide(unexplainedMass + BioMassCalc.MassProton, 1);
+            return result.OffsetAndDivide(unexplainedMass + charge*BioMassCalc.MassProton, charge);
         }
 
 // ReSharper disable ReturnTypeCanBeEnumerable.Local
@@ -655,9 +662,7 @@ namespace pwiz.Skyline.Model
             }
 
             // Add isotope mass shift
-            mass += _massDiff13C*massIndex;
- 
-            return mass;                
+            return GetMassI(mass, massIndex);                
         }
 
         public double[,] GetFragmentIonMasses(string seq)
@@ -925,9 +930,9 @@ namespace pwiz.Skyline.Model
             return _massCalcBase.GetModifiedSequence(seq, _mods, formatNarrow);
         }
 
-        public MassDistribution GetMassDistribution(string seq, IsotopeAbundances abundances)
+        public MassDistribution GetMzDistribution(string seq, int charge, IsotopeAbundances abundances)
         {
-            return _massCalcBase.GetMassDistribution(seq, abundances, _mods);
+            return _massCalcBase.GetMzDistribution(seq, charge, abundances, _mods);
         }
 
         public double[,] GetFragmentIonMasses(string seq)

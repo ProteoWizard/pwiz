@@ -107,6 +107,16 @@ namespace pwiz.Skyline.Model
             return pluses.Substring(0, Math.Min(charge, pluses.Length-1));
         }
 
+        public static string GetMassIndexText(int massIndex)
+        {
+            if (massIndex == 0)
+                return "";
+
+            // CONSIDER: Should this be based on the true neutral mass shift from the
+            //           monoisotopic mass?
+            return string.Format(" [M{0}{1}]", massIndex > 0 ? "+" : "", massIndex);
+        }
+
         private readonly TransitionGroup _group;
 
         /// <summary>
@@ -272,14 +282,7 @@ namespace pwiz.Skyline.Model
         {
             if (IsPrecursor())
             {
-                string text = "precursor" + GetChargeIndicator(Charge);
-                if (MassIndex > 0)
-                {
-                    // CONSIDER: Should this be based on the true neutral mass shift from the
-                    //           monoisotopic mass?
-                    text += string.Format(" [M+{0}]", MassIndex);
-                }
-                return  text;
+                return "precursor" + GetChargeIndicator(Charge) + GetMassIndexText(MassIndex);
             }
 
             return string.Format("{0} - {1}{2}{3}",
