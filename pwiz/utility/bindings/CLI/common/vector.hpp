@@ -29,6 +29,7 @@
 #define DEFINE_STD_VECTOR_WRAPPER(WrapperName, NativeType, CLIType, CLIHandle, NativeToCLI, CLIToNative) \
 ref class WrapperName : public System::Collections::Generic::IList<CLIHandle> \
 { \
+    public:   System::IntPtr void_base() {return (System::IntPtr) base_;} \
     INTERNAL: typedef std::vector<NativeType> WrappedType; \
 \
               /* void* downcast is needed for cross-assembly calls; */ \

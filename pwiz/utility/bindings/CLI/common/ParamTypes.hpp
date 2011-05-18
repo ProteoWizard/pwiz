@@ -136,6 +136,7 @@ using namespace cv;
 /// </summary>
 public ref class CVParamValue
 {
+    public:   System::IntPtr void_base() {return (System::IntPtr) base_;}
     INTERNAL: CVParamValue(boost::shared_ptr<pwiz::data::CVParam>* base);
               virtual ~CVParamValue();
               !CVParamValue();
@@ -157,6 +158,7 @@ public ref class CVParamValue
 /// </summary>
 public ref class CVParam
 {
+    public:   System::IntPtr void_base() {return (System::IntPtr) base_;}
     INTERNAL: CVParam(void* base, System::Object^ owner);
               CVParam(void* base);
               virtual ~CVParam();
@@ -253,6 +255,7 @@ public ref class CVParam
 /// </summary>
 public ref class UserParamValue
 {
+    public:   System::IntPtr void_base() {return (System::IntPtr) base_;}
     INTERNAL: UserParamValue(boost::shared_ptr<pwiz::data::UserParam>* base);
               virtual ~UserParamValue();
               !UserParamValue();
@@ -275,6 +278,7 @@ public ref class UserParamValue
 /// </summary>
 public ref class UserParam
 {
+    public:   System::IntPtr void_base() {return (System::IntPtr) base_;}
     INTERNAL: UserParam(void* base, System::Object^ owner);
               UserParam(void* base);
               virtual ~UserParam();
@@ -354,6 +358,7 @@ ref class UserParamList;
 /// </summary>
 public ref class ParamContainer
 {
+    public:   System::IntPtr void_base() {return (System::IntPtr) base_;}
     INTERNAL: ParamContainer(pwiz::data::ParamContainer* base);
               virtual ~ParamContainer();
               pwiz::data::ParamContainer* base_;

@@ -155,7 +155,7 @@ INTERNAL: CLIType(NativeType* base, System::Object^ owner) : base_(base), owner_
 
 // defines internal members for wrapping a raw pointer to a derived native class with a managed wrapper class
 #define DEFINE_DERIVED_INTERNAL_BASE_CODE(ns, ClassType, BaseClassType) \
-public:   System::IntPtr void_base() {return (System::IntPtr) base_;} \
+public:   System::IntPtr void_base() new {return (System::IntPtr) base_;} \
 INTERNAL: ClassType(ns::ClassType* base, System::Object^ owner) : BaseClassType(base), base_(base) {owner_ = owner; LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
           ClassType(ns::ClassType* base) : BaseClassType(base), base_(base) {owner_ = nullptr; LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
           virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType), (owner_ == nullptr)) if (owner_ == nullptr) {SAFEDELETE(base_); BaseClassType::base_ = NULL;}} \
@@ -176,7 +176,7 @@ INTERNAL: ClassType(boost::shared_ptr<ns::ClassType>* base, System::Object^ owne
 
 // defines internal members for wrapping a shared_ptr to a derived native class with a managed wrapper class
 #define DEFINE_SHARED_DERIVED_INTERNAL_BASE_CODE(ns, ClassType, BaseClassType) \
-public:   System::IntPtr void_base() {return (System::IntPtr) base_;} \
+public:   System::IntPtr void_base() new {return (System::IntPtr) base_;} \
 INTERNAL: ClassType(boost::shared_ptr<ns::ClassType>* base) : BaseClassType(base->get()), base_(base) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
           virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType), true) SAFEDELETE(base_); BaseClassType::base_ = NULL;} \
           !ClassType() {LOG_FINALIZE(BOOST_PP_STRINGIZE(ClassType)) delete this;} \
@@ -186,7 +186,7 @@ INTERNAL: ClassType(boost::shared_ptr<ns::ClassType>* base) : BaseClassType(base
 // defines internal members for wrapping a shared_ptr to a derived native class with a managed wrapper class
 // TODO: explain why SpectrumList/MSData derivatives need this but ParamContainer derivatives don't
 #define DEFINE_SHARED_DERIVED_INTERNAL_SHARED_BASE_CODE(ns, ClassType, BaseClassType) \
-public:   System::IntPtr void_base() {return (System::IntPtr) base_;} \
+public:   System::IntPtr void_base() new {return (System::IntPtr) base_;} \
 INTERNAL: ClassType(boost::shared_ptr<ns::ClassType>* base) : BaseClassType(new boost::shared_ptr<ns::BaseClassType>(base->get(), nullDelete)), base_(base) {LOG_CONSTRUCT(BOOST_PP_STRINGIZE(ClassType))} \
           virtual ~ClassType() {LOG_DESTRUCT(BOOST_PP_STRINGIZE(ClassType), true) SAFEDELETE(base_); BaseClassType::base_ = NULL;} \
           !ClassType() {LOG_FINALIZE(BOOST_PP_STRINGIZE(ClassType)) delete this;} \

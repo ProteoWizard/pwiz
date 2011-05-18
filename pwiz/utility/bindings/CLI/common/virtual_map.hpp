@@ -29,6 +29,7 @@
 #define DEFINE_VIRTUAL_MAP_WRAPPER(WrapperName, NativeKeyType, CLIKeyType, CLIKeyHandle, NativeKeyToCLI, CLIKeyToNative, NativeValueType, CLIValueType, CLIValueHandle, NativeValueToCLI, CLIValueToNative) \
 public ref class WrapperName : public System::Collections::Generic::IDictionary<CLIKeyHandle, CLIValueHandle> \
 { \
+    public:   System::IntPtr void_base() {return (System::IntPtr) base_;} \
     INTERNAL: typedef pwiz::util::virtual_map<NativeKeyType, NativeValueType> WrappedType; \
 \
               /* void* downcast is needed for cross-assembly calls; */ \
