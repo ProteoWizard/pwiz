@@ -542,7 +542,7 @@ JumpTableEntry jumpTable_[] =
     {"scanTime", "[scanTimeLow,scanTimeHigh]", filterCreator_scanTime},
     {"stripIT", " (strip ion trap ms1 scans)", filterCreator_stripIT},
     {"metadataFixer", " (add/replace TIC/BPI metadata)", filterCreator_metadataFixer},
-    {"titleMaker", " (add/replace spectrum title according to user-specified format string; the following keywords are recognized: <RunId> <Index> <Id> <ScanNumber> <ActivationType> <IsolationMz> <SelectedIonMz> <ChargeState> <PrecursorSpectrumId> <SpectrumType> <MsLevel> <ScanStartTime> <BasePeakMz> <BasePeakIntensity> <TotalIonCurrent>", filterCreator_titleMaker},
+    {"titleMaker", " (add/replace spectrum title according to user-specified format string; the following keywords are recognized: <RunId> <Index> <Id> <ScanNumber> <ActivationType> <IsolationMz> <SelectedIonMz> <ChargeState> <PrecursorSpectrumId> <SpectrumType> <MsLevel> <ScanStartTimeInMinutes> <ScanStartTimeInSeconds> <BasePeakMz> <BasePeakIntensity> <TotalIonCurrent>", filterCreator_titleMaker},
     {"threshold", "<count|count-after-ties|absolute|bpi-relative|tic-relative|tic-cutoff> <threshold> <most-intense|least-intense> [int_set(MS levels)]", filterCreator_thresholdFilter},
     {"mzWindow", "[mzLow,mzHigh]", filterCreator_mzWindow},
 	{"mzPrecursors", "[mz1,mz2, ... mzn] zero for no precursor m/z", filterCreator_mzPrecursors},
