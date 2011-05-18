@@ -22,23 +22,16 @@
 
 #define PWIZ_SOURCE
 
+#include "pwiz/utility/misc/Std.hpp"
 #include "Serializer_Text.hpp"
 #include "TextWriter.hpp"
-#include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string/case_conv.hpp>
-#include <boost/algorithm/string/classification.hpp>
-#include <boost/algorithm/string/join.hpp>
-#include <boost/foreach.hpp>
 #include <boost/regex.hpp>
-#include <algorithm>
-#include <iostream>
 
 namespace pwiz {
 namespace mziddata {
 
-using namespace std;
-using namespace boost;
 using namespace pwiz::util;
+using namespace boost;
 
 namespace {
 
@@ -429,7 +422,7 @@ void Serializer_Text::Impl::setHeaders(const vector<string>& headers) const
         to_lower(f);
         vector<string>::const_iterator i;
         i=std::find_if(idNames.begin(), idNames.end(),
-                     bind2nd(equal_to<string>(),f));
+                       std::bind2nd(std::equal_to<string>(),f));
 
 
         if (i!=idNames.end())

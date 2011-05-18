@@ -28,10 +28,6 @@
 #include "examples.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 
-#include <iostream>
-#include <boost/shared_ptr.hpp>
-
-using namespace std;
 using namespace pwiz::mziddata;
 using namespace pwiz::mziddata::examples;
 
