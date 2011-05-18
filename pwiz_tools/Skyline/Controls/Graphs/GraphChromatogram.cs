@@ -1457,10 +1457,13 @@ namespace pwiz.Skyline.Controls.Graphs
             if (graphItem == null || graphItem.TransitionChromInfo != null)
                 return graphItem;
 
+            // Look for a transition from the same precursor with chrom info
+            var nodeGroup = graphItem.TransitionGroupNode;
             foreach (var curveCurr in GraphPane.CurveList)
             {
                 var graphItemCurr = (ChromGraphItem)curveCurr.Tag;
-                if (graphItemCurr.TransitionChromInfo != null)
+                if (ReferenceEquals(nodeGroup, graphItemCurr.TransitionGroupNode) &&
+                        graphItemCurr.TransitionChromInfo != null)
                     return graphItemCurr;
             }
 
