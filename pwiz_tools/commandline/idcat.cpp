@@ -158,8 +158,8 @@ Config parseCommandLine(int argc, const char* argv[])
         ("fields", po::value<string>(),
          ": comma separated list of fields to display")
         ("force,f", ": overwrite file if it exists.")
-        /*("sort,s", po::value<string>(&config.sortBy),
-          ": sort by (single) column")*/
+        ("sort,s", po::value<string>(&config.sortBy),
+          ": sort by (single) column")
         ("output,o", po::value<string>(&config.output),
          ": output filename or directory (for multiple files).")
         ("verbose,v", ": prints extra information.")

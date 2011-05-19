@@ -35,20 +35,27 @@ using namespace boost;
 
 namespace {
 
+///
+/// @brief TextRecord holds the data of a single "line" of data.
+/// 
+/// A vector of TextRecord objects is used to hold a text file. By
+/// default, strings are initialized empty and numerical members are
+/// initialized to -1.
+///
 struct TextRecord
 {
     string none;
     string scan;
     string rt;
-    string mz;
-    string charge;
+    double mz;
+    int charge;
     string score;
     string scoretype;
     string peptide;
     string protein;
 
     TextRecord()
-        : none(""), scan(""), rt(""), mz(""), charge(""),
+        : none(""), scan(""), rt(""), mz(-1), charge(-1),
           score(""), scoretype(""), peptide(""), protein("")
     {}
     TextRecord(const TextRecord& tr)
@@ -74,6 +81,14 @@ struct TextRecord
     }
 };
 
+/// Used for debugging, the TextRecord insertion operator for ostream
+/// object writes an easily readable version of the object with fields
+/// labeled.
+///
+/// @param os output stream.
+/// @param tr object to be written to os.
+///
+/// @return output stream object
 ostream& operator<<(ostream& os, const TextRecord& tr)
 {
     os << "[TextRecord]\n"
@@ -107,16 +122,14 @@ public:
     Impl(const Config& config_)
         : config(config_)
     {
-        for (int i=0; i<Last; i++)
-        {
+        for (int i=0; i<=Last; i++)
             idNames.push_back(IdFieldNames[i]);
-        }
     }
 
     void write(ostream& os, const MzIdentML& mzid,
                const IterationListenerRegistry* iterationListenerRegistry) const;
 
-    void read(shared_ptr<istream> is, MzIdentML& msd) const;
+    void read(boost::shared_ptr<istream> is, MzIdentML& msd) const;
 
     void write(ostream& os, const TextRecord& tr,
                const IterationListenerRegistry* iterationListenerRegistry) const;
@@ -127,15 +140,78 @@ public:
     void setHeaders(const vector<string>& fields) const;
     string getHeaders() const;
 
+    template <Serializer_Text::IdField F>
+    struct field_order
+    {
+        Serializer_Text::IdField field;
+    
+        field_order(Serializer_Text::IdField field)
+            : field(field)
+        {
+        }
+    
+        bool operator()(const TextRecord& left, const TextRecord& right)
+        {
+            bool result = false;
+        
+            switch(field)
+            {
+            case None:
+                result = left.none == right.none;
+                break;
+        
+            case Scan:
+                result = left.scan == right.scan;
+                break;
+        
+            case Rt:
+                result = left.rt == right.rt;
+                break;
+        
+            case Mz:
+                result = left.mz == right.mz;
+                break;
+
+            case Charge:
+                result = left.charge == right.charge;
+                break;
+        
+            case Score:
+                result = left.score == right.score;
+                break;
+        
+            case ScoreType:
+                result = left.scoretype == right.scoretype;
+                break;
+        
+            case Peptide:
+                result = left.peptide == right.peptide;
+                break;
+        
+            case Protein:
+                result = left.protein == right.protein;
+                break;
+
+            default:
+                break;
+            }
+
+            return result;
+        }
+    };
+
+
 private:
     Config config;
     vector<string> idNames;
 };
 
-
-void parseHeaders(shared_ptr<istream> is, vector<string> fields)
+namespace
 {
-    // TODO add haeder parsing & field identification.
+
+void parseHeaders(boost::shared_ptr<istream> is, vector<string> fields)
+{
+    // TODO add header parsing & field identification.
 }
 
 vector<TextRecord> fetchPeptideEvidence(const vector<PeptideEvidencePtr>& peps,
@@ -146,16 +222,7 @@ vector<TextRecord> fetchPeptideEvidence(const vector<PeptideEvidencePtr>& peps,
     BOOST_FOREACH(PeptideEvidencePtr pep, peps)
     {
         TextRecord tr(record);
-        ostringstream oss;
 
-        /*
-        if (pep->start != pep->end)
-            oss << pep->start << "-" << pep->end;
-        else
-            oss << pep->start;
-        tr.scan = oss.str();
-        */
-        
         // Fetch the peptide sequence by way of the DBSequence
         // reference.
         if (pep->dbSequencePtr.get())
@@ -185,13 +252,8 @@ vector<TextRecord> fetchSpectrumIdItem(
     {
         TextRecord tr(record);
 
-        ostringstream oss;
-        oss << sii->experimentalMassToCharge;
-        tr.mz = oss.str();
-
-        oss.str("");
-        oss << sii->chargeState;
-        tr.charge = oss.str();
+        tr.mz = sii->experimentalMassToCharge;
+        tr.charge = sii->chargeState;
 
         CVParam score = sii->cvParamChild(MS_search_engine_specific_score);
         if (score.cvid != CVID_Unknown)
@@ -289,6 +351,8 @@ vector<TextRecord> fetchRecords(const MzIdentML& mzid)
     return records;
 }
 
+} // anonymous namespace
+
 void Serializer_Text::Impl::writeField(ostream& os, const TextRecord& tr,
                                        Serializer_Text::IdField field) const
 {
@@ -375,7 +439,7 @@ void Serializer_Text::Impl::write(ostream& os, const MzIdentML& mzid,
     }
 }
 
-void Serializer_Text::Impl::read(shared_ptr<istream> is, MzIdentML& mzid) const
+void Serializer_Text::Impl::read(boost::shared_ptr<istream> is, MzIdentML& mzid) const
 {
     namespace algo=boost::algorithm;
     
@@ -388,11 +452,15 @@ void Serializer_Text::Impl::read(shared_ptr<istream> is, MzIdentML& mzid) const
 
     // Sort out which fields we can manage.
     setHeaders(headers);
+
+    // TODO read in file and sort into mzid.
 }
 
 string Serializer_Text::Impl::getHeaders() const
 {
     vector<string> headerList;
+
+    // User selected fields are used when set.
     if (config.fields.size()>0)
     {
         BOOST_FOREACH(IdField id, config.fields)
@@ -400,13 +468,11 @@ string Serializer_Text::Impl::getHeaders() const
     }
     else
     {
-
-        headerList.resize(idNames.size()-1);
-        copy(idNames.begin()+1, idNames.end(), headerList.begin());
-        
-        BOOST_FOREACH(string name, headerList)
-            headerList.push_back(name);
-
+        // If there is no subset of fields, we use all but the "None"
+        // field.
+        for (vector<string>::const_iterator i=idNames.begin()+1;
+             i!=idNames.end(); ++i)
+            headerList.push_back(*i);
     }
     
     return join(headerList, config.fieldDelim);
@@ -457,7 +523,7 @@ PWIZ_API_DECL void Serializer_Text::write(ostream& os, const MzIdentML& mzid,
     return impl_->write(os, mzid, iterationListenerRegistry);
 }
 
-PWIZ_API_DECL void Serializer_Text::read(shared_ptr<istream> is, MzIdentML& mzid) const
+PWIZ_API_DECL void Serializer_Text::read(boost::shared_ptr<istream> is, MzIdentML& mzid) const
 {
     return impl_->read(is, mzid);
 }

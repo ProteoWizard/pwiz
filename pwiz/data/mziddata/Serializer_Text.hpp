@@ -31,6 +31,10 @@
 namespace pwiz {
 namespace mziddata {
 
+/// \class Serializer_Text
+///
+/// Serializer_Text reads in and writes out an id file in tab format.
+///
 class  PWIZ_API_DECL Serializer_Text
 {
 public:
@@ -50,8 +54,8 @@ public:
     };
 
     static const std::string IdFieldNames[];
-    
-    struct PWIZ_API_DECL Config
+
+    struct PWIZ_API_DECL Config ///< Controls the format of the text file.
     {
         bool headers;
         std::vector<IdField> fields;
@@ -64,14 +68,14 @@ public:
         Config(const Config& config);
     };
 
-    /// constructor
+    /// Constructor with Config 
     Serializer_Text(const Config& config = Config());
 
-    /// write MzIdentML object to ostream as a text table
+    /// writes MzIdentML object to ostream as a text table
     void write(std::ostream& os, const MzIdentML& mzid,
                const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0) const;
 
-    /// read in MzIdentML object from an mzIdentML istream
+    /// read in MzIdentML object from a delimited text fromat.
     void read(boost::shared_ptr<std::istream> is, MzIdentML& mzid) const;
 
     private:

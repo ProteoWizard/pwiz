@@ -95,12 +95,12 @@ int main(int argc, char** argv)
     }
     catch (exception& e)
     {
-        cerr << e.what() << endl;
+        cerr << typeid(e).name() << "\t" << e.what() << endl;
     }
     catch (...)
     {
         cerr << "Caught unknown exception.\n";
     }
-    
+     
     return 1;
 }
