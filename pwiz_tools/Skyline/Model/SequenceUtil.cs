@@ -24,6 +24,7 @@ using System.Linq;
 using System.Text;
 using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
@@ -154,19 +155,6 @@ namespace pwiz.Skyline.Model
         public static double GetMH(double mz, int charge)
         {
             return mz*charge - (charge - 1)*BioMassCalc.MassProton;
-        }
-
-        private static readonly double MASS_DIFF_13_C = BioMassCalc.MONOISOTOPIC.GetMass("C'") -
-                                                       BioMassCalc.MONOISOTOPIC.GetMass("C");
-
-        public static double GetMassI(double massH, int massIndex)
-        {
-            return massH + MASS_DIFF_13_C*massIndex;
-        }
-
-        public static double GetMZI (double massH, int massIndex, int charge)
-        {
-            return GetMZ(GetMassI(massH, massIndex), charge);
         }
 
         public static double ParseModMass(BioMassCalc calc, string desc)
@@ -631,15 +619,10 @@ namespace pwiz.Skyline.Model
 
         public double GetPrecursorMass(string seq)
         {
-            return GetPrecursorMass(seq, 0, null);
+            return GetPrecursorMass(seq, null);
         }
 
-        public double GetPrecursorMass(string seq, int massIndex)
-        {
-            return GetPrecursorMass(seq, massIndex, null);
-        }
-
-        public double GetPrecursorMass(string seq, int massIndex, ExplicitSequenceMods mods)
+        public double GetPrecursorMass(string seq, ExplicitSequenceMods mods)
         {
             var modMasses = GetModMasses(mods);
             double mass = _massCleaveN + modMasses._massModCleaveN +
@@ -661,8 +644,7 @@ namespace pwiz.Skyline.Model
                     mass += mods.ModMasses[i];
             }
 
-            // Add isotope mass shift
-            return GetMassI(mass, massIndex);                
+            return mass;                
         }
 
         public double[,] GetFragmentIonMasses(string seq)
@@ -734,15 +716,15 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public double GetFragmentMass(Transition transition)
+        public double GetFragmentMass(Transition transition, IsotopePeakInfo isotopePeaks)
         {
-            return GetFragmentMass(transition, null);
+            return GetFragmentMass(transition, isotopePeaks, null);
         }
 
-        public double GetFragmentMass(Transition transition, ExplicitSequenceMods mods)
+        public double GetFragmentMass(Transition transition, IsotopePeakInfo isotopePeaks, ExplicitSequenceMods mods)
         {
             return GetFragmentMass(transition.Group.Peptide.Sequence,
-                transition.IonType, transition.Ordinal, transition.MassIndex, mods);
+                transition.IonType, transition.Ordinal, transition.MassIndex, isotopePeaks, mods);
         }
 
         public double GetPrecursorFragmentMass(string seq)
@@ -752,13 +734,14 @@ namespace pwiz.Skyline.Model
 
         public double GetPrecursorFragmentMass(string seq, ExplicitSequenceMods mods)
         {
-            return GetFragmentMass(seq, IonType.precursor, seq.Length, 0, mods);
+            return GetFragmentMass(seq, IonType.precursor, seq.Length, 0, null, mods);
         }
 
-        public double GetFragmentMass(string seq, IonType type, int ordinal, int massIndex, ExplicitSequenceMods mods)
+        public double GetFragmentMass(string seq, IonType type, int ordinal,
+            int massIndex, IsotopePeakInfo isotopePeaks, ExplicitSequenceMods mods)
         {
             if (Transition.IsPrecursor(type))
-                return GetPrecursorMass(seq, massIndex, mods);
+                return isotopePeaks != null ? isotopePeaks.GetMassI(massIndex) : GetPrecursorMass(seq, mods);
 
             int len = seq.Length - 1;
 
@@ -911,12 +894,7 @@ namespace pwiz.Skyline.Model
 
         public double GetPrecursorMass(string seq)
         {
-            return _massCalcBase.GetPrecursorMass(seq, 0, _mods);
-        }
-
-        public double GetPrecursorMass(string seq, int massIndex)
-        {
-            return _massCalcBase.GetPrecursorMass(seq, massIndex, _mods);
+            return _massCalcBase.GetPrecursorMass(seq, _mods);
         }
 
         public bool IsModified(string seq)
@@ -940,9 +918,9 @@ namespace pwiz.Skyline.Model
             return _massCalcBase.GetFragmentIonMasses(seq, _mods);
         }
 
-        public double GetFragmentMass(Transition transition)
+        public double GetFragmentMass(Transition transition, IsotopePeakInfo isotopePeaks)
         {
-            return _massCalcBase.GetFragmentMass(transition, _mods);
+            return _massCalcBase.GetFragmentMass(transition, isotopePeaks, _mods);
         }
 
         public double GetPrecursorFragmentMass(string seq)

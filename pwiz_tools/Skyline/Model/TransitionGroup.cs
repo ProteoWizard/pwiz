@@ -272,11 +272,10 @@ namespace pwiz.Skyline.Model
                 {
                     if (precursorMS1)
                     {
-                        var calcPrecursorMS1 = settings.GetPrecursorCalc(LabelType, mods);
-                        foreach (int i in fullScan.SelectIsotopePeakIndices(isotopePeaks, useFilter))
+                        foreach (int i in fullScan.SelectMassIndices(isotopePeaks, useFilter))
                         {
-                            double precursorMS1Mass = calcPrecursorMS1.GetPrecursorMass(sequence, i);
-                            double ionMz = SequenceMassCalc.GetMZ(Transition.CalcMass(precursorMS1Mass, null), PrecursorCharge);
+                            double precursorMS1Mass = isotopePeaks.GetMassI(i);
+                            double ionMz = SequenceMassCalc.GetMZ(precursorMS1Mass, PrecursorCharge);
                             if (minMz > ionMz || ionMz > maxMz)
                                 continue;
                             yield return CreateTransitionNode(i, precursorMS1Mass, null, transitionRanks);

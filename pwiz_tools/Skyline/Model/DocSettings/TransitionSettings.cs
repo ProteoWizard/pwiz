@@ -1543,6 +1543,7 @@ namespace pwiz.Skyline.Model.DocSettings
         public const int MIN_ISOTOPE_COUNT = 1;
         public const int MAX_ISOTOPE_COUNT = 5;
         public const int DEFAULT_ISOTOPE_COUNT = 3;
+        public const double ISOTOPE_PEAK_CENTERING_RES = 0.1;
         public const double MIN_ISOTOPE_PEAK_ABUNDANCE = 0.01;
 
         public const string QIT = "QIT";
@@ -1701,7 +1702,7 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
 
-        public IEnumerable<int> SelectIsotopePeakIndices(IsotopePeakInfo isotopePeaks, bool useFilter)
+        public IEnumerable<int> SelectMassIndices(IsotopePeakInfo isotopePeaks, bool useFilter)
         {
             if (isotopePeaks == null)
             {
@@ -1709,17 +1710,17 @@ namespace pwiz.Skyline.Model.DocSettings
             }
             else
             {
-                var expectedPeaks = isotopePeaks.ExpectedPeaks;
-                int monoMassIndex = isotopePeaks.MonoMassIndex;
+                int countPeaks = isotopePeaks.CountPeaks;
 
                 if (!useFilter)
-                {                    
-                    for (int i = 0; i < expectedPeaks.Count; i++)
-                        yield return i - monoMassIndex;
+                {
+                    for (int i = 0; i < countPeaks; i++)
+                        yield return isotopePeaks.PeakIndexToMassIndex(i);
                 }
                 else if (PrecursorIsotopes == FullScanPrecursorIsotopes.Count)
                 {
-                    int countPeaks = Math.Min((int)(PrecursorIsotopeFilter ?? 1), expectedPeaks.Count - monoMassIndex);
+                    int maxMassIndex = isotopePeaks.PeakIndexToMassIndex(countPeaks);
+                    countPeaks = Math.Min((int)(PrecursorIsotopeFilter ?? 1), maxMassIndex);
 
                     for (int i = 0; i < countPeaks; i++)
                         yield return i;
@@ -1728,10 +1729,11 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     double minAbundancePercent = (PrecursorIsotopeFilter ?? 0)/100;
                     double baseMassPercent = isotopePeaks.BaseMassPercent;
-                    for (int i = 0; i < expectedPeaks.Count; i++)
+                    for (int i = 0; i < countPeaks; i++)
                     {
-                        if (expectedPeaks[i] / baseMassPercent >= minAbundancePercent)
-                            yield return i - monoMassIndex;
+                        int massIndex = isotopePeaks.PeakIndexToMassIndex(i);
+                        if (isotopePeaks.GetProportionI(massIndex) / baseMassPercent >= minAbundancePercent)
+                            yield return massIndex;
                     }
                 }
             }

@@ -277,6 +277,11 @@ namespace pwiz.SkylineTestA.Results
             var doc = ResultsUtil.DeserializeDocument("MultiLabel.sky", GetType());
             Assert.IsFalse(doc.TransitionGroups.Any(nodeGroup => nodeGroup.IsotopePeaks != null));
 
+            double c13Delta = BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C13) -
+                              BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C);
+            double n15Delta = BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.N15) -
+                              BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.N);
+
             // Verify isotope distributions calculated when MS1 filtering enabled
             var enrichments = IsotopeEnrichments.DEFAULT;
             var docIsotopes = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(fs =>
@@ -290,8 +295,39 @@ namespace pwiz.SkylineTestA.Results
                 var isotopePeaks = nodeGroup.IsotopePeaks;
                 Assert.IsNotNull(isotopePeaks);
                 // The peaks should always includ at least M-1
-                Assert.IsTrue(isotopePeaks.MonoMassIndex > 0);
-                Assert.AreEqual(1.0, isotopePeaks.ExpectedPeaks.Sum(), 0.025);
+                Assert.IsTrue(isotopePeaks.MassIndexToPeakIndex(0) > 0);
+                // Within 2.5% of 100% of the entire isotope envelope
+                Assert.AreEqual(1.0, isotopePeaks.ExpectedProportions.Sum(), 0.025);
+
+                // Check isotope distribution masses
+                for (int i = 1; i < isotopePeaks.CountPeaks; i++)
+                {
+                    int massIndex = isotopePeaks.PeakIndexToMassIndex(i);
+                    double massDelta = GetMassDelta(isotopePeaks, massIndex);
+                    if (nodeGroup.TransitionGroup.LabelType.IsLight)
+                    {
+                        // All positive should be close to 13C - C, and 0 should be the same as the next delta
+                        double expectedDelta = (massIndex > 0 ? c13Delta : GetMassDelta(isotopePeaks, massIndex + 1));
+                        Assert.AreEqual(expectedDelta, massDelta, 0.001);
+                    }
+                    else if (nodeGroup.TransitionGroup.LabelType.Name.Contains("15N"))
+                    {
+                        // All positive shoube be close to 13C, and all negative 15N
+                        double expectedDelta = (massIndex > 0 ? c13Delta : n15Delta);
+                        Assert.AreEqual(expectedDelta, massDelta, 0.0015);
+                    }
+                    else if (massIndex == 0)
+                    {
+                        double expectedDelta = (isotopePeaks.GetProportionI(massIndex - 1) == 0
+                                                    ? GetMassDelta(isotopePeaks, massIndex + 1)
+                                                    : 1.0017);
+                        Assert.AreEqual(expectedDelta, massDelta, 0.001);
+                    }
+                    else
+                    {
+                        Assert.AreEqual(c13Delta, massDelta, 0.001);
+                    }
+                }
             }
             AssertEx.Serializable(docIsotopes, AssertEx.Cloned);
 
@@ -306,8 +342,8 @@ namespace pwiz.SkylineTestA.Results
             {
                 Assert.AreNotSame(tranGroupsOld[i], tranGroupsNew[i]);
                 Assert.AreNotSame(tranGroupsOld[i].IsotopePeaks, tranGroupsNew[i].IsotopePeaks);
-                Assert.IsTrue(tranGroupsOld[i].IsotopePeaks.ExpectedPeaks.Sum() >
-                    tranGroupsNew[i].IsotopePeaks.ExpectedPeaks.Sum());
+                Assert.IsTrue(tranGroupsOld[i].IsotopePeaks.ExpectedProportions.Sum() >
+                    tranGroupsNew[i].IsotopePeaks.ExpectedProportions.Sum());
             }
 
             // Use Min % of base peak and verify variation in transitions used
@@ -325,12 +361,12 @@ namespace pwiz.SkylineTestA.Results
                 maxTran = Math.Max(maxTran, tranGroupsNew[i].Children.Count);
                 foreach (TransitionDocNode nodeTran in tranGroupsNew[i].Children)
                 {
-                    int massIndex = nodeTran.Transition.MassIndex + isotopePeaks.MonoMassIndex;
-                    Assert.IsTrue(0 <= massIndex);
-                    Assert.IsTrue(minPercent1 <= isotopePeaks.ExpectedPeaks[massIndex]*100.0/isotopePeaks.BaseMassPercent);
+                    int massIndex = nodeTran.Transition.MassIndex;
+                    Assert.IsTrue(minPercent1 <= isotopePeaks.GetProportionI(massIndex)*100.0/isotopePeaks.BaseMassPercent);
                 }
             }
             Assert.AreEqual(5, maxTran);
+            AssertEx.Serializable(docIsotopesP1, AssertEx.Cloned);
 
             // Use 10%, and check that 15N modifications all have M-1
             const float minPercent2 = 10;
@@ -344,6 +380,7 @@ namespace pwiz.SkylineTestA.Results
                 else
                     Assert.AreNotEqual(-1, firstChild.Transition.MassIndex);
             }
+            AssertEx.Serializable(docIsotopesP2, AssertEx.Cloned);
 
             // Use lower enrichment of 13C, and verify that this add M-1 for 13C labeled precursors
             var enrichmentsLow13C = enrichments.ChangeEnrichment(new IsotopeEnrichmentItem(BioMassCalc.C13, 0.9));
@@ -361,6 +398,7 @@ namespace pwiz.SkylineTestA.Results
                     Assert.IsTrue(firstChild.Transition.MassIndex < 0);
                 }
             }
+            AssertEx.Serializable(docIsotopesLow13C, AssertEx.Cloned);
 
             // Use 0%, and check that everything has M-1 and lower
             var enrichmentsLow = enrichmentsLow13C.ChangeEnrichment(new IsotopeEnrichmentItem(BioMassCalc.N15, 0.97));
@@ -368,13 +406,19 @@ namespace pwiz.SkylineTestA.Results
                 fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Percent, 0, enrichmentsLow)));
             foreach (var nodeGroup in docIsotopesLowP0.TransitionGroups)
             {
-                Assert.AreEqual(nodeGroup.IsotopePeaks.ExpectedPeaks.Count, nodeGroup.Children.Count);
+                Assert.AreEqual(nodeGroup.IsotopePeaks.CountPeaks, nodeGroup.Children.Count);
                 var firstChild = (TransitionDocNode)nodeGroup.Children[0];
                 if (nodeGroup.TransitionGroup.LabelType.IsLight)
                     Assert.AreEqual(-1, firstChild.Transition.MassIndex);
                 else
                     Assert.IsTrue(-1 > firstChild.Transition.MassIndex);
             }
+            AssertEx.Serializable(docIsotopesLowP0, AssertEx.Cloned);
+        }
+
+        private static double GetMassDelta(IsotopePeakInfo isotopePeaks, int massIndex)
+        {
+            return isotopePeaks.GetMassI(massIndex) - isotopePeaks.GetMassI(massIndex - 1);
         }
     }
 }

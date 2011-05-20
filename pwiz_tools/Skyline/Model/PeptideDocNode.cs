@@ -581,7 +581,8 @@ namespace pwiz.Skyline.Model
                                              transition.CleavageOffset,
                                              0,
                                              transition.Charge);
-                double massH = settings.GetFragmentMass(tranGroup.LabelType, explicitMods, tranNew);
+                double massH = settings.GetFragmentMass(tranGroup.LabelType, explicitMods,
+                    tranNew, nodeGroupMatching.IsotopePeaks);
                 listTrans.Add(new TransitionDocNode(tranNew, losses, massH, null));
             }
             return listTrans.ToArray();

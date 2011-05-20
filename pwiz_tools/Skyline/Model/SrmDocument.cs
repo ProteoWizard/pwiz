@@ -1401,34 +1401,44 @@ namespace pwiz.Skyline.Model
 
             var typedMods = ReadLabelType(reader, IsotopeLabelType.light);
             TransitionGroup group = new TransitionGroup(peptide, precursorCharge, typedMods.LabelType);
+            var children = new TransitionDocNode[0];    // Empty until proven otherwise
             bool autoManageChildren = reader.GetBoolAttribute(ATTR.auto_manage_children, true);
-            var annotations = Annotations.EMPTY;
-            SpectrumHeaderInfo libInfo = null;
-            Results<TransitionGroupChromInfo> results = null;
-            TransitionDocNode[] children = null;
 
             if (reader.IsEmptyElement)
+            {
                 reader.Read();
+
+                return new TransitionGroupDocNode(group,
+                                                  Annotations.EMPTY,
+                                                  Settings,
+                                                  mods,
+                                                  null,
+                                                  null,
+                                                  children,
+                                                  autoManageChildren);
+            }
             else
             {
                 reader.ReadStartElement();
-                annotations = ReadAnnotations(reader);
-                libInfo = ReadTransitionGroupLibInfo(reader);
-                results = ReadTransitionGroupResults(reader);
+                var annotations = ReadAnnotations(reader);
+                var libInfo = ReadTransitionGroupLibInfo(reader);
+                var results = ReadTransitionGroupResults(reader);
 
-                children = ReadTransitionListXml(reader, group, mods);
+                var nodeGroup = new TransitionGroupDocNode(group,
+                                                  annotations,
+                                                  Settings,
+                                                  mods,
+                                                  libInfo,
+                                                  results,
+                                                  children,
+                                                  autoManageChildren);
+
+                children = ReadTransitionListXml(reader, group, mods, nodeGroup.IsotopePeaks);
 
                 reader.ReadEndElement();
-            }
 
-            return new TransitionGroupDocNode(group,
-                                              annotations,
-                                              Settings,
-                                              mods,
-                                              libInfo,
-                                              results,
-                                              children ?? new TransitionDocNode[0],
-                                              autoManageChildren);
+                return (TransitionGroupDocNode) nodeGroup.ChangeChildrenChecked(children);
+            }
         }
 
         private TypedModifications ReadLabelType(XmlReader reader, IsotopeLabelType labelTypeDefault)
@@ -1557,8 +1567,8 @@ namespace pwiz.Skyline.Model
                 Transition transition = new Transition(curGroup, info.IonType,
                     offset, info.MassIndex, info.Charge);
 
-                // No heavy transition support in v0.1
-                double massH = Settings.GetFragmentMass(IsotopeLabelType.light, mods, transition);
+                // No heavy transition support in v0.1, and no full-scan filtering
+                double massH = Settings.GetFragmentMass(IsotopeLabelType.light, mods, transition, null);
 
                 curList.Add(new TransitionDocNode(transition, info.Losses, massH, null));
             }
@@ -1580,12 +1590,14 @@ namespace pwiz.Skyline.Model
         /// <param name="reader">The reader positioned at the first element</param>
         /// <param name="group">A previously read parent <see cref="Identity"/></param>
         /// <param name="mods">Explicit modifications for the peptide</param>
+        /// <param name="isotopePeaks">Isotope peak distribution to use for assigning M+N m/z values</param>
         /// <returns>A new array of <see cref="TransitionDocNode"/></returns>
-        private TransitionDocNode[] ReadTransitionListXml(XmlReader reader, TransitionGroup group, ExplicitMods mods)
+        private TransitionDocNode[] ReadTransitionListXml(XmlReader reader, TransitionGroup group,
+            ExplicitMods mods, IsotopePeakInfo isotopePeaks)
         {
             var list = new List<TransitionDocNode>();
             while (reader.IsStartElement(EL.transition))
-                list.Add(ReadTransitionXml(reader, group, mods));
+                list.Add(ReadTransitionXml(reader, group, mods, isotopePeaks));
             return list.ToArray();
         }
 
@@ -1596,8 +1608,10 @@ namespace pwiz.Skyline.Model
         /// <param name="reader">The reader positioned at a start element of a transition</param>
         /// <param name="group">A previously read parent <see cref="Identity"/></param>
         /// <param name="mods">Explicit mods for the peptide</param>
+        /// <param name="isotopePeaks">Isotope peak distribution to use for assigning M+N m/z values</param>
         /// <returns>A new <see cref="TransitionDocNode"/></returns>
-        private TransitionDocNode ReadTransitionXml(XmlReader reader, TransitionGroup group, ExplicitMods mods)
+        private TransitionDocNode ReadTransitionXml(XmlReader reader, TransitionGroup group,
+            ExplicitMods mods, IsotopePeakInfo isotopePeaks)
         {
             TransitionInfo info = new TransitionInfo();
             info.ReadXml(reader, Settings);
@@ -1612,7 +1626,7 @@ namespace pwiz.Skyline.Model
                 transition = new Transition(group, info.IonType, offset, info.MassIndex, info.Charge);
             }
 
-            double massH = Settings.GetFragmentMass(group.LabelType, mods, transition);
+            double massH = Settings.GetFragmentMass(group.LabelType, mods, transition, isotopePeaks);
 
             return new TransitionDocNode(transition, info.Annotations, info.Losses, massH, info.LibInfo, info.Results);
         }

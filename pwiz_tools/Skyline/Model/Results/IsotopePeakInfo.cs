@@ -29,46 +29,45 @@ namespace pwiz.Skyline.Model.Results
     {
         private readonly double _monoisotopicMassH;
         private readonly int _charge;
-        private ReadOnlyCollection<float> _expectedDistribution;
+        private ReadOnlyCollection<MzProportion> _expectedDistribution;
 
         public IsotopePeakInfo(MassDistribution massDistribution,
                                double monoisotopicMassH,
                                int charge,
                                Func<double, double> calcFilterWindow,
+                               double massResolution,
                                double minimumAbundance)
         {
             _monoisotopicMassH = monoisotopicMassH;
             _charge = charge;
 
-            // Insert M-N peaks, always including M-1
-            var q1FilterValues = new List<double>();
-            double minMz = massDistribution.MinMass, maxMz = massDistribution.MaxMass;
-            double startFilter;
-            do
+            // Get peak center of mass values for the given resolution
+            var q1FilterValues = MassDistribution.NewInstance(massDistribution, massResolution, 0).Keys.ToList();
+            // Find the monoisotopic m/z and make sure it is exactly the expected number
+            double monoMz = SequenceMassCalc.GetMZ(_monoisotopicMassH, _charge);
+            double monoMzDist = monoMz;
+            int monoMassIndex = 0;
+            for (int i = 0; i < q1FilterValues.Count; i++)
             {
-                double peakCenterMz = GetMZI(-(q1FilterValues.Count + 1));
-                q1FilterValues.Insert(0, peakCenterMz);
-
+                double peakCenterMz = q1FilterValues[i];
                 double filterWindow = calcFilterWindow(peakCenterMz);
-                startFilter = peakCenterMz - filterWindow / 2;
+                double startMz = peakCenterMz - filterWindow/2;
+                double endMz = startMz + filterWindow;
+                if (startMz < monoMz && monoMz < endMz)
+                {
+                    monoMzDist = q1FilterValues[i];
+                    q1FilterValues[i] = monoMz;
+                    monoMassIndex = i;
+                    break;
+                }                
             }
-            while (minMz < startFilter);
-
-            int monoMassIndex = q1FilterValues.Count;
-
-            // Then add the non-negative peaks
-            int i = 0;
-            double endFilter;
-            do
+            // Insert a M-1 peak, even if it is not expected in the isotope mass distribution
+            if (monoMassIndex == 0 && q1FilterValues.Count > 1)
             {
-                double peakCenterMz = GetMZI(i++);
-                q1FilterValues.Add(peakCenterMz);
-
-                double filterWindow = calcFilterWindow(peakCenterMz);
-                startFilter = peakCenterMz - filterWindow / 2;
-                endFilter = startFilter + filterWindow;
+                // Use the delta from the original distribution monoMz to the next peak
+                q1FilterValues.Insert(0, monoMz + monoMzDist - q1FilterValues[1]);
+                monoMassIndex++;
             }
-            while (endFilter <= maxMz);
 
             // Use the filtering algorithm that will be used on real data to determine the
             // expected proportions of the mass distribution that will end up filtered into
@@ -87,44 +86,78 @@ namespace pwiz.Skyline.Model.Results
                 startIndex = monoMassIndex - 1;
             int endIndex = expectedSpectrum.Intensities.LastIndexOf(inten => inten >= minimumAbundance) + 1;
             int countPeaks = endIndex - startIndex;
-            var expectedPeaks = new float[countPeaks];
-            for (i = 0; i < countPeaks; i++)
+            var expectedProportions = new float[countPeaks];
+            for (int i = 0; i < countPeaks; i++)
             {
-                expectedPeaks[i] = (float) expectedSpectrum.Intensities[i + startIndex];
+                expectedProportions[i] = (float) expectedSpectrum.Intensities[i + startIndex];
             }
-
-            ExpectedPeaks = expectedPeaks;
 
             // TODO: Can this be discarded?
             // MassDistribution = massDistribution;
 
-            // Find the base peak
             MonoMassIndex = monoMassIndex - startIndex;
-            for (i = 1; i < countPeaks; i++)
+
+            // Find the base peak and fill in the masses and proportions
+            var expectedPeaks = new List<MzProportion>();
+            for (int i = 0; i < countPeaks; i++)
             {
-                if (expectedPeaks[i] > expectedPeaks[BaseMassIndex])
+                float expectedProportion = expectedProportions[i];
+                expectedPeaks.Add(new MzProportion(q1FilterValues[i + startIndex], expectedProportion));
+                if (expectedProportion > expectedProportions[BaseMassIndex])
                     BaseMassIndex = i;
             }
+            ExpectedPeaks = expectedPeaks;
         }
 
-        public int MonoMassIndex { get; private set; }
+        public int CountPeaks { get { return _expectedDistribution.Count; } }
 
-        public int BaseMassIndex { get; private set; }
+        private int MonoMassIndex { get; set; }
 
-        public IList<float> ExpectedPeaks
+        private int BaseMassIndex { get; set; }
+
+        private IList<MzProportion> ExpectedPeaks
         {
             get { return _expectedDistribution; }
-            private set { _expectedDistribution = MakeReadOnly(value); }
+            set { _expectedDistribution = MakeReadOnly(value); }
+        }
+
+        public int MassIndexToPeakIndex(int massIndex)
+        {
+            return massIndex + MonoMassIndex;
+        }
+
+        public int PeakIndexToMassIndex(int index)
+        {
+            return index - MonoMassIndex;
+        }
+
+        public IEnumerable<float> ExpectedProportions
+        {
+            get { return _expectedDistribution.Select(mzP => mzP.Proportion); }
         }
 
         public float BaseMassPercent
         {
-            get { return ExpectedPeaks[BaseMassIndex]; }
+            get { return ExpectedPeaks[BaseMassIndex].Proportion; }
         }
 
-        public double GetMZI(int index)
+        public float GetProportionI(int massIndex)
         {
-            return SequenceMassCalc.GetMZI(_monoisotopicMassH, index, _charge);
+            return ExpectedPeaks[MassIndexToPeakIndex(massIndex)].Proportion;
+        }
+
+        public double GetMZI(int massIndex)
+        {
+            return ExpectedPeaks[MassIndexToPeakIndex(massIndex)].Mz;
+        }
+
+        public double GetMassI(int massIndex)
+        {
+            // Return the original monoisotopic mass + H, if requested to maintain an exact match.
+            if (massIndex == 0)
+                return _monoisotopicMassH;
+            // Otherwize use the charge to convert from the peak center m/z values
+            return SequenceMassCalc.GetMH(ExpectedPeaks[MassIndexToPeakIndex(massIndex)].Mz, _charge);
         }
 
         #region object overrides
@@ -162,5 +195,17 @@ namespace pwiz.Skyline.Model.Results
         }
 
         #endregion
+
+        private struct MzProportion
+        {
+            public MzProportion(double mz, float proportion) : this()
+            {
+                Mz = mz;
+                Proportion = proportion;
+            }
+
+            public double Mz { get; private set; }
+            public float Proportion { get; private set; }
+        }
     }
 }

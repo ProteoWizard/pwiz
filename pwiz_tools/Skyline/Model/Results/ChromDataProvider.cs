@@ -262,7 +262,10 @@ namespace pwiz.Skyline.Model.Results
                     if (!filter.EnabledMsMs && dataFile.GetMsLevel(i) != 1)
                         continue;
 
-                    var dataSpectrum = dataFile.GetSpectrum(i);                    
+                    var dataSpectrum = dataFile.GetSpectrum(i);
+                    if (dataSpectrum.Mzs.Length == 0)
+                        continue;
+
                     double? rt = dataSpectrum.RetentionTime;
                     if (!rt.HasValue)
                         continue;
@@ -522,8 +525,8 @@ namespace pwiz.Skyline.Model.Results
             else
             {
                 // Otherwise, return all possible isotope peaks
-                for (int i = 0; i < isotopePeaks.ExpectedPeaks.Count; i++)
-                    yield return isotopePeaks.GetMZI(i - isotopePeaks.MonoMassIndex);
+                for (int i = 0; i < isotopePeaks.CountPeaks; i++)
+                    yield return isotopePeaks.GetMZI(isotopePeaks.PeakIndexToMassIndex(i));
             }
         }
 
@@ -553,7 +556,7 @@ namespace pwiz.Skyline.Model.Results
 
         public IEnumerable<FilteredSrmSpectrum> SrmSpectraFromMs1Scan(double? time,
             double[] mzArray, double[] intensityArray)
-        {
+                {
             if (!EnabledMs || !time.HasValue || mzArray == null || intensityArray == null)
                 yield break;
 
@@ -563,8 +566,8 @@ namespace pwiz.Skyline.Model.Results
                 var filteredSrmSpectrum = filterPair.FilterQ1Spectrum(mzArray, intensityArray);
                 if (filteredSrmSpectrum != null)
                     yield return filteredSrmSpectrum;
+                }
             }
-        }
 
         private IEnumerable<SpectrumFilterPair> FindFilterPairs(double isolationTargetMz, double? isolationWidth,
             FullScanPrecursorFilterType precursorFilterType)

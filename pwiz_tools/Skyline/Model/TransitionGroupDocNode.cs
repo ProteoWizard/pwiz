@@ -441,6 +441,7 @@ namespace pwiz.Skyline.Model
                 var massDist = calc.GetMzDistribution(seq, charge, fullScan.IsotopeAbundances);
                 isotopePeaks = new IsotopePeakInfo(massDist, massH, charge,
                     settings.TransitionSettings.FullScan.GetPrecursorFilterWindow,
+                    TransitionFullScan.ISOTOPE_PEAK_CENTERING_RES,
                     TransitionFullScan.MIN_ISOTOPE_PEAK_ABUNDANCE);
             }
             return mz;
@@ -514,7 +515,7 @@ namespace pwiz.Skyline.Model
                             var tran = nodeTranResult.Transition;
                             var annotations = nodeTranResult.Annotations;
                             var losses = nodeTranResult.Losses;
-                            double massH = settingsNew.GetFragmentMass(TransitionGroup.LabelType, mods, tran);
+                            double massH = settingsNew.GetFragmentMass(TransitionGroup.LabelType, mods, tran, isotopePeaks);
                             var info = TransitionDocNode.GetLibInfo(tran, Transition.CalcMass(massH, losses), transitionRanks);
                             var results = nodeTranResult.Results;
                             nodeTranResult = new TransitionDocNode(tran, annotations, losses, massH, info, results);
@@ -583,7 +584,7 @@ namespace pwiz.Skyline.Model
                             losses = losses.ChangeMassType(massType);
                         var annotations = nodeTransition.Annotations;   // Don't lose annotations
                         var results = nodeTransition.Results;           // Results changes happen later
-                        double massH = settingsNew.GetFragmentMass(TransitionGroup.LabelType, mods, tran);
+                        double massH = settingsNew.GetFragmentMass(TransitionGroup.LabelType, mods, tran, isotopePeaks);
                         var info = TransitionDocNode.GetLibInfo(tran, Transition.CalcMass(massH, losses), transitionRanks);
                         var nodeNew = new TransitionDocNode(tran, annotations, losses, massH, info, results);
 

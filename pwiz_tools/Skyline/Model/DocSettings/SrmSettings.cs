@@ -228,14 +228,10 @@ namespace pwiz.Skyline.Model.DocSettings
             return GetMassCalc(labelType, _fragmentMassCalcs);
         }
 
-        public double GetFragmentMass(Transition transition, ExplicitMods mods)
+        public double GetFragmentMass(IsotopeLabelType labelType, ExplicitMods mods,
+                                      Transition transition, IsotopePeakInfo isotopePeaks)
         {
-            return GetFragmentMass(IsotopeLabelType.light, mods, transition);
-        }
-
-        public double GetFragmentMass(IsotopeLabelType labelType, ExplicitMods mods, Transition transition)
-        {
-            return GetFragmentCalc(labelType, mods).GetFragmentMass(transition);
+            return GetFragmentCalc(labelType, mods).GetFragmentMass(transition, isotopePeaks);
         }
 
         public string GetModifiedSequence(string seq, IsotopeLabelType labelType, ExplicitMods mods)
@@ -968,7 +964,6 @@ namespace pwiz.Skyline.Model.DocSettings
     {
         MassType MassType { get;}
         double GetPrecursorMass(string seq);
-        double GetPrecursorMass(string seq, int massIndex);
         bool IsModified(string seq);
         string GetModifiedSequence(string seq, bool formatNarrow);
         MassDistribution GetMzDistribution(string seq, int charge, IsotopeAbundances abundances);
@@ -978,7 +973,7 @@ namespace pwiz.Skyline.Model.DocSettings
     {
         MassType MassType { get; }
         double[,] GetFragmentIonMasses(string seq);
-        double GetFragmentMass(Transition transition);
+        double GetFragmentMass(Transition transition, IsotopePeakInfo isotopePeaks);
         double GetPrecursorFragmentMass(string seq);
     }
 
@@ -1202,6 +1197,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
             // Any change in modifications or precursor mass-type forces a recalc
             // of precursor m/z values, as
+            bool enrichmentsChanged = !Equals(newTran.FullScan.IsotopeEnrichments, oldTran.FullScan.IsotopeEnrichments);
             DiffTransitionGroupProps = diffStaticMods || diffHeavyMods ||
                                  !newTran.Prediction.PrecursorMassType.Equals(oldTran.Prediction.PrecursorMassType) ||
                                  // Or changes to MS1 filtering that change the expected isotope distribution
@@ -1209,7 +1205,7 @@ namespace pwiz.Skyline.Model.DocSettings
                                  !Equals(newTran.FullScan.PrecursorRes, oldTran.FullScan.PrecursorRes) ||
                                  !Equals(newTran.FullScan.PrecursorResMz, oldTran.FullScan.PrecursorResMz) ||
                                  // Or isotope enrichments
-                                 !Equals(newTran.FullScan.IsotopeEnrichments, oldTran.FullScan.IsotopeEnrichments)
+                                 enrichmentsChanged
                                  ;
 
             if (!DiffTransitionGroupProps && libraryChange)
@@ -1235,8 +1231,7 @@ namespace pwiz.Skyline.Model.DocSettings
                               // MS1 filtering changed select peaks
                               newTran.FullScan.PrecursorIsotopes != oldTran.FullScan.PrecursorIsotopes ||
                               newTran.FullScan.PrecursorIsotopeFilter != oldTran.FullScan.PrecursorIsotopeFilter ||
-                              (newTran.FullScan.PrecursorIsotopes == FullScanPrecursorIsotopes.Percent &&
-                              !ReferenceEquals(newTran.FullScan.IsotopeEnrichments, oldTran.FullScan.IsotopeEnrichments))
+                              (newTran.FullScan.PrecursorIsotopes != FullScanPrecursorIsotopes.None && enrichmentsChanged)
                               ;
 
             // Any change in modifications or fragment mass-type forces a recalc
@@ -1247,10 +1242,8 @@ namespace pwiz.Skyline.Model.DocSettings
                                  // Any change in transitions can change transition rankings
                                  // if a library is in use.
                                  (newLib.HasLibraries && DiffTransitions) ||
-                                 // If full-scan MS1 filtering is enabled, then changing precursor mass type
-                                 // can change precursor transition m/z values
-                                 (newTran.FullScan.PrecursorIsotopes != FullScanPrecursorIsotopes.None  &&
-                                    !newTran.Prediction.PrecursorMassType.Equals(oldTran.Prediction.PrecursorMassType))
+                                 // If using MS1 isotopes, an enrichment change can change transition masses
+                                 (newTran.FullScan.PrecursorIsotopes != FullScanPrecursorIsotopes.None && enrichmentsChanged)
                                  ;
 
             // If the results changed, then update the results information which has changed
