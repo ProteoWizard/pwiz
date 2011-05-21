@@ -133,6 +133,8 @@ namespace pwiz.Skyline
             this.toolStripSeparatorReplicates = new System.Windows.Forms.ToolStripSeparator();
             this.previousReplicateMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.nextReplicateMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator44 = new System.Windows.Forms.ToolStripSeparator();
+            this.closeAllChromatogramsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.transitionsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.allTranMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.singleTranMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -334,8 +336,6 @@ namespace pwiz.Skyline
             this.peptideCvsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator28 = new System.Windows.Forms.ToolStripSeparator();
             this.areaPropsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripSeparator44 = new System.Windows.Forms.ToolStripSeparator();
-            this.closeAllChromatogramsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuMain.SuspendLayout();
             this.statusStrip.SuspendLayout();
             this.contextMenuTreeNode.SuspendLayout();
@@ -1208,6 +1208,18 @@ namespace pwiz.Skyline
             this.nextReplicateMenuItem.Size = new System.Drawing.Size(219, 22);
             this.nextReplicateMenuItem.Text = "Ne&xt Replicate";
             this.nextReplicateMenuItem.Click += new System.EventHandler(this.nextReplicateMenuItem_Click);
+            // 
+            // toolStripSeparator44
+            // 
+            this.toolStripSeparator44.Name = "toolStripSeparator44";
+            this.toolStripSeparator44.Size = new System.Drawing.Size(216, 6);
+            // 
+            // closeAllChromatogramsMenuItem
+            // 
+            this.closeAllChromatogramsMenuItem.Name = "closeAllChromatogramsMenuItem";
+            this.closeAllChromatogramsMenuItem.Size = new System.Drawing.Size(219, 22);
+            this.closeAllChromatogramsMenuItem.Text = "Close &All";
+            this.closeAllChromatogramsMenuItem.Click += new System.EventHandler(this.closeAllChromatogramsMenuItem_Click);
             // 
             // transitionsMenuItem
             // 
@@ -2501,7 +2513,7 @@ namespace pwiz.Skyline
             this.zoomOutRTContextMenuItem,
             this.toolStripSeparator25});
             this.contextMenuRetentionTimes.Name = "contextMenuRetentionTimes";
-            this.contextMenuRetentionTimes.Size = new System.Drawing.Size(178, 342);
+            this.contextMenuRetentionTimes.Size = new System.Drawing.Size(178, 320);
             // 
             // timeGraphContextMenuItem
             // 
@@ -2585,9 +2597,9 @@ namespace pwiz.Skyline
             this.fwbRTValueContextMenuItem.Text = "FWB";
             this.fwbRTValueContextMenuItem.Click += new System.EventHandler(this.fwbRTValueContextMenuItem_Click);
             // 
-            // showRTLegendToolStripMenuItem
+            // showRTLegendContextMenuItem
             // 
-            this.showRTLegendContextMenuItem.Name = "showRTLegendToolStripMenuItem";
+            this.showRTLegendContextMenuItem.Name = "showRTLegendContextMenuItem";
             this.showRTLegendContextMenuItem.Size = new System.Drawing.Size(177, 22);
             this.showRTLegendContextMenuItem.Text = "Legend";
             this.showRTLegendContextMenuItem.Click += new System.EventHandler(this.showRTLegendContextMenuItem_Click);
@@ -2849,9 +2861,9 @@ namespace pwiz.Skyline
             this.areaNormalizeNoneContextMenuItem.Text = "None";
             this.areaNormalizeNoneContextMenuItem.Click += new System.EventHandler(this.areaNormalizeNoneContextMenuItem_Click);
             // 
-            // showPeakAreaLegendToolStripMenuItem
+            // showPeakAreaLegendContextMenuItem
             // 
-            this.showPeakAreaLegendContextMenuItem.Name = "showPeakAreaLegendToolStripMenuItem";
+            this.showPeakAreaLegendContextMenuItem.Name = "showPeakAreaLegendContextMenuItem";
             this.showPeakAreaLegendContextMenuItem.Size = new System.Drawing.Size(170, 22);
             this.showPeakAreaLegendContextMenuItem.Text = "Legend";
             this.showPeakAreaLegendContextMenuItem.Click += new System.EventHandler(this.showPeakAreaLegendContextMenuItem_Click);
@@ -2898,18 +2910,6 @@ namespace pwiz.Skyline
             this.areaPropsContextMenuItem.Size = new System.Drawing.Size(170, 22);
             this.areaPropsContextMenuItem.Text = "Properties...";
             this.areaPropsContextMenuItem.Click += new System.EventHandler(this.areaPropsContextMenuItem_Click);
-            // 
-            // toolStripSeparator44
-            // 
-            this.toolStripSeparator44.Name = "toolStripSeparator44";
-            this.toolStripSeparator44.Size = new System.Drawing.Size(216, 6);
-            // 
-            // closeAllChromatogramsMenuItem
-            // 
-            this.closeAllChromatogramsMenuItem.Name = "closeAllChromatogramsMenuItem";
-            this.closeAllChromatogramsMenuItem.Size = new System.Drawing.Size(219, 22);
-            this.closeAllChromatogramsMenuItem.Text = "Close &All";
-            this.closeAllChromatogramsMenuItem.Click += new System.EventHandler(this.closeAllChromatogramsMenuItem_Click);
             // 
             // SkylineWindow
             // 

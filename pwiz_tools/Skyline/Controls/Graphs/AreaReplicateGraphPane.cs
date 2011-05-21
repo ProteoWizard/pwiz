@@ -183,8 +183,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 normalizeData = AreaNormalizeToData.none;
 
             // Calculate graph data points
+            // IsLibraryVisible depends on this CanShowLibrary
             CanShowLibrary = parentGroupNode != null && parentGroupNode.HasLibInfo &&
-               AreaGraphController.AreaView != AreaNormalizeToView.area_ratio_view;  // IsLibraryVisible depends on this
+               AreaGraphController.AreaView != AreaNormalizeToView.area_ratio_view &&
+               displayType != DisplayTypeChrom.total &&
+               !(optimizationPresent && displayType == DisplayTypeChrom.single);
 
             GraphData graphData = new AreaGraphData(document, parentNode, displayType, ratioIndex, normalizeData, IsLibraryVisible);
 
@@ -210,7 +213,8 @@ namespace pwiz.Skyline.Controls.Graphs
             // where each dot product annotation (if showing) should be placed
             double[] sumAreas = new double[results.Chromatograms.Count];
 
-            int iColor = 0;
+            int iColor = 0, iCharge = -1, charge = -1;
+            int countLabelTypes = document.Settings.PeptideSettings.Modifications.CountLabelTypes;
             for (int i = 0; i < countNodes; i++)
             {
                 var docNode = graphData.DocNodes[i];
@@ -221,7 +225,13 @@ namespace pwiz.Skyline.Controls.Graphs
                     int step = iStep - numSteps;
                     var pointPairList = pointPairLists[iStep];
                     Color color;
-                    if (parentNode is PeptideDocNode || displayType == DisplayTypeChrom.total)
+                    var nodeGroup = docNode as TransitionGroupDocNode;
+                    if (parentNode is PeptideDocNode)
+                    {
+                        int iColorGroup = GetColorIndex(nodeGroup, countLabelTypes, ref charge, ref iCharge);
+                        color = COLORS_GROUPS[iColorGroup % COLORS_GROUPS.Length];
+                    }
+                    else if (displayType == DisplayTypeChrom.total)
                     {
                         color = COLORS_GROUPS[iColor%COLORS_GROUPS.Length];
                     }
@@ -237,7 +247,6 @@ namespace pwiz.Skyline.Controls.Graphs
                     // If showing ratios, do not add the standard type to the graph,
                     // since it will always be empty, but make sure the colors still
                     // correspond with the other graphs.
-                    var nodeGroup = docNode as TransitionGroupDocNode;
                     if (nodeGroup != null && ratioIndex != -1)
                     {
                         var labelType = nodeGroup.TransitionGroup.LabelType;
@@ -717,11 +726,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 // Finds the maximum bar height from the list of bar heights
                 if (listTotals.Count != 0)
                 {
+                    double firstColumnHeight = listTotals[0];
+                    // If the library column is visible, remove it before getting the max height
+                    if (_isLibraryVisible)
+                        listTotals.RemoveAt(0);
                     double maxBarHeight = listTotals.Aggregate(Math.Max);
 
                     // Normalizes each non-missing point by max bar height
                     if (_isLibraryVisible)
-                        NormalizeTo(maxBarHeight, listTotals[0]);
+                        NormalizeTo(maxBarHeight, firstColumnHeight);
                     else
                         NormalizeTo(maxBarHeight, 0);
                 }

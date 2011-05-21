@@ -460,16 +460,17 @@ namespace pwiz.Skyline.Controls.Graphs
                     // If displaying multiple groups or the total of a single group
                     if (nodeGroups.Length > 1 || DisplayType == DisplayTypeChrom.total)
                     {
-                        DisplayTotals(chromatograms, mzMatchTolerance,
-                                      listChromGraphs, ref bestStartTime, ref bestEndTime);
+                        int countLabelTypes = settings.PeptideSettings.Modifications.CountLabelTypes;
+                        DisplayTotals(chromatograms, mzMatchTolerance, listChromGraphs,
+                            countLabelTypes, ref bestStartTime, ref bestEndTime);
                     }
                         // Single group with optimization data, not a transition selected,
                         // and single display mode
                     else if (chromatograms.OptimizationFunction != null &&
                              nodeTranTree == null && DisplayType == DisplayTypeChrom.single)
                     {
-                        DisplayOptimizationTotals(chromatograms, mzMatchTolerance,
-                                                  listChromGraphs, ref bestStartTime, ref bestEndTime);
+                        DisplayOptimizationTotals(chromatograms, mzMatchTolerance, listChromGraphs,
+                            ref bestStartTime, ref bestEndTime);
                     }
                     else
                     {
@@ -753,8 +754,11 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private void DisplayOptimizationTotals(ChromatogramSet chromatograms, float mzMatchTolerance,
-                                               ICollection<ChromGraphItem> listChromGraphs, ref double bestStartTime, ref double bestEndTime)
+        private void DisplayOptimizationTotals(ChromatogramSet chromatograms,
+                                               float mzMatchTolerance,
+                                               ICollection<ChromGraphItem> listChromGraphs,
+                                               ref double bestStartTime,
+                                               ref double bestEndTime)
         {
             // As with display of transitions, only the most intense peak for
             // each peak group will be shown, but each peak group is shown
@@ -991,8 +995,12 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private void DisplayTotals(ChromatogramSet chromatograms, float mzMatchTolerance,
-                                   ICollection<ChromGraphItem> listChromGraphs, ref double bestStartTime, ref double bestEndTime)
+        private void DisplayTotals(ChromatogramSet chromatograms,
+                                   float mzMatchTolerance,
+                                   ICollection<ChromGraphItem> listChromGraphs,
+                                   int countLabelTypes,
+                                   ref double bestStartTime,
+                                   ref double bestEndTime)
         {
             // Turn on curve overlap, so that the retention time labels
             // for smaller peaks of one group will show up beneath larger
@@ -1002,7 +1010,7 @@ namespace pwiz.Skyline.Controls.Graphs
             // Construct and add graph items for all relevant transition groups.
             float fontSize = FontSize;
             int lineWidth = LineWidth;
-            int iColor = 0;
+            int iCharge = -1, charge = -1;
             var chromGroupInfos = ChromGroupInfos;
             for (int i = 0; i < _nodeGroups.Length; i++)
             {
@@ -1057,7 +1065,9 @@ namespace pwiz.Skyline.Controls.Graphs
                     // Apply any transform the user has chosen
                     infoPrimary.Transform(Transform);
 
-                    Color color = COLORS_GROUPS[iColor++ % COLORS_GROUPS.Length];
+                    int iColor = GetColorIndex(nodeGroup, countLabelTypes, ref charge, ref iCharge);
+                    Color color = COLORS_GROUPS[iColor % COLORS_GROUPS.Length];
+
                     bool[] annotateAll = new bool[infoPrimary.NumPeaks];
                     for (int j = 0; j < annotateAll.Length; j++)
                     {
@@ -1804,6 +1814,20 @@ namespace pwiz.Skyline.Controls.Graphs
 //                Color.PaleGreen,
 //                Color.Pink,
 //            };
+
+        public static int GetColorIndex(TransitionGroupDocNode nodeGroup, int countLabelTypes, ref int charge, ref int iCharge)
+        {
+            // Make sure colors stay somewhat consistent among charge states.
+            // The same label type should always have the same color, with the
+            // first charge state in the peptide matching the peptide label type
+            // modification font colors.
+            if (charge != nodeGroup.TransitionGroup.PrecursorCharge)
+            {
+                charge = nodeGroup.TransitionGroup.PrecursorCharge;
+                iCharge++;
+            }
+            return iCharge * countLabelTypes + nodeGroup.TransitionGroup.LabelType.SortOrder;
+        }
     }
 
     internal sealed class PeakBoundsDragInfo

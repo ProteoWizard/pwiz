@@ -110,7 +110,8 @@ namespace pwiz.Skyline.Controls.Graphs
             int selectedReplicateIndex = SelectedIndex;
             double minRetentionTime = double.MaxValue;
             double maxRetentionTime = -double.MaxValue;
-            int iColor = 0;
+            int iColor = 0, iCharge = -1, charge = -1;
+            int countLabelTypes = document.Settings.PeptideSettings.Modifications.CountLabelTypes;
             for (int i = 0; i < graphData.DocNodes.Count; i++)
             {
                 var docNode = graphData.DocNodes[i];
@@ -121,7 +122,13 @@ namespace pwiz.Skyline.Controls.Graphs
                     int step = iStep - numSteps;
                     var pointPairList = pointPairLists[iStep];
                     Color color;
-                    if (parentNode is PeptideDocNode || displayType == DisplayTypeChrom.total)
+                    var nodeGroup = docNode as TransitionGroupDocNode;
+                    if (parentNode is PeptideDocNode)
+                    {
+                        int iColorGroup = GetColorIndex(nodeGroup, countLabelTypes, ref charge, ref iCharge);
+                        color = COLORS_GROUPS[iColorGroup % COLORS_GROUPS.Length];
+                    }
+                    else if (displayType == DisplayTypeChrom.total)
                     {
                         color = COLORS_GROUPS[iColor%COLORS_GROUPS.Length];
                     }

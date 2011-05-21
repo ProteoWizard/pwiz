@@ -896,6 +896,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public int MaxVariableMods { get; private set; }
         public int MaxNeutralLosses { get; private set; }
+        public int CountLabelTypes { get { return _modifications.Count; } }
 
         public IList<IsotopeLabelType> InternalStandardTypes
         {
