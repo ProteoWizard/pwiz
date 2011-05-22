@@ -61,6 +61,8 @@
             // 
             // comboReplicateNames
             // 
+            this.comboReplicateNames.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.comboReplicateNames.DisplayMember = "Name";
             this.comboReplicateNames.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboReplicateNames.Enabled = false;
@@ -128,7 +130,6 @@
             this.Controls.Add(this.comboReplicateNames);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "SchedulingOptionsDlg";

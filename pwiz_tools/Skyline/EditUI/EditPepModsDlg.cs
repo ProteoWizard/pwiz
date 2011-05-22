@@ -350,6 +350,9 @@ namespace pwiz.Skyline.EditUI
             {
                 combo.Items.Clear();
                 listItems.ForEach(item => combo.Items.Add(item));
+                // If not just the blank, add and edit items, make sure the drop-down is wid enough
+                if (listItems.Count > 3)
+                    ComboHelper.AutoSizeDropDown(combo);
             }
             if (select)
                 combo.SelectedIndex = iSelected;

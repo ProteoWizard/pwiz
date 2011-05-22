@@ -22,6 +22,7 @@ using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI
 {
@@ -39,6 +40,8 @@ namespace pwiz.Skyline.FileUI
         {
             InitializeComponent();
 
+            Icon = Resources.Skyline;
+
             _document = document;
 
             foreach (var chromatogramSet in document.Settings.MeasuredResults.Chromatograms)
@@ -46,6 +49,7 @@ namespace pwiz.Skyline.FileUI
                 comboReplicateNames.Items.Add(chromatogramSet);
             }
             comboReplicateNames.SelectedIndex = comboReplicateNames.Items.Count - 1;
+            ComboHelper.AutoSizeDropDown(comboReplicateNames);
 
             radioSingleDataSet.Checked = !Settings.Default.ScheduleAvergeRT;
         }
