@@ -299,7 +299,13 @@ namespace pwiz.SkylineTestA.Results
                 // Within 2.5% of 100% of the entire isotope envelope
                 Assert.AreEqual(1.0, isotopePeaks.ExpectedProportions.Sum(), 0.025);
 
-                // Check isotope distribution masses
+                // Precursor mass and m/z values are expected to match exactly
+                Assert.AreEqual(nodeGroup.PrecursorMz, nodeGroup.IsotopePeaks.GetMZI(0));
+                Assert.AreEqual(nodeGroup.PrecursorMz,
+                                SequenceMassCalc.GetMZ(nodeGroup.IsotopePeaks.GetMassI(0),
+                                                       nodeGroup.TransitionGroup.PrecursorCharge));
+
+                // Check isotope distribution masses);));))
                 for (int i = 1; i < isotopePeaks.CountPeaks; i++)
                 {
                     int massIndex = isotopePeaks.PeakIndexToMassIndex(i);
