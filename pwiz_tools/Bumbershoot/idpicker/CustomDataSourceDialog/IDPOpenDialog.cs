@@ -790,7 +790,8 @@ namespace CustomDataSourceDialog
 
         private void BreadCrumbPanel_Resize(object sender, EventArgs e)
         {
-            BreadCrumbs.CheckBreadcrumbSize();
+            if (BreadCrumbs != null)
+                BreadCrumbs.CheckBreadcrumbSize();
         }
 
         private void AddNode_Click(object sender, EventArgs e)

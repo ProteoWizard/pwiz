@@ -88,9 +88,6 @@ namespace IDPicker
         {
             InitializeComponent();
 
-            Properties.Settings.Default.Reset();
-            Properties.Settings.Default.Save();
-
             this.args = args;
 
             manager = new Manager(dockPanel)
