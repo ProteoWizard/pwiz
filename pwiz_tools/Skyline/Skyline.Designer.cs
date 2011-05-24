@@ -2642,21 +2642,21 @@ namespace pwiz.Skyline
             // averageReplicatesContextMenuItem
             // 
             this.averageReplicatesContextMenuItem.Name = "averageReplicatesContextMenuItem";
-            this.averageReplicatesContextMenuItem.Size = new System.Drawing.Size(106, 22);
+            this.averageReplicatesContextMenuItem.Size = new System.Drawing.Size(152, 22);
             this.averageReplicatesContextMenuItem.Text = "All";
             this.averageReplicatesContextMenuItem.Click += new System.EventHandler(this.averageReplicatesContextMenuItem_Click);
             // 
             // singleReplicateRTContextMenuItem
             // 
             this.singleReplicateRTContextMenuItem.Name = "singleReplicateRTContextMenuItem";
-            this.singleReplicateRTContextMenuItem.Size = new System.Drawing.Size(106, 22);
+            this.singleReplicateRTContextMenuItem.Size = new System.Drawing.Size(152, 22);
             this.singleReplicateRTContextMenuItem.Text = "Single";
             this.singleReplicateRTContextMenuItem.Click += new System.EventHandler(this.singleReplicateRTContextMenuItem_Click);
             // 
             // bestReplicateRTContextMenuItem
             // 
             this.bestReplicateRTContextMenuItem.Name = "bestReplicateRTContextMenuItem";
-            this.bestReplicateRTContextMenuItem.Size = new System.Drawing.Size(106, 22);
+            this.bestReplicateRTContextMenuItem.Size = new System.Drawing.Size(152, 22);
             this.bestReplicateRTContextMenuItem.Text = "Best";
             this.bestReplicateRTContextMenuItem.Click += new System.EventHandler(this.bestReplicateRTContextMenuItem_Click);
             // 
@@ -2741,7 +2741,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator28,
             this.areaPropsContextMenuItem});
             this.contextMenuPeakAreas.Name = "contextMenuStrip1";
-            this.contextMenuPeakAreas.Size = new System.Drawing.Size(171, 230);
+            this.contextMenuPeakAreas.Size = new System.Drawing.Size(171, 252);
             // 
             // areaGraphContextMenuItem
             // 

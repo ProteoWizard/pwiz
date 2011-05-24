@@ -47,7 +47,11 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected override GraphData CreateGraphData(SrmDocument document, TransitionGroupDocNode selectedGroup, DisplayTypeChrom displayType)
         {
-            return new RTGraphData(document, selectedGroup, displayType);
+            int? result = null;
+            if (RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single)
+                result = GraphSummary.ResultsIndex;
+
+            return new RTGraphData(document, selectedGroup, result, displayType);
         }
 
         protected override void UpdateAxes()
@@ -70,8 +74,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public RTGraphData(SrmDocument document,
                                TransitionGroupDocNode selectedGroup,
+                               int? result,
                                DisplayTypeChrom displayType)
-                : base(document, selectedGroup, displayType)
+                : base(document, selectedGroup, result, displayType)
             {
             }
 
@@ -86,10 +91,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 return RTPointPairMissing(iGroup);
             }
 
-            protected override PointPair CreatePointPair(int iGroup, TransitionGroupDocNode nodeGroup, ref double maxY, ref double minY)
+            protected override PointPair CreatePointPair(int iGroup, TransitionGroupDocNode nodeGroup, ref double maxY, ref double minY, int? resultIndex)
             {
                 if (RTValue != RTPeptideValue.All)
-                    return base.CreatePointPair(iGroup, nodeGroup, ref maxY, ref minY);
+                    return base.CreatePointPair(iGroup, nodeGroup, ref maxY, ref minY, resultIndex);
 
                 if (!nodeGroup.HasResults)
                     return RTPointPairMissing(iGroup);
@@ -98,7 +103,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var listStarts = new List<double>();
                 var listEnds = new List<double>();
                 var listFwhms = new List<double>();
-                foreach (var chromInfo in nodeGroup.ChromInfos)
+                foreach (var chromInfo in nodeGroup.GetChromInfos(resultIndex))
                 {
                     if (chromInfo.OptimizationStep == 0)
                     {
@@ -132,10 +137,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 return null;
             }
 
-            protected override PointPair CreatePointPair(int iGroup, TransitionDocNode nodeTran, ref double maxY, ref double minY)
+            protected override PointPair CreatePointPair(int iGroup, TransitionDocNode nodeTran, ref double maxY, ref double minY, int? resultIndex)
             {
                 if (RTValue != RTPeptideValue.All)
-                    return base.CreatePointPair(iGroup, nodeTran, ref maxY, ref minY);
+                    return base.CreatePointPair(iGroup, nodeTran, ref maxY, ref minY, resultIndex);
 
                 if (!nodeTran.HasResults)
                     return RTPointPairMissing(iGroup);
@@ -144,7 +149,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 var listStarts = new List<double>();
                 var listEnds = new List<double>();
                 var listFwhms = new List<double>();
-                foreach (var chromInfo in nodeTran.ChromInfos)
+                foreach (var chromInfo in nodeTran.GetChromInfos(resultIndex))
                 {
                     if (chromInfo.OptimizationStep == 0 && !chromInfo.IsEmpty)
                     {

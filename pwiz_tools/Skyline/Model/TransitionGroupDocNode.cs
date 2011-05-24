@@ -145,6 +145,16 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public IEnumerable<TransitionGroupChromInfo> GetChromInfos(int? i)
+        {
+            if (!i.HasValue)
+                return ChromInfos;
+            var chromInfos = GetSafeChromInfo(i.Value);
+            if (chromInfos != null)
+                return chromInfos;
+            return new TransitionGroupChromInfo[0];
+        }
+
         public ChromInfoList<TransitionGroupChromInfo> GetSafeChromInfo(int i)
         {
             return (HasResults && Results.Count > i ? Results[i] : null);

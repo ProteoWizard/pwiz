@@ -31,7 +31,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected override GraphData CreateGraphData(SrmDocument document, TransitionGroupDocNode selectedGroup, DisplayTypeChrom displayType)
         {
-            return new AreaGraphData(document, selectedGroup, displayType);
+            int? result = null;
+            if (RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single)
+                result = GraphSummary.ResultsIndex;
+            return new AreaGraphData(document, selectedGroup, result, displayType);
         }
 
         protected override void UpdateAxes()
@@ -45,8 +48,9 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             public AreaGraphData(SrmDocument document,
                                  TransitionGroupDocNode selectedGroup,
+                                 int? result,
                                  DisplayTypeChrom displayType)
-                : base(document, selectedGroup, displayType)
+                : base(document, selectedGroup, result, displayType)
             {
             }
 

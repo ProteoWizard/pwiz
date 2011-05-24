@@ -6,7 +6,7 @@ namespace pwiz.Skyline.Controls.Graphs
 {
     public enum GraphTypeArea { replicate, peptide }
 
-    public enum AreaNormalizeToView{ area_percent_view, area_maximum_view, area_ratio_view, none}
+    public enum AreaNormalizeToView{ area_percent_view, area_maximum_view, area_ratio_view, none }
 
     public sealed class AreaGraphController : GraphSummary.IController
     {
@@ -48,7 +48,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void OnResultsIndexChanged()
         {
-            if (GraphSummary.GraphPane is AreaReplicateGraphPane /* || !Settings.Default.AreaAverageReplicates */)
+            if (GraphSummary.GraphPane is AreaReplicateGraphPane /* || !Settings.Default.AreaAverageReplicates */ ||
+                    RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single)
                 GraphSummary.UpdateUI();
         }
 

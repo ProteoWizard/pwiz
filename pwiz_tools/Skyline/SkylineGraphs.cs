@@ -1991,6 +1991,21 @@ namespace pwiz.Skyline
                             peptideOrderAreaContextMenuItem
                         });
                     }
+
+                    if (DocumentUI.Settings.HasResults &&
+                    DocumentUI.Settings.MeasuredResults.Chromatograms.Count > 1)
+                    {
+                        menuStrip.Items.Insert(iInsert++, replicatesRTContextMenuItem);
+                        if (replicatesRTContextMenuItem.DropDownItems.Count == 0)
+                        {
+                            replicatesRTContextMenuItem.DropDownItems.AddRange(new[]
+                        {
+                            averageReplicatesContextMenuItem,
+                            singleReplicateRTContextMenuItem,
+                            bestReplicateRTContextMenuItem
+                        });
+                        }
+                    }
                     menuStrip.Items.Insert(iInsert++, peptideCvsContextMenuItem);
                     peptideCvsContextMenuItem.Checked = set.ShowPeptideCV;                    
                 }
@@ -2095,19 +2110,19 @@ namespace pwiz.Skyline
         private void averageReplicatesContextMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.ShowRegressionReplicateEnum = ReplicateDisplay.all.ToString();
-            UpdateRetentionTimeGraph();
+            UpdateSummaryGraphs();
         }
 
         private void singleReplicateRTContextMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.ShowRegressionReplicateEnum = ReplicateDisplay.single.ToString();
-            UpdateRetentionTimeGraph();
+            UpdateSummaryGraphs();
         }
 
         private void bestReplicateRTContextMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.ShowRegressionReplicateEnum = ReplicateDisplay.best.ToString();
-            UpdateRetentionTimeGraph();
+            UpdateSummaryGraphs();
         }
 
         private void replicatesRTContextMenuItem_DropDownOpening(object sender, EventArgs e)
@@ -2418,6 +2433,21 @@ namespace pwiz.Skyline
                             peptideOrderRTContextMenuItem,
                             peptideOrderAreaContextMenuItem
                         });
+                }
+
+                if (DocumentUI.Settings.HasResults &&
+                    DocumentUI.Settings.MeasuredResults.Chromatograms.Count > 1)
+                {
+                    menuStrip.Items.Insert(iInsert++, replicatesRTContextMenuItem);
+                    if (replicatesRTContextMenuItem.DropDownItems.Count == 0)
+                    {
+                        replicatesRTContextMenuItem.DropDownItems.AddRange(new[]
+                        {
+                            averageReplicatesContextMenuItem,
+                            singleReplicateRTContextMenuItem,
+                            bestReplicateRTContextMenuItem
+                        });
+                    }
                 }
                 menuStrip.Items.Insert(iInsert++, peptideCvsContextMenuItem);
                 peptideCvsContextMenuItem.Checked = set.ShowPeptideCV;

@@ -206,9 +206,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
         internal abstract class GraphData : Immutable
         {
-            protected GraphData(SrmDocument document, TransitionGroupDocNode selectedGroup,
-                             DisplayTypeChrom displayType)
+            private readonly int? _resultIndex;
+
+            protected GraphData(SrmDocument document, TransitionGroupDocNode selectedGroup, 
+                             int? iResult, DisplayTypeChrom displayType)
             {
+                _resultIndex = iResult;
+                
                 // Determine the shortest possible unique ID for each peptide
                 var uniqueSeq = new List<KeyValuePair<string, string>>();
                 foreach (var nodePep in document.Peptides)
@@ -329,10 +333,13 @@ namespace pwiz.Skyline.Controls.Graphs
                     double groupMinY = double.MaxValue;
 
                     // ReSharper disable DoNotCallOverridableMethodsInConstructor
+                    int? resultIndex = _resultIndex;
+                    if (RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.best && nodePep != null)
+                        resultIndex = nodePep.BestResult;
                     if (displayTotals)
                     {
                         var labelType = nodeGroup.TransitionGroup.LabelType;
-                        pointPairLists[dictTypeToSet[labelType]].Add(CreatePointPair(iGroup, nodeGroup, ref groupMaxY, ref groupMinY));
+                        pointPairLists[dictTypeToSet[labelType]].Add(CreatePointPair(iGroup, nodeGroup, ref groupMaxY, ref groupMinY, resultIndex));
                     }
                     else
                     {
@@ -344,7 +351,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             else
                             {
                                 pointPairList.Add(CreatePointPair(iGroup,
-                                                                  (TransitionDocNode) nodeGroup.Children[i], ref groupMaxY, ref groupMinY));
+                                                                  (TransitionDocNode) nodeGroup.Children[i], ref groupMaxY, ref groupMinY, resultIndex));
                             }
                         }
                     }
@@ -449,13 +456,13 @@ namespace pwiz.Skyline.Controls.Graphs
                 return PointPairMissing(iGroup);
             }
 
-            protected virtual PointPair CreatePointPair(int iGroup, TransitionGroupDocNode nodeGroup, ref double maxY, ref double minY)
+            protected virtual PointPair CreatePointPair(int iGroup, TransitionGroupDocNode nodeGroup, ref double maxY, ref double minY, int? resultIndex)
             {
                 if (!nodeGroup.HasResults)
                     return PointPairMissing(iGroup);
 
                 var listValues = new List<double>();
-                foreach (var chromInfo in nodeGroup.ChromInfos)
+                foreach (var chromInfo in nodeGroup.GetChromInfos(resultIndex))
                 {
                     double? value = GetValue(chromInfo);
                     if (chromInfo.OptimizationStep == 0 && value.HasValue)
@@ -467,13 +474,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
             protected abstract double? GetValue(TransitionGroupChromInfo chromInfo);
 
-            protected virtual PointPair CreatePointPair(int iGroup, TransitionDocNode nodeTran, ref double maxY, ref double minY)
+            protected virtual PointPair CreatePointPair(int iGroup, TransitionDocNode nodeTran, ref double maxY, ref double minY, int? resultIndex)
             {
                 if (!nodeTran.HasResults)
                     return PointPairMissing(iGroup);
 
                 var listValues = new List<double>();
-                foreach (var chromInfo in nodeTran.ChromInfos)
+                foreach (var chromInfo in nodeTran.GetChromInfos(resultIndex))
                 {
                     if (chromInfo.OptimizationStep == 0 && !chromInfo.IsEmpty)
                         listValues.Add(GetValue(chromInfo));
