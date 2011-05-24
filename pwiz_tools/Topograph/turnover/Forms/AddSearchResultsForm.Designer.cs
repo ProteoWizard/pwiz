@@ -54,18 +54,21 @@
             this.btnChoosePercolatorResults = new System.Windows.Forms.Button();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.btnChoosePeptideList = new System.Windows.Forms.Button();
+            this.groupBox5 = new System.Windows.Forms.GroupBox();
+            this.btnBiblioSpec = new System.Windows.Forms.Button();
             this.tableLayoutPanel1.SuspendLayout();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.groupBox4.SuspendLayout();
+            this.groupBox5.SuspendLayout();
             this.SuspendLayout();
             // 
             // tbxStatus
             // 
             this.tbxStatus.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbxStatus.Location = new System.Drawing.Point(1, 438);
+            this.tbxStatus.Location = new System.Drawing.Point(1, 550);
             this.tbxStatus.Multiline = true;
             this.tbxStatus.Name = "tbxStatus";
             this.tbxStatus.ReadOnly = true;
@@ -75,7 +78,7 @@
             // btnCancel
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnCancel.Location = new System.Drawing.Point(805, 487);
+            this.btnCancel.Location = new System.Drawing.Point(805, 619);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(65, 27);
             this.btnCancel.TabIndex = 0;
@@ -87,7 +90,7 @@
             // 
             this.progressBar.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
-            this.progressBar.Location = new System.Drawing.Point(1, 462);
+            this.progressBar.Location = new System.Drawing.Point(1, 574);
             this.progressBar.Name = "progressBar";
             this.progressBar.Size = new System.Drawing.Size(887, 20);
             this.progressBar.TabIndex = 2;
@@ -230,7 +233,7 @@
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.groupBox1.Controls.Add(this.btnChooseDTASelect);
             this.groupBox1.Controls.Add(this.label5);
-            this.groupBox1.Location = new System.Drawing.Point(12, 31);
+            this.groupBox1.Location = new System.Drawing.Point(12, 143);
             this.groupBox1.Name = "groupBox1";
             this.groupBox1.Size = new System.Drawing.Size(865, 46);
             this.groupBox1.TabIndex = 8;
@@ -267,7 +270,7 @@
             this.groupBox2.Controls.Add(this.tableLayoutPanel1);
             this.groupBox2.Controls.Add(this.cbxOnlyExistingPeptides);
             this.groupBox2.Controls.Add(this.btnChooseSqtFiles);
-            this.groupBox2.Location = new System.Drawing.Point(12, 206);
+            this.groupBox2.Location = new System.Drawing.Point(12, 318);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(865, 226);
             this.groupBox2.TabIndex = 9;
@@ -292,7 +295,7 @@
             this.groupBox3.Controls.Add(this.tbxMaxQValue);
             this.groupBox3.Controls.Add(this.label7);
             this.groupBox3.Controls.Add(this.btnChoosePercolatorResults);
-            this.groupBox3.Location = new System.Drawing.Point(13, 83);
+            this.groupBox3.Location = new System.Drawing.Point(13, 195);
             this.groupBox3.Name = "groupBox3";
             this.groupBox3.Size = new System.Drawing.Size(858, 57);
             this.groupBox3.TabIndex = 10;
@@ -332,7 +335,7 @@
             // groupBox4
             // 
             this.groupBox4.Controls.Add(this.btnChoosePeptideList);
-            this.groupBox4.Location = new System.Drawing.Point(14, 148);
+            this.groupBox4.Location = new System.Drawing.Point(14, 260);
             this.groupBox4.Name = "groupBox4";
             this.groupBox4.Size = new System.Drawing.Size(863, 52);
             this.groupBox4.TabIndex = 11;
@@ -349,11 +352,35 @@
             this.btnChoosePeptideList.UseVisualStyleBackColor = true;
             this.btnChoosePeptideList.Click += new System.EventHandler(this.btnChoosePeptideList_Click);
             // 
+            // groupBox5
+            // 
+            this.groupBox5.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.groupBox5.Controls.Add(this.btnBiblioSpec);
+            this.groupBox5.Location = new System.Drawing.Point(14, 37);
+            this.groupBox5.Name = "groupBox5";
+            this.groupBox5.Size = new System.Drawing.Size(856, 100);
+            this.groupBox5.TabIndex = 12;
+            this.groupBox5.TabStop = false;
+            this.groupBox5.Text = "Most File Formats";
+            // 
+            // btnBiblioSpec
+            // 
+            this.btnBiblioSpec.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnBiblioSpec.Location = new System.Drawing.Point(673, 62);
+            this.btnBiblioSpec.Name = "btnBiblioSpec";
+            this.btnBiblioSpec.Size = new System.Drawing.Size(177, 23);
+            this.btnBiblioSpec.TabIndex = 0;
+            this.btnBiblioSpec.Text = "Use BiblioSpec";
+            this.btnBiblioSpec.UseVisualStyleBackColor = true;
+            this.btnBiblioSpec.Click += new System.EventHandler(this.btnBiblioSpec_Click);
+            // 
             // AddSearchResultsForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(889, 526);
+            this.ClientSize = new System.Drawing.Size(889, 658);
+            this.Controls.Add(this.groupBox5);
             this.Controls.Add(this.groupBox4);
             this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.groupBox2);
@@ -373,6 +400,7 @@
             this.groupBox3.ResumeLayout(false);
             this.groupBox3.PerformLayout();
             this.groupBox4.ResumeLayout(false);
+            this.groupBox5.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -405,5 +433,7 @@
         private System.Windows.Forms.Label label7;
         private System.Windows.Forms.GroupBox groupBox4;
         private System.Windows.Forms.Button btnChoosePeptideList;
+        private System.Windows.Forms.GroupBox groupBox5;
+        private System.Windows.Forms.Button btnBiblioSpec;
     }
 }

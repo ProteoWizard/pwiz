@@ -22,6 +22,8 @@ using System.ComponentModel;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using pwiz.BiblioSpec;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;

@@ -23,20 +23,15 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Text;
+using pwiz.BiblioSpec;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Lib
 {
-// ReSharper disable InconsistentNaming
-    public enum LibraryBuildAction { Create, Append }
-// ReSharper restore InconsistentNaming
-
     public sealed class BiblioSpecLiteBuilder : ILibraryBuilder
     {
-        public const string EXE_BLIB_BUILD = "BlibBuild";
-        public const string EXE_BLIB_FILTER = "BlibFilter";
-
         public const string EXT_PEP_XML = ".pep.xml";
         public const string EXT_PEP_XML_ONE_DOT = ".pepXML";
         public const string EXT_IDP_XML = ".idpXML";
@@ -46,7 +41,6 @@ namespace pwiz.Skyline.Model.Lib
         public const string EXT_PILOT_XML = ".group.xml";
         public const string EXT_PERCOLATOR_XML = "results.xml";
         public const string EXT_WATERS_MSE = "final_fragment.csv";
-        public const string EXT_SQLITE_JOURNAL = "-journal";
 
         private ReadOnlyCollection<string> _inputFiles;
 
@@ -78,51 +72,22 @@ namespace pwiz.Skyline.Model.Lib
             ProgressStatus status = new ProgressStatus(message);
 
             progress.UpdateProgress(status);
-
-            // Arguments for BlibBuild
-            List<string> argv = new List<string> { "-s" };  // Read from stdin
-            if (Action == LibraryBuildAction.Create)
-                argv.Add("-o");
-            if (CutOffScore.HasValue)
-            {
-                argv.Add("-c");
-                argv.Add(CutOffScore.Value.ToString(CultureInfo.InvariantCulture));
-            }
-            if (!string.IsNullOrEmpty(Authority))
-            {
-                argv.Add("-a");
-                argv.Add(Authority);
-            }
-            if (!string.IsNullOrEmpty(Id))
-            {
-                argv.Add("-i");
-                argv.Add(Id);
-            }
-            string dirCommon = PathEx.GetCommonRoot(InputFiles);
-            var stdinBuilder = new StringBuilder();
-            foreach (string fileName in InputFiles)
-                stdinBuilder.AppendLine(fileName.Substring(dirCommon.Length));
-
             string outputDir = Path.GetDirectoryName(OutputPath);
             string outputBaseName = Path.GetFileNameWithoutExtension(OutputPath);
             string redundantLibrary = Path.Combine(outputDir ?? "", outputBaseName + BiblioSpecLiteSpec.EXT_REDUNDANT);
+            var blibBuilder = new BiblioSpec.BlibBuild(redundantLibrary, InputFiles)
+            {
+                Authority = Authority,
+                CutOffScore = CutOffScore,
+                Id = Id,
 
-            argv.Add("\"" + redundantLibrary + "\"");
-
-            var psiBlibBuilder = new ProcessStartInfo(EXE_BLIB_BUILD)
-                                     {
-                                         CreateNoWindow = true,
-                                         UseShellExecute = false,
-                                         // Common directory includes the directory separator
-                                         WorkingDirectory = dirCommon.Substring(0, dirCommon.Length - 1),
-                                         Arguments = string.Join(" ", argv.ToArray()),
-                                         RedirectStandardOutput = true,
-                                         RedirectStandardError = true,
-                                         RedirectStandardInput = true
-                                     };
+            };
             try
             {
-                psiBlibBuilder.RunProcess(stdinBuilder.ToString(), null, progress, ref status);
+                if (!blibBuilder.BuildLibrary(Action, progress, ref status))
+                {
+                    return false;
+                }
             }
             catch (IOException x)
             {
@@ -132,45 +97,21 @@ namespace pwiz.Skyline.Model.Lib
             catch (Exception x)
             {
                 Console.WriteLine(x.Message);
-                progress.UpdateProgress(status = status.ChangeErrorException(new Exception(string.Format("Failed trying to build the redundant library {0}.",redundantLibrary))));
+                progress.UpdateProgress(status = status.ChangeErrorException(new Exception(string.Format("Failed trying to build the redundant library {0}.", redundantLibrary))));
                 return false;
             }
-            finally
-            {
-                // If something happened (error or cancel) to end processing, then
-                // get rid of the possibly partial redundant library.
-                if (!status.IsComplete)
-                {
-                    File.Delete(redundantLibrary);
-                    File.Delete(redundantLibrary + EXT_SQLITE_JOURNAL);                    
-                }
-            }
-
+            var blibFilter = new BlibFilter();
             status = status.ChangeMessage(message).ChangePercentComplete(0);
             progress.UpdateProgress(status);
-
-            // Write the non-redundant library to a temporary file first
+            // Write the non-redundant library to a temporary file first);)
             using (var saver = new FileSaver(OutputPath))
             {
-                // Arguments for BlibFilter
-                argv.Clear();
-
-                argv.Add("\"" + redundantLibrary + "\"");
-                argv.Add("\"" + saver.SafeName + "\"");
-
-                var psiBlibFilter = new ProcessStartInfo(EXE_BLIB_FILTER)
-                {
-                    CreateNoWindow = true,
-                    UseShellExecute = false,
-                    // Common directory includes the directory separator
-                    WorkingDirectory = outputDir ?? "", // ReSharper
-                    Arguments = string.Join(" ", argv.ToArray()),
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true
-                };
                 try
                 {
-                    psiBlibFilter.RunProcess(progress, ref status);
+                    if (!blibFilter.Filter(redundantLibrary, saver.SafeName, progress, ref status))
+                    {
+                        return false;
+                    }
                     saver.Commit();
                 }
                 catch (IOException x)
@@ -185,14 +126,12 @@ namespace pwiz.Skyline.Model.Lib
                 }
                 finally
                 {
-                    if (!status.IsComplete)
-                        File.Delete(saver.SafeName + "-journal");
                     if (!KeepRedundant)
                         File.Delete(redundantLibrary);
                 }
             }
 
-            return status.IsComplete;
+            return true;
         }
     }
 }

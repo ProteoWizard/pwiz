@@ -21,6 +21,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.BiblioSpec;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
@@ -403,7 +404,7 @@ namespace pwiz.SkylineTestFunctional
         private static void CheckLibraryExistence(string libPath, bool libExist)
         {
             // Wait for journal to be removed
-            string libJournalPath = libPath + BiblioSpecLiteBuilder.EXT_SQLITE_JOURNAL;
+            string libJournalPath = libPath + BiblioSpec.BlibBuild.EXT_SQLITE_JOURNAL;
             WaitForCondition(() => !File.Exists(libJournalPath));
             Assert.IsFalse(File.Exists(libJournalPath),
                 string.Format("Unexpected library journal {0} found", libJournalPath));            

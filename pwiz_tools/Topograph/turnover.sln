@@ -25,10 +25,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MSGraph", "..\Shared\MSGrap
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Crawdad", "..\Shared\Crawdad\Crawdad.vcproj", "{5C81BB57-E46C-4B3B-9764-82F835E643B8}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BiblioSpec", "..\Shared\BiblioSpec\BiblioSpec.csproj", "{32CC9B1A-9442-4B56-AF34-FB47595278A1}"
+EndProject
 Global
-	GlobalSection(TestCaseManagementSettings) = postSolution
-		CategoryFile = turnover.vsmdi
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Mixed Platforms = Debug|Mixed Platforms
 		Release|Mixed Platforms = Release|Mixed Platforms
@@ -68,6 +67,10 @@ Global
 		{5C81BB57-E46C-4B3B-9764-82F835E643B8}.Debug|Mixed Platforms.Build.0 = Debug|Win32
 		{5C81BB57-E46C-4B3B-9764-82F835E643B8}.Release|Mixed Platforms.ActiveCfg = Release|Win32
 		{5C81BB57-E46C-4B3B-9764-82F835E643B8}.Release|Mixed Platforms.Build.0 = Release|Win32
+		{32CC9B1A-9442-4B56-AF34-FB47595278A1}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{32CC9B1A-9442-4B56-AF34-FB47595278A1}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{32CC9B1A-9442-4B56-AF34-FB47595278A1}.Release|Mixed Platforms.ActiveCfg = Release|x86
+		{32CC9B1A-9442-4B56-AF34-FB47595278A1}.Release|Mixed Platforms.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -638,6 +638,10 @@
       <Project>{6ED3F65E-B0A0-48F0-8966-F3E4D146F07F}</Project>
       <Name>turnover_lib</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.csproj">
+      <Project>{32CC9B1A-9442-4B56-AF34-FB47595278A1}</Project>
+      <Name>BiblioSpec</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Framework.2.0">
@@ -667,6 +671,18 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="..\..\Shared\BiblioSpec\binaries\BlibBuild.exe">
+      <Link>BlibBuild.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Shared\BiblioSpec\binaries\BlibFilter.exe">
+      <Link>BlibFilter.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\Shared\BiblioSpec\binaries\msparser.dll">
+      <Link>msparser.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="MassLynxRaw.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

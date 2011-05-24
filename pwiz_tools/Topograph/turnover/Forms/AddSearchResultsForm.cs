@@ -217,37 +217,51 @@ namespace pwiz.Topograph.ui.Forms
             String extension = Path.GetExtension(file);
             IList<SearchResult> searchResults = null;
             String msDataFileName = null;
-            using (var stream = File.OpenRead(file))
+            if (searchResultFileType == SearchResultFileType.BlibBuild)
             {
-                switch (searchResultFileType)
+                searchResults = SearchResults.ReadBlibBuild(file, ProgressMonitor);
+            }
+            else
+            {
+                using (var stream = File.OpenRead(file))
                 {
-                    default:
-                        if (extension == ".sqt")
-                        {
-                            msDataFileName = Path.GetFileNameWithoutExtension(file);
-                            searchResults = SearchResults.ReadSQT(msDataFileName, stream, ProgressMonitor);
-                            searchResults = FilterSearchResults(peptides, searchResults);
-                        }
-                        else if (true || file.ToLower().EndsWith(".pep.xml"))
-                        {
-                            msDataFileName = Path.GetFileName(file);
-                            msDataFileName = msDataFileName.Substring(0, msDataFileName.Length - 8);
-                            searchResults = SearchResults.ReadPepXml(msDataFileName, stream, ProgressMonitor);
-                            searchResults = FilterSearchResults(peptides, searchResults);
-                        }
-                        break;
-                    case SearchResultFileType.Dtaselect:
-                        msDataFileName = null;
-                        searchResults = SearchResults.ReadDTASelect(stream, ProgressMonitor);
-                        break;
-                    case SearchResultFileType.Percolator:
-                        msDataFileName = null;
-                        searchResults = SearchResults.ReadPercolatorOutput(stream, _maxQValue, ProgressMonitor);
-                        break;
-                    case SearchResultFileType.ListOfPeptides:
-                        msDataFileName = null;
-                        searchResults = SearchResults.ReadListOfPeptides(stream, ProgressMonitor);
-                        break;
+                    switch (searchResultFileType)
+                    {
+                        default:
+                            if (extension == ".sqt")
+                            {
+                                msDataFileName = Path.GetFileNameWithoutExtension(file);
+                                searchResults = SearchResults.ReadSQT(msDataFileName, stream, ProgressMonitor);
+                                searchResults = FilterSearchResults(peptides, searchResults);
+                            }
+                            else
+                            {
+                                if (file.ToLower().EndsWith(".pep.xml"))
+                                {
+                                    msDataFileName = Path.GetFileName(file);
+                                    msDataFileName = msDataFileName.Substring(0, msDataFileName.Length - 8);
+                                }
+                                else
+                                {
+                                    msDataFileName = Path.GetFileNameWithoutExtension(file);
+                                }
+                                searchResults = SearchResults.ReadPepXml(msDataFileName, stream, ProgressMonitor);
+                                searchResults = FilterSearchResults(peptides, searchResults);
+                            }
+                            break;
+                        case SearchResultFileType.Dtaselect:
+                            msDataFileName = null;
+                            searchResults = SearchResults.ReadDTASelect(stream, ProgressMonitor);
+                            break;
+                        case SearchResultFileType.Percolator:
+                            msDataFileName = null;
+                            searchResults = SearchResults.ReadPercolatorOutput(stream, _maxQValue, ProgressMonitor);
+                            break;
+                        case SearchResultFileType.ListOfPeptides:
+                            msDataFileName = null;
+                            searchResults = SearchResults.ReadListOfPeptides(stream, ProgressMonitor);
+                            break;
+                    }
                 }
             }
             if (searchResults == null)
@@ -556,9 +570,11 @@ namespace pwiz.Topograph.ui.Forms
             _minXCorr3 = double.Parse(tbxMinXCorr3.Text);
             _maxQValue = double.Parse(tbxMaxQValue.Text);
             this.filenames = filenames;
+            btnBiblioSpec.Enabled = false;
             btnChooseSqtFiles.Enabled = false;
             btnChooseDTASelect.Enabled = false;
             btnChoosePercolatorResults.Enabled = false;
+            btnChoosePeptideList.Enabled = false;
             IsRunning = true;
             this.searchResultFileType = searchResultFileType;
             new Action(WorkBackground).BeginInvoke(null, null);
@@ -647,6 +663,25 @@ namespace pwiz.Topograph.ui.Forms
             Settings.Default.Save();
             AddSearchResults(openFileDialog.FileNames, SearchResultFileType.ListOfPeptides);
         }
+
+        private void btnBiblioSpec_Click(object sender, EventArgs e)
+        {
+            Settings.Default.Reload();
+            var openFileDialog = new OpenFileDialog
+                                     {
+                                         Filter =
+                                             "Supported Files|*.sqt;*.pep.xml;*.pepXML;*.blib;*.idpXML;*.dat;*.ssl;*.mzid;*.perc.xml;*final_fragment.csv",
+                                         Multiselect = true,
+                                         InitialDirectory = Settings.Default.SearchResultsDirectory,
+                                     };
+            if (openFileDialog.ShowDialog(this) == DialogResult.Cancel)
+            {
+                return;
+            }
+            Settings.Default.SearchResultsDirectory = Path.GetDirectoryName(openFileDialog.FileName);
+            Settings.Default.Save();
+            AddSearchResults(openFileDialog.FileNames, SearchResultFileType.BlibBuild);
+        }
     }
 
     enum SearchResultFileType
@@ -655,5 +690,6 @@ namespace pwiz.Topograph.ui.Forms
         Percolator,
         Sequest,
         ListOfPeptides,
+        BlibBuild,
     }
 }

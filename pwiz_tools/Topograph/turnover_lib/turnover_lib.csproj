@@ -55,10 +55,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
     </Reference>
-    <Reference Include="LinFu.DynamicProxy, Version=1.0.3.14911, Culture=neutral, PublicKeyToken=62a6874124340d6e, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\Shared\Lib\NHibernate\bin\net-2.0\LinFu.DynamicProxy.dll</HintPath>
-    </Reference>
     <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\NHibernate\bin\net-2.0\log4net.dll</HintPath>
@@ -222,11 +218,16 @@
     <Compile Include="Util\LongOperation.cs" />
     <Compile Include="Util\PeakDivider.cs" />
     <Compile Include="Util\PendingIdQueue.cs" />
+    <Compile Include="Util\ProgressMonitorImpl.cs" />
     <Compile Include="Util\SessionWithLock.cs" />
     <Compile Include="Util\Statistics.cs" />
     <Compile Include="Util\WeakDictionary.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.csproj">
+      <Project>{32CC9B1A-9442-4B56-AF34-FB47595278A1}</Project>
+      <Name>BiblioSpec</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Shared\Common\Common.csproj">
       <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>
       <Name>Common</Name>

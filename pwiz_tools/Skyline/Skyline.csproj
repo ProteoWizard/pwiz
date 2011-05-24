@@ -904,10 +904,16 @@
     </FileAssociation>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="BlibBuild.exe">
+    <Content Include="..\Shared\BiblioSpec\binaries\BlibBuild.exe">
+      <Link>BlibBuild.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="BlibFilter.exe">
+    <Content Include="..\Shared\BiblioSpec\binaries\BlibFilter.exe">
+      <Link>BlibFilter.exe</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\Shared\BiblioSpec\binaries\msparser.dll">
+      <Link>msparser.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="MassLynxRaw.dll">
@@ -984,9 +990,11 @@
     </Content>
     <EmbeddedResource Include="Alerts\ImportDocResultsDlg.resx">
       <DependentUpon>ImportDocResultsDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\MultiButtonMsgDlg.resx">
       <DependentUpon>MultiButtonMsgDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\EmptyProteinsDlg.resx">
       <DependentUpon>EmptyProteinsDlg.cs</DependentUpon>
@@ -998,6 +1006,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\FilterMatchedPeptidesDlg.resx">
       <DependentUpon>FilterMatchedPeptidesDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Alerts\ShareTypeDlg.resx">
       <DependentUpon>ShareTypeDlg.cs</DependentUpon>
@@ -1073,6 +1082,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\RefineListDlg.resx">
       <DependentUpon>RefineListDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="EditUI\RTChartPropertyDlg.resx">
       <DependentUpon>RTChartPropertyDlg.cs</DependentUpon>
@@ -1112,6 +1122,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\SchedulingOptionsDlg.resx">
       <DependentUpon>SchedulingOptionsDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\ShareListDlg.resx">
       <DependentUpon>ShareListDlg.cs</DependentUpon>
@@ -1241,9 +1252,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <EmbeddedResource Include="Model\Lib\BlibData\mapping.xml" />
-    <Content Include="msparser.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <EmbeddedResource Include="Resources\Fragment.bmp" />
     <EmbeddedResource Include="Resources\FragmentLib.bmp" />
     <EmbeddedResource Include="SettingsUI\ViewLibraryDlg.resx">
@@ -1280,6 +1288,10 @@
     <Content Include="SkylineDoc.ico" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Shared\BiblioSpec\BiblioSpec.csproj">
+      <Project>{32CC9B1A-9442-4B56-AF34-FB47595278A1}</Project>
+      <Name>BiblioSpec</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Shared\Common\Common.csproj">
       <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>
       <Name>Common</Name>

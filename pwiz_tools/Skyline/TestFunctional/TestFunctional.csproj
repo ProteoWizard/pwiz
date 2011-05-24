@@ -2,7 +2,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.30729</ProductVersion>
+    <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{1B7E62FF-463B-4B3E-8E37-72F1A7C2BFD9}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -110,6 +110,14 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\Shared\BiblioSpec\BiblioSpec.csproj">
+      <Project>{32CC9B1A-9442-4B56-AF34-FB47595278A1}</Project>
+      <Name>BiblioSpec</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Shared\Common\Common.csproj">
+      <Project>{A5527BE9-4A62-458F-AE47-F0F9204A5CF9}</Project>
+      <Name>Common</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Shared\MSGraph\MSGraph.csproj">
       <Project>{26CFD1FF-F4F7-4F66-B5B4-E686BDB9B34E}</Project>
       <Name>MSGraph</Name>

@@ -18,6 +18,7 @@
  */
 using System.Collections.Generic;
 using System.IO;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;

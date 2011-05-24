@@ -24,6 +24,7 @@ using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Schema;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;

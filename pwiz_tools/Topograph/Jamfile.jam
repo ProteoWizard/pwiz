@@ -113,7 +113,6 @@ if [ modules.peek : NT ]
             <dependency>../../pwiz_aux/msrc/utility/vendor_api/Bruker//install_pwiz_vendor_api_bruker_stub/<location>$(PWIZ_WRAPPER_PATH)
             <dependency>../../pwiz_aux/msrc/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo_eula/<location>$(TOPOGRAPH_PATH)/turnover
             <dependency>../../pwiz_aux/msrc/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo_mfc/<location>$(TOPOGRAPH_PATH)/turnover/Microsoft.VC90.MFC
-            <dependency>../../pwiz_aux/msrc/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo_mfc/<location>$(PWIZ_WRAPPER_PATH)/Microsoft.VC90.MFC
             <dependency>../../pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters/<location>$(TOPOGRAPH_PATH)/turnover
         ;
 #Test

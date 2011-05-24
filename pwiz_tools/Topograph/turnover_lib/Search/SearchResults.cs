@@ -18,11 +18,14 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
+using pwiz.BiblioSpec;
+using pwiz.Common.SystemUtil;
 using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.Search
@@ -278,6 +281,51 @@ namespace pwiz.Topograph.Search
                     continue;
                 }
                 results.Add(new SearchResult(match.ToString()));
+            }
+            return results;
+        }
+
+        public static List<SearchResult> ReadBlibBuild(String filename, Func<int,bool> progressMonitor)
+        {
+            var results = new List<SearchResult>();
+            string tempFile = null;
+            try
+            {
+                tempFile = Path.GetTempFileName();
+                var blibBuild = new BlibBuild(tempFile, new[] {filename});
+                var status = new ProgressStatus("");
+                var progressMonitorImpl = ProgressMonitorImpl.NewProgressMonitorImpl(status, progressMonitor);
+                blibBuild.BuildLibrary(LibraryBuildAction.Create, progressMonitorImpl, ref status);
+                using (var connection = new SQLiteConnection(new SQLiteConnectionStringBuilder { DataSource = tempFile }.ToString()))
+                {
+                    connection.Open();
+                    var command = connection.CreateCommand();
+                    command.CommandText =
+                        "SELECT S.peptideSeq, S.precursorCharge, S.SpecIDInFile, F.fileName FROM RefSpectra S INNER JOIN SpectrumSourceFiles F ON S.fileId = F.id";
+                    var rs = command.ExecuteReader();
+                    while (rs.Read())
+                    {
+                        string name = Path.GetFileName(rs.GetString(3));
+                        int idxDot = name.IndexOf('.');
+                        if (idxDot > 0)
+                        {
+                            name = name.Substring(0, idxDot);
+                        }
+                        results.Add(new SearchResult(rs.GetString(0))
+                                       {
+                                           Charge = rs.GetInt32(1),
+                                           ScanIndex = Convert.ToInt32(rs.GetValue(2)),
+                                           Filename = name, 
+                                       });
+                    }
+                }
+            }
+            finally
+            {
+                if (tempFile != null)
+                {
+                    File.Delete(tempFile);
+                }
             }
             return results;
         }
