@@ -196,10 +196,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     labelType = IsotopeLabelType.light;
                 if (!labelType.IsLight && !mods.HasModifications(labelType))
                     return null;
-                return new ExplicitSequenceMassCalc(massCalcBase,
-                                                    mods.GetModifications(labelType),
-                                                    mods.GetModMasses(massCalcBase.MassType, labelType).ToArray(),
-                                                    mods.IsVariableStaticMods);
+                return new ExplicitSequenceMassCalc(mods, massCalcBase, labelType);
             }
             return GetMassCalc(labelType, _precursorMassCalcs);
         }
@@ -220,10 +217,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     labelType = IsotopeLabelType.light;
                 if (!labelType.IsLight && !mods.HasModifications(labelType))
                     return null;
-                return new ExplicitSequenceMassCalc(massCalcBase,
-                                                    mods.GetModifications(labelType),
-                                                    mods.GetModMasses(massCalcBase.MassType, labelType),
-                                                    mods.IsVariableStaticMods);
+                return new ExplicitSequenceMassCalc(mods, massCalcBase, labelType);
             }
             return GetMassCalc(labelType, _fragmentMassCalcs);
         }

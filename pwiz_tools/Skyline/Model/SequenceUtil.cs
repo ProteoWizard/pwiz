@@ -533,7 +533,7 @@ namespace pwiz.Skyline.Model
             }
             if (mods != null)
             {
-                foreach (ExplicitMod mod in mods.Mods)
+                foreach (ExplicitMod mod in mods.AllMods)
                 {
                     double modUnexplainedMass;
                     string modFormula = GetModFormula(seq[mod.IndexAA], mod.Modification, out modUnexplainedMass);
@@ -879,12 +879,16 @@ namespace pwiz.Skyline.Model
         private readonly SequenceMassCalc _massCalcBase;
         private readonly ExplicitSequenceMods _mods;
 
-        public ExplicitSequenceMassCalc(SequenceMassCalc massCalcBase,
-            IList<ExplicitMod> mods, IList<double> modMasses, bool requiresAllCalcMods)
+        public ExplicitSequenceMassCalc(ExplicitMods mods, SequenceMassCalc massCalcBase, IsotopeLabelType labelType)
         {
             _massCalcBase = massCalcBase;
             _mods = new ExplicitSequenceMods
-                { Mods = mods, ModMasses = modMasses, RequiresAllCalcMods = requiresAllCalcMods};
+                { 
+                    Mods = mods.GetModifications(labelType),
+                    StaticBaseMods = mods.GetStaticBaseMods(labelType),
+                    ModMasses = mods.GetModMasses(_massCalcBase.MassType, labelType),
+                    RequiresAllCalcMods = mods.IsVariableStaticMods
+                };
         }
 
         public MassType MassType
@@ -932,7 +936,15 @@ namespace pwiz.Skyline.Model
     public class ExplicitSequenceMods
     {
         public IList<ExplicitMod> Mods { get; set; }
+        public IList<ExplicitMod> StaticBaseMods { get; set; }
         public IList<double> ModMasses { get; set; }
         public bool RequiresAllCalcMods { get; set; }
+        public IEnumerable<ExplicitMod> AllMods
+        {
+            get
+            {
+                return (Mods ?? new ExplicitMod[0]).Union(StaticBaseMods ?? new ExplicitMod[0]);
+            }
+        }
     }
 }

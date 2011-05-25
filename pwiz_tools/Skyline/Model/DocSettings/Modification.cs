@@ -682,9 +682,13 @@ namespace pwiz.Skyline.Model.DocSettings
         public IList<ExplicitMod> GetModifications(IsotopeLabelType labelType)
         {
             int index = GetModIndex(labelType);
-            if (index == -1)
-                return null;
-            return _modifications[index].Modifications;
+            return (index != -1 ? _modifications[index].Modifications : null);
+        }
+
+        public IList<ExplicitMod> GetStaticBaseMods(IsotopeLabelType labelType)
+        {
+            int index = GetModIndex(labelType);
+            return (index != -1 ? _modifications[index].StaticBaseMods : null);
         }
 
         private int GetModIndex(IsotopeLabelType labelType)
@@ -947,6 +951,13 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public IsotopeLabelType LabelType { get; private set; }
         public IList<ExplicitMod> Modifications { get; private set; }
+        public IList<ExplicitMod> StaticBaseMods
+        {
+            get
+            {
+                return _typedStaticMods != null ? _typedStaticMods.Modifications : null;
+            }
+        }
 
         public IList<double> GetModMasses(MassType massType)
         {

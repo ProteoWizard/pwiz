@@ -305,10 +305,11 @@ namespace pwiz.SkylineTestA.Results
                                 SequenceMassCalc.GetMZ(nodeGroup.IsotopePeaks.GetMassI(0),
                                                        nodeGroup.TransitionGroup.PrecursorCharge));
 
-                // Check isotope distribution masses);));))
+                // Check isotope distribution masses
                 for (int i = 1; i < isotopePeaks.CountPeaks; i++)
                 {
                     int massIndex = isotopePeaks.PeakIndexToMassIndex(i);
+                    Assert.IsTrue(isotopePeaks.GetMZI(massIndex - 1) < isotopePeaks.GetMZI(massIndex));
                     double massDelta = GetMassDelta(isotopePeaks, massIndex);
                     if (nodeGroup.TransitionGroup.LabelType.IsLight)
                     {
@@ -420,6 +421,45 @@ namespace pwiz.SkylineTestA.Results
                     Assert.IsTrue(-1 > firstChild.Transition.MassIndex);
             }
             AssertEx.Serializable(docIsotopesLowP0, AssertEx.Cloned);
+
+            // Test a document with variable and heavy modifications, which caused problems for
+            // the original implementation
+            var docVariable = ResultsUtil.DeserializeDocument("HeavyVariable.sky", GetType());
+            Assert.IsFalse(docVariable.TransitionGroups.Any(nodeGroup => nodeGroup.IsotopePeaks == null));
+
+            foreach (var nodeGroup in docVariable.TransitionGroups)
+            {
+                var isotopePeaks = nodeGroup.IsotopePeaks;
+                Assert.IsNotNull(isotopePeaks);
+                // The peaks should always includ at least M-1
+                Assert.IsTrue(isotopePeaks.MassIndexToPeakIndex(0) > 0);
+                // Precursor mass and m/z values are expected to match exactly
+                Assert.AreEqual(nodeGroup.PrecursorMz, nodeGroup.IsotopePeaks.GetMZI(0));
+
+                // Check isotope distribution masses
+                for (int i = 1; i < isotopePeaks.CountPeaks; i++)
+                {
+                    int massIndex = isotopePeaks.PeakIndexToMassIndex(i);
+                    Assert.IsTrue(isotopePeaks.GetMZI(massIndex - 1) < isotopePeaks.GetMZI(massIndex));
+                    double massDelta = GetMassDelta(isotopePeaks, massIndex);
+                    bool containsSulfur = nodeGroup.TransitionGroup.Peptide.Sequence.IndexOfAny("CM".ToCharArray()) != -1;
+                    if (massIndex == 0)
+                    {
+                        double expectedDelta = (isotopePeaks.GetProportionI(massIndex - 1) == 0
+                                                    ? GetMassDelta(isotopePeaks, massIndex + 1)
+                                                    : 1.0017);
+                        Assert.AreEqual(expectedDelta, massDelta, 0.001);
+                    }
+                    else if (!containsSulfur || massIndex == 1)
+                    {
+                        Assert.AreEqual(c13Delta, massDelta, 0.001);
+                    }
+                    else
+                    {
+                        Assert.AreEqual(1.00075, massDelta, 0.001);
+                    }
+                }
+            }
         }
 
         private static double GetMassDelta(IsotopePeakInfo isotopePeaks, int massIndex)
