@@ -591,96 +591,106 @@ namespace pwiz.Topograph.ui.Forms
                 }
             }
             Settings.Default.Reload();
-            var openFileDialog = new OpenFileDialog
-            {
-                Filter =
-                    "Search results(*.sqt;*.pep.xml)|*.sqt;*.pep.xml",
+            using (var openFileDialog = new OpenFileDialog
+                {
+                    Filter =
+                        "Search results(*.sqt;*.pep.xml)|*.sqt;*.pep.xml",
 
-                Multiselect = true,
-                InitialDirectory = Settings.Default.SearchResultsDirectory
-            };
-            if (openFileDialog.ShowDialog(this) == DialogResult.Cancel)
+                    Multiselect = true,
+                    InitialDirectory = Settings.Default.SearchResultsDirectory
+                })
             {
-                return;
+                if (openFileDialog.ShowDialog(this) == DialogResult.Cancel)
+                {
+                    return;
+                }
+                Settings.Default.SearchResultsDirectory = Path.GetDirectoryName(openFileDialog.FileName);
+                Settings.Default.Save();
+                AddSearchResults(openFileDialog.FileNames, SearchResultFileType.Sequest);
             }
-            Settings.Default.SearchResultsDirectory = Path.GetDirectoryName(openFileDialog.FileName);
-            Settings.Default.Save();
-            AddSearchResults(openFileDialog.FileNames, SearchResultFileType.Sequest);
         }
 
         private void btnChooseDTASelect_Click(object sender, EventArgs e)
         {
             Settings.Default.Reload();
-            var openFileDialog = new OpenFileDialog
+            using (var openFileDialog = new OpenFileDialog
                                      {
                                          Filter = "DTASelect Filter Files (*filter*.txt)|*filter*.txt|All Files|*.*",
                                          Multiselect = true,
                                          InitialDirectory = Settings.Default.SearchResultsDirectory
-                                     };
-            if (openFileDialog.ShowDialog(this) == DialogResult.Cancel)
+                                     })
             {
-                return;
+                if (openFileDialog.ShowDialog(this) == DialogResult.Cancel)
+                {
+                    return;
+                }
+                Settings.Default.SearchResultsDirectory = Path.GetDirectoryName(openFileDialog.FileName);
+                Settings.Default.Save();
+                AddSearchResults(openFileDialog.FileNames, SearchResultFileType.Dtaselect);
             }
-            Settings.Default.SearchResultsDirectory = Path.GetDirectoryName(openFileDialog.FileName);
-            Settings.Default.Save();
-            AddSearchResults(openFileDialog.FileNames, SearchResultFileType.Dtaselect);
         }
 
         private void btnChoosePercolatorResults_Click(object sender, EventArgs e)
         {
             Settings.Default.Reload();
-            var openFileDialog = new OpenFileDialog
+            using (var openFileDialog = new OpenFileDialog
                                      {
                                          Filter =
                                              "Percolator Combined Results (combined-results.xml)|combined-results.xml|All Files|*.*",
                                          Multiselect = true,
                                          InitialDirectory = Settings.Default.SearchResultsDirectory
-                                     };
-            if (openFileDialog.ShowDialog(this) == DialogResult.Cancel)
+                                     })
             {
-                return;
+                if (openFileDialog.ShowDialog(this) == DialogResult.Cancel)
+                {
+                    return;
+                }
+                Settings.Default.SearchResultsDirectory = Path.GetDirectoryName(openFileDialog.FileName);
+                Settings.Default.Save();
+                AddSearchResults(openFileDialog.FileNames, SearchResultFileType.Percolator);
             }
-            Settings.Default.SearchResultsDirectory = Path.GetDirectoryName(openFileDialog.FileName);
-            Settings.Default.Save();
-            AddSearchResults(openFileDialog.FileNames, SearchResultFileType.Percolator);
         }
 
         private void btnChoosePeptideList_Click(object sender, EventArgs e)
         {
             Settings.Default.Reload();
-            var openFileDialog = new OpenFileDialog
+            using (var openFileDialog = new OpenFileDialog
             {
                 Filter =
                     "All Files|*.*",
                 Multiselect = true,
                 InitialDirectory = Settings.Default.SearchResultsDirectory
-            };
-            if (openFileDialog.ShowDialog(this) == DialogResult.Cancel)
+            })
             {
-                return;
+                if (openFileDialog.ShowDialog(this) == DialogResult.Cancel)
+                {
+                    return;
+                }
+                Settings.Default.SearchResultsDirectory = Path.GetDirectoryName(openFileDialog.FileName);
+                Settings.Default.Save();
+                AddSearchResults(openFileDialog.FileNames, SearchResultFileType.ListOfPeptides);
             }
-            Settings.Default.SearchResultsDirectory = Path.GetDirectoryName(openFileDialog.FileName);
-            Settings.Default.Save();
-            AddSearchResults(openFileDialog.FileNames, SearchResultFileType.ListOfPeptides);
         }
 
         private void btnBiblioSpec_Click(object sender, EventArgs e)
         {
             Settings.Default.Reload();
-            var openFileDialog = new OpenFileDialog
+            using (var openFileDialog = new OpenFileDialog
                                      {
                                          Filter =
                                              "Supported Files|*.sqt;*.pep.xml;*.pepXML;*.blib;*.idpXML;*.dat;*.ssl;*.mzid;*.perc.xml;*final_fragment.csv",
                                          Multiselect = true,
                                          InitialDirectory = Settings.Default.SearchResultsDirectory,
-                                     };
-            if (openFileDialog.ShowDialog(this) == DialogResult.Cancel)
+                                     })
             {
-                return;
+                if (openFileDialog.ShowDialog(this) == DialogResult.Cancel)
+                {
+                    return;
+                }
+                Settings.Default.SearchResultsDirectory = Path.GetDirectoryName(openFileDialog.FileName);
+                Settings.Default.Save();
+                AddSearchResults(openFileDialog.FileNames, SearchResultFileType.BlibBuild);
             }
-            Settings.Default.SearchResultsDirectory = Path.GetDirectoryName(openFileDialog.FileName);
-            Settings.Default.Save();
-            AddSearchResults(openFileDialog.FileNames, SearchResultFileType.BlibBuild);
         }
     }
 

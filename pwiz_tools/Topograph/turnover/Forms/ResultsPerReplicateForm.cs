@@ -102,11 +102,13 @@ namespace pwiz.Topograph.ui.Forms
             var calculator = new HalfLifeCalculator(Workspace, HalfLifeCalculationType.GroupPrecursorPool)
             {
             };
-            var longOperationBroker = new LongOperationBroker(calculator,
-                                                              new LongWaitDialog(this, "Calculating Half Lives"));
-            if (!longOperationBroker.LaunchJob())
+            using (var longWaitDialog = new LongWaitDialog(this, "Calculating Half Lives"))
             {
-                return;
+                var longOperationBroker = new LongOperationBroker(calculator, longWaitDialog);
+                if (!longOperationBroker.LaunchJob())
+                {
+                    return;
+                }
             }
             UpdateRows(calculator);
         }

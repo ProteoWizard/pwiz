@@ -35,11 +35,14 @@ namespace pwiz.Topograph.ui.Forms
             var locks = new List<DbLock>();
             using (var session = Workspace.OpenSession())
             {
-                var broker = new LongOperationBroker(b => session.CreateCriteria(typeof (DbLock)).List(locks),
-                                                     new LongWaitDialog(this, "Querying Database"), session);
-                if (broker.LaunchJob())
+                using (var longWaitDialog = new LongWaitDialog(this, "Querying Database"))
                 {
-                    BeginInvoke(new Action<List<DbLock>>(DisplayResults), locks);
+                    var broker = new LongOperationBroker(b => session.CreateCriteria(typeof (DbLock)).List(locks),
+                                                         longWaitDialog, session);
+                    if (broker.LaunchJob())
+                    {
+                        BeginInvoke(new Action<List<DbLock>>(DisplayResults), locks);
+                    }
                 }
             }
         }

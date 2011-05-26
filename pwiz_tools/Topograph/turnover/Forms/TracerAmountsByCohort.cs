@@ -126,11 +126,15 @@ namespace pwiz.Topograph.ui.Forms
                     query.SetParameter("minScore", 0.0);
                 }
                 var rowDataArrays = new List<object[]>();
-                var broker = new LongOperationBroker(b => query.List(rowDataArrays), 
-                    new LongWaitDialog(this, "Executing query"), session);
-                if (!broker.LaunchJob())
+                using (var longWaitDialog = new LongWaitDialog(this, "Executing query"))
                 {
-                    return;
+                    var broker = new LongOperationBroker(b => query.List(rowDataArrays), 
+                        longWaitDialog, session);
+                    if (!broker.LaunchJob())
+                    {
+                        return;
+                    }
+                    
                 }
                 bool groupByCohort = cbxGroupByCohort.Checked;
                 bool groupByTimePoint = cbxGroupByTimePoint.Checked;

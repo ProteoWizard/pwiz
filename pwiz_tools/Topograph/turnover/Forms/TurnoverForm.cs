@@ -329,29 +329,31 @@ namespace pwiz.Topograph.ui.Forms
                 return;
             }
             Settings.Default.Reload();
-            var fileDialog = new SaveFileDialog()
-                                 {
-                                     Filter = WorkspaceFilter,
-                                     InitialDirectory = Settings.Default.WorkspaceDirectory
-                                 };
-            
-            if (fileDialog.ShowDialog(this) == DialogResult.Cancel)
+            using (var fileDialog = new SaveFileDialog()
             {
-                return;
-            }
-            String filename = fileDialog.FileName;
-            Settings.Default.WorkspaceDirectory = Path.GetDirectoryName(filename);
-            Settings.Default.Save();
-            if (File.Exists(filename))
+                Filter = WorkspaceFilter,
+                InitialDirectory = Settings.Default.WorkspaceDirectory
+            })
             {
-                File.Delete(filename);
+                if (fileDialog.ShowDialog(this) == DialogResult.Cancel)
+                {
+                    return;
+                }
+                String filename = fileDialog.FileName;
+                Settings.Default.WorkspaceDirectory = Path.GetDirectoryName(filename);
+                Settings.Default.Save();
+                if (File.Exists(filename))
+                {
+                    File.Delete(filename);
+                }
+                using (ISessionFactory sessionFactory = SessionFactoryFactory.CreateSessionFactory(filename, SessionFactoryFlags.create_schema))
+                {
+                    InitWorkspace(sessionFactory);
+                }
+                Workspace = new Workspace(filename);
+                enrichmentToolStripMenuItem_Click(sender, e);
+                
             }
-            using(ISessionFactory sessionFactory = SessionFactoryFactory.CreateSessionFactory(filename, SessionFactoryFlags.create_schema))
-            {
-                InitWorkspace(sessionFactory);
-            }
-            Workspace = new Workspace(filename);
-            enrichmentToolStripMenuItem_Click(sender, e);
         }
 
         public Workspace OpenWorkspace(String path)
@@ -396,9 +398,12 @@ namespace pwiz.Topograph.ui.Forms
                 {
                     return null;
                 }
-                if (!new LongOperationBroker(upgrader, new LongWaitDialog(this, "Upgrading Workspace")).LaunchJob())
+                using (var longWaitDialog = new LongWaitDialog(this, "Upgrading Workspace"))
                 {
-                    return null;
+                    if (!new LongOperationBroker(upgrader, longWaitDialog).LaunchJob())
+                    {
+                        return null;
+                    }
                 }
             }
             return new Workspace(path);
@@ -411,22 +416,25 @@ namespace pwiz.Topograph.ui.Forms
                 return;
             }
             Settings.Default.Reload();
-            var fileDialog = new OpenFileDialog
-                                 {
-                                     Filter = AnyWorkspaceFilter,
-                                     InitialDirectory = Settings.Default.WorkspaceDirectory
-                                 };
-            if (fileDialog.ShowDialog(this) == DialogResult.Cancel)
+            using (var fileDialog = new OpenFileDialog
+                {
+                    Filter = AnyWorkspaceFilter,
+                    InitialDirectory = Settings.Default.WorkspaceDirectory
+                })
             {
-                return;
-            }
-            String filename = fileDialog.FileName;
-            Settings.Default.WorkspaceDirectory = Path.GetDirectoryName(filename);
-            Settings.Default.Save();
-            var workspace = OpenWorkspace(filename);
-            if (workspace != null)
-            {
-                Workspace = workspace;
+                if (fileDialog.ShowDialog(this) == DialogResult.Cancel)
+                {
+                    return;
+                }
+                String filename = fileDialog.FileName;
+                Settings.Default.WorkspaceDirectory = Path.GetDirectoryName(filename);
+                Settings.Default.Save();
+                var workspace = OpenWorkspace(filename);
+                if (workspace != null)
+                {
+                    Workspace = workspace;
+                }
+                
             }
         }
 
@@ -483,7 +491,10 @@ namespace pwiz.Topograph.ui.Forms
 
         private bool SaveWorkspace()
         {
-            return Workspace.Save(new LongWaitDialog(this, "Saving Workspace"));
+            using (var longWaitDialog = new LongWaitDialog(this, "Saving Workspace"))
+            {
+                return Workspace.Save(longWaitDialog);
+            }
         }
 
         private void closeWorkspaceToolStripMenuItem_Click(object sender, EventArgs e)
@@ -516,20 +527,22 @@ namespace pwiz.Topograph.ui.Forms
                 Program.AppName, MessageBoxButtons.OKCancel);
             while (dialogResult == DialogResult.OK)
             {
-                OpenFileDialog fileDialog = new OpenFileDialog
+                using (OpenFileDialog fileDialog = new OpenFileDialog
+                    {
+                        Filter = msDataFile.Name + ".*|" + msDataFile.Name + ".*"
+                                 + "|All Files|*.*",
+                        Title = "Browser for " + msDataFile.Name,
+                        InitialDirectory = Settings.Default.RawFilesDirectory
+                    })
                 {
-                    Filter = msDataFile.Name + ".*|" + msDataFile.Name + ".*"
-                             + "|All Files|*.*",
-                    Title = "Browser for " + msDataFile.Name,
-                    InitialDirectory = Settings.Default.RawFilesDirectory
-                };
-                fileDialog.ShowDialog(this);
+                    fileDialog.ShowDialog(this);
 
-                if (String.IsNullOrEmpty(fileDialog.FileName))
-                {
-                    break;
+                    if (String.IsNullOrEmpty(fileDialog.FileName))
+                    {
+                        break;
+                    }
+                    Workspace.SetDataDirectory(Path.GetDirectoryName(fileDialog.FileName));
                 }
-                Workspace.SetDataDirectory(Path.GetDirectoryName(fileDialog.FileName));
                 if (MsDataFileUtil.TryInitMsDataFile(Workspace, msDataFile, out errorMessage))
                 {
                     return true;
@@ -589,7 +602,10 @@ namespace pwiz.Topograph.ui.Forms
 
         private void modificationsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            new ModificationsForm(Workspace).ShowDialog(this);
+            using (var form = new ModificationsForm(Workspace))
+            {
+                form.ShowDialog(this);
+            }
         }
 
         private void saveWorkspaceToolStripMenuItem_Click(object sender, EventArgs e)
@@ -613,23 +629,27 @@ namespace pwiz.Topograph.ui.Forms
         private void updateProteinNamesToolStripMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.Reload();
-            var openFileDialog = new OpenFileDialog
-                                     {
-                                         Title = "Browse for FASTA file",
-                                         Multiselect = true,
-                                         InitialDirectory = Settings.Default.FastaDirectory,
-                                     };
-            if (openFileDialog.ShowDialog(this) == DialogResult.Cancel || openFileDialog.FileNames.Count() == 0)
+            using (var openFileDialog = new OpenFileDialog
+                {
+                    Title = "Browse for FASTA file",
+                    Multiselect = true,
+                    InitialDirectory = Settings.Default.FastaDirectory,
+                })
             {
-                return;
+                if (openFileDialog.ShowDialog(this) == DialogResult.Cancel || openFileDialog.FileNames.Count() == 0)
+                {
+                    return;
+                }
+                Settings.Default.FastaDirectory = Path.GetDirectoryName(openFileDialog.FileNames[0]);
+                Settings.Default.Save();
+                using (var updateProteinNames = new UpdateProteinNames(Workspace)
+                {
+                    FastaFilePaths = openFileDialog.FileNames
+                })
+                {
+                    updateProteinNames.ShowDialog(this);
+                }
             }
-            Settings.Default.FastaDirectory = Path.GetDirectoryName(openFileDialog.FileNames[0]);
-            Settings.Default.Save();
-            var updateProteinNames = new UpdateProteinNames(Workspace)
-                                         {
-                                             FastaFilePaths = openFileDialog.FileNames
-                                         };
-            updateProteinNames.ShowDialog(this);
         }
 
         private void queriesToolStripMenuItem_Click(object sender, EventArgs e)
@@ -646,7 +666,10 @@ namespace pwiz.Topograph.ui.Forms
 
         private void machineSettingsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            new MiscSettingsForm(Workspace).ShowDialog(this);
+            using (var form = new MiscSettingsForm(Workspace))
+            {
+                form.ShowDialog(this);
+            }
         }
 
         private void mercuryToolStripMenuItem_Click(object sender, EventArgs e)
@@ -678,40 +701,47 @@ namespace pwiz.Topograph.ui.Forms
             {
                 return;
             }
-            var dialog = new TpgLinkForm
-                             {
-                                 ShowReadOnlyCheckbox = false,
-                                 BrowseOnOk = true,
-                             };
-            while (true)
+            using (var dialog = new TpgLinkForm
+                {
+                    ShowReadOnlyCheckbox = false,
+                    BrowseOnOk = true,
+                })
             {
-                if (dialog.ShowDialog(this) == DialogResult.Cancel)
+                while (true)
                 {
-                    return;
-                }
-                var tpgLinkDef = dialog.GetTpgLinkDef();
-                try
-                {
-                    tpgLinkDef.CreateDatabase();
-                }
-                catch (Exception exception)
-                {
-                    var result = MessageBox.Show(this, "There was an error creating the database.  Do you want to try again?\n" + exception, Program.AppName, MessageBoxButtons.OKCancel);
-                    if (result == DialogResult.Cancel)
+                    if (dialog.ShowDialog(this) == DialogResult.Cancel)
                     {
                         return;
                     }
-                    continue;
-                }
-                using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory(tpgLinkDef, SessionFactoryFlags.create_schema))
-                {
-                    InitWorkspace(sessionFactory);
-                }
+                    var tpgLinkDef = dialog.GetTpgLinkDef();
+                    try
+                    {
+                        tpgLinkDef.CreateDatabase();
+                    }
+                    catch (Exception exception)
+                    {
+                        var result = MessageBox.Show(this,
+                                                     "There was an error creating the database.  Do you want to try again?\n" +
+                                                     exception, Program.AppName, MessageBoxButtons.OKCancel);
+                        if (result == DialogResult.Cancel)
+                        {
+                            return;
+                        }
+                        continue;
+                    }
+                    using (
+                        var sessionFactory = SessionFactoryFactory.CreateSessionFactory(tpgLinkDef,
+                                                                                        SessionFactoryFlags.
+                                                                                            create_schema))
+                    {
+                        InitWorkspace(sessionFactory);
+                    }
 
-                tpgLinkDef.Save(dialog.Filename);
-                break;
+                    tpgLinkDef.Save(dialog.Filename);
+                    break;
+                }
+                Workspace = OpenWorkspace(dialog.Filename);
             }
-            Workspace = OpenWorkspace(dialog.Filename);
         }
 
         private void openOnlineWorkspaceToolStripMenuItem_Click(object sender, EventArgs e)
@@ -720,35 +750,38 @@ namespace pwiz.Topograph.ui.Forms
             {
                 return;
             }
-            var dialog = new TpgLinkForm
+            using (var dialog = new TpgLinkForm
+                {
+                    ShowReadOnlyCheckbox = false,
+                    BrowseOnOk = true,
+                })
             {
-                ShowReadOnlyCheckbox = false,
-                BrowseOnOk = true,
-            };
-            while (true)
-            {
-                if (dialog.ShowDialog(this) == DialogResult.Cancel)
+                while (true)
                 {
-                    return;
-                }
-                var tpgLinkDef = dialog.GetTpgLinkDef();
-                tpgLinkDef.Save(dialog.Filename);
-                try
-                {
-                    Workspace = OpenWorkspace(dialog.Filename);
-                    return;
-                }
-                catch (Exception exception)
-                {
-                    var result = MessageBox.Show(this, "There was an error connecting to the database.  Do you want to try again?\n" + exception, Program.AppName, MessageBoxButtons.OKCancel);
-                    if (result == DialogResult.Cancel)
+                    if (dialog.ShowDialog(this) == DialogResult.Cancel)
                     {
                         return;
                     }
-                    continue;
+                    var tpgLinkDef = dialog.GetTpgLinkDef();
+                    tpgLinkDef.Save(dialog.Filename);
+                    try
+                    {
+                        Workspace = OpenWorkspace(dialog.Filename);
+                        return;
+                    }
+                    catch (Exception exception)
+                    {
+                        var result = MessageBox.Show(this,
+                                                     "There was an error connecting to the database.  Do you want to try again?\n" +
+                                                     exception, Program.AppName, MessageBoxButtons.OKCancel);
+                        if (result == DialogResult.Cancel)
+                        {
+                            return;
+                        }
+                        continue;
+                    }
                 }
             }
-            
         }
 
 
@@ -756,32 +789,34 @@ namespace pwiz.Topograph.ui.Forms
         {
             while (true)
             {
-                var dialog = new FolderBrowserDialog()
-                                 {
-                                     ShowNewFolderButton = false
-                                 };
-                var currentDataDirectory = Workspace.GetDataDirectory();
-                if (!string.IsNullOrEmpty(currentDataDirectory) && Directory.Exists(currentDataDirectory))
+                using (var dialog = new FolderBrowserDialog()
+                    {
+                        ShowNewFolderButton = false
+                    })
                 {
-                    dialog.SelectedPath = currentDataDirectory;
-                }
-                var dialogResult = dialog.ShowDialog(this);
-                if (dialogResult == DialogResult.Cancel)
-                {
-                    Workspace.SetDataDirectory("");
+                    var currentDataDirectory = Workspace.GetDataDirectory();
+                    if (!string.IsNullOrEmpty(currentDataDirectory) && Directory.Exists(currentDataDirectory))
+                    {
+                        dialog.SelectedPath = currentDataDirectory;
+                    }
+                    var dialogResult = dialog.ShowDialog(this);
+                    if (dialogResult == DialogResult.Cancel)
+                    {
+                        Workspace.SetDataDirectory("");
+                        return;
+                    }
+                    if (!Workspace.IsValidDataDirectory(dialog.SelectedPath))
+                    {
+                        if (MessageBox.Show(
+                            "That directory does not appear to contain any of the data files from this workspace.  Are you sure you want to use that directory?",
+                            Program.AppName, MessageBoxButtons.YesNo) == DialogResult.No)
+                        {
+                            continue;
+                        }
+                    }
+                    Workspace.SetDataDirectory(dialog.SelectedPath);
                     return;
                 }
-                if (!Workspace.IsValidDataDirectory(dialog.SelectedPath))
-                {
-                    if (MessageBox.Show(
-                        "That directory does not appear to contain any of the data files from this workspace.  Are you sure you want to use that directory?",
-                        Program.AppName, MessageBoxButtons.YesNo) == DialogResult.No)
-                    {
-                        continue;
-                    }
-                }
-                Workspace.SetDataDirectory(dialog.SelectedPath);
-                return;
             }
         }
 
@@ -818,7 +853,10 @@ namespace pwiz.Topograph.ui.Forms
         {
             var job = new LoadPeptideAnalysisSnapshot(Workspace, ids, loadChromatograms);
             var title = ids.Count == 1 ? "Loading peptide analysis" : "Loading " + ids.Count + " peptide analyses";
-            new LongOperationBroker(job, new LongWaitDialog(this, title)).LaunchJob();
+            using (var longWaitDialog = new LongWaitDialog(this, title))
+            {
+                new LongOperationBroker(job, longWaitDialog).LaunchJob();
+            }
             return job.PeptideAnalyses;
         }
 
@@ -828,34 +866,42 @@ namespace pwiz.Topograph.ui.Forms
             {
                 return;
             }
-            var dumpWorkspaceDlg = new DumpWorkspaceDlg();
-            if (dumpWorkspaceDlg.ShowDialog(this) == DialogResult.Cancel)
+            using (var dumpWorkspaceDlg = new DumpWorkspaceDlg())
             {
-                return;
-            }
-            Settings.Default.Reload();
-            var fileDialog = new SaveFileDialog()
-                                 {
-                                    Title = "Export Workspace SQL",
-                                    Filter = "SQL Files (*.sql)|*.sql|All Files|*.*",
-                                    InitialDirectory = Settings.Default.ExportResultsDirectory
-                                 };
-            if (fileDialog.ShowDialog(this) == DialogResult.Cancel)
-            {
-                return;
-            }
-            Settings.Default.ExportResultsDirectory = Path.GetDirectoryName(fileDialog.FileName);
-            Settings.Default.Save();
-            var workspace = Workspace;
-            try
-            {
-                Workspace = null;
-                var databaseDumper = new DatabaseDumper(workspace, dumpWorkspaceDlg.DatabaseTypeEnum, fileDialog.FileName);
-                new LongOperationBroker(databaseDumper, new LongWaitDialog(this, "Exporting SQL")).LaunchJob();
-            }
-            finally
-            {
-                Workspace = OpenWorkspace(workspace.DatabasePath);
+                if (dumpWorkspaceDlg.ShowDialog(this) == DialogResult.Cancel)
+                {
+                    return;
+                }
+                Settings.Default.Reload();
+                using (var fileDialog = new SaveFileDialog()
+                    {
+                        Title = "Export Workspace SQL",
+                        Filter = "SQL Files (*.sql)|*.sql|All Files|*.*",
+                        InitialDirectory = Settings.Default.ExportResultsDirectory
+                    })
+                {
+                    if (fileDialog.ShowDialog(this) == DialogResult.Cancel)
+                    {
+                        return;
+                    }
+                    Settings.Default.ExportResultsDirectory = Path.GetDirectoryName(fileDialog.FileName);
+                    Settings.Default.Save();
+                    var workspace = Workspace;
+                    try
+                    {
+                        Workspace = null;
+                        using (var longWaitDialog = new LongWaitDialog(this, "Exporting SQL"))
+                        {
+                            var databaseDumper = new DatabaseDumper(workspace, dumpWorkspaceDlg.DatabaseTypeEnum, fileDialog.FileName);
+                            new LongOperationBroker(databaseDumper, longWaitDialog).LaunchJob();
+                        }
+                    }
+                    finally
+                    {
+                        Workspace = OpenWorkspace(workspace.DatabasePath);
+                    }
+                    
+                }                
             }
         }
 
@@ -898,8 +944,10 @@ namespace pwiz.Topograph.ui.Forms
 
         private void displayToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var settingsForm = new DisplaySettingsForm();
-            settingsForm.ShowDialog(this);
+            using (var settingsForm = new DisplaySettingsForm())
+            {
+                settingsForm.ShowDialog(this);
+            }
         }
 
         private void fileToolStripMenuItem_DropDownOpening(object sender, EventArgs e)

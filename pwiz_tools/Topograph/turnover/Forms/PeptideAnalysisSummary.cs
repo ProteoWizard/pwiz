@@ -57,7 +57,10 @@ namespace pwiz.Topograph.ui.Forms
 
         private void btnCreateAnalyses_Click(object sender, EventArgs e)
         {
-            new CreateFileAnalysesForm(PeptideAnalysis).ShowDialog(this);
+            using (var form = new CreateFileAnalysesForm(PeptideAnalysis))
+            {
+                form.ShowDialog(this);
+            }
         }
 
         protected override void OnHandleCreated(EventArgs e)

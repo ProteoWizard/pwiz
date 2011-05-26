@@ -61,11 +61,13 @@ namespace pwiz.Topograph.ui.Forms
                                      FixedInitialPercent = cbxFixYIntercept.Checked,
                                      ExcludedTimePoints = UpdateTimePoints(),
                                  };
-            var longOperationBroker = new LongOperationBroker(calculator,
-                                                              new LongWaitDialog(this, "Calculating Half Lives"));
-            if (!longOperationBroker.LaunchJob())
+            using (var longWaitDialog = new LongWaitDialog(this, "Calculating Half Lives"))
             {
-                return;
+                var longOperationBroker = new LongOperationBroker(calculator, longWaitDialog);
+                if (!longOperationBroker.LaunchJob())
+                {
+                    return;
+                }
             }
             colPeptide.Visible = !calculator.ByProtein;
             foreach (var entry in _cohortColumns.ToArray())

@@ -208,10 +208,13 @@ namespace pwiz.Topograph.ui.Forms
                     {
                         dataFileIds.Add(((MsDataFile) row.Tag).Id.Value);
                     }
-                    var longWaitBroker = new LongOperationBroker((b => DeleteDataFiles(b, dataFileIds)),
-                                                                 new LongWaitDialog(this, "Deleting data files"));
-                    longWaitBroker.LaunchJob();
-                    cancelled = longWaitBroker.WasCancelled;
+                    using (var longWaitDialog = new LongWaitDialog(this, "Deleting data files"))
+                    {
+                        var longWaitBroker = new LongOperationBroker((b => DeleteDataFiles(b, dataFileIds)),
+                                                                     longWaitDialog);
+                        longWaitBroker.LaunchJob();
+                        cancelled = longWaitBroker.WasCancelled;
+                    }
                 }
 
                 if (cancelled)

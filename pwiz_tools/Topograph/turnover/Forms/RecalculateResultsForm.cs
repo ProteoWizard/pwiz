@@ -90,13 +90,16 @@ namespace pwiz.Topograph.ui.Forms
         {
             using (var session = Workspace.OpenSession())
             {
-                var broker = new LongOperationBroker(b =>
-                                                         {
-                                                             session.BeginTransaction();
-                                                             Workspace.UpdateWorkspaceVersion(b, session, v);
-                                                             session.Transaction.Commit();
-                                                         }, new LongWaitDialog(this, "Updating Workspace"), session);
-                broker.LaunchJob();
+                using (var longWaitDialog = new LongWaitDialog(this, "Updating Workspace"))
+                {
+                    var broker = new LongOperationBroker(b =>
+                    {
+                        session.BeginTransaction();
+                        Workspace.UpdateWorkspaceVersion(b, session, v);
+                        session.Transaction.Commit();
+                    }, longWaitDialog, session);
+                    broker.LaunchJob();
+                }
             }
         }
     }

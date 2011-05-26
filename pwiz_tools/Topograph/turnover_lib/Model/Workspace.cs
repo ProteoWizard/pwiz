@@ -528,7 +528,7 @@ namespace pwiz.Topograph.Model
             lock(this)
             {
                 EnsureEntitiesChangedEventArgs().AddChangedEntity(key);
-                if (key is PeptideAnalysis)
+                if (key is PeptideAnalysis && ((PeptideAnalysis)key).IsDirty())
                 {
                     _dirtyPeptideAnalyses.Add((PeptideAnalysis) key);
                 }
@@ -912,6 +912,10 @@ namespace pwiz.Topograph.Model
                 if (!peptideAnalysis.IsDirty())
                 {
                     _dirtyPeptideAnalyses.Remove(peptideAnalysis);
+                }
+                else
+                {
+                    peptideAnalysis.IsDirty();
                 }
             }
             bool isDirty = _dirtyPeptideAnalyses.Count > 0

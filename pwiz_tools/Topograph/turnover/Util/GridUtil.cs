@@ -12,50 +12,52 @@ namespace pwiz.Topograph.ui.Util
         public static void ExportResults(DataGridView dataGridView, String name)
         {
             Settings.Default.Reload();
-            var dialog = new SaveFileDialog()
-            {
-                Filter = "Tab Separated Values (*.tsv)|*.tsv|All Files|*.*",
-                InitialDirectory = Settings.Default.ExportResultsDirectory,
-            };
-            if (name != null)
-            {
-                dialog.FileName = name + ".tsv";
-            }
-            if (dialog.ShowDialog(dataGridView) == DialogResult.Cancel)
-            {
-                return;
-            }
-            String filename = dialog.FileName;
-            Settings.Default.ExportResultsDirectory = Path.GetDirectoryName(filename);
-            Settings.Default.Save();
-            var columns = GetColumnsSortedByDisplayIndex(dataGridView).Where(c => c.Visible);
-            using (var stream = File.OpenWrite(filename))
-            {
-                using (var writer = new StreamWriter(stream))
+            using (var dialog = new SaveFileDialog
                 {
-                    var tab = "";
-                    foreach (var column in columns)
+                    Filter = "Tab Separated Values (*.tsv)|*.tsv|All Files|*.*",
+                    InitialDirectory = Settings.Default.ExportResultsDirectory,
+                })
+            {
+                if (name != null)
+                {
+                    dialog.FileName = name + ".tsv";
+                }
+                if (dialog.ShowDialog(dataGridView) == DialogResult.Cancel)
+                {
+                    return;
+                }
+                String filename = dialog.FileName;
+                Settings.Default.ExportResultsDirectory = Path.GetDirectoryName(filename);
+                Settings.Default.Save();
+                var columns = GetColumnsSortedByDisplayIndex(dataGridView).Where(c => c.Visible);
+                using (var stream = File.OpenWrite(filename))
+                {
+                    using (var writer = new StreamWriter(stream))
                     {
-                        writer.Write(tab);
-                        tab = "\t";
-                        writer.Write(column.HeaderText);
-                    }
-                    writer.WriteLine();
-                    for (int iRow = 0; iRow < dataGridView.Rows.Count; iRow++)
-                    {
-                        var row = dataGridView.Rows[iRow];
-                        tab = "";
+                        var tab = "";
                         foreach (var column in columns)
                         {
-                            if (!column.Visible)
-                            {
-                                continue;
-                            }
                             writer.Write(tab);
                             tab = "\t";
-                            writer.Write(StripLineBreaks(row.Cells[column.Index].Value));
+                            writer.Write(column.HeaderText);
                         }
                         writer.WriteLine();
+                        for (int iRow = 0; iRow < dataGridView.Rows.Count; iRow++)
+                        {
+                            var row = dataGridView.Rows[iRow];
+                            tab = "";
+                            foreach (var column in columns)
+                            {
+                                if (!column.Visible)
+                                {
+                                    continue;
+                                }
+                                writer.Write(tab);
+                                tab = "\t";
+                                writer.Write(StripLineBreaks(row.Cells[column.Index].Value));
+                            }
+                            writer.WriteLine();
+                        }
                     }
                 }
             }

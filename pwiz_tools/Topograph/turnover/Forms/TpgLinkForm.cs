@@ -128,18 +128,20 @@ namespace pwiz.Topograph.ui.Forms
             if (BrowseOnOk && string.IsNullOrEmpty(Filename))
             {
                 Settings.Default.Reload();
-                var fileDialog = new SaveFileDialog()
+                using (var fileDialog = new SaveFileDialog()
                                      {
                                          Filter = TurnoverForm.OnlineWorkspaceFilter,
                                          InitialDirectory = Settings.Default.WorkspaceDirectory,
                                          FileName = tbxDatabase.Text + ".tpglnk",
-                };
-
-                if (fileDialog.ShowDialog(this) == DialogResult.Cancel)
+                                     })
                 {
-                    return;
+
+                    if (fileDialog.ShowDialog(this) == DialogResult.Cancel)
+                    {
+                        return;
+                    }
+                    Filename = fileDialog.FileName;
                 }
-                Filename = fileDialog.FileName;
             }
             DialogResult = DialogResult.OK;
             Close();

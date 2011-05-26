@@ -131,10 +131,13 @@ namespace pwiz.Topograph.ui.Controls
                 var entityTypesToQuery = new HashSet<String>();
                 var query = session.CreateQuery(parsedQuery.GetExecuteHql());
                 var queryExecuter = new QueryExecuter(session, query, new List<object>());
-                var broker = new LongOperationBroker(queryExecuter, new LongWaitDialog(this, "Executing Query"));
-                if (!broker.LaunchJob())
+                using (var longWaitDialog = new LongWaitDialog(this, "Executing Query"))
                 {
-                    return false;
+                    var broker = new LongOperationBroker(queryExecuter, longWaitDialog);
+                    if (!broker.LaunchJob())
+                    {
+                        return false;
+                    }
                 }
                 var results = queryExecuter.Results;
                 foreach (var selectColumn in parsedQuery.Columns)
@@ -234,50 +237,52 @@ namespace pwiz.Topograph.ui.Controls
         public void ExportResults(ParsedQuery parsedQuery, String name)
         {
             Settings.Default.Reload();
-            var dialog = new SaveFileDialog()
-                             {
-                                 Filter = "Tab Separated Values (*.tsv)|*.tsv|All Files|*.*",
-                                 InitialDirectory = Settings.Default.ExportResultsDirectory,
-                             };
-            if (name != null)
+            using (var dialog = new SaveFileDialog()
             {
-                dialog.FileName = name + ".tsv";
-            }
-            if (dialog.ShowDialog(this) == DialogResult.Cancel)
+                Filter = "Tab Separated Values (*.tsv)|*.tsv|All Files|*.*",
+                InitialDirectory = Settings.Default.ExportResultsDirectory,
+            })
             {
-                return;
-            }
-            String filename = dialog.FileName;
-            Settings.Default.ExportResultsDirectory = Path.GetDirectoryName(filename);
-            Settings.Default.Save();
-            IList<object[]> rows;
-            IList<String> columnNames;
-            if (!ExecuteQuery(parsedQuery, out rows, out columnNames))
-            {
-                return;
-            }
-            using (var stream = File.OpenWrite(filename))
-            {
-                using (var writer = new StreamWriter(stream))
+                if (name != null)
                 {
-                    var tab = "";
-                    foreach (var columnName in columnNames)
+                    dialog.FileName = name + ".tsv";
+                }
+                if (dialog.ShowDialog(this) == DialogResult.Cancel)
+                {
+                    return;
+                }
+                String filename = dialog.FileName;
+                Settings.Default.ExportResultsDirectory = Path.GetDirectoryName(filename);
+                Settings.Default.Save();
+                IList<object[]> rows;
+                IList<String> columnNames;
+                if (!ExecuteQuery(parsedQuery, out rows, out columnNames))
+                {
+                    return;
+                }
+                using (var stream = File.OpenWrite(filename))
+                {
+                    using (var writer = new StreamWriter(stream))
                     {
-                        writer.Write(tab);
-                        tab = "\t";
-                        writer.Write(columnName);
-                    }
-                    writer.WriteLine();
-                    foreach (var row in rows)
-                    {
-                        tab = "";
-                        foreach (var cell in row)
+                        var tab = "";
+                        foreach (var columnName in columnNames)
                         {
                             writer.Write(tab);
                             tab = "\t";
-                            writer.Write(StripLineBreaks(cell));
+                            writer.Write(columnName);
                         }
                         writer.WriteLine();
+                        foreach (var row in rows)
+                        {
+                            tab = "";
+                            foreach (var cell in row)
+                            {
+                                writer.Write(tab);
+                                tab = "\t";
+                                writer.Write(StripLineBreaks(cell));
+                            }
+                            writer.WriteLine();
+                        }
                     }
                 }
             }

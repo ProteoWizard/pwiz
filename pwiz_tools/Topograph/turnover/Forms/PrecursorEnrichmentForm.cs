@@ -38,14 +38,17 @@ namespace pwiz.Topograph.ui.Forms
             IDictionary<CohortKey, IDictionary<double, int>> rows = null;
             using (var session = Workspace.OpenSession())
             {
-                var broker = new LongOperationBroker(new Action<LongOperationBroker>(delegate
-                                                                                         {
-                                                                                             rows = QueryRecords(session);
-                                                                                         }),
-                                                     new LongWaitDialog(this, "Querying database"), session);
-                if (broker.LaunchJob())
+                using (var longWaitDialog = new LongWaitDialog(this, "Querying database"))
                 {
-                    _queryRows = rows;
+                    var broker = new LongOperationBroker(new Action<LongOperationBroker>(delegate
+                                                                                             {
+                                                                                                 rows = QueryRecords(session);
+                                                                                             }),
+                                                         longWaitDialog, session);
+                    if (broker.LaunchJob())
+                    {
+                        _queryRows = rows;
+                    }
                 }
             }
             RefreshUi();

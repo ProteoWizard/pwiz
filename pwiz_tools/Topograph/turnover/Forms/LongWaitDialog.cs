@@ -52,6 +52,13 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
+        protected override void OnClosed(EventArgs e)
+        {
+            base.OnClosed(e);
+            Dispose();
+            timer1.Dispose();
+        }
+
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             base.OnFormClosing(e);
