@@ -499,7 +499,7 @@ void Serializer_Text::Impl::setHeaders(const vector<string>& headers) const
 }
 
 
-PWIZ_API_DECL const string Serializer_Text::IdFieldNames[] =
+const string PWIZ_API_DECL Serializer_Text::IdFieldNames[] =
 {
     "none",
     "scan",
