@@ -404,19 +404,19 @@ if [ modules.peek : NT ]
 {
     import path ;
 
-    # extract the vendor APIs if the user agrees to the licenses
-    if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
+    if ! --incremental in [ modules.peek : ARGV ]
     {
-        if ! --incremental in [ modules.peek : ARGV ]
-	{
+        # extract the vendor APIs if the user agrees to the licenses
+        if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
+        {
             echo "Extracting vendor APIs..." ;
             SHELL "$(PWIZ_LIBRARIES_PATH)\\7za.exe x -aoa -pi-agree-to-the-vendor-licenses -o$(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility $(PWIZ_ROOT_PATH)\\pwiz_aux\\msrc\\utility\\vendor_api.7z" ;
         }
-    }
-    else
-    {
-        echo "NOTICE: not extracting vendor APIs; use --i-agree-to-the-vendor-licenses to extract and use them." ;
-    }
+        else
+        {
+            echo "NOTICE: not extracting vendor APIs; use --i-agree-to-the-vendor-licenses to extract and use them." ;
+        }
+     }
 
     # HACK: bug in boost::iostreams 1.43 requires a patch to support building with link=shared
     # Boost bug ticket: https://svn.boost.org/trac/boost/ticket/4335

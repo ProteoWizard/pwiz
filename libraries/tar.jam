@@ -300,6 +300,14 @@ rule quote-string ( string )
 
 rule extract ( tar-filepath : include-patterns * : tar-requirements * : tar-usage-requirements * : check-last-file-only ? )
 {
+    if ! --incremental in [ modules.peek : ARGV ]
+    {
+        extract-really $(tar-filepath) : $(include-patterns) : $(tar-requirements) : $(tar-usage-requirements) : $(check-last-file-only) ;
+    }
+}
+
+rule extract-really ( tar-filepath : include-patterns * : tar-requirements * : tar-usage-requirements * : check-last-file-only ? )
+{
     #local project = [ project.current ] ;
 
     # TODO: make this target-centric approach work (without awful performance)
