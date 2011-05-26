@@ -147,7 +147,8 @@
             // 
             // btnReimport
             // 
-            this.btnReimport.Location = new System.Drawing.Point(284, 211);
+            this.btnReimport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnReimport.Location = new System.Drawing.Point(283, 211);
             this.btnReimport.Name = "btnReimport";
             this.btnReimport.Size = new System.Drawing.Size(75, 23);
             this.btnReimport.TabIndex = 9;

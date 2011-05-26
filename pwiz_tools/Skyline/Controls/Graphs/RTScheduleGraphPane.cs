@@ -50,7 +50,6 @@ namespace pwiz.Skyline.Controls.Graphs
             : base(graphSummary)
         {
             XAxis.Title.Text = "Scheduled Time";
-            YAxis.Title.Text = "Concurrent Transitions";
             YAxis.Scale.MinAuto = false;
             YAxis.Scale.Min = 0;
         }
@@ -58,6 +57,11 @@ namespace pwiz.Skyline.Controls.Graphs
         public override void UpdateGraph(bool checkData)
         {
             SrmDocument document = GraphSummary.DocumentUIContainer.DocumentUI;
+
+            // TODO: Make it possible to see transition scheduling when full-scan enabled.
+            YAxis.Title.Text = document.Settings.TransitionSettings.FullScan.IsEnabledMsMs
+                                   ? "Concurrent Precursors"
+                                   : "Concurrent Transitions";
 
             CurveList.Clear();
 
@@ -83,6 +87,7 @@ namespace pwiz.Skyline.Controls.Graphs
         private void AddCurve(SrmDocument document, Color color)
         {
             var predict = document.Settings.PeptideSettings.Prediction;
+            bool fullScan = document.Settings.TransitionSettings.FullScan.IsEnabledMsMs;
 
             // TODO: Guess this value from the document
             const bool singleWindow = false;
@@ -102,7 +107,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
                     if (retentionTime.HasValue)
                     {
-                        var schedule = new PrecursorScheduleBase(nodeGroup, retentionTime.Value, timeWindow, 0);
+                        // TODO: Make it possible to see transition scheduling when full-scan enabled.
+                        var schedule = new PrecursorScheduleBase(nodeGroup, retentionTime.Value, timeWindow, fullScan, 0);
                         xMin = Math.Min(xMin, schedule.StartTime);
                         xMax = Math.Max(xMax, schedule.EndTime);
                         listSchedules.Add(schedule);

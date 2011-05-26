@@ -87,6 +87,8 @@ namespace pwiz.Skyline.Model
 
         public ExportStrategy Strategy { get; set; }
         public ExportMethodType MethodType { get; set; }
+        public bool IsPrecursorLimited { get; set; }
+        public bool FullScans { get; set; }
         public int? MaxTransitions { get; set; }
         public int MinTransitions { get; set; }
         public bool IgnoreProteins { get; set; }
@@ -126,7 +128,7 @@ namespace pwiz.Skyline.Model
         public void Export(string fileName)
         {
             bool single = (Strategy == ExportStrategy.Single);
-            using (var fileIterator = new FileIterator(fileName, single, WriteHeaders))
+            using (var fileIterator = new FileIterator(fileName, single, IsPrecursorLimited, WriteHeaders))
             {
                 MemoryOutput = fileIterator.MemoryOutput;
 
@@ -156,7 +158,7 @@ namespace pwiz.Skyline.Model
                     fileIterator.NextFile();
                 }
                 else if (!single && (!fileIterator.HasFile ||
-                    (!IgnoreProteins && ExceedsMax(fileIterator.TransitionCount + CalcTransitionCount(seq.TransitionCount)))))
+                    (!IgnoreProteins && ExceedsMax(fileIterator.TransitionCount + CalcTransitionCount(seq)))))
                 {
                     fileIterator.NextFile();
                 }
@@ -170,7 +172,7 @@ namespace pwiz.Skyline.Model
                     // Never split transitions from a single peptide across multiple injections,
                     // since this would mess up coelution and quantitation.
                     if (!single && fileIterator.TransitionCount > 0 &&
-                            ExceedsMax(fileIterator.TransitionCount + CalcTransitionCount(peptide.TransitionCount)))
+                            ExceedsMax(fileIterator.TransitionCount + CalcTransitionCount(peptide)))
                     {
                         fileIterator.NextFile();
                     }
@@ -201,6 +203,16 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        private int CalcTransitionCount(PeptideGroupDocNode nodePepGroup)
+        {
+            return CalcTransitionCount(IsPrecursorLimited ? nodePepGroup.TransitionGroupCount : nodePepGroup.TransitionCount);
+        }
+
+        private int CalcTransitionCount(PeptideDocNode nodePep)
+        {
+            return CalcTransitionCount(IsPrecursorLimited ? nodePep.TransitionGroupCount : nodePep.TransitionCount);
+        }
+
         private int CalcTransitionCount(int transitionNodes)
         {
             if (OptimizeType == null)
@@ -216,7 +228,9 @@ namespace pwiz.Skyline.Model
             bool singleWindow = IsSingleWindowInstrumentType(InstrumentType);
 
             var predict = Document.Settings.PeptideSettings.Prediction;
-            int? maxInstrumentTrans = Document.Settings.TransitionSettings.Instrument.MaxTransitions;
+            int? maxInstrumentTrans = null;
+            if (!IsPrecursorLimited)
+                maxInstrumentTrans = Document.Settings.TransitionSettings.Instrument.MaxTransitions;
             var listSchedules = new List<PeptideSchedule>();
             var listUnscheduled = new List<PeptideSchedule>();
             foreach (PeptideGroupDocNode nodePepGroup in Document.PeptideGroups)
@@ -230,9 +244,15 @@ namespace pwiz.Skyline.Model
                         double? retentionTime = predict.PredictRetentionTime(Document, nodePep, nodeTranGroup, SchedulingReplicateIndex,
                             SchedulingAlgorithm, singleWindow, out timeWindow);
                         if (retentionTime.HasValue)
-                            peptideSchedule.Add(new PrecursorSchedule(nodePepGroup, nodePep, nodeTranGroup, retentionTime.Value, timeWindow, OptimizeStepCount));
+                        {
+                            peptideSchedule.Add(new PrecursorSchedule(nodePepGroup, nodePep, nodeTranGroup,
+                                retentionTime.Value, timeWindow, IsPrecursorLimited, OptimizeStepCount));
+                        }
                         else
-                            peptideSchedule.Add(new PrecursorSchedule(nodePepGroup, nodePep, nodeTranGroup, 0, 0, OptimizeStepCount));
+                        {
+                            peptideSchedule.Add(new PrecursorSchedule(nodePepGroup, nodePep, nodeTranGroup,
+                                0, 0, IsPrecursorLimited, OptimizeStepCount));
+                        }
                     }
                     if (peptideSchedule.CanSchedule)
                         listSchedules.Add(peptideSchedule);
@@ -251,20 +271,22 @@ namespace pwiz.Skyline.Model
                 listScheduleBuckets.Add(listScheduleNext);
                 if (listScheduleNext.TransitionCount == 0)
                 {
+                    string itemName = IsPrecursorLimited ? "precursors" : "transitions";
                     var sb = new StringBuilder();
                     foreach (var peptideSchedule in listSchedules)
                     {
                         if (peptideSchedule.TransitionCount > MaxTransitions.Value)
                         {
-                            sb.AppendLine(string.Format("{0} - {1} transitions",
+                            sb.AppendLine(string.Format("{0} - {1} {2}",
                                 peptideSchedule.Peptide.Peptide,
-                                peptideSchedule.TransitionCount));
+                                peptideSchedule.TransitionCount,
+                                itemName));
                         }
                     }
                     if (OptimizeStepCount == 0)
-                        throw new IOException(string.Format("Failed to schedule the following peptides with the current settings:\n\n{0}\n\nCheck max concurrent transitions count.", sb));
+                        throw new IOException(string.Format("Failed to schedule the following peptides with the current settings:\n\n{0}\n\nCheck max concurrent {1} count.", sb, itemName));
                     else
-                        throw new IOException(string.Format("Failed to schedule the following peptides with the current settings:\n\n{0}\nCheck max concurrent transitions count and optimization step count.", sb));
+                        throw new IOException(string.Format("Failed to schedule the following peptides with the current settings:\n\n{0}\nCheck max concurrent {1} count and optimization step count.", sb, itemName));
                 }
                 totalScheduled += listScheduleNext.TransitionCount;
             }
@@ -483,8 +505,8 @@ namespace pwiz.Skyline.Model
         {
             public PrecursorSchedule(PeptideGroupDocNode nodePepGroup, PeptideDocNode nodePep,
                     TransitionGroupDocNode nodeTranGroup, double retentionTime, double timeWindow,
-                    int optimizeStepCount)
-                : base(nodeTranGroup, retentionTime, timeWindow, optimizeStepCount)
+                    bool IsPrecursorLimited, int optimizeStepCount)
+                : base(nodeTranGroup, retentionTime, timeWindow, IsPrecursorLimited, optimizeStepCount)
             {
                 PeptideGroup = nodePepGroup;
                 Peptide = nodePep;
@@ -755,12 +777,16 @@ namespace pwiz.Skyline.Model
             private FileSaver _saver;
             private TextWriter _writer;
             private readonly bool _single;
+            private readonly bool _isPrecursorLimited;
             private readonly Action<TextWriter> _writeHeaders;
 
-            public FileIterator(string fileName, bool single, Action<TextWriter> writeHeaders)
+            private TransitionGroupDocNode _nodeGroupLast;
+
+            public FileIterator(string fileName, bool single, bool isPrecursorLimited, Action<TextWriter> writeHeaders)
             {
                 FileName = fileName;
                 _single = single;
+                _isPrecursorLimited = isPrecursorLimited;
                 _writeHeaders = writeHeaders;
                 if (fileName == null)
                 {
@@ -881,7 +907,15 @@ namespace pwiz.Skyline.Model
 
                 exporter.WriteTransition(_writer, seq, peptide, group, transition, step);
 
-                TransitionCount++;
+                // If not full-scan, count transtions
+                if (!_isPrecursorLimited)
+                    TransitionCount++;
+                // Otherwise, count precursors
+                else if (!ReferenceEquals(_nodeGroupLast, group))
+                {
+                    TransitionCount++;
+                    _nodeGroupLast = group;
+                }
             }
         }
     }
@@ -889,18 +923,27 @@ namespace pwiz.Skyline.Model
     internal class PrecursorScheduleBase
     {
         public PrecursorScheduleBase(TransitionGroupDocNode nodeGroup, double retentionTime,
-            double timeWindow, int optimizeStepCount)
+            double timeWindow, bool isPrecursorLimited, int optimizeStepCount)
         {
             TransitionGroup = nodeGroup;
             StartTime = retentionTime - (timeWindow / 2);
             EndTime = StartTime + timeWindow;
+            IsPrecursorLimited = isPrecursorLimited;
             OptimizeStepCount = optimizeStepCount;
         }
 
         public TransitionGroupDocNode TransitionGroup { get; private set; }
-        public int TransitionCount { get { return TransitionGroup.TransitionCount * (OptimizeStepCount*2 + 1); } }
+        public int TransitionCount
+        {
+            get
+            {
+                int count = IsPrecursorLimited ? 1 : TransitionGroup.TransitionCount;
+                return count*(OptimizeStepCount*2 + 1);
+            }
+        }
         public double StartTime { get; set; }
         public double EndTime { get; set; }
+        public bool IsPrecursorLimited { get; set; }
         public int OptimizeStepCount { get; set; }
 
         public bool ContainsTime(double time)
@@ -1060,9 +1103,9 @@ namespace pwiz.Skyline.Model
             // is yet possible on the LTQ. (requires dealing with
             // segments)
             RunLength = 0;
+            // The LTQ is always precursor limited even when exporting pseudo-SRM
+            IsPrecursorLimited = true;
         }
-
-        public bool FullScans { get; set; }
 
         public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
         {

@@ -31,7 +31,6 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI
 {
@@ -140,16 +139,7 @@ namespace pwiz.Skyline.FileUI
             DwellTime = Settings.Default.ExportMethodDwellTime;
             RunLength = Settings.Default.ExportMethodRunLength;
 
-            try
-            {
-                string maxTran = Settings.Default.ExportMethodMaxTran;
-                if (!string.IsNullOrEmpty(maxTran))
-                    MaxTransitions = int.Parse(maxTran);
-            }
-            catch (FormatException)
-            {
-                MaxTransitions = null;
-            }
+            UpdateMaxTransitions();
 
             cbEnergyRamp.Checked = Settings.Default.ExportThermoEnergyRamp;
             // Reposition from design layout
@@ -339,6 +329,24 @@ namespace pwiz.Skyline.FileUI
             cbFullScan.Visible = IsFullScanInstrument;
         }
 
+        private void UpdateMaxTransitions()
+        {
+            try
+            {
+                string maxTran = IsFullScanInstrument
+                                     ? Settings.Default.ExportMethodMaxPrec
+                                     : Settings.Default.ExportMethodMaxTran;
+                if (string.IsNullOrEmpty(maxTran))
+                    MaxTransitions = null;
+                else
+                    MaxTransitions = int.Parse(maxTran);
+            }
+            catch (FormatException)
+            {
+                MaxTransitions = null;
+            }
+        }
+
         public ExportMethodType MethodType
         {
             get { return _methodType; }
@@ -517,7 +525,8 @@ namespace pwiz.Skyline.FileUI
                 // CONSIDER: Better error message when instrument limitation encountered?
                 int maxInstrumentTrans = documentExport.Settings.TransitionSettings.Instrument.MaxTransitions ??
                                          TransitionInstrument.MAX_TRANSITION_MAX;
-                if (!helper.ValidateNumberTextBox(e, textMaxTransitions, 10, maxInstrumentTrans, out maxVal))
+                int minTrans = IsFullScanInstrument ? 2 : 10;
+                if (!helper.ValidateNumberTextBox(e, textMaxTransitions, minTrans, maxInstrumentTrans, out maxVal))
                     return;
                 // Make sure all the precursors can fit into a single document
                 if (!ValidatePrecursorFit(documentExport, maxVal))
@@ -658,8 +667,16 @@ namespace pwiz.Skyline.FileUI
             Settings.Default.ExportInstrumentType = _instrumentType;
             Settings.Default.ExportMethodStrategy = _exportStrategy.ToString();
             Settings.Default.ExportIgnoreProteins = _ignoreProteins;
-            Settings.Default.ExportMethodMaxTran = (_maxTransitions != null ?
-                _maxTransitions.ToString() : null);
+            if (IsFullScanInstrument)
+            {
+                Settings.Default.ExportMethodMaxPrec = (_maxTransitions != null ?
+                    _maxTransitions.ToString() : null);                
+            }
+            else
+            {
+                Settings.Default.ExportMethodMaxTran = (_maxTransitions != null ?
+                    _maxTransitions.ToString() : null);
+            }
             Settings.Default.ExportMethodType = _methodType.ToString();
             if (textDwellTime.Visible)
                 Settings.Default.ExportMethodDwellTime = DwellTime;
@@ -895,6 +912,8 @@ namespace pwiz.Skyline.FileUI
 
         private void comboInstrument_SelectedIndexChanged(object sender, EventArgs e)
         {
+            bool wasFullScanInstrument = IsFullScanInstrument;
+
             _instrumentType = comboInstrument.SelectedItem.ToString();
 
             bool standard = Equals(comboTargetType.SelectedItem.ToString(), ExportMethodType.Standard.ToString());
@@ -908,6 +927,8 @@ namespace pwiz.Skyline.FileUI
             UpdateEnergyRamp(standard);
             UpdateMaxLabel(standard);
             UpdateFullScan();
+            if (wasFullScanInstrument != IsFullScanInstrument)
+                UpdateMaxTransitions();
 
             MethodTemplateFile templateFile;
             if (Settings.Default.ExportMethodTemplateList.TryGetValue(_instrumentType, out templateFile))
