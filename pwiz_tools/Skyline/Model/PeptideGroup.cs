@@ -23,6 +23,7 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Model.Lib;
@@ -100,14 +101,18 @@ namespace pwiz.Skyline.Model
     public class FastaSequence : PeptideGroup
     {
         public const string PEPTIDE_SEQUENCE_SEPARATOR = "::";
+        private static readonly Regex RGX_ALL = new Regex(@"(\[.*?\]|\{.*?\})");
+        public static readonly Regex RGX_LIGHT = new Regex(@"\[.*?\]");
+        public static readonly Regex RGX_HEAVY = new Regex(@"\{.*?\}");
+
         public static bool IsSequence(string seq)
         {
-            return IsSequence(seq, AminoAcid.IsAA);
+            return IsSequence(StripModifications(seq), AminoAcid.IsAA);
         }
 
         public static bool IsExSequence(string seq)
         {
-            return IsSequence(seq, AminoAcid.IsExAA);
+            return IsSequence(StripModifications(seq), AminoAcid.IsExAA);
         }
 
         private static bool IsSequence(string seq, Func<char, bool> check)
@@ -121,6 +126,20 @@ namespace pwiz.Skyline.Model
                     return false;
             }
             return true;
+        }
+
+        public static string StripModifications(string seq)
+        {
+            return StripModifications(seq, RGX_ALL);
+        }
+
+        public static string StripModifications(string seq, Regex rgx)
+        {
+            // If the sequence begins with anything other than an AA, 
+            // it is not a valid modified sequence.
+            if(seq.Length == 0 || !AminoAcid.IsExAA(seq[0]))
+                return seq;
+            return rgx.Replace(seq, "");
         }
 
         private readonly string _name;
@@ -202,6 +221,7 @@ namespace pwiz.Skyline.Model
 
         public PeptideDocNode CreateFullPeptideDocNode(SrmSettings settings, String peptideSequence)
         {
+            peptideSequence = StripModifications(peptideSequence);
             foreach (var peptideDocNode in CreateFullPeptideDocNodes(settings, false))
             {
                 if (peptideSequence == peptideDocNode.Peptide.Sequence)

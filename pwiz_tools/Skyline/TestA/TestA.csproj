@@ -71,6 +71,7 @@
     <Compile Include="LibrarySettingsTest.cs" />
     <Compile Include="LossesTest.cs" />
     <Compile Include="MassCalcTest.cs" />
+    <Compile Include="ModificationMatcherTest.cs" />
     <Compile Include="PasteTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RefineTest.cs" />

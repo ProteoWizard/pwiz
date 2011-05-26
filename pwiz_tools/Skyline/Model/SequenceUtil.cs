@@ -469,21 +469,10 @@ namespace pwiz.Skyline.Model
 
             // Otherwise, build a modified sequence string like AMC[+57.0]LP[-37.1]K
             StringBuilder sb = new StringBuilder();
-            var modMasses = GetModMasses(mods);
             for (int i = 0, len = seq.Length; i < len; i++)
             {
                 char c = seq[i];
-
-                double mod = modMasses._aminoModMasses[c];
-                // Explicit modifications
-                if (mods != null && i < mods.ModMasses.Count)
-                    mod += mods.ModMasses[i];
-                // Terminal modifications
-                if (i == 0)
-                    mod += modMasses._massModCleaveN + modMasses._aminoNTermModMasses[c];
-                else if (i == len - 1)
-                    mod += modMasses._massModCleaveC + modMasses._aminoCTermModMasses[c];
-
+                var mod = GetAAModMass(c, i, len, mods);
                 sb.Append(c);
                 if (mod != 0)
                     sb.Append(GetModDiffDescription(mod, formatNarrow));
@@ -491,6 +480,26 @@ namespace pwiz.Skyline.Model
             return sb.ToString();
         }
 
+        public double GetAAModMass(char aa, int seqIndex, int seqLength)
+        {
+            return GetAAModMass(aa, seqIndex, seqLength, null);
+        }
+
+        public double GetAAModMass(char aa, int seqIndex, int seqLength, ExplicitSequenceMods mods)
+        {
+            var modMasses = GetModMasses(mods);
+            double mod = modMasses._aminoModMasses[aa];
+            // Explicit modifications
+            if (mods != null && seqIndex < mods.ModMasses.Count)
+                mod += mods.ModMasses[seqIndex];
+            // Terminal modifications
+            if (seqIndex == 0)
+                mod += modMasses._massModCleaveN + modMasses._aminoNTermModMasses[aa];
+            else if (seqIndex == seqLength - 1)
+                mod += modMasses._massModCleaveC + modMasses._aminoCTermModMasses[aa];
+            return mod;
+
+        }
         public MassDistribution GetMzDistribution(string seq, int charge, IsotopeAbundances abundances)
         {
             return GetMzDistribution(seq, charge, abundances, null);
@@ -912,7 +921,16 @@ namespace pwiz.Skyline.Model
             return _massCalcBase.GetModifiedSequence(seq, _mods, formatNarrow);
         }
 
+        public double GetAAModMass(char aa, int seqIndex, int seqLength)
+        {
+            return _massCalcBase.GetAAModMass(aa, seqIndex, seqLength, _mods);
+        }
+
         public MassDistribution GetMzDistribution(string seq, int charge, IsotopeAbundances abundances)
+
+
+
+
         {
             return _massCalcBase.GetMzDistribution(seq, charge, abundances, _mods);
         }

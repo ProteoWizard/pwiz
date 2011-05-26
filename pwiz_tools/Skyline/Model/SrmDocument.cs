@@ -539,6 +539,19 @@ namespace pwiz.Skyline.Model
                 to, out firstAdded, out nextAdd);
         }
 
+        public SrmDocument ImportFasta(TextReader reader, ILongWaitBroker longWaitBroker, long lines, 
+            ModificationMatcher matcher, IdentityPath to, out IdentityPath firstAdded, out IdentityPath nextAdded)
+        {
+            if (matcher == null)
+            {
+                nextAdded = null;
+                return ImportFasta(reader, false, to, out firstAdded);
+            }
+
+            FastaImporter importer = new FastaImporter(this, matcher);
+            return AddPeptideGroups(importer.Import(reader, longWaitBroker, lines), true, to, out firstAdded, out nextAdded);
+        }
+
         public SrmDocument ImportMassList(TextReader reader, IFormatProvider provider, char separator,
             IdentityPath to, out IdentityPath firstAdded)
         {

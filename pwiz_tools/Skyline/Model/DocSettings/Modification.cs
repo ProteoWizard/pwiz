@@ -788,7 +788,7 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <param name="staticMods">The new <see cref="StaticMod"/> objects</param>
         /// <param name="explicitMods">The original <see cref="ExplicitMod"/> objects</param>
         /// <returns>A new list of <see cref="ExplicitMod"/> objects with <see cref="StaticMod"/> objects updated</returns>
-        public static IList<ExplicitMod> ChangeGlobalMods(IList<StaticMod> staticMods, IList<ExplicitMod> explicitMods)
+        public IList<ExplicitMod> ChangeGlobalMods(IList<StaticMod> staticMods, IList<ExplicitMod> explicitMods)
         {
             var modsNew = new List<ExplicitMod>();
             foreach (var mod in explicitMods)
@@ -800,6 +800,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (iStaticMod == -1)
                     continue;
                 var staticMod = staticMods[iStaticMod];
+                if(!staticMod.IsMod(Peptide.Sequence[mod.IndexAA], mod.IndexAA, Peptide.Sequence.Length))
+                    continue;
                 if (mod.Modification.EquivalentAll(staticMod))
                     modsNew.Add(mod);
                 else

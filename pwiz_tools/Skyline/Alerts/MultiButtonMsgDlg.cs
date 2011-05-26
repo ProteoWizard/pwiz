@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 
+using System;
 using System.Windows.Forms;
 
 namespace pwiz.Skyline.Alerts
@@ -50,7 +51,9 @@ namespace pwiz.Skyline.Alerts
                 btn1.DialogResult = DialogResult.OK;
             }
             btn1.Text = btn1Text;
+            int height = labelMessage.Height;
             labelMessage.Text = message;
+            Height += Math.Max(0, labelMessage.Height - height * 3);
         }
 
         public void Btn0Click()

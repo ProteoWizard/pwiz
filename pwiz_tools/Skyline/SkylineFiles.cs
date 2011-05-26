@@ -31,6 +31,7 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
@@ -637,22 +638,54 @@ namespace pwiz.Skyline
         private void ImportFasta(TextReader reader, long lineCount, bool peptideList, string description)
         {
             SrmTreeNode nodePaste = sequenceTree.SelectedNode as SrmTreeNode;
-
             IdentityPath selectPath = null;
-
+            var to = nodePaste != null ? nodePaste.Path : null;
+            
             var docCurrent = DocumentUI;
+
+            ModificationMatcher matcher = null;
+            if(peptideList)
+            {
+                matcher = new ModificationMatcher();
+                List<string> sequences = new List<string>();
+                string line;
+                var header = reader.ReadLine(); // Read past header
+                while ((line = reader.ReadLine()) != null)
+                {
+                    sequences.Add(line);
+                }
+                try
+                {
+                    matcher.CreateMatches(docCurrent.Settings, sequences, Settings.Default.StaticModList, Settings.Default.HeavyModList);
+                    var strNameMatches = matcher.FoundMatches;
+                    if (!string.IsNullOrEmpty(strNameMatches))
+                    {
+                        var dlg = new MultiButtonMsgDlg(
+                            string.Format(
+                                "Would you like to use the Unimod definitions for the following modifications?\n\n{0}",
+                                strNameMatches), "OK");
+                        if (dlg.ShowDialog() == DialogResult.Cancel)
+                            return;
+                    }
+                }
+                catch(FormatException x)
+                {
+                    MessageDlg.Show(this, x.Message);
+                    return;
+                }
+                reader = new StringReader(string.Format("{0}\n{1}", header, string.Join("\n", sequences.ToArray())));
+            }
+
             var longWaitDlg = new LongWaitDlg(this)
             {
                 Text = description,
             };
             SrmDocument docNew = null;
+            IdentityPath nextAdded;
             longWaitDlg.PerformWork(this, 1000, () =>
-                docNew = docCurrent.ImportFasta(reader,
-                                                longWaitDlg,
-                                                lineCount,
-                                                peptideList,
-                                                nodePaste != null ? nodePaste.Path : null,
-                                                out selectPath));
+                       docNew = docCurrent.ImportFasta(reader, longWaitDlg, lineCount, matcher, to, out selectPath, out nextAdded));
+
+
             if (docNew == null)
                 return;
 
@@ -697,6 +730,12 @@ namespace pwiz.Skyline
             {
                 if (doc != docCurrent)
                     throw new InvalidDataException("Unexpected document change during operation.");
+                if (matcher != null)
+                {
+                    var pepModsNew = matcher.GetDocModifications(docNew);
+                    docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptideModifications(mods => pepModsNew));
+                    docNew.Settings.UpdateDefaultModifications(false);
+                }
                 return docNew;
             });
 

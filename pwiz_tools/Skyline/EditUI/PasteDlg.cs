@@ -30,6 +30,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -202,7 +203,7 @@ namespace pwiz.Skyline.EditUI
             var origPath = SelectedPath;
             try
             {
-                var document = GetNewDocument(DocumentUiContainer.Document);
+                var document = GetNewDocument(DocumentUiContainer.Document, true);
                 if (document != null)
                     ShowNoErrors();
             }
@@ -212,7 +213,7 @@ namespace pwiz.Skyline.EditUI
             }
         }
 
-        private SrmDocument GetNewDocument(SrmDocument document)
+        private SrmDocument GetNewDocument(SrmDocument document, bool validating)
         {
             if ((document = AddFasta(document)) == null)
             {
@@ -222,7 +223,7 @@ namespace pwiz.Skyline.EditUI
             {
                 return null;
             }
-            if ((document = AddPeptides(document)) == null)
+            if ((document = AddPeptides(document, validating)) == null)
             {
                 return null;
             }
@@ -254,29 +255,45 @@ namespace pwiz.Skyline.EditUI
             gridViewTransitionList.CurrentCell = gridViewTransitionList.Rows[pasteError.Line].Cells[pasteError.Column];
         }
 
-        private SrmDocument AddPeptides(SrmDocument document)
+        private SrmDocument AddPeptides(SrmDocument document, bool validating)
         {
+            var matcher = new ModificationMatcher();
+            var listPeptideSequences = ListPeptideSequences();
+            if (listPeptideSequences == null)
+                return null;
+            try
+            {
+                matcher.CreateMatches(document.Settings, listPeptideSequences, Settings.Default.StaticModList, Settings.Default.HeavyModList);
+            }
+            catch (FormatException e)
+            {
+                MessageDlg.Show(this, e.Message);
+                ShowPeptideError(new PasteError
+                                     {
+                                         Column = colPeptideSequence.Index,
+                                         Message = "Unable to interpret peptide modifications"
+                                     });
+                return null;
+            }
+            var strNameMatches = matcher.FoundMatches;
+            if (!validating && !string.IsNullOrEmpty(strNameMatches))
+            {
+                var dlg = new MultiButtonMsgDlg(
+                    string.Format(
+                        "Would you like to use the Unimod definitions for the following modifications?\n\n{0}",
+                        strNameMatches), "OK");
+                if (dlg.ShowDialog() == DialogResult.Cancel)
+                    return null;
+            }
             var backgroundProteome = GetBackgroundProteome(document);
             for (int i = gridViewPeptides.Rows.Count - 1; i >= 0; i--)
             {
-                var row = gridViewPeptides.Rows[i];
-                var peptideSequence = Convert.ToString(row.Cells[colPeptideSequence.Index].Value);
-                var proteinName = Convert.ToString(row.Cells[colPeptideProtein.Index].Value);
-                if (string.IsNullOrEmpty(peptideSequence) && string.IsNullOrEmpty(proteinName))
-                {
-                    continue;
-                }
-                if (string.IsNullOrEmpty(peptideSequence))
-                {
-                    ShowPeptideError(new PasteError { Column = colPeptideSequence.Index, Line = i, Message = "The peptide sequence cannot be blank."});
-                    return null;
-                }
-                if (!FastaSequence.IsExSequence(peptideSequence))
-                {
-                    ShowPeptideError(new PasteError { Column = colPeptideSequence.Index, Line = i, Message = "This peptide sequence contains invalid characters." });
-                    return null;
-                }
                 PeptideGroupDocNode peptideGroupDocNode;
+                var row = gridViewPeptides.Rows[i];
+                var pepModSequence = Convert.ToString(row.Cells[colPeptideSequence.Index].Value);
+                var proteinName = Convert.ToString(row.Cells[colPeptideProtein.Index].Value);
+                if (string.IsNullOrEmpty(pepModSequence) && string.IsNullOrEmpty(proteinName))
+                    continue;
                 if (string.IsNullOrEmpty(proteinName))
                 {
                     peptideGroupDocNode = GetSelectedPeptideGroupDocNode(document);
@@ -320,11 +337,12 @@ namespace pwiz.Skyline.EditUI
                 }
 
                 var fastaSequence = peptideGroupDocNode.PeptideGroup as FastaSequence;
-                int missedCleavages = document.Settings.PeptideSettings.Enzyme.CountCleavagePoints(peptideSequence);
                 PeptideDocNode nodePepNew;
                 if (fastaSequence != null)
                 {
-                    nodePepNew = fastaSequence.CreateFullPeptideDocNode(document.Settings, peptideSequence);
+                    // Attempt to create node for error checking.
+                    nodePepNew = fastaSequence.CreateFullPeptideDocNode(document.Settings,
+                                                                        FastaSequence.StripModifications(pepModSequence));
                     if (nodePepNew == null)
                     {
                         ShowPeptideError(new PasteError
@@ -336,13 +354,11 @@ namespace pwiz.Skyline.EditUI
                         return null;
                     }
                 }
-                else
-                {
-                    var newPeptide = new Peptide(null, peptideSequence, null, null, missedCleavages);
-                    nodePepNew = new PeptideDocNode(newPeptide, new TransitionGroupDocNode[0]).ChangeSettings(document.Settings, SrmSettingsDiff.ALL);
-                }
+                // Create node using ModificationMatcher.
+                nodePepNew = matcher.GetModifiedNode(pepModSequence, fastaSequence).ChangeSettings(document.Settings,
+                                                                                                  SrmSettingsDiff.ALL);
                 // Avoid adding an existing peptide a second time.
-                if (!peptides.Contains(nodePep => Equals(nodePep.Peptide, nodePepNew.Peptide)))
+                if (!peptides.Contains(nodePep => Equals(nodePep.Key, nodePepNew.Key)))
                 {
                     peptides.Add(nodePepNew);
                     if (nodePepNew.Peptide.FastaSequence != null)
@@ -351,7 +367,50 @@ namespace pwiz.Skyline.EditUI
                     document = (SrmDocument)document.ReplaceChild(newPeptideGroupDocNode);
                 }
             }
+            if (!validating && listPeptideSequences.Count > 0)
+            {
+                var pepModsNew = matcher.GetDocModifications(document);
+                document = document.ChangeSettings(document.Settings.ChangePeptideModifications(mods => pepModsNew));
+                document.Settings.UpdateDefaultModifications(false);
+            }
             return document;
+        }
+
+        private List<string> ListPeptideSequences()
+        {
+            List<string> listSequences = new List<string>();
+            for (int i = gridViewPeptides.Rows.Count - 1; i >= 0; i--)
+            {
+                var row = gridViewPeptides.Rows[i];
+                var peptideSequence = Convert.ToString(row.Cells[colPeptideSequence.Index].Value);
+                var proteinName = Convert.ToString(row.Cells[colPeptideProtein.Index].Value);
+                if (string.IsNullOrEmpty(peptideSequence) && string.IsNullOrEmpty(proteinName))
+                {
+                    continue;
+                }
+                if (string.IsNullOrEmpty(peptideSequence))
+                {
+                    ShowPeptideError(new PasteError
+                    {
+                        Column = colPeptideSequence.Index,
+                        Line = i,
+                        Message = "The peptide sequence cannot be blank."
+                    });
+                    return null;
+                }
+                if (!FastaSequence.IsExSequence(peptideSequence))
+                {
+                    ShowPeptideError(new PasteError
+                    {
+                        Column = colPeptideSequence.Index,
+                        Line = i,
+                        Message = "This peptide sequence contains invalid characters."
+                    });
+                    return null;
+                }
+                listSequences.Add(peptideSequence);
+            }
+            return listSequences;
         }
 
         private static bool IsPeptideListDocNode(PeptideGroupDocNode peptideGroupDocNode)
@@ -892,19 +951,21 @@ namespace pwiz.Skyline.EditUI
                                 : (Equals(dataGridView, gridViewTransitionList) ? colTransitionProteinName.Index : -1);
             
             var proteinName = Convert.ToString(row.Cells[proteinIndex].Value);
-            var peptideSequence = Convert.ToString(row.Cells[sequenceIndex].Value);
+            var pepModSequence = Convert.ToString(row.Cells[sequenceIndex].Value);
 
             // Only enumerate the proteins if the user has not specified a protein.
             if (!string.IsNullOrEmpty(proteinName))
                 return;
             
             // If there is no peptide sequence and no protein, remove this entry.
-            if (string.IsNullOrEmpty(peptideSequence))
+            if (string.IsNullOrEmpty(pepModSequence))
             {
                 dataGridView.Rows.Remove(row);
                 return;
             }
-            
+
+            string peptideSequence = FastaSequence.StripModifications(pepModSequence);
+
             // Check to see if this is a new sequence because we don't want to count peptides more than once for
             // the FilterMatchedPeptidesDlg.
             bool newSequence = !seenPepSeq.Contains(peptideSequence);
@@ -1033,7 +1094,7 @@ namespace pwiz.Skyline.EditUI
             Program.MainWindow.ModifyDocument(Description, 
                                               document =>
                                                   {
-                                                      var newDocument = GetNewDocument(document);
+                                                      var newDocument = GetNewDocument(document, false);
                                                       if (newDocument == null)
                                                       {
                                                           error = true;

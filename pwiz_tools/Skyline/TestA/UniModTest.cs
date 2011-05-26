@@ -38,8 +38,6 @@ namespace pwiz.SkylineTestA
         [TestMethod]
         public void TestUniMod()
         {
-            UniMod.Init();
-
             // UpdateTestXML is used to update the test files if the modifications in UniMod.cs
             // have changed. Before UpdateTestXML is called, TestUniMod should pass with the new changes 
             // to make sure we haven't lost/broken any modifications from earlier versions of UniMod.cs.

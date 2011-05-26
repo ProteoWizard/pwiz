@@ -205,6 +205,11 @@ namespace pwiz.Skyline.Model
         {
             var peptide = new Peptide(null, sequence, null, null,
                 settings.PeptideSettings.Enzyme.CountCleavagePoints(sequence));
+            return CreateAllDocNodes(settings, peptide);
+        }
+
+        public static IEnumerable<PeptideDocNode> CreateAllDocNodes(SrmSettings settings, Peptide peptide)
+        {
             return peptide.CreateDocNodes(settings, PeptideFilter.UNFILTERED);
         }
 

@@ -116,9 +116,9 @@ namespace pwiz.SkylineTestFunctional
             AddHeavyMod(mod15N, peptideSettingsUI);
 //            var mod13C = new StaticMod("All 13C", null, null, null, LabelAtoms.C13, null, null);
 //            AddHeavyMod(mod13C, peptideSettingsUI);
-            var modK13C = new StaticMod("13C K", "K", ModTerminus.C, null, LabelAtoms.C13, null, null);
+            var modK13C = new StaticMod("Label:13C(6) (C-term K)", "K", ModTerminus.C, null, LabelAtoms.C13, null, null);
             AddHeavyMod(modK13C, peptideSettingsUI);
-            var modR13C = new StaticMod("13C R", "R", ModTerminus.C, null, LabelAtoms.C13, null, null);
+            var modR13C = new StaticMod("Label:13C(6) (C-term R)", "R", ModTerminus.C, null, LabelAtoms.C13, null, null);
             AddHeavyMod(modR13C, peptideSettingsUI);
             var modV13C = new StaticMod("Label:13C(5)15N(1) (V)", "V", null, null, LabelAtoms.C13 | LabelAtoms.N15, null, null);
             AddHeavyMod(modV13C, peptideSettingsUI);

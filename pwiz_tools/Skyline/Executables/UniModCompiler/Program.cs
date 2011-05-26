@@ -352,8 +352,8 @@ namespace UniModCompiler
                         int numInFormula = ParseSeqMassCalcFormula(aa, elementMatch);
                         if (element.number != numInFormula.ToString())
                         {
-                            labelAtomsFormula = "|LabelAtoms.None";
                             hasLabelAtoms = false;
+                            break;
                         }
                     }
                     var symbol = element.symbol;
@@ -371,7 +371,7 @@ namespace UniModCompiler
                     }
                 }
             }
-            labelAtomsFormula = labelAtomsFormula.Length > 0 ? labelAtomsFormula.Substring(1) : "LabelAtoms.None";
+            labelAtomsFormula = hasLabelAtoms && labelAtomsFormula.Length > 0 ? labelAtomsFormula.Substring(1) : "LabelAtoms.None";
             return true;
         }
 

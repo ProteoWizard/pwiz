@@ -945,7 +945,8 @@ namespace pwiz.Skyline
                 // First make sure it looks like a sequence.
                 List<double> lineLengths = new List<double>();
                 int lineLen = 0;
-                foreach (char c in text)
+                var textNoMods = FastaSequence.StripModifications(text);
+                foreach (char c in textNoMods)
                 {
                     if (!AminoAcid.IsExAA(c) && !char.IsWhiteSpace(c) && c != '*' && c != '.')
                     {
@@ -1024,8 +1025,9 @@ namespace pwiz.Skyline
             var listFilterPeptides = new List<string>();
             for (int i = 0; i < pepSequences.Length; i++)
             {
-                string pepSeqClean = CleanPeptideSequence(pepSequences[i]);
-                if (string.IsNullOrEmpty(pepSeqClean))
+                string pepSeqMod = CleanPeptideSequence(pepSequences[i]);
+                string pepSeqClean = FastaSequence.StripModifications(pepSeqMod);
+                if (string.IsNullOrEmpty(pepSeqMod))
                     continue;
                 if (pepSeqClean.Contains("."))
                 {
@@ -1038,13 +1040,13 @@ namespace pwiz.Skyline
                 // when multiple modified forms are desired.
                 // if (setAdded.Contains(pepSeqClean))
                 //    continue;
-                setAdded.Add(pepSeqClean);
-                listAllPeptides.Add(pepSeqClean);
+                setAdded.Add(pepSeqMod);
+                listAllPeptides.Add(pepSeqMod);
 
                 if (settings.Accept(pepSeqClean))
-                    listAcceptPeptides.Add(pepSeqClean);
+                    listAcceptPeptides.Add(pepSeqMod);
                 else
-                    listFilterPeptides.Add(pepSeqClean);
+                    listFilterPeptides.Add(pepSeqMod);
             }
 
             // If filtered peptides, ask the user whether to filter or keep.
@@ -1072,9 +1074,15 @@ namespace pwiz.Skyline
                 return s;
             // Internal whitespace
             var sb = new StringBuilder();
+            bool inParen = false;
             foreach (char c in s)
             {
-                if (!char.IsWhiteSpace(c))
+                if(c == '[' || c == '{')
+                    inParen = true;
+                if(c == ']' || c == '}')
+                    inParen = false;
+                // Preserve spaces inside brackets - modification names can have spaces.
+                if (inParen || !char.IsWhiteSpace(c))
                     sb.Append(c);
             }
             // If the peptide is in the format K.PEPTIDER.C, then remove the periods
@@ -1233,7 +1241,7 @@ namespace pwiz.Skyline
             });
             Settings.Default.SequenceTreeExpandPeptides =
                 Settings.Default.SequenceTreeExpandPrecursors = false;
-        }
+       }
 
         private void collapsePrecursorsMenuItem_Click(object sender, EventArgs e) { CollapsePrecursors(); }
         public void CollapsePrecursors()
@@ -1981,11 +1989,12 @@ namespace pwiz.Skyline
                         }
                         fastaSequence = backgroundProteome.GetFastaSequence(proteinName);
                     }
-                    string peptideGroupName;
+                    string peptideGroupName = null;
                     string modifyMessage;
                     PeptideGroupDocNode oldPeptideGroupDocNode = null;
-                    PeptideGroup peptideGroup;
+                    PeptideGroup peptideGroup = null;
                     List<PeptideDocNode> peptideDocNodes = new List<PeptideDocNode>();
+                    ModificationMatcher matcher = null;
                     if (fastaSequence != null)
                     {
                         if (peptideSequence == null)
@@ -2028,8 +2037,10 @@ namespace pwiz.Skyline
                     else
                     {
                         modifyMessage = "Add " + labelText;
-                        if (FastaSequence.IsExSequence(labelText) &&
-                                labelText.Length >= settings.PeptideSettings.Filter.MinPeptideLength)
+                        bool isExSequence = FastaSequence.IsExSequence(labelText) &&
+                                            FastaSequence.StripModifications(labelText).Length >= 
+                                            settings.PeptideSettings.Filter.MinPeptideLength;
+                        if (isExSequence)
                         {
                             int countGroups = document.Children.Count;
                             if (countGroups > 0)
@@ -2051,14 +2062,33 @@ namespace pwiz.Skyline
                                 foreach (PeptideDocNode peptideDocNode in oldPeptideGroupDocNode.Children)
                                     peptideDocNodes.Add(peptideDocNode);
                             }
-
-                            int missedCleavages = settings.PeptideSettings.Enzyme.CountCleavagePoints(labelText);
-                            var peptide = new Peptide(null, labelText, null, null, missedCleavages);
-                            var nodePep = new PeptideDocNode(peptide, new TransitionGroupDocNode[0]);
-
-                            peptideDocNodes.Add(nodePep.ChangeSettings(settings, SrmSettingsDiff.ALL));
+                            try
+                            {
+                                matcher = new ModificationMatcher();
+                                matcher.CreateMatches(settings, new List<string> { labelText }, Settings.Default.StaticModList, Settings.Default.HeavyModList);
+                                           var strNameMatches = matcher.FoundMatches;
+                                if (!string.IsNullOrEmpty(strNameMatches))
+                                {
+                                    var dlg = new MultiButtonMsgDlg(
+                                        string.Format(
+                                            "Would you like to use the Unimod definitions for the following modifications?\n\n{0}",
+                                            strNameMatches), "OK");
+                                    if (dlg.ShowDialog() == DialogResult.Cancel)
+                                    {
+                                        e.Node.Text = EmptyNode.TEXT_EMPTY;
+                                        e.Node.EnsureVisible();
+                                        return;
+                                    }
+                                }
+                                peptideDocNodes.Add(matcher.GetModifiedNode(labelText).ChangeSettings(settings, SrmSettingsDiff.ALL));
+                            }
+                            catch (FormatException)
+                            {
+                                isExSequence = false;
+                                matcher = null;
+                            }
                         }
-                        else
+                        if(!isExSequence)
                         {
                             peptideGroupName = labelText;
                             peptideGroup = new PeptideGroup();
@@ -2070,14 +2100,35 @@ namespace pwiz.Skyline
                         // Add a new peptide list or protein to the end of the document
                         newPeptideGroupDocNode = new PeptideGroupDocNode(peptideGroup, Annotations.EMPTY, peptideGroupName, null,
                             peptideDocNodes.ToArray(), peptideSequence == null);
-                        ModifyDocument(modifyMessage, doc => (SrmDocument)doc.Add(newPeptideGroupDocNode));
+                        ModifyDocument(modifyMessage, doc =>
+                        {
+                            var docNew = (SrmDocument) doc.Add(newPeptideGroupDocNode.ChangeSettings(doc.Settings, SrmSettingsDiff.ALL));
+                            if (matcher != null)
+                            {
+                                var pepModsNew = matcher.GetDocModifications(docNew);
+                                docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptideModifications(mods => pepModsNew));
+                                docNew.Settings.UpdateDefaultModifications(false);
+                            }
+                            return docNew;
+                        });
                     }
                     else
                     {
                         // Add peptide to existing protein
                         newPeptideGroupDocNode = new PeptideGroupDocNode(oldPeptideGroupDocNode.PeptideGroup, oldPeptideGroupDocNode.Annotations, oldPeptideGroupDocNode.Name,
                             oldPeptideGroupDocNode.Description, peptideDocNodes.ToArray(), false);
-                        ModifyDocument(modifyMessage, doc => (SrmDocument)doc.ReplaceChild(newPeptideGroupDocNode));
+                        ModifyDocument(modifyMessage, doc =>
+                        {
+                            var docNew =
+                            (SrmDocument) doc.ReplaceChild(newPeptideGroupDocNode);
+                            if (matcher != null)
+                            {
+                                var pepModsNew = matcher.GetDocModifications(docNew);
+                                docNew = docNew.ChangeSettings(docNew.Settings.ChangePeptideModifications(mods => pepModsNew));
+                                docNew.Settings.UpdateDefaultModifications(false);
+                            }
+                            return docNew;
+                        });
                     }
                 }
                 e.Node.Text = EmptyNode.TEXT_EMPTY;

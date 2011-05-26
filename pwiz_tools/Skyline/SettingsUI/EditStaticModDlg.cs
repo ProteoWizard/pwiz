@@ -35,7 +35,7 @@ namespace pwiz.Skyline.SettingsUI
     public partial class EditStaticModDlg : Form
     {
         private StaticMod _modification;
-        private StaticMod _originalModification;
+        private readonly StaticMod _originalModification;
         private readonly IEnumerable<StaticMod> _existing;
 
         private readonly bool _editing;
@@ -53,7 +53,6 @@ namespace pwiz.Skyline.SettingsUI
             ComboNameVisible = !_editing;
             TextNameVisible = _editing;
 
-            UniMod.Init();
             UpdateListAvailableMods();
 
             cbVariableMod.Visible = !heavy;
@@ -227,6 +226,11 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        private bool IsStructural
+        {
+            get { return !_heavy; }
+        }
+
         private void ResizeForLoss()
         {
             int bottomControl = _heavy ? comboRelativeRT.Bottom : btnLoss.Bottom;
@@ -384,12 +388,12 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
             
-            var uniMod = GetModification(name);
+            var uniMod = UniMod.GetModification(name, IsStructural);
             // If the modification name is not found in Unimod, check if there exists a modification in Unimod that matches
             // the dialog modification, and prompt the user to to use the Unimod modification instead.
             if (uniMod == null)
             {
-                var matchingMod = UniMod.FindMatchingStaticMod(_heavy, newMod);
+                var matchingMod = UniMod.FindMatchingStaticMod(newMod, IsStructural);
                 if (matchingMod != null && ModNameAvailable(matchingMod.Name))
                 {
                     MultiButtonMsgDlg dlg =
@@ -743,18 +747,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public void SetModification(string modName)
         {
-            Modification = GetModification(modName);
-        }
-
-        private StaticMod GetModification(string modName)
-        {
-            StaticMod mod;
-            var dict = _heavy ? UniMod.DictIsotopeModNames : UniMod.DictStructuralModNames;
-            var hiddenDict = _heavy ? UniMod.DictHiddenIsotopeModNames : UniMod.DictHiddenStructuralModNames;
-            dict.TryGetValue(modName, out mod);
-            if (mod == null)
-                hiddenDict.TryGetValue(modName, out mod);
-            return mod;
+            Modification = UniMod.GetModification(modName, IsStructural);
         }
 
         private void comboMod_SelectedIndexChanged(object sender, EventArgs e)

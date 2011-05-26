@@ -34,11 +34,18 @@ namespace pwiz.Skyline.Model
     {
         private int _countPeptides;
         private int _countIons;
+        readonly ModificationMatcher _modMatcher;
 
         public FastaImporter(SrmDocument document, bool peptideList)
         {
             Document = document;
             PeptideList = peptideList;
+        }
+
+        public FastaImporter(SrmDocument document, ModificationMatcher modMatcher)
+            : this(document, true)
+        {
+            _modMatcher = modMatcher;
         }
 
         public SrmDocument Document { get; private set; }
@@ -87,7 +94,9 @@ namespace pwiz.Skyline.Model
                     if (seqBuilder != null)
                         AddPeptideGroup(peptideGroupsNew, set, seqBuilder);
 
-                    seqBuilder = new PeptideGroupBuilder(line, PeptideList, Document.Settings);
+                    seqBuilder = _modMatcher == null
+                        ? new PeptideGroupBuilder(line, PeptideList, Document.Settings)
+                        : new PeptideGroupBuilder(line, _modMatcher, Document.Settings);
                     if (longWaitBroker != null)
                         longWaitBroker.Message = string.Format("Adding protein {0}", seqBuilder.Name);
                 }
@@ -1239,6 +1248,9 @@ namespace pwiz.Skyline.Model
         private readonly List<ExTransitionInfo> _activeTransitionInfos;
         private readonly List<TransitionGroupDocNode> _transitionGroups;
 
+        private readonly ModificationMatcher _modMatcher;
+        private bool _hasExplicitMods;
+
         public PeptideGroupBuilder(FastaSequence fastaSequence, SrmSettings settings)
         {
             _activeFastaSeq = fastaSequence;
@@ -1296,6 +1308,12 @@ namespace pwiz.Skyline.Model
             PeptideList = peptideList;
         }
 
+        public PeptideGroupBuilder(string line, ModificationMatcher modMatcher, SrmSettings settings)
+            : this(line, true, settings)
+        {
+            _modMatcher = modMatcher;
+        }
+
         private static int IndexEndId(string line)
         {
             return line.IndexOfAny(new[] {' ', '\t'});
@@ -1325,8 +1343,10 @@ namespace pwiz.Skyline.Model
         }
         public bool PeptideList { get; private set; }
 
-        public void AppendSequence(string seq)
+        public void AppendSequence(string seqMod)
         {
+            var seq = FastaSequence.StripModifications(seqMod);
+            _hasExplicitMods = _hasExplicitMods || !Equals(seq, seqMod);
             // Get rid of whitespace
             seq = seq.Replace(" ", "").Trim();
             // Get rid of 
@@ -1337,8 +1357,16 @@ namespace pwiz.Skyline.Model
                 _sequence.Append(seq);
             else
             {
-                Peptide peptide = new Peptide(null, seq, null, null, _enzyme.CountCleavagePoints(seq));
-                _peptides.Add(new PeptideDocNode(peptide, new TransitionGroupDocNode[0]));
+                // If there is a ModificationMatcher, use it to create the DocNode.
+                PeptideDocNode nodePep;
+                if (_modMatcher != null)
+                    nodePep = _modMatcher.GetModifiedNode(seqMod);
+                else
+                {
+                    Peptide peptide = new Peptide(null, seq, null, null, _enzyme.CountCleavagePoints(seq));
+                    nodePep = new PeptideDocNode(peptide, new TransitionGroupDocNode[0]);
+                }
+                _peptides.Add(nodePep);
             }
         }
 
@@ -1548,6 +1576,8 @@ namespace pwiz.Skyline.Model
                     new FastaSequence(Name, Description, Alternatives, _sequence.ToString()),
                     null, null, new PeptideDocNode[0]);
             }
+            if (_hasExplicitMods)
+                nodeGroup = (PeptideGroupDocNode) nodeGroup.ChangeAutoManageChildren(false);
             // Materialize children, so that we have accurate accounting of
             // peptide and transition counts.
             return nodeGroup.ChangeSettings(_settings, diff);

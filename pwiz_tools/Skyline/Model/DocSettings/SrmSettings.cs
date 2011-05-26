@@ -960,6 +960,7 @@ namespace pwiz.Skyline.Model.DocSettings
         double GetPrecursorMass(string seq);
         bool IsModified(string seq);
         string GetModifiedSequence(string seq, bool formatNarrow);
+        double GetAAModMass(char aa, int seqIndex, int seqLength);
         MassDistribution GetMzDistribution(string seq, int charge, IsotopeAbundances abundances);
     }
 

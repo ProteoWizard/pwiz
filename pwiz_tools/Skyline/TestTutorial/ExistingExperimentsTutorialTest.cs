@@ -209,12 +209,12 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.NewDocument();
             });
             var peptideSettingsUI1 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            var mod13Cr = new StaticMod("13C R", "R", ModTerminus.C, false, null, LabelAtoms.C13,
+            var mod13Cr = new StaticMod("Label:13C(6) (C-term R)", "R", ModTerminus.C, false, null, LabelAtoms.C13,
                                           RelativeRT.Matching, null, null, null);
             AddHeavyMod(mod13Cr, peptideSettingsUI1);
             RunUI(() =>
                       {
-                          peptideSettingsUI1.PickedHeavyMods = new[] {"13C R", HEAVY_K};
+                          peptideSettingsUI1.PickedHeavyMods = new[] {"Label:13C(6) (C-term R)", HEAVY_K};
                           peptideSettingsUI1.PickedLibraries = new[] { "" };
                           peptideSettingsUI1.SelectedBackgroundProteome = "None";
                           peptideSettingsUI1.OkDialog();

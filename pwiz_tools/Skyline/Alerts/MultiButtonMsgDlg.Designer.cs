@@ -60,6 +60,7 @@
             // 
             // btn1
             // 
+            this.btn1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btn1.DialogResult = System.Windows.Forms.DialogResult.No;
             this.btn1.Location = new System.Drawing.Point(230, 95);
             this.btn1.Name = "btn1";
@@ -69,6 +70,7 @@
             // 
             // btnCancel
             // 
+            this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
             this.btnCancel.Location = new System.Drawing.Point(311, 95);
             this.btnCancel.Name = "btnCancel";
@@ -79,6 +81,7 @@
             // 
             // btn0
             // 
+            this.btn0.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btn0.DialogResult = System.Windows.Forms.DialogResult.Yes;
             this.btn0.Location = new System.Drawing.Point(149, 95);
             this.btn0.Name = "btn0";

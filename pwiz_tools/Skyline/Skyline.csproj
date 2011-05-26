@@ -373,6 +373,7 @@
     <Compile Include="Model\Lib\BlibData\DbRefSpectra.cs" />
     <Compile Include="Model\Lib\BlibData\DbRefSpectraPeaks.cs" />
     <Compile Include="Model\Lib\BlibData\SessionFactoryFactory.cs" />
+    <Compile Include="Model\ModificationMatcher.cs" />
     <Compile Include="Model\PeptideDocNode.cs" />
     <Compile Include="Model\PeptideGroupDocNode.cs" />
     <Compile Include="Model\RefinementSettings.cs" />
