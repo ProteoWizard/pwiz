@@ -693,16 +693,16 @@ void write_spectrum_queries(XMLWriter& xmlWriter, const MzIdentML& mzid, const s
                 attributes.add("assumed_charge", sii.chargeState);
                 attributes.add("index", queryIndex);
 
-                CVParam cvp = sir.cvParamChild(MS_retention_time);
-                // TODO convert from non-seconds to seconds if
-                // needed. No instance has been found in the wild of a
-                // non-second RT, but this should be covered for
-                // correct coding.
-                if (cvp.cvid != CVID_Unknown)
-                    attributes.add("retention_time_sec", cvp.value);
+                if (sir.hasCVParam(MS_retention_time))
+                    attributes.add("retention_time_sec", sir.cvParam(MS_retention_time).timeInSeconds());
 
                 xmlWriter.startElement("spectrum_query", attributes);
-                xmlWriter.startElement("search_result");
+
+                attributes.clear();
+                BOOST_FOREACH(const UserParam& userParam, sir.userParams)
+                    attributes.add(userParam.name, userParam.value);
+
+                xmlWriter.startElement("search_result", attributes);
             }
 
             write_search_hit(xmlWriter, analysisSoftware.cvid, mzid, sir, sii);
