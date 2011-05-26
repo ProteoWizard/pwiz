@@ -302,11 +302,25 @@ rule extract ( tar-filepath : include-patterns * : tar-requirements * : tar-usag
 {
     if ! --incremental in [ modules.peek : ARGV ]
     {
-        extract-really $(tar-filepath) : $(include-patterns) : $(tar-requirements) : $(tar-usage-requirements) : $(check-last-file-only) ;
+        local pwd = [ path.make [ path.pwd ] ] ;
+        local caller-location = [ modules.binding [ CALLER_MODULE ] ] ;
+        caller-location = $(caller-location:D) ;
+        if ! $(caller-location) || $(caller-location) = ""
+        {
+            caller-location = $(pwd) ;
+        }
+        else
+        {
+            caller-location = [ path.make $(caller-location) ] ;
+            if ! [ path.is-rooted $(caller-location) ] { caller-location = [ path.root $(caller-location) $(pwd) ] ; }
+            caller-location = [ path.native $(caller-location) ] ;
+        }
+
+        extract-really $(tar-filepath) : $(include-patterns) : $(tar-requirements) : $(tar-usage-requirements) : $(check-last-file-only) : $(caller-location) ;
     }
 }
 
-rule extract-really ( tar-filepath : include-patterns * : tar-requirements * : tar-usage-requirements * : check-last-file-only ? )
+rule extract-really ( tar-filepath : include-patterns * : tar-requirements * : tar-usage-requirements * : check-last-file-only ? : caller-location )
 {
     #local project = [ project.current ] ;
 
@@ -337,21 +351,6 @@ rule extract-really ( tar-filepath : include-patterns * : tar-requirements * : t
         RMDIR = "rm -fr" ;
         MKDIR = "mkdir -p" ;
         CS = ";" ;
-    }
-
-    local pwd = [ path.make [ path.pwd ] ] ;
-
-    local caller-location = [ modules.binding [ CALLER_MODULE ] ] ;
-    caller-location = $(caller-location:D) ;
-    if ! $(caller-location) || $(caller-location) = ""
-    {
-        caller-location = $(pwd) ;
-    }
-    else
-    {
-        caller-location = [ path.make $(caller-location) ] ;
-        if ! [ path.is-rooted $(caller-location) ] { caller-location = [ path.root $(caller-location) $(pwd) ] ; }
-        caller-location = [ path.native $(caller-location) ] ;
     }
 
     tar-filepath = [ path.make $(tar-filepath) ] ;
