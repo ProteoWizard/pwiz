@@ -28,6 +28,7 @@ namespace pwiz.Topograph.Model
     public class MsDataFileData : EntityModel<DbMsDataFile>
     {
         private double[] _times;
+        private double[] _totalIonCurrent;
         private byte[] _msLevels;
         private String _path;
         public MsDataFileData(MsDataFile msDataFile, DbMsDataFile dbMsDataFile)
@@ -40,6 +41,7 @@ namespace pwiz.Topograph.Model
             base.Load(entity);
             _times = entity.Times;
             _msLevels = entity.MsLevels;
+            _totalIonCurrent = entity.TotalIonCurrent;
         }
         public MsDataFile MsDataFile { get; private set; }
         public void Init(MsDataFileImpl msDataFileImpl)
@@ -47,6 +49,7 @@ namespace pwiz.Topograph.Model
             if (_times == null)
             {
                 _times = msDataFileImpl.GetScanTimes();
+                _totalIonCurrent = msDataFileImpl.GetTotalIonCurrent();
                 if (_times == null)
                 {
                     msDataFileImpl.GetScanTimesAndMsLevels(out _times, out _msLevels);
@@ -75,6 +78,10 @@ namespace pwiz.Topograph.Model
                     }
                 }
                 msDataFile.MsLevels = _msLevels;
+                if (_totalIonCurrent != null)
+                {
+                    msDataFile.TotalIonCurrent = _totalIonCurrent;
+                }
             }
             session.Save(new DbChangeLog(MsDataFile));
             return msDataFile;
@@ -117,6 +124,66 @@ namespace pwiz.Topograph.Model
         public bool HasTimes()
         {
             return _times != null;
+        }
+        public double? GetTotalIonCurrent(double startTime, double endTime)
+        {
+            if (_totalIonCurrent == null || _msLevels == null)
+            {
+                return null;
+            }
+            double total = 0;
+            int startIndex = FindScanIndex(startTime);
+            int endIndex = FindScanIndex(endTime);
+            for (int i = startIndex; i<=endIndex; i++)
+            {
+                if (_msLevels[i] != 1)
+                {
+                    continue;
+                }
+                int? prevIndex = GetPrevMs1Index(i);
+                int? nextIndex = GetNextMs1Index(i);
+                double width;
+                if (prevIndex.HasValue && nextIndex.HasValue)
+                {
+                    width = (_times[nextIndex.Value] - _times[prevIndex.Value])/2;
+                }
+                else if (prevIndex.HasValue)
+                {
+                    width = _times[i] - _times[prevIndex.Value];
+                }
+                else if (nextIndex.HasValue)
+                {
+                    width = _times[nextIndex.Value] - _times[i];
+                }
+                else
+                {
+                    width = 0;
+                }
+                total += _totalIonCurrent[i]*width;
+            }
+            return total;
+        }
+        private int? GetPrevMs1Index(int index)
+        {
+            for (int i = index - 1; i >= 0; i--)
+            {
+                if (_msLevels[i] == 1)
+                {
+                    return i;
+                }
+            }
+            return null;
+        }
+        private int? GetNextMs1Index(int index)
+        {
+            for (int i = index + 1; i < _msLevels.Length; i++)
+            {
+                if (_msLevels[i] == 1)
+                {
+                    return i;
+                }
+            }
+            return null;
         }
     }
 }

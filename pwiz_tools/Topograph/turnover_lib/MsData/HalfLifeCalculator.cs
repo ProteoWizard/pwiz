@@ -73,19 +73,26 @@ namespace pwiz.Topograph.MsData
                        + "\nAND F.TracerPercent IS NOT NULL");
             var query = Session.CreateQuery(hql.ToString())
                 .SetParameter("minScore", MinScore);
-            var peaksQuery = Session.CreateQuery("SELECT P.PeptideFileAnalysis.Id, P.Name, P.TotalArea"
+            var peaksQuery = Session.CreateQuery("SELECT P.PeptideFileAnalysis.Id, P.Name, P.TotalArea, P.StartTime, P.EndTime"
                                                  + "\nFROM " + typeof (DbPeak) + " P");
-            var peaksDict = new Dictionary<long, IDictionary<TracerFormula, double>>();
+            var peaksDict = new Dictionary<long, IDictionary<TracerFormula, PeakData>>();
             foreach (object[] row in peaksQuery.List())
             {
                 var peptideFileAnalysisId = Convert.ToInt32(row[0]);
-                IDictionary<TracerFormula, double> dict;
+                IDictionary<TracerFormula, PeakData> dict;
                 if (!peaksDict.TryGetValue(peptideFileAnalysisId, out dict))
                 {
-                    dict = new Dictionary<TracerFormula, double>();
+                    dict = new Dictionary<TracerFormula, PeakData>();
                     peaksDict.Add(peptideFileAnalysisId, dict);
                 }
-                dict.Add(TracerFormula.Parse(Convert.ToString(row[1])), Convert.ToDouble(row[2]));
+                dict.Add(TracerFormula.Parse(Convert.ToString(row[1])),
+                         new PeakData
+                             {
+                                 TotalArea = Convert.ToDouble(row[2]),
+                                 StartTime = Convert.ToDouble(row[3]),
+                                 EndTime = Convert.ToDouble(row[4]),
+                        }
+                    );
             }
             var result = new List<RowData>();
             foreach (object[] row in query.List())
@@ -93,7 +100,7 @@ namespace pwiz.Topograph.MsData
                 try
                 {
                     var peptideFileAnalysisId = Convert.ToInt32(row[5]);
-                    IDictionary<TracerFormula, double> peaks;
+                    IDictionary<TracerFormula, PeakData> peaks;
                     peaksDict.TryGetValue(peptideFileAnalysisId, out peaks);
                     var rowData = new RowData
                                       {
@@ -134,7 +141,7 @@ namespace pwiz.Topograph.MsData
                     var turnoverCalculator = GetTurnoverCalculator(rowData.Peptide.Sequence);
                     double? turnover;
                     double? turnoverScore;
-                    turnoverCalculator.ComputeTurnover(precursorEnrichment, rowData.Peaks, out turnover, out turnoverScore);
+                    turnoverCalculator.ComputeTurnover(precursorEnrichment, rowData.PeakAreas, out turnover, out turnoverScore);
                     rowData.AvgTurnover = turnover * 100;
                     rowData.AvgTurnoverScore = turnoverScore;
                 }
@@ -365,6 +372,16 @@ namespace pwiz.Topograph.MsData
             {
                 return null;
             }
+            var peaks = new Dictionary<TracerFormula, PeakData>();
+            foreach (var dbPeak in peptideFileAnalysis.Peaks.ListChildren())
+            {
+                peaks.Add(dbPeak.TracerFormula, new PeakData
+                                                    {
+                                                        TotalArea = dbPeak.TotalArea,
+                                                        StartTime = dbPeak.StartTime,
+                                                        EndTime = dbPeak.EndTime,
+                                                    });
+            }
             var rowData = new RowData
                        {
                            MsDataFile = peptideFileAnalysis.MsDataFile,
@@ -374,7 +391,7 @@ namespace pwiz.Topograph.MsData
                            IndTurnover = peptideFileAnalysis.Peaks.Turnover*100,
                            IndTurnoverScore = peptideFileAnalysis.Peaks.TurnoverScore,
                            IndPrecursorEnrichment = peptideFileAnalysis.Peaks.PrecursorEnrichment,
-                           Peaks = peptideFileAnalysis.Peaks.ToDictionary(),
+                           Peaks = peaks,
                        };
             ComputeAvgTurnover(rowData);
             return rowData;
@@ -465,7 +482,7 @@ namespace pwiz.Topograph.MsData
             public String ProteinDescription { get { return Peptide.ProteinDescription; } }
             public MsDataFile MsDataFile { get; set; }
             public long PeptideFileAnalysisId { get; set; }
-            public IDictionary<TracerFormula, double> Peaks { get; set; }
+            public IDictionary<TracerFormula, PeakData> Peaks { get; set; }
             public double? AreaUnderCurve
             {
                 get
@@ -474,9 +491,44 @@ namespace pwiz.Topograph.MsData
                     {
                         return null;
                     }
-                    return Peaks.Values.Sum();
+                    return Peaks.Values.Select(p=>p.TotalArea).Sum();
                 }
             }
+            public IDictionary<TracerFormula, double> PeakAreas
+            {
+                get
+                {
+                    return Peaks.Keys.ToDictionary(k => k, k => Peaks[k].TotalArea);
+                }
+            }
+            public double? StartTime
+            {
+                get
+                {
+                    if (Peaks == null)
+                    {
+                        return null;
+                    }
+                    return Peaks.Values.Select(p => p.StartTime).Min();
+                }
+            }
+            public double? EndTime
+            {
+                get
+                {
+                    if (Peaks == null)
+                    {
+                        return null;
+                    }
+                    return Peaks.Values.Select(p => p.EndTime).Max();
+                }
+            }
+        }
+        public class PeakData
+        {
+            public double TotalArea { get; set; }
+            public double StartTime { get; set; }
+            public double EndTime { get; set; }
         }
 
         public class ResultRow

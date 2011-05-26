@@ -32,6 +32,7 @@ namespace pwiz.Topograph.Data
         public virtual String Sample { get; set; }
         public virtual double? TimePoint { get; set; }
         public virtual byte[] TimesBytes { get; set; }
+        public virtual byte[] TotalIonCurrentBytes { get; set; }
         public virtual byte[] MsLevels { get; set; }
 
         public virtual double[] Times {
@@ -47,6 +48,23 @@ namespace pwiz.Topograph.Data
             set
             {
                 TimesBytes = ArrayConverter.ToBytes(value);
+            }
+        }
+
+        public virtual double[] TotalIonCurrent
+        {
+            get
+            {
+                byte[] ticBytes = TotalIonCurrentBytes;
+                if (ticBytes == null)
+                {
+                    return null;
+                }
+                return ArrayConverter.FromBytes<double>(ticBytes);
+            }
+            set
+            {
+                TotalIonCurrentBytes = ArrayConverter.ToBytes(value);
             }
         }
 

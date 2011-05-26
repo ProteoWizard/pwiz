@@ -269,6 +269,28 @@ namespace pwiz.ProteowizardWrapper
                 return times;
             }
         }
+        public double[] GetTotalIonCurrent()
+        {
+            if (ChromatogramList == null)
+            {
+                return null;
+            }
+            using (var chromatogram = ChromatogramList.chromatogram(0, true))
+            {
+                if (chromatogram == null)
+                {
+                    return null;
+                }
+                TimeIntensityPairList timeIntensityPairList = new TimeIntensityPairList();
+                chromatogram.getTimeIntensityPairs(ref timeIntensityPairList);
+                double[] intensities = new double[timeIntensityPairList.Count];
+                for (int i = 0; i < intensities.Length; i++)
+                {
+                    intensities[i] = timeIntensityPairList[i].intensity;
+                }
+                return intensities;
+            }
+        }
 
         /// <summary>
         /// Walks the spectrum list, and fills in the retention time and MS level of each scan.

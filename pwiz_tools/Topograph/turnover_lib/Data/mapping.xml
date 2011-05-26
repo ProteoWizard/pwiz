@@ -33,6 +33,7 @@
     <property name="Sample" />
     <property name="TimesBytes" length="1000000" type="BinaryBlob" />
     <property name="MsLevels" length="1000000" type="BinaryBlob"/>
+    <property name="TotalIonCurrentBytes" length="1000000" type="BinaryBlob" />
   </class>
   <class name="DbPeptide">
     <id name="Id">

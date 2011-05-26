@@ -46,6 +46,7 @@ namespace pwiz.Topograph.ui.Forms
                 colAvgTurnover.Visible = false;
                 colAvgTurnoverScore.Visible = false;
             }
+            colTotalIonCurrent.Visible = false;
             for (int i = 0; i < dataGridView1.Columns.Count; i++)
             {
                 var column = dataGridView1.Columns[i];
@@ -144,6 +145,8 @@ namespace pwiz.Topograph.ui.Forms
                 row.Cells[colIndTurnoverScore.Index].Value = rowData.IndTurnoverScore;
                 row.Cells[colTracerPercent.Index].Value = rowData.TracerPercent;
                 row.Cells[colStatus.Index].Value = rowData.ValidationStatus;
+                row.Cells[colTotalIonCurrent.Index].Value =
+                    rowData.MsDataFile.MsDataFileData.GetTotalIonCurrent(rowData.StartTime.Value, rowData.EndTime.Value);
             }
         }
 

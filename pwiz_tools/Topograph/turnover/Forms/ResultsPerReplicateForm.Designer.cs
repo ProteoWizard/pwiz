@@ -56,6 +56,7 @@
             this.colAvgTurnover = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colAvgTurnoverScore = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colStatus = new pwiz.Topograph.ui.Controls.ValidationStatusColumn();
+            this.colTotalIonCurrent = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -189,7 +190,8 @@
             this.colAvgPrecursorEnrichment,
             this.colAvgTurnover,
             this.colAvgTurnoverScore,
-            this.colStatus});
+            this.colStatus,
+            this.colTotalIonCurrent});
             dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
             dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -321,6 +323,12 @@
             this.colStatus.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             this.colStatus.ValueMember = "Value";
             // 
+            // colTotalIonCurrent
+            // 
+            this.colTotalIonCurrent.HeaderText = "TotalIonCurrent";
+            this.colTotalIonCurrent.Name = "colTotalIonCurrent";
+            this.colTotalIonCurrent.ReadOnly = true;
+            // 
             // ResultsPerReplicateForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -349,6 +357,7 @@
         private System.Windows.Forms.Button btnRequery;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnSave;
+        private pwiz.Common.Controls.RecordNavBar recordNavBar1;
         private System.Windows.Forms.DataGridViewLinkColumn colPeptide;
         private System.Windows.Forms.DataGridViewTextBoxColumn colDataFile;
         private System.Windows.Forms.DataGridViewTextBoxColumn colArea;
@@ -366,6 +375,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn colAvgTurnover;
         private System.Windows.Forms.DataGridViewTextBoxColumn colAvgTurnoverScore;
         private pwiz.Topograph.ui.Controls.ValidationStatusColumn colStatus;
-        private pwiz.Common.Controls.RecordNavBar recordNavBar1;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colTotalIonCurrent;
     }
 }

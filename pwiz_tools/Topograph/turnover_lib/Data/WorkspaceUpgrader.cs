@@ -13,7 +13,7 @@ namespace pwiz.Topograph.Data
 {
     public class WorkspaceUpgrader : ILongOperationJob
     {
-        public const int CurrentVersion = 8;
+        public const int CurrentVersion = 9;
         public const int MinUpgradeableVersion = 1;
         private IDbCommand _currentCommand;
         private LongOperationBroker _longOperationBroker;
@@ -214,6 +214,12 @@ namespace pwiz.Topograph.Data
                 {
                     broker.UpdateStatusMessage("Upgrading from version 7 to 8");
                     CreateCommand(connection, "ALTER TABLE DbPeptideFileAnalysis ADD Column TurnoverScore DOUBLE")
+                        .ExecuteNonQuery();
+                }
+                if (dbVersion < 9)
+                {
+                    broker.UpdateStatusMessage("Upgrading from version 8 to 9");
+                    CreateCommand(connection, "ALTER TABLE DbMsDataFile ADD COLUMN TotalIonCurrentBytes MEDIUMBLOB")
                         .ExecuteNonQuery();
                 }
                 if (dbVersion < CurrentVersion)

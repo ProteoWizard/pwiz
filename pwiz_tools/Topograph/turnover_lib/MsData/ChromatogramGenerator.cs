@@ -598,10 +598,7 @@ namespace pwiz.Topograph.MsData
                     }
                     _session.Save(new DbChangeLog(_workspace, dbPeptideFileAnalysis.PeptideAnalysis));
                 }
-                if (finished)
-                {
-                    chromatogramTask.MsDataFile.MsDataFileData.Save(_session);
-                }
+                chromatogramTask.MsDataFile.MsDataFileData.Save(_session);
                 chromatogramTask.UpdateLock(_session);
                 _session.Transaction.Commit();
             }
