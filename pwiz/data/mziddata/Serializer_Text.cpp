@@ -502,10 +502,15 @@ void Serializer_Text::Impl::write(ostream& os, const MzIdentML& mzid,
     const IterationListenerRegistry* iterationListenerRegistry) const
 {
 
-    os << getHeaders() << config.recordDelim;
+    if (config.headers)
+        os << getHeaders() << config.recordDelim;
 
+    // Recrods are assembled in a depth first search of the mzIdentML
+    // tree.
     vector<TextRecord> records = fetchRecords(mzid);
 
+    // Sort the records according to the Config::sort field. If it's
+    // set to None, they will be output in an arbitrary order.
     sortRecords(records, config.sort);
     
     BOOST_FOREACH(TextRecord tr, records)

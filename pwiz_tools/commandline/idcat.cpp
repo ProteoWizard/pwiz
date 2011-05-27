@@ -31,7 +31,8 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
-#include <boost/algorithm/string/join.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/classification.hpp>
 #include <boost/foreach.hpp>
@@ -43,6 +44,16 @@
 using namespace std;
 using namespace pwiz::mziddata;
 using namespace pwiz::util;
+
+// DEBUG - print unitary function
+template<class T> struct print : public unary_function<T, void>
+{
+  print(ostream& out) : os(out), count(0) {}
+  void operator() (T x) { os << x << ' '; ++count; }
+  ostream& os;
+  int count;
+};
+
 
 // This class is used to send messages to the main function. These are
 // not error conditions. 
@@ -82,7 +93,23 @@ struct Config
     
     Config()
         : force(false), verbose(false), very(false)
-    {}
+    {
+        loadNames();
+    }
+
+    void loadNames()
+    {
+        // Load up the field names and convert into lowercase
+        size_t idx=0;
+        while(!Serializer_Text::getIdFieldNames()[idx].empty())
+        {
+            string name = Serializer_Text::getIdFieldNames()[idx++];
+            boost::to_lower(name);
+            idNames.push_back(name);
+        }
+    }
+    
+    vector<string> idNames;
 };
 
 struct UserFeedbackIterationListener : public IterationListener
@@ -272,6 +299,32 @@ string getOutputFilename(const string& inFilename, const Config& config)
     return outputFile;
 }
 
+/// Converts any values in the idcat's Config that have an effect on
+/// the Serializer_Text::Config members.
+Serializer_Text::Config getSerializerConfig(const Config& config)
+{
+    Serializer_Text::Config sConfig;
+
+    //
+    // Choosing a sort field
+    //
+
+    // Find a match w/ available 
+    string sortBy = config.sortBy;
+    boost::to_lower(sortBy);
+    vector<string>::const_iterator s=find(config.idNames.begin(),
+                                          config.idNames.end(),
+                                          sortBy);
+
+    if (s != config.idNames.end())
+        sConfig.sort = (Serializer_Text::IdField)
+            (s-config.idNames.begin());
+    
+    return sConfig;
+}
+
+/// Writes an id file to the output file, or to stdout if the
+/// outputFile is empty.
 void dumpFile(const string& filename, const string& outputFile,
               const Config& config, const ReaderList& readers)
 {
@@ -290,6 +343,7 @@ void dumpFile(const string& filename, const string& outputFile,
     Reader::Config readerConfig;
     readers.read(filename, iddList, readerConfig);
 
+    // Open up the output file or set cout as the output stream.
     ostream *os;
     if (outputFile.empty())
         os = &cout;
@@ -299,6 +353,7 @@ void dumpFile(const string& filename, const string& outputFile,
         (*os) << outputFile << "\n";
     }
 
+    // Verify that the output is valid.
     if (os->bad())
     {
         ostringstream oss("[dumpFile] Bad file: ");
@@ -311,7 +366,7 @@ void dumpFile(const string& filename, const string& outputFile,
         MzIdentML& idd = *iddList[i];
         try
         {
-            Serializer_Text writer;
+            Serializer_Text writer(getSerializerConfig(config));
             writer.write(*os, idd, pILR);
         }
         catch (exception& e)
