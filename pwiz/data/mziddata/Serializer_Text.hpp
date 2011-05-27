@@ -53,7 +53,7 @@ public:
         Last=Protein
     };
 
-    static const std::string IdFieldNames[];
+    static const string* getIdFieldNames();
 
     struct PWIZ_API_DECL Config ///< Controls the format of the text file.
     {

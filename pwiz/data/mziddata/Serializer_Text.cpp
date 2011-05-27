@@ -79,7 +79,20 @@ struct TextRecord
 
         return tr;
     }
+
+    void assign(const TextRecord& tr)
+    {
+        none = tr.none;
+        scan = tr.scan;
+        rt = tr.rt;
+        mz = tr.mz;
+        score = tr.score;
+        scoretype = tr.scoretype;
+        peptide = tr.peptide;
+        protein = tr.protein;
+    }
 };
+
 
 /// Used for debugging, the TextRecord insertion operator for ostream
 /// object writes an easily readable version of the object with fields
@@ -140,70 +153,125 @@ public:
     void setHeaders(const vector<string>& fields) const;
     string getHeaders() const;
 
-    template <Serializer_Text::IdField F>
-    struct field_order
-    {
-        Serializer_Text::IdField field;
-    
-        field_order(Serializer_Text::IdField field)
-            : field(field)
-        {
-        }
-    
-        bool operator()(const TextRecord& left, const TextRecord& right)
-        {
-            bool result = false;
-        
-            switch(field)
-            {
-            case None:
-                result = left.none == right.none;
-                break;
-        
-            case Scan:
-                result = left.scan == right.scan;
-                break;
-        
-            case Rt:
-                result = left.rt == right.rt;
-                break;
-        
-            case Mz:
-                result = left.mz == right.mz;
-                break;
-
-            case Charge:
-                result = left.charge == right.charge;
-                break;
-        
-            case Score:
-                result = left.score == right.score;
-                break;
-        
-            case ScoreType:
-                result = left.scoretype == right.scoretype;
-                break;
-        
-            case Peptide:
-                result = left.peptide == right.peptide;
-                break;
-        
-            case Protein:
-                result = left.protein == right.protein;
-                break;
-
-            default:
-                break;
-            }
-
-            return result;
-        }
-    };
-
+    static const std::string IdFieldNames[];
 
 private:
     Config config;
     vector<string> idNames;
+};
+
+template <Serializer_Text::IdField F>
+struct tr_eq
+{
+    Serializer_Text::IdField field;
+    
+    tr_eq(Serializer_Text::IdField field)
+        : field(field)
+    {
+    }
+    
+    bool operator()(const TextRecord& left, const TextRecord& right)
+    {
+        bool result = false;
+        
+        switch(field)
+        {
+        case Serializer_Text::None:
+            result = left.none == right.none;
+            break;
+        
+        case Serializer_Text::Scan:
+            result = left.scan == right.scan;
+            break;
+        
+        case Serializer_Text::Rt:
+            result = left.rt == right.rt;
+            break;
+        
+        case Serializer_Text::Mz:
+            result = left.mz == right.mz;
+            break;
+
+        case Serializer_Text::Charge:
+            result = left.charge == right.charge;
+            break;
+        
+        case Serializer_Text::Score:
+            result = left.score == right.score;
+            break;
+        
+        case Serializer_Text::ScoreType:
+            result = left.scoretype == right.scoretype;
+            break;
+        
+        case Serializer_Text::Peptide:
+            result = left.peptide == right.peptide;
+            break;
+        
+        case Serializer_Text::Protein:
+            result = left.protein == right.protein;
+            break;
+
+        default:
+            break;
+        }
+
+        return result;
+    }
+};
+
+struct tr_less
+{
+    Serializer_Text::IdField field;
+    
+    tr_less(Serializer_Text::IdField field) : field(field) {}
+
+    bool operator()(const TextRecord& left, const TextRecord& right) const
+    {
+        switch(field)
+        {
+        case Serializer_Text::None:
+            return true;
+            break;
+
+        case Serializer_Text::Scan:
+            return left.scan < right.scan;
+            break;
+
+        case Serializer_Text::Rt:
+            return left.rt < right.rt;
+            break;
+            
+        case Serializer_Text::Mz:
+            return left.mz < right.mz;
+            break;
+            
+        case Serializer_Text::Charge:
+            return left.charge < right.charge;
+            break;
+            
+        case Serializer_Text::Score:
+            return left.score < right.score;
+            break;
+            
+        case Serializer_Text::ScoreType:
+            return left.scoretype < right.scoretype;
+            break;
+            
+        case Serializer_Text::Peptide:
+            return left.peptide < right.peptide;
+            break;
+            
+        case Serializer_Text::Protein:
+            return left.protein < right.protein;
+            break;
+
+        default:
+            break;
+        }
+
+        return true;
+    }
 };
 
 namespace
@@ -351,6 +419,12 @@ vector<TextRecord> fetchRecords(const MzIdentML& mzid)
     return records;
 }
 
+void sortRecords(vector<TextRecord>& records,
+                 Serializer_Text::IdField field)
+{
+    sort(records.begin(), records.end(), tr_less(field));
+}
+
 } // anonymous namespace
 
 void Serializer_Text::Impl::writeField(ostream& os, const TextRecord& tr,
@@ -432,7 +506,8 @@ void Serializer_Text::Impl::write(ostream& os, const MzIdentML& mzid,
 
     vector<TextRecord> records = fetchRecords(mzid);
 
-    // TODO setup sorting.
+    sortRecords(records, config.sort);
+    
     BOOST_FOREACH(TextRecord tr, records)
     {
         write(os, tr, iterationListenerRegistry);
@@ -499,7 +574,13 @@ void Serializer_Text::Impl::setHeaders(const vector<string>& headers) const
 }
 
 
-const string PWIZ_API_DECL Serializer_Text::IdFieldNames[] =
+
+const string* Serializer_Text::getIdFieldNames()
+{
+    return Impl::IdFieldNames;
+}
+
+const string PWIZ_API_DECL Serializer_Text::Impl::IdFieldNames[] =
 {
     "none",
     "scan",
@@ -515,7 +596,8 @@ const string PWIZ_API_DECL Serializer_Text::IdFieldNames[] =
 
 PWIZ_API_DECL Serializer_Text::Serializer_Text(const Config& config)
     : impl_(new Impl(config))
-{}
+{
+}
 
 PWIZ_API_DECL void Serializer_Text::write(ostream& os, const MzIdentML& mzid,
            const IterationListenerRegistry* iterationListenerRegistry) const
