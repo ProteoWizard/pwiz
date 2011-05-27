@@ -7,16 +7,16 @@
 // Copyright 2007 Spielberg Family Center for Applied Proteomics
 //   Cedars-Sinai Medical Center, Los Angeles, California  90048
 //
-// Licensed under the Apache License, Version 2.0 (the "License"); 
-// you may not use this file except in compliance with the License. 
-// You may obtain a copy of the License at 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
 // http://www.apache.org/licenses/LICENSE-2.0
 //
-// Unless required by applicable law or agreed to in writing, software 
-// distributed under the License is distributed on an "AS IS" BASIS, 
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-// See the License for the specific language governing permissions and 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
 // limitations under the License.
 //
 
@@ -53,7 +53,7 @@ public:
         Last=Protein
     };
 
-    static const string* getIdFieldNames();
+    static const std::string* getIdFieldNames();
 
     struct PWIZ_API_DECL Config ///< Controls the format of the text file.
     {
@@ -63,12 +63,12 @@ public:
 
         std::string recordDelim;
         std::string fieldDelim;
-        
+
         Config();
         Config(const Config& config);
     };
 
-    /// Constructor with Config 
+    /// Constructor with Config
     Serializer_Text(const Config& config = Config());
 
     /// writes MzIdentML object to ostream as a text table
@@ -86,7 +86,7 @@ public:
 };
 
 
-} // namespace mziddata 
+} // namespace mziddata
 } // namespace pwiz
 
 #endif // _SERIALIZER_TEXT_HPP_
