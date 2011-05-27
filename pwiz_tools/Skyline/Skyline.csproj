@@ -361,6 +361,7 @@
     <Compile Include="Model\DocSettings\Loss.cs" />
     <Compile Include="Model\DocSettings\MeasuredIon.cs" />
     <Compile Include="Model\DocSettings\UniMod.cs" />
+    <Compile Include="Model\DocSettings\UniModData.cs" />
     <Compile Include="Model\Hibernate\DbPrecursorResultSummary.cs" />
     <Compile Include="Model\Hibernate\DbRatioResult.cs" />
     <Compile Include="Model\Hibernate\DbTransitionResultSummary.cs" />

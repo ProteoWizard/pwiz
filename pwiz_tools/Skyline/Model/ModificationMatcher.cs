@@ -30,7 +30,7 @@ namespace pwiz.Skyline.Model
         private SrmSettings _settings; 
 
         private Dictionary<StaticMod, IsotopeLabelType> _userDefinedTypedMods;
-        private Dictionary<SequenceKey, StaticMod> _dictSeqMatches;
+        private Dictionary<AAModKey, StaticMod> _dictSeqMatches;
         private List<string> _unmatchedSequences;
 
         private MappedList<string, StaticMod> _defSetStatic;
@@ -47,7 +47,7 @@ namespace pwiz.Skyline.Model
 
         private const int DEFAULT_ROUNDING_DIGITS = 6;
 
-        public void CreateMatches(SrmSettings settings, List<string> sequences,
+        public void CreateMatches(SrmSettings settings, IEnumerable<string> sequences,
             MappedList<string, StaticMod> defSetStatic, MappedList<string, StaticMod> defSetHeavy)
         {
             _defSetStatic = defSetStatic;
@@ -69,7 +69,7 @@ namespace pwiz.Skyline.Model
             InitUserDefTypedModDict(new TypedModifications(IsotopeLabelType.light, _defSetStatic), true);
             InitUserDefTypedModDict(new TypedModifications(_docDefHeavyLabelType, _defSetHeavy), true);
 
-            _dictSeqMatches = new Dictionary<SequenceKey, StaticMod>();
+            _dictSeqMatches = new Dictionary<AAModKey, StaticMod>();
             _unmatchedSequences = new List<string>();
 
             foreach (var seq in sequences)
@@ -112,23 +112,22 @@ namespace pwiz.Skyline.Model
             int prevIndexAA = -1;
             int countModsPerAA = 0;
             List<int> badSeqIndices = new List<int>();
-            foreach (var key in GetSequenceKeys(seq, structural, false))
+            foreach (var info in GetSequenceInfos(seq, structural, false))
             {
                 // Keys always start with information specific to the sequence they are found in.
-                int indexAA = key.IndexAA ?? -1; //Resharper
-                var indexAAinSeq = key.IndexAAInSeq ?? -1;
+                int indexAA = info.IndexAA; //Resharper
+                var indexAAinSeq = info.IndexAAInSeq;
                 // Clear information specific to the sequence before using these keys in the dictionary
                 // of sequence matches.
-                key.RemoveOrigSeqInfo();
                 countModsPerAA = prevIndexAA != indexAA ? 1 : countModsPerAA + 1;
                 prevIndexAA = indexAA;
                 bool tooManyMods = countModsPerAA > 1;
-                if (!tooManyMods && _dictSeqMatches.ContainsKey(key))
+                if (!tooManyMods && _dictSeqMatches.ContainsKey(info.ModKey))
                     continue;
                 // If the modification isn't indicated by a double, assume it must be the name of the modification.
-                StaticMod match = GetMod(key);
+                StaticMod match = GetMod(info);
                 if (match != null && !tooManyMods)
-                    _dictSeqMatches.Add(key, match.ChangeExplicit(true));
+                    _dictSeqMatches.Add(info.ModKey, match.ChangeExplicit(true));
                 else
                 {
                     if(badSeqIndices.Contains(indexAAinSeq))
@@ -161,46 +160,46 @@ namespace pwiz.Skyline.Model
             return result.ToString();
         }
 
-        private StaticMod GetMod(SequenceKey key)
+        private StaticMod GetMod(AAModInfo info)
         {
-            return key.Mass != null ? GetModByMass(key) : GetModByName(key);
+            return info.Mass != null ? GetModByMass(info) : GetModByName(info);
         }
 
-        private StaticMod GetModByName(SequenceKey key)
+        private StaticMod GetModByName(AAModInfo info)
         {
-            var structural = key.Structural;
+            var structural = info.Structural;
             StaticMod modMatch = null;
             // First, look in the document/global settings.
             foreach (var mod in _userDefinedTypedMods.Keys)
             {
-                if (Equals(key.Name, mod.Name)
+                if (Equals(info.Name, mod.Name)
                         && structural == _userDefinedTypedMods[mod].IsLight)
                     modMatch = mod;
             }
             // If not found, then look in Unimod.
-            modMatch = modMatch ?? UniMod.GetModification(key.Name, structural);
-            return key.IsModMatch(modMatch) ? modMatch : null;
+            modMatch = modMatch ?? UniMod.GetModification(info.Name, structural);
+            return info.IsModMatch(modMatch) ? modMatch : null;
         }
 
-        private StaticMod GetModByMass(SequenceKey key)
+        private StaticMod GetModByMass(AAModInfo info)
         {
-            return GetModByMassInSettings(key) ??
-                   UniMod.MassLookup.MatchModificationMass(key.Mass ?? -1,
-                                                           key.AA,
-                                                           key.RoundedTo,
-                                                           key.Structural,
-                                                           key.Terminus,
-                                                           key.IsSpecificHeavy);
+            return GetModByMassInSettings(info) ??
+                   UniMod.MassLookup.MatchModificationMass(info.Mass ?? -1,
+                                                           info.AA,
+                                                           info.RoundedTo,
+                                                           info.Structural,
+                                                           info.Terminus,
+                                                           info.IsSpecificHeavy);
         }
 
-        private StaticMod GetModByMassInSettings(SequenceKey key)
+        private StaticMod GetModByMassInSettings(AAModInfo info)
         {
             StaticMod firstMatch = null;
-            foreach (var match in GetModMatchesInSettings(key))
+            foreach (var match in GetModMatchesInSettings(info))
             {
                 firstMatch = firstMatch ?? match;
-                if (key.Structural || (key.IsSpecificHeavy && (!string.IsNullOrEmpty(match.AAs) || match.Terminus != null))
-                    || (!key.IsSpecificHeavy && string.IsNullOrEmpty(match.AAs) && match.Terminus == null))
+                if (info.Structural || (info.IsSpecificHeavy && (!string.IsNullOrEmpty(match.AAs) || match.Terminus != null))
+                    || (!info.IsSpecificHeavy && string.IsNullOrEmpty(match.AAs) && match.Terminus == null))
                 {
                     firstMatch = match;
                     break;
@@ -209,26 +208,26 @@ namespace pwiz.Skyline.Model
             return firstMatch;
         }
 
-        private IEnumerable<StaticMod> GetModMatchesInSettings(SequenceKey key)
+        private IEnumerable<StaticMod> GetModMatchesInSettings(AAModInfo info)
         {
             var modifications = _settings.PeptideSettings.Modifications;
-            var labelTypes = key.Structural
+            var labelTypes = info.Structural
                                 ? new[] { IsotopeLabelType.light }
                                 : modifications.GetHeavyModificationTypes();
             foreach (var type in labelTypes)
             {
                 foreach (var mod in modifications.GetModifications(type))
                 {
-                    if (key.IsMassMatch(mod))
+                    if (info.IsMassMatch(mod))
                     {
                         yield return mod;
                     }
                 }
             }
-            var listGlobalMods = key.Structural ? _defSetStatic : _defSetHeavy;
+            var listGlobalMods = info.Structural ? _defSetStatic : _defSetHeavy;
             foreach(var mod in listGlobalMods)
             {
-                if (key.IsMassMatch(mod))
+                if (info.IsMassMatch(mod))
                     yield return mod;
             }
         }
@@ -286,19 +285,19 @@ namespace pwiz.Skyline.Model
         {
             bool structural = calcLight == null;
             string aas = FastaSequence.StripModifications(seq);
-            foreach (var key in GetSequenceKeys(seq, structural, true))
+            foreach (var info in GetSequenceInfos(seq, structural, true))
             {
-                int indexAA = key.IndexAA ?? 0; // ReSharper
+                int indexAA = info.IndexAA; // ReSharper
                 var aa = aas[indexAA];
-                var roundedTo = key.RoundedTo;
+                var roundedTo = info.RoundedTo;
                 // If the user has indicated the modification by name, find that modification 
                 // and calculate the mass.
                 double massKey;
-                if (key.Mass != null)
-                    massKey = (double) key.Mass;
+                if (info.Mass != null)
+                    massKey = (double) info.Mass;
                 else
                 {
-                    StaticMod modMatch = GetModByName(key);
+                    StaticMod modMatch = GetModByName(info);
                     if (modMatch == null)
                         return false;
                     roundedTo = DEFAULT_ROUNDING_DIGITS;
@@ -318,7 +317,7 @@ namespace pwiz.Skyline.Model
         /// <summary>
         /// Enumerates the SequenceKeys found by parsing a modified sequence.
         /// </summary>
-        private static IEnumerable<SequenceKey> GetSequenceKeys(string seq, bool structural, bool includeUnmod)
+        private static IEnumerable<AAModInfo> GetSequenceInfos(string seq, bool structural, bool includeUnmod)
         {
             seq = FastaSequence.StripModifications(seq, structural ? FastaSequence.RGX_HEAVY : FastaSequence.RGX_LIGHT);
             if (!structural)
@@ -352,29 +351,38 @@ namespace pwiz.Skyline.Model
                         mass = Math.Round(result, roundedTo);
                     else
                         name = mod;
-                    yield return new SequenceKey
-                    {
-                        Name = name,
-                        Mass = mass,
-                        AA = aa,
-                        IndexAA = indexAA,
-                        IndexAAInSeq = indexAAInSeq,
-                        Terminus = modTerminus,
-                        Structural = structural,
-                        RoundedTo = roundedTo,
-                        IsSpecificHeavy = isSpecificHeavy
-                    };
+                    var key = new AAModKey
+                        {
+                            Name = name,
+                            Mass = mass,
+                            AA = aa,
+                            Terminus = modTerminus,
+                            Structural = structural,
+                            RoundedTo = roundedTo,
+                            IsSpecificHeavy = isSpecificHeavy
+                        };
+
+                    yield return new AAModInfo
+                        {
+                            ModKey = key,
+                            IndexAA = indexAA,
+                            IndexAAInSeq = indexAAInSeq,
+                        };
                 }
                 else if (includeUnmod)
                 {
                     // If need unmodified amino acids (as when 
                     // checking for equality), yield SequenceKeys for these AA's.
-                    yield return new SequenceKey
+                    var key = new AAModKey
+                        {
+                            AA = aa,
+                            Structural = structural,
+                            Mass = 0
+                        };
+                    yield return new AAModInfo
                     {
-                        AA = aa,
+                        ModKey = key,
                         IndexAA = indexAA,
-                        Structural = structural,
-                        Mass = 0
                     };
                 }
                 // If the next character is a bracket, continue using the same amino
@@ -410,18 +418,16 @@ namespace pwiz.Skyline.Model
               : fastaSequence.CreateFullPeptideDocNode(_settings, seqNoMod);
             // Enumerate the necessary explicit modifications.
             List<ExplicitMod> listLightMods = new List<ExplicitMod>();
-            foreach(var key in GetSequenceKeys(seq, true, false))
+            foreach(var key in GetSequenceInfos(seq, true, false))
             {
-                int indexAA = key.IndexAA ?? 0; // ReSharper
-                key.RemoveOrigSeqInfo();
-                listLightMods.Add(new ExplicitMod(indexAA, _dictSeqMatches[key]));                
+                int indexAA = key.IndexAA; // ReSharper
+                listLightMods.Add(new ExplicitMod(indexAA, _dictSeqMatches[key.ModKey]));                
             }
             var dictHeavyMods = new Dictionary<IsotopeLabelType, List<ExplicitMod>>();
-            foreach(var key in GetSequenceKeys(seq, false, false))
+            foreach(var key in GetSequenceInfos(seq, false, false))
             {
-                int indexAA = key.IndexAA ?? 0; // ReSharper
-                key.RemoveOrigSeqInfo();
-                var mod = _dictSeqMatches[key];
+                int indexAA = key.IndexAA; // ReSharper
+                var mod = _dictSeqMatches[key.ModKey];
 
                 IsotopeLabelType type;
                 if (!_userDefinedTypedMods.TryGetValue(mod, out type))
@@ -527,32 +533,20 @@ namespace pwiz.Skyline.Model
               lightMods, heavyMods);
         }
 
-        private struct SequenceKey
+        private struct AAModInfo
         {
-            private int? _indexAA; 
-            private int? _indexSeq;
-            public char AA { get; set; }
-            public int? IndexAA
-            {
-                get { return _indexAA; }
-                set { _indexAA = value; }
-            }
-            public int? IndexAAInSeq
-            {
-                get { return _indexSeq; }
-                set { _indexSeq = value; }
-            }
-            public ModTerminus? Terminus { get; set; }
-            public bool Structural { get; set; }
-            public double? Mass { get; set; }
-            public string Name { get; set; }
-            public int RoundedTo { get; set; }
-            public bool IsSpecificHeavy { get; set; }
-            public void RemoveOrigSeqInfo()
-            {
-                _indexAA = null;
-                _indexSeq = null;
-            }
+            public AAModKey ModKey { get; set; }
+            public int IndexAA { get; set; }
+            public int IndexAAInSeq { get; set; }
+
+            public char AA { get { return ModKey.AA; } }
+            public ModTerminus? Terminus { get { return ModKey.Terminus; } }
+            public bool Structural { get { return ModKey.Structural; } }
+            public double? Mass { get { return ModKey.Mass; } }
+            public string Name { get { return ModKey.Name; } }
+            public int RoundedTo { get { return ModKey.RoundedTo; } }
+            public bool IsSpecificHeavy { get { return ModKey.IsSpecificHeavy; } }
+
             public bool IsMassMatch(StaticMod mod)
             {
                 return Equals(Math.Round(GetDefaultModMass(AA, mod), RoundedTo), Mass)
@@ -570,6 +564,17 @@ namespace pwiz.Skyline.Model
             {
                 return string.Format(Structural ? "{0}[{1}]" : "{0}{{{1}}}", AA, Mass);
             }
+        }
+
+        private struct AAModKey
+        {
+            public char AA { get; set; }
+            public ModTerminus? Terminus { get; set; }
+            public bool Structural { get; set; }
+            public double? Mass { get; set; }
+            public string Name { get; set; }
+            public int RoundedTo { get; set; }
+            public bool IsSpecificHeavy { get; set; }
         }
     }
 }

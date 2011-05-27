@@ -90,7 +90,7 @@ namespace UniModCompiler
                 _impossibleMods = new List<string>();
 
                 // Writing the output file.
-                StreamWriter writer = new StreamWriter(@"..\..\..\..\Model\DocSettings\UniMod.cs");
+                StreamWriter writer = new StreamWriter(@"..\..\..\..\Model\DocSettings\UniModData.cs");
                 var templateStream =
                     typeof (Program).Assembly.GetManifestResourceStream("UniModCompiler.UniModTemplate.cs");
                 if (templateStream == null)
@@ -267,19 +267,24 @@ namespace UniModCompiler
                         _listedMods.Remove(mod);
                     continue;
                 }
-                writer.WriteLine(
-                    String.Format(@"            AddMod(""{0}"", {1}, {2}, {3}, {4}, {5}, {6}, {7}, {8});", 
-                                    mod.Name,
-                                    mod.AAs.Length > 0 ? '"' + BuildAAString(mod.AAs) + '"' : "null",
-                                    mod.Terminal != null ? "ModTerminus." + mod.Terminal : "null",
-                                    labelAtoms,                                    
-                                    Equals(labelAtoms, "LabelAtoms.None") ?
-                                        '"' + BuildFormula(dictMod.delta.element) + '"'
-                                        : "null",
-                                    lossesStr,
-                                    dictMod.record_id, 
-                                    (!isotopic).ToString().ToLower(), 
-                                    hidden.ToString().ToLower()));
+                writer.WriteLine("            new UniModModificationData");
+                writer.WriteLine("            {");
+                writer.WriteLine(string.Format(@"                 Name = ""{0}"", ", mod.Name));
+                writer.Write("                 ");
+                if (mod.AAs.Length > 0)
+                    writer.Write(string.Format(@"AAs = ""{0}"", ", BuildAAString(mod.AAs)));
+                if (mod.Terminal != null)
+                    writer.Write(string.Format(@"Terminus = {0}, ", "ModTerminus." + mod.Terminal));
+                writer.Write(string.Format("LabelAtoms = {0}, ", labelAtoms));
+                if (Equals(labelAtoms, "LabelAtoms.None"))
+                    writer.Write(string.Format(@"Formula = ""{0}"", ", BuildFormula(dictMod.delta.element)));
+                if(!Equals(lossesStr, "null"))
+                    writer.Write(string.Format("Losses = {0}, ", lossesStr));
+                writer.WriteLine(string.Format("ID = {0}, ", dictMod.record_id));
+                writer.Write(string.Format("                 Structural = {0}, ", (!isotopic).ToString().ToLower()));
+                writer.WriteLine(string.Format("Hidden = {0}, ", hidden.ToString().ToLower()));
+                writer.WriteLine("            },");
+
                 
                 if (hidden)
                     _listedHiddenMods.Remove(mod);
@@ -350,7 +355,7 @@ namespace UniModCompiler
                     foreach (char aa in aas)
                     {
                         int numInFormula = ParseSeqMassCalcFormula(aa, elementMatch);
-                        if (element.number != numInFormula.ToString())
+                        if (!Equals(element.number, numInFormula.ToString()))
                         {
                             hasLabelAtoms = false;
                             break;
