@@ -23,6 +23,7 @@
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/data/msdata/SpectrumListBase.hpp"
 #include "pwiz/utility/misc/IntegerSet.hpp"
+#include <boost/thread/mutex.hpp>
 
 #ifdef PWIZ_READER_ABI
 #include "pwiz_aux/msrc/utility/vendor_api/ABI/WiffFile.hpp"
@@ -43,15 +44,19 @@ class PWIZ_API_DECL SpectrumList_ABI : public SpectrumListBase
     virtual const SpectrumIdentity& spectrumIdentity(size_t index) const;
     virtual size_t find(const std::string& id) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
+    virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
+    virtual SpectrumPtr spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const;
     
 #ifdef PWIZ_READER_ABI
-    SpectrumList_ABI(const MSData& msd, WiffFilePtr wifffile, int sample);
+    SpectrumList_ABI(const MSData& msd, WiffFilePtr wifffile,
+        const ExperimentsMap& experimentsMap, int sample);
 
     private:
 
     const MSData& msd_;
     WiffFilePtr wifffile_;
+    ExperimentsMap experimentsMap_;
     int sample;
 
     mutable size_t size_;
@@ -63,12 +68,17 @@ class PWIZ_API_DECL SpectrumList_ABI : public SpectrumListBase
         int sample;
         int period;
         int cycle;
-        int experiment;
+        ExperimentPtr experiment;
         int transition;
     };
 
     mutable std::vector<IndexEntry> index_;
     mutable std::map<std::string, size_t> idToIndexMap_;
+
+    // Cache last accessed spectrum for fast in order access
+    mutable boost::mutex spectrum_mutex;
+    mutable size_t spectrumLastIndex_;
+    mutable pwiz::vendor_api::ABI::SpectrumPtr spectrumLast_;
 
     void createIndex() const;
 #endif // PWIZ_READER_ABI

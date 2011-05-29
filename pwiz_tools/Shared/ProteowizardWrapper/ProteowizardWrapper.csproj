@@ -47,9 +47,9 @@
     <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ABSciex.DataAccess.WiffFileDataReader, Version=3.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Clearcore2.Data.WiffReader, Version=2.0.0.0, Culture=neutral, PublicKeyToken=2a79e0d8fd2e4eca, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>obj\x86\ABSciex.DataAccess.WiffFileDataReader.dll</HintPath>
+      <HintPath>obj\x86\Clearcore2.Data.WiffReader.dll</HintPath>
     </Reference>
     <Reference Include="MassSpecDataReader, Version=3.0.318.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>

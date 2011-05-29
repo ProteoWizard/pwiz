@@ -39,9 +39,11 @@ namespace msdata {
 namespace detail {
 
 
-PWIZ_API_DECL ChromatogramList_ABI::ChromatogramList_ABI(const MSData& msd, WiffFilePtr wifffile, int sample)
+PWIZ_API_DECL ChromatogramList_ABI::ChromatogramList_ABI(const MSData& msd, WiffFilePtr wifffile,
+                                                         const ExperimentsMap& experimentsMap, int sample)
 :   msd_(msd),
     wifffile_(wifffile),
+    experimentsMap_(experimentsMap),
     sample(sample),
     size_(0),
     indexInitialized_(util::init_once_flag_proxy)
@@ -114,7 +116,9 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, b
                         int experimentCount = wifffile_->getExperimentCount(i, ii);
                         for (int iii=1; iii <= experimentCount; ++iii)
                         {
-                            ExperimentPtr msExperiment = wifffile_->getExperiment(i, ii, iii);
+                            ExperimentPtr msExperiment = (i == sample
+                                ? experimentsMap_.find(pair<int, int>(ii, iii))->second
+                                : wifffile_->getExperiment(i, ii, iii));
 
                             // add current experiment TIC to full file TIC
                             vector<double> times, intensities;
@@ -124,7 +128,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, b
                         }
                     }
                 }
-                catch (exception& e)
+                catch (exception&)
                 {
                     // TODO: log warning
                 }
@@ -154,7 +158,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_ABI::chromatogram(size_t index, b
 
         case MS_SRM_chromatogram:
         {
-            ExperimentPtr experiment = wifffile_->getExperiment(ie.sample, ie.period, ie.experiment);
+            ExperimentPtr experiment = ie.experiment;
             pwiz::vendor_api::ABI::Target target;
             experiment->getSRM(ie.transition, target);
 
@@ -212,7 +216,7 @@ PWIZ_API_DECL void ChromatogramList_ABI::createIndex() const
         int experimentCount = wifffile_->getExperimentCount(sample, ii);
         for (int iii=1; iii <= experimentCount; ++iii)
         {
-            ExperimentPtr msExperiment = wifffile_->getExperiment(sample, ii, iii);
+            ExperimentPtr msExperiment = experimentsMap_.find(pair<int, int>(ii, iii))->second;
 
             for (int iiii = 0; iiii < (int) msExperiment->getSRMSize(); ++iiii)
             {
@@ -225,7 +229,7 @@ PWIZ_API_DECL void ChromatogramList_ABI::createIndex() const
                 ie.q3 = target.Q3;
                 ie.sample = sample;
                 ie.period = ii;
-                ie.experiment = iii;
+                ie.experiment = msExperiment;
                 ie.transition = iiii;
                 ie.index = index_.size()-1;
 
@@ -234,7 +238,7 @@ PWIZ_API_DECL void ChromatogramList_ABI::createIndex() const
                        " Q3=" << ie.q3 <<
                        " sample=" << ie.sample <<
                        " period=" << ie.period <<
-                       " experiment=" << ie.experiment <<
+                       " experiment=" << ie.experiment->getExperimentNumber() <<
                        " transition=" << ie.transition;
                 ie.id = oss.str();
                 idToIndexMap_[ie.id] = ie.index;

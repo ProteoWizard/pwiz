@@ -41,8 +41,7 @@ InstrumentConfigurationPtr translateAsInstrumentConfiguration(WiffFilePtr wifffi
 
 PWIZ_API_DECL CVID translateAsInstrumentModel(InstrumentModel instrumentModel);
 PWIZ_API_DECL CVID translateAsIonSource(IonSourceType ionSourceType);
-PWIZ_API_DECL CVID translateAsSpectrumType(ScanType scanType);
-PWIZ_API_DECL int translateAsMSLevel(ScanType scanType);
+PWIZ_API_DECL CVID translateAsSpectrumType(ExperimentType scanType);
 PWIZ_API_DECL CVID translate(Polarity polarity);
 
 } // detail

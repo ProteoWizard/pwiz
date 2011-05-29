@@ -45,12 +45,13 @@ class PWIZ_API_DECL ChromatogramList_ABI : public ChromatogramListBase
     virtual ChromatogramPtr chromatogram(size_t index, bool getBinaryData) const;
     
 #ifdef PWIZ_READER_ABI
-    ChromatogramList_ABI(const MSData& msd, WiffFilePtr wifffile, int sample);
+    ChromatogramList_ABI(const MSData& msd, WiffFilePtr wifffile, const ExperimentsMap& experimentsMap, int sample);
 
     private:
 
     const MSData& msd_;
     WiffFilePtr wifffile_;
+    ExperimentsMap experimentsMap_;
     int sample;
 
     mutable size_t size_;
@@ -62,7 +63,7 @@ class PWIZ_API_DECL ChromatogramList_ABI : public ChromatogramListBase
         CVID chromatogramType;
         int sample;
         int period;
-        int experiment;
+        ExperimentPtr experiment;
         int transition;
         double q1, q3;
     };

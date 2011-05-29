@@ -25,19 +25,19 @@ GOTO READER_TEST
 
 :ABI
 set name=ABI
-set readerpath=pwiz_aux\msrc\data\vendor_readers\ABI
+set readerpath=pwiz\data\vendor_readers\ABI
 set next=Bruker
 GOTO READER_TEST
 
 :Bruker
 set name=Bruker
-set readerpath=pwiz_aux\msrc\data\vendor_readers\Bruker
+set readerpath=pwiz\data\vendor_readers\Bruker
 set next=Waters
 GOTO READER_TEST
 
 :Waters
 set name=Waters
-set readerpath=pwiz_aux\msrc\data\vendor_readers\Waters
+set readerpath=pwiz\data\vendor_readers\Waters
 set next=end
 GOTO READER_TEST
 

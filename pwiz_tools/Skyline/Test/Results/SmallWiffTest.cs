@@ -112,7 +112,7 @@ namespace pwiz.SkylineTest.Results
 
             var docResultsSingle = docResults.ChangeMeasuredResults(new MeasuredResults(listChromatograms));
 
-            AssertResult.IsDocumentResultsState(docResultsSingle, "test", 9, 2, 9, 7, 27);
+            AssertResult.IsDocumentResultsState(docResultsSingle, "test", 9, 2, 9, 8, 27);
 
             // Add mzXML version of test sample
             listChromatograms.Add(new ChromatogramSet("test-mzXML", new[] { testFilesDir.GetTestPath("051309_digestion-s3.mzXML") }));
@@ -130,7 +130,7 @@ namespace pwiz.SkylineTest.Results
             docContainer.SetDocument(doc, docContainer.Document);
 
             // TODO: Switch to a using clause when PWiz is fixed, and this assertion fails
-            AssertEx.ThrowsException<IOException>(() => testFilesDir.Dispose());
+//            AssertEx.ThrowsException<IOException>(() => testFilesDir.Dispose());
         }
 
         private static SrmDocument InitWiffDocument(TestFilesDir testFilesDir)

@@ -44,24 +44,10 @@ namespace ABI {
 
 PWIZ_API_DECL enum ScanType
 {
-    UNDEFINED_SCAN = -1,
-    Q1_SCAN = 0,
-    SIM_Q1 = 1,
-    Q3_SCAN = 2,
-    SIM_Q3 = 3,
-    MRM = 4,
-    PRECURSOR_ION_SCAN = 5,
-    PRODUCT_ION_SCAN = 6,
-    NEUTRAL_LOSS_SCAN = 7,
-    TOF_MS_SCAN = 8,
-    TOF_PRODUCT_ION_SCAN = 9,
-    TOF_PRECURSOR_ION_SCAN = 10,
-    ENHANCED_PRODUCT_ION_SCAN = 11,
-    ENHANCED_RESOLUTION_SCAN = 12,
-    MSMSMS_SCAN = 13,
-    TIMEDELAY_FRAGMENTATION_SCAN = 14,
-    ENHANCED_MS_SCAN = 15,
-    ENHANCED_MULTCHARGE_SCAN = 16
+    Unknown = 0,
+    MRMScan,
+    SIMScan,
+    FullScan
 };
 
 PWIZ_API_DECL enum InstrumentModel
@@ -115,11 +101,21 @@ PWIZ_API_DECL enum IonSourceType
     PhotoSpray = 9
 };
 
+PWIZ_API_DECL enum ExperimentType
+{
+    MS = 0,
+    Product,
+    Precursor,
+    NeutralGainOrLoss,
+    SIM,
+    MRM
+};
+
 PWIZ_API_DECL enum Polarity
 {
-    NotDefined = -10,
-    Negative = -1,
-    Positive = 1
+    Positive = 0,
+    Negative = 1,
+    Undefined = 2
 };
 
 
@@ -129,6 +125,8 @@ struct PWIZ_API_DECL Spectrum
     virtual int getPeriodNumber() const = 0;
     virtual int getExperimentNumber() const = 0;
     virtual int getCycleNumber() const = 0;
+
+    virtual int getMSLevel() const = 0;
 
     virtual bool getHasIsolationInfo() const = 0;
     virtual void getIsolationInfo(double& centerMz, double& lowerLimit, double& upperLimit) const = 0;
@@ -179,22 +177,25 @@ struct PWIZ_API_DECL Experiment
     virtual int getPeriodNumber() const = 0;
     virtual int getExperimentNumber() const = 0;
 
-    virtual double getCycleStartTime(int cycle) const = 0;
-
     virtual size_t getSRMSize() const = 0;
     virtual void getSRM(size_t index, Target& target) const = 0;
     virtual void getSIC(size_t index, std::vector<double>& times, std::vector<double>& intensities) const = 0;
+    virtual void getSIC(size_t index, std::vector<double>& times, std::vector<double>& intensities,
+                        double& basePeakX, double& basePeakY) const = 0;
 
     virtual void getAcquisitionMassRange(double& startMz, double& stopMz) const = 0;
     virtual ScanType getScanType() const = 0;
+    virtual ExperimentType getExperimentType() const = 0;
     virtual Polarity getPolarity() const = 0;
 
     virtual void getTIC(std::vector<double>& times, std::vector<double>& intensities) const = 0;
+    virtual void getBPC(std::vector<double>& times, std::vector<double>& intensities) const = 0;
 
     virtual ~Experiment() {}
 };
 
 typedef boost::shared_ptr<Experiment> ExperimentPtr;
+typedef std::map<std::pair<int, int>, ExperimentPtr> ExperimentsMap;
 
 
 class PWIZ_API_DECL WiffFile

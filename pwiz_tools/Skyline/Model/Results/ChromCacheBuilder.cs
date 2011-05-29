@@ -489,12 +489,12 @@ namespace pwiz.Skyline.Model.Results
         {
             // The WiffFileDataReader messes up the precursor m/z values for targeted
             // spectra.  The mzWiff mzXML converter must be used instead.
-            if (dataFile.IsABFile && !dataFile.IsMzWiffXml)
-            {
+//            if (dataFile.IsABFile && !dataFile.IsMzWiffXml)
+//            {
                 // NOTE: This will show an error about the import taking 10 hours, which is not really true, if the computer running Skyline does not have Analyst installed
-                throw new LoadingTooSlowlyException(LoadingTooSlowlyException.Solution.mzwiff_conversion, _status,
-                    10*60, 4);
-            }
+//                throw new LoadingTooSlowlyException(LoadingTooSlowlyException.Solution.mzwiff_conversion, _status,
+//                    10*60, 4);
+//            }
             // If this is a performance work-around, then make sure the progress indicator
             // does not jump backward perceptibly.
             int startPercent = (_tempFileSubsitute != null ? (StartPercent + EndPercent)/2 : StartPercent);

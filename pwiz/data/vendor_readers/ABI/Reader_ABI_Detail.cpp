@@ -162,60 +162,21 @@ PWIZ_API_DECL CVID translateAsIonSource(IonSourceType ionSourceType)
 }
 
 
-PWIZ_API_DECL CVID translateAsSpectrumType(ScanType scanType)
+PWIZ_API_DECL CVID translateAsSpectrumType(ExperimentType experimentType)
 {
-    switch (scanType)
+    switch (experimentType)
     {
-        default:
-        case UNDEFINED_SCAN:                return CVID_Unknown;
+        case MS:                            return MS_MS1_spectrum;
+        case vendor_api::ABI::Product:      return MS_MSn_spectrum;
+        case vendor_api::ABI::Precursor:    return MS_precursor_ion_spectrum;
+        case NeutralGainOrLoss:             return MS_constant_neutral_loss_spectrum;
+        case SIM:                           return MS_SIM_spectrum;
+        case MRM:                           return MS_SRM_spectrum;
 
-        case Q1_SCAN:                       return MS_MS1_spectrum;
-        case SIM_Q1:                        return MS_SIM_spectrum;
-        case Q3_SCAN:                       return MS_MS1_spectrum;
-        case SIM_Q3:                        return MS_SIM_spectrum;
-        case MRM:                           return MS_MRM_spectrum;
-        case PRECURSOR_ION_SCAN:            return MS_precursor_ion_spectrum;
-        case PRODUCT_ION_SCAN:              return MS_MSn_spectrum;
-        case NEUTRAL_LOSS_SCAN:             return MS_constant_neutral_loss_spectrum;
-        case TOF_MS_SCAN:                   return MS_MS1_spectrum;
-        case TOF_PRODUCT_ION_SCAN:          return MS_MSn_spectrum;
-        case TOF_PRECURSOR_ION_SCAN:        return MS_precursor_ion_spectrum;
-        case ENHANCED_PRODUCT_ION_SCAN:     return MS_MSn_spectrum;
-        case ENHANCED_RESOLUTION_SCAN:      return MS_MS1_spectrum;
-        case MSMSMS_SCAN:                   return MS_MSn_spectrum;
-        case TIMEDELAY_FRAGMENTATION_SCAN:  return MS_time_delayed_fragmentation_spectrum;
-        case ENHANCED_MS_SCAN:              return MS_MS1_spectrum;
-        case ENHANCED_MULTCHARGE_SCAN:      return MS_enhanced_multiply_charged_spectrum;
+        default:                            return CVID_Unknown;
     }
 }
 
-
-PWIZ_API_DECL int translateAsMSLevel(ScanType scanType)
-{
-    switch (scanType)
-    {
-        default:
-        case UNDEFINED_SCAN:                return 0;
-
-        case Q1_SCAN:                       return 1;
-        case SIM_Q1:                        return 1;
-        case Q3_SCAN:                       return 2;
-        case SIM_Q3:                        return 2;
-        case MRM:                           return 2;
-        case PRECURSOR_ION_SCAN:            return 2;
-        case PRODUCT_ION_SCAN:              return 2;
-        case NEUTRAL_LOSS_SCAN:             return 2;
-        case TOF_MS_SCAN:                   return 1;
-        case TOF_PRODUCT_ION_SCAN:          return 2;
-        case TOF_PRECURSOR_ION_SCAN:        return 2;
-        case ENHANCED_PRODUCT_ION_SCAN:     return 2;
-        case ENHANCED_RESOLUTION_SCAN:      return 1;
-        case MSMSMS_SCAN:                   return 3;
-        case TIMEDELAY_FRAGMENTATION_SCAN:  return 2;
-        case ENHANCED_MS_SCAN:              return 1;
-        case ENHANCED_MULTCHARGE_SCAN:      return 1;
-    }
-}
 
 
 PWIZ_API_DECL CVID translate(Polarity polarity)
@@ -226,7 +187,7 @@ PWIZ_API_DECL CVID translate(Polarity polarity)
             return MS_positive_scan;
         case Negative:
             return MS_negative_scan;
-        case NotDefined:
+        case Undefined:
         default:
             return CVID_Unknown;
     }

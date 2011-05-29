@@ -27,6 +27,7 @@ del /q pwiz\data\proteome\Version.cpp > nul 2>&1
 del /q pwiz\analysis\Version.cpp > nul 2>&1
 
 del /q pwiz_aux\msrc\utility\vendor_api\ABI\*.dll > nul 2>&1
+del /q pwiz_aux\msrc\utility\vendor_api\ABI\LicenseKey.h > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Agilent\*.dll > nul 2>&1
 del /q pwiz_aux\msrc\utility\vendor_api\Agilent\EULA.* > nul 2>&1
 rmdir /s /q pwiz_aux\msrc\utility\vendor_api\Agilent\Documents > nul 2>&1

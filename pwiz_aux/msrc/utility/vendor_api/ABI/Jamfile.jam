@@ -30,36 +30,7 @@ path-constant API_PATH : . ;
 if [ modules.peek : NT ]
 {
 
-local .dllPath = [ find-wiff-dlls $(API_PATH) ] ;
-if ! --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
-{
-    # ignore vendor DLLs even if they're available
-}
-else
-{
-    if $(API_PATH) in $(.dllPath)
-    {
-        # DLLs are already copied
-        .hasDLLs = true ;
-    }
-    else if $(.dllPath)
-    {
-        # need to copy DLLs
-        .hasDLLs = true ;
-        local destination = [ path.native $(API_PATH) ] ;
-        echo "Copying WiffFileDataReader DLLs from \"$(.dllPath)\" to \"$(destination)\"" ;
-        echo [ SHELL "copy \"$(.dllPath)\\ABSciex.DataAccess.WiffFileDataReader.dll \"  \"$(destination)\"" ] ;
-        echo [ SHELL "copy \"$(.dllPath)\\Clearcore.dll\"  \"$(destination)\"" ] ;
-        echo [ SHELL "copy \"$(.dllPath)\\ClearCore.Storage.dll\" \"$(destination)\"" ] ;
-        echo [ SHELL "copy \"$(.dllPath)\\rscoree.dll\" \"$(destination)\"" ] ;
-        RESCAN ;
-    }
-    else if --require-vendor-support in [ modules.peek : ARGV ]
-    {
-        exit "Unable to find ABI DLLs; --require-vendor-support makes this a fatal error." ;
-    }
-}
-
+if [ find-wiff-dlls $(API_PATH) ] { .hasDLLs = true ; }
 
 rule vendor-api-requirements ( properties * )
 {
@@ -77,10 +48,14 @@ rule vendor-api-requirements ( properties * )
             result += <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc ;
         }
         result += <linkflags>/FORCE:MULTIPLE ; # HACK HACK HACK: the duplicate date_time symbols must be fixed, but how?!
-        result += <assembly>$(API_PATH)/ABSciex.DataAccess.WiffFileDataReader.dll ;
-        result += <assembly>$(API_PATH)/Clearcore.dll ;
-        result += <assembly>$(API_PATH)/ClearCore.Storage.dll ;
-        result += <assembly-dependency>$(API_PATH)/rscoree.dll ;
+        result += <assembly>$(API_PATH)/Clearcore2.Data.AnalystDataProvider.dll ;
+        result += <assembly>$(API_PATH)/Clearcore2.Data.CommonInterfaces.dll ;
+        result += <assembly>$(API_PATH)/Clearcore2.Data.dll ;
+        result += <assembly>$(API_PATH)/Clearcore2.Data.WiffReader.dll ;
+        result += <assembly>$(API_PATH)/Clearcore2.InternalRawXYProcessing.dll ;
+        result += <assembly>$(API_PATH)/Clearcore2.ProjectUtilities.dll ;
+        result += <assembly>$(API_PATH)/Clearcore2.StructuredStorage.dll ;
+        result += <assembly>$(API_PATH)/Clearcore2.Utility.dll ;
         result += <define>PWIZ_READER_ABI ;
     }
     else
@@ -127,32 +102,4 @@ explicit WiffFileTest ;
 install install_pwiz_vendor_api_abi
     : [ path.glob $(API_PATH) : *.dll ]
     ;
-
-explicit install_pwiz_vendor_api_abi ;
-
-if [ path.exists $(API_PATH)/ClearCore.dll ]
-{
-# for application build and install
-install install_pwiz_vendor_api_abi_app
-    : ClearCore.dll
-      ClearCore.Storage.dll
-    ;
-}
-else
-{
-
-if ! [ path.exists $(API_PATH)\\stub\\ClearCore.dll ]
-{
-    echo "Creating dummy ClearCore.dll and ClearCore.Storage.dll." ;
-    SHELL "echo \"This is a dummy ClearCore.dll for Visual Studio projects to reference.\" > \"$(API_PATH)\\stub\\ClearCore.dll\"" ;
-    SHELL "echo \"This is a dummy ClearCore.Storage.dll for Visual Studio projects to reference.\" > \"$(API_PATH)\\stub\\ClearCore.Storage.dll\"" ;
-}
-
-# for application build and install
-install install_pwiz_vendor_api_abi_app
-    : stub/ClearCore.dll
-      stub/ClearCore.Storage.dll
-    ;
-}
-explicit install_pwiz_vendor_api_abi_app ;
 }

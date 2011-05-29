@@ -62,7 +62,8 @@ using namespace pwiz::msdata::detail;
 
 namespace {
 
-void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile, int sample)
+void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile,
+                    ExperimentsMap& experimentsMap, int sample)
 {
     msd.cvs = defaultCVList();
 
@@ -75,8 +76,9 @@ void fillInMetadata(const string& wiffpath, MSData& msd, WiffFilePtr wifffile, i
         for (int iii=1; iii <= experimentCount; ++iii)
         {
             ExperimentPtr msExperiment = wifffile->getExperiment(sample, ii, iii);
-            if (msExperiment->getScanType() != MRM) // TODO: ExperimentType
-                msd.fileDescription.fileContent.set(translateAsSpectrumType(msExperiment->getScanType()));
+            experimentsMap[pair<int, int>(ii, iii)] = msExperiment;
+            if (msExperiment->getExperimentType() != MRM)
+                msd.fileDescription.fileContent.set(translateAsSpectrumType(msExperiment->getExperimentType()));
             else
                 msd.fileDescription.fileContent.set(MS_SRM_chromatogram);
         }
@@ -193,9 +195,9 @@ void copyProteinPilotDLLs()
     if (!bfs::exists(callingExecutablePath / "ABSciex.DataAccess.WiffFileDataReader.dll"))
     {
         // copy the ProteinPilot DLLs if it is installed, else throw an exception informing the user to download it
-        string programFilesPath = env::get("ProgramFiles");
+        char* programFilesPath = ::getenv("ProgramFiles");
         bfs::path proteinPilotPath;
-        if (programFilesPath.empty())
+        if (!programFilesPath)
         {
             if (bfs::exists("C:/Program Files(x86)"))
                 proteinPilotPath = "C:/Program Files(x86)/Applied Biosystems MDS Analytical Technologies/ProteinPilot";
@@ -220,10 +222,10 @@ void copyProteinPilotDLLs()
         else // couldn't find Protein Pilot 3; try finding a Skyline installation
         {
             // Windows Vista/7 have %LOCALAPPDATA%
-            string localAppDataPath = env::get("LOCALAPPDATA");
+            string localAppDataPath = ::getenv("LOCALAPPDATA");
 
             // Windows 2000/XP have %APPDATA%\Local Settings
-            if (localAppDataPath.empty()) localAppDataPath = env::get("USERPROFILE") + "\\Local Settings";
+            if (localAppDataPath.empty()) localAppDataPath = string(::getenv("USERPROFILE")) + "\\Local Settings";
 
             if (localAppDataPath.empty())
                 throw runtime_error("[Reader_ABI::ctor] When trying to find Skyline, the Local Settings directory could not be found!");
@@ -262,18 +264,22 @@ void Reader_ABI::read(const string& filename,
                       MSData& result,
                       int runIndex) const
 {
-    copyProteinPilotDLLs();
+//    copyProteinPilotDLLs();
 
     try
     {
         runIndex++; // one-based index
         WiffFilePtr wifffile = WiffFile::create(filename);
-        SpectrumList_ABI* sl = new SpectrumList_ABI(result, wifffile, runIndex);
-        ChromatogramList_ABI* cl = new ChromatogramList_ABI(result, wifffile, runIndex);
+        // Loading the experiments are one of the more expensive operations,
+        // so make sure it only happens once.
+        ExperimentsMap experimentsMap;
+
+        fillInMetadata(filename, result, wifffile, experimentsMap, runIndex);
+
+        SpectrumList_ABI* sl = new SpectrumList_ABI(result, wifffile, experimentsMap, runIndex);
+        ChromatogramList_ABI* cl = new ChromatogramList_ABI(result, wifffile, experimentsMap, runIndex);
         result.run.spectrumListPtr = SpectrumListPtr(sl);
         result.run.chromatogramListPtr = ChromatogramListPtr(cl);
-
-        fillInMetadata(filename, result, wifffile, runIndex);
     }
     catch (std::exception& e)
     {
@@ -290,7 +296,7 @@ void Reader_ABI::read(const string& filename,
                       const string& head,
                       vector<MSDataPtr>& results) const
 {
-    copyProteinPilotDLLs();
+//    copyProteinPilotDLLs();
 
     try
     {
@@ -303,13 +309,16 @@ void Reader_ABI::read(const string& filename,
             {
                 MSDataPtr msDataPtr = MSDataPtr(new MSData);
                 MSData& result = *msDataPtr;
+                // Loading the experiments are one of the more expensive operations,
+                // so make sure it only happens once.
+                ExperimentsMap experimentsMap;
 
-                SpectrumList_ABI* sl = new SpectrumList_ABI(result, wifffile, i);
-                ChromatogramList_ABI* cl = new ChromatogramList_ABI(result, wifffile, i);
+                fillInMetadata(filename, result, wifffile, experimentsMap, i);
+
+                SpectrumList_ABI* sl = new SpectrumList_ABI(result, wifffile, experimentsMap, i);
+                ChromatogramList_ABI* cl = new ChromatogramList_ABI(result, wifffile, experimentsMap, i);
                 result.run.spectrumListPtr = SpectrumListPtr(sl);
                 result.run.chromatogramListPtr = ChromatogramListPtr(cl);
-
-                fillInMetadata(filename, result, wifffile, i);
 
                 results.push_back(msDataPtr);
             }
@@ -335,7 +344,7 @@ void Reader_ABI::readIds(const string& filename,
                       const string& head,
                       vector<string>& results) const
 {
-    copyProteinPilotDLLs();
+//    copyProteinPilotDLLs();
 
     try
     {
