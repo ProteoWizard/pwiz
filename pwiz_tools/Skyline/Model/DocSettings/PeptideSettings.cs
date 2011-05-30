@@ -1575,6 +1575,85 @@ namespace pwiz.Skyline.Model.DocSettings
             return libClone;
         }
 
+        public PeptideLibraries MergeLibrarySpecs(PeptideLibraries newPepLibraries)
+        {
+            IList<LibrarySpec> librarySpecs = LibrarySpecs.ToList();
+
+            for (int i = 0; i < newPepLibraries.Libraries.Count; i++)
+            {
+                LibrarySpec spec = newPepLibraries.LibrarySpecs[i];
+                Library library = newPepLibraries.Libraries[i];
+                string libraryName;
+                string fileName;
+                if (library != null)
+                {
+                    libraryName = library.Name;
+                    fileName = library.FileNameHint;
+                }
+                else if (spec != null)
+                {
+                    libraryName = spec.Name;
+                    fileName = Path.GetFileName(spec.FilePath);
+                }
+                else
+                {
+                    // If no library and no spec, give up
+                    continue;
+                }
+
+                // If already in the list, nothing more to do
+                if (librarySpecs.Contains(s => Equals(s.Name, libraryName)))
+                    continue;
+
+                // If the named spec is in the global settings, use it
+                LibrarySpec specSettings;
+                if (Settings.Default.SpectralLibraryList.TryGetValue(libraryName, out specSettings))
+                {
+                    librarySpecs.Add(specSettings);
+                    continue;
+                }
+
+                // If it is a library spec, and the path exists then use the spec
+                if (spec != null && File.Exists(spec.FilePath))
+                {
+                    librarySpecs.Add(spec);
+                    Settings.Default.SpectralLibraryList.Add(spec);
+                    continue;
+                }
+
+                // If there is no filename, give up
+                if (fileName == null)
+                    continue;
+
+                // Look for the library in the user's default library path
+                var pathLibrary = Path.Combine(Settings.Default.LibraryDirectory, fileName);
+                if (!File.Exists(pathLibrary))
+                {
+                    // If it still can't be found, show a dialog to ask the user
+                    var dlg = new MissingLibraryDlg
+                    {
+                        LibraryName = libraryName,
+                        LibraryFileNameHint = fileName
+                    };
+                    // If the user didn't give an answer, give up
+                    if (dlg.ShowDialog() != DialogResult.OK || dlg.LibraryPath == null)
+                        continue;
+
+                    pathLibrary = dlg.LibraryPath;
+                }
+
+                // Create a new library spec from the library, or change existing library
+                // spec path to the newly found path.
+                var libSpec = (library != null
+                                   ? library.CreateSpec(pathLibrary)
+                                   : spec.ChangeFilePath(pathLibrary));
+                librarySpecs.Add(libSpec);
+                Settings.Default.SpectralLibraryList.Add(libSpec);
+            }
+
+            return ChangeLibrarySpecs(librarySpecs);
+        }
+
         #endregion
 
         #region Implementation of IXmlSerializable
@@ -1679,85 +1758,6 @@ namespace pwiz.Skyline.Model.DocSettings
             return true;
         }
 
-        public PeptideLibraries MergeLibrarySpecs(PeptideLibraries newPepLibraries)
-        {
-            IList<LibrarySpec> librarySpecs = LibrarySpecs.ToList();
-
-            for (int i = 0; i < newPepLibraries.Libraries.Count; i++)
-            {
-                LibrarySpec spec = newPepLibraries.LibrarySpecs[i];
-                Library library = newPepLibraries.Libraries[i];
-                string libraryName;
-                string fileName;
-                if (library != null)
-                {
-                    libraryName = library.Name;
-                    fileName = library.FileNameHint;
-                }
-                else if (spec != null)
-                {
-                    libraryName = spec.Name;
-                    fileName = Path.GetFileName(spec.FilePath);
-                }
-                else
-                {
-                    // If no library and no spec, give up
-                    continue;
-                }
-
-                // If already in the list, nothing more to do
-                if (librarySpecs.Contains(s => Equals(s.Name, libraryName)))
-                    continue;
-
-                // If the named spec is in the global settings, use it
-                LibrarySpec specSettings;
-                if (Settings.Default.SpectralLibraryList.TryGetValue(libraryName, out specSettings))
-                {
-                    librarySpecs.Add(specSettings);
-                    continue;
-                }
-
-                // If it is a library spec, and the path exists then use the spec
-                if (spec != null && File.Exists(spec.FilePath))
-                {
-                    librarySpecs.Add(spec);
-                    Settings.Default.SpectralLibraryList.Add(spec);
-                    continue;
-                }
-
-                // If there is no filename, give up
-                if (fileName == null)
-                    continue;
-
-                // Look for the library in the user's default library path
-                var pathLibrary = Path.Combine(Settings.Default.LibraryDirectory, fileName);
-                if (!File.Exists(pathLibrary))
-                {
-                    // If it still can't be found, show a dialog to ask the user
-                    var dlg = new MissingLibraryDlg
-                                  {
-                                      LibraryName = libraryName,
-                                      LibraryFileNameHint = fileName
-                                  };
-                    // If the user didn't give an answer, give up
-                    if (dlg.ShowDialog() != DialogResult.OK || dlg.LibraryPath == null)
-                        continue;
-
-                    pathLibrary = dlg.LibraryPath;
-                }
-
-                // Create a new library spec from the library, or change existing library
-                // spec path to the newly found path.
-                var libSpec = (library != null
-                                   ? library.CreateSpec(pathLibrary)
-                                   : spec.ChangeFilePath(pathLibrary));
-                librarySpecs.Add(libSpec);
-                Settings.Default.SpectralLibraryList.Add(libSpec);
-            }
-
-            return ChangeLibrarySpecs(librarySpecs);
-        }
-            
         // Support for serializing multiple library types
         private static readonly IXmlElementHelper<Library>[] LIBRARY_HELPERS =
         {

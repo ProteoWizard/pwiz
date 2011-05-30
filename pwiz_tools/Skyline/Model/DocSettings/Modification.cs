@@ -310,7 +310,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
             if (!UniMod.ValidateID(this))
-                throw new InvalidDataException("UniMod id does not match modification settings.");
+                throw new InvalidDataException(string.Format("Modification settings do not match the expected values for Unimod ID {0}.", UnimodId));
         }
 
         private static ModTerminus ToModTerminus(String value)
@@ -365,6 +365,9 @@ namespace pwiz.Skyline.Model.DocSettings
                 IsExplicit = reader.GetBoolAttribute(ATTR.explicit_decl);
 
             UnimodId = reader.GetNullableIntAttribute(ATTR.unimod_id);
+            // Backward compatibility with early code that assigned -1 to some custom modifications
+            if (UnimodId.HasValue && UnimodId.Value == -1)
+                UnimodId = null;
 
             // Consume tag
             reader.Read();

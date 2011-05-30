@@ -135,13 +135,13 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public static bool ValidateID(StaticMod mod)
         {
-            if (INITIALIZING || mod.UnimodId == null)
+            if (INITIALIZING || !mod.UnimodId.HasValue)
                 return true;
             var idKey = new UniModIdKey
             {
                 Aa = mod.AAs == null ? 'A' : mod.AminoAcids.First(),
                 AllAas = mod.AAs == null,
-                Id = (int)mod.UnimodId,
+                Id = mod.UnimodId.Value,
                 Terminus = mod.Terminus
             };
             StaticMod unimod;
