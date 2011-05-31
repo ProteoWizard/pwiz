@@ -875,94 +875,100 @@ namespace pwiz.Skyline.Model
 
         #region Implementation of IXmlSerializable
 
-        private enum EL
+        // ReSharper disable InconsistentNaming
+        // Enum.ToString() was too slow for use in the document
+        private static class EL
         {
             // v0.1 lists
-            selected_proteins,
-            selected_peptides,
-            selected_transitions,
+            public const string selected_proteins = "selected_proteins";
+            public const string selected_peptides = "selected_peptides";
+            public const string selected_transitions = "selected_transitions";
 
-            protein,
-            note,
-            annotation,
-            alternatives,
-            alternative_protein,
-            sequence,
-            peptide_list,
-            peptide,
-            explicit_modifications,
-            explicit_static_modifications,
-            explicit_heavy_modifications,
-            explicit_modification,
-            variable_modifications,
-            variable_modification,
-            losses,
-            neutral_loss,
-            peptide_results,
-            peptide_result,
-            precursor,
-            precursor_results,
-            precursor_peak,
-            transition,
-            transition_results,
-            transition_peak,
-            transition_lib_info,
-            precursor_mz,
-            product_mz,
-            collision_energy,
-            declustering_potential,
-            start_rt,
-            stop_rt
+            public const string protein = "protein";
+            public const string note = "note";
+            public const string annotation = "annotation";
+            public const string alternatives = "alternatives";
+            public const string alternative_protein = "alternative_protein";
+            public const string sequence = "sequence";
+            public const string peptide_list = "peptide_list";
+            public const string peptide = "peptide";
+            public const string explicit_modifications = "explicit_modifications";
+            public const string explicit_static_modifications = "explicit_static_modifications";
+            public const string explicit_heavy_modifications = "explicit_heavy_modifications";
+            public const string explicit_modification = "explicit_modification";
+            public const string variable_modifications = "variable_modifications";
+            public const string variable_modification = "variable_modification";
+            public const string losses = "losses";
+            public const string neutral_loss = "neutral_loss";
+            public const string peptide_results = "peptide_results";
+            public const string peptide_result = "peptide_result";
+            public const string precursor = "precursor";
+            public const string precursor_results = "precursor_results";
+            public const string precursor_peak = "precursor_peak";
+            public const string transition = "transition";
+            public const string transition_results = "transition_results";
+            public const string transition_peak = "transition_peak";
+            public const string transition_lib_info = "transition_lib_info";
+            public const string precursor_mz = "precursor_mz";
+            public const string product_mz = "product_mz";
+            public const string collision_energy = "collision_energy";
+            public const string declustering_potential = "declustering_potential";
+            public const string start_rt = "start_rt";
+            public const string stop_rt = "stop_rt";
         }
+        // ReSharper restore InconsistentNaming
 
-        private enum ATTR
+        // ReSharper disable InconsistentNaming
+        // Enum.ToString() was too slow for use in the document
+        private static class ATTR
         {
-            format_version,
-            name,
-            category,
-            description,
-            label_name,
-            label_description,
-            peptide_list,
-            start,
-            end,
-            sequence,
-            prev_aa,
-            next_aa,
-            index_aa,
-            modification_name,
-            loss_index,
-            calc_neutral_pep_mass,
-            num_missed_cleavages,
-            predicted_retention_time,
-            isotope_label,
-            fragment_type,
-            fragment_ordinal,
-            mass_index,
-            calc_neutral_mass,
-            charge,
-            precursor_charge,   // backware compatibility with v0.1
-            product_charge,
-            rank,
-            intensity,
+            public const string format_version = "format_version";
+            public const string name = "name";
+            public const string category = "category";
+            public const string description = "description";
+            public const string label_name = "label_name";
+            public const string label_description = "label_description";
+            public const string peptide_list = "peptide_list";
+            public const string start = "start";
+            public const string end = "end";
+            public const string sequence = "sequence";
+            public const string prev_aa = "prev_aa";
+            public const string next_aa = "next_aa";
+            public const string index_aa = "index_aa";
+            public const string modification_name = "modification_name";
+            public const string loss_index = "loss_index";
+            public const string calc_neutral_pep_mass = "calc_neutral_pep_mass";
+            public const string num_missed_cleavages = "num_missed_cleavages";
+            public const string predicted_retention_time = "predicted_retention_time";
+            public const string isotope_label = "isotope_label";
+            public const string fragment_type = "fragment_type";
+            public const string fragment_ordinal = "fragment_ordinal";
+            public const string mass_index = "mass_index";
+            public const string calc_neutral_mass = "calc_neutral_mass";
+            public const string charge = "charge";
+            public const string precursor_charge = "precursor_charge";   // backware compatibility with v0.1
+            public const string product_charge = "product_charge";
+            public const string rank = "rank";
+            public const string intensity = "intensity";
+            public const string auto_manage_children = "auto_manage_children";
             // Results
-            replicate,
-            file,
-            step,
-            retention_time,
-            start_time,
-            end_time,
-            area,
-            background,
-            height,
-            fwhm,
-            fwhm_degenerate,
-            truncated,
-            user_set,
-            peak_count_ratio,
-            library_dotp,
-            auto_manage_children,
+            public const string replicate = "replicate";
+            public const string file = "file";
+            public const string step = "step";
+            public const string retention_time = "retention_time";
+            public const string start_time = "start_time";
+            public const string end_time = "end_time";
+            public const string area = "area";
+            public const string background = "background";
+            public const string height = "height";
+            public const string fwhm = "fwhm";
+            public const string fwhm_degenerate = "fwhm_degenerate";
+            public const string truncated = "truncated";
+            public const string user_set = "user_set";
+            public const string peak_count_ratio = "peak_count_ratio";
+            public const string library_dotp = "library_dotp";
         }
+        // ReSharper restore InconsistentNaming
 
         /// <summary>
         /// For deserialization
@@ -1346,8 +1352,8 @@ namespace pwiz.Skyline.Model
             return new ExplicitMods(peptide, staticMods, listHeavyMods, isVariable);
         }
 
-        private TypedExplicitModifications ReadExplicitMods(XmlReader reader, Enum name,
-            Enum nameElMod, Peptide peptide, IsotopeLabelType labelTypeDefault)
+        private TypedExplicitModifications ReadExplicitMods(XmlReader reader, string name,
+            string nameElMod, Peptide peptide, IsotopeLabelType labelTypeDefault)
         {
             if (!reader.IsStartElement(name))
                 return new TypedExplicitModifications(peptide, labelTypeDefault, new ExplicitMod[0]);
@@ -1812,7 +1818,7 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private static Results<TItem> ReadResults<TItem>(XmlReader reader, SrmSettings settings, Enum start,
+        private static Results<TItem> ReadResults<TItem>(XmlReader reader, SrmSettings settings, string start,
                 Func<XmlReader, SrmSettings, ChromFileInfoId, TItem> readInfo)
             where TItem : ChromInfo
         {
@@ -2057,8 +2063,8 @@ namespace pwiz.Skyline.Model
             writer.WriteEndElement();
         }
 
-        private static void WriteExplicitMods(XmlWriter writer, Enum name,
-            Enum nameElMod, IsotopeLabelType labelType, IEnumerable<ExplicitMod> mods)
+        private static void WriteExplicitMods(XmlWriter writer, string name,
+            string nameElMod, IsotopeLabelType labelType, IEnumerable<ExplicitMod> mods)
         {
             if (mods == null)
                 return;
@@ -2260,7 +2266,7 @@ namespace pwiz.Skyline.Model
         }
 
         private static void WriteResults<TItem>(XmlWriter writer, SrmSettings settings,
-                IEnumerable<ChromInfoList<TItem>> results, Enum start, Enum startChild,
+                IEnumerable<ChromInfoList<TItem>> results, string start, string startChild,
                 Action<XmlWriter, TItem> writeChromInfo)
             where TItem : ChromInfo
         {

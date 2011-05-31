@@ -232,6 +232,83 @@ namespace pwiz.Skyline.Util
             writer.WriteStartElement(name.ToString());
         }
 
+        public static void WriteAttributeNullable<TStruct>(this XmlWriter writer, string name, TStruct? value)
+            where TStruct : struct
+        {
+            if (value.HasValue)
+                writer.WriteAttributeString(name, value.ToString());
+        }
+
+        /// <summary>
+        /// Always writes a bool value, if one is present, or nothing for a null value.
+        /// </summary>
+        public static void WriteAttributeNullable(this XmlWriter writer, string name, bool? value)
+        {
+            if (value.HasValue)
+                writer.WriteAttribute(name, value.Value, !value.Value);
+        }
+
+        public static void WriteAttributeNullable(this XmlWriter writer, string name, int? value)
+        {
+            if (value.HasValue)
+                writer.WriteAttribute(name, value.Value);
+        }
+
+        public static void WriteAttributeNullable(this XmlWriter writer, string name, float? value)
+        {
+            if (value.HasValue)
+                writer.WriteAttribute(name, value.Value);
+        }
+
+        public static void WriteAttributeNullable(this XmlWriter writer, string name, double? value)
+        {
+            if (value.HasValue)
+                writer.WriteAttribute(name, value.Value);
+        }
+
+        public static void WriteAttributeIfString(this XmlWriter writer, string name, string value)
+        {
+            if (!string.IsNullOrEmpty(value))
+                writer.WriteAttributeString(name, value);
+        }
+
+        public static void WriteAttribute<TAttr>(this XmlWriter writer, string name, TAttr value)
+        {
+            writer.WriteAttributeString(name, value.ToString());
+        }
+
+        public static void WriteAttribute<TAttr>(this XmlWriter writer, string name, TAttr value, TAttr defaultValue)
+        {
+            if (!Equals(value, defaultValue))
+                writer.WriteAttributeString(name, value.ToString());
+        }
+
+        public static void WriteAttribute(this XmlWriter writer, string name, bool value)
+        {
+            WriteAttribute(writer, name, value, false);
+        }
+
+        public static void WriteAttribute(this XmlWriter writer, string name, bool value, bool defaultValue)
+        {
+            if (value != defaultValue)
+                writer.WriteAttributeString(name, value.ToString(CultureInfo.InvariantCulture).ToLowerInvariant());
+        }
+
+        public static void WriteAttribute(this XmlWriter writer, string name, int value)
+        {
+            writer.WriteAttributeString(name, value.ToString(CultureInfo.InvariantCulture));
+        }
+
+        public static void WriteAttribute(this XmlWriter writer, string name, double value)
+        {
+            writer.WriteAttributeString(name, value.ToString(CultureInfo.InvariantCulture));
+        }
+
+        public static void WriteAttribute(this XmlWriter writer, string name, float value)
+        {
+            writer.WriteAttributeString(name, value.ToString(CultureInfo.InvariantCulture));
+        }
+
         public static void WriteElement<TChild>(this XmlWriter writer, TChild child)
             where TChild : IXmlSerializable
         {
@@ -250,6 +327,23 @@ namespace pwiz.Skyline.Util
         }
 
         public static void WriteElementString<TChild>(this XmlWriter writer, Enum name, TChild child)
+        {
+            writer.WriteStartElement(name);
+            writer.WriteString(child.ToString());
+            writer.WriteEndElement();
+        }
+
+        public static void WriteElementString(this XmlWriter writer, string name, double child)
+        {
+            writer.WriteElementString(name, child.ToString(CultureInfo.InvariantCulture));
+        }
+
+        public static void WriteElementString(this XmlWriter writer, string name, float child)
+        {
+            writer.WriteElementString(name, child.ToString(CultureInfo.InvariantCulture));
+        }
+
+        public static void WriteElementString<TChild>(this XmlWriter writer, string name, TChild child)
         {
             writer.WriteStartElement(name);
             writer.WriteString(child.ToString());
@@ -346,6 +440,23 @@ namespace pwiz.Skyline.Util
             }
         }
 
+        public static TOutput? GetAttribute<TOutput>(this XmlReader reader, string name,
+                                                     Converter<string, TOutput> converter)
+            where TOutput : struct
+        {
+            string value = reader.GetAttribute(name);
+            if (value == null)
+                return null;
+            try
+            {
+                return converter(value);
+            }
+            catch (Exception x)
+            {
+                throw new InvalidDataException(string.Format("The value '{0}' is not valid for the attribute {1}.", value, name), x);
+            }
+        }
+
         private static bool ConvertToBoolean(string attribute)
         {
             return Convert.ToBoolean(attribute, CultureInfo.InvariantCulture);
@@ -362,6 +473,21 @@ namespace pwiz.Skyline.Util
         }
 
         public static bool GetBoolAttribute(this XmlReader reader, Enum name, bool defaultValue)
+        {
+            return reader.GetNullableBoolAttribute(name) ?? defaultValue;
+        }
+
+        public static bool? GetNullableBoolAttribute(this XmlReader reader, string name)
+        {
+            return reader.GetAttribute<bool>(name, ConvertToBoolean);
+        }
+
+        public static bool GetBoolAttribute(this XmlReader reader, string name)
+        {
+            return reader.GetBoolAttribute(name, false);
+        }
+
+        public static bool GetBoolAttribute(this XmlReader reader, string name, bool defaultValue)
         {
             return reader.GetNullableBoolAttribute(name) ?? defaultValue;
         }
@@ -386,6 +512,21 @@ namespace pwiz.Skyline.Util
             return reader.GetNullableIntAttribute(name) ?? defaultValue;
         }
 
+        public static int? GetNullableIntAttribute(this XmlReader reader, string name)
+        {
+            return reader.GetAttribute<int>(name, ConvertToInt32);
+        }
+
+        public static int GetIntAttribute(this XmlReader reader, string name)
+        {
+            return reader.GetIntAttribute(name, 0);
+        }
+
+        public static int GetIntAttribute(this XmlReader reader, string name, int defaultValue)
+        {
+            return reader.GetNullableIntAttribute(name) ?? defaultValue;
+        }
+
         private static double ConvertToDouble(string attribute)
         {
             return Convert.ToDouble(attribute, CultureInfo.InvariantCulture);
@@ -402,6 +543,21 @@ namespace pwiz.Skyline.Util
         }
 
         public static double GetDoubleAttribute(this XmlReader reader, Enum name, double defaultValue)
+        {
+            return reader.GetNullableDoubleAttribute(name) ?? defaultValue;
+        }
+
+        public static double? GetNullableDoubleAttribute(this XmlReader reader, string name)
+        {
+            return reader.GetAttribute<double>(name, ConvertToDouble);
+        }
+
+        public static double GetDoubleAttribute(this XmlReader reader, string name)
+        {
+            return reader.GetDoubleAttribute(name, 0.0);
+        }
+
+        public static double GetDoubleAttribute(this XmlReader reader, string name, double defaultValue)
         {
             return reader.GetNullableDoubleAttribute(name) ?? defaultValue;
         }
@@ -426,12 +582,49 @@ namespace pwiz.Skyline.Util
             return reader.GetNullableFloatAttribute(name) ?? defaultValue;
         }
 
+        public static float? GetNullableFloatAttribute(this XmlReader reader, string name)
+        {
+            return reader.GetAttribute<float>(name, ConvertToSingle);
+        }
+
+        public static float GetFloatAttribute(this XmlReader reader, string name)
+        {
+            return reader.GetFloatAttribute(name, 0.0f);
+        }
+
+        public static float GetFloatAttribute(this XmlReader reader, string name, float defaultValue)
+        {
+            return reader.GetNullableFloatAttribute(name) ?? defaultValue;
+        }
+
         public static TAttr GetEnumAttribute<TAttr>(this XmlReader reader, Enum name, TAttr defaultValue)
         {
             return reader.GetEnumAttribute(name, defaultValue, false);
         }
 
         public static TAttr GetEnumAttribute<TAttr>(this XmlReader reader, Enum name, TAttr defaultValue, bool lower)
+        {
+            string value = reader.GetAttribute(name);
+            if (!string.IsNullOrEmpty(value))
+            {
+                try
+                {
+                    return (TAttr)Enum.Parse(typeof(TAttr), (lower ? value.ToLower() : value));
+                }
+                catch (ArgumentException x)
+                {
+                    throw new InvalidDataException(string.Format("The value '{0}' is not valid for the attribute {1}.", value, name), x);
+                }
+            }
+            return defaultValue;
+        }
+
+        public static TAttr GetEnumAttribute<TAttr>(this XmlReader reader, string name, TAttr defaultValue)
+        {
+            return reader.GetEnumAttribute(name, defaultValue, false);
+        }
+
+        public static TAttr GetEnumAttribute<TAttr>(this XmlReader reader, string name, TAttr defaultValue, bool lower)
         {
             string value = reader.GetAttribute(name);
             if (!string.IsNullOrEmpty(value))
