@@ -45,15 +45,6 @@ using namespace std;
 using namespace pwiz::mziddata;
 using namespace pwiz::util;
 
-// DEBUG - print unitary function
-template<class T> struct print : public unary_function<T, void>
-{
-  print(ostream& out) : os(out), count(0) {}
-  void operator() (T x) { os << x << ' '; ++count; }
-  ostream& os;
-  int count;
-};
-
 
 // This class is used to send messages to the main function. These are
 // not error conditions. 
