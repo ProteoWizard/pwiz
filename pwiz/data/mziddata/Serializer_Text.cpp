@@ -585,7 +585,7 @@ const string* Serializer_Text::getIdFieldNames()
     return Impl::IdFieldNames;
 }
 
-const string PWIZ_API_DECL Serializer_Text::Impl::IdFieldNames[] =
+const std::string Serializer_Text::Impl::IdFieldNames[] =
 {
     "none",
     "scan",
