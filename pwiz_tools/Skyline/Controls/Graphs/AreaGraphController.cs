@@ -8,6 +8,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public enum AreaNormalizeToView{ area_percent_view, area_maximum_view, area_ratio_view, none }
 
+    public enum AreaScope{ document, protein }
+
     public sealed class AreaGraphController : GraphSummary.IController
     {
         public static GraphTypeArea GraphType
@@ -35,6 +37,20 @@ namespace pwiz.Skyline.Controls.Graphs
             set
             {
                 Settings.Default.AreaNormalizeToView = value.ToString();
+            }
+        }
+
+        public static AreaScope AreaScope
+        {
+            get
+            {
+                return (AreaScope)Enum.Parse(typeof(AreaScope),
+                                                       Settings.Default.PeakAreaScope);
+            }
+
+            set
+            {
+                Settings.Default.PeakAreaScope = value.ToString();
             }
         }
 

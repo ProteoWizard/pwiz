@@ -329,6 +329,9 @@ namespace pwiz.Skyline
             this.areaNormalizeTotalContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator40 = new System.Windows.Forms.ToolStripSeparator();
             this.areaNormalizeNoneContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.scopeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.documentScopeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.proteinScopeContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showPeakAreaLegendContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showLibraryPeakAreaContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showDotProductToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -2642,21 +2645,21 @@ namespace pwiz.Skyline
             // averageReplicatesContextMenuItem
             // 
             this.averageReplicatesContextMenuItem.Name = "averageReplicatesContextMenuItem";
-            this.averageReplicatesContextMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.averageReplicatesContextMenuItem.Size = new System.Drawing.Size(106, 22);
             this.averageReplicatesContextMenuItem.Text = "All";
             this.averageReplicatesContextMenuItem.Click += new System.EventHandler(this.averageReplicatesContextMenuItem_Click);
             // 
             // singleReplicateRTContextMenuItem
             // 
             this.singleReplicateRTContextMenuItem.Name = "singleReplicateRTContextMenuItem";
-            this.singleReplicateRTContextMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.singleReplicateRTContextMenuItem.Size = new System.Drawing.Size(106, 22);
             this.singleReplicateRTContextMenuItem.Text = "Single";
             this.singleReplicateRTContextMenuItem.Click += new System.EventHandler(this.singleReplicateRTContextMenuItem_Click);
             // 
             // bestReplicateRTContextMenuItem
             // 
             this.bestReplicateRTContextMenuItem.Name = "bestReplicateRTContextMenuItem";
-            this.bestReplicateRTContextMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.bestReplicateRTContextMenuItem.Size = new System.Drawing.Size(106, 22);
             this.bestReplicateRTContextMenuItem.Text = "Best";
             this.bestReplicateRTContextMenuItem.Click += new System.EventHandler(this.bestReplicateRTContextMenuItem_Click);
             // 
@@ -2733,6 +2736,7 @@ namespace pwiz.Skyline
             this.peptideOrderContextMenuItem,
             this.replicateOrderContextMenuItem,
             this.areaNormalizeContextMenuItem,
+            this.scopeContextMenuItem,
             this.showPeakAreaLegendContextMenuItem,
             this.showLibraryPeakAreaContextMenuItem,
             this.showDotProductToolStripMenuItem,
@@ -2860,6 +2864,30 @@ namespace pwiz.Skyline
             this.areaNormalizeNoneContextMenuItem.Size = new System.Drawing.Size(128, 22);
             this.areaNormalizeNoneContextMenuItem.Text = "None";
             this.areaNormalizeNoneContextMenuItem.Click += new System.EventHandler(this.areaNormalizeNoneContextMenuItem_Click);
+            // 
+            // scopeContextMenuItem
+            // 
+            this.scopeContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.documentScopeContextMenuItem,
+            this.proteinScopeContextMenuItem});
+            this.scopeContextMenuItem.Name = "scopeContextMenuItem";
+            this.scopeContextMenuItem.Size = new System.Drawing.Size(170, 22);
+            this.scopeContextMenuItem.Text = "Scope";
+            this.scopeContextMenuItem.DropDownOpening += new System.EventHandler(this.scopeContextMenuItem_DropDownOpening);
+            // 
+            // documentScopeContextMenuItem
+            // 
+            this.documentScopeContextMenuItem.Name = "documentScopeContextMenuItem";
+            this.documentScopeContextMenuItem.Size = new System.Drawing.Size(130, 22);
+            this.documentScopeContextMenuItem.Text = "Document";
+            this.documentScopeContextMenuItem.Click += new System.EventHandler(this.documentScopeContextMenuItem_Click);
+            // 
+            // proteinScopeContextMenuItem
+            // 
+            this.proteinScopeContextMenuItem.Name = "proteinScopeContextMenuItem";
+            this.proteinScopeContextMenuItem.Size = new System.Drawing.Size(130, 22);
+            this.proteinScopeContextMenuItem.Text = "Protein";
+            this.proteinScopeContextMenuItem.Click += new System.EventHandler(this.proteinScopeContextMenuItem_Click);
             // 
             // showPeakAreaLegendContextMenuItem
             // 
@@ -3254,6 +3282,9 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem showDotProductToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showPeakAreaLegendContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showRTLegendContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem scopeContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem documentScopeContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem proteinScopeContextMenuItem;
     }
 }
 

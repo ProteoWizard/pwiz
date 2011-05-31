@@ -29,12 +29,12 @@ namespace pwiz.Skyline.Controls.Graphs
         {
         }
 
-        protected override GraphData CreateGraphData(SrmDocument document, TransitionGroupDocNode selectedGroup, DisplayTypeChrom displayType)
+        protected override GraphData CreateGraphData(SrmDocument document, TransitionGroupDocNode selectedGroup, PeptideGroupDocNode selectedProtein, DisplayTypeChrom displayType)
         {
             int? result = null;
             if (RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single)
                 result = GraphSummary.ResultsIndex;
-            return new AreaGraphData(document, selectedGroup, result, displayType);
+            return new AreaGraphData(document, selectedGroup, selectedProtein, result, displayType);
         }
 
         protected override void UpdateAxes()
@@ -48,9 +48,10 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             public AreaGraphData(SrmDocument document,
                                  TransitionGroupDocNode selectedGroup,
+                                 PeptideGroupDocNode selectedProtein,
                                  int? result,
                                  DisplayTypeChrom displayType)
-                : base(document, selectedGroup, result, displayType)
+                : base(document, selectedGroup, selectedProtein, result, displayType)
             {
             }
 

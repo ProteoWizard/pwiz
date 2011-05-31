@@ -362,6 +362,9 @@
     <Setting Name="ShowRetentionTimesLegend" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
+    <Setting Name="PeakAreaScope" Type="System.String" Scope="User">
+      <Value Profile="(Default)">document</Value>
+    </Setting>
     <Setting Name="ExportMethodMaxPrec" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>

@@ -2006,6 +2006,15 @@ namespace pwiz.Skyline
                         });
                         }
                     }
+                    menuStrip.Items.Insert(iInsert++, scopeContextMenuItem);
+                    if (scopeContextMenuItem.DropDownItems.Count == 0)
+                    {
+                        scopeContextMenuItem.DropDownItems.AddRange(new[]
+                        {
+                            documentScopeContextMenuItem,
+                            proteinScopeContextMenuItem
+                        });
+                    }
                     menuStrip.Items.Insert(iInsert++, peptideCvsContextMenuItem);
                     peptideCvsContextMenuItem.Checked = set.ShowPeptideCV;                    
                 }
@@ -2449,6 +2458,15 @@ namespace pwiz.Skyline
                         });
                     }
                 }
+                menuStrip.Items.Insert(iInsert++, scopeContextMenuItem);
+                if (scopeContextMenuItem.DropDownItems.Count == 0)
+                {
+                    scopeContextMenuItem.DropDownItems.AddRange(new[]
+                        {
+                            documentScopeContextMenuItem,
+                            proteinScopeContextMenuItem
+                        });
+                }
                 menuStrip.Items.Insert(iInsert++, peptideCvsContextMenuItem);
                 peptideCvsContextMenuItem.Checked = set.ShowPeptideCV;
             }
@@ -2516,6 +2534,29 @@ namespace pwiz.Skyline
         public void ShowReplicateOrder(SummaryReplicateOrder order)
         {
             SummaryReplicateGraphPane.ReplicateOrder = order;
+            UpdateSummaryGraphs();
+        }
+
+        private void scopeContextMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            var areaScope = AreaGraphController.AreaScope;
+            documentScopeContextMenuItem.Checked = (areaScope == AreaScope.document);
+            proteinScopeContextMenuItem.Checked = (areaScope == AreaScope.protein);
+        }
+
+        private void documentScopeContextMenuItem_Click(object sender, EventArgs e)
+        {
+            AreaScopeTo(AreaScope.document);
+        }
+
+        private void proteinScopeContextMenuItem_Click(object sender, EventArgs e)
+        {
+            AreaScopeTo(AreaScope.protein);
+        }
+
+        public void AreaScopeTo(AreaScope areaScope)
+        {
+            AreaGraphController.AreaScope = areaScope;
             UpdateSummaryGraphs();
         }
 

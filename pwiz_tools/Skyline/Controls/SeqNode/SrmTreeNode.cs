@@ -121,6 +121,22 @@ namespace pwiz.Skyline.Controls.SeqNode
         public SrmTreeNodeParent SrmParent { get { return (SrmTreeNodeParent) Parent; } }
 
         /// <summary>
+        /// Returns the start node, or an ancestor, if it is of a given type.
+        /// </summary>
+        /// <typeparam name="TNode">The type to look for</typeparam>
+        /// <returns>The selected node or ancestor of the desired type</returns>
+        public TNode GetNodeOfType<TNode>()
+            where TNode : TreeNode
+        {
+            for (TreeNode node = this; node != null; node = node.Parent)
+            {
+                if (node is TNode)
+                    return (TNode)node;
+            }
+            return null;
+        }
+
+        /// <summary>
         /// Returns an <see cref="IdentityPath"/> to this node, suitable for use
         /// in modifying the node through a reference to its <see cref="SrmDocument"/>,
         /// or for saving as an in memory reference to a tree selection.

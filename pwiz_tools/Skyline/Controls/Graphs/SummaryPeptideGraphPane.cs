@@ -75,6 +75,7 @@ namespace pwiz.Skyline.Controls.Graphs
             Clear();
 
             TransitionGroupDocNode selectedGroup = null;
+            PeptideGroupDocNode selectedProtein = null;
             var selectedTreeNode = GraphSummary.StateProvider.SelectedNode as SrmTreeNode;
             if (selectedTreeNode != null)
             {
@@ -88,12 +89,15 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (nodePep.Children.Count > 0)
                         selectedGroup = (TransitionGroupDocNode)nodePep.Children[0];
                 }
+                var proteinTreeNode = selectedTreeNode.GetNodeOfType<PeptideGroupTreeNode>();
+                if (proteinTreeNode != null)
+                    selectedProtein = proteinTreeNode.DocNode;
             }
 
             SrmDocument document = GraphSummary.DocumentUIContainer.DocumentUI;
             var displayType = GraphChromatogram.DisplayType;
 
-            _graphData = CreateGraphData(document, selectedGroup, displayType);
+            _graphData = CreateGraphData(document, selectedGroup, selectedProtein, displayType);
 
             int iColor = 0;
             foreach (var pointPairList in _graphData.PointPairLists)
@@ -131,6 +135,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         protected abstract GraphData CreateGraphData(SrmDocument document,
                                                      TransitionGroupDocNode selectedGroup,
+                                                     PeptideGroupDocNode selectedProtein,
                                                      DisplayTypeChrom displayType);
 
         protected virtual void UpdateAxes()
@@ -208,7 +213,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             private readonly int? _resultIndex;
 
-            protected GraphData(SrmDocument document, TransitionGroupDocNode selectedGroup, 
+            protected GraphData(SrmDocument document, TransitionGroupDocNode selectedGroup, PeptideGroupDocNode selectedProtein, 
                              int? iResult, DisplayTypeChrom displayType)
             {
                 _resultIndex = iResult;
@@ -246,6 +251,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 var listPoints = new List<GraphPointData>();
                 foreach (PeptideGroupDocNode nodeGroupPep in document.PeptideGroups)
                 {
+                    if (AreaGraphController.AreaScope == AreaScope.protein)
+                    {
+                        if (!ReferenceEquals(nodeGroupPep, selectedProtein))
+                            continue;
+                    } 
                     foreach (PeptideDocNode nodePep in nodeGroupPep.Children)
                     {
                         foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
