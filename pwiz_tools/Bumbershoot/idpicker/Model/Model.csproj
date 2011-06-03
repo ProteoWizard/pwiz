@@ -94,6 +94,7 @@
     <Compile Include="Exporter.cs" />
     <Compile Include="Merger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QueryReader.cs" />
     <Compile Include="SessionFactoryFactory.cs" />
     <Compile Include="Settings.cs" />
   </ItemGroup>
