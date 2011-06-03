@@ -1,5 +1,5 @@
 ﻿//
-// $Id: DataGridViewProgressBar.cs 2666 2011-04-28 15:57:33Z chambm $
+// $Id$
 //
 //
 // Original author: Jay Holman <jay.holman .@. vanderbilt.edu>
