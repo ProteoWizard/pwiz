@@ -105,6 +105,7 @@
     <Compile Include="TestMerger.cs" />
     <Compile Include="TestModel.cs" />
     <Compile Include="TestQonverter.cs" />
+    <Compile Include="TestQueryReader.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\freicore\pwiz_src\pwiz_tools\Shared\Common\Common.csproj">
