@@ -1134,8 +1134,18 @@ namespace pwiz.Skyline
                 var results = document.Settings.MeasuredResults;
                 var chromRemaining = results.Chromatograms.Where(chrom => !setReimport.Contains(chrom)).ToArray();
                 var resultsNew = results.ChangeChromatograms(chromRemaining);
-                // Optimize the cache using this reduced set to remove their data from the cache
-                resultsNew = resultsNew.OptimizeCache(DocumentFilePath, _chromatogramManager.StreamManager);
+                if (chromRemaining.Length > 0)
+                {
+                    // Optimize the cache using this reduced set to remove their data from the cache
+                    resultsNew = resultsNew.OptimizeCache(DocumentFilePath, _chromatogramManager.StreamManager);
+                }
+                else
+                {
+                    // Or remove the cache entirely, if everything is being reimported
+                    string cachePath = ChromatogramCache.FinalPathForName(DocumentFilePath, null);
+                    if (File.Exists(cachePath))
+                        File.Delete(cachePath);                    
+                }
                 // Restore the original set unchanged
                 resultsNew = resultsNew.ChangeChromatograms(results.Chromatograms);
 
