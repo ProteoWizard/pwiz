@@ -270,7 +270,7 @@ namespace pwiz.Skyline.Model
             {
                 if (losses == null)
                 {
-                    if (precursorMS1)
+                    if (precursorMS1 && isotopePeaks != null)
                     {
                         foreach (int i in fullScan.SelectMassIndices(isotopePeaks, useFilter))
                         {
