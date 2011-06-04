@@ -94,9 +94,9 @@ namespace pwiz.Skyline.Util
         private static readonly IDictionary<string, KeyValuePair<int, double>> DICT_SYMBOL_TO_ISOTOPE_INDEX =
             new Dictionary<string, KeyValuePair<int, double>>
                 {
-                    { H2, new KeyValuePair<int, double>(1, 0.99) },
-                    { C13, new KeyValuePair<int, double>(1, 0.99) },
-                    { N15, new KeyValuePair<int, double>(1, 0.99) },
+                    { H2, new KeyValuePair<int, double>(1, 0.98) },
+                    { C13, new KeyValuePair<int, double>(1, 0.995) },
+                    { N15, new KeyValuePair<int, double>(1, 0.995) },
                     { O17, new KeyValuePair<int, double>(1, 0.99) },
                     { O18, new KeyValuePair<int, double>(1, 0.99) },
                 };
