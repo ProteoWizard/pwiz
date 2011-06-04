@@ -24,7 +24,6 @@ using System.Linq;
 using pwiz.Common.SystemUtil;
 using pwiz.ProteowizardWrapper;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -557,7 +556,7 @@ namespace pwiz.Skyline.Model.Results
 
         public IEnumerable<FilteredSrmSpectrum> SrmSpectraFromMs1Scan(double? time,
             double[] mzArray, double[] intensityArray)
-                {
+        {
             if (!EnabledMs || !time.HasValue || mzArray == null || intensityArray == null)
                 yield break;
 
@@ -567,8 +566,8 @@ namespace pwiz.Skyline.Model.Results
                 var filteredSrmSpectrum = filterPair.FilterQ1Spectrum(mzArray, intensityArray);
                 if (filteredSrmSpectrum != null)
                     yield return filteredSrmSpectrum;
-                }
             }
+        }
 
         private IEnumerable<SpectrumFilterPair> FindFilterPairs(double isolationTargetMz, double? isolationWidth,
             FullScanPrecursorFilterType precursorFilterType)

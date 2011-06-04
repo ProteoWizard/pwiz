@@ -480,6 +480,7 @@ namespace pwiz.Skyline.Model
             IsotopePeakInfo isotopePeaks = IsotopePeaks;
             RelativeRT relativeRT = RelativeRT;
             SpectrumHeaderInfo libInfo = LibInfo;
+            bool dotProductChange = false;
             var transitionRanks = new Dictionary<double, LibraryRankedSpectrumInfo.RankedMI>();
             if (diff.DiffTransitionGroupProps)
             {
@@ -527,6 +528,9 @@ namespace pwiz.Skyline.Model
                             var losses = nodeTranResult.Losses;
                             double massH = settingsNew.GetFragmentMass(TransitionGroup.LabelType, mods, tran, isotopePeaks);
                             var info = TransitionDocNode.GetLibInfo(tran, Transition.CalcMass(massH, losses), transitionRanks);
+                            Helpers.AssignIfEquals(ref info, nodeTranResult.LibInfo);
+                            if (!ReferenceEquals(info, nodeTranResult.LibInfo))
+                                dotProductChange = true;
                             var results = nodeTranResult.Results;
                             nodeTranResult = new TransitionDocNode(tran, annotations, losses, massH, info, results);
 
@@ -596,6 +600,10 @@ namespace pwiz.Skyline.Model
                         var results = nodeTransition.Results;           // Results changes happen later
                         double massH = settingsNew.GetFragmentMass(TransitionGroup.LabelType, mods, tran, isotopePeaks);
                         var info = TransitionDocNode.GetLibInfo(tran, Transition.CalcMass(massH, losses), transitionRanks);
+                        Helpers.AssignIfEquals(ref info, nodeTransition.LibInfo);
+                        if (!ReferenceEquals(info, nodeTransition.LibInfo))
+                            dotProductChange = true;
+
                         var nodeNew = new TransitionDocNode(tran, annotations, losses, massH, info, results);
 
                         Helpers.AssignIfEquals(ref nodeNew, nodeTransition);
@@ -617,11 +625,14 @@ namespace pwiz.Skyline.Model
             // One final check for a library info change
             bool libInfoChange = !Equals(libInfo, nodeResult.LibInfo);
             if (libInfoChange)
+            {
                 nodeResult = nodeResult.ChangeLibInfo(libInfo);
+                dotProductChange = true;
+            }
 
             // A change in the precursor m/z may impact which results match this node
-            // If lib info changed, the dot-products may need to be recalculated
-            if (diff.DiffResults || ChangedResults(nodeResult) || precursorMz != PrecursorMz || libInfoChange)
+            // Or if the dot-product may need to be recalculated
+            if (diff.DiffResults || ChangedResults(nodeResult) || precursorMz != PrecursorMz || dotProductChange)
                 nodeResult = nodeResult.UpdateResults(settingsNew, diff, this);
 
             return nodeResult;

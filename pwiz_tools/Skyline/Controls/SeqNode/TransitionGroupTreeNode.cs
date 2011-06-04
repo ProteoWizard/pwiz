@@ -150,12 +150,12 @@ namespace pwiz.Skyline.Controls.SeqNode
                 GetResultsText(nodeGroup, settings.NodePep, settings.Index, settings.RatioIndex));
         }
         
-        public static string GetResultsText(TransitionGroupDocNode nodeTran,
+        public static string GetResultsText(TransitionGroupDocNode nodeGroup,
             PeptideDocNode nodePep, int indexResult, int indexRatio)
         {
-            float? libraryProduct = nodeTran.GetLibraryDotProduct(indexResult);
+            float? libraryProduct = nodeGroup.GetLibraryDotProduct(indexResult);
             float? stdev;
-            float? ratio = nodeTran.GetPeakAreaRatio(indexResult, indexRatio, out stdev);
+            float? ratio = nodeGroup.GetPeakAreaRatio(indexResult, indexRatio, out stdev);
             if (!ratio.HasValue && !libraryProduct.HasValue)
                 return "";
             StringBuilder sb = new StringBuilder(" (");

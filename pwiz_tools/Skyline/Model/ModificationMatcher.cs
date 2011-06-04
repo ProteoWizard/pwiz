@@ -559,11 +559,6 @@ namespace pwiz.Skyline.Model
                     && (string.IsNullOrEmpty(mod.AAs) || mod.AminoAcids.ContainsAA(AA.ToString()))
                     && ((mod.Terminus == null) || Equals(mod.Terminus, Terminus));
             }
-
-            public override string ToString()
-            {
-                return string.Format(Structural ? "{0}[{1}]" : "{0}{{{1}}}", AA, Mass);
-            }
         }
 
         private struct AAModKey
@@ -575,6 +570,11 @@ namespace pwiz.Skyline.Model
             public string Name { get; set; }
             public int RoundedTo { get; set; }
             public bool IsSpecificHeavy { get; set; }
+
+            public override string ToString()
+            {
+                return string.Format(Structural ? "{0}[{1}]" : "{0}{{{1}}}", AA, Mass);
+            }
         }
     }
 }

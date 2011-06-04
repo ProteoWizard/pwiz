@@ -715,6 +715,8 @@ namespace pwiz.Skyline.Model.Results
         {
             int startTran = _groupHeaderInfo.StartTransitionIndex;
             int endTran = startTran + _groupHeaderInfo.NumTransitions;
+            int? iNearest = null;
+            double deltaNearestMz = double.MaxValue;
             for (int i = startTran; i < endTran; i++)
             {
                 if (ChromKey.CompareTolerant(productMz, _allTransitions[i].Product, tolerance) == 0)
@@ -730,11 +732,18 @@ namespace pwiz.Skyline.Model.Results
 
                     i = iBegin + (i - iBegin)/2;
 
-                    return new ChromatogramInfo(_groupHeaderInfo, i - startTran,
-                        _allFiles, _allTransitions, _allPeaks, Times, IntensityArray);
+                    double deltaMz = Math.Abs(productMz - _allTransitions[i].Product);
+                    if (deltaMz < deltaNearestMz)
+                    {
+                        iNearest = i;
+                        deltaNearestMz = deltaMz;
+                    }
                 }
             }
-            return null;
+            return iNearest.HasValue
+                       ? new ChromatogramInfo(_groupHeaderInfo, iNearest.Value - startTran,
+                                              _allFiles, _allTransitions, _allPeaks, Times, IntensityArray)
+                       : null;
         }
 
         public ChromatogramInfo[] GetAllTransitionInfo(float productMz, float tolerance, OptimizableRegression regression)

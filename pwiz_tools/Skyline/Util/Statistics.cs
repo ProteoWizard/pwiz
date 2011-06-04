@@ -855,6 +855,10 @@ namespace pwiz.Skyline.Util
                 sumRight += right*right;
             }
 
+            // Avoid dividing by zero
+            if (sumLeft == 0 || sumRight == 0)
+                return sumLeft == 0 && sumRight == 0 ? 1 : 0;
+
             return sumCross/Math.Sqrt(sumLeft*sumRight);
         }
 
