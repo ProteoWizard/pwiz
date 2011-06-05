@@ -487,11 +487,12 @@ namespace pwiz.Skyline.Model.Results
 
         private SpectraChromDataProvider CreateSpectraChromProvider(MsDataFileImpl dataFile, SrmDocument document)
         {
-            // The WiffFileDataReader messes up the precursor m/z values for targeted
+            // New WIFF reader library no longer needs this, and mzWiff.exe has been removed from the installation
+            // The old WiffFileDataReader messed up the precursor m/z values for targeted
             // spectra.  The mzWiff mzXML converter must be used instead.
 //            if (dataFile.IsABFile && !dataFile.IsMzWiffXml)
 //            {
-                // NOTE: This will show an error about the import taking 10 hours, which is not really true, if the computer running Skyline does not have Analyst installed
+                // This will show an error about the import taking 10 hours, which is not really true, if the computer running Skyline does not have Analyst installed
 //                throw new LoadingTooSlowlyException(LoadingTooSlowlyException.Solution.mzwiff_conversion, _status,
 //                    10*60, 4);
 //            }

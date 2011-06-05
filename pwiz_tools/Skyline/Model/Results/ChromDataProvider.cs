@@ -110,16 +110,18 @@ namespace pwiz.Skyline.Model.Results
                 // Both WIFF files and Thermo Raw files have potential performance bugs
                 // that have work-arounds.  WIFF files tend to take longer to load early
                 // chromatograms, while Thermo files remain fairly consistent.
-                if (_dataFile.IsABFile)
-                {
-                    _readMaxMinutes = 4;
-                    _slowLoadWorkAround = LoadingTooSlowlyException.Solution.mzwiff_conversion;
-                }
-                else if (_dataFile.IsThermoFile)
+                if (_dataFile.IsThermoFile)
                 {
                     _readMaxMinutes = 4;
                     _slowLoadWorkAround = LoadingTooSlowlyException.Solution.local_file;
                 }
+                // WIFF file issues have been fixed with new WIFF reader library, and mzWiff.exe
+                // has been removed from the installation.
+//                else if (_dataFile.IsABFile)
+//                {
+//                    _readMaxMinutes = 4;
+//                    _slowLoadWorkAround = LoadingTooSlowlyException.Solution.mzwiff_conversion;
+//                }
             }
 
             int len = dataFile.ChromatogramCount;

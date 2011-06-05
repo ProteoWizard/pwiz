@@ -1274,9 +1274,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="Resources\add-pro32.bmp" />
-    <Content Include="mzWiff.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <EmbeddedResource Include="Resources\PeptideStandard.bmp" />
     <EmbeddedResource Include="Resources\PeptideLibStandard.bmp" />
     <Content Include="Resources\RedXTransparentBackground.bmp" />

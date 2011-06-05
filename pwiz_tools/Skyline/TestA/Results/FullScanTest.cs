@@ -354,7 +354,7 @@ namespace pwiz.SkylineTestA.Results
             }
 
             // Use Min % of base peak and verify variation in transitions used
-            const float minPercent1 = 20;
+            const float minPercent1 = 10;
             var docIsotopesP1 = docIsotopes.ChangeSettings(docIsotopes.Settings.ChangeTransitionFullScan(fs =>
                 fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Percent, minPercent1, enrichments)));
             tranGroupsNew = docIsotopesP1.TransitionGroups.ToArray();
@@ -376,7 +376,7 @@ namespace pwiz.SkylineTestA.Results
             AssertEx.Serializable(docIsotopesP1, AssertEx.Cloned);
 
             // Use 10%, and check that 15N modifications all have M-1
-            const float minPercent2 = 10;
+            const float minPercent2 = 5;
             var docIsotopesP2 = docIsotopesP1.ChangeSettings(docIsotopesP1.Settings.ChangeTransitionFullScan(fs =>
                 fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Percent, minPercent2, enrichments)));
             foreach (var nodeGroup in docIsotopesP2.TransitionGroups)

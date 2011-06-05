@@ -23,7 +23,6 @@ using System.Linq;
 using System.Text;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
-using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -45,6 +44,9 @@ namespace pwiz.Skyline.Model.Results
                         loader.UpdateProgress(status = status.ChangeMessage(string.Format("Local copy work-around for {0}", Path.GetFileName(filePath))));
                         File.Copy(filePath, tempFileSubsitute, true);
                         break;
+                    // This is a legacy solution that should no longer ever be invoked.  The mzWiff.exe has
+                    // been removed from the installation.
+                    // TODO: This code should be removed also.
                     case LoadingTooSlowlyException.Solution.mzwiff_conversion:
                         loader.UpdateProgress(status = status.ChangeMessage(string.Format("Convert to mzXML work-around for {0}", Path.GetFileName(filePath))));
                         ConvertWiffToMzxml(filePath, sampleIndex, tempFileSubsitute, slowlyException, loader);
