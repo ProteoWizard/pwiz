@@ -50,7 +50,7 @@ void test()
     // some simple tests
     unit_assert(cvTermInfo(MS_sample_number).name == "sample number");
     unit_assert(cvTermInfo(MS_contact_email).name == "contact email");
-    unit_assert(cvTermInfo(MS_contact_email).def == "Email adress of the contact person.");
+    unit_assert(cvTermInfo(MS_contact_email).def == "Email address of the contact person or organization.");
 
     unit_assert(cvTermInfo(MS_zlib_compression).parentsIsA.size() == 1 &&
                 cvTermInfo(MS_zlib_compression).parentsIsA[0] == MS_binary_data_compression_type);
