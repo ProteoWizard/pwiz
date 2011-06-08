@@ -35,14 +35,14 @@
 
 // [psi-ms.obo]
 //   format-version: 1.2
-//   date: 04:05:2011 14:00
-//   saved-by: gmayer
-//   auto-generated-by: OBO-Edit 2.1-beta 10
+//   date: 06:07:2011 15:05
+//   saved-by: edeutsch
+//   auto-generated-by: OBO-Edit 2.1-beta 13
 //   default-namespace: MS
 //   remark: namespace: MS
-//   data-version: 2.50.0
-//   remark: version: 2.50.0
-//   remark: release date: 2011-04-05
+//   data-version: 3.4.1
+//   remark: version: 3.4.1
+//   remark: release date: 2011-06-08
 //   remark: coverage: Mass spectrometer output files and spectra interpretation
 //   remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 //   remark: creator: Andreas Bertsch <bertsch <-at-> informatik.uni-tuebingen.de>
@@ -52,7 +52,7 @@
 //   remark: creator: Gerhard Mayer <mayerg97 <-at-> rub.de>
 //   remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group and HUPO Proteomics Standards Initiative Proteomics Informatics Working Group 
 //   remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html.
-//   import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo?revision=1.21
+//   import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo
 //
 // [unit.obo]
 //   format-version: 1.2
@@ -63,7 +63,7 @@
 //   subsetdef: unit_slim "unit slim"
 //   default-namespace: unit.ontology
 //   namespace-id-rule: * UO:$sequence(7,0,9999999)$
-//   import: http://purl.org/obo/obo-all/quality/quality.obo
+//   import: http://pato.googlecode.com/svn/trunk/quality.obo
 //
 // [unimod.obo]
 //   format-version: 1.0
@@ -2224,19 +2224,19 @@ enum PWIZ_API_DECL CVID
     /// mzML file: Proteomics Standards Inititative mzML file format.
     MS_mzML_file = 1000584,
 
-    /// contact person attribute: Details about a person to contact in case of concern or dicussion about the file.
-    MS_contact_person_attribute = 1000585,
+    /// contact attribute: Details about a person or organization to contact in case of concern or discussion about the file.
+    MS_contact_attribute = 1000585,
 
-    /// contact name: Name of a contact person.
+    /// contact name: Name of the contact person or organization.
     MS_contact_name = 1000586,
 
-    /// contact address: Postal address of a contact person.
+    /// contact address: Postal address of the contact person or organization.
     MS_contact_address = 1000587,
 
-    /// contact URL: Uniform Resource Locator related to the contact person.
+    /// contact URL: Uniform Resource Locator related to the contact person or organization.
     MS_contact_URL = 1000588,
 
-    /// contact email: Email adress of the contact person.
+    /// contact email: Email address of the contact person or organization.
     MS_contact_email = 1000589,
 
     /// contact organization: Home institution of the contact person.
@@ -3001,10 +3001,10 @@ enum PWIZ_API_DECL CVID
     /// isolation window target m/z: The primary or reference m/z about which the isolation window is defined.
     MS_isolation_window_target_m_z = 1000827,
 
-    /// isolation window lower offset: The extent of the isolation window in m/z below the isolation window target m/z. The lower and upper offsets may be asymetric about the target m/z.
+    /// isolation window lower offset: The extent of the isolation window in m/z below the isolation window target m/z. The lower and upper offsets may be asymmetric about the target m/z.
     MS_isolation_window_lower_offset = 1000828,
 
-    /// isolation window upper offset: The extent of the isolation window in m/z above the isolation window target m/z. The lower and upper offsets may be asymetric about the target m/z.
+    /// isolation window upper offset: The extent of the isolation window in m/z above the isolation window target m/z. The lower and upper offsets may be asymmetric about the target m/z.
     MS_isolation_window_upper_offset = 1000829,
 
     /// sample preparation: Properties of the preparation steps which took place before the measurement was performed.
@@ -3148,10 +3148,10 @@ enum PWIZ_API_DECL CVID
     /// declustering potential: Potential difference between the orifice and the skimmer in volts.
     MS_declustering_potential = 1000875,
 
-    /// cone voltage: Potential difference between the sampling cone/orifice and the what? in volts.
+    /// cone voltage: Potential difference between the sampling cone/orifice in volts.
     MS_cone_voltage = 1000876,
 
-    /// tube lens: No ideas.
+    /// tube lens: Potential difference setting of the tube lens in volts.
     MS_tube_lens = 1000877,
 
     /// external reference identifier: An identifier/accession number to an external reference database.
@@ -3324,6 +3324,12 @@ enum PWIZ_API_DECL CVID
 
     /// AB SCIEX TripleTOF 5600: Applied Biosystems|MDS SCIEX TripleTOF 5500, a quadrupole - quadrupole - time-of-flight mass spectrometer.
     MS_AB_SCIEX_TripleTOF_5600 = 1000932,
+
+    /// protein modifications: Encoding of modifications of the protein sequence from the specified accession, written in PEFF notation.
+    MS_protein_modifications = 1000933,
+
+    /// gene name: Name of the gene from which the protein is translated.
+    MS_gene_name = 1000934,
 
     /// spectrum interpretation: Collection of terms from the PSI Proteome Informatics standards describing the interpretation of spectra.
     MS_spectrum_interpretation = 1001000,
@@ -3880,8 +3886,8 @@ enum PWIZ_API_DECL CVID
     /// parent mass type average: Mass type setting for parent mass was average isotopic.
     MS_parent_mass_type_average = 1001212,
 
-    /// search result details 	 : OBSOLETE: Scores and global result characteristics.
-    MS_search_result_details____OBSOLETE = 1001213,
+    /// search result details: OBSOLETE: Scores and global result characteristics.
+    MS_search_result_details_OBSOLETE = 1001213,
 
     /// prot:global FDR: Estimation of global false discovery rate of the proteins.
     MS_prot_global_FDR = 1001214,
@@ -4672,23 +4678,23 @@ enum PWIZ_API_DECL CVID
     /// ProteinExtractor: An algorithm for protein determination/assembly integrated into Bruker's ProteinScape.
     MS_ProteinExtractor = 1001487,
 
-    /// Mascot Distiller : Mascot Distiller.
-    MS_Mascot_Distiller_ = 1001488,
+    /// Mascot Distiller: Mascot Distiller.
+    MS_Mascot_Distiller = 1001488,
 
-    /// Mascot Integra : Mascot Integra.
-    MS_Mascot_Integra_ = 1001489,
+    /// Mascot Integra: Mascot Integra.
+    MS_Mascot_Integra = 1001489,
 
-    /// Percolator : Percolator.
-    MS_Percolator_ = 1001490,
+    /// Percolator: Percolator.
+    MS_Percolator = 1001490,
 
     /// percolator:Q value: percolator:Q value.
     MS_percolator_Q_value = 1001491,
 
-    /// percolator:score : percolator:score.
-    MS_percolator_score_ = 1001492,
+    /// percolator:score: percolator:score.
+    MS_percolator_score = 1001492,
 
-    /// percolaror:PEP : Posterior error probability.
-    MS_percolaror_PEP_ = 1001493,
+    /// percolaror:PEP: Posterior error probability.
+    MS_percolaror_PEP = 1001493,
 
     /// no threshold: In case no threshold was used.
     MS_no_threshold = 1001494,
@@ -4698,6 +4704,9 @@ enum PWIZ_API_DECL CVID
 
     /// ProteinScape:SearchEventId: The SearchEventId of the SearchEvent in the ProteinScape database.
     MS_ProteinScape_SearchEventId = 1001496,
+
+    /// ProteinScape:ProfoundProbability: The Profound probability score stored by ProteinScape.
+    MS_ProteinScape_ProfoundProbability = 1001497,
 
     /// Profound:z value: The Profound z value.
     MS_Profound_z_value = 1001498,
@@ -4780,8 +4789,8 @@ enum PWIZ_API_DECL CVID
     /// fragment neutral loss: This term can describe a neutral loss m/z value that is lost from an ion.
     MS_fragment_neutral_loss = 1001524,
 
-    /// precursor neutral loss : This term can describe a neutral loss m/z value that is lost from an ion.
-    MS_precursor_neutral_loss_ = 1001525,
+    /// precursor neutral loss: This term can describe a neutral loss m/z value that is lost from an ion.
+    MS_precursor_neutral_loss = 1001525,
 
     /// spectrum from database nativeID format: databasekey=xsd:Long
     MS_spectrum_from_database_nativeID_format_1001526 = 1001526,
@@ -4972,20 +4981,20 @@ enum PWIZ_API_DECL CVID
     /// MyriMatch:MVH: Using the multivariate hypergeometric distribution and a peak list divided into several intensity classes, this score is the negative natural log probability that the predicted peaks matched to experimental peaks by random chance.
     MS_MyriMatch_MVH = 1001589,
 
-    /// TagRecon:MVH (MyriMatch:MVH): Using the multivariate hypergeometric distribution and a peak list divided into several intensity classes, this score is the negative natural log probability that the predicted peaks matched to experimental peaks by random chance.
-    MS_TagRecon_MVH = MS_MyriMatch_MVH,
-
     /// Pepitome:MVH (MyriMatch:MVH): Using the multivariate hypergeometric distribution and a peak list divided into several intensity classes, this score is the negative natural log probability that the predicted peaks matched to experimental peaks by random chance.
     MS_Pepitome_MVH = MS_MyriMatch_MVH,
+
+    /// TagRecon:MVH (MyriMatch:MVH): Using the multivariate hypergeometric distribution and a peak list divided into several intensity classes, this score is the negative natural log probability that the predicted peaks matched to experimental peaks by random chance.
+    MS_TagRecon_MVH = MS_MyriMatch_MVH,
 
     /// MyriMatch:mzFidelity: The negative natural log probability that predicted peaks match to experimental peaks by random chance by scoring the m/z delta of the matches in a multinomial distribution.
     MS_MyriMatch_mzFidelity = 1001590,
 
-    /// TagRecon:mzFidelity (MyriMatch:mzFidelity): The negative natural log probability that predicted peaks match to experimental peaks by random chance by scoring the m/z delta of the matches in a multinomial distribution.
-    MS_TagRecon_mzFidelity = MS_MyriMatch_mzFidelity,
-
     /// Pepitome:mzFidelity (MyriMatch:mzFidelity): The negative natural log probability that predicted peaks match to experimental peaks by random chance by scoring the m/z delta of the matches in a multinomial distribution.
     MS_Pepitome_mzFidelity = MS_MyriMatch_mzFidelity,
+
+    /// TagRecon:mzFidelity (MyriMatch:mzFidelity): The negative natural log probability that predicted peaks match to experimental peaks by random chance by scoring the m/z delta of the matches in a multinomial distribution.
+    MS_TagRecon_mzFidelity = MS_MyriMatch_mzFidelity,
 
     /// anchor protein: A representative protein selected from a set of sequence same-set or spectrum same-set proteins.
     MS_anchor_protein = 1001591,
@@ -5005,8 +5014,8 @@ enum PWIZ_API_DECL CVID
     /// sequence sub-set protein: A protein with a sub-set of the peptide sequence matches for another protein, and no distinguishing peptide matches.
     MS_sequence_sub_set_protein = 1001596,
 
-    /// ProteinScape:ProfoundProbability: The Profound probability score stored by ProteinScape.
-    MS_ProteinScape_ProfoundProbability = 1001597,
+    /// spectrum sub-set protein: A protein with a sub-set of the matched spectra for another protein, where the matches cannot be distinguished using the evidence in the mass spectra, and no distinguishing peptide matches.
+    MS_spectrum_sub_set_protein = 1001597,
 
     /// sequence subsumable protein: A sequence same-set or sequence sub-set protein where the matches are distributed across two or more proteins.
     MS_sequence_subsumable_protein = 1001598,
@@ -5170,7 +5179,7 @@ enum PWIZ_API_DECL CVID
     /// ProteomeDiscoverer:Mascot:X Static Modification: Number of attempts to submit the Mascot search.
     MS_ProteomeDiscoverer_Mascot_X_Static_Modification = 1001651,
 
-    /// ProteomeDiscoverer:Mascot:User Name: Number of attempts to submit the Mascot search.
+    /// ProteomeDiscoverer:Mascot:User Name: Name of the user submitting the Mascot search.
     MS_ProteomeDiscoverer_Mascot_User_Name = 1001652,
 
     /// ProteomeDiscoverer:Mascot:Time interval between attempts to submit a search: Time interval between attempts to submit a search in seconds.
@@ -5182,7 +5191,7 @@ enum PWIZ_API_DECL CVID
     /// ProteomeDiscoverer:Fragment Mass Tolerance: Mass tolerance used for matching fragment peaks in Da or mmu.
     MS_ProteomeDiscoverer_Fragment_Mass_Tolerance = 1001655,
 
-    /// ProteomeDiscoverer:Mascot:Instrument: type of instrument used to acquire the data in the .raw file.
+    /// ProteomeDiscoverer:Mascot:Instrument: Type of instrument used to acquire the data in the .raw file.
     MS_ProteomeDiscoverer_Mascot_Instrument = 1001656,
 
     /// ProteomeDiscoverer:Maximum Missed Cleavage Sites: Maximum number of missed cleavage sites to consider during the digest.
@@ -5205,6 +5214,12 @@ enum PWIZ_API_DECL CVID
 
     /// ProteomeDiscoverer:Target FDR Relaxed: Specifies the relaxed target false discovery rate (FDR, 0.0 ... 1.0) for peptide hits with moderate confidence.
     MS_ProteomeDiscoverer_Target_FDR_Relaxed = 1001663,
+
+    /// ProteomeDiscoverer:Target FDR Strict: Specifies the strict target false discovery rate (FDR, 0.0 ... 1.0) for peptide hits with high confidence.
+    MS_ProteomeDiscoverer_Target_FDR_Strict = 1001664,
+
+    /// ProteomeDiscoverer:Mascot:Taxonomy: Limits searches to entries from a particular species or group of species.
+    MS_ProteomeDiscoverer_Mascot_Taxonomy = 1001665,
 
     /// ProteomeDiscoverer:Use Average Precursor Mass: Use average mass for the precursor.
     MS_ProteomeDiscoverer_Use_Average_Precursor_Mass = 1001666,
@@ -5320,53 +5335,53 @@ enum PWIZ_API_DECL CVID
     /// ProteomeDiscoverer:Search Modifications Only For Identified Proteins: Influences the modifications search.
     MS_ProteomeDiscoverer_Search_Modifications_Only_For_Identified_Proteins = 1001703,
 
-    /// ProteomeDiscoverer:Std High Confidence XCorr Charge1: Standard high confidence XCorr parameter for charge = 1.
-    MS_ProteomeDiscoverer_Std_High_Confidence_XCorr_Charge1 = 1001704,
+    /// ProteomeDiscoverer:SEQUEST:Std High Confidence XCorr Charge1: Standard high confidence XCorr parameter for charge = 1.
+    MS_ProteomeDiscoverer_SEQUEST_Std_High_Confidence_XCorr_Charge1 = 1001704,
 
-    /// ProteomeDiscoverer:Std High Confidence XCorr Charge2: Standard high confidence XCorr parameter for charge = 2.
-    MS_ProteomeDiscoverer_Std_High_Confidence_XCorr_Charge2 = 1001705,
+    /// ProteomeDiscoverer:SEQUEST:Std High Confidence XCorr Charge2: Standard high confidence XCorr parameter for charge = 2.
+    MS_ProteomeDiscoverer_SEQUEST_Std_High_Confidence_XCorr_Charge2 = 1001705,
 
-    /// ProteomeDiscoverer:Std High Confidence XCorr Charge3: Standard high confidence XCorr parameter for charge = 3.
-    MS_ProteomeDiscoverer_Std_High_Confidence_XCorr_Charge3 = 1001706,
+    /// ProteomeDiscoverer:SEQUEST:Std High Confidence XCorr Charge3: Standard high confidence XCorr parameter for charge = 3.
+    MS_ProteomeDiscoverer_SEQUEST_Std_High_Confidence_XCorr_Charge3 = 1001706,
 
-    /// ProteomeDiscoverer:Std High Confidence XCorr Charge4: Standard high confidence XCorr parameter for charge >= 4.
-    MS_ProteomeDiscoverer_Std_High_Confidence_XCorr_Charge4 = 1001707,
+    /// ProteomeDiscoverer:SEQUEST:Std High Confidence XCorr Charge4: Standard high confidence XCorr parameter for charge >= 4.
+    MS_ProteomeDiscoverer_SEQUEST_Std_High_Confidence_XCorr_Charge4 = 1001707,
 
-    /// ProteomeDiscoverer:Std Medium Confidence XCorr Charge1: Standard medium confidence XCorr parameter for charge = 1.
-    MS_ProteomeDiscoverer_Std_Medium_Confidence_XCorr_Charge1 = 1001708,
+    /// ProteomeDiscoverer:SEQUEST:Std Medium Confidence XCorr Charge1: Standard medium confidence XCorr parameter for charge = 1.
+    MS_ProteomeDiscoverer_SEQUEST_Std_Medium_Confidence_XCorr_Charge1 = 1001708,
 
-    /// ProteomeDiscoverer:Std Medium Confidence XCorr Charge2: Standard medium confidence XCorr parameter for charge = 2.
-    MS_ProteomeDiscoverer_Std_Medium_Confidence_XCorr_Charge2 = 1001709,
+    /// ProteomeDiscoverer:SEQUEST:Std Medium Confidence XCorr Charge2: Standard medium confidence XCorr parameter for charge = 2.
+    MS_ProteomeDiscoverer_SEQUEST_Std_Medium_Confidence_XCorr_Charge2 = 1001709,
 
-    /// ProteomeDiscoverer:Std Medium Confidence XCorr Charge3: Standard medium confidence XCorr parameter for charge = 3.
-    MS_ProteomeDiscoverer_Std_Medium_Confidence_XCorr_Charge3 = 1001710,
+    /// ProteomeDiscoverer:SEQUEST:Std Medium Confidence XCorr Charge3: Standard medium confidence XCorr parameter for charge = 3.
+    MS_ProteomeDiscoverer_SEQUEST_Std_Medium_Confidence_XCorr_Charge3 = 1001710,
 
-    /// ProteomeDiscoverer:Std Medium Confidence XCorr Charge4: Standard medium confidence XCorr parameter for charge >= 4.
-    MS_ProteomeDiscoverer_Std_Medium_Confidence_XCorr_Charge4 = 1001711,
+    /// ProteomeDiscoverer:SEQUEST:Std Medium Confidence XCorr Charge4: Standard medium confidence XCorr parameter for charge >= 4.
+    MS_ProteomeDiscoverer_SEQUEST_Std_Medium_Confidence_XCorr_Charge4 = 1001711,
 
-    /// ProteomeDiscoverer:FT High Confidence XCorr Charge1: FT high confidence XCorr parameter for charge = 1.
-    MS_ProteomeDiscoverer_FT_High_Confidence_XCorr_Charge1 = 1001712,
+    /// ProteomeDiscoverer:SEQUEST:FT High Confidence XCorr Charge1: FT high confidence XCorr parameter for charge = 1.
+    MS_ProteomeDiscoverer_SEQUEST_FT_High_Confidence_XCorr_Charge1 = 1001712,
 
-    /// ProteomeDiscoverer:FT High Confidence XCorr Charge2: FT high confidence XCorr parameter for charge = 2.
-    MS_ProteomeDiscoverer_FT_High_Confidence_XCorr_Charge2 = 1001713,
+    /// ProteomeDiscoverer:SEQUEST:FT High Confidence XCorr Charge2: FT high confidence XCorr parameter for charge = 2.
+    MS_ProteomeDiscoverer_SEQUEST_FT_High_Confidence_XCorr_Charge2 = 1001713,
 
-    /// ProteomeDiscoverer:FT High Confidence XCorr Charge3: FT high confidence XCorr parameter for charge = 3.
-    MS_ProteomeDiscoverer_FT_High_Confidence_XCorr_Charge3 = 1001714,
+    /// ProteomeDiscoverer:SEQUEST:FT High Confidence XCorr Charge3: FT high confidence XCorr parameter for charge = 3.
+    MS_ProteomeDiscoverer_SEQUEST_FT_High_Confidence_XCorr_Charge3 = 1001714,
 
-    /// ProteomeDiscoverer:FT High Confidence XCorr Charge4: FT high confidence XCorr parameter for charge >= 4.
-    MS_ProteomeDiscoverer_FT_High_Confidence_XCorr_Charge4 = 1001715,
+    /// ProteomeDiscoverer:SEQUEST:FT High Confidence XCorr Charge4: FT high confidence XCorr parameter for charge >= 4.
+    MS_ProteomeDiscoverer_SEQUEST_FT_High_Confidence_XCorr_Charge4 = 1001715,
 
-    /// ProteomeDiscoverer:FT Medium Confidence XCorr Charge1: FT medium confidence XCorr parameter for charge = 1.
-    MS_ProteomeDiscoverer_FT_Medium_Confidence_XCorr_Charge1 = 1001716,
+    /// ProteomeDiscoverer:SEQUEST:FT Medium Confidence XCorr Charge1: FT medium confidence XCorr parameter for charge = 1.
+    MS_ProteomeDiscoverer_SEQUEST_FT_Medium_Confidence_XCorr_Charge1 = 1001716,
 
-    /// ProteomeDiscoverer:FT Medium Confidence XCorr Charge2: FT medium confidence XCorr parameter for charge = 2.
-    MS_ProteomeDiscoverer_FT_Medium_Confidence_XCorr_Charge2 = 1001717,
+    /// ProteomeDiscoverer:SEQUEST:FT Medium Confidence XCorr Charge2: FT medium confidence XCorr parameter for charge = 2.
+    MS_ProteomeDiscoverer_SEQUEST_FT_Medium_Confidence_XCorr_Charge2 = 1001717,
 
-    /// ProteomeDiscoverer:FT Medium Confidence XCorr Charge3: FT medium confidence XCorr parameter for charge = 3.
-    MS_ProteomeDiscoverer_FT_Medium_Confidence_XCorr_Charge3 = 1001718,
+    /// ProteomeDiscoverer:SEQUEST:FT Medium Confidence XCorr Charge3: FT medium confidence XCorr parameter for charge = 3.
+    MS_ProteomeDiscoverer_SEQUEST_FT_Medium_Confidence_XCorr_Charge3 = 1001718,
 
-    /// ProteomeDiscoverer:FT Medium Confidence XCorr Charge4: FT medium confidence XCorr parameter for charge >= 4.
-    MS_ProteomeDiscoverer_FT_Medium_Confidence_XCorr_Charge4 = 1001719,
+    /// ProteomeDiscoverer:SEQUEST:FT Medium Confidence XCorr Charge4: FT medium confidence XCorr parameter for charge >= 4.
+    MS_ProteomeDiscoverer_SEQUEST_FT_Medium_Confidence_XCorr_Charge4 = 1001719,
 
     /// ProteomeDiscoverer:1. Dynamic Modification: Determine 1st dynamic post-translational modifications (PTMs).
     MS_ProteomeDiscoverer_1__Dynamic_Modification = 1001720,
@@ -5464,11 +5479,23 @@ enum PWIZ_API_DECL CVID
     /// ProteomeDiscoverer:Mascot:Weight of Z Ions: Determines if to use z ions for spectrum matching.
     MS_ProteomeDiscoverer_Mascot_Weight_of_Z_Ions = 1001751,
 
-    /// ProteomeDiscoverer:Target FDR Strict: Specifies the strict target false discovery rate (FDR, 0.0 ... 1.0) for peptide hits with high confidence.
-    MS_ProteomeDiscoverer_Target_FDR_Strict = 10001664,
+    /// ProteomeDiscoverer:Spectrum Selector:Use New Precursor Reevaluation: Determines if to use precursor reevaluation.
+    MS_ProteomeDiscoverer_Spectrum_Selector_Use_New_Precursor_Reevaluation = 1001752,
 
-    /// ProteomeDiscoverer:Mascot:Taxonomy: Limits searches to entries from a particular species or group of species.
-    MS_ProteomeDiscoverer_Mascot_Taxonomy = 10001665,
+    /// ProteomeDiscoverer:Spectrum Selector:SN Threshold FTonly: Signal-to-Noise ratio below which peaks are removed (in FT mode only).
+    MS_ProteomeDiscoverer_Spectrum_Selector_SN_Threshold_FTonly = 1001753,
+
+    /// ProteomeDiscoverer:Mascot:Please Do not Touch this: Unknown Mascot parameter which ProteomeDiscoverer uses for mascot searches.
+    MS_ProteomeDiscoverer_Mascot_Please_Do_not_Touch_this = 1001754,
+
+    /// contact phone number: Phone number of the contact person or organization.
+    MS_contact_phone_number = 1001755,
+
+    /// contact fax number: Fax number for the contact person or organization.
+    MS_contact_fax_number = 1001756,
+
+    /// contact toll-free phone number: Toll-free phone number of the contact person or organization.
+    MS_contact_toll_free_phone_number = 1001757,
 
     /// unit: A unit of measurement is a standardized quantity of a physical quality.
     UO_unit = 100000000,
@@ -6304,6 +6331,15 @@ enum PWIZ_API_DECL CVID
     /// milliunits per milliliter: A unit per milliliter unit which is equal to one thousandth of a unit of an agreed arbitrary amount per one milliliter.
     UO_milliunits_per_milliliter = 100000279,
 
+    /// rate unit: A unit which represents a standard measurement occurrence of a process per unit time.
+    UO_rate_unit = 100000280,
+
+    /// count per nanomolar second: A rate unit which is equal to one over one nanomolar second.
+    UO_count_per_nanomolar_second = 100000281,
+
+    /// count per molar second: A rate unit which is equal to one over one molar second.
+    UO_count_per_molar_second = 100000282,
+
     /// microgram per liter: A mass unit density which is equal to mass of an object in micrograms divided by the volume in liters.
     UO_microgram_per_liter = 100000301,
 
@@ -6376,7 +6412,7 @@ enum PWIZ_API_DECL CVID
     /// Gln->pyro-Glu: Pyro-glu from Q
     UNIMOD_Gln__pyro_Glu = 200000028,
 
-    /// SMA: N-Succinimidyl-3-morpholine acetate
+    /// SMA: N-Succinimidyl-2-morpholine acetate
     UNIMOD_SMA = 200000029,
 
     /// Cation:Na: Sodium adduct
@@ -6550,7 +6586,7 @@ enum PWIZ_API_DECL CVID
     /// ICAT-H:13C(6): N-iodoacetyl, p-chlorobenzyl-13C6-glucamine
     UNIMOD_ICAT_H_13C_6_ = 200000124,
 
-    /// Thioacyl: thioacylation of primary amines (N-term and Lys)
+    /// Thioacyl: 3-sulfanylpropanoyl
     UNIMOD_Thioacyl = 200000126,
 
     /// Fluoro: fluorophenylalanine replacement of phenylalanine
@@ -6793,7 +6829,7 @@ enum PWIZ_API_DECL CVID
     /// AEBS: Aminoethylbenzenesulfonylation
     UNIMOD_AEBS = 200000276,
 
-    /// Ethanolyl: Ethanolation of Cys
+    /// Ethanolyl: Ethanolation
     UNIMOD_Ethanolyl = 200000278,
 
     /// Ethyl: Ethylation
@@ -7294,14 +7330,11 @@ enum PWIZ_API_DECL CVID
     /// Piperidine: Piperidination
     UNIMOD_Piperidine = 200000520,
 
-    /// Maleimide-PEO2-Biotin: Maleimide-PEO2-Biotin
+    /// Maleimide-PEO2-Biotin: Maleimide-Biotin
     UNIMOD_Maleimide_PEO2_Biotin = 200000522,
 
-    /// Sulfo-NHS-LC-LC-Biotin: Sulfo-NHS-LC-LC-Biotin
+    /// Sulfo-NHS-LC-LC-Biotin: Biot_LC_LC
     UNIMOD_Sulfo_NHS_LC_LC_Biotin = 200000523,
-
-    /// CLIP_TRAQ_1: CLIP_TRAQ_1
-    UNIMOD_CLIP_TRAQ_1 = 200000524,
 
     /// CLIP_TRAQ_2: CLIP_TRAQ_2
     UNIMOD_CLIP_TRAQ_2 = 200000525,
@@ -7339,11 +7372,11 @@ enum PWIZ_API_DECL CVID
     /// CLIP_TRAQ_4: CLIP_TRAQ_4
     UNIMOD_CLIP_TRAQ_4 = 200000537,
 
-    /// 15dB-biotin: 15-deoxy-delta 12,14-Prostaglandin J2-biotinimide
-    UNIMOD_15dB_biotin = 200000538,
+    /// Biotin:Cayman-10141: was 15dB-biotin
+    UNIMOD_Biotin_Cayman_10141 = 200000538,
 
-    /// PGA1-biotin: Prostaglandin A1-biotinimide
-    UNIMOD_PGA1_biotin = 200000539,
+    /// Biotin:Cayman-10013: was PGA1-biotin
+    UNIMOD_Biotin_Cayman_10013 = 200000539,
 
     /// Ala->Ser: Ala->Ser substitution
     UNIMOD_Ala__Ser = 200000540,
@@ -7924,14 +7957,14 @@ enum PWIZ_API_DECL CVID
     /// Label:13C(6)+GlyGly: 13C6 labeled ubiquitinylation residue
     UNIMOD_Label_13C_6__GlyGly = 200000799,
 
-    /// PentylamineBiotin: Used for labeling glutamine-donor substrate of transglutaminase
-    UNIMOD_PentylamineBiotin = 200000800,
+    /// Biotin:Thermo-21345: was PentylamineBiotin
+    UNIMOD_Biotin_Thermo_21345 = 200000800,
 
     /// Pentylamine: Labeling transglutaminase substrate on glutamine side chain
     UNIMOD_Pentylamine = 200000801,
 
-    /// Biotin-PEO4-hydrazide: Pierce EZ link biotin hydrazide prod no. 21360
-    UNIMOD_Biotin_PEO4_hydrazide = 200000811,
+    /// Biotin:Thermo-21360: was Biotin-PEO4-hydrazide
+    UNIMOD_Biotin_Thermo_21360 = 200000811,
 
     /// Cy3b-maleimide: fluorescent dye that labels cysteines
     UNIMOD_Cy3b_maleimide = 200000821,
@@ -8008,8 +8041,8 @@ enum PWIZ_API_DECL CVID
     /// Bodipy: Bodipy modifications onto cysteine
     UNIMOD_Bodipy = 200000878,
 
-    /// ChromoBiotin: EZ-Link NHS-Chromogenic Biotin
-    UNIMOD_ChromoBiotin = 200000884,
+    /// Biotin:Thermo-21325: was ChromoBiotin
+    UNIMOD_Biotin_Thermo_21325 = 200000884,
 
     /// Label:13C(1)2H(3)+Oxidation: Oxidised methionine 13C(1)2H(3) SILAC label
     UNIMOD_Label_13C_1_2H_3__Oxidation = 200000885,
@@ -8087,7 +8120,262 @@ enum PWIZ_API_DECL CVID
     UNIMOD_HNE_BAHAH = 200000912,
 
     /// Methylmalonylation: Methylmalonylation on Serine
-    UNIMOD_Methylmalonylation = 200000914
+    UNIMOD_Methylmalonylation = 200000914,
+
+    /// Ethoxyformyl: Ethoxyformylation
+    UNIMOD_Ethoxyformyl = 200000915,
+
+    /// Label:13C(4)15N(2)+GlyGly: 13C(4) 15N(2) Lysine glygly
+    UNIMOD_Label_13C_4_15N_2__GlyGly = 200000923,
+
+    /// ethylamino: ethyl amino
+    UNIMOD_ethylamino = 200000926,
+
+    /// MercaptoEthanol: 2-OH-ethyl thio-Ser
+    UNIMOD_MercaptoEthanol = 200000928,
+
+    /// EthylAmide: solvolysis of amide group on Asn or Gln by ethanol
+    UNIMOD_EthylAmide = 200000931,
+
+    /// VFQQQTGG: SUMOylation by SUMO-2/3 (formic acid cleavage)
+    UNIMOD_VFQQQTGG = 200000932,
+
+    /// VIEVYQEQTGG: SUMOylation by SUMO-1 (formic acid cleavage)
+    UNIMOD_VIEVYQEQTGG = 200000933,
+
+    /// AMTzHexNAc2: Photocleavable Biotin + GalNAz on O-GlcNAc
+    UNIMOD_AMTzHexNAc2 = 200000934,
+
+    /// Atto495Maleimide: High molecular absorption maleimide label for proteins
+    UNIMOD_Atto495Maleimide = 200000935,
+
+    /// Chlorination: Chlorination of tyrosine residues
+    UNIMOD_Chlorination = 200000936,
+
+    /// dichlorination: Dichlorination of tyrosine residues
+    UNIMOD_dichlorination = 200000937,
+
+    /// AROD: Cysteine modifier
+    UNIMOD_AROD = 200000938,
+
+    /// Cys->methylaminoAla: carbamidomethylated Cys that undergoes beta-elimination and Michael addition of methylamine
+    UNIMOD_Cys__methylaminoAla = 200000939,
+
+    /// Cys->ethylaminoAla: Carbamidomethylated Cys that undergoes beta-elimination and Michael addition of ethylamine
+    UNIMOD_Cys__ethylaminoAla = 200000940,
+
+    /// DNPS: 2,4-Dinitrobenzenesulfenyl
+    UNIMOD_DNPS = 200000941,
+
+    /// SulfoGMBS: High molecular absorption label for proteins
+    UNIMOD_SulfoGMBS = 200000942,
+
+    /// DimethylamineGMBS: Modified GMBS X linker for proteins
+    UNIMOD_DimethylamineGMBS = 200000943,
+
+    /// Label:15N(2)2H(9): SILAC label
+    UNIMOD_Label_15N_2_2H_9_ = 200000944,
+
+    /// LG-anhydrolactam: Levuglandinyl-lysine anhydrolactam adduct
+    UNIMOD_LG_anhydrolactam = 200000946,
+
+    /// LG-pyrrole: Levuglandinyl-lysine pyrrole adduct
+    UNIMOD_LG_pyrrole = 200000947,
+
+    /// LG-anhyropyrrole: Levuglandinyl-lysine anhyropyrrole adduct
+    UNIMOD_LG_anhyropyrrole = 200000948,
+
+    /// 3-deoxyglucosone: Condensation product of 3-deoxyglucosone
+    UNIMOD_3_deoxyglucosone = 200000949,
+
+    /// Cation:Li: Replacement of proton by lithium
+    UNIMOD_Cation_Li = 200000950,
+
+    /// Cation:Ca[II]: Replacement of 2 protons by calcium
+    UNIMOD_Cation_Ca_II_ = 200000951,
+
+    /// Cation:Fe[II]: Replacement of 2 protons by iron
+    UNIMOD_Cation_Fe_II_ = 200000952,
+
+    /// Cation:Ni[II]: Replacement of 2 protons by nickel
+    UNIMOD_Cation_Ni_II_ = 200000953,
+
+    /// Cation:Zn[II]: Replacement of 2 protons by zinc
+    UNIMOD_Cation_Zn_II_ = 200000954,
+
+    /// Cation:Ag: Replacement of proton by silver
+    UNIMOD_Cation_Ag = 200000955,
+
+    /// Cation:Mg[II]: Replacement of 2 protons by magnesium
+    UNIMOD_Cation_Mg_II_ = 200000956,
+
+    /// 2-succinyl: S-(2-succinyl) cysteine
+    UNIMOD_2_succinyl = 200000957,
+
+    /// Propargylamine: propargylamine
+    UNIMOD_Propargylamine = 200000958,
+
+    /// Phosphopropargyl: phospho-propargylamine
+    UNIMOD_Phosphopropargyl = 200000959,
+
+    /// SUMO2135: SUMOylation by SUMO-1 after tryptic cleavage
+    UNIMOD_SUMO2135 = 200000960,
+
+    /// SUMO3549: SUMOylation by SUMO-2/3 after tryptic cleavage
+    UNIMOD_SUMO3549 = 200000961,
+
+    /// thioacylPA: membrane protein extraction
+    UNIMOD_thioacylPA = 200000967,
+
+    /// maleimide3: maleimide-3-saccharide
+    UNIMOD_maleimide3 = 200000971,
+
+    /// maleimide5: maleimide-5-saccharide
+    UNIMOD_maleimide5 = 200000972,
+
+    /// Puromycin: Puromycin
+    UNIMOD_Puromycin = 200000973,
+
+    /// Chlorpyrifos: O,O-diethyl o-3,5,6-trichloro-2-pyridyl phosphorothioate
+    UNIMOD_Chlorpyrifos = 200000975,
+
+    /// Carbofuran: 2,3-dihydro-2,2-dimethyl-7-benzofuranol N-methyl carbamate
+    UNIMOD_Carbofuran = 200000977,
+
+    /// BITC: Benzyl isothiocyanate
+    UNIMOD_BITC = 200000978,
+
+    /// PEITC: Phenethyl isothiocyanate
+    UNIMOD_PEITC = 200000979,
+
+    /// glucosone: Condensation product of glucosone
+    UNIMOD_glucosone = 200000981,
+
+    /// cysTMT: Native cysteine-reactive Tandem Mass Tag®
+    UNIMOD_cysTMT = 200000984,
+
+    /// cysTMT6plex: cysteine-reactive Sixplex Tandem Mass Tag®
+    UNIMOD_cysTMT6plex = 200000985,
+
+    /// Label:13C(6)+Dimethyl: Dimethyl 13C(6) Silac label
+    UNIMOD_Label_13C_6__Dimethyl = 200000986,
+
+    /// Label:13C(6)15N(2)+Dimethyl: Dimethyl 13C(6)15N(2) Silac label
+    UNIMOD_Label_13C_6_15N_2__Dimethyl = 200000987,
+
+    /// Ammonium: replacement of proton with ammonium ion
+    UNIMOD_Ammonium = 200000989,
+
+    /// ISD_z+2_ion: ISD (z+2)-series
+    UNIMOD_ISD_z_2_ion = 200000991,
+
+    /// Biotin:Sigma-B1267: was Biotin-maleimide
+    UNIMOD_Biotin_Sigma_B1267 = 200000993,
+
+    /// Label:15N(1): SILAS 15N(1)
+    UNIMOD_Label_15N_1_ = 200000994,
+
+    /// Label:15N(2): SILAS 15N(2)
+    UNIMOD_Label_15N_2_ = 200000995,
+
+    /// Label:15N(3): SILAS 15N(3)
+    UNIMOD_Label_15N_3_ = 200000996,
+
+    /// sulfo+amino: aminotyrosine with sulfation
+    UNIMOD_sulfo_amino = 200000997,
+
+    /// BHAc: N-biotinyl-6-aminohexanoyl
+    UNIMOD_BHAc = 200000998,
+
+    /// AHA-Alkyne: Azidohomoalanine (AHA) bound to propargylglycine-NH2 (alkyne)
+    UNIMOD_AHA_Alkyne = 200001000,
+
+    /// AHA-Alkyne-KDDDD: Azidohomoalanine (AHA) bound to DDDDK-propargylglycine-NH2 (alkyne)
+    UNIMOD_AHA_Alkyne_KDDDD = 200001001,
+
+    /// EGCG1: (-)-epigallocatechin-3-gallate
+    UNIMOD_EGCG1 = 200001002,
+
+    /// EGCG2: (-)-dehydroepigallocatechin
+    UNIMOD_EGCG2 = 200001003,
+
+    /// Label:13C(6)15N(4)+Methyl: Monomethylated Arg13C(6) 15N(4)
+    UNIMOD_Label_13C_6_15N_4__Methyl = 200001004,
+
+    /// Label:13C(6)15N(4)+Dimethyl: Dimethylated Arg13C(6) 15N(4)
+    UNIMOD_Label_13C_6_15N_4__Dimethyl = 200001005,
+
+    /// Label:13C(6)15N(4)+Methyl:2H(3)13C(1): 2H(3) 13C(1) monomethylated Arg13C(6) 15N(4)
+    UNIMOD_Label_13C_6_15N_4__Methyl_2H_3_13C_1_ = 200001006,
+
+    /// Label:13C(6)15N(4)+Dimethyl:2H(6)13C(2): 2H(6) 13C(2) Dimethylated Arg13C(6) 15N(4)
+    UNIMOD_Label_13C_6_15N_4__Dimethyl_2H_6_13C_2_ = 200001007,
+
+    /// SecCarbamidomethyl: Sec Iodoacetamide derivative
+    UNIMOD_SecCarbamidomethyl = 200001008,
+
+    /// Thiazolidine: Addition of Carbon to cysteine
+    UNIMOD_Thiazolidine = 200001009,
+
+    /// DEDGFLYMVYASQETFG: Addition of DEDGFLYMVYASQETFG
+    UNIMOD_DEDGFLYMVYASQETFG = 200001010,
+
+    /// Biotin:Invitrogen-M1602: Nalpha-(3-maleimidylpropionyl)biocytin
+    UNIMOD_Biotin_Invitrogen_M1602 = 200001012,
+
+    /// glycidamide: glycidamide adduct
+    UNIMOD_glycidamide = 200001014,
+
+    /// Ahx2+Hsl: C-terminal homoserine lactone and two aminohexanoic acids
+    UNIMOD_Ahx2_Hsl = 200001015,
+
+    /// DMPO: DMPO spin-trap nitrone adduct
+    UNIMOD_DMPO = 200001017,
+
+    /// ICDID: Isotope-Coded Dimedone light form
+    UNIMOD_ICDID = 200001018,
+
+    /// ICDID:2H(6): Isotope-Coded Dimedone heavy form
+    UNIMOD_ICDID_2H_6_ = 200001019,
+
+    /// Xlink:DSS: Monolink of DSS/BS3 crosslinker to Lys or N-terminus
+    UNIMOD_Xlink_DSS = 200001020,
+
+    /// Xlink:EGS: Monolink of EGS crosslinker to Lys or N-terminus
+    UNIMOD_Xlink_EGS = 200001021,
+
+    /// Xlink:DST: Monolink of DST crosslinker to Lys or N-terminus
+    UNIMOD_Xlink_DST = 200001022,
+
+    /// Xlink:DTSSP: Monolink of DSP/DTSSP crosslinker to Lys or N-terminus
+    UNIMOD_Xlink_DTSSP = 200001023,
+
+    /// Xlink:SMCC: Monolink of sulfoSMCC/SMCC crosslinker to Cys
+    UNIMOD_Xlink_SMCC = 200001024,
+
+    /// Xlink:DMP-de: Monolink of DMP crosslinker to Lys or N-terminus
+    UNIMOD_Xlink_DMP_de = 200001027,
+
+    /// Xlink:EGScleaved: EGS crosslinker to Lys or N-terminus following hydroxylamine cleavage
+    UNIMOD_Xlink_EGScleaved = 200001028,
+
+    /// Biotin:Thermo-88310: desthiobiotin modification of lysine
+    UNIMOD_Biotin_Thermo_88310 = 200001031,
+
+    /// 2-nitrobenzyl: Tyrosine caged with 2-nitrobenzyl (ONB)
+    UNIMOD_2_nitrobenzyl = 200001032,
+
+    /// SecNEM: N-ethylmaleimide on selenocysteines
+    UNIMOD_SecNEM = 200001033,
+
+    /// SecNEM:2H(5): D5 N-ethylmaleimide on selenocysteines
+    UNIMOD_SecNEM_2H_5_ = 200001034,
+
+    /// Thiadiazole: Thiadiazolydation of Cys
+    UNIMOD_Thiadiazole = 200001035,
+
+    /// Withaferin: Modification of cystein by withaferin
+    UNIMOD_Withaferin = 200001036
 }; // enum CVID
 
 

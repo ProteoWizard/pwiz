@@ -84,6 +84,651 @@ property_value: spec_classification_1="Chemical derivative"
 is_a: UNIMOD:0 ! unimod root node
 
 [Term]
+id: UNIMOD:1000
+name: AHA-Alkyne
+def: "Azidohomoalanine (AHA) bound to propargylglycine-NH2 (alkyne)" []
+property_value: record_id="1000"
+property_value: delta_mono_mass="107.077339"
+property_value: delta_avge_mass="107.0504"
+property_value: delta_composition="H(5) C(4) N(5) O S(-1)"
+property_value: username_of_poster="BThomas"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-09-28 09:28:15"
+property_value: date_time_modified="2010-10-03 13:44:56"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="M"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:1001
+name: AHA-Alkyne-KDDDD
+def: "Azidohomoalanine (AHA) bound to DDDDK-propargylglycine-NH2 (alkyne)" []
+property_value: record_id="1001"
+property_value: delta_mono_mass="695.280074"
+property_value: delta_avge_mass="695.5723"
+property_value: delta_composition="H(37) C(26) N(11) O(14) S(-1)"
+property_value: username_of_poster="BThomas"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-09-28 09:35:48"
+property_value: date_time_modified="2010-10-03 13:44:40"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="M"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:1002
+name: EGCG1
+def: "(-)-epigallocatechin-3-gallate" [PMID:18771724 ]
+property_value: record_id="1002"
+property_value: delta_mono_mass="456.069261"
+property_value: delta_avge_mass="456.3558"
+property_value: delta_composition="H(16) C(22) O(11)"
+property_value: username_of_poster="hooverdm"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-10-05 20:46:40"
+property_value: date_time_modified="2010-12-23 15:47:42"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="C"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Post-translational"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:1003
+name: EGCG2
+def: "(-)-dehydroepigallocatechin" [PMID:18771724 ]
+property_value: record_id="1003"
+property_value: delta_mono_mass="287.055563"
+property_value: delta_avge_mass="287.2442"
+property_value: delta_composition="H(11) C(15) O(6)"
+property_value: username_of_poster="hooverdm"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-10-05 20:48:38"
+property_value: date_time_modified="2010-12-23 15:47:33"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="C"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Post-translational"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:1004
+name: Label:13C(6)15N(4)+Methyl
+def: "Monomethylated Arg13C(6) 15N(4)" []
+property_value: record_id="1004"
+property_value: delta_mono_mass="24.023919"
+property_value: delta_avge_mass="23.9561"
+property_value: delta_composition="H(2) C(-5) 13C(6) N(-4) 15N(4)"
+property_value: username_of_poster="BThomas"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-10-27 10:36:31"
+property_value: date_time_modified="2010-11-05 16:47:36"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="R"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Isotopic label"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:1005
+name: Label:13C(6)15N(4)+Dimethyl
+def: "Dimethylated Arg13C(6) 15N(4)" []
+property_value: record_id="1005"
+property_value: delta_mono_mass="38.039569"
+property_value: delta_avge_mass="37.9827"
+property_value: delta_composition="H(4) C(-4) 13C(6) N(-4) 15N(4)"
+property_value: username_of_poster="BThomas"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-10-27 10:52:10"
+property_value: date_time_modified="2010-11-05 16:49:29"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="R"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Isotopic label"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:1006
+name: Label:13C(6)15N(4)+Methyl:2H(3)13C(1)
+def: "2H(3) 13C(1) monomethylated Arg13C(6) 15N(4)" []
+property_value: record_id="1006"
+property_value: delta_mono_mass="28.046104"
+property_value: delta_avge_mass="27.9673"
+property_value: delta_composition="H(-1) 2H(3) C(-6) 13C(7) N(-4) 15N(4)"
+property_value: username_of_poster="BThomas"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-10-27 10:59:21"
+property_value: date_time_modified="2010-11-05 16:53:21"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="R"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Isotopic label"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:1007
+name: Label:13C(6)15N(4)+Dimethyl:2H(6)13C(2)
+def: "2H(6) 13C(2) Dimethylated Arg13C(6) 15N(4)" []
+property_value: record_id="1007"
+property_value: delta_mono_mass="46.083939"
+property_value: delta_avge_mass="46.0050"
+property_value: delta_composition="H(-2) 2H(6) C(-6) 13C(8) N(-4) 15N(4)"
+property_value: username_of_poster="BThomas"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-10-27 11:07:29"
+property_value: date_time_modified="2010-11-05 16:54:24"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="R"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Isotopic label"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:1008
+name: SecCarbamidomethyl
+def: "Sec Iodoacetamide derivative" [PMID:18283440 ]
+property_value: record_id="1008"
+property_value: delta_mono_mass="104.965913"
+property_value: delta_avge_mass="103.9463"
+property_value: delta_composition="H(3) C(2) N O S(-1) Se"
+property_value: username_of_poster="BThomas"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-11-04 12:00:12"
+property_value: date_time_modified="2010-11-05 16:55:08"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="C"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Non-standard residue"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:1009
+name: Thiazolidine
+def: "Addition of Carbon to cysteine" []
+property_value: record_id="1009"
+property_value: delta_mono_mass="12.000000"
+property_value: delta_avge_mass="12.0107"
+property_value: delta_composition="C"
+property_value: username_of_poster="BThomas"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-11-04 12:29:10"
+property_value: date_time_modified="2010-11-05 16:55:44"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="C"
+property_value: spec_position_1="Any N-term"
+property_value: spec_classification_1="Synth. pep. protect. gp."
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:1010
+name: DEDGFLYMVYASQETFG
+def: "Addition of DEDGFLYMVYASQETFG" []
+property_value: record_id="1010"
+property_value: delta_mono_mass="1970.824411"
+property_value: delta_avge_mass="1972.0880"
+property_value: delta_composition="H(122) C(89) N(18) O(31) S"
+property_value: username_of_poster="hbromage"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-11-04 17:27:46"
+property_value: date_time_modified="2010-11-24 18:00:09"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="K"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Post-translational"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:1012
+name: Biotin:Invitrogen-M1602
+def: "Nalpha-(3-maleimidylpropionyl)biocytin" []
+property_value: record_id="1012"
+property_value: delta_mono_mass="523.210069"
+property_value: delta_avge_mass="523.6024"
+property_value: delta_composition="H(33) C(23) N(5) O(7) S"
+property_value: username_of_poster="camoin"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-11-16 10:11:53"
+property_value: date_time_modified="2010-12-03 15:58:11"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="C"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:1014
+name: glycidamide
+def: "glycidamide adduct" []
+property_value: record_id="1014"
+property_value: delta_mono_mass="87.032028"
+property_value: delta_avge_mass="87.0773"
+property_value: delta_composition="H(5) C(3) N O(2)"
+property_value: username_of_poster="unimod"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-12-21 17:00:41"
+property_value: date_time_modified="2010-12-21 17:00:41"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="K"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="N-term"
+property_value: spec_position_2="Any N-term"
+property_value: spec_classification_2="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:1015
+name: Ahx2+Hsl
+def: "C-terminal homoserine lactone and two aminohexanoic acids" []
+property_value: record_id="1015"
+property_value: delta_mono_mass="309.205242"
+property_value: delta_avge_mass="309.4039"
+property_value: delta_composition="H(27) C(16) N(3) O(3)"
+property_value: username_of_poster="kpkent"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-12-22 10:13:01"
+property_value: date_time_modified="2011-01-07 17:06:08"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="C-term"
+property_value: spec_position_1="Any C-term"
+property_value: spec_classification_1="Non-standard residue"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:1017
+name: DMPO
+def: "DMPO spin-trap nitrone adduct" [PMID:18160050 PMID:17637042 ]
+property_value: record_id="1017"
+property_value: delta_mono_mass="111.068414"
+property_value: delta_avge_mass="111.1418"
+property_value: delta_composition="H(9) C(6) N O"
+property_value: username_of_poster="hooverdm"
+property_value: group_of_poster=""
+property_value: date_time_posted="2011-01-25 18:30:32"
+property_value: date_time_modified="2011-02-28 17:17:57"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="C"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Post-translational"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="H"
+property_value: spec_position_2="Anywhere"
+property_value: spec_classification_2="Post-translational"
+property_value: spec_group3="3"
+property_value: spec_hidden_3="1"
+property_value: spec_site_3="Y"
+property_value: spec_position_3="Anywhere"
+property_value: spec_classification_3="Post-translational"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:1018
+name: ICDID
+def: "Isotope-Coded Dimedone light form" []
+property_value: record_id="1018"
+property_value: delta_mono_mass="138.068080"
+property_value: delta_avge_mass="138.1638"
+property_value: delta_composition="H(10) C(8) O(2)"
+property_value: username_of_poster="unimod"
+property_value: group_of_poster=""
+property_value: date_time_posted="2011-02-02 17:23:34"
+property_value: date_time_modified="2011-02-02 17:23:34"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="C"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Isotopic label"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:1019
+name: ICDID:2H(6)
+def: "Isotope-Coded Dimedone heavy form" []
+property_value: record_id="1019"
+property_value: delta_mono_mass="144.105740"
+property_value: delta_avge_mass="144.2008"
+property_value: delta_composition="H(4) 2H(6) C(8) O(2)"
+property_value: username_of_poster="unimod"
+property_value: group_of_poster=""
+property_value: date_time_posted="2011-02-02 17:24:45"
+property_value: date_time_modified="2011-02-02 17:24:45"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="C"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Isotopic label"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:1020
+name: Xlink:DSS
+def: "Monolink of DSS/BS3 crosslinker to Lys or N-terminus" [PMID:8326953 ]
+property_value: record_id="1020"
+property_value: delta_mono_mass="156.078644"
+property_value: delta_avge_mass="156.1791"
+property_value: delta_composition="H(12) C(8) O(3)"
+property_value: username_of_poster="Kramerh"
+property_value: group_of_poster=""
+property_value: date_time_posted="2011-02-07 14:20:22"
+property_value: date_time_modified="2011-02-11 14:33:33"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="K"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="N-term"
+property_value: spec_position_2="Protein N-term"
+property_value: spec_classification_2="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:1021
+name: Xlink:EGS
+def: "Monolink of EGS crosslinker to Lys or N-terminus" [PMID:36892 ]
+property_value: record_id="1021"
+property_value: delta_mono_mass="244.058303"
+property_value: delta_avge_mass="244.1981"
+property_value: delta_composition="H(12) C(10) O(7)"
+property_value: username_of_poster="Kramerh"
+property_value: group_of_poster=""
+property_value: date_time_posted="2011-02-07 17:40:36"
+property_value: date_time_modified="2011-02-11 14:33:05"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="K"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="N-term"
+property_value: spec_position_2="Protein N-term"
+property_value: spec_classification_2="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:1022
+name: Xlink:DST
+def: "Monolink of DST crosslinker to Lys or N-terminus" [PMID:3001048 PMID:212103 ]
+property_value: record_id="1022"
+property_value: delta_mono_mass="132.005873"
+property_value: delta_avge_mass="132.0716"
+property_value: delta_composition="H(4) C(4) O(5)"
+property_value: username_of_poster="Kramerh"
+property_value: group_of_poster=""
+property_value: date_time_posted="2011-02-07 18:02:58"
+property_value: date_time_modified="2011-02-11 14:32:52"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="K"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="N-term"
+property_value: spec_position_2="Protein N-term"
+property_value: spec_classification_2="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:1023
+name: Xlink:DTSSP
+def: "Monolink of DSP/DTSSP crosslinker to Lys or N-terminus" [PMID:1262347 PMID:322714 PMID:8457554 ]
+property_value: record_id="1023"
+property_value: delta_mono_mass="191.991486"
+property_value: delta_avge_mass="192.2559"
+property_value: delta_composition="H(8) C(6) O(3) S(2)"
+property_value: username_of_poster="Kramerh"
+property_value: group_of_poster=""
+property_value: date_time_posted="2011-02-07 18:22:31"
+property_value: date_time_modified="2011-02-11 14:32:42"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="K"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="N-term"
+property_value: spec_position_2="Protein N-term"
+property_value: spec_classification_2="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:1024
+name: Xlink:SMCC
+def: "Monolink of sulfoSMCC/SMCC crosslinker to Cys" [PMID:1931231 PMID:6490581 ]
+property_value: record_id="1024"
+property_value: delta_mono_mass="237.100108"
+property_value: delta_avge_mass="237.2518"
+property_value: delta_composition="H(15) C(12) N O(4)"
+property_value: username_of_poster="Kramerh"
+property_value: group_of_poster=""
+property_value: date_time_posted="2011-02-07 19:33:39"
+property_value: date_time_modified="2011-02-11 14:32:28"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="C"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:1027
+name: Xlink:DMP-de
+def: "Monolink of DMP crosslinker to Lys or N-terminus" [PMID:2144419 PMID:14696200 ]
+property_value: record_id="1027"
+property_value: delta_mono_mass="140.094963"
+property_value: delta_avge_mass="140.1830"
+property_value: delta_composition="H(12) C(7) N(2) O"
+property_value: username_of_poster="Kramerh"
+property_value: group_of_poster=""
+property_value: date_time_posted="2011-02-25 16:18:13"
+property_value: date_time_modified="2011-03-04 11:06:19"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="K"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="N-term"
+property_value: spec_position_2="Protein N-term"
+property_value: spec_classification_2="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:1028
+name: Xlink:EGScleaved
+def: "EGS crosslinker to Lys or N-terminus following hydroxylamine cleavage" [PMID:36892 ]
+property_value: record_id="1028"
+property_value: delta_mono_mass="99.032028"
+property_value: delta_avge_mass="99.0880"
+property_value: delta_composition="H(5) C(4) N O(2)"
+property_value: username_of_poster="Kramerh"
+property_value: group_of_poster=""
+property_value: date_time_posted="2011-02-25 17:16:45"
+property_value: date_time_modified="2011-03-04 10:43:22"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="K"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="N-term"
+property_value: spec_position_2="Protein N-term"
+property_value: spec_classification_2="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:1031
+name: Biotin:Thermo-88310
+def: "desthiobiotin modification of lysine" []
+property_value: record_id="1031"
+property_value: delta_mono_mass="196.121178"
+property_value: delta_avge_mass="196.2462"
+property_value: delta_composition="H(16) C(10) N(2) O(2)"
+property_value: username_of_poster="rbomgard"
+property_value: group_of_poster=""
+property_value: date_time_posted="2011-03-02 20:33:20"
+property_value: date_time_modified="2011-03-18 13:44:07"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="K"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:1032
+name: 2-nitrobenzyl
+def: "Tyrosine caged with 2-nitrobenzyl (ONB)" [PMID:16548032 ]
+property_value: record_id="1032"
+property_value: delta_mono_mass="135.032028"
+property_value: delta_avge_mass="135.1201"
+property_value: delta_composition="H(5) C(7) N O(2)"
+property_value: username_of_poster="BThomas"
+property_value: group_of_poster=""
+property_value: date_time_posted="2011-03-14 10:56:33"
+property_value: date_time_modified="2011-03-18 13:39:54"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="Y"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:1033
+name: SecNEM
+def: "N-ethylmaleimide on selenocysteines" [PMID:18283440 PMID:12777388 PMID:11813307 ]
+property_value: record_id="1033"
+property_value: delta_mono_mass="172.992127"
+property_value: delta_avge_mass="172.0203"
+property_value: delta_composition="H(7) C(6) N O(2) S(-1) Se"
+property_value: username_of_poster="mpcusack"
+property_value: group_of_poster=""
+property_value: date_time_posted="2011-03-31 18:29:45"
+property_value: date_time_modified="2011-03-31 18:41:41"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="C"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Non-standard residue"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:1034
+name: SecNEM:2H(5)
+def: "D5 N-ethylmaleimide on selenocysteines" [PMID:11813307 PMID:12777388 PMID:18283440 ]
+property_value: record_id="1034"
+property_value: delta_mono_mass="178.023511"
+property_value: delta_avge_mass="177.0511"
+property_value: delta_composition="H(2) 2H(5) C(6) N O(2) S(-1) Se"
+property_value: username_of_poster="mpcusack"
+property_value: group_of_poster=""
+property_value: date_time_posted="2011-03-31 18:32:32"
+property_value: date_time_modified="2011-03-31 18:41:50"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="C"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:1035
+name: Thiadiazole
+def: "Thiadiazolydation of Cys" []
+property_value: record_id="1035"
+property_value: delta_mono_mass="174.025169"
+property_value: delta_avge_mass="174.2223"
+property_value: delta_composition="H(6) C(9) N(2) S"
+property_value: username_of_poster="cbatthya"
+property_value: group_of_poster=""
+property_value: date_time_posted="2011-04-01 16:26:52"
+property_value: date_time_modified="2011-04-08 16:38:12"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="C"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:1036
+name: Withaferin
+def: "Modification of cystein by withaferin" [PMID:PMID: 21432907 ]
+property_value: record_id="1036"
+property_value: delta_mono_mass="470.266839"
+property_value: delta_avge_mass="470.5977"
+property_value: delta_composition="H(38) C(28) O(6)"
+property_value: username_of_poster="ProtUA"
+property_value: group_of_poster=""
+property_value: date_time_posted="2011-04-06 12:31:40"
+property_value: date_time_modified="2011-04-08 16:37:15"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="C"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
 id: UNIMOD:105
 name: ICAT-C
 def: "Applied Biosystems cleavable ICAT(TM) light" []
@@ -486,7 +1131,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:126
 name: Thioacyl
-def: "thioacylation of primary amines (N-term and Lys)" [PMID:11710128 PMID:3155470 PMID:957432 ]
+def: "3-sulfanylpropanoyl" [PMID:3155470 PMID:957432 PMID:11710128 ]
 property_value: record_id="126"
 property_value: delta_mono_mass="87.998285"
 property_value: delta_avge_mass="88.1283"
@@ -494,7 +1139,7 @@ property_value: delta_composition="H(4) C(3) O S"
 property_value: username_of_poster="rabah"
 property_value: group_of_poster="users"
 property_value: date_time_posted="2003-06-05 13:38:19"
-property_value: date_time_modified="2006-10-16 12:37:13"
+property_value: date_time_modified="2010-08-17 16:42:36"
 property_value: approved="1"
 property_value: spec_group1="1"
 property_value: spec_hidden_1="1"
@@ -758,14 +1403,14 @@ id: UNIMOD:140
 name: a-type-ion
 def: "ISD a-series (C-Term)" [PMID:14588022 ]
 property_value: record_id="140"
-property_value: delta_mono_mass="-29.002740"
-property_value: delta_avge_mass="-29.0180"
-property_value: delta_composition="H(-1) C(-1) O(-1)"
+property_value: delta_mono_mass="-46.005479"
+property_value: delta_avge_mass="-46.0254"
+property_value: delta_composition="H(-2) C(-1) O(-2)"
 property_value: username_of_poster="suckau"
 property_value: group_of_poster="users"
 property_value: date_time_posted="2003-09-02 16:17:09"
-property_value: date_time_modified="2006-10-14 07:46:22"
-property_value: approved="1"
+property_value: date_time_modified="2010-06-08 14:19:03"
+property_value: approved="0"
 property_value: spec_group1="1"
 property_value: spec_hidden_1="1"
 property_value: spec_site_1="C-term"
@@ -1656,7 +2301,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:2
 name: Amidated
-def: "Amidation" [RESID:AA0100 RESID:AA0099 RESID:AA0098 RESID:AA0097 RESID:AA0096 RESID:AA0095 RESID:AA0094 RESID:AA0093 RESID:AA0092 RESID:AA0091 RESID:AA0090 RESID:AA0089 RESID:AA0081 RESID:AA0082 RESID:AA0083 RESID:AA0084 RESID:AA0085 RESID:AA0086 RESID:AA0087 RESID:AA0088 FindMod:AMID ]
+def: "Amidation" [RESID:AA0088 RESID:AA0087 RESID:AA0086 RESID:AA0085 RESID:AA0084 RESID:AA0083 RESID:AA0082 RESID:AA0081 RESID:AA0089 RESID:AA0090 RESID:AA0091 RESID:AA0092 RESID:AA0093 RESID:AA0094 RESID:AA0095 RESID:AA0096 RESID:AA0097 RESID:AA0098 RESID:AA0099 RESID:AA0100 FindMod:AMID PMID:14588022 ]
 property_value: record_id="2"
 property_value: delta_mono_mass="-0.984016"
 property_value: delta_avge_mass="-0.9848"
@@ -1664,7 +2309,7 @@ property_value: delta_composition="H N O(-1)"
 property_value: username_of_poster="unimod"
 property_value: group_of_poster="admin"
 property_value: date_time_posted="2002-08-19 19:17:11"
-property_value: date_time_modified="2006-10-14 08:10:18"
+property_value: date_time_modified="2010-06-28 10:52:25"
 property_value: approved="1"
 property_value: spec_group1="1"
 property_value: spec_hidden_1="0"
@@ -2064,13 +2709,23 @@ property_value: delta_composition="H(5) C(3) N O"
 property_value: username_of_poster="unimod"
 property_value: group_of_poster="admin"
 property_value: date_time_posted="2002-08-19 19:17:11"
-property_value: date_time_modified="2006-10-16 10:35:51"
+property_value: date_time_modified="2010-12-21 16:57:03"
 property_value: approved="1"
 property_value: spec_group1="1"
 property_value: spec_hidden_1="0"
 property_value: spec_site_1="C"
 property_value: spec_position_1="Anywhere"
 property_value: spec_classification_1="Artefact"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="K"
+property_value: spec_position_2="Anywhere"
+property_value: spec_classification_2="Chemical derivative"
+property_value: spec_group3="3"
+property_value: spec_hidden_3="1"
+property_value: spec_site_3="N-term"
+property_value: spec_position_3="Any N-term"
+property_value: spec_classification_3="Chemical derivative"
 is_a: UNIMOD:0 ! unimod root node
 
 [Term]
@@ -2159,7 +2814,7 @@ property_value: delta_composition="H(2) C(2)"
 property_value: username_of_poster="fatcat"
 property_value: group_of_poster="users"
 property_value: date_time_posted="2004-08-12 20:01:03"
-property_value: date_time_modified="2006-10-14 19:44:29"
+property_value: date_time_modified="2010-02-25 10:49:11"
 property_value: approved="1"
 property_value: spec_group1="1"
 property_value: spec_hidden_1="1"
@@ -2171,6 +2826,11 @@ property_value: spec_hidden_2="1"
 property_value: spec_site_2="K"
 property_value: spec_position_2="Anywhere"
 property_value: spec_classification_2="Other"
+property_value: spec_group3="3"
+property_value: spec_hidden_3="1"
+property_value: spec_site_3="N-term"
+property_value: spec_position_3="Protein N-term"
+property_value: spec_classification_3="Other"
 is_a: UNIMOD:0 ! unimod root node
 
 [Term]
@@ -2209,7 +2869,7 @@ property_value: delta_composition="H(4) C(3)"
 property_value: username_of_poster="fatcat"
 property_value: group_of_poster="users"
 property_value: date_time_posted="2004-08-12 20:04:01"
-property_value: date_time_modified="2006-10-15 18:30:52"
+property_value: date_time_modified="2010-02-25 10:49:55"
 property_value: approved="1"
 property_value: spec_group1="1"
 property_value: spec_hidden_1="1"
@@ -2221,6 +2881,11 @@ property_value: spec_hidden_2="1"
 property_value: spec_site_2="K"
 property_value: spec_position_2="Anywhere"
 property_value: spec_classification_2="Other"
+property_value: spec_group3="3"
+property_value: spec_hidden_3="1"
+property_value: spec_site_3="N-term"
+property_value: spec_position_3="Protein N-term"
+property_value: spec_classification_3="Other"
 is_a: UNIMOD:0 ! unimod root node
 
 [Term]
@@ -2691,7 +3356,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:278
 name: Ethanolyl
-def: "Ethanolation of Cys" [PMID:15351294 ]
+def: "Ethanolation" [PMID:15351294 PMID:7730303 ]
 property_value: record_id="278"
 property_value: delta_mono_mass="44.026215"
 property_value: delta_avge_mass="44.0526"
@@ -2699,13 +3364,23 @@ property_value: delta_composition="H(4) C(2) O"
 property_value: username_of_poster="knierman"
 property_value: group_of_poster="users"
 property_value: date_time_posted="2005-01-11 04:26:47"
-property_value: date_time_modified="2006-10-16 10:01:41"
+property_value: date_time_modified="2010-04-28 18:12:10"
 property_value: approved="1"
 property_value: spec_group1="1"
 property_value: spec_hidden_1="0"
 property_value: spec_site_1="C"
 property_value: spec_position_1="Anywhere"
 property_value: spec_classification_1="Chemical derivative"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="K"
+property_value: spec_position_2="Anywhere"
+property_value: spec_classification_2="Chemical derivative"
+property_value: spec_group3="3"
+property_value: spec_hidden_3="1"
+property_value: spec_site_3="R"
+property_value: spec_position_3="Anywhere"
+property_value: spec_classification_3="Chemical derivative"
 is_a: UNIMOD:0 ! unimod root node
 
 [Term]
@@ -2739,7 +3414,7 @@ property_value: delta_composition="H(4) C(2)"
 property_value: username_of_poster="Qishanl"
 property_value: group_of_poster="users"
 property_value: date_time_posted="2005-01-27 23:18:07"
-property_value: date_time_modified="2009-07-02 10:23:31"
+property_value: date_time_modified="2009-10-02 18:28:37"
 property_value: approved="1"
 property_value: spec_group1="1"
 property_value: spec_hidden_1="1"
@@ -2761,6 +3436,16 @@ property_value: spec_hidden_4="1"
 property_value: spec_site_4="N-term"
 property_value: spec_position_4="Protein N-term"
 property_value: spec_classification_4="Chemical derivative"
+property_value: spec_group5="5"
+property_value: spec_hidden_5="1"
+property_value: spec_site_5="C-term"
+property_value: spec_position_5="Any C-term"
+property_value: spec_classification_5="Chemical derivative"
+property_value: spec_group6="6"
+property_value: spec_hidden_6="1"
+property_value: spec_site_6="D"
+property_value: spec_position_6="Anywhere"
+property_value: spec_classification_6="Chemical derivative"
 is_a: UNIMOD:0 ! unimod root node
 
 [Term]
@@ -2916,7 +3601,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:29
 name: SMA
-def: "N-Succinimidyl-3-morpholine acetate" [PMID:10446193 ]
+def: "N-Succinimidyl-2-morpholine acetate" [PMID:10446193 ]
 property_value: record_id="29"
 property_value: delta_mono_mass="127.063329"
 property_value: delta_avge_mass="127.1412"
@@ -2924,7 +3609,7 @@ property_value: delta_composition="H(9) C(6) N O(2)"
 property_value: username_of_poster="unimod"
 property_value: group_of_poster="admin"
 property_value: date_time_posted="2002-08-19 19:17:11"
-property_value: date_time_modified="2006-11-14 11:41:18"
+property_value: date_time_modified="2010-11-03 17:44:14"
 property_value: approved="1"
 property_value: spec_group1="1"
 property_value: spec_hidden_1="1"
@@ -2949,7 +3634,7 @@ property_value: delta_composition="H(32) C(19) N(4) O(3) S(2)"
 property_value: username_of_poster="tgreco"
 property_value: group_of_poster="users"
 property_value: date_time_posted="2005-03-03 22:56:52"
-property_value: date_time_modified="2006-11-14 11:14:29"
+property_value: date_time_modified="2010-12-03 16:28:07"
 property_value: approved="0"
 property_value: spec_group1="1"
 property_value: spec_hidden_1="1"
@@ -3634,7 +4319,7 @@ property_value: delta_composition="H(49) C(27) N(4) O(5) P S"
 property_value: username_of_poster="lmschopfer"
 property_value: group_of_poster="users"
 property_value: date_time_posted="2005-05-19 22:01:37"
-property_value: date_time_modified="2008-10-26 21:43:45"
+property_value: date_time_modified="2010-02-24 20:54:27"
 property_value: approved="0"
 property_value: spec_group1="1"
 property_value: spec_hidden_1="1"
@@ -3769,7 +4454,7 @@ property_value: delta_composition="H(34) C(19) N(3) O(5) P S"
 property_value: username_of_poster="lmschopfer"
 property_value: group_of_poster="users"
 property_value: date_time_posted="2005-07-21 20:54:00"
-property_value: date_time_modified="2007-01-10 16:25:18"
+property_value: date_time_modified="2010-12-03 16:24:45"
 property_value: approved="0"
 property_value: spec_group1="1"
 property_value: spec_hidden_1="1"
@@ -4394,7 +5079,7 @@ property_value: delta_composition="H(13) C(6) O(3) P"
 property_value: username_of_poster="lmschopfer"
 property_value: group_of_poster="users"
 property_value: date_time_posted="2005-09-14 18:05:04"
-property_value: date_time_modified="2008-10-26 21:45:07"
+property_value: date_time_modified="2010-02-24 20:53:53"
 property_value: approved="0"
 property_value: spec_group1="1"
 property_value: spec_hidden_1="1"
@@ -4576,7 +5261,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:37
 name: Trimethyl
-def: "tri-Methylation" [PMID:12590383 RESID:AA0074 RESID:AA0062 FindMod:TRIMETH ]
+def: "tri-Methylation" [FindMod:TRIMETH RESID:AA0062 PMID:12590383 RESID:AA0074 ]
 property_value: record_id="37"
 property_value: delta_mono_mass="42.046950"
 property_value: delta_avge_mass="42.0797"
@@ -4584,7 +5269,7 @@ property_value: delta_composition="H(6) C(3)"
 property_value: username_of_poster="unimod"
 property_value: group_of_poster="admin"
 property_value: date_time_posted="2002-08-19 19:17:11"
-property_value: date_time_modified="2006-10-18 14:31:46"
+property_value: date_time_modified="2011-02-03 10:02:45"
 property_value: approved="1"
 property_value: spec_group1="1"
 property_value: spec_hidden_1="1"
@@ -5701,7 +6386,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:421
 name: Sulfide
-def: "persulfide" [FindMod:CYSP RESID:AA0269 ]
+def: "persulfide" [RESID:AA0269 FindMod:CYSP ]
 property_value: record_id="421"
 property_value: delta_mono_mass="31.972071"
 property_value: delta_avge_mass="32.0650"
@@ -5709,13 +6394,18 @@ property_value: delta_composition="S"
 property_value: username_of_poster="unimod"
 property_value: group_of_poster="admin"
 property_value: date_time_posted="2005-10-15 17:22:45"
-property_value: date_time_modified="2006-10-15 18:05:03"
+property_value: date_time_modified="2010-02-14 11:06:23"
 property_value: approved="1"
 property_value: spec_group1="1"
 property_value: spec_hidden_1="1"
 property_value: spec_site_1="C"
 property_value: spec_position_1="Anywhere"
 property_value: spec_classification_1="Post-translational"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="D"
+property_value: spec_position_2="Anywhere"
+property_value: spec_classification_2="Post-translational"
 is_a: UNIMOD:0 ! unimod root node
 
 [Term]
@@ -5884,13 +6574,18 @@ property_value: delta_composition="H O(3) P HexNAc"
 property_value: username_of_poster="unimod"
 property_value: group_of_poster="admin"
 property_value: date_time_posted="2005-10-15 18:15:16"
-property_value: date_time_modified="2006-10-16 15:48:40"
+property_value: date_time_modified="2010-11-05 17:03:09"
 property_value: approved="1"
 property_value: spec_group1="1"
 property_value: spec_hidden_1="1"
 property_value: spec_site_1="S"
 property_value: spec_position_1="Anywhere"
 property_value: spec_classification_1="Other glycosylation"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="T"
+property_value: spec_position_2="Anywhere"
+property_value: spec_classification_2="O-linked glycosylation"
 is_a: UNIMOD:0 ! unimod root node
 
 [Term]
@@ -6804,13 +7499,23 @@ property_value: delta_composition="H(-4) 2H(4)"
 property_value: username_of_poster="yunwah"
 property_value: group_of_poster="users"
 property_value: date_time_posted="2006-02-20 11:44:19"
-property_value: date_time_modified="2006-10-17 11:52:44"
+property_value: date_time_modified="2010-06-04 15:12:04"
 property_value: approved="0"
 property_value: spec_group1="1"
 property_value: spec_hidden_1="1"
 property_value: spec_site_1="K"
 property_value: spec_position_1="Anywhere"
 property_value: spec_classification_1="Isotopic label"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="F"
+property_value: spec_position_2="Anywhere"
+property_value: spec_classification_2="Isotopic label"
+property_value: spec_group3="3"
+property_value: spec_hidden_3="1"
+property_value: spec_site_3="Y"
+property_value: spec_position_3="Anywhere"
+property_value: spec_classification_3="Isotopic label"
 is_a: UNIMOD:0 ! unimod root node
 
 [Term]
@@ -7011,7 +7716,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:5
 name: Carbamyl
-def: "Carbamylation" [RESID:AA0343 PMID:12203680 RESID:AA0332 PMID:10978403 ]
+def: "Carbamylation" [PMID:10978403 RESID:AA0332 RESID:AA0343 PMID:12203680 ]
 property_value: record_id="5"
 property_value: delta_mono_mass="43.005814"
 property_value: delta_avge_mass="43.0247"
@@ -7019,7 +7724,7 @@ property_value: delta_composition="H C N O"
 property_value: username_of_poster="unimod"
 property_value: group_of_poster="admin"
 property_value: date_time_posted="2002-08-19 19:17:11"
-property_value: date_time_modified="2006-11-14 11:09:40"
+property_value: date_time_modified="2010-03-03 15:36:53"
 property_value: approved="0"
 property_value: spec_group1="1"
 property_value: spec_hidden_1="0"
@@ -7046,6 +7751,21 @@ property_value: spec_hidden_5="1"
 property_value: spec_site_5="M"
 property_value: spec_position_5="Anywhere"
 property_value: spec_classification_5="Artefact"
+property_value: spec_group6="6"
+property_value: spec_hidden_6="1"
+property_value: spec_site_6="S"
+property_value: spec_position_6="Anywhere"
+property_value: spec_classification_6="Chemical derivative"
+property_value: spec_group7="7"
+property_value: spec_hidden_7="1"
+property_value: spec_site_7="T"
+property_value: spec_position_7="Anywhere"
+property_value: spec_classification_7="Chemical derivative"
+property_value: spec_group8="8"
+property_value: spec_hidden_8="1"
+property_value: spec_site_8="Y"
+property_value: spec_position_8="Anywhere"
+property_value: spec_classification_8="Chemical derivative"
 is_a: UNIMOD:0 ! unimod root node
 
 [Term]
@@ -7436,7 +8156,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:522
 name: Maleimide-PEO2-Biotin
-def: "Maleimide-PEO2-Biotin" []
+def: "Maleimide-Biotin" []
 property_value: record_id="522"
 property_value: delta_mono_mass="525.225719"
 property_value: delta_avge_mass="525.6183"
@@ -7444,7 +8164,7 @@ property_value: delta_composition="H(35) C(23) N(5) O(7) S"
 property_value: username_of_poster="ericjohansen"
 property_value: group_of_poster="users"
 property_value: date_time_posted="2006-08-11 02:49:51"
-property_value: date_time_modified="2006-10-17 14:17:58"
+property_value: date_time_modified="2010-12-03 16:13:49"
 property_value: approved="0"
 property_value: spec_group1="1"
 property_value: spec_hidden_1="1"
@@ -7456,7 +8176,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:523
 name: Sulfo-NHS-LC-LC-Biotin
-def: "Sulfo-NHS-LC-LC-Biotin" []
+def: "Biot_LC_LC" []
 property_value: record_id="523"
 property_value: delta_mono_mass="452.245726"
 property_value: delta_avge_mass="452.6106"
@@ -7464,7 +8184,7 @@ property_value: delta_composition="H(36) C(22) N(4) O(4) S"
 property_value: username_of_poster="unimod"
 property_value: group_of_poster="admin"
 property_value: date_time_posted="2006-08-31 18:01:50"
-property_value: date_time_modified="2006-10-17 14:16:14"
+property_value: date_time_modified="2010-12-03 16:11:08"
 property_value: approved="0"
 property_value: spec_group1="1"
 property_value: spec_hidden_1="1"
@@ -7476,36 +8196,6 @@ property_value: spec_hidden_2="1"
 property_value: spec_site_2="N-term"
 property_value: spec_position_2="Any N-term"
 property_value: spec_classification_2="Chemical derivative"
-is_a: UNIMOD:0 ! unimod root node
-
-[Term]
-id: UNIMOD:524
-name: CLIP_TRAQ_1
-def: "CLIP_TRAQ_1" []
-property_value: record_id="524"
-property_value: delta_mono_mass="140.094963"
-property_value: delta_avge_mass="140.1830"
-property_value: delta_composition="H(12) C(7) N(2) O"
-property_value: username_of_poster="overalllab"
-property_value: group_of_poster="users"
-property_value: date_time_posted="2006-09-15 02:21:17"
-property_value: date_time_modified="2006-10-17 18:03:21"
-property_value: approved="0"
-property_value: spec_group1="1"
-property_value: spec_hidden_1="1"
-property_value: spec_site_1="K"
-property_value: spec_position_1="Anywhere"
-property_value: spec_classification_1="Isotopic label"
-property_value: spec_group2="2"
-property_value: spec_hidden_2="1"
-property_value: spec_site_2="N-term"
-property_value: spec_position_2="Any N-term"
-property_value: spec_classification_2="Isotopic label"
-property_value: spec_group3="3"
-property_value: spec_hidden_3="1"
-property_value: spec_site_3="Y"
-property_value: spec_position_3="Anywhere"
-property_value: spec_classification_3="Isotopic label"
 is_a: UNIMOD:0 ! unimod root node
 
 [Term]
@@ -7855,8 +8545,8 @@ is_a: UNIMOD:0 ! unimod root node
 
 [Term]
 id: UNIMOD:538
-name: 15dB-biotin
-def: "15-deoxy-delta 12,14-Prostaglandin J2-biotinimide" []
+name: Biotin:Cayman-10141
+def: "was 15dB-biotin" []
 property_value: record_id="538"
 property_value: delta_mono_mass="626.386577"
 property_value: delta_avge_mass="626.8927"
@@ -7864,7 +8554,7 @@ property_value: delta_composition="H(54) C(35) N(4) O(4) S"
 property_value: username_of_poster="sevgh"
 property_value: group_of_poster=""
 property_value: date_time_posted="2006-10-17 18:13:45"
-property_value: date_time_modified="2006-10-17 18:13:45"
+property_value: date_time_modified="2010-12-03 16:08:40"
 property_value: approved="0"
 property_value: spec_group1="1"
 property_value: spec_hidden_1="1"
@@ -7875,8 +8565,8 @@ is_a: UNIMOD:0 ! unimod root node
 
 [Term]
 id: UNIMOD:539
-name: PGA1-biotin
-def: "Prostaglandin A1-biotinimide" []
+name: Biotin:Cayman-10013
+def: "was PGA1-biotin" []
 property_value: record_id="539"
 property_value: delta_mono_mass="660.428442"
 property_value: delta_avge_mass="660.9504"
@@ -7884,7 +8574,7 @@ property_value: delta_composition="H(60) C(36) N(4) O(5) S"
 property_value: username_of_poster="sevgh"
 property_value: group_of_poster=""
 property_value: date_time_posted="2006-10-17 18:24:06"
-property_value: date_time_modified="2006-10-17 18:24:06"
+property_value: date_time_modified="2010-12-03 16:07:57"
 property_value: approved="0"
 property_value: spec_group1="1"
 property_value: spec_hidden_1="1"
@@ -11444,7 +12134,7 @@ property_value: delta_composition="H(9) C(4) O(3) P"
 property_value: username_of_poster="lmschopfer"
 property_value: group_of_poster=""
 property_value: date_time_posted="2007-01-09 21:44:04"
-property_value: date_time_modified="2008-10-26 21:44:29"
+property_value: date_time_modified="2010-04-05 21:32:59"
 property_value: approved="0"
 property_value: spec_group1="1"
 property_value: spec_hidden_1="1"
@@ -11466,6 +12156,16 @@ property_value: spec_hidden_4="1"
 property_value: spec_site_4="K"
 property_value: spec_position_4="Anywhere"
 property_value: spec_classification_4="Chemical derivative"
+property_value: spec_group5="5"
+property_value: spec_hidden_5="1"
+property_value: spec_site_5="C"
+property_value: spec_position_5="Anywhere"
+property_value: spec_classification_5="Chemical derivative"
+property_value: spec_group6="6"
+property_value: spec_hidden_6="1"
+property_value: spec_site_6="H"
+property_value: spec_position_6="Anywhere"
+property_value: spec_classification_6="Chemical derivative"
 is_a: UNIMOD:0 ! unimod root node
 
 [Term]
@@ -11509,7 +12209,7 @@ property_value: delta_composition="H(15) C(7) O(2) P"
 property_value: username_of_poster="lmschopfer"
 property_value: group_of_poster=""
 property_value: date_time_posted="2007-01-10 16:04:46"
-property_value: date_time_modified="2007-01-13 21:06:41"
+property_value: date_time_modified="2010-04-29 08:38:50"
 property_value: approved="0"
 property_value: spec_group1="1"
 property_value: spec_hidden_1="1"
@@ -11526,6 +12226,16 @@ property_value: spec_hidden_3="1"
 property_value: spec_site_3="Y"
 property_value: spec_position_3="Anywhere"
 property_value: spec_classification_3="Chemical derivative"
+property_value: spec_group4="4"
+property_value: spec_hidden_4="1"
+property_value: spec_site_4="H"
+property_value: spec_position_4="Anywhere"
+property_value: spec_classification_4="Chemical derivative"
+property_value: spec_group5="5"
+property_value: spec_hidden_5="1"
+property_value: spec_site_5="K"
+property_value: spec_position_5="Anywhere"
+property_value: spec_classification_5="Chemical derivative"
 is_a: UNIMOD:0 ! unimod root node
 
 [Term]
@@ -11784,7 +12494,7 @@ property_value: delta_composition="H(20) C(12) N(2) O(2)"
 property_value: username_of_poster="JUergen.schaefer"
 property_value: group_of_poster=""
 property_value: date_time_posted="2007-03-02 09:29:50"
-property_value: date_time_modified="2007-03-03 18:21:42"
+property_value: date_time_modified="2010-02-17 19:57:34"
 property_value: approved="0"
 property_value: spec_group1="1"
 property_value: spec_hidden_1="0"
@@ -12395,8 +13105,8 @@ is_a: UNIMOD:0 ! unimod root node
 
 [Term]
 id: UNIMOD:800
-name: PentylamineBiotin
-def: "Used for labeling glutamine-donor substrate of transglutaminase" []
+name: Biotin:Thermo-21345
+def: "was PentylamineBiotin" []
 property_value: record_id="800"
 property_value: delta_mono_mass="311.166748"
 property_value: delta_avge_mass="311.4429"
@@ -12404,7 +13114,7 @@ property_value: delta_composition="H(25) C(15) N(3) O(2) S"
 property_value: username_of_poster="mengyi"
 property_value: group_of_poster=""
 property_value: date_time_posted="2007-12-03 13:56:58"
-property_value: date_time_modified="2007-12-04 09:00:49"
+property_value: date_time_modified="2010-12-03 16:06:50"
 property_value: approved="0"
 property_value: spec_group1="1"
 property_value: spec_hidden_1="1"
@@ -12435,8 +13145,8 @@ is_a: UNIMOD:0 ! unimod root node
 
 [Term]
 id: UNIMOD:811
-name: Biotin-PEO4-hydrazide
-def: "Pierce EZ link biotin hydrazide prod no. 21360" []
+name: Biotin:Thermo-21360
+def: "was Biotin-PEO4-hydrazide" []
 property_value: record_id="811"
 property_value: delta_mono_mass="487.246455"
 property_value: delta_avge_mass="487.6134"
@@ -12444,7 +13154,7 @@ property_value: delta_composition="H(37) C(21) N(5) O(6) S"
 property_value: username_of_poster="MCole18"
 property_value: group_of_poster=""
 property_value: date_time_posted="2007-12-12 15:23:23"
-property_value: date_time_modified="2007-12-14 18:09:17"
+property_value: date_time_modified="2010-12-03 16:05:51"
 property_value: approved="0"
 property_value: spec_group1="1"
 property_value: spec_hidden_1="1"
@@ -12484,7 +13194,7 @@ property_value: delta_composition="H(-2) C(-2) O(-2)"
 property_value: username_of_poster="timothyr"
 property_value: group_of_poster=""
 property_value: date_time_posted="2008-02-06 09:33:39"
-property_value: date_time_modified="2008-02-15 05:34:31"
+property_value: date_time_modified="2010-07-14 23:15:49"
 property_value: approved="0"
 property_value: spec_group1="1"
 property_value: spec_hidden_1="1"
@@ -12995,8 +13705,8 @@ is_a: UNIMOD:0 ! unimod root node
 
 [Term]
 id: UNIMOD:884
-name: ChromoBiotin
-def: "EZ-Link NHS-Chromogenic Biotin" []
+name: Biotin:Thermo-21325
+def: "was ChromoBiotin" []
 property_value: record_id="884"
 property_value: delta_mono_mass="695.310118"
 property_value: delta_avge_mass="695.8288"
@@ -13004,7 +13714,7 @@ property_value: delta_composition="H(45) C(34) N(7) O(7) S"
 property_value: username_of_poster="chens002"
 property_value: group_of_poster=""
 property_value: date_time_posted="2008-10-20 13:26:20"
-property_value: date_time_modified="2008-10-26 21:40:59"
+property_value: date_time_modified="2010-12-03 16:04:54"
 property_value: approved="0"
 property_value: spec_group1="1"
 property_value: spec_hidden_1="1"
@@ -13018,13 +13728,13 @@ id: UNIMOD:885
 name: Label:13C(1)2H(3)+Oxidation
 def: "Oxidised methionine 13C(1)2H(3) SILAC label" []
 property_value: record_id="885"
-property_value: delta_mono_mass="35.040575"
-property_value: delta_avge_mass="35.0451"
-property_value: delta_composition="2H(3) 13C O"
+property_value: delta_mono_mass="20.017100"
+property_value: delta_avge_mass="20.0105"
+property_value: delta_composition="H(-3) 2H(3) C(-1) 13C O"
 property_value: username_of_poster="BThomas"
 property_value: group_of_poster=""
 property_value: date_time_posted="2008-10-24 09:47:20"
-property_value: date_time_modified="2008-10-26 21:38:50"
+property_value: date_time_modified="2009-09-25 13:15:07"
 property_value: approved="0"
 property_value: spec_group1="1"
 property_value: spec_hidden_1="1"
@@ -13301,9 +14011,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:898
 name: pyrophospho
-def: "pyrophosphorylation of Ser/Thr" [PMID:PMID: 17873058 ]
-
-Protein pyrophosphorylation by inositol pyrophosphates is a posttranslational event. ]
+def: "pyrophosphorylation of Ser/Thr" [PMID:17873058 ]
 property_value: record_id="898"
 property_value: delta_mono_mass="159.932662"
 property_value: delta_avge_mass="159.9598"
@@ -13311,7 +14019,7 @@ property_value: delta_composition="H(2) O(6) P(2)"
 property_value: username_of_poster="Kramerh"
 property_value: group_of_poster=""
 property_value: date_time_posted="2009-02-23 20:54:00"
-property_value: date_time_modified="2009-03-13 16:08:51"
+property_value: date_time_modified="2009-11-11 09:39:17"
 property_value: approved="0"
 property_value: spec_group1="1"
 property_value: spec_hidden_1="1"
@@ -13393,7 +14101,7 @@ is_a: UNIMOD:0 ! unimod root node
 [Term]
 id: UNIMOD:901
 name: 4AcAllylGal
-def: "2,3,4,6-tetra-O-Acetyl-1-allyl-α-D-galactopyranoside modification of cysteine" [PMID:18275052 ]
+def: "2,3,4,6-tetra-O-Acetyl-1-allyl-α-D-galactopyranoside modification of cysteine" [PMID:19798718 PMID:18275052 ]
 property_value: record_id="901"
 property_value: delta_mono_mass="372.142033"
 property_value: delta_avge_mass="372.3671"
@@ -13401,7 +14109,7 @@ property_value: delta_composition="H(24) C(17) O(9)"
 property_value: username_of_poster="paolo.nanni"
 property_value: group_of_poster=""
 property_value: date_time_posted="2009-03-06 16:08:43"
-property_value: date_time_modified="2009-03-13 15:50:46"
+property_value: date_time_modified="2010-02-02 14:27:07"
 property_value: approved="0"
 property_value: spec_group1="1"
 property_value: spec_hidden_1="1"
@@ -13521,7 +14229,7 @@ property_value: delta_composition="O Hex"
 property_value: username_of_poster="zientek"
 property_value: group_of_poster=""
 property_value: date_time_posted="2009-04-21 18:11:24"
-property_value: date_time_modified="2009-05-01 16:44:39"
+property_value: date_time_modified="2010-03-02 20:53:08"
 property_value: approved="0"
 property_value: spec_group1="1"
 property_value: spec_hidden_1="1"
@@ -13656,13 +14364,33 @@ property_value: delta_composition="H(4) C(4) O(3)"
 property_value: username_of_poster="xwei"
 property_value: group_of_poster=""
 property_value: date_time_posted="2009-07-15 23:43:13"
-property_value: date_time_modified="2009-07-15 23:43:13"
+property_value: date_time_modified="2010-11-24 17:59:18"
 property_value: approved="0"
-property_value: spec_group0="0"
-property_value: spec_hidden_0="0"
-property_value: spec_site_0="S"
-property_value: spec_position_0="Anywhere"
-property_value: spec_classification_0="Chemical derivative"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="S"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:915
+name: Ethoxyformyl
+def: "Ethoxyformylation" []
+property_value: record_id="915"
+property_value: delta_mono_mass="73.028954"
+property_value: delta_avge_mass="73.0706"
+property_value: delta_composition="H(5) C(3) O(2)"
+property_value: username_of_poster="BThomas"
+property_value: group_of_poster=""
+property_value: date_time_posted="2009-07-24 17:00:29"
+property_value: date_time_modified="2009-07-26 22:05:56"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="H"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
 is_a: UNIMOD:0 ! unimod root node
 
 [Term]
@@ -13687,6 +14415,76 @@ property_value: spec_group2="2"
 property_value: spec_hidden_2="1"
 property_value: spec_site_2="N-term"
 property_value: spec_position_2="Any N-term"
+property_value: spec_classification_2="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:923
+name: Label:13C(4)15N(2)+GlyGly
+def: "13C(4) 15N(2) Lysine glygly" [PMID:12716131 ]
+property_value: record_id="923"
+property_value: delta_mono_mass="120.050417"
+property_value: delta_avge_mass="120.0601"
+property_value: delta_composition="H(6) 13C(4) 15N(2) O(2)"
+property_value: username_of_poster="mpcusack"
+property_value: group_of_poster=""
+property_value: date_time_posted="2009-09-16 21:04:07"
+property_value: date_time_modified="2009-10-02 18:13:08"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="K"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Isotopic label"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:926
+name: ethylamino
+def: "ethyl amino" []
+property_value: record_id="926"
+property_value: delta_mono_mass="27.047285"
+property_value: delta_avge_mass="27.0684"
+property_value: delta_composition="H(5) C(2) N O(-1)"
+property_value: username_of_poster="cbatthya"
+property_value: group_of_poster=""
+property_value: date_time_posted="2009-09-17 20:37:18"
+property_value: date_time_modified="2009-10-02 18:21:10"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="S"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="T"
+property_value: spec_position_2="Anywhere"
+property_value: spec_classification_2="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:928
+name: MercaptoEthanol
+def: "2-OH-ethyl thio-Ser" []
+property_value: record_id="928"
+property_value: delta_mono_mass="60.003371"
+property_value: delta_avge_mass="60.1182"
+property_value: delta_composition="H(4) C(2) S"
+property_value: username_of_poster="cbatthya"
+property_value: group_of_poster=""
+property_value: date_time_posted="2009-09-17 20:43:13"
+property_value: date_time_modified="2009-10-02 18:23:38"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="S"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="T"
+property_value: spec_position_2="Anywhere"
 property_value: spec_classification_2="Chemical derivative"
 is_a: UNIMOD:0 ! unimod root node
 
@@ -13716,6 +14514,201 @@ property_value: spec_classification_2="Chemical derivative"
 is_a: UNIMOD:0 ! unimod root node
 
 [Term]
+id: UNIMOD:931
+name: EthylAmide
+def: "solvolysis of amide group on Asn or Gln by ethanol" []
+property_value: record_id="931"
+property_value: delta_mono_mass="29.039125"
+property_value: delta_avge_mass="29.0611"
+property_value: delta_composition="H(5) C(2)"
+property_value: username_of_poster="BThomas"
+property_value: group_of_poster=""
+property_value: date_time_posted="2009-09-22 11:05:21"
+property_value: date_time_modified="2009-10-02 18:30:37"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="N"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="Q"
+property_value: spec_position_2="Anywhere"
+property_value: spec_classification_2="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:932
+name: VFQQQTGG
+def: "SUMOylation by SUMO-2/3 (formic acid cleavage)" []
+property_value: record_id="932"
+property_value: delta_mono_mass="845.403166"
+property_value: delta_avge_mass="845.8991"
+property_value: delta_composition="H(55) C(37) N(11) O(12)"
+property_value: username_of_poster="oosula"
+property_value: group_of_poster=""
+property_value: date_time_posted="2009-09-24 16:11:11"
+property_value: date_time_modified="2010-02-02 18:25:30"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="K"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Other"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:933
+name: VIEVYQEQTGG
+def: "SUMOylation by SUMO-1 (formic acid cleavage)" []
+property_value: record_id="933"
+property_value: delta_mono_mass="1203.577168"
+property_value: delta_avge_mass="1204.2859"
+property_value: delta_composition="H(81) C(53) N(13) O(19)"
+property_value: username_of_poster="oosula"
+property_value: group_of_poster=""
+property_value: date_time_posted="2009-09-24 16:15:34"
+property_value: date_time_modified="2009-10-02 18:31:51"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="K"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Other"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:934
+name: AMTzHexNAc2
+def: "Photocleavable Biotin + GalNAz on O-GlcNAc" []
+property_value: record_id="934"
+property_value: delta_mono_mass="502.202341"
+property_value: delta_avge_mass="502.4757"
+property_value: delta_composition="H(30) C(19) N(6) O(10)"
+property_value: username_of_poster="mskim"
+property_value: group_of_poster=""
+property_value: date_time_posted="2009-10-08 18:05:00"
+property_value: date_time_modified="2010-10-03 13:45:56"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="N"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="S"
+property_value: spec_position_2="Anywhere"
+property_value: spec_classification_2="Chemical derivative"
+property_value: spec_group3="3"
+property_value: spec_hidden_3="1"
+property_value: spec_site_3="T"
+property_value: spec_position_3="Anywhere"
+property_value: spec_classification_3="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:935
+name: Atto495Maleimide
+def: "High molecular absorption maleimide label for proteins" []
+property_value: record_id="935"
+property_value: delta_mono_mass="474.250515"
+property_value: delta_avge_mass="474.5747"
+property_value: delta_composition="H(32) C(27) N(5) O(3)"
+property_value: username_of_poster="anikolakakis"
+property_value: group_of_poster=""
+property_value: date_time_posted="2009-10-14 18:48:56"
+property_value: date_time_modified="2009-10-16 14:34:17"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="C"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:936
+name: Chlorination
+def: "Chlorination of tyrosine residues" [PMID:14660678 ]
+property_value: record_id="936"
+property_value: delta_mono_mass="34.968853"
+property_value: delta_avge_mass="35.4530"
+property_value: delta_composition="Cl"
+property_value: username_of_poster="Bryan"
+property_value: group_of_poster=""
+property_value: date_time_posted="2009-10-15 17:07:41"
+property_value: date_time_modified="2009-10-16 14:40:43"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="Y"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Artefact"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:937
+name: dichlorination
+def: "Dichlorination of tyrosine residues" [PMID:11733505 ]
+property_value: record_id="937"
+property_value: delta_mono_mass="69.937705"
+property_value: delta_avge_mass="70.9060"
+property_value: delta_composition="Cl(2)"
+property_value: username_of_poster="Bryan"
+property_value: group_of_poster=""
+property_value: date_time_posted="2009-10-15 17:12:42"
+property_value: date_time_modified="2009-10-16 14:40:19"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="Y"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Artefact"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:938
+name: AROD
+def: "Cysteine modifier" []
+property_value: record_id="938"
+property_value: delta_mono_mass="820.336015"
+property_value: delta_avge_mass="820.9790"
+property_value: delta_composition="H(52) C(35) N(10) O(9) S(2)"
+property_value: username_of_poster="hbromage"
+property_value: group_of_poster=""
+property_value: date_time_posted="2009-10-15 19:27:20"
+property_value: date_time_modified="2009-10-16 14:41:49"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="C"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:939
+name: Cys->methylaminoAla
+def: "carbamidomethylated Cys that undergoes beta-elimination and Michael addition of methylamine" []
+property_value: record_id="939"
+property_value: delta_mono_mass="-2.945522"
+property_value: delta_avge_mass="-3.0238"
+property_value: delta_composition="H(3) C N S(-1)"
+property_value: username_of_poster="cbatthya"
+property_value: group_of_poster=""
+property_value: date_time_posted="2009-10-16 13:50:33"
+property_value: date_time_modified="2009-10-16 14:44:00"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="C"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
 id: UNIMOD:94
 name: IMID
 def: "IMID d0" [PMID:11746907 ]
@@ -13733,6 +14726,206 @@ property_value: spec_hidden_1="1"
 property_value: spec_site_1="K"
 property_value: spec_position_1="Anywhere"
 property_value: spec_classification_1="Isotopic label"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:940
+name: Cys->ethylaminoAla
+def: "Carbamidomethylated Cys that undergoes beta-elimination and Michael addition of ethylamine" []
+property_value: record_id="940"
+property_value: delta_mono_mass="11.070128"
+property_value: delta_avge_mass="11.0028"
+property_value: delta_composition="H(5) C(2) N S(-1)"
+property_value: username_of_poster="cbatthya"
+property_value: group_of_poster=""
+property_value: date_time_posted="2009-10-16 13:53:46"
+property_value: date_time_modified="2009-10-16 14:44:21"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="C"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:941
+name: DNPS
+def: "2,4-Dinitrobenzenesulfenyl" []
+property_value: record_id="941"
+property_value: delta_mono_mass="198.981352"
+property_value: delta_avge_mass="199.1640"
+property_value: delta_composition="H(3) C(6) N(2) O(4) S"
+property_value: username_of_poster="odra.pinato"
+property_value: group_of_poster=""
+property_value: date_time_posted="2009-10-19 13:08:56"
+property_value: date_time_modified="2009-10-30 18:23:17"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="C"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="W"
+property_value: spec_position_2="Anywhere"
+property_value: spec_classification_2="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:942
+name: SulfoGMBS
+def: "High molecular absorption label for proteins" []
+property_value: record_id="942"
+property_value: delta_mono_mass="458.162391"
+property_value: delta_avge_mass="458.5306"
+property_value: delta_composition="H(26) C(22) N(4) O(5) S"
+property_value: username_of_poster="anikolakakis"
+property_value: group_of_poster=""
+property_value: date_time_posted="2009-10-26 19:28:04"
+property_value: date_time_modified="2009-11-13 17:02:06"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="C"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Other"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:943
+name: DimethylamineGMBS
+def: "Modified GMBS X linker for proteins" []
+property_value: record_id="943"
+property_value: delta_mono_mass="267.158292"
+property_value: delta_avge_mass="267.3241"
+property_value: delta_composition="H(21) C(13) N(3) O(3)"
+property_value: username_of_poster="anikolakakis"
+property_value: group_of_poster=""
+property_value: date_time_posted="2009-11-04 20:26:57"
+property_value: date_time_modified="2009-11-13 16:38:29"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="C"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:944
+name: Label:15N(2)2H(9)
+def: "SILAC label" []
+property_value: record_id="944"
+property_value: delta_mono_mass="11.050561"
+property_value: delta_avge_mass="11.0423"
+property_value: delta_composition="H(-9) 2H(9) N(-2) 15N(2)"
+property_value: username_of_poster="mskim"
+property_value: group_of_poster=""
+property_value: date_time_posted="2009-11-25 22:32:49"
+property_value: date_time_modified="2009-12-07 20:03:50"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="K"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Isotopic label"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:946
+name: LG-anhydrolactam
+def: "Levuglandinyl-lysine anhydrolactam adduct" [PMID:Boutaud O, Brame CJ, Salomon RG, Roberts LJ 2nd, Oates JA. Characterization of the lysyl adducts formed from prostaglandin H2 via the levuglandin pathway. Biochemistry. 1999 Jul 20;38(29):9389-96. ]
+property_value: record_id="946"
+property_value: delta_mono_mass="314.188195"
+property_value: delta_avge_mass="314.4186"
+property_value: delta_composition="H(26) C(20) O(3)"
+property_value: username_of_poster="wridenour"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-01-12 01:08:28"
+property_value: date_time_modified="2010-02-01 09:12:29"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="K"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Post-translational"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="N-term"
+property_value: spec_position_2="Any N-term"
+property_value: spec_classification_2="Post-translational"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:947
+name: LG-pyrrole
+def: "Levuglandinyl-lysine pyrrole adduct" [PMID:Boutaud O, Brame CJ, Salomon RG, Roberts LJ 2nd, Oates JA. Characterization of the lysyl adducts formed from prostaglandin H2 via the levuglandin pathway. Biochemistry. 1999 Jul 20;38(29):9389-96. ]
+property_value: record_id="947"
+property_value: delta_mono_mass="316.203845"
+property_value: delta_avge_mass="316.4345"
+property_value: delta_composition="H(28) C(20) O(3)"
+property_value: username_of_poster="wridenour"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-01-12 01:12:38"
+property_value: date_time_modified="2010-02-01 09:11:56"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="K"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Post-translational"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="N-term"
+property_value: spec_position_2="Any N-term"
+property_value: spec_classification_2="Post-translational"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:948
+name: LG-anhyropyrrole
+def: "Levuglandinyl-lysine anhyropyrrole adduct" [PMID:Boutaud O, Brame CJ, Salomon RG, Roberts LJ 2nd, Oates JA., Characterization of the lysyl adducts formed from prostaglandin H2 via the levuglandin pathway. Biochemistry. 1999 Jul 20;38(29):9389-96. ]
+property_value: record_id="948"
+property_value: delta_mono_mass="298.193280"
+property_value: delta_avge_mass="298.4192"
+property_value: delta_composition="H(26) C(20) O(2)"
+property_value: username_of_poster="wridenour"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-01-12 01:14:46"
+property_value: date_time_modified="2010-02-01 09:11:30"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="K"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Post-translational"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="N-term"
+property_value: spec_position_2="Any N-term"
+property_value: spec_classification_2="Post-translational"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:949
+name: 3-deoxyglucosone
+def: "Condensation product of 3-deoxyglucosone" []
+property_value: record_id="949"
+property_value: delta_mono_mass="144.042259"
+property_value: delta_avge_mass="144.1253"
+property_value: delta_composition="H(8) C(6) O(4)"
+property_value: username_of_poster="kimzey"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-01-15 18:19:17"
+property_value: date_time_modified="2010-01-18 13:20:51"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="R"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Multiple"
 is_a: UNIMOD:0 ! unimod root node
 
 [Term]
@@ -13756,6 +14949,356 @@ property_value: spec_classification_1="Isotopic label"
 is_a: UNIMOD:0 ! unimod root node
 
 [Term]
+id: UNIMOD:950
+name: Cation:Li
+def: "Replacement of proton by lithium" []
+property_value: record_id="950"
+property_value: delta_mono_mass="6.008178"
+property_value: delta_avge_mass="5.9331"
+property_value: delta_composition="H(-1) Li"
+property_value: username_of_poster="unimod"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-01-20 12:17:12"
+property_value: date_time_modified="2010-01-20 12:17:13"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="D"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Artefact"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="E"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Artefact"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="C-term"
+property_value: spec_position_2="Any C-term"
+property_value: spec_classification_2="Artefact"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:951
+name: Cation:Ca[II]
+def: "Replacement of 2 protons by calcium" []
+property_value: record_id="951"
+property_value: delta_mono_mass="37.946941"
+property_value: delta_avge_mass="38.0621"
+property_value: delta_composition="H(-2) Ca"
+property_value: username_of_poster="unimod"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-01-20 12:20:03"
+property_value: date_time_modified="2010-01-20 12:36:41"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="E"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Artefact"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="D"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Artefact"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="C-term"
+property_value: spec_position_2="Any C-term"
+property_value: spec_classification_2="Artefact"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:952
+name: Cation:Fe[II]
+def: "Replacement of 2 protons by iron" []
+property_value: record_id="952"
+property_value: delta_mono_mass="53.919289"
+property_value: delta_avge_mass="53.8291"
+property_value: delta_composition="H(-2) Fe"
+property_value: username_of_poster="unimod"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-01-20 12:21:03"
+property_value: date_time_modified="2010-01-20 12:21:03"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="D"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Artefact"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="E"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Artefact"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="C-term"
+property_value: spec_position_2="Any C-term"
+property_value: spec_classification_2="Artefact"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:953
+name: Cation:Ni[II]
+def: "Replacement of 2 protons by nickel" []
+property_value: record_id="953"
+property_value: delta_mono_mass="55.919696"
+property_value: delta_avge_mass="56.6775"
+property_value: delta_composition="H(-2) Ni"
+property_value: username_of_poster="unimod"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-01-20 12:22:52"
+property_value: date_time_modified="2010-01-20 12:22:52"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="D"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Artefact"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="E"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Artefact"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="C-term"
+property_value: spec_position_2="Any C-term"
+property_value: spec_classification_2="Artefact"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:954
+name: Cation:Zn[II]
+def: "Replacement of 2 protons by zinc" []
+property_value: record_id="954"
+property_value: delta_mono_mass="61.913495"
+property_value: delta_avge_mass="63.3931"
+property_value: delta_composition="H(-2) Zn"
+property_value: username_of_poster="unimod"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-01-20 12:23:59"
+property_value: date_time_modified="2010-01-20 12:24:16"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="E"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Artefact"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="D"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Artefact"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="C-term"
+property_value: spec_position_2="Any C-term"
+property_value: spec_classification_2="Artefact"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:955
+name: Cation:Ag
+def: "Replacement of proton by silver" []
+property_value: record_id="955"
+property_value: delta_mono_mass="105.897267"
+property_value: delta_avge_mass="106.8603"
+property_value: delta_composition="H(-1) Ag"
+property_value: username_of_poster="unimod"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-01-20 12:30:59"
+property_value: date_time_modified="2010-01-20 12:30:59"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="D"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Artefact"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="E"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Artefact"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="C-term"
+property_value: spec_position_2="Any C-term"
+property_value: spec_classification_2="Artefact"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:956
+name: Cation:Mg[II]
+def: "Replacement of 2 protons by magnesium" []
+property_value: record_id="956"
+property_value: delta_mono_mass="21.969392"
+property_value: delta_avge_mass="22.2891"
+property_value: delta_composition="H(-2) Mg"
+property_value: username_of_poster="unimod"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-01-20 12:36:18"
+property_value: date_time_modified="2010-01-20 12:36:18"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="D"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Artefact"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="E"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Artefact"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="C-term"
+property_value: spec_position_2="Any C-term"
+property_value: spec_classification_2="Artefact"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:957
+name: 2-succinyl
+def: "S-(2-succinyl) cysteine" [PMID:18448829 ]
+property_value: record_id="957"
+property_value: delta_mono_mass="116.010959"
+property_value: delta_avge_mass="116.0722"
+property_value: delta_composition="H(4) C(4) O(4)"
+property_value: username_of_poster="BThomas"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-01-26 09:57:53"
+property_value: date_time_modified="2010-10-15 15:51:20"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="C"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:958
+name: Propargylamine
+def: "propargylamine" []
+property_value: record_id="958"
+property_value: delta_mono_mass="37.031634"
+property_value: delta_avge_mass="37.0632"
+property_value: delta_composition="H(3) C(3) N O(-1)"
+property_value: username_of_poster="ywswansea"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-01-26 14:37:33"
+property_value: date_time_modified="2010-02-01 09:26:28"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="C-term"
+property_value: spec_position_1="Any C-term"
+property_value: spec_classification_1="Chemical derivative"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="D"
+property_value: spec_position_2="Anywhere"
+property_value: spec_classification_2="Chemical derivative"
+property_value: spec_group3="3"
+property_value: spec_hidden_3="1"
+property_value: spec_site_3="E"
+property_value: spec_position_3="Anywhere"
+property_value: spec_classification_3="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:959
+name: Phosphopropargyl
+def: "phospho-propargylamine" []
+property_value: record_id="959"
+property_value: delta_mono_mass="116.997965"
+property_value: delta_avge_mass="117.0431"
+property_value: delta_composition="H(4) C(3) N O(2) P"
+property_value: username_of_poster="ywswansea"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-01-26 14:42:08"
+property_value: date_time_modified="2010-02-01 09:25:52"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="S"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Multiple"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="T"
+property_value: spec_position_2="Anywhere"
+property_value: spec_classification_2="Multiple"
+property_value: spec_group3="3"
+property_value: spec_hidden_3="1"
+property_value: spec_site_3="Y"
+property_value: spec_position_3="Anywhere"
+property_value: spec_classification_3="Multiple"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:960
+name: SUMO2135
+def: "SUMOylation by SUMO-1 after tryptic cleavage" []
+property_value: record_id="960"
+property_value: delta_mono_mass="2135.920496"
+property_value: delta_avge_mass="2137.2343"
+property_value: delta_composition="H(137) C(90) N(21) O(37) S"
+property_value: username_of_poster="oosula"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-02-02 18:17:15"
+property_value: date_time_modified="2010-02-14 11:28:47"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="K"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Other"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:961
+name: SUMO3549
+def: "SUMOylation by SUMO-2/3 after tryptic cleavage" []
+property_value: record_id="961"
+property_value: delta_mono_mass="3549.536568"
+property_value: delta_avge_mass="3551.6672"
+property_value: delta_composition="H(224) C(150) N(38) O(60) S"
+property_value: username_of_poster="oosula"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-02-02 18:21:23"
+property_value: date_time_modified="2010-02-14 11:27:47"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="K"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Other"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:967
+name: thioacylPA
+def: "membrane protein extraction" []
+property_value: record_id="967"
+property_value: delta_mono_mass="159.035399"
+property_value: delta_avge_mass="159.2062"
+property_value: delta_composition="H(9) C(6) N O(2) S"
+property_value: username_of_poster="tmiwamoto"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-02-05 06:00:39"
+property_value: date_time_modified="2010-04-05 21:31:02"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="K"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
 id: UNIMOD:97
 name: Propionamide:2H(3)
 def: "Acrylamide d3" []
@@ -13773,5 +15316,535 @@ property_value: spec_hidden_1="1"
 property_value: spec_site_1="C"
 property_value: spec_position_1="Anywhere"
 property_value: spec_classification_1="Isotopic label"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:971
+name: maleimide3
+def: "maleimide-3-saccharide" [PMID:18925771 ]
+property_value: record_id="971"
+property_value: delta_mono_mass="969.366232"
+property_value: delta_avge_mass="969.8975"
+property_value: delta_composition="H(59) C(37) N(7) O(23)"
+property_value: username_of_poster="hooverdm"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-02-12 17:23:33"
+property_value: date_time_modified="2010-04-05 21:30:05"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="K"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Post-translational"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="C"
+property_value: spec_position_2="Anywhere"
+property_value: spec_classification_2="Post-translational"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:972
+name: maleimide5
+def: "maleimide-5-saccharide" [PMID:18925771 ]
+property_value: record_id="972"
+property_value: delta_mono_mass="1293.471879"
+property_value: delta_avge_mass="1294.1787"
+property_value: delta_composition="H(79) C(49) N(7) O(33)"
+property_value: username_of_poster="hooverdm"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-02-12 17:25:52"
+property_value: date_time_modified="2010-04-05 21:29:47"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="C"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Post-translational"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="K"
+property_value: spec_position_2="Anywhere"
+property_value: spec_classification_2="Post-translational"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:973
+name: Puromycin
+def: "Puromycin" [PMID:10666460 ]
+property_value: record_id="973"
+property_value: delta_mono_mass="453.212452"
+property_value: delta_avge_mass="453.4943"
+property_value: delta_composition="H(27) C(22) N(7) O(4)"
+property_value: username_of_poster="hooverdm"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-02-12 20:50:31"
+property_value: date_time_modified="2010-04-12 15:38:52"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="C-term"
+property_value: spec_position_1="Any C-term"
+property_value: spec_classification_1="Co-translational"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:975
+name: Chlorpyrifos
+def: "O,O-diethyl o-3,5,6-trichloro-2-pyridyl phosphorothioate" []
+property_value: record_id="975"
+property_value: delta_mono_mass="153.013912"
+property_value: delta_avge_mass="153.1598"
+property_value: delta_composition="H(10) C(4) O(2) P S"
+property_value: username_of_poster="lmschopfer"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-02-24 20:59:41"
+property_value: date_time_modified="2010-04-05 21:28:28"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="S"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="T"
+property_value: spec_position_2="Anywhere"
+property_value: spec_classification_2="Chemical derivative"
+property_value: spec_group3="3"
+property_value: spec_hidden_3="1"
+property_value: spec_site_3="Y"
+property_value: spec_position_3="Anywhere"
+property_value: spec_classification_3="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:977
+name: Carbofuran
+def: "2,3-dihydro-2,2-dimethyl-7-benzofuranol N-methyl carbamate" []
+property_value: record_id="977"
+property_value: delta_mono_mass="58.029289"
+property_value: delta_avge_mass="58.0593"
+property_value: delta_composition="H(4) C(2) N O"
+property_value: username_of_poster="lmschopfer"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-02-24 21:10:32"
+property_value: date_time_modified="2010-04-05 21:27:53"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="S"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:978
+name: BITC
+def: "Benzyl isothiocyanate" []
+property_value: record_id="978"
+property_value: delta_mono_mass="149.029920"
+property_value: delta_avge_mass="149.2129"
+property_value: delta_composition="H(7) C(8) N S"
+property_value: username_of_poster="miyoshin"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-03-09 09:42:12"
+property_value: date_time_modified="2010-04-05 21:26:31"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="C"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="K"
+property_value: spec_position_2="Anywhere"
+property_value: spec_classification_2="Chemical derivative"
+property_value: spec_group3="3"
+property_value: spec_hidden_3="1"
+property_value: spec_site_3="N-term"
+property_value: spec_position_3="Any N-term"
+property_value: spec_classification_3="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:979
+name: PEITC
+def: "Phenethyl isothiocyanate" []
+property_value: record_id="979"
+property_value: delta_mono_mass="163.045570"
+property_value: delta_avge_mass="163.2395"
+property_value: delta_composition="H(9) C(9) N S"
+property_value: username_of_poster="miyoshin"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-03-09 10:06:18"
+property_value: date_time_modified="2010-04-05 21:26:00"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="C"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="K"
+property_value: spec_position_2="Anywhere"
+property_value: spec_classification_2="Chemical derivative"
+property_value: spec_group3="3"
+property_value: spec_hidden_3="1"
+property_value: spec_site_3="N-term"
+property_value: spec_position_3="Any N-term"
+property_value: spec_classification_3="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:981
+name: glucosone
+def: "Condensation product of glucosone" []
+property_value: record_id="981"
+property_value: delta_mono_mass="160.037173"
+property_value: delta_avge_mass="160.1247"
+property_value: delta_composition="H(8) C(6) O(5)"
+property_value: username_of_poster="kimzey"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-03-31 00:28:53"
+property_value: date_time_modified="2010-04-05 21:25:21"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="R"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Other"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:984
+name: cysTMT
+def: "Native cysteine-reactive Tandem Mass Tag®" []
+property_value: record_id="984"
+property_value: delta_mono_mass="299.166748"
+property_value: delta_avge_mass="299.4322"
+property_value: delta_composition="H(25) C(14) N(3) O(2) S"
+property_value: username_of_poster="jorogers6"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-04-22 21:57:44"
+property_value: date_time_modified="2010-04-28 18:04:40"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="C"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:985
+name: cysTMT6plex
+def: "cysteine-reactive Sixplex Tandem Mass Tag®" []
+property_value: record_id="985"
+property_value: delta_mono_mass="304.177202"
+property_value: delta_avge_mass="304.3962"
+property_value: delta_composition="H(25) C(10) 13C(4) N(2) 15N O(2) S"
+property_value: username_of_poster="jorogers6"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-04-22 22:05:46"
+property_value: date_time_modified="2010-04-22 22:06:15"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="0"
+property_value: spec_site_1="C"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Isotopic label"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:986
+name: Label:13C(6)+Dimethyl
+def: "Dimethyl 13C(6) Silac label" [FindMod:DIMETH PMID:Stable-isotope dimethyl labeling for quantitative proteomics ]
+property_value: record_id="986"
+property_value: delta_mono_mass="34.051429"
+property_value: delta_avge_mass="34.0091"
+property_value: delta_composition="H(4) C(-4) 13C(6)"
+property_value: username_of_poster="glick2"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-05-09 10:48:19"
+property_value: date_time_modified="2010-05-14 16:19:43"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="K"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Isotopic label"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:987
+name: Label:13C(6)15N(2)+Dimethyl
+def: "Dimethyl 13C(6)15N(2) Silac label" [FindMod:DIMETH ]
+property_value: record_id="987"
+property_value: delta_mono_mass="36.045499"
+property_value: delta_avge_mass="35.9959"
+property_value: delta_composition="H(4) C(-4) 13C(6) N(-2) 15N(2)"
+property_value: username_of_poster="glick2"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-05-09 10:57:55"
+property_value: date_time_modified="2010-05-14 16:20:12"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="K"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Isotopic label"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:989
+name: Ammonium
+def: "replacement of proton with ammonium ion" []
+property_value: record_id="989"
+property_value: delta_mono_mass="17.026549"
+property_value: delta_avge_mass="17.0305"
+property_value: delta_composition="H(3) N"
+property_value: username_of_poster="BThomas"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-05-18 10:32:03"
+property_value: date_time_modified="2010-06-04 15:08:34"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="C-term"
+property_value: spec_position_1="Any C-term"
+property_value: spec_classification_1="Artefact"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="E"
+property_value: spec_position_2="Anywhere"
+property_value: spec_classification_2="Artefact"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="D"
+property_value: spec_position_2="Anywhere"
+property_value: spec_classification_2="Artefact"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:991
+name: ISD_z+2_ion
+def: "ISD (z+2)-series" []
+property_value: record_id="991"
+property_value: delta_mono_mass="-15.010899"
+property_value: delta_avge_mass="-15.0146"
+property_value: delta_composition="H(-1) N(-1)"
+property_value: username_of_poster="suckau"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-06-08 09:42:52"
+property_value: date_time_modified="2010-06-28 10:47:55"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="N-term"
+property_value: spec_position_1="Any N-term"
+property_value: spec_classification_1="Artefact"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:993
+name: Biotin:Sigma-B1267
+def: "was Biotin-maleimide" [PMID:15449375 ]
+property_value: record_id="993"
+property_value: delta_mono_mass="449.173290"
+property_value: delta_avge_mass="449.5239"
+property_value: delta_composition="H(27) C(20) N(5) O(5) S"
+property_value: username_of_poster="mpcusack"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-06-10 07:50:00"
+property_value: date_time_modified="2010-12-03 16:02:22"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="C"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:994
+name: Label:15N(1)
+def: "SILAS 15N(1)" [PMID:19664813 ]
+property_value: record_id="994"
+property_value: delta_mono_mass="0.997035"
+property_value: delta_avge_mass="0.9934"
+property_value: delta_composition="N(-1) 15N"
+property_value: username_of_poster="ppicotti"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-06-22 14:52:08"
+property_value: date_time_modified="2010-06-28 10:44:16"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="F"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Isotopic label"
+property_value: spec_group10="10"
+property_value: spec_hidden_10="1"
+property_value: spec_site_10="I"
+property_value: spec_position_10="Anywhere"
+property_value: spec_classification_10="Isotopic label"
+property_value: spec_group11="11"
+property_value: spec_hidden_11="1"
+property_value: spec_site_11="L"
+property_value: spec_position_11="Anywhere"
+property_value: spec_classification_11="Isotopic label"
+property_value: spec_group12="12"
+property_value: spec_hidden_12="1"
+property_value: spec_site_12="D"
+property_value: spec_position_12="Anywhere"
+property_value: spec_classification_12="Isotopic label"
+property_value: spec_group13="13"
+property_value: spec_hidden_13="1"
+property_value: spec_site_13="E"
+property_value: spec_position_13="Anywhere"
+property_value: spec_classification_13="Isotopic label"
+property_value: spec_group14="14"
+property_value: spec_hidden_14="1"
+property_value: spec_site_14="M"
+property_value: spec_position_14="Anywhere"
+property_value: spec_classification_14="Isotopic label"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="Y"
+property_value: spec_position_2="Anywhere"
+property_value: spec_classification_2="Isotopic label"
+property_value: spec_group3="3"
+property_value: spec_hidden_3="1"
+property_value: spec_site_3="G"
+property_value: spec_position_3="Anywhere"
+property_value: spec_classification_3="Isotopic label"
+property_value: spec_group4="4"
+property_value: spec_hidden_4="1"
+property_value: spec_site_4="A"
+property_value: spec_position_4="Anywhere"
+property_value: spec_classification_4="Isotopic label"
+property_value: spec_group5="5"
+property_value: spec_hidden_5="1"
+property_value: spec_site_5="S"
+property_value: spec_position_5="Anywhere"
+property_value: spec_classification_5="Isotopic label"
+property_value: spec_group6="6"
+property_value: spec_hidden_6="1"
+property_value: spec_site_6="P"
+property_value: spec_position_6="Anywhere"
+property_value: spec_classification_6="Isotopic label"
+property_value: spec_group7="7"
+property_value: spec_hidden_7="1"
+property_value: spec_site_7="V"
+property_value: spec_position_7="Anywhere"
+property_value: spec_classification_7="Isotopic label"
+property_value: spec_group8="8"
+property_value: spec_hidden_8="1"
+property_value: spec_site_8="T"
+property_value: spec_position_8="Anywhere"
+property_value: spec_classification_8="Isotopic label"
+property_value: spec_group9="9"
+property_value: spec_hidden_9="1"
+property_value: spec_site_9="C"
+property_value: spec_position_9="Anywhere"
+property_value: spec_classification_9="Isotopic label"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:995
+name: Label:15N(2)
+def: "SILAS 15N(2)" [PMID:19664813 ]
+property_value: record_id="995"
+property_value: delta_mono_mass="1.994070"
+property_value: delta_avge_mass="1.9868"
+property_value: delta_composition="N(-2) 15N(2)"
+property_value: username_of_poster="ppicotti"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-06-22 15:29:02"
+property_value: date_time_modified="2010-06-28 10:41:43"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="N"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Isotopic label"
+property_value: spec_group2="2"
+property_value: spec_hidden_2="1"
+property_value: spec_site_2="Q"
+property_value: spec_position_2="Anywhere"
+property_value: spec_classification_2="Isotopic label"
+property_value: spec_group3="3"
+property_value: spec_hidden_3="1"
+property_value: spec_site_3="K"
+property_value: spec_position_3="Anywhere"
+property_value: spec_classification_3="Isotopic label"
+property_value: spec_group4="4"
+property_value: spec_hidden_4="1"
+property_value: spec_site_4="W"
+property_value: spec_position_4="Anywhere"
+property_value: spec_classification_4="Isotopic label"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:996
+name: Label:15N(3)
+def: "SILAS 15N(3)" [PMID:19664813 ]
+property_value: record_id="996"
+property_value: delta_mono_mass="2.991105"
+property_value: delta_avge_mass="2.9802"
+property_value: delta_composition="N(-3) 15N(3)"
+property_value: username_of_poster="ppicotti"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-06-22 15:30:28"
+property_value: date_time_modified="2010-06-28 10:36:50"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="H"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Isotopic label"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:997
+name: sulfo+amino
+def: "aminotyrosine with sulfation" []
+property_value: record_id="997"
+property_value: delta_mono_mass="94.967714"
+property_value: delta_avge_mass="95.0778"
+property_value: delta_composition="H N O(3) S"
+property_value: username_of_poster="huidouzi"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-06-23 18:50:14"
+property_value: date_time_modified="2010-06-28 10:29:52"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="Y"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
+is_a: UNIMOD:0 ! unimod root node
+
+[Term]
+id: UNIMOD:998
+name: BHAc
+def: "N-biotinyl-6-aminohexanoyl" []
+property_value: record_id="998"
+property_value: delta_mono_mass="339.161662"
+property_value: delta_avge_mass="339.4530"
+property_value: delta_composition="H(25) C(16) N(3) O(3) S"
+property_value: username_of_poster="natfre08"
+property_value: group_of_poster=""
+property_value: date_time_posted="2010-07-13 14:38:17"
+property_value: date_time_modified="2010-08-02 17:37:08"
+property_value: approved="0"
+property_value: spec_group1="1"
+property_value: spec_hidden_1="1"
+property_value: spec_site_1="K"
+property_value: spec_position_1="Anywhere"
+property_value: spec_classification_1="Chemical derivative"
 is_a: UNIMOD:0 ! unimod root node
 

@@ -1,12 +1,12 @@
 format-version: 1.2
-date: 04:05:2011 14:00
-saved-by: gmayer
-auto-generated-by: OBO-Edit 2.1-beta 10
+date: 06:07:2011 15:05
+saved-by: edeutsch
+auto-generated-by: OBO-Edit 2.1-beta 13
 default-namespace: MS
 remark: namespace: MS
-data-version: 2.50.0
-remark: version: 2.50.0
-remark: release date: 2011-04-05
+data-version: 3.4.1
+remark: version: 3.4.1
+remark: release date: 2011-06-08
 remark: coverage: Mass spectrometer output files and spectra interpretation
 remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 remark: creator: Andreas Bertsch <bertsch <-at-> informatik.uni-tuebingen.de>
@@ -16,7 +16,7 @@ remark: creator: Fredrik Levander <fredrik.levander <-at-> immun.lth.se>
 remark: creator: Gerhard Mayer <mayerg97 <-at-> rub.de>
 remark: publisher: HUPO Proteomics Standards Initiative Mass Spectrometry Standards Working Group and HUPO Proteomics Standards Initiative Proteomics Informatics Working Group 
 remark: When appropriate the definition and synonyms of a term are reported exactly as in the chapter 12 of IUPAC orange book. See http://www.iupac.org/projects/2003/2003-056-2-500.html.
-import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo?revision=1.21
+import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo
 
 [Term]
 id: MS:0000000
@@ -306,9 +306,9 @@ is_a: MS:1000460 ! unit
 id: MS:1000041
 name: charge state
 def: "The charge state of the ion, single or multiple and positive or negatively charged." [PSI:MS]
+synonym: "z" EXACT []
 xref: value-type:xsd\:int "The allowed value-type for this CV term."
 is_a: MS:1000455 ! ion selection attribute
-synonym: "z" EXACT []
 
 [Term]
 id: MS:1000042
@@ -316,10 +316,10 @@ name: peak intensity
 def: "Intensity of ions as measured by the height or area of a peak in a mass spectrum." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000455 ! ion selection attribute
-relationship: has_units MS:1000132 ! percent of base peak
-relationship: has_units MS:1000905 ! percent of base peak times 100
 relationship: has_units MS:1000131 ! number of counts
+relationship: has_units MS:1000132 ! percent of base peak
 relationship: has_units MS:1000814 ! counts per second
+relationship: has_units MS:1000905 ! percent of base peak times 100
 relationship: has_units UO:0000269 ! absorbance unit
 relationship: part_of MS:1000231 ! peak
 
@@ -1078,13 +1078,13 @@ is_a: MS:1000126 ! Waters instrument model
 id: MS:1000160
 name: HCT
 def: "Bruker Daltonics' HCT: ESI Q-TOF, Nanospray, APCI, APPI." [PSI:MS]
-is_a: MS:1000697 ! Bruker Daltonics HCT series
+is_a: MS:1000697 ! Bruker Daltonics HCT Series
 
 [Term]
 id: MS:1000161
 name: HCTplus
 def: "Bruker Daltonics' HCTplus: ESI Q-TOF, Nanospray, APCI, APPI." [PSI:MS]
-is_a: MS:1000697 ! Bruker Daltonics HCT series
+is_a: MS:1000697 ! Bruker Daltonics HCT Series
 
 [Term]
 id: MS:1000162
@@ -2281,7 +2281,6 @@ id: MS:1000339
 name: nth generation product ion spectrum
 def: "OBSOLETE The mass spectrum recorded from any mass spectrometer in which the appropriate scan function can be set to record the appropriate generation product ion or ions of m/z selected precursor ions." [PSI:MS]
 comment: This term was made obsolete because it was merged with MSn spectrum (MS:1000580)
-is_a: MS:1000343 ! product ion spectrum
 is_obsolete: true
 
 [Term]
@@ -3381,8 +3380,8 @@ relationship: part_of MS:1000625 ! chromatogram
 id: MS:1000514
 name: m/z array
 def: "A data array of m/z values." [PSI:MS]
-xref: binary-data-type:MS\:1000521 ! 32-bit float
-xref: binary-data-type:MS\:1000523 ! 64-bit float
+xref: binary-data-type:MS\:1000521 "32-bit float"
+xref: binary-data-type:MS\:1000523 "64-bit float"
 is_a: MS:1000513 ! binary data array
 relationship: has_units MS:1000040 ! m/z
 
@@ -3390,8 +3389,8 @@ relationship: has_units MS:1000040 ! m/z
 id: MS:1000515
 name: intensity array
 def: "A data array of intensity values." [PSI:MS]
-xref: binary-data-type:MS\:1000521 ! 32-bit float
-xref: binary-data-type:MS\:1000523 ! 64-bit float
+xref: binary-data-type:MS\:1000521 "32-bit float"
+xref: binary-data-type:MS\:1000523 "64-bit float"
 is_a: MS:1000513 ! binary data array
 relationship: has_units MS:1000131 ! number of counts
 relationship: has_units MS:1000132 ! percent of base peak
@@ -3403,15 +3402,15 @@ relationship: has_units UO:0000269 ! absorbance unit
 id: MS:1000516
 name: charge array
 def: "A data array of charge values." [PSI:MS]
-xref: binary-data-type:MS\:1000519 ! 32-bit integer
+xref: binary-data-type:MS\:1000519 "32-bit integer"
 is_a: MS:1000513 ! binary data array
 
 [Term]
 id: MS:1000517
 name: signal to noise array
 def: "A data array of signal-to-noise values." [PSI:MS]
-xref: binary-data-type:MS\:1000521 ! 32-bit float
-xref: binary-data-type:MS\:1000523 ! 64-bit float
+xref: binary-data-type:MS\:1000521 "32-bit float"
+xref: binary-data-type:MS\:1000523 "64-bit float"
 is_a: MS:1000513 ! binary data array
 
 [Term]
@@ -3876,45 +3875,45 @@ is_a: MS:1000560 ! mass spectrometer file format
 
 [Term]
 id: MS:1000585
-name: contact person attribute
-def: "Details about a person to contact in case of concern or dicussion about the file." [PSI:MS]
+name: contact attribute
+def: "Details about a person or organization to contact in case of concern or discussion about the file." [PSI:MS]
 is_a: MS:1000547 ! object attribute
 relationship: part_of MS:0000000 ! Proteomics Standards Initiative Mass Spectrometry Vocabularies
 
 [Term]
 id: MS:1000586
 name: contact name
-def: "Name of a contact person." [PSI:MS]
+def: "Name of the contact person or organization." [PSI:MS]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
-is_a: MS:1000585 ! contact person attribute
+is_a: MS:1000585 ! contact attribute
 
 [Term]
 id: MS:1000587
 name: contact address
-def: "Postal address of a contact person." [PSI:MS]
+def: "Postal address of the contact person or organization." [PSI:MS]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
-is_a: MS:1000585 ! contact person attribute
+is_a: MS:1000585 ! contact attribute
 
 [Term]
 id: MS:1000588
 name: contact URL
-def: "Uniform Resource Locator related to the contact person." [PSI:MS]
+def: "Uniform Resource Locator related to the contact person or organization." [PSI:MS]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
-is_a: MS:1000585 ! contact person attribute
+is_a: MS:1000585 ! contact attribute
 
 [Term]
 id: MS:1000589
 name: contact email
-def: "Email adress of the contact person." [PSI:MS]
+def: "Email address of the contact person or organization." [PSI:MS]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
-is_a: MS:1000585 ! contact person attribute
+is_a: MS:1000585 ! contact attribute
 
 [Term]
 id: MS:1000590
 name: contact organization
 def: "Home institution of the contact person." [PSI:MS]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
-is_a: MS:1000585 ! contact person attribute
+is_a: MS:1000585 ! contact attribute
 
 [Term]
 id: MS:1000591
@@ -3945,8 +3944,8 @@ is_a: MS:1001486 ! data filtering
 id: MS:1000595
 name: time array
 def: "A data array of relative time offset values from a reference time." [PSI:MS]
-xref: binary-data-type:MS\:1000521 ! 32-bit float
-xref: binary-data-type:MS\:1000523 ! 64-bit float
+xref: binary-data-type:MS\:1000521 "32-bit float"
+xref: binary-data-type:MS\:1000523 "64-bit float"
 is_a: MS:1000513 ! binary data array
 relationship: has_units UO:0000010 ! second
 relationship: has_units UO:0000031 ! minute
@@ -4091,8 +4090,8 @@ is_a: MS:1000503 ! scan attribute
 id: MS:1000617
 name: wavelength array
 def: "A data array of electromagnetic radiation wavelength values." [PSI:MS]
-xref: binary-data-type:MS\:1000521 ! 32-bit float
-xref: binary-data-type:MS\:1000523 ! 64-bit float
+xref: binary-data-type:MS\:1000521 "32-bit float"
+xref: binary-data-type:MS\:1000523 "64-bit float"
 is_a: MS:1000513 ! binary data array
 relationship: has_units UO:0000018 ! nanometer
 
@@ -4653,19 +4652,19 @@ is_a: MS:1000122 ! Bruker Daltonics instrument model
 id: MS:1000698
 name: HCTultra
 def: "Bruker Daltonics' HCTultra: ESI TOF, Nanospray, APCI, APPI." [PSI:MS]
-is_a: MS:1000697 ! Bruker Daltonics HCT series
+is_a: MS:1000697 ! Bruker Daltonics HCT Series
 
 [Term]
 id: MS:1000699
 name: HCTultra PTM
 def: "Bruker Daltonics' HCTultra PTM: ESI TOF, Nanospray, APCI, APPI, PTR" [PSI:MS]
-is_a: MS:1000697 ! Bruker Daltonics HCT series
+is_a: MS:1000697 ! Bruker Daltonics HCT Series
 
 [Term]
 id: MS:1000700
 name: HCTultra ETD II
 def: "Bruker Daltonics' HCTultra ETD II: ESI Q-TOF, Nanospray, APCI, APPI, ETD" [PSI:MS]
-is_a: MS:1000697 ! Bruker Daltonics HCT series
+is_a: MS:1000697 ! Bruker Daltonics HCT Series
 
 [Term]
 id: MS:1000701
@@ -5228,12 +5227,12 @@ is_a: MS:1000592 ! smoothing
 id: MS:1000786
 name: non-standard data array
 def: "A data array that contains data not covered by any other term in this group. Please do not use this term, if the binary data array type might be commonly used - contact the PSI-MS working group in order to have another CV term added." [PSI:MS]
+xref: binary-data-type:MS\:1000519 "32-bit integer"
+xref: binary-data-type:MS\:1000521 "32-bit float"
+xref: binary-data-type:MS\:1000522 "64-bit integer"
+xref: binary-data-type:MS\:1000523 "64-bit float"
+xref: binary-data-type:MS\:1001479 "null-terminated ASCII string"
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
-xref: binary-data-type:MS\:1000519 ! 32-bit integer
-xref: binary-data-type:MS\:1000521 ! 32-bit float
-xref: binary-data-type:MS\:1000522 ! 64-bit integer
-xref: binary-data-type:MS\:1000523 ! 64-bit float
-xref: binary-data-type:MS\:1001479 ! null-terminated ASCII string
 is_a: MS:1000513 ! binary data array
 
 [Term]
@@ -5490,16 +5489,16 @@ is_a: MS:1000126 ! Waters instrument model
 id: MS:1000820
 name: flow rate array
 def: "A data array of flow rate measurements." [PSI:MS]
-xref: binary-data-type:MS\:1000521 ! 32-bit float
-xref: binary-data-type:MS\:1000523 ! 64-bit float
+xref: binary-data-type:MS\:1000521 "32-bit float"
+xref: binary-data-type:MS\:1000523 "64-bit float"
 is_a: MS:1000513 ! binary data array
 
 [Term]
 id: MS:1000821
 name: pressure array
 def: "A data array of pressure measurements." [PSI:MS]
-xref: binary-data-type:MS\:1000521 ! 32-bit float
-xref: binary-data-type:MS\:1000523 ! 64-bit float
+xref: binary-data-type:MS\:1000521 "32-bit float"
+xref: binary-data-type:MS\:1000523 "64-bit float"
 is_a: MS:1000513 ! binary data array
 relationship: has_units UO:0000110 ! pascal
 
@@ -5507,8 +5506,8 @@ relationship: has_units UO:0000110 ! pascal
 id: MS:1000822
 name: temperature array
 def: "A data array of temperature measurements." [PSI:MS]
-xref: binary-data-type:MS\:1000521 ! 32-bit float
-xref: binary-data-type:MS\:1000523 ! 64-bit float
+xref: binary-data-type:MS\:1000521 "32-bit float"
+xref: binary-data-type:MS\:1000523 "64-bit float"
 is_a: MS:1000513 ! binary data array
 relationship: has_units UO:0000012 ! kelvin
 
@@ -5550,7 +5549,7 @@ relationship: has_units MS:1000040 ! m/z
 [Term]
 id: MS:1000828
 name: isolation window lower offset
-def: "The extent of the isolation window in m/z below the isolation window target m/z. The lower and upper offsets may be asymetric about the target m/z." [PSI:MS]
+def: "The extent of the isolation window in m/z below the isolation window target m/z. The lower and upper offsets may be asymmetric about the target m/z." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000792 ! isolation window attribute
 relationship: has_units MS:1000040 ! m/z
@@ -5558,7 +5557,7 @@ relationship: has_units MS:1000040 ! m/z
 [Term]
 id: MS:1000829
 name: isolation window upper offset
-def: "The extent of the isolation window in m/z above the isolation window target m/z. The lower and upper offsets may be asymetric about the target m/z." [PSI:MS]
+def: "The extent of the isolation window in m/z above the isolation window target m/z. The lower and upper offsets may be asymmetric about the target m/z." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000792 ! isolation window attribute
 relationship: has_units MS:1000040 ! m/z
@@ -5568,13 +5567,13 @@ id: MS:1000831
 name: sample preparation
 def: "Properties of the preparation steps which took place before the measurement was performed." [PSI:MS]
 is_a: MS:1000547 ! object attribute
-relationship: part_of MS:1000548 ! sample
+relationship: part_of MS:1000548 ! sample attribute
 
 [Term]
 id: MS:1000832
 name: MALDI matrix application
 def: "Attributes to describe the technique how the sample is prepared with the matrix solution." [PSI:MS]
-relationship: part_of MS:1000831 ! Matrix-Assisted Laser Desorption Ionisation
+relationship: part_of MS:1000831 ! sample preparation
 
 [Term]
 id: MS:1000833
@@ -5595,7 +5594,7 @@ name: matrix solution concentration
 def: "Concentration of the chemical solution used as matrix." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000832 ! MALDI matrix application
-relationship: has_units UO:0000175 ! gram per liter 
+relationship: has_units UO:0000175 ! gram per liter
 
 [Term]
 id: MS:1000836
@@ -5741,6 +5740,7 @@ is_a: MS:1000494 ! Thermo Scientific instrument model
 id: MS:1000857
 name: run attribute
 def: "Properties of the described run." [PSI:MS]
+is_a: MS:1000547 ! object attribute
 
 [Term]
 id: MS:1000858
@@ -5771,7 +5771,7 @@ relationship: part_of MS:1000881 ! chemical compound
 id: MS:1000862
 name: isoelectric point
 def: "The pH of a solution at which a charged molecule does not migrate in an electric field." [PSI:MS]
-exact_synonym: "pI" []
+synonym: "pI" EXACT []
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000861 ! chemical compound attribute
 
@@ -5779,7 +5779,7 @@ is_a: MS:1000861 ! chemical compound attribute
 id: MS:1000863
 name: predicted isoelectric point
 def: "The pH of a solution at which a charged molecule would not migrate in an electric field, as predicted by a software algorithm." [PSI:MS]
-exact_synonym: "predicted pI" []
+synonym: "predicted pI" EXACT []
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000862 ! isoelectric point
 
@@ -5866,7 +5866,7 @@ relationship: has_units UO:0000218 ! volt
 [Term]
 id: MS:1000876
 name: cone voltage
-def: "Potential difference between the sampling cone/orifice and the what? in volts." [PSI:MS]
+def: "Potential difference between the sampling cone/orifice in volts." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000482 ! source attribute
 relationship: has_units UO:0000218 ! volt
@@ -5874,7 +5874,7 @@ relationship: has_units UO:0000218 ! volt
 [Term]
 id: MS:1000877
 name: tube lens
-def: "No ideas." [PSI:MS]
+def: "Potential difference setting of the tube lens in volts." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1000482 ! source attribute
 relationship: has_units UO:0000218 ! volt
@@ -5975,7 +5975,7 @@ is_a: MS:1000890 ! peptide labeling state
 id: MS:1000892
 name: unlabeled peptide
 def: "A peptide that has not been labeled with heavier-than-usual isotopes. This is often referred to as \"light\" to distinguish from \"heavy\"." [PSI:MS]
-exact_synonym: "light labeled peptide" []
+synonym: "light labeled peptide" EXACT []
 is_a: MS:1000890 ! peptide labeling state
 
 [Term]
@@ -6060,8 +6060,8 @@ id: MS:1000904
 name: product ion m/z delta
 def: "The difference in m/z of the predicted m/z based on the assigned product ion minus the actual observed peak m/z." [PSI:PI]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
-relationship: has_units MS:1000040 ! m/z
 is_a: MS:1001221 ! fragmentation information
+relationship: has_units MS:1000040 ! m/z
 
 [Term]
 id: MS:1000905
@@ -6195,7 +6195,7 @@ name: MaRiMba
 def: "OBSOLETE Software used to predict transitions for selected reaction monitoring experiments based on observed spectrum libraries developed and distributed by the Institute for Systems Biology. http://tools.proteomecenter.org/wiki/index.php?title=Software:TPP-MaRiMba." [PSI:MS]
 comment: This term was made obsolete because it was redundant with an existing term (MS:1000872)
 is_obsolete: true
-replaced_by: MS:1000872 ! MaRiMba
+replaced_by: MS:1000872
 
 [Term]
 id: MS:1000925
@@ -6247,6 +6247,21 @@ id: MS:1000932
 name: AB SCIEX TripleTOF 5600
 def: "Applied Biosystems|MDS SCIEX TripleTOF 5500, a quadrupole - quadrupole - time-of-flight mass spectrometer." [PSI:MS]
 is_a: MS:1000121 ! AB SCIEX instrument model
+
+[Term]
+id: MS:1000933
+name: protein modifications
+def: "Encoding of modifications of the protein sequence from the specified accession, written in PEFF notation." [PSI:MS]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1000884 ! protein attribute
+
+[Term]
+id: MS:1000934
+name: gene name
+def: "Name of the gene from which the protein is translated." [PSI:MS]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1000884 ! protein attribute
+
 
 [Term]
 id: MS:1001000
@@ -6577,7 +6592,7 @@ name: neutral loss
 def: "OBSOLETE: replaced by MS:1000336 (neutral loss): Leave this to PSI-MOD?" [PSI:PI]
 is_a: MS:1001055 ! modification parameters
 is_obsolete: true
-replaced_by: MS:1000336 ! neutral loss
+replaced_by: MS:1000336
 
 [Term]
 id: MS:1001062
@@ -6708,10 +6723,10 @@ name: taxonomy nomenclature
 def: "OBSOLETE: The system used to indicate taxonomy. There should be an enumerated list of options: latin name, NCBI TaxID, common name, Swiss-Prot species ID (ex. RABIT from the full protein ID ALBU_RABIT)." [PSI:PI]
 is_a: MS:1001089 ! molecule taxonomy
 is_obsolete: true
-replaced_by: MS:1001467 ! taxonomy: NCBI TaxID
-replaced_by: MS:1001468 ! taxonomy: common name
-replaced_by: MS:1001469 ! taxonomy: scientific name
-replaced_by: MS:1001470 ! taxonomy: Swiss-Prot ID
+replaced_by: MS:1001467
+replaced_by: MS:1001468
+replaced_by: MS:1001469
+replaced_by: MS:1001470
 
 [Term]
 id: MS:1001091
@@ -6861,9 +6876,9 @@ is_a: MS:1001105 ! peptide result details
 id: MS:1001114
 name: retention time(s)
 def: "Retention time of the spectrum from the source file" [PSI:PI]
+xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001105 ! peptide result details
 is_a: MS:1001405 ! spectrum identification result details
-xref: value-type:xsd\:double "The allowed value-type for this CV term."
 relationship: has_units UO:0000010 ! second
 relationship: has_units UO:0000031 ! minute
 
@@ -7407,7 +7422,6 @@ name: DB PI filter minimum
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001512 ! Sequence database filters
 
-
 [Term]
 id: MS:1001207
 name: Mascot
@@ -7443,7 +7457,7 @@ is_a: MS:1001210 ! mass type settings
 
 [Term]
 id: MS:1001213
-name: search result details 	 
+name: search result details
 def: "OBSOLETE: Scores and global result characteristics." [PSI:PI]
 relationship: part_of MS:1000479 ! purgatory
 is_obsolete: true
@@ -7520,15 +7534,15 @@ is_a: MS:1001221 ! fragmentation information
 [Term]
 id: MS:1001225
 name: product ion m/z
-synonym: "fragment ion m/z" EXACT []
 def: "The m/z of the product ion." [PSI:PI]
+synonym: "fragment ion m/z" EXACT []
 is_a: MS:1001221 ! fragmentation information
 
 [Term]
 id: MS:1001226
 name: product ion intensity
-synonym: "fragment ion intensity" EXACT []
 def: "The intensity of the product ion." [PSI:PI]
+synonym: "fragment ion intensity" EXACT []
 is_a: MS:1001221 ! fragmentation information
 
 [Term]
@@ -7537,7 +7551,7 @@ name: product ion m/z error
 def: "The product ion m/z error." [PSI:PI]
 is_a: MS:1001221 ! fragmentation information
 relationship: has_units MS:1000040 ! m/z
-relationship: has_units UO:0000166 ! parts per notation
+relationship: has_units UO:0000166 ! parts per notation unit
 
 [Term]
 id: MS:1001228
@@ -7663,7 +7677,7 @@ def: "Result of quality estimation: the local FDR at the current position of a s
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001092 ! peptide quality estimation measure
 is_a: MS:1001198 ! protein quality estimation measure
-relationship: has_units UO:0000166 ! parts per notation
+relationship: has_units UO:0000166 ! parts per notation unit
 relationship: has_units UO:0000187 ! percent
 
 [Term]
@@ -7738,7 +7752,7 @@ is_a: MS:1001066 ! ions series considered in search
 id: MS:1001266
 name: role type
 def: "Role of a Person or Organization." [PSI:PI]
-is_a: MS:1000585 ! contact person attribute
+is_a: MS:1000585 ! contact attribute
 
 [Term]
 id: MS:1001267
@@ -8555,7 +8569,7 @@ id: MS:1001412
 name: search tolerance plus value
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001411 ! search tolerance specification
-relationship: has_units UO:0000166 ! parts per notation
+relationship: has_units UO:0000166 ! parts per notation unit
 relationship: has_units UO:0000187 ! percent
 relationship: has_units UO:0000221 ! dalton
 
@@ -8564,7 +8578,7 @@ id: MS:1001413
 name: search tolerance minus value
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001411 ! search tolerance specification
-relationship: has_units UO:0000166 ! parts per notation
+relationship: has_units UO:0000166 ! parts per notation unit
 relationship: has_units UO:0000187 ! percent
 relationship: has_units UO:0000221 ! dalton
 
@@ -8575,7 +8589,7 @@ def: "OBSOLETE: replaced by MS:1000797 (peak list scans): This term can hold the
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001405 ! spectrum identification result details
 is_obsolete: true
-replaced_by: MS:1000797 ! peak list scans
+replaced_by: MS:1000797
 
 [Term]
 id: MS:1001415
@@ -8584,7 +8598,7 @@ def: "OBSOLETE: replaced by MS:1000798 (peak list raw scans): This term can hold
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001405 ! spectrum identification result details
 is_obsolete: true
-replaced_by: MS:1000798 ! peak list raw scans
+replaced_by: MS:1000798
 
 [Term]
 id: MS:1001416
@@ -8593,7 +8607,7 @@ def: "OBSOLETE: replaced by MS:1000796 (spectrum title): Holds the spectrum titl
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001405 ! spectrum identification result details
 is_obsolete: true
-replaced_by: MS:1000796 ! spectrum title
+replaced_by: MS:1000796
 
 [Term]
 id: MS:1001417
@@ -8916,14 +8930,12 @@ def: "This term is used if a common name is specified, e.g. human. Recommend usi
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001089 ! molecule taxonomy
 
-
 [Term]
 id: MS:1001469
 name: taxonomy: scientific name
 def: "This term is used if a scientific name is specified, e.g. Homo sapiens. Recommend using MS:1001467 (taxonomy: NCBI TaxID) where possible." [PSI:PI]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001089 ! molecule taxonomy
-
 
 [Term]
 id: MS:1001470
@@ -9037,30 +9049,30 @@ is_a: MS:1000543 ! data processing action
 id: MS:1001486
 name: data filtering
 def: "Filtering out part of the data." [PSI:MS]
-is_a: MS:1000543 ! data processing action 
+is_a: MS:1000543 ! data processing action
 
 [Term]
 id: MS:1001487
 name: ProteinExtractor
 def: "An algorithm for protein determination/assembly integrated into Bruker's ProteinScape." [PSI:MS]
-is_a: MS:1001456 ! analysis software
 is_a: MS:1000692 ! Bruker software
+is_a: MS:1001456 ! analysis software
 
 [Term]
 id: MS:1001488
-name: Mascot Distiller 
+name: Mascot Distiller
 def: "Mascot Distiller." [PSI:PI]
 is_a: MS:1001456 ! analysis software
 
 [Term]
 id: MS:1001489
-name: Mascot Integra 
+name: Mascot Integra
 def: "Mascot Integra." [PSI:PI]
 is_a: MS:1001456 ! analysis software
 
 [Term]
 id: MS:1001490
-name: Percolator 
+name: Percolator
 def: "Percolator." [PSI:PI]
 is_a: MS:1001456 ! analysis software
 
@@ -9068,25 +9080,25 @@ is_a: MS:1001456 ! analysis software
 id: MS:1001491
 name: percolator:Q value
 def: "percolator:Q value." [PSI:PI]
-is_a: MS:1001153 ! search engine specific score 
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001143 ! search engine specific score for peptides    
+is_a: MS:1001143 ! search engine specific score for peptides
+is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001492
-name: percolator:score 
+name: percolator:score
 def: "percolator:score." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001153 ! search engine specific score 
-is_a: MS:1001143 ! search engine specific score for peptides    
+is_a: MS:1001143 ! search engine specific score for peptides
+is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001493
-name: percolaror:PEP 
+name: percolaror:PEP
 def: "Posterior error probability." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
-is_a: MS:1001153 ! search engine specific score 
-is_a: MS:1001143 ! search engine specific score for peptides    
+is_a: MS:1001143 ! search engine specific score for peptides
+is_a: MS:1001153 ! search engine specific score
 
 [Term]
 id: MS:1001494
@@ -9111,7 +9123,7 @@ is_a: MS:1001143 ! search engine specific score for peptides
 is_a: MS:1001153 ! search engine specific score
 
 [Term]
-id: MS:1001597
+id: MS:1001497
 name: ProteinScape:ProfoundProbability
 def: "The Profound probability score stored by ProteinScape." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
@@ -9304,7 +9316,7 @@ relationship: has_units UO:0000221 ! dalton
 
 [Term]
 id: MS:1001525
-name: precursor neutral loss 
+name: precursor neutral loss
 def: "This term can describe a neutral loss m/z value that is lost from an ion." [PSI:PI]
 xref: value-type:xsd\:double "The allowed value-type for this CV term."
 is_a: MS:1001471 ! peptide modification details
@@ -9349,16 +9361,16 @@ id: MS:1001531
 name: spectrum from ProteinScape database nativeID format
 def: "databasekey=xsd:long" [PSI:MS]
 comment: A unique identifier of a spectrum stored in a ProteinScape database.
-is_a: MS:1001529 ! spectra data details
 is_a: MS:1000767 ! native spectrum identifier format
+is_a: MS:1001529 ! spectra data details
 
 [Term]
 id: MS:1001532
 name: spectrum from database nativeID format
 def: "databasekey=xsd:string" [PSI:MS]
 comment: A unique identifier of a spectrum stored in a database (e.g. a PRIMARY KEY identifier).
-is_a: MS:1001529 ! spectra data details
 is_a: MS:1000767 ! native spectrum identifier format
+is_a: MS:1001529 ! spectra data details
 
 [Term]
 id: MS:1001533
@@ -9419,13 +9431,13 @@ is_a: MS:1001545 ! Bruker Daltonics amaZon series
 [Term]
 id: MS:1001543
 name: microflex LRF
-def: "Bruker Daltonics' microflex LRF: MALDI TOF." [PSI-MS]
+def: "Bruker Daltonics' microflex LRF: MALDI TOF." [PSI:MS]
 is_a: MS:1001534 ! Bruker Daltonics flex series
 
 [Term]
 id: MS:1001544
 name: ultrafleXtreme
-def: "Bruker Daltonics' ultrafleXtreme: MALDI TOF." [PSI-MS]
+def: "Bruker Daltonics' ultrafleXtreme: MALDI TOF." [PSI:MS]
 is_a: MS:1001534 ! Bruker Daltonics flex series
 
 [Term]
@@ -9459,7 +9471,7 @@ is_a: MS:1001548 ! Bruker Daltonics solarix series
 [Term]
 id: MS:1001550
 name: microflex II
-def: "Bruker Daltonics' microflex II: MALDI TOF." [PSI-MS]
+def: "Bruker Daltonics' microflex II: MALDI TOF." [PSI:MS]
 is_a: MS:1001534 ! Bruker Daltonics flex series
 
 [Term]
@@ -9494,10 +9506,10 @@ is_a: MS:1000531 ! software
 id: MS:1001558
 name: MALDI Solutions
 def: "Shimadzu Biotech software for data acquisition, processing, and analysis." [PSI:MS]
-is_a: MS:1001557 ! Shimadzu Biotech software
 is_a: MS:1001455 ! acquisition software
 is_a: MS:1001456 ! analysis software
 is_a: MS:1001457 ! data processing software
+is_a: MS:1001557 ! Shimadzu Biotech software
 
 [Term]
 id: MS:1001559
@@ -9668,8 +9680,8 @@ is_a: MS:1001457 ! data processing software
 id: MS:1001583
 name: MaxQuant
 def: "MaxQuant is a quantitative proteomics software package designed for analyzing large mass spectrometric data sets. It is specifically aimed at high resolution MS data." [PSI:MS]
-is_a: MS:1001456 ! analysis software
 is_a: MS:1001139 ! quantitation software name
+is_a: MS:1001456 ! analysis software
 
 [Term]
 id: MS:1001584
@@ -9705,8 +9717,8 @@ is_a: MS:1001456 ! analysis software
 id: MS:1001589
 name: MyriMatch:MVH
 def: "Using the multivariate hypergeometric distribution and a peak list divided into several intensity classes, this score is the negative natural log probability that the predicted peaks matched to experimental peaks by random chance." [PSI:MS]
-synonym: "TagRecon:MVH" EXACT []
 synonym: "Pepitome:MVH" EXACT []
+synonym: "TagRecon:MVH" EXACT []
 is_a: MS:1001143 ! search engine specific score for peptides
 is_a: MS:1001153 ! search engine specific score
 
@@ -9714,8 +9726,8 @@ is_a: MS:1001153 ! search engine specific score
 id: MS:1001590
 name: MyriMatch:mzFidelity
 def: "The negative natural log probability that predicted peaks match to experimental peaks by random chance by scoring the m/z delta of the matches in a multinomial distribution." [PSI:MS]
-synonym: "TagRecon:mzFidelity" EXACT []
 synonym: "Pepitome:mzFidelity" EXACT []
+synonym: "TagRecon:mzFidelity" EXACT []
 is_a: MS:1001143 ! search engine specific score for peptides
 is_a: MS:1001153 ! search engine specific score
 
@@ -9808,7 +9820,6 @@ name: ProteomeDiscoverer:Spectrum Selector:Ionization Source
 def: "Ionization source (electro-, nano-, thermospray, electron impact, APCI, MALDI, FAB, ...)." [PSI:MS]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-is_a: MS:1000008 ! ionization type
 
 [Term]
 id: MS:1001604
@@ -9816,7 +9827,6 @@ name: ProteomeDiscoverer:Activation Type
 def: "Fragmentation method used (CID, MPD, ECD, PQD, ETD, HCD, Any)." [PSI:MS]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-is_a: MS:1000044 ! dissociation method
 
 [Term]
 id: MS:1001605
@@ -9824,9 +9834,6 @@ name: ProteomeDiscoverer:Spectrum Selector:Lower RT Limit
 def: "Lower retention-time limit." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-is_a: MS:1000894 ! retention time
-relationship: has_units UO:0000010 ! second
-relationship: has_units UO:0000031 ! minute
 
 [Term]
 id: MS:1001606
@@ -9834,7 +9841,6 @@ name: ProteomeDiscoverer:Mass Analyzer
 def: "Type of mass spectrometer used (ITMS, FTMS, TOFMS, SQMS, TQMS, SectorMS)." [PSI:MS]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-is_a: MS:1000451 ! mass analyzer
 
 [Term]
 id: MS:1001607
@@ -9842,7 +9848,6 @@ name: ProteomeDiscoverer:Max Precursor Mass
 def: "Maximum mass limit of a singly charged precursor ion." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-relationship: has_units UO:0000002 ! dalton
 
 [Term]
 id: MS:1001608
@@ -9850,7 +9855,6 @@ name: ProteomeDiscoverer:Min Precursor Mass
 def: "Minimum mass limit of a singly charged precursor ion." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-relationship: has_units UO:0000002 ! dalton
 
 [Term]
 id: MS:1001609
@@ -9865,7 +9869,6 @@ name: ProteomeDiscoverer:MS Order
 def: "Level of the mass spectrum (MS/MS=MS2 ... MS10)." [PSI:MS]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-is_a: MS:1000511 ! ms level
 
 [Term]
 id: MS:1001611
@@ -9943,9 +9946,6 @@ name: ProteomeDiscoverer:Spectrum Selector:Upper RT Limit
 def: "Upper retention-time limit." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-is_a: MS:1000894 ! retention time
-relationship: has_units UO:0000010 ! second
-relationship: has_units UO:0000031 ! minute
 
 [Term]
 id: MS:1001622
@@ -9953,8 +9953,6 @@ name: ProteomeDiscoverer:Non-Fragment Filter:Mass Window Offset
 def: "Specifies the size of the mass-to-charge ratio (m/z) window in daltons used to remove precursors." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-is_a: MS:1001486 ! data filtering
-relationship: has_units UO:0000002 ! dalton
 
 [Term]
 id: MS:1001623
@@ -9962,8 +9960,6 @@ name: ProteomeDiscoverer:Non-Fragment Filter:Maximum Neutral Loss Mass
 def: "Maximum allowed mass of a neutral loss." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-is_a: MS:1001486 ! data filtering
-relationship: has_units UO:0000002 ! dalton
 
 [Term]
 id: MS:1001624
@@ -9971,7 +9967,6 @@ name: ProteomeDiscoverer:Non-Fragment Filter:Remove Charge Reduced Precursor
 def: "Determines whether the charge-reduced precursor peaks found in an ETD or ECD spectrum are removed." [PSI:MS]
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-is_a: MS:1001486 ! data filtering
 
 [Term]
 id: MS:1001625
@@ -9979,7 +9974,6 @@ name: ProteomeDiscoverer:Non-Fragment Filter:Remove Neutral Loss Peaks
 def: "Determines whether neutral loss peaks are removed from ETD and ECD spectra." [PSI:MS]
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-is_a: MS:1001486 ! data filtering
 
 [Term]
 id: MS:1001626
@@ -9987,7 +9981,6 @@ name: ProteomeDiscoverer:Non-Fragment Filter:Remove Only Known Masses
 def: "Determines whether overtone peaks are removed from LTQ FT or LTQ FT Ultra ECD spectra." [PSI:MS]
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-is_a: MS:1001486 ! data filtering
 
 [Term]
 id: MS:1001627
@@ -9995,7 +9988,6 @@ name: ProteomeDiscoverer:Non-Fragment Filter:Remove Precursor Overtones
 def: "Determines whether precursor overtone peaks in the spectrum are removed from the input spectrum." [PSI:MS]
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-is_a: MS:1001486 ! data filtering
 
 [Term]
 id: MS:1001628
@@ -10003,7 +9995,6 @@ name: ProteomeDiscoverer:Non-Fragment Filter:Remove Precursor Peak
 def: "Determines whether precursor artifact peaks from the MS/MS input spectra are removed." [PSI:MS]
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-is_a: MS:1001486 ! data filtering
 
 [Term]
 id: MS:1001629
@@ -10025,8 +10016,6 @@ name: ProteomeDiscoverer:Spectrum Grouper:Max RT Difference
 def: "Chromatographic window where precursors to be grouped must reside to be considered the same species." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-relationship: has_units UO:0000010 ! second
-relationship: has_units UO:0000031 ! minute
 
 [Term]
 id: MS:1001632
@@ -10048,7 +10037,6 @@ name: ProteomeDiscoverer:Xtract:Highest MZ
 def: "Highest mass-to-charge (mz) value for spectral peaks in the measured spectrum that are considered for Xtract." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-relationship: has_units UO:0000002 ! dalton
 
 [Term]
 id: MS:1001635
@@ -10063,7 +10051,6 @@ name: ProteomeDiscoverer:Xtract:Lowest MZ
 def: "Lowest mass-to-charge (mz) value for spectral peaks in the measured spectrum that are considered for Xtract." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-relationship: has_units UO:0000002 ! dalton
 
 [Term]
 id: MS:1001637
@@ -10148,7 +10135,6 @@ name: ProteomeDiscoverer:Mascot:Max MGF File Size
 def: "Maximum size of the .mgf (Mascot Generic Format) file in MByte." [PSI:MS]
 xref: value-type:xsd\:int "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-relationship: has_units UO:0000235 ! megabyte
 
 [Term]
 id: MS:1001649
@@ -10174,7 +10160,7 @@ is_a: MS:1001302 ! search engine specific input parameter
 [Term]
 id: MS:1001652
 name: ProteomeDiscoverer:Mascot:User Name
-def: "Number of attempts to submit the Mascot search." [PSI:MS]
+def: "Name of the user submitting the Mascot search." [PSI:MS]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
@@ -10184,7 +10170,6 @@ name: ProteomeDiscoverer:Mascot:Time interval between attempts to submit a searc
 def: "Time interval between attempts to submit a search in seconds." [PSI:MS]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-relationship: has_units UO:0000010 ! second
 
 [Term]
 id: MS:1001654
@@ -10192,7 +10177,6 @@ name: ProteomeDiscoverer:Enzyme Name
 def: "Specifies the enzyme reagent used for protein digestion." [PSI:MS]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-is_a: MS:1001045 ! cleavage agent name
 
 [Term]
 id: MS:1001655
@@ -10200,13 +10184,11 @@ name: ProteomeDiscoverer:Fragment Mass Tolerance
 def: "Mass tolerance used for matching fragment peaks in Da or mmu." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-relationship: has_units UO:0000002 ! dalton
-relationship: has_units UO:0000267 ! millimassunit
 
 [Term]
 id: MS:1001656
 name: ProteomeDiscoverer:Mascot:Instrument
-def: "type of instrument used to acquire the data in the .raw file." [PSI:MS]
+def: "Type of instrument used to acquire the data in the .raw file." [PSI:MS]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
@@ -10230,8 +10212,6 @@ name: ProteomeDiscoverer:Precursor Mass Tolerance
 def: "Mass window for which precursor ions are considered to be the same species." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-relationship: has_units UO:0000221 ! dalton
-relationship: has_units UO:0000169 ! parts per million
 
 [Term]
 id: MS:1001660
@@ -10246,7 +10226,6 @@ name: ProteomeDiscoverer:Protein Database
 def: "Database to use in the search (configured on the Mascot server)." [PSI:MS]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-is_a: MS:1001013 ! database name
 
 [Term]
 id: MS:1001662
@@ -10261,28 +10240,20 @@ name: ProteomeDiscoverer:Target FDR Relaxed
 def: "Specifies the relaxed target false discovery rate (FDR, 0.0 ... 1.0) for peptide hits with moderate confidence." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-is_a: MS:1001092 ! peptide quality estimation measure
-is_a: MS:1001364 ! pep:global FDR
-is_a: MS:1001448 ! pep:FDR threshold
 
 [Term]
-id: MS:10001664
+id: MS:1001664
 name: ProteomeDiscoverer:Target FDR Strict
 def: "Specifies the strict target false discovery rate (FDR, 0.0 ... 1.0) for peptide hits with high confidence." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-is_a: MS:1001092 ! peptide quality estimation measure
-is_a: MS:1001364 ! pep:global FDR
-is_a: MS:1001448 ! pep:FDR threshold
 
 [Term]
-id: MS:10001665
+id: MS:1001665
 name: ProteomeDiscoverer:Mascot:Taxonomy
 def: "Limits searches to entries from a particular species or group of species." [PSI:MS]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-is-a: MS:1001468 ! taxonomy: common name
-is-a: MS:1001469 ! taxonomy: scientific name
 
 [Term]
 id: MS:1001666
@@ -10521,7 +10492,6 @@ name: ProteomeDiscoverer:Reporter Ions Quantizer:Integration Window Tolerance
 def: "Specifies the mass-to-charge window that enables one to look for the reporter peaks." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-relationship: has_units UO:0000169 ! parts per million
 
 [Term]
 id: MS:1001700
@@ -10536,7 +10506,6 @@ name: ProteomeDiscoverer:Spectrum Exporter:Export Format
 def: "Format of the exported spectra (*.dta, *.mgf or *.mzData.)" [PSI:MS]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-is_a: MS:1001459 ! file format
 
 [Term]
 id: MS:1001702
@@ -10554,112 +10523,112 @@ is_a: MS:1001302 ! search engine specific input parameter
 
 [Term]
 id: MS:1001704
-name: ProteomeDiscoverer:Std High Confidence XCorr Charge1
+name: ProteomeDiscoverer:SEQUEST:Std High Confidence XCorr Charge1
 def: "Standard high confidence XCorr parameter for charge = 1." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
 [Term]
 id: MS:1001705
-name: ProteomeDiscoverer:Std High Confidence XCorr Charge2
+name: ProteomeDiscoverer:SEQUEST:Std High Confidence XCorr Charge2
 def: "Standard high confidence XCorr parameter for charge = 2." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
 [Term]
 id: MS:1001706
-name: ProteomeDiscoverer:Std High Confidence XCorr Charge3
+name: ProteomeDiscoverer:SEQUEST:Std High Confidence XCorr Charge3
 def: "Standard high confidence XCorr parameter for charge = 3." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
 [Term]
 id: MS:1001707
-name: ProteomeDiscoverer:Std High Confidence XCorr Charge4
+name: ProteomeDiscoverer:SEQUEST:Std High Confidence XCorr Charge4
 def: "Standard high confidence XCorr parameter for charge >= 4." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
 [Term]
 id: MS:1001708
-name: ProteomeDiscoverer:Std Medium Confidence XCorr Charge1
+name: ProteomeDiscoverer:SEQUEST:Std Medium Confidence XCorr Charge1
 def: "Standard medium confidence XCorr parameter for charge = 1." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
 [Term]
 id: MS:1001709
-name: ProteomeDiscoverer:Std Medium Confidence XCorr Charge2
+name: ProteomeDiscoverer:SEQUEST:Std Medium Confidence XCorr Charge2
 def: "Standard medium confidence XCorr parameter for charge = 2." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
 [Term]
 id: MS:1001710
-name: ProteomeDiscoverer:Std Medium Confidence XCorr Charge3
+name: ProteomeDiscoverer:SEQUEST:Std Medium Confidence XCorr Charge3
 def: "Standard medium confidence XCorr parameter for charge = 3." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
 [Term]
 id: MS:1001711
-name: ProteomeDiscoverer:Std Medium Confidence XCorr Charge4
+name: ProteomeDiscoverer:SEQUEST:Std Medium Confidence XCorr Charge4
 def: "Standard medium confidence XCorr parameter for charge >= 4." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
 [Term]
 id: MS:1001712
-name: ProteomeDiscoverer:FT High Confidence XCorr Charge1
+name: ProteomeDiscoverer:SEQUEST:FT High Confidence XCorr Charge1
 def: "FT high confidence XCorr parameter for charge = 1." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
 [Term]
 id: MS:1001713
-name: ProteomeDiscoverer:FT High Confidence XCorr Charge2
+name: ProteomeDiscoverer:SEQUEST:FT High Confidence XCorr Charge2
 def: "FT high confidence XCorr parameter for charge = 2." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
 [Term]
 id: MS:1001714
-name: ProteomeDiscoverer:FT High Confidence XCorr Charge3
+name: ProteomeDiscoverer:SEQUEST:FT High Confidence XCorr Charge3
 def: "FT high confidence XCorr parameter for charge = 3." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
 [Term]
 id: MS:1001715
-name: ProteomeDiscoverer:FT High Confidence XCorr Charge4
+name: ProteomeDiscoverer:SEQUEST:FT High Confidence XCorr Charge4
 def: "FT high confidence XCorr parameter for charge >= 4." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
 [Term]
 id: MS:1001716
-name: ProteomeDiscoverer:FT Medium Confidence XCorr Charge1
+name: ProteomeDiscoverer:SEQUEST:FT Medium Confidence XCorr Charge1
 def: "FT medium confidence XCorr parameter for charge = 1." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
 [Term]
 id: MS:1001717
-name: ProteomeDiscoverer:FT Medium Confidence XCorr Charge2
+name: ProteomeDiscoverer:SEQUEST:FT Medium Confidence XCorr Charge2
 def: "FT medium confidence XCorr parameter for charge = 2." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
 [Term]
 id: MS:1001718
-name: ProteomeDiscoverer:FT Medium Confidence XCorr Charge3
+name: ProteomeDiscoverer:SEQUEST:FT Medium Confidence XCorr Charge3
 def: "FT medium confidence XCorr parameter for charge = 3." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
 [Term]
 id: MS:1001719
-name: ProteomeDiscoverer:FT Medium Confidence XCorr Charge4
+name: ProteomeDiscoverer:SEQUEST:FT Medium Confidence XCorr Charge4
 def: "FT medium confidence XCorr parameter for charge >= 4." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
@@ -10760,7 +10729,7 @@ id: MS:1001733
 name: ProteomeDiscoverer:Number of predicted correct proteins
 def: "Total number of predicted correct protein ids (sum of probabilities)." [PSI:MS]
 xref: value-type:xsd\:float "The allowed value-type for this CV term."
-is_a: MS:1001085 ! protein result details
+is_a: MS:1001302 ! search engine specific input parameter
 
 [Term]
 id: MS:1001734
@@ -10768,16 +10737,13 @@ name: ProteomeDiscoverer:Organism
 def: "Sample organism (used for annotation purposes)." [PSI:MS]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-is-a: MS:1001468 ! taxonomy: common name
-is-a: MS:1001469 ! taxonomy: scientific name
 
 [Term]
 id: MS:1001735
 name: ProteomeDiscoverer:Reference Database
 def: "Full path database name." [PSI:MS]
-xref: value-type:xsd\:string  "The allowed value-type for this CV term."
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-is_a: MS:1001011 ! search database details
 
 [Term]
 id: MS:1001736
@@ -10792,8 +10758,6 @@ name: ProteomeDiscoverer:Source file extension
 def: "File type (if not pepXML)." [PSI:MS]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-is_a: MS:1001459 ! file format
-is_a: MS:1001040 ! intermediate analysis format
 
 [Term]
 id: MS:1001738
@@ -10801,7 +10765,6 @@ name: ProteomeDiscoverer:Source Files
 def: "Input pepXML files." [PSI:MS]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-is_a: MS:1001421 ! pepXML file
 
 [Term]
 id: MS:1001739
@@ -10809,8 +10772,6 @@ name: ProteomeDiscoverer:Source Files old
 def: "Input pepXML files (old)." [PSI:MS]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-is_a: MS:1001421 ! pepXML file
-is_a: MS:1001738 ! ProteomeDiscoverer:Source Files
 
 [Term]
 id: MS:1001740
@@ -10818,7 +10779,6 @@ name: ProteomeDiscoverer:WinCyg reference database
 def: "Windows full path for database." [PSI:MS]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-is_a: MS:1001011 ! search database details
 
 [Term]
 id: MS:1001741
@@ -10826,7 +10786,6 @@ name: ProteomeDiscoverer:WinCyg source files
 def: "Windows pepXML file names." [PSI:MS]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
-is_a: MS:1001421 ! pepXML file
 
 [Term]
 id: MS:1001742
@@ -10897,6 +10856,48 @@ def: "Determines if to use z ions for spectrum matching." [PSI:MS]
 xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
 is_a: MS:1001302 ! search engine specific input parameter
 
+[Term]
+id: MS:1001752
+name: ProteomeDiscoverer:Spectrum Selector:Use New Precursor Reevaluation
+def: "Determines if to use precursor reevaluation." [PSI:MS]
+xref: value-type:xsd\:boolean "The allowed value-type for this CV term."
+is_a: MS:1001302 ! search engine specific input parameter
+
+[Term]
+id: MS:1001753
+name: ProteomeDiscoverer:Spectrum Selector:SN Threshold FTonly
+def: "Signal-to-Noise ratio below which peaks are removed (in FT mode only)." [PSI:MS]
+xref: value-type:xsd\:float "The allowed value-type for this CV term."
+is_a: MS:1001302 ! search engine specific input parameter
+
+[Term]
+id: MS:1001754
+name: ProteomeDiscoverer:Mascot:Please Do not Touch this
+def: "Unknown Mascot parameter which ProteomeDiscoverer uses for mascot searches." [PSI:MS]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1001302 ! search engine specific input parameter
+
+[Term]
+id: MS:1001755
+name: contact phone number
+def: "Phone number of the contact person or organization." [PSI:MS]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1000585 ! contact attribute
+
+[Term]
+id: MS:1001756
+name: contact fax number
+def: "Fax number for the contact person or organization." [PSI:MS]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1000585 ! contact attribute
+
+[Term]
+id: MS:1001757
+name: contact toll-free phone number
+def: "Toll-free phone number of the contact person or organization." [PSI:MS]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1000585 ! contact attribute
+
 [Typedef]
 id: has_regexp
 name: has regexp
@@ -10909,3 +10910,4 @@ name: has_units
 id: part_of
 name: part_of
 is_transitive: true
+

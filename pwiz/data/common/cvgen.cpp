@@ -432,6 +432,9 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "\n"
           "        cvMap_[\"UO\"].fullName = \"Unit Ontology\";\n"
           "        cvMap_[\"UO\"].URI = \"http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo\";\n"
+          "\n"
+          "        cvMap_[\"UNIMOD\"].fullName = \"UNIMOD\";\n"
+          "        cvMap_[\"UNIMOD\"].URI = \"http://www.unimod.org/obo/unimod.obo\";\n"
           "\n";
 
     // populate CV ids and versions from OBO headers
@@ -449,13 +452,38 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
                 version = what[1];
                 break;
             }
+        }
 
-            if (version.empty())
+        if (version.empty())
+        {
+            // since UNIMOD doesn't update its 'date' field,
+            // we use the maximum "date_time_modified" property_value
+            string max_date_time_modified;
+            boost::regex e("(\\d+-\\d+-\\d+).*");
+            boost::smatch what;
+            BOOST_FOREACH(const Term& term, obo->terms)
+            BOOST_FOREACH(const NameValuePair& nameValuePair, term.propertyValues)
+                if (nameValuePair.first == "date_time_modified" &&
+                    regex_match(nameValuePair.second, what, e))
+                {
+                    if (max_date_time_modified.empty() || what[1] > max_date_time_modified)
+                        max_date_time_modified = what[1];
+                    continue; // to the next term
+                }
+            version = max_date_time_modified;
+        }
+
+        if (version.empty())
+        {
+            for (size_t i=0; i < obo->header.size(); ++i)
             {
                 boost::regex e("\\s*date: (\\S+).*");
                 boost::smatch what;
                 if (regex_match(obo->header[i], what, e))
+                {
                     version = what[1];
+                    break;
+                }
             }
         }
 
