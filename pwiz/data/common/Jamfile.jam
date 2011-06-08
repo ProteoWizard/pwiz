@@ -91,7 +91,9 @@ actions do_cvgen
    "$(>[1]:P)/cvgen" $(>)
 }
 
-make cv.hpp : psi-ms.obo unit.obo unimod.obo : do_cvgen : <dependency>install_cvgen ;
+
+path-constant PWIZ_DATA_COMMON_PATH : . ;
+make cv.hpp : [ path.glob $(PWIZ_DATA_COMMON_PATH) : *.obo ] : do_cvgen : <dependency>install_cvgen ;
 explicit cv.hpp ;
 
 

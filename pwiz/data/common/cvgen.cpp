@@ -334,6 +334,9 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
         vector<OBO>::const_iterator obo2;
         for (obo2=obos.begin(); obo2!=obos.end(); ++obo2)
         {
+            if (jt->second.first != obo2->prefix)
+                continue;
+
             set<Term>::const_iterator relatedTermItr = obo2->terms.find(Term(jt->second.second));
             if (relatedTermItr != obo2->terms.end())
             {
