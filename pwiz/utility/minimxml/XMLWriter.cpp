@@ -26,10 +26,42 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include "boost/iostreams/filtering_stream.hpp" 
 #include "boost/iostreams/filter/counter.hpp"
+#include <boost/spirit/include/karma.hpp>
 
 
 namespace pwiz {
 namespace minimxml {
+
+
+template <typename T>
+struct double12_policy : boost::spirit::karma::real_policies<T>   
+{
+    //  we want to generate up to 12 fractional digits
+    static unsigned int precision(T) { return 12; }
+};
+
+void XMLWriter::Attributes::add(const string& name, const double& value)
+{
+    using namespace boost::spirit::karma;
+    typedef real_generator<double, double12_policy<double> > double12_type;
+    static const double12_type double12 = double12_type();
+    char buffer[256];
+    char* p = buffer;
+    generate(p, double12, value);
+    *p = '\0';
+    push_back(make_pair(name, std::string(&buffer[0], p)));
+}
+
+void XMLWriter::Attributes::add(const string& name, const int& value)
+{
+    using namespace boost::spirit::karma;
+    static const int_generator<int> intgen = int_generator<int>();
+    char buffer[256];
+    char* p = buffer;
+    generate(p, intgen, value);
+    *p = '\0';
+    push_back(make_pair(name, std::string(&buffer[0], p)));
+}
 
 
 class XMLWriter::Impl
@@ -99,7 +131,7 @@ void XMLWriter::Impl::processingInstruction(const string& name, const string& da
 
 void writeEscapedAttributeXML(ostream& os, const string& str)
 {
-    for (size_t i=0; i < str.size(); ++i)
+    for (size_t i=0, end=str.size(); i < end; ++i)
     {
         const char& c = str[i];
         switch (c)
@@ -117,7 +149,7 @@ void writeEscapedAttributeXML(ostream& os, const string& str)
 
 void writeEscapedTextXML(ostream& os, const string& str)
 {
-    for (size_t i=0; i < str.size(); ++i)
+    for (size_t i=0, end=str.size(); i < end; ++i)
     {
         const char& c = str[i];
         switch (c)

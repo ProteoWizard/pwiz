@@ -26,6 +26,8 @@
 #include "ParamTypes.hpp"
 #include "diff_std.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include <boost/spirit/include/karma.hpp>
+
 
 namespace pwiz {
 namespace data {
@@ -68,8 +70,10 @@ PWIZ_API_DECL double CVParam::timeInSeconds() const
 
 PWIZ_API_DECL ostream& operator<<(ostream& os, const CVParam& param)
 {
-    os << cvTermInfo(param.cvid).name << ": " << param.value;
+    os << cvTermInfo(param.cvid).name;
 
+    if (!param.value.empty())
+        os << ": " << param.value;
     if (param.units != CVID_Unknown)
         os << " " << cvTermInfo(param.units).name << "(s)";
 
@@ -245,6 +249,37 @@ PWIZ_API_DECL void ParamContainer::set(CVID cvid, const string& value, CVID unit
     }
 
     cvParams.push_back(CVParam(cvid, value, units));
+}
+
+
+template <typename T>
+struct double12_policy : boost::spirit::karma::real_policies<T>   
+{
+    //  we want to generate up to 12 fractional digits
+    static unsigned int precision(T) { return 12; }
+};
+
+
+PWIZ_API_DECL void ParamContainer::set(CVID cvid, double value, CVID units)
+{
+    using namespace boost::spirit::karma;
+    typedef real_generator<double, double12_policy<double> > double12_type;
+    static const double12_type double12 = double12_type();
+    char buffer[256];
+    char* p = buffer;
+    generate(p, double12, value);
+    set(cvid, std::string(&buffer[0], p), units);
+}
+
+
+PWIZ_API_DECL void ParamContainer::set(CVID cvid, int value, CVID units)
+{
+    using namespace boost::spirit::karma;
+    static const int_generator<int> intgen = int_generator<int>();
+    char buffer[256];
+    char* p = buffer;
+    generate(p, intgen, value);
+    set(cvid, std::string(&buffer[0], p), units);
 }
 
 

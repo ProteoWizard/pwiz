@@ -279,6 +279,12 @@ struct PWIZ_API_DECL ParamContainer
     void set(CVID cvid, const std::string& value = "", CVID units = CVID_Unknown);
 
     /// set/add a CVParam (not recursive)
+    void set(CVID cvid, double value, CVID units = CVID_Unknown);
+
+    /// set/add a CVParam (not recursive)
+    void set(CVID cvid, int value, CVID units = CVID_Unknown);
+
+    /// set/add a CVParam (not recursive)
     template <typename value_type>
     void set(CVID cvid, value_type value, CVID units = CVID_Unknown)
     {

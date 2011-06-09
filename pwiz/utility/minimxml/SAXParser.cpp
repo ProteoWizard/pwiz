@@ -135,11 +135,48 @@ struct ProcessingInstruction
 
 string& unescapeXML(string& str)
 {
-    bal::replace_all(str, "&lt;", "<");
-    bal::replace_all(str, "&gt;", ">");
-    bal::replace_all(str, "&quot;", "\"");
-    bal::replace_all(str, "&apos;", "'");
-    bal::replace_all(str, "&amp;", "&");
+    for (size_t i=0, end=str.size(); i < end; ++i)
+    {
+        if (str[i] != '&')
+            continue;
+
+        // there must be at least three characters after '&' (&lt; or &gt;)
+        if (i+3 >= end)
+            throw runtime_error("[SAXParser::unescapeXML] Invalid escape sequence.");
+
+        if (str[i+1] == 'l' && str[i+2] == 't' && str[i+3] == ';')
+        {
+            str[i] = '<';
+            str.erase(i+1, 3);
+            end -= 3;
+        }
+        else if (str[i+1] == 'g' && str[i+2] == 't' && str[i+3] == ';')
+        {
+            str[i] = '>';
+            str.erase(i+1, 3);
+            end -= 3;
+        }
+        else if (i+4 < end && str[i+1] == 'a' && str[i+2] == 'm' && str[i+3] == 'p' && str[i+4] == ';')
+        {
+            str[i] = '&';
+            str.erase(i+1, 4);
+            end -= 4;
+        }
+        else if (i+5 < end && str[i+1] == 'q' && str[i+2] == 'u' && str[i+3] == 'o' && str[i+4] == 't' && str[i+5] == ';')
+        {
+            str[i] = '"';
+            str.erase(i+1, 5);
+            end -= 5;
+        }
+        else if (i+5 < end && str[i+1] == 'a' && str[i+2] == 'p' && str[i+3] == 'o' && str[i+4] == 's' && str[i+5] == ';')
+        {
+            str[i] = '\'';
+            str.erase(i+1, 5);
+            end -= 5;
+        }
+        else
+            throw runtime_error("[SAXParser::unescapeXML] Invalid escape sequence.");
+    }
     return str;
 }
 

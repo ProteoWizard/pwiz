@@ -26,10 +26,10 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/utility/misc/optimized_lexical_cast.hpp"
 #include "boost/shared_ptr.hpp"
 #include "boost/iostreams/positioning.hpp"
 #include "boost/iostreams/filter/counter.hpp"
-#include "boost/lexical_cast.hpp"
 #include <iosfwd>
 #include <string>
 #include <vector>
@@ -81,6 +81,9 @@ class PWIZ_API_DECL XMLWriter
     class Attributes : public std::vector< std::pair<std::string,std::string> >
     {
         public:
+        void add(const std::string& name, const double& value);
+        void add(const std::string& name, const int& value);
+
         template <typename T>
         inline void add(const std::string& name, const T& value)
         {

@@ -26,10 +26,10 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "pwiz/utility/misc/optimized_lexical_cast.hpp"
+#include "pwiz/utility/misc/shared_map.hpp"
 #include "boost/iostreams/positioning.hpp"
 #include <iosfwd>
 #include <string>
-#include <map>
 
 
 namespace pwiz {
@@ -83,7 +83,7 @@ class Handler
         {}
     };
 
-    typedef std::map<std::string,std::string> Attributes;
+    typedef pwiz::util::shared_map<std::string, std::string> Attributes;
     typedef boost::iostreams::stream_offset stream_offset; 
 
     virtual Status processingInstruction(const std::string& name,
