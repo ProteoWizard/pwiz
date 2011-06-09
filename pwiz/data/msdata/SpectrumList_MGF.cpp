@@ -200,11 +200,11 @@ class SpectrumList_MGFImpl : public SpectrumList_MGF
                                 size_t delim2 = value.find(' ');
                                 if (delim2 != string::npos)
                                 {
-                                    selectedIon.set(MS_selected_ion_m_z, lexical_cast<double>(value.substr(0, delim2)), MS_m_z);
-                                    selectedIon.set(MS_peak_intensity, lexical_cast<double>(value.substr(delim2+1)), MS_number_of_counts);
+                                    selectedIon.set(MS_selected_ion_m_z, value.substr(0, delim2), MS_m_z);
+                                    selectedIon.set(MS_peak_intensity, value.substr(delim2+1), MS_number_of_counts);
                                 }
                                 else
-                                    selectedIon.set(MS_selected_ion_m_z, lexical_cast<double>(value), MS_m_z);
+                                    selectedIon.set(MS_selected_ion_m_z, value, MS_m_z);
 				            }
                             else if (name == "CHARGE")
 				            {

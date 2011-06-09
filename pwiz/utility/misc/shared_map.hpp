@@ -23,10 +23,14 @@
 #ifndef _SHARED_MAP_HPP_
 #define _SHARED_MAP_HPP_
 
+
 #include <map>
+#include <boost/shared_ptr.hpp>
+
 
 namespace pwiz {
 namespace util {
+
 
 /// copy semantics of shared_ptr<map<K,V> > with a std::map interface
 template<class keyT,
@@ -234,4 +238,3 @@ class shared_map
 } // namespace pwiz
 
 #endif // _SHARED_MAP_HPP_
-
