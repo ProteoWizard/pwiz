@@ -78,7 +78,7 @@ class PWIZ_API_DECL XMLWriter
     };
 
     /// vector of name/value pairs to be written as XML attributes
-    class Attributes : public std::vector< std::pair<std::string,std::string> >
+    class PWIZ_API_DECL Attributes : public std::vector< std::pair<std::string,std::string> >
     {
         public:
         void add(const std::string& name, const double& value);
