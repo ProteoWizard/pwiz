@@ -51,13 +51,6 @@ void diff(const IonType& a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
-void diff(const Material& a,
-          const Material& b,
-          Material& a_b,
-          Material& b_a,
-          const DiffConfig& config);
-
-PWIZ_API_DECL
 void diff(const Measure& a,
           const Measure& b,
           Measure& a_b,
@@ -226,13 +219,6 @@ void diff(const Contact& a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
-void diff(const Affiliations& a,
-          const Affiliations& b,
-          Affiliations& a_b,
-          Affiliations& b_a,
-          const DiffConfig& config);
-
-PWIZ_API_DECL
 void diff(const Person& a,
           const Person& b,
           Person& a_b,
@@ -245,15 +231,6 @@ void diff(const Organization& a,
           Organization& a_b,
           Organization& b_a,
           const DiffConfig& config);
-
-/*
-PWIZ_API_DECL
-void diff(const OrganizationPtr a,
-          const OrganizationPtr b,
-          OrganizationPtr a_b,
-          OrganizationPtr b_a,
-          const DiffConfig& config);
-*/
 
 PWIZ_API_DECL
 void diff(const BibliographicReference& a,
@@ -312,24 +289,10 @@ void diff(const Peptide& a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
-void diff(const PeptideEvidenceList& a,
-          const PeptideEvidenceList& b,
-          PeptideEvidenceList& a_b,
-          PeptideEvidenceList& b_a,
-          const DiffConfig& config);
-
-PWIZ_API_DECL
 void diff(const SequenceCollection& a,
           const SequenceCollection& b,
           SequenceCollection& a_b,
           SequenceCollection& b_a,
-          const DiffConfig& config);
-
-PWIZ_API_DECL
-void diff(const Sample::SubSample& a,
-          const Sample::SubSample& b,
-          Sample::SubSample& a_b,
-          Sample::SubSample& b_a,
           const DiffConfig& config);
 
 PWIZ_API_DECL

@@ -40,7 +40,7 @@ ostream* os_ = 0;
 
 void testSerialize()
 {
-    cerr << "begin testSerialize\n";
+    if (os_) *os_ << "begin testSerialize\n";
     MzIdentML mzid;
     initializeTiny(mzid);
 

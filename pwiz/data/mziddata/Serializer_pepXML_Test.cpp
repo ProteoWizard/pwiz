@@ -63,6 +63,7 @@ void stripUnmappedMetadata(MzIdentML& mzid)
     mzid.analysisCollection.spectrumIdentification[0]->searchDatabase[0]->name.clear();
     mzid.analysisCollection.spectrumIdentification[0]->searchDatabase[0]->version.clear();
     mzid.analysisCollection.spectrumIdentification[0]->searchDatabase[0]->releaseDate.clear();
+    mzid.analysisCollection.spectrumIdentification[0]->searchDatabase[0]->databaseName.clear();
 
     // pepXML doesn't reliably store location or file format
     string& location = mzid.analysisCollection.spectrumIdentification[0]->inputSpectra[0]->location;
@@ -81,9 +82,14 @@ void stripUnmappedMetadata(MzIdentML& mzid)
     }
 
     // pepXML can only support one mass type (we pick the max mass in case one of them is 0)
+    // and it doesn't reliably store UNIMOD names or accessions
     BOOST_FOREACH(PeptidePtr& peptide, mzid.sequenceCollection.peptides)
     BOOST_FOREACH(ModificationPtr& mod, peptide->modification)
+    {
         mod->monoisotopicMassDelta = mod->avgMassDelta = max(mod->monoisotopicMassDelta, mod->avgMassDelta);
+        mod->cvParams.clear();
+        mod->set(MS_unknown_modification);
+    }
 
     // pepXML doesn't support fragment metadata
     mzid.dataCollection.analysisData.spectrumIdentificationList[0]->fragmentationTable.clear();
@@ -106,7 +112,6 @@ void stripUnmappedMetadata(MzIdentML& mzid)
             {
                 pe.pre.clear();
                 pe.post.clear();
-                pe.missedCleavages = 0;
             }
         }
     }
@@ -169,8 +174,7 @@ void testSerialize()
         // clear the original SequenceCollection
         mzid.sequenceCollection.dbSequences.clear();
         mzid.sequenceCollection.peptides.clear();
-        BOOST_FOREACH(PeptideEvidenceListPtr& pel, mzid.sequenceCollection.peptideEvidenceList)
-            pel->peptideEvidence.clear();
+        mzid.sequenceCollection.peptideEvidence.clear();
 
         // clear the original analysis data
         mzid.analysisCollection.spectrumIdentification[0]->spectrumIdentificationListPtr.reset();

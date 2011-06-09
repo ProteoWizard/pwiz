@@ -96,8 +96,7 @@ void diff(const SearchModification& a,
     }
     diff_floating(a.massDelta, b.massDelta, a_b.massDelta, b_a.massDelta, config);
     diff(a.residues, b.residues, a_b.residues, b_a.residues, config);
-    diff(a.specificityRules, b.specificityRules,
-         a_b.specificityRules, b_a.specificityRules, config);
+    diff(a.specificityRules, b.specificityRules, a_b.specificityRules, b_a.specificityRules, config);
     diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
 }
 
@@ -111,23 +110,10 @@ void diff(const IonType& a,
 {
     diff_integral(a.charge, b.charge, a_b.charge, b_a.charge, config);
     vector_diff(a.index, b.index, a_b.index, b_a.index);
-    vector_diff_deep(a.fragmentArray, b.fragmentArray,
-                     a_b.fragmentArray, b_a.fragmentArray, config);
+    vector_diff_deep(a.fragmentArray, b.fragmentArray, a_b.fragmentArray, b_a.fragmentArray, config);
     diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
 }
 
-
-
-PWIZ_API_DECL
-void diff(const Material& a,
-          const Material& b,
-          Material& a_b,
-          Material& b_a,
-          const DiffConfig& config)
-{
-    diff(a.contactRole, b.contactRole, a_b.contactRole, b_a.contactRole, config);
-    diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
-}
 
 PWIZ_API_DECL
 void diff(const DataCollection& a,
@@ -149,8 +135,8 @@ void diff(const PeptideEvidence& a,
           const DiffConfig& config)
 {
     diff(static_cast<const IdentifiableParamContainer&>(a), b, a_b, b_a, config);
-    ptr_diff(a.dbSequencePtr, b.dbSequencePtr, a_b.dbSequencePtr,
-             b_a.dbSequencePtr, config);
+    ptr_diff(a.peptidePtr, b.peptidePtr, a_b.peptidePtr, b_a.peptidePtr, config);
+    ptr_diff(a.dbSequencePtr, b.dbSequencePtr, a_b.dbSequencePtr, b_a.dbSequencePtr, config);
     diff_integral(a.start, b.start, a_b.start, b_a.start, config);
     diff_integral(a.end, b.end, a_b.end, b_a.end, config);
     diff(a.pre, b.pre, a_b.pre, b_a.pre, config);
@@ -163,8 +149,6 @@ void diff(const PeptideEvidence& a,
         a_b.isDecoy = a.isDecoy;
         b_a.isDecoy = b.isDecoy;
     }
-    diff_integral(a.missedCleavages, b.missedCleavages,
-                  a_b.missedCleavages, b_a.missedCleavages, config);
 }
 
 
@@ -175,21 +159,15 @@ void diff(const SpectrumIdentificationItem& a,
           SpectrumIdentificationItem& b_a,
           const DiffConfig& config)
 {
-    diff_integral(a.chargeState, b.chargeState, a_b.chargeState, b_a.chargeState,
-                  config);
-
+    diff_integral(a.chargeState, b.chargeState, a_b.chargeState, b_a.chargeState, config);
     diff_floating(a.experimentalMassToCharge, b.experimentalMassToCharge,
                   a_b.experimentalMassToCharge, b_a.experimentalMassToCharge,
                   config);
     diff_floating(a.calculatedMassToCharge, b.calculatedMassToCharge,
                   a_b.calculatedMassToCharge, b_a.calculatedMassToCharge,
                   config);
-    diff_floating(a.calculatedPI, b.calculatedPI,
-                  a_b.calculatedPI, b_a.calculatedPI,
-                  config);
-    ptr_diff(a.peptidePtr, b.peptidePtr,
-             a_b.peptidePtr, b_a.peptidePtr,
-             config);
+    diff_floating(a.calculatedPI, b.calculatedPI, a_b.calculatedPI, b_a.calculatedPI, config);
+    ptr_diff(a.peptidePtr, b.peptidePtr, a_b.peptidePtr, b_a.peptidePtr, config);
     diff_integral(a.rank, b.rank, a_b.rank, b_a.rank, config);
 
     if(a.passThreshold != b.passThreshold)
@@ -198,18 +176,13 @@ void diff(const SpectrumIdentificationItem& a,
         b_a.passThreshold = b.passThreshold;
     }
 
-    ptr_diff(a.massTablePtr, b.massTablePtr,
-             a_b.massTablePtr, b_a.massTablePtr, config);
-    
-    ptr_diff(a.samplePtr, b.samplePtr,
-             a_b.samplePtr, b_a.samplePtr, config);
-
+    ptr_diff(a.massTablePtr, b.massTablePtr, a_b.massTablePtr, b_a.massTablePtr, config);
+    ptr_diff(a.samplePtr, b.samplePtr, a_b.samplePtr, b_a.samplePtr, config);
     vector_diff_deep(a.peptideEvidencePtr, b.peptideEvidencePtr,
                      a_b.peptideEvidencePtr, b_a.peptideEvidencePtr, config);
-
     vector_diff_deep(a.fragmentation, b.fragmentation,
                      a_b.fragmentation, b_a.fragmentation, config);
-    
+
     diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
 }
 
@@ -222,8 +195,7 @@ void diff(const SpectrumIdentificationResult& a,
           const DiffConfig& config)
 {
     diff(a.spectrumID, b.spectrumID, a_b.spectrumID, b_a.spectrumID, config);
-    ptr_diff(a.spectraDataPtr, b.spectraDataPtr,
-             a_b.spectraDataPtr, b_a.spectraDataPtr, config);
+    ptr_diff(a.spectraDataPtr, b.spectraDataPtr, a_b.spectraDataPtr, b_a.spectraDataPtr, config);
 
     vector_diff_deep(a.spectrumIdentificationItem, b.spectrumIdentificationItem,
                      a_b.spectrumIdentificationItem, b_a.spectrumIdentificationItem,
@@ -231,6 +203,7 @@ void diff(const SpectrumIdentificationResult& a,
 
     diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
 }
+
 
 PWIZ_API_DECL
 void diff(const SpectrumIdentificationListPtr a,
@@ -261,6 +234,7 @@ void diff(const SpectrumIdentificationList& a,
                      b_a.spectrumIdentificationResult, config);
 }
 
+
 PWIZ_API_DECL
 void diff(const PeptideHypothesis& a,
           const PeptideHypothesis& b,
@@ -275,6 +249,7 @@ void diff(const PeptideHypothesis& a,
                      a_b.spectrumIdentificationItemPtr, b_a.spectrumIdentificationItemPtr,
                      config);
 }
+
 
 PWIZ_API_DECL
 void diff(const ProteinDetectionHypothesis& a,
@@ -295,6 +270,7 @@ void diff(const ProteinDetectionHypothesis& a,
     diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
 }
 
+
 PWIZ_API_DECL
 void diff(const ProteinAmbiguityGroup& a,
           const ProteinAmbiguityGroup& b,
@@ -305,6 +281,7 @@ void diff(const ProteinAmbiguityGroup& a,
     vector_diff_deep(a.proteinDetectionHypothesis, b.proteinDetectionHypothesis, a_b.proteinDetectionHypothesis, b_a.proteinDetectionHypothesis, config);
     diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
 }
+
 
 PWIZ_API_DECL
 void diff(const ProteinDetectionList& a,
@@ -318,6 +295,7 @@ void diff(const ProteinDetectionList& a,
                      a_b.proteinAmbiguityGroup, b_a.proteinAmbiguityGroup,
                      config);
 }
+
 
 PWIZ_API_DECL
 void diff(const AnalysisData& a,
@@ -334,6 +312,7 @@ void diff(const AnalysisData& a,
              a_b.proteinDetectionListPtr, b_a.proteinDetectionListPtr,
              config);
 }
+
 
 PWIZ_API_DECL
 void diff(const SearchDatabase& a,
@@ -359,8 +338,9 @@ void diff(const SearchDatabase& a,
     }
 
     diff(a.fileFormat, b.fileFormat, a_b.fileFormat, b_a.fileFormat, config);
-    diff(a.DatabaseName, b.DatabaseName, a_b.DatabaseName, b_a.DatabaseName, config);
+    diff(a.databaseName, b.databaseName, a_b.databaseName, b_a.databaseName, config);
 }
+
 
 PWIZ_API_DECL
 void diff(const SourceFile& a,
@@ -378,6 +358,7 @@ void diff(const SourceFile& a,
     diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
 }
 
+
 PWIZ_API_DECL
 void diff(const SpectraData& a,
           const SpectraData& b,
@@ -394,6 +375,7 @@ void diff(const SpectraData& a,
     diff(a.spectrumIDFormat, b.spectrumIDFormat, a_b.spectrumIDFormat, b_a.spectrumIDFormat, config);
 }
 
+
 PWIZ_API_DECL
 void diff(const Inputs& a,
           const Inputs& b,
@@ -401,13 +383,11 @@ void diff(const Inputs& a,
           Inputs& b_a,
           const DiffConfig& config)
 {
-    vector_diff_deep(a.sourceFile, b.sourceFile,
-                     a_b.sourceFile, b_a.sourceFile, config);
-    vector_diff_deep(a.searchDatabase, b.searchDatabase,
-                     a_b.searchDatabase, b_a.searchDatabase, config);
-    vector_diff_deep(a.spectraData, b.spectraData,
-                     a_b.spectraData, b_a.spectraData, config);
+    vector_diff_deep(a.sourceFile, b.sourceFile, a_b.sourceFile, b_a.sourceFile, config);
+    vector_diff_deep(a.searchDatabase, b.searchDatabase, a_b.searchDatabase, b_a.searchDatabase, config);
+    vector_diff_deep(a.spectraData, b.spectraData, a_b.spectraData, b_a.spectraData, config);
 }
+
 
 PWIZ_API_DECL
 void diff(const Enzyme& a,
@@ -426,6 +406,7 @@ void diff(const Enzyme& a,
     diff(a.enzymeName, b.enzymeName, a_b.enzymeName, b_a.enzymeName,config);
 }
 
+
 PWIZ_API_DECL
 void diff(const Enzymes& a,
           const Enzymes& b,
@@ -436,6 +417,7 @@ void diff(const Enzymes& a,
     diff(a.independent, b.independent, a_b.independent, b_a.independent,config);
     vector_diff_deep(a.enzymes, b.enzymes, a_b.enzymes, b_a.enzymes,config);
 }
+
 
 PWIZ_API_DECL
 void diff(const MassTable& a,
@@ -462,6 +444,7 @@ void diff(const Residue& a,
     diff_floating(a.Mass, b.Mass, a_b.Mass, b_a.Mass, config);
 }
 
+
 PWIZ_API_DECL
 void diff(const AmbiguousResidue& a,
           const AmbiguousResidue& b,
@@ -472,6 +455,7 @@ void diff(const AmbiguousResidue& a,
     diff(a.Code, b.Code, a_b.Code, b_a.Code, config);
     diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
 }
+
 
 PWIZ_API_DECL
 void diff(const Filter& a,
@@ -484,6 +468,7 @@ void diff(const Filter& a,
     diff(a.include, b.include, a_b.include, b_a.include, config);
     diff(a.exclude, b.exclude, a_b.exclude, b_a.exclude, config);
 }
+
 
 PWIZ_API_DECL
 void diff(const SpectrumIdentificationProtocol& a,
@@ -506,6 +491,7 @@ void diff(const SpectrumIdentificationProtocol& a,
     vector_diff_deep(a.databaseFilters, b.databaseFilters, a_b.databaseFilters, b_a.databaseFilters, config);
 }
 
+
 PWIZ_API_DECL
 void diff(const ProteinDetectionProtocol& a,
           const ProteinDetectionProtocol& b,
@@ -517,6 +503,7 @@ void diff(const ProteinDetectionProtocol& a,
     diff(a.analysisParams, b.analysisParams, a_b.analysisParams, b_a.analysisParams, config);
     diff(a.threshold, b.threshold, a_b.threshold, b_a.threshold, config);
 }
+
 
 PWIZ_API_DECL
 void diff(const AnalysisProtocolCollection& a,
@@ -537,6 +524,7 @@ void diff(const AnalysisProtocolCollection& a,
                      config);
 }
 
+
 PWIZ_API_DECL
 void diff(const Contact& a,
           const Contact& b,
@@ -545,12 +533,6 @@ void diff(const Contact& a,
           const DiffConfig& config)
 {
     diff(static_cast<const IdentifiableParamContainer&>(a), b, a_b, b_a, config);
-    diff(a.address, b.address, a_b.address, b_a.address, config);
-    diff(a.phone, b.phone, a_b.phone, b_a.phone, config);
-    diff(a.email, b.email, a_b.email, b_a.email, config);
-    diff(a.fax, b.fax, a_b.fax, b_a.fax, config);
-    diff(a.tollFreePhone, b.tollFreePhone, a_b.tollFreePhone,
-         b_a.tollFreePhone, config);
 }
 
 
@@ -592,22 +574,6 @@ void diff(const ContactPtr a,
     }
 }
 
-PWIZ_API_DECL
-void diff(const Affiliations& a,
-          const Affiliations& b,
-          Affiliations& a_b,
-          Affiliations& b_a,
-          const DiffConfig& config)
-{
-    if (a.organizationPtr.get() &&  b.organizationPtr.get())
-        diff(a.organizationPtr, b.organizationPtr,
-             a_b.organizationPtr, b_a.organizationPtr, config);
-    else
-    {
-        a_b.organizationPtr = a.organizationPtr;
-        b_a.organizationPtr = b.organizationPtr;
-    }
-}
 
 PWIZ_API_DECL
 void diff(const Person& a,
@@ -619,11 +585,10 @@ void diff(const Person& a,
     diff(static_cast<const Contact&>(a), b, a_b, b_a, config);
     diff(a.lastName, b.lastName, a_b.lastName, b_a.lastName, config);
     diff(a.firstName, b.firstName, a_b.firstName, b_a.firstName, config);
-    diff(a.midInitials, b.midInitials, a_b.midInitials, b_a.midInitials,
-         config);
-    vector_diff_diff(a.affiliations, b.affiliations, a_b.affiliations,
-                     b_a.affiliations, config);
+    diff(a.midInitials, b.midInitials, a_b.midInitials, b_a.midInitials, config);
+    vector_diff_deep(a.affiliations, b.affiliations, a_b.affiliations, b_a.affiliations, config);
 }
+
 
 PWIZ_API_DECL
 void diff(const Organization& a,
@@ -633,9 +598,7 @@ void diff(const Organization& a,
           const DiffConfig& config)
 {
     diff(static_cast<const Contact&>(a), b, a_b, b_a, config);
-    ptr_diff(a.parent.organizationPtr, b.parent.organizationPtr,
-             a_b.parent.organizationPtr, b_a.parent.organizationPtr,
-             config);
+    ptr_diff(a.parent, b.parent, a_b.parent, b_a.parent, config);
 }
 
 
@@ -658,6 +621,7 @@ void diff(const BibliographicReference& a,
     diff(a.title, b.title, a_b.title, b_a.title, config);
 }
 
+
 PWIZ_API_DECL
 void diff(const ProteinDetection& a,
           const ProteinDetection& b,
@@ -666,19 +630,14 @@ void diff(const ProteinDetection& a,
           const DiffConfig& config)
 {
     ptr_diff(a.proteinDetectionProtocolPtr, b.proteinDetectionProtocolPtr,
-             a_b.proteinDetectionProtocolPtr, b_a.proteinDetectionProtocolPtr,
-             config);
+             a_b.proteinDetectionProtocolPtr, b_a.proteinDetectionProtocolPtr, config);
     ptr_diff(a.proteinDetectionListPtr, b.proteinDetectionListPtr,
-             a_b.proteinDetectionListPtr, b_a.proteinDetectionListPtr,
-             config);
-    diff(a.activityDate, b.activityDate, a_b.activityDate, b_a.activityDate,
-         config);
-    vector_diff_deep(a.inputSpectrumIdentifications,
-                     b.inputSpectrumIdentifications,
-                     a_b.inputSpectrumIdentifications,
-                     b_a.inputSpectrumIdentifications,
-                     config);
+             a_b.proteinDetectionListPtr, b_a.proteinDetectionListPtr, config);
+    diff(a.activityDate, b.activityDate, a_b.activityDate, b_a.activityDate, config);
+    vector_diff_deep(a.inputSpectrumIdentifications, b.inputSpectrumIdentifications,
+                     a_b.inputSpectrumIdentifications, b_a.inputSpectrumIdentifications, config);
 }
+
 
 PWIZ_API_DECL
 void diff(const SpectrumIdentification& a,
@@ -687,21 +646,15 @@ void diff(const SpectrumIdentification& a,
           SpectrumIdentification& b_a,
           const DiffConfig& config)
 {
-    ptr_diff(a.spectrumIdentificationProtocolPtr,
-         b.spectrumIdentificationProtocolPtr,
-         a_b.spectrumIdentificationProtocolPtr,
-         b_a.spectrumIdentificationProtocolPtr, config);
-    ptr_diff(a.spectrumIdentificationListPtr,
-         b.spectrumIdentificationListPtr,
-         a_b.spectrumIdentificationListPtr,
-         b_a.spectrumIdentificationListPtr, config);
-    diff(a.activityDate, b.activityDate, a_b.activityDate,
-         b_a.activityDate, config);
-    vector_diff_deep(a.inputSpectra, b.inputSpectra, a_b.inputSpectra,
-         b_a.inputSpectra, config);
-    vector_diff_deep(a.searchDatabase, b.searchDatabase, a_b.searchDatabase,
-         b_a.searchDatabase, config);
+    ptr_diff(a.spectrumIdentificationProtocolPtr, b.spectrumIdentificationProtocolPtr,
+             a_b.spectrumIdentificationProtocolPtr, b_a.spectrumIdentificationProtocolPtr, config);
+    ptr_diff(a.spectrumIdentificationListPtr, b.spectrumIdentificationListPtr,
+             a_b.spectrumIdentificationListPtr, b_a.spectrumIdentificationListPtr, config);
+    diff(a.activityDate, b.activityDate, a_b.activityDate, b_a.activityDate, config);
+    vector_diff_deep(a.inputSpectra, b.inputSpectra, a_b.inputSpectra, b_a.inputSpectra, config);
+    vector_diff_deep(a.searchDatabase, b.searchDatabase, a_b.searchDatabase, b_a.searchDatabase, config);
 }
+
 
 PWIZ_API_DECL
 void diff(const AnalysisCollection& a,
@@ -713,9 +666,10 @@ void diff(const AnalysisCollection& a,
     vector_diff_deep(a.spectrumIdentification, b.spectrumIdentification,
                      a_b.spectrumIdentification, b_a.spectrumIdentification,
                      config);
-    diff(a.proteinDetection, b.proteinDetection, a_b.proteinDetection,
-         b_a.proteinDetection, config);
+    diff(a.proteinDetection, b.proteinDetection,
+         a_b.proteinDetection, b_a.proteinDetection, config);
 }
+
 
 PWIZ_API_DECL
 void diff(const DBSequence& a,
@@ -727,10 +681,10 @@ void diff(const DBSequence& a,
     diff(static_cast<const IdentifiableParamContainer&>(a), b, a_b, b_a, config);
     diff_integral(a.length, b.length, a_b.length, b_a.length, config);
     diff(a.accession, b.accession, a_b.accession, b_a.accession, config);
-    ptr_diff(a.searchDatabasePtr, b.searchDatabasePtr, a_b.searchDatabasePtr,
-         b_a.searchDatabasePtr, config);
+    ptr_diff(a.searchDatabasePtr, b.searchDatabasePtr, a_b.searchDatabasePtr, b_a.searchDatabasePtr, config);
     diff(a.seq, b.seq, a_b.seq, b_a.seq, config);
 }
+
 
 PWIZ_API_DECL
 void diff(const Peptide& a,
@@ -748,24 +702,6 @@ void diff(const Peptide& a,
          a_b.substitutionModification,b_a.substitutionModification, config);
 }
 
-PWIZ_API_DECL
-void diff(const PeptideEvidenceList& a,
-          const PeptideEvidenceList& b,
-          PeptideEvidenceList& a_b,
-          PeptideEvidenceList& b_a,
-          const DiffConfig& config)
-{
-    //diff(static_cast<const Identifiable&>(a), b, a_b, b_a, config);
-    vector_diff_deep(a.peptideEvidence, b.peptideEvidence,
-                     a_b.peptideEvidence, b_a.peptideEvidence,
-                     config);
-    vector_diff_deep(a.enzymePtr, b.enzymePtr,
-                     a_b.enzymePtr, b_a.enzymePtr,
-                     config);
-    diff(static_cast<const ParamContainer&>(a.additionalParams), b.additionalParams,
-         a_b.additionalParams, b_a.additionalParams,
-         config);
-}
 
 PWIZ_API_DECL
 void diff(const Modification& a,
@@ -781,6 +717,7 @@ void diff(const Modification& a,
     diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
 }
 
+
 PWIZ_API_DECL
 void diff(const SubstitutionModification& a,
           const SubstitutionModification& b,
@@ -788,16 +725,17 @@ void diff(const SubstitutionModification& a,
           SubstitutionModification& b_a,
           const DiffConfig& config)
 {
-    diff(a.originalResidue, b.originalResidue, a_b.originalResidue,
-         b_a.originalResidue, config);
-    diff(a.replacementResidue, b.replacementResidue, a_b.replacementResidue,
-         b_a.replacementResidue, config);
+    diff(a.originalResidue, b.originalResidue,
+         a_b.originalResidue, b_a.originalResidue, config);
+    diff(a.replacementResidue, b.replacementResidue,
+         a_b.replacementResidue, b_a.replacementResidue, config);
     diff_integral(a.location, b.location, a_b.location, b_a.location, config);
-    diff_floating(a.avgMassDelta, b.avgMassDelta, a_b.avgMassDelta,
-                  b_a.avgMassDelta, config);
+    diff_floating(a.avgMassDelta, b.avgMassDelta,
+                  a_b.avgMassDelta, b_a.avgMassDelta, config);
     diff_floating(a.monoisotopicMassDelta, b.monoisotopicMassDelta,
                   a_b.monoisotopicMassDelta, b_a.monoisotopicMassDelta, config);
 }
+
 
 PWIZ_API_DECL
 void diff(const SequenceCollection& a,
@@ -806,27 +744,11 @@ void diff(const SequenceCollection& a,
           SequenceCollection& b_a,
           const DiffConfig& config)
 {
-    vector_diff_deep(a.dbSequences, b.dbSequences, a_b.dbSequences,
-                     b_a.dbSequences, config);
-    
-    vector_diff_deep(a.peptides, b.peptides, a_b.peptides, b_a.peptides,
-                     config);
-    
-    vector_diff_deep(a.peptideEvidenceList, b.peptideEvidenceList,
-                     a_b.peptideEvidenceList, b_a.peptideEvidenceList,
-                     config);
+    vector_diff_deep(a.dbSequences, b.dbSequences, a_b.dbSequences, b_a.dbSequences, config);
+    vector_diff_deep(a.peptides, b.peptides, a_b.peptides, b_a.peptides, config);
+    vector_diff_deep(a.peptideEvidence, b.peptideEvidence, a_b.peptideEvidence, b_a.peptideEvidence, config);
 }
 
-PWIZ_API_DECL
-void diff(const Sample::SubSample& a,
-          const Sample::SubSample& b,
-          Sample::SubSample& a_b,
-          Sample::SubSample& b_a,
-          const DiffConfig& config)
-{
-    ptr_diff(a.samplePtr, b.samplePtr,
-             a_b.samplePtr, b_a.samplePtr, config);
-}
 
 PWIZ_API_DECL
 void diff(const Sample& a,
@@ -835,9 +757,11 @@ void diff(const Sample& a,
           Sample& b_a,
           const DiffConfig& config)
 {
-    vector_diff_diff(a.subSamples, b.subSamples, a_b.subSamples,
-                     b_a.subSamples, config);
+    diff(a.contactRole, b.contactRole, a_b.contactRole, b_a.contactRole, config);
+    vector_diff_deep(a.subSamples, b.subSamples, a_b.subSamples, b_a.subSamples, config);
+    diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
 }
+
 
 PWIZ_API_DECL
 void diff(const AnalysisSampleCollection& a,
@@ -848,6 +772,7 @@ void diff(const AnalysisSampleCollection& a,
 {
     vector_diff_deep(a.samples, b.samples, a_b.samples, b_a.samples, config);
 }
+
 
 PWIZ_API_DECL
 void diff(const Provider& a,
@@ -861,6 +786,7 @@ void diff(const Provider& a,
          b_a.contactRole, config);
 }
 
+
 PWIZ_API_DECL
 void diff(const ContactRole& a,
           const ContactRole& b,
@@ -872,6 +798,7 @@ void diff(const ContactRole& a,
     diff(static_cast<const CVParam&>(a), b, a_b, b_a, config);
 }
 
+
 PWIZ_API_DECL
 void diff(const AnalysisSoftware& a,
           const AnalysisSoftware& b,
@@ -879,8 +806,7 @@ void diff(const AnalysisSoftware& a,
           AnalysisSoftware& b_a,
           const DiffConfig& config)
 {
-    diff((const Identifiable&)a, (const Identifiable&)b,
-         (Identifiable&)a_b, (Identifiable&)b_a, config);
+    diff(static_cast<const Identifiable&>(a), b, a_b, b_a, config);
     diff(a.version, b.version, a_b.version, b_a.version, config);
     ptr_diff(a.contactRolePtr, b.contactRolePtr, a_b.contactRolePtr, b_a.contactRolePtr, config);
     diff(a.softwareName, b.softwareName, a_b.softwareName, b_a.softwareName, config);
@@ -899,8 +825,7 @@ void diff(const MzIdentML& a,
     string a_b_version, b_a_version;
 
     // Attributes
-    diff((const Identifiable&)a, (const Identifiable&)b,
-         (Identifiable&)a_b, (Identifiable&)b_a, config);
+    diff(static_cast<const Identifiable&>(a), b, a_b, b_a, config);
     diff(a.version(), b.version(), a_b_version, b_a_version, config);
     diff(a.creationDate, b.creationDate, a_b.creationDate, b_a.creationDate, config);
 
@@ -930,6 +855,7 @@ void diff(const MzIdentML& a,
     //if (!b_a.empty() && b_a.name.empty()) b_a.name = b.name; 
 }
 
+
 PWIZ_API_DECL
 void diff(const Identifiable& a,
           const Identifiable& b,
@@ -940,6 +866,7 @@ void diff(const Identifiable& a,
     diff(a.id, b.id, a_b.id, b_a.id, config);
     diff(a.name, b.name, a_b.name, b_a.name, config);
 }
+
 
 PWIZ_API_DECL
 void diff(const IdentifiableParamContainer& a,
@@ -958,6 +885,7 @@ void diff(const IdentifiableParamContainer& a,
 
 
 namespace mziddata {
+
 
 PWIZ_API_DECL
 std::ostream& operator<<(std::ostream& os, const data::Diff<MzIdentML, DiffConfig>& diff)

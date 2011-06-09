@@ -85,15 +85,15 @@ void testAnalysisSampleCollection()
     MzIdentML mzid;
     
     SamplePtr sample(new Sample("s1", "Sample No. 1"));
-    sample->subSamples.push_back(Sample::SubSample("s2"));
+    sample->subSamples.push_back(SamplePtr(new Sample("s2")));
 
     mzid.analysisSampleCollection.samples.push_back(sample);
 
     unit_assert(mzid.analysisSampleCollection.samples.at(0)->id == "s1");
-    unit_assert(mzid.analysisSampleCollection.samples.at(0)->subSamples.at(0).samplePtr->name.empty());
+    unit_assert(mzid.analysisSampleCollection.samples.at(0)->subSamples.at(0)->name.empty());
 
     sample = SamplePtr(new Sample("s2", "Sample No. 2"));
-    sample->subSamples.push_back(Sample::SubSample("s1"));
+    sample->subSamples.push_back(SamplePtr(new Sample("s1")));
 
     mzid.analysisSampleCollection.samples.push_back(sample);
 
@@ -102,8 +102,8 @@ void testAnalysisSampleCollection()
     unit_assert(mzid.analysisSampleCollection.samples.size() == 2);
     unit_assert(mzid.analysisSampleCollection.samples.at(0)->id == "s1");
     unit_assert(mzid.analysisSampleCollection.samples.at(1)->id == "s2");
-    unit_assert(mzid.analysisSampleCollection.samples.at(0)->subSamples.at(0).samplePtr->name == "Sample No. 2");
-    unit_assert(mzid.analysisSampleCollection.samples.at(1)->subSamples.at(0).samplePtr->name == "Sample No. 1");
+    unit_assert(mzid.analysisSampleCollection.samples.at(0)->subSamples.at(0)->name == "Sample No. 2");
+    unit_assert(mzid.analysisSampleCollection.samples.at(1)->subSamples.at(0)->name == "Sample No. 1");
 }
 
 void testContacts()
@@ -111,15 +111,15 @@ void testContacts()
     ContactPtr cont(new Contact("c1", "contact1"));
 
     PersonPtr peep1(new Person("p1", "person1"));
-    peep1->affiliations.push_back(Affiliations("o1"));
+    peep1->affiliations.push_back(OrganizationPtr(new Organization("o1")));
     PersonPtr peep2(new Person("p2", "person2"));
-    peep2->affiliations.push_back(Affiliations("o2"));
-    peep2->affiliations.push_back(Affiliations("O"));
+    peep2->affiliations.push_back(OrganizationPtr(new Organization("o2")));
+    peep2->affiliations.push_back(OrganizationPtr(new Organization("O")));
     
     OrganizationPtr mail_organ(new Organization("o1", "organ1"));
     OrganizationPtr feemail_organ(new Organization("o2", "organ2"));
     OrganizationPtr big_Organ(new Organization("O", "Organ"));
-    big_Organ->parent.organizationPtr = ContactPtr(new Contact("o1"));
+    big_Organ->parent = OrganizationPtr(new Organization("o1"));
 
     MzIdentML mzid;
 
@@ -133,13 +133,13 @@ void testContacts()
     References::resolve(mzid.auditCollection, mzid);
 
     Person* tp = (Person*)mzid.auditCollection.at(1).get();
-    unit_assert(tp->affiliations.at(0).organizationPtr->name == "organ1");
+    unit_assert(tp->affiliations.at(0) == mail_organ);
     tp = (Person*)mzid.auditCollection.at(2).get();
-    unit_assert(tp->affiliations.at(0).organizationPtr->name == "organ2");
-    unit_assert(tp->affiliations.at(1).organizationPtr->name == "Organ");
+    unit_assert(tp->affiliations.at(0) == feemail_organ);
+    unit_assert(tp->affiliations.at(1) == big_Organ);
     
     Organization* to = (Organization*)mzid.auditCollection.at(5).get();
-    unit_assert(to->parent.organizationPtr->name == "organ1");    
+    unit_assert(to->parent == mail_organ);    
 }
 
 

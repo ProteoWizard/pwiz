@@ -80,16 +80,8 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Measure& measure);
 PWIZ_API_DECL void read(std::istream& writer, Measure& measure);
 
 
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Material& material);
-PWIZ_API_DECL void read(std::istream& writer, Material& material);
-
-
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Sample& sample);
 PWIZ_API_DECL void read(std::istream& writer, Sample& sample);
-
-
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Sample::SubSample& subsample);
-PWIZ_API_DECL void read(std::istream& writer, Sample::SubSample& subsample);
 
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Person& cp);
@@ -236,12 +228,6 @@ PWIZ_API_DECL void read(std::istream& is, DBSequence& dbSequence);
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Peptide& peptide);
 PWIZ_API_DECL void read(std::istream& is, Peptide& peptide);
-
-
-PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const PeptideEvidenceList& pel,
-                         const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0);
-PWIZ_API_DECL void read(std::istream& is, PeptideEvidenceList& pel,
-                        const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0);
 
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const PeptideEvidence& pe);

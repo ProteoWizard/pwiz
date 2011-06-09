@@ -107,42 +107,47 @@ PWIZ_API_DECL void resolve(AnalysisSoftwarePtr asp, MzIdentML& mzid)
 
 PWIZ_API_DECL void resolve(AnalysisSampleCollection& asc, MzIdentML& mzid)
 {
-    typedef vector<SamplePtr>::iterator Sit;
-    typedef vector<Sample::SubSample>::iterator SubSit;
-
-    for (Sit sit = asc.samples.begin(); sit != asc.samples.end(); sit++)
-    {
-        for (SubSit ssit = (*sit)->subSamples.begin();
-             ssit != (*sit)->subSamples.end(); ssit++)
-        {
-            if (!ssit->empty())
-            {
-                resolve((*ssit).samplePtr, asc.samples);
-            }
-        }
-    }
+    BOOST_FOREACH(SamplePtr& s, asc.samples)
+        BOOST_FOREACH(SamplePtr& ss, s->subSamples)
+            if (ss.get() && !ss->empty())
+                resolve(ss, asc.samples);
 }
 
-PWIZ_API_DECL void resolve(vector<Affiliations>& vaff, vector<ContactPtr>& vcp)
+
+PWIZ_API_DECL void resolve(OrganizationPtr& reference, vector<ContactPtr>& referentList)
 {
-    for (vector<Affiliations>::iterator it=vaff.begin(); it!=vaff.end(); it++)
+    if (!reference.get() || reference->id.empty())
+        return; 
+
+    vector<ContactPtr>::iterator it = 
+        find_if(referentList.begin(), referentList.end(), HasID<Contact>(reference->id));
+
+    if (it == referentList.end())
     {
-        if (it->organizationPtr.get() && !it->organizationPtr->empty())
-            resolve(it->organizationPtr, vcp);
+        ostringstream oss;
+        oss << "[References::resolve()] Failed to resolve reference.\n"
+            << "  object type: OrganizationPtr" << endl
+            << "  reference id: " << reference->id << endl
+            << "  referent list: " << referentList.size() << endl;
+        for (vector<ContactPtr>::const_iterator it=referentList.begin(); it!=referentList.end(); ++it)
+            oss << "    " << (*it)->id << endl;
+        throw runtime_error(oss.str().c_str());
     }
+
+    reference = boost::static_pointer_cast<Organization>(*it);
 }
 
 
 PWIZ_API_DECL void resolve(vector<ContactPtr>& vcp, MzIdentML& mzid)
 {
-    for (vector<ContactPtr>::iterator it=vcp.begin(); it!=vcp.end(); it++)
+    BOOST_FOREACH(ContactPtr& c, vcp)
     {
-        if (dynamic_cast<Organization*>(it->get()))
-            resolve(((Organization*)it->get())->parent.organizationPtr,
-                     mzid.auditCollection);
-        else if (dynamic_cast<Person*>((it->get())))
-            resolve(((Person*)it->get())->affiliations, 
-                     mzid.auditCollection);
+        if (dynamic_cast<Organization*>(c.get()))
+            resolve(static_cast<Organization*>(c.get())->parent, mzid.auditCollection);
+        else if (dynamic_cast<Person*>(c.get()))
+            BOOST_FOREACH(OrganizationPtr& org, static_cast<Person*>(c.get())->affiliations)
+                if (org.get() && !org->empty())
+                    resolve(org, vcp);
     }
 }
 
@@ -156,9 +161,6 @@ PWIZ_API_DECL void resolve(SequenceCollection& sc, MzIdentML& mzid)
     vector<EnzymePtr> enzymePtrs;
     BOOST_FOREACH(const SpectrumIdentificationProtocolPtr& sip, mzid.analysisProtocolCollection.spectrumIdentificationProtocol)
         enzymePtrs.insert(enzymePtrs.end(), sip->enzymes.enzymes.begin(), sip->enzymes.enzymes.end());    
-
-    BOOST_FOREACH(PeptideEvidenceListPtr& pel, sc.peptideEvidenceList)
-        resolve(pel->enzymePtr, enzymePtrs);
 }
 
 PWIZ_API_DECL void resolve(MassTablePtr& mt, const vector<SpectrumIdentificationProtocolPtr>& spectrumIdProts)
@@ -188,8 +190,10 @@ PWIZ_API_DECL void resolve(MassTablePtr& mt, const vector<SpectrumIdentification
 PWIZ_API_DECL void resolve(PeptideEvidencePtr pe, const MzIdentML& mzid)
 {
     if (!pe.get())
-        throw runtime_error("NULL value passed into resolve(PeptideEvidencePtr,"
-            "MzIdentML&)");
+        throw runtime_error("NULL value passed into resolve(PeptideEvidencePtr, MzIdentML&)");
+
+    if (pe->peptidePtr.get())
+        resolve(pe->peptidePtr, mzid.sequenceCollection.peptides);
 
     if (pe->dbSequencePtr.get())
         resolve(pe->dbSequencePtr, mzid.sequenceCollection.dbSequences);
@@ -332,11 +336,6 @@ PWIZ_API_DECL void resolve(DataCollection& dc, MzIdentML& mzid)
 
     ProteinDetectionListPtr pdl=dc.analysisData.proteinDetectionListPtr;
 
-    // Create a single PeptideEvidencePtr referent list
-    vector<PeptideEvidencePtr> peptideEvidence;
-    BOOST_FOREACH(const PeptideEvidenceListPtr& pel, mzid.sequenceCollection.peptideEvidenceList)
-        peptideEvidence.insert(peptideEvidence.end(), pel->peptideEvidence.begin(), pel->peptideEvidence.end());
-
     BOOST_FOREACH(ProteinAmbiguityGroupPtr& pag, pdl->proteinAmbiguityGroup)
     {
         BOOST_FOREACH(ProteinDetectionHypothesisPtr& pdh, pag->proteinDetectionHypothesis)
@@ -345,7 +344,7 @@ PWIZ_API_DECL void resolve(DataCollection& dc, MzIdentML& mzid)
 
             BOOST_FOREACH(PeptideHypothesis& ph, pdh->peptideHypothesis)
             {
-                resolve(ph.peptideEvidencePtr, peptideEvidence);
+                resolve(ph.peptideEvidencePtr, mzid.sequenceCollection.peptideEvidence);
 
                 //BOOST_FOREACH(SpectrumIdentificationItemPtr& sii, ph.spectrumIdentificationItemPtr)
                 //    resolve(sii, mzid.analysisCollection.proteinDetection.inputSpectrumIdentifications);

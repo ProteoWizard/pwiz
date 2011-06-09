@@ -109,12 +109,6 @@ struct PWIZ_API_DECL Contact : public IdentifiableParamContainer
             const std::string& name_ = "");
     virtual ~Contact() {}
 
-    std::string address;
-    std::string phone;
-    std::string email;
-    std::string fax;
-    std::string tollFreePhone;
-
     virtual bool empty() const;
 };
 
@@ -123,33 +117,15 @@ TYPEDEF_SHARED_PTR(Contact);
 
 struct PWIZ_API_DECL Organization : public Contact
 {
-    struct PWIZ_API_DECL Parent
-    {
-        Parent();
-
-        ContactPtr organizationPtr;
-
-        bool empty() const;
-    };
-
     Organization(const std::string& id_ = "",
                  const std::string& name_ = "");
-    Parent parent;
+
+    boost::shared_ptr<Organization> parent;
 
     virtual bool empty() const;
 };
 
 TYPEDEF_SHARED_PTR(Organization);
-
-
-struct PWIZ_API_DECL Affiliations
-{
-    Affiliations(const std::string& organizationId = "");
-
-    ContactPtr organizationPtr;
-
-    bool empty() const;
-};
 
 
 struct PWIZ_API_DECL Person : public Contact
@@ -161,7 +137,7 @@ struct PWIZ_API_DECL Person : public Contact
     std::string firstName;
     std::string midInitials;
 
-    std::vector<Affiliations> affiliations;
+    std::vector<OrganizationPtr> affiliations;
 
     virtual bool empty() const;
 };
@@ -194,33 +170,13 @@ struct PWIZ_API_DECL Provider : public Identifiable
 TYPEDEF_SHARED_PTR(Provider);
 
 
-struct PWIZ_API_DECL Material : public IdentifiableParamContainer
+struct PWIZ_API_DECL Sample : public IdentifiableParamContainer
 {
-    Material(const std::string& id_ = "",
-             const std::string& name_ = "");
-
     ContactRole contactRole;
-
-    virtual bool empty() const;
-};
-
-
-struct PWIZ_API_DECL Sample : public Material
-{
-    // SampleType schema elements
-    struct PWIZ_API_DECL SubSample
-    {
-        SubSample(const std::string& id_ = "",
-                  const std::string& name_ = "");
-
-        boost::shared_ptr<Sample> samplePtr;
-
-        bool empty() const;
-    };
+    std::vector<boost::shared_ptr<Sample> > subSamples;
 
     Sample(const std::string& id_ = "",
            const std::string& name_ = "");
-    std::vector<SubSample> subSamples;
 
     bool empty() const;
 };
@@ -270,7 +226,7 @@ struct PWIZ_API_DECL SearchDatabase : public IdentifiableParamContainer
     long numResidues;
 
     CVParam fileFormat;
-    ParamContainer DatabaseName;
+    ParamContainer databaseName;
 
     bool empty() const;
 };
@@ -533,17 +489,12 @@ struct PWIZ_API_DECL IonType : public ParamContainer
 TYPEDEF_SHARED_PTR(IonType);
 
 
-// forward declaration needed for PeptideEvidence to refer to its parent list for enzyme information
-struct PeptideEvidenceList;
-TYPEDEF_SHARED_PTR(PeptideEvidenceList);
-
-
 struct PWIZ_API_DECL PeptideEvidence : public IdentifiableParamContainer
 {
     PeptideEvidence(const std::string& id = "",
                     const std::string& name = "");
 
-    PeptideEvidenceListPtr peptideEvidenceListPtr;
+    PeptidePtr peptidePtr;
     DBSequencePtr dbSequencePtr;
     int start;
     int end;
@@ -552,7 +503,6 @@ struct PWIZ_API_DECL PeptideEvidence : public IdentifiableParamContainer
     TranslationTablePtr translationTablePtr;
     int frame;
     bool isDecoy;
-    int missedCleavages;
 
     bool empty() const;
 };
@@ -560,24 +510,11 @@ struct PWIZ_API_DECL PeptideEvidence : public IdentifiableParamContainer
 TYPEDEF_SHARED_PTR(PeptideEvidence);
 
 
-struct PWIZ_API_DECL PeptideEvidenceList : public Identifiable
-{
-    PeptideEvidenceList(const std::string& id = "",
-                        const std::string& name = "");
-
-    std::vector<PeptideEvidencePtr> peptideEvidence;
-    std::vector<EnzymePtr> enzymePtr;
-    ParamContainer additionalParams;
-
-    bool empty() const;
-};
-
-
 struct PWIZ_API_DECL SequenceCollection
 {
     std::vector<DBSequencePtr> dbSequences;
     std::vector<PeptidePtr> peptides;
-    std::vector<PeptideEvidenceListPtr> peptideEvidenceList;
+    std::vector<PeptideEvidencePtr> peptideEvidence;
     bool empty() const;
 };
 

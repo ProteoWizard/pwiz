@@ -1258,11 +1258,11 @@ void Pep2MzIdent::Impl::translateSearch(const SearchSummaryPtr summary,
     // TODO figure out if this is correct
     CVID dbName = getCVID(summary->searchDatabase.databaseName);
     if (dbName != CVID_Unknown)
-        searchDatabase->DatabaseName.set(dbName);
+        searchDatabase->databaseName.set(dbName);
     else
     {
         fs::path localPath(summary->searchDatabase.localPath);
-        searchDatabase->DatabaseName.userParams.push_back(
+        searchDatabase->databaseName.userParams.push_back(
             UserParam("local_path", localPath.filename()));
     }
 
@@ -1709,7 +1709,7 @@ void Pep2MzIdent::Impl::earlyParameters(ParameterPtr parameter,
             person = (Person*)mzid->auditCollection.back().get();
         }
 
-        person->email = parameter->value;
+        person->set(MS_contact_email, parameter->value);
     }
     else if (parameter->name == "FILE")
     {

@@ -565,17 +565,17 @@ void write_search_hit(XMLWriter& xmlWriter,
     attributes.add("num_tot_proteins", sii.peptideEvidencePtr.size());
     attributes.add("calc_neutral_pep_mass", Ion::neutralMass(sii.calculatedMassToCharge, sii.chargeState));
     attributes.add("massdiff", Ion::neutralMass(sii.calculatedMassToCharge, sii.chargeState) - Ion::neutralMass(sii.experimentalMassToCharge, sii.chargeState));
-    attributes.add("num_missed_cleavages", sii.peptideEvidencePtr[0]->missedCleavages);
 
     // Add the protein description, if present
     if (dbseq->hasCVParam(MS_protein_description))
         attributes.add("protein_descr",
                        dbseq->cvParam(MS_protein_description).value);
     
-    // calculate num_tol_term
+    // calculate num_tol_term and num_missed_cleavages
     const SpectrumIdentificationProtocol& sip = *mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0];
     DigestedPeptide digestedPeptide = sii.digestedPeptide(sip, *sii.peptideEvidencePtr[0]);
     attributes.add("num_tol_term", digestedPeptide.specificTermini());
+    attributes.add("num_missed_cleavages", digestedPeptide.missedCleavages());
 
 
     if (sii.hasCVParam(MS_number_of_matched_peaks))
@@ -1149,9 +1149,6 @@ struct HandlerSearchSummary : public SAXParser::Handler
             getAttribute(attributes, "max_num_internal_cleavages", _sip->enzymes.enzymes[0]->missedCleavages);
             getAttribute(attributes, "min_number_termini", minTermini);
             _sip->enzymes.enzymes[0]->semiSpecific = (minTermini == "1" ? true : false);
-
-            _mzid->sequenceCollection.peptideEvidenceList.push_back(PeptideEvidenceListPtr(new PeptideEvidenceList));
-            _mzid->sequenceCollection.peptideEvidenceList.back()->enzymePtr.push_back(_sip->enzymes.enzymes[0]);
         }
         else if (name == "aminoacid_modification")
         {
@@ -1279,7 +1276,6 @@ struct HandlerSearchResults : public SAXParser::Handler
     MzIdentML* _mzid;
     SpectrumIdentificationProtocol* _sip;
     SpectrumIdentificationList* _sil;
-    PeptideEvidenceList* _pel;
     CVID nativeIdFormat;
 
     HandlerSearchResults(const CVTranslator& cvTranslator,
@@ -1362,39 +1358,52 @@ struct HandlerSearchResults : public SAXParser::Handler
             SpectrumIdentificationItem& sii = *_sir->spectrumIdentificationItem.back();
 
             // search_score comes after <alternative_protein> and <modification_info>,
-            // so once we get here we can check if _currentPeptide is in sequenceCollection
+            // so once we get here we can check if the peptide is already in sequenceCollection
             if (_currentPeptide->id.empty())
             {
-                PeptideIndexEntry& indexEntry = _peptides[_currentPeptide->peptideSequence];
-
-                // if distinct peptide is new, add the current peptideEvidences
-                if (indexEntry.peptideInstances.empty())
-                {
-                    indexEntry.peptideInstances = sii.peptideEvidencePtr;
-                    
-                    // build a unique id for each PeptideEvidence (based on distinct peptide count)
-                    BOOST_FOREACH(PeptideEvidencePtr& pe, sii.peptideEvidencePtr)
-                    {
-                        pe->id += /* ACCESSION */ "_PEP_" + lexical_cast<string>(_peptides.size());
-                        _pel->peptideEvidence.push_back(pe);
-                    }
-                }
-                else
-                    sii.peptideEvidencePtr = indexEntry.peptideInstances;
-
                 // the PeptideLessThan comparator assumes the modifications are sorted
                 sort(_currentPeptide->modification.begin(), _currentPeptide->modification.end(), ModLessThan());
 
                 // try to insert the current peptide variant
-                pair<set<PeptidePtr, PeptideLessThan>::iterator, bool> insertResult = indexEntry.peptideVariants.insert(_currentPeptide);
-                _currentPeptide = *insertResult.first;
+                pair<map<PeptidePtr, vector<PeptideEvidencePtr>, PeptideLessThan>::iterator, bool> insertResult =
+                    _peptides.insert(make_pair(_currentPeptide, vector<PeptideEvidencePtr>()));
+                _currentPeptide = insertResult.first->first;
 
                 // if the variant was added, give it an id
                 if (insertResult.second)
                 {
-                    _currentPeptide->id = "PEP_" + lexical_cast<string>(++peptideCount);
+                    _currentPeptide->id = "PEP_";
+                    _currentPeptide->id += lexical_cast<string>(++peptideCount);
                     _mzid->sequenceCollection.peptides.push_back(_currentPeptide);
+
+                    // add PeptideEvidence elements for this peptide variant
+                    BOOST_FOREACH(const Attributes& proteinAttributes, _currentProteinAttributes)
+                    {
+                        PeptideEvidencePtr pe(new PeptideEvidence);
+                        _mzid->sequenceCollection.peptideEvidence.push_back(pe);
+                        insertResult.first->second.push_back(pe);
+
+                        string accession;
+                        getAttribute(proteinAttributes, "protein", accession);
+
+                        pe->id = accession;
+                        pe->id += "_";
+                        pe->id += _currentPeptide->id;
+
+                        pe->peptidePtr = _currentPeptide;
+                        pe->dbSequencePtr = getDBSequence(accession);
+
+                        string proteinDescr;
+                        getAttribute(proteinAttributes, "protein_descr", proteinDescr);
+                        if (!proteinDescr.empty())
+                            pe->dbSequencePtr->set(MS_protein_description, proteinDescr);
+
+                        getAttribute(proteinAttributes, "peptide_prev_aa", pe->pre);
+                        getAttribute(proteinAttributes, "peptide_next_aa", pe->post);
+                    }
                 }
+
+                sii.peptideEvidencePtr = insertResult.first->second;
 
                 // the peptide is guaranteed to exist, so reference it
                 sii.peptidePtr = _currentPeptide;
@@ -1414,6 +1423,7 @@ struct HandlerSearchResults : public SAXParser::Handler
                 Modification& mod = *_currentPeptide->modification.back();
                 mod.monoisotopicMassDelta = mod.avgMassDelta = modNTermMass - _nTerm.monoisotopicMass();
                 mod.location = 0;
+                mod.set(MS_unknown_modification);
             }
 
             if (modCTermMass > 0)
@@ -1422,6 +1432,7 @@ struct HandlerSearchResults : public SAXParser::Handler
                 Modification& mod = *_currentPeptide->modification.back();
                 mod.monoisotopicMassDelta = mod.avgMassDelta = modCTermMass - _cTerm.monoisotopicMass();
                 mod.location = _currentPeptide->peptideSequence.length() + 1;
+                mod.set(MS_unknown_modification);
             }
         }
         else if (name == "mod_aminoacid_mass")
@@ -1435,25 +1446,11 @@ struct HandlerSearchResults : public SAXParser::Handler
             getAttribute(attributes, "mass", modMassPlusAminoAcid);
             mod.avgMassDelta = mod.monoisotopicMassDelta = modMassPlusAminoAcid - AminoAcid::Info::record(modifiedResidue).residueFormula.monoisotopicMass();
             mod.residues = string(1, modifiedResidue);
+            mod.set(MS_unknown_modification);
         }
         else if (name == "alternative_protein")
         {
-            SpectrumIdentificationItem& sii = *_sir->spectrumIdentificationItem.back();
-
-            if (!sii.peptideEvidencePtr.empty())
-            {
-                PeptideEvidencePtr pe = PeptideEvidencePtr(new PeptideEvidence);
-                sii.peptideEvidencePtr.push_back(pe);
-
-                getAttribute(attributes, "protein", pe->id);
-
-                pe->dbSequencePtr = getDBSequence(pe->id);
-
-                string proteinDescr;
-                getAttribute(attributes, "protein_descr", proteinDescr);
-
-                pe->dbSequencePtr->set(MS_protein_description, proteinDescr);
-            }
+            _currentProteinAttributes.push_back(attributes);
         }
         else if (name == "search_hit")
         {
@@ -1464,38 +1461,21 @@ struct HandlerSearchResults : public SAXParser::Handler
             getAttribute(attributes, "calc_neutral_pep_mass", sii.calculatedMassToCharge);
             sii.calculatedMassToCharge = Ion::mz(sii.calculatedMassToCharge, sii.chargeState);
 
-            int matchedIons, totalIons;
+            string matchedIons, totalIons;
             getAttribute(attributes, "num_matched_ions", matchedIons);
-            if (matchedIons > 0)
+            if (!matchedIons.empty())
+            {
                 sii.set(MS_number_of_matched_peaks, matchedIons);
 
-            getAttribute(attributes, "tot_num_ions", totalIons);
-            if (totalIons > 0)
-                sii.set(MS_number_of_unmatched_peaks, totalIons - matchedIons);
+                getAttribute(attributes, "tot_num_ions", totalIons);
+                if (!totalIons.empty())
+                    sii.set(MS_number_of_unmatched_peaks, lexical_cast<int>(totalIons) - lexical_cast<int>(matchedIons));
+            }
 
-            _currentPeptide = PeptidePtr(new Peptide);
+            _currentPeptide.reset(new Peptide);
             getAttribute(attributes, "peptide", _currentPeptide->peptideSequence);
 
-            PeptideIndexEntry& indexEntry = _peptides[_currentPeptide->peptideSequence];
-
-            // if distinct peptide is new, add the current peptideEvidences
-            if (indexEntry.peptideInstances.empty())
-            {
-                PeptideEvidencePtr pe = PeptideEvidencePtr(new PeptideEvidence);
-                sii.peptideEvidencePtr.push_back(pe);
-
-                getAttribute(attributes, "protein", pe->id);
-
-                pe->dbSequencePtr = getDBSequence(pe->id);
-
-                string proteinDescr;
-                getAttribute(attributes, "protein_descr", proteinDescr);
-                pe->dbSequencePtr->set(MS_protein_description, proteinDescr);
-
-                getAttribute(attributes, "num_missed_cleavages", pe->missedCleavages);
-                getAttribute(attributes, "peptide_prev_aa", pe->pre);
-                getAttribute(attributes, "peptide_next_aa", pe->post);
-            }
+            _currentProteinAttributes.assign(1, attributes);
         }
         else if (name == "spectrum_query")
         {
@@ -1569,13 +1549,12 @@ struct HandlerSearchResults : public SAXParser::Handler
     const IterationListenerRegistry* ilr;
     bool strict;
 
-    // stores evidence and modified forms of a distinct peptide
-    struct PeptideIndexEntry
-    {
-        vector<PeptideEvidencePtr> peptideInstances;
-        set<PeptidePtr, PeptideLessThan> peptideVariants;
-    };
-    map<string, PeptideIndexEntry> _peptides;
+    // maps a modified peptide to its PeptideEvidences
+    map<PeptidePtr, vector<PeptideEvidencePtr>, PeptideLessThan> _peptides;
+
+    // Attributes from <search_hit> and <alternative_protein>s for the current SII;
+    // parsing is delayed until the <modification_info> block is parsed
+    vector<SAXParser::Handler::Attributes> _currentProteinAttributes;
 };
 
 
@@ -1703,10 +1682,6 @@ struct Handler_pepXML : public SAXParser::Handler
         }
         else if (name == "spectrum_query")
         {
-            if (mzid.sequenceCollection.peptideEvidenceList.empty())
-                throw runtime_error("[Handler_pepXML] Missing enzymatic search constraint.");
-            handlerSearchResults._pel = mzid.sequenceCollection.peptideEvidenceList[0].get();
-
             // determine nativeID format from first spectrum_query
             string spectrumNativeID;
             getAttribute(attributes, "spectrumNativeID", spectrumNativeID);

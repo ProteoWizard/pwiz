@@ -51,7 +51,9 @@ class PWIZ_API_DECL TextWriter
         os_.precision(14);
     }
 
+
     TextWriter child() {return TextWriter(os_, depth_+1);}
+
 
     TextWriter& operator()(const std::string& text)
     {
@@ -59,11 +61,13 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
+
     TextWriter& operator()(const float value)
     {
         os_ << indent_ << value << std::endl;
         return *this;
     }
+
 
     TextWriter& operator()(const CVParam& cvParam)
     {
@@ -76,11 +80,13 @@ class PWIZ_API_DECL TextWriter
         return *this;    
     }
 
+
     TextWriter& operator()(const std::string& label, const float& v)
     {
         os_ << indent_ << label << v << std::endl;
         return *this;
     }
+
 
     TextWriter& operator()(const std::string& label, const double& v)
     {
@@ -88,11 +94,13 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
+
     TextWriter& operator()(const std::string& label, const bool& v)
     {
         os_ << indent_ << label << std::boolalpha << v << std::endl;
         return *this;
     }
+
 
     TextWriter& operator()(const UserParam& userParam)
     {
@@ -104,6 +112,7 @@ class PWIZ_API_DECL TextWriter
         return *this;    
     }
 
+
     template<typename object_type>
     TextWriter& operator()(const std::string& label, const std::vector<object_type>& v)
     {
@@ -112,12 +121,14 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
+
     template<typename object_type>
     TextWriter& operator()(const std::vector<object_type>& v)
     {
         for_each(v.begin(), v.end(), child());
         return *this;
     }
+
 
     template<typename object_type>
     TextWriter& operator()(const std::string& label, const object_type& v)
@@ -134,7 +145,8 @@ class PWIZ_API_DECL TextWriter
         for_each(paramContainer.userParams.begin(), paramContainer.userParams.end(), child());
         return *this;
     }
-    
+
+
     TextWriter& operator()(const ParamContainer& paramContainer)
     {
         for_each(paramContainer.cvParams.begin(), paramContainer.cvParams.end(), *this);
@@ -146,7 +158,6 @@ class PWIZ_API_DECL TextWriter
     TextWriter& operator()(const BibliographicReference& br)
     {
         (*this)("BibliographicReference: ");
-
         (*this)((Identifiable)br);
         if (!br.authors.empty())
             child()("authors: "+br.authors);
@@ -170,37 +181,37 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
-    
+
     TextWriter& operator()(const SpectrumIdentificationProtocol& si)
     {
         (*this)("SpectrumIdentificationProtocol:");
         (*this)((Identifiable&)si);
         if (si.analysisSoftwarePtr.get() &&
             !si.analysisSoftwarePtr->empty())
-            child()("AnalysisSoftware_ref: "+si.analysisSoftwarePtr->id);
+            child()("analysisSoftware_ref: "+si.analysisSoftwarePtr->id);
         if (!si.searchType.empty())
-            child()("searchType", si.searchType);
+            child()("SearchType", si.searchType);
         if (!si.additionalSearchParams.empty())
-            child()("additionalSearchParams", si.additionalSearchParams);
+            child()("AdditionalSearchParams", si.additionalSearchParams);
         if (!si.modificationParams.empty())
-            child()("modificationParams", si.modificationParams);
+            child()("ModificationParams", si.modificationParams);
         if (!si.enzymes.empty())
             child()(si.enzymes);
         if (!si.massTable.empty())
             child()(si.massTable);
         if (!si.fragmentTolerance.empty())
-            child()("fragmentTolerance", si.fragmentTolerance);
+            child()("FragmentTolerance", si.fragmentTolerance);
         if (!si.parentTolerance.empty())
-            child()("parentTolerance", si.parentTolerance);
+            child()("ParentTolerance", si.parentTolerance);
         if (!si.threshold.empty())
-            child()("threshold", si.threshold);
+            child()("Threshold", si.threshold);
         if (!si.databaseFilters.empty())
-            child()("databaseFilters", si.databaseFilters);
+            child()("DatabaseFilters", si.databaseFilters);
 
         return *this;
     }
 
-    
+
     TextWriter& operator()(const DBSequence& ds)
     {
         (*this)("DBSequence: ");
@@ -210,14 +221,14 @@ class PWIZ_API_DECL TextWriter
         if (!ds.accession.empty())
             child()("accession: "+ds.accession);
         if (ds.searchDatabasePtr.get() && !ds.searchDatabasePtr->empty())
-            child()("SearchDatabase_ref: "+ds.searchDatabasePtr->id);
+            child()("searchDatabase_ref: "+ds.searchDatabasePtr->id);
         if (!ds.seq.empty())
-            child()("seq: "+ds.seq);
+            child()("Seq: "+ds.seq);
 
         return *this;
     }
 
-    
+
     TextWriter& operator()(const SubstitutionModification& ds)
     {
         (*this)("SubstitutionModification: ");
@@ -233,11 +244,10 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
-    
+
     TextWriter& operator()(const IonType& it)
     {
         (*this)("IonType: ");
-
         if (!it.index.empty())
             child()("index: ", it.index);
         if (it.charge != 0)
@@ -248,11 +258,10 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
-    
+
     TextWriter& operator()(const Measure& m)
     {
         (*this)("Measure: ");
-
         (*this)((const ParamContainer&)m);
         
         return *this;
@@ -262,7 +271,7 @@ class PWIZ_API_DECL TextWriter
     TextWriter& operator()(const SearchDatabase& sd)
     {
         (*this)("SearchDatabase: ");
-        child()((const IdentifiableParamContainer&)sd);
+        (*this)((const IdentifiableParamContainer&)sd);
         if (!sd.location.empty())
             child()("location: " + sd.location);
         if (!sd.version.empty())
@@ -274,56 +283,61 @@ class PWIZ_API_DECL TextWriter
         if (sd.numResidues != 0)
             child()("numResidues: ", sd.numResidues);
         if (!sd.fileFormat.empty())
-            child()("fileFormat: ", sd.fileFormat);
-        if (!sd.DatabaseName.empty())
-            child()("DatabaseName: ", sd.DatabaseName);
+            child()("FileFormat: ", sd.fileFormat);
+        if (!sd.databaseName.empty())
+            child()("DatabaseName: ", sd.databaseName);
         return *this;
     }
-    
+
+
     TextWriter& operator()(const SpectraData& sd)
     {
         (*this)("SpectraData: ");
         if (!sd.location.empty())
             child()("location: " + sd.location);
         if (!sd.externalFormatDocumentation.empty())
-            child()("externalFormatDocumentation: ", sd.externalFormatDocumentation);
+            child()("ExternalFormatDocumentation: ", sd.externalFormatDocumentation);
         if (!sd.fileFormat.empty())
-            child()("fileFormat: ", sd.fileFormat);
+            child()("FileFormat: ", sd.fileFormat);
         return *this;
     }
+
 
     TextWriter& operator()(const SpectrumIdentificationItem& sii)
     {
         (*this)("SpectrumIdentificationItem:");
-
+        if (!sii.id.empty())
+            child()("id: ", sii.id);
+        if (!sii.name.empty())
+            child()("name: ", sii.name);
         if (!sii.empty())
-            child()("chargeState: ", sii.chargeState);
-        if (!sii.empty())
-            child()("experimentalMassToCharge: ", sii.experimentalMassToCharge);
-        if (!sii.empty())
-            child()("calculatedMassToCharge: ", sii.calculatedMassToCharge);
-        if (!sii.empty())
-            child()("calculatedPI: ", sii.calculatedPI);
-        if (sii.peptidePtr.get() && !sii.peptidePtr->empty())
-            child()("peptide_ref: "+sii.peptidePtr->id);
-        if (!sii.empty())
+        {
             child()("rank: ", sii.rank);
-        if (!sii.empty())
+            child()("chargeState: ", sii.chargeState);
+            child()("experimentalMassToCharge: ", sii.experimentalMassToCharge);
+            child()("calculatedMassToCharge: ", sii.calculatedMassToCharge);
+            child()("calculatedPI: ", sii.calculatedPI);
             child()("passThreshold: ", sii.passThreshold);
+        }
+        if (sii.peptidePtr.get() && !sii.peptidePtr->empty())
+            child()("peptide_ref: ", sii.peptidePtr->id);
         if (sii.massTablePtr.get() && !sii.massTablePtr->empty())
-            child()("massTable_ref: "+sii.massTablePtr->id);
+            child()("massTable_ref: ", sii.massTablePtr->id);
         if (sii.samplePtr.get() && !sii.samplePtr->empty())
-            child()("sample_ref: "+sii.samplePtr->id);
+            child()("sample_ref: ", sii.samplePtr->id);
 
-    
-        if (!sii.peptideEvidencePtr.empty())
-            child()("peptideEvidence_ref", sii.peptideEvidencePtr);
+        BOOST_FOREACH(const PeptideEvidencePtr& pe, sii.peptideEvidencePtr)
+            if (pe.get() && !pe->empty())
+                child()("peptideEvidence_ref: ", pe->id);
+
         if (!sii.fragmentation.empty())
             child()("fragmentation", sii.fragmentation);
-        (*this)((const ParamContainer&)sii);
+
+        child()((const ParamContainer&)sii);
 
         return *this;
     }
+
 
     TextWriter& operator()(const SpectrumIdentificationResult& sir)
     {
@@ -339,7 +353,7 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
-    
+
     TextWriter& operator()(const SpectrumIdentificationList& sil)
     {
         (*this)("SpectrumIdentificationList: ");
@@ -353,6 +367,7 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
+
     TextWriter& operator()(const ProteinDetectionList& pdl)
     {
         (*this)("ProteinDetectionList: ");
@@ -362,10 +377,10 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
-    
+
     TextWriter& operator()(const AnalysisData& ad)
     {
-        (*this)("analysisData: ");
+        (*this)("AnalysisData: ");
 
         if (!ad.spectrumIdentificationList.empty())
             child()(ad.spectrumIdentificationList);
@@ -375,7 +390,7 @@ class PWIZ_API_DECL TextWriter
         
         return *this;
     }
-    
+
 
     TextWriter& operator()(const FragmentArray& fa)
     {
@@ -390,7 +405,7 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
-    
+
     TextWriter& operator()(const SourceFile& sf)
     {
         //(*this)("sourceFile: ");
@@ -406,7 +421,8 @@ class PWIZ_API_DECL TextWriter
         
         return *this;
     }
-    
+
+
     TextWriter& operator()(const Inputs& inputs)
     {
         (*this)("Inputs: ");
@@ -421,7 +437,7 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
-    
+
     TextWriter& operator()(const DataCollection& dc)
     {
         (*this)("DataCollection: ");
@@ -434,7 +450,7 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
-    
+
     TextWriter& operator()(const Filter& f)
     {
         (*this)("Filter: ");
@@ -447,7 +463,7 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
-    
+
     TextWriter& operator()(const SearchModification& sm)
     {
         (*this)("SearchModification: ");
@@ -463,6 +479,7 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
+
     TextWriter& operator()(const Enzymes& ezs)
     {
         (*this)("Enzymes: ");
@@ -472,6 +489,7 @@ class PWIZ_API_DECL TextWriter
             child()("enzymes: ", ezs.enzymes);
         return *this;
     }
+
 
     TextWriter& operator()(const MassTable& mt)
     {
@@ -487,7 +505,7 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
-    
+
     TextWriter& operator()(const AnalysisProtocolCollection& apc)
     {
         (*this)("AnalysisProtocolCollection: ");
@@ -499,7 +517,8 @@ class PWIZ_API_DECL TextWriter
                     apc.proteinDetectionProtocol);
         return *this;
     }
-    
+
+
     TextWriter& operator()(const PeptideHypothesis& ph)
     {
         (*this)("PeptideHypothesis: ");
@@ -512,7 +531,8 @@ class PWIZ_API_DECL TextWriter
 
         return *this;
     }
-    
+
+
     TextWriter& operator()(const ProteinDetectionHypothesis& pdh)
     {
         (*this)("ProteinDetectionHypothesis: ");
@@ -526,7 +546,8 @@ class PWIZ_API_DECL TextWriter
         (*this)((const ParamContainer&)pdh);                  
         return *this;
     }
-    
+
+
     TextWriter& operator()(const ProteinAmbiguityGroup& pag)
     {
         (*this)("ProteinAmbiguityGroup: ");
@@ -536,6 +557,7 @@ class PWIZ_API_DECL TextWriter
 
         return *this;
     }
+
 
     TextWriter& operator()(const ProteinDetection& pd)
     {
@@ -557,7 +579,7 @@ class PWIZ_API_DECL TextWriter
         child()("inputSpectrumIdentifications: ", pd.inputSpectrumIdentifications);
         return *this;
     }
-    
+
 
     TextWriter& operator()(const SpectrumIdentification& si)
     {
@@ -577,7 +599,7 @@ class PWIZ_API_DECL TextWriter
         
         return *this;
     }
-    
+
 
     TextWriter& operator()(const AnalysisCollection& ac)
     {
@@ -587,18 +609,7 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
-    
-    TextWriter& operator()(const PeptideEvidenceList& pel)
-    {
-        if (!pel.peptideEvidence.empty())
-            child()("peptideEvidence: ", pel.peptideEvidence);
-        if (!pel.enzymePtr.empty())
-            child()("enzyme_ref: ", pel.enzymePtr);
-        (*this)((const ParamContainer&)pel.additionalParams);
-        return *this;
-    }
 
-    
     TextWriter& operator()(const SequenceCollection& sc)
     {
         (*this)("SequenceCollection: ");
@@ -606,39 +617,19 @@ class PWIZ_API_DECL TextWriter
             child()("dbSequences: ", sc.dbSequences);
         if (!sc.peptides.empty())
             child()("peptides: ", sc.peptides);
-        if (!sc.peptideEvidenceList.empty())
-            child()("peptideEvidenceList: ", sc.peptideEvidenceList);
+        if (!sc.peptideEvidence.empty())
+            child()("peptideEvidence: ", sc.peptideEvidence);
         return *this;
     }
 
-    
+
     TextWriter& operator()(const Contact& cont)
     {
-        (*this)((Identifiable&)cont);
-        if (!cont.address.empty())
-            child()("address: "+cont.address);
-        if (!cont.phone.empty())
-            child()("phone: "+cont.phone);
-        if (!cont.email.empty())
-            child()("email: "+cont.email);
-        if (!cont.fax.empty())
-            child()("fax: "+cont.fax);
-        if (!cont.tollFreePhone.empty())
-            child()("tollFreePhone: "+cont.tollFreePhone);
+        (*this)((const IdentifiableParamContainer&)cont);
 
         return *this;
     }
 
-
-    TextWriter& operator()(const Affiliations& aff)
-    {
-        (*this)("Affiliations: ");
-
-        if (aff.organizationPtr.get())
-            child()("organizationPtr: "+aff.organizationPtr->id);
-        
-        return *this;
-    }
 
     TextWriter& operator()(const Person& per)
     {
@@ -655,21 +646,19 @@ class PWIZ_API_DECL TextWriter
         
         return *this;
     }
-    
+
+
     TextWriter& operator()(const Organization& org)
     {
         (*this)("Organization: ");
         (*this)((const Contact&)org);
-        if (org.parent.organizationPtr.get() && !org.parent.organizationPtr->empty())
-        {
-            child()("Parent::organizationPtr: ");
-            child()(*org.parent.organizationPtr);
-        }
-        
+        if (org.parent.get())
+            child()("Parent: ", org.parent->id);
+
         return *this;
     }
 
-    
+
     TextWriter& operator()(const ContactPtr cont)
     {
         if (dynamic_cast<Person*>(cont.get()))
@@ -682,7 +671,7 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
-    
+
     TextWriter& operator()(const std::string& label, const ContactPtr cont)
     {
         (*this)(label);
@@ -691,20 +680,18 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
-    
+
     TextWriter& operator()(const ContactRole& cr)
     {
         (*this)("ContactRole: ");
         if (cr.contactPtr.get() && !cr.contactPtr->empty())
-        {
-            child()("Contact_ref: ", cr.contactPtr);
-        }
+            child()("contact_ref: ", cr.contactPtr->id);
         if (!cr.CVParam::empty())
-            child()("role: ", (const CVParam&)cr);
+            child()("Role: ", (const CVParam&)cr);
         return (*this);
     }
 
-    
+
     TextWriter& operator()(const Provider& provider)
     {
         (*this)("Provider: ");
@@ -714,35 +701,19 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
-    
-    TextWriter& operator()(const Sample::SubSample& subSample)
-    {
-        if (subSample.samplePtr.get())
-            (*this)("Sample_ref: "+subSample.samplePtr->id);
 
-        return *this;
-    }
-
-    
-    TextWriter& operator()(const Material& material)
-    {
-        child()(material.contactRole);
-        child()(material.cvParams);
-
-        return *this;
-    }
-
-    
     TextWriter& operator()(const Sample& sample)
     {
-        (*this)("samples: ");
-        (*this)((const Material&)sample);
-        child()("subSamples:", sample.subSamples);
+        (*this)("Sample: ");
+        (*this)((const IdentifiableParamContainer&)sample);
+        child()(sample.contactRole);
+        child()(sample.cvParams);
+        child()("SubSamples:", sample.subSamples);
 
         return *this;
     }
 
-    
+
     TextWriter& operator()(const AnalysisSampleCollection& asc)
     {
         (*this)("AnalysisSampleCollection: ", asc.samples);
@@ -750,7 +721,7 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
-    
+
     TextWriter& operator()(const AnalysisSoftwarePtr& asp)
     {
         (*this)("analysisSoftware:");
@@ -762,12 +733,12 @@ class PWIZ_API_DECL TextWriter
         if (!asp->softwareName.empty())
             child()("softwareName: ", asp->softwareName);
         if (!asp->URI.empty())
-            child()("URI: "+asp->URI);
+            child()("uri: "+asp->URI);
         if (!asp->customizations.empty())
             child()("customizations: "+asp->customizations);
         return *this;
     }
-    
+
 
     TextWriter& operator()(const Enzyme& enzyme)
     {
@@ -779,7 +750,7 @@ class PWIZ_API_DECL TextWriter
         if (!enzyme.cTermGain.empty())
             child()("cTermGain: "+enzyme.cTermGain);
         if (enzyme.semiSpecific != boost::logic::indeterminate)
-            child()(std::string("semiSpecific: ")+ (enzyme.semiSpecific ? "true": "false"));
+            child()(std::string("semiSpecific: ") + (enzyme.semiSpecific ? "true": "false"));
         if (enzyme.missedCleavages != 0)
             child()("missedCleavages: ", enzyme.missedCleavages);
         if (enzyme.minDistance != 0)
@@ -792,7 +763,7 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
-    
+
     TextWriter& operator()(const Identifiable& id)
     {
         if (!id.id.empty())
@@ -821,24 +792,24 @@ class PWIZ_API_DECL TextWriter
     {
         (*this)("Residue: ");
         if (!res.Code.empty())
-            child()("Code: " + res.Code);
+            child()("code: " + res.Code);
         if (res.Mass != 0)
-            child()("Mass: ", res.Mass);
+            child()("mass: ", res.Mass);
         return *this;
     }
 
-    
+
     TextWriter& operator()(const AmbiguousResidue& res)
     {
         (*this)("AmbiguousResidue: ");
         if (!res.Code.empty())
-            child()("Code: ", res.Code);
+            child()("code: ", res.Code);
         (*this)((const ParamContainer&)res);
         
         return *this;
     }
 
-    
+
     TextWriter& operator()(const Modification& mod)
     {
         (*this)("Modification: ");
@@ -855,11 +826,10 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
-    
+
     TextWriter& operator()(const Peptide& pep)
     {
         (*this)("Peptide: ");
-
         (*this)((const IdentifiableParamContainer&)pep);
         if (!pep.peptideSequence.empty())
             child()("peptideSequence: "+pep.peptideSequence);
@@ -871,14 +841,15 @@ class PWIZ_API_DECL TextWriter
         return *this;
     }
 
-    
+
     TextWriter& operator()(const PeptideEvidence& pe)
     {
         (*this)("PeptideEvidence: ");
-
-        child()((const IdentifiableParamContainer&)pe);
+        (*this)((const IdentifiableParamContainer&)pe);
+        if (pe.peptidePtr.get() && !pe.peptidePtr->empty())
+            child()("peptide_ref: "+pe.peptidePtr->id);
         if (pe.dbSequencePtr.get() && !pe.dbSequencePtr->empty())
-            child()("DBSequence_ref: "+pe.dbSequencePtr->id);
+            child()("dBSequence_ref: "+pe.dbSequencePtr->id);
         if (pe.start != 0)
             child()("start: ", pe.start);
         if (pe.end != 0)
@@ -888,15 +859,14 @@ class PWIZ_API_DECL TextWriter
         if (!pe.post.empty())
             child()("post: " + pe.post);
         if (pe.translationTablePtr.get() && !pe.translationTablePtr->empty())
-            child()("TranslationTable_ref: "+pe.translationTablePtr->id);
+            child()("translationTable_ref: "+pe.translationTablePtr->id);
         if (pe.frame != 0)
             child()("frame: ", pe.frame);
         child()("isDecoy: ", pe.isDecoy);
-        if (pe.missedCleavages != 0)
-            child()("missedCleavages: ", pe.missedCleavages);
         
         return *this;
     }
+
 
     TextWriter& operator()(const MzIdentML& mzid)
     {
@@ -925,7 +895,8 @@ class PWIZ_API_DECL TextWriter
             child()(mzid.bibliographicReference);
         return *this;
     }
-    
+
+
     TextWriter& operator()(const CV& cv)
     {
         (*this)("cv:");
@@ -936,6 +907,7 @@ class PWIZ_API_DECL TextWriter
             ("URI: " + cv.URI);
         return *this;
     }
+
 
     // if no other overload matches, assume the object is a shared_ptr of a valid overloaded type
     template<typename object_type>

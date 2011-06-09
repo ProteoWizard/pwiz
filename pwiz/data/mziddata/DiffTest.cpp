@@ -135,41 +135,6 @@ void testIonType()
 }
 
 
-void testMaterial()
-{
-    if (os_) *os_ << "testMaterial()\n";
-
-    Material a, b;
-
-    a.contactRole.contactPtr = ContactPtr(new Person("contactPtr"));
-    a.set(MS_sample_number);
-    b = a;
-
-    Diff<Material, DiffConfig> diff(a, b);
-    if (os_) *os_ << diff_string<TextWriter>(diff) << endl;
-    unit_assert(!diff);
-
-    b.contactRole.contactPtr = ContactPtr(new Person("fer_rehto"));
-    b.set(MS_sample_name);
-
-    diff(a, b);
-    if (os_) *os_ << diff_string<TextWriter>(diff) << endl;
-
-    // a diff was found
-    unit_assert(diff);
-
-    // and correctly
-    unit_assert(diff.a_b.cvParams.size() == 0);
-    unit_assert(diff.b_a.cvParams.size() == 1);
-    unit_assert(diff.a_b.contactRole.contactPtr.get());
-    unit_assert(diff.b_a.contactRole.contactPtr.get());
-    unit_assert(diff.a_b.contactRole.contactPtr->id == "contactPtr");
-    unit_assert(diff.b_a.contactRole.contactPtr->id == "fer_rehto");
-    unit_assert(diff.b_a.hasCVParam(MS_sample_name));
-
-}
-
-
 void testMeasure()
 {
     if (os_) *os_ << "testMeasure()\n";
@@ -250,7 +215,6 @@ void testPeptideEvidence()
     a.translationTablePtr = TranslationTablePtr(new TranslationTable("TranslationTable_ref"));
     a.frame = 0;
     a.isDecoy = true;
-    a.missedCleavages = 0;
     a.set(MS_Mascot_score, 15.71);
     b = a;
 
@@ -265,7 +229,6 @@ void testPeptideEvidence()
     b.translationTablePtr = TranslationTablePtr(new TranslationTable("fer_elbaTnoitalsnarT"));
     b.frame = 1;
     b.isDecoy = false;
-    b.missedCleavages = 1;
     b.set(MS_Mascot_expectation_value, 0.0268534444565851);
 
     diff(a, b);
@@ -295,8 +258,6 @@ void testPeptideEvidence()
     unit_assert_equal(diff.b_a.frame, 1.0, epsilon);
     unit_assert(diff.a_b.isDecoy == true);
     unit_assert(diff.b_a.isDecoy == false);
-    unit_assert_equal(diff.a_b.missedCleavages, 0.0, epsilon);
-    unit_assert_equal(diff.b_a.missedCleavages, 1.0, epsilon);
     unit_assert(diff.a_b.cvParams.size() == 0);
     unit_assert(diff.b_a.cvParams.size() == 1);
     unit_assert(diff.b_a.hasCVParam(MS_Mascot_expectation_value));
@@ -543,7 +504,7 @@ void testSearchDatabase()
     b.numResidues = 13;
 
     a.fileFormat.cvid = MS_frag__z_ion;
-    a.DatabaseName.set(MS_frag__z_ion);
+    a.databaseName.set(MS_frag__z_ion);
 
     diff(a,b);
     if (os_) *os_ << diff_string<TextWriter>(diff) << endl;
@@ -563,9 +524,9 @@ void testSearchDatabase()
     unit_assert(!diff.a_b.fileFormat.empty());
     unit_assert(diff.b_a.fileFormat.empty());
     unit_assert(diff.a_b.fileFormat.cvid == MS_frag__z_ion);
-    unit_assert(diff.a_b.DatabaseName.cvParams.size() == 1);
-    unit_assert(diff.b_a.DatabaseName.cvParams.size() == 0);
-    unit_assert(diff.a_b.DatabaseName.hasCVParam(MS_frag__z_ion));
+    unit_assert(diff.a_b.databaseName.cvParams.size() == 1);
+    unit_assert(diff.b_a.databaseName.cvParams.size() == 0);
+    unit_assert(diff.a_b.databaseName.hasCVParam(MS_frag__z_ion));
 
 }
 
@@ -911,11 +872,11 @@ void testContact()
 
     Contact a("a_id", "a_name"), b;
 
-    a.address = "address";
-    a.phone = "phone";
-    a.email = "email";
-    a.fax = "fax";
-    a.tollFreePhone = "tollFreePhone";
+    a.set(MS_contact_address, "address");
+    a.set(MS_contact_phone_number, "phone");
+    a.set(MS_contact_email, "email");
+    a.set(MS_contact_fax_number, "fax");
+    a.set(MS_contact_toll_free_phone_number, "tollFreePhone");
 
     b = a;
 
@@ -930,40 +891,18 @@ void testContact()
 
     unit_assert(diff);
 
-    b.address = "b_address";
-    b.phone = "b_phone";
-    b.email = "b_email";
-    b.fax = "b_fax";
-    b.tollFreePhone = "b_tollFreePhone";
+    b.set(MS_contact_address, "b_address");
+    b.set(MS_contact_phone_number, "b_phone");
+    b.set(MS_contact_email, "b_email");
+    b.set(MS_contact_fax_number, "b_fax");
+    b.set(MS_contact_toll_free_phone_number, "b_tollFreePhone");
+
 
     diff(a, b);
     if (os_) *os_ << diff_string<TextWriter>(diff) << endl;
 
     unit_assert(diff);
 
-}
-
-
-void testAffiliations()
-{
-    if (os_) *os_ << "testAffiliations()\n";
-
-    Affiliations a, b;
-
-    a.organizationPtr = OrganizationPtr(new Organization("id"));
-
-    b = a;
-
-    Diff<Affiliations, DiffConfig> diff(a, b);
-    if (os_) *os_ << diff_string<TextWriter>(diff) << endl;
-    unit_assert(!diff);
-
-    b.organizationPtr = OrganizationPtr(new Organization("id2"));
-
-    diff(a, b);
-    if (os_) *os_ << diff_string<TextWriter>(diff) << endl;
-
-    unit_assert(diff);
 }
 
 
@@ -977,8 +916,7 @@ void testPerson()
     a.firstName = "first";
     a.midInitials = "mi";
 
-    Affiliations c;
-    a.affiliations.push_back(c);
+    a.affiliations.push_back(OrganizationPtr(new Organization("org")));
 
     b = a;
     Diff<Person, DiffConfig> diff(a, b);
@@ -1075,6 +1013,34 @@ void testSampleComponent()
 void testSample()
 {
     if (os_) *os_ << "testSample()\n";
+
+    Sample a, b;
+
+    a.contactRole.contactPtr = ContactPtr(new Person("contactPtr"));
+    a.set(MS_sample_number);
+    b = a;
+
+    Diff<Sample, DiffConfig> diff(a, b);
+    if (os_) *os_ << diff_string<TextWriter>(diff) << endl;
+    unit_assert(!diff);
+
+    b.contactRole.contactPtr = ContactPtr(new Person("fer_rehto"));
+    b.set(MS_sample_name);
+
+    diff(a, b);
+    if (os_) *os_ << diff_string<TextWriter>(diff) << endl;
+
+    // a diff was found
+    unit_assert(diff);
+
+    // and correctly
+    unit_assert(diff.a_b.cvParams.size() == 0);
+    unit_assert(diff.b_a.cvParams.size() == 1);
+    unit_assert(diff.a_b.contactRole.contactPtr.get());
+    unit_assert(diff.b_a.contactRole.contactPtr.get());
+    unit_assert(diff.a_b.contactRole.contactPtr->id == "contactPtr");
+    unit_assert(diff.b_a.contactRole.contactPtr->id == "fer_rehto");
+    unit_assert(diff.b_a.hasCVParam(MS_sample_name));
 }
 
 
@@ -1216,7 +1182,6 @@ void test()
     testContactRole();
     testFragmentArray();
     testIonType();
-    testMaterial();
     testMeasure();
     testPeptideEvidence();
     testProteinAmbiguityGroup();
@@ -1238,7 +1203,6 @@ void test()
     testSpectrumIdentificationProtocol();
     testProteinDetectionProtocol();
     testAnalysisProtocolCollection();
-    testAffiliations();
     testPerson();
     testOrganization();
     testBibliographicReference();

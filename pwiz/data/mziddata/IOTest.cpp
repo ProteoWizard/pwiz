@@ -130,19 +130,17 @@ void testPerson()
 
     Person a;
 
-    a.address = "abcd";
-    a.phone = "efg";
-    a.email = "hijk";
-    a.fax = "lmnop";
-    a.tollFreePhone = "qrs";
+    a.set(MS_contact_address, "123 abc");
+    a.set(MS_contact_phone_number, "456");
+    a.set(MS_contact_email, "efg@hijk.op");
+    a.set(MS_contact_fax_number, "789");
+    a.set(MS_contact_toll_free_phone_number, "012-345-678");
 
     a.lastName = "tuv";
     a.firstName = "wx";
     a.midInitials = "yz";
 
-    Affiliations b;
-    //b.organizationPtr=OrganizationPtr(new Organization("ref"));
-    a.affiliations.push_back(b);
+    a.affiliations.push_back(OrganizationPtr(new Organization("ref")));
 
     testObject(a);
 }
@@ -154,13 +152,13 @@ void testOrganization()
     
     Organization a;
 
-    a.address = "abcd";
-    a.phone = "efg";
-    a.email = "hijk";
-    a.fax = "lmnop";
-    a.tollFreePhone = "qrs";
+    a.set(MS_contact_address, "123 abc");
+    a.set(MS_contact_phone_number, "456");
+    a.set(MS_contact_email, "efg@hijk.op");
+    a.set(MS_contact_fax_number, "789");
+    a.set(MS_contact_toll_free_phone_number, "012-345-678");
 
-    a.parent.organizationPtr = OrganizationPtr(new Organization("ref"));
+    a.parent = OrganizationPtr(new Organization("ref"));
 
     testObject(a);
 }
@@ -191,18 +189,6 @@ void testProvider()
 }
 
 
-void testMaterial()
-{
-    Material a;
-
-    // Reduced to a previously tested object.
-    a.contactRole.contactPtr = ContactPtr(new Contact("abc"));
-    a.set(MS_septum);
-
-    testObject(a);
-}
-
-
 void testSample()
 {
     if (os_) *os_ << "testSample\n" ;
@@ -211,11 +197,10 @@ void testSample()
 
     // Reduced to a previously tested object.
     a.contactRole.contactPtr = ContactPtr(new Contact("abc"));
+    a.contactRole.cvid = MS_software_vendor;
     a.set(MS_septum);
 
-    Sample::SubSample b;
-    b.samplePtr = SamplePtr(new Sample("subSample_ref"));
-    a.subSamples.push_back(b);
+    a.subSamples.push_back(SamplePtr(new Sample("subSample_ref")));
 
     testObject(a);
 }
@@ -238,13 +223,14 @@ void testAnalysisSoftware()
     testObject(a);
 }
 
+
 void testAnalysisSampleCollection()
 {
     if (os_) *os_ << "testAnalysisSampleCollection\n" ;
 
     AnalysisSampleCollection a;
     SamplePtr b(new Sample());
-    b->subSamples.push_back(Sample::SubSample());
+    b->subSamples.push_back(SamplePtr(new Sample("ref")));
 
     testObject(a);
 }
@@ -313,29 +299,13 @@ void testPeptide()
 }
 
 
-void testPeptideEvidenceList()
-{
-    PeptideEvidenceList a;
-    a.id = "id";
-    a.name = "name";
-    a.peptideEvidence.push_back(PeptideEvidencePtr(new PeptideEvidence("pe1")));
-    a.peptideEvidence.push_back(PeptideEvidencePtr(new PeptideEvidence("pe2")));
-    a.enzymePtr.push_back(EnzymePtr(new Enzyme("ez1")));
-    a.enzymePtr.push_back(EnzymePtr(new Enzyme("ez2")));
-    a.additionalParams.set(MS_peptide);
-
-    testObject(a);
-}
-
-
 void testSequenceCollection()
 {
     SequenceCollection a;
 
     a.dbSequences.push_back(DBSequencePtr(new DBSequence("db_id")));
     a.peptides.push_back(PeptidePtr(new Peptide("pep_id")));
-    a.peptideEvidenceList.push_back(PeptideEvidenceListPtr(new PeptideEvidenceList("pel_id")));
-    a.peptideEvidenceList.back()->peptideEvidence.push_back(PeptideEvidencePtr(new PeptideEvidence("pe1")));
+    a.peptideEvidence.push_back(PeptideEvidencePtr(new PeptideEvidence("pe1")));
     
     testObject(a);
 }
@@ -578,7 +548,7 @@ void testSearchDatabase()
     a.numResidues = 2;
 
     a.fileFormat.cvid = MS_FASTA_format;
-    a.DatabaseName.userParams.push_back(UserParam("5peptideMix_20090515.fasta"));
+    a.databaseName.userParams.push_back(UserParam("5peptideMix_20090515.fasta"));
     
     testObject(a);
 }
@@ -678,7 +648,6 @@ void testPeptideEvidence()
     a.translationTablePtr = TranslationTablePtr(new TranslationTable("tranny_ref"));
     a.frame = 3;
     a.isDecoy = true;
-    a.missedCleavages = 4;
     
     a.set(MS_Mascot_score, "15.71");
 
@@ -868,7 +837,7 @@ void testMzIdentML()
         // clear the original SequenceCollection
         a.sequenceCollection.dbSequences.clear();
         a.sequenceCollection.peptides.clear();
-        a.sequenceCollection.peptideEvidenceList.clear();
+        a.sequenceCollection.peptideEvidence.clear();
 
         // clear the original analysis data
         BOOST_FOREACH(SpectrumIdentificationPtr& si, a.analysisCollection.spectrumIdentification)
@@ -896,14 +865,12 @@ void test()
     testOrganization();
     testContactRole();
     testProvider();
-    testMaterial();
     testSample();
     testAnalysisSoftware();
     testDBSequence();
     testModification();
     testSubstitutionModification();
     testPeptide();
-    testPeptideEvidenceList();
     testSequenceCollection();
     testSpectrumIdentification();
     testProteinDetection();

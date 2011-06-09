@@ -108,6 +108,7 @@ PWIZ_API_DECL bool BibliographicReference::empty() const
            title.empty();
 }
 
+
 //
 // ContactRole
 //
@@ -123,6 +124,7 @@ PWIZ_API_DECL bool ContactRole::empty() const
            CVParam::empty();
 }
 
+
 //
 // Contact
 //
@@ -136,28 +138,9 @@ PWIZ_API_DECL Contact::Contact(const string& id_,
 
 PWIZ_API_DECL bool Contact::empty() const
 {
-    return IdentifiableParamContainer::empty() &&
-           address.empty() &&
-           phone.empty() &&
-           email.empty() &&
-           fax.empty() &&
-           tollFreePhone.empty();
+    return IdentifiableParamContainer::empty();
 }
 
-//
-// Affiliations
-//
-
-PWIZ_API_DECL Affiliations::Affiliations(const string& organizationId)
-    : organizationPtr(OrganizationPtr(new Organization(organizationId)))
-{
-}
-
-
-PWIZ_API_DECL bool Affiliations::empty() const
-{
-    return !organizationPtr.get() || organizationPtr->empty();
-}
 
 //
 // Person
@@ -178,6 +161,7 @@ PWIZ_API_DECL bool Person::empty() const
            affiliations.empty();
 }
 
+
 //
 // Organization
 //
@@ -192,18 +176,9 @@ PWIZ_API_DECL Organization::Organization(const string& id_,
 PWIZ_API_DECL bool Organization::empty() const
 {
     return Contact::empty() &&
-           !parent.organizationPtr.get();
+           (!parent.get() || parent->empty());
 }
 
-
-PWIZ_API_DECL Organization::Parent::Parent()
-{
-}
-
-PWIZ_API_DECL bool Organization::Parent::empty() const
-{
-    return !organizationPtr.get() || organizationPtr->empty();
-}
 
 //
 // Modification
@@ -225,6 +200,7 @@ PWIZ_API_DECL bool Modification::empty() const
            ParamContainer::empty();
 }
 
+
 //
 // Enzymes
 //
@@ -234,6 +210,7 @@ PWIZ_API_DECL bool Enzymes::empty() const
     return indeterminate(independent) &&
            enzymes.empty();
 }
+
 
 //
 // MassTable
@@ -270,6 +247,7 @@ PWIZ_API_DECL bool IonType::empty() const
            ParamContainer::empty() &&
            fragmentArray.empty();
 }
+
 
 //
 // SpectrumIdentificationItem
@@ -519,6 +497,7 @@ PWIZ_API_DECL bool SpectrumIdentification::empty() const
         searchDatabase.empty();
 }
 
+
 //
 // ProteinDetectionList
 //
@@ -565,6 +544,7 @@ PWIZ_API_DECL bool ProteinDetectionHypothesis::empty() const
            peptideHypothesis.empty() &&
            IdentifiableParamContainer::empty();
 }
+
 
 //
 // ProteinAmbiguityGroup
@@ -639,6 +619,7 @@ PWIZ_API_DECL bool ProteinDetectionProtocol::empty() const
            threshold.empty();
 }
 
+
 //
 // PeptideEvidence
 //
@@ -647,8 +628,7 @@ PWIZ_API_DECL PeptideEvidence::PeptideEvidence(const string& id,
                                                const string& name)
     : IdentifiableParamContainer(id, name),
       start(0), end(0),
-      frame(0), isDecoy(false),
-      missedCleavages(0)
+      frame(0), isDecoy(false)
 {
 }
 
@@ -656,6 +636,7 @@ PWIZ_API_DECL PeptideEvidence::PeptideEvidence(const string& id,
 PWIZ_API_DECL bool PeptideEvidence::empty() const
 {
     return IdentifiableParamContainer::empty() &&
+           (!peptidePtr.get() || peptidePtr->empty()) &&
            (!dbSequencePtr.get() || dbSequencePtr->empty()) &&
            start == 0 &&
            end == 0 &&
@@ -663,30 +644,7 @@ PWIZ_API_DECL bool PeptideEvidence::empty() const
            post.empty() &&
            (!translationTablePtr.get() || translationTablePtr->empty()) &&
            frame == 0 &&
-           isDecoy == false &&
-           missedCleavages == 0;
-}
-
-//
-// PeptideEvidenceList
-//
-
-PWIZ_API_DECL PeptideEvidenceList::PeptideEvidenceList(const string& id,
-                                                       const string& name)
-    : Identifiable(id, name)
-{
-}
-
-    std::vector<PeptideEvidencePtr> peptideEvidence;
-    std::vector<EnzymePtr> enzymePtr;
-    ParamContainer additionalParams;
-
-PWIZ_API_DECL bool PeptideEvidenceList::empty() const
-{
-    return Identifiable::empty() &&
-           peptideEvidence.empty()&&
-           enzymePtr.empty() &&
-           additionalParams.empty();
+           isDecoy == false;
 }
 
 
@@ -700,6 +658,7 @@ PWIZ_API_DECL bool FragmentArray::empty() const
            (!measurePtr.get() || measurePtr->empty()) &&
            ParamContainer::empty();
 }
+
 
 //
 // Filter
@@ -881,21 +840,6 @@ PWIZ_API_DECL string IonType::getIndex() const
     return oss.str();
 }
 
-//
-// Material
-//
-
-PWIZ_API_DECL Material::Material(const std::string& id_,
-                                 const std::string& name_)
-    : IdentifiableParamContainer(id_, name_)
-{
-}
-
-PWIZ_API_DECL bool Material::empty() const
-{
-    return contactRole.empty() &&
-           cvParams.empty();
-}
 
 //
 // Measure
@@ -906,7 +850,6 @@ PWIZ_API_DECL Measure::Measure(const string id, const string name)
 {
 }
     
-
 PWIZ_API_DECL bool Measure::empty() const
 {
     return IdentifiableParamContainer::empty();
@@ -919,28 +862,15 @@ PWIZ_API_DECL bool Measure::empty() const
 
 PWIZ_API_DECL Sample::Sample(const std::string& id_,
                              const std::string& name_)
-    : Material(id_, name_)
+    : IdentifiableParamContainer(id_, name_)
 {
 }
 
 PWIZ_API_DECL bool Sample::empty() const
 {
-    return Material::empty() &&
-           subSamples.empty();
-}
-
-//
-// subSample
-//
-
-PWIZ_API_DECL Sample::SubSample::SubSample(const std::string& id_,
-                                           const std::string& name_)
-    : samplePtr(SamplePtr(new Sample(id_, name_)))
-{}
-
-PWIZ_API_DECL bool Sample::SubSample::empty() const
-{
-    return !samplePtr.get();
+    return IdentifiableParamContainer::empty() &&
+           subSamples.empty() &&
+           contactRole.empty();
 }
 
 
@@ -965,6 +895,7 @@ PWIZ_API_DECL bool SubstitutionModification::empty() const
            monoisotopicMassDelta == 0;
 }
 
+
 //
 // Peptide
 //
@@ -983,6 +914,7 @@ PWIZ_API_DECL bool Peptide::empty() const
            substitutionModification.empty();
 }
 
+
 //
 // SequenceCollection
 //
@@ -991,7 +923,7 @@ PWIZ_API_DECL bool SequenceCollection::empty() const
 {
     return dbSequences.empty() &&
            peptides.empty() &&
-           peptideEvidenceList.empty();
+           peptideEvidence.empty();
 }
 
 
@@ -1179,7 +1111,7 @@ PWIZ_API_DECL bool SearchDatabase::empty() const
            numDatabaseSequences == 0 &&
            numResidues == 0 &&
            fileFormat.empty() &&
-           DatabaseName.empty();
+           databaseName.empty();
 }
 
 //

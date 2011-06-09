@@ -98,7 +98,7 @@ AnalysisSoftwarePtr getPwizSoftware(MzIdentML& mzid)
     if (!contactPwiz.get())
     {
         contactPwiz.reset(new Organization("ORG_PWIZ", "ProteoWizard"));
-        contactPwiz->email = "support@proteowizard.org";
+        contactPwiz->set(MS_contact_email, "support@proteowizard.org");
         mzid.auditCollection.push_back(contactPwiz);
     }
 
