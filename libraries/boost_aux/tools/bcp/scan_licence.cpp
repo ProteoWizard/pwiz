@@ -239,10 +239,10 @@ void bcp_implementation::scan_license(const fs::path& p, const fileview& v)
        // Perform the actual conversion
        if (m_bsl_convert_mode) {
           try{
-            std::ofstream out((m_boost_path / p).native_file_string().c_str());
+             std::ofstream out((m_boost_path / p).string().c_str());
             if (!out) {
                std::string msg("Cannot open file for license conversion: ");
-               msg += p.native_file_string();
+               msg += p.string();
                std::runtime_error e(msg);
                boost::throw_exception(e);
             }

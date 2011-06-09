@@ -57,7 +57,7 @@ void bcp_implementation::output_license_info()
    i = m_license_data.begin();
    j = m_license_data.end();
 
-   std::ofstream os(m_dest_path.native_file_string().c_str());
+   std::ofstream os(m_dest_path.string().c_str());
    if(!os)
    {
       std::string msg("Error opening ");
@@ -139,7 +139,7 @@ void bcp_implementation::output_license_info()
    // version):
    //
    fileview version_file(m_boost_path / "boost/version.hpp");
-   boost::regex version_regex(
+   static const boost::regex version_regex(
       "^[[:blank:]]*#[[:blank:]]*define[[:blank:]]+BOOST_VERSION[[:blank:]]+(\\d+)");
    boost::cmatch what;
    if(boost::regex_search(version_file.begin(), version_file.end(), what, version_regex))

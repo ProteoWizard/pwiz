@@ -57,11 +57,11 @@ void fileview::close()
 void fileview::open(const boost::filesystem::path& p)
 {
    cow();
-   std::ifstream is(p.native_file_string().c_str());
+   std::ifstream is(p.string().c_str());
    if(!is)
    {
       std::string msg("Bad file name: ");
-      msg += p.native_file_string();
+      msg += p.string();
       std::runtime_error e(msg);
       boost::throw_exception(e);
    }
@@ -73,7 +73,7 @@ void fileview::open(const boost::filesystem::path& p)
 // iterators:
 fileview::const_iterator         fileview::begin() const
 {
-   return &(pimpl->m_data[0]);
+   return pimpl->m_data.size() ? &(pimpl->m_data[0]) : 0;
 }
 
 fileview::const_iterator         fileview::end() const

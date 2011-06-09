@@ -7,6 +7,12 @@
  *
  */
 
+#if defined(BOOST_FILESYSTEM_VERSION) && (BOOST_FILESYSTEM_VERSION != 3)
+# error "This library must be built with Boost.Filesystem version 3"
+#else
+#define BOOST_FILESYSTEM_VERSION 3
+#endif
+
 #include <boost/shared_ptr.hpp>
 #include <boost/filesystem/path.hpp>
 

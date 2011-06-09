@@ -9,7 +9,7 @@
  *    void bcp_implementation::add_path(const fs::path& p)
  *    void bcp_implementation::add_directory(const fs::path& p)
  *    void bcp_implementation::add_file(const fs::path& p)
- *    void bcp_implementation::add_dependent_lib(const std::string& libname)
+ *    void bcp_implementation::add_dependent_lib(const std::string& libname, const fs::path& p, const fileview& view)
  */
 
 #include "bcp_imp.hpp"
@@ -23,7 +23,7 @@
 void bcp_implementation::add_path(const fs::path& p)
 {
    fs::path normalized_path = p;
-   normalized_path.normalize();
+    normalized_path.normalize();
    if(fs::exists(m_boost_path / normalized_path))
    {
       if(fs::is_directory(m_boost_path / normalized_path))
@@ -34,6 +34,7 @@ void bcp_implementation::add_path(const fs::path& p)
    else
    {
       std::cerr << "CAUTION: dependent file " << p.string() << " does not exist." << std::endl;
+      std::cerr << "   Found while scanning file " << m_dependencies[p].string() << std::endl;
    }
 }
 
@@ -67,12 +68,15 @@ void bcp_implementation::add_directory(const fs::path& p)
       // we need to convert *i back into
       // a relative path, what follows is a hack:
       //
-      std::string s(i->string());
+      std::string s(i->path().string());
       if(m_boost_path.string().size())
          s.erase(0, m_boost_path.string().size() + 1);
-      if(!m_dependencies.count(fs::path(s))) 
-         m_dependencies[fs::path(s)] = p; // set up dependency tree
-      add_path(fs::path(s));
+      fs::path np = s;
+      if(!m_dependencies.count(np)) 
+      {
+         m_dependencies[np] = p; // set up dependency tree
+         add_path(np);
+      }
       ++i;
    }
 }
@@ -100,6 +104,37 @@ void bcp_implementation::add_file(const fs::path& p)
    {
       add_file_dependencies(p, false);
    }
+   if(is_jam_file(p) && m_namespace_name.size() && ((std::distance(p.begin(), p.end()) < 3) || (*p.begin() != "tools") || (*++p.begin() != "build")))
+   {
+      //
+      // We're doing a rename of namespaces and library names
+      // so scan for names of libraries:
+      //
+      static const boost::regex e(
+         "\\<lib\\s+(boost\\w+)\\s+[:;]"
+         );
+
+      fileview view(m_boost_path / p);
+      boost::regex_token_iterator<const char*> i(view.begin(), view.end(), e, 1);
+      boost::regex_token_iterator<const char*> j;
+      while(i != j)
+      {
+         m_lib_names.insert(*i);
+         ++i;
+      }
+      static const std::pair<fs::path, std::string> specials_library_names[] = {
+            std::pair<fs::path, std::string>("libs/python/build/Jamfile.v2", "boost_python"),
+            std::pair<fs::path, std::string>("libs/python/build/Jamfile.v2", "boost_python3"),
+      };
+
+      for(unsigned int n = 0; n < (sizeof(specials_library_names)/sizeof(specials_library_names[0])); ++n)
+      {
+         if(0 == compare_paths(specials_library_names[n].first, p))
+         {
+            m_lib_names.insert(specials_library_names[n].second);
+         }
+      }
+   }
    //
    // if this is a html file, scan for dependencies:
    //
@@ -126,6 +161,14 @@ void bcp_implementation::add_file(const fs::path& p)
             s.erase(s.size() - 1);
          }
          //
+         // Remove any target suffix:
+         //
+         std::string::size_type n = s.find('#');
+         if(n != std::string::npos)
+         {
+            s.erase(n);
+         }
+         //
          // if the name starts with ./ remove it
          // or we'll get an error:
          if(s.compare(0, 2, "./") == 0)
@@ -136,8 +179,10 @@ void bcp_implementation::add_file(const fs::path& p)
             // rather than a URL:
             fs::path dep(p.branch_path() / s);
             if(!m_dependencies.count(dep)) 
+            {
                m_dependencies[dep] = p; // set up dependency tree
-            add_path(dep);
+               add_path(dep);
+            }
          }
          ++i;
       }
@@ -177,10 +222,19 @@ static const std::pair<fs::path, fs::path>
       std::pair<fs::path, fs::path>("boost/mpl/set/aux_/include_preprocessed.hpp", "boost/mpl/set/aux_/preprocessed"),
       std::pair<fs::path, fs::path>("boost/mpl/map/aux_/include_preprocessed.hpp", "boost/mpl/map/aux_/preprocessed"),
       std::pair<fs::path, fs::path>("boost/mpl/list/aux_/include_preprocessed.hpp", "boost/mpl/list/aux_/preprocessed"),
-      std::pair<fs::path, fs::path>("boost/function_types/components.hpp", "boost/function_types/detail"),
-      std::pair<fs::path, fs::path>("boost/function_types/function_type.hpp", "boost/function_types/detail"),
-      std::pair<fs::path, fs::path>("boost/parameter/parameters.hpp", "boost/parameter/aux_/overloads.hpp"),
-      std::pair<fs::path, fs::path>("libs/graph/src/python/visitor.hpp", "libs/graph/src/python"),        
+      std::pair<fs::path, fs::path>("libs/graph/src/python/visitor.hpp", "libs/graph/src/python"),
+      std::pair<fs::path, fs::path>("boost/test/detail/config.hpp", "libs/test/src"),
+      std::pair<fs::path, fs::path>("boost/test/detail/config.hpp", "libs/test/build"),
+      std::pair<fs::path, fs::path>("boost/typeof.hpp", "boost/typeof/incr_registration_group.hpp"),
+      std::pair<fs::path, fs::path>("boost/function_types/detail/pp_loop.hpp", "boost/function_types/detail/pp_cc_loop"),
+      std::pair<fs::path, fs::path>("boost/function_types/components.hpp", "boost/function_types/detail/components_impl"),
+      std::pair<fs::path, fs::path>("boost/function_types/detail/pp_loop.hpp", "boost/function_types/detail"),
+      std::pair<fs::path, fs::path>("boost/math/tools/rational.hpp", "boost/math/tools/detail"),
+      std::pair<fs::path, fs::path>("boost/proto/repeat.hpp", "boost/proto/detail/local.hpp"),
+      std::pair<fs::path, fs::path>("boost/signals/signal_template.hpp", "boost/function"),
+      std::pair<fs::path, fs::path>("boost/preprocessor/slot/counter.hpp", "boost/preprocessor/slot/detail/counter.hpp"),
+      std::pair<fs::path, fs::path>("boost/graph/distributed/detail/tag_allocator.hpp", "libs/graph_parallel"),
+      std::pair<fs::path, fs::path>("boost/graph/distributed/mpi_process_group.hpp", "libs/graph_parallel"),
    };
 
    for(unsigned int n = 0; n < (sizeof(specials)/sizeof(specials[0])); ++n)
@@ -188,31 +242,13 @@ static const std::pair<fs::path, fs::path>
       if(0 == compare_paths(specials[n].first, p))
       {
          if(!m_dependencies.count(specials[n].second)) 
+         {
             m_dependencies[specials[n].second] = p; // set up dependency tree
-         add_path(specials[n].second);
+            add_path(specials[n].second);
+         }
       }
    }
 
-}
-
-void bcp_implementation::add_dependent_lib(const std::string& libname, const fs::path& p)
-{
-   //
-   // if the boost library libname has source associated with it
-   // then add the source to our list:
-   //
-   if(fs::exists(m_boost_path / "libs" / libname / "src"))
-   {
-      if(!m_dependencies.count(fs::path("libs") / libname / "src")) 
-         m_dependencies[fs::path("libs") / libname / "src"] = p; // set up dependency tree
-      add_path(fs::path("libs") / libname / "src");
-      if(fs::exists(m_boost_path / "libs" / libname / "build"))
-      {
-         if(!m_dependencies.count(fs::path("libs") / libname / "build")) 
-            m_dependencies[fs::path("libs") / libname / "build"] = p; // set up dependency tree
-         add_path(fs::path("libs") / libname / "build");
-      }
-   }
 }
 
 void bcp_implementation::add_file_dependencies(const fs::path& p, bool scanfile)
@@ -255,6 +291,24 @@ void bcp_implementation::add_file_dependencies(const fs::path& p, bool scanfile)
             continue;
          }
          include_file = i->str();
+         fs::path test_file(m_boost_path / p.branch_path() / include_file);
+         if(fs::exists(test_file) && !fs::is_directory(test_file) && (p.branch_path().string() != "boost"))
+         {
+            if(!m_dependencies.count(p.branch_path() / include_file)) 
+            {
+               m_dependencies[p.branch_path() / include_file] = p;
+               add_path(p.branch_path() / include_file);
+            }
+         }
+         else if(fs::exists(m_boost_path / include_file))
+         {
+            if(!m_dependencies.count(include_file)) 
+            {
+               m_dependencies[include_file] = p;
+               add_path(include_file);
+            }
+         }
+         ++i;
       }
       catch(const fs::filesystem_error&)
       {
@@ -262,26 +316,12 @@ void bcp_implementation::add_file_dependencies(const fs::path& p, bool scanfile)
          ++i;
          continue;
       }
-      fs::path test_file(m_boost_path / p.branch_path() / include_file);
-      if(fs::exists(test_file) && !fs::is_directory(test_file) && (p.branch_path().string() != "boost"))
-      {
-         if(!m_dependencies.count(p.branch_path() / include_file)) 
-            m_dependencies[p.branch_path() / include_file] = p;
-         add_path(p.branch_path() / include_file);
-      }
-      else if(fs::exists(m_boost_path / include_file))
-      {
-         if(!m_dependencies.count(include_file)) 
-            m_dependencies[include_file] = p;
-         add_path(include_file);
-      }
-      ++i;
    }
    //
    // Now we need to scan for Boost.Preprocessor includes that
    // are included via preprocessor iteration:
    //
-   boost::regex ppfiles("^[[:blank:]]*#[[:blank:]]*define[[:blank:]]+(?:BOOST_PP_FILENAME|BOOST_PP_ITERATION_PARAMS|BOOST_PP_INDIRECT_SELF)[^\\n]+?[\"<]([^\">]+)[\">]");
+   static const boost::regex ppfiles("^[[:blank:]]*#[[:blank:]]*define[[:blank:]]+(?:BOOST_PP_FILENAME|BOOST_PP_ITERATION_PARAMS|BOOST_PP_INDIRECT_SELF)[^\\n]+?[\"<]([^\">]+)[\">]");
    i = boost::regex_token_iterator<const char*>(view.begin(), view.end(), ppfiles, 1);
    while(i != j)
    {
@@ -305,14 +345,18 @@ void bcp_implementation::add_file_dependencies(const fs::path& p, bool scanfile)
       if(fs::exists(test_file) && !fs::is_directory(test_file) && (p.branch_path().string() != "boost"))
       {
          if(!m_dependencies.count(p.branch_path() / include_file)) 
+         {
             m_dependencies[p.branch_path() / include_file] = p;
-         add_path(p.branch_path() / include_file);
+            add_path(p.branch_path() / include_file);
+         }
       }
       else if(fs::exists(m_boost_path / include_file))
       {
          if(!m_dependencies.count(include_file)) 
+         {
             m_dependencies[include_file] = p;
-         add_path(include_file);
+            add_path(include_file);
+         }
       }
       else
       {
@@ -328,6 +372,8 @@ void bcp_implementation::add_file_dependencies(const fs::path& p, bool scanfile)
    // we know about and are correctly handled as special cases:
    //
    static const std::string known_macros[] = {
+      "AUX778076_INCLUDE_STRING",
+      "BOOST_PP_STRINGIZE(boost/mpl/aux_/preprocessed/AUX778076_PREPROCESSED_HEADER)",
       "BOOST_USER_CONFIG",
       "BOOST_COMPILER_CONFIG",
       "BOOST_STDLIB_CONFIG",
@@ -370,16 +416,49 @@ void bcp_implementation::add_file_dependencies(const fs::path& p, bool scanfile)
       "BOOST_PP_STRINGIZE(boost/mpl/vector/AUX778076_VECTOR_C_HEADER)",
       "BOOST_REGEX_USER_CONFIG",
       "BGL_PYTHON_EVENTS_HEADER",
-   };
+      "B1",
+      "B2",
+      "BOOST_TYPEOF_INCREMENT_REGISTRATION_GROUP()",
+      "BOOST_SLIST_HEADER",
+      "BOOST_HASH_SET_HEADER",
+      "BOOST_HASH_MAP_HEADER",
+      "BOOST_INTRUSIVE_INVARIANT_ASSERT_INCLUDE",
+      "BOOST_INTRUSIVE_SAFE_HOOK_DEFAULT_ASSERT_INCLUDE",
+      "BOOST_INTRUSIVE_SAFE_HOOK_DESTRUCTOR_ASSERT_INCLUDE",
+      "BOOST_FT_loop",
+      "BOOST_FT_AL_PREPROCESSED",
+      "BOOST_FT_AL_INCLUDE_FILE",
+      "__FILE__",
+      "BOOST_FT_cc_file",
+      "BOOST_FT_variate_file",
+      "BOOST_USER_CONFIG",
+      "BOOST_HEADER()",
+      "BOOST_TR1_STD_HEADER(utility)",
+      "BOOST_TR1_STD_HEADER(BOOST_TR1_PATH(tuple))",
+      "BOOST_TR1_STD_HEADER(BOOST_TR1_PATH(random))",
+      "BOOST_TR1_STD_HEADER(BOOST_TR1_PATH(array))",
+      "BOOST_TR1_HEADER(cmath)",
+      "BOOST_TR1_STD_HEADER(BOOST_TR1_PATH(complex))",
+      "BOOST_TR1_STD_HEADER(BOOST_TR1_PATH(functional))",
+      "BOOST_TR1_STD_HEADER(BOOST_TR1_PATH(memory))",
+      "BOOST_TR1_STD_HEADER(BOOST_TR1_PATH(regex))",
+      "BOOST_TR1_STD_HEADER(BOOST_TR1_PATH(type_traits))",
+      "BOOST_TR1_STD_HEADER(BOOST_TR1_PATH(unordered_map))",
+      "BOOST_TR1_STD_HEADER(BOOST_TR1_PATH(unordered_set))",
+      "BOOST_TR1_STD_HEADER(BOOST_TR1_PATH(utility))",
+      "BOOST_PROTO_LOCAL_ITERATE()",
+      "BOOST_SIGNAL_FUNCTION_N_HEADER",
+      "BOOST_PP_UPDATE_COUNTER()",
+  };
 
-   boost::regex indirect_includes("^[[:blank:]]*#[[:blank:]]*include[[:blank:]]+([^\"<][^\n]*?)[[:blank:]]*$");
+   static const boost::regex indirect_includes("^[[:blank:]]*#[[:blank:]]*include[[:blank:]]+([^\"<][^\n]*?)[[:blank:]]*$");
    i = boost::regex_token_iterator<const char*>(view.begin(), view.end(), indirect_includes, 1);
    while(i != j)
    {
       const std::string* known_macros_end = known_macros + sizeof(known_macros)/sizeof(known_macros[0]);
       if(known_macros_end == std::find(known_macros, known_macros_end, i->str()))
       {
-         std::cerr << "CAUTION: don't know how to trace depenencies through macro: " << *i << " in file: " << p.string() << std::endl;
+         std::cerr << "CAUTION: don't know how to trace depenencies through macro: \"" << *i << "\" in file: " << p.string() << std::endl;
       }
       ++i;
    }
@@ -392,27 +471,51 @@ void bcp_implementation::add_file_dependencies(const fs::path& p, bool scanfile)
    boost::cmatch what;
    if(boost::regex_search(view.begin(), view.end(), what, m))
    {
-      add_dependent_lib("test", p);
+      add_dependent_lib("test", p, view);
    }
-   //
-   // grab the name of the library to which the header belongs, 
-   // and if that library has source then add the source to our
-   // list:
-   //
-   // this regex catches boost/libname.hpp or boost/libname/whatever:
-   //
-   static const boost::regex lib1("boost/([^\\./]+)(?!detail).*");
-   boost::smatch swhat;
-   if(boost::regex_match(p.string(), swhat, lib1))
+   if(!scanfile)
    {
-      add_dependent_lib(swhat.str(1), p);
+      //
+      // grab the name of the library to which the header belongs, 
+      // and if that library has source then add the source to our
+      // list:
+      //
+      // this regex catches boost/libname.hpp or boost/libname/whatever:
+      //
+      static const boost::regex lib1("boost/([^\\./]+)(?!detail).*");
+      boost::smatch swhat;
+      std::string gs(p.string());
+      if(boost::regex_match(gs, swhat, lib1))
+      {
+         add_dependent_lib(swhat.str(1), p, view);
+      }
+      //
+      // and this one catches boost/x/y/whatever (for example numeric/ublas):
+      //
+      static const boost::regex lib2("boost/([^/]+/[^/]+)/(?!detail).*");
+      gs = p.string();
+      if(boost::regex_match(gs, swhat, lib2))
+      {
+         add_dependent_lib(swhat.str(1), p, view);
+      }
    }
-   //
-   // and this one catches boost/x/y/whatever (for example numeric/ublas):
-   //
-   static const boost::regex lib2("boost/([^/]+/[^/]+)/(?!detail).*");
-   if(boost::regex_match(p.string(), swhat, lib2))
+   if(m_list_namespaces)
    {
-      add_dependent_lib(swhat.str(1), p);
+      //
+      // scan for top level namespaces and add to our list:
+      //
+      static const boost::regex namespace_scanner(
+         "^(?<!\\\\\\n)[[:blank:]]*+namespace\\s++(\\w++)\\s++(\\{[^{}]*(?:(?2)[^{}]*)*\\})"
+         );
+      i = boost::regex_token_iterator<const char*>(view.begin(), view.end(), namespace_scanner, 1);
+      while(i != j)
+      {
+         if(m_top_namespaces.count(*i) == 0)
+         {
+            //std::cout << *i << " (Found in " << p << ")" << std::endl;
+            m_top_namespaces[*i] = p;
+         }
+         ++i;
+      }
    }
 }
