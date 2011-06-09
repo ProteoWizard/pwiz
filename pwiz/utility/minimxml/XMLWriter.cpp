@@ -40,7 +40,7 @@ struct double12_policy : boost::spirit::karma::real_policies<T>
     static unsigned int precision(T) { return 12; }
 };
 
-void XMLWriter::Attributes::add(const string& name, const double& value)
+PWIZ_API_DECL void XMLWriter::Attributes::add(const string& name, const double& value)
 {
     using namespace boost::spirit::karma;
     typedef real_generator<double, double12_policy<double> > double12_type;
@@ -52,7 +52,7 @@ void XMLWriter::Attributes::add(const string& name, const double& value)
     push_back(make_pair(name, std::string(&buffer[0], p)));
 }
 
-void XMLWriter::Attributes::add(const string& name, const int& value)
+PWIZ_API_DECL void XMLWriter::Attributes::add(const string& name, const int& value)
 {
     using namespace boost::spirit::karma;
     static const int_generator<int> intgen = int_generator<int>();

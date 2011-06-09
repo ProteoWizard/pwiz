@@ -698,7 +698,7 @@ struct HandlerDBSequence : public HandlerIdentifiableParamContainer
     virtual Status endElement(const string& name, 
                               stream_offset position)
     {
-        if (name == "seq")
+        if (name == Seq_element(version))
             inSeq = false;
 
         return Status::Ok;
