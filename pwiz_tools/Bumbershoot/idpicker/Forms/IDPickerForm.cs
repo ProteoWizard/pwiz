@@ -226,57 +226,73 @@ namespace IDPicker
                 TaskbarManager.Instance.SetProgressState(TaskbarProgressBarState.NoProgress);
         }
 
-        void openToolStripMenuItem_Click (object sender, EventArgs e)
+        void openToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var fileTypeList = new List<string>
-            {
-                "IDPicker Files|.idpDB;.idpXML;.pepXML;.pep.xml",
-                "PepXML Files|.pepXML;.pep.xml",
-                "IDPicker XML|.idpXML",
-                "IDPicker DB|.idpDB"
-            };
+            List<string> fileNames;
+            TreeNode treeStructure = null;
+
             if (sender == openToolStripMenuItem)
-                fileTypeList = new List<string> {"IDPicker DB|.idpDB"};
-
-            var openFileDialog = new IDPOpenDialog(fileTypeList);
-
-            if (openFileDialog.ShowDialog() == DialogResult.OK)
             {
-                var fileNames = openFileDialog.GetFileNames();
-                var treeStructure = openFileDialog.GetTreeStructure();
-                if (!fileNames.Any())
-                    return;
+                var ofd = new OpenFileDialog
+                              {
+                                  Filter = "IDPicker DB|*.idpDB",
+                                  Multiselect = true,
+                                  SupportMultiDottedExtensions = true
+                              };
+                if (ofd.ShowDialog() == DialogResult.OK)
+                    fileNames = ofd.FileNames.ToList();
+                else return;
+            }
+            else
+            {
+                var fileTypeList = new List<string>
+                                       {
+                                           "IDPicker Files|.idpDB;.idpXML;.pepXML;.pep.xml",
+                                           "PepXML Files|.pepXML;.pep.xml",
+                                           "IDPicker XML|.idpXML",
+                                           "IDPicker DB|.idpDB"
+                                       };
 
-                ////Was used to set the directory in the same way the old Open File Dialog would
-                //Directory.SetCurrentDirectory(Path.GetDirectoryName(fileNames[0])
-                //    ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
+                var openFileDialog = new IDPOpenDialog(fileTypeList);
 
-                clearData();
-                progressMonitor = new ProgressMonitor();
-                progressMonitor.ProgressUpdate += progressMonitor_ProgressUpdate;
-
-                basicFilterControl = new BasicFilterControl();
-                basicFilterControl.BasicFilterChanged += basicFilterControl_BasicFilterChanged;
-                basicFilterControl.ShowQonverterSettings += ShowQonverterSettings;
-                dataFilterPopup = new Popup(basicFilterControl) { FocusOnOpen = true };
-                dataFilterPopup.Closed += dataFilterPopup_Closed;
-
-                breadCrumbControl.ClearBreadcrumbs();
-
-                if (session != null)
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
-                    if (sender == importToolStripMenuItem)
-                    {
-                        var filenameMatch = Regex.Match(session.Connection.ConnectionString, @"Data Source=(?:\w|:|\\| |/|\.)+").ToString().Remove(0,12);
-                        if (!fileNames.Contains(filenameMatch))
-                            fileNames.Add(filenameMatch);
+                    fileNames = openFileDialog.GetFileNames();
+                    treeStructure = openFileDialog.GetTreeStructure();
+                    if (!fileNames.Any())
+                        return;
+                }
+                else return;
             }
-                    session.Close();
-                    session = null;
-        }
 
-                OpenFiles(fileNames.ToArray(),treeStructure);
+            clearData();
+            progressMonitor = new ProgressMonitor();
+            progressMonitor.ProgressUpdate += progressMonitor_ProgressUpdate;
+
+            basicFilterControl = new BasicFilterControl();
+            basicFilterControl.BasicFilterChanged += basicFilterControl_BasicFilterChanged;
+            basicFilterControl.ShowQonverterSettings += ShowQonverterSettings;
+            dataFilterPopup = new Popup(basicFilterControl) {FocusOnOpen = true};
+            dataFilterPopup.Closed += dataFilterPopup_Closed;
+
+            breadCrumbControl.ClearBreadcrumbs();
+
+            if (session != null)
+            {
+                if (sender == importToolStripMenuItem)
+                {
+                    var filenameMatch =
+                        Regex.Match(session.Connection.ConnectionString, @"Data Source=(?:\w|:|\\| |/|\.)+").
+                            ToString().Remove(0, 12);
+                    if (!fileNames.Contains(filenameMatch))
+                        fileNames.Add(filenameMatch);
+                }
+                session.Close();
+                session = null;
             }
+
+            OpenFiles(fileNames.ToArray(), treeStructure);
+
         }
 
         #region Handling of events for spectrum/protein visualization

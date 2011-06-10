@@ -62,7 +62,7 @@ namespace CustomDataSourceDialog
                 if (_extensionList.Count > 0)
                     _allExtensions = _extensionList.First().Value;
             }
-            FileTreeView.Nodes.Add(new TreeNode { Text = "/", Tag = "Root" });
+            FileTreeView.Nodes.Add(new TreeNode { Text = "/", Tag = "Root", Checked = true});
             _unfilteredNode = FileTreeView.Nodes[0];
             SetUpDialog();
 
@@ -81,7 +81,7 @@ namespace CustomDataSourceDialog
                 var extensionList = twoSides[1].Split(";".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
                 _extensionList.Add(twoSides[0], extensionList);
             }
-            FileTreeView.Nodes.Add(new TreeNode { Text = "/", Tag = "Root" });
+            FileTreeView.Nodes.Add(new TreeNode { Text = "/", Tag = "Root", Checked = true });
             _unfilteredNode = FileTreeView.Nodes[0];
             SetUpDialog();
 
@@ -266,7 +266,8 @@ namespace CustomDataSourceDialog
                               {
                                   Text = currentNode.Text,
                                   ToolTipText = currentNode.ToolTipText,
-                                  Tag = "Folder"
+                                  Tag = "Folder",
+                                  Checked = true
                               };
             foreach (TreeNode child in currentNode.Nodes)
             {
@@ -283,7 +284,8 @@ namespace CustomDataSourceDialog
                                               {
                                                   Text = child.Text,
                                                   ToolTipText = child.ToolTipText,
-                                                  Tag = child.Tag
+                                                  Tag = child.Tag,
+                                                  Checked = true
                                               });
             }
             return newNode.Nodes.Count > 0 ? newNode : null;
@@ -731,7 +733,8 @@ namespace CustomDataSourceDialog
                               {
                                   Text = treeNode.Text,
                                   Tag = treeNode.Tag,
-                                  ToolTipText = treeNode.ToolTipText
+                                  ToolTipText = treeNode.ToolTipText,
+                                  Checked = true
                               };
             foreach (var sourceNode in treeNode.Nodes.Cast<TreeNode>().Where(node => (string)node.Tag == "Source"))
             {
@@ -740,6 +743,7 @@ namespace CustomDataSourceDialog
                                             Text = sourceNode.Text,
                                             Tag = sourceNode.Tag,
                                             ToolTipText = sourceNode.ToolTipText,
+                                            Checked = true,
                                             ImageIndex = 10,
                                             SelectedImageIndex = 10
                                         };
@@ -755,20 +759,21 @@ namespace CustomDataSourceDialog
                         && !_extensionList[sourceTypeComboBox.Text].Contains(info.Extension))
                         continue;
 
-                    if (regexConversion.IsMatch(fileNode.Text))
+                    if (regexConversion.IsMatch(fileNode.Text.ToLower()))
                         newSourceNode.Nodes.Add(fileNode);
                 }
-                newNode.Nodes.Add(newSourceNode);
+                if (newSourceNode.Nodes.Count > 0)
+                    newNode.Nodes.Add(newSourceNode);
             }
 
-            foreach (var node in treeNode.Nodes.Cast<TreeNode>().Where(node => (string) node.Tag == "Folder"))
+            foreach (var node in treeNode.Nodes.Cast<TreeNode>().Where(node => (string)node.Tag == "Folder"))
             {
                 var possibleChild = FilterNode(node, regexConversion);
                 if (possibleChild != null)
                     newNode.Nodes.Add(possibleChild);
             }
 
-            if ((string)treeNode.Tag == "Root" && treeNode.Parent != null 
+            if ((string)treeNode.Tag != "Root" && treeNode.Parent != null 
                 && (string)treeNode.Parent.Tag != "Root")
             {
                 if (newNode.Nodes.Count == 0)
@@ -828,7 +833,7 @@ namespace CustomDataSourceDialog
             //save results
             _unfilteredNode = FileTreeView.Nodes[0];
             SelectAndPreviewNode(FileTree.SelectedNode);
-            if (DataSources.Contains((string)FileTree.SelectedNode.Tag))
+            if (!DataSources.Contains((string)FileTree.SelectedNode.Tag))
                 DataSources.Add((string) FileTree.SelectedNode.Tag);
             ApplyFilters();
 
@@ -840,7 +845,8 @@ namespace CustomDataSourceDialog
             {
                 Text = "Temp",
                 ToolTipText = folderPath,
-                Tag = "Folder"
+                Tag = "Folder",
+                Checked = true
             };
 
             if (!Directory.Exists(folderPath))
@@ -924,6 +930,7 @@ namespace CustomDataSourceDialog
                     Text = file.FullName,
                     ToolTipText = file.FullName,
                     Tag = "File",
+                    Checked = true,
                     ImageIndex = 9,
                     SelectedImageIndex = 9
                 };
@@ -935,6 +942,7 @@ namespace CustomDataSourceDialog
                                               Text = item,
                                               ToolTipText = item,
                                               Tag = "Source",
+                                              Checked = true,
                                               ImageIndex = 10,
                                               SelectedImageIndex = 10
                                           };

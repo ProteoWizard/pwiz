@@ -228,7 +228,7 @@ namespace IDPicker.Forms
             this.gbFiles.Font = new System.Drawing.Font("Tahoma", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.gbFiles.Location = new System.Drawing.Point(3, 10);
             this.gbFiles.Name = "gbFiles";
-            this.gbFiles.Size = new System.Drawing.Size(339, 465);
+            this.gbFiles.Size = new System.Drawing.Size(338, 465);
             this.gbFiles.TabIndex = 128;
             this.gbFiles.TabStop = false;
             this.gbFiles.Text = "Non-Grouped Files";
@@ -245,7 +245,7 @@ namespace IDPicker.Forms
             this.pnlUngroupedFiles.Controls.Add(this.lvNonGroupedFiles);
             this.pnlUngroupedFiles.Location = new System.Drawing.Point(12, 22);
             this.pnlUngroupedFiles.Name = "pnlUngroupedFiles";
-            this.pnlUngroupedFiles.Size = new System.Drawing.Size(314, 431);
+            this.pnlUngroupedFiles.Size = new System.Drawing.Size(313, 431);
             this.pnlUngroupedFiles.TabIndex = 10;
             // 
             // pnlUngroupedSpacer
@@ -255,7 +255,7 @@ namespace IDPicker.Forms
             this.pnlUngroupedSpacer.BackColor = System.Drawing.SystemColors.Window;
             this.pnlUngroupedSpacer.Location = new System.Drawing.Point(1, 26);
             this.pnlUngroupedSpacer.Name = "pnlUngroupedSpacer";
-            this.pnlUngroupedSpacer.Size = new System.Drawing.Size(312, 5);
+            this.pnlUngroupedSpacer.Size = new System.Drawing.Size(311, 5);
             this.pnlUngroupedSpacer.TabIndex = 2;
             // 
             // tbStartHere
@@ -271,7 +271,7 @@ namespace IDPicker.Forms
             this.tbStartHere.Multiline = true;
             this.tbStartHere.Name = "tbStartHere";
             this.tbStartHere.ReadOnly = true;
-            this.tbStartHere.Size = new System.Drawing.Size(287, 101);
+            this.tbStartHere.Size = new System.Drawing.Size(286, 101);
             this.tbStartHere.TabIndex = 3;
             this.tbStartHere.Text = resources.GetString("tbStartHere.Text");
             this.tbStartHere.TextAlign = System.Windows.Forms.HorizontalAlignment.Center;
@@ -288,7 +288,7 @@ namespace IDPicker.Forms
             this.msUngroupedFiles.Location = new System.Drawing.Point(1, 1);
             this.msUngroupedFiles.Name = "msUngroupedFiles";
             this.msUngroupedFiles.ShowItemToolTips = true;
-            this.msUngroupedFiles.Size = new System.Drawing.Size(312, 24);
+            this.msUngroupedFiles.Size = new System.Drawing.Size(311, 24);
             this.msUngroupedFiles.TabIndex = 1;
             this.msUngroupedFiles.Text = "menuStrip1";
             // 
@@ -314,7 +314,7 @@ namespace IDPicker.Forms
             this.lvNonGroupedFiles.Location = new System.Drawing.Point(1, 31);
             this.lvNonGroupedFiles.Name = "lvNonGroupedFiles";
             this.lvNonGroupedFiles.ShowGroups = false;
-            this.lvNonGroupedFiles.Size = new System.Drawing.Size(312, 399);
+            this.lvNonGroupedFiles.Size = new System.Drawing.Size(311, 399);
             this.lvNonGroupedFiles.Sorting = System.Windows.Forms.SortOrder.Ascending;
             this.lvNonGroupedFiles.TabIndex = 3;
             this.lvNonGroupedFiles.UseCompatibleStateImageBehavior = false;
@@ -404,7 +404,6 @@ namespace IDPicker.Forms
             this.splitContainer1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
-            this.splitContainer1.IsSplitterFixed = true;
             this.splitContainer1.Location = new System.Drawing.Point(0, 2);
             this.splitContainer1.Name = "splitContainer1";
             // 
@@ -417,7 +416,7 @@ namespace IDPicker.Forms
             this.splitContainer1.Panel2.Controls.Add(this.gbFiles);
             this.splitContainer1.Size = new System.Drawing.Size(706, 485);
             this.splitContainer1.SplitterDistance = 356;
-            this.splitContainer1.SplitterWidth = 1;
+            this.splitContainer1.SplitterWidth = 2;
             this.splitContainer1.TabIndex = 131;
             // 
             // GroupingControlForm
