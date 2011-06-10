@@ -14,8 +14,9 @@
     <FileAlignment>512</FileAlignment>
     <ApplicationIcon>Skyline.ico</ApplicationIcon>
     <IsWebBootstrapper>true</IsWebBootstrapper>
-    <ManifestCertificateThumbprint>F7D224CC7D3E98266EA4DF66D755CB4ED628320A</ManifestCertificateThumbprint>
-    <ManifestKeyFile>MacCossLab_CodeSigning.p12</ManifestKeyFile>
+    <ManifestCertificateThumbprint>E0522E8A11C50119DCC0CE92CA62F4E90D8E381B</ManifestCertificateThumbprint>
+    <ManifestKeyFile>
+    </ManifestKeyFile>
     <GenerateManifests>true</GenerateManifests>
     <TargetZone>LocalIntranet</TargetZone>
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
@@ -857,7 +858,6 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Skyline.ico" />
-    <None Include="Skyline_TemporaryKey.pfx" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
