@@ -68,7 +68,8 @@ namespace IDPicker.Forms
             this.panel1 = new System.Windows.Forms.Panel();
             this.displayOptionsButton = new System.Windows.Forms.Button();
             this.pivotSetupButton = new System.Windows.Forms.Button();
-            ((System.ComponentModel.ISupportInitialize) (this.treeListView)).BeginInit();
+            this.proteinLengthColumn = new BrightIdeasSoftware.OLVColumn();
+            ((System.ComponentModel.ISupportInitialize)(this.treeListView)).BeginInit();
             this.exportMenu.SuspendLayout();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
@@ -82,6 +83,7 @@ namespace IDPicker.Forms
             this.treeListView.AllColumns.Add(this.distinctPeptidesColumn);
             this.treeListView.AllColumns.Add(this.distinctMatchesColumn);
             this.treeListView.AllColumns.Add(this.filteredSpectraColumn);
+            this.treeListView.AllColumns.Add(this.proteinLengthColumn);
             this.treeListView.AllColumns.Add(this.descriptionColumn);
             this.treeListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.accessionColumn,
@@ -91,6 +93,7 @@ namespace IDPicker.Forms
             this.distinctPeptidesColumn,
             this.distinctMatchesColumn,
             this.filteredSpectraColumn,
+            this.proteinLengthColumn,
             this.descriptionColumn});
             this.treeListView.Cursor = System.Windows.Forms.Cursors.Default;
             this.treeListView.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -151,7 +154,7 @@ namespace IDPicker.Forms
             // 
             // exportButton
             // 
-            this.exportButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.exportButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.exportButton.Image = global::IDPicker.Properties.Resources.Export;
             this.exportButton.Location = new System.Drawing.Point(986, 2);
             this.exportButton.Name = "exportButton";
@@ -192,7 +195,7 @@ namespace IDPicker.Forms
             // 
             // panel1
             // 
-            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles) ((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.panel1.Controls.Add(this.treeListView);
@@ -203,7 +206,7 @@ namespace IDPicker.Forms
             // 
             // displayOptionsButton
             // 
-            this.displayOptionsButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.displayOptionsButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.displayOptionsButton.Location = new System.Drawing.Point(884, 2);
             this.displayOptionsButton.Name = "displayOptionsButton";
             this.displayOptionsButton.Size = new System.Drawing.Size(96, 23);
@@ -214,7 +217,7 @@ namespace IDPicker.Forms
             // 
             // pivotSetupButton
             // 
-            this.pivotSetupButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.pivotSetupButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.pivotSetupButton.Location = new System.Drawing.Point(794, 2);
             this.pivotSetupButton.Name = "pivotSetupButton";
             this.pivotSetupButton.Size = new System.Drawing.Size(84, 23);
@@ -222,6 +225,10 @@ namespace IDPicker.Forms
             this.pivotSetupButton.Text = "Pivot Options";
             this.pivotSetupButton.UseVisualStyleBackColor = true;
             this.pivotSetupButton.Click += new System.EventHandler(this.pivotSetupButton_Click);
+            // 
+            // proteinLengthColumn
+            // 
+            this.proteinLengthColumn.Text = "Length";
             // 
             // ProteinTableForm
             // 
@@ -232,14 +239,14 @@ namespace IDPicker.Forms
             this.Controls.Add(this.displayOptionsButton);
             this.Controls.Add(this.exportButton);
             this.Controls.Add(this.panel1);
-            this.DockAreas = ((DigitalRune.Windows.Docking.DockAreas) (((((DigitalRune.Windows.Docking.DockAreas.Left | DigitalRune.Windows.Docking.DockAreas.Right)
+            this.DockAreas = ((DigitalRune.Windows.Docking.DockAreas)(((((DigitalRune.Windows.Docking.DockAreas.Left | DigitalRune.Windows.Docking.DockAreas.Right)
                         | DigitalRune.Windows.Docking.DockAreas.Top)
                         | DigitalRune.Windows.Docking.DockAreas.Bottom)
                         | DigitalRune.Windows.Docking.DockAreas.Document)));
             this.Name = "ProteinTableForm";
             this.TabText = "ProteinTableForm";
             this.Text = "ProteinTableForm";
-            ((System.ComponentModel.ISupportInitialize) (this.treeListView)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.treeListView)).EndInit();
             this.exportMenu.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
             this.ResumeLayout(false);
@@ -265,6 +272,7 @@ namespace IDPicker.Forms
         private System.Windows.Forms.ToolStripMenuItem showInExcelToolStripMenuItem;
         private System.Windows.Forms.Button displayOptionsButton;
         private System.Windows.Forms.Button pivotSetupButton;
+        private BrightIdeasSoftware.OLVColumn proteinLengthColumn;
 
     }
 }

@@ -60,6 +60,7 @@ namespace IDPicker.Forms
             public long Spectra { get; private set; }
             public string ProteinGroup { get; private set; }
             public long FirstProteinId { get; private set; }
+            public int Length { get; private set; }
             public string FirstProteinDescription { get; set; }
             public long ProteinCount { get; private set; }
             public int? Cluster { get; private set; }
@@ -74,10 +75,11 @@ namespace IDPicker.Forms
                 Spectra = (long) queryRow[3];
                 ProteinGroup = (string) queryRow[4];
                 FirstProteinId = (long) queryRow[5];
-                FirstProteinDescription = (string) queryRow[6];
-                ProteinCount = (long) queryRow[7];
-                Cluster = (int?) queryRow[8];
-                MeanProteinCoverage = (double) queryRow[9];
+                Length = (int) queryRow[6];
+                FirstProteinDescription = (string) queryRow[7];
+                ProteinCount = (long) queryRow[8];
+                Cluster = (int?) queryRow[9];
+                MeanProteinCoverage = (double) queryRow[10];
             }
             #endregion
         }
@@ -225,6 +227,7 @@ namespace IDPicker.Forms
                                      {distinctPeptidesColumn, "Integer"},
                                      {distinctMatchesColumn, "Integer"},
                                      {filteredSpectraColumn, "Integer"},
+                                     {proteinLengthColumn, "Integer"},
                                      {descriptionColumn, "String"}
                                  };
 
@@ -311,6 +314,17 @@ namespace IDPicker.Forms
             {
                 if (x is ProteinGroupRow)
                     return (x as ProteinGroupRow).Spectra;
+                return null;
+            };
+
+            proteinLengthColumn.AspectGetter += delegate(object x)
+            {
+                Protein pro;
+                if (x is ProteinGroupRow && (x as ProteinGroupRow).ProteinCount == 1)
+                    return (x as ProteinGroupRow).Length;
+                else if (x is ProteinRow)
+                    return (x as ProteinRow).Protein.Length;
+
                 return null;
             };
 
@@ -549,6 +563,7 @@ namespace IDPicker.Forms
                     "       COUNT(DISTINCT psm.Spectrum.id), " +
                     "       pro.ProteinGroup, " +
                     "       MIN(pro.Id), " +
+                    "       MIN(pro.Length), " +
                     "       MIN(pro.Description), " +
                     "       COUNT(DISTINCT pro.Id), " +
                     "       pro.Cluster, " +
