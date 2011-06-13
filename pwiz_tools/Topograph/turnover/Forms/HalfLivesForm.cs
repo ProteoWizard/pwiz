@@ -60,6 +60,7 @@ namespace pwiz.Topograph.ui.Forms
                                      FinalPercent = double.Parse(tbxFinalTracerPercent.Text),
                                      FixedInitialPercent = cbxFixYIntercept.Checked,
                                      ExcludedTimePoints = UpdateTimePoints(),
+                                     ApplyEvviesFilter = cbxEvviesFilter.Checked,
                                  };
             using (var longWaitDialog = new LongWaitDialog(this, "Calculating Half Lives"))
             {

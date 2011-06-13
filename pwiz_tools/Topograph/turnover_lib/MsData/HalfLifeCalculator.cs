@@ -44,6 +44,19 @@ namespace pwiz.Topograph.MsData
             get; set;
         }
 
+        /// <summary>
+        /// For bug 395 : Automated outlier-trimming algorithm/QC filter
+        /// Apply Evvie's special criteria to filter out outliers:
+        /// 1) Treat each time point separately.
+        /// 2) Divide standard deviation by mean.
+        /// 3) If the ratio is less than 0.3, set a cutoff of 2 standard deviations above or below the *median*--not the mean. If the ratio is 0.3 or greater, set a cutoff of 1 standard deviation.
+        /// 4) Exclude any data point falling outside the cutoffs.
+        /// </summary>
+        public bool ApplyEvviesFilter
+        {
+            get; set;
+        }
+
         private bool RequiresPrecursorPool
         {
             get
@@ -260,9 +273,71 @@ namespace pwiz.Topograph.MsData
 
         private ResultData CalculateHalfLife(IEnumerable<RowData> rowDatas)
         {
+            IEnumerable<RowData> filteredRowDatas;
+            if (ApplyEvviesFilter)
+            {
+                var applicableRowDatas = new List<RowData>();
+                var values = new Dictionary<double, List<double>>();
+                foreach (var rowData in rowDatas)
+                {
+                    double? score;
+                    var value = GetValue(rowData, out score);
+                    if (!value.HasValue || double.IsNaN(value.Value) || double.IsInfinity(value.Value))
+                    {
+                        continue;
+                    }
+                    var timePoint = GetTimePoint(rowData);
+                    if (!timePoint.HasValue)
+                    {
+                        continue;
+                    }
+                    List<double> list;
+                    if (!values.TryGetValue(timePoint.Value, out list))
+                    {
+                        list = new List<double>();
+                        values.Add(timePoint.Value, list);
+                    }
+                    list.Add(value.Value);
+                    applicableRowDatas.Add(rowData);
+                }
+                var cutoffs = new Dictionary<double, KeyValuePair<double, double>>();
+                foreach (var entry in values)
+                {
+                    var statistics = new Statistics(entry.Value.ToArray());
+                    var mean = statistics.Mean();
+                    var stdDev = statistics.StdDev();
+                    double cutoff;
+                    if (stdDev / mean < .3)
+                    {
+                        cutoff = 2 * stdDev;
+                    }
+                    else
+                    {
+                        cutoff = stdDev;
+                    }
+                    cutoffs.Add(entry.Key, new KeyValuePair<double, double>(mean - cutoff, mean + cutoff));
+                }
+                var filteredRowDataList = new List<RowData>();
+                foreach (var rowData in applicableRowDatas)
+                {
+                    var cutoff = cutoffs[GetTimePoint(rowData).Value];
+                    double? score;
+                    var value = GetValue(rowData, out score);
+                    if (value.Value < cutoff.Key || value.Value > cutoff.Value)
+                    {
+                        continue;
+                    }
+                    filteredRowDataList.Add(rowData);
+                }
+                filteredRowDatas = filteredRowDataList;
+            }
+            else
+            {
+                filteredRowDatas = rowDatas;
+            }
             var timePoints = new List<double>();
             var logValues = new List<double>();
-            foreach (var rowData in rowDatas)
+            foreach (var rowData in filteredRowDatas)
             {
                 double? logValue = GetLogValue(rowData);
                 if (!logValue.HasValue || double.IsNaN(logValue.Value) || double.IsInfinity(logValue.Value))
@@ -304,6 +379,8 @@ namespace pwiz.Topograph.MsData
                     PointCount = timePoints.Count,
                     YIntercept = yIntercept,
                     RSquared = rSquared,
+                    RowDatas = rowDatas.ToArray(),
+                    FilteredRowDatas = filteredRowDatas.ToArray(),
                 };
         }
 
@@ -392,6 +469,7 @@ namespace pwiz.Topograph.MsData
                            IndTurnoverScore = peptideFileAnalysis.Peaks.TurnoverScore,
                            IndPrecursorEnrichment = peptideFileAnalysis.Peaks.PrecursorEnrichment,
                            Peaks = peaks,
+                           PeptideFileAnalysisId = peptideFileAnalysis.Id.Value,
                        };
             ComputeAvgTurnover(rowData);
             return rowData;
@@ -551,6 +629,8 @@ namespace pwiz.Topograph.MsData
             public double RateConstantError { get; set; }
             public double? RSquared { get; set; }
             public int PointCount { get; set; }
+            public IList<RowData> RowDatas { get; set; }
+            public IList<RowData> FilteredRowDatas { get; set; }
             public double HalfLife
             {
                 get { return HalfLifeFromRateConstant(RateConstant);}

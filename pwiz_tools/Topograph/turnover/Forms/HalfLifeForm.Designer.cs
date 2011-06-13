@@ -66,6 +66,7 @@ namespace pwiz.Topograph.ui.Forms
             this.colStatsMean = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colStatsMedian = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colStatsStdDev = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.cbxEvviesFilter = new System.Windows.Forms.CheckBox();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.colPeptide = new System.Windows.Forms.DataGridViewLinkColumn();
             this.colFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -133,6 +134,7 @@ namespace pwiz.Topograph.ui.Forms
             this.tableLayoutPanel1.Controls.Add(this.comboCalculationType, 1, 6);
             this.tableLayoutPanel1.Controls.Add(this.label10, 0, 6);
             this.tableLayoutPanel1.Controls.Add(this.gridViewStats, 0, 12);
+            this.tableLayoutPanel1.Controls.Add(this.cbxEvviesFilter, 1, 5);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -467,6 +469,17 @@ namespace pwiz.Topograph.ui.Forms
             this.colStatsStdDev.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
             this.colStatsStdDev.Width = 90;
             // 
+            // cbxEvviesFilter
+            // 
+            this.cbxEvviesFilter.AutoSize = true;
+            this.cbxEvviesFilter.Location = new System.Drawing.Point(153, 128);
+            this.cbxEvviesFilter.Name = "cbxEvviesFilter";
+            this.cbxEvviesFilter.Size = new System.Drawing.Size(114, 17);
+            this.cbxEvviesFilter.TabIndex = 23;
+            this.cbxEvviesFilter.Text = "Apply Evvie\'s Filter";
+            this.cbxEvviesFilter.UseVisualStyleBackColor = true;
+            this.cbxEvviesFilter.CheckedChanged += new System.EventHandler(this.cbxEvviesFilter_CheckedChanged);
+            // 
             // dataGridView1
             // 
             this.dataGridView1.AllowUserToAddRows = false;
@@ -692,5 +705,6 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.DataGridViewTextBoxColumn colStatsMean;
         private System.Windows.Forms.DataGridViewTextBoxColumn colStatsMedian;
         private System.Windows.Forms.DataGridViewTextBoxColumn colStatsStdDev;
+        private System.Windows.Forms.CheckBox cbxEvviesFilter;
     }
 }

@@ -324,7 +324,11 @@ namespace pwiz.Topograph.ui.Forms
                     row.Cells[colPrecursorPool.Index].Value = peptideFileAnalysis.Peaks.PrecursorEnrichment;
                     row.Cells[colTurnoverScore.Index].Value = peptideFileAnalysis.Peaks.TurnoverScore;
                 }
-                var halfLifeCalculator = UpdateGraph(peptideFileAnalyses);
+                HalfLifeCalculator.ResultData resultData;
+                var halfLifeCalculator = UpdateGraph(peptideFileAnalyses, out resultData);
+                var allFileAnalysisIds = new HashSet<long>(resultData.RowDatas.Select(rd => rd.PeptideFileAnalysisId));
+                var filteredFileAnalysisIds =
+                    new HashSet<long>(resultData.FilteredRowDatas.Select(rd => rd.PeptideFileAnalysisId));
                 if (HalfLifeCalculationType == HalfLifeCalculationType.GroupPrecursorPool || HalfLifeCalculationType == HalfLifeCalculationType.OldGroupPrecursorPool)
                 {
                     colTurnoverAvg.Visible = true;
@@ -348,6 +352,10 @@ namespace pwiz.Topograph.ui.Forms
                             row.Cells[colPrecursorPoolAvg.Index].Value = null;
                             row.Cells[colTurnoverScoreAvg.Index].Value = null;
                         }
+                        if (allFileAnalysisIds.Contains(peptideFileAnalysis.Id.Value) && !filteredFileAnalysisIds.Contains(peptideFileAnalysis.Id.Value))
+                        {
+                            SetBackColor(row, Color.LightBlue);
+                        }
                     }
                 }
                 else
@@ -358,15 +366,16 @@ namespace pwiz.Topograph.ui.Forms
                 }
             }
         }
-        private HalfLifeCalculator UpdateGraph(List<PeptideFileAnalysis> peptideFileAnalyses)
+        private HalfLifeCalculator UpdateGraph(List<PeptideFileAnalysis> peptideFileAnalyses, out HalfLifeCalculator.ResultData resultData)
         {
             var halfLifeCalculator = new HalfLifeCalculator(Workspace, HalfLifeCalculationType)
-                                            {
-                                                InitialPercent = InitialPercent,
-                                                FinalPercent = FinalPercent,
-                                                FixedInitialPercent = FixedInitialPercent,
+                                         {
+                                                 InitialPercent = InitialPercent,
+                                                 FinalPercent = FinalPercent,
+                                                 FixedInitialPercent = FixedInitialPercent,
+                                                 ApplyEvviesFilter = cbxEvviesFilter.Checked,
                                             };
-            var halfLife = halfLifeCalculator.CalculateHalfLife(peptideFileAnalyses);
+            var halfLife = resultData = halfLifeCalculator.CalculateHalfLife(peptideFileAnalyses);
             _zedGraphControl.GraphPane.CurveList.Clear();
             _zedGraphControl.GraphPane.GraphObjList.Clear();
             _pointsCurve = null;
@@ -374,8 +383,14 @@ namespace pwiz.Topograph.ui.Forms
             var xValues = new List<double>();
             var yValues = new List<double>();
             var fileAnalysisPoints = new List<PeptideFileAnalysis>();
+            var filteredFileAnalysisIds =
+                new HashSet<long>(resultData.FilteredRowDatas.Select(rd => rd.PeptideFileAnalysisId));
             foreach (var peptideFileAnalysis in peptideFileAnalyses)
             {
+                if (!filteredFileAnalysisIds.Contains(peptideFileAnalysis.Id.Value))
+                {
+                    continue;
+                }
                 double? value;
                 if (LogPlot)
                 {
@@ -401,7 +416,7 @@ namespace pwiz.Topograph.ui.Forms
             var pointsCurve = _zedGraphControl.GraphPane.AddCurve("Data Points", xValues.ToArray(), yValues.ToArray(), Color.Black);
             pointsCurve.Line.IsVisible = false;
             pointsCurve.Label.IsVisible = false;
-            Func<double,double> funcMiddle = x => halfLife.YIntercept + halfLife.RateConstant*x;
+            Func<double, double> funcMiddle = x => halfLife.YIntercept + halfLife.RateConstant * x;
             Func<double, double> funcMin = x => halfLife.YIntercept + (halfLife.RateConstant - halfLife.RateConstantError) * x;
             Func<double, double> funcMax = x => halfLife.YIntercept + (halfLife.RateConstant + halfLife.RateConstantError) * x;
             if (LogPlot)
@@ -443,10 +458,10 @@ namespace pwiz.Topograph.ui.Forms
             _zedGraphControl.Invalidate();
             _pointsCurve = pointsCurve;
             _peptideFileAnalysisPoints = fileAnalysisPoints;
-            tbxRateConstant.Text = halfLife.RateConstant.ToString("0.##E0") + "+/-" +
-                                   halfLife.RateConstantError.ToString("0.##E0");
-            tbxHalfLife.Text = halfLife.HalfLife.ToString("0.##") + "(" + halfLife.MinHalfLife.ToString("0.##") + "-" +
-                               halfLife.MaxHalfLife.ToString("0.##") + ")";
+            tbxRateConstant.Text = resultData.RateConstant.ToString("0.##E0") + "+/-" +
+                                   resultData.RateConstantError.ToString("0.##E0");
+            tbxHalfLife.Text = resultData.HalfLife.ToString("0.##") + "(" + resultData.MinHalfLife.ToString("0.##") + "-" +
+                               resultData.MaxHalfLife.ToString("0.##") + ")";
             return halfLifeCalculator;
         }
 
@@ -552,11 +567,16 @@ namespace pwiz.Topograph.ui.Forms
 
         private void SetIncluded(DataGridViewRow row, bool included)
         {
+            SetBackColor(row, included ? Color.White : Color.LightGray);
+        }
+
+        private void SetBackColor(DataGridViewRow row, Color color)
+        {
             for (int i = 0; i < row.Cells.Count; i++)
             {
-                var cell = row.Cells[i];
-                cell.Style.BackColor = included ? Color.White : Color.LightGray;
+                row.Cells[i].Style.BackColor = color;
             }
+            
         }
 
         private void cbxLogPlot_CheckedChanged(object sender, EventArgs e)
@@ -697,6 +717,11 @@ namespace pwiz.Topograph.ui.Forms
             var time = (double)row.Cells[colStatsTime.Index].Value;
             var excluded = !(bool)row.Cells[colStatsInclude.Index].Value;
             SetTimePointExcluded(time, excluded);
+        }
+
+        private void cbxEvviesFilter_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateRows();
         }
     }
 }
