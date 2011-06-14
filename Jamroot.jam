@@ -698,7 +698,6 @@ rule binary-tarball-requirements ( properties * )
 
     local result = <tar-source>path-anchor:$(location)&&exclude:$(non-redistributables)&&$(location) ;
     if ! <architecture> in $(properties:G) { properties += <architecture>$(.platform:L) ; }
-    if ! <architecture> in $(properties:G) { properties += <architecture>$(.platform:L) ; }
     local linkage ;
     if <link>shared in $(properties) { linkage = "-shared" ; }
     local name = [ common.format-name <base> <property:target-os> <property:architecture> <toolset> <property:variant> $(linkage) -$(version-tag:J=_)
