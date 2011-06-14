@@ -213,7 +213,7 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "    id_list parentsPartOf;\n"
           "    std::multimap<std::string, CVID> otherRelations;\n"
           "    std::vector<std::string> exactSynonyms;\n"
-          "    std::map<std::string, std::string> propertyValues;\n"
+          "    std::multimap<std::string, std::string> propertyValues;\n"
           "\n"
           "    CVTermInfo() : cvid((CVID)-1) {}\n"
           "    const std::string& shortName() const;\n"

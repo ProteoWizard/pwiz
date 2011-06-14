@@ -114,6 +114,9 @@ struct PWIZ_API_DECL Record
 /// retrieve the record for an element
 PWIZ_API_DECL const Record& record(Type type);
 
+/// retrieve the record for an element
+PWIZ_API_DECL const Record& record(const std::string& symbol);
+
 
 } // namespace Info
 

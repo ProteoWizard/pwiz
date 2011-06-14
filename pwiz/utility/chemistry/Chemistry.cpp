@@ -113,22 +113,7 @@ class RecordData : public boost::singleton<RecordData>
 };
 
 
-PWIZ_API_DECL const Info::Record& Info::record(Type type) {return RecordData::instance->record(type);}
-
-
-PWIZ_API_DECL ostream& operator<<(ostream& os, const Info::Record& r)
-{
-    cout << r.symbol << " " << r.atomicNumber << " " << r.atomicWeight << " " << r.monoisotope << " ";
-    copy(r.isotopes.begin(), r.isotopes.end(), ostream_iterator<MassAbundance>(cout, " "));
-    return os;
-}
-
-
-} // namespace Element
-
-
 // implementation of element symbol->type (text->enum) mapping
-
 namespace { 
 
 struct Text2EnumMap : public map<string, Element::Type>,
@@ -153,6 +138,22 @@ Element::Type text2enum(const string& text)
 }
 
 } // namespace
+
+
+PWIZ_API_DECL const Info::Record& Info::record(Type type) {return RecordData::instance->record(type);}
+PWIZ_API_DECL const Info::Record& Info::record(const string& symbol) {return record(text2enum(symbol));}
+
+
+PWIZ_API_DECL ostream& operator<<(ostream& os, const Info::Record& r)
+{
+    cout << r.symbol << " " << r.atomicNumber << " " << r.atomicWeight << " " << r.monoisotope << " ";
+    copy(r.isotopes.begin(), r.isotopes.end(), ostream_iterator<MassAbundance>(cout, " "));
+    return os;
+}
+
+
+} // namespace Element
+
 
 
 // Formula implementation
@@ -249,7 +250,7 @@ Formula::Impl::Impl(const string& formula)
             throw runtime_error("[Formula::Impl::Impl()] Invalid count in formula: " + formula);
         }
 
-        Element::Type type = text2enum(symbol);
+        Element::Type type = Element::text2enum(symbol);
         if (type > Element::P)
             data[type] = count;
         else

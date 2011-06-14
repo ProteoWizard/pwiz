@@ -53,13 +53,16 @@ lib pwiz_data_common
         ParamTypes.cpp
         diff_std.cpp
         CVTranslator.cpp
+        Unimod.cpp
     : # requirements
         <library>/ext/boost//thread
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/chemistry//pwiz_utility_chemistry
     : # default-build
     : # usage-requirements
         <library>/ext/boost//thread
         <library>$(PWIZ_ROOT_PATH)/pwiz/utility/misc//pwiz_utility_misc
+        <library>$(PWIZ_ROOT_PATH)/pwiz/utility/chemistry//pwiz_utility_chemistry
     ;
 
 
@@ -108,3 +111,4 @@ unit-test-if-exists cvtest : cvtest.cpp pwiz_data_common ;
 unit-test-if-exists diff_std_test : diff_std_test.cpp pwiz_data_common ;
 unit-test-if-exists ParamTypesTest : ParamTypesTest.cpp pwiz_data_common ;
 unit-test-if-exists CVTranslatorTest : CVTranslatorTest.cpp pwiz_data_common ;
+unit-test-if-exists UnimodTest : UnimodTest.cpp pwiz_data_common ;

@@ -67,6 +67,9 @@ void testPPM()
 
     unit_assert_equal(1000+tolerance, 1000.005, epsilon_);
     unit_assert_equal(1000-tolerance, 999.995, epsilon_);
+
+    unit_assert_equal(-1000+tolerance, -999.995, epsilon_);
+    unit_assert_equal(-1000-tolerance, -1000.005, epsilon_);
 }
 
 

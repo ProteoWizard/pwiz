@@ -24,17 +24,17 @@
 	BOOST_PP_IF(BOOST_ENUM_IS_COLUMN_2(i, data), (elem), BOOST_PP_EMPTY())
 
 #define BOOST_ENUM_VISITOR1(_seq, _macro, _col) \
-	BOOST_PP_SEQ_FOR_EACH(_macro, _, _seq)
+	BOOST_PP_SEQ_FOR_EACH_I(_macro, _, _seq)
 
 #define BOOST_ENUM_VISITOR2(_seq, _macro, _col) \
-	BOOST_PP_SEQ_FOR_EACH( \
+	BOOST_PP_SEQ_FOR_EACH_I( \
 		_macro, \
 		_, \
 		BOOST_PP_SEQ_FOR_EACH_I(BOOST_ENUM_GET_COLUMN_2, _col, _seq) \
 	)
 
-#define BOOST_ENUM_DOMAIN_ITEM(r, data, elem) \
-	elem BOOST_PP_COMMA()
+#define BOOST_ENUM_DOMAIN_ITEM(r, data, i, elem) \
+	BOOST_PP_COMMA_IF(i) elem
 
 #define BOOST_ENUM_domain(_seq, _col, _colsize) \
 	enum domain \
@@ -47,7 +47,7 @@
 #define BOOST_ENUM_size(_seq, _colsize) \
 	BOOST_PP_DIV(BOOST_PP_SEQ_SIZE(_seq), _colsize)
 
-#define BOOST_ENUM_PARSE_ITEM(r, data, elem) \
+#define BOOST_ENUM_PARSE_ITEM(r, data, i, elem) \
 	if(strcmp(str, BOOST_PP_STRINGIZE(elem)) == 0) return optional(elem);
 
 #define BOOST_ENUM_get_by_name(_name, _seq, _col, _colsize) \
@@ -58,7 +58,7 @@
 		return optional(); \
 	}
 
-#define BOOST_ENUM_CASE_STRING(r, data, elem) \
+#define BOOST_ENUM_CASE_STRING(r, data, i, elem) \
 	case elem: return BOOST_PP_STRINGIZE(elem);
 
 #define BOOST_ENUM_names(_seq, _col, _colsize) \
@@ -157,8 +157,8 @@
 		} \
 	}
 
-#define BOOST_ENUM(_name, _seq) \
-	class _name : public boost::detail::enum_base<_name> \
+#define BOOST_ENUM_EX(_name, _interface, _seq) \
+	class _interface _name : public boost::detail::enum_base<_name> \
 	{ \
 	public: \
 		BOOST_ENUM_domain(_seq, 0, 1) \
@@ -169,10 +169,13 @@
 		friend class boost::detail::enum_base<_name>; \
 		BOOST_ENUM_names(_seq, 0, 1) \
 		BOOST_ENUM_values_identity() \
-	}; 
+	}; \
+    inline bool operator == (const _name::domain& lhs, const _name& rhs) {return rhs == lhs;}
 
-#define BOOST_ENUM_VALUES(_name, _type, _seq) \
-	class _name : public boost::detail::enum_base<_name, _type> \
+#define BOOST_ENUM(_name, _seq) BOOST_ENUM_EX(_name, , _seq)
+
+#define BOOST_ENUM_VALUES_EX(_name, _interface, _type, _seq) \
+	class _interface _name : public boost::detail::enum_base<_name, _type> \
 	{ \
 	public: \
 		BOOST_ENUM_domain(_seq, 0, 2) \
@@ -183,10 +186,13 @@
 		friend class boost::detail::enum_base<_name, _type>; \
 		BOOST_ENUM_names(_seq, 0, 2) \
 		BOOST_ENUM_values(_seq, 0, 1, 2) \
-	}; 
+	}; \
+    inline bool operator == (const _name::domain& lhs, const _name& rhs) {return rhs == lhs;}
 
-#define BOOST_BITFIELD(_name, _seq) \
-	class _name : public boost::detail::bitfield_base<_name> \
+#define BOOST_ENUM_VALUES(_name, _type, _seq) BOOST_ENUM_VALUES_EX(_name, , _type, _seq)
+
+#define BOOST_BITFIELD_EX(_name, _interface, _seq) \
+	class _interface _name : public boost::detail::bitfield_base<_name> \
 	{ \
 	public: \
 		BOOST_BITFIELD_domain(_seq, 0, 2) \
@@ -198,6 +204,9 @@
 		_name(value_type raw, int) : boost::detail::bitfield_base<_name>(raw, 0) {} \
 		BOOST_BITFIELD_names(_seq, 0, 2) \
 		BOOST_BITFIELD_values(_seq, 0, 1, 2) \
-	}; 
+	}; \
+    inline bool operator == (const _name::domain& lhs, const _name& rhs) {return rhs == lhs;}
+
+#define BOOST_BITFIELD(_name, _seq) BOOST_BITFIELD_EX(_name, , _seq)
 
 #endif

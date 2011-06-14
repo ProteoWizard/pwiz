@@ -64,7 +64,7 @@ PWIZ_API_DECL double& operator+=(double& d, const MZTolerance& tolerance)
     if (tolerance.units == MZTolerance::MZ)
         d += tolerance.value;
     else if (tolerance.units == MZTolerance::PPM)
-        d += d*tolerance.value*1e-6;
+        d += fabs(d)*tolerance.value*1e-6;
     else
         throw runtime_error("[MZTolerance::operator+=] This isn't happening.");
 
@@ -77,7 +77,7 @@ PWIZ_API_DECL double& operator-=(double& d, const MZTolerance& tolerance)
     if (tolerance.units == MZTolerance::MZ)
         d -= tolerance.value;
     else if (tolerance.units == MZTolerance::PPM)
-        d -= d*tolerance.value*1e-6;
+        d -= fabs(d)*tolerance.value*1e-6;
     else
         throw runtime_error("[MZTolerance::operator-=] This isn't happening.");
 

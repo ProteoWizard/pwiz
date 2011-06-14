@@ -159,6 +159,17 @@ void testInfo()
             *os_ << Element::Info::record(e).symbol << " " << Element::Info::record(e).atomicNumber << endl;
         *os_ << endl;
     }
+
+    unit_assert(Element::Info::record(Element::C).atomicNumber == 6);
+    unit_assert(Element::Info::record("C").atomicNumber == 6);
+    unit_assert(Element::Info::record(Element::U).atomicNumber == 92);
+    unit_assert(Element::Info::record("U").atomicNumber == 92);
+    unit_assert(Element::Info::record(Element::Uuh).atomicNumber == 116);
+    unit_assert(Element::Info::record("Uuh").atomicNumber == 116);
+
+    unit_assert_throws_what(Element::Info::record("foo"),
+                            runtime_error,
+                            "[chemistry::text2enum()] Error translating symbol foo");
 }
 
 

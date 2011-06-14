@@ -115,11 +115,20 @@ void testIDTranslation()
 
 void testPropertyValues()
 {
-    CVTermInfo deamidation = cvTermInfo(UNIMOD_Deamidated);
-    unit_assert(deamidation.propertyValues["delta_mono_mass"] == "0.984016");
-    unit_assert(deamidation.propertyValues["delta_composition"] == "H(-1) N(-1) O");
-    unit_assert(deamidation.propertyValues["spec_site_1"] == "Q");
-    unit_assert(deamidation.propertyValues["spec_site_2"] == "R");
+    CVTermInfo phospho = cvTermInfo(UNIMOD_Phospho);
+
+    unit_assert_operator_equal(1, phospho.propertyValues.count("delta_mono_mass"));
+    unit_assert_operator_equal("79.966331", phospho.propertyValues.find("delta_mono_mass")->second);
+
+    unit_assert_operator_equal(1, phospho.propertyValues.count("delta_composition"));
+    unit_assert_operator_equal("H O(3) P", phospho.propertyValues.find("delta_composition")->second);
+
+    unit_assert_operator_equal(2, phospho.propertyValues.count("spec_site_1"));
+    unit_assert_operator_equal("T", phospho.propertyValues.equal_range("spec_site_1").first->second);
+    unit_assert_operator_equal("S", (--phospho.propertyValues.equal_range("spec_site_1").second)->second);
+
+    unit_assert_operator_equal(1, phospho.propertyValues.count("spec_site_2"));
+    unit_assert_operator_equal("Y", phospho.propertyValues.find("spec_site_2")->second);
 }
 
 

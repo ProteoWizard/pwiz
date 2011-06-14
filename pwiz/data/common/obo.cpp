@@ -212,13 +212,13 @@ void parse_synonym(const string& line, Term& term)
 
 void parse_property_value(const string& line, Term& term)
 {
-    static const boost::regex e("property_value: (\\S+)=\"(.*)\".*");
+    static const boost::regex e("property_value: (\\S+?)\\s*[=:]?\\s*\"(.*)\".*");
 
     boost::smatch what;
     if (!regex_match(line, what, e))
         throw runtime_error("Error matching term property_value.");
 
-    term.propertyValues[what[1]] = what[2];
+    term.propertyValues.insert(make_pair(what[1], what[2]));
 }
 
 
