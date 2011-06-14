@@ -687,17 +687,17 @@ rule binary-tarball-requirements ( properties * )
     local location = [ install-location $(properties) ] ;
     location = $(location:G=) ;
 
-    local non-redistributables =
-        *ABSciex.DataAccess.WiffFileDataReader.dll *Clear?ore*.dll *rscoree.dll ; # ABI API
+    local non-redistributables = *.xml ; # .NET documentation
 
     if $(variants[1]) = "release"
     {
-        non-redistributables += *.pdb   # MSVC debug symbols
-                                *.xml ; # .NET documentation
+        non-redistributables += *.pdb ; # MSVC debug symbols
     }
 
     non-redistributables = [ sequence.join $(non-redistributables) : "&&exclude:" ] ;
+
     local result = <tar-source>path-anchor:$(location)&&exclude:$(non-redistributables)&&$(location) ;
+    if ! <architecture> in $(properties:G) { properties += <architecture>$(.platform:L) ; }
     if ! <architecture> in $(properties:G) { properties += <architecture>$(.platform:L) ; }
     local linkage ;
     if <link>shared in $(properties) { linkage = "-shared" ; }
@@ -730,11 +730,12 @@ rule library-tarball-requirements ( properties * )
     local prefix = [ option.get prefix ] ;
     local location = $(prefix:G=) ;
 
-    local non-redistributables =
-        *ABSciex.DataAccess.WiffFileDataReader.dll *Clear?ore*.dll *rscoree.dll ; # ABI API
+    # no more redistributables!
+    #local non-redistributables =
+    #non-redistributables = [ sequence.join $(non-redistributables) : "&&exclude:" ] ;
+    #local result = <tar-source>path-anchor:$(location)&&exclude:$(non-redistributables)&&$(location) ;
 
-    non-redistributables = [ sequence.join $(non-redistributables) : "&&exclude:" ] ;
-    local result = <tar-source>path-anchor:$(location)&&exclude:$(non-redistributables)&&$(location) ;
+    local result = <tar-source>path-anchor:$(location)&&$(location) ;
     if ! <architecture> in $(properties:G) { properties += <architecture>$(.platform:L) ; }
     local linkage ;
     if <link>shared in $(properties) { linkage = "-shared" ; }
