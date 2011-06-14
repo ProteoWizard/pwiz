@@ -278,7 +278,8 @@ namespace pwiz.Skyline.Model
                             double ionMz = SequenceMassCalc.GetMZ(precursorMS1Mass, PrecursorCharge);
                             if (minMz > ionMz || ionMz > maxMz)
                                 continue;
-                            yield return CreateTransitionNode(i, precursorMS1Mass, null, transitionRanks);
+                            float envelopeProportion = isotopePeaks.GetProportionI(i);
+                            yield return CreateTransitionNode(i, precursorMS1Mass, envelopeProportion, null, transitionRanks);
                         }
                         continue;
                     }
@@ -292,7 +293,7 @@ namespace pwiz.Skyline.Model
                         continue;
                 }
 
-                yield return CreateTransitionNode(0, precursorMassPredict, losses, transitionRanks);
+                yield return CreateTransitionNode(0, precursorMassPredict, null, losses, transitionRanks);
             }            
         }
 
@@ -396,12 +397,12 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private TransitionDocNode CreateTransitionNode(int massIndex, double precursorMassH, TransitionLosses losses,
-            IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks)
+        private TransitionDocNode CreateTransitionNode(int massIndex, double precursorMassH, float? envelopeProportion,
+            TransitionLosses losses, IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks)
         {
             Transition transition = new Transition(this, massIndex);
             var info = TransitionDocNode.GetLibInfo(transition, Transition.CalcMass(precursorMassH, losses), transitionRanks);
-            return new TransitionDocNode(transition, losses, precursorMassH, info);
+            return new TransitionDocNode(transition, losses, precursorMassH, envelopeProportion, info);
         }
 
         private TransitionDocNode CreateTransitionNode(IonType type, int cleavageOffset, int charge, double massH,
@@ -409,7 +410,7 @@ namespace pwiz.Skyline.Model
         {
             Transition transition = new Transition(this, type, cleavageOffset, 0, charge);
             var info = TransitionDocNode.GetLibInfo(transition, Transition.CalcMass(massH, losses), transitionRanks);
-            return new TransitionDocNode(transition, losses, massH, info);
+            return new TransitionDocNode(transition, losses, massH, null, info);
         }
 
         /// <summary>

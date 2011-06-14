@@ -579,11 +579,15 @@ namespace pwiz.Skyline.Model
                 var tranNew = new Transition(tranGroup,
                                              transition.IonType,
                                              transition.CleavageOffset,
-                                             0,
+                                             transition.MassIndex,
                                              transition.Charge);
+                var isotopePeaks = nodeGroupMatching.IsotopePeaks;
                 double massH = settings.GetFragmentMass(tranGroup.LabelType, explicitMods,
-                    tranNew, nodeGroupMatching.IsotopePeaks);
-                listTrans.Add(new TransitionDocNode(tranNew, losses, massH, null));
+                    tranNew, isotopePeaks);
+                float? envelopeProportion = isotopePeaks != null
+                    ? isotopePeaks.GetProportionI(tranNew.MassIndex)
+                    : (float?) null;
+                listTrans.Add(new TransitionDocNode(tranNew, losses, massH, envelopeProportion, null));
             }
             return listTrans.ToArray();
         }

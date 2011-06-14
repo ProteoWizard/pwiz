@@ -1528,7 +1528,7 @@ namespace pwiz.Skyline.Model
                     int offset = Transition.OrdinalToOffset(ionType, ordinal, _activePeptide.Sequence.Length);
                     var tran = new Transition(transitionGroup, ionType, offset, 0, productExp.Charge);
                     // m/z and library info calculated later
-                    return new TransitionDocNode(tran, productExp.Losses, 0, null);
+                    return new TransitionDocNode(tran, productExp.Losses, 0, null, null);
                 });
             // m/z calculated later
             _transitionGroups.Add(new TransitionGroupDocNode(transitionGroup, CompleteTransitions(transitions)));

@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.MSGraph;
@@ -37,7 +38,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public enum AutoZoomChrom { none, peak, window, both }
 
-    public enum DisplayTypeChrom { single, all, total }
+    public enum DisplayTypeChrom { single, precursors, products, all, total }
 
     public partial class GraphChromatogram : DockableForm, IGraphContainer
     {
@@ -73,6 +74,38 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 return Helpers.ParseEnum(Settings.Default.ShowTransitionGraphs, DisplayTypeChrom.all);
             }
+        }
+
+        public static DisplayTypeChrom GetDisplayType(SrmDocument documentUI)
+        {
+            var displayType = DisplayType;
+            var fullScan = documentUI.Settings.TransitionSettings.FullScan;
+            if (!fullScan.IsEnabledMs || !fullScan.IsEnabledMsMs)
+            {
+                if (displayType == DisplayTypeChrom.precursors || displayType == DisplayTypeChrom.products)
+                    displayType = DisplayTypeChrom.all;                
+            }
+            return displayType;
+        }
+
+        public static bool IsSingleTransitionDisplay
+        {
+            get { return DisplayType == DisplayTypeChrom.single; }
+        }
+
+        public static IEnumerable<TransitionDocNode> GetDisplayTransitions(TransitionGroupDocNode nodeGroup, DisplayTypeChrom displayType)
+        {
+            switch (displayType)
+            {
+                case DisplayTypeChrom.precursors:
+                    // Return transitions that would be filtered from MS1
+                    return nodeGroup.GetMsTransitions(true);
+                case DisplayTypeChrom.products:
+                    // Return transitions that would not be filtered in MS1
+                    return nodeGroup.GetMsMsTransitions(true);
+                default:
+                    return nodeGroup.Transitions;
+            }            
         }
 
         public interface IStateProvider
@@ -209,7 +242,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     TransitionGroupDocNode nodeGroup = dragInfo.GraphItem.TransitionGroupNode;
                     TransitionDocNode nodeTran = null;
                     // If editing a single transition, then add the ID to the event
-                    if (DisplayType == DisplayTypeChrom.single && GraphPane.CurveList.Count == 1)
+                    if (IsSingleTransitionDisplay && GraphPane.CurveList.Count == 1)
                         nodeTran = dragInfo.GraphItem.TransitionNode;
 
                     int iGroup = _nodeGroups.IndexOf(node => ReferenceEquals(node.TransitionGroup, nodeGroup.TransitionGroup));
@@ -467,7 +500,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         // Single group with optimization data, not a transition selected,
                         // and single display mode
                     else if (chromatograms.OptimizationFunction != null &&
-                             nodeTranTree == null && DisplayType == DisplayTypeChrom.single)
+                             nodeTranTree == null && IsSingleTransitionDisplay)
                     {
                         DisplayOptimizationTotals(chromatograms, mzMatchTolerance, listChromGraphs,
                             ref bestStartTime, ref bestEndTime);
@@ -559,18 +592,18 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // Get points for all transitions, and pick maximum peaks.
             ChromatogramInfo[] arrayChromInfo;
-            var graphTrans = nodeGroup.Children;
-            int numTrans = graphTrans.Count;
+            DisplayTypeChrom displayType = GetDisplayType(DocumentUI);
+            var displayTrans = GetDisplayTransitions(nodeGroup, displayType).ToArray();
+            int numTrans = displayTrans.Length;
             int numSteps = 0;
             bool allowEmpty = false;
 
-            if (DisplayType == DisplayTypeChrom.single &&
-                nodeTranSelected != null)
+            if (IsSingleTransitionDisplay && nodeTranSelected != null)
             {
-                if (!graphTrans.Contains(nodeTranSelected))
+                if (!displayTrans.Contains(nodeTranSelected))
                 {
                     arrayChromInfo = new ChromatogramInfo[0];
-                    graphTrans = new DocNode[0];                    
+                    displayTrans = new TransitionDocNode[0];                    
                 }
                 else
                 {
@@ -589,19 +622,19 @@ namespace pwiz.Skyline.Controls.Graphs
                         }
                     }
 
-                    graphTrans = new DocNode[arrayChromInfo.Length];
-                    for (int i = 0; i < arrayChromInfo.Length; i++)
-                        graphTrans[i] = nodeTranSelected;
+                    numTrans = arrayChromInfo.Length;
+                    displayTrans = new TransitionDocNode[numTrans];
+                    for (int i = 0; i < numTrans; i++)
+                        displayTrans[i] = nodeTranSelected;
                 }
-                numTrans = graphTrans.Count;
                 numSteps = numTrans/2;
             }
             else
             {
                 arrayChromInfo = new ChromatogramInfo[numTrans];
-                for (int i = 0; i < graphTrans.Count; i++)
+                for (int i = 0; i < numTrans; i++)
                 {
-                    var nodeTran = (TransitionDocNode) graphTrans[i];
+                    var nodeTran = displayTrans[i];
                     // Get chromatogram info for this transition
                     arrayChromInfo[i] =
                         chromGroupInfo.GetTransitionInfo((float)nodeTran.Mz, mzMatchTolerance);
@@ -615,22 +648,32 @@ namespace pwiz.Skyline.Controls.Graphs
             var maxPeakHeights = new float[numPeaks];
             var transform = Transform;
             // Prepare arrays of values for library dot-product
-            double[] libIntensities = null;
+            double[] expectedIntensities = null;
             double[][] peakAreas = null;
-            if (nodeGroup.HasLibInfo && numTrans >= TransitionGroupDocNode.MIN_DOT_PRODUCT_TRANSITIONS)
+            bool isShowingMs = displayTrans.Any(nodeTran => nodeTran.IsMs1);
+            bool isShowingMsMs = displayTrans.Any(nodeTran => !nodeTran.IsMs1);
+            bool isFullScanMs = DocumentUI.Settings.TransitionSettings.FullScan.IsEnabledMs && isShowingMs;
+            if ((isFullScanMs && !isShowingMsMs && nodeGroup.HasIsotopePeaks) ||
+                (!isFullScanMs && nodeGroup.HasLibInfo))
             {
-                libIntensities = new double[numTrans];
+                expectedIntensities = new double[numTrans];
                 peakAreas = new double[numPeaks][];
                 for (int i = 0; i < numPeaks; i++)
                     peakAreas[i] = new double[numTrans];
             }
             for (int i = 0; i < numTrans; i++)
             {
-                var nodeTran = (TransitionDocNode) graphTrans[i];
+                var nodeTran = displayTrans[i];
 
                 // Store library intensities for dot-product
-                if (libIntensities != null)
-                    libIntensities[i] = nodeTran.HasLibInfo ? nodeTran.LibInfo.Intensity : 0;
+                if (expectedIntensities != null)
+                {
+                    if (isFullScanMs)
+                        expectedIntensities[i] = nodeTran.EnvelopeProportion ?? 0;
+                    else
+                        expectedIntensities[i] = nodeTran.HasLibInfo ? nodeTran.LibInfo.Intensity : 0;
+                    
+                }
 
                 var info = arrayChromInfo[i];
                 if (info == null)
@@ -676,32 +719,34 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             // Calculate library dot-products, if possible
-            double[] libraryDotProducts = null;
+            double[] dotProducts = null;
             double bestProduct = 0;
             if (peakAreas != null)
             {
                 var tranGroupChromInfo = GetTransitionGroupChromInfo(nodeGroup, fileId, _chromIndex);
                 if (tranGroupChromInfo != null)
                 {
-                    bestProduct = tranGroupChromInfo.LibraryDotProduct ?? 0;
+                    bestProduct = (isFullScanMs
+                        ? tranGroupChromInfo.IsotopeDotProduct
+                        : tranGroupChromInfo.LibraryDotProduct) ?? 0;
 
-                    var statLibIntensities = new Statistics(libIntensities);
+                    var statExpectedIntensities = new Statistics(expectedIntensities);
                     for (int i = 0; i < peakAreas.Length; i++)
                     {
                         var statPeakAreas = new Statistics(peakAreas[i]);
-                        double libraryDotProduct = statPeakAreas.AngleSqrt(statLibIntensities);
+                        double dotProductCurrent = statPeakAreas.AngleSqrt(statExpectedIntensities);
                         // Only show products that are greater than the best peak product,
                         // and by enough to be a significant improvement.  Also the library product
                         // on the group node is stored as a float, which means the version
                         // hear calculated as a double can be larger, but really represent
                         // the same number.
-                        if (libraryDotProduct > bestProduct &&
-                            libraryDotProduct > 0.7 &&
-                            libraryDotProduct - bestProduct > 0.05)
+                        if (dotProductCurrent > bestProduct &&
+                            dotProductCurrent > 0.7 &&
+                            dotProductCurrent - bestProduct > 0.05)
                         {
-                            if (libraryDotProducts == null)
-                                libraryDotProducts = new double[numPeaks];
-                            libraryDotProducts[i] = libraryDotProduct;
+                            if (dotProducts == null)
+                                dotProducts = new double[numPeaks];
+                            dotProducts[i] = dotProductCurrent;
                         }
                     }                    
                 }
@@ -717,7 +762,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (info == null && !allowEmpty)
                     continue;
 
-                var nodeTran = (TransitionDocNode) graphTrans[i];
+                var nodeTran = displayTrans[i];
                 int step = numSteps != 0 ? i - numSteps : 0;
 
                 Color color;
@@ -742,8 +787,9 @@ namespace pwiz.Skyline.Controls.Graphs
                                                    info,
                                                    tranPeakInfoGraph,
                                                    GetAnnotationFlags(i, maxPeakTrans, maxPeakHeights),
-                                                   libraryDotProducts,
+                                                   dotProducts,
                                                    bestProduct,
+                                                   isFullScanMs,
                                                    step,
                                                    color,
                                                    fontSize,
@@ -915,6 +961,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                    GetAnnotationFlags(i, maxPeakData, maxPeakHeights),
                                                    null,
                                                    0,
+                                                   false,
                                                    step,
                                                    color,
                                                    fontSize,
@@ -1089,6 +1136,7 @@ namespace pwiz.Skyline.Controls.Graphs
                                                        annotateAll,
                                                        null,
                                                        0,
+                                                       false,
                                                        0,
                                                        color,
                                                        fontSize,

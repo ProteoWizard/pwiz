@@ -32,8 +32,9 @@ namespace pwiz.Skyline.Model
         public TransitionDocNode(Transition id,
                                  TransitionLosses losses,
                                  double massH,
+                                 float? envelopeProportion,
                                  TransitionLibInfo libInfo)
-            : this(id, Annotations.EMPTY, losses, massH, libInfo, null)
+            : this(id, Annotations.EMPTY, losses, massH, envelopeProportion, libInfo, null)
         {
         }
 
@@ -41,6 +42,7 @@ namespace pwiz.Skyline.Model
                                  Annotations annotations,
                                  TransitionLosses losses,
                                  double massH,
+                                 float? envelopeProportion,
                                  TransitionLibInfo libInfo,
                                  Results<TransitionChromInfo> results)
             : base(id, annotations)
@@ -49,6 +51,7 @@ namespace pwiz.Skyline.Model
             if (losses != null)
                 massH -= losses.Mass;
             Mz = SequenceMassCalc.GetMZ(massH, id.Charge);
+            EnvelopeProportion = envelopeProportion;
             LibInfo = libInfo;
             Results = results;
         }
@@ -93,6 +96,23 @@ namespace pwiz.Skyline.Model
                 string ionName = Transition.FragmentIonName;
                 return (HasLoss ? string.Format("{0} -{1}", ionName, Math.Round(Losses.Mass, 1)) : ionName);
             }
+        }
+
+        /// <summary>
+        /// Returns true for a transition that would be filtered from MS1 in full-scan filtering.
+        /// </summary>
+        public bool IsMs1
+        {
+            get { return Transition.IsPrecursor() && Losses == null; }
+        }
+
+        public float? EnvelopeProportion { get; private set; }
+
+        public static float? GetEnvelopeProportion(Transition transition, IsotopePeakInfo isotopePeaks)
+        {
+            if (isotopePeaks == null)
+                return null;
+            return isotopePeaks.GetProportionI(transition.MassIndex);
         }
 
         public TransitionLibInfo LibInfo { get; private set; }
@@ -239,9 +259,19 @@ namespace pwiz.Skyline.Model
         public DocNode EnsureChildren(TransitionGroupDocNode parent, SrmSettings settings)
         {
             // Make sure node points to correct parent.
-            return ReferenceEquals(parent.TransitionGroup, Transition.Group) ? this
-                       : new TransitionDocNode(new Transition(parent.TransitionGroup, Transition.IonType, Transition.CleavageOffset, 0, Transition.Charge), Annotations,
-                                               Losses, 0.0, LibInfo, null) { Mz = Mz };
+            return ReferenceEquals(parent.TransitionGroup, Transition.Group)
+                       ? this
+                       : new TransitionDocNode(new Transition(parent.TransitionGroup,
+                                                              Transition.IonType,
+                                                              Transition.CleavageOffset,
+                                                              Transition.MassIndex,
+                                                              Transition.Charge),
+                                               Annotations,
+                                               Losses,
+                                               0.0,
+                                               EnvelopeProportion,
+                                               LibInfo,
+                                               null) {Mz = Mz};
         }
 
         public override string GetDisplayText(DisplaySettings settings)

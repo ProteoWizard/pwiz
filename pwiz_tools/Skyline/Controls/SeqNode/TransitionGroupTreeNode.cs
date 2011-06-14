@@ -154,14 +154,21 @@ namespace pwiz.Skyline.Controls.SeqNode
             PeptideDocNode nodePep, int indexResult, int indexRatio)
         {
             float? libraryProduct = nodeGroup.GetLibraryDotProduct(indexResult);
+            float? isotopeProduct = nodeGroup.GetIsotopeDotProduct(indexResult);
             float? stdev;
             float? ratio = nodeGroup.GetPeakAreaRatio(indexResult, indexRatio, out stdev);
-            if (!ratio.HasValue && !libraryProduct.HasValue)
+            if (!ratio.HasValue && !isotopeProduct.HasValue && !libraryProduct.HasValue)
                 return "";
             StringBuilder sb = new StringBuilder(" (");
             int len = sb.Length;
+            if (isotopeProduct.HasValue)
+                sb.Append(string.Format("idotp {0:F02}", isotopeProduct.Value));
             if (libraryProduct.HasValue)
+            {
+                if (sb.Length > len)
+                    sb.Append(", ");
                 sb.Append(string.Format("dotp {0:F02}", libraryProduct.Value));
+            }
             if (ratio.HasValue)
             {
                 if (sb.Length > len)

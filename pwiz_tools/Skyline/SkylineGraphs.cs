@@ -970,7 +970,7 @@ namespace pwiz.Skyline
             var set = Settings.Default;
             int iInsert = 0;
             var nodeTree = SelectedNode;
-            if (nodeTree is TransitionTreeNode && GraphChromatogram.DisplayType == DisplayTypeChrom.single)
+            if (nodeTree is TransitionTreeNode && GraphChromatogram.IsSingleTransitionDisplay)
             {
                 if (HasPeak(comboResults.SelectedIndex, ((TransitionTreeNode)nodeTree).DocNode))
                 {
@@ -978,7 +978,7 @@ namespace pwiz.Skyline
                     menuStrip.Items.Insert(iInsert++, toolStripSeparator33);                    
                 }
             }
-            else if ((nodeTree is TransitionTreeNode && GraphChromatogram.DisplayType == DisplayTypeChrom.all) ||
+            else if ((nodeTree is TransitionTreeNode && GraphChromatogram.GetDisplayType(DocumentUI) == DisplayTypeChrom.all) ||
                     (nodeTree is TransitionGroupTreeNode) ||
                     (nodeTree is PeptideTreeNode && ((PeptideTreeNode)nodeTree).DocNode.Children.Count == 1))
             {
@@ -1016,8 +1016,10 @@ namespace pwiz.Skyline
             {
                 transitionsContextMenuItem.DropDownItems.AddRange(new[]
                     {
-                        singleTranContextMenuItem,
                         allTranContextMenuItem,
+                        precursorsTranContextMenuItem,
+                        productsTranContextMenuItem,
+                        singleTranContextMenuItem,
                         totalTranContextMenuItem
                     });
             }
@@ -1160,8 +1162,20 @@ namespace pwiz.Skyline
 
         private void transitionsMenuItem_DropDownOpening(object sender, EventArgs e)
         {
-            var displayType = GraphChromatogram.DisplayType;
+            var displayType = GraphChromatogram.GetDisplayType(DocumentUI);
 
+            // If both MS1 and MS/MS ions are not possible, then menu items to differentiate precursors and
+            // products are not necessary.
+            var fullScan = DocumentUI.Settings.TransitionSettings.FullScan;
+            precursorsTranMenuItem.Visible =
+                precursorsTranContextMenuItem.Visible =
+                productsTranMenuItem.Visible =
+                productsTranContextMenuItem.Visible = fullScan.IsEnabledMs && fullScan.IsEnabledMsMs;
+
+            precursorsTranMenuItem.Checked = precursorsTranContextMenuItem.Checked =
+                (displayType == DisplayTypeChrom.precursors);
+            productsTranMenuItem.Checked = productsTranContextMenuItem.Checked =
+                (displayType == DisplayTypeChrom.products);
             singleTranMenuItem.Checked = singleTranContextMenuItem.Checked =
                 (displayType == DisplayTypeChrom.single);
             allTranMenuItem.Checked = allTranContextMenuItem.Checked =
@@ -1323,10 +1337,27 @@ namespace pwiz.Skyline
 
         public void ShowSingleTransition()
         {
-            Settings.Default.ShowTransitionGraphs = DisplayTypeChrom.single.ToString();
-            UpdateChromGraphs();
-            UpdateRetentionTimeGraph();
-            UpdatePeakAreaGraph();
+            SetDisplayTypeChrom(DisplayTypeChrom.single);
+        }
+
+        private void precursorsTranMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowPrecursorTransitions();
+        }
+
+        public void ShowPrecursorTransitions()
+        {
+            SetDisplayTypeChrom(DisplayTypeChrom.precursors);
+        }
+
+        private void productsTranMenuItem_Click(object sender, EventArgs e)
+        {
+            ShowProductTransitions();
+        }
+
+        public void ShowProductTransitions()
+        {
+            SetDisplayTypeChrom(DisplayTypeChrom.products);
         }
 
         private void allTranMenuItem_Click(object sender, EventArgs e)
@@ -1336,10 +1367,7 @@ namespace pwiz.Skyline
 
         public void ShowAllTransitions()
         {
-            Settings.Default.ShowTransitionGraphs = DisplayTypeChrom.all.ToString();
-            UpdateChromGraphs();
-            UpdateRetentionTimeGraph();
-            UpdatePeakAreaGraph();
+            SetDisplayTypeChrom(DisplayTypeChrom.all);
         }
 
         private void totalTranMenuItem_Click(object sender, EventArgs e)
@@ -1349,7 +1377,12 @@ namespace pwiz.Skyline
 
         public void ShowTotalTransitions()
         {
-            Settings.Default.ShowTransitionGraphs = DisplayTypeChrom.total.ToString();
+            SetDisplayTypeChrom(DisplayTypeChrom.total);
+        }
+
+        public void SetDisplayTypeChrom(DisplayTypeChrom displayType)
+        {
+            Settings.Default.ShowTransitionGraphs = displayType.ToString();
             UpdateChromGraphs();
             UpdateRetentionTimeGraph();
             UpdatePeakAreaGraph();
@@ -1956,8 +1989,10 @@ namespace pwiz.Skyline
                 {
                     transitionsContextMenuItem.DropDownItems.AddRange(new[]
                     {
-                        singleTranContextMenuItem,
                         allTranContextMenuItem,
+                        precursorsTranContextMenuItem,
+                        productsTranContextMenuItem,
+                        singleTranContextMenuItem,
                         totalTranContextMenuItem
                     });
                 }
@@ -2373,8 +2408,10 @@ namespace pwiz.Skyline
             {
                 transitionsContextMenuItem.DropDownItems.AddRange(new[]
                 {
-                    singleTranContextMenuItem,
                     allTranContextMenuItem,
+                    precursorsTranMenuItem,
+                    productsTranContextMenuItem,
+                    singleTranContextMenuItem,
                     totalTranContextMenuItem
                 });
             }
@@ -2416,9 +2453,13 @@ namespace pwiz.Skyline
 
                     // If the area replicate graph is being displayed and it can show a library,
                     // display the "Show Library" option
-                    if (areaReplicateGraphPane.CanShowLibrary)
+                    var expectedVisible = areaReplicateGraphPane.ExpectedVisible;
+                    if (expectedVisible != AreaExpectedValue.none)
                     {
                         showLibraryPeakAreaContextMenuItem.Checked = set.ShowLibraryPeakArea;
+                        showLibraryPeakAreaContextMenuItem.Text = expectedVisible == AreaExpectedValue.library
+                                                                      ? "Show Library"
+                                                                      : "Show Expected";
                         menuStrip.Items.Insert(iInsert++, showLibraryPeakAreaContextMenuItem);
                     }
 

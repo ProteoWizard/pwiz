@@ -137,6 +137,8 @@ namespace pwiz.Skyline
             this.closeAllChromatogramsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.transitionsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.allTranMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.precursorsTranMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.productsTranMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.singleTranMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.totalTranMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.transformChromMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -252,6 +254,8 @@ namespace pwiz.Skyline
             this.toolStripSeparator16 = new System.Windows.Forms.ToolStripSeparator();
             this.transitionsContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.allTranContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.precursorsTranContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.productsTranContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.singleTranContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.totalTranContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.transformChromContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1228,6 +1232,8 @@ namespace pwiz.Skyline
             // 
             this.transitionsMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.allTranMenuItem,
+            this.precursorsTranMenuItem,
+            this.productsTranMenuItem,
             this.singleTranMenuItem,
             this.totalTranMenuItem});
             this.transitionsMenuItem.Enabled = false;
@@ -1240,15 +1246,32 @@ namespace pwiz.Skyline
             // 
             this.allTranMenuItem.Name = "allTranMenuItem";
             this.allTranMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Shift | System.Windows.Forms.Keys.F10)));
-            this.allTranMenuItem.Size = new System.Drawing.Size(153, 22);
+            this.allTranMenuItem.Size = new System.Drawing.Size(196, 22);
             this.allTranMenuItem.Text = "&All";
             this.allTranMenuItem.Click += new System.EventHandler(this.allTranMenuItem_Click);
+            // 
+            // precursorsTranMenuItem
+            // 
+            this.precursorsTranMenuItem.Name = "precursorsTranMenuItem";
+            this.precursorsTranMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Alt | System.Windows.Forms.Keys.F10)));
+            this.precursorsTranMenuItem.Size = new System.Drawing.Size(196, 22);
+            this.precursorsTranMenuItem.Text = "&Precursors";
+            this.precursorsTranMenuItem.Click += new System.EventHandler(this.precursorsTranMenuItem_Click);
+            // 
+            // productsTranMenuItem
+            // 
+            this.productsTranMenuItem.Name = "productsTranMenuItem";
+            this.productsTranMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)(((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Alt)
+                        | System.Windows.Forms.Keys.F10)));
+            this.productsTranMenuItem.Size = new System.Drawing.Size(196, 22);
+            this.productsTranMenuItem.Text = "Pr&oducts";
+            this.productsTranMenuItem.Click += new System.EventHandler(this.productsTranMenuItem_Click);
             // 
             // singleTranMenuItem
             // 
             this.singleTranMenuItem.Name = "singleTranMenuItem";
             this.singleTranMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F10;
-            this.singleTranMenuItem.Size = new System.Drawing.Size(153, 22);
+            this.singleTranMenuItem.Size = new System.Drawing.Size(196, 22);
             this.singleTranMenuItem.Text = "&Single";
             this.singleTranMenuItem.Click += new System.EventHandler(this.singleTranMenuItem_Click);
             // 
@@ -1256,7 +1279,7 @@ namespace pwiz.Skyline
             // 
             this.totalTranMenuItem.Name = "totalTranMenuItem";
             this.totalTranMenuItem.ShortcutKeys = ((System.Windows.Forms.Keys)((System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.F10)));
-            this.totalTranMenuItem.Size = new System.Drawing.Size(153, 22);
+            this.totalTranMenuItem.Size = new System.Drawing.Size(196, 22);
             this.totalTranMenuItem.Text = "&Total";
             this.totalTranMenuItem.Click += new System.EventHandler(this.totalTranMenuItem_Click);
             // 
@@ -2226,6 +2249,8 @@ namespace pwiz.Skyline
             // 
             this.transitionsContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.allTranContextMenuItem,
+            this.precursorsTranContextMenuItem,
+            this.productsTranContextMenuItem,
             this.singleTranContextMenuItem,
             this.totalTranContextMenuItem});
             this.transitionsContextMenuItem.Name = "transitionsContextMenuItem";
@@ -2236,21 +2261,35 @@ namespace pwiz.Skyline
             // allTranContextMenuItem
             // 
             this.allTranContextMenuItem.Name = "allTranContextMenuItem";
-            this.allTranContextMenuItem.Size = new System.Drawing.Size(106, 22);
+            this.allTranContextMenuItem.Size = new System.Drawing.Size(129, 22);
             this.allTranContextMenuItem.Text = "All";
             this.allTranContextMenuItem.Click += new System.EventHandler(this.allTranMenuItem_Click);
+            // 
+            // precursorsTranContextMenuItem
+            // 
+            this.precursorsTranContextMenuItem.Name = "precursorsTranContextMenuItem";
+            this.precursorsTranContextMenuItem.Size = new System.Drawing.Size(129, 22);
+            this.precursorsTranContextMenuItem.Text = "Precursors";
+            this.precursorsTranContextMenuItem.Click += new System.EventHandler(this.precursorsTranMenuItem_Click);
+            // 
+            // productsTranContextMenuItem
+            // 
+            this.productsTranContextMenuItem.Name = "productsTranContextMenuItem";
+            this.productsTranContextMenuItem.Size = new System.Drawing.Size(129, 22);
+            this.productsTranContextMenuItem.Text = "Products";
+            this.productsTranContextMenuItem.Click += new System.EventHandler(this.productsTranMenuItem_Click);
             // 
             // singleTranContextMenuItem
             // 
             this.singleTranContextMenuItem.Name = "singleTranContextMenuItem";
-            this.singleTranContextMenuItem.Size = new System.Drawing.Size(106, 22);
+            this.singleTranContextMenuItem.Size = new System.Drawing.Size(129, 22);
             this.singleTranContextMenuItem.Text = "Single";
             this.singleTranContextMenuItem.Click += new System.EventHandler(this.singleTranMenuItem_Click);
             // 
             // totalTranContextMenuItem
             // 
             this.totalTranContextMenuItem.Name = "totalTranContextMenuItem";
-            this.totalTranContextMenuItem.Size = new System.Drawing.Size(106, 22);
+            this.totalTranContextMenuItem.Size = new System.Drawing.Size(129, 22);
             this.totalTranContextMenuItem.Text = "Total";
             this.totalTranContextMenuItem.Click += new System.EventHandler(this.totalTranMenuItem_Click);
             // 
@@ -2745,7 +2784,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator28,
             this.areaPropsContextMenuItem});
             this.contextMenuPeakAreas.Name = "contextMenuStrip1";
-            this.contextMenuPeakAreas.Size = new System.Drawing.Size(171, 252);
+            this.contextMenuPeakAreas.Size = new System.Drawing.Size(171, 230);
             // 
             // areaGraphContextMenuItem
             // 
@@ -3285,6 +3324,10 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem scopeContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem documentScopeContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem proteinScopeContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem precursorsTranContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem productsTranContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem precursorsTranMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem productsTranMenuItem;
     }
 }
 

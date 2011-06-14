@@ -88,8 +88,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 return;
 
             int iResult = IndexOfReplicate(selectedIndex);
-            if (GraphSummary.ResultsIndex != iResult ||
-                    GraphChromatogram.DisplayType == DisplayTypeChrom.single)
+            if (GraphSummary.ResultsIndex != iResult || GraphChromatogram.IsSingleTransitionDisplay)
             {
                 ChangeSelectedIndex(iResult);                
             }
@@ -139,6 +138,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 _displayType = displayType;
             }
 
+            protected DisplayTypeChrom DisplayType { get { return _displayType; } }
+
             /// <summary>
             /// Moved out of the constructor for better support of virtual functions called
             /// in this code.
@@ -166,7 +167,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     var nodeGroup = (TransitionGroupDocNode)_docNode;
                     ReplicateIndices = GetReplicateIndices(nodeGroup).ToArray();
-                    if (_displayType != DisplayTypeChrom.all)
+                    if (_displayType == DisplayTypeChrom.single || _displayType == DisplayTypeChrom.total)
                     {
                         docNodes.Add(nodeGroup);
                         pointPairLists.Add(GetPointPairLists(nodeGroup, _displayType));
@@ -174,11 +175,11 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                     else
                     {
-                        foreach (TransitionDocNode transitionDocNode in nodeGroup.Children)
+                        foreach (TransitionDocNode nodeTran in GraphChromatogram.GetDisplayTransitions(nodeGroup, _displayType))
                         {
-                            docNodes.Add(transitionDocNode);
-                            pointPairLists.Add(GetPointPairLists(transitionDocNode, _displayType));
-                            docNodeLabels.Add(ChromGraphItem.GetTitle(transitionDocNode));
+                            docNodes.Add(nodeTran);
+                            pointPairLists.Add(GetPointPairLists(nodeTran, _displayType));
+                            docNodeLabels.Add(ChromGraphItem.GetTitle(nodeTran));
                         }
                     }
                 }
@@ -186,11 +187,11 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     var nodePep = (PeptideDocNode) _docNode;
                     ReplicateIndices = GetReplicateIndices(nodePep).ToArray();
-                    foreach (TransitionGroupDocNode transitionGroup in nodePep.Children)
+                    foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                     {
-                        docNodes.Add(transitionGroup);
-                        pointPairLists.Add(GetPointPairLists(transitionGroup, DisplayTypeChrom.total));
-                        docNodeLabels.Add(ChromGraphItem.GetTitle(transitionGroup));
+                        docNodes.Add(nodeGroup);
+                        pointPairLists.Add(GetPointPairLists(nodeGroup, DisplayTypeChrom.total));
+                        docNodeLabels.Add(ChromGraphItem.GetTitle(nodeGroup));
                     }
                 }
                 PointPairLists = pointPairLists;

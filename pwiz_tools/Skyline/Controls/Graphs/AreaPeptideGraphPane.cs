@@ -29,7 +29,7 @@ namespace pwiz.Skyline.Controls.Graphs
         {
         }
 
-        protected override GraphData CreateGraphData(SrmDocument document, TransitionGroupDocNode selectedGroup, PeptideGroupDocNode selectedProtein, DisplayTypeChrom displayType)
+        protected override GraphData CreateGraphData(SrmDocument document, PeptideGroupDocNode selectedProtein, TransitionGroupDocNode selectedGroup, DisplayTypeChrom displayType)
         {
             int? result = null;
             if (RTLinearRegressionGraphPane.ShowReplicate == ReplicateDisplay.single)

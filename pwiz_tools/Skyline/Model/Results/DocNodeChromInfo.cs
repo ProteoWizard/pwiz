@@ -153,6 +153,7 @@ namespace pwiz.Skyline.Model.Results
                                         IList<float?> stdevs,
                                         int? truncated,
                                         float? libraryDotProduct,
+                                        float? isotopeDotProduct,
                                         Annotations annotations,
                                         bool userSet)
             : base(fileId)
@@ -169,6 +170,7 @@ namespace pwiz.Skyline.Model.Results
             RatioStdevs = stdevs;
             Truncated = truncated;
             LibraryDotProduct = libraryDotProduct;
+            IsotopeDotProduct = isotopeDotProduct;
             Annotations = annotations;
             UserSet = userSet;
         }
@@ -196,6 +198,7 @@ namespace pwiz.Skyline.Model.Results
         }
         public int? Truncated { get; private set; }
         public float? LibraryDotProduct { get; private set; }
+        public float? IsotopeDotProduct { get; private set; }
         public Annotations Annotations { get; private set; }
 
         /// <summary>
@@ -241,6 +244,7 @@ namespace pwiz.Skyline.Model.Results
                    ArrayUtil.EqualsDeep(other.RatioStdevs, RatioStdevs) &&
                    other.Truncated.Equals(Truncated) &&
                    other.LibraryDotProduct.Equals(LibraryDotProduct) &&
+                   other.IsotopeDotProduct.Equals(IsotopeDotProduct) &&
                    other.Annotations.Equals(Annotations) &&
                    other.UserSet.Equals(UserSet);
         }
@@ -266,6 +270,7 @@ namespace pwiz.Skyline.Model.Results
                 result = (result*397) ^ RatioStdevs.GetHashCodeDeep();
                 result = (result*397) ^ (Truncated.HasValue ? Truncated.Value.GetHashCode() : 0);
                 result = (result*397) ^ (LibraryDotProduct.HasValue ? LibraryDotProduct.Value.GetHashCode() : 0);
+                result = (result*397) ^ (IsotopeDotProduct.HasValue ? IsotopeDotProduct.Value.GetHashCode() : 0);
                 result = (result*397) ^ UserSet.GetHashCode();
                 return result;
             }

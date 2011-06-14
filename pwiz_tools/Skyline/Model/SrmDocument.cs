@@ -229,34 +229,25 @@ namespace pwiz.Skyline.Model
 
         public IEnumerable<PeptideGroupDocNode> PeptideGroups
         {
-            get
+            get 
             {
-                foreach (PeptideGroupDocNode node in Children)
-                    yield return node;
+                return Children.Cast<PeptideGroupDocNode>();
             }
         }
 
         public IEnumerable<PeptideDocNode> Peptides
         {
-            get
+            get 
             {
-                foreach (PeptideGroupDocNode node in PeptideGroups)
-                {
-                    foreach (PeptideDocNode nodePep in node.Children)
-                        yield return nodePep;
-                }
+                return PeptideGroups.SelectMany(node => node.Children.Cast<PeptideDocNode>());
             }
         }
 
         public IEnumerable<TransitionGroupDocNode> TransitionGroups
         {
-            get
+            get 
             {
-                foreach (PeptideDocNode node in Peptides)
-                {
-                    foreach (TransitionGroupDocNode nodeGroup in node.Children)
-                        yield return nodeGroup;
-                }
+                return Peptides.SelectMany(node => node.Children.Cast<TransitionGroupDocNode>());
             }
         }
 
@@ -264,11 +255,7 @@ namespace pwiz.Skyline.Model
         {
             get
             {
-                foreach (TransitionGroupDocNode node in TransitionGroups)
-                {
-                    foreach (TransitionDocNode nodeTran in node.Children)
-                        yield return nodeTran;
-                }
+                return TransitionGroups.SelectMany(node => node.Children.Cast<TransitionDocNode>());
             }
         }
 
@@ -967,6 +954,7 @@ namespace pwiz.Skyline.Model
             public const string user_set = "user_set";
             public const string peak_count_ratio = "peak_count_ratio";
             public const string library_dotp = "library_dotp";
+            public const string isotope_dotp = "isotope_dotp";
         }
         // ReSharper restore InconsistentNaming
 
@@ -1503,6 +1491,7 @@ namespace pwiz.Skyline.Model
             float? backgroundArea = reader.GetNullableFloatAttribute(ATTR.background);
             int? truncated = reader.GetNullableIntAttribute(ATTR.truncated);
             float? libraryDotProduct = reader.GetNullableFloatAttribute(ATTR.library_dotp);
+            float? isotopeDotProduct = reader.GetNullableFloatAttribute(ATTR.isotope_dotp);
             var annotations = Annotations.EMPTY;
             if (!reader.IsEmptyElement)
             {
@@ -1527,6 +1516,7 @@ namespace pwiz.Skyline.Model
                                                 new float?[countRatios],
                                                 truncated,
                                                 libraryDotProduct,
+                                                isotopeDotProduct,
                                                 annotations,
                                                 userSet);
         }
@@ -1589,7 +1579,7 @@ namespace pwiz.Skyline.Model
                 // No heavy transition support in v0.1, and no full-scan filtering
                 double massH = Settings.GetFragmentMass(IsotopeLabelType.light, mods, transition, null);
 
-                curList.Add(new TransitionDocNode(transition, info.Losses, massH, null));
+                curList.Add(new TransitionDocNode(transition, info.Losses, massH, null, null));
             }
 
             // Use collected information to create the DocNodes.
@@ -1646,8 +1636,12 @@ namespace pwiz.Skyline.Model
             }
 
             double massH = Settings.GetFragmentMass(group.LabelType, mods, transition, isotopePeaks);
+            float? envelopeProportion = isotopePeaks != null
+                ? isotopePeaks.GetProportionI(transition.MassIndex)
+                : (float?) null;
 
-            return new TransitionDocNode(transition, info.Annotations, info.Losses, massH, info.LibInfo, info.Results);
+            return new TransitionDocNode(transition, info.Annotations, info.Losses,
+                massH, envelopeProportion, info.LibInfo, info.Results);
         }
 
         private static Annotations ReadAnnotations(XmlReader reader)
@@ -2135,6 +2129,7 @@ namespace pwiz.Skyline.Model
             writer.WriteAttributeNullable(ATTR.background, chromInfo.BackgroundArea);
             writer.WriteAttributeNullable(ATTR.truncated, chromInfo.Truncated);
             writer.WriteAttributeNullable(ATTR.library_dotp, chromInfo.LibraryDotProduct);
+            writer.WriteAttributeNullable(ATTR.isotope_dotp, chromInfo.IsotopeDotProduct);
             WriteAnnotations(writer, chromInfo.Annotations);
         }
 

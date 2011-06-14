@@ -63,7 +63,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             Title.Text = null;
 
-            DisplayTypeChrom displayType = GraphChromatogram.DisplayType;
+            DisplayTypeChrom displayType = GraphChromatogram.GetDisplayType(document);
             DocNode selectedNode = selectedTreeNode.Model;
             DocNode parentNode = selectedNode;
             IdentityPath identityPath = selectedTreeNode.Path;

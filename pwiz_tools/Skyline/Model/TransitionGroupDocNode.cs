@@ -32,6 +32,7 @@ namespace pwiz.Skyline.Model
     public class TransitionGroupDocNode : DocNodeParent
     {
         public const int MIN_DOT_PRODUCT_TRANSITIONS = 4;
+        public const int MIN_DOT_PRODUCT_MS1_TRANSITIONS = 3;
 
         public const int MIN_TREND_REPLICATES = 4;
         public const int MAX_TREND_REPLICATES = 6;
@@ -91,6 +92,22 @@ namespace pwiz.Skyline.Model
 
         public TransitionGroup TransitionGroup { get { return (TransitionGroup) Id; }}
 
+        public IEnumerable<TransitionDocNode> Transitions { get { return Children.Cast<TransitionDocNode>(); } }
+
+        public IEnumerable<TransitionDocNode> GetMsTransitions(bool fullScanMs)
+        {
+            if (fullScanMs)
+            {
+                foreach (var nodeTran in Transitions.Where(nodeTran => nodeTran.IsMs1))
+                    yield return nodeTran;
+            }
+        }
+
+        public IEnumerable<TransitionDocNode> GetMsMsTransitions(bool fullScanMs)
+        {
+            return fullScanMs ? Transitions.Where(nodeTran => !nodeTran.IsMs1) : Transitions;
+        }
+
         public bool IsLight { get { return TransitionGroup.LabelType.IsLight; } }
 
         public RelativeRT RelativeRT { get; private set; }
@@ -100,6 +117,8 @@ namespace pwiz.Skyline.Model
         public double PrecursorMz { get; private set; }
 
         public IsotopePeakInfo IsotopePeaks { get; private set; }
+
+        public bool HasIsotopePeaks { get { return IsotopePeaks != null; } }
 
         public SpectrumHeaderInfo LibInfo { get; private set; }
 
@@ -191,9 +210,31 @@ namespace pwiz.Skyline.Model
         {
             get
             {
-                return GetAverageResultValue(chromInfo =>
-                                             chromInfo.OptimizationStep != 0 ?
-                                                                                 (float?) null : chromInfo.PeakCountRatio);
+                return GetAverageResultValue(chromInfo => chromInfo.OptimizationStep == 0
+                                                              ? chromInfo.PeakCountRatio
+                                                              : (float?) null);
+            }
+        }
+
+        public float? GetIsotopeDotProduct(int i)
+        {
+            if (i == -1)
+                return AverageIsotopeDotProduct;
+
+            // CONSIDER: Also specify the file index?
+            var result = GetChromInfoEntry(i);
+            if (result == null)
+                return null;
+            return result.IsotopeDotProduct;
+        }
+
+        public float? AverageIsotopeDotProduct
+        {
+            get
+            {
+                return GetAverageResultValue(chromInfo => chromInfo.OptimizationStep == 0
+                                                              ? chromInfo.IsotopeDotProduct
+                                                              : (float?)null);
             }
         }
 
@@ -213,9 +254,9 @@ namespace pwiz.Skyline.Model
         {
             get
             {
-                return GetAverageResultValue(chromInfo =>
-                                             chromInfo.OptimizationStep != 0 ?
-                                                                                 (float?)null : chromInfo.LibraryDotProduct);
+                return GetAverageResultValue(chromInfo => chromInfo.OptimizationStep == 0
+                                                              ? chromInfo.LibraryDotProduct
+                                                              : (float?) null);
             }
         }
 
@@ -527,12 +568,14 @@ namespace pwiz.Skyline.Model
                             var annotations = nodeTranResult.Annotations;
                             var losses = nodeTranResult.Losses;
                             double massH = settingsNew.GetFragmentMass(TransitionGroup.LabelType, mods, tran, isotopePeaks);
+                            float? envelopeProportion = TransitionDocNode.GetEnvelopeProportion(tran, isotopePeaks);
                             var info = TransitionDocNode.GetLibInfo(tran, Transition.CalcMass(massH, losses), transitionRanks);
                             Helpers.AssignIfEquals(ref info, nodeTranResult.LibInfo);
                             if (!ReferenceEquals(info, nodeTranResult.LibInfo))
                                 dotProductChange = true;
                             var results = nodeTranResult.Results;
-                            nodeTranResult = new TransitionDocNode(tran, annotations, losses, massH, info, results);
+                            nodeTranResult = new TransitionDocNode(tran, annotations, losses,
+                                massH, envelopeProportion, info, results);
 
                             Helpers.AssignIfEquals(ref nodeTranResult, (TransitionDocNode) existing);
                         }
@@ -599,12 +642,14 @@ namespace pwiz.Skyline.Model
                         var annotations = nodeTransition.Annotations;   // Don't lose annotations
                         var results = nodeTransition.Results;           // Results changes happen later
                         double massH = settingsNew.GetFragmentMass(TransitionGroup.LabelType, mods, tran, isotopePeaks);
+                        float? envelopeProportion = TransitionDocNode.GetEnvelopeProportion(tran, isotopePeaks);
                         var info = TransitionDocNode.GetLibInfo(tran, Transition.CalcMass(massH, losses), transitionRanks);
                         Helpers.AssignIfEquals(ref info, nodeTransition.LibInfo);
                         if (!ReferenceEquals(info, nodeTransition.LibInfo))
                             dotProductChange = true;
 
-                        var nodeNew = new TransitionDocNode(tran, annotations, losses, massH, info, results);
+                        var nodeNew = new TransitionDocNode(tran, annotations, losses,
+                            massH, envelopeProportion, info, results);
 
                         Helpers.AssignIfEquals(ref nodeNew, nodeTransition);
                         childrenNew.Add(nodeNew);
@@ -1113,17 +1158,34 @@ namespace pwiz.Skyline.Model
             {
                 int countTransitions = _arrayChromInfoSets.Length;
                 var arrayRanked = new KeyValuePair<int, TransitionChromInfo>[countTransitions];
+                bool isFullScanMs = Settings.TransitionSettings.FullScan.IsEnabledMs;
+                double[] peakAreas = null, libIntensities = null;
+                if (nodeGroup.HasLibInfo)
+                {
+                    var nodeTransMsMs = nodeGroup.GetMsMsTransitions(isFullScanMs).ToArray();
+                    int countTransMsMs = nodeTransMsMs.Length;
+                    if (countTransMsMs >= MIN_DOT_PRODUCT_TRANSITIONS)
+                    {
+                        peakAreas = new double[countTransMsMs];
+                        libIntensities = new double[countTransMsMs];
+                    }
+                }
+                double[] peakAreasMs = null, isoProportionsMs = null;
+                if (nodeGroup.HasIsotopePeaks)
+                {
+                    var nodeTransMs = nodeGroup.GetMsTransitions(isFullScanMs).ToArray();
+                    int countTransMs = nodeTransMs.Length;
+                    if (countTransMs >= MIN_DOT_PRODUCT_MS1_TRANSITIONS)
+                    {
+                        peakAreasMs = new double[countTransMs];
+                        isoProportionsMs = new double[countTransMs];
+                    }
+                }
                 for (int i = 0; i < _listResultCalcs.Count; i++)
                 {
                     for (int iInfo = 0; /* internal break */ ; iInfo++)
                     {
-                        int countInfo = 0;
-                        double[] peakAreas = null, libIntensities = null;
-                        if (nodeGroup.HasLibInfo && nodeGroup.Children.Count >= MIN_DOT_PRODUCT_TRANSITIONS)
-                        {
-                            peakAreas = new double[countTransitions];
-                            libIntensities = new double[countTransitions];
-                        }
+                        int countInfo = 0, countLibTrans = 0, countIsoTrans = 0;
                         ChromFileInfoId fileId = null;
                         int optStep = 0;
                         for (int iTran = 0; iTran < countTransitions; iTran++)
@@ -1141,10 +1203,18 @@ namespace pwiz.Skyline.Model
                             }
 
                             // Store information for correlation score
-                            if (peakAreas != null)
+                            var nodeTran = (TransitionDocNode) nodeGroup.Children[iTran];
+                            if (peakAreas != null && (!isFullScanMs || !nodeTran.IsMs1))
                             {
-                                peakAreas[iTran] = GetSafeArea(chromInfo);
-                                libIntensities[iTran] = GetSafeIntensity((TransitionDocNode)nodeGroup.Children[iTran]);
+                                peakAreas[countLibTrans] = GetSafeArea(chromInfo);
+                                libIntensities[countLibTrans] = GetSafeLibIntensity(nodeTran);
+                                countLibTrans++;
+                            }
+                            if (peakAreasMs != null && nodeTran.IsMs1)
+                            {
+                                peakAreasMs[countIsoTrans] = GetSafeArea(chromInfo);
+                                isoProportionsMs[countIsoTrans] = GetSafeEnvelopeProportion(nodeTran);
+                                countIsoTrans++;
                             }
                         }
 
@@ -1155,6 +1225,8 @@ namespace pwiz.Skyline.Model
                         // Calculate correlation score
                         if (peakAreas != null)
                             _listResultCalcs[i].SetLibInfo(fileId, optStep, peakAreas, libIntensities);
+                        if (peakAreasMs != null)
+                            _listResultCalcs[i].SetEnvelopeInfo(fileId, optStep, peakAreasMs, isoProportionsMs);
 
                         // Sort by area descending
                         Array.Sort(arrayRanked, (p1, p2) =>
@@ -1185,9 +1257,14 @@ namespace pwiz.Skyline.Model
                 return (info != null ? info.Area : -1.0f);
             }
 
-            private static float GetSafeIntensity(TransitionDocNode nodeTran)
+            private static float GetSafeLibIntensity(TransitionDocNode nodeTran)
             {
                 return (nodeTran.HasLibInfo ? nodeTran.LibInfo.Intensity : 0);
+            }
+
+            private static float GetSafeEnvelopeProportion(TransitionDocNode nodeTran)
+            {
+                return nodeTran.EnvelopeProportion ?? 0;
             }
         }
 
@@ -1259,6 +1336,13 @@ namespace pwiz.Skyline.Model
                 int iFile = IndexOfCalc(fileId, optStep);
                 Debug.Assert(iFile >= 0);   // Should have already been added
                 Calculators[iFile].SetLibInfo(peakAreas, libIntensities);
+            }
+
+            public void SetEnvelopeInfo(ChromFileInfoId fileId, int optStep, double[] peakAreas, double[] envelopeProportions)
+            {
+                int iFile = IndexOfCalc(fileId, optStep);
+                Debug.Assert(iFile >= 0);   // Should have already been added
+                Calculators[iFile].SetEnvelopeInfo(peakAreas, envelopeProportions);
             }
 
             private TransitionGroupChromInfo FindChromInfo(ChromFileInfoId fileId, int optStep)
@@ -1360,6 +1444,7 @@ namespace pwiz.Skyline.Model
             private float? BackgroundArea { get; set; }
             private int? Truncated { get; set; }
             private float? LibraryDotProduct { get; set; }
+            private float? IsotopeDotProduct { get; set; }
             private IList<float?> Ratios { get; set; }
             private IList<float?> RatioStdevs { get; set; }
             private Annotations Annotations { get; set; }
@@ -1421,6 +1506,17 @@ namespace pwiz.Skyline.Model
                 LibraryDotProduct = (float) statPeakAreas.AngleSqrt(statLibIntensities);
             }
 
+            public void SetEnvelopeInfo(double[] peakAreas, double[] envelopeProportions)
+            {
+                // Only do this once.
+                if (IsotopeDotProduct.HasValue)
+                    return;
+
+                var statPeakAreas = new Statistics(peakAreas);
+                var statEnvelopeProportions = new Statistics(envelopeProportions);
+                IsotopeDotProduct = (float)statPeakAreas.AngleSqrt(statEnvelopeProportions);
+            }
+
             public TransitionGroupChromInfo CalcChromInfo()
             {
                 if (ResultsCount == 0)
@@ -1438,6 +1534,7 @@ namespace pwiz.Skyline.Model
                                                     RatioStdevs,
                                                     Truncated,
                                                     LibraryDotProduct,
+                                                    IsotopeDotProduct,
                                                     Annotations,
                                                     UserSet);
             }
@@ -1655,8 +1752,8 @@ namespace pwiz.Skyline.Model
                     var tranMatch = nodeTran.Transition;
                     var tran = new Transition(TransitionGroup, tranMatch.IonType, tranMatch.CleavageOffset, 0, tranMatch.Charge);
                     var losses = nodeTran.Losses;
-                    // m/z and library info calculated later
-                    childrenNew.Add(new TransitionDocNode(tran, losses, 0, null));
+                    // m/z, isotope envelope and library info calculated later
+                    childrenNew.Add(new TransitionDocNode(tran, losses, 0, null, null));
                 }
                 nodeResult = (TransitionGroupDocNode)nodeResult.ChangeChildrenChecked(childrenNew);
             }

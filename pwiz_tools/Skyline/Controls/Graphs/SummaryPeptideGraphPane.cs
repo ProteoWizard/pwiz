@@ -20,6 +20,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
@@ -95,9 +96,9 @@ namespace pwiz.Skyline.Controls.Graphs
             }
 
             SrmDocument document = GraphSummary.DocumentUIContainer.DocumentUI;
-            var displayType = GraphChromatogram.DisplayType;
+            var displayType = GraphChromatogram.GetDisplayType(document);
 
-            _graphData = CreateGraphData(document, selectedGroup, selectedProtein, displayType);
+            _graphData = CreateGraphData(document, selectedProtein, selectedGroup, displayType);
 
             int iColor = 0;
             foreach (var pointPairList in _graphData.PointPairLists)
@@ -133,10 +134,8 @@ namespace pwiz.Skyline.Controls.Graphs
             UpdateAxes();
         }
 
-        protected abstract GraphData CreateGraphData(SrmDocument document,
-                                                     TransitionGroupDocNode selectedGroup,
-                                                     PeptideGroupDocNode selectedProtein,
-                                                     DisplayTypeChrom displayType);
+        protected abstract GraphData CreateGraphData(SrmDocument document, PeptideGroupDocNode selectedProtein,
+            TransitionGroupDocNode selectedGroup, DisplayTypeChrom displayType);
 
         protected virtual void UpdateAxes()
         {
@@ -244,7 +243,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 else
                 {
                     foreach (var nodeGroup in document.TransitionGroups)
-                        pointListCount = Math.Max(pointListCount, nodeGroup.Children.Count);
+                        pointListCount = Math.Max(pointListCount, GraphChromatogram.GetDisplayTransitions(nodeGroup, displayType).Count());
                 }
 
                 // Build the list of points to show.
@@ -353,15 +352,15 @@ namespace pwiz.Skyline.Controls.Graphs
                     }
                     else
                     {
+                        var nodeTrans = GraphChromatogram.GetDisplayTransitions(nodeGroup, displayType).ToArray();
                         for (int i = 0; i < pointListCount; i++)
                         {
                             var pointPairList = pointPairLists[i];
-                            if (i >= nodeGroup.Children.Count)
+                            if (i >= nodeTrans.Length)
                                 pointPairList.Add(CreatePointPairMissing(iGroup));
                             else
                             {
-                                pointPairList.Add(CreatePointPair(iGroup,
-                                                                  (TransitionDocNode) nodeGroup.Children[i], ref groupMaxY, ref groupMinY, resultIndex));
+                                pointPairList.Add(CreatePointPair(iGroup, nodeTrans[i], ref groupMaxY, ref groupMinY, resultIndex));
                             }
                         }
                     }

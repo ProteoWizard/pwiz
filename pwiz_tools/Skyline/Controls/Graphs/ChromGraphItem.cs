@@ -60,8 +60,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private readonly Dictionary<double, int> _annotatedTimes = new Dictionary<double, int>();
         private readonly int[] _arrayLabelIndexes;
-        private readonly double[] _libraryDotProducts;
+        private readonly double[] _dotProducts;
         private readonly double _bestProduct;
+        private readonly bool _isFullScanMs;
         private readonly int _step;
 
         private int _bestPeakTimeIndex = -1;
@@ -72,8 +73,9 @@ namespace pwiz.Skyline.Controls.Graphs
                               ChromatogramInfo chromatogram,
                               TransitionChromInfo tranPeakInfo,
                               bool[] annotatePeaks,
-                              double[] libraryDotProducts,
+                              double[] dotProducts,
                               double bestProduct,
+                              bool isFullScanMs,
                               int step,
                               Color color,
                               float fontSize,
@@ -89,8 +91,9 @@ namespace pwiz.Skyline.Controls.Graphs
             _fontSpec = CreateFontSpec(color, fontSize);
             _width = width;
 
-            _libraryDotProducts = libraryDotProducts;
+            _dotProducts = dotProducts;
             _bestProduct = bestProduct;
+            _isFullScanMs = isFullScanMs;
 
             _arrayLabelIndexes = new int[annotatePeaks.Length];
 
@@ -292,7 +295,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         // Best peak gets its own label to avoid curve overlap detection
                         double intensityLabel = graphPane.YAxis.Scale.ReverseTransform(yBest - 5);
-                        string label = FormatTimeLabel(timeBest, _libraryDotProducts != null ? _bestProduct : 0);
+                        string label = FormatTimeLabel(timeBest, _dotProducts != null ? _bestProduct : 0);
                         TextObj text = new TextObj(label, timeBest, intensityLabel,
                                                    CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom)
                                            {
@@ -436,19 +439,19 @@ namespace pwiz.Skyline.Controls.Graphs
                  (showRT == ShowRTChrom.threshold && Settings.Default.ShowRetentionTimesThreshold <= point.Y))
                 && _annotatedTimes.TryGetValue(point.X, out indexPeak))
             {
-                string label = FormatTimeLabel(point.X, _libraryDotProducts != null ?
-                                                                                        _libraryDotProducts[indexPeak] : 0);
+                string label = FormatTimeLabel(point.X, _dotProducts != null
+                    ? _dotProducts[indexPeak] : 0);
                 return new PointAnnotation(label, FontSpec);
             }
 
             return null;
         }
 
-        public string FormatTimeLabel(double time, double libraryProduct)
+        public string FormatTimeLabel(double time, double dotProduct)
         {
             string label = string.Format("{0:F01}", time);
-            if (libraryProduct != 0)
-                label += string.Format("\n(dotp {0:F02})", libraryProduct);
+            if (dotProduct != 0)
+                label += string.Format("\n({0} {1:F02})", _isFullScanMs ? "idotp" : "dotp", dotProduct);
             return label;
         }
 
