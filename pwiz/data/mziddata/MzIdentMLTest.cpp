@@ -54,9 +54,9 @@ void testDigestedPeptides()
     {
         // result 2 rank 1: K.QTQTFTTYSDNQPGVLIQVYEGER.A
         SpectrumIdentificationItemPtr result2_rank1 = result2->spectrumIdentificationItem[0];
-        vector<DigestedPeptide> result2_rank1_digestedPeptides = result2_rank1->digestedPeptides(*sip);
+        vector<DigestedPeptide> result2_rank1_digestedPeptides = digestedPeptides(*sip, *result2_rank1);
         unit_assert(result2_rank1_digestedPeptides.size() == 1);
-        unit_assert(result2_rank1_digestedPeptides[0] == result2_rank1->digestedPeptide(*sip, *result2_rank1->peptideEvidencePtr[0]));
+        unit_assert(result2_rank1_digestedPeptides[0] == digestedPeptide(*sip, *result2_rank1->peptideEvidencePtr[0]));
         unit_assert(result2_rank1_digestedPeptides[0].offset() == 423);
         unit_assert(result2_rank1_digestedPeptides[0].missedCleavages() == 0);
         unit_assert(result2_rank1_digestedPeptides[0].specificTermini() == 2);
@@ -67,13 +67,13 @@ void testDigestedPeptides()
 
         // result 2 rank 2: K.RNSTIPT.K
         SpectrumIdentificationItemPtr result2_rank2 = result2->spectrumIdentificationItem[1];
-        vector<DigestedPeptide> result2_rank2_digestedPeptides = result2_rank2->digestedPeptides(*sip);
+        vector<DigestedPeptide> result2_rank2_digestedPeptides = digestedPeptides(*sip, *result2_rank2);
         unit_assert(result2_rank2_digestedPeptides.size() == 2);
 
         // both PeptideEvidences have the same values
         for (int i=0; i < 2; ++i)
         {
-            unit_assert(result2_rank2_digestedPeptides[i] == result2_rank2->digestedPeptide(*sip, *result2_rank2->peptideEvidencePtr[i]));
+            unit_assert(result2_rank2_digestedPeptides[i] == digestedPeptide(*sip, *result2_rank2->peptideEvidencePtr[i]));
             unit_assert(result2_rank2_digestedPeptides[i].offset() == 415);
             unit_assert(result2_rank2_digestedPeptides[i].missedCleavages() == 1);
             unit_assert(result2_rank2_digestedPeptides[i].specificTermini() == 1);
@@ -90,9 +90,9 @@ void testDigestedPeptides()
     {
         // result 2 rank 1: K.QTQTFTTYSDNQPGVLIQVYEGER.A
         SpectrumIdentificationItemPtr result2_rank1 = result2->spectrumIdentificationItem[0];
-        vector<DigestedPeptide> result2_rank1_digestedPeptides = result2_rank1->digestedPeptides(*sip);
+        vector<DigestedPeptide> result2_rank1_digestedPeptides = digestedPeptides(*sip, *result2_rank1);
         unit_assert(result2_rank1_digestedPeptides.size() == 1);
-        unit_assert(result2_rank1_digestedPeptides[0] == result2_rank1->digestedPeptide(*sip, *result2_rank1->peptideEvidencePtr[0]));
+        unit_assert(result2_rank1_digestedPeptides[0] == digestedPeptide(*sip, *result2_rank1->peptideEvidencePtr[0]));
         unit_assert(result2_rank1_digestedPeptides[0].missedCleavages() == 0);
         unit_assert(result2_rank1_digestedPeptides[0].specificTermini() == 1);
         unit_assert(result2_rank1_digestedPeptides[0].NTerminusIsSpecific());
@@ -100,13 +100,13 @@ void testDigestedPeptides()
 
         // result 2 rank 2: K.RNSTIPT.K
         SpectrumIdentificationItemPtr result2_rank2 = result2->spectrumIdentificationItem[1];
-        vector<DigestedPeptide> result2_rank2_digestedPeptides = result2_rank2->digestedPeptides(*sip);
+        vector<DigestedPeptide> result2_rank2_digestedPeptides = digestedPeptides(*sip, *result2_rank2);
         unit_assert(result2_rank2_digestedPeptides.size() == 2);
 
         // both PeptideEvidences have the same values
         for (int i=0; i < 2; ++i)
         {
-            unit_assert(result2_rank2_digestedPeptides[i] == result2_rank2->digestedPeptide(*sip, *result2_rank2->peptideEvidencePtr[i]));
+            unit_assert(result2_rank2_digestedPeptides[i] == digestedPeptide(*sip, *result2_rank2->peptideEvidencePtr[i]));
             unit_assert(result2_rank2_digestedPeptides[i].missedCleavages() == 0);
             unit_assert(result2_rank2_digestedPeptides[i].specificTermini() == 1);
             unit_assert(result2_rank2_digestedPeptides[i].NTerminusIsSpecific());
@@ -120,9 +120,9 @@ void testDigestedPeptides()
     {
         // result 2 rank 1: K.QTQTFTTYSDNQPGVLIQVYEGER.A
         SpectrumIdentificationItemPtr result2_rank1 = result2->spectrumIdentificationItem[0];
-        vector<DigestedPeptide> result2_rank1_digestedPeptides = result2_rank1->digestedPeptides(*sip);
+        vector<DigestedPeptide> result2_rank1_digestedPeptides = digestedPeptides(*sip, *result2_rank1);
         unit_assert(result2_rank1_digestedPeptides.size() == 1);
-        unit_assert(result2_rank1_digestedPeptides[0] == result2_rank1->digestedPeptide(*sip, *result2_rank1->peptideEvidencePtr[0]));
+        unit_assert(result2_rank1_digestedPeptides[0] == digestedPeptide(*sip, *result2_rank1->peptideEvidencePtr[0]));
         unit_assert(result2_rank1_digestedPeptides[0].missedCleavages() == 0);
         unit_assert(result2_rank1_digestedPeptides[0].specificTermini() == 0);
         unit_assert(!result2_rank1_digestedPeptides[0].NTerminusIsSpecific());
@@ -130,13 +130,13 @@ void testDigestedPeptides()
 
         // result 2 rank 2: K.RNSTIPT.K
         SpectrumIdentificationItemPtr result2_rank2 = result2->spectrumIdentificationItem[1];
-        vector<DigestedPeptide> result2_rank2_digestedPeptides = result2_rank2->digestedPeptides(*sip);
+        vector<DigestedPeptide> result2_rank2_digestedPeptides = digestedPeptides(*sip, *result2_rank2);
         unit_assert(result2_rank2_digestedPeptides.size() == 2);
 
         // both PeptideEvidences have the same values
         for (int i=0; i < 2; ++i)
         {
-            unit_assert(result2_rank2_digestedPeptides[i] == result2_rank2->digestedPeptide(*sip, *result2_rank2->peptideEvidencePtr[i]));
+            unit_assert(result2_rank2_digestedPeptides[i] == digestedPeptide(*sip, *result2_rank2->peptideEvidencePtr[i]));
             unit_assert(result2_rank2_digestedPeptides[i].missedCleavages() == 0);
             unit_assert(result2_rank2_digestedPeptides[i].specificTermini() == 1);
             unit_assert(!result2_rank2_digestedPeptides[i].NTerminusIsSpecific());
@@ -151,11 +151,11 @@ void testDigestedPeptides()
 
         // move it to the C terminus
         result2_rank1->peptideEvidencePtr[0]->start = 618;
-        result2_rank1->peptideEvidencePtr[0]->post = "-";
+        result2_rank1->peptideEvidencePtr[0]->post = '-';
 
-        vector<DigestedPeptide> result2_rank1_digestedPeptides = result2_rank1->digestedPeptides(*sip);
+        vector<DigestedPeptide> result2_rank1_digestedPeptides = digestedPeptides(*sip, *result2_rank1);
         unit_assert(result2_rank1_digestedPeptides.size() == 1);
-        unit_assert(result2_rank1_digestedPeptides[0] == result2_rank1->digestedPeptide(*sip, *result2_rank1->peptideEvidencePtr[0]));
+        unit_assert(result2_rank1_digestedPeptides[0] == digestedPeptide(*sip, *result2_rank1->peptideEvidencePtr[0]));
         unit_assert(result2_rank1_digestedPeptides[0].offset() == 617);
         unit_assert(result2_rank1_digestedPeptides[0].missedCleavages() == 0);
         unit_assert(result2_rank1_digestedPeptides[0].specificTermini() == 1);
@@ -166,12 +166,12 @@ void testDigestedPeptides()
 
         // move it to the N terminus
         result2_rank1->peptideEvidencePtr[0]->start = 1;
-        result2_rank1->peptideEvidencePtr[0]->pre = "-";
-        result2_rank1->peptideEvidencePtr[0]->post = "A";
+        result2_rank1->peptideEvidencePtr[0]->pre = '-';
+        result2_rank1->peptideEvidencePtr[0]->post = 'A';
 
-        result2_rank1_digestedPeptides = result2_rank1->digestedPeptides(*sip);
+        result2_rank1_digestedPeptides = digestedPeptides(*sip, *result2_rank1);
         unit_assert(result2_rank1_digestedPeptides.size() == 1);
-        unit_assert(result2_rank1_digestedPeptides[0] == result2_rank1->digestedPeptide(*sip, *result2_rank1->peptideEvidencePtr[0]));
+        unit_assert(result2_rank1_digestedPeptides[0] == digestedPeptide(*sip, *result2_rank1->peptideEvidencePtr[0]));
         unit_assert(result2_rank1_digestedPeptides[0].offset() == 0);
         unit_assert(result2_rank1_digestedPeptides[0].missedCleavages() == 0);
         unit_assert(result2_rank1_digestedPeptides[0].specificTermini() == 1);
@@ -199,14 +199,14 @@ void testDigestedPeptides()
         SpectrumIdentificationItemPtr result2_rank1 = result2->spectrumIdentificationItem[0];
 
         // reassign the original prefix residue
-        result2_rank1->peptideEvidencePtr[0]->pre = "K";
+        result2_rank1->peptideEvidencePtr[0]->pre = 'K';
 
         // there are two semi-specific peptides, one cut by Lys-C and the other cut by Arg-C;
         // only the first one will be returned because they have the same "best specificity"
 
-        vector<DigestedPeptide> result2_rank1_digestedPeptides = result2_rank1->digestedPeptides(*sip);
+        vector<DigestedPeptide> result2_rank1_digestedPeptides = digestedPeptides(*sip, *result2_rank1);
         unit_assert(result2_rank1_digestedPeptides.size() == 1);
-        unit_assert(result2_rank1_digestedPeptides[0] == result2_rank1->digestedPeptide(*sip, *result2_rank1->peptideEvidencePtr[0]));
+        unit_assert(result2_rank1_digestedPeptides[0] == digestedPeptide(*sip, *result2_rank1->peptideEvidencePtr[0]));
         unit_assert(result2_rank1_digestedPeptides[0].missedCleavages() == 0);
         unit_assert(result2_rank1_digestedPeptides[0].specificTermini() == 1);
         unit_assert(result2_rank1_digestedPeptides[0].NTerminusIsSpecific());
@@ -221,9 +221,9 @@ void testDigestedPeptides()
         SpectrumIdentificationItemPtr result2_rank1 = result2->spectrumIdentificationItem[0];
 
         // both termini are specific now, one cut from each enzyme
-        vector<DigestedPeptide> result2_rank1_digestedPeptides = result2_rank1->digestedPeptides(*sip);
+        vector<DigestedPeptide> result2_rank1_digestedPeptides = digestedPeptides(*sip, *result2_rank1);
         unit_assert(result2_rank1_digestedPeptides.size() == 1);
-        unit_assert(result2_rank1_digestedPeptides[0] == result2_rank1->digestedPeptide(*sip, *result2_rank1->peptideEvidencePtr[0]));
+        unit_assert(result2_rank1_digestedPeptides[0] == digestedPeptide(*sip, *result2_rank1->peptideEvidencePtr[0]));
         unit_assert(result2_rank1_digestedPeptides[0].missedCleavages() == 0);
         unit_assert(result2_rank1_digestedPeptides[0].specificTermini() == 2);
         unit_assert(result2_rank1_digestedPeptides[0].NTerminusIsSpecific());

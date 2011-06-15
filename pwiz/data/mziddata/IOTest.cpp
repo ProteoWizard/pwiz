@@ -258,7 +258,8 @@ void testModification()
 
     a.location = 1;
     a.avgMassDelta = 1.001001;
-    a.residues = "sos";
+    a.residues.push_back('A');
+    a.residues.push_back('C');
     a.monoisotopicMassDelta = 100.1001;
 
     a.set(UNIMOD_Gln__pyro_Glu);
@@ -271,8 +272,8 @@ void testSubstitutionModification()
 {
     SubstitutionModification a;
 
-    a.originalResidue = "abc";
-    a.replacementResidue = "def";
+    a.originalResidue = 'L';
+    a.replacementResidue = 'V';
     a.location = 1;
     a.avgMassDelta = 2.;
     a.monoisotopicMassDelta = 3.;
@@ -288,10 +289,14 @@ void testPeptide()
     a.id = "id";
     a.name = "name";
     a.peptideSequence = "abc";
-    ModificationPtr mod(new Modification());
+
+    ModificationPtr mod(new Modification);
     mod->location = 1;
     a.modification.push_back(mod);
-    a.substitutionModification.location = 2;
+
+    SubstitutionModificationPtr sub(new SubstitutionModification);
+    sub->location = 2;
+    a.substitutionModification.push_back(sub);
     
     a.set(MS_peptide);
 
@@ -367,7 +372,8 @@ void testSearchModification()
 
     a.fixedMod = true;
     a.massDelta = 3.14;
-    a.residues = "Q";
+    a.residues.push_back('Q');
+    a.residues.push_back('E');
     a.set(UNIMOD_Gln__pyro_Glu);
     a.specificityRules.cvid = MS_modification_specificity_N_term;
 
@@ -415,8 +421,8 @@ void testResidue()
 
     Residue a;
 
-    a.Code = "abc";
-    a.Mass = 2;
+    a.code = 'A';
+    a.mass = 2;
 
     testObject(a);
 }
@@ -428,8 +434,8 @@ void testAmbiguousResidue()
 
     AmbiguousResidue a;
 
-    a.Code = "B";
-    a.set(MS_alternate_single_letter_codes);
+    a.code = 'B';
+    a.set(MS_alternate_single_letter_codes, "D N");
 
     testObject(a);
 }
@@ -443,11 +449,11 @@ void testMassTable()
     a.msLevel = "1";
 
     ResiduePtr b(new Residue());
-    b->Code = "B";
+    b->code = 'B';
     a.residues.push_back(b);
     
     AmbiguousResiduePtr c(new AmbiguousResidue());
-    c->Code = "C";
+    c->code = 'C';
     a.ambiguousResidue.push_back(c);
 
     testObject(a);
@@ -643,8 +649,8 @@ void testPeptideEvidence()
     a.dbSequencePtr = DBSequencePtr(new DBSequence("dbs_ref"));
     a.start = 1;
     a.end = 2;
-    a.pre = "PRE";
-    a.post = "POST";
+    a.pre = 'A';
+    a.post = 'C';
     a.translationTablePtr = TranslationTablePtr(new TranslationTable("tranny_ref"));
     a.frame = 3;
     a.isDecoy = true;

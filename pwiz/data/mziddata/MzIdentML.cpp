@@ -24,6 +24,9 @@
 
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
+#include "pwiz/utility/chemistry/Ion.hpp"
+#include "pwiz/utility/chemistry/MZTolerance.hpp"
+#include "pwiz/data/common/Unimod.hpp"
 #include "MzIdentML.hpp"
 #include "boost/regex.hpp"
 
@@ -36,6 +39,7 @@ using namespace boost::logic;
 using namespace boost::gregorian;
 using namespace pwiz::cv;
 using namespace pwiz::data;
+using namespace pwiz::chemistry;
 
 
 PWIZ_API_DECL vector<CV> defaultCVList()
@@ -281,187 +285,6 @@ PWIZ_API_DECL bool SpectrumIdentificationItem::empty() const
            fragmentation.empty();
 }
 
-PWIZ_API_DECL proteome::DigestedPeptide SpectrumIdentificationItem::digestedPeptide(const SpectrumIdentificationProtocol& sip, const PeptideEvidence& peptideEvidence) const
-{
-    using namespace proteome;
-
-    if (!peptidePtr.get() || peptidePtr->empty())
-        throw runtime_error("[SpectrumIdentificationItem::digestedPeptide] null or empty Peptide reference");
-    if (peptideEvidence.empty())
-        throw runtime_error("[SpectrumIdentificationItem::digestedPeptide] null or empty PeptideEvidence element");
-
-    const Peptide& peptide = *peptidePtr;
-
-    vector<boost::regex> cleavageAgentRegexes;
-    BOOST_FOREACH(const EnzymePtr& enzymePtr, sip.enzymes.enzymes)
-    {
-        const Enzyme& enzyme = *enzymePtr;
-        string regex = enzyme.siteRegexp;
-        if (regex.empty())
-        {
-            CVParam enzymeTerm = enzyme.enzymeName.cvParamChild(MS_cleavage_agent_name);
-
-            if (enzymeTerm.empty())
-                enzymeTerm = CVParam(Digestion::getCleavageAgentByName(enzyme.enzymeName.userParams[0].name));
-
-            try {regex = Digestion::getCleavageAgentRegex(enzymeTerm.cvid);} catch (...) {}
-        }
-
-        if (!regex.empty())
-            cleavageAgentRegexes.push_back(boost::regex(regex));
-    }
-
-    if (cleavageAgentRegexes.empty())
-        throw runtime_error("[SpectrumIdentificationItem::digestedPeptide] unknown cleavage agent");
-
-    const PeptideEvidence& pe = peptideEvidence;
-
-    if (pe.pre.empty() || pe.pre == "?" || pe.post.empty() || pe.post == "?")
-        throw runtime_error("[SpectrumIdentificationItem::digestedPeptide] invalid pre/post on PeptideEvidence element");
-
-    string peptideSequenceInContext = peptide.peptideSequence;
-    if (pe.pre != "-") peptideSequenceInContext = pe.pre + peptideSequenceInContext;
-    if (pe.post != "-") peptideSequenceInContext += pe.post;
-
-    int nTerminusIsSpecific = pe.pre == "-" ? 1 : 0;
-    int cTerminusIsSpecific = pe.post == "-" ? 1 : 0;
-
-    int bestSpecificity = -1;
-    boost::shared_ptr<DigestedPeptide> bestResult;
-
-    BOOST_FOREACH(const boost::regex& regex, cleavageAgentRegexes)
-    {
-        Digestion::Config config;
-        config.minimumSpecificity = Digestion::NonSpecific;
-        Digestion peptideInContext(peptideSequenceInContext, regex, config);
-
-        // if enzymes are independent, both termini of a peptide must be cleaved by the same enzyme
-        if (sip.enzymes.independent)
-        {
-            nTerminusIsSpecific = pe.pre == "-" ? 1 : 0;
-            cTerminusIsSpecific = pe.post == "-" ? 1 : 0;
-        }
-
-        try
-        {
-            DigestedPeptide result = peptideInContext.find_first(peptide.peptideSequence);
-            nTerminusIsSpecific |= result.NTerminusIsSpecific() ? 1 : 0;
-            cTerminusIsSpecific |= result.CTerminusIsSpecific() ? 1 : 0;
-
-            if (nTerminusIsSpecific + cTerminusIsSpecific > bestSpecificity)
-            {
-                bestSpecificity = nTerminusIsSpecific + cTerminusIsSpecific;
-                bestResult.reset(new DigestedPeptide(result,
-                                                     pe.start-1, // offset is 0-based
-                                                     result.missedCleavages(),
-                                                     nTerminusIsSpecific == 1,
-                                                     cTerminusIsSpecific == 1,
-                                                     pe.pre,
-                                                     pe.post));
-            }
-        }
-        catch (runtime_error&)
-        {}
-    }
-
-    if (!bestResult.get())
-        throw runtime_error("[SpectrumIdentificationItem::digestedPeptide] invalid PeptideEvidence element");
-    return *bestResult;
-}
-
-PWIZ_API_DECL vector<proteome::DigestedPeptide> SpectrumIdentificationItem::digestedPeptides(const SpectrumIdentificationProtocol& sip) const
-{
-    using namespace proteome;
-
-    if (!peptidePtr.get() || peptidePtr->empty())
-        throw runtime_error("[SpectrumIdentificationItem::digestedPeptides] null or empty Peptide reference");
-    if (peptideEvidencePtr.empty())
-        throw runtime_error("[SpectrumIdentificationItem::digestedPeptides] no PeptideEvidence elements");
-
-    const Peptide& peptide = *peptidePtr;
-
-    vector<boost::regex> cleavageAgentRegexes;
-    BOOST_FOREACH(const EnzymePtr& enzymePtr, sip.enzymes.enzymes)
-    {
-        const Enzyme& enzyme = *enzymePtr;
-        string regex = enzyme.siteRegexp;
-        if (regex.empty())
-        {
-            CVParam enzymeTerm = enzyme.enzymeName.cvParamChild(MS_cleavage_agent_name);
-
-            if (enzymeTerm.empty())
-                enzymeTerm = CVParam(Digestion::getCleavageAgentByName(enzyme.enzymeName.userParams[0].name));
-
-            try {regex = Digestion::getCleavageAgentRegex(enzymeTerm.cvid);} catch (...) {}
-        }
-
-        if (!regex.empty())
-            cleavageAgentRegexes.push_back(boost::regex(regex));
-    }
-
-    if (cleavageAgentRegexes.empty())
-        throw runtime_error("[SpectrumIdentificationItem::digestedPeptide] unknown cleavage agent");
-
-    vector<proteome::DigestedPeptide> results;
-
-    BOOST_FOREACH(const PeptideEvidencePtr& pePtr, peptideEvidencePtr)
-    {
-        const PeptideEvidence& pe = *pePtr;
-
-        if (pe.pre.empty() || pe.pre == "?" || pe.post.empty() || pe.post == "?")
-            continue;
-
-        string peptideSequenceInContext = peptide.peptideSequence;
-        if (pe.pre != "-") peptideSequenceInContext = pe.pre + peptideSequenceInContext;
-        if (pe.post != "-") peptideSequenceInContext += pe.post;
-
-        int nTerminusIsSpecific = pe.pre == "-" ? 1 : 0;
-        int cTerminusIsSpecific = pe.post == "-" ? 1 : 0;
-
-        int bestSpecificity = -1;
-        boost::shared_ptr<DigestedPeptide> bestResult;
-
-        BOOST_FOREACH(const boost::regex& regex, cleavageAgentRegexes)
-        {
-            Digestion::Config config;
-            config.minimumSpecificity = Digestion::NonSpecific;
-            Digestion peptideInContext(peptideSequenceInContext, regex, config);
-
-            // if enzymes are independent, both termini of a peptide must be cleaved by the same enzyme
-            if (sip.enzymes.independent)
-            {
-                nTerminusIsSpecific = pe.pre == "-" ? 1 : 0;
-                cTerminusIsSpecific = pe.post == "-" ? 1 : 0;
-            }
-
-            try
-            {
-                DigestedPeptide result = peptideInContext.find_first(peptide.peptideSequence);
-                nTerminusIsSpecific |= result.NTerminusIsSpecific() ? 1 : 0;
-                cTerminusIsSpecific |= result.CTerminusIsSpecific() ? 1 : 0;
-
-                if (nTerminusIsSpecific + cTerminusIsSpecific > bestSpecificity)
-                {
-                    bestSpecificity = nTerminusIsSpecific + cTerminusIsSpecific;
-                    bestResult.reset(new DigestedPeptide(result,
-                                                         pe.start-1, // offset is 0-based
-                                                         result.missedCleavages(),
-                                                         nTerminusIsSpecific == 1,
-                                                         cTerminusIsSpecific == 1,
-                                                         pe.pre,
-                                                         pe.post));
-                }
-            }
-            catch (runtime_error&)
-            {}
-        }
-
-        if (bestResult.get())
-            results.push_back(*bestResult);
-    }
-    return results;
-}
-
 
 //
 // SpectrumIdentificationResult
@@ -628,6 +451,7 @@ PWIZ_API_DECL PeptideEvidence::PeptideEvidence(const string& id,
                                                const string& name)
     : IdentifiableParamContainer(id, name),
       start(0), end(0),
+      pre(0), post(0),
       frame(0), isDecoy(false)
 {
 }
@@ -640,8 +464,8 @@ PWIZ_API_DECL bool PeptideEvidence::empty() const
            (!dbSequencePtr.get() || dbSequencePtr->empty()) &&
            start == 0 &&
            end == 0 &&
-           pre.empty() &&
-           post.empty() &&
+           pre == 0 &&
+           post == 0 &&
            (!translationTablePtr.get() || translationTablePtr->empty()) &&
            frame == 0 &&
            isDecoy == false;
@@ -682,44 +506,10 @@ PWIZ_API_DECL TranslationTable::TranslationTable(const std::string& id,
 {
 }
 
-PWIZ_API_DECL bool TranslationTable::empty() const
-{
-    return IdentifiableParamContainer::empty();
-}
-
 
 //
 // DatabaseTranslation
 //
-
-PWIZ_API_DECL DatabaseTranslation& DatabaseTranslation::setFrames(const std::string& values)
-{
-    istringstream iss(values);
-
-    this->frames.clear();
-    copy(istream_iterator<double>(iss), istream_iterator<double>(), back_inserter(this->frames));
-
-    return *this;
-}
-
-PWIZ_API_DECL DatabaseTranslation& DatabaseTranslation::setFrames(const std::vector<int>& values)
-{
-    this->frames.clear();
-    copy(values.begin(), values.end(), back_inserter(this->frames));
-    
-    return *this;
-}
-
-
-PWIZ_API_DECL string DatabaseTranslation::getFrames() const
-{
-    ostringstream oss;
-    copy(frames.begin(), frames.end(), ostream_iterator<double>(oss, " "));
-
-    return oss.str();
-
-}
-
 
 PWIZ_API_DECL bool DatabaseTranslation::empty() const
 {
@@ -733,23 +523,30 @@ PWIZ_API_DECL bool DatabaseTranslation::empty() const
 //
 
 PWIZ_API_DECL Residue::Residue() :
-    Mass(0)
+    code(0),
+    mass(0)
 {
 }
 
 PWIZ_API_DECL bool Residue::empty() const
 {
-    return Code.empty() &&
-           Mass == 0;
+    return code == 0 &&
+           mass == 0;
 }
+
 
 //
 // AmbiguousResidue
 //
 
+PWIZ_API_DECL AmbiguousResidue::AmbiguousResidue() :
+    code(0)
+{
+}
+
 PWIZ_API_DECL bool AmbiguousResidue::empty() const
 {
-    return Code.empty() &&
+    return code == 0 &&
            ParamContainer::empty();
 }
 
@@ -811,37 +608,6 @@ PWIZ_API_DECL string FragmentArray::getValues() const
 
 
 //
-// IonType
-//
-
-PWIZ_API_DECL IonType& IonType::setIndex(const string& value)
-{
-    istringstream iss(value);
-
-    index.clear();
-    copy(istream_iterator<double>(iss), istream_iterator<double>(), back_inserter(index));
-
-    return *this;
-}
-
-PWIZ_API_DECL IonType& IonType::setIndex(const vector<int>& value)
-{
-    index.clear();
-    copy(value.begin(), value.end(), back_inserter(index));
-    
-    return *this;
-}
-
-PWIZ_API_DECL string IonType::getIndex() const
-{
-    ostringstream oss;
-    copy(index.begin(), index.end(), ostream_iterator<int>(oss, " "));
-
-    return oss.str();
-}
-
-
-//
 // Measure
 //
 
@@ -879,6 +645,8 @@ PWIZ_API_DECL bool Sample::empty() const
 //
 
 PWIZ_API_DECL SubstitutionModification::SubstitutionModification() :
+    originalResidue(0),
+    replacementResidue(0),
     location(0),
     avgMassDelta(0),
     monoisotopicMassDelta(0)
@@ -888,8 +656,8 @@ PWIZ_API_DECL SubstitutionModification::SubstitutionModification() :
 
 PWIZ_API_DECL bool SubstitutionModification::empty() const
 {
-    return originalResidue.empty() &&
-           replacementResidue.empty() &&
+    return originalResidue == 0 &&
+           replacementResidue == 0 &&
            location == 0 &&
            avgMassDelta == 0 &&
            monoisotopicMassDelta == 0;
@@ -1176,6 +944,294 @@ PWIZ_API_DECL const string& MzIdentML::version() const
 {
     return version_;
 }
+
+
+namespace {
+
+bool hasValidFlankingSymbols(const PeptideEvidence& pe)
+{
+    return ((pe.pre >= 'A' && pe.pre <= 'Z') || pe.pre == '-') &&
+           ((pe.post >= 'A' && pe.post <= 'Z') || pe.post == '-');
+}
+
+} // namespace
+
+
+PWIZ_API_DECL proteome::DigestedPeptide digestedPeptide(const SpectrumIdentificationProtocol& sip, const PeptideEvidence& pe)
+{
+    using namespace proteome;
+
+    if (pe.empty())
+        throw runtime_error("[mziddata::digestedPeptide] null or empty PeptideEvidence element");
+    if (!pe.peptidePtr.get() || pe.peptidePtr->empty())
+        throw runtime_error("[mziddata::digestedPeptide] null or empty Peptide reference");
+
+    const Peptide& peptide = *pe.peptidePtr;
+
+    vector<boost::regex> cleavageAgentRegexes;
+    BOOST_FOREACH(const EnzymePtr& enzymePtr, sip.enzymes.enzymes)
+    {
+        const Enzyme& enzyme = *enzymePtr;
+        string regex = enzyme.siteRegexp;
+        if (regex.empty())
+        {
+            CVParam enzymeTerm = enzyme.enzymeName.cvParamChild(MS_cleavage_agent_name);
+
+            if (enzymeTerm.empty())
+                enzymeTerm = CVParam(Digestion::getCleavageAgentByName(enzyme.enzymeName.userParams[0].name));
+
+            try {regex = Digestion::getCleavageAgentRegex(enzymeTerm.cvid);} catch (...) {}
+        }
+
+        if (!regex.empty())
+            cleavageAgentRegexes.push_back(boost::regex(regex));
+    }
+
+    if (cleavageAgentRegexes.empty())
+        throw runtime_error("[mziddata::digestedPeptide] unknown cleavage agent");
+
+    if (!hasValidFlankingSymbols(pe))
+        throw runtime_error("[mziddata::digestedPeptide] invalid pre/post on PeptideEvidence element");
+
+    string peptideSequenceInContext = peptide.peptideSequence;
+    if (pe.pre != '-') peptideSequenceInContext = pe.pre + peptideSequenceInContext;
+    if (pe.post != '-') peptideSequenceInContext += pe.post;
+
+    int nTerminusIsSpecific = pe.pre == '-' ? 1 : 0;
+    int cTerminusIsSpecific = pe.post == '-' ? 1 : 0;
+
+    int bestSpecificity = -1;
+    boost::shared_ptr<DigestedPeptide> bestResult;
+
+    BOOST_FOREACH(const boost::regex& regex, cleavageAgentRegexes)
+    {
+        Digestion::Config config;
+        config.minimumSpecificity = Digestion::NonSpecific;
+        Digestion peptideInContext(peptideSequenceInContext, regex, config);
+
+        // if enzymes are independent, both termini of a peptide must be cleaved by the same enzyme
+        if (sip.enzymes.independent)
+        {
+            nTerminusIsSpecific = pe.pre == '-' ? 1 : 0;
+            cTerminusIsSpecific = pe.post == '-' ? 1 : 0;
+        }
+
+        try
+        {
+            DigestedPeptide result = peptideInContext.find_first(peptide.peptideSequence);
+            nTerminusIsSpecific |= result.NTerminusIsSpecific() ? 1 : 0;
+            cTerminusIsSpecific |= result.CTerminusIsSpecific() ? 1 : 0;
+
+            if (nTerminusIsSpecific + cTerminusIsSpecific > bestSpecificity)
+            {
+                bestSpecificity = nTerminusIsSpecific + cTerminusIsSpecific;
+                bestResult.reset(new DigestedPeptide(result,
+                                                     pe.start-1, // offset is 0-based
+                                                     result.missedCleavages(),
+                                                     nTerminusIsSpecific == 1,
+                                                     cTerminusIsSpecific == 1,
+                                                     string(1, pe.pre),
+                                                     string(1, pe.post)));
+            }
+        }
+        catch (runtime_error&)
+        {}
+    }
+
+    if (!bestResult.get())
+        throw runtime_error("[mziddata::digestedPeptide] invalid PeptideEvidence element");
+    return *bestResult;
+}
+
+PWIZ_API_DECL vector<proteome::DigestedPeptide> digestedPeptides(const SpectrumIdentificationProtocol& sip, const SpectrumIdentificationItem& sii)
+{
+    using namespace proteome;
+
+    if (!sii.peptidePtr.get() || sii.peptidePtr->empty())
+        throw runtime_error("[mziddata::digestedPeptides] null or empty Peptide reference");
+    if (sii.peptideEvidencePtr.empty())
+        throw runtime_error("[mziddata::digestedPeptides] no PeptideEvidence elements");
+
+    const Peptide& peptide = *sii.peptidePtr;
+
+    vector<boost::regex> cleavageAgentRegexes;
+    BOOST_FOREACH(const EnzymePtr& enzymePtr, sip.enzymes.enzymes)
+    {
+        const Enzyme& enzyme = *enzymePtr;
+        string regex = enzyme.siteRegexp;
+        if (regex.empty())
+        {
+            CVParam enzymeTerm = enzyme.enzymeName.cvParamChild(MS_cleavage_agent_name);
+
+            if (enzymeTerm.empty())
+                enzymeTerm = CVParam(Digestion::getCleavageAgentByName(enzyme.enzymeName.userParams[0].name));
+
+            try {regex = Digestion::getCleavageAgentRegex(enzymeTerm.cvid);} catch (...) {}
+        }
+
+        if (!regex.empty())
+            cleavageAgentRegexes.push_back(boost::regex(regex));
+    }
+
+    if (cleavageAgentRegexes.empty())
+        throw runtime_error("[mziddata::digestedPeptides] unknown cleavage agent");
+
+    vector<proteome::DigestedPeptide> results;
+
+    BOOST_FOREACH(const PeptideEvidencePtr& pePtr, sii.peptideEvidencePtr)
+    {
+        const PeptideEvidence& pe = *pePtr;
+
+        if (!hasValidFlankingSymbols(pe))
+            continue;
+
+        string peptideSequenceInContext = peptide.peptideSequence;
+        if (pe.pre != '-') peptideSequenceInContext = pe.pre + peptideSequenceInContext;
+        if (pe.post != '-') peptideSequenceInContext += pe.post;
+
+        int nTerminusIsSpecific = pe.pre == '-' ? 1 : 0;
+        int cTerminusIsSpecific = pe.post == '-' ? 1 : 0;
+
+        int bestSpecificity = -1;
+        boost::shared_ptr<DigestedPeptide> bestResult;
+
+        BOOST_FOREACH(const boost::regex& regex, cleavageAgentRegexes)
+        {
+            Digestion::Config config;
+            config.minimumSpecificity = Digestion::NonSpecific;
+            Digestion peptideInContext(peptideSequenceInContext, regex, config);
+
+            // if enzymes are independent, both termini of a peptide must be cleaved by the same enzyme
+            if (sip.enzymes.independent)
+            {
+                nTerminusIsSpecific = pe.pre == '-' ? 1 : 0;
+                cTerminusIsSpecific = pe.post == '-' ? 1 : 0;
+            }
+
+            try
+            {
+                DigestedPeptide result = peptideInContext.find_first(peptide.peptideSequence);
+                nTerminusIsSpecific |= result.NTerminusIsSpecific() ? 1 : 0;
+                cTerminusIsSpecific |= result.CTerminusIsSpecific() ? 1 : 0;
+
+                if (nTerminusIsSpecific + cTerminusIsSpecific > bestSpecificity)
+                {
+                    bestSpecificity = nTerminusIsSpecific + cTerminusIsSpecific;
+                    bestResult.reset(new DigestedPeptide(result,
+                                                         pe.start-1, // offset is 0-based
+                                                         result.missedCleavages(),
+                                                         nTerminusIsSpecific == 1,
+                                                         cTerminusIsSpecific == 1,
+                                                         string(1, pe.pre),
+                                                         string(1, pe.post)));
+                }
+            }
+            catch (runtime_error&)
+            {}
+        }
+
+        if (bestResult.get())
+            results.push_back(*bestResult);
+    }
+    return results;
+}
+
+void snapModificationsToUnimod(const SpectrumIdentification& si)
+{
+    const SpectrumIdentificationProtocol& sip = *si.spectrumIdentificationProtocolPtr;
+
+    // TODO: what about asymmetric tolerances?
+    CVParam precursorToleranceParam = sip.parentTolerance.cvParam(MS_search_tolerance_plus_value);
+    MZTolerance precursorTolerance(precursorToleranceParam.valueAs<double>());
+    if (precursorToleranceParam.units == UO_parts_per_million)
+        precursorTolerance.units = MZTolerance::PPM;
+
+    BOOST_FOREACH(const SearchModificationPtr& modPtr, sip.modificationParams)
+    {
+        SearchModification& mod = *modPtr;
+        vector<char> residues = mod.residues;
+        if (residues.empty()) residues.push_back('x');
+        
+        mod.cvParams.clear();
+        BOOST_FOREACH(char residue, residues)
+        {
+            vector<unimod::Modification> possibleMods = unimod::modifications(mod.massDelta,
+                                                                              0.5,
+                                                                              boost::logic::indeterminate,
+                                                                              boost::logic::indeterminate,
+                                                                              unimod::site(residue),
+                                                                              unimod::position(mod.specificityRules.cvid));
+
+            BOOST_FOREACH(const unimod::Modification& possibleMod, possibleMods)
+            {
+                // skip AA substitutions
+                if (possibleMod.specificities[0].classification == unimod::Classification::Substitution)
+                    continue;
+                mod.set(possibleMod.cvid);
+            }
+        }
+        if (mod.cvParams.empty())
+            mod.set(MS_unknown_modification);
+    }
+
+    if (!si.spectrumIdentificationListPtr.get())
+        return;
+
+    const SpectrumIdentificationList& sil = *si.spectrumIdentificationListPtr;
+
+    set<PeptidePtr> snappedPeptides;
+    BOOST_FOREACH(const SpectrumIdentificationResultPtr& sir, sil.spectrumIdentificationResult)
+    BOOST_FOREACH(const SpectrumIdentificationItemPtr& sii, sir->spectrumIdentificationItem)
+    {
+        if (!sii->peptidePtr.get())
+            throw runtime_error("[mziddata::snapModificationsToUnimod] NULL PeptidePtr in " + sii->id);
+
+        // skip the peptide if it's already been processed
+        pair<set<PeptidePtr>::iterator, bool> insertResult = snappedPeptides.insert(sii->peptidePtr);
+        if (!insertResult.second)
+            continue;
+
+        Peptide& peptide = *sii->peptidePtr;
+        double precursorMass = Ion::neutralMass(sii->calculatedMassToCharge, sii->chargeState);
+        double precursorAbsoluteTolerance = precursorMass - (precursorMass - precursorTolerance);
+
+        BOOST_FOREACH(const ModificationPtr& modPtr, peptide.modification)
+        {
+            Modification& mod = *modPtr;
+            vector<char> residues = mod.residues;
+            if (residues.empty())
+            {
+                if (mod.location == 0)
+                    residues.push_back('n');
+                else if (mod.location == (int) peptide.peptideSequence.length()+1)
+                    residues.push_back('c');
+                else
+                    throw runtime_error("[mziddata::snapModificationsToUnimod] no residues specified for a non-terminal modification");
+            }
+
+            mod.cvParams.clear();
+            BOOST_FOREACH(char residue, residues)
+            {
+                vector<unimod::Modification> possibleMods = unimod::modifications(mod.monoisotopicMassDelta,
+                                                                                  precursorAbsoluteTolerance,
+                                                                                  boost::logic::indeterminate,
+                                                                                  boost::logic::indeterminate,
+                                                                                  unimod::site(residue));
+
+                BOOST_FOREACH(const unimod::Modification& possibleMod, possibleMods)
+                {
+                    // skip AA substitutions
+                    if (possibleMod.specificities[0].classification == unimod::Classification::Substitution)
+                        continue;
+                    mod.set(possibleMod.cvid);
+                }
+            }
+            if (mod.cvParams.empty())
+                mod.set(MS_unknown_modification);
+        }
+    }
+}
+
 
 } // namespace pwiz
 } // namespace mziddata

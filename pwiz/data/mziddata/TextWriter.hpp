@@ -26,8 +26,8 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/utility/misc/optimized_lexical_cast.hpp"
 #include "MzIdentML.hpp"
-#include <boost/lexical_cast.hpp>
 #include <boost/foreach.hpp>
 #include <iostream>
 #include <string>
@@ -182,6 +182,25 @@ class PWIZ_API_DECL TextWriter
     }
 
 
+    TextWriter& operator()(const TranslationTable& tt)
+    {
+        (*this)("TranslationTable:");
+        (*this)((const IdentifiableParamContainer&)tt);
+        return *this;
+    }
+
+
+    TextWriter& operator()(const DatabaseTranslation& dt)
+    {
+        (*this)("DatabaseTranslation:");
+        if (!dt.frames.empty())
+            child()("frames: ", dt.frames);
+        if (!dt.translationTable.empty())
+            child()("translationTable: ", dt.translationTable);
+        return *this;
+    }
+
+
     TextWriter& operator()(const SpectrumIdentificationProtocol& si)
     {
         (*this)("SpectrumIdentificationProtocol:");
@@ -190,7 +209,7 @@ class PWIZ_API_DECL TextWriter
             !si.analysisSoftwarePtr->empty())
             child()("analysisSoftware_ref: "+si.analysisSoftwarePtr->id);
         if (!si.searchType.empty())
-            child()("SearchType", si.searchType);
+            child()("SearchType: ", si.searchType);
         if (!si.additionalSearchParams.empty())
             child()("AdditionalSearchParams", si.additionalSearchParams);
         if (!si.modificationParams.empty())
@@ -207,6 +226,8 @@ class PWIZ_API_DECL TextWriter
             child()("Threshold", si.threshold);
         if (!si.databaseFilters.empty())
             child()("DatabaseFilters", si.databaseFilters);
+        if (si.databaseTranslation.get() && !si.databaseTranslation->empty())
+            child()("DatabaseTranslation", si.databaseTranslation);
 
         return *this;
     }
@@ -232,10 +253,10 @@ class PWIZ_API_DECL TextWriter
     TextWriter& operator()(const SubstitutionModification& ds)
     {
         (*this)("SubstitutionModification: ");
-        if (!ds.originalResidue.empty())
-            child()("originalResidue: "+ds.originalResidue);
-        if (!ds.replacementResidue.empty())
-            child()("replacementResidue: "+ds.replacementResidue);
+        if (ds.originalResidue != 0)
+            child()("originalResidue: ", ds.originalResidue);
+        if (ds.replacementResidue != 0)
+            child()("replacementResidue: ", ds.replacementResidue);
         if (ds.location != 0)
             child()("location: ", ds.location);
         child()("avgMassDelta: ", ds.avgMassDelta);
@@ -472,10 +493,10 @@ class PWIZ_API_DECL TextWriter
         if (sm.massDelta != 0)
             child()("massDelta: ", sm.massDelta);
         if (!sm.residues.empty())
-            child()("residues: " + sm.residues);
+            child()("residues: " + makeDelimitedListString(sm.residues));
         if (!sm.specificityRules.empty())
             child()("specificityRules: ", sm.specificityRules);
-        (*this)((const ParamContainer&)sm);  
+        child()((const ParamContainer&)sm);  
         return *this;
     }
 
@@ -791,10 +812,10 @@ class PWIZ_API_DECL TextWriter
     TextWriter& operator()(const Residue& res)
     {
         (*this)("Residue: ");
-        if (!res.Code.empty())
-            child()("code: " + res.Code);
-        if (res.Mass != 0)
-            child()("mass: ", res.Mass);
+        if (res.code != 0)
+            child()("code: ", res.code);
+        if (res.mass != 0)
+            child()("mass: ", res.mass);
         return *this;
     }
 
@@ -802,8 +823,8 @@ class PWIZ_API_DECL TextWriter
     TextWriter& operator()(const AmbiguousResidue& res)
     {
         (*this)("AmbiguousResidue: ");
-        if (!res.Code.empty())
-            child()("code: ", res.Code);
+        if (res.code != 0)
+            child()("code: ", res.code);
         (*this)((const ParamContainer&)res);
         
         return *this;
@@ -816,12 +837,12 @@ class PWIZ_API_DECL TextWriter
         if (mod.location != 0)
             child()("location: ", mod.location);
         if (!mod.residues.empty())
-            child()("residues: " + mod.residues);
+            child()("residues: " + makeDelimitedListString(mod.residues));
         if (mod.avgMassDelta != 0)
             child()("avgMassDelta: ", mod.avgMassDelta);
         if (mod.monoisotopicMassDelta != 0)
             child()("monoisotopicMassDelta: ", mod.monoisotopicMassDelta);
-        (*this)((const ParamContainer&)mod);
+        child()((const ParamContainer&)mod);
 
         return *this;
     }
@@ -854,10 +875,10 @@ class PWIZ_API_DECL TextWriter
             child()("start: ", pe.start);
         if (pe.end != 0)
             child()("end: ", pe.end);
-        if (!pe.pre.empty())
-            child()("pre: " + pe.pre);
-        if (!pe.post.empty())
-            child()("post: " + pe.post);
+        if (pe.pre != 0)
+            child()("pre: ", pe.pre);
+        if (pe.post != 0)
+            child()("post: ", pe.post);
         if (pe.translationTablePtr.get() && !pe.translationTablePtr->empty())
             child()("translationTable_ref: "+pe.translationTablePtr->id);
         if (pe.frame != 0)
@@ -920,6 +941,14 @@ class PWIZ_API_DECL TextWriter
     std::ostream& os_;
     int depth_;
     std::string indent_;
+
+    template <typename object_type>
+    std::string makeDelimitedListString(const std::vector<object_type>& objects, const char* delimiter = " ")
+    {
+        std::ostringstream oss;
+        copy(objects.begin(), objects.end(), std::ostream_iterator<object_type>(oss, delimiter));
+        return oss.str();
+    }
 };
 
 	

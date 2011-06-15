@@ -155,6 +155,27 @@ void writePtrList(minimxml::XMLWriter& writer, const vector<object_type>& object
     }
 }
 
+template <typename object_type>
+std::string makeDelimitedListString(const vector<object_type>& objects, const char* delimiter = " ")
+{
+    ostringstream oss;
+    copy(objects.begin(), objects.end(), ostream_iterator<object_type>(oss, delimiter));
+    return oss.str();
+}
+
+template <typename object_type>
+void parseDelimitedListString(vector<object_type>& objects, const string& delimitedList, const string& delimiter = " ")
+{
+    istringstream iss(delimitedList);
+    iss >> std::noskipws;
+    object_type value;
+    while (iss >> value)
+    {
+        iss.seekg(delimiter.length(), iss.cur);
+        objects.push_back(value);
+    }
+}
+
 
 //
 // CV
@@ -723,7 +744,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Modification& mod)
     XMLWriter::Attributes attributes;
     attributes.add("location", mod.location);
     if (!mod.residues.empty())
-        attributes.add("residues", mod.residues);
+        attributes.add("residues", makeDelimitedListString(mod.residues));
     if (mod.avgMassDelta != 0)
         attributes.add("avgMassDelta", mod.avgMassDelta);
     //if (mod.monoisotopicMassDelta > 0)
@@ -752,8 +773,11 @@ struct HandlerModification : public HandlerParamContainer
     {
         if (name == "Modification")
         {
+            string residues;
+            getAttribute(attributes, "residues", residues);
+            parseDelimitedListString(mod->residues, residues);
+
             getAttribute(attributes, "location", mod->location);
-            getAttribute(attributes, "residues", mod->residues);
             getAttribute(attributes, "avgMassDelta", mod->avgMassDelta);
             getAttribute(attributes, "monoisotopicMassDelta", mod->monoisotopicMassDelta);
             HandlerParamContainer::paramContainer = mod;
@@ -779,9 +803,9 @@ PWIZ_API_DECL void read(std::istream& is, Modification& mod)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SubstitutionModification& sm)
 {
     XMLWriter::Attributes attributes;
-    if (!sm.originalResidue.empty())
+    if (sm.originalResidue != 0)
         attributes.add("originalResidue", sm.originalResidue);
-    if (!sm.replacementResidue.empty())
+    if (sm.replacementResidue != 0)
         attributes.add("replacementResidue", sm.replacementResidue);
     if (sm.location != 0)
         attributes.add("location", boost::lexical_cast<string>(sm.location));
@@ -848,7 +872,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Peptide& peptide)
     if (!peptide.modification.empty())
         writeList(writer, peptide.modification);
     if (!peptide.substitutionModification.empty())
-        write(writer, peptide.substitutionModification);
+        writeList(writer, peptide.substitutionModification);
 
     writeParamContainer(writer, peptide);
     writer.endElement();
@@ -885,15 +909,16 @@ struct HandlerPeptide : public HandlerIdentifiableParamContainer
         }
         else if (name == "Modification")
         {
-            peptide->modification.push_back(ModificationPtr(new Modification()));
+            peptide->modification.push_back(ModificationPtr(new Modification));
             handlerModification_.version = version;
             handlerModification_.mod = peptide->modification.back().get();
             return Status(Status::Delegate, &handlerModification_);
         }
         else if (name == "SubstitutionModification")
         {
+            peptide->substitutionModification.push_back(SubstitutionModificationPtr(new SubstitutionModification));
             handlerSubstitutionModification_.version = version;
-            handlerSubstitutionModification_.subMod = &peptide->substitutionModification;
+            handlerSubstitutionModification_.subMod = peptide->substitutionModification.back().get();
             return Status(Status::Delegate, &handlerSubstitutionModification_);
         }
 
@@ -954,9 +979,9 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const PeptideEvidence& pep
         attributes.add("end", pep.end);
     }
 
-    if (!pep.pre.empty())
+    if (pep.pre != 0)
         attributes.add("pre", pep.pre);
-    if (!pep.post.empty())
+    if (pep.post != 0)
         attributes.add("post", pep.post);
     if (pep.translationTablePtr.get() && !pep.translationTablePtr->empty())
         attributes.add("translationTable_ref", pep.translationTablePtr->id);
@@ -2053,8 +2078,9 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Residue& residue)
 {
     XMLWriter::Attributes attributes;
 
-    attributes.add("code", residue.Code);
-    attributes.add("mass", residue.Mass);
+    if (residue.code != 0)
+        attributes.add("code", residue.code);
+    attributes.add("mass", residue.mass);
 
     writer.startElement("Residue", attributes, XMLWriter::EmptyElement);
 }
@@ -2072,8 +2098,8 @@ struct HandlerResidue : public SAXParser::Handler
         if (name != "Residue")
             throw runtime_error("[IO::HandlerResidue] Unexpected element name: " + name);
 
-        getAttribute(attributes, code_attribute(version), residue->Code);
-        getAttribute(attributes, mass_attribute(version), residue->Mass);
+        getAttribute(attributes, code_attribute(version), residue->code);
+        getAttribute(attributes, mass_attribute(version), residue->mass);
         
         return Status::Ok;
     }
@@ -2095,7 +2121,8 @@ PWIZ_API_DECL void read(std::istream& is, Residue& residue)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const AmbiguousResidue& residue)
 {
     XMLWriter::Attributes attributes;
-    attributes.add("code", residue.Code);
+    if (residue.code != 0)
+        attributes.add("code", residue.code);
     
     writer.startElement("AmbiguousResidue", attributes);
     writeParamContainer(writer, residue);
@@ -2115,7 +2142,7 @@ struct HandlerAmbiguousResidue : public HandlerParamContainer
     {
         if (name == "AmbiguousResidue")
         {
-            getAttribute(attributes, code_attribute(version), residue->Code);
+            getAttribute(attributes, code_attribute(version), residue->code);
             HandlerParamContainer::paramContainer = residue;
             return Status::Ok;
         }
@@ -2130,6 +2157,7 @@ PWIZ_API_DECL void read(std::istream& is, AmbiguousResidue& residue)
     HandlerAmbiguousResidue handler(&residue);
     SAXParser::parse(is, handler);
 }
+
 
 //
 // MassTable
@@ -2210,7 +2238,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SearchModification& 
     XMLWriter::Attributes attributes;
     attributes.add("fixedMod", sm.fixedMod ? "true" : "false");
     attributes.add("massDelta", sm.massDelta);
-    attributes.add("residues", sm.residues);
+    attributes.add("residues", makeDelimitedListString(sm.residues));
 
     bool emptyElement = sm.specificityRules.empty() && static_cast<const ParamContainer&>(sm).empty();
 
@@ -2255,7 +2283,8 @@ struct HandlerSearchModification : public HandlerParamContainer
             if (version != SchemaVersion_1_0)
             {
                 getAttribute(attributes, "massDelta", sm->massDelta);
-                getAttribute(attributes, "residues", sm->residues);
+                getAttribute(attributes, "residues", value);
+                parseDelimitedListString(sm->residues, value);
             }
 
             HandlerParamContainer::paramContainer = sm;
@@ -2264,7 +2293,10 @@ struct HandlerSearchModification : public HandlerParamContainer
         else if (version == SchemaVersion_1_0 && name == "ModParam")
         {
             getAttribute(attributes, "massDelta", sm->massDelta);
-            getAttribute(attributes, "residues", sm->residues);
+
+            string residues;
+            getAttribute(attributes, "residues", residues);
+            parseDelimitedListString(sm->residues, residues);
 
             return Status::Ok;
         }
@@ -2428,7 +2460,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const DatabaseTranslation&
 {
     XMLWriter::Attributes attributes;
     if (!dt.frames.empty())
-        attributes.add("frames", dt.getFrames());
+        attributes.add("frames", makeDelimitedListString(dt.frames));
 
     writer.startElement("DatabaseTranslation", attributes);
 
@@ -2453,8 +2485,7 @@ struct HandlerDatabaseTranslation : SAXParser::Handler
         {
             string values;
             getAttribute(attributes, "frames", values);
-            if (!values.empty())
-                dt->setFrames(values);
+            parseDelimitedListString(dt->frames, values);
         }
         else if (name == "TranslationTable")
         {
@@ -3596,7 +3627,7 @@ PWIZ_API_DECL void read(std::istream& is, FragmentArray& fa)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const IonType& itype)
 {
     XMLWriter::Attributes attributes;
-    attributes.add("index", itype.getIndex());
+    attributes.add("index", makeDelimitedListString(itype.index));
     attributes.add("charge", itype.charge);
 
     writer.startElement("IonType", attributes);
@@ -3627,7 +3658,7 @@ struct HandlerIonType : public HandlerParamContainer
         {
             string values;
             getAttribute(attributes, "index", values);
-            it->setIndex(values);
+            parseDelimitedListString(it->index, values);
             getAttribute(attributes, "charge", it->charge);
             HandlerParamContainer::paramContainer = it;
             return Status::Ok;

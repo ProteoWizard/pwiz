@@ -167,7 +167,8 @@ void testSearchModification()
     SearchModification a, b;
 
     a.massDelta = 1;
-    a.residues = "ABCD";
+    a.residues.push_back('A');
+    a.residues.push_back('B');
     a.set(UNIMOD_Gln__pyro_Glu);
     b = a;
 
@@ -175,7 +176,7 @@ void testSearchModification()
     unit_assert(!diff);
 
     b.massDelta = 10;
-    b.residues = "EFG";
+    b.residues.push_back('C');
     b.cvParams.clear();
     b.set(UNIMOD_Oxidation);
 
@@ -188,8 +189,8 @@ void testSearchModification()
     // and correctly
     unit_assert_equal(diff.a_b.massDelta, 9, epsilon);
     unit_assert_equal(diff.b_a.massDelta, 9, epsilon);
-    unit_assert(diff.a_b.residues == "ABCD");
-    unit_assert(diff.b_a.residues == "EFG");
+    unit_assert(diff.a_b.residues.empty());
+    unit_assert(diff.b_a.residues.size() == 1 && diff.b_a.residues[0] == 'C');
     unit_assert(!diff.a_b.cvParams.empty());
     unit_assert(diff.a_b.cvParams[0].cvid == UNIMOD_Gln__pyro_Glu);
     unit_assert(!diff.b_a.cvParams.empty());
@@ -210,8 +211,8 @@ void testPeptideEvidence()
     a.dbSequencePtr = DBSequencePtr(new DBSequence("DBSequence_ref"));
     a.start = 1;
     a.end = 6;
-    a.pre = "-";
-    a.post = "-";
+    a.pre = '-';
+    a.post = '-';
     a.translationTablePtr = TranslationTablePtr(new TranslationTable("TranslationTable_ref"));
     a.frame = 0;
     a.isDecoy = true;
@@ -224,8 +225,8 @@ void testPeptideEvidence()
     b.dbSequencePtr = DBSequencePtr(new DBSequence("fer_ecneuqeSBD"));
     b.start = 2;
     b.end = 7;
-    b.pre = "A";
-    b.post = "A";
+    b.pre = 'A';
+    b.post = 'A';
     b.translationTablePtr = TranslationTablePtr(new TranslationTable("fer_elbaTnoitalsnarT"));
     b.frame = 1;
     b.isDecoy = false;
@@ -250,10 +251,10 @@ void testPeptideEvidence()
     unit_assert_equal(diff.b_a.start, 2.0, epsilon);
     unit_assert_equal(diff.a_b.end, 6.0, epsilon);
     unit_assert_equal(diff.b_a.end, 7.0, epsilon);
-    unit_assert(diff.a_b.pre == "-");
-    unit_assert(diff.b_a.pre == "A");
-    unit_assert(diff.a_b.post == "-");
-    unit_assert(diff.b_a.post == "A");
+    unit_assert(diff.a_b.pre == '-');
+    unit_assert(diff.b_a.pre == 'A');
+    unit_assert(diff.a_b.post == '-');
+    unit_assert(diff.b_a.post == 'A');
     unit_assert_equal(diff.a_b.frame, 0.0, epsilon);
     unit_assert_equal(diff.b_a.frame, 1.0, epsilon);
     unit_assert(diff.a_b.isDecoy == true);
@@ -755,25 +756,25 @@ void testResidue()
 
     Residue a, b;
 
-    a.Code = "ON";
-    a.Mass = 1.0;
+    a.code = 'A';
+    a.mass = 1.0;
     b = a;
 
     Diff<Residue, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
-    b.Code = "OFF";
-    b.Mass = 2.0;
+    b.code = 'C';
+    b.mass = 2.0;
 
     diff(a, b);
     if (os_) *os_ << diff_string<TextWriter>(diff) << endl;
 
     unit_assert(diff);
 
-    unit_assert(diff.a_b.Code == "ON");
-    unit_assert(diff.b_a.Code == "OFF");
-    unit_assert_equal(diff.a_b.Mass, 1.0, epsilon);
-    unit_assert_equal(diff.b_a.Mass, 1.0, epsilon);
+    unit_assert(diff.a_b.code == 'A');
+    unit_assert(diff.b_a.code == 'C');
+    unit_assert_equal(diff.a_b.mass, 1.0, epsilon);
+    unit_assert_equal(diff.b_a.mass, 1.0, epsilon);
 }
 
 
@@ -783,30 +784,27 @@ void testAmbiguousResidue()
 
     AmbiguousResidue a, b;
 
-    a.Code = "Z";
-    a.set(MS_alternate_single_letter_codes);
+    a.code = 'Z';
+    a.set(MS_alternate_single_letter_codes, "E Q");
     b = a;
 
     Diff<AmbiguousResidue, DiffConfig> diff(a, b);
     unit_assert(!diff);
 
-    b.Code = "B";
-    b.clear();
-    b.set(MS_ambiguous_residues);
+    b.code = 'B';
+    b.set(MS_alternate_single_letter_codes, "D N");
 
     diff(a, b);
     if (os_) *os_ << diff_string<TextWriter>(diff) << endl;
 
     unit_assert(diff);
 
-    unit_assert(diff.a_b.Code == "Z");
-    unit_assert(diff.b_a.Code == "B");
-
-    //unit_assert(diff.a_b.cvParams.size() == 1);
-    //unit_assert(diff.b_a.cvParams.size() == 1);
-    //unit_assert(diff.a_b.hasCVParam(MS_alternate_single_letter_codes));
-    //unit_assert(diff.a_b.hasCVParam(MS_ambiguous_residues));
+    unit_assert(diff.a_b.code == 'Z');
+    unit_assert(diff.b_a.code == 'B');
+    unit_assert(diff.a_b.cvParam(MS_alternate_single_letter_codes).value == "E Q");
+    unit_assert(diff.b_a.cvParam(MS_alternate_single_letter_codes).value == "D N");
 }
+
 
 void testFilter()
 {
@@ -842,6 +840,50 @@ void testFilter()
     unit_assert(diff.b_a.exclude.hasCVParam(MS_DB_MW_filter));
 }
 
+
+void testDatabaseTranslation()
+{
+    if (os_) *os_ << "testDatabaseTranslation()\n";
+
+    DatabaseTranslation a, b;
+
+    a.frames.push_back(1);
+    a.frames.push_back(2);
+
+    TranslationTablePtr tt(new TranslationTable("TT_1", "TT_1"));
+    tt->set(MS_translation_table, "GATTACA");
+    tt->set(MS_translation_table_description, "http://somewhere.com");
+    a.translationTable.push_back(tt);
+    b = a;
+
+    Diff<DatabaseTranslation, DiffConfig> diff(a, b);
+    unit_assert(!diff);
+
+    b.translationTable.clear();
+
+    diff(a, b);
+    if (os_) *os_ << diff_string<TextWriter>(diff) << endl;
+
+    unit_assert(diff);
+
+    unit_assert_operator_equal(0, diff.a_b.frames.size());
+    unit_assert_operator_equal(0, diff.b_a.frames.size());
+    unit_assert_operator_equal(1, diff.a_b.translationTable.size());
+    unit_assert_operator_equal(0, diff.b_a.translationTable.size());
+
+    b = a;
+    b.frames.push_back(3);
+
+    diff(a, b);
+    if (os_) *os_ << diff_string<TextWriter>(diff) << endl;
+
+    unit_assert(diff);
+
+    unit_assert_operator_equal(0, diff.a_b.frames.size());
+    unit_assert_operator_equal(1, diff.b_a.frames.size());
+    unit_assert_operator_equal(0, diff.a_b.translationTable.size());
+    unit_assert_operator_equal(0, diff.b_a.translationTable.size());
+}
 
 
 void testSpectrumIdentificationProtocol()
@@ -902,7 +944,6 @@ void testContact()
     if (os_) *os_ << diff_string<TextWriter>(diff) << endl;
 
     unit_assert(diff);
-
 }
 
 
@@ -1200,6 +1241,7 @@ void test()
     testResidue();
     testAmbiguousResidue();
     testFilter();
+    testDatabaseTranslation();
     testSpectrumIdentificationProtocol();
     testProteinDetectionProtocol();
     testAnalysisProtocolCollection();

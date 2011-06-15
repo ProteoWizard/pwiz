@@ -35,6 +35,7 @@
 #include "pwiz/data/common/CVTranslator.hpp"
 #include "boost/utility/singleton.hpp"
 #include "boost/xpressive/xpressive.hpp"
+#include "boost/range/adaptor/transformed.hpp"
 #include <cstring>
 
 
@@ -352,6 +353,12 @@ void write_sample_enzyme(XMLWriter& xmlWriter, const MzIdentML& mzid)
     xmlWriter.endElement(); // sample_enzyme
 }
 
+struct CVParam_name
+{
+    typedef string result_type;
+    result_type operator()(const CVParam& x) const {return x.name();}
+};
+
 void write_search_summary(XMLWriter& xmlWriter, const MzIdentML& mzid, const string& filepath)
 {
     XMLWriter::Attributes attributes;
@@ -420,23 +427,19 @@ void write_search_summary(XMLWriter& xmlWriter, const MzIdentML& mzid, const str
 
         BOOST_FOREACH(const SearchModificationPtr& sm, sip.modificationParams)
         {
-            string residues = sm->residues;
+            vector<char> residues = sm->residues;
             if (residues.empty())
             {
                 if (sm->specificityRules.empty())
-                    throw runtime_error("[write_search_summary] Empty "
-                                        "SearchModification.");
+                    throw runtime_error("[write_search_summary] Empty SearchModification.");
                 if (sm->specificityRules == MS_modification_specificity_N_term)
-                    residues = "n";
+                    residues.push_back('n');
                 else
-                    residues = "c";
+                    residues.push_back('c');
             }
 
             BOOST_FOREACH(char aa, residues)
             {
-                if (aa == ' ')
-                    continue;
-
                 attributes.clear();
                 if (aa > 'Z') // terminal_modification
                 {
@@ -463,7 +466,13 @@ void write_search_summary(XMLWriter& xmlWriter, const MzIdentML& mzid, const str
                         attributes.add("peptide_terminus", "c");
                 }
                 attributes.add("variable", sm->fixedMod ? "N" : "Y");
-                // TODO: attributes.add("description", sm->);
+
+                if (sm->hasCVParamChild(UNIMOD_unimod_root_node))
+                {
+                    vector<CVParam> possibleMods = sm->cvParamChildren(UNIMOD_unimod_root_node);
+                    string description = bal::join(possibleMods | boost::adaptors::transformed(CVParam_name()), ", ");
+                    attributes.add("description", description);
+                }
 
                 xmlWriter.startElement(aa > 'Z' ? "terminal_modification" : "aminoacid_modification", attributes, XMLWriter::EmptyElement);
             }
@@ -541,6 +550,10 @@ void write_alternative_proteins(XMLWriter& xmlWriter, const SpectrumIdentificati
     }
 }
 
+// we only write search_scores for numeric CVParams and UserParams;
+// examples of valid numbers: 1 1.234 1.234e5 1.234E-5 (also 123.456e5, not a big deal)
+boost::xpressive::sregex numericRegex = boost::xpressive::sregex::compile("[+-]?\\d+(?:\\.\\d*)?(?:[eE][+-]?\\d+)?");
+
 void write_search_hit(XMLWriter& xmlWriter,
                       CVID analysisSoftwareCVID,
                       const MzIdentML& mzid,
@@ -573,7 +586,7 @@ void write_search_hit(XMLWriter& xmlWriter,
     
     // calculate num_tol_term and num_missed_cleavages
     const SpectrumIdentificationProtocol& sip = *mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0];
-    DigestedPeptide digestedPeptide = sii.digestedPeptide(sip, *sii.peptideEvidencePtr[0]);
+    DigestedPeptide digestedPeptide = mziddata::digestedPeptide(sip, *sii.peptideEvidencePtr[0]);
     attributes.add("num_tol_term", digestedPeptide.specificTermini());
     attributes.add("num_missed_cleavages", digestedPeptide.missedCleavages());
 
@@ -596,9 +609,6 @@ void write_search_hit(XMLWriter& xmlWriter,
             write_modification_info(xmlWriter, sii);
 
         using namespace boost::xpressive;
-
-        // numeric CVParams and UserParams are written regardless
-        sregex numericRegex = sregex::compile("\\d+(?:\\.\\d*)");
         smatch what;
 
         BOOST_FOREACH(const CVParam& cvParam, sii.cvParams)
@@ -1118,7 +1128,7 @@ struct HandlerSearchSummary : public SAXParser::Handler
         }
         else if (name == "search_database")
         {
-            SearchDatabasePtr searchDatabase = SearchDatabasePtr(new SearchDatabase);
+            SearchDatabasePtr searchDatabase(new SearchDatabase);
             searchDatabase->fileFormat.cvid = MS_FASTA_format;
 
             string databaseReleaseIdentifier, type;
@@ -1155,13 +1165,12 @@ struct HandlerSearchSummary : public SAXParser::Handler
             string aminoacid, variable, peptideTerminus;
             getAttribute(attributes, "aminoacid", aminoacid);
             bal::to_lower(getAttribute(attributes, "variable", variable));
-            getAttribute(attributes, "peptide_terminus", peptideTerminus);
+            bal::to_lower(getAttribute(attributes, "peptide_terminus", peptideTerminus));
 
-            // TODO: snap masses to unimod
-
-            SearchModificationPtr searchModification = SearchModificationPtr(new SearchModification);
+            SearchModificationPtr searchModification(new SearchModification);
             getAttribute(attributes, "massdiff", searchModification->massDelta);
-            searchModification->residues = aminoacid;
+            if (!aminoacid.empty())
+                searchModification->residues.push_back(aminoacid[0]);
             if (variable == "y" || variable == "n")
                 searchModification->fixedMod = (variable == "n");
             else
@@ -1169,24 +1178,32 @@ struct HandlerSearchSummary : public SAXParser::Handler
 
             if (bal::icontains(peptideTerminus, "n"))
                 searchModification->specificityRules.cvid = MS_modification_specificity_N_term;
-            if (bal::icontains(peptideTerminus, "c"))
+            else if (bal::icontains(peptideTerminus, "c"))
                 searchModification->specificityRules.cvid = MS_modification_specificity_C_term;
 
             _sip->modificationParams.push_back(searchModification);
+
+            // in the case of either terminus, duplicate the mod with C terminal specificity
+            if (peptideTerminus == "nc")
+            {
+                searchModification.reset(new SearchModification(*searchModification));
+                searchModification->specificityRules.cvid = MS_modification_specificity_C_term;
+                _sip->modificationParams.push_back(searchModification);
+            }
         }
         else if (name == "terminal_modification")
         {
             string terminus, variable;
-            getAttribute(attributes, "terminus", terminus);
+            bal::to_lower(getAttribute(attributes, "terminus", terminus));
             bal::to_lower(getAttribute(attributes, "variable", variable));
             
-            SearchModificationPtr searchModification = SearchModificationPtr(new SearchModification);
+            SearchModificationPtr searchModification(new SearchModification);
             getAttribute(attributes, "massdiff", searchModification->massDelta);
             searchModification->fixedMod = !(variable == "y" || lexical_cast<bool>(variable));
 
-            if (bal::icontains(terminus, "n"))
+            if (terminus == "n")
                 searchModification->specificityRules.cvid = MS_modification_specificity_N_term;
-            if (bal::icontains(terminus, "c"))
+            else if (terminus == "c")
                 searchModification->specificityRules.cvid = MS_modification_specificity_C_term;
 
             _sip->modificationParams.push_back(searchModification);
@@ -1398,8 +1415,8 @@ struct HandlerSearchResults : public SAXParser::Handler
                         if (!proteinDescr.empty())
                             pe->dbSequencePtr->set(MS_protein_description, proteinDescr);
 
-                        getAttribute(proteinAttributes, "peptide_prev_aa", pe->pre);
-                        getAttribute(proteinAttributes, "peptide_next_aa", pe->post);
+                        getAttribute(proteinAttributes, "peptide_prev_aa", pe->pre, '?');
+                        getAttribute(proteinAttributes, "peptide_next_aa", pe->post, '?');
                     }
                 }
 
@@ -1423,7 +1440,6 @@ struct HandlerSearchResults : public SAXParser::Handler
                 Modification& mod = *_currentPeptide->modification.back();
                 mod.monoisotopicMassDelta = mod.avgMassDelta = modNTermMass - _nTerm.monoisotopicMass();
                 mod.location = 0;
-                mod.set(MS_unknown_modification);
             }
 
             if (modCTermMass > 0)
@@ -1432,7 +1448,6 @@ struct HandlerSearchResults : public SAXParser::Handler
                 Modification& mod = *_currentPeptide->modification.back();
                 mod.monoisotopicMassDelta = mod.avgMassDelta = modCTermMass - _cTerm.monoisotopicMass();
                 mod.location = _currentPeptide->peptideSequence.length() + 1;
-                mod.set(MS_unknown_modification);
             }
         }
         else if (name == "mod_aminoacid_mass")
@@ -1445,8 +1460,7 @@ struct HandlerSearchResults : public SAXParser::Handler
             double modMassPlusAminoAcid;
             getAttribute(attributes, "mass", modMassPlusAminoAcid);
             mod.avgMassDelta = mod.monoisotopicMassDelta = modMassPlusAminoAcid - AminoAcid::Info::record(modifiedResidue).residueFormula.monoisotopicMass();
-            mod.residues = string(1, modifiedResidue);
-            mod.set(MS_unknown_modification);
+            mod.residues.push_back(modifiedResidue);
         }
         else if (name == "alternative_protein")
         {
@@ -1733,6 +1747,9 @@ void Serializer_pepXML::read(boost::shared_ptr<std::istream> is, MzIdentML& mzid
     Handler_pepXML handler(mzid, config_.readSpectrumQueries,
                            iterationListenerRegistry, strict);
     SAXParser::parse(*is, handler);
+
+    // there can be only one
+    snapModificationsToUnimod(*mzid.analysisCollection.spectrumIdentification[0]);
 }
 
 

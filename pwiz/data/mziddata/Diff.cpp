@@ -95,7 +95,7 @@ void diff(const SearchModification& a,
         b_a.fixedMod = b.fixedMod;
     }
     diff_floating(a.massDelta, b.massDelta, a_b.massDelta, b_a.massDelta, config);
-    diff(a.residues, b.residues, a_b.residues, b_a.residues, config);
+    vector_diff(a.residues, b.residues, a_b.residues, b_a.residues);
     diff(a.specificityRules, b.specificityRules, a_b.specificityRules, b_a.specificityRules, config);
     diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
 }
@@ -139,8 +139,8 @@ void diff(const PeptideEvidence& a,
     ptr_diff(a.dbSequencePtr, b.dbSequencePtr, a_b.dbSequencePtr, b_a.dbSequencePtr, config);
     diff_integral(a.start, b.start, a_b.start, b_a.start, config);
     diff_integral(a.end, b.end, a_b.end, b_a.end, config);
-    diff(a.pre, b.pre, a_b.pre, b_a.pre, config);
-    diff(a.post, b.post, a_b.post, b_a.post, config);
+    diff_char(a.pre, b.pre, a_b.pre, b_a.pre);
+    diff_char(a.post, b.post, a_b.post, b_a.post);
     ptr_diff(a.translationTablePtr, b.translationTablePtr,
              a_b.translationTablePtr, b_a.translationTablePtr, config);
     diff_integral(a.frame, b.frame, a_b.frame, b_a.frame, config);
@@ -440,8 +440,8 @@ void diff(const Residue& a,
           Residue& b_a,
           const DiffConfig& config)
 {
-    diff(a.Code, b.Code, a_b.Code, b_a.Code, config);
-    diff_floating(a.Mass, b.Mass, a_b.Mass, b_a.Mass, config);
+    diff_char(a.code, b.code, a_b.code, b_a.code);
+    diff_floating(a.mass, b.mass, a_b.mass, b_a.mass, config);
 }
 
 
@@ -452,7 +452,7 @@ void diff(const AmbiguousResidue& a,
           AmbiguousResidue& b_a,
           const DiffConfig& config)
 {
-    diff(a.Code, b.Code, a_b.Code, b_a.Code, config);
+    diff_char(a.code, b.code, a_b.code, b_a.code);
     diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
 }
 
@@ -471,6 +471,18 @@ void diff(const Filter& a,
 
 
 PWIZ_API_DECL
+void diff(const DatabaseTranslation& a,
+          const DatabaseTranslation& b,
+          DatabaseTranslation& a_b,
+          DatabaseTranslation& b_a,
+          const DiffConfig& config)
+{
+    vector_diff(a.frames, b.frames, a_b.frames, b_a.frames);
+    vector_diff_deep(a.translationTable, b.translationTable, a_b.translationTable, b_a.translationTable, config);
+}
+
+
+PWIZ_API_DECL
 void diff(const SpectrumIdentificationProtocol& a,
           const SpectrumIdentificationProtocol& b,
           SpectrumIdentificationProtocol& a_b,
@@ -481,6 +493,8 @@ void diff(const SpectrumIdentificationProtocol& a,
              a_b.analysisSoftwarePtr, b_a.analysisSoftwarePtr,
              config);
     diff(a.searchType, b.searchType, a_b.searchType, b_a.searchType, config);
+    vector_diff_deep(a.modificationParams, b.modificationParams,
+                     a_b.modificationParams, b_a.modificationParams, config);
     diff(a.additionalSearchParams, b.additionalSearchParams,
          a_b.additionalSearchParams, b_a.additionalSearchParams, config);
     diff(a.enzymes, b.enzymes, a_b.enzymes, b_a.enzymes, config);
@@ -489,6 +503,10 @@ void diff(const SpectrumIdentificationProtocol& a,
     diff(a.parentTolerance, b.parentTolerance, a_b.parentTolerance, b_a.parentTolerance, config);
     diff(a.threshold, b.threshold, a_b.threshold, b_a.threshold, config);
     vector_diff_deep(a.databaseFilters, b.databaseFilters, a_b.databaseFilters, b_a.databaseFilters, config);
+    
+    ptr_diff(a.databaseTranslation, b.databaseTranslation,
+             a_b.databaseTranslation, b_a.databaseTranslation,
+             config);
 }
 
 
@@ -694,12 +712,10 @@ void diff(const Peptide& a,
           const DiffConfig& config)
 {
     diff(static_cast<const IdentifiableParamContainer&>(a), b, a_b, b_a, config);
-    diff(a.peptideSequence, b.peptideSequence, a_b.peptideSequence,
-         b_a.peptideSequence, config);
-    vector_diff_deep(a.modification, b.modification, a_b.modification,
-                     b_a.modification, config);
-    diff(a.substitutionModification, b.substitutionModification,
-         a_b.substitutionModification,b_a.substitutionModification, config);
+    diff(a.peptideSequence, b.peptideSequence, a_b.peptideSequence, b_a.peptideSequence, config);
+    vector_diff_deep(a.modification, b.modification, a_b.modification, b_a.modification, config);
+    vector_diff_deep(a.substitutionModification, b.substitutionModification,
+                     a_b.substitutionModification,b_a.substitutionModification, config);
 }
 
 
@@ -711,7 +727,7 @@ void diff(const Modification& a,
           const DiffConfig& config)
 {
     diff_integral(a.location, b.location, a_b.location, b_a.location, config);
-    diff(a.residues, b.residues, a_b.residues, b_a.residues, config);
+    vector_diff(a.residues, b.residues, a_b.residues, b_a.residues);
     diff_floating(a.avgMassDelta, b.avgMassDelta, a_b.avgMassDelta, b_a.avgMassDelta, config);
     diff_floating(a.monoisotopicMassDelta, b.monoisotopicMassDelta, a_b.monoisotopicMassDelta, b_a.monoisotopicMassDelta, config);
     diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
@@ -725,10 +741,8 @@ void diff(const SubstitutionModification& a,
           SubstitutionModification& b_a,
           const DiffConfig& config)
 {
-    diff(a.originalResidue, b.originalResidue,
-         a_b.originalResidue, b_a.originalResidue, config);
-    diff(a.replacementResidue, b.replacementResidue,
-         a_b.replacementResidue, b_a.replacementResidue, config);
+    diff_char(a.originalResidue, b.originalResidue, a_b.originalResidue, b_a.originalResidue);
+    diff_char(a.replacementResidue, b.replacementResidue, a_b.replacementResidue, b_a.replacementResidue);
     diff_integral(a.location, b.location, a_b.location, b_a.location, config);
     diff_floating(a.avgMassDelta, b.avgMassDelta,
                   a_b.avgMassDelta, b_a.avgMassDelta, config);

@@ -1348,7 +1348,7 @@ void Pep2MzIdent::Impl::addModifications(
                 mod->monoisotopicMassDelta = it->massDiff;
             else
                 mod->avgMassDelta = it->massDiff;
-            mod->residues = it->aminoAcid;
+            mod->residues.push_back(it->aminoAcid[0]);
 
             // TODO save terminus somewhere
             if (it->peptideTerminus == "c")

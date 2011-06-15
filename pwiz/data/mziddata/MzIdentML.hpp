@@ -256,13 +256,13 @@ struct PWIZ_API_DECL Modification : public ParamContainer
     Modification();
 
     int location;
-    std::string residues;
+    std::vector<char> residues;
     double avgMassDelta;
     double monoisotopicMassDelta;
 
     bool empty() const;
 };
-    
+
 TYPEDEF_SHARED_PTR(Modification);
 
 
@@ -270,14 +270,16 @@ struct PWIZ_API_DECL SubstitutionModification
 {
     SubstitutionModification();
 
-    std::string originalResidue;
-    std::string replacementResidue;
+    char originalResidue;
+    char replacementResidue;
     int location;
     double avgMassDelta;
     double monoisotopicMassDelta;
 
     bool empty() const;
 };
+
+TYPEDEF_SHARED_PTR(SubstitutionModification);
 
 
 struct PWIZ_API_DECL Peptide : public IdentifiableParamContainer
@@ -287,7 +289,7 @@ struct PWIZ_API_DECL Peptide : public IdentifiableParamContainer
 
     std::string peptideSequence;
     std::vector<ModificationPtr> modification;
-    SubstitutionModification substitutionModification;
+    std::vector<SubstitutionModificationPtr> substitutionModification;
 
     bool empty() const;
 };
@@ -301,7 +303,7 @@ struct PWIZ_API_DECL SearchModification : public ParamContainer
 
     bool fixedMod;
     double massDelta;
-    std::string residues;
+    std::vector<char> residues;
     CVParam specificityRules;
 
     bool empty() const;
@@ -344,8 +346,8 @@ struct PWIZ_API_DECL Residue
 {
     Residue();
 
-    std::string Code;
-    double Mass;
+    char code;
+    double mass;
 
     bool empty() const;
 };
@@ -355,7 +357,9 @@ TYPEDEF_SHARED_PTR(Residue);
 
 struct PWIZ_API_DECL AmbiguousResidue : public ParamContainer
 {
-    std::string Code;
+    AmbiguousResidue();
+
+    char code;
 
     bool empty() const;
 };
@@ -395,8 +399,6 @@ struct PWIZ_API_DECL TranslationTable : public IdentifiableParamContainer
 {
     TranslationTable(const std::string& id = "",
                      const std::string& name = "");
-
-    bool empty() const;
 };
 
 TYPEDEF_SHARED_PTR(TranslationTable);
@@ -405,13 +407,7 @@ TYPEDEF_SHARED_PTR(TranslationTable);
 struct PWIZ_API_DECL DatabaseTranslation
 {
     std::vector<int> frames;
-
     std::vector<TranslationTablePtr> translationTable;
-
-    DatabaseTranslation& setFrames(const std::string& values);
-    DatabaseTranslation& setFrames(const std::vector<int>& values);
-
-    std::string getFrames() const;
 
     bool empty() const;
 };
@@ -478,11 +474,6 @@ struct PWIZ_API_DECL IonType : public ParamContainer
 
     std::vector<FragmentArrayPtr> fragmentArray;
 
-    IonType& setIndex(const std::string& value);
-    IonType& setIndex(const std::vector<int>& value);
-
-    std::string getIndex() const;
-
     bool empty() const;
 };
 
@@ -498,8 +489,8 @@ struct PWIZ_API_DECL PeptideEvidence : public IdentifiableParamContainer
     DBSequencePtr dbSequencePtr;
     int start;
     int end;
-    std::string pre;
-    std::string post;
+    char pre;
+    char post;
     TranslationTablePtr translationTablePtr;
     int frame;
     bool isDecoy;
@@ -538,12 +529,6 @@ struct PWIZ_API_DECL SpectrumIdentificationItem : public IdentifiableParamContai
     std::vector<IonTypePtr> fragmentation;
 
     bool empty() const;
-
-    /// given a protocol and a PeptideEvidence instance, returns the PeptideEvidence as a DigestedPeptide instance
-    proteome::DigestedPeptide digestedPeptide(const SpectrumIdentificationProtocol& sip, const PeptideEvidence& peptideEvidence) const;
-
-    /// given a protocol, builds a set of DigestedPeptides for a SpectrumIdentificationItem
-    std::vector<proteome::DigestedPeptide> digestedPeptides(const SpectrumIdentificationProtocol& sip) const;
 };
 
 TYPEDEF_SHARED_PTR(SpectrumIdentificationItem);
@@ -814,6 +799,16 @@ struct PWIZ_API_DECL MzIdentML : public Identifiable
 };
 
 TYPEDEF_SHARED_PTR(MzIdentML);
+
+
+/// given a protocol and a PeptideEvidence instance, returns the PeptideEvidence as a DigestedPeptide instance
+proteome::DigestedPeptide digestedPeptide(const SpectrumIdentificationProtocol& sip, const PeptideEvidence& peptideEvidence);
+
+/// given a protocol and a SpectrumIdentificationItem, builds a set of DigestedPeptides
+std::vector<proteome::DigestedPeptide> digestedPeptides(const SpectrumIdentificationProtocol& sip, const SpectrumIdentificationItem& sii);
+
+/// sets Unimod CV terms (if possible) for all SearchModifications and Modification elements
+void snapModificationsToUnimod(const SpectrumIdentification& si);
 
 
 } // namespace mziddata 

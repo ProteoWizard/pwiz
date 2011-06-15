@@ -254,57 +254,59 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
 
     sm = SearchModificationPtr(new SearchModification);
     sm->massDelta = deamidation.monoisotopicMass();
-    sm->residues = "N";
+    sm->residues.push_back('N');
     sm->set(UNIMOD_Deamidated);
     sip->modificationParams.push_back(sm);
 
     sm = SearchModificationPtr(new SearchModification);
     sm->massDelta = pyroglutQ.monoisotopicMass();
     sm->specificityRules.cvid = MS_modification_specificity_N_term;
-    sm->residues = "Q";
+    sm->residues.push_back('Q');
     sm->set(UNIMOD_Gln__pyro_Glu);
     sip->modificationParams.push_back(sm);
 
     sm = SearchModificationPtr(new SearchModification);
     sm->massDelta = carbamylation.monoisotopicMass();
-    sm->residues = "K";
+    sm->residues.push_back('K');
     sm->set(UNIMOD_Carbamyl);
     sip->modificationParams.push_back(sm);
 
     sm = SearchModificationPtr(new SearchModification);
     sm->massDelta = carbamylation.monoisotopicMass();
-    sm->residues = "R";
+    sm->residues.push_back('R');
     sm->set(UNIMOD_Carbamyl);
     sip->modificationParams.push_back(sm);
 
     sm = SearchModificationPtr(new SearchModification);
     sm->massDelta = oxidation.monoisotopicMass();
-    sm->residues = "M";
+    sm->residues.push_back('M');
     sm->set(UNIMOD_Oxidation);
     sip->modificationParams.push_back(sm);
 
     sm = SearchModificationPtr(new SearchModification);
     sm->massDelta = phosphorylation.monoisotopicMass();
-    sm->residues = "S";
+    sm->residues.push_back('S');
     sm->set(UNIMOD_Phospho);
+    sm->set(UNIMOD_Sulfo);
     sip->modificationParams.push_back(sm);
 
     sm = SearchModificationPtr(new SearchModification);
     sm->massDelta = phosphorylation.monoisotopicMass();
-    sm->residues = "T";
+    sm->residues.push_back('T');
     sm->set(UNIMOD_Phospho);
+    sm->set(UNIMOD_Sulfo);
     sip->modificationParams.push_back(sm);
 
     sm = SearchModificationPtr(new SearchModification);
     sm->massDelta = cam.monoisotopicMass();
-    sm->residues = "C";
+    sm->residues.push_back('C');
     sm->fixedMod = true;
     sm->set(UNIMOD_Carbamidomethyl);
     sip->modificationParams.push_back(sm);
 
     sm = SearchModificationPtr(new SearchModification);
     sm->massDelta = 311;
-    sm->residues = "H";
+    sm->residues.push_back('H');
     sm->fixedMod = true;
     sm->set(MS_unknown_modification);
     sip->modificationParams.push_back(sm);
@@ -365,18 +367,18 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
     {
         const AminoAcid::Info::Record& record = AminoAcid::Info::record(residueSymbols[i]);       
         ResiduePtr rp(new Residue);
-        rp->Code = record.symbol;
-        rp->Mass = record.residueFormula.monoisotopicMass();
+        rp->code = record.symbol;
+        rp->mass = record.residueFormula.monoisotopicMass();
         sip->massTable.residues.push_back(rp);
     }
     
     AmbiguousResiduePtr arp(new AmbiguousResidue);
-    arp->Code = "B";
+    arp->code = 'B';
     arp->set(MS_alternate_single_letter_codes, "D N");
     sip->massTable.ambiguousResidue.push_back(arp);
 
     arp.reset(new AmbiguousResidue);
-    arp->Code = "Z";
+    arp->code = 'Z';
     arp->set(MS_alternate_single_letter_codes, "E Q");
     sip->massTable.ambiguousResidue.push_back(arp);
 
@@ -436,7 +438,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
 
             mod = ModificationPtr(new Modification);
             mod->location = 17;
-            mod->residues = peptide->peptideSequence[mod->location-1];
+            mod->residues.push_back(peptide->peptideSequence[mod->location-1]);
             mod->avgMassDelta = cam.molecularWeight();
             mod->monoisotopicMassDelta = cam.monoisotopicMass();
             mod->set(UNIMOD_Carbamidomethyl);
@@ -454,15 +456,15 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sii->set(MS_Mascot_identity_threshold, 11);
             sii->set(MS_Mascot_homology_threshold, 21);
             sii->set(MS_Mascot_expectation_value, 0.01);
-            sii->userParams.push_back(UserParam("an extra score", "1.2345", "xsd:float"));
+            sii->userParams.push_back(UserParam("an extra score", "1.2345e10", "xsd:float"));
 
             pe = PeptideEvidencePtr(new PeptideEvidence);
             pe->peptidePtr = peptide;
             pe->dbSequencePtr = mzid.sequenceCollection.dbSequences[0];
             pe->id = pe->dbSequencePtr->accession + "_" + peptide->id;
             pe->start = 1; pe->end = 25;
-            pe->pre = "-";
-            pe->post = "V";
+            pe->pre = '-';
+            pe->post = 'V';
             mzid.sequenceCollection.peptideEvidence.push_back(pe);
             sii->peptideEvidencePtr.push_back(pe);
 
@@ -478,7 +480,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
 
             mod = ModificationPtr(new Modification);
             mod->location = 9;
-            mod->residues = peptide->peptideSequence[mod->location-1];
+            mod->residues.push_back(peptide->peptideSequence[mod->location-1]);
             mod->avgMassDelta = phosphorylation.molecularWeight();
             mod->monoisotopicMassDelta = phosphorylation.monoisotopicMass();
             mod->set(UNIMOD_Phospho);
@@ -486,7 +488,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
 
             mod = ModificationPtr(new Modification);
             mod->location = 13;
-            mod->residues = peptide->peptideSequence[mod->location-1];
+            mod->residues.push_back(peptide->peptideSequence[mod->location-1]);
             mod->avgMassDelta = cam.molecularWeight();
             mod->monoisotopicMassDelta = cam.monoisotopicMass();
             mod->set(UNIMOD_Carbamidomethyl);
@@ -504,15 +506,15 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sii->set(MS_Mascot_identity_threshold, 11);
             sii->set(MS_Mascot_homology_threshold, 21);
             sii->set(MS_Mascot_expectation_value, 0.1);
-            sii->userParams.push_back(UserParam("an extra score", "1.2345", "xsd:float"));
+            sii->userParams.push_back(UserParam("an extra score", "1.2345E10", "xsd:float"));
 
             pe = PeptideEvidencePtr(new PeptideEvidence);
             pe->peptidePtr = peptide;
             pe->dbSequencePtr = mzid.sequenceCollection.dbSequences[0];
             pe->id = pe->dbSequencePtr->accession + "_" + peptide->id;
             pe->start = 5; pe->end = 25;
-            pe->pre = "K";
-            pe->post = "V";
+            pe->pre = 'K';
+            pe->post = 'V';
             mzid.sequenceCollection.peptideEvidence.push_back(pe);
             sii->peptideEvidencePtr.push_back(pe);
 
@@ -528,7 +530,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
 
             mod = ModificationPtr(new Modification);
             mod->location = 10;
-            mod->residues = peptide->peptideSequence[mod->location-1];
+            mod->residues.push_back(peptide->peptideSequence[mod->location-1]);
             mod->avgMassDelta = phosphorylation.molecularWeight();
             mod->monoisotopicMassDelta = phosphorylation.monoisotopicMass();
             mod->set(UNIMOD_Phospho);
@@ -536,7 +538,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
 
             mod = ModificationPtr(new Modification);
             mod->location = 13;
-            mod->residues = peptide->peptideSequence[mod->location-1];
+            mod->residues.push_back(peptide->peptideSequence[mod->location-1]);
             mod->avgMassDelta = cam.molecularWeight();
             mod->monoisotopicMassDelta = cam.monoisotopicMass();
             mod->set(UNIMOD_Carbamidomethyl);
@@ -554,7 +556,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sii->set(MS_Mascot_identity_threshold, 11);
             sii->set(MS_Mascot_homology_threshold, 21);
             sii->set(MS_Mascot_expectation_value, 0.1);
-            sii->userParams.push_back(UserParam("an extra score", "1.2345", "xsd:float"));
+            sii->userParams.push_back(UserParam("an extra score", "-1.2345", "xsd:float"));
 
             // copy from previous variant and change peptide and id
             pe = PeptideEvidencePtr(new PeptideEvidence(*pe));
@@ -586,7 +588,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
 
             mod = ModificationPtr(new Modification);
             mod->location = 1;
-            mod->residues = peptide->peptideSequence[mod->location-1];
+            mod->residues.push_back(peptide->peptideSequence[mod->location-1]);
             mod->avgMassDelta = pyroglutQ.molecularWeight();
             mod->monoisotopicMassDelta = pyroglutQ.monoisotopicMass();
             mod->set(UNIMOD_Gln__pyro_Glu);
@@ -604,15 +606,15 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sii->set(MS_Mascot_identity_threshold, 12);
             sii->set(MS_Mascot_homology_threshold, 22);
             sii->set(MS_Mascot_expectation_value, 0.02);
-            sii->userParams.push_back(UserParam("an extra score", "1.2345", "xsd:float"));
+            sii->userParams.push_back(UserParam("an extra score", "+1E10", "xsd:float"));
 
             pe = PeptideEvidencePtr(new PeptideEvidence);
             pe->peptidePtr = peptide;
             pe->dbSequencePtr = mzid.sequenceCollection.dbSequences[0];
             pe->id = pe->dbSequencePtr->accession + "_" + peptide->id;
             pe->start = 424; pe->end = 447;
-            pe->pre = "K";
-            pe->post = "A";
+            pe->pre = 'K';
+            pe->post = 'A';
             mzid.sequenceCollection.peptideEvidence.push_back(pe);
             sii->peptideEvidencePtr.push_back(pe);
 
@@ -628,7 +630,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
 
             mod = ModificationPtr(new Modification);
             mod->location = 3;
-            mod->residues = peptide->peptideSequence[mod->location-1];
+            mod->residues.push_back(peptide->peptideSequence[mod->location-1]);
             mod->avgMassDelta = phosphorylation.molecularWeight();
             mod->monoisotopicMassDelta = phosphorylation.monoisotopicMass();
             mod->set(UNIMOD_Phospho);
@@ -653,15 +655,15 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sii->set(MS_Mascot_identity_threshold, 12);
             sii->set(MS_Mascot_homology_threshold, 22);
             sii->set(MS_Mascot_expectation_value, 0.2);
-            sii->userParams.push_back(UserParam("an extra score", "2.3456", "xsd:float"));
+            sii->userParams.push_back(UserParam("an extra score", "-2", "xsd:float"));
 
             pe = PeptideEvidencePtr(new PeptideEvidence);
             pe->peptidePtr = peptide;
             pe->dbSequencePtr = mzid.sequenceCollection.dbSequences[0];
             pe->id = pe->dbSequencePtr->accession + "_" + peptide->id;
             pe->start = 416; pe->end = 422;
-            pe->pre = "K";
-            pe->post = "K";
+            pe->pre = 'K';
+            pe->post = 'K';
             mzid.sequenceCollection.peptideEvidence.push_back(pe);
             sii->peptideEvidencePtr.push_back(pe);
 
@@ -670,8 +672,8 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             pe->dbSequencePtr = mzid.sequenceCollection.dbSequences[1];
             pe->id = pe->dbSequencePtr->accession + "_" + peptide->id;
             pe->start = 416; pe->end = 422;
-            pe->pre = "K";
-            pe->post = "K";
+            pe->pre = 'K';
+            pe->post = 'K';
             mzid.sequenceCollection.peptideEvidence.push_back(pe);
             sii->peptideEvidencePtr.push_back(pe);
 
@@ -771,8 +773,8 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             pe->dbSequencePtr = mzid.sequenceCollection.dbSequences[0];
             pe->id = pe->dbSequencePtr->accession + "_" + peptide->id;
             pe->start = 26; pe->end = 37;
-            pe->pre = "K";
-            pe->post = "T";
+            pe->pre = 'K';
+            pe->post = 'T';
             mzid.sequenceCollection.peptideEvidence.push_back(pe);
             sii->peptideEvidencePtr.push_back(pe);
 
@@ -781,8 +783,8 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             pe->dbSequencePtr = mzid.sequenceCollection.dbSequences[1];
             pe->id = pe->dbSequencePtr->accession + "_" + peptide->id;
             pe->start = 26; pe->end = 37;
-            pe->pre = "K";
-            pe->post = "T";
+            pe->pre = 'K';
+            pe->post = 'T';
             mzid.sequenceCollection.peptideEvidence.push_back(pe);
             sii->peptideEvidencePtr.push_back(pe);
 

@@ -191,6 +191,13 @@ void diff(const Filter& a,
           const DiffConfig& config);
 
 PWIZ_API_DECL
+void diff(const DatabaseTranslation& a,
+          const DatabaseTranslation& b,
+          DatabaseTranslation& a_b,
+          DatabaseTranslation& b_a,
+          const DiffConfig& config);
+
+PWIZ_API_DECL
 void diff(const SpectrumIdentificationProtocol& a,
           const SpectrumIdentificationProtocol& b,
           SpectrumIdentificationProtocol& a_b,

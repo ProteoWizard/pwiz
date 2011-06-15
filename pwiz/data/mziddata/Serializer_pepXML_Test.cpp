@@ -82,14 +82,9 @@ void stripUnmappedMetadata(MzIdentML& mzid)
     }
 
     // pepXML can only support one mass type (we pick the max mass in case one of them is 0)
-    // and it doesn't reliably store UNIMOD names or accessions
     BOOST_FOREACH(PeptidePtr& peptide, mzid.sequenceCollection.peptides)
     BOOST_FOREACH(ModificationPtr& mod, peptide->modification)
-    {
         mod->monoisotopicMassDelta = mod->avgMassDelta = max(mod->monoisotopicMassDelta, mod->avgMassDelta);
-        mod->cvParams.clear();
-        mod->set(MS_unknown_modification);
-    }
 
     // pepXML doesn't support fragment metadata
     mzid.dataCollection.analysisData.spectrumIdentificationList[0]->fragmentationTable.clear();
@@ -109,10 +104,7 @@ void stripUnmappedMetadata(MzIdentML& mzid)
 
             // pepXML's alternative_proteins do not store prev/next AA or missed cleavages
             if (i > 0)
-            {
-                pe.pre.clear();
-                pe.post.clear();
-            }
+                pe.pre = pe.post = '?';
         }
     }
 
