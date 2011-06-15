@@ -1179,6 +1179,7 @@ void snapModificationsToUnimod(const SpectrumIdentification& si)
 
     const SpectrumIdentificationList& sil = *si.spectrumIdentificationListPtr;
 
+    // loop over SIIs instead of Peptides to get access to calculatedMassToCharge without recalculating it
     set<PeptidePtr> snappedPeptides;
     BOOST_FOREACH(const SpectrumIdentificationResultPtr& sir, sil.spectrumIdentificationResult)
     BOOST_FOREACH(const SpectrumIdentificationItemPtr& sii, sir->spectrumIdentificationItem)

@@ -235,7 +235,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
     sip->additionalSearchParams.userParams.push_back(UserParam("INSTRUMENT", "Default"));
     sip->additionalSearchParams.userParams.push_back(UserParam("MASS", "Monoisotopic"));
     sip->additionalSearchParams.userParams.push_back(UserParam("PFA", "1"));
-    sip->additionalSearchParams.userParams.push_back(UserParam("TOL", "10"));
+    sip->additionalSearchParams.userParams.push_back(UserParam("TOL", "1"));
     sip->additionalSearchParams.userParams.push_back(UserParam("TOLU", "ppm"));
     sip->additionalSearchParams.userParams.push_back(UserParam("ITOL", "0.6"));
     sip->additionalSearchParams.userParams.push_back(UserParam("ITOLU", "Da"));
@@ -323,8 +323,8 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
     sip->enzymes.independent = true;
     sip->enzymes.enzymes.push_back(enzyme);
 
-    sip->parentTolerance.set(MS_search_tolerance_plus_value, "10", UO_parts_per_million);
-    sip->parentTolerance.set(MS_search_tolerance_minus_value, "10", UO_parts_per_million);
+    sip->parentTolerance.set(MS_search_tolerance_plus_value, "1", UO_parts_per_million);
+    sip->parentTolerance.set(MS_search_tolerance_minus_value, "1", UO_parts_per_million);
 
     sip->fragmentTolerance.set(MS_search_tolerance_plus_value, "0.6", UO_dalton);
     sip->fragmentTolerance.set(MS_search_tolerance_minus_value, "0.6", UO_dalton);

@@ -29,6 +29,7 @@
 #include "Serializer_mzid.hpp"
 #include "examples.hpp"
 #include "Diff.hpp"
+#include "TextWriter.hpp"
 
 
 using namespace pwiz::mziddata;
@@ -231,6 +232,31 @@ void testDigestedPeptides()
     }
 }
 
+void testSnapModifications()
+{
+    MzIdentML mzid, mzid2;
+    initializeBasicSpectrumIdentification(mzid);
+    initializeBasicSpectrumIdentification(mzid2);
+
+    BOOST_FOREACH(SpectrumIdentificationProtocolPtr& sip, mzid2.analysisProtocolCollection.spectrumIdentificationProtocol)
+    BOOST_FOREACH(SearchModificationPtr& mod, sip->modificationParams)
+        mod->cvParams.clear();
+
+    BOOST_FOREACH(PeptidePtr& pep, mzid2.sequenceCollection.peptides)
+    BOOST_FOREACH(ModificationPtr& mod, pep->modification)
+        mod->cvParams.clear();
+
+    Diff<MzIdentML, DiffConfig> diff(mzid, mzid2);
+    unit_assert(diff);
+
+    BOOST_FOREACH(SpectrumIdentificationPtr& si, mzid2.analysisCollection.spectrumIdentification)
+        snapModificationsToUnimod(*si);
+
+    diff(mzid, mzid2);
+    if (diff && os_) *os_ << "diff:\n" << diff_string<TextWriter>(diff) << endl;
+    unit_assert(!diff);
+}
+
 
 int main(int argc, char** argv)
 {
@@ -240,6 +266,7 @@ int main(int argc, char** argv)
     try
     {
         testDigestedPeptides();
+        testSnapModifications();
         return 0;
     }
     catch (exception& e)
