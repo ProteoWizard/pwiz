@@ -87,8 +87,16 @@ void test()
     unit_assert_operator_equal(false, acetyl.specificities[4].hidden);
     unit_assert_operator_equal(Classification::PostTranslational, acetyl.specificities[4].classification);
 
-    unit_assert_operator_equal("Acetyl", modifications(acetyl.deltaMonoisotopicMass(), 0)[0].name);
-    unit_assert_operator_equal("Acetyl", modifications(acetyl.deltaAverageMass(), 0, false)[0].name);
+    unit_assert_operator_equal(UNIMOD_Acetyl, modifications(acetyl.deltaMonoisotopicMass(), 0)[0].cvid);
+    unit_assert_operator_equal(UNIMOD_Acetyl, modifications(acetyl.deltaAverageMass(), 0, false)[0].cvid);
+
+    // test a position-only filter
+    unit_assert_operator_equal(1, modifications(acetyl.deltaMonoisotopicMass(), 0.5,
+                                                indeterminate, indeterminate,
+                                                Site::Any, Position::AnyNTerminus).size());
+    unit_assert_operator_equal(UNIMOD_Acetyl, modifications(acetyl.deltaMonoisotopicMass(), 0.5,
+                                                            indeterminate, indeterminate,
+                                                            Site::Any, Position::AnyNTerminus)[0].cvid);
 
 
     const Modification& hse = modification("Met->Hse");
