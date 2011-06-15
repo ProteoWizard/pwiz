@@ -21,7 +21,7 @@
 
 
 #include <stdexcept>
-#include <boost/lexical_cast.hpp>
+#include "optimized_lexical_cast.hpp"
 #include <cstdlib>
 
 
