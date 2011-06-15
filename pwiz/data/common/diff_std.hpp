@@ -226,6 +226,23 @@ void diff_string(const string_type& a,
 }
 
 
+template <typename char_type>
+void diff_char(const char_type& a,
+               const char_type& b,
+               char_type& a_b,
+               char_type& b_a)
+{
+    a_b = 0;
+    b_a = 0;
+    
+    if (a != b)
+    {
+        a_b = a;
+        b_a = b;
+    }
+}
+
+
 template <typename integral_type>
 void diff_integral(const integral_type& a, 
                    const integral_type& b, 
