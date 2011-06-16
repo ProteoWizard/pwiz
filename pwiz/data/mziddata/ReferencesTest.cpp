@@ -40,9 +40,11 @@ MzIdentML createMzid()
     MzIdentML mzid;
     ContactPtr c1 = ContactPtr(new Contact("c1", "larry"));
     PersonPtr p1  = PersonPtr(new Person("p1", "mo"));
-    OrganizationPtr o1 = OrganizationPtr(new Organization("o1", "curly"));
+    PersonPtr p2  = PersonPtr(new Person("p2", "curly"));
+    OrganizationPtr o1 = OrganizationPtr(new Organization("o1", "three stooges"));
     mzid.auditCollection.push_back(c1);
     mzid.auditCollection.push_back(p1);
+    mzid.auditCollection.push_back(p2);
     mzid.auditCollection.push_back(o1);
 
     return mzid;
@@ -51,32 +53,35 @@ MzIdentML createMzid()
 
 void testContactRole()
 {
-    ContactRole cr1;
-    cr1.contactPtr = ContactPtr(new Contact("c1"));
-    ContactRole cr2;
-    cr2.contactPtr = ContactPtr(new Contact("p1"));
-    ContactRole cr3;
-    cr3.contactPtr = ContactPtr(new Contact("o1"));
+    MzIdentML mzid;
+    ContactPtr c1 = ContactPtr(new Contact("c1", "larry"));
+    PersonPtr p1  = PersonPtr(new Person("p1", "mo"));
+    PersonPtr p2  = PersonPtr(new Person("p2", "curly"));
+    OrganizationPtr o1 = OrganizationPtr(new Organization("o1", "three stooges"));
+    mzid.auditCollection.push_back(c1);
+    mzid.auditCollection.push_back(p1);
+    mzid.auditCollection.push_back(p2);
+    mzid.auditCollection.push_back(o1);
 
-    unit_assert(cr1.contactPtr->name.empty());
-    unit_assert(cr2.contactPtr->name.empty());
-    unit_assert(cr3.contactPtr->name.empty());
-    
-    MzIdentML mzid = createMzid();
+    mzid.provider.contactRolePtr.reset(new ContactRole(MS_role_type, ContactPtr(new Contact("c1"))));
 
-    References::resolve(cr1, mzid);
+    AnalysisSoftwarePtr software(new AnalysisSoftware);
+    software->contactRolePtr.reset(new ContactRole(MS_role_type, ContactPtr(new Person("p2"))));
+    mzid.analysisSoftwareList.push_back(software);
 
-    unit_assert(cr1.contactPtr->name == "larry");
+    SamplePtr sample(new Sample);
+    sample->contactRole.push_back(ContactRolePtr(new ContactRole(MS_role_type, ContactPtr(new Person("p1")))));
+    sample->contactRole.push_back(ContactRolePtr(new ContactRole(MS_role_type, ContactPtr(new Organization("o1")))));
+    mzid.analysisSampleCollection.samples.push_back(sample);
 
-    References::resolve(cr2, mzid);
+    References::resolve(mzid);
 
-    unit_assert(cr2.contactPtr->name == "mo");
-    unit_assert(dynamic_cast<Person*>(cr2.contactPtr.get()));
-
-    References::resolve(cr3, mzid);
-
-    unit_assert(cr3.contactPtr->name == "curly");
-    unit_assert(dynamic_cast<Organization*>(cr3.contactPtr.get()));
+    unit_assert(mzid.provider.contactRolePtr->contactPtr->name == "larry");
+    unit_assert(software->contactRolePtr->contactPtr->name == "curly");
+    unit_assert(sample->contactRole.front()->contactPtr->name == "mo");
+    unit_assert(dynamic_cast<Person*>(sample->contactRole.front()->contactPtr.get()));
+    unit_assert(sample->contactRole.back()->contactPtr->name == "three stooges");
+    unit_assert(dynamic_cast<Organization*>(sample->contactRole.back()->contactPtr.get()));
 }
 
 
@@ -97,7 +102,7 @@ void testAnalysisSampleCollection()
 
     mzid.analysisSampleCollection.samples.push_back(sample);
 
-    References::resolve(mzid.analysisSampleCollection, mzid);
+    References::resolve(mzid);
     
     unit_assert(mzid.analysisSampleCollection.samples.size() == 2);
     unit_assert(mzid.analysisSampleCollection.samples.at(0)->id == "s1");
@@ -130,7 +135,7 @@ void testContacts()
     mzid.auditCollection.push_back(feemail_organ);
     mzid.auditCollection.push_back(big_Organ);
 
-    References::resolve(mzid.auditCollection, mzid);
+    References::resolve(mzid);
 
     Person* tp = (Person*)mzid.auditCollection.at(1).get();
     unit_assert(tp->affiliations.at(0) == mail_organ);
@@ -167,7 +172,7 @@ void testDBSequence()
     dbs->searchDatabasePtr = SearchDatabasePtr(new SearchDatabase("sd3"));
     mzid.sequenceCollection.dbSequences.push_back(dbs);
 
-    References::resolve(mzid.sequenceCollection, mzid);
+    References::resolve(mzid);
 
     DBSequencePtr& dps1 = mzid.sequenceCollection.dbSequences.at(0);
     unit_assert(dps1->searchDatabasePtr->name == "everywhere");
@@ -177,12 +182,40 @@ void testDBSequence()
 }
 
 
+void testMeasure()
+{
+    MzIdentML mzid;
+    SpectrumIdentificationListPtr sil(new SpectrumIdentificationList);
+    SpectrumIdentificationResultPtr sir(new SpectrumIdentificationResult("SIR_1"));
+    SpectrumIdentificationItemPtr sii(new SpectrumIdentificationItem("SII_1"));
+
+    mzid.dataCollection.analysisData.spectrumIdentificationList.push_back(sil);
+    sil->spectrumIdentificationResult.push_back(sir);
+    sir->spectrumIdentificationItem.push_back(sii);
+
+    MeasurePtr measureMz(new Measure("M_MZ", "m/z measure"));
+    sil->fragmentationTable.push_back(measureMz);
+
+    IonTypePtr it(new IonType);
+    sii->fragmentation.push_back(it);
+
+    FragmentArrayPtr fa(new FragmentArray);
+    fa->measurePtr.reset(new Measure("M_MZ"));
+    it->fragmentArray.push_back(fa);
+
+    References::resolve(mzid);
+
+    unit_assert_operator_equal("m/z measure", it->fragmentArray.back()->measurePtr->name);
+}
+
+
 void test()
 {
     testContactRole();
     testContacts();
     testAnalysisSampleCollection();
     testDBSequence();
+    testMeasure();
 }
 
 int main(int argc, char* argv[])

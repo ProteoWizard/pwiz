@@ -98,19 +98,32 @@ PWIZ_API_DECL void resolve(ContactRole& cr, MzIdentML& mzid)
 }
 
 
-PWIZ_API_DECL void resolve(AnalysisSoftwarePtr asp, MzIdentML& mzid)
+PWIZ_API_DECL void resolve(AnalysisSoftwarePtr& asp, MzIdentML& mzid)
 {
     if (asp->contactRolePtr.get() && !asp->contactRolePtr->empty())
         resolve(*asp->contactRolePtr, mzid);
 }
 
 
+void resolve(Provider& provider, MzIdentML& mzid)
+{   
+    if (mzid.provider.contactRolePtr.get())
+        resolve(*mzid.provider.contactRolePtr, mzid);
+    if (mzid.provider.analysisSoftwarePtr.get())
+        resolve(mzid.provider.analysisSoftwarePtr, mzid);
+}
+
+
 PWIZ_API_DECL void resolve(AnalysisSampleCollection& asc, MzIdentML& mzid)
 {
     BOOST_FOREACH(SamplePtr& s, asc.samples)
+    {
+        BOOST_FOREACH(ContactRolePtr& cr, s->contactRole)
+            resolve(*cr, mzid);
         BOOST_FOREACH(SamplePtr& ss, s->subSamples)
             if (ss.get() && !ss->empty())
                 resolve(ss, asc.samples);
+    }
 }
 
 
@@ -187,7 +200,7 @@ PWIZ_API_DECL void resolve(MassTablePtr& mt, const vector<SpectrumIdentification
     mt = MassTablePtr(new MassTable((*it)->massTable));
 }
 
-PWIZ_API_DECL void resolve(PeptideEvidencePtr pe, const MzIdentML& mzid)
+PWIZ_API_DECL void resolve(PeptideEvidencePtr& pe, const MzIdentML& mzid)
 {
     if (!pe.get())
         throw runtime_error("NULL value passed into resolve(PeptideEvidencePtr, MzIdentML&)");
@@ -213,37 +226,37 @@ struct ResolvePE
     const MzIdentML* mzid_;
     ResolvePE(const MzIdentML* mzid) : mzid_(mzid) {}
     
-    void operator()(PeptideEvidencePtr pe)
+    void operator()(PeptideEvidencePtr& pe)
     {
         return resolve(pe, (*mzid_));
     }
 };
 
-PWIZ_API_DECL void resolve(SpectrumIdentificationListPtr si, MzIdentML& mzid)
+PWIZ_API_DECL void resolve(SpectrumIdentificationListPtr& sil, MzIdentML& mzid)
 {
-    BOOST_FOREACH(SpectrumIdentificationResultPtr& sir, si->spectrumIdentificationResult)
+    BOOST_FOREACH(SpectrumIdentificationResultPtr& sir, sil->spectrumIdentificationResult)
     {
         if (sir->spectraDataPtr.get())
             resolve(sir->spectraDataPtr, mzid.dataCollection.inputs.spectraData);
 
-        if (mzid.sequenceCollection.empty())
-            continue;
-
         BOOST_FOREACH(SpectrumIdentificationItemPtr& sii, sir->spectrumIdentificationItem)
         {
-            if (sii->peptidePtr.get())
-            {
-                if (sii->peptidePtr->peptideSequence.empty())
-                {
-                    ResolvePE rpe(&mzid);
-                    for_each(sii->peptideEvidencePtr.begin(),
-                             sii->peptideEvidencePtr.end(),
-                             rpe);
-                    resolve(sii->peptidePtr, mzid.sequenceCollection.peptides);
-                }
+            resolve(sii->massTablePtr, mzid.analysisProtocolCollection.spectrumIdentificationProtocol);
+            resolve(sii->samplePtr, mzid.analysisSampleCollection.samples);
 
-                resolve(sii->massTablePtr, mzid.analysisProtocolCollection.spectrumIdentificationProtocol);
-                resolve(sii->samplePtr, mzid.analysisSampleCollection.samples);
+            BOOST_FOREACH(IonTypePtr& it, sii->fragmentation)
+            BOOST_FOREACH(FragmentArrayPtr& fa, it->fragmentArray)
+                resolve(fa->measurePtr, sil->fragmentationTable);
+
+            if (!mzid.sequenceCollection.empty() &&
+                sii->peptidePtr.get() &&
+                sii->peptidePtr->peptideSequence.empty())
+            {
+                ResolvePE rpe(&mzid);
+                for_each(sii->peptideEvidencePtr.begin(),
+                         sii->peptideEvidencePtr.end(),
+                         rpe);
+                resolve(sii->peptidePtr, mzid.sequenceCollection.peptides);
             }
         }
     }
@@ -318,13 +331,8 @@ PWIZ_API_DECL void resolve(vector<ProteinDetectionProtocolPtr>& vpdp, MzIdentML&
 
 PWIZ_API_DECL void resolve(DataCollection& dc, MzIdentML& mzid)
 {
-    vector<SpectrumIdentificationListPtr>& sil = dc.analysisData.spectrumIdentificationList;
-    typedef vector<SpectrumIdentificationListPtr>::iterator sil_iterator;
-
-    for (sil_iterator it=sil.begin(); it != sil.end(); it++)
-    {
-        resolve(*it, mzid);
-    }
+    BOOST_FOREACH(SpectrumIdentificationListPtr& sil, dc.analysisData.spectrumIdentificationList)
+        resolve(sil, mzid);
 
     // If there's no proteinDetectionListPtr, then we're done.
     if (!dc.analysisData.proteinDetectionListPtr.get())
@@ -360,7 +368,7 @@ PWIZ_API_DECL void resolve(MzIdentML& mzid)
         if (as->contactRolePtr.get())
             resolve(*as->contactRolePtr, mzid);
 
-    resolve(mzid.provider.contactRole, mzid);
+    resolve(mzid.provider, mzid);
     resolve(mzid.auditCollection, mzid);
     resolve(mzid.analysisSampleCollection, mzid);
     

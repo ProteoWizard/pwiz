@@ -29,12 +29,14 @@
 #include "pwiz/utility/chemistry/Ion.hpp"
 #include "pwiz/data/proteome/Digestion.hpp"
 #include "pwiz/data/proteome/AminoAcid.hpp"
+#include <boost/assign.hpp>
 //#include <boost/random.hpp>
 
 
 using namespace pwiz::proteome;
 using namespace pwiz::chemistry;
 using namespace pwiz::util;
+using namespace boost::assign;
 
 
 namespace pwiz {
@@ -162,9 +164,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
     mslOrg->set(MS_contact_phone_number, "+44 (0)20 7486 1050");
     mzid.auditCollection.push_back(mslOrg);
 
-    as->contactRolePtr.reset(new ContactRole);
-    as->contactRolePtr->cvid = MS_software_vendor;
-    as->contactRolePtr->contactPtr = mslOrg;
+    as->contactRolePtr.reset(new ContactRole(MS_software_vendor, mslOrg));
 
     OrganizationPtr ownerOrg(new Organization("ORG_DOC_OWNER", "Some Lab Owner"));
     mzid.auditCollection.push_back(ownerOrg);
@@ -177,8 +177,8 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
     mzid.auditCollection.push_back(owner);
 
     mzid.provider.id = "PROVIDER";
-    mzid.provider.contactRole.contactPtr = owner;
-    mzid.provider.contactRole.cvid = MS_researcher;
+    mzid.provider.contactRolePtr.reset(new ContactRole(MS_researcher, owner));
+    mzid.provider.analysisSoftwarePtr = mzid.analysisSoftwareList.front();
 
     SearchDatabasePtr sdb(new SearchDatabase);
     sdb->id = "SDB_SwissProt";
@@ -389,30 +389,10 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
     sip->databaseFilters.push_back(fp);
 
     // Fill in mzid.analysisData
-    MeasurePtr measure(new Measure);
-    measure->id = "m_mz";
-    measure->set(MS_product_ion_m_z);
-    sil->fragmentationTable.push_back(measure);
-
-    measure = MeasurePtr(new Measure);
-    measure->id = "m_intensity";
-    measure->set(MS_product_ion_intensity);
-    sil->fragmentationTable.push_back(measure);
-
-    measure = MeasurePtr(new Measure);
-    measure->id = "m_error";
-    measure->set(MS_product_ion_m_z_error, "", MS_m_z);
-    sil->fragmentationTable.push_back(measure);
-
-    /*IonTypePtr ionType(new IonType);
-    ionType->setIndex("2 3 4 5 6 7").charge = 1;
-    ionType->set(MS_frag__a_ion);
-    siip->fragmentation.push_back(ionType);
-    FragmentArrayPtr fap(new FragmentArray);
-    fap->setValues("197.055771 360.124878 489.167847 603.244324 731.075562 828.637207 " );
-    fap->measurePtr = MeasurePtr(new Measure("m_mz"));
-    ionType->fragmentArray.push_back(fap);
-    sirp->spectrumIdentificationItem.push_back(siip);*/
+    MeasurePtr measureMz(new Measure);
+    measureMz->id = "m_mz";
+    measureMz->set(MS_product_ion_m_z, "", MS_m_z);
+    sil->fragmentationTable.push_back(measureMz);
 
     PeptidePtr peptide;
     ModificationPtr mod;
@@ -427,7 +407,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
         sir->name = "tiny.42.42";
         sir->spectrumID = "controllerType=0 controllerNumber=1 scan=42";
         sir->spectraDataPtr = sd;
-        sir->set(MS_retention_time, "123.4", UO_second);
+        sir->set(MS_scan_start_time, "123.4", UO_second);
 
         // result 1 rank 1
         {
@@ -444,19 +424,33 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             mod->set(UNIMOD_Carbamidomethyl);
             peptide->modification.push_back(mod);
 
+            proteome::Peptide proteomePeptide = mziddata::peptide(*peptide);
+            proteome::Fragmentation fragmentation(proteomePeptide, true, true);
+
             sii = SpectrumIdentificationItemPtr(new SpectrumIdentificationItem);
             sii->id = "SII_1";
             sii->rank = 1;
             sii->chargeState = 4;
             sii->passThreshold = true;
-            sii->experimentalMassToCharge = 420.42;
-            sii->calculatedMassToCharge = 420.24;
+            sii->experimentalMassToCharge = Ion::mz(proteomePeptide.molecularWeight(), sii->chargeState);
+            sii->calculatedMassToCharge = Ion::mz(proteomePeptide.monoisotopicMass(), sii->chargeState);
             sii->peptidePtr = peptide;
             sii->set(MS_Mascot_score, 42.1);
             sii->set(MS_Mascot_identity_threshold, 11);
             sii->set(MS_Mascot_homology_threshold, 21);
             sii->set(MS_Mascot_expectation_value, 0.01);
             sii->userParams.push_back(UserParam("an extra score", "1.2345e10", "xsd:float"));
+
+            IonTypePtr ionType(new IonType);
+            ionType->charge = 1;
+            ionType->cvid = MS_frag__b_ion;
+            ionType->index += 2, 3, 4;
+            sii->fragmentation.push_back(ionType);
+
+            FragmentArrayPtr fap(new FragmentArray);
+            fap->values += fragmentation.b(2), fragmentation.b(3), fragmentation.b(4);
+            fap->measurePtr = measureMz;
+            ionType->fragmentArray.push_back(fap);
 
             pe = PeptideEvidencePtr(new PeptideEvidence);
             pe->peptidePtr = peptide;
@@ -494,19 +488,33 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             mod->set(UNIMOD_Carbamidomethyl);
             peptide->modification.push_back(mod);
 
+            proteome::Peptide proteomePeptide = mziddata::peptide(*peptide);
+            proteome::Fragmentation fragmentation(proteomePeptide, true, true);
+
             sii = SpectrumIdentificationItemPtr(new SpectrumIdentificationItem);
             sii->id = "SII_2";
             sii->rank = 2;
             sii->chargeState = 3;
             sii->passThreshold = true;
-            sii->experimentalMassToCharge = 421.42;
-            sii->calculatedMassToCharge = 421.24;
+            sii->experimentalMassToCharge = Ion::mz(proteomePeptide.molecularWeight(), sii->chargeState);
+            sii->calculatedMassToCharge = Ion::mz(proteomePeptide.monoisotopicMass(), sii->chargeState);
             sii->peptidePtr = peptide;
             sii->set(MS_Mascot_score, 4.2);
             sii->set(MS_Mascot_identity_threshold, 11);
             sii->set(MS_Mascot_homology_threshold, 21);
             sii->set(MS_Mascot_expectation_value, 0.1);
             sii->userParams.push_back(UserParam("an extra score", "1.2345E10", "xsd:float"));
+
+            IonTypePtr ionType(new IonType);
+            ionType->charge = 1;
+            ionType->cvid = MS_frag__b_ion;
+            ionType->index += 5, 7, 9;
+            sii->fragmentation.push_back(ionType);
+
+            FragmentArrayPtr fap(new FragmentArray);
+            fap->values += fragmentation.b(5), fragmentation.b(7), fragmentation.b(9);
+            fap->measurePtr = measureMz;
+            ionType->fragmentArray.push_back(fap);
 
             pe = PeptideEvidencePtr(new PeptideEvidence);
             pe->peptidePtr = peptide;
@@ -544,19 +552,33 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             mod->set(UNIMOD_Carbamidomethyl);
             peptide->modification.push_back(mod);
 
+            proteome::Peptide proteomePeptide = mziddata::peptide(*peptide);
+            proteome::Fragmentation fragmentation(proteomePeptide, true, true);
+
             sii = SpectrumIdentificationItemPtr(new SpectrumIdentificationItem);
             sii->id = "SII_3";
             sii->rank = 2;
             sii->chargeState = 3;
             sii->passThreshold = true;
-            sii->experimentalMassToCharge = 421.42;
-            sii->calculatedMassToCharge = 421.24;
+            sii->experimentalMassToCharge = Ion::mz(proteomePeptide.molecularWeight(), sii->chargeState);
+            sii->calculatedMassToCharge = Ion::mz(proteomePeptide.monoisotopicMass(), sii->chargeState);
             sii->peptidePtr = peptide;
             sii->set(MS_Mascot_score, 4.2);
             sii->set(MS_Mascot_identity_threshold, 11);
             sii->set(MS_Mascot_homology_threshold, 21);
             sii->set(MS_Mascot_expectation_value, 0.1);
             sii->userParams.push_back(UserParam("an extra score", "-1.2345", "xsd:float"));
+
+            IonTypePtr ionType(new IonType);
+            ionType->charge = 1;
+            ionType->cvid = MS_frag__b_ion;
+            ionType->index += 9, 11, 14;
+            sii->fragmentation.push_back(ionType);
+
+            FragmentArrayPtr fap(new FragmentArray);
+            fap->values += fragmentation.b(9), fragmentation.b(11), fragmentation.b(14);
+            fap->measurePtr = measureMz;
+            ionType->fragmentArray.push_back(fap);
 
             // copy from previous variant and change peptide and id
             pe = PeptideEvidencePtr(new PeptideEvidence(*pe));
@@ -577,7 +599,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
         sir->name = "tiny.420.420";
         sir->spectrumID = "controllerType=0 controllerNumber=1 scan=420";
         sir->spectraDataPtr = sd;
-        sir->set(MS_retention_time, "234.5", UO_second);
+        sir->set(MS_scan_start_time, "234.5", UO_second);
 
         // result 2 rank 1
         {
@@ -594,13 +616,15 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             mod->set(UNIMOD_Gln__pyro_Glu);
             peptide->modification.push_back(mod);
 
+            proteome::Peptide proteomePeptide = mziddata::peptide(*peptide);
+
             sii = SpectrumIdentificationItemPtr(new SpectrumIdentificationItem);
             sii->id = "SII_4";
             sii->rank = 1;
             sii->chargeState = 2;
             sii->passThreshold = true;
-            sii->experimentalMassToCharge = 1420.42;
-            sii->calculatedMassToCharge = 1420.24;
+            sii->experimentalMassToCharge = Ion::mz(proteomePeptide.molecularWeight(), sii->chargeState);
+            sii->calculatedMassToCharge = Ion::mz(proteomePeptide.monoisotopicMass(), sii->chargeState);
             sii->peptidePtr = peptide;
             sii->set(MS_Mascot_score, 24.1);
             sii->set(MS_Mascot_identity_threshold, 12);
@@ -643,13 +667,15 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             mod->set(UNIMOD_Amidated);
             peptide->modification.push_back(mod);
 
+            proteome::Peptide proteomePeptide = mziddata::peptide(*peptide);
+
             sii = SpectrumIdentificationItemPtr(new SpectrumIdentificationItem);
             sii->id = "SII_5";
             sii->rank = 2;
             sii->chargeState = 5;
             sii->passThreshold = true;
-            sii->experimentalMassToCharge = 422.42;
-            sii->calculatedMassToCharge = 422.24;
+            sii->experimentalMassToCharge = Ion::mz(proteomePeptide.molecularWeight(), sii->chargeState);
+            sii->calculatedMassToCharge = Ion::mz(proteomePeptide.monoisotopicMass(), sii->chargeState);
             sii->peptidePtr = peptide;
             sii->set(MS_Mascot_score, 2.4);
             sii->set(MS_Mascot_identity_threshold, 12);
@@ -689,19 +715,21 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
         sir->name = "tiny.421.421";
         sir->spectrumID = "controllerType=0 controllerNumber=1 scan=421";
         sir->spectraDataPtr = sd;
-        sir->set(MS_retention_time, "345.6", UO_second);
+        sir->set(MS_scan_start_time, "345.6", UO_second);
 
         // result 3 rank 1
         {
             peptide = mzid.sequenceCollection.peptides[4];
+
+            proteome::Peptide proteomePeptide(peptide->peptideSequence);
 
             sii = SpectrumIdentificationItemPtr(new SpectrumIdentificationItem);
             sii->id = "SII_6";
             sii->rank = 1;
             sii->chargeState = 4;
             sii->passThreshold = true;
-            sii->experimentalMassToCharge = 424.42;
-            sii->calculatedMassToCharge = 424.24;
+            sii->experimentalMassToCharge = Ion::mz(proteomePeptide.molecularWeight(), sii->chargeState);
+            sii->calculatedMassToCharge = Ion::mz(proteomePeptide.monoisotopicMass(), sii->chargeState);
             sii->peptidePtr = peptide;
             sii->set(MS_Mascot_score, 44);
             sii->set(MS_Mascot_identity_threshold, 13);
@@ -718,13 +746,15 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
         {
             peptide = mzid.sequenceCollection.peptides[3];
 
+            proteome::Peptide proteomePeptide(peptide->peptideSequence);
+
             sii = SpectrumIdentificationItemPtr(new SpectrumIdentificationItem);
             sii->id = "SII_7";
             sii->rank = 2;
             sii->chargeState = 5;
             sii->passThreshold = true;
-            sii->experimentalMassToCharge = 422.42;
-            sii->calculatedMassToCharge = 422.24;
+            sii->experimentalMassToCharge = Ion::mz(proteomePeptide.molecularWeight(), sii->chargeState);
+            sii->calculatedMassToCharge = Ion::mz(proteomePeptide.monoisotopicMass(), sii->chargeState);
             sii->peptidePtr = peptide;
             sii->set(MS_Mascot_score, 4.4);
             sii->set(MS_Mascot_identity_threshold, 13);
@@ -746,7 +776,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
         sir->name = "tiny.422.422";
         sir->spectrumID = "controllerType=0 controllerNumber=1 scan=422";
         sir->spectraDataPtr = sd;
-        sir->set(MS_retention_time, "456.7", UO_second);
+        sir->set(MS_scan_start_time, "456.7", UO_second);
 
         // result 4 rank 1
         {
@@ -755,13 +785,15 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             peptide->peptideSequence = "VEIIANDQGNR";
             mzid.sequenceCollection.peptides.push_back(peptide);
 
+            proteome::Peptide proteomePeptide = mziddata::peptide(*peptide);
+
             sii = SpectrumIdentificationItemPtr(new SpectrumIdentificationItem);
             sii->id = "SII_8";
             sii->rank = 1;
             sii->chargeState = 3;
             sii->passThreshold = true;
-            sii->experimentalMassToCharge = 424.42;
-            sii->calculatedMassToCharge = 424.24;
+            sii->experimentalMassToCharge = Ion::mz(proteomePeptide.molecularWeight(), sii->chargeState);
+            sii->calculatedMassToCharge = Ion::mz(proteomePeptide.monoisotopicMass(), sii->chargeState);
             sii->peptidePtr = peptide;
             sii->set(MS_Mascot_score, 54);
             sii->set(MS_Mascot_identity_threshold, 23);
@@ -800,10 +832,16 @@ PWIZ_API_DECL void initializeTiny(MzIdentML& mzid)
 
     SpectrumIdentificationListPtr& sil = mzid.dataCollection.analysisData.spectrumIdentificationList[0];
 
-    mzid.id = "";
+    mzid.id = "Lizard King";
     
-    //SamplePtr sample(new Sample);
-    //mzid.analysisSampleCollection.samples.push_back(sample);
+    SamplePtr sample(new Sample("SAMPLE_1", "T. Rex"));
+    sample->set(MS_taxonomy__scientific_name, "T. Rex");
+    mzid.analysisSampleCollection.samples.push_back(sample);
+
+    SamplePtr toothSample(new Sample("SAMPLE_1_TOOTH", "T. Rex tooth"));
+    toothSample->set(MS_taxonomy__scientific_name, "T. Rex");
+    sample->subSamples.push_back(toothSample);
+    mzid.analysisSampleCollection.samples.push_back(toothSample);
 
     ProteinDetectionProtocolPtr pdp(new ProteinDetectionProtocol("PDP_Mascot_1"));
     pdp->analysisSoftwarePtr = mzid.analysisSoftwareList[1];

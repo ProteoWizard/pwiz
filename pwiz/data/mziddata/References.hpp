@@ -36,7 +36,7 @@ namespace mziddata {
 namespace References {
 
 PWIZ_API_DECL void resolve(ContactRole& cr, MzIdentML& mzid);
-PWIZ_API_DECL void resolve(AnalysisSoftwarePtr asp, MzIdentML& mzid);
+PWIZ_API_DECL void resolve(AnalysisSoftwarePtr& asp, MzIdentML& mzid);
 PWIZ_API_DECL void resolve(AnalysisSampleCollection& asc, MzIdentML& mzid);
 PWIZ_API_DECL void resolve(std::vector<ContactPtr>& vcp, MzIdentML& mzid);
 PWIZ_API_DECL void resolve(SequenceCollection& sc, MzIdentML& mzid);

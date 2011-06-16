@@ -147,7 +147,8 @@ TYPEDEF_SHARED_PTR(Person);
 
 struct PWIZ_API_DECL ContactRole : public CVParam
 {
-    ContactRole();
+    ContactRole(CVID role_ = CVID_Unknown,
+                const ContactPtr& contactPtr_ = ContactPtr());
 
     ContactPtr contactPtr;
 
@@ -157,26 +158,13 @@ struct PWIZ_API_DECL ContactRole : public CVParam
 TYPEDEF_SHARED_PTR(ContactRole);
 
 
-struct PWIZ_API_DECL Provider : public Identifiable
-{
-    Provider(const std::string id_ = "",
-             const std::string name_ = "");
-
-    ContactRole contactRole;
-
-    bool empty() const;
-};
-
-TYPEDEF_SHARED_PTR(Provider);
-
-
 struct PWIZ_API_DECL Sample : public IdentifiableParamContainer
 {
-    ContactRole contactRole;
-    std::vector<boost::shared_ptr<Sample> > subSamples;
-
     Sample(const std::string& id_ = "",
            const std::string& name_ = "");
+
+    std::vector<ContactRolePtr> contactRole;
+    std::vector<boost::shared_ptr<Sample> > subSamples;
 
     bool empty() const;
 };
@@ -202,6 +190,20 @@ struct PWIZ_API_DECL AnalysisSoftware : public Identifiable
 };
 
 TYPEDEF_SHARED_PTR(AnalysisSoftware);
+
+
+struct PWIZ_API_DECL Provider : public Identifiable
+{
+    Provider(const std::string id_ = "",
+             const std::string name_ = "");
+
+    ContactRolePtr contactRolePtr;
+    AnalysisSoftwarePtr analysisSoftwarePtr;
+
+    bool empty() const;
+};
+
+TYPEDEF_SHARED_PTR(Provider);
 
 
 // TODO find example document w/ this in it and determine best
@@ -450,14 +452,10 @@ struct PWIZ_API_DECL Measure : public IdentifiableParamContainer
 TYPEDEF_SHARED_PTR(Measure);
 
 
-struct PWIZ_API_DECL FragmentArray : public ParamContainer
+struct PWIZ_API_DECL FragmentArray
 {
     std::vector<double> values;
     MeasurePtr measurePtr;
-
-    FragmentArray& setValues(const std::string& values);
-    FragmentArray& setValues(const std::vector<double>& values);
-    std::string getValues() const;
 
     bool empty() const;
 };
@@ -465,13 +463,12 @@ struct PWIZ_API_DECL FragmentArray : public ParamContainer
 TYPEDEF_SHARED_PTR(FragmentArray);
 
 
-struct PWIZ_API_DECL IonType : public ParamContainer
+struct PWIZ_API_DECL IonType : public CVParam
 {
     IonType();
 
     std::vector<int> index;
     int charge;
-
     std::vector<FragmentArrayPtr> fragmentArray;
 
     bool empty() const;
@@ -553,6 +550,9 @@ TYPEDEF_SHARED_PTR(SpectraData);
 
 struct PWIZ_API_DECL SpectrumIdentificationResult : public IdentifiableParamContainer
 {
+    SpectrumIdentificationResult(const std::string& id_ = "",
+                                 const std::string& name_ = "");
+
     std::string spectrumID;
     SpectraDataPtr spectraDataPtr;
 
@@ -802,13 +802,19 @@ TYPEDEF_SHARED_PTR(MzIdentML);
 
 
 /// given a protocol and a PeptideEvidence instance, returns the PeptideEvidence as a DigestedPeptide instance
-proteome::DigestedPeptide digestedPeptide(const SpectrumIdentificationProtocol& sip, const PeptideEvidence& peptideEvidence);
+PWIZ_API_DECL proteome::DigestedPeptide digestedPeptide(const SpectrumIdentificationProtocol& sip, const PeptideEvidence& peptideEvidence);
 
 /// given a protocol and a SpectrumIdentificationItem, builds a set of DigestedPeptides
-std::vector<proteome::DigestedPeptide> digestedPeptides(const SpectrumIdentificationProtocol& sip, const SpectrumIdentificationItem& sii);
+PWIZ_API_DECL std::vector<proteome::DigestedPeptide> digestedPeptides(const SpectrumIdentificationProtocol& sip, const SpectrumIdentificationItem& sii);
+
+/// creates a proteome::Peptide from an mziddata::Peptide
+PWIZ_API_DECL proteome::Peptide peptide(const Peptide& peptide);
+
+/// creates a proteome::Modification from an mziddata::Modification
+PWIZ_API_DECL proteome::Modification modification(const Modification& mod);
 
 /// sets Unimod CV terms (if possible) for all SearchModifications and Modification elements
-void snapModificationsToUnimod(const SpectrumIdentification& si);
+PWIZ_API_DECL void snapModificationsToUnimod(const SpectrumIdentification& si);
 
 
 } // namespace mziddata 

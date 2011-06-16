@@ -25,6 +25,7 @@
 
 #include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/data/common/Unimod.hpp"
 #include "MzIdentML.hpp"
 #include "Serializer_mzid.hpp"
 #include "examples.hpp"
@@ -35,6 +36,8 @@
 using namespace pwiz::mziddata;
 using namespace pwiz::mziddata::examples;
 using namespace pwiz::util;
+using namespace pwiz::data;
+namespace proteome = pwiz::proteome;
 
 
 ostream* os_;
@@ -257,6 +260,36 @@ void testSnapModifications()
     unit_assert(!diff);
 }
 
+void testConversion()
+{
+    using proteome::ModificationMap;
+
+    MzIdentML mzid;
+    initializeBasicSpectrumIdentification(mzid);
+
+    // PEP_2: TAIGIDLGT[80]TYSC[57]VGVFQHGK
+    proteome::Peptide pep2 = peptide(*mzid.sequenceCollection.peptides[1]);
+    unit_assert_operator_equal("TAIGIDLGTTYSCVGVFQHGK", pep2.sequence());
+    unit_assert_operator_equal(2, pep2.modifications().size());
+    unit_assert_operator_equal(1, pep2.modifications().count(8));
+    unit_assert_operator_equal(unimod::modification(UNIMOD_Phospho).deltaMonoisotopicMass(),
+                               pep2.modifications().find(8)->second.monoisotopicDeltaMass());
+    unit_assert_operator_equal(1, pep2.modifications().count(12));
+    unit_assert_operator_equal(unimod::modification(UNIMOD_Carbamidomethyl).deltaMonoisotopicMass(),
+                               pep2.modifications().find(12)->second.monoisotopicDeltaMass());
+
+    // PEP_5: RNS[80]TIPT[-1]
+    proteome::Peptide pep5 = peptide(*mzid.sequenceCollection.peptides[4]);
+    unit_assert_operator_equal("RNSTIPT", pep5.sequence());
+    unit_assert_operator_equal(2, pep5.modifications().size());
+    unit_assert_operator_equal(1, pep5.modifications().count(2));
+    unit_assert_operator_equal(unimod::modification(UNIMOD_Phospho).deltaMonoisotopicMass(),
+                               pep5.modifications().find(2)->second.monoisotopicDeltaMass());
+    unit_assert_operator_equal(1, pep5.modifications().count(ModificationMap::CTerminus()));
+    unit_assert_operator_equal(unimod::modification(UNIMOD_Amidated).deltaMonoisotopicMass(),
+                               pep5.modifications().find(ModificationMap::CTerminus())->second.monoisotopicDeltaMass());
+}
+
 
 int main(int argc, char** argv)
 {
@@ -267,6 +300,7 @@ int main(int argc, char** argv)
     {
         testDigestedPeptides();
         testSnapModifications();
+        testConversion();
         return 0;
     }
     catch (exception& e)

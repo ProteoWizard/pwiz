@@ -159,7 +159,12 @@ template <typename object_type>
 std::string makeDelimitedListString(const vector<object_type>& objects, const char* delimiter = " ")
 {
     ostringstream oss;
-    copy(objects.begin(), objects.end(), ostream_iterator<object_type>(oss, delimiter));
+    oss.precision(12);
+    for (size_t i=0; i < objects.size(); ++i)
+    {
+        if (i > 0) oss << delimiter;
+        oss << objects[i];
+    }
     return oss.str();
 }
 
@@ -1756,7 +1761,6 @@ PWIZ_API_DECL void read(std::istream& is, ProteinDetection& pd)
 // Sample
 //
 
-
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Sample& sample)
 {
     XMLWriter::Attributes attributes;
@@ -1765,9 +1769,9 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Sample& sample)
     if (sample.subSamples.empty() || !sample.ParamContainer::empty() || !sample.contactRole.empty())
     {
         writer.startElement("Sample", attributes);
-        
-        if (!sample.contactRole.empty())
-            write(writer, sample.contactRole);
+
+        BOOST_FOREACH(const ContactRolePtr& cr, sample.contactRole)
+            write(writer, *cr);
 
         BOOST_FOREACH(const SamplePtr& subSample, sample.subSamples)
         {
@@ -1797,8 +1801,9 @@ struct HandlerSample : public HandlerIdentifiableParamContainer
 
         if (name == "ContactRole")
         {
+            sample->contactRole.push_back(ContactRolePtr(new ContactRole()));
             handlerContactRole_.version = version;
-            handlerContactRole_.cvParam = handlerContactRole_.cr = &sample->contactRole;
+            handlerContactRole_.cvParam = handlerContactRole_.cr = sample->contactRole.back().get();
             return Status(Status::Delegate, &handlerContactRole_);
         }
         else if (name == SubSample_element(version))
@@ -3573,7 +3578,7 @@ PWIZ_API_DECL void read(std::istream& is, ProteinDetectionList& pdl)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const FragmentArray& fa)
 {
     XMLWriter::Attributes attributes;
-    attributes.add("values", fa.getValues());
+    attributes.add("values", makeDelimitedListString(fa.values));
     if (fa.measurePtr.get() && !fa.measurePtr->empty())
         attributes.add("measure_ref", fa.measurePtr->id);
     
@@ -3597,7 +3602,7 @@ struct HandlerFragmentArray : public SAXParser::Handler
         {
             string values;
             getAttribute(attributes, "values", values);
-            fa->setValues(values);
+            parseDelimitedListString(fa->values, values);
 
             values.clear();
             getAttribute(attributes, measure_ref(version), values);
@@ -3631,21 +3636,20 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const IonType& itype)
     attributes.add("charge", itype.charge);
 
     writer.startElement("IonType", attributes);
-
-    writeParamContainer(writer, itype);
     
     for(vector<FragmentArrayPtr>::const_iterator it=itype.fragmentArray.begin();
         it!=itype.fragmentArray.end(); it++)
         write(writer, *it);
     
+    write(writer, (const CVParam&)itype);
     writer.endElement();
 }
 
 
-struct HandlerIonType : public HandlerParamContainer
+struct HandlerIonType : public HandlerNamedCVParam
 {
     IonType* it;
-    HandlerIonType(IonType* _it = 0) : HandlerParamContainer(_it), it(_it) {}
+    HandlerIonType(IonType* _it = 0) : HandlerNamedCVParam("IonType", _it), it(_it) {}
 
     virtual Status startElement(const string& name, 
                                 const Attributes& attributes,
@@ -3660,7 +3664,7 @@ struct HandlerIonType : public HandlerParamContainer
             getAttribute(attributes, "index", values);
             parseDelimitedListString(it->index, values);
             getAttribute(attributes, "charge", it->charge);
-            HandlerParamContainer::paramContainer = it;
+            HandlerNamedCVParam::cvParam = it;
             return Status::Ok;
         }
         else if (name == "FragmentArray")
@@ -3672,7 +3676,7 @@ struct HandlerIonType : public HandlerParamContainer
             return handlerFragmentArray_.startElement(name, attributes, position);
         }
 
-        return HandlerParamContainer::startElement(name, attributes, position);
+        return HandlerNamedCVParam::startElement(name, attributes, position);
     }
     private:
     HandlerFragmentArray handlerFragmentArray_;
@@ -3719,9 +3723,9 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
         writer.startElement("PeptideEvidenceRef", attributes, XMLWriter::EmptyElement);
     }
 
-    writeParamContainer(writer, siip);
-
     writePtrList(writer, siip.fragmentation, "Fragmentation");
+
+    writeParamContainer(writer, siip);
     
     writer.endElement();
 }
@@ -4209,9 +4213,13 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Provider& provider)
 {
     XMLWriter::Attributes attributes;
     addIdAttributes(provider, attributes);
-    
+
+    if (provider.analysisSoftwarePtr.get() && !provider.analysisSoftwarePtr->empty())
+        attributes.add("analysisSoftware_ref", provider.analysisSoftwarePtr);
+
     writer.startElement("Provider", attributes);
-    write(writer, provider.contactRole);
+    if (provider.contactRolePtr.get() && !provider.contactRolePtr->empty())
+        write(writer, provider.contactRolePtr);
     writer.endElement();
 }
 
@@ -4226,18 +4234,25 @@ struct HandlerProvider : public HandlerIdentifiable
     {
         if (name == "Provider")
         {
+            if (version == SchemaVersion_1_1)
+            {
+                p->analysisSoftwarePtr.reset(new AnalysisSoftware);
+                getAttribute(attributes, "analysisSoftware_ref", p->analysisSoftwarePtr->id);
+            }
+
             HandlerIdentifiable::id = p;
             return HandlerIdentifiable::startElement(name, attributes, position);
         }
         else if (name == "ContactRole")
         {
+            p->contactRolePtr.reset(new ContactRole);
             handlerContactRole_.version = version;
-            handlerContactRole_.cvParam = handlerContactRole_.cr = &p->contactRole;
+            handlerContactRole_.cvParam = handlerContactRole_.cr = p->contactRolePtr.get();
             return Status(Status::Delegate, &handlerContactRole_);
         }
         else
             throw runtime_error("[IO::HandlerProvider] Unknown tag "+name);
-        
+
         return Status::Ok;
     }
     HandlerContactRole handlerContactRole_;

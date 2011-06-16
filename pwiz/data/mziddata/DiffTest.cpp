@@ -83,8 +83,13 @@ void testFragmentArray()
     unit_assert(diff);
 
     // the values of the diff are correct
-    unit_assert(diff.a_b.userParams.size() == 1);
-    unit_assert(diff.b_a.userParams.size() == 1);
+    unit_assert(diff.a_b.values.size() == 2);
+    unit_assert_equal(0.0, diff.a_b.values[0], 1e-6);
+    unit_assert_equal(0.1, diff.a_b.values[1], 1e-6);
+    unit_assert(diff.b_a.values.size() == 2);
+    unit_assert_equal(0.0, diff.b_a.values[0], 1e-6);
+    unit_assert_equal(-0.1, diff.b_a.values[1], 1e-6);
+
     unit_assert(diff.a_b.measurePtr.get());
     unit_assert(diff.a_b.measurePtr->id == "Measure_ref");
     unit_assert(diff.b_a.measurePtr.get());
@@ -100,7 +105,7 @@ void testIonType()
     IonType a, b;
     a.index.push_back(1);
     a.charge = 1;
-    a.set(MS_frag__a_ion);
+    a.cvid = MS_frag__a_ion;
     a.fragmentArray.push_back(FragmentArrayPtr(new FragmentArray));
 
     b = a;
@@ -111,7 +116,7 @@ void testIonType()
 
     b.index.back() = 2;
     b.charge = 2;
-    b.set(MS_frag__z_ion);
+    b.cvid = MS_frag__z_ion;
     b.fragmentArray.push_back(FragmentArrayPtr(new FragmentArray));
     b.fragmentArray.back()->measurePtr = MeasurePtr(new Measure("Graduated_cylinder"));
     diff(a, b);
@@ -127,8 +132,8 @@ void testIonType()
     unit_assert_equal(*diff.b_a.index.begin(), 2.0, epsilon);
     unit_assert_equal(diff.a_b.charge, 1.0, epsilon);
     unit_assert_equal(diff.b_a.charge, 2.0, epsilon);
-    unit_assert(diff.a_b.ParamContainer::empty());
-    unit_assert(diff.b_a.hasCVParam(MS_frag__z_ion));
+    unit_assert(diff.a_b.cvid == MS_frag__a_ion);
+    unit_assert(diff.b_a.cvid == MS_frag__z_ion);
     unit_assert(diff.b_a.fragmentArray.size() == 1);
     unit_assert(diff.b_a.fragmentArray.back()->measurePtr.get());
     unit_assert(diff.b_a.fragmentArray.back()->measurePtr->id == "Graduated_cylinder");
@@ -1057,15 +1062,14 @@ void testSample()
 
     Sample a, b;
 
-    a.contactRole.contactPtr = ContactPtr(new Person("contactPtr"));
-    a.set(MS_sample_number);
+    a.contactRole.push_back(ContactRolePtr(new ContactRole(MS_role_type, ContactPtr(new Person("contactPtr")))));
     b = a;
 
     Diff<Sample, DiffConfig> diff(a, b);
     if (os_) *os_ << diff_string<TextWriter>(diff) << endl;
     unit_assert(!diff);
 
-    b.contactRole.contactPtr = ContactPtr(new Person("fer_rehto"));
+    b.contactRole.back().reset(new ContactRole(MS_role_type, ContactPtr(new Person("fer_rehto"))));
     b.set(MS_sample_name);
 
     diff(a, b);
@@ -1077,10 +1081,14 @@ void testSample()
     // and correctly
     unit_assert(diff.a_b.cvParams.size() == 0);
     unit_assert(diff.b_a.cvParams.size() == 1);
-    unit_assert(diff.a_b.contactRole.contactPtr.get());
-    unit_assert(diff.b_a.contactRole.contactPtr.get());
-    unit_assert(diff.a_b.contactRole.contactPtr->id == "contactPtr");
-    unit_assert(diff.b_a.contactRole.contactPtr->id == "fer_rehto");
+    unit_assert(diff.a_b.contactRole.size() == 1);
+    unit_assert(diff.b_a.contactRole.size() == 1);
+    unit_assert(diff.a_b.contactRole.back().get());
+    unit_assert(diff.b_a.contactRole.back().get());
+    unit_assert(diff.a_b.contactRole.back()->contactPtr.get());
+    unit_assert(diff.b_a.contactRole.back()->contactPtr.get());
+    unit_assert(diff.a_b.contactRole.back()->contactPtr->id == "contactPtr");
+    unit_assert(diff.b_a.contactRole.back()->contactPtr->id == "fer_rehto");
     unit_assert(diff.b_a.hasCVParam(MS_sample_name));
 }
 

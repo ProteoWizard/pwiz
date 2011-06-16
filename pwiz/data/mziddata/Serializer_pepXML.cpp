@@ -703,8 +703,10 @@ void write_spectrum_queries(XMLWriter& xmlWriter, const MzIdentML& mzid, const s
                 attributes.add("assumed_charge", sii.chargeState);
                 attributes.add("index", queryIndex);
 
-                if (sir.hasCVParam(MS_retention_time))
-                    attributes.add("retention_time_sec", sir.cvParam(MS_retention_time).timeInSeconds());
+                if (sir.hasCVParam(MS_scan_start_time))
+                    attributes.add("retention_time_sec", sir.cvParam(MS_scan_start_time).timeInSeconds());
+                else if (sir.hasCVParam(MS_retention_time_s_))
+                    attributes.add("retention_time_sec", sir.cvParam(MS_retention_time_s_).timeInSeconds());
 
                 xmlWriter.startElement("spectrum_query", attributes);
 
@@ -1535,7 +1537,7 @@ struct HandlerSearchResults : public SAXParser::Handler
 
             double retentionTimeSec;
             getAttribute(attributes, "retention_time_sec", retentionTimeSec);
-            _sir->set(MS_retention_time, retentionTimeSec, UO_second);
+            _sir->set(MS_scan_start_time, retentionTimeSec, UO_second);
         }
         else if (name == "search_result")
         {

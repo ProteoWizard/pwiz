@@ -46,27 +46,39 @@ void diff(const FragmentArray& a,
           FragmentArray& b_a,
           const DiffConfig& config)
 {
-    if (a.values.size() != b.values.size())
+    bool valuesDiff = false;
+    for (size_t i=0, end=max(a.values.size(), b.values.size()); i < end; ++i)
     {
-        a_b.userParams.push_back(UserParam("Binary data array size: " + 
-                                           lexical_cast<string>(a.values.size())));
-        b_a.userParams.push_back(UserParam("Binary data array size: " + 
-                                           lexical_cast<string>(b.values.size())));
-    }
-    else
-    {
-        double max = maxdiff(a.values, b.values);
-       
-        if (max > config.precision + numeric_limits<double>::epsilon())
+        if (i < a.values.size() && i < b.values.size())
         {
-            a_b.userParams.push_back(UserParam(userParamName_FragmentArrayDifference_,
-                                               lexical_cast<string>(max),
-                                               "xsd:float"));
-            b_a.userParams.push_back(UserParam(userParamName_FragmentArrayDifference_,
-                                               lexical_cast<string>(max),
-					       "xsd:float"));
+            if (fabs(a.values[i] - b.values[i]) > config.precision + numeric_limits<double>::epsilon())
+            {
+                valuesDiff = true;
+                a_b.values.push_back(a.values[i] - b.values[i]);
+                b_a.values.push_back(b.values[i] - a.values[i]);
+            }
+            else
+            {
+                a_b.values.push_back(0);
+                b_a.values.push_back(0);
+            }
+        }
+        else
+        {
+            valuesDiff = true;
+            if (i < a.values.size())
+                a_b.values.push_back(a.values[i]);
+            else
+                b_a.values.push_back(b.values[i]);
         }
     }
+
+    if (!valuesDiff)
+    {
+        a_b.values.clear();
+        b_a.values.clear();
+    }
+
     ptr_diff(a.measurePtr, b.measurePtr, a_b.measurePtr, b_a.measurePtr, config);
 }
 
@@ -111,7 +123,7 @@ void diff(const IonType& a,
     diff_integral(a.charge, b.charge, a_b.charge, b_a.charge, config);
     vector_diff(a.index, b.index, a_b.index, b_a.index);
     vector_diff_deep(a.fragmentArray, b.fragmentArray, a_b.fragmentArray, b_a.fragmentArray, config);
-    diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
+    diff(static_cast<const CVParam&>(a), b, a_b, b_a, config);
 }
 
 
@@ -771,7 +783,7 @@ void diff(const Sample& a,
           Sample& b_a,
           const DiffConfig& config)
 {
-    diff(a.contactRole, b.contactRole, a_b.contactRole, b_a.contactRole, config);
+    vector_diff_deep(a.contactRole, b.contactRole, a_b.contactRole, b_a.contactRole, config);
     vector_diff_deep(a.subSamples, b.subSamples, a_b.subSamples, b_a.subSamples, config);
     diff(static_cast<const ParamContainer&>(a), b, a_b, b_a, config);
 }
@@ -796,8 +808,9 @@ void diff(const Provider& a,
           const DiffConfig& config)
 {
     diff(static_cast<const Identifiable&>(a), b, a_b, b_a, config);
-    diff(a.contactRole, b.contactRole, a_b.contactRole,
-         b_a.contactRole, config);
+    ptr_diff(a.contactRolePtr, b.contactRolePtr, a_b.contactRolePtr, b_a.contactRolePtr, config);
+    ptr_diff(a.analysisSoftwarePtr, b.analysisSoftwarePtr,
+             a_b.analysisSoftwarePtr, b_a.analysisSoftwarePtr, config);
 }
 
 

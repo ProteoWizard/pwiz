@@ -545,7 +545,8 @@ bool addToSample(CVParam& param, vector<string>& path, SamplePtr sample)
     if (path.at(0) == "ContactRole")
     {
         path.erase(path.begin());
-        return addToContactRoleCV(param, path, sample->contactRole);
+        sample->contactRole.push_back(ContactRolePtr(new ContactRole));
+        return addToContactRoleCV(param, path, *sample->contactRole.back());
     }
     else
         throw runtime_error(("Unsupported tag in mzIdentML path: "+
@@ -737,7 +738,8 @@ bool addToMzIdentMLLevel(CVParam& param, vector<string>& path, MzIdentML& mzid)
             path.at(0) == "ContactRole")
         {
             path.erase(path.begin());
-            return addToContactRoleCV(param, path, mzid.provider.contactRole);
+            mzid.provider.contactRolePtr.reset(new ContactRole);
+            return addToContactRoleCV(param, path, *mzid.provider.contactRolePtr);
         }
         // Otherwise fall through to "false"
     }

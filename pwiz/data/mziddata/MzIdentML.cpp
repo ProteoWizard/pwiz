@@ -117,14 +117,15 @@ PWIZ_API_DECL bool BibliographicReference::empty() const
 // ContactRole
 //
 
-PWIZ_API_DECL ContactRole::ContactRole()
-    : contactPtr(ContactPtr(new Contact()))
+PWIZ_API_DECL ContactRole::ContactRole(CVID role_,
+                                       const ContactPtr& contactPtr_)
+    : CVParam(role_), contactPtr(contactPtr_)
 {
 }
 
 PWIZ_API_DECL bool ContactRole::empty() const
 {
-    return (!contactPtr.get()  || contactPtr->empty()) &&
+    return (!contactPtr.get() || contactPtr->empty()) &&
            CVParam::empty();
 }
 
@@ -248,7 +249,7 @@ PWIZ_API_DECL bool IonType::empty() const
 {
     return charge == 0 &&
            index.empty() &&
-           ParamContainer::empty() &&
+           CVParam::empty() &&
            fragmentArray.empty();
 }
 
@@ -289,6 +290,12 @@ PWIZ_API_DECL bool SpectrumIdentificationItem::empty() const
 //
 // SpectrumIdentificationResult
 //
+
+PWIZ_API_DECL SpectrumIdentificationResult::SpectrumIdentificationResult(const std::string& id_,
+                                                                         const std::string& name_)
+    : IdentifiableParamContainer(id_, name_)
+{
+}
 
 PWIZ_API_DECL bool SpectrumIdentificationResult::empty() const
 {
@@ -401,7 +408,7 @@ PWIZ_API_DECL Provider::Provider(const std::string id_,
 PWIZ_API_DECL bool Provider::empty() const
 {
     return Identifiable::empty() &&
-           contactRole.empty();
+           (!contactRolePtr.get() || contactRolePtr->empty());
 }
 
 
@@ -479,8 +486,7 @@ PWIZ_API_DECL bool PeptideEvidence::empty() const
 PWIZ_API_DECL bool FragmentArray::empty() const
 {
     return values.empty() &&
-           (!measurePtr.get() || measurePtr->empty()) &&
-           ParamContainer::empty();
+           (!measurePtr.get() || measurePtr->empty());
 }
 
 
@@ -573,37 +579,6 @@ PWIZ_API_DECL bool Enzyme::empty() const
            minDistance == 0 &&
            siteRegexp.empty() &&
            enzymeName.empty();
-}
-
-
-//
-// FragmentArray
-//
-
-PWIZ_API_DECL FragmentArray& FragmentArray::setValues(const std::string& values)
-{
-    istringstream iss(values);
-
-    this->values.clear();
-    copy(istream_iterator<double>(iss), istream_iterator<double>(), back_inserter(this->values));
-
-    return *this;
-}
-
-PWIZ_API_DECL FragmentArray& FragmentArray::setValues(const std::vector<double>& values)
-{
-    this->values.clear();
-    copy(values.begin(), values.end(), back_inserter(this->values));
-    
-    return *this;
-}
-
-PWIZ_API_DECL string FragmentArray::getValues() const
-{
-    ostringstream oss;
-    copy(values.begin(), values.end(), ostream_iterator<double>(oss, " "));
-
-    return oss.str();
 }
 
 
@@ -1136,7 +1111,35 @@ PWIZ_API_DECL vector<proteome::DigestedPeptide> digestedPeptides(const SpectrumI
     return results;
 }
 
-void snapModificationsToUnimod(const SpectrumIdentification& si)
+PWIZ_API_DECL proteome::Peptide peptide(const Peptide& peptide)
+{
+    proteome::Peptide result(peptide.peptideSequence);
+    proteome::ModificationMap& modMap = result.modifications();
+    BOOST_FOREACH(const ModificationPtr& mod, peptide.modification)
+    {
+        int location = mod->location-1;
+        if (location == -1)
+            location = proteome::ModificationMap::NTerminus();
+        else if (location == (int) peptide.peptideSequence.length())
+            location = proteome::ModificationMap::CTerminus();
+        modMap[location] = modification(*mod);
+    }
+    return result;
+}
+
+PWIZ_API_DECL proteome::Modification modification(const Modification& mod)
+{
+    CVParam firstUnimodAnnotation = mod.cvParamChild(UNIMOD_unimod_root_node);
+
+    // if mod is unannotated, return mod without formula
+    if (firstUnimodAnnotation.empty())
+        return proteome::Modification(mod.monoisotopicMassDelta, mod.avgMassDelta);
+
+    // return mod with formula
+    return proteome::Modification(unimod::modification(firstUnimodAnnotation.cvid).deltaComposition);
+}
+
+PWIZ_API_DECL void snapModificationsToUnimod(const SpectrumIdentification& si)
 {
     const SpectrumIdentificationProtocol& sip = *si.spectrumIdentificationProtocolPtr;
 

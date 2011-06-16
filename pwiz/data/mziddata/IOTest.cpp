@@ -183,7 +183,7 @@ void testProvider()
     Provider a;
 
     // Reduced to a previously tested object.
-    a.contactRole.contactPtr = ContactPtr(new Contact("abc"));
+    a.contactRolePtr.reset(new ContactRole(MS_role_type, ContactPtr(new Contact("abc"))));
 
     testObject(a);
 }
@@ -196,8 +196,8 @@ void testSample()
     Sample a;
 
     // Reduced to a previously tested object.
-    a.contactRole.contactPtr = ContactPtr(new Contact("abc"));
-    a.contactRole.cvid = MS_software_vendor;
+    a.contactRole.push_back(ContactRolePtr(new ContactRole(MS_software_vendor, ContactPtr(new Contact("abc")))));
+    a.contactRole.push_back(ContactRolePtr(new ContactRole(MS_programmer, ContactPtr(new Contact("def")))));
     a.set(MS_septum);
 
     a.subSamples.push_back(SamplePtr(new Sample("subSample_ref")));
@@ -617,9 +617,6 @@ void testFragmentArray()
     a.measurePtr = MeasurePtr(new Measure("ref"));
 
     testObject(a);
-
-    a.setValues("4.0 3.0 2.0 1.0");
-    testObject(a);
 }
 
 
@@ -633,7 +630,7 @@ void testIonType()
     a.index.push_back(3);
     a.charge = 2;
 
-    a.set(MS_frag__a_ion);
+    a.cvid = MS_frag__a_ion;
     FragmentArrayPtr b(new FragmentArray());
     a.fragmentArray.push_back(b);
     
@@ -799,10 +796,6 @@ void testAnalysisData()
 
 void testDataCollection()
 {
-    MzIdentML mz;
-    examples::initializeTiny(mz);
-    testObject(mz);
-
     DataCollection a;
 
     SourceFilePtr b(new SourceFile());
