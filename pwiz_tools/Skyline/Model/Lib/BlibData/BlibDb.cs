@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using NHibernate;
@@ -186,7 +187,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                             session.Save(refSpectra);
 
                             dictLibrary.Add(libKey,
-                                new BiblioLiteSpectrumInfo(copies, refSpectra.NumPeaks, (int) (refSpectra.Id ?? 0)));
+                                new BiblioLiteSpectrumInfo(libKey, copies, refSpectra.NumPeaks, (int) (refSpectra.Id ?? 0)));
 
                             session.Flush();
                             session.Clear();
@@ -212,8 +213,10 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 transaction.Commit();
             }
 
+            var libraryEntries = dictLibrary.Values.ToArray();
+
             return new BiblioSpecLiteLibrary(librarySpec, libLsid, majorVer, minorVer,
-                dictLibrary, FileStreamManager.Default);
+                libraryEntries, FileStreamManager.Default);
         }
 
         /// <summary>

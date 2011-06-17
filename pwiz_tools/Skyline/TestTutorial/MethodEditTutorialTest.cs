@@ -139,10 +139,10 @@ namespace pwiz.SkylineTestTutorial
             // Limiting Peptides per Protein, p. 10
             RunUI(() => peptideSettingsUI.PickedLibraries = new[] { YEAST_GPM });
             OkDialog(peptideSettingsUI, peptideSettingsUI.OkDialog);
-            WaitForCondition(
+            Assert.IsTrue(WaitForCondition(
                 () =>
                 SkylineWindow.Document.Settings.PeptideSettings.Libraries.IsLoaded &&
-                SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.Count > 0);
+                SkylineWindow.Document.Settings.PeptideSettings.Libraries.Libraries.Count > 0));
 
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 35, 180, 216, 1036);
 

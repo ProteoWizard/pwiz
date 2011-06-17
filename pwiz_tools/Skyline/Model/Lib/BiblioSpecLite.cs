@@ -76,10 +76,15 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("bibliospec_lite_library")]
     public sealed class BiblioSpecLiteLibrary : Library
     {
+        private const int FORMAT_VERSION_CACHE = 1;
+
         public const string DEFAULT_AUTHORITY = "proteome.gs.washington.edu";
 
-        private IDictionary<LibKey, BiblioLiteSpectrumInfo> _dictLibrary;
-        private HashSet<LibSeqKey> _setSequences;
+        public const string EXT_CACHE = ".slc";
+
+        private BiblioLiteSpectrumInfo[] _libraryEntries;
+        
+        private Dictionary<LibSeqKey, bool> _setSequences;
 
         private PooledSqliteConnection _sqliteConnection;
 
@@ -88,7 +93,7 @@ namespace pwiz.Skyline.Model.Lib
             var library = new BiblioSpecLiteLibrary(spec);
             if (library.Load(loader))
                 return library;
-            return null;            
+            return null;
         }
 
         /// <summary>
@@ -99,21 +104,32 @@ namespace pwiz.Skyline.Model.Lib
             : base(spec)
         {
             FilePath = spec.FilePath;
+
+            string baseName = Path.GetFileNameWithoutExtension(FilePath);
+            CachePath = Path.Combine(Path.GetDirectoryName(FilePath) ?? "", baseName + EXT_CACHE);
         }
 
         /// <summary>
         /// Constructs library from its component parts.  For use with <see cref="BlibDb"/>.
         /// </summary>
         public BiblioSpecLiteLibrary(LibrarySpec spec, string lsid, int minorVer, int majorVer,
-            IDictionary<LibKey, BiblioLiteSpectrumInfo> dictLibrary, IStreamManager streamManager)
+            BiblioLiteSpectrumInfo[] libraryEntries,IStreamManager streamManager)
             :this(spec)
         {
             Lsid = lsid;
             SetRevision(minorVer, majorVer);
 
-            _dictLibrary = dictLibrary;
+            _libraryEntries = libraryEntries;
+            Array.Sort(_libraryEntries, CompareSpectrumInfo);
+
             // Create the SQLite connection without actually connecting
-            _sqliteConnection = new PooledSqliteConnection(streamManager.ConnectionPool, FilePath);
+            CreateConnection(streamManager);
+        }
+
+        public SpectrumHeaderInfo CreateSpectrumHeaderInfo(string libraryName,
+            int spectrumCount)
+        {
+            return new BiblioSpecSpectrumHeaderInfo(libraryName, spectrumCount);
         }
 
         public override LibrarySpec CreateSpec(string path)
@@ -146,9 +162,11 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         public string FilePath { get; private set; }
 
+        public string CachePath { get; set; }
+
         public override bool IsLoaded
         {
-            get { return _dictLibrary != null; }
+            get { return _libraryEntries != null; }
         }
 
         public override IPooledStream ReadStream
@@ -158,7 +176,8 @@ namespace pwiz.Skyline.Model.Lib
 
         private SQLiteConnection CreateConnection(IStreamManager streamManager)
         {
-            _sqliteConnection = new PooledSqliteConnection(streamManager.ConnectionPool, FilePath);
+            if (_sqliteConnection == null)
+                _sqliteConnection = new PooledSqliteConnection(streamManager.ConnectionPool, FilePath);
             return _sqliteConnection.Connection;
         }
 
@@ -181,6 +200,7 @@ namespace pwiz.Skyline.Model.Lib
 
         // ReSharper disable UnusedMember.Local
         // ReSharper disable InconsistentNaming
+        // Column indices for BiblioSpec SQLite indices
         private enum LibInfo
         {
             libLSID,
@@ -208,133 +228,374 @@ namespace pwiz.Skyline.Model.Lib
             peakMZ,
             peakIntensity
         }
+
+        // Cache struct layouts
+        private enum LibHeaders
+        {
+            format_version,
+            num_spectra,
+            location_headers_lo,
+            location_headers_hi,
+
+            count
+        }
+
+        private enum SpectrumCacheHeader
+        {
+            seq_key_hash,
+            seq_key_length,
+            charge,
+            copies,
+            num_peaks,
+            id,
+            seq_len,
+
+            count
+        }
         // ReSharper restore InconsistentNaming
         // ReSharper restore UnusedMember.Local
 
-        private bool Load(ILoadMonitor loader)
+        private bool CreateCache(ILoadMonitor loader, ProgressStatus status, int percent)
         {
-            ProgressStatus status = new ProgressStatus(string.Format("Loading {0} library", Path.GetFileName(FilePath)));
-            loader.UpdateProgress(status);
-            try
-            {
-                using (SQLiteCommand select = new SQLiteCommand(CreateConnection(loader.StreamManager)))
-                {
-                    int rows;
+            var sm = loader.StreamManager;
 
-                    // First get header information
-                    select.CommandText = "SELECT * FROM [LibInfo]";
+            using (SQLiteCommand select = new SQLiteCommand(CreateConnection(loader.StreamManager)))
+            {
+                int rows;
+
+                // First get header information
+                select.CommandText = "SELECT * FROM [LibInfo]";
+                using (SQLiteDataReader reader = select.ExecuteReader())
+                {
+                    if (!reader.Read())
+                        throw new IOException(string.Format("Failed reading library header for {0}.", FilePath));
+
+                    rows = reader.GetInt32(LibInfo.numSpecs);
+
+                    Lsid = reader.GetString(LibInfo.libLSID);
+
+                    SetRevision(reader.GetInt32(LibInfo.majorVersion), reader.GetInt32(LibInfo.minorVersion));
+                }
+
+                // Corrupted library without a valid row count, but try to compensate
+                // by using count(*)
+                if (rows == 0)
+                {
+                    select.CommandText = "SELECT count(*) FROM [RefSpectra]";
                     using (SQLiteDataReader reader = select.ExecuteReader())
                     {
                         if (!reader.Read())
-                            throw new IOException(string.Format("Failed reading library header for {0}.", FilePath));
-
-                        rows = reader.GetInt32(LibInfo.numSpecs);
-
-                        Lsid = reader.GetString(LibInfo.libLSID);
-
-                        SetRevision(reader.GetInt32(LibInfo.majorVersion), reader.GetInt32(LibInfo.minorVersion));
-                    }
-
-                    // Corrupted library without a valid row count, but try to compensate
-                    // by using count(*)
-                    if (rows == 0)
-                    {
-                        select.CommandText = "SELECT count(*) FROM [RefSpectra]";
-                        using (SQLiteDataReader reader = select.ExecuteReader())
-                        {
-                            if (!reader.Read())
-                                throw new InvalidDataException(string.Format("Unable to get a valid count of spectra in the library {0}", FilePath));
-                            rows = reader.GetInt32(0);
-                            if (rows == 0)
-                                throw new InvalidDataException(string.Format("No spectra were found in the library {0}", FilePath));
-                        }
-                    }
-
-                    // Then read in spectrum headers
-                    _dictLibrary = new Dictionary<LibKey, BiblioLiteSpectrumInfo>(rows);
-                    _setSequences = new HashSet<LibSeqKey>();
-
-                    select.CommandText = "SELECT * FROM [RefSpectra]";
-                    using (SQLiteDataReader reader = select.ExecuteReader())
-                    {
-                        int iId = reader.GetOrdinal(RefSpectra.id);
-                        int iSeq = reader.GetOrdinal(RefSpectra.peptideModSeq);
-                        int iCharge = reader.GetOrdinal(RefSpectra.precursorCharge);
-                        int iCopies = reader.GetOrdinal(RefSpectra.copies);
-                        int iPeaks = reader.GetOrdinal(RefSpectra.numPeaks);
-
-                        int rowsRead = 0;
-                        while (reader.Read())
-                        {
-                            int percent = rowsRead++*100/rows;
-                            if (status.PercentComplete != percent)
-                            {
-                                // Check for cancellation after each integer change in percent loaded.
-                                if (loader.IsCanceled)
-                                {
-                                    loader.UpdateProgress(status.Cancel());
-                                    return false;
-                                }
-
-                                // If not cancelled, update progress.
-                                loader.UpdateProgress(status = status.ChangePercentComplete(percent));
-                            }
-
-                            string sequence = reader.GetString(iSeq);
-                            int charge = reader.GetInt16(iCharge);
-                            short copies = reader.GetInt16(iCopies);
-                            short numPeaks = reader.GetInt16(iPeaks);
-                            int id = reader.GetInt32(iId);
-
-                            // These libraries should not have duplicates, but just in case.
-                            // CONSIDER: Emit error about redundancy?
-                            var key = new LibKey(sequence, charge);
-                            if (!_dictLibrary.ContainsKey(key))
-                                _dictLibrary.Add(key, new BiblioLiteSpectrumInfo(copies, numPeaks, id));
-                            _setSequences.Add(new LibSeqKey(key));
-                        }
+                            throw new InvalidDataException(
+                                string.Format("Unable to get a valid count of spectra in the library {0}", FilePath));
+                        rows = reader.GetInt32(0);
+                        if (rows == 0)
+                            throw new InvalidDataException(string.Format("No spectra were found in the library {0}",
+                                                                         FilePath));
                     }
                 }
+
+                var setSequences = new Dictionary<LibSeqKey, bool>(rows);
+                var libraryEntries = new BiblioLiteSpectrumInfo[rows];
+                select.CommandText = "SELECT * FROM [RefSpectra]";
+
+                using (SQLiteDataReader reader = select.ExecuteReader())
+                {
+                    int iId = reader.GetOrdinal(RefSpectra.id);
+                    int iSeq = reader.GetOrdinal(RefSpectra.peptideModSeq);
+                    int iCharge = reader.GetOrdinal(RefSpectra.precursorCharge);
+                    int iCopies = reader.GetOrdinal(RefSpectra.copies);
+                    int iPeaks = reader.GetOrdinal(RefSpectra.numPeaks);
+
+                    int rowsRead = 0;
+                    while (reader.Read())
+                    {
+                        int percentComplete = rowsRead++*100/rows;
+                        if (status.PercentComplete != percentComplete)
+                        {
+                            // Check for cancellation after each integer change in percent loaded.
+                            if (loader.IsCanceled)
+                            {
+                                loader.UpdateProgress(status.Cancel());
+                                return false;
+                            }
+
+                            // If not cancelled, update progress.
+                            loader.UpdateProgress(status = status.ChangePercentComplete(percent));
+                        }
+
+                        string sequence = reader.GetString(iSeq);
+                        int charge = reader.GetInt16(iCharge);
+                        short copies = reader.GetInt16(iCopies);
+                        short numPeaks = reader.GetInt16(iPeaks);
+                        int id = reader.GetInt32(iId);
+
+                        // These libraries should not have duplicates, but just in case.
+                        // CONSIDER: Emit error about redundancy?
+                        LibKey key = new LibKey(sequence, charge);
+                        libraryEntries[rowsRead - 1] = new BiblioLiteSpectrumInfo(key, copies, numPeaks, id);
+                    }
+                }
+
+                Array.Sort(libraryEntries, CompareSpectrumInfo);
+
+                using (FileSaver fs = new FileSaver(CachePath, sm))
+                using (Stream outStream = sm.CreateStream(fs.SafeName, FileMode.Create, true))
+                {
+                    foreach (var info in libraryEntries)
+                    {
+                        LibSeqKey seqKey = new LibSeqKey(info.Key);
+                        if (setSequences.ContainsKey(seqKey))
+                        {
+                            outStream.Write(BitConverter.GetBytes(0), 0, sizeof(int));
+                            outStream.Write(BitConverter.GetBytes(-1), 0, sizeof(int));
+                        }
+                        else
+                        {
+                            // If it is unique, it will need to be added at cache load time.
+                            outStream.Write(BitConverter.GetBytes(seqKey.GetHashCode()), 0, sizeof(int));
+                            outStream.Write(BitConverter.GetBytes(seqKey.Length), 0, sizeof(int));
+                            setSequences.Add(seqKey, true);
+                        }
+                        outStream.Write(BitConverter.GetBytes(info.Key.Charge), 0, sizeof (int));
+                        outStream.Write(BitConverter.GetBytes(info.Copies), 0, sizeof (int));
+                        outStream.Write(BitConverter.GetBytes(info.NumPeaks), 0, sizeof (int));
+                        outStream.Write(BitConverter.GetBytes(info.Id), 0, sizeof (int));
+                        info.Key.WriteSequence(outStream);
+                    }
+                    outStream.Write(BitConverter.GetBytes(FORMAT_VERSION_CACHE), 0, sizeof (int));
+                    outStream.Write(BitConverter.GetBytes(libraryEntries.Length), 0, sizeof (int));
+                    outStream.Write(BitConverter.GetBytes((long) 0), 0, sizeof (long));
+
+                    sm.Finish(outStream);
+                    fs.Commit();
+                    sm.SetCache(FilePath, CachePath);
+                }
             }
+
+            loader.UpdateProgress(status.Complete());
+
+            return true;
+        }
+
+        private bool Load(ILoadMonitor loader)
+        {
+            ProgressStatus status = new ProgressStatus("");
+            loader.UpdateProgress(status);
+
+            bool cached = loader.StreamManager.IsCached(FilePath, CachePath);
+            if (Load(loader, status, cached))
+                return true;
+
+            // If loading from the cache failed, rebuild it.
+            if (cached)
+            {
+                // Reset readStream so we don't read corrupt file.
+                _sqliteConnection = null;
+                if (Load(loader, status, false))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private bool Load(ILoadMonitor loader, ProgressStatus status, bool cached)
+        {
+            try
+            {
+                int loadPercent = 100;
+                
+                if (!cached)
+                {
+
+                    // Building the cache will take 95% of the load time.
+                    loadPercent = 5;
+
+                    status =
+                        status.ChangeMessage(string.Format("Building binary cache for {0} library",
+                                                           Path.GetFileName(FilePath)));
+                    status = status.ChangePercentComplete(0);
+
+                    loader.UpdateProgress(status);
+
+                    if (!CreateCache(loader, status, 100 - loadPercent))
+                        return false;
+                }
+
+                status = status.ChangeMessage(string.Format("Loading {0} library,", Path.GetFileName(FilePath)));
+                loader.UpdateProgress(status);
+
+                var sm = loader.StreamManager;
+
+                using (Stream stream = sm.CreateStream(CachePath, FileMode.Open, true))
+                {
+
+                    // Read library header from the end of the cache
+                    int countHeader = (int) LibHeaders.count*sizeof (int);
+                    stream.Seek(-countHeader, SeekOrigin.End);
+
+                    byte[] libHeader = new byte[countHeader];
+                    ReadComplete(stream, libHeader, countHeader);
+
+                    int version = GetInt32(libHeader, (int) LibHeaders.format_version);
+                    if (version != FORMAT_VERSION_CACHE)
+                        return false;
+
+                    int numSpectra = GetInt32(libHeader, (int) LibHeaders.num_spectra);
+
+                    var setSequences = new Dictionary<LibSeqKey, bool>(numSpectra);
+                    var libraryEntries = new BiblioLiteSpectrumInfo[numSpectra];
+
+                    // Seek to beginning of spectrum headers
+                    long locationHeaders = BitConverter.ToInt64(libHeader,
+                                                                ((int) LibHeaders.location_headers_lo)*sizeof (int));
+                    stream.Seek(locationHeaders, SeekOrigin.Begin);
+
+                    byte[] specSequence = new byte[1024];
+                    byte[] specHeader = new byte[1024];
+
+                    countHeader = (int) SpectrumCacheHeader.count*sizeof (int);
+
+                    for (int i = 0; i < numSpectra; i++)
+                    {
+                        int percent = (100 - loadPercent) + (i*loadPercent/numSpectra);
+                        if (status.PercentComplete != percent)
+                        {
+                            // Check for cancellation after each integer change in percent loaded.
+                            if (loader.IsCanceled)
+                            {
+                                loader.UpdateProgress(status.Cancel());
+                                return false;
+                            }
+                            // If not cancelled, update progress.
+                            loader.UpdateProgress(status = status.ChangePercentComplete(percent));
+                        }
+
+                        // Read spectrum header
+                        ReadComplete(stream, specHeader, countHeader);
+
+                        int seqKeyHash = GetInt32(specHeader, ((int) SpectrumCacheHeader.seq_key_hash));
+                        int seqKeyLength = GetInt32(specHeader, ((int) SpectrumCacheHeader.seq_key_length));
+                        int charge = GetInt32(specHeader, ((int) SpectrumCacheHeader.charge));
+                        if (charge == 0 || charge > 10)
+                            throw new InvalidDataException("Invalid precursor charge found. File may be corrupted.");
+                        int copies = GetInt32(specHeader, ((int) SpectrumCacheHeader.copies));
+                        int numPeaks = GetInt32(specHeader, ((int) SpectrumCacheHeader.num_peaks));
+                        int id = GetInt32(specHeader, ((int) SpectrumCacheHeader.id));
+                        int seqLength = GetInt32(specHeader, (int) SpectrumCacheHeader.seq_len);
+                    
+                        // Read sequence information
+                        ReadComplete(stream, specSequence, seqLength);
+
+                        // These libraries should not have duplicates, but just in case.
+                        // CONSIDER: Emit error about redundancy?
+                        LibKey key = new LibKey(specSequence, 0, seqLength, charge);
+                        libraryEntries[i] = new BiblioLiteSpectrumInfo(key, (short)copies, (short)numPeaks, id);
+                        if (seqKeyLength > 0)
+                        {
+                            LibSeqKey seqKey = new LibSeqKey(key, seqKeyHash, seqKeyLength);
+                            if (!setSequences.ContainsKey(seqKey))
+                                setSequences.Add(seqKey, true);
+                        }
+                    }
+
+                    // Checksum = checksum.ChecksumValue;
+                    _libraryEntries = libraryEntries;
+                    _setSequences = setSequences;
+
+                    loader.UpdateProgress(status.Complete());
+
+                    // Create a connection to the database from which the spectra will be read
+                    CreateConnection(sm);
+                }
+
+                return true;
+            }
+
             catch (InvalidDataException x)
             {
-                loader.UpdateProgress(status.ChangeErrorException(x));
+                if (!cached)
+                    loader.UpdateProgress(status.ChangeErrorException(x));
                 return false;
             }
             catch (IOException x)
             {
-                loader.UpdateProgress(status.ChangeErrorException(x));
+                if (!cached)
+                    loader.UpdateProgress(status.ChangeErrorException(x));
                 return false;
             }
             catch (Exception x)
             {
-                x = new Exception(string.Format("Failed loading library '{0}'.", FilePath), x);
-                loader.UpdateProgress(status.ChangeErrorException(x));
+                if (!cached)
+                {
+                    x = new Exception(string.Format("Failed loading library '{0}'.", FilePath), x);
+                    loader.UpdateProgress(status.ChangeErrorException(x));
+                }
                 return false;
             }
 
+        }
 
-            loader.UpdateProgress(status.Complete());
-            return true;
+        private static int GetInt32(byte[] bytes, int index)
+        {
+            int ibyte = index * 4;
+            return bytes[ibyte] | bytes[ibyte + 1] << 8 | bytes[ibyte + 2] << 16 | bytes[ibyte + 3] << 24;
         }
 
         public override bool Contains(LibKey key)
         {
-            return (_dictLibrary != null && _dictLibrary.ContainsKey(key));
+            return FindEntry(key) != -1;
+        }
+
+        private int FindEntry(LibKey key)
+        {
+            if (_libraryEntries == null)
+                return -1;
+            return FindEntry(key, 0, _libraryEntries.Length - 1);
+        }
+
+        private int FindEntry(LibKey key, int left, int right)
+        {
+            // Binary search for the right key
+            if (left > right)
+                return -1;
+            int mid = (left + right)/2;
+            int compare = key.Compare(_libraryEntries[mid].Key);
+            if (compare < 0)
+                return FindEntry(key, left, mid - 1);
+            else if (compare > 0)
+                return FindEntry(key, mid + 1, right);
+            else
+            {
+                return mid;
+            }
         }
 
         public override bool ContainsAny(LibSeqKey key)
         {
-            return (_setSequences != null && _setSequences.Contains(key));
+            return (_setSequences != null && _setSequences.ContainsKey(key));
+        }
+
+        private static int CompareSpectrumInfo(BiblioLiteSpectrumInfo info1, BiblioLiteSpectrumInfo info2)
+        {
+            return info1.Key.Compare(info2.Key);
+        }
+
+
+        private static void ReadComplete(Stream stream, byte[] buffer, int size)
+        {
+            if (stream.Read(buffer, 0, size) != size)
+                throw new InvalidDataException("Data truncation in library header. File may be corrupted.");
         }
 
         public override bool TryGetLibInfo(LibKey key, out SpectrumHeaderInfo libInfo)
         {
-            BiblioLiteSpectrumInfo info;
-            if (_dictLibrary != null && _dictLibrary.TryGetValue(key, out info))
+            int i = FindEntry(key);
+            if (i != -1)
             {
-                libInfo = new BiblioSpecSpectrumHeaderInfo(Name, info.Copies);
+                var entry = _libraryEntries[i];
+                libInfo = CreateSpectrumHeaderInfo(Name, entry.Copies);
                 return true;
+
             }
             libInfo = null;
             return false;
@@ -342,29 +603,28 @@ namespace pwiz.Skyline.Model.Lib
 
         public override bool TryLoadSpectrum(LibKey key, out SpectrumPeaksInfo spectrum)
         {
-            BiblioLiteSpectrumInfo info;
-            if (_dictLibrary != null && _dictLibrary.TryGetValue(key, out info))
+            int i = FindEntry(key);
+            if (i != -1)
             {
-                spectrum = new SpectrumPeaksInfo(ReadSpectrum(info));
+                spectrum = new SpectrumPeaksInfo(ReadSpectrum(_libraryEntries[i]));
                 return true;
             }
-
             spectrum = null;
             return false;
         }
 
         public override int Count
         {
-            get { return _dictLibrary == null ? 0 : _dictLibrary.Count; }
+            get { return _libraryEntries == null ? 0 : _libraryEntries.Length; }
         }
 
         public override IEnumerable<LibKey> Keys
         {
             get
             {
-                if (_dictLibrary != null)
-                    foreach (var key in _dictLibrary.Keys)
-                        yield return key;
+                if (IsLoaded)
+                    foreach (var entry in _libraryEntries)
+                        yield return entry.Key;
             }
         }
 
@@ -530,17 +790,20 @@ namespace pwiz.Skyline.Model.Lib
 
     public struct BiblioLiteSpectrumInfo
     {
+        private readonly LibKey _key;
         private readonly short _copies;
         private readonly short _numPeaks;
         private readonly int _id;
 
-        public BiblioLiteSpectrumInfo(short copies, short numPeaks, int id)
+        public BiblioLiteSpectrumInfo(LibKey key, short copies, short numPeaks, int id)
         {
+            _key = key;
             _copies = copies;
             _numPeaks = numPeaks;
             _id = id;
         }
 
+        public LibKey Key { get { return _key;  } }
         public int Copies { get { return _copies; } }
         public int NumPeaks { get { return _numPeaks; } }
         public long Id { get { return _id; } }

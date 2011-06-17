@@ -1404,6 +1404,7 @@ namespace pwiz.Skyline.Model.Lib
     public struct LibSeqKey
     {
         private readonly int _length;
+        private readonly int _cachedHash;
         private readonly string _seq;
         private readonly byte[] _libKeyBytes;
 
@@ -1415,6 +1416,7 @@ namespace pwiz.Skyline.Model.Lib
         {
             _seq = seq;
             _length = seq.Length;
+            _cachedHash = GetHashCodeInternal();
         }
 
         /// <summary>
@@ -1426,7 +1428,18 @@ namespace pwiz.Skyline.Model.Lib
         {
             _libKeyBytes = key.Key;
             _length = AminoAcids.Count();
+            _cachedHash = GetHashCodeInternal();
         }
+
+        public LibSeqKey(LibKey key, int hash, int aminoAcid)
+            : this()
+        {
+            _libKeyBytes = key.Key;
+            _length = aminoAcid;
+            _cachedHash = hash;
+        }
+
+        public int Length { get { return _length; } }
 
         /// <summary>
         /// Enumerates the amino acid characters of the sequence, with special handling for
@@ -1447,7 +1460,7 @@ namespace pwiz.Skyline.Model.Lib
                     for (int i = 1; i < _libKeyBytes.Length; i++)
                     {
                         char aa = (char)_libKeyBytes[i];
-                        if (AminoAcid.IsExAA(aa))
+                        if ('A' <= aa && aa <= 'Z')
                             yield return aa;
                     }
                 }
@@ -1482,15 +1495,20 @@ namespace pwiz.Skyline.Model.Lib
 
         public override int GetHashCode()
         {
+            return _cachedHash;
+        }
+        private int GetHashCodeInternal()
+        {
             unchecked
             {
-                var result = _length.GetHashCode();
+                int result = _length.GetHashCode();
                 foreach (char aa in AminoAcids)
-                    result = (result * 31) ^ aa;
+                {
+                    result = (result*31) ^ aa;
+                }
                 return result;
             }
         }
-
         #endregion
     }
 

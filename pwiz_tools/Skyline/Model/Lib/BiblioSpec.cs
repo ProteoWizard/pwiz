@@ -208,7 +208,8 @@ namespace pwiz.Skyline.Model.Lib
 
         private Stream CreateStream(ILoadMonitor loader)
         {
-            _readStream = loader.StreamManager.CreatePooledStream(FilePath, false);
+            if (_readStream == null)
+                _readStream = loader.StreamManager.CreatePooledStream(FilePath, false);
             return ReadStream.Stream;
         }
 
