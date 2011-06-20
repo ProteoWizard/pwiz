@@ -72,7 +72,8 @@ class PWIZ_API_DECL Reader
                          const std::string& head,
                          std::vector<std::string>& dataIds) const;
 
-	virtual const char *getType() const = 0; // what kind of reader are you?
+    /// returns a unique string identifying the reader type
+	virtual const char* getType() const = 0;
 
     virtual ~Reader(){}
 };
@@ -179,8 +180,7 @@ class PWIZ_API_DECL ReaderList : public Reader,
         return const_cast<ReaderList*>(this)->get<reader_type>();
     }
 
-	virtual const char *getType() const {return "ReaderList";} // satisfy inheritance
-
+	virtual const char* getType() const {return "ReaderList";} // satisfy inheritance
 };
 
 

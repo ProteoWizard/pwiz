@@ -22,14 +22,18 @@
 
 
 lib pwiz_utility_minimxml
-    :   XMLWriter.cpp 
+    : # sources
+        XMLWriter.cpp 
         SAXParser.cpp 
-        /ext/boost//regex
-    :   <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
-    :   <library>/ext/boost//regex
+    : # requirements
+        <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
+        <library>/ext/boost//regex
+        <library>../misc//pwiz_utility_misc
+    : # default-build
+    : # usage-requirements
+        <library>/ext/boost//regex
+        <library>../misc//pwiz_utility_misc
     ;
 
 unit-test-if-exists SAXParserTest : SAXParserTest.cpp pwiz_utility_minimxml ;
 unit-test-if-exists XMLWriterTest : XMLWriterTest.cpp pwiz_utility_minimxml ;
-
-

@@ -24,6 +24,9 @@
 
 #include "SAXParser.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/utility/misc/random_access_compressed_ifstream.hpp"
+#include "boost/regex.hpp"
+
 
 //#define PWIZ_USE_BOOST_REGEX 
 #ifdef PWIZ_USE_BOOST_REGEX 
@@ -500,6 +503,42 @@ PWIZ_API_DECL void parse(istream& is, Handler& handler)
 
 
 } // namespace SAXParser
+
+
+
+string xml_root_element(const string& fileheader)
+{
+    const static boost::regex e("<\\?xml.*?>.*?<([^?!]\\S+?)[\\s>]");
+
+    // convert Unicode to ASCII
+    string asciiheader;
+    asciiheader.reserve(fileheader.size());
+    BOOST_FOREACH(char c, fileheader)
+    {
+        if(c > 0)
+            asciiheader.push_back(c);
+    }
+
+    boost::smatch m;
+    if (boost::regex_search(asciiheader, m, e))
+        return m[1];
+    throw runtime_error("[xml_root_element] Root element not found (header is not well-formed XML)");
+}
+
+string xml_root_element(istream& is)
+{
+    char buf[513];
+    is.read(buf, 512);
+    return xml_root_element(buf);
+}
+
+string xml_root_element_from_file(const string& filepath)
+{
+    pwiz::util::random_access_compressed_ifstream file(filepath.c_str());
+    if (!file)
+        throw runtime_error("[xml_root_element_from_file] Error opening file");
+    return xml_root_element(file);
+}
 
 
 namespace { bool isalnum(char& c) {return std::isalnum(c, std::locale::classic());} }

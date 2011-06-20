@@ -21,9 +21,10 @@
 //
 
 
-#include "SAXParser.hpp"
 #include "pwiz/utility/misc/unit.hpp"
+#include "SAXParser.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
 #include <cstring>
 
 
@@ -509,6 +510,27 @@ void testNested()
 }
 
 
+void testRootElement()
+{
+    if (os_) *os_ << "testRootElement()\n";
+
+    string RootElement = "RootElement";
+    unit_assert_operator_equal(RootElement, xml_root_element(sampleXML));
+
+    istringstream sampleXMLStream(sampleXML);
+    unit_assert_operator_equal(RootElement, xml_root_element(sampleXMLStream));
+
+    {ofstream sampleXMLFile("testRootElement.xml"); sampleXMLFile << sampleXML;}
+    unit_assert_operator_equal(RootElement, xml_root_element_from_file("testRootElement.xml"));
+    bfs::remove("testRootElement.xml");
+
+    unit_assert_operator_equal(RootElement, xml_root_element("<?xml?><RootElement>"));
+    unit_assert_operator_equal(RootElement, xml_root_element("<?xml?><RootElement name='value'"));
+
+    unit_assert_throws(xml_root_element("not-xml"), runtime_error);
+}
+
+
 void testDecoding()
 {
     string id1("_x0031_invalid_x0020_ID");
@@ -536,6 +558,7 @@ int main(int argc, char* argv[])
         testDone();
         testBadXML();
         testNested();
+        testRootElement();
         testDecoding();
         return 0;
     }

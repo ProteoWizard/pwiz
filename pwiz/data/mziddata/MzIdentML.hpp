@@ -816,6 +816,10 @@ PWIZ_API_DECL proteome::Modification modification(const Modification& mod);
 /// sets Unimod CV terms (if possible) for all SearchModifications and Modification elements
 PWIZ_API_DECL void snapModificationsToUnimod(const SpectrumIdentification& si);
 
+/// returns the CVID file format of the specified filepath,
+/// or CVID_Unknown if the file format has no CV term or the filepath doesn't exist
+PWIZ_API_DECL CVID spectraDataFileFormat(const std::string& filepath);
+
 
 } // namespace mziddata 
 } // namespace pwiz 

@@ -145,6 +145,19 @@ PWIZ_API_DECL void parse(std::istream& is, Handler& handler);
 } // namespace SAXParser
 
 
+/// Returns the root element from an XML buffer;
+/// throws runtime_error if no element is found.
+PWIZ_API_DECL std::string xml_root_element(const std::string& fileheader);
+
+/// Returns the root element from an XML stream;
+/// throws runtime_error if no element is found.
+PWIZ_API_DECL std::string xml_root_element(std::istream& is);
+
+/// Returns the root element from an XML file;
+/// throws runtime_error if no element is found.
+PWIZ_API_DECL std::string xml_root_element_from_file(const std::string& filepath);
+
+
 /// Decodes any characters encoded with their hexadecimal value,
 /// e.g. "_x0020_" decodes as " "
 /// This override modifies the input string in place and returns its reference.
