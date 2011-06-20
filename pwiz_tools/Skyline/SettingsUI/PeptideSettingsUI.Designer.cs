@@ -42,47 +42,47 @@ namespace pwiz.Skyline.SettingsUI
             this.listStandardTypes = new System.Windows.Forms.CheckedListBox();
             this.textMaxVariableMods = new System.Windows.Forms.TextBox();
             this.textMaxNeutralLosses = new System.Windows.Forms.TextBox();
-            this.tabControl1 = new System.Windows.Forms.TabControl();
-            this.tabDigestion = new System.Windows.Forms.TabPage();
-            this.label2 = new System.Windows.Forms.Label();
             this.cbMissedCleavages = new System.Windows.Forms.ComboBox();
-            this.label1 = new System.Windows.Forms.Label();
             this.comboEnzyme = new System.Windows.Forms.ComboBox();
-            this.label15 = new System.Windows.Forms.Label();
             this.comboBackgroundProteome = new System.Windows.Forms.ComboBox();
-            this.tabPrediction = new System.Windows.Forms.TabPage();
-            this.label14 = new System.Windows.Forms.Label();
             this.textMeasureRTWindow = new System.Windows.Forms.TextBox();
             this.cbUseMeasuredRT = new System.Windows.Forms.CheckBox();
-            this.label13 = new System.Windows.Forms.Label();
             this.comboRetentionTime = new System.Windows.Forms.ComboBox();
-            this.label9 = new System.Windows.Forms.Label();
-            this.tabFilter = new System.Windows.Forms.TabPage();
             this.cbAutoSelect = new System.Windows.Forms.CheckBox();
-            this.label3 = new System.Windows.Forms.Label();
             this.textExcludeAAs = new System.Windows.Forms.TextBox();
             this.cbRaggedEnds = new System.Windows.Forms.CheckBox();
             this.btnEditExlusions = new System.Windows.Forms.Button();
             this.listboxExclusions = new System.Windows.Forms.CheckedListBox();
-            this.label6 = new System.Windows.Forms.Label();
-            this.label5 = new System.Windows.Forms.Label();
-            this.label4 = new System.Windows.Forms.Label();
             this.textMaxLength = new System.Windows.Forms.TextBox();
             this.textMinLength = new System.Windows.Forms.TextBox();
-            this.tabLibrary = new System.Windows.Forms.TabPage();
             this.btnExplore = new System.Windows.Forms.Button();
             this.btnBuildLibrary = new System.Windows.Forms.Button();
-            this.panelPick = new System.Windows.Forms.Panel();
             this.comboRank = new System.Windows.Forms.ComboBox();
-            this.labelPeptides = new System.Windows.Forms.Label();
-            this.label12 = new System.Windows.Forms.Label();
             this.textPeptideCount = new System.Windows.Forms.TextBox();
             this.comboMatching = new System.Windows.Forms.ComboBox();
             this.cbLimitPeptides = new System.Windows.Forms.CheckBox();
-            this.label7 = new System.Windows.Forms.Label();
             this.editLibraries = new System.Windows.Forms.Button();
-            this.label11 = new System.Windows.Forms.Label();
             this.listLibraries = new System.Windows.Forms.CheckedListBox();
+            this.tabControl1 = new System.Windows.Forms.TabControl();
+            this.tabDigestion = new System.Windows.Forms.TabPage();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label1 = new System.Windows.Forms.Label();
+            this.label15 = new System.Windows.Forms.Label();
+            this.tabPrediction = new System.Windows.Forms.TabPage();
+            this.label14 = new System.Windows.Forms.Label();
+            this.label13 = new System.Windows.Forms.Label();
+            this.label9 = new System.Windows.Forms.Label();
+            this.tabFilter = new System.Windows.Forms.TabPage();
+            this.label3 = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
+            this.label4 = new System.Windows.Forms.Label();
+            this.tabLibrary = new System.Windows.Forms.TabPage();
+            this.panelPick = new System.Windows.Forms.Panel();
+            this.labelPeptides = new System.Windows.Forms.Label();
+            this.label12 = new System.Windows.Forms.Label();
+            this.label7 = new System.Windows.Forms.Label();
+            this.label11 = new System.Windows.Forms.Label();
             this.tabModifications = new System.Windows.Forms.TabPage();
             this.label18 = new System.Windows.Forms.Label();
             this.label17 = new System.Windows.Forms.Label();
@@ -198,48 +198,6 @@ namespace pwiz.Skyline.SettingsUI
             this.helpTip.SetToolTip(this.textMaxNeutralLosses, "The maximum number of neutral loss events allowed\r\nto occur in combination on any" +
                     " fragment instance.");
             // 
-            // tabControl1
-            // 
-            this.tabControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.tabControl1.Controls.Add(this.tabDigestion);
-            this.tabControl1.Controls.Add(this.tabPrediction);
-            this.tabControl1.Controls.Add(this.tabFilter);
-            this.tabControl1.Controls.Add(this.tabLibrary);
-            this.tabControl1.Controls.Add(this.tabModifications);
-            this.tabControl1.DataBindings.Add(new System.Windows.Forms.Binding("SelectedIndex", global::pwiz.Skyline.Properties.Settings.Default, "PeptideSettingsTab", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
-            this.tabControl1.Location = new System.Drawing.Point(12, 12);
-            this.tabControl1.Name = "tabControl1";
-            this.tabControl1.SelectedIndex = global::pwiz.Skyline.Properties.Settings.Default.PeptideSettingsTab;
-            this.tabControl1.Size = new System.Drawing.Size(371, 486);
-            this.tabControl1.TabIndex = 0;
-            // 
-            // tabDigestion
-            // 
-            this.tabDigestion.Controls.Add(this.label2);
-            this.tabDigestion.Controls.Add(this.cbMissedCleavages);
-            this.tabDigestion.Controls.Add(this.label1);
-            this.tabDigestion.Controls.Add(this.comboEnzyme);
-            this.tabDigestion.Controls.Add(this.label15);
-            this.tabDigestion.Controls.Add(this.comboBackgroundProteome);
-            this.tabDigestion.Location = new System.Drawing.Point(4, 22);
-            this.tabDigestion.Name = "tabDigestion";
-            this.tabDigestion.Padding = new System.Windows.Forms.Padding(3);
-            this.tabDigestion.Size = new System.Drawing.Size(363, 460);
-            this.tabDigestion.TabIndex = 0;
-            this.tabDigestion.Text = "Digestion";
-            this.tabDigestion.UseVisualStyleBackColor = true;
-            // 
-            // label2
-            // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(25, 79);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(117, 13);
-            this.label2.TabIndex = 2;
-            this.label2.Text = "&Max missed cleavages:";
-            // 
             // cbMissedCleavages
             // 
             this.cbMissedCleavages.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -262,15 +220,6 @@ namespace pwiz.Skyline.SettingsUI
             this.helpTip.SetToolTip(this.cbMissedCleavages, "The maximum number of missed cleavages allowed in a peptide when\r\nconsidering pro" +
                     "tein digestion.");
             // 
-            // label1
-            // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(25, 20);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(47, 13);
-            this.label1.TabIndex = 0;
-            this.label1.Text = "&Enzyme:";
-            // 
             // comboEnzyme
             // 
             this.comboEnzyme.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -283,15 +232,6 @@ namespace pwiz.Skyline.SettingsUI
                     " into the mass spectrometer\r\n");
             this.comboEnzyme.SelectedIndexChanged += new System.EventHandler(this.enzyme_SelectedIndexChanged);
             // 
-            // label15
-            // 
-            this.label15.AutoSize = true;
-            this.label15.Location = new System.Drawing.Point(25, 142);
-            this.label15.Name = "label15";
-            this.label15.Size = new System.Drawing.Size(115, 13);
-            this.label15.TabIndex = 4;
-            this.label15.Text = "&Background proteome:";
-            // 
             // comboBackgroundProteome
             // 
             this.comboBackgroundProteome.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -303,30 +243,6 @@ namespace pwiz.Skyline.SettingsUI
             this.helpTip.SetToolTip(this.comboBackgroundProteome, "Processed FASTA sequence information specifying the full\r\nset of proteins that ma" +
                     "y be present in the sample matrix to be\r\ninjected into the mass spectrometer.");
             this.comboBackgroundProteome.SelectedIndexChanged += new System.EventHandler(this.comboBackgroundProteome_SelectedIndexChanged);
-            // 
-            // tabPrediction
-            // 
-            this.tabPrediction.Controls.Add(this.label14);
-            this.tabPrediction.Controls.Add(this.textMeasureRTWindow);
-            this.tabPrediction.Controls.Add(this.cbUseMeasuredRT);
-            this.tabPrediction.Controls.Add(this.label13);
-            this.tabPrediction.Controls.Add(this.comboRetentionTime);
-            this.tabPrediction.Controls.Add(this.label9);
-            this.tabPrediction.Location = new System.Drawing.Point(4, 22);
-            this.tabPrediction.Name = "tabPrediction";
-            this.tabPrediction.Size = new System.Drawing.Size(363, 460);
-            this.tabPrediction.TabIndex = 3;
-            this.tabPrediction.Text = "Prediction";
-            this.tabPrediction.UseVisualStyleBackColor = true;
-            // 
-            // label14
-            // 
-            this.label14.AutoSize = true;
-            this.label14.Location = new System.Drawing.Point(134, 136);
-            this.label14.Name = "label14";
-            this.label14.Size = new System.Drawing.Size(43, 13);
-            this.label14.TabIndex = 15;
-            this.label14.Text = "minutes";
             // 
             // textMeasureRTWindow
             // 
@@ -350,15 +266,6 @@ namespace pwiz.Skyline.SettingsUI
             this.cbUseMeasuredRT.UseVisualStyleBackColor = true;
             this.cbUseMeasuredRT.CheckedChanged += new System.EventHandler(this.cbUseMeasuredRT_CheckedChanged);
             // 
-            // label13
-            // 
-            this.label13.AutoSize = true;
-            this.label13.Location = new System.Drawing.Point(28, 116);
-            this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(72, 13);
-            this.label13.TabIndex = 12;
-            this.label13.Text = "Time &window:";
-            // 
             // comboRetentionTime
             // 
             this.comboRetentionTime.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -370,36 +277,6 @@ namespace pwiz.Skyline.SettingsUI
             this.helpTip.SetToolTip(this.comboRetentionTime, "Specifies a linear equation that may be used to predict retention\r\ntimes from a p" +
                     "eptide specific hydrophobicity score.");
             this.comboRetentionTime.SelectedIndexChanged += new System.EventHandler(this.comboRetentionTime_SelectedIndexChanged);
-            // 
-            // label9
-            // 
-            this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(25, 20);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(122, 13);
-            this.label9.TabIndex = 10;
-            this.label9.Text = "&Retention time equation:";
-            // 
-            // tabFilter
-            // 
-            this.tabFilter.Controls.Add(this.cbAutoSelect);
-            this.tabFilter.Controls.Add(this.label3);
-            this.tabFilter.Controls.Add(this.textExcludeAAs);
-            this.tabFilter.Controls.Add(this.cbRaggedEnds);
-            this.tabFilter.Controls.Add(this.btnEditExlusions);
-            this.tabFilter.Controls.Add(this.listboxExclusions);
-            this.tabFilter.Controls.Add(this.label6);
-            this.tabFilter.Controls.Add(this.label5);
-            this.tabFilter.Controls.Add(this.label4);
-            this.tabFilter.Controls.Add(this.textMaxLength);
-            this.tabFilter.Controls.Add(this.textMinLength);
-            this.tabFilter.Location = new System.Drawing.Point(4, 22);
-            this.tabFilter.Name = "tabFilter";
-            this.tabFilter.Padding = new System.Windows.Forms.Padding(3);
-            this.tabFilter.Size = new System.Drawing.Size(363, 460);
-            this.tabFilter.TabIndex = 1;
-            this.tabFilter.Text = "Filter";
-            this.tabFilter.UseVisualStyleBackColor = true;
             // 
             // cbAutoSelect
             // 
@@ -413,15 +290,6 @@ namespace pwiz.Skyline.SettingsUI
                     "er and library settings.  Otherwise, all peptide\r\nselection must be done by manu" +
                     "al document editing.");
             this.cbAutoSelect.UseVisualStyleBackColor = true;
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(25, 70);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(120, 13);
-            this.label3.TabIndex = 6;
-            this.label3.Text = "Exclude &N-terminal AAs:";
             // 
             // textExcludeAAs
             // 
@@ -464,33 +332,6 @@ namespace pwiz.Skyline.SettingsUI
             this.listboxExclusions.TabIndex = 10;
             this.helpTip.SetToolTip(this.listboxExclusions, "Regular expression patterns that may be used to exclude certain peptides");
             // 
-            // label6
-            // 
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(25, 160);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(143, 13);
-            this.label6.TabIndex = 9;
-            this.label6.Text = "&Exclude peptides containing:";
-            // 
-            // label5
-            // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(112, 20);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(62, 13);
-            this.label5.TabIndex = 2;
-            this.label5.Text = "Ma&x length:";
-            // 
-            // label4
-            // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(26, 20);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(59, 13);
-            this.label4.TabIndex = 0;
-            this.label4.Text = "&Min length:";
-            // 
             // textMaxLength
             // 
             this.textMaxLength.Location = new System.Drawing.Point(115, 36);
@@ -506,21 +347,6 @@ namespace pwiz.Skyline.SettingsUI
             this.textMinLength.Size = new System.Drawing.Size(45, 20);
             this.textMinLength.TabIndex = 1;
             this.helpTip.SetToolTip(this.textMinLength, "Minimum number of amino acids allowed in peptides matching\r\nthis filter");
-            // 
-            // tabLibrary
-            // 
-            this.tabLibrary.Controls.Add(this.btnExplore);
-            this.tabLibrary.Controls.Add(this.btnBuildLibrary);
-            this.tabLibrary.Controls.Add(this.panelPick);
-            this.tabLibrary.Controls.Add(this.editLibraries);
-            this.tabLibrary.Controls.Add(this.label11);
-            this.tabLibrary.Controls.Add(this.listLibraries);
-            this.tabLibrary.Location = new System.Drawing.Point(4, 22);
-            this.tabLibrary.Name = "tabLibrary";
-            this.tabLibrary.Size = new System.Drawing.Size(363, 460);
-            this.tabLibrary.TabIndex = 4;
-            this.tabLibrary.Text = "Library";
-            this.tabLibrary.UseVisualStyleBackColor = true;
             // 
             // btnExplore
             // 
@@ -545,20 +371,6 @@ namespace pwiz.Skyline.SettingsUI
             this.btnBuildLibrary.UseVisualStyleBackColor = true;
             this.btnBuildLibrary.Click += new System.EventHandler(this.btnBuildLibrary_Click);
             // 
-            // panelPick
-            // 
-            this.panelPick.Controls.Add(this.comboRank);
-            this.panelPick.Controls.Add(this.labelPeptides);
-            this.panelPick.Controls.Add(this.label12);
-            this.panelPick.Controls.Add(this.textPeptideCount);
-            this.panelPick.Controls.Add(this.comboMatching);
-            this.panelPick.Controls.Add(this.cbLimitPeptides);
-            this.panelPick.Controls.Add(this.label7);
-            this.panelPick.Location = new System.Drawing.Point(3, 136);
-            this.panelPick.Name = "panelPick";
-            this.panelPick.Size = new System.Drawing.Size(357, 190);
-            this.panelPick.TabIndex = 3;
-            // 
             // comboRank
             // 
             this.comboRank.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -571,24 +383,6 @@ namespace pwiz.Skyline.SettingsUI
                     " rank matching peptides.  Not all library formats provide the\r\nsame values for r" +
                     "anking.");
             this.comboRank.SelectedIndexChanged += new System.EventHandler(this.comboRank_SelectedIndexChanged);
-            // 
-            // labelPeptides
-            // 
-            this.labelPeptides.AutoSize = true;
-            this.labelPeptides.Location = new System.Drawing.Point(99, 159);
-            this.labelPeptides.Name = "labelPeptides";
-            this.labelPeptides.Size = new System.Drawing.Size(48, 13);
-            this.labelPeptides.TabIndex = 6;
-            this.labelPeptides.Text = "Peptides";
-            // 
-            // label12
-            // 
-            this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(22, 14);
-            this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(120, 13);
-            this.label12.TabIndex = 0;
-            this.label12.Text = "&Pick peptides matching:";
             // 
             // textPeptideCount
             // 
@@ -628,15 +422,6 @@ namespace pwiz.Skyline.SettingsUI
             this.cbLimitPeptides.UseVisualStyleBackColor = true;
             this.cbLimitPeptides.CheckedChanged += new System.EventHandler(this.cbLimitPeptides_CheckedChanged);
             // 
-            // label7
-            // 
-            this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(22, 71);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(93, 13);
-            this.label7.TabIndex = 2;
-            this.label7.Text = "&Rank peptides by:";
-            // 
             // editLibraries
             // 
             this.editLibraries.Location = new System.Drawing.Point(272, 36);
@@ -648,15 +433,6 @@ namespace pwiz.Skyline.SettingsUI
             this.editLibraries.UseVisualStyleBackColor = true;
             this.editLibraries.Click += new System.EventHandler(this.editLibraries_Click);
             // 
-            // label11
-            // 
-            this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(25, 20);
-            this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(49, 13);
-            this.label11.TabIndex = 0;
-            this.label11.Text = "&Libraries:";
-            // 
             // listLibraries
             // 
             this.listLibraries.CheckOnClick = true;
@@ -667,6 +443,230 @@ namespace pwiz.Skyline.SettingsUI
             this.listLibraries.TabIndex = 1;
             this.helpTip.SetToolTip(this.listLibraries, resources.GetString("listLibraries.ToolTip"));
             this.listLibraries.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.listLibraries_ItemCheck);
+            // 
+            // tabControl1
+            // 
+            this.tabControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.tabControl1.Controls.Add(this.tabDigestion);
+            this.tabControl1.Controls.Add(this.tabPrediction);
+            this.tabControl1.Controls.Add(this.tabFilter);
+            this.tabControl1.Controls.Add(this.tabLibrary);
+            this.tabControl1.Controls.Add(this.tabModifications);
+            this.tabControl1.DataBindings.Add(new System.Windows.Forms.Binding("SelectedIndex", global::pwiz.Skyline.Properties.Settings.Default, "PeptideSettingsTab", true, System.Windows.Forms.DataSourceUpdateMode.OnPropertyChanged));
+            this.tabControl1.Location = new System.Drawing.Point(12, 12);
+            this.tabControl1.Name = "tabControl1";
+            this.tabControl1.SelectedIndex = global::pwiz.Skyline.Properties.Settings.Default.PeptideSettingsTab;
+            this.tabControl1.Size = new System.Drawing.Size(371, 486);
+            this.tabControl1.TabIndex = 0;
+            // 
+            // tabDigestion
+            // 
+            this.tabDigestion.Controls.Add(this.label2);
+            this.tabDigestion.Controls.Add(this.cbMissedCleavages);
+            this.tabDigestion.Controls.Add(this.label1);
+            this.tabDigestion.Controls.Add(this.comboEnzyme);
+            this.tabDigestion.Controls.Add(this.label15);
+            this.tabDigestion.Controls.Add(this.comboBackgroundProteome);
+            this.tabDigestion.Location = new System.Drawing.Point(4, 22);
+            this.tabDigestion.Name = "tabDigestion";
+            this.tabDigestion.Padding = new System.Windows.Forms.Padding(3);
+            this.tabDigestion.Size = new System.Drawing.Size(363, 460);
+            this.tabDigestion.TabIndex = 0;
+            this.tabDigestion.Text = "Digestion";
+            this.tabDigestion.UseVisualStyleBackColor = true;
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(25, 79);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(117, 13);
+            this.label2.TabIndex = 2;
+            this.label2.Text = "&Max missed cleavages:";
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(25, 20);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(47, 13);
+            this.label1.TabIndex = 0;
+            this.label1.Text = "&Enzyme:";
+            // 
+            // label15
+            // 
+            this.label15.AutoSize = true;
+            this.label15.Location = new System.Drawing.Point(25, 142);
+            this.label15.Name = "label15";
+            this.label15.Size = new System.Drawing.Size(115, 13);
+            this.label15.TabIndex = 4;
+            this.label15.Text = "&Background proteome:";
+            // 
+            // tabPrediction
+            // 
+            this.tabPrediction.Controls.Add(this.label14);
+            this.tabPrediction.Controls.Add(this.textMeasureRTWindow);
+            this.tabPrediction.Controls.Add(this.cbUseMeasuredRT);
+            this.tabPrediction.Controls.Add(this.label13);
+            this.tabPrediction.Controls.Add(this.comboRetentionTime);
+            this.tabPrediction.Controls.Add(this.label9);
+            this.tabPrediction.Location = new System.Drawing.Point(4, 22);
+            this.tabPrediction.Name = "tabPrediction";
+            this.tabPrediction.Size = new System.Drawing.Size(363, 460);
+            this.tabPrediction.TabIndex = 3;
+            this.tabPrediction.Text = "Prediction";
+            this.tabPrediction.UseVisualStyleBackColor = true;
+            // 
+            // label14
+            // 
+            this.label14.AutoSize = true;
+            this.label14.Location = new System.Drawing.Point(134, 136);
+            this.label14.Name = "label14";
+            this.label14.Size = new System.Drawing.Size(27, 13);
+            this.label14.TabIndex = 15;
+            this.label14.Text = "Min.";
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Location = new System.Drawing.Point(28, 116);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(72, 13);
+            this.label13.TabIndex = 12;
+            this.label13.Text = "Time &window:";
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(25, 20);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(122, 13);
+            this.label9.TabIndex = 10;
+            this.label9.Text = "&Retention time equation:";
+            // 
+            // tabFilter
+            // 
+            this.tabFilter.Controls.Add(this.cbAutoSelect);
+            this.tabFilter.Controls.Add(this.label3);
+            this.tabFilter.Controls.Add(this.textExcludeAAs);
+            this.tabFilter.Controls.Add(this.cbRaggedEnds);
+            this.tabFilter.Controls.Add(this.btnEditExlusions);
+            this.tabFilter.Controls.Add(this.listboxExclusions);
+            this.tabFilter.Controls.Add(this.label6);
+            this.tabFilter.Controls.Add(this.label5);
+            this.tabFilter.Controls.Add(this.label4);
+            this.tabFilter.Controls.Add(this.textMaxLength);
+            this.tabFilter.Controls.Add(this.textMinLength);
+            this.tabFilter.Location = new System.Drawing.Point(4, 22);
+            this.tabFilter.Name = "tabFilter";
+            this.tabFilter.Padding = new System.Windows.Forms.Padding(3);
+            this.tabFilter.Size = new System.Drawing.Size(363, 460);
+            this.tabFilter.TabIndex = 1;
+            this.tabFilter.Text = "Filter";
+            this.tabFilter.UseVisualStyleBackColor = true;
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(25, 70);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(120, 13);
+            this.label3.TabIndex = 6;
+            this.label3.Text = "Exclude &N-terminal AAs:";
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(25, 160);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(143, 13);
+            this.label6.TabIndex = 9;
+            this.label6.Text = "&Exclude peptides containing:";
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(112, 20);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(62, 13);
+            this.label5.TabIndex = 2;
+            this.label5.Text = "Ma&x length:";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(26, 20);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(59, 13);
+            this.label4.TabIndex = 0;
+            this.label4.Text = "&Min length:";
+            // 
+            // tabLibrary
+            // 
+            this.tabLibrary.Controls.Add(this.btnExplore);
+            this.tabLibrary.Controls.Add(this.btnBuildLibrary);
+            this.tabLibrary.Controls.Add(this.panelPick);
+            this.tabLibrary.Controls.Add(this.editLibraries);
+            this.tabLibrary.Controls.Add(this.label11);
+            this.tabLibrary.Controls.Add(this.listLibraries);
+            this.tabLibrary.Location = new System.Drawing.Point(4, 22);
+            this.tabLibrary.Name = "tabLibrary";
+            this.tabLibrary.Size = new System.Drawing.Size(363, 460);
+            this.tabLibrary.TabIndex = 4;
+            this.tabLibrary.Text = "Library";
+            this.tabLibrary.UseVisualStyleBackColor = true;
+            // 
+            // panelPick
+            // 
+            this.panelPick.Controls.Add(this.comboRank);
+            this.panelPick.Controls.Add(this.labelPeptides);
+            this.panelPick.Controls.Add(this.label12);
+            this.panelPick.Controls.Add(this.textPeptideCount);
+            this.panelPick.Controls.Add(this.comboMatching);
+            this.panelPick.Controls.Add(this.cbLimitPeptides);
+            this.panelPick.Controls.Add(this.label7);
+            this.panelPick.Location = new System.Drawing.Point(3, 136);
+            this.panelPick.Name = "panelPick";
+            this.panelPick.Size = new System.Drawing.Size(357, 190);
+            this.panelPick.TabIndex = 3;
+            // 
+            // labelPeptides
+            // 
+            this.labelPeptides.AutoSize = true;
+            this.labelPeptides.Location = new System.Drawing.Point(99, 159);
+            this.labelPeptides.Name = "labelPeptides";
+            this.labelPeptides.Size = new System.Drawing.Size(48, 13);
+            this.labelPeptides.TabIndex = 6;
+            this.labelPeptides.Text = "Peptides";
+            // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Location = new System.Drawing.Point(22, 14);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(120, 13);
+            this.label12.TabIndex = 0;
+            this.label12.Text = "&Pick peptides matching:";
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(22, 71);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(93, 13);
+            this.label7.TabIndex = 2;
+            this.label7.Text = "&Rank peptides by:";
+            // 
+            // label11
+            // 
+            this.label11.AutoSize = true;
+            this.label11.Location = new System.Drawing.Point(25, 20);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(49, 13);
+            this.label11.TabIndex = 0;
+            this.label11.Text = "&Libraries:";
             // 
             // tabModifications
             // 

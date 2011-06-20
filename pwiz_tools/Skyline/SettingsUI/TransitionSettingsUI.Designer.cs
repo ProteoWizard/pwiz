@@ -77,6 +77,12 @@
             this.cbLibraryPick = new System.Windows.Forms.CheckBox();
             this.label13 = new System.Windows.Forms.Label();
             this.tabInstrument = new System.Windows.Forms.TabPage();
+            this.label30 = new System.Windows.Forms.Label();
+            this.label31 = new System.Windows.Forms.Label();
+            this.label33 = new System.Windows.Forms.Label();
+            this.label34 = new System.Windows.Forms.Label();
+            this.textMaxTime = new System.Windows.Forms.TextBox();
+            this.textMinTime = new System.Windows.Forms.TextBox();
             this.label26 = new System.Windows.Forms.Label();
             this.label25 = new System.Windows.Forms.Label();
             this.label24 = new System.Windows.Forms.Label();
@@ -119,6 +125,7 @@
             this.comboPrecursorFilterType = new System.Windows.Forms.ComboBox();
             this.label20 = new System.Windows.Forms.Label();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
+            this.cbFilterScheduling = new System.Windows.Forms.CheckBox();
             this.tabControl1.SuspendLayout();
             this.tabGeneral.SuspendLayout();
             this.tabFilter.SuspendLayout();
@@ -135,7 +142,7 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(308, 477);
+            this.btnCancel.Location = new System.Drawing.Point(308, 502);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 2;
@@ -145,7 +152,7 @@
             // btnOk
             // 
             this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOk.Location = new System.Drawing.Point(227, 477);
+            this.btnOk.Location = new System.Drawing.Point(227, 502);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
             this.btnOk.TabIndex = 1;
@@ -167,7 +174,7 @@
             this.tabControl1.Location = new System.Drawing.Point(12, 12);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = global::pwiz.Skyline.Properties.Settings.Default.TransitionSettingsTab;
-            this.tabControl1.Size = new System.Drawing.Size(371, 457);
+            this.tabControl1.Size = new System.Drawing.Size(371, 482);
             this.tabControl1.TabIndex = 0;
             // 
             // tabGeneral
@@ -655,6 +662,12 @@
             // 
             // tabInstrument
             // 
+            this.tabInstrument.Controls.Add(this.label30);
+            this.tabInstrument.Controls.Add(this.label31);
+            this.tabInstrument.Controls.Add(this.label33);
+            this.tabInstrument.Controls.Add(this.label34);
+            this.tabInstrument.Controls.Add(this.textMaxTime);
+            this.tabInstrument.Controls.Add(this.textMinTime);
             this.tabInstrument.Controls.Add(this.label26);
             this.tabInstrument.Controls.Add(this.label25);
             this.tabInstrument.Controls.Add(this.label24);
@@ -669,10 +682,66 @@
             this.tabInstrument.Controls.Add(this.textMinMz);
             this.tabInstrument.Location = new System.Drawing.Point(4, 22);
             this.tabInstrument.Name = "tabInstrument";
-            this.tabInstrument.Size = new System.Drawing.Size(363, 431);
+            this.tabInstrument.Size = new System.Drawing.Size(363, 456);
             this.tabInstrument.TabIndex = 2;
             this.tabInstrument.Text = "Instrument";
             this.tabInstrument.UseVisualStyleBackColor = true;
+            // 
+            // label30
+            // 
+            this.label30.AutoSize = true;
+            this.label30.Location = new System.Drawing.Point(264, 215);
+            this.label30.Name = "label30";
+            this.label30.Size = new System.Drawing.Size(27, 13);
+            this.label30.TabIndex = 18;
+            this.label30.Text = "Min.";
+            // 
+            // label31
+            // 
+            this.label31.AutoSize = true;
+            this.label31.Location = new System.Drawing.Point(101, 215);
+            this.label31.Name = "label31";
+            this.label31.Size = new System.Drawing.Size(27, 13);
+            this.label31.TabIndex = 14;
+            this.label31.Text = "Min.";
+            // 
+            // label33
+            // 
+            this.label33.AutoSize = true;
+            this.label33.Location = new System.Drawing.Point(187, 196);
+            this.label33.Name = "label33";
+            this.label33.Size = new System.Drawing.Size(52, 13);
+            this.label33.TabIndex = 16;
+            this.label33.Text = "Ma&x time:";
+            // 
+            // label34
+            // 
+            this.label34.AutoSize = true;
+            this.label34.Location = new System.Drawing.Point(24, 196);
+            this.label34.Name = "label34";
+            this.label34.Size = new System.Drawing.Size(49, 13);
+            this.label34.TabIndex = 12;
+            this.label34.Text = "&Min time:";
+            // 
+            // textMaxTime
+            // 
+            this.textMaxTime.Location = new System.Drawing.Point(190, 212);
+            this.textMaxTime.Name = "textMaxTime";
+            this.textMaxTime.Size = new System.Drawing.Size(68, 20);
+            this.textMaxTime.TabIndex = 17;
+            this.helpTip.SetToolTip(this.textMaxTime, "Maximum time allowed in chromatograms regardless of how\r\nthey were acquired.  Set" +
+                    "ting this can save memory and disk space\r\nthat might be used on uninteresting pa" +
+                    "rts of the gradient.");
+            // 
+            // textMinTime
+            // 
+            this.textMinTime.Location = new System.Drawing.Point(27, 212);
+            this.textMinTime.Name = "textMinTime";
+            this.textMinTime.Size = new System.Drawing.Size(68, 20);
+            this.textMinTime.TabIndex = 13;
+            this.helpTip.SetToolTip(this.textMinTime, "Minimum time allowed in chromatograms regardless of how\r\nthey were acquired.  Set" +
+                    "ting this can save memory and disk space\r\nthat might be used on uninteresting pa" +
+                    "rts of the gradient.");
             // 
             // label26
             // 
@@ -786,12 +855,13 @@
             // 
             // tabFullScan
             // 
+            this.tabFullScan.Controls.Add(this.cbFilterScheduling);
             this.tabFullScan.Controls.Add(this.groupBoxMS1);
             this.tabFullScan.Controls.Add(this.groupBoxMS2);
             this.tabFullScan.Location = new System.Drawing.Point(4, 22);
             this.tabFullScan.Name = "tabFullScan";
             this.tabFullScan.Padding = new System.Windows.Forms.Padding(3);
-            this.tabFullScan.Size = new System.Drawing.Size(363, 431);
+            this.tabFullScan.Size = new System.Drawing.Size(363, 456);
             this.tabFullScan.TabIndex = 4;
             this.tabFullScan.Text = "Full-Scan";
             this.tabFullScan.UseVisualStyleBackColor = true;
@@ -1081,13 +1151,24 @@
             this.label20.TabIndex = 0;
             this.label20.Text = "Pr&ecursor matching:";
             // 
+            // cbFilterScheduling
+            // 
+            this.cbFilterScheduling.AutoSize = true;
+            this.cbFilterScheduling.Location = new System.Drawing.Point(18, 423);
+            this.cbFilterScheduling.Name = "cbFilterScheduling";
+            this.cbFilterScheduling.Size = new System.Drawing.Size(234, 17);
+            this.cbFilterScheduling.TabIndex = 2;
+            this.cbFilterScheduling.Text = "Filter only retention time scheduling windows";
+            this.helpTip.SetToolTip(this.cbFilterScheduling, resources.GetString("cbFilterScheduling.ToolTip"));
+            this.cbFilterScheduling.UseVisualStyleBackColor = true;
+            // 
             // TransitionSettingsUI
             // 
             this.AcceptButton = this.btnOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(395, 512);
+            this.ClientSize = new System.Drawing.Size(395, 537);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnOk);
             this.Controls.Add(this.tabControl1);
@@ -1112,6 +1193,7 @@
             this.tabInstrument.ResumeLayout(false);
             this.tabInstrument.PerformLayout();
             this.tabFullScan.ResumeLayout(false);
+            this.tabFullScan.PerformLayout();
             this.groupBoxMS1.ResumeLayout(false);
             this.groupBoxMS1.PerformLayout();
             this.groupBoxMS2.ResumeLayout(false);
@@ -1211,5 +1293,12 @@
         private System.Windows.Forms.ComboBox comboPrecursorIsotopes;
         private System.Windows.Forms.ComboBox comboEnrichments;
         private System.Windows.Forms.Label label29;
+        private System.Windows.Forms.Label label30;
+        private System.Windows.Forms.Label label31;
+        private System.Windows.Forms.Label label33;
+        private System.Windows.Forms.Label label34;
+        private System.Windows.Forms.TextBox textMaxTime;
+        private System.Windows.Forms.TextBox textMinTime;
+        private System.Windows.Forms.CheckBox cbFilterScheduling;
     }
 }

@@ -505,8 +505,8 @@ namespace pwiz.Skyline.Model
         {
             public PrecursorSchedule(PeptideGroupDocNode nodePepGroup, PeptideDocNode nodePep,
                     TransitionGroupDocNode nodeTranGroup, double retentionTime, double timeWindow,
-                    bool IsPrecursorLimited, int optimizeStepCount)
-                : base(nodeTranGroup, retentionTime, timeWindow, IsPrecursorLimited, optimizeStepCount)
+                    bool isPrecursorLimited, int optimizeStepCount)
+                : base(nodeTranGroup, retentionTime, timeWindow, isPrecursorLimited, optimizeStepCount)
             {
                 PeptideGroup = nodePepGroup;
                 Peptide = nodePep;

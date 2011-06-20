@@ -160,7 +160,7 @@ namespace pwiz.Skyline.Model.DocSettings
                                                       Instrument.ProductFilter/TransitionFullScan.RES_PER_FILTER, null,
                                                       FullScanPrecursorIsotopes.None, null,
                                                       FullScanMassAnalyzerType.none, null, null,
-                                                      null);
+                                                      null, false);
                     Instrument = Instrument.ClearFullScanSettings();
                 }
 
@@ -1227,7 +1227,9 @@ namespace pwiz.Skyline.Model.DocSettings
         public const double DEFAULT_MZ_MATCH_TOLERANCE = 0.055;
         public const int MIN_TRANSITION_MAX = 50;
         public const int MAX_TRANSITION_MAX = 10000;
-
+        public const int MIN_TIME = 0;
+        public const int MAX_TIME = 500;
+        public const int MIN_TIME_RANGE = 5;
 
         public static double GetThermoDynamicMin(double precursorMz)
         {
@@ -1235,34 +1237,21 @@ namespace pwiz.Skyline.Model.DocSettings
             return ((int) (precursorMz*(activationQ/0.908))/5.0)*5.0;
         }
 
-        public TransitionInstrument(int minMz, int maxMz, bool isDynamicMin, double mzMatchTolerance, int? maxTransitions)
-            : this(minMz, maxMz, isDynamicMin, mzMatchTolerance, maxTransitions,
-                FullScanPrecursorFilterType.None, null, null, null)
-        {
-        }
-
         public TransitionInstrument(int minMz,
                                     int maxMz,
                                     bool isDynamicMin,
                                     double mzMatchTolerance,
                                     int? maxTransitions,
-                                    // Backward compatibility with 0.7.1
-                                    FullScanPrecursorFilterType precursorFilterType,
-                                    double? precursorFilter,
-                                    string productFilterType,
-                                    double? productFilter)
+                                    int? minTime,
+                                    int? maxTime)
         {
             MinMz = minMz;
             MaxMz = maxMz;
             IsDynamicMin = isDynamicMin;
             MzMatchTolerance = mzMatchTolerance;
             MaxTransitions = maxTransitions;
-
-            // Backward compatibility with 0.7.1
-            PrecursorFilterType = precursorFilterType;
-            PrecursorFilter = precursorFilter;
-            ProductFilterType = productFilterType;
-            ProductFilter = productFilter;
+            MinTime = minTime;
+            MaxTime = maxTime;
 
             DoValidate();
         }
@@ -1299,6 +1288,10 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public int? MaxTransitions { get; private set; }
+
+        public int? MinTime { get; private set; }
+
+        public int? MaxTime { get; private set; }
 
         // Backward compatibility with 0.7.1
 
@@ -1337,6 +1330,16 @@ namespace pwiz.Skyline.Model.DocSettings
             return ChangeProp(ImClone(this), im => im.MaxTransitions = prop);
         }
 
+        public TransitionInstrument ChangeMinTime(int? prop)
+        {
+            return ChangeProp(ImClone(this), im => im.MinTime = prop);
+        }
+
+        public TransitionInstrument ChangeMaxTime(int? prop)
+        {
+            return ChangeProp(ImClone(this), im => im.MaxTime = prop);
+        }
+
         // Backward compatibility with 0.7.1
 
         public TransitionInstrument ClearFullScanSettings()
@@ -1365,6 +1368,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             min_mz,
             max_mz,
+            min_time,
+            max_time,
             dynamic_min,
             mz_match_tolerance,
             max_transitions,
@@ -1407,6 +1412,21 @@ namespace pwiz.Skyline.Model.DocSettings
                 throw new InvalidDataException(string.Format("The maximum number of transitions {0} must be between {1} and {2}.",
                     MaxTransitions, MIN_TRANSITION_MAX, MAX_TRANSITION_MAX));
             }
+            if (MinTime.HasValue && (MIN_TIME > MinTime || MinTime > MAX_TIME))
+            {
+                throw new InvalidDataException(string.Format("The minimum retention time {0} must be between {1} and {2}.",
+                    MinTime, MIN_TIME, MAX_TIME));
+            }
+            if (MaxTime.HasValue && (MIN_TIME > MaxTime || MaxTime > MAX_TIME))
+            {
+                throw new InvalidDataException(string.Format("The maximum retention time {0} must be between {1} and {2}.",
+                    MaxTime, MIN_TIME, MAX_TIME));
+            }
+            if (MinTime.HasValue && MaxTime.HasValue && MaxTime.Value - MinTime.Value < MIN_TIME_RANGE)
+            {
+                throw new InvalidDataException(string.Format("The allowable retention time range {0} to {1} must be at least {2} minutes apart.",
+                    MinTime, MaxTime, MIN_TIME_RANGE));
+            }
             if (PrecursorFilterType == FullScanPrecursorFilterType.None)
             {
                 if (ProductFilterType != null || PrecursorFilter.HasValue || ProductFilter.HasValue)
@@ -1439,6 +1459,8 @@ namespace pwiz.Skyline.Model.DocSettings
             MinMz = reader.GetIntAttribute(ATTR.min_mz);
             MaxMz = reader.GetIntAttribute(ATTR.max_mz);
             MzMatchTolerance = reader.GetDoubleAttribute(ATTR.mz_match_tolerance, DEFAULT_MZ_MATCH_TOLERANCE);
+            MinTime = reader.GetNullableIntAttribute(ATTR.min_time);
+            MaxTime = reader.GetNullableIntAttribute(ATTR.max_time);
             MaxTransitions = reader.GetNullableIntAttribute(ATTR.max_transitions);
 
             // Full-scan filter parameters (backward compatibility w/ 0.7.1)
@@ -1469,6 +1491,8 @@ namespace pwiz.Skyline.Model.DocSettings
             writer.WriteAttribute(ATTR.min_mz, MinMz);
             writer.WriteAttribute(ATTR.max_mz, MaxMz);
             writer.WriteAttribute(ATTR.mz_match_tolerance, MzMatchTolerance);
+            writer.WriteAttributeNullable(ATTR.min_time, MinTime);
+            writer.WriteAttributeNullable(ATTR.max_time, MaxTime);
             writer.WriteAttributeNullable(ATTR.max_transitions, MaxTransitions);
         }
 
@@ -1484,6 +1508,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 other.MaxMz == MaxMz &&
                 other.IsDynamicMin.Equals(IsDynamicMin) &&
                 other.MzMatchTolerance.Equals(MzMatchTolerance) &&
+                other.MinTime.Equals(MinTime) &&
+                other.MaxTime.Equals(MaxTime) &&
                 other.MaxTransitions.Equals(MaxTransitions) &&
                 Equals(other.PrecursorFilterType, PrecursorFilterType) &&
                 other.PrecursorFilter.Equals(PrecursorFilter) &&
@@ -1507,6 +1533,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ MaxMz;
                 result = (result*397) ^ IsDynamicMin.GetHashCode();
                 result = (result*397) ^ MzMatchTolerance.GetHashCode();
+                result = (result*397) ^ (MinTime.HasValue ? MinTime.Value : 0);
+                result = (result*397) ^ (MaxTime.HasValue ? MaxTime.Value : 0);
                 result = (result*397) ^ (MaxTransitions.HasValue ? MaxTransitions.Value : 0);
                 result = (result*397) ^ PrecursorFilterType.GetHashCode();
                 result = (result*397) ^ (PrecursorFilter.HasValue ? PrecursorFilter.Value.GetHashCode() : 0);
@@ -1576,7 +1604,8 @@ namespace pwiz.Skyline.Model.DocSettings
                                     FullScanMassAnalyzerType precursorMassAnalyzer,
                                     double? precursorRes,
                                     double? precursorResMz,
-                                    IsotopeEnrichments isotopeEnrichments)
+                                    IsotopeEnrichments isotopeEnrichments,
+                                    bool isScheduledFilter)
         {
             PrecursorFilterType = precursorFilterType;
             PrecursorFilter = precursorFilter;
@@ -1590,6 +1619,8 @@ namespace pwiz.Skyline.Model.DocSettings
             PrecursorResMz = precursorResMz;
 
             IsotopeEnrichments = isotopeEnrichments;
+
+            IsScheduledFilter = isScheduledFilter;
 
             DoValidate();
         }
@@ -1624,6 +1655,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             get { return IsotopeEnrichments != null ? IsotopeEnrichments.IsotopeAbundances : null; }
         }
+
+        public bool IsScheduledFilter { get; private set; }
 
         public bool IsEnabled
         {
@@ -1844,7 +1877,8 @@ namespace pwiz.Skyline.Model.DocSettings
             precursor_isotope_filter,
             precursor_mass_analyzer,
             precursor_res,
-            precursor_res_mz
+            precursor_res_mz,
+            scheduled_filter
         }
 
         void IValidating.Validate()
@@ -2000,6 +2034,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
 
+            IsScheduledFilter = reader.GetBoolAttribute(ATTR.scheduled_filter);
+
             // Consume tag
             reader.Read();
 
@@ -2034,6 +2070,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 writer.WriteAttributeNullable(ATTR.precursor_res, PrecursorRes);
                 writer.WriteAttributeNullable(ATTR.precursor_res_mz, PrecursorResMz);
             }
+            writer.WriteAttribute(ATTR.scheduled_filter, IsScheduledFilter);
             if (IsotopeEnrichments != null)
                 writer.WriteElement(IsotopeEnrichments);
         }
@@ -2056,7 +2093,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 Equals(other.IsotopeEnrichments, IsotopeEnrichments) &&
                 Equals(other.PrecursorMassAnalyzer, PrecursorMassAnalyzer) &&
                 other.PrecursorRes.Equals(PrecursorRes) &&
-                other.PrecursorResMz.Equals(PrecursorResMz);
+                other.PrecursorResMz.Equals(PrecursorResMz) &&
+                other.IsScheduledFilter == IsScheduledFilter;
         }
 
         public override bool Equals(object obj)
@@ -2082,6 +2120,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 result = (result*397) ^ PrecursorMassAnalyzer.GetHashCode();
                 result = (result*397) ^ (PrecursorRes.HasValue ? PrecursorRes.Value.GetHashCode() : 0);
                 result = (result*397) ^ (PrecursorResMz.HasValue ? PrecursorResMz.Value.GetHashCode() : 0);
+                result = (result*397) ^ IsScheduledFilter.GetHashCode();
                 return result;
             }
         }

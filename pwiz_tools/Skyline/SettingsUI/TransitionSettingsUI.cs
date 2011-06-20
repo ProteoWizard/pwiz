@@ -105,6 +105,10 @@ namespace pwiz.Skyline.SettingsUI
             textMzMatchTolerance.Text = Instrument.MzMatchTolerance.ToString();
             if (Instrument.MaxTransitions.HasValue)
                 textMaxTrans.Text = Instrument.MaxTransitions.Value.ToString();
+            if (Instrument.MinTime.HasValue)
+                textMinTime.Text = Instrument.MinTime.Value.ToString();
+            if (Instrument.MaxTime.HasValue)
+                textMaxTime.Text = Instrument.MaxTime.Value.ToString();
 
             _driverEnrichments = new SettingsListComboDriver<IsotopeEnrichments>(comboEnrichments, Settings.Default.IsotopeEnrichmentsList);
             sel = (FullScan.IsotopeEnrichments != null ? FullScan.IsotopeEnrichments.Name : null);
@@ -308,8 +312,28 @@ namespace pwiz.Skyline.SettingsUI
                     return;
                 maxTrans = maxTransTemp;
             }
+            int? minTime = null, maxTime = null;
+            min = TransitionInstrument.MIN_TIME;
+            max = TransitionInstrument.MAX_TIME;
+            if (!string.IsNullOrEmpty(textMinTime.Text))
+            {
+                int minTimeTemp;
+                if (!helper.ValidateNumberTextBox(e, tabControl1, (int)TABS.Instrument, textMinTime,
+                        min, max, out minTimeTemp))
+                    return;
+                minTime = minTimeTemp;
+            }
+            if (!string.IsNullOrEmpty(textMaxTime.Text))
+            {
+                int maxTimeTemp;
+                if (!helper.ValidateNumberTextBox(e, tabControl1, (int)TABS.Instrument, textMaxTime,
+                        min, max, out maxTimeTemp))
+                    return;
+                maxTime = maxTimeTemp;
+            }
 
-            TransitionInstrument instrument = new TransitionInstrument(minMz, maxMz, isDynamicMin, mzMatchTolerance, maxTrans);
+            TransitionInstrument instrument = new TransitionInstrument(minMz,
+                maxMz, isDynamicMin, mzMatchTolerance, maxTrans, minTime, maxTime);
             Helpers.AssignIfEquals(ref instrument, Instrument);
 
             // Validate and store full-scan settings
@@ -444,6 +468,7 @@ namespace pwiz.Skyline.SettingsUI
                     return;
                 }
             }
+            bool isScheduledFilter = cbFilterScheduling.Checked;
 
             var fullScan = new TransitionFullScan(precursorFilterType,
                                                   precursorFilter,
@@ -455,7 +480,8 @@ namespace pwiz.Skyline.SettingsUI
                                                   precursorAnalyzerType,
                                                   precursorRes,
                                                   precursorResMz,
-                                                  enrichments);
+                                                  enrichments,
+                                                  isScheduledFilter);
 
             Helpers.AssignIfEquals(ref fullScan, FullScan);
 
