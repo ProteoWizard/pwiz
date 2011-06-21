@@ -320,6 +320,8 @@ class PWIZ_API_DECL TextWriter
             child()("ExternalFormatDocumentation: ", sd.externalFormatDocumentation);
         if (!sd.fileFormat.empty())
             child()("FileFormat: ", sd.fileFormat);
+        if (!sd.spectrumIDFormat.empty())
+            child()("SpectrumIDFormat: ", sd.spectrumIDFormat);
         return *this;
     }
 
@@ -760,16 +762,15 @@ class PWIZ_API_DECL TextWriter
             child()("nTermGain: "+enzyme.nTermGain);
         if (!enzyme.cTermGain.empty())
             child()("cTermGain: "+enzyme.cTermGain);
-        if (enzyme.semiSpecific != boost::logic::indeterminate)
-            child()(std::string("semiSpecific: ") + (enzyme.semiSpecific ? "true": "false"));
+        child()("semiSpecific: ", (enzyme.terminalSpecificity != proteome::Digestion::FullySpecific ? "true": "false"));
         if (enzyme.missedCleavages != 0)
             child()("missedCleavages: ", enzyme.missedCleavages);
         if (enzyme.minDistance != 0)
             child()("minDistance: ", enzyme.minDistance);
         if (!enzyme.siteRegexp.empty())
-            child()("siteRegexp: "+enzyme.siteRegexp);
+            child()("SiteRegexp: "+enzyme.siteRegexp);
         if (!enzyme.enzymeName.empty())
-            child()("enzymeName: ", enzyme.enzymeName);
+            child()("EnzymeName: ", enzyme.enzymeName);
 
         return *this;
     }

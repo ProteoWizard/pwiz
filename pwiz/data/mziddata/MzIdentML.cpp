@@ -571,7 +571,9 @@ PWIZ_API_DECL bool AmbiguousResidue::empty() const
 
 PWIZ_API_DECL Enzyme::Enzyme(const string& id,
                              const std::string& name)
-    : Identifiable(id, name), semiSpecific(indeterminate), missedCleavages(0),
+    : Identifiable(id, name),
+      terminalSpecificity(proteome::Digestion::FullySpecific),
+      missedCleavages(0),
       minDistance(0)
 
 {
@@ -582,7 +584,7 @@ PWIZ_API_DECL bool Enzyme::empty() const
     return id.empty() &&
            nTermGain.empty() &&
            cTermGain.empty() &&
-           (indeterminate(semiSpecific) || semiSpecific== false) &&
+           terminalSpecificity == proteome::Digestion::NonSpecific && // CONSIDER: boost::optional
            missedCleavages == 0 &&
            minDistance == 0 &&
            siteRegexp.empty() &&
@@ -1145,6 +1147,18 @@ PWIZ_API_DECL proteome::Modification modification(const Modification& mod)
 
     // return mod with formula
     return proteome::Modification(unimod::modification(firstUnimodAnnotation.cvid).deltaComposition);
+}
+
+PWIZ_API_DECL CVID cleavageAgent(const Enzyme& ez)
+{
+    CVID result = proteome::Digestion::getCleavageAgentByName(ez.enzymeName.cvParamChild(MS_cleavage_agent_name).name());
+    if (result == CVID_Unknown && !ez.enzymeName.userParams.empty())
+        result = proteome::Digestion::getCleavageAgentByName(ez.enzymeName.userParams[0].name);
+    if (result == CVID_Unknown && !ez.name.empty())
+        result = proteome::Digestion::getCleavageAgentByName(ez.name);
+    if (result == CVID_Unknown)
+        result = proteome::Digestion::getCleavageAgentByRegex(ez.siteRegexp);
+    return result;
 }
 
 PWIZ_API_DECL void snapModificationsToUnimod(const SpectrumIdentification& si)

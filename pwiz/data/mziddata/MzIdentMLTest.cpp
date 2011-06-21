@@ -56,6 +56,57 @@ void testDigestedPeptides()
 
     SpectrumIdentificationResultPtr result2 = sil->spectrumIdentificationResult[1];
 
+    // test with multiple simultaneous enzymes (Lys-C/P and Arg-C)
+    {
+        // result 2 rank 1: K.QTQTFTTYSDNQPGVLIQVYEGER.A
+
+        SpectrumIdentificationItemPtr result2_rank1 = result2->spectrumIdentificationItem[0];
+
+        // both termini are specific now, one cut from each enzyme
+        vector<DigestedPeptide> result2_rank1_digestedPeptides = digestedPeptides(*sip, *result2_rank1);
+        unit_assert(result2_rank1_digestedPeptides.size() == 1);
+        unit_assert(result2_rank1_digestedPeptides[0] == digestedPeptide(*sip, *result2_rank1->peptideEvidencePtr[0]));
+        unit_assert(result2_rank1_digestedPeptides[0].missedCleavages() == 0);
+        unit_assert(result2_rank1_digestedPeptides[0].specificTermini() == 2);
+        unit_assert(result2_rank1_digestedPeptides[0].NTerminusIsSpecific());
+        unit_assert(result2_rank1_digestedPeptides[0].CTerminusIsSpecific());
+    }
+    
+    // test with multiple independent enzymes (Lys-C/P and Arg-C)
+    sip->enzymes.independent = true;
+    {
+        // result 2 rank 1: K.QTQTFTTYSDNQPGVLIQVYEGER.A
+        
+        SpectrumIdentificationItemPtr result2_rank1 = result2->spectrumIdentificationItem[0];
+
+        // reassign the original prefix residue
+        result2_rank1->peptideEvidencePtr[0]->pre = 'K';
+
+        // there are two semi-specific peptides, one cut by Lys-C and the other cut by Arg-C;
+        // only the first one will be returned because they have the same "best specificity"
+
+        vector<DigestedPeptide> result2_rank1_digestedPeptides = digestedPeptides(*sip, *result2_rank1);
+        unit_assert(result2_rank1_digestedPeptides.size() == 1);
+        unit_assert(result2_rank1_digestedPeptides[0] == digestedPeptide(*sip, *result2_rank1->peptideEvidencePtr[0]));
+        unit_assert(result2_rank1_digestedPeptides[0].missedCleavages() == 0);
+        unit_assert(result2_rank1_digestedPeptides[0].specificTermini() == 1);
+        unit_assert(result2_rank1_digestedPeptides[0].NTerminusIsSpecific());
+        unit_assert(!result2_rank1_digestedPeptides[0].CTerminusIsSpecific());
+    }
+
+    // change from multiple enzymes to trypsin/p and test again
+    sip->enzymes.enzymes.clear();
+    EnzymePtr trypsin(new Enzyme);
+    trypsin->id = "ENZ_1";
+    trypsin->cTermGain = "OH";
+    trypsin->nTermGain = "H";
+    trypsin->missedCleavages = 2;
+    trypsin->minDistance = 1;
+    trypsin->terminalSpecificity = proteome::Digestion::FullySpecific;
+    trypsin->siteRegexp = "(?<=[KR])";
+    trypsin->enzymeName.set(MS_Trypsin_P);
+    sip->enzymes.enzymes.push_back(trypsin);
+
     {
         // result 2 rank 1: K.QTQTFTTYSDNQPGVLIQVYEGER.A
         SpectrumIdentificationItemPtr result2_rank1 = result2->spectrumIdentificationItem[0];
@@ -185,55 +236,6 @@ void testDigestedPeptides()
         unit_assert(result2_rank1_digestedPeptides[0].NTerminusPrefix() == "-");
         unit_assert(result2_rank1_digestedPeptides[0].CTerminusSuffix() == "A");
     }
-
-    // change enzyme back to Lys-C
-    sip->enzymes.enzymes[0]->siteRegexp = "(?<=K)";
-
-    // now test with multiple independent enzymes (Lys-C and Arg-C)
-    sip->enzymes.enzymes.push_back(EnzymePtr(new Enzyme("ENZ_2")));
-    sip->enzymes.enzymes[1]->nTermGain = sip->enzymes.enzymes[0]->nTermGain;
-    sip->enzymes.enzymes[1]->cTermGain = sip->enzymes.enzymes[0]->cTermGain;
-    sip->enzymes.enzymes[1]->semiSpecific = sip->enzymes.enzymes[0]->semiSpecific;
-    sip->enzymes.enzymes[1]->missedCleavages = sip->enzymes.enzymes[0]->missedCleavages;
-    sip->enzymes.enzymes[1]->minDistance = sip->enzymes.enzymes[0]->minDistance;
-    sip->enzymes.enzymes[1]->siteRegexp = "(?<=R)";
-
-    {
-        // result 2 rank 1: K.QTQTFTTYSDNQPGVLIQVYEGER.A
-        
-        SpectrumIdentificationItemPtr result2_rank1 = result2->spectrumIdentificationItem[0];
-
-        // reassign the original prefix residue
-        result2_rank1->peptideEvidencePtr[0]->pre = 'K';
-
-        // there are two semi-specific peptides, one cut by Lys-C and the other cut by Arg-C;
-        // only the first one will be returned because they have the same "best specificity"
-
-        vector<DigestedPeptide> result2_rank1_digestedPeptides = digestedPeptides(*sip, *result2_rank1);
-        unit_assert(result2_rank1_digestedPeptides.size() == 1);
-        unit_assert(result2_rank1_digestedPeptides[0] == digestedPeptide(*sip, *result2_rank1->peptideEvidencePtr[0]));
-        unit_assert(result2_rank1_digestedPeptides[0].missedCleavages() == 0);
-        unit_assert(result2_rank1_digestedPeptides[0].specificTermini() == 1);
-        unit_assert(result2_rank1_digestedPeptides[0].NTerminusIsSpecific());
-        unit_assert(!result2_rank1_digestedPeptides[0].CTerminusIsSpecific());
-    }
-
-    // now test with multiple simultaneous enzymes (Lys-C and Arg-C)
-    sip->enzymes.independent = false;
-    {
-        // result 2 rank 1: K.QTQTFTTYSDNQPGVLIQVYEGER.A
-
-        SpectrumIdentificationItemPtr result2_rank1 = result2->spectrumIdentificationItem[0];
-
-        // both termini are specific now, one cut from each enzyme
-        vector<DigestedPeptide> result2_rank1_digestedPeptides = digestedPeptides(*sip, *result2_rank1);
-        unit_assert(result2_rank1_digestedPeptides.size() == 1);
-        unit_assert(result2_rank1_digestedPeptides[0] == digestedPeptide(*sip, *result2_rank1->peptideEvidencePtr[0]));
-        unit_assert(result2_rank1_digestedPeptides[0].missedCleavages() == 0);
-        unit_assert(result2_rank1_digestedPeptides[0].specificTermini() == 2);
-        unit_assert(result2_rank1_digestedPeptides[0].NTerminusIsSpecific());
-        unit_assert(result2_rank1_digestedPeptides[0].CTerminusIsSpecific());
-    }
 }
 
 void testSnapModifications()
@@ -291,6 +293,33 @@ void testConversion()
                                pep5.modifications().find(ModificationMap::CTerminus())->second.monoisotopicDeltaMass());
 }
 
+void testCleavageAgent()
+{
+    {
+        Enzyme ez;
+        ez.enzymeName.set(MS_Trypsin_P);
+        unit_assert_operator_equal(MS_Trypsin_P, cleavageAgent(ez));
+    }
+
+    {
+        Enzyme ez;
+        ez.enzymeName.userParams.push_back(UserParam("trypsin/p"));
+        unit_assert_operator_equal(MS_Trypsin_P, cleavageAgent(ez));
+    }
+
+    {
+        Enzyme ez;
+        ez.name = "trypsin/p";
+        unit_assert_operator_equal(MS_Trypsin_P, cleavageAgent(ez));
+    }
+
+    {
+        Enzyme ez;
+        ez.siteRegexp = "(?<=[KR])(?!P)";
+        unit_assert_operator_equal(MS_Trypsin, cleavageAgent(ez));
+    }
+}
+
 void testSpectraDataFileFormat()
 {
     {ofstream fs("testSpectraDataFile.mzedML"); fs << "<?xml?><mzML>";}
@@ -329,6 +358,7 @@ int main(int argc, char** argv)
         testDigestedPeptides();
         testSnapModifications();
         testConversion();
+        testCleavageAgent();
         testSpectraDataFileFormat();
         return 0;
     }

@@ -166,6 +166,10 @@ class PWIZ_API_DECL Digestion
     /// or CVID_Unknown if the agent is not found
     static CVID getCleavageAgentByName(const std::string& agentName);
 
+    /// returns the cvid of the specified cleavage agent looking it up by the Perl regular expression,
+    /// or CVID_Unknown if the agent is not found (the regex pattern must match exactly)
+    static CVID getCleavageAgentByRegex(const std::string& agentRegex);
+
     /// returns the Perl regular expression defining the places in a
     /// polypeptide or protein that the agent will cut.
     static const std::string& getCleavageAgentRegex(CVID agentCvid);

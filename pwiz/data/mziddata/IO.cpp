@@ -1898,7 +1898,9 @@ PWIZ_API_DECL void read(std::istream& is, AnalysisCollection& anal)
 //
 // Enzyme
 //
-
+// MzIdentML has a perverse encoding for a non-specific search:
+// the enzymeName must be written as MS_NoEnzyme;
+// pwiz preserves the real enzyme in the data model with the siteRegexp
 
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Enzyme& ez)
 {
@@ -1908,13 +1910,13 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Enzyme& ez)
         attributes.add("cTermGain", ez.cTermGain);
     if (!ez.nTermGain.empty())
         attributes.add("nTermGain", ez.nTermGain);
-    if (ez.semiSpecific != indeterminate)
-        attributes.add("semiSpecific", ez.semiSpecific ? "true" : "false");
     if (ez.missedCleavages != 0)
         attributes.add("missedCleavages", ez.missedCleavages);
     if (ez.minDistance != 0)
         attributes.add("minDistance", ez.minDistance);
-    
+
+    attributes.add("semiSpecific", ez.terminalSpecificity == proteome::Digestion::FullySpecific ? "false" : "true");
+
     writer.startElement("Enzyme", attributes);
 
     if (!ez.siteRegexp.empty())
@@ -1926,7 +1928,13 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Enzyme& ez)
         writer.popStyle();
     }
 
-    if (!ez.enzymeName.empty())
+    if (ez.terminalSpecificity == proteome::Digestion::NonSpecific)
+    {
+        writer.startElement("EnzymeName");
+        write(writer, CVParam(MS_NoEnzyme));
+        writer.endElement();
+    }
+    else if (!ez.enzymeName.empty())
     {
         writer.startElement("EnzymeName");
         writeParamContainer(writer, ez.enzymeName);
@@ -1955,20 +1963,12 @@ struct HandlerEnzyme : public HandlerIdentifiable
         if (name == "Enzyme")
         {
             getAttribute(attributes, "id", ez->id);
-            ez->nTermGain.clear();
             getAttribute(attributes, nTermGain_attribute(version), ez->nTermGain);
-            ez->cTermGain.clear();
             getAttribute(attributes, cTermGain_attribute(version), ez->cTermGain);
-            ez->semiSpecific = indeterminate;
-            string value;
-            getAttribute(attributes, "semiSpecific", value);
-            if (!value.empty())
-                ez->semiSpecific = value == "true" ? true : false;
-            ez->missedCleavages = 0;
-            getAttribute(attributes, "missedCleavages", ez->missedCleavages);
-            ez->minDistance = 0;
-            getAttribute(attributes, "minDistance", ez->minDistance);
-            
+            getAttribute(attributes, "missedCleavages", ez->missedCleavages, 0);
+            getAttribute(attributes, "minDistance", ez->minDistance, 0);
+            getAttribute(attributes, "semiSpecific", _semiSpecific);
+
             HandlerIdentifiable::id = ez;
             return HandlerIdentifiable::startElement(name, attributes, position);
         }
@@ -1995,17 +1995,31 @@ struct HandlerEnzyme : public HandlerIdentifiable
         return Status::Ok;
     }
 
-    virtual Status startElement(const string& name, 
-                                stream_offset position)
+    virtual Status endElement(const string& name, 
+                              stream_offset position)
     {
         if (name == "SiteRegexp")
             inSiteRegexp = false;
+        else if (name == "Enzyme")
+        {
+            if (ez->enzymeName.hasCVParam(MS_NoEnzyme))
+            {
+                ez->enzymeName.clear();
+                CVID cleavageAgent = proteome::Digestion::getCleavageAgentByRegex(ez->siteRegexp);
+                if (cleavageAgent != CVID_Unknown)
+                    ez->enzymeName.set(cleavageAgent);
+                ez->terminalSpecificity = proteome::Digestion::NonSpecific;
+            }
+            else if (_semiSpecific == "true")
+                ez->terminalSpecificity = proteome::Digestion::SemiSpecific;
+        }
 
         return Status::Ok;
     }
     
     private:
     HandlerNamedParamContainer handlerNamedParamContainer_;
+    string _semiSpecific;
 };
 
 
@@ -2173,7 +2187,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const MassTable& mt)
 {
     XMLWriter::Attributes attributes;
     attributes.add("id", mt.id);
-    attributes.add("msLevel", mt.msLevel);
+    attributes.add("msLevel", makeDelimitedListString(mt.msLevel));
     
     writer.startElement("MassTable", attributes);
 
@@ -2199,7 +2213,10 @@ struct HandlerMassTable : public SAXParser::Handler
         if (name == "MassTable")
         {
             getAttribute(attributes, "id", mt->id);
-            getAttribute(attributes, "msLevel", mt->msLevel);
+
+            string values;
+            getAttribute(attributes, "msLevel", values);
+            parseDelimitedListString(mt->msLevel, values);
         }
         else if (name == "Residue")
         {
@@ -2549,8 +2566,8 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
     if (!si.enzymes.empty())
         write(writer, si.enzymes);
     
-    if (!si.massTable.empty())
-        write(writer, si.massTable);
+    BOOST_FOREACH(const MassTablePtr& mt, si.massTable)
+        write(writer, *mt);
 
     if (!si.fragmentTolerance.empty())
     {
@@ -2634,8 +2651,9 @@ struct HandlerSpectrumIdentificationProtocol : public HandlerIdentifiable
         }
         else if (name == "MassTable")
         {
+            sip->massTable.push_back(MassTablePtr(new MassTable()));
             handlerMassTable_.version = version;
-            handlerMassTable_.mt = &sip->massTable;
+            handlerMassTable_.mt = sip->massTable.back().get();
             return Status(Status::Delegate, &handlerMassTable_);
         }
         else if (name == "FragmentTolerance")

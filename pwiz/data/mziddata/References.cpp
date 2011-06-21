@@ -31,7 +31,6 @@ namespace mziddata {
 namespace References {
 
 
-
 template <typename object_type>
 struct HasID
 {
@@ -41,17 +40,6 @@ struct HasID
     bool operator()(const shared_ptr<object_type>& objectPtr)
     {
         return objectPtr.get() && objectPtr->id == id_;
-    }
-};
-
-struct HasMTID
-{
-    const string& id_;
-    HasMTID(const string& id) : id_(id) {}
-
-    bool operator()(const SpectrumIdentificationProtocolPtr& sip)
-    {
-        return sip.get() && sip->massTable.id == id_;
     }
 };
 
@@ -181,23 +169,27 @@ PWIZ_API_DECL void resolve(MassTablePtr& mt, const vector<SpectrumIdentification
     if (!mt.get() || mt->id.empty())
         return; 
 
-    vector<SpectrumIdentificationProtocolPtr>::const_iterator it = 
-        find_if(spectrumIdProts.begin(), spectrumIdProts.end(), HasMTID(mt->id));
-
-    if (it == spectrumIdProts.end())
+    BOOST_FOREACH(const SpectrumIdentificationProtocolPtr& sip, spectrumIdProts)
+    BOOST_FOREACH(const MassTablePtr& mt2, sip->massTable)
     {
-        ostringstream oss;
-        oss << "[References::resolve()] Failed to resolve reference.\n"
-            << "  object type: MassTable" << endl
-            << "  reference id: " << mt->id << endl
-            << "  referent list: " << spectrumIdProts.size() << endl;
-        for (vector<SpectrumIdentificationProtocolPtr>::const_iterator it=spectrumIdProts.begin();
-             it!=spectrumIdProts.end(); ++it)
-            oss << "    " << (*it)->id << endl;
-        throw runtime_error(oss.str().c_str());
+        if (mt == mt2)
+            return;
+        else if (mt->id == mt2->id)
+        {
+            mt = mt2;
+            return;
+        }
     }
 
-    mt = MassTablePtr(new MassTable((*it)->massTable));
+    ostringstream oss;
+    oss << "[References::resolve()] Failed to resolve reference.\n"
+        << "  object type: MassTable" << endl
+        << "  reference id: " << mt->id << endl
+        << "  referent list: " << spectrumIdProts.size() << endl;
+    for (vector<SpectrumIdentificationProtocolPtr>::const_iterator it=spectrumIdProts.begin();
+         it!=spectrumIdProts.end(); ++it)
+        oss << "    " << (*it)->id << endl;
+    throw runtime_error(oss.str().c_str());
 }
 
 PWIZ_API_DECL void resolve(PeptideEvidencePtr& pe, const MzIdentML& mzid)

@@ -51,7 +51,6 @@ namespace mziddata {
 using namespace pwiz::cv;
 using namespace pwiz::data;
 
-
 /// returns a default list of CVs used in an MzIdentML document;
 /// currently includes PSI-MS, Unit Ontology, and UNIMOD
 PWIZ_API_DECL std::vector<CV> defaultCVList();
@@ -321,7 +320,7 @@ struct PWIZ_API_DECL Enzyme : public Identifiable
 
     std::string nTermGain;
     std::string cTermGain;
-    boost::logic::tribool semiSpecific;
+    proteome::Digestion::Specificity terminalSpecificity;
     int missedCleavages;
     int minDistance;
 
@@ -374,7 +373,7 @@ struct PWIZ_API_DECL MassTable
     MassTable(const std::string id = "");
 
     std::string id;
-    std::string msLevel;
+    std::vector<int> msLevel;
 
     std::vector<ResiduePtr> residues;
     std::vector<AmbiguousResiduePtr> ambiguousResidue;
@@ -428,7 +427,7 @@ struct PWIZ_API_DECL SpectrumIdentificationProtocol : public Identifiable
     ParamContainer additionalSearchParams;
     std::vector<SearchModificationPtr> modificationParams;
     Enzymes enzymes;
-    MassTable massTable;
+    std::vector<MassTablePtr> massTable;
     ParamContainer fragmentTolerance;
     ParamContainer parentTolerance;
     ParamContainer threshold;
@@ -812,6 +811,9 @@ PWIZ_API_DECL proteome::Peptide peptide(const Peptide& peptide);
 
 /// creates a proteome::Modification from an mziddata::Modification
 PWIZ_API_DECL proteome::Modification modification(const Modification& mod);
+
+/// returns a cleavage agent CVID for an mziddata::Enzyme
+PWIZ_API_DECL CVID cleavageAgent(const Enzyme& ez);
 
 /// sets Unimod CV terms (if possible) for all SearchModifications and Modification elements
 PWIZ_API_DECL void snapModificationsToUnimod(const SpectrumIdentification& si);

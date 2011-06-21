@@ -31,6 +31,7 @@
 namespace pwiz {
 namespace mziddata {
 
+
 /// MZIDData <-> pepXML stream serialization
 class PWIZ_API_DECL Serializer_pepXML
 {
@@ -60,7 +61,17 @@ class PWIZ_API_DECL Serializer_pepXML
     Serializer_pepXML& operator=(Serializer_pepXML&);
 };
 
+
+struct PWIZ_API_DECL PepXMLSpecificity
+{
+    std::string cut, no_cut, sense;
+};
+
+/// converts an mziddata::Enzyme into a pepXML cut/no_cut/sense tuple
+PepXMLSpecificity pepXMLSpecificity(const Enzyme& ez);
+
+
+} // namespace mziddata
 } // namespace pwiz 
-} // namespace mziddata 
 
 #endif // _SERIALIZER_PEPXML_HPP_

@@ -27,15 +27,32 @@
 #include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/data/proteome/Digestion.hpp"
 #include "TextWriter.hpp"
+#include "boost/range/adaptor/transformed.hpp"
+#include "boost/range/algorithm/max_element.hpp"
+#include "boost/range/algorithm/min_element.hpp"
 #include <cstring>
 
 
 using namespace pwiz::mziddata;
 using namespace pwiz::mziddata::examples;
 using namespace pwiz::util;
+namespace proteome = pwiz::proteome;
 
 ostream* os_ = 0;
+
+struct EnzymePtr_specificity
+{
+    typedef int result_type;
+    int operator()(const EnzymePtr& x) const {return x->terminalSpecificity;}
+};
+
+struct EnzymePtr_missedCleavages
+{
+    typedef int result_type;
+    int operator()(const EnzymePtr& x) const {return x->missedCleavages;}
+};
 
 void stripUnmappedMetadata(MzIdentML& mzid)
 {
@@ -52,12 +69,22 @@ void stripUnmappedMetadata(MzIdentML& mzid)
         as->contactRolePtr.reset();
     }
 
-    // HACK: fix the enzyme mapping!
-    mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0]->enzymes.enzymes[0]->enzymeName.clear();
-    mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0]->massTable = MassTable();
-    mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0]->threshold.clear();
-    mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0]->databaseFilters.clear();
-    mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0]->databaseTranslation.reset();
+    SpectrumIdentificationProtocol& sip = *mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0];
+
+    // pepXML only provides a single min_number_termini and max_num_internal_cleavages for all enzymes
+    int minSpecificity = *boost::range::min_element(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_specificity()));
+    int maxMissedCleavages = *boost::range::max_element(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_missedCleavages()));
+    BOOST_FOREACH(const EnzymePtr& ez, sip.enzymes.enzymes)
+    {
+        ez->terminalSpecificity = (proteome::Digestion::Specificity) minSpecificity;
+        ez->missedCleavages = maxMissedCleavages;
+    }
+
+    // pepXML doesn't map these elements
+    sip.massTable.clear();
+    sip.threshold.clear();
+    sip.databaseFilters.clear();
+    sip.databaseTranslation.reset();
 
     // pepXML doesn't map these attributes
     mzid.analysisCollection.spectrumIdentification[0]->searchDatabase[0]->name.clear();
@@ -92,8 +119,9 @@ void stripUnmappedMetadata(MzIdentML& mzid)
     BOOST_FOREACH(SpectrumIdentificationResultPtr& sir, mzid.dataCollection.analysisData.spectrumIdentificationList[0]->spectrumIdentificationResult)
     BOOST_FOREACH(SpectrumIdentificationItemPtr& sii, sir->spectrumIdentificationItem)
     {
-        // pepXML doesn't support fragment metadata
+        // pepXML doesn't support fragment metadata or mass tables
         sii->fragmentation.clear();
+        sii->massTablePtr.reset();
 
         for (size_t i=0; i < sii->peptideEvidencePtr.size(); ++i)
         {
@@ -129,20 +157,17 @@ void testTranslation(const string& str)
     unit_assert(bal::contains(str, "spectrumNativeID=\"controllerType=0 controllerNumber=1 scan=420\""));
 }
 
-void testSerialize()
+void testSerializeReally(MzIdentML& mzid, const Serializer_pepXML::Config& config)
 {
     if (os_) *os_ << "begin testSerialize" << endl;
 
-    MzIdentML mzid;
-    initializeBasicSpectrumIdentification(mzid);
-    stripUnmappedMetadata(mzid);
-
-    Serializer_pepXML serializer;
+    Serializer_pepXML serializer(config);
     ostringstream oss;
     serializer.write(oss, mzid, "tiny.pepXML");
 
     if (os_) *os_ << "oss:\n" << oss.str() << endl;
-    testTranslation(oss.str());
+    if (config.readSpectrumQueries)
+        testTranslation(oss.str());
 
     shared_ptr<istringstream> iss(new istringstream(oss.str()));
     MzIdentML mzid2;
@@ -153,43 +178,156 @@ void testSerialize()
     Diff<MzIdentML, DiffConfig> diff(mzid, mzid2);
     if (os_ && diff) *os_ << diff << endl; 
     unit_assert(!diff);
+}
+
+void testSerialize()
+{
+    MzIdentML mzid;
+    initializeBasicSpectrumIdentification(mzid);
+    stripUnmappedMetadata(mzid);
+    testSerializeReally(mzid, Serializer_pepXML::Config());
+
+
+    // test non-specific enzyme
+    mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0]->enzymes.enzymes.clear();
+    EnzymePtr noEnzyme(new Enzyme);
+    noEnzyme->id = "ENZ_1";
+    noEnzyme->cTermGain = "OH";
+    noEnzyme->nTermGain = "H";
+    noEnzyme->missedCleavages = 2;
+    noEnzyme->minDistance = 1;
+    noEnzyme->terminalSpecificity = proteome::Digestion::NonSpecific;
+    noEnzyme->siteRegexp = "(?<=[KR])";
+    noEnzyme->enzymeName.set(MS_Trypsin_P);
+    mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0]->enzymes.enzymes.push_back(noEnzyme);
+    testSerializeReally(mzid, Serializer_pepXML::Config());
+
 
     // test with readSpectrumQueries == false
-    {
-        Serializer_pepXML serializer2(Serializer_pepXML::Config(false));
-        shared_ptr<istringstream> iss(new istringstream(oss.str()));
-        MzIdentML mzid2;
-        serializer2.read(iss, mzid2);
 
-        References::resolve(mzid2);
+    // clear the original SequenceCollection
+    mzid.sequenceCollection.dbSequences.clear();
+    mzid.sequenceCollection.peptides.clear();
+    mzid.sequenceCollection.peptideEvidence.clear();
 
-        // clear the original SequenceCollection
-        mzid.sequenceCollection.dbSequences.clear();
-        mzid.sequenceCollection.peptides.clear();
-        mzid.sequenceCollection.peptideEvidence.clear();
+    // clear the original analysis data
+    mzid.analysisCollection.spectrumIdentification[0]->inputSpectra[0]->spectrumIDFormat = CVParam();
+    mzid.analysisCollection.spectrumIdentification[0]->spectrumIdentificationListPtr.reset();
+    mzid.dataCollection.analysisData.spectrumIdentificationList.clear();
+    mzid.dataCollection.analysisData.proteinDetectionListPtr.reset();
 
-        // clear the original analysis data
-        mzid.analysisCollection.spectrumIdentification[0]->spectrumIdentificationListPtr.reset();
-        mzid.dataCollection.analysisData.spectrumIdentificationList.clear();
-        mzid.dataCollection.analysisData.proteinDetectionListPtr.reset();
-
-        Diff<MzIdentML, DiffConfig> diff(mzid, mzid2);
-        if (os_ && diff) *os_ << diff << endl; 
-        unit_assert(!diff);
-    }
+    testSerializeReally(mzid, Serializer_pepXML::Config(false));
 }
 
-void test()
+void testPepXMLSpecificity()
 {
-    testSerialize();
+    PepXMLSpecificity result;
+    Enzyme ez;
+
+    ez.enzymeName.set(MS_Trypsin);
+    result = pepXMLSpecificity(ez);
+    unit_assert_operator_equal("C", result.sense);
+    unit_assert_operator_equal("KR", result.cut);
+    unit_assert_operator_equal("P", result.no_cut);
+
+    ez.enzymeName.clear();
+    ez.enzymeName.set(MS_Trypsin_P);
+    result = pepXMLSpecificity(ez);
+    unit_assert_operator_equal("C", result.sense);
+    unit_assert_operator_equal("KR", result.cut);
+    unit_assert_operator_equal("", result.no_cut);
+
+    ez.enzymeName.clear();
+    ez.enzymeName.userParams.push_back(UserParam("trypsin/p"));
+    result = pepXMLSpecificity(ez);
+    unit_assert_operator_equal("C", result.sense);
+    unit_assert_operator_equal("KR", result.cut);
+    unit_assert_operator_equal("", result.no_cut);
+
+    ez.enzymeName.clear();
+    ez.name = "trypsin/p";
+    result = pepXMLSpecificity(ez);
+    unit_assert_operator_equal("C", result.sense);
+    unit_assert_operator_equal("KR", result.cut);
+    unit_assert_operator_equal("", result.no_cut);
+
+    ez.name.clear();
+    ez.enzymeName.set(MS_Asp_N);
+    result = pepXMLSpecificity(ez);
+    unit_assert_operator_equal("N", result.sense);
+    unit_assert_operator_equal("BD", result.cut);
+    unit_assert_operator_equal("", result.no_cut);
+
+    ez.enzymeName.clear();
+    ez.siteRegexp = proteome::Digestion::getCleavageAgentRegex(MS_Trypsin);
+    result = pepXMLSpecificity(ez);
+    unit_assert_operator_equal("C", result.sense);
+    unit_assert_operator_equal("KR", result.cut);
+    unit_assert_operator_equal("P", result.no_cut);
+
+    ez.siteRegexp = proteome::Digestion::getCleavageAgentRegex(MS_Trypsin_P);
+    result = pepXMLSpecificity(ez);
+    unit_assert_operator_equal("C", result.sense);
+    unit_assert_operator_equal("KR", result.cut);
+    unit_assert_operator_equal("", result.no_cut);
+
+    ez.siteRegexp = proteome::Digestion::getCleavageAgentRegex(MS_Arg_C);
+    result = pepXMLSpecificity(ez);
+    unit_assert_operator_equal("C", result.sense);
+    unit_assert_operator_equal("R", result.cut);
+    unit_assert_operator_equal("P", result.no_cut);
+
+    ez.siteRegexp = proteome::Digestion::getCleavageAgentRegex(MS_Asp_N);
+    result = pepXMLSpecificity(ez);
+    unit_assert_operator_equal("N", result.sense);
+    unit_assert_operator_equal("BD", result.cut);
+    unit_assert_operator_equal("", result.no_cut);
+
+    ez.siteRegexp = "(?<=[QWERTY])(?=[QWERTY])";
+    result = pepXMLSpecificity(ez);
+    unit_assert_operator_equal("C", result.sense);
+    unit_assert_operator_equal("QWERTY", result.cut);
+    unit_assert_operator_equal("ABCDFGHIJKLMNOPSUVZ", result.no_cut);
+
+    ez.siteRegexp = "(?<![QWERTY])(?![QWERTY])";
+    result = pepXMLSpecificity(ez);
+    unit_assert_operator_equal("C", result.sense);
+    unit_assert_operator_equal("ABCDFGHIJKLMNOPSUVZ", result.cut);
+    unit_assert_operator_equal("QWERTY", result.no_cut);
+
+    ez.siteRegexp = "(?<=[QWERTY])";
+    result = pepXMLSpecificity(ez);
+    unit_assert_operator_equal("C", result.sense);
+    unit_assert_operator_equal("QWERTY", result.cut);
+    unit_assert_operator_equal("", result.no_cut);
+
+    ez.siteRegexp = "(?=[QWERTY])";
+    result = pepXMLSpecificity(ez);
+    unit_assert_operator_equal("N", result.sense);
+    unit_assert_operator_equal("QWERTY", result.cut);
+    unit_assert_operator_equal("", result.no_cut);
+
+    ez.siteRegexp = "(?<![QWERTY])";
+    result = pepXMLSpecificity(ez);
+    unit_assert_operator_equal("C", result.sense);
+    unit_assert_operator_equal("ABCDFGHIJKLMNOPSUVZ", result.cut);
+    unit_assert_operator_equal("", result.no_cut);
+
+    ez.siteRegexp = "(?![QWERTY])";
+    result = pepXMLSpecificity(ez);
+    unit_assert_operator_equal("N", result.sense);
+    unit_assert_operator_equal("ABCDFGHIJKLMNOPSUVZ", result.cut);
+    unit_assert_operator_equal("", result.no_cut);
 }
+
 
 int main(int argc, char** argv)
 {
     try
     {
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
-        test();
+        testSerialize();
+        testPepXMLSpecificity();
         return 0;
     }
     catch (exception& e)

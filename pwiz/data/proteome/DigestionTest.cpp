@@ -72,6 +72,11 @@ void testCleavageAgents()
     unit_assert(Digestion::getCleavageAgentByName("ion trap") == CVID_Unknown);
     unit_assert(Digestion::getCleavageAgentByName("!@#$%^&*") == CVID_Unknown);
 
+    unit_assert(Digestion::getCleavageAgentByRegex("(?<=[KR])(?!P)") == MS_Trypsin);
+    unit_assert(Digestion::getCleavageAgentByRegex("(?<=[KR])") == MS_Trypsin_P);
+    unit_assert(Digestion::getCleavageAgentByRegex("(?<=K)") == MS_Lys_C_P);
+    unit_assert(Digestion::getCleavageAgentByRegex("!@#$%^&*") == CVID_Unknown);
+
     unit_assert(Digestion::getCleavageAgentByName(cleavageAgentNames[0]) == MS_Trypsin);
     unit_assert(Digestion::getCleavageAgentByName(cleavageAgentNames[1]) == MS_Arg_C);
     unit_assert(Digestion::getCleavageAgentByName(cleavageAgentNames[2]) == MS_Asp_N);

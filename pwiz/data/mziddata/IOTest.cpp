@@ -32,6 +32,7 @@ using namespace pwiz::util;
 using namespace pwiz::minimxml;
 using namespace pwiz::cv;
 using namespace pwiz::mziddata;
+namespace proteome = pwiz::proteome;
 using boost::iostreams::stream_offset;
 
 ostream* os_ = 0;
@@ -390,7 +391,7 @@ void testEnzyme()
     a.id = "id";
     a.nTermGain = "n";
     a.cTermGain = "c";
-    a.semiSpecific = true;
+    a.terminalSpecificity = proteome::Digestion::SemiSpecific;
     a.missedCleavages = 1;
     a.minDistance = 2;
     
@@ -446,7 +447,7 @@ void testMassTable()
     MassTable a;
     
     a.id = "id";
-    a.msLevel = "1";
+    a.msLevel.push_back(1);
 
     ResiduePtr b(new Residue());
     b->code = 'B';
@@ -484,7 +485,9 @@ void testSpectrumIdentificationProtocol()
     a.additionalSearchParams.set(MS_parent_mass_type_mono);
     a.modificationParams.push_back(SearchModificationPtr(new SearchModification()));
     a.enzymes.independent = "no";
-    a.massTable.msLevel = "2";
+    a.massTable.push_back(MassTablePtr(new MassTable("MT_1")));
+    a.massTable.back()->msLevel.push_back(1);
+    a.massTable.back()->msLevel.push_back(2);
     a.fragmentTolerance.set(MS_search_tolerance_plus_value, "0.6", UO_dalton);
     a.parentTolerance.set(MS_search_tolerance_plus_value, "3", UO_dalton);
     a.threshold.set(MS_Mascot_SigThreshold, "0.05");

@@ -32,6 +32,7 @@ using namespace pwiz::util;
 using namespace pwiz::data;
 using namespace pwiz::data::diff_impl;
 using namespace pwiz::mziddata;
+namespace proteome = pwiz::proteome;
 
 
 // TODO: Add Identifiable diff to all subclasses of Identifiable
@@ -664,8 +665,8 @@ void testEnzyme()
     b.nTermGain = "n";
     a.cTermGain = "y";
     b.cTermGain = "n";
-    a.semiSpecific = true;
-    b.semiSpecific = false;
+    a.terminalSpecificity = proteome::Digestion::SemiSpecific;
+    b.terminalSpecificity = proteome::Digestion::FullySpecific;
     a.missedCleavages = 1;
     b.missedCleavages = 5;
     a.minDistance = 2;
@@ -686,8 +687,8 @@ void testEnzyme()
     unit_assert(diff.a_b.nTermGain == "y");
     unit_assert(diff.b_a.nTermGain == "n");
     unit_assert(diff.a_b.cTermGain == "y");
-    unit_assert(diff.a_b.semiSpecific);
-    unit_assert(!diff.b_a.semiSpecific);
+    unit_assert(diff.a_b.terminalSpecificity == proteome::Digestion::SemiSpecific);
+    unit_assert(diff.b_a.terminalSpecificity == proteome::Digestion::FullySpecific);
     unit_assert(diff.b_a.cTermGain == "n");
     unit_assert(diff.a_b.missedCleavages == 1);
     unit_assert(diff.b_a.missedCleavages == 5);
@@ -722,7 +723,7 @@ void testMassTable()
     MassTable a, b;
 
     a.id = "id";
-    a.msLevel = "msLevel";
+    a.msLevel.push_back(1);
 
     ResiduePtr c(new Residue());
     a.residues.push_back(c);
@@ -739,11 +740,11 @@ void testMassTable()
     unit_assert(diff);
 
     a.id = "b_id";
-    b.msLevel = "b_msLevel";
+    b.msLevel.push_back(2);
     diff(a, b);
     unit_assert(diff);
 
-    a.msLevel = "b_msLevel";
+    b.msLevel.push_back(2);
     b.residues.clear();
     diff(a, b);
     unit_assert(diff);

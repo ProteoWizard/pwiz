@@ -286,15 +286,15 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
     sm = SearchModificationPtr(new SearchModification);
     sm->massDelta = phosphorylation.monoisotopicMass();
     sm->residues.push_back('S');
-    sm->set(UNIMOD_Phospho);
     sm->set(UNIMOD_Sulfo);
+    sm->set(UNIMOD_Phospho);
     sip->modificationParams.push_back(sm);
 
     sm = SearchModificationPtr(new SearchModification);
     sm->massDelta = phosphorylation.monoisotopicMass();
     sm->residues.push_back('T');
-    sm->set(UNIMOD_Phospho);
     sm->set(UNIMOD_Sulfo);
+    sm->set(UNIMOD_Phospho);
     sip->modificationParams.push_back(sm);
 
     sm = SearchModificationPtr(new SearchModification);
@@ -311,17 +311,29 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
     sm->set(MS_unknown_modification);
     sip->modificationParams.push_back(sm);
 
-    EnzymePtr enzyme(new Enzyme);
-    enzyme->id = "ENZ_1";
-    enzyme->cTermGain = "OH";
-    enzyme->nTermGain = "H";
-    enzyme->missedCleavages = 1;
-    enzyme->minDistance = 1;
-    enzyme->semiSpecific = false;
-    enzyme->siteRegexp = "(?<=[KR])";
-    enzyme->enzymeName.set(MS_Trypsin_P);
-    sip->enzymes.independent = true;
-    sip->enzymes.enzymes.push_back(enzyme);
+    sip->enzymes.independent = false;
+
+    EnzymePtr lysC(new Enzyme);
+    lysC->id = "ENZ_1";
+    lysC->cTermGain = "OH";
+    lysC->nTermGain = "H";
+    lysC->missedCleavages = 3;
+    lysC->minDistance = 2;
+    lysC->terminalSpecificity = proteome::Digestion::SemiSpecific;
+    lysC->siteRegexp = "(?<=K)";
+    lysC->enzymeName.set(MS_Lys_C_P);
+    sip->enzymes.enzymes.push_back(lysC);
+
+    EnzymePtr argC(new Enzyme);
+    argC->id = "ENZ_2";
+    argC->cTermGain = "OH";
+    argC->nTermGain = "H";
+    argC->missedCleavages = 2;
+    argC->minDistance = 1;
+    argC->terminalSpecificity = proteome::Digestion::FullySpecific;
+    argC->siteRegexp = "(?<=R)(?!P)";
+    argC->enzymeName.set(MS_Arg_C);
+    sip->enzymes.enzymes.push_back(argC);
 
     sip->parentTolerance.set(MS_search_tolerance_plus_value, "1", UO_parts_per_million);
     sip->parentTolerance.set(MS_search_tolerance_minus_value, "1", UO_parts_per_million);
@@ -359,8 +371,10 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
     si->searchDatabase.push_back(sdb);
     mzid.analysisCollection.spectrumIdentification.push_back(si);
 
-    sip->massTable.id = "MT";
-    sip->massTable.msLevel = "1 2";
+    MassTablePtr massTable(new MassTable);
+    massTable->id = "MT";
+    massTable->msLevel += 1, 2;
+    sip->massTable.push_back(massTable);
 
     const char* residueSymbols = "ACDEFGHIKLMNPQRSTUVWY";
     for (int i=0; i < 21; ++i)
@@ -369,18 +383,18 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
         ResiduePtr rp(new Residue);
         rp->code = record.symbol;
         rp->mass = record.residueFormula.monoisotopicMass();
-        sip->massTable.residues.push_back(rp);
+        massTable->residues.push_back(rp);
     }
     
     AmbiguousResiduePtr arp(new AmbiguousResidue);
     arp->code = 'B';
     arp->set(MS_alternate_single_letter_codes, "D N");
-    sip->massTable.ambiguousResidue.push_back(arp);
+    massTable->ambiguousResidue.push_back(arp);
 
     arp.reset(new AmbiguousResidue);
     arp->code = 'Z';
     arp->set(MS_alternate_single_letter_codes, "E Q");
-    sip->massTable.ambiguousResidue.push_back(arp);
+    massTable->ambiguousResidue.push_back(arp);
 
     sip->threshold.set(MS_Mascot_SigThreshold, "0.05");
     
@@ -435,6 +449,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sii->experimentalMassToCharge = Ion::mz(proteomePeptide.molecularWeight(), sii->chargeState);
             sii->calculatedMassToCharge = Ion::mz(proteomePeptide.monoisotopicMass(), sii->chargeState);
             sii->peptidePtr = peptide;
+            sii->massTablePtr = massTable;
             sii->set(MS_Mascot_score, 42.1);
             sii->set(MS_Mascot_identity_threshold, 11);
             sii->set(MS_Mascot_homology_threshold, 21);
@@ -499,6 +514,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sii->experimentalMassToCharge = Ion::mz(proteomePeptide.molecularWeight(), sii->chargeState);
             sii->calculatedMassToCharge = Ion::mz(proteomePeptide.monoisotopicMass(), sii->chargeState);
             sii->peptidePtr = peptide;
+            sii->massTablePtr = massTable;
             sii->set(MS_Mascot_score, 4.2);
             sii->set(MS_Mascot_identity_threshold, 11);
             sii->set(MS_Mascot_homology_threshold, 21);
@@ -563,6 +579,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sii->experimentalMassToCharge = Ion::mz(proteomePeptide.molecularWeight(), sii->chargeState);
             sii->calculatedMassToCharge = Ion::mz(proteomePeptide.monoisotopicMass(), sii->chargeState);
             sii->peptidePtr = peptide;
+            sii->massTablePtr = massTable;
             sii->set(MS_Mascot_score, 4.2);
             sii->set(MS_Mascot_identity_threshold, 11);
             sii->set(MS_Mascot_homology_threshold, 21);
@@ -626,6 +643,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sii->experimentalMassToCharge = Ion::mz(proteomePeptide.molecularWeight(), sii->chargeState);
             sii->calculatedMassToCharge = Ion::mz(proteomePeptide.monoisotopicMass(), sii->chargeState);
             sii->peptidePtr = peptide;
+            sii->massTablePtr = massTable;
             sii->set(MS_Mascot_score, 24.1);
             sii->set(MS_Mascot_identity_threshold, 12);
             sii->set(MS_Mascot_homology_threshold, 22);
@@ -677,6 +695,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sii->experimentalMassToCharge = Ion::mz(proteomePeptide.molecularWeight(), sii->chargeState);
             sii->calculatedMassToCharge = Ion::mz(proteomePeptide.monoisotopicMass(), sii->chargeState);
             sii->peptidePtr = peptide;
+            sii->massTablePtr = massTable;
             sii->set(MS_Mascot_score, 2.4);
             sii->set(MS_Mascot_identity_threshold, 12);
             sii->set(MS_Mascot_homology_threshold, 22);
@@ -731,6 +750,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sii->experimentalMassToCharge = Ion::mz(proteomePeptide.molecularWeight(), sii->chargeState);
             sii->calculatedMassToCharge = Ion::mz(proteomePeptide.monoisotopicMass(), sii->chargeState);
             sii->peptidePtr = peptide;
+            sii->massTablePtr = massTable;
             sii->set(MS_Mascot_score, 44);
             sii->set(MS_Mascot_identity_threshold, 13);
             sii->set(MS_Mascot_homology_threshold, 23);
@@ -756,6 +776,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sii->experimentalMassToCharge = Ion::mz(proteomePeptide.molecularWeight(), sii->chargeState);
             sii->calculatedMassToCharge = Ion::mz(proteomePeptide.monoisotopicMass(), sii->chargeState);
             sii->peptidePtr = peptide;
+            sii->massTablePtr = massTable;
             sii->set(MS_Mascot_score, 4.4);
             sii->set(MS_Mascot_identity_threshold, 13);
             sii->set(MS_Mascot_homology_threshold, 23);
@@ -795,6 +816,7 @@ PWIZ_API_DECL void initializeBasicSpectrumIdentification(MzIdentML& mzid)
             sii->experimentalMassToCharge = Ion::mz(proteomePeptide.molecularWeight(), sii->chargeState);
             sii->calculatedMassToCharge = Ion::mz(proteomePeptide.monoisotopicMass(), sii->chargeState);
             sii->peptidePtr = peptide;
+            sii->massTablePtr = massTable;
             sii->set(MS_Mascot_score, 54);
             sii->set(MS_Mascot_identity_threshold, 23);
             sii->set(MS_Mascot_homology_threshold, 33);

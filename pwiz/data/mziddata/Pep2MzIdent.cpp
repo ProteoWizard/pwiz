@@ -630,12 +630,15 @@ bool addToSpectrumIdentificationProtocol(CVParam& param, vector<string>& path,
     else if (iequals(tag, "MassTable") &&
              iequals(path.at(0), "AmbiguousResidue"))
     {
+        if (sip->massTable.empty())
+            sip->massTable.push_back(MassTablePtr(new MassTable("MT_1")));
+
         AmbiguousResiduePtr ar;
-        if (!sip->massTable.ambiguousResidue.size())
-            sip->massTable.ambiguousResidue.push_back(
+        if (!sip->massTable.back()->ambiguousResidue.size())
+            sip->massTable.back()->ambiguousResidue.push_back(
                 AmbiguousResiduePtr(new AmbiguousResidue()));
 
-        ar = sip->massTable.ambiguousResidue.back();
+        ar = sip->massTable.back()->ambiguousResidue.back();
         ar->cvParams.push_back(param);
 
         result = true;
@@ -1113,9 +1116,9 @@ void Pep2MzIdent::Impl::translateEnzyme(const SampleEnzyme& sampleEnzyme,
             push_back(UserParam("description", sampleEnzyme.description));
 
     if (sampleEnzyme.fidelity == "Semispecific")
-        enzyme->semiSpecific = true;
+        enzyme->terminalSpecificity = proteome::Digestion::SemiSpecific;
     else if (sampleEnzyme.fidelity == "Nonspecific")
-        enzyme->semiSpecific = false;
+        enzyme->terminalSpecificity = proteome::Digestion::NonSpecific;
 
     enzyme->minDistance = sampleEnzyme.specificity.minSpace;
 

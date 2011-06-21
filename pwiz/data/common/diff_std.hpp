@@ -250,13 +250,13 @@ void diff_integral(const integral_type& a,
                    integral_type& b_a,
                    const BaseDiffConfig& config)
 {
-    a_b = 0;
-    b_a = 0;
+    a_b = integral_type();
+    b_a = integral_type();
     
     if (a != b)
     {
-        a_b = a;
-        b_a = b;
+        a_b = static_cast<integral_type>(a);
+        b_a = static_cast<integral_type>(b);
     }
 }
 

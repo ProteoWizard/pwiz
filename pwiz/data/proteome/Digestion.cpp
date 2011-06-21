@@ -384,6 +384,7 @@ class CleavageAgentInfo : public boost::singleton<CleavageAgentInfo>
                 cleavageAgentNames_.push_back(cvTermInfo.name);
                 cleavageAgentNameToCvidMap_[bal::to_lower_copy(cvTermInfo.name)] = *itr;
                 const CVTermInfo& cleavageAgentRegexTerm = pwiz::cv::cvTermInfo(regexRelationItr->second);
+                cleavageAgentRegexToCvidMap_[cleavageAgentRegexTerm.name] = *itr;
                 cleavageAgentToRegexMap_[*itr] = &cleavageAgentRegexTerm;
             }
         }
@@ -398,6 +399,16 @@ class CleavageAgentInfo : public boost::singleton<CleavageAgentInfo>
         map<string, CVID>::const_iterator agentTermItr = cleavageAgentNameToCvidMap_.find(name);
 
         if (agentTermItr == cleavageAgentNameToCvidMap_.end())
+            return CVID_Unknown;
+
+        return agentTermItr->second;
+    }
+
+    CVID getCleavageAgentByRegex(const string& agentRegex) const
+    {
+        map<string, CVID>::const_iterator agentTermItr = cleavageAgentRegexToCvidMap_.find(agentRegex);
+
+        if (agentTermItr == cleavageAgentRegexToCvidMap_.end())
             return CVID_Unknown;
 
         return agentTermItr->second;
@@ -421,6 +432,7 @@ class CleavageAgentInfo : public boost::singleton<CleavageAgentInfo>
     set<CVID> cleavageAgents_;
     vector<string> cleavageAgentNames_;
     map<string, CVID> cleavageAgentNameToCvidMap_;
+    map<string, CVID> cleavageAgentRegexToCvidMap_;
     map<CVID, const CVTermInfo*> cleavageAgentToRegexMap_;
 };
 
@@ -440,6 +452,11 @@ const vector<string>& Digestion::getCleavageAgentNames()
 CVID Digestion::getCleavageAgentByName(const string& agentName)
 {
     return CleavageAgentInfo::instance->getCleavageAgentByName(agentName);
+}
+
+CVID Digestion::getCleavageAgentByRegex(const string& agentRegex)
+{
+    return CleavageAgentInfo::instance->getCleavageAgentByRegex(agentRegex);
 }
 
 const string& Digestion::getCleavageAgentRegex(CVID agentCvid)

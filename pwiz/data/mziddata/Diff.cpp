@@ -411,7 +411,8 @@ void diff(const Enzyme& a,
     diff(static_cast<const Identifiable&>(a), b, a_b, b_a, config);
     diff(a.nTermGain, b.nTermGain, a_b.nTermGain, b_a.nTermGain,config);
     diff(a.cTermGain, b.cTermGain, a_b.cTermGain, b_a.cTermGain,config);
-    diff(a.semiSpecific, b.semiSpecific, a_b.semiSpecific, b_a.semiSpecific,config);
+    diff_integral(a.terminalSpecificity, b.terminalSpecificity,
+                  a_b.terminalSpecificity, b_a.terminalSpecificity, config);
     diff_integral(a.missedCleavages, b.missedCleavages, a_b.missedCleavages, b_a.missedCleavages,config);
     diff_integral(a.minDistance, b.minDistance, a_b.minDistance, b_a.minDistance,config);
     diff(a.siteRegexp, b.siteRegexp, a_b.siteRegexp, b_a.siteRegexp,config);
@@ -439,7 +440,7 @@ void diff(const MassTable& a,
           const DiffConfig& config)
 {
     diff(a.id, b.id, a_b.id, b_a.id, config);
-    diff(a.msLevel, b.msLevel, a_b.msLevel, b_a.msLevel, config);
+    vector_diff(a.msLevel, b.msLevel, a_b.msLevel, b_a.msLevel);
     vector_diff_deep(a.residues, b.residues, a_b.residues, b_a.residues, config);
     vector_diff_deep(a.ambiguousResidue, b.ambiguousResidue, a_b.ambiguousResidue, b_a.ambiguousResidue, config); 
 }
@@ -510,7 +511,7 @@ void diff(const SpectrumIdentificationProtocol& a,
     diff(a.additionalSearchParams, b.additionalSearchParams,
          a_b.additionalSearchParams, b_a.additionalSearchParams, config);
     diff(a.enzymes, b.enzymes, a_b.enzymes, b_a.enzymes, config);
-    diff(a.massTable, b.massTable, a_b.massTable, b_a.massTable, config);
+    vector_diff_deep(a.massTable, b.massTable, a_b.massTable, b_a.massTable, config);
     diff(a.fragmentTolerance, b.fragmentTolerance, a_b.fragmentTolerance, b_a.fragmentTolerance, config);
     diff(a.parentTolerance, b.parentTolerance, a_b.parentTolerance, b_a.parentTolerance, config);
     diff(a.threshold, b.threshold, a_b.threshold, b_a.threshold, config);

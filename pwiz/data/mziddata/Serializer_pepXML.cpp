@@ -36,6 +36,9 @@
 #include "boost/utility/singleton.hpp"
 #include "boost/xpressive/xpressive.hpp"
 #include "boost/range/adaptor/transformed.hpp"
+#include "boost/range/algorithm/min_element.hpp"
+#include "boost/range/algorithm/max_element.hpp"
+#include "boost/range/algorithm/set_algorithm.hpp"
 #include <cstring>
 
 
@@ -324,31 +327,77 @@ void start_msms_run_summary(XMLWriter& xmlWriter, const MzIdentML& mzid, const s
     xmlWriter.startElement("msms_run_summary", attributes);
 }
 
+struct EnzymePtr_name
+{
+    typedef string result_type;
+    result_type operator()(const EnzymePtr& x) const
+    {
+        CVParam enzymeName = x->enzymeName.cvParamChild(MS_cleavage_agent_name);
+        if (!enzymeName.empty() && enzymeName.cvid != MS_NoEnzyme)
+            return enzymeName.name();
+        if (!x->enzymeName.userParams.empty())
+            return x->enzymeName.userParams[0].name;
+        if (!x->name.empty())
+            return x->name;
+        if (!x->siteRegexp.empty())
+            return x->siteRegexp;
+        throw runtime_error("[EnzymePtr_name] No enzyme name or regular expression.");
+    }
+};
+
+struct EnzymePtr_specificity
+{
+    typedef int result_type;
+    int operator()(const EnzymePtr& x) const {return x->terminalSpecificity;}
+};
+
+struct EnzymePtr_missedCleavages
+{
+    typedef int result_type;
+    int operator()(const EnzymePtr& x) const {return x->missedCleavages;}
+};
+
+struct EnzymePtr_minDistance
+{
+    typedef int result_type;
+    int operator()(const EnzymePtr& x) const {return x->minDistance;}
+};
+
 void write_sample_enzyme(XMLWriter& xmlWriter, const MzIdentML& mzid)
 {
-    bool independent = mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0]->enzymes.independent;
-    const Enzyme& enzyme = *mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0]->enzymes.enzymes[0];
-    if (enzyme.enzymeName.empty() && enzyme.siteRegexp.empty())
-        throw runtime_error("[write_sample_enzyme] No enzyme name or regular expression.");
+    const SpectrumIdentificationProtocol& sip = *mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0];
+    bool independent = sip.enzymes.independent;
 
-    // TODO: create a cumulative enzyme name like "CNBr+Trypsin" if there are multiple enzymes;
-    //       parse CV enzymeName or siteRegexp from each enzyme into cut/no_cut/sense attributes;
-    //       determine minimum specificity (to use for the sample_enzyme attribute)
-    //       write each enzyme as a <specificity> element
+    // create a cumulative enzyme name for multiple enzymes like "Trypsin + AspN + Chymotrypsin"
+    string enzymeName = bal::join(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_name()), " + ");
+
+    // find the minimum specificity
+    int minSpecificity = *boost::range::min_element(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_specificity()));
 
     XMLWriter::Attributes attributes;
-    attributes.add("name", "Trypsin");
-    attributes.add("fidelity", "specific");
+    attributes.add("name", enzymeName);
     attributes.add("independent", independent ? "true" : "false");
+
+    switch (minSpecificity)
+    {
+        case 2: attributes.add("fidelity", "specific"); break;
+        case 1: attributes.add("fidelity", "semispecific"); break;
+        case 0: attributes.add("fidelity", "nonspecific"); break;
+    }
 
     xmlWriter.startElement("sample_enzyme", attributes);
     {
-        attributes.clear();
-        attributes.add("sense", "C");
-        attributes.add("min_spacing", "1");
-        attributes.add("cut", "KR");
-        attributes.add("no_cut", "");
-        xmlWriter.startElement("specificity", attributes, XMLWriter::EmptyElement);
+        BOOST_FOREACH(const EnzymePtr& ez, sip.enzymes.enzymes)
+        {
+            // parse CV enzymeName or siteRegexp from each enzyme into cut/no_cut/sense attributes
+            PepXMLSpecificity result = pepXMLSpecificity(*ez);
+            attributes.clear();
+            attributes.add("sense", result.sense);
+            attributes.add("cut", result.cut);
+            attributes.add("no_cut", result.no_cut);
+            attributes.add("min_spacing", ez->minDistance);
+            xmlWriter.startElement("specificity", attributes, XMLWriter::EmptyElement);
+        }
     }
     xmlWriter.endElement(); // sample_enzyme
 }
@@ -369,28 +418,21 @@ void write_search_summary(XMLWriter& xmlWriter, const MzIdentML& mzid, const str
         *mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0];
 
     if (!sip.analysisSoftwarePtr.get())
-        throw runtime_error("[write_search_summary] PepXML requires the "
-                            "analysis software to be known.");
+        throw runtime_error("[write_search_summary] PepXML requires the analysis software to be known.");
 
-    CVParam searchEngine = sip.analysisSoftwarePtr->
-        softwareName.cvParamChild(MS_analysis_software);
+    CVParam searchEngine = sip.analysisSoftwarePtr->softwareName.cvParamChild(MS_analysis_software);
     if (!searchEngine.empty())
         attributes.add("search_engine", searchEngine.name());
     else if (!sip.analysisSoftwarePtr->softwareName.userParams.empty())
-        attributes.add("search_engine",
-                       sip.analysisSoftwarePtr->
-                       softwareName.userParams[0].name);
+        attributes.add("search_engine", sip.analysisSoftwarePtr->softwareName.userParams[0].name);
     else
-        throw runtime_error("[write_search_summary] PepXML requires the "
-                            "analysis software to be known.");
+        throw runtime_error("[write_search_summary] PepXML requires the analysis software to be known.");
 
     attributes.add("precursor_mass_type",
-                   sip.additionalSearchParams.hasCVParam(
-                       MS_parent_mass_type_average) ?
+                   sip.additionalSearchParams.hasCVParam(MS_parent_mass_type_average) ?
                    "average" : "monoisotopic");
     attributes.add("fragment_mass_type",
-                   sip.additionalSearchParams.hasCVParam(
-                       MS_fragment_mass_type_average) ?
+                   sip.additionalSearchParams.hasCVParam(MS_fragment_mass_type_average) ?
                    "average" : "monoisotopic");
     attributes.add("out_data_type", "");
     attributes.add("out_data", "");
@@ -398,11 +440,9 @@ void write_search_summary(XMLWriter& xmlWriter, const MzIdentML& mzid, const str
     xmlWriter.startElement("search_summary", attributes);
     {
         if (mzid.dataCollection.inputs.searchDatabase.empty())
-            throw runtime_error("[write_search_summary] PepXML requires "
-                                "the searched database to be known.");
+            throw runtime_error("[write_search_summary] PepXML requires the searched database to be known.");
 
-        const SearchDatabase& sd = *mzid.dataCollection.inputs.
-            searchDatabase[0];
+        const SearchDatabase& sd = *mzid.dataCollection.inputs.searchDatabase[0];
         attributes.clear();
         attributes.add("local_path", sd.location);
         attributes.add("database_name", sd.id);
@@ -411,19 +451,23 @@ void write_search_summary(XMLWriter& xmlWriter, const MzIdentML& mzid, const str
             attributes.add("size_in_db_entries", sd.numDatabaseSequences);
         if (sd.numResidues > 0)
             attributes.add("size_of_residues", sd.numResidues);
-        attributes.add("type", sd.hasCVParam(MS_database_type_amino_acid) ?
-                       "AA" : "NA");
-        xmlWriter.startElement("search_database", attributes,
-                               XMLWriter::EmptyElement);
+        attributes.add("type", sd.hasCVParam(MS_database_type_amino_acid) ? "AA" : "NA");
+        xmlWriter.startElement("search_database", attributes,XMLWriter::EmptyElement);
+
+        // create a cumulative enzyme name for multiple enzymes like "Trypsin + AspN + Chymotrypsin"
+        string enzymeName = bal::join(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_name()), " + ");
+
+        // find the maximum missed cleavages
+        int maxMissedCleavages = *boost::range::max_element(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_missedCleavages()));
+
+        // find the minimum specificity
+        int minSpecificity = *boost::range::min_element(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_specificity()));
 
         attributes.clear();
-        attributes.add("enzyme", "Trypsin"); // TODO: use the combined name from sample_enzyme
-        attributes.add("max_num_internal_cleavages",
-                       sip.enzymes.enzymes[0]->missedCleavages);
-        attributes.add("min_number_termini", sip.enzymes.enzymes[0]->
-                       semiSpecific ? "1" : "2");
-        xmlWriter.startElement("enzymatic_search_constraint", attributes,
-                               XMLWriter::EmptyElement);
+        attributes.add("enzyme", enzymeName);
+        attributes.add("max_num_internal_cleavages", maxMissedCleavages);
+        attributes.add("min_number_termini", minSpecificity);
+        xmlWriter.startElement("enzymatic_search_constraint", attributes, XMLWriter::EmptyElement);
 
         BOOST_FOREACH(const SearchModificationPtr& sm, sip.modificationParams)
         {
@@ -447,16 +491,13 @@ void write_search_summary(XMLWriter& xmlWriter, const MzIdentML& mzid, const str
                     attributes.add("massdiff", sm->massDelta);
 
                     if (aa == 'n')
-                        attributes.add("mass", nTerm.monoisotopicMass() +
-                                       sm->massDelta);
+                        attributes.add("mass", nTerm.monoisotopicMass() + sm->massDelta);
                     else
-                        attributes.add("mass", cTerm.monoisotopicMass() +
-                                       sm->massDelta);
+                        attributes.add("mass", cTerm.monoisotopicMass() + sm->massDelta);
                 }
                 else // aminoacid_modificiation
                 {
-                    double aaMass = AminoAcid::Info::record(aa).
-                        residueFormula.monoisotopicMass();
+                    double aaMass = AminoAcid::Info::record(aa).residueFormula.monoisotopicMass();
                     attributes.add("aminoacid", string(1, aa));
                     attributes.add("massdiff", sm->massDelta);
                     attributes.add("mass", sm->massDelta + aaMass);
@@ -540,12 +581,10 @@ void write_alternative_proteins(XMLWriter& xmlWriter, const SpectrumIdentificati
     {
         attributes.clear();
         attributes.add("protein", sii.peptideEvidencePtr[i]->dbSequencePtr->accession);
-        if (sii.peptideEvidencePtr[i]->
-            dbSequencePtr->hasCVParam(MS_protein_description))
+        if (sii.peptideEvidencePtr[i]->dbSequencePtr->hasCVParam(MS_protein_description))
             attributes.add("protein_descr",
-                           sii.peptideEvidencePtr[i]->dbSequencePtr->
-                           cvParam(MS_protein_description).value);
-        
+                           sii.peptideEvidencePtr[i]->dbSequencePtr->cvParam(MS_protein_description).value);
+
         xmlWriter.startElement("alternative_protein", attributes, XMLWriter::EmptyElement);
     }
 }
@@ -731,8 +770,8 @@ void write_spectrum_queries(XMLWriter& xmlWriter, const MzIdentML& mzid, const s
 
 } // namespace
 
-void Serializer_pepXML::write(ostream& os, const MzIdentML& mzid, const string& filepath,
-                              const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const
+PWIZ_API_DECL void Serializer_pepXML::write(ostream& os, const MzIdentML& mzid, const string& filepath,
+                                            const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const
 {
     // check for the minimum information to write a pepXML
     if (mzid.analysisCollection.spectrumIdentification.empty())
@@ -743,9 +782,6 @@ void Serializer_pepXML::write(ostream& os, const MzIdentML& mzid, const string& 
 
     if (mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0]->searchType != MS_ms_ms_search)
         throw runtime_error("[Serializer_pepXML::write] PepXML can only represent an MS/MS analysis.");
-
-    if (mzid.dataCollection.analysisData.spectrumIdentificationList.empty())
-        throw runtime_error("[Serializer_pepXML::write] PepXML requires at least one spectrum identification list.");
 
     if (mzid.analysisProtocolCollection.spectrumIdentificationProtocol[0]->enzymes.empty())
         throw runtime_error("[Serializer_pepXML::write] PepXML requires at least one enzyme in the spectrum identification protocol.");
@@ -773,7 +809,9 @@ void Serializer_pepXML::write(ostream& os, const MzIdentML& mzid, const string& 
 
     write_sample_enzyme(xmlWriter, mzid);
     write_search_summary(xmlWriter, mzid, filepath);
-    write_spectrum_queries(xmlWriter, mzid, filepath, iterationListenerRegistry);
+
+    if (!mzid.dataCollection.analysisData.spectrumIdentificationList.empty())
+        write_spectrum_queries(xmlWriter, mzid, filepath, iterationListenerRegistry);
 
     xmlWriter.endElement(); // msms_run_summary
     xmlWriter.endElement(); // msms_pipeline_analysis
@@ -808,9 +846,13 @@ struct HandlerSampleEnzyme : public SAXParser::Handler
         {
             EnzymePtr enzyme = EnzymePtr(new Enzyme);
             enzyme->id = "ENZ_" + lexical_cast<string>(_sip->enzymes.enzymes.size()+1);
-            enzyme->semiSpecific = _fidelity == "semispecific" ? true : false;
             enzyme->nTermGain = "H";
             enzyme->cTermGain = "OH";
+
+            if (_fidelity == "semispecific")
+                enzyme->terminalSpecificity = proteome::Digestion::SemiSpecific;
+            else if (_fidelity == "nonspecific")
+                enzyme->terminalSpecificity = proteome::Digestion::NonSpecific;
 
             string cut, noCut, sense;
 
@@ -829,19 +871,19 @@ struct HandlerSampleEnzyme : public SAXParser::Handler
             enzyme->siteRegexp = string("(?<=") + (cut.length() > 1 ? "[" : "") + cut + (cut.length() > 1 ? "])" : ")") +
                                 (noCut.empty() ? "" : "(?!") + (noCut.length() > 1 ? "[" : "") + noCut + (noCut.length() > 1 ? "]" : "") + (noCut.empty() ? "" : ")");
 
-            string value;
-            getAttribute(attributes, "min_spacing", value);
-            if (!value.empty())
-                enzyme->minDistance = lexical_cast<size_t>(value);
+            getAttribute(attributes, "min_spacing", enzyme->minDistance, 1);
 
-            // TODO: populate EnzymeName
+            CVID cleavageAgent = Digestion::getCleavageAgentByRegex(enzyme->siteRegexp);
+            if (cleavageAgent == CVID_Unknown)
+                enzyme->enzymeName.userParams.push_back(UserParam(_name));
+            else
+                enzyme->enzymeName.set(cleavageAgent);
 
             _sip->enzymes.enzymes.push_back(enzyme);
             return Handler::Status::Ok;
         }
         else if (strict)
-            throw runtime_error("[HandlerSampleEnzyme] Unexpected element "
-                                "name: " + name);
+            throw runtime_error("[HandlerSampleEnzyme] Unexpected element name: " + name);
 
         return Status::Ok;
     }
@@ -1156,11 +1198,16 @@ struct HandlerSearchSummary : public SAXParser::Handler
         }
         else if (name == "enzymatic_search_constraint")
         {
-            string enzyme, minTermini;
+            string enzyme;
+            int minTermini, missedCleavages;
             getAttribute(attributes, "enzyme", enzyme);
-            getAttribute(attributes, "max_num_internal_cleavages", _sip->enzymes.enzymes[0]->missedCleavages);
-            getAttribute(attributes, "min_number_termini", minTermini);
-            _sip->enzymes.enzymes[0]->semiSpecific = (minTermini == "1" ? true : false);
+            getAttribute(attributes, "max_num_internal_cleavages", missedCleavages, 0);
+            getAttribute(attributes, "min_number_termini", minTermini, 2);
+            BOOST_FOREACH(const EnzymePtr& ez, _sip->enzymes.enzymes)
+            {
+                ez->terminalSpecificity = (proteome::Digestion::Specificity) minTermini;
+                ez->missedCleavages = missedCleavages;
+            }
         }
         else if (name == "aminoacid_modification")
         {
@@ -1736,8 +1783,8 @@ struct Handler_pepXML : public SAXParser::Handler
 } // namespace
 
 
-void Serializer_pepXML::read(boost::shared_ptr<std::istream> is, MzIdentML& mzid,
-                             const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const
+PWIZ_API_DECL void Serializer_pepXML::read(boost::shared_ptr<std::istream> is, MzIdentML& mzid,
+                                           const pwiz::util::IterationListenerRegistry* iterationListenerRegistry) const
 {
     bool strict = false;
     
@@ -1752,6 +1799,118 @@ void Serializer_pepXML::read(boost::shared_ptr<std::istream> is, MzIdentML& mzid
 
     // there can be only one
     snapModificationsToUnimod(*mzid.analysisCollection.spectrumIdentification[0]);
+}
+
+
+namespace {
+  
+const string allResidues = "ABCDEFGHIJKLMNOPQRSTUVWYZ";
+string& invertResidueSet(string& residues)
+{
+    set<char> allResidueSet;
+    allResidueSet.insert(allResidues.begin(), allResidues.end());
+
+    set<char> residueSet;
+    residueSet.insert(residues.begin(), residues.end());
+
+    string result;
+    boost::range::set_difference(allResidueSet, residueSet, std::back_inserter(result));
+
+    swap(residues, result);
+    return residues;
+}
+
+// match zero or one regex term like (?<=[KR]) or (?<=K) or (?<![KR]) or (?<!K)
+// followed by zero or one term like (?=[KR]) or (?=K) or (?![KR]) or (?!K)
+// 4 capture groups: [!=] [A-Z] for each look: 0                1                        2                3
+const boost::regex cutNoCutRegex("(?:\\(+\\?<([=!])(\\[[A-Z]+\\]|[A-Z])\\)+)?(?:\\(+\\?([=!])(\\[[A-Z]+\\]|[A-Z])\\)+)?");
+
+} // namespace
+
+
+PWIZ_API_DECL PepXMLSpecificity pepXMLSpecificity(const Enzyme& ez)
+{
+    PepXMLSpecificity result;
+    string &cut = result.cut, &nocut = result.no_cut, &sense = result.sense;
+
+    boost::smatch what;
+    if (ez.siteRegexp.empty() || !boost::regex_match(ez.siteRegexp, what, cutNoCutRegex))
+    {
+        CVID cleavageAgent = mziddata::cleavageAgent(ez);
+
+        switch (cleavageAgent)
+        {
+            case MS_Trypsin:        cut="KR"; nocut="P"; sense="C"; break;
+            case MS_Arg_C:          cut="R"; nocut="P"; sense="C"; break;
+            case MS_Asp_N:          cut="BD"; nocut=""; sense="N"; break;
+            case MS_Asp_N_ambic:    cut="DE"; nocut=""; sense="N"; break;
+            case MS_Chymotrypsin:   cut="FYWL"; nocut="P"; sense="C"; break;
+            case MS_CNBr:           cut="M"; nocut=""; sense="C"; break;
+            case MS_Formic_acid:    cut="D"; nocut=""; sense="C"; break;
+            case MS_Lys_C:          cut="K"; nocut="P"; sense="C"; break;
+            case MS_Lys_C_P:        cut="K"; nocut=""; sense="C"; break;
+            case MS_PepsinA:        cut="FL"; nocut=""; sense="C"; break;
+            case MS_TrypChymo:      cut="KRFYWL"; nocut="P"; sense="C"; break;
+            case MS_Trypsin_P:      cut="KR"; nocut=""; sense="C"; break;
+            case MS_V8_DE:          cut="BDEZ"; nocut="P"; sense="C"; break;
+            case MS_V8_E:           cut="EZ"; nocut="P"; sense="C"; break;
+            default:
+                throw runtime_error("[pepXMLSpecificity] Unable to parse regular expression \"" + ez.siteRegexp + "\"");
+        }
+    }
+    else
+    {
+        bool hasLookbehind = what[1].matched && what[2].matched;
+        bool hasLookahead = what[3].matched && what[4].matched;
+        bool lookbehindIsPositive = hasLookbehind && what[1] == "=";
+        bool lookaheadIsPositive = hasLookahead && what[3] == "=";
+        string lookbehindResidues = hasLookbehind ? bal::trim_copy_if(what[2].str(), bal::is_any_of("[]")) : string();
+        string lookaheadResidues = hasLookahead ? bal::trim_copy_if(what[4].str(), bal::is_any_of("[]")) : string();
+
+        // if both looks are empty, throw an exception
+        if (!hasLookbehind && !hasLookahead)
+            throw runtime_error("[pepXMLSpecificity] No lookbehind or lookahead expressions found in \"" + ez.siteRegexp + "\"");
+
+        // if both looks are positive, invert the lookahead residue set to be the "no_cut" set;
+        // if both looks are negative, invert the lookbehind residue set to be the "cut" set (unless it's empty)
+        if (lookbehindIsPositive && lookaheadIsPositive)
+        {
+            // convert lookahead to negative
+            sense = "C";
+            cut = lookbehindResidues;
+            nocut = invertResidueSet(lookaheadResidues);
+        }
+        else if (!lookbehindIsPositive && !lookaheadIsPositive)
+        {
+            // if lookbehind is empty, convert lookahead to positive
+            if (!hasLookbehind)
+            {
+                sense = "N";
+                cut = invertResidueSet(lookaheadResidues);
+            }
+            else
+            {
+                // convert lookbehind to positive
+                sense = "C";
+                cut = invertResidueSet(lookbehindResidues);
+                nocut = lookaheadResidues;
+            }
+        }
+        else if (lookbehindIsPositive)
+        {
+            sense = "C";
+            cut = lookbehindResidues;
+            nocut = lookaheadResidues;
+        }
+        else if (lookaheadIsPositive)
+        {
+            sense = "N";
+            cut = lookaheadResidues;
+            nocut = lookbehindResidues;
+        }
+    }
+
+    return result;
 }
 
 
