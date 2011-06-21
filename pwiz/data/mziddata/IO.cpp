@@ -865,10 +865,20 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Peptide& peptide)
 {
     XMLWriter::Attributes attributes;
     addIdAttributes(peptide, attributes);
-    
+
+    // if peptide has mods or params, it takes up more than a single line
+    bool hasModsOrParams = !peptide.modification.empty() ||
+                           !peptide.substitutionModification.empty() ||
+                           !peptide.ParamContainer::empty();
+
+    if (!hasModsOrParams)
+        writer.pushStyle(XMLWriter::StyleFlag_InlineInner);
     writer.startElement("Peptide", attributes);
 
-    writer.pushStyle(XMLWriter::StyleFlag_InlineInner);
+    if (!hasModsOrParams)
+        writer.pushStyle(XMLWriter::StyleFlag_Inline);
+    else
+        writer.pushStyle(XMLWriter::StyleFlag_InlineInner);
     writer.startElement("PeptideSequence");
     writer.characters(peptide.peptideSequence);
     writer.endElement();
@@ -881,6 +891,9 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Peptide& peptide)
 
     writeParamContainer(writer, peptide);
     writer.endElement();
+
+    if (!hasModsOrParams)
+        writer.popStyle();
 }
 
 
@@ -1442,9 +1455,14 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ContactRole& cr)
     attributes.add("contact_ref", cr.contactPtr->id);
 
     writer.startElement("ContactRole", attributes);
+
+    writer.pushStyle(XMLWriter::StyleFlag_InlineInner);
     writer.startElement("Role");
+    writer.pushStyle(XMLWriter::StyleFlag_Inline);
     write(writer, (const CVParam&)cr);
+    writer.popStyle();
     writer.endElement();
+    writer.popStyle();
 
     writer.endElement();
 }
@@ -1506,18 +1524,20 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const AnalysisSoftware& an
 
     if (anal.contactRolePtr.get() && !anal.contactRolePtr->empty())
         write(writer, *anal.contactRolePtr);
-    
+
+    writer.pushStyle(XMLWriter::StyleFlag_InlineInner);
     writer.startElement("SoftwareName");
+    writer.pushStyle(XMLWriter::StyleFlag_Inline);
     writeParamContainer(writer, anal.softwareName);
+    writer.popStyle();
     writer.endElement();
+    writer.popStyle();
 
     if (!anal.customizations.empty())
     {
-        writer.pushStyle(XMLWriter::StyleFlag_InlineInner);
         writer.startElement("Customizations");
         writer.characters(anal.customizations);
         writer.endElement();
-        writer.popStyle();
     }
     
     writer.endElement();
@@ -1930,15 +1950,23 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Enzyme& ez)
 
     if (ez.terminalSpecificity == proteome::Digestion::NonSpecific)
     {
+        writer.pushStyle(XMLWriter::StyleFlag_InlineInner);
         writer.startElement("EnzymeName");
+        writer.pushStyle(XMLWriter::StyleFlag_Inline);
         write(writer, CVParam(MS_NoEnzyme));
+        writer.popStyle();
         writer.endElement();
+        writer.popStyle();
     }
     else if (!ez.enzymeName.empty())
     {
+        writer.pushStyle(XMLWriter::StyleFlag_InlineInner);
         writer.startElement("EnzymeName");
+        writer.pushStyle(XMLWriter::StyleFlag_Inline);
         writeParamContainer(writer, ez.enzymeName);
+        writer.popStyle();
         writer.endElement();
+        writer.popStyle();
     }
 
     writer.endElement();
@@ -2270,9 +2298,13 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SearchModification& 
 
         if (!sm.specificityRules.empty())
         {
+            writer.pushStyle(XMLWriter::StyleFlag_InlineInner);
             writer.startElement("SpecificityRules");
+            writer.pushStyle(XMLWriter::StyleFlag_Inline);
             write(writer, sm.specificityRules);
+            writer.popStyle();
             writer.endElement();
+            writer.popStyle();
         }
 
         writeParamContainer(writer, sm);
@@ -2549,9 +2581,13 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
 
     if (!si.searchType.empty())
     {
+        writer.pushStyle(XMLWriter::StyleFlag_InlineInner);
         writer.startElement("SearchType");
+        writer.pushStyle(XMLWriter::StyleFlag_Inline);
         write(writer, si.searchType);
+        writer.popStyle();
         writer.endElement();
+        writer.popStyle();
     }
     
     if (!si.additionalSearchParams.empty())
@@ -2937,16 +2973,24 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectraData& sd)
 
     if (!sd.fileFormat.empty())
     {
+        writer.pushStyle(XMLWriter::StyleFlag_InlineInner);
         writer.startElement("FileFormat");
+        writer.pushStyle(XMLWriter::StyleFlag_Inline);
         write(writer, sd.fileFormat);
+        writer.popStyle();
         writer.endElement();
+        writer.popStyle();
     }
 
     if (!sd.spectrumIDFormat.empty())
     {
+        writer.pushStyle(XMLWriter::StyleFlag_InlineInner);
         writer.startElement("SpectrumIDFormat");
+        writer.pushStyle(XMLWriter::StyleFlag_Inline);
         write(writer, sd.spectrumIDFormat);
+        writer.popStyle();
         writer.endElement();
+        writer.popStyle();
     }
 
     writer.endElement();
@@ -3058,14 +3102,22 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SearchDatabase& sd)
 
     if (!sd.fileFormat.empty())
     {
+        writer.pushStyle(XMLWriter::StyleFlag_InlineInner);
         writer.startElement("FileFormat");
+        writer.pushStyle(XMLWriter::StyleFlag_Inline);
         write(writer, sd.fileFormat);
+        writer.popStyle();
         writer.endElement();
+        writer.popStyle();
     }
 
+    writer.pushStyle(XMLWriter::StyleFlag_InlineInner);
     writer.startElement("DatabaseName");
+    writer.pushStyle(XMLWriter::StyleFlag_Inline);
     writeParamContainer(writer, sd.databaseName);
+    writer.popStyle();
     writer.endElement();
+    writer.popStyle();
 
     writeParamContainer(writer, sd);
     
@@ -4233,7 +4285,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Provider& provider)
     addIdAttributes(provider, attributes);
 
     if (provider.analysisSoftwarePtr.get() && !provider.analysisSoftwarePtr->empty())
-        attributes.add("analysisSoftware_ref", provider.analysisSoftwarePtr);
+        attributes.add("analysisSoftware_ref", provider.analysisSoftwarePtr->id);
 
     writer.startElement("Provider", attributes);
     if (provider.contactRolePtr.get() && !provider.contactRolePtr->empty())
