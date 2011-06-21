@@ -257,7 +257,13 @@ namespace pwiz.Topograph.ui.Forms
                                                FinalPercent = double.Parse(tbxFinalTracerPercent.Text),
                                                FixedInitialPercent = cbxFixYIntercept.Checked,
                                                HalfLifeCalculationType = HalfLifeCalculationType,
+                                               ApplyEvviesFilter = cbxEvviesFilter.Checked,
                                            };
+                    for (int i = 0 ; i < checkedListBoxTimePoints.Items.Count; i++)
+                    {
+                        halfLifeForm.SetTimePointExcluded((double) checkedListBoxTimePoints.Items[i],
+                                                          !checkedListBoxTimePoints.GetItemChecked(i));
+                    }
                     halfLifeForm.Show(DockPanel, DockState);
                 }
             }

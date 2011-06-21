@@ -679,6 +679,18 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
+        public bool ApplyEvviesFilter
+        {
+            get
+            {
+                return cbxEvviesFilter.Checked;
+            }
+            set
+            {
+                cbxEvviesFilter.Checked = value;
+            }
+        }
+
         private bool IsTimePointExcluded(double timePoint)
         {
             return _excludedTimePoints.Contains(timePoint);
@@ -699,7 +711,10 @@ namespace pwiz.Topograph.ui.Forms
                 excludedTimePoints.Remove(time);
             }
             _excludedTimePoints = excludedTimePoints;
-            BeginInvoke(new Action(UpdateRows));
+            if (IsHandleCreated)
+            {
+                BeginInvoke(new Action(UpdateRows));
+            }
         }
 
         private void gridViewStats_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
