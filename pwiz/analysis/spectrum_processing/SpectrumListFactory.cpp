@@ -38,8 +38,8 @@
 #include "pwiz/analysis/spectrum_processing/ThresholdFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/MS2NoiseFilter.hpp"
 #include "pwiz/analysis/spectrum_processing/MS2Deisotoper.hpp"
-#include "pwiz/data/msdata/SpectrumInfo.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+
 
 namespace pwiz {
 namespace analysis {
@@ -239,8 +239,15 @@ struct StripIonTrapSurveyScans : public SpectrumList_Filter::Predicate
 
     virtual boost::logic::tribool accept(const Spectrum& spectrum) const
     {
-        SpectrumInfo info(spectrum);
-        return !(info.msLevel==1 && cvIsA(info.massAnalyzerType, MS_ion_trap));
+        if (!spectrum.hasCVParam(MS_ms_level) ||
+            spectrum.scanList.scans.empty() ||
+            !spectrum.scanList.scans[0].instrumentConfigurationPtr.get())
+            return boost::logic::indeterminate;
+
+        CVID massAnalyzerType = spectrum.scanList.scans[0].instrumentConfigurationPtr->componentList.analyzer(0).
+                                    cvParamChild(MS_mass_analyzer_type).cvid;
+        if (massAnalyzerType == CVID_Unknown) return boost::logic::indeterminate;
+        return !(spectrum.cvParam(MS_ms_level).value == "1" && cvIsA(massAnalyzerType, MS_ion_trap));
     }
 };
 
