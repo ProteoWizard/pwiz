@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
 
@@ -78,24 +79,45 @@ namespace pwiz.SkylineTestUtil
         }
     }
 
-    public class ResultsTestDocumentContainer : TestDocumentContainer
+    public class ResultsTestDocumentContainer : ResultsMemoryDocumentContainer
     {
         public ResultsTestDocumentContainer(SrmDocument docInitial, string pathInitial)
+            : base(docInitial, pathInitial)
         {
-            Assert.IsTrue(SetDocument(docInitial, null));
-            // Chromatogram loader needs file path to know how to place the .skyd file
-            DocumentFilePath = pathInitial;
-
-            ChromatogramManager = new ChromatogramManager();
-            ChromatogramManager.Register(this);
-            Register(ChromatogramManager);
         }
 
-        public ChromatogramManager ChromatogramManager { get; private set; }
-
-        protected override bool IsComplete(SrmDocument docNew)
+        public ResultsTestDocumentContainer(SrmDocument docInitial, string pathInitial, bool wait)
+            : base(docInitial, pathInitial, wait)
         {
-            return !docNew.Settings.HasResults || docNew.Settings.MeasuredResults.IsLoaded;
+        }
+
+        public void AssertComplete()
+        {
+            if (LastProgress != null)
+            {
+                if (LastProgress.IsError)
+                    throw LastProgress.ErrorException;
+                else if (LastProgress.IsCanceled)
+                    Assert.Fail("Loader cancelled");
+                else
+                    Assert.Fail("Unknown progress state");
+            }
+        }
+
+        public SrmDocument ChangeMeasuredResults(MeasuredResults measuredResults,
+            int peptides, int tranGroups, int transitions)
+        {
+            var doc = Document;
+            var docResults = doc.ChangeMeasuredResults(measuredResults);
+            Assert.IsTrue(SetDocument(docResults, doc, true));
+            AssertComplete();
+            docResults = Document;
+
+            // Check the result state of the most recently added chromatogram set.
+            var chroms = measuredResults.Chromatograms;
+            AssertResult.IsDocumentResultsState(docResults, chroms[chroms.Count - 1].Name, peptides, tranGroups, 0, transitions, 0);
+
+            return docResults;
         }
     }
 

@@ -17,6 +17,8 @@
  * limitations under the License.
  */
 using System;
+using System.IO;
+using System.IO.Pipes;
 using System.Threading;
 using System.Windows.Forms;
 //using pwiz.Skyline.Alerts;
@@ -45,6 +47,30 @@ namespace pwiz.Skyline
         [STAThread]
         public static void Main()
         {
+
+            // First, check for command-line parameters. If there are any, let
+            // CommandLine deal with them and write output over a named pipe
+            // then exit the program.
+            if (AppDomain.CurrentDomain != null && AppDomain.CurrentDomain.SetupInformation != null &&
+                AppDomain.CurrentDomain.SetupInformation.ActivationArguments != null &&
+                AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData != null &&
+                AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData.Length > 0)
+            {
+                String[] inputArgs = AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData;
+                inputArgs = inputArgs[0].Split(new[] {','});
+
+
+                if (inputArgs.Length > 0)
+                {
+                    NamedPipeServerStream pipeStream = new NamedPipeServerStream("SkylinePipe");
+                    pipeStream.WaitForConnection();
+
+                    RunCommand(inputArgs, new StreamWriter(pipeStream));
+
+                    return;
+                }
+            }
+
             try
             {
                 Application.EnableVisualStyles();
@@ -81,6 +107,14 @@ namespace pwiz.Skyline
                 // Send unhandled exceptions to the console.
                 Console.WriteLine(x.Message);
                 Console.Write(x.StackTrace);
+            }
+        }
+
+        public static void RunCommand(string[] inputArgs, TextWriter consoleOut)
+        {
+            using (CommandLine cmd = new CommandLine(consoleOut))
+            {
+                cmd.Run(inputArgs);
             }
         }
 

@@ -85,7 +85,7 @@ namespace pwiz.SkylineTestA.Results
             var measuredResults = new MeasuredResults(new[]
                 {new ChromatogramSet("Single", new[] {rawPath})});
 
-            SrmDocument docResults = ChangeMeasuredResults(docContainer, measuredResults, 3, 3, 21);
+            SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, 3, 3, 21);
 
             // Refilter allowing multiple precursors per spectrum
             SrmDocument docMulti = doc.ChangeSettings(doc.Settings.ChangeTransitionFullScan(
@@ -96,7 +96,7 @@ namespace pwiz.SkylineTestA.Results
             // And remove it
             File.Delete(Path.ChangeExtension(docPath, ChromatogramCache.EXT));
 
-            ChangeMeasuredResults(docContainer, measuredResults, 6, 6, 38);
+            docContainer.ChangeMeasuredResults(measuredResults, 6, 6, 38);
 
             // Import full scan Orbi-Velos data
             docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_long_acc_template.sky");
@@ -108,8 +108,8 @@ namespace pwiz.SkylineTestA.Results
             rawPath = testFilesDir.GetTestPath("ah_20101029r_BSA_CID_FT_centroid_3uscan_3" +
                 ExtensionTestContext.ExtThermoRaw);
             measuredResults = new MeasuredResults(new[] { new ChromatogramSet("Accurate", new[] { rawPath }) });
-            
-            ChangeMeasuredResults(docContainer, measuredResults, 3, 3, 21);
+
+            docContainer.ChangeMeasuredResults(measuredResults, 3, 3, 21);
 
             // Import LTQ data with MS1 and MS/MS
             docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_test4.sky");
@@ -129,7 +129,7 @@ namespace pwiz.SkylineTestA.Results
                                   };
             measuredResults = new MeasuredResults(listResults.ToArray());
 
-            ChangeMeasuredResults(docContainer, measuredResults, 3, 4, 26);
+            docContainer.ChangeMeasuredResults(measuredResults, 3, 4, 26);
             // The mzML was filtered for the m/z range 410 to 910.
             foreach (var nodeTran in docContainer.Document.Transitions)
             {
@@ -148,7 +148,7 @@ namespace pwiz.SkylineTestA.Results
                                                                       testFilesDir.GetTestPath("both_KVP.mzML"),
                                                                   }));
             measuredResults = new MeasuredResults(listResults.ToArray());
-            ChangeMeasuredResults(docContainer, measuredResults, 2, 3, 25);
+            docContainer.ChangeMeasuredResults(measuredResults, 2, 3, 25);
             int indexResults = listResults.Count - 1;
             foreach (var nodeTran in docContainer.Document.Transitions)
             {
@@ -186,7 +186,7 @@ namespace pwiz.SkylineTestA.Results
                                       new ChromatogramSet(rep1, new[] {testFilesDir.GetTestPath("S_2_LVN.mzML")}),
                                   };
             measuredResults = new MeasuredResults(listResults.ToArray());
-            ChangeMeasuredResults(docContainer, measuredResults, 1, 1, 1);
+            docContainer.ChangeMeasuredResults(measuredResults, 1, 1, 1);
             // Because of the way the mzML files were filtered, all of the LVN peaks should be present
             // in the first replicate, and all of the NVN peaks should be present in the other.
             foreach (var nodeTran in docContainer.Document.Transitions)
@@ -202,7 +202,7 @@ namespace pwiz.SkylineTestA.Results
             const string rep2 = "rep2";
             listResults.Add(new ChromatogramSet(rep2, new[] {testFilesDir.GetTestPath("S_2_NVN.mzML")}));
             measuredResults = new MeasuredResults(listResults.ToArray());
-            ChangeMeasuredResults(docContainer, measuredResults, 1, 1, 1);
+            docContainer.ChangeMeasuredResults(measuredResults, 1, 1, 1);
             // Because of the way the mzML files were filtered, all of the LVN peaks should be present
             // in the first replicate, and all of the NVN peaks should be present in the other.
             foreach (var nodeTran in docContainer.Document.Transitions)
@@ -243,22 +243,6 @@ namespace pwiz.SkylineTestA.Results
             Assert.AreEqual(-1, tranM1.Transition.MassIndex);
             Assert.IsTrue(tranM1.Results[0] != null && tranM1.Results[1] != null);
             Assert.IsTrue(tranM1.Results[0][0].IsEmpty && tranM1.Results[1][0].IsEmpty);
-        }
-
-        private static SrmDocument ChangeMeasuredResults(TestDocumentContainer docContainer, MeasuredResults measuredResults,
-            int peptides, int tranGroups, int transitions)
-        {
-            var doc = docContainer.Document;
-            var docResults = doc.ChangeMeasuredResults(measuredResults);
-            Assert.IsTrue(docContainer.SetDocument(docResults, doc, true));
-            docContainer.AssertComplete();
-            docResults = docContainer.Document;
-
-            // Check the result state of the most recently added chromatogram set.
-            var chroms = measuredResults.Chromatograms;
-            AssertResult.IsDocumentResultsState(docResults, chroms[chroms.Count - 1].Name, peptides, tranGroups, 0, transitions, 0);
-
-            return docResults;
         }
 
         private static SrmDocument InitFullScanDocument(string docPath, int prot, int pep, int prec, int tran)

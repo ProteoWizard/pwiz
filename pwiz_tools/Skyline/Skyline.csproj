@@ -213,6 +213,7 @@
     <Compile Include="Alerts\UpgradeDlg.designer.cs">
       <DependentUpon>UpgradeDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="CommandLine.cs" />
     <Compile Include="Controls\Graphs\AreaGraphController.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -375,6 +376,7 @@
     <Compile Include="Model\Lib\BlibData\DbRefSpectra.cs" />
     <Compile Include="Model\Lib\BlibData\DbRefSpectraPeaks.cs" />
     <Compile Include="Model\Lib\BlibData\SessionFactoryFactory.cs" />
+    <Compile Include="Model\MemoryDocumentContainer.cs" />
     <Compile Include="Model\ModificationMatcher.cs" />
     <Compile Include="Model\PeptideDocNode.cs" />
     <Compile Include="Model\PeptideGroupDocNode.cs" />
@@ -1274,6 +1276,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="Resources\add-pro32.bmp" />
+    <None Include="Skyline_TemporaryKey.pfx" />
     <EmbeddedResource Include="Resources\PeptideStandard.bmp" />
     <EmbeddedResource Include="Resources\PeptideLibStandard.bmp" />
     <Content Include="Resources\RedXTransparentBackground.bmp" />
