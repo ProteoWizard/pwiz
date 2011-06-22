@@ -123,7 +123,7 @@ namespace pwiz.Skyline.Model.Lib
             Array.Sort(_libraryEntries, CompareSpectrumInfo);
 
             // Create the SQLite connection without actually connecting
-            CreateConnection(streamManager);
+            _sqliteConnection = new PooledSqliteConnection(streamManager.ConnectionPool, FilePath);
         }
 
         public SpectrumHeaderInfo CreateSpectrumHeaderInfo(string libraryName,
