@@ -68,7 +68,7 @@ struct PWIZ_API_DECL PepXMLSpecificity
 };
 
 /// converts an mziddata::Enzyme into a pepXML cut/no_cut/sense tuple
-PepXMLSpecificity pepXMLSpecificity(const Enzyme& ez);
+PWIZ_API_DECL PepXMLSpecificity pepXMLSpecificity(const Enzyme& ez);
 
 
 } // namespace mziddata
