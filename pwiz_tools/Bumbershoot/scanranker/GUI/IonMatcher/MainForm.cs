@@ -51,8 +51,8 @@ namespace IonMatcher
 
             //tbSrcDir.Text = @"C:\Documents and Settings\maz\My Documents\IonMatch-test;";
             //tbOutDir.Text = @"C:\Documents and Settings\maz\My Documents\IonMatch-test";
-            //tbSpecFile.Text = @"C:\Documents and Settings\maz\My Documents\test\mzXMLs\mam_20100301o_Project85_JensKraus_Antibody_Fab_A_10x.mzML";
-            //tbMetricsFile.Text = @"C:\Documents and Settings\maz\My Documents\test\mzXMLs\mam_20100301o_Project85_JensKraus_Antibody_Fab_A_10x-ScanRankerMetrics-Labeled.txt";
+            //tbSpecFile.Text = @"C:\Data\test\Vanacore\sh_2251_RV_060611p_C4_6.mzXML";
+            //tbMetricsFile.Text = @"C:\Data\test\Vanacore\sh_2251_RV_060611p_C4_6-ScanRankerMetrics-local.txt";
         }
 
         public static string OpenFileBrowseDialog(string sPrevFile)
@@ -374,14 +374,14 @@ namespace IonMatcher
             string[] fields = null;
             DataTable dt = new DataTable();
             //metrics file header:
-            //H	Index	NativeID	BestTagScore	BestTagTIC	TagMzRange	ScanRankerScore	AdjustedScore	Label	CumsumLabel	Peptide	Protein(locus;peptide starting position)
-            //List<string> selectedColumns = new List<string>(new string[] { "NativeID","ScanRankerScore","Peptide"});
+            //H	Index	NativeID	"PrecursorMZ","Charge","PrecursorMass", BestTagScore	BestTagTIC	TagMzRange	ScanRankerScore	AdjustedScore	Label	CumsumLabel	Peptide	Protein(locus;peptide starting position)
+            //List<string> selectedColumns = new List<string>(new string[] { "NativeID", "PrecursorMZ", "Charge", "PrecursorMass", "ScanRankerScore", "Peptide" });
             //dt.TableName = tableName;  
             try
             {
                 using (StreamReader sr = new StreamReader(filename))
                 {
-                    List<int> columnIndices = new List<int>();  //store column index of "NativeID","ScanRankerScore" and "Peptide"
+                    List<int> columnIndices = new List<int>();  //store column index of "NativeID","PrecursorMZ","Charge","PrecursorMass","ScanRankerScore" and "Peptide"
                     sr.ReadLine();  // first three lines are header lines
                     sr.ReadLine();
                     // thrid line has headers  
@@ -399,6 +399,18 @@ namespace IonMatcher
                             {                                
                                 columnIndices.Add(i);
                             }
+                            else if (s.Equals("PrecursorMZ"))
+                            {
+                                columnIndices.Add(i);
+                            }
+                            else if (s.Equals("Charge"))
+                            {
+                                columnIndices.Add(i);
+                            }
+                            else if (s.Equals("PrecursorMass"))
+                            {
+                                columnIndices.Add(i);
+                            }
                             else if (s.Equals("ScanRankerScore"))
                             {                                
                                 columnIndices.Add(i);
@@ -409,8 +421,11 @@ namespace IonMatcher
                             }
                             i++;
                         }
-                        //add three columns in datatable
+                        //add  columns in datatable
                         dt.Columns.Add("NativeID", typeof(string));
+                        dt.Columns.Add("PrecursorMZ", typeof(float));
+                        dt.Columns.Add("Charge", typeof(int));
+                        dt.Columns.Add("PrecursorMass", typeof(float));
                         dt.Columns.Add("SRscore", typeof(float));
                         dt.Columns.Add("Sequence", typeof(string));
                     }
@@ -424,23 +439,27 @@ namespace IonMatcher
                     // sr.ReadLine();
                     //dt.Columns.Add("NativeID");
                     //dt.Columns.Add("SRscore");
-                    //dt.Columns.Add("Sequence");                    
+                    //dt.Columns.Add("Sequence");   
+                 
                     // fill the rest of the table; positional  
                     while ((line = sr.ReadLine()) != null)
                     {
                         DataRow row = dt.NewRow();
                         fields = line.Split('\t');
                         row[0] = fields[columnIndices[0]];  //NativeID
-                        row[1] = Convert.ToSingle(fields[columnIndices[1]]); //ScanRankerScore
+                        row[1] = Convert.ToSingle(fields[columnIndices[1]]); //PrecursorMZ
+                        row[2] = Convert.ToInt16(fields[columnIndices[2]]); //Charge
+                        row[3] = Convert.ToSingle(fields[columnIndices[3]]); //PrecursorMass
+                        row[4] = Convert.ToSingle(fields[columnIndices[4]]); //ScanRankerScore
                         //MessageBox.Show(columnIndices[0].ToString() + " " + columnIndices[1].ToString() + " " +columnIndices[2].ToString() 
                          //   + " " +row[0] + " " + row[1] + "field Length: " + fields.Length.ToString());
-                        if (columnIndices.Count == 3)  // exist the third column
+                        if (columnIndices.Count == 6)  // exist peptide column
                         {
-                            row[2] = (columnIndices[2] <= fields.Length - 1) ? convertToSeeMSFormat((fields[columnIndices[2]].Split(','))[0]) : ""; //Peptide, if more than one, only select the first one
+                            row[5] = (columnIndices[5] <= fields.Length - 1) ? convertToSeeMSFormat((fields[columnIndices[5]].Split(','))[0]) : ""; //Peptide, if more than one, only select the first one
                         }
                         else
                         {
-                            row[2] = "";
+                            row[5] = "";
                         }
 
                         //int i = 0;
@@ -519,6 +538,9 @@ namespace IonMatcher
                 pepGridView.Columns["SRscore"].Width = pepGridView.Columns["SRscore"].Width - 10;
                 //pepGridView.Columns["NativeID"].Width = pepGridView.Columns["NativeID"].Width + 40;                
                 pepGridView.Columns["NativeID"].ValueType = typeof(string);
+                pepGridView.Columns["PrecursorMZ"].ValueType = typeof(float);
+                pepGridView.Columns["Charge"].ValueType = typeof(int);
+                pepGridView.Columns["PrecursorMass"].ValueType = typeof(float);
                 pepGridView.Columns["SRscore"].ValueType = typeof(float);
                 pepGridView.Columns["Sequence"].ValueType = typeof(string);                
                 pepGridView.Columns["NativeID"].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleLeft;
