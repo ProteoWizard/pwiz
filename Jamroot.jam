@@ -199,7 +199,7 @@ modules.poke : BOOST_BUILD_PATH : [ modules.peek : BOOST_BUILD_PATH ] $(PWIZ_LIB
 import svnrev sequence common ;
 
 constant PWIZ_MAJOR : 2 ;
-constant PWIZ_MINOR : 1 ;
+constant PWIZ_MINOR : 2 ;
 
 # rule for generating a ProteoWizard Version.cpp file
 rule generate-Version.cpp ( filepath ? : namespace ? : sources-with-rcs-keywords + :
@@ -393,7 +393,8 @@ else
 }
 
 
-    tar.extract $(PWIZ_LIBRARIES_PATH)/gd-2.0.33.tar.bz2 : *.h : <location>$(PWIZ_LIBRARIES_PATH) ;
+tar.extract $(PWIZ_LIBRARIES_PATH)/gd-2.0.33.tar.bz2 : *.h : <location>$(PWIZ_LIBRARIES_PATH) ;
+tar.extract $(PWIZ_LIBRARIES_PATH)/hdf5-1.8.7.tar.bz2 : * : <location>$(PWIZ_LIBRARIES_PATH) ;
 
 path-constant BOOST_SOURCE : $(boost_src) ;
 path-constant ZLIB_SOURCE : $(zlib_src) ;

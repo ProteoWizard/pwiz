@@ -45,6 +45,7 @@ lib pwiz_data_msdata
     : # sources
         BinaryDataEncoder.cpp
         ChromatogramList_mzML.cpp
+        ChromatogramList_mz5.cpp
         DefaultReaderList.cpp
         Diff.cpp
         IO.cpp
@@ -56,6 +57,7 @@ lib pwiz_data_msdata
         Serializer_mzXML.cpp
         Serializer_MGF.cpp
         Serializer_MSn.cpp
+        Serializer_mz5.cpp
         SpectrumInfo.cpp
         SpectrumIterator.cpp
         SpectrumList_mzML.cpp
@@ -63,6 +65,7 @@ lib pwiz_data_msdata
         SpectrumList_MGF.cpp
         SpectrumList_MSn.cpp
         SpectrumList_BTDX.cpp
+        SpectrumList_mz5.cpp
         SpectrumListCache.cpp
         RAMPAdapter.cpp
         Reader.cpp
@@ -79,26 +82,28 @@ lib pwiz_data_msdata
         <library>/ext/boost//thread
         <library>/ext/boost//regex
         <library>/ext/zlib//z
+        <library>mz5//pwiz_data_msdata_mz5
     : # default-build
     : # usage-requirements
         <library>pwiz_data_msdata_version
         <library>../common//pwiz_data_common
         <library>../..//pwiz_version
-		<library>../../utility/misc//pwiz_utility_misc
+        <library>../../utility/misc//pwiz_utility_misc
         <library>../../utility/minimxml//pwiz_utility_minimxml
         <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
         <library>/ext/boost//filesystem
         <library>/ext/boost//thread
         <library>/ext/boost//regex
         <library>/ext/zlib//z
+        <library>mz5//pwiz_data_msdata_mz5
     ;
 
 
 lib pwiz_data_msdata_examples
     :   examples.cpp
-	:   <library>pwiz_data_msdata
-	:
-	:	<library>pwiz_data_msdata
+    :   <library>pwiz_data_msdata
+    :
+    :   <library>pwiz_data_msdata
     ;
 
 
@@ -125,6 +130,9 @@ unit-test-if-exists SpectrumList_MGF_Test : SpectrumList_MGF_Test.cpp pwiz_data_
 unit-test-if-exists Serializer_MGF_Test : Serializer_MGF_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples ;
 unit-test-if-exists SpectrumList_MSn_Test : SpectrumList_MSn_Test.cpp pwiz_data_msdata ;
 unit-test-if-exists Serializer_MSn_Test : Serializer_MSn_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples ;
+unit-test-if-exists Serializer_mz5_Test : Serializer_mz5_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples /ext/boost//filesystem ;
+unit-test-if-exists SpectrumList_mz5_Test : SpectrumList_mz5_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples /ext/boost//filesystem ;
+unit-test-if-exists ChromatogramList_mz5_Test : ChromatogramList_mz5_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples /ext/boost//filesystem ;
 unit-test-if-exists MSnReaderTest : MSnReaderTest.cpp pwiz_data_msdata pwiz_data_msdata_examples ;
 unit-test-if-exists MSDataFileTest : MSDataFileTest.cpp pwiz_data_msdata pwiz_data_msdata_examples /ext/boost//filesystem ;
 unit-test-if-exists RAMPAdapterTest : RAMPAdapterTest.cpp pwiz_data_msdata pwiz_data_msdata_examples /ext/boost//filesystem ;

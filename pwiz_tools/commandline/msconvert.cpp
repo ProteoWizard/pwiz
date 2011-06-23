@@ -87,7 +87,8 @@ string Config::outputFilename(const string& filename, const MSData& msd) const
             extension == ".xml" ||
             extension == ".mgf" ||
             extension == ".ms2" ||
-            extension == ".cms2")
+            extension == ".cms2" ||
+            extension == ".mz5")
             runId = bfs::basename(runId);
     }
 
@@ -149,6 +150,7 @@ Config parseCommandLine(int argc, const char* argv[])
     bool format_MGF = false;
     bool format_MS2 = false;
     bool format_CMS2 = false;
+    bool format_mz5 = false;
     bool precision_32 = false;
     bool precision_64 = false;
     bool mz_precision_32 = false;
@@ -172,13 +174,16 @@ Config parseCommandLine(int argc, const char* argv[])
             ": configuration file (optionName=value)")
         ("ext,e",
             po::value<string>(&config.extension)->default_value(config.extension),
-            ": set extension for output files [mzML|mzXML|mgf|txt]")
+            ": set extension for output files [mzML|mzXML|mgf|txt|mz5]")
         ("mzML",
             po::value<bool>(&format_mzML)->zero_tokens(),
             ": write mzML format [default]")
         ("mzXML",
             po::value<bool>(&format_mzXML)->zero_tokens(),
             ": write mzXML format")
+        ("mz5",
+            po::value<bool>(&format_mz5)->zero_tokens(),
+            ": write mz5 format")
         ("mgf",
             po::value<bool>(&format_MGF)->zero_tokens(),
             ": write Mascot generic format")
@@ -414,6 +419,9 @@ Config parseCommandLine(int argc, const char* argv[])
                 break;
             case MSDataFile::Format_CMS2:
                 config.extension = ".cms2";
+                break;
+            case MSDataFile::Format_MZ5:
+                config.extension = ".mz5";
                 break;
             default:
                 throw user_error("[msconvert] Unsupported format."); 

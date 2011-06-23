@@ -29,6 +29,7 @@
 #include "Serializer_mzXML.hpp"
 #include "Serializer_MGF.hpp"
 #include "Serializer_MSn.hpp"
+#include "Serializer_mz5.hpp"
 #include "DefaultReaderList.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
@@ -187,10 +188,10 @@ void writeStream(ostream& os, const MSData& msd, const MSDataFile::WriteConfig& 
             serializer.write(os, msd, iterationListenerRegistry);
             break;
         }
+        case MSDataFile::Format_MZ5:
+            throw runtime_error("[MSDataFile::write()] mz5 does not support writing with an output stream.");
         default:
-        {
             throw runtime_error("[MSDataFile::write()] Format not implemented.");
-        }
     }
 }
 
@@ -204,8 +205,20 @@ void MSDataFile::write(const MSData& msd,
                        const WriteConfig& config,
                        const IterationListenerRegistry* iterationListenerRegistry)
 {
-    shared_ptr<ostream> os = openFile(filename,config.gzipped);
-    writeStream(*os, msd, config, iterationListenerRegistry);
+    switch (config.format)
+    {
+        case MSDataFile::Format_MZ5:
+        {
+            Serializer_mz5 serializer(config);
+            serializer.write(filename, msd, iterationListenerRegistry);
+            break;
+        }
+        default:
+        {
+            shared_ptr<ostream> os = openFile(filename,config.gzipped);
+            writeStream(*os, msd, config, iterationListenerRegistry);
+        }
+    }
 }
 
 
@@ -278,6 +291,9 @@ PWIZ_API_DECL ostream& operator<<(ostream& os, MSDataFile::Format format)
         case MSDataFile::Format_CMS2:
             os << "CMS2";
             return os;
+        case MSDataFile::Format_MZ5:
+            os << "mz5";
+            return os;
         default:
             os << "Unknown";
             return os;
@@ -292,6 +308,8 @@ PWIZ_API_DECL ostream& operator<<(ostream& os, const MSDataFile::WriteConfig& co
         config.format == MSDataFile::Format_mzXML)
         os << " " << config.binaryDataEncoderConfig
            << " indexed=\"" << boolalpha << config.indexed << "\"";
+    else if (config.format == MSDataFile::Format_MZ5)
+        os << " " << config.binaryDataEncoderConfig;
     return os;
 }
 
