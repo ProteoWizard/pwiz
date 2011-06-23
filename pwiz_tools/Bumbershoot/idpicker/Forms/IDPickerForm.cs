@@ -291,7 +291,11 @@ namespace IDPicker
                 session = null;
             }
 
-            OpenFiles(fileNames.ToArray(), treeStructure);
+            var distinctFileNames = new HashSet<string>();
+            foreach (var item in fileNames)
+                distinctFileNames.Add(item);
+
+            OpenFiles(distinctFileNames.ToArray(), treeStructure);
 
         }
 
@@ -574,7 +578,11 @@ namespace IDPicker
                 "IDPicker XML|.idpXML",
                 "IDPicker DB|.idpDB"
             };
-            var ofd = new IDPOpenDialog(fileTypeList){Visible = false};
+            var ofd = new IDPOpenDialog(fileTypeList)
+                          {
+                              ShowInTaskbar = false,
+                              WindowState = FormWindowState.Minimized
+                          };
             ofd.Show();
             var structure = ofd.GetTreeStructure(sources);
             ofd.Close();
@@ -760,6 +768,7 @@ namespace IDPicker
                     if (possibledirectory != null && Directory.Exists(possibledirectory))
                         newDi = new DirectoryInfo(possibledirectory);
                 }
+                Environment.CurrentDirectory = possibledirectory ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
                 // set main window title
                 Text = commonFilename;

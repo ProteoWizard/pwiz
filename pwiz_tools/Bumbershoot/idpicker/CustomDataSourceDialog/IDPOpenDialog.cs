@@ -20,6 +20,7 @@ namespace CustomDataSourceDialog
         private Dictionary<string, List<string[]>> _spectraFolders;
         private Dictionary<string, List<string[]>> _spectraFiles;
         private Dictionary<string, IEnumerable<string>> _extensionList;
+        private Dictionary<TreeNode, List<TreeNode>> _relatedNodes;
         private IEnumerable<string> _allExtensions;
         private int _placeInQueue = -1;
         private bool _navigatingHistory;
@@ -44,6 +45,7 @@ namespace CustomDataSourceDialog
         public IDPOpenDialog(IEnumerable<string> fileTypes)
         {
             InitializeComponent();
+            _relatedNodes = new Dictionary<TreeNode, List<TreeNode>>();
             _extensionList = new Dictionary<string, IEnumerable<string>>();
             foreach (var item in fileTypes)
             {
@@ -72,6 +74,8 @@ namespace CustomDataSourceDialog
         public IDPOpenDialog(IEnumerable<string> fileTypes, string initialLocation)
         {
             InitializeComponent();
+            _relatedNodes = new Dictionary<TreeNode, List<TreeNode>>();
+            _extensionList = new Dictionary<string, IEnumerable<string>>();
             foreach (var item in fileTypes)
             {
                 var twoSides = item.Split("|".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
@@ -100,7 +104,7 @@ namespace CustomDataSourceDialog
             var folderNames = new List<string>();
 
             //Desktop
-            var specialLocation = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.Desktop));
+            var specialLocation = new DirectoryInfo(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory));
             var node = new TreeNode("Desktop")
                            {
                                Tag = specialLocation.FullName,
@@ -353,19 +357,47 @@ namespace CustomDataSourceDialog
                 if (_spectraFolders.ContainsKey(folderInfo))
                     _spectraFolders.Remove((folderInfo));
             }
-
             //process the info
             var dirList = BreadCrumbControl.PathToDirectoryList(folderInfo);
             TreeNode currentNode = null;
-            foreach (TreeNode node in FileTree.Nodes)
+            if (folderInfo.StartsWith(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory)))
             {
-                if (node.Text == dirList[0])
+                var desktopList =
+                    BreadCrumbControl.PathToDirectoryList(
+                        Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory));
+                for (var x = 0; x < desktopList.Count - 1; x++)
+                    dirList.RemoveAt(0);
+                foreach (TreeNode node in FileTree.Nodes)
+                    if (node.Text == "Desktop")
+                        currentNode = node;
+                    else
+                        node.Collapse();
+            }
+            else if (folderInfo.StartsWith(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments)))
+            {
+                var documentsList =
+                    BreadCrumbControl.PathToDirectoryList(
+                        Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
+                for (var x = 0; x < documentsList.Count - 1; x++)
+                    dirList.RemoveAt(0);
+                foreach (TreeNode node in FileTree.Nodes)
+                    if (node.Text == "My Documents")
+                        currentNode = node;
+                    else
+                        node.Collapse();
+            }
+            else
+            {
+                foreach (TreeNode node in FileTree.Nodes)
                 {
-                    currentNode = node;
-                    currentNode.Expand();
+                    if (node.Text == dirList[0])
+                    {
+                        currentNode = node;
+                        currentNode.Expand();
+                    }
+                    else
+                        node.Collapse();
                 }
-                else
-                    node.Collapse();
             }
 
             //if you cant find the root you cant go anywhere
@@ -816,7 +848,17 @@ namespace CustomDataSourceDialog
                 //If folder is a super-folder move subs
                 for (var x = closestRelative.Nodes.Count-1; x >= 0; x--)
                 {
-                    if (!closestRelative.Nodes[x].ToolTipText.Contains(newNode.ToolTipText) ||
+                    var pathList = BreadCrumbControl.PathToDirectoryList(closestRelative.Nodes[x].ToolTipText);
+                    var buildingString = string.Empty;
+                    var possibleRelatives = new List<string>();
+                    foreach (var item in pathList)
+                    {
+                        buildingString = Path.Combine(buildingString, item);
+                        if (item != closestRelative.Nodes[x].ToolTipText)
+                            possibleRelatives.Add(buildingString);
+                    }
+
+                    if (!possibleRelatives.Contains(newNode.ToolTipText) ||
                         closestRelative.Nodes[x].ToolTipText == newNode.ToolTipText) continue;
 
                     var nodeToMove = closestRelative.Nodes[x];
@@ -902,6 +944,28 @@ namespace CustomDataSourceDialog
                     continue;
                 }
             }
+            foreach (var source in newNode.Nodes.Cast<TreeNode>()
+                     .Where(node => (string)node.Tag == "Source"))
+            {
+                foreach (TreeNode file in source.Nodes)
+                {
+                    if (file.Text.ToLower().EndsWith(".pepxml") 
+                        || file.Text.ToLower().EndsWith(".pep.xml"))
+                    {
+                        var baseName = Path.GetFileNameWithoutExtension(file.Text);
+                        var matchFound = source.Nodes.Cast<TreeNode>()
+                            .Where(idpDB => idpDB.Text.ToLower().EndsWith(".idpdb"))
+                            .Any(idpDB => Path.GetFileNameWithoutExtension(idpDB.Text)
+                                          == baseName);
+                        if (matchFound)
+                        {
+                            file.ForeColor = SystemColors.GrayText;
+                            file.Checked = false;
+                        }
+                    }
+                }
+            }
+
             return newNode.Nodes.Count == 0 ? null : newNode;
         }
 
@@ -922,6 +986,9 @@ namespace CustomDataSourceDialog
                 sourceList.AddRange(temp.Select(item => item.Name));
             }
 
+            var mergedFile = sourceList.Count > 1;
+            var relatedNodes = new List<TreeNode>();
+
             foreach (var item in sourceList)
             {
                 var target = GetSpecificNode(rootNode, item);
@@ -934,6 +1001,11 @@ namespace CustomDataSourceDialog
                     ImageIndex = 9,
                     SelectedImageIndex = 9
                 };
+                if (mergedFile)
+                {
+                    subNode.ForeColor = SystemColors.InactiveCaption;
+                    relatedNodes.Add(subNode);
+                }
 
                 if (target == null)
                 {
@@ -952,31 +1024,68 @@ namespace CustomDataSourceDialog
                 else
                     target.Nodes.Add(subNode);
             }
+            foreach (var node in relatedNodes)
+            {
+                _relatedNodes.Add(node, new List<TreeNode>());
+                foreach (var neighbor in relatedNodes)
+                    if (neighbor != node)
+                        _relatedNodes[node].Add(neighbor);
+                node.Checked = false;
+            }
         }
 
         private TreeNode FindClosestRelative(TreeNode currentNode, string newPath)
         {
             var closestMatch = currentNode;
 
-            foreach (var node in currentNode.Nodes.Cast<TreeNode>()
-                .Where(node => newPath.Contains(node.ToolTipText)))
+            var pathList = BreadCrumbControl.PathToDirectoryList(newPath);
+            var buildingString = string.Empty;
+            var possibleRelatives = new List<string>();
+            foreach (var item in pathList)
             {
-                closestMatch = node.ToolTipText == newPath
-                                   ? null
-                                   : FindClosestRelative(node, newPath);
-                break;
+                buildingString = Path.Combine(buildingString,item);
+                if (item != newPath)
+                    possibleRelatives.Add(buildingString);
             }
+
+            foreach (TreeNode node in currentNode.Nodes)
+                if (possibleRelatives.Contains(node.ToolTipText))
+                {
+                    closestMatch = node.ToolTipText == newPath
+                                       ? null
+                                       : FindClosestRelative(node, newPath);
+                    break;
+                }
             return closestMatch;
         }
 
         private void FileTreeView_AfterCheck(object sender, TreeViewEventArgs e)
         {
             if (e.Node.Checked)
-                foreach (TreeNode child in e.Node.Nodes)
-                    child.Checked = true;
+            {
+                if (_relatedNodes.ContainsKey(e.Node))
+                {
+                    foreach (var neighbor in _relatedNodes[e.Node])
+                        if (!neighbor.Checked)
+                            neighbor.Checked = true;
+                }
+                else
+                    foreach (TreeNode child in e.Node.Nodes)
+                        if (child.ForeColor != SystemColors.GrayText
+                            && child.ForeColor != SystemColors.InactiveCaption)
+                            child.Checked = true;
+            }
             else
+            {
+                if (_relatedNodes.ContainsKey(e.Node))
+                {
+                    foreach (var neighbor in _relatedNodes[e.Node])
+                        if (neighbor.Checked)
+                            neighbor.Checked = false;
+                }
                 foreach (TreeNode child in e.Node.Nodes)
                     child.Checked = false;
+            }
         }
 
         private void RemoveNode_Click(object sender, EventArgs e)

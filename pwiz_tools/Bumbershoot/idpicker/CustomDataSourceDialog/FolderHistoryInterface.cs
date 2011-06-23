@@ -9,7 +9,7 @@ namespace CustomDataSourceDialog
     {
         static internal List<string> GetRecentFolders()
         {
-            return Properties.Settings.Default.FolderHistory.Split('|').ToList();
+            return Properties.Settings.Default.FolderHistory.Split("|".ToCharArray(),StringSplitOptions.RemoveEmptyEntries).ToList();
         }
 
         static internal void AddFolderToHistory(string newFolder)

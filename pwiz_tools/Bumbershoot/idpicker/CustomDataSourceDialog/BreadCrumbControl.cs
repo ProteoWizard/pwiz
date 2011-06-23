@@ -44,7 +44,7 @@ namespace CustomDataSourceDialog
         public static string GetMostRecentLocation()
         {
             var history = FolderHistoryInterface.GetRecentFolders();
-            return history.Count > 0 ? history.First() : string.Empty;
+            return history.Count > 0 ? history.First() : Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
         }
 
         public BreadCrumbControl()
@@ -103,7 +103,7 @@ namespace CustomDataSourceDialog
             BreadCrumbTrail.Items.Add(tsmi);
             _itemNeighbors.Add(tsmi,new ToolStripMenuItem {Width = 0});
 
-            //Allow history button to be seen
+            //show History button
             HistoryButton.Visible = true;
         }
 
