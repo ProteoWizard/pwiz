@@ -546,7 +546,7 @@ namespace pwiz.Skyline.SettingsUI
                         var rankTypes = settings.TransitionSettings.Filter.IonTypes;
                         var rankCharges = settings.TransitionSettings.Filter.ProductCharges;
 
-                        ExplicitMods mods = null;
+                        ExplicitMods mods;
                         var pepInfo = (ViewLibraryPepInfo)listPeptide.SelectedItem;
                         var nodPep = pepInfo.PeptideNode;
                         if (nodPep != null)
@@ -562,25 +562,24 @@ namespace pwiz.Skyline.SettingsUI
                             transitionGroup = new TransitionGroup(peptide, _peptides[index].Charge,
                                                                   IsotopeLabelType.light, true);
 
-                            if (_peptides[index].IsModified)
+                            // Because the document modifications do not explain this peptide, a set of
+                            // explicit modifications must be constructed, even if they are empty.
+                            IList<ExplicitMod> staticModList = new List<ExplicitMod>();
+                            IEnumerable<ModificationInfo> modList = GetModifications(_peptides[index]);
+                            foreach (var modInfo in modList)
                             {
-                                IList<ExplicitMod> staticModList = new List<ExplicitMod>();
-                                IEnumerable<ModificationInfo> modList = GetModifications(_peptides[index]);
-                                foreach (var modInfo in modList)
-                                {
-                                    var smod = new StaticMod("temp",
-                                                             modInfo.ModifiedAminoAcid.ToString(),
-                                                             null,
-                                                             null,
-                                                             LabelAtoms.None,
-                                                             modInfo.ModifiedMass,
-                                                             modInfo.ModifiedMass);
-                                    var exmod = new ExplicitMod(modInfo.IndexMod, smod);
-                                    staticModList.Add(exmod);
-                                }
-
-                                mods = new ExplicitMods(peptide, staticModList, new TypedExplicitModifications[0]);
+                                var smod = new StaticMod("temp",
+                                                         modInfo.ModifiedAminoAcid.ToString(),
+                                                         null,
+                                                         null,
+                                                         LabelAtoms.None,
+                                                         modInfo.ModifiedMass,
+                                                         modInfo.ModifiedMass);
+                                var exmod = new ExplicitMod(modInfo.IndexMod, smod);
+                                staticModList.Add(exmod);
                             }
+
+                            mods = new ExplicitMods(peptide, staticModList, new TypedExplicitModifications[0]);
                         }
 
                         // Make sure the types and charges in the settings are at the head
