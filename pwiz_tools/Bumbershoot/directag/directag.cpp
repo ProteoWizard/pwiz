@@ -207,7 +207,7 @@ namespace directag
 					<< bestTagTICIQR << '\t'
 					<< tagMzRangeIQR << '\t'
 					<< numTaggedSpectra << "\n";
-		fileStream << "H\tIndex\tNativeID\tBestTagScore\tBestTagTIC\tTagMzRange\tScanRankerScore\n" ;
+		fileStream << "H\tIndex\tNativeID\tPrecursorMZ\tCharge\tPrecursorMass\tBestTagScore\tBestTagTIC\tTagMzRange\tScanRankerScore\n" ;
 		vector<int> seen;
 		Spectrum* s;
 		for( SpectraList::iterator sItr = instance.begin(); sItr != instance.end(); ++sItr )
@@ -221,8 +221,9 @@ namespace directag
 				fileStream	<< "S" << '\t'
 							<< s->id.index << '\t'
 							<< s->nativeID << '\t'
-							//<< s->id.index << '\t'
-							//<< s->id.charge << '\t'
+							<< s->mzOfPrecursor << '\t'
+							<< s->id.charge << '\t'
+							<< s->mOfPrecursor << '\t'
 							<< s->bestTagScore << '\t'
 							<< logBestTagTIC << '\t'
 							<< s->tagMzRange << '\t'
