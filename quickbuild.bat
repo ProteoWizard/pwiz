@@ -27,5 +27,5 @@ set BOOST_BUILD_PATH=%PWIZ_ROOT%\libraries\boost-build
 REM # Do full build of ProteoWizard, passing quickbuild's arguments to bjam
 echo Building pwiz...
 pushd %PWIZ_ROOT%
-%PWIZ_BJAM% %*
+%PWIZ_BJAM% -j4 --toolset=msvc-9.0 --i-agree-to-the-vendor-licenses secure-scl=off %*
 popd

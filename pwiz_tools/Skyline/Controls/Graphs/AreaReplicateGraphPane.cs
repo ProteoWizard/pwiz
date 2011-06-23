@@ -81,9 +81,31 @@ namespace pwiz.Skyline.Controls.Graphs
         public bool IsDotProductVisible { get { return CanShowDotProduct && Settings.Default.ShowDotProductPeakArea; } }
 
         public bool CanShowPeakAreaLegend { get; private set; }
+        
+        public IList<double> SumAreas { get; private set; }
+
+        public TransitionGroupDocNode ParentGroupNode { get; private set; }
+
+        public override void Draw(Graphics g)
+        {
+            // Make sure changes are not only drawn when the graph is updated.
+            if (IsDotProductVisible)
+                AddDotProductLabels(g, ParentGroupNode, SumAreas);
+            base.Draw(g);
+            // Have to call AddDotProductLabels twice, since the X-scale may not be up
+            // to date before calling Draw.  If nothing changes, this will be a no-op
+            if (IsDotProductVisible)
+            {
+                int dotpLabelsCount = _dotpLabels.Count;
+                AddDotProductLabels(g, ParentGroupNode, SumAreas);
+                if (dotpLabelsCount != _dotpLabels.Count)
+                    base.Draw(g);
+            }
+        }
 
         public override void UpdateGraph(bool checkData)
         {
+            _dotpLabels = new GraphObjList();
             SrmDocument document = GraphSummary.DocumentUIContainer.DocumentUI;
             var results = document.Settings.MeasuredResults;
             bool resultsAvailable = results != null;
@@ -234,9 +256,10 @@ namespace pwiz.Skyline.Controls.Graphs
             
             double maxArea = -double.MaxValue;
             double sumArea = 0;
+     
             // An array to keep track of height of all bars to determine 
             // where each dot product annotation (if showing) should be placed
-            double[] sumAreas = new double[results.Chromatograms.Count];
+            var sumAreas = new double[results.Chromatograms.Count];
 
             int iColor = 0, iCharge = -1, charge = -1;
             int countLabelTypes = document.Settings.PeptideSettings.Modifications.CountLabelTypes;
@@ -304,8 +327,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
             }
 
-            if (IsDotProductVisible)
-                AddDotProductLabels(parentGroupNode, sumAreas);
+            ParentGroupNode = parentGroupNode;
+            SumAreas = sumAreas;
 
             // Draw a box around the currently selected replicate
             if (ShowSelection && maxArea >  -double.MaxValue)
@@ -443,37 +466,55 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        private void AddDotProductLabels(TransitionGroupDocNode nodeGroup, IList<double> sumAreas)
+        private GraphObjList _dotpLabels;
+
+        private void AddDotProductLabels(Graphics g, TransitionGroupDocNode nodeGroup, IList<double> sumAreas)
         {
-            // x shift of the dot product labels
-            var xShift = 1;
-            if (IsExpectedVisible)
-                // shift dot product labels over by 1 more, if library is visible
-                xShift++;
-            // y shift of the dot product labels when scale is 1
-            var yShift = .04;
-            if (AreaGraphController.AreaView == AreaNormalizeToView.none)
-            {
-                // If scale is not 1, then use maximum bar heigh to scale the space
-                // to the curren y-scale
-                double maxBarHeight = sumAreas.Aggregate(Math.Max);
-                yShift = .04 * maxBarHeight;
-            }
+            // Create temporary label to calculate positions
+            FontSpec fontLabel = new FontSpec();
+            SizeF sizeLabel = fontLabel.MeasureString(g, DotpLabelText, CalcScaleFactor());
 
-            for (int i = 0; i < sumAreas.Count; i++)
-            {
-                string text = GetDotProductResultsText(nodeGroup, i);
-                if (string.IsNullOrEmpty(text))
-                    continue;
+            float labelWidth = (float) XAxis.Scale.ReverseTransform((XAxis.Scale.Transform(0) + sizeLabel.Width));
 
-                TextObj textObj = new TextObj(text,
-                                           i + xShift, sumAreas[i] + yShift)
-                                   {
-                                       IsClippedToChartRect = true,
-                                       ZOrder = ZOrder.F_BehindGrid
-                                   };
-                textObj.FontSpec.Border.IsVisible = false;
-                GraphObjList.Add(textObj);
+            bool visible = labelWidth < 1.0;
+            bool visibleState = _dotpLabels.Count > 0;
+
+            if (visible == visibleState)
+                return;
+
+            foreach (GraphObj pa in _dotpLabels)
+                GraphObjList.Remove(pa);
+            _dotpLabels.Clear();
+
+            if (visible)
+            {
+                // x shift of the dot product labels
+                var xShift = 1;
+                if (IsExpectedVisible)
+                    // shift dot product labels over by 1 more, if library is visible
+                    xShift++;
+
+                for (int i = 0; i < sumAreas.Count; i++)
+                {
+                    string text = GetDotProductResultsText(nodeGroup, i);
+                    if (string.IsNullOrEmpty(text))
+                        continue;
+
+                    TextObj textObj = new TextObj(text,
+                                                  i + xShift, sumAreas[i],
+                                                  CoordType.AxisXYScale,
+                                                  AlignH.Center,
+                                                  AlignV.Bottom)
+                                          {
+                                              IsClippedToChartRect = true,
+                                              ZOrder = ZOrder.F_BehindGrid,
+                                          };
+
+
+                    textObj.FontSpec.Border.IsVisible = false;
+                    GraphObjList.Add(textObj);
+                    _dotpLabels.Add(textObj);
+                }
             }
         }
 
@@ -482,17 +523,32 @@ namespace pwiz.Skyline.Controls.Graphs
             switch (ExpectedVisible)
             {
                 case AreaExpectedValue.library:
-                    return GetDotProductText("dotp", nodeTran.GetLibraryDotProduct(indexResult));
                 case AreaExpectedValue.envelope:
-                    return GetDotProductText("idotp", nodeTran.GetIsotopeDotProduct(indexResult));
+                    return GetDotProductText(nodeTran.GetIsotopeDotProduct(indexResult));
                 default:
                     return null;
             }
         }
 
-        private static string GetDotProductText(string labelText, float? dotpValue)
+        private string DotpLabelText
         {
-            return dotpValue.HasValue ? string.Format("{0}\n{1:F02}", labelText, dotpValue) : null;
+            get
+            {
+                switch (ExpectedVisible)
+                {
+                    case AreaExpectedValue.library:
+                        return "dotp";
+                    case AreaExpectedValue.envelope:
+                        return "idotp";
+                    default:
+                        return "";
+                }
+            }
+        }
+
+        private string GetDotProductText(float? dotpValue)
+        {
+            return dotpValue.HasValue ? string.Format("{0}\n{1:F02}", DotpLabelText, dotpValue) : null;
         }
 
         private void EmptyGraph(SrmDocument document)
