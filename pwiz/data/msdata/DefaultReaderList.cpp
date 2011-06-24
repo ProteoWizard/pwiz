@@ -400,7 +400,10 @@ const size_t mz5HeaderSize = sizeof(mz5Header) / sizeof(char);
 
 PWIZ_API_DECL std::string Reader_mz5::identify(const string& filename, const string& head) const
 {
-    for (size_t i=0; i < mz5HeaderSize && i < head.length(); ++i)
+    if (head.length() < mz5HeaderSize)
+        return "";
+
+    for (size_t i=0; i < mz5HeaderSize; ++i)
         if (head[i] != mz5Header[i])
             return "";
 

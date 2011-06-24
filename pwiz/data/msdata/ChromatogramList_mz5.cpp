@@ -21,11 +21,11 @@
 // limitations under the License.
 //
 
+#define PWIZ_SOURCE
+
 #include "pwiz/utility/misc/Std.hpp"
 #include "References.hpp"
 #include "ChromatogramList_mz5.hpp"
-#include <string>
-#include <iostream>
 
 
 namespace pwiz {
@@ -34,7 +34,7 @@ namespace msdata {
 
 namespace {
 
-using namespace pwiz::msdata::mz5;
+using namespace mz5;
 
 /**
  * Implementation of a ChromatogramList.
