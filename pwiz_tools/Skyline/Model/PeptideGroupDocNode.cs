@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -320,6 +321,11 @@ namespace pwiz.Skyline.Model
         public override string GetDisplayText(DisplaySettings settings)
         {
             return PeptideGroupTreeNode.DisplayText(this, settings);
+        }
+
+        public static int CompareNames(PeptideGroupDocNode p1, PeptideGroupDocNode p2)
+        {
+            return string.Compare(p1.Name, p2.Name);
         }
 
         #region object overrides

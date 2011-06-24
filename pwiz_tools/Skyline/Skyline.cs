@@ -22,6 +22,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
@@ -1460,6 +1461,16 @@ namespace pwiz.Skyline
         {
             var refinementSettings = new RefinementSettings { RemoveRepeatedPeptides = true };
             ModifyDocument("Remove repeated peptides", refinementSettings.Refine);
+        }
+
+        private void sortProteinsMenuItem_Click(object sender, EventArgs e)
+        {
+            ModifyDocument("Sort proteins by name", doc =>
+                {
+                    var listProteins = new List<PeptideGroupDocNode>(doc.PeptideGroups);
+                    listProteins.Sort(PeptideGroupDocNode.CompareNames);
+                    return (SrmDocument) doc.ChangeChildrenChecked(listProteins.Cast<DocNode>().ToArray());
+                });
         }
 
         private void acceptPeptidesMenuItem_Click(object sender, EventArgs e)

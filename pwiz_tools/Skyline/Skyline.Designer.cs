@@ -86,6 +86,8 @@ namespace pwiz.Skyline
             this.removeDuplicatePeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeRepeatedPeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeMissingResultsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator45 = new System.Windows.Forms.ToolStripSeparator();
+            this.sortProteinsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator43 = new System.Windows.Forms.ToolStripSeparator();
             this.acceptPeptidesMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator35 = new System.Windows.Forms.ToolStripSeparator();
@@ -713,7 +715,7 @@ namespace pwiz.Skyline
             this.findNextMenuItem.Name = "findNextMenuItem";
             this.findNextMenuItem.ShortcutKeys = System.Windows.Forms.Keys.F3;
             this.findNextMenuItem.Size = new System.Drawing.Size(207, 22);
-            this.findNextMenuItem.Text = "Find N&ext";
+            this.findNextMenuItem.Text = "Find Ne&xt";
             this.findNextMenuItem.Click += new System.EventHandler(this.findNextMenuItem_Click);
             // 
             // toolStripSeparator8
@@ -782,6 +784,8 @@ namespace pwiz.Skyline
             this.removeDuplicatePeptidesMenuItem,
             this.removeRepeatedPeptidesMenuItem,
             this.removeMissingResultsMenuItem,
+            this.toolStripSeparator45,
+            this.sortProteinsMenuItem,
             this.toolStripSeparator43,
             this.acceptPeptidesMenuItem,
             this.toolStripSeparator35,
@@ -817,6 +821,18 @@ namespace pwiz.Skyline
             this.removeMissingResultsMenuItem.Size = new System.Drawing.Size(218, 22);
             this.removeMissingResultsMenuItem.Text = "Remove &Missing Results";
             this.removeMissingResultsMenuItem.Click += new System.EventHandler(this.removeMissingResultsMenuItem_Click);
+            // 
+            // toolStripSeparator45
+            // 
+            this.toolStripSeparator45.Name = "toolStripSeparator45";
+            this.toolStripSeparator45.Size = new System.Drawing.Size(215, 6);
+            // 
+            // sortProteinsMenuItem
+            // 
+            this.sortProteinsMenuItem.Name = "sortProteinsMenuItem";
+            this.sortProteinsMenuItem.Size = new System.Drawing.Size(218, 22);
+            this.sortProteinsMenuItem.Text = "&Sort Proteins by Name";
+            this.sortProteinsMenuItem.Click += new System.EventHandler(this.sortProteinsMenuItem_Click);
             // 
             // toolStripSeparator43
             // 
@@ -2784,7 +2800,7 @@ namespace pwiz.Skyline
             this.toolStripSeparator28,
             this.areaPropsContextMenuItem});
             this.contextMenuPeakAreas.Name = "contextMenuStrip1";
-            this.contextMenuPeakAreas.Size = new System.Drawing.Size(171, 230);
+            this.contextMenuPeakAreas.Size = new System.Drawing.Size(171, 252);
             // 
             // areaGraphContextMenuItem
             // 
@@ -3328,6 +3344,8 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem productsTranContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem precursorsTranMenuItem;
         private System.Windows.Forms.ToolStripMenuItem productsTranMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator45;
+        private System.Windows.Forms.ToolStripMenuItem sortProteinsMenuItem;
     }
 }
 
