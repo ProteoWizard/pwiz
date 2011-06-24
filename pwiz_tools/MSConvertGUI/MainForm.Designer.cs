@@ -754,6 +754,7 @@ namespace MSConvertGUI
             this.OutputFormatBox.Items.AddRange(new object[] {
             "mzML",
             "mzXML",
+            "mz5",
             "mgf",
             "text",
             "ms2",

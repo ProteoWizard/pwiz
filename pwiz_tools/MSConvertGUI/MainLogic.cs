@@ -102,8 +102,9 @@ namespace MSConvertGUI
             _info = info;
             _canceled = false;
 
-            ThreadPool.SetMinThreads(Environment.ProcessorCount, Environment.ProcessorCount);
-            ThreadPool.SetMaxThreads(Environment.ProcessorCount, Environment.ProcessorCount);
+            int numThreads = Environment.ProcessorCount;
+            ThreadPool.SetMinThreads(numThreads, numThreads);
+            ThreadPool.SetMaxThreads(numThreads, numThreads);
         }
 
         public Config ParseCommandLine(string outputFolder, string argv)
@@ -116,6 +117,7 @@ namespace MSConvertGUI
             var formatText = false;
             var formatMzMl = false;
             var formatMzXml = false;
+            var formatMz5 = false;
             var formatMgf = false;
             var formatMs2 = false;
             var formatCms2 = false;
@@ -151,6 +153,9 @@ namespace MSConvertGUI
                         break;
                     case "--mzXML":
                         formatMzXml = true;
+                        break;
+                    case "--mz5":
+                        formatMz5 = true;
                         break;
                     case "--mgf":
                         formatMgf = true;
@@ -299,8 +304,9 @@ namespace MSConvertGUI
                 throw new Exception("[msconvert] No files specified.");
 
             var count = (formatText ? 1 : 0) 
-                + (formatMzMl ? 1 : 0) 
+                + (formatMzMl ? 1 : 0)
                 + (formatMzXml ? 1 : 0)
+                + (formatMz5 ? 1 : 0)
                 + (formatMgf ? 1 : 0)
                 + (formatMs2 ? 1 : 0)
                 + (formatCms2 ? 1 : 0);
@@ -308,6 +314,7 @@ namespace MSConvertGUI
             if (formatText) config.WriteConfig.format = MSDataFile.Format.Format_Text;
             if (formatMzMl) config.WriteConfig.format = MSDataFile.Format.Format_mzML;
             if (formatMzXml) config.WriteConfig.format = MSDataFile.Format.Format_mzXML;
+            if (formatMz5) config.WriteConfig.format = MSDataFile.Format.Format_MZ5;
             if (formatMgf) config.WriteConfig.format = MSDataFile.Format.Format_MGF;
             if (formatMs2) config.WriteConfig.format = MSDataFile.Format.Format_MS2;
             if (formatCms2) config.WriteConfig.format = MSDataFile.Format.Format_CMS2;
@@ -326,6 +333,9 @@ namespace MSConvertGUI
                         break;
                     case MSDataFile.Format.Format_mzXML:
                         config.Extension = ".mzXML";
+                        break;
+                    case MSDataFile.Format.Format_MZ5:
+                        config.Extension = ".mz5";
                         break;
                     case MSDataFile.Format.Format_MGF:
                         config.Extension = ".mgf";
@@ -399,6 +409,7 @@ namespace MSConvertGUI
             }
         }
 
+        object calculateSHA1Mutex = new object();
         void processFile(string filename, Config config, ReaderList readers)
         {
             if (LogUpdate != null) LogUpdate("Opening file...", _info);
@@ -419,7 +430,9 @@ namespace MSConvertGUI
                     if (LogUpdate != null) LogUpdate("Calculating SHA1 checksum...", _info);
                     if (StatusUpdate != null) StatusUpdate("Calculating SHA1 checksum...", ProgressBarStyle.Marquee, _info);
 
-                    MSDataFile.calculateSHA1Checksums(msd);
+                    // only one thread 
+                    lock (calculateSHA1Mutex)
+                        MSDataFile.calculateSHA1Checksums(msd);
 
                     if (LogUpdate != null) LogUpdate("Processing...", _info);
                     if (StatusUpdate != null) StatusUpdate("Processing...", ProgressBarStyle.Marquee, _info);

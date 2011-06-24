@@ -387,7 +387,7 @@ Config parseCommandLine(int argc, const char* argv[])
     if (config.filenames.empty())
         throw user_error("[msconvert] No files specified.");
 
-    int count = format_text + format_mzML + format_mzXML + format_MGF + format_MS2 + format_CMS2;
+    int count = format_text + format_mzML + format_mzXML + format_MGF + format_MS2 + format_CMS2 + format_mz5;
     if (count > 1) throw user_error("[msconvert] Multiple format flags specified.");
     if (format_text) config.writeConfig.format = MSDataFile::Format_Text;
     if (format_mzML) config.writeConfig.format = MSDataFile::Format_mzML;
@@ -395,6 +395,7 @@ Config parseCommandLine(int argc, const char* argv[])
     if (format_MGF) config.writeConfig.format = MSDataFile::Format_MGF;
     if (format_MS2) config.writeConfig.format = MSDataFile::Format_MS2;
     if (format_CMS2) config.writeConfig.format = MSDataFile::Format_CMS2;
+    if (format_mz5) config.writeConfig.format = MSDataFile::Format_MZ5;
 
     config.writeConfig.gzipped = gzip; // if true, file is written as .gz
 

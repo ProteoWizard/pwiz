@@ -150,7 +150,7 @@ namespace MSConvertGUI
         {
             var fileList = new List<string>
                                {
-                                   "Any spectra format","mzML", "mzXML",
+                                   "Any spectra format","mzML", "mzXML", "MZ5",
                                    "Thermo RAW", "Waters RAW", "ABSciex WIFF",
                                    "Bruker Analysis", "Agilent MassHunter",
                                    "Mascot Generic", "Bruker Data Exchange"
@@ -358,6 +358,9 @@ namespace MSConvertGUI
             {
                 case "mzXML":
                     commandLine.Append("--mzXML|");
+                    break;
+                case "mz5":
+                    commandLine.Append("--mz5|");
                     break;
                 case "mgf":
                     commandLine.Append("--mgf|");
