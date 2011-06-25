@@ -148,6 +148,10 @@ namespace pwiz.Topograph.ui.Forms
 
         private IList<SearchResult> FilterSearchResults(Dictionary<string, DbPeptide> peptides, IList<SearchResult> searchResults)
         {
+            if (searchResults == null)
+            {
+                return null;
+            }
             bool useMinXCorr = _useMinXCorr;
             bool onlyExistingPeptides = _onlyExistingPeptides;
             if (!useMinXCorr && !onlyExistingPeptides)

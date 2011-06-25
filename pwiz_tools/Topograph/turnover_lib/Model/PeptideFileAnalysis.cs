@@ -49,7 +49,10 @@ namespace pwiz.Topograph.Model
             : base(peptideAnalysis.Workspace, dbPeptideFileAnalysis)
         {
             Peaks = new Peaks(this, dbPeptideFileAnalysis);
-            Chromatograms = new Chromatograms(this, dbPeptideFileAnalysis);
+            if (dbPeptideFileAnalysis.ChromatogramSet != null)
+            {
+                Chromatograms = new Chromatograms(this, dbPeptideFileAnalysis.ChromatogramSet);
+            }
             PeptideAnalysis = peptideAnalysis;
             ExcludedMzs.ChangedEvent += ExcludedMzs_Changed;
             SetWorkspaceVersion(Workspace.WorkspaceVersion);
@@ -308,7 +311,7 @@ namespace pwiz.Topograph.Model
             ClearTracerChromatograms();
             if (!IsMzKeySetComplete(Chromatograms.GetKeys()))
             {
-                Chromatograms = new Chromatograms(this, new double[0], new int[0]);
+                Chromatograms = null;
             }
             Recalculate(AutoFindPeak);
         }
@@ -391,7 +394,7 @@ namespace pwiz.Topograph.Model
         {
             if (!_workspaceVersion.ChromatogramsValid(newWorkspaceVersion))
             {
-                Chromatograms = new Chromatograms(this, new double[0], new int[0]);
+                Chromatograms = null;
                 Peaks = new Peaks(this);
             }
             if (!_workspaceVersion.PeaksValid(newWorkspaceVersion))

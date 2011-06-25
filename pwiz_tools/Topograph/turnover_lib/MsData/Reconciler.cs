@@ -267,11 +267,11 @@ namespace pwiz.Topograph.MsData
                         if (peptideAnalysisIds.Count < max_requery_count)
                         {
                             session.CreateQuery("SELECT F.Id FROM " + typeof(DbPeptideFileAnalysis) +
-                                                " F WHERE F.PeptideAnalysis.Id IN (" + Lists.Join(peptideAnalysisIds, ",") + ") AND F.ChromatogramCount <> 0 AND F.PeakCount = 0")
+                                                " F WHERE F.PeptideAnalysis.Id IN (" + Lists.Join(peptideAnalysisIds, ",") + ") AND F.ChromatogramSet IS NOT NULL AND F.PeakCount = 0")
                                 .List(fileAnalysisIdsForResultCalculator);
                             session.CreateQuery("SELECT F.Id FROM " + typeof(DbPeptideFileAnalysis) +
                                                 " F WHERE F.PeptideAnalysis.Id IN (" + Lists.Join(peptideAnalysisIds, ",") +
-                                                ") AND F.ChromatogramCount = 0")
+                                                ") AND F.ChromatogramSet IS NULL")
                                 .List(fileAnalysisIdsForChromatogramGenerator);
                         }
                     }

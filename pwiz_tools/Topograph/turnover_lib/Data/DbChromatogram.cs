@@ -27,7 +27,7 @@ namespace pwiz.Topograph.Data
 {
     public class DbChromatogram : DbEntity<DbChromatogram>
     {
-        public virtual DbPeptideFileAnalysis PeptideFileAnalysis { get; set; }
+        public virtual DbChromatogramSet ChromatogramSet { get; set; }
         public virtual int MassIndex { get; set; }
         public virtual int Charge { get; set; }
         public virtual double MzMin { get; set; }
@@ -57,7 +57,7 @@ namespace pwiz.Topograph.Data
         {
             get
             {
-                return PeptideFileAnalysis.ScanIndexes;
+                return ChromatogramSet.ScanIndexes;
             }
         }
         
@@ -65,7 +65,7 @@ namespace pwiz.Topograph.Data
         {
             get
             {
-                return PeptideFileAnalysis.Times;
+                return ChromatogramSet.Times;
             }
         }
         public virtual MzKey MzKey

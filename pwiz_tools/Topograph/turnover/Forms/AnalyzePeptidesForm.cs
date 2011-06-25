@@ -262,7 +262,6 @@ namespace pwiz.Topograph.ui.Forms
                                     {"PeptideAnalysis", dbPeptideAnalysis.Id},
                                     {"AutoFindPeak", 1},
                                     {"Version",1},
-                                    {"ChromatogramCount", 0},
                                     {"PeakCount",0},
                                     {"ValidationStatus",0},
                                 }

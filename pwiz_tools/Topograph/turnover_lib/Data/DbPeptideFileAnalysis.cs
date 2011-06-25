@@ -29,13 +29,11 @@ namespace pwiz.Topograph.Data
     {
         public DbPeptideFileAnalysis()
         {
-            Chromatograms = new List<DbChromatogram>();
             Peaks = new List<DbPeak>();
         }
         public virtual DbPeptideAnalysis PeptideAnalysis { get; set; }
+        public virtual DbChromatogramSet ChromatogramSet { get; set; }
         public virtual DbMsDataFile MsDataFile { get; set; }
-        public virtual ICollection<DbChromatogram> Chromatograms { get; set; }
-        public virtual int ChromatogramCount { get; set; }
         public virtual ICollection<DbPeak> Peaks { get; set; }
         public virtual int PeakCount { get; set; }
         public virtual bool AutoFindPeak { get; set; }
@@ -44,8 +42,6 @@ namespace pwiz.Topograph.Data
         public virtual double ChromatogramEndTime { get; set; }
         public virtual int? FirstDetectedScan { get; set; }
         public virtual int? LastDetectedScan { get; set; }
-        public virtual byte[] TimesBytes { get; set; }
-        public virtual byte[] ScanIndexesBytes { get; set; }
         public virtual byte[] ExcludedMasses { get; set; }
         public virtual string BasePeakName { get; set; }
         public virtual double? TracerPercent { get; set; }
@@ -55,37 +51,6 @@ namespace pwiz.Topograph.Data
         public virtual double? Turnover { get; set; }
         public virtual double? TurnoverScore { get; set; }
         public virtual bool IsCalculated { get { return PeakCount != 0 && TracerPercent.HasValue; } }
-        public virtual double[] Times 
-        { 
-            get
-            {
-                return ArrayConverter.FromBytes<double>(TimesBytes);
-            } 
-            set
-            {
-                TimesBytes = ArrayConverter.ToBytes(value);
-            }
-        }
-        public virtual int[] ScanIndexes
-        {
-            get
-            {
-                return ArrayConverter.FromBytes<int>(ScanIndexesBytes);
-            }
-            set
-            {
-                ScanIndexesBytes = ArrayConverter.ToBytes(value);
-            }
-        }
-        public virtual Dictionary<MzKey, DbChromatogram> GetChromatogramDict()
-        {
-            var result = new Dictionary<MzKey, DbChromatogram>();
-            foreach (var chromatogram in Chromatograms)
-            {
-                result.Add(chromatogram.MzKey, chromatogram);
-            }
-            return result;
-        }
         public override string ToString()
         {
             return PeptideAnalysis.Peptide.Sequence + ":" + MsDataFile.Label;

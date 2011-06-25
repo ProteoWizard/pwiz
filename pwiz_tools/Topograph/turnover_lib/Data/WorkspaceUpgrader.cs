@@ -13,7 +13,7 @@ namespace pwiz.Topograph.Data
 {
     public class WorkspaceUpgrader : ILongOperationJob
     {
-        public const int CurrentVersion = 9;
+        public const int CurrentVersion = 10;
         public const int MinUpgradeableVersion = 1;
         private IDbCommand _currentCommand;
         private LongOperationBroker _longOperationBroker;
@@ -66,7 +66,7 @@ namespace pwiz.Topograph.Data
                     throw new JobCancelledException();
                 }
                 _currentCommand = connection.CreateCommand();
-                _currentCommand.CommandTimeout = 1800;
+                _currentCommand.CommandTimeout = 180000;
                 _currentCommand.CommandText = commandText;
                 return _currentCommand;
             }
@@ -221,6 +221,65 @@ namespace pwiz.Topograph.Data
                     broker.UpdateStatusMessage("Upgrading from version 8 to 9");
                     CreateCommand(connection, "ALTER TABLE DbMsDataFile ADD COLUMN TotalIonCurrentBytes MEDIUMBLOB")
                         .ExecuteNonQuery();
+                }
+                if (dbVersion < 10)
+                {
+                    broker.UpdateStatusMessage("Upgrading from version 9 to 10");
+                    if (IsSqlite)
+                    {
+                        CreateCommand(connection,
+                                      "CREATE TABLE DbChromatogramSet (Id  integer, Version INTEGER not null, TimesBytes BLOB, ScanIndexesBytes BLOB, PeptideFileAnalysis INTEGER not null, ChromatogramCount INTEGER, primary key (Id),unique (PeptideFileAnalysis))")
+                                      .ExecuteNonQuery();
+                        CreateCommand(connection, "DROP TABLE DbChromatogram").ExecuteNonQuery();
+                        CreateCommand(connection,
+                                      "CREATE TABLE DbChromatogram (Id  integer, Version INTEGER not null, ChromatogramSet INTEGER not null, Charge INTEGER not null, MassIndex INTEGER not null, MzMin NUMERIC, MzMax NUMERIC, PointsBytes BLOB, UncompressedSize INTEGER, primary key (Id),unique (ChromatogramSet, Charge, MassIndex))")
+                            .ExecuteNonQuery();
+                    }
+                    else
+                    {
+                        CreateCommand(connection, "CREATE TABLE DbChromatogramSet ("
+                                              + "\nId BIGINT NOT NULL AUTO_INCREMENT"
+                                              + "\n,Version INT NOT NULL"
+                                              + "\n,TimesBytes MEDIUMBLOB"
+                                              + "\n,ScanIndexesBytes MEDIUMBLOB"
+                                              + "\n,PeptideFileAnalysis BIGINT NOT NULL"
+                                              + "\n,ChromatogramCount INT"
+                                              + "\n,primary key (Id)"
+                                              + "\n,unique KEY PeptideFileAnalysis (PeptideFileAnalysis)"
+                                              +")")
+                        .ExecuteNonQuery();
+                        CreateCommand(connection, "DROP INDEX PeptideFileAnalysis ON DbChromatogram")
+                            .ExecuteNonQuery();
+                        CreateCommand(connection, "ALTER TABLE DbChromatogram ADD COLUMN ChromatogramSet BIGINT")
+                            .ExecuteNonQuery();
+                    }
+                    CreateCommand(connection, "ALTER TABLE DbPeptideFileAnalysis ADD COLUMN ChromatogramSet BIGINT")
+                        .ExecuteNonQuery();
+//                    CreateCommand(connection,
+//                                  "SELECT Id AS PeptideFileAnalysis, TimesBytes, ScanIndexesBytes, ChromatogramCount INTO DbChromatogramSet FROM DbPeptideFileAnalysis WHERE ChromatogramCount > 0")
+//                        .ExecuteNonQuery();
+                    if (!IsSqlite)
+                    {
+                        CreateCommand(connection,
+                                      "INSERT INTO DbChromatogramSet (PeptideFileAnalysis, TimesBytes, ScanIndexesBytes, ChromatogramCount)"
+                                      + "\nSELECT Id, TimesBytes, ScanIndexesBytes, ChromatogramCount"
+                                      + "\nFROM DbPeptideFileAnalysis"
+                                      + "\nWHERE ChromatogramCount > 0")
+                            .ExecuteNonQuery();
+                    }
+
+                    CreateCommand(connection,
+                                      "UPDATE DbPeptideFileAnalysis SET TimesBytes = NULL, ScanIndexesBytes = NULL, ChromatogramSet = (SELECT Id FROM DbChromatogramSet WHERE DbChromatogramSet.PeptideFileAnalysis = DbPeptideFileAnalysis.Id)")
+                            .ExecuteNonQuery();
+                    if (!IsSqlite) 
+                    {
+                        CreateCommand(connection,
+                                      "UPDATE DbChromatogram C INNER JOIN DbChromatogramSet S ON C.PeptideFileAnalysis = S.PeptideFileAnalysis SET C.ChromatogramSet = S.Id")
+                            .ExecuteNonQuery();
+                        CreateCommand(connection,
+                                      "CREATE UNIQUE INDEX ChromatogramSetMz ON DbChromatogram (ChromatogramSet, Charge, MassIndex)")
+                            .ExecuteNonQuery();
+                    }
                 }
                 if (dbVersion < CurrentVersion)
                 {

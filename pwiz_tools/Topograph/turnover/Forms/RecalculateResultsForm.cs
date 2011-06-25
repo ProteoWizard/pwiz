@@ -48,10 +48,10 @@ namespace pwiz.Topograph.ui.Forms
                                         " F WHERE F.PeakCount = 0 OR F.TracerPercent IS NULL");
                 var queryChromatogramsPresent =
                     session.CreateQuery("SELECT COUNT(F.Id) FROM " + typeof (DbPeptideFileAnalysis) +
-                                        " F WHERE F.ChromatogramCount <> 0");
+                                        " F WHERE F.ChromatogramSet IS NOT NULL");
                 var queryChromatogramsMissing =
                     session.CreateQuery("SELECT COUNT(F.Id) FROM " + typeof (DbPeptideFileAnalysis) +
-                                        " F WHERE F.ChromatogramCount = 0");
+                                        " F WHERE F.ChromatogramSet IS NULL");
                 int resultsPresent = Convert.ToInt32(queryResultsPresent.UniqueResult());
                 int resultsMissing = Convert.ToInt32(queryResultsMissing.UniqueResult());
                 int chromatogramsPresent = Convert.ToInt32(queryChromatogramsPresent.UniqueResult());

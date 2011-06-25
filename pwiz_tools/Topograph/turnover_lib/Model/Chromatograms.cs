@@ -26,12 +26,12 @@ using pwiz.Topograph.Enrichment;
 
 namespace pwiz.Topograph.Model
 {
-    public class Chromatograms : EntityModelCollection<DbPeptideFileAnalysis, MzKey, DbChromatogram, ChromatogramData>
+    public class Chromatograms : EntityModelCollection<DbChromatogramSet, MzKey, DbChromatogram, ChromatogramData>
     {
         private double[] _times;
         private int[] _scanIndexes;
-        public Chromatograms(PeptideFileAnalysis peptideFileAnalysis, DbPeptideFileAnalysis dbPeptideFileAnalysis) 
-            : base(peptideFileAnalysis.Workspace, dbPeptideFileAnalysis)
+        public Chromatograms(PeptideFileAnalysis peptideFileAnalysis, DbChromatogramSet dbChromatogramSet) 
+            : base(peptideFileAnalysis.Workspace, dbChromatogramSet)
         {
             Parent = peptideFileAnalysis;
         }
@@ -43,7 +43,7 @@ namespace pwiz.Topograph.Model
             _scanIndexes = scanIndexes;
         }
 
-        protected override void Load(DbPeptideFileAnalysis parent)
+        protected override void Load(DbChromatogramSet parent)
         {
             base.Load(parent);
             _times = parent.Times;
@@ -51,7 +51,7 @@ namespace pwiz.Topograph.Model
         }
 
         public PeptideFileAnalysis PeptideFileAnalysis { get { return (PeptideFileAnalysis) Parent; } }
-        protected override IEnumerable<KeyValuePair<MzKey, DbChromatogram>> GetChildren(DbPeptideFileAnalysis parent)
+        protected override IEnumerable<KeyValuePair<MzKey, DbChromatogram>> GetChildren(DbChromatogramSet parent)
         {
             foreach (var dbChromatogram in parent.Chromatograms)
             {
@@ -64,12 +64,12 @@ namespace pwiz.Topograph.Model
             return new ChromatogramData(PeptideFileAnalysis, entity);
         }
 
-        protected override int GetChildCount(DbPeptideFileAnalysis parent)
+        protected override int GetChildCount(DbChromatogramSet parent)
         {
             return parent.ChromatogramCount;
         }
 
-        protected override void SetChildCount(DbPeptideFileAnalysis parent, int childCount)
+        protected override void SetChildCount(DbChromatogramSet parent, int childCount)
         {
             parent.ChromatogramCount = childCount;
         }

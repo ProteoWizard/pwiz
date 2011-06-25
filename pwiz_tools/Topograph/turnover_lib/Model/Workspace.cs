@@ -610,7 +610,7 @@ namespace pwiz.Topograph.Model
                 longOperationBroker.UpdateStatusMessage("Deleting chromatograms");
                 session.CreateSQLQuery("DELETE FROM DbChromatogram")
                     .ExecuteUpdate();
-                session.CreateSQLQuery("UPDATE DbPeptideFileAnalysis SET ChromatogramCount = 0, PeakCount = 0")
+                session.CreateSQLQuery("UPDATE DbPeptideFileAnalysis SET ChromatogramSet = NULL, PeakCount = 0")
                     .ExecuteUpdate();
                 session.CreateSQLQuery("DELETE FROM DbLock").ExecuteUpdate();
             }

@@ -152,7 +152,7 @@ namespace pwiz.Topograph.MsData
                         {
                             continue;
                         }
-                        if (!peptideFileAnalysis.IsMzKeySetComplete(peptideFileAnalysis.Chromatograms.GetKeys()))
+                        if (peptideFileAnalysis.Chromatograms == null || !peptideFileAnalysis.IsMzKeySetComplete(peptideFileAnalysis.Chromatograms.GetKeys()))
                         {
                             if (msDataFileId == null)
                             {
@@ -189,7 +189,7 @@ namespace pwiz.Topograph.MsData
                             foreach (var id in _pendingIdQueue.EnumerateIds())
                             {
                                 var peptideFileAnalysis = _session.Get<DbPeptideFileAnalysis>(id);
-                                if (peptideFileAnalysis.ChromatogramCount != 0)
+                                if (peptideFileAnalysis.ChromatogramSet != null)
                                 {
                                     continue;
                                 }
@@ -219,7 +219,7 @@ namespace pwiz.Topograph.MsData
                                 var ids = new List<long>();
                                 var query =
                                     _session.CreateQuery("SELECT T.Id FROM " + typeof(DbPeptideFileAnalysis) +
-                                                        " T WHERE T.ChromatogramCount = 0");
+                                                        " T WHERE T.ChromatogramSet IS NULL");
                                 query.List(ids);
                                 _pendingIdQueue.SetQueriedIds(ids);
                             }
@@ -227,7 +227,7 @@ namespace pwiz.Topograph.MsData
                         if (msDataFileId != null)
                         {
                             var query = _session.CreateQuery("SELECT T, T.PeptideAnalysis, T.PeptideAnalysis.Peptide FROM " + typeof(DbPeptideFileAnalysis) + " T "
-                                + "\nWHERE T.ChromatogramCount = 0 AND T.MsDataFile.Id = :msDataFileId")
+                                + "\nWHERE T.ChromatogramSet IS NULL AND T.MsDataFile.Id = :msDataFileId")
                                 .SetParameter("msDataFileId", msDataFileId);
                             foreach (object[] row in query.List())
                             {
@@ -576,11 +576,21 @@ namespace pwiz.Topograph.MsData
                     {
                         continue;
                     }
-                    dbPeptideFileAnalysis.Times = analysis.Times.ToArray();
-                    dbPeptideFileAnalysis.ScanIndexes = analysis.ScanIndexes.ToArray();
-                    dbPeptideFileAnalysis.ChromatogramCount = analysis.Chromatograms.Count;
+                    var dbChromatogramSet = dbPeptideFileAnalysis.ChromatogramSet;
+                    if (dbChromatogramSet == null)
+                    {
+                        dbChromatogramSet = new DbChromatogramSet
+                                              {
+                                                  PeptideFileAnalysis = dbPeptideFileAnalysis,
+                                              };
+                    }
+                    dbChromatogramSet.Times = analysis.Times.ToArray();
+                    dbChromatogramSet.ScanIndexes = analysis.ScanIndexes.ToArray();
+                    dbChromatogramSet.ChromatogramCount = analysis.Chromatograms.Count;
+                    _session.SaveOrUpdate(dbChromatogramSet);
+                    dbPeptideFileAnalysis.ChromatogramSet = dbChromatogramSet;
                     _session.Update(dbPeptideFileAnalysis);
-                    var dbChromatogramDict = dbPeptideFileAnalysis.GetChromatogramDict();
+                    var dbChromatogramDict = dbChromatogramSet.GetChromatogramDict();
                     foreach (Chromatogram chromatogram in analysis.Chromatograms)
                     {
                         DbChromatogram dbChromatogram;
@@ -588,7 +598,7 @@ namespace pwiz.Topograph.MsData
                         {
                             dbChromatogram = new DbChromatogram
                                                  {
-                                                     PeptideFileAnalysis = dbPeptideFileAnalysis,
+                                                     ChromatogramSet = dbChromatogramSet,
                                                      MzKey = chromatogram.MzKey,
                                                  };
                         }

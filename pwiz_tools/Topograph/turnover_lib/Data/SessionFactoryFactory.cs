@@ -72,38 +72,6 @@ namespace pwiz.Topograph.Data
                              typeof(NHibernate.ByteCode.Castle.ProxyFactoryFactory).AssemblyQualifiedName)
                 .SetProperty("command_timeout", "1800")
                 .AddInputStream(assembly.GetManifestResourceStream("pwiz.Topograph.Data.mapping.xml"));
-            if (0 == (flags & SessionFactoryFlags.remove_binary_columns))
-            {
-                var classMapping = configuration.GetClassMapping(typeof (DbPeptideFileAnalysis));
-                var timesColumn = new Column("TimesBytes")
-                                 {
-                                     Length = 1000000,
-                                 };
-                classMapping.Table.AddColumn(timesColumn);
-                var timesValue = new SimpleValue(classMapping.Table)
-                                     {
-                                         TypeName = "BinaryBlob"
-                                     };
-                timesValue.AddColumn(timesColumn);
-                classMapping.AddProperty(new Property(timesValue)
-                                             {
-                                                 Name = "TimesBytes"
-                                             });
-                var scanIndexesColumn = new Column("ScanIndexesBytes")
-                                 {
-                                     Length = 1000000,
-                                 };
-                classMapping.Table.AddColumn(scanIndexesColumn);
-                var scanIndexesValue = new SimpleValue(classMapping.Table)
-                                           {
-                                               TypeName = "BinaryBlob"
-                                           };
-                scanIndexesValue.AddColumn(scanIndexesColumn);
-                classMapping.AddProperty(new Property(scanIndexesValue)
-                                             {
-                                                 Name = "ScanIndexesBytes"
-                                             });
-            }
             return configuration;
         }
 

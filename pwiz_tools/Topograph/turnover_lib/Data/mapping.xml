@@ -8,9 +8,9 @@
     </id>
     <version name="Version" generated="never"/>
 
-    <many-to-one name="PeptideFileAnalysis" unique-key="PeptideFileAnalysisMz" not-null="true"/>
-    <property name="Charge" unique-key="PeptideFileAnalysisMz" not-null="true" />
-    <property name="MassIndex" unique-key="PeptideFileAnalysisMz" not-null="true"/>
+    <many-to-one name="ChromatogramSet" unique-key="ChromatogramSetMz" not-null="true"/>
+    <property name="Charge" unique-key="ChromatogramSetMz" not-null="true" />
+    <property name="MassIndex" unique-key="ChromatogramSetMz" not-null="true"/>
     <property name="MzMin" />
     <property name="MzMax" />
     <property name="PointsBytes" length="1000000" type="BinaryBlob" />
@@ -185,12 +185,8 @@
     <property name="Note" />
 
     <many-to-one name="PeptideAnalysis" unique-key="PeptideAnalysis" not-null="true"/>
+    <many-to-one name="ChromatogramSet" />
     <many-to-one name="MsDataFile" unique-key="PeptideAnalysis" not-null="true"/>
-    <bag name="Chromatograms" cascade="delete" inverse="true">
-      <key column="PeptideFileAnalysis" />
-      <one-to-many class="DbChromatogram" />
-    </bag>
-    <property name="ChromatogramCount" />
     <bag name="Peaks" cascade="delete" inverse="true">
       <key column="PeptideFileAnalysis" />
       <one-to-many class="DbPeak "/>
@@ -208,10 +204,23 @@
     <property name="PrecursorEnrichment" />
     <property name="PrecursorEnrichmentFormula" />
     <property name="Turnover" />
-    <!--<property name="TimesBytes" length="1000000" type="BinaryBlob" />
-    <property name="ScanIndexesBytes" length="1000000" type="BinaryBlob"/>-->
     <property name="ExcludedMasses" type="BinaryBlob" />
     <property name="TurnoverScore"/>
+  </class>
+  <class name="DbChromatogramSet">
+    <id name="Id">
+      <column name="Id" not-null="true"/>
+      <generator class="native" />
+    </id>
+    <version name="Version" generated="never"/>
+    <property name="TimesBytes" length="1000000" type="BinaryBlob" />
+    <property name="ScanIndexesBytes" length="1000000" type="BinaryBlob"/>
+    <many-to-one name="PeptideFileAnalysis" unique-key="PeptideFileAnalysis" not-null="true"/>
+    <bag name="Chromatograms" cascade="delete" inverse="true">
+      <key column="ChromatogramSet" />
+      <one-to-many class="DbChromatogram" />
+    </bag>
+    <property name="ChromatogramCount" />
   </class>
   <class name="DbPeptideAnalysis">
     <id name="Id">

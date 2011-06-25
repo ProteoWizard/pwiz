@@ -121,7 +121,7 @@ namespace pwiz.Topograph.Test
             var peptideFileAnalysis = PeptideFileAnalysis.EnsurePeptideFileAnalysis(peptideAnalysis, msDataFile);
             var chromatogramGenerator = new ChromatogramGenerator(workspace);
             chromatogramGenerator.Start();
-            while (peptideFileAnalysis.Chromatograms.ChildCount == 0)
+            while (peptideFileAnalysis.Chromatograms == null)
             {
                 Thread.Sleep(100);
                 workspace.Reconciler.ReconcileNow();
