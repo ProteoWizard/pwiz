@@ -110,6 +110,7 @@ namespace pwiz.Skyline.SettingsUI
             if (Instrument.MaxTime.HasValue)
                 textMaxTime.Text = Instrument.MaxTime.Value.ToString();
 
+            // Initialize full-scan settings
             _driverEnrichments = new SettingsListComboDriver<IsotopeEnrichments>(comboEnrichments, Settings.Default.IsotopeEnrichmentsList);
             sel = (FullScan.IsotopeEnrichments != null ? FullScan.IsotopeEnrichments.Name : null);
             _driverEnrichments.LoadList(sel);
@@ -139,6 +140,8 @@ namespace pwiz.Skyline.SettingsUI
 
             // Update the product analyzer type in case the SelectedIndex is still -1
             UpdateProductAnalyzerType();
+
+            cbFilterScheduling.Checked = FullScan.IsScheduledFilter;
         }
 
         public TransitionPrediction Prediction { get { return _transitionSettings.Prediction; } }

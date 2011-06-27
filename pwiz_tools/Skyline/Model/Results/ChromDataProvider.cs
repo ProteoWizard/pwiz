@@ -27,7 +27,7 @@ using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Model.Results
 {
-    internal abstract class ChromDataProvider
+    internal abstract class ChromDataProvider : IDisposable
     {
         private readonly int _startPercent;
         private readonly int _endPercent;
@@ -64,6 +64,10 @@ namespace pwiz.Skyline.Model.Results
         public abstract void GetChromatogram(int id, out float[] times, out float[] intensities);
 
         public abstract bool IsProcessedScans { get; }
+
+        public abstract void ReleaseMemory();
+
+        public abstract void Dispose();
     }
 
     internal sealed class ChromatogramDataProvider : ChromDataProvider
@@ -71,7 +75,7 @@ namespace pwiz.Skyline.Model.Results
         private readonly IList<KeyValuePair<ChromKey, int>> _chromIds =
             new List<KeyValuePair<ChromKey, int>>();
 
-        private readonly MsDataFileImpl _dataFile;
+        private MsDataFileImpl _dataFile;
 
         /// <summary>
         /// The number of chromatograms read so far.
@@ -201,12 +205,24 @@ namespace pwiz.Skyline.Model.Results
             }
             return false;
         }
+
+        public override void ReleaseMemory()
+        {
+            Dispose();
+        }
+
+        public override void Dispose()
+        {
+            if (_dataFile != null)
+                _dataFile.Dispose();
+            _dataFile = null;
+        }
     }
 
     internal sealed class SpectraChromDataProvider : ChromDataProvider
     {
-        private readonly List<KeyValuePair<ChromKey, ChromCollector>> _chromatograms =
-            new List<KeyValuePair<ChromKey, ChromCollector>>();
+        private List<KeyValuePair<ChromKey, ChromCollected>> _chromatograms =
+            new List<KeyValuePair<ChromKey, ChromCollected>>();
 
         private readonly bool _isProcessedScans;
 
@@ -218,113 +234,123 @@ namespace pwiz.Skyline.Model.Results
                                         IProgressMonitor loader)
             : base(status, startPercent, endPercent, loader)
         {
-            // 10% done with this file
-            SetPercentComplete(10);
-
-            // Create a spectrum filter data structure, in case it is needed
-            // This could be done lazily, but does not seem worth it, given the file reading
-            var filter = new SpectrumFilter(document);
-
-            // First read all of the spectra, building chromatogram time, intensity lists
-            bool isSrm = dataFile.HasSrmSpectra;
-            var chromMap = new ChromDataCollectorSet(isSrm ? TimeSharing.single : TimeSharing.grouped);
-            var chromMapMs1 = new ChromDataCollectorSet(filter.IsSharedTime ? TimeSharing.shared : TimeSharing.grouped);
-            int lenSpectra = dataFile.SpectrumCount;
-            int eighth = 0;
-            for (int i = 0; i < lenSpectra; i++)
+            using (dataFile)
             {
-                // Update progress indicator
-                if (i * 8 / lenSpectra > eighth)
+                // 10% done with this file
+                const int loadPercent = 10;
+                SetPercentComplete(loadPercent);
+
+                // Only mzXML from mzWiff requires the introduction of zero values
+                // during interpolation.
+                _isProcessedScans = dataFile.IsMzWiffXml;
+
+                // Create a spectrum filter data structure, in case it is needed
+                // This could be done lazily, but does not seem worth it, given the file reading
+                var filter = new SpectrumFilter(document);
+
+                // First read all of the spectra, building chromatogram time, intensity lists
+                bool isSrm = dataFile.HasSrmSpectra;
+                var chromMap = new ChromDataCollectorSet(isSrm ? TimeSharing.single : TimeSharing.grouped);
+                var chromMapMs1 = new ChromDataCollectorSet(filter.IsSharedTime ? TimeSharing.shared : TimeSharing.grouped);
+                int lenSpectra = dataFile.SpectrumCount;
+                int statusPercent = 0;
+                for (int i = 0; i < lenSpectra; i++)
                 {
-                    eighth++;
-                    SetPercentComplete((eighth + 1) * 10);
-                }
-
-                if (chromMap.IsSingleTime)
-                {
-                    var dataSpectrum = dataFile.GetSrmSpectrum(i);
-                    if (dataSpectrum.Level != 2)
-                        continue;
-
-                    if (!dataSpectrum.RetentionTime.HasValue)
-                        throw new InvalidDataException(String.Format("Scan {0} found without scan time.", dataFile.GetSpectrumId(i)));
-                    if (!dataSpectrum.PrecursorMz.HasValue)
-                        throw new InvalidDataException(String.Format("Scan {0} found without precursor m/z.", dataFile.GetSpectrumId(i)));
-
-                    // Process the one SRM spectrum
-                    ProcessSrmSpectrum(dataSpectrum.RetentionTime.Value,
-                                       dataSpectrum.PrecursorMz.Value,
-                                       dataSpectrum.Mzs,
-                                       dataSpectrum.Intensities,
-                                       chromMap,
-                                       null);
-                }
-                else if (filter.EnabledMsMs || filter.EnabledMs)
-                {
-                    // If MS/MS filtering is not enabled, skip anything that is not a MS1 scan
-                    if (!filter.EnabledMsMs && dataFile.GetMsLevel(i) != 1)
-                        continue;
-
-                    var dataSpectrum = dataFile.GetSpectrum(i);
-                    if (dataSpectrum.Mzs.Length == 0)
-                        continue;
-
-                    double? rt = dataSpectrum.RetentionTime;
-                    if (!rt.HasValue)
-                        continue;
-
-                    if (dataSpectrum.Level == 1 && filter.EnabledMs)
+                    // Update progress indicator
+                    int currentPercent = i*80/lenSpectra;
+                    if (currentPercent > statusPercent)
                     {
-                        // Process all SRM spectra that can be generated by filtering this full-scan MS1
-                        int? insertIndex = null;
-                        if (filter.IsSharedTime)
+                        statusPercent = currentPercent;
+                        SetPercentComplete(statusPercent + loadPercent);
+                    }
+
+                    if (chromMap.IsSingleTime)
+                    {
+                        var dataSpectrum = dataFile.GetSrmSpectrum(i);
+                        if (dataSpectrum.Level != 2)
+                            continue;
+
+                        if (!dataSpectrum.RetentionTime.HasValue)
+                            throw new InvalidDataException(String.Format("Scan {0} found without scan time.", dataFile.GetSpectrumId(i)));
+                        if (!dataSpectrum.PrecursorMz.HasValue)
+                            throw new InvalidDataException(String.Format("Scan {0} found without precursor m/z.", dataFile.GetSpectrumId(i)));
+
+                        // Process the one SRM spectrum
+                        ProcessSrmSpectrum(dataSpectrum.RetentionTime.Value,
+                                           dataSpectrum.PrecursorMz.Value,
+                                           dataSpectrum.Mzs,
+                                           dataSpectrum.Intensities,
+                                           chromMap,
+                                           null);
+                    }
+                    else if (filter.EnabledMsMs || filter.EnabledMs)
+                    {
+                        // If MS/MS filtering is not enabled, skip anything that is not a MS1 scan
+                        if (!filter.EnabledMsMs && dataFile.GetMsLevel(i) != 1)
+                            continue;
+
+                        var dataSpectrum = dataFile.GetSpectrum(i);
+                        if (dataSpectrum.Mzs.Length == 0)
+                            continue;
+
+                        double? rt = dataSpectrum.RetentionTime;
+                        if (!rt.HasValue)
+                            continue;
+
+                        if (dataSpectrum.Level == 1 && filter.EnabledMs)
                         {
-                            if (!filter.ContainsTime(rt.Value))
-                                continue;
-                            insertIndex = AddTime((float)rt.Value, chromMapMs1.Times);
+                            // Process all SRM spectra that can be generated by filtering this full-scan MS1
+                            int? insertIndex = null;
+                            if (filter.IsSharedTime)
+                            {
+                                if (!filter.ContainsTime(rt.Value))
+                                    continue;
+                                insertIndex = AddTime((float)rt.Value, chromMapMs1.Times);
+                            }
+                            foreach (var spectrum in filter.SrmSpectraFromMs1Scan(rt,
+                                dataSpectrum.Mzs, dataSpectrum.Intensities))
+                            {
+                                ProcessSrmSpectrum(rt.Value, spectrum.PrecursorMz,
+                                    spectrum.Mzs, spectrum.Intensities, chromMapMs1, insertIndex);
+                            }
                         }
-                        foreach (var spectrum in filter.SrmSpectraFromMs1Scan(rt,
-                            dataSpectrum.Mzs, dataSpectrum.Intensities))
+                        else if (dataSpectrum.Level == 2 && filter.EnabledMsMs)
                         {
-                            ProcessSrmSpectrum(rt.Value, spectrum.PrecursorMz,
-                                spectrum.Mzs, spectrum.Intensities, chromMapMs1, insertIndex);
+                            // Process all SRM spectra that can be generated by filtering this full-scan MS/MS
+                            foreach (var spectrum in filter.SrmSpectraFromFullScan(rt,
+                                    dataSpectrum.IsolationMz,
+                                    dataSpectrum.IsolationWidth,
+                                    dataSpectrum.Mzs,
+                                    dataSpectrum.Intensities))
+                            {
+                                ProcessSrmSpectrum(rt.Value, spectrum.PrecursorMz,
+                                    spectrum.Mzs, spectrum.Intensities, chromMap, null);
+                            }
                         }
                     }
-                    else if (dataSpectrum.Level == 2 && filter.EnabledMsMs)
-                    {
-                        // Process all SRM spectra that can be generated by filtering this full-scan MS/MS
-                        foreach (var spectrum in filter.SrmSpectraFromFullScan(rt,
-                                dataSpectrum.IsolationMz,
-                                dataSpectrum.IsolationWidth,
-                                dataSpectrum.Mzs,
-                                dataSpectrum.Intensities))
-                        {
-                            ProcessSrmSpectrum(rt.Value, spectrum.PrecursorMz,
-                                spectrum.Mzs, spectrum.Intensities, chromMap, null);
-                        }
-                    }
                 }
+
+                if (chromMap.Count == 0 && chromMapMs1.Count == 0)
+                    throw new NoSrmDataException();
+
+                AddChromatograms(chromMap);
+                AddChromatograms(chromMapMs1);
             }
-
-            if (chromMap.Count == 0 && chromMapMs1.Count == 0)
-                throw new NoSrmDataException();
-
-            AddChromatograms(chromMap);
-            AddChromatograms(chromMapMs1);
-
-            // Only mzXML from mzWiff requires the introduction of zero values
-            // during interpolation.
-            _isProcessedScans = dataFile.IsMzWiffXml;
         }
 
         private void AddChromatograms(ChromDataCollectorSet chromMap)
         {
+            float[] times = chromMap.Times != null ? chromMap.Times.ToArray() : null;
             foreach (var collector in chromMap.PrecursorCollectorMap.Values)
             {
+                if (times == null && collector.Times != null)
+                    times = collector.Times.ToArray();
+
                 foreach (var pair in collector.ProductIntensityMap)
                 {
                     var key = new ChromKey(collector.PrecursorMz, pair.Key);
-                    _chromatograms.Add(new KeyValuePair<ChromKey, ChromCollector>(key, pair.Value));
+                    var collected = pair.Value.ReleaseChromatogram(times);
+                    _chromatograms.Add(new KeyValuePair<ChromKey, ChromCollected>(key, collected));
                 }
             }
         }
@@ -431,8 +457,8 @@ namespace pwiz.Skyline.Model.Results
         public override void GetChromatogram(int id, out float[] times, out float[] intensities)
         {
             var tis = _chromatograms[id].Value;
-            times = tis.Times.ToArray();
-            intensities = tis.Intensities.ToArray();
+            times = tis.Times;
+            intensities = tis.Intensities;
         }
 
         public override bool IsProcessedScans
@@ -440,11 +466,21 @@ namespace pwiz.Skyline.Model.Results
             get { return _isProcessedScans; }
         }
 
+        public override void ReleaseMemory()
+        {
+            Dispose();
+        }
+
+        public override void Dispose()
+        {
+            _chromatograms = null;
+        }
+
         public static bool HasSpectrumData(MsDataFileImpl dataFile)
         {
             return dataFile.SpectrumCount > 0;
         }
-    }
+   }
 
     internal enum TimeSharing { single, shared, grouped }
 
@@ -468,6 +504,13 @@ namespace pwiz.Skyline.Model.Results
         public Dictionary<double, ChromDataCollector> PrecursorCollectorMap { get; private set; }
 
         public int Count { get { return PrecursorCollectorMap.Count; } }
+
+        public float[] ReleaseTimes()
+        {
+            var times = Times;
+            Times = null;
+            return times != null ? times.ToArray() : null;
+        }
     }
 
     internal sealed class ChromDataCollector
@@ -494,6 +537,13 @@ namespace pwiz.Skyline.Model.Results
                 return 0;
             }
         }
+
+        public float[] ReleaseTimes()
+        {
+            var times = Times;
+            Times = null;
+            return times != null ? times.ToArray() : null;
+        }
     }
 
     internal sealed class ChromCollector
@@ -506,6 +556,29 @@ namespace pwiz.Skyline.Model.Results
 
         public List<float> Times { get; private set; }
         public List<float> Intensities { get; private set; }
+
+        public ChromCollected ReleaseChromatogram(float[] times)
+        {
+            var result = new ChromCollected(times ?? Times.ToArray(), Intensities.ToArray());
+
+            // Release the memory for the times and intensities
+            Times = null;
+            Intensities = null;
+
+            return result;
+        }
+    }
+
+    internal sealed class ChromCollected
+    {
+        public ChromCollected(float[] times, float[] intensities)
+        {
+            Times = times;
+            Intensities = intensities;
+        }
+
+        public float[] Times { get; private set; }
+        public float[] Intensities { get; private set; }
     }
 
     internal sealed class SpectrumFilter

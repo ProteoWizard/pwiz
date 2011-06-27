@@ -168,38 +168,39 @@ namespace pwiz.Skyline.Model.Results
                     if (sampleIndex == -1)
                         sampleIndex = 0;
 
+                    // Once a ChromDataProvider is created, it owns disposing of the MSDataFileImpl.
+                    MsDataFileImpl inFile = null;
+                    ChromDataProvider provider = null;
                     try
                     {
-                        using (var inFile = new MsDataFileImpl(dataFilePathPart, sampleIndex))
+                        inFile = new MsDataFileImpl(dataFilePathPart, sampleIndex);
+
+                        // Check for cancelation);
+                        if (_loader.IsCanceled)
                         {
-                            // Check for cancelation);
-                            if (_loader.IsCanceled)
-                            {
-                                _loader.UpdateProgress(_status = _status.Cancel());
-                                Complete(null);
-                                return;
-                            }
-                            if (_outStream == null)
-                                _outStream = _loader.StreamManager.CreateStream(_fs.SafeName, FileMode.Create, true);
-
-                            _currentFileInfo = new FileBuildInfo(inFile);
-
-                            // Read and write the mass spec data
-                            ChromDataProvider provider;
-                            if (ChromatogramDataProvider.HasChromatogramData(inFile))
-                                provider = CreateChromatogramProvider(inFile, _tempFileSubsitute == null);
-                            else if (SpectraChromDataProvider.HasSpectrumData(inFile))
-                                provider = CreateSpectraChromProvider(inFile, _document);
-                            else
-                            {
-                                throw new InvalidDataException(String.Format("The sample {0} contains no usable data.",
-                                                                             SampleHelp.GetFileSampleName(dataFilePath)));
-                            }
-
-                            Read(provider);
-
-                            _status = provider.Status;
+                            _loader.UpdateProgress(_status = _status.Cancel());
+                            Complete(null);
+                            return;
                         }
+                        if (_outStream == null)
+                            _outStream = _loader.StreamManager.CreateStream(_fs.SafeName, FileMode.Create, true);
+
+                        _currentFileInfo = new FileBuildInfo(inFile);
+
+                        // Read and write the mass spec data
+                        if (ChromatogramDataProvider.HasChromatogramData(inFile))
+                            provider = CreateChromatogramProvider(inFile, _tempFileSubsitute == null);
+                        else if (SpectraChromDataProvider.HasSpectrumData(inFile))
+                            provider = CreateSpectraChromProvider(inFile, _document);
+                        else
+                        {
+                            throw new InvalidDataException(String.Format("The sample {0} contains no usable data.",
+                                                                         SampleHelp.GetFileSampleName(dataFilePath)));
+                        }
+
+                        Read(provider);
+
+                        _status = provider.Status;
 
                         if (_status.IsCanceled)
                             Complete(null);
@@ -213,6 +214,13 @@ namespace pwiz.Skyline.Model.Results
                             sampleIndex, x, _loader, ref _status);
                         // Trigger next call to BuildNextFile from the write thread
                         PostChromDataSet(null, true);
+                    }
+                    finally
+                    {
+                        if (provider != null)
+                            provider.Dispose();
+                        else if (inFile != null)
+                            inFile.Dispose();
                     }
                 }
                 catch (LoadCanceledException x)
@@ -275,6 +283,8 @@ namespace pwiz.Skyline.Model.Results
                 // it can be garbage collected after it has been written
                 listChromData[i] = null;
             }
+            // Release all provider memory before waiting for write completion
+            provider.ReleaseMemory();
             PostChromDataSet(null, true);
         }
 
