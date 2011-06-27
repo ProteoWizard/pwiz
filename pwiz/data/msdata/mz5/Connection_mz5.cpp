@@ -27,6 +27,7 @@
 #include "Translator_mz5.hpp"
 #include <algorithm>
 #include <iostream>
+#include "boost/thread/mutex.hpp"
 
 namespace pwiz {
 namespace msdata {
@@ -34,8 +35,7 @@ namespace mz5 {
 
 using namespace H5;
 
-boost::mutex Connection_mz5::connectionReadMutex_;
-boost::mutex Connection_mz5::connectionWriteMutex_;
+namespace {boost::mutex connectionReadMutex_, connectionWriteMutex_;}
 
 Connection_mz5::Connection_mz5(const std::string filename, const OpenPolicy op,
         const Configuration_mz5 config) :

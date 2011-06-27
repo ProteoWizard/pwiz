@@ -28,7 +28,6 @@
 #include "Configuration_mz5.hpp"
 #include <string>
 #include <vector>
-#include "boost/thread/mutex.hpp"
 
 namespace pwiz {
 namespace msdata {
@@ -201,9 +200,6 @@ private:
      * Closes the file and flushes all open buffers/datasets.
      */
     void close();
-
-    static boost::mutex connectionReadMutex_;
-    static boost::mutex connectionWriteMutex_;
 
     /**
      * Existing field in file.
