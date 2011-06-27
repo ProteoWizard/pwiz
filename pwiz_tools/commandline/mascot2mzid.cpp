@@ -21,9 +21,9 @@
 // limitations under the License.
 //
 
-#include "pwiz/data/mziddata/MzIdentMLFile.hpp"
-#include "pwiz/data/mziddata/MascotReader.hpp"
-#include "pwiz/data/mziddata/TextWriter.hpp"
+#include "pwiz/data/identdata/IdentDataFile.hpp"
+#include "pwiz/data/identdata/MascotReader.hpp"
+#include "pwiz/data/identdata/TextWriter.hpp"
 #include "pwiz/Version.hpp"
 
 #include <boost/program_options.hpp>
@@ -31,7 +31,7 @@
 #include <iostream>
 
 using namespace std;
-using namespace pwiz::mziddata;
+using namespace pwiz::identdata;
 
 struct Config
 {
@@ -148,10 +148,10 @@ int main(int argc, const char**argv)
             throw invalid_argument(usage(config));
         
         ReaderPtr  mr(new MascotReader());
-        MzIdentML mzid;
+        IdentData mzid;
         mr->read(config.mascotfile, mzid, Reader::Config());
 
-        MzIdentMLFile::write(mzid, config.mzidfile);
+        IdentDataFile::write(mzid, config.mzidfile);
         
         // DEBUG begin
         //TextWriter tw(cout);

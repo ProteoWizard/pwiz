@@ -21,7 +21,7 @@
 //
 
 
-#include "pwiz/data/mziddata/MzIdentMLFile.hpp"
+#include "pwiz/data/identdata/IdentDataFile.hpp"
 #include "pwiz/data/msdata/CVTranslator.hpp"
 #include "pwiz/data/msdata/cv.hpp"
 #include "pwiz/Version.hpp"
@@ -38,7 +38,7 @@
 
 using boost::tokenizer;
 using namespace std;
-using namespace pwiz::mziddata;
+using namespace pwiz::identdata;
 using namespace pwiz;
 using namespace pwiz::msdata;
 using namespace boost::filesystem;
@@ -170,7 +170,7 @@ struct first_predicate
 /// in the param group
 void copyPeptide(record& rec,
                  pair<string, string>& pep,
-                 MzIdentML& mzid)
+                 IdentData& mzid)
 {
     PeptidePtr peptide(new Peptide(pep.first));
     peptide->peptideSequence = pep.second;
@@ -180,7 +180,7 @@ void copyPeptide(record& rec,
 
 
 void sortPeptides(Config& config,
-                  MzIdentML& mzid)
+                  IdentData& mzid)
 {
     typedef vector<record>::iterator record_it;
     typedef vector< pair<string, string> >::const_iterator const_spair_it;
@@ -203,7 +203,7 @@ void sortPeptides(Config& config,
 
 
 void copyProteins(const Config& config,
-                  MzIdentML& mzid)
+                  IdentData& mzid)
 {
     namespace prot = pwiz::proteome;
     
@@ -280,9 +280,9 @@ void copyProteins(const Config& config,
 }
 
 
-void setInputFiles(const Config& config, MzIdentML& mzid)
+void setInputFiles(const Config& config, IdentData& mzid)
 {
-    pwiz::mziddata::SourceFilePtr sourceFile(new pwiz::mziddata::SourceFile());
+    pwiz::identdata::SourceFilePtr sourceFile(new pwiz::identdata::SourceFile());
     sourceFile->location = config.inFile;
     sourceFile->fileFormat.set(MS_tab_delimited_text_file);
     mzid.dataCollection.inputs.sourceFile.push_back(sourceFile);
@@ -311,7 +311,7 @@ int main(int argc, char* argv[])
 
     if (success)
     {
-        MzIdentML mzid;
+        IdentData mzid;
 
         setInputFiles(config, mzid);
         
@@ -325,7 +325,7 @@ int main(int argc, char* argv[])
         copyProteins(config, mzid);
 
         // Write the file out
-        MzIdentMLFile::write(mzid, config.outFile);
+        IdentDataFile::write(mzid, config.outFile);
     }
     
     return 0;

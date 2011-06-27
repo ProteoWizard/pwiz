@@ -20,19 +20,18 @@
 //
 
 
-#include "pwiz/data/mziddata/DefaultReaderList.hpp"
-#include "pwiz/data/mziddata/MzIdentMLFile.hpp"
-#include "pwiz/data/mziddata/IO.hpp"
-#include "pwiz/utility/misc/IterationListener.hpp"
-#include "pwiz/Version.hpp"
-#include "pwiz/data/mziddata/Version.hpp"
-#include "boost/program_options.hpp"
-#include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/data/identdata/DefaultReaderList.hpp"
+#include "pwiz/data/identdata/IdentDataFile.hpp"
+//#include "pwiz/data/identdata/IO.hpp"
+#include "pwiz/data/identdata/Version.hpp"
+#include "pwiz/Version.hpp"
+#include "boost/program_options.hpp"
 
 using namespace pwiz::cv;
 using namespace pwiz::data;
-using namespace pwiz::mziddata;
+using namespace pwiz::identdata;
 using namespace pwiz::util;
 
 
@@ -54,7 +53,7 @@ struct Config
     string outputPath;
     string extension;
     bool verbose;
-    MzIdentMLFile::WriteConfig writeConfig;
+    IdentDataFile::WriteConfig writeConfig;
     //string contactFilename;
     //bool merge;
 
@@ -62,11 +61,11 @@ struct Config
     :   outputPath("."), verbose(false)//, merge(false)
     {}
 
-    string outputFilename(const string& inputFilename, const MzIdentML& inputIdentData) const;
+    string outputFilename(const string& inputFilename, const IdentData& inputIdentData) const;
 };
 
 
-string Config::outputFilename(const string& filename, const MzIdentML& idd) const
+string Config::outputFilename(const string& filename, const IdentData& idd) const
 {
     bfs::path fullPath = bfs::path(outputPath) / (bfs::basename(filename) + extension);
     return fullPath.string(); 
@@ -184,7 +183,7 @@ Config parseCommandLine(int argc, const char* argv[])
           << "support@proteowizard.org\n"
           << "\n"
           << "ProteoWizard release: " << pwiz::Version::str() << " (" << pwiz::Version::LastModified() << ")" << endl
-          << "ProteoWizard IdentData: " << pwiz::mziddata::Version::str() << " (" << pwiz::mziddata::Version::LastModified() << ")" << endl
+          << "ProteoWizard IdentData: " << pwiz::identdata::Version::str() << " (" << pwiz::identdata::Version::LastModified() << ")" << endl
           << "Build date: " << __DATE__ << " " << __TIME__ << endl;
 
     if (argc <= 1)
@@ -270,9 +269,9 @@ Config parseCommandLine(int argc, const char* argv[])
 
     int count = format_text + format_mzIdentML + format_pepXML;
     if (count > 1) throw user_error("[idconvert] Multiple format flags specified.");
-    if (format_text) config.writeConfig.format = MzIdentMLFile::Format_Text;
-    if (format_mzIdentML) config.writeConfig.format = MzIdentMLFile::Format_MzIdentML;
-    if (format_pepXML) config.writeConfig.format = MzIdentMLFile::Format_pepXML;
+    if (format_text) config.writeConfig.format = IdentDataFile::Format_Text;
+    if (format_mzIdentML) config.writeConfig.format = IdentDataFile::Format_MzIdentML;
+    if (format_pepXML) config.writeConfig.format = IdentDataFile::Format_pepXML;
 
     //config.writeConfig.gzipped = gzip; // if true, file is written as .gz
 
@@ -280,13 +279,13 @@ Config parseCommandLine(int argc, const char* argv[])
     {
         switch (config.writeConfig.format)
         {
-            case MzIdentMLFile::Format_Text:
+            case IdentDataFile::Format_Text:
                 config.extension = ".txt";
                 break;
-            case MzIdentMLFile::Format_MzIdentML:
+            case IdentDataFile::Format_MzIdentML:
                 config.extension = ".mzid";
                 break;
-            case MzIdentMLFile::Format_pepXML:
+            case IdentDataFile::Format_pepXML:
                 config.extension = ".pepXML";
                 break;
             default:
@@ -426,14 +425,14 @@ void processFile(const string& filename, const Config& config, const ReaderList&
 
     cout << "processing file: " << filename << endl;
 
-    vector<MzIdentMLPtr> iddList;
+    vector<IdentDataPtr> iddList;
     Reader::Config readerConfig;
     readerConfig.iterationListenerRegistry = pILR;
     readers.read(filename, iddList, readerConfig);
 
     for (size_t i=0; i < iddList.size(); ++i)
     {
-        MzIdentML& idd = *iddList[i];
+        IdentData& idd = *iddList[i];
         try
         {
             // process the data 
@@ -446,9 +445,9 @@ void processFile(const string& filename, const Config& config, const ReaderList&
             cout << "writing output file: " << outputFilename << endl;
 
             if (config.outputPath == "-")
-                MzIdentMLFile::write(idd, outputFilename, cout, config.writeConfig);
+                IdentDataFile::write(idd, outputFilename, cout, config.writeConfig);
             else
-                MzIdentMLFile::write(idd, outputFilename, config.writeConfig, pILR);
+                IdentDataFile::write(idd, outputFilename, config.writeConfig, pILR);
         }
         catch (exception& e)
         {
@@ -523,7 +522,7 @@ int main(int argc, const char* argv[])
          << "Attach the command output and this version information in your report:\n"
          << "\n"
          << "ProteoWizard release: " << pwiz::Version::str() << " (" << pwiz::Version::LastModified() << ")" << endl
-         << "ProteoWizard IdentData: " << pwiz::mziddata::Version::str() << " (" << pwiz::mziddata::Version::LastModified() << ")" << endl
+         << "ProteoWizard IdentData: " << pwiz::identdata::Version::str() << " (" << pwiz::identdata::Version::LastModified() << ")" << endl
          << "Build date: " << __DATE__ << " " << __TIME__ << endl;
 
     return 1;

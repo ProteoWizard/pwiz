@@ -20,9 +20,9 @@
 // limitations under the License.
 //
 
-#include "pwiz/data/mziddata/MzIdentMLFile.hpp"
-#include "pwiz/data/mziddata/Pep2MzIdent.hpp"
-#include "pwiz/data/mziddata/KwCVMap.hpp"
+#include "pwiz/data/identdata/IdentDataFile.hpp"
+#include "pwiz/data/identdata/Pep2MzIdent.hpp"
+#include "pwiz/data/identdata/KwCVMap.hpp"
 #include "pwiz/data/common/CVTranslator.hpp"
 #include "pwiz/data/misc/MinimumPepXML.hpp"
 #include "pwiz/data/common/cv.hpp"
@@ -40,7 +40,7 @@ using boost::tokenizer;
 using namespace boost::filesystem;
 
 using namespace pwiz::data;
-using namespace pwiz::mziddata;
+using namespace pwiz::identdata;
 using namespace pwiz::data::pepxml;
 
 struct Config
@@ -202,7 +202,7 @@ int main(int argc, const char* argv[])
         
         p2m.translate();
 
-        MzIdentMLFile::write(*p2m.getMzIdentML(), config.outputFilename);
+        IdentDataFile::write(*p2m.getIdentData(), config.outputFilename);
         
         return 0;
     }

@@ -314,8 +314,8 @@ generate-Version.cpp $(PWIZ_ROOT_PATH)/pwiz/analysis/Version.cpp : analysis :
         : *.?pp Jamfile.jam : Version.cpp
     ] ;
 
-generate-Version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/mziddata/Version.cpp : mziddata :
-    [ path.glob-tree $(PWIZ_ROOT_PATH)/pwiz/data/mziddata
+generate-Version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/identdata/Version.cpp : identdata :
+    [ path.glob-tree $(PWIZ_ROOT_PATH)/pwiz/data/identdata
                      $(PWIZ_ROOT_PATH)/pwiz/utility/misc
                      $(PWIZ_ROOT_PATH)/pwiz/utility/minimxml
         : *.?pp Jamfile.jam : Version.cpp

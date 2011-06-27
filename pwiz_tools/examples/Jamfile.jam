@@ -100,7 +100,7 @@ exe write_traml_example_files
 
 exe write_mzid_example_files
     : write_mzid_example_files.cpp
-      ../../pwiz/data/mziddata
+      ../../pwiz/data/identdata
     : <include>../../..
     ;
 

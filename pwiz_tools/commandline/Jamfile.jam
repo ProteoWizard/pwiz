@@ -111,7 +111,7 @@ exe chainsaw
 
 
 alias idtool-requirements : : : :
-        <library>../../pwiz/data/mziddata//pwiz_data_mzid
+        <library>../../pwiz/data/identdata//pwiz_data_identdata
         <library>/ext/boost//program_options ;
 
 
@@ -130,7 +130,7 @@ exe idcat
 
 #exe mascot2mzid
 #    : mascot2mzid.cpp
-#      ../../pwiz/data/mziddata//pwiz_data_mzid
+#      ../../pwiz/data/identdata//pwiz_data_identdata
 #      ../../pwiz//pwiz_version
 #      /ext/boost//program_options
 #    : <include>../../..

@@ -20,10 +20,10 @@
 // limitations under the License.
 //
 
-#include "pwiz/data/mziddata/DelimWriter.hpp"
-#include "pwiz/data/mziddata/DelimReader.hpp"
-#include "pwiz/data/mziddata/MzIdentMLFile.hpp"
-#include "pwiz/data/mziddata/Serializer_mzid.hpp"
+#include "pwiz/data/identdata/DelimWriter.hpp"
+#include "pwiz/data/identdata/DelimReader.hpp"
+#include "pwiz/data/identdata/IdentDataFile.hpp"
+#include "pwiz/data/identdata/Serializer_mzid.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/Version.hpp"
 
@@ -36,7 +36,7 @@
 #include <boost/filesystem.hpp>
 
 using namespace std;
-using namespace pwiz::mziddata;
+using namespace pwiz::identdata;
 using namespace pwiz::util;
 
 struct Config
@@ -201,7 +201,7 @@ void translateToTxt(Config& config)
     namespace bfs=boost::filesystem;
 
     // Read in mzid file.
-    MzIdentMLFile mzid(config.firstfile);
+    IdentDataFile mzid(config.firstfile);
     
     // Open up output file.
     string secondfile;
@@ -257,7 +257,7 @@ void translateToMzid(Config& config, DelimReader dr)
 {
     namespace bfs=boost::filesystem;
 
-    MzIdentML mzid;
+    IdentData mzid;
     
     dr.read(config.firstfile, read_file_header(config.firstfile), mzid);
 

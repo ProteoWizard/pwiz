@@ -2,7 +2,7 @@
 // $Id$
 //
 //
-// Original author: Robert Burke <robetr.burke@proteowizard.org>
+// Original author: Robert Burke <robert.burke@proteowizard.org>
 //
 // Copyright 2009 Spielberg Family Center for Applied Proteomics
 //   University of Southern California, Los Angeles, California  90033
@@ -20,37 +20,51 @@
 // limitations under the License.
 //
 
-#define PWIZ_SOURCE
-
-#include "pwiz/data/identdata/IdentDataFile.hpp"
-#include "pwiz/data/identdata/examples.hpp"
-#include "pwiz/data/identdata/DefaultReaderList.hpp"
+#include "IdentDataFile.hpp"
+#include "DefaultReaderList.hpp"
+#include "IO.hpp"
 #include "pwiz/utility/misc/Std.hpp"
 
-using namespace pwiz::data;
 using namespace pwiz::identdata;
 
-
-
-void writeTiny()
+const char* filenames[] =
 {
-    IdentData mzid;
-    examples::initializeTiny(mzid);
-    
+    "Mascot_MSMS_example.mzid",
+    "omssa_example_full.mzid",
+    "Mascot_mzml_example.mzid",
+    "PMF_example.mzid",
+    "Mascot_N15_example.mzid",
+    "Sequest_example.mzid",
+    "Mascot_NA_example.mzid",
+    "spectraST.mzid",
+    "Mascot_top_down_example.mzid",
+    "xtandem_example_full.mzid",
+    "MPC_example.mzid"
+};
 
-    // write out mzIdentML 
-    string filename = "tiny.pwiz.mzid";
-    cout << "Writing file " << filename << endl;
-    // call after writer creation
-    IdentDataFile::write(mzid, filename);
+void testFile(const string& inFilepath, const string& outFilepath)
+{
+    cout << "reading file in from " << inFilepath << endl;
+    IdentDataFile mzid(inFilepath);
+
+    cout << "writing file out to " << outFilepath << endl;
+    mzid.write(outFilepath);
+    cout << "done.\n";
 }
 
 
-int main()
+int main(int argc, char* argv[])
 {
     try
     {
-        writeTiny();
+        if (argc == 3)
+            testFile(argv[1], argv[2]);
+        else
+        {
+            cout << "only have " << argc << " arguments:\n";
+            for(int i=0; i<argc; i++)
+                cout << argv[i] << endl;
+        }
 
         cout << "\nhttp://proteowizard.sourceforge.net\n"
              << "support@proteowizard.org\n";

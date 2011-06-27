@@ -24,7 +24,7 @@
 build-project-if-exists common ;
 build-project-if-exists misc ;
 build-project-if-exists msdata ;
-build-project-if-exists mziddata ;
+build-project-if-exists identdata ;
 build-project-if-exists proteome ;
 build-project-if-exists vendor_readers ;
 

@@ -2,7 +2,7 @@
 // $Id$
 //
 //
-// Origional author: Robert Burke <robert.burke@proteowizard.org>
+// Original author: Robert Burke <robert.burke@proteowizard.org>
 //
 // Copyright 2010 Spielberg Family Center for Applied Proteomics
 //   University of Southern California, Los Angeles, California  90033
@@ -20,29 +20,18 @@
 // limitations under the License.
 //
 
-#include "pwiz/data/mziddata/DefaultReaderList.hpp"
-#include "pwiz/data/mziddata/MzIdentMLFile.hpp"
-#include "pwiz/utility/misc/IterationListener.hpp"
-#include "pwiz/data/mziddata/TextWriter.hpp"
-#include "pwiz/data/mziddata/Version.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
-#include "pwiz/data/mziddata/Serializer_Text.hpp"
+#include "pwiz/data/identdata/DefaultReaderList.hpp"
+#include "pwiz/data/identdata/IdentDataFile.hpp"
+#include "pwiz/data/identdata/TextWriter.hpp"
+#include "pwiz/data/identdata/Serializer_Text.hpp"
+#include "pwiz/data/identdata/Version.hpp"
 #include "pwiz/Version.hpp"
-
-#include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
-#include <boost/algorithm/string.hpp>
-#include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string/classification.hpp>
-#include <boost/foreach.hpp>
-#include <algorithm>
-#include <functional>
-#include <iostream>
-#include <stdexcept>
 
 using namespace std;
-using namespace pwiz::mziddata;
+using namespace pwiz::identdata;
 using namespace pwiz::util;
 
 
@@ -330,7 +319,7 @@ void dumpFile(const string& filename, const string& outputFile,
         &iterationListenerRegistry : 0; 
 
     // handle progress updates if requested
-    vector<MzIdentMLPtr> iddList;
+    vector<IdentDataPtr> iddList;
     Reader::Config readerConfig;
     readers.read(filename, iddList, readerConfig);
 
@@ -354,7 +343,7 @@ void dumpFile(const string& filename, const string& outputFile,
 
     for (size_t i=0; i < iddList.size(); ++i)
     {
-        MzIdentML& idd = *iddList[i];
+        IdentData& idd = *iddList[i];
         try
         {
             Serializer_Text writer(getSerializerConfig(config));
@@ -435,7 +424,7 @@ int main(int argc, const char* argv[])
          << "Attach the command output and this version information in your report:\n"
          << "\n"
          << "ProteoWizard release: " << pwiz::Version::str() << " (" << pwiz::Version::LastModified() << ")" << endl
-         << "ProteoWizard IdentData: " << pwiz::mziddata::Version::str() << " (" << pwiz::mziddata::Version::LastModified() << ")" << endl
+         << "ProteoWizard IdentData: " << pwiz::identdata::Version::str() << " (" << pwiz::identdata::Version::LastModified() << ")" << endl
          << "Build date: " << __DATE__ << " " << __TIME__ << endl;
 
     return 1;
