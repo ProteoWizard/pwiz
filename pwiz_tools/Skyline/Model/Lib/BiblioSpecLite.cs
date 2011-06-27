@@ -24,6 +24,7 @@ using System.Data.SQLite;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
@@ -76,7 +77,7 @@ namespace pwiz.Skyline.Model.Lib
     [XmlRoot("bibliospec_lite_library")]
     public sealed class BiblioSpecLiteLibrary : Library
     {
-        private const int FORMAT_VERSION_CACHE = 1;
+        private const int FORMAT_VERSION_CACHE = 2;
 
         public const string DEFAULT_AUTHORITY = "proteome.gs.washington.edu";
 
@@ -232,6 +233,9 @@ namespace pwiz.Skyline.Model.Lib
         // Cache struct layouts
         private enum LibHeaders
         {
+            lsid_byte_count,
+            major_ver,
+            minor_ver,
             format_version,
             num_spectra,
             location_headers_lo,
@@ -262,6 +266,8 @@ namespace pwiz.Skyline.Model.Lib
             using (SQLiteCommand select = new SQLiteCommand(CreateConnection(loader.StreamManager)))
             {
                 int rows;
+                string lsid;
+                int majorVer, minorVer;
 
                 // First get header information
                 select.CommandText = "SELECT * FROM [LibInfo]";
@@ -272,9 +278,10 @@ namespace pwiz.Skyline.Model.Lib
 
                     rows = reader.GetInt32(LibInfo.numSpecs);
 
-                    Lsid = reader.GetString(LibInfo.libLSID);
+                    lsid = reader.GetString(LibInfo.libLSID);
 
-                    SetRevision(reader.GetInt32(LibInfo.majorVersion), reader.GetInt32(LibInfo.minorVersion));
+                    majorVer = reader.GetInt32(LibInfo.majorVersion);
+                    minorVer = reader.GetInt32(LibInfo.minorVersion);
                 }
 
                 // Corrupted library without a valid row count, but try to compensate
@@ -362,7 +369,12 @@ namespace pwiz.Skyline.Model.Lib
                         outStream.Write(BitConverter.GetBytes(info.Id), 0, sizeof (int));
                         info.Key.WriteSequence(outStream);
                     }
-                    outStream.Write(BitConverter.GetBytes(FORMAT_VERSION_CACHE), 0, sizeof (int));
+                    byte[] lsidBytes = Encoding.UTF8.GetBytes(lsid);
+                    outStream.Write(lsidBytes, 0, lsidBytes.Length);
+                    outStream.Write(BitConverter.GetBytes(lsidBytes.Length), 0, sizeof(int));
+                    outStream.Write(BitConverter.GetBytes(majorVer), 0, sizeof(int));
+                    outStream.Write(BitConverter.GetBytes(minorVer), 0, sizeof(int));
+                    outStream.Write(BitConverter.GetBytes(FORMAT_VERSION_CACHE), 0, sizeof(int));
                     outStream.Write(BitConverter.GetBytes(libraryEntries.Length), 0, sizeof (int));
                     outStream.Write(BitConverter.GetBytes((long) 0), 0, sizeof (long));
 
@@ -428,7 +440,6 @@ namespace pwiz.Skyline.Model.Lib
 
                 using (Stream stream = sm.CreateStream(CachePath, FileMode.Open, true))
                 {
-
                     // Read library header from the end of the cache
                     int countHeader = (int) LibHeaders.count*sizeof (int);
                     stream.Seek(-countHeader, SeekOrigin.End);
@@ -439,6 +450,15 @@ namespace pwiz.Skyline.Model.Lib
                     int version = GetInt32(libHeader, (int) LibHeaders.format_version);
                     if (version != FORMAT_VERSION_CACHE)
                         return false;
+
+                    int countLsidBytes = GetInt32(libHeader, (int) LibHeaders.lsid_byte_count);
+                    stream.Seek(-countHeader-countLsidBytes, SeekOrigin.End);
+                    byte[] lsidBytes = new byte[countLsidBytes];
+                    ReadComplete(stream, lsidBytes, countLsidBytes);
+                    Lsid = Encoding.UTF8.GetString(lsidBytes);
+                    int majorVer = GetInt32(libHeader, (int)LibHeaders.major_ver);
+                    int minorVer = GetInt32(libHeader, (int) LibHeaders.minor_ver);
+                    SetRevision(majorVer, minorVer);
 
                     int numSpectra = GetInt32(libHeader, (int) LibHeaders.num_spectra);
 
