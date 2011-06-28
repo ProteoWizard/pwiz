@@ -107,7 +107,7 @@ namespace IonMatcher
             string EXE = @"PepNovo.exe";
             string BIN_DIR = Path.GetDirectoryName(Application.ExecutablePath) + "\\" + "PepNovo";
             string pathAndExeFile = BIN_DIR + "\\" + EXE;
-            string args = " -model CID_IT_TRYP " + " -model_dir " + BIN_DIR + "\\" + "Models"
+            string args = " -model CID_IT_TRYP " + " -model_dir " + "\"" + BIN_DIR + "\"" + "\\" + "Models"
                 + " -pm_tolerance " + precursorTolerance + " -fragment_tolerance " + fragmentTolerance
                 + " -no_quality_filter " + " -num_solutions 10 " + " -PTMs " + ptms
                 + useSpectrumCharge + useSpectrumMz + " -file " + " \"" + inFile + "\"";
