@@ -75,17 +75,13 @@ namespace pwiz.Skyline.Model.Lib
     }
 
     [XmlRoot("bibliospec_lite_library")]
-    public sealed class BiblioSpecLiteLibrary : Library
+    public sealed class BiblioSpecLiteLibrary : CachedLibrary<BiblioLiteSpectrumInfo>
     {
         private const int FORMAT_VERSION_CACHE = 2;
 
         public const string DEFAULT_AUTHORITY = "proteome.gs.washington.edu";
 
         public const string EXT_CACHE = ".slc";
-
-        private BiblioLiteSpectrumInfo[] _libraryEntries;
-        
-        private Dictionary<LibSeqKey, bool> _setSequences;
 
         private PooledSqliteConnection _sqliteConnection;
 
@@ -127,12 +123,6 @@ namespace pwiz.Skyline.Model.Lib
             _sqliteConnection = new PooledSqliteConnection(streamManager.ConnectionPool, FilePath);
         }
 
-        public SpectrumHeaderInfo CreateSpectrumHeaderInfo(string libraryName,
-            int spectrumCount)
-        {
-            return new BiblioSpecSpectrumHeaderInfo(libraryName, spectrumCount);
-        }
-
         public override LibrarySpec CreateSpec(string path)
         {
             return new BiblioSpecLiteSpec(Name, path);
@@ -162,13 +152,6 @@ namespace pwiz.Skyline.Model.Lib
         /// been loaded.
         /// </summary>
         public string FilePath { get; private set; }
-
-        public string CachePath { get; set; }
-
-        public override bool IsLoaded
-        {
-            get { return _libraryEntries != null; }
-        }
 
         public override IPooledStream ReadStream
         {
@@ -453,9 +436,7 @@ namespace pwiz.Skyline.Model.Lib
 
                     int countLsidBytes = GetInt32(libHeader, (int) LibHeaders.lsid_byte_count);
                     stream.Seek(-countHeader-countLsidBytes, SeekOrigin.End);
-                    byte[] lsidBytes = new byte[countLsidBytes];
-                    ReadComplete(stream, lsidBytes, countLsidBytes);
-                    Lsid = Encoding.UTF8.GetString(lsidBytes);
+                    Lsid = ReadString(stream, countLsidBytes);
                     int majorVer = GetInt32(libHeader, (int)LibHeaders.major_ver);
                     int minorVer = GetInt32(libHeader, (int) LibHeaders.minor_ver);
                     SetRevision(majorVer, minorVer);
@@ -555,100 +536,12 @@ namespace pwiz.Skyline.Model.Lib
 
         }
 
-        private static int GetInt32(byte[] bytes, int index)
+        protected override SpectrumHeaderInfo CreateSpectrumHeaderInfo(BiblioLiteSpectrumInfo info)
         {
-            int ibyte = index * 4;
-            return bytes[ibyte] | bytes[ibyte + 1] << 8 | bytes[ibyte + 2] << 16 | bytes[ibyte + 3] << 24;
+            return new BiblioSpecSpectrumHeaderInfo(Name, info.Copies);
         }
 
-        public override bool Contains(LibKey key)
-        {
-            return FindEntry(key) != -1;
-        }
-
-        private int FindEntry(LibKey key)
-        {
-            if (_libraryEntries == null)
-                return -1;
-            return FindEntry(key, 0, _libraryEntries.Length - 1);
-        }
-
-        private int FindEntry(LibKey key, int left, int right)
-        {
-            // Binary search for the right key
-            if (left > right)
-                return -1;
-            int mid = (left + right)/2;
-            int compare = key.Compare(_libraryEntries[mid].Key);
-            if (compare < 0)
-                return FindEntry(key, left, mid - 1);
-            else if (compare > 0)
-                return FindEntry(key, mid + 1, right);
-            else
-            {
-                return mid;
-            }
-        }
-
-        public override bool ContainsAny(LibSeqKey key)
-        {
-            return (_setSequences != null && _setSequences.ContainsKey(key));
-        }
-
-        private static int CompareSpectrumInfo(BiblioLiteSpectrumInfo info1, BiblioLiteSpectrumInfo info2)
-        {
-            return info1.Key.Compare(info2.Key);
-        }
-
-
-        private static void ReadComplete(Stream stream, byte[] buffer, int size)
-        {
-            if (stream.Read(buffer, 0, size) != size)
-                throw new InvalidDataException("Data truncation in library header. File may be corrupted.");
-        }
-
-        public override bool TryGetLibInfo(LibKey key, out SpectrumHeaderInfo libInfo)
-        {
-            int i = FindEntry(key);
-            if (i != -1)
-            {
-                var entry = _libraryEntries[i];
-                libInfo = CreateSpectrumHeaderInfo(Name, entry.Copies);
-                return true;
-
-            }
-            libInfo = null;
-            return false;
-        }
-
-        public override bool TryLoadSpectrum(LibKey key, out SpectrumPeaksInfo spectrum)
-        {
-            int i = FindEntry(key);
-            if (i != -1)
-            {
-                spectrum = new SpectrumPeaksInfo(ReadSpectrum(_libraryEntries[i]));
-                return true;
-            }
-            spectrum = null;
-            return false;
-        }
-
-        public override int Count
-        {
-            get { return _libraryEntries == null ? 0 : _libraryEntries.Length; }
-        }
-
-        public override IEnumerable<LibKey> Keys
-        {
-            get
-            {
-                if (IsLoaded)
-                    foreach (var entry in _libraryEntries)
-                        yield return entry.Key;
-            }
-        }
-
-        private SpectrumPeaksInfo.MI[] ReadSpectrum(BiblioLiteSpectrumInfo info)
+        protected override SpectrumPeaksInfo.MI[] ReadSpectrum(BiblioLiteSpectrumInfo info)
         {
             using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
             {
@@ -808,7 +701,7 @@ namespace pwiz.Skyline.Model.Lib
         }
     }
 
-    public struct BiblioLiteSpectrumInfo
+    public struct BiblioLiteSpectrumInfo : ICachedSpectrumInfo
     {
         private readonly LibKey _key;
         private readonly short _copies;

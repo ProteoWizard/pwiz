@@ -269,10 +269,9 @@ namespace pwiz.Skyline.Model.Lib
         {
         }
 
-        protected override SpectrumHeaderInfo CreateSpectrumHeaderInfo(string libraryName,
-            float tfRatio, float totalIntensity, int spectrumCount)
+        protected override SpectrumHeaderInfo CreateSpectrumHeaderInfo(NistSpectrumInfo info)
         {
-            return new NistSpectrumHeaderInfo(libraryName, tfRatio, totalIntensity, spectrumCount);
+            return new NistSpectrumHeaderInfo(Name, info.TFRatio, info.TotalIntensity, info.Copies);
         }
 
         public override LibrarySpec CreateSpec(string path)
@@ -318,7 +317,7 @@ namespace pwiz.Skyline.Model.Lib
         #endregion
     }
 
-    public abstract class NistLibraryBase : Library
+    public abstract class NistLibraryBase : CachedLibrary<NistSpectrumInfo>
     {
         private const int FORMAT_VERSION_CACHE = 3;
 
@@ -462,9 +461,6 @@ namespace pwiz.Skyline.Model.Lib
                 {"GlyGly", SequenceMassCalc.GetModDiffDescription(114.1026)}, // Ubiquitin/NEDD8 Tryptic tail (2 glycines)
             };
 
-        private NistSpectrumInfo[] _libraryEntries;
-        private Dictionary<LibSeqKey, bool> _setSequences;
-
         private IPooledStream _readStream;
 
         protected static Library Load(LibrarySpec spec, NistLibraryBase library, ILoadMonitor loader)
@@ -494,9 +490,6 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
-        protected abstract SpectrumHeaderInfo CreateSpectrumHeaderInfo(string name,
-            float tfRatio, float intensity, int copies);
-
         /// <summary>
         /// A date string (yyyy-mm-dd) associate with the library.
         /// </summary>
@@ -513,13 +506,6 @@ namespace pwiz.Skyline.Model.Lib
         /// been loaded.
         /// </summary>
         public string FilePath { get; private set; }
-
-        private string CachePath { get; set; }
-
-        public override bool IsLoaded
-        {
-            get { return _libraryEntries != null; }
-        }
 
         public override IPooledStream ReadStream { get { return _readStream; } }
 
@@ -986,75 +972,7 @@ namespace pwiz.Skyline.Model.Lib
             return index;
         }
 
-        private static int GetInt32(byte[] bytes, int index)
-        {
-            int ibyte = index*4;
-            return bytes[ibyte] | bytes[ibyte + 1] << 8 | bytes[ibyte + 2] << 16 | bytes[ibyte + 3] << 24;
-        }
-
-        private static void ReadComplete(Stream stream, byte[] buffer, int size)
-        {
-            if (stream.Read(buffer, 0, size) != size)
-                throw new InvalidDataException("Data truncation in library header. File may be corrupted.");            
-        }
-
-        private static int CompareSpectrumInfo(NistSpectrumInfo info1, NistSpectrumInfo info2)
-        {
-            return info1.Key.Compare(info2.Key);
-        }
-
-        public override bool Contains(LibKey key)
-        {
-            return FindEntry(key) != -1;
-        }
-
-        public override bool ContainsAny(LibSeqKey key)
-        {
-            return (_setSequences != null && _setSequences.ContainsKey(key));
-        }
-
-        public override bool TryGetLibInfo(LibKey key, out SpectrumHeaderInfo libInfo)
-        {
-            int i = FindEntry(key);
-            if (i != -1)
-            {
-                var entry = _libraryEntries[i];
-                libInfo = CreateSpectrumHeaderInfo(Name, entry.TFRatio, entry.TotalIntensity , entry.Copies);
-                return true;
-            }
-            libInfo = null;
-            return false;
-        }
-
-        public override bool TryLoadSpectrum(LibKey key, out SpectrumPeaksInfo spectrum)
-        {
-            int i = FindEntry(key);
-            if (i != -1)
-            {
-                spectrum = new SpectrumPeaksInfo(ReadSpectrum(_libraryEntries[i]));
-                return true;
-            }
-
-            spectrum = null;
-            return false;
-        }
-
-        public override int Count
-        {
-            get { return _libraryEntries == null ? 0 : _libraryEntries.Length; }
-        }
-
-        public override IEnumerable<LibKey> Keys
-        {
-            get
-            {
-                if (IsLoaded)
-                    foreach (var entry in _libraryEntries)
-                        yield return entry.Key;
-            }
-        }
-
-        private SpectrumPeaksInfo.MI[] ReadSpectrum(NistSpectrumInfo info)
+        protected override SpectrumPeaksInfo.MI[] ReadSpectrum(NistSpectrumInfo info)
         {
             Stream fs = ReadStream.Stream;
           
@@ -1080,28 +998,6 @@ namespace pwiz.Skyline.Model.Lib
             }
 
             return arrayMI;
-        }
-
-        private int FindEntry(LibKey key)
-        {
-            if (_libraryEntries == null)
-                return -1;
-            return FindEntry(key, 0, _libraryEntries.Length - 1);
-        }
-
-        private int FindEntry(LibKey key, int left, int right)
-        {
-            // Binary search for the right key
-            if (left > right)
-                return -1;
-            int mid = (left + right)/2;
-            int compare = key.Compare(_libraryEntries[mid].Key);
-            if (compare < 0)
-                return FindEntry(key, left, mid - 1);
-            else if (compare > 0)
-                return FindEntry(key, mid + 1, right);
-            else
-                return mid;
         }
 
         #region Implementation of IXmlSerializable
@@ -1173,7 +1069,7 @@ namespace pwiz.Skyline.Model.Lib
         #endregion
     }
 
-    internal struct NistSpectrumInfo
+    public struct NistSpectrumInfo : ICachedSpectrumInfo
     {
         private readonly LibKey _key;
         private readonly float _tfRatio;

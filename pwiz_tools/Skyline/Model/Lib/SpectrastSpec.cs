@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Skyline.Util;
@@ -119,10 +120,9 @@ namespace pwiz.Skyline.Model.Lib
         {
         }
 
-        protected override SpectrumHeaderInfo CreateSpectrumHeaderInfo(string libraryName,
-            float tfRatio, float totalIntensity, int spectrumCount)
+        protected override SpectrumHeaderInfo CreateSpectrumHeaderInfo(NistSpectrumInfo info)
         {
-            return new SpectrastSpectrumHeaderInfo(libraryName, tfRatio, totalIntensity, spectrumCount);
+            return new SpectrastSpectrumHeaderInfo(Name, info.TFRatio, info.TotalIntensity, info.Copies);
         }
 
         public override LibrarySpec CreateSpec(string path)

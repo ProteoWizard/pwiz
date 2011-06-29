@@ -375,6 +375,37 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         public abstract IEnumerable<LibKey> Keys { get; }
 
+        protected static int GetInt32(byte[] bytes, int index)
+        {
+            int ibyte = index * 4;
+            return bytes[ibyte] | bytes[ibyte + 1] << 8 | bytes[ibyte + 2] << 16 | bytes[ibyte + 3] << 24;
+        }
+
+        protected static float GetSingle(byte[] bytes, int index)
+        {
+            return BitConverter.ToSingle(bytes, index * 4);
+        }
+
+        protected static int ReadSize(Stream stream)
+        {
+            byte[] libSize = new byte[4];
+            ReadComplete(stream, libSize, libSize.Length);
+            return GetInt32(libSize, 0);
+        }
+
+        protected static string ReadString(Stream stream, int countBytes)
+        {
+            byte[] stringBytes = new byte[countBytes];
+            ReadComplete(stream, stringBytes, countBytes);
+            return Encoding.UTF8.GetString(stringBytes);
+        }
+
+        protected static void ReadComplete(Stream stream, byte[] buffer, int size)
+        {
+            if (stream.Read(buffer, 0, size) != size)
+                throw new InvalidDataException("Data truncation in library header. File may be corrupted.");
+        }
+
         #region Implementation of IXmlSerializable
 
         /// <summary>
@@ -404,7 +435,117 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         #endregion
+    }
 
+    public interface ICachedSpectrumInfo
+    {
+        LibKey Key { get; }        
+    }
+
+    public abstract class CachedLibrary<TInfo> : Library
+        where TInfo : ICachedSpectrumInfo
+    {
+        protected CachedLibrary()
+        {
+        }
+
+        protected CachedLibrary(LibrarySpec spec) : base(spec)
+        {
+        }
+
+        protected TInfo[] _libraryEntries;
+
+        protected Dictionary<LibSeqKey, bool> _setSequences;
+
+        protected string CachePath { get; set; }
+
+        public override bool IsLoaded
+        {
+            get { return _libraryEntries != null; }
+        }
+
+        public override bool ContainsAny(LibSeqKey key)
+        {
+            return (_setSequences != null && _setSequences.ContainsKey(key));
+        }
+
+        public override bool Contains(LibKey key)
+        {
+            return FindEntry(key) != -1;
+        }
+
+        protected static int CompareSpectrumInfo(TInfo info1, TInfo info2)
+        {
+            return info1.Key.Compare(info2.Key);
+        }
+
+        private int FindEntry(LibKey key)
+        {
+            if (_libraryEntries == null)
+                return -1;
+            return FindEntry(key, 0, _libraryEntries.Length - 1);
+        }
+
+        private int FindEntry(LibKey key, int left, int right)
+        {
+            // Binary search for the right key
+            if (left > right)
+                return -1;
+            int mid = (left + right) / 2;
+            int compare = key.Compare(_libraryEntries[mid].Key);
+            if (compare < 0)
+                return FindEntry(key, left, mid - 1);
+            else if (compare > 0)
+                return FindEntry(key, mid + 1, right);
+            else
+            {
+                return mid;
+            }
+        }
+
+        public override bool TryGetLibInfo(LibKey key, out SpectrumHeaderInfo libInfo)
+        {
+            int i = FindEntry(key);
+            if (i != -1)
+            {
+                libInfo = CreateSpectrumHeaderInfo(_libraryEntries[i]);
+                return true;
+
+            }
+            libInfo = null;
+            return false;
+        }
+
+        protected abstract SpectrumHeaderInfo CreateSpectrumHeaderInfo(TInfo info);
+
+        public override bool TryLoadSpectrum(LibKey key, out SpectrumPeaksInfo spectrum)
+        {
+            int i = FindEntry(key);
+            if (i != -1)
+            {
+                spectrum = new SpectrumPeaksInfo(ReadSpectrum(_libraryEntries[i]));
+                return true;
+            }
+            spectrum = null;
+            return false;
+        }
+
+        protected abstract SpectrumPeaksInfo.MI[] ReadSpectrum(TInfo info);
+
+        public override int Count
+        {
+            get { return _libraryEntries == null ? 0 : _libraryEntries.Length; }
+        }
+
+        public override IEnumerable<LibKey> Keys
+        {
+            get
+            {
+                if (IsLoaded)
+                    foreach (var entry in _libraryEntries)
+                        yield return entry.Key;
+            }
+        }
     }
 
     public abstract class LibrarySpec : XmlNamedElement

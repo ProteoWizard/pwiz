@@ -178,17 +178,15 @@ namespace pwiz.Skyline.Model.Lib
     }
 
     [XmlRoot("hunter_library")]
-    public sealed class XHunterLibrary : Library
+    public sealed class XHunterLibrary : CachedLibrary<XHunterSpectrumInfo>
     {
-        private const int FORMAT_VERSION_CACHE = 1;
+        private const int FORMAT_VERSION_CACHE = 2;
 
         public const string DEFAULT_AUTHORITY = "thegpm.org";
 
         public const string EXT_CACHE = ".slc";
 
         private static readonly Regex REGEX_HEADER = new Regex(@"HLF v=(\d+) s=([^ ]+) d=(\d\d\d\d\.\d\d.\d\d)");
-        private XHunterSpectrumInfo[] _libraryEntries;
-        private Dictionary<LibSeqKey, bool> _setSequences;
         private IPooledStream _readStream;
 
         public static XHunterLibrary Load(XHunterLibSpec spec, ILoadMonitor loader)
@@ -213,12 +211,6 @@ namespace pwiz.Skyline.Model.Lib
 
         }
 
-        public SpectrumHeaderInfo CreateSpectrumHeaderInfo(string libraryName,
-            float expect, float processedIntensity)
-        {
-            return new XHunterSpectrumHeaderInfo(libraryName, expect, processedIntensity);
-        }
-
         public override LibrarySpec CreateSpec(string path)
         {
             return new XHunterLibSpec(Name, path);
@@ -240,13 +232,6 @@ namespace pwiz.Skyline.Model.Lib
         /// been loaded.
         /// </summary>
         public string FilePath { get; private set; }
-
-        private string CachePath { get; set; }
-
-        public override bool IsLoaded
-        {
-            get { return _libraryEntries != null; }
-        }
 
         public override IPooledStream ReadStream { get { return _readStream; } }
 
@@ -298,6 +283,8 @@ namespace pwiz.Skyline.Model.Lib
 
         private enum LibHeaders
         {
+            revision_byte_count,
+            id_byte_count,
             format_version,
             num_spectra,
             location_headers_lo,
@@ -330,6 +317,7 @@ namespace pwiz.Skyline.Model.Lib
             BufferedStream stream = new BufferedStream(CreateStream(loader), 32*1024);
 
             int version = 1;
+            string id = "", revision = "";
             int size = ReadSize(stream);
             int i;
             if (size == 0)
@@ -353,8 +341,8 @@ namespace pwiz.Skyline.Model.Lib
                 if (match.Success)
                 {
                     version = int.Parse(match.Groups[1].Value);
-                    Id = match.Groups[2].Value;
-                    Revision = match.Groups[3].Value;
+                    id = match.Groups[2].Value;
+                    revision = match.Groups[3].Value;
                 }
             }
             var libraryEntries = new XHunterSpectrumInfo[size];
@@ -495,7 +483,13 @@ namespace pwiz.Skyline.Model.Lib
                     info.Key.WriteSequence(outStream);
                 }
 
-                outStream.Write(BitConverter.GetBytes(FORMAT_VERSION_CACHE), 0, sizeof (int));
+                byte[] revisionBytes = Encoding.UTF8.GetBytes(revision);
+                outStream.Write(revisionBytes, 0, revisionBytes.Length);
+                byte[] idBytes = Encoding.UTF8.GetBytes(id);
+                outStream.Write(idBytes, 0, idBytes.Length);
+                outStream.Write(BitConverter.GetBytes(revisionBytes.Length), 0, sizeof(int));
+                outStream.Write(BitConverter.GetBytes(idBytes.Length), 0, sizeof(int));
+                outStream.Write(BitConverter.GetBytes(FORMAT_VERSION_CACHE), 0, sizeof(int));
                 outStream.Write(BitConverter.GetBytes(libraryEntries.Length), 0, sizeof (int));
                 outStream.Write(BitConverter.GetBytes((long) 0), 0, sizeof (long));
 
@@ -508,8 +502,6 @@ namespace pwiz.Skyline.Model.Lib
 
             return true;
         }
-
-      
 
         private bool Load(ILoadMonitor loader)
         {
@@ -571,7 +563,13 @@ namespace pwiz.Skyline.Model.Lib
                     if (version != FORMAT_VERSION_CACHE)
                         return false;
 
-                    int numSpectra = GetInt32(libHeader, (int) LibHeaders.num_spectra);
+                    int countRevisionBytes = GetInt32(libHeader, (int)LibHeaders.revision_byte_count);
+                    int countIdBytes = GetInt32(libHeader, (int)LibHeaders.id_byte_count);
+                    stream.Seek(-countHeader - countRevisionBytes - countIdBytes, SeekOrigin.End);
+                    Revision = ReadString(stream, countRevisionBytes);
+                    Id = ReadString(stream, countIdBytes);
+
+                    int numSpectra = GetInt32(libHeader, (int)LibHeaders.num_spectra);
 
                     var setSequences = new Dictionary<LibSeqKey, bool>(numSpectra);
                     var libraryEntries = new XHunterSpectrumInfo[numSpectra];
@@ -677,90 +675,12 @@ namespace pwiz.Skyline.Model.Lib
             }
         }
 
-        private static int GetInt32(byte[] bytes, int index)
+        protected override SpectrumHeaderInfo CreateSpectrumHeaderInfo(XHunterSpectrumInfo info)
         {
-            int ibyte = index*4;
-            return bytes[ibyte] | bytes[ibyte + 1] << 8 | bytes[ibyte + 2] << 16 | bytes[ibyte + 3] << 24;
+            return new XHunterSpectrumHeaderInfo(Name, info.Expect, info.ProcessedIntensity);
         }
 
-        private static float GetSingle(byte[] bytes, int index)
-        {
-            return BitConverter.ToSingle(bytes, index*4);
-        }
-
-        private static int ReadSize(Stream stream)
-        {
-            byte[] libSize = new byte[4];
-            ReadComplete(stream, libSize, libSize.Length);
-            return GetInt32(libSize, 0);            
-        }
-
-        private static void ReadComplete(Stream stream, byte[] buffer, int size)
-        {
-            if (stream.Read(buffer, 0, size) != size)
-                throw new InvalidDataException("Data truncation in library header. File may be corrupted.");            
-        }
-
-        private static int CompareSpectrumInfo(XHunterSpectrumInfo info1, XHunterSpectrumInfo info2)
-        {
-            return info1.Key.Compare(info2.Key);
-        }
-
-        public override bool Contains(LibKey key)
-        {
-            return FindEntry(key) != -1;
-        }
-
-        public override bool ContainsAny(LibSeqKey key)
-        {
-            return (_setSequences != null && _setSequences.ContainsKey(key));
-        }
-
-        public override bool TryGetLibInfo(LibKey key, out SpectrumHeaderInfo libInfo)
-        {
-            int i = FindEntry(key);
-
-            if (i != -1)
-            {
-                var entry = _libraryEntries[i];
-                libInfo = CreateSpectrumHeaderInfo(Name, entry.Expect, entry.ProcessedIntensity);
-                return true;
-            }
-
-            libInfo = null;
-            return false;
-        }
-
-        public override bool TryLoadSpectrum(LibKey key, out SpectrumPeaksInfo spectrum)
-        {
-            int i = FindEntry(key);
-
-            if (i != -1)
-            {
-                spectrum = new SpectrumPeaksInfo(ReadSpectrum(_libraryEntries[i]));
-                return true;
-            }
-
-            spectrum = null;
-            return false;
-        }
-
-        public override int Count
-        {
-            get { return _libraryEntries == null ? 0 : _libraryEntries.Length; }
-        }
-
-        public override IEnumerable<LibKey> Keys
-        {
-            get
-            {
-                if (IsLoaded)
-                    foreach (var entry in _libraryEntries)
-                        yield return entry.Key;
-            }
-        }
-
-        private SpectrumPeaksInfo.MI[] ReadSpectrum(XHunterSpectrumInfo info)
+        protected override SpectrumPeaksInfo.MI[] ReadSpectrum(XHunterSpectrumInfo info)
         {
             Stream fs = ReadStream.Stream;
 
@@ -784,30 +704,6 @@ namespace pwiz.Skyline.Model.Lib
                 arrayMI[iNext++].Mz = BitConverter.ToSingle(peaks, i);
 
             return arrayMI;
-        }
-
-        private int FindEntry(LibKey key)
-        {
-            if (_libraryEntries == null)
-                return -1;
-            return FindEntry(key, 0, _libraryEntries.Length - 1);
-        }
-
-        private int FindEntry(LibKey key, int left, int right)
-        {
-            //Binary search for the right key
-            if (left > right)
-                return -1;
-            int mid = (left + right)/2;
-            int compare = key.Compare(_libraryEntries[mid].Key);
-            if (compare < 0)
-                return FindEntry(key, left, mid - 1);
-            else if (compare > 0)
-                return FindEntry(key, mid + 1, right);
-            else
-            {
-                return mid;
-            }
         }
 
         #region Test functions
@@ -940,8 +836,8 @@ namespace pwiz.Skyline.Model.Lib
         {
             // Write tag attributes
             base.WriteXml(writer);
-            writer.WriteAttribute(ATTR.id, Id);
-            writer.WriteAttribute(ATTR.revision, Revision);
+            writer.WriteAttributeIfString(ATTR.id, Id);
+            writer.WriteAttributeIfString(ATTR.revision, Revision);
         }
 
         #endregion
@@ -970,8 +866,8 @@ namespace pwiz.Skyline.Model.Lib
             unchecked
             {
                 int result = base.GetHashCode();
-                result = (result*397) ^ Id.GetHashCode();
-                result = (result*397) ^ Revision.GetHashCode();
+                result = (result*397) ^ (Id != null ? Id.GetHashCode() : 0);
+                result = (result*397) ^ (Revision != null ? Revision.GetHashCode() : 0);
                 result = (result*397) ^ (FilePath != null ? FilePath.GetHashCode() : 0);
                 return result;
             }
@@ -980,7 +876,7 @@ namespace pwiz.Skyline.Model.Lib
         #endregion
     }
 
-    internal struct XHunterSpectrumInfo
+    public struct XHunterSpectrumInfo : ICachedSpectrumInfo
     {
         private readonly LibKey _key;
         private readonly float _processedIntensity;
