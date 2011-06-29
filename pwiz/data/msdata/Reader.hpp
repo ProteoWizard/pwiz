@@ -188,6 +188,12 @@ class PWIZ_API_DECL ReaderList : public Reader,
 PWIZ_API_DECL ReaderList operator +(const ReaderPtr& lhs, const ReaderPtr& rhs);
 
 
+/// tries to identify a filepath using the provided Reader or ReaderList;
+/// returns the CVID file format of the specified filepath,
+/// or CVID_Unknown if the file format has no CV term or the filepath doesn't exist
+PWIZ_API_DECL CVID identifyFileFormat(const ReaderPtr& reader, const std::string& filepath);
+
+
 } // namespace msdata
 } // namespace pwiz
 

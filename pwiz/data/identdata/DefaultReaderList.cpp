@@ -23,8 +23,9 @@
 
 #define PWIZ_SOURCE
 
-#include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
+#include "pwiz/utility/minimxml/SAXParser.hpp"
 #include "DefaultReaderList.hpp"
 #include "Serializer_mzid.hpp"
 #include "Serializer_pepXML.hpp"
@@ -34,47 +35,15 @@
 #include "boost/regex.hpp"
 
 
+using namespace pwiz::util;
+using namespace pwiz::minimxml;
+
+
 namespace pwiz {
 namespace identdata {
 
 
-
-
 namespace {
-
-string GetXMLRootElement(const string& fileheader)
-{
-    const static boost::regex e("<\\?xml.*?>.*?<([^?!]\\S+?)[\\s>]");
-
-    // convert Unicode to ASCII
-    string asciiheader;
-    asciiheader.reserve(fileheader.size());
-    BOOST_FOREACH(char c, fileheader)
-    {
-        if(c > 0)
-            asciiheader.push_back(c);
-    }
-
-    boost::smatch m;
-    if (boost::regex_search(asciiheader, m, e))
-        return m[1];
-    throw runtime_error("[GetXMLRootElement] Root element not found (header is not well-formed XML)");
-}
-
-string GetXMLRootElement(istream& is)
-{
-    char buf[513];
-    is.read(buf, 512);
-    return GetXMLRootElement(buf);
-}
-
-string GetXMLRootElementFromFile(const string& filepath)
-{
-    pwiz::util::random_access_compressed_ifstream file(filepath.c_str());
-    if (!file)
-        throw runtime_error("[GetXMLRootElementFromFile] Error opening file");
-    return GetXMLRootElement(file);
-}
 
 AnalysisSoftwarePtr getPwizSoftware(IdentData& mzid)
 {
@@ -134,8 +103,8 @@ class Reader_mzid : public Reader
 
     virtual std::string identify(const std::string& filename, const std::string& head) const
     {
-        istringstream iss(head);
-        return std::string((type(iss) != Type_Unknown)?getType():"");
+        // mzIdentML 1.0 root is "mzIdentML", 1.1 root is "MzIdentML"
+        return string(bal::iequals(xml_root_element(head), "MzIdentML") ? getType() : "");
     }
 
     virtual void read(const std::string& filename, const std::string& head, IdentDataPtr& result, const Config& config) const
@@ -147,27 +116,15 @@ class Reader_mzid : public Reader
     
     virtual void read(const std::string& filename, const std::string& head, IdentData& result, const Config& config) const
     {
-        shared_ptr<istream> is(new pwiz::util::random_access_compressed_ifstream(filename.c_str()));
+        shared_ptr<istream> is(new random_access_compressed_ifstream(filename.c_str()));
         if (!is.get() || !*is)
             throw runtime_error(("[Reader_mzid::read] Unable to open file " + filename).c_str());
 
-       switch (type(*is))
-        {
-            case Type_mzid:
-            {
-                Serializer_mzIdentML::Config serializerConfig;
-                serializerConfig.readSequenceCollection = !config.ignoreSequenceCollectionAndAnalysisData;
-                serializerConfig.readAnalysisData = !config.ignoreSequenceCollectionAndAnalysisData;
-                Serializer_mzIdentML serializer(serializerConfig);
-                serializer.read(is, result, config.iterationListenerRegistry);
-                break;
-            }
-            case Type_Unknown:
-            default:
-            {
-                throw runtime_error("[Reader_mzid::read] This isn't happening.");
-            }
-        }
+        Serializer_mzIdentML::Config serializerConfig;
+        serializerConfig.readSequenceCollection = !config.ignoreSequenceCollectionAndAnalysisData;
+        serializerConfig.readAnalysisData = !config.ignoreSequenceCollectionAndAnalysisData;
+        Serializer_mzIdentML serializer(serializerConfig);
+        serializer.read(is, result, config.iterationListenerRegistry);
 
         fillInCommonMetadata(filename, result);
     }
@@ -182,24 +139,6 @@ class Reader_mzid : public Reader
     }
 
     virtual const char *getType() const {return "mzIdentML";}
-
-    private:
-
-    enum Type { Type_mzid, Type_Unknown };
-
-    Type type(istream& is) const
-    {
-        try
-        {
-            string rootElement = GetXMLRootElement(is);
-            if (rootElement == "mzIdentML")
-                return Type_mzid;
-        }
-        catch (runtime_error&)
-        {
-        }
-        return Type_Unknown;
-    }
 };
 
 
@@ -207,21 +146,12 @@ class Reader_pepXML : public Reader
 {
     virtual std::string identify(const std::string& filename, const std::string& head) const
     {
-        std::string result;
-        try
-        {
-            string rootElement = GetXMLRootElement(head);
-            result = (rootElement == "msms_pipeline_analysis" ? getType() : "");
-        }
-        catch (runtime_error&)
-        {
-        }
-        return result;
+        return string(xml_root_element(head) == "msms_pipeline_analysis" ? getType() : "");
     }
 
     virtual void read(const std::string& filename, const std::string& head, IdentData& result, const Config& config) const
     {
-        shared_ptr<istream> is(new pwiz::util::random_access_compressed_ifstream(filename.c_str()));
+        shared_ptr<istream> is(new random_access_compressed_ifstream(filename.c_str()));
         if (!is.get() || !*is)
             throw runtime_error("[Reader_pepXML::read] Unable to open file " + filename);
 

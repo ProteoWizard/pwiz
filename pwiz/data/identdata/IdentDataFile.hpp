@@ -21,8 +21,8 @@
 //
 
 
-#ifndef _MZIDENTMLFILE_HPP_
-#define _MZIDENTMLFILE_HPP_
+#ifndef _IDENTDATAFILE_HPP_
+#define _IDENTDATAFILE_HPP_
 
 
 #include "pwiz/utility/misc/Export.hpp"
@@ -35,10 +35,10 @@ namespace pwiz {
 namespace identdata {
 
 
-/// Mziddata object plus file I/O
+/// IdentData object plus file I/O
 struct PWIZ_API_DECL IdentDataFile : public IdentData
 {
-    /// constructs Mziddata object backed by file;
+    /// constructs IdentData object backed by file;
     /// reader==0 -> use DefaultReaderList
     IdentDataFile(const std::string& filename,
                   const Reader* reader = 0,
@@ -58,7 +58,7 @@ struct PWIZ_API_DECL IdentDataFile : public IdentData
         {}
     };
 
-    /// static write function for any Mziddata object;
+    /// static write function for any IdentData object;
     static void write(const IdentData& mzid,
                       const std::string& filename,
                       const WriteConfig& config = WriteConfig(),
@@ -69,7 +69,7 @@ struct PWIZ_API_DECL IdentDataFile : public IdentData
                const WriteConfig& config = WriteConfig(),
                const pwiz::util::IterationListenerRegistry* iterationListenerRegistry = 0);
 
-    /// static write function for any Mziddata object;
+    /// static write function for any IdentData object;
     static void write(const IdentData& mzid,
                       const std::string& filename,
                       std::ostream& os,
@@ -92,4 +92,4 @@ PWIZ_API_DECL std::ostream& operator<<(std::ostream& os, const IdentDataFile::Wr
 } // namespace pwiz
 
 
-#endif // _MZIDENTMLFILE_HPP_
+#endif // _IDENTDATAFILE_HPP_

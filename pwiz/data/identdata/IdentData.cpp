@@ -28,13 +28,6 @@
 #include "pwiz/utility/chemistry/Ion.hpp"
 #include "pwiz/utility/chemistry/MZTolerance.hpp"
 #include "pwiz/data/common/Unimod.hpp"
-#include "pwiz/data/msdata/DefaultReaderList.hpp"
-#include "pwiz/data/vendor_readers/ABI/Reader_ABI.hpp"
-#include "pwiz/data/vendor_readers/ABI/T2D/Reader_ABI_T2D.hpp"
-#include "pwiz/data/vendor_readers/Agilent/Reader_Agilent.hpp"
-#include "pwiz/data/vendor_readers/Bruker/Reader_Bruker.hpp"
-#include "pwiz/data/vendor_readers/Thermo/Reader_Thermo.hpp"
-#include "pwiz/data/vendor_readers/Waters/Reader_Waters.hpp"
 #include "IdentData.hpp"
 #include "boost/regex.hpp"
 
@@ -1256,36 +1249,6 @@ PWIZ_API_DECL void snapModificationsToUnimod(const SpectrumIdentification& si)
                 mod.set(MS_unknown_modification);
         }
     }
-}
-
-PWIZ_API_DECL CVID spectraDataFileFormat(const std::string& filepath)
-{
-    using namespace msdata;
-    try
-    {
-        string head = util::read_file_header(filepath, 512);
-        if (!Reader_mzML().identify(filepath, head).empty()) return MS_mzML_file;
-        else if (!Reader_mzXML().identify(filepath, head).empty()) return MS_ISB_mzXML_file;
-        else if (!Reader_MGF().identify(filepath, head).empty()) return MS_Mascot_MGF_file;
-        else if (!Reader_MSn().identify(filepath, head).empty()) return MS_MS2_file;
-        else if (!Reader_ABI().identify(filepath, head).empty()) return MS_ABI_WIFF_file;
-        else if (!Reader_ABI_T2D().identify(filepath, head).empty()) return MS_AB_SCIEX_TOF_TOF_T2D_file;
-        else if (!Reader_Agilent().identify(filepath, head).empty()) return MS_Agilent_MassHunter_file;
-        else if (!Reader_Thermo().identify(filepath, head).empty()) return MS_Thermo_RAW_file;
-        else if (!Reader_Waters().identify(filepath, head).empty()) return MS_Waters_raw_file;
-        else
-        {
-            string type = Reader_Bruker().identify(filepath, head);
-            if (type == "Bruker FID") return MS_Bruker_FID_file;
-            else if (type == "Bruker YEP") return MS_Bruker_Agilent_YEP_file;
-            else if (type == "Bruker BAF") return MS_Bruker_BAF_file;
-        }
-    }
-    catch (exception&)
-    {
-        // the filepath is missing or inaccessible
-    }
-    return CVID_Unknown;
 }
 
 

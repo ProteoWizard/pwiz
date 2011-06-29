@@ -25,7 +25,6 @@
 
 #include "pwiz/utility/misc/unit.hpp"
 #include "pwiz/utility/misc/Std.hpp"
-#include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/data/common/Unimod.hpp"
 #include "IdentData.hpp"
 #include "Serializer_mzid.hpp"
@@ -320,33 +319,6 @@ void testCleavageAgent()
     }
 }
 
-void testSpectraDataFileFormat()
-{
-    {ofstream fs("testSpectraDataFile.mzedML"); fs << "<?xml?><mzML>";}
-    unit_assert_operator_equal(MS_mzML_file, spectraDataFileFormat("testSpectraDataFile.mzedML"));
-    bfs::remove("testSpectraDataFile.mzedML");
-
-    {ofstream fs("testSpectraDataFile.mzedXML"); fs << "<?xml?><mzXML>";}
-    unit_assert_operator_equal(MS_ISB_mzXML_file, spectraDataFileFormat("testSpectraDataFile.mzedXML"));
-    bfs::remove("testSpectraDataFile.mzedXML");
-
-    {ofstream fs("testSpectraDataFile.mGF"); fs << "MGF";}
-    unit_assert_operator_equal(MS_Mascot_MGF_file, spectraDataFileFormat("testSpectraDataFile.mGF"));
-    bfs::remove("testSpectraDataFile.mGF");
-    
-    {ofstream fs("testSpectraDataFile.Ms2"); fs << "MS2";}
-    unit_assert_operator_equal(MS_MS2_file, spectraDataFileFormat("testSpectraDataFile.Ms2"));
-    bfs::remove("testSpectraDataFile.Ms2");
-    
-    {ofstream fs("testSpectraDataFile.wiFF"); fs << "WIFF";}
-    unit_assert_operator_equal(MS_ABI_WIFF_file, spectraDataFileFormat("testSpectraDataFile.wiFF"));
-    bfs::remove("testSpectraDataFile.wiFF");
-
-    {ofstream fs("_FUNC42.DAT"); fs << "Life, the Universe, and Everything";}
-    unit_assert_operator_equal(MS_Waters_raw_file, spectraDataFileFormat("."));
-    bfs::remove("_FUNC42.DAT");
-}
-
 
 int main(int argc, char** argv)
 {
@@ -359,7 +331,6 @@ int main(int argc, char** argv)
         testSnapModifications();
         testConversion();
         testCleavageAgent();
-        testSpectraDataFileFormat();
         return 0;
     }
     catch (exception& e)

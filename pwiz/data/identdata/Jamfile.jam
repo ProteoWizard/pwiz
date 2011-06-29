@@ -108,7 +108,6 @@ lib pwiz_data_identdata
         <library>../proteome//pwiz_data_proteome
         <library>../common//pwiz_data_common
         <library>../msdata//pwiz_data_msdata
-        <library>../vendor_readers//pwiz_data_vendor_readers
         <library>../misc//pwiz_data_misc
         <library>../../utility/chemistry//pwiz_utility_chemistry
         <library>/ext/boost//iostreams/<boost-iostreams-zlib>on
@@ -120,7 +119,6 @@ lib pwiz_data_identdata
         <library>../proteome//pwiz_data_proteome
         <library>../common//pwiz_data_common
         <library>../msdata//pwiz_data_msdata
-        <library>../vendor_readers//pwiz_data_vendor_readers
         <library>../misc//pwiz_data_misc
         <library>../../utility/chemistry//pwiz_utility_chemistry
         <library>/ext/boost//iostreams/<boost-iostreams-zlib>on

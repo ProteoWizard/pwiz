@@ -818,10 +818,6 @@ PWIZ_API_DECL CVID cleavageAgent(const Enzyme& ez);
 /// sets Unimod CV terms (if possible) for all SearchModifications and Modification elements
 PWIZ_API_DECL void snapModificationsToUnimod(const SpectrumIdentification& si);
 
-/// returns the CVID file format of the specified filepath,
-/// or CVID_Unknown if the file format has no CV term or the filepath doesn't exist
-PWIZ_API_DECL CVID spectraDataFileFormat(const std::string& filepath);
-
 
 } // namespace identdata 
 } // namespace pwiz 
