@@ -43,7 +43,7 @@ const char* sampleXML =
     "        Some Text with Entity References: &lt;&amp;&gt;\n"
     "    </FirstElement>\n"
     "    <SecondElement param2=\"something\" param3=\"something.else 1234-56\">\n"
-    "        Pre-Text <Inline>Inlined text</Inline> Post-text. <br/>\n"
+    "        Pre-Text <Inline>Inlined text with <![CDATA[<&\">]]></Inline> Post-text. <br/>\n"
     "    </SecondElement>\n"
     "    <prefix:ThirdElement goober:name=\"value\">\n"
     "    <!--this is a comment-->\n"
@@ -211,14 +211,14 @@ class FirstHandler : public Handler
 
     virtual Status characters(const string& text, stream_offset position)
     {
-        unit_assert(position == 0x8f);
+        unit_assert_operator_equal(0x8f, position);
         object_.text = text;          
         return Status::Ok;
     }
 
     virtual Status endElement(const string& name, stream_offset position)
     {
-        unit_assert(position == 0xc3);
+        unit_assert_operator_equal(0xc3, position);
         return Status::Ok;
     }
 
@@ -295,7 +295,7 @@ class FifthHandler : public Handler
 
     virtual Status endElement(const string& name, stream_offset position)
     {
-        unit_assert(position == 0x24c);
+        unit_assert_operator_equal(0x262, position);
         return Status::Ok;
     }
 
@@ -326,12 +326,12 @@ class RootHandler : public Handler
         if (name == "RootElement")
         {
             readAttribute(attributes, "param", object_.param);
-            unit_assert(position == 0x27);
+            unit_assert_operator_equal(0x27, position);
         }
         else if (name == "FirstElement")
         {
             // delegate handling to a FirstHandler
-            unit_assert(position == 0x47);
+            unit_assert_operator_equal(0x47, position);
             return Status(Status::Delegate, &firstHandler_); 
         }
         else if (name == "SecondElement")
@@ -379,17 +379,18 @@ void test()
              << "\n"; 
     }
 
-    unit_assert(root.param == "value");
-    unit_assert(root.first.escaped_attribute == "\"<&lt;>\"");
-    unit_assert(root.first.text == "Some Text with Entity References: <&>");
-    unit_assert(root.second.param2 == "something");
-    unit_assert(root.second.param3 == "something.else 1234-56");
-    unit_assert(root.second.text.size() == 3);
-    unit_assert(root.second.text[0] == "Pre-Text");
-    unit_assert(root.second.text[1] == "Inlined text");
-    unit_assert(root.second.text[2] == "Post-text.");
-    unit_assert(root.fifth.leeloo == ">Leeloo > mul-ti-pass");
-    unit_assert(root.fifth.mr_zorg == "You're a monster, Zorg.>I know.");
+    unit_assert_operator_equal("value", root.param);
+    unit_assert_operator_equal("\"<&lt;>\"", root.first.escaped_attribute);
+    unit_assert_operator_equal("Some Text with Entity References: <&>", root.first.text);
+    unit_assert_operator_equal("something", root.second.param2);
+    unit_assert_operator_equal("something.else 1234-56", root.second.param3);
+    unit_assert_operator_equal(4, root.second.text.size());
+    unit_assert_operator_equal("Pre-Text", root.second.text[0]);
+    unit_assert_operator_equal("Inlined text with", root.second.text[1]);
+    unit_assert_operator_equal("<&\">", root.second.text[2]);
+    unit_assert_operator_equal("Post-text.", root.second.text[3]);
+    unit_assert_operator_equal(">Leeloo > mul-ti-pass", root.fifth.leeloo);
+    unit_assert_operator_equal("You're a monster, Zorg.>I know.", root.fifth.mr_zorg);
 }
 
 
@@ -414,15 +415,16 @@ void testNoAutoUnescape()
         *os_ << "\n\n"; 
     }
 
-    unit_assert(root.param == "value");
-    unit_assert(root.first.escaped_attribute == "&quot;&lt;&amp;lt;&gt;&quot;");
-    unit_assert(root.first.text == "Some Text with Entity References: &lt;&amp;&gt;");
-    unit_assert(root.second.param2 == "something");
-    unit_assert(root.second.param3 == "something.else 1234-56");
-    unit_assert(root.second.text.size() == 3);
-    unit_assert(root.second.text[0] == "Pre-Text");
-    unit_assert(root.second.text[1] == "Inlined text");
-    unit_assert(root.second.text[2] == "Post-text.");
+    unit_assert_operator_equal("value", root.param);
+    unit_assert_operator_equal("&quot;&lt;&amp;lt;&gt;&quot;", root.first.escaped_attribute);
+    unit_assert_operator_equal("Some Text with Entity References: &lt;&amp;&gt;", root.first.text);
+    unit_assert_operator_equal("something", root.second.param2);
+    unit_assert_operator_equal("something.else 1234-56", root.second.param3);
+    unit_assert_operator_equal(4, root.second.text.size());
+    unit_assert_operator_equal("Pre-Text", root.second.text[0]);
+    unit_assert_operator_equal("Inlined text with", root.second.text[1]);
+    unit_assert_operator_equal("<&\">", root.second.text[2]);
+    unit_assert_operator_equal("Post-text.", root.second.text[3]);
 }
 
 
@@ -436,7 +438,7 @@ class AnotherRootHandler : public Handler
     {
         if (name == "AnotherRoot")
         {
-            unit_assert(position == 0x26b);
+            unit_assert_operator_equal(0x281, position);
             return Status::Done; 
         }
 
@@ -458,7 +460,7 @@ void testDone()
     getline(is, buffer, '<');
     
     if (os_) *os_ << "buffer: " << buffer << "\n\n";
-    unit_assert(buffer == "The quick brown fox jumps over the lazy dog.");
+    unit_assert_operator_equal("The quick brown fox jumps over the lazy dog.", buffer);
 }
 
 
@@ -506,7 +508,7 @@ void testNested()
     NestedHandler nestedHandler;
     parse(is, nestedHandler);
     if (os_) *os_ << "count: " << nestedHandler.count << "\n\n";
-    unit_assert(nestedHandler.count == 2);
+    unit_assert_operator_equal(2, nestedHandler.count);
 }
 
 
@@ -534,16 +536,16 @@ void testRootElement()
 void testDecoding()
 {
     string id1("_x0031_invalid_x0020_ID");
-    unit_assert(decode_xml_id_copy(id1) == "1invalid ID");
-    unit_assert(&decode_xml_id(id1) == &id1);
-    unit_assert(id1 == "1invalid ID");
+    unit_assert_operator_equal("1invalid ID", decode_xml_id_copy(id1));
+    unit_assert_operator_equal(&id1, &decode_xml_id(id1));
+    unit_assert_operator_equal("1invalid ID", id1);
 
     string id2("_invalid-ID__x0023_2__x003c_3_x003e_");
-    unit_assert(decode_xml_id_copy(id2) == "_invalid-ID_#2_<3>");
-    unit_assert(decode_xml_id(id2) == "_invalid-ID_#2_<3>");
+    unit_assert_operator_equal("_invalid-ID_#2_<3>", decode_xml_id_copy(id2));
+    unit_assert_operator_equal("_invalid-ID_#2_<3>", decode_xml_id(id2));
 
     string crazyId("_x0021__x0021__x0021_");
-    unit_assert(decode_xml_id(crazyId) == "!!!");
+    unit_assert_operator_equal("!!!", decode_xml_id(crazyId));
 }
 
 

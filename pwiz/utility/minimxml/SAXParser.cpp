@@ -28,6 +28,9 @@
 #include "boost/regex.hpp"
 
 
+const string CDATA_begin("![CDATA["), CDATA_end("]]");
+
+
 //#define PWIZ_USE_BOOST_REGEX 
 #ifdef PWIZ_USE_BOOST_REGEX 
 #define BOOST_REGEX_MATCH_EXTRA // use boost::regex with multiple matches for tag parsing
@@ -357,30 +360,14 @@ class HandlerWrangler : public SAXParser::Handler
 } // namespace
 
 
-struct char_match
-{
-    string list;
-    char_match(const string& chars = " \t\n\r") : list(chars) {}
-
-    bool operator()(const char a) const
-    {
-        return find(list.begin(), list.end(), a) != list.end();
-    }
-};
-
 bool unbalancedQuote(const string& buffer)
 {
-    char_match stop_cond("\"");
     size_t quoteCount = 0;
-    string::const_iterator pos = buffer.begin();
+    string::const_iterator pos = buffer.begin(), end = buffer.end();
 
-    while(pos != buffer.end())
-    {
-        pos = find_if(pos+1, buffer.end(), stop_cond);
-        
-        if (pos != buffer.end())
-            quoteCount++;            
-    }
+    for (; pos != end; ++pos)
+        if (*pos == '"' || *pos == '\"')
+            ++quoteCount;
     
     return ((quoteCount%2)!=0); // need explicit bool operation to quiet some compilers
 }
@@ -430,20 +417,26 @@ PWIZ_API_DECL void parse(istream& is, Handler& handler)
         // read tag
 
         string temp_buffer;
-        bool complete = false;
+        bool complete = false, inCDATA = false;
         buffer.clear();
 
-        // Check for unbalanced quotes, and fetch more until we have
+        // If in CDATA, fetch more until the section is ended;
+        // else check for unbalanced quotes and fetch more until we have
         // the complete tag.
-        do {
+        do
+        {
             if (!getline(is, temp_buffer, '>')) break;
             buffer += temp_buffer;
-            
-            if (unbalancedQuote(buffer))
+
+            inCDATA = inCDATA || bal::starts_with(buffer, CDATA_begin);
+
+            if (inCDATA && !bal::ends_with(buffer, CDATA_end) ||
+                !inCDATA && unbalancedQuote(buffer))
                 buffer += ">";
             else
                 complete = true;
-        } while(!complete);
+        }
+        while(!complete);
         
         stripws(buffer);
         if (buffer.empty())
@@ -468,16 +461,12 @@ PWIZ_API_DECL void parse(istream& is, Handler& handler)
             }
             case '!':
             {
-                if (buffer.size() >= 10 &&
-                    buffer.substr(0,8) == "![CDATA[" &&
-                    buffer.substr(buffer.size()-2,buffer.size()-1) == "]]")
+                if (inCDATA)
                 {
-                    Handler::Status status = wrangler.characters(buffer.substr(0,buffer.size()-2), position);
+                    Handler::Status status = wrangler.characters(buffer.substr(CDATA_begin.length(), buffer.size()-CDATA_begin.length()-CDATA_end.length()), position);
                     if (status.flag == Handler::Status::Done) return;
                 }
-                else if (buffer.size()<5 ||
-                    buffer.substr(0,3) != "!--" || 
-                    buffer.substr(buffer.size()-2) != "--")
+                else if (!bal::starts_with(buffer, "!--") || !bal::ends_with(buffer, "--"))
                     throw runtime_error(("[SAXParser::parse()] Illegal comment: " + buffer).c_str());
                 break;
             }
