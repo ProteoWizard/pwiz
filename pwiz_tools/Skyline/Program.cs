@@ -19,6 +19,7 @@
 using System;
 using System.IO;
 using System.IO.Pipes;
+using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 //using pwiz.Skyline.Alerts;
@@ -51,16 +52,14 @@ namespace pwiz.Skyline
             // First, check for command-line parameters. If there are any, let
             // CommandLine deal with them and write output over a named pipe
             // then exit the program.
-            if (AppDomain.CurrentDomain != null && AppDomain.CurrentDomain.SetupInformation != null &&
-                AppDomain.CurrentDomain.SetupInformation.ActivationArguments != null &&
+            if (AppDomain.CurrentDomain.SetupInformation.ActivationArguments != null &&
                 AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData != null &&
                 AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData.Length > 0)
             {
                 String[] inputArgs = AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData;
                 inputArgs = inputArgs[0].Split(new[] {','});
 
-
-                if (inputArgs.Length > 0)
+                if (inputArgs.Any(arg => arg.StartsWith("--")))
                 {
                     NamedPipeServerStream pipeStream = new NamedPipeServerStream("SkylinePipe");
                     pipeStream.WaitForConnection();
