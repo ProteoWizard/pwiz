@@ -62,17 +62,25 @@ namespace pwiz.SkylineTestUtil
                 for (int i = 0; i < zipPaths.Length; i++)
                 {
                     var zipPath = zipPaths[i];
+                    // If the file is on the web, save it to the local disk in the developer's
+                    // Downloads folder for future use
                     if (zipPath.Substring(0, 8).ToLower().Equals("https://") || zipPath.Substring(0, 7).ToLower().Equals("http://"))
                     {
-                        WebClient webClient = new WebClient();
+                        string desktopFolder = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+                        string downloadsFolder = Path.Combine(Path.GetDirectoryName(desktopFolder), "Downloads");
+                        string tutorialsFolder = Path.Combine(downloadsFolder, "Tutorials");
                         string fileName = zipPath.Substring(zipPath.LastIndexOf('/') + 1);
-                        string zipFileTestPath = Path.Combine(TestContext.TestDir, fileName);
-                        webClient.DownloadFile(zipPath, zipFileTestPath);
-                        _testFilesZips[i] = zipFileTestPath;
+                        zipPath = Path.Combine(tutorialsFolder, fileName);
+                        if (!File.Exists(zipPath))
+                        {
+                            if (!Directory.Exists(tutorialsFolder))
+                                Directory.CreateDirectory(tutorialsFolder);
+
+                            WebClient webClient = new WebClient();
+                            webClient.DownloadFile(zipPath, zipPath);
+                        }
                     }
-                    else
-                        _testFilesZips[i] = zipPath;
-                    
+                    _testFilesZips[i] = zipPath;
                 }
             }
         }
