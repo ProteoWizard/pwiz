@@ -448,7 +448,7 @@ namespace pwiz.Skyline.Model.Lib
             return sequence;
         }
 
-        private int GetInt32(byte[] bytes, int index)
+        private new int GetInt32(byte[] bytes, int index)
         {
             int ibyte = index*4;
             return _bigEndian ?
