@@ -343,13 +343,14 @@ namespace pwiz.Skyline.Model.Results
             float[] times = chromMap.Times != null ? chromMap.Times.ToArray() : null;
             foreach (var collector in chromMap.PrecursorCollectorMap.Values)
             {
-                if (times == null && collector.Times != null)
-                    times = collector.Times.ToArray();
+                var collectorTimes = times;
+                if (collectorTimes == null && collector.Times != null)
+                    collectorTimes = collector.Times.ToArray();
 
                 foreach (var pair in collector.ProductIntensityMap)
                 {
                     var key = new ChromKey(collector.PrecursorMz, pair.Key);
-                    var collected = pair.Value.ReleaseChromatogram(times);
+                    var collected = pair.Value.ReleaseChromatogram(collectorTimes);
                     _chromatograms.Add(new KeyValuePair<ChromKey, ChromCollected>(key, collected));
                 }
             }
@@ -573,6 +574,11 @@ namespace pwiz.Skyline.Model.Results
     {
         public ChromCollected(float[] times, float[] intensities)
         {
+            if (times.Length != intensities.Length)
+            {
+                throw new InvalidDataException(string.Format("Times ({0}) and intensities ({1}) disagree in point count.",
+                    times.Length, intensities.Length));
+            }
             Times = times;
             Intensities = intensities;
         }
@@ -853,13 +859,13 @@ namespace pwiz.Skyline.Model.Results
 
         public void AddQ1FilterValues(IEnumerable<double> filterValues, Func<double, double> getFilterWindow)
         {
-            AddFilterValues(MergeFilters(ArrayQ1, filterValues), getFilterWindow,
+            AddFilterValues(MergeFilters(ArrayQ1, filterValues).Distinct(), getFilterWindow,
                 centers => ArrayQ1 = centers, windows => ArrayQ1Window = windows);
         }
 
         public void AddQ3FilterValues(IEnumerable<double> filterValues, Func<double, double> getFilterWindow)
         {
-            AddFilterValues(MergeFilters(ArrayQ3, filterValues), getFilterWindow,
+            AddFilterValues(MergeFilters(ArrayQ3, filterValues).Distinct(), getFilterWindow,
                 centers => ArrayQ3 = centers, windows => ArrayQ3Window = windows);
         }
 
