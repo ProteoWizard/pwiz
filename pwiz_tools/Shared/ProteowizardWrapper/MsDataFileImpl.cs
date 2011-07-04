@@ -347,10 +347,7 @@ namespace pwiz.ProteowizardWrapper
                                {
                                    Level = GetMsLevel(spectrum) ?? 0,
                                    RetentionTime = GetStartTime(spectrum),
-                                   PrecursorMz = GetPrecursorMz(spectrum),
-                                   IsolationWindowTargetMz = GetIsolationWindowTargetMz(spectrum),
-                                   IsolationWindowUpper = GetIsolationWindowUpper(spectrum),
-                                   IsolationWindowLower = GetIsolationWindowLower(spectrum),
+                                   Precursors = GetPrecursors(spectrum),
                                    Centroided = IsCentroided(spectrum),
                                    Mzs = ToArray(spectrum.getMZArray().data),
                                    Intensities = ToArray(spectrum.getIntensityArray().data)
@@ -537,47 +534,30 @@ namespace pwiz.ProteowizardWrapper
             return param.timeInSeconds() / 60;
         }
 
-        public double? GetPrecursorMz(int scanIndex)
+        private static MsPrecursor[] GetPrecursors(Spectrum spectrum)
         {
-            using (var spectrum = SpectrumList.spectrum(scanIndex))
-            {
-                return GetPrecursorMz(spectrum);
-            }            
+            return spectrum.precursors.Select(p =>
+                new MsPrecursor
+                    {
+                        PrecursorMz = GetPrecursorMz(p),
+                        IsolationWindowTargetMz = GetIsolationWindowValue(p, CVID.MS_isolation_window_target_m_z),
+                        IsolationWindowLower = GetIsolationWindowValue(p, CVID.MS_isolation_window_lower_offset),
+                        IsolationWindowUpper = GetIsolationWindowValue(p, CVID.MS_isolation_window_upper_offset),
+                    }).ToArray();
         }
 
-        private static double? GetPrecursorMz(Spectrum spectrum)
+        private static double? GetPrecursorMz(Precursor precursor)
         {
-            foreach (Precursor p in spectrum.precursors)
-            {
-                foreach (SelectedIon si in p.selectedIons)
-                    return si.cvParam(CVID.MS_selected_ion_m_z).value;
-            }
-            return null;
+            // CONSIDER: Only the first selected ion m/z is considered for the precursor m/z
+            var selectedIon = precursor.selectedIons.FirstOrDefault();
+            return (selectedIon != null ? selectedIon.cvParam(CVID.MS_selected_ion_m_z).value : null);
         }
 
-        private static double? GetIsolationWindowTargetMz(Spectrum spectrum)
+        private static double? GetIsolationWindowValue(Precursor precursor, CVID cvid)
         {
-            return GetIsolationWindowValue(spectrum, CVID.MS_isolation_window_target_m_z);
-        }
-
-        private static double? GetIsolationWindowUpper(Spectrum spectrum)
-        {
-            return GetIsolationWindowValue(spectrum, CVID.MS_isolation_window_upper_offset);
-        }
-
-        private static double? GetIsolationWindowLower(Spectrum spectrum)
-        {
-            return GetIsolationWindowValue(spectrum, CVID.MS_isolation_window_lower_offset);
-        }
-
-        private static double? GetIsolationWindowValue(Spectrum spectrum, CVID cvid)
-        {
-            foreach (Precursor p in spectrum.precursors)
-            {
-                var term = p.isolationWindow.cvParam(cvid);
-                if (!term.empty())
-                    return term.value;
-            }
+            var term = precursor.isolationWindow.cvParam(cvid);
+            if (!term.empty())
+                return term.value;
             return null;
         }
 
@@ -612,11 +592,9 @@ namespace pwiz.ProteowizardWrapper
         public string Detector { get; set; }
     }
 
-    public sealed class MsDataSpectrum
+    public struct MsPrecursor
     {
-        public int Level { get; set; }
         public double? PrecursorMz { get; set; }
-        public double? RetentionTime { get; set; }
         public double? IsolationWindowTargetMz { get; set; }
         public double? IsolationWindowUpper { get; set; }
         public double? IsolationWindowLower { get; set; }
@@ -629,7 +607,7 @@ namespace pwiz.ProteowizardWrapper
                 // m/z value that is centered in the isolation window.
                 if (targetMz.HasValue && IsolationWindowUpper.HasValue && IsolationWindowLower.HasValue &&
                         IsolationWindowUpper.Value != IsolationWindowLower.Value)
-                    return (targetMz.Value*2 + IsolationWindowUpper.Value - IsolationWindowLower.Value)/2.0;
+                    return (targetMz.Value * 2 + IsolationWindowUpper.Value - IsolationWindowLower.Value) / 2.0;
                 return targetMz;
             }
         }
@@ -646,6 +624,13 @@ namespace pwiz.ProteowizardWrapper
                 return null;
             }
         }
+    }
+
+    public sealed class MsDataSpectrum
+    {
+        public int Level { get; set; }
+        public double? RetentionTime { get; set; }
+        public MsPrecursor[] Precursors { get; set; }
         public bool Centroided { get; set; }
         public double[] Mzs { get; set; }
         public double[] Intensities { get; set; }
