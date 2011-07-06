@@ -247,11 +247,15 @@ namespace pwiz.Topograph.ui.Forms
             }
             sqlDataFileIds.Append(")");
             var sqlFileAnalysisIds = "(SELECT Id FROM DbPeptideFileAnalysis WHERE MsDataFile IN " + sqlDataFileIds + ")";
+            var sqlChromatogramSetIds = "(SELECT ChromatogramSet FROM DbPeptideFileAnalysis WHERE MsDataFile IN " +
+                                        sqlFileAnalysisIds + ")";
             using (var session = Workspace.OpenSession())
             {
                 session.BeginTransaction();
                 broker.UpdateStatusMessage("Deleting chromatograms");
-                session.CreateSQLQuery("DELETE FROM DbChromatogram WHERE PeptideFileAnalysis IN " + sqlFileAnalysisIds)
+                session.CreateSQLQuery("DELETE FROM DbChromatogram WHERE ChromatogramSet IN " + sqlChromatogramSetIds)
+                    .ExecuteUpdate();
+                session.CreateQuery("DELETE FROM DbChromatogramSet WHERE PeptideFileAnalysis IN " + sqlFileAnalysisIds)
                     .ExecuteUpdate();
                 broker.UpdateStatusMessage("Deleting peaks");
                 session.CreateSQLQuery("DELETE FROM DbPeak WHERE PeptideFileAnalysis IN " + sqlFileAnalysisIds)
