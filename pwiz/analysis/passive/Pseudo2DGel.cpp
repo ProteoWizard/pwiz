@@ -94,6 +94,8 @@ void Pseudo2DGel::Config::process(const std::string& args)
             bry = true; 
         else if (*it == "grey")
             grey = true; 
+        else if (*it == "gray")
+            grey = true; 
         else if (*it == "binSum")
             binSum = true; 
         else if (*it == "ms2locs")
