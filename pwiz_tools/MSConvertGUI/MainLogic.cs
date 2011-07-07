@@ -496,39 +496,44 @@ namespace MSConvertGUI
 
         public void Work(object state)
         {
-            Thread.CurrentThread.Priority = ThreadPriority.BelowNormal;
-
-            Config config = (Config) state;
-            try
+            var worker = new Thread((x) =>
             {
-                var result = Go(config) == 0 ? 100 : -99;
-
-                if (result == 100)
-                {
-                    if (LogUpdate != null) LogUpdate("Finished.", _info);
-                    if (StatusUpdate != null) StatusUpdate("Finished", ProgressBarStyle.Continuous, _info);
-                    if (PercentageUpdate != null) PercentageUpdate(100, 100, _info);
-                }
-                else
-                {
-                    if (LogUpdate != null) LogUpdate("Failed - " + _errorMessage, _info);
-                    if (StatusUpdate != null) StatusUpdate("Failed", ProgressBarStyle.Continuous, _info);
-                    if (PercentageUpdate != null) PercentageUpdate(-99, 100, _info);
-                }
-            }
-            catch (Exception e)
-            {
+                Config config = (Config) state;
                 try
                 {
-                    if (LogUpdate != null) LogUpdate("Failed - " + e, _info);
-                    if (StatusUpdate != null) StatusUpdate("Failed", ProgressBarStyle.Continuous, _info);
-                    if (PercentageUpdate != null) PercentageUpdate(-99, 100, _info);
+                    var result = Go(config) == 0 ? 100 : -99;
+
+                    if (result == 100)
+                    {
+                        if (LogUpdate != null) LogUpdate("Finished.", _info);
+                        if (StatusUpdate != null) StatusUpdate("Finished", ProgressBarStyle.Continuous, _info);
+                        if (PercentageUpdate != null) PercentageUpdate(100, 100, _info);
+                    }
+                    else
+                    {
+                        if (LogUpdate != null) LogUpdate("Failed - " + _errorMessage, _info);
+                        if (StatusUpdate != null) StatusUpdate("Failed", ProgressBarStyle.Continuous, _info);
+                        if (PercentageUpdate != null) PercentageUpdate(-99, 100, _info);
+                    }
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    //probably nothing left to report to
+                    try
+                    {
+                        if (LogUpdate != null) LogUpdate("Failed - " + e, _info);
+                        if (StatusUpdate != null) StatusUpdate("Failed", ProgressBarStyle.Continuous, _info);
+                        if (PercentageUpdate != null) PercentageUpdate(-99, 100, _info);
+                    }
+                    catch (Exception)
+                    {
+                        //probably nothing left to report to
+                    }
                 }
-            }
+            });
+            worker.SetApartmentState(ApartmentState.STA);
+            worker.Priority = ThreadPriority.BelowNormal;
+            worker.Start();
+            worker.Join();
         }
     }
 }

@@ -186,12 +186,19 @@ PWIZ_API_DECL void ChromatogramList_Agilent::createIndex() const
         ci.chromatogramType = transition.type == Transition::MRM ? MS_SRM_chromatogram
                                                                  : MS_SIM_chromatogram;
         ci.transition = transition;
-        ci.id = (format("SRM SIC Q1=%.10g Q3=%.10g start=%.10g end=%.10g")
-                 % transition.Q1
-                 % transition.Q3
-                 % transition.acquiredTimeRange.start
-                 % transition.acquiredTimeRange.end
-                ).str();
+        if (ci.chromatogramType == MS_SRM_chromatogram)
+            ci.id = (format("SRM SIC Q1=%.10g Q3=%.10g start=%.10g end=%.10g")
+                     % transition.Q1
+                     % transition.Q3
+                     % transition.acquiredTimeRange.start
+                     % transition.acquiredTimeRange.end
+                    ).str();
+        else
+            ci.id = (format("SIM SIC Q1=%.10g start=%.10g end=%.10g")
+                     % transition.Q1
+                     % transition.acquiredTimeRange.start
+                     % transition.acquiredTimeRange.end
+                    ).str();
         idMap_[ci.id] = ci.index;
     }
 }

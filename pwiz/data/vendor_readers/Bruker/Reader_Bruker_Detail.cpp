@@ -87,13 +87,14 @@ Reader_Bruker_Format format(const string& path)
     if (bfs::exists(sourcePath / "Analysis.yep") || bfs::exists(sourcePath / "analysis.yep"))
         return Reader_Bruker_Format_YEP;
 
+    bfs::path sourceDirectory = *(--sourcePath.end());
+
     // Check for baf-based data;
     // The directory should have a file named "Analysis.baf"
     if (bfs::exists(sourcePath / "Analysis.baf") || bfs::exists(sourcePath / "analysis.baf"))
     {
         // Check for baf/u2 hybrid data
-        string sourceDirectory = *(--sourcePath.end());
-        if (bfs::exists(sourcePath / (sourceDirectory.substr(0, sourceDirectory.length()-2) + ".u2")))
+        if (bfs::exists(sourcePath / sourceDirectory.replace_extension(".u2")))
             return Reader_Bruker_Format_BAF_and_U2;
         else
             return Reader_Bruker_Format_BAF;
@@ -101,8 +102,7 @@ Reader_Bruker_Format format(const string& path)
 
     // Check for u2-based data;
     // The directory should have a file named "<directory-name - ".d">.u2"
-    string sourceDirectory = *(--sourcePath.end());
-    if (bfs::exists(sourcePath / (sourceDirectory.substr(0, sourceDirectory.length()-2) + ".u2")))
+    if (bfs::exists(sourcePath / sourceDirectory.replace_extension(".u2")))
         return Reader_Bruker_Format_U2;
 
     return Reader_Bruker_Format_Unknown;

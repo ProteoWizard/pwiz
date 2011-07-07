@@ -636,7 +636,7 @@ getMZIntensityArrays(const vector<BinaryDataArrayPtr>& ptrs)
 
     for (vector<BinaryDataArrayPtr>::const_iterator it=ptrs.begin(); it!=ptrs.end(); ++it)
     {
-        if ((*it)->hasCVParam(MS_m_z_array) && !mzArray.get()) mzArray = *it;
+        if (((*it)->hasCVParam(MS_m_z_array) || (*it)->hasCVParam(MS_wavelength_array)) && !mzArray.get()) mzArray = *it;
         if ((*it)->hasCVParam(MS_intensity_array) && !intensityArray.get()) intensityArray = *it;
     }
 
@@ -714,7 +714,7 @@ PWIZ_API_DECL BinaryDataArrayPtr Spectrum::getMZArray() const
          it != binaryDataArrayPtrs.end();
          ++it)
     {
-        if ((*it)->hasCVParam(MS_m_z_array)) return *it;
+        if ((*it)->hasCVParam(MS_m_z_array) || (*it)->hasCVParam(MS_wavelength_array)) return *it;
     }
     return BinaryDataArrayPtr();
 }

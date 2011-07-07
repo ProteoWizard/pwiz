@@ -34,6 +34,7 @@ if [ modules.peek : NT ]
 if ! --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
 {
     SHELL "copy \"$(API_PATH)\\Interop.EDAL.SxS.manifest.dummy\" \"$(API_PATH)\\Interop.EDAL.SxS.manifest\"" ;
+    SHELL "copy \"$(API_PATH)\\Interop.HSREADWRITELib.SxS.manifest.dummy\" \"$(API_PATH)\\Interop.HSREADWRITELib.SxS.manifest\"" ;
     RESCAN ;
 }
 
@@ -54,6 +55,7 @@ rule vendor-api-requirements ( properties * )
         }
         result += <linkflags>/FORCE:MULTIPLE ; # HACK HACK HACK: the duplicate date_time symbols must be fixed, but how?!
         result += <assembly>$(API_PATH)/Interop.EDAL.dll ;
+        result += <assembly>$(API_PATH)/Interop.HSREADWRITELib.dll ;
         result += <assembly>$(API_PATH)/BDal.CXt.Lc.dll ;
         result += <assembly>$(API_PATH)/BDal.CXt.Lc.Factory.dll ;
         result += <assembly>$(API_PATH)/BDal.CXt.Lc.Interfaces.dll ;
@@ -61,13 +63,18 @@ rule vendor-api-requirements ( properties * )
         result += <assembly-dependency>$(API_PATH)/CompassXtractMS.dll ;
         result += <assembly-dependency>$(API_PATH)/boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll ;
         result += <assembly-dependency>$(API_PATH)/boost_thread-vc80-mt-1_33_1-BDAL_20070424.dll ;
-        #result += <assembly-dependency>$(API_PATH)/boost_date_time-vc80-mt-1_33_1-BDAL_20070424.dll ;
+        result += <assembly-dependency>$(API_PATH)/boost_date_time-vc80-mt-1_33_1-BDAL_20070424.dll ;
         result += <assembly-dependency>$(API_PATH)/libfftw3-3.dll ;
         result += <assembly-dependency>$(API_PATH)/libfftw3f-3.dll ;
-        result += <assembly-dependency>$(API_PATH)/NTB-vc80-mt-4_3_61.dll ;
-        #result += <assembly-dependency>$(API_PATH)/NTB-vc80-mt-1_5_97.dll ;
+        result += <assembly-dependency>$(API_PATH)/NTB-vc80-mt-1_5_97.dll ;
+        result += <assembly-dependency>$(API_PATH)/HSReadWrite.dll ;
         result += <manifest-dependency>$(API_PATH)/Interop.EDAL.dll ;
+        result += <manifest-dependency>$(API_PATH)/Interop.HSREADWRITELib.dll ;
         result += <assembly-dependency>$(API_PATH)/Interop.EDAL.SxS.manifest ;
+        result += <assembly-dependency>$(API_PATH)/Interop.HSREADWRITELib.SxS.manifest ;
+        result += <assembly-dependency>$(API_PATH)/FlexVariableTable.xml ;
+        result += <assembly-dependency>$(API_PATH)/ICRVariableTable.xml ;
+        result += <linkflags>/CLRTHREADATTRIBUTE:STA ; # required by HSReadWrite.dll
     }
     return $(result) ;
 }
@@ -75,6 +82,7 @@ rule vendor-api-requirements ( properties * )
 lib pwiz_vendor_api_bruker
     : # sources
         CompassData.cpp
+		$(PWIZ_ROOT_PATH)/pwiz/data/vendor_readers/Bruker//Reader_Bruker_Detail
     : # requirements
 
         # - when boost::thread is link=static, the exe header is tweaked to call
@@ -108,13 +116,13 @@ explicit CompassDataTest ;
 
 
 install install_pwiz_vendor_api_bruker
-    : [ path.glob $(API_PATH) : *.dll *.manifest ]
+    : [ path.glob $(API_PATH) : *.dll *.manifest *.xml ]
     ;
 
 explicit install_pwiz_vendor_api_bruker ;
 
 # for application build and install
 install install_pwiz_vendor_api_bruker_stub
-    : Interop.EDAL.SxS.manifest
+    : [ path.glob $(API_PATH) : *.manifest ]
     ;
 }

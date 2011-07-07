@@ -49,6 +49,7 @@ std::string pwiz::msdata::Reader_Bruker::identify(const std::string& filename,
         case pwiz::msdata::detail::Reader_Bruker_Format_YEP: return "Bruker YEP";
         case pwiz::msdata::detail::Reader_Bruker_Format_BAF: return "Bruker BAF";
         case pwiz::msdata::detail::Reader_Bruker_Format_U2: return "Bruker U2";
+        case pwiz::msdata::detail::Reader_Bruker_Format_BAF_and_U2: return "Bruker BAF/U2";
 
         case pwiz::msdata::detail::Reader_Bruker_Format_Unknown:
         default:
@@ -112,11 +113,11 @@ void fillInMetadata(const bfs::path& rootpath, MSData& msd, Reader_Bruker_Format
 
     bool hasMS1 = false;
     bool hasMSn = false;
-    for (size_t i=0, end=compassDataPtr->getMSSpectrumCount();
-         i < end && (!hasMS1 || !hasMSn);
-         ++i)
+    for (size_t scan=1, end=compassDataPtr->getMSSpectrumCount();
+         scan <= end && (!hasMS1 || !hasMSn);
+         ++scan)
     {
-        int msLevel = sl->getMSSpectrumPtr(i)->getMSMSStage();
+        int msLevel = sl->getMSSpectrumPtr(scan)->getMSMSStage();
         if (!hasMS1 && msLevel == 1)
         {
             hasMS1 = true;
@@ -162,7 +163,7 @@ void Reader_Bruker::read(const string& filename,
     if (bfs::is_regular_file(rootpath))
         rootpath = rootpath.branch_path();
 
-    CompassDataPtr compassDataPtr(CompassData::create(rootpath.string()));
+    CompassDataPtr compassDataPtr(CompassData::create(rootpath.string(), format));
 
     SpectrumList_Bruker* sl = new SpectrumList_Bruker(result, rootpath.string(), format, compassDataPtr);
     ChromatogramList_Bruker* cl = new ChromatogramList_Bruker(result, rootpath.string(), format, compassDataPtr);

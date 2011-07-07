@@ -26,11 +26,6 @@
 #include "pwiz/utility/misc/Export.hpp"
 #include <string>
 
-#ifdef PWIZ_READER_BRUKER
-#include "pwiz_aux/msrc/utility/vendor_api/Bruker/CompassData.hpp"
-using namespace pwiz::vendor_api::Bruker;
-#endif
-
 
 namespace pwiz {
 namespace msdata {
@@ -56,6 +51,12 @@ Reader_Bruker_Format format(const std::string& path);
 } // namespace detail
 } // namespace msdata
 } // namespace pwiz
+
+
+#ifdef PWIZ_READER_BRUKER
+#include "pwiz_aux/msrc/utility/vendor_api/Bruker/CompassData.hpp"
+using namespace pwiz::vendor_api::Bruker;
+#endif
 
 
 #endif // _READER_BRUKER_DETAIL_HPP_

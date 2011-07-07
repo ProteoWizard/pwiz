@@ -71,9 +71,9 @@ class PWIZ_API_DECL SpectrumList_Bruker : public SpectrumListBase
 
     struct IndexEntry : public SpectrumIdentity
     {
-        size_t declaration;
-        long collection; // -1 for an MS spectrum
-        long scan;
+        int source;
+        int collection; // -1 for an MS spectrum
+        int scan;
     };
 
     vector<IndexEntry> index_;

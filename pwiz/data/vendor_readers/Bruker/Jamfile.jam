@@ -80,12 +80,16 @@ rule vendor-api-requirements ( properties * )
 }
 
 
+# shared with pwiz_vendor_api_bruker
+obj Reader_Bruker_Detail : Reader_Bruker_Detail.cpp : <library>/ext/boost//filesystem : : <library>/ext/boost//filesystem ;
+
+
 lib pwiz_reader_bruker
     : # sources
         Reader_Bruker.cpp
-        Reader_Bruker_Detail.cpp
         SpectrumList_Bruker.cpp
         ChromatogramList_Bruker.cpp
+        Reader_Bruker_Detail
     : # requirements
 		<library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
 		<conditional>@vendor-api-requirements

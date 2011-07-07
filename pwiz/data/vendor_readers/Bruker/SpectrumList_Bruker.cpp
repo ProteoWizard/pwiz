@@ -34,6 +34,7 @@
 #include "pwiz/utility/misc/IntegerSet.hpp"
 #include "pwiz/utility/misc/SHA1Calculator.hpp"
 #include "pwiz/utility/minimxml/XMLWriter.hpp"
+#include <boost/range/algorithm/find_if.hpp>
 
 
 using namespace pwiz::util;
@@ -56,28 +57,6 @@ SpectrumList_Bruker::SpectrumList_Bruker(MSData& msd,
     size_(0)
 {
     fillSourceList();
-
-    switch (format_)
-    {
-        case Reader_Bruker_Format_YEP:
-        case Reader_Bruker_Format_BAF:
-            size_ = compassDataPtr_->getMSSpectrumCount();
-            break;
-
-        case Reader_Bruker_Format_FID:
-            size_ = sourcePaths_.size();
-            break;
-
-        case Reader_Bruker_Format_U2:
-            //size_ = compassDataPtr_->getLCSpectrumCount();
-            break;
-
-        case Reader_Bruker_Format_BAF_and_U2:
-            size_ = compassDataPtr_->getMSSpectrumCount();
-            //size_ += compassDataPtr_->getLCSpectrumCount();
-            break;
-    }
-
     createIndex();
 }
 
@@ -90,7 +69,7 @@ PWIZ_API_DECL size_t SpectrumList_Bruker::size() const
 
 PWIZ_API_DECL const SpectrumIdentity& SpectrumList_Bruker::spectrumIdentity(size_t index) const
 {
-    if (index > size_)
+    if (index >= size_)
         throw runtime_error(("[SpectrumList_Bruker::spectrumIdentity()] Bad index: " 
                             + lexical_cast<string>(index)).c_str());
     return index_[index];
@@ -106,15 +85,15 @@ PWIZ_API_DECL size_t SpectrumList_Bruker::find(const string& id) const
 }
 
 
-MSSpectrumPtr SpectrumList_Bruker::getMSSpectrumPtr(size_t index) const
+MSSpectrumPtr SpectrumList_Bruker::getMSSpectrumPtr(size_t scan) const
 {
     if (format_ == Reader_Bruker_Format_FID)
     {
-        compassDataPtr_ = CompassData::create(sourcePaths_[index].string());
+        compassDataPtr_ = CompassData::create(sourcePaths_[scan].string());
         return compassDataPtr_->getMSSpectrum(1);
     }
 
-    return compassDataPtr_->getMSSpectrum(index+1);
+    return compassDataPtr_->getMSSpectrum(scan);
 }
 
 
@@ -138,6 +117,7 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
     result->index = si.index;
     result->id = si.id;
 
+    // the scan element may be empty for MALDI spectra, but it's required for a valid file
     result->scanList.set(MS_no_combination);
     result->scanList.scans.push_back(Scan());
     Scan& scan = result->scanList.scans[0];
@@ -149,36 +129,46 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
         if (si.collection > -1)
         {
             // fill the spectrum from the LC interface
-            /*CompassXtractWrapper::LC_AnalysisPtr& analysis = compassXtractWrapperPtr_->lcAnalysis_;
-            CompassXtractWrapper::LC_SpectrumSourceDeclarationPtr& ssd = compassXtractWrapperPtr_->spectrumSourceDeclarations_[si.declaration];
-            BDal_CXt_Lc_Interfaces::ISpectrumCollectionPtr spectra = analysis->GetSpectrumCollection(si.collection);
-            BDal_CXt_Lc_Interfaces::ISpectrumPtr spectrum = spectra->GetItem(si.scan);
+            LCSpectrumSourcePtr source = compassDataPtr_->getLCSource(si.source);
+            LCSpectrumPtr spectrum = compassDataPtr_->getLCSpectrum(si.source, si.scan);
 
-            if (ssd->GetXAxisUnit() == BDal_CXt_Lc_Interfaces::Unit_NanoMeter)
+            if (source->getXAxisUnit() == LCUnit_NanoMeter)
                 result->set(MS_EMR_spectrum);
             else
                 throw runtime_error("[SpectrumList_Bruker::spectrum()] unexpected XAxisUnit");
 
-            double scanTime = spectrum->GetTime();
+            double scanTime = spectrum->getTime();
             if (scanTime > 0)
                 scan.set(MS_scan_start_time, scanTime, UO_minute);
 
-            result->setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_counts);
+            result->set(MS_profile_spectrum);
 
-            automation_vector<double> lcX(*ssd->GetXAxis(), automation_vector<double>::MOVE);
-            result->getMZArray()->data.assign(lcX.begin(), lcX.end());
+            vector<double> lcX;
+            source->getXAxis(lcX);
 
-            automation_vector<double> lcY(*spectrum->GetIntensity(), automation_vector<double>::MOVE);
-            result->getIntensityArray()->data.assign(lcY.begin(), lcY.end());*/
+            if (getBinaryData)
+            {
+                result->setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_counts);
+                result->defaultArrayLength = lcX.size();
+
+                BinaryDataArrayPtr mzArray = result->getMZArray();
+                vector<CVParam>::iterator itr = boost::range::find_if(mzArray->cvParams, CVParamIs(MS_m_z_array));
+                *itr = CVParam(MS_wavelength_array);
+
+                swap(mzArray->data, lcX);
+
+                vector<double> lcY;
+                spectrum->getData(lcY);
+                swap(result->getIntensityArray()->data, lcY);
+            }
+            else
+                result->defaultArrayLength = lcX.size();
 
             return result;
         }
 
-        // get the spectrum from MS interface
-        MSSpectrumPtr spectrum = getMSSpectrumPtr(index);
-
-        //scan.instrumentConfigurationPtr = 
-            //findInstrumentConfiguration(msd_, translate(scanInfo->massAnalyzerType()));
+        // get the spectrum from MS interface; for FID formats scan is 0-based, else it's 1-based
+        MSSpectrumPtr spectrum = getMSSpectrumPtr(si.scan);
 
         int msLevel = spectrum->getMSMSStage();
         result->set(MS_ms_level, msLevel);
@@ -209,22 +199,22 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
         sd.set(MS_base_peak_intensity, pScanStats_->BPI);
         sd.set(MS_total_ion_current, pScanStats_->TIC);*/
 
-        // TODO: get correct values
-        //scan.scanWindows.push_back(ScanWindow(pScanStats_->LoMass, pScanStats_->HiMass));
-
         //sd.set(MS_lowest_observed_m_z, minObservedMz);
         //sd.set(MS_highest_observed_m_z, maxObservedMz);
 
-        /*EDAL::IMSSpectrumParameterCollectionPtr spectrumParameters = spectrum->MSSpectrumParameterCollection;
-        long numParameters = spectrumParameters->Count;
-        for (long i=1; i < numParameters; ++i)
+        string scanBegin, scanEnd, triggerCharge, isolationWidth;
+
+        MSSpectrumParameterListPtr parameters = spectrum->parameters();
+        BOOST_FOREACH(const MSSpectrumParameter& p, *parameters)
         {
-            EDAL::IMSSpectrumParameterPtr pParameter = spectrumParameters->GetItem(i);
-            string group = (const char*) pParameter->GroupName;
-            string name = (const char*) pParameter->ParameterName;
-            string value = (const char*) pParameter->ParameterValue.bstrVal;
-            scan.userParams.push_back(UserParam(name, value, group));
-        }*/
+            if (p.name == "Scan Begin") scanBegin = p.value;
+            else if (p.name == "Scan End") scanEnd = p.value;
+            else if (p.name == "MS(n) Isol Width") isolationWidth = p.value;
+            else if (bal::starts_with(p.name, "Trigger Charge")) triggerCharge = p.value;
+        }
+
+        if (!scanBegin.empty() && !scanEnd.empty())
+            scan.scanWindows.push_back(ScanWindow(lexical_cast<double>(scanBegin), lexical_cast<double>(scanEnd), MS_m_z));
 
         if (msLevel > 1)
         {
@@ -246,9 +236,13 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
                     {
                         SelectedIon selectedIon(fragMZs[i]);
 
-                        //long parentCharge = scanInfo->parentCharge();
-                        //if (parentCharge > 0)
-                        //    selectedIon.cvParams.push_back(CVParam(MS_charge_state, parentCharge));
+                        if (!triggerCharge.empty())
+                        {
+                            if (triggerCharge == "single") selectedIon.set(MS_charge_state, 1);
+                            else if (triggerCharge == "double") selectedIon.set(MS_charge_state, 2);
+                            else if (triggerCharge == "triple") selectedIon.set(MS_charge_state, 3);
+                            else if (triggerCharge == "quad") selectedIon.set(MS_charge_state, 4);
+                        }
 
                         switch (fragModes[i])
                         {
@@ -286,6 +280,16 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Bruker::spectrum(size_t index, bool getBi
                     if (isolMZs[i] > 0)
                     {
                         precursor.isolationWindow.set(MS_isolation_window_target_m_z, isolMZs[i], MS_m_z);
+
+                        if (!isolationWidth.empty())
+                        {
+                            double value = lexical_cast<double>(isolationWidth);
+                            if (value > 0)
+                            {
+                                precursor.isolationWindow.set(MS_isolation_window_lower_offset, value/2, MS_m_z);
+                                precursor.isolationWindow.set(MS_isolation_window_upper_offset, value/2, MS_m_z);
+                            }
+                        }
                     }
                 }
             }
@@ -455,55 +459,59 @@ PWIZ_API_DECL void SpectrumList_Bruker::fillSourceList()
 
 PWIZ_API_DECL void SpectrumList_Bruker::createIndex()
 {
-    /*if (format_ == Reader_Bruker_Format_U2 ||
+    if (format_ == Reader_Bruker_Format_U2 ||
         format_ == Reader_Bruker_Format_BAF_and_U2)
     {
         msd_.fileDescription.fileContent.set(MS_EMR_spectrum);
 
-        for (size_t i=0; i < ssdList.size(); ++i)
+        for (size_t i=0, end=compassDataPtr_->getLCSourceCount(); i < end; ++i)
         {
-            long scId = ssdList[i]->GetSpectrumCollectionId();
-            size_t numSpectra = (size_t) analysis->GetSpectrumCollection(scId)->GetNumberOfSpectra();
+            LCSpectrumSourcePtr source = compassDataPtr_->getLCSource(i);
 
-            for (size_t j=0; j < numSpectra; ++j)
+            for (size_t scan=0, end=compassDataPtr_->getLCSpectrumCount(i); scan < end; ++scan)
             {
                 index_.push_back(IndexEntry());
                 IndexEntry& si = index_.back();
-                si.declaration = i;
-                si.collection = scId;
-                si.scan = j;
+                si.source = i;
+                si.collection = source->getCollectionId();
+                si.scan = scan;
                 si.index = index_.size()-1;
-                si.id = "declaration=" + lexical_cast<string>(si.declaration) +
-                        " collection=" + lexical_cast<string>(si.collection) +
+                si.id = "collection=" + lexical_cast<string>(si.collection) +
                         " scan=" + lexical_cast<string>(si.scan);
                 idToIndexMap_[si.id] = si.index;
             }
         }
-    }*/
+    }
 
-    if (format_ != Reader_Bruker_Format_U2)
+    if (format_ == Reader_Bruker_Format_FID)
     {
-        size_t remainder = size_ - index_.size();
-        for (size_t i=0; i < remainder; ++i)
+        int scan = -1;
+        BOOST_FOREACH(const SourceFilePtr& sf, msd_.fileDescription.sourceFilePtrs)
         {
             index_.push_back(IndexEntry());
             IndexEntry& si = index_.back();
-            si.declaration = 0;
-            si.collection = -1;
-            si.scan = 0;
+            si.source = si.collection = -1;
             si.index = index_.size()-1;
-            switch (format_)
-            {
-                case Reader_Bruker_Format_FID:
-                    si.id = "file=" + encode_xml_id_copy(msd_.fileDescription.sourceFilePtrs[i]->id);
-                    break;
-                default:
-                    si.id = "scan=" + lexical_cast<string>(i+1);
-                    break;
-            }
+            si.scan = ++scan;
+            si.id = "file=" + encode_xml_id_copy(sf->id);
             idToIndexMap_[si.id] = si.index;
         }
     }
+    else if (format_ != Reader_Bruker_Format_U2)
+    {
+        for (size_t scan=1, end=compassDataPtr_->getMSSpectrumCount(); scan <= end; ++scan)
+        {
+            index_.push_back(IndexEntry());
+            IndexEntry& si = index_.back();
+            si.source = si.collection = -1;
+            si.index = index_.size()-1;
+            si.scan = scan;
+            si.id = "scan=" + lexical_cast<string>(si.scan);
+            idToIndexMap_[si.id] = si.index;
+        }
+    }
+
+    size_ = index_.size();
 }
 
 } // detail
