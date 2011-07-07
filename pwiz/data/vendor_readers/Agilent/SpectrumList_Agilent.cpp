@@ -396,11 +396,13 @@ namespace detail {
 
 namespace {const SpectrumIdentity emptyIdentity;}
 
-size_t SpectrumList_Agilent::size() const {return 0;}
-const SpectrumIdentity& SpectrumList_Agilent::spectrumIdentity(size_t index) const {return emptyIdentity;}
-size_t SpectrumList_Agilent::find(const std::string& id) const {return 0;}
-SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, bool getBinaryData) const {return SpectrumPtr();}
-SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
+PWIZ_API_DECL size_t SpectrumList_Agilent::size() const {return 0;}
+PWIZ_API_DECL const SpectrumIdentity& SpectrumList_Agilent::spectrumIdentity(size_t index) const {return emptyIdentity;}
+PWIZ_API_DECL size_t SpectrumList_Agilent::find(const std::string& id) const {return 0;}
+PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, bool getBinaryData) const {return SpectrumPtr();}
+PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, bool getBinaryData, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
+PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLevel detailLevel) const {return SpectrumPtr();}
+PWIZ_API_DECL SpectrumPtr SpectrumList_Agilent::spectrum(size_t index, DetailLevel detailLevel, const pwiz::util::IntegerSet& msLevelsToCentroid) const {return SpectrumPtr();}
 
 } // detail
 } // msdata
