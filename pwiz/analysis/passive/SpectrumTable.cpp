@@ -136,6 +136,7 @@ PWIZ_API_DECL void SpectrumTable::close(const DataInfo& dataInfo)
         const size_t width_precursorMZ = 12;
         const size_t width_thermoMonoisotopicMZ = 15;
         const size_t width_filterStringMZ = 15;
+        const size_t width_ionInjectionTime = 17;
 
         os << setfill(' ')
            << setw(width_index) << "# index"
@@ -153,6 +154,7 @@ PWIZ_API_DECL void SpectrumTable::close(const DataInfo& dataInfo)
            << setw(width_precursorMZ) << "precursorMZ"
            << setw(width_thermoMonoisotopicMZ) << "thermo_monoMZ"
            << setw(width_filterStringMZ) << "filterStringMZ"
+           << setw(width_ionInjectionTime) << "ionInjectionTime"
            << endl;
 
         for (vector<SpectrumInfo>::const_iterator it=cache_.begin(); it!=cache_.end(); ++it)
@@ -172,6 +174,7 @@ PWIZ_API_DECL void SpectrumTable::close(const DataInfo& dataInfo)
                << setw(width_precursorMZ) << fixed << setprecision(4) << (!it->precursors.empty() ? it->precursors[0].mz : 0)
                << setw(width_thermoMonoisotopicMZ) << fixed << setprecision(4) << it->thermoMonoisotopicMZ
                << setw(width_filterStringMZ) << fixed << setprecision(4) << it->mzFromFilterString()
+               << setw(width_ionInjectionTime) << fixed << setprecision(4) << it->ionInjectionTime
                << endl;
         }
     }
@@ -191,7 +194,8 @@ PWIZ_API_DECL void SpectrumTable::close(const DataInfo& dataInfo)
            << "charge" << delimiter
            << "precursorMZ" << delimiter
            << "thermo_monoMZ" << delimiter
-           << "filterStringMZ"
+           << "filterStringMZ" << delimiter
+           << "ionInjectionTime"
            << endl;
 
         for (vector<SpectrumInfo>::const_iterator it=cache_.begin(); it!=cache_.end(); ++it)
@@ -210,7 +214,8 @@ PWIZ_API_DECL void SpectrumTable::close(const DataInfo& dataInfo)
                << fixed << setprecision(0) << (!it->precursors.empty() ? it->precursors[0].charge : 0) << delimiter
                << fixed << setprecision(4) << (!it->precursors.empty() ? it->precursors[0].mz : 0) << delimiter
                << fixed << setprecision(4) << it->thermoMonoisotopicMZ << delimiter
-               << fixed << setprecision(4) << it->mzFromFilterString()
+               << fixed << setprecision(4) << it->mzFromFilterString() << delimiter
+               << fixed << setprecision(4) << it->ionInjectionTime
                << endl;
         }
     }

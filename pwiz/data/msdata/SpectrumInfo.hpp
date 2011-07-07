@@ -62,6 +62,7 @@ struct PWIZ_API_DECL SpectrumInfo
     double basePeakIntensity;
     double totalIonCurrent;
     double thermoMonoisotopicMZ;
+    double ionInjectionTime;
     std::vector<PrecursorInfo> precursors;
     size_t dataSize;
     std::vector<MZIntensityPair> data;

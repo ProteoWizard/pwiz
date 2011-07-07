@@ -35,14 +35,14 @@ namespace msdata {
 PWIZ_API_DECL SpectrumInfo::SpectrumInfo()
 :   index((size_t)-1), scanNumber(0), massAnalyzerType(CVID_Unknown), scanEvent(0), 
     msLevel(0), isZoomScan(false), retentionTime(0), mzLow(0), mzHigh(0), basePeakMZ(0), 
-    basePeakIntensity(0), totalIonCurrent(0), thermoMonoisotopicMZ(0)
+    basePeakIntensity(0), totalIonCurrent(0), thermoMonoisotopicMZ(0), ionInjectionTime(0)
 {}
 
 
 PWIZ_API_DECL SpectrumInfo::SpectrumInfo(const Spectrum& spectrum)
 :   index((size_t)-1), scanNumber(0), massAnalyzerType(CVID_Unknown), scanEvent(0), 
     msLevel(0), isZoomScan(false), retentionTime(0), mzLow(0), mzHigh(0), basePeakMZ(0), 
-    basePeakIntensity(0), totalIonCurrent(0), thermoMonoisotopicMZ(0)
+    basePeakIntensity(0), totalIonCurrent(0), thermoMonoisotopicMZ(0), ionInjectionTime(0)
 {
     update(spectrum);
 }
@@ -81,7 +81,8 @@ PWIZ_API_DECL void SpectrumInfo::update(const Spectrum& spectrum, bool getBinary
     mzHigh = spectrum.cvParam(MS_highest_observed_m_z).valueAs<double>();        
     basePeakMZ = spectrum.cvParam(MS_base_peak_m_z).valueAs<double>();    
     basePeakIntensity = spectrum.cvParam(MS_base_peak_intensity).valueAs<double>();    
-    totalIonCurrent = spectrum.cvParam(MS_total_ion_current).valueAs<double>();
+    totalIonCurrent = spectrum.cvParam(MS_total_ion_current).valueAs<double>();  
+    ionInjectionTime = scan.cvParam(MS_ion_injection_time).valueAs<double>();
 
     UserParam userParamMonoisotopicMZ = scan.userParam("[Thermo Trailer Extra]Monoisotopic M/Z:");
     if (!userParamMonoisotopicMZ.name.empty())
