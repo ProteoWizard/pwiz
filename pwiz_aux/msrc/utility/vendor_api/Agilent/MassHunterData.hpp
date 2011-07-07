@@ -207,6 +207,30 @@ struct PWIZ_API_DECL Spectrum
 typedef boost::shared_ptr<Spectrum> SpectrumPtr;
 
 
+struct PWIZ_API_DECL ScanRecord
+{
+    virtual int getScanId() const = 0;
+    virtual double getRetentionTime() const = 0;
+    virtual int getMSLevel() const = 0;
+    virtual MSScanType getMSScanType() const = 0;
+    virtual double getTic() const = 0;
+    virtual double getBasePeakMZ() const = 0;
+    virtual double getBasePeakIntensity() const = 0;
+    virtual IonizationMode getIonizationMode() const = 0;
+    virtual IonPolarity getIonPolarity() const = 0;
+    virtual double getMZOfInterest() const = 0;
+    virtual int getTimeSegment() const = 0;
+    virtual double getFragmentorVoltage() const = 0;
+    virtual double getCollisionEnergy() const = 0;
+    virtual bool getIsFragmentorVoltageDynamic() const = 0;
+    virtual bool getIsCollisionEnergyDynamic() const = 0;
+
+    virtual ~ScanRecord() {}
+};
+
+typedef boost::shared_ptr<ScanRecord> ScanRecordPtr;
+
+
 class PWIZ_API_DECL MassHunterData
 {
     public:
@@ -231,6 +255,7 @@ class PWIZ_API_DECL MassHunterData
     virtual const automation_vector<float>& getBpcIntensities() const = 0;
 
     /// rowNumber is a 0-based index
+    virtual ScanRecordPtr getScanRecord(int rowNumber) const = 0;
     virtual SpectrumPtr getProfileSpectrumByRow(int rowNumber) const = 0;
     virtual SpectrumPtr getPeakSpectrumByRow(int rowNumber, PeakFilterPtr peakFilter = PeakFilterPtr()) const = 0;
 

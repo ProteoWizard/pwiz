@@ -99,6 +99,7 @@ class MassHunterDataImpl : public MassHunterData
     virtual const automation_vector<float>& getTicIntensities() const;
     virtual const automation_vector<float>& getBpcIntensities() const;
 
+    virtual ScanRecordPtr getScanRecord(int row) const;
     virtual SpectrumPtr getProfileSpectrumByRow(int row) const;
     virtual SpectrumPtr getPeakSpectrumByRow(int row, PeakFilterPtr peakFilter = PeakFilterPtr()) const;
 
@@ -123,23 +124,50 @@ class MassHunterDataImpl : public MassHunterData
 
 typedef boost::shared_ptr<MassHunterDataImpl> MassHunterDataImplPtr;
 
+
+struct ScanRecordImpl : public ScanRecord
+{
+    ScanRecordImpl(MHDAC::IMSScanRecord^ scanRecord) : scanRecord_(scanRecord) {}
+
+    virtual int getScanId() const {return scanRecord_->ScanID;}
+    virtual double getRetentionTime() const {return scanRecord_->RetentionTime;}
+    virtual int getMSLevel() const {return scanRecord_->MSLevel == MHDAC::MSLevel::MSMS ? 2 : 1;}
+    virtual MSScanType getMSScanType() const {return (MSScanType) scanRecord_->MSScanType;}
+    virtual double getTic() const {return scanRecord_->Tic;}
+    virtual double getBasePeakMZ() const {return scanRecord_->BasePeakMZ;}
+    virtual double getBasePeakIntensity() const {return scanRecord_->BasePeakIntensity;}
+    virtual IonizationMode getIonizationMode() const {return (IonizationMode) scanRecord_->IonizationMode;}
+    virtual IonPolarity getIonPolarity() const {return (IonPolarity) scanRecord_->IonPolarity;}
+    virtual double getMZOfInterest() const {return scanRecord_->MZOfInterest;}
+    virtual int getTimeSegment() const {return scanRecord_->TimeSegment;}
+    virtual double getFragmentorVoltage() const {return scanRecord_->FragmentorVoltage;}
+    virtual double getCollisionEnergy() const {return scanRecord_->CollisionEnergy;}
+    virtual bool getIsFragmentorVoltageDynamic() const {return scanRecord_->IsFragmentorVoltageDynamic;}
+    virtual bool getIsCollisionEnergyDynamic() const {return scanRecord_->IsCollisionEnergyDynamic;}
+
+    private:
+    gcroot<MHDAC::IMSScanRecord^> scanRecord_;
+};
+
+
 struct SpectrumImpl : public Spectrum
 {
-    SpectrumImpl(MHDAC::IBDASpecData^ specData);
-    ~SpectrumImpl();
+    SpectrumImpl(MHDAC::IBDASpecData^ specData) : specData_(specData) {}
 
-    virtual MSScanType getMSScanType() const;
-    virtual MSStorageMode getMSStorageMode() const;
-    virtual IonPolarity getIonPolarity() const;
-    virtual DeviceType getDeviceType() const;
+    virtual int getScanId() const {return specData_->ScanId;}
+    virtual int getMSLevel() const {return specData_->MSLevelInfo == MHDAC::MSLevel::MSMS ? 2 : 1;}
+    virtual MSScanType getMSScanType() const {return (MSScanType) specData_->MSScanType;}
+    virtual MSStorageMode getMSStorageMode() const {return (MSStorageMode) specData_->MSStorageMode;}
+    virtual IonPolarity getIonPolarity() const {return (IonPolarity) specData_->IonPolarity;}
+    virtual DeviceType getDeviceType() const {return (DeviceType) specData_->DeviceType;}
+    virtual double getCollisionEnergy() const {return specData_->CollisionEnergy;}
+    virtual int getTotalDataPoints() const {return specData_->TotalDataPoints;}
+    virtual int getParentScanId() const {return (int) specData_->ParentScanId;}
+
     virtual MassRange getMeasuredMassRange() const;
-    virtual int getParentScanId() const;
     virtual void getPrecursorIons(vector<double>& precursorIons) const;
     virtual bool getPrecursorCharge(int& charge) const;
     virtual bool getPrecursorIntensity(double& precursorIntensity) const;
-    virtual double getCollisionEnergy() const;
-    virtual int getScanId() const;
-    virtual int getTotalDataPoints() const;
     virtual void getXArray(automation_vector<double>& x) const;
     virtual void getYArray(automation_vector<float>& y) const;
 
@@ -147,12 +175,10 @@ struct SpectrumImpl : public Spectrum
     gcroot<MHDAC::IBDASpecData^> specData_;
 };
 
-typedef boost::shared_ptr<SpectrumImpl> SpectrumImplPtr;
 
 struct ChromatogramImpl : public Chromatogram
 {
-    ChromatogramImpl(MHDAC::IBDAChromData^ chromData);
-    ~ChromatogramImpl();
+    ChromatogramImpl(MHDAC::IBDAChromData^ chromData) : chromData_(chromData) {}
 
     virtual double getCollisionEnergy() const;
     virtual int getTotalDataPoints() const;
@@ -163,7 +189,6 @@ struct ChromatogramImpl : public Chromatogram
     gcroot<MHDAC::IBDAChromData^> chromData_;
 };
 
-typedef boost::shared_ptr<ChromatogramImpl> ChromatogramImplPtr;
 
 #pragma unmanaged
 PWIZ_API_DECL
@@ -245,7 +270,7 @@ MassHunterDataImpl::MassHunterDataImpl(const std::string& path)
                 t.acquiredTimeRange.end = chromatogram->AcquiredTimeRange[0]->End;
             }
             else
-                t.acquiredTimeRange.start = t.acquiredTimeRange.end = 0;
+                t.acquiredTimeRange.start = t.acquiredTimeRange.end;
 
             transitionToChromatogramIndexMap_[t] = transitions_.size();
             transitions_.insert(t);
@@ -383,10 +408,14 @@ ChromatogramPtr MassHunterDataImpl::getChromatogram(const Transition& transition
 			chromatograms = reader_->GetChromatogram(filter);
 		}
 
-        ChromatogramImplPtr chromatogramPtr(new ChromatogramImpl(chromatograms[index]));
-        return chromatogramPtr;
+        return ChromatogramPtr(new ChromatogramImpl(chromatograms[index]));
     }
     CATCH_AND_FORWARD
+}
+
+ScanRecordPtr MassHunterDataImpl::getScanRecord(int rowNumber) const
+{
+    try {return ScanRecordPtr(new ScanRecordImpl(reader_->GetScanRecord(rowNumber)));} CATCH_AND_FORWARD
 }
 
 SpectrumPtr MassHunterDataImpl::getProfileSpectrumByRow(int rowNumber) const
@@ -428,35 +457,6 @@ SpectrumPtr MassHunterDataImpl::getPeakSpectrumById(int scanId, PeakFilterPtr pe
 }
 
 
-SpectrumImpl::SpectrumImpl(MHDAC::IBDASpecData^ specData)
-{
-    specData_ = specData;
-}
-
-SpectrumImpl::~SpectrumImpl()
-{
-}
-
-MSScanType SpectrumImpl::getMSScanType() const
-{
-    try {return (MSScanType) specData_->MSScanType;} CATCH_AND_FORWARD
-}
-
-MSStorageMode SpectrumImpl::getMSStorageMode() const
-{
-    try {return (MSStorageMode) specData_->MSStorageMode;} CATCH_AND_FORWARD
-}
-
-IonPolarity SpectrumImpl::getIonPolarity() const
-{
-    try {return (IonPolarity) specData_->IonPolarity;} CATCH_AND_FORWARD
-}
-
-DeviceType SpectrumImpl::getDeviceType() const
-{
-    try {return (DeviceType) specData_->DeviceType;} CATCH_AND_FORWARD
-}
-
 MassRange SpectrumImpl::getMeasuredMassRange() const
 {
     try
@@ -468,11 +468,6 @@ MassRange SpectrumImpl::getMeasuredMassRange() const
         return mr;
     }
     CATCH_AND_FORWARD
-}
-
-int SpectrumImpl::getParentScanId() const
-{
-    try {return (int) specData_->ParentScanId;} CATCH_AND_FORWARD
 }
 
 void SpectrumImpl::getPrecursorIons(vector<double>& precursorIons) const
@@ -491,21 +486,6 @@ bool SpectrumImpl::getPrecursorIntensity(double& precursorIntensity) const
     try {return specData_->GetPrecursorIntensity(precursorIntensity);} CATCH_AND_FORWARD
 }
 
-double SpectrumImpl::getCollisionEnergy() const
-{
-    try {return specData_->CollisionEnergy;} CATCH_AND_FORWARD
-}
-
-int SpectrumImpl::getScanId() const
-{
-    try {return specData_->ScanId;} CATCH_AND_FORWARD
-}
-
-int SpectrumImpl::getTotalDataPoints() const
-{
-    try {return specData_->TotalDataPoints;} CATCH_AND_FORWARD
-}
-
 void SpectrumImpl::getXArray(automation_vector<double>& x) const
 {
     try {return ToAutomationVector(specData_->XArray, x);} CATCH_AND_FORWARD
@@ -516,15 +496,6 @@ void SpectrumImpl::getYArray(automation_vector<float>& y) const
     try {return ToAutomationVector(specData_->YArray, y);} CATCH_AND_FORWARD
 }
 
-
-ChromatogramImpl::ChromatogramImpl(MHDAC::IBDAChromData^ chromData)
-{
-    chromData_ = chromData;
-}
-
-ChromatogramImpl::~ChromatogramImpl()
-{
-}
 
 double ChromatogramImpl::getCollisionEnergy() const
 {
