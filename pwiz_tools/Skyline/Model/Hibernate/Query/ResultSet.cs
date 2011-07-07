@@ -19,7 +19,10 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Hibernate.Query
 {
@@ -110,6 +113,36 @@ namespace pwiz.Skyline.Model.Hibernate.Query
         public ColumnInfo GetColumnInfo(ReportColumn identifier)
         {
             return ColumnInfos[_columnIndexes[identifier]];
+        }
+
+        public static void WriteReportHelper(ResultSet results, char separator, TextWriter writer, CultureInfo ci)
+        {
+            for (int i = 0; i < results.ColumnInfos.Count; i++)
+            {
+                var columnInfo = results.ColumnInfos[i];
+                if (columnInfo.IsHidden)
+                    continue;
+
+                if (i > 0)
+                    writer.Write(separator);
+                writer.Write(columnInfo.Caption);
+            }
+            writer.WriteLine();
+            for (int iRow = 0; iRow < results.RowCount; iRow++)
+            {
+                for (int iColumn = 0; iColumn < results.ColumnInfos.Count; iColumn++)
+                {
+                    var columnInfo = results.ColumnInfos[iColumn];
+                    if (columnInfo.IsHidden)
+                        continue;
+
+                    if (iColumn > 0)
+                        writer.Write(separator);
+                    string value = results.FormatValue(iRow, iColumn, ci);
+                    writer.WriteDsvField(value, separator);
+                }
+                writer.WriteLine();
+            }
         }
     }
 

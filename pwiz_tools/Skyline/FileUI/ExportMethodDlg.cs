@@ -51,24 +51,6 @@ namespace pwiz.Skyline.FileUI
         private bool _fullScans;
         private bool _addEnergyRamp;    // Thermo scheduled only
 
-        private static readonly string[] METHOD_TYPES =
-            {
-                ExportInstrumentType.ABI_QTRAP,
-                ExportInstrumentType.Agilent6400,
-                ExportInstrumentType.Thermo_TSQ,
-                ExportInstrumentType.Thermo_LTQ,
-                ExportInstrumentType.Waters_Xevo,
-                ExportInstrumentType.Waters_Quattro_Premier,
-            };
-
-        private static readonly string[] TRANSITION_LIST_TYPES =
-            {
-                ExportInstrumentType.ABI,
-                ExportInstrumentType.Agilent,
-                ExportInstrumentType.Thermo,
-                ExportInstrumentType.Waters
-            };
-
         public ExportMethodDlg(SrmDocument document, ExportFileType fileType)
         {
             InitializeComponent();
@@ -78,7 +60,7 @@ namespace pwiz.Skyline.FileUI
 
             string[] listTypes;
             if (_fileType == ExportFileType.Method)
-                listTypes = METHOD_TYPES;
+                listTypes = ExportInstrumentType.METHOD_TYPES;
             else
             {
                 Text = "Export Transition List";
@@ -87,7 +69,7 @@ namespace pwiz.Skyline.FileUI
                 textTemplateFile.Visible = false;
                 Height -= textTemplateFile.Bottom - comboTargetType.Bottom;
 
-                listTypes = TRANSITION_LIST_TYPES;
+                listTypes = ExportInstrumentType.TRANSITION_LIST_TYPES;
             }
 
             comboInstrument.Items.Clear();
@@ -229,24 +211,14 @@ namespace pwiz.Skyline.FileUI
         private ExportSchedulingAlgorithm SchedulingAlgorithm { get; set; }
         private int? SchedulingReplicateNum { get; set; }
 
-        private static bool IsFullScanInstrumentType(string type)
-        {
-            return Equals(type, ExportInstrumentType.Thermo_LTQ);
-        }
-
         public bool IsFullScanInstrument
         {
-            get { return IsFullScanInstrumentType(InstrumentType);  }
-        }
-
-        private static bool IsPrecursorOnlyInstrumentType(string type)
-        {
-            return Equals(type, ExportInstrumentType.Thermo_LTQ);
+            get { return ExportInstrumentType.IsFullScanInstrumentType(InstrumentType);  }
         }
 
         public bool IsPrecursorOnlyInstrument
         {
-            get { return IsPrecursorOnlyInstrumentType(InstrumentType); }
+            get { return ExportInstrumentType.IsPrecursorOnlyInstrumentType(InstrumentType); }
         }
 
         public ExportStrategy ExportStrategy
@@ -404,7 +376,7 @@ namespace pwiz.Skyline.FileUI
 
             _instrumentType = comboInstrument.SelectedItem.ToString();
 
-            // Use variable for document to export, since code below may modify to document.
+            // Use variable for document to export, since code below may modify the document.
             SrmDocument documentExport = _document;
 
             string templateName = null;
@@ -525,7 +497,7 @@ namespace pwiz.Skyline.FileUI
                 // CONSIDER: Better error message when instrument limitation encountered?
                 int maxInstrumentTrans = documentExport.Settings.TransitionSettings.Instrument.MaxTransitions ??
                                          TransitionInstrument.MAX_TRANSITION_MAX;
-                int minTrans = IsFullScanInstrument ? 2 : 10;
+                int minTrans = IsFullScanInstrument ? MassListExporter.MAX_TRANS_PER_INJ_MIN : MethodExporter.MAX_TRANS_PER_INJ_MIN_TLTQ;
                 if (!helper.ValidateNumberTextBox(e, textMaxTransitions, minTrans, maxInstrumentTrans, out maxVal))
                     return;
                 // Make sure all the precursors can fit into a single document
@@ -539,16 +511,16 @@ namespace pwiz.Skyline.FileUI
 
             if (textDwellTime.Visible)
             {
-                if (!helper.ValidateNumberTextBox(e, textDwellTime, 1, 1000, out _dwellTime))
+                if (!helper.ValidateNumberTextBox(e, textDwellTime, MassListExporter.DWELL_TIME_MIN, MassListExporter.DWELL_TIME_MAX, out _dwellTime))
                     return;
             }
             if (textRunLength.Visible)
             {
-                if (!helper.ValidateDecimalTextBox(e, textRunLength, 5, 500, out _runLength))
+                if (!helper.ValidateDecimalTextBox(e, textRunLength, MassListExporter.RUN_LENGTH_MIN, MassListExporter.RUN_LENGTH_MAX, out _runLength))
                     return;
             }
 
-            // If export method type is scheduled, and allows multiple schduling options
+            // If export method type is scheduled, and allows multiple scheduling options
             // ask the user which to use.
             if (_methodType == ExportMethodType.Scheduled && HasMultipleSchedulingOptions(documentExport))
             {

@@ -256,80 +256,9 @@ namespace pwiz.Skyline.Controls
         {
             if(_showMessages)
                 return;
-            string messageException = GetInvalidDataMessage(path, x);
+            string messageException = XmlUtil.GetInvalidDataMessage(path, x);
             MessageBox.Show(parent, firstLine + "\n" + messageException, Program.Name);
         }
 
-        private static string GetInvalidDataMessage(string path, Exception x)
-        {
-            StringBuilder sb = new StringBuilder();
-            int line, column;
-            if (!TryGetXmlLineColumn(x.Message, out line, out column))
-                sb.Append(x.Message);
-            else
-            {
-                if (line != 0)
-                    sb.Append(string.Format("The file contains an error on line {0} at column {1}.", line, column));
-                else
-                {
-                    if (column == 0 && IsSmallAndWhiteSpace(path))
-                        return "The file is empty.\nIt may have been truncated during file transfer.";
-                    else
-                        return "The file does not appear to be valid XML.";
-                }
-            }
-            while (x != null)
-            {
-                if (x is InvalidDataException)
-                {
-                    sb.AppendLine().Append(x.Message);
-                    break;
-                }
-                x = x.InnerException;
-            }
-            return sb.ToString();
-        }
-
-        private static readonly Regex REGEX_XML_ERROR = new Regex(@"There is an error in XML document \((\d+), (\d+)\).");
-
-        private static bool TryGetXmlLineColumn(string message, out int line, out int column)
-        {
-            line = column = 0;
-
-            Match match = REGEX_XML_ERROR.Match(message);
-            if (!match.Success)
-                return false;
-            if (!int.TryParse(match.Groups[1].Value, out line))
-                return false;
-            if (!int.TryParse(match.Groups[2].Value, out column))
-                return false;
-            return true;
-        }
-
-        /// <summary>
-        /// Returns true, if a file is less than or equal to 10 characters and
-        /// all whitespace, or empty.
-        /// </summary>
-        /// <param name="path">Path to the file</param>
-        /// <returns>True if small and whitespace</returns>
-        private static bool IsSmallAndWhiteSpace(string path)
-        {
-            if (new FileInfo(path).Length > 10)
-                return false;
-            try
-            {
-                string text = File.ReadAllText(path);
-                foreach (char c in text)
-                {
-                    if (!char.IsWhiteSpace(c))
-                        return false;
-                }
-            }
-            catch (Exception)
-            {
-                return false;   // Can't tell, really
-            }
-            return true;
-        }
     }
 }

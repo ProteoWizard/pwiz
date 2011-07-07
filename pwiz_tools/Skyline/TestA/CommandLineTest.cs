@@ -2,7 +2,7 @@
  * Original author: John Chilton <jchilton .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
- * Copyright 2009 University of Washington - Seattle, WA
+ * Copyright 2011 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
 using System.IO;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestA
@@ -92,6 +94,293 @@ namespace pwiz.SkylineTestA
 
             AssertEx.IsDocumentState(doc, 0, 2, 7, 7, 49);
             AssertResult.IsDocumentResultsState(doc, replicateName, 3, 3, 0, 21, 0);
+
+        }
+
+        [TestMethod]
+        public void ConsoleReportExportTest()
+        {
+            var consoleBuffer = new StringBuilder();
+            var consoleOutput = new StringWriter(consoleBuffer);
+
+            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            string outPath = testFilesDir.GetTestPath("Exported_test_report.csv");
+
+            // Import the first RAW file (or mzML for international)
+            string rawPath = testFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +
+                ExtensionTestContext.ExtThermoRaw);
+
+
+            //Before generating this report, check that it exists
+            var reportEnumerator = Settings.Default.ReportSpecList.GetDefaults().GetEnumerator();
+            reportEnumerator.MoveNext();
+
+            while(reportEnumerator.Current != null &&
+                !reportEnumerator.Current.Name.Equals("Peptide Ratio Results") &&
+                reportEnumerator.MoveNext())
+            {
+            }
+            Assert.IsNotNull(reportEnumerator.Current);
+            Assert.IsTrue(reportEnumerator.Current.Name.Equals("Peptide Ratio Results"));
+
+
+
+            var args = new[]
+                           {
+                               "--in=" + docPath,
+                               "--import=" + rawPath,
+                               "--report=\"Peptide Ratio Results\"",
+                               "--separator=,",
+                               "--reportfile=" + outPath                               
+                           };
+
+            string[] properReport = new[]
+                                        {
+                                            "PeptideSequence,ProteinName,ReplicateName,PeptidePeakFoundRatio,PeptideRetentionTime,RatioToStandard"
+                                            ,
+                                            "LVNELTEFAK,sp|P02769|ALBU_BOVIN,ah_20101011y_BSA_MS-MS_only_5-2,1,46.65,#N/A"
+                                            ,
+                                            "HLVDEPQNLIK,sp|P02769|ALBU_BOVIN,ah_20101011y_BSA_MS-MS_only_5-2,1,42.37,#N/A"
+                                            ,
+                                            "KVPQVSTPTLVEVSR,sp|P02769|ALBU_BOVIN,ah_20101011y_BSA_MS-MS_only_5-2,1,44.19,#N/A"
+                                        };
+
+            Program.RunCommand(args, consoleOutput);
+
+            try
+            {
+                using (var fileStream = new FileStream(outPath, FileMode.Open))
+                using (var stream = new StreamReader(fileStream))
+                {
+                    int i = 0;
+                    string line;
+                    while (!String.IsNullOrEmpty(line = stream.ReadLine()))
+                    {
+                        Assert.AreEqual(line, properReport[i]);
+                        i++;
+                    }
+                    Assert.AreEqual(i, 4);
+                }
+            } catch(FileNotFoundException)
+            {
+                Assert.Fail();
+            }
+        }
+
+        [TestMethod]
+        public void ConsoleMassListTest()
+        {
+            var consoleBuffer = new StringBuilder();
+            var consoleOutput = new StringWriter(consoleBuffer);
+
+            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+
+            // Import the first RAW file (or mzML for international)
+            string rawPath = testFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +
+                                                      ExtensionTestContext.ExtThermoRaw);
+
+            /////////////////////////
+            // Thermo test
+            string thermoPath = testFilesDir.GetTestPath("Thermo_test.csv");
+
+            var args = new[]
+                           {
+                               "--in=" + docPath,
+                               "--import=" + rawPath,
+                               "--exp-translist-instrument=Thermo",
+                               "--exp-translist-out=" + thermoPath   
+                           };
+
+            Program.RunCommand(args, consoleOutput);
+
+            //check for success
+            Assert.IsTrue(consoleBuffer.ToString().Contains("successfully."));
+
+
+            /////////////////////////
+            // Agilent test
+            string agilentPath = testFilesDir.GetTestPath("Agilent_test.csv");
+
+            consoleBuffer = new StringBuilder();
+            consoleOutput = new StringWriter(consoleBuffer);
+
+            args = new[]
+                           {
+                               "--in=" + docPath,
+                               "--import=" + rawPath,
+                               "--exp-translist-instrument=Agilent",
+                               "--exp-translist-out=" + agilentPath,
+                               "--exp-dwelltime=20"
+                           };
+
+            Program.RunCommand(args, consoleOutput);
+
+            //check for success
+            Assert.IsTrue(consoleBuffer.ToString().Contains("successfully."));
+
+            /////////////////////////
+            // AB Sciex test
+            string sciexPath = testFilesDir.GetTestPath("AB_Sciex_test.csv");
+
+            consoleBuffer = new StringBuilder();
+            consoleOutput = new StringWriter(consoleBuffer);
+
+            args = new[]
+                           {
+                               "--in=" + docPath,
+                               "--import=" + rawPath,
+                               "--exp-translist-instrument=AB SCIEX",
+                               "--exp-translist-out=" + sciexPath,
+                               "--exp-dwelltime=20"
+                           };
+
+            Program.RunCommand(args, consoleOutput);
+
+            //check for success
+            Assert.IsTrue(consoleBuffer.ToString().Contains("successfully."));
+
+            /////////////////////////
+            // Waters test
+            string watersPath = testFilesDir.GetTestPath("Waters_test.csv");
+
+            consoleBuffer = new StringBuilder();
+            consoleOutput = new StringWriter(consoleBuffer);
+
+            args = new[]
+                           {
+                               "--in=" + docPath,
+                               "--import=" + rawPath,
+                               "--exp-translist-instrument=Waters",
+                               "--exp-translist-out=" + watersPath,
+                               "--exp-runlength=100"
+                           };
+
+            Program.RunCommand(args, consoleOutput);
+
+            //check for success
+            Assert.IsTrue(consoleBuffer.ToString().Contains("successfully."));
+        }
+
+        [TestMethod]
+        public void ConsolePathCoverage()
+        {
+            var consoleBuffer = new StringBuilder();
+            var consoleOutput = new StringWriter(consoleBuffer);
+
+            var testFilesDir = new TestFilesDir(TestContext, ZIP_FILE);
+            string bogusPath = testFilesDir.GetTestPath("bogus_file.sky");
+            string docPath = testFilesDir.GetTestPath("BSA_Protea_label_free_20100323_meth3_multi.sky");
+            string outPath = testFilesDir.GetTestPath("Output_file.sky");
+            string tsvPath = testFilesDir.GetTestPath("Exported_test_report.csv");
+
+            // Import the first RAW file (or mzML for international)
+            string rawPath = testFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +
+                ExtensionTestContext.ExtThermoRaw);
+
+            Program.RunCommand(new[]
+                                   {
+                                       "--in=" + bogusPath
+                                   },
+                                   consoleOutput);
+            //Error: file does not exist
+            Assert.IsTrue(consoleBuffer.ToString().Contains("Error"));
+
+            consoleBuffer = new StringBuilder();
+            consoleOutput = new StringWriter(consoleBuffer);
+
+            Program.RunCommand(new[]
+                                   {
+                                       "--in=" + docPath,
+                                       "--import=" + rawPath,
+                                       "--save",
+                                       "--out=" + outPath,
+                                       "--separator=TAB",
+                                       "--report=" + "Peptide Ratio Results"
+                                    }, consoleOutput);
+            //Error: no reportfile
+            Assert.IsTrue(consoleBuffer.ToString().Contains("Error"));
+
+            consoleBuffer = new StringBuilder();
+            consoleOutput = new StringWriter(consoleBuffer);
+
+            Program.RunCommand(new[]
+                                   {
+                                       "--in=" + docPath,
+                                       "--import=" + rawPath,
+                                       "--save",
+                                       "--out=" + outPath,
+                                       "--reportfile=" + tsvPath,                                       
+                                       "--report=" + "Peptide Ratio Results"
+                                    }, consoleOutput);
+
+
+            consoleBuffer = new StringBuilder();
+            consoleOutput = new StringWriter(consoleBuffer);
+
+            Program.RunCommand(new[]
+                                   {
+                                       "--in=" + docPath,
+                                       "--import=" + rawPath,
+                                       "--save",
+                                       "--out=" + outPath,
+                                       "--reportfile=" + tsvPath,                                       
+                                       "--report=" + "Bogus Report"
+                                    }, consoleOutput);
+            //Error: no such report
+            Assert.IsTrue(consoleBuffer.ToString().Contains("Error"));
+
+            consoleBuffer = new StringBuilder();
+            consoleOutput = new StringWriter(consoleBuffer);
+
+            Program.RunCommand(new[]
+                                   {
+                                       "--import=" + rawPath,
+                                       "--save"
+                                    }, consoleOutput);
+            //Error: no --in specified with --import
+            Assert.IsTrue(consoleBuffer.ToString().Contains("Error"));
+
+            consoleBuffer = new StringBuilder();
+            consoleOutput = new StringWriter(consoleBuffer);
+
+            Program.RunCommand(new[]
+                                   {
+                                       "--out=" + outPath,
+                                       "--reportfile=" + tsvPath,                                       
+                                       "--report=" + "Bogus Report"
+                                    }, consoleOutput);
+            //Error: no --in specified with --report
+            Assert.IsTrue(consoleBuffer.ToString().Contains("Error"));
+
+
+
+            //check for success. This is merely to cover more paths
+
+            string watersPath = testFilesDir.GetTestPath("Waters_test.csv");
+
+            consoleBuffer = new StringBuilder();
+            consoleOutput = new StringWriter(consoleBuffer);
+
+            var args = new[]
+                           {
+                               "--in=" + docPath,
+                               "--import=" + rawPath,
+                               "--exp-translist-instrument=Waters",
+                               "--exp-translist-out=" + watersPath,
+                               "--exp-runlength=100",
+                               "--exp-optimizing=ce",
+                               "--exp-strategy=protein",
+                               "--exp-max-trans=100",
+                               "--exp-scheduling-algorithm=single",
+                               "--exp-scheduling-replicate-index=1"                               
+                           };
+
+            Program.RunCommand(args, consoleOutput);
+
+            //check for success
+            Assert.IsTrue(consoleBuffer.ToString().Contains("successfully."));
 
         }
     }

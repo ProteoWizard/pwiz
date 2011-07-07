@@ -192,32 +192,9 @@ namespace pwiz.Skyline.FileUI
                                 return;
                             broker.ProgressValue = 95;
                             broker.Message = "Writing report...";
-                            for (int i = 0; i < resultSet.ColumnInfos.Count; i++)
-                            {
-                                var columnInfo = resultSet.ColumnInfos[i];
-                                if (columnInfo.IsHidden)
-                                    continue;
+                            
+                            ResultSet.WriteReportHelper(resultSet, separator, writer, CultureInfo);
 
-                                if (i > 0)
-                                    writer.Write(separator);
-                                writer.Write(columnInfo.Caption);
-                            }
-                            writer.WriteLine();
-                            for (int iRow = 0; iRow < resultSet.RowCount; iRow++)
-                            {
-                                for (int iColumn = 0; iColumn < resultSet.ColumnInfos.Count; iColumn++)
-                                {
-                                    var columnInfo = resultSet.ColumnInfos[iColumn];
-                                    if (columnInfo.IsHidden)
-                                        continue;
-
-                                    if (iColumn > 0)
-                                        writer.Write(separator);
-                                    string value = resultSet.FormatValue(iRow, iColumn, CultureInfo);
-                                    writer.WriteDsvField(value, separator);
-                                }
-                                writer.WriteLine();
-                            }
                             writer.Flush();
                             writer.Close();
 

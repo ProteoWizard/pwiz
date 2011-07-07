@@ -37,6 +37,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model
 {
+
 // ReSharper disable InconsistentNaming
     public enum ExportStrategy { Single, Protein, Buckets }
     public enum ExportMethodType { Standard, Scheduled }
@@ -54,17 +55,60 @@ namespace pwiz.Skyline.Model
         public const string Waters = "Waters";
         public const string Waters_Xevo = "Waters Xevo";
         public const string Waters_Quattro_Premier = "Waters Quattro Premier";
+
+        public static readonly string[] METHOD_TYPES =
+            {
+                ABI_QTRAP,
+                Agilent6400,
+                Thermo_TSQ,
+                Thermo_LTQ,
+                Waters_Xevo,
+                Waters_Quattro_Premier,
+            };
+
+        public static readonly string[] TRANSITION_LIST_TYPES =
+            {
+                ABI,
+                Agilent,
+                Thermo,
+                Waters
+            };
+
+        public static bool IsFullScanInstrumentType(string type)
+        {
+            return Equals(type, Thermo_LTQ);
+        }
+
+        public static bool IsPrecursorOnlyInstrumentType(string type)
+        {
+            return Equals(type, Thermo_LTQ);
+        }
     }
+
     public static class ExportOptimize
     {
         public const string NONE = "None";
         public const string CE = "Collision Energy";
         public const string DP = "Declustering Potential";
+
+        public static string[] OptimizeTypes = {NONE, CE, DP};
     }
 
 // ReSharper restore InconsistentNaming
     public abstract class MassListExporter
     {
+
+        public const int DWELL_TIME_MIN = 1;
+        public const int DWELL_TIME_MAX = 1000;
+        public const int DWELL_TIME_DEFAULT = 20;
+
+        public const int RUN_LENGTH_MIN = 5;
+        public const int RUN_LENGTH_MAX = 500;
+        public const int RUN_LENGTH_DEFAULT = 100;
+
+        public const int MAX_TRANS_PER_INJ_DEFAULT = 130;
+        public const int MAX_TRANS_PER_INJ_MIN = 2;
+
         public const string MEMORY_KEY_ROOT = "memory";
 
         public static bool IsSingleWindowInstrumentType(string type)
@@ -1695,6 +1739,9 @@ namespace pwiz.Skyline.Model
 
     internal static class MethodExporter
     {
+
+        public const int MAX_TRANS_PER_INJ_MIN_TLTQ = 10;
+
         public static void ExportMethod(string exeName,
                                         List<string> argv,
                                         string fileName,
