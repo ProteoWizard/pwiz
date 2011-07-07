@@ -576,36 +576,37 @@ namespace pwiz.Topograph.MsData
                     {
                         continue;
                     }
-                    var dbChromatogramSet = dbPeptideFileAnalysis.ChromatogramSet;
-                    if (dbChromatogramSet == null)
+                    foreach (DbChromatogramSet dbChromatogramSet in _session.CreateCriteria(typeof(DbChromatogramSet))
+                        .Add(Restrictions.Eq("PeptideFileAnalysis", dbPeptideFileAnalysis)).List())
                     {
-                        dbChromatogramSet = new DbChromatogramSet
-                                              {
-                                                  PeptideFileAnalysis = dbPeptideFileAnalysis,
-                                              };
+                        foreach (DbChromatogram dbChromatogram in _session.CreateCriteria(typeof(DbChromatogram))
+                            .Add(Restrictions.Eq("ChromatogramSet", dbChromatogramSet)).List())
+                        {
+                            _session.Delete(dbChromatogram);
+                        }
+                        _session.Delete(dbChromatogramSet);
                     }
-                    dbChromatogramSet.Times = analysis.Times.ToArray();
-                    dbChromatogramSet.ScanIndexes = analysis.ScanIndexes.ToArray();
-                    dbChromatogramSet.ChromatogramCount = analysis.Chromatograms.Count;
-                    _session.SaveOrUpdate(dbChromatogramSet);
-                    dbPeptideFileAnalysis.ChromatogramSet = dbChromatogramSet;
-                    _session.Update(dbPeptideFileAnalysis);
-                    var dbChromatogramDict = dbChromatogramSet.GetChromatogramDict();
+                    _session.Flush();
+                    dbPeptideFileAnalysis.ChromatogramSet = new DbChromatogramSet
+                                          {
+                                              PeptideFileAnalysis = dbPeptideFileAnalysis,
+                                              Times = analysis.Times.ToArray(),
+                                              ScanIndexes = analysis.ScanIndexes.ToArray(),
+                                              ChromatogramCount = analysis.Chromatograms.Count,
+                                          };
+                    _session.Save(dbPeptideFileAnalysis.ChromatogramSet);
                     foreach (Chromatogram chromatogram in analysis.Chromatograms)
                     {
-                        DbChromatogram dbChromatogram;
-                        if (!dbChromatogramDict.TryGetValue(chromatogram.MzKey, out dbChromatogram))
-                        {
-                            dbChromatogram = new DbChromatogram
+                        DbChromatogram dbChromatogram = new DbChromatogram
                                                  {
-                                                     ChromatogramSet = dbChromatogramSet,
+                                                     ChromatogramSet = dbPeptideFileAnalysis.ChromatogramSet,
                                                      MzKey = chromatogram.MzKey,
+                                                     ChromatogramPoints = chromatogram.Points,
+                                                     MzRange = chromatogram.MzRange,
                                                  };
-                        }
-                        dbChromatogram.ChromatogramPoints = chromatogram.Points;
-                        dbChromatogram.MzRange = chromatogram.MzRange;
-                        _session.SaveOrUpdate(dbChromatogram);
+                        _session.Save(dbChromatogram);
                     }
+                    _session.Update(dbPeptideFileAnalysis);
                     _session.Save(new DbChangeLog(_workspace, dbPeptideFileAnalysis.PeptideAnalysis));
                 }
                 chromatogramTask.MsDataFile.MsDataFileData.Save(_session);
