@@ -121,14 +121,22 @@ struct ExperimentImpl : public Experiment
     gcroot<MSExperiment^> msExperiment;
     int sample, period, experiment;
 
-    vector<double> cycleTimes;
-    vector<double> cycleIntensities;
-    vector<double> basePeakMZs;
-    vector<double> basePeakIntensities;
-
     size_t transitionCount;
     typedef map<pair<double, double>, pair<int, int> > TransitionParametersMap;
     TransitionParametersMap transitionParametersMap;
+
+    const vector<double>& cycleTimes() const {initialize(); return cycleTimes_;}
+    const vector<double>& cycleIntensities() const {initialize(); return cycleIntensities_;}
+    const vector<double>& basePeakMZs() const {initialize(); return basePeakMZs_;}
+    const vector<double>& basePeakIntensities() const {initialize(); return basePeakIntensities_;}
+
+    private:
+    void initialize() const;
+    mutable bool initialized_;
+    mutable vector<double> cycleTimes_;
+    mutable vector<double> cycleIntensities_;
+    mutable vector<double> basePeakMZs_;
+    mutable vector<double> basePeakIntensities_;
 };
 
 typedef boost::shared_ptr<ExperimentImpl> ExperimentImplPtr;
@@ -165,7 +173,7 @@ struct SpectrumImpl : public Spectrum
 
     ExperimentImplPtr experiment;
     gcroot<MassSpectrumInfo^> spectrumInfo;
-    gcroot<MassSpectrum^> spectrum;
+    mutable gcroot<MassSpectrum^> spectrum;
     int cycle;
 
     // data points
@@ -304,25 +312,12 @@ ExperimentPtr WiffFileImpl::getExperiment(int sample, int period, int experiment
 
 
 ExperimentImpl::ExperimentImpl(const WiffFileImpl* wifffile, int sample, int period, int experiment)
-: wifffile_(wifffile), sample(sample), period(period), experiment(experiment), transitionCount(0)
+: wifffile_(wifffile), sample(sample), period(period), experiment(experiment), transitionCount(0), initialized_(false)
 {
     try
     {
         wifffile_->setExperiment(sample, period, experiment);
         msExperiment = wifffile_->msSample->GetMSExperiment(experiment-1);
-
-        TotalIonChromatogram^ tic = msExperiment->GetTotalIonChromatogram();
-        ToStdVector(tic->GetActualXValues(), cycleTimes);
-        ToStdVector(tic->GetActualYValues(), cycleIntensities);
-
-        BasePeakChromatogramSettings^ bpcs = gcnew BasePeakChromatogramSettings(0, 0, gcnew array<double>(0), gcnew array<double>(0));
-        BasePeakChromatogram^ bpc = msExperiment->GetBasePeakChromatogram(bpcs);
-        BasePeakChromatogramInfo^ bpci = bpc->Info;
-        ToStdVector(bpc->GetActualYValues(), basePeakIntensities);
-
-        basePeakMZs.resize(cycleTimes.size());
-        for (size_t i=0; i < cycleTimes.size(); ++i)
-            basePeakMZs[i] = bpci->GetBasePeakMass(i);
 
         if ((ExperimentType) msExperiment->Details->ExperimentType == MRM)
             transitionCount = msExperiment->Details->MassRangeInfo->Length;
@@ -346,6 +341,27 @@ ExperimentImpl::ExperimentImpl(const WiffFileImpl* wifffile, int sample, int per
         }*/
     }
     CATCH_AND_FORWARD
+}
+
+void ExperimentImpl::initialize() const
+{
+    if (initialized_)
+        return;
+
+    TotalIonChromatogram^ tic = msExperiment->GetTotalIonChromatogram();
+    ToStdVector(tic->GetActualXValues(), cycleTimes_);
+    ToStdVector(tic->GetActualYValues(), cycleIntensities_);
+
+    BasePeakChromatogramSettings^ bpcs = gcnew BasePeakChromatogramSettings(0, 0, gcnew array<double>(0), gcnew array<double>(0));
+    BasePeakChromatogram^ bpc = msExperiment->GetBasePeakChromatogram(bpcs);
+    BasePeakChromatogramInfo^ bpci = bpc->Info;
+    ToStdVector(bpc->GetActualYValues(), basePeakIntensities_);
+
+    basePeakMZs_.resize(cycleTimes_.size());
+    for (size_t i=0; i < cycleTimes_.size(); ++i)
+        basePeakMZs_[i] = bpci->GetBasePeakMass(i);
+
+    initialized_ = true;
 }
 
 size_t ExperimentImpl::getSRMSize() const
@@ -452,8 +468,8 @@ void ExperimentImpl::getTIC(std::vector<double>& times, std::vector<double>& int
 {
     try
     {
-        times = cycleTimes;
-        intensities = cycleIntensities;
+        times = cycleTimes();
+        intensities = cycleIntensities();
     }
     CATCH_AND_FORWARD
 }
@@ -462,8 +478,8 @@ void ExperimentImpl::getBPC(std::vector<double>& times, std::vector<double>& int
 {
     try
     {
-        times = cycleTimes;
-        intensities = basePeakIntensities;
+        times = cycleTimes();
+        intensities = basePeakIntensities();
     }
     CATCH_AND_FORWARD
 }
@@ -473,16 +489,15 @@ SpectrumImpl::SpectrumImpl(ExperimentImplPtr experiment, int cycle)
 {
     try
     {
-        spectrum = experiment->msExperiment->GetMassSpectrum(cycle-1);
-        spectrumInfo = spectrum->Info;
+        spectrumInfo = experiment->msExperiment->GetMassSpectrumInfo(cycle-1);
 
         //pointsAreContinuous = !spectrumInfo->CentroidMode;
 
-        sumY = experiment->cycleIntensities[cycle-1];
+        sumY = experiment->cycleIntensities()[cycle-1];
         //minX = experiment->; // TODO Mass range?
         //maxX = spectrum->MaximumXValue;
-        bpY = experiment->basePeakIntensities[cycle-1];
-        bpX = bpY > 0 ? experiment->basePeakMZs[cycle-1] : 0;
+        bpY = experiment->basePeakIntensities()[cycle-1];
+        bpX = bpY > 0 ? experiment->basePeakMZs()[cycle-1] : 0;
 
         if (spectrumInfo->IsProductSpectrum)
         {
@@ -529,7 +544,7 @@ bool SpectrumImpl::getDataIsContinuous() const
 {
     try
     {
-//        if ((MassSpectrum^) spectrum == nullptr) spectrum = experiment->msExperiment->GetMassSpectrum(cycle-1);
+        if ((MassSpectrum^) spectrum == nullptr) spectrum = experiment->msExperiment->GetMassSpectrum(cycle-1);
         return spectrum->ContinuumData;
     }
     CATCH_AND_FORWARD
@@ -539,7 +554,7 @@ size_t SpectrumImpl::getDataSize(bool doCentroid) const
 {
     try
     {
-//        if ((MassSpectrum^) spectrum == nullptr) spectrum = experiment->msExperiment->GetMassSpectrum(cycle-1);
+        if ((MassSpectrum^) spectrum == nullptr) spectrum = experiment->msExperiment->GetMassSpectrum(cycle-1);
         return spectrum->NumDataPoints;
     }
     CATCH_AND_FORWARD
@@ -549,7 +564,7 @@ void SpectrumImpl::getData(bool doCentroid, std::vector<double>& mz, std::vector
 {
     try
     {
-//        if ((MassSpectrum^) spectrum == nullptr) spectrum = experiment->msExperiment->GetMassSpectrum(cycle-1);
+        if ((MassSpectrum^) spectrum == nullptr) spectrum = experiment->msExperiment->GetMassSpectrum(cycle-1);
 
         /*if (doCentroid)
             doCentroid = pointsAreContinuous && spectrum->AllPeakCount > 0;
