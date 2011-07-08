@@ -27,7 +27,7 @@
 #include "pwiz/data/proteome/Version.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "PTMVariantList.h"
-#include "svnrev.hpp"
+#include "myrimatchVersion.hpp"
 
 namespace freicore
 {
@@ -42,17 +42,6 @@ namespace myrimatch
 	SpectraMassMapList				monoSpectraByChargeState;
 
 	RunTimeConfig*					g_rtConfig;
-
-    int Version::Major()                {return 2;}
-    int Version::Minor()                {return 0;}
-    int Version::Revision()             {return SVN_REV;}
-    string Version::LastModified()      {return SVN_REVDATE;}
-    string Version::str()               
-    {
-    	std::ostringstream v;
-    	v << Major() << "." << Minor() << "." << Revision();
-    	return v.str();
-    }
 
 	int InitProcess( argList_t& args )
 	{
@@ -837,7 +826,8 @@ namespace myrimatch
 					spectra.readPeaks( *fItr,
                                        0, -1,
                                        2, // minMsLevel
-                                       g_rtConfig->SpectrumListFilters );
+                                       g_rtConfig->SpectrumListFilters,
+                                       g_rtConfig->NumChargeStates);
 				} catch( std::exception& e )
 				{
 					cerr << g_hostString << " had an error: " << e.what() << endl;

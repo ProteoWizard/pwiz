@@ -175,10 +175,16 @@ modules.poke : BOOST_BUILD_PATH : $(tmp) ;
 
 local application-name = "MyriMatch" ;
 
+constant MAJOR : 2 ;
+constant MINOR : 1 ;
+
 
 # set version info (used for tarball filenames)
-import svnrev ;
-local revision-info = [ svnrev.generate-version-header svnrev.hpp : [ glob  *.?pp *.h Jamroot.jam ] : warn-on-missing ] ;
+import generate-version ;
+local version-file = $(application-name:L)Version.cpp ;
+local revision-info = [ generate-version.cpp $(ROOT_PATH)/$(version-file) : freicore $(application-name:L) : $(MAJOR) : $(MINOR) :
+                                             [ path.glob . : *.?pp *.h Jamroot.jam : $(version-file) ] :
+                                             warn-on-missing ] ;
 
 # revision-info is a sequence: <max revision> <max year> <max month> <max day> <number of modified files in working copy>
 
@@ -186,8 +192,6 @@ local year = $(revision-info[2]) ;
 local month = $(revision-info[3]) ;
 local day = $(revision-info[4]) ;
 
-constant MAJOR : 2 ;
-constant MINOR : 1 ;
 constant SVNREV : $(revision-info[1]) ;
 constant SVNREVDATE : "(last modified $(year)-$(month)-$(day))" ;
 
@@ -325,14 +329,11 @@ rule binary-tarball-requirements ( properties * )
     local location = [ install-location $(properties) ] ;
     location = $(location:G=) ;
 
-    local non-redistributables =
-        *ABSciex.DataAccess.WiffFileDataReader.dll *Clear?ore*.dll *rscoree.dll         # ABI API
-        *DACServer.dll *genutil.dll *raw.dll *RawCsm.dll *Security*.dll *MetaGD32.dll *MassLynxRaw.dll ; # Waters API
+    local non-redistributables = pwiz_bindings_cli.xml ; # .NET documentation
 
     if $(variants[1]) = "release"
     {
-        non-redistributables += *.pdb   # MSVC debug symbols
-                                *.xml ; # .NET documentation
+        non-redistributables += *.pdb ; # MSVC debug symbols
     }
 
     non-redistributables = [ sequence.join $(non-redistributables) : "&&exclude:" ] ;
@@ -375,6 +376,8 @@ bcp.copy-boost-dependencies copy_boost_subset
     [ path.glob-tree $(PWIZ_SOURCE)/pwiz_aux : *.cpp *.hpp ]
     [ path.glob-tree $(PWIZ_SOURCE)/pwiz_tools/common : *.cpp *.hpp ]
     [ path.glob-tree $(LIBRARIES_PATH)/boost_aux : *.cpp *.hpp ]
+
+    $(LIBRARIES_PATH)/hdf5-1.8.7/src/init_once_workaround.cpp
 
     # scan all targets and their dependencies
     $(ROOT_PATH)//$(application-name:L)

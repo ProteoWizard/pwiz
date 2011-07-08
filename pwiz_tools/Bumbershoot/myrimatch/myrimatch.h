@@ -44,16 +44,6 @@ namespace freicore
 
 namespace myrimatch
 {
-    struct Version
-    {
-        static int Major();
-        static int Minor();
-        static int Revision();
-        static std::string str();
-        static std::string LastModified();
-    };
-
-
 	struct SearchStatistics
 	{
         SearchStatistics()
