@@ -129,6 +129,10 @@ class PWIZ_API_DECL MSSpectrumParameterIterator
     bool equal(const MSSpectrumParameterIterator& that) const;
     const MSSpectrumParameter& dereference() const;
 
+    // HACK: why does link=shared require this?
+    void decrement() {}
+    void advance(difference_type n) {}
+
     struct Impl;
     boost::scoped_ptr<Impl> impl_;
 };
