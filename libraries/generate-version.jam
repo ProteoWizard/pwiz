@@ -64,7 +64,7 @@ rule cpp ( filepath ? : namespaces * : major : minor :
 // $Date: $(revision-info[2])-$(revision-info[3])-$(revision-info[4]) $
 //
 
-\#include \"Version.hpp\"
+\#include \"$(filepath:D=:S=.hpp)\"
 \#include <sstream>
 
 \#ifdef PWIZ_USER_VERSION_INFO_H // in case you need to add any info version of your own
