@@ -167,6 +167,9 @@ namespace pwiz.Topograph.ui.Forms
                     {
                         menuItem.Enabled = _workspace.IsLoaded;
                     }
+                    databaseSizeToolStripMenuItem.Enabled 
+                        = _workspace.TpgLinkDef != null 
+                        && _workspace.TpgLinkDef.DatabaseTypeEnum == DatabaseTypeEnum.mysql;
                     _workspace.EntitiesChange += Workspace_EntitiesChange;
                     _workspace.WorkspaceDirty += Workspace_WorkspaceDirty;
                     _workspace.WorkspaceLoaded += Workspace_WorkspaceLoaded;
@@ -181,6 +184,7 @@ namespace pwiz.Topograph.ui.Forms
                     {
                         menuItem.Enabled = false;
                     }
+                    databaseSizeToolStripMenuItem.Enabled = false;
                 }
                 UpdateWindowTitle();
                 if (_workspace != null)
@@ -1016,6 +1020,11 @@ namespace pwiz.Topograph.ui.Forms
         private void alignmentToolStripMenuItem_Click(object sender, EventArgs e)
         {
             new AlignmentForm(Workspace).Show(dockPanel, DockState.Document);
+        }
+
+        private void databaseSizeToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            new DatabaseSizeForm(Workspace).Show(this);
         }
     }
 }

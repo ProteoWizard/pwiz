@@ -40,6 +40,7 @@ namespace pwiz.Topograph.ui.Forms
             this.colPeakEnd = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTurnover = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colApe = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.recordNavBar1 = new pwiz.Common.Controls.RecordNavBar();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -60,6 +61,7 @@ namespace pwiz.Topograph.ui.Forms
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.dataGridView);
+            this.splitContainer1.Panel2.Controls.Add(this.recordNavBar1);
             this.splitContainer1.Size = new System.Drawing.Size(602, 264);
             this.splitContainer1.SplitterDistance = 200;
             this.splitContainer1.TabIndex = 0;
@@ -103,9 +105,9 @@ namespace pwiz.Topograph.ui.Forms
             this.colTurnover,
             this.colApe});
             this.dataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridView.Location = new System.Drawing.Point(0, 0);
+            this.dataGridView.Location = new System.Drawing.Point(0, 21);
             this.dataGridView.Name = "dataGridView";
-            this.dataGridView.Size = new System.Drawing.Size(398, 264);
+            this.dataGridView.Size = new System.Drawing.Size(398, 243);
             this.dataGridView.TabIndex = 0;
             this.dataGridView.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView_CellEndEdit);
             this.dataGridView.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView_CellContentClick);
@@ -147,6 +149,15 @@ namespace pwiz.Topograph.ui.Forms
             this.colApe.HeaderText = "APE";
             this.colApe.Name = "colApe";
             // 
+            // recordNavBar1
+            // 
+            this.recordNavBar1.DataGridView = this.dataGridView;
+            this.recordNavBar1.Dock = System.Windows.Forms.DockStyle.Top;
+            this.recordNavBar1.Location = new System.Drawing.Point(0, 0);
+            this.recordNavBar1.Name = "recordNavBar1";
+            this.recordNavBar1.Size = new System.Drawing.Size(398, 21);
+            this.recordNavBar1.TabIndex = 1;
+            // 
             // DataFileSummary
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -177,5 +188,6 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.DataGridViewTextBoxColumn colPeakEnd;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTurnover;
         private System.Windows.Forms.DataGridViewTextBoxColumn colApe;
+        private pwiz.Common.Controls.RecordNavBar recordNavBar1;
     }
 }
