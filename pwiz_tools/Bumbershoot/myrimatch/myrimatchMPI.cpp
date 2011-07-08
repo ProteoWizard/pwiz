@@ -591,7 +591,7 @@ namespace myrimatch
             Serializer_FASTA unpacker;
             shared_ptr<ProteomeData> subsetProteinsPtr(new ProteomeData);
             unpacker.read(proteinStream, *subsetProteinsPtr);
-            proteins = proteinStore(subsetProteinsPtr, "");
+            proteins = proteinStore(subsetProteinsPtr, g_rtConfig->DecoyPrefix, false);
 		} catch( exception& e )
 		{
 			cerr << g_hostString << " had an error: " << typeid(e).name() << " (" << e.what() << ")" << endl;
@@ -710,8 +710,20 @@ namespace myrimatch
 
                     rootSpectrum->resultsByCharge.resize(childSpectrum->resultsByCharge.size());
                     for (size_t z=0; z < childSpectrum->resultsByCharge.size(); ++z)
-                        BOOST_FOREACH(const Spectrum::SearchResultPtr& result, childSpectrum->resultsByCharge[z])
-						    rootSpectrum->resultsByCharge[z].add( result );
+                    {
+                        Spectrum::SearchResultSetType& rootResults = rootSpectrum->resultsByCharge[z];
+                        Spectrum::SearchResultSetType& childResults = childSpectrum->resultsByCharge[z];
+
+                        BOOST_FOREACH(const Spectrum::SearchResultPtr& result, childResults)
+						    rootResults.add( result );
+
+                        if (childResults.bestFullySpecificTarget().get()) rootResults.add(childResults.bestFullySpecificTarget());
+                        if (childResults.bestFullySpecificDecoy().get()) rootResults.add(childResults.bestFullySpecificDecoy());
+                        if (childResults.bestSemiSpecificTarget().get()) rootResults.add(childResults.bestSemiSpecificTarget());
+                        if (childResults.bestSemiSpecificDecoy().get()) rootResults.add(childResults.bestSemiSpecificDecoy());
+                        if (childResults.bestNonSpecificTarget().get()) rootResults.add(childResults.bestNonSpecificTarget());
+                        if (childResults.bestNonSpecificDecoy().get()) rootResults.add(childResults.bestNonSpecificDecoy());
+                    }
 
 					for(map<int,int>::iterator itr = childSpectrum->mvhScoreDistribution.begin(); itr != childSpectrum->mvhScoreDistribution.end(); ++itr)
 						rootSpectrum->mvhScoreDistribution[(*itr).first] += (*itr).second;

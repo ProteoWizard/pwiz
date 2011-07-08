@@ -26,7 +26,7 @@
 #include "stdafx.h"
 #include "freicore.h"
 #include "BaseRunTimeConfig.h"
-#include "pwiz/data/mziddata/MzIdentMLFile.hpp"
+#include "pwiz/data/identdata/IdentDataFile.hpp"
 
 
 using namespace freicore;
@@ -89,6 +89,9 @@ namespace myrimatch
     public:
         RTCONFIG_DEFINE_MEMBERS( RunTimeConfig, MYRIMATCH_RUNTIME_CONFIG, "\r\n\t ", "myrimatch.cfg", "\r\n#" )
 
+        string decoyPrefix;
+        bool automaticDecoys;
+
         boost::regex cleavageAgentRegex;
         Digestion::Config digestionConfig;
 
@@ -118,17 +121,21 @@ namespace myrimatch
         vector<double>  massErrors;
         vector<double>  mzFidelityLods;
 
-        pwiz::mziddata::MzIdentMLFile::Format outputFormat;
+        pwiz::identdata::IdentDataFile::Format outputFormat;
 
     private:
         void finalize()
         {
             if (bal::iequals(OutputFormat, "pepXML"))
-                outputFormat = pwiz::mziddata::MzIdentMLFile::Format_pepXML;
+                outputFormat = pwiz::identdata::IdentDataFile::Format_pepXML;
             else if (bal::iequals(OutputFormat, "mzIdentML"))
-                outputFormat = pwiz::mziddata::MzIdentMLFile::Format_MzIdentML;
+                outputFormat = pwiz::identdata::IdentDataFile::Format_MzIdentML;
             else
                 throw runtime_error("invalid output format");
+
+            
+            decoyPrefix = DecoyPrefix.empty() ? "rev_" : DecoyPrefix;
+            automaticDecoys = DecoyPrefix.empty() ? false : true;
 
             // TODO: move CleavageRules parsing to its own class
             trim(CleavageRules); // trim flanking whitespace

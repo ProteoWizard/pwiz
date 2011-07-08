@@ -154,7 +154,7 @@ namespace myrimatch
 		void serialize( Archive& ar, const unsigned int version )
 		{
 			ar & boost::serialization::base_object< BaseSearchResult >( *this );
-			ar & mvh & mzFidelity & XCorr;
+			ar & _isDecoy & mvh & mzFidelity & XCorr;
             //ar & massError & mzSSE & mzMAE & newMZFidelity;
 			//ar & deltaMVHAvg & deltaMVHMode & deltaMVHSeqType & deltaMVHSmartSeqType;
 			//ar & deltaMZFidelityMode & deltaMZFidelityAvg & deltaMZFidelitySeqType & deltaMZFidelitySmartSeqType;

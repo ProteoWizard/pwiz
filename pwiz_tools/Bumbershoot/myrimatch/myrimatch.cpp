@@ -373,11 +373,20 @@ namespace myrimatch
 		fileParams["PeakCounts: 3rdQuartile: Original"] = lexical_cast<string>( opcs[4] );
 		fileParams["PeakCounts: 3rdQuartile: Filtered"] = lexical_cast<string>( fpcs[4] );
 
-        string extension = g_rtConfig->outputFormat == pwiz::mziddata::MzIdentMLFile::Format_pepXML ? ".pepXML" : ".mzid";
+        string extension = g_rtConfig->outputFormat == pwiz::identdata::IdentDataFile::Format_pepXML ? ".pepXML" : ".mzid";
 		string outputFilename = filenameAsScanName + g_rtConfig->OutputSuffix + extension;
 		cout << "Writing search results to file \"" << outputFilename << "\"." << endl;
 
-		spectra.write( dataFilename, g_rtConfig->outputFormat, g_rtConfig->OutputSuffix, "MyriMatch", g_dbPath + g_dbFilename, g_rtConfig->cleavageAgentRegex, fileParams );
+		spectra.write(dataFilename,
+                      g_rtConfig->outputFormat,
+                      g_rtConfig->OutputSuffix,
+                      "MyriMatch",
+                      Version::str(),
+                      "http://forge.fenchurch.mc.vanderbilt.edu/projects/myrimatch/",
+                      g_dbPath + g_dbFilename,
+                      g_rtConfig->cleavageAgentRegex,
+                      g_rtConfig->decoyPrefix,
+                      fileParams);
 	}
 
 	void PrepareSpectra()
@@ -517,7 +526,7 @@ namespace myrimatch
 
 				START_PROFILER(4);
                 {
-                    boost::lock_guard<boost::mutex> guard(spectrum->mutex);
+                    boost::mutex::scoped_lock guard(spectrum->mutex);
 
                     if( isDecoy )
 				        ++ spectrum->numDecoyComparisons;
@@ -780,8 +789,8 @@ namespace myrimatch
 			Timer readTime(true);
 			try
 			{
-                proteins = proteinStore( g_rtConfig->DecoyPrefix );
-                proteins.readFASTA( g_dbFilename );
+                proteins = proteinStore( g_rtConfig->decoyPrefix );
+                proteins.readFASTA( g_dbFilename, " ", g_rtConfig->automaticDecoys );
 			} catch( std::exception& e )
 			{
 				cout << g_hostString << " had an error: " << e.what() << endl;
@@ -816,9 +825,6 @@ namespace myrimatch
 				avgSpectraByChargeState.clear();
                 monoSpectraByChargeState.clear();
                 searchStatistics = SearchStatistics();
-
-				//if( !TestFileType( *fItr, "mzdata" ) )
-				//	continue;
 
 				cout << "Reading spectra from file \"" << *fItr << "\"" << endl;
 				finishedFiles.insert( *fItr );
