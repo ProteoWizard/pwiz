@@ -21,7 +21,7 @@ del /q libraries\libfftw3-3.d* > nul 2>&1
 
 del /q pwiz\Version.cpp > nul 2>&1
 del /q pwiz\data\msdata\Version.cpp > nul 2>&1
-del /q pwiz\data\mziddata\Version.cpp > nul 2>&1
+del /q pwiz\data\identdata\Version.cpp > nul 2>&1
 del /q pwiz\data\tradata\Version.cpp > nul 2>&1
 del /q pwiz\data\proteome\Version.cpp > nul 2>&1
 del /q pwiz\analysis\Version.cpp > nul 2>&1
