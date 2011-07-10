@@ -126,7 +126,7 @@ namespace pwiz.Topograph.ui.Forms
                     query.SetParameter("minScore", 0.0);
                 }
                 var rowDataArrays = new List<object[]>();
-                using (var longWaitDialog = new LongWaitDialog(this, "Executing query"))
+                using (var longWaitDialog = new LongWaitDialog(TopLevelControl, "Executing query"))
                 {
                     var broker = new LongOperationBroker(b => query.List(rowDataArrays), 
                         longWaitDialog, session);

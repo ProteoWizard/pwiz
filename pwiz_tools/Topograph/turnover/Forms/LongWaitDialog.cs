@@ -12,6 +12,7 @@ namespace pwiz.Topograph.ui.Forms
 {
     public partial class LongWaitDialog : Form, ILongOperationUi
     {
+        private bool _closed;
         public LongWaitDialog(IWin32Window parentWindow, String title)
         {
             InitializeComponent();
@@ -41,7 +42,7 @@ namespace pwiz.Topograph.ui.Forms
         {
             try
             {
-                if (!IsDisposed && IsHandleCreated)
+                if (IsHandleCreated && !_closed)
                 {
                     BeginInvoke(new Action(Close));
                 }
@@ -52,13 +53,6 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
-        protected override void OnClosed(EventArgs e)
-        {
-            base.OnClosed(e);
-            Dispose();
-            timer1.Dispose();
-        }
-
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             base.OnFormClosing(e);
@@ -67,8 +61,8 @@ namespace pwiz.Topograph.ui.Forms
                 e.Cancel = true;
                 return;
             }
+            _closed = true;
             LongOperationBroker.WaitUntilFinished();
-            timer1.Dispose();
         }
 
         private void btnCancel_Click(object sender, EventArgs e)

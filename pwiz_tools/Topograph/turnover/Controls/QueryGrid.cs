@@ -131,7 +131,7 @@ namespace pwiz.Topograph.ui.Controls
                 var entityTypesToQuery = new HashSet<String>();
                 var query = session.CreateQuery(parsedQuery.GetExecuteHql());
                 var queryExecuter = new QueryExecuter(session, query, new List<object>());
-                using (var longWaitDialog = new LongWaitDialog(this, "Executing Query"))
+                using (var longWaitDialog = new LongWaitDialog(TopLevelControl, "Executing Query"))
                 {
                     var broker = new LongOperationBroker(queryExecuter, longWaitDialog);
                     if (!broker.LaunchJob())

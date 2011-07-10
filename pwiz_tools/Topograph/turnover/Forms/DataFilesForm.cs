@@ -208,7 +208,7 @@ namespace pwiz.Topograph.ui.Forms
                     {
                         dataFileIds.Add(((MsDataFile) row.Tag).Id.Value);
                     }
-                    using (var longWaitDialog = new LongWaitDialog(this, "Deleting data files"))
+                    using (var longWaitDialog = new LongWaitDialog(TopLevelControl, "Deleting data files"))
                     {
                         var longWaitBroker = new LongOperationBroker((b => DeleteDataFiles(b, dataFileIds)),
                                                                      longWaitDialog);

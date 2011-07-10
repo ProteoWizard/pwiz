@@ -13,7 +13,7 @@ namespace pwiz.Topograph.Data
 {
     public class WorkspaceUpgrader : ILongOperationJob
     {
-        public const int CurrentVersion = 10;
+        public const int CurrentVersion = 11;
         public const int MinUpgradeableVersion = 1;
         private IDbCommand _currentCommand;
         private LongOperationBroker _longOperationBroker;
@@ -224,7 +224,7 @@ namespace pwiz.Topograph.Data
                 }
                 if (dbVersion < 10)
                 {
-                    broker.UpdateStatusMessage("Upgrading from version 9 to 10");
+                    broker.UpdateStatusMessage("Upgrading from version 10 to 11");
                     if (IsSqlite)
                     {
                         CreateCommand(connection,
@@ -280,6 +280,36 @@ namespace pwiz.Topograph.Data
                                       "CREATE UNIQUE INDEX ChromatogramSetMz ON DbChromatogram (ChromatogramSet, Charge, MassIndex)")
                             .ExecuteNonQuery();
                     }
+                }
+                if (dbVersion < 11)
+                {
+                    broker.UpdateStatusMessage("Upgrading from version 9 to 10");
+                    CreateCommand(connection, "ALTER TABLE DbPeptideSearchResult ADD COLUMN PsmCount INT")
+                        .ExecuteNonQuery();
+                    CreateCommand(connection, "ALTER TABLE DbPeptideFileAnalysis ADD COLUMN PsmCount INT")
+                        .ExecuteNonQuery();
+                    CreateCommand(connection,
+                            "ALTER TABLE DbPeptideFileAnalysis ADD COLUMN IntegrationNote VARCHAR(255)")
+                        .ExecuteNonQuery();
+                    CreateCommand(connection,
+                                  "UPDATE DbPeptideSearchResult SET PsmCount = 1 WHERE FirstDetectedScan = LastDetectedScan")
+                                  .ExecuteNonQuery();
+                    CreateCommand(connection,
+                                  "UPDATE DbPeptideSearchResult SET PsmCount = 2 WHERE FirstDetectedScan <> LastDetectedScan")
+                                  .ExecuteNonQuery();
+                    if (!IsSqlite)
+                    {
+                        CreateCommand(connection, "UPDATE DbPeptideFileAnalysis F"
+                                                  + "\nINNER JOIN DbPeptideAnalysis A ON F.PeptideAnalysis = A.Id"
+                                                  +
+                                                  "\nLEFT JOIN DbPeptideSearchResult R ON R.Peptide = A.Peptide AND R.MsDataFile = F.MsDataFile"
+                                                  + "\nSET F.PsmCount = Coalesce(R.PsmCount, 0)")
+                            .ExecuteNonQuery();
+
+                            
+                    }
+
+
                 }
                 if (dbVersion < CurrentVersion)
                 {

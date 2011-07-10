@@ -50,6 +50,8 @@ namespace pwiz.Topograph.Data
         public virtual string PrecursorEnrichmentFormula { get; set; }
         public virtual double? Turnover { get; set; }
         public virtual double? TurnoverScore { get; set; }
+        public virtual int PsmCount { get; set; }
+        public virtual string IntegrationNote { get; set; }
         public virtual bool IsCalculated { get { return PeakCount != 0 && TracerPercent.HasValue; } }
         public override string ToString()
         {

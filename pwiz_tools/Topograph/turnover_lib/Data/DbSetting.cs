@@ -42,5 +42,8 @@ namespace pwiz.Topograph.Data
         max_isotope_retention_time_shift,
         min_correlation_coeff,
         min_deconvolution_score_for_avg_precursor_pool,
+        accept_samples_without_ms2_id,
+        accept_min_deconvolution_score,
+        accept_integration_notes,
     }
 }

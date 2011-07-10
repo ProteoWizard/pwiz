@@ -22,6 +22,9 @@ namespace pwiz.Topograph.MsData
             InitialPercent = 0;
             FinalPercent = 100;
             ExcludedTimePoints = new double[0];
+            MinScore = workspace.GetAcceptMinDeconvolutionScore();
+            AcceptMissingMs2Id = workspace.GetAcceptSamplesWithoutMs2Id();
+            AcceptIntegrationNotes = new HashSet<IntegrationNote>(workspace.GetAcceptIntegrationNotes());
         }
 
         public HalfLifeCalculationType HalfLifeCalculationType
@@ -43,6 +46,8 @@ namespace pwiz.Topograph.MsData
         {
             get; set;
         }
+        public bool AcceptMissingMs2Id { get; set; }
+        public ICollection<IntegrationNote> AcceptIntegrationNotes { get; set; }
 
         /// <summary>
         /// For bug 395 : Automated outlier-trimming algorithm/QC filter
@@ -80,12 +85,12 @@ namespace pwiz.Topograph.MsData
                        + "\nF.Id,"
                        + "\nF.PrecursorEnrichment,"
                        + "\nF.TurnoverScore,"
-                       + "\nF.ValidationStatus"
+                       + "\nF.ValidationStatus,"
+                       + "\nF.PsmCount,"
+                       + "\nF.IntegrationNote"
                        + "\nFROM " + typeof (DbPeptideFileAnalysis) + " F"
-                       + "\nWHERE F.DeconvolutionScore >= :minScore"
-                       + "\nAND F.TracerPercent IS NOT NULL");
-            var query = Session.CreateQuery(hql.ToString())
-                .SetParameter("minScore", MinScore);
+                       + "\nWHERE F.TracerPercent IS NOT NULL");
+            var query = Session.CreateQuery(hql.ToString());
             var peaksQuery = Session.CreateQuery("SELECT P.PeptideFileAnalysis.Id, P.Name, P.TotalArea, P.StartTime, P.EndTime"
                                                  + "\nFROM " + typeof (DbPeak) + " P");
             var peaksDict = new Dictionary<long, IDictionary<TracerFormula, PeakData>>();
@@ -127,7 +132,10 @@ namespace pwiz.Topograph.MsData
                                           Peaks = peaks,
                                           PeptideFileAnalysisId = peptideFileAnalysisId,
                                           ValidationStatus = (ValidationStatus) row[8],
+                                          PsmCount = (int) row[9],
+                                          IntegrationNote = IntegrationNote.Parse((string) row[10]),
                                       };
+                    rowData.Accept = IsAcceptable(rowData);
                     ComputeAvgTurnover(rowData);
                     result.Add(rowData);
                 }
@@ -137,6 +145,31 @@ namespace pwiz.Topograph.MsData
                 }
             }
             return result;
+        }
+
+        private bool IsAcceptable(RowData rowData)
+        {
+            if (rowData.ValidationStatus == ValidationStatus.accept)
+            {
+                return true;
+            }
+            if (rowData.ValidationStatus == ValidationStatus.reject)
+            {
+                return false;
+            }
+            if (rowData.DeconvolutionScore < MinScore)
+            {
+                return false;
+            }
+            if (!AcceptMissingMs2Id && rowData.PsmCount == 0)
+            {
+                return false;
+            }
+            if (!AcceptIntegrationNotes.Contains(rowData.IntegrationNote))
+            {
+                return false;
+            }
+            return true;
         }
 
         private void ComputeAvgTurnover(RowData rowData)
@@ -280,6 +313,10 @@ namespace pwiz.Topograph.MsData
                 var values = new Dictionary<double, List<double>>();
                 foreach (var rowData in rowDatas)
                 {
+                    if (!rowData.Accept)
+                    {
+                        continue;
+                    }
                     double? score;
                     var value = GetValue(rowData, out score);
                     if (!value.HasValue || double.IsNaN(value.Value) || double.IsInfinity(value.Value))
@@ -339,6 +376,10 @@ namespace pwiz.Topograph.MsData
             var logValues = new List<double>();
             foreach (var rowData in filteredRowDatas)
             {
+                if (!rowData.Accept)
+                {
+                    continue;
+                }
                 double? logValue = GetLogValue(rowData);
                 if (!logValue.HasValue || double.IsNaN(logValue.Value) || double.IsInfinity(logValue.Value))
                 {
@@ -460,17 +501,20 @@ namespace pwiz.Topograph.MsData
                                                     });
             }
             var rowData = new RowData
-                       {
-                           MsDataFile = peptideFileAnalysis.MsDataFile,
-                           Peptide = peptideFileAnalysis.Peptide,
-                           DeconvolutionScore = peptideFileAnalysis.Peaks.DeconvolutionScore.Value,
-                           TracerPercent = peptideFileAnalysis.Peaks.TracerPercent.Value,
-                           IndTurnover = peptideFileAnalysis.Peaks.Turnover*100,
-                           IndTurnoverScore = peptideFileAnalysis.Peaks.TurnoverScore,
-                           IndPrecursorEnrichment = peptideFileAnalysis.Peaks.PrecursorEnrichment,
-                           Peaks = peaks,
-                           PeptideFileAnalysisId = peptideFileAnalysis.Id.Value,
+                              {
+                                  MsDataFile = peptideFileAnalysis.MsDataFile,
+                                  Peptide = peptideFileAnalysis.Peptide,
+                                  DeconvolutionScore = peptideFileAnalysis.Peaks.DeconvolutionScore.Value,
+                                  TracerPercent = peptideFileAnalysis.Peaks.TracerPercent.Value,
+                                  IndTurnover = peptideFileAnalysis.Peaks.Turnover*100,
+                                  IndTurnoverScore = peptideFileAnalysis.Peaks.TurnoverScore,
+                                  IndPrecursorEnrichment = peptideFileAnalysis.Peaks.PrecursorEnrichment,
+                                  Peaks = peaks,
+                                  PeptideFileAnalysisId = peptideFileAnalysis.Id.Value,
+                                  PsmCount = peptideFileAnalysis.PsmCount,
+                                  IntegrationNote = peptideFileAnalysis.Peaks.IntegrationNote,
                        };
+            rowData.Accept = IsAcceptable(rowData);
             ComputeAvgTurnover(rowData);
             return rowData;
         }
@@ -546,6 +590,7 @@ namespace pwiz.Topograph.MsData
         public IList<RowData> RowDatas { get; private set; }
         public class RowData
         {
+            public bool Accept { get; set; }
             public double TracerPercent { get; set; }
             public double DeconvolutionScore { get; set; }
             public double? IndPrecursorEnrichment { get; set; }
@@ -560,6 +605,8 @@ namespace pwiz.Topograph.MsData
             public String ProteinDescription { get { return Peptide.ProteinDescription; } }
             public MsDataFile MsDataFile { get; set; }
             public long PeptideFileAnalysisId { get; set; }
+            public int PsmCount { get; set; }
+            public IntegrationNote IntegrationNote { get; set; }
             public IDictionary<TracerFormula, PeakData> Peaks { get; set; }
             public double? AreaUnderCurve
             {

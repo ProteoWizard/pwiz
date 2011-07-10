@@ -281,8 +281,10 @@ namespace pwiz.Topograph.ui.Forms
             if (overlayFileAnalysis != null)
             {
                 overlayTracerChromatograms = overlayFileAnalysis.GetTracerChromatograms(Smooth);
-                var mapDict = overlayFileAnalysis.MsDataFile.AlignTimes(PeptideFileAnalysis.MsDataFile);
-                mappedTimes = overlayTracerChromatograms.Times.Select(t => mapDict[t]).ToArray();
+                var retentionTimeAlignment =
+                    overlayFileAnalysis.MsDataFile.GetRetentionTimeAlignment(PeptideFileAnalysis.MsDataFile);
+                mappedTimes =
+                    overlayTracerChromatograms.Times.Select(t => retentionTimeAlignment.GetTargetTime(t)).ToArray();
             }
             var peaks = PeptideFileAnalysis.Peaks;
             var entries = tracerChromatograms.Points.ToArray();

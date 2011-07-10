@@ -121,6 +121,7 @@
     <Compile Include="Data\DbProteinName.cs" />
     <Compile Include="Data\DbProteinSet.cs" />
     <Compile Include="Data\DbProteinSetMember.cs" />
+    <Compile Include="Data\IntegrationNote.cs" />
     <Compile Include="Data\QueryExecuter.cs" />
     <Compile Include="Data\Snapshot\LoadPeptideAnalysisSnapshot.cs" />
     <Compile Include="Data\Snapshot\PeptideAnalysisSnapshot.cs" />
@@ -142,6 +143,7 @@
     <Compile Include="Model\PeakData.cs" />
     <Compile Include="Model\Peaks.cs" />
     <Compile Include="Model\AbstractSetting.cs" />
+    <Compile Include="Model\RetentionTimeAlignment.cs" />
     <Compile Include="Model\SettingCollection.cs" />
     <Compile Include="Model\SimpleChildCollection.cs" />
     <Compile Include="Model\TpgLinkDef.cs" />

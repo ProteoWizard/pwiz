@@ -49,21 +49,24 @@ namespace pwiz.Topograph.ui.Forms
             using (var session = Workspace.OpenSession())
             {
                 IEnumerable<TableData> tableDatas = null;
-                var broker = new LongOperationBroker(b => { tableDatas = RequeryGrid(b, session); }, 
-                    new LongWaitDialog(this, "Querying Table Sizes"), session);
-                if (!broker.LaunchJob() || tableDatas == null)
+                using (var longWaitDialog = new LongWaitDialog(TopLevelControl, "Querying Table Sizes"))
                 {
-                    return;
-                }
-                dataGridView1.Rows.Clear();
-                foreach (var tableData in tableDatas)
-                {
-                    var row = dataGridView1.Rows[dataGridView1.Rows.Add()];
-                    row.Cells[colTableName.Index].Value = tableData.Name;
-                    row.Cells[colRowCount.Index].Value = tableData.RowCount;
-                    row.Cells[colDataFileSize.Index].Value = tableData.DataFileSize;
-                    row.Cells[colFreeSpace.Index].Value = tableData.FreeSpace;
-                    row.Cells[colIndexSize.Index].Value = tableData.IndexSize;
+                    var broker = new LongOperationBroker(b => { tableDatas = RequeryGrid(b, session); }, longWaitDialog
+                                                         , session);
+                    if (!broker.LaunchJob() || tableDatas == null)
+                    {
+                        return;
+                    }
+                    dataGridView1.Rows.Clear();
+                    foreach (var tableData in tableDatas)
+                    {
+                        var row = dataGridView1.Rows[dataGridView1.Rows.Add()];
+                        row.Cells[colTableName.Index].Value = tableData.Name;
+                        row.Cells[colRowCount.Index].Value = tableData.RowCount;
+                        row.Cells[colDataFileSize.Index].Value = tableData.DataFileSize;
+                        row.Cells[colFreeSpace.Index].Value = tableData.FreeSpace;
+                        row.Cells[colIndexSize.Index].Value = tableData.IndexSize;
+                    }
                 }
             }
         }

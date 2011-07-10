@@ -155,7 +155,7 @@ namespace pwiz.Topograph.ui.Forms
         private void btnAnalyzePeptides_Click(object sender, EventArgs e)
         {
             var oldCount = Workspace.PeptideAnalyses.ChildCount;
-            new AnalyzePeptidesForm(Workspace).Show(this);
+            new AnalyzePeptidesForm(Workspace).Show(TopLevelControl);
             if (oldCount == Workspace.PeptideAnalyses.ChildCount)
             {
                 return;
@@ -172,7 +172,7 @@ namespace pwiz.Topograph.ui.Forms
 
         private void btnAddSearchResults_Click(object sender, EventArgs e)
         {
-            new AddSearchResultsForm(Workspace).Show(this);
+            new AddSearchResultsForm(Workspace).Show(TopLevelControl);
         }
     }
 }

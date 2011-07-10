@@ -36,8 +36,10 @@ namespace pwiz.Topograph.Model
         private String _cohort;
         private String _sample;
         private double? _timePoint;
-        private IDictionary<long, IDictionary<double, double>> _alignments 
-            = new Dictionary<long, IDictionary<double, double>>();
+        private IDictionary<long, RetentionTimeAlignment> _alignments 
+            = new Dictionary<long, RetentionTimeAlignment>();
+
+        private const int AlignmentArraySparseness = 10;
 
         private IList<SearchResultInfo> _searchResults;
 
@@ -170,12 +172,13 @@ namespace pwiz.Topograph.Model
             }
             return result;
         }
-        public IDictionary<double, double> AlignTimes(MsDataFile other)
+
+        public RetentionTimeAlignment GetRetentionTimeAlignment(MsDataFile other)
         {
             var alignments = _alignments;
             lock (alignments)
             {
-                IDictionary<double, double> result;
+                RetentionTimeAlignment result;
                 if (alignments.TryGetValue(other.Id.Value, out result))
                 {
                     return result;
@@ -207,12 +210,7 @@ namespace pwiz.Topograph.Model
                 var loessInterpolator = new LoessInterpolator(.1, 0);
                 var weights = Enumerable.Repeat(1.0, xValues.Count()).ToArray();
                 var smoothedPoints = loessInterpolator.Smooth(xValues, yValues, weights);
-                result = new Dictionary<double, double>();
-                for (int i = 0; i < MsDataFileData.GetSpectrumCount(); i++)
-                {
-                    var time = MsDataFileData.GetTime(i);
-                    result.Add(time, LoessInterpolator.Interpolate(time, xValues, smoothedPoints));
-                }
+                result = RetentionTimeAlignment.GetRetentionTimeAlignment(xValues, smoothedPoints);
                 alignments.Add(other.Id.Value, result);
                 return result;
             }

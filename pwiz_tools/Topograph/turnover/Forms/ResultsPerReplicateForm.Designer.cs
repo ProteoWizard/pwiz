@@ -38,7 +38,8 @@
             this.label1 = new System.Windows.Forms.Label();
             this.btnSave = new System.Windows.Forms.Button();
             this.recordNavBar1 = new pwiz.Common.Controls.RecordNavBar();
-            this.dataGridView1 = new System.Windows.Forms.DataGridView();
+            this.dataGridView1 = new pwiz.Common.Controls.EnhancedDataGridView();
+            this.colAccept = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colPeptide = new System.Windows.Forms.DataGridViewLinkColumn();
             this.colDataFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colArea = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -57,6 +58,8 @@
             this.colAvgTurnoverScore = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colStatus = new pwiz.Topograph.ui.Controls.ValidationStatusColumn();
             this.colTotalIonCurrent = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colPsmCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colIntegrationNote = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.Panel2.SuspendLayout();
             this.splitContainer1.SuspendLayout();
@@ -174,6 +177,7 @@
             this.dataGridView1.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.colAccept,
             this.colPeptide,
             this.colDataFile,
             this.colArea,
@@ -191,7 +195,9 @@
             this.colAvgTurnover,
             this.colAvgTurnoverScore,
             this.colStatus,
-            this.colTotalIonCurrent});
+            this.colTotalIonCurrent,
+            this.colPsmCount,
+            this.colIntegrationNote});
             dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
             dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
@@ -213,8 +219,16 @@
             this.dataGridView1.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
             this.dataGridView1.Size = new System.Drawing.Size(736, 284);
             this.dataGridView1.TabIndex = 0;
+            this.dataGridView1.UseStableSort = true;
             this.dataGridView1.RowHeaderMouseDoubleClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView1_RowHeaderMouseDoubleClick);
             this.dataGridView1.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellContentClick);
+            // 
+            // colAccept
+            // 
+            this.colAccept.HeaderText = "Accept";
+            this.colAccept.Name = "colAccept";
+            this.colAccept.ReadOnly = true;
+            this.colAccept.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             // 
             // colPeptide
             // 
@@ -329,6 +343,18 @@
             this.colTotalIonCurrent.Name = "colTotalIonCurrent";
             this.colTotalIonCurrent.ReadOnly = true;
             // 
+            // colPsmCount
+            // 
+            this.colPsmCount.HeaderText = "Psm Count";
+            this.colPsmCount.Name = "colPsmCount";
+            this.colPsmCount.ReadOnly = true;
+            // 
+            // colIntegrationNote
+            // 
+            this.colIntegrationNote.HeaderText = "Peak Integration Notes";
+            this.colIntegrationNote.Name = "colIntegrationNote";
+            this.colIntegrationNote.ReadOnly = true;
+            // 
             // ResultsPerReplicateForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -352,12 +378,12 @@
 
         private System.Windows.Forms.SplitContainer splitContainer1;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
-        private System.Windows.Forms.DataGridView dataGridView1;
         private System.Windows.Forms.CheckedListBox checkedListBoxColumns;
         private System.Windows.Forms.Button btnRequery;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnSave;
         private pwiz.Common.Controls.RecordNavBar recordNavBar1;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colAccept;
         private System.Windows.Forms.DataGridViewLinkColumn colPeptide;
         private System.Windows.Forms.DataGridViewTextBoxColumn colDataFile;
         private System.Windows.Forms.DataGridViewTextBoxColumn colArea;
@@ -376,5 +402,8 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn colAvgTurnoverScore;
         private pwiz.Topograph.ui.Controls.ValidationStatusColumn colStatus;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTotalIonCurrent;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colPsmCount;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colIntegrationNote;
+        private pwiz.Common.Controls.EnhancedDataGridView dataGridView1;
     }
 }

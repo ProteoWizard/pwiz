@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.21022</ProductVersion>
+    <ProductVersion>9.0.30729</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{DACEE7D5-5A6A-4001-9602-FAB1A9A2DE59}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -78,6 +78,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <NativeReference Include="Interop.HSREADWRITELib.SxS, Version=1.0.0.0, Type=win32">
+      <Name>Interop.HSREADWRITELib.SxS.manifest</Name>
+      <HintPath>..\..\..\pwiz_aux\msrc\utility\vendor_api\Bruker\Interop.HSREADWRITELib.SxS.manifest</HintPath>
+    </NativeReference>
     <NativeReference Include="MSFileReader.XRawfile2.SxS, Version=2.1.0.20, Type=win32">
       <Name>MSFileReader.XRawfile2.SxS.manifest</Name>
       <HintPath>obj\x86\MSFileReader.XRawfile2.SxS.manifest</HintPath>

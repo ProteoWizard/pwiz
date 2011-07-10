@@ -85,6 +85,7 @@ namespace pwiz.Topograph.Model
             LastTime = dbPeptideFileAnalysis.ChromatogramEndTime;
             FirstDetectedScan = dbPeptideFileAnalysis.FirstDetectedScan;
             LastDetectedScan = dbPeptideFileAnalysis.LastDetectedScan;
+            PsmCount = dbPeptideFileAnalysis.PsmCount;
             _workspaceVersion = Workspace.SavedWorkspaceVersion;
         }
 
@@ -131,6 +132,7 @@ namespace pwiz.Topograph.Model
         public double LastTime { get; private set; }
         public int? FirstDetectedScan { get; private set; }
         public int? LastDetectedScan { get; private set; }
+        public int PsmCount { get; private set; }
         public int TracerCount { get { return Peptide.MaxTracerCount; } }
         public double? PeakStartTime { get { return Peaks.StartTime; } }
         public double? PeakEndTime { get { return Peaks.EndTime; } }
@@ -140,12 +142,14 @@ namespace pwiz.Topograph.Model
             var dbMsDataFile = session.Load<DbMsDataFile>(msDataFile.Id);
             double chromatogramStartTime, chromatogramEndTime;
             int? firstDetectedScan, lastDetectedScan;
+            int psmCount;
             if (peptideSearchResult != null)
             {
                 chromatogramStartTime = msDataFile.GetTime(peptideSearchResult.FirstDetectedScan - 1800);
                 chromatogramEndTime = msDataFile.GetTime(peptideSearchResult.LastDetectedScan + 1800);
                 firstDetectedScan = peptideSearchResult.FirstDetectedScan;
                 lastDetectedScan = peptideSearchResult.LastDetectedScan;
+                psmCount = peptideSearchResult.PsmCount;
             }
             else
             {
@@ -168,17 +172,19 @@ namespace pwiz.Topograph.Model
                     chromatogramStartTime = chromatogramEndTime = 0;
                 }
                 firstDetectedScan = lastDetectedScan = null;
+                psmCount = 0;
             }
             return new DbPeptideFileAnalysis
-            {
-                ChromatogramEndTime = chromatogramEndTime,
-                ChromatogramStartTime = chromatogramStartTime,
-                FirstDetectedScan = firstDetectedScan,
-                LastDetectedScan = lastDetectedScan,
-                MsDataFile = dbMsDataFile,
-                PeptideAnalysis = dbPeptideAnalysis,
-                AutoFindPeak = true,
-            };
+                       {
+                           ChromatogramEndTime = chromatogramEndTime,
+                           ChromatogramStartTime = chromatogramStartTime,
+                           FirstDetectedScan = firstDetectedScan,
+                           LastDetectedScan = lastDetectedScan,
+                           MsDataFile = dbMsDataFile,
+                           PeptideAnalysis = dbPeptideAnalysis,
+                           AutoFindPeak = true,
+                           PsmCount = psmCount,
+                       };
         }
 
         public static PeptideFileAnalysis EnsurePeptideFileAnalysis(PeptideAnalysis peptideAnalysis, MsDataFile msDataFile)

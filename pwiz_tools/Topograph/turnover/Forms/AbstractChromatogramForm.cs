@@ -231,7 +231,7 @@ namespace pwiz.Topograph.ui.Forms
                 ScanIndex = scanIndex,
                 PeptideAnalysis = PeptideAnalysis
             };
-            spectrumForm.Show(this);
+            spectrumForm.Show(TopLevelControl);
             double minMz = 2000;
             double maxMz = 0;
             var selectedCharges = GetSelectedCharges();

@@ -35,7 +35,7 @@ namespace pwiz.Topograph.ui.Forms
             var locks = new List<DbLock>();
             using (var session = Workspace.OpenSession())
             {
-                using (var longWaitDialog = new LongWaitDialog(this, "Querying Database"))
+                using (var longWaitDialog = new LongWaitDialog(TopLevelControl, "Querying Database"))
                 {
                     var broker = new LongOperationBroker(b => session.CreateCriteria(typeof (DbLock)).List(locks),
                                                          longWaitDialog, session);

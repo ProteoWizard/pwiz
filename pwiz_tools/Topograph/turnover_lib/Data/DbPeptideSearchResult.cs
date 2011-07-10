@@ -34,5 +34,6 @@ namespace pwiz.Topograph.Data
         public virtual int LastDetectedScan { get; set; }
         public virtual int FirstTracerCount { get; set; }
         public virtual int LastTracerCount { get; set; }
+        public virtual int PsmCount { get; set; }
     }
 }

@@ -1,4 +1,22 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2011 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -102,7 +120,7 @@ namespace pwiz.Topograph.ui.Forms
             var calculator = new HalfLifeCalculator(Workspace, HalfLifeCalculationType.GroupPrecursorPool)
             {
             };
-            using (var longWaitDialog = new LongWaitDialog(this, "Calculating Half Lives"))
+            using (var longWaitDialog = new LongWaitDialog(TopLevelControl, "Calculating Half Lives"))
             {
                 var longOperationBroker = new LongOperationBroker(calculator, longWaitDialog);
                 if (!longOperationBroker.LaunchJob())
@@ -128,6 +146,7 @@ namespace pwiz.Topograph.ui.Forms
                 var row = dataGridView1.Rows[iRow];
                 var rowData = rowDatas[iRow];
                 row.Tag = rowData.PeptideFileAnalysisId;
+                row.Cells[colAccept.Index].Value = rowData.Accept ? "Pass" : "Fail";
                 row.Cells[colPeptide.Index].Value = rowData.Peptide.FullSequence;
                 row.Cells[colProteinName.Index].Value = Workspace.GetProteinKey(rowData.Peptide.ProteinName,
                                                                           rowData.Peptide.ProteinDescription);
@@ -149,6 +168,8 @@ namespace pwiz.Topograph.ui.Forms
                 row.Cells[colStatus.Index].Value = rowData.ValidationStatus;
                 row.Cells[colTotalIonCurrent.Index].Value =
                     rowData.MsDataFile.MsDataFileData.GetTotalIonCurrent(rowData.StartTime.Value, rowData.EndTime.Value);
+                row.Cells[colPsmCount.Index].Value = rowData.PsmCount;
+                row.Cells[colIntegrationNote.Index].Value = rowData.IntegrationNote;
             }
         }
 

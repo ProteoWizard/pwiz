@@ -26,6 +26,7 @@ namespace pwiz.Topograph.ui.Forms
             var tracerDef = workspace.GetTracerDefs()[0];
             tbxInitialTracerPercent.Text = tracerDef.InitialApe.ToString();
             tbxFinalTracerPercent.Text = tracerDef.FinalApe.ToString();
+            tbxMinScore.Text = workspace.GetAcceptMinDeconvolutionScore().ToString();
             comboCalculationType.SelectedIndex = 0;
             UpdateTimePoints();
         }
@@ -62,7 +63,7 @@ namespace pwiz.Topograph.ui.Forms
                                      ExcludedTimePoints = UpdateTimePoints(),
                                      ApplyEvviesFilter = cbxEvviesFilter.Checked,
                                  };
-            using (var longWaitDialog = new LongWaitDialog(this, "Calculating Half Lives"))
+            using (var longWaitDialog = new LongWaitDialog(TopLevelControl, "Calculating Half Lives"))
             {
                 var longOperationBroker = new LongOperationBroker(calculator, longWaitDialog);
                 if (!longOperationBroker.LaunchJob())

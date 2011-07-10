@@ -119,6 +119,7 @@ namespace pwiz.Topograph.ui.Forms
                                precursorEnrichmentsToolStripMenuItem,
                                resultsByReplicateToolStripMenuItem,
                                alignmentToolStripMenuItem,
+                               acceptanceCriteriaToolStripMenuItem,
                            };
             }
         }
@@ -402,7 +403,7 @@ namespace pwiz.Topograph.ui.Forms
                 {
                     return null;
                 }
-                using (var longWaitDialog = new LongWaitDialog(this, "Upgrading Workspace"))
+                using (var longWaitDialog = new LongWaitDialog(TopLevelControl, "Upgrading Workspace"))
                 {
                     if (!new LongOperationBroker(upgrader, longWaitDialog).LaunchJob())
                     {
@@ -458,7 +459,7 @@ namespace pwiz.Topograph.ui.Forms
             var peptidesForm = Program.FindOpenForm<PeptidesForm>();
             if (peptidesForm != null)
             {
-                peptidesForm.Activate();
+                RestoreAndActivate(peptidesForm);
                 return;
             }
 
@@ -495,7 +496,7 @@ namespace pwiz.Topograph.ui.Forms
 
         private bool SaveWorkspace()
         {
-            using (var longWaitDialog = new LongWaitDialog(this, "Saving Workspace"))
+            using (var longWaitDialog = new LongWaitDialog(TopLevelControl, "Saving Workspace"))
             {
                 return Workspace.Save(longWaitDialog);
             }
@@ -563,7 +564,7 @@ namespace pwiz.Topograph.ui.Forms
             var dataFilesForm = Program.FindOpenForm<DataFilesForm>();
             if (dataFilesForm != null)
             {
-                dataFilesForm.Activate();
+                RestoreAndActivate(dataFilesForm);
                 return;
             }
             dataFilesForm = new DataFilesForm(Workspace);
@@ -596,7 +597,7 @@ namespace pwiz.Topograph.ui.Forms
             var peptideComparisonsForm = Program.FindOpenForm<PeptideAnalysesForm>();
             if (peptideComparisonsForm != null)
             {
-                peptideComparisonsForm.Activate();
+                RestoreAndActivate(peptideComparisonsForm);
                 return;
             }
 
@@ -608,7 +609,7 @@ namespace pwiz.Topograph.ui.Forms
         {
             using (var form = new ModificationsForm(Workspace))
             {
-                form.ShowDialog(this);
+                form.ShowDialog(TopLevelControl);
             }
         }
 
@@ -626,8 +627,17 @@ namespace pwiz.Topograph.ui.Forms
             }
             else
             {
-                form.Activate();
+                RestoreAndActivate(form);
             }
+        }
+
+        private void RestoreAndActivate(Form form)
+        {
+            if (form.WindowState == FormWindowState.Minimized)
+            {
+                form.WindowState = FormWindowState.Normal;
+            }
+            form.Activate();
         }
 
         private void updateProteinNamesToolStripMenuItem_Click(object sender, EventArgs e)
@@ -651,7 +661,7 @@ namespace pwiz.Topograph.ui.Forms
                     FastaFilePaths = openFileDialog.FileNames
                 })
                 {
-                    updateProteinNames.ShowDialog(this);
+                    updateProteinNames.ShowDialog(TopLevelControl);
                 }
             }
         }
@@ -661,7 +671,7 @@ namespace pwiz.Topograph.ui.Forms
             var form = Program.FindOpenForm<QueriesForm>();
             if (form != null)
             {
-                form.Activate();
+                RestoreAndActivate(form);
                 return;
             }
             form = new QueriesForm(Workspace);
@@ -672,7 +682,7 @@ namespace pwiz.Topograph.ui.Forms
         {
             using (var form = new MiscSettingsForm(Workspace))
             {
-                form.ShowDialog(this);
+                form.ShowDialog(TopLevelControl);
             }
         }
 
@@ -713,7 +723,7 @@ namespace pwiz.Topograph.ui.Forms
             {
                 while (true)
                 {
-                    if (dialog.ShowDialog(this) == DialogResult.Cancel)
+                    if (dialog.ShowDialog(TopLevelControl) == DialogResult.Cancel)
                     {
                         return;
                     }
@@ -762,7 +772,7 @@ namespace pwiz.Topograph.ui.Forms
             {
                 while (true)
                 {
-                    if (dialog.ShowDialog(this) == DialogResult.Cancel)
+                    if (dialog.ShowDialog(TopLevelControl) == DialogResult.Cancel)
                     {
                         return;
                     }
@@ -834,7 +844,7 @@ namespace pwiz.Topograph.ui.Forms
             var locksForm = Program.FindOpenForm<LocksForm>();
             if (locksForm != null)
             {
-                locksForm.Activate();
+                RestoreAndActivate(locksForm);
                 return;
             }
             locksForm = new LocksForm(Workspace);
@@ -857,7 +867,7 @@ namespace pwiz.Topograph.ui.Forms
         {
             var job = new LoadPeptideAnalysisSnapshot(Workspace, ids, loadChromatograms);
             var title = ids.Count == 1 ? "Loading peptide analysis" : "Loading " + ids.Count + " peptide analyses";
-            using (var longWaitDialog = new LongWaitDialog(this, title))
+            using (var longWaitDialog = new LongWaitDialog(TopLevelControl, title))
             {
                 new LongOperationBroker(job, longWaitDialog).LaunchJob();
             }
@@ -872,7 +882,7 @@ namespace pwiz.Topograph.ui.Forms
             }
             using (var dumpWorkspaceDlg = new DumpWorkspaceDlg())
             {
-                if (dumpWorkspaceDlg.ShowDialog(this) == DialogResult.Cancel)
+                if (dumpWorkspaceDlg.ShowDialog(TopLevelControl) == DialogResult.Cancel)
                 {
                     return;
                 }
@@ -894,7 +904,7 @@ namespace pwiz.Topograph.ui.Forms
                     try
                     {
                         Workspace = null;
-                        using (var longWaitDialog = new LongWaitDialog(this, "Exporting SQL"))
+                        using (var longWaitDialog = new LongWaitDialog(TopLevelControl, "Exporting SQL"))
                         {
                             var databaseDumper = new DatabaseDumper(workspace, dumpWorkspaceDlg.DatabaseTypeEnum, fileDialog.FileName);
                             new LongOperationBroker(databaseDumper, longWaitDialog).LaunchJob();
@@ -914,7 +924,7 @@ namespace pwiz.Topograph.ui.Forms
             var form = Program.FindOpenForm<ErrorForm>();
             if (form != null)
             {
-                form.Activate();
+                RestoreAndActivate(form);
                 return;
             }
             new ErrorForm().Show(this);
@@ -942,7 +952,7 @@ namespace pwiz.Topograph.ui.Forms
             }
             else
             {
-                f.Activate();
+                RestoreAndActivate(f);
             }
         }
 
@@ -950,7 +960,7 @@ namespace pwiz.Topograph.ui.Forms
         {
             using (var settingsForm = new DisplaySettingsForm())
             {
-                settingsForm.ShowDialog(this);
+                settingsForm.ShowDialog(TopLevelControl);
             }
         }
 
@@ -1025,6 +1035,14 @@ namespace pwiz.Topograph.ui.Forms
         private void databaseSizeToolStripMenuItem_Click(object sender, EventArgs e)
         {
             new DatabaseSizeForm(Workspace).Show(this);
+        }
+
+        private void acceptanceCriteriaToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            using (var form = new AcceptanceCriteriaForm(Workspace))
+            {
+                form.ShowDialog(this);
+            }
         }
     }
 }

@@ -304,7 +304,7 @@ namespace pwiz.Topograph.ui.Forms
 
         private void btnAnalyzePeptides_Click(object sender, EventArgs e)
         {
-            new AnalyzePeptidesForm(Workspace).Show(this);
+            new AnalyzePeptidesForm(Workspace).Show(TopLevelControl);
         }
 
         private void dataGridView_CellContentClick(object sender, DataGridViewCellEventArgs e)

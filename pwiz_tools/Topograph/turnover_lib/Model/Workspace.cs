@@ -320,6 +320,32 @@ namespace pwiz.Topograph.Model
             _settings.SetSetting(SettingEnum.min_deconvolution_score_for_avg_precursor_pool, value);
         }
 
+        public bool GetAcceptSamplesWithoutMs2Id()
+        {
+            return _settings.GetSetting(SettingEnum.accept_samples_without_ms2_id, true);
+        }
+        public void SetAcceptSamplesWithoutMs2Id(bool value)
+        {
+            _settings.SetSetting(SettingEnum.accept_samples_without_ms2_id, value);
+        }
+        public double GetAcceptMinDeconvolutionScore()
+        {
+            return _settings.GetSetting(SettingEnum.accept_min_deconvolution_score, 0.0);
+        }
+        public void SetAcceptMinDeconvolutionScore(double value)
+        {
+            _settings.SetSetting(SettingEnum.accept_min_deconvolution_score, value);
+        }
+        public IEnumerable<IntegrationNote> GetAcceptIntegrationNotes()
+        {
+            return IntegrationNote.ParseCollection(_settings.GetSetting(SettingEnum.accept_integration_notes, 
+                IntegrationNote.ToString(new[]{IntegrationNote.Manual, IntegrationNote.Success,})));
+        }
+        public void SetAcceptIntegrationNotes(IEnumerable<IntegrationNote> integrationNotes)
+        {
+            _settings.SetSetting(SettingEnum.accept_integration_notes, IntegrationNote.ToString(integrationNotes));
+        }
+
         public void SetProteinDescriptionKey(String proteinDescriptionKey)
         {
             if (proteinDescriptionKey == GetProteinDescriptionKey())

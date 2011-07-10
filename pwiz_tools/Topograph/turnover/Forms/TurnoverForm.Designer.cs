@@ -68,8 +68,9 @@
             this.databaseLocksToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.errorsToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.recalculateResultsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.debuggingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.databaseSizeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.debuggingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.acceptanceCriteriaToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -310,7 +311,8 @@
             this.updateProteinNamesToolStripMenuItem,
             this.machineSettingsToolStripMenuItem,
             this.dataDirectoryToolStripMenuItem,
-            this.displayToolStripMenuItem});
+            this.displayToolStripMenuItem,
+            this.acceptanceCriteriaToolStripMenuItem});
             this.settingsToolStripMenuItem.Name = "settingsToolStripMenuItem";
             this.settingsToolStripMenuItem.Size = new System.Drawing.Size(61, 20);
             this.settingsToolStripMenuItem.Text = "Settings";
@@ -405,12 +407,6 @@
             this.recalculateResultsToolStripMenuItem.Text = "Recalculate Results...";
             this.recalculateResultsToolStripMenuItem.Click += new System.EventHandler(this.recalculateResultsToolStripMenuItem_Click);
             // 
-            // debuggingToolStripMenuItem
-            // 
-            this.debuggingToolStripMenuItem.Name = "debuggingToolStripMenuItem";
-            this.debuggingToolStripMenuItem.Size = new System.Drawing.Size(32, 19);
-            this.debuggingToolStripMenuItem.Text = "Debugging";
-            // 
             // databaseSizeToolStripMenuItem
             // 
             this.databaseSizeToolStripMenuItem.Enabled = false;
@@ -418,6 +414,20 @@
             this.databaseSizeToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
             this.databaseSizeToolStripMenuItem.Text = "Database Size...";
             this.databaseSizeToolStripMenuItem.Click += new System.EventHandler(this.databaseSizeToolStripMenuItem_Click);
+            // 
+            // debuggingToolStripMenuItem
+            // 
+            this.debuggingToolStripMenuItem.Name = "debuggingToolStripMenuItem";
+            this.debuggingToolStripMenuItem.Size = new System.Drawing.Size(32, 19);
+            this.debuggingToolStripMenuItem.Text = "Debugging";
+            // 
+            // acceptanceCriteriaToolStripMenuItem
+            // 
+            this.acceptanceCriteriaToolStripMenuItem.Enabled = false;
+            this.acceptanceCriteriaToolStripMenuItem.Name = "acceptanceCriteriaToolStripMenuItem";
+            this.acceptanceCriteriaToolStripMenuItem.Size = new System.Drawing.Size(202, 22);
+            this.acceptanceCriteriaToolStripMenuItem.Text = "Acceptance Criteria...";
+            this.acceptanceCriteriaToolStripMenuItem.Click += new System.EventHandler(this.acceptanceCriteriaToolStripMenuItem_Click);
             // 
             // TurnoverForm
             // 
@@ -480,5 +490,6 @@
         private System.Windows.Forms.ToolStripMenuItem resultsByReplicateToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem alignmentToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem databaseSizeToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem acceptanceCriteriaToolStripMenuItem;
     }
 }

@@ -120,7 +120,7 @@ namespace pwiz.Topograph.ui.Forms
             if (msDataFiles.Count > 0)
             {
                 var job = new Task(PeptideAnalysis, msDataFiles);
-                using (var longWaitDialog = new LongWaitDialog(this, "Creating file analyses"))
+                using (var longWaitDialog = new LongWaitDialog(TopLevelControl, "Creating file analyses"))
                 {
                     new LongOperationBroker(job, longWaitDialog).LaunchJob();
                 }

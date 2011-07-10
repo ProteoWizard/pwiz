@@ -59,7 +59,7 @@ namespace pwiz.Topograph.ui.Forms
         {
             using (var form = new CreateFileAnalysesForm(PeptideAnalysis))
             {
-                form.ShowDialog(this);
+                form.ShowDialog(TopLevelControl);
             }
         }
 

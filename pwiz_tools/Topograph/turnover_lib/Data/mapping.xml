@@ -72,6 +72,7 @@
     <property name="LastDetectedScan" />
     <property name="FirstTracerCount" />
     <property name="LastTracerCount" />
+    <property name="PsmCount" />
   </class>
   <class name="DbTracerDef">
     <id name="Id">
@@ -206,6 +207,8 @@
     <property name="Turnover" />
     <property name="ExcludedMasses" type="BinaryBlob" />
     <property name="TurnoverScore"/>
+    <property name="PsmCount" />
+    <property name="IntegrationNote" />
   </class>
   <class name="DbChromatogramSet">
     <id name="Id">

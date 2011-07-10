@@ -39,6 +39,7 @@ namespace pwiz.Topograph.ui.Forms
             var tracerDef = Workspace.GetTracerDefs()[0];
             tbxInitialPercent.Text = tracerDef.InitialApe.ToString();
             tbxFinalPercent.Text = tracerDef.FinalApe.ToString();
+            tbxMinScore.Text = workspace.GetAcceptMinDeconvolutionScore().ToString();
             colTurnover.DefaultCellStyle.Format = "#.##%";
             colPrecursorPool.DefaultCellStyle.Format = "#.##%";
             comboCalculationType.SelectedIndex = 0;

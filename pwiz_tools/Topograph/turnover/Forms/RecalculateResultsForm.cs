@@ -90,7 +90,7 @@ namespace pwiz.Topograph.ui.Forms
         {
             using (var session = Workspace.OpenSession())
             {
-                using (var longWaitDialog = new LongWaitDialog(this, "Updating Workspace"))
+                using (var longWaitDialog = new LongWaitDialog(TopLevelControl, "Updating Workspace"))
                 {
                     var broker = new LongOperationBroker(b =>
                     {

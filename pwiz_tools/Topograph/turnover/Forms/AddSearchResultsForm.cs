@@ -375,6 +375,7 @@ namespace pwiz.Topograph.ui.Forms
                                                         LastDetectedScan = searchResult.ScanIndex,
                                                         FirstTracerCount = searchResult.TracerCount,
                                                         LastTracerCount = searchResult.TracerCount,
+                                                        PsmCount = 0,
                                                     };
                             searchResultsToInsert.Add(key, dbPeptideSearchResult);
                             if (!newPeptides.ContainsKey(trimmedSequence))
@@ -390,6 +391,7 @@ namespace pwiz.Topograph.ui.Forms
                                                                       searchResult.ScanIndex);
                     dbPeptideSearchResult.MinCharge = Math.Min(dbPeptideSearchResult.MinCharge, searchResult.Charge);
                     dbPeptideSearchResult.MaxCharge = Math.Max(dbPeptideSearchResult.MaxCharge, searchResult.Charge);
+                    dbPeptideSearchResult.PsmCount++;
                 }
                 var statements = new List<string>();
                 foreach (var dbPeptide in modifiedPeptides)
@@ -429,6 +431,7 @@ namespace pwiz.Topograph.ui.Forms
                             {"LastDetectedScan", dbPeptideSearchResult.LastDetectedScan},
                             {"FirstTracerCount", dbPeptideSearchResult.FirstTracerCount},
                             {"LastTracerCount", dbPeptideSearchResult.LastTracerCount},
+                            {"PsmCount", dbPeptideSearchResult.PsmCount},
                         },
                             new Dictionary<string, object> { { "Id", dbPeptideSearchResult.Id.Value } }
                         ));

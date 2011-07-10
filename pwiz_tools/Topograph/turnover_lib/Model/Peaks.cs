@@ -57,6 +57,7 @@ namespace pwiz.Topograph.Model
             }
         }
 
+        public IntegrationNote IntegrationNote { get; set; }
 
         protected override IEnumerable<KeyValuePair<String, DbPeak>> GetChildren(DbPeptideFileAnalysis parent)
         {
@@ -102,6 +103,7 @@ namespace pwiz.Topograph.Model
             Turnover = parent.Turnover;
             TurnoverScore = parent.TurnoverScore;
             AutoFindPeak = parent.AutoFindPeak;
+            IntegrationNote = IntegrationNote.Parse(parent.IntegrationNote);
         }
 
         protected override DbPeptideFileAnalysis UpdateDbEntity(ISession session)
@@ -115,6 +117,7 @@ namespace pwiz.Topograph.Model
             result.Turnover = Turnover;
             result.TurnoverScore = TurnoverScore;
             result.AutoFindPeak = AutoFindPeak;
+            result.IntegrationNote = IntegrationNote.ToString(IntegrationNote);
             return result;
         }
 
@@ -454,6 +457,14 @@ namespace pwiz.Topograph.Model
                     }
                 }
             }
+            if (bestDistance > 0)
+            {
+                IntegrationNote = IntegrationNote.PeakNotFoundAtMs2Id;
+            }
+            else
+            {
+                IntegrationNote = IntegrationNote.Success;
+            }
             return bestPeak;
         }
 
@@ -482,22 +493,17 @@ namespace pwiz.Topograph.Model
                 {
                     continue;
                 }
-                var startTime = peptideFileAnalysis.PeakStartTime;
-                var endTime = peptideFileAnalysis.PeakEndTime;
+                var startTime = otherPeak.StartTime;
+                var endTime = otherPeak.EndTime;
                 if (!startTime.HasValue || !endTime.HasValue)
                 {
                     continue;
                 }
-                var timeMap = peptideFileAnalysis.MsDataFile.AlignTimes(PeptideFileAnalysis.MsDataFile);
-                double firstTime, lastTime;
-                if (timeMap.TryGetValue(startTime.Value, out firstTime))
-                {
-                    firstDetectedTime = Math.Min(firstDetectedTime, firstTime);
-                }
-                if (timeMap.TryGetValue(endTime.Value, out lastTime))
-                {
-                    lastDetectedTime = Math.Max(lastDetectedTime, lastTime);
-                }
+                var retentionTimeAlignment = peptideFileAnalysis.MsDataFile.GetRetentionTimeAlignment(PeptideFileAnalysis.MsDataFile);
+                firstDetectedTime = Math.Min(firstDetectedTime, 
+                    retentionTimeAlignment.GetTargetTime(startTime.Value));
+                lastDetectedTime = Math.Max(lastDetectedTime,
+                    retentionTimeAlignment.GetTargetTime(endTime.Value));
             }
         }
 
@@ -512,6 +518,7 @@ namespace pwiz.Topograph.Model
                 }
                 else
                 {
+                    IntegrationNote = IntegrationNote.Manual;
                     MakeBasePeak(origPeaks.BaseTracerFormula, origPeaks.GetBasePeak().StartTime,
                                  origPeaks.GetBasePeak().EndTime);
                     foreach (var peak in origPeaks.ListChildren())

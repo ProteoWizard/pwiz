@@ -145,6 +145,7 @@ namespace pwiz.Topograph.Data
                     ExportTable<DbPeptideSearchResult>();
                     ExportTable<DbPeptideAnalysis>();
                     ExportTable<DbPeptideFileAnalysis>();
+                    ExportTable<DbChromatogramSet>();
                     ExportTable<DbChromatogram>();
                     ExportTable<DbPeak>();
                 }
