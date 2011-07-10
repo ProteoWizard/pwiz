@@ -246,7 +246,7 @@ RawFileImpl::RawFileImpl(const string& filename)
                 bfs::copy_file(msFileReaderPath / "fregistry.dll", callingExecutablePath / "fregistry.dll");
         }
         else
-            throw runtime_error("[RawFile::ctor] Reading Thermo RAW files requires MSFileReader to be installed. It is available for download at:\nhttp://sjsupport.thermofinnigan.com/public/detail.asp?id=586");
+            throw runtime_error("[RawFile::ctor] Reading Thermo RAW files requires MSFileReader to be installed. It is available for download at:\nhttp://sjsupport.thermofinnigan.com/public/detail.asp?id=703");
     }
 
     // use the latest version of IXRawfile that will initialize
