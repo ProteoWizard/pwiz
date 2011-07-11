@@ -566,7 +566,7 @@ namespace pwiz.Skyline
 
             if (String.IsNullOrEmpty(reportFile))
             {
-                _out.WriteLine("Error: if you specify a report, you must specify the");
+                _out.WriteLine("Error: If you specify a report, you must specify the");
                 _out.WriteLine("--reportfile=path/to/file.csv parameter.");
                 return;
             }
@@ -575,12 +575,12 @@ namespace pwiz.Skyline
             ReportSpec reportSpec = Settings.Default.GetReportSpecByName(reportName);
             if (reportSpec == null)
             {
-                _out.WriteLine("Error: The report you specified does not exist. If it has spaces in its name,");
+                _out.WriteLine("Error: The report {0} does not exist. If it has spaces in its name,", reportName);
                 _out.WriteLine("use \"double quotes\" around your entire list of command parameters.");
                 return;
             }
 
-            _out.WriteLine("Exporting report " + reportName + "...");
+            _out.WriteLine("Exporting report {0}...", reportName);
 
             using (var saver = new FileSaver(reportFile))
             {
@@ -613,7 +613,7 @@ namespace pwiz.Skyline
                 }
 
                 saver.Commit();
-                _out.WriteLine("Report " + reportName + " exported successfully.");
+                _out.WriteLine("Report {0} exported successfully.", reportName);
             }
         }
 
@@ -623,7 +623,7 @@ namespace pwiz.Skyline
 
             if (String.IsNullOrEmpty(args.TransListFile))
             {
-                _out.WriteLine("Error: you must specify a transition list file to write to with the");
+                _out.WriteLine("Error: You must specify a transition list file to write to with the");
                 _out.WriteLine("--exp-translist-out=path/to/file.csv parameter. No transition list");
                 _out.WriteLine("will be exported.");
                 return;
@@ -631,7 +631,7 @@ namespace pwiz.Skyline
 
             if (!args.ExportStrategySet)
             {
-                _out.WriteLine("Warning: no export strategy specified (from \"single\", \"protein\" or");
+                _out.WriteLine("Warning: No export strategy specified (from \"single\", \"protein\" or");
                 _out.WriteLine("\"buckets\"). Defaulting to \"single\".");
                 args.ExportStrategy = ExportStrategy.Single;
             }
@@ -644,9 +644,9 @@ namespace pwiz.Skyline
                     (Equals(args.ExportStrategy, ExportStrategy.Buckets) ||
                      Equals(args.ExportStrategy, ExportStrategy.Protein)))
             {
-                _out.WriteLine("Warning: max transitions per injection must be set to some value between");
-                _out.WriteLine(MassListExporter.MAX_TRANS_PER_INJ_MIN + " and " + maxInstrumentTrans + " for export strategies \"protein\" and \"buckets\".");
-                _out.WriteLine("Defaulting to " + MassListExporter.MAX_TRANS_PER_INJ_DEFAULT + ".");
+                _out.WriteLine("Warning: Max transitions per injection must be set to some value between");
+                _out.WriteLine(" {0} and {1} for export strategies \"protein\" and \"buckets\".", MassListExporter.MAX_TRANS_PER_INJ_MIN, maxInstrumentTrans);
+                _out.WriteLine("Defaulting to {0}.", MassListExporter.MAX_TRANS_PER_INJ_DEFAULT);
 
                 args.MaxTransitionsPerInjection = MassListExporter.MAX_TRANS_PER_INJ_DEFAULT;
             }
@@ -658,9 +658,9 @@ namespace pwiz.Skyline
                 case ExportInstrumentType.ABI:
                     if (args.DwellTime < MassListExporter.DWELL_TIME_MIN || args.DwellTime > MassListExporter.DWELL_TIME_MAX)
                     {
-                        _out.WriteLine("Warning: missing or invalid dwell time parameter. This parameter is needed");
-                        _out.WriteLine("to export an AB Sciex transition list and must be between " + MassListExporter.DWELL_TIME_MIN +
-                                       " and " + MassListExporter.DWELL_TIME_MAX + ".");
+                        _out.WriteLine("Warning: Missing or invalid dwell time parameter. This parameter is needed");
+                        _out.WriteLine("to export an AB Sciex transition list and must be between {0} and {1}.",
+                            MassListExporter.DWELL_TIME_MIN, MassListExporter.DWELL_TIME_MAX);
                         _out.WriteLine("Defaulting to {0}", MassListExporter.DWELL_TIME_DEFAULT);
                         args.DwellTime = MassListExporter.DWELL_TIME_DEFAULT;
                     }
@@ -670,9 +670,9 @@ namespace pwiz.Skyline
                 case ExportInstrumentType.Agilent:
                     if (args.DwellTime < MassListExporter.DWELL_TIME_MIN || args.DwellTime > MassListExporter.DWELL_TIME_MAX)
                     {
-                        _out.WriteLine("Warning: missing or invalid dwell time parameter. This parameter is needed");
-                        _out.WriteLine("to export an Agilent transition list and must be between " + MassListExporter.DWELL_TIME_MIN +
-                                       " and " + MassListExporter.DWELL_TIME_MAX + ".");
+                        _out.WriteLine("Warning: Missing or invalid dwell time parameter. This parameter is needed");
+                        _out.WriteLine("to export an Agilent transition list and must be between {0} and {1}.",
+                            MassListExporter.DWELL_TIME_MIN, MassListExporter.DWELL_TIME_MAX);
                         _out.WriteLine("Defaulting to {0}", MassListExporter.DWELL_TIME_DEFAULT);
                         args.DwellTime = MassListExporter.DWELL_TIME_DEFAULT;
                     }
@@ -685,7 +685,7 @@ namespace pwiz.Skyline
                 case ExportInstrumentType.Waters:
                     if (args.RunLength < MassListExporter.RUN_LENGTH_MIN || args.RunLength > MassListExporter.RUN_LENGTH_MAX)
                     {
-                        _out.WriteLine("Warning: missing or invalid run length parameter. This parameter is needed");
+                        _out.WriteLine("Warning: Missing or invalid run length parameter. This parameter is needed");
                         _out.WriteLine("to export a Waters transition list and must be between {0} and {1}.",
                                        MassListExporter.RUN_LENGTH_MIN, MassListExporter.RUN_LENGTH_MAX);
                         _out.WriteLine("Defaulting to {0}", MassListExporter.RUN_LENGTH_DEFAULT);
@@ -696,7 +696,7 @@ namespace pwiz.Skyline
                     break;
                 default:
                     //this should never happen
-                    _out.WriteLine("Error: instrument vendor must be one of:");
+                    _out.WriteLine("Error: Instrument vendor must be one of:");
                     foreach (string vendor in ExportInstrumentType.TRANSITION_LIST_TYPES)
                     {
                         _out.WriteLine(vendor);
@@ -749,7 +749,7 @@ namespace pwiz.Skyline
                 {
                     if (args.SchedulingReplicateIndex > _doc.Settings.MeasuredResults.Chromatograms.Count)
                     {
-                        _out.WriteLine("Warning: the specified replicate index ({0}) is greater than the number of", args.SchedulingReplicateIndex);
+                        _out.WriteLine("Warning: The specified replicate index ({0}) is greater than the number of", args.SchedulingReplicateIndex);
                         _out.WriteLine("replicates in the document ({0}). Defaulting to the last replicate in the document.");
                         exporter.SchedulingReplicateIndex = _doc.Settings.MeasuredResults.Chromatograms.Count - 1;
                     }
@@ -762,14 +762,14 @@ namespace pwiz.Skyline
             }
             else
             {
-                _out.WriteLine("Warning: no scheduling replicate is set. Defaulting to the last replicate");
+                _out.WriteLine("Warning: No scheduling replicate is set. Defaulting to the last replicate");
                 _out.WriteLine("in the document.");
                 exporter.SchedulingReplicateIndex = _doc.Settings.MeasuredResults.Chromatograms.Count - 1;
             }
 
             if (!CheckInstrument(args.TransListInstrumentType, _doc))
             {
-                _out.WriteLine("Warning: the specified instrument vendor does not match the vendor");
+                _out.WriteLine("Warning: The specified instrument vendor does not match the vendor");
                 _out.WriteLine("in the settings of the document. Continuing exporting a transition");
                 _out.WriteLine("list anyway...");
             }
@@ -781,7 +781,7 @@ namespace pwiz.Skyline
             }
             catch (Exception)
             {
-                _out.WriteLine("Error: the file could not be saved. Check that the specified file directory");
+                _out.WriteLine("Error: The file could not be saved. Check that the specified file directory");
                 _out.WriteLine("exists and is writeable.");
                 return;
             }
@@ -892,6 +892,7 @@ namespace pwiz.Skyline
         #region Implementation of ILongWaitBroker
 
         private int _currentProgress;
+        private DateTime _waitStart;
         private DateTime _lastOutput;
 
         private readonly TextWriter _out;
@@ -899,7 +900,7 @@ namespace pwiz.Skyline
         public CommandWaitBroker(TextWriter outWriter)
         {
             _out = outWriter;
-            _lastOutput = DateTime.Now;
+            _waitStart = _lastOutput = DateTime.Now;
         }
 
         bool ILongWaitBroker.IsCanceled
@@ -914,7 +915,9 @@ namespace pwiz.Skyline
             {
                 _currentProgress = value;
                 var currentTime = DateTime.Now;
-                if (_currentProgress == 100 || (currentTime - _lastOutput).Seconds > 2)
+                // Show progress at least every 2 seconds and at 100%, if any other percentage
+                // output has been shown.
+                if ((currentTime - _lastOutput).Seconds > 2 || (_currentProgress == 100 && _lastOutput != _waitStart))
                 {
                     _out.WriteLine("{0}%", _currentProgress);
                     _lastOutput = currentTime;

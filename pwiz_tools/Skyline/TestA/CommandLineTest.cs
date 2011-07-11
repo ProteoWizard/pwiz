@@ -18,6 +18,7 @@
  */
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
@@ -111,26 +112,18 @@ namespace pwiz.SkylineTestA
             string rawPath = testFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +
                 ExtensionTestContext.ExtThermoRaw);
 
-
             //Before generating this report, check that it exists
-            var reportEnumerator = Settings.Default.ReportSpecList.GetDefaults().GetEnumerator();
-            reportEnumerator.MoveNext();
-
-            while(reportEnumerator.Current != null &&
-                !reportEnumerator.Current.Name.Equals("Peptide Ratio Results") &&
-                reportEnumerator.MoveNext())
-            {
-            }
-            Assert.IsNotNull(reportEnumerator.Current);
-            Assert.IsTrue(reportEnumerator.Current.Name.Equals("Peptide Ratio Results"));
-
-
+            const string reportName = "Peptide Ratio Results";
+            var defaultReportSpecs = Settings.Default.ReportSpecList.GetDefaults();
+            Assert.IsNotNull(defaultReportSpecs.FirstOrDefault(r => r.Name.Equals(reportName)));
+            Settings.Default.ReportSpecList = new ReportSpecList();
+            Settings.Default.ReportSpecList.AddRange(defaultReportSpecs);
 
             var args = new[]
                            {
                                "--in=" + docPath,
                                "--import=" + rawPath,
-                               "--report=\"Peptide Ratio Results\"",
+                               "--report=" + reportName,
                                "--separator=,",
                                "--reportfile=" + outPath                               
                            };
@@ -139,14 +132,17 @@ namespace pwiz.SkylineTestA
                                         {
                                             "PeptideSequence,ProteinName,ReplicateName,PeptidePeakFoundRatio,PeptideRetentionTime,RatioToStandard"
                                             ,
-                                            "LVNELTEFAK,sp|P02769|ALBU_BOVIN,ah_20101011y_BSA_MS-MS_only_5-2,1,46.65,#N/A"
+                                            "LVNELTEFAK,sp|P02769|ALBU_BOVIN,ah_20101011y_BSA_MS-MS_only_5-2,1,46.66,#N/A"
                                             ,
                                             "HLVDEPQNLIK,sp|P02769|ALBU_BOVIN,ah_20101011y_BSA_MS-MS_only_5-2,1,42.37,#N/A"
                                             ,
-                                            "KVPQVSTPTLVEVSR,sp|P02769|ALBU_BOVIN,ah_20101011y_BSA_MS-MS_only_5-2,1,44.19,#N/A"
+                                            "KVPQVSTPTLVEVSR,sp|P02769|ALBU_BOVIN,ah_20101011y_BSA_MS-MS_only_5-2,1,44.21,#N/A"
                                         };
 
             Program.RunCommand(args, consoleOutput);
+
+            string consoleText = consoleBuffer.ToString();
+            Assert.IsFalse(consoleText.ToLower().Contains("error"), consoleText);
 
             try
             {
@@ -162,7 +158,8 @@ namespace pwiz.SkylineTestA
                     }
                     Assert.AreEqual(i, 4);
                 }
-            } catch(FileNotFoundException)
+            }
+            catch(FileNotFoundException)
             {
                 Assert.Fail();
             }
