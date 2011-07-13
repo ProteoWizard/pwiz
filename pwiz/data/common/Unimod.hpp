@@ -65,6 +65,7 @@ BOOST_ENUM_EX(Site, PWIZ_API_DECL,
     (Tryptophan)
     (Tyrosine)
 )
+BOOST_ENUM_LHS_DOMAIN_OPERATOR_EQUAL(Site)
 
 BOOST_ENUM_EX(Position, PWIZ_API_DECL,
     (Anywhere)
@@ -73,6 +74,7 @@ BOOST_ENUM_EX(Position, PWIZ_API_DECL,
     (ProteinNTerminus)
     (ProteinCTerminus)
 )
+BOOST_ENUM_LHS_DOMAIN_OPERATOR_EQUAL(Position)
 
 BOOST_ENUM_EX(Classification, PWIZ_API_DECL,
     (Any)
@@ -90,6 +92,7 @@ BOOST_ENUM_EX(Classification, PWIZ_API_DECL,
     (PreTranslational)
     (Substitution)
 )
+BOOST_ENUM_LHS_DOMAIN_OPERATOR_EQUAL(Classification)
 
 
 /// a modification from Unimod
