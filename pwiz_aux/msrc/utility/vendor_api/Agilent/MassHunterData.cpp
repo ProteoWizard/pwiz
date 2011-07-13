@@ -27,6 +27,7 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
+#include "boost/thread/mutex.hpp"
 
 
 #pragma managed
@@ -72,6 +73,8 @@ MHDAC::IBDASpecFilter^ bdaSpecFilterForScanId(int scanId, bool preferProfileData
 
     return result;
 }
+
+boost::mutex massHunterInitMutex;
 
 } // namespace
 
@@ -222,9 +225,12 @@ MassHunterDataImpl::MassHunterDataImpl(const std::string& path)
 {
     try
     {
-        reader_ = gcnew MHDAC::MassSpecDataReader();
-        if (!reader_->OpenDataFile(ToSystemString(path)))
-        {}    // TODO: log warning about incomplete acquisition, possibly indicating corrupt data
+        {
+            boost::mutex::scoped_lock lock(massHunterInitMutex);
+            reader_ = gcnew MHDAC::MassSpecDataReader();
+            if (!reader_->OpenDataFile(ToSystemString(path)))
+            {}    // TODO: log warning about incomplete acquisition, possibly indicating corrupt data
+        }
 
         scanFileInfo_ = reader_->MSScanFileInformation;
 
