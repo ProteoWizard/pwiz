@@ -169,8 +169,7 @@
 		friend class boost::detail::enum_base<_name>; \
 		BOOST_ENUM_names(_seq, 0, 1) \
 		BOOST_ENUM_values_identity() \
-	}; \
-    inline bool operator == (const _name::domain& lhs, const _name& rhs) {return rhs == lhs;}
+	};
 
 #define BOOST_ENUM(_name, _seq) BOOST_ENUM_EX(_name, , _seq)
 
@@ -186,8 +185,7 @@
 		friend class boost::detail::enum_base<_name, _type>; \
 		BOOST_ENUM_names(_seq, 0, 2) \
 		BOOST_ENUM_values(_seq, 0, 1, 2) \
-	}; \
-    inline bool operator == (const _name::domain& lhs, const _name& rhs) {return rhs == lhs;}
+	};
 
 #define BOOST_ENUM_VALUES(_name, _type, _seq) BOOST_ENUM_VALUES_EX(_name, , _type, _seq)
 
@@ -204,9 +202,11 @@
 		_name(value_type raw, int) : boost::detail::bitfield_base<_name>(raw, 0) {} \
 		BOOST_BITFIELD_names(_seq, 0, 2) \
 		BOOST_BITFIELD_values(_seq, 0, 1, 2) \
-	}; \
-    inline bool operator == (const _name::domain& lhs, const _name& rhs) {return rhs == lhs;}
+	};
 
 #define BOOST_BITFIELD(_name, _seq) BOOST_BITFIELD_EX(_name, , _seq)
+
+#define BOOST_ENUM_LHS_DOMAIN_OPERATOR_EQUAL(_name) \
+    inline bool operator== (const _name::domain& lhs, const _name& rhs) {return rhs == lhs;}
 
 #endif
