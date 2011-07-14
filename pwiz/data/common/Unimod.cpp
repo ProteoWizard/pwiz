@@ -71,26 +71,8 @@ struct UnimodData : public boost::singleton<UnimodData>
         map<string, Site> siteMap;
         siteMap["N-term"] = Site::NTerminus;
         siteMap["C-term"] = Site::CTerminus;
-        siteMap["A"] = Site::Alanine;
-        siteMap["C"] = Site::Cysteine;
-        siteMap["D"] = Site::AsparticAcid;
-        siteMap["E"] = Site::GlutamicAcid;
-        siteMap["F"] = Site::Phenylalanine;
-        siteMap["G"] = Site::Glycine;
-        siteMap["H"] = Site::Histidine;
-        siteMap["I"] = Site::Isoleucine;
-        siteMap["K"] = Site::Lysine;
-        siteMap["L"] = Site::Leucine;
-        siteMap["M"] = Site::Methionine;
-        siteMap["N"] = Site::Asparagine;
-        siteMap["P"] = Site::Proline;
-        siteMap["Q"] = Site::Glutamine;
-        siteMap["R"] = Site::Arginine;
-        siteMap["S"] = Site::Serine;
-        siteMap["T"] = Site::Threonine;
-        siteMap["V"] = Site::Valine;
-        siteMap["W"] = Site::Tryptophan;
-        siteMap["Y"] = Site::Tyrosine;
+        BOOST_FOREACH(char aa, string("ABCDEFGHIJKLMNPQRSTUVWXYZ"))
+            siteMap[string(1, aa)] = site(aa);
 
         map<string, Position> positionMap;
         positionMap["Anywhere"] = Position::Anywhere;
@@ -249,23 +231,52 @@ struct UnimodData : public boost::singleton<UnimodData>
 
 PWIZ_API_DECL Site site(char symbol)
 {
-    // maps character to the corresponding Site index
-    const static size_t symbolMap[] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 0-19
-                                       0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 20-39
-                                       0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, // 40-59
-                                    //           A B C D E F G H I  J K  L  M
-                                       0,0,0,0,0,3,0,4,5,6,7,8,9,10,0,11,12,13,
-                                    // N  O P  Q  R  S  T  U V  W  X Y  Z
-                                       14,0,15,16,17,18,19,0,20,21,0,22,0,
-                                    // [ \ ] ^ _ ` a b c d e f g h i j
-                                       0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,
-                                    // k l m n o p q r s t u v w x
-                                       0,0,0,1,0,0,0,0,0,0,0,0,0,0};
+    // maps character to a corresponding Site bitmask
+    const static size_t nil = Site(Site::not_mask).value();
+    const static size_t symbolMap[] =
+    {
+        nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,nil, // 0-19
+        nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,nil, // 20-39
+        nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,nil,nil, // 40-59
+        nil,nil,nil,nil,nil, // 60-64
+        Site(Site::Alanine).value(), // A (65)
+        Site(Site::Asparagine | Site::AsparticAcid).value(), // B
+        Site(Site::Cysteine).value(),
+        Site(Site::AsparticAcid).value(),
+        Site(Site::GlutamicAcid).value(),
+        Site(Site::Phenylalanine).value(),
+        Site(Site::Glycine).value(),
+        Site(Site::Histidine).value(),
+        Site(Site::Isoleucine).value(),
+        Site(Site::Leucine | Site::Isoleucine).value(), // J
+        Site(Site::Lysine).value(),
+        Site(Site::Leucine).value(),
+        Site(Site::Methionine).value(),
+        Site(Site::Asparagine).value(),
+        nil, // O
+        Site(Site::Proline).value(),
+        Site(Site::Glutamine).value(),
+        Site(Site::Arginine).value(),
+        Site(Site::Serine).value(),
+        Site(Site::Threonine).value(),
+        Site(Site::Selenocysteine).value(), // U
+        Site(Site::Valine).value(),
+        Site(Site::Tryptophan).value(),
+        Site(Site::Any).value(), // X
+        Site(Site::Tyrosine).value(),
+        Site(Site::Glutamine | Site::GlutamicAcid).value(), // Z
+        nil,nil,nil,nil,nil,nil,nil,nil, // [ \ ] ^ _ ` a b
+        Site(Site::CTerminus).value(), // c
+        nil,nil,nil,nil,nil,nil,nil,nil,nil,nil, // d e f g h i j k l m
+        Site(Site::NTerminus).value(), // n
+        nil,nil,nil,nil,nil,nil,nil,nil,nil, // o p q r s t u v w
+        Site(Site::Any).value() // x
+    };
 
-    if (symbol > 'x' || symbol != 'x' && symbolMap[(size_t) symbol] == 0)
+    if (symbol > 'x' || symbol != 'x' && symbolMap[(size_t) symbol] == nil)
         throw invalid_argument("[unimod::site] invalid symbol");
 
-    return Site::get_by_index(symbolMap[(size_t) symbol]).get();
+    return Site::get_by_value(symbolMap[(size_t) symbol]).get();
 }
 
 
@@ -321,9 +332,9 @@ vector<Modification> modifications(double mass,
 
         BOOST_FOREACH(const Modification::Specificity& specificity, mod.specificities)
         {
-            if ((site == Site::Any || site == specificity.site) &&
+            if ((site == Site::Any || site[specificity.site]) &&
                 (position == Position::Anywhere || position == specificity.position) &&
-                (classification == Classification::Any || classification == specificity.classification) &&
+                (classification == Classification::Any || classification[specificity.classification]) &&
                 (indeterminate(hidden) || hidden == specificity.hidden))
             {
                 result.push_back(mod);

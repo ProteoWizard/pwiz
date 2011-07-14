@@ -117,14 +117,14 @@
 		} \
 	}
 
-#define BOOST_BITFIELD_OR_ITEM(r, data, elem) \
+#define BOOST_BITFIELD_OR_ITEM(r, data, i, elem) \
 	| (elem)
 
 #define BOOST_BITFIELD_domain(_seq, _col, _colsize) \
 	enum domain \
 	{ \
 		BOOST_PP_CAT(BOOST_ENUM_VISITOR, _colsize) \
-			(_seq, BOOST_ENUM_DOMAIN_ITEM, _col) \
+			(_seq, BOOST_ENUM_DOMAIN_ITEM, _col), \
 		all_mask, \
 		not_mask \
 	}; \
@@ -206,7 +206,13 @@
 
 #define BOOST_BITFIELD(_name, _seq) BOOST_BITFIELD_EX(_name, , _seq)
 
-#define BOOST_ENUM_LHS_DOMAIN_OPERATOR_EQUAL(_name) \
-    inline bool operator== (const _name::domain& lhs, const _name& rhs) {return rhs == lhs;}
+#define BOOST_ENUM_DOMAIN_OPERATORS(_name) \
+    inline bool operator== (const _name::domain& lhs, const _name& rhs) {return rhs == lhs;} \
+    inline bool operator!= (const _name::domain& lhs, const _name& rhs) {return rhs != lhs;}
+
+#define BOOST_BITFIELD_DOMAIN_OPERATORS(_name) \
+    BOOST_ENUM_DOMAIN_OPERATORS(_name) \
+    inline _name operator| (const _name::domain& lhs, const _name::domain& rhs) {return _name(lhs) | rhs;} \
+    inline _name operator& (const _name::domain& lhs, const _name::domain& rhs) {return _name(lhs) & rhs;}
 
 #endif

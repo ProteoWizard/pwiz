@@ -41,11 +41,14 @@ void test()
     if (os_) *os_ << "test()\n"; 
 
     unit_assert_operator_equal(Site::Any, site('x'));
+    unit_assert_operator_equal(Site::Any, site('X'));
     unit_assert_operator_equal(Site::NTerminus, site('n'));
     unit_assert_operator_equal(Site::CTerminus, site('c'));
     unit_assert_operator_equal(Site::Alanine, site('A'));
     unit_assert_operator_equal(Site::Tyrosine, site('Y'));
-    unit_assert_throws_what(site('X'), invalid_argument, "[unimod::site] invalid symbol");
+    unit_assert_operator_equal((Site::Asparagine | Site::AsparticAcid), site('B'));
+    unit_assert_operator_equal((Site::Glutamine | Site::GlutamicAcid), site('Z'));
+    unit_assert_throws_what(site('1'), invalid_argument, "[unimod::site] invalid symbol");
     unit_assert_throws_what(site('z'), invalid_argument, "[unimod::site] invalid symbol");
 
 
@@ -120,6 +123,12 @@ void test()
     unit_assert_operator_equal(1, modifications(oxidation.deltaMonoisotopicMass(), 0, true, indeterminate, Site::Methionine).size());
     unit_assert_operator_equal(1, modifications(oxidation.deltaAverageMass(), 0, false, indeterminate, Site::Methionine).size());
 
+    // oxidation also happens on Proline (test multi-bit Site mask)
+    unit_assert_operator_equal(1, modifications(oxidation.deltaAverageMass(), 0, false, indeterminate, Site::Methionine | Site::Proline).size());
+
+    // add Alanine as a site and it could be a substitution
+    unit_assert_operator_equal(2, modifications(oxidation.deltaAverageMass(), 0, false, indeterminate, Site::Methionine | Site::Alanine).size());
+
 
     // 12 mods are 28 +/- 1 (but 1 of them is an isotope label not yet supported)
     unit_assert_operator_equal(11, modifications(28, 1, true, indeterminate).size());
@@ -136,6 +145,9 @@ void test()
     unit_assert_operator_equal(UNIMOD_Phospho, modifications(phospho.deltaMonoisotopicMass(), 0, true, true, Site::Serine)[0].cvid);
     unit_assert_operator_equal(UNIMOD_Phospho, modifications(phospho.deltaMonoisotopicMass(), 0, true, true, Site::Threonine)[0].cvid);
     unit_assert_operator_equal(UNIMOD_Phospho, modifications(phospho.deltaMonoisotopicMass(), 0, true, true, Site::Tyrosine)[0].cvid);
+
+    // test multi-bit Site mask
+    unit_assert_operator_equal(UNIMOD_Phospho, modifications(phospho.deltaMonoisotopicMass(), 0, true, true, Site::Serine | Site::Tyrosine)[0].cvid);
 
     // there are no unapproved mods at phospho's mass
     unit_assert_operator_equal(0, modifications(phospho.deltaMonoisotopicMass(), 0, true, false).size());
@@ -165,6 +177,9 @@ void test()
     // all 6 unapproved mods are hidden
     unit_assert_operator_equal(0, modifications(14.5, 0.5, true, false, Site::Any,
                                                 Position::Anywhere, Classification::Any, false).size());
+
+    // test ambiguous residue; this mod could be a Q->P substitution
+    unit_assert_operator_equal(1, modifications(-31, 0.01, true, indeterminate, site('Z')).size());
 }
 
 
