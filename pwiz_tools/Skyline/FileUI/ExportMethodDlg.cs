@@ -39,21 +39,14 @@ namespace pwiz.Skyline.FileUI
         private readonly SrmDocument _document;
         private readonly ExportFileType _fileType;
         private string _instrumentType;
-        private ExportStrategy _exportStrategy;
-        private ExportMethodType _methodType;
-        private string _optimizeType;
-        private double _optimizeStepSize;
-        private int _optimizeStepCount;
-        private int _dwellTime;
-        private double _runLength;
-        private int? _maxTransitions;
-        private bool _ignoreProteins;
-        private bool _fullScans;
-        private bool _addEnergyRamp;    // Thermo scheduled only
+
+        private readonly ExportDlgProperties _exportProperties;
 
         public ExportMethodDlg(SrmDocument document, ExportFileType fileType)
         {
             InitializeComponent();
+
+            _exportProperties = new ExportDlgProperties(this);
 
             _document = document;
             _fileType = fileType;
@@ -148,7 +141,7 @@ namespace pwiz.Skyline.FileUI
                 {
                     // If single window state changing, and it is no longer possible to
                     // schedule, then switch back to a standard method.
-                    if (MassListExporter.IsSingleWindowInstrumentType(_instrumentType) != IsSingleWindowInstrument && !CanSchedule)
+                    if (ExportInstrumentType.IsSingleWindowInstrumentType(_instrumentType) != IsSingleWindowInstrument && !CanSchedule)
                         MethodType = ExportMethodType.Standard;                        
 
                 }
@@ -158,7 +151,7 @@ namespace pwiz.Skyline.FileUI
 
         public bool IsSingleWindowInstrument
         {
-            get { return MassListExporter.IsSingleWindowInstrumentType(InstrumentType); }
+            get { return ExportInstrumentType.IsSingleWindowInstrumentType(InstrumentType); }
         }
 
         public bool IsSingleDwellInstrument
@@ -189,22 +182,11 @@ namespace pwiz.Skyline.FileUI
                    Equals(type, ExportInstrumentType.Waters_Quattro_Premier);
         }
 
-        public bool CanScheduleInstrument
-        {
-            get { return CanScheduleInstrumentType(InstrumentType); }
-        }
-
-        private static bool CanScheduleInstrumentType(string type)
-        {
-            return !Equals(type, ExportInstrumentType.Thermo_LTQ);
-        }
-
         private bool CanSchedule
         {
             get
             {
-                return CanScheduleInstrument &&
-                    _document.Settings.PeptideSettings.Prediction.CanSchedule(_document, IsSingleWindowInstrument);
+                return ExportInstrumentType.CanSchedule(InstrumentType, _document) && ExportInstrumentType.CanScheduleInstrumentType(InstrumentType);
             }
         }
 
@@ -223,11 +205,12 @@ namespace pwiz.Skyline.FileUI
 
         public ExportStrategy ExportStrategy
         {
-            get { return _exportStrategy; }
+            get { return _exportProperties.ExportStrategy; }
             set
             {
-                _exportStrategy = value;
-                switch (_exportStrategy)
+                _exportProperties.ExportStrategy = value;
+
+                switch (_exportProperties.ExportStrategy)
                 {
                     case ExportStrategy.Single:
                         radioSingle.Checked = true;
@@ -244,49 +227,57 @@ namespace pwiz.Skyline.FileUI
 
         public string OptimizeType
         {
-            get { return _optimizeType; }
+            get { return _exportProperties.OptimizeType; }
             set
             {
-                _optimizeType = value;
-                comboOptimizing.SelectedItem = _optimizeType;
+                _exportProperties.OptimizeType = value;
+                comboOptimizing.SelectedItem = _exportProperties.OptimizeType;
             }
         }
 
         public double OptimizeStepSize
         {
-            get { return _optimizeStepSize; }
+            get { return _exportProperties.OptimizeStepSize; }
+            set
+            {
+                _exportProperties.OptimizeStepSize = value;
+            }
         }
 
         public int OptimizeStepCount
         {
-            get { return _optimizeStepCount; }
+            get { return _exportProperties.OptimizeStepCount; }
+            set
+            {
+                _exportProperties.OptimizeStepCount = value;
+            }
         }
 
         public bool IgnoreProteins
         {
-            get { return _ignoreProteins; }
+            get { return _exportProperties.IgnoreProteins; }
             set
             {
-                _ignoreProteins = value && ExportStrategy == ExportStrategy.Buckets;
-                cbIgnoreProteins.Checked = _ignoreProteins;
+                _exportProperties.IgnoreProteins = value && ExportStrategy == ExportStrategy.Buckets;
+                cbIgnoreProteins.Checked = _exportProperties.IgnoreProteins;
             }
         }
 
         public bool FullScans
         {
-            get { return _fullScans; }
+            get { return _exportProperties.FullScans; }
             set
             {
-                _fullScans = cbFullScan.Checked = value;
+                _exportProperties.FullScans = cbFullScan.Checked = value;
             }
         }
 
         public bool AddEnergyRamp
         {
-            get { return _addEnergyRamp; }
+            get { return _exportProperties.AddEnergyRamp; }
             set
             {
-                _addEnergyRamp = cbEnergyRamp.Checked = value;
+                _exportProperties.AddEnergyRamp = cbEnergyRamp.Checked = value;
             }
         }
 
@@ -321,11 +312,11 @@ namespace pwiz.Skyline.FileUI
 
         public ExportMethodType MethodType
         {
-            get { return _methodType; }
+            get { return _exportProperties.MethodType; }
             set
             {
-                _methodType = value;
-                comboTargetType.SelectedItem = _methodType.ToString();
+                _exportProperties.MethodType = value;
+                comboTargetType.SelectedItem = _exportProperties.MethodType.ToString();
             }
         }
 
@@ -334,32 +325,32 @@ namespace pwiz.Skyline.FileUI
         /// </summary>
         public int DwellTime
         {
-            get { return _dwellTime; }
+            get { return _exportProperties.DwellTime; }
             set
             {
-                _dwellTime = value;
-                textDwellTime.Text = _dwellTime.ToString();
+                _exportProperties.DwellTime = value;
+                textDwellTime.Text = _exportProperties.DwellTime.ToString();
             }
         }
 
         public double RunLength
         {
-            get { return _runLength; }
+            get { return _exportProperties.RunLength; }
             set
             {
-                _runLength = value;
-                textRunLength.Text = _runLength.ToString();
+                _exportProperties.RunLength = value;
+                textRunLength.Text = _exportProperties.RunLength.ToString();
             }
         }
 
         public int? MaxTransitions
         {
-            get { return _maxTransitions; }
+            get { return _exportProperties.MaxTransitions; }
             set
             {
-                _maxTransitions = value;
-                textMaxTransitions.Text = (_maxTransitions == null ?
-                    "" : _maxTransitions.ToString());
+                _exportProperties.MaxTransitions = value;
+                textMaxTransitions.Text = (_exportProperties.MaxTransitions == null ?
+                    "" : _exportProperties.MaxTransitions.ToString());
             }
         }
 
@@ -453,43 +444,43 @@ namespace pwiz.Skyline.FileUI
 
             // ReSharper disable ConvertIfStatementToConditionalTernaryExpression
             if (radioSingle.Checked)
-                _exportStrategy = ExportStrategy.Single;
+                _exportProperties.ExportStrategy = ExportStrategy.Single;
             else if (radioProtein.Checked)
-                _exportStrategy = ExportStrategy.Protein;
+                _exportProperties.ExportStrategy = ExportStrategy.Protein;
             else
-                _exportStrategy = ExportStrategy.Buckets;
+                _exportProperties.ExportStrategy = ExportStrategy.Buckets;
             // ReSharper restore ConvertIfStatementToConditionalTernaryExpression
 
-            _ignoreProteins = cbIgnoreProteins.Checked;
-            _fullScans = cbFullScan.Checked;
-            _addEnergyRamp = cbEnergyRamp.Visible && cbEnergyRamp.Checked;
+            _exportProperties.IgnoreProteins = cbIgnoreProteins.Checked;
+            _exportProperties.FullScans = cbFullScan.Checked;
+            _exportProperties.AddEnergyRamp = cbEnergyRamp.Visible && cbEnergyRamp.Checked;
 
-            _optimizeType = comboOptimizing.SelectedItem.ToString();
+            _exportProperties.OptimizeType = comboOptimizing.SelectedItem.ToString();
             var prediction = _document.Settings.TransitionSettings.Prediction;
-            if (Equals(_optimizeType, ExportOptimize.NONE))
-                _optimizeType = null;
-            else if (Equals(_optimizeType, ExportOptimize.CE))
+            if (Equals(_exportProperties.OptimizeType, ExportOptimize.NONE))
+                _exportProperties.OptimizeType = null;
+            else if (Equals(_exportProperties.OptimizeType, ExportOptimize.CE))
             {
                 var regression = prediction.CollisionEnergy;
-                _optimizeStepSize = regression.StepSize;
-                _optimizeStepCount = regression.StepCount;
+                _exportProperties.OptimizeStepSize = regression.StepSize;
+                _exportProperties.OptimizeStepCount = regression.StepCount;
             }
-            else if (Equals(_optimizeType, ExportOptimize.DP))
+            else if (Equals(_exportProperties.OptimizeType, ExportOptimize.DP))
             {
                 var regression = prediction.DeclusteringPotential;
-                _optimizeStepSize = regression.StepSize;
-                _optimizeStepCount = regression.StepCount;
+                _exportProperties.OptimizeStepSize = regression.StepSize;
+                _exportProperties.OptimizeStepCount = regression.StepCount;
             }
 
             string maxTran = textMaxTransitions.Text;
             if (string.IsNullOrEmpty(maxTran))
             {
-                if (_exportStrategy == ExportStrategy.Buckets)
+                if (_exportProperties.ExportStrategy == ExportStrategy.Buckets)
                 {
                     helper.ShowTextBoxError(textMaxTransitions, "{0} must contain a value.");
                     return;
                 }
-                _maxTransitions = null;                
+                _exportProperties.MaxTransitions = null;                
             }
             else
             {
@@ -503,26 +494,32 @@ namespace pwiz.Skyline.FileUI
                 // Make sure all the precursors can fit into a single document
                 if (!ValidatePrecursorFit(documentExport, maxVal))
                     return;
-                _maxTransitions = maxVal;
+                _exportProperties.MaxTransitions = maxVal;
             }
 
-            _methodType = (ExportMethodType) Enum.Parse(typeof (ExportMethodType),
+            _exportProperties.MethodType = (ExportMethodType)Enum.Parse(typeof(ExportMethodType),
                                                         comboTargetType.SelectedItem.ToString());
 
             if (textDwellTime.Visible)
             {
-                if (!helper.ValidateNumberTextBox(e, textDwellTime, MassListExporter.DWELL_TIME_MIN, MassListExporter.DWELL_TIME_MAX, out _dwellTime))
+               int dwellTime;
+               if (!helper.ValidateNumberTextBox(e, textDwellTime, MassListExporter.DWELL_TIME_MIN, MassListExporter.DWELL_TIME_MAX, out dwellTime))
                     return;
+
+                _exportProperties.DwellTime = dwellTime;
             }
             if (textRunLength.Visible)
             {
-                if (!helper.ValidateDecimalTextBox(e, textRunLength, MassListExporter.RUN_LENGTH_MIN, MassListExporter.RUN_LENGTH_MAX, out _runLength))
+                double runLength;
+                if (!helper.ValidateDecimalTextBox(e, textRunLength, MassListExporter.RUN_LENGTH_MIN, MassListExporter.RUN_LENGTH_MAX, out runLength))
                     return;
+
+                _exportProperties.RunLength = runLength;
             }
 
             // If export method type is scheduled, and allows multiple scheduling options
             // ask the user which to use.
-            if (_methodType == ExportMethodType.Scheduled && HasMultipleSchedulingOptions(documentExport))
+            if (_exportProperties.MethodType == ExportMethodType.Scheduled && HasMultipleSchedulingOptions(documentExport))
             {
                 SchedulingOptionsDlg schedulingOptionsDlg = new SchedulingOptionsDlg(documentExport);
                 if (schedulingOptionsDlg.ShowDialog(this) != DialogResult.OK)
@@ -551,24 +548,8 @@ namespace pwiz.Skyline.FileUI
                 {
                     dlg.Title = string.Format("Export {0} Method", _instrumentType);
 
-                    if (Equals(_instrumentType, ExportInstrumentType.ABI_QTRAP))
-                    {
-                        dlg.DefaultExt = "dam";
-                    }
-                    else if (Equals(_instrumentType, ExportInstrumentType.Agilent6400))
-                    {
-                        dlg.DefaultExt = "m";
-                    }
-                    else if (Equals(_instrumentType, ExportInstrumentType.Thermo_TSQ) ||
-                        Equals(_instrumentType, ExportInstrumentType.Thermo_LTQ))
-                    {
-                        dlg.DefaultExt = "meth";
-                    }
-                    else if (Equals(_instrumentType, ExportInstrumentType.Waters_Xevo) ||
-                        Equals(_instrumentType, ExportInstrumentType.Waters_Quattro_Premier))
-                    {
-                        dlg.DefaultExt = "exp";
-                    }
+                    dlg.DefaultExt = ExportInstrumentType.MethodExtension(_instrumentType);
+                    
                     dlg.Filter = string.Join("|", new[]
                                      {
                                          string.Format("Method File (*.{0})|*.{0}", dlg.DefaultExt),
@@ -592,37 +573,37 @@ namespace pwiz.Skyline.FileUI
                     case ExportInstrumentType.ABI:
                     case ExportInstrumentType.ABI_QTRAP:
                         if (_fileType == ExportFileType.List)
-                            ExportAbiCsv(documentExport, outputPath);
+                            _exportProperties.ExportAbiCsv(documentExport, outputPath);
                         else
-                            ExportAbiQtrapMethod(documentExport, outputPath, templateName);
+                            _exportProperties.ExportAbiQtrapMethod(documentExport, outputPath, templateName);
                         break;
                     case ExportInstrumentType.Agilent:
                     case ExportInstrumentType.Agilent6400:
                         if (_fileType == ExportFileType.List)
-                            ExportAgilentCsv(documentExport, outputPath);
+                            _exportProperties.ExportAgilentCsv(documentExport, outputPath);
                         else
-                            ExportAgilentMethod(documentExport, outputPath, templateName);
+                            _exportProperties.ExportAgilentMethod(documentExport, outputPath, templateName);
                         break;
                     case ExportInstrumentType.Thermo:
                     case ExportInstrumentType.Thermo_TSQ:
                         if (_fileType == ExportFileType.List)
-                            ExportThermoCsv(documentExport, outputPath);
+                            _exportProperties.ExportThermoCsv(documentExport, outputPath);
                         else
-                            ExportThermoMethod(documentExport, outputPath, templateName);
+                            _exportProperties.ExportThermoMethod(documentExport, outputPath, templateName);
                         break;
                     case ExportInstrumentType.Thermo_LTQ:
-                        _optimizeType = null;
-                        ExportThermoLtqMethod(documentExport, outputPath, templateName);
+                        OptimizeType = null;
+                        _exportProperties.ExportThermoLtqMethod(documentExport, outputPath, templateName);
                         break;
                     case ExportInstrumentType.Waters:
                     case ExportInstrumentType.Waters_Xevo:
                         if (_fileType == ExportFileType.List)
-                            ExportWatersCsv(documentExport, outputPath);
+                            _exportProperties.ExportWatersCsv(documentExport, outputPath);
                         else
-                            ExportWatersMethod(documentExport, outputPath, templateName);
+                            _exportProperties.ExportWatersMethod(documentExport, outputPath, templateName);
                         break;
                     case ExportInstrumentType.Waters_Quattro_Premier:
-                        ExportWatersQMethod(documentExport, outputPath, templateName);
+                        _exportProperties.ExportWatersQMethod(documentExport, outputPath, templateName);
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -637,25 +618,25 @@ namespace pwiz.Skyline.FileUI
 
             // Successfully completed dialog.  Store the values in settings.
             Settings.Default.ExportInstrumentType = _instrumentType;
-            Settings.Default.ExportMethodStrategy = _exportStrategy.ToString();
-            Settings.Default.ExportIgnoreProteins = _ignoreProteins;
+            Settings.Default.ExportMethodStrategy = ExportStrategy.ToString();
+            Settings.Default.ExportIgnoreProteins = IgnoreProteins;
             if (IsFullScanInstrument)
             {
-                Settings.Default.ExportMethodMaxPrec = (_maxTransitions != null ?
-                    _maxTransitions.ToString() : null);                
+                Settings.Default.ExportMethodMaxPrec = (MaxTransitions != null ?
+                    MaxTransitions.ToString() : null);                
             }
             else
             {
-                Settings.Default.ExportMethodMaxTran = (_maxTransitions != null ?
-                    _maxTransitions.ToString() : null);
+                Settings.Default.ExportMethodMaxTran = (MaxTransitions != null ?
+                    MaxTransitions.ToString() : null);
             }
-            Settings.Default.ExportMethodType = _methodType.ToString();
+            Settings.Default.ExportMethodType = _exportProperties.MethodType.ToString();
             if (textDwellTime.Visible)
                 Settings.Default.ExportMethodDwellTime = DwellTime;
             if (textRunLength.Visible)
                 Settings.Default.ExportMethodRunLength = RunLength;
             if (cbEnergyRamp.Visible)
-                Settings.Default.ExportThermoEnergyRamp = _addEnergyRamp;
+                Settings.Default.ExportThermoEnergyRamp = AddEnergyRamp;
             if (_fileType == ExportFileType.Method)
                 Settings.Default.ExportMethodTemplateList.SetValue(new MethodTemplateFile(_instrumentType, templateName));
 
@@ -682,14 +663,14 @@ namespace pwiz.Skyline.FileUI
 
         private bool ValidatePrecursorFit(SrmDocument document, int maxTransitions)
         {
-            string messageFormat = (_optimizeType == null ?
+            string messageFormat = (OptimizeType == null ?
                 "The precursor {0} for the peptide {1} has {2} transitions, which exceeds the current maximum {3}." :
                 "The precursor {0} for the peptide {1} requires {2} transitions to optimize, which exceeds the current maximum {3}.");
             foreach (var nodeGroup in document.TransitionGroups)
             {
                 int tranRequired = nodeGroup.Children.Count;
-                if (_optimizeType != null)
-                    tranRequired *= _optimizeStepCount * 2 + 1;
+                if (OptimizeType != null)
+                    tranRequired *= OptimizeStepCount * 2 + 1;
                 if (tranRequired > maxTransitions)
                 {
                     MessageDlg.Show(this, string.Format(messageFormat,
@@ -744,107 +725,7 @@ namespace pwiz.Skyline.FileUI
             OkDialog(null);
         }
 
-        private void ExportAbiCsv(SrmDocument document, string fileName)
-        {
-            var exporter = InitExporter(new AbiMassListExporter(document));
-            if (MethodType == ExportMethodType.Standard)
-                exporter.DwellTime = DwellTime;
-            exporter.Export(fileName);
-        }
-
-        private void ExportAbiQtrapMethod(SrmDocument document, string fileName, string templateName)
-        {
-            var exporter = InitExporter(new AbiQtrapMethodExporter(document));
-            if (MethodType == ExportMethodType.Standard)
-                exporter.DwellTime = DwellTime;
-            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
-        }
-
-        private void ExportAgilentCsv(SrmDocument document, string fileName)
-        {
-            var exporter = InitExporter(new AgilentMassListExporter(document));
-            if (MethodType == ExportMethodType.Standard)
-                exporter.DwellTime = DwellTime;
-            exporter.Export(fileName);
-        }
-
-        private void ExportAgilentMethod(SrmDocument document, string fileName, string templateName)
-        {
-            var exporter = InitExporter(new AgilentMethodExporter(document));
-            if (MethodType == ExportMethodType.Standard)
-                exporter.DwellTime = DwellTime;
-            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
-        }
-
-        private void ExportThermoCsv(SrmDocument document, string fileName)
-        {
-            var exporter = InitExporter(new ThermoMassListExporter(document));
-            exporter.AddEnergyRamp = AddEnergyRamp;
-            exporter.Export(fileName);
-        }
-
-        private void ExportThermoMethod(SrmDocument document, string fileName, string templateName)
-        {
-            var exporter = InitExporter(new ThermoMethodExporter(document));
-            if (MethodType == ExportMethodType.Standard)
-                exporter.RunLength = RunLength;
-
-            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
-        }
-
-        private void ExportThermoLtqMethod(SrmDocument document, string fileName, string templateName)
-        {
-            var exporter = InitExporter(new ThermoLtqMethodExporter(document));
-            exporter.FullScans = FullScans;
-
-            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
-        }
-
-        private void ExportWatersCsv(SrmDocument document, string fileName)
-        {
-            var exporter = InitExporter(new WatersMassListExporter(document));
-            if (MethodType == ExportMethodType.Standard)
-                exporter.RunLength = RunLength;
-            exporter.Export(fileName);
-        }
-
-        private void ExportWatersMethod(SrmDocument document, string fileName, string templateName)
-        {
-            var exporter = InitExporter(new WatersMethodExporter(document));
-            if (MethodType == ExportMethodType.Standard)
-                exporter.RunLength = RunLength;
-
-            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
-        }
-
-        private void ExportWatersQMethod(SrmDocument document, string fileName, string templateName)
-        {
-            var exporter = InitExporter(new WatersMethodExporter(document)
-                                            {
-                                                MethodInstrumentType = ExportInstrumentType.Waters_Quattro_Premier
-                                            });
-            if (MethodType == ExportMethodType.Standard)
-                exporter.RunLength = RunLength;
-
-            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
-        }
-
-        private void PerformLongExport(Action<IProgressMonitor> performExport)
-        {
-            var longWait = new LongWaitDlg { Text = "Exporting Methods" };
-            try
-            {
-                var status = longWait.PerformWork(this, 800, performExport);
-                if (status.IsError)
-                    MessageBox.Show(this, status.ErrorException.Message);
-            }
-            catch (Exception x)
-            {
-                MessageBox.Show(this, string.Format("An error occurred attempting to export.\n{0}", x.Message), Program.Name);
-            }
-        }
-
-        private TExp InitExporter<TExp>(TExp exporter)
+        public TExp InitExporter<TExp>(TExp exporter)
             where TExp : MassListExporter
         {
             exporter.Strategy = ExportStrategy;
@@ -891,7 +772,7 @@ namespace pwiz.Skyline.FileUI
             bool standard = Equals(comboTargetType.SelectedItem.ToString(), ExportMethodType.Standard.ToString());
             if (!standard && !CanSchedule)
                 comboTargetType.SelectedItem = ExportMethodType.Standard.ToString();
-            comboTargetType.Enabled = CanScheduleInstrument;
+            comboTargetType.Enabled = ExportInstrumentType.CanScheduleInstrumentType(InstrumentType);
 
             comboOptimizing.Enabled = !Equals(_instrumentType, ExportInstrumentType.Thermo_LTQ);
 
@@ -1051,6 +932,31 @@ namespace pwiz.Skyline.FileUI
             if (openFileDialog.ShowDialog(this) == DialogResult.OK)
             {
                 textTemplateFile.Text = openFileDialog.FileName;
+            }
+        }
+    }
+
+    public class ExportDlgProperties : ExportProperties
+    {
+        private readonly ExportMethodDlg _dialog;
+
+        public ExportDlgProperties(ExportMethodDlg dialog)
+        {
+            _dialog = dialog;
+        }
+
+        public override void PerformLongExport(Action<IProgressMonitor> performExport)
+        {
+            var longWait = new LongWaitDlg { Text = "Exporting Methods" };
+            try
+            {
+                var status = longWait.PerformWork(_dialog, 800, performExport);
+                if (status.IsError)
+                    MessageBox.Show(_dialog, status.ErrorException.Message);
+            }
+            catch (Exception x)
+            {
+                MessageBox.Show(_dialog, string.Format("An error occurred attempting to export.\n{0}", x.Message), Program.Name);
             }
         }
     }

@@ -108,6 +108,41 @@ namespace pwiz.Skyline.Util
         DialogResult ShowDialog(Func<IWin32Window, DialogResult> show);
     }
 
+    /// <summary>
+    /// Exposes <see cref="IProgressMonitor"/> for an action that requires the interface,
+    /// given a <see cref="ILongWaitBroker"/>.
+    /// </summary>
+    public sealed class ProgressWaitBroker : IProgressMonitor
+    {
+        private readonly Action<IProgressMonitor> _performWork;
+        private ILongWaitBroker _broker;
+
+        public ProgressWaitBroker(Action<IProgressMonitor> performWork)
+        {
+            _performWork = performWork;
+        }
+
+        public void PerformWork(ILongWaitBroker broker)
+        {
+            _broker = broker;
+            _performWork(this);
+        }
+
+        public ProgressStatus Status { get; private set; }
+
+        public bool IsCanceled
+        {
+            get { return _broker.IsCanceled; }
+        }
+
+        public void UpdateProgress(ProgressStatus status)
+        {
+            _broker.ProgressValue = status.PercentComplete;
+            _broker.Message = status.Message;
+            Status = status;
+        }
+    }
+
     public class ProgressUpdateEventArgs : EventArgs
     {
         public ProgressUpdateEventArgs(ProgressStatus progress)

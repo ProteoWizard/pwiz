@@ -15,6 +15,9 @@
     <DeploymentItem filename="..\Shared\ProteowizardWrapper\obj\x86\MSFileReader.XRawfile2.dll" />
     <DeploymentItem filename="..\Shared\ProteowizardWrapper\obj\x86\fileio.dll" />
     <DeploymentItem filename="..\Shared\ProteowizardWrapper\obj\x86\fregistry.dll" />
+    <DeploymentItem filename="Method\Thermo\BuildLTQMethod.exe" outputDirectory="Method\Thermo" />
+    <DeploymentItem filename="Method\Agilent\BuildAgilentMethod.exe" outputDirectory="Method\Agilent" />
+    <DeploymentItem filename="Method\Agilent\MethodCreator.dll" outputDirectory="Method\Agilent" />
   </Deployment>
   <TestTypeSpecific />
 </TestRunConfiguration>

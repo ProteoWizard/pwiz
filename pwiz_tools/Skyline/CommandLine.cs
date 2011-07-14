@@ -25,12 +25,14 @@ using System.Text;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
+using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline
 {
@@ -39,6 +41,7 @@ namespace pwiz.Skyline
         public string SkylineFile { get; private set; }
         public string ReplicateFile { get; private set; }
         public string ReplicateName { get; private set; }
+        public bool ImportAppend { get; private set; }
         public bool ImportingResults
         {
             get { return !string.IsNullOrEmpty(ReplicateFile); }
@@ -79,7 +82,7 @@ namespace pwiz.Skyline
 
         public bool ExportingTransitionList
         {
-            get { return !String.IsNullOrEmpty(TransListInstrumentType);  }
+            get { return !string.IsNullOrEmpty(TransListInstrumentType);  }
         }
 
         private string _methodInstrumentType;
@@ -99,6 +102,11 @@ namespace pwiz.Skyline
             }
         }
 
+        public bool ExportingMethod
+        {
+            get { return !string.IsNullOrEmpty(MethodInstrumentType); }
+        }
+
         public bool ExportStrategySet { get; private set; }
         public ExportStrategy ExportStrategy { get; set; }
 
@@ -113,13 +121,26 @@ namespace pwiz.Skyline
             get { return _optimizeType; }
             set
             {
-                if (ExportOptimize.OptimizeTypes.Any(opt => opt.Equals(value)))
+                if(value == null)
                 {
                     _optimizeType = value;
+                    return;
                 }
-                else
+
+                var valueUpper = value.ToUpper();
+                switch(valueUpper)
                 {
-                    throw new ArgumentException(string.Format("The instrument parameter {0} is not valid for optimization.", value));
+                    case "NONE":
+                        _optimizeType = ExportOptimize.NONE;
+                        break;
+                    case "CE":
+                        _optimizeType = ExportOptimize.CE;
+                        break;
+                    case "DP":
+                        _optimizeType = ExportOptimize.DP;
+                        break;
+                    default:
+                        throw new ArgumentException(string.Format("The instrument parameter {0} is not valid for optimization.", value));
                 }
             }
         }
@@ -127,11 +148,18 @@ namespace pwiz.Skyline
         public ExportMethodType ExportMethodType { get; private set; }
 
         public string TemplateFile { get; private set; }
-
-        public ExportSchedulingAlgorithm ExportSchedulingAlgorithm { get; private set; }
-
-        public bool SchedulingReplicateSet { get; private set; }
-        public int SchedulingReplicateIndex { get; private set; }
+        
+        public ExportSchedulingAlgorithm ExportSchedulingAlgorithm
+        {
+            get
+            {
+                return String.IsNullOrEmpty(SchedulingReplicate)
+                           ? ExportSchedulingAlgorithm.Average
+                           : ExportSchedulingAlgorithm.Single;
+            }
+        }
+        
+        public string SchedulingReplicate { get; private set; }
 
         public bool IgnoreProteins { get; private set; }
 
@@ -164,27 +192,45 @@ namespace pwiz.Skyline
             }
         }
 
-        public string TransListFile { get; private set; }
+        public bool FullScans { get; private set; }
 
-        public CommandArgs()
+        public string ExportPath { get; private set; }
+
+        public ExportCommandProperties ExportCommandProperties
         {
-            SetDefaults();
+            get
+            {
+                return new ExportCommandProperties(_out)
+                {
+
+                    AddEnergyRamp = AddEnergyRamp,
+                    DwellTime = DwellTime,
+                    ExportStrategy = ExportStrategy,
+                    FullScans = FullScans,
+                    IgnoreProteins = IgnoreProteins,
+                    MaxTransitions = MaxTransitionsPerInjection,
+                    MethodType = ExportMethodType,
+                    OptimizeType = OptimizeType,
+                    RunLength = RunLength,
+                    SchedulingAlgorithm = ExportSchedulingAlgorithm
+                };
+            }
         }
 
-        public void SetDefaults()
+        private readonly TextWriter _out;
+
+        public CommandArgs(TextWriter output)
         {
+            _out = output;
+
             ReportColumnSeparator = ',';
             MaxTransitionsPerInjection = MassListExporter.MAX_TRANS_PER_INJ_DEFAULT;
             OptimizeType = ExportOptimize.NONE;
             ExportStrategy = ExportStrategy.Single;
             ExportMethodType = ExportMethodType.Standard;
-            //This is a flag
-            SchedulingReplicateIndex = -1;
-            ExportSchedulingAlgorithm = ExportSchedulingAlgorithm.Average;
             DwellTime = MassListExporter.DWELL_TIME_DEFAULT;
             RunLength = MassListExporter.RUN_LENGTH_DEFAULT;
         }
-
 
         public struct NameValuePair
         {
@@ -206,7 +252,7 @@ namespace pwiz.Skyline
         }
 
 
-        public bool ParseArgs(string[] args, TextWriter output)
+        public bool ParseArgs(string[] args)
         {
             foreach (string s in args)
             {
@@ -217,16 +263,19 @@ namespace pwiz.Skyline
                     SkylineFile = pair.Value;
                 }
 
-                else if (pair.Name.Equals("import"))
+                else if (pair.Name.Equals("import-file"))
                 {
                     ReplicateFile = pair.Value;
                 }
 
-                else if (pair.Name.Equals("replicate"))
+                else if (pair.Name.Equals("import-replicate-name"))
                 {
                     ReplicateName = pair.Value;
                 }
-
+                else if (pair.Name.Equals("import-append"))
+                {
+                    ImportAppend = true;
+                }
                 else if (pair.Name.Equals("out"))
                 {
                     SaveFile = pair.Value;
@@ -237,20 +286,26 @@ namespace pwiz.Skyline
                     Saving = true;
                 }
 
-                else if (pair.Name.Equals("report"))
+                else if (pair.Name.Equals("report-name"))
                 {
                     ReportName = pair.Value;
                 }
 
-                else if (pair.Name.Equals("separator"))
+                else if (pair.Name.Equals("report-format"))
                 {
-                    if (pair.Value.Equals("TAB"))
+                    if (pair.Value.Equals("TSV", StringComparison.CurrentCultureIgnoreCase))
                         ReportColumnSeparator = '\t';
+                    else if (pair.Value.Equals("CSV", StringComparison.CurrentCultureIgnoreCase))
+                        ReportColumnSeparator = TextUtil.GetCsvSeparator(CultureInfo.CurrentCulture);
                     else
-                        ReportColumnSeparator = pair.Value[0];
+                    {
+                        _out.WriteLine("Warning: Report format must be either \"CSV\" or \"TSV\".");
+                        _out.WriteLine("You entered {0}. Defaulting to CSV.", pair.Value);
+                        ReportColumnSeparator = TextUtil.GetCsvSeparator(CultureInfo.CurrentCulture);
+                    }
                 }
 
-                else if (pair.Name.Equals("reportfile"))
+                else if (pair.Name.Equals("report-file"))
                 {
                     ReportFile = pair.Value;
                 }
@@ -260,14 +315,15 @@ namespace pwiz.Skyline
                     try
                     {
                         TransListInstrumentType = pair.Value;
-                    } catch (ArgumentException)
+                    }
+                    catch (ArgumentException)
                     {
-                        output.WriteLine("Error: {0} is not a valid instrument type. Please choose from:", pair.Value);
-                        foreach(string str in ExportInstrumentType.TRANSITION_LIST_TYPES)
+                        _out.WriteLine("Warning: {0} is not a valid instrument type. Please choose from:", pair.Value);
+                        foreach (string str in ExportInstrumentType.TRANSITION_LIST_TYPES)
                         {
-                            output.WriteLine(str);
+                            _out.WriteLine(str);
                         }
-                        output.WriteLine("No transition list will be exported.");
+                        _out.WriteLine("No transition list will be exported.");
                     }
                 }
                 else if (pair.Name.Equals("exp-method-instrument"))
@@ -278,13 +334,17 @@ namespace pwiz.Skyline
                     }
                     catch (ArgumentException)
                     {
-                        output.WriteLine("Error: {0} is not a valid instrument type. Please choose from:", pair.Value);
+                        _out.WriteLine("Warning: {0} is not a valid instrument type. Please choose from:", pair.Value);
                         foreach (string str in ExportInstrumentType.METHOD_TYPES)
                         {
-                            output.WriteLine(str);
+                            _out.WriteLine(str);
                         }
-                        output.WriteLine("No method will be exported.");
+                        _out.WriteLine("No method will be exported.");
                     }
+                }
+                else if (pair.Name.Equals("exp-file"))
+                {
+                    ExportPath = pair.Value;
                 }
                 else if (pair.Name.Equals("exp-strategy"))
                 {
@@ -302,22 +362,24 @@ namespace pwiz.Skyline
                         ExportStrategy = ExportStrategy.Buckets;
                     else
                     {
-                        output.WriteLine("Warning: export strategy must be one of \"single\", \"protein\" or \"buckets\".");
-                        output.WriteLine("Defaulting to \"single\".");
+                        _out.WriteLine("Warning: export strategy must be one of \"single\", \"protein\" or \"buckets\".");
+                        _out.WriteLine("You entered {0}. Defaulting to \"single\".", pair.Value);
                         //already set to Single
                     }
                 }
 
                 else if (pair.Name.Equals("exp-max-trans"))
                 {
+                    //This one can't be kept within bounds because the bounds depend on the instrument
+                    //and the document. 
                     try
                     {
                         MaxTransitionsPerInjection = pair.ValueInt;
                     }
                     catch
                     {
-                        output.WriteLine("Warning: invalid max transitions per injection parameter.");
-                        output.WriteLine("Defaulting to " + MassListExporter.MAX_TRANS_PER_INJ_DEFAULT + ".");
+                        _out.WriteLine("Warning: Invalid max transitions per injection parameter ({0}).", pair.Value);
+                        _out.WriteLine("It must be a number. Defaulting to " + MassListExporter.MAX_TRANS_PER_INJ_DEFAULT + ".");
                         MaxTransitionsPerInjection = MassListExporter.MAX_TRANS_PER_INJ_DEFAULT;
                     }
                 }
@@ -328,8 +390,8 @@ namespace pwiz.Skyline
                     {
                         OptimizeType = pair.Value;
                     } catch (ArgumentException) {
-                        output.WriteLine("Warning: invalid optimization parameter. Use \"ce\", \"dp\", or \"none\".");
-                        output.WriteLine("Defaulting to none.");
+                        _out.WriteLine("Warning: Invalid optimization parameter ({0}). Use \"ce\", \"dp\", or \"none\".", pair.Value);
+                        _out.WriteLine("Defaulting to none.");
                     }
                 }
                 else if (pair.Name.Equals("exp-method-type"))
@@ -345,41 +407,13 @@ namespace pwiz.Skyline
                     }
                     else
                     {
-                        output.WriteLine("Warning: export method type must be \"standard\" or \"scheduled\".");
-                        output.WriteLine("Defaulting to standard.");
+                        _out.WriteLine("Warning: Export method type must be \"standard\" or \"scheduled\".");
+                        _out.WriteLine("Defaulting to standard.");
                     }
                 }
-                else if (pair.Name.Equals("exp-scheduling-algorithm"))
+                else if (pair.Name.Equals("exp-scheduling-replicate"))
                 {
-                    var sAlg = pair.Value;
-
-                    if (sAlg.Equals("single", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        ExportSchedulingAlgorithm = ExportSchedulingAlgorithm.Single;
-                    }
-                    else if (sAlg.Equals("average", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        //defaults to average
-                    }
-                    else
-                    {
-                        output.WriteLine("Warning: export scheduling algorithm must be \"single\" or \"average\".");
-                        output.WriteLine("Defaulting to average.");
-                    }
-                }
-                else if (pair.Name.Equals("exp-scheduling-replicate-index"))
-                {
-                    SchedulingReplicateSet = true;
-
-                    try
-                    {
-                        SchedulingReplicateIndex = pair.ValueInt;
-                    }
-                    catch
-                    {
-                        output.WriteLine("Warning: invalid scheduling replicate index parameter.");
-                        output.WriteLine("Defaulting to the last replicate in the document.");
-                    }
+                    SchedulingReplicate = pair.Value;
                 }
                 else if (pair.Name.Equals("exp-template"))
                 {
@@ -389,7 +423,7 @@ namespace pwiz.Skyline
                 {
                     IgnoreProteins = true;
                 }
-                else if (pair.Name.Equals("exp-dwelltime"))
+                else if (pair.Name.Equals("exp-dwell-time"))
                 {
                     try
                     {
@@ -397,15 +431,15 @@ namespace pwiz.Skyline
                     }
                     catch
                     {
-                        output.Write("Warning: dwell time must be between {0} and {1}. Defaulting to {2}",
+                        _out.WriteLine("Warning: dwell time must be a number between {0} and {1}. Defaulting to {2}",
                             MassListExporter.DWELL_TIME_MIN, MassListExporter.DWELL_TIME_MAX, MassListExporter.DWELL_TIME_DEFAULT);
                     }
                 }
-                else if (pair.Name.Equals("exp-addenergyramp"))
+                else if (pair.Name.Equals("exp-add-energy-ramp"))
                 {
                     AddEnergyRamp = true;
                 }
-                else if (pair.Name.Equals("exp-runlength"))
+                else if (pair.Name.Equals("exp-run-length"))
                 {
                     try
                     {
@@ -413,19 +447,19 @@ namespace pwiz.Skyline
                     }
                     catch
                     {
-                        output.Write("Warning: run length must be between {0} and {1}. Defaulting to {2}",
+                        _out.WriteLine("Warning: run length must be a number between {0} and {1}. Defaulting to {2}",
                             MassListExporter.RUN_LENGTH_MIN, MassListExporter.RUN_LENGTH_MAX, MassListExporter.RUN_LENGTH_DEFAULT);
                     }
                 }
-                else if (pair.Name.Equals("exp-translist-out"))
+                else if(pair.Name.Equals("exp-full-scans"))
                 {
-                    TransListFile = pair.Value;
+                    FullScans = true;
                 }
             }
 
             if (String.IsNullOrEmpty(SkylineFile))
             {
-                output.WriteLine("Error: Use --in to specify a Skyline document to open.");
+                _out.WriteLine("Error: Use --in to specify a Skyline document to open.");
                 return false;
             }
 
@@ -440,11 +474,13 @@ namespace pwiz.Skyline
 
     }
 
-    internal class CommandLine : IDisposable
+    public class CommandLine : IDisposable
     {
         private readonly TextWriter _out;
 
         SrmDocument _doc;
+
+        private ExportCommandProperties _exportProperties;
 
         public CommandLine(TextWriter output)
         {
@@ -454,9 +490,9 @@ namespace pwiz.Skyline
         public void Run(string[] args)
         {
 
-            var commandArgs = new CommandArgs();
+            var commandArgs = new CommandArgs(_out);
 
-            if(!commandArgs.ParseArgs(args, _out))
+            if(!commandArgs.ParseArgs(args))
                 return;
 
             if (!OpenSkyFile(commandArgs.SkylineFile))
@@ -464,7 +500,7 @@ namespace pwiz.Skyline
 
             if (commandArgs.ImportingResults)
             {
-                ImportResultsFile(commandArgs.ReplicateFile, commandArgs.ReplicateName, commandArgs.SkylineFile);
+                ImportResultsFile(commandArgs.ReplicateFile, commandArgs.ReplicateName, commandArgs.SkylineFile, commandArgs.ImportAppend);
             }
 
             if (commandArgs.Saving)
@@ -477,9 +513,22 @@ namespace pwiz.Skyline
                 ExportReport(commandArgs.ReportName, commandArgs.ReportFile, commandArgs.ReportColumnSeparator);
             }
 
-            if (commandArgs.ExportingTransitionList)
+            if (!string.IsNullOrEmpty(commandArgs.TransListInstrumentType) && !string.IsNullOrEmpty(commandArgs.MethodInstrumentType))
             {
-                ExportTransList(commandArgs);
+                _out.WriteLine("Error: You cannot simultaneously export a transition list and a method.");
+                _out.WriteLine("Neither will be exported. Please change your command line parameters.");
+                return;
+            } else
+            {
+                if (commandArgs.ExportingTransitionList)
+                {
+                    ExportInstrumentFile(ExportFileType.List, commandArgs);
+                }
+
+                if (commandArgs.ExportingMethod)
+                {
+                    ExportInstrumentFile(ExportFileType.Method, commandArgs);
+                }
             }
         }
 
@@ -492,15 +541,7 @@ namespace pwiz.Skyline
                     XmlSerializer xmlSerializer = new XmlSerializer(typeof(SrmDocument));
                     _out.WriteLine("Opening file...");
 
-                    try
-                    {
-                        _doc = (SrmDocument)xmlSerializer.Deserialize(stream);
-                    }
-                    catch (Exception)
-                    {
-                        _out.WriteLine("Error opening file: {0}", filePath);
-                        return false;
-                    }
+                    _doc = (SrmDocument)xmlSerializer.Deserialize(stream);
 
                     _out.WriteLine("File {0} opened.", Path.GetFileName(filePath));
                 }
@@ -510,27 +551,32 @@ namespace pwiz.Skyline
                 _out.WriteLine("Error: The Skyline file {0} does not exist.", filePath);
                 return false;
             }
-            catch (InvalidDataException x)
-            { 
+            catch (Exception x)
+            {
                 _out.WriteLine("Error: There was an error opening the file");
                 _out.WriteLine("{0}", filePath);
                 _out.WriteLine(XmlUtil.GetInvalidDataMessage(filePath, x));
                 return false;
-            } catch (Exception)
-            {
-                _out.WriteLine("Error: There was an unanticipated error opening the file");
-                _out.WriteLine("{0}", filePath);
             }
             return true;
         }
 
-        public void ImportResultsFile(string replicateFile, string replicateName, string skylineFile)
+        public void ImportResultsFile(string replicateFile, string replicateName, string skylineFile, bool append)
         {
             if (string.IsNullOrEmpty(replicateName))
                 replicateName = Path.GetFileNameWithoutExtension(replicateFile);
 
             _out.WriteLine("Adding results...");
 
+            if(_doc.Settings.HasResults && _doc.Settings.MeasuredResults.ContainsChromatogram(replicateName) && !append)
+            {
+                _out.WriteLine("Warning: The replicate {0} already exists", replicateName);
+                _out.WriteLine(("in the given document and the --import-append option is not specified."));
+                _out.WriteLine("The replicate will not be added to the document.");
+                return;
+            }
+
+            //This function will also detect whether the replicate exists in the document
             SrmDocument newDoc = ImportResults(_doc, skylineFile, replicateName, replicateFile);
 
             if (ReferenceEquals(_doc, newDoc))
@@ -567,7 +613,7 @@ namespace pwiz.Skyline
             if (String.IsNullOrEmpty(reportFile))
             {
                 _out.WriteLine("Error: If you specify a report, you must specify the");
-                _out.WriteLine("--reportfile=path/to/file.csv parameter.");
+                _out.WriteLine("--report-file=path/to/file.csv parameter.");
                 return;
             }
 
@@ -586,7 +632,7 @@ namespace pwiz.Skyline
             {
                 if (!saver.CanSave(false))
                 {
-                    _out.WriteLine("Error: the file {0} could not be saved.", reportFile);
+                    _out.WriteLine("Error: The file {0} could not be saved.", reportFile);
                     _out.WriteLine("Check to make sure it is not read-only.");
                 }
 
@@ -618,15 +664,38 @@ namespace pwiz.Skyline
         }
 
         // This function needs so many variables, we might as well just pass the whole CommandArgs object
-        public void ExportTransList(CommandArgs args)
+        private void ExportInstrumentFile(ExportFileType type, CommandArgs args)
         {
-
-            if (String.IsNullOrEmpty(args.TransListFile))
+            if (string.IsNullOrEmpty(args.ExportPath))
             {
-                _out.WriteLine("Error: You must specify a transition list file to write to with the");
-                _out.WriteLine("--exp-translist-out=path/to/file.csv parameter. No transition list");
+                _out.WriteLine("Error: You must specify an output file to write to with the");
+                _out.WriteLine("--exp-file=path/to/file parameter. No transition list");
                 _out.WriteLine("will be exported.");
                 return;
+            }
+
+            if (Equals(type, ExportFileType.Method))
+            {
+                if (string.IsNullOrEmpty(args.TemplateFile))
+                {
+                    _out.WriteLine("Error: A template file is required to export a method.");
+                    return;
+                }
+                else if (Equals(args.MethodInstrumentType, ExportInstrumentType.Agilent6400)
+                             ? !Directory.Exists(args.TemplateFile)
+                             : !File.Exists(args.TemplateFile))
+                {
+                    _out.WriteLine("Error: The template file {0} does not exist.", args.TemplateFile);
+                    return;
+                }
+                else if (Equals(args.MethodInstrumentType, ExportInstrumentType.Agilent6400) &&
+                         !AgilentMethodExporter.IsAgilentMethodPath(args.TemplateFile))
+                {
+                    _out.WriteLine("Error: The folder {0} does not appear to contain an Agilent QQQ", args.TemplateFile);
+                    _out.WriteLine("method template.  The folder is expected to have a .m extension, and contain the");
+                    _out.WriteLine("file qqqacqmethod.xsd.");
+                    return;
+                }
             }
 
             if (!args.ExportStrategySet)
@@ -636,84 +705,67 @@ namespace pwiz.Skyline
                 args.ExportStrategy = ExportStrategy.Single;
             }
 
+            if (args.AddEnergyRamp && !Equals(args.TransListInstrumentType, ExportInstrumentType.Thermo))
+            {
+                _out.WriteLine("Warning: The add-energy-ramp parameter is only applicable for Thermo");
+                _out.WriteLine("transition lists. This parameter will be ignored.");
+            }
+
+            string instrument = Equals(type, ExportFileType.List)
+                                    ? args.TransListInstrumentType
+                                    : args.MethodInstrumentType;
+            if (!CheckInstrument(instrument, _doc))
+            {
+                _out.WriteLine("Warning: The vendor {0} does not match the vendor", instrument);
+                _out.WriteLine("in the document settings. Continuing exporting a transition");
+                _out.WriteLine("list anyway...");
+            }
+
+
             int maxInstrumentTrans = _doc.Settings.TransitionSettings.Instrument.MaxTransitions ??
-                     TransitionInstrument.MAX_TRANSITION_MAX;
+                                     TransitionInstrument.MAX_TRANSITION_MAX;
 
             if ((args.MaxTransitionsPerInjection < MassListExporter.MAX_TRANS_PER_INJ_MIN ||
                  args.MaxTransitionsPerInjection > maxInstrumentTrans) &&
-                    (Equals(args.ExportStrategy, ExportStrategy.Buckets) ||
-                     Equals(args.ExportStrategy, ExportStrategy.Protein)))
+                (Equals(args.ExportStrategy, ExportStrategy.Buckets) ||
+                 Equals(args.ExportStrategy, ExportStrategy.Protein)))
             {
                 _out.WriteLine("Warning: Max transitions per injection must be set to some value between");
-                _out.WriteLine(" {0} and {1} for export strategies \"protein\" and \"buckets\".", MassListExporter.MAX_TRANS_PER_INJ_MIN, maxInstrumentTrans);
-                _out.WriteLine("Defaulting to {0}.", MassListExporter.MAX_TRANS_PER_INJ_DEFAULT);
+                _out.WriteLine("{0} and {1} for export strategies \"protein\" and \"buckets\" and for", MassListExporter.MAX_TRANS_PER_INJ_MIN, maxInstrumentTrans);
+                _out.WriteLine("scheduled methods. You specified {1}. Defaulting to {0}.", MassListExporter.MAX_TRANS_PER_INJ_DEFAULT, args.MaxTransitionsPerInjection);
 
                 args.MaxTransitionsPerInjection = MassListExporter.MAX_TRANS_PER_INJ_DEFAULT;
             }
 
-            MassListExporter exporter;
+            /*
+             * Consider: for transition lists, AB Sciex and Agilent require the 
+             * dwell time parameter, and Waters requires the run length parameter.
+             * These are guaranteed to be set and within-bounds at this point, but
+             * not necessarily by the user because there is a default.
+             * 
+             * Should we warn the user that they didn't set these parameters?
+             * Should we warn the user if they set parameters that will not be used
+             * with the given instrument?
+             * 
+             * This would require a pretty big matrix of conditionals, and there is
+             * documentation after all...
+             */
 
-            switch (args.TransListInstrumentType)
+            if(Equals(type, ExportFileType.Method))
             {
-                case ExportInstrumentType.ABI:
-                    if (args.DwellTime < MassListExporter.DWELL_TIME_MIN || args.DwellTime > MassListExporter.DWELL_TIME_MAX)
-                    {
-                        _out.WriteLine("Warning: Missing or invalid dwell time parameter. This parameter is needed");
-                        _out.WriteLine("to export an AB Sciex transition list and must be between {0} and {1}.",
-                            MassListExporter.DWELL_TIME_MIN, MassListExporter.DWELL_TIME_MAX);
-                        _out.WriteLine("Defaulting to {0}", MassListExporter.DWELL_TIME_DEFAULT);
-                        args.DwellTime = MassListExporter.DWELL_TIME_DEFAULT;
-                    }
-
-                    exporter = new AbiMassListExporter(_doc) { DwellTime = args.DwellTime };
-                    break;
-                case ExportInstrumentType.Agilent:
-                    if (args.DwellTime < MassListExporter.DWELL_TIME_MIN || args.DwellTime > MassListExporter.DWELL_TIME_MAX)
-                    {
-                        _out.WriteLine("Warning: Missing or invalid dwell time parameter. This parameter is needed");
-                        _out.WriteLine("to export an Agilent transition list and must be between {0} and {1}.",
-                            MassListExporter.DWELL_TIME_MIN, MassListExporter.DWELL_TIME_MAX);
-                        _out.WriteLine("Defaulting to {0}", MassListExporter.DWELL_TIME_DEFAULT);
-                        args.DwellTime = MassListExporter.DWELL_TIME_DEFAULT;
-                    }
-
-                    exporter = new AgilentMassListExporter(_doc) { DwellTime = args.DwellTime };
-                    break;
-                case ExportInstrumentType.Thermo:
-                    exporter = new ThermoMassListExporter(_doc) { AddEnergyRamp = args.AddEnergyRamp };
-                    break;
-                case ExportInstrumentType.Waters:
-                    if (args.RunLength < MassListExporter.RUN_LENGTH_MIN || args.RunLength > MassListExporter.RUN_LENGTH_MAX)
-                    {
-                        _out.WriteLine("Warning: Missing or invalid run length parameter. This parameter is needed");
-                        _out.WriteLine("to export a Waters transition list and must be between {0} and {1}.",
-                                       MassListExporter.RUN_LENGTH_MIN, MassListExporter.RUN_LENGTH_MAX);
-                        _out.WriteLine("Defaulting to {0}", MassListExporter.RUN_LENGTH_DEFAULT);
-                        args.RunLength = MassListExporter.RUN_LENGTH_DEFAULT;
-                    }
-
-                    exporter = new WatersMassListExporter(_doc) { RunLength = args.RunLength };
-                    break;
-                default:
-                    //this should never happen
-                    _out.WriteLine("Error: Instrument vendor must be one of:");
-                    foreach (string vendor in ExportInstrumentType.TRANSITION_LIST_TYPES)
-                    {
-                        _out.WriteLine(vendor);
-                    }
-                    _out.WriteLine("No transition list will be exported.");
+                string extension = Path.GetExtension(args.TemplateFile);
+                if(!Equals(ExportInstrumentType.MethodExtension(args.MethodInstrumentType),extension))
+                {
+                    _out.WriteLine("Error: The template extension {0} does not match the expected extension for",extension);
+                    _out.WriteLine("the instrument {0}. No method will be exported.", args.MethodInstrumentType);
                     return;
+                }
             }
-
-            exporter.Strategy = args.ExportStrategy;
-            exporter.IgnoreProteins = args.IgnoreProteins;
-            exporter.MaxTransitions = args.MaxTransitionsPerInjection;
-            //exporter.MethodType = args.ExportMethodType;
 
             var prediction = _doc.Settings.TransitionSettings.Prediction;
             double optimizeStepSize = 0;
             int optimizeStepCount = 0;
-            
+
             if (Equals(args.OptimizeType, ExportOptimize.CE))
             {
                 var regression = prediction.CollisionEnergy;
@@ -727,64 +779,105 @@ namespace pwiz.Skyline
                 optimizeStepCount = regression.StepCount;
             }
 
-            exporter.OptimizeType = args.OptimizeType;
-            exporter.OptimizeStepSize = optimizeStepSize;
-            exporter.OptimizeStepCount = optimizeStepCount;
-            exporter.SchedulingAlgorithm = args.ExportSchedulingAlgorithm;
+            //Now is a good time to make this conversion
+            _exportProperties = args.ExportCommandProperties;
+            _exportProperties.OptimizeStepSize = optimizeStepSize;
+            _exportProperties.OptimizeStepCount = optimizeStepCount;
 
-            //the default is average
-            if (Equals(args.ExportSchedulingAlgorithm, ExportSchedulingAlgorithm.Average))
+            if(Equals(args.ExportMethodType, ExportMethodType.Scheduled))
             {
-                exporter.SchedulingReplicateIndex = null;
-            }
-            else if (args.SchedulingReplicateSet)
-            {
-                if (args.SchedulingReplicateIndex < 1)
+
+                if (Equals(type, ExportFileType.Method) && !ExportInstrumentType.CanSchedule(args.MethodInstrumentType, _doc))
                 {
-                    //a warning has already been printed by CommandArgs.ParseArgs
-                    //default to the last replicate
-                    exporter.SchedulingReplicateIndex = _doc.Settings.MeasuredResults.Chromatograms.Count - 1;
+                    _out.WriteLine("Error: your specified instrument {0} is not compatible with scheduled methods.",
+                                   args.TransListInstrumentType);
+                    _out.WriteLine("No method will be exported.");
+                    return;
+                }
+
+                if (Equals(args.ExportSchedulingAlgorithm, ExportSchedulingAlgorithm.Average))
+                {
+                    _exportProperties.SchedulingReplicateNum = 0;
                 }
                 else
                 {
-                    if (args.SchedulingReplicateIndex > _doc.Settings.MeasuredResults.Chromatograms.Count)
+                    if(args.SchedulingReplicate.Equals("LAST"))
                     {
-                        _out.WriteLine("Warning: The specified replicate index ({0}) is greater than the number of", args.SchedulingReplicateIndex);
-                        _out.WriteLine("replicates in the document ({0}). Defaulting to the last replicate in the document.");
-                        exporter.SchedulingReplicateIndex = _doc.Settings.MeasuredResults.Chromatograms.Count - 1;
+                        _exportProperties.SchedulingReplicateNum = _doc.Settings.MeasuredResults.Chromatograms.Count - 1;
                     }
                     else
                     {
+                        //check whether the given replicate exists
+                        if (!_doc.Settings.MeasuredResults.ContainsChromatogram(args.SchedulingReplicate))
+                        {
+                            _out.WriteLine("Error: the specified replicate {0} does not exist in your document.",
+                                           args.SchedulingReplicate);
+                            _out.WriteLine("No {0} will be exported.", Equals(type, ExportFileType.Method) ? "method" : "transition list");
+                            return;
+                        }
 
-                        exporter.SchedulingReplicateIndex = args.SchedulingReplicateIndex;
+                        _exportProperties.SchedulingReplicateNum =
+                            _doc.Settings.MeasuredResults.Chromatograms.IndexOf(
+                                rep => rep.Name.Equals(args.SchedulingReplicate));
                     }
                 }
             }
-            else
-            {
-                _out.WriteLine("Warning: No scheduling replicate is set. Defaulting to the last replicate");
-                _out.WriteLine("in the document.");
-                exporter.SchedulingReplicateIndex = _doc.Settings.MeasuredResults.Chromatograms.Count - 1;
-            }
 
-            if (!CheckInstrument(args.TransListInstrumentType, _doc))
-            {
-                _out.WriteLine("Warning: The specified instrument vendor does not match the vendor");
-                _out.WriteLine("in the settings of the document. Continuing exporting a transition");
-                _out.WriteLine("list anyway...");
-            }
-
+            var instrumentType = Equals(type, ExportFileType.List)
+                                     ? args.TransListInstrumentType
+                                     : args.MethodInstrumentType;
             try
             {
-                exporter.Export(args.TransListFile);
-                _out.WriteLine("The transition list was exported successfully.");
+                switch (instrumentType)
+                {
+                    case ExportInstrumentType.ABI:
+                    case ExportInstrumentType.ABI_QTRAP:
+                        if (type == ExportFileType.List)
+                            _exportProperties.ExportAbiCsv(_doc, args.ExportPath);
+                        else
+                            _exportProperties.ExportAbiQtrapMethod(_doc, args.ExportPath, args.TemplateFile);
+                        break;
+                    case ExportInstrumentType.Agilent:
+                    case ExportInstrumentType.Agilent6400:
+                        if (type == ExportFileType.List)
+                            _exportProperties.ExportAgilentCsv(_doc, args.ExportPath);
+                        else
+                            _exportProperties.ExportAgilentMethod(_doc, args.ExportPath, args.TemplateFile);
+                        break;
+                    case ExportInstrumentType.Thermo:
+                    case ExportInstrumentType.Thermo_TSQ:
+                        if (type == ExportFileType.List)
+                            _exportProperties.ExportThermoCsv(_doc, args.ExportPath);
+                        else
+                            _exportProperties.ExportThermoMethod(_doc, args.ExportPath, args.TemplateFile);
+                        break;
+                    case ExportInstrumentType.Thermo_LTQ:
+                        _exportProperties.OptimizeType = null;
+                        _exportProperties.ExportThermoLtqMethod(_doc, args.ExportPath, args.TemplateFile);
+                        break;
+                    case ExportInstrumentType.Waters:
+                    case ExportInstrumentType.Waters_Xevo:
+                        if (type == ExportFileType.List)
+                            _exportProperties.ExportWatersCsv(_doc, args.ExportPath);
+                        else
+                            _exportProperties.ExportWatersMethod(_doc, args.ExportPath, args.TemplateFile);
+                        break;
+                    case ExportInstrumentType.Waters_Quattro_Premier:
+                        _exportProperties.ExportWatersQMethod(_doc, args.ExportPath, args.TemplateFile);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
             }
-            catch (Exception)
+            catch (IOException x)
             {
                 _out.WriteLine("Error: The file could not be saved. Check that the specified file directory");
                 _out.WriteLine("exists and is writeable.");
+                _out.WriteLine(x.Message);
                 return;
             }
+
+            _out.WriteLine("The file was exported successfully.");
         }
 
         public static void SaveDocument(SrmDocument doc, string outFile)
@@ -818,6 +911,11 @@ namespace pwiz.Skyline
             }
         }
 
+
+        /// <summary>
+        /// This function will add the given replicate, from dataFile, to the given document. If the replicate
+        /// does not exist, it will be added. If it does exist, it will be appended to.
+        /// </summary>
         public static SrmDocument ImportResults(SrmDocument doc, string docPath, string replicate, string dataFile)
         {
             var docContainer = new ResultsMemoryDocumentContainer(doc, docPath);
@@ -827,7 +925,19 @@ namespace pwiz.Skyline
             if (doc.Settings.HasResults)
                 listChromatograms.AddRange(doc.Settings.MeasuredResults.Chromatograms);
 
-            listChromatograms.Add(new ChromatogramSet(replicate, new[] {dataFile}));
+            int indexChrom = listChromatograms.IndexOf(chrom => chrom.Name.Equals(replicate));
+            if (indexChrom != -1)
+            {
+                var chromatogram = listChromatograms[indexChrom];
+                var paths = chromatogram.MSDataFilePaths;
+                var listFilePaths = paths.ToList();
+                listFilePaths.Add(dataFile);
+                listChromatograms[indexChrom] = chromatogram.ChangeMSDataFilePaths(listFilePaths);
+            }
+            else
+            {
+                listChromatograms.Add(new ChromatogramSet(replicate, new[] { dataFile }));
+            }
 
             var results = doc.Settings.HasResults
                               ? doc.Settings.MeasuredResults.ChangeChromatograms(listChromatograms)
@@ -886,13 +996,29 @@ namespace pwiz.Skyline
 
     }
 
+    public class ExportCommandProperties : ExportProperties
+    {
+        private readonly TextWriter _out;
+
+        public ExportCommandProperties(TextWriter output)
+        {
+            _out = output;
+        }
+
+        public override void PerformLongExport(Action<IProgressMonitor> performExport)
+        {
+            var waitBroker = new CommandWaitBroker(_out);
+            new ProgressWaitBroker(performExport).PerformWork(waitBroker);
+        }
+    }
+
 
     internal class CommandWaitBroker : ILongWaitBroker
     {
         #region Implementation of ILongWaitBroker
 
         private int _currentProgress;
-        private DateTime _waitStart;
+        private readonly DateTime _waitStart;
         private DateTime _lastOutput;
 
         private readonly TextWriter _out;

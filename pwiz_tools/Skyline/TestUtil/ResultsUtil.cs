@@ -132,39 +132,43 @@ namespace pwiz.SkylineTestUtil
             ChromatogramSet chromatogramSet;
             document.Settings.MeasuredResults.TryGetChromatogramSet(replicateName, out chromatogramSet, out index);
             int peptidesActual = 0;
-            foreach (var nodePep in document.Peptides)
+
+            foreach (var nodePep in document.Peptides.Where(nodePep => nodePep.Results[index] != null))
             {
-                if (nodePep.Results[index] != null)
-                    peptidesActual += nodePep.Results[index][0].PeakCountRatio >= 0.5 ? 1 : 0;
+                peptidesActual += nodePep.Results[index].Sum(chromInfo => chromInfo.PeakCountRatio >= 0.5 ? 1 : 0);
             }
             Assert.AreEqual(peptides, peptidesActual);
             int tranGroupsActual = 0;
             int tranGroupsHeavyActual = 0;
-            foreach (var nodeGroup in document.TransitionGroups)
+            foreach (var nodeGroup in document.TransitionGroups.Where(nodeGroup => nodeGroup.Results[index] != null))
             {
-                if (nodeGroup.Results[index] == null ||
-                        nodeGroup.Results[index][0].PeakCountRatio < 0.5)
-                    continue;
+                foreach (var chromInfo in nodeGroup.Results[index])
+                {
+                    if (chromInfo.PeakCountRatio < 0.5)
+                        continue;
 
-                if (nodeGroup.TransitionGroup.LabelType.IsLight)
-                    tranGroupsActual++;
-                else
-                    tranGroupsHeavyActual++;
+                    if (nodeGroup.TransitionGroup.LabelType.IsLight)
+                        tranGroupsActual++;
+                    else
+                        tranGroupsHeavyActual++;
+                }
             }
             Assert.AreEqual(tranGroups, tranGroupsActual);
             Assert.AreEqual(tranGroupsHeavy, tranGroupsHeavyActual);
             int transitionsActual = 0;
             int transitionsHeavyActual = 0;
-            foreach (var nodeTran in document.Transitions)
+            foreach (var nodeTran in document.Transitions.Where(nodeTran => nodeTran.Results[index] != null))
             {
-                if (nodeTran.Results[index] == null ||
-                        nodeTran.Results[index][0].Area == 0)
-                    continue;
+                foreach (var chromInfo in nodeTran.Results[index])
+                {
+                    if (chromInfo.Area == 0)
+                        continue;
 
-                if (nodeTran.Transition.Group.LabelType.IsLight)
-                    transitionsActual++;
-                else
-                    transitionsHeavyActual++;
+                    if (nodeTran.Transition.Group.LabelType.IsLight)
+                        transitionsActual++;
+                    else
+                        transitionsHeavyActual++;
+                }
             }
             Assert.AreEqual(transitions, transitionsActual);
             Assert.AreEqual(transitionsHeavy, transitionsHeavyActual);

@@ -17,9 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.IO;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using System.ComponentModel;
 using pwiz.Skyline.Util;

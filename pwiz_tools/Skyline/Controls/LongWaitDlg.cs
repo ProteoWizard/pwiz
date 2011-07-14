@@ -189,36 +189,5 @@ namespace pwiz.Skyline.Controls
                 _performWork();
             }
         }
-
-        private sealed class ProgressWaitBroker : IProgressMonitor
-        {
-            private readonly Action<IProgressMonitor> _performWork;
-            private ILongWaitBroker _broker;
-
-            public ProgressWaitBroker(Action<IProgressMonitor> performWork)
-            {
-                _performWork = performWork;
-            }
-
-            public void PerformWork(ILongWaitBroker broker)
-            {
-                _broker = broker;
-                _performWork(this);
-            }
-
-            public ProgressStatus Status { get; private set; }
-
-            public bool IsCanceled
-            {
-                get { return _broker.IsCanceled; }
-            }
-
-            public void UpdateProgress(ProgressStatus status)
-            {
-                _broker.ProgressValue = status.PercentComplete;
-                _broker.Message = status.Message;
-                Status = status;
-            }
-        }
     }
 }

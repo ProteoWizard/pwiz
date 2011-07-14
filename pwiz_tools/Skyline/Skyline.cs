@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Deployment.Application;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -191,6 +192,32 @@ namespace pwiz.Skyline
                 NewDocument();
             }
 
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            if (ApplicationDeployment.IsNetworkDeployed)
+            {
+                try
+                {
+                    var appDeployment = ApplicationDeployment.CurrentDeployment;
+                    if (appDeployment != null)
+                    {
+                        appDeployment.CheckForUpdateAsync();
+                    }
+                }
+                catch (DeploymentDownloadException)
+                {
+                }
+                catch (InvalidDeploymentException)
+                {
+                }
+                catch (InvalidOperationException)
+                {
+                }
+            }
+
+            base.OnHandleCreated(e);
         }
 
         void IDocumentContainer.Listen(EventHandler<DocumentChangedEventArgs> listener)

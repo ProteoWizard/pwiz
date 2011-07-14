@@ -56,6 +56,11 @@ namespace pwiz.Skyline.Model
         public const string Waters_Xevo = "Waters Xevo";
         public const string Waters_Quattro_Premier = "Waters Quattro Premier";
 
+        private const string EXT_AB_SCIEX = ".dam";
+        private const string EXT_AGILENT = ".m";
+        private const string EXT_THERMO = ".meth";
+        private const string EXT_WATERS = ".m";
+
         public static readonly string[] METHOD_TYPES =
             {
                 ABI_QTRAP,
@@ -74,6 +79,32 @@ namespace pwiz.Skyline.Model
                 Waters
             };
 
+        private readonly static Dictionary<string, string> MethodExtensions;
+
+        static ExportInstrumentType()
+        {
+            MethodExtensions = new Dictionary<string, string>
+                                   {
+                                       {ABI_QTRAP, EXT_AB_SCIEX},
+                                       {Agilent6400, EXT_AGILENT},
+                                       {Thermo_TSQ, EXT_THERMO},
+                                       {Thermo_LTQ, EXT_THERMO},
+                                       {Waters_Xevo, EXT_WATERS},
+                                       {Waters_Quattro_Premier, EXT_WATERS}
+                                   };
+        }
+
+        /// <summary>
+        /// Returns the method file extension associated with the given instrument.
+        /// If the given instrument is not in METHOD_TYPES, the string returned
+        /// will be null.
+        /// </summary>
+        public static string MethodExtension(string instrument)
+        {
+            string ext;
+            return MethodExtensions.TryGetValue(instrument, out ext) ? ext : null;
+        }
+
         public static bool IsFullScanInstrumentType(string type)
         {
             return Equals(type, Thermo_LTQ);
@@ -83,6 +114,146 @@ namespace pwiz.Skyline.Model
         {
             return Equals(type, Thermo_LTQ);
         }
+
+        public static bool CanScheduleInstrumentType(string type)
+        {
+            return !Equals(type, Thermo_LTQ);
+        }
+
+        public static bool CanSchedule(string instrumentType, SrmDocument doc)
+        {
+            return CanScheduleInstrumentType(instrumentType) &&
+                   doc.Settings.PeptideSettings.Prediction.CanSchedule(doc,
+                                                                       IsSingleWindowInstrumentType(instrumentType));
+        }
+
+        public static bool IsSingleWindowInstrumentType(string type)
+        {
+            return Equals(type, ABI) ||
+                   Equals(type, Waters) ||
+                   Equals(type, Waters_Xevo) ||
+                   Equals(type, Waters_Quattro_Premier);
+        }
+    }
+
+    public abstract class ExportProperties
+    {
+        public virtual ExportStrategy ExportStrategy { get; set; }
+        public virtual bool IgnoreProteins { get; set; }
+        public virtual int? MaxTransitions { get; set; }
+        public virtual ExportMethodType MethodType { get; set; }
+        public virtual string OptimizeType { get; set; }
+        public virtual double OptimizeStepSize { get; set; }
+        public virtual int OptimizeStepCount { get; set; }
+        public virtual int SchedulingReplicateNum { get; set; }
+        public virtual ExportSchedulingAlgorithm SchedulingAlgorithm { get; set; }
+
+        public virtual int DwellTime { get; set; }
+        public virtual bool AddEnergyRamp { get; set; }
+        public virtual double RunLength { get; set; }
+        public virtual bool FullScans { get; set; }
+
+        public TExp InitExporter<TExp>(TExp exporter)
+            where TExp : MassListExporter
+        {
+            exporter.Strategy = ExportStrategy;
+            exporter.IgnoreProteins = IgnoreProteins;
+            exporter.MaxTransitions = MaxTransitions;
+            exporter.MethodType = MethodType;
+            exporter.OptimizeType = OptimizeType;
+            exporter.OptimizeStepSize = OptimizeStepSize;
+            exporter.OptimizeStepCount = OptimizeStepCount;
+            exporter.SchedulingReplicateIndex = SchedulingReplicateNum;
+            exporter.SchedulingAlgorithm = SchedulingAlgorithm;
+            return exporter;
+        }
+
+        public void ExportAbiCsv(SrmDocument document, string fileName)
+        {
+            var exporter = InitExporter(new AbiMassListExporter(document));
+            if (MethodType == ExportMethodType.Standard)
+                exporter.DwellTime = DwellTime;
+            exporter.Export(fileName);
+        }
+
+        public void ExportAbiQtrapMethod(SrmDocument document, string fileName, string templateName)
+        {
+            var exporter = InitExporter(new AbiQtrapMethodExporter(document));
+            if (MethodType == ExportMethodType.Standard)
+                exporter.DwellTime = DwellTime;
+            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
+        }
+
+        public void ExportAgilentCsv(SrmDocument document, string fileName)
+        {
+            var exporter = InitExporter(new AgilentMassListExporter(document));
+            if (MethodType == ExportMethodType.Standard)
+                exporter.DwellTime = DwellTime;
+            exporter.Export(fileName);
+        }
+
+        public void ExportAgilentMethod(SrmDocument document, string fileName, string templateName)
+        {
+            var exporter = InitExporter(new AgilentMethodExporter(document));
+            if (MethodType == ExportMethodType.Standard)
+                exporter.DwellTime = DwellTime;
+            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
+        }
+
+        public void ExportThermoCsv(SrmDocument document, string fileName)
+        {
+            var exporter = InitExporter(new ThermoMassListExporter(document));
+            exporter.AddEnergyRamp = AddEnergyRamp;
+            exporter.Export(fileName);
+        }
+
+        public void ExportThermoMethod(SrmDocument document, string fileName, string templateName)
+        {
+            var exporter = InitExporter(new ThermoMethodExporter(document));
+            if (MethodType == ExportMethodType.Standard)
+                exporter.RunLength = RunLength;
+
+            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
+        }
+
+        public void ExportThermoLtqMethod(SrmDocument document, string fileName, string templateName)
+        {
+            var exporter = InitExporter(new ThermoLtqMethodExporter(document));
+            exporter.FullScans = FullScans;
+
+            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
+        }
+
+        public void ExportWatersCsv(SrmDocument document, string fileName)
+        {
+            var exporter = InitExporter(new WatersMassListExporter(document));
+            if (MethodType == ExportMethodType.Standard)
+                exporter.RunLength = RunLength;
+            exporter.Export(fileName);
+        }
+
+        public void ExportWatersMethod(SrmDocument document, string fileName, string templateName)
+        {
+            var exporter = InitExporter(new WatersMethodExporter(document));
+            if (MethodType == ExportMethodType.Standard)
+                exporter.RunLength = RunLength;
+
+            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
+        }
+
+        public void ExportWatersQMethod(SrmDocument document, string fileName, string templateName)
+        {
+            var exporter = InitExporter(new WatersMethodExporter(document)
+            {
+                MethodInstrumentType = ExportInstrumentType.Waters_Quattro_Premier
+            });
+            if (MethodType == ExportMethodType.Standard)
+                exporter.RunLength = RunLength;
+
+            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
+        }
+
+        public abstract void PerformLongExport(Action<IProgressMonitor> performExport);
     }
 
     public static class ExportOptimize
@@ -104,20 +275,12 @@ namespace pwiz.Skyline.Model
 
         public const int RUN_LENGTH_MIN = 5;
         public const int RUN_LENGTH_MAX = 500;
-        public const int RUN_LENGTH_DEFAULT = 100;
+        public const int RUN_LENGTH_DEFAULT = 60;
 
         public const int MAX_TRANS_PER_INJ_DEFAULT = 130;
         public const int MAX_TRANS_PER_INJ_MIN = 2;
 
         public const string MEMORY_KEY_ROOT = "memory";
-
-        public static bool IsSingleWindowInstrumentType(string type)
-        {
-            return Equals(type, ExportInstrumentType.ABI) ||
-                   Equals(type, ExportInstrumentType.Waters) ||
-                   Equals(type, ExportInstrumentType.Waters_Xevo) ||
-                   Equals(type, ExportInstrumentType.Waters_Quattro_Premier);
-        }
 
         protected MassListExporter(SrmDocument document, DocNode node)
         {
@@ -269,7 +432,7 @@ namespace pwiz.Skyline.Model
             if (!MaxTransitions.HasValue)
                 throw new InvalidOperationException("Maximum transitions per file required");
 
-            bool singleWindow = IsSingleWindowInstrumentType(InstrumentType);
+            bool singleWindow = ExportInstrumentType.IsSingleWindowInstrumentType(InstrumentType);
 
             var predict = Document.Settings.PeptideSettings.Prediction;
             int? maxInstrumentTrans = null;
