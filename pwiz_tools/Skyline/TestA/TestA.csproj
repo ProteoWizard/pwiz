@@ -108,6 +108,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <None Include="CommandLineTest.zip" />
     <None Include="Refine.zip" />
     <None Include="Results\FullScan.zip" />
     <EmbeddedResource Include="Results\HeavyVariable.sky" />

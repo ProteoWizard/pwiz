@@ -148,7 +148,7 @@ namespace pwiz.SkylineTestA.Results
                                                                       testFilesDir.GetTestPath("both_KVP.mzML"),
                                                                   }));
             measuredResults = new MeasuredResults(listResults.ToArray());
-            docContainer.ChangeMeasuredResults(measuredResults, 2, 3, 25);
+            docContainer.ChangeMeasuredResults(measuredResults, 2, 3, 26);
             int indexResults = listResults.Count - 1;
             foreach (var nodeTran in docContainer.Document.Transitions)
             {

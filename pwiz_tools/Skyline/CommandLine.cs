@@ -299,8 +299,8 @@ namespace pwiz.Skyline
                         ReportColumnSeparator = TextUtil.GetCsvSeparator(CultureInfo.CurrentCulture);
                     else
                     {
-                        _out.WriteLine("Warning: Report format must be either \"CSV\" or \"TSV\".");
-                        _out.WriteLine("You entered {0}. Defaulting to CSV.", pair.Value);
+                        _out.WriteLine("Warning: The report format {0} is invalid. It must be either \"CSV\" or \"TSV\".", pair.Value);
+                        _out.WriteLine("Defaulting to CSV.", pair.Value);
                         ReportColumnSeparator = TextUtil.GetCsvSeparator(CultureInfo.CurrentCulture);
                     }
                 }
@@ -318,7 +318,7 @@ namespace pwiz.Skyline
                     }
                     catch (ArgumentException)
                     {
-                        _out.WriteLine("Warning: {0} is not a valid instrument type. Please choose from:", pair.Value);
+                        _out.WriteLine("Warning: The instrument type {0} is not valid. Please choose from:", pair.Value);
                         foreach (string str in ExportInstrumentType.TRANSITION_LIST_TYPES)
                         {
                             _out.WriteLine(str);
@@ -334,7 +334,7 @@ namespace pwiz.Skyline
                     }
                     catch (ArgumentException)
                     {
-                        _out.WriteLine("Warning: {0} is not a valid instrument type. Please choose from:", pair.Value);
+                        _out.WriteLine("Warning: The instrument type {0} is not valid. Please choose from:", pair.Value);
                         foreach (string str in ExportInstrumentType.METHOD_TYPES)
                         {
                             _out.WriteLine(str);
@@ -362,8 +362,8 @@ namespace pwiz.Skyline
                         ExportStrategy = ExportStrategy.Buckets;
                     else
                     {
-                        _out.WriteLine("Warning: export strategy must be one of \"single\", \"protein\" or \"buckets\".");
-                        _out.WriteLine("You entered {0}. Defaulting to \"single\".", pair.Value);
+                        _out.WriteLine("Warning: The export strategy {0} is not valid. It must be one of", pair.Value);
+                        _out.WriteLine("\"single\", \"protein\" or \"buckets\". Defaulting to single.");
                         //already set to Single
                     }
                 }
@@ -407,7 +407,7 @@ namespace pwiz.Skyline
                     }
                     else
                     {
-                        _out.WriteLine("Warning: Export method type must be \"standard\" or \"scheduled\".");
+                        _out.WriteLine("Warning: The method type {0} is invalid. It must be \"standard\" or \"scheduled\".", pair.Value);
                         _out.WriteLine("Defaulting to standard.");
                     }
                 }
@@ -431,8 +431,9 @@ namespace pwiz.Skyline
                     }
                     catch
                     {
-                        _out.WriteLine("Warning: dwell time must be a number between {0} and {1}. Defaulting to {2}",
-                            MassListExporter.DWELL_TIME_MIN, MassListExporter.DWELL_TIME_MAX, MassListExporter.DWELL_TIME_DEFAULT);
+                        _out.WriteLine("Warning: The dwell time {0} is invalid. it must be a number between {1} and {2}.", pair.Value,
+                            MassListExporter.DWELL_TIME_MIN, MassListExporter.DWELL_TIME_MAX);
+                        _out.WriteLine("Defaulting to {0}.", MassListExporter.DWELL_TIME_DEFAULT);
                     }
                 }
                 else if (pair.Name.Equals("exp-add-energy-ramp"))
@@ -447,8 +448,9 @@ namespace pwiz.Skyline
                     }
                     catch
                     {
-                        _out.WriteLine("Warning: run length must be a number between {0} and {1}. Defaulting to {2}",
-                            MassListExporter.RUN_LENGTH_MIN, MassListExporter.RUN_LENGTH_MAX, MassListExporter.RUN_LENGTH_DEFAULT);
+                        _out.WriteLine("Warning: The run length {0} is invalid. It must be a number between {1} and {2}.", pair.Value,
+                            MassListExporter.RUN_LENGTH_MIN, MassListExporter.RUN_LENGTH_MAX);
+                        _out.WriteLine("Defaulting to {0}.", MassListExporter.RUN_LENGTH_DEFAULT);
                     }
                 }
                 else if(pair.Name.Equals("exp-full-scans"))
@@ -493,10 +495,16 @@ namespace pwiz.Skyline
             var commandArgs = new CommandArgs(_out);
 
             if(!commandArgs.ParseArgs(args))
+            {
+                _out.WriteLine("Exiting...");
                 return;
+            }
 
             if (!OpenSkyFile(commandArgs.SkylineFile))
+            {
+                _out.WriteLine("Exiting...");
                 return;
+            }
 
             if (commandArgs.ImportingResults)
             {
@@ -826,48 +834,10 @@ namespace pwiz.Skyline
             var instrumentType = Equals(type, ExportFileType.List)
                                      ? args.TransListInstrumentType
                                      : args.MethodInstrumentType;
+
             try
             {
-                switch (instrumentType)
-                {
-                    case ExportInstrumentType.ABI:
-                    case ExportInstrumentType.ABI_QTRAP:
-                        if (type == ExportFileType.List)
-                            _exportProperties.ExportAbiCsv(_doc, args.ExportPath);
-                        else
-                            _exportProperties.ExportAbiQtrapMethod(_doc, args.ExportPath, args.TemplateFile);
-                        break;
-                    case ExportInstrumentType.Agilent:
-                    case ExportInstrumentType.Agilent6400:
-                        if (type == ExportFileType.List)
-                            _exportProperties.ExportAgilentCsv(_doc, args.ExportPath);
-                        else
-                            _exportProperties.ExportAgilentMethod(_doc, args.ExportPath, args.TemplateFile);
-                        break;
-                    case ExportInstrumentType.Thermo:
-                    case ExportInstrumentType.Thermo_TSQ:
-                        if (type == ExportFileType.List)
-                            _exportProperties.ExportThermoCsv(_doc, args.ExportPath);
-                        else
-                            _exportProperties.ExportThermoMethod(_doc, args.ExportPath, args.TemplateFile);
-                        break;
-                    case ExportInstrumentType.Thermo_LTQ:
-                        _exportProperties.OptimizeType = null;
-                        _exportProperties.ExportThermoLtqMethod(_doc, args.ExportPath, args.TemplateFile);
-                        break;
-                    case ExportInstrumentType.Waters:
-                    case ExportInstrumentType.Waters_Xevo:
-                        if (type == ExportFileType.List)
-                            _exportProperties.ExportWatersCsv(_doc, args.ExportPath);
-                        else
-                            _exportProperties.ExportWatersMethod(_doc, args.ExportPath, args.TemplateFile);
-                        break;
-                    case ExportInstrumentType.Waters_Quattro_Premier:
-                        _exportProperties.ExportWatersQMethod(_doc, args.ExportPath, args.TemplateFile);
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
+                _exportProperties.ExportFile(instrumentType, type, args.ExportPath, _doc, args.TemplateFile);
             }
             catch (IOException x)
             {

@@ -168,6 +168,50 @@ namespace pwiz.Skyline.Model
             return exporter;
         }
 
+        public void ExportFile(string instrumentType, ExportFileType type, string path, SrmDocument doc, string template)
+        {
+            switch (instrumentType)
+            {
+                case ExportInstrumentType.ABI:
+                case ExportInstrumentType.ABI_QTRAP:
+                    if (type == ExportFileType.List)
+                        ExportAbiCsv(doc, path);
+                    else
+                        ExportAbiQtrapMethod(doc, path, template);
+                    break;
+                case ExportInstrumentType.Agilent:
+                case ExportInstrumentType.Agilent6400:
+                    if (type == ExportFileType.List)
+                        ExportAgilentCsv(doc, path);
+                    else
+                        ExportAgilentMethod(doc, path, template);
+                    break;
+                case ExportInstrumentType.Thermo:
+                case ExportInstrumentType.Thermo_TSQ:
+                    if (type == ExportFileType.List)
+                        ExportThermoCsv(doc, path);
+                    else
+                        ExportThermoMethod(doc, path, template);
+                    break;
+                case ExportInstrumentType.Thermo_LTQ:
+                    OptimizeType = null;
+                    ExportThermoLtqMethod(doc, path, template);
+                    break;
+                case ExportInstrumentType.Waters:
+                case ExportInstrumentType.Waters_Xevo:
+                    if (type == ExportFileType.List)
+                        ExportWatersCsv(doc, path);
+                    else
+                        ExportWatersMethod(doc, path, template);
+                    break;
+                case ExportInstrumentType.Waters_Quattro_Premier:
+                    ExportWatersQMethod(doc, path, template);
+                    break;
+                default:
+                    break;
+            }
+        }
+
         public void ExportAbiCsv(SrmDocument document, string fileName)
         {
             var exporter = InitExporter(new AbiMassListExporter(document));

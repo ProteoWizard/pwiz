@@ -190,8 +190,17 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        private ExportSchedulingAlgorithm SchedulingAlgorithm { get; set; }
-        private int? SchedulingReplicateNum { get; set; }
+        private ExportSchedulingAlgorithm SchedulingAlgorithm
+        {
+            get { return _exportProperties.SchedulingAlgorithm; }
+            set { _exportProperties.SchedulingAlgorithm = value; }
+        }
+
+        private int? SchedulingReplicateNum
+        {
+            get { return _exportProperties.SchedulingReplicateNum; }
+            set { _exportProperties.SchedulingReplicateNum = value ?? 0; }
+        }
 
         public bool IsFullScanInstrument
         {
@@ -568,46 +577,7 @@ namespace pwiz.Skyline.FileUI
             Settings.Default.ExportDirectory = Path.GetDirectoryName(outputPath);
             try
             {
-                switch (_instrumentType)
-                {
-                    case ExportInstrumentType.ABI:
-                    case ExportInstrumentType.ABI_QTRAP:
-                        if (_fileType == ExportFileType.List)
-                            _exportProperties.ExportAbiCsv(documentExport, outputPath);
-                        else
-                            _exportProperties.ExportAbiQtrapMethod(documentExport, outputPath, templateName);
-                        break;
-                    case ExportInstrumentType.Agilent:
-                    case ExportInstrumentType.Agilent6400:
-                        if (_fileType == ExportFileType.List)
-                            _exportProperties.ExportAgilentCsv(documentExport, outputPath);
-                        else
-                            _exportProperties.ExportAgilentMethod(documentExport, outputPath, templateName);
-                        break;
-                    case ExportInstrumentType.Thermo:
-                    case ExportInstrumentType.Thermo_TSQ:
-                        if (_fileType == ExportFileType.List)
-                            _exportProperties.ExportThermoCsv(documentExport, outputPath);
-                        else
-                            _exportProperties.ExportThermoMethod(documentExport, outputPath, templateName);
-                        break;
-                    case ExportInstrumentType.Thermo_LTQ:
-                        OptimizeType = null;
-                        _exportProperties.ExportThermoLtqMethod(documentExport, outputPath, templateName);
-                        break;
-                    case ExportInstrumentType.Waters:
-                    case ExportInstrumentType.Waters_Xevo:
-                        if (_fileType == ExportFileType.List)
-                            _exportProperties.ExportWatersCsv(documentExport, outputPath);
-                        else
-                            _exportProperties.ExportWatersMethod(documentExport, outputPath, templateName);
-                        break;
-                    case ExportInstrumentType.Waters_Quattro_Premier:
-                        _exportProperties.ExportWatersQMethod(documentExport, outputPath, templateName);
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
+                _exportProperties.ExportFile(_instrumentType, _fileType, outputPath, documentExport, templateName);
             }
             catch (IOException x)
             {
