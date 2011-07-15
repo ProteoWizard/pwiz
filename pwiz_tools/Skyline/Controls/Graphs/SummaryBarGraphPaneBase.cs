@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
@@ -37,6 +38,8 @@ namespace pwiz.Skyline.Controls.Graphs
             CurveList.Clear();
             GraphObjList.Clear();
         }
+
+        protected virtual int FirstDataIndex { get { return 0; } }
 
         protected abstract int SelectedIndex { get; }
 
@@ -98,18 +101,57 @@ namespace pwiz.Skyline.Controls.Graphs
             return true;
         }
 
+        public override void Draw(Graphics g)
+        {
+            HandleResizeEvent();
+            base.Draw(g);
+            if (IsRedrawRequired(g))
+                base.Draw(g);
+
+        }
+
         public override void HandleResizeEvent()
         {
             ScaleAxisLabels();
         }
 
+        protected virtual bool IsRedrawRequired(Graphics g)
+        {
+            // Have to call HandleResizeEvent twice, since the X-scale may not be up
+            // to date before calling Draw.  If nothing changes, this will be a no-op
+            
+            HandleResizeEvent();
+            return (Chart.Rect.Bottom != _chartBottom.Rect.Bottom);
+        }
+
+        private Chart _chartBottom;
+        public string[] _originalTextLabels;
+        public string[] _reducedTextLabels;
+
         protected void ScaleAxisLabels()
         {
-            int dyAvailable = (int) Rect.Height/4;
+            float dyAvailable = Rect.Height/5;
+
+            _chartBottom = Chart;
+
+            // Reset the text labels to their original values.
+            if (_reducedTextLabels != null && ArrayUtil.EqualsDeep(XAxis.Scale.TextLabels, _reducedTextLabels))
+                Array.Copy(_originalTextLabels, XAxis.Scale.TextLabels, _originalTextLabels.Length);
+            //Keep the reduced text.
+            else
+                _originalTextLabels = XAxis.Scale.TextLabels.ToArray();
+            _reducedTextLabels = null;
+
             int countLabels = (XAxis.Scale.TextLabels != null ? XAxis.Scale.TextLabels.Length : 0);
-            int dxAvailable = (int) Rect.Width/Math.Max(1, countLabels);
-            int dpAvailable;
-            if (dyAvailable > dxAvailable)
+            float dxAvailable = Rect.Width/Math.Max(1, countLabels);
+
+            float dpAvailable;
+
+            var fontSpec = XAxis.Scale.FontSpec;
+
+            var textWidth = MaxWidth(new Font(fontSpec.Family, fontSpec.Size), XAxis.Scale.TextLabels);
+
+            if (textWidth > dxAvailable)
             {
                 dpAvailable = dyAvailable;
                 XAxis.Scale.FontSpec.Angle = 90;
@@ -121,8 +163,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 XAxis.Scale.FontSpec.Angle = 0;
                 XAxis.Scale.Align = AlignP.Center;
             }
-            var fontSpec = XAxis.Scale.FontSpec;
+            
             int pointSize;
+            
             for (pointSize = 12; pointSize > 4; pointSize--)
             {
                 using (var font = new Font(fontSpec.Family, pointSize))
@@ -132,8 +175,18 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         break;
                     }
+                    else if (Helpers.RemoveRepeatedLabelText(XAxis.Scale.TextLabels, FirstDataIndex))
+                    {
+                        maxWidth = MaxWidth(font, XAxis.Scale.TextLabels);
+                        if (maxWidth <= dpAvailable)
+                            break;
+                    }
                 }
             }
+
+            if (!ArrayUtil.EqualsDeep(XAxis.Scale.TextLabels, _originalTextLabels))
+                _reducedTextLabels = XAxis.Scale.TextLabels.ToArray();
+
             XAxis.Scale.FontSpec.Size = pointSize;
         }
 

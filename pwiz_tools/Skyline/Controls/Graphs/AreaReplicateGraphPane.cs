@@ -50,7 +50,9 @@ namespace pwiz.Skyline.Controls.Graphs
                 string[] labels = XAxis.Scale.TextLabels;
                 string[] withLibLabel = new string[labels.Length + 1];
                 withLibLabel[0] = ExpectedVisible == AreaExpectedValue.library ? "Library" : "Expected";
+
                 Array.Copy(labels, 0, withLibLabel, 1, labels.Length);
+               
 
                 XAxis.Scale.TextLabels = withLibLabel;
                 ScaleAxisLabels();
@@ -76,6 +78,11 @@ namespace pwiz.Skyline.Controls.Graphs
             get { return ExpectedVisible != AreaExpectedValue.none && Settings.Default.ShowLibraryPeakArea; }
         }
 
+        protected override int FirstDataIndex
+        {
+            get { return IsExpectedVisible ? 1 : 0; }
+        }
+
         public bool CanShowDotProduct { get; private set; }
 
         public bool IsDotProductVisible { get { return CanShowDotProduct && Settings.Default.ShowDotProductPeakArea; } }
@@ -91,7 +98,15 @@ namespace pwiz.Skyline.Controls.Graphs
             // Make sure changes are not only drawn when the graph is updated.
             if (IsDotProductVisible)
                 AddDotProductLabels(g, ParentGroupNode, SumAreas);
+
             base.Draw(g);
+        }
+
+        protected override bool IsRedrawRequired(Graphics g)
+        {
+            if (base.IsRedrawRequired(g))
+                return true;
+
             // Have to call AddDotProductLabels twice, since the X-scale may not be up
             // to date before calling Draw.  If nothing changes, this will be a no-op
             if (IsDotProductVisible)
@@ -99,13 +114,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 int dotpLabelsCount = _dotpLabels.Count;
                 AddDotProductLabels(g, ParentGroupNode, SumAreas);
                 if (dotpLabelsCount != _dotpLabels.Count)
-                    base.Draw(g);
+                    return true;
             }
+            return false;
         }
 
         public override void UpdateGraph(bool checkData)
         {
             _dotpLabels = new GraphObjList();
+          
             SrmDocument document = GraphSummary.DocumentUIContainer.DocumentUI;
             var results = document.Settings.MeasuredResults;
             bool resultsAvailable = results != null;
@@ -168,6 +185,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 Title.Text = "Select a peptide to see the peak area graph";
                 CanShowPeakAreaLegend = false;
+                CanShowDotProduct = false;
                 return;
             }
 
@@ -554,7 +572,11 @@ namespace pwiz.Skyline.Controls.Graphs
         private void EmptyGraph(SrmDocument document)
         {
             string[] resultNames = GraphData.GetReplicateNames(document).ToArray();
+
             XAxis.Scale.TextLabels = resultNames;
+            _originalTextLabels = new string[XAxis.Scale.TextLabels.Length];
+            Array.Copy(XAxis.Scale.TextLabels, _originalTextLabels, XAxis.Scale.TextLabels.Length);
+            
             ScaleAxisLabels();
             // Add a missing point for each replicate name.
             PointPairList pointPairList = new PointPairList();

@@ -1096,6 +1096,146 @@ namespace pwiz.Skyline.Util
             }
             return count;
         }
+
+        private const char LABEL_SEP_CHAR = '_';
+        private const string ELIPSIS = "...";
+        private static readonly char[] SPACE_CHARS = new[] {'_', '-', ' ', '.', ','};
+
+        /// <summary>
+        /// Finds repetitive text in labels and removes the text to save space.
+        /// </summary>
+        /// <param name="labels">The labels we are removing redundant text from.</param>
+        /// <param name="startLabelIndex">Index we want to start looking at, in case the Expected/Library
+        /// label is showing.</param>
+        /// <returns>Return </returns>
+        public static bool RemoveRepeatedLabelText(string[] labels, int startLabelIndex)
+        {
+            // Check to see if there are any labels. 
+            if (labels.Length == startLabelIndex)
+                return false;
+
+            // Creat a normalized set of labels to test for repeated text
+            string[] labelsRemove = new string[labels.Length];
+
+            Array.Copy(labels, labelsRemove, labels.Length);
+
+            if (startLabelIndex != 0)
+            {
+                labelsRemove = new string[labelsRemove.Length - startLabelIndex];
+                Array.Copy(labels, startLabelIndex, labelsRemove, 0, labelsRemove.Length);
+            }
+
+            for (int i = 0; i < labelsRemove.Length; i++)
+                labelsRemove[i] = NormalizeSeparators(labelsRemove[i]);
+
+            var labelParts = labelsRemove[0].Split(LABEL_SEP_CHAR);
+
+            // If all labels start with the first part
+            string replaceString = labelParts[0];
+            string partFirst = replaceString + LABEL_SEP_CHAR;
+            if (!labelsRemove.Contains(label => !label.StartsWith(partFirst)))
+            {
+                RemoveString(labels, startLabelIndex, replaceString, ReplaceLocation.start);
+                return true;
+            }
+
+            // If all labels end with the last part
+            replaceString = labelParts[labelParts.Length - 1];
+            string partLast = LABEL_SEP_CHAR + replaceString;
+            if (!labelsRemove.Contains(label => !label.EndsWith(partLast)))
+            {
+                RemoveString(labels, startLabelIndex, replaceString, ReplaceLocation.end);
+                return true;
+            }
+
+            for (int i = 1 ; i < labelParts.Length - 1; i++)
+            {
+                replaceString = labelParts[i];
+                string partMiddle = LABEL_SEP_CHAR + replaceString + LABEL_SEP_CHAR;
+                // If all labels contain the middle part
+                if (!labelsRemove.Contains(label => !label.Contains(partMiddle)))
+                {
+                    RemoveString(labels, startLabelIndex, replaceString, ReplaceLocation.middle);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool IsSpaceChar(char c)
+        {
+            return SPACE_CHARS.Contains(c);
+        }
+
+        private static string NormalizeSeparators(string startLabelText)
+        {
+            startLabelText = startLabelText.Replace(ELIPSIS, LABEL_SEP_CHAR.ToString());
+            foreach (var spaceChar in SPACE_CHARS)
+            {
+                startLabelText = startLabelText.Replace(spaceChar, LABEL_SEP_CHAR);
+            }
+
+            return startLabelText;
+        }
+
+        /// <summary>
+        /// Truncates labels.
+        /// </summary>
+        /// <param name="labels">Labels text will be removed from.</param>
+        /// <param name="startLabelIndex">Index we want to start looking at, in case the Expected/Library
+        /// label is showing.</param>
+        /// <param name="replaceString">Text being removed from labels.</param>
+        /// <param name="location">Expected location of the replacement text</param>
+        public static void RemoveString(string[] labels, int startLabelIndex, string replaceString, ReplaceLocation location)
+        {
+            for (int i = startLabelIndex; i < labels.Length; i++)
+                labels[i] = RemoveString(labels[i], replaceString, location);
+        }
+
+        public enum ReplaceLocation {start, middle, end}
+
+        private static string RemoveString(string label, string replaceString, ReplaceLocation location)
+        {
+            int startIndex = -1;
+            while ((startIndex = label.IndexOf(replaceString, startIndex + 1)) != -1)
+            {
+                int endIndex = startIndex + replaceString.Length;
+                // Not start string and does not end with space
+                if ((startIndex != 0 && !IsSpaceChar(label[startIndex - 1])) || 
+                    (startIndex == 0 && location != ReplaceLocation.start))
+                    continue;
+                
+                // Not end string and does not start with space
+                if ((endIndex != label.Length && !IsSpaceChar(label[endIndex])) ||
+                    (endIndex == label.Length && location != ReplaceLocation.end))
+                    continue;
+                
+                bool elipsisSeen = false;
+                bool middle = true;
+                // Check left of the string for the start of the label or a space char
+                if (startIndex == 0)
+                    middle = false;
+                else if (startIndex >= ELIPSIS.Length && label.LastIndexOf(ELIPSIS, startIndex) == startIndex - ELIPSIS.Length)
+                    elipsisSeen = true;
+                else
+                    startIndex--;
+                
+                // Check right of the string for the end of the label or a space char
+                if (endIndex == label.Length)
+                    middle = false;
+                else if (label.IndexOf(ELIPSIS, endIndex) == endIndex)
+                    elipsisSeen = true;
+                else
+                    endIndex++;
+                label = label.Remove(startIndex, endIndex - startIndex);
+                // Insert an elipsis, if this is in the middle and no elipsis has been seen
+                if (middle && !elipsisSeen && location == ReplaceLocation.middle)
+                    label = label.Insert(startIndex, ELIPSIS);
+                return label;
+            }
+            return label;
+        }
     }
 
     public static class MathEx
