@@ -70,15 +70,16 @@ namespace pwiz.SkylineTestUtil
                         string downloadsFolder = Path.Combine(Path.GetDirectoryName(desktopFolder), "Downloads");
                         string tutorialsFolder = Path.Combine(downloadsFolder, "Tutorials");
                         string fileName = zipPath.Substring(zipPath.LastIndexOf('/') + 1);
-                        zipPath = Path.Combine(tutorialsFolder, fileName);
-                        if (!File.Exists(zipPath))
+                        string zipFilePath = Path.Combine(tutorialsFolder, fileName);
+                        if (!File.Exists(zipFilePath))
                         {
                             if (!Directory.Exists(tutorialsFolder))
                                 Directory.CreateDirectory(tutorialsFolder);
 
                             WebClient webClient = new WebClient();
-                            webClient.DownloadFile(zipPath, zipPath);
+                            webClient.DownloadFile(zipPath, zipFilePath);
                         }
+                        zipPath = zipFilePath;
                     }
                     _testFilesZips[i] = zipPath;
                 }
