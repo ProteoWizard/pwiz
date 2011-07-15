@@ -103,6 +103,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public override void Draw(Graphics g)
         {
+            _chartBottom = Chart.Rect.Bottom;
             HandleResizeEvent();
             base.Draw(g);
             if (IsRedrawRequired(g))
@@ -119,20 +120,17 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             // Have to call HandleResizeEvent twice, since the X-scale may not be up
             // to date before calling Draw.  If nothing changes, this will be a no-op
-            
             HandleResizeEvent();
-            return (Chart.Rect.Bottom != _chartBottom.Rect.Bottom);
+            return (Chart.Rect.Bottom != _chartBottom);
         }
 
-        private Chart _chartBottom;
+        private float _chartBottom;
         public string[] _originalTextLabels;
         public string[] _reducedTextLabels;
 
         protected void ScaleAxisLabels()
         {
             float dyAvailable = Rect.Height/5;
-
-            _chartBottom = Chart;
 
             // Reset the text labels to their original values.
             if (_reducedTextLabels != null && ArrayUtil.EqualsDeep(XAxis.Scale.TextLabels, _reducedTextLabels))
@@ -143,7 +141,7 @@ namespace pwiz.Skyline.Controls.Graphs
             _reducedTextLabels = null;
 
             int countLabels = (XAxis.Scale.TextLabels != null ? XAxis.Scale.TextLabels.Length : 0);
-            float dxAvailable = Rect.Width/Math.Max(1, countLabels);
+            float dxAvailable = Chart.Rect.Width/Math.Max(1, countLabels);
 
             float dpAvailable;
 
