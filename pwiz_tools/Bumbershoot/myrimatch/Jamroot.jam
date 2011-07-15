@@ -133,6 +133,7 @@ project bumbershoot
         <toolset>msvc:<cxxflags>/wd4244                 # warning: conversion from 'int' to 'unsigned short', possible loss of data (boost/date_time/microsec_time_clock.hpp)
         <toolset>msvc:<cxxflags>/wd4275                 # warning: non dll-interface class 'base' used as base for dll-interface class 'derived'
         <toolset>msvc:<cxxflags>/wd4702                 # warning: unreachable code (boost::lexical_cast)
+        <toolset>msvc:<linkflags>/OPT:REF,ICF
 
         # warning: _SECURE_SCL_THROWS is deprecated
         <toolset>msvc:<define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
@@ -169,7 +170,7 @@ project bumbershoot
 
 
 tmp = [ modules.peek : BOOST_BUILD_PATH ] ;
-tmp += freicore/ext freicore/libraries ;
+tmp += freicore/ext $(libraries_path) ;
 modules.poke : BOOST_BUILD_PATH : $(tmp) ;
 
 

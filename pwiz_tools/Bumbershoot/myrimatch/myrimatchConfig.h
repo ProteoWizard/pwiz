@@ -69,7 +69,6 @@ using namespace freicore;
     RTCONFIG_VARIABLE( string,          SpectrumListFilters,            "peakPicking true 2-"   ) \
     RTCONFIG_VARIABLE( string,          ProteinListFilters,             ""                      ) \
     RTCONFIG_VARIABLE( bool,            UseSmartPlusThreeModel,         true                    ) \
-    RTCONFIG_VARIABLE( bool,            UseChargeStateFromMS,           false                   ) \
     RTCONFIG_VARIABLE( string,          StaticMods,                     ""                      ) \
     RTCONFIG_VARIABLE( string,          DynamicMods,                    ""                      ) \
     RTCONFIG_VARIABLE( int,             MaxDynamicMods,                 2                       ) \
@@ -133,7 +132,6 @@ namespace myrimatch
             else
                 throw runtime_error("invalid output format");
 
-            
             decoyPrefix = DecoyPrefix.empty() ? "rev_" : DecoyPrefix;
             automaticDecoys = DecoyPrefix.empty() ? false : true;
 
