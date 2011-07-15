@@ -125,8 +125,7 @@ struct HandlerPrecursor : public SAXParser::Handler
 
         if (name == "precursorMz")
         {
-            string precursorScanNum("0"), precursorIntensity, precursorCharge,
-                possibleCharges;
+            string precursorScanNum("0"), precursorIntensity, precursorCharge, possibleCharges;
             getAttribute(attributes, "precursorScanNum", precursorScanNum);
             getAttribute(attributes, "precursorIntensity", precursorIntensity);
             getAttribute(attributes, "precursorCharge", precursorCharge);
@@ -137,10 +136,10 @@ struct HandlerPrecursor : public SAXParser::Handler
             precursor->selectedIons.push_back(SelectedIon());
 
             if (!precursorIntensity.empty() && precursorIntensity != "0")
-                precursor->selectedIons.back().cvParams.push_back(CVParam(MS_peak_intensity, precursorIntensity, MS_number_of_counts));
+                precursor->selectedIons.back().set(MS_peak_intensity, precursorIntensity, MS_number_of_counts);
 
             if (!precursorCharge.empty())
-                precursor->selectedIons.back().cvParams.push_back(CVParam(MS_charge_state, precursorCharge));
+                precursor->selectedIons.back().set(MS_charge_state, precursorCharge);
 
 			if (!possibleCharges.empty())
 			{
@@ -149,7 +148,7 @@ struct HandlerPrecursor : public SAXParser::Handler
 
 				BOOST_FOREACH(string& charge, strCharges)
 				{
-					precursor->selectedIons.back().cvParams.push_back(CVParam(MS_possible_charge_state, lexical_cast<int>(charge)));
+					precursor->selectedIons.back().set(MS_possible_charge_state, lexical_cast<int>(charge));
 				}
 			}
 
@@ -165,7 +164,7 @@ struct HandlerPrecursor : public SAXParser::Handler
         if (!precursor)
             throw runtime_error("[SpectrumList_mzXML::HandlerPrecursor] Null precursor."); 
 
-        precursor->selectedIons.back().cvParams.push_back(CVParam(MS_selected_ion_m_z, text, MS_m_z));
+        precursor->selectedIons.back().set(MS_selected_ion_m_z, text, MS_m_z);
 
         return Status::Ok;
     }
@@ -299,10 +298,13 @@ class HandlerScan : public SAXParser::Handler
                 // we're in a nested scan declaration, we can quit
                 return Status::Done;
             }
-            string scanEvent, msLevel, peaksCount, polarity,
+            string scanEvent, msLevel, polarity,
                 retentionTime, lowMz, highMz, basePeakMz, basePeakIntensity, totIonCurrent,
                 msInstrumentID, centroided, deisotoped, chargeDeconvoluted, scanType,
-                ionisationEnergy, cidGasPressure, startMz, endMz;
+                ionisationEnergy, cidGasPressure;
+
+            unsigned int peaksCount;
+            double startMz, endMz;
 
             getAttribute(attributes, "num", scanNumber_);
             getAttribute(attributes, "scanEvent", scanEvent);
@@ -337,7 +339,7 @@ class HandlerScan : public SAXParser::Handler
                 msLevel = "1";
             spectrum_.set(MS_ms_level, msLevel);
 
-            handlerPeaks_.peaksCount = lexical_cast<unsigned int>(peaksCount);
+            handlerPeaks_.peaksCount = peaksCount;
 
             spectrum_.scanList.set(MS_no_combination);
             spectrum_.scanList.scans.push_back(Scan());
@@ -413,9 +415,8 @@ class HandlerScan : public SAXParser::Handler
                 scan.set(MS_scan_start_time, retentionTime, UO_second);
             }
 
-            if (!startMz.empty() && !endMz.empty())
-                scan.scanWindows.push_back(
-                    ScanWindow(lexical_cast<double>(startMz), lexical_cast<double>(endMz), MS_m_z));
+            if (endMz > 0)
+                scan.scanWindows.push_back(ScanWindow(startMz, endMz, MS_m_z));
             
             if (!lowMz.empty())
                 spectrum_.set(MS_lowest_observed_m_z, lowMz);
@@ -454,6 +455,8 @@ class HandlerScan : public SAXParser::Handler
             }
             else if (activationMethod_ == "ECD")
                 precursor.activation.set(MS_ECD);
+            else if (activationMethod_ == "HCD")
+                precursor.activation.set(MS_high_energy_collision_induced_dissociation);
             //else
                 // TODO: log about invalid attribute value
 

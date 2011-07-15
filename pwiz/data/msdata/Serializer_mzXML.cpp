@@ -75,11 +75,11 @@ void start_mzXML(XMLWriter& xmlWriter)
 {
     XMLWriter::Attributes attributes; 
     attributes.push_back(make_pair("xmlns", 
-        "http://sashimi.sourceforge.net/schema_revision/mzXML_3.1"));
+        "http://sashimi.sourceforge.net/schema_revision/mzXML_3.2"));
     attributes.push_back(make_pair("xmlns:xsi", 
         "http://www.w3.org/2001/XMLSchema-instance"));
     attributes.push_back(make_pair("xsi:schemaLocation", 
-        "http://sashimi.sourceforge.net/schema_revision/mzXML_3.1 http://sashimi.sourceforge.net/schema_revision/mzXML_3.1/mzXML_idx_3.1.xsd"));
+        "http://sashimi.sourceforge.net/schema_revision/mzXML_3.2 http://sashimi.sourceforge.net/schema_revision/mzXML_3.2/mzXML_idx_3.2.xsd"));
 
     xmlWriter.pushStyle(XMLWriter::StyleFlag_AttributesOnMultipleLines);
     xmlWriter.startElement("mzXML", attributes);
@@ -117,9 +117,9 @@ void start_msRun(XMLWriter& xmlWriter, const MSData& msd)
     }
 
     XMLWriter::Attributes attributes; 
-    attributes.push_back(make_pair("scanCount", scanCount));
-    attributes.push_back(make_pair("startTime", startTime));
-    attributes.push_back(make_pair("endTime", endTime));
+    attributes.add("scanCount", scanCount);
+    attributes.add("startTime", startTime);
+    attributes.add("endTime", endTime);
     xmlWriter.startElement("msRun", attributes);
 }
 
@@ -254,9 +254,9 @@ void write_parentFile(XMLWriter& xmlWriter, const MSData& msd)
         fileSha1 = sf.cvParam(MS_SHA_1).value;
 
         XMLWriter::Attributes attributes;
-        attributes.push_back(make_pair("fileName", fileName));
-        attributes.push_back(make_pair("fileType", fileType));
-        attributes.push_back(make_pair("fileSha1", fileSha1));
+        attributes.add("fileName", fileName);
+        attributes.add("fileType", fileType);
+        attributes.add("fileSha1", fileSha1);
         xmlWriter.pushStyle(XMLWriter::StyleFlag_AttributesOnMultipleLines);
         xmlWriter.startElement("parentFile", attributes, XMLWriter::EmptyElement);
         xmlWriter.popStyle();
@@ -267,8 +267,8 @@ void write_parentFile(XMLWriter& xmlWriter, const MSData& msd)
 void writeCategoryValue(XMLWriter& xmlWriter, const string& category, const string& value)
 {
     XMLWriter::Attributes attributes; 
-    attributes.push_back(make_pair("category", category));
-    attributes.push_back(make_pair("value", value));
+    attributes.add("category", category);
+    attributes.add("value", value);
     xmlWriter.startElement(category, attributes, XMLWriter::EmptyElement);
 }
 
@@ -280,9 +280,9 @@ void writeSoftware(XMLWriter& xmlWriter, SoftwarePtr software,
     LegacyAdapter_Software adapter(software, const_cast<MSData&>(msd), cvTranslator);
     XMLWriter::Attributes attributes; 
 
-    attributes.push_back(make_pair("type", type.empty() ? adapter.type() : type));
-    attributes.push_back(make_pair("name", adapter.name()));
-    attributes.push_back(make_pair("version", adapter.version()));
+    attributes.add("type", type.empty() ? adapter.type() : type);
+    attributes.add("name", adapter.name());
+    attributes.add("version", adapter.version());
 
     xmlWriter.startElement("software", attributes, XMLWriter::EmptyElement);
 }
@@ -295,7 +295,7 @@ void write_msInstrument(XMLWriter& xmlWriter, const InstrumentConfiguration& ins
         const_cast<InstrumentConfiguration&>(instrumentConfiguration), cvTranslator);
     
     XMLWriter::Attributes attributes; 
-    attributes.push_back(make_pair("id", instrumentConfiguration.id));
+    attributes.add("id", instrumentConfiguration.id);
     xmlWriter.startElement("msInstrument", attributes);
         writeCategoryValue(xmlWriter, "msManufacturer", adapter.manufacturer());
         writeCategoryValue(xmlWriter, "msModel", adapter.model());
@@ -323,7 +323,7 @@ void write_processingOperation(XMLWriter& xmlWriter, const ProcessingMethod& pm,
     if (!actionParam.empty() && actionParam != action)
     {
         XMLWriter::Attributes attributes;
-        attributes.push_back(make_pair("name", actionParam.name()));
+        attributes.add("name", actionParam.name());
         xmlWriter.startElement("processingOperation", attributes, XMLWriter::EmptyElement);
     }
 }
@@ -338,14 +338,14 @@ void write_dataProcessing(XMLWriter& xmlWriter, const MSData& msd, const CVTrans
         XMLWriter::Attributes attributes;
         BOOST_FOREACH(const ProcessingMethod& pm, dpPtr->processingMethods)
         {
-            if (pm.hasCVParamChild(MS_peak_picking)) attributes.push_back(make_pair("centroided", "1"));
-            if (pm.hasCVParamChild(MS_deisotoping)) attributes.push_back(make_pair("deisotoped", "1"));
-            if (pm.hasCVParamChild(MS_charge_deconvolution)) attributes.push_back(make_pair("chargeDeconvoluted", "1"));
+            if (pm.hasCVParamChild(MS_peak_picking)) attributes.add("centroided", "1");
+            if (pm.hasCVParamChild(MS_deisotoping)) attributes.add("deisotoped", "1");
+            if (pm.hasCVParamChild(MS_charge_deconvolution)) attributes.add("chargeDeconvoluted", "1");
             if (pm.hasCVParamChild(MS_thresholding))
             {
                 CVParam threshold = pm.cvParam(MS_low_intensity_threshold);
                 if (!threshold.empty())
-                    attributes.push_back(make_pair("intensityCutoff", threshold.value));
+                    attributes.add("intensityCutoff", threshold.value);
             }
         }
 
@@ -455,6 +455,10 @@ vector<PrecursorInfo> getPrecursorInfo(const Spectrum& spectrum,
             {
                 info.activation = "CID";
             }
+            else if (it->activation.hasCVParam(MS_high_energy_collision_induced_dissociation))
+            {
+                info.activation = "HCD";
+            }
 
             if (it->activation.hasCVParam(MS_CID))
                 info.collisionEnergy = it->activation.cvParam(MS_collision_energy).value;
@@ -475,15 +479,15 @@ void write_precursors(XMLWriter& xmlWriter, const vector<PrecursorInfo>& precurs
     {    
         XMLWriter::Attributes attributes;
         if (!it->scanNum.empty())
-            attributes.push_back(make_pair("precursorScanNum", it->scanNum));
+            attributes.add("precursorScanNum", it->scanNum);
         if (it->intensity.empty())
-            attributes.push_back(make_pair("precursorIntensity", "0")); // required attribute
+            attributes.add("precursorIntensity", "0"); // required attribute
         else
-            attributes.push_back(make_pair("precursorIntensity", it->intensity));
+            attributes.add("precursorIntensity", it->intensity);
         if (!it->charge.empty())
-            attributes.push_back(make_pair("precursorCharge", it->charge));
+            attributes.add("precursorCharge", it->charge);
         if(!it->activation.empty())
-            attributes.push_back(make_pair("activationMethod", it->activation));
+            attributes.add("activationMethod", it->activation);
         xmlWriter.startElement("precursorMz", attributes);
         xmlWriter.characters(it->mz, false);
         xmlWriter.endElement();
@@ -511,15 +515,15 @@ void write_peaks(XMLWriter& xmlWriter, const vector<MZIntensityPair>& mzIntensit
     string precision = bdeConfig.precision == BinaryDataEncoder::Precision_32 ? "32" : "64";
     if (bdeConfig.compression == BinaryDataEncoder::Compression_Zlib)
     {
-        attributes.push_back(make_pair("compressionType", "zlib"));
-        attributes.push_back(make_pair("compressedLen", lexical_cast<string>(binaryByteCount)));
+        attributes.add("compressionType", "zlib");
+        attributes.add("compressedLen", binaryByteCount);
     }
     else
-        attributes.push_back(make_pair("compressedLen", "0"));
+        attributes.add("compressedLen", "0");
 
-    attributes.push_back(make_pair("precision", precision));
-    attributes.push_back(make_pair("byteOrder", "network"));
-    attributes.push_back(make_pair("pairOrder", "m/z-int"));
+    attributes.add("precision", precision);
+    attributes.add("byteOrder", "network");
+    attributes.add("pairOrder", "m/z-int");
 
     xmlWriter.pushStyle(XMLWriter::StyleFlag_InlineInner |
                         XMLWriter::StyleFlag_AttributesOnMultipleLines);
@@ -590,40 +594,40 @@ IndexEntry write_scan(XMLWriter& xmlWriter,
     // write out xml
 
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("num", lexical_cast<string>(result.scanNumber)));
+    attributes.add("num", result.scanNumber);
     if (!scanEvent.empty())
-        attributes.push_back(make_pair("scanEvent", scanEvent));
+        attributes.add("scanEvent", scanEvent);
     if (!scanType.empty())
-        attributes.push_back(make_pair("scanType", scanType));
+        attributes.add("scanType", scanType);
 
     // TODO: write this attribute only when SpectrumList_PeakPicker has processed the spectrum
-    attributes.push_back(make_pair("centroided", isCentroided ? "1" : "0"));
+    attributes.add("centroided", isCentroided ? "1" : "0");
 
-    attributes.push_back(make_pair("msLevel", msLevel));
-    attributes.push_back(make_pair("peaksCount", lexical_cast<string>(mzIntensityPairs.size())));
+    attributes.add("msLevel", msLevel);
+    attributes.add("peaksCount", mzIntensityPairs.size());
     if (!polarity.empty())
-        attributes.push_back(make_pair("polarity", polarity));
-    attributes.push_back(make_pair("retentionTime", retentionTime));
+        attributes.add("polarity", polarity);
+    attributes.add("retentionTime", retentionTime);
     if (!precursorInfo.empty())
     {
         if(!precursorInfo[0].collisionEnergy.empty())
-            attributes.push_back(make_pair("collisionEnergy", precursorInfo[0].collisionEnergy));
+            attributes.add("collisionEnergy", precursorInfo[0].collisionEnergy);
     }
     if (!lowMz.empty())
-        attributes.push_back(make_pair("lowMz", lowMz));
+        attributes.add("lowMz", lowMz);
     if (!highMz.empty())
-        attributes.push_back(make_pair("highMz", highMz));
+        attributes.add("highMz", highMz);
     if (!basePeakMz.empty())
-        attributes.push_back(make_pair("basePeakMz", basePeakMz));
+        attributes.add("basePeakMz", basePeakMz);
     if (!basePeakIntensity.empty())
-        attributes.push_back(make_pair("basePeakIntensity", basePeakIntensity));
+        attributes.add("basePeakIntensity", basePeakIntensity);
     if (!totIonCurrent.empty())
-        attributes.push_back(make_pair("totIonCurrent", totIonCurrent));
+        attributes.add("totIonCurrent", totIonCurrent);
     if (!compensationVoltage.empty())
-        attributes.push_back(make_pair("compensationVoltage", compensationVoltage));
+        attributes.add("compensationVoltage", compensationVoltage);
 
     if (scan.instrumentConfigurationPtr.get())
-        attributes.push_back(make_pair("msInstrumentID", scan.instrumentConfigurationPtr->id));
+        attributes.add("msInstrumentID", scan.instrumentConfigurationPtr->id);
 
     xmlWriter.pushStyle(XMLWriter::StyleFlag_AttributesOnMultipleLines);
     xmlWriter.startElement("scan", attributes);
@@ -636,8 +640,8 @@ IndexEntry write_scan(XMLWriter& xmlWriter,
     BOOST_FOREACH(const UserParam& userParam, spectrum.userParams)
     {
         attributes.clear();
-        attributes.push_back(make_pair("name", userParam.name));
-        attributes.push_back(make_pair("value", userParam.value));
+        attributes.add("name", userParam.name);
+        attributes.add("value", userParam.value);
         xmlWriter.startElement("nameValue", attributes, XMLWriter::EmptyElement);
     }
 
@@ -693,15 +697,15 @@ void write_scans(XMLWriter& xmlWriter, const MSData& msd,
 void write_index(XMLWriter& xmlWriter, const vector<IndexEntry>& index)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("name", "scan"));
+    attributes.add("name", "scan");
     xmlWriter.startElement("index", attributes);
 
     xmlWriter.pushStyle(XMLWriter::StyleFlag_InlineInner);
     for (vector<IndexEntry>::const_iterator it=index.begin(); it!=index.end(); ++it)
     {
-        XMLWriter::Attributes entryAttributes;
-        entryAttributes.push_back(make_pair("id", lexical_cast<string>(it->scanNumber)));
-        xmlWriter.startElement("offset", entryAttributes);
+        attributes.clear();
+        attributes.add("id", it->scanNumber);
+        xmlWriter.startElement("offset", attributes);
         xmlWriter.characters(lexical_cast<string>(it->offset), false);
         xmlWriter.endElement(); // offset
     }
