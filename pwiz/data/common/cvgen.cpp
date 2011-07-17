@@ -1,22 +1,22 @@
 //
 // $Id$
 //
-// 
+//
 // Original author: Darren Kessner <darren@proteowizard.org>
 //
 // Copyright 2007 Spielberg Family Center for Applied Proteomics
 //   Cedars-Sinai Medical Center, Los Angeles, California  90048
 //
-// Licensed under the Apache License, Version 2.0 (the "License"); 
-// you may not use this file except in compliance with the License. 
-// You may obtain a copy of the License at 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
 // http://www.apache.org/licenses/LICENSE-2.0
 //
-// Unless required by applicable law or agreed to in writing, software 
-// distributed under the License is distributed on an "AS IS" BASIS, 
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-// See the License for the specific language governing permissions and 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
 // limitations under the License.
 //
 
@@ -32,7 +32,7 @@ namespace bfs = boost::filesystem;
 
 
 //
-// This program selectively parses OBO format controlled vocabulary files 
+// This program selectively parses OBO format controlled vocabulary files
 // and generates C++ code (one hpp file and one cpp file).
 //
 
@@ -124,7 +124,7 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
     string filename = basename + ".hpp";
     bfs::path filenameFullPath = outputDir / filename;
     bfs::ofstream os(filenameFullPath, ios::binary);
-    
+
     writeCopyright(os, filename);
 
     string includeGuard = includeGuardString(basename);
@@ -139,7 +139,7 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
     {
         os << "// [" << bfs::path(obo->filename).filename() << "]\n";
-        
+
         for (vector<string>::const_iterator it=obo->header.begin(); it!=obo->header.end(); ++it)
             os << "//   " << *it << endl;
 
@@ -149,18 +149,18 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
 
     namespaceBegin(os, basename);
 
-    os << "/// enumeration of controlled vocabulary (CV) terms, generated from OBO file(s)\n" 
+    os << "/// enumeration of controlled vocabulary (CV) terms, generated from OBO file(s)\n"
           "enum PWIZ_API_DECL CVID\n{\n"
           "    CVID_Unknown = -1";
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
     BOOST_FOREACH(const Term& term, obo->terms)
     {
         string& eName = correctedEnumNameMaps[obo-obos.begin()][term.id];
-        
+
         os << ",\n\n"
            << "    /// " << term.name << ": " << term.def << "\n"
            << "    " << eName << " = " << enumValue(term, obo-obos.begin());
-        
+
         if (obo->prefix == "MS") // add synonyms for PSI-MS only
         {
             BOOST_FOREACH(const string& synonym, term.exactSynonyms)
@@ -199,11 +199,11 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "/// currently supported namespaces are: MS UO\n"
           "PWIZ_API_DECL const CV& cv(const std::string& prefix);\n\n\n";
 
-    os << "/// structure for holding CV term info\n" 
+    os << "/// structure for holding CV term info\n"
           "struct PWIZ_API_DECL CVTermInfo\n"
           "{\n"
           "    CVID cvid;\n"
-          "    std::string id;\n"      
+          "    std::string id;\n"
           "    std::string name;\n"
           "    std::string def;\n"
           "    bool isObsolete;\n"
@@ -220,16 +220,16 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "    std::string prefix() const;\n"
           "};\n\n\n";
 
-    os << "/// returns CV term info for the specified CVID\n" 
+    os << "/// returns CV term info for the specified CVID\n"
           "PWIZ_API_DECL const CVTermInfo& cvTermInfo(CVID cvid);\n\n\n";
 
-    os << "/// returns CV term info for the specified id (accession number)\n" 
+    os << "/// returns CV term info for the specified id (accession number)\n"
           "PWIZ_API_DECL const CVTermInfo& cvTermInfo(const std::string& id);\n\n\n";
 
-    os << "/// returns true iff child IsA parent in the CV\n" 
+    os << "/// returns true iff child IsA parent in the CV\n"
           "PWIZ_API_DECL bool cvIsA(CVID child, CVID parent);\n\n\n";
 
-    os << "/// returns vector of all valid CVIDs\n" 
+    os << "/// returns vector of all valid CVIDs\n"
           "PWIZ_API_DECL const std::vector<CVID>& cvids();\n\n\n";
 
     namespaceEnd(os, basename);
@@ -280,7 +280,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
 
         os << "    {" << eName << ", "
            << "\"" << term.prefix << ":" << (term.prefix != "UNIMOD" ? setw(7) : setw(1) )  << setfill('0') << term.id << "\", "
-           << "\"" << correctName << "\", " 
+           << "\"" << correctName << "\", "
            << "\"" << term.def << "\", "
            << (term.isObsolete ? "true" : "false") // setw(7) screws up direct output
            << "},\n";
@@ -296,20 +296,20 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "};\n\n\n";
 
     os << "CVIDPair relationsIsA_[] =\n{\n";
-    for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)    
+    for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
     BOOST_FOREACH(const Term& term, obo->terms)
     BOOST_FOREACH(const Term::id_type& id, term.parentsIsA)
-        os << "    {" << correctedEnumNameMaps[obo-obos.begin()][term.id] << ", " 
+        os << "    {" << correctedEnumNameMaps[obo-obos.begin()][term.id] << ", "
            << correctedEnumNameMaps[obo-obos.begin()][id] << "},\n";
     os << "}; // relationsIsA_\n\n\n";
 
     os << "const size_t relationsIsASize_ = sizeof(relationsIsA_)/sizeof(CVIDPair);\n\n\n";
 
     os << "CVIDPair relationsPartOf_[] =\n{\n";
-    for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)    
+    for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
     BOOST_FOREACH(const Term& term, obo->terms)
     BOOST_FOREACH(const Term::id_type& id, term.parentsPartOf)
-        os << "    {" << correctedEnumNameMaps[obo-obos.begin()][term.id] << ", " 
+        os << "    {" << correctedEnumNameMaps[obo-obos.begin()][term.id] << ", "
            << correctedEnumNameMaps[obo-obos.begin()][id] << "},\n";
     os << "}; // relationsPartOf_\n\n\n";
 
@@ -365,7 +365,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
     os << "CVIDStringPair relationsExactSynonym_[] =\n"
           "{\n"
           "    {CVID_Unknown, \"Unknown\"},\n";
-    for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)    
+    for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
     BOOST_FOREACH(const Term& term, obo->terms)
     BOOST_FOREACH(const string& synonym, term.exactSynonyms)
         os << "    {" << correctedEnumNameMaps[obo-obos.begin()][term.id] << ", \"" << synonym << "\"},\n";
@@ -373,7 +373,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
 
     os << "const size_t relationsExactSynonymSize_ = sizeof(relationsExactSynonym_)/sizeof(CVIDStringPair);\n\n\n";
 
-    
+
     os << "struct PropertyValuePair\n"
           "{\n"
           "    CVID term;\n"
@@ -382,26 +382,38 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "};\n\n\n";
 
 
+	int countPvp = 0;
     typedef pair<string, string> NameValuePair;
-    os << "PropertyValuePair propertyValue_[] =\n"
-          "{\n";
-    for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)    
+    for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
     BOOST_FOREACH(const Term& term, obo->terms)
-    BOOST_FOREACH(const NameValuePair& nameValuePair, term.propertyValues)
-        os << "    {" << correctedEnumNameMaps[obo-obos.begin()][term.id]
-                      << ", \"" << nameValuePair.first
-                      << "\", \"" << nameValuePair.second
-                      << "\"},\n";
-    os << "}; // propertyValue_\n\n\n";
+        countPvp += term.propertyValues.size();
 
-    os << "const size_t propertyValueSize_ = sizeof(propertyValue_)/sizeof(PropertyValuePair);\n\n\n";
+    if (countPvp == 0)
+    {
+        os << "PropertyValuePair* propertyValue_;\n";
+        os << "const size_t propertyValueSize_ = 0;\n\n\n";
+	}
+    else
+    {
+        os << "PropertyValuePair propertyValue_[] =\n" <<
+	        "{\n";
+        for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
+        BOOST_FOREACH(const Term& term, obo->terms)
+        BOOST_FOREACH(const NameValuePair& nameValuePair, term.propertyValues)
+            os << "    {" << correctedEnumNameMaps[obo-obos.begin()][term.id]
+                          << ", \"" << nameValuePair.first
+                          << "\", \"" << nameValuePair.second
+                          << "\"},\n";
+        os << "}; // propertyValue_\n\n\n";
+        os << "const size_t propertyValueSize_ = sizeof(propertyValue_)/sizeof(PropertyValuePair);\n\n\n";
+    }
 
     os << "class CVTermData : public boost::singleton<CVTermData>\n"
           "{\n"
           "    public:\n"
           "    CVTermData(boost::restricted)\n"
           "    {\n"
-          "        for (const TermInfo* it=termInfos_; it!=termInfos_+termInfosSize_; ++it)\n" 
+          "        for (const TermInfo* it=termInfos_; it!=termInfos_+termInfosSize_; ++it)\n"
           "        {\n"
           "            CVTermInfo temp;\n"
           "            temp.cvid = it->cvid;\n"
@@ -625,13 +637,13 @@ void generateFiles(const vector<OBO>& obos, const string& basename, const bfs::p
     termMaps.resize(obos.size());
     correctedEnumNameMaps.resize(obos.size());
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
-    {    
+    {
         multiset<string> enumNames;
         BOOST_FOREACH(const Term& term, obo->terms)
             enumNames.insert(enumName(term));
 
         BOOST_FOREACH(const Term& term, obo->terms)
-        {          
+        {
             termMaps[obo-obos.begin()][term.id] = &term;
 
             string& eName = correctedEnumNameMaps[obo-obos.begin()][term.id] = enumName(term);
@@ -675,6 +687,6 @@ int main(int argc, char* argv[])
         cerr << "Caught unknown exception.\n";
     }
 
-    return 1; 
+    return 1;
 }
 
