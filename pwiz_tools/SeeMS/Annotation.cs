@@ -348,7 +348,7 @@ namespace seems
 
             int index = -1;
             if( points != null )
-                index = points.LowerBound( mz - 0.5 );
+                index = points.ScaledLowerBound( mz - 0.5 );
 
             if( index == -1 || points.ScaledList[index].X > ( mz + 0.5 ) )
             // no matching point: present a "missed" fragment annotation
@@ -427,12 +427,12 @@ namespace seems
             if( points != null )
             {
                 // Find the left mz value using a mass tolerance of 0.5 da.
-                index = points.LowerBound( leftMZ - 0.5 );
-                if( index != -1 && points.ScaledList[index].X <= ( leftMZ + 0.5 ) )
+                index = points.FullLowerBound( leftMZ - 0.5 );
+                if (index != -1 && points.FullList[index].X <= (leftMZ + 0.5))
                     leftMZFound = true;
                 // Find the right mz value using a mass tolerance of 0.5 da.
-                index = points.LowerBound( rightMZ - 0.5 );
-                if( index != -1 && points.ScaledList[index].X <= ( rightMZ + 0.5 ) )
+                index = points.FullLowerBound(rightMZ - 0.5);
+                if (index != -1 && points.FullList[index].X <= (rightMZ + 0.5))
                     righMZFound = true;
             }
             // Return if both are found
@@ -910,9 +910,9 @@ namespace seems
 
                         int index = -1;
                         if( points != null )
-                            index = points.LowerBound( mz - 0.5 );
+                            index = points.FullLowerBound(mz - 0.5);
 
-                        if( index == -1 || points.ScaledList[index].X > ( mz + 0.5 ) )
+                        if( index == -1 || points.FullList[index].X > ( mz + 0.5 ) )
                             continue;
                         cell.Style.Font = new Font( annotationPanels.fragmentInfoGridView.Font, FontStyle.Bold );
                     }
