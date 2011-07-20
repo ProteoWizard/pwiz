@@ -47,10 +47,10 @@ using namespace util;
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const CV& cv)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("id", encode_xml_id_copy(cv.id)));
-    attributes.push_back(make_pair("fullName", cv.fullName));
-    attributes.push_back(make_pair("version", cv.version));
-    attributes.push_back(make_pair("URI", cv.URI));
+    attributes.add("id", encode_xml_id_copy(cv.id));
+    attributes.add("fullName", cv.fullName);
+    attributes.add("version", cv.version);
+    attributes.add("URI", cv.URI);
     writer.startElement("cv", attributes, XMLWriter::EmptyElement);
 }
 
@@ -90,15 +90,15 @@ PWIZ_API_DECL void read(std::istream& is, CV& cv)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const UserParam& userParam)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("name", userParam.name));
+    attributes.add("name", userParam.name);
     if (!userParam.value.empty())
-        attributes.push_back(make_pair("value", userParam.value));
+        attributes.add("value", userParam.value);
     if (!userParam.type.empty())
-        attributes.push_back(make_pair("type", userParam.type));
+        attributes.add("type", userParam.type);
     if (userParam.units != CVID_Unknown)
     {
-        attributes.push_back(make_pair("unitAccession", cvTermInfo(userParam.units).id));
-        attributes.push_back(make_pair("unitName", cvTermInfo(userParam.units).name));
+        attributes.add("unitAccession", cvTermInfo(userParam.units).id);
+        attributes.add("unitName", cvTermInfo(userParam.units).name);
     }
 
     writer.startElement("userParam", attributes, XMLWriter::EmptyElement);
@@ -149,15 +149,15 @@ PWIZ_API_DECL void read(std::istream& is, UserParam& userParam)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const CVParam& cvParam)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("cvRef", cvTermInfo(cvParam.cvid).prefix()));
-    attributes.push_back(make_pair("accession", cvTermInfo(cvParam.cvid).id));
-    attributes.push_back(make_pair("name", cvTermInfo(cvParam.cvid).name));
-    attributes.push_back(make_pair("value", cvParam.value));
+    attributes.add("cvRef", cvTermInfo(cvParam.cvid).prefix());
+    attributes.add("accession", cvTermInfo(cvParam.cvid).id);
+    attributes.add("name", cvTermInfo(cvParam.cvid).name);
+    attributes.add("value", cvParam.value);
     if (cvParam.units != CVID_Unknown)
     {
-        attributes.push_back(make_pair("unitCvRef", cvTermInfo(cvParam.units).prefix()));
-        attributes.push_back(make_pair("unitAccession", cvTermInfo(cvParam.units).id));
-        attributes.push_back(make_pair("unitName", cvTermInfo(cvParam.units).name));
+        attributes.add("unitCvRef", cvTermInfo(cvParam.units).prefix());
+        attributes.add("unitAccession", cvTermInfo(cvParam.units).id);
+        attributes.add("unitName", cvTermInfo(cvParam.units).name);
     }
     writer.startElement("cvParam", attributes, XMLWriter::EmptyElement);
 }
@@ -214,7 +214,7 @@ PWIZ_API_DECL void read(std::istream& is, CVParam& cvParam)
 PWIZ_API_DECL void writeParamGroupRef(minimxml::XMLWriter& writer, const ParamGroup& paramGroup)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("ref", paramGroup.id));
+    attributes.add("ref", paramGroup.id);
     writer.startElement("referenceableParamGroupRef", attributes, XMLWriter::EmptyElement);
 }
 
@@ -310,7 +310,7 @@ struct HandlerNamedParamContainer : public HandlerParamContainer
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ParamGroup& paramGroup)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("id", encode_xml_id_copy(paramGroup.id)));
+    attributes.add("id", encode_xml_id_copy(paramGroup.id));
     writer.startElement("referenceableParamGroup", attributes);
     writeParamContainer(writer, paramGroup);
     writer.endElement();
@@ -379,9 +379,9 @@ PWIZ_API_DECL void read(std::istream& is, FileContent& fc)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SourceFile& sf)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("id", encode_xml_id_copy(sf.id)));
-    attributes.push_back(make_pair("name", sf.name));
-    attributes.push_back(make_pair("location", sf.location));
+    attributes.add("id", encode_xml_id_copy(sf.id));
+    attributes.add("name", sf.name);
+    attributes.add("location", sf.location);
     writer.startElement("sourceFile", attributes);
     writeParamContainer(writer, sf);
     writer.endElement();
@@ -391,7 +391,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SourceFile& sf)
 void writeSourceFileRef(minimxml::XMLWriter& writer, const SourceFile& sourceFile)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("ref", encode_xml_id_copy(sourceFile.id)));
+    attributes.add("ref", encode_xml_id_copy(sourceFile.id));
     writer.startElement("sourceFileRef", attributes, XMLWriter::EmptyElement);
 }
 
@@ -463,7 +463,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const FileDescription& fd)
     write(writer, fd.fileContent);
 
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("count", lexical_cast<string>(fd.sourceFilePtrs.size())));
+    attributes.add("count", fd.sourceFilePtrs.size());
     writer.startElement("sourceFileList", attributes);
 
     for (vector<SourceFilePtr>::const_iterator it=fd.sourceFilePtrs.begin(); 
@@ -548,8 +548,8 @@ PWIZ_API_DECL void read(std::istream& is, FileDescription& fd)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Sample& sample)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("id", encode_xml_id_copy(sample.id)));
-    attributes.push_back(make_pair("name", sample.name));
+    attributes.add("id", encode_xml_id_copy(sample.id));
+    attributes.add("name", sample.name);
     writer.startElement("sample", attributes);
     writeParamContainer(writer, sample);
     writer.endElement();
@@ -599,7 +599,7 @@ PWIZ_API_DECL void read(std::istream& is, Sample& sample)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Component& component)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("order", lexical_cast<string>(component.order)));
+    attributes.add("order", component.order);
     switch (component.type)
     {
         case ComponentType_Source:
@@ -665,7 +665,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ComponentList& compo
     int count = (int) componentList.size();
 
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("count", lexical_cast<string>(count)));
+    attributes.add("count", count);
 
     writer.startElement("componentList", attributes);
     for (size_t i=0; i < componentList.size(); ++i)
@@ -732,8 +732,8 @@ PWIZ_API_DECL void read(std::istream& is, ComponentList& componentList)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Software& software)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("id", encode_xml_id_copy(software.id)));
-    attributes.push_back(make_pair("version", software.version));
+    attributes.add("id", encode_xml_id_copy(software.id));
+    attributes.add("version", software.version);
     writer.startElement("software", attributes);
     writeParamContainer(writer, software);
     writer.endElement();
@@ -793,7 +793,7 @@ PWIZ_API_DECL void read(std::istream& is, Software& software)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const InstrumentConfiguration& instrumentConfiguration)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("id", encode_xml_id_copy(instrumentConfiguration.id)));
+    attributes.add("id", encode_xml_id_copy(instrumentConfiguration.id));
     writer.startElement("instrumentConfiguration", attributes);
 
     writeParamContainer(writer, instrumentConfiguration);
@@ -803,7 +803,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const InstrumentConfigurat
     if (instrumentConfiguration.softwarePtr.get())
     {
         attributes.clear();
-        attributes.push_back(make_pair("ref", encode_xml_id_copy(instrumentConfiguration.softwarePtr->id)));
+        attributes.add("ref", encode_xml_id_copy(instrumentConfiguration.softwarePtr->id));
         writer.startElement("softwareRef", attributes, XMLWriter::EmptyElement);
     }
 
@@ -869,9 +869,9 @@ PWIZ_API_DECL void read(std::istream& is, InstrumentConfiguration& instrumentCon
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ProcessingMethod& processingMethod)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("order", lexical_cast<string>(processingMethod.order)));
+    attributes.add("order", processingMethod.order);
     if (processingMethod.softwarePtr.get())
-        attributes.push_back(make_pair("softwareRef", encode_xml_id_copy(processingMethod.softwarePtr->id))); 
+        attributes.add("softwareRef", encode_xml_id_copy(processingMethod.softwarePtr->id)); 
 
     writer.startElement("processingMethod", attributes);
     writeParamContainer(writer, processingMethod);
@@ -931,7 +931,7 @@ PWIZ_API_DECL void read(std::istream& is, ProcessingMethod& processingMethod)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const DataProcessing& dataProcessing)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("id", encode_xml_id_copy(dataProcessing.id)));
+    attributes.add("id", encode_xml_id_copy(dataProcessing.id));
 
     writer.startElement("dataProcessing", attributes);
 
@@ -1023,14 +1023,14 @@ PWIZ_API_DECL void read(std::istream& is, Target& t)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ScanSettings& scanSettings)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("id", encode_xml_id_copy(scanSettings.id)));
+    attributes.add("id", encode_xml_id_copy(scanSettings.id));
 
     writer.startElement("scanSettings", attributes);
 
     if (!scanSettings.sourceFilePtrs.empty()) 
     {
         attributes.clear();
-        attributes.push_back(make_pair("count", lexical_cast<string>(scanSettings.sourceFilePtrs.size())));
+        attributes.add("count", scanSettings.sourceFilePtrs.size());
         writer.startElement("sourceFileRefList", attributes);
         for (vector<SourceFilePtr>::const_iterator it=scanSettings.sourceFilePtrs.begin(); 
              it!=scanSettings.sourceFilePtrs.end(); ++it)
@@ -1041,7 +1041,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ScanSettings& scanSe
     if (!scanSettings.targets.empty())
     {
         XMLWriter::Attributes attributes;
-        attributes.push_back(make_pair("count", lexical_cast<string>(scanSettings.targets.size())));
+        attributes.add("count", scanSettings.targets.size());
         writer.startElement("targetList", attributes);
 
         for (vector<Target>::const_iterator it=scanSettings.targets.begin(); 
@@ -1188,12 +1188,12 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Precursor& precursor
             if (!precursor.sourceFilePtr.get())
                 throw runtime_error("[IO::write] External spectrum references must refer to a source file");
 
-            attributes.push_back(make_pair("sourceFileRef", encode_xml_id_copy(precursor.sourceFilePtr->id))); 
-            attributes.push_back(make_pair("externalSpectrumID", precursor.externalSpectrumID)); 
+            attributes.add("sourceFileRef", encode_xml_id_copy(precursor.sourceFilePtr->id)); 
+            attributes.add("externalSpectrumID", precursor.externalSpectrumID); 
         }
     }
     else
-        attributes.push_back(make_pair("spectrumRef", precursor.spectrumID)); // not an XML:IDREF
+        attributes.add("spectrumRef", precursor.spectrumID); // not an XML:IDREF
 
     writer.startElement("precursor", attributes);
     writeParamContainer(writer, precursor);
@@ -1208,7 +1208,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Precursor& precursor
     if (!precursor.selectedIons.empty())
     {
         attributes.clear();
-        attributes.push_back(make_pair("count", lexical_cast<string>(precursor.selectedIons.size())));
+        attributes.add("count", precursor.selectedIons.size());
         writer.startElement("selectedIonList", attributes);
 
         for (vector<SelectedIon>::const_iterator it=precursor.selectedIons.begin(); 
@@ -1409,18 +1409,18 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Scan& scan, const MS
             if (!scan.sourceFilePtr.get())
                 throw runtime_error("[IO::write] External spectrum references must refer to a source file");
 
-            attributes.push_back(make_pair("sourceFileRef", encode_xml_id_copy(scan.sourceFilePtr->id))); 
-            attributes.push_back(make_pair("externalSpectrumID", scan.externalSpectrumID)); 
+            attributes.add("sourceFileRef", encode_xml_id_copy(scan.sourceFilePtr->id)); 
+            attributes.add("externalSpectrumID", scan.externalSpectrumID); 
         }
     }
     else
-        attributes.push_back(make_pair("spectrumRef", scan.spectrumID)); // not an XML:IDREF
+        attributes.add("spectrumRef", scan.spectrumID); // not an XML:IDREF
 
     // don't write the instrumentConfigurationRef if it's set to the default
     const InstrumentConfigurationPtr& defaultIC = msd.run.defaultInstrumentConfigurationPtr;
     if (scan.instrumentConfigurationPtr.get() &&
         (!defaultIC.get() || scan.instrumentConfigurationPtr != defaultIC))
-        attributes.push_back(make_pair("instrumentConfigurationRef", encode_xml_id_copy(scan.instrumentConfigurationPtr->id)));
+        attributes.add("instrumentConfigurationRef", encode_xml_id_copy(scan.instrumentConfigurationPtr->id));
 
     writer.startElement("scan", attributes);
     writeParamContainer(writer, scan);
@@ -1428,7 +1428,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const Scan& scan, const MS
     if (!scan.scanWindows.empty())
     {
         attributes.clear();
-        attributes.push_back(make_pair("count", lexical_cast<string>(scan.scanWindows.size())));
+        attributes.add("count", scan.scanWindows.size());
         writer.startElement("scanWindowList", attributes);
         
         for (vector<ScanWindow>::const_iterator it=scan.scanWindows.begin(); 
@@ -1542,7 +1542,7 @@ PWIZ_API_DECL void read(std::istream& is, Scan& scan)
 PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const ScanList& scanList, const MSData& msd)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("count", lexical_cast<string>(scanList.scans.size())));
+    attributes.add("count", scanList.scans.size());
     writer.startElement("scanList", attributes);
     writeParamContainer(writer, scanList);
     
@@ -1621,12 +1621,12 @@ void write(minimxml::XMLWriter& writer, const BinaryDataArray& binaryDataArray,
         !binaryDataArray.hasCVParam(MS_time_array) &&
         !binaryDataArray.hasCVParam(MS_intensity_array))
     {
-        attributes.push_back(make_pair("arrayLength", lexical_cast<string>(binaryDataArray.data.size())));
+        attributes.add("arrayLength", binaryDataArray.data.size());
     }
 
-    attributes.push_back(make_pair("encodedLength", lexical_cast<string>(encoded.size())));
+    attributes.add("encodedLength", encoded.size());
     if (binaryDataArray.dataProcessingPtr.get())
-        attributes.push_back(make_pair("dataProcessingRef", encode_xml_id_copy(binaryDataArray.dataProcessingPtr->id)));
+        attributes.add("dataProcessingRef", encode_xml_id_copy(binaryDataArray.dataProcessingPtr->id));
 
     writer.startElement("binaryDataArray", attributes);
 
@@ -1820,15 +1820,15 @@ void write(minimxml::XMLWriter& writer, const Spectrum& spectrum, const MSData& 
            const BinaryDataEncoder::Config& config)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("index", lexical_cast<string>(spectrum.index)));
-    attributes.push_back(make_pair("id", spectrum.id)); // not an XML:ID
+    attributes.add("index", spectrum.index);
+    attributes.add("id", spectrum.id); // not an XML:ID
     if (!spectrum.spotID.empty())
-        attributes.push_back(make_pair("spotID", spectrum.spotID));
-    attributes.push_back(make_pair("defaultArrayLength", lexical_cast<string>(spectrum.defaultArrayLength)));
+        attributes.add("spotID", spectrum.spotID);
+    attributes.add("defaultArrayLength", spectrum.defaultArrayLength);
     if (spectrum.dataProcessingPtr.get())
-        attributes.push_back(make_pair("dataProcessingRef", encode_xml_id_copy(spectrum.dataProcessingPtr->id)));
+        attributes.add("dataProcessingRef", encode_xml_id_copy(spectrum.dataProcessingPtr->id));
     if (spectrum.sourceFilePtr.get())
-        attributes.push_back(make_pair("sourceFileRef", encode_xml_id_copy(spectrum.sourceFilePtr->id)));
+        attributes.add("sourceFileRef", encode_xml_id_copy(spectrum.sourceFilePtr->id));
 
     writer.startElement("spectrum", attributes);
 
@@ -1839,7 +1839,7 @@ void write(minimxml::XMLWriter& writer, const Spectrum& spectrum, const MSData& 
     if (!spectrum.precursors.empty())
     {
         XMLWriter::Attributes attributes;
-        attributes.push_back(make_pair("count", lexical_cast<string>(spectrum.precursors.size())));
+        attributes.add("count", spectrum.precursors.size());
         writer.startElement("precursorList", attributes);
         
         for (vector<Precursor>::const_iterator it=spectrum.precursors.begin(); 
@@ -1852,7 +1852,7 @@ void write(minimxml::XMLWriter& writer, const Spectrum& spectrum, const MSData& 
     if (!spectrum.products.empty())
     {
         XMLWriter::Attributes attributes;
-        attributes.push_back(make_pair("count", lexical_cast<string>(spectrum.products.size())));
+        attributes.add("count", spectrum.products.size());
         writer.startElement("productList", attributes);
         
         for (vector<Product>::const_iterator it=spectrum.products.begin(); 
@@ -1865,7 +1865,7 @@ void write(minimxml::XMLWriter& writer, const Spectrum& spectrum, const MSData& 
     if (!spectrum.binaryDataArrayPtrs.empty())
     {
         attributes.clear();
-        attributes.push_back(make_pair("count", lexical_cast<string>(spectrum.binaryDataArrayPtrs.size())));
+        attributes.add("count", spectrum.binaryDataArrayPtrs.size());
         writer.startElement("binaryDataArrayList", attributes);
 
         for (vector<BinaryDataArrayPtr>::const_iterator it=spectrum.binaryDataArrayPtrs.begin(); 
@@ -2022,11 +2022,11 @@ void write(minimxml::XMLWriter& writer, const Chromatogram& chromatogram,
            const BinaryDataEncoder::Config& config)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("index", lexical_cast<string>(chromatogram.index)));
-    attributes.push_back(make_pair("id", chromatogram.id)); // not an XML:ID
-    attributes.push_back(make_pair("defaultArrayLength", lexical_cast<string>(chromatogram.defaultArrayLength)));
+    attributes.add("index", chromatogram.index);
+    attributes.add("id", chromatogram.id); // not an XML:ID
+    attributes.add("defaultArrayLength", chromatogram.defaultArrayLength);
     if (chromatogram.dataProcessingPtr.get())
-        attributes.push_back(make_pair("dataProcessingRef", encode_xml_id_copy(chromatogram.dataProcessingPtr->id)));
+        attributes.add("dataProcessingRef", encode_xml_id_copy(chromatogram.dataProcessingPtr->id));
 
     writer.startElement("chromatogram", attributes);
 
@@ -2041,7 +2041,7 @@ void write(minimxml::XMLWriter& writer, const Chromatogram& chromatogram,
     if (!chromatogram.binaryDataArrayPtrs.empty())
     {
         attributes.clear();
-        attributes.push_back(make_pair("count", lexical_cast<string>(chromatogram.binaryDataArrayPtrs.size())));
+        attributes.add("count", chromatogram.binaryDataArrayPtrs.size());
         writer.startElement("binaryDataArrayList", attributes);
 
         for (vector<BinaryDataArrayPtr>::const_iterator it=chromatogram.binaryDataArrayPtrs.begin(); 
@@ -2146,7 +2146,7 @@ void write(minimxml::XMLWriter& writer, const SpectrumList& spectrumList, const 
            const IterationListenerRegistry* iterationListenerRegistry)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("count", lexical_cast<string>(spectrumList.size())));
+    attributes.add("count", spectrumList.size());
 
     if (spectrumList.dataProcessingPtr().get())
         attributes.push_back(make_pair("defaultDataProcessingRef", 
@@ -2246,7 +2246,7 @@ void write(minimxml::XMLWriter& writer, const ChromatogramList& chromatogramList
            const IterationListenerRegistry* iterationListenerRegistry)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("count", lexical_cast<string>(chromatogramList.size())));
+    attributes.add("count", chromatogramList.size());
 
     if (chromatogramList.dataProcessingPtr().get())
         attributes.push_back(make_pair("defaultDataProcessingRef", 
@@ -2344,24 +2344,24 @@ void write(minimxml::XMLWriter& writer, const Run& run, const MSData& msd,
            const pwiz::util::IterationListenerRegistry* iterationListenerRegistry)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("id", encode_xml_id_copy(run.id)));
+    attributes.add("id", encode_xml_id_copy(run.id));
 
     // defaultInstrumentConfigurationPtr is mandatory for schematic validity;
     // at least one (possibly unknown) instrument configuration is mandatory for schematic validity;
     // therefore we set this attribute to a reasonable default if the client didn't set it
     if (run.defaultInstrumentConfigurationPtr.get())
-        attributes.push_back(make_pair("defaultInstrumentConfigurationRef", encode_xml_id_copy(run.defaultInstrumentConfigurationPtr->id)));
+        attributes.add("defaultInstrumentConfigurationRef", encode_xml_id_copy(run.defaultInstrumentConfigurationPtr->id));
     else if (!msd.instrumentConfigurationPtrs.empty())
-        attributes.push_back(make_pair("defaultInstrumentConfigurationRef", encode_xml_id_copy(msd.instrumentConfigurationPtrs.front()->id)));
+        attributes.add("defaultInstrumentConfigurationRef", encode_xml_id_copy(msd.instrumentConfigurationPtrs.front()->id));
     else
-        attributes.push_back(make_pair("defaultInstrumentConfigurationRef", "IC"));
+        attributes.add("defaultInstrumentConfigurationRef", "IC");
 
     if (run.samplePtr.get())
-        attributes.push_back(make_pair("sampleRef", encode_xml_id_copy(run.samplePtr->id)));
+        attributes.add("sampleRef", encode_xml_id_copy(run.samplePtr->id));
     if (!run.startTimeStamp.empty())
-        attributes.push_back(make_pair("startTimeStamp", run.startTimeStamp));
+        attributes.add("startTimeStamp", run.startTimeStamp);
     if (run.defaultSourceFilePtr.get())
-        attributes.push_back(make_pair("defaultSourceFileRef", encode_xml_id_copy(run.defaultSourceFilePtr->id)));
+        attributes.add("defaultSourceFileRef", encode_xml_id_copy(run.defaultSourceFilePtr->id));
  
     writer.startElement("run", attributes);
 
@@ -2487,7 +2487,7 @@ void writeList(minimxml::XMLWriter& writer, const vector<object_type>& objectPtr
     if (!objectPtrs.empty())
     {
         XMLWriter::Attributes attributes;
-        attributes.push_back(make_pair("count", lexical_cast<string>(objectPtrs.size())));
+        attributes.add("count", objectPtrs.size());
         writer.startElement(label, attributes);
         for (typename vector<object_type>::const_iterator it=objectPtrs.begin(); it!=objectPtrs.end(); ++it)
             write(writer, **it);
@@ -2504,20 +2504,20 @@ void write(minimxml::XMLWriter& writer, const MSData& msd,
            const pwiz::util::IterationListenerRegistry* iterationListenerRegistry)
 {
     XMLWriter::Attributes attributes;
-    attributes.push_back(make_pair("xmlns", "http://psi.hupo.org/ms/mzml"));
-    attributes.push_back(make_pair("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance"));
-    attributes.push_back(make_pair("xsi:schemaLocation", "http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML" + msd.version() + ".xsd"));
+    attributes.add("xmlns", "http://psi.hupo.org/ms/mzml");
+    attributes.add("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance");
+    attributes.add("xsi:schemaLocation", "http://psi.hupo.org/ms/mzml http://psidev.info/files/ms/mzML/xsd/mzML" + msd.version() + ".xsd");
     if (!msd.accession.empty())
-        attributes.push_back(make_pair("accession", msd.accession));
-    attributes.push_back(make_pair("id", msd.id)); // not an XML:ID
-    attributes.push_back(make_pair("version", msd.version()));
+        attributes.add("accession", msd.accession);
+    attributes.add("id", msd.id); // not an XML:ID
+    attributes.add("version", msd.version());
 
     writer.startElement("mzML", attributes);
 
     if (!msd.cvs.empty())
     {
         attributes.clear();
-        attributes.push_back(make_pair("count", lexical_cast<string>(msd.cvs.size())));
+        attributes.add("count", msd.cvs.size());
         writer.startElement("cvList", attributes);
         for (vector<CV>::const_iterator it=msd.cvs.begin(); it!=msd.cvs.end(); ++it)
             write(writer, *it);
