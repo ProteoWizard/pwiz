@@ -96,7 +96,7 @@ namespace seems
                             case "z": z = true; break;
                             case "z*": zRadical = true; break;
                         }
-                    return (IAnnotation) new PeptideFragmentationAnnotation( sequence, minCharge, maxCharge, a, b, c, x, y, z, zRadical, true, false, true );
+                    return (IAnnotation) new PeptideFragmentationAnnotation( sequence, minCharge, maxCharge, a, b, c, x, y, z, zRadical, true, false, true, false );
                 }
 
                 return null;
@@ -158,6 +158,7 @@ namespace seems
         bool showLadders;
         bool showMisses;
         bool showLabels;
+        bool showFragmentationSummary;
 
         public PeptideFragmentationAnnotation()
         {
@@ -169,6 +170,7 @@ namespace seems
             showLadders = true;
             showMisses = false;
             showLabels = true;
+            showFragmentationSummary = false;
 
             annotationPanels.precursorMassTypeComboBox.SelectedIndex = precursorMassType;
             annotationPanels.fragmentMassTypeComboBox.SelectedIndex = fragmentMassType;
@@ -187,6 +189,7 @@ namespace seems
             annotationPanels.zRadicalCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.showFragmentationLaddersCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.showMissesCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
+            annotationPanels.showFragmentationSummaryCheckBox.CheckedChanged += new EventHandler(checkBox_CheckedChanged);
         }
 
         public PeptideFragmentationAnnotation( string sequence,
@@ -195,7 +198,8 @@ namespace seems
                                                bool x, bool y, bool z, bool zRadical,
                                                bool showFragmentationLadders,
                                                bool showMissedFragments,
-                                               bool showLabels )
+                                               bool showLabels,
+                                               bool showFragmetationSummary )
             : this(sequence, minCharge, maxCharge,
                    (a ? IonSeries.a : IonSeries.Off) |
                    (b ? IonSeries.b : IonSeries.Off) |
@@ -206,7 +210,8 @@ namespace seems
                    (zRadical ? IonSeries.zRadical : IonSeries.Off),
                    showFragmentationLadders,
                    showMissedFragments,
-                   showLabels)
+                   showLabels,
+                   showFragmetationSummary)
         {
         }
 
@@ -215,7 +220,8 @@ namespace seems
                                                IonSeries ionSeries,
                                                bool showFragmentationLadders,
                                                bool showMissedFragments,
-                                               bool showLabels)
+                                               bool showLabels,
+                                               bool showFragmentationSummary)
         {
             this.sequence = sequence;
             this.min = minCharge;
@@ -224,6 +230,7 @@ namespace seems
             this.showLadders = showFragmentationLadders;
             this.showMisses = showMissedFragments;
             this.showLabels = showLabels;
+            this.showFragmentationSummary = showFragmentationSummary;
 
             annotationPanels.precursorMassTypeComboBox.SelectedIndex = 0;
             annotationPanels.fragmentMassTypeComboBox.SelectedIndex = 0;
@@ -242,6 +249,7 @@ namespace seems
             annotationPanels.zRadicalCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.showFragmentationLaddersCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
             annotationPanels.showMissesCheckBox.CheckedChanged += new EventHandler( checkBox_CheckedChanged );
+            annotationPanels.showFragmentationSummaryCheckBox.CheckedChanged += new EventHandler(checkBox_CheckedChanged);
 
             annotationPanels.fragmentInfoGridView.Columns.Clear();
         }
@@ -266,6 +274,7 @@ namespace seems
                 fragmentMassType = annotationPanels.fragmentMassTypeComboBox.SelectedIndex;
 
                 showLadders = annotationPanels.showFragmentationLaddersCheckBox.Checked;
+                showFragmentationSummary = annotationPanels.showFragmentationSummaryCheckBox.Checked;
 
                 // any control which affects the columns displayed for fragments clears the column list;
                 // it gets repopulated on the next call to Update()
@@ -274,10 +283,11 @@ namespace seems
 
                 // when showLadders is checked, the ion series checkboxes act like radio buttons:
                 // series from the same terminus are grouped together
-                if( showLadders && sender is CheckBox )
+                if ((showLadders || showFragmentationSummary) && sender is CheckBox)
                 {
                     panel.Tag = null;
-                    if( ReferenceEquals( sender, annotationPanels.showFragmentationLaddersCheckBox ) )
+                    if (ReferenceEquals(sender, annotationPanels.showFragmentationLaddersCheckBox) ||
+                        ReferenceEquals(sender, annotationPanels.showFragmentationSummaryCheckBox))
                     {
                         // uncheck all but the first checked checkbox
                         annotationPanels.bCheckBox.Checked = !annotationPanels.aCheckBox.Checked;
@@ -437,6 +447,229 @@ namespace seems
             }
             // Return if both are found
             return (leftMZFound & righMZFound);
+        }
+
+        ///<summary>Adds user requested ion series to the fragmentation summary.</summary>
+        private void addFragmentationSummary(GraphObjList list, pwiz.MSGraph.MSPointList points, Peptide peptide, Fragmentation fragmentation, string topSeries, string bottomSeries)
+        {
+            int ionSeriesChargeState = min;
+            string sequence = peptide.sequence;
+            ModificationMap modifications = peptide.modifications();
+
+            // Select the color for the ion series.
+            Color topSeriesColor;
+            Color bottomSeriesColor;
+            switch (topSeries)
+            {
+                default: topSeriesColor = Color.Gray; break;
+                case "a": topSeriesColor = Color.YellowGreen; break;
+                case "b": topSeriesColor = Color.BlueViolet; break;
+                case "c": topSeriesColor = Color.Orange; break;
+            }
+
+            switch (bottomSeries)
+            {
+                default: bottomSeriesColor = Color.Gray; break;
+                case "x": bottomSeriesColor = Color.Green; break;
+                case "y": bottomSeriesColor = Color.Blue; break;
+                case "z": bottomSeriesColor = Color.OrangeRed; break;
+                case "z*": bottomSeriesColor = Color.Crimson; break;
+            }
+            // Ion series offsets. These offsets control where on the chart a particular ion series
+            // get displayed
+            double seriesTopLeftOffset = 0.2;
+            // Set the constants for starting the label paint
+            double topSeriesLeftPoint = 0.025;
+            double residueWidth = 0.5 / ((double)sequence.Length);
+            double tickStart = residueWidth/2.0;
+
+            // Process all the series except c and x
+            for (int i = 1; i <= sequence.Length; ++i)
+            {
+                double topSeriesFragmentMZ = 0.0;
+                double bottomSeriesFragmentMZ = 0.0;
+                switch (topSeries)
+                {
+                    case "a": topSeriesFragmentMZ = fragmentation.a(i, ionSeriesChargeState); break;
+                    case "b": topSeriesFragmentMZ = fragmentation.b(i, ionSeriesChargeState); break;
+                    default: topSeriesFragmentMZ = 0.0; break;
+                }
+                switch (bottomSeries)
+                {
+                    case "y": bottomSeriesFragmentMZ = fragmentation.y(i, ionSeriesChargeState); break;
+                    case "z": bottomSeriesFragmentMZ = fragmentation.z(i, ionSeriesChargeState); break;
+                    case "z*": bottomSeriesFragmentMZ = fragmentation.zRadical(i, ionSeriesChargeState); break;
+                    default: bottomSeriesFragmentMZ = 0.0; break;
+                }
+
+                // Check if the top and bottom fragments have evidence
+                bool topSeriesHasMatch = false;
+                bool bottomSeriesHasMatch = false;
+                if (points != null)
+                {
+                    // Search index
+                    int index = -1;
+                    // Find the left mz value using a mass tolerance of 0.5 da.
+                    index = points.FullLowerBound(topSeriesFragmentMZ - 0.5);
+                    if (index != -1 && points.FullList[index].X <= (topSeriesFragmentMZ + 0.5))
+                        topSeriesHasMatch = true;
+
+                    // Reset the search index
+                    index = -1;
+                    // Find the left mz value using a mass tolerance of 0.5 da.
+                    index = points.FullLowerBound(bottomSeriesFragmentMZ - 0.5);
+                    if (index != -1 && points.FullList[index].X <= (bottomSeriesFragmentMZ + 0.5))
+                        bottomSeriesHasMatch = true;
+                }
+                // Build the label for the amino acid
+                // Add a text box in the middle of the left and right mz boundaries
+                StringBuilder label = new StringBuilder(sequence[i - 1].ToString());
+                // Figure out if any mods are there on this amino acid
+                double deltaMass = modifications[i - 1].monoisotopicDeltaMass();
+                // Round the mod mass and append it to the amino acid as a string
+                if (deltaMass > 0.0)
+                {
+                    label.Append("+" + Math.Round(deltaMass));
+                }
+                else if (deltaMass < 0.0)
+                {
+                    label.Append(Math.Round(deltaMass));
+                }
+                TextObj text = new TextObj(label.ToString(), topSeriesLeftPoint,
+                            seriesTopLeftOffset, CoordType.ChartFraction, AlignH.Center, AlignV.Center);
+                text.ZOrder = ZOrder.A_InFront;
+                text.FontSpec = new FontSpec("Arial", 13, Color.Black, true, false, false);
+                text.FontSpec.Border.IsVisible = false;
+                text.FontSpec.Fill.Color = Color.White;
+                text.IsClippedToChartRect = true;
+                list.Add(text);
+                if (topSeriesHasMatch)
+                {
+                    // Paint the tick in the middle
+                    LineObj tick = new LineObj(topSeriesColor, topSeriesLeftPoint + tickStart, (seriesTopLeftOffset - 0.05), topSeriesLeftPoint + tickStart, seriesTopLeftOffset);
+                    tick.Location.CoordinateFrame = CoordType.ChartFraction;
+                    tick.Line.Width = 2;
+                    tick.IsClippedToChartRect = true;
+                    list.Add(tick);
+                    // Paint the hook
+                    LineObj hook = new LineObj(topSeriesColor, topSeriesLeftPoint , (seriesTopLeftOffset- 0.08), topSeriesLeftPoint + tickStart, seriesTopLeftOffset-0.05);
+                    hook.Location.CoordinateFrame = CoordType.ChartFraction;
+                    hook.Line.Width = 2;
+                    hook.IsClippedToChartRect = true;
+                    list.Add(hook);
+                }
+                if (bottomSeriesHasMatch)
+                {
+                    // Paint the tick in the middle
+                    LineObj tick = new LineObj(bottomSeriesColor, topSeriesLeftPoint + tickStart, seriesTopLeftOffset, topSeriesLeftPoint + tickStart, seriesTopLeftOffset + 0.05);
+                    tick.Location.CoordinateFrame = CoordType.ChartFraction;
+                    tick.Line.Width = 2;
+                    tick.IsClippedToChartRect = true;
+                    list.Add(tick);
+                    // Paint the hook
+                    LineObj hook = new LineObj(bottomSeriesColor, topSeriesLeftPoint + tickStart, seriesTopLeftOffset + 0.05, topSeriesLeftPoint + 2.0*tickStart, seriesTopLeftOffset + 0.08);
+                    hook.Location.CoordinateFrame = CoordType.ChartFraction;
+                    hook.Line.Width = 2;
+                    hook.IsClippedToChartRect = true;
+                    list.Add(hook);
+                }
+                // Update the next paint point
+                topSeriesLeftPoint += residueWidth;
+            }
+            // Reset the series starting point
+            topSeriesLeftPoint = 0.025;
+            // Process the x and c series
+            for (int i = 1; i < sequence.Length; ++i)
+            {
+                double topSeriesFragmentMZ = 0.0;
+                double bottomSeriesFragmentMZ = 0.0;
+                switch (topSeries)
+                {
+                    case "c": topSeriesFragmentMZ = fragmentation.c(i, ionSeriesChargeState); break;
+                    default: topSeriesFragmentMZ = 0.0; break;
+                }
+                switch (bottomSeries)
+                {
+                    case "x": bottomSeriesFragmentMZ = fragmentation.x(i, ionSeriesChargeState); break;
+                    default: bottomSeriesFragmentMZ = 0.0; break;
+                }
+
+                // Check if the top and bottom fragments have evidence
+                bool topSeriesHasMatch = false;
+                bool bottomSeriesHasMatch = false;
+                if (points != null)
+                {
+                    // Search index
+                    int index = -1;
+                    // Find the left mz value using a mass tolerance of 0.5 da.
+                    index = points.FullLowerBound(topSeriesFragmentMZ - 0.5);
+                    if (index != -1 && points.FullList[index].X <= (topSeriesFragmentMZ + 0.5))
+                        topSeriesHasMatch = true;
+
+                    // Reset the search index
+                    index = -1;
+                    // Find the left mz value using a mass tolerance of 0.5 da.
+                    index = points.FullLowerBound(bottomSeriesFragmentMZ - 0.5);
+                    if (index != -1 && points.FullList[index].X <= (bottomSeriesFragmentMZ + 0.5))
+                        bottomSeriesHasMatch = true;
+                }
+                // Build the label for the amino acid
+                // Add a text box in the middle of the left and right mz boundaries
+                StringBuilder label = new StringBuilder(sequence[i - 1].ToString());
+                // Figure out if any mods are there on this amino acid
+                double deltaMass = modifications[i - 1].monoisotopicDeltaMass();
+                // Round the mod mass and append it to the amino acid as a string
+                if (deltaMass > 0.0)
+                {
+                    label.Append("+" + Math.Round(deltaMass));
+                }
+                else if (deltaMass < 0.0)
+                {
+                    label.Append(Math.Round(deltaMass));
+                }
+                TextObj text = new TextObj(label.ToString(), topSeriesLeftPoint,
+                            seriesTopLeftOffset, CoordType.ChartFraction, AlignH.Center, AlignV.Center);
+                text.ZOrder = ZOrder.A_InFront;
+                text.FontSpec = new FontSpec("Arial", 13, Color.Black, true, false, false);
+                text.FontSpec.Border.IsVisible = false;
+                text.FontSpec.Fill.Color = Color.White;
+                text.IsClippedToChartRect = true;
+                list.Add(text);
+                if (topSeriesHasMatch)
+                {
+                    // Paint the tick in the middle
+                    LineObj tick = new LineObj(topSeriesColor, topSeriesLeftPoint + tickStart, (seriesTopLeftOffset - 0.05), topSeriesLeftPoint + tickStart, seriesTopLeftOffset);
+                    tick.Location.CoordinateFrame = CoordType.ChartFraction;
+                    tick.Line.Width = 2;
+                    tick.IsClippedToChartRect = true;
+                    list.Add(tick);
+                    // Paint the hook
+                    LineObj hook = new LineObj(topSeriesColor, topSeriesLeftPoint, (seriesTopLeftOffset - 0.08), topSeriesLeftPoint + tickStart, seriesTopLeftOffset - 0.05);
+                    hook.Location.CoordinateFrame = CoordType.ChartFraction;
+                    hook.Line.Width = 2;
+                    hook.IsClippedToChartRect = true;
+                    list.Add(hook);
+                }
+                if (bottomSeriesHasMatch)
+                {
+                    // Paint the tick in the middle
+                    LineObj tick = new LineObj(bottomSeriesColor, topSeriesLeftPoint + tickStart, seriesTopLeftOffset, topSeriesLeftPoint + tickStart, seriesTopLeftOffset + 0.05);
+                    tick.Location.CoordinateFrame = CoordType.ChartFraction;
+                    tick.Line.Width = 2;
+                    tick.IsClippedToChartRect = true;
+                    list.Add(tick);
+                    // Paint the hook
+                    LineObj hook = new LineObj(bottomSeriesColor, topSeriesLeftPoint + tickStart, seriesTopLeftOffset + 0.05, topSeriesLeftPoint + 2.0 * tickStart, seriesTopLeftOffset + 0.08);
+                    hook.Location.CoordinateFrame = CoordType.ChartFraction;
+                    hook.Line.Width = 2;
+                    hook.IsClippedToChartRect = true;
+                    list.Add(hook);
+                }
+                // Update the next paint point
+                topSeriesLeftPoint += residueWidth;
+            }
+
+            
         }
 
         ///<summary>Adds user requested ion series on top of the chart.</summary>
@@ -764,11 +997,14 @@ namespace seems
                 }
             }
 
-            if( showLadders )
+            if( showLadders || showFragmentationSummary)
             {
                 string topSeries = ionSeriesIsEnabled(IonSeries.a) ? "a" : ionSeriesIsEnabled(IonSeries.b) ? "b" : ionSeriesIsEnabled(IonSeries.c) ? "c" : "";
                 string bottomSeries = ionSeriesIsEnabled(IonSeries.x) ? "x" : ionSeriesIsEnabled(IonSeries.y) ? "y" : ionSeriesIsEnabled(IonSeries.z) ? "z" : ionSeriesIsEnabled(IonSeries.zRadical) ? "z*" : "";
-                addIonSeries( list, points, peptide, fragmentation, topSeries, bottomSeries );
+                if(showLadders)
+                    addIonSeries( list, points, peptide, fragmentation, topSeries, bottomSeries );
+                if(showFragmentationSummary)
+                    addFragmentationSummary(list, points, peptide, fragmentation, topSeries, bottomSeries);
             }
 
             // fill peptide info table
