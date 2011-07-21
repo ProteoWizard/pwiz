@@ -26,7 +26,7 @@
 #include "stdafx.h"
 #include "freicore.h"
 #include "tagreconSpectrum.h"
-#include "simplethreads.h"
+#include <boost/atomic.hpp>
 #include <boost/cstdint.hpp>
 
 #define TAGRECON_LICENSE			COMMON_LICENSE
@@ -44,22 +44,6 @@ namespace freicore
 
 namespace tagrecon
 {
-    struct Version
-    {
-        static int Major();
-        static int Minor();
-        static int Revision();
-        static std::string str();
-        static std::string LastModified();
-    };
-
-	#ifdef USE_MPI
-		void TransmitConfigsToChildProcesses();
-		void ReceiveConfigsFromRootProcess();
-	#endif
-
-	typedef map< string, simplethread_mutex_t > tagMutexes_t;
-
 	typedef struct spectrumInfo
 	{
 		vector< string > sequences;
@@ -183,17 +167,36 @@ namespace tagrecon
 	//typedef multimap<pair <string, float>, TagMapInfo>				SpectraTagMap;
 	typedef vector< SpectraTagMap >										SpectraTagMapList;
 
-	struct searchStats
+	struct SearchStatistics
 	{
-		searchStats() :
-			numProteinsDigested(0), numCandidatesGenerated(0),
-			numCandidatesQueried(0), numComparisonsDone(0), 
-            numCandidatesSkipped(0) {}
-        boost::int64_t numProteinsDigested;
-		boost::int64_t numCandidatesGenerated;
-		boost::int64_t numCandidatesQueried;
-		boost::int64_t numComparisonsDone;
-        boost::int64_t numCandidatesSkipped;
+        SearchStatistics()
+        :   numProteinsDigested(0),
+            numCandidatesGenerated(0),
+            numCandidatesQueried(0),
+            numComparisonsDone(0),
+            numCandidatesSkipped(0)
+        {}
+
+        SearchStatistics(const SearchStatistics& other)
+        {
+            operator=(other);
+        }
+
+		SearchStatistics& operator=(const SearchStatistics& other)
+		{
+            numProteinsDigested.store(other.numProteinsDigested);
+            numCandidatesGenerated.store(other.numCandidatesGenerated);
+            numCandidatesQueried.store(other.numCandidatesQueried);
+            numComparisonsDone.store(other.numComparisonsDone);
+            numCandidatesSkipped.store(other.numCandidatesSkipped);
+            return *this;
+        }
+
+        boost::atomic_uint32_t numProteinsDigested;
+		boost::atomic_uint64_t numCandidatesGenerated;
+		boost::atomic_uint64_t numCandidatesQueried;
+		boost::atomic_uint64_t numComparisonsDone;
+        boost::atomic_uint64_t numCandidatesSkipped;
 
 		template< class Archive >
 		void serialize( Archive& ar, const unsigned int version )
@@ -201,14 +204,14 @@ namespace tagrecon
 			ar & numProteinsDigested & numCandidatesGenerated & numCandidatesQueried & numComparisonsDone & numCandidatesSkipped;
 		}
 
-		searchStats operator+ ( const searchStats& rhs )
+		SearchStatistics operator+ ( const SearchStatistics& rhs )
 		{
-			searchStats tmp;
-			tmp.numProteinsDigested = numProteinsDigested + rhs.numProteinsDigested;
-			tmp.numCandidatesGenerated = numCandidatesGenerated + rhs.numCandidatesGenerated;
-			tmp.numCandidatesQueried = numCandidatesQueried + rhs.numCandidatesQueried;
-			tmp.numComparisonsDone = numComparisonsDone + rhs.numComparisonsDone;
-            tmp.numCandidatesSkipped = numCandidatesSkipped + rhs.numCandidatesSkipped;
+			SearchStatistics tmp(*this);
+			tmp.numProteinsDigested.fetch_add(rhs.numProteinsDigested);
+			tmp.numCandidatesGenerated.fetch_add(rhs.numCandidatesGenerated);
+			tmp.numCandidatesQueried.fetch_add(rhs.numCandidatesQueried);
+			tmp.numComparisonsDone.fetch_add(rhs.numComparisonsDone);
+            tmp.numCandidatesSkipped.fetch_add(rhs.numCandidatesSkipped);
 			return tmp;
 		}
 
@@ -224,12 +227,6 @@ namespace tagrecon
 		}
 	};
 
-	struct WorkerInfo : public BaseWorkerInfo
-	{
-		WorkerInfo( int num, int start, int end ) : BaseWorkerInfo( num, start, end ) {}
-		searchStats stats;
-	};
-
     #ifdef USE_MPI
 		void TransmitConfigsToChildProcesses();
 		void ReceiveConfigsFromRootProcess();
@@ -242,17 +239,15 @@ namespace tagrecon
 		int ReceiveSpectraFromRootProcess();
 		int TransmitSpectraToChildProcesses( int done );
 		int TransmitProteinsToChildProcesses();
-		int ReceiveProteinBatchFromRootProcess( int lastQueryCount );
-		int TransmitResultsToRootProcess( const searchStats& stats );
-		int ReceiveResultsFromChildProcesses( searchStats& overallSearchStats, bool firstBatch );
+		int ReceiveProteinBatchFromRootProcess();
+		int TransmitResultsToRootProcess();
+		int ReceiveResultsFromChildProcesses( bool firstBatch );
 	#endif
 
-	extern WorkerThreadMap	    g_workerThreads;
-	extern simplethread_mutex_t	resourceMutex;
+	extern proteinStore         proteins;
+    extern SearchStatistics     searchStatistics;
 
-	extern proteinStore			proteins;
 	extern SpectraList			spectra;
-	extern SpectraMassMap		spectraMassMapsByChargeState;
 	extern SpectraTagMap		spectraTagMapsByChargeState;
 }
 }

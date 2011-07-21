@@ -37,89 +37,6 @@ namespace freicore
 {
 namespace tagrecon
 {
-
-        /* This function processes the spectra to compute the fast XCorr implemented in Crux. 
-           Ideally, this function has to be called prior to spectrum filtering.             
-        */
-        void Spectrum::PreprocessForXCorr()
-        {
-
-            if( mzOfPrecursor < 1 )
-            {
-                peakPreData.clear();
-                return;
-            }
-
-            // Determine the neutral mass of the precursor (m/z * z - z)
-            // Eliminate peaks above the precursor's mass with a given tolerance
-            mOfPrecursor = mzOfPrecursor * id.charge - ( id.charge * PROTON );
-            peakPreData.erase( peakPreData.upper_bound( mOfPrecursor + 50 ), peakPreData.end() );
-
-            if( peakPreData.empty() )
-                return;
-
-            // Locate precursor and corresponding water loss ions and wipe them out
-            //PeakPreData::iterator precursorMzLow = peakPreData.lower_bound( mzOfPrecursor - g_rtConfig->FragmentMzTolerance);
-            //PeakPreData::iterator precursorMzHigh = peakPreData.upper_bound( mzOfPrecursor + g_rtConfig->FragmentMzTolerance);
-            //for(; precursorMzLow != precursorMzHigh; ++precursorMzLow)
-            //    peakPreData.erase( precursorMzLow );
-            PeakPreData::iterator precursorWaterLossItr = peakPreData.findNear( mzOfPrecursor - WATER_MONO/id.charge, g_rtConfig->FragmentMzTolerance, true );
-            if( precursorWaterLossItr != peakPreData.end() ) 
-                peakPreData.erase( precursorWaterLossItr );
-            PeakPreData::iterator precursorDoubleWaterLossItr = peakPreData.findNear( mzOfPrecursor - 2*WATER_MONO/id.charge, g_rtConfig->FragmentMzTolerance, true );
-            if( precursorDoubleWaterLossItr != peakPreData.end() ) 
-                peakPreData.erase( precursorDoubleWaterLossItr );
-
-            // Get the number of bins and bin width for the processed peak array
-            float binWidth = 1.0005079;
-            int maxBins;
-            float massCutOff = mOfPrecursor + 50;
-            if (massCutOff > 512)
-                maxBins = (int) ceil(massCutOff / 1024) * 1024;
-            else
-                maxBins = 512;
-            
-            // Detemine the max mass of a fragmet peak.
-            PeakPreData::const_reverse_iterator lastPeakIter = peakPreData.rbegin();
-            float maxPeakMass = (float) lastPeakIter->first;
-            // Section the original peak array in 10 bins and find the
-            // base peak in each bin. Also, square-root the peak intensities
-            int numberOfRegions = 10;
-            vector<double> maxPeakIntensityInRegions;
-            maxPeakIntensityInRegions.resize(numberOfRegions);
-            fill(maxPeakIntensityInRegions.begin(), maxPeakIntensityInRegions.end(), 1);
-            int regionSelector = (int) (maxPeakMass / numberOfRegions);
-            for(PeakPreData::iterator itr = peakPreData.begin(); itr != peakPreData.end(); ++ itr)
-            {
-                itr->second = sqrt(itr->second);
-                int mzBin = (int) (itr->first / binWidth + 0.5f);
-                int normalizationIndex = mzBin / regionSelector;
-                if( IS_VALID_INDEX( normalizationIndex,numberOfRegions ) )
-                    maxPeakIntensityInRegions[normalizationIndex] = max(maxPeakIntensityInRegions[normalizationIndex], itr->second);
-            }
-
-            // Normalize peaks in each region from 0 to 50. 
-            // Use base peak in each region for normalization. 
-            peakDataForXCorr.resize(maxBins);
-            fill(peakDataForXCorr.begin(), peakDataForXCorr.end(), 0);
-            for(PeakPreData::iterator itr = peakPreData.begin(); itr != peakPreData.end(); ++itr)
-            {
-                int mzBin = (int) (itr->first / binWidth + 0.5f);
-                int normalizationIndex = mzBin / regionSelector;
-                if ( IS_VALID_INDEX(normalizationIndex,numberOfRegions) && IS_VALID_INDEX(mzBin,maxBins) )
-                    peakDataForXCorr[mzBin] = (itr->second / maxPeakIntensityInRegions[normalizationIndex]) * 50;
-            }
-
-            // Compute the cumulative spectrum
-            for (int index = 0; index < (int) peakDataForXCorr.size(); ++index)
-                for (int subIndex = index - 75; subIndex <= index + 75; ++subIndex)
-                    if ( IS_VALID_INDEX(subIndex,maxBins) )
-                        peakDataForXCorr[index] -= (peakDataForXCorr[subIndex] / 151);
-
-            peakPreData.clear();
-
-        }
-
 	/**!
 		Preprocess() function take an experimental spectrum and processes it to 
 		locate neutral and water losses from the precursor ion, performs deisotoping
@@ -138,215 +55,438 @@ namespace tagrecon
 			return;
 		}
 
-		// Secondly, determine the neutral mass of the precursor (m/z * z - z)
-		mOfPrecursor = mzOfPrecursor * id.charge - ( id.charge * PROTON );
-		mOfUnadjustedPrecursor = mOfPrecursor;
-		//if( id.index == 6234 ) cout << mOfPrecursor << endl;
-		//cout << g_residueMap->GetMassOfResidues( "AGLLGLLEEMR", false ) << endl;
+		if( peakPreData.empty() )
+			return;
 
-		// Eliminate peaks above the precursor's mass with a given tolerance
-		float maxPeakMass = mOfPrecursor + PROTON + g_rtConfig->PrecursorMassTolerance.back();
-		itr = peakPreData.upper_bound( maxPeakMass );
-		peakPreData.erase( itr, peakPreData.end() );
+        //PeakPreData unfilteredPeakPreData = peakPreData;
+
+        // Determine the neutral mass of the precursor (m/z * z - z)
+        // Eliminate peaks above the precursor's mass with a given tolerance
+        mOfPrecursor = mzOfPrecursor * id.charge - ( id.charge * PROTON );
+        peakPreData.erase( peakPreData.upper_bound( mOfPrecursor + 50 ), peakPreData.end() );
+
+		// The old way of calculating these values:
+        /*mzLowerBound = peakPreData.begin()->first;
+		mzUpperBound = peakPreData.rbegin()->first;
+		totalPeakSpace = mzUpperBound - mzLowerBound;*/
+
+		FilterByTIC( g_rtConfig->TicCutoffPercentage );
+        FilterByPeakCount( g_rtConfig->MaxPeakCount );
 
 		if( peakPreData.empty() )
 			return;
 
-		// Thirdly, store the bounds of the spectrum before eliminating any peaks
-		mzLowerBound = peakPreData.begin()->first;
-		mzUpperBound = peakPreData.rbegin()->first;
-		totalPeakSpace = mzUpperBound - mzLowerBound;
+        BOOST_FOREACH(int charge, possibleChargeStates)
+        {
+		    PeakPreData::iterator precursorWaterLossItr = peakPreData.findNear( mzOfPrecursor - WATER_MONO/charge, g_rtConfig->FragmentMzTolerance, true );
+		    if( precursorWaterLossItr != peakPreData.end() )
+			    peakPreData.erase( precursorWaterLossItr );
 
-		if( g_rtConfig->MakeSpectrumGraphs )
-				writeToSvgFile( "-unprocessed" + g_rtConfig->OutputSuffix );
-		
-		// Locate water loss ions of the precursor ion
-		PeakPreData::iterator precursorWaterLossItr = peakPreData.findNear( mzOfPrecursor - WATER_MONO/id.charge, g_rtConfig->FragmentMzTolerance, true );
-		PeakPreData::iterator precursorDoubleWaterLossItr = peakPreData.findNear( mzOfPrecursor - 2*WATER_MONO/id.charge, g_rtConfig->FragmentMzTolerance, true );
-        bool eraseWaterLoss = precursorWaterLossItr != peakPreData.end();
-        bool eraseDoubleWaterLoss = precursorDoubleWaterLossItr != peakPreData.end() && precursorWaterLossItr != precursorDoubleWaterLossItr;
-		if( eraseWaterLoss ) peakPreData.erase( precursorWaterLossItr );
-		if( eraseDoubleWaterLoss ) peakPreData.erase( precursorDoubleWaterLossItr );
+		    PeakPreData::iterator precursorDoubleWaterLossItr = peakPreData.findNear( mzOfPrecursor - 2*WATER_MONO/charge, g_rtConfig->FragmentMzTolerance, true );
+		    if( precursorDoubleWaterLossItr != peakPreData.end() )
+                peakPreData.erase( precursorDoubleWaterLossItr );
+        }
 
-        // Cut off the peaks based on % TIC and MaxPeakCount (User configurable)
-		FilterByTIC( g_rtConfig->TicCutoffPercentage );
-        FilterByPeakCount( g_rtConfig->MaxPeakCount );
+		if( peakPreData.empty() )
+			return;
 
-		if( g_rtConfig->MakeSpectrumGraphs )
-			writeToSvgFile( "-filtered" + g_rtConfig->OutputSuffix );
+        // results for each possible charge state are stored separately
+        resultsByCharge.resize(possibleChargeStates.back());
+        BOOST_FOREACH(SearchResultSetType& resultSet, resultsByCharge)
+            resultSet.max_ranks( g_rtConfig->MaxResultRank );
 
-		// Create a deisotoped version of the spectrum for finding complements
-		PeakPreData originalPeakPreData;
-		//PeakData originalPeakData;
+		ClassifyPeakIntensities(); // for mvh
 
-		if( g_rtConfig->DeisotopingMode > 0 || g_rtConfig->AdjustPrecursorMass )
-		{
-			if( g_rtConfig->DeisotopingMode == 0 )
-			{
-				originalPeakPreData = peakPreData;
-				//originalPeakData = peakData;
-			}
-
-			// Deisotope the spectrum
-			Deisotope( g_rtConfig->IsotopeMzTolerance );
-
-			if( g_rtConfig->MakeSpectrumGraphs )
-				writeToSvgFile( "-deisotoped" + g_rtConfig->OutputSuffix );
-		}
-
-		// Adjust the precursor mass if user desired to do so.
-		// Change the precursor mass from Minimum to Maximum 
-		// adjustment in a small mass steps. Find the number of
-		// complements at each mass step and calculate their total
-		// intensity. Use the mass of the precursor that gave the 
-		// maximum total intensity to correct the experimental precursor mass.
-		if( g_rtConfig->AdjustPrecursorMass )
-		{
-			float originalPrecursorMass = mOfPrecursor;
-			float originalPrecursorMz = mzOfPrecursor;
-			float bestPrecursorAdjustment = 0.0f;
-			float maxSumOfProducts = 0.0f;
-			map< float, float > AdjustmentResults;
-
-			// Step between minimumPrecursorAdjustment to MaxPrecursorAdjustment in small
-			// mass steps of PrecursorAdjustmentStep mangnitude
-			for( mOfPrecursor += g_rtConfig->MinPrecursorAdjustment;
-				 mOfPrecursor <= originalPrecursorMass + g_rtConfig->MaxPrecursorAdjustment;
-				 mOfPrecursor += g_rtConfig->PrecursorAdjustmentStep )
-			{
-				// Get the new precursor m/z
-				mzOfPrecursor = ( mOfPrecursor + ( id.charge * PROTON ) ) / id.charge;
-
-				// Find out the total intensity of number of complementary pairs
-				float sumOfProducts = FindComplements( g_rtConfig->ComplementMzTolerance, g_rtConfig->PreferIntenseComplements );
-
-				// Remember the PrecursorAdjustmentStep that gave the maximum
-				// complementary intensity
-				if( sumOfProducts > maxSumOfProducts )
-				{
-					maxSumOfProducts = sumOfProducts;
-					bestPrecursorAdjustment = mOfPrecursor - originalPrecursorMass;
-				}
-
-				// Store the number of complementary pairs found at each adjustment step.
-				AdjustmentResults[ mOfPrecursor ] = sumOfProducts;
-			}
-
-			// Remember the precursor masses for the few best precursor adjustments
-			map< float, vector< float > > adjustmentToMzMap;
-			for( map< float, float >::iterator itr = AdjustmentResults.begin(); itr != AdjustmentResults.end(); ++itr )
-				adjustmentToMzMap[ itr->second ].push_back( itr->first );
-			int n=0;
-			for( map< float, vector< float > >::reverse_iterator itr = adjustmentToMzMap.rbegin();
-				 itr != adjustmentToMzMap.rend() && n < g_rtConfig->NumSearchBestAdjustments;
-				 ++itr, ++n )
-			{
-				 for( size_t i=0; i < itr->second.size(); ++i )
-					mOfPrecursorList.push_back( itr->second[i] );
-			}
-
-			// Update the precursor mass with bestPrecursorAdjustment that gave
-			// maximum total complementary intensity.
-			if( maxSumOfProducts > 0.0f )
-			{
-				mOfPrecursor = originalPrecursorMass + bestPrecursorAdjustment;
-				mzOfPrecursor = ( mOfPrecursor + ( id.charge * PROTON ) ) / id.charge;
-			} else
-			{
-				mOfPrecursor = originalPrecursorMass;
-				mzOfPrecursor = originalPrecursorMz;
-			}
-
-			if( g_rtConfig->MakeSpectrumGraphs )
-			{
-				writeToSvgFile( "-adjusted" + g_rtConfig->OutputSuffix );
-				cout << "Original precursor m/z: " << originalPrecursorMz << endl;
-				cout << "Corrected precursor m/z: " << mzOfPrecursor << endl;
-				cout << "Sum of complement products: " << maxSumOfProducts << endl;
-
-				/*cout << "Best complement total: " << BestComplementTotal << endl;
-				cout << oldPrecursor << " (" << mOfPrecursorFixed << ") corrected by " << mzOfPrecursor - oldPrecursor <<
-						" to " << mzOfPrecursor << " (" << mOfPrecursor << ") " << endl;*/
-
-				cout << AdjustmentResults << endl;
-			}
-
-			if( g_rtConfig->DeisotopingMode == 0 )
-			{
-				peakPreData = originalPeakPreData;
-				//peakData = originalPeakData;
-			}
-		} else {
-			// If user doesn't want any precursor adjustment then so
-			// be it.
-			mOfPrecursorList.push_back( mOfPrecursor );
-		}
-
-		// Classify peak intensities
-		ClassifyPeakIntensities();
-		// Find complementary fragment ions
-		FindComplements( g_rtConfig->ComplementMzTolerance );
+        //swap(peakPreData, unfilteredPeakPreData);
+        NormalizePeakIntensities(); // for xcorr
+        //swap(peakPreData, unfilteredPeakPreData);
 
 		peakCount = (int) peakData.size();
-        //cout << id.id << ":" << peakCount << endl;
 
-		// Compute the total number of peak bins
-		int totalPeakBins = (int) round( totalPeakSpace / ( g_rtConfig->FragmentMzTolerance * 2.0f ), 0 );
-		// Compute the number of peaks in each intensity and m/z fidelity classes
+		// Divide the spectrum peak space into equal m/z bins
+		//cout << mzUpperBound << "," << mzLowerBound << endl;
+		double spectrumMedianMass = totalPeakSpace/2.0;
+        double fragMassError = g_rtConfig->FragmentMzTolerance;
+		//cout << fragMassError << "," << mOfPrecursor << endl;
+		int totalPeakBins = (int) round( totalPeakSpace / ( fragMassError * 2.0f ), 0 );
 		initialize( g_rtConfig->NumIntensityClasses+1, g_rtConfig->NumMzFidelityClasses );
 		for( PeakData::iterator itr = peakData.begin(); itr != peakData.end(); ++itr )
 		{
-			++ intenClassCounts[ itr->second.intenClass-1 ];
+            if (itr->second.intenClass > 0)
+			    ++ intenClassCounts[ itr->second.intenClass-1 ];
 		}
 		intenClassCounts[ g_rtConfig->NumIntensityClasses ] = totalPeakBins - peakCount;
 		//cout << id.index << ": " << intenClassCounts << endl;
 
-		// Compute the m/z fidelity score. First divide the fragment m/z tolerance (fmt) around an 
-		// expected m/z into 3 classes (user configurable) with each successive class twice as big 
-		// the previous class, e.g. 1:2:4 ratio (fmt, fmt*2, fmt*4). Compute the number of fragment
-		// ions that were matched between exprimental and theoretical spectra with a mass tolerance
-		// of fmt, fmt*2, and fmt*4 etc. Then apply multinomial dist to compute the chance of getting
-		// a random match if x number of peaks matched from class 1 (fmt), y number of peaks matched
-		// from class 2 (fmt * 2), and z number of peaks matched from class 3 (fmt * 4). This scoring
-		// is very similar to intensity scoring in MyriMatch algorithm (Journal of Proteome Reasearch;
-		// 2007; 6(2); 654-661)
         int divider = 0;
 	    for( int i=0; i < g_rtConfig->NumMzFidelityClasses-1; ++i )
 	    {
 		    divider += 1 << i;
-		    mzFidelityThresholds[i] = g_rtConfig->FragmentMzTolerance * (float)divider / (float)g_rtConfig->minMzFidelityClassCount;
+		    mzFidelityThresholds[i] = g_rtConfig->FragmentMzTolerance * (double)divider / (double)g_rtConfig->minMzFidelityClassCount;
 	    }
-	    mzFidelityThresholds.back() = g_rtConfig->FragmentMzTolerance;
+		mzFidelityThresholds.back() = g_rtConfig->FragmentMzTolerance;
         //cout << id.index << ": " << mzFidelityThresholds << endl;
- 
+
 		//totalPeakSpace = peakPreData.rbegin()->first - peakPreData.begin()->first;
 		//if( id.index == 1723 )
 		//	cout << totalPeakSpace << " " << mzUpperBound << " " << mzLowerBound << endl;
 
-		// If graphs will be drawn, the predata must be retained, otherwise it's unnecessary
-		if( !g_rtConfig->MakeSpectrumGraphs /*&& g_rtConfig->DeisotopingTestMode == 0*/ )
-			peakPreData.clear();
+        // we no longer need the raw intensities
+		peakPreData.clear();
 
+        // set fragment types
         fragmentTypes.reset();
         if( g_rtConfig->FragmentationAutoRule )
         {
-            switch( dissociationType )
+            if( dissociationTypes.count(pwiz::cv::MS_CID) > 0 )
             {
-                case pwiz::cv::MS_CID:
-                    fragmentTypes[FragmentType_B] = true;
-                    fragmentTypes[FragmentType_Y] = true;
-                    break;
-                case pwiz::cv::MS_ETD:
-                    fragmentTypes[FragmentType_C] = true;
-                    fragmentTypes[FragmentType_Z_Radical] = true;
-                    break;
-                default:
-                    break;
+                fragmentTypes[FragmentType_B] = true;
+                fragmentTypes[FragmentType_Y] = true;
+            }
+
+            if( dissociationTypes.count(pwiz::cv::MS_ETD) > 0 )
+            {
+                fragmentTypes[FragmentType_B] = false; // override CID
+                fragmentTypes[FragmentType_C] = true;
+                fragmentTypes[FragmentType_Z_Radical] = true;
             }
         }
 
         if( fragmentTypes.none() )
             fragmentTypes = g_rtConfig->defaultFragmentTypes;
 	}
+
+    void Spectrum::ClassifyPeakIntensities()
+	{
+		// Sort peaks by intensity.
+		// Use multimap because multiple peaks can have the same intensity.
+		typedef multimap< double, double > IntenSortedPeakPreData;
+		IntenSortedPeakPreData intenSortedPeakPreData;
+		for( PeakPreData::iterator itr = peakPreData.begin(); itr != peakPreData.end(); ++itr )
+		{
+			IntenSortedPeakPreData::iterator iItr = intenSortedPeakPreData.insert( make_pair( itr->second, itr->second ) );
+			iItr->second = itr->first;
+		}
+
+		// Restore the sorting order to be based on MZ
+		IntenSortedPeakPreData::reverse_iterator r_iItr = intenSortedPeakPreData.rbegin();
+        //cout << id.index << peakPreData.size() << endl;
+		peakPreData.clear();
+		peakData.clear();
+
+		for( int i=0; i < g_rtConfig->NumIntensityClasses; ++i )
+		{
+			int numFragments = (int) round( (double) ( pow( (double) g_rtConfig->ClassSizeMultiplier, i ) * intenSortedPeakPreData.size() ) / (double) g_rtConfig->minIntensityClassCount, 0 );
+			//cout << numFragments << endl;
+			for( int j=0; r_iItr != intenSortedPeakPreData.rend() && j < numFragments; ++j, ++r_iItr )
+			{
+				double mz = r_iItr->second;
+				double inten = r_iItr->first;
+				peakPreData[ mz ] = inten;
+				peakData[ mz ].intenClass = i+1;
+			}
+		}
+		intenSortedPeakPreData.clear();
+	}
+
+    // the m/z width for xcorr bins
+    const double binWidth = Proton;
+
+    #define IS_VALID_INDEX(index,length) (index >=0 && index < length ? true : false)
+
+    /* This function processes the spectra to compute the fast XCorr implemented in Crux. 
+       Ideally, this function has to be called prior to spectrum filtering.             
+    */
+    void Spectrum::NormalizePeakIntensities()
+    {
+        // Get the number of bins and bin width for the processed peak array
+        double massCutOff = mOfPrecursor + 50;
+
+        int maxBins;
+        if (massCutOff > 512)
+            maxBins = (int) ceil(massCutOff / 1024) * 1024;
+        else
+            maxBins = 512;
+        
+        // Detemine the max mass of a fragmet peak.
+        double maxPeakMass = peakPreData.rbegin()->first;
+
+        // Section the original peak array in 10 regions and find the
+        // base peak in each region. Also, square-root the peak intensities
+        const int numberOfRegions = 10;
+
+        vector<float> basePeakIntensityByRegion(numberOfRegions, 1);
+        int regionSelector = (int) (maxPeakMass / numberOfRegions);
+        for(PeakPreData::iterator itr = peakPreData.begin(); itr != peakPreData.end(); ++itr)
+        {
+            itr->second = sqrt(itr->second);
+            int mzBin = round(itr->first / binWidth);
+            int normalizationIndex = mzBin / regionSelector;
+            if( IS_VALID_INDEX( normalizationIndex,numberOfRegions ) )
+                basePeakIntensityByRegion[normalizationIndex] = max(basePeakIntensityByRegion[normalizationIndex],
+                                                                    itr->second);
+        }
+
+        // Normalize peaks in each region from 0 to 50. 
+        // Use base peak in each region for normalization. 
+        for(PeakPreData::iterator itr = peakPreData.begin(); itr != peakPreData.end(); ++itr)
+        {
+            int mzBin = round(itr->first / binWidth);
+            int normalizationIndex = mzBin / regionSelector;
+            if( IS_VALID_INDEX( normalizationIndex,numberOfRegions ) )
+                peakData[itr->first].normalizedIntensity = (itr->second / basePeakIntensityByRegion[normalizationIndex]) * 50;
+        }
+    }
+
+    // Assign an intensity of 50 to fragment ions. 
+    // Assign an intensity of 25 to bins neighboring the fragment ions.
+    // Assign an intensity of 10 to neutral losses.
+    void addXCorrFragmentIon(vector<float>& theoreticalSpectrum, double fragmentMass, int fragmentCharge)
+    {
+        int peakDataLength = theoreticalSpectrum.size();
+        int mzBin = round(fragmentMass / binWidth);
+        if( IS_VALID_INDEX( mzBin, peakDataLength ) )
+        {
+            theoreticalSpectrum[mzBin] = 50;
+
+            // Fill the neighbouring bins
+            if( IS_VALID_INDEX( (mzBin-1), peakDataLength ) )
+                theoreticalSpectrum[mzBin-1] = 25;
+            if( IS_VALID_INDEX( (mzBin+1), peakDataLength ) )
+                theoreticalSpectrum[mzBin+1] = 25;
+
+            // Neutral loss peaks
+            int NH3LossIndex = round( (fragmentMass - (AMMONIA_MONO / fragmentCharge)) / binWidth );
+            if( IS_VALID_INDEX( NH3LossIndex, peakDataLength ) )
+                theoreticalSpectrum[NH3LossIndex] = 10;
+
+            int H20LossIndex = round( (fragmentMass - (WATER_MONO / fragmentCharge)) / binWidth );
+            if ( IS_VALID_INDEX( H20LossIndex, peakDataLength ) )
+                theoreticalSpectrum[H20LossIndex] = 10;
+        }
+    }
+
+    void Spectrum::ComputeXCorrs()
+    {
+        // Get the number of bins and bin width for the processed peak array
+        double massCutOff = mOfPrecursor + 50;
+
+        int maxBins;
+        if (massCutOff > 512)
+            maxBins = (int) ceil(massCutOff / 1024) * 1024;
+        else
+            maxBins = 512;
+
+        // populate a vector representation of the peak data
+        vector<float> peakDataForXCorr(maxBins, 0);
+        int peakDataLength = peakDataForXCorr.size();
+        
+        for (PeakData::iterator itr = peakData.begin(); itr != peakData.end(); ++itr)
+        {
+            int mzBin = round(itr->first / binWidth);
+            if ( IS_VALID_INDEX(mzBin,maxBins) )
+                peakDataForXCorr[mzBin] = itr->second.normalizedIntensity;
+        }
+
+        // Compute the cumulative spectrum
+        for (int i = 0; i < peakDataLength; ++i)
+            for (int j = i - 75; j <= i + 75; ++j)
+                if ( IS_VALID_INDEX(j,maxBins) )
+                    peakDataForXCorr[i] -= (peakDataForXCorr[j] / 151);
+
+        int z = id.charge-1;
+        int maxIonCharge = max(1, z);
+
+        SearchResultSetType& resultSet = resultsByCharge[z];
+        typedef SearchResultSetType::RankMap RankMap;
+
+        if (resultSet.empty())
+            return;
+
+        RankMap resultsByRank = resultSet.byRankAndCategory();
+
+        // first=rank, second=vector of tied results
+        BOOST_FOREACH(RankMap::value_type& rank, resultsByRank)
+        BOOST_FOREACH(const SearchResultSetType::SearchResultPtr& resultPtr, rank.second)
+        {
+            const SearchResult& result = *resultPtr;
+
+            // Get the expected width of the array
+            vector<float> theoreticalSpectrum(peakDataLength, 0);
+
+            size_t seqLength = result.sequence().length();
+
+            // For each peptide bond and charge state
+            Fragmentation fragmentation = result.fragmentation(true, true);
+            for(int charge = 1; charge <= maxIonCharge; ++charge)
+            {
+                for(size_t fragIndex = 0; fragIndex < seqLength; ++fragIndex)
+                {
+                    size_t nLength = fragIndex;
+                    size_t cLength = seqLength - fragIndex;
+
+                    if(nLength > 0)
+                    {
+                        if ( fragmentTypes[FragmentType_A] )
+                            addXCorrFragmentIon(theoreticalSpectrum, fragmentation.a(nLength, charge), charge);
+                        if ( fragmentTypes[FragmentType_B] )
+                            addXCorrFragmentIon(theoreticalSpectrum, fragmentation.b(nLength, charge), charge);
+                        if ( fragmentTypes[FragmentType_C] && nLength < seqLength )
+                            addXCorrFragmentIon(theoreticalSpectrum, fragmentation.c(nLength, charge), charge);
+                    }
+
+                    if(cLength > 0)
+                    {
+                        if ( fragmentTypes[FragmentType_X] && cLength < seqLength )
+                            addXCorrFragmentIon(theoreticalSpectrum, fragmentation.x(cLength, charge), charge);
+                        if ( fragmentTypes[FragmentType_Y] )
+                            addXCorrFragmentIon(theoreticalSpectrum, fragmentation.y(cLength, charge), charge);
+                        if ( fragmentTypes[FragmentType_Z] )
+                            addXCorrFragmentIon(theoreticalSpectrum, fragmentation.z(cLength, charge), charge);
+                        if ( fragmentTypes[FragmentType_Z_Radical] )
+                            addXCorrFragmentIon(theoreticalSpectrum, fragmentation.zRadical(cLength, charge), charge);
+                    }
+                }
+            }
+            
+            double rawXCorr = 0.0;
+            for(int index = 0; index < peakDataLength; ++index)
+                rawXCorr += peakDataForXCorr[index] * theoreticalSpectrum[index];
+            (const_cast<Spectrum::SearchResultType&>(result)).XCorr = (rawXCorr / 1e4);
+        }
+    }
+
+    void Spectrum::ScoreSequenceVsSpectrum( SearchResult& result,
+                                            const string& seq,
+                                            const vector< double >& seqIons,
+                                            int NTT )
+    {
+        PeakData::iterator peakItr;
+		MvIntKey mzFidelityKey;
+        //MvIntKey& mvhKey = result.key;
+        MvIntKey mvhKey;
+
+		mvhKey.clear();
+		mvhKey.resize( g_rtConfig->NumIntensityClasses+1, 0 );
+		mzFidelityKey.resize( g_rtConfig->NumMzFidelityClasses+1, 0 );
+		result.mvh = 0.0;
+		result.mzFidelity = 0.0;
+		//result.mzSSE = 0.0;
+		//result.newMZFidelity = 0.0;
+		//result.mzMAE = 0.0;
+		result.matchedIons.clear();
+
+
+		START_PROFILER(6);
+		int totalPeaks = (int) seqIons.size();
+
+        for( size_t j=0; j < seqIons.size(); ++j )
+	    {
+		    // skip theoretical ions outside the scan range of the spectrum
+		    if( seqIons[j] < mzLowerBound ||
+			    seqIons[j] > mzUpperBound )
+		    {
+			    --totalPeaks; // one less ion to consider because it's out of the scan range
+			    continue;
+		    }
+
+
+		    START_PROFILER(7);
+		    // Find the fragment ion peak. Consider the fragment ion charge state while setting the
+		    // mass window for the fragment ion lookup.
+		    peakItr = peakData.findNear( seqIons[j], g_rtConfig->FragmentMzTolerance );
+		    STOP_PROFILER(7);
+
+		    // If a peak was found, increment the sequenceInstance's ion correlation triplet
+		    if( peakItr != peakData.end() && peakItr->second.intenClass > 0 )
+		    {
+			    double mzError = fabs( peakItr->first - seqIons[j] );
+			    ++mvhKey[ peakItr->second.intenClass-1 ];
+			    //result.mzSSE += pow( mzError, 2.0 );
+			    //result.mzMAE += mzError;
+			    ++mzFidelityKey[ ClassifyError( mzError, mzFidelityThresholds ) ];
+			    //int mzFidelityClass = ClassifyError( mzError, g_rtConfig->massErrors );
+			    //result.newMZFidelity += g_rtConfig->mzFidelityLods[mzFidelityClass];
+			    //result.matchedIons.push_back(peakItr->first);
+		    } else
+		    {
+			    ++mvhKey[ g_rtConfig->NumIntensityClasses ];
+			    //result.mzSSE += pow( 2.0 * g_rtConfig->FragmentMzTolerance, 2.0 );
+			    //result.mzMAE += 2.0 * g_rtConfig->FragmentMzTolerance;
+			    ++mzFidelityKey[ g_rtConfig->NumMzFidelityClasses ];
+		    }
+
+	    }
+		STOP_PROFILER(6);
+
+		//result.mzSSE /= totalPeaks;
+		//result.mzMAE /= totalPeaks;
+
+		// Convert the new mzFidelity score into normal domain.
+		//result.newMZFidelity = exp(result.newMZFidelity);
+
+		double mvh = 0.0;
+
+        result.fragmentsUnmatched = mvhKey.back();
+
+		START_PROFILER(8);
+		if( result.fragmentsUnmatched != totalPeaks )
+		{
+            int fragmentsPredicted = accumulate( mvhKey.begin(), mvhKey.end(), 0 );
+			result.fragmentsMatched = fragmentsPredicted - result.fragmentsUnmatched;
+
+			//int numHits = accumulate( intenClassCounts.begin(), intenClassCounts.end()-1, 0 );
+			int numVoids = intenClassCounts.back();
+			int totalPeakBins = numVoids + peakCount;
+
+			for( size_t i=0; i < intenClassCounts.size(); ++i ) {
+				mvh += lnCombin( intenClassCounts[i], mvhKey[i] );
+			}
+			mvh -= lnCombin( totalPeakBins, fragmentsPredicted );
+
+			result.mvh = -mvh;
+
+
+			int N;
+			double sum1 = 0, sum2 = 0;
+			int totalPeakSpace = numVoids + fragmentsPredicted;
+			double pHits = (double) fragmentsPredicted / (double) totalPeakSpace;
+			double pMisses = 1.0 - pHits;
+
+			N = accumulate( mzFidelityKey.begin(), mzFidelityKey.end(), 0 );
+			int p = 0;
+
+			//cout << id << ": " << mzFidelityKey << endl;
+
+			//if( id == 2347 ) cout << pHits << " " << totalPeakSpace << " " << peakData.size() << endl;
+			for( int i=0; i < g_rtConfig->NumMzFidelityClasses; ++i )
+			{
+				p = 1 << i;
+				double pKey = pHits * ( (double) p / (double) g_rtConfig->minMzFidelityClassCount );
+				//if( id == 2347 ) cout << " " << pKey << " " << mzFidelityKey[i] << endl;
+				sum1 += log( pow( pKey, mzFidelityKey[i] ) );
+				sum2 += g_lnFactorialTable[ mzFidelityKey[i] ];
+			}
+			sum1 += log( pow( pMisses, mzFidelityKey.back() ) );
+			sum2 += g_lnFactorialTable[ mzFidelityKey.back() ];
+			result.mzFidelity = -1.0 * double( ( g_lnFactorialTable[ N ] - sum2 ) + sum1 );
+
+            // Reward the MVH of the peptide according to its enzymatic status
+            result.probabilisticScore = result.mvh;
+            if (g_rtConfig->UseNETAdjustment)
+                result.probabilisticScore -= g_rtConfig->NETRewardVector[NTT];
+
+            // Penalize the score for number of modifications
+            if(g_rtConfig->PenalizeUnknownMods)
+            {
+                double modPenalty = result.numberOfOtherMods * result.probabilisticScore * 0.025 +
+                                    result.numberOfBlindMods * result.probabilisticScore * 0.05;
+                result.probabilisticScore -= modPenalty;
+            }
+            result.rankScore = result.probabilisticScore;
+		}
+
+		STOP_PROFILER(8);
+    }
 }
 }

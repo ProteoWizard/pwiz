@@ -32,6 +32,10 @@
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/zlib.hpp>
 #include <pwiz/data/proteome/Serializer_FASTA.hpp>
+#include <boost/serialization/variant.hpp>
+
+BOOST_CLASS_IMPLEMENTATION(boost::atomic_uint32_t, boost::serialization::primitive_type)
+BOOST_CLASS_IMPLEMENTATION(boost::atomic_uint64_t, boost::serialization::primitive_type)
 
 namespace freicore
 {
@@ -54,11 +58,6 @@ namespace tagrecon
 			len = (int) g_rtConfig->cfgStr.length();
 			MPI_Send( &len,									1,		MPI_INT,			p+1,	0x00, MPI_COMM_WORLD );
 			MPI_Send( (void*) g_rtConfig->cfgStr.c_str(),	len,	MPI_CHAR,			p+1,	0x01, MPI_COMM_WORLD );
-
-			// Send the residue map to all the child process
-			len = (int) g_residueMap->cfgStr.length();
-			MPI_Send( &len,									1,		MPI_INT,			p+1,	0x02, MPI_COMM_WORLD );
-			MPI_Send( (void*) g_residueMap->cfgStr.c_str(),	len,	MPI_CHAR,			p+1,	0x03, MPI_COMM_WORLD );
 		}
 	}
 
@@ -76,13 +75,6 @@ namespace tagrecon
 		g_rtConfig->cfgStr.resize( len );
 		MPI_Recv( &g_rtConfig->cfgStr[0],					len,	MPI_CHAR,			0,		0x01, MPI_COMM_WORLD, &st );
 		g_rtConfig->initializeFromBuffer( g_rtConfig->cfgStr, "\r\n#" );
-
-		// Secondly, get the residue map and parse it out.
-		g_residueMap = new ResidueMap();
-		MPI_Recv( &len,										1,		MPI_INT,			0,		0x02, MPI_COMM_WORLD, &st );
-		g_residueMap->cfgStr.resize( len );
-		MPI_Recv( &g_residueMap->cfgStr[0],					len,	MPI_CHAR,			0,		0x03, MPI_COMM_WORLD, &st );
-		g_residueMap->initializeFromBuffer( g_residueMap->cfgStr );
 	}
 
     void TransmitNETRewardsToChildProcess()
@@ -192,7 +184,7 @@ namespace tagrecon
 			{
 				float nodesPerSec = float(p+1) / totalReceiveTime;
 				float estimatedTimeRemaining = float(g_numChildren-p-1) / nodesPerSec;
-				cout << g_hostString << " has received prepared spectra from " << p+1 << " of " << g_numChildren << " worker nodes; " << nodesPerSec <<
+				cout << "Received prepared spectra from " << p+1 << " of " << g_numChildren << " worker nodes; " << nodesPerSec <<
 						" per second, " << estimatedTimeRemaining << " seconds remaining." << endl;
 				lastUpdate = totalReceiveTime;
 			}
@@ -425,7 +417,7 @@ namespace tagrecon
 
 				float spectraPerSec = float(i) / totalPrepareTime;
 				float estimatedTimeRemaining = float(numSpectra-i) / spectraPerSec;
-				cout << g_hostString << " has prepared " << i << " of " << numSpectra << " spectra; " << spectraPerSec <<
+				cout << "Prepared " << i << " of " << numSpectra << " spectra; " << spectraPerSec <<
 						" per second, " << estimatedTimeRemaining << " seconds remaining." << endl;
 				lastUpdate = totalPrepareTime;
 			}
@@ -532,7 +524,7 @@ namespace tagrecon
 		string pack = compressedStream.str();
 		int len = (int) pack.length();
 
-		cout << g_hostString << ": " << numSpectra << " spectra packed into " << len << " bytes." << endl;
+		cout << "Packed " << numSpectra << " spectra into " << len << " bytes." << endl;
 
 		Timer PrepareTime( true );
 		float totalPrepareTime = 0.01f;
@@ -558,8 +550,8 @@ namespace tagrecon
 			{
 				float nodesPerSec = float(p+1) / totalPrepareTime;
 				float estimatedTimeRemaining = float(g_numChildren-p-1) / nodesPerSec;
-				cout << g_hostString << " has sent spectra to " << p+1 << " of " << g_numChildren << " worker nodes; " << nodesPerSec <<
-						" per second, " << estimatedTimeRemaining << " seconds remaining." << endl;
+				cout << "Sent spectra to " << p+1 << " of " << g_numChildren << " worker nodes; " << round(nodesPerSec, 1) <<
+						" per second, " << round(estimatedTimeRemaining) << " seconds remaining." << endl;
 				lastUpdate = totalPrepareTime;
 			}
 		}
@@ -578,8 +570,7 @@ namespace tagrecon
 
 		vector< simplethread_handle_t > workerHandles;
 
-		int sourceProcess, batchSize, numChildQueries;
-		int numQueries = 0;
+		int sourceProcess, batchSize;
 		bool IsFinished = false;
 
 		Timer searchTime( true );
@@ -624,9 +615,6 @@ namespace tagrecon
 
 			// Get the process ID of the child process that requested the database chunk
 			MPI_Recv( &sourceProcess,			1,		MPI_INT,	MPI_ANY_SOURCE,	0xFF, MPI_COMM_WORLD, &st );
-			// Get how many processes exist in the child process
-			MPI_Recv( &numChildQueries,			1,		MPI_INT,	sourceProcess,	0xEE, MPI_COMM_WORLD, &st );
-			numQueries += numChildQueries;
 
 			if( i < numProteins )
 			{
@@ -673,17 +661,12 @@ namespace tagrecon
 					IsFinished = true;
 
 				float proteinsPerSec = float(i+1) / totalSearchTime;
-				float estimatedTimeRemaining = float(numProteins-i) / proteinsPerSec;
+				bpt::time_duration estimatedTimeRemaining(0, 0, round((numProteins - i) / proteinsPerSec));
 
-				cout << g_hostString << " has searched " << i << " of " <<	numProteins << " proteins; " << proteinsPerSec <<
-						" per second, " << totalSearchTime << " elapsed, " << estimatedTimeRemaining << " remaining." << endl;
-					
-				//cout << threadInfo->workerHostString << " has searched " << curProtein << " of " <<	threadInfo->endIndex+1 <<
-				//		" proteins " << i+1 << "; " << proteinsPerSec << " per second, " << estimatedTimeRemaining << " seconds remaining." << endl;
-				//float candidatesPerSec = numQueries / totalSearchTime;
-				//estimatedTimeRemaining = float( numCandidates - numQueries ) / candidatesPerSec;
-				//cout << g_hostString << " has made " << numQueries << " of about " << numCandidates << " comparisons; " <<
-				//		candidatesPerSec << " per second, " << estimatedTimeRemaining << " seconds remaining." << endl;
+		        cout << "Searched " << i << " of " << numProteins << " proteins; "
+                     << round(proteinsPerSec) << " per second, "
+                     << format_date_time("%H:%M:%S", bpt::time_duration(0, 0, round(totalSearchTime))) << " elapsed, "
+                     << format_date_time("%H:%M:%S", estimatedTimeRemaining) << " remaining." << endl;
 
 				lastUpdate = totalSearchTime;
 			}
@@ -697,13 +680,12 @@ namespace tagrecon
 		asks for a fresh batch of proteins for searching the spectra. The function using message-passing
 		interface to communicate with the root process.
 	*/
-	int ReceiveProteinBatchFromRootProcess( int lastQueryCount )
+	int ReceiveProteinBatchFromRootProcess()
 	{
 		int batchSize;
 
 		// Send the process id and the number of queries it has finished
 		MPI_Ssend( &g_pid,			1,				MPI_INT,	0,	0xFF, MPI_COMM_WORLD );
-		MPI_Ssend( &lastQueryCount,	1,				MPI_INT,	0,	0xEE, MPI_COMM_WORLD );
 
 		// Get the fresh batch of the proteins from the root process
 		MPI_Recv( &batchSize,		1,				MPI_INT,	0,	0x99, MPI_COMM_WORLD, &st );
@@ -752,7 +734,7 @@ namespace tagrecon
             Serializer_FASTA unpacker;
             shared_ptr<ProteomeData> subsetProteinsPtr(new ProteomeData);
             unpacker.read(proteinStream, *subsetProteinsPtr);
-            proteins = proteinStore(subsetProteinsPtr);
+            proteins = proteinStore(subsetProteinsPtr, g_rtConfig->DecoyPrefix, false);
 		} catch( exception& e )
 		{
 			cerr << g_hostString << " had an error: " << typeid(e).name() << " (" << e.what() << ")" << endl;
@@ -767,7 +749,7 @@ namespace tagrecon
 		search results to the root process. The function uses message-passing interface for communicating
 		with the root process
 	*/
-	int TransmitResultsToRootProcess( const searchStats& stats )
+	int TransmitResultsToRootProcess()
 	{
 		// Get the number of spectra
 		int numSpectra = (int) spectra.size();
@@ -777,7 +759,7 @@ namespace tagrecon
 		binary_oarchive packArchive( packStream );
 
 		packArchive & numSpectra;
-		packArchive & stats;
+		packArchive & searchStatistics;
 		for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
 		{
 			Spectrum* s = (*sItr);
@@ -822,7 +804,7 @@ namespace tagrecon
 		ReceiveResultsFromChildProcesses function receives the search results from all the process. The function
 		receives the results on a first-come-first-served basis using messge-passing interface. 
 	*/
-	int ReceiveResultsFromChildProcesses(searchStats& overallSearchStats, bool firstBatch = false)
+	int ReceiveResultsFromChildProcesses(bool firstBatch = false)
 	{
 		#ifdef MPI_DEBUG
 			cout << "master receiving results from child processes...." << endl;
@@ -866,18 +848,18 @@ namespace tagrecon
 
 			try
 			{
-				searchStats childSearchStats;
+				SearchStatistics childSearchStats;
 				packArchive & numSpectra;
 				packArchive & childSearchStats;
 				if(firstBatch)
                 {
-				    overallSearchStats = overallSearchStats + childSearchStats;
+				    searchStatistics = searchStatistics + childSearchStats;
                 }
                 else 
                 {
-                    overallSearchStats.numCandidatesQueried += childSearchStats.numCandidatesQueried;
-                    overallSearchStats.numComparisonsDone += childSearchStats.numComparisonsDone;
-                    overallSearchStats.numCandidatesSkipped += childSearchStats.numCandidatesSkipped;
+                    searchStatistics.numCandidatesQueried += childSearchStats.numCandidatesQueried;
+                    searchStatistics.numComparisonsDone += childSearchStats.numComparisonsDone;
+                    searchStatistics.numCandidatesSkipped += childSearchStats.numCandidatesSkipped;
                 }
 
 				#ifdef MPI_DEBUG
@@ -899,12 +881,24 @@ namespace tagrecon
                     rootSpectrum->numDecoyComparisons += childSpectrum->numDecoyComparisons;
 					rootSpectrum->processingTime += childSpectrum->processingTime;
                     rootSpectrum->detailedCompStats = rootSpectrum->detailedCompStats + childSpectrum->detailedCompStats;
-					for( Spectrum::SearchResultSetType::iterator itr = childSpectrum->resultSet.begin(); itr != childSpectrum->resultSet.end(); ++itr )
-						rootSpectrum->resultSet.add( *itr );
-                    for( Spectrum::SearchResultSetType::iterator itr = childSpectrum->topTargetHits.begin(); itr != childSpectrum->topTargetHits.end(); ++itr )
-						rootSpectrum->topTargetHits.add( *itr );
-                    for( Spectrum::SearchResultSetType::iterator itr = childSpectrum->topDecoyHits.begin(); itr != childSpectrum->topDecoyHits.end(); ++itr )
-						rootSpectrum->topDecoyHits.add( *itr );
+
+                    rootSpectrum->resultsByCharge.resize(childSpectrum->resultsByCharge.size());
+                    for (size_t z=0; z < childSpectrum->resultsByCharge.size(); ++z)
+                    {
+                        Spectrum::SearchResultSetType& rootResults = rootSpectrum->resultsByCharge[z];
+                        Spectrum::SearchResultSetType& childResults = childSpectrum->resultsByCharge[z];
+
+                        BOOST_FOREACH(const Spectrum::SearchResultPtr& result, childResults)
+						    rootResults.add( result );
+
+                        if (childResults.bestFullySpecificTarget().get()) rootResults.add(childResults.bestFullySpecificTarget());
+                        if (childResults.bestFullySpecificDecoy().get()) rootResults.add(childResults.bestFullySpecificDecoy());
+                        if (childResults.bestSemiSpecificTarget().get()) rootResults.add(childResults.bestSemiSpecificTarget());
+                        if (childResults.bestSemiSpecificDecoy().get()) rootResults.add(childResults.bestSemiSpecificDecoy());
+                        if (childResults.bestNonSpecificTarget().get()) rootResults.add(childResults.bestNonSpecificTarget());
+                        if (childResults.bestNonSpecificDecoy().get()) rootResults.add(childResults.bestNonSpecificDecoy());
+                    }
+
 					rootSpectrum->scoreHistogram += childSpectrum->scoreHistogram;
                     
 					delete childSpectrum;
@@ -927,7 +921,7 @@ namespace tagrecon
 			{
 				float nodesPerSec = float(p+1) / totalResultsTime;
 				float estimatedTimeRemaining = float(g_numChildren-p-1) / nodesPerSec;
-				cout << g_hostString << " has received results from " << p+1 << " of " << g_numChildren << " worker nodes; " << nodesPerSec <<
+				cout << "Received results from " << p+1 << " of " << g_numChildren << " worker nodes; " << nodesPerSec <<
 						" per second, " << estimatedTimeRemaining << " seconds remaining." << endl;
 				lastUpdate = totalResultsTime;
 			}

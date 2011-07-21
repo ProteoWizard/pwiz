@@ -26,7 +26,7 @@
 #include "UniModXMLParser.h"
 #include "tagreconConfig.h"
 #include "shared_types.h"
-#include "../freicore/BlosumMatrix.h"
+#include "BlosumMatrix.h"
 
 namespace freicore {
 	namespace tagrecon {
@@ -125,26 +125,26 @@ namespace freicore {
 					// unimod xml file to the blosum matrix file. The hack is necessary due to 
 					// the lack of target amino acid information in the substitution description
 					// of unimod xml.
-					aaLookup.insert(AminoAcidNameLookup::value_type("Gly", "G"));
-					aaLookup.insert(AminoAcidNameLookup::value_type("Ala", "A"));
-					aaLookup.insert(AminoAcidNameLookup::value_type("Ser", "S"));
-					aaLookup.insert(AminoAcidNameLookup::value_type("Pro", "P"));
-					aaLookup.insert(AminoAcidNameLookup::value_type("Val", "V"));
-					aaLookup.insert(AminoAcidNameLookup::value_type("Thr", "T"));
-					aaLookup.insert(AminoAcidNameLookup::value_type("Cys", "C"));
-					aaLookup.insert(AminoAcidNameLookup::value_type("Leu", "L"));
-					aaLookup.insert(AminoAcidNameLookup::value_type("Ile", "I"));
-					aaLookup.insert(AminoAcidNameLookup::value_type("Asn", "N"));
-					aaLookup.insert(AminoAcidNameLookup::value_type("Asp", "D"));
-					aaLookup.insert(AminoAcidNameLookup::value_type("Gln", "Q"));
-					aaLookup.insert(AminoAcidNameLookup::value_type("Lys", "K"));
-					aaLookup.insert(AminoAcidNameLookup::value_type("Glu", "E"));
-					aaLookup.insert(AminoAcidNameLookup::value_type("Met", "M"));
-					aaLookup.insert(AminoAcidNameLookup::value_type("His", "H"));
-					aaLookup.insert(AminoAcidNameLookup::value_type("Phe", "F"));
-					aaLookup.insert(AminoAcidNameLookup::value_type("Arg", "R"));
-					aaLookup.insert(AminoAcidNameLookup::value_type("Tyr", "Y"));
-					aaLookup.insert(AminoAcidNameLookup::value_type("Trp", "W"));
+					aaLookup.insert(make_pair("Gly", "G"));
+					aaLookup.insert(make_pair("Ala", "A"));
+					aaLookup.insert(make_pair("Ser", "S"));
+					aaLookup.insert(make_pair("Pro", "P"));
+					aaLookup.insert(make_pair("Val", "V"));
+					aaLookup.insert(make_pair("Thr", "T"));
+					aaLookup.insert(make_pair("Cys", "C"));
+					aaLookup.insert(make_pair("Leu", "L"));
+					aaLookup.insert(make_pair("Ile", "I"));
+					aaLookup.insert(make_pair("Asn", "N"));
+					aaLookup.insert(make_pair("Asp", "D"));
+					aaLookup.insert(make_pair("Gln", "Q"));
+					aaLookup.insert(make_pair("Lys", "K"));
+					aaLookup.insert(make_pair("Glu", "E"));
+					aaLookup.insert(make_pair("Met", "M"));
+					aaLookup.insert(make_pair("His", "H"));
+					aaLookup.insert(make_pair("Phe", "F"));
+					aaLookup.insert(make_pair("Arg", "R"));
+					aaLookup.insert(make_pair("Tyr", "Y"));
+					aaLookup.insert(make_pair("Trp", "W"));
 				}
 			}
 			// Builds MassToAminoAcidMap and InterpretationMap

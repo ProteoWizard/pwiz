@@ -31,6 +31,8 @@
 #include "PeakSpectrum.h"
 #include "simplethreads.h"
 #include "Histogram.h"
+#include <boost/thread/thread.hpp>
+#include <boost/thread/mutex.hpp>
 #include <bitset>
 
 #define IS_VALID_INDEX(index,length) (index >=0 && index < length ? true : false)
@@ -39,17 +41,19 @@ namespace freicore
 {
 namespace tagrecon
 {
-	
-    struct PeakInfo
+	struct PeakInfo
 	{
 		template< class Archive >
 		void serialize( Archive& ar, const int unsigned version )
 		{
-			ar & intenClass;
+			ar & intenClass & normalizedIntensity;
 		}
 
+        // for MVH
 		int		intenClass;
 
+        // for xcorr
+        float   normalizedIntensity;
 	};
 
 	/**!
@@ -59,8 +63,11 @@ namespace tagrecon
 	*/
 	struct SearchResult : public BaseSearchResult
 	{
-		SearchResult() : BaseSearchResult() {}
+		SearchResult() : BaseSearchResult("A") {}
 		SearchResult( const DigestedPeptide& peptide ) : BaseSearchResult(peptide) {}
+
+        bool _isDecoy;
+        bool isDecoy() const {return _isDecoy;}
 
 		double mvh;
         double mzFidelity;
@@ -93,23 +100,17 @@ namespace tagrecon
 		SearchScoreList getScoreList() const
 		{
 			SearchScoreList scoreList;
-			scoreList.push_back( SearchScoreInfo( "mvh", mvh ) );
-			scoreList.push_back( SearchScoreInfo( "massError", massError ) );
-			scoreList.push_back( SearchScoreInfo( "mzSSE", mzSSE ) );
-            scoreList.push_back( SearchScoreInfo( "mzFidelity", mzFidelity ) );
-            scoreList.push_back( SearchScoreInfo( "numPTMs", numberOfOtherMods ) );
+			scoreList.push_back( SearchScore( "mvh", mvh, MS_MyriMatch_MVH ) );
+			scoreList.push_back( SearchScore( "mzSSE", mzSSE ) );
+            scoreList.push_back( SearchScore( "mzFidelity", mzFidelity, MS_MyriMatch_mzFidelity) );
 
             if (g_rtConfig->ComputeXCorr)
-                scoreList.push_back( SearchScoreInfo( "xcorr", XCorr ) );
+                scoreList.push_back( SearchScore( "xcorr", XCorr ) );
 
-			if( g_rtConfig->CalculateRelativeScores )
-			{
-				scoreList.push_back( SearchScoreInfo( "pvalue", pvalue ) );
-				scoreList.push_back( SearchScoreInfo( "expect", expect ) );
-			}
+            scoreList.push_back( SearchScore( "numDynamicMods", numberOfOtherMods ) );
             
             if (g_rtConfig->unknownMassShiftSearchMode == BLIND_PTMS)
-                scoreList.push_back( SearchScoreInfo( "numBlindPTMs", numberOfBlindMods ) );
+                scoreList.push_back( SearchScore( "numBlindMods", numberOfBlindMods ) );
 
 			return scoreList;
 		}
@@ -159,10 +160,8 @@ namespace tagrecon
 		void serialize( Archive& ar, const unsigned int version )
 		{
 			ar & boost::serialization::base_object< BaseSearchResult >( *this );
-			ar & mvh & massError & mzSSE & mzFidelity & rankScore & XCorr & probabilisticScore;
+			ar & _isDecoy & mvh & massError & mzSSE & mzFidelity & rankScore & XCorr & probabilisticScore;
             ar & numberOfBlindMods & numberOfOtherMods;
-			if( g_rtConfig->CalculateRelativeScores )
-				ar & pvalue & expect;
 		}
 	};
 
@@ -171,25 +170,7 @@ namespace tagrecon
 	*/
 	struct Spectrum : public PeakSpectrum<PeakInfo>, SearchSpectrum<SearchResult>, TaggingSpectrum
 	{
-		Spectrum()
-			:	BaseSpectrum(), PeakSpectrum<PeakInfo>(), SearchSpectrum<SearchResult>(), TaggingSpectrum()
-		{
-			resultSet.max_size( g_rtConfig->MaxResults );
-            topTargetHits.max_size( 2 );
-            topDecoyHits.max_size( 2 );
-            //resultSet.max_size( g_rtConfig->maxResultsForInternalUse );
-			simplethread_create_mutex( &mutex );
-		}
-
-		Spectrum( const Spectrum& old )
-			:	BaseSpectrum( old ), PeakSpectrum<PeakInfo>( old ), SearchSpectrum<SearchResult>( old ), TaggingSpectrum( old )
-		{
-			resultSet.max_size( g_rtConfig->MaxResults );
-            topTargetHits.max_size( 2 );
-            topDecoyHits.max_size( 2 );
-            //resultSet.max_size( g_rtConfig->maxResultsForInternalUse );
-			simplethread_create_mutex( &mutex );
-		}
+        Spectrum() : mutex(new boost::mutex) {}
 
 		void initialize( int numIntenClasses, int numMzFidelityClasses )
 		{
@@ -197,277 +178,25 @@ namespace tagrecon
             mzFidelityThresholds.resize( numMzFidelityClasses, 0 );
 		}
 
-		~Spectrum()
-		{
-			simplethread_destroy_mutex( &mutex );
-		}
-
         void Preprocess();
-        void PreprocessForXCorr();
 
-		/**
-			ClassifyPeakIntensities function classifies peaks based on 
-			intensity. The number of classes are user defined and the
-			cardinality of each class is also user defined. Please see
-			MyriMatch publication (Journal of Proteome Research; 2007;
-			6; 654-661) for further details about the classification
-			schema.
-		*/
-		void ClassifyPeakIntensities()
-		{
-			// Sort peaks by intensity.
-			// Use multimap because multiple peaks can have the same intensity.
-			typedef multimap< float, float > IntenSortedPeakPreData;
-			IntenSortedPeakPreData intenSortedPeakPreData;
-			for( PeakPreData::iterator itr = peakPreData.begin(); itr != peakPreData.end(); ++itr )
-			{
-				IntenSortedPeakPreData::iterator iItr = intenSortedPeakPreData.insert( pair< float, float >( itr->second, itr->second ) );
-				iItr->second = itr->first;
-			}
+		int QuerySequence();
 
-			// Restore the sorting order to be based on MZ
-			IntenSortedPeakPreData::reverse_iterator r_iItr = intenSortedPeakPreData.rbegin();
-            //cout << id.index << ":" << peakPreData.size() << ":" << intenSortedPeakPreData.size() << endl;
-			peakPreData.clear();
-			peakData.clear();
+        // for MVH scoring
+		void ClassifyPeakIntensities();
 
-			// For each intensity class
-			for( int i=0; i < g_rtConfig->NumIntensityClasses; ++i )
-			{
-				// Determine total number of fragments that can be fitted into the class
-				int numFragments = (int) round( (float) ( pow( (float) g_rtConfig->ClassSizeMultiplier, i ) * intenSortedPeakPreData.size() ) / (float) g_rtConfig->minIntensityClassCount, 0 );
-				//cout << numFragments << endl;
-				// Step through the peaks and assign them the intensity class they belong to
-				for( int j=0; r_iItr != intenSortedPeakPreData.rend() && j < numFragments; ++j, ++r_iItr )
-				{
-					float mz = r_iItr->second;
-					float inten = r_iItr->first;
-					peakPreData[ mz ] = inten;
-					peakData[ mz ].intenClass = i+1;
-					if(filteredPeaks.size() < 50) {
-						filteredPeaks.insert(multimap<float,float>::value_type(mz, inten));
-					}
-				}
-			}
-            //cout << id.index << ":" << peakData.size() << endl;
-			intenSortedPeakPreData.clear();
-
-		}
+        // for XCorr scoring
+        void NormalizePeakIntensities();
 
         /* This function predicts the theoretical spectrum for a result, and computes the
             cross-correlation between the predicted spectrum and the experimental spectrum
         */
-        void ComputeXCorr(const SearchResult& result, size_t maxIonCharge)
-        {
-            if(peakDataForXCorr.size()==0)
-                return;
-            
-            // Get the expected width of the array
-            int peakDataLength = peakDataForXCorr.size();
-            float binWidth = 1.0007079f;
-            vector<float> theoreticalSpectrum;
-            theoreticalSpectrum.resize(peakDataLength);
-            fill(theoreticalSpectrum.begin(), theoreticalSpectrum.end(), 0);
-            
-            // For each peptide bond and charge state
-            // Assign an intensity of 50 to b and y ions. 
-            // Also assign an intensity of 25 to bins 
-            // bordering the b and y ions. Neutral loss
-            // and a ions are assigned an intensity of 10.
-            Fragmentation fragmentation = result.fragmentation(true, true);
-            for(size_t charge = 1; charge <= maxIonCharge; ++charge)
-            {
-                for(size_t fragIndex = 0; fragIndex < result.sequence().length(); ++fragIndex)
-                {
-                    size_t nLength = fragIndex;
-                    size_t cLength = result.sequence().length() - fragIndex;
-                    if(nLength > 0)
-                    {
-                        // B-ion
-                        float fragMass = fragmentation.b(nLength, charge);
-                        int bin = (int) (fragMass / binWidth + 0.5f);
-                        if( !IS_VALID_INDEX( bin, peakDataLength ) )
-                            continue;
-                        theoreticalSpectrum[bin] = 50;
-                        // Fill the neighbouring bins
-                        if( IS_VALID_INDEX( (bin-1), peakDataLength ) )
-                            theoreticalSpectrum[bin-1] = 25;
-                        if( IS_VALID_INDEX( (bin+1), peakDataLength ) )
-                            theoreticalSpectrum[bin+1] = 25;
-                        // Neutral loss peaks
-                        int NH3LossIndex = (int) ( ( fragMass - (AMMONIA_MONO / charge) ) / binWidth + 0.5f );
-                        if( IS_VALID_INDEX( NH3LossIndex, peakDataLength ) )
-                            theoreticalSpectrum[NH3LossIndex] = 10;
-
-                        int H20LossIndex = (int)( ( fragMass - (WATER_MONO / charge) ) / binWidth + 0.5f );
-                        if ( IS_VALID_INDEX( H20LossIndex, peakDataLength ) )
-                            theoreticalSpectrum[H20LossIndex] = 10;
-                        // A-ion
-                        fragMass = fragmentation.a(nLength, charge);
-                        bin = (int) (fragMass / binWidth + 0.5f);
-                        if( IS_VALID_INDEX( bin,peakDataLength ) )
-                            theoreticalSpectrum[bin] = 10;
-                    }
-                    if(cLength > 0)
-                    {
-                        // Y-ion
-                        float fragMass = fragmentation.y(cLength, charge);
-                        int bin = (int) (fragMass / binWidth + 0.5f);
-                        if( !IS_VALID_INDEX( bin, peakDataLength ) )
-                            continue;
-                        theoreticalSpectrum[bin] = 50;
-                        // Fill the neighbouring bins
-                        if( IS_VALID_INDEX( (bin-1), peakDataLength ) )
-                            theoreticalSpectrum[bin-1] = 25;
-                        if( IS_VALID_INDEX( (bin+1), peakDataLength ) )
-                            theoreticalSpectrum[bin+1] = 25;
-                        // Neutral loss
-                        int NH3LossIndex = (int) ( ( fragMass - (AMMONIA_MONO / charge) ) / binWidth + 0.5f );
-                        if( IS_VALID_INDEX( NH3LossIndex, peakDataLength ) )
-                            theoreticalSpectrum[NH3LossIndex] = 10;
-                    }
-                }
-            }
-            
-            double rawXCorr = 0.0;
-            for(int index = 0; index <  peakDataLength; ++index)
-                rawXCorr += peakDataForXCorr[index] * theoreticalSpectrum[index];
-            (const_cast<Spectrum::SearchResultType&>(result)).XCorr = (rawXCorr / 1e4);
-        }
-
-		/**!
-			ScoreSequenceVsSpectrum takes a peptide sequence, predicted sequence ions and experimental spectrum
-			to generate MVH and m/z fidelity scores.
-		*/
-		inline size_t ScoreSequenceVsSpectrum( SearchResult& result, const string& seq, const vector<double>& seqIons, 
-                                               int NTT, size_t numDynamicMods, size_t numUnknownMods)
-		{
-			PeakData::iterator peakItr;
-			// Holds the number of occurences of each class
-			// of mzFidelity
-            MvIntKey mzFidelityKey;
-
-			result.key.clear();
-			result.key.resize( g_rtConfig->NumIntensityClasses+1, 0 );
-            mzFidelityKey.resize( g_rtConfig->NumMzFidelityClasses+1, 0 );
-			// Compute the intensity based MVH and m/z Fidelity scores.
-			result.mvh = 0.0;
-			result.mzSSE = 0.0;
-            result.mzFidelity = 0.0;
-            result.numberOfBlindMods = numUnknownMods;
-            result.numberOfOtherMods = numDynamicMods;
-			size_t numPeaksFound = 0;
-
-			START_PROFILER(6);
-			int totalPeaks = (int) seqIons.size();
-			
-			// For each of the sequence ions
-			for( size_t j=0; j < seqIons.size(); ++j )
-			{
-				// skip theoretical ions outside the scan range of the spectrum
-				if( seqIons[j] < mzLowerBound ||
-					seqIons[j] > mzUpperBound )
-				{
-					--totalPeaks; // one less ion to consider because it's out of the scan range
-					continue;
-				}
-
-				START_PROFILER(7);
-				// Find a peak near it
-				peakItr = peakData.findNear( seqIons[j], g_rtConfig->FragmentMzTolerance );
-				STOP_PROFILER(7);
-
-				// If a peak was found, increment the sequenceInstance's ion correlation triplet
-				if( peakItr != peakData.end() )
-				{
-					numPeaksFound++;
-                    double mzError = peakItr->first - seqIons[j];
-					result.key.incrementClass( peakItr->second.intenClass-1 );
-					result.mzSSE += pow( mzError, 2.0 );
-                    mzFidelityKey.incrementClass( ClassifyError( fabs( mzError ), mzFidelityThresholds ) );
-				} else
-				{
-					result.key.incrementClass( g_rtConfig->NumIntensityClasses );
-					result.mzSSE += pow( 2.0 * g_rtConfig->FragmentMzTolerance, 2.0 );
-                    mzFidelityKey.incrementClass( g_rtConfig->NumMzFidelityClasses );
-				}
-			}
-			STOP_PROFILER(6);
-
-			// Compute squared error of the mass deviations
-			result.mzSSE /= totalPeaks;
-
-			double mvh = 0.0;
-
-			START_PROFILER(8);
-			
-			// Compute the intensity based MVH score and mzFidelity score
-			if( result.key.back() != totalPeaks )
-			{
-				// Total occurences
-				int keySum = accumulate( result.key.begin(), result.key.end(), 0 );
-				//int numHits = accumulate( intenClassCounts.begin(), intenClassCounts.end()-1, 0 );
-				// Total number of empty classes
-				int numVoids = intenClassCounts.back();
-				//int totalPeakBins = numVoids + peakCount;
-                int totalPeakBins = numVoids + peakData.size();
-
-				// Compute the MVH for intensity class
-                for( size_t i=0; i < intenClassCounts.size(); ++i ) {
-					mvh += lnCombin( intenClassCounts[i], result.key[i] );
-                }
-				
-				mvh -= lnCombin( totalPeakBins, keySum );
-                result.mvh = -mvh;
-				
-				// Variables to compute the mzFidelity class based MVH score
-                int N;
-			    double sum1 = 0, sum2 = 0;
-			    int numHits = accumulate( result.key.begin(), result.key.end(), 0 );
-                int totalPeakSpace = numVoids + numHits;
-			    double pHits = (double) numHits / (double) totalPeakSpace;
-			    double pMisses = 1.0 - pHits;
-
-				// Total number of mzFidelity classes
-                N = accumulate( mzFidelityKey.begin(), mzFidelityKey.end(), 0 );
-				int p = 0;
-
-				// For each mzFidelity class
-				for( int i=0; i < g_rtConfig->NumMzFidelityClasses; ++i )
-				{
-					// This value is always equal to 1??
-					p = 1 << i;
-					double pKey = pHits * ( (double) p / (double) g_rtConfig->minMzFidelityClassCount );
-					// Compute the sub-score of MVH
-					sum1 += log( pow( pKey, mzFidelityKey[i] ) );
-					sum2 += g_lnFactorialTable[ mzFidelityKey[i] ];
-				}
-				// Compute the sub-score for the misses
-				sum1 += log( pow( pMisses, mzFidelityKey.back() ) );
-                sum2 += g_lnFactorialTable[ mzFidelityKey.back() ];
-				// Compute the total score
-                result.mzFidelity = -1.0 * double( ( g_lnFactorialTable[ N ] - sum2 ) + sum1 );
-
-                // Penalize the mvh based on the peptide enzymatic status
-                // We take out 10% of the score for every non-conforming termini
-                //double penalizedMVH = result.mvh - (result.mvh * 0.1 * (2-NTT));
-                //result.rankScore = g_rtConfig->UseNETAdjustment ? penalizedMVH : result.mvh;
-
-                // Reward the MVH of the peptide according to its enzymatic status
-                double rewardedMVH = result.mvh + -1.0 * g_rtConfig->NETRewardVector[NTT];
-                result.probabilisticScore = g_rtConfig->UseNETAdjustment ? rewardedMVH : result.mvh;
-                // Penalize the score for number of modifications
-                if(g_rtConfig->PenalizeUnknownMods)
-                {
-                    double modPenalty = 0.0;
-                    modPenalty = numDynamicMods * result.probabilisticScore * 0.025 + result.probabilisticScore * numUnknownMods * 0.05;
-                    result.probabilisticScore -= modPenalty;
-                }
-                result.rankScore = result.probabilisticScore;
-			}
-			STOP_PROFILER(8);
-			return numPeaksFound;
-		}
+        void ComputeXCorrs();
+        
+		void ScoreSequenceVsSpectrum( SearchResult& result,
+                                      const string& seq,
+                                      const vector< double >& seqIons,
+                                      int NTT );
 
 		template< class Archive >
 		void serialize( Archive& ar, const unsigned int version )
@@ -590,33 +319,10 @@ namespace tagrecon
 			}
 		}
 
-		void CalculateRelativeScores()
-		{
-			map< size_t, PValueByMvhProbability > pValueByMvhProbabilityCache;
-			for( SearchResultSetType::iterator rItr = resultSet.begin(); rItr != resultSet.end(); ++rItr )
-			{
-				int fragmentsPredicted = accumulate( rItr->key.begin(), rItr->key.end(), 0 );
-
-				PValueByMvhProbability& pValueByMvhProbability = pValueByMvhProbabilityCache[ fragmentsPredicted ];
-				if( pValueByMvhProbability.empty() )
-				{
-					CalculateMvhProbabilities(	0, fragmentsPredicted, g_rtConfig->NumIntensityClasses+1,
-												intenClassCounts, pValueByMvhProbability, g_lnFactorialTable );
-					//cout << pValueByMvhProbability[ rItr->mvh ] << endl;
-					//cout << pValueByMvhProbability << endl;
-				}
-
-				PValueByMvhProbability::iterator pValueItr = pValueByMvhProbability.lower_bound( rItr->mvh );
-				double pvalue = ( pValueItr == pValueByMvhProbability.end() ? pValueByMvhProbability.rbegin()->second : pValueItr->second );
-				const_cast< SearchResult& >( *rItr ).pvalue = (float) pvalue;
-				const_cast< SearchResult& >( *rItr ).expect = (float) ( pvalue * (numTargetComparisons+numDecoyComparisons) );
-			}
-		}
-
 		Histogram< float >	scoreHistogram;
 		map< float, int > scores;
 
-		simplethread_mutex_t mutex;
+        boost::shared_ptr<boost::mutex> mutex;
 	};
 
 	struct SpectraList : public	PeakSpectraList< Spectrum, SpectraList >,
