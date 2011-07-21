@@ -483,8 +483,6 @@ namespace tagrecon
 			{
 				if( !g_rtConfig->UseChargeStateFromMS )
 					spectra.setId( s->id, SpectrumId( s->id.source, s->id.nativeID, 0 ) );
-                else
-                    spectra.setId( s->id, SpectrumId( s->id.source, s->id.nativeID, s->possibleChargeStates.front() ) );
 
 				if( s->id.charge == 0 )
 				{
