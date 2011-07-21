@@ -26,6 +26,7 @@
 // Code for ScanRanker, use pwiz to write high quality spectra
 #include "pwiz/data/msdata/MSDataFile.hpp"
 #include "stdafx.h"
+#include "shared_types.h"
 
 using namespace pwiz::msdata;
 
@@ -52,7 +53,7 @@ struct Config
     string outputFilename(const string& inputFilename, const string& outFilename) const;
 };
 
-int writeHighQualSpectra(const string& inputFilename, const vector<int>& spectraIndices, const string& outputFormat, const string& outputFilename);
+int writeHighQualSpectra(const string& inputFilename, const vector<NativeID>& spectrumIDs, const string& outputFormat, const string& outputFilename);
 
 }
 }

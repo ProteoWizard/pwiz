@@ -67,7 +67,7 @@ namespace directag
 	IRBinsTable SpectraList::intensityRanksumBinsTable;
 
 	Spectrum::Spectrum()
-		:	BaseSpectrum(), PeakSpectrum< PeakInfo >(), TaggingSpectrum(), SearchSpectrum< SearchResult >()
+		:	BaseSpectrum(), PeakSpectrum< PeakInfo >(), TaggingSpectrum()
 	{
 		tagList.max_size( g_rtConfig->MaxTagCount );
 
@@ -78,7 +78,7 @@ namespace directag
 	}
 
 	Spectrum::Spectrum( const Spectrum& old )
-		:	BaseSpectrum( old ), PeakSpectrum< PeakInfo >( old ), TaggingSpectrum( old ), SearchSpectrum< SearchResult >( old )
+		:	BaseSpectrum( old ), PeakSpectrum< PeakInfo >( old ), TaggingSpectrum( old )
 	{
 		scoreWeights[ "intensity" ] = intensityScoreWeight = g_rtConfig->IntensityScoreWeight;
 		scoreWeights[ "mzFidelity" ] = mzFidelityScoreWeight = g_rtConfig->MzFidelityScoreWeight;
@@ -456,28 +456,11 @@ namespace directag
 
 		tagMzRange = ((tagMzRangeUpperBound - tagMzRangeLowerBound) < 0) ? 0 : (tagMzRangeUpperBound - tagMzRangeLowerBound);
 
-		for( TagList::iterator itr = validTagList.begin(); itr != validTagList.end(); ++itr )
-		{
-			TagInfo& tag = const_cast< TagInfo& >( *itr );
-			//tag.CalculateTotal( scoreWeights );
-			tag.CalculateTotal( complementScoreWeight, intensityScoreWeight, mzFidelityScoreWeight );
-			tag.totalScore *= numTagsGenerated;
-			//for( map< string, double >::iterator scoreItr = tag.scores.begin(); scoreItr != tag.scores.end(); ++scoreItr )
-			//	scoreItr->second *= numTagsGenerated;
-			if( !g_rtConfig->AlwaysKeepValidTags )
-			{
-				if( g_rtConfig->MaxTagScore == 0 || tag.totalScore <= g_rtConfig->MaxTagScore )
-					tagList.insert( tag );
-			} else
-				tagList.insert( tag, true );
-		}
-
 		// Code for ScanRanker
 		bestTagScore = (tagList.empty()) ? 0 : tagList.rbegin()->chisquared;
 		bestTagTIC = (tagList.empty()) ? 0 : tagList.rbegin()->tagTIC;
 
 		START_PROFILER(6)
-		deallocate( validTagList );
 		deallocate( interimTagList );
 
 		deallocate( bgComplements );
@@ -652,65 +635,8 @@ namespace directag
 			newTag.totalScore = (double) tagCount;
 			newTag.chargeState = peakChargeState;
 
-			if( resultSet.empty() || g_rtConfig->InlineValidationFile.empty() )
-			{
-				interimTagList.insert( newTag );
-				
-				++ tagCount;
-			} else
-			{
-				++ tagCount;
-
-				for(	Spectrum::SearchResultSetType::reverse_iterator rItr = resultSet.rbegin();
-						rItr != resultSet.rend() && rItr->rank == 1;
-						++rItr )
-				{
-					string seq = rItr->sequence();
-
-					// Make a list of tag combinations expanding 'I' to 'I' and 'L'
-					vector< string > tagVariants;
-					TagExploder( newTag.tag, tagVariants );
-					//cout << seq << endl;
-					bool anyValidVariant = false;
-					for( size_t i=0; i < tagVariants.size(); ++i )
-					{
-						newTag.tag = tagVariants[i];
-						newTag.valid = false;
-
-						//cout << properTag << endl;
-						size_t offset = 0;
-						size_t length = tagVariants[i].length();
-
-						if( ( offset = seq.find( newTag.tag ) ) != string::npos )
-						{
-							double nTerminusMass = g_rtConfig->inlineValidationResidues.GetMassOfResidues( seq.substr( 0, offset ), g_rtConfig->UseAvgMassOfSequences );
-							double cTerminusMass = g_rtConfig->inlineValidationResidues.GetMassOfResidues( seq.substr( offset+length ), g_rtConfig->UseAvgMassOfSequences );
-							//cout << nTerminusMass << " " << nT << endl;
-							//cout << cTerminusMass << " " << cT << endl;
-							if( fabs( nTerminusMass - newTag.nTerminusMass ) < g_rtConfig->NTerminusMassTolerance &&
-								fabs( cTerminusMass - newTag.cTerminusMass ) < g_rtConfig->CTerminusMassTolerance )
-							{
-									//spectrumHasValidTag = true;
-									newTag.valid = true;
-									anyValidVariant = true;
-							}
-						}
-
-						if( newTag.valid )
-						{
-							validTagList.insert( newTag );
-						}
-					}
-
-					if( !anyValidVariant )
-					{
-						newTag.tag = tagVariants[0];
-						interimTagList.insert( newTag );
-					}
-
-				}
-			}
-
+			++ tagCount;
+			interimTagList.insert( newTag );
 		} else
 		{
 			if( gapInfoItr == gapMaps[peakChargeState-1].end() )
@@ -809,7 +735,8 @@ namespace directag
 	{
 		intensityRanksumBinsTable.clear();
 
-		cout << g_hostString << " is reading intensity ranksum bins cache file." << endl;
+        if( g_pid == 0 )
+		    cout << "Reading intensity ranksum bins cache file." << endl;
 		ifstream cacheInputFile( "directag_intensity_ranksum_bins.cache" );
 		if( cacheInputFile.is_open() )
 		{
@@ -818,7 +745,8 @@ namespace directag
 		}
 		cacheInputFile.close();
 
-		cout << g_hostString << " is calculating uncached ranksum bins (this could take a while)." << endl;
+		if( g_pid == 0 )
+		    cout << "Calculating uncached ranksum bins (this could take a while)." << endl;
 		for( iterator itr = instance.begin(); itr != instance.end(); ++itr )
 		{
 			if( intensityRanksumBinsTable.size() <= (size_t) g_rtConfig->TagLength ||
@@ -832,7 +760,7 @@ namespace directag
 
 		if( g_pid == 0 )
 		{
-			cout << g_hostString << " is writing intensity ranksum bins cache file." << endl;
+			cout << "Writing intensity ranksum bins cache file." << endl;
 			ofstream cacheOutputFile( "directag_intensity_ranksum_bins.cache" );
 			text_oarchive cacheOutputArchive( cacheOutputFile );
 			cacheOutputArchive & intensityRanksumBinsTable;

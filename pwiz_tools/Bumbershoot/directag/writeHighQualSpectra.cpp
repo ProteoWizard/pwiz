@@ -194,14 +194,35 @@ Config createConfig(const string& inFile, const string& outputFormat)
     return config;
 }
 
-void processFile(const string& filename, const Config& config, const IntegerSet& indexSet, const string& outFilename)
+
+struct SpectrumList_FilterPredicate_NativeIDSet : public SpectrumList_Filter::Predicate
+{
+    template <typename ForwardIterator>
+    SpectrumList_FilterPredicate_NativeIDSet(const ForwardIterator& begin, const ForwardIterator& end)
+        : nativeIDSet_(begin, end)
+    {}
+
+    virtual boost::logic::tribool accept(const SpectrumIdentity& spectrumIdentity) const
+    {
+        return nativeIDSet_.count(spectrumIdentity.id) > 0;
+    }
+
+    virtual bool done() const {return false;}
+
+    private:
+    set<NativeID> nativeIDSet_;
+};
+
+
+void processFile(const string& filename, const Config& config, const vector<NativeID>& spectrumIDs, const string& outFilename)
 {
     // read in data file
 
     cout << "processing file: " << filename << endl;
 
 	MSDataFile file( filename );
-	file.run.spectrumListPtr = SpectrumListPtr( new SpectrumList_Filter( file.run.spectrumListPtr, SpectrumList_FilterPredicate_IndexSet(indexSet) ) );
+    SpectrumList_FilterPredicate_NativeIDSet nativeIDFilter(spectrumIDs.begin(), spectrumIDs.end());
+	file.run.spectrumListPtr = SpectrumListPtr( new SpectrumList_Filter( file.run.spectrumListPtr, nativeIDFilter ) );
 	string outputFilename = config.outputFilename(filename,outFilename);
     cout << "writing output file: " << outputFilename << endl;
 	file.write(outputFilename, config.writeConfig);
@@ -209,13 +230,13 @@ void processFile(const string& filename, const Config& config, const IntegerSet&
 }
 
 
-int go(const Config& config, const IntegerSet& indexSet, const string& outputFilename)
+int go(const Config& config, const vector<NativeID>& spectrumIDs, const string& outputFilename)
 {
     cout << config;
     boost::filesystem::create_directories(config.outputPath);
 	try
 	{
-		processFile( config.filename, config, indexSet, outputFilename );
+		processFile( config.filename, config, spectrumIDs, outputFilename );
 	}
 	catch (exception& e)
    {
@@ -228,26 +249,14 @@ int go(const Config& config, const IntegerSet& indexSet, const string& outputFil
 
 
 int writeHighQualSpectra(	const string& inputFilename,
-							const vector<int>& spectraIndices,
+							const vector<NativeID>& spectrumIDs,
 							const string& outputFormat,
 							const string& outputFilename) 
 {
-	/*
-freicore::BaseSpectrum::id.index maps to the pwiz::Spectrum::index
-freicore::BaseSpectrum::nativeID maps to pwiz::Spectrum::id
-scanNumber assumes it's a thermo nativeID. It's index+1 basically. Unless it has been resorted or filtered somehow. Use index
-index is the place that that <scan> appears in the list of scans
-*/
-	IntegerSet indexSet;
-	for( vector<int>::const_iterator itr = spectraIndices.begin(); itr != spectraIndices.end(); ++itr)
-	{
-		indexSet.insert(*itr);
-	}
-
     try
     {
         Config config = createConfig(inputFilename, outputFormat);        
-        return go(config, indexSet, outputFilename);
+        return go(config, spectrumIDs, outputFilename);
     }
     catch (exception& e)
     {

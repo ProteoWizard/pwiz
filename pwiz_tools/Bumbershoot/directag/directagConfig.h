@@ -29,24 +29,15 @@
 
 using namespace freicore;
 
-#define TAG_ONLY_HITS	0
-#define TAG_ALWAYS		1
-#define TAG_ONLY_MISSES	2
-
 #define DIRECTAG_RUNTIME_CONFIG \
-	COMMON_RTCONFIG SPECTRUM_RTCONFIG SEQUENCE_RTCONFIG MULTITHREAD_RTCONFIG VALIDATION_RTCONFIG \
-	RTCONFIG_VARIABLE( string,			OutputSuffix,				"-tags"			) \
-	RTCONFIG_VARIABLE( string,			InlineValidationFile,		""				) \
-	RTCONFIG_VARIABLE( int,				InlineValidationMode,		TAG_ONLY_HITS	) \
-	RTCONFIG_VARIABLE( bool,			AlwaysKeepValidTags,		true			) \
+	COMMON_RTCONFIG MULTITHREAD_RTCONFIG \
+	RTCONFIG_VARIABLE( string,			OutputSuffix,				""			    ) \
 	RTCONFIG_VARIABLE( int,				MaxTagCount,				50				) \
 	RTCONFIG_VARIABLE( double,			MaxTagScore,				20.0			) \
 	RTCONFIG_VARIABLE( int,				NumIntensityClasses,		3				) \
 	RTCONFIG_VARIABLE( int,				NumMzFidelityClasses,		3				) \
+    RTCONFIG_VARIABLE( int,				NumBatches,					50				) \
 	RTCONFIG_VARIABLE( int,				TagLength,					3				) \
-	RTCONFIG_VARIABLE( int,				StartSpectraScanNum,		0				) \
-	RTCONFIG_VARIABLE( int,				EndSpectraScanNum,			-1				) \
-	RTCONFIG_VARIABLE( int,				NumBatches,					50				) \
 	RTCONFIG_VARIABLE( double,			TicCutoffPercentage,		1.0			) \
 	RTCONFIG_VARIABLE( size_t,			MaxPeakCount,				100				) \
 	RTCONFIG_VARIABLE( double,			ClassSizeMultiplier,		2.0			) \
@@ -61,6 +52,16 @@ using namespace freicore;
 	RTCONFIG_VARIABLE( int,				MzFidelityErrorBinsSamples,	10000		) \
 	RTCONFIG_VARIABLE( double,			MzFidelityErrorBinsLogMin,	-5.0			) \
 	RTCONFIG_VARIABLE( double,			MzFidelityErrorBinsLogMax,	1.0			) \
+	RTCONFIG_VARIABLE( double,			PrecursorMzTolerance,		1.5					) \
+	RTCONFIG_VARIABLE( double,			FragmentMzTolerance,		0.5				    ) \
+	RTCONFIG_VARIABLE( double,			ComplementMzTolerance,		0.5				    ) \
+	RTCONFIG_VARIABLE( double,			IsotopeMzTolerance,			0.25				) \
+	RTCONFIG_VARIABLE( bool,			DuplicateSpectra,			true				) \
+	RTCONFIG_VARIABLE( bool,			UseChargeStateFromMS,		true				) \
+    RTCONFIG_VARIABLE( string,			DynamicMods,				""		            ) \
+	RTCONFIG_VARIABLE( int,				MaxDynamicMods,				2					) \
+	RTCONFIG_VARIABLE( string,			StaticMods,					""					) \
+    RTCONFIG_VARIABLE( string,          SpectrumListFilters,        "peakPicking true 2-"   ) \
 	\
 	RTCONFIG_VARIABLE( double,			IntensityScoreWeight,		1.0			) \
 	RTCONFIG_VARIABLE( double,			MzFidelityScoreWeight,		1.0			) \
@@ -151,7 +152,7 @@ namespace directag
 			{
 				TicCutoffPercentage /= 100.0f;
 				if( g_pid == 0 )
-					cerr << g_hostString << ": TicCutoffPercentage > 1.0 (100%) corrected, now at: " << TicCutoffPercentage << endl;
+					cerr << "TicCutoffPercentage > 1.0 (100%) corrected, now at: " << TicCutoffPercentage << endl;
 			}
 
 			if( !DynamicMods.empty() )

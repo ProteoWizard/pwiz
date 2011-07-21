@@ -25,7 +25,10 @@
 #include "Histogram.h"
 #include "pwiz/data/msdata/Version.hpp"
 #include "pwiz/data/proteome/Version.hpp"
-#include "svnrev.hpp"
+#include "directagVersion.hpp"
+#include <boost/lockfree/fifo.hpp>
+#include <boost/thread/thread.hpp>
+#include <boost/thread/mutex.hpp>
 
 //#include "ranker.h"
 #include "writeHighQualSpectra.h"
@@ -36,16 +39,16 @@ namespace freicore
 {
 namespace directag
 {
-    SpectraList                  spectra;
-	map< char, float >           compositionInfo;
+    SpectraList                         spectra;
+    boost::lockfree::fifo<Spectrum*>    taggingTasks;
+    TaggingStatistics                   taggingStatistics;
+	map< char, float >                  compositionInfo;
 
 	RunTimeConfig*               g_rtConfig;
 
-	simplethread_mutex_t         resourceMutex;
-
 	// Code for ScanRanker
-	vector<int>				mergedSpectraIndices;
-	vector<int>				highQualSpectraIndices;
+	vector<NativeID>		mergedSpectraIndices;
+	vector<NativeID>		highQualSpectraIndices;
 	float					bestTagScoreMean;
 	float					bestTagTICMean;
 	float					tagMzRangeMean;
@@ -55,17 +58,6 @@ namespace directag
 	size_t					numTaggedSpectra;
 
 
-    int Version::Major()                {return 1;}
-    int Version::Minor()                {return 3;}
-    int Version::Revision()             {return SVN_REV;}
-    string Version::LastModified()      {return SVN_REVDATE;}
-    string Version::str()               
-    {
-    	std::ostringstream v;
-    	v << Major() << "." << Minor() << "." << Revision();
-    	return v.str();
-    }
-
 	double lnCombin( int a, int b ) { return lnCombin( a, b, g_lnFactorialTable ); }
 	float GetMassOfResidues( const string& a, bool b ) { return g_residueMap->GetMassOfResidues( a, b ); }
 
@@ -74,8 +66,6 @@ namespace directag
 								string startDate,
 								float totalTaggingTime )
 	{
-		cout << g_hostString << " is generating output of tags." << endl;
-
 		string filenameAsScanName;
 		filenameAsScanName =	inputFilename.substr( inputFilename.find_last_of( SYS_PATH_SEPARATOR )+1,
 								inputFilename.find_last_of( '.' ) - inputFilename.find_last_of( SYS_PATH_SEPARATOR )-1 );
@@ -100,88 +90,8 @@ namespace directag
 					"H\tOriginal (filtered) peak count at 1st/2nd/3rd quartiles: " <<	opcs[2] << " (" << fpcs[2] << "), " <<
 																						opcs[3] << " (" << fpcs[3] << "), " <<
 																						opcs[4] << " (" << fpcs[4] << ")\n";*/
-		if( !g_rtConfig->InlineValidationFile.empty() )
-		{
-			ofstream classCountsFile( string( filenameAsScanName + g_rtConfig->OutputSuffix + "-class-counts.txt" ).c_str() );
-			classCountsFile << "<SpectrumId>\t<MatchedIonIntensityRankHistogram>\n";
 
-			//ofstream scoreHistogramsFile( string( filenameAsScanName + g_rtConfig->OutputSuffix + "-histograms.txt" ).c_str() );
-			Histogram<int> totalMatchedIonRanks;
-			Histogram<int> totalMatchedBIonRanks;
-			Histogram<int> totalMatchedYIonRanks;
-			Histogram<int> totalMatchedYWaterLossRanks;
-			Histogram<int> totalMatchedBWaterLossRanks;
-			Histogram<int> totalMatchedYAmmoniaLossRanks;
-			Histogram<int> totalMatchedBAmmoniaLossRanks;
-			Histogram<int> totalLongestPathRanks;
-			Histogram<int> totalValidLongestPathRanks;
-			Histogram<int> totalIntensityRanksums;
-			Histogram<int> totalValidIntensityRanksums;
-			//Spectrum* s;
-			map< float, int > scoreToRanksumMap;
-
-			/*for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
-			{
-				s = *sItr;
-
-				for( TagList::iterator tItr = s->tagList.begin(); tItr != s->tagList.end(); ++tItr )
-				{
-					++ totalIntensityRanksums[tItr->ranksum];// += itr->second;
-					if( tItr->valid )
-						++ totalValidIntensityRanksums[tItr->ranksum];// += itr->second;
-				}
-
-				if( !s->resultSet.empty() )
-				{
-					Histogram<int> matchedIonRanks;
-					SearchResultSet::reverse_iterator itr = s->resultSet.rbegin();
-					vector< float > ionMasses;
-					vector< string > ionLabels;
-					bool allIonTypes[4] = { true, true, true, true };
-					CalculateSequenceIons( itr->sequence, s->id.charge, &ionMasses, g_rtConfig->UseSmartPlusThreeModel, &ionLabels, 0, allIonTypes, &g_rtConfig->inlineValidationResidues );
-
-					for( size_t i=0; i < ionMasses.size(); ++i )
-					{
-						PeakData::iterator pItr = s->peakData.findNear( ionMasses[i], g_rtConfig->FragmentMzTolerance );
-						if( pItr != s->peakData.end() )
-						{
-							++ matchedIonRanks[ pItr->second.intensityRank ];
-							++ totalMatchedIonRanks[ pItr->second.intensityRank ];
-							if( ionLabels[i][0] == 'y' )
-							{
-								if( ionLabels[i].find( "H2O" ) != string::npos )
-									++totalMatchedYWaterLossRanks[ pItr->second.intensityRank ];
-								else if( ionLabels[i].find( "NH3" ) != string::npos )
-									++totalMatchedYAmmoniaLossRanks[ pItr->second.intensityRank ];
-								else
-									++totalMatchedYIonRanks[ pItr->second.intensityRank ];
-							} else if( ionLabels[i][0] == 'b' )
-							{
-								if( ionLabels[i].find( "H2O" ) != string::npos )
-									++totalMatchedBWaterLossRanks[ pItr->second.intensityRank ];
-								else if( ionLabels[i].find( "NH3" ) != string::npos )
-									++totalMatchedBAmmoniaLossRanks[ pItr->second.intensityRank ];
-								else
-									++totalMatchedBIonRanks[ pItr->second.intensityRank ];
-							}
-						}
-					}
-				}
-			}*/
-			classCountsFile << "total\t" << totalMatchedIonRanks << endl;
-			classCountsFile << "Ys\t" << totalMatchedYIonRanks << endl;
-			classCountsFile << "Bs\t" << totalMatchedBIonRanks << endl;
-			classCountsFile << "Y-H2Os\t" << totalMatchedYWaterLossRanks << endl;
-			classCountsFile << "B-H2Os\t" << totalMatchedBWaterLossRanks << endl;
-			classCountsFile << "Y-NH3s\t" << totalMatchedYAmmoniaLossRanks << endl;
-			classCountsFile << "B-NH3s\t" << totalMatchedBAmmoniaLossRanks << endl;
-			classCountsFile << "AllIntensityRanksums" << totalIntensityRanksums << endl;
-			classCountsFile << "ValidIntensityRanksums" << totalValidIntensityRanksums << endl;
-			classCountsFile << "AllLongestPathRanks" << totalLongestPathRanks << endl;
-			classCountsFile << "ValidLongestPathRanks" << totalValidLongestPathRanks << endl;
-		}
-
-		cout << g_hostString << " is writing tags to \"" << outputFilename << "\"." << endl;
+		cout << "Writing tags to \"" << outputFilename << "\"." << endl;
 		spectra.writeTags( inputFilename, g_rtConfig->OutputSuffix, header.str(), g_rtConfig->getVariables() );
 		spectra.clear();
 	}
@@ -189,7 +99,7 @@ namespace directag
 	// Code for writing ScanRanker metrics file
 	void WriteSpecQualMetrics( const string& inputFilename, SpectraList& instance, const string& outFilename)
 	{
-		cout << g_hostString << " is generating output of quality metrics." << endl;
+		cout << "Generating output of quality metrics." << endl;
 		string filenameAsScanName;
 		filenameAsScanName =	inputFilename.substr( inputFilename.find_last_of( SYS_PATH_SEPARATOR )+1,
 								inputFilename.find_last_of( '.' ) - inputFilename.find_last_of( SYS_PATH_SEPARATOR )-1 );
@@ -208,18 +118,17 @@ namespace directag
 					<< tagMzRangeIQR << '\t'
 					<< numTaggedSpectra << "\n";
 		fileStream << "H\tIndex\tNativeID\tPrecursorMZ\tCharge\tPrecursorMass\tBestTagScore\tBestTagTIC\tTagMzRange\tScanRankerScore\n" ;
-		vector<int> seen;
+		set<NativeID> seen;
 		Spectrum* s;
 		for( SpectraList::iterator sItr = instance.begin(); sItr != instance.end(); ++sItr )
 		{
 			s = *sItr;
 			float logBestTagTIC = (s->bestTagTIC == 0) ? 0 : (log( s->bestTagTIC ));
-			vector<int>::iterator found = find(seen.begin(),seen.end(), s->id.index );
-			if( found == seen.end() )    // only write out metrics of best scored spectrum if existing multiple charge states
+            pair<set<NativeID>::iterator, bool> insertResult = seen.insert(s->id.nativeID);
+			if( !insertResult.second ) // only write out metrics of best scored spectrum if existing multiple charge states
 			{
-				seen.push_back( s->id.index );
 				fileStream	<< "S" << '\t'
-							<< s->id.index << '\t'
+							<< s->nativeID << '\t'
 							<< s->nativeID << '\t'
 							<< s->mzOfPrecursor << '\t'
 							<< s->id.charge << '\t'
@@ -301,9 +210,9 @@ namespace directag
 	{
 		Timer timer;
 
-		if( g_numChildren == 0 )
+		if( g_pid == 0 )
 		{
-			cout << g_hostString << " is trimming spectra with less than " << 10 << " peaks." << endl;
+			cout << "Trimming spectra with less than " << 10 << " peaks." << endl;
 		}
 
 		int preTrimCount = 0;
@@ -318,26 +227,26 @@ namespace directag
 			throw runtime_error( "trimming spectra" );
 		}
 
-		if( g_numChildren == 0 )
+		if( g_pid == 0 )
 		{
-			cout << g_hostString << " trimmed " << preTrimCount << " spectra for being too small before peak filtering." << endl;
-			cout << g_hostString << " is determining spectrum charge states from " << spectra.size() << " spectra." << endl;
+			cout << "Trimmed " << preTrimCount << " spectra for being too small before peak filtering." << endl;
+			cout << "Determining spectrum charge states from " << spectra.size() << " spectra." << endl;
 		}
 
 		timer.Begin();
 		SpectraList duplicates;
-		for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
+		BOOST_FOREACH(Spectrum* s, spectra)
 		{
 			try
 			{
 				if( !g_rtConfig->UseChargeStateFromMS )
-						spectra.setId( (*sItr)->id, SpectrumId( (*sItr)->id.index, 0 ) );
+					spectra.setId( s->id, SpectrumId( s->id.nativeID, 0 ) );
 
-				if( (*sItr)->id.charge == 0 )
+				if( s->id.charge == 0 )
 				{
-					SpectrumId preChargeId( (*sItr)->id );
-					(*sItr)->DetermineSpectrumChargeState();
-					SpectrumId postChargeId( (*sItr)->id );
+					SpectrumId preChargeId( s->id );
+					s->DetermineSpectrumChargeState();
+					SpectrumId postChargeId( s->id );
 
 					if( postChargeId.charge == 0 )
 					{
@@ -347,7 +256,7 @@ namespace directag
 						{
 							for( int z = 3; z <= g_rtConfig->NumChargeStates; ++z )
 							{
-								Spectrum* s = new Spectrum( *(*sItr) );
+								Spectrum* s = new Spectrum( *s );
 								s->id.setCharge(z);
 								duplicates.push_back(s);
 							}
@@ -359,10 +268,10 @@ namespace directag
 
 			} catch( exception& e )
 			{
-				throw runtime_error( string( "duplicating scan " ) + string( (*sItr)->id ) + ": " + e.what() );
+				throw runtime_error( string( "duplicating scan " ) + string( s->id ) + ": " + e.what() );
 			} catch( ... )
 			{
-				throw runtime_error( string( "duplicating scan " ) + string( (*sItr)->id ) );
+				throw runtime_error( string( "duplicating scan " ) + string( s->id ) );
 			}
 		}
 
@@ -378,10 +287,10 @@ namespace directag
 			throw runtime_error( "adding duplicated spectra" );
 		}
 
-		if( g_numChildren == 0 )
+		if( g_pid == 0 )
 		{
-			cout << g_hostString << " finished determining spectrum charge states; " << timer.End() << " seconds elapsed." << endl;
-			cout << g_hostString << " is filtering peaks in " << spectra.size() << " spectra." << endl;
+			cout << "Finished determining spectrum charge states; " << timer.End() << " seconds elapsed." << endl;
+			cout << "Filtering peaks in " << spectra.size() << " spectra." << endl;
 		}
 
 		timer.Begin();
@@ -402,198 +311,134 @@ namespace directag
 			}
 		}
 
-		if( g_numChildren == 0 )
-			cout << g_hostString << " finished filtering peaks; " << timer.End() << " seconds elapsed." << endl;
+		if( g_pid == 0 )
+			cout << "Finished filtering peaks; " << timer.End() << " seconds elapsed." << endl;
 
 		int postTrimCount = 0;
 		postTrimCount = spectra.filterByPeakCount( g_rtConfig->minIntensityClassCount );
 
-		if( g_numChildren == 0 )
-			cout << g_hostString << " trimmed " << postTrimCount << " spectra for being too small after peak filtering." << endl;
+		if( g_pid == 0 )
+			cout << "Trimmed " << postTrimCount << " spectra for being too small after peak filtering." << endl;
 	}
 
 	vector< int > workerNumbers;
 	int numSearched;
 
-	simplethread_return_t ExecutePipelineThread( simplethread_arg_t threadArg )
+	void ExecutePipelineThread()
 	{
-		simplethread_lock_mutex( &resourceMutex );
-		simplethread_id_t threadId = simplethread_get_id();
-		WorkerThreadMap* threadMap = (WorkerThreadMap*) threadArg;
-		WorkerInfo* threadInfo = reinterpret_cast< WorkerInfo* >( threadMap->find( threadId )->second );
-		int numThreads = (int) threadMap->size();
-		if( g_numChildren == 0 )
-			cout << threadInfo->workerHostString << " is initialized." << endl;
-		simplethread_unlock_mutex( &resourceMutex );
+        try
+        {
+            Spectrum* taggingTask;
+	        while( true )
+	        {
+                if (!taggingTasks.dequeue(&taggingTask))
+			        break;
 
-		bool done;
-		Timer executionTime(true);
-		float totalExecutionTime = 0;
-		float lastUpdate = 0;
+			    Spectrum* s = taggingTask;
+			    ++ taggingStatistics.numSpectraTagged;
 
-		while( true )
-		{
-			simplethread_lock_mutex( &resourceMutex );
-			done = workerNumbers.empty();
-			if( !done )
-			{
-				threadInfo->workerNum = workerNumbers.back();
-				workerNumbers.pop_back();
-			}
-			simplethread_unlock_mutex( &resourceMutex );
+			    //s->DetermineSpectrumChargeState();
+			    START_PROFILER(0)
+			    s->Preprocess();
+			    STOP_PROFILER(0)
 
-			if( done )
-				break;
+			    if( (int) s->peakPreData.size() < g_rtConfig->minIntensityClassCount )
+				    continue;
 
-			threadInfo->endIndex = ( spectra.size() / g_numWorkers )-1;
+			    START_PROFILER(1)
+			    taggingStatistics.numResidueMassGaps += s->MakeTagGraph();
+			    STOP_PROFILER(1)
 
-			//cout << threadInfo->workerHostString << " " << numProteins << " " << g_numWorkers << endl;
+			    s->MakeProbabilityTables();
 
-			Spectrum* s;
-			SpectraList::iterator sItr = spectra.begin();
-			for(	advance_to_bound( sItr, spectra.end(), threadInfo->workerNum );
-					sItr != spectra.end();
-					advance_to_bound( sItr, spectra.end(), g_numWorkers ) )
-			{
-				s = (*sItr);
-				++ threadInfo->stats.numSpectraTagged;
+			    //s->tagGraphs.clear();
+			    //s->nodeSet.clear();
+			    deallocate(s->nodeSet);
 
-				//s->DetermineSpectrumChargeState();
-				START_PROFILER(0)
-				s->Preprocess();
-				STOP_PROFILER(0)
+			    START_PROFILER(2)
+			    taggingStatistics.numTagsGenerated += s->Score();
+			    STOP_PROFILER(2)
 
-				if( (int) (*sItr)->peakPreData.size() < g_rtConfig->minIntensityClassCount )
-					continue;
+			    taggingStatistics.numTagsRetained += s->tagList.size();
 
-				START_PROFILER(1)
-				threadInfo->stats.numResidueMassGaps += s->MakeTagGraph();
-				STOP_PROFILER(1)
-
-				s->MakeProbabilityTables();
-
-				//s->tagGraphs.clear();
-				//s->nodeSet.clear();
-				deallocate(s->nodeSet);
-
-				START_PROFILER(2)
-				threadInfo->stats.numTagsGenerated += s->Score();
-				STOP_PROFILER(2)
-
-				threadInfo->stats.numTagsRetained += s->tagList.size();
-
-				//s->gapMaps.clear();
-				//s->tagGraphs.clear();
-				deallocate(s->gapMaps);
-				deallocate(s->tagGraphs);
-				if( ( !g_rtConfig->MakeSpectrumGraphs && g_rtConfig->InlineValidationFile.empty() ) )
-				{
-					//s->peakPreData.clear();
-					//s->peakData.clear();
-					deallocate(s->peakPreData);
-					deallocate(s->peakData);
-				}
-
-				if( g_numChildren == 0 )
-					totalExecutionTime = executionTime.TimeElapsed();
-
-				if( g_numChildren == 0 && ( ( totalExecutionTime - lastUpdate > g_rtConfig->StatusUpdateFrequency ) || s->id == ((*spectra.rbegin())->id) ) )
-				{
-					//int curSpectrum = ( i + 1 ) / g_numWorkers;
-					float spectraPerSec = float( threadInfo->stats.numSpectraTagged ) / totalExecutionTime;
-					float estimatedTimeRemaining = float( spectra.size() - threadInfo->stats.numSpectraTagged ) / spectraPerSec / numThreads;
-
-					simplethread_lock_mutex( &resourceMutex );
-					cout << threadInfo->workerHostString << " has sequence tagged " << threadInfo->stats.numSpectraTagged << " of " << spectra.size() <<
-							" spectra; " << spectraPerSec << " per second, " << totalExecutionTime << " elapsed, " << estimatedTimeRemaining << " remaining." << endl;
-					cout << threadInfo->workerHostString << " stats: " << 1 << " / " <<
-							threadInfo->stats.numSpectraTagged << " / " <<	
-							threadInfo->stats.numResidueMassGaps << " / " <<
-							threadInfo->stats.numTagsGenerated << " / " <<
-							threadInfo->stats.numTagsRetained << endl;
-
-					PRINT_PROFILERS( cout, threadInfo->workerHostString + " profiling" )
-
-					simplethread_unlock_mutex( &resourceMutex );
-
-					lastUpdate = totalExecutionTime;
-				}
-			}
-
-		}
-
-		return 0;
+			    //s->gapMaps.clear();
+			    //s->tagGraphs.clear();
+			    deallocate(s->gapMaps);
+			    deallocate(s->tagGraphs);
+			    if( !g_rtConfig->MakeSpectrumGraphs )
+			    {
+				    //s->peakPreData.clear();
+				    //s->peakData.clear();
+				    deallocate(s->peakPreData);
+				    deallocate(s->peakData);
+			    }
+		    }
+        } catch( std::exception& e )
+        {
+            cerr << " terminated with an error: " << e.what() << endl;
+        } catch(...)
+        {
+            cerr << " terminated with an unknown error." << endl;
+        }
 	}
-}
-}
 
-namespace std {
-	ostream& operator<< ( ostream& o, const list< freicore::directag::Spectrum* >::iterator& itr )
+    void ExecutePipeline()
 	{
-		return o << "itr";//*itr;
-	}
-}
-
-namespace freicore {
-namespace directag {
-	taggingStats ExecutePipeline()
-	{
-		WorkerThreadMap workerThreads;
-		int numProcessors = g_numWorkers;
-
-		//if( !g_rtConfig->UseMultipleProcessors )
-		//	numProcessors = 1;
-
 		int numSpectra = (int) spectra.size();
 
 		float maxPeakSpace = 0;
 		for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
+        {
+			taggingTasks.enqueue(*sItr);
 			if( (*sItr)->totalPeakSpace > maxPeakSpace )
 				maxPeakSpace = (*sItr)->totalPeakSpace;
+        }
 
 		//cout << "Resizing lnTable to " << maxPeakSpace << endl;
 		g_lnFactorialTable.resize( (int) ceil( maxPeakSpace ) );
 
-		if( g_rtConfig->UseMultipleProcessors && g_numWorkers > 1 )
-		{
-			g_numWorkers = min( numSpectra, g_numWorkers * g_rtConfig->ThreadCountMultiplier );
+        bpt::ptime start = bpt::microsec_clock::local_time();
 
-			for( int i=0; i < g_numWorkers; ++i )
-				workerNumbers.push_back(i);
+        boost::thread_group workerThreadGroup;
+        vector<boost::thread*> workerThreads;
 
-			simplethread_handle_array_t workerHandles;
+		for (int i = 0; i < g_numWorkers; ++i)
+            workerThreads.push_back(workerThreadGroup.create_thread(&ExecutePipelineThread));
 
-			simplethread_lock_mutex( &resourceMutex );
-			for( int t = 0; t < numProcessors; ++t )
-			{
-				simplethread_id_t threadId;
-				simplethread_handle_t threadHandle = simplethread_create_thread( &threadId, &ExecutePipelineThread, &workerThreads );
-				workerThreads[ threadId ] = new WorkerInfo( t, 0, 0 );
-				workerHandles.array.push_back( threadHandle );
-			}
-			simplethread_unlock_mutex( &resourceMutex );
+        if (g_numChildren > 0)
+        {
+            // MPI jobs do a simple join_all
+            workerThreadGroup.join_all();
+        }
+        else
+        {
+            bpt::ptime lastUpdate = start;
 
-			simplethread_join_all( &workerHandles );
-			//cout << g_hostString << " tagged " << numSearched << " of " << spectra.size() << " spectra." << endl;
+            for (int i=0; i < g_numWorkers; ++i)
+            {
+                // returns true if the thread finished before the timeout;
+                // (each thread index is joined until it finishes)
+                if (!workerThreads[i]->timed_join(bpt::seconds(round(g_rtConfig->StatusUpdateFrequency))))
+                    --i;
 
-		} else
-		{
-			//cout << g_hostString << " is preparing " << numSpectra << " unprepared spectra." << endl;
-			g_numWorkers = 1;
-			workerNumbers.push_back(0);
-			simplethread_id_t threadId = simplethread_get_id();
-			workerThreads[ threadId ] = new WorkerInfo( 0, 0, 0 );
-			ExecutePipelineThread( &workerThreads );
-		}
+                bpt::ptime current = bpt::microsec_clock::local_time();
 
-		taggingStats stats;
+                // only make one update per StatusUpdateFrequency seconds
+                if ((current - lastUpdate).total_microseconds() / 1e6 < g_rtConfig->StatusUpdateFrequency)
+                    continue;
 
-		for( WorkerThreadMap::iterator itr = workerThreads.begin(); itr != workerThreads.end(); ++itr )
-			stats = stats + reinterpret_cast< WorkerInfo* >( itr->second )->stats;
+                lastUpdate = current;
+                bpt::time_duration elapsed = current - start;
 
-		g_numWorkers = numProcessors;
+			    float spectraPerSec = static_cast<float>(taggingStatistics.numSpectraTagged) / elapsed.total_microseconds() * 1e6;
+                bpt::time_duration estimatedTimeRemaining(0, 0, round((numSpectra - taggingStatistics.numSpectraTagged) / spectraPerSec));
 
-		return stats;
+		        cout << "Sequence tagged " << taggingStatistics.numSpectraTagged << " of " << numSpectra << " spectra; "
+                     << round(spectraPerSec) << " per second, "
+                     << format_date_time("%H:%M:%S", bpt::time_duration(0, 0, elapsed.total_seconds())) << " elapsed, "
+                     << format_date_time("%H:%M:%S", estimatedTimeRemaining) << " remaining." << endl;
+		    }
+        }
 	}
 
 	int InitProcess( argList_t& args )
@@ -641,7 +486,7 @@ namespace directag {
 				{
 					if( g_rtConfig->initializeFromFile( args[i+1] ) )
 					{
-						cerr << g_hostString << " could not find runtime configuration at \"" << args[i+1] << "\"." << endl;
+						cerr << "Could not find runtime configuration at \"" << args[i+1] << "\"." << endl;
 						return 1;
 					}
 					args.erase( args.begin() + i );
@@ -650,7 +495,7 @@ namespace directag {
 				{
 					if( g_residueMap->initializeFromFile( args[i+1] ) )
 					{
-						cerr << g_hostString << " could not find residue masses at \"" << args[i+1] << "\"." << endl;
+						cerr << "Could not find residue masses at \"" << args[i+1] << "\"." << endl;
 						return 1;
 					}
 					args.erase( args.begin() + i );
@@ -671,7 +516,7 @@ namespace directag {
 			{
 				if( g_rtConfig->initializeFromFile() )
 				{
-					cerr << g_hostString << " could not find the default configuration file (hard-coded defaults in use)." << endl;
+					cerr << "Could not find the default configuration file (hard-coded defaults in use)." << endl;
 				}
 				//return 1;
 			}
@@ -680,7 +525,7 @@ namespace directag {
 			{
 				if( g_residueMap->initializeFromFile() )
 				{
-					cerr << g_hostString << " could not find the default residue masses file (hard-coded defaults in use)." << endl;
+					cerr << "Could not find the default residue masses file (hard-coded defaults in use)." << endl;
 				}
 			}
 
@@ -744,99 +589,8 @@ namespace directag {
 		return 0;
 	}
 
-	void ReadInlineValidationFile()
-	{
-		/*if( !g_rtConfig->InlineValidationFile.empty() )
-		{
-			g_rtConfig->inlineValidationResidues = *g_residueMap;
-			fileList_t sqtFilenames;
-
-			if( g_pid == 0 ) cout << "Finding SQT files matching mask \"" << g_rtConfig->InlineValidationFile << "\"" << endl;
-			FindFilesByMask( g_rtConfig->InlineValidationFile, sqtFilenames );
-
-			if( sqtFilenames.empty() )
-			{
-				if( g_pid == 0 ) cerr << "No files found matching given filemasks." << endl;
-			} else
-			{
-				// Read SQT files for validation
-				RunTimeVariableMap varsFromFile( "NumChargeStates DynamicMods StaticMods UseAvgMassOfSequences" );
-				for( fileList_t::iterator fItr = sqtFilenames.begin(); fItr != sqtFilenames.end(); ++fItr )
-				{
-					if( g_pid == 0 ) cout << "Reading peptide identifications from \"" << *fItr << "\"" << endl;
-					spectra.readSQT( *fItr, true, true, g_rtConfig->ValidationMode, " ", varsFromFile );
-					cout << "Setting DynamicMods and StaticMods from SQT file: " << varsFromFile["DynamicMods"] << "; " << varsFromFile["StaticMods"] << endl;
-					g_rtConfig->inlineValidationResidues.setDynamicMods( varsFromFile["DynamicMods"] );
-					g_rtConfig->inlineValidationResidues.setStaticMods( varsFromFile["StaticMods"] );
-					varsFromFile.erase( "DynamicMods" );
-					varsFromFile.erase( "StaticMods" );
-					g_rtConfig->setVariables( varsFromFile );
-				}
-
-				if( spectra.empty() )
-				{
-					if( g_pid == 0 ) cout << "No identifications found." << endl;
-
-				} else
-				{
-					if( g_pid == 0 ) cout << "Finished reading " << spectra.size() << " identifications, now calculating validation thresholds." << endl;
-
-					if( g_rtConfig->StartSpectraScanNum == 0 && g_rtConfig->EndSpectraScanNum == -1 )
-					{
-						spectra.calculateValidationThresholds(	g_rtConfig->scoreThresholds,
-																g_rtConfig->NumChargeStates,
-																g_rtConfig->Confidence,
-																g_rtConfig->DecoyRatio,
-																g_rtConfig->DecoyPrefix,														
-																g_rtConfig->ValidationMode );
-
-						//SpectraList originalSpectra = spectra;
-						vector< size_t > potentialMatchCounts, validMatchCounts;
-						pair< SpectraList, SpectraList > filteredSpectra = spectra.filterByThresholds(	g_rtConfig->scoreThresholds,
-																										g_rtConfig->NumChargeStates,
-																										g_rtConfig->ValidationMode,
-																										&potentialMatchCounts,
-																										&validMatchCounts );
-
-						for(	SpectraList::ListIndexIterator itr = spectra.index.begin();
-								itr != spectra.index.end();
-								++itr )
-						{
-								if( g_rtConfig->InlineValidationMode == TAG_ONLY_HITS &&
-									filteredSpectra.first.index.find( itr->first ) == filteredSpectra.first.index.end() )
-								{
-									deallocate( (*itr->second)->peakPreData );
-									deallocate( (*itr->second)->peakData );
-								} else if(	g_rtConfig->InlineValidationMode == TAG_ONLY_MISSES &&
-											filteredSpectra.second.index.find( itr->first ) == filteredSpectra.first.index.end() )
-								{
-									deallocate( (*itr->second)->peakPreData );
-									deallocate( (*itr->second)->peakData );
-								}
-						}
-
-						spectra.filterByPeakCount();
-						//spectra = originalSpectra;
-
-						for( int z=0; z < g_rtConfig->NumChargeStates; ++z )
-						{
-							if( g_pid == 0 ) cout << "Threshold for " << g_rtConfig->Confidence * 100.0f << "% confidence in +" << z+1 << " IDs: " <<
-									g_rtConfig->scoreThresholds[z] << "; " << validMatchCounts[z] << " of " << potentialMatchCounts[z] << " IDs pass." << endl;
-						}
-
-						if( g_pid == 0 ) cout << "All charge states: " << accumulate( validMatchCounts.begin(), validMatchCounts.end(), 0 ) <<
-								" of " << accumulate( potentialMatchCounts.begin(), potentialMatchCounts.end(), 0 ) << " IDs pass." << endl;
-						//cout << spectra.size() << " identifications pass confidence filter." << endl;
-					}
-				}
-			}
-		}*/
-	}
-
 	int ProcessHandler( int argc, char* argv[] )
 	{
-		simplethread_create_mutex( &resourceMutex );
-
 		vector< string > args;
 		for( int i=0; i < argc; ++i )
 			args.push_back( argv[i] );
@@ -855,13 +609,13 @@ namespace directag {
 			g_inputFilenames.clear();
 			for( size_t i=1; i < args.size(); ++i )
 			{
-				cout << g_hostString << " is reading spectra from files matching mask \"" << args[i] << "\"" << endl;
+				//cout << "Reading spectra from files matching mask \"" << args[i] << "\"" << endl;
 				FindFilesByMask( args[i], g_inputFilenames );
 			}
 
 			if( g_inputFilenames.empty() )
 			{
-				cerr << g_hostString << " did not find any spectra matching given filemasks." << endl;
+				cerr << "No source files found matching given filemasks." << endl;
 				return 1;
 			}
 
@@ -874,11 +628,11 @@ namespace directag {
 
 				Timer fileTime(true);
 
-				cout << g_hostString << " is reading spectra from file \"" << *fItr << "\"" << endl;
+				cout << "Reading spectra from file \"" << *fItr << "\"" << endl;
 				finishedFiles.insert( *fItr );
 
 				Timer readTime(true);
-				spectra.readPeaks( *fItr, g_rtConfig->StartSpectraScanNum, g_rtConfig->EndSpectraScanNum );
+				spectra.readPeaks( *fItr, 0, -1, 2, g_rtConfig->SpectrumListFilters, g_rtConfig->NumChargeStates );
 				readTime.End();
 
 				int totalPeakCount = 0;
@@ -886,12 +640,12 @@ namespace directag {
 				for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
 					totalPeakCount += (*sItr)->peakPreCount;
 
-				cout << g_hostString << " read " << numSpectra << " spectra with " << totalPeakCount << " peaks; " << readTime.TimeElapsed() << " seconds elapsed." << endl;
+				cout << "Read " << numSpectra << " spectra with " << totalPeakCount << " peaks; " << readTime.TimeElapsed() << " seconds elapsed." << endl;
 
 				int skip = 0;
 				if( numSpectra == 0 )
 				{
-					cout << g_hostString << " is skipping a file with no spectra." << endl;
+					cout << "Skipping a file with no spectra." << endl;
 					skip = 1;
 				}
 				#ifdef USE_MPI
@@ -912,13 +666,11 @@ namespace directag {
 						#ifdef USE_MPI
 							if( g_numChildren > 0 )
 							{
-								g_rtConfig->SpectraBatchSize = (int) ceil( (float) numSpectra / (float) g_numChildren / (float) g_rtConfig->NumBatches );
-								cout << g_hostString << " calculates dynamic spectra batch size is " << g_rtConfig->SpectraBatchSize << endl;
+								g_rtConfig->SpectraBatchSize = (int) ceil( (float) numSpectra / (float) g_numChildren / 10 );
+								cout << "Dynamic spectra batch size is " << g_rtConfig->SpectraBatchSize << endl;
 							}
 
-							//std::random_shuffle( spectra.begin(), spectra.end() );
-
-							cout << g_hostString << " is sending spectra to worker nodes to prepare them for search." << endl;
+							cout << "Sending spectra to worker nodes to prepare them for search." << endl;
 							Timer prepareTime(true);
 							TransmitUnpreparedSpectraToChildProcesses();
 
@@ -933,7 +685,7 @@ namespace directag {
 							skip = 0;
 							if( numSpectra == 0 )
 							{
-								cout << g_hostString << " is skipping a file with no suitable spectra." << endl;
+								cout << "Skipping a file with no suitable spectra." << endl;
 								skip = 1;
 							}
 
@@ -944,33 +696,31 @@ namespace directag {
 							{
 								opcs = spectra.getOriginalPeakCountStatistics();
 								fpcs = spectra.getFilteredPeakCountStatistics();
-								cout << g_hostString << ": mean original (filtered) peak count: " <<
-										opcs[5] << " (" << fpcs[5] << ")" << endl;
-								cout << g_hostString << ": min/max original (filtered) peak count: " <<
-										opcs[0] << " (" << fpcs[0] << ") / " << opcs[1] << " (" << fpcs[1] << ")" << endl;
-								cout << g_hostString << ": original (filtered) peak count at 1st/2nd/3rd quartiles: " <<
-										opcs[2] << " (" << fpcs[2] << "), " <<
-										opcs[3] << " (" << fpcs[3] << "), " <<
-										opcs[4] << " (" << fpcs[4] << ")" << endl;
+							    cout << "Mean original (filtered) peak count: " << opcs[5] << " (" << fpcs[5] << ")" << endl;
+							    cout << "Min/max original (filtered) peak count: " << opcs[0] << " (" << fpcs[0] << ") / " << opcs[1] << " (" << fpcs[1] << ")" << endl;
+							    cout << "Original (filtered) peak count at 1st/2nd/3rd quartiles: " <<
+									    opcs[2] << " (" << fpcs[2] << "), " <<
+									    opcs[3] << " (" << fpcs[3] << "), " <<
+									    opcs[4] << " (" << fpcs[4] << ")" << endl;
 
 								float filter = 1.0f - ( (float) fpcs[5] / (float) opcs[5] );
-								cout << g_hostString << " filtered out " << filter * 100.0f << "% of peaks." << endl;
+								cout << "Filtered out " << filter * 100.0f << "% of peaks." << endl;
 
-								cout << g_hostString << " has " << numSpectra << " spectra prepared now; " << prepareTime.End() << " seconds elapsed." << endl;
+								cout << "Prepared " << numSpectra << " spectra; " << prepareTime.End() << " seconds elapsed." << endl;
 
-								ReadInlineValidationFile();
-
-								cout << g_hostString << " is sending " << spectra.size() << " spectra to worker nodes for sequence tagging." << endl;
+								cout << "Sending " << spectra.size() << " spectra to worker nodes for sequence tagging." << endl;
 								startTime = GetTimeString(); startDate = GetDateString(); taggingTime.Begin();
 								TransmitUntaggedSpectraToChildProcesses();
-								cout << g_hostString << " has sequence tagged all its spectra; " << taggingTime.End() << " seconds elapsed." << endl;
+								cout << "Finished sequence tagging spectra; " << taggingTime.End() << " seconds elapsed." << endl;
 
 								deallocate( spectra );
 
-								cout << g_hostString << " is receiving tag results from worker nodes." << endl;
+								cout << "Receiving tag results from worker nodes." << endl;
 								Timer resultsTime(true);
 								ReceiveTaggedSpectraFromChildProcesses();
-								cout << g_hostString << " finished receiving tag results for " << spectra.size() << " spectra; " << resultsTime.End() << " seconds elapsed." << endl;
+								cout << "Finished receiving tag results for " << spectra.size() << " spectra; " << resultsTime.End() << " seconds elapsed." << endl;
+
+    							cout << "Overall stats: " << (string) taggingStatistics << endl;
 							}
 
 						#endif
@@ -983,7 +733,7 @@ namespace directag {
 						skip = 0;
 						if( spectra.size() == 0 )
 						{
-							cout << g_hostString << " is skipping a file with no suitable spectra." << endl;
+							cout << "Skipping a file with no suitable spectra." << endl;
 							skip = 1;
 						}
 
@@ -991,34 +741,25 @@ namespace directag {
 						{
 							opcs = spectra.getOriginalPeakCountStatistics();
 							fpcs = spectra.getFilteredPeakCountStatistics();
-							cout << g_hostString << ": mean original (filtered) peak count: " <<
-									opcs[5] << " (" << fpcs[5] << ")" << endl;
-							cout << g_hostString << ": min/max original (filtered) peak count: " <<
-									opcs[0] << " (" << fpcs[0] << ") / " << opcs[1] << " (" << fpcs[1] << ")" << endl;
-							cout << g_hostString << ": original (filtered) peak count at 1st/2nd/3rd quartiles: " <<
+							cout << "Mean original (filtered) peak count: " << opcs[5] << " (" << fpcs[5] << ")" << endl;
+							cout << "Min/max original (filtered) peak count: " << opcs[0] << " (" << fpcs[0] << ") / " << opcs[1] << " (" << fpcs[1] << ")" << endl;
+							cout << "Original (filtered) peak count at 1st/2nd/3rd quartiles: " <<
 									opcs[2] << " (" << fpcs[2] << "), " <<
 									opcs[3] << " (" << fpcs[3] << "), " <<
 									opcs[4] << " (" << fpcs[4] << ")" << endl;
 
 							float filter = 1.0f - ( (float) fpcs[5] / (float) opcs[5] );
-							cout << g_hostString << " filtered out " << filter * 100.0f << "% of peaks." << endl;
-
-							ReadInlineValidationFile();
+							cout << "Filtered out " << filter * 100.0f << "% of peaks." << endl;
 
 							SpectraList::PrecacheIRBins( spectra );
 
-							cout << g_hostString << " is sequence tagging " << spectra.size() << " spectra." << endl;
+							cout << "Sequence tagging " << spectra.size() << " spectra." << endl;
 							startTime = GetTimeString(); startDate = GetDateString(); taggingTime.Begin();
-							taggingStats sumTaggingStats = ExecutePipeline();
-							//EncodeSpectraForOutput();
+							ExecutePipeline();
 
-							cout << g_hostString << " has sequence tagged all its spectra; " << taggingTime.End() << " seconds elapsed." << endl;
+							cout << "Finished sequence tagging spectra; " << taggingTime.End() << " seconds elapsed." << endl;
 
-							cout << g_hostString << " stats: " << 1 << " / " <<
-									sumTaggingStats.numSpectraTagged << " / " <<
-									sumTaggingStats.numResidueMassGaps << " / " <<
-									sumTaggingStats.numTagsGenerated << " / " <<
-									sumTaggingStats.numTagsRetained << endl;
+							cout << "Overall stats: " << (string) taggingStatistics << endl;
 						}
 					}
 
@@ -1034,7 +775,7 @@ namespace directag {
 						try
 						{
 						WriteSpecQualMetrics( *fItr, spectra, g_rtConfig->ScanRankerMetricsFileName);
-						cout << g_hostString << " finished writing spectral quality metrics for file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
+						cout << "Finished writing spectral quality metrics for file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
 						} catch( ... )
 						{
 							cerr << "Error while writing ScanRanker metrics file." << endl;
@@ -1044,18 +785,15 @@ namespace directag {
 
 					if( !skip && g_rtConfig->WriteHighQualSpectra)
 					{						
-						Spectrum* s;
 						mergedSpectraIndices.clear();
 						highQualSpectraIndices.clear();
-						for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
-						{
-							s = *sItr;
+                        set<NativeID> seen;
+						BOOST_FOREACH(Spectrum* s, spectra)
+                        {
 							// merge duplicate spectra with differen charge state
-							vector<int>::iterator found = find(mergedSpectraIndices.begin(),mergedSpectraIndices.end(), s->id.index );
-							if( found == mergedSpectraIndices.end() )
-							{
-								mergedSpectraIndices.push_back( s->id.index );
-							}
+                            pair<set<NativeID>::iterator, bool> insertResult = seen.insert(s->id.nativeID);
+							if( !insertResult.second )
+								mergedSpectraIndices.push_back( s->id.nativeID );
 						}
 						int maxOutput = (int) (((double) mergedSpectraIndices.size()) * g_rtConfig->HighQualSpecCutoff);
 						cout << endl << "Extracting high quality spectra ..." << endl;
@@ -1070,7 +808,7 @@ namespace directag {
 						{
 							//std::sort( highQualSpectraIndices.begin(), highQualSpectraIndices.end() );
 							writeHighQualSpectra( *fItr, highQualSpectraIndices, g_rtConfig->OutputFormat, g_rtConfig->HighQualSpecFileName);
-							cout << g_hostString << " finished writing high quality spectra for file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
+							cout << "Finished writing high quality spectra for file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
 
 						} catch( ... )
 						{
@@ -1085,7 +823,7 @@ namespace directag {
 						{
 							spectra.sort( spectraSortByID() );
 							WriteTagsToTagsFile( *fItr, startTime, startDate, taggingTime.End() );
-							cout << g_hostString << " finished file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
+							cout << "Finished file \"" << *fItr << "\"; " << fileTime.End() << " seconds elapsed." << endl;
 						} catch( ... )
 						{
 							cerr << "Error while sorting and writing XML output." << endl;
@@ -1115,67 +853,57 @@ namespace directag {
 						MPI_Ssend( &done,		1,		MPI_INT,	p+1, 0x00, MPI_COMM_WORLD );
 			#endif
 
-			cout << g_hostString << " sequence tagged spectra from " << g_inputFilenames.size() << " files; " << overallTime.End() << " seconds elapsed." << endl;
+			cout << "Finished tagging " << g_inputFilenames.size() << " files; " << overallTime.End() << " seconds elapsed." << endl;
 		}
 		#ifdef USE_MPI
-			else
-			{
-				int allDone = 0;
+		else
+		{
+			int allDone = 0;
 
-				while( !allDone )
+			while( !allDone )
+			{
+				int skip;
+				MPI_Recv( &skip,	1,		MPI_INT,	0,	0x00, MPI_COMM_WORLD, &st );
+
+				if( !skip )
 				{
-					int skip;
+					SpectraList preparedSpectra;
+
+					while( ReceiveUnpreparedSpectraBatchFromRootProcess() )
+					{
+						PrepareSpectra();
+						preparedSpectra.insert( spectra.begin(), spectra.end(), preparedSpectra.end() );
+						spectra.clear( false );
+					}
+
+					TransmitPreparedSpectraToRootProcess( preparedSpectra );
+					deallocate( preparedSpectra );
+
 					MPI_Recv( &skip,	1,		MPI_INT,	0,	0x00, MPI_COMM_WORLD, &st );
 
 					if( !skip )
 					{
-						SpectraList preparedSpectra;
+						SpectraList taggedSpectra;
+						SpectraList::PrecacheIRBins( spectra );
 
-						while( ReceiveUnpreparedSpectraBatchFromRootProcess() )
+						while( ReceiveUntaggedSpectraBatchFromRootProcess() )
 						{
-							PrepareSpectra();
-							preparedSpectra.insert( spectra.begin(), spectra.end(), preparedSpectra.end() );
+							ExecutePipeline();
+
+							taggedSpectra.insert( spectra.begin(), spectra.end(), taggedSpectra.end() );
 							spectra.clear( false );
 						}
 
-						TransmitPreparedSpectraToRootProcess( preparedSpectra );
-						deallocate( preparedSpectra );
+						cout << g_hostString << " stats: " << (string) taggingStatistics << endl;
 
-						MPI_Recv( &skip,	1,		MPI_INT,	0,	0x00, MPI_COMM_WORLD, &st );
-
-						if( !skip )
-						{
-							SpectraList taggedSpectra;
-							SpectraList::PrecacheIRBins( spectra );
-
-							int numBatches = 0;
-							taggingStats sumTaggingStats;
-							taggingStats lastTaggingStats;
-							while( ReceiveUntaggedSpectraBatchFromRootProcess() )
-							{
-								++ numBatches;
-
-								lastTaggingStats = ExecutePipeline();
-								sumTaggingStats = sumTaggingStats + lastTaggingStats;
-
-								taggedSpectra.insert( spectra.begin(), spectra.end(), taggedSpectra.end() );
-								spectra.clear( false );
-							}
-
-							cout << g_hostString << " stats: " << numBatches << " / " <<
-									sumTaggingStats.numSpectraTagged << " / " <<
-									sumTaggingStats.numResidueMassGaps << " / " <<
-									sumTaggingStats.numTagsGenerated << " / " <<
-									sumTaggingStats.numTagsRetained << endl;
-
-							TransmitTaggedSpectraToRootProcess( taggedSpectra );
-							taggedSpectra.clear();
-						}
+						TransmitTaggedSpectraToRootProcess( taggedSpectra );
+						taggedSpectra.clear();
 					}
-
-					MPI_Recv( &allDone,	1,		MPI_INT,	0,	0x00, MPI_COMM_WORLD, &st );
 				}
+
+				MPI_Recv( &allDone,	1,		MPI_INT,	0,	0x00, MPI_COMM_WORLD, &st );
 			}
+		}
 		#endif
 
 		return 0;

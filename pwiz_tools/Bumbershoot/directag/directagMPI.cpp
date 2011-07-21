@@ -28,6 +28,10 @@
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/zlib.hpp>
+#include <boost/serialization/variant.hpp>
+
+BOOST_CLASS_IMPLEMENTATION(boost::atomic_uint32_t, boost::serialization::primitive_type)
+BOOST_CLASS_IMPLEMENTATION(boost::atomic_uint64_t, boost::serialization::primitive_type)
 
 namespace freicore
 {
@@ -324,8 +328,8 @@ namespace directag
 		int sourceProcess, batchSize;
 		bool IsFinished = false;
 
-		Timer PrepareTime( true );
-		float totalPrepareTime = 0.01f;
+		Timer taggingTime( true );
+		float totalTaggingTime = 0.01f;
 		float lastUpdate = 0.0f;
 
 		int i = 0;
@@ -394,18 +398,21 @@ namespace directag
 						sendTime.End() << " seconds elapsed." << endl;
 			#endif
 
-			totalPrepareTime = PrepareTime.TimeElapsed();
-			if( ( totalPrepareTime - lastUpdate > g_rtConfig->StatusUpdateFrequency ) || ( !IsFinished && i == numSpectra ) )
+			totalTaggingTime = taggingTime.TimeElapsed();
+			if( !IsFinished && ( ( totalTaggingTime - lastUpdate > g_rtConfig->StatusUpdateFrequency ) || i+1 == numSpectra ) )
 			{
-				if( i == numSpectra )
+				if( i+1 == numSpectra )
 					IsFinished = true;
 
-				float spectraPerSec = float(i) / totalPrepareTime;
-				float estimatedTimeRemaining = float(numSpectra-i) / spectraPerSec;
-				cout << g_hostString << " has sequence tagged " << i << " of " << numSpectra << " spectra; " << spectraPerSec <<
-						" per second, " << estimatedTimeRemaining << " seconds remaining." << endl;
+				float spectraPerSec = float(i+1) / totalTaggingTime;
+				bpt::time_duration estimatedTimeRemaining(0, 0, round((numSpectra - i) / spectraPerSec));
 
-				lastUpdate = totalPrepareTime;
+		        cout << "Sequence tagged " << i << " of " << numSpectra << " spectra; "
+                     << round(spectraPerSec) << " per second, "
+                     << format_date_time("%H:%M:%S", bpt::time_duration(0, 0, round(totalTaggingTime))) << " elapsed, "
+                     << format_date_time("%H:%M:%S", estimatedTimeRemaining) << " remaining." << endl;
+
+				lastUpdate = totalTaggingTime;
 			}
 		}
 		spectra.clear(false);
@@ -496,7 +503,10 @@ namespace directag
 
 			try
 			{
+                TaggingStatistics childTaggingStatistics;
 				packArchive & numSpectra;
+                packArchive & childTaggingStatistics;
+				taggingStatistics = taggingStatistics + childTaggingStatistics;
 
 				//cout << g_hostString << " is unpacking results for " << numSpectra << " spectra." << endl;
 				for( int j=0; j < numSpectra; ++j )
@@ -534,6 +544,7 @@ namespace directag
 		//Timer packTime(true);
 		//cout << g_hostString << " is packing " << numSpectra << " results." << endl;
 		packArchive & numSpectra;
+        packArchive & taggingStatistics;
 		for( SpectraList::iterator sItr = preparedSpectra.begin(); sItr != preparedSpectra.end(); ++sItr )
 		{
 			Spectrum* s = (*sItr);

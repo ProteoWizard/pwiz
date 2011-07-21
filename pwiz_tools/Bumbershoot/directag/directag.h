@@ -27,8 +27,9 @@
 #include "freicore.h"
 #include "base64.h"
 #include "directagSpectrum.h"
-#include "simplethreads.h"
 #include "tagsFile.h"
+#include <boost/atomic.hpp>
+#include <boost/cstdint.hpp>
 
 #define DIRECTAG_LICENSE				COMMON_LICENSE
 
@@ -43,15 +44,6 @@ namespace freicore
 
 namespace directag
 {
-    struct Version
-    {
-        static int Major();
-        static int Minor();
-        static int Revision();
-        static std::string str();
-        static std::string LastModified();
-    };
-
 	extern double lnCombin( int a, int b );
 	extern float GetMassOfResidues( const string& a, bool b = false );
 
@@ -65,9 +57,9 @@ namespace directag
 		string name;
 	};
 
-	struct taggingStats
+	struct TaggingStatistics
 	{
-		taggingStats() :
+		TaggingStatistics() :
 			numSpectraTagged(0), numResidueMassGaps(0), 
 			numTagsGenerated(0), numTagsRetained(0) {}
 		size_t numSpectraTagged;
@@ -75,21 +67,29 @@ namespace directag
 		size_t numTagsGenerated;
 		size_t numTagsRetained;
 
-		taggingStats operator+ ( const taggingStats& rhs )
+		TaggingStatistics operator+ ( const TaggingStatistics& rhs ) const
 		{
-			taggingStats tmp;
+			TaggingStatistics tmp;
 			tmp.numSpectraTagged = numSpectraTagged + rhs.numSpectraTagged;
 			tmp.numResidueMassGaps = numResidueMassGaps + rhs.numResidueMassGaps;
 			tmp.numTagsGenerated = numTagsGenerated + rhs.numTagsGenerated;
 			tmp.numTagsRetained = numTagsRetained + rhs.numTagsRetained;
 			return tmp;
 		}
-	};
 
-	struct WorkerInfo : public BaseWorkerInfo
-	{
-		WorkerInfo( int num, int start, int end ) : BaseWorkerInfo( num, start, end ) {}
-		taggingStats stats;
+		operator string() const
+		{
+			stringstream s;
+			s << numSpectraTagged << " spectra; " << numResidueMassGaps << " tag graph edges; "
+			  << numTagsGenerated << " tags generated; " << numTagsRetained << " tags retained";
+			return s.str();
+		}
+
+		template< class Archive >
+		void serialize( Archive& ar, const unsigned int version )
+		{
+			ar & numSpectraTagged & numResidueMassGaps & numTagsGenerated & numTagsRetained;
+		}
 	};
     
     #ifdef USE_MPI
@@ -106,12 +106,11 @@ namespace directag
 		int TransmitTaggedSpectraToRootProcess( SpectraList& preparedSpectra );
     #endif
 
-	extern SpectraList					spectra;
-	extern map< char, float >			compositionInfo;
+	extern SpectraList                  spectra;
+    extern TaggingStatistics            taggingStatistics;
+	extern map< char, float >           compositionInfo;
 
 	extern RunTimeConfig*				g_rtConfig;
-
-	extern simplethread_mutex_t		resourceMutex;
 
 	int						InitProcess( argList_t& args );
 	int						ProcessHandler( int argc, char* argv[] );
@@ -121,15 +120,15 @@ namespace directag
 	gapMap_t::iterator		FindPeakNear( gapMap_t&, float, float );
 
 	// code for ScanRanker
-	extern vector<int>				mergedSpectraIndices;
-	extern vector<int>				highQualSpectraIndices;
+	extern vector<NativeID>			mergedSpectraIndices;
+	extern vector<NativeID>			highQualSpectraIndices;
 	extern float					bestTagScoreMean;
 	extern float					bestTagTICMean;
 	extern float					tagMzRangeMean;
 	extern float					bestTagScoreIQR;
 	extern float					bestTagTICIQR;
 	extern float					tagMzRangeIQR;
-	extern size_t						numTaggedSpectra;
+	extern size_t					numTaggedSpectra;
 
 
 	struct spectraSortByQualScore

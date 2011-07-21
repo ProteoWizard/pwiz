@@ -26,7 +26,6 @@
 #include "stdafx.h"
 #include "freicore.h"
 #include "directagConfig.h"
-#include "SearchSpectrum.h"
 #include "tagsFile.h"
 #include "PeakSpectrum.h"
 
@@ -89,88 +88,7 @@ namespace directag
 
 	typedef BasePeakData< PeakInfo > PeakData;
 
-	struct SearchResult : public GenericSearchResult
-	{
-		SearchResult( const GenericSearchResult& r = GenericSearchResult() )
-			:	GenericSearchResult( r ), fdr( 1 ), pScoreWeights(NULL), isScoreCalculated( false ), score( 0 )
-		{}
-
-		void setScoreWeights( const map< string, double >& scoreWeights )
-		{
-			pScoreWeights = &scoreWeights;
-			isScoreCalculated = false;
-			calculateTotalScore();
-		}
-
-		double fdr;
-
-		inline double getTotalScore() const
-		{
-			if( pScoreWeights == NULL )
-				throw runtime_error( "Error: score weights not set, cannot calculate total score for results!" );
-			return score;
-		}
-
-		bool operator< ( const SearchResult& rhs ) const
-		{
-			if( pScoreWeights == NULL )
-			{
-				if( rank == rhs.rank )
-                    return (static_cast<const Peptide&>(*this)) < (static_cast<const Peptide&>(rhs));
-				else
-					return rank < rhs.rank;
-			}
-
-			if( score == rhs.score )
-				if( mod == rhs.mod )
-                    return (static_cast<const Peptide&>(*this)) < (static_cast<const Peptide&>(rhs));
-				else
-					return mod > rhs.mod;
-			else
-				return score < rhs.score;
-		}
-
-		bool operator== ( const SearchResult& rhs ) const
-		{
-			if( pScoreWeights == NULL )
-				return ( rank == rhs.rank && comparePWIZPeptides(static_cast <const Peptide&> (*this), 
-														         static_cast<const Peptide&>(rhs)) );
-			return ( score == rhs.score && comparePWIZPeptides(static_cast <const Peptide&> (*this), 
-														       static_cast<const Peptide&>(rhs)) );
-		}
-
-		template< class Archive >
-		void serialize( Archive& ar, const unsigned int version )
-		{
-			ar & boost::serialization::base_object< GenericSearchResult >( *this );
-			ar & fdr;
-		}
-
-	protected:
-		void calculateTotalScore()
-		{
-			if( pScoreWeights == NULL )
-				throw runtime_error( "Error: score weights not set, cannot calculate total score for results!" );
-
-			if( !isScoreCalculated )
-			{
-				score = 0;
-				for( size_t i=0; i < scoreList.size(); ++i )
-				{
-					map< string, double >::const_iterator itr = pScoreWeights->find( scoreList[i].first );
-					if( itr != pScoreWeights->end() )
-						score += scoreList[i].second * itr->second;
-				}
-				isScoreCalculated = true;
-			}
-		}
-
-		const map< string, double >* pScoreWeights;
-		bool isScoreCalculated;
-		double score;
-	};
-
-	struct Spectrum : public PeakSpectrum< PeakInfo >, TaggingSpectrum, SearchSpectrum<SearchResult>
+	struct Spectrum : public PeakSpectrum< PeakInfo >, TaggingSpectrum
 	{
 		Spectrum();
 		Spectrum( const Spectrum& old );
@@ -180,7 +98,6 @@ namespace directag
 			complementClassCounts.resize( 2 /* binary */, 0 );
 		}
 
-		void Parse( bool intenAsClasses = false );
 		void ClassifyPeakIntensities();
 		double FindComplements( double complementMzTolerance );
 		size_t MakeTagGraph();
@@ -205,13 +122,11 @@ namespace directag
 			ar & boost::serialization::base_object< BaseSpectrum >( *this );
 			ar & boost::serialization::base_object< PeakSpectrum< PeakInfo > >( *this );
 			ar & boost::serialization::base_object< TaggingSpectrum >( *this );
-			ar & boost::serialization::base_object< SearchSpectrum< SearchResult > >( *this );
 
-			ar & complementClassCounts & scoreWeights;
+			ar & complementClassCounts & scoreWeights & complementaryTIC;
+			ar & tagGraphPeakCount & tagGraphTIC;
 			ar & complementScoreWeight & intensityScoreWeight & mzFidelityScoreWeight;
 		}
-
-		TagList					validTagList;
 
 		map< string, double >	scoreWeights;
 		float					complementScoreWeight;
