@@ -318,6 +318,9 @@ namespace pwiz.Skyline.Util
                 else
                     dictAtomCounts.Add(sym, count);
 
+                if (dictAtomCounts[sym] == 0)
+                    dictAtomCounts.Remove(sym);
+
                 desc = desc.Substring(endCount).TrimStart();
             }
         }

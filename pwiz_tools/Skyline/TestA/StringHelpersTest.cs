@@ -69,7 +69,7 @@ namespace pwiz.SkylineTestA
         public void RepeatTextTest()
         {
 
-            // Label with partial middle repeat
+            // Label with no repeats.
             var stringLabels = new[]
                                {
                                    "0001_data1_a",
@@ -92,65 +92,83 @@ namespace pwiz.SkylineTestA
             Assert.IsFalse(Helpers.RemoveRepeatedLabelText(noStringsWithoutLabel, 0));
 
             // All but one label have repeats.
-            stringLabels[0] = "0001_data1_a";
-            stringLabels[1] = "0001_data2_b";
-            stringLabels[2] = "0001_data3_c";
-            stringLabels[3] = "0001_data4_d";
-            stringLabels[4] = "5_5_e";
+            stringLabels = new[]
+                               {
+                                   "0001_data1_a",
+                                   "0001_data2_b",
+                                   "0001_data3_c",
+                                   "0001_data4_d",
+                                   "0005_data5_e"
+                               };
 
             Assert.IsFalse(Helpers.RemoveRepeatedLabelText(stringLabels, 0));
 
             // String with no repeats and expect/library label.
-            stringLabels[0] = "Expected";
-            stringLabels[1] = "2_2_b";
-            stringLabels[2] = "0003_data3_c";
-            stringLabels[3] = "0004_data4_d";
-            stringLabels[4] = "0005_data5_e";
+            stringLabels = new[]
+                               {
+                                   "Expected",
+                                   "0002_data2_b",
+                                   "0003_data3_c",
+                                   "0004_data4_d",
+                                   "0005_data5_e",
+                               };
 
             Assert.IsFalse(Helpers.RemoveRepeatedLabelText(stringLabels, 1));
 
             // String with start repeat and no expect/library.
-            stringLabels[0] = "0001_1_a";
-            stringLabels[1] = "0001_data2_b";
-            stringLabels[2] = "0001_data3_c";
-            stringLabels[3] = "0001_data4_d";
-            stringLabels[4] = "0001_data5_e";
+            stringLabels = new[]
+                               {
+                                   "0001_data1_a",
+                                   "0001_data2_b",
+                                   "0001_data3_c",
+                                   "0001_data4_d",
+                                   "0001_data5_e",
+                               };
 
             Assert.IsTrue(Helpers.RemoveRepeatedLabelText(stringLabels, 0));
             // If we check again, the repeat text should no longer be there. 
-            Assert.IsTrue(stringLabels[0] == "1_a");
+            Assert.IsTrue(stringLabels[0] == "data1_a");
             Assert.IsFalse(Helpers.RemoveRepeatedLabelText(stringLabels, 0));
 
             // String with start repeat and expect/library.
-            stringLabels[0] = "Library";
-            stringLabels[1] = "0001_2_b";
-            stringLabels[2] = "0001_data3_c";
-            stringLabels[3] = "0001_data4_d";
-            stringLabels[4] = "0001_data5_e";
+            stringLabels = new[]
+                               {
+                                   "Library",
+                                   "0001_data2_b",
+                                   "0001_data3_c",
+                                   "0001_data4_d",
+                                   "0001_data5_e",
+                               };
 
             Assert.IsTrue(Helpers.RemoveRepeatedLabelText(stringLabels, 1));
             // If we check again, the repeat text should no longer be there. 
-            Assert.IsTrue(stringLabels[1] == "2_b");
+            Assert.IsTrue(stringLabels[1] == "data2_b");
             Assert.IsFalse(Helpers.RemoveRepeatedLabelText(stringLabels, 1));
 
             // String with end repeat and no expect/library.
-            stringLabels[0] = "1_1_a";
-            stringLabels[1] = "0002_data2_a";
-            stringLabels[2] = "0003_data3_a";
-            stringLabels[3] = "0004_data4_a";
-            stringLabels[4] = "0005_data5_a";
+            stringLabels = new[]
+                               {
+                                   "0001_data1_a",
+                                   "0002_data2_a",
+                                   "0003_data3_a",
+                                   "0004_data4_a",
+                                   "0005_data5_a",
+                               };
 
             Assert.IsTrue(Helpers.RemoveRepeatedLabelText(stringLabels, 0));
             // If we check again, the repeat text should no longer be there.
-            Assert.IsTrue(stringLabels[0] == "1_1");
+            Assert.IsTrue(stringLabels[0] == "0001_data1");
             Assert.IsFalse(Helpers.RemoveRepeatedLabelText(stringLabels, 0));
 
             // String with end repeat and expect/library.
-            stringLabels[0] = "Library";
-            stringLabels[1] = "0002_data2_a";
-            stringLabels[2] = "0003_data3_a";
-            stringLabels[3] = "0004_data4_a";
-            stringLabels[4] = "0005_data5_a";
+            stringLabels = new[]
+                               {
+                                   "Library",
+                                   "0002_data2_a",
+                                   "0003_data3_a",
+                                   "0004_data4_a",
+                                   "0005_data5_a",
+                               };
 
             Assert.IsTrue(Helpers.RemoveRepeatedLabelText(stringLabels, 1));
             // If we check again, the repeat text should no longer be there.
@@ -158,11 +176,14 @@ namespace pwiz.SkylineTestA
             Assert.IsFalse(Helpers.RemoveRepeatedLabelText(stringLabels, 1));
 
             // String with middle repeat and no expect/library.
-            stringLabels[0] = "0001_data1_a";
-            stringLabels[1] = "0002_data1_b";
-            stringLabels[2] = "0003_data1_c";
-            stringLabels[3] = "0004_data1_d";
-            stringLabels[4] = "0005_data1_e";
+            stringLabels = new[]
+                               {
+                                   "0001_data1_a",
+                                   "0002_data1_b",
+                                   "0003_data1_c",
+                                   "0004_data1_d",
+                                   "0005_data1_e",
+                               };
 
             Assert.IsTrue(Helpers.RemoveRepeatedLabelText(stringLabels, 0));
            
@@ -170,11 +191,14 @@ namespace pwiz.SkylineTestA
             Assert.IsFalse(Helpers.RemoveRepeatedLabelText(stringLabels, 0));
 
             // String with start and end repeat.
-            stringLabels[0] = "0001_data1_a";
-            stringLabels[1] = "0001_data2_a";
-            stringLabels[2] = "0001_data3_a";
-            stringLabels[3] = "0001_data4_a";
-            stringLabels[4] = "0001_data5_a";
+            stringLabels = new[]
+                               {
+                                   "0001_data1_a",
+                                   "0001_data2_a",
+                                   "0001_data3_a",
+                                   "0001_data4_a",
+                                   "0001_data5_a",
+                               };
 
             Assert.IsTrue(Helpers.RemoveRepeatedLabelText(stringLabels, 0));
             // If we check again, only the end repeat text should be there.
@@ -185,11 +209,14 @@ namespace pwiz.SkylineTestA
             Assert.IsFalse(Helpers.RemoveRepeatedLabelText(stringLabels, 0));
 
             // String with middle repeat.
-            stringLabels[0] = "0001_abc_data1_h_a";
-            stringLabels[1] = "0002_abc_data2_h_b";
-            stringLabels[2] = "0003_abc_data3_h_c";
-            stringLabels[3] = "0004_abc_data4_h_d";
-            stringLabels[4] = "0005_abc_data5_h_e";
+            stringLabels = new[]
+                               {
+                                   "0001_abc_data1_h_a",
+                                   "0002_abc_data2_h_b", 
+                                   "0003_abc_data3_h_c", 
+                                   "0004_abc_data4_h_d",
+                                   "0005_abc_data5_h_e",
+                               };
 
             Assert.IsTrue(Helpers.RemoveRepeatedLabelText(stringLabels, 0));
             Assert.IsTrue(stringLabels[0] == "0001...data1_h_a");
@@ -197,20 +224,26 @@ namespace pwiz.SkylineTestA
             Assert.IsTrue(stringLabels[0] == "0001...data1...a");
 
             // Different space types.
-            stringLabels[0] = "0001 data1 a";
-            stringLabels[1] = "0002 data2 a";
-            stringLabels[2] = "0003 data3 a";
-            stringLabels[3] = "0004 data4 a";
-            stringLabels[4] = "0005 data5 a";
+            stringLabels = new[]
+                               {
+                                   "0001 data1 a",
+                                   "0002 data2 a",
+                                   "0003 data3 a",
+                                   "0004 data4 a",
+                                   "0005 data5 a",
+                               };
 
             Assert.IsTrue(Helpers.RemoveRepeatedLabelText(stringLabels, 0));
             Assert.IsTrue(stringLabels[0] == "0001 data1");
 
-            stringLabels[0] = "0001-data1-a";
-            stringLabels[1] = "0002-data2-a";
-            stringLabels[2] = "0003-data3-a";
-            stringLabels[3] = "0004-data4-a";
-            stringLabels[4] = "0005-data5-a";
+            stringLabels = new[]
+                               {
+                                   "0001-data1-a",
+                                   "0002-data2-a",
+                                   "0003-data3-a",
+                                   "0004-data4-a",
+                                   "0005-data5-a",
+                               };
 
 
             Assert.IsTrue(Helpers.RemoveRepeatedLabelText(stringLabels, 0));

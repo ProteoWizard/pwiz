@@ -72,7 +72,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public StaticMod(string name, string aas, ModTerminus? term, bool isVariable, string formula,
                          LabelAtoms labelAtoms, RelativeRT relativeRT, double? monoMass, double? avgMass, IList<FragmentLoss> losses)
-            : this(name, aas, term, isVariable, formula, labelAtoms, RelativeRT.Matching, monoMass, avgMass, losses, null)
+            : this(name, aas, term, isVariable, formula, labelAtoms, relativeRT, monoMass, avgMass, losses, null)
         {
             
         }
@@ -226,6 +226,16 @@ namespace pwiz.Skyline.Model.DocSettings
         public StaticMod ChangeVariable(bool prop)
         {
             return ChangeProp(ImClone(this), im => im.IsVariable = im.IsExplicit = prop);
+        }
+
+        public StaticMod ChangeFormula(string prop)
+        {
+            return ChangeProp(ImClone(this), im => im.Formula = prop);
+        }
+
+        public StaticMod ChangeLabelAtoms(LabelAtoms prop)
+        {
+            return ChangeProp(ImClone(this), im => im.LabelAtoms = prop);
         }
 
         #endregion
@@ -431,17 +441,61 @@ namespace pwiz.Skyline.Model.DocSettings
         /// </summary>
         public bool Equivalent(StaticMod obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            return Equals(obj.AAs, AAs) &&
-                obj.Terminus.Equals(Terminus) &&
-                obj.AverageMass.Equals(AverageMass) &&
-                Equals(obj.Formula, Formula) &&
-                Equals(obj.LabelAtoms, LabelAtoms) &&
-                Equals(obj.RelativeRT, RelativeRT) &&
-                obj.MonoisotopicMass.Equals(MonoisotopicMass) &&
-                ArrayUtil.EqualsDeep(obj._losses, _losses);
+            if (!Equals(obj.AAs, AAs) ||
+                !obj.Terminus.Equals(Terminus) ||
+                !obj.AverageMass.Equals(AverageMass) ||
+                !obj.MonoisotopicMass.Equals(MonoisotopicMass) ||
+                !Equals(obj.RelativeRT, RelativeRT) ||
+                // CONSIDER: Order change for multiple losses
+                !ArrayUtil.EqualsDeep(obj._losses, _losses))
+            {
+                return false;
+            }
+
+            if (AAs != null)
+            {
+                foreach (var aa in AminoAcids)
+                {
+                    if (!EquivalentFormulas(aa, obj))
+                        return false;
+                }                
+            }
+            else if (Terminus != null)
+            {
+                return EquivalentFormulas('\0', obj);
+            }
+            else
+            {
+                // Label all amino acids with this label
+                for (char aa = 'A'; aa <= 'Z'; aa++)
+                {
+                    if (AminoAcid.IsAA(aa) && !EquivalentFormulas(aa, obj))
+                        return false;
+                }
+            }
+
+            return true;
         }
+
+        private bool EquivalentFormulas(char aa, StaticMod obj)
+        {
+            SequenceMassCalc modCalc = new SequenceMassCalc(MassType.Monoisotopic);
+
+            double unexplainedMassThis, unexplainedMassObj;
+
+            string formulaThis = modCalc.GetModFormula(aa, this, out unexplainedMassThis);
+            string formulaObj = modCalc.GetModFormula(aa, obj, out unexplainedMassObj);
+
+            SortedDictionary<string, int> parseFormulaObj = new SortedDictionary<string, int>();
+            SortedDictionary<string, int> parseFormulaKnown = new SortedDictionary<string, int>();
+
+            modCalc.ParseModCounts(formulaObj, parseFormulaObj);
+            modCalc.ParseModCounts(formulaThis, parseFormulaKnown);
+
+            return unexplainedMassThis == unexplainedMassObj &&
+                ArrayUtil.EqualsDeep(parseFormulaKnown.ToArray(), parseFormulaObj.ToArray());
+        }
+
 
         public bool Equals(StaticMod obj)
         {

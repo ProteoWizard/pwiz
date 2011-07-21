@@ -195,6 +195,11 @@ namespace pwiz.Skyline.Model
             return new[] { part1, part2 };
         }
 
+        public void ParseModCounts(string desc, IDictionary<string, int> dictAtomCounts)
+        {
+            ParseModCounts(_massCalc, desc, dictAtomCounts);
+        }
+
         public static void ParseModCounts(BioMassCalc calc, string desc, IDictionary<string, int> dictAtomCounts)
         {
             string parse = desc;
