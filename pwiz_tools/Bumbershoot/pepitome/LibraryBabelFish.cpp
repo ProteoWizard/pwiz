@@ -17,8 +17,8 @@ void LibraryBabelFish::initializeDatabase()
                      );
     // Create tables
     sqlite::transaction transaction(libraryIndex);
-    libraryIndex.execute("CREATE TABLE LibMetaData ( Id INTEGER PRIMARY KEY, Peptide TEXT, LibraryMass REAL, MonoMass REAL, AvgMass REAL, Charge INTEGER);"
-                         "CREATE TABLE LibSpectrumData (Id INTEGER PRIMARY KEY, NumPeaks INTEGER, SpectrumData TEXT, FOREIGN KEY (Id) REFERENCES LibMetaData(Id));"
+    libraryIndex.execute("CREATE TABLE LibMetaData ( Id TEXT PRIMARY KEY, Peptide TEXT, LibraryMass REAL, MonoMass REAL, AvgMass REAL, Charge INTEGER);"
+                         "CREATE TABLE LibSpectrumData (Id TEXT PRIMARY KEY, NumPeaks INTEGER, SpectrumData BLOB, FOREIGN KEY (Id) REFERENCES LibMetaData(Id));"
                         );
     transaction.commit();
 }
@@ -28,7 +28,8 @@ void LibraryBabelFish::indexLibrary()
     // Get insertion commands
     sqlite::command insertMetaData(libraryIndex, "INSERT INTO LibMetaData ( Id, Peptide, LibraryMass, MonoMass, AvgMass, Charge) VALUES (?,?,?,?,?,?)");
     sqlite::command insertSpectrumData(libraryIndex, "INSERT INTO LibSpectrumData ( Id, NumPeaks, SpectrumData) VALUES (?,?,?)");
-    
+    sqlite::transaction transaction(libraryIndex);
+
     library.loadLibrary(libraryName);
     size_t totalSpectra = library.size();
     cout << "Indexing  " << totalSpectra << " found in the library." << endl;
@@ -38,7 +39,7 @@ void LibraryBabelFish::indexLibrary()
             cout << totalSpectra << ": " << index << '\r' << flush;
         // Read the library spectrum metadata and insert it into the DB
         library[index]->readSpectrumForIndexing();
-        insertMetaData.binder() << index 
+        insertMetaData.binder() << ("scan="+boost::lexical_cast<string>(index)) 
                                 << library[index]->matchedPeptide->sequence()
                                 << library[index]->libraryMass
                                 << library[index]->monoisotopicMass
@@ -48,28 +49,31 @@ void LibraryBabelFish::indexLibrary()
         insertMetaData.reset();
 
         // Archive the peptide, peaks, and proteins data.
-        stringstream packStream;
-        text_oarchive packArchive( packStream );
+        stringstream packStream(stringstream::binary|stringstream::in|stringstream::out);
+        // This library offer binary portability. boost::binary_oarchive is not protable
+        eos::portable_oarchive packArchive( packStream );
         packArchive  & *library[index];
-        // Compress the data before putting it in the DB
-        stringstream encoded;
-        bio::copy(packStream,
-                  bio::compose(bio::zlib_compressor(bio::zlib_params::zlib_params(bio::zlib::best_compression)), 
-                  bio::compose(bio::base64_encoder(),encoded)));
-        
         sqlite3_int64 numPeaks = library[index]->peakPreData.size();
-        insertSpectrumData.binder() << index 
-                                << numPeaks
-                                << encoded.str();
-
-        // Insert the compressed spectrum data into library
-        //insertSpectrumData.bind(1, index);
-        //insertSpectrumData.bind(2, numPeaks);
-        //insertSpectrumData.bind(3, static_cast<const void*>(compressedStream.str().data()), compressedStream.str().length());
+        // Insert the spectrum data into library
+        string tmpStr = packStream.str();
+        insertSpectrumData.bind(1, ("scan="+boost::lexical_cast<string>(index)) );
+        insertSpectrumData.bind(2, numPeaks);
+        insertSpectrumData.bind(3, static_cast<const void*>(tmpStr.data()), tmpStr.length());
         insertSpectrumData.execute();
         insertSpectrumData.reset();
+        /*if(index == 3)
+        {
+            ofstream tmp("tmp.bin.in");
+            cout << "\n" << packStream.str().length() << endl;
+            tmp.write(packStream.str().data(), packStream.str().length());
+            tmp.close();
+            //transaction.commit(); 
+            //exit(1);
+        }*/
         library[index]->clearSpectrum();
-    }   
+    }
+    transaction.commit();
+    libraryIndex.execute("VACUUM");   
 }
 }
 }
