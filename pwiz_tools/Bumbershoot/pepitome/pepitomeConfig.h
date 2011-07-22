@@ -123,7 +123,7 @@ namespace pepitome
 		vector<double> massErrors;
 		vector<double> mzFidelityLods;
 
-        pwiz::mziddata::MzIdentMLFile::Format outputFormat;
+        pwiz::identdata::IdentDataFile::Format outputFormat;
 
         shared_ptr<boost::math::chi_squared> chiDist;
 
@@ -131,9 +131,9 @@ namespace pepitome
 		void finalize()
 		{
             if (bal::iequals(OutputFormat, "pepXML"))
-                outputFormat = pwiz::mziddata::MzIdentMLFile::Format_pepXML;
+                outputFormat = pwiz::identdata::IdentDataFile::Format_pepXML;
             else if (bal::iequals(OutputFormat, "mzIdentML"))
-                outputFormat = pwiz::mziddata::MzIdentMLFile::Format_MzIdentML;
+                outputFormat = pwiz::identdata::IdentDataFile::Format_MzIdentML;
             else
                 throw runtime_error("invalid output format");
 

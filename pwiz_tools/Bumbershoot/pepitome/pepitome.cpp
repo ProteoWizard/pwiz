@@ -327,7 +327,7 @@ namespace freicore
             BOOST_FOREACH(Spectrum* s, spectra)
             {
                 ++ numSpectra;
-                spectra.setId( s->id, SpectrumId( filenameAsScanName, s->id.index, s->id.charge ) );
+                spectra.setId( s->id, SpectrumId( filenameAsScanName, s->id.nativeID, s->id.charge ) );
                 s->computeSecondaryScores();
             }
 
@@ -353,11 +353,20 @@ namespace freicore
             fileParams["PeakCounts: 3rdQuartile: Original"] = lexical_cast<string>( opcs[4] );
             fileParams["PeakCounts: 3rdQuartile: Filtered"] = lexical_cast<string>( fpcs[4] );
             
-            string extension = g_rtConfig->outputFormat == pwiz::mziddata::MzIdentMLFile::Format_pepXML ? ".pepXML" : ".mzid";
+            string extension = g_rtConfig->outputFormat == pwiz::identdata::IdentDataFile::Format_pepXML ? ".pepXML" : ".mzid";
 		    string outputFilename = filenameAsScanName + g_rtConfig->OutputSuffix + extension;
 		    cout << "Writing search results to file \"" << outputFilename << "\"." << endl;
 
-		    spectra.write( dataFilename, g_rtConfig->outputFormat, g_rtConfig->OutputSuffix, "Pepitome", g_dbPath + g_dbFilename, g_rtConfig->cleavageAgentRegex, fileParams );
+		    spectra.write( dataFilename, 
+                           g_rtConfig->outputFormat,
+                           g_rtConfig->OutputSuffix,
+                           "Pepitome", 
+                            Version::str(),
+                            "http://forge.fenchurch.mc.vanderbilt.edu/projects/pepitome/",
+                            g_dbPath + g_dbFilename, 
+                            g_rtConfig->cleavageAgentRegex,
+                            g_rtConfig->DecoyPrefix,
+                            fileParams );
         }
 
         void PrepareSpectra()
@@ -417,96 +426,137 @@ namespace freicore
         }
 
         typedef pair<string,size_t> Protein;
+
+        void readLibrarySpectraAsBatch(const vector<size_t>& indices, CandidateQueries& candidateQueries)
+        {
+
+            vector<size_t> spectraToBeRead;
+            BOOST_FOREACH(size_t currSpectrumIndex, indices)
+            {
+                
+                if(librarySpectra[currSpectrumIndex]->id.charge > g_rtConfig->maxChargeStateFromSpectra)
+                {
+                    ++searchStatistics.numSpectraSearched;
+                    continue;
+                }
+                double libraryMass = librarySpectra[currSpectrumIndex]->libraryMass;
+                if(libraryMass < g_rtConfig->curMinPeptideMass || libraryMass > g_rtConfig->curMaxPeptideMass)
+                {
+                    ++searchStatistics.numSpectraSearched;
+                    continue;
+                }
+                int z = librarySpectra[currSpectrumIndex]->id.charge-1;
+                // Look up the spectra that have precursor mass hypotheses between mass + massError and mass - massError
+                vector<SpectraMassMap::iterator> candidateHypotheses;
+                SpectraMassMap::iterator cur, end;
+                if(g_rtConfig->RecalculateLibPepMasses)
+                {
+                    double monoCalculatedMass = librarySpectra[currSpectrumIndex]->monoisotopicMass;
+                    double avgCalculatedMass = librarySpectra[currSpectrumIndex]->averageMass;
+
+                    end = monoSpectraByChargeState[z].upper_bound( monoCalculatedMass + g_rtConfig->monoPrecursorMassTolerance[z] );
+                    for( cur = monoSpectraByChargeState[z].lower_bound( monoCalculatedMass - g_rtConfig->monoPrecursorMassTolerance[z] ); cur != end; ++cur )
+                        candidateHypotheses.push_back(cur);
+
+                    end = avgSpectraByChargeState[z].upper_bound( avgCalculatedMass + g_rtConfig->avgPrecursorMassTolerance[z] );
+                    for( cur = avgSpectraByChargeState[z].lower_bound( avgCalculatedMass - g_rtConfig->avgPrecursorMassTolerance[z] ); cur != end; ++cur )
+                        candidateHypotheses.push_back(cur);
+                } 
+                else
+                {
+                    end = monoSpectraByChargeState[z].upper_bound( libraryMass + g_rtConfig->monoPrecursorMassTolerance[z] );
+                    for( cur = monoSpectraByChargeState[z].lower_bound( libraryMass - g_rtConfig->monoPrecursorMassTolerance[z] ); cur != end; ++cur )
+                        candidateHypotheses.push_back(cur);
+
+                    end = avgSpectraByChargeState[z].upper_bound( libraryMass + g_rtConfig->avgPrecursorMassTolerance[z] );
+                    for( cur = avgSpectraByChargeState[z].lower_bound( libraryMass - g_rtConfig->avgPrecursorMassTolerance[z] ); cur != end; ++cur )
+                        candidateHypotheses.push_back(cur);
+                }
+
+                if(candidateHypotheses.size()==0)
+                {
+                    ++searchStatistics.numSpectraSearched;
+                    continue;
+                }
+
+                candidateQueries.insert(make_pair(currSpectrumIndex,candidateHypotheses));
+                spectraToBeRead.push_back(currSpectrumIndex);
+            }
+            START_PROFILER(3)
+            librarySpectra.readSpectraAsBatch(spectraToBeRead);
+            searchStatistics.numSpectraSearched += spectraToBeRead.size();
+            STOP_PROFILER(3)
+        }
+        
+        typedef vector< vector < size_t > > LibraryBatchTasks;
+        LibraryBatchTasks libBatchValues;
+
         /*
          * This function takes a library spectrum index and searches it against  the experimental spectra
         */
-        boost::int64_t QuerySpectrum( int libSpectrumIndex, bool estimateComparisonsOnly = false )
+        boost::int64_t QueryLibraryBatch( int libBatchIndex, bool estimateComparisonsOnly = false )
         {
             boost::int64_t numComparisonsDone = 0;
-
-            if(librarySpectra[libSpectrumIndex]->id.charge > g_rtConfig->maxChargeStateFromSpectra)
-                return numComparisonsDone;
-            double libraryMass = librarySpectra[libSpectrumIndex]->libraryMass;
-            if(libraryMass < g_rtConfig->curMinPeptideMass || libraryMass > g_rtConfig->curMaxPeptideMass)
-                return numComparisonsDone;
-            int z = librarySpectra[libSpectrumIndex]->id.charge-1;
-
-            // Look up the spectra that have precursor mass hypotheses between mass + massError and mass - massError
-            vector<SpectraMassMap::iterator> candidateHypotheses;
-            SpectraMassMap::iterator cur, end;
-            if(g_rtConfig->RecalculateLibPepMasses)
-            {
-                double monoCalculatedMass = librarySpectra[libSpectrumIndex]->monoisotopicMass;
-                double avgCalculatedMass = librarySpectra[libSpectrumIndex]->averageMass;
-
-                end = monoSpectraByChargeState[z].upper_bound( monoCalculatedMass + g_rtConfig->monoPrecursorMassTolerance[z] );
-                for( cur = monoSpectraByChargeState[z].lower_bound( monoCalculatedMass - g_rtConfig->monoPrecursorMassTolerance[z] ); cur != end; ++cur )
-                    candidateHypotheses.push_back(cur);
-
-                end = avgSpectraByChargeState[z].upper_bound( avgCalculatedMass + g_rtConfig->avgPrecursorMassTolerance[z] );
-                for( cur = avgSpectraByChargeState[z].lower_bound( avgCalculatedMass - g_rtConfig->avgPrecursorMassTolerance[z] ); cur != end; ++cur )
-                    candidateHypotheses.push_back(cur);
-            } 
-            else
-            {
-                end = monoSpectraByChargeState[z].upper_bound( libraryMass + g_rtConfig->monoPrecursorMassTolerance[z] );
-                for( cur = monoSpectraByChargeState[z].lower_bound( libraryMass - g_rtConfig->monoPrecursorMassTolerance[z] ); cur != end; ++cur )
-                    candidateHypotheses.push_back(cur);
-
-                end = avgSpectraByChargeState[z].upper_bound( libraryMass + g_rtConfig->avgPrecursorMassTolerance[z] );
-                for( cur = avgSpectraByChargeState[z].lower_bound( libraryMass - g_rtConfig->avgPrecursorMassTolerance[z] ); cur != end; ++cur )
-                    candidateHypotheses.push_back(cur);
-            }
-
-            if(candidateHypotheses.size()==0)
-                return numComparisonsDone;
             
-            // Load the library spectra from the file, if we have candidate matches
-            librarySpectra[libSpectrumIndex]->readSpectrum(g_rtConfig->LibTicCutoffPercentage, g_rtConfig->LibMaxPeakCount, g_rtConfig->CleanLibSpectra);
-            int libPeptideLength = librarySpectra[libSpectrumIndex]->matchedPeptide->sequence().length();
-            if(libPeptideLength < g_rtConfig->MinPeptideLength || libPeptideLength > g_rtConfig->MaxPeptideLength)
-                return numComparisonsDone;
-            
-            BOOST_FOREACH(SpectraMassMap::iterator spectrumHypothesisPair, candidateHypotheses)
-			{
-                Spectrum* spectrum = spectrumHypothesisPair->second.first;
-                PrecursorMassHypothesis& p = spectrumHypothesisPair->second.second;
-                
-                boost::shared_ptr<SearchResult> resultPtr(new SearchResult(*librarySpectra[libSpectrumIndex]->matchedPeptide));
-                SearchResult& result = *resultPtr;
-
-                if( !estimateComparisonsOnly )
-                {
-                    spectrum->ScoreSpectrumVsSpectrum(result, librarySpectra[libSpectrumIndex]->peakData);
-                    if( result.mvh >= g_rtConfig->MinResultScore )
-                        BOOST_FOREACH(Protein p, librarySpectra[libSpectrumIndex]->matchedProteins)
-                            result.proteins.insert(p.first);
-                }
-
-                ++numComparisonsDone;
-
-                if( estimateComparisonsOnly )
+            CandidateQueries queries;
+            readLibrarySpectraAsBatch(libBatchValues[libBatchIndex], queries);
+            BOOST_FOREACH(const Query& query, queries)
+            {
+                size_t libSpectrumIndex = query.first;
+                vector<SpectraMassMap::iterator> candidateHypotheses = query.second;
+                // Load the library spectra from the file, if we have candidate matches
+                START_PROFILER(12)
+                librarySpectra[libSpectrumIndex]->preprocessSpectrum(g_rtConfig->LibTicCutoffPercentage, g_rtConfig->LibMaxPeakCount, g_rtConfig->CleanLibSpectra);
+                STOP_PROFILER(12)
+                int libPeptideLength = librarySpectra[libSpectrumIndex]->matchedPeptide->sequence().length();
+                if(libPeptideLength < g_rtConfig->MinPeptideLength || libPeptideLength > g_rtConfig->MaxPeptideLength)
                     continue;
-
-                START_PROFILER(4);
-                {
-                    boost::lock_guard<boost::mutex> guard(spectrum->mutex);
+                
+                ++searchStatistics.numSpectraQueried;
+                int z = librarySpectra[libSpectrumIndex]->id.charge-1;
+                BOOST_FOREACH(SpectraMassMap::iterator spectrumHypothesisPair, candidateHypotheses)
+			    {
+                    Spectrum* spectrum = spectrumHypothesisPair->second.first;
+                    PrecursorMassHypothesis& p = spectrumHypothesisPair->second.second;
                     
-                    ++spectrum->numTargetComparisons;
-
-                    if( result.mvh >= g_rtConfig->MinResultScore )
+                    boost::shared_ptr<SearchResult> resultPtr(new SearchResult(*librarySpectra[libSpectrumIndex]->matchedPeptide));
+                    SearchResult& result = *resultPtr;
+                    START_PROFILER(5)
+                    if( !estimateComparisonsOnly )
                     {
-                        result.precursorMassHypothesis = p;
-                        // Accumulate score distributions for the spectrum
-                        ++ spectrum->mvhScoreDistribution[ (int) (result.mvh+0.5) ];
-                        ++ spectrum->mzFidelityDistribution[ (int) (result.mzFidelity+0.5)];
-                        spectrum->resultsByCharge[z].add( resultPtr );   
+                        spectrum->ScoreSpectrumVsSpectrum(result, librarySpectra[libSpectrumIndex]->peakData);
+                        if( result.mvh >= g_rtConfig->MinResultScore )
+                            BOOST_FOREACH(Protein p, librarySpectra[libSpectrumIndex]->matchedProteins)
+                                result.proteins.insert(p.first);
                     }
+                    STOP_PROFILER(5)
+                    ++numComparisonsDone;
+
+                    if( estimateComparisonsOnly )
+                        continue;
+
+                    START_PROFILER(4);
+                    {
+                        boost::unique_lock<boost::mutex> guard(spectrum->mutex,boost::defer_lock);
+                        guard.lock();
+                        
+                        ++spectrum->numTargetComparisons;
+
+                        if( result.mvh >= g_rtConfig->MinResultScore )
+                        {
+                            result.precursorMassHypothesis = p;
+                            // Accumulate score distributions for the spectrum
+                            ++ spectrum->mvhScoreDistribution[ (int) (result.mvh+0.5) ];
+                            ++ spectrum->mzFidelityDistribution[ (int) (result.mzFidelity+0.5)];
+                            spectrum->resultsByCharge[z].add( resultPtr );   
+                        }
+                        guard.unlock();
+                    }
+                    STOP_PROFILER(4);
                 }
-                STOP_PROFILER(4);
+                // Clear the spectrum to keep memory in bounds.
+                librarySpectra[libSpectrumIndex]->clearSpectrum();
             }
-            // Clear the spectrum to keep memory in bounds.
-            librarySpectra[libSpectrumIndex]->clearSpectrum();
 
             return numComparisonsDone;
         }
@@ -521,11 +571,8 @@ namespace freicore
                 {
                     if (!libraryTasks.dequeue(&libraryTask))
                         break;
-
-                    ++searchStatistics.numSpectraSearched;
-                    boost::int64_t numComps = QuerySpectrum(libraryTask);
-                    if(numComps>0)
-                        ++searchStatistics.numSpectraQueried;
+                    
+                    boost::int64_t numComps = QueryLibraryBatch(libraryTask);
                     searchStatistics.numComparisonsDone += numComps;
                 }
             } catch( std::exception& e )
@@ -539,12 +586,44 @@ namespace freicore
             return 0;
         } 
 
+        
         void ExecuteSearch()
         {
             size_t numProcessors = (size_t) g_numWorkers;
             boost::uint32_t numLibSpectra = (boost::uint32_t) librarySpectra.size();
             
-            for (size_t i=0; i < numLibSpectra; ++i)
+            // Clear any previous batches
+            libBatchValues.clear();
+
+            vector<size_t> current;
+            size_t currentBatchSize = 0;
+            // For each spectrum
+            for( size_t i=0; i < numLibSpectra; ++i ) 
+            {
+                // Check the result size, if it exceeds the limit, then push back the
+                // current list into the vector and get a fresh list
+                ++currentBatchSize;
+                if(currentBatchSize>5000) 
+                {
+                    libBatchValues.push_back(current);
+                    current.clear();
+                    currentBatchSize = 0;
+                }
+                current.push_back(i);
+            }
+            // Make sure you push back the last batch
+            if(current.size()>0)
+                libBatchValues.push_back(current);
+            // Check to see if the last batch is not a tiny batch
+            if(libBatchValues.back().size()<1000 && libBatchValues.size()>1) 
+            {
+                vector<size_t> last = libBatchValues.back(); libBatchValues.pop_back();
+                vector<size_t> penultimate = libBatchValues.back(); libBatchValues.pop_back();
+                penultimate.insert(penultimate.end(),last.begin(),last.end());
+                libBatchValues.push_back(penultimate);
+            }
+
+            for (size_t i=0; i < libBatchValues.size(); ++i)
 			    libraryTasks.enqueue(i);
 
             bpt::ptime start = bpt::microsec_clock::local_time();
@@ -579,6 +658,7 @@ namespace freicore
                     << round(spectraPerSec) << " per second, "
                     << format_date_time("%H:%M:%S", bpt::time_duration(0, 0, elapsed.total_seconds())) << " elapsed, "
                     << format_date_time("%H:%M:%S", estimatedTimeRemaining) << " remaining." << endl;
+                PRINT_PROFILERS(cout,"profile:");
             }
         }
 
@@ -870,7 +950,7 @@ namespace freicore
                     }
                     // randomize order of the spectra to optimize work 
                     // distribution in the multi-threading mode.
-                    librarySpectra.random_shuffle();
+                    //librarySpectra.random_shuffle();
 
                     fileList_t finishedFiles;
                     fileList_t::iterator fItr;
@@ -962,7 +1042,7 @@ namespace freicore
                                     cout << "Commencing library search on " << numSpectra << " spectra." << endl;
                                     startTime = GetTimeString(); startDate = GetDateString(); searchTime.Begin();
                                     ExecuteSearch();
-                                    cout << "Finished database search; " << searchTime.End() << " seconds elapsed." << endl;
+                                    cout << "Finished library search; " << searchTime.End() << " seconds elapsed." << endl;
 								    cout << "Overall stats: " << (string) searchStatistics << endl;
                                 } else
                                 {
