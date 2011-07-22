@@ -20,6 +20,8 @@
 #include "freicore.h"
 #include "PeakSpectrum.h"
 #include "shared_types.h"
+#include "portable_iarchive.hpp"
+#include "portable_oarchive.hpp"
 
 #include "sqlite/sqlite3pp.h"
 
@@ -30,9 +32,6 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/predicate.hpp>
-
-#include <boost/archive/portable_iarchive.hpp>
-#include <boost/archive/portable_oarchive.hpp>
 
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/compose.hpp>
