@@ -459,6 +459,8 @@ tar.create $(application-name:L)-src.tar.bz2
 
     [ path.glob $(ROOT_PATH) : *.cpp *.hpp *.h ]
     [ path.glob $(ROOT_PATH)/freicore : *.cpp *.hpp *.h *.tar.bz2 ]
+    unimod.xml
+    blosum62.fas
     $(ROOT_PATH)/freicore/Jamfile.jam
     $(ROOT_PATH)/freicore/ext
 
