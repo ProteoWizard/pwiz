@@ -403,7 +403,7 @@ tar.create boost_$(BOOST_VERSION:J=_).tar.bz2
   exclude:.svn
   exclude:*.bak
   exclude:svnrev.hpp
-  exclude:Version.cpp
+  exclude:*Version.cpp
   exclude:Reader_*_Test.data*
   exclude:site-config.jam exclude:user-config.jam # user should provide these
   exclude:bootstrap exclude:bin.* # boost-build intermediate directories
@@ -447,10 +447,8 @@ tar.create $(application-name:L)-src.tar.bz2
 
     $(.exclusion-list)
 
-    [ path.glob $(ROOT_PATH) : *.cpp *.h ]
-    [ glob $(ROOT_PATH)/freicore/*.h ]
-    [ glob $(ROOT_PATH)/freicore/*.cpp ]
-    [ glob $(ROOT_PATH)/freicore/*.tar.bz2 ]
+    [ path.glob $(ROOT_PATH) : *.cpp *.hpp *.h ]
+    [ path.glob $(ROOT_PATH)/freicore : *.cpp *.hpp *.h *.tar.bz2 ]
     $(ROOT_PATH)/freicore/Jamfile.jam
     $(ROOT_PATH)/freicore/ext
 
