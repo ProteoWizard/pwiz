@@ -444,7 +444,7 @@ tar.create $(application-name:L)-src.tar.bz2
     $(.exclusion-list)
 
     [ path.glob $(ROOT_PATH) : *.cpp *.hpp *.h ]
-    [ path.glob $(ROOT_PATH)/freicore : *.cpp *.hpp *.h *.tar.bz2
+    [ path.glob $(ROOT_PATH)/freicore : *.cpp *.hpp *.h *.tar.bz2 ]
     $(ROOT_PATH)/freicore/Jamfile.jam
     $(ROOT_PATH)/freicore/ext
 
