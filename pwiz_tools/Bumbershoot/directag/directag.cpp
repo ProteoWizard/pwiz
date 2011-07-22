@@ -17,7 +17,7 @@
 //
 // Copyright 2009 Vanderbilt University
 //
-// Contributor(s): Surendra Dasaris, Zeqiang Ma
+// Contributor(s): Surendra Dasari, Zeqiang Ma
 //
 
 #include "stdafx.h"

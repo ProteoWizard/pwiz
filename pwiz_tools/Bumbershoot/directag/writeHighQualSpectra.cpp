@@ -13,12 +13,11 @@
 //
 // The Original Code is the DirecTag peptide sequence tagger.
 //
-// The Initial Developer of the Original Code is Matt Chambers.
+// The Initial Developer of the Original Code is Zeqiang Ma.
 //
 // Copyright 2009 Vanderbilt University
 //
-// Contributor(s): Surendra Dasaris, Zeqiang Ma
-//
+// Contributor(s):
 
 // modified from msconvert source code
 
