@@ -27,7 +27,6 @@
 
 #include "stdafx.h"
 #include "freicore.h"
-#include "base64.h"
 #include "directagSpectrum.h"
 #include "tagsFile.h"
 #include <boost/atomic.hpp>
