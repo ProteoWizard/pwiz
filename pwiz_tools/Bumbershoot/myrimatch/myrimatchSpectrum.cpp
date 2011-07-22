@@ -140,7 +140,7 @@ namespace myrimatch
 			    ++ intenClassCounts[ itr->second.intenClass-1 ];
 		}
 		intenClassCounts[ g_rtConfig->NumIntensityClasses ] = totalPeakBins - peakCount;
-		//cout << id.index << ": " << intenClassCounts << endl;
+		//cout << id.nativeID << ": " << intenClassCounts << endl;
 
         int divider = 0;
 	    for( int i=0; i < g_rtConfig->NumMzFidelityClasses-1; ++i )
@@ -149,10 +149,10 @@ namespace myrimatch
 		    mzFidelityThresholds[i] = g_rtConfig->FragmentMzTolerance.value * (double)divider / (double)g_rtConfig->minMzFidelityClassCount;
 	    }
 		mzFidelityThresholds.back() = g_rtConfig->FragmentMzTolerance.value;
-        //cout << id.index << ": " << mzFidelityThresholds << endl;
+        //cout << id.nativeID << ": " << mzFidelityThresholds << endl;
 
 		//totalPeakSpace = peakPreData.rbegin()->first - peakPreData.begin()->first;
-		//if( id.index == 1723 )
+		//if( id.nativeID == 1723 )
 		//	cout << totalPeakSpace << " " << mzUpperBound << " " << mzLowerBound << endl;
 
         // we no longer need the raw intensities
@@ -194,7 +194,7 @@ namespace myrimatch
 
 		// Restore the sorting order to be based on MZ
 		IntenSortedPeakPreData::reverse_iterator r_iItr = intenSortedPeakPreData.rbegin();
-        //cout << id.index << peakPreData.size() << endl;
+        //cout << id.nativeID << peakPreData.size() << endl;
 		peakPreData.clear();
 		peakData.clear();
 

@@ -336,7 +336,7 @@ namespace myrimatch
 		{
 			++ numSpectra;
 
-			spectra.setId( s->id, SpectrumId( filenameAsScanName, s->id.index, s->id.charge ) );
+			spectra.setId( s->id, SpectrumId( filenameAsScanName, s->id.nativeID, s->id.charge ) );
 
 		
 			s->computeSecondaryScores();
@@ -1098,7 +1098,7 @@ namespace myrimatch
 					}
 
 					//for( int i=0; i < (int) preparedSpectra.size(); ++i )
-					//	cout << preparedSpectra[i]->id.index << " " << preparedSpectra[i]->peakData.size() << endl;
+					//	cout << preparedSpectra[i]->id.nativeID << " " << preparedSpectra[i]->peakData.size() << endl;
 
 					TransmitPreparedSpectraToRootProcess( preparedSpectra );
 

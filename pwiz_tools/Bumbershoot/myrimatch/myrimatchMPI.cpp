@@ -32,6 +32,7 @@
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/filter/zlib.hpp>
 #include <pwiz/data/proteome/Serializer_FASTA.hpp>
+#include <boost/serialization/variant.hpp>
 
 BOOST_CLASS_IMPLEMENTATION(boost::atomic_uint32_t, boost::serialization::primitive_type)
 BOOST_CLASS_IMPLEMENTATION(boost::atomic_uint64_t, boost::serialization::primitive_type)
