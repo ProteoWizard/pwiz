@@ -26,7 +26,7 @@
 #include "stdafx.h"
 #include "freicore.h"
 #include "BaseRunTimeConfig.h"
-#include "pwiz/data/identdata/MzIdentMLFile.hpp"
+#include "pwiz/data/identdata/IdentDataFile.hpp"
 #include "pwiz/utility/math/erf.hpp"
 #include <boost/math/distributions/chi_squared.hpp>
 using boost::math::chi_squared_distribution;
