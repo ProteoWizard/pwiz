@@ -44,6 +44,13 @@ using std::underflow_error;
 #ifdef _DEBUG
 #include <crtdbg.h>
 #include <iostream>
+#ifndef BOOST_THREAD_NO_LIB
+#define BOOST_THREAD_NO_LIB	// because not all build targets currently define this
+#endif
+#ifndef BOOST_DATE_TIME_NO_LIB
+#define BOOST_DATE_TIME_NO_LIB	// because not all build targets currently define this
+#endif
+#include <boost/utility/detail/singleton_manager.hpp>
 inline int CrtReportHook(int reportType, char *message, int *returnValue)
 {
     std::cerr << message;
@@ -70,6 +77,10 @@ struct ReportHooker
     {
         _CrtSetReportHook2(_CRT_RPTHOOK_REMOVE, &CrtReportHook);
         _CrtSetReportHookW2(_CRT_RPTHOOK_REMOVE, &CrtReportHookW);
+
+        // In debug builds, destroy the singletons to keep memory leak detection
+        // from reporting them.
+        boost::destroy_singletons();
     }
 
     // TODO: redesign to support once-per-process (or once-per-thread?) initialization
