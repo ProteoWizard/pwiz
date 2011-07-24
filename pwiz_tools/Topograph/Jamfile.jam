@@ -103,10 +103,10 @@ if [ modules.peek : NT ]
             <link>shared:<build>no
             <address-model>64:<build>no
             <conditional>@no-msvc-express
-            <toolset>msvc:<assembly>../../pwiz/utility/bindings/CLI//pwiz_bindings_cli
+            <toolset>msvc:<assembly>../../pwiz/utility/bindings/CLI//pwiz_data_cli
             <conditional>@build-location
-            <dependency>../../pwiz/utility/bindings/CLI//pwiz_bindings_cli/<location>$(PWIZ_WRAPPER_PATH)/obj/x86
-            <dependency>../../pwiz/utility/bindings/CLI//pwiz_bindings_cli.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/x86
+            <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli/<location>$(PWIZ_WRAPPER_PATH)/obj/x86
+            <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/x86
             <dependency>../../pwiz_aux/msrc/utility/vendor_api/Agilent//install_pwiz_vendor_api_agilent_eula/<location>$(TOPOGRAPH_PATH)/turnover
             <dependency>../../pwiz_aux/msrc/utility/vendor_api/Bruker//install_pwiz_vendor_api_bruker_stub/<location>$(TOPOGRAPH_PATH)/turnover
             <dependency>../../pwiz_aux/msrc/utility/vendor_api/Bruker//install_pwiz_vendor_api_bruker_stub/<location>$(PWIZ_WRAPPER_PATH)

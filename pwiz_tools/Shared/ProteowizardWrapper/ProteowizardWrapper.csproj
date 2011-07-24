@@ -55,9 +55,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>obj\x86\MassSpecDataReader.dll</HintPath>
     </Reference>
-    <Reference Include="pwiz_bindings_cli, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
+    <Reference Include="pwiz_data_cli, Version=0.0.0.0, Culture=neutral, processorArchitecture=x86">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>obj\x86\pwiz_bindings_cli.dll</HintPath>
+      <HintPath>obj\x86\pwiz_data_cli.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
