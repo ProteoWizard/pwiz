@@ -110,7 +110,7 @@ namespace boost
                 if (!!ptr_instance)
                 { 
                     context* i;
-                    while (!!(i = ptr_instance->ptr_first))
+                    while ((i = ptr_instance->ptr_first) != 0)
                     {
                         context* next = i->ptr_next;
                         i->fnc_dtor(i);
