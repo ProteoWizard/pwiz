@@ -118,6 +118,18 @@ size_t enumValue(const Term& term, size_t index)
 vector< map<Term::id_type, const Term*> > termMaps;
 vector< map<Term::id_type, string> > correctedEnumNameMaps;
 
+static string replaceAll(string result, const string& replaceWhat, const string& replaceWithWhat)
+{
+    for (int pos = 0; (pos = result.find(replaceWhat, pos)) != -1; /* do nothing */)
+        result.replace(pos,replaceWhat.size(),replaceWithWhat);
+    return result;
+}
+
+static string toupperAll(string result)
+{
+    transform(result.begin(), result.end(), result.begin(), (int(*)(int)) toupper);
+    return result;
+}
 
 void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& outputDir)
 {
@@ -138,7 +150,10 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
 
     for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
     {
-        os << "// [" << bfs::path(obo->filename).filename() << "]\n";
+		string filename = bfs::path(obo->filename).filename();
+        os << "// [" << filename << "]\n";
+        string fileDefine = replaceAll(replaceAll(toupperAll(filename), "-", "_"), ".", "_");
+        os << "#define _" << fileDefine << "_\n";
 
         for (vector<string>::const_iterator it=obo->header.begin(); it!=obo->header.end(); ++it)
             os << "//   " << *it << endl;

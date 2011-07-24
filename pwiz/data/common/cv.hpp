@@ -34,6 +34,7 @@
 
 
 // [psi-ms.obo]
+#define _PSI_MS_OBO_
 //   format-version: 1.2
 //   date: 06:07:2011 15:05
 //   saved-by: edeutsch
@@ -55,12 +56,14 @@
 //   import: http://obo.cvs.sourceforge.net/*checkout*/obo/obo/ontology/phenotype/unit.obo
 //
 // [unimod.obo]
+#define _UNIMOD_OBO_
 //   format-version: 1.0
 //   date: 19:11:2008 14:50
 //   saved-by: psi-pi_team
 //   default-namespace: UNIMOD
 //
 // [unit.obo]
+#define _UNIT_OBO_
 //   format-version: 1.2
 //   date: 18:03:2011 15:34
 //   saved-by: George Gkoutos
