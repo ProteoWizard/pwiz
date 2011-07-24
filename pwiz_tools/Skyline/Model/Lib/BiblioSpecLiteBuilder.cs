@@ -19,14 +19,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.Globalization;
 using System.IO;
-using System.Text;
 using pwiz.BiblioSpec;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
-using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline.Model.Lib
 {
@@ -75,7 +71,7 @@ namespace pwiz.Skyline.Model.Lib
             string outputDir = Path.GetDirectoryName(OutputPath);
             string outputBaseName = Path.GetFileNameWithoutExtension(OutputPath);
             string redundantLibrary = Path.Combine(outputDir ?? "", outputBaseName + BiblioSpecLiteSpec.EXT_REDUNDANT);
-            var blibBuilder = new BiblioSpec.BlibBuild(redundantLibrary, InputFiles)
+            var blibBuilder = new BlibBuild(redundantLibrary, InputFiles)
             {
                 Authority = Authority,
                 CutOffScore = CutOffScore,
@@ -91,13 +87,13 @@ namespace pwiz.Skyline.Model.Lib
             }
             catch (IOException x)
             {
-                progress.UpdateProgress(status = status.ChangeErrorException(x));
+                progress.UpdateProgress(status.ChangeErrorException(x));
                 return false;
             }
             catch (Exception x)
             {
                 Console.WriteLine(x.Message);
-                progress.UpdateProgress(status = status.ChangeErrorException(new Exception(string.Format("Failed trying to build the redundant library {0}.", redundantLibrary))));
+                progress.UpdateProgress(status.ChangeErrorException(new Exception(string.Format("Failed trying to build the redundant library {0}.", redundantLibrary))));
                 return false;
             }
             var blibFilter = new BlibFilter();
