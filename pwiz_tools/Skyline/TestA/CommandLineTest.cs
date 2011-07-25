@@ -91,7 +91,7 @@ namespace pwiz.SkylineTestA
                                "--out=" + outPath
                            };
 
-            Program.RunCommand(args, consoleOutput);
+            CommandLineRunner.RunCommand(args, consoleOutput);
 
             SrmDocument doc = ResultsUtil.DeserializeDocument(outPath);
 
@@ -107,7 +107,7 @@ namespace pwiz.SkylineTestA
             var dataFile2 = testFilesDir.GetTestPath("ah_20101029r_BSA_CID_FT_centroid_3uscan_3" +
                 ExtensionTestContext.ExtThermoRaw);
 
-            Program.RunCommand(new[]
+            CommandLineRunner.RunCommand(new[]
                                    {
                                        "--in=" + outPath,
                                        "--import-file=" + dataFile2,
@@ -181,7 +181,7 @@ namespace pwiz.SkylineTestA
                                "--report-file=" + outPath                               
                            };
 
-            Program.RunCommand(args, consoleOutput);
+            CommandLineRunner.RunCommand(args, consoleOutput);
 
             string reportLines = File.ReadAllText(outPath);
             AssertEx.NoDiff(reportLines, programmaticReport);
@@ -214,7 +214,7 @@ namespace pwiz.SkylineTestA
                                "--exp-file=" + thermoPath   
                            };
 
-            Program.RunCommand(args, consoleOutput);
+            CommandLineRunner.RunCommand(args, consoleOutput);
             
             Assert.IsTrue(consoleBuffer.ToString().Contains("successfully."));
             Assert.IsTrue(File.Exists(thermoPath));
@@ -237,7 +237,7 @@ namespace pwiz.SkylineTestA
                                "--exp-dwelltime=20"
                            };
 
-            Program.RunCommand(args, consoleOutput);
+            CommandLineRunner.RunCommand(args, consoleOutput);
 
             //check for success
             Assert.IsTrue(consoleBuffer.ToString().Contains("successfully."));
@@ -260,7 +260,7 @@ namespace pwiz.SkylineTestA
                                "--exp-dwelltime=20"
                            };
 
-            Program.RunCommand(args, consoleOutput);
+            CommandLineRunner.RunCommand(args, consoleOutput);
 
             //check for success
             Assert.IsTrue(consoleBuffer.ToString().Contains("successfully."));
@@ -283,7 +283,7 @@ namespace pwiz.SkylineTestA
                                "--exp-runlength=100"
                            };
 
-            Program.RunCommand(args, consoleOutput);
+            CommandLineRunner.RunCommand(args, consoleOutput);
 
             //check for success
             Assert.IsTrue(consoleBuffer.ToString().Contains("successfully."));
@@ -323,7 +323,7 @@ namespace pwiz.SkylineTestA
 //                               "--exp-full-scans"                               
 //                           };
 //
-//            Program.RunCommand(args, consoleOutput);
+//            CommandLineRunner.RunCommand(args, consoleOutput);
             //check for success
 //            Assert.IsTrue(consoleBuffer.ToString().Contains("successfully."));
 
@@ -348,7 +348,7 @@ namespace pwiz.SkylineTestA
                                "--exp-max-trans=75",
                            };
 
-            Program.RunCommand(args, consoleOutput);
+            CommandLineRunner.RunCommand(args, consoleOutput);
 
             //check for success
             Assert.IsTrue(consoleBuffer.ToString().Contains("successfully."));
@@ -373,7 +373,7 @@ namespace pwiz.SkylineTestA
 
 
             //Error: file does not exist
-            Program.RunCommand(new[]
+            CommandLineRunner.RunCommand(new[]
                                    {
                                        "--in=" + bogusPath
                                    },
@@ -385,7 +385,7 @@ namespace pwiz.SkylineTestA
             consoleBuffer = new StringBuilder();
             consoleOutput = new StringWriter(consoleBuffer);
 
-            Program.RunCommand(new[]
+            CommandLineRunner.RunCommand(new[]
                                    {
                                        "--in=" + docPath,
                                        "--import-file=" + rawPath,
@@ -401,7 +401,7 @@ namespace pwiz.SkylineTestA
             consoleBuffer = new StringBuilder();
             consoleOutput = new StringWriter(consoleBuffer);
 
-            Program.RunCommand(new[]
+            CommandLineRunner.RunCommand(new[]
                                    {
                                        "--in=" + docPath,
                                        "--import-file=" + rawPath,
@@ -415,7 +415,7 @@ namespace pwiz.SkylineTestA
             consoleBuffer = new StringBuilder();
             consoleOutput = new StringWriter(consoleBuffer);
 
-            Program.RunCommand(new[]
+            CommandLineRunner.RunCommand(new[]
                                    {
                                        "--import-file=" + rawPath,
                                        "--save"
@@ -427,7 +427,7 @@ namespace pwiz.SkylineTestA
             consoleBuffer = new StringBuilder();
             consoleOutput = new StringWriter(consoleBuffer);
 
-            Program.RunCommand(new[]
+            CommandLineRunner.RunCommand(new[]
                                    {
                                        "--out=" + outPath,
                                        "--report-file=" + tsvPath,                                       
@@ -457,7 +457,7 @@ namespace pwiz.SkylineTestA
                                "--exp-scheduling-replicate=LAST"                               
                            };
 
-            Program.RunCommand(args, consoleOutput);
+            CommandLineRunner.RunCommand(args, consoleOutput);
             Assert.IsTrue(consoleBuffer.ToString().Contains("successfully."));
 
 
@@ -480,7 +480,7 @@ namespace pwiz.SkylineTestA
                                "--exp-scheduling-replicate=Single"                               
                            };
 
-            Program.RunCommand(args, consoleOutput);
+            CommandLineRunner.RunCommand(args, consoleOutput);
             Assert.IsTrue(consoleBuffer.ToString().Contains("successfully."));
 
 
@@ -509,7 +509,7 @@ namespace pwiz.SkylineTestA
                                //1 Error for using the above 2 parameters simultaneously
                            };
 
-            Program.RunCommand(args, consoleOutput);
+            CommandLineRunner.RunCommand(args, consoleOutput);
 
             string buf = consoleBuffer.ToString();
             Assert.IsFalse(buf.Contains("successfully."));
@@ -525,7 +525,7 @@ namespace pwiz.SkylineTestA
             var commandFilesDir = new TestFilesDir(TestContext, COMMAND_FILE);
             var brokenFile = commandFilesDir.GetTestPath("Broken_file.sky");
 
-            Program.RunCommand(new[]
+            CommandLineRunner.RunCommand(new[]
                                    {
                                        "--in=" + brokenFile
                                     }, consoleOutput);
@@ -539,7 +539,7 @@ namespace pwiz.SkylineTestA
 
             var invalidFile = commandFilesDir.GetTestPath("InvalidFile.sky");
 
-            Program.RunCommand(new[]
+            CommandLineRunner.RunCommand(new[]
                                    {
                                        "--in=" + invalidFile
                                     }, consoleOutput);
@@ -549,7 +549,7 @@ namespace pwiz.SkylineTestA
         }
 
         //[TestMethod]
-        public void TestCountInstances()
+        public void CountInstancesTest()
         {
             string s = "hello,hello,hello";
             Assert.AreEqual(3,CountInstances("hello",s));
@@ -562,16 +562,16 @@ namespace pwiz.SkylineTestA
             Assert.AreEqual(0,CountInstances("hi","howdy"));
         }
 
-        public int CountInstances(string search, string searchSpace)
+        public static int CountInstances(string search, string searchSpace)
         {
-            if(searchSpace.Length == 0)
+            if (searchSpace.Length == 0)
             {
                 return 0;
             }
 
             int count = 0;
             int lastIndex = searchSpace.IndexOf(search);
-            for(; !Equals(-1, lastIndex) && lastIndex+search.Length <= searchSpace.Length; count++)
+            for (; !Equals(-1, lastIndex) && lastIndex + search.Length <= searchSpace.Length; count++)
             {
                 lastIndex = searchSpace.IndexOf(search);
                 searchSpace = searchSpace.Substring(lastIndex + 1);

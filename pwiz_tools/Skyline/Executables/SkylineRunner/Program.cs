@@ -2,7 +2,7 @@
  * Original author: John Chilton <jchilton .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
- * Copyright 2009 University of Washington - Seattle, WA
+ * Copyright 2011 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
@@ -27,88 +28,112 @@ namespace SkylineRunner
 {
     class Program
     {
+        public static readonly object SERVER_CONNECTION_LOCK = new object();
+        private bool _connected;
+
         static void Main(string[] args)
         {
+            new Program(args);
+        }
 
+        public Program(IEnumerable<string> args)
+        {
+            const string skylineAppName = "Skyline-daily";
             string skylinePath = "\"" + Environment.GetFolderPath(Environment.SpecialFolder.StartMenu);
-            skylinePath += "\\Programs\\MacCoss Lab, UW\\Skyline-daily.appref-ms" + "\"";
-
-            string arguments = CommaSeparate(args);
-
-            //Console.WriteLine(arguments);
+            skylinePath += "\\Programs\\MacCoss Lab, UW\\" + skylineAppName + ".appref-ms" + "\"";
 
             var psiExporter = new ProcessStartInfo(@"cmd.exe")
             {
                 CreateNoWindow = true,
                 UseShellExecute = false,
-                Arguments = String.Format("/c {0} {1}", skylinePath, arguments)
+                Arguments = String.Format("/c {0} CMD", skylinePath)
             };
 
-            Process.Start(psiExporter); 
+            Process.Start(psiExporter);
 
-            Thread clientThread = new Thread(ThreadStartClient);
-
-            clientThread.Start();
-
-            return;
-        }
-
-
-        /// <summary>
-        /// This function will concatenate the given strings, separating them
-        /// with commas. No prefix or suffix comma will be added.
-        /// </summary>
-        /// <param name="args">See summary</param>
-        /// <returns>See summary</returns>
-        private static string CommaSeparate(string[] args)
-        {
-            if (args.Length == 0)
-                return "";
-
-            string output = "";
-            for (int i = 0; i < args.Length - 1; i++)
+            using (var serverStream = new NamedPipeServerStream("SkylineInputPipe"))
             {
-                output += args[i] + ',';
+                if(!WaitForConnection(serverStream))
+                {
+                    Console.WriteLine("Error: Could not connect to Skyline.");
+                    Console.WriteLine("Make sure you have a valid {0} installation.", skylineAppName);
+                    return;
+                }
+
+                using (StreamWriter sw = new StreamWriter(serverStream))
+                {
+                    foreach (string arg in args)
+                    {
+                        sw.WriteLine(arg);
+                    }
+                }
             }
 
-            return output + args[args.Length - 1];
-        }
-
-
-        /// <summary>
-        /// This function will try for 3 seconds to open a named pipe ("SkylinePipe").
-        /// If this operation is not successful, the function will exit. Otherwise,
-        /// the function will print each line received from the pipe
-        /// out to the console and then wait for a newline from the user.
-        /// </summary>
-        public static void ThreadStartClient()
-        {
-
-            using (NamedPipeClientStream pipeStream = new NamedPipeClientStream("SkylinePipe"))
+            using (var pipeStream = new NamedPipeClientStream("SkylineOutputPipe"))
             {
-                // The connect function will wait 10 seconds for the pipe to become available
+                // The connect function will wait 5s for the pipe to become available
                 // If that is not acceptable specify a maximum waiting time (in ms)
                 try
                 {
-                    pipeStream.Connect(10*1000);
-                } 
-                catch(Exception)
+                    pipeStream.Connect(5 * 1000);
+                }
+                catch (Exception)
                 {
-                    Console.WriteLine("Error: Couldn't connect to Skyline process.");
+                    Console.WriteLine("Error: Could not connect to Skyline.");
+                    Console.WriteLine("Make sure you have a valid {0} installation.", skylineAppName);
                     return;
                 }
-                //Console.WriteLine("[Client] Pipe connection established");
-                using (StreamReader sw = new StreamReader(pipeStream))
+
+                using (StreamReader sr = new StreamReader(pipeStream))
                 {
-                    string temp;
-                    while ((temp = sw.ReadLine()) != null)
+                    string line;
+                    //While (!done reading)
+                    while ((line = sr.ReadLine()) != null)
                     {
-                        Console.WriteLine(temp);
+                        Console.WriteLine(line);
                     }
                 }
-
-                Console.ReadLine();
             }
+        }
+
+        private bool WaitForConnection(NamedPipeServerStream serverStream)
+        {
+            Thread connector = new Thread(() =>
+            {
+                serverStream.WaitForConnection();
+                lock (SERVER_CONNECTION_LOCK)
+                {
+                    _connected = true;
+                    Monitor.Pulse(SERVER_CONNECTION_LOCK);
+                }
+            });
+
+            connector.Start();
+
+            bool connected;
+            lock (SERVER_CONNECTION_LOCK)
+            {
+                Monitor.Wait(SERVER_CONNECTION_LOCK, 5 * 1000);
+                connected = _connected;
+            }
+
+            if (!connected)
+            {
+                // Clear the waiting thread.
+                try
+                {
+                    using (var pipeFake = new NamedPipeClientStream("SkylineInputPipe"))
+                    {
+                        pipeFake.Connect(10);
+                    }
+                    return false;
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }

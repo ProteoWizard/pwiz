@@ -17,10 +17,10 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.IO;
 using System.IO.Pipes;
-using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Windows.Forms;
@@ -50,26 +50,17 @@ namespace pwiz.Skyline
         [STAThread]
         public static void Main()
         {
-
-            // First, check for command-line parameters. If there are any, let
-            // CommandLine deal with them and write output over a named pipe
-            // then exit the program.
-            if (AppDomain.CurrentDomain.SetupInformation.ActivationArguments != null &&
+            if(AppDomain.CurrentDomain != null &&
+                AppDomain.CurrentDomain.SetupInformation != null &&
+                AppDomain.CurrentDomain.SetupInformation.ActivationArguments != null &&
                 AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData != null &&
-                AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData.Length > 0)
+                AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData.Length > 0 &&
+                AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData[0] == "CMD")
             {
-                String[] inputArgs = AppDomain.CurrentDomain.SetupInformation.ActivationArguments.ActivationData;
-                inputArgs = inputArgs[0].Split(new[] {','});
+                CommandLineRunner clr = new CommandLineRunner();
+                clr.Start();
 
-                if (inputArgs.Any(arg => arg.StartsWith("--")))
-                {
-                    NamedPipeServerStream pipeStream = new NamedPipeServerStream("SkylinePipe");
-                    pipeStream.WaitForConnection();
-
-                    RunCommand(inputArgs, new StreamWriter(pipeStream));
-
-                    return;
-                }
+                return;
             }
 
             try
@@ -111,14 +102,6 @@ namespace pwiz.Skyline
             }
         }
 
-        public static void RunCommand(string[] inputArgs, TextWriter consoleOut)
-        {
-            using (CommandLine cmd = new CommandLine(consoleOut))
-            {
-                cmd.Run(inputArgs);
-            }
-        }
-
         public static void ThreadExceptionEventHandler(Object sender, ThreadExceptionEventArgs e)
         {
             var reportForm = new ReportErrorDlg(e.Exception);
@@ -155,6 +138,108 @@ namespace pwiz.Skyline
         public static string Name
         {
             get { return Settings.Default.ProgramName; }
+        }
+    }
+
+    public class CommandLineRunner
+    {
+        private static readonly object SERVER_CONNECTION_LOCK = new object();
+        private bool _connected;
+
+        public static void RunCommand(string[] inputArgs, TextWriter consoleOut)
+        {
+            using (CommandLine cmd = new CommandLine(consoleOut))
+            {
+                cmd.Run(inputArgs);
+            }
+        }
+
+
+        /// <summary>
+        /// This function will try for 5 seconds to open a named pipe ("SkylineInputPipe").
+        /// If this operation is not successful, the function will exit. Otherwise,
+        /// the function will print each line received from the pipe
+        /// out to the console and then wait for a newline from the user.
+        /// </summary>
+        public void Start()
+        {
+            List<string> args = new List<string>();
+            using (NamedPipeClientStream pipeStream = new NamedPipeClientStream("SkylineInputPipe"))
+            {
+                // The connect function will wait 5s for the pipe to become available
+                try
+                {
+                    pipeStream.Connect(5 * 1000);
+                }
+                catch (Exception)
+                {
+                    // Nothing to output, because no connection to command-line process.
+                    return;
+                }
+
+                using (StreamReader sr = new StreamReader(pipeStream))
+                {
+                    string line;
+                    //While (!done reading)
+                    while ((line = sr.ReadLine()) != null)
+                    {
+                        args.Add(line);
+                    }
+                }
+            }
+
+            using (var serverStream = new NamedPipeServerStream("SkylineOutputPipe"))
+            {
+                if (!WaitForConnection(serverStream))
+                {
+                    return;
+                }
+                using (StreamWriter sw = new StreamWriter(serverStream))
+                {
+                    RunCommand(args.ToArray(), sw);
+                }
+            }
+        }
+
+        private bool WaitForConnection(NamedPipeServerStream serverStream)
+        {
+            Thread connector = new Thread(() =>
+            {
+                serverStream.WaitForConnection();
+
+                lock (SERVER_CONNECTION_LOCK)
+                {
+                    _connected = true;
+                    Monitor.Pulse(SERVER_CONNECTION_LOCK);
+                }
+            });
+
+            connector.Start();
+
+            bool connected;
+            lock (SERVER_CONNECTION_LOCK)
+            {
+                Monitor.Wait(SERVER_CONNECTION_LOCK, 5 * 1000);
+                connected = _connected;
+            }
+
+            if (!connected)
+            {
+                // Clear the waiting thread.
+                try
+                {
+                    using (var pipeFake = new NamedPipeClientStream("SkylineOutputPipe"))
+                    {
+                        pipeFake.Connect(10);
+                    }
+                    return false;
+                }
+                catch (Exception)
+                {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 }

@@ -36,7 +36,7 @@ using pwiz.Skyline.Util.Extensions;
 
 namespace pwiz.Skyline
 {
-    internal class CommandArgs
+    public class CommandArgs
     {
         public string SkylineFile { get; private set; }
         public string ReplicateFile { get; private set; }
@@ -254,6 +254,7 @@ namespace pwiz.Skyline
 
         public bool ParseArgs(string[] args)
         {
+
             foreach (string s in args)
             {
                 var pair = new NameValuePair(s);
@@ -261,6 +262,15 @@ namespace pwiz.Skyline
                 if (pair.Name.Equals("in"))
                 {
                     SkylineFile = pair.Value;
+                }
+
+                else if (pair.Name.Equals("save"))
+                {
+                    Saving = true;
+                }
+                else if (pair.Name.Equals("out"))
+                {
+                    SaveFile = pair.Value;
                 }
 
                 else if (pair.Name.Equals("import-file"))
@@ -276,19 +286,15 @@ namespace pwiz.Skyline
                 {
                     ImportAppend = true;
                 }
-                else if (pair.Name.Equals("out"))
-                {
-                    SaveFile = pair.Value;
-                }
-
-                else if (pair.Name.Equals("save"))
-                {
-                    Saving = true;
-                }
 
                 else if (pair.Name.Equals("report-name"))
                 {
                     ReportName = pair.Value;
+                }
+
+                else if (pair.Name.Equals("report-file"))
+                {
+                    ReportFile = pair.Value;
                 }
 
                 else if (pair.Name.Equals("report-format"))
@@ -303,11 +309,6 @@ namespace pwiz.Skyline
                         _out.WriteLine("Defaulting to CSV.", pair.Value);
                         ReportColumnSeparator = TextUtil.GetCsvSeparator(CultureInfo.CurrentCulture);
                     }
-                }
-
-                else if (pair.Name.Equals("report-file"))
-                {
-                    ReportFile = pair.Value;
                 }
 
                 else if (pair.Name.Equals("exp-translist-instrument"))
@@ -368,6 +369,24 @@ namespace pwiz.Skyline
                     }
                 }
 
+                else if (pair.Name.Equals("exp-method-type"))
+                {
+                    var type = pair.Value;
+                    if (type.Equals("scheduled", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        ExportMethodType = ExportMethodType.Scheduled;
+                    }
+                    else if (type.Equals("standard", StringComparison.CurrentCultureIgnoreCase))
+                    {
+                        //default
+                    }
+                    else
+                    {
+                        _out.WriteLine("Warning: The method type {0} is invalid. It must be \"standard\" or \"scheduled\".", pair.Value);
+                        _out.WriteLine("Defaulting to standard.");
+                    }
+                }
+
                 else if (pair.Name.Equals("exp-max-trans"))
                 {
                     //This one can't be kept within bounds because the bounds depend on the instrument
@@ -392,23 +411,6 @@ namespace pwiz.Skyline
                     } catch (ArgumentException) {
                         _out.WriteLine("Warning: Invalid optimization parameter ({0}). Use \"ce\", \"dp\", or \"none\".", pair.Value);
                         _out.WriteLine("Defaulting to none.");
-                    }
-                }
-                else if (pair.Name.Equals("exp-method-type"))
-                {
-                    var type = pair.Value;
-                    if (type.Equals("scheduled", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        ExportMethodType = ExportMethodType.Scheduled;
-                    }
-                    else if (type.Equals("standard", StringComparison.CurrentCultureIgnoreCase))
-                    {
-                        //default
-                    }
-                    else
-                    {
-                        _out.WriteLine("Warning: The method type {0} is invalid. It must be \"standard\" or \"scheduled\".", pair.Value);
-                        _out.WriteLine("Defaulting to standard.");
                     }
                 }
                 else if (pair.Name.Equals("exp-scheduling-replicate"))
