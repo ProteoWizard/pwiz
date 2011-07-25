@@ -136,7 +136,7 @@ namespace pwiz.Skyline.Controls.Graphs
             if (_reducedTextLabels != null && ArrayUtil.EqualsDeep(XAxis.Scale.TextLabels, _reducedTextLabels))
                 Array.Copy(_originalTextLabels, XAxis.Scale.TextLabels, _originalTextLabels.Length);
             //Keep the reduced text.
-            else
+            else if (XAxis.Scale.TextLabels != null)
                 _originalTextLabels = XAxis.Scale.TextLabels.ToArray();
             _reducedTextLabels = null;
 

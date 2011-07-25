@@ -17,12 +17,14 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Specialized;
 using System.IO;
 using System.IO.Pipes;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Windows.Forms;
-//using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Properties;
 
@@ -75,7 +77,7 @@ namespace pwiz.Skyline
                 Application.EnableVisualStyles();
                 Application.SetCompatibleTextRenderingDefault(false);
                 Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
-                Application.ThreadException += Application_ThreadExceptionEventHandler;
+                Application.ThreadException += ThreadExceptionEventHandler;
 
                 // Make sure the user has agreed to the current license version
                 // or one more recent.
@@ -117,10 +119,31 @@ namespace pwiz.Skyline
             }
         }
 
-        public static void Application_ThreadExceptionEventHandler(Object sender,ThreadExceptionEventArgs e )
+        public static void ThreadExceptionEventHandler(Object sender, ThreadExceptionEventArgs e)
         {
-            MessageBox.Show(MainWindow, "Unhandled exception: " + e.Exception, Name);
+            var reportForm = new ReportErrorDlg(e.Exception);
+            if (reportForm.ShowDialog(MainWindow) == DialogResult.OK)
+                SendErrorReport(reportForm.MessageBody);
         }
+
+        private static void SendErrorReport(string messageBody)
+        {
+            WebClient webClient = new WebClient();
+
+            const string address = "https://brendanx-uw1.gs.washington.edu/labkey/announcements/home/issues/exceptions/insert.view";
+
+            NameValueCollection form = new NameValueCollection
+                                           {
+                                               { "title", "Unhandled Exception" },
+                                               { "body", messageBody },
+                                               { "fromDiscussion", "false"},
+                                               { "allowMultipleDiscussions", "false"},
+                                               { "rendererType", "TEXT_WITH_LINKS"}
+                                           };
+
+            webClient.UploadValues(address, form);
+        }
+
 
         public static SkylineWindow MainWindow { get; private set; }
         public static SrmDocument ActiveDocument { get { return MainWindow.Document; } }
