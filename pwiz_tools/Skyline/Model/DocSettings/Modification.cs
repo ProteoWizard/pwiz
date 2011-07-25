@@ -486,6 +486,10 @@ namespace pwiz.Skyline.Model.DocSettings
             string formulaThis = modCalc.GetModFormula(aa, this, out unexplainedMassThis);
             string formulaObj = modCalc.GetModFormula(aa, obj, out unexplainedMassObj);
 
+            // If either is null, both must be null.
+            if (formulaThis == null || formulaObj == null)
+                return formulaThis == null && formulaObj == null;
+
             SortedDictionary<string, int> parseFormulaObj = new SortedDictionary<string, int>();
             SortedDictionary<string, int> parseFormulaKnown = new SortedDictionary<string, int>();
 

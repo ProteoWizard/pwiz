@@ -170,7 +170,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 listPeptides.Add(nodePep.ChangeSettings(settings, SrmSettingsDiff.ALL));
 
             PeptideRankId rankId = DocSettings.PeptideSettings.Libraries.RankId;
-            if (rankId != null)
+            if (rankId != null && !DocNode.IsPeptideList)
                 listPeptides = PeptideGroup.RankPeptides(listPeptides, settings, useFilter).ToList();
 
             MergeChosen(listPeptides, useFilter, node => ((PeptideDocNode)node).Key);

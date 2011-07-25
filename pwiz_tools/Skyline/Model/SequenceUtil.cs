@@ -350,7 +350,7 @@ namespace pwiz.Skyline.Model
                 if (mod.AverageMass.HasValue)
                     unexplainedMass = mod.AverageMass.Value;
             }
-            return "";
+            return null;
         }
 
         public void AddStaticModifications(IEnumerable<StaticMod> mods)
