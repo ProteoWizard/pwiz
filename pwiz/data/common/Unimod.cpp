@@ -19,10 +19,6 @@
 // limitations under the License.
 //
 
-#include "cv.hpp"
-
-#ifdef _UNIMOD_OBO_
-
 #define PWIZ_SOURCE
 
 
@@ -105,7 +101,7 @@ struct UnimodData : public boost::singleton<UnimodData>
         BOOST_FOREACH(CVID cvid, cvids())
         {
             const CVTermInfo& term = cvTermInfo(cvid);
-            if (!bal::istarts_with(term.id, "UNIMOD") || cvid == UNIMOD_unimod_root_node)
+            if (!bal::starts_with(term.id, "UNIMOD") || bal::ends_with(term.id, ":0"))
                 continue;
 
             try
@@ -388,5 +384,3 @@ PWIZ_API_DECL const Modification& modification(const std::string& title)
 } // namespace unimod
 } // namespace data
 } // namespace pwiz
-
-#endif // _UNIMOD_OBO_
