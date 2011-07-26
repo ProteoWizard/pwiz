@@ -26,8 +26,8 @@
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz/data/common/diff_std.hpp"
-#include "pwiz/data/mziddata/MzIdentMLFile.hpp"
-#include "pwiz/data/mziddata/TextWriter.hpp"
+#include "pwiz/data/identdata/IdentDataFile.hpp"
+#include "pwiz/data/identdata/TextWriter.hpp"
 #include "pwiz/data/proteome/ProteinListCache.hpp"
 #include "pwiz/data/proteome/ProteomeDataFile.hpp"
 #include "pwiz/utility/chemistry/Ion.hpp"
@@ -35,9 +35,23 @@
 #include "Qonverter.hpp"
 #include "../freicore/AhoCorasickTrie.hpp"
 #include "boost/foreach_field.hpp"
+#include "boost/thread/thread.hpp"
+#include "boost/thread/mutex.hpp"
+#include "boost/lambda/lambda.hpp"
+#include "boost/lambda/bind.hpp"
+#include "boost/atomic.hpp"
+#include "boost/exception/all.hpp"
 
 
-using namespace pwiz::mziddata;
+// convenient macro for one-line status and cancellation updates
+#define ITERATION_UPDATE(ilr, index, count, message) \
+{ \
+    if (ilr && ilr->broadcastUpdateMessage(UpdateMessage((index), (count), (message))) == IterationListener::Status_Cancel) \
+        return IterationListener::Status_Cancel; \
+}
+
+
+using namespace pwiz::identdata;
 using namespace pwiz::chemistry;
 using namespace pwiz::util;
 typedef IterationListener::UpdateMessage UpdateMessage;
@@ -49,10 +63,10 @@ using freicore::AhoCorasickTrie;
 BEGIN_IDPICKER_NAMESPACE
 
 
+typedef boost::shared_ptr<proteome::ProteomeData> ProteomeDataPtr;
 typedef Parser::Analysis Analysis;
 typedef Parser::AnalysisPtr AnalysisPtr;
 typedef Parser::ConstAnalysisPtr ConstAnalysisPtr;
-
 
 
 namespace {
@@ -74,6 +88,8 @@ struct AminoAcidTranslator
     static char translate(int index) {return static_cast<char>(index) + 'A';}
 };
 
+typedef AhoCorasickTrie<AminoAcidTranslator> PeptideTrie;
+
 struct IsNotAnalysisParameter
 {
     bool operator() (const pair<string, string>& parameter) const
@@ -81,6 +97,11 @@ struct IsNotAnalysisParameter
         return bal::starts_with(parameter.first, "PeakCounts:") ||
                bal::starts_with(parameter.first, "SearchStats:") ||
                bal::starts_with(parameter.first, "SearchTime:") ||
+               parameter.first == "Config: WorkingDirectory" ||
+               parameter.first == "Config: StatusUpdateFrequency" ||
+               parameter.first == "Config: UseMultipleProcessors" ||
+               bal::starts_with(parameter.first, "Config: MaxResult") ||
+               parameter.first == "Config: OutputSuffix" ||
                parameter.first == "USEREMAIL" ||
                parameter.first == "USERNAME" ||
                parameter.first == "LICENSE" ||
@@ -88,7 +109,7 @@ struct IsNotAnalysisParameter
     }
 };
 
-void parseAnalysis(const MzIdentMLFile& mzid, Analysis& analysis)
+void parseAnalysis(const IdentDataFile& mzid, Analysis& analysis)
 {
     SpectrumIdentification& si = *mzid.analysisCollection.spectrumIdentification[0];
     SpectrumIdentificationProtocol& sip = *si.spectrumIdentificationProtocolPtr;
@@ -212,7 +233,7 @@ void findDistinctAnalyses(const vector<string>& inputFilepaths, DistinctAnalysis
     BOOST_FOREACH(const string& filepath, inputFilepaths)
     {
         // ignore SequenceCollection and AnalysisData
-        MzIdentMLFile mzid(filepath, 0, 0, true);
+        IdentDataFile mzid(filepath, 0, 0, true);
 
         AnalysisPtr analysis(new Analysis);
         parseAnalysis(mzid, *analysis);
@@ -254,14 +275,22 @@ void findDistinctAnalyses(const vector<string>& inputFilepaths, DistinctAnalysis
 
 struct ParserImpl
 {
+    const string& inputFilepath;
     sqlite::database& idpDb;
-    const IterationListenerRegistry& iterationListenerRegistry;
+    const IdentDataFile& mzid;
+    const IterationListenerRegistry* ilr;
 
     map<boost::shared_ptr<string>, sqlite3_int64, SharedStringFastLessThan> distinctPeptideIdBySequence;
     map<double, sqlite3_int64> modIdByDeltaMass;
 
-    ParserImpl(sqlite::database& idpDb, const IterationListenerRegistry& iterationListenerRegistry)
-    : idpDb(idpDb), iterationListenerRegistry(iterationListenerRegistry)
+    ParserImpl(const string& inputFilepath,
+               sqlite::database& idpDb,
+               const IdentDataFile& mzid,
+               const IterationListenerRegistry* ilr)
+    : inputFilepath(inputFilepath),
+      idpDb(idpDb),
+      mzid(mzid),
+      ilr(ilr)
     {
         initializeDatabase();
     }
@@ -304,8 +333,10 @@ struct ParserImpl
         transaction.commit();
     }
 
-    void insertAnalysisMetadata(MzIdentMLFile& mzid)
+    void insertAnalysisMetadata()
     {
+        sqlite::transaction transaction(idpDb);
+
         if (mzid.analysisProtocolCollection.spectrumIdentificationProtocol.empty())
             throw runtime_error("no spectrum identification protocol");
 
@@ -356,6 +387,8 @@ struct ParserImpl
             insertAnalysisParameter.execute();
             insertAnalysisParameter.reset();
         }
+
+        transaction.commit();
     }
 
     void insertScoreNames(SpectrumIdentificationItemPtr& sii)
@@ -379,8 +412,10 @@ struct ParserImpl
         }
     }
 
-    void insertSpectrumResults(MzIdentMLFile& mzid)
+    IterationListener::Status insertSpectrumResults()
     {
+        sqlite::transaction transaction(idpDb);
+
         if (mzid.dataCollection.analysisData.spectrumIdentificationList.empty())
             throw runtime_error("no spectrum identification list");
 
@@ -404,11 +439,7 @@ struct ParserImpl
         int iterationIndex = 0;
         BOOST_FOREACH(SpectrumIdentificationResultPtr& sir, sil.spectrumIdentificationResult)
         {
-            if (iterationListenerRegistry.broadcastUpdateMessage(
-                UpdateMessage(iterationIndex++,
-                              sil.spectrumIdentificationResult.size(),
-                              "writing spectrum results")) == IterationListener::Status_Cancel)
-                return;
+            ITERATION_UPDATE(ilr, iterationIndex++, sil.spectrumIdentificationResult.size(), "writing spectrum results");
 
             // without an SII, precursor m/z is unknown, so empty results are skipped
             if (sir->spectrumIdentificationItem.empty())
@@ -542,85 +573,14 @@ struct ParserImpl
                 }
             }
         }
+
+        transaction.commit();
+        return IterationListener::Status_Ok;
     }
-
-    void insertPeptideInstances(MzIdentMLFile& mzid, const proteome::ProteomeData& pd)
-    {
-        typedef AhoCorasickTrie<AminoAcidTranslator> PeptideTrie;
-        typedef map<boost::shared_ptr<string>, sqlite3_int64, SharedStringFastLessThan>::value_type PeptideIdPair;
-
-        vector<boost::shared_ptr<string> > peptides;
-        BOOST_FOREACH(const PeptideIdPair& pair, distinctPeptideIdBySequence)
-            peptides.push_back(pair.first);
-
-        sqlite::command insertProtein(idpDb, "INSERT INTO Protein (Id, Accession, Cluster, ProteinGroup, Length) VALUES (?,?,0,0,?)");
-        sqlite::command insertProteinData(idpDb, "INSERT INTO ProteinData (Id, Sequence) VALUES (?,?)");
-        sqlite::command insertProteinMetadata(idpDb, "INSERT INTO ProteinMetadata (Id, Description) VALUES (?,?)");
-        sqlite::command insertPeptideInstance(idpDb, "INSERT INTO PeptideInstance (Id, Protein, Peptide, Offset, Length, NTerminusIsSpecific, CTerminusIsSpecific, MissedCleavages) VALUES (?,?,?,?,?,?,?,?)");
-
-        PeptideTrie peptideTrie(peptides.begin(), peptides.end());
-
-        sqlite3_int64 nextProteinId = 0, nextPeptideInstanceId = 0;
-        int maxProteinLength = 0;
-
-        proteome::ProteinListPtr pl = pd.proteinListPtr;
-        for (size_t i=0; i < pl->size(); ++i)
-        {
-            if (iterationListenerRegistry.broadcastUpdateMessage(UpdateMessage(i, pl->size(), "writing peptide instances")) == IterationListener::Status_Cancel)
-                return;
-
-            proteome::ProteinPtr protein = pl->protein(i);
-            proteome::Digestion::Config digestionConfig(100000, 0, 100000, proteome::Digestion::NonSpecific);
-            proteome::Digestion digestion(*protein, MS_Trypsin_P, digestionConfig); // TODO: use the right enzyme
-            maxProteinLength = max((int) protein->sequence().length(), maxProteinLength);
-
-            vector<PeptideTrie::SearchResult> peptideInstances = peptideTrie.find_all(protein->sequence());
-
-            if (peptideInstances.empty())
-                continue;
-
-            insertProtein.binder() << ++nextProteinId << protein->id << (int) protein->sequence().length();
-            insertProtein.execute();
-            insertProtein.reset();
-
-            insertProteinData.binder() << nextProteinId << protein->sequence();
-            insertProteinData.execute();
-            insertProteinData.reset();
-
-            insertProteinMetadata.binder() << nextProteinId << protein->description;
-            insertProteinMetadata.execute();
-            insertProteinMetadata.reset();
-
-            BOOST_FOREACH(PeptideTrie::SearchResult& instance, peptideInstances)
-            {
-                // calculate terminal specificity and missed cleavages
-                proteome::DigestedPeptide peptide = digestion.find_first(*instance.keyword(), instance.offset());
-
-                insertPeptideInstance.binder() << ++nextPeptideInstanceId
-                                               << nextProteinId
-                                               << distinctPeptideIdBySequence[instance.keyword()]
-                                               << (int) instance.offset()
-                                               << (int) instance.keyword()->length()
-                                               << peptide.NTerminusIsSpecific()
-                                               << peptide.CTerminusIsSpecific()
-                                               << (int) peptide.missedCleavages();
-                insertPeptideInstance.execute();
-                insertPeptideInstance.reset();
-            }
-        }
-
-        sqlite::command insertIntegerSet(idpDb, "INSERT INTO IntegerSet (Value) VALUES (?)");
-        for (int i=1; i <= maxProteinLength; ++i)
-        {
-            insertIntegerSet.binder() << i;
-            insertIntegerSet.execute();
-            insertIntegerSet.reset();
-        }
-    }
-
 
     void createIndexes()
     {
+        sqlite::transaction transaction(idpDb);
         idpDb.execute("CREATE UNIQUE INDEX Protein_Accession ON Protein (Accession);"
                       "CREATE INDEX PeptideInstance_Peptide ON PeptideInstance (Peptide);"
                       "CREATE INDEX PeptideInstance_Protein ON PeptideInstance (Protein);"
@@ -637,6 +597,7 @@ struct ParserImpl
                       "CREATE INDEX PeptideModification_PeptideSpectrumMatch ON PeptideModification (PeptideSpectrumMatch);"
                       "CREATE INDEX PeptideModification_Modification ON PeptideModification (Modification);"
                      );
+        transaction.commit();
     }
 
     void applyQValueFilter(const Analysis& analysis, double qValueThreshold)
@@ -707,7 +668,9 @@ struct ParserImpl
             "DELETE FROM Peptide WHERE Id NOT IN (SELECT DISTINCT Peptide FROM PeptideSpectrumMatch);"
             //"DELETE FROM PeptideSequence WHERE Id NOT IN (SELECT Id FROM Peptide);"
             "DELETE FROM PeptideInstance WHERE Peptide NOT IN (SELECT Id FROM Peptide);"
-            "DELETE FROM Protein WHERE Id NOT IN (SELECT Protein FROM PeptideInstance);";
+            "DELETE FROM Protein WHERE Id NOT IN (SELECT Protein FROM PeptideInstance);"
+            "DELETE FROM ProteinData WHERE Id NOT IN (SELECT Protein FROM PeptideInstance);"
+            "DELETE FROM ProteinMetadata WHERE Id NOT IN (SELECT Protein FROM PeptideInstance);";
 
         idpDb.executef(sql, qValueThreshold);
 
@@ -716,6 +679,627 @@ struct ParserImpl
         idpDb.execute("VACUUM");
     }
 };
+
+
+struct ProteinDatabaseTaskGroup
+{
+    ProteomeDataPtr proteomeDataPtr;
+    vector<string> inputFilepaths;
+};
+
+vector<ProteinDatabaseTaskGroup> createTasksPerProteinDatabase(const vector<string>& inputFilepaths,
+                                                               const DistinctAnalysisMap& distinctAnalysisByFilepath,
+                                                               map<string, ProteomeDataPtr> proteinDatabaseByFilepath,
+                                                               int maxThreads)
+{
+    // group input files by their protein database
+    map<string, vector<string> > inputFilepathsByProteinDatabase;
+    BOOST_FOREACH(const string& inputFilepath, inputFilepaths)
+    {
+        if (distinctAnalysisByFilepath.count(inputFilepath) == 0)
+            throw runtime_error("[Parser::parse()] unable to find analysis for file \"" + inputFilepath + "\"");
+
+        const AnalysisPtr& analysis = distinctAnalysisByFilepath.find(inputFilepath)->second;
+        const string& proteinDatabaseFilepath = analysis->importSettings.proteinDatabaseFilepath;
+
+        inputFilepathsByProteinDatabase[proteinDatabaseFilepath].push_back(inputFilepath);
+    }
+
+    int processorCount = min(maxThreads, (int) boost::thread::hardware_concurrency());
+    vector<ProteinDatabaseTaskGroup> taskGroups;
+
+    int processorsUsed = 0;
+    BOOST_FOREACH_FIELD((const string& proteinDatabaseFilepath)(vector<string>& inputFilepaths),
+                        inputFilepathsByProteinDatabase)
+    {
+        taskGroups.push_back(ProteinDatabaseTaskGroup());
+        taskGroups.back().proteomeDataPtr = proteinDatabaseByFilepath[proteinDatabaseFilepath];
+
+        // shuffled so that large and small input files get mixed
+        random_shuffle(inputFilepaths.begin(), inputFilepaths.end());
+
+        BOOST_FOREACH(const string& inputFilepath, inputFilepaths)
+        {
+            if (bfs::exists(bfs::path(inputFilepath).replace_extension(".idpDB")))
+            {
+                // for now, abort; eventually we want to merge? here
+                continue;
+            }
+
+            taskGroups.back().inputFilepaths.push_back(inputFilepath);
+            ++processorsUsed;
+
+            // if out of processors and there are more input files for this database, add another top-level task
+            if (processorsUsed == processorCount && &inputFilepath != &inputFilepaths.back())
+            {
+                taskGroups.push_back(ProteinDatabaseTaskGroup());
+                taskGroups.back().proteomeDataPtr = proteinDatabaseByFilepath[proteinDatabaseFilepath];
+                processorsUsed = 0;
+            }
+        }
+    }
+
+    return taskGroups;
+}
+
+// an iteration listener that prepends the inputFilepath before forwarding the update message
+struct ParserForwardingIterationListener : public IterationListener
+{
+    const IterationListenerRegistry& inner;
+    const string& inputFilepath;
+
+    ParserForwardingIterationListener(const IterationListenerRegistry& inner, const string& inputFilepath)
+        : inner(inner), inputFilepath(inputFilepath)
+    {}
+
+    virtual Status update(const UpdateMessage& updateMessage)
+    {
+        string specificMessage = inputFilepath + "*" + updateMessage.message;
+        return inner.broadcastUpdateMessage(UpdateMessage(updateMessage.iterationIndex,
+                                                          updateMessage.iterationCount,
+                                                          specificMessage));
+    }
+};
+
+
+struct ThreadStatus
+{
+    bool userCanceled;
+    boost::exception_ptr exception;
+
+    ThreadStatus() : userCanceled(false) {}
+    ThreadStatus(IterationListener::Status status) : userCanceled(status == IterationListener::Status_Cancel) {}
+    ThreadStatus(const boost::exception_ptr& e) : userCanceled(false), exception(e) {}
+};
+
+
+struct ParserTask
+{
+    ParserTask(const string& inputFilepath = "") : inputFilepath(inputFilepath) {}
+
+    string inputFilepath;
+    boost::shared_ptr<sqlite::database> idpDb;
+    boost::shared_ptr<IdentDataFile> mzid;
+    boost::shared_ptr<ParserImpl> parser;
+    AnalysisPtr analysis;
+};
+
+typedef boost::shared_ptr<ParserTask> ParserTaskPtr;
+
+
+ThreadStatus executeParserTask(ParserTaskPtr parserTask,
+                               const IterationListenerRegistry* ilr,
+                               boost::mutex* ioMutex)
+{
+    const string& inputFilepath = parserTask->inputFilepath;
+
+    try
+    {
+        // create an in-memory database
+        parserTask->idpDb.reset(new sqlite::database(":memory:", sqlite::no_mutex));
+
+        IterationListenerRegistry* threadILR;
+        if (ilr)
+        {
+            threadILR = new IterationListenerRegistry();
+            threadILR->addListener(IterationListenerPtr(new ParserForwardingIterationListener(*ilr, inputFilepath)), 10);
+        }
+
+        // read the mzid document into memory
+        ITERATION_UPDATE(ilr, 0, 0, inputFilepath + "*opening file");
+        {
+            //boost::mutex::scoped_lock ioLock(*ioMutex);
+            parserTask->mzid.reset(new IdentDataFile(inputFilepath, 0, threadILR));
+        }
+
+        // create parser instance
+        parserTask->parser.reset(new ParserImpl(inputFilepath, *parserTask->idpDb, *parserTask->mzid, threadILR));
+
+        parserTask->parser->insertAnalysisMetadata();
+
+        if (parserTask->parser->insertSpectrumResults() == IterationListener::Status_Cancel)
+            return IterationListener::Status_Cancel;
+
+        //if (parserTask->parser->buildPeptideTrie() == IterationListener::Status_Cancel)
+        //    return IterationListener::Status_Cancel;
+
+        parserTask->mzid.reset();
+
+        return IterationListener::Status_Ok;
+    }
+    catch (exception& e)
+    {
+        return boost::copy_exception(runtime_error("[executeParserTask] error parsing \"" + inputFilepath + "\": " + e.what()));
+    }
+    catch (...)
+    {
+        return boost::copy_exception(runtime_error("[executeParserTask] unknown error parsing \"" + inputFilepath + "\""));
+    }
+}
+
+
+struct PeptideFinderTask;
+typedef boost::weak_ptr<PeptideFinderTask> PeptideFinderTaskWeakPtr;
+
+
+struct ProteinReaderTask
+{
+    ProteomeDataPtr proteomeDataPtr;
+    int proteinCount;
+    vector<PeptideFinderTaskWeakPtr> peptideFinderTasks;
+    boost::mutex queueMutex;
+    boost::atomic_uint32_t done;
+};
+
+typedef boost::shared_ptr<ProteinReaderTask> ProteinReaderTaskPtr;
+
+
+struct PeptideFinderTask
+{
+    ProteinReaderTaskPtr proteinReaderTask;
+    deque<proteome::ProteinPtr> proteinQueue;
+    ParserTaskPtr parserTask;
+    boost::atomic<bool> done;
+};
+
+typedef boost::shared_ptr<PeptideFinderTask> PeptideFinderTaskPtr;
+
+
+ThreadStatus executeProteinReaderTask(ProteinReaderTaskPtr proteinReaderTask)
+{
+    try
+    {
+        const proteome::ProteomeData& pd = *proteinReaderTask->proteomeDataPtr;
+        const proteome::ProteinList& pl = *pd.proteinListPtr;
+
+        const size_t batchSize = 100;
+        vector<proteome::ProteinPtr> proteinBatch(batchSize);
+
+        boost::mutex::scoped_lock lock(proteinReaderTask->queueMutex, boost::defer_lock);
+
+        // protein database is read over for each peptide batch
+        while (true)
+        {
+            if (proteinReaderTask->done == proteinReaderTask->peptideFinderTasks.size())
+                return IterationListener::Status_Ok; // ~scoped_lock calls unlock()
+
+            for (size_t i=0; i < pl.size(); ++i)
+            {
+                proteinBatch.clear();
+
+                for (int j=0; j < batchSize && i+j < pl.size(); ++j)
+                    proteinBatch.push_back(pl.protein(i+j));
+                i += batchSize - 1;
+
+                while (true)
+                {
+                    // check for early cancellation
+                    if (proteinReaderTask->done == proteinReaderTask->peptideFinderTasks.size())
+                        return IterationListener::Status_Cancel; // ~scoped_lock calls unlock()
+
+                    lock.lock();
+
+                    size_t maxQueueSize = 0;
+                    BOOST_FOREACH(const PeptideFinderTaskWeakPtr& taskPtr, proteinReaderTask->peptideFinderTasks)
+                    {
+                        PeptideFinderTaskPtr task = taskPtr.lock();
+                        maxQueueSize = max(maxQueueSize, task.get() ? task->proteinQueue.size() : 0);
+                    }
+
+                    // keep at most 20 batches in the queue
+                    if (maxQueueSize > batchSize * 20)
+                    {
+                        lock.unlock();
+                        boost::this_thread::sleep(bpt::milliseconds(100));
+                        continue;
+                    }
+                    else
+                        break;
+                }
+
+                // lock is still locked
+
+                BOOST_FOREACH(const PeptideFinderTaskWeakPtr& taskPtr, proteinReaderTask->peptideFinderTasks)
+                {
+                    PeptideFinderTaskPtr task = taskPtr.lock();
+                    if (task.get() && !task->done)
+                        task->proteinQueue.insert(task->proteinQueue.end(), proteinBatch.begin(), proteinBatch.end());
+                }
+                lock.unlock();
+            }
+        }
+    }
+    catch (exception& e)
+    {
+        proteinReaderTask->done.store(proteinReaderTask->peptideFinderTasks.size());
+        return boost::copy_exception(runtime_error("[executeProteinReaderTask] error reading proteins: " + string(e.what())));
+    }
+    catch (...)
+    {
+        proteinReaderTask->done.store(proteinReaderTask->peptideFinderTasks.size());
+        return boost::copy_exception(runtime_error("[executeProteinReaderTask] unknown error reading proteins"));
+    }
+}
+
+
+ThreadStatus executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask,
+                                      const IterationListenerRegistry* ilr,
+                                      boost::mutex* ioMutex)
+{
+    ProteinReaderTask& proteinReaderTask = *peptideFinderTask->proteinReaderTask;
+    deque<proteome::ProteinPtr>& proteinQueue = peptideFinderTask->proteinQueue;
+    ParserTask& parserTask = *peptideFinderTask->parserTask;
+    ParserImpl& parser = *parserTask.parser;
+    sqlite::database& idpDb = *parserTask.idpDb;
+    map<boost::shared_ptr<string>, sqlite3_int64, SharedStringFastLessThan>& distinctPeptideIdBySequence =
+        parser.distinctPeptideIdBySequence;
+
+    try
+    {
+        sqlite::command insertProtein(idpDb, "INSERT INTO Protein (Id, Accession, Cluster, ProteinGroup, Length) VALUES (?,?,0,0,?)");
+        //sqlite::command insertProteinData(idpDb, "INSERT INTO ProteinData (Id, Sequence) VALUES (?,?)");
+        //sqlite::command insertProteinMetadata(idpDb, "INSERT INTO ProteinMetadata (Id, Description) VALUES (?,?)");
+        sqlite::command insertPeptideInstance(idpDb, "INSERT INTO PeptideInstance (Id, Protein, Peptide, Offset, Length, NTerminusIsSpecific, CTerminusIsSpecific, MissedCleavages) VALUES (?,?,?,?,?,?,?,?)");
+
+        sqlite3_int64 nextProteinId = 0, nextPeptideInstanceId = 0;
+        int maxProteinLength = 0;
+
+        boost::mutex::scoped_lock lock(proteinReaderTask.queueMutex, boost::defer_lock);
+
+        /*if (ilr && ilr->broadcastUpdateMessage(UpdateMessage(0, 0, parserTask.inputFilepath + "*opening protein database")) == IterationListener::Status_Cancel)
+        {
+            lock.lock();
+            proteinReaderTask.done = true;
+            return IterationListener::Status_Cancel;
+        }*/
+
+        // peptide tries are created in batches to ensure scalability
+        const size_t peptideBatchSize = 200000;
+        int peptideQueries = 0;
+
+        vector<boost::shared_ptr<string> > peptides;
+        BOOST_FOREACH_FIELD((const boost::shared_ptr<string>& peptide), distinctPeptideIdBySequence)
+            peptides.push_back(peptide);
+
+        // distinctPeptideIdBySequence is sorted on peptide length, which is bad for the trie
+        random_shuffle(peptides.begin(), peptides.end());
+
+        // maps proteins indexes to protein ids (in the database)
+        map<size_t, sqlite3_int64> proteinIdByIndex;
+
+        vector<boost::shared_ptr<string> > peptideBatch;
+        BOOST_FOREACH(const boost::shared_ptr<string>& peptide, peptides)
+        {
+            peptideBatch.push_back(peptide);
+
+            // only proceed if we're at the batch size or the end of the peptides
+            if (peptideBatch.size() < peptideBatchSize && peptide != *peptides.rbegin())
+                continue;
+
+            peptideQueries += (int) peptideBatch.size();
+            if (ilr && ilr->broadcastUpdateMessage(UpdateMessage(peptideQueries-1, peptides.size(), parserTask.inputFilepath + "*building peptide trie")) == IterationListener::Status_Cancel)
+            {
+                proteinReaderTask.done.store(proteinReaderTask.peptideFinderTasks.size());
+                return IterationListener::Status_Cancel;
+            }
+
+            PeptideTrie peptideTrie(peptideBatch.begin(), peptideBatch.end());
+            peptideBatch.clear();
+
+            int proteinsDigested = 0;
+
+            while (true)
+            {
+                // dequeue a batch of proteins, or sleep if none are available
+                vector<proteome::ProteinPtr> proteinBatch;
+
+                lock.lock();
+                size_t queueSize = proteinQueue.size();
+                if (queueSize == 0)
+                {
+                    if (proteinReaderTask.done == proteinReaderTask.peptideFinderTasks.size())
+                    {
+                        lock.unlock();
+                        break;
+                    }
+                    else
+                    {
+                        lock.unlock();
+                        boost::this_thread::sleep(bpt::milliseconds(100));
+                        continue;
+                    }
+                }
+
+                const size_t maxBatchSize = 100;
+                size_t proteinsRemaining = proteinReaderTask.proteinCount - proteinsDigested;
+                size_t batchSize = min(queueSize, min(proteinsRemaining, maxBatchSize));
+
+                proteinBatch.assign(proteinQueue.begin(), proteinQueue.begin() + batchSize);
+                proteinQueue.erase(proteinQueue.begin(), proteinQueue.begin() + batchSize);
+                lock.unlock();
+
+                // move to next peptide batch
+                if (proteinBatch.empty())
+                    break;
+
+                proteinsDigested += proteinBatch.size();
+
+                if (ilr && ilr->broadcastUpdateMessage(UpdateMessage(proteinsDigested-1, proteinReaderTask.proteinCount, parserTask.inputFilepath + "*finding peptides in proteins")) == IterationListener::Status_Cancel)
+                {
+                    proteinReaderTask.done.store(proteinReaderTask.peptideFinderTasks.size());
+                    return IterationListener::Status_Cancel;
+                }
+
+                BOOST_FOREACH(proteome::ProteinPtr& protein, proteinBatch)
+                {
+                    proteome::Digestion::Config digestionConfig(100000, 0, 100000, proteome::Digestion::NonSpecific);
+                    proteome::Digestion digestion(*protein, MS_Trypsin_P, digestionConfig); // TODO: use the right enzyme
+
+                    vector<PeptideTrie::SearchResult> peptideInstances = peptideTrie.find_all(protein->sequence());
+
+                    if (peptideInstances.empty())
+                        continue;
+
+                    maxProteinLength = max((int) protein->sequence().length(), maxProteinLength);
+
+                    map<size_t, sqlite3_int64>::iterator itr; bool wasInserted;
+                    boost::tie(itr, wasInserted) = proteinIdByIndex.insert(make_pair(protein->index, 0));
+
+                    if (wasInserted)
+                    {
+                        itr->second = ++nextProteinId;
+
+                        insertProtein.binder() << nextProteinId << protein->id << (int) protein->sequence().length();
+                        insertProtein.execute();
+                        insertProtein.reset();
+
+                        /*insertProteinData.binder() << nextProteinId << protein->sequence();
+                        insertProteinData.execute();
+                        insertProteinData.reset();
+
+                        insertProteinMetadata.binder() << nextProteinId << protein->description;
+                        insertProteinMetadata.execute();
+                        insertProteinMetadata.reset();*/
+                    }
+
+                    sqlite3_int64 curProteinId = itr->second;
+
+                    BOOST_FOREACH(PeptideTrie::SearchResult& instance, peptideInstances)
+                    {
+                        // calculate terminal specificity and missed cleavages
+                        proteome::DigestedPeptide peptide = digestion.find_first(*instance.keyword(), instance.offset());
+
+                        insertPeptideInstance.binder() << ++nextPeptideInstanceId
+                                                       << curProteinId
+                                                       << distinctPeptideIdBySequence[instance.keyword()]
+                                                       << (int) instance.offset()
+                                                       << (int) instance.keyword()->length()
+                                                       << peptide.NTerminusIsSpecific()
+                                                       << peptide.CTerminusIsSpecific()
+                                                       << (int) peptide.missedCleavages();
+                        insertPeptideInstance.execute();
+                        insertPeptideInstance.reset();
+                    }
+                }
+            }
+        }
+
+        // the protein reader task stops when done == proteinReaderTask.peptideFinderTasks.size()
+        ++proteinReaderTask.done;
+        peptideFinderTask->done.store(true);
+        proteinQueue.clear();
+
+        sqlite::command insertIntegerSet(idpDb, "INSERT INTO IntegerSet (Value) VALUES (?)");
+        for (int i=1; i <= maxProteinLength; ++i)
+        {
+            insertIntegerSet.binder() << i;
+            insertIntegerSet.execute();
+            insertIntegerSet.reset();
+        }
+
+        try
+        {
+            ITERATION_UPDATE(ilr, 0, 0, parserTask.inputFilepath + "*creating indexes");
+            parser.createIndexes();
+        }
+        catch (exception& e)
+        {
+            // failure to create indexes is not fatal (need to check the database for the error)
+            cerr << "\n[executePeptideFinderTask] thread " << boost::this_thread::get_id() << " failed to create indexes: " << e.what() << endl;
+        }
+
+        try
+        {
+            // run preqonvert if import settings specify it
+            ITERATION_UPDATE(ilr, 0, 0, parserTask.inputFilepath + "*qonverting");
+            parser.applyQValueFilter(*parserTask.analysis, 0.25);
+        }
+        catch (exception& e)
+        {
+            // failure during qonversion is not fatal
+            cerr << "\n[executePeptideFinderTask] thread " << boost::this_thread::get_id() << " failed to apply Q value filter: " << e.what() << endl;
+        }
+
+        string idpDbFilepath = bfs::path(parserTask.inputFilepath).replace_extension(".idpDB").string();
+        {
+            sqlite::query filteredProteinIdQuery(idpDb, "SELECT Id FROM Protein");
+
+            set<sqlite3_int64> filteredProteinIds;
+            BOOST_FOREACH(sqlite::query::rows& row, filteredProteinIdQuery)
+                filteredProteinIds.insert(row.get<sqlite3_int64>(0));
+
+            vector<size_t> filteredProteinIndexes;
+            BOOST_FOREACH_FIELD((size_t index)(sqlite3_int64 id), proteinIdByIndex)
+                if (filteredProteinIds.count(id) > 0)
+                    filteredProteinIndexes.push_back(index);
+
+            ITERATION_UPDATE(ilr, 0, 0, parserTask.inputFilepath + "*saving database");
+            boost::mutex::scoped_lock ioLock(*ioMutex);
+            idpDb.save_to_file(idpDbFilepath.c_str());
+
+            sqlite::database idpDbFile(idpDbFilepath, sqlite::no_mutex);
+            
+            // optimize for bulk insertion
+            idpDbFile.execute("PRAGMA journal_mode=OFF;"
+                              "PRAGMA synchronous=OFF;"
+                              "PRAGMA automatic_indexing=OFF;"
+                              "PRAGMA default_cache_size=500000;"
+                              "PRAGMA temp_store=MEMORY"
+                             );
+
+            sqlite::command insertProteinData(idpDbFile, "INSERT INTO ProteinData (Id, Sequence) VALUES (?,?)");
+            sqlite::command insertProteinMetadata(idpDbFile, "INSERT INTO ProteinMetadata (Id, Description) VALUES (?,?)");
+
+            int proteinsWritten = 0;
+            BOOST_FOREACH(size_t index, filteredProteinIndexes)
+            {
+                ITERATION_UPDATE(ilr, proteinsWritten++, filteredProteinIndexes.size(), parserTask.inputFilepath + "*writing protein data");
+                proteome::ProteinPtr protein = proteinReaderTask.proteomeDataPtr->proteinListPtr->protein(index);
+                const sqlite3_int64& id = proteinIdByIndex[index];
+
+                insertProteinData.binder() << id << protein->sequence();
+                insertProteinData.execute();
+                insertProteinData.reset();
+
+                insertProteinMetadata.binder() << id << protein->description;
+                insertProteinMetadata.execute();
+                insertProteinMetadata.reset();
+            }
+        }
+
+        ITERATION_UPDATE(ilr, 0, 1, parserTask.inputFilepath + "*done");
+        return IterationListener::Status_Ok;
+    }
+    catch (exception& e)
+    {
+        boost::mutex::scoped_lock lock(proteinReaderTask.queueMutex);
+        proteinReaderTask.done.store(proteinReaderTask.peptideFinderTasks.size());
+        return boost::copy_exception(runtime_error("[executePeptideFinderTask] error finding peptides for \"" + parserTask.inputFilepath + "\": " + e.what()));
+    }
+    catch (...)
+    {
+        boost::mutex::scoped_lock lock(proteinReaderTask.queueMutex);
+        proteinReaderTask.done.store(proteinReaderTask.peptideFinderTasks.size());
+        return boost::copy_exception(runtime_error("[executePeptideFinderTask] unknown error finding peptides for \"" + parserTask.inputFilepath + "\""));
+    }
+}
+
+
+void executeTaskGroup(const ProteinDatabaseTaskGroup& taskGroup,
+                      const DistinctAnalysisMap& distinctAnalysisByFilepath,
+                      IterationListenerRegistry* ilr)
+{
+    using boost::thread;
+    using boost::lambda::_1;
+    using boost::lambda::_2;
+    using boost::lambda::_3;
+    using boost::lambda::var;
+    using boost::lambda::bind;
+
+    boost::mutex ioMutex;
+
+    vector<ParserTaskPtr> parserTasks;
+
+    // parsing stage
+    {
+        // use list so iterators and references stay valid
+        list<pair<boost::shared_ptr<thread>, ThreadStatus> > threads;
+
+        BOOST_FOREACH(const string& inputFilepath, taskGroup.inputFilepaths)
+        {
+            if (distinctAnalysisByFilepath.count(inputFilepath) == 0)
+                throw runtime_error("[Parser::parse()] unable to find analysis for file \"" + inputFilepath + "\"");
+
+            parserTasks.push_back(ParserTaskPtr(new ParserTask(inputFilepath)));
+            parserTasks.back()->analysis = distinctAnalysisByFilepath.find(inputFilepath)->second;
+
+            threads.push_back(make_pair(boost::shared_ptr<thread>(), ThreadStatus(IterationListener::Status_Ok)));
+            threads.back().first.reset(new thread(var(threads.back().second) = bind(executeParserTask, _1, _2, _3),
+                                                  parserTasks.back(), ilr, &ioMutex));
+        }
+
+        set<boost::shared_ptr<thread> > finishedThreads;
+        while (finishedThreads.size() < threads.size())
+            BOOST_FOREACH_FIELD((boost::shared_ptr<thread>& t)(ThreadStatus& status), threads)
+            {
+                if (t->timed_join(bpt::seconds(1)))
+                    finishedThreads.insert(t);
+
+                if (status.exception.get())
+                    boost::rethrow_exception(status.exception);
+                else if (status.userCanceled)
+                    return;
+            }
+    }
+
+    // peptide finding stage
+    {
+        list<pair<boost::shared_ptr<thread>, ThreadStatus> > threads;
+
+        ProteinReaderTaskPtr proteinReaderTask(new ProteinReaderTask);
+        proteinReaderTask->proteomeDataPtr = taskGroup.proteomeDataPtr;
+        proteinReaderTask->proteinCount = taskGroup.proteomeDataPtr->proteinListPtr->size();
+        proteinReaderTask->done.store(0);
+
+        for (size_t i=0; i < taskGroup.inputFilepaths.size(); ++i)
+        {
+            PeptideFinderTaskPtr peptideFinderTask(new PeptideFinderTask);
+            peptideFinderTask->proteinReaderTask = proteinReaderTask;
+            peptideFinderTask->parserTask = parserTasks[i];
+            peptideFinderTask->done.store(false);
+            proteinReaderTask->peptideFinderTasks.push_back(peptideFinderTask);
+
+            threads.push_back(make_pair(boost::shared_ptr<thread>(), IterationListener::Status_Ok));
+            threads.back().first.reset(new thread(var(threads.back().second) = bind(executePeptideFinderTask, _1, _2, _3), peptideFinderTask, ilr, &ioMutex));
+        }
+
+        // threads will free their parserTask
+        //parserTasks.clear();
+
+        ThreadStatus status;
+        boost::thread proteinReaderThread(var(status) = bind(executeProteinReaderTask, _1), proteinReaderTask);
+
+        proteinReaderThread.join();
+
+        set<boost::shared_ptr<thread> > finishedThreads;
+        while (finishedThreads.size() < threads.size())
+            BOOST_FOREACH_FIELD((boost::shared_ptr<thread>& t)(ThreadStatus& status), threads)
+            {
+                if (t->timed_join(bpt::seconds(1)))
+                    finishedThreads.insert(t);
+
+                if (status.exception.get())
+                    boost::rethrow_exception(status.exception);
+                else if (status.userCanceled)
+                    return;
+            }
+    }
+    
+    // fatal error if an idpDB didn't get saved
+    BOOST_FOREACH(const string& inputFilepath, taskGroup.inputFilepaths)
+        if (!bfs::exists(bfs::path(inputFilepath).replace_extension(".idpDB")))
+            throw runtime_error("\n[executeTaskGroup] no database created for file \"" + inputFilepath + "\"");
+}
 
 } // namespace
 
@@ -729,7 +1313,7 @@ void Parser::ImportSettingsCallback::operator() (const vector<ConstAnalysisPtr>&
 }
 
 
-void Parser::parse(const vector<string>& inputFilepaths) const
+void Parser::parse(const vector<string>& inputFilepaths, int maxThreads, IterationListenerRegistry* ilr) const
 {
     if (inputFilepaths.empty())
         return;
@@ -752,9 +1336,8 @@ void Parser::parse(const vector<string>& inputFilepaths) const
             return;
     }
     else
-        throw runtime_error("Parser::parse()] no import settings handler set");
+        throw runtime_error("[Parser::parse()] no import settings handler set");
 
-    typedef boost::shared_ptr<proteome::ProteomeData> ProteomeDataPtr;
     map<string, ProteomeDataPtr> proteinDatabaseByFilepath;
     BOOST_FOREACH(const ConstAnalysisPtr& analysis, distinctAnalyses)
     {
@@ -763,13 +1346,24 @@ void Parser::parse(const vector<string>& inputFilepaths) const
 
         try
         {
+            if (!bfs::exists(proteinDatabaseFilepath))
+                throw runtime_error("[Parser::parse()] protein database does not exist: \"" + proteinDatabaseFilepath + "\"");
+        }
+        catch (runtime_error& e)
+        {
+            throw runtime_error("[Parser::parse()] error checking for database \"" + proteinDatabaseFilepath + "\": " + e.what());
+        }
+
+        try
+        {
             if (!proteomeDataPtr.get())
             {
                 using namespace pwiz::proteome;
-                proteomeDataPtr.reset(new ProteomeDataFile(proteinDatabaseFilepath));
-                proteomeDataPtr->proteinListPtr.reset(new ProteinListCache(proteomeDataPtr->proteinListPtr,
-                                                                           ProteinListCacheMode_MetaDataAndSequence,
-                                                                           50000));
+                proteomeDataPtr.reset(new ProteomeDataFile(proteinDatabaseFilepath, true));
+                if (proteomeDataPtr->proteinListPtr->size() <= 50000)
+                    proteomeDataPtr->proteinListPtr.reset(new ProteinListCache(proteomeDataPtr->proteinListPtr,
+                                                                               ProteinListCacheMode_MetaDataAndSequence,
+                                                                               50000));
             }
         }
         catch (runtime_error& e)
@@ -778,64 +1372,24 @@ void Parser::parse(const vector<string>& inputFilepaths) const
         }
     }
 
-    BOOST_FOREACH(const string& inputFilepath, inputFilepaths)
-    {
-        if (distinctAnalysisByFilepath.count(inputFilepath) == 0)
-            throw runtime_error("[Parser::parse()] unable to find analysis for file \"" + inputFilepath + "\"");
+    vector<ProteinDatabaseTaskGroup> taskGroups = createTasksPerProteinDatabase(inputFilepaths,
+                                                                                distinctAnalysisByFilepath,
+                                                                                proteinDatabaseByFilepath,
+                                                                                maxThreads);
 
-        string idpDbFilepath = bfs::path(inputFilepath).replace_extension(".idpDB").string();
-
-        if (bfs::exists(idpDbFilepath))
-        {
-            // for now, abort; eventually we want to merge? here
-            continue;
-        }
-
-        // create an in-memory database
-        sqlite::database idpDb(":memory:");
-
-        // read the mzid document into memory
-        iterationListenerRegistry.broadcastUpdateMessage(UpdateMessage(0, 0, "opening " + bfs::path(inputFilepath).replace_extension("").filename()));
-        MzIdentMLFile mzid(inputFilepath, 0, &iterationListenerRegistry);
-
-        ParserImpl parser(idpDb, iterationListenerRegistry);
-        
-        sqlite::transaction transaction(idpDb);
-
-        parser.insertAnalysisMetadata(mzid);
-
-        //iterationListenerRegistry.broadcastUpdateMessage(UpdateMessage(0, 0, "writing spectrum results"));
-        parser.insertSpectrumResults(mzid);
-
-        //iterationListenerRegistry.broadcastUpdateMessage(UpdateMessage(0, 0, "writing peptide instances"));
-        const AnalysisPtr& analysis = distinctAnalysisByFilepath[inputFilepath];
-        const string& proteinDatabaseFilepath = analysis->importSettings.proteinDatabaseFilepath;
-        const ProteomeDataPtr& proteomeDataPtr = proteinDatabaseByFilepath[proteinDatabaseFilepath];
-        parser.insertPeptideInstances(mzid, *proteomeDataPtr);
-
-        iterationListenerRegistry.broadcastUpdateMessage(UpdateMessage(0, 0, "creating indexes"));
-        parser.createIndexes();
-
-        transaction.commit();
-
-        // run preqonvert if import settings specify it
-        iterationListenerRegistry.broadcastUpdateMessage(UpdateMessage(0, 0, "qonverting"));
-        parser.applyQValueFilter(*analysis, 0.25);
-
-        iterationListenerRegistry.broadcastUpdateMessage(UpdateMessage(0, 0, "saving database"));
-        idpDb.save_to_file(idpDbFilepath.c_str());
-    }
+    BOOST_FOREACH(const ProteinDatabaseTaskGroup& taskGroup, taskGroups)
+        executeTaskGroup(taskGroup, distinctAnalysisByFilepath, ilr);
 }
 
 
-void Parser::parse(const string& inputFilepath) const
+void Parser::parse(const string& inputFilepath, int maxThreads, IterationListenerRegistry* ilr) const
 {
-    parse(vector<string>(1, inputFilepath));
+    parse(vector<string>(1, inputFilepath), maxThreads, ilr);
 }
 
 string Parser::parseSource(const string& inputFilepath)
 {
-	MzIdentMLFile mzid(inputFilepath, 0, 0, true);
+	IdentDataFile mzid(inputFilepath, 0, 0, true);
 	
 	string spectraDataName = mzid.dataCollection.inputs.spectraData[0]->name;
         if (spectraDataName.empty())

@@ -91,13 +91,12 @@ struct Parser
     typedef boost::shared_ptr<ImportSettingsCallback> ImportSettingsCallbackPtr;
 
 
-    pwiz::util::IterationListenerRegistry iterationListenerRegistry;
     ImportSettingsCallbackPtr importSettingsCallback;
 
 
-    void parse(const vector<string>& inputFilepaths) const;
+    void parse(const vector<string>& inputFilepaths, int maxThreads = 8, pwiz::util::IterationListenerRegistry* ilr = 0) const;
 
-    void parse(const string& inputFilepath) const;
+    void parse(const string& inputFilepath, int maxThreads = 8, pwiz::util::IterationListenerRegistry* ilr = 0) const;
 	
 	static string parseSource(const string& inputFilepath);
 };

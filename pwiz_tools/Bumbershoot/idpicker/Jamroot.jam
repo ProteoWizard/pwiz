@@ -35,13 +35,34 @@
 .os = [ modules.peek : OS ] ; # NT, LINUX, MACOSX
 .platform = [ modules.peek : OSPLAT ] ; # X86, X86_64, POWERPC
 
+constant BOOST_VERSION : 1 43 0 ;
+
+local default_libraries_path = "./freicore/libraries" ;
+local libraries_path = [ MATCH --libraries-path=(.*) : [ modules.peek : ARGV ] ] ;
+libraries_path ?= $(default_libraries_path) ; # set default path in absence of command-line path
+
+local default_boost_src = "$(libraries_path)/boost_$(BOOST_VERSION:J=_)" ;
+local boost_src = [ MATCH --boost-src=(.*) : [ modules.peek : ARGV ] ] ;
+boost_src ?= $(default_boost_src) ; # set default path in absence of command-line path
+
+local default_zlib_src = "$(libraries_path)/zlib-1.2.3" ;
+local zlib_src = [ MATCH --zlib-src=(.*) : [ modules.peek : ARGV ] ] ;
+zlib_src ?= $(default_zlib_src) ; # set default path in absence of command-line path
+
+local expat_src = [ MATCH --expat-src=(.*) : [ modules.peek : ARGV ] ] ;
+expat_src ?= [ glob "freicore/ext/src/expat*" : "freicore/ext/src/*.tar.gz" ] ;
+expat_src = $(expat_src[0]) ;
+
+if ! $(expat_src)
+{
+     error "This build requires the Expat source code. Specify the path to the Expat source distribution with '--expat-src=<path>'" ;
+}
+
 
 path-constant ROOT_PATH : . ;
 path-constant BUILD_PATH : build-$(.os:L)-$(.platform:L) ;
-path-constant LIBRARIES_PATH : ./freicore/libraries ;
+path-constant LIBRARIES_PATH : $(libraries_path) ;
 path-constant PWIZ_SOURCE : ./freicore/pwiz_src ;
-constant BOOST_VERSION : 1.43.0 ;
-constant BOOST_VERSION_PATH : 1_43_0 ;
 
 
 # this makes pwiz use freicore's libraries directory
@@ -55,22 +76,13 @@ import common ;
 import package ;
 import errors : error ;
 import feature ;
-import mpi ;
-
-local msvc-secure-scl = ;
-if --without-secure-scl in [ modules.peek : ARGV ]
-{
-    # TODO: change this from a <define> to a feature in msvc.jam
-    # disable checked iterators (on by default in VC8/9)
-    msvc-secure-scl = <toolset>msvc,<variant>release:<define>_SECURE_SCL=0 ;
-}
 
 
 project bumbershoot
 	: requirements
 	  <include>$(PWIZ_SOURCE)
 	  <include>$(LIBRARIES_PATH)/boost_aux
-	  <include>$(LIBRARIES_PATH)/boost_$(BOOST_VERSION_PATH)
+	  <include>$(LIBRARIES_PATH)/boost_$(BOOST_VERSION:J=_)
 	  <include>$(LIBRARIES_PATH)/libsvm-3.0
 
       <toolset>gcc,<link>shared:<runtime-link>shared
@@ -97,11 +109,10 @@ project bumbershoot
       <toolset>msvc:<cxxflags>/wd4267	                # warning: conversion from 'type1' to 'type2', possible loss of data (boost::lexical_cast)
       <toolset>msvc:<cxxflags>/wd4244                 # warning: conversion from 'int' to 'unsigned short', possible loss of data (boost/date_time/microsec_time_clock.hpp)
       <toolset>msvc:<cxxflags>/wd4275                 # warning: non dll-interface class 'base' used as base for dll-interface class 'derived'
+      <toolset>msvc:<linkflags>/OPT:REF,ICF
 
       # warning: _SECURE_SCL_THROWS is deprecated
       <toolset>msvc:<define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
-
-      $(msvc-secure-scl)
         
       # special gcc hack - Cygwin gcc 3.4.4, Ubuntu gcc 4.1.2 
       # warning: '__cur' might be used uninitialized in this function 
@@ -128,16 +139,6 @@ project bumbershoot
       <link>static
       <runtime-link>static
 	;
-
-
-local expat_src = [ MATCH --expat-src=(.*) : [ modules.peek : ARGV ] ] ;
-expat_src ?= [ glob "freicore/ext/src/expat*" : "freicore/ext/src/*.tar.gz" ] ;
-expat_src = $(expat_src[0]) ;
-
-if ! $(expat_src)
-{
-     error "This build requires the Expat source code. Specify the path to the Expat source distribution with '--expat-src=<path>'" ;
-}
 
 alias svm : $(LIBRARIES_PATH)/libsvm-3.0//svm ;
 
@@ -260,7 +261,7 @@ local revision-info = [ generate-AssemblyInfo.cs Properties\\AssemblyInfo.cs :
                          *.cs
                          #*.html
                          #*.vdproj
-      : freicore build-*-* _Resharper.* ]
+      : freicore* build-*-* _Resharper.* ]
     : warn-on-missing : : "IDPicker" "Filtering, assembling, and reporting of parsimonious protein identifications." $(COMPANY_AND_PRODUCT) ] ;
 
 # revision-info is a sequence: <max revision> <max year> <max month> <max day> <number of modified files in working copy>
@@ -284,10 +285,17 @@ if $(revision-info[5]) > 0
 echo $(application-name) $(version-tag:J=.) $(SVNREVDATE:J=) ;
 
 
-path-constant BOOST_SOURCE : "freicore/libraries/boost_$(BOOST_VERSION_PATH)" ;
 path-constant EXPAT_SOURCE : $(expat_src) ;
+path-constant BOOST_SOURCE : $(boost_src) ;
+path-constant ZLIB_SOURCE : $(zlib_src) ;
 
-using ext-boost : $(BOOST_VERSION) : $(BOOST_SOURCE) ;
+local .has-boost = [ MATCH "(.+)" : [ modules.peek : BOOST_VERSION ] ] ;
+if ! $(.has-boost)
+{
+    modules.poke : BOOST_VERSION : $(BOOST_VERSION) ;
+    using ext-boost : $(BOOST_VERSION:J=.) : $(BOOST_SOURCE) : <zlib-src-location>$(ZLIB_SOURCE) ;
+}
+
 using expat : 2.0 : $(EXPAT_SOURCE) ;
 
 
@@ -350,6 +358,7 @@ actions msbuild_IDPicker
     IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
     echo Building IDPicker in $(CONFIGURATION:L) configuration...
     msbuild $(ROOT_PATH)/IDPicker.csproj /p:Configuration=$(CONFIGURATION);Platform=x86;$(INTERMEDIATE_PATH);OutDir=$(OUTPUT_PATH) /nologo /verbosity:minimal
+    editbin.exe /LargeAddressAware "$(OUTPUT_PATH)IDPicker.exe"
 }
 
 
@@ -479,14 +488,11 @@ rule binary-tarball-requirements ( properties * )
     local variants = [ feature.get-values <variant> : $(properties) ] ;
     local location = $(BUILD_PATH)/$(toolsets[1])-$(variants[1]) ;
 
-    local non-redistributables = *dummy.c
-        *ABSciex.DataAccess.WiffFileDataReader.dll *Clear?ore*.dll *rscoree.dll         # ABI API
-        *DACServer.dll *genutil.dll *raw.dll *RawCsm.dll *Security*.dll *MetaGD32.dll ; # Waters API
+    local non-redistributables = pwiz_bindings_cli.xml ; # .NET documentation
 
     if $(variants[1]) = "release"
     {
-        non-redistributables += *.pdb   # MSVC debug symbols
-                                *.xml ; # .NET documentation
+        non-redistributables += *.pdb ; # MSVC debug symbols
     }
 
     non-redistributables = [ sequence.join $(non-redistributables) : "&&exclude:" ] ;
@@ -525,22 +531,25 @@ bcp.copy-boost-dependencies copy_boost_subset
   : # sources
 
     # scan all source files for boost dependencies
+    [ path.glob-tree Qonverter : *.cpp *.h ]
     [ glob freicore/*.cpp freicore/*.h ]
     [ path.glob-tree $(PWIZ_SOURCE)/pwiz : *.cpp *.hpp ]
     [ path.glob-tree $(PWIZ_SOURCE)/pwiz_aux : *.cpp *.hpp ]
     [ path.glob-tree $(PWIZ_SOURCE)/pwiz_tools/common : *.cpp *.hpp ]
     [ path.glob-tree $(LIBRARIES_PATH)/boost_aux : *.cpp *.hpp ]
 
+    $(LIBRARIES_PATH)/hdf5-1.8.7/src/init_once_workaround.cpp
+
   : # requirements
-    <location>$(BOOST_SUBSET_PATH)/boost_$(BOOST_VERSION_PATH)
+    <location>$(BOOST_SUBSET_PATH)/boost_$(BOOST_VERSION:J=_)
   ;
 
 
-tar.create boost_$(BOOST_VERSION_PATH).tar.bz2
+tar.create boost_$(BOOST_VERSION:J=_).tar.bz2
   : # sources
 
       path-anchor:$(BOOST_SUBSET_PATH)
-      $(BOOST_SUBSET_PATH)/boost_$(BOOST_VERSION_PATH)
+      $(BOOST_SUBSET_PATH)/boost_$(BOOST_VERSION:J=_)
 
   : # requirements
     <location>$(BOOST_SUBSET_PATH)/freicore/libraries
@@ -551,6 +560,7 @@ tar.create boost_$(BOOST_VERSION_PATH).tar.bz2
   exclude:.svn
   exclude:*.bak
   exclude:svnrev.hpp
+  exclude:*Version.cpp
   exclude:Reader_*_Test.data*
   exclude:site-config.jam exclude:user-config.jam # user should provide these
   exclude:bootstrap exclude:bin.* # boost-build intermediate directories
@@ -585,11 +595,9 @@ tar.create $(application-name:L)-src.tar.bz2
     $(ROOT_PATH)/Forms
     $(ROOT_PATH)/Util
 
-    [ glob $(ROOT_PATH)/freicore/*.h ]
-    [ glob $(ROOT_PATH)/freicore/*.cpp ]
+    [ path.glob $(ROOT_PATH)/freicore : *.cpp *.hpp *.h *.tar.bz2 ]
     [ glob $(ROOT_PATH)/freicore/percolator/*.h ]
     [ glob $(ROOT_PATH)/freicore/percolator/*.cpp ]
-    [ glob $(ROOT_PATH)/freicore/*.tar.bz2 ]
     $(ROOT_PATH)/freicore/Jamfile.jam
     $(ROOT_PATH)/freicore/ext
 
@@ -598,14 +606,16 @@ tar.create $(application-name:L)-src.tar.bz2
     $(ROOT_PATH)/quickbuild.sh
     $(ROOT_PATH)/clean.bat
     $(ROOT_PATH)/clean.sh
+    #$(ROOT_PATH)/LICENSE
 
     $(LIBRARIES_PATH)/boost-build
     $(LIBRARIES_PATH)/boost_aux
-    [ path.glob $(LIBRARIES_PATH) : *.bat *.sh *.jam *.dll *.lib *.exe *.cpp gd*.tar.bz2 zlib*.tar.bz2 ]
-  
+    $(LIBRARIES_PATH)/libsvm-3.0
+    [ path.glob $(LIBRARIES_PATH) : *.bat *.sh *.jam *.dll *.lib *.exe *.cpp gd*.tar.bz2 zlib*.tar.bz2 hdf5*.tar.bz2 ]
+
     path-anchor:$(BUILD_PATH)
     $(BUILD_PATH)/SUBSET
-  
+
     # include the bcp'd boost tarball as if it was really located at "libraries/boost_*.tar.bz2"
     path-anchor:$(BOOST_SUBSET_PATH)
     $(BOOST_SUBSET_PATH)/freicore/libraries
@@ -613,7 +623,7 @@ tar.create $(application-name:L)-src.tar.bz2
   : # requirements
     <name>$(application-name:L)-src-$(version-tag:J=_).tar.bz2
     <location>$(BUILD_PATH)
-    <dependency>boost_$(BOOST_VERSION_PATH).tar.bz2
+    <dependency>boost_$(BOOST_VERSION:J=_).tar.bz2
   ;
 
 } # if SUBSET

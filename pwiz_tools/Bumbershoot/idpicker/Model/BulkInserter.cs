@@ -38,7 +38,7 @@ namespace IDPicker.DataModel
             Peptide, PeptideSequences, PeptideInstance,
             SpectrumSourceGroup, SpectrumSource, SpectrumSourceGroupLink, Spectrum,
             Analysis, AnalysisParameter,
-            PeptideSpectrumMatch, PeptideSpectrumMatchScoreNames, PeptideSpectrumMatchScores,
+            PeptideSpectrumMatch, PeptideSpectrumMatchScoreName, PeptideSpectrumMatchScore,
             Modification, PeptideModification,
             IntegerSet,
             QonverterSettings
@@ -127,11 +127,11 @@ namespace IDPicker.DataModel
                                 "MonoisotopicMassError, MolecularWeightError, " +
                                 "Rank, QValue, Charge");
 
-            insertCommandByTable[(int) Table.PeptideSpectrumMatchScoreNames] = new KeyValuePair<IDbCommand, List<object[]>>(conn.CreateCommand(), new List<object[]>());
-            insertCommandByTable[(int) Table.PeptideSpectrumMatchScoreNames].Key.CommandText = createInsertSql("PeptideSpectrumMatchScoreNames", "Id, Name");
+            insertCommandByTable[(int) Table.PeptideSpectrumMatchScoreName] = new KeyValuePair<IDbCommand, List<object[]>>(conn.CreateCommand(), new List<object[]>());
+            insertCommandByTable[(int) Table.PeptideSpectrumMatchScoreName].Key.CommandText = createInsertSql("PeptideSpectrumMatchScoreName", "Id, Name");
 
-            insertCommandByTable[(int) Table.PeptideSpectrumMatchScores] = new KeyValuePair<IDbCommand, List<object[]>>(conn.CreateCommand(), new List<object[]>());
-            insertCommandByTable[(int) Table.PeptideSpectrumMatchScores].Key.CommandText = createInsertSql("PeptideSpectrumMatchScores", "PsmId, ScoreNameId, Value");
+            insertCommandByTable[(int) Table.PeptideSpectrumMatchScore] = new KeyValuePair<IDbCommand, List<object[]>>(conn.CreateCommand(), new List<object[]>());
+            insertCommandByTable[(int) Table.PeptideSpectrumMatchScore].Key.CommandText = createInsertSql("PeptideSpectrumMatchScore", "PsmId, ScoreNameId, Value");
 
             insertCommandByTable[(int) Table.Modification] = new KeyValuePair<IDbCommand, List<object[]>>(conn.CreateCommand(), new List<object[]>());
             insertCommandByTable[(int) Table.Modification].Key.CommandText = createInsertSql("Modification", "Id, MonoMassDelta, AvgMassDelta, Name, Formula");
@@ -153,7 +153,7 @@ namespace IDPicker.DataModel
 
             scoreIdByName = new Dictionary<string, long>();
 
-            foreach (var queryRow in conn.ExecuteQuery("SELECT Name, Id FROM PeptideSpectrumMatchScoreNames"))
+            foreach (var queryRow in conn.ExecuteQuery("SELECT Name, Id FROM PeptideSpectrumMatchScoreName"))
                 scoreIdByName[queryRow.GetString(0)] = queryRow.GetInt64(1);
 
             /*diskConn.ExecuteNonQuery("CREATE TABLE IF NOT EXISTS PeptideSequences (Id INTEGER PRIMARY KEY, Sequence TEXT)");
@@ -197,8 +197,8 @@ namespace IDPicker.DataModel
                     memConn.ExecuteNonQuery("INSERT INTO disk.Analysis SELECT * FROM Analysis");
                     memConn.ExecuteNonQuery("INSERT INTO disk.AnalysisParameter SELECT * FROM AnalysisParameter");
                     memConn.ExecuteNonQuery("INSERT INTO disk.PeptideSpectrumMatch SELECT * FROM PeptideSpectrumMatch");
-                    memConn.ExecuteNonQuery("INSERT INTO disk.PeptideSpectrumMatchScoreNames SELECT * FROM PeptideSpectrumMatchScoreNames");
-                    memConn.ExecuteNonQuery("INSERT INTO disk.PeptideSpectrumMatchScores SELECT * FROM PeptideSpectrumMatchScores");
+                    memConn.ExecuteNonQuery("INSERT INTO disk.PeptideSpectrumMatchScoreName SELECT * FROM PeptideSpectrumMatchScoreName");
+                    memConn.ExecuteNonQuery("INSERT INTO disk.PeptideSpectrumMatchScore SELECT * FROM PeptideSpectrumMatchScore");
                     memConn.ExecuteNonQuery("INSERT INTO disk.Modification SELECT * FROM Modification");
                     memConn.ExecuteNonQuery("INSERT INTO disk.PeptideModification SELECT * FROM PeptideModification");
                     memConn.ExecuteNonQuery("INSERT OR IGNORE INTO disk.IntegerSet SELECT * FROM IntegerSet");
@@ -345,9 +345,9 @@ namespace IDPicker.DataModel
                         else
                             scoreIdByName[score.Key] = scoreId = 1;
 
-                        insertRow(Table.PeptideSpectrumMatchScoreNames, new object[] { scoreId, score.Key });
+                        insertRow(Table.PeptideSpectrumMatchScoreName, new object[] { scoreId, score.Key });
                     }
-                    insertRow(Table.PeptideSpectrumMatchScores, new object[] {psm.Id, scoreId, score.Value});
+                    insertRow(Table.PeptideSpectrumMatchScore, new object[] {psm.Id, scoreId, score.Value});
                 }
         }
 

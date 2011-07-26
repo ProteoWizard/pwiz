@@ -28,6 +28,8 @@
 #include <climits>
 #include <cfloat>
 
+#include <iostream>
+
 
 using namespace IDPICKER_NAMESPACE;
 
@@ -335,46 +337,61 @@ struct MinMaxPair
     T min, max;
 };
 
-MinMaxPair<double> bestSpecificity(2, 0);
-MinMaxPair<double> chargeState(DBL_MAX, 0);
-MinMaxPair<double> missedCleavages(DBL_MAX, 0);
-MinMaxPair<double> massError(DBL_MAX, 0);
-void scaleNonScoreFeatures(const Qonverter::Settings& settings, const PSMIteratorRange& range)
+struct NonScoreFeatureInfo
 {
+    NonScoreFeatureInfo()
+        : bestSpecificity(2, 0),
+          chargeState(FLT_MAX, 0),
+          missedCleavages(FLT_MAX, 0),
+          massError(DBL_MAX, 0)
+    {}
+
+    MinMaxPair<float> bestSpecificity;
+    MinMaxPair<float> chargeState;
+    MinMaxPair<float> missedCleavages;
+    MinMaxPair<double> massError;
+};
+
+NonScoreFeatureInfo scaleNonScoreFeatures(const Qonverter::Settings& settings, const PSMIteratorRange& range)
+{
+    NonScoreFeatureInfo result;
+
     // first pass: calculate extrema
     // second pass: scale features linearly between -1 and 1
 
     if (settings.chargeStateHandling == Qonverter::ChargeStateHandling::Feature)
     {
         BOOST_FOREACH(PeptideSpectrumMatch& psm, range)
-            chargeState.compare(psm.chargeState);
+            result.chargeState.compare(psm.chargeState);
         BOOST_FOREACH(PeptideSpectrumMatch& psm, range)
-            chargeState.scale(psm.chargeState);
+            result.chargeState.scale(psm.chargeState);
     }
 
     if (settings.terminalSpecificityHandling == Qonverter::TerminalSpecificityHandling::Feature)
     {
         BOOST_FOREACH(PeptideSpectrumMatch& psm, range)
-            bestSpecificity.compare(psm.bestSpecificity);
+            result.bestSpecificity.compare(psm.bestSpecificity);
         BOOST_FOREACH(PeptideSpectrumMatch& psm, range)
-            bestSpecificity.scale(psm.bestSpecificity);
+            result.bestSpecificity.scale(psm.bestSpecificity);
     }
 
     if (settings.missedCleavagesHandling == Qonverter::MissedCleavagesHandling::Feature)
     {
         BOOST_FOREACH(PeptideSpectrumMatch& psm, range)
-            missedCleavages.compare(psm.missedCleavages);
+            result.missedCleavages.compare(psm.missedCleavages);
         BOOST_FOREACH(PeptideSpectrumMatch& psm, range)
-            missedCleavages.scale(psm.missedCleavages);
+            result.missedCleavages.scale(psm.missedCleavages);
     }
 
     if (settings.massErrorHandling == Qonverter::MassErrorHandling::Feature)
     {
         BOOST_FOREACH(PeptideSpectrumMatch& psm, range)
-            massError.compare(psm.massError);
+            result.massError.compare(psm.massError);
         BOOST_FOREACH(PeptideSpectrumMatch& psm, range)
-            massError.scale(psm.massError);
+            result.massError.scale(psm.massError);
     }
+
+    return result;
 }
 
 void scaleScoreFeatures(const PSMIteratorRange& range)
@@ -527,14 +544,16 @@ void testModel(const Qonverter::Settings& settings,
 namespace {
 
 void writeFeatureDetails(const string& sourceName, const Qonverter::Settings& settings,
-                         PSMIteratorRange fullRange, PSMIteratorRange truePositives)
+                         PSMIteratorRange fullRange, PSMIteratorRange truePositives,
+                         const NonScoreFeatureInfo& nonScoreFeatureInfo)
 {
-    ofstream psmDetails((sourceName + "-details.txt").c_str());
-    ofstream psmFeatures((sourceName + "-scaled-features.tsv").c_str());
+    ofstream psmDetails((sourceName + "-details.txt").c_str(), std::ios::app);
+    ofstream psmFeatures((sourceName + "-scaled-features.tsv").c_str(), std::ios::app);
 
     using std::left;
     psmDetails  << setw(9) << left << "Ordinal"
                 << setw(9) << left << "Spectrum"
+                //<< setw(50) << left << "NativeID"
                 << setw(8) << left << "Rank"
 	            << setw(8) << left << "Charge"
                 << setw(8) << left << "NET"
@@ -573,16 +592,17 @@ void writeFeatureDetails(const string& sourceName, const Qonverter::Settings& se
         double unscaledMissedCleavages = psm.missedCleavages;
         double unscaledMassError = psm.massError;
         if (settings.chargeStateHandling == Qonverter::ChargeStateHandling::Feature)
-            chargeState.unscale(unscaledChargeState);
+            nonScoreFeatureInfo.chargeState.unscale(unscaledChargeState);
         if (settings.terminalSpecificityHandling == Qonverter::TerminalSpecificityHandling::Feature)
-            bestSpecificity.unscale(unscaledBestSpecificity);
+            nonScoreFeatureInfo.bestSpecificity.unscale(unscaledBestSpecificity);
         if (settings.missedCleavagesHandling == Qonverter::MissedCleavagesHandling::Feature)
-            missedCleavages.unscale(unscaledMissedCleavages);
+            nonScoreFeatureInfo.missedCleavages.unscale(unscaledMissedCleavages);
         if (settings.massErrorHandling == Qonverter::MassErrorHandling::Feature)
-            massError.unscale(unscaledMassError);
+            nonScoreFeatureInfo.massError.unscale(unscaledMassError);
 
         psmDetails  << setw(9) << left << ++ordinal
                     << setw(9) << left << psm.spectrum
+                    //<< setw(50) << left << psm.nativeID
                     << setw(8) << left << psm.originalRank
                     << setw(8) << left << unscaledChargeState
                     << setw(8) << left << unscaledBestSpecificity
@@ -634,7 +654,7 @@ void SVMQonverter::Qonvert(const string& sourceName, vector<PeptideSpectrumMatch
     vector<PSMIteratorRange> psmPartitionedRows = partition(settings, fullRange);
 
     // for all partitions, scale the non-score features linearly between -1 and 1
-    scaleNonScoreFeatures(settings, fullRange);
+    NonScoreFeatureInfo nonScoreFeatureInfo = scaleNonScoreFeatures(settings, fullRange);
 
     // for each partition, scale the scores linearly between -1 and 1
     BOOST_FOREACH(const PSMIteratorRange& range, psmPartitionedRows)
@@ -677,7 +697,7 @@ void SVMQonverter::Qonvert(const string& sourceName, vector<PeptideSpectrumMatch
         if (truePositiveRange.empty()) {/*cerr << "No true positives." << endl;*/ continue;}
         if (falsePositiveRange.empty()) {/*cerr << "No false positives." << endl;*/ continue;}
 
-        //writeFeatureDetails(sourceName, settings, fullRange, truePositiveRange);
+        //writeFeatureDetails(sourceName, settings, fullRange, truePositiveRange, nonScoreFeatureInfo);
 
         // sort by rank
         sort(falsePositiveRange.begin(), falsePositiveRange.end(), OriginalRankLessThan());

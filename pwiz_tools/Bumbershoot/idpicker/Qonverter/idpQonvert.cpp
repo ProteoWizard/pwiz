@@ -25,6 +25,8 @@
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/data/common/diff_std.hpp"
 #include "../freicore/freicore.h"
+#include "boost/foreach_field.hpp"
+#include "boost/thread/mutex.hpp"
 
 #include "Parser.hpp"
 #include "idpQonvert.hpp"
@@ -63,7 +65,7 @@ int InitProcess( argList_t& args )
 
 	g_rtConfig = new RunTimeConfig;
 	g_rtSharedConfig = (BaseRunTimeConfig*) g_rtConfig;
-	g_hostString = "Process #" + lexical_cast<string>( g_pid ) + " (" + GetHostname() + ")";
+	g_numWorkers = GetNumProcessors();
 
 	// First set the working directory, if provided
 	for( size_t i=1; i < args.size(); ++i )
@@ -72,16 +74,20 @@ int InitProcess( argList_t& args )
 		{
 			chdir( args[i+1].c_str() );
 			args.erase( args.begin() + i );
-		} else if( args[i] == "-cpus" && i+1 <= args.size() )
+		}
+        else if( args[i] == "-cpus" && i+1 <= args.size() )
 		{
 			g_numWorkers = atoi( args[i+1].c_str() );
 			args.erase( args.begin() + i );
-		} else
+		}
+        else
 			continue;
 
 		args.erase( args.begin() + i );
 		--i;
 	}
+
+    vector<string> extraFilepaths;
 
 	for( size_t i=1; i < args.size(); ++i )
 	{
@@ -89,12 +95,29 @@ int InitProcess( argList_t& args )
 		{
 			if( g_rtConfig->initializeFromFile( args[i+1] ) )
 			{
-				cerr << g_hostString << " could not find runtime configuration at \"" << args[i+1] << "\"." << endl;
+				cerr << "Could not find runtime configuration at \"" << args[i+1] << "\"." << endl;
 				return QONVERT_ERROR_RUNTIME_CONFIG_FILE_FAILURE;
 			}
 			args.erase( args.begin() + i );
 
-		} else
+		}
+        else if( args[i] == "-b" && i+1 <= args.size() )
+        {
+            // read filepaths from file
+            if( !bfs::exists(args[i+1]) )
+            {
+                cerr << "Could not find list file at \"" << args[i+1] << "\"." << endl;
+                return QONVERT_ERROR_RUNTIME_CONFIG_FILE_FAILURE;
+            }
+
+            ifstream listFile(args[i+1].c_str());
+            string line;
+            while (getline(listFile, line))
+                extraFilepaths.push_back(line);
+
+			args.erase( args.begin() + i );
+        }
+        else
 			continue;
 
 		args.erase( args.begin() + i );
@@ -103,7 +126,7 @@ int InitProcess( argList_t& args )
 
 	if( g_rtConfig->inputFilepaths.empty() && args.size() < 2 )
 	{
-		cerr << "Not enough arguments.\nUsage: idpQonvert [<idpDB filemask> [<another idpDB filemask> ...]]" << endl;
+		cerr << "Not enough arguments.\nUsage: idpQonvert <analyzed data filemask> [<another filemask> ...]" << endl;
 		return QONVERT_ERROR_NOT_ENOUGH_ARGUMENTS;
 	}
 
@@ -111,7 +134,7 @@ int InitProcess( argList_t& args )
 	{
 		if( g_rtConfig->initializeFromFile() )
 		{
-			cerr << g_hostString << " could not find the default configuration file (hard-coded defaults in use)." << endl;
+			cerr << "Could not find the default configuration file (hard-coded defaults in use)." << endl;
 		}
 	}
 
@@ -140,33 +163,28 @@ int InitProcess( argList_t& args )
 		g_rtConfig->setVariables( vars );
 	} catch( std::exception& e )
 	{
-		if( g_pid == 0 ) cerr << g_hostString << " had an error while overriding runtime variables: " << e.what() << endl;
+		cerr << "Error overriding runtime variables: " << e.what() << endl;
 		return QONVERT_ERROR_RUNTIME_CONFIG_OVERRIDE_FAILURE;
 	}
 
-	if( g_pid == 0 )
+	for( size_t i=1; i < args.size(); ++i )
 	{
-		for( size_t i=1; i < args.size(); ++i )
+		if( args[i] == "-dump" )
 		{
-			if( args[i] == "-dump" )
-			{
-				g_rtConfig->dump();
-				g_residueMap->dump();
-				args.erase( args.begin() + i );
-				--i;
-			}
+			g_rtConfig->dump();
+			g_residueMap->dump();
+			args.erase( args.begin() + i );
+			--i;
 		}
-
-		for( size_t i=1; i < args.size(); ++i )
+        else if( args[i][0] == '-' )
 		{
-			if( args[i][0] == '-' )
-			{
-				cerr << "Warning: ignoring unrecognized parameter \"" << args[i] << "\"" << endl;
-				args.erase( args.begin() + i );
-				--i;
-			}
+			cerr << "Warning: ignoring unrecognized parameter \"" << args[i] << "\"" << endl;
+			args.erase( args.begin() + i );
+			--i;
 		}
 	}
+
+    args.insert(args.end(), extraFilepaths.begin(), extraFilepaths.end());
 
 	return 0;
 }
@@ -180,13 +198,16 @@ struct ImportSettingsHandler : public Parser::ImportSettingsCallback
         if (distinctAnalyses.size() > 1)
         {
             ostringstream error;
-            error << "Command-line idpQonvert only supports qonverting a single distinct analysis at a time." << endl;
+            error << "Warning: multiple distinct analyses detected in the input files. IdpQonvert settings apply to every analysis." << endl;
 
             for (size_t i=0; i < distinctAnalyses.size(); ++i)
             {
                 const Parser::Analysis& analysis = *distinctAnalyses[i];
                 error << "Analysis " << analysis.name << " (" << analysis.softwareName << " " << analysis.softwareVersion << ")" << endl;
                 error << "\tstartTime: " << analysis.startTime << endl;
+                error << "\tinputFilepaths:" << endl;
+                BOOST_FOREACH(const string& filepath, analysis.filepaths)
+                    error << "\t\t" << filepath << endl;
 
                 if (i == 0)
                 {
@@ -206,51 +227,109 @@ struct ImportSettingsHandler : public Parser::ImportSettingsCallback
                     //error << endl;
                 }
             }
-            throw runtime_error(error.str());
+            cerr << error.str() << endl;
         }
 
         // verify the protein database from the imported files matches ProteinDatabase
-        const Parser::Analysis& analysis = *distinctAnalyses[0];
-        if (!bal::iequals(bfs::path(analysis.importSettings.proteinDatabaseFilepath).replace_extension("").filename(),
-                          bfs::path(g_rtConfig->ProteinDatabase).replace_extension("").filename()))
-            throw runtime_error("ProteinDatabase " + bfs::path(g_rtConfig->ProteinDatabase).filename() +
-                                " does not match " + bfs::path(analysis.importSettings.proteinDatabaseFilepath).filename());
+        BOOST_FOREACH(const Parser::ConstAnalysisPtr& analysisPtr, distinctAnalyses)
+        {
+            const Parser::Analysis& analysis = *analysisPtr;
 
-        analysis.importSettings.proteinDatabaseFilepath = g_rtConfig->ProteinDatabase;
+            if (!bal::iequals(bfs::path(analysis.importSettings.proteinDatabaseFilepath).replace_extension("").filename(),
+                              bfs::path(g_rtConfig->ProteinDatabase).replace_extension("").filename()))
+                throw runtime_error("ProteinDatabase " + bfs::path(g_rtConfig->ProteinDatabase).filename() +
+                                    " does not match " + bfs::path(analysis.importSettings.proteinDatabaseFilepath).filename());
 
-        Qonverter::Settings& settings = analysis.importSettings.qonverterSettings;
-        settings.qonverterMethod = g_rtConfig->QonverterMethod;
-        settings.kernel = g_rtConfig->Kernel;
-        settings.chargeStateHandling = g_rtConfig->ChargeStateHandling;
-        settings.terminalSpecificityHandling = g_rtConfig->TerminalSpecificityHandling;
-        settings.missedCleavagesHandling = g_rtConfig->MissedCleavagesHandling;
-        settings.massErrorHandling = g_rtConfig->MassErrorHandling;
-        settings.decoyPrefix = g_rtConfig->DecoyPrefix;
-        settings.scoreInfoByName = g_rtConfig->scoreInfoByName;
+            analysis.importSettings.proteinDatabaseFilepath = g_rtConfig->ProteinDatabase;
+
+            Qonverter::Settings& settings = analysis.importSettings.qonverterSettings;
+            settings.qonverterMethod = g_rtConfig->QonverterMethod;
+            settings.kernel = g_rtConfig->Kernel;
+            settings.chargeStateHandling = g_rtConfig->ChargeStateHandling;
+            settings.terminalSpecificityHandling = g_rtConfig->TerminalSpecificityHandling;
+            settings.missedCleavagesHandling = g_rtConfig->MissedCleavagesHandling;
+            settings.massErrorHandling = g_rtConfig->MassErrorHandling;
+            settings.decoyPrefix = g_rtConfig->DecoyPrefix;
+            settings.scoreInfoByName = g_rtConfig->scoreInfoByName;
+        }
     }
 };
 
 struct UserFeedbackIterationListener : public IterationListener
 {
+    struct PersistentUpdateMessage
+    {
+        size_t iterationIndex;
+        size_t iterationCount; // 0 == unknown
+        string message;
+
+        PersistentUpdateMessage() {}
+
+        PersistentUpdateMessage(const UpdateMessage& updateMessage)
+        {
+            iterationIndex = updateMessage.iterationIndex;
+            iterationCount = updateMessage.iterationCount;
+            message = updateMessage.message;
+        }
+    };
+
+    boost::mutex mutex;
+    map<string, PersistentUpdateMessage> lastUpdateByFilepath;
+    string currentMessage; // when the message changes, make a new line
+
     virtual Status update(const UpdateMessage& updateMessage)
     {
-        int index = updateMessage.iterationIndex;
-        int count = updateMessage.iterationCount;
+        vector<string> parts;
+        bal::split(parts, updateMessage.message, bal::is_any_of("*"));
 
-        // when the index is 0, create a new line
-        if (index == 0)
-            cout << endl;
-
-        cout << updateMessage.message;
-        if (index > 0)
+        // parts[0] must be filepath, parts[1] must be original update message
+        if (parts.size() != 2)
         {
-            cout << ": " << index+1;
-            if (count > 0)
-                cout << "/" << count;
+            cerr << "Invalid update message: " << updateMessage.message << endl;
+            return Status_Cancel;
         }
 
-        // add tabs to erase all of the previous line
-        cout << "\t\t\t\r" << flush;
+        const string& originalMessage = parts[1];
+
+        boost::mutex::scoped_lock lock(mutex);
+
+        // when the message changes, clear lastUpdateByFilepath and make a new line
+        if (currentMessage.empty() || currentMessage != originalMessage)
+        {
+            if (!currentMessage.empty())
+                cout << endl;
+            lastUpdateByFilepath.clear();
+            currentMessage = originalMessage;
+        }
+
+        lastUpdateByFilepath[parts[0]] = PersistentUpdateMessage(updateMessage);
+
+        vector<string> updateStrings;
+
+        BOOST_FOREACH_FIELD((const string& filepath)(PersistentUpdateMessage& updateMessage), lastUpdateByFilepath)
+        {
+            // create a message for each file like "source (message: index/count)"
+            string source = bfs::path(filepath).replace_extension("").filename();
+            int index = updateMessage.iterationIndex;
+            int count = updateMessage.iterationCount;
+            const string& message = originalMessage;
+
+            if (index == 0 && count == 0)
+            {
+                updateStrings.push_back((boost::format("%1% (%2%)")
+                                         % source % message).str());
+            }
+            else if (count > 0)
+            {
+                updateStrings.push_back((boost::format("%1% (%2%: %3%/%4%)")
+                                         % source % message % (index+1) % count).str());
+            }
+            else
+                updateStrings.push_back((boost::format("%1% (%2%: %3%)")
+                                         % source % message % (index+1)).str());
+        }
+
+        cout << "\r" << bal::join(updateStrings, "; ") << flush;
 
         return Status_Ok;
     }
@@ -263,18 +342,24 @@ void summarizeQonversion(const string& filepath)
 {
     sqlite::database idpDb(filepath);
 
-    string sql = "SELECT COUNT(DISTINCT Spectrum),"
-                 "       COUNT(DISTINCT Peptide)"
+    string sql = "SELECT Name, COUNT(DISTINCT Spectrum), COUNT(DISTINCT Peptide)"
                  "  FROM PeptideSpectrumMatch"
-                 " WHERE QValue < " + lexical_cast<string>(g_rtConfig->MaxFDR);
+                 "  JOIN Spectrum s ON Spectrum=s.Id"
+                 "  JOIN SpectrumSource ss ON Source=ss.Id"
+                 " WHERE QValue < " + lexical_cast<string>(g_rtConfig->MaxFDR) +
+                 " GROUP BY Source";
 
     sqlite::query summaryQuery(idpDb, sql.c_str());
 
-    int spectra, peptides;
-    boost::tie(spectra, peptides)= summaryQuery.begin()->get_columns<int, int>(0, 1);
-    cout << left << setw(8) << spectra
-         << left << setw(9) << peptides
-         << filepath << endl;
+    BOOST_FOREACH(sqlite::query::rows& row, summaryQuery)
+    {
+        string source;
+        int spectra, peptides;
+        boost::tie(source, spectra, peptides) = row.get_columns<string, int, int>(0, 1, 2);
+        cout << left << setw(8) << spectra
+             << left << setw(9) << peptides
+             << source << endl;
+    }
 }
 
 
@@ -308,11 +393,11 @@ int main( int argc, char* argv[] )
 
         // update on the first spectrum, the last spectrum, the 100th spectrum, the 200th spectrum, etc.
         const size_t iterationPeriod = 100;
-        UserFeedbackIterationListener feedback;
-        parser.iterationListenerRegistry.addListener(feedback, iterationPeriod);
+        IterationListenerRegistry ilr;
+        ilr.addListenerWithTimer(IterationListenerPtr(new UserFeedbackIterationListener), 1.0);
 
         parser.importSettingsCallback = Parser::ImportSettingsCallbackPtr(new ImportSettingsHandler);
-        parser.parse(parserFilepaths);
+        parser.parse(parserFilepaths, g_numWorkers, &ilr);
 
         // output summary statistics for each input file
         cout << "\nSpectra Peptides Filepath\n"
@@ -344,12 +429,12 @@ int main( int argc, char* argv[] )
     }
     catch (exception& e)
     {
-        cerr << "Error: " << e.what() << endl;
+        cerr << "\nError: " << e.what() << endl;
         return QONVERT_ERROR_UNHANDLED_EXCEPTION;
     }
     catch (...)
     {
-        cerr << "Error: unhandled exception." << endl;
+        cerr << "\nError: unhandled exception." << endl;
         return QONVERT_ERROR_UNHANDLED_EXCEPTION;
     }
 

@@ -106,48 +106,47 @@ struct PsmRowReader
 
     PsmRowReader(const vector<string>& scoreIdSet) : scoresSize(scoreIdSet.size()) {}
 
-    int operator() (int columnCount, char** columnValues, char** columnNames)
+    void read(sqlite::database& db, const string& sql)
     {
-        if (columnCount != 8 + scoresSize)
-            throw runtime_error("[Qonverter::PsmRowReader()] result has incorrect column count");
+        sqlite::query psmQuery(db, sql.c_str());
 
-        psmRows.push_back(PeptideSpectrumMatch());
-        PeptideSpectrumMatch& psm = psmRows.back();
-
-        psm.id = lexical_cast<sqlite_int64>(columnValues[0]);
-        psm.spectrum = lexical_cast<sqlite_int64>(columnValues[1]);
-        psm.originalRank = lexical_cast<sqlite_int64>(columnValues[2]);
-
-        switch (columnValues[3][0])
+        BOOST_FOREACH(sqlite::query::rows& row, psmQuery)
         {
-            case '0': psm.decoyState = DecoyState::Target; break;
-            case '1': psm.decoyState = DecoyState::Decoy; break;
-            case '2': psm.decoyState = DecoyState::Ambiguous; break;
+            psmRows.push_back(PeptideSpectrumMatch());
+            PeptideSpectrumMatch& psm = psmRows.back();
+
+            int decoyState;
+            sqlite::query::rows::getstream psmGetter = row.getter();
+            psmGetter >> psm.id
+                      >> psm.spectrum
+                      //>> psm.nativeID
+                      >> psm.originalRank
+                      >> decoyState
+                      >> psm.chargeState
+                      >> psm.bestSpecificity
+                      >> psm.missedCleavages
+                      >> psm.massError;
+
+            switch (decoyState)
+            {
+                case 0: psm.decoyState = DecoyState::Target; break;
+                case 1: psm.decoyState = DecoyState::Decoy; break;
+                case 2: psm.decoyState = DecoyState::Ambiguous; break;
+                default: throw runtime_error("[PsmRowReader::read] query returned invalid decoy state");
+            }
+
+            psm.scores.resize(scoresSize);
+            for (size_t i=0; i < scoresSize; ++i)
+                psmGetter >> psm.scores[i];
+
+            psm.totalScore = 0;
+            psm.qValue = 2;
         }
-
-        psm.chargeState = lexical_cast<int>(columnValues[4]);
-        psm.bestSpecificity = lexical_cast<int>(columnValues[5]);
-        psm.missedCleavages = lexical_cast<int>(columnValues[6]);
-        psm.massError = lexical_cast<double>(columnValues[7]);
-
-        psm.scores.resize(scoresSize);
-        for (size_t i=0; i < scoresSize; ++i)
-            psm.scores[i] = lexical_cast<double>(columnValues[8+i]);
-
-        psm.totalScore = 0;
-        psm.qValue = 2;
-
-        return 0;
     }
 
     private:
     size_t scoresSize;
 };
-
-int addPsmRows(void* data, int columnCount, char** columnValues, char** columnNames)
-{
-    return (*static_cast<PsmRowReader*>(data))(columnCount, columnValues, columnNames);
-}
 
 void validateSettings(const Qonverter::Settings& settings)
 {
@@ -222,8 +221,11 @@ void Qonverter::qonvert(const string& idpDbFilepath, const ProgressMonitor& prog
     qonvert(db.connected(), progressMonitor);
 }
 
-void Qonverter::qonvert(sqlite3* db, const ProgressMonitor& progressMonitor)
+void Qonverter::qonvert(sqlite3* dbPtr, const ProgressMonitor& progressMonitor)
 {
+    // do not disconnect on close
+    sqlite::database db(dbPtr, false);
+
     string sql;
 
     // get the set of distinct analysis/source pairs
@@ -239,7 +241,7 @@ void Qonverter::qonvert(sqlite3* db, const ProgressMonitor& progressMonitor)
           "GROUP BY psm.Analysis, s.Source";
 
     vector<AnalysisSourcePair> analysisSourcePairs;
-    CHECK_SQLITE_RESULT(sqlite3_exec(db, sql.c_str(), getAnalysisSourcePairs, &analysisSourcePairs, &errorBuf));
+    CHECK_SQLITE_RESULT(sqlite3_exec(dbPtr, sql.c_str(), getAnalysisSourcePairs, &analysisSourcePairs, &errorBuf));
 
     // send initial progress update to indicate how many qonversion steps there are
     ProgressMonitor::UpdateMessage updateMessage;
@@ -284,7 +286,7 @@ void Qonverter::qonvert(sqlite3* db, const ProgressMonitor& progressMonitor)
 
         vector<string> strings;
         sql = "SELECT Name FROM SpectrumSource WHERE Id=" + spectrumSourceId;
-        CHECK_SQLITE_RESULT(sqlite3_exec(db, sql.c_str(), getStringVector, &strings, &errorBuf));
+        CHECK_SQLITE_RESULT(sqlite3_exec(dbPtr, sql.c_str(), getStringVector, &strings, &errorBuf));
         const string& sourceName = strings[0];
 
         // verify that the decoyPrefix occurs in the PSM subset
@@ -298,7 +300,7 @@ void Qonverter::qonvert(sqlite3* db, const ProgressMonitor& progressMonitor)
               "  AND pro.Accession LIKE '" + decoyPrefix + "%'";
 
         bool decoyPrefixOccurs = true;
-        CHECK_SQLITE_RESULT(sqlite3_exec(db, sql.c_str(), verifyDecoyPrefixOccurs, &decoyPrefixOccurs, &errorBuf));
+        CHECK_SQLITE_RESULT(sqlite3_exec(dbPtr, sql.c_str(), verifyDecoyPrefixOccurs, &decoyPrefixOccurs, &errorBuf));
         if (!decoyPrefixOccurs)
             throw runtime_error("[Qonverter::Qonvert] decoy prefix '" + decoyPrefix + "' does not occur in analysis " + analysisId);
 
@@ -324,7 +326,7 @@ void Qonverter::qonvert(sqlite3* db, const ProgressMonitor& progressMonitor)
         vector<string> actualScoreNames;
         map<string, string> actualScoreIdByName;
 
-        CHECK_SQLITE_RESULT(sqlite3_exec(db, sql.c_str(), getScoreNames, &actualScoreIdNamePairs, &errorBuf));
+        CHECK_SQLITE_RESULT(sqlite3_exec(dbPtr, sql.c_str(), getScoreNames, &actualScoreIdNamePairs, &errorBuf));
 
         BOOST_FOREACH(const string& idName, actualScoreIdNamePairs)
         {
@@ -384,7 +386,9 @@ void Qonverter::qonvert(sqlite3* db, const ProgressMonitor& progressMonitor)
                           " AND " + id + "=score" + id + ".ScoreNameId ";
         }
 
-        sql = "SELECT psm.Id, psm.Spectrum, psm.Rank, "
+        sql = "SELECT psm.Id, psm.Spectrum, "
+              //"s.NativeID, "
+              "psm.Rank, "
               "       CASE WHEN SUM(DISTINCT CASE WHEN pro.Accession LIKE '" + decoyPrefix + "%' THEN 1 ELSE 0 END) + SUM(DISTINCT CASE WHEN pro.Accession NOT LIKE '" + decoyPrefix + "%' THEN 1 ELSE 0 END) = 2 THEN 2 " +
               "            ELSE SUM(DISTINCT CASE WHEN pro.Accession LIKE '" + decoyPrefix + "%' THEN 1 ELSE 0 END) " +
               "            END AS DecoyState, "
@@ -404,7 +408,7 @@ void Qonverter::qonvert(sqlite3* db, const ProgressMonitor& progressMonitor)
               " GROUP BY psm.Id";
 
         PsmRowReader psmRowReader(scoreIdSet);
-        CHECK_SQLITE_RESULT(sqlite3_exec(db, sql.c_str(), addPsmRows, &psmRowReader, &errorBuf));
+        psmRowReader.read(db, sql.c_str());
 
         switch (qonverterSettings.qonverterMethod.index())
         {
@@ -418,7 +422,7 @@ void Qonverter::qonvert(sqlite3* db, const ProgressMonitor& progressMonitor)
         }
 
         // update the database with the new Q values
-        updatePsmRows(db, logQonversionDetails, psmRowReader.psmRows);
+        updatePsmRows(dbPtr, logQonversionDetails, psmRowReader.psmRows);
 
         ++updateMessage.qonvertedAnalyses;
         progressMonitor(updateMessage);

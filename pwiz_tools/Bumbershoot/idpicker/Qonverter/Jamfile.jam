@@ -39,14 +39,14 @@ lib Parser
         <library>Qonverter
         <library>$(PWIZ_SOURCE)/pwiz_tools/common//pwiz_tools_common
         <library>$(PWIZ_SOURCE)/pwiz/data/proteome//pwiz_data_proteome
-        <library>$(PWIZ_SOURCE)/pwiz/data/mziddata//pwiz_data_mzid
+        <library>$(PWIZ_SOURCE)/pwiz/data/identdata//pwiz_data_identdata
         <library>$(PWIZ_SOURCE)/pwiz/analysis/proteome_processing//pwiz_analysis_proteome_processing
     : # default-build
     : # usage-requirements
         <library>Qonverter
         <library>$(PWIZ_SOURCE)/pwiz_tools/common//pwiz_tools_common
         <library>$(PWIZ_SOURCE)/pwiz/data/proteome//pwiz_data_proteome
-        <library>$(PWIZ_SOURCE)/pwiz/data/mziddata//pwiz_data_mzid
+        <library>$(PWIZ_SOURCE)/pwiz/data/identdata//pwiz_data_identdata
         <library>$(PWIZ_SOURCE)/pwiz/analysis/proteome_processing//pwiz_analysis_proteome_processing
     ;
 

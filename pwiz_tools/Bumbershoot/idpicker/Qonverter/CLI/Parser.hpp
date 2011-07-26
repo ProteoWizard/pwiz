@@ -24,7 +24,6 @@
 #pragma warning( push )
 #pragma warning( disable : 4634 4635 )
 #include "Qonverter.hpp"
-#include "pwiz/utility/bindings/CLI/common/IterationListener.hpp"
 #using <system.dll>
 #pragma warning( pop )
 
@@ -69,19 +68,18 @@ public ref struct Parser
     delegate void ImportSettingsEventHandler(Object^ sender, ImportSettingsEventArgs^ e);
 
     event ImportSettingsEventHandler^ ImportSettings;
-    event pwiz::CLI::util::IterationEventHandler^ ParsingProgress;
 
 
-    void Parse(IEnumerable<String^>^ inputFilepaths);
+    void Parse(IEnumerable<String^>^ inputFilepaths, pwiz::CLI::util::IterationListenerRegistry^ ilr);
 
-    void Parse(String^ inputFilepath);
+    void Parse(String^ inputFilepath, pwiz::CLI::util::IterationListenerRegistry^ ilr);
 	
 	static String^ ParseSource(String^ inputFilepath);
 
 
     internal:
+    Parser::ImportSettingsEventHandler^ handler;
     void marshal(Object^ sender, ImportSettingsEventArgs^ e);
-    void marshal(Object^ sender, pwiz::CLI::util::IterationEventArgs^ e);
 };
 
 

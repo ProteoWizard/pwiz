@@ -150,8 +150,8 @@ namespace Test
                     new SpectrumTuple("/",  source,     14, analysis,     70, q, String.Format("TIDER@{0}/1 PEPTIDER@{0}/2", charge)),
                     new SpectrumTuple("/",  source,     2,  analysis,     65, q, String.Format("THEQUICKBR@{0}/1 BKCIUQEHT@{0}/1 PEPTIDER@{0}/2", charge)),
                     new SpectrumTuple("/",  source,     7,  analysis,     60, q, String.Format("KEDITPEPR@{0}/1 DERPEPTIDEK@{0}/4", charge)),
-                    new SpectrumTuple("/",  source,     4,  analysis,     50, q, String.Format("THELZYDG@{0}/1 PEPTI@{0}/3", charge)),
                     new SpectrumTuple("/",  source,     10, analysis,     55, q, String.Format("DERPEPTIDEK@{0}/1 PEPTIDEK@{0}/5", charge)),
+                    new SpectrumTuple("/",  source,     4,  analysis,     50, q, String.Format("THELZYDG@{0}/1 PEPTI@{0}/3", charge)),
                     new SpectrumTuple("/",  source,     8,  analysis,     45, q, String.Format("PEPTI@{0}/1 PEPTIDER@{0}/6", charge)),
                     new SpectrumTuple("/",  source,     9,  analysis,     40, q, String.Format("PEPTIDEK@{0}/1 THEQUICKBR@{0}/2", charge)),
                     new SpectrumTuple("/",  source,     3,  analysis,     35, q, String.Format("PEPKEDITPEPR@{0}/1 THELZYDG@{0}/2", charge)),
@@ -192,6 +192,10 @@ namespace Test
                 qonverter.SettingsByAnalysis[i] = new Qonverter.Settings()
                 {
                     QonverterMethod = Qonverter.QonverterMethod.StaticWeighted,
+                    ChargeStateHandling = Qonverter.ChargeStateHandling.Partition,
+                    TerminalSpecificityHandling = Qonverter.TerminalSpecificityHandling.Partition,
+                    MassErrorHandling = Qonverter.MassErrorHandling.Ignore,
+                    MissedCleavagesHandling = Qonverter.MissedCleavagesHandling.Ignore,
                     DecoyPrefix = decoyPrefix,
                     ScoreInfoByName = new Dictionary<string, Qonverter.Settings.ScoreInfo>()
                     {
@@ -203,7 +207,7 @@ namespace Test
             var progressTester = new QonversionProgressTest()
             {
                 Qonverter = qonverter,
-                ExpectedTotalAnalyses = analysisCount * sourceCount * chargeCount // engine 3 is ignored
+                ExpectedTotalAnalyses = analysisCount * sourceCount // engine 3 is ignored
             };
 
             System.IO.File.Copy("testStaticQonversion.idpDB", "testStaticQonversion.idpDB-copy");
@@ -236,23 +240,26 @@ namespace Test
             #region QValue test
             Dictionary<long, double> expectedQValues = new Dictionary<long, double>()
             {
-                { 4, 0 },
-                { 10, 0 },
-                { 11, 0 },
-                { 15, 2/4.0 },
-                { 14, 4/5.0 },
-                { 16, 4/6.0 },
-                { 13, 4/7.0 },
-                { 1, 4/7.0 },
-                { 6, 6/8.0 },
-                { 9, 6/9.0 },
-                { 3, 6/10.0 },
-                { 7, 6/11.0 },
-                { 8, 6/12.0 },
-                { 2, 8/13.0 },
-                { 0, 10/14.0 },
-                { 12, 10/14.0 },
-                { 5, 10/15.0 },
+                // with high scoring decoys, Q values can spike and gradually go down again;
+                // we squash these spikes such that Q value is monotonically increasing
+                //               targets  decoys  ambiguous  unadjusted-Q-value  adjusted-Q-value
+                { 4, 0 },        // 1        0       0              0                   0
+                { 10, 0 },       // 2        0       0              0                   0
+                { 11, 0 },       // 3        0       0              0                   0
+                { 15, 0.5 },     // 3        1       0              0.5                 0.5
+                { 14, 0.5 },     // 3        2       0              0.8                 0.5
+                { 16, 0.5 },     // 4        2       0              0.66                0.5
+                { 13, 0.5 },     // 5        2       0              0.57                0.5
+                { 1, 0.5 },      // 5        2       1              0.57                0.5
+                { 6, 0.5 },      // 5        3       1              0.75                0.5
+                { 9, 0.5 },      // 6        3       1              0.66                0.5
+                { 3, 0.5 },      // 7        3       1              0.6                 0.5
+                { 7, 0.5 },      // 8        3       1              0.55                0.5
+                { 8, 0.5 },      // 9        3       1              0.5                 0.5
+                { 2, 8/13.0 },   // 9        4       1              0.62                0.62
+                { 0, 2/3.0 },    // 9        5       1              0.71                0.66
+                { 12, 2/3.0 },   // 9        5       2              0.71                0.66
+                { 5, 2/3.0 },    // 10       5       2              0.66                0.66
             };
 
             for (long engine = 1; engine <= 2; ++engine)

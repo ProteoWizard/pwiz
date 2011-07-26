@@ -66,14 +66,15 @@ struct PeptideSpectrumMatch
 {
     sqlite_int64 id;
     sqlite_int64 spectrum;
+    //string nativeID;
 
     int originalRank;
     DecoyState::Type decoyState;
 
     // all values are floating point so they can be scaled to arbitrary values
-    double chargeState;
-    double bestSpecificity;
-    double missedCleavages;
+    float chargeState;
+    float bestSpecificity;
+    float missedCleavages;
     double massError;
     vector<double> scores;
 
@@ -191,6 +192,17 @@ struct Qonverter
     void reset(const string& idpDbFilepath);
     void reset(sqlite3* idpDb);
 };
+
+
+// allow enum values to be the LHS of an equality expression
+BOOST_ENUM_DOMAIN_OPERATORS(Qonverter::QonverterMethod);
+BOOST_ENUM_DOMAIN_OPERATORS(Qonverter::Kernel);
+BOOST_ENUM_DOMAIN_OPERATORS(Qonverter::ChargeStateHandling);
+BOOST_ENUM_DOMAIN_OPERATORS(Qonverter::TerminalSpecificityHandling);
+BOOST_ENUM_DOMAIN_OPERATORS(Qonverter::MissedCleavagesHandling);
+BOOST_ENUM_DOMAIN_OPERATORS(Qonverter::MassErrorHandling);
+BOOST_ENUM_DOMAIN_OPERATORS(Qonverter::Settings::NormalizationMethod);
+BOOST_ENUM_DOMAIN_OPERATORS(Qonverter::Settings::Order);
 
 
 /// functor to sort PSMs by original rank

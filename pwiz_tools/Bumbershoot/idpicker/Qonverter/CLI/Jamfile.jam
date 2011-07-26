@@ -37,6 +37,7 @@ lib NativeQonverter
    <link>static
    <library>../../Lib/SQLite//sqlite3pp
    <library>../..//svm
+   <toolset>msvc:<using-clr>false
  :
  : <library>../../Lib/SQLite//sqlite3pp
    <library>../..//svm
@@ -49,13 +50,14 @@ lib NativeParser
    <library>NativeQonverter
    <library>$(PWIZ_SOURCE)/pwiz_tools/common//pwiz_tools_common
    <library>$(PWIZ_SOURCE)/pwiz/data/proteome//pwiz_data_proteome
-   <library>$(PWIZ_SOURCE)/pwiz/data/mziddata//pwiz_data_mzid
+   <library>$(PWIZ_SOURCE)/pwiz/data/identdata//pwiz_data_identdata
    <library>$(PWIZ_SOURCE)/pwiz/analysis/proteome_processing//pwiz_analysis_proteome_processing
+   <toolset>msvc:<using-clr>false
  :
  : <library>NativeQonverter
    <library>$(PWIZ_SOURCE)/pwiz_tools/common//pwiz_tools_common
    <library>$(PWIZ_SOURCE)/pwiz/data/proteome//pwiz_data_proteome
-   <library>$(PWIZ_SOURCE)/pwiz/data/mziddata//pwiz_data_mzid
+   <library>$(PWIZ_SOURCE)/pwiz/data/identdata//pwiz_data_identdata
    <library>$(PWIZ_SOURCE)/pwiz/analysis/proteome_processing//pwiz_analysis_proteome_processing
  ;
 
@@ -64,6 +66,7 @@ lib InteropQonverter
  : Qonverter.cpp Parser.cpp NativeParser
  : <define>IDPICKER_NAMESPACE=NativeIDPicker
    <toolset>msvc:<using-clr>true
-   <toolset>msvc:<link>shared
+   #<toolset>msvc:<link>shared
    <toolset>msvc:<source>AssemblyInfo.cpp
+   <conditional>@pwiz-dependency
  ;
