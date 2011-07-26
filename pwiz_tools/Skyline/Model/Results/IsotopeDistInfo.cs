@@ -25,13 +25,13 @@ using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
 {
-    public sealed class IsotopePeakInfo : Immutable
+    public sealed class IsotopeDistInfo : Immutable
     {
         private readonly double _monoisotopicMassH;
         private readonly int _charge;
         private ReadOnlyCollection<MzProportion> _expectedDistribution;
 
-        public IsotopePeakInfo(MassDistribution massDistribution,
+        public IsotopeDistInfo(MassDistribution massDistribution,
                                double monoisotopicMassH,
                                int charge,
                                Func<double, double> calcFilterWindow,
@@ -162,7 +162,7 @@ namespace pwiz.Skyline.Model.Results
 
         #region object overrides
 
-        public bool Equals(IsotopePeakInfo other)
+        public bool Equals(IsotopeDistInfo other)
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
@@ -177,8 +177,8 @@ namespace pwiz.Skyline.Model.Results
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != typeof (IsotopePeakInfo)) return false;
-            return Equals((IsotopePeakInfo) obj);
+            if (obj.GetType() != typeof (IsotopeDistInfo)) return false;
+            return Equals((IsotopeDistInfo) obj);
         }
 
         public override int GetHashCode()

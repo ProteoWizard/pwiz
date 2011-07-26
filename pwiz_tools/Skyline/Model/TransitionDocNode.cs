@@ -32,9 +32,9 @@ namespace pwiz.Skyline.Model
         public TransitionDocNode(Transition id,
                                  TransitionLosses losses,
                                  double massH,
-                                 float? envelopeProportion,
+                                 float? isotopeDistProportion,
                                  TransitionLibInfo libInfo)
-            : this(id, Annotations.EMPTY, losses, massH, envelopeProportion, libInfo, null)
+            : this(id, Annotations.EMPTY, losses, massH, isotopeDistProportion, libInfo, null)
         {
         }
 
@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Model
                                  Annotations annotations,
                                  TransitionLosses losses,
                                  double massH,
-                                 float? envelopeProportion,
+                                 float? isotopeDistProportion,
                                  TransitionLibInfo libInfo,
                                  Results<TransitionChromInfo> results)
             : base(id, annotations)
@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Model
             if (losses != null)
                 massH -= losses.Mass;
             Mz = SequenceMassCalc.GetMZ(massH, id.Charge);
-            EnvelopeProportion = envelopeProportion;
+            IsotopeDistProportion = isotopeDistProportion;
             LibInfo = libInfo;
             Results = results;
         }
@@ -106,13 +106,13 @@ namespace pwiz.Skyline.Model
             get { return Transition.IsPrecursor() && Losses == null; }
         }
 
-        public float? EnvelopeProportion { get; private set; }
+        public float? IsotopeDistProportion { get; private set; }
 
-        public static float? GetEnvelopeProportion(Transition transition, IsotopePeakInfo isotopePeaks)
+        public static float? GetIsotopeDistProportion(Transition transition, IsotopeDistInfo isotopeDist)
         {
-            if (isotopePeaks == null)
+            if (isotopeDist == null)
                 return null;
-            return isotopePeaks.GetProportionI(transition.MassIndex);
+            return isotopeDist.GetProportionI(transition.MassIndex);
         }
 
         public TransitionLibInfo LibInfo { get; private set; }
@@ -269,7 +269,7 @@ namespace pwiz.Skyline.Model
                                                Annotations,
                                                Losses,
                                                0.0,
-                                               EnvelopeProportion,
+                                               IsotopeDistProportion,
                                                LibInfo,
                                                null) {Mz = Mz};
         }

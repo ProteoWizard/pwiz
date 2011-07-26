@@ -581,13 +581,13 @@ namespace pwiz.Skyline.Model
                                              transition.CleavageOffset,
                                              transition.MassIndex,
                                              transition.Charge);
-                var isotopePeaks = nodeGroupMatching.IsotopePeaks;
+                var isotopePeaks = nodeGroupMatching.IsotopeDist;
                 double massH = settings.GetFragmentMass(tranGroup.LabelType, explicitMods,
                     tranNew, isotopePeaks);
-                float? envelopeProportion = isotopePeaks != null
+                float? isotopeDistProportion = isotopePeaks != null
                     ? isotopePeaks.GetProportionI(tranNew.MassIndex)
                     : (float?) null;
-                listTrans.Add(new TransitionDocNode(tranNew, losses, massH, envelopeProportion, null));
+                listTrans.Add(new TransitionDocNode(tranNew, losses, massH, isotopeDistProportion, null));
             }
             return listTrans.ToArray();
         }

@@ -1735,24 +1735,24 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
 
-        public IEnumerable<int> SelectMassIndices(IsotopePeakInfo isotopePeaks, bool useFilter)
+        public IEnumerable<int> SelectMassIndices(IsotopeDistInfo isotopeDists, bool useFilter)
         {
-            if (isotopePeaks == null)
+            if (isotopeDists == null)
             {
                 yield return 0;
             }
             else
             {
-                int countPeaks = isotopePeaks.CountPeaks;
+                int countPeaks = isotopeDists.CountPeaks;
 
                 if (!useFilter)
                 {
                     for (int i = 0; i < countPeaks; i++)
-                        yield return isotopePeaks.PeakIndexToMassIndex(i);
+                        yield return isotopeDists.PeakIndexToMassIndex(i);
                 }
                 else if (PrecursorIsotopes == FullScanPrecursorIsotopes.Count)
                 {
-                    int maxMassIndex = isotopePeaks.PeakIndexToMassIndex(countPeaks);
+                    int maxMassIndex = isotopeDists.PeakIndexToMassIndex(countPeaks);
                     countPeaks = Math.Min((int)(PrecursorIsotopeFilter ?? 1), maxMassIndex);
 
                     for (int i = 0; i < countPeaks; i++)
@@ -1761,11 +1761,11 @@ namespace pwiz.Skyline.Model.DocSettings
                 else if (PrecursorIsotopes == FullScanPrecursorIsotopes.Percent)
                 {
                     double minAbundancePercent = (PrecursorIsotopeFilter ?? 0)/100;
-                    double baseMassPercent = isotopePeaks.BaseMassPercent;
+                    double baseMassPercent = isotopeDists.BaseMassPercent;
                     for (int i = 0; i < countPeaks; i++)
                     {
-                        int massIndex = isotopePeaks.PeakIndexToMassIndex(i);
-                        if (isotopePeaks.GetProportionI(massIndex) / baseMassPercent >= minAbundancePercent)
+                        int massIndex = isotopeDists.PeakIndexToMassIndex(i);
+                        if (isotopeDists.GetProportionI(massIndex) / baseMassPercent >= minAbundancePercent)
                             yield return massIndex;
                     }
                 }

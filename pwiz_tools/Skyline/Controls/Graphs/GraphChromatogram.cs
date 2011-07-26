@@ -653,7 +653,7 @@ namespace pwiz.Skyline.Controls.Graphs
             bool isShowingMs = displayTrans.Any(nodeTran => nodeTran.IsMs1);
             bool isShowingMsMs = displayTrans.Any(nodeTran => !nodeTran.IsMs1);
             bool isFullScanMs = DocumentUI.Settings.TransitionSettings.FullScan.IsEnabledMs && isShowingMs;
-            if ((isFullScanMs && !isShowingMsMs && nodeGroup.HasIsotopePeaks) ||
+            if ((isFullScanMs && !isShowingMsMs && nodeGroup.HasIsotopeDist) ||
                 (!isFullScanMs && nodeGroup.HasLibInfo))
             {
                 expectedIntensities = new double[numTrans];
@@ -669,7 +669,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (expectedIntensities != null)
                 {
                     if (isFullScanMs)
-                        expectedIntensities[i] = nodeTran.EnvelopeProportion ?? 0;
+                        expectedIntensities[i] = nodeTran.IsotopeDistProportion ?? 0;
                     else
                         expectedIntensities[i] = nodeTran.HasLibInfo ? nodeTran.LibInfo.Intensity : 0;
                     

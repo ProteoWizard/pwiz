@@ -67,9 +67,9 @@ namespace pwiz.Skyline.Model
         {
             if (settings != null)
             {
-                IsotopePeakInfo isotopePeaks;
-                PrecursorMz = CalcPrecursorMZ(settings, mods, out isotopePeaks);
-                IsotopePeaks = isotopePeaks;
+                IsotopeDistInfo isotopeDist;
+                PrecursorMz = CalcPrecursorMZ(settings, mods, out isotopeDist);
+                IsotopeDist = isotopeDist;
                 RelativeRT = CalcRelativeRT(settings, mods);
             }
             LibInfo = libInfo;
@@ -78,13 +78,13 @@ namespace pwiz.Skyline.Model
 
         private TransitionGroupDocNode(TransitionGroupDocNode group,
                                        double precursorMz,
-                                       IsotopePeakInfo isotopePeaks,
+                                       IsotopeDistInfo isotopeDist,
                                        RelativeRT relativeRT,
                                        IList<DocNode> children)
             : base(group.TransitionGroup, group.Annotations, children, group.AutoManageChildren)
         {
             PrecursorMz = precursorMz;
-            IsotopePeaks = isotopePeaks;
+            IsotopeDist = isotopeDist;
             RelativeRT = relativeRT;
             LibInfo = group.LibInfo;
             Results = group.Results;
@@ -116,9 +116,9 @@ namespace pwiz.Skyline.Model
 
         public double PrecursorMz { get; private set; }
 
-        public IsotopePeakInfo IsotopePeaks { get; private set; }
+        public IsotopeDistInfo IsotopeDist { get; private set; }
 
-        public bool HasIsotopePeaks { get { return IsotopePeaks != null; } }
+        public bool HasIsotopeDist { get { return IsotopeDist != null; } }
 
         public SpectrumHeaderInfo LibInfo { get; private set; }
 
@@ -476,7 +476,7 @@ namespace pwiz.Skyline.Model
 
         public int TransitionCount { get { return GetCount((int)Level.Transitions); } }
 
-        private double CalcPrecursorMZ(SrmSettings settings, ExplicitMods mods, out IsotopePeakInfo isotopePeaks)
+        private double CalcPrecursorMZ(SrmSettings settings, ExplicitMods mods, out IsotopeDistInfo isotopeDist)
         {
             string seq = TransitionGroup.Peptide.Sequence;
             int charge = TransitionGroup.PrecursorCharge;
@@ -485,12 +485,12 @@ namespace pwiz.Skyline.Model
             double massH = calc.GetPrecursorMass(seq);
             double mz = SequenceMassCalc.GetMZ(massH, charge);
 
-            isotopePeaks = null;
+            isotopeDist = null;
             var fullScan = settings.TransitionSettings.FullScan;
             if (fullScan.IsHighResPrecursor)
             {
                 var massDist = calc.GetMzDistribution(seq, charge, fullScan.IsotopeAbundances);
-                isotopePeaks = new IsotopePeakInfo(massDist, massH, charge,
+                isotopeDist = new IsotopeDistInfo(massDist, massH, charge,
                     settings.TransitionSettings.FullScan.GetPrecursorFilterWindow,
                     TransitionFullScan.ISOTOPE_PEAK_CENTERING_RES,
                     TransitionFullScan.MIN_ISOTOPE_PEAK_ABUNDANCE);
@@ -507,27 +507,27 @@ namespace pwiz.Skyline.Model
         {
             return ChangeProp(ImClone(this), im =>
                                                  {
-                                                     IsotopePeakInfo isotopePeaks;
-                                                     im.PrecursorMz = CalcPrecursorMZ(settings, mods, out isotopePeaks);
+                                                     IsotopeDistInfo isotopeDist;
+                                                     im.PrecursorMz = CalcPrecursorMZ(settings, mods, out isotopeDist);
                                                      // Preserve reference equality, if no change to isotope peaks
-                                                     Helpers.AssignIfEquals(ref isotopePeaks, IsotopePeaks);
-                                                     im.IsotopePeaks = isotopePeaks;
+                                                     Helpers.AssignIfEquals(ref isotopeDist, IsotopeDist);
+                                                     im.IsotopeDist = isotopeDist;
                                                  });
         }
 
         public TransitionGroupDocNode ChangeSettings(SrmSettings settingsNew, ExplicitMods mods, SrmSettingsDiff diff)
         {
             double precursorMz = PrecursorMz;
-            IsotopePeakInfo isotopePeaks = IsotopePeaks;
+            IsotopeDistInfo isotopeDist = IsotopeDist;
             RelativeRT relativeRT = RelativeRT;
             SpectrumHeaderInfo libInfo = LibInfo;
             bool dotProductChange = false;
             var transitionRanks = new Dictionary<double, LibraryRankedSpectrumInfo.RankedMI>();
             if (diff.DiffTransitionGroupProps)
             {
-                precursorMz = CalcPrecursorMZ(settingsNew, mods, out isotopePeaks);
+                precursorMz = CalcPrecursorMZ(settingsNew, mods, out isotopeDist);
                 // Preserve reference equality if no change
-                Helpers.AssignIfEquals(ref isotopePeaks, IsotopePeaks);
+                Helpers.AssignIfEquals(ref isotopeDist, IsotopeDist);
                 relativeRT = CalcRelativeRT(settingsNew, mods);
             }
 
@@ -553,7 +553,7 @@ namespace pwiz.Skyline.Model
                 // TODO: Use TransitionLossKey
                 Dictionary<TransitionLossKey, DocNode> mapIdToChild = CreateTransitionLossToChildMap();
                 foreach (TransitionDocNode nodeTran in TransitionGroup.GetTransitions(settingsNew, mods,
-                        precursorMz, isotopePeaks, libInfo, transitionRanks, true))
+                        precursorMz, isotopeDist, libInfo, transitionRanks, true))
                 {
                     TransitionDocNode nodeTranResult;
 
@@ -567,15 +567,15 @@ namespace pwiz.Skyline.Model
                             var tran = nodeTranResult.Transition;
                             var annotations = nodeTranResult.Annotations;
                             var losses = nodeTranResult.Losses;
-                            double massH = settingsNew.GetFragmentMass(TransitionGroup.LabelType, mods, tran, isotopePeaks);
-                            float? envelopeProportion = TransitionDocNode.GetEnvelopeProportion(tran, isotopePeaks);
+                            double massH = settingsNew.GetFragmentMass(TransitionGroup.LabelType, mods, tran, isotopeDist);
+                            float? isotopeDistProportion = TransitionDocNode.GetIsotopeDistProportion(tran, isotopeDist);
                             var info = TransitionDocNode.GetLibInfo(tran, Transition.CalcMass(massH, losses), transitionRanks);
                             Helpers.AssignIfEquals(ref info, nodeTranResult.LibInfo);
                             if (!ReferenceEquals(info, nodeTranResult.LibInfo))
                                 dotProductChange = true;
                             var results = nodeTranResult.Results;
                             nodeTranResult = new TransitionDocNode(tran, annotations, losses,
-                                massH, envelopeProportion, info, results);
+                                massH, isotopeDistProportion, info, results);
 
                             Helpers.AssignIfEquals(ref nodeTranResult, (TransitionDocNode) existing);
                         }
@@ -591,11 +591,11 @@ namespace pwiz.Skyline.Model
                 }
 
                 if (!ArrayUtil.ReferencesEqual(childrenNew, Children))
-                    nodeResult = new TransitionGroupDocNode(this, precursorMz, isotopePeaks, relativeRT, childrenNew);
+                    nodeResult = new TransitionGroupDocNode(this, precursorMz, isotopeDist, relativeRT, childrenNew);
                 else
                 {
-                    if (precursorMz != PrecursorMz || !Equals(isotopePeaks, IsotopePeaks) || relativeRT != RelativeRT)
-                        nodeResult = new TransitionGroupDocNode(this, precursorMz, isotopePeaks, relativeRT, Children);
+                    if (precursorMz != PrecursorMz || !Equals(isotopeDist, IsotopeDist) || relativeRT != RelativeRT)
+                        nodeResult = new TransitionGroupDocNode(this, precursorMz, isotopeDist, relativeRT, Children);
                     else
                     {
                         // If nothing changed, use this node.
@@ -641,15 +641,15 @@ namespace pwiz.Skyline.Model
                             losses = losses.ChangeMassType(massType);
                         var annotations = nodeTransition.Annotations;   // Don't lose annotations
                         var results = nodeTransition.Results;           // Results changes happen later
-                        double massH = settingsNew.GetFragmentMass(TransitionGroup.LabelType, mods, tran, isotopePeaks);
-                        float? envelopeProportion = TransitionDocNode.GetEnvelopeProportion(tran, isotopePeaks);
+                        double massH = settingsNew.GetFragmentMass(TransitionGroup.LabelType, mods, tran, isotopeDist);
+                        float? isotopeDistProportion = TransitionDocNode.GetIsotopeDistProportion(tran, isotopeDist);
                         var info = TransitionDocNode.GetLibInfo(tran, Transition.CalcMass(massH, losses), transitionRanks);
                         Helpers.AssignIfEquals(ref info, nodeTransition.LibInfo);
                         if (!ReferenceEquals(info, nodeTransition.LibInfo))
                             dotProductChange = true;
 
                         var nodeNew = new TransitionDocNode(tran, annotations, losses,
-                            massH, envelopeProportion, info, results);
+                            massH, isotopeDistProportion, info, results);
 
                         Helpers.AssignIfEquals(ref nodeNew, nodeTransition);
                         childrenNew.Add(nodeNew);
@@ -657,13 +657,13 @@ namespace pwiz.Skyline.Model
 
                     // Change as little as possible
                     if (!ArrayUtil.ReferencesEqual(childrenNew, Children))
-                        nodeResult = new TransitionGroupDocNode(nodeResult, precursorMz, isotopePeaks, relativeRT, childrenNew);
-                    else if (precursorMz != PrecursorMz || !Equals(isotopePeaks, IsotopePeaks) || relativeRT != RelativeRT)
-                        nodeResult = new TransitionGroupDocNode(nodeResult, precursorMz, isotopePeaks, relativeRT, Children);
+                        nodeResult = new TransitionGroupDocNode(nodeResult, precursorMz, isotopeDist, relativeRT, childrenNew);
+                    else if (precursorMz != PrecursorMz || !Equals(isotopeDist, IsotopeDist) || relativeRT != RelativeRT)
+                        nodeResult = new TransitionGroupDocNode(nodeResult, precursorMz, isotopeDist, relativeRT, Children);
                 }
                 else if (diff.DiffTransitionGroupProps)
                 {
-                    nodeResult = new TransitionGroupDocNode(nodeResult, precursorMz, isotopePeaks, relativeRT, Children);
+                    nodeResult = new TransitionGroupDocNode(nodeResult, precursorMz, isotopeDist, relativeRT, Children);
                 }
             }
 
@@ -1171,7 +1171,7 @@ namespace pwiz.Skyline.Model
                     }
                 }
                 double[] peakAreasMs = null, isoProportionsMs = null;
-                if (nodeGroup.HasIsotopePeaks)
+                if (nodeGroup.HasIsotopeDist)
                 {
                     var nodeTransMs = nodeGroup.GetMsTransitions(isFullScanMs).ToArray();
                     int countTransMs = nodeTransMs.Length;
@@ -1213,7 +1213,7 @@ namespace pwiz.Skyline.Model
                             if (peakAreasMs != null && nodeTran.IsMs1)
                             {
                                 peakAreasMs[countIsoTrans] = GetSafeArea(chromInfo);
-                                isoProportionsMs[countIsoTrans] = GetSafeEnvelopeProportion(nodeTran);
+                                isoProportionsMs[countIsoTrans] = GetSafeIsotopeDistProportion(nodeTran);
                                 countIsoTrans++;
                             }
                         }
@@ -1226,7 +1226,7 @@ namespace pwiz.Skyline.Model
                         if (peakAreas != null)
                             _listResultCalcs[i].SetLibInfo(fileId, optStep, peakAreas, libIntensities);
                         if (peakAreasMs != null)
-                            _listResultCalcs[i].SetEnvelopeInfo(fileId, optStep, peakAreasMs, isoProportionsMs);
+                            _listResultCalcs[i].SetIsotopeDistInfo(fileId, optStep, peakAreasMs, isoProportionsMs);
 
                         // Sort by area descending
                         Array.Sort(arrayRanked, (p1, p2) =>
@@ -1262,9 +1262,9 @@ namespace pwiz.Skyline.Model
                 return (nodeTran.HasLibInfo ? nodeTran.LibInfo.Intensity : 0);
             }
 
-            private static float GetSafeEnvelopeProportion(TransitionDocNode nodeTran)
+            private static float GetSafeIsotopeDistProportion(TransitionDocNode nodeTran)
             {
-                return nodeTran.EnvelopeProportion ?? 0;
+                return nodeTran.IsotopeDistProportion ?? 0;
             }
         }
 
@@ -1338,11 +1338,11 @@ namespace pwiz.Skyline.Model
                 Calculators[iFile].SetLibInfo(peakAreas, libIntensities);
             }
 
-            public void SetEnvelopeInfo(ChromFileInfoId fileId, int optStep, double[] peakAreas, double[] envelopeProportions)
+            public void SetIsotopeDistInfo(ChromFileInfoId fileId, int optStep, double[] peakAreas, double[] isotopeDistProportions)
             {
                 int iFile = IndexOfCalc(fileId, optStep);
                 Debug.Assert(iFile >= 0);   // Should have already been added
-                Calculators[iFile].SetEnvelopeInfo(peakAreas, envelopeProportions);
+                Calculators[iFile].SetIsotopeDistInfo(peakAreas, isotopeDistProportions);
             }
 
             private TransitionGroupChromInfo FindChromInfo(ChromFileInfoId fileId, int optStep)
@@ -1506,15 +1506,15 @@ namespace pwiz.Skyline.Model
                 LibraryDotProduct = (float) statPeakAreas.AngleSqrt(statLibIntensities);
             }
 
-            public void SetEnvelopeInfo(double[] peakAreas, double[] envelopeProportions)
+            public void SetIsotopeDistInfo(double[] peakAreas, double[] isotopeDistProportions)
             {
                 // Only do this once.
                 if (IsotopeDotProduct.HasValue)
                     return;
 
                 var statPeakAreas = new Statistics(peakAreas);
-                var statEnvelopeProportions = new Statistics(envelopeProportions);
-                IsotopeDotProduct = (float)statPeakAreas.AngleSqrt(statEnvelopeProportions);
+                var statIsotopeDistProportions = new Statistics(isotopeDistProportions);
+                IsotopeDotProduct = (float)statPeakAreas.AngleSqrt(statIsotopeDistProportions);
             }
 
             public TransitionGroupChromInfo CalcChromInfo()
@@ -1752,7 +1752,7 @@ namespace pwiz.Skyline.Model
                     var tranMatch = nodeTran.Transition;
                     var tran = new Transition(TransitionGroup, tranMatch.IonType, tranMatch.CleavageOffset, 0, tranMatch.Charge);
                     var losses = nodeTran.Losses;
-                    // m/z, isotope envelope and library info calculated later
+                    // m/z, isotope distribution and library info calculated later
                     childrenNew.Add(new TransitionDocNode(tran, losses, 0, null, null));
                 }
                 nodeResult = (TransitionGroupDocNode)nodeResult.ChangeChildrenChecked(childrenNew);

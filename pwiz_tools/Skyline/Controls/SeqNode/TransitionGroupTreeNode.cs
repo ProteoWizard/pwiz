@@ -287,7 +287,7 @@ namespace pwiz.Skyline.Controls.SeqNode
 
             var listChoices = new List<DocNode>();
             foreach (TransitionDocNode nodeTran in group.GetTransitions(settings, mods,
-                    nodeGroup.PrecursorMz, nodeGroup.IsotopePeaks, libInfo, transitionRanks, useFilter))
+                    nodeGroup.PrecursorMz, nodeGroup.IsotopeDist, libInfo, transitionRanks, useFilter))
             {
                 listChoices.Add(nodeTran);               
             }

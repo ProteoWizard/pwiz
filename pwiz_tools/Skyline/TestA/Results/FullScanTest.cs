@@ -259,7 +259,7 @@ namespace pwiz.SkylineTestA.Results
         public void FullScanSettingsTest()
         {
             var doc = ResultsUtil.DeserializeDocument("MultiLabel.sky", GetType());
-            Assert.IsFalse(doc.TransitionGroups.Any(nodeGroup => nodeGroup.IsotopePeaks != null));
+            Assert.IsFalse(doc.TransitionGroups.Any(nodeGroup => nodeGroup.IsotopeDist != null));
 
             double c13Delta = BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C13) -
                               BioMassCalc.MONOISOTOPIC.GetMass(BioMassCalc.C);
@@ -276,17 +276,17 @@ namespace pwiz.SkylineTestA.Results
             foreach (var nodeGroup in docIsotopes.TransitionGroups)
             {
                 Assert.AreEqual(3, nodeGroup.Children.Count);
-                var isotopePeaks = nodeGroup.IsotopePeaks;
+                var isotopePeaks = nodeGroup.IsotopeDist;
                 Assert.IsNotNull(isotopePeaks);
                 // The peaks should always includ at least M-1
                 Assert.IsTrue(isotopePeaks.MassIndexToPeakIndex(0) > 0);
-                // Within 2.5% of 100% of the entire isotope envelope
+                // Within 2.5% of 100% of the entire isotope distribution
                 Assert.AreEqual(1.0, isotopePeaks.ExpectedProportions.Sum(), 0.025);
 
                 // Precursor mass and m/z values are expected to match exactly
-                Assert.AreEqual(nodeGroup.PrecursorMz, nodeGroup.IsotopePeaks.GetMZI(0));
+                Assert.AreEqual(nodeGroup.PrecursorMz, nodeGroup.IsotopeDist.GetMZI(0));
                 Assert.AreEqual(nodeGroup.PrecursorMz,
-                                SequenceMassCalc.GetMZ(nodeGroup.IsotopePeaks.GetMassI(0),
+                                SequenceMassCalc.GetMZ(nodeGroup.IsotopeDist.GetMassI(0),
                                                        nodeGroup.TransitionGroup.PrecursorCharge));
 
                 // Check isotope distribution masses
@@ -323,7 +323,7 @@ namespace pwiz.SkylineTestA.Results
             AssertEx.Serializable(docIsotopes, AssertEx.Cloned);
 
             // Narrow the resolution, and verify that predicted proportion of the isotope
-            // envelope captured is reduced for all precursors
+            // distribution captured is reduced for all precursors
             var docIsotopesFt = docIsotopes.ChangeSettings(docIsotopes.Settings.ChangeTransitionFullScan(fs =>
                 fs.ChangePrecursorResolution(FullScanMassAnalyzerType.ft_icr, 500 * 1000, 400)));
             var tranGroupsOld = docIsotopes.TransitionGroups.ToArray();
@@ -332,9 +332,9 @@ namespace pwiz.SkylineTestA.Results
             for (int i = 0; i < tranGroupsOld.Length; i++)
             {
                 Assert.AreNotSame(tranGroupsOld[i], tranGroupsNew[i]);
-                Assert.AreNotSame(tranGroupsOld[i].IsotopePeaks, tranGroupsNew[i].IsotopePeaks);
-                Assert.IsTrue(tranGroupsOld[i].IsotopePeaks.ExpectedProportions.Sum() >
-                    tranGroupsNew[i].IsotopePeaks.ExpectedProportions.Sum());
+                Assert.AreNotSame(tranGroupsOld[i].IsotopeDist, tranGroupsNew[i].IsotopeDist);
+                Assert.IsTrue(tranGroupsOld[i].IsotopeDist.ExpectedProportions.Sum() >
+                    tranGroupsNew[i].IsotopeDist.ExpectedProportions.Sum());
             }
 
             // Use Min % of base peak and verify variation in transitions used
@@ -346,8 +346,8 @@ namespace pwiz.SkylineTestA.Results
             for (int i = 0; i < tranGroupsOld.Length; i++)
             {
                 // Isotope distributions should not have changed
-                var isotopePeaks = tranGroupsNew[i].IsotopePeaks;
-                Assert.AreSame(tranGroupsOld[i].IsotopePeaks, isotopePeaks);
+                var isotopePeaks = tranGroupsNew[i].IsotopeDist;
+                Assert.AreSame(tranGroupsOld[i].IsotopeDist, isotopePeaks);
                 // Expected transitions should be present
                 maxTran = Math.Max(maxTran, tranGroupsNew[i].Children.Count);
                 foreach (TransitionDocNode nodeTran in tranGroupsNew[i].Children)
@@ -382,7 +382,7 @@ namespace pwiz.SkylineTestA.Results
             {
                 var nodeGroup = tranGroupsNew[i];
                 if (!Equals(nodeGroup.TransitionGroup.LabelType.Name, "heavy"))
-                    Assert.AreSame(tranGroupsOld[i].IsotopePeaks, nodeGroup.IsotopePeaks);
+                    Assert.AreSame(tranGroupsOld[i].IsotopeDist, nodeGroup.IsotopeDist);
                 else
                 {
                     var firstChild = (TransitionDocNode)nodeGroup.Children[0];
@@ -397,7 +397,7 @@ namespace pwiz.SkylineTestA.Results
                 fs.ChangePrecursorIsotopes(FullScanPrecursorIsotopes.Percent, 0, enrichmentsLow)));
             foreach (var nodeGroup in docIsotopesLowP0.TransitionGroups)
             {
-                Assert.AreEqual(nodeGroup.IsotopePeaks.CountPeaks, nodeGroup.Children.Count);
+                Assert.AreEqual(nodeGroup.IsotopeDist.CountPeaks, nodeGroup.Children.Count);
                 var firstChild = (TransitionDocNode)nodeGroup.Children[0];
                 if (nodeGroup.TransitionGroup.LabelType.IsLight)
                     Assert.AreEqual(-1, firstChild.Transition.MassIndex);
@@ -409,16 +409,16 @@ namespace pwiz.SkylineTestA.Results
             // Test a document with variable and heavy modifications, which caused problems for
             // the original implementation
             var docVariable = ResultsUtil.DeserializeDocument("HeavyVariable.sky", GetType());
-            Assert.IsFalse(docVariable.TransitionGroups.Any(nodeGroup => nodeGroup.IsotopePeaks == null));
+            Assert.IsFalse(docVariable.TransitionGroups.Any(nodeGroup => nodeGroup.IsotopeDist == null));
 
             foreach (var nodeGroup in docVariable.TransitionGroups)
             {
-                var isotopePeaks = nodeGroup.IsotopePeaks;
+                var isotopePeaks = nodeGroup.IsotopeDist;
                 Assert.IsNotNull(isotopePeaks);
                 // The peaks should always includ at least M-1
                 Assert.IsTrue(isotopePeaks.MassIndexToPeakIndex(0) > 0);
                 // Precursor mass and m/z values are expected to match exactly
-                Assert.AreEqual(nodeGroup.PrecursorMz, nodeGroup.IsotopePeaks.GetMZI(0));
+                Assert.AreEqual(nodeGroup.PrecursorMz, nodeGroup.IsotopeDist.GetMZI(0));
 
                 // Check isotope distribution masses
                 for (int i = 1; i < isotopePeaks.CountPeaks; i++)
@@ -446,9 +446,9 @@ namespace pwiz.SkylineTestA.Results
             }
         }
 
-        private static double GetMassDelta(IsotopePeakInfo isotopePeaks, int massIndex)
+        private static double GetMassDelta(IsotopeDistInfo isotopeDist, int massIndex)
         {
-            return isotopePeaks.GetMassI(massIndex) - isotopePeaks.GetMassI(massIndex - 1);
+            return isotopeDist.GetMassI(massIndex) - isotopeDist.GetMassI(massIndex - 1);
         }
     }
 }

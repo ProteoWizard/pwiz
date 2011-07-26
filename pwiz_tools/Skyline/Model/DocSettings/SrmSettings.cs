@@ -223,9 +223,9 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         public double GetFragmentMass(IsotopeLabelType labelType, ExplicitMods mods,
-                                      Transition transition, IsotopePeakInfo isotopePeaks)
+                                      Transition transition, IsotopeDistInfo isotopeDist)
         {
-            return GetFragmentCalc(labelType, mods).GetFragmentMass(transition, isotopePeaks);
+            return GetFragmentCalc(labelType, mods).GetFragmentMass(transition, isotopeDist);
         }
 
         public string GetModifiedSequence(string seq, IsotopeLabelType labelType, ExplicitMods mods)
@@ -968,7 +968,7 @@ namespace pwiz.Skyline.Model.DocSettings
     {
         MassType MassType { get; }
         double[,] GetFragmentIonMasses(string seq);
-        double GetFragmentMass(Transition transition, IsotopePeakInfo isotopePeaks);
+        double GetFragmentMass(Transition transition, IsotopeDistInfo isotopeDist);
         double GetPrecursorFragmentMass(string seq);
     }
 

@@ -53,7 +53,9 @@ namespace pwiz.Skyline.Model.Hibernate
         public virtual int? CountTruncated { get; set; }
         [QueryColumn(Format = Formats.STANDARD_RATIO)]
         public virtual double? LibraryDotProduct { get; set; }
-//        [QueryColumn(Format = Formats.PEAK_AREA)]
+        [QueryColumn(Format = Formats.STANDARD_RATIO)]
+        public virtual double? IsotopeDotProduct { get; set; }
+        //        [QueryColumn(Format = Formats.PEAK_AREA)]
 //        public virtual double TotalSignalToNoise { get; set; }
         public virtual bool UserSetTotal { get; set; }
         public virtual int OptStep { get; set; }

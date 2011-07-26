@@ -226,6 +226,14 @@ namespace pwiz.Skyline.Controls
                           ReadOnly = true,
                           DefaultCellStyle = {Format = Formats.STANDARD_RATIO}
                       });
+            Columns.Add(IsotopeDotProductColumn
+                = new DataGridViewTextBoxColumn
+                {
+                    Name = "IsotopeDotProduct",
+                    HeaderText = "Isotope Dot Product",
+                    ReadOnly = true,
+                    DefaultCellStyle = { Format = Formats.STANDARD_RATIO }
+                });
             Columns.Add(OptCollisionEnergyColumn
                 = new DataGridViewTextBoxColumn
                       {
@@ -602,6 +610,7 @@ namespace pwiz.Skyline.Controls
                                CountTruncatedColumn,
                                UserSetTotalColumn,
                                LibraryDotProductColumn,
+                               IsotopeDotProductColumn,
                                OptCollisionEnergyColumn,
                                OptDeclusteringPotentialColumn,
                            };
@@ -1221,6 +1230,7 @@ namespace pwiz.Skyline.Controls
                     row.Cells[TotalBackgroundColumn.Index].Value =
                     row.Cells[TotalAreaRatioColumn.Index].Value =
                     row.Cells[LibraryDotProductColumn.Index].Value =
+                    row.Cells[IsotopeDotProductColumn.Index].Value =
                     row.Cells[CountTruncatedColumn.Index].Value =
                     row.Cells[UserSetTotalColumn.Index].Value =
                     row.Cells[PrecursorNoteColumn.Index].Value =
@@ -1240,6 +1250,7 @@ namespace pwiz.Skyline.Controls
                 row.Cells[CountTruncatedColumn.Index].Value = chromInfo.Truncated;
                 row.Cells[UserSetTotalColumn.Index].Value = chromInfo.UserSet;
                 row.Cells[LibraryDotProductColumn.Index].Value = chromInfo.LibraryDotProduct;
+                row.Cells[IsotopeDotProductColumn.Index].Value = chromInfo.IsotopeDotProduct;
                 row.Cells[PrecursorNoteColumn.Index].Value = chromInfo.Annotations.Note;
                 row.Cells[OptCollisionEnergyColumn.Index].Value = null;
                 row.Cells[OptDeclusteringPotentialColumn.Index].Value = null;
@@ -1480,7 +1491,8 @@ namespace pwiz.Skyline.Controls
             else if (SelectedTransitionGroupDocNode != null)
             {
                 result.UnionWith(from column in PrecursorColumns
-                                     where !ReferenceEquals(column, CountTruncatedColumn) &&
+                                     where !ReferenceEquals(column, IsotopeDotProductColumn) &&
+                                           !ReferenceEquals(column, CountTruncatedColumn) &&
                                            !ReferenceEquals(column, UserSetTotalColumn) &&
                                            !ReferenceEquals(column, OptCollisionEnergyColumn) &&
                                            !ReferenceEquals(column, OptDeclusteringPotentialColumn)
@@ -1619,6 +1631,7 @@ namespace pwiz.Skyline.Controls
         public DataGridViewTextBoxColumn CountTruncatedColumn { get; private set; }
         public DataGridViewTextBoxColumn UserSetTotalColumn { get; private set; }
         public DataGridViewTextBoxColumn LibraryDotProductColumn { get; private set; }
+        public DataGridViewTextBoxColumn IsotopeDotProductColumn { get; private set; }
         public DataGridViewTextBoxColumn OptCollisionEnergyColumn { get; private set; }
         public DataGridViewTextBoxColumn OptDeclusteringPotentialColumn { get; private set; }
         public DataGridViewTextBoxColumn PrecursorNoteColumn { get; private set; }

@@ -106,6 +106,7 @@
     <property name="TotalAreaNormalized" />
     <property name="CountTruncated" />
     <property name="LibraryDotProduct" />
+    <property name="IsotopeDotProduct" />
     <!-- <property name="TotalSignalToNoise" /> -->
     <property name="UserSetTotal" />
     <property name="OptStep" />
@@ -155,6 +156,7 @@
     <property name="Note" length="10000" />
     <property name="LibraryRank" />
     <property name="LibraryIntensity" />
+    <property name="IsotopeDistProportion" />
   </class>
   <class name="DbTransitionResult">
     <id name="Id">

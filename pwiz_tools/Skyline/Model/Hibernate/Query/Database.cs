@@ -500,6 +500,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                             // StdevAreaRatio = chromInfo.RatioStdevs[0],
                             CountTruncated = chromInfo.Truncated,
                             LibraryDotProduct = chromInfo.LibraryDotProduct,
+                            IsotopeDotProduct = chromInfo.IsotopeDotProduct,
                             // TotalSignalToNoise = SignalToNoise(chromInfo.Area, chromInfo.BackgroundArea),
                             Note = chromInfo.Annotations.Note,
                             UserSetTotal = chromInfo.UserSet,
@@ -597,6 +598,10 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             {
                 dbTransition.LibraryIntensity = nodeTran.LibInfo.Intensity;
                 dbTransition.LibraryRank = nodeTran.LibInfo.Rank;
+            }
+            if (nodeTran.IsotopeDistProportion.HasValue)
+            {
+                dbTransition.IsotopeDistProportion = nodeTran.IsotopeDistProportion;
             }
             AddAnnotations(docInfo, dbTransition, nodeTran.Annotations);
             session.Save(dbTransition);

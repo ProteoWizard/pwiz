@@ -29,7 +29,7 @@ using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    public enum AreaExpectedValue { none, library, envelope }
+    public enum AreaExpectedValue { none, library, isotope_dist }
 
     /// <summary>
     /// Graph pane which shows the comparison of retention times across the replicates.
@@ -241,8 +241,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 bool isFullScanMs = document.Settings.TransitionSettings.FullScan.IsEnabledMs && isShowingMs;
                 if (isFullScanMs)
                 {
-                    if (!isShowingMsMs && parentGroupNode.HasIsotopePeaks)
-                        ExpectedVisible = AreaExpectedValue.envelope;
+                    if (!isShowingMsMs && parentGroupNode.HasIsotopeDist)
+                        ExpectedVisible = AreaExpectedValue.isotope_dist;
                 }
                 else
                 {
@@ -541,7 +541,7 @@ namespace pwiz.Skyline.Controls.Graphs
             switch (ExpectedVisible)
             {
                 case AreaExpectedValue.library:
-                case AreaExpectedValue.envelope:
+                case AreaExpectedValue.isotope_dist:
                     return GetDotProductText(nodeTran.GetIsotopeDotProduct(indexResult));
                 default:
                     return null;
@@ -556,7 +556,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     case AreaExpectedValue.library:
                         return "dotp";
-                    case AreaExpectedValue.envelope:
+                    case AreaExpectedValue.isotope_dist:
                         return "idotp";
                     default:
                         return "";
@@ -713,8 +713,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     case AreaExpectedValue.library:
                         return nodeTran.HasLibInfo ? nodeTran.LibInfo.Intensity : 0;
-                    case AreaExpectedValue.envelope:
-                        return nodeTran.EnvelopeProportion ?? 0;
+                    case AreaExpectedValue.isotope_dist:
+                        return nodeTran.IsotopeDistProportion ?? 0;
                     default:
                         return 0;
                 }

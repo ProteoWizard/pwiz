@@ -698,7 +698,7 @@ namespace pwiz.Skyline.Model.Results
 
         private IEnumerable<double> GetMS1MzValues(TransitionGroupDocNode nodeGroup)
         {
-            var isotopePeaks = nodeGroup.IsotopePeaks;
+            var isotopePeaks = nodeGroup.IsotopeDist;
             if (isotopePeaks == null)
             {
                 // Return the MS1 transition m/z values, if the precursor has no isotope peaks

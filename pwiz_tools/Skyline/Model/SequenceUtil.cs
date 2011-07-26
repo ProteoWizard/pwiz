@@ -730,15 +730,15 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public double GetFragmentMass(Transition transition, IsotopePeakInfo isotopePeaks)
+        public double GetFragmentMass(Transition transition, IsotopeDistInfo isotopeDist)
         {
-            return GetFragmentMass(transition, isotopePeaks, null);
+            return GetFragmentMass(transition, isotopeDist, null);
         }
 
-        public double GetFragmentMass(Transition transition, IsotopePeakInfo isotopePeaks, ExplicitSequenceMods mods)
+        public double GetFragmentMass(Transition transition, IsotopeDistInfo isotopeDist, ExplicitSequenceMods mods)
         {
             return GetFragmentMass(transition.Group.Peptide.Sequence,
-                transition.IonType, transition.Ordinal, transition.MassIndex, isotopePeaks, mods);
+                transition.IonType, transition.Ordinal, transition.MassIndex, isotopeDist, mods);
         }
 
         public double GetPrecursorFragmentMass(string seq)
@@ -752,10 +752,10 @@ namespace pwiz.Skyline.Model
         }
 
         public double GetFragmentMass(string seq, IonType type, int ordinal,
-            int massIndex, IsotopePeakInfo isotopePeaks, ExplicitSequenceMods mods)
+            int massIndex, IsotopeDistInfo isotopeDists, ExplicitSequenceMods mods)
         {
             if (Transition.IsPrecursor(type))
-                return isotopePeaks != null ? isotopePeaks.GetMassI(massIndex) : GetPrecursorMass(seq, mods);
+                return isotopeDists != null ? isotopeDists.GetMassI(massIndex) : GetPrecursorMass(seq, mods);
 
             int len = seq.Length - 1;
 
@@ -945,9 +945,9 @@ namespace pwiz.Skyline.Model
             return _massCalcBase.GetFragmentIonMasses(seq, _mods);
         }
 
-        public double GetFragmentMass(Transition transition, IsotopePeakInfo isotopePeaks)
+        public double GetFragmentMass(Transition transition, IsotopeDistInfo isotopeDist)
         {
-            return _massCalcBase.GetFragmentMass(transition, isotopePeaks, _mods);
+            return _massCalcBase.GetFragmentMass(transition, isotopeDist, _mods);
         }
 
         public double GetPrecursorFragmentMass(string seq)

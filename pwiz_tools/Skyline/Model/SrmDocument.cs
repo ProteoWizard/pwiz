@@ -1440,7 +1440,7 @@ namespace pwiz.Skyline.Model
                                                   children,
                                                   autoManageChildren);
 
-                children = ReadTransitionListXml(reader, group, mods, nodeGroup.IsotopePeaks);
+                children = ReadTransitionListXml(reader, group, mods, nodeGroup.IsotopeDist);
 
                 reader.ReadEndElement();
 
@@ -1599,14 +1599,14 @@ namespace pwiz.Skyline.Model
         /// <param name="reader">The reader positioned at the first element</param>
         /// <param name="group">A previously read parent <see cref="Identity"/></param>
         /// <param name="mods">Explicit modifications for the peptide</param>
-        /// <param name="isotopePeaks">Isotope peak distribution to use for assigning M+N m/z values</param>
+        /// <param name="isotopeDist">Isotope peak distribution to use for assigning M+N m/z values</param>
         /// <returns>A new array of <see cref="TransitionDocNode"/></returns>
         private TransitionDocNode[] ReadTransitionListXml(XmlReader reader, TransitionGroup group,
-            ExplicitMods mods, IsotopePeakInfo isotopePeaks)
+            ExplicitMods mods, IsotopeDistInfo isotopeDist)
         {
             var list = new List<TransitionDocNode>();
             while (reader.IsStartElement(EL.transition))
-                list.Add(ReadTransitionXml(reader, group, mods, isotopePeaks));
+                list.Add(ReadTransitionXml(reader, group, mods, isotopeDist));
             return list.ToArray();
         }
 
@@ -1617,10 +1617,10 @@ namespace pwiz.Skyline.Model
         /// <param name="reader">The reader positioned at a start element of a transition</param>
         /// <param name="group">A previously read parent <see cref="Identity"/></param>
         /// <param name="mods">Explicit mods for the peptide</param>
-        /// <param name="isotopePeaks">Isotope peak distribution to use for assigning M+N m/z values</param>
+        /// <param name="isotopeDist">Isotope peak distribution to use for assigning M+N m/z values</param>
         /// <returns>A new <see cref="TransitionDocNode"/></returns>
         private TransitionDocNode ReadTransitionXml(XmlReader reader, TransitionGroup group,
-            ExplicitMods mods, IsotopePeakInfo isotopePeaks)
+            ExplicitMods mods, IsotopeDistInfo isotopeDist)
         {
             TransitionInfo info = new TransitionInfo();
             info.ReadXml(reader, Settings);
@@ -1635,13 +1635,13 @@ namespace pwiz.Skyline.Model
                 transition = new Transition(group, info.IonType, offset, info.MassIndex, info.Charge);
             }
 
-            double massH = Settings.GetFragmentMass(group.LabelType, mods, transition, isotopePeaks);
-            float? envelopeProportion = isotopePeaks != null
-                ? isotopePeaks.GetProportionI(transition.MassIndex)
+            double massH = Settings.GetFragmentMass(group.LabelType, mods, transition, isotopeDist);
+            float? isotopeDistProportion = isotopeDist != null
+                ? isotopeDist.GetProportionI(transition.MassIndex)
                 : (float?) null;
 
             return new TransitionDocNode(transition, info.Annotations, info.Losses,
-                massH, envelopeProportion, info.LibInfo, info.Results);
+                massH, isotopeDistProportion, info.LibInfo, info.Results);
         }
 
         private static Annotations ReadAnnotations(XmlReader reader)
