@@ -351,7 +351,7 @@ void summarizeQonversion(const string& filepath)
 
     sqlite::query summaryQuery(idpDb, sql.c_str());
 
-    BOOST_FOREACH(sqlite::query::rows& row, summaryQuery)
+    BOOST_FOREACH(sqlite::query::rows row, summaryQuery)
     {
         string source;
         int spectra, peptides;

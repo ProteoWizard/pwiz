@@ -110,7 +110,7 @@ struct PsmRowReader
     {
         sqlite::query psmQuery(db, sql.c_str());
 
-        BOOST_FOREACH(sqlite::query::rows& row, psmQuery)
+        BOOST_FOREACH(sqlite::query::rows row, psmQuery)
         {
             psmRows.push_back(PeptideSpectrumMatch());
             PeptideSpectrumMatch& psm = psmRows.back();

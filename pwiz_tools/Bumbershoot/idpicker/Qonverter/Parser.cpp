@@ -47,7 +47,7 @@
 #define ITERATION_UPDATE(ilr, index, count, message) \
 { \
     if (ilr && ilr->broadcastUpdateMessage(UpdateMessage((index), (count), (message))) == IterationListener::Status_Cancel) \
-        return IterationListener::Status_Cancel; \
+        {status = IterationListener::Status_Cancel; return;} \
 }
 
 
@@ -412,7 +412,7 @@ struct ParserImpl
         }
     }
 
-    IterationListener::Status insertSpectrumResults()
+    void insertSpectrumResults(IterationListener::Status& status)
     {
         sqlite::transaction transaction(idpDb);
 
@@ -575,7 +575,6 @@ struct ParserImpl
         }
 
         transaction.commit();
-        return IterationListener::Status_Ok;
     }
 
     void createIndexes()
@@ -782,16 +781,18 @@ struct ParserTask
     boost::shared_ptr<IdentDataFile> mzid;
     boost::shared_ptr<ParserImpl> parser;
     AnalysisPtr analysis;
+    const IterationListenerRegistry* ilr;
+    boost::mutex* ioMutex;
 };
 
 typedef boost::shared_ptr<ParserTask> ParserTaskPtr;
 
 
-ThreadStatus executeParserTask(ParserTaskPtr parserTask,
-                               const IterationListenerRegistry* ilr,
-                               boost::mutex* ioMutex)
+void executeParserTask(ParserTaskPtr parserTask, ThreadStatus& status)
 {
     const string& inputFilepath = parserTask->inputFilepath;
+    const IterationListenerRegistry* ilr = parserTask->ilr;
+    //boost::mutex& ioMutex = *peptideFinderTask->ioMutex;
 
     try
     {
@@ -808,7 +809,7 @@ ThreadStatus executeParserTask(ParserTaskPtr parserTask,
         // read the mzid document into memory
         ITERATION_UPDATE(ilr, 0, 0, inputFilepath + "*opening file");
         {
-            //boost::mutex::scoped_lock ioLock(*ioMutex);
+            //boost::mutex::scoped_lock ioLock(ioMutex);
             parserTask->mzid.reset(new IdentDataFile(inputFilepath, 0, threadILR));
         }
 
@@ -817,23 +818,28 @@ ThreadStatus executeParserTask(ParserTaskPtr parserTask,
 
         parserTask->parser->insertAnalysisMetadata();
 
-        if (parserTask->parser->insertSpectrumResults() == IterationListener::Status_Cancel)
-            return IterationListener::Status_Cancel;
+        IterationListener::Status tmpStatus;
+        parserTask->parser->insertSpectrumResults(tmpStatus);
+        if (tmpStatus == IterationListener::Status_Cancel)
+        {
+            status = tmpStatus;
+            return;
+        }
 
         //if (parserTask->parser->buildPeptideTrie() == IterationListener::Status_Cancel)
         //    return IterationListener::Status_Cancel;
 
         parserTask->mzid.reset();
 
-        return IterationListener::Status_Ok;
+        status = IterationListener::Status_Ok;
     }
     catch (exception& e)
     {
-        return boost::copy_exception(runtime_error("[executeParserTask] error parsing \"" + inputFilepath + "\": " + e.what()));
+        status = boost::copy_exception(runtime_error("[executeParserTask] error parsing \"" + inputFilepath + "\": " + e.what()));
     }
     catch (...)
     {
-        return boost::copy_exception(runtime_error("[executeParserTask] unknown error parsing \"" + inputFilepath + "\""));
+        status = boost::copy_exception(runtime_error("[executeParserTask] unknown error parsing \"" + inputFilepath + "\""));
     }
 }
 
@@ -860,12 +866,14 @@ struct PeptideFinderTask
     deque<proteome::ProteinPtr> proteinQueue;
     ParserTaskPtr parserTask;
     boost::atomic<bool> done;
+    const IterationListenerRegistry* ilr;
+    boost::mutex* ioMutex;
 };
 
 typedef boost::shared_ptr<PeptideFinderTask> PeptideFinderTaskPtr;
 
 
-ThreadStatus executeProteinReaderTask(ProteinReaderTaskPtr proteinReaderTask)
+void executeProteinReaderTask(ProteinReaderTaskPtr proteinReaderTask, ThreadStatus& status)
 {
     try
     {
@@ -881,7 +889,10 @@ ThreadStatus executeProteinReaderTask(ProteinReaderTaskPtr proteinReaderTask)
         while (true)
         {
             if (proteinReaderTask->done == proteinReaderTask->peptideFinderTasks.size())
-                return IterationListener::Status_Ok; // ~scoped_lock calls unlock()
+            {
+                status = IterationListener::Status_Ok;
+                return; // ~scoped_lock calls unlock()
+            }
 
             for (size_t i=0; i < pl.size(); ++i)
             {
@@ -895,7 +906,10 @@ ThreadStatus executeProteinReaderTask(ProteinReaderTaskPtr proteinReaderTask)
                 {
                     // check for early cancellation
                     if (proteinReaderTask->done == proteinReaderTask->peptideFinderTasks.size())
-                        return IterationListener::Status_Cancel; // ~scoped_lock calls unlock()
+                    {
+                        status = IterationListener::Status_Cancel;
+                        return; // ~scoped_lock calls unlock()
+                    }
 
                     lock.lock();
 
@@ -932,25 +946,25 @@ ThreadStatus executeProteinReaderTask(ProteinReaderTaskPtr proteinReaderTask)
     catch (exception& e)
     {
         proteinReaderTask->done.store(proteinReaderTask->peptideFinderTasks.size());
-        return boost::copy_exception(runtime_error("[executeProteinReaderTask] error reading proteins: " + string(e.what())));
+        status = boost::copy_exception(runtime_error("[executeProteinReaderTask] error reading proteins: " + string(e.what())));
     }
     catch (...)
     {
         proteinReaderTask->done.store(proteinReaderTask->peptideFinderTasks.size());
-        return boost::copy_exception(runtime_error("[executeProteinReaderTask] unknown error reading proteins"));
+        status = boost::copy_exception(runtime_error("[executeProteinReaderTask] unknown error reading proteins"));
     }
 }
 
 
-ThreadStatus executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask,
-                                      const IterationListenerRegistry* ilr,
-                                      boost::mutex* ioMutex)
+void executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask, ThreadStatus& status)
 {
     ProteinReaderTask& proteinReaderTask = *peptideFinderTask->proteinReaderTask;
     deque<proteome::ProteinPtr>& proteinQueue = peptideFinderTask->proteinQueue;
     ParserTask& parserTask = *peptideFinderTask->parserTask;
     ParserImpl& parser = *parserTask.parser;
     sqlite::database& idpDb = *parserTask.idpDb;
+    const IterationListenerRegistry* ilr = peptideFinderTask->ilr;
+    boost::mutex& ioMutex = *peptideFinderTask->ioMutex;
     map<boost::shared_ptr<string>, sqlite3_int64, SharedStringFastLessThan>& distinctPeptideIdBySequence =
         parser.distinctPeptideIdBySequence;
 
@@ -1000,7 +1014,8 @@ ThreadStatus executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask,
             if (ilr && ilr->broadcastUpdateMessage(UpdateMessage(peptideQueries-1, peptides.size(), parserTask.inputFilepath + "*building peptide trie")) == IterationListener::Status_Cancel)
             {
                 proteinReaderTask.done.store(proteinReaderTask.peptideFinderTasks.size());
-                return IterationListener::Status_Cancel;
+                status = IterationListener::Status_Cancel;
+                return;
             }
 
             PeptideTrie peptideTrie(peptideBatch.begin(), peptideBatch.end());
@@ -1047,7 +1062,8 @@ ThreadStatus executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask,
                 if (ilr && ilr->broadcastUpdateMessage(UpdateMessage(proteinsDigested-1, proteinReaderTask.proteinCount, parserTask.inputFilepath + "*finding peptides in proteins")) == IterationListener::Status_Cancel)
                 {
                     proteinReaderTask.done.store(proteinReaderTask.peptideFinderTasks.size());
-                    return IterationListener::Status_Cancel;
+                    status = IterationListener::Status_Cancel;
+                    return;
                 }
 
                 BOOST_FOREACH(proteome::ProteinPtr& protein, proteinBatch)
@@ -1145,7 +1161,7 @@ ThreadStatus executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask,
             sqlite::query filteredProteinIdQuery(idpDb, "SELECT Id FROM Protein");
 
             set<sqlite3_int64> filteredProteinIds;
-            BOOST_FOREACH(sqlite::query::rows& row, filteredProteinIdQuery)
+            BOOST_FOREACH(sqlite::query::rows row, filteredProteinIdQuery)
                 filteredProteinIds.insert(row.get<sqlite3_int64>(0));
 
             vector<size_t> filteredProteinIndexes;
@@ -1154,7 +1170,7 @@ ThreadStatus executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask,
                     filteredProteinIndexes.push_back(index);
 
             ITERATION_UPDATE(ilr, 0, 0, parserTask.inputFilepath + "*saving database");
-            boost::mutex::scoped_lock ioLock(*ioMutex);
+            boost::mutex::scoped_lock ioLock(ioMutex);
             idpDb.save_to_file(idpDbFilepath.c_str());
 
             sqlite::database idpDbFile(idpDbFilepath, sqlite::no_mutex);
@@ -1188,19 +1204,19 @@ ThreadStatus executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask,
         }
 
         ITERATION_UPDATE(ilr, 0, 1, parserTask.inputFilepath + "*done");
-        return IterationListener::Status_Ok;
+        status = IterationListener::Status_Ok;
     }
     catch (exception& e)
     {
         boost::mutex::scoped_lock lock(proteinReaderTask.queueMutex);
         proteinReaderTask.done.store(proteinReaderTask.peptideFinderTasks.size());
-        return boost::copy_exception(runtime_error("[executePeptideFinderTask] error finding peptides for \"" + parserTask.inputFilepath + "\": " + e.what()));
+        status = boost::copy_exception(runtime_error("[executePeptideFinderTask] error finding peptides for \"" + parserTask.inputFilepath + "\": " + e.what()));
     }
     catch (...)
     {
         boost::mutex::scoped_lock lock(proteinReaderTask.queueMutex);
         proteinReaderTask.done.store(proteinReaderTask.peptideFinderTasks.size());
-        return boost::copy_exception(runtime_error("[executePeptideFinderTask] unknown error finding peptides for \"" + parserTask.inputFilepath + "\""));
+        status = boost::copy_exception(runtime_error("[executePeptideFinderTask] unknown error finding peptides for \"" + parserTask.inputFilepath + "\""));
     }
 }
 
@@ -1230,12 +1246,14 @@ void executeTaskGroup(const ProteinDatabaseTaskGroup& taskGroup,
             if (distinctAnalysisByFilepath.count(inputFilepath) == 0)
                 throw runtime_error("[Parser::parse()] unable to find analysis for file \"" + inputFilepath + "\"");
 
-            parserTasks.push_back(ParserTaskPtr(new ParserTask(inputFilepath)));
-            parserTasks.back()->analysis = distinctAnalysisByFilepath.find(inputFilepath)->second;
+            ParserTaskPtr parserTask(new ParserTask(inputFilepath));
+            parserTask->analysis = distinctAnalysisByFilepath.find(inputFilepath)->second;
+            parserTask->ilr = ilr;
+            parserTask->ioMutex = &ioMutex;
+            parserTasks.push_back(parserTask);
 
             threads.push_back(make_pair(boost::shared_ptr<thread>(), ThreadStatus(IterationListener::Status_Ok)));
-            threads.back().first.reset(new thread(var(threads.back().second) = bind(executeParserTask, _1, _2, _3),
-                                                  parserTasks.back(), ilr, &ioMutex));
+            threads.back().first.reset(new thread(executeParserTask, parserTasks.back(), threads.back().second));
         }
 
         set<boost::shared_ptr<thread> > finishedThreads;
@@ -1267,17 +1285,19 @@ void executeTaskGroup(const ProteinDatabaseTaskGroup& taskGroup,
             peptideFinderTask->proteinReaderTask = proteinReaderTask;
             peptideFinderTask->parserTask = parserTasks[i];
             peptideFinderTask->done.store(false);
+            peptideFinderTask->ilr = ilr;
+            peptideFinderTask->ioMutex = &ioMutex;
             proteinReaderTask->peptideFinderTasks.push_back(peptideFinderTask);
 
             threads.push_back(make_pair(boost::shared_ptr<thread>(), IterationListener::Status_Ok));
-            threads.back().first.reset(new thread(var(threads.back().second) = bind(executePeptideFinderTask, _1, _2, _3), peptideFinderTask, ilr, &ioMutex));
+            threads.back().first.reset(new thread(executePeptideFinderTask, peptideFinderTask, threads.back().second));
         }
 
         // threads will free their parserTask
         //parserTasks.clear();
 
         ThreadStatus status;
-        boost::thread proteinReaderThread(var(status) = bind(executeProteinReaderTask, _1), proteinReaderTask);
+        boost::thread proteinReaderThread(executeProteinReaderTask, proteinReaderTask, status);
 
         proteinReaderThread.join();
 
