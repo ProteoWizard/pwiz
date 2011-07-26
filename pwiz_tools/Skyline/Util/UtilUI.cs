@@ -120,6 +120,7 @@ namespace pwiz.Skyline.Util
         public ProgressWaitBroker(Action<IProgressMonitor> performWork)
         {
             _performWork = performWork;
+            Status = new ProgressStatus("");
         }
 
         public void PerformWork(ILongWaitBroker broker)

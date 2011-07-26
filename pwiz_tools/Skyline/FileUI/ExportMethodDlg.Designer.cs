@@ -53,6 +53,8 @@
             this.comboOptimizing = new System.Windows.Forms.ComboBox();
             this.label1 = new System.Windows.Forms.Label();
             this.cbFullScan = new System.Windows.Forms.CheckBox();
+            this.labelMethods = new System.Windows.Forms.Label();
+            this.labelMethodNum = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // radioSingle
@@ -104,6 +106,7 @@
             this.textMaxTransitions.TabIndex = 7;
             this.helpTip.SetToolTip(this.textMaxTransitions, "Each file created will have at most this number of transitions, but may have fewe" +
                     "r,\r\nif peptide or protein boundaries do not allow the maximum.");
+            this.textMaxTransitions.TextChanged += new System.EventHandler(this.textMaxTransitions_TextChanged);
             // 
             // labelMaxTransitions
             // 
@@ -139,7 +142,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(13, 292);
+            this.label2.Location = new System.Drawing.Point(13, 303);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(69, 13);
             this.label2.TabIndex = 10;
@@ -152,7 +155,7 @@
             this.comboTargetType.Items.AddRange(new object[] {
             "Standard",
             "Scheduled"});
-            this.comboTargetType.Location = new System.Drawing.Point(16, 308);
+            this.comboTargetType.Location = new System.Drawing.Point(16, 319);
             this.comboTargetType.Name = "comboTargetType";
             this.comboTargetType.Size = new System.Drawing.Size(124, 21);
             this.comboTargetType.TabIndex = 11;
@@ -160,7 +163,7 @@
             // 
             // textRunLength
             // 
-            this.textRunLength.Location = new System.Drawing.Point(164, 308);
+            this.textRunLength.Location = new System.Drawing.Point(164, 319);
             this.textRunLength.Name = "textRunLength";
             this.textRunLength.Size = new System.Drawing.Size(100, 20);
             this.textRunLength.TabIndex = 10;
@@ -168,7 +171,7 @@
             // 
             // textDwellTime
             // 
-            this.textDwellTime.Location = new System.Drawing.Point(164, 308);
+            this.textDwellTime.Location = new System.Drawing.Point(164, 319);
             this.textDwellTime.Name = "textDwellTime";
             this.textDwellTime.Size = new System.Drawing.Size(100, 20);
             this.textDwellTime.TabIndex = 13;
@@ -177,7 +180,7 @@
             // labelDwellTime
             // 
             this.labelDwellTime.AutoSize = true;
-            this.labelDwellTime.Location = new System.Drawing.Point(164, 289);
+            this.labelDwellTime.Location = new System.Drawing.Point(164, 300);
             this.labelDwellTime.Name = "labelDwellTime";
             this.labelDwellTime.Size = new System.Drawing.Size(80, 13);
             this.labelDwellTime.TabIndex = 12;
@@ -212,7 +215,7 @@
             // labelTemplateFile
             // 
             this.labelTemplateFile.AutoSize = true;
-            this.labelTemplateFile.Location = new System.Drawing.Point(13, 359);
+            this.labelTemplateFile.Location = new System.Drawing.Point(13, 370);
             this.labelTemplateFile.Name = "labelTemplateFile";
             this.labelTemplateFile.Size = new System.Drawing.Size(70, 13);
             this.labelTemplateFile.TabIndex = 15;
@@ -220,14 +223,14 @@
             // 
             // textTemplateFile
             // 
-            this.textTemplateFile.Location = new System.Drawing.Point(16, 377);
+            this.textTemplateFile.Location = new System.Drawing.Point(16, 388);
             this.textTemplateFile.Name = "textTemplateFile";
             this.textTemplateFile.Size = new System.Drawing.Size(175, 20);
             this.textTemplateFile.TabIndex = 16;
             // 
             // btnBrowseTemplate
             // 
-            this.btnBrowseTemplate.Location = new System.Drawing.Point(197, 375);
+            this.btnBrowseTemplate.Location = new System.Drawing.Point(197, 386);
             this.btnBrowseTemplate.Name = "btnBrowseTemplate";
             this.btnBrowseTemplate.Size = new System.Drawing.Size(75, 23);
             this.btnBrowseTemplate.TabIndex = 17;
@@ -256,7 +259,7 @@
             // cbEnergyRamp
             // 
             this.cbEnergyRamp.AutoSize = true;
-            this.cbEnergyRamp.Location = new System.Drawing.Point(164, 334);
+            this.cbEnergyRamp.Location = new System.Drawing.Point(164, 345);
             this.cbEnergyRamp.Name = "cbEnergyRamp";
             this.cbEnergyRamp.Size = new System.Drawing.Size(106, 17);
             this.cbEnergyRamp.TabIndex = 14;
@@ -268,15 +271,16 @@
             // 
             this.comboOptimizing.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboOptimizing.FormattingEnabled = true;
-            this.comboOptimizing.Location = new System.Drawing.Point(16, 239);
+            this.comboOptimizing.Location = new System.Drawing.Point(16, 250);
             this.comboOptimizing.Name = "comboOptimizing";
             this.comboOptimizing.Size = new System.Drawing.Size(121, 21);
             this.comboOptimizing.TabIndex = 9;
+            this.comboOptimizing.SelectedIndexChanged += new System.EventHandler(this.comboOptimizing_SelectedIndexChanged);
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(13, 225);
+            this.label1.Location = new System.Drawing.Point(13, 236);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(58, 13);
             this.label1.TabIndex = 8;
@@ -293,13 +297,33 @@
             this.cbFullScan.UseVisualStyleBackColor = true;
             this.cbFullScan.Visible = false;
             // 
+            // labelMethods
+            // 
+            this.labelMethods.AutoSize = true;
+            this.labelMethods.Location = new System.Drawing.Point(13, 201);
+            this.labelMethods.Name = "labelMethods";
+            this.labelMethods.Size = new System.Drawing.Size(51, 13);
+            this.labelMethods.TabIndex = 21;
+            this.labelMethods.Text = "Methods:";
+            // 
+            // labelMethodNum
+            // 
+            this.labelMethodNum.AutoSize = true;
+            this.labelMethodNum.Location = new System.Drawing.Point(70, 201);
+            this.labelMethodNum.Name = "labelMethodNum";
+            this.labelMethodNum.Size = new System.Drawing.Size(21, 13);
+            this.labelMethodNum.TabIndex = 22;
+            this.labelMethodNum.Text = "##";
+            // 
             // ExportMethodDlg
             // 
             this.AcceptButton = this.btnOk;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(287, 409);
+            this.ClientSize = new System.Drawing.Size(287, 422);
+            this.Controls.Add(this.labelMethodNum);
+            this.Controls.Add(this.labelMethods);
             this.Controls.Add(this.cbFullScan);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.comboOptimizing);
@@ -360,5 +384,7 @@
         private System.Windows.Forms.ComboBox comboOptimizing;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.CheckBox cbFullScan;
+        private System.Windows.Forms.Label labelMethods;
+        private System.Windows.Forms.Label labelMethodNum;
     }
 }

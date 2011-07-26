@@ -126,6 +126,8 @@ namespace pwiz.Skyline.FileUI
             if (document.Settings.TransitionSettings.Prediction.DeclusteringPotential != null)
                 comboOptimizing.Items.Add(ExportOptimize.DP);
             comboOptimizing.SelectedIndex = 0;
+
+            CalcMethodCount();
         }
 
         public string InstrumentType
@@ -192,13 +194,11 @@ namespace pwiz.Skyline.FileUI
 
         private ExportSchedulingAlgorithm SchedulingAlgorithm
         {
-            get { return _exportProperties.SchedulingAlgorithm; }
             set { _exportProperties.SchedulingAlgorithm = value; }
         }
 
         private int? SchedulingReplicateNum
         {
-            get { return _exportProperties.SchedulingReplicateNum; }
             set { _exportProperties.SchedulingReplicateNum = value ?? 0; }
         }
 
@@ -372,7 +372,7 @@ namespace pwiz.Skyline.FileUI
         {
             // TODO: Remove this
             var e = new CancelEventArgs();
-            var helper = new MessageBoxHelper(this);
+            var helper = new MessageBoxHelper(this, true);
 
             _instrumentType = comboInstrument.SelectedItem.ToString();
 
@@ -451,91 +451,10 @@ namespace pwiz.Skyline.FileUI
                 }
             }
 
-            // ReSharper disable ConvertIfStatementToConditionalTernaryExpression
-            if (radioSingle.Checked)
-                _exportProperties.ExportStrategy = ExportStrategy.Single;
-            else if (radioProtein.Checked)
-                _exportProperties.ExportStrategy = ExportStrategy.Protein;
-            else
-                _exportProperties.ExportStrategy = ExportStrategy.Buckets;
-            // ReSharper restore ConvertIfStatementToConditionalTernaryExpression
-
-            _exportProperties.IgnoreProteins = cbIgnoreProteins.Checked;
-            _exportProperties.FullScans = cbFullScan.Checked;
-            _exportProperties.AddEnergyRamp = cbEnergyRamp.Visible && cbEnergyRamp.Checked;
-
-            _exportProperties.OptimizeType = comboOptimizing.SelectedItem.ToString();
-            var prediction = _document.Settings.TransitionSettings.Prediction;
-            if (Equals(_exportProperties.OptimizeType, ExportOptimize.NONE))
-                _exportProperties.OptimizeType = null;
-            else if (Equals(_exportProperties.OptimizeType, ExportOptimize.CE))
+            //This will populate _exportProperties
+            if(!ValidateSettings(e, helper))
             {
-                var regression = prediction.CollisionEnergy;
-                _exportProperties.OptimizeStepSize = regression.StepSize;
-                _exportProperties.OptimizeStepCount = regression.StepCount;
-            }
-            else if (Equals(_exportProperties.OptimizeType, ExportOptimize.DP))
-            {
-                var regression = prediction.DeclusteringPotential;
-                _exportProperties.OptimizeStepSize = regression.StepSize;
-                _exportProperties.OptimizeStepCount = regression.StepCount;
-            }
-
-            string maxTran = textMaxTransitions.Text;
-            if (string.IsNullOrEmpty(maxTran))
-            {
-                if (_exportProperties.ExportStrategy == ExportStrategy.Buckets)
-                {
-                    helper.ShowTextBoxError(textMaxTransitions, "{0} must contain a value.");
-                    return;
-                }
-                _exportProperties.MaxTransitions = null;                
-            }
-            else
-            {
-                int maxVal;
-                // CONSIDER: Better error message when instrument limitation encountered?
-                int maxInstrumentTrans = documentExport.Settings.TransitionSettings.Instrument.MaxTransitions ??
-                                         TransitionInstrument.MAX_TRANSITION_MAX;
-                int minTrans = IsFullScanInstrument ? MassListExporter.MAX_TRANS_PER_INJ_MIN : MethodExporter.MAX_TRANS_PER_INJ_MIN_TLTQ;
-                if (!helper.ValidateNumberTextBox(e, textMaxTransitions, minTrans, maxInstrumentTrans, out maxVal))
-                    return;
-                // Make sure all the precursors can fit into a single document
-                if (!ValidatePrecursorFit(documentExport, maxVal))
-                    return;
-                _exportProperties.MaxTransitions = maxVal;
-            }
-
-            _exportProperties.MethodType = (ExportMethodType)Enum.Parse(typeof(ExportMethodType),
-                                                        comboTargetType.SelectedItem.ToString());
-
-            if (textDwellTime.Visible)
-            {
-               int dwellTime;
-               if (!helper.ValidateNumberTextBox(e, textDwellTime, MassListExporter.DWELL_TIME_MIN, MassListExporter.DWELL_TIME_MAX, out dwellTime))
-                    return;
-
-                _exportProperties.DwellTime = dwellTime;
-            }
-            if (textRunLength.Visible)
-            {
-                double runLength;
-                if (!helper.ValidateDecimalTextBox(e, textRunLength, MassListExporter.RUN_LENGTH_MIN, MassListExporter.RUN_LENGTH_MAX, out runLength))
-                    return;
-
-                _exportProperties.RunLength = runLength;
-            }
-
-            // If export method type is scheduled, and allows multiple scheduling options
-            // ask the user which to use.
-            if (_exportProperties.MethodType == ExportMethodType.Scheduled && HasMultipleSchedulingOptions(documentExport))
-            {
-                SchedulingOptionsDlg schedulingOptionsDlg = new SchedulingOptionsDlg(documentExport);
-                if (schedulingOptionsDlg.ShowDialog(this) != DialogResult.OK)
-                    return;
-
-                SchedulingAlgorithm = schedulingOptionsDlg.Algorithm;
-                SchedulingReplicateNum = schedulingOptionsDlg.ReplicateNum;
+                return;
             }
 
             if (outputPath == null)
@@ -575,6 +494,7 @@ namespace pwiz.Skyline.FileUI
             }
 
             Settings.Default.ExportDirectory = Path.GetDirectoryName(outputPath);
+
             try
             {
                 _exportProperties.ExportFile(_instrumentType, _fileType, outputPath, documentExport, templateName);
@@ -614,6 +534,129 @@ namespace pwiz.Skyline.FileUI
             Close();
         }
 
+
+        /// <summary>
+        /// This function will validate all the settings required for exporting a method,
+        /// placing the values on the ExportDlgProperties _exportProperties. It returns
+        /// boolean whether or not it succeeded. It can show MessageBoxes or not based
+        /// on a parameter.
+        /// </summary>
+        /// <param name="e"></param>
+        /// <param name="helper"></param>
+        /// <returns></returns>
+        public bool ValidateSettings(CancelEventArgs e, MessageBoxHelper helper)
+        {
+            // ReSharper disable ConvertIfStatementToConditionalTernaryExpression
+            if (radioSingle.Checked)
+                _exportProperties.ExportStrategy = ExportStrategy.Single;
+            else if (radioProtein.Checked)
+                _exportProperties.ExportStrategy = ExportStrategy.Protein;
+            else
+                _exportProperties.ExportStrategy = ExportStrategy.Buckets;
+            // ReSharper restore ConvertIfStatementToConditionalTernaryExpression
+
+            _exportProperties.IgnoreProteins = cbIgnoreProteins.Checked;
+            _exportProperties.FullScans = cbFullScan.Checked;
+            _exportProperties.AddEnergyRamp = cbEnergyRamp.Visible && cbEnergyRamp.Checked;
+
+            _exportProperties.OptimizeType = comboOptimizing.SelectedItem == null ? ExportOptimize.NONE : comboOptimizing.SelectedItem.ToString();
+            var prediction = _document.Settings.TransitionSettings.Prediction;
+            if (Equals(_exportProperties.OptimizeType, ExportOptimize.CE))
+            {
+                var regression = prediction.CollisionEnergy;
+                _exportProperties.OptimizeStepSize = regression.StepSize;
+                _exportProperties.OptimizeStepCount = regression.StepCount;
+            }
+            else if (Equals(_exportProperties.OptimizeType, ExportOptimize.DP))
+            {
+                var regression = prediction.DeclusteringPotential;
+                _exportProperties.OptimizeStepSize = regression.StepSize;
+                _exportProperties.OptimizeStepCount = regression.StepCount;
+            }
+            else
+            {
+                _exportProperties.OptimizeType = null;
+                _exportProperties.OptimizeStepSize = _exportProperties.OptimizeStepCount = 0;
+            }
+
+            string maxTran = textMaxTransitions.Text;
+            if (string.IsNullOrEmpty(maxTran))
+            {
+                if (_exportProperties.ExportStrategy == ExportStrategy.Buckets)
+                {
+                    helper.ShowTextBoxError(textMaxTransitions, "{0} must contain a value.");
+                    return false;
+                }
+                _exportProperties.MaxTransitions = null;
+            }
+            else
+            {
+                int maxVal;
+                // CONSIDER: Better error message when instrument limitation encountered?
+                int maxInstrumentTrans = _document.Settings.TransitionSettings.Instrument.MaxTransitions ??
+                                         TransitionInstrument.MAX_TRANSITION_MAX;
+                int minTrans = IsFullScanInstrument ? MassListExporter.MAX_TRANS_PER_INJ_MIN : MethodExporter.MAX_TRANS_PER_INJ_MIN_TLTQ;
+                if (!helper.ValidateNumberTextBox(e, textMaxTransitions, minTrans, maxInstrumentTrans, out maxVal))
+                    return false;
+                // Make sure all the transitions of all precursors can fit into a single document,
+                // but not if this is a full-scan instrument, because then the maximum is refering
+                // to precursors and not transitions.
+                if (!IsFullScanInstrument && !ValidatePrecursorFit(_document, maxVal, helper.ShowMessages))
+                    return false;
+                _exportProperties.MaxTransitions = maxVal;
+            }
+
+            _exportProperties.MethodType = (ExportMethodType)Enum.Parse(typeof(ExportMethodType),
+                                                        comboTargetType.SelectedItem.ToString());
+
+            if (textDwellTime.Visible)
+            {
+                int dwellTime;
+                if (!helper.ValidateNumberTextBox(e, textDwellTime, MassListExporter.DWELL_TIME_MIN, MassListExporter.DWELL_TIME_MAX, out dwellTime))
+                    return false;
+
+                _exportProperties.DwellTime = dwellTime;
+            }
+            if (textRunLength.Visible)
+            {
+                double runLength;
+                if (!helper.ValidateDecimalTextBox(e, textRunLength, MassListExporter.RUN_LENGTH_MIN, MassListExporter.RUN_LENGTH_MAX, out runLength))
+                    return false;
+
+                _exportProperties.RunLength = runLength;
+            }
+
+            // If export method type is scheduled, and allows multiple scheduling options
+            // ask the user which to use.
+            if (_exportProperties.MethodType == ExportMethodType.Scheduled && HasMultipleSchedulingOptions(_document))
+            {
+                if (!helper.ShowMessages)
+                {
+                    // CONSIDER: Kind of a hack, but pick some reasonable defaults.  The user
+                    //           may decide otherwise later, but this is the best we can do
+                    //           without asking.
+                    if (!_document.Settings.HasResults || Settings.Default.ScheduleAvergeRT)
+                        SchedulingAlgorithm = ExportSchedulingAlgorithm.Average;
+                    else
+                    {
+                        SchedulingAlgorithm = ExportSchedulingAlgorithm.Single;
+                        SchedulingReplicateNum = _document.Settings.MeasuredResults.Chromatograms.Count - 1;
+                    }
+                }
+                else
+                {
+                    SchedulingOptionsDlg schedulingOptionsDlg = new SchedulingOptionsDlg(_document);
+                    if (schedulingOptionsDlg.ShowDialog(this) != DialogResult.OK)
+                        return false;
+
+                    SchedulingAlgorithm = schedulingOptionsDlg.Algorithm;
+                    SchedulingReplicateNum = schedulingOptionsDlg.ReplicateNum;
+                }
+            }
+
+            return true;
+        }
+
         private static bool HasMultipleSchedulingOptions(SrmDocument document)
         {
             // No scheduling from data, if no data is present
@@ -631,7 +674,7 @@ namespace pwiz.Skyline.FileUI
             return (sched == 0 && chromatagrams.Count > 1);
         }
 
-        private bool ValidatePrecursorFit(SrmDocument document, int maxTransitions)
+        private bool ValidatePrecursorFit(SrmDocument document, int maxTransitions, bool showMessages)
         {
             string messageFormat = (OptimizeType == null ?
                 "The precursor {0} for the peptide {1} has {2} transitions, which exceeds the current maximum {3}." :
@@ -643,11 +686,14 @@ namespace pwiz.Skyline.FileUI
                     tranRequired *= OptimizeStepCount * 2 + 1;
                 if (tranRequired > maxTransitions)
                 {
-                    MessageDlg.Show(this, string.Format(messageFormat,
-                        SequenceMassCalc.PersistentMZ(nodeGroup.PrecursorMz) + Transition.GetChargeIndicator(nodeGroup.TransitionGroup.PrecursorCharge),
-                        nodeGroup.TransitionGroup.Peptide.Sequence,
-                        tranRequired,
-                        maxTransitions));
+                    if (showMessages)
+                    {
+                        MessageDlg.Show(this, string.Format(messageFormat,
+                            SequenceMassCalc.PersistentMZ(nodeGroup.PrecursorMz) + Transition.GetChargeIndicator(nodeGroup.TransitionGroup.PrecursorCharge),
+                            nodeGroup.TransitionGroup.Peptide.Sequence,
+                            tranRequired,
+                            maxTransitions));
+                    }
                     return false;
                 }
             }
@@ -695,21 +741,6 @@ namespace pwiz.Skyline.FileUI
             OkDialog(null);
         }
 
-        public TExp InitExporter<TExp>(TExp exporter)
-            where TExp : MassListExporter
-        {
-            exporter.Strategy = ExportStrategy;
-            exporter.IgnoreProteins = IgnoreProteins;
-            exporter.MaxTransitions = MaxTransitions;
-            exporter.MethodType = MethodType;
-            exporter.OptimizeType = OptimizeType;
-            exporter.OptimizeStepSize = OptimizeStepSize;
-            exporter.OptimizeStepCount = OptimizeStepCount;
-            exporter.SchedulingReplicateIndex = SchedulingReplicateNum;
-            exporter.SchedulingAlgorithm = SchedulingAlgorithm;
-            return exporter;
-        }
-
         private void radioSingle_CheckedChanged(object sender, EventArgs e)
         {
             StrategyCheckChanged();
@@ -731,6 +762,15 @@ namespace pwiz.Skyline.FileUI
             cbIgnoreProteins.Enabled = radioBuckets.Checked;
             if (!radioBuckets.Checked)
                 cbIgnoreProteins.Checked = false;
+
+            if (radioSingle.Checked)
+            {
+                labelMethodNum.Text = "1";
+            }
+            else
+            {
+                CalcMethodCount();
+            }
         }
 
         private void comboInstrument_SelectedIndexChanged(object sender, EventArgs e)
@@ -758,6 +798,8 @@ namespace pwiz.Skyline.FileUI
                 textTemplateFile.Text = templateFile.FilePath;
             else
                 textTemplateFile.Text = "";
+
+            CalcMethodCount();
         }
 
         private void comboTargetType_SelectedIndexChanged(object sender, EventArgs e)
@@ -788,6 +830,8 @@ namespace pwiz.Skyline.FileUI
             UpdateDwellControls(standard);
             UpdateEnergyRamp(standard);
             UpdateMaxLabel(standard);
+
+            CalcMethodCount();
         }
 
         private void UpdateMaxLabel(bool standard)
@@ -806,6 +850,30 @@ namespace pwiz.Skyline.FileUI
                 else
                     labelMaxTransitions.Text = "Ma&x concurrent transitions:";
             }
+        }
+        
+        private void CalcMethodCount()
+        {
+            var e = new CancelEventArgs();
+            var helper = new MessageBoxHelper(this, false);
+
+            if (!ValidateSettings(e, helper) || comboInstrument.SelectedItem == null)
+            {
+                labelMethodNum.Text = "";
+                return;
+            }
+
+            string instrument = comboInstrument.SelectedItem.ToString();
+            MassListExporter exporter = null;
+            try
+            {
+                exporter = _exportProperties.ExportFile(instrument, _fileType, null, _document, null);
+            }
+            catch (IOException)
+            {
+            }
+            
+            labelMethodNum.Text = exporter != null ? exporter.MemoryOutput.Count.ToString() : "";
         }
 
         private void UpdateDwellControls(bool standard)
@@ -904,6 +972,23 @@ namespace pwiz.Skyline.FileUI
                 textTemplateFile.Text = openFileDialog.FileName;
             }
         }
+
+        private void textMaxTransitions_TextChanged(object sender, EventArgs e)
+        {
+            int maxTrans;
+            if(!int.TryParse(textMaxTransitions.Text, out maxTrans) || maxTrans < 1)
+            {
+                labelMethodNum.Text = "";
+                return;
+            }
+
+            CalcMethodCount();
+        }
+
+        private void comboOptimizing_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            CalcMethodCount();
+        }
     }
 
     public class ExportDlgProperties : ExportProperties
@@ -915,8 +1000,16 @@ namespace pwiz.Skyline.FileUI
             _dialog = dialog;
         }
 
+        public bool ShowMessages { get; set; }
+
         public override void PerformLongExport(Action<IProgressMonitor> performExport)
         {
+            if (!ShowMessages)
+            {
+                performExport(new SilentProgressMonitor());
+                return;
+            }
+
             var longWait = new LongWaitDlg { Text = "Exporting Methods" };
             try
             {
@@ -928,6 +1021,12 @@ namespace pwiz.Skyline.FileUI
             {
                 MessageBox.Show(_dialog, string.Format("An error occurred attempting to export.\n{0}", x.Message), Program.Name);
             }
+        }
+
+        private class SilentProgressMonitor : IProgressMonitor
+        {
+            public bool IsCanceled { get { return false; } }
+            public void UpdateProgress(ProgressStatus status) { }
         }
     }
 }

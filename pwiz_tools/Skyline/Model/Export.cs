@@ -168,124 +168,136 @@ namespace pwiz.Skyline.Model
             return exporter;
         }
 
-        public void ExportFile(string instrumentType, ExportFileType type, string path, SrmDocument doc, string template)
+        public MassListExporter ExportFile(string instrumentType, ExportFileType type, string path, SrmDocument doc, string template)
         {
             switch (instrumentType)
             {
                 case ExportInstrumentType.ABI:
                 case ExportInstrumentType.ABI_QTRAP:
                     if (type == ExportFileType.List)
-                        ExportAbiCsv(doc, path);
+                        return ExportAbiCsv(doc, path);
                     else
-                        ExportAbiQtrapMethod(doc, path, template);
-                    break;
+                        return ExportAbiQtrapMethod(doc, path, template);
                 case ExportInstrumentType.Agilent:
                 case ExportInstrumentType.Agilent6400:
                     if (type == ExportFileType.List)
-                        ExportAgilentCsv(doc, path);
+                        return ExportAgilentCsv(doc, path);
                     else
-                        ExportAgilentMethod(doc, path, template);
-                    break;
+                        return ExportAgilentMethod(doc, path, template);
                 case ExportInstrumentType.Thermo:
                 case ExportInstrumentType.Thermo_TSQ:
                     if (type == ExportFileType.List)
-                        ExportThermoCsv(doc, path);
+                        return ExportThermoCsv(doc, path);
                     else
-                        ExportThermoMethod(doc, path, template);
-                    break;
+                        return ExportThermoMethod(doc, path, template);
                 case ExportInstrumentType.Thermo_LTQ:
                     OptimizeType = null;
-                    ExportThermoLtqMethod(doc, path, template);
-                    break;
+                    return ExportThermoLtqMethod(doc, path, template);
                 case ExportInstrumentType.Waters:
                 case ExportInstrumentType.Waters_Xevo:
                     if (type == ExportFileType.List)
-                        ExportWatersCsv(doc, path);
+                        return ExportWatersCsv(doc, path);
                     else
-                        ExportWatersMethod(doc, path, template);
-                    break;
+                        return ExportWatersMethod(doc, path, template);
                 case ExportInstrumentType.Waters_Quattro_Premier:
-                    ExportWatersQMethod(doc, path, template);
-                    break;
+                    return ExportWatersQMethod(doc, path, template);
                 default:
-                    break;
+                    return null;
             }
         }
 
-        public void ExportAbiCsv(SrmDocument document, string fileName)
+        public MassListExporter ExportAbiCsv(SrmDocument document, string fileName)
         {
             var exporter = InitExporter(new AbiMassListExporter(document));
             if (MethodType == ExportMethodType.Standard)
                 exporter.DwellTime = DwellTime;
             exporter.Export(fileName);
+
+            return exporter;
         }
 
-        public void ExportAbiQtrapMethod(SrmDocument document, string fileName, string templateName)
+        public MassListExporter ExportAbiQtrapMethod(SrmDocument document, string fileName, string templateName)
         {
             var exporter = InitExporter(new AbiQtrapMethodExporter(document));
             if (MethodType == ExportMethodType.Standard)
                 exporter.DwellTime = DwellTime;
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
+
+            return exporter;
         }
 
-        public void ExportAgilentCsv(SrmDocument document, string fileName)
+        public MassListExporter ExportAgilentCsv(SrmDocument document, string fileName)
         {
             var exporter = InitExporter(new AgilentMassListExporter(document));
             if (MethodType == ExportMethodType.Standard)
                 exporter.DwellTime = DwellTime;
             exporter.Export(fileName);
+
+            return exporter;
         }
 
-        public void ExportAgilentMethod(SrmDocument document, string fileName, string templateName)
+        public MassListExporter ExportAgilentMethod(SrmDocument document, string fileName, string templateName)
         {
             var exporter = InitExporter(new AgilentMethodExporter(document));
             if (MethodType == ExportMethodType.Standard)
                 exporter.DwellTime = DwellTime;
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
+
+            return exporter;
         }
 
-        public void ExportThermoCsv(SrmDocument document, string fileName)
+        public MassListExporter ExportThermoCsv(SrmDocument document, string fileName)
         {
             var exporter = InitExporter(new ThermoMassListExporter(document));
             exporter.AddEnergyRamp = AddEnergyRamp;
             exporter.Export(fileName);
+
+            return exporter;
         }
 
-        public void ExportThermoMethod(SrmDocument document, string fileName, string templateName)
+        public MassListExporter ExportThermoMethod(SrmDocument document, string fileName, string templateName)
         {
             var exporter = InitExporter(new ThermoMethodExporter(document));
             if (MethodType == ExportMethodType.Standard)
                 exporter.RunLength = RunLength;
 
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
+
+            return exporter;
         }
 
-        public void ExportThermoLtqMethod(SrmDocument document, string fileName, string templateName)
+        public MassListExporter ExportThermoLtqMethod(SrmDocument document, string fileName, string templateName)
         {
             var exporter = InitExporter(new ThermoLtqMethodExporter(document));
             exporter.FullScans = FullScans;
 
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
+
+            return exporter;
         }
 
-        public void ExportWatersCsv(SrmDocument document, string fileName)
+        public MassListExporter ExportWatersCsv(SrmDocument document, string fileName)
         {
             var exporter = InitExporter(new WatersMassListExporter(document));
             if (MethodType == ExportMethodType.Standard)
                 exporter.RunLength = RunLength;
             exporter.Export(fileName);
+
+            return exporter;
         }
 
-        public void ExportWatersMethod(SrmDocument document, string fileName, string templateName)
+        public MassListExporter ExportWatersMethod(SrmDocument document, string fileName, string templateName)
         {
             var exporter = InitExporter(new WatersMethodExporter(document));
             if (MethodType == ExportMethodType.Standard)
                 exporter.RunLength = RunLength;
 
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
+
+            return exporter;
         }
 
-        public void ExportWatersQMethod(SrmDocument document, string fileName, string templateName)
+        public MassListExporter ExportWatersQMethod(SrmDocument document, string fileName, string templateName)
         {
             var exporter = InitExporter(new WatersMethodExporter(document)
             {
@@ -295,6 +307,8 @@ namespace pwiz.Skyline.Model
                 exporter.RunLength = RunLength;
 
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
+
+            return exporter;
         }
 
         public abstract void PerformLongExport(Action<IProgressMonitor> performExport);
@@ -371,6 +385,27 @@ namespace pwiz.Skyline.Model
         public char FieldSeparator { get; private set; }
 
         public Dictionary<string, StringBuilder> MemoryOutput { get; private set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        protected bool InitExport(string fileName, IProgressMonitor progressMonitor)
+        {
+            if (progressMonitor.IsCanceled)
+                return false;
+
+            // First export transition lists to map in memory
+            Export(null);
+
+            // If filename is null, then no more work needs to be done.
+            if (fileName == null)
+            {
+                progressMonitor.UpdateProgress(new ProgressStatus("").Complete());
+                return false;
+            }
+
+            return true;
+        }
 
         /// <summary>
         /// Export to a transition list to a file or to memory.
@@ -1335,8 +1370,8 @@ namespace pwiz.Skyline.Model
 
         public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
         {
-            // First export transition lists to map in memory
-            Export(null);
+            if (!InitExport(fileName, progressMonitor))
+                return;
 
             MethodExporter.ExportMethod(EXE_BUILD_TSQ_METHOD, new List<string>(),
                 fileName, templateName, MemoryOutput, progressMonitor);
@@ -1360,8 +1395,8 @@ namespace pwiz.Skyline.Model
 
         public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
         {
-            // First export transition lists to map in memory
-            Export(null);
+            if (!InitExport(fileName, progressMonitor))
+                return;
 
             var argv = new List<string>();
             if (FullScans)
@@ -1450,12 +1485,11 @@ namespace pwiz.Skyline.Model
 
         public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
         {
-            EnsureAnalyst(progressMonitor);
-            if (progressMonitor.IsCanceled)
+            if(fileName != null)
+                EnsureAnalyst(progressMonitor);
+            
+            if (!InitExport(fileName, progressMonitor))
                 return;
-
-            // First export transition lists to map in memory
-            Export(null);
 
             var argv = new List<string>();
             if (RTWindow.HasValue)
@@ -1666,8 +1700,8 @@ namespace pwiz.Skyline.Model
 
         public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
         {
-            // First export transition lists to map in memory
-            Export(null);
+            if (!InitExport(fileName, progressMonitor))
+                return;
 
             MethodExporter.ExportMethod(EXE_BUILD_AGILENT_METHOD,
                 new List<string>(), fileName, templateName, MemoryOutput, progressMonitor);
@@ -1821,10 +1855,11 @@ namespace pwiz.Skyline.Model
 
         public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
         {
-            EnsureLibraries();
+            if(fileName != null)
+                EnsureLibraries();
 
-            // First export transition lists to map in memory
-            Export(null);
+            if (!InitExport(fileName, progressMonitor))
+                return;
 
             var argv = new List<string>();
             if (Equals(MethodInstrumentType, ExportInstrumentType.Waters_Quattro_Premier))

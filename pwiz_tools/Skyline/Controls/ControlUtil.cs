@@ -39,6 +39,8 @@ namespace pwiz.Skyline.Controls
             _showMessages = showMessages;
         }
 
+        public bool ShowMessages { get { return _showMessages; } }
+
         public bool ValidateNameTextBox(CancelEventArgs e, Control control, out string val)
         {
             bool valid = false;
@@ -104,7 +106,7 @@ namespace pwiz.Skyline.Controls
         /// <summary>
         /// Validates a TextBox that should containe an integer value.
         /// </summary>
-        /// <param name="e">CancelEvenArgs to cancel validation, if the integer is invalid</param>
+        /// <param name="e">CancelEventArgs to cancel validation, if the integer is invalid</param>
         /// <param name="control">The TextBox control to validate</param>
         /// <param name="min">Minimum allowed value</param>
         /// <param name="max">Maximum allowed value</param>
@@ -251,7 +253,7 @@ namespace pwiz.Skyline.Controls
         /// <param name="x">An <see cref="Exception"/> thrown during XML parsing</param>
         public static void ShowXmlParsingError(IWin32Window parent, string firstLine, string path, Exception x)
         {
-            if(_showMessages)
+            if(!_showMessages)
                 return;
             string messageException = XmlUtil.GetInvalidDataMessage(path, x);
             MessageBox.Show(parent, firstLine + "\n" + messageException, Program.Name);
