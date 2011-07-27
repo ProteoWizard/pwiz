@@ -1,0 +1,3 @@
+path-constant CRAWDAD_PATH : . ;
+lib crawdad : [ glob *.cpp filters/*.cpp msmat/*.cpp ] ;
+# should be able to use [ path.glob-tree $(CRAWDAD_PATH) : *.cpp ] instead but it didn't seem to like it
