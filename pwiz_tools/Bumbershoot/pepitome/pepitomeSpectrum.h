@@ -13,11 +13,11 @@
 // See the License for the specific language governing permissions and 
 // limitations under the License.
 //
-// The Original Code is the MyriMatch search engine.
+// The Original Code is the Pepitome search engine.
 //
 // The Initial Developer of the Original Code is Surendra Dasari.
 //
-// Copyright 2009 Vanderbilt University
+// Copyright 2011 Vanderbilt University
 //
 // Contributor(s):
 //

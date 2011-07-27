@@ -28,10 +28,10 @@
 #include "pwiz/data/proteome/Version.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "PTMVariantList.h"
-#include "svnrev.hpp"
 #include "WuManber.h"
 #include "boost/tuple/tuple.hpp"
 #include "boost/lockfree/fifo.hpp"
+#include "pepitomeVersion.hpp"
 
 namespace freicore
 {
@@ -43,21 +43,11 @@ namespace freicore
 
         SpectraList						spectra;
         SpectraMassMapList				avgSpectraByChargeState;
-	    SpectraMassMapList				monoSpectraByChargeState;
+        SpectraMassMapList				monoSpectraByChargeState;
         
         SpectraStore                    librarySpectra;
         RunTimeConfig*					g_rtConfig;
 
-        int Version::Major()                {return 1;}
-        int Version::Minor()                {return 0;}
-        int Version::Revision()             {return SVN_REV;}
-        string Version::LastModified()      {return SVN_REVDATE;}
-        string Version::str()               
-        {
-            std::ostringstream v;
-            v << Major() << "." << Minor() << "." << Revision();
-            return v.str();
-        }
 
         int InitProcess( argList_t& args )
         {

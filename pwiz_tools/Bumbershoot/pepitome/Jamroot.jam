@@ -37,14 +37,6 @@
 #                           Default: "ext/src/expat*"
 #
 #
-#   --with-mpi              For MPI-enabled applications, compile with
-#                           support for running the application in parallel
-#                           across multiple nodes. This support depends on
-#                           a working MPI implementation being available
-#                           at compile-time (and if using shared linkage,
-#                           at run-time as well).
-#
-#
 #   install                 Install executable files to certain locations
 #   =======
 #
@@ -95,39 +87,29 @@ local argv = [ modules.peek : ARGV ] ;
 modules.poke : ARGV : $(argv) --libraries-path="$(LIBRARIES_PATH)" ;
 
 
-local msvc-secure-scl = ;
-if --without-secure-scl in [ modules.peek : ARGV ]
-{
-    # TODO: change this from a <define> to a feature in msvc.jam
-    # disable checked iterators (on by default in VC8/9)
-    msvc-secure-scl = <toolset>msvc,<variant>release:<define>_SECURE_SCL=0 ;
-}
-
-
 import os ;
 import modules ;
 import common ;
 import package ;
 import errors : error ;
 import feature ;
-import mpi ;
 
 
 project bumbershoot
 	: requirements
-	    <include>$(PWIZ_SOURCE)
-	    <include>$(LIBRARIES_PATH)/boost_aux
-		<include>$(boost_src)
+      <include>$(PWIZ_SOURCE)
+      <include>$(LIBRARIES_PATH)/boost_aux
+      <include>$(boost_src)
 
       <toolset>gcc,<link>shared:<runtime-link>shared
-        <toolset>darwin,<link>shared:<runtime-link>shared
+      <toolset>darwin,<link>shared:<runtime-link>shared
 
-        # any module which links with .NET (either dynamically or statically) must use the shared runtime
+      # any module which links with .NET (either dynamically or statically) must use the shared runtime
       <toolset>msvc:<runtime-link>shared
 
-        # SEH exceptions crossing native/managed boundaries are problematic with this set to off;
-        # also, catch(...) will catch SEH exceptions with this on
-        <toolset>msvc:<asynch-exceptions>on
+      # SEH exceptions crossing native/managed boundaries are problematic with this set to off;
+      # also, catch(...) will catch SEH exceptions with this on
+      <toolset>msvc:<asynch-exceptions>on
 
       # special msvc hacks
       <toolset>msvc:<define>WIN32                     # windows
@@ -144,12 +126,11 @@ project bumbershoot
       <toolset>msvc:<cxxflags>/wd4267	                # warning: conversion from 'type1' to 'type2', possible loss of data (boost::lexical_cast)
       <toolset>msvc:<cxxflags>/wd4244                 # warning: conversion from 'int' to 'unsigned short', possible loss of data (boost/date_time/microsec_time_clock.hpp)
       <toolset>msvc:<cxxflags>/wd4275                 # warning: non dll-interface class 'base' used as base for dll-interface class 'derived'
-        <toolset>msvc:<cxxflags>/wd4702                 # warning: unreachable code (boost::lexical_cast)
+      <toolset>msvc:<cxxflags>/wd4702                 # warning: unreachable code (boost::lexical_cast)
+      <toolset>msvc:<linkflags>/OPT:REF,ICF
 
-        # warning: _SECURE_SCL_THROWS is deprecated
-        <toolset>msvc:<define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
-
-        $(msvc-secure-scl)
+      # warning: _SECURE_SCL_THROWS is deprecated
+      <toolset>msvc:<define>_SILENCE_DEPRECATION_OF_SECURE_SCL_THROWS
 
       # special gcc hack - Cygwin gcc 3.4.4, Ubuntu gcc 4.1.2 
       # warning: '__cur' might be used uninitialized in this function 
@@ -164,14 +145,14 @@ project bumbershoot
       <toolset>gcc:<cxxflags>-Wno-long-long
       <toolset>darwin:<cxxflags>-Wno-long-long
 
-        # any GCC executable that uses shared libraries must have all its code built with -fPIC
-        <conditional>@static-with-fpic
+      # any GCC executable that uses shared libraries must have all its code built with -fPIC
+      <conditional>@static-with-fpic
 
       # don't call 'strip' -- causes 'Bus error' in some cases
       #  e.g. find_if with inline predicate
       <toolset>darwin:<debug-symbols>on
 
-        # use of boost::thread requires multithreaded runtime
+      # use of boost::thread requires multithreaded runtime
       <threading>multi
 
   : build-dir $(BUILD_PATH)
@@ -183,16 +164,21 @@ project bumbershoot
 
 
 tmp = [ modules.peek : BOOST_BUILD_PATH ] ;
-tmp += freicore/ext freicore/libraries ;
+tmp += freicore/ext $(libraries_path) ;
 modules.poke : BOOST_BUILD_PATH : $(tmp) ;
 
 
 local application-name = "Pepitome" ;
-local utility-name = "librarybabelfish" ;
+
+constant MAJOR : 1 ;
+constant MINOR : 0 ;
 
 # set version info (used for tarball filenames)
-import svnrev ;
-local revision-info = [ svnrev.generate-version-header svnrev.hpp : [ glob  *.?pp *.h Jamroot.jam ] : warn-on-missing ] ;
+import generate-version ;
+local version-file = $(application-name:L)Version.cpp ;
+local revision-info = [ generate-version.cpp $(ROOT_PATH)/$(version-file) : freicore $(application-name:L) : $(MAJOR) : $(MINOR) :
+                                             [ path.glob . : *.?pp *.h Jamroot.jam : $(version-file) ] :
+                                             warn-on-missing ] ;
 
 # revision-info is a sequence: <max revision> <max year> <max month> <max day> <number of modified files in working copy>
 
@@ -200,8 +186,6 @@ local year = $(revision-info[2]) ;
 local month = $(revision-info[3]) ;
 local day = $(revision-info[4]) ;
 
-constant MAJOR : 1 ;
-constant MINOR : 0 ;
 constant SVNREV : $(revision-info[1]) ;
 constant SVNREVDATE : "(last modified $(year)-$(month)-$(day))" ;
 
@@ -271,14 +255,6 @@ rule install-vendor-api-dependencies ( properties * )
     return $(dependencies) ;
 }
 
-rule with-mpi ( properties * )
-{
-    if --with-mpi in [ modules.peek : ARGV ]
-    {
-        return <location-prefix>with-mpi <library>/mpi//mpi <define>USE_MPI ;
-    }
-}
-
 rule gcc-install-dll-path ( properties * )
 {
     if <toolset>gcc in $(properties) && <link>shared in $(properties) && <target-os>linux in $(properties)
@@ -290,19 +266,18 @@ rule gcc-install-dll-path ( properties * )
 
 exe $(application-name:L)
   : # sources
-    [ glob pepitome*.cpp ] [ glob pepitome*.h spectraStore.h ]
+      [ glob pepitome*.cpp ]
   : # requirements
-      <conditional>@with-mpi
       <library>freicore
-	  <library>sqlite//sqlite3pp
+      <library>sqlite//sqlite3pp
   ;
 
-exe $(utility-name:L)
+exe librarybabelfish
    : # sources
-     [ glob LibraryBabelFish* spectraStore.h ]
+       LibraryBabelFish.cpp
    : # requirements
-	 <library>freicore
-     <library>sqlite//sqlite3pp
+       <library>freicore
+       <library>sqlite//sqlite3pp
    ;
 
 install install
@@ -348,14 +323,11 @@ rule binary-tarball-requirements ( properties * )
     local location = [ install-location $(properties) ] ;
     location = $(location:G=) ;
 
-    local non-redistributables =
-        *ABSciex.DataAccess.WiffFileDataReader.dll *Clear?ore*.dll *rscoree.dll         # ABI API
-        *DACServer.dll *genutil.dll *raw.dll *RawCsm.dll *Security*.dll *MetaGD32.dll ; # Waters API
+    local non-redistributables = pwiz_bindings_cli.xml ; # .NET documentation
 
     if $(variants[1]) = "release"
     {
-        non-redistributables += *.pdb   # MSVC debug symbols
-                                *.xml ; # .NET documentation
+        non-redistributables += *.pdb ; # MSVC debug symbols
     }
 
     non-redistributables = [ sequence.join $(non-redistributables) : "&&exclude:" ] ;
@@ -411,7 +383,7 @@ tar.create boost_$(BOOST_VERSION:J=_).tar.bz2
   : # sources
 
       path-anchor:$(BOOST_SUBSET_PATH)
-      $(BOOST_SUBSET_PATH)/boost_1_43_0
+      $(BOOST_SUBSET_PATH)/boost_$(BOOST_VERSION:J=_)
 
   : # requirements
     <location>$(BOOST_SUBSET_PATH)/freicore/libraries
@@ -422,7 +394,7 @@ tar.create boost_$(BOOST_VERSION:J=_).tar.bz2
   exclude:.svn
   exclude:*.bak
   exclude:svnrev.hpp
-  exclude:Version.cpp
+  exclude:*Version.cpp
   exclude:Reader_*_Test.data*
   exclude:site-config.jam exclude:user-config.jam # user should provide these
   exclude:bootstrap exclude:bin.* # boost-build intermediate directories
@@ -445,10 +417,12 @@ This $(application-name) source tree uses a subset of the full Boost tarball.
   $(ROOT_PATH)/quickbuild.sh
   $(ROOT_PATH)/clean.bat
   $(ROOT_PATH)/clean.sh
+  $(ROOT_PATH)/LICENSE
 
   $(LIBRARIES_PATH)/boost-build
   $(LIBRARIES_PATH)/boost_aux
-  [ path.glob $(LIBRARIES_PATH) : *.bat *.sh *.jam *.dll *.lib *.exe *.cpp gd*.tar.bz2 zlib*.tar.bz2 ]
+  $(LIBRARIES_PATH)/libsvm-3.0
+  [ path.glob $(LIBRARIES_PATH) : *.bat *.sh *.jam *.dll *.lib *.exe *.cpp gd*.tar.bz2 zlib*.tar.bz2 hdf5*.tar.bz2 ]
 
   path-anchor:$(BUILD_PATH)
   $(BUILD_PATH)/SUBSET
@@ -465,10 +439,8 @@ tar.create $(application-name:L)-src.tar.bz2
 
     $(.exclusion-list)
 
-    [ path.glob $(ROOT_PATH) : *.cpp *.h ]
-    [ glob $(ROOT_PATH)/freicore/*.h ]
-    [ glob $(ROOT_PATH)/freicore/*.cpp ]
-    [ glob $(ROOT_PATH)/freicore/*.tar.bz2 ]
+    [ path.glob $(ROOT_PATH) : *.cpp *.hpp *.h ]
+    [ path.glob $(ROOT_PATH)/freicore : *.cpp *.hpp *.h *.tar.bz2 ]
     $(ROOT_PATH)/freicore/Jamfile.jam
     $(ROOT_PATH)/freicore/ext
 

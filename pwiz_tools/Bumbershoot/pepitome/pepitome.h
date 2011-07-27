@@ -41,15 +41,6 @@ namespace freicore
 
 namespace pepitome
 {
-    struct Version
-    {
-        static int Major();
-        static int Minor();
-        static int Revision();
-        static std::string str();
-        static std::string LastModified();
-    };
-
 	typedef multimap< double, pair<Spectrum*, PrecursorMassHypothesis> >   SpectraMassMap;
 	typedef vector< SpectraMassMap >									   SpectraMassMapList;
 
