@@ -67,6 +67,7 @@ rule init ( version ? : location : options * )
                 <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
                 <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
                 <link>shared:<define>ZLIB_DLL
+                <warnings>off
             :
             :   <include>$(location)
             ;
