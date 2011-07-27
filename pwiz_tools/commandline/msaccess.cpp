@@ -20,6 +20,12 @@
 // limitations under the License.
 //
 
+/// Contains the code for the msaccess executable. This program
+/// bundles passive analysis classes in pwiz/analysis/passive that are
+/// applicable to mass spectra files to provide direct access to
+/// analysis tools. The MSDataAnalyzerApplication and
+/// MSDataAnalyzerContainer frameworks are used to manage user
+/// selection, processing, and output.
 
 #include "pwiz_tools/common/MSDataAnalyzerApplication.hpp"
 #include "pwiz/analysis/passive/MSDataCache.hpp"
