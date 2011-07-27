@@ -28,6 +28,8 @@ using System.Data;
 using System.Data.SQLite;
 using System.ComponentModel;
 using System.Threading;
+using System.IO;
+using System.Security.AccessControl;
 
 namespace IDPicker.DataModel
 {
@@ -83,6 +85,13 @@ namespace IDPicker.DataModel
             {
                 System.IO.File.Delete(mergeTargetFilepath);
                 SessionFactoryFactory.CreateFile(mergeTargetFilepath);
+            }
+            else
+            {
+                using (var session = SessionFactoryFactory.CreateSessionFactory(mergeTargetFilepath, false, false).OpenSession())
+                {
+                    DataFilter.DropFilters(session.Connection);
+                }
             }
 
             conn.ExecuteNonQuery("ATTACH DATABASE '" + mergeTargetFilepath.Replace("'", "''") + "' AS merged");
@@ -150,6 +159,17 @@ namespace IDPicker.DataModel
                     // skip files that have already been merged
                     if (conn.ExecuteQuery("SELECT * FROM merged.MergedFiles WHERE Filepath = '" + mergeSourceFilepath.Replace("'", "''") + "'").Count() > 0)
                         continue;
+
+                    // if the database can fit in the available RAM, populate the disk cache
+                    long ramBytesAvailable = (long) new System.Diagnostics.PerformanceCounter("Memory", "Available Bytes").NextValue();
+                    if (ramBytesAvailable > new FileInfo(mergeSourceFilepath).Length)
+                    {
+                        using (var fs = new FileStream(mergeSourceFilepath, FileMode.Open, FileSystemRights.ReadData, FileShare.ReadWrite, (1 << 15), FileOptions.SequentialScan))
+                        {
+                            var buffer = new byte[UInt16.MaxValue];
+                            while (fs.Read(buffer, 0, UInt16.MaxValue) > 0) { }
+                        }
+                    }
 
                     using (var newConn = new SQLiteConnection("Data Source=\"" + mergeSourceFilepath + "\""))
                     {

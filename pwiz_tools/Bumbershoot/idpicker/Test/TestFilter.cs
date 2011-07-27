@@ -76,7 +76,7 @@ namespace Test
         [TestMethod]
         public void TestAggregation ()
         {
-            var lhs = new DataFilter() { MaximumQValue = 1M };
+            var lhs = new DataFilter() { MaximumQValue = 1 };
             var rhs = new DataFilter() { Protein =  new List<Protein>()};
             rhs.Protein.Add(new Protein("foo", "bar"));
             var result = lhs + rhs;
@@ -1577,14 +1577,14 @@ namespace Test
             session.Clear();
 
             var peptideQuery = session.CreateQuery("SELECT psm.Peptide, " +
-                                                   "       COUNT(DISTINCT psm.SequenceAndMassDistinctKey), " +
+                                                   "       COUNT(DISTINCT psm.DistinctMatchKey), " +
                                                    "       COUNT(DISTINCT psm.Spectrum) " +
                                                    dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
                                                    "GROUP BY psm.Peptide");
 
             /*var peptideQuery2 = from psm in dataFilter.GetFilteredPeptideSpectrumMatches(session)
                                 group psm by psm.Peptide into g
-                                let distinctMatches = (from psm in g select psm.SequenceAndMassDistinctKey).Distinct().Count()
+                                let distinctMatches = (from psm in g select psm.DistinctMatchKey).Distinct().Count()
                                 let spectra = (from psm in g select psm.Spectrum).Distinct().Count()
                                 orderby distinctMatches descending, spectra descending 
                                 select new { Peptide = g.Key, DistinctMatches = distinctMatches, Spectra = spectra };

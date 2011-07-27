@@ -40,6 +40,7 @@ using IDPicker.Controls;
 using IDPicker.DataModel;
 using pwiz.CLI.cv;
 using pwiz.CLI.proteome;
+using pwiz.CLI.util;
 using seems;
 using NHibernate;
 using NHibernate.Linq;
@@ -87,6 +88,8 @@ namespace IDPicker
         public IDPickerForm (string[] args)
         {
             InitializeComponent();
+
+            Thread.CurrentThread.Priority = ThreadPriority.AboveNormal;
 
             this.args = args;
 
@@ -144,7 +147,6 @@ namespace IDPicker
 
             // load last or default location and size
             _layoutManager.LoadMainFormSettings();
-
 
             //logForm = new LogForm();
             //Console.SetOut(logForm.LogWriter);
@@ -245,22 +247,22 @@ namespace IDPicker
             }
             else
             {
-                var fileTypeList = new List<string>
-                                       {
-                                           "IDPicker Files|.idpDB;.idpXML;.pepXML;.pep.xml",
-                                           "PepXML Files|.pepXML;.pep.xml",
-                                           "IDPicker XML|.idpXML",
-                                           "IDPicker DB|.idpDB"
-                                       };
+            var fileTypeList = new List<string>
+            {
+                "IDPicker Files|.idpDB;.idpXML;.pepXML;.pep.xml",
+                "PepXML Files|.pepXML;.pep.xml",
+                "IDPicker XML|.idpXML",
+                "IDPicker DB|.idpDB"
+            };
 
-                var openFileDialog = new IDPOpenDialog(fileTypeList);
+            var openFileDialog = new IDPOpenDialog(fileTypeList);
 
-                if (openFileDialog.ShowDialog() == DialogResult.OK)
-                {
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
                     fileNames = openFileDialog.GetFileNames();
                     treeStructure = openFileDialog.GetTreeStructure();
-                    if (!fileNames.Any())
-                        return;
+                if (!fileNames.Any())
+                    return;
                 }
                 else return;
             }
@@ -281,9 +283,7 @@ namespace IDPicker
             {
                 if (sender == importToolStripMenuItem)
                 {
-                    var filenameMatch =
-                        Regex.Match(session.Connection.ConnectionString, @"Data Source=(?:\w|:|\\| |/|\.)+").
-                            ToString().Remove(0, 12);
+                    var filenameMatch = Regex.Match(session.Connection.ConnectionString, @"Data Source=(?:\w|:|\\| |/|\.)+").ToString().Remove(0, 12);
                     if (!fileNames.Contains(filenameMatch))
                         fileNames.Add(filenameMatch);
                 }
@@ -291,12 +291,7 @@ namespace IDPicker
                 session = null;
             }
 
-            var distinctFileNames = new HashSet<string>();
-            foreach (var item in fileNames)
-                distinctFileNames.Add(item);
-
-            OpenFiles(distinctFileNames.ToArray(), treeStructure);
-
+            new Thread(() => { OpenFiles(fileNames, treeStructure); }).Start();
         }
 
         #region Handling of events for spectrum/protein visualization
@@ -525,16 +520,11 @@ namespace IDPicker
 
         void clearData ()
         {
-            if (proteinTableForm != null)
-            proteinTableForm.ClearData(true);
-            if (peptideTableForm != null)
-            peptideTableForm.ClearData(true);
-            if (spectrumTableForm != null)
-            spectrumTableForm.ClearData(true);
-            if (modificationTableForm != null)
-            modificationTableForm.ClearData(true);
-            if (analysisTableForm != null)
-            analysisTableForm.ClearData(true);
+            if (proteinTableForm != null) proteinTableForm.ClearData(true);
+            if (peptideTableForm != null) peptideTableForm.ClearData(true);
+            if (spectrumTableForm != null) spectrumTableForm.ClearData(true);
+            if (modificationTableForm != null) modificationTableForm.ClearData(true);
+            if (analysisTableForm != null) analysisTableForm.ClearData(true);
             fragmentationStatisticsForm.ClearData(true);
             peakStatisticsForm.ClearData(true);
         }
@@ -565,7 +555,7 @@ namespace IDPicker
             if (args != null && args.Length > 0 && args.All(o => File.Exists(o)))
             {
                 var grouping = CreateGroupingFromArgs(args);
-                OpenFiles(args,grouping);
+                new Thread(() => { OpenFiles(args,grouping); }).Start();
             }
         }
 
@@ -771,7 +761,7 @@ namespace IDPicker
                 Environment.CurrentDirectory = possibledirectory ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
                 // set main window title
-                Text = commonFilename;
+                BeginInvoke(new MethodInvoker(() => Text = commonFilename));
 
                 
                 /*if (xml_filepaths.Count() > 0)
@@ -791,12 +781,29 @@ namespace IDPicker
                 if (xml_filepaths.Count() > 0)
                 {
                     importCancelled = false;
-                    var parser = new Parser();
-                    parser.ImportSettings += importSettingsHandler;
-                    parser.ParsingProgress += progressMonitor.UpdateProgress;
-                    parser.Parse(xml_filepaths);
+
+                    Parser parser = new Parser();
+                    Invoke(new MethodInvoker(() => parser.ImportSettings += importSettingsHandler));
+
+                    var ilr = new IterationListenerRegistry();
+
+                    var progressForm = new ProgressForm(xml_filepaths, ilr)
+                    {
+                        Text = "Import Progress",
+                        StartPosition = FormStartPosition.CenterParent
+                    };
+
+                    Invoke(new MethodInvoker(() => progressForm.Show(this)));
+
+                    parser.Parse(xml_filepaths, ilr);
+
+                    importCancelled |= progressForm.Cancelled;
+
+                    Invoke(new MethodInvoker(() => progressForm.Close()));
+
                     if (importCancelled)
                         return;
+
                     idpDB_filepaths = idpDB_filepaths.Union(xml_filepaths.Select(o => Path.ChangeExtension(o, ".idpDB")));
                 }
 
@@ -821,49 +828,52 @@ namespace IDPicker
                     }
                 }
 
-                var sessionFactory = DataModel.SessionFactoryFactory.CreateSessionFactory(commonFilename, false, true);
+                BeginInvoke(new MethodInvoker(() =>
+                {
+                    var sessionFactory = DataModel.SessionFactoryFactory.CreateSessionFactory(commonFilename, false, true);
 
-                // reload qonverter settings because the ids may change after merging
-                session = sessionFactory.OpenSession();
-                qonverterSettingsByAnalysis = session.Query<QonverterSettings>().ToDictionary(o => session.Get<Analysis>(o.Id));
+                    // reload qonverter settings because the ids may change after merging
+                    session = sessionFactory.OpenSession();
+                    qonverterSettingsByAnalysis = session.Query<QonverterSettings>().ToDictionary(o => session.Get<Analysis>(o.Id));
 
-                session.CreateSQLQuery("PRAGMA temp_store=MEMORY").ExecuteUpdate();
+                    session.CreateSQLQuery("PRAGMA temp_store=MEMORY").ExecuteUpdate();
 
-                _layoutManager.SetSession(session);
+                    _layoutManager.SetSession(session);
 
-                //set or save default layout
-                dockPanel.Visible = true;
-                LoadLayout(_layoutManager.GetCurrentDefault());
+                    //set or save default layout
+                    dockPanel.Visible = true;
+                    LoadLayout(_layoutManager.GetCurrentDefault());
                 SetStructure(rootNode);
 
-                //breadCrumbControl.BreadCrumbs.Clear();
+                    //breadCrumbControl.BreadCrumbs.Clear();
 
-                basicFilter = DataFilter.LoadFilter(session);
+                    basicFilter = DataFilter.LoadFilter(session);
 
-                if (basicFilter == null)
-                {
-                    basicFilter = new DataFilter()
+                    if (basicFilter == null)
                     {
-                        MaximumQValue = 0.02M,
-                        MinimumDistinctPeptidesPerProtein = 2,
-                        MinimumSpectraPerProtein = 2,
-                        MinimumAdditionalPeptidesPerProtein = 1
-                    };
+                        basicFilter = new DataFilter()
+                        {
+                            MaximumQValue = 0.02,
+                            MinimumDistinctPeptidesPerProtein = 2,
+                            MinimumSpectraPerProtein = 2,
+                            MinimumAdditionalPeptidesPerProtein = 1
+                        };
 
-                    basicFilterControl.DataFilter = basicFilter;
+                        basicFilterControl.DataFilter = basicFilter;
 
-                    viewFilter = basicFilter;
+                        viewFilter = basicFilter;
 
-                    ApplyBasicFilter();
-                }
-                else
-                {
-                    basicFilterControl.DataFilter = basicFilter;
+                        ApplyBasicFilter();
+                    }
+                    else
+                    {
+                        basicFilterControl.DataFilter = basicFilter;
 
-                    viewFilter = basicFilter;
+                        viewFilter = basicFilter;
 
-                    setData();
-                }
+                        setData();
+                    }
+                }));
             }
             catch (Exception ex)
             {
@@ -949,6 +959,12 @@ namespace IDPicker
         bool importCancelled = false;
         void importSettingsHandler (object sender, Parser.ImportSettingsEventArgs e)
         {
+            if (InvokeRequired)
+            {
+                Invoke(new MethodInvoker(() => importSettingsHandler(sender, e)));
+                return;
+            }
+
             var result = UserDialog.Show(this, "Import Settings", new ImportSettingsControl(e.DistinctAnalyses, showQonverterSettingsManager));
             importCancelled = e.Cancel = result == DialogResult.Cancel;
         }
@@ -1104,7 +1120,7 @@ namespace IDPicker
 
             basicFilter = new DataFilter()
                               {
-                                  MaximumQValue = 0.02M,
+                                  MaximumQValue = 0.02,
                                   MinimumDistinctPeptidesPerProtein = 2,
                                   MinimumSpectraPerProtein = 2,
                                   MinimumAdditionalPeptidesPerProtein = 1

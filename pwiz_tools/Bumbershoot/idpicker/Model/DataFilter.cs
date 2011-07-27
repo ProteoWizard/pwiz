@@ -68,7 +68,7 @@ namespace IDPicker.DataModel
             public FilteringProgressEventArgs(string stage, int completed, Exception ex)
             {
                 CompletedFilters = completed;
-                TotalFilters = 14;
+                TotalFilters = 15;
                 FilteringStage = stage;
                 FilteringException = ex;
             }
@@ -90,7 +90,7 @@ namespace IDPicker.DataModel
 
         public DataFilter ()
         {
-            MaximumQValue = 0.02M;
+            MaximumQValue = 0.02;
             MinimumDistinctPeptidesPerProtein = 2;
             MinimumSpectraPerProtein = 2;
             MinimumAdditionalPeptidesPerProtein = 1;
@@ -115,7 +115,7 @@ namespace IDPicker.DataModel
             SpectrumSourceGroup = other.SpectrumSourceGroup == null ? null : new List<SpectrumSourceGroup>(other.SpectrumSourceGroup);
         }
 
-        public decimal MaximumQValue { get; set; }
+        public double MaximumQValue { get; set; }
         public int MinimumDistinctPeptidesPerProtein { get; set; }
         public int MinimumSpectraPerProtein { get; set; }
         public int MinimumAdditionalPeptidesPerProtein { get; set; }
@@ -294,7 +294,7 @@ namespace IDPicker.DataModel
                                                                  FROM FilteringCriteria
                                                                 ").List<object[]>()[0];
                 var dataFilter = new DataFilter();
-                dataFilter.MaximumQValue = Convert.ToDecimal(filteringCriteria[0]);
+                dataFilter.MaximumQValue = Convert.ToDouble(filteringCriteria[0]);
                 dataFilter.MinimumDistinctPeptidesPerProtein = Convert.ToInt32(filteringCriteria[1]);
                 dataFilter.MinimumSpectraPerProtein = Convert.ToInt32(filteringCriteria[2]);
                 dataFilter.MinimumAdditionalPeptidesPerProtein = Convert.ToInt32(filteringCriteria[3]);
@@ -484,6 +484,7 @@ namespace IDPicker.DataModel
             if (ApplyAdditionalPeptidesFilter(session)) return;
             if (AssembleClusters(session)) return;
             if (AssembleProteinCoverage(session)) return;
+            if (AssembleDistinctMatches(session)) return;
 
             SaveFilter(session);
 
@@ -700,6 +701,23 @@ namespace IDPicker.DataModel
                 cmd.ExecuteNonQuery();
             }
 
+            return false;
+        }
+
+        bool AssembleDistinctMatches (NHibernate.ISession session)
+        {
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Assembling distinct peptide matches...", 15, null)))
+                return true;
+            
+            session.CreateSQLQuery(@"DROP TABLE IF EXISTS DistinctMatch;
+                                     CREATE TABLE DistinctMatch (PsmId INT, Modifications TEXT);
+                                     INSERT INTO DistinctMatch (PsmId, Modifications)
+                                     SELECT DISTINCT psm.Id, IFNULL((SELECT GROUP_CONCAT(pm.Modification || '@' || pm.Offset)
+                                                                     FROM PeptideModification pm
+                                                                     WHERE psm.Id=pm.PeptideSpectrumMatch), '')
+                                     FROM PeptideSpectrumMatch psm;
+                                     CREATE INDEX DistinctMatch_Peptide ON DistinctMatch (PsmId);
+                                    ").ExecuteUpdate();
             return false;
         }
         #endregion

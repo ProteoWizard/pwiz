@@ -245,10 +245,15 @@ namespace IDPicker.DataModel
         public virtual int Charge { get; set; }
         public virtual IDictionary<string, double> Scores { get; set; }
 
-        public virtual string FullDistinctKey { get { return fullDistinctKey; } }
-        public virtual string SequenceAndMassDistinctKey { get { return sequenceAndMassDistinctKey; } }
+        public virtual string DistinctMatchKey { get { return distinctMatchKey; } }
+        public virtual string DistinctMatchAndChargeKey { get { return distinctMatchAndChargeKey; } }
 
-        public readonly static double DefaultQValue = double.PositiveInfinity;
+        /// <summary>
+        /// Valid Q values are always between 0 and 1;
+        /// '2' is a better invalid Q value than Double.MaxValue or Double.PositiveInfinity
+        /// because '1.79769313486232E308' is annoyingly long and 'Infinity' doesn't fly with SQLite.
+        /// </summary>
+        public readonly static double DefaultQValue = 2;
 
         #region Transient instance members
         public PeptideSpectrumMatch () { QValue = DefaultQValue; }
@@ -269,8 +274,8 @@ namespace IDPicker.DataModel
             Scores = other.Scores;
         }
 
-        private string fullDistinctKey = "";
-        private string sequenceAndMassDistinctKey = "";
+        private string distinctMatchKey = "";
+        private string distinctMatchAndChargeKey = "";
         #endregion
     }
 

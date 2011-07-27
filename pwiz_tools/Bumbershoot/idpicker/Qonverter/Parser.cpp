@@ -37,8 +37,6 @@
 #include "boost/foreach_field.hpp"
 #include "boost/thread/thread.hpp"
 #include "boost/thread/mutex.hpp"
-#include "boost/lambda/lambda.hpp"
-#include "boost/lambda/bind.hpp"
 #include "boost/atomic.hpp"
 #include "boost/exception/all.hpp"
 
@@ -1226,11 +1224,6 @@ void executeTaskGroup(const ProteinDatabaseTaskGroup& taskGroup,
                       IterationListenerRegistry* ilr)
 {
     using boost::thread;
-    using boost::lambda::_1;
-    using boost::lambda::_2;
-    using boost::lambda::_3;
-    using boost::lambda::var;
-    using boost::lambda::bind;
 
     boost::mutex ioMutex;
 

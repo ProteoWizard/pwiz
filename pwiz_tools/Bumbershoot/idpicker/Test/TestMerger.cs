@@ -46,8 +46,6 @@ namespace Test
         {
         }
 
-        private TestContext testContextInstance;
-
         /// <summary>
         ///Gets or sets the test context which provides
         ///information about and functionality for the current test run.
@@ -211,7 +209,7 @@ namespace Test
             var testModel = new TestModel();
 
             // test that testMerger.idpDB passes the TestModel tests
-            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testModel.idpDB", false, false))
+            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testMerger.idpDB", false, false))
             using (var session = testModel.session = sessionFactory.OpenSession())
             {
                 testModel.TestOverallCounts();

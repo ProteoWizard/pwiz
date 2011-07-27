@@ -120,7 +120,7 @@ namespace IDPicker.Forms
 
             public static string Selection = "SELECT " +
                                              "COUNT(DISTINCT psm.Spectrum), " +
-                                             "COUNT(DISTINCT psm.SequenceAndMassDistinctKey), " +
+                                             "COUNT(DISTINCT psm.DistinctMatchKey), " +
                                              "COUNT(DISTINCT psm.Peptide), " +
                                              "COUNT(DISTINCT psm.Analysis), " +
                                              "COUNT(DISTINCT psm.Charge)";

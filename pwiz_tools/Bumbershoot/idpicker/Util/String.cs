@@ -36,10 +36,10 @@ namespace IDPicker
         public static string GetCommonFilename (IEnumerable<string> filepaths)
         {
             string commonFilename = "";
-            LongestCommonSubstring(filepaths, out commonFilename);
+            LongestCommonPrefix(filepaths, out commonFilename);
 
-            // trim useless suffix characters
-            commonFilename = commonFilename.TrimEnd(' ', '_', '-');
+            // trim useless prefix and suffix characters
+            commonFilename = commonFilename.Trim(' ', '_', '-');
 
             // use a generic 
             if (String.IsNullOrEmpty(commonFilename))

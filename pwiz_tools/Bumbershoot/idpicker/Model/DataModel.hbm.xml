@@ -206,8 +206,8 @@
 				DROP TABLE PsmScore
 			</sql-insert>-->
 		</map>
-		<property name="FullDistinctKey" access="nosetter.camelcase" formula="(Peptide || ' ' || MonoisotopicMass || ' ' || Charge)"/>
-		<property name="SequenceAndMassDistinctKey" access="nosetter.camelcase" formula="(Peptide || ' ' || IFNULL((SELECT GROUP_CONCAT(pm.Modification || '@' || pm.Offset) FROM PeptideModification pm WHERE Id=pm.PeptideSpectrumMatch), ''))"/>
+		<property name="DistinctMatchKey" lazy="true" access="nosetter.camelcase" formula="(Peptide || ' ' || (SELECT dm.Modifications FROM DistinctMatch dm WHERE Id=dm.PsmId))"/>
+		<property name="DistinctMatchAndChargeKey" lazy="true" access="nosetter.camelcase" formula="(Peptide || ' ' || (SELECT dm.Modifications FROM DistinctMatch dm WHERE Id=dm.PsmId) || ' ' || Charge)"/>
 	</class>
 
 	<class name="PeptideModification">

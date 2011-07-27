@@ -597,18 +597,18 @@ namespace IDPicker.Forms
             try
             {
                 var peptideQuery = session.CreateQuery("SELECT psm.Peptide, " +
-                                                       "       COUNT(DISTINCT psm.SequenceAndMassDistinctKey), " +
+                                                       "       COUNT(DISTINCT psm.DistinctMatchKey), " +
                                                        "       COUNT(DISTINCT psm.Spectrum) " +
                                                        dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
                                                        "GROUP BY psm.Peptide " +
-                                                       "ORDER BY COUNT(DISTINCT psm.SequenceAndMassDistinctKey) DESC, COUNT(DISTINCT psm.Spectrum) DESC");
+                                                       "ORDER BY COUNT(DISTINCT psm.DistinctMatchKey) DESC, COUNT(DISTINCT psm.Spectrum) DESC");
 
                 peptideQuery.SetReadOnly(true);
 
                 var statsPerPeptideBySpectrumSourceQuery = session.CreateQuery(
                     "SELECT s.Source.id, " +
                     "       psm.Peptide.id, " +
-                    "       COUNT(DISTINCT psm.SequenceAndMassDistinctKey), " +
+                    "       COUNT(DISTINCT psm.DistinctMatchKey), " +
                     "       COUNT(DISTINCT psm.Spectrum.id) " +
                     dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
                                                       DataFilter.PeptideSpectrumMatchToSpectrumSource) +
@@ -617,7 +617,7 @@ namespace IDPicker.Forms
                 var statsPerPeptideBySpectrumSourceGroupQuery = session.CreateQuery(
                     "SELECT ssgl.Group.id, " +
                     "       psm.Peptide.id, " +
-                    "       COUNT(DISTINCT psm.SequenceAndMassDistinctKey), " +
+                    "       COUNT(DISTINCT psm.DistinctMatchKey), " +
                     "       COUNT(DISTINCT psm.Spectrum.id) " +
                     dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
                                                       DataFilter.PeptideSpectrumMatchToSpectrumSourceGroupLink) +

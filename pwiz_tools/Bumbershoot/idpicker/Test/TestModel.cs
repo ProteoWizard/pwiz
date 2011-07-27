@@ -571,7 +571,7 @@ namespace Test
             Assert.AreEqual(12, session.Query<Peptide>().Count());
             Assert.AreEqual(30, session.Query<PeptideInstance>().Count());
             Assert.AreEqual(90, session.Query<PeptideSpectrumMatch>().Count());
-            Assert.AreEqual(180, session.CreateSQLQuery("SELECT COUNT(*) FROM PeptideSpectrumMatchScores").UniqueResult<long>());
+            Assert.AreEqual(180, session.CreateSQLQuery("SELECT COUNT(*) FROM PeptideSpectrumMatchScore").UniqueResult<long>());
             Assert.AreEqual(2, session.Query<Analysis>().Count());
             Assert.AreEqual(2, session.Query<AnalysisParameter>().Count());
             Assert.AreEqual(15, session.Query<Spectrum>().Count());
