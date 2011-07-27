@@ -44,7 +44,7 @@ namespace IDPicker
 
         private Stopwatch stopwatch = new Stopwatch();
 
-        public void UpdateProgress (object sender, IterationEventArgs e)
+        /*public void UpdateProgress (object sender, IterationEventArgs e)
         {
             if (ProgressUpdate == null)
                 return;
@@ -84,7 +84,7 @@ namespace IDPicker
 
             ProgressUpdate(this, progressUpdate);
             e.Cancel = progressUpdate.Cancel;
-        }
+        }*/
 
         public void UpdateProgress (object sender, Merger.MergingProgressEventArgs e)
         {
