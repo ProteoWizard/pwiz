@@ -48,13 +48,13 @@ namespace IDPicker.Controls
         {
             get
             {
-                decimal maxQValue;
-                if (!Decimal.TryParse(maxQValueComboBox.Text, out maxQValue))
-                    maxQValue = 0M;
+                double maxQValue;
+                if (!Double.TryParse(maxQValueComboBox.Text, out maxQValue))
+                    maxQValue = 0;
 
                 return new DataFilter()
                 {
-                    MaximumQValue = maxQValue / 100M,
+                    MaximumQValue = maxQValue / 100,
                     //MaxAmbiguousIds
                     //MinPeptideLength
                     MinimumDistinctPeptidesPerProtein = minDistinctPeptidesTextBox.Text.Length == 0 ? 0 : Convert.ToInt32(minDistinctPeptidesTextBox.Text),
@@ -67,7 +67,7 @@ namespace IDPicker.Controls
             set
             {
                 settingDataFilter = true;
-                maxQValueComboBox.Text = (value.MaximumQValue * 100M).ToString();
+                maxQValueComboBox.Text = (value.MaximumQValue * 100).ToString();
                 //maxAmbiguousIds
                 //minPeptideLength
                 minDistinctPeptidesTextBox.Text = value.MinimumDistinctPeptidesPerProtein.ToString();
