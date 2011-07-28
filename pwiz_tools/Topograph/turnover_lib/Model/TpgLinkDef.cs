@@ -25,6 +25,7 @@ namespace pwiz.Topograph.Model
         public String DataDirectory { get; set; }
         public String DatabaseType { get; set; }
         public int? Port { get; set; }
+        [XmlIgnore]
         public DatabaseTypeEnum DatabaseTypeEnum 
         {
             get

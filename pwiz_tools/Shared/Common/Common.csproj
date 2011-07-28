@@ -72,6 +72,7 @@
     <Compile Include="Chemistry\IsotopeAbundances.cs" />
     <Compile Include="Chemistry\MassDistribution.cs" />
     <Compile Include="Chemistry\Molecule.cs" />
+    <Compile Include="Collections\CollectionUtil.cs" />
     <Compile Include="Collections\ImmutableCollection.cs" />
     <Compile Include="Collections\ImmutableDictionary.cs" />
     <Compile Include="Controls\FindBox.cs">
@@ -86,11 +87,55 @@
     <Compile Include="Controls\RecordNavBar.Designer.cs">
       <DependentUpon>RecordNavBar.cs</DependentUpon>
     </Compile>
-    <Compile Include="Controls\EnhancedDataGridView.cs">
+    <Compile Include="DataAnalysis\LoessInterpolator.cs" />
+    <Compile Include="DataBinding\AbstractViewContext.cs" />
+    <Compile Include="DataBinding\BindingListView.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="DataBinding\BoundDataGridView.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="DataAnalysis\LoessInterpolator.cs" />
+    <Compile Include="DataBinding\ChainedPropertyDescriptor.cs" />
+    <Compile Include="DataBinding\CollectionInfo.cs" />
+    <Compile Include="DataBinding\ColumnDescriptor.cs" />
+    <Compile Include="DataBinding\ColumnPropertyDescriptor.cs" />
+    <Compile Include="DataBinding\ColumnSpec.cs" />
+    <Compile Include="DataBinding\Controls\AvailableFieldsTree.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="DataBinding\Controls\CustomizeViewForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DataBinding\Controls\CustomizeViewForm.Designer.cs">
+      <DependentUpon>CustomizeViewForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DataBinding\Controls\ListViewHelper.cs" />
+    <Compile Include="DataBinding\Controls\ManageViewsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="DataBinding\Controls\ManageViewsForm.Designer.cs">
+      <DependentUpon>ManageViewsForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DataBinding\Controls\NavBar.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="DataBinding\Controls\NavBar.Designer.cs">
+      <DependentUpon>NavBar.cs</DependentUpon>
+    </Compile>
+    <Compile Include="DataBinding\DataFormat.cs" />
+    <Compile Include="DataBinding\DataSchema.cs" />
+    <Compile Include="DataBinding\IdentifierPath.cs" />
+    <Compile Include="DataBinding\IViewContext.cs" />
+    <Compile Include="DataBinding\RowKey.cs" />
+    <Compile Include="DataBinding\RowValue.cs" />
+    <Compile Include="DataBinding\LinkValue.cs" />
+    <Compile Include="DataBinding\ViewInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="SystemUtil\IProgressMonitor.cs" />
     <Compile Include="SystemUtil\PathEx.cs" />
     <Compile Include="SystemUtil\ProcessStreamReader.cs" />
@@ -106,6 +151,28 @@
       <DependentUpon>RecordNavBar.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\CustomizeViewForm.resx">
+      <DependentUpon>CustomizeViewForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\ManageViewsForm.resx">
+      <DependentUpon>ManageViewsForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="DataBinding\Controls\NavBar.resx">
+      <DependentUpon>NavBar.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\Delete.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\down-pro32.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Resources\up-pro32.bmp" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

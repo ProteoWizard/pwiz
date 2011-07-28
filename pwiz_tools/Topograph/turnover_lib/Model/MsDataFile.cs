@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -38,15 +39,13 @@ namespace pwiz.Topograph.Model
         private double? _timePoint;
         private IDictionary<long, RetentionTimeAlignment> _alignments 
             = new Dictionary<long, RetentionTimeAlignment>();
-
-        private const int AlignmentArraySparseness = 10;
-
         private IList<SearchResultInfo> _searchResults;
 
         public MsDataFile(Workspace workspace, DbMsDataFile msDataFile) : base(workspace, msDataFile)
         {
         }
 
+        [Browsable(false)]
         public MsDataFileData MsDataFileData { get; private set; }
 
         public void Init(MsDataFileImpl msDataFileImpl)
@@ -144,7 +143,7 @@ namespace pwiz.Topograph.Model
         }
         public override string ToString()
         {
-            return Name;
+            return Label ?? Name;
         }
         public bool HasSearchResults(Peptide peptide)
         {

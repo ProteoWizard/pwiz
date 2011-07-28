@@ -262,6 +262,8 @@ namespace pwiz.Topograph.ui.Forms
                 {
                     text += "(settings changed)";
                 }
+                halfLivesToolStripMenuItem.Enabled =
+                    precursorEnrichmentsToolStripMenuItem.Enabled = _workspace.GetTracerDefs().Count > 0;
             }
             else
             {

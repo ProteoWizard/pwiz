@@ -25,6 +25,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using pwiz.Common.DataBinding;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Model;
@@ -36,89 +37,50 @@ namespace pwiz.Topograph.ui.Forms
 {
     public partial class ResultsPerReplicateForm : WorkspaceForm
     {
+        private IViewContext _viewContext;
         public ResultsPerReplicateForm(Workspace workspace) : base(workspace)
         {
             InitializeComponent();
-            if (Workspace.MsDataFiles.ListChildren().Where(f=>f.TimePoint != null).Count() == 0)
-            {
-                colTimePoint.Visible = false;
-            }
-            if (Workspace.MsDataFiles.ListChildren().Where(f=>f.Cohort != null).Count() == 0)
-            {
-                colCohort.Visible = false;
-            }
-            if (Workspace.MsDataFiles.ListChildren().Where(f=>f.Sample != null).Count() == 0)
-            {
-                colSample.Visible = false;
-            }
-            if (Workspace.GetTracerDefs().Count == 0)
-            {
-                colIndPrecursorEnrichment.Visible = false;
-                colIndTurnover.Visible = false;
-                colIndTurnoverScore.Visible = false;
-                colTracerPercent.Visible = false;
-            }
-            if (Workspace.GetTracerDefs().Count != 1)
-            {
-                colAvgPrecursorEnrichment.Visible = false;
-                colAvgTurnover.Visible = false;
-                colAvgTurnoverScore.Visible = false;
-            }
-            colTotalIonCurrent.Visible = false;
-            for (int i = 0; i < dataGridView1.Columns.Count; i++)
-            {
-                var column = dataGridView1.Columns[i];
-                checkedListBoxColumns.Items.Add(new ColumnListItem(column));
-                checkedListBoxColumns.SetItemChecked(i, column.Visible);
-            }
-            checkedListBoxColumns.ItemCheck += checkedListBoxColumns_ItemCheck;
-        }
+            bool hasTimePoints = Workspace.MsDataFiles.ListChildren().Where(f=>f.TimePoint != null).Count() != 0;
+            bool hasCohorts = Workspace.MsDataFiles.ListChildren().Where(f=>f.Cohort != null).Count() != 0;
+            bool hasSamples = Workspace.MsDataFiles.ListChildren().Where(f=>f.Sample != null).Count() != 0;
+            bool hasTracerDefs = Workspace.GetTracerDefs().Count != 0;
+            bool hasOneTracerDef = Workspace.GetTracerDefs().Count == 1;
+            var defaultColumns = new[]
+                                         {
+                                             new ColumnSpec().SetName("Accept"),
+                                             new ColumnSpec().SetName("Peptide"),
+                                             new ColumnSpec().SetName("DataFile.Name").SetCaption("DataFile"),
+                                             new ColumnSpec().SetName("Area"),
+                                             new ColumnSpec().SetName("TracerPercent").SetVisible(hasTracerDefs),
+                                             new ColumnSpec().SetName("DeconvolutionScore"),
+                                             new ColumnSpec().SetName("DataFile.Cohort").SetVisible(hasCohorts),
+                                             new ColumnSpec().SetName("DataFile.TimePoint").SetVisible(hasTimePoints),
+                                             new ColumnSpec().SetName("DataFile.Sample").SetVisible(hasSamples),
+                                             new ColumnSpec().SetName("IndividualTurnover.PrecursorEnrichment").SetCaption("Ind Precursor Enrichment").SetVisible(hasTracerDefs),
+                                             new ColumnSpec().SetName("IndividualTurnover.Turnover").SetCaption("Ind Turnover").SetVisible(hasTracerDefs),
+                                             new ColumnSpec().SetName("IndividualTurnover.Score").SetCaption("Ind Turnover Score").SetVisible(hasTracerDefs),
+                                             new ColumnSpec().SetName("Peptide.ProteinName").SetCaption("Protein"),
+                                             new ColumnSpec().SetName("Peptide.ProteinDescription"),
+                                             new ColumnSpec().SetName("AverageTurnover.PrecursorEnrichment").SetCaption("Avg Precursor Enrichment").SetVisible(hasOneTracerDef),
+                                             new ColumnSpec().SetName("AverageTurnover.Turnover").SetCaption("Avg Turnover").SetVisible(hasOneTracerDef),
+                                             new ColumnSpec().SetName("AverageTurnover.Score").SetCaption("Avg Turnover Score").SetVisible(hasOneTracerDef),
+                                             new ColumnSpec().SetName("Status"),
+                                             new ColumnSpec().SetName("PsmCount"),
+                                             new ColumnSpec().SetName("PeakIntegrationNote"),
+                                         };
 
-        void checkedListBoxColumns_ItemCheck(object sender, ItemCheckEventArgs e)
-        {
-            var item = checkedListBoxColumns.Items[e.Index] as ColumnListItem;
-            if (item == null)
-            {
-                return;
-            }
-            item.Column.Visible = e.NewValue == CheckState.Checked;
-        }
-
-        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.ColumnIndex < 0 || e.RowIndex < 0)
-            {
-                return;
-            }
-            var row = dataGridView1.Rows[e.RowIndex];
-            if (e.ColumnIndex == colPeptide.Index)
-            {
-                ShowPeptideFileAnalysis(row.Tag as long?);
-            }
-        }
-
-        private PeptideFileAnalysisFrame ShowPeptideFileAnalysis(long? peptideFileAnalysisId)
-        {
-            return PeptideFileAnalysisFrame.ShowPeptideFileAnalysis(Workspace, peptideFileAnalysisId);
-        }
-
-        private class ColumnListItem
-        {
-            public ColumnListItem(DataGridViewColumn column)
-            {
-                Column = column;
-            }
-            public DataGridViewColumn Column { get; private set; }
-            public override string ToString()
-            {
-                return Column.HeaderText;
-            }
+            var defaultViewSpec = new ViewSpec()
+                .SetName("default")
+                .SetColumns(defaultColumns);
+            navBar21.ViewContext = _viewContext = new TopographViewContext(dataGridViewResults, workspace, typeof (ResultRow), new[] {defaultViewSpec});
         }
 
         private void btnRequery_Click(object sender, EventArgs e)
         {
             var calculator = new HalfLifeCalculator(Workspace, HalfLifeCalculationType.GroupPrecursorPool)
             {
+                MaxResults = MaxResults,
             };
             using (var longWaitDialog = new LongWaitDialog(TopLevelControl, "Calculating Half Lives"))
             {
@@ -131,51 +93,25 @@ namespace pwiz.Topograph.ui.Forms
             UpdateRows(calculator);
         }
 
+     
         private void UpdateRows(HalfLifeCalculator halfLifeCalculator)
         {
-            dataGridView1.Rows.Clear();
-            btnSave.Enabled = true;
-            var rowDatas = halfLifeCalculator.RowDatas;
-            if (rowDatas.Count == 0)
+            var resultRows = halfLifeCalculator.RowDatas.Select(rd => new ResultRow(rd)).ToArray();
+            var bindingListView = bindingSourceResults.DataSource as BindingListView;
+            if (bindingListView == null)
             {
-                return;
+                bindingListView = new BindingListView(new ViewInfo(_viewContext.ParentColumn, _viewContext.BuiltInViewSpecs.First()), resultRows);
             }
-            dataGridView1.Rows.Add(rowDatas.Count);
-            for (int iRow = 0; iRow < rowDatas.Count; iRow++)
+            else
             {
-                var row = dataGridView1.Rows[iRow];
-                var rowData = rowDatas[iRow];
-                row.Tag = rowData.PeptideFileAnalysisId;
-                row.Cells[colAccept.Index].Value = rowData.Accept ? "Pass" : "Fail";
-                row.Cells[colPeptide.Index].Value = rowData.Peptide.FullSequence;
-                row.Cells[colProteinName.Index].Value = Workspace.GetProteinKey(rowData.Peptide.ProteinName,
-                                                                          rowData.Peptide.ProteinDescription);
-                row.Cells[colProteinDescription.Index].Value = rowData.Peptide.ProteinDescription;
-                row.Cells[colSample.Index].Value = rowData.MsDataFile.Sample;
-                row.Cells[colTimePoint.Index].Value = rowData.MsDataFile.TimePoint;
-                row.Cells[colCohort.Index].Value = rowData.MsDataFile.Cohort;
-                row.Cells[colDataFile.Index].Value = rowData.MsDataFile.Label;
-
-                row.Cells[colAvgPrecursorEnrichment.Index].Value = rowData.AvgPrecursorEnrichment;
-                row.Cells[colAvgTurnover.Index].Value = rowData.AvgTurnover;
-                row.Cells[colAvgTurnoverScore.Index].Value = rowData.AvgTurnoverScore;
-                row.Cells[colArea.Index].Value = rowData.AreaUnderCurve;
-                row.Cells[colDeconvolutionScore.Index].Value = rowData.DeconvolutionScore;
-                row.Cells[colIndPrecursorEnrichment.Index].Value = rowData.IndPrecursorEnrichment;
-                row.Cells[colIndTurnover.Index].Value = rowData.IndTurnover;
-                row.Cells[colIndTurnoverScore.Index].Value = rowData.IndTurnoverScore;
-                row.Cells[colTracerPercent.Index].Value = rowData.TracerPercent;
-                row.Cells[colStatus.Index].Value = rowData.ValidationStatus;
-                row.Cells[colTotalIonCurrent.Index].Value =
-                    rowData.MsDataFile.MsDataFileData.GetTotalIonCurrent(rowData.StartTime.Value, rowData.EndTime.Value);
-                row.Cells[colPsmCount.Index].Value = rowData.PsmCount;
-                row.Cells[colIntegrationNote.Index].Value = rowData.IntegrationNote;
+                bindingListView = new BindingListView(bindingListView.ViewInfo, resultRows);
             }
+            bindingSourceResults.DataSource = bindingListView;
         }
 
         private void btnSave_Click(object sender, EventArgs e)
         {
-            GridUtil.ExportResults(dataGridView1, Path.GetFileNameWithoutExtension(Workspace.DatabasePath) + "ResultsPerReplicate");
+            GridUtil.ExportResults(dataGridViewResults, Path.GetFileNameWithoutExtension(Workspace.DatabasePath) + "ResultsPerReplicate");
         }
 
         private void dataGridView1_RowHeaderMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
@@ -184,8 +120,88 @@ namespace pwiz.Topograph.ui.Forms
             {
                 return;
             }
-            var row = dataGridView1.Rows[e.RowIndex];
-            ShowPeptideFileAnalysis(row.Tag as long?);
+            var row = dataGridViewResults.Rows[e.RowIndex];
+        }
+        public int? MaxResults
+        {
+            get
+            {
+                int maxResults;
+                if (int.TryParse(tbxMaxResults.Text, out maxResults))
+                {
+                    return maxResults;
+                }
+                return null;
+            }
+            set
+            {
+                if (value.HasValue)
+                {
+                    tbxMaxResults.Text = value.ToString();
+                }
+                else
+                {
+                    tbxMaxResults.Text = "";
+                }
+            }
+        }
+        public class TurnoverResult
+        {
+            public double PrecursorEnrichment {get; set;}
+            public double Turnover { get; set; }
+            public double Score { get; set; }
+
+        }
+        public class ResultRow
+        {
+            readonly HalfLifeCalculator.RowData _rowData;
+            public ResultRow(HalfLifeCalculator.RowData rowData)
+            {
+                _rowData = rowData;
+            }
+            public bool Accept { get { return _rowData.Accept; } }
+            public LinkValue<Peptide> Peptide {get
+            {
+                return new LinkValue<Peptide>(_rowData.Peptide, (o, e) => PeptideFileAnalysisFrame
+                    .ShowPeptideFileAnalysis(_rowData.Peptide.Workspace, _rowData.PeptideFileAnalysisId));
+            }}
+            public MsDataFile DataFile { get { return _rowData.MsDataFile; } }
+            public double? Area { get { return _rowData.AreaUnderCurve; } }
+            public double? TracerPercent { get { return _rowData.TracerPercent; } }
+            public double? DeconvolutionScore { get { return _rowData.DeconvolutionScore; } }
+            public TurnoverResult IndividualTurnover 
+            { 
+                get 
+                { 
+                    if (!_rowData.IndTurnover.HasValue || !_rowData.IndPrecursorEnrichment.HasValue || !_rowData.IndTurnoverScore.HasValue) {
+                        return null;
+                    }
+                    return new TurnoverResult
+                               {
+                                   PrecursorEnrichment = _rowData.IndPrecursorEnrichment.Value,
+                                   Turnover = _rowData.IndTurnover.Value,
+                                   Score = _rowData.IndTurnoverScore.Value,
+                               };
+                } 
+            }
+            public TurnoverResult AverageTurnover
+            {
+                get
+                {
+                    if (!_rowData.AvgTurnover.HasValue || !_rowData.AvgPrecursorEnrichment.HasValue || !_rowData.AvgTurnoverScore.HasValue) {
+                        return null;
+                    }
+                    return new TurnoverResult
+                               {
+                                   PrecursorEnrichment = _rowData.AvgPrecursorEnrichment.Value,
+                                   Turnover = _rowData.AvgTurnover.Value,
+                                   Score = _rowData.AvgTurnoverScore.Value,
+                               };
+                }
+            }
+                public ValidationStatus Status {get { return _rowData.ValidationStatus;}}
+                public int PsmCount { get { return _rowData.PsmCount;}}
+                public IntegrationNote PeakIntegrationNote { get { return _rowData.IntegrationNote; }}
         }
     }
 }

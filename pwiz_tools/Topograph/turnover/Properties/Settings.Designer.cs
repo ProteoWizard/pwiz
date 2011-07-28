@@ -166,5 +166,7 @@ namespace pwiz.Topograph.ui.Properties {
                 this["ChromatogramLineWidth"] = value;
             }
         }
+
+
     }
 }

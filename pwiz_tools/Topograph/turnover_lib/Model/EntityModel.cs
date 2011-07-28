@@ -19,6 +19,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -37,8 +38,11 @@ namespace pwiz.Topograph.Model
             Id = id;
         }
         
+        [Browsable(false)]
         public Workspace Workspace { get; private set; }
+        [Browsable(false)]
         public long? Id { get; private set; }
+        [Browsable(false)]
         public virtual Type ModelType { get { return GetType(); } }
         public virtual void SetId(long? id)
         {
@@ -103,6 +107,7 @@ namespace pwiz.Topograph.Model
             }
         }
 
+        [Browsable(false)]
         public virtual EntityModel Parent
         {
             get
@@ -172,6 +177,7 @@ namespace pwiz.Topograph.Model
         {
             return SavedEntity == null;
         }
+        [Browsable(false)]
         public T SavedEntity { get; set; }
         public virtual bool IsPropDirty(ModelProperty property)
         {

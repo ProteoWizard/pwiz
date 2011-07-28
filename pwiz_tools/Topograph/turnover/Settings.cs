@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using pwiz.Common.DataBinding;
 
 namespace pwiz.Topograph.ui.Properties {
     
@@ -39,6 +40,22 @@ namespace pwiz.Topograph.ui.Properties {
             set
             {
                 this["MruList"] = value;
+            }
+        }
+        [System.Configuration.UserScopedSettingAttribute]
+        public List<ViewSpecList> ViewSpecLists
+        {
+            get
+            {
+                if (this["ViewSpecLists"] == null)
+                {
+                    ViewSpecLists = new List<ViewSpecList>();
+                }
+                return (List<ViewSpecList>)this["ViewSpecLists"];
+            }
+            set
+            {
+                this["ViewSpecLists"] = value;
             }
         }
     }

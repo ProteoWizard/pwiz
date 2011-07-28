@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -75,6 +76,7 @@ namespace pwiz.Topograph.Model
         {
             return new ChargedPeptide(FullSequence, charge);
         }
+        [Browsable(false)]
         public String FullSequence { get; private set; }
         public String Sequence { get; private set; }
         public String ProteinName { get; private set; }
@@ -165,6 +167,11 @@ namespace pwiz.Topograph.Model
         public String GetProteinKey()
         {
             return Workspace.GetProteinKey(ProteinName, ProteinDescription);
+        }
+
+        public override string ToString()
+        {
+            return FullSequence;
         }
     }
 }

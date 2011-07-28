@@ -48,7 +48,7 @@ namespace pwiz.Topograph.MsData
         }
         public bool AcceptMissingMs2Id { get; set; }
         public ICollection<IntegrationNote> AcceptIntegrationNotes { get; set; }
-
+        public int? MaxResults { get; set; }
         /// <summary>
         /// For bug 395 : Automated outlier-trimming algorithm/QC filter
         /// Apply Evvie's special criteria to filter out outliers:
@@ -91,6 +91,10 @@ namespace pwiz.Topograph.MsData
                        + "\nFROM " + typeof (DbPeptideFileAnalysis) + " F"
                        + "\nWHERE F.TracerPercent IS NOT NULL");
             var query = Session.CreateQuery(hql.ToString());
+            if (MaxResults.HasValue)
+            {
+                query.SetMaxResults(MaxResults.Value);
+            }
             var peaksQuery = Session.CreateQuery("SELECT P.PeptideFileAnalysis.Id, P.Name, P.TotalArea, P.StartTime, P.EndTime"
                                                  + "\nFROM " + typeof (DbPeak) + " P");
             var peaksDict = new Dictionary<long, IDictionary<TracerFormula, PeakData>>();
@@ -165,7 +169,7 @@ namespace pwiz.Topograph.MsData
             {
                 return false;
             }
-            if (!AcceptIntegrationNotes.Contains(rowData.IntegrationNote))
+            if (rowData.IntegrationNote != null && !AcceptIntegrationNotes.Contains(rowData.IntegrationNote))
             {
                 return false;
             }
