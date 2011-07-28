@@ -2195,22 +2195,36 @@ namespace pwiz.Skyline
 
         private void sequenceTree_ItemDrag(object sender, ItemDragEventArgs e)
         {
-            SrmTreeNode nodeTree = e.Item as SrmTreeNode;
-            if (nodeTree != null)
-            {
-                // Only sequence nodes and peptides in peptides in peptide lists may be dragged.
-                bool allow = nodeTree is PeptideGroupTreeNode;
-                if (!allow && nodeTree.Model.Id is Peptide)
-                {
-                    Peptide peptide = (Peptide)nodeTree.Model.Id;
-                    allow = peptide.FastaSequence == null;
-                }
+            var listDragNodes = new List<SrmTreeNode>();
 
-                if (allow)
+            foreach (var node in SelectedNodes)
+            {
+                SrmTreeNode srmNode = node as SrmTreeNode;
+                if (srmNode != null)
                 {
-                    sequenceTree.HideEffects();
-                    DoDragDrop(e.Item, DragDropEffects.Move);
+                    // Only sequence nodes and peptides in peptides in peptide lists may be dragged.
+                    bool allow = srmNode is PeptideGroupTreeNode;
+                    if (!allow && srmNode.Model.Id is Peptide)
+                    {
+                        Peptide peptide = (Peptide)srmNode.Model.Id;
+                        allow = peptide.FastaSequence == null;
+                    }
+                    if (!allow || (listDragNodes.Count > 0 && !Equals(srmNode.GetType(), listDragNodes[0].GetType())))
+                        return;
+
+                    listDragNodes.Add(srmNode);
                 }
+            }
+
+            if (listDragNodes.Count != 0)
+            {
+                var dataObj = new DataObject();
+                if (listDragNodes.First() is PeptideTreeNode)
+                    dataObj.SetData(typeof(PeptideTreeNode), listDragNodes);
+                else
+                    dataObj.SetData(typeof(PeptideGroupTreeNode), listDragNodes);
+                
+                DoDragDrop(dataObj, DragDropEffects.Move);              
             }
         }
 
@@ -2248,31 +2262,55 @@ namespace pwiz.Skyline
 
         private void sequenceTree_DragDrop(object sender, DragEventArgs e)
         {
-            SrmTreeNode nodeSource = (SrmTreeNode)e.Data.GetData(typeof(PeptideGroupTreeNode).FullName) ??
-                                     (SrmTreeNode)e.Data.GetData(typeof(PeptideTreeNode).FullName);
-            if (nodeSource == null)
+            List<SrmTreeNode> nodeSources = (List<SrmTreeNode>) e.Data.GetData(typeof (PeptideGroupTreeNode).FullName) ??
+                (List<SrmTreeNode>) e.Data.GetData(typeof(PeptideTreeNode));
+
+            if (nodeSources == null)
                 return;
+
+            var nodeSourcesArray = nodeSources.ToArray();
+
+            var selectedPaths = new List<IdentityPath>();
+            var sourcePaths = new IdentityPath[nodeSourcesArray.Length];
 
             SrmTreeNode nodeDrop = GetSrmTreeNodeAt(e.X, e.Y);
-
-            // No work for dropping on the start node.
-            if (ReferenceEquals(nodeDrop, nodeSource))
-                return;
-
-            IdentityPath pathSource = nodeSource.Path;
             IdentityPath pathTarget = SrmTreeNode.GetSafePath(nodeDrop);
+            
+            for (int i = 0; i < nodeSourcesArray.Length; i++)
+            {
+                var nodeSource = nodeSourcesArray[i];
+                // No work for dropping on the start node.
+                if (ReferenceEquals(nodeDrop, nodeSource))
+                    return;
 
-            // Dropping inside self also requires no work.
-            if (pathSource.Length < pathTarget.Length &&
+                IdentityPath pathSource = SrmTreeNode.GetSafePath(nodeSource);
+                
+                // Dropping inside self also requires no work.
+                if (pathSource.Length < pathTarget.Length &&
                     Equals(pathSource, pathTarget.GetPathTo(pathSource.Length - 1)))
-                return;
+                    return;
 
-            IdentityPath selectPath = null;
-            ModifyDocument("Drag and drop",
-                doc => doc.MoveNode(pathSource, pathTarget, out selectPath));
+                sourcePaths[i] = pathSource;
+            }
 
-            if (selectPath != null)
-                sequenceTree.SelectedPath = selectPath;
+            // Reselect the original paths, so they will be stored on the undo bufferS
+            sequenceTree.SelectedPath = sourcePaths.First();
+            sequenceTree.SelectedPaths = sourcePaths;
+
+            ModifyDocument("Drag and drop", doc =>
+                                                {
+                                                    foreach (IdentityPath pathSource in sourcePaths)
+                                                    {
+                                                        IdentityPath selectPath;
+                                                        doc = doc.MoveNode(pathSource, pathTarget, out selectPath);
+                                                        selectedPaths.Add(selectPath);
+                                                    }
+                                                    return doc;
+                                                });
+
+            sequenceTree.SelectedPath = selectedPaths.First();
+            sequenceTree.SelectedPaths = selectedPaths;
+            sequenceTree.Invalidate();
         }
 
         private TreeNode GetDropTarget(DragEventArgs e)

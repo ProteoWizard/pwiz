@@ -388,6 +388,7 @@ namespace pwiz.Skyline.Controls
             {
                 if (value != null)
                 {
+                    SelectedNodes.Clear();
                     foreach (IdentityPath path in value)
                     {
                         AddSelectedNode(Nodes, new IdentityPathTraversal(path));
