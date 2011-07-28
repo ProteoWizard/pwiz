@@ -22,6 +22,9 @@
 # Contributor(s): Surendra Dasari
 #
 
+.os = [ modules.peek : OS ] ; # NT, LINUX, MACOSX
+.platform = [ modules.peek : OSPLAT ] ; # X86, X86_64, POWERPC
+
 # Usage:
 #
 #   bjam [options] [install]
@@ -47,10 +50,6 @@
 #   --exec-prefix=<EPREFIX> Install architecture dependent files here.
 #                           Default: <PREFIX>
 #
-
-
-.os = [ modules.peek : OS ] ; # NT, LINUX, MACOSX
-.platform = [ modules.peek : OSPLAT ] ; # X86, X86_64, POWERPC
 
 constant BOOST_VERSION : 1 43 0 ;
 
@@ -97,6 +96,7 @@ import feature ;
 
 project bumbershoot
 	: requirements
+      <include>.
       <include>$(PWIZ_SOURCE)
       <include>$(LIBRARIES_PATH)/boost_aux
       <include>$(boost_src)
