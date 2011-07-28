@@ -81,7 +81,9 @@ typedef __int64 off64_t; //off_t is only 32-bit on 32-bit windows
 #define FSEEK(h,p,offset_flag) fseeko(h,p,offset_flag)
 #define FTELL(h) ftello(h)
 //TODO -- I should check during the build if off_t really is 
+#ifdef _XBS5_ILP32_OFF32
 typedef off_t off64_t; //if I compile with _LARGEFILE_SOURCE and _FILE_OFFSET_BITS=64, off_t is 64-bit
+#endif
 
 #endif /* end _MSC_VER */
 
