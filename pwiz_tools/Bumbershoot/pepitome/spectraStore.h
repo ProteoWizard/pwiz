@@ -252,7 +252,7 @@ namespace pepitome
             sqlite3* db;
             sqlite3_open_v2(id.source.c_str(), &db, SQLITE_OPEN_NOMUTEX|SQLITE_OPEN_READONLY, NULL);
             sqlite::database library(db);
-            string queryStr = "SELECT NumPeaks, SpectrumData FROM LibSpectrumData WHERE Id = " + (string) id.nativeID;
+            string queryStr = "SELECT NumPeaks, SpectrumData FROM LibSpectrumData WHERE Id = '" + (string) id.nativeID + "'";
             sqlite::query qry(library, queryStr.c_str() );
             int numPeaks;
             string data;
@@ -1140,7 +1140,7 @@ namespace pepitome
                 BOOST_FOREACH(size_t arrayIndex, indices)
                 {
                     string libraryIndex = at(arrayIndex)->id.nativeID;
-                    batchedIndicesStream << libraryIndex << ",";
+                    batchedIndicesStream << "'" << libraryIndex << "'" << ",";
                     libraryIndexToArrayIndex.insert(make_pair(libraryIndex,arrayIndex));
                 }
 
