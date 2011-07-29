@@ -36,6 +36,7 @@
 #include <boost/iostreams/copy.hpp>
 #include <boost/iostreams/compose.hpp>
 #include <boost/utility/singleton.hpp>
+#include <boost/range/algorithm/remove_if.hpp>
 #include "svm.h"
 #include <numeric>
 #include <cassert>
@@ -128,19 +129,20 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ChargeStateCalculator::spectrum(size_t in
     IntegerSet possibleChargeStates;
     for(vector<CVParam>::iterator itr = cvParams.begin(); itr != cvParams.end(); ++itr)
     {
-        if (override_ &&
-            (itr->cvid == MS_charge_state ||
-             itr->cvid == MS_possible_charge_state))
+        if (itr->cvid == MS_charge_state ||
+            itr->cvid == MS_possible_charge_state)
         {
-            selectedIon.userParams.push_back(UserParam("old charge state", itr->value));
-            itr = cvParams.erase(itr);
-            if (itr == cvParams.end())
-                break;
+            // some files may have a bogus "0" charge state
+            if (override_ || itr->value == "0")
+            {
+                selectedIon.userParams.push_back(UserParam("old charge state", itr->value));
+                itr = --cvParams.erase(itr);
+            }
+            else if (itr->cvid == MS_possible_charge_state)
+                possibleChargeStates.insert(itr->valueAs<int>());
+            else if (itr->cvid == MS_charge_state)
+                return s;
         }
-        else if (itr->cvid == MS_possible_charge_state)
-            possibleChargeStates.insert(itr->valueAs<int>());
-        else if (itr->cvid == MS_charge_state)
-            return s;
     }
 
     double precursorMZ = selectedIon.cvParam(MS_selected_ion_m_z).valueAs<double>();
@@ -154,22 +156,17 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_ChargeStateCalculator::spectrum(size_t in
     // accumulate TIC from the right until the cutoff fraction or the precursor m/z is reached
     vector<MZIntensityPair>::iterator mzItr = lower_bound(mzIntensityPairs.begin(), mzIntensityPairs.end(), MZIntensityPair(precursorMZ, 0), &mzIntensityPairLessThan);
     double fractionTIC = 0, inverseFractionCutoff = 1 - fraction_;
-    for (vector<MZIntensityPair>::reverse_iterator itr = mzIntensityPairs.rbegin();
-         itr != mzIntensityPairs.rend() && &*itr != &*mzItr && fractionTIC < inverseFractionCutoff;
-         ++itr)
-         fractionTIC += itr->intensity / tic;
+    if (mzItr != mzIntensityPairs.end())
+        for (vector<MZIntensityPair>::reverse_iterator itr = mzIntensityPairs.rbegin();
+             itr != mzIntensityPairs.rend() && &*itr != &*mzItr && fractionTIC < inverseFractionCutoff;
+             ++itr)
+             fractionTIC += itr->intensity / tic;
     fractionTIC = 1 - fractionTIC; // invert
 
     if (fractionTIC >= fraction_)
     {
         // remove possible charge states
-        for(vector<CVParam>::iterator itr = cvParams.begin(); itr != cvParams.end(); ++itr)
-            if (itr->cvid == MS_possible_charge_state)
-            {
-                itr = cvParams.erase(itr);
-                if (itr == cvParams.end())
-                    break;
-            }
+        boost::range::remove_if(cvParams, CVParamIs(MS_possible_charge_state));
 
         // set charge state to 1
         cvParams.push_back(CVParam(MS_charge_state, 1));

@@ -70,6 +70,10 @@ TestChargeStateCalculator testChargeStateCalculators[] =
     { "1 2 3 4 5", "10 20 30 40 50", "", "CID", 2.5,
       true, 2, 3, 0.9, "2 3" },
 
+    // input charge of 0 should be treated like no charge
+    { "1 2 3 4 5", "10 20 30 40 50", "0", "CID", 2.5,
+      true, 2, 3, 0.9, "2 3" },
+
     { "1 2 3 4 5", "10 20 30 40 50", "2", "CID", 2.5,
       true, 3, 4, 0.9, "3 4 5" },
 
@@ -83,6 +87,10 @@ TestChargeStateCalculator testChargeStateCalculators[] =
       false, 2, 3, 0.9, "1" },
 
     { "1 2 3 4 5", "10 20 30 40 50", "", "CID", 2.5,
+      false, 2, 3, 0.9, "2 3" },
+
+    // input charge of 0 should be treated like no charge
+    { "1 2 3 4 5", "10 20 30 40 50", "0", "CID", 2.5,
       false, 2, 3, 0.9, "2 3" },
 
     { "1 2 3 4 5", "10 20 30 40 50", "1", "CID", 2.5,
@@ -166,9 +174,9 @@ vector<double> parseDoubleArray(const string& doubleArray)
     return doubleVector;
 }
 
-pwiz::data::CVTranslator cvTranslator;
 vector<CVID> parseCVTermArray(const string& cvTermArray)
 {
+    static pwiz::data::CVTranslator cvTranslator;
     vector<CVID> cvTermVector;
     vector<string> tokens;
     bal::split(tokens, cvTermArray, bal::is_space());
@@ -219,7 +227,7 @@ int test()
             CVID outputChargeStateTerm = outputChargeStateArray.size() > 1 ? MS_possible_charge_state : MS_charge_state;
 
             SpectrumPtr calculatedSpectrum = calculator->spectrum(0, true);
-            BOOST_FOREACH(CVParam cvParam, s->precursors[0].selectedIons[0].cvParams)
+            BOOST_FOREACH(const CVParam& cvParam, s->precursors[0].selectedIons[0].cvParams)
             {
                 if (cvParam.cvid != MS_charge_state && cvParam.cvid != MS_possible_charge_state)
                     continue;
@@ -235,6 +243,7 @@ int test()
     }
     return result;
 }
+
 
 int main(int argc, char* argv[])
 {

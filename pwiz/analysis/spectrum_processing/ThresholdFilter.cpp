@@ -136,6 +136,10 @@ PWIZ_API_DECL void ThresholdFilter::operator () (const SpectrumPtr s) const
     if (!msLevelsToThreshold.contains(s->cvParam(MS_ms_level).valueAs<int>()))
         return;
 
+    // do nothing to empty spectra
+    if (s->defaultArrayLength == 0)
+        return;
+
     if (byType == ThresholdingBy_Count ||
         byType == ThresholdingBy_CountAfterTies)
     {
@@ -162,101 +166,29 @@ PWIZ_API_DECL void ThresholdFilter::operator () (const SpectrumPtr s) const
         throw runtime_error("[threshold()] invalid orientation type");
 
     double tic = accumulate(mzIntensityPairs.begin(), mzIntensityPairs.end(), 0.0, MZIntensityPairIntensitySum());
-    double bpi = orientation == Orientation_MostIntense ? mzIntensityPairs.front().intensity
-        : mzIntensityPairs.back().intensity;
 
+    if (tic == 0)
+    {
+        s->getMZArray()->data.clear();
+        s->getIntensityArray()->data.clear();
+        s->defaultArrayLength = 0;
+        return;
+    }
+
+    double bpi = orientation == Orientation_MostIntense ? mzIntensityPairs.front().intensity
+                                                        : mzIntensityPairs.back().intensity;
+
+    // after the threshold is applied, thresholdItr should be set to the first data point to erase
     vector<MZIntensityPair>::iterator thresholdItr;
+
     switch (byType)
     {
-    case ThresholdingBy_Count:
-        // no need to check bounds on thresholdItr because it gets checked above
-        thresholdItr = mzIntensityPairs.begin() + (size_t) threshold;
-
-        // iterate backward until a non-tie is found
-        while (true)
-        {
-            const double& i = thresholdItr->intensity;
-            if (thresholdItr == mzIntensityPairs.begin())
-                break;
-            else if (i != (--thresholdItr)->intensity)
-            {
-                ++thresholdItr;
-                break;
-            }
-        }
-        break;
-
-    case ThresholdingBy_CountAfterTies:
-        // no need to check bounds on thresholdItr because it gets checked above
-        thresholdItr = mzIntensityPairs.begin() + ((size_t) threshold)-1;
-
-        // iterate forward until a non-tie is found
-        while (true)
-        {
-            const double& i = thresholdItr->intensity;
-            if (++thresholdItr == mzIntensityPairs.end() ||
-                i != thresholdItr->intensity)
-                break;
-        }
-        break;
-
-    case ThresholdingBy_AbsoluteIntensity:
-        if (orientation == Orientation_MostIntense)
-            thresholdItr = lower_bound(mzIntensityPairs.begin(),
-                                       mzIntensityPairs.end(),
-                                       MZIntensityPair(0, threshold),
-                                       orientationMore_Predicate);
-        else
-            thresholdItr = lower_bound(mzIntensityPairs.begin(),
-                                       mzIntensityPairs.end(),
-                                       MZIntensityPair(0, threshold),
-                                       orientationLess_Predicate);
-        break;
-
-    case ThresholdingBy_FractionOfBasePeakIntensity:
-        if (orientation == Orientation_MostIntense)
-            thresholdItr = lower_bound(mzIntensityPairs.begin(),
-                                       mzIntensityPairs.end(),
-                                       MZIntensityPair(0, threshold*bpi),
-                                       MZIntensityPairIntensityFractionGreaterThan(bpi));
-        else
-            thresholdItr = lower_bound(mzIntensityPairs.begin(),
-                                       mzIntensityPairs.end(),
-                                       MZIntensityPair(0, threshold*bpi),
-                                       MZIntensityPairIntensityFractionLessThan(bpi));
-        break;
-
-    case ThresholdingBy_FractionOfTotalIntensity:
-        if (orientation == Orientation_MostIntense)
-            thresholdItr = lower_bound(mzIntensityPairs.begin(),
-            mzIntensityPairs.end(),
-            MZIntensityPair(0, threshold*tic),
-            MZIntensityPairIntensityFractionGreaterThan(tic));
-        else
-            thresholdItr = lower_bound(mzIntensityPairs.begin(),
-            mzIntensityPairs.end(),
-            MZIntensityPair(0, threshold*tic),
-            MZIntensityPairIntensityFractionLessThan(tic));
-        break;
-
-    case ThresholdingBy_FractionOfTotalIntensityCutoff:
-        {
-            // starting at the (most/least intense point)/TIC fraction,
-            // calculate the running sum
-            vector<double> cumulativeIntensityFraction(1, mzIntensityPairs[0].intensity / tic);
-            size_t i=0;
-            while (cumulativeIntensityFraction.back() <= threshold &&
-                ++i < mzIntensityPairs.size())
-            {
-                cumulativeIntensityFraction.push_back(
-                    cumulativeIntensityFraction[i-1] +
-                    mzIntensityPairs[i].intensity / tic);
-            }
-
-            thresholdItr = mzIntensityPairs.begin() + i;
+        case ThresholdingBy_Count:
+            // no need to check bounds on thresholdItr because it gets checked above
+            thresholdItr = mzIntensityPairs.begin() + (size_t) threshold;
 
             // iterate backward until a non-tie is found
-            while (thresholdItr != mzIntensityPairs.end())
+            while (true)
             {
                 const double& i = thresholdItr->intensity;
                 if (thresholdItr == mzIntensityPairs.begin())
@@ -267,11 +199,103 @@ PWIZ_API_DECL void ThresholdFilter::operator () (const SpectrumPtr s) const
                     break;
                 }
             }
+            break;
+
+        case ThresholdingBy_CountAfterTies:
+            // no need to check bounds on thresholdItr because it gets checked above
+            thresholdItr = mzIntensityPairs.begin() + ((size_t) threshold)-1;
+
+            // iterate forward until a non-tie is found
+            while (true)
+            {
+                const double& i = thresholdItr->intensity;
+                if (++thresholdItr == mzIntensityPairs.end() ||
+                    i != thresholdItr->intensity)
+                    break;
+            }
+            break;
+
+        case ThresholdingBy_AbsoluteIntensity:
+            if (orientation == Orientation_MostIntense)
+                thresholdItr = lower_bound(mzIntensityPairs.begin(),
+                                           mzIntensityPairs.end(),
+                                           MZIntensityPair(0, threshold),
+                                           orientationMore_Predicate);
+            else
+                thresholdItr = lower_bound(mzIntensityPairs.begin(),
+                                           mzIntensityPairs.end(),
+                                           MZIntensityPair(0, threshold),
+                                           orientationLess_Predicate);
+            break;
+
+        case ThresholdingBy_FractionOfBasePeakIntensity:
+            if (orientation == Orientation_MostIntense)
+                thresholdItr = lower_bound(mzIntensityPairs.begin(),
+                                           mzIntensityPairs.end(),
+                                           MZIntensityPair(0, threshold*bpi),
+                                           MZIntensityPairIntensityFractionGreaterThan(bpi));
+            else
+                thresholdItr = lower_bound(mzIntensityPairs.begin(),
+                                           mzIntensityPairs.end(),
+                                           MZIntensityPair(0, threshold*bpi),
+                                           MZIntensityPairIntensityFractionLessThan(bpi));
+            break;
+
+        case ThresholdingBy_FractionOfTotalIntensity:
+            if (orientation == Orientation_MostIntense)
+                thresholdItr = lower_bound(mzIntensityPairs.begin(),
+                mzIntensityPairs.end(),
+                MZIntensityPair(0, threshold*tic),
+                MZIntensityPairIntensityFractionGreaterThan(tic));
+            else
+                thresholdItr = lower_bound(mzIntensityPairs.begin(),
+                mzIntensityPairs.end(),
+                MZIntensityPair(0, threshold*tic),
+                MZIntensityPairIntensityFractionLessThan(tic));
+            break;
+
+        case ThresholdingBy_FractionOfTotalIntensityCutoff:
+        {
+            // example (ties are included)
+            // intensities:     12  2   2   1   1   1   1   0   0  (TIC 20)
+            // cumulative:      12  14  16  17  18  19  20  20  20
+            // fraction:        .60 .70 .80 .85 .90 .95 1.0 1.0 1.0
+            // at threshold 1.0 ---------------------------^ cut here
+            // at threshold .99 ---------------------------^ cut here
+            // at threshold .90 ---------------------------^ cut here
+            // at threshold .80 -----------^ cut here
+            // at threshold .65 -----------^ cut here
+            // at threshold .60 ---^ cut here
+            // at threshold .15 ---^ cut here
+
+            // starting at the (most/least intense point)/TIC fraction, calculate the running sum
+            vector<double> cumulativeIntensityFraction;
+            cumulativeIntensityFraction.reserve(mzIntensityPairs.size());
+            cumulativeIntensityFraction.push_back(mzIntensityPairs[0].intensity / tic);
+            size_t i=1;
+            while (cumulativeIntensityFraction.back() < threshold - 1e-6 &&
+                   i < mzIntensityPairs.size())
+            {
+                cumulativeIntensityFraction.push_back(cumulativeIntensityFraction[i-1] +
+                                                      mzIntensityPairs[i].intensity / tic);
+                ++i;
+            }
+
+            thresholdItr = mzIntensityPairs.begin() + (i-1);
+
+            // iterate forward until a non-tie is found
+            while (thresholdItr != mzIntensityPairs.end())
+            {
+                const double& i = thresholdItr->intensity;
+                if (++thresholdItr == mzIntensityPairs.end() ||
+                    i != thresholdItr->intensity)
+                    break;
+            }
         }
         break;
 
-    default:
-        throw runtime_error("[threshold()] invalid thresholding type");
+        default:
+            throw runtime_error("[threshold()] invalid thresholding type");
     }
 
     sort(mzIntensityPairs.begin(), thresholdItr, MZIntensityPairSortByMZ());
