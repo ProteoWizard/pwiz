@@ -26,6 +26,8 @@
 #include "../ChromatogramList_mz5.hpp"
 #include "../SpectrumList_mz5.hpp"
 
+#include <iostream>
+
 namespace pwiz {
 namespace msdata {
 namespace mz5 {
@@ -207,8 +209,7 @@ pwiz::msdata::DataProcessingPtr ReferenceRead_mz5::getDataProcessingPtr(
     }
     else
     {
-        throw std::out_of_range(
-                "ReferenceRead_mz5::getDataProcessingPtr(): out of range");
+		return pwiz::msdata::DataProcessingPtr();
     }
 }
 
