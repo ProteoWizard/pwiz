@@ -16,6 +16,7 @@
 #endif
 
 #include <boost/preprocessor.hpp>
+#include <cstring>
 
 #define BOOST_ENUM_IS_COLUMN_2(i, k) \
 	BOOST_PP_EQUAL(BOOST_PP_MOD(i, 2), k)
