@@ -89,6 +89,7 @@
     </Compile>
     <Compile Include="DataAnalysis\LoessInterpolator.cs" />
     <Compile Include="DataBinding\AbstractViewContext.cs" />
+    <Compile Include="DataBinding\BindingListIndex.cs" />
     <Compile Include="DataBinding\BindingListView.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -123,7 +124,9 @@
       <DependentUpon>NavBar.cs</DependentUpon>
     </Compile>
     <Compile Include="DataBinding\DataFormat.cs" />
+    <Compile Include="DataBinding\DataRowsChangedEventArgs.cs" />
     <Compile Include="DataBinding\DataSchema.cs" />
+    <Compile Include="DataBinding\IDataRow.cs" />
     <Compile Include="DataBinding\IdentifierPath.cs" />
     <Compile Include="DataBinding\IViewContext.cs" />
     <Compile Include="DataBinding\RowKey.cs" />

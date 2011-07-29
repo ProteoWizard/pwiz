@@ -34,17 +34,27 @@ namespace pwiz.Common.DataBinding
     {
         protected override void OnDataBindingComplete(DataGridViewBindingCompleteEventArgs e)
         {
+            AutoGenerateColumns = true;
             base.OnDataBindingComplete(e);
             if (DesignMode)
             {
                 return;
             }
-            if (!AutoGenerateColumns)
+            var bindingSource = DataSource as BindingSource;
+            if (bindingSource == null)
             {
                 return;
             }
-            var bindingListView = BindingListView;
+            var bindingListView = bindingSource.DataSource as BindingListView;
+            if (_handleCreated)
+            {
+                BindingListView = bindingListView;
+            }
             if (bindingListView == null)
+            {
+                return;
+            }
+            if (!AutoGenerateColumns)
             {
                 return;
             }
@@ -89,18 +99,51 @@ namespace pwiz.Common.DataBinding
             Columns.Clear();
             Columns.AddRange(columnArray);
         }
+
+        private BindingListView _bindingListView;
         [Browsable(false)]
-        public BindingListView BindingListView
+        protected BindingListView BindingListView
         {
             get
             {
-                var bindingSource = DataSource as BindingSource;
-                if (bindingSource == null)
+                return _bindingListView;
+            } 
+            set
+            {
+                if (_bindingListView == value)
                 {
-                    return null;
+                    return;
                 }
-                return bindingSource.DataSource as BindingListView;
+                if (BindingListView != null)
+                {
+                    BindingListView.StopTrackingChanges();
+                }
+                _bindingListView = value;
+                if (BindingListView != null)
+                {
+                    BindingListView.StartTrackingChanges();
+                }
             }
+        }
+
+        private bool _handleCreated;
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            _handleCreated = true;
+            var bindingSource = DataSource as BindingSource;
+            if (bindingSource == null)
+            {
+                return;
+            }
+            BindingListView = bindingSource.DataSource as BindingListView;
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            base.OnHandleDestroyed(e);
+            _handleCreated = false;
+            BindingListView = null;
         }
 
         protected override void OnCellContentClick(DataGridViewCellEventArgs e)

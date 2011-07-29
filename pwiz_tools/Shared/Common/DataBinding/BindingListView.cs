@@ -40,19 +40,19 @@ namespace pwiz.Common.DataBinding
     /// </summary>
     public class BindingListView : BindingList<object>, IBindingListView, ITypedList
     {
-        private IList _innerList;
         private Func<object, bool> _filterPredicate;
         private Control _owner;
         private bool _isHandleCreated;
         private ViewInfo _viewInfo;
         private string[] _columnDisplayOrder;
+        private BindingListIndex _bindingListIndex;
 
         
         public BindingListView(ViewInfo viewInfo, IList innerList)
         {
             ViewInfo = viewInfo;
-            _innerList = innerList;
-            foreach (var item in _innerList)
+            InnerList = innerList;
+            foreach (var item in InnerList)
             {
                 Items.Add(item);
             }
@@ -314,35 +314,58 @@ namespace pwiz.Common.DataBinding
             }
         }
 
-        protected virtual void OnHandleCreated()
+        public virtual void StartTrackingChanges()
         {
-            var innerBindingList = _innerList as IBindingList;
-            if (innerBindingList != null)
+            if (_bindingListIndex == null)
             {
-                innerBindingList.ListChanged += InnerList_ListChanged;
+                _bindingListIndex = new BindingListIndex {BindingListView = this};
             }
         }
 
-        protected virtual void OnHandleDestroyed()
+        public virtual void StopTrackingChanges()
         {
-            var innerBindingList = _innerList as IBindingList;
-            if (innerBindingList != null)
+            if (_bindingListIndex != null)
             {
-                innerBindingList.ListChanged -= InnerList_ListChanged;
+                _bindingListIndex.BindingListView = null;
+                _bindingListIndex = null;
             }
         }
-        protected virtual void InnerList_ListChanged(object sender, ListChangedEventArgs e)
+        public virtual void InnerList_ListChanged(object sender, ListChangedEventArgs e)
         {
             switch (e.ListChangedType)
             {
-                
+                case ListChangedType.ItemAdded:
+                    Insert(e.NewIndex, InnerList[e.NewIndex]);
+                    break;
+                case ListChangedType.ItemDeleted:
+                    RemoveAt(e.NewIndex);
+                    break;
+                case ListChangedType.ItemChanged:
+                    Items[e.NewIndex] = InnerList[e.NewIndex];
+                    break;
+                default:
+                    InnerList_Reset();
+                    break;
             }
         }
 
         protected virtual void InnerList_Reset()
         {
-            Items.Clear();
-
+            var oldRaiseListChangedEvents = RaiseListChangedEvents;
+            try
+            {
+                RaiseListChangedEvents = false;
+                Items.Clear();
+                foreach (var item in InnerList)
+                {
+                    Add(item);
+                }
+            }
+            finally
+            {
+                RaiseListChangedEvents = oldRaiseListChangedEvents;
+            }
+            ResetBindings();
         }
 
         public string GetListName(PropertyDescriptor[] listAccessors)
@@ -363,6 +386,11 @@ namespace pwiz.Common.DataBinding
         public void SetColumnDisplayOrder(IEnumerable<string> columnDisplayOrder)
         {
             _columnDisplayOrder = columnDisplayOrder == null ? null : columnDisplayOrder.ToArray();
+        }
+
+        public IList InnerList
+        {
+            get; private set;
         }
 
 

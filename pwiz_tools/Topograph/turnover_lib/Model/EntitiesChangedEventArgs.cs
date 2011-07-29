@@ -143,6 +143,10 @@ namespace pwiz.Topograph.Model
         {
             return removedEntities.Values;
         }
+        public ICollection<EntityModel> GetNewEntities()
+        {
+            return newEntities.Values;
+        }
         public bool IsRemoved(EntityModel e)
         {
             return removedEntities.ContainsKey(e);

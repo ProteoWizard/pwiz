@@ -24,18 +24,28 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using NHibernate;
+using pwiz.Common.DataBinding;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.Model
 {
-    public class EntityModel
+    public class EntityModel : IDataRow
     {
         private EntityModel _parent;
         protected EntityModel(Workspace workspace, long? id)
         {
             Workspace = workspace;
             Id = id;
+        }
+
+        public object GetRowIdentifier()
+        {
+            if (!Id.HasValue)
+            {
+                return this;
+            }
+            return new KeyValuePair<Type, long>(ModelType, Id.Value);
         }
         
         [Browsable(false)]

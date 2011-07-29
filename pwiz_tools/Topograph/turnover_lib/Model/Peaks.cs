@@ -500,10 +500,13 @@ namespace pwiz.Topograph.Model
                     continue;
                 }
                 var retentionTimeAlignment = peptideFileAnalysis.MsDataFile.GetRetentionTimeAlignment(PeptideFileAnalysis.MsDataFile);
-                firstDetectedTime = Math.Min(firstDetectedTime, 
-                    retentionTimeAlignment.GetTargetTime(startTime.Value));
-                lastDetectedTime = Math.Max(lastDetectedTime,
-                    retentionTimeAlignment.GetTargetTime(endTime.Value));
+                if (retentionTimeAlignment != null)
+                {
+                    firstDetectedTime = Math.Min(firstDetectedTime,
+                        retentionTimeAlignment.GetTargetTime(startTime.Value));
+                    lastDetectedTime = Math.Max(lastDetectedTime,
+                        retentionTimeAlignment.GetTargetTime(endTime.Value));
+                }
             }
         }
 

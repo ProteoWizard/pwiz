@@ -26,6 +26,7 @@ using System.Windows.Forms;
 using pwiz.Common.Collections;
 using pwiz.Common.DataBinding;
 using pwiz.Common.SystemUtil;
+using pwiz.Topograph.ui.DataBinding;
 using pwiz.Topograph.ui.Forms;
 using pwiz.Topograph.ui.Properties;
 using pwiz.Topograph.Model;
@@ -36,7 +37,7 @@ namespace pwiz.Topograph.ui
     public class TopographViewContext : AbstractViewContext
     {
         public TopographViewContext(DataGridView dataGridView, Workspace workspace, Type rowType, IEnumerable<ViewSpec> builtInViews) 
-            : base(new ColumnDescriptor(new DataSchema(), rowType), dataGridView)
+            : base(new ColumnDescriptor(new TopographDataSchema(workspace), rowType), dataGridView)
         {
             Workspace = workspace;
             BuiltInViewSpecs = builtInViews;

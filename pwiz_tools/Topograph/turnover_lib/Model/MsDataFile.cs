@@ -28,6 +28,7 @@ using NHibernate.Criterion;
 using pwiz.Common.DataAnalysis;
 using pwiz.ProteowizardWrapper;
 using pwiz.Topograph.Data;
+using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.Model
 {
@@ -177,41 +178,50 @@ namespace pwiz.Topograph.Model
             var alignments = _alignments;
             lock (alignments)
             {
-                RetentionTimeAlignment result;
-                if (alignments.TryGetValue(other.Id.Value, out result))
+                try
                 {
+                    RetentionTimeAlignment result;
+                    if (alignments.TryGetValue(other.Id.Value, out result))
+                    {
+                        return result;
+                    }
+                    var lstMySearchResults = ListSearchResults();
+                    var lstOtherSearchResults = other.ListSearchResults();
+                    var otherSearchResults = lstOtherSearchResults.ToDictionary(s => s.PeptideId, s => s);
+                    var dict = new Dictionary<double, double>();
+                    foreach (var searchResult1 in lstMySearchResults)
+                    {
+                        SearchResultInfo searchResult2;
+                        if (!otherSearchResults.TryGetValue(searchResult1.PeptideId, out searchResult2))
+                        {
+                            continue;
+                        }
+                        if (searchResult1.FirstTracerCount == searchResult2.FirstTracerCount)
+                        {
+                            dict[GetTime(searchResult1.FirstDetectedScan)] =
+                                other.GetTime(searchResult2.FirstDetectedScan);
+                        }
+                        if (searchResult1.LastTracerCount == searchResult2.LastTracerCount)
+                        {
+                            dict[GetTime(searchResult1.LastDetectedScan)] = other.GetTime(searchResult2.LastDetectedScan);
+                        }
+                    }
+                    var xValues = dict.Keys.ToArray();
+                    Array.Sort(xValues);
+                    var yValues = xValues.Select(x => dict[x]).ToArray();
+                    var loessInterpolator = new LoessInterpolator(.1, 0);
+                    var weights = Enumerable.Repeat(1.0, xValues.Count()).ToArray();
+                    var smoothedPoints = loessInterpolator.Smooth(xValues, yValues, weights);
+                    result = RetentionTimeAlignment.GetRetentionTimeAlignment(xValues, smoothedPoints);
+                    alignments.Add(other.Id.Value, result);
                     return result;
                 }
-                var lstMySearchResults = ListSearchResults();
-                var lstOtherSearchResults = other.ListSearchResults();
-                var otherSearchResults = lstOtherSearchResults.ToDictionary(s => s.PeptideId, s => s);
-                var dict = new Dictionary<double, double>();
-                foreach (var searchResult1 in lstMySearchResults)
+                catch (Exception exception)
                 {
-                    SearchResultInfo searchResult2;
-                    if (!otherSearchResults.TryGetValue(searchResult1.PeptideId, out searchResult2))
-                    {
-                        continue;
-                    }
-                    if (searchResult1.FirstTracerCount == searchResult2.FirstTracerCount)
-                    {
-                        dict[GetTime(searchResult1.FirstDetectedScan)] =
-                            other.GetTime(searchResult2.FirstDetectedScan);
-                    }
-                    if (searchResult1.LastTracerCount == searchResult2.LastTracerCount)
-                    {
-                        dict[GetTime(searchResult1.LastDetectedScan)] = other.GetTime(searchResult2.LastDetectedScan);
-                    }
+                    ErrorHandler.LogException("Retention time alignment", "Error aligning " + Name + " with " + other.Name, exception);
+                    alignments.Add(other.Id.Value, null);
+                    return null;
                 }
-                var xValues = dict.Keys.ToArray();
-                Array.Sort(xValues);
-                var yValues = xValues.Select(x => dict[x]).ToArray();
-                var loessInterpolator = new LoessInterpolator(.1, 0);
-                var weights = Enumerable.Repeat(1.0, xValues.Count()).ToArray();
-                var smoothedPoints = loessInterpolator.Smooth(xValues, yValues, weights);
-                result = RetentionTimeAlignment.GetRetentionTimeAlignment(xValues, smoothedPoints);
-                alignments.Add(other.Id.Value, result);
-                return result;
             }
         }
         private IList<SearchResultInfo> ListSearchResults()

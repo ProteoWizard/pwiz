@@ -111,5 +111,15 @@ namespace pwiz.Common.DataBinding
             }
             return result.ToString();
         }
+
+        public virtual event DataRowsChangedEventHandler DataRowsChanged;
+        protected virtual void OnDataRowsChanged(DataRowsChangedEventArgs args)
+        {
+            var dataRowsChanged = DataRowsChanged;
+            if (dataRowsChanged != null)
+            {
+                dataRowsChanged.Invoke(this, args);
+            }
+        }
     }
 }
