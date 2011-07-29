@@ -27,12 +27,11 @@
 
 #include <iostream>
 #include <sstream>
-//#include <fstream>
 #include <map>
 #include <math.h>
 #include <time.h>
 
-#include "../sqlite/sqlite3pp.h"
+#include "sqlite/sqlite3pp.h"
 
 #include "crawdad/SimpleCrawdad.h"
 #include "pwiz/data/msdata/MSDataFile.hpp"
@@ -51,6 +50,12 @@ using namespace boost::filesystem;
 using namespace boost::icl;
 using namespace std;
 using namespace freicore;
+using namespace pwiz;
+using namespace pwiz::msdata;
+using namespace pwiz::analysis;
+using namespace pwiz::util;
+using namespace SimpleCrawdad;
+using namespace crawpeaks;
 
 namespace sqlite = sqlite3pp;
 
@@ -107,3 +112,32 @@ struct sourceFile {
 	string filename;
 	string dbFilename;
 };
+
+double Q1(vector<double>); // First quartile function
+double Q2(vector<double>); // Second quartile (aka median) function
+double Q3(vector<double>); // Third quartile function
+
+vector<string> GetNativeId(const string&, const string&);
+
+vector<windowData> MZRTWindows(const string&, const string&, map<string, int>, vector<ms_amalgam>);
+
+multimap<int, string> GetDuplicateID(const string&, const string&);
+
+int PeptidesIdentifiedOnce(const string&, const string&);
+int PeptidesIdentifiedTwice(const string&, const string&);
+int PeptidesIdentifiedThrice(const string&, const string&);
+
+double MedianPrecursorMZ(const string&, const string&);
+
+vector<double> GetRealPrecursorErrors(const string&, const string&);
+double GetMeanAbsolutePrecursorErrors(const string&, const string&);
+ppmStruct GetRealPrecursorErrorPPM(const string&, const string&);
+
+double GetMedianIDScore(const string&, const string&);
+
+int GetNumTrypticMS2Spectra(const string&, const string&);
+int GetNumTrypticPeptides(const string&, const string&);
+int GetNumUniqueTrypticPeptides(const string&, const string&);
+int GetNumUniqueSemiTrypticPeptides(const string&, const string&);
+
+vector<sourceFile> GetSpectraSources(const string& dbFilename);

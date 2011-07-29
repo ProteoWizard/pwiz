@@ -25,48 +25,19 @@
 #include "quameter.h"
 
 /**
-	How long did that take?
-*/
-
-/*silent: doesn't work in Windows
-timespec diff(timespec tStart, timespec tEnd)
-{
-	timespec temp;
-	if ((tEnd.tv_nsec-tStart.tv_nsec)<0) {
-		temp.tv_sec = tEnd.tv_sec-tStart.tv_sec-1;
-		temp.tv_nsec = 1000000000+tEnd.tv_nsec-tStart.tv_nsec;
-	} else {
-		temp.tv_sec = tEnd.tv_sec-tStart.tv_sec;
-		temp.tv_nsec = tEnd.tv_nsec-tStart.tv_nsec;
-	}
-	return temp;
-}
-*/
-
-/**
-	This is the primary function where all metrics are figured out.
+	The primary function where all metrics are calculated.
 */
 void MetricMaster(const string& dbFilename, string sourceFilename, const string& sourceId) {
 try {
 	boost::timer t;
-	// Set up the reading
-	using namespace pwiz;
-	using namespace pwiz::msdata;
-	using namespace pwiz::analysis;
-	using namespace pwiz::util;
-
-	double Q1(vector<double>); // First quartile function
-	double Q2(vector<double>); // Second quartile (aka median) function
-	double Q3(vector<double>); // Third quartile function
 
 	ofstream qout; // short for quameter output, save to same directory as input file
 	qout.open (	boost::filesystem::change_extension(sourceFilename, "-quameter_results.txt").string().c_str() );
-	
-qout << "Test 1\n";	
+
+	// Set up the reading	
 	FullReaderList readers;
-qout << "Test 2\n";
 	MSDataFile msd(sourceFilename, & readers);
-qout << "Test 3\n";
+	
     int startSpectraIndex = 0;	
     SpectrumList& spectrumList = *msd.run.spectrumListPtr;
     string sourceName = GetFilenameWithoutExtension( GetFilenameFromFilepath( sourceFilename ) );
@@ -82,7 +53,6 @@ qout << "Test 3\n";
 	vector<CVParam> scan2Time;
 	vector<double> retentionTime;
 	int iter = 0;
-	vector<string> GetNativeId(const string&, const string&);
 	vector<string> nativeID = GetNativeId(dbFilename, sourceId);
 	map<string, double> ticMap;
 	vector<double> ionInjectionTimeMS1;
@@ -211,9 +181,7 @@ qout << "Test 3\n";
 	
 // ------------------- start peak-finding code ------------------- //	
 
-	vector<windowData> MZRTWindows(const string&, const string&, map<string, int>, vector<ms_amalgam>);
 	vector<windowData> pepWindow = MZRTWindows(dbFilename, sourceId, nativeToArrayMap, scanInfo);
-//	int mzToleranceOrbitrap = 10; // 10 ppm
 	vector<double> sigNoisMS1;
 	vector<double> sigNoisMS2;
 	vector<chromatogram> identMS2Chrom(scanInfo.size());
@@ -403,7 +371,7 @@ qout << "Test 3\n";
 	string chromFilename = boost::filesystem::change_extension(sourceFilename, "-quameter_chromatograms.mzML").string();
 	MSDataFile::write(chromData, chromFilename);
 
-	// Crawdad time (peak finding)
+	// Find peaks with Crawdad
 	using namespace SimpleCrawdad;
 	using namespace crawpeaks;
 	typedef boost::shared_ptr<CrawdadPeak> CrawdadPeakPtr;
@@ -613,7 +581,6 @@ qout << "Test 3\n";
 //	double iqMS2Rate = iqMS2Scans / iqIDTime;
 
 	// Look for repeat peptide IDs in .idpDB. Used for metric C-1A and C-1B
-	multimap<int, string> GetDuplicateID(const string&, const string&);
 	multimap<int, string> duplicatePeptides = GetDuplicateID(dbFilename, sourceId);
 	
 	typedef multimap<int, string>::iterator mapIter;
@@ -663,15 +630,12 @@ qout << "Test 3\n";
 	float bleedRatio = (float)bleed/duplicatePeptides.size();
 	
 	// Metric DS-1A: Estimates oversampling
-	int PeptidesIdentifiedOnce(const string&, const string&);
 	int identifiedOnce = PeptidesIdentifiedOnce(dbFilename, sourceId);
-	int PeptidesIdentifiedTwice(const string&, const string&);
 	int identifiedTwice = PeptidesIdentifiedTwice(dbFilename, sourceId);
 	
 	float DS1A = (float)identifiedOnce/identifiedTwice;
 	
 	// Metric DS-1B: Estimates oversampling
-	int PeptidesIdentifiedThrice(const string&, const string&);
 	int identifiedThrice = PeptidesIdentifiedThrice(dbFilename, sourceId);
 	
 	float DS1B = (float)identifiedTwice/identifiedThrice;
@@ -699,7 +663,6 @@ qout << "Test 3\n";
 	}
 
 	// Call MedianPrecursorMZ() for metric IS-2
-	double MedianPrecursorMZ(const string&, const string&);
 	double medianPrecursorMZ = MedianPrecursorMZ(dbFilename, sourceId);
 
 	// Call PeptideCharge() for metrics IS-3A, IS3-B, IS3-C
@@ -740,20 +703,14 @@ qout << "Test 3\n";
 	sort(allPeaks.begin(), allPeaks.end());
 	double medianMS1Peak = Q2(allPeaks);
 
-	// MS1-5A: Median real value of precursor errors
-	
-	vector<double> GetRealPrecursorErrors(const string&, const string&);
+	// MS1-5A: Median real value of precursor errors	
 	vector<double> realPrecursorErrors = GetRealPrecursorErrors(dbFilename, sourceId);
 	double medianRealPrecursorError = Q2(realPrecursorErrors);
 
 	// MS1-5B: Mean of the absolute precursor errors
-	
-	double GetMeanAbsolutePrecursorErrors(const string&, const string&);
 	double meanAbsolutePrecursorError = GetMeanAbsolutePrecursorErrors(dbFilename, sourceId);
 	
 	// MS1-5C: Median real value of precursor errors in ppm
-
-	ppmStruct GetRealPrecursorErrorPPM(const string&, const string&);
 	ppmStruct realPrecursorErrorPPM = GetRealPrecursorErrorPPM(dbFilename, sourceId);
 	double medianRealPrecursorErrorPPM = realPrecursorErrorPPM.median;
 	
@@ -791,24 +748,19 @@ qout << "Test 3\n";
 	double idRatioQ4 = (double)idQ4/totalQ4;
 	
 	// P-1: Median peptide ID score
-	double GetMedianIDScore(const string&, const string&);
 	double medianIDScore = GetMedianIDScore(dbFilename, sourceId);
 	
 	// P-2A: Number of MS2 spectra identifying tryptic peptide ions
-	int GetNumTrypticMS2Spectra(const string&, const string&);
 	int numTrypticMS2Spectra = GetNumTrypticMS2Spectra(dbFilename, sourceId);
 	
 	// P-2B: Number of tryptic peptide ions identified
-	int GetNumTrypticPeptides(const string&, const string&);
 	int numTrypticPeptides = GetNumTrypticPeptides(dbFilename, sourceId);
 	
 	// P-2C: Number of unique tryptic peptides
-	int GetNumUniqueTrypticPeptides(const string&, const string&);
 	int numUniqueTrypticPeptides = GetNumUniqueTrypticPeptides(dbFilename, sourceId);
 	
 	// P-3: Ratio of semi to fully tryptic peptides
 	// uses variable from P-2C above
-	int GetNumUniqueSemiTrypticPeptides(const string&, const string&);
 	int numUniqueSemiTrypticPeptides = GetNumUniqueSemiTrypticPeptides(dbFilename, sourceId);
 	float ratioSemiToFullyTryptic = (float)numUniqueSemiTrypticPeptides/numUniqueTrypticPeptides;
 
@@ -892,11 +844,11 @@ qout << "Test 3\n";
 	cout << sourceFilename << " took " << t.elapsed() << " seconds to analyze.\n";
 	}
 	catch (exception& e) {
-        cerr << "Exception in worker thread: " << e.what() << endl;
+        cerr << "Exception in MetricMaster thread: " << e.what() << endl;
     }
 	catch (...) {
-        cerr << "Unhandled exception in worker thread." << endl;
-//        exit(1); // fear the unknown!
+        cerr << "Unhandled exception in MetricMaster thread." << endl;
+        exit(1); // fear the unknown!
     }
 	return;
 }
@@ -969,7 +921,6 @@ double Q3(vector<double> dataSet) {
 // also accept filenames of interest (e.g. ignore all source files except -these-)
 // also accept an extension type (e.g. use the .RAW source file instead of .mzML)
 vector<sourceFile> GetSpectraSources(const string& dbFilename) {
-
 	sqlite::database db(dbFilename);
 	string s = "select Id, Name from SpectrumSource";
 	sqlite::query qry(db, s.c_str() );
@@ -999,7 +950,7 @@ vector<sourceFile> GetSpectraSources(const string& dbFilename) {
 			tmpFilename = boost::filesystem::change_extension(tmpFilename, ".RAW").string();
 		else {
 			cout << "Cannot find file " << boost::filesystem::change_extension(tmpFilename, "").string() << " with any known extensions.\n";
-			continue; // if this source file dosen't exist we can't do anything, so let's try for the next source file
+			continue; // if this source file doesn't exist we can't do anything, so let's try for the next source file
 		}
 
 		tmpFile.filename = tmpFilename;
@@ -1008,8 +959,8 @@ vector<sourceFile> GetSpectraSources(const string& dbFilename) {
 		sources.push_back(tmpFile);
 		cout << "db: " << tmpFile.dbFilename << "\tid: " << tmpFile.id << "\tsource: " << tmpFile.filename << endl;
 	}
-	
-	return sources;
+	cout << endl;
+	return sources;	
 }
 
 //	Read an idpDB file
@@ -1357,25 +1308,18 @@ int main( int argc, char* argv[] ) {
 
 	vector<sourceFile> allSources;
 	for (int j=1; j < argc; j++) {
-
-/*silent			// Starting the timer
-			timespec time1, time2;
-			timespec diff(timespec tStart, timespec tEnd);
-			clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &time1);
-*/
-
-			// Queries the idpDB file for source filenames and their database ID number
-			vector<sourceFile> GetSpectraSources(const string& dbFilename);
+		// Queries the idpDB file for source filenames and their database ID number
+		try {
 			vector<sourceFile> spectraSources = GetSpectraSources(argv[j]);
 			allSources.insert(allSources.end(), spectraSources.begin(), spectraSources.end());
-			
-/*silent
-			// Stopping the timer and displaying the result
-			clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &time2);
-			cout << "Calling MetricMaster once took " << diff(time1,time2).tv_sec << "." << diff(time1,time2).tv_nsec << " seconds\n";
-*/
-//		}
-
+		}
+		catch (exception& e) {
+			cerr << "Exception in GetSpectraSources: " << e.what() << endl;
+		}
+		catch (...) {
+			cerr << "Unhandled exception in GetSpectraSources." << endl;
+			exit(1);
+		}
 	}
 	
 	int numFiles = allSources.size();
@@ -1384,13 +1328,13 @@ int main( int argc, char* argv[] ) {
 	if (maxThreads < 1) maxThreads = 1; // there must be at least one thread
 
 	for (int k = 0; k < max(1,( ((numFiles-1)/maxThreads)+1 )); k++) { // at least go through this loop once.
-		boost::thread_group two_by_two_this_hu_man_zoo;
+		boost::thread_group threadGroup;
 		for (int l = 0; (l < maxThreads) && (current < numFiles); l++) {
 			cout << "current: " << current << "\tdb: " << allSources[current].dbFilename << "\tid: " << allSources[current].id << "\tfile: " << allSources[current].filename << endl;
-			two_by_two_this_hu_man_zoo.add_thread(new boost::thread(MetricMaster, allSources[current].dbFilename, allSources[current].filename, allSources[current].id));
+			threadGroup.add_thread(new boost::thread(MetricMaster, allSources[current].dbFilename, allSources[current].filename, allSources[current].id));
 			current++;
 		}
-		two_by_two_this_hu_man_zoo.join_all();
+		threadGroup.join_all();
 	}
 	
 	return 0;
