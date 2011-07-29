@@ -23,6 +23,11 @@
 
 #define _WIN32_WINNT 0x0501     // Windows XP
 
+#define DEFAULT_TOP_N_PRECURSORS 5
+
+#define DEFAULT_MS1_MIN_MZ 400
+#define DEFAULT_MS1_MAX_MZ 1400
+
 #include <stdio.h>
 #include <iostream>
 #include <math.h>
@@ -60,6 +65,13 @@ enum Fields
     standard_type   // Optional
 };
 
+struct InclListEntry
+{
+	double precursor_mz;
+	double start_time;
+	double stop_time;
+};
+
 // Equation for low mass limit provided by Thermo
 double FirstMass(double precursorMass, double activationQ)
 {
@@ -78,7 +90,15 @@ public:
             "   Takes template LTQ SRM method file and a Skyline generated Thermo\n"
             "   scheduled transition list as inputs, to generate a new LTQ SRM method\n"
             "   file as output.\n"
-			"   -f               Collect full scan MS/MS, ignoring product m/z values\n";
+			"   -f               Collect full scan MS/MS, ignoring product m/z values\n"
+			"   -1               Collect full scan MS1 on each cycle\n"
+			"                    (NB: it's a \"one\", not an \"L\")\n"
+			"   -b [min]-[max]   Use min and max as the m/z window for full scan MS1\n"
+			"                    [default range 400-1400]\n"
+			"   -i               Create an inclusion list method instead of a transition\n"
+			"                    list method\n"
+			"   -t [n]           When using an inclusion list, cycle through the top n most\n"
+			"                    intense precursors after the MS1 scan. Default is 5.\n";
 
         cerr << usage;
 
@@ -92,10 +112,16 @@ public:
 
 private:
     void replaceTransitionList(const vector<vector<string>>& tableTranList);
+	void buildInclusionListMethod(const vector<vector<string>>& tableTranList);
     void printMethod();
 
 private:
 	bool _fullScans;
+	bool _ms1Scans;
+	double _ms1MinMz;
+	double _ms1MaxMz;
+	bool _inclusionList;
+	int _topNPrecursors;
     ILCQMethodPtr _methodPtr;
 };
 
@@ -104,13 +130,17 @@ int main(int argc, char* argv[])
     BuildLTQMethod builder;
     builder.parseCommandArgs(argc, argv);
     builder.build();
-
+	
     return 0;
 }
 
 BuildLTQMethod::BuildLTQMethod()
 {
 	_fullScans = false;
+	_ms1Scans = false;
+	_ms1MinMz = DEFAULT_MS1_MIN_MZ;
+	_ms1MaxMz = DEFAULT_MS1_MAX_MZ;
+    _topNPrecursors = DEFAULT_TOP_N_PRECURSORS;
     if (FAILED(CoInitialize(NULL)))
         Verbosity::error("Failure during initialization.");
 
@@ -131,17 +161,59 @@ void BuildLTQMethod::parseCommandArgs(int argc, char* argv[])
     int i = 1;
     while (i < argc && *argv[i] == '-')
     {
+		bool processed = true;
         switch (*(argv[i++]+1))
         {
         case 'f':
 			_fullScans = true;
-			// Remove this flag and end the loop
+            break;
+		case '1':
+		    _ms1Scans = true;
+			break;
+		case 'b':
+			{
+			if(i+2 >= argc) usage();
+
+			vector<string> minAndMax;
+			split(argv[i++], minAndMax, "-");
+
+			if(minAndMax.size() < 2u) usage();
+
+			_ms1MinMz = atoi(minAndMax[0].c_str());
+			_ms1MaxMz = atoi(minAndMax[1].c_str());
+			}
+			break;
+		case 'i':
+			_inclusionList = true;
+			break;
+		case 't':
+			if(i + 1 >= argc) usage();
+			_topNPrecursors = atoi(argv[i++]);
+			if(_topNPrecursors < 1) usage();
+		default:
+			processed = false;
+			break;
+        }
+
+		if (processed)
+		{
+			// Remove this flag so that it will not be processed again by the base class
 			if (i < argc)
 				memmove(&argv[i-1], &argv[i], sizeof(char*)*(argc-i));
-			i = --argc;
-            break;
-        }
+			argc--;
+			i--;
+		}
     }
+
+	if(_topNPrecursors < 1)
+	{
+		usage();
+	}
+
+	if(_ms1MinMz <= 0 || _ms1MaxMz <= 0 || _ms1MaxMz <= _ms1MinMz)
+	{
+		usage();
+	}
 
 	MethodBuilder::parseCommandArgs(argc, argv);
 }
@@ -166,8 +238,11 @@ void BuildLTQMethod::createMethod(string templateMethod, string outputMethod, co
     // Inject the new transition list into the template and save
     try
     {
-        replaceTransitionList(tableTranList);
-
+		if(_inclusionList)
+			buildInclusionListMethod(tableTranList);
+		else
+			replaceTransitionList(tableTranList);
+		
         // Save into existing to avoid losing information that Thermo
         // strips with SaveAs()
         _methodPtr->Save();
@@ -177,6 +252,73 @@ void BuildLTQMethod::createMethod(string templateMethod, string outputMethod, co
     {
         Verbosity::error("Failure creating new method from %s", templateMethod.c_str());
     }
+}
+
+void BuildLTQMethod::buildInclusionListMethod(const vector<vector<string>>& tableTranList)
+{
+
+	//Setup the MS1 scan
+	_methodPtr->NumScanEvents = 1 + _topNPrecursors;
+	_methodPtr->CurrentScanEvent = 0;
+	_methodPtr->ScanType = 0;		//full scan
+	_methodPtr->ScanMode = 0;		//MS1
+	_methodPtr->DataType = 1;		//Profile
+	_methodPtr->NumReactions = 0;
+	_methodPtr->NumMassRanges = 1;
+	_methodPtr->SetMassRange(0, _ms1MinMz, _ms1MaxMz);
+
+	_methodPtr->DataDepUseGlobalMassLists = 1;
+	
+	//Install the scan events 2 through _topNPrecursors+1 (which is >=2)
+	for(int i = 1; i < _topNPrecursors + 1; i++)
+	{
+		_methodPtr->CurrentScanEvent = i;
+		_methodPtr->NumReactions = 0;	//These do not default to zero, you must set them!!
+		_methodPtr->NumMassRanges = 0;
+		_methodPtr->ScanType = 0;
+		_methodPtr->ScanMode = 1;
+		_methodPtr->DataDepMasterEvent = 0;
+		_methodPtr->DataDepMode = 1;	//Nth most intense ion from inclusion list, not overall
+		_methodPtr->DependentScan = 1;
+		_methodPtr->DataType = 0; //Centroid
+		_methodPtr->DataDepNthMostIntenseIon = i; //each scan Si should look for the (i-1)th most intense ion
+		_methodPtr->DataDepFallThroughToNthMostIntense = 1; // "Most intense if no Parent Masses found"
+	}
+	
+	//_methodPtr->DataDepAnalyzeTopN = _topNPrecursors; //needed?
+	
+	
+	//We need to set _methodPtr->DataDepNumParentMasses and to install a start/stop
+	//time juncture at each "parent mass" entry, so we need to do a Group By on the
+	//precursor MZ of the transition list
+	vector<InclListEntry> iList;
+	vector<vector<string>>::const_iterator trans = tableTranList.begin();
+	double precursorMz = -1; //Cannot happen
+
+	for(; trans != tableTranList.end(); ++trans)
+	{
+		double newPrecMz = atof(trans->at(precursor_mz).c_str());
+
+		if(precursorMz != newPrecMz)
+		{
+			InclListEntry listEntry;
+			listEntry.precursor_mz = newPrecMz;
+			listEntry.start_time = atof(trans->at(start_time).c_str());
+			listEntry.stop_time = atof(trans->at(stop_time).c_str());
+			
+			iList.push_back(listEntry);
+
+			precursorMz = newPrecMz;
+		}
+	}
+	
+	//Now use the grouped data. Number of precursors,
+	_methodPtr->put_NumMassTimeWindows(0, iList.size());
+	//and the data for each one
+	for(int i = 0; i < iList.size(); i++)
+	{
+		_methodPtr->SetMassTimeWindow(0, i, iList[i].start_time, iList[i].stop_time, iList[i].precursor_mz);
+	}
 }
 
 void BuildLTQMethod::replaceTransitionList(const vector<vector<string>>& tableTranList)
@@ -212,13 +354,31 @@ void BuildLTQMethod::replaceTransitionList(const vector<vector<string>>& tableTr
         }
     }
 
-	// Always start with zero precursor mass, or the first precursor won't get written
-    precursorMass = 0.0;
-
     // TODO: Handle scheduling with segments
     short scanCount = 0;
     short rangeCount = 0;
+
+	// Always start with zero precursor mass, or the first precursor won't get written
+    precursorMass = 0.0;
+
+	
+	//First, add an MS1 scan if the flag has been set
+	if(_ms1Scans)
+	{
+		scanCount++;
+		_methodPtr->NumScanEvents = scanCount;
+		_methodPtr->CurrentScanEvent = scanCount - 1;
+		_methodPtr->ScanMode = 0;    // 0 = MS, ..., 9 = MS10
+		_methodPtr->ScanType = 0;    // 0 = Full, 1 = SIM/SRM
+		_methodPtr->DataType = 1;    // 0 = Centroid, 1 = Profile
+		_methodPtr->NumReactions = 0;
+
+		_methodPtr->NumMassRanges = 1;
+		_methodPtr->SetMassRange(0, _ms1MinMz, _ms1MaxMz);
+	}
+	
     vector<vector<string>>::const_iterator it = tableTranList.begin();
+	
     for (; it != tableTranList.end(); it++)
     {
         string value = it->at(precursor_mz);
