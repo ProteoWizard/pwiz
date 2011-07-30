@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Common.SystemUtil;
@@ -148,7 +149,7 @@ namespace pwiz.Skyline.Controls
                 Dispose();
 
                 if (x != null)
-                    throw x;
+                    throw new TargetInvocationException(x);
             }
         }
 
