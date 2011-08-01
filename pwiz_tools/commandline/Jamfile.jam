@@ -97,6 +97,7 @@ exe msistats
       ../../pwiz/utility/misc//pwiz_utility_misc
       mstool-requirements
     : <include>../../..
+      <warnings>off
     ;
 
 
