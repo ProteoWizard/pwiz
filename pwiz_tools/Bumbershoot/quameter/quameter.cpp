@@ -797,7 +797,7 @@ try {
 	qout << "--------\n";
 	qout << "C-1A: Chromatographic peak tailing: " << peakTailing << "/" << numDuplicatePeptides << " = " << peakTailingRatio << endl;
 	qout << "C-1B: Chromatographic bleeding: " << bleed << "/" << numDuplicatePeptides << " = " << bleedRatio << endl;
-	qout << "C-2A: Time period over which 50% of peptides were identified: " << thirdQuartileIDTime << " sec - " << firstQuartileIDTime << " sec = " << iqIDTime/60 << " minutes.\n";
+	qout << "C-2A: Time period over which middle 50% of peptides were identified: " << thirdQuartileIDTime << " sec - " << firstQuartileIDTime << " sec = " << iqIDTime/60 << " minutes.\n";
 	qout << "C-2B: Peptide identification rate during the interquartile range: " << iqIDRate << " peptides/min.\n";
 	qout << "C-3A: Median peak width for identified peptides: " << medianFwhm << " seconds.\n";
 	qout << "C-3B: Interquartile peak width for identified peptides: " << fwhmQ3 << " - " << fwhmQ1 << " = "<< iqFwhm << " seconds.\n";
@@ -806,8 +806,8 @@ try {
 	qout << "C-4C: Median peak width for identified peptides in median RT decile: " << medianFwhmByRT << " seconds.\n";
 	qout << "DS-1A: Ratio of peptides identified once over those identified twice: " << identifiedOnce << "/" << identifiedTwice << " = " << DS1A << endl;
 	qout << "DS-1B: Ratio of peptides identified twice over those identified thrice: " << identifiedTwice << "/" << identifiedThrice << " = " << DS1B << endl;
-	qout << "DS-2A: Number of MS1 scans taken over the interquartile range: " << iqMS1Scans << " peptides\n";
-	qout << "DS-2B: Number of MS2 scans taken over the interquartile range: " << iqMS2Scans << " peptides\n";
+	qout << "DS-2A: Number of MS1 scans taken over the interquartile range: " << iqMS1Scans << " scans\n";
+	qout << "DS-2B: Number of MS2 scans taken over the interquartile range: " << iqMS2Scans << " scans\n";
 	qout << "DS-3A: MS1 peak intensity over MS1 sampled intensity at median sorted by max intensity: " << medianSamplingRatio << endl;
 	qout << "DS-3B: MS1 peak intensity over MS1 sampled intensity at median sorted by max intensity of bottom 50% of MS1: " << bottomHalfSamplingRatio << endl;
 	qout << "IS-1A: Number of big drops in total ion current value: " << ticDrop << endl; 
@@ -817,7 +817,7 @@ try {
 	qout << "IS-3B: +3 charge / +2 charge: " << charge3 << "/" << charge2 << " = " << IS3B << endl;
 	qout << "IS-3C: +4 charge / +2 charge: " << charge4 << "/" << charge2 << " = " << IS3C << endl;
 	if (ionInjectionTimeMS1.empty())
-		qout << "MS1-1: Median MS1 ion injection time: " << emptyMetric << " ms\n";
+		qout << "MS1-1: Median MS1 ion injection time: " << emptyMetric << endl;
 	else
 		qout << "MS1-1: Median MS1 ion injection time: " << medianInjectionTimeMS1 << " ms\n";
 	qout << "MS1-2A: Median signal-to-noise ratio (max/median peak height) for MS1 up to and including C-2A: " << medianSigNoisMS1 << endl;
@@ -829,7 +829,7 @@ try {
 	qout << "MS1-5C: Median real value of precursor errors in ppm: " << medianRealPrecursorErrorPPM << endl;
 	qout << "MS1-5D: Interquartile range in ppm of the precursor errors: " << interquartileRealPrecursorErrorPPM << endl;
 	if (ionInjectionTimeMS2.empty())
-		qout << "MS2-1: Median MS2 ion injection time: " << emptyMetric << " ms\n";
+		qout << "MS2-1: Median MS2 ion injection time: " << emptyMetric << endl;
 	else
 		qout << "MS2-1: Median MS2 ion injection time: " << medianInjectionTimeMS2 << " ms\n";
 	qout << "MS2-2: Median S/N ratio (max/median peak height) for identified MS2 spectra: " << medianSigNoisMS2 << endl;
@@ -1127,6 +1127,7 @@ fourInts PeptideCharge(const string& dbFilename, const string& spectrumSourceId)
 	return charges;
 }
 
+// Interested in +2 charges only
 vector<double> GetRealPrecursorErrors(const string& dbFilename, const string& spectrumSourceId) {
 
 	sqlite::database db(dbFilename);
@@ -1190,7 +1191,7 @@ ppmStruct GetRealPrecursorErrorPPM(const string& dbFilename, const string& spect
 	// Find the median for metric MS1-5C
 	returnMe.median = Q2(realPrecursorErrorsPPM);
 
-	// The itnerquartile range is the distance between Q1 and Q3
+	// The interquartile range is the distance between Q1 and Q3
 	returnMe.interquartileRange = Q3(realPrecursorErrorsPPM) - Q1(realPrecursorErrorsPPM);
 	
 	return returnMe;
