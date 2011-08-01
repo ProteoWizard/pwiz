@@ -23,7 +23,6 @@
 //
 
 #include "stdafx.h"
-#include "shared_defs.h"
 
 #include <iostream>
 #include <sstream>
@@ -100,11 +99,9 @@ struct windowData {
 	vector<double> MS1RT;
 };
 
-struct peakData {
-	int peptide;
+struct intensityPair {
+	double precursorIntensity;
 	double peakIntensity;
-	double peakRT;
-	double fwhm;
 };
 
 struct sourceFile {
@@ -116,6 +113,8 @@ struct sourceFile {
 double Q1(vector<double>); // First quartile function
 double Q2(vector<double>); // Second quartile (aka median) function
 double Q3(vector<double>); // Third quartile function
+
+bool compareByPeak(const intensityPair& pair1, const intensityPair& pair2) { return pair1.peakIntensity < pair2.peakIntensity; }
 
 vector<string> GetNativeId(const string&, const string&);
 
