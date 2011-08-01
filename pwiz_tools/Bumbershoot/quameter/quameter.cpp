@@ -375,12 +375,12 @@ try {
 	using namespace SimpleCrawdad;
 	using namespace crawpeaks;
 	typedef boost::shared_ptr<CrawdadPeak> CrawdadPeakPtr;
-	vector<peakData> peakDataV;
+	vector<intensityPair> idMS2Intensities;
 	vector<double> idMS2PeakV;
 	vector<double> unidMS2PeakV;
 	vector<double> allMS2Peaks;
-	vector<double> allFwhm;
-	vector<double> allPeaks;
+	vector<double> identifiedPeptideFwhm;
+	vector<double> identifiedPeptidePeaks;
 	
 	// cycle through all unique peptides, passing each one to crawdad
 	for (unsigned int iWin = 0; iWin < pepWindow.size(); iWin++) {
@@ -407,17 +407,9 @@ try {
 				closestFwhm = (*peakPtr).getFwhm();
 			}
 		}
-	
-		// --- assign struct stuff here ---
-		peakData tmpPeakData;
-		tmpPeakData.peptide = pepWindow[iWin].peptide;
-		tmpPeakData.peakIntensity = closestIntensity;
-		tmpPeakData.peakRT = closestRT;
-		tmpPeakData.fwhm = closestFwhm;
 		
-		allFwhm.push_back(closestFwhm);
-		allPeaks.push_back(closestIntensity);
-		peakDataV.push_back(tmpPeakData);
+		identifiedPeptideFwhm.push_back(closestFwhm);
+		identifiedPeptidePeaks.push_back(closestIntensity);
 	}
 	// cycle through all identifed MS2 scans, passing each one to crawdad
 	for (unsigned int i = 0; i < identMS2Chrom.size(); i++) {
@@ -442,6 +434,10 @@ try {
 			}
 		}
 
+		intensityPair tmpIntensityPair;
+		tmpIntensityPair.precursorIntensity = scanInfo[i].precursorIntensity;
+		tmpIntensityPair.peakIntensity = closestIntensity;
+		idMS2Intensities.push_back(tmpIntensityPair);
 		idMS2PeakV.push_back(closestIntensity);
 		allMS2Peaks.push_back(closestIntensity);
 	}
@@ -515,51 +511,51 @@ try {
 	double iqIDRate = (thirdQuartileIndex - firstQuartileIndex) *60 / iqIDTime;
 
 	// Metric C-4A: Median peak width for peptides in last decile sorted by RT
-	// Going slightly out of order (C-4A/B before C-3A/B) because the former use 'unsorted' allFwhm (default is sorted by RT) while the C-3A/B then sort allFwhm by width size
+	// Going slightly out of order (C-4A/B before C-3A/B) because the former use 'unsorted' identifiedPeptideFwhm (default is sorted by RT) while the C-3A/B then sort identifiedPeptideFwhm by width size
 	double medianFwhmLastRTDecile;
-	int sizeFwhm = allFwhm.size();
+	int sizeFwhm = identifiedPeptideFwhm.size();
 	int lastDecileStart = ( (sizeFwhm+1) * 9 / 10 );
 	int lastDecile = sizeFwhm - lastDecileStart;
 	if ( sizeFwhm < 10)	// If there aren't more than 10 items in this vector the last decile is meaningless
-		medianFwhmLastRTDecile = allFwhm[sizeFwhm-1];
+		medianFwhmLastRTDecile = identifiedPeptideFwhm[sizeFwhm-1];
 	else if ( lastDecile % 2 == 0 ) {
 		int index1 = (lastDecile/2)-1 + lastDecileStart;
 		int index2 = (lastDecile/2) + lastDecileStart;
-		medianFwhmLastRTDecile = (allFwhm[index1] + allFwhm[index2]) / 2;
+		medianFwhmLastRTDecile = (identifiedPeptideFwhm[index1] + identifiedPeptideFwhm[index2]) / 2;
 	}
 	else {
 		int index1 = (lastDecile)/2 + lastDecileStart;
-		medianFwhmLastRTDecile = allFwhm[index1];
+		medianFwhmLastRTDecile = identifiedPeptideFwhm[index1];
 	}	
 
 	// Metric C-4B: Median peak width for peptides in first decile sorted by RT
 	double medianFwhmFirstRTDecile;
 	int firstDecile = (sizeFwhm+1) / 10;
 	if ( sizeFwhm < 10)
-		medianFwhmFirstRTDecile = allFwhm[0];
+		medianFwhmFirstRTDecile = identifiedPeptideFwhm[0];
 	else if ( firstDecile % 2 == 0 ) {
 		int index1 = (firstDecile/2)-1;
 		int index2 = (firstDecile/2);
-		medianFwhmFirstRTDecile = (allFwhm[index1] + allFwhm[index2]) / 2;
+		medianFwhmFirstRTDecile = (identifiedPeptideFwhm[index1] + identifiedPeptideFwhm[index2]) / 2;
 	}
 	else {
 		int index1 = (firstDecile)/2;
-		medianFwhmFirstRTDecile = allFwhm[index1];
+		medianFwhmFirstRTDecile = identifiedPeptideFwhm[index1];
 	}
 	
 	// Metric C-4C: Median peak width for peptides "in the median decile" sorted by RT -- really just the median of all the values
-	double medianFwhmByRT = Q2(allFwhm);
+	double medianFwhmByRT = Q2(identifiedPeptideFwhm);
 	
 	// Metric C-3A - uses sizeFwhm from Metric C-4A; the difference is the sorting here
-	sort(allFwhm.begin(), allFwhm.end());
-	double medianFwhm = Q2(allFwhm);
+	sort(identifiedPeptideFwhm.begin(), identifiedPeptideFwhm.end());
+	double medianFwhm = Q2(identifiedPeptideFwhm);
 
 	// Metric C-3B
 	// First quartile
-	double fwhmQ1 = Q1(allFwhm);
+	double fwhmQ1 = Q1(identifiedPeptideFwhm);
 	
 	// Third quartile
-	double fwhmQ3 = Q3(allFwhm);
+	double fwhmQ3 = Q3(identifiedPeptideFwhm);
 	
 	// Interquartile fwhm
 	double iqFwhm = fwhmQ3 - fwhmQ1;
@@ -632,13 +628,37 @@ try {
 	// Metric DS-1A: Estimates oversampling
 	int identifiedOnce = PeptidesIdentifiedOnce(dbFilename, sourceId);
 	int identifiedTwice = PeptidesIdentifiedTwice(dbFilename, sourceId);
-	
 	float DS1A = (float)identifiedOnce/identifiedTwice;
 	
 	// Metric DS-1B: Estimates oversampling
 	int identifiedThrice = PeptidesIdentifiedThrice(dbFilename, sourceId);
-	
 	float DS1B = (float)identifiedTwice/identifiedThrice;
+
+	// For metric DS-3A: Ratio of MS1 max intensity over sampled intensity for median identified peptides sorted by max intensity
+	sort( idMS2Intensities.begin(), idMS2Intensities.end(), compareByPeak );
+	int idMS2Size = (int)idMS2Intensities.size();
+	double medianSamplingRatio = 0;
+	if ( idMS2Size % 2 == 0 ) {
+		int index1 = (idMS2Size/2)-1;
+		int index2 = (idMS2Size/2);
+		medianSamplingRatio = ((idMS2Intensities[index1].peakIntensity / idMS2Intensities[index1].precursorIntensity) + (idMS2Intensities[index2].peakIntensity / idMS2Intensities[index2].precursorIntensity)) / 2;
+	}
+	else {
+		int index1 = (idMS2Size)/2;
+		medianSamplingRatio = (idMS2Intensities[index1].peakIntensity / idMS2Intensities[index1].precursorIntensity);
+	}	
+
+	// For metric DS-3B: Same as DS-3A except only look at the bottom 50% of identified peptides sorted by max intensity
+	double bottomHalfSamplingRatio = 0;
+	if ( idMS2Size % 4 == 0 ) {
+		int index1 = (idMS2Size/4)-1;
+		int index2 = (idMS2Size/4);
+		bottomHalfSamplingRatio = ((idMS2Intensities[index1].peakIntensity / idMS2Intensities[index1].precursorIntensity) + (idMS2Intensities[index2].peakIntensity / idMS2Intensities[index2].precursorIntensity)) / 2;
+	}
+	else {
+		int index1 = (idMS2Size)/4;
+		bottomHalfSamplingRatio = (idMS2Intensities[index1].peakIntensity / idMS2Intensities[index1].precursorIntensity);
+	}
 	
 	// Metrics IS-1A and IS-1B
 	double lastTIC = -1;
@@ -698,10 +718,17 @@ try {
 	sort(ticVector.begin(), ticVector.end());
 	int ticSize = ticVector.size();
 	double medianTIC = Q2(ticVector)/1000;
+	
+	// MS1-3A: Ratio of 95th over 5th percentile of MS1 max intensities of identified peptides
+	sort(identifiedPeptidePeaks.begin(), identifiedPeptidePeaks.end());
+	int numPeaks = identifiedPeptidePeaks.size();
+	double ninetyfifthPercPeak = identifiedPeptidePeaks[(int)(.95*numPeaks + .5)-1]; // 95th percentile peak
+	double fifthPercPeak = identifiedPeptidePeaks[(int)(.05*numPeaks + .5)-1]; // 5th percentile peak
+	double dynamicRangeOfPeptideSignals = ninetyfifthPercPeak/fifthPercPeak;
 
 	// MS1-3B: Median MS1 peak height for identified peptides
-	sort(allPeaks.begin(), allPeaks.end());
-	double medianMS1Peak = Q2(allPeaks);
+	// the peaks have already been sorted by intensity in metric MS1-3A above
+	double medianMS1Peak = Q2(identifiedPeptidePeaks);
 
 	// MS1-5A: Median real value of precursor errors	
 	vector<double> realPrecursorErrors = GetRealPrecursorErrors(dbFilename, sourceId);
@@ -781,6 +808,8 @@ try {
 	qout << "DS-1B: Ratio of peptides identified twice over those identified thrice: " << identifiedTwice << "/" << identifiedThrice << " = " << DS1B << endl;
 	qout << "DS-2A: Number of MS1 scans taken over the interquartile range: " << iqMS1Scans << " peptides\n";
 	qout << "DS-2B: Number of MS2 scans taken over the interquartile range: " << iqMS2Scans << " peptides\n";
+	qout << "DS-3A: MS1 peak intensity over MS1 sampled intensity at median sorted by max intensity: " << medianSamplingRatio << endl;
+	qout << "DS-3B: MS1 peak intensity over MS1 sampled intensity at median sorted by max intensity of bottom 50% of MS1: " << bottomHalfSamplingRatio << endl;
 	qout << "IS-1A: Number of big drops in total ion current value: " << ticDrop << endl; 
 	qout << "IS-1B: Number of big jumps in total ion current value: " << ticJump << endl;
 	qout << "IS-2: Median m/z value for all unique ions of identified peptides: " << medianPrecursorMZ << endl;
@@ -793,6 +822,7 @@ try {
 		qout << "MS1-1: Median MS1 ion injection time: " << medianInjectionTimeMS1 << " ms\n";
 	qout << "MS1-2A: Median signal-to-noise ratio (max/median peak height) for MS1 up to and including C-2A: " << medianSigNoisMS1 << endl;
 	qout << "MS1-2B: Median TIC value of identified peptides before the third quartile: " << medianTIC << endl;
+	qout << "MS1-3A: Ratio of 95th over 5th percentile MS1 max intensities of identified peptides: " << ninetyfifthPercPeak << "/" << fifthPercPeak << " = " << dynamicRangeOfPeptideSignals << endl;
 	qout << "MS1-3B: Median maximum MS1 value for identified peptides: " << medianMS1Peak << endl;
 	qout << "MS1-5A: Median real value of precursor errors: " << medianRealPrecursorError << endl;
 	qout << "MS1-5B: Mean of the absolute precursor errors: " << meanAbsolutePrecursorError << endl;
