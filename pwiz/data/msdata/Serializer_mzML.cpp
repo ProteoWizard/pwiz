@@ -221,8 +221,9 @@ void Serializer_mzML::Impl::read(shared_ptr<istream> is, MSData& msd) const
     }
 
     IO::read(*is, msd, IO::IgnoreSpectrumList);
-    msd.run.spectrumListPtr = SpectrumList_mzML::create(is, msd, config_.indexed);
-    msd.run.chromatogramListPtr = ChromatogramList_mzML::create(is, msd, config_.indexed);
+    Index_mzML_Ptr indexPtr(new Index_mzML(is, msd));
+    msd.run.spectrumListPtr = SpectrumList_mzML::create(is, msd, indexPtr);
+    msd.run.chromatogramListPtr = ChromatogramList_mzML::create(is, msd, indexPtr);
 }
 
 

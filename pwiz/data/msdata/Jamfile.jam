@@ -49,6 +49,7 @@ lib pwiz_data_msdata
         DefaultReaderList.cpp
         Diff.cpp
         IO.cpp
+        Index_mzML.cpp
         LegacyAdapter.cpp
         MSData.cpp
         MSDataFile.cpp

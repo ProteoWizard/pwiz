@@ -78,7 +78,8 @@ void test(bool indexed)
     dummy.instrumentConfigurationPtrs.push_back(InstrumentConfigurationPtr(new InstrumentConfiguration("LCQ Deca")));
     dummy.dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing("CompassXtract processing")));
 
-    SpectrumListPtr sl = SpectrumList_mzML::create(is, dummy, indexed);
+    Index_mzML_Ptr index(new Index_mzML(is, dummy));
+    SpectrumListPtr sl = SpectrumList_mzML::create(is, dummy, index);
 
     // check easy functions
 

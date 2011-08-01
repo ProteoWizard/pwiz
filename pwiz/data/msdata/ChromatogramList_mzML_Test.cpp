@@ -64,7 +64,8 @@ void test(bool indexed)
     dummy.dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing("pwiz_processing")));
     dummy.dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing("CompassXtract processing")));
 
-    ChromatogramListPtr sl = ChromatogramList_mzML::create(is, dummy, indexed);
+    Index_mzML_Ptr index(new Index_mzML(is, dummy));
+    ChromatogramListPtr sl = ChromatogramList_mzML::create(is, dummy, index);
 
     // check easy functions
 

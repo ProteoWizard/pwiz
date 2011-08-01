@@ -27,6 +27,7 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "SpectrumListBase.hpp"
+#include "Index_mzML.hpp"
 #include <iosfwd>
 
 
@@ -41,7 +42,7 @@ class PWIZ_API_DECL SpectrumList_mzML : public SpectrumListBase
 
     static SpectrumListPtr create(boost::shared_ptr<std::istream> is,
                                   const MSData& msd,
-                                  bool indexed = true);
+                                  const Index_mzML_Ptr& indexPtr);
 };
 
 

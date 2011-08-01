@@ -27,6 +27,7 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include "ChromatogramListBase.hpp"
+#include "Index_mzML.hpp"
 #include <iosfwd>
 
 
@@ -41,7 +42,7 @@ class PWIZ_API_DECL ChromatogramList_mzML : public ChromatogramListBase
 
     static ChromatogramListPtr create(boost::shared_ptr<std::istream> is,
                                       const MSData& msd,
-                                      bool indexed = true);
+                                      const Index_mzML_Ptr& indexPtr);
 };
 
 
