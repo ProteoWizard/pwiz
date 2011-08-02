@@ -93,12 +93,14 @@ public:
 			"   -f               Collect full scan MS/MS, ignoring product m/z values\n"
 			"   -1               Collect full scan MS1 on each cycle\n"
 			"                    (NB: it's a \"one\", not an \"L\")\n"
-			"   -b [min]-[max]   Use min and max as the m/z window for full scan MS1\n"
+			"   -w [min]-[max]   Use min and max as the m/z window for full scan MS1\n"
 			"                    [default range 400-1400]\n"
 			"   -i               Create an inclusion list method instead of a transition\n"
 			"                    list method\n"
 			"   -t [n]           When using an inclusion list, cycle through the top n most\n"
-			"                    intense precursors after the MS1 scan. Default is 5.\n";
+			"                    intense precursors after the MS1 scan. Default is 5.\n"
+			"   -a [analyzer]    For MS1, use given mass analyzer (\"iontrap\" or \"ftms\")\n";
+		    "   -b [analyzer]    For MS/MS, use given mass analyzer (\"iontrap\" or \"ftms\")"; 
 
         cerr << usage;
 
@@ -122,6 +124,8 @@ private:
 	double _ms1MaxMz;
 	bool _inclusionList;
 	int _topNPrecursors;
+	int _msAnalyzer;
+	int _msmsAnalyzer;
     ILCQMethodPtr _methodPtr;
 };
 
@@ -141,6 +145,9 @@ BuildLTQMethod::BuildLTQMethod()
 	_ms1MinMz = DEFAULT_MS1_MIN_MZ;
 	_ms1MaxMz = DEFAULT_MS1_MAX_MZ;
     _topNPrecursors = DEFAULT_TOP_N_PRECURSORS;
+	_inclusionList = false;
+	_msAnalyzer = 1;
+	_msmsAnalyzer = 0;
     if (FAILED(CoInitialize(NULL)))
         Verbosity::error("Failure during initialization.");
 
@@ -161,7 +168,7 @@ void BuildLTQMethod::parseCommandArgs(int argc, char* argv[])
     int i = 1;
     while (i < argc && *argv[i] == '-')
     {
-		bool processed = true;
+		int processed = 1;
         switch (*(argv[i++]+1))
         {
         case 'f':
@@ -170,13 +177,13 @@ void BuildLTQMethod::parseCommandArgs(int argc, char* argv[])
 		case '1':
 		    _ms1Scans = true;
 			break;
-		case 'b':
+		case 'w':
 			{
-			if(i+2 >= argc) usage();
+			if(i >= argc) usage();
 
 			vector<string> minAndMax;
 			split(argv[i++], minAndMax, "-");
-
+			processed = 2;
 			if(minAndMax.size() < 2u) usage();
 
 			_ms1MinMz = atoi(minAndMax[0].c_str());
@@ -187,21 +194,51 @@ void BuildLTQMethod::parseCommandArgs(int argc, char* argv[])
 			_inclusionList = true;
 			break;
 		case 't':
-			if(i + 1 >= argc) usage();
+			if(i >= argc) usage();
 			_topNPrecursors = atoi(argv[i++]);
+			processed = 2;
 			if(_topNPrecursors < 1) usage();
+			break;
+		case 'a':
+			if(i >= argc) usage();
+			if(strcmp(argv[i], "iontrap") == 0)
+			{
+				_msAnalyzer = 0;
+			}
+			else if(strcmp(argv[i], "ftms") == 0)
+			{
+				_msAnalyzer = 1;
+			}
+			else { usage(); }
+			processed = 2;
+			i++;
+			break;
+		case 'b':
+			if(i >= argc) usage();
+			if(strcmp(argv[i], "iontrap") == 0)
+			{
+				_msmsAnalyzer = 0;
+			}
+			else if(strcmp(argv[i], "ftms") == 0)
+			{
+				_msmsAnalyzer = 1;
+			}
+			else { usage(); }
+			processed = 2;
+			i++;
+			break;
 		default:
-			processed = false;
+			processed = 0;
 			break;
         }
-
-		if (processed)
+		
+		if(processed)
 		{
 			// Remove this flag so that it will not be processed again by the base class
 			if (i < argc)
-				memmove(&argv[i-1], &argv[i], sizeof(char*)*(argc-i));
-			argc--;
-			i--;
+				memmove(&argv[i-processed], &argv[i], sizeof(char*)*(argc-i));
+			argc -= processed;
+			i -= processed;
 		}
     }
 
@@ -230,8 +267,10 @@ void BuildLTQMethod::createMethod(string templateMethod, string outputMethod, co
 
         _methodPtr->Open(outputMethodW);
     }
-    catch (_com_error&)
+    catch (_com_error& e)
     {
+		//cerr << e.Error() << "\n";
+		//cerr << e.ErrorMessage() << "\n";
         Verbosity::error("Failure opening template method %s", templateMethod.c_str());
     }
 
@@ -248,52 +287,38 @@ void BuildLTQMethod::createMethod(string templateMethod, string outputMethod, co
         _methodPtr->Save();
         _methodPtr->Close();
     }
-    catch (_com_error&)
+    catch (_com_error& e)
     {
+		//cerr << e.Error() << "\n";
+		//cerr << e.ErrorMessage() << "\n";
         Verbosity::error("Failure creating new method from %s", templateMethod.c_str());
     }
 }
 
 void BuildLTQMethod::buildInclusionListMethod(const vector<vector<string>>& tableTranList)
 {
+	//Creating an inclusion list consists of the following:
+	//1 calling put_NumMassTimeWindows to allocate space for inclusion list entries
+	//2 putting parent mz/start/stop entries in the list
+	//3 creating scan events for the top N precursors (see CLI parameters)
+	//4 making sure that the method's Acquire Time is greater than all the entry
+	//  stop times.
 
-	//Setup the MS1 scan
-	_methodPtr->NumScanEvents = 1 + _topNPrecursors;
-	_methodPtr->CurrentScanEvent = 0;
-	_methodPtr->ScanType = 0;		//full scan
-	_methodPtr->ScanMode = 0;		//MS1
-	_methodPtr->DataType = 1;		//Profile
-	_methodPtr->NumReactions = 0;
-	_methodPtr->NumMassRanges = 1;
-	_methodPtr->SetMassRange(0, _ms1MinMz, _ms1MaxMz);
+	//do #4 first because to set the Acquire Time we have to set some values
+	//for segments as well, and it makes sense to do this first. It might work
+	//later, but this definitely works.
 
-	_methodPtr->DataDepUseGlobalMassLists = 1;
-	
-	//Install the scan events 2 through _topNPrecursors+1 (which is >=2)
-	for(int i = 1; i < _topNPrecursors + 1; i++)
-	{
-		_methodPtr->CurrentScanEvent = i;
-		_methodPtr->NumReactions = 0;	//These do not default to zero, you must set them!!
-		_methodPtr->NumMassRanges = 0;
-		_methodPtr->ScanType = 0;
-		_methodPtr->ScanMode = 1;
-		_methodPtr->DataDepMasterEvent = 0;
-		_methodPtr->DataDepMode = 1;	//Nth most intense ion from inclusion list, not overall
-		_methodPtr->DependentScan = 1;
-		_methodPtr->DataType = 0; //Centroid
-		_methodPtr->DataDepNthMostIntenseIon = i; //each scan Si should look for the (i-1)th most intense ion
-		_methodPtr->DataDepFallThroughToNthMostIntense = 1; // "Most intense if no Parent Masses found"
-	}
-	
-	//_methodPtr->DataDepAnalyzeTopN = _topNPrecursors; //needed?
-	
-	
-	//We need to set _methodPtr->DataDepNumParentMasses and to install a start/stop
-	//time juncture at each "parent mass" entry, so we need to do a Group By on the
-	//precursor MZ of the transition list
+	//To find the max stop time (hence the Acquire Time), we have to do a "group by"
+	//on inclusion list entries. At the same time, we can build a vector for the list
+	//entries to be used later, and to count how many there are.
+
 	vector<InclListEntry> iList;
 	vector<vector<string>>::const_iterator trans = tableTranList.begin();
 	double precursorMz = -1; //Cannot happen
+	
+	//Also make sure that all inclusion list entry end times are less than the
+	//method acquire time
+	double maxStopTime = 0;
 
 	for(; trans != tableTranList.end(); ++trans)
 	{
@@ -301,10 +326,16 @@ void BuildLTQMethod::buildInclusionListMethod(const vector<vector<string>>& tabl
 
 		if(precursorMz != newPrecMz)
 		{
+			double stopTime = atof(trans->at(stop_time).c_str());
+			//There is an error if any stop time is greater than the method's "Acquire Time"
+			//so make sure that never happens
+			if(stopTime > maxStopTime)
+				maxStopTime = stopTime;
+
 			InclListEntry listEntry;
 			listEntry.precursor_mz = newPrecMz;
 			listEntry.start_time = atof(trans->at(start_time).c_str());
-			listEntry.stop_time = atof(trans->at(stop_time).c_str());
+			listEntry.stop_time = stopTime;
 			
 			iList.push_back(listEntry);
 
@@ -312,9 +343,52 @@ void BuildLTQMethod::buildInclusionListMethod(const vector<vector<string>>& tabl
 		}
 	}
 	
-	//Now use the grouped data. Number of precursors,
+	//#4
+	_methodPtr->AcquireTime = maxStopTime;
+	_methodPtr->NumSegments = 1;
+	_methodPtr->CurrentSegment = 0;
+	_methodPtr->SegmentTime = maxStopTime;
+	_methodPtr->StartDelay = 0.0;
+	
+
+	//#3 (And first we setup an MS1 scan)
+	_methodPtr->NumScanEvents = 1;
+	_methodPtr->CurrentScanEvent = 0;
+	_methodPtr->ScanMode = 0;    // 0 = MS, ..., 9 = MS10
+	_methodPtr->ScanType = 0;    // 0 = Full, 1 = SIM/SRM
+	_methodPtr->DataType = 1;    // 0 = Centroid, 1 = Profile
+	_methodPtr->NumReactions = 0;
+	
+	_methodPtr->Analyzer = _msAnalyzer;	//0 = Ion Trap, 1 = FTMS
+
+	_methodPtr->NumMassRanges = 1;
+	_methodPtr->SetMassRange(0, _ms1MinMz, _ms1MaxMz);
+
+	_methodPtr->DataDepUseGlobalMassLists = 1;
+	
+	//Install the scan events 2 through _topNPrecursors+1 (which is >=2)
+	_methodPtr->NumScanEvents = 1 + _topNPrecursors;
+	for(int i = 1; i < _topNPrecursors + 1; i++)
+	{
+		_methodPtr->CurrentScanEvent = i;
+		_methodPtr->NumReactions = 0;	//These do not default to zero, you must set them!!
+		_methodPtr->NumMassRanges = 0;
+		_methodPtr->Analyzer = _msmsAnalyzer;
+		_methodPtr->ScanType = 0;		//0 = full, 1 = SRM
+		_methodPtr->ScanMode = 1;		//0 = MS1 ... 9 = MS10
+		_methodPtr->DataDepMasterEvent = 0;
+		_methodPtr->DataDepMode = 0;	//1 = Nth most intense ion from inclusion list, 0 = Nth most intense overall
+		_methodPtr->DependentScan = 1;
+		_methodPtr->DataType = 0; //Centroid
+		_methodPtr->DataDepNthMostIntenseIon = i; //each scan Si should look for the (i-1)th most intense ion
+													//(because S0 is the MS1 scan)
+		_methodPtr->DataDepFallThroughToNthMostIntense = 1; // "Most intense if no Parent Masses found" from the GUI
+	}
+	
+	//#1 Now use the grouped data. Number of precursors,
 	_methodPtr->put_NumMassTimeWindows(0, iList.size());
-	//and the data for each one
+
+	//#2 and the data for each one
 	for(int i = 0; i < iList.size(); i++)
 	{
 		_methodPtr->SetMassTimeWindow(0, i, iList[i].start_time, iList[i].stop_time, iList[i].precursor_mz);
@@ -353,7 +427,7 @@ void BuildLTQMethod::replaceTransitionList(const vector<vector<string>>& tableTr
                 productWindow = deltaMass;
         }
     }
-
+	
     // TODO: Handle scheduling with segments
     short scanCount = 0;
     short rangeCount = 0;
