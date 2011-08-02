@@ -25,8 +25,8 @@
 #include "quameter.h"
 
 /**
-	The primary function where all metrics are calculated.
-*/
+ * The primary function where all metrics are calculated.
+ */
 void MetricMaster(const string& dbFilename, string sourceFilename, const string& sourceId) {
 try {
 	boost::timer t;
@@ -716,7 +716,6 @@ try {
 		ticVector.push_back(ticMap.find(scanInfo[iTic].precursor)->second);
 		
 	sort(ticVector.begin(), ticVector.end());
-	int ticSize = ticVector.size();
 	double medianTIC = Q2(ticVector)/1000;
 	
 	// MS1-3A: Ratio of 95th over 5th percentile of MS1 max intensities of identified peptides
@@ -731,8 +730,7 @@ try {
 	double medianMS1Peak = Q2(identifiedPeptidePeaks);
 
 	// MS1-5A: Median real value of precursor errors	
-	vector<double> realPrecursorErrors = GetRealPrecursorErrors(dbFilename, sourceId);
-	double medianRealPrecursorError = Q2(realPrecursorErrors);
+	double medianRealPrecursorError = MedianRealPrecursorError(dbFilename, sourceId);
 
 	// MS1-5B: Mean of the absolute precursor errors
 	double meanAbsolutePrecursorError = GetMeanAbsolutePrecursorErrors(dbFilename, sourceId);
@@ -883,7 +881,9 @@ try {
 	return;
 }
 
-// Return the first quartile of a vector<double>
+/**
+  * Return the first quartile of a vector<double>
+  */
 double Q1(vector<double> dataSet) {
 	double quartile1;
 	int dataSize = (int)dataSet.size();
@@ -899,7 +899,9 @@ double Q1(vector<double> dataSet) {
 	return quartile1;
 }
 
-// Return the second quartile (aka median) of a vector<double>
+/**
+  * Return the second quartile (aka median) of a vector<double>
+  */
 double Q2(vector<double> dataSet) {
 	double quartile2;
 	int dataSize = (int)dataSet.size();
@@ -915,7 +917,9 @@ double Q2(vector<double> dataSet) {
 	return quartile2;
 }
 
-// Overload to int
+/**
+  * Overload second quartile function to int
+  */
 int Q2(vector<int> dataSet) {
 	int quartile2;
 	int dataSize = (int)dataSet.size();
@@ -931,7 +935,9 @@ int Q2(vector<int> dataSet) {
 	return quartile2;
 }
 
-// Return the third quartile of a vector<double>
+/**
+  * Return the third quartile of a vector<double>
+  */
 double Q3(vector<double> dataSet) {
 	double quartile3;
 	int dataSize = (int)dataSet.size();
@@ -947,9 +953,11 @@ double Q3(vector<double> dataSet) {
 	return quartile3;
 }
 
-// Given an idpDB, return its RAW/mzML/etc source files
-// also accept filenames of interest (e.g. ignore all source files except -these-)
-// also accept an extension type (e.g. use the .RAW source file instead of .mzML)
+/**
+  * Given an idpDB file, return its RAW/mzML/etc source files.
+  * Add: also accept filenames of interest (e.g. ignore all source files except -these-)
+  * Add: also accept an extension type (e.g. use the .RAW source file instead of .mzML)
+  */
 vector<sourceFile> GetSpectraSources(const string& dbFilename) {
 	sqlite::database db(dbFilename);
 	string s = "select Id, Name from SpectrumSource";
@@ -993,11 +1001,21 @@ vector<sourceFile> GetSpectraSources(const string& dbFilename) {
 	return sources;	
 }
 
-//	Read an idpDB file
+/**
+  * Query the idpDB and return with a list of MS2 native IDs for all identified peptides
+  *
+  * SELECT DISTINCT NativeID 
+  * FROM PeptideSpectrumMatch JOIN Spectrum 
+  * WHERE PeptideSpectrumMatch.QValue <= 0.05 
+  * AND PeptideSpectrumMatch.Spectrum=Spectrum.Id 
+  * AND Rank = 1 
+  * AND Spectrum.Source
+  * ORDER BY Spectrum.Id
+  */
 vector<string> GetNativeId(const string& dbFilename, const string& spectrumSourceId) {
 
 	sqlite::database db(dbFilename);
-	string s = "SELECT DISTINCT NativeID FROM PeptideSpectrumMatch JOIN Spectrum WHERE PeptideSpectrumMatch.Spectrum=Spectrum.Id and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " ORDER BY Spectrum.Id";
+	string s = "SELECT DISTINCT NativeID FROM PeptideSpectrumMatch JOIN Spectrum where PeptideSpectrumMatch.QValue <= 0.05 and PeptideSpectrumMatch.Spectrum=Spectrum.Id and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " ORDER BY Spectrum.Id";
 	sqlite::query qry(db, s.c_str() );
 	vector<string> nativeIdV;
 
@@ -1011,11 +1029,24 @@ vector<string> GetNativeId(const string& dbFilename, const string& spectrumSourc
 	return nativeIdV;
 }
 
-// For metric DS-1A
+/**
+  * For metric DS-1A: Finds the number of peptides identified by one spectrum
+  *
+  * SELECT COUNT(*) 
+  * FROM PeptideSpectrumMatch 
+  * WHERE Peptide 
+  * IN (SELECT Peptide 
+  *		FROM PeptideSpectrumMatch JOIN Spectrum 
+  *		WHERE PeptideSpectrumMatch.QValue <= 0.05 
+  *		AND PeptideSpectrumMatch.Spectrum=Spectrum.Id 
+  *		AND Rank = 1 
+  *		GROUP BY Peptide HAVING COUNT(Peptide)=1 
+  *		ORDER BY COUNT(Peptide))
+  */
 int PeptidesIdentifiedOnce(const string& dbFilename, const string& spectrumSourceId) {
 
 	sqlite::database db(dbFilename);
-	string s = "select count(*) from PeptideSpectrumMatch where Peptide IN (select Peptide from PeptideSpectrumMatch JOIN Spectrum where PeptideSpectrumMatch.Spectrum=Spectrum.Id and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " GROUP BY Peptide HAVING COUNT(Peptide)=1 ORDER BY Count(peptide))";
+	string s = "select count(*) from PeptideSpectrumMatch where Peptide IN (select Peptide from PeptideSpectrumMatch JOIN Spectrum where PeptideSpectrumMatch.QValue <= 0.05 and PeptideSpectrumMatch.Spectrum=Spectrum.Id and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " GROUP BY Peptide HAVING COUNT(Peptide)=1 ORDER BY Count(peptide))";
 	sqlite::query qry(db, s.c_str() );
 	int identifiedOnce;
 
@@ -1026,11 +1057,24 @@ int PeptidesIdentifiedOnce(const string& dbFilename, const string& spectrumSourc
 	return identifiedOnce;
 }
 
-// For metric DS-1A and DS-1B
+/**
+  * For metrics DS-1A and DS-1B: Finds the number of peptides identified by two spectra
+  *
+  * SELECT COUNT(*)/2
+  * FROM PeptideSpectrumMatch 
+  * WHERE Peptide 
+  * IN (SELECT Peptide 
+  *		FROM PeptideSpectrumMatch JOIN Spectrum 
+  *		WHERE PeptideSpectrumMatch.QValue <= 0.05 
+  *		AND PeptideSpectrumMatch.Spectrum=Spectrum.Id 
+  *		AND Rank = 1 
+  *		GROUP BY Peptide HAVING COUNT(Peptide)=2 
+  *		ORDER BY COUNT(Peptide))
+  */
 int PeptidesIdentifiedTwice(const string& dbFilename, const string& spectrumSourceId) {
 
 	sqlite::database db(dbFilename);
-	string s = "select COUNT(*)/2 from PeptideSpectrumMatch where Peptide IN (select Peptide from PeptideSpectrumMatch JOIN Spectrum where PeptideSpectrumMatch.Spectrum=Spectrum.Id and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " GROUP BY Peptide HAVING COUNT(Peptide)=2 ORDER BY Count(peptide))";
+	string s = "select COUNT(*)/2 from PeptideSpectrumMatch where Peptide IN (select Peptide from PeptideSpectrumMatch JOIN Spectrum where PeptideSpectrumMatch.QValue <= 0.05 and PeptideSpectrumMatch.Spectrum=Spectrum.Id and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " GROUP BY Peptide HAVING COUNT(Peptide)=2 ORDER BY Count(peptide))";
 	sqlite::query qry(db, s.c_str() );
 	int identifiedTwice;
 
@@ -1041,11 +1085,24 @@ int PeptidesIdentifiedTwice(const string& dbFilename, const string& spectrumSour
 	return identifiedTwice;
 }
 
-// For metric DS-1A
+/**
+  * For metric DS-1B: Finds the number of peptides identified by three spectra
+  *
+  * SELECT COUNT(*)/3
+  * FROM PeptideSpectrumMatch 
+  * WHERE Peptide IN 
+  *		(SELECT Peptide 
+  *		 FROM PeptideSpectrumMatch JOIN Spectrum 
+  *		 WHERE PeptideSpectrumMatch.QValue <= 0.05 
+  *		 AND PeptideSpectrumMatch.Spectrum=Spectrum.Id 
+  *		 AND Rank = 1 
+  *		 GROUP BY Peptide HAVING COUNT(Peptide)=3 
+  *		 ORDER BY COUNT(Peptide))
+  */
 int PeptidesIdentifiedThrice(const string& dbFilename, const string& spectrumSourceId) {
 
 	sqlite::database db(dbFilename);
-	string s = "select COUNT(*)/3 from PeptideSpectrumMatch where Peptide IN (select Peptide from PeptideSpectrumMatch JOIN Spectrum where PeptideSpectrumMatch.Spectrum=Spectrum.Id and Rank = 1 and PeptideSpectrumMatch.Spectrum = Spectrum.Id and Spectrum.Source = " + spectrumSourceId + " GROUP BY Peptide HAVING COUNT(Peptide)=3 ORDER BY Count(peptide))";
+	string s = "select COUNT(*)/3 from PeptideSpectrumMatch where Peptide IN (select Peptide from PeptideSpectrumMatch JOIN Spectrum where PeptideSpectrumMatch.QValue <= 0.05 and PeptideSpectrumMatch.Spectrum=Spectrum.Id and Rank = 1 and PeptideSpectrumMatch.Spectrum = Spectrum.Id and Spectrum.Source = " + spectrumSourceId + " GROUP BY Peptide HAVING COUNT(Peptide)=3 ORDER BY Count(peptide))";
 	sqlite::query qry(db, s.c_str() );
 	int identifiedThrice;
 
@@ -1056,12 +1113,20 @@ int PeptidesIdentifiedThrice(const string& dbFilename, const string& spectrumSou
 	return identifiedThrice;
 }
 
-// For metric IS-2: Find the median precursor m/z of unique ions of id'd peptides
-
+/**
+  * For metric IS-2: Find the median precursor m/z of unique ions of id'd peptides
+  *
+  * SELECT DISTINCT NativeID, PrecursorMZ 
+  * FROM PeptideSpectrumMatch JOIN Spectrum 
+  * WHERE PeptideSpectrumMatch.QValue <= 0.05 
+  * AND PeptideSpectrumMatch.Spectrum=Spectrum.Id 
+  * AND Rank = 1 
+  * ORDER BY PrecursorMZ
+  */
 double MedianPrecursorMZ(const string& dbFilename, const string& spectrumSourceId) {
 	
 	sqlite::database db(dbFilename);
-	string s = "SELECT DISTINCT NativeID, precursorMZ FROM PeptideSpectrumMatch JOIN Spectrum WHERE PeptideSpectrumMatch.Spectrum=Spectrum.Id and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " ORDER BY PrecursorMZ";
+	string s = "SELECT DISTINCT NativeID, precursorMZ FROM PeptideSpectrumMatch JOIN Spectrum where PeptideSpectrumMatch.QValue <= 0.05 and PeptideSpectrumMatch.Spectrum=Spectrum.Id and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " ORDER BY PrecursorMZ";
 	sqlite::query qry(db, s.c_str() );
 	vector<double> precursorMZ;
 
@@ -1076,11 +1141,29 @@ double MedianPrecursorMZ(const string& dbFilename, const string& spectrumSourceI
 	return Q2(precursorMZ);
 }
 
-// Return the duplicate peptide IDs
+/**
+  * Finds duplicate peptide IDs. Used in metrics C-1A and C-1B.
+  *
+  * SELECT distinct NativeID,Peptide 
+  * FROM PeptideSpectrumMatch JOIN Spectrum 
+  * WHERE PeptideSpectrumMatch.QValue <= 0.05 
+  * AND PeptideSpectrumMatch.Spectrum=Spectrum.Id 
+  * AND Rank = 1 
+  * AND Peptide IN
+  * 		(SELECT Peptide 
+  *		 FROM PeptideSpectrumMatch JOIN Spectrum 
+  *		 WHERE PeptideSpectrumMatch.QValue <= 0.05 
+  *		 AND PeptideSpectrumMatch.Spectrum=Spectrum.Id 
+  *		 AND Rank = 1 
+  *		 GROUP BY Peptide 
+  *		 HAVING COUNT(Peptide) > 1 
+  *		 ORDER BY NativeID) 
+  * ORDER BY Peptide
+  */
 multimap<int, string> GetDuplicateID(const string& dbFilename, const string& spectrumSourceId) {
 
 	sqlite::database db(dbFilename);
-	string s = "select distinct NativeID,Peptide from PeptideSpectrumMatch JOIN Spectrum where PeptideSpectrumMatch.Spectrum=Spectrum.Id and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " and Peptide IN (select Peptide from PeptideSpectrumMatch JOIN Spectrum WHERE PeptideSpectrumMatch.Spectrum=Spectrum.Id and Rank = 1 GROUP BY Peptide HAVING COUNT(Peptide) > 1 ORDER BY NativeID) ORDER BY Peptide";
+	string s = "select distinct NativeID,Peptide from PeptideSpectrumMatch JOIN Spectrum where PeptideSpectrumMatch.QValue <= 0.05 and PeptideSpectrumMatch.Spectrum=Spectrum.Id and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " and Peptide IN (select Peptide from PeptideSpectrumMatch JOIN Spectrum where PeptideSpectrumMatch.QValue <= 0.05 and PeptideSpectrumMatch.Spectrum=Spectrum.Id and Rank = 1 GROUP BY Peptide HAVING COUNT(Peptide) > 1 ORDER BY NativeID) ORDER BY Peptide";
 	sqlite::query qry(db, s.c_str() );
 	multimap<int, string> duplicatePeptides;
 
@@ -1095,11 +1178,20 @@ multimap<int, string> GetDuplicateID(const string& dbFilename, const string& spe
 	return duplicatePeptides;
 }
 
-// For metrics IS-3A, IS-3B and IS-3C: Return the number of peptides with a charge of +1, +2, +3 and +4 
+/**
+  * For metrics IS-3A, IS-3B and IS-3C: Return the number of peptides with a charge of +1, +2, +3 and +4 
+  *
+  * SELECT DISTINCT Peptide,Charge 
+  * FROM PeptideSpectrumMatch JOIN Spectrum 
+  * WHERE PeptideSpectrumMatch.QValue <= 0.05 
+  * AND PeptideSpectrumMatch.Spectrum=Spectrum.Id 
+  * AND Rank = 1 
+  * ORDER BY Peptide
+  */
 fourInts PeptideCharge(const string& dbFilename, const string& spectrumSourceId) {
 	
 	sqlite::database db(dbFilename);
-	string s = "select distinct Peptide,Charge from PeptideSpectrumMatch JOIN Spectrum where PeptideSpectrumMatch.Spectrum=Spectrum.Id and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " ORDER BY Peptide";
+	string s = "select distinct Peptide,Charge from PeptideSpectrumMatch JOIN Spectrum where PeptideSpectrumMatch.QValue <= 0.05 and PeptideSpectrumMatch.Spectrum=Spectrum.Id and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " ORDER BY Peptide";
 	sqlite::query qry(db, s.c_str() );
 	int charge1 = 0, charge2 = 0, charge3 = 0, charge4 = 0;
 
@@ -1127,11 +1219,21 @@ fourInts PeptideCharge(const string& dbFilename, const string& spectrumSourceId)
 	return charges;
 }
 
-// Interested in +2 charges only
-vector<double> GetRealPrecursorErrors(const string& dbFilename, const string& spectrumSourceId) {
+/**
+  * For metric MS1-5A: Find the median real value of precursor errors
+  *
+  * SELECT DISTINCT NativeID,Peptide,PrecursorMZ,MonoisotopicMassError,MolecularWeightError 
+  * FROM PeptideSpectrumMatch JOIN Spectrum 
+  * WHERE PeptideSpectrumMatch.QValue <= 0.05 
+  * AND PeptideSpectrumMatch.Spectrum=Spectrum.Id 
+  * AND Rank = 1 
+  * AND Charge=2 
+  * ORDER BY Spectrum
+  */
+double MedianRealPrecursorError(const string& dbFilename, const string& spectrumSourceId) {
 
 	sqlite::database db(dbFilename);
-	string s = "select distinct NativeID,Peptide,PrecursorMZ,MonoisotopicMassError,MolecularWeightError from PeptideSpectrumMatch JOIN Spectrum where PeptideSpectrumMatch.Spectrum=Spectrum.Id and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " and Charge=2 Order By Spectrum";
+	string s = "SELECT DISTINCT NativeID,Peptide,PrecursorMZ,MonoisotopicMassError,MolecularWeightError from PeptideSpectrumMatch JOIN Spectrum where PeptideSpectrumMatch.QValue <= 0.05 and PeptideSpectrumMatch.Spectrum=Spectrum.Id and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " and Charge=2 Order By Spectrum";
 	sqlite::query qry(db, s.c_str() );
 	vector<double> realPrecursorErrors;
 
@@ -1146,13 +1248,24 @@ vector<double> GetRealPrecursorErrors(const string& dbFilename, const string& sp
 	}
 	
 	sort(realPrecursorErrors.begin(), realPrecursorErrors.end());
-	return realPrecursorErrors;
+	return Q2(realPrecursorErrors);
 }
 
+/**
+ * For metric MS1-5B: Find the mean of the absolute precursor errors
+ *
+ * SELECT DISTINCT NativeID,Peptide,PrecursorMZ,MonoisotopicMassError,MolecularWeightError 
+ * FROM PeptideSpectrumMatch JOIN Spectrum 
+ * WHERE PeptideSpectrumMatch.QValue <= 0.05 
+ * AND PeptideSpectrumMatch.Spectrum=Spectrum.Id 
+ * AND Rank = 1 
+ * AND Charge=2 
+ * ORDER BY Spectrum
+ */
 double GetMeanAbsolutePrecursorErrors(const string& dbFilename, const string& spectrumSourceId) {
 
 	sqlite::database db(dbFilename);
-	string s = "select distinct NativeID,Peptide,PrecursorMZ,MonoisotopicMassError,MolecularWeightError from PeptideSpectrumMatch JOIN Spectrum where PeptideSpectrumMatch.Spectrum=Spectrum.Id and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " and Charge=2 Order By Spectrum";
+	string s = "SELECT DISTINCT NativeID,Peptide,PrecursorMZ,MonoisotopicMassError,MolecularWeightError from PeptideSpectrumMatch JOIN Spectrum where PeptideSpectrumMatch.QValue <= 0.05 and PeptideSpectrumMatch.Spectrum=Spectrum.Id and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " and Charge=2 Order By Spectrum";
 	sqlite::query qry(db, s.c_str() );
 	vector<double> absolutePrecursorErrors;
 
@@ -1170,10 +1283,26 @@ double GetMeanAbsolutePrecursorErrors(const string& dbFilename, const string& sp
 	return ( (absolutePrecursorErrors[0] + absolutePrecursorErrors[absolutePrecursorErrors.size()-1]) / 2 );
 }
 
+/**
+ * For metrics MS1-5C and MS1-5D: Find the median real value and interquartile distance of precursor errors (both in ppm)
+ *
+ * SELECT DISTINCT NativeID, Peptide, PrecursorMZ, 
+ * ((SUM(MonoMassDelta)+Peptide.MonoisotopicMass-psm.MonoisotopicMass)/(2*(SUM(MonoMassDelta)+Peptide.MonoisotopicMass)))*1000000 as PPMError 
+ * FROM PeptideSpectrumMatch psm JOIN Spectrum JOIN Peptide JOIN PeptideModification pm JOIN Modification mod 
+ * WHERE psm.Spectrum = Spectrum.Id 
+ * AND psm.Peptide = Peptide.Id 
+ * AND pm.PeptideSpectrumMatch=psm.Id 
+ * AND mod.Id=pm.Modification 
+ * AND Rank = 1 
+ * AND Charge=2 
+ * AND abs(MonoisotopicMassError) <= 0.45 
+ * GROUP BY psm.Id 
+ * ORDER BY PPMError
+ */
 ppmStruct GetRealPrecursorErrorPPM(const string& dbFilename, const string& spectrumSourceId) {
 
 	sqlite::database db(dbFilename);
-	string s = "select distinct NativeID, Peptide, PrecursorMZ, ((SUM(MonoMassDelta)+Peptide.MonoisotopicMass-psm.MonoisotopicMass)/(2*(SUM(MonoMassDelta)+Peptide.MonoisotopicMass)))*1000000 as PPMError from PeptideSpectrumMatch psm JOIN Spectrum JOIN Peptide JOIN PeptideModification pm JOIN Modification mod where psm.Spectrum = Spectrum.Id and psm.Peptide = Peptide.Id and pm.PeptideSpectrumMatch=psm.Id and mod.Id=pm.Modification and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " and Charge=2 and abs(MonoisotopicMassError) <= 0.45 group by psm.Id order by PPMError";
+	string s = "SELECT DISTINCT NativeID, Peptide, PrecursorMZ, ((SUM(MonoMassDelta)+Peptide.MonoisotopicMass-psm.MonoisotopicMass)/(2*(SUM(MonoMassDelta)+Peptide.MonoisotopicMass)))*1000000 as PPMError from PeptideSpectrumMatch psm JOIN Spectrum JOIN Peptide JOIN PeptideModification pm JOIN Modification mod where psm.Spectrum = Spectrum.Id and psm.Peptide = Peptide.Id and pm.PeptideSpectrumMatch=psm.Id and mod.Id=pm.Modification and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " and Charge=2 and abs(MonoisotopicMassError) <= 0.45 group by psm.Id order by PPMError";
 
 	sqlite::query qry(db, s.c_str() );
 	vector<double> realPrecursorErrorsPPM;
@@ -1197,11 +1326,22 @@ ppmStruct GetRealPrecursorErrorPPM(const string& dbFilename, const string& spect
 	return returnMe;
 }
 
-// For metric P-1
+/**
+ * For metric P-1: Find the median peptide identification score for all peptides
+ *
+ * SELECT DISTINCT PeptideSpectrumMatch.Peptide, PeptideSpectrumMatchScore.Value 
+ * FROM PeptideSpectrumMatch JOIN PeptideSpectrumMatchScore JOIN spectrum 
+ * WHERE PeptideSpectrumMatch.QValue <= 0.05 
+ * AND PeptideSpectrumMatch.Spectrum = Spectrum.Id 
+ * AND PeptideSpectrumMatch.Id = PeptideSpectrumMatchScore.PsmId 
+ * AND PeptideSpectrumMatchScore.ScoreNameId = 3 
+ * AND Rank = 1 
+ * ORDER BY PeptideSpectrumMatchScore.Value
+ */
 double GetMedianIDScore(const string& dbFilename, const string& spectrumSourceId) {
 
 	sqlite::database db(dbFilename);
-	string s = "select distinct PeptideSpectrumMatch.Peptide, PeptideSpectrumMatchScore.Value from PeptideSpectrumMatch join PeptideSpectrumMatchScore join spectrum where PeptideSpectrumMatch.spectrum = spectrum.id and PeptideSpectrumMatch.id = PeptideSpectrumMatchScore.PsmId and PeptideSpectrumMatchScore.ScoreNameId = 3 and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " order by PeptideSpectrumMatchScore.Value";
+	string s = "SELECT DISTINCT PeptideSpectrumMatch.Peptide, PeptideSpectrumMatchScore.Value from PeptideSpectrumMatch join PeptideSpectrumMatchScore join spectrum where PeptideSpectrumMatch.QValue <= 0.05 and PeptideSpectrumMatch.spectrum = spectrum.id and PeptideSpectrumMatch.id = PeptideSpectrumMatchScore.PsmId and PeptideSpectrumMatchScore.ScoreNameId = 3 and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " order by PeptideSpectrumMatchScore.Value";
 	sqlite::query qry(db, s.c_str() );
 	vector<double> idScore;
 	int peptideTemp;
@@ -1215,11 +1355,24 @@ double GetMedianIDScore(const string& dbFilename, const string& spectrumSourceId
 	return Q2(idScore);
 }
 
-// For metric P-2A
+/**
+ * For metric P-2A: Find the number of MS2 spectra that identify tryptic peptide ions
+ *
+ * SELECT COUNT(distinct nativeid) 
+ * FROM PeptideInstance JOIN PeptideSpectrumMatch JOIN Spectrum 
+ * WHERE PeptideInstance.Peptide = PeptideSpectrumMatch.Peptide 
+ * AND PeptideSpectrumMatch.QValue <= 0.05 
+ * AND PeptidespectrumMatch.Spectrum = Spectrum.Id 
+ * AND Rank = 1 
+ * AND Spectrum.Source = " + SpectrumSourceId + " 
+ * AND NTerminusIsSpecific = 1 
+ * AND CTerminusIsSpecific = 1 
+ * ORDER BY Spectrum.Id
+ */
 int GetNumTrypticMS2Spectra(const string& dbFilename, const string& spectrumSourceId) {
 
 	sqlite::database db(dbFilename);
-	string s = "select count(distinct nativeid) from PeptideInstance join PeptideSpectrumMatch join Spectrum where PeptideInstance.peptide = PeptideSpectrumMatch.peptide and peptidespectrummatch.spectrum = spectrum.id and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " and NTerminusIsSpecific = 1 and CTerminusIsSpecific = 1 order by spectrum.id";
+	string s = "SELECT COUNT(distinct nativeid) FROM PeptideInstance JOIN PeptideSpectrumMatch JOIN Spectrum WHERE PeptideInstance.peptide = PeptideSpectrumMatch.peptide AND PeptideSpectrumMatch.QValue <= 0.05 and peptidespectrummatch.spectrum = spectrum.id and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " and NTerminusIsSpecific = 1 and CTerminusIsSpecific = 1 order by spectrum.id";
 	sqlite::query qry(db, s.c_str() );
 	int trypticMS2Spectra;
 
@@ -1234,7 +1387,7 @@ int GetNumTrypticMS2Spectra(const string& dbFilename, const string& spectrumSour
 int GetNumTrypticPeptides(const string& dbFilename, const string& spectrumSourceId) {
 
 	sqlite::database db(dbFilename);
-	string s = "select distinct PeptideInstance.Peptide, charge, modification from PeptideInstance join Spectrum join PeptideSpectrumMatch join PeptideModification where PeptideInstance.peptide = PeptideSpectrumMatch.peptide and PeptideModification.PeptideSpectrumMatch = PeptideSpectrumMatch.id and Rank = 1 and PeptideSpectrumMatch.Spectrum = Spectrum.Id and Spectrum.Source = " + spectrumSourceId + " and NTerminusIsSpecific = 1 and CTerminusIsSpecific = 1";
+	string s = "select distinct PeptideInstance.Peptide, charge, modification from PeptideInstance join Spectrum join PeptideSpectrumMatch join PeptideModification where PeptideSpectrumMatch.QValue <= 0.05 and PeptideInstance.peptide = PeptideSpectrumMatch.peptide and PeptideModification.PeptideSpectrumMatch = PeptideSpectrumMatch.id and Rank = 1 and PeptideSpectrumMatch.Spectrum = Spectrum.Id and Spectrum.Source = " + spectrumSourceId + " and NTerminusIsSpecific = 1 and CTerminusIsSpecific = 1";
 	sqlite::query qry(db, s.c_str() );
 	int trypticPeptides = 0;
 	
@@ -1250,7 +1403,7 @@ int GetNumUniqueTrypticPeptides(const string& dbFilename, const string& spectrum
 {
 
 	sqlite::database db(dbFilename);
-	string s = "select count(distinct PeptideInstance.Peptide) from PeptideInstance join Spectrum join PeptideSpectrumMatch join PeptideModification where PeptideInstance.peptide = PeptideSpectrumMatch.peptide and PeptideModification.PeptideSpectrumMatch = PeptideSpectrumMatch.id and Rank = 1 and PeptideSpectrumMatch.Spectrum = Spectrum.Id and Spectrum.Source = " + spectrumSourceId + " and NTerminusIsSpecific = 1 and CTerminusIsSpecific = 1";
+	string s = "select count(distinct PeptideInstance.Peptide) from PeptideInstance join Spectrum join PeptideSpectrumMatch join PeptideModification where PeptideSpectrumMatch.QValue <= 0.05 and PeptideInstance.peptide = PeptideSpectrumMatch.peptide and PeptideModification.PeptideSpectrumMatch = PeptideSpectrumMatch.id and Rank = 1 and PeptideSpectrumMatch.Spectrum = Spectrum.Id and Spectrum.Source = " + spectrumSourceId + " and NTerminusIsSpecific = 1 and CTerminusIsSpecific = 1";
 	sqlite::query qry(db, s.c_str() );
 	int uniqueTrypticPeptides;
 	
@@ -1265,7 +1418,7 @@ int GetNumUniqueTrypticPeptides(const string& dbFilename, const string& spectrum
 int GetNumUniqueSemiTrypticPeptides(const string& dbFilename, const string& spectrumSourceId) {
 
 	sqlite::database db(dbFilename);
-	string s = "select count(distinct PeptideInstance.Peptide) from PeptideInstance join Spectrum join PeptideSpectrumMatch join PeptideModification where PeptideInstance.peptide = PeptideSpectrumMatch.peptide and PeptideModification.PeptideSpectrumMatch = PeptideSpectrumMatch.id and Rank = 1 and PeptideSpectrumMatch.Spectrum = Spectrum.Id and Spectrum.Source = " + spectrumSourceId + " and ((NTerminusIsSpecific = 1 and CTerminusIsSpecific = 0) or (NTerminusIsSpecific = 0 and CTerminusIsSpecific = 1))";
+	string s = "select count(distinct PeptideInstance.Peptide) from PeptideInstance join Spectrum join PeptideSpectrumMatch join PeptideModification where PeptideSpectrumMatch.QValue <= 0.05 and PeptideInstance.peptide = PeptideSpectrumMatch.peptide and PeptideModification.PeptideSpectrumMatch = PeptideSpectrumMatch.id and Rank = 1 and PeptideSpectrumMatch.Spectrum = Spectrum.Id and Spectrum.Source = " + spectrumSourceId + " and ((NTerminusIsSpecific = 1 and CTerminusIsSpecific = 0) or (NTerminusIsSpecific = 0 and CTerminusIsSpecific = 1))";
 	sqlite::query qry(db, s.c_str() );
 	int uniqueSemiTrypticPeptides;
 	
