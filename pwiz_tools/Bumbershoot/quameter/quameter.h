@@ -128,7 +128,7 @@ int PeptidesIdentifiedThrice(const string&, const string&);
 
 double MedianPrecursorMZ(const string&, const string&);
 
-vector<double> GetRealPrecursorErrors(const string&, const string&);
+double MedianRealPrecursorError(const string&, const string&);
 double GetMeanAbsolutePrecursorErrors(const string&, const string&);
 ppmStruct GetRealPrecursorErrorPPM(const string&, const string&);
 
