@@ -19,6 +19,9 @@
 // limitations under the License.
 //
 
+#ifndef _SINGLETON_HPP_
+#define _SINGLETON_HPP_
+
 // Include this file in any file that creates a singleton.
 #include <boost/utility/singleton.hpp>
 
@@ -27,3 +30,5 @@ namespace
     struct Destroyer {~Destroyer() {boost::destroy_singletons();}};
     Destroyer destroyer;
 }
+
+#endif // _SINGLETON_HPP_
