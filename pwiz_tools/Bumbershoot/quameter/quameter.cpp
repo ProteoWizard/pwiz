@@ -27,15 +27,13 @@
 /**
  * The primary function where all metrics are calculated.
  */
-void MetricMaster(const string& dbFilename, string sourceFilename, const string& sourceId, runtimeOptions configOptions) {
+void MetricMaster(const string& dbFilename, string sourceFilename, const string& sourceId, runtimeOptions configOptions, FullReaderList readers) {
 try {
 	boost::timer t;
 
 	ofstream qout; // short for quameter output, save to same directory as input file
 	qout.open (	boost::filesystem::change_extension(sourceFilename, "-quameter_results.txt").string().c_str() );
 
-	// Set up the reading	
-	FullReaderList readers;
 	MSDataFile msd(sourceFilename, & readers);
 	
     int startSpectraIndex = 0;	
@@ -1640,12 +1638,15 @@ int main( int argc, char* argv[] ) {
 	int current = 0;		
 	int maxThreads = boost::thread::hardware_concurrency(); 
 	if (maxThreads < 1) maxThreads = 1; // there must be at least one thread
+	
+	// Set up the reading	
+	FullReaderList readers;
 
 	for (int k = 0; k < max(1,( ((numFiles-1)/maxThreads)+1 )); k++) { // at least go through this loop once.
 		boost::thread_group threadGroup;
 		for (int l = 0; (l < maxThreads) && (current < numFiles); l++) {
 			cout << "current: " << current << "\tdb: " << allSources[current].dbFilename << "\tid: " << allSources[current].id << "\tfile: " << allSources[current].filename << endl;
-			threadGroup.add_thread(new boost::thread(MetricMaster, allSources[current].dbFilename, allSources[current].filename, allSources[current].id, configOptions));
+			threadGroup.add_thread(new boost::thread(MetricMaster, allSources[current].dbFilename, allSources[current].filename, allSources[current].id, configOptions, readers));
 			current++;
 		}
 		threadGroup.join_all();
