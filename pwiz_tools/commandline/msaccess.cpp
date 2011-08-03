@@ -127,6 +127,7 @@ string usage(const MSDataAnalyzerApplication& app)
 
     oss << "Usage: msaccess [options] [filenames]\n"
         << "MassSpecAccess - command line access to mass spec data files\n"
+        << "                 using the -x/--exec option to specify action.\n"
         << "\n"
         << "Options:\n" 
         << "\n"
