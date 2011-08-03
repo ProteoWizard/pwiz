@@ -27,7 +27,7 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include <cmath>
 #include "pwiz/utility/misc/CharIndexedVector.hpp"
-#include "boost/utility/singleton.hpp"
+#include "pwiz/utility/misc/Singleton.hpp"
 
 using namespace pwiz::util;
 

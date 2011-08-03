@@ -199,7 +199,7 @@ void parse_exact_synonym(const string& line, Term& term)
 
 void parse_synonym(const string& line, Term& term)
 {
-    static const boost::regex e("synonym: \"(.*)\"\\s*(\\w+).*");
+    static const boost::regex e("synonym: \"(.*)\"\\s*(\\w+)?.*");
 
     boost::smatch what; 
     if (!regex_match(line, what, e))
@@ -219,6 +219,18 @@ void parse_property_value(const string& line, Term& term)
         throw runtime_error("Error matching term property_value.");
 
     term.propertyValues.insert(make_pair(what[1], what[2]));
+}
+
+
+void parse_xref(const string& line, Term& term)
+{
+    static const boost::regex e("xref: (\\S+?)\\s*\"(.*)\".*");
+
+    boost::smatch what;
+    if (!regex_match(line, what, e))
+        throw runtime_error("Error matching term xref.");
+
+    term.propertyValues.insert(make_pair(unescape_copy(what[1]), unescape_copy(what[2])));
 }
 
 
@@ -248,12 +260,13 @@ void parseTagValuePair(const string& line, Term& term)
         parse_synonym(line, term);
     else if (tag == "property_value")
         parse_property_value(line, term);
+    else if (tag == "xref")
+        parse_xref(line, term);
     else if (tag == "related_synonym" ||
              tag == "narrow_synonym" ||
              tag == "comment" ||
              tag == "alt_id" ||
              tag == "namespace" ||
-			 tag == "xref" ||
              tag == "xref_analog" ||
              tag == "replaced_by" ||
              tag == "created_by" ||

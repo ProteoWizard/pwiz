@@ -1,12 +1,15 @@
 format-version: 1.2
-date: 06:07:2011 15:05
-saved-by: edeutsch
+date: 13:07:2011 14:32
+saved-by: david ovelleiro
 auto-generated-by: OBO-Edit 2.1-beta 13
 default-namespace: MS
 remark: namespace: MS
-data-version: 3.4.1
-remark: version: 3.4.1
-remark: release date: 2011-06-08
+data-version: 3.7.3
+remark: version: 3.7.3
+remark: release date: 2011-07-13
+remark: increment 'x' when a first level term is renamed, added, deleted, or rearranged in the structure.
+remark: increment 'y' when any other term is added or obsoleted.
+remark: increment 'z' when a term name, definition, or relationship is edited.
 remark: coverage: Mass spectrometer output files and spectra interpretation
 remark: creator: Matt Chambers <matt.chambers <-at-> vanderbilt.edu>
 remark: creator: Andreas Bertsch <bertsch <-at-> informatik.uni-tuebingen.de>
@@ -3531,6 +3534,7 @@ def: "Micromass software for data acquisition and analysis." [PSI:MS]
 is_a: MS:1001455 ! acquisition software
 is_a: MS:1001456 ! analysis software
 is_a: MS:1001457 ! data processing software
+is_a: MS:1000694 ! Waters software
 
 [Term]
 id: MS:1000535
@@ -6261,7 +6265,6 @@ name: gene name
 def: "Name of the gene from which the protein is translated." [PSI:MS]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1000884 ! protein attribute
-
 
 [Term]
 id: MS:1001000
@@ -10897,6 +10900,249 @@ name: contact toll-free phone number
 def: "Toll-free phone number of the contact person or organization." [PSI:MS]
 xref: value-type:xsd\:string "The allowed value-type for this CV term."
 is_a: MS:1000585 ! contact attribute
+
+[Term]
+id: MS:1001758
+name: Mascot:SigThresholdType
+def: "Significance threshold type used in Mascot reporting (either 'identity' or 'homology')." [PSI:MS]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1001302 ! search engine specific input parameter
+
+[Term]
+id: MS:1001759
+name: Mascot:ProteinGrouping
+def: "Strategy used by Mascot to group proteins with same peptide matches (one of 'none', 'Occam's razor' or 'family clustering')." [PSI:MS]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1001302 ! search engine specific input parameter
+
+[Term]
+id: MS:1001760
+name: Percolator:features
+def: "List of Percolator features that were used in processing the peptide matches. Typical Percolator features are 'retentionTime', 'dM', 'mScore', 'lgDScore', 'mrCalc', 'charge' and 'dMppm'." [PSI:MS]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1001302 ! search engine specific input parameter
+
+[Term]
+id: MS:1001761
+name: ACQUITY UPLC
+def: "Waters LC-system." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1001762
+name: ACQUITY UPLC H-Class
+def: "Waters LC-system." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1001763
+name: ACQUITY UPLC H-Class Bio
+def: "Waters LC-system." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1001764
+name: ACQUITY UPLC I-Class
+def: "Waters LC-system." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1001765
+name: ACQUITY UPLC Systems with 2D Technology
+def: "Waters LC-system." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1001766
+name: nanoACQUITY UPLC
+def: "Waters LC-system." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1001767
+name: nanoACQUITY UPLC System with Technology
+def: "Waters LC-system." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1001768
+name: nanoACQUITY UPLC with HDX Technology
+def: "Waters LC-system." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1001769
+name: TRIZAIC UPLC nanoTile
+def: "Waters LC-system." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1001770
+name: GCT Premier
+def: "Waters oa-ToF based." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1001771
+name: MALDI Synapt G2 HDMS
+def: "Waters oa-ToF based." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1001772
+name: MALDI Synapt G2 MS
+def: "Waters oa-ToF based." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1001773
+name: MALDI Synapt G2-S HDMS
+def: "Waters oa-ToF based." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1001774
+name: MALDI Synapt G2-S MS
+def: "Waters oa-ToF based." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1001775
+name: MALDI Synapt HDMS
+def: "Waters oa-ToF based." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1001776
+name: MALDI Synapt MS
+def: "Waters oa-ToF based." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1001777
+name: Synapt G2 HDMS
+def: "Waters oa-ToF based." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1001778
+name: Synapt G2 MS
+def: "Waters oa-ToF based." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1001779
+name: Synapt G2-S HDMS
+def: "Waters oa-ToF based." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1001780
+name: Synapt G2-S MS
+def: "Waters oa-ToF based." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1001781
+name: Synapt HDMS
+def: "Waters oa-ToF based." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1001782
+name: Synapt MS
+def: "Waters oa-ToF based." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1001783
+name: Xevo G2 Q-Tof
+def: "Waters oa-ToF based." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1001784
+name: Xevo G2 Tof
+def: "Waters oa-ToF based." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1001785
+name: Xevo Q-Tof
+def: "Waters oa-ToF based." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1001786
+name: 3100
+def: "Waters quadrupole based." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1001787
+name: Acquity SQD
+def: "Waters quadrupole based." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1001788
+name: Acquity TQD
+def: "Waters quadrupole based." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1001789
+name: Quattro micro GC
+def: "Waters quadrupole based." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1001790
+name: Xevo TQ MS
+def: "Waters quadrupole based." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1001791
+name: Xevo TQD
+def: "Waters quadrupole based." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1001792
+name: Xevo TQ-S
+def: "Waters quadrupole based." [PSI:MS]
+is_a: MS:1000126 ! Waters instrument model
+
+[Term]
+id: MS:1001793
+name: Mascot:PreferredTaxonomy
+def: "NCBI TaxID taxonomy ID to prefer when two or more proteins match the same set of peptides or when protein entry in database represents multiple sequences." [PSI:MS]
+xref: value-type:xsd\:string "The allowed value-type for this CV term."
+is_a: MS:1001302 ! search engine specific input parameter
+
+[Term]
+id: MS:1001795
+name: Empower
+def: "Waters software for liquid chromatography acquisition, processing, data analysis and data management." [PSI:MS]
+is_a: MS:1000694 ! Waters software
+is_a: MS:1001456 ! analysis software
+is_a: MS:1001457 ! data processing software
+
+[Term]
+id: MS:1001796
+name: Unify
+def: "Waters software for liquid chromatography and mass spectrometry acquisition, processing, data analysis and data management." [PSI:MS]
+is_a: MS:1000694 ! Waters software
+is_a: MS:1001456 ! analysis software
+is_a: MS:1001457 ! data processing software
+
+[Term]
+id: MS:1001797
+name: travelling wave ion mobility mass spectrometer
+def: "An ion mobility mass spectrometry technique based on the superimposition of travelling voltage waves on a radially-confining RF voltage in a gas-filled, stacked-ring ion guide." [PSI:MS]
+synonym: "TWIMS" EXACT []
+is_a: MS:1000261 ! ion mobility spectrometry
 
 [Typedef]
 id: has_regexp

@@ -26,6 +26,7 @@
 #include "COMInitializer.hpp"
 #include "ObjBase.h" // basic COM declarations
 #include "boost/utility/thread_specific_singleton.hpp"
+#include "pwiz/utility/misc/Singleton.hpp"
 
 
 namespace pwiz {

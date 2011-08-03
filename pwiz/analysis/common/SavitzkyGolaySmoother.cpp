@@ -30,7 +30,7 @@
 #include <boost/numeric/ublas/vector.hpp>
 #include <boost/numeric/ublas/matrix.hpp>
 #include <boost/numeric/ublas/lu.hpp>
-#include <boost/utility/singleton.hpp>
+#include "pwiz/utility/misc/Singleton.hpp"
 
 
 namespace pwiz {

@@ -25,6 +25,7 @@
 #define _EXCEPTION_HPP_
 
 
+#include "Export.hpp"
 #include <stdexcept>
 
 
@@ -42,61 +43,14 @@ using std::underflow_error;
 
 // make debug assertions throw exceptions in MSVC
 #ifdef _DEBUG
-#include <crtdbg.h>
-#include <iostream>
-#ifndef BOOST_THREAD_NO_LIB
-#define BOOST_THREAD_NO_LIB	// because not all build targets currently define this
-#endif
-#ifndef BOOST_DATE_TIME_NO_LIB
-#define BOOST_DATE_TIME_NO_LIB	// because not all build targets currently define this
-#endif
-#include <boost/utility/detail/singleton_manager.hpp>
-inline int CrtReportHook(int reportType, char *message, int *returnValue)
-{
-    std::cerr << message;
-    if (returnValue) *returnValue = 0;
-    return 1;
-}
-
-inline int CrtReportHookW(int reportType, wchar_t *message, int *returnValue)
-{
-    std::wcerr << message;
-    if (returnValue) *returnValue = 0;
-    return 1;
-}
-
-struct ReportHooker
-{
-    ReportHooker()
-    {
-        _CrtSetReportHook2(_CRT_RPTHOOK_INSTALL, &CrtReportHook);
-        _CrtSetReportHookW2(_CRT_RPTHOOK_INSTALL, &CrtReportHookW);
-    }
-
-    ~ReportHooker()
-    {
-        _CrtSetReportHook2(_CRT_RPTHOOK_REMOVE, &CrtReportHook);
-        _CrtSetReportHookW2(_CRT_RPTHOOK_REMOVE, &CrtReportHookW);
-
-        // In debug builds, destroy the singletons to keep memory leak detection
-        // from reporting them.
-        boost::destroy_singletons();
-    }
-
-    // TODO: redesign to support once-per-process (or once-per-thread?) initialization
-    //private:
-    //bool isReportHookSet;
-};
-
+struct PWIZ_API_DECL ReportHooker {ReportHooker(); ~ReportHooker();};
 static ReportHooker reportHooker;
-
 #endif // _DEBUG
 
 
 // handle Boost assertions with a message to stderr
 #if !defined(NDEBUG)
 #include <sstream>
-#define BOOST_ENABLE_ASSERT_HANDLER
 namespace boost
 {
     inline void assertion_failed(char const * expr, char const * function, char const * file, long line) // user defined

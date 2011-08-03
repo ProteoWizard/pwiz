@@ -29,7 +29,7 @@
 #include "XRawFile2.tlh"
 
 #include <map>
-#include "boost/utility/singleton.hpp"
+#include "pwiz/utility/misc/Singleton.hpp"
 
 
 namespace pwiz {

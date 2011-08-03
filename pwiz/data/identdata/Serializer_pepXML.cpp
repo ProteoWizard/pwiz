@@ -33,7 +33,7 @@
 #include "pwiz/data/msdata/MSData.hpp"
 #include "pwiz/data/proteome/AminoAcid.hpp"
 #include "pwiz/data/common/CVTranslator.hpp"
-#include "boost/utility/singleton.hpp"
+#include "pwiz/utility/misc/Singleton.hpp"
 #include "boost/xpressive/xpressive.hpp"
 #include "boost/range/adaptor/transformed.hpp"
 #include "boost/range/algorithm/min_element.hpp"

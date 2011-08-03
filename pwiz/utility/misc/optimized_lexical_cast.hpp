@@ -33,7 +33,7 @@
 // HACK: Darwin strtod isn't threadsafe so strtod_l must be used
 #ifdef __APPLE__
 #include <xlocale.h>
-#include "boost/utility/singleton.hpp"
+#include "pwiz/utility/misc/Singleton.hpp"
 
 namespace {
 

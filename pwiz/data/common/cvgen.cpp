@@ -118,19 +118,6 @@ size_t enumValue(const Term& term, size_t index)
 vector< map<Term::id_type, const Term*> > termMaps;
 vector< map<Term::id_type, string> > correctedEnumNameMaps;
 
-static string replaceAll(string result, const string& replaceWhat, const string& replaceWithWhat)
-{
-    for (int pos = 0; (pos = result.find(replaceWhat, pos)) != -1; /* do nothing */)
-        result.replace(pos,replaceWhat.size(),replaceWithWhat);
-    return result;
-}
-
-static string toupperAll(string result)
-{
-    transform(result.begin(), result.end(), result.begin(), (int(*)(int)) toupper);
-    return result;
-}
-
 void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& outputDir)
 {
     string filename = basename + ".hpp";
@@ -152,7 +139,8 @@ void writeHpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
     {
 		string filename = bfs::path(obo->filename).filename();
         os << "// [" << filename << "]\n";
-        string fileDefine = replaceAll(replaceAll(toupperAll(filename), "-", "_"), ".", "_");
+        string fileDefine = bal::to_upper_copy(filename);
+        transform(fileDefine.begin(), fileDefine.end(), fileDefine.begin(), toAllowableChar);
         os << "#define _" << fileDefine << "_\n";
 
         for (vector<string>::const_iterator it=obo->header.begin(); it!=obo->header.end(); ++it)
@@ -266,7 +254,7 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
        << "#include \"pwiz/utility/misc/String.hpp\"\n"
        << "#include \"pwiz/utility/misc/Container.hpp\"\n"
        << "#include \"pwiz/utility/misc/Exception.hpp\"\n"
-       << "#include \"boost/utility/singleton.hpp\"\n"
+       << "#include \"pwiz/utility/misc/Singleton.hpp\"\n"
        << "\n\n";
 
     namespaceBegin(os, basename);
@@ -397,31 +385,34 @@ void writeCpp(const vector<OBO>& obos, const string& basename, const bfs::path& 
           "};\n\n\n";
 
 
-	int countPvp = 0;
     typedef pair<string, string> NameValuePair;
-    for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
-    BOOST_FOREACH(const Term& term, obo->terms)
-        countPvp += term.propertyValues.size();
 
-    if (countPvp == 0)
+    os << "PropertyValuePair propertyValue_[] =\n"
+          "{\n"
+          "    {CVID_Unknown, \"Unknown\", \"Unknown\"},\n";
+    for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
     {
-        os << "PropertyValuePair* propertyValue_;\n";
-        os << "const size_t propertyValueSize_ = 0;\n\n\n";
-	}
-    else
-    {
-        os << "PropertyValuePair propertyValue_[] =\n" <<
-	        "{\n";
-        for (vector<OBO>::const_iterator obo=obos.begin(); obo!=obos.end(); ++obo)
+        if (obo->prefix != "UNIMOD") // we currently only use UNIMOD properties
+            continue;
+
         BOOST_FOREACH(const Term& term, obo->terms)
         BOOST_FOREACH(const NameValuePair& nameValuePair, term.propertyValues)
+        {
+            if (!(bal::ends_with(nameValuePair.first, "_classification") ||
+                  bal::ends_with(nameValuePair.first, "_position") ||
+                  bal::ends_with(nameValuePair.first, "_hidden") ||
+                  bal::ends_with(nameValuePair.first, "_site") ||
+                  nameValuePair.first == "delta_composition" ||
+                  nameValuePair.first == "approved"))
+                  continue;
             os << "    {" << correctedEnumNameMaps[obo-obos.begin()][term.id]
                           << ", \"" << nameValuePair.first
                           << "\", \"" << nameValuePair.second
                           << "\"},\n";
-        os << "}; // propertyValue_\n\n\n";
-        os << "const size_t propertyValueSize_ = sizeof(propertyValue_)/sizeof(PropertyValuePair);\n\n\n";
+        }
     }
+    os << "}; // propertyValue_\n\n\n";
+    os << "const size_t propertyValueSize_ = sizeof(propertyValue_)/sizeof(PropertyValuePair);\n\n\n";
 
     os << "class CVTermData : public boost::singleton<CVTermData>\n"
           "{\n"

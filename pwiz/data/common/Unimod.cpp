@@ -24,7 +24,7 @@
 
 #include "Unimod.hpp"
 #include "pwiz/utility/misc/Std.hpp"
-#include "boost/utility/singleton.hpp"
+#include "pwiz/utility/misc/Singleton.hpp"
 
 
 using namespace pwiz::cv;
@@ -148,48 +148,64 @@ struct UnimodData : public boost::singleton<UnimodData>
                 mod.approved = itr->second == "1";
 
                 multimap<string, string>::const_iterator end = term.propertyValues.end();
-                vector<Modification::Specificity>::iterator specificityItr;
 
-                // properties are ordered asciibetically: spec_site_1, spec_site_10, spec_site_2;
-                // so all sites are parsed first, then all positions, etc.
-                itr = term.propertyValues.lower_bound("spec_site_");
-                for (; itr != end && bal::starts_with(itr->first, "spec_site_"); ++itr)
+                // properties are ordered asciibetically:
+                // spec_1_classification
+                // spec_1_hidden
+                // spec_1_position
+                // spec_1_site
+                itr = term.propertyValues.lower_bound("spec_");
+                while (true)
                 {
                     mod.specificities.push_back(Modification::Specificity());
+                    Modification::Specificity& spec = mod.specificities.back();
 
-                    map<string, Site>::const_iterator itr2 = siteMap.find(itr->second);
-                    if (itr2 == siteMap.end())
-                        throw runtime_error("unknown site \"" + itr->second + "\" for term \"" + term.id + "\"");
-                    mod.specificities.back().site = itr2->second;
-                }
-
-                itr = term.propertyValues.lower_bound("spec_position_");
-                for (specificityItr = mod.specificities.begin();
-                     itr != end && bal::starts_with(itr->first, "spec_position_");
-                     ++itr, ++specificityItr)
-                {
-                    map<string, Position>::const_iterator itr2 = positionMap.find(itr->second);
-                    if (itr2 == positionMap.end())
-                        throw runtime_error("unknown position \"" + itr->second + "\" for term \"" + term.id + "\"");
-                    specificityItr->position = itr2->second;
-                }
-
-                itr = term.propertyValues.lower_bound("spec_classification_");
-                for (specificityItr = mod.specificities.begin();
-                     itr != end && bal::starts_with(itr->first, "spec_classification_");
-                     ++itr, ++specificityItr)
-                {
                     map<string, Classification>::const_iterator itr2 = classificationMap.find(itr->second);
                     if (itr2 == classificationMap.end())
                         throw runtime_error("unknown classification \"" + itr->second + "\" for term \"" + term.id + "\"");
-                    specificityItr->classification = itr2->second;
-                }
+                    spec.classification = itr2->second;
 
-                itr = term.propertyValues.lower_bound("spec_hidden_");
-                for (specificityItr = mod.specificities.begin();
-                     itr != end && bal::starts_with(itr->first, "spec_hidden_");
-                     ++itr, ++specificityItr)
-                    specificityItr->hidden = itr->second == "1";
+                    // skip redundant classification properties for the current site
+                    do {++itr;} while (itr != end && bal::ends_with(itr->first, "classification"));
+                    assert(itr != end && bal::starts_with(itr->first, "spec"));
+
+                    spec.hidden = itr->second == "1";
+
+                    // skip redundant hidden properties for the current site
+                    do {++itr;} while (itr != end && bal::ends_with(itr->first, "hidden"));
+                    assert(itr != end && bal::starts_with(itr->first, "spec"));
+
+                    map<string, Position>::const_iterator itr3 = positionMap.find(itr->second);
+                    if (itr3 == positionMap.end())
+                        throw runtime_error("unknown position \"" + itr->second + "\" for term \"" + term.id + "\"");
+                    spec.position = itr3->second;
+
+                    // skip redundant position properties for the current site
+                    do {++itr;} while (itr != end && bal::ends_with(itr->first, "position"));
+                    assert(itr != end && bal::starts_with(itr->first, "spec"));
+
+                    map<string, Site>::const_iterator itr4 = siteMap.find(itr->second);
+                    if (itr4 == siteMap.end())
+                        throw runtime_error("unknown site \"" + itr->second + "\" for term \"" + term.id + "\"");
+                    spec.site = itr4->second;
+
+                    // add copies of the currently specificity for each site, e.g.
+                    // spec_1_site = S
+                    // spec_1_site = T
+                    ++itr;
+                    while (itr != end && bal::ends_with(itr->first, "site"))
+                    {
+                        mod.specificities.push_back(spec);
+                        itr4 = siteMap.find(itr->second);
+                        if (itr4 == siteMap.end())
+                            throw runtime_error("unknown site \"" + itr->second + "\" for term \"" + term.id + "\"");
+                        mod.specificities.back().site = itr4->second;
+                        ++itr;
+                    }
+
+                    if (itr == end || !bal::starts_with(itr->first, "spec_"))
+                        break;
+                }
 
                 modifications.push_back(mod);
                 size_t modIndex = modifications.size() - 1;

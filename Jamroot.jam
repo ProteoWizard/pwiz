@@ -117,6 +117,7 @@ project pwiz
         <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE  # don't deprecate the standard library 
         <toolset>msvc:<define>_SECURE_SCL_THROWS=1      # checked iterators throw instead of crash  
         <toolset>msvc:<define>_USE_MATH_DEFINES         # for M_PI in <cmath>
+        <toolset>msvc:<define>BOOST_ALL_NO_LIB          # disable auto-link
         <toolset>msvc:<cxxflags>/wd4100                 # warning: unreferenced formal parameter
         <toolset>msvc:<cxxflags>/wd4512                 # warning: assignment operator could not be generated
         <toolset>msvc:<cxxflags>/wd4127                 # warning: conditional expression is constant (boost::lexical_cast)
@@ -154,6 +155,9 @@ project pwiz
         
         # use of boost::thread requires multithreaded runtime
         <threading>multi
+
+        # change boost debug assertions to exceptions
+        <variant>debug:<define>BOOST_ENABLE_ASSERT_HANDLER
 
         $(TEST_PRECOMMAND)
         $(TEST_POSTCOMMAND)

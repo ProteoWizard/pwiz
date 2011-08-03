@@ -26,7 +26,7 @@
 #include "Chemistry.hpp"
 #include "ChemistryData.hpp"
 #include "pwiz/utility/misc/Std.hpp"
-#include "boost/utility/singleton.hpp"
+#include "pwiz/utility/misc/Singleton.hpp"
 
 
 namespace pwiz {

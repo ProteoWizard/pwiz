@@ -6,7 +6,7 @@ subsetdef: unit_group_slim "unit group slim"
 subsetdef: unit_slim "unit slim"
 default-namespace: unit.ontology
 namespace-id-rule: * UO:$sequence(7,0,9999999)$
-import: http://pato.googlecode.com/svn/trunk/quality.obo
+import: http://purl.obolibrary.org/obo/pato.obo
 
 [Term]
 id: UO:0000000

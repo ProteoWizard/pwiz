@@ -130,8 +130,8 @@ void test()
     unit_assert_operator_equal(2, modifications(oxidation.deltaAverageMass(), 0, false, indeterminate, Site::Methionine | Site::Alanine).size());
 
 
-    // 12 mods are 28 +/- 1 (but 1 of them is an isotope label not yet supported)
-    unit_assert_operator_equal(11, modifications(28, 1, true, indeterminate).size());
+    // 18 mods are 28 +/- 1 (but 1 of them is an isotope label not yet supported)
+    unit_assert_operator_equal(17, modifications(28, 1, true, indeterminate).size());
 
     // only two of those mods happen post-translationally on protein N-termini
     unit_assert_operator_equal(2, modifications(28, 1, true, indeterminate, Site::Any,
@@ -172,9 +172,9 @@ void test()
 
     // at 14.5 +/- 0.5 there are 3 approved mods and 6 unapproved
     unit_assert_operator_equal(3, modifications(14.5, 0.5, true, true).size());
-    unit_assert_operator_equal(6, modifications(14.5, 0.5, true, false).size());
+    unit_assert_operator_equal(9, modifications(14.5, 0.5, true, false).size());
 
-    // all 6 unapproved mods are hidden
+    // all 9 unapproved mods are hidden
     unit_assert_operator_equal(0, modifications(14.5, 0.5, true, false, Site::Any,
                                                 Position::Anywhere, Classification::Any, false).size());
 
