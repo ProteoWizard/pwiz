@@ -27,7 +27,7 @@
 /**
  * The primary function where all metrics are calculated.
  */
-void MetricMaster(const string& dbFilename, string sourceFilename, const string& sourceId, bool tabbedOutput) {
+void MetricMaster(const string& dbFilename, string sourceFilename, const string& sourceId, runtimeOptions configOptions) {
 try {
 	boost::timer t;
 
@@ -792,7 +792,7 @@ try {
 	string emptyMetric = "NaN"; // NaN stands for Not a Number
 
 	// Output can either be tab delimited with all metrics in one row, or be more descriptive over 45-some lines of output
-	if (tabbedOutput) {
+	if (configOptions.tabbedOutput) {
 		// Tab delimited output header
 		qout << "Filename\tC-1A\tC-1B\tC-2A\tC-2B\tC-3A\tC-3B\tC-4A\tC-4B\tC-4C";
 		qout << "\tDS-1A\tDS-1B\tDS-2A\tDS-2B\tDS-3A\tDS-3B";
@@ -1585,9 +1585,41 @@ int main( int argc, char* argv[] ) {
         return 1;
     }
 	
-	// Check initialization file for output type (tabbed or delimited)
-	bool tabbedOutput = true;
+	// Does the config file exist? If it does, read its settings.
+	// If there's no config file, the defaults in the struct runtimeOptions in quameter.h are used
+	ifstream configFile("quameter.cfg");
+	runtimeOptions configOptions = runtimeDefaults;
+	if (configFile) {
+		while ( ! configFile.eof() )
+		  {
+			char buf[ 80 ] = {0};
+			string firstField;
+			string secondField;
+			string data;
 
+			configFile.getline( buf, sizeof( buf ) );
+			istringstream istr( string(buf), ios_base::out );
+			istr >> firstField >> secondField >> data;
+			
+			toLowerCase(firstField);
+			toLowerCase(data);
+			// Check config file for output type (tabbed or delimited)
+			if ( firstField == "tabbed_output" )
+			{
+				if (data == "1" || data == "true")
+					configOptions.tabbedOutput = true;
+				else
+					configOptions.tabbedOutput = false;
+			}
+/*			else if ( firstField == "???" )
+			{
+				configOptions.??? = data;
+			}
+*/		
+		}
+	}
+
+	
 	vector<sourceFile> allSources;
 	for (int j=1; j < argc; j++) {
 		// Queries the idpDB file for source filenames and their database ID number
@@ -1613,7 +1645,7 @@ int main( int argc, char* argv[] ) {
 		boost::thread_group threadGroup;
 		for (int l = 0; (l < maxThreads) && (current < numFiles); l++) {
 			cout << "current: " << current << "\tdb: " << allSources[current].dbFilename << "\tid: " << allSources[current].id << "\tfile: " << allSources[current].filename << endl;
-			threadGroup.add_thread(new boost::thread(MetricMaster, allSources[current].dbFilename, allSources[current].filename, allSources[current].id, tabbedOutput));
+			threadGroup.add_thread(new boost::thread(MetricMaster, allSources[current].dbFilename, allSources[current].filename, allSources[current].id, configOptions));
 			current++;
 		}
 		threadGroup.join_all();

@@ -25,6 +25,7 @@
 #include "stdafx.h"
 
 #include <iostream>
+#include <fstream>
 #include <sstream>
 #include <map>
 #include <math.h>
@@ -58,6 +59,15 @@ using namespace crawpeaks;
 
 namespace sqlite = sqlite3pp;
 
+struct runtimeOptions {
+	bool tabbedOutput;
+	
+	// set default values
+//	runtimeOptions() : tabbedOutput = false {}
+};
+
+static const runtimeOptions runtimeDefaults = { false };
+
 struct ms_amalgam {
 	string MS2;
 	double MS2Retention;
@@ -79,10 +89,10 @@ struct chromatogram {
 };
 
 struct fourInts {
-	int	first;
+	int first;
 	int second;
-	int	third;
-	int	fourth;
+	int third;
+	int fourth;
 };
 
 struct ppmStruct {
@@ -110,11 +120,16 @@ struct sourceFile {
 	string dbFilename;
 };
 
-void MetricMaster(const string&, string, const string&, bool);
+void MetricMaster(const string&, string, const string&, runtimeOptions);
 
 double Q1(vector<double>); // First quartile function
 double Q2(vector<double>); // Second quartile (aka median) function
 double Q3(vector<double>); // Third quartile function
+
+void toLowerCase(std::string &str)
+{
+	std::transform(str.begin(), str.end(), str.begin(), std::tolower);
+}
 
 bool compareByPeak(const intensityPair& pair1, const intensityPair& pair2) { return pair1.peakIntensity < pair2.peakIntensity; }
 
