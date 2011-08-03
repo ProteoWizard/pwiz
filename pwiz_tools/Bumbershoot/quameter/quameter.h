@@ -110,6 +110,8 @@ struct sourceFile {
 	string dbFilename;
 };
 
+void MetricMaster(const string&, string, const string&, bool);
+
 double Q1(vector<double>); // First quartile function
 double Q2(vector<double>); // Second quartile (aka median) function
 double Q3(vector<double>); // Third quartile function

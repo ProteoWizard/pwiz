@@ -27,7 +27,7 @@
 /**
  * The primary function where all metrics are calculated.
  */
-void MetricMaster(const string& dbFilename, string sourceFilename, const string& sourceId) {
+void MetricMaster(const string& dbFilename, string sourceFilename, const string& sourceId, bool tabbedOutput) {
 try {
 	boost::timer t;
 
@@ -790,84 +790,103 @@ try {
 	float ratioSemiToFullyTryptic = (float)numUniqueSemiTrypticPeptides/numUniqueTrypticPeptides;
 
 	string emptyMetric = "NaN"; // NaN stands for Not a Number
-	qout << sourceFilename << endl;
-	qout << "\nMetrics:\n";
-	qout << "--------\n";
-	qout << "C-1A: Chromatographic peak tailing: " << peakTailing << "/" << numDuplicatePeptides << " = " << peakTailingRatio << endl;
-	qout << "C-1B: Chromatographic bleeding: " << bleed << "/" << numDuplicatePeptides << " = " << bleedRatio << endl;
-	qout << "C-2A: Time period over which middle 50% of peptides were identified: " << thirdQuartileIDTime << " sec - " << firstQuartileIDTime << " sec = " << iqIDTime/60 << " minutes.\n";
-	qout << "C-2B: Peptide identification rate during the interquartile range: " << iqIDRate << " peptides/min.\n";
-	qout << "C-3A: Median peak width for identified peptides: " << medianFwhm << " seconds.\n";
-	qout << "C-3B: Interquartile peak width for identified peptides: " << fwhmQ3 << " - " << fwhmQ1 << " = "<< iqFwhm << " seconds.\n";
-	qout << "C-4A: Median peak width for identified peptides in the last RT decile: " << medianFwhmLastRTDecile << " seconds.\n";
-	qout << "C-4B: Median peak width for identified peptides in the first RT decile: " << medianFwhmFirstRTDecile << " seconds.\n";
-	qout << "C-4C: Median peak width for identified peptides in median RT decile: " << medianFwhmByRT << " seconds.\n";
-	qout << "DS-1A: Ratio of peptides identified once over those identified twice: " << identifiedOnce << "/" << identifiedTwice << " = " << DS1A << endl;
-	qout << "DS-1B: Ratio of peptides identified twice over those identified thrice: " << identifiedTwice << "/" << identifiedThrice << " = " << DS1B << endl;
-	qout << "DS-2A: Number of MS1 scans taken over the interquartile range: " << iqMS1Scans << " scans\n";
-	qout << "DS-2B: Number of MS2 scans taken over the interquartile range: " << iqMS2Scans << " scans\n";
-	qout << "DS-3A: MS1 peak intensity over MS1 sampled intensity at median sorted by max intensity: " << medianSamplingRatio << endl;
-	qout << "DS-3B: MS1 peak intensity over MS1 sampled intensity at median sorted by max intensity of bottom 50% of MS1: " << bottomHalfSamplingRatio << endl;
-	qout << "IS-1A: Number of big drops in total ion current value: " << ticDrop << endl; 
-	qout << "IS-1B: Number of big jumps in total ion current value: " << ticJump << endl;
-	qout << "IS-2: Median m/z value for all unique ions of identified peptides: " << medianPrecursorMZ << endl;
-	qout << "IS-3A: +1 charge / +2 charge: " << charge1 << "/" << charge2 << " = " << IS3A << endl;
-	qout << "IS-3B: +3 charge / +2 charge: " << charge3 << "/" << charge2 << " = " << IS3B << endl;
-	qout << "IS-3C: +4 charge / +2 charge: " << charge4 << "/" << charge2 << " = " << IS3C << endl;
-	if (ionInjectionTimeMS1.empty())
-		qout << "MS1-1: Median MS1 ion injection time: " << emptyMetric << endl;
-	else
-		qout << "MS1-1: Median MS1 ion injection time: " << medianInjectionTimeMS1 << " ms\n";
-	qout << "MS1-2A: Median signal-to-noise ratio (max/median peak height) for MS1 up to and including C-2A: " << medianSigNoisMS1 << endl;
-	qout << "MS1-2B: Median TIC value of identified peptides before the third quartile: " << medianTIC << endl;
-	qout << "MS1-3A: Ratio of 95th over 5th percentile MS1 max intensities of identified peptides: " << ninetyfifthPercPeak << "/" << fifthPercPeak << " = " << dynamicRangeOfPeptideSignals << endl;
-	qout << "MS1-3B: Median maximum MS1 value for identified peptides: " << medianMS1Peak << endl;
-	qout << "MS1-5A: Median real value of precursor errors: " << medianRealPrecursorError << endl;
-	qout << "MS1-5B: Mean of the absolute precursor errors: " << meanAbsolutePrecursorError << endl;
-	qout << "MS1-5C: Median real value of precursor errors in ppm: " << medianRealPrecursorErrorPPM << endl;
-	qout << "MS1-5D: Interquartile range in ppm of the precursor errors: " << interquartileRealPrecursorErrorPPM << endl;
-	if (ionInjectionTimeMS2.empty())
-		qout << "MS2-1: Median MS2 ion injection time: " << emptyMetric << endl;
-	else
-		qout << "MS2-1: Median MS2 ion injection time: " << medianInjectionTimeMS2 << " ms\n";
-	qout << "MS2-2: Median S/N ratio (max/median peak height) for identified MS2 spectra: " << medianSigNoisMS2 << endl;
-	qout << "MS2-3: Median number of peaks in an MS2 scan: " << medianNumMS2Peaks << endl;
-	qout << "MS2-4A: Fraction of MS2 scans identified in the first quartile of peptides sorted by MS1 max intensity: " << idQ1 << "/" << totalQ1 << " = " << idRatioQ1 << endl;
-	qout << "MS2-4B: Fraction of MS2 scans identified in the second quartile of peptides sorted by MS1 max intensity: " << idQ2 << "/" << totalQ2 << " = " << idRatioQ2 << endl;
-	qout << "MS2-4C: Fraction of MS2 scans identified in the third quartile of peptides sorted by MS1 max intensity: " << idQ3 << "/" << totalQ3 << " = " << idRatioQ3 << endl;
-	qout << "MS2-4D: Fraction of MS2 scans identified in the fourth quartile of peptides sorted by MS1 max intensity: " << idQ4 << "/" << totalQ4 << " = " << idRatioQ4 << endl;
-	qout << "P-1: Median peptide identification score: " << medianIDScore << endl;
-	qout << "P-2A: Number of MS2 spectra identifying tryptic peptide ions: " << numTrypticMS2Spectra << endl;
-	qout << "P-2B: Number of tryptic peptide ions identified: " << numTrypticPeptides << endl;
-	qout << "P-2C: Number of unique tryptic peptide sequences identified: " << numUniqueTrypticPeptides << endl;
-	qout << "P-3: Ratio of semi/fully tryptic peptides: " << numUniqueSemiTrypticPeptides << "/" << numUniqueTrypticPeptides << " = " << ratioSemiToFullyTryptic << endl;
+
+	// Output can either be tab delimited with all metrics in one row, or be more descriptive over 45-some lines of output
+	if (tabbedOutput) {
+		// Tab delimited output header
+		qout << "Filename\tC-1A\tC-1B\tC-2A\tC-2B\tC-3A\tC-3B\tC-4A\tC-4B\tC-4C";
+		qout << "\tDS-1A\tDS-1B\tDS-2A\tDS-2B\tDS-3A\tDS-3B";
+		qout << "\tIS-1A\tIS1-B\tIS-2\tIS-3A\tIS-3B\tIS-3C";
+		qout << "\tMS1-1\tMS1-2A\tMS1-2B\tMS1-3A\tMS1-3B\tMS1-5A\tMS1-5B\tMS1-5C\tMS1-5D";
+		qout << "\tMS2-1\tMS2-2\tMS2-3\tMS2-4A\tMS2-4B\tMS2-4C\tMS2-4D";
+		qout << "\tP-1\tP-2A\tP-2B\tP-2C\tP-3" << endl;
 	
-	qout << "\nNot metrics:\n";
-	qout << "------------\n";
-	if (!ionInjectionTimeMS1.empty() && !ionInjectionTimeMS2.empty()) {
-		qout << "MS1 mean ion injection time: " << (ionInjectionTimeMS1[0] + ionInjectionTimeMS1[ionInjectionTimeMS1.size()-1])/2 << endl;
-		qout << "MS2 mean ion injection time: " << (ionInjectionTimeMS2[0] + ionInjectionTimeMS2[ionInjectionTimeMS1.size()-1])/2 << endl;
+		// Tab delimited metrics
+		qout << sourceFilename;
+		qout << "\t" << peakTailingRatio << "\t" << bleedRatio << "\t" << iqIDTime << "\t" << iqIDRate << "\t" << medianFwhm << "\t" << iqFwhm;
+		qout << "\t" << medianFwhmLastRTDecile  << "\t" << medianFwhmFirstRTDecile  << "\t" << medianFwhmByRT;
+		qout << "\t" << DS1A << "\t" << DS1B << "\t" << iqMS1Scans << "\t" << iqMS2Scans;
+		qout << "\t" << medianSamplingRatio << "\t" << bottomHalfSamplingRatio;
+		qout << "\t" << ticDrop << "\t" << ticJump << "\t" << medianPrecursorMZ << "\t" << IS3A << "\t" << IS3B << "\t" << IS3C;
+		if (ionInjectionTimeMS1.empty())
+			qout << "\t" << emptyMetric;
+		else
+			qout << "\t" << medianInjectionTimeMS1;
+		qout << "\t" << medianSigNoisMS1 << "\t" << medianTIC << "\t" << dynamicRangeOfPeptideSignals << "\t" << medianMS1Peak;
+		qout << "\t" << medianRealPrecursorError << "\t" << meanAbsolutePrecursorError << "\t" << medianRealPrecursorErrorPPM << "\t" << interquartileRealPrecursorErrorPPM;
+		if (ionInjectionTimeMS2.empty())
+			qout << "\t" << emptyMetric;
+		else
+			qout << "\t" << medianInjectionTimeMS2;
+		qout << "\t" << medianSigNoisMS2 << "\t" << medianNumMS2Peaks;
+		qout << "\t" << idRatioQ1 << "\t" << idRatioQ2 << "\t" << idRatioQ3 << "\t" << idRatioQ4;
+		qout << "\t" << medianIDScore << "\t" << numTrypticMS2Spectra << "\t" << numTrypticPeptides;
+		qout << "\t" << numUniqueTrypticPeptides << "\t" << ratioSemiToFullyTryptic << endl;
+	
 	}
-	qout << "Total number of MS1 scans: " << MS1Count << endl;
-	qout << "Total number of MS2 scans: " << MS2Count << endl << endl;
+	else {
+		qout << sourceFilename << endl;
+		qout << "\nMetrics:\n";
+		qout << "--------\n";
+		qout << "C-1A: Chromatographic peak tailing: " << peakTailing << "/" << numDuplicatePeptides << " = " << peakTailingRatio << endl;
+		qout << "C-1B: Chromatographic bleeding: " << bleed << "/" << numDuplicatePeptides << " = " << bleedRatio << endl;
+		qout << "C-2A: Time period over which middle 50% of peptides were identified: " << thirdQuartileIDTime << " sec - " << firstQuartileIDTime << " sec = " << iqIDTime/60 << " minutes.\n";
+		qout << "C-2B: Peptide identification rate during the interquartile range: " << iqIDRate << " peptides/min.\n";
+		qout << "C-3A: Median peak width for identified peptides: " << medianFwhm << " seconds.\n";
+		qout << "C-3B: Interquartile peak width for identified peptides: " << fwhmQ3 << " - " << fwhmQ1 << " = "<< iqFwhm << " seconds.\n";
+		qout << "C-4A: Median peak width for identified peptides in the last RT decile: " << medianFwhmLastRTDecile << " seconds.\n";
+		qout << "C-4B: Median peak width for identified peptides in the first RT decile: " << medianFwhmFirstRTDecile << " seconds.\n";
+		qout << "C-4C: Median peak width for identified peptides in median RT decile: " << medianFwhmByRT << " seconds.\n";
+		qout << "DS-1A: Ratio of peptides identified once over those identified twice: " << identifiedOnce << "/" << identifiedTwice << " = " << DS1A << endl;
+		qout << "DS-1B: Ratio of peptides identified twice over those identified thrice: " << identifiedTwice << "/" << identifiedThrice << " = " << DS1B << endl;
+		qout << "DS-2A: Number of MS1 scans taken over the interquartile range: " << iqMS1Scans << " scans\n";
+		qout << "DS-2B: Number of MS2 scans taken over the interquartile range: " << iqMS2Scans << " scans\n";
+		qout << "DS-3A: MS1 peak intensity over MS1 sampled intensity at median sorted by max intensity: " << medianSamplingRatio << endl;
+		qout << "DS-3B: MS1 peak intensity over MS1 sampled intensity at median sorted by max intensity of bottom 50% of MS1: " << bottomHalfSamplingRatio << endl;
+		qout << "IS-1A: Number of big drops in total ion current value: " << ticDrop << endl; 
+		qout << "IS-1B: Number of big jumps in total ion current value: " << ticJump << endl;
+		qout << "IS-2: Median m/z value for all unique ions of identified peptides: " << medianPrecursorMZ << endl;
+		qout << "IS-3A: +1 charge / +2 charge: " << charge1 << "/" << charge2 << " = " << IS3A << endl;
+		qout << "IS-3B: +3 charge / +2 charge: " << charge3 << "/" << charge2 << " = " << IS3B << endl;
+		qout << "IS-3C: +4 charge / +2 charge: " << charge4 << "/" << charge2 << " = " << IS3C << endl;
+		if (ionInjectionTimeMS1.empty())
+			qout << "MS1-1: Median MS1 ion injection time: " << emptyMetric << endl;
+		else
+			qout << "MS1-1: Median MS1 ion injection time: " << medianInjectionTimeMS1 << " ms\n";
+		qout << "MS1-2A: Median signal-to-noise ratio (max/median peak height) for MS1 up to and including C-2A: " << medianSigNoisMS1 << endl;
+		qout << "MS1-2B: Median TIC value of identified peptides before the third quartile: " << medianTIC << endl;
+		qout << "MS1-3A: Ratio of 95th over 5th percentile MS1 max intensities of identified peptides: " << ninetyfifthPercPeak << "/" << fifthPercPeak << " = " << dynamicRangeOfPeptideSignals << endl;
+		qout << "MS1-3B: Median maximum MS1 value for identified peptides: " << medianMS1Peak << endl;
+		qout << "MS1-5A: Median real value of precursor errors: " << medianRealPrecursorError << endl;
+		qout << "MS1-5B: Mean of the absolute precursor errors: " << meanAbsolutePrecursorError << endl;
+		qout << "MS1-5C: Median real value of precursor errors in ppm: " << medianRealPrecursorErrorPPM << endl;
+		qout << "MS1-5D: Interquartile range in ppm of the precursor errors: " << interquartileRealPrecursorErrorPPM << endl;
+		if (ionInjectionTimeMS2.empty())
+			qout << "MS2-1: Median MS2 ion injection time: " << emptyMetric << endl;
+		else
+			qout << "MS2-1: Median MS2 ion injection time: " << medianInjectionTimeMS2 << " ms\n";
+		qout << "MS2-2: Median S/N ratio (max/median peak height) for identified MS2 spectra: " << medianSigNoisMS2 << endl;
+		qout << "MS2-3: Median number of peaks in an MS2 scan: " << medianNumMS2Peaks << endl;
+		qout << "MS2-4A: Fraction of MS2 scans identified in the first quartile of peptides sorted by MS1 max intensity: " << idQ1 << "/" << totalQ1 << " = " << idRatioQ1 << endl;
+		qout << "MS2-4B: Fraction of MS2 scans identified in the second quartile of peptides sorted by MS1 max intensity: " << idQ2 << "/" << totalQ2 << " = " << idRatioQ2 << endl;
+		qout << "MS2-4C: Fraction of MS2 scans identified in the third quartile of peptides sorted by MS1 max intensity: " << idQ3 << "/" << totalQ3 << " = " << idRatioQ3 << endl;
+		qout << "MS2-4D: Fraction of MS2 scans identified in the fourth quartile of peptides sorted by MS1 max intensity: " << idQ4 << "/" << totalQ4 << " = " << idRatioQ4 << endl;
+		qout << "P-1: Median peptide identification score: " << medianIDScore << endl;
+		qout << "P-2A: Number of MS2 spectra identifying tryptic peptide ions: " << numTrypticMS2Spectra << endl;
+		qout << "P-2B: Number of tryptic peptide ions identified: " << numTrypticPeptides << endl;
+		qout << "P-2C: Number of unique tryptic peptide sequences identified: " << numUniqueTrypticPeptides << endl;
+		qout << "P-3: Ratio of semi/fully tryptic peptides: " << numUniqueSemiTrypticPeptides << "/" << numUniqueTrypticPeptides << " = " << ratioSemiToFullyTryptic << endl;
+		
+		qout << "\nNot metrics:\n";
+		qout << "------------\n";
+		if (!ionInjectionTimeMS1.empty() && !ionInjectionTimeMS2.empty()) {
+			qout << "MS1 mean ion injection time: " << (ionInjectionTimeMS1[0] + ionInjectionTimeMS1[ionInjectionTimeMS1.size()-1])/2 << endl;
+			qout << "MS2 mean ion injection time: " << (ionInjectionTimeMS2[0] + ionInjectionTimeMS2[ionInjectionTimeMS1.size()-1])/2 << endl;
+		}
+		qout << "Total number of MS1 scans: " << MS1Count << endl;
+		qout << "Total number of MS2 scans: " << MS2Count << endl << endl;
+	}
 
-
-/*	// Tab delimited output: metrics in one row
-	cout << sourceFilename;
-	cout << "\t" << peakTailingRatio << "\t" << bleedRatio << "\t" << iqIDTime << "\t" << iqIDRate << "\t" << DS1A << "\t" << DS1B << "\t" << iqMS1Scans << "\t" << iqMS2Scans;
-	cout << "\t" << ticDrop << "\t" << ticJump << "\t" << medianPrecursorMZ << "\t" << IS3A << "\t" << IS3B << "\t" << IS3C;
-	if (ionInjectionTimeMS1.empty())
-		cout << "\t" << emptyMetric;
-	else
-		cout << "\t" << medianInjectionTimeMS1;
-	cout << "\t" << medianTIC << "\t" << medianRealPrecursorError << "\t" << meanAbsolutePrecursorError << "\t" << medianRealPrecursorErrorPPM << "\t" << interquartileRealPrecursorErrorPPM;
-	if (ionInjectionTimeMS2.empty())
-		cout << "\t" << emptyMetric;
-	else
-		cout << "\t" << medianInjectionTimeMS2;
-	cout << "\t" << medianNumMS2Peaks << "\t" << medianIDScore << "\t" << numTrypticMS2Spectra << "\t" << numTrypticPeptides;
-	cout << "\t" << numUniqueTrypticPeptides << "\t" << ratioSemiToFullyTryptic << endl;
-*/
 	qout.close();
 	cout << sourceFilename << " took " << t.elapsed() << " seconds to analyze.\n";
 	}
@@ -1565,14 +1584,9 @@ int main( int argc, char* argv[] ) {
         cerr << "Usage: quameter <idpDB file>" << endl;
         return 1;
     }
-
-/*	// Tab delimited output: header
-	cout << "Filename\tC-1A\tC-1B\tC-2A\tC-2B\tDS-1A\tDS-1B\tDS-2A\tDS-2B";
-	cout << "\tIS-1A\tIS1-B\tIS-2\tIS-3A\tIS-3B\tIS-3C";
-	cout << "\tMS1-1\tMS1-2B\tMS1-5A\tMS1-5B\tMS1-5C\tMS1-5D\tMS2-1";
-	cout << "\tMS2-3\tP-1\tP-2A\tP-2B";
-	cout << "\tP-2C\tP-3" << endl;
-*/	
+	
+	// Check initialization file for output type (tabbed or delimited)
+	bool tabbedOutput = true;
 
 	vector<sourceFile> allSources;
 	for (int j=1; j < argc; j++) {
@@ -1599,7 +1613,7 @@ int main( int argc, char* argv[] ) {
 		boost::thread_group threadGroup;
 		for (int l = 0; (l < maxThreads) && (current < numFiles); l++) {
 			cout << "current: " << current << "\tdb: " << allSources[current].dbFilename << "\tid: " << allSources[current].id << "\tfile: " << allSources[current].filename << endl;
-			threadGroup.add_thread(new boost::thread(MetricMaster, allSources[current].dbFilename, allSources[current].filename, allSources[current].id));
+			threadGroup.add_thread(new boost::thread(MetricMaster, allSources[current].dbFilename, allSources[current].filename, allSources[current].id, tabbedOutput));
 			current++;
 		}
 		threadGroup.join_all();
