@@ -1636,12 +1636,10 @@ namespace pwiz.Skyline.Model
             }
 
             double massH = Settings.GetFragmentMass(group.LabelType, mods, transition, isotopeDist);
-            float? isotopeDistProportion = isotopeDist != null
-                ? isotopeDist.GetProportionI(transition.MassIndex)
-                : (float?) null;
+            var isotopeDistInfo = TransitionDocNode.GetIsotopeDistInfo(transition, isotopeDist);
 
             return new TransitionDocNode(transition, info.Annotations, info.Losses,
-                massH, isotopeDistProportion, info.LibInfo, info.Results);
+                massH, isotopeDistInfo, info.LibInfo, info.Results);
         }
 
         private static Annotations ReadAnnotations(XmlReader reader)

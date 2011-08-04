@@ -151,7 +151,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                 labelPrefix = string.Format("{0} [{1}]", tran.AA, nodeTran.FragmentIonName);
             }
 
-            if (!nodeTran.HasLibInfo)
+            if (!nodeTran.HasLibInfo && !nodeTran.HasDistInfo)
             {
                 return string.Format("{0} - {1:F04}{2}{3}",
                                      labelPrefix,
@@ -161,11 +161,15 @@ namespace pwiz.Skyline.Controls.SeqNode
             }
             else
             {
-                return string.Format("{0} - {1:F04}{2} (rank {3}){4}",
+                string rank = nodeTran.HasLibInfo
+                                  ? string.Format("rank {0}", nodeTran.LibInfo.Rank)
+                                  : string.Format("irank {0}", nodeTran.IsotopeDistInfo.Rank);
+
+                return string.Format("{0} - {1:F04}{2} ({3}){4}",
                                      labelPrefix,
                                      nodeTran.Mz,
                                      Transition.GetChargeIndicator(tran.Charge),
-                                     nodeTran.LibInfo.Rank,
+                                     rank,
                                      resultsText);
             }
         }

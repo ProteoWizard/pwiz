@@ -278,8 +278,9 @@ namespace pwiz.Skyline.Model
                             double ionMz = SequenceMassCalc.GetMZ(precursorMS1Mass, PrecursorCharge);
                             if (minMz > ionMz || ionMz > maxMz)
                                 continue;
-                            float isotopeDistProportion = isotopeDist.GetProportionI(i);
-                            yield return CreateTransitionNode(i, precursorMS1Mass, isotopeDistProportion, null, transitionRanks);
+                            var isotopeDistInfo = new TransitionIsotopeDistInfo(
+                                isotopeDist.GetRankI(i), isotopeDist.GetProportionI(i));
+                            yield return CreateTransitionNode(i, precursorMS1Mass, isotopeDistInfo, null, transitionRanks);
                         }
                         continue;
                     }
@@ -397,12 +398,12 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        private TransitionDocNode CreateTransitionNode(int massIndex, double precursorMassH, float? isotopeDistProportion,
+        private TransitionDocNode CreateTransitionNode(int massIndex, double precursorMassH, TransitionIsotopeDistInfo isotopeDistInfo,
             TransitionLosses losses, IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks)
         {
             Transition transition = new Transition(this, massIndex);
             var info = TransitionDocNode.GetLibInfo(transition, Transition.CalcMass(precursorMassH, losses), transitionRanks);
-            return new TransitionDocNode(transition, losses, precursorMassH, isotopeDistProportion, info);
+            return new TransitionDocNode(transition, losses, precursorMassH, isotopeDistInfo, info);
         }
 
         private TransitionDocNode CreateTransitionNode(IonType type, int cleavageOffset, int charge, double massH,

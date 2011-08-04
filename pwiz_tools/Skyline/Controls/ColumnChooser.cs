@@ -16,7 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
@@ -33,7 +32,7 @@ namespace pwiz.Skyline.Controls
             Icon = Resources.Skyline;
         }
 
-        public void SetColumns(IList<String> nameList, IList<bool> checkedList)
+        public void SetColumns(IList<string> nameList, IList<bool> checkedList)
         {
             checkedListBox1.Items.Clear();
             checkedListBox1.Items.AddRange(nameList.ToArray());
@@ -41,6 +40,16 @@ namespace pwiz.Skyline.Controls
             {
                 checkedListBox1.SetItemChecked(i, checkedList[i]);
             }
+        }
+
+        public void SetChecked(IDictionary<string, bool> dictNameChecked)
+        {
+            for (int i = 0; i < checkedListBox1.Items.Count; i++)
+            {
+                bool isChecked;
+                if (dictNameChecked.TryGetValue((string) checkedListBox1.Items[i], out isChecked))
+                    checkedListBox1.SetItemChecked(i, isChecked);
+            }            
         }
 
         public IList<bool> GetCheckedList()

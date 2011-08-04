@@ -714,7 +714,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     case AreaExpectedValue.library:
                         return nodeTran.HasLibInfo ? nodeTran.LibInfo.Intensity : 0;
                     case AreaExpectedValue.isotope_dist:
-                        return nodeTran.IsotopeDistProportion ?? 0;
+                        return nodeTran.HasDistInfo ? nodeTran.IsotopeDistInfo.Proportion : 0;
                     default:
                         return 0;
                 }

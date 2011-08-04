@@ -1076,7 +1076,7 @@ namespace pwiz.Skyline
             // 
             this.aMenuItem.CheckOnClick = true;
             this.aMenuItem.Name = "aMenuItem";
-            this.aMenuItem.Size = new System.Drawing.Size(124, 22);
+            this.aMenuItem.Size = new System.Drawing.Size(152, 22);
             this.aMenuItem.Text = "&A";
             this.aMenuItem.Click += new System.EventHandler(this.aMenuItem_Click);
             // 
@@ -1084,7 +1084,7 @@ namespace pwiz.Skyline
             // 
             this.bMenuItem.CheckOnClick = true;
             this.bMenuItem.Name = "bMenuItem";
-            this.bMenuItem.Size = new System.Drawing.Size(124, 22);
+            this.bMenuItem.Size = new System.Drawing.Size(152, 22);
             this.bMenuItem.Text = "&B";
             this.bMenuItem.Click += new System.EventHandler(this.bMenuItem_Click);
             // 
@@ -1092,7 +1092,7 @@ namespace pwiz.Skyline
             // 
             this.cMenuItem.CheckOnClick = true;
             this.cMenuItem.Name = "cMenuItem";
-            this.cMenuItem.Size = new System.Drawing.Size(124, 22);
+            this.cMenuItem.Size = new System.Drawing.Size(152, 22);
             this.cMenuItem.Text = "&C";
             this.cMenuItem.Click += new System.EventHandler(this.cMenuItem_Click);
             // 
@@ -1100,7 +1100,7 @@ namespace pwiz.Skyline
             // 
             this.xMenuItem.CheckOnClick = true;
             this.xMenuItem.Name = "xMenuItem";
-            this.xMenuItem.Size = new System.Drawing.Size(124, 22);
+            this.xMenuItem.Size = new System.Drawing.Size(152, 22);
             this.xMenuItem.Text = "&X";
             this.xMenuItem.Click += new System.EventHandler(this.xMenuItem_Click);
             // 
@@ -1110,7 +1110,7 @@ namespace pwiz.Skyline
             this.yMenuItem.CheckOnClick = true;
             this.yMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.yMenuItem.Name = "yMenuItem";
-            this.yMenuItem.Size = new System.Drawing.Size(124, 22);
+            this.yMenuItem.Size = new System.Drawing.Size(152, 22);
             this.yMenuItem.Text = "&Y";
             this.yMenuItem.Click += new System.EventHandler(this.yMenuItem_Click);
             // 
@@ -1118,14 +1118,14 @@ namespace pwiz.Skyline
             // 
             this.zMenuItem.CheckOnClick = true;
             this.zMenuItem.Name = "zMenuItem";
-            this.zMenuItem.Size = new System.Drawing.Size(124, 22);
+            this.zMenuItem.Size = new System.Drawing.Size(152, 22);
             this.zMenuItem.Text = "&Z";
             this.zMenuItem.Click += new System.EventHandler(this.zMenuItem_Click);
             // 
             // precursorIonMenuItem
             // 
             this.precursorIonMenuItem.Name = "precursorIonMenuItem";
-            this.precursorIonMenuItem.Size = new System.Drawing.Size(124, 22);
+            this.precursorIonMenuItem.Size = new System.Drawing.Size(152, 22);
             this.precursorIonMenuItem.Text = "&Precursor";
             this.precursorIonMenuItem.Click += new System.EventHandler(this.precursorIonMenuItem_Click);
             // 

@@ -46,7 +46,7 @@
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOK.Location = new System.Drawing.Point(391, 345);
+            this.btnOK.Location = new System.Drawing.Point(391, 373);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(82, 24);
             this.btnOK.TabIndex = 4;
@@ -57,7 +57,7 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(479, 345);
+            this.btnCancel.Location = new System.Drawing.Point(479, 373);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(82, 24);
             this.btnCancel.TabIndex = 5;
@@ -68,7 +68,7 @@
             // 
             this.tbMessage.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbMessage.Location = new System.Drawing.Point(12, 222);
+            this.tbMessage.Location = new System.Drawing.Point(12, 250);
             this.tbMessage.Name = "tbMessage";
             this.tbMessage.Size = new System.Drawing.Size(549, 80);
             this.tbMessage.TabIndex = 1;
@@ -78,7 +78,7 @@
             // 
             this.lblCommentBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.lblCommentBox.AutoSize = true;
-            this.lblCommentBox.Location = new System.Drawing.Point(9, 206);
+            this.lblCommentBox.Location = new System.Drawing.Point(9, 234);
             this.lblCommentBox.Name = "lblCommentBox";
             this.lblCommentBox.Size = new System.Drawing.Size(259, 13);
             this.lblCommentBox.TabIndex = 0;
@@ -109,7 +109,7 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(9, 103);
+            this.label1.Location = new System.Drawing.Point(12, 109);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(132, 13);
             this.label1.TabIndex = 10;
@@ -120,18 +120,18 @@
             this.tbSourceCodeLocation.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbSourceCodeLocation.Location = new System.Drawing.Point(12, 119);
+            this.tbSourceCodeLocation.Location = new System.Drawing.Point(12, 125);
             this.tbSourceCodeLocation.Multiline = true;
             this.tbSourceCodeLocation.Name = "tbSourceCodeLocation";
             this.tbSourceCodeLocation.ReadOnly = true;
             this.tbSourceCodeLocation.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.tbSourceCodeLocation.Size = new System.Drawing.Size(549, 81);
+            this.tbSourceCodeLocation.Size = new System.Drawing.Size(549, 103);
             this.tbSourceCodeLocation.TabIndex = 11;
             // 
             // btnClipboard
             // 
             this.btnClipboard.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.btnClipboard.Location = new System.Drawing.Point(12, 345);
+            this.btnClipboard.Location = new System.Drawing.Point(12, 373);
             this.btnClipboard.Name = "btnClipboard";
             this.btnClipboard.Size = new System.Drawing.Size(135, 23);
             this.btnClipboard.TabIndex = 6;
@@ -143,7 +143,7 @@
             // 
             this.lblEmail.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.lblEmail.AutoSize = true;
-            this.lblEmail.Location = new System.Drawing.Point(9, 312);
+            this.lblEmail.Location = new System.Drawing.Point(9, 340);
             this.lblEmail.Name = "lblEmail";
             this.lblEmail.Size = new System.Drawing.Size(123, 13);
             this.lblEmail.TabIndex = 2;
@@ -152,7 +152,7 @@
             // tbEmail
             // 
             this.tbEmail.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.tbEmail.Location = new System.Drawing.Point(132, 309);
+            this.tbEmail.Location = new System.Drawing.Point(132, 337);
             this.tbEmail.Name = "tbEmail";
             this.tbEmail.Size = new System.Drawing.Size(299, 20);
             this.tbEmail.TabIndex = 3;
@@ -166,7 +166,7 @@
             this.tbErrorDescription.Name = "tbErrorDescription";
             this.tbErrorDescription.ReadOnly = true;
             this.tbErrorDescription.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.tbErrorDescription.Size = new System.Drawing.Size(549, 28);
+            this.tbErrorDescription.Size = new System.Drawing.Size(549, 34);
             this.tbErrorDescription.TabIndex = 9;
             // 
             // ReportErrorDlg
@@ -175,7 +175,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(573, 377);
+            this.ClientSize = new System.Drawing.Size(573, 405);
             this.Controls.Add(this.tbErrorDescription);
             this.Controls.Add(this.tbEmail);
             this.Controls.Add(this.lblEmail);

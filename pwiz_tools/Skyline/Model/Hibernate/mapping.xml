@@ -156,6 +156,8 @@
     <property name="Note" length="10000" />
     <property name="LibraryRank" />
     <property name="LibraryIntensity" />
+    <property name="IsotopeDistIndex" />
+    <property name="IsotopeDistRank" />
     <property name="IsotopeDistProportion" />
   </class>
   <class name="DbTransitionResult">

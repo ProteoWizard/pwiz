@@ -669,7 +669,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (expectedIntensities != null)
                 {
                     if (isFullScanMs)
-                        expectedIntensities[i] = nodeTran.IsotopeDistProportion ?? 0;
+                        expectedIntensities[i] = nodeTran.HasDistInfo ? nodeTran.IsotopeDistInfo.Proportion : 0;
                     else
                         expectedIntensities[i] = nodeTran.HasLibInfo ? nodeTran.LibInfo.Intensity : 0;
                     

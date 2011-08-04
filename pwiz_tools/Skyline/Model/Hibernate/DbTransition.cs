@@ -41,6 +41,8 @@ namespace pwiz.Skyline.Model.Hibernate
         public virtual string Note { get; set; }
         public virtual int? LibraryRank { get; set; }
         public virtual double? LibraryIntensity { get; set; }
+        public virtual int IsotopeDistIndex { get; set; }
+        public virtual int? IsotopeDistRank { get; set; }
         [QueryColumn(Format = Formats.STANDARD_RATIO)]
         public virtual double? IsotopeDistProportion { get; set; }
     }

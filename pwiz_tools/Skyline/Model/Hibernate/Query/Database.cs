@@ -576,18 +576,22 @@ namespace pwiz.Skyline.Model.Hibernate.Query
         {
             Transition transition = nodeTran.Transition;
             IsotopeLabelType labelType = transition.Group.LabelType;
+            string fragmentIon = transition.FragmentIonName;
+            if (transition.IonType == IonType.precursor)
+                fragmentIon += Transition.GetMassIndexText(transition.MassIndex);
             DbTransition dbTransition = new DbTransition
                                           {
                                               Precursor = dbPrecursor,
                                               ProductCharge = transition.Charge,
                                               ProductNeutralMass = SequenceMassCalc.PersistentNeutral(SequenceMassCalc.GetMH(nodeTran.Mz, transition.Charge)),
                                               ProductMz = SequenceMassCalc.PersistentMZ(nodeTran.Mz),
-                                              FragmentIon = nodeTran.FragmentIonName,
+                                              FragmentIon = fragmentIon,
                                               FragmentIonType = transition.IonType.ToString(),
                                               FragmentIonOrdinal = transition.Ordinal,
                                               CleavageAa = transition.AA.ToString(),
                                               LossNeutralMass = nodeTran.LostMass,
-                                              Note = nodeTran.Note
+                                              Note = nodeTran.Note,
+                                              IsotopeDistIndex = transition.MassIndex
                                           };
 
             if (nodeTran.HasLoss)
@@ -599,9 +603,10 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 dbTransition.LibraryIntensity = nodeTran.LibInfo.Intensity;
                 dbTransition.LibraryRank = nodeTran.LibInfo.Rank;
             }
-            if (nodeTran.IsotopeDistProportion.HasValue)
+            if (nodeTran.HasDistInfo)
             {
-                dbTransition.IsotopeDistProportion = nodeTran.IsotopeDistProportion;
+                dbTransition.IsotopeDistRank = nodeTran.IsotopeDistInfo.Rank;
+                dbTransition.IsotopeDistProportion = nodeTran.IsotopeDistInfo.Proportion;
             }
             AddAnnotations(docInfo, dbTransition, nodeTran.Annotations);
             session.Save(dbTransition);

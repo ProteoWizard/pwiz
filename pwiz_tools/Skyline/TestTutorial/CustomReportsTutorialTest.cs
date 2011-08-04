@@ -269,8 +269,12 @@ namespace pwiz.SkylineTestTutorial
             WaitForGraphs();
             RunDlg<ColumnChooser>(resultsGridForm.ChooseColumns, columnChooser =>
             {
-                columnChooser.SetColumns(new[] {"Min Start Time", "Max End Time", "Library Dot Product"}, 
-                    new[] {false, false, false});
+                columnChooser.SetChecked(new Dictionary<string, bool>
+                                             {
+                                                 {"Min Start Time", false},
+                                                 {"Max End Time", false},
+                                                 {"Library Dot Product", false}
+                                             });
                 columnChooser.DialogResult = DialogResult.OK;
             });
             RunUI(() => SkylineWindow.SelectedNode.Expand());

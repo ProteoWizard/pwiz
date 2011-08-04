@@ -568,14 +568,14 @@ namespace pwiz.Skyline.Model
                             var annotations = nodeTranResult.Annotations;
                             var losses = nodeTranResult.Losses;
                             double massH = settingsNew.GetFragmentMass(TransitionGroup.LabelType, mods, tran, isotopeDist);
-                            float? isotopeDistProportion = TransitionDocNode.GetIsotopeDistProportion(tran, isotopeDist);
+                            var isotopeDistInfo = TransitionDocNode.GetIsotopeDistInfo(tran, isotopeDist);
                             var info = TransitionDocNode.GetLibInfo(tran, Transition.CalcMass(massH, losses), transitionRanks);
                             Helpers.AssignIfEquals(ref info, nodeTranResult.LibInfo);
                             if (!ReferenceEquals(info, nodeTranResult.LibInfo))
                                 dotProductChange = true;
                             var results = nodeTranResult.Results;
                             nodeTranResult = new TransitionDocNode(tran, annotations, losses,
-                                massH, isotopeDistProportion, info, results);
+                                massH, isotopeDistInfo, info, results);
 
                             Helpers.AssignIfEquals(ref nodeTranResult, (TransitionDocNode) existing);
                         }
@@ -642,14 +642,14 @@ namespace pwiz.Skyline.Model
                         var annotations = nodeTransition.Annotations;   // Don't lose annotations
                         var results = nodeTransition.Results;           // Results changes happen later
                         double massH = settingsNew.GetFragmentMass(TransitionGroup.LabelType, mods, tran, isotopeDist);
-                        float? isotopeDistProportion = TransitionDocNode.GetIsotopeDistProportion(tran, isotopeDist);
+                        var isotopeDistInfo = TransitionDocNode.GetIsotopeDistInfo(tran, isotopeDist);
                         var info = TransitionDocNode.GetLibInfo(tran, Transition.CalcMass(massH, losses), transitionRanks);
                         Helpers.AssignIfEquals(ref info, nodeTransition.LibInfo);
                         if (!ReferenceEquals(info, nodeTransition.LibInfo))
                             dotProductChange = true;
 
                         var nodeNew = new TransitionDocNode(tran, annotations, losses,
-                            massH, isotopeDistProportion, info, results);
+                            massH, isotopeDistInfo, info, results);
 
                         Helpers.AssignIfEquals(ref nodeNew, nodeTransition);
                         childrenNew.Add(nodeNew);
@@ -1264,7 +1264,7 @@ namespace pwiz.Skyline.Model
 
             private static float GetSafeIsotopeDistProportion(TransitionDocNode nodeTran)
             {
-                return nodeTran.IsotopeDistProportion ?? 0;
+                return (nodeTran.HasDistInfo ? nodeTran.IsotopeDistInfo.Proportion : 0);
             }
         }
 
@@ -1791,6 +1791,7 @@ namespace pwiz.Skyline.Model
             if (ReferenceEquals(this, obj)) return true;
             return base.Equals(obj) &&
                    obj.PrecursorMz == PrecursorMz &&
+                   Equals(obj.IsotopeDist, IsotopeDist) &&
                    Equals(obj.LibInfo, LibInfo) &&
                    Equals(obj.Results, Results);
         }
@@ -1808,6 +1809,7 @@ namespace pwiz.Skyline.Model
             {
                 int result = base.GetHashCode();
                 result = (result*397) ^ PrecursorMz.GetHashCode();
+                result = (result*397) ^ (IsotopeDist != null ? IsotopeDist.GetHashCode() : 0);
                 result = (result*397) ^ (LibInfo != null ? LibInfo.GetHashCode() : 0);
                 result = (result*397) ^ (Results != null ? Results.GetHashCode() : 0);
                 return result;

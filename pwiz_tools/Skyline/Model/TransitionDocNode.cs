@@ -32,9 +32,9 @@ namespace pwiz.Skyline.Model
         public TransitionDocNode(Transition id,
                                  TransitionLosses losses,
                                  double massH,
-                                 float? isotopeDistProportion,
+                                 TransitionIsotopeDistInfo isotopeDistInfo,
                                  TransitionLibInfo libInfo)
-            : this(id, Annotations.EMPTY, losses, massH, isotopeDistProportion, libInfo, null)
+            : this(id, Annotations.EMPTY, losses, massH, isotopeDistInfo, libInfo, null)
         {
         }
 
@@ -42,7 +42,7 @@ namespace pwiz.Skyline.Model
                                  Annotations annotations,
                                  TransitionLosses losses,
                                  double massH,
-                                 float? isotopeDistProportion,
+                                 TransitionIsotopeDistInfo isotopeDistInfo,
                                  TransitionLibInfo libInfo,
                                  Results<TransitionChromInfo> results)
             : base(id, annotations)
@@ -51,7 +51,7 @@ namespace pwiz.Skyline.Model
             if (losses != null)
                 massH -= losses.Mass;
             Mz = SequenceMassCalc.GetMZ(massH, id.Charge);
-            IsotopeDistProportion = isotopeDistProportion;
+            IsotopeDistInfo = isotopeDistInfo;
             LibInfo = libInfo;
             Results = results;
         }
@@ -106,13 +106,16 @@ namespace pwiz.Skyline.Model
             get { return Transition.IsPrecursor() && Losses == null; }
         }
 
-        public float? IsotopeDistProportion { get; private set; }
+        public TransitionIsotopeDistInfo IsotopeDistInfo { get; private set; }
 
-        public static float? GetIsotopeDistProportion(Transition transition, IsotopeDistInfo isotopeDist)
+        public bool HasDistInfo { get { return IsotopeDistInfo != null; }}
+
+        public static TransitionIsotopeDistInfo GetIsotopeDistInfo(Transition transition, IsotopeDistInfo isotopeDist)
         {
             if (isotopeDist == null)
                 return null;
-            return isotopeDist.GetProportionI(transition.MassIndex);
+            return new TransitionIsotopeDistInfo(isotopeDist.GetRankI(transition.MassIndex),
+                isotopeDist.GetProportionI(transition.MassIndex));
         }
 
         public TransitionLibInfo LibInfo { get; private set; }
@@ -269,7 +272,7 @@ namespace pwiz.Skyline.Model
                                                Annotations,
                                                Losses,
                                                0.0,
-                                               IsotopeDistProportion,
+                                               IsotopeDistInfo,
                                                LibInfo,
                                                null) {Mz = Mz};
         }
@@ -361,6 +364,7 @@ namespace pwiz.Skyline.Model
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             return base.Equals(obj) && obj.Mz == Mz &&
+                   Equals(obj.IsotopeDistInfo, IsotopeDistInfo) &&
                    Equals(obj.LibInfo, LibInfo) &&
                    Equals(obj.Results, Results);
         }
@@ -378,6 +382,7 @@ namespace pwiz.Skyline.Model
             {
                 int result = base.GetHashCode();
                 result = (result*397) ^ Mz.GetHashCode();
+                result = (result*397) ^ (IsotopeDistInfo != null ? IsotopeDistInfo.GetHashCode() : 0);
                 result = (result*397) ^ (LibInfo != null ? LibInfo.GetHashCode() : 0);
                 result = (result*397) ^ (Results != null ? Results.GetHashCode() : 0);
                 return result;

@@ -22,7 +22,7 @@
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
     <SignManifests>false</SignManifests>
     <SignAssembly>false</SignAssembly>
-    <PublishUrl>C:\Program Files\LabKey Server\apache-tomcat-5.5.29\webapps\ROOT\software\Skyline-test\</PublishUrl>
+    <PublishUrl>C:\Program Files\LabKey Server\apache-tomcat-5.5.29\webapps\ROOT\software\Skyline-daily\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Web</InstallFrom>
     <UpdateEnabled>false</UpdateEnabled>
@@ -32,14 +32,14 @@
     <UpdatePeriodically>false</UpdatePeriodically>
     <UpdateRequired>false</UpdateRequired>
     <MapFileExtensions>true</MapFileExtensions>
-    <InstallUrl>https://brendanx-uw1.gs.washington.edu/software/Skyline-test/</InstallUrl>
+    <InstallUrl>https://brendanx-uw1.gs.washington.edu/software/Skyline-daily/</InstallUrl>
     <SupportUrl>https://brendanx-uw1.gs.washington.edu/labkey/project/home/support/begin.view%3f</SupportUrl>
     <ProductName>Skyline-daily</ProductName>
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>2875</ApplicationRevision>
-    <ApplicationVersion>1.1.1.2875</ApplicationVersion>
+    <ApplicationRevision>2884</ApplicationRevision>
+    <ApplicationVersion>1.1.1.2884</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>

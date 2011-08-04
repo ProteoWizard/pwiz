@@ -15,7 +15,7 @@
     <ManifestCertificateThumbprint>B226686C5D57EC6D3C850F6DD0334C32C39A5AAC</ManifestCertificateThumbprint>
     <ManifestKeyFile>SkylineRunner_TemporaryKey.pfx</ManifestKeyFile>
     <GenerateManifests>false</GenerateManifests>
-    <SignManifests>true</SignManifests>
+    <SignManifests>false</SignManifests>
     <IsWebBootstrapper>false</IsWebBootstrapper>
     <TargetZone>LocalIntranet</TargetZone>
     <ApplicationManifest>Properties\app.manifest</ApplicationManifest>

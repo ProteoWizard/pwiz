@@ -17,10 +17,12 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using pwiz.Common.Chemistry;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.Results
@@ -29,7 +31,7 @@ namespace pwiz.Skyline.Model.Results
     {
         private readonly double _monoisotopicMassH;
         private readonly int _charge;
-        private ReadOnlyCollection<MzProportion> _expectedDistribution;
+        private ReadOnlyCollection<MzRankProportion> _expectedDistribution;
 
         public IsotopeDistInfo(MassDistribution massDistribution,
                                double monoisotopicMassH,
@@ -86,10 +88,21 @@ namespace pwiz.Skyline.Model.Results
                 startIndex = monoMassIndex - 1;
             int endIndex = expectedSpectrum.Intensities.LastIndexOf(inten => inten >= minimumAbundance) + 1;
             int countPeaks = endIndex - startIndex;
-            var expectedProportions = new float[countPeaks];
+            var listProportionIndices = new List<KeyValuePair<float, int>>(countPeaks);
             for (int i = 0; i < countPeaks; i++)
             {
-                expectedProportions[i] = (float) expectedSpectrum.Intensities[i + startIndex];
+                listProportionIndices.Add(new KeyValuePair<float, int>(
+                    (float) expectedSpectrum.Intensities[i + startIndex], i));
+            }
+            // Sort proportions descending.
+            listProportionIndices.Sort((p1, p2) => Comparer.Default.Compare(p2.Key, p1.Key));
+
+            // Set proportions and ranks back in the original locations
+            var expectedProportionRanks = new KeyValuePair<float, int>[countPeaks];
+            for (int i = 0; i < countPeaks; i++)
+            {
+                expectedProportionRanks[listProportionIndices[i].Value] =
+                    new KeyValuePair<float, int>(listProportionIndices[i].Key, i + 1);
             }
 
             // TODO: Can this be discarded?
@@ -98,12 +111,13 @@ namespace pwiz.Skyline.Model.Results
             MonoMassIndex = monoMassIndex - startIndex;
 
             // Find the base peak and fill in the masses and proportions
-            var expectedPeaks = new List<MzProportion>();
+            var expectedPeaks = new List<MzRankProportion>();
             for (int i = 0; i < countPeaks; i++)
             {
-                float expectedProportion = expectedProportions[i];
-                expectedPeaks.Add(new MzProportion(q1FilterValues[i + startIndex], expectedProportion));
-                if (expectedProportion > expectedProportions[BaseMassIndex])
+                float expectedProportion = expectedProportionRanks[i].Key;
+                int rank = expectedProportionRanks[i].Value;
+                expectedPeaks.Add(new MzRankProportion(q1FilterValues[i + startIndex], rank, expectedProportion));
+                if (expectedProportion > expectedProportionRanks[BaseMassIndex].Key)
                     BaseMassIndex = i;
             }
             ExpectedPeaks = expectedPeaks;
@@ -115,7 +129,7 @@ namespace pwiz.Skyline.Model.Results
 
         private int BaseMassIndex { get; set; }
 
-        private IList<MzProportion> ExpectedPeaks
+        private IList<MzRankProportion> ExpectedPeaks
         {
             get { return _expectedDistribution; }
             set { _expectedDistribution = MakeReadOnly(value); }
@@ -144,6 +158,11 @@ namespace pwiz.Skyline.Model.Results
         public float GetProportionI(int massIndex)
         {
             return ExpectedPeaks[MassIndexToPeakIndex(massIndex)].Proportion;
+        }
+
+        public int GetRankI(int massIndex)
+        {
+            return ExpectedPeaks[MassIndexToPeakIndex(massIndex)].Rank;
         }
 
         public double GetMZI(int massIndex)
@@ -196,16 +215,57 @@ namespace pwiz.Skyline.Model.Results
 
         #endregion
 
-        private struct MzProportion
+        private struct MzRankProportion
         {
-            public MzProportion(double mz, float proportion) : this()
+            public MzRankProportion(double mz, int rank, float proportion) : this()
             {
                 Mz = mz;
+                Rank = rank;
                 Proportion = proportion;
             }
 
             public double Mz { get; private set; }
+            public int Rank { get; private set; }
             public float Proportion { get; private set; }
         }
+    }
+
+    public sealed class TransitionIsotopeDistInfo
+    {
+        public TransitionIsotopeDistInfo(int rank, float proportion)
+        {
+            Rank = rank;
+            Proportion = proportion;
+        }
+
+        public int Rank { get; private set; }
+        public float Proportion { get; private set; }
+
+        #region object overrides
+
+        public bool Equals(TransitionIsotopeDistInfo obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return obj.Proportion == Proportion && obj.Rank == Rank;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != typeof(TransitionIsotopeDistInfo)) return false;
+            return Equals((TransitionIsotopeDistInfo)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (Proportion.GetHashCode() * 397) ^ Rank;
+            }
+        }
+
+        #endregion
     }
 }
