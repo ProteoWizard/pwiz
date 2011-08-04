@@ -1,6 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿//
+// $Id: DataGridViewProgressBar.cs 2666 2011-04-28 15:57:33Z chambm $
+//
+//
+// Original author: Jay Holman <jay.holman .@. vanderbilt.edu>
+//
+// Copyright 2011 Vanderbilt University - Nashville, TN 37232
+//
+// Licensed under the Apache License, Version 2.0 (the "License"); 
+// you may not use this file except in compliance with the License. 
+// You may obtain a copy of the License at 
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software 
+// distributed under the License is distributed on an "AS IS" BASIS, 
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
+// See the License for the specific language governing permissions and 
+// limitations under the License.
+//
+
+
+using System;
 using System.Windows.Forms;
 using System.Drawing;
 using System.ComponentModel;
@@ -8,7 +28,7 @@ using System.ComponentModel;
 
 namespace CustomProgressCell
 {
-    public sealed class DataGridViewProgressColumn : DataGridViewImageColumn
+    public sealed class DataGridViewProgressColumn : DataGridViewColumn
     {
         public DataGridViewProgressColumn()
         {
@@ -19,189 +39,160 @@ namespace CustomProgressCell
 
 namespace CustomProgressCell
 {
-    sealed class DataGridViewProgressCell : DataGridViewImageCell
+    sealed class DataGridViewProgressCell : DataGridViewTextBoxCell
     {
         #region Public data accessors
-
-        public int MaxValue
+        /// <summary>
+        /// Gets or sets the progress bar's Maximum property.
+        /// </summary>
+        public int Maximum
         {
-            get { return _maxValue; }
-            set
-            {
-                _maxValue = value;
-                DataGridView.InvalidateCell(this);
-            }
+            get { return _progressBar.Maximum; }
+            set { _progressBar.Maximum = value; startAnimation(); }
         }
 
-        public int MinValue
+        /// <summary>
+        /// Gets or sets the progress bar's Minimum property.
+        /// </summary>
+        public int Minimum
         {
-            get { return _minValue; }
-            set
-            {
-                _minValue = value;
-                DataGridView.InvalidateCell(this);
-            }
+            get { return _progressBar.Minimum; }
+            set { _progressBar.Minimum = value; startAnimation(); }
         }
 
+        /// <summary>
+        /// Gets or sets the text to display on top of the progress bar.
+        /// </summary>
         public string Message
         {
             get { return _message; }
-            set
-            {
-                _message = value;
-                DataGridView.InvalidateCell(this);
-            }
+            set { _message = value; refresh(); }
         }
-
-        public bool MarqueeMode
-        {
-            get { return _marqueeMode; }
-            set
-            {
-                _marqueeMode = value;
-                DataGridView.InvalidateCell(this);
-            }
-        }
-
-        #endregion
-
-        private int _maxValue;
-        private int _minValue;
-        private string _message;
-        private bool _marqueeMode; //internal representation of whether marquee is on or off
-        private int _marqueeIndex; //Determines where in the bar the marquee has gotten to
-        private int _lastCheckedValue; //helps keep marquee speed mostly consistant
 
         /// <summary>
-        /// Use these in the Message property to show other properties of the cell in the text
+        /// Gets or sets the progress bar's drawing style.
         /// </summary>
-        public static class MessageSpecialValue
+        public ProgressBarStyle ProgressBarStyle
         {
-            public const string MinValue = "<<MinValue>>";
-            public const string MaxValue = "<<MaxValue>>";
+            get { return _progressBar.Style; }
+            set { _progressBar.Style = value; startAnimation(); }
+        }
+        #endregion
+
+        /// <summary>
+        /// Use these keywords in the Text property to their respective values in the text.
+        /// </summary>
+        public abstract class MessageSpecialValue
+        {
+            public const string Minimum = "<<Minimum>>";
+            public const string Maximum = "<<Maximum>>";
             public const string CurrentValue = "<<CurrentValue>>";
             public const string Percentage = "<<Percentage>>";
         }
 
-        private Timer _animationTimer;
+        #region Private member variables
+        private ProgressBar _progressBar;
+        private Timer _animationStepTimer;
+        private Timer _animationStopTimer;
+        private string _message;
+        #endregion
 
-        // Used to make custom cell consistent with a DataGridViewImageCell
-        static Image emptyImage;
-        static DataGridViewProgressCell()
-        {
-            emptyImage = new Bitmap(1, 1, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-        }
         public DataGridViewProgressCell()
         {
-            _minValue = 0;
-            _maxValue = 100;
+            _progressBar = new ProgressBar()
+            {
+                Minimum = 0,
+                Maximum = 100,
+                Style = ProgressBarStyle.Continuous
+            };
 
-            _message = string.Empty;
+            //_message = String.Format("{0} of {1}", MessageSpecialValue.CurrentValue, MessageSpecialValue.Maximum);
 
             ValueType = typeof(int);
-            _animationTimer = new Timer { Interval = 25, Enabled = false };
-            _animationTimer.Tick += (x, y) =>
-            {
-                if (_lastCheckedValue == (int)Value && DataGridView != null)
-                    DataGridView.InvalidateCell(this);
-                else
-                    _lastCheckedValue = (int)(Value ?? 0);
-            };
-        }
-        // Method required to make the Progress Cell consistent with the default Image Cell.
-        // The default Image Cell assumes an Image as a value, although the value of the Progress Cell is an int.
-        protected override object GetFormattedValue(object value,
-                            int rowIndex, ref DataGridViewCellStyle cellStyle,
-                            TypeConverter valueTypeConverter,
-                            TypeConverter formattedValueTypeConverter,
-                            DataGridViewDataErrorContexts context)
-        {
-            return emptyImage;
+
+            // repaint every 25 milliseconds while progress is active
+            _animationStepTimer = new Timer { Interval = 25, Enabled = true };
+
+            // stop repainting 3 seconds after progress becomes inactive
+            _animationStopTimer = new Timer { Interval = 3000, Enabled = false };
+
+            _animationStepTimer.Tick += (x, y) => { stopAnimation(); refresh(); };
+            _animationStopTimer.Tick += (x, y) => { _animationStepTimer.Stop(); _animationStopTimer.Stop(); };
         }
 
-        protected override void Paint(Graphics g, Rectangle clipBounds, Rectangle cellBounds, int rowIndex, DataGridViewElementStates cellState, object value, object formattedValue, string errorText, DataGridViewCellStyle cellStyle, DataGridViewAdvancedBorderStyle advancedBorderStyle, DataGridViewPaintParts paintParts)
+        protected override object GetValue (int rowIndex)
         {
-            // Draws the cell grid
+            return _progressBar.Value;
+        }
+
+        protected override bool SetValue (int rowIndex, object value)
+        {
+            if (value is int)
+            {
+                _progressBar.Value = (int) value;
+                refresh();
+                return true;
+            }
+            return false;
+        }
+
+        protected override void Paint (Graphics g, Rectangle clipBounds, Rectangle cellBounds, int rowIndex, DataGridViewElementStates cellState, object value, object formattedValue, string errorText, DataGridViewCellStyle cellStyle, DataGridViewAdvancedBorderStyle advancedBorderStyle, DataGridViewPaintParts paintParts)
+        {
+            ReadOnly = true;
+
+            // Draw the cell border
             base.Paint(g, clipBounds, cellBounds,
-             rowIndex, cellState, value, formattedValue, errorText,
-             cellStyle, advancedBorderStyle, (paintParts & ~DataGridViewPaintParts.ContentForeground));
+                       rowIndex, cellState, value, formattedValue, errorText,
+                       cellStyle, advancedBorderStyle, DataGridViewPaintParts.Border);
 
             try
             {
-                if (Value == null || !(Value is int))
+                // Draw the ProgressBar to an in-memory bitmap
+                Bitmap bmp = new Bitmap(cellBounds.Width, cellBounds.Height);
+                Rectangle bmpBounds = new Rectangle(0, 0, cellBounds.Width, cellBounds.Height);
+                _progressBar.Size = cellBounds.Size;
+                _progressBar.DrawToBitmap(bmp, bmpBounds);
+
+                // Draw the bitmap on the cell
+                g.DrawImage(bmp, cellBounds);
+
+                if (string.IsNullOrEmpty(_message))
                     return;
 
-                if (_marqueeMode)
-                {
-                    //Start animation timer if it isnt on already
-                    if (!_animationTimer.Enabled)
-                    {
-                        _animationTimer.Enabled = true;
-                        _marqueeIndex = 25;
-                    }
-
-                    double barWidth = _marqueeIndex < 75
-                                  ? .5
-                                  : (100 - _marqueeIndex) / 50.0;
-                    int marqueeStart = Convert.ToInt32(((_marqueeIndex - 25) / 50.0) * (cellBounds.Width - 4));
-
-                    //Draw main progress bar
-                    g.FillRectangle(new SolidBrush(Color.FromArgb(163, 189, 242)), cellBounds.X + 2 + marqueeStart, cellBounds.Y + 2,
-                                        Convert.ToInt32((barWidth * (cellBounds.Width - 4))), cellBounds.Height - 4);
-
-                    //if Bar is far enough in draw a second one
-                    if (_marqueeIndex > 75)
-                    {
-                        double secondBarWidth = .5 - barWidth;
-
-                        g.FillRectangle(new SolidBrush(Color.FromArgb(163, 189, 242)), cellBounds.X + 2, cellBounds.Y + 2,
-                                        Convert.ToInt32((secondBarWidth * (cellBounds.Width - 4))), cellBounds.Height - 4);
-                    }
-
-                    //go through range 25-100 (0-25 have tendency to write outside control)
-                    if (_marqueeIndex == 100)
-                        _marqueeIndex = 25;
-                    else
-                        _marqueeIndex++;
-                }
-                else if (_maxValue > 0)
-                {
-                    _animationTimer.Enabled = false;
-
-                    if ((int)Value < MinValue)
-                        Value = MinValue;
-
-                    double percentage = ((int)Value / (double)_maxValue);
-                    if (percentage > 1)
-                        percentage = 1;
-                    if (percentage < 0)
-                        percentage = 0;
-
-                    if (percentage > 0.0)
-                    {
-                        g.FillRectangle(new SolidBrush(Color.FromArgb(163, 189, 242)), cellBounds.X + 2, cellBounds.Y + 2,
-                                        Convert.ToInt32((percentage * cellBounds.Width - 4)), cellBounds.Height - 4);
-                    }
-                }
-                else
-                    _animationTimer.Enabled = false;
-
+                // Replace special value placeholders
                 var editedMessage = _message.Replace(MessageSpecialValue.CurrentValue, Value.ToString())
-            .Replace(MessageSpecialValue.MaxValue, _maxValue.ToString())
-            .Replace(MessageSpecialValue.MinValue, _minValue.ToString())
-            .Replace(MessageSpecialValue.Percentage, Math.Floor(((int)Value / (double)_maxValue) * 100.0) + "%");
+            .Replace(MessageSpecialValue.Maximum, Maximum.ToString())
+            .Replace(MessageSpecialValue.Minimum, Minimum.ToString())
+            .Replace(MessageSpecialValue.Percentage, Math.Floor(((int)Value / (double)Maximum) * 100.0) + "%");
 
-                //write message over bar
-                if (!string.IsNullOrEmpty(_message))
-                {
-                    Brush foreColorBrush = new SolidBrush(cellStyle.ForeColor);
-                    g.DrawString(editedMessage, cellStyle.Font, foreColorBrush, cellBounds.X + 6, cellBounds.Y + 2);
-                }
+                // Write text over bar)
+                base.Paint(g, clipBounds, cellBounds,
+                           rowIndex, cellState, value, editedMessage, errorText,
+                           cellStyle, advancedBorderStyle, DataGridViewPaintParts.ContentForeground);
             }
             catch (ArgumentOutOfRangeException)
             {
-                //Row couldn't be accessed
+                // Row probably couldn't be accessed
             }
+        }
+
+        private void refresh ()
+        {
+            if (DataGridView != null) DataGridView.InvalidateCell(this);
+        }
+
+        private void startAnimation ()
+        {
+            if (_progressBar.Style == ProgressBarStyle.Marquee ||
+                (_progressBar.Value > _progressBar.Minimum && _progressBar.Value < _progressBar.Maximum))
+                _animationStepTimer.Start();
+        }
+
+        private void stopAnimation ()
+        {
+            if (_progressBar.Style != ProgressBarStyle.Marquee &&
+                (_progressBar.Value == _progressBar.Minimum || _progressBar.Value == _progressBar.Maximum))
+                _animationStopTimer.Start();
         }
     }
 }

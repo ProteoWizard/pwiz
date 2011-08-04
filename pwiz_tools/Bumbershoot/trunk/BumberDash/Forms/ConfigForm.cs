@@ -1676,11 +1676,14 @@ namespace BumberDash.Forms
             else
                 AppliedModDGV = TRAppliedModBox;
 
-            if (Type == "Static" && !statRx.IsMatch(Residue))
+            if (Type == "Static")
             {
-                if (!Passive)
-                    MessageBox.Show("Invalid Residue Character");
-                return "Invalid Mod Character";
+                if (!statRx.IsMatch(Residue))
+                {
+                    if (!Passive)
+                        MessageBox.Show("Invalid Residue Character");
+                    return "Invalid Mod Character";
+                }
             }
 
             if (Type != "Static" && !dynRx.IsMatch(Residue))
@@ -1694,14 +1697,31 @@ namespace BumberDash.Forms
             {
                 if ((string) AppliedModDGV.Rows[item].Cells[0].Value == mod)
                 {
-                    if (skipOne)
-                        skipOne = false;
-                    else
+                    if (Type == "Static" && (string)AppliedModDGV.Rows[item].Cells[2].Value == "Static")
                     {
-                        if (!Passive)
-                            MessageBox.Show("Residue Motif already present in list.");
-                        return "Mod Already Present";
+                        if (skipOne)
+                            skipOne = false;
+                        else
+                        {
+                            if (!Passive)
+                                MessageBox.Show("Static 'Residue Motif' already present in list.");
+                            return "Mod Already Present";
+                        }
                     }
+                    else if (Type != "Static" &&
+                            (string)AppliedModDGV.Rows[item].Cells[1].Value == Mass &&
+                            (string)AppliedModDGV.Rows[item].Cells[2].Value == Type)
+                    {
+                        if (skipOne)
+                            skipOne = false;
+                        else
+                        {
+                            if (!Passive)
+                                MessageBox.Show("Modification already present in list.");
+                            return "Mod Already Present";
+                        }
+                    }
+
                 }
             }
 

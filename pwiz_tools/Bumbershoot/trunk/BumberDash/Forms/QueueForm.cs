@@ -464,7 +464,7 @@ namespace BumberDash.Forms
 
             try
             {
-                System.Diagnostics.Process.Start(cell.ToolTipText);
+                System.Diagnostics.Process.Start(cell.ToolTipText.TrimEnd('+').TrimEnd('*'));
             }
             catch
             {
@@ -502,7 +502,7 @@ namespace BumberDash.Forms
                         JobQueueDGV.SelectedRows[0].Cells[x].Style.BackColor = Color.Wheat;
                     var progressCell = (DataGridViewProgressCell)JobQueueDGV.SelectedRows[0].Cells[5];
                     progressCell.Message = "Locked";
-                    progressCell.MarqueeMode = false;
+                    progressCell.ProgressBarStyle = ProgressBarStyle.Continuous;
                 }
             }
             else
@@ -514,7 +514,7 @@ namespace BumberDash.Forms
                     JobQueueDGV.SelectedRows[0].Cells[x].Style.BackColor = Color.White;
                 var progressCell = (DataGridViewProgressCell)JobQueueDGV.SelectedRows[0].Cells[5];
                 progressCell.Message = string.Empty;
-                progressCell.MarqueeMode = false;
+                progressCell.ProgressBarStyle = ProgressBarStyle.Continuous;
                 IsValidJob(JobQueueDGV.SelectedRows[0].Index);
             }
             _session.Flush();
@@ -1114,7 +1114,7 @@ namespace BumberDash.Forms
                         ((HistoryItem) JobQueueDGV[0, row].Tag).CurrentStatus = "Locked";
                         var progressCell = (DataGridViewProgressCell)JobQueueDGV[5, row];
                         progressCell.Message = "Locked";
-                        progressCell.MarqueeMode = false;
+                        progressCell.ProgressBarStyle = ProgressBarStyle.Continuous;
                         _session.SaveOrUpdate(JobQueueDGV[0, row].Tag);
                         _session.Flush();
                         for (var x = 0; x < 6; x++)
@@ -1149,7 +1149,7 @@ namespace BumberDash.Forms
                         ((HistoryItem) JobQueueDGV[0, row].Tag).CurrentStatus = "Locked";
                         var progressCell = (DataGridViewProgressCell)JobQueueDGV[5, row];
                         progressCell.Message = "Locked";
-                        progressCell.MarqueeMode = false;
+                        progressCell.ProgressBarStyle = ProgressBarStyle.Continuous;
                         _session.SaveOrUpdate(JobQueueDGV[0, row].Tag);
                         _session.Flush();
                         for (var x = 0; x < 6; x++)
@@ -1612,7 +1612,7 @@ namespace BumberDash.Forms
             var progressCell = (DataGridViewProgressCell)JobQueueDGV[5, LastCompleted + 1];
             var editedStatus = status.Replace("<<JobName>>", ((HistoryItem)JobQueueDGV[0, LastCompleted + 1].Tag).JobName);
             progressCell.Message = editedStatus;
-            progressCell.MarqueeMode = marqueeMode;
+            progressCell.ProgressBarStyle = marqueeMode ? ProgressBarStyle.Marquee : ProgressBarStyle.Continuous;
         }
 
         private void SetPercentage(int value)

@@ -349,10 +349,10 @@ namespace BumberDash.lib
 
                 if (recievedLine.Contains("has finished database search"))
                 {
-                    SetPercentage(100);
                     _barMode = false;
                     _minPercentage = 0;
                     SetRunStatus("Preparing cross-correlation",true);
+                    SetPercentage(0);
                 }
                 else
                 {
@@ -498,6 +498,7 @@ namespace BumberDash.lib
                 var delimiter = new string[1];
 
                 SetRunStatus("Writing Results", true);
+                SetPercentage(0);
 
                 delimiter[0] = "is writing tags to \"";
                 var brokenLine = recievedLine.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
@@ -531,8 +532,8 @@ namespace BumberDash.lib
 
                 if (recievedLine.Contains("has finished database search"))
                 {
-                    SetPercentage(100);
                     SetRunStatus("Preparing cross-correlation", true);
+                    SetPercentage(0);
                     _barMode = false;
                     _minPercentage = 0;
                 }

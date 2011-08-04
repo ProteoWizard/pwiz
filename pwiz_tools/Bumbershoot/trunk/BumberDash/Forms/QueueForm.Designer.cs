@@ -30,6 +30,7 @@
         {
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(QueueForm));
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             this.JobQueueDGV = new System.Windows.Forms.DataGridView();
             this.JQRowMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.lockToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -435,6 +436,9 @@
             // JQProgress
             // 
             this.JQProgress.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            dataGridViewCellStyle1.ForeColor = System.Drawing.Color.Black;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.Color.Black;
+            this.JQProgress.DefaultCellStyle = dataGridViewCellStyle1;
             this.JQProgress.FillWeight = 125F;
             this.JQProgress.HeaderText = "Progress";
             this.JQProgress.MinimumWidth = 50;
