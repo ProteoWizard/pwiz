@@ -49,10 +49,10 @@ namespace myrimatch
 	{
         SearchStatistics()
         :   numProteinsDigested(0),
-            numCandidatesGenerated(0),
-            numCandidatesQueried(0),
+            numPeptidesGenerated(0),
+            numVariantsGenerated(0),
             numComparisonsDone(0),
-            numCandidatesSkipped(0)
+            numPeptidesSkipped(0)
         {}
 
         SearchStatistics(const SearchStatistics& other)
@@ -63,43 +63,46 @@ namespace myrimatch
 		SearchStatistics& operator=(const SearchStatistics& other)
 		{
             numProteinsDigested.store(other.numProteinsDigested);
-            numCandidatesGenerated.store(other.numCandidatesGenerated);
-            numCandidatesQueried.store(other.numCandidatesQueried);
+            numPeptidesGenerated.store(other.numPeptidesGenerated);
+            numVariantsGenerated.store(other.numVariantsGenerated);
             numComparisonsDone.store(other.numComparisonsDone);
-            numCandidatesSkipped.store(other.numCandidatesSkipped);
+            numPeptidesSkipped.store(other.numPeptidesSkipped);
             return *this;
         }
 
         boost::atomic_uint32_t numProteinsDigested;
-		boost::atomic_uint64_t numCandidatesGenerated;
-		boost::atomic_uint64_t numCandidatesQueried;
+		boost::atomic_uint64_t numPeptidesGenerated;
+		boost::atomic_uint64_t numVariantsGenerated;
 		boost::atomic_uint64_t numComparisonsDone;
-        boost::atomic_uint64_t numCandidatesSkipped;
+        boost::atomic_uint64_t numPeptidesSkipped;
 
 		template< class Archive >
 		void serialize( Archive& ar, const unsigned int version )
 		{
-			ar & numProteinsDigested & numCandidatesGenerated & numCandidatesQueried & numComparisonsDone & numCandidatesSkipped;
+			ar & numProteinsDigested & numPeptidesGenerated & numVariantsGenerated
+               & numComparisonsDone & numPeptidesSkipped;
 		}
 
 		SearchStatistics operator+ ( const SearchStatistics& rhs )
 		{
 			SearchStatistics tmp(*this);
 			tmp.numProteinsDigested.fetch_add(rhs.numProteinsDigested);
-			tmp.numCandidatesGenerated.fetch_add(rhs.numCandidatesGenerated);
-			tmp.numCandidatesQueried.fetch_add(rhs.numCandidatesQueried);
+			tmp.numPeptidesGenerated.fetch_add(rhs.numPeptidesGenerated);
+			tmp.numVariantsGenerated.fetch_add(rhs.numVariantsGenerated);
 			tmp.numComparisonsDone.fetch_add(rhs.numComparisonsDone);
-            tmp.numCandidatesSkipped.fetch_add(rhs.numCandidatesSkipped);
+            tmp.numPeptidesSkipped.fetch_add(rhs.numPeptidesSkipped);
 			return tmp;
 		}
 
 		operator string()
 		{
 			stringstream s;
-			s	<< numProteinsDigested << " proteins; " << numCandidatesGenerated << " candidates; "
-				<< numCandidatesQueried << " queries; " << numComparisonsDone << " comparisons";
-            if(numCandidatesSkipped>0) {
-                s << "; " << numCandidatesSkipped << " skipped";
+			s	<< numProteinsDigested << " proteins; "
+                << numPeptidesGenerated << " peptides; "
+                << numVariantsGenerated << " variants; "
+                << numComparisonsDone << " comparisons";
+            if(numPeptidesSkipped>0) {
+                s << "; " << numPeptidesSkipped << " skipped";
             }
 			return s.str();
 		}

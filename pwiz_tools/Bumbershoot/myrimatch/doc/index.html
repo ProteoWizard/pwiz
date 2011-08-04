@@ -15,17 +15,17 @@ xmlns="http://www.w3.org/TR/REC-html40">
  <o:DocumentProperties>
   <o:Author>Matt Chambers</o:Author>
   <o:LastAuthor>Matt Chambers</o:LastAuthor>
-  <o:Revision>448</o:Revision>
-  <o:TotalTime>2314</o:TotalTime>
+  <o:Revision>449</o:Revision>
+  <o:TotalTime>2317</o:TotalTime>
   <o:Created>2007-05-31T15:23:00Z</o:Created>
-  <o:LastSaved>2011-07-22T22:11:00Z</o:LastSaved>
+  <o:LastSaved>2011-08-04T16:31:00Z</o:LastSaved>
   <o:Pages>5</o:Pages>
-  <o:Words>4224</o:Words>
-  <o:Characters>24082</o:Characters>
+  <o:Words>4231</o:Words>
+  <o:Characters>24120</o:Characters>
   <o:Company>MSRC</o:Company>
-  <o:Lines>200</o:Lines>
+  <o:Lines>201</o:Lines>
   <o:Paragraphs>56</o:Paragraphs>
-  <o:CharactersWithSpaces>28250</o:CharactersWithSpaces>
+  <o:CharactersWithSpaces>28295</o:CharactersWithSpaces>
   <o:Version>12.00</o:Version>
  </o:DocumentProperties>
 </xml><![endif]-->
@@ -628,7 +628,7 @@ table.MsoTableGrid
 	font-family:"Times New Roman","serif";}
 </style>
 <![endif]--><!--[if gte mso 9]><xml>
- <o:shapedefaults v:ext="edit" spidmax="5122"/>
+ <o:shapedefaults v:ext="edit" spidmax="6146"/>
 </xml><![endif]--><!--[if gte mso 9]><xml>
  <o:shapelayout v:ext="edit">
   <o:idmap v:ext="edit" data="1"/>
@@ -740,16 +740,17 @@ style='font-size:14.0pt;mso-bidi-font-size:36.0pt;font-family:"Arial","sans-seri
 
 <p class=MsoNormal style='margin-left:.25in;text-indent:.25in'><span
 class=SpellE><span style='mso-bidi-font-size:36.0pt;font-family:"Arial","sans-serif"'>MyriMatch</span></span><span
-style='mso-bidi-font-size:36.0pt;font-family:"Arial","sans-serif"'> is a tool designed
-to take experimental data from shotgun proteomics experiments and compare those
-spectra against sequences in a known database of proteins. Whether the program
-is being run in a single-computer environment or across an entire cluster of
-processing nodes, it is able to optimally divide work in a much more efficient
-way than many other database search programs. This is because it only generates
-candidate sequences from the known database once for the entire set of spectra
-instead of once for every spectrum. Thus, for each candidate sequence
-generated, it is compared against every spectrum. The spectra keep a certain
-(user-defined) number of candidate sequences that had the highest scores.<o:p></o:p></span></p>
+style='mso-bidi-font-size:36.0pt;font-family:"Arial","sans-serif"'> is a tool
+designed to take experimental data from shotgun proteomics experiments and
+compare those spectra against sequences in a known database of proteins.
+Whether the program is being run in a single-computer environment or across an
+entire cluster of processing nodes, it is able to optimally divide work in a
+much more efficient way than many other database search programs. This is
+because it only generates candidate sequences from the known database once for
+the entire set of spectra instead of once for every spectrum. Thus, for each
+candidate sequence generated, it is compared against every spectrum. The
+spectra keep a certain (user-defined) number of candidate sequences that had
+the highest scores.<o:p></o:p></span></p>
 
 <p class=MsoNormal style='margin-left:.25in'><span style='mso-bidi-font-size:
 36.0pt;font-family:"Arial","sans-serif"'><o:p>&nbsp;</o:p></span></p>
@@ -924,8 +925,8 @@ parameters guide<o:p></o:p></span></p>
   none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
   mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
-  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>Controls
-  the number of charge states that <span class=SpellE>MyriMatch</span> will handle
+  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>Controls the
+  number of charge states that <span class=SpellE>MyriMatch</span> will handle
   during all stages of the program. It is especially important during
   determination of charge state (see <span class=SpellE>DuplicateSpectra</span>
   for more information).<o:p></o:p></span></p>
@@ -946,10 +947,10 @@ parameters guide<o:p></o:p></span></p>
   mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
   <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>The output
-  of a <span class=SpellE>MyriMatch</span> job will be an identification file for
-  each input file. The string specified by this parameter will be appended to
-  each output filename. It is useful for differentiating jobs within a single
-  directory.<o:p></o:p></span></p>
+  of a <span class=SpellE>MyriMatch</span> job will be an identification file
+  for each input file. The string specified by this parameter will be appended
+  to each output filename. It is useful for differentiating jobs within a
+  single directory.<o:p></o:p></span></p>
   </td>
  </tr>
  <tr style='mso-yfti-irow:3'>
@@ -1005,10 +1006,10 @@ parameters guide<o:p></o:p></span></p>
   mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
   <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>Specifying
-  a decoy prefix enables <span class=SpellE>MyriMatch</span> to know if it is making
-  a target or a decoy comparison for each PSM. If the protein database has
-  proteins that begin with <span class=SpellE>DecoyPrefix</span>, then those
-  proteins are decoys. If not, decoy proteins are created on-the-fly by
+  a decoy prefix enables <span class=SpellE>MyriMatch</span> to know if it is
+  making a target or a decoy comparison for each PSM. If the protein database
+  has proteins that begin with <span class=SpellE>DecoyPrefix</span>, then
+  those proteins are decoys. If not, decoy proteins are created on-the-fly by
   reversing each target protein in the database (so there is one decoy protein
   per target protein). The automatic reversal (as well as the ability to
   distinguish between target and decoy comparisons) can be disabled by setting
@@ -1484,8 +1485,8 @@ parameters guide<o:p></o:p></span></p>
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
   <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>In order to
   maximize the effectiveness of the MVH scoring algorithm, an important step in
-  preprocessing the experimental spectra is filtering out noise peaks. Noise
-  peaks are filtered out by sorting the original peaks in descending order of
+  preprocessing the experimental spectra is filtering out noise peaks. Noise peaks
+  are filtered out by sorting the original peaks in descending order of
   intensity, and then picking peaks from that list until the cumulative ion
   current of the picked peaks divided by the total ion current (TIC) is greater
   than or equal to this parameter. Lower percentages mean that less of the
@@ -1553,14 +1554,14 @@ parameters guide<o:p></o:p></span></p>
   mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
   <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>A generated
-  sequence candidate is only compared to an experimental spectrum if the
-  candidates mass is within this tolerance of the experimental spectrum&#8217;s
-  precursor mass. The units (&#8220;<span class=SpellE>daltons</span>&#8221; or
-  &#8220;<span class=SpellE>ppm</span>&#8221;) must be provided as well as the
-  magnitude. The actual tolerance used for the search is calculated by
-  multiplying the tolerance by the charge state, so this parameter should be
-  set to the tolerance that is desired for +1 <span class=GramE>spectra</span>.
-  At the default value, the precursor mass tolerances are 10, 20, and 30 <span
+  sequence candidate is only compared to an experimental spectrum if the candidates
+  mass is within this tolerance of the experimental spectrum&#8217;s precursor
+  mass. The units (&#8220;<span class=SpellE>daltons</span>&#8221; or &#8220;<span
+  class=SpellE>ppm</span>&#8221;) must be provided as well as the magnitude.
+  The actual tolerance used for the search is calculated by multiplying the
+  tolerance by the charge state, so this parameter should be set to the
+  tolerance that is desired for +1 <span class=GramE>spectra</span>. At the
+  default value, the precursor mass tolerances are 10, 20, and 30 <span
   class=SpellE>ppm</span> for the first three charge states, respectively.<span
   style='mso-spacerun:yes'>&nbsp; </span><o:p></o:p></span></p>
   </td>
@@ -1602,9 +1603,9 @@ parameters guide<o:p></o:p></span></p>
   none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
   mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
-  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>This parameter
-  controls the automatic selection of precursor mass type. For data from Thermo
-  instruments, using the &#8220;auto&#8221; setting on a RAW, <span
+  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>This
+  parameter controls the automatic selection of precursor mass type. For data
+  from Thermo instruments, using the &#8220;auto&#8221; setting on a RAW, <span
   class=SpellE>mzML</span>, or mz5 file will automatically choose <span
   class=SpellE>monoisotopic</span> or average mass values (and the
   corresponding precursor tolerance). For other instruments or older data
@@ -1673,9 +1674,9 @@ parameters guide<o:p></o:p></span></p>
   mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
   <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>If true, <span
-  class=SpellE>MyriMatch</span> will automatically choose the fragmentation rule
-  based on the activation type of each <span class=SpellE>MSn</span> spectrum.
-  This allows a single search to handle CID and ETD spectra (i.e. an
+  class=SpellE>MyriMatch</span> will automatically choose the fragmentation
+  rule based on the activation type of each <span class=SpellE>MSn</span>
+  spectrum. This allows a single search to handle CID and ETD spectra (i.e. an
   interleaved or decision tree run). If false or if the input format does not
   specify the input format then <span class=SpellE>FragmentationRule</span> is
   used (see above).<o:p></o:p></span></p>
@@ -1950,7 +1951,8 @@ parameters guide<o:p></o:p></span></p>
   style='font-family:"Arial","sans-serif";mso-fareast-font-family:Arial'><span
   style='mso-list:Ignore'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
   </span></span></span><![endif]><span style='font-family:"Arial","sans-serif"'>&#8220;<span
-  class=SpellE>NoEnzyme</span>&#8221; (Cuts everywhere)<o:p></o:p></span></p>
+  class=SpellE>NoEnzyme</span>&#8221; (not supported; use the proper enzyme and
+  set <span class=SpellE>MinTerminiCleavages</span> to 0)<o:p></o:p></span></p>
   <p class=MsoListParagraphCxSpLast style='margin-left:.85in;mso-add-space:
   auto'><span style='font-family:"Arial","sans-serif"'><o:p>&nbsp;</o:p></span></p>
   <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>A complete
@@ -2005,9 +2007,9 @@ parameters guide<o:p></o:p></span></p>
   "Arial","sans-serif"'><o:p></o:p></span></p>
   <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'><o:p>&nbsp;</o:p></span></p>
   <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>Remember
-  that this parameter is a <i style='mso-bidi-font-style:normal'>list</i> of
-  cleavage rules; a real <span class=SpellE>tryptic</span> digest can be
-  declared with two cleavage rules:<o:p></o:p></span></p>
+  that this parameter is a <i style='mso-bidi-font-style:normal'>list</i> of cleavage
+  rules; a real <span class=SpellE>tryptic</span> digest can be declared with
+  two cleavage rules:<o:p></o:p></span></p>
   <p class=MsoNormal style='margin-left:91.8pt;text-indent:-91.8pt'><b
   style='mso-bidi-font-weight:normal'><span style='font-family:"Arial","sans-serif"'>[|R|K
   . <span class=GramE>. ]</span></span></b><span style='font-family:"Arial","sans-serif"'><span
@@ -2051,13 +2053,13 @@ parameters guide<o:p></o:p></span></p>
   mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
   <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>By default,
-  when generating peptides from the protein database, a peptide must start
-  after a cleavage and end before a cleavage. Setting this parameter to 0 or 1
-  will reduce that requirement, so that <span class=GramE>neither terminus or</span>
-  only one terminus of the peptide must match one of the cleavage rules
-  specified in the <span class=SpellE>CleavageRules</span> parameter. This
-  parameter is useful to turn a <span class=SpellE>tryptic</span> digest into a
-  semi-<span class=SpellE>tryptic</span> digest.<o:p></o:p></span></p>
+  when generating peptides from the protein database, a peptide must start and
+  end at a valid cleavage site. Setting this parameter to 0 or 1 will reduce
+  that requirement, so that <span class=GramE>neither terminus or</span> only
+  one terminus of the peptide must match one of the cleavage rules specified in
+  the <span class=SpellE>CleavageRules</span> parameter. This parameter is
+  useful to turn a <span class=SpellE>tryptic</span> digest into a semi-<span
+  class=SpellE>tryptic</span> digest.<o:p></o:p></span></p>
   </td>
  </tr>
  <tr style='mso-yfti-irow:22'>
@@ -2076,8 +2078,8 @@ parameters guide<o:p></o:p></span></p>
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
   <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>By default,
   when generating peptides from the protein database, a peptide may contain any
-  number of missed cleavages. A missed cleavage is a site within the peptide that
-  matches one of the cleavage rules (refer to <span class=SpellE>CleavageRules</span>).
+  number of missed cleavages. A missed cleavage is a site within the peptide
+  that matches one of the cleavage rules (refer to <span class=SpellE>CleavageRules</span>).
   Settings this parameter to some other number will stop generating peptides
   from a sequence if it contains more than the specified number of missed
   cleavages.<o:p></o:p></span></p>
@@ -2097,12 +2099,12 @@ parameters guide<o:p></o:p></span></p>
   border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
   mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
-  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>When
-  preprocessing the experimental spectra, any spectrum with a precursor mass
-  that is less than the specified mass will be disqualified. This parameter is
-  useful to eliminate inherently unidentifiable spectra from an input data set.
-  A setting of 500 for example, will eliminate most 3-residue matches and clean
-  up the output file quite a lot.<o:p></o:p></span></p>
+  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>When preprocessing
+  the experimental spectra, any spectrum with a precursor mass that is less
+  than the specified mass will be disqualified. This parameter is useful to
+  eliminate inherently unidentifiable spectra from an input data set. A setting
+  of 500 for example, will eliminate most 3-residue matches and clean up the
+  output file quite a lot.<o:p></o:p></span></p>
   </td>
  </tr>
  <tr style='mso-yfti-irow:24'>
@@ -2157,8 +2159,8 @@ parameters guide<o:p></o:p></span></p>
   border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;
   mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
-  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>When digesting
-  proteins, any peptide which exceeds this specified length will be
+  <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>When
+  digesting proteins, any peptide which exceeds this specified length will be
   disqualified.<o:p></o:p></span></p>
   </td>
  </tr>
@@ -2177,9 +2179,9 @@ parameters guide<o:p></o:p></span></p>
   mso-border-top-alt:solid windowtext .5pt;mso-border-left-alt:solid windowtext .5pt;
   mso-border-alt:solid windowtext .5pt;padding:.15in .1in .15in .1in'>
   <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>Preprocessing
-  spectra and scoring candidates may take a long time. A measure of progress through
-  the protein database will be given on intervals that are specified by this
-  parameter, measured in seconds.<o:p></o:p></span></p>
+  spectra and scoring candidates may take a long time. A measure of progress
+  through the protein database will be given on intervals that are specified by
+  this parameter, measured in seconds.<o:p></o:p></span></p>
   </td>
  </tr>
  <tr style='mso-yfti-irow:28'>
@@ -2311,10 +2313,10 @@ parameters guide<o:p></o:p></span></p>
   height:12.1pt'>
   <p class=MsoNormal><span style='font-family:"Arial","sans-serif"'>When
   stratifying peaks into a specified, fixed number of intensity classes, this
-  parameter controls the size of each class relative to the class above it (where
-  the peaks are more intense). At default values, if the best class, A, has 1
-  peak in it, then class B will have 2 peaks in it and class C will have 4
-  peaks.<o:p></o:p></span></p>
+  parameter controls the size of each class relative to the class above it
+  (where the peaks are more intense). At default values, if the best class, A,
+  has 1 peak in it, then class B will have 2 peaks in it and class C will have
+  4 peaks.<o:p></o:p></span></p>
   </td>
  </tr>
  <tr style='mso-yfti-irow:33'>
@@ -2359,18 +2361,18 @@ parameters guide<o:p></o:p></span></p>
   processing unit (where a processing unit can be either a core on a multi-core
   CPU or a separate CPU entirely). The main thread then generates a list of
   worker numbers which is equal to the number of worker threads multiplied by
-  this parameter. The worker threads then take a worker number from the list
-  and use that number to iterate through the protein list. It is possible that
-  one thread will be assigned all the proteins that generate a few candidates
-  while another thread is assigned all the proteins that generate many
-  candidates, resulting in one thread finishing its searching early. By having
-  each thread use multiple worker numbers, the chance of one thread being
-  penalized for picking all the easy proteins is reduced because if it finishes
-  early it can just pick a new number. The only disadvantage to this system is
-  that picking the new number incurs some overhead because of synchronizing
-  with the other worker threads that might be trying to pick a worker number at
-  the same time. The default value is a nice compromise between incurring that
-  overhead and minimizing wasted time.<o:p></o:p></span></p>
+  this parameter. The worker threads then take a worker number from the list and
+  use that number to iterate through the protein list. It is possible that one
+  thread will be assigned all the proteins that generate a few candidates while
+  another thread is assigned all the proteins that generate many candidates,
+  resulting in one thread finishing its searching early. By having each thread
+  use multiple worker numbers, the chance of one thread being penalized for
+  picking all the easy proteins is reduced because if it finishes early it can
+  just pick a new number. The only disadvantage to this system is that picking
+  the new number incurs some overhead because of synchronizing with the other
+  worker threads that might be trying to pick a worker number at the same time.
+  The default value is a nice compromise between incurring that overhead and minimizing
+  wasted time.<o:p></o:p></span></p>
   </td>
  </tr>
  <tr style='mso-yfti-irow:35;mso-yfti-lastrow:yes'>

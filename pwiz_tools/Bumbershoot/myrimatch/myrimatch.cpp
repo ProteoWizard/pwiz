@@ -570,6 +570,8 @@ namespace myrimatch
                 Digestion digestion( protein, g_rtConfig->cleavageAgentRegex, g_rtConfig->digestionConfig );
                 for( Digestion::const_iterator itr = digestion.begin(); itr != digestion.end(); )
                 {
+                    ++searchStatistics.numPeptidesGenerated;
+
                     if (itr->sequence().find_first_of("BXZ") != string::npos)
                     {
                         ++itr;
@@ -586,29 +588,25 @@ namespace myrimatch
                         ++itr;
                         continue;
                     }
-                    
-                    vector<DigestedPeptide> digestedPeptides;
-					
+
 					PTMVariantList variantIterator( (*itr), g_rtConfig->MaxDynamicMods, g_rtConfig->dynamicMods, g_rtConfig->staticMods, g_rtConfig->MaxPeptideVariants);
                     if(variantIterator.isSkipped)
                     {
-                        ++ searchStatistics.numCandidatesSkipped;
+                        ++ searchStatistics.numPeptidesSkipped;
                         ++ itr;
                         continue;
                     }
 
-                    variantIterator.getVariantsAsList(digestedPeptides);
-                    searchStatistics.numCandidatesGenerated += digestedPeptides.size();
-                    
-                    for( size_t j=0; j < digestedPeptides.size(); ++j )
+                    searchStatistics.numVariantsGenerated += variantIterator.numVariants;
+
+                    // query each variant
+                    do
                     {
-                        boost::int64_t queryComparisonCount = QuerySequence( digestedPeptides[j], p.getName(), isDecoy, g_rtConfig->EstimateSearchTimeOnly );
+                        boost::int64_t queryComparisonCount = QuerySequence( variantIterator.ptmVariant, p.getName(), isDecoy, g_rtConfig->EstimateSearchTimeOnly );
                         if( queryComparisonCount > 0 )
-                        {
                             searchStatistics.numComparisonsDone += queryComparisonCount;
-                            ++searchStatistics.numCandidatesQueried;
-                        }
                     }
+                    while (variantIterator.next());
 
                     ++itr;
                 }
@@ -670,8 +668,13 @@ namespace myrimatch
 			    float proteinsPerSec = static_cast<float>(searchStatistics.numProteinsDigested) / elapsed.total_microseconds() * 1e6;
                 bpt::time_duration estimatedTimeRemaining(0, 0, round((numProteins - searchStatistics.numProteinsDigested) / proteinsPerSec));
 
-		        cout << "Searched " << searchStatistics.numProteinsDigested << " of " << numProteins << " proteins; "
-                     << round(proteinsPerSec) << " per second, "
+		        cout << "Searched " << searchStatistics.numProteinsDigested << " of " << numProteins << " proteins; ";
+                //cout << searchStatistics.numPeptidesGenerated << " peptides; "
+                //     << searchStatistics.numVariantsGenerated << " variants; ";
+                //if (searchStatistics.numPeptidesSkipped > 0)
+                //    cout << searchStatistics.numPeptidesSkipped << " skipped; ";
+                //cout << searchStatistics.numComparisonsDone << " comparisons; ";
+                cout << round(proteinsPerSec) << " per second, "
                      << format_date_time("%H:%M:%S", bpt::time_duration(0, 0, elapsed.total_seconds())) << " elapsed, "
                      << format_date_time("%H:%M:%S", estimatedTimeRemaining) << " remaining." << endl;
 

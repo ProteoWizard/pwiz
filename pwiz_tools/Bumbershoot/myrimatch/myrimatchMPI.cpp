@@ -696,9 +696,10 @@ namespace myrimatch
                 }
                 else 
                 {
-                    searchStatistics.numCandidatesQueried += childSearchStats.numCandidatesQueried;
+                    searchStatistics.numPeptidesGenerated += childSearchStats.numPeptidesGenerated;
+                    searchStatistics.numVariantsGenerated += childSearchStats.numVariantsGenerated;
                     searchStatistics.numComparisonsDone += childSearchStats.numComparisonsDone;
-                    searchStatistics.numCandidatesSkipped += childSearchStats.numCandidatesSkipped;
+                    searchStatistics.numPeptidesSkipped += childSearchStats.numPeptidesSkipped;
                 }
 
 				//cout << g_hostString << " is unpacking results for " << numSpectra << " spectra." << endl;

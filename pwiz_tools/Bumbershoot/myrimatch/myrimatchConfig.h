@@ -143,6 +143,9 @@ namespace myrimatch
             {
                 // a single token must be either a cleavage agent name or regex
 
+                if (bal::iequals(CleavageRules, "NoEnzyme"))
+                    throw runtime_error("NoEnzyme is not supported. If you want non-specific digestion, set CleavageRules to the enzyme that digested your sample and set MinTerminiCleavages to 0.");
+
                 // first try to parse the token as the name of an agent
                 CVID cleavageAgent = Digestion::getCleavageAgentByName(CleavageRules);
                 if( cleavageAgent == CVID_Unknown )
