@@ -75,6 +75,9 @@
     <Compile Include="Collections\CollectionUtil.cs" />
     <Compile Include="Collections\ImmutableCollection.cs" />
     <Compile Include="Collections\ImmutableDictionary.cs" />
+    <Compile Include="Controls\DoubleBufferedListView.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Controls\FindBox.cs">
       <SubType>UserControl</SubType>
     </Compile>

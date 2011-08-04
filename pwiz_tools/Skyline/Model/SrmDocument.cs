@@ -29,6 +29,7 @@ using System.Xml.Serialization;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
@@ -845,19 +846,43 @@ namespace pwiz.Skyline.Model
             return docResult.ChangeSettings(settings);
         }
 
-        public IdentityPath SearchDocumentForString(IdentityPath startPath,
+        public FindResult SearchDocumentForString(Bookmark startPath,
             string searchString, DisplaySettings settings, bool reverse, bool caseSensitive)
         {
             if (!caseSensitive)
                 searchString = searchString.ToLower();
+            var bookmarkEnumerator = new BookmarkEnumerator(this, startPath);
+            bookmarkEnumerator.Forward = !reverse;
+            return SearchForString(bookmarkEnumerator, searchString, settings, caseSensitive);
+        }
 
-            var foundPath = SearchForString(startPath, searchString, settings, reverse, caseSensitive);
-            // If the node was not found and the entire document was not searched,
-            // start over from the root.
-            if (foundPath == null && !startPath.IsRoot)
-                foundPath = SearchForString(IdentityPath.ROOT, searchString, settings, reverse, caseSensitive);
-
-            return foundPath;
+        public IdentityPath SearchDocumentForString(IdentityPath startPath,
+            string searchString, DisplaySettings settings, bool reverse, bool caseSensitive)
+        {
+            var result = SearchDocumentForString(new Bookmark(startPath), searchString, settings, reverse,
+                                                 caseSensitive);
+            if (result == null)
+            {
+                return null;
+            }
+            return result.Bookmark.IdentityPath;
+        }
+        public FindResult SearchForString(BookmarkEnumerator bookmarkEnumerator, string searchString, DisplaySettings settings, bool caseSensitive)
+        {
+            var findOptions = new FindOptions()
+                .ChangeText(searchString)
+                .ChangeCaseSensitive(caseSensitive)
+                .ChangeForward(bookmarkEnumerator.Forward);
+            var findPredicate = new FindPredicate(findOptions, settings);
+            while (bookmarkEnumerator.MoveNext())
+            {
+                var findMatch = findPredicate.Match(bookmarkEnumerator);
+                if (findMatch != null)
+                {
+                    return new FindResult(findPredicate, bookmarkEnumerator, findMatch);
+                }
+            }
+            return null;
         }
 
         #region Implementation of IXmlSerializable

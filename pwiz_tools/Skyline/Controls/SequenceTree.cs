@@ -25,6 +25,7 @@ using System.Windows.Forms;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -1081,7 +1082,7 @@ namespace pwiz.Skyline.Controls
 
         public bool AllowDisplayTip
         {
-            get { return Focused; }
+            get { return Focused || ToolTipOwner != null; }
         }
 
         public DisplaySettings GetDisplaySettings(PeptideDocNode nodePep)
@@ -1098,6 +1099,72 @@ namespace pwiz.Skyline.Controls
         {
             base.OnTextZoomChanged();
             ModFonts = new ModFontHolder(this);   
+        }
+
+        private Control _toolTipOwner;
+        Control ToolTipOwner
+        {
+            get
+            {
+                return _toolTipOwner;
+            }
+            set
+            {
+                if (ToolTipOwner == value)
+                {
+                    return;
+                }
+                if (ToolTipOwner != null)
+                {
+                    ToolTipOwner.LostFocus -= TooltipOwnerLostFocus;
+                }
+                _toolTipOwner = value;
+                if (ToolTipOwner != null)
+                {
+                    ToolTipOwner.LostFocus += TooltipOwnerLostFocus;
+                }
+            }
+        }
+        /// <summary>
+        /// If the FindMatch requires showing a tooltip, displays the Tooltip
+        /// for the currently selected node.
+        /// </summary>
+        /// <param name="owner">If not null, the SequenceTree will continue to
+        /// display the tooltip until owner loses focus.  If null, the SequenceTree
+        /// sets focus to itself before displaying the tooltip.</param>
+        public void HighlightFindMatch(Control owner, FindMatch findMatch)
+        {
+            ToolTipOwner = null;
+            if (!findMatch.Note && findMatch.AnnotationName == null)
+            {
+                return;
+            }
+            if (owner != null)
+            {
+                if (!owner.Focused)
+                {
+                    return;
+                }
+                ToolTipOwner = owner;
+            }
+            else
+            {
+                Focus();
+                Console.Out.WriteLine(this.Focused);
+            }
+            var selectedMsNode = SelectedNode as TreeNodeMS;
+            var tipProvider = SelectedNode as ITipProvider;
+            if (tipProvider == null || selectedMsNode == null)
+            {
+                _nodeTip.HideTip();
+                return;
+            }
+            _nodeTip.SetTipProvider(tipProvider, selectedMsNode.BoundsMS, PointToClient(Cursor.Position));
+        }
+        private void TooltipOwnerLostFocus(object sender, EventArgs eventArgs)
+        {
+            ToolTipOwner = null;
+            _nodeTip.HideTip();
         }
     }
 

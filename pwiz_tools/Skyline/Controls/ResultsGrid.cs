@@ -23,6 +23,7 @@ using System.Windows.Forms;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Hibernate;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -1604,6 +1605,155 @@ namespace pwiz.Skyline.Controls
         {
             UpdateGrid();
         }
+
+        public void HighlightFindResult(FindResult findResult)
+        {
+            var bookmarkEnumerator = BookmarkEnumerator.TryGet(Document, findResult.Bookmark);
+            if (bookmarkEnumerator == null)
+            {
+                return;
+            }
+            var chromInfo = bookmarkEnumerator.CurrentChromInfo;
+            if (chromInfo == null)
+            {
+                return;
+            }
+            var replicateIndex = FindReplicateIndex(bookmarkEnumerator.CurrentDocNode, chromInfo);
+            if (replicateIndex < 0)
+            {
+                return;
+            }
+            var rowIdentifier = new RowIdentifier(replicateIndex, chromInfo.FileIndex, GetOptStep(chromInfo));
+            DataGridViewRow row;
+            if (!_chromInfoRows.TryGetValue(rowIdentifier, out row))
+            {
+                return;
+            }
+            DataGridViewColumn column = null;
+            if (findResult.FindMatch.Note)
+            {
+                var docNode = bookmarkEnumerator.CurrentDocNode;
+                if (docNode is TransitionGroupDocNode)
+                {
+                    column = PrecursorNoteColumn;
+                }
+                else if (docNode is TransitionDocNode)
+                {
+                    column = TransitionNoteColumn;
+                }
+            }
+            else if (findResult.FindMatch.AnnotationName != null)
+            {
+                _annotationColumns.TryGetValue(AnnotationDef.GetColumnName(findResult.FindMatch.AnnotationName), out column);
+            }
+            if (column == null)
+            {
+                return;
+            }
+            column.Visible = true;
+            CurrentCell = row.Cells[column.Index];
+        }
+
+        public ChromFileInfoId GetCurrentChromFileInfoId()
+        {
+            var currentRow = CurrentRow;
+            if (currentRow == null)
+            {
+                return null;
+            }
+            var rowIdentifier = currentRow.Tag as RowIdentifier;
+            if (rowIdentifier == null)
+            {
+                return null;
+            }
+            var currentTreeNode = StateProvider.SelectedNode as SrmTreeNode;
+            if (currentTreeNode == null)
+            {
+                return null;
+            }
+            var chromInfo =
+                GetChromInfos(currentTreeNode.Model, (AnnotationDef.AnnotationTarget) ~0, rowIdentifier, false)
+                .FirstOrDefault();
+            if (chromInfo == null)
+            {
+                return null;
+            }
+            return chromInfo.FileId;
+        }
+
+        int FindReplicateIndex(DocNode docNode, ChromInfo chromInfo)
+        {
+            var peptideDocNode = docNode as PeptideDocNode;
+            if (peptideDocNode != null)
+            {
+                if (peptideDocNode.Results != null)
+                {
+                    for (int replicateIndex = 0; replicateIndex < peptideDocNode.Results.Count; replicateIndex++)
+                    {
+                        var chromInfoList = peptideDocNode.Results[replicateIndex];
+                        if (chromInfoList.Count > chromInfo.FileIndex
+                            && Equals(chromInfo, chromInfoList[chromInfo.FileIndex]))
+                        {
+                            return replicateIndex;
+                        }
+                    }
+                }
+                return -1;
+            }
+            var transitionGroupDocNode = docNode as TransitionGroupDocNode;
+            if (transitionGroupDocNode != null)
+            {
+                if (transitionGroupDocNode.Results != null)
+                {
+                    for (int replicateIndex = 0;
+                         replicateIndex < transitionGroupDocNode.Results.Count;
+                         replicateIndex++)
+                    {
+                        if (transitionGroupDocNode.Results[replicateIndex].FirstOrDefault(
+                            transitionGroupChromInfo=>chromInfo.FileId == transitionGroupChromInfo.FileId) != null)
+                        {
+                            return replicateIndex;
+                        }
+                    }
+                }
+                return -1;
+            }
+            var transitionDocNode = docNode as TransitionDocNode;
+            if (transitionDocNode != null)
+            {
+                if (transitionDocNode.Results != null)
+                {
+                    for (int replicateIndex = 0;
+                        replicateIndex < transitionDocNode.Results.Count;
+                        replicateIndex++)
+                    {
+                        if (transitionDocNode.Results[replicateIndex].FirstOrDefault(
+                            transitionChromInfo => chromInfo.FileId == transitionChromInfo.FileId) != null)
+                        {
+                            return replicateIndex;
+                        }
+                    }
+
+                }
+            }
+            return -1;
+        }
+
+        int? GetOptStep(ChromInfo chromInfo)
+        {
+            var transitionGroupChromInfo = chromInfo as TransitionGroupChromInfo;
+            if (transitionGroupChromInfo != null)
+            {
+                return transitionGroupChromInfo.OptimizationStep;
+            }
+            var transitionChromInfo = chromInfo as TransitionChromInfo;
+            if (transitionChromInfo != null)
+            {
+                return transitionChromInfo.OptimizationStep;
+            }
+            return null;
+        }
+
 
         public IDocumentUIContainer DocumentUiContainer { get; private set; }
         public IStateProvider StateProvider { get; private set; }

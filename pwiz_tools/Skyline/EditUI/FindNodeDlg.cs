@@ -17,7 +17,10 @@
  * limitations under the License.
  */
 using System;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
+using System.Linq;
+using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.EditUI
@@ -49,7 +52,7 @@ namespace pwiz.Skyline.EditUI
 
         private void textSequence_TextChanged(object sender, EventArgs e)
         {
-            btnFindNext.Enabled = !string.IsNullOrEmpty(SearchString);
+            btnFindAll.Enabled = btnFindNext.Enabled = !string.IsNullOrEmpty(SearchString);
         }
 
         private void btnFindNext_Click(object sender, EventArgs e)
@@ -57,16 +60,33 @@ namespace pwiz.Skyline.EditUI
             FindNext();
         }
 
-        public void FindNext()
+        private void UpdateSettings()
         {
             Settings.Default.EditFindText = SearchString;
             Settings.Default.EditFindCase = CaseSensitive;
+        }
+
+        public void FindNext()
+        {
+            UpdateSettings();
             ((SkylineWindow)Owner).FindNext(SearchUp);
+            // Put the focus back on the Find Dialog since Skyline might have popped up a window to display the find result.
+            // Don't steal the focus if it's on the SequenceTree, since the SequenceTree might be displaying a tooltip.
+            if (!((SkylineWindow) Owner).SequenceTree.Focused)
+            {
+                Focus();
+            }
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
         {
             Close();
+        }
+
+        private void btnFindAll_Click(object sender, EventArgs e)
+        {
+            UpdateSettings();
+            ((SkylineWindow) Owner).FindAll(this);
         }
     }
 }

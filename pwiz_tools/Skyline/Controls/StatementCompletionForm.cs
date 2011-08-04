@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
+using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls
@@ -164,77 +165,20 @@ namespace pwiz.Skyline.Controls
         private void DrawDescription(String description, String textToHighlight, Graphics graphics,
             Rectangle descriptionBounds, Color textColor, Color backColor)
         {
-            if (descriptionBounds.Width < 0)
-            {
-                return;
-            }
-            graphics.SetClip(descriptionBounds);
-            // If some of the text is supposed to be highlighted, find the location of that highlighted text 
-            // within the string.  We will output the text in three parts: the text before the highlighted part
-            // the highlighted text, and the text after the highlighted part
+            var findMatch = new FindMatch(description);
             int ichHighlightBegin = description.ToLower().IndexOf(textToHighlight.ToLower());
-            int ichHighlightEnd;
-            if (ichHighlightBegin < 0)
+            if (ichHighlightBegin >= 0)
             {
-                ichHighlightBegin = ichHighlightEnd = 0;
+                findMatch = findMatch.ChangeRange(ichHighlightBegin, ichHighlightBegin + textToHighlight.Length);
             }
-            else
+            var textRendererHelper = new TextRendererHelper()
             {
-                ichHighlightEnd = ichHighlightBegin + textToHighlight.Length;
-            }
-            var beginText = description.Substring(0, ichHighlightBegin);
-            var highlightedText = description.Substring(ichHighlightBegin, ichHighlightEnd - ichHighlightBegin);
-            var endText = description.Substring(ichHighlightEnd);
-            using (var fontHighlight = new Font(ListView.Font, FontStyle.Bold))
-            {
-                // Measure the width of the three parts of text
-                const int xPad = 0;
-                const TextFormatFlags format = TextFormatFlags.SingleLine |
-                    TextFormatFlags.PreserveGraphicsClipping |
-                    TextFormatFlags.NoPadding;
-                Size sizeMax = new Size(int.MaxValue, int.MaxValue);
-                int dxBegin =
-                    TextRenderer.MeasureText(graphics, beginText, ListView.Font, sizeMax, format).Width - xPad;
-                int dxHighlight =
-                    TextRenderer.MeasureText(graphics, highlightedText, fontHighlight, sizeMax, format).Width - xPad;
-                int dxEnd = 
-                    TextRenderer.MeasureText(graphics, endText, ListView.Font, sizeMax, format).Width - xPad;
-                int dxTotal = dxBegin + dxHighlight + dxEnd;
-
-                int dxBeginUnclipped = dxBegin;
-                // If the text won't all fit in the space provided, figure out what should be clipped,
-                // trying to keep the bold text centered in the middle of the line.
-                if (dxTotal > descriptionBounds.Width)
-                {
-                    int dxHalf = (descriptionBounds.Width - dxHighlight)/2;
-                    if (dxBegin > dxHalf && dxEnd > dxHalf)
-                    {
-                        dxBegin = dxHalf;
-                    }
-                    else if (dxBegin > dxHalf)
-                    {
-                        dxBegin = descriptionBounds.Width - dxHighlight - dxEnd;
-                    }
-                    else
-                    {
-                        dxEnd = descriptionBounds.Width - dxHighlight - dxBegin;
-                    }
-                }
-                // Draw the text before the highlight
-                var rect = new Rectangle(
-                    descriptionBounds.Left + dxBegin - dxBeginUnclipped,
-                    descriptionBounds.Top,
-                    dxBeginUnclipped, descriptionBounds.Height);
-                TextRenderer.DrawText(graphics, beginText, ListView.Font, rect, textColor, backColor, format);
-                // Draw the highlighted text
-                rect.X += dxBeginUnclipped;
-                rect.Width = dxHighlight;
-                TextRenderer.DrawText(graphics, highlightedText, fontHighlight, rect, textColor, backColor, format);
-                // Draw the text after the highlight
-                rect.X += dxHighlight;
-                rect.Width = dxEnd;
-                TextRenderer.DrawText(graphics, endText, ListView.Font, rect, textColor, backColor, format);
-            }
+                Font = ListView.Font,
+                HighlightFont = new Font(ListView.Font, FontStyle.Bold),
+                ForeColor = textColor,
+                BackColor = backColor,
+            };
+            textRendererHelper.DrawHighlightedText(graphics, descriptionBounds, findMatch);
         }
 
         /// <summary>

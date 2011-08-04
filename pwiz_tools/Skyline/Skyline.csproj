@@ -220,6 +220,12 @@
       <DependentUpon>UpgradeDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="CommandLine.cs" />
+    <Compile Include="Controls\FindResultsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Controls\FindResultsForm.Designer.cs">
+      <DependentUpon>FindResultsForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Controls\Graphs\AreaGraphController.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -370,6 +376,12 @@
     <Compile Include="Model\DocSettings\MeasuredIon.cs" />
     <Compile Include="Model\DocSettings\UniMod.cs" />
     <Compile Include="Model\DocSettings\UniModData.cs" />
+    <Compile Include="Model\Find\Bookmark.cs" />
+    <Compile Include="Model\Find\BookmarkEnumerator.cs" />
+    <Compile Include="Model\Find\FindMatch.cs" />
+    <Compile Include="Model\Find\FindOptions.cs" />
+    <Compile Include="Model\Find\FindPredicate.cs" />
+    <Compile Include="Model\Find\FindResult.cs" />
     <Compile Include="Model\Hibernate\DbPrecursorResultSummary.cs" />
     <Compile Include="Model\Hibernate\DbRatioResult.cs" />
     <Compile Include="Model\Hibernate\DbTransitionResultSummary.cs" />
@@ -833,6 +845,7 @@
     <Compile Include="Util\Extensions\UtilProcess.cs" />
     <Compile Include="Util\FormAnimator.cs" />
     <Compile Include="Util\SystemMetrics.cs" />
+    <Compile Include="Util\TextRendererHelper.cs" />
     <Compile Include="Util\UtilUIExtra.cs" />
     <Compile Include="Util\UtilIOExtra.cs" />
     <Compile Include="Util\Extensions\UtilDB.cs" />
@@ -1039,6 +1052,9 @@
     <EmbeddedResource Include="Controls\ColumnChooser.resx">
       <DependentUpon>ColumnChooser.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Controls\FindResultsForm.resx">
+      <DependentUpon>FindResultsForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Controls\Graphs\GraphRegression.resx">
       <DependentUpon>GraphRegression.cs</DependentUpon>

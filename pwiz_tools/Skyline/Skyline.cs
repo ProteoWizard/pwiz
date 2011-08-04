@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Deployment.Application;
@@ -30,6 +31,7 @@ using System.Threading;
 using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
+using DigitalRune.Windows.Docking;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
@@ -39,6 +41,7 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
@@ -1325,24 +1328,113 @@ namespace pwiz.Skyline
 
         public void FindNext(bool reverse)
         {
+            var searchString = Settings.Default.EditFindText;
             Settings.Default.EditFindUp = reverse;
-
             var startPath = sequenceTree.SelectedPath;
             // If the insert node is selected, start from the root.
             if (sequenceTree.IsInsertPath(startPath))
                 startPath = IdentityPath.ROOT;
             var displaySettings = sequenceTree.GetDisplaySettings(null);
+            var bookmark = new Bookmark(startPath);
+            if (_resultsGridForm != null && _resultsGridForm.Visible)
+            {
+                bookmark = bookmark.ChangeChromFileInfoId(_resultsGridForm.ResultsGrid.GetCurrentChromFileInfoId());
+            }            
+            var findResult = DocumentUI.SearchDocumentForString(bookmark,
+                searchString, displaySettings, reverse, Settings.Default.EditFindCase);
 
-            var searchString = Settings.Default.EditFindText;
-            bool caseSensitive = Settings.Default.EditFindCase;
-
-            var pathFound = DocumentUI.SearchDocumentForString(startPath,
-                searchString, displaySettings, reverse, caseSensitive);
-
-            if (pathFound == null)
+            if (findResult == null)
                 MessageBox.Show(this, string.Format("The text '{0}' could not be found.", searchString));
             else
-                sequenceTree.SelectedPath = pathFound;
+                DisplayFindResult(null, findResult);
+        }
+
+        private IEnumerable<FindResult> FindAll(ILongWaitBroker longWaitBroker, FindPredicate findPredicate)
+        {
+            var results = new List<FindResult>();
+            longWaitBroker.Message = "Found 0 matches";
+            var bookmarkEnumerator = new BookmarkEnumerator(Document);
+            while (bookmarkEnumerator.MoveNext())
+            {
+                if (longWaitBroker.IsCanceled)
+                {
+                    break;
+                }
+                var findMatch = findPredicate.Match(bookmarkEnumerator);
+                if (findMatch != null)
+                {
+                    results.Add(new FindResult(findPredicate, bookmarkEnumerator, findMatch));
+                    int matchCount = results.Count;
+                    longWaitBroker.Message = matchCount == 1 ? "Found 1 match" : "Found " + matchCount + " matches";
+                }
+            }
+            return results;
+        }
+
+        public void FindAll(Control parent)
+        {
+            var findOptions = new FindOptions()
+                .ChangeText(Settings.Default.EditFindText)
+                .ChangeCaseSensitive(Settings.Default.EditFindCase);
+            var findPredicate = new FindPredicate(findOptions, sequenceTree.GetDisplaySettings(null));
+            IList<FindResult> results = null;
+            var longWaitDlg = new LongWaitDlg(this);
+            longWaitDlg.PerformWork(parent, 3000, lwb => results = FindAll(lwb, findPredicate).ToArray());
+            if (results.Count() == 0)
+            {
+                if (!longWaitDlg.IsCanceled)
+                {
+                    MessageBox.Show(parent.TopLevelControl, string.Format("The text '{0}' could not be found.", findOptions.Text));
+                }
+                return;
+            }
+            // Consider(nicksh): if there is only one match, then perhaps just navigate to it instead
+            // of displaying FindResults window
+//            if (results.Count() == 1)
+//            {
+//                DisplayFindResult(results[0]);
+//            }
+            var findResultsForm = Application.OpenForms.OfType<FindResultsForm>().FirstOrDefault();
+            if (findResultsForm == null)
+            {
+                findResultsForm = new FindResultsForm(this, results);
+                findResultsForm.Show(dockPanel, DockState.DockBottom);
+                splitMain.Panel2Collapsed = false;
+            }
+            else
+            {
+                findResultsForm.ChangeResults(results);
+                findResultsForm.Activate();
+            }
+        }
+
+        /// <summary>
+        /// Navigates the UI to the appropriate spot to display to the user
+        /// where text was found.
+        /// </summary>
+        /// <param name="owner">The control which currently has the focus.  If displaying the find result
+        /// requires showing a tooltip, the tooltip will remain displayed as long as owner has focus.
+        /// If owner is null, then the SequenceTree will set the focus to itself if a tooltip needs to 
+        /// be displayed.
+        /// </param>
+        public void DisplayFindResult(Control owner, FindResult findResult)
+        {
+            var bookmarkEnumerator = BookmarkEnumerator.TryGet(DocumentUI, findResult.Bookmark);
+            if (bookmarkEnumerator == null)
+            {
+                return;
+            }
+            SequenceTree.SelectedPath = bookmarkEnumerator.IdentityPath;
+            if (bookmarkEnumerator.CurrentChromInfo != null)
+            {
+                ShowResultsGrid(true);
+                _resultsGridForm.ResultsGrid.HighlightFindResult(findResult);
+                return;
+            }
+            if (findResult.FindMatch != null)
+            {
+                SequenceTree.HighlightFindMatch(owner, findResult.FindMatch);
+            }
         }
 
         private void modifyPeptideMenuItem_Click(object sender, EventArgs e)

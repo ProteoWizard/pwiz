@@ -36,6 +36,7 @@
             this.radioDown = new System.Windows.Forms.RadioButton();
             this.radioUp = new System.Windows.Forms.RadioButton();
             this.cbCaseSensitive = new System.Windows.Forms.CheckBox();
+            this.btnFindAll = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -43,11 +44,11 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(293, 42);
+            this.btnCancel.Location = new System.Drawing.Point(293, 66);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 4;
-            this.btnCancel.Text = "Cancel";
+            this.btnCancel.Text = "Close";
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
             // 
@@ -125,6 +126,19 @@
             this.cbCaseSensitive.Text = "Match Case";
             this.cbCaseSensitive.UseVisualStyleBackColor = true;
             // 
+            // btnFindAll
+            // 
+            this.btnFindAll.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnFindAll.DialogResult = System.Windows.Forms.DialogResult.OK;
+            this.btnFindAll.Enabled = false;
+            this.btnFindAll.Location = new System.Drawing.Point(293, 39);
+            this.btnFindAll.Name = "btnFindAll";
+            this.btnFindAll.Size = new System.Drawing.Size(75, 23);
+            this.btnFindAll.TabIndex = 6;
+            this.btnFindAll.Text = "Find &All";
+            this.btnFindAll.UseVisualStyleBackColor = true;
+            this.btnFindAll.Click += new System.EventHandler(this.btnFindAll_Click);
+            // 
             // FindNodeDlg
             // 
             this.AcceptButton = this.btnFindNext;
@@ -132,6 +146,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(380, 122);
+            this.Controls.Add(this.btnFindAll);
             this.Controls.Add(this.cbCaseSensitive);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.textSequence);
@@ -162,5 +177,6 @@
         private System.Windows.Forms.RadioButton radioDown;
         private System.Windows.Forms.RadioButton radioUp;
         private System.Windows.Forms.CheckBox cbCaseSensitive;
+        private System.Windows.Forms.Button btnFindAll;
     }
 }

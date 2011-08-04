@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.Linq;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
@@ -855,63 +856,6 @@ namespace pwiz.Skyline.Model
         private static DocNodeParent RemoveAll(DocNodeParent parent, IdentityPathTraversal traversal, ICollection<DocNode> descendentsRemove)
         {
             return traversal.Traverse(parent, descendentsRemove, AddAll, parent.AddAll);
-        }
-
-
-        public IdentityPath SearchForString(IdentityPath path, string searchString,
-            DisplaySettings settings, bool searchUp, bool caseSensitive)
-        {
-            return SearchForString(new IdentityPathTraversal(path), searchString, settings,
-                                   searchUp, caseSensitive);
-        }
-
-        private IdentityPath SearchForString(IdentityPathTraversal traversal, string searchString,
-            DisplaySettings settings, bool searchUp, bool caseSensitive)
-        {
-            // Initialize default looping variables
-            int increment = searchUp ? -1 : 1;
-            int start = searchUp ? Children.Count - 1 : 0;
-
-            // If still looking for the selected node, start from the index of the
-            // current node in the path.
-            bool findingSelection = traversal.HasNext;
-            bool isSelection = false;
-            if (findingSelection)
-            {
-                Identity id = traversal.Next();
-                start = FindNodeIndex(id);
-                if (start == -1)
-                    throw new IdentityNotFoundException(id);
-                isSelection = !traversal.HasNext;
-            }
-
-            // Enumerate children, looking for one that matches the search string
-            for (int i = start; i >= 0 && i < Children.Count; i += increment)
-            {
-                var child = Children[i];
-                
-                // If not searching up and not descending to the selected node, check
-                // to see if the current child matches the string.
-                if (!searchUp && (!findingSelection || i != start)  && child.Matches(searchString, settings, caseSensitive))
-                    return new IdentityPath(child.Id);
-
-                // If the child is a parent, search its children, unless we are searching up and have found the selected node.
-                if ((child is DocNodeParent) && !(searchUp && isSelection && i == start))
-                {
-                    var foundPath = ((DocNodeParent) child).SearchForString(traversal,
-                        searchString, settings, searchUp, caseSensitive);
-                    if (foundPath != null)
-                        return new IdentityPath(child.Id, foundPath);
-                }
-                
-                // If the string was not found in the children, and searching up, check
-                // to see if the current child matches the string, as long as we are either not on the search path
-                // or if we are on the search path, that the current child node is not the selected node.
-                if (searchUp && !(isSelection && i == start) && child.Matches(searchString, settings, caseSensitive))
-                    return new IdentityPath(child.Id);
-            }
-
-            return null;
         }
 
         /// <summary>
