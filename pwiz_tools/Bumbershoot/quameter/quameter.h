@@ -60,13 +60,14 @@ using namespace crawpeaks;
 namespace sqlite = sqlite3pp;
 
 struct runtimeOptions {
+	string instrument;
 	bool tabbedOutput;
-	
-	// set default values
-//	runtimeOptions() : tabbedOutput = false {}
+	bool headerOn;
+	string locRAW;
+	string locOutput;
 };
 
-static const runtimeOptions runtimeDefaults = { false };
+static const runtimeOptions runtimeDefaults = { "LTQ", true, true, "", ""};
 
 struct ms_amalgam {
 	string MS2;
@@ -120,7 +121,7 @@ struct sourceFile {
 	string dbFilename;
 };
 
-void MetricMaster(const string&, string, const string&, runtimeOptions, FullReaderList);
+void MetricMaster(sourceFile, runtimeOptions, FullReaderList);
 
 double Q1(vector<double>); // First quartile function
 double Q2(vector<double>); // Second quartile (aka median) function
@@ -128,9 +129,12 @@ double Q3(vector<double>); // Third quartile function
 
 void toLowerCase(std::string &str)
 {
-	std::transform(str.begin(), str.end(), str.begin(), std::tolower);
+	const int length = str.length();
+	for(int i=0; i < length; ++i)
+	{
+		str[i] = std::tolower(str[i]);
+	}
 }
-
 bool compareByPeak(const intensityPair& pair1, const intensityPair& pair2) { return pair1.peakIntensity < pair2.peakIntensity; }
 
 vector<string> GetNativeId(const string&, const string&);

@@ -27,10 +27,21 @@
 /**
  * The primary function where all metrics are calculated.
  */
-void MetricMaster(const string& dbFilename, string sourceFilename, const string& sourceId, runtimeOptions configOptions, FullReaderList readers) {
+void MetricMaster(sourceFile currentFile, runtimeOptions configOptions, FullReaderList readers) {
 try {
 	boost::timer t;
-
+	
+	string sourceFilename = currentFile.filename;
+	const string& dbFilename = currentFile.dbFilename;
+	const string& sourceId = currentFile.id;
+	
+/*	// Let's test the config file
+	cout << "Instrument type: " << configOptions.instrument << endl;
+	cout << "Tabbed output: " << configOptions.tabbedOutput << endl;
+	cout << "Tabbed output header: " << configOptions.headerOn << endl;
+	cout << "Location of RAW file: " << configOptions.locRAW << endl;
+	cout << "Desired output directory: " << configOptions.locOutput << endl;
+*/
 	ofstream qout; // short for quameter output, save to same directory as input file
 	qout.open (	boost::filesystem::change_extension(sourceFilename, "-quameter_results.txt").string().c_str() );
 
@@ -790,7 +801,7 @@ try {
 	string emptyMetric = "NaN"; // NaN stands for Not a Number
 
 	// Output can either be tab delimited with all metrics in one row, or be more descriptive over 45-some lines of output
-	if (configOptions.tabbedOutput) {
+	if (configOptions.tabbedOutput && configOptions.headerOn) {
 		// Tab delimited output header
 		qout << "Filename\tC-1A\tC-1B\tC-2A\tC-2B\tC-3A\tC-3B\tC-4A\tC-4B\tC-4C";
 		qout << "\tDS-1A\tDS-1B\tDS-2A\tDS-2B\tDS-3A\tDS-3B";
@@ -1588,32 +1599,41 @@ int main( int argc, char* argv[] ) {
 	ifstream configFile("quameter.cfg");
 	runtimeOptions configOptions = runtimeDefaults;
 	if (configFile) {
-		while ( ! configFile.eof() )
-		  {
-			char buf[ 80 ] = {0};
+		while ( configFile.good() ) {
 			string firstField;
 			string secondField;
 			string data;
-
-			configFile.getline( buf, sizeof( buf ) );
-			istringstream istr( string(buf), ios_base::out );
+			string oneLine;
+			
+			getline(configFile, oneLine);
+			istringstream istr( oneLine, ios_base::out );
 			istr >> firstField >> secondField >> data;
 			
 			toLowerCase(firstField);
 			toLowerCase(data);
+			
 			// Check config file for output type (tabbed or delimited)
-			if ( firstField == "tabbed_output" )
-			{
+			if ( firstField == "instrument" ) {
+				configOptions.instrument = data;
+			}
+			else if ( firstField == "tabbed_output" ) {
 				if (data == "1" || data == "true")
 					configOptions.tabbedOutput = true;
 				else
 					configOptions.tabbedOutput = false;
 			}
-/*			else if ( firstField == "???" )
-			{
-				configOptions.??? = data;
+			else if ( firstField == "header" ) {
+				if (data == "1" || data == "true")
+					configOptions.headerOn = true;
+				else
+					configOptions.headerOn = false;
 			}
-*/		
+			else if ( firstField == "locraw" ) {
+				configOptions.locRAW = data;
+			}
+			else if ( firstField == "locoutput" ) {
+				configOptions.locOutput = data;
+			}
 		}
 	}
 
@@ -1645,8 +1665,8 @@ int main( int argc, char* argv[] ) {
 	for (int k = 0; k < max(1,( ((numFiles-1)/maxThreads)+1 )); k++) { // at least go through this loop once.
 		boost::thread_group threadGroup;
 		for (int l = 0; (l < maxThreads) && (current < numFiles); l++) {
-			cout << "current: " << current << "\tdb: " << allSources[current].dbFilename << "\tid: " << allSources[current].id << "\tfile: " << allSources[current].filename << endl;
-			threadGroup.add_thread(new boost::thread(MetricMaster, allSources[current].dbFilename, allSources[current].filename, allSources[current].id, configOptions, readers));
+//			cout << "current: " << current << "\tdb: " << allSources[current].dbFilename << "\tid: " << allSources[current].id << "\tfile: " << allSources[current].filename << endl;
+			threadGroup.add_thread(new boost::thread(MetricMaster, allSources[current], configOptions, readers));
 			current++;
 		}
 		threadGroup.join_all();
