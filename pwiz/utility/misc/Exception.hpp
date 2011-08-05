@@ -25,13 +25,54 @@
 #define _EXCEPTION_HPP_
 
 
-#include "Export.hpp"
 #include <stdexcept>
 
 
 // make debug assertions throw exceptions in MSVC
 #ifdef _DEBUG
-struct PWIZ_API_DECL ReportHooker {ReportHooker(); ~ReportHooker();};
+#include <crtdbg.h>
+#include <iostream>
+#include <locale>
+#include <sstream>
+namespace {
+
+inline std::string narrow(const std::wstring& str)
+{
+    std::ostringstream oss;
+    const std::ctype<char>& ctfacet = std::use_facet< std::ctype<char> >(oss.getloc());
+    for (size_t i=0; i < str.size(); ++i)
+        oss << ctfacet.narrow(str[i], 0);
+    return oss.str();
+}
+
+inline int CrtReportHook(int reportType, char *message, int *returnValue)
+{
+    throw std::runtime_error(message);
+}
+
+inline int CrtReportHookW(int reportType, wchar_t *message, int *returnValue)
+{
+    throw std::runtime_error(narrow(message));
+}
+
+} // namespace
+
+struct ReportHooker
+{
+    ReportHooker()
+    {
+        _CrtSetReportMode(_CRT_ASSERT, _CRTDBG_MODE_FILE);
+        _CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDERR);
+        _CrtSetReportHook2(_CRT_RPTHOOK_INSTALL, &CrtReportHook);
+        _CrtSetReportHookW2(_CRT_RPTHOOK_INSTALL, &CrtReportHookW);
+    }
+
+    ~ReportHooker()
+    {
+        _CrtSetReportHook2(_CRT_RPTHOOK_REMOVE, &CrtReportHook);
+        _CrtSetReportHookW2(_CRT_RPTHOOK_REMOVE, &CrtReportHookW);
+    }
+};
 static ReportHooker reportHooker;
 #endif // _DEBUG
 

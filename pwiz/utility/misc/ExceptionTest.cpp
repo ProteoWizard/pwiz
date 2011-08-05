@@ -23,6 +23,7 @@
 #include "Exception.hpp"
 #include "Std.hpp"
 #include "unit.hpp"
+#include <cassert>
 
 
 using namespace pwiz::util;
@@ -36,6 +37,10 @@ void test()
 #ifndef NDEBUG
     boost::shared_ptr<int> foo;
     unit_assert_throws(*foo, runtime_error);
+#endif
+
+#ifdef _DEBUG
+    unit_assert_throws(_ASSERTE(1+1 == 4), runtime_error);
 #endif
 }
 
