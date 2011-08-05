@@ -301,6 +301,7 @@ void BuildLTQMethod::buildInclusionListMethod(const vector<vector<string>>& tabl
 	//3 creating scan events for the top precursors (either from the template or CLI parameter)
 	//4 making sure that the method's Acquire Time is greater than all the entry
 	//  stop times.
+	//5 making sure that the MS1 scan range includes all of the inclusion list mz's
 
 	//do #4 first because to set the Acquire Time we have to set some values
 	//for segments as well, and it makes sense to do this first. It might work
@@ -334,6 +335,12 @@ void BuildLTQMethod::buildInclusionListMethod(const vector<vector<string>>& tabl
 			listEntry.precursor_mz = newPrecMz;
 			listEntry.start_time = atof(trans->at(start_time).c_str());
 			listEntry.stop_time = stopTime;
+
+			if(listEntry.precursor_mz > _ms1MaxMz)
+				_ms1MaxMz = listEntry.precursor_mz;
+
+			if(listEntry.precursor_mz < _ms1MinMz)
+				_ms1MinMz = listEntry.precursor_mz;
 			
 			iList.push_back(listEntry);
 
