@@ -72,6 +72,7 @@ namespace IDPicker.Forms
             this.clipboardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showInExcelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.showSourcesInExcelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.groupingSetupButton = new System.Windows.Forms.Button();
             this.displayOptionsButton = new System.Windows.Forms.Button();
             this.exportButton = new System.Windows.Forms.Button();
@@ -226,30 +227,38 @@ namespace IDPicker.Forms
             this.exportMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.clipboardToolStripMenuItem,
             this.fileToolStripMenuItem,
-            this.showInExcelToolStripMenuItem});
+            this.showInExcelToolStripMenuItem,
+            this.showSourcesInExcelToolStripMenuItem});
             this.exportMenu.Name = "contextMenuStrip1";
-            this.exportMenu.Size = new System.Drawing.Size(172, 70);
+            this.exportMenu.Size = new System.Drawing.Size(192, 92);
             // 
             // clipboardToolStripMenuItem
             // 
             this.clipboardToolStripMenuItem.Name = "clipboardToolStripMenuItem";
-            this.clipboardToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
+            this.clipboardToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
             this.clipboardToolStripMenuItem.Text = "Copy to Clipboard";
             this.clipboardToolStripMenuItem.Click += new System.EventHandler(this.clipboardToolStripMenuItem_Click);
             // 
             // fileToolStripMenuItem
             // 
             this.fileToolStripMenuItem.Name = "fileToolStripMenuItem";
-            this.fileToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
+            this.fileToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
             this.fileToolStripMenuItem.Text = "Export to File";
             this.fileToolStripMenuItem.Click += new System.EventHandler(this.fileToolStripMenuItem_Click);
             // 
             // showInExcelToolStripMenuItem
             // 
             this.showInExcelToolStripMenuItem.Name = "showInExcelToolStripMenuItem";
-            this.showInExcelToolStripMenuItem.Size = new System.Drawing.Size(171, 22);
-            this.showInExcelToolStripMenuItem.Text = "Show in Excel";
-            this.showInExcelToolStripMenuItem.Click += new System.EventHandler(this.showInExcelToolStripMenuItem_Click);
+            this.showInExcelToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.showInExcelToolStripMenuItem.Text = "Show Current in Excel";
+            this.showInExcelToolStripMenuItem.Click += new System.EventHandler(this.showCurrentInExcelToolStripMenuItem_Click);
+            // 
+            // showSourcesInExcelToolStripMenuItem
+            // 
+            this.showSourcesInExcelToolStripMenuItem.Name = "showSourcesInExcelToolStripMenuItem";
+            this.showSourcesInExcelToolStripMenuItem.Size = new System.Drawing.Size(191, 22);
+            this.showSourcesInExcelToolStripMenuItem.Text = "Show Sources in Excel";
+            this.showSourcesInExcelToolStripMenuItem.Click += new System.EventHandler(this.showSourcesInExcelToolStripMenuItem_Click);
             // 
             // groupingSetupButton
             // 
@@ -333,6 +342,7 @@ namespace IDPicker.Forms
         private BrightIdeasSoftware.OLVColumn distinctChargesColumn;
         private System.Windows.Forms.Button displayOptionsButton;
         private System.Windows.Forms.Button exportButton;
+        private System.Windows.Forms.ToolStripMenuItem showSourcesInExcelToolStripMenuItem;
 
     }
 }

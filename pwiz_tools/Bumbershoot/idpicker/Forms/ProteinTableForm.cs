@@ -822,66 +822,130 @@ namespace IDPicker.Forms
             exportMenu.Show(Cursor.Position);
         }
 
-        private List<List<string>> getFormTable()
+        internal List<List<string>> getFormTable()
         {
-            var table = new List<List<string>>();
-            var row = new List<string>();
-            int numColumns;
+            return getFormTable(false, string.Empty);
+        }
 
-            //get column names
+        internal List<List<string>> getFormTable(bool htmlFormat, string reportName)
+        {
+            //get groups and remove filtered entries
+            var list = rowsByProteinGroup;
+            for (var c = list.Count-1; c >= 0; c--)
+                if (viewFilter.Protein != null && viewFilter.Protein.Count(x => x.Id == list[c].FirstProteinId) == 0 ||
+                    viewFilter.Cluster != null && viewFilter.Cluster.Contains(list[c].Cluster.Value))
+                    list.RemoveAt(c);
+
+            var fullGroups = from ProteinGroupRow row in list where row.ProteinCount > 1 select row;
+            var allGroupedProteinNames = string.Join(",", (from ProteinGroupRow p in fullGroups select p.Proteins).ToArray());
+            var allGroupedProteins = session.CreateQuery(String.Format(
+                "SELECT pro FROM Protein pro WHERE pro.Accession IN ('{0}')",
+                allGroupedProteinNames.Replace(",", "','")))
+                .List<Protein>();
+            var stats = statsPerProteinGroupBySpectrumSource;
+            var stats2 = statsPerProteinGroupBySpectrumSourceGroup;
+            var sourceColumns = new HashSet<OLVColumn>();
+            var groupColumns = new HashSet<OLVColumn>();
+            foreach (var sourceId in stats.Keys)
+            {
+                var id = sourceId;
+                var column = (from OLVColumn p in pivotColumns where (long)p.Tag == id select p).First();
+                if (column == null) continue;
+                sourceColumns.Add(column);
+            }
+            foreach (var sourceId in stats2.Keys)
+            {
+                var id = sourceId;
+                var column = (from OLVColumn p in pivotColumns where (long)p.Tag == id select p).Last();
+                if (column == null) continue;
+                groupColumns.Add(column);
+            }
+            var exportTable = new List<List<string>>();
+            var displayedColumns = new List<OLVColumn>();
+            var columnRow = new List<string>();
             foreach (var column in treeListView.ColumnsInDisplayOrder)
-                row.Add(column.Text);
-
-            table.Add(row);
-            numColumns = row.Count;
-            row = new List<string>();
-
-            //Retrieve all items
-            if (treeListView.SelectedIndices.Count > 1)
             {
-                foreach (int tableRow in treeListView.SelectedIndices)
+                columnRow.Add(column.Text);
+                displayedColumns.Add(column);
+            }
+            exportTable.Add(columnRow);
+
+            foreach (var row in list)
+            {
+                var rowText = new List<string>();
+                foreach (var column in displayedColumns)
                 {
-                    string indention = string.Empty;
-                    for (int tabs = 0; tabs < treeListView.Items[tableRow].IndentCount; tabs++)
-                        indention += "     ";
+                    if (column == clusterColumn)
+                        rowText.Add(row.Cluster == null ? string.Empty : row.Cluster.ToString());
+                    else if (column == accessionColumn)
+                        rowText.Add(htmlFormat
+                                        ? string.Format("<a href=\"{0}-cluster{1}.html\">{2}</a>", reportName,
+                                                        row.Cluster, row.Proteins)
+                                        : row.Proteins);
+                    else if (column == proteinCountColumn)
+                        rowText.Add(row.ProteinCount.ToString());
+                    else if (column == coverageColumn)
+                        rowText.Add((row.MeanProteinCoverage / 100.0).ToString());
+                    else if (column == distinctPeptidesColumn)
+                        rowText.Add(row.DistinctPeptides.ToString());
+                    else if (column == distinctMatchesColumn)
+                        rowText.Add(row.DistinctMatches.ToString());
+                    else if (column == filteredSpectraColumn)
+                        rowText.Add(row.Spectra.ToString());
+                    else if (column == proteinLengthColumn)
+                        rowText.Add(row.Length.ToString());
+                    else if (column == descriptionColumn && row.ProteinCount == 1)
+                        rowText.Add(row.FirstProteinDescription);
+                    else if (sourceColumns.Contains(column))
+                        rowText.Add(stats[(long)column.Tag].Contains(row.FirstProteinId)
+                                        ? stats[(long)column.Tag][row.FirstProteinId].DistinctPeptides.ToString()
+                                        : string.Empty);
+                    else if (groupColumns.Contains(column))
+                        rowText.Add(stats2[(long)column.Tag].Contains(row.FirstProteinId)
+                                        ? stats2[(long)column.Tag][row.FirstProteinId].DistinctPeptides.ToString()
+                                        : string.Empty);
+                    else
+                        rowText.Add(string.Empty);
+                }
 
-                    row.Add(indention + treeListView.Items[tableRow].SubItems[0].Text);
+                exportTable.Add(rowText);
 
-                    for (int x = 1; x < numColumns; x++)
+                //individual protein checking
+                if (fullGroups.Contains(row))
+                {
+                    var currentRow = row;
+                    var groupProteins = from Protein p in allGroupedProteins
+                                        where currentRow.Proteins.Contains(p.Accession)
+                                        select p;
+                    foreach (var protein in groupProteins)
                     {
-                        row.Add(treeListView.Items[tableRow].SubItems[x].Text);
+                        rowText = new List<string>();
+                        foreach (var column in displayedColumns)
+                        {
+                            if (column == accessionColumn)
+                                rowText.Add("     " +protein.Accession);
+                            else if (column == coverageColumn)
+                                rowText.Add((protein.Coverage/100.0).ToString());
+                            else if (column == proteinLengthColumn)
+                                rowText.Add(protein.Length.ToString());
+                            else if (column == descriptionColumn)
+                                rowText.Add(protein.Description);
+                            else rowText.Add(string.Empty);
+                        }
+                        exportTable.Add(rowText);
                     }
-                    table.Add(row);
-                    row = new List<string>();
                 }
             }
-            else
-            {
-                for (int tableRow = 0; tableRow < treeListView.Items.Count; tableRow++)
-                {
-                    string indention = string.Empty;
-                    for (int tabs = 0; tabs < treeListView.Items[tableRow].IndentCount; tabs++)
-                        indention += "     ";
-
-                    row.Add(indention + treeListView.Items[tableRow].SubItems[0].Text);
-
-                    for (int x = 1; x < numColumns; x++)
-                    {
-                        row.Add(treeListView.Items[tableRow].SubItems[x].Text);
-                    }
-                    table.Add(row);
-                    row = new List<string>();
-                }
-            }
-
-            return table;
+            return exportTable;
         }
 
         private void showInExcelToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var table = getFormTable();
 
-            TableExporter.ShowInExcel(table);
+            var exportWrapper = new Dictionary<string, List<List<string>>> { { this.Name, table } };
+
+            TableExporter.ShowInExcel(exportWrapper, false);
         }
 
         private void displayOptionsButton_Click(object sender, EventArgs e)

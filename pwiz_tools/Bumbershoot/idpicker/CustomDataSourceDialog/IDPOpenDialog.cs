@@ -938,9 +938,9 @@ namespace CustomDataSourceDialog
 
                     HandleItemToAdd(ref newNode,file);
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
-                    //looks like couldnt access the file there
+                    MessageBox.Show("Couldnt add folder-" + e.Message);
                     continue;
                 }
             }
@@ -984,6 +984,8 @@ namespace CustomDataSourceDialog
                 var session = sessionFactory.OpenSession();
                 var temp = session.QueryOver<SpectrumSource>().List();
                 sourceList.AddRange(temp.Select(item => item.Name));
+                session.Close();
+                sessionFactory.Close();
             }
 
             var mergedFile = sourceList.Count > 1;

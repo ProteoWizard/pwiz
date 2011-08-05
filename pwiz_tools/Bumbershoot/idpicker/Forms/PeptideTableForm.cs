@@ -851,66 +851,98 @@ namespace IDPicker.Forms
             exportMenu.Show(Cursor.Position);
         }
 
-        private List<List<string>> getFormTable()
+        internal List<List<string>> getFormTable()
         {
-            var table = new List<List<string>>();
-            var row = new List<string>();
-            int numColumns;
+            if (session == null) return new List<List<string>>();
 
-            //get column names
+            var sourceColumns = new HashSet<OLVColumn>();
+            var groupColumns = new HashSet<OLVColumn>();
+            var list = session.CreateQuery("SELECT psm, (psm.Peptide || ' ' || ROUND(psm.MonoisotopicMass)), COUNT(DISTINCT psm.Spectrum) " +
+                                                 viewFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
+                                                 "GROUP BY (psm.Peptide || ' ' || ROUND(psm.MonoisotopicMass))")
+                                    .List<object[]>().Select(o => new PeptideSpectrumMatchRow(o));
+
+            var stats = statsPerPeptideBySpectrumSource;
+            var stats2 = statsPerPeptideBySpectrumSourceGroup;
+            foreach (var sourceId in stats.Keys)
+            {
+                var id = sourceId;
+                var column = (from OLVColumn p in pivotColumns where (long)p.Tag == id select p).First();
+                if (column == null) continue;
+                sourceColumns.Add(column);
+            }
+            foreach (var sourceId in stats2.Keys)
+            {
+                var id = sourceId;
+                var column = (from OLVColumn p in pivotColumns where (long)p.Tag == id select p).Last();
+                if (column == null) continue;
+                groupColumns.Add(column);
+            }
+
+            var exportTable = new List<List<string>>();
+            var displayedColumns = new List<OLVColumn>();
+            var columnRow = new List<string>();
             foreach (var column in treeListView.ColumnsInDisplayOrder)
-                row.Add(column.Text);
-
-            table.Add(row);
-            numColumns = row.Count;
-            row = new List<string>();
-
-            //Retrieve all items
-            if (treeListView.SelectedIndices.Count > 1)
             {
-                foreach (int tableRow in treeListView.SelectedIndices)
-                {
-                    string indention = string.Empty;
-                    for (int tabs = 0; tabs < treeListView.Items[tableRow].IndentCount; tabs++)
-                        indention += "     ";
-
-                    row.Add(indention + treeListView.Items[tableRow].SubItems[0].Text);
-
-                    for (int x = 1; x < numColumns; x++)
-                    {
-                        row.Add(treeListView.Items[tableRow].SubItems[x].Text);
-                    }
-                    table.Add(row);
-                    row = new List<string>();
-                }
+                if (column == distinctMatchesColumn) continue;
+                columnRow.Add(column.Text);
+                displayedColumns.Add(column);
             }
-            else
+            exportTable.Add(columnRow);
+
+            foreach (var row in list)
             {
-                for (int tableRow = 0; tableRow < treeListView.Items.Count; tableRow++)
+                var rowText = new List<string>();
+                foreach (var column in displayedColumns)
                 {
-                    string indention = string.Empty;
-                    for (int tabs = 0; tabs < treeListView.Items[tableRow].IndentCount; tabs++)
-                        indention += "     ";
-
-                    row.Add(indention + treeListView.Items[tableRow].SubItems[0].Text);
-
-                    for (int x = 1; x < numColumns; x++)
+                    if (column == sequenceColumn)
+                        rowText.Add(row.DistinctPeptide.Sequence);
+                    else if (column == filteredSpectraColumn)
+                        rowText.Add(row.Spectra.ToString());
+                    else if (column == monoisotopicMassColumn)
+                        rowText.Add(row.PeptideSpectrumMatch.MonoisotopicMass.ToString());
+                    else if (column == molecularWeightColumn)
+                        rowText.Add(row.PeptideSpectrumMatch.MolecularWeight.ToString());
+                    else if (column == proteinsColumn)
+                        rowText.Add(String.Join(";",
+                                                row.PeptideSpectrumMatch.Peptide.Instances.
+                                                    Select(o => o.Protein.Accession).
+                                                    Distinct().ToArray()));
+                    else if (sourceColumns.Contains(column))
                     {
-                        row.Add(treeListView.Items[tableRow].SubItems[x].Text);
+                        if (row.PeptideSpectrumMatch.Peptide.Id != null &&
+                        stats[(long)column.Tag].Contains(row.PeptideSpectrumMatch.Peptide.Id.Value))
+                            rowText.Add(stats[(long) column.Tag]
+                                            [row.PeptideSpectrumMatch.Peptide.Id.Value].Spectra.ToString());
+                        else
+                            rowText.Add(string.Empty);
                     }
-                    table.Add(row);
-                    row = new List<string>();
+                    else if (groupColumns.Contains(column))
+                    {
+                        if (row.PeptideSpectrumMatch.Peptide.Id != null &&
+                        stats2[(long)column.Tag].Contains(row.PeptideSpectrumMatch.Peptide.Id.Value))
+                            rowText.Add(stats2[(long)column.Tag]
+                                            [row.PeptideSpectrumMatch.Peptide.Id.Value].Spectra.ToString());
+                        else
+                            rowText.Add(string.Empty);
+                    }
+                    else
+                        rowText.Add(string.Empty);
                 }
+
+                exportTable.Add(rowText);
             }
 
-            return table;
+            return exportTable;
         }
 
         private void showInExcelToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var table = getFormTable();
 
-            TableExporter.ShowInExcel(table);
+            var exportWrapper = new Dictionary<string, List<List<string>>> { { this.Name, table } };
+
+            TableExporter.ShowInExcel(exportWrapper, false);
         }
 
         private void displayOptionsButton_Click(object sender, EventArgs e)

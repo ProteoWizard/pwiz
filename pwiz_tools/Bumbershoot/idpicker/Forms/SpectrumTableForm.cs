@@ -67,7 +67,7 @@ namespace IDPicker.Forms
             public int Analyses;
 
             #region Constructor
-            public TotalCounts (NHibernate.ISession session, DataFilter dataFilter)
+            public TotalCounts(NHibernate.ISession session, DataFilter dataFilter)
             {
                 lock (session)
                 {
@@ -126,13 +126,13 @@ namespace IDPicker.Forms
                                              "COUNT(DISTINCT psm.Charge)";
 
             #region Constructor
-            public AggregateRow (object[] queryRow, DataFilter dataFilter)
+            public AggregateRow(object[] queryRow, DataFilter dataFilter)
             {
-                Spectra = (long) queryRow[0];
-                DistinctMatches = (int) (long) queryRow[1];
-                DistinctPeptides = (int) (long) queryRow[2];
-                DistinctAnalyses = (int) (long) queryRow[3];
-                DistinctCharges = (int) (long) queryRow[4];
+                Spectra = (long)queryRow[0];
+                DistinctMatches = (int)(long)queryRow[1];
+                DistinctPeptides = (int)(long)queryRow[2];
+                DistinctAnalyses = (int)(long)queryRow[3];
+                DistinctCharges = (int)(long)queryRow[4];
                 DataFilter = dataFilter;
             }
             #endregion
@@ -143,7 +143,8 @@ namespace IDPicker.Forms
             public DataModel.SpectrumSourceGroup SpectrumSourceGroup { get; private set; }
 
             #region Constructor
-            public SpectrumSourceGroupRow (object[] queryRow, DataFilter dataFilter) : base(queryRow, dataFilter)
+            public SpectrumSourceGroupRow(object[] queryRow, DataFilter dataFilter)
+                : base(queryRow, dataFilter)
             {
                 SpectrumSourceGroup = (queryRow[5] as DataModel.SpectrumSourceGroupLink).Group;
             }
@@ -155,9 +156,10 @@ namespace IDPicker.Forms
             public DataModel.SpectrumSource SpectrumSource { get; private set; }
 
             #region Constructor
-            public SpectrumSourceRow (object[] queryRow, DataFilter dataFilter) : base(queryRow, dataFilter)
+            public SpectrumSourceRow(object[] queryRow, DataFilter dataFilter)
+                : base(queryRow, dataFilter)
             {
-                SpectrumSource = (DataModel.SpectrumSource) queryRow[5];
+                SpectrumSource = (DataModel.SpectrumSource)queryRow[5];
             }
             #endregion
         }
@@ -168,9 +170,10 @@ namespace IDPicker.Forms
             public string Key { get; private set; }
 
             #region Constructor
-            public AnalysisRow (object[] queryRow, DataFilter dataFilter) : base(queryRow, dataFilter)
+            public AnalysisRow(object[] queryRow, DataFilter dataFilter)
+                : base(queryRow, dataFilter)
             {
-                Analysis = (DataModel.Analysis) queryRow[5];
+                Analysis = (DataModel.Analysis)queryRow[5];
 
                 Key = String.Format("{0} {1} {2}", Analysis.Id, Analysis.Software.Name, Analysis.Software.Version);
             }
@@ -182,9 +185,10 @@ namespace IDPicker.Forms
             public int Charge { get; private set; }
 
             #region Constructor
-            public ChargeRow (object[] queryRow, DataFilter dataFilter) : base(queryRow, dataFilter)
+            public ChargeRow(object[] queryRow, DataFilter dataFilter)
+                : base(queryRow, dataFilter)
             {
-                Charge = (int) queryRow[5];
+                Charge = (int)queryRow[5];
             }
             #endregion
         }
@@ -194,9 +198,10 @@ namespace IDPicker.Forms
             public DataModel.Peptide Peptide { get; private set; }
 
             #region Constructor
-            public PeptideRow (object[] queryRow, DataFilter dataFilter) : base(queryRow, dataFilter)
+            public PeptideRow(object[] queryRow, DataFilter dataFilter)
+                : base(queryRow, dataFilter)
             {
-                Peptide = (DataModel.Peptide) queryRow[5];
+                Peptide = (DataModel.Peptide)queryRow[5];
             }
             #endregion
         }
@@ -209,12 +214,12 @@ namespace IDPicker.Forms
             public string Key { get; private set; }
 
             #region Constructor
-            public SpectrumRow (object[] queryRow, DataFilter dataFilter, IList<Grouping<GroupBy>> checkedGroupings)
+            public SpectrumRow(object[] queryRow, DataFilter dataFilter, IList<Grouping<GroupBy>> checkedGroupings)
                 : base(queryRow, dataFilter)
             {
-                Spectrum = (DataModel.Spectrum) queryRow[5];
-                Source = (DataModel.SpectrumSource) queryRow[6];
-                Group = (DataModel.SpectrumSourceGroup) queryRow[7];
+                Spectrum = (DataModel.Spectrum)queryRow[5];
+                Source = (DataModel.SpectrumSource)queryRow[6];
+                Group = (DataModel.SpectrumSourceGroup)queryRow[7];
 
                 Key = Spectrum.NativeID;
 
@@ -238,12 +243,12 @@ namespace IDPicker.Forms
             public string Key { get; private set; }
 
             #region Constructor
-            public PeptideSpectrumMatchRow (object[] queryRow, DataFilter dataFilter, IList<Grouping<GroupBy>> checkedGroupings)
+            public PeptideSpectrumMatchRow(object[] queryRow, DataFilter dataFilter, IList<Grouping<GroupBy>> checkedGroupings)
             {
-                PeptideSpectrumMatch = (DataModel.PeptideSpectrumMatch) queryRow[0];
-                Spectrum = (DataModel.Spectrum) queryRow[3];
-                Source = (DataModel.SpectrumSource) queryRow[4];
-                Group = (DataModel.SpectrumSourceGroup) queryRow[5];
+                PeptideSpectrumMatch = (DataModel.PeptideSpectrumMatch)queryRow[0];
+                Spectrum = (DataModel.Spectrum)queryRow[3];
+                Source = (DataModel.SpectrumSource)queryRow[4];
+                Group = (DataModel.SpectrumSourceGroup)queryRow[5];
                 DataFilter = dataFilter;
 
                 // if not grouping by Spectrum, use Spectrum as the key column
@@ -280,7 +285,7 @@ namespace IDPicker.Forms
         }
         #endregion
 
-        public SpectrumTableForm ()
+        public SpectrumTableForm()
         {
             InitializeComponent();
 
@@ -298,7 +303,7 @@ namespace IDPicker.Forms
 
         Dictionary<OLVColumn, ColumnProperty> _columnSettings;
 
-        protected override void OnLoad (EventArgs e)
+        protected override void OnLoad(EventArgs e)
         {
             Text = TabText = "Spectrum View";
 
@@ -359,7 +364,7 @@ namespace IDPicker.Forms
                     }
 
                     //set overall colors from end properties
-                    treeListView.BackColor = Color.FromArgb(int.Parse(retrievedList[treeListView.Columns.Count -2]));
+                    treeListView.BackColor = Color.FromArgb(int.Parse(retrievedList[treeListView.Columns.Count - 2]));
                     treeListView.ForeColor = Color.FromArgb(int.Parse(retrievedList[treeListView.Columns.Count - 1]));
 
                     //foreach (var kvp in _columnSettings)
@@ -376,9 +381,9 @@ namespace IDPicker.Forms
             treeListView.UseCellFormatEvents = true;
             treeListView.FormatCell +=
                 delegate(object sender, FormatCellEventArgs currentCell)
-                    {
-                        currentCell.SubItem.BackColor = Color.FromArgb(_columnSettings[currentCell.Column].ColorCode);
-                    };
+                {
+                    currentCell.SubItem.BackColor = Color.FromArgb(_columnSettings[currentCell.Column].ColorCode);
+                };
 
             treeListView.CanExpandGetter += delegate(object x) { return !(x is PeptideSpectrumMatchScoreRow); };
             treeListView.ChildrenGetter += new TreeListView.ChildrenGetterDelegate(getChildren);
@@ -629,17 +634,17 @@ namespace IDPicker.Forms
         }
 
         #region Set column visibility
-        void treeListView_AfterExpanding (object sender, AfterExpandingEventArgs e)
+        void treeListView_AfterExpanding(object sender, AfterExpandingEventArgs e)
         {
             treeListView_setColumnVisibility();
         }
 
-        void treeListView_AfterCollapsing (object sender, AfterCollapsingEventArgs e)
+        void treeListView_AfterCollapsing(object sender, AfterCollapsingEventArgs e)
         {
             treeListView_setColumnVisibility();
         }
 
-        void treeListView_setColumnVisibility ()
+        void treeListView_setColumnVisibility()
         {
             object deepestRowObject = null;
             int deepestIndentCount = -1;
@@ -720,13 +725,13 @@ namespace IDPicker.Forms
         }
         #endregion
 
-        IEnumerable getChildren (object x)
+        IEnumerable getChildren(object x)
         {
             if (x is SpectrumSourceGroupRow)
             {
                 var row = x as SpectrumSourceGroupRow;
                 var parentFilter = row.DataFilter ?? dataFilter;
-                var childFilter = new DataFilter(parentFilter) {SpectrumSourceGroup = new List<SpectrumSourceGroup>()};
+                var childFilter = new DataFilter(parentFilter) { SpectrumSourceGroup = new List<SpectrumSourceGroup>() };
                 childFilter.SpectrumSourceGroup.Add(row.SpectrumSourceGroup);
                 return getSpectrumSourceRows(childFilter);
             }
@@ -734,7 +739,7 @@ namespace IDPicker.Forms
             {
                 var row = x as SpectrumSourceRow;
                 var parentFilter = row.DataFilter ?? dataFilter;
-                var childFilter = new DataFilter(parentFilter) {SpectrumSource = new List<SpectrumSource>()};
+                var childFilter = new DataFilter(parentFilter) { SpectrumSource = new List<SpectrumSource>() };
                 childFilter.SpectrumSource.Add(row.SpectrumSource);
                 var childGrouping = GroupingSetupControl<GroupBy>.GetChildGrouping(checkedGroupings, GroupBy.Source);
                 return getChildren(childGrouping, childFilter);
@@ -743,7 +748,7 @@ namespace IDPicker.Forms
             {
                 var row = x as AnalysisRow;
                 var parentFilter = row.DataFilter ?? dataFilter;
-                var childFilter = new DataFilter(parentFilter) {Analysis = new List<Analysis>()};
+                var childFilter = new DataFilter(parentFilter) { Analysis = new List<Analysis>() };
                 childFilter.Analysis.Add(row.Analysis);
                 var childGrouping = GroupingSetupControl<GroupBy>.GetChildGrouping(checkedGroupings, GroupBy.Analysis);
                 return getChildren(childGrouping, childFilter);
@@ -752,7 +757,7 @@ namespace IDPicker.Forms
             {
                 var row = x as PeptideRow;
                 var parentFilter = row.DataFilter ?? dataFilter;
-                var childFilter = new DataFilter(parentFilter) {Peptide = new List<Peptide>()};
+                var childFilter = new DataFilter(parentFilter) { Peptide = new List<Peptide>() };
                 childFilter.Peptide.Add(row.Peptide);
                 var childGrouping = GroupingSetupControl<GroupBy>.GetChildGrouping(checkedGroupings, GroupBy.Peptide);
                 return getChildren(childGrouping, childFilter);
@@ -761,7 +766,7 @@ namespace IDPicker.Forms
             {
                 var row = x as ChargeRow;
                 var parentFilter = row.DataFilter ?? dataFilter;
-                var childFilter = new DataFilter(parentFilter) {Charge = new List<int>()};
+                var childFilter = new DataFilter(parentFilter) { Charge = new List<int>() };
                 childFilter.Charge.Add(row.Charge);
                 var childGrouping = GroupingSetupControl<GroupBy>.GetChildGrouping(checkedGroupings, GroupBy.Charge);
                 return getChildren(childGrouping, childFilter);
@@ -770,7 +775,7 @@ namespace IDPicker.Forms
             {
                 var row = x as SpectrumRow;
                 var parentFilter = row.DataFilter ?? dataFilter;
-                var childFilter = new DataFilter(parentFilter) {Spectrum = new List<Spectrum>()};
+                var childFilter = new DataFilter(parentFilter) { Spectrum = new List<Spectrum>() };
                 childFilter.Spectrum.Add(row.Spectrum);
                 var childGrouping = GroupingSetupControl<GroupBy>.GetChildGrouping(checkedGroupings, GroupBy.Spectrum);
                 return getChildren(childGrouping, childFilter);
@@ -783,7 +788,7 @@ namespace IDPicker.Forms
             }
         }
 
-        void treeListView_CellClick (object sender, CellClickEventArgs e)
+        void treeListView_CellClick(object sender, CellClickEventArgs e)
         {
             if (e.ClickCount < 2 || e.Item == null || e.Item.RowObject == null ||
                 e.HitTest.HitTestLocation == HitTestLocation.ExpandButton)
@@ -824,7 +829,7 @@ namespace IDPicker.Forms
                 return;
 
             e.Handled = true;
-            var newDataFilter = new DataFilter() {FilterSource = this};
+            var newDataFilter = new DataFilter() { FilterSource = this };
 
             foreach (var item in treeListView.SelectedObjects)
             {
@@ -883,9 +888,9 @@ namespace IDPicker.Forms
         #region getChildren functions for each row type
 
         // returns both groups and sources
-        IEnumerable<AggregateRow> getSpectrumSourceRows (DataFilter parentFilter)
+        IEnumerable<AggregateRow> getSpectrumSourceRows(DataFilter parentFilter)
         {
-            var groupsFilter = new DataFilter(parentFilter) {SpectrumSourceGroup = null};
+            var groupsFilter = new DataFilter(parentFilter) { SpectrumSourceGroup = null };
             var groups = session.CreateQuery(AggregateRow.Selection + ", ssgl " +
                                              groupsFilter.GetFilteredQueryString(
                                                  DataFilter.FromPeptideSpectrumMatch,
@@ -941,34 +946,34 @@ namespace IDPicker.Forms
                 return childGroups.Concat(childSources);*/
         }
 
-        IEnumerable<AggregateRow> getAnalysisRows (DataFilter parentFilter)
+        IEnumerable<AggregateRow> getAnalysisRows(DataFilter parentFilter)
         {
-            return session.CreateQuery(AggregateRow.Selection + ", psm.Analysis " + 
+            return session.CreateQuery(AggregateRow.Selection + ", psm.Analysis " +
                                        parentFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
                                        "GROUP BY psm.Analysis.id")
                           .List<object[]>()
                           .Select(o => new AnalysisRow(o, parentFilter) as AggregateRow);
         }
 
-        IEnumerable<AggregateRow> getPeptideRows (DataFilter parentFilter)
+        IEnumerable<AggregateRow> getPeptideRows(DataFilter parentFilter)
         {
-            return session.CreateQuery(AggregateRow.Selection + ", psm.Peptide " + 
+            return session.CreateQuery(AggregateRow.Selection + ", psm.Peptide " +
                                        parentFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
                                        "GROUP BY psm.Peptide.id")
                           .List<object[]>()
                           .Select(o => new PeptideRow(o, parentFilter) as AggregateRow);
         }
 
-        IEnumerable<AggregateRow> getChargeRows (DataFilter parentFilter)
+        IEnumerable<AggregateRow> getChargeRows(DataFilter parentFilter)
         {
-            return session.CreateQuery(AggregateRow.Selection + ", psm.Charge " + 
+            return session.CreateQuery(AggregateRow.Selection + ", psm.Charge " +
                                        parentFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
                                        "GROUP BY psm.Charge")
                           .List<object[]>()
                           .Select(o => new ChargeRow(o, parentFilter) as AggregateRow);
         }
 
-        IEnumerable<SpectrumRow> getSpectrumRows (DataFilter parentFilter)
+        IEnumerable<SpectrumRow> getSpectrumRows(DataFilter parentFilter)
         {
             return session.CreateQuery(AggregateRow.Selection + ", s, ss, ssg " +
                                        parentFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
@@ -979,7 +984,7 @@ namespace IDPicker.Forms
                           .Select(o => new SpectrumRow(o, parentFilter, checkedGroupings));
         }
 
-        IEnumerable<PeptideSpectrumMatchRow> getPeptideSpectrumMatchRows (DataFilter parentFilter)
+        IEnumerable<PeptideSpectrumMatchRow> getPeptideSpectrumMatchRows(DataFilter parentFilter)
         {
             return session.CreateQuery("SELECT DISTINCT psm, pm, mod, s, ss, ssg " +
                                        parentFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
@@ -991,12 +996,12 @@ namespace IDPicker.Forms
                           .Select(o => new PeptideSpectrumMatchRow(o, parentFilter, checkedGroupings));
         }
 
-        IEnumerable getChildren (PeptideSpectrumMatchRow x, DataFilter parentFilter)
+        IEnumerable getChildren(PeptideSpectrumMatchRow x, DataFilter parentFilter)
         {
             return x.PeptideSpectrumMatch.Scores.Select(o => new PeptideSpectrumMatchScoreRow(o));
         }
 
-        IEnumerable getChildren (Grouping<GroupBy> grouping, DataFilter parentFilter)
+        IEnumerable getChildren(Grouping<GroupBy> grouping, DataFilter parentFilter)
         {
             if (grouping == null)
                 return getPeptideSpectrumMatchRows(parentFilter);
@@ -1013,7 +1018,7 @@ namespace IDPicker.Forms
         }
         #endregion
 
-        public void ClearData ()
+        public void ClearData()
         {
             Text = TabText = "Spectrum View";
 
@@ -1023,14 +1028,14 @@ namespace IDPicker.Forms
             Refresh();
         }
 
-        public void ClearData (bool clearBasicFilter)
+        public void ClearData(bool clearBasicFilter)
         {
             if (clearBasicFilter)
                 basicDataFilter = null;
             ClearData();
         }
 
-        public void SetData (NHibernate.ISession session, DataFilter userFilter)
+        public void SetData(NHibernate.ISession session, DataFilter userFilter)
         {
             if (session == null)
                 return;
@@ -1039,7 +1044,7 @@ namespace IDPicker.Forms
             this.userFilter = userFilter;
             dataFilter = new DataFilter(userFilter) { Spectrum = null, SpectrumSource = null, SpectrumSourceGroup = null };
             oldSelectionPath = new List<string>();
-            for (int x = 0; x < treeListView.Items.Count; x++ )
+            for (int x = 0; x < treeListView.Items.Count; x++)
             {
                 if (treeListView.IsExpanded(treeListView.GetModelObject(x)))
                     oldSelectionPath.Add(treeListView.Items[x].Text);
@@ -1047,7 +1052,7 @@ namespace IDPicker.Forms
             oldSelectionPath.Add(treeListView.SelectedItem == null
                                      ? "<<No Item Selected>>"
                                      : treeListView.SelectedItem.Text);
-            
+
 
             checkedGroupings = groupingSetupControl.CheckedGroupings;
 
@@ -1123,7 +1128,7 @@ namespace IDPicker.Forms
         }
 
 
-        void setData (object sender, DoWorkEventArgs e)
+        void setData(object sender, DoWorkEventArgs e)
         {
             var rootGrouping = checkedGroupings.Count > 0 ? checkedGroupings.First() : null;
 
@@ -1162,7 +1167,7 @@ namespace IDPicker.Forms
             }
         }
 
-        void renderData (object sender, RunWorkerCompletedEventArgs e)
+        void renderData(object sender, RunWorkerCompletedEventArgs e)
         {
             // show total counts in the form title
             Text = TabText = String.Format("Spectrum View: {0} groups, {1} sources, {2} spectra",
@@ -1185,7 +1190,7 @@ namespace IDPicker.Forms
 
                 if (rootGroupRow != null)
                 {
-                    treeListView.Roots = new object[] {rootGroupRow};
+                    treeListView.Roots = new object[] { rootGroupRow };
 
                     // by default, expand all groups
                     foreach (var row in aggregateRows.Where(o => o is SpectrumSourceGroupRow))
@@ -1211,7 +1216,7 @@ namespace IDPicker.Forms
             treeListView.Refresh();
         }
 
-        private List<string> getGroupTreePath (DataModel.SpectrumSourceGroup group)
+        private List<string> getGroupTreePath(DataModel.SpectrumSourceGroup group)
         {
             var result = new List<string>();
             string groupPath = group.Name;
@@ -1225,7 +1230,7 @@ namespace IDPicker.Forms
             return result;
         }
 
-        private void expandSelectionPath (IEnumerable<string> selectionPath)
+        private void expandSelectionPath(IEnumerable<string> selectionPath)
         {
             OLVListItem selectedItem = null;
             foreach (string branch in selectionPath)
@@ -1271,17 +1276,17 @@ namespace IDPicker.Forms
                 exportMenu.Items[1].Text = "Export Selected to File";
                 exportMenu.Items[2].Text = "Show Selected in Excel";
             }
-             else
+            else
             {
                 exportMenu.Items[0].Text = "Copy to Clipboard";
                 exportMenu.Items[1].Text = "Export to File";
-                exportMenu.Items[2].Text = "Show in Excel";
+                exportMenu.Items[2].Text = "Show Current in Excel";
             }
 
             exportMenu.Show(Cursor.Position);
         }
 
-        private List<List<string>> getFormTable()
+        internal List<List<string>> getFormTable()
         {
             var table = new List<List<string>>();
             var row = new List<string>();
@@ -1305,9 +1310,9 @@ namespace IDPicker.Forms
             }
 
             // ObjectListView's virtual mode doesn't support GetEnumerator()
-            for(int i=0; i < exportedRows.Count; ++i)
+            for (int i = 0; i < exportedRows.Count; ++i)
             {
-                var tableRow = treeListView.Items[(int) exportedRows[i]];
+                var tableRow = treeListView.Items[(int)exportedRows[i]];
 
                 row = new List<string>();
 
@@ -1315,7 +1320,7 @@ namespace IDPicker.Forms
                 for (int tabs = 0; tabs < tableRow.IndentCount; tabs++)
                     indention += "     ";
 
-                row.Add(indention + tableRow.SubItems[0].Text);
+                row.Add("'" + indention + tableRow.SubItems[0].Text);
 
                 for (int x = 1; x < numColumns; ++x)
                     row.Add(tableRow.SubItems[x].Text);
@@ -1323,6 +1328,68 @@ namespace IDPicker.Forms
             }
 
             return table;
+        }
+
+        internal List<TreeNode> getSpectrumSourceGroupTree()
+        {
+            var groupNodes = new List<TreeNode>();
+            var groups = session.CreateQuery(AggregateRow.Selection + ", ssgl " +
+                                             userFilter.GetFilteredQueryString(
+                                                 DataFilter.FromPeptideSpectrumMatch,
+                                                 DataFilter.PeptideSpectrumMatchToSpectrumSourceGroupLink) +
+                                             "GROUP BY ssgl.Group.id")
+                .List<object[]>()
+                .Select(o => new SpectrumSourceGroupRow(o, userFilter));
+            foreach (var group in groups)
+            {
+                var newNode = new TreeNode
+                                  {
+                                      Text = group.SpectrumSourceGroup.Name,
+                                      Tag =
+                                          new[]
+                                              {
+                                                  "'" + group.SpectrumSourceGroup.Name + "'", group.Spectra.ToString(),
+                                                  group.DistinctPeptides.ToString(), group.DistinctMatches.ToString(),
+                                                  group.DistinctAnalyses.ToString(), group.DistinctCharges.ToString()
+                                              }
+                                  };
+                var groupFilter = new DataFilter(userFilter)
+                                      {
+                                          SpectrumSourceGroup =
+                                              new List<SpectrumSourceGroup> { group.SpectrumSourceGroup }
+                                      };
+                var sources = session.CreateQuery(AggregateRow.Selection + ", psm.Spectrum.Source " +
+                                              groupFilter.GetFilteredQueryString(
+                                                  DataFilter.FromPeptideSpectrumMatch) +
+                                              "GROUP BY psm.Spectrum.Source.id")
+                .List<object[]>().Select(o => new SpectrumSourceRow(o, groupFilter));
+                SpectrumSourceGroupRow ssgr = group;
+                sources = from SpectrumSourceRow s in sources
+                          where s.SpectrumSource.Group == ssgr.SpectrumSourceGroup
+                          select s;
+                foreach (var source in sources)
+                {
+                    var newSubNode = new TreeNode
+                                         {
+                                             Text = "source" + source.SpectrumSource.Id ?? string.Empty + ".html",
+                                             Tag = new[]
+                                                       {
+                                                           "'<a href =\"source" + (source.SpectrumSource.Id != null
+                                                                                       ? source.SpectrumSource.Id.ToString()
+                                                                                       : string.Empty) + ".html\">" +
+                                                           source.SpectrumSource.Name + "</a>'",
+                                                           source.Spectra.ToString(),
+                                                           source.DistinctPeptides.ToString(),
+                                                           source.DistinctMatches.ToString(),
+                                                           source.DistinctAnalyses.ToString(),
+                                                           source.DistinctCharges.ToString()
+                                                       }
+                                         };
+                    newNode.Nodes.Add(newSubNode);
+                }
+                groupNodes.Add(newNode);
+            }
+            return groupNodes;
         }
 
         private void clipboardToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1339,20 +1406,21 @@ namespace IDPicker.Forms
             TableExporter.ExportToFile(table);
         }
 
-        private void showInExcelToolStripMenuItem_Click(object sender, EventArgs e)
+        private void showCurrentInExcelToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var table = getFormTable();
+            var exportWrapper = new Dictionary<string, List<List<string>>> { { this.Name, table } };
 
-            TableExporter.ShowInExcel(table);
+            TableExporter.ShowInExcel(exportWrapper, false);
         }
         #endregion
 
-        private void groupingSetupButton_Click (object sender, EventArgs e)
+        private void groupingSetupButton_Click(object sender, EventArgs e)
         {
             groupingSetupPopup.Show(sender as Button);
         }
 
-        private void groupingSetupControl_GroupingChanging (object sender, GroupingChangingEventArgs<GroupBy> e)
+        private void groupingSetupControl_GroupingChanging(object sender, GroupingChangingEventArgs<GroupBy> e)
         {
             // GroupBy.Spectrum cannot be before GroupBy.Source
 
@@ -1366,12 +1434,12 @@ namespace IDPicker.Forms
             e.Cancel = GroupingSetupControl<GroupBy>.HasParentGrouping(newGroupings, GroupBy.Source, GroupBy.Spectrum);
         }
 
-        private void groupingSetupControl_GroupingChanged (object sender, EventArgs e)
+        private void groupingSetupControl_GroupingChanged(object sender, EventArgs e)
         {
             dirtyGroupings = true;
         }
 
-        void groupingSetupPopup_Closed (object sender, ToolStripDropDownClosedEventArgs e)
+        void groupingSetupPopup_Closed(object sender, ToolStripDropDownClosedEventArgs e)
         {
             if (dirtyGroupings)
             {
@@ -1406,6 +1474,168 @@ namespace IDPicker.Forms
                 SetColumnAspectGetters();
                 treeListView.RebuildColumns();
             }
+        }
+
+        private void showSourcesInExcelToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            TableExporter.ShowInExcel(getSourceContentsForExcel(), true);
+        }
+
+        internal Dictionary<string, List<List<string>>> getSourceContentsForExcel()
+        {
+            var allContents = new Dictionary<string, List<List<string>>>();
+            var sources = session.QueryOver<SpectrumSource>().List();
+            foreach (var source in sources)
+            {
+                var exportTable = new List<List<string>>();
+                var scoreList = new HashSet<string>();
+                exportTable.Add(new List<string>
+                                    {
+                                        "Spectrum/Rank",
+                                        "Distinct Peptides",
+                                        "Distinct Analysis",
+                                        "Distinct Charges",
+                                        "Precursor m/z",
+                                        "Charge",
+                                        "Observed Mass",
+                                        "Exact Mass",
+                                        "Mass Error",
+                                        "Q Value",
+                                        "Sequence"
+                                    });
+
+                var sourceFilter = new DataFilter(dataFilter) { SpectrumSource = new List<SpectrumSource> { source } };
+                var spectraRows = getSpectrumRows(sourceFilter);
+                foreach (var spectra in spectraRows)
+                {
+                    var key = spectra.Spectrum.NativeID;
+                    try { key = pwiz.CLI.msdata.id.abbreviate(key); }
+                    catch { }
+                    exportTable.Add(new List<string>
+                                        {
+                                            key,
+                                            spectra.DistinctPeptides.ToString(),
+                                            spectra.DistinctAnalyses.ToString(),
+                                            spectra.DistinctCharges.ToString(),
+                                            spectra.Spectrum.PrecursorMZ.ToString()
+                                        });
+                    foreach (var match in spectra.Spectrum.Matches)
+                    {
+                        var observedMass = match.Spectrum.PrecursorMZ * match.Charge - match.Charge * pwiz.CLI.chemistry.Proton.Mass;
+                        var newRow = new List<string>
+                                         {
+                                             "'          " + match.Rank,
+                                             string.Empty,
+                                             string.Empty,
+                                             string.Empty,
+                                             string.Empty,
+                                             match.Charge.ToString(),
+                                             observedMass.ToString(),
+                                             match.MonoisotopicMass.ToString(),
+                                             match.MonoisotopicMassError.ToString(),
+                                             match.QValue.ToString(),
+                                             match.Peptide.Sequence
+                                         };
+                        foreach (var score in match.Scores)
+                            scoreList.Add(score.Key);
+                        foreach (var score in scoreList)
+                        {
+                            newRow.Add(match.Scores.ContainsKey(score)
+                                           ? match.Scores[score].ToString()
+                                           : string.Empty);
+                        }
+                        exportTable.Add(newRow);
+                    }
+                }
+                exportTable[0].AddRange(scoreList);
+                allContents.Add(source.Name, exportTable);
+            }
+            return allContents;
+        }
+
+        internal Dictionary<string[], List<TreeNode>> getSourceContentsForHTML()
+        {
+            const int decimalPlaces = 4;
+            var allContents = new Dictionary<string[], List<TreeNode>>();
+            var sources = session.QueryOver<SpectrumSource>().List();
+            foreach (var source in sources)
+            {
+                var exportTable = new List<TreeNode>();
+                var scoreList = new HashSet<string>();
+                var sourceFilter = new DataFilter(dataFilter) {SpectrumSource = new List<SpectrumSource> {source}};
+                var spectraRows = getSpectrumRows(sourceFilter);
+
+                foreach (var spectra in spectraRows)
+                {
+                    var key = spectra.Spectrum.NativeID;
+                    try
+                    {
+                        key = pwiz.CLI.msdata.id.abbreviate(key);
+                    }
+                    catch
+                    {
+                    }
+                    var newBranch = new TreeNode
+                                        {
+                                            Text = key,
+                                            Tag = new[]
+                                                      {
+                                                          "'" + key + "'", spectra.DistinctPeptides.ToString(),
+                                                          spectra.DistinctAnalyses.ToString(),
+                                                          spectra.DistinctCharges.ToString(),
+                                                          Math.Round(spectra.Spectrum.PrecursorMZ,decimalPlaces).ToString()
+                                                      }
+                                        };
+                    foreach (var match in spectra.Spectrum.Matches)
+                    {
+                        var observedMass = match.Spectrum.PrecursorMZ*match.Charge -
+                                           match.Charge*pwiz.CLI.chemistry.Proton.Mass;
+                        var matchNode = new TreeNode {Text = match.Rank.ToString()};
+                        var tag = new List<string>
+                                      {
+                                          "'" + match.Rank + "'",
+                                          match.Charge.ToString(),
+                                          Math.Round(observedMass,decimalPlaces).ToString(),
+                                          Math.Round(match.MonoisotopicMass,decimalPlaces).ToString(),
+                                          Math.Round(match.MonoisotopicMassError,decimalPlaces).ToString(),
+                                          Math.Round(match.QValue,decimalPlaces).ToString(),
+                                          "'" + match.Peptide.Sequence + "'"
+                                      };
+                        foreach (var score in match.Scores)
+                            scoreList.Add("'" + score.Key + "'");
+                        foreach (var score in scoreList)
+                        {
+                            tag.Add(match.Scores.ContainsKey(score.Trim("'".ToCharArray()))
+                                        ? Math.Round(match.Scores[score.Trim("'".ToCharArray())],decimalPlaces).ToString()
+                                        : string.Empty);
+                        }
+                        matchNode.Tag = tag.ToArray();
+                        newBranch.Nodes.Add(matchNode);
+                    }
+                    exportTable.Add(newBranch);
+                }
+                var headers = new List<string>()
+                                  {
+                                      "'Rank'",
+                                      "'Charge'",
+                                      "'Observed Mass'",
+                                      "'Monoisotopic Mass'",
+                                      "'Mass Error'",
+                                      "'Q Value'",
+                                      "'Sequence'"
+                                  };
+                headers.AddRange(scoreList);
+                allContents.Add(
+                    new[]
+                        {
+                            source.Name, "source" + (source.Id == null
+                                                         ? string.Empty
+                                                         : source.Id.ToString())
+                                         + ".html",
+                            string.Join("|", headers.ToArray())
+                        }, exportTable);
+            }
+            return allContents;
         }
     }
 

@@ -70,7 +70,7 @@ namespace IDPicker.Forms
             this.showInExcelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.displayOptionsButton = new System.Windows.Forms.Button();
             this.pivotSetupButton = new System.Windows.Forms.Button();
-            ((System.ComponentModel.ISupportInitialize) (this.treeListView)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.treeListView)).BeginInit();
             this.exportMenu.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -85,7 +85,7 @@ namespace IDPicker.Forms
             this.treeListView.AllColumns.Add(this.terminalSpecificityColumn);
             this.treeListView.AllColumns.Add(this.missedCleavagesColumn);
             this.treeListView.AllColumns.Add(this.proteinsColumn);
-            this.treeListView.Anchor = ((System.Windows.Forms.AnchorStyles) ((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            this.treeListView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.treeListView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
@@ -185,7 +185,7 @@ namespace IDPicker.Forms
             // 
             // exportButton
             // 
-            this.exportButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.exportButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.exportButton.Image = global::IDPicker.Properties.Resources.Export;
             this.exportButton.Location = new System.Drawing.Point(680, 2);
             this.exportButton.Name = "exportButton";
@@ -226,7 +226,7 @@ namespace IDPicker.Forms
             // 
             // displayOptionsButton
             // 
-            this.displayOptionsButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.displayOptionsButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.displayOptionsButton.Location = new System.Drawing.Point(578, 2);
             this.displayOptionsButton.Name = "displayOptionsButton";
             this.displayOptionsButton.Size = new System.Drawing.Size(96, 23);
@@ -237,7 +237,7 @@ namespace IDPicker.Forms
             // 
             // pivotSetupButton
             // 
-            this.pivotSetupButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.pivotSetupButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.pivotSetupButton.Location = new System.Drawing.Point(488, 2);
             this.pivotSetupButton.Name = "pivotSetupButton";
             this.pivotSetupButton.Size = new System.Drawing.Size(84, 23);
@@ -257,7 +257,7 @@ namespace IDPicker.Forms
             this.Controls.Add(this.radioButton2);
             this.Controls.Add(this.radioButton1);
             this.Controls.Add(this.treeListView);
-            this.DockAreas = ((DigitalRune.Windows.Docking.DockAreas) (((((DigitalRune.Windows.Docking.DockAreas.Left | DigitalRune.Windows.Docking.DockAreas.Right)
+            this.DockAreas = ((DigitalRune.Windows.Docking.DockAreas)(((((DigitalRune.Windows.Docking.DockAreas.Left | DigitalRune.Windows.Docking.DockAreas.Right)
                         | DigitalRune.Windows.Docking.DockAreas.Top)
                         | DigitalRune.Windows.Docking.DockAreas.Bottom)
                         | DigitalRune.Windows.Docking.DockAreas.Document)));
@@ -265,7 +265,7 @@ namespace IDPicker.Forms
             this.Opacity = 0.25;
             this.TabText = "PeptideTableForm";
             this.Text = "PeptideTableForm";
-            ((System.ComponentModel.ISupportInitialize) (this.treeListView)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.treeListView)).EndInit();
             this.exportMenu.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();

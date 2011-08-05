@@ -377,7 +377,7 @@ namespace IDPicker.Forms
             exportMenu.Show(Cursor.Position);
         }
 
-        private List<List<string>> getFormTable()
+        internal List<List<string>> getFormTable()
         {
             var table = new List<List<string>>();
             var row = new List<string>();
@@ -399,7 +399,9 @@ namespace IDPicker.Forms
 
                 //get column names
                 for (int x = 0; x < columnList.Count; x++)
-                    row.Add(dataGridView.Columns[columnList[x]].HeaderText);
+                    row.Add(dataGridView.Columns[columnList[x]].HeaderText.EndsWith("Mass")
+                                ? "Delta Mass"
+                                : dataGridView.Columns[columnList[x]].HeaderText);
 
                 table.Add(row);
                 row = new List<string>();
@@ -419,7 +421,9 @@ namespace IDPicker.Forms
             {
                 //get column names
                 for (int x = 0; x < dataGridView.Columns.Count; x++)
-                    row.Add(dataGridView.Columns[x].HeaderText);
+                    row.Add(dataGridView.Columns[x].HeaderText.EndsWith("Mass")
+                                ? "Delta Mass"
+                                : dataGridView.Columns[x].HeaderText);
 
                 table.Add(row);
                 row = new List<string>();
@@ -439,11 +443,74 @@ namespace IDPicker.Forms
             return table;
         }
 
+        internal List<TreeNode> getModificationTree(string reportName)
+        {
+            var groupNodes = new List<TreeNode>();
+            var sites = new List<char>();
+            var mods = new List<Modification>();
+            if (viewFilter.ModifiedSite != null)
+                sites.AddRange(viewFilter.ModifiedSite);
+            else
+            {
+                var siteList = session.CreateSQLQuery("select distinct site from peptidemodification").List<string>();
+                sites.AddRange(siteList.Select(site => site[0]));
+            }
+
+            mods.AddRange(viewFilter.Modifications
+                          ?? session.QueryOver<Modification>().List());
+            foreach (var site in sites)
+            {
+                foreach (var mod in mods)
+                {
+                    var modFilter = new DataFilter(viewFilter)
+                                        {
+                                            Modifications = new List<Modification> {mod},
+                                            ModifiedSite = new List<char> {site}
+                                        };
+                    var peptideList = session.CreateQuery("SELECT psm, (psm.Peptide || ' ' || ROUND(psm.MonoisotopicMass)), COUNT(DISTINCT psm.Spectrum) " +
+                                                 modFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
+                                                 "GROUP BY (psm.Peptide || ' ' || ROUND(psm.MonoisotopicMass))")
+                                    .List<object[]>().Select(o => new PeptideTableForm.PeptideSpectrumMatchRow(o));
+                    if (!peptideList.Any()) continue;
+                    var newNode = new TreeNode
+                                      {
+                                          Text = site + mod.AvgMassDelta.ToString(),
+                                          Tag = new[]
+                                                    {
+                                                        "'" +site + "'", mod.AvgMassDelta.ToString(),
+                                                        peptideList.Count().ToString(),
+                                                        peptideList.Sum(item => item.Spectra).ToString()
+                                                    }
+                                      };
+                    foreach (var peptide in peptideList)
+                    {
+                        var cluster = peptide.PeptideSpectrumMatch.Peptide.Instances.First().Protein.Cluster;
+                        var subNode = new TreeNode
+                                          {
+                                              Text = peptide.DistinctPeptide.Sequence,
+                                              Tag = new[]
+                                                        {
+                                                            "'" + peptide.DistinctPeptide.Sequence+"'",
+                                                            string.Format("'<a href = \"{0}-cluster{1}.html\">{1}</a>'",
+                                                                          reportName,cluster),
+                                                            peptide.Spectra.ToString(),
+                                                        }
+                                          };
+                        newNode.Nodes.Add(subNode);
+                    }
+                    groupNodes.Add(newNode);
+                }
+            }
+            return groupNodes;
+        }
+
         private void showInExcelToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var table = getFormTable();
 
-            TableExporter.ShowInExcel(table);
+            var exportWrapper = new Dictionary<string, List<List<string>>> { { this.Name, table } };
+
+            TableExporter.ShowInExcel(exportWrapper, false);
         }
     }
 

@@ -221,12 +221,12 @@
 
   <sql-query read-only="true" name="PeptideSpectrumMatchScores_LoaderQuery">
 		<load-collection alias="scores" role="PeptideSpectrumMatch.Scores"/>
-		SELECT {scores.*}
-		FROM (	SELECT PsmId, Name AS ScoreNameId, Value
-				FROM PeptideSpectrumMatchScore
-				JOIN PeptideSpectrumMatchScoreName ON ScoreNameId = Id
-				WHERE PsmId = ?
-			 ) scores
-	</sql-query>
+    SELECT {scores.*}
+    FROM (	SELECT PsmId, Name AS ScoreNameId, case when Value like '%E%' then (case when Value like '%E-%' then 0 else 999999.9 end) else Value end as Value
+    FROM PeptideSpectrumMatchScore
+    JOIN PeptideSpectrumMatchScoreName ON ScoreNameId = Id
+    WHERE PsmId = ?
+    ) scores
+  </sql-query>
 
 </hibernate-mapping>

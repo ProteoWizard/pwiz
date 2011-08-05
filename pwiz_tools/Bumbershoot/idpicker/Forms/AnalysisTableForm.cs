@@ -289,66 +289,46 @@ namespace IDPicker.Forms
             exportMenu.Show(Cursor.Position);
         }*/
 
-        private List<List<string>> getFormTable ()
+        internal List<List<string>> getFormTable ()
         {
-            var table = new List<List<string>>();
-            var row = new List<string>();
-            int numColumns;
 
-            //get column names
-            foreach (var column in treeListView.ColumnsInDisplayOrder)
-                row.Add(column.Text);
-
-            table.Add(row);
-            numColumns = row.Count;
-            row = new List<string>();
-
-            //Retrieve all items
-            if (treeListView.SelectedIndices.Count > 1)
+            var table = new List<List<string>>
+                            {
+                                new List<string>
+                                    {
+                                        "Analysis Name/Property",
+                                        "Software",
+                                        "Parameters",
+                                        "Value"
+                                    }
+                            };
+            IList<Analysis> analysisQuery;
+            lock (session)
+                analysisQuery = session.CreateQuery("SELECT psm.Analysis " +
+                                                    dataFilter.GetFilteredQueryString(
+                                                        DataFilter.FromPeptideSpectrumMatch) +
+                                                    "GROUP BY psm.Analysis.id").List<Analysis>();
+            foreach (var analysis in analysisQuery)
             {
-                foreach (int tableRow in treeListView.SelectedIndices)
+                table.Add(new List<string>
+                              {
+                                  analysis.Id.ToString(),
+                                  analysis.Name,
+                                  analysis.Parameters.Count.ToString(),
+                                  string.Empty
+                              });
+                foreach (var parameter in analysis.Parameters)
                 {
-                    string indention = string.Empty;
-                    for (int tabs = 0; tabs < treeListView.Items[tableRow].IndentCount; tabs++)
-                        indention += "     ";
-
-                    row.Add(indention + treeListView.Items[tableRow].SubItems[0].Text);
-
-                    for (int x = 1; x < numColumns; x++)
-                    {
-                        row.Add(treeListView.Items[tableRow].SubItems[x].Text);
-                    }
-                    table.Add(row);
-                    row = new List<string>();
+                    table.Add(new List<string>
+                                  {
+                                      "     " + parameter.Name,
+                                      string.Empty, string.Empty,
+                                      parameter.Value
+                                  });
                 }
             }
-            else
-            {
-                for (int tableRow = 0; tableRow < treeListView.Items.Count; tableRow++)
-                {
-                    string indention = string.Empty;
-                    for (int tabs = 0; tabs < treeListView.Items[tableRow].IndentCount; tabs++)
-                        indention += "     ";
-
-                    row.Add(indention + treeListView.Items[tableRow].SubItems[0].Text);
-
-                    for (int x = 1; x < numColumns; x++)
-                    {
-                        row.Add(treeListView.Items[tableRow].SubItems[x].Text);
-                    }
-                    table.Add(row);
-                    row = new List<string>();
-                }
-            }
-
             return table;
-        }
 
-        private void showInExcelToolStripMenuItem_Click (object sender, EventArgs e)
-        {
-            var table = getFormTable();
-
-            TableExporter.ShowInExcel(table);
         }
     }
 

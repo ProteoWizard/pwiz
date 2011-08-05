@@ -65,6 +65,9 @@ namespace IDPicker
             this.exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.optionsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportCurrentViewToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toHTMLToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toExcelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.layoutToolStripMenuRoot = new System.Windows.Forms.ToolStripMenuItem();
             this.dataFiltersToolStripMenuRoot = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip.SuspendLayout();
@@ -193,7 +196,8 @@ namespace IDPicker
             // toolsToolStripMenuItem
             // 
             this.toolsToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.optionsToolStripMenuItem});
+            this.optionsToolStripMenuItem,
+            this.exportCurrentViewToolStripMenuItem});
             this.toolsToolStripMenuItem.Name = "toolsToolStripMenuItem";
             this.toolsToolStripMenuItem.Size = new System.Drawing.Size(44, 20);
             this.toolsToolStripMenuItem.Text = "Tools";
@@ -201,9 +205,32 @@ namespace IDPicker
             // optionsToolStripMenuItem
             // 
             this.optionsToolStripMenuItem.Name = "optionsToolStripMenuItem";
-            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(122, 22);
+            this.optionsToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
             this.optionsToolStripMenuItem.Text = "Options";
             this.optionsToolStripMenuItem.Click += new System.EventHandler(this.optionsToolStripMenuItem_Click);
+            // 
+            // exportCurrentViewToolStripMenuItem
+            // 
+            this.exportCurrentViewToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.toHTMLToolStripMenuItem,
+            this.toExcelToolStripMenuItem});
+            this.exportCurrentViewToolStripMenuItem.Name = "exportCurrentViewToolStripMenuItem";
+            this.exportCurrentViewToolStripMenuItem.Size = new System.Drawing.Size(182, 22);
+            this.exportCurrentViewToolStripMenuItem.Text = "Export Current View";
+            // 
+            // toHTMLToolStripMenuItem
+            // 
+            this.toHTMLToolStripMenuItem.Name = "toHTMLToolStripMenuItem";
+            this.toHTMLToolStripMenuItem.Size = new System.Drawing.Size(124, 22);
+            this.toHTMLToolStripMenuItem.Text = "to HTML";
+            this.toHTMLToolStripMenuItem.Click += new System.EventHandler(this.toHTMLToolStripMenuItem_Click);
+            // 
+            // toExcelToolStripMenuItem
+            // 
+            this.toExcelToolStripMenuItem.Name = "toExcelToolStripMenuItem";
+            this.toExcelToolStripMenuItem.Size = new System.Drawing.Size(124, 22);
+            this.toExcelToolStripMenuItem.Text = "to Excel";
+            this.toExcelToolStripMenuItem.Click += new System.EventHandler(this.toExcelToolStripMenuItem_Click);
             // 
             // layoutToolStripMenuRoot
             // 
@@ -260,6 +287,9 @@ namespace IDPicker
         private System.Windows.Forms.ToolStripMenuItem importToToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem importToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem newToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exportCurrentViewToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem toHTMLToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem toExcelToolStripMenuItem;
 
     }
 }

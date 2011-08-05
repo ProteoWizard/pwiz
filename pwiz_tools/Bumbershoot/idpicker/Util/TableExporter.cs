@@ -23,6 +23,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.IO;
 using System.Windows.Forms;
@@ -120,32 +121,204 @@ namespace IDPicker
         /// Places 2D list of strings in Excel.
         /// Variable should be in format of a list of rows, wehre each row is a list of values.
         /// </summary>
-        /// <param name="table"></param>
-        public static void ShowInExcel(List<List<string>> table)
+        /// <param name="tables"></param>
+        /// <param name="freezeFirstColumn"></param>
+        public static void ShowInExcel(Dictionary<string,List<List<string>>> tables, bool freezeFirstColumn)
         {
-            //must be converted to array of objects for quick population
-            //and to avoid "numbers formatted as text" errors
-            object[,] genericList = new object[table.Count,table[0].Count];
-            for (int row = 0; row < table.Count; row++)
-                for (int column = 0; column < table[0].Count; column++)
-                    genericList[row, column] = table[row][column];
-
+            var firstSheet = true;
             var newExcel = new Microsoft.Office.Interop.Excel.ApplicationClass();
             var newWorkbook = newExcel.Workbooks.Add(Microsoft.Office.Interop.Excel.XlWBATemplate.xlWBATWorksheet);
-            var newWorksheet = (Microsoft.Office.Interop.Excel.Worksheet)newWorkbook.ActiveSheet;
-            var range = newWorksheet.get_Range("A1", string.Format("{0}{1}", IntToColumn(table[0].Count), table.Count));
+            var sheetNames = new List<string>();
+            foreach (var kvp in tables)
+            {
+                var table = kvp.Value;
+                //must be converted to array of objects for quick population
+                //and to avoid "numbers formatted as text" errors
+                var maxWidth = table.Max(x => x.Count);
+                var genericList = new object[table.Count, maxWidth];
+                for (int row = 0; row < table.Count; row++)
+                    for (int column = 0; column < maxWidth; column++)
+                    {
+                        if (column >= table[row].Count)
+                            genericList[row, column] = string.Empty;
+                        else
+                            genericList[row, column] = table[row][column];
+                    }
 
-            range.Value2 = genericList;
+                if (!firstSheet)
+                    newWorkbook.Sheets.Add(Missing.Value, Missing.Value, Missing.Value, Missing.Value);
+                else firstSheet = false;
+                var newWorksheet = (Microsoft.Office.Interop.Excel.Worksheet)newWorkbook.ActiveSheet;
 
-            newWorksheet.Columns.AutoFit();
+                //name worksheet
+                var tempName = kvp.Key;
+                if (tempName.Length > 25)
+                    tempName = tempName.Remove(25);
+                if (sheetNames.Contains(tempName))
+                {
+                    var tempNumber = 2;
+                    while (sheetNames.Contains(tempName + tempNumber))
+                        tempNumber++;
+                    tempName = tempName + tempNumber;
+                }
+                sheetNames.Add(tempName);
+                newWorksheet.Name = tempName;
+
+                var range = newWorksheet.get_Range("A1", string.Format("{0}{1}", IntToColumn(maxWidth), table.Count));
+                range.Value2 = genericList;
+                range.NumberFormat = "@";
+                newWorksheet.Columns.AutoFit();
+                for (var x = 1; x <= maxWidth; x++)
+                {
+                    var column =
+                        (Microsoft.Office.Interop.Excel.Range) newWorksheet.Columns.get_Item(x, Missing.Value);
+                    var columnWidth = double.Parse(column.ColumnWidth.ToString());
+                    if (columnWidth > 75)
+                        column.ColumnWidth = 75;
+                }
+
+                if (kvp.Key != "Summary")
+                {
+                    newWorksheet.get_Range("A1", Missing.Value).EntireRow.Font.Bold = true;
+                    newWorksheet.Activate();
+                    if (freezeFirstColumn)
+                        newWorksheet.Application.ActiveWindow.SplitColumn = 1;
+                    newWorksheet.Application.ActiveWindow.SplitRow = 1;
+                    newWorksheet.Application.ActiveWindow.FreezePanes = true;
+
+                }
+            }
 
             newExcel.UserControl = true;
             newExcel.Visible = true;
         }
 
-
-        private static string IntToColumn(int number)
+        public static string CreateHTMLTablePage(List<List<List<string>>> tablesToCreate, string fileName, string title, bool firstRowEmphasis, bool firstColumnEmphasis, bool clusterPage)
         {
+            if (File.Exists(fileName))
+            {
+                if (fileName.EndsWith(".html"))
+                fileName = Path.GetFileNameWithoutExtension(fileName);
+                var number = 2;
+                while (File.Exists(fileName + number))
+                    number++;
+                fileName += number + ".html";
+            }
+            var sb =
+                new StringBuilder(
+                    string.Format(
+                        "<html>{0}\t<head>{0}\t\t<title>{1}</title>" +
+                        "{0}\t\t<link rel=\"stylesheet\" type=\"text/css\"" +
+                        " href=\"idpicker-style.css\" />{0}\t</head>\t<body>{0}",
+                        Environment.NewLine, title));
+            for (var tableNumber = 0; tableNumber < tablesToCreate.Count;tableNumber++)
+            {
+                var lastCluster = clusterPage && tableNumber == tablesToCreate.Count - 1;
+                var evenRow = true;
+                var firstR = firstRowEmphasis;
+                sb.AppendLine("\t\t<p><table" + (lastCluster ? " class=t4 border=\"1\"" : string.Empty) + ">");
+                //(lastCluster ? " border=\"1\" cellspacing=\"0\"" : string.Empty)
+
+                foreach (var row in tablesToCreate[tableNumber])
+                {
+                    if (clusterPage && tableNumber == 1)
+                    {
+                        if (row[0] != string.Empty)
+                            evenRow = !evenRow;
+                    }
+                    var firstC = firstColumnEmphasis || lastCluster;
+                    var modifier = firstR ? " id=es1>" : (evenRow ? " id=even>" : ">");
+                    if (!clusterPage || tableNumber != 1)
+                        evenRow = !evenRow;
+                    var line = new StringBuilder("\t\t\t<tr" + modifier);
+                    firstR = false;
+
+                    foreach (var cell in row)
+                    {
+                        line.Append("<td" + (firstC ? " id=es1>" : ">") +
+                                    cell.Replace("     ", "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;") + "</td>");
+                        firstC = false;
+                    }
+
+                    line.Append("</tr>");
+                    sb.AppendLine(line.ToString());
+                }
+
+                sb.AppendLine("\t\t</table></p>");
+            }
+            sb.Append(string.Format("\t</body>{0}</html>", Environment.NewLine));
+            var fileOut = new StreamWriter(fileName);
+            fileOut.Write(sb.ToString());
+            fileOut.Flush();
+            fileOut.Close();
+            return fileName;
+        }
+
+        public static string CreateHTMLTreePage(List<TreeNode> groups, string fileName, string title, List<string> firstHeaders, List<string> secondHeaders)
+        {
+            //'Name','Filtered Spectra','Distinct Peptides','Distinct Matches','Distinct Analyses','Distinct Charges'
+            var indexList = new List<string>();
+            for (int x = 1; x <= firstHeaders.Count;x++ )
+                indexList.Add("[" + x + "]");
+
+            if (File.Exists(fileName))
+            {
+                if (fileName.EndsWith(".html"))
+                    fileName = Path.GetFileNameWithoutExtension(fileName);
+                var number = 2;
+                while (File.Exists(fileName + number))
+                    number++;
+                fileName += number + ".html";
+            }
+            var sb = new StringBuilder("<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML//EN\">" + Environment.NewLine +
+                                       "<script src=\"idpicker-scripts.js\" language=javascript></script>" +
+                                       Environment.NewLine +
+                                       "<script language=javascript>" + Environment.NewLine +
+                                       "\tvar treeTables = new Array;" + Environment.NewLine +
+                                       "\ttreeTables['GroupTable'] = {caption:'Group Table'," +
+                                       " show:true, sortable:true, headerSortIndexes: [" +
+                                       string.Join(",", indexList.ToArray()) + "]," +
+                                       " header:[" + string.Join(",", firstHeaders.ToArray()) + "]," +
+                                       " titles:[" + string.Join(",", firstHeaders.ToArray()) + "]," +
+                                       " data:[");
+            var nodes = new List<string>();
+            foreach (var group in groups)
+                nodes.Add("[" + string.Join(",", (string[]) group.Tag) + ",{child:'" + group.Text.Replace(".","-") + "'}]");
+            sb.AppendLine(string.Join(",", nodes.ToArray()) + "] };");
+
+            foreach (var group in groups)
+            {
+                sb.Append("\ttreeTables['" + group.Text.Replace(".", "-") + "'] = { sortable:true," +
+                          " header:[" + string.Join(",", secondHeaders.ToArray()) + "]," +
+                          " titles:[" + string.Join(",", secondHeaders.ToArray()) + "], data:[");
+                var groupNodes = new List<string>();
+                foreach (TreeNode source in group.Nodes)
+                {
+                    groupNodes.Add("[" + string.Join(",", (string[]) source.Tag) + "]");
+                }
+                sb.AppendLine(string.Join(",", groupNodes.ToArray()) + "] };");
+            }
+
+            sb.Append(string.Format("</script>{0}" +
+                                    "<html>{0}" + "\t<head>{0}" +
+                                    "\t\t<title>{1}</title>{0}" +
+                                    "\t\t<link rel=\"stylesheet\" type=\"text/css\" href=\"idpicker-style.css\" />{0}" +
+                                    "\t</head>{0}" + "\t<body>{0}" +
+                                    "\t\t<script language=javascript>document.body.appendChild(makeTreeTable('GroupTable'))</script><br />{0}" +
+                                    "\t</body>{0}" + "</html>", Environment.NewLine, title));
+            var fileOut = new StreamWriter(fileName);
+            fileOut.Write(sb.ToString());
+            fileOut.Flush();
+            fileOut.Close();
+            return fileName;
+
+        }
+
+        public static string IntToColumn(int number)
+        {
+            if (number < 1)
+                return "a";
+
             char[] chars = new char[] { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z' };
             string finalresult = string.Empty;
             int remainder = number % 26;
@@ -160,6 +333,73 @@ namespace IDPicker
             finalresult += chars[remainder - 1];
 
             return finalresult;
+        }
+
+        public static void CreateNavigationPage(List<string[]> clusterList, string outFolder, string reportName)
+        {
+            var outPathBase = Path.Combine(outFolder, reportName);
+            var outstring = new StringBuilder();
+            if (clusterList.Any())
+            {
+                outstring.Append("<script src=\"idpicker-scripts.js\" language=javascript></script>" + Environment.NewLine +
+                                       "<script language=javascript>" + Environment.NewLine +
+                                       "var treeTables = new Array;" + Environment.NewLine +
+                                       "treeTables['nav'] = { caption:'cluster table of contents'," +
+                                       " show:true, sortable:true, header:['Id','Protein Groups','Unique Results','Spectra']," +
+                                       " titles:['cluster id','number of protein groups in cluster','number of unique results in" +
+                                       " cluster','total number of spectra in cluster'], metadata:[1,0,0,0,0]," +
+                                       " headerSortIndexes:[[1],[-3,-4,-5,1],[-4,-3,-5,1],[-5,-4,-3,1]], data:[");
+                var formattedClusterList = clusterList.Select(cluster => "[" + string.Join(",", cluster) + "]").ToList();
+                outstring.Append(string.Join(",", formattedClusterList.ToArray()));
+                outstring.Append("] };" + Environment.NewLine + "</script>");
+            }
+            outstring.AppendLine("<html>" + Environment.NewLine +
+                                 "\t<head>" + Environment.NewLine +
+                                 "\t\t<link rel=\"stylesheet\" type=\"text/css\"" +
+                                 " href=\"idpicker-style.css\" />" + Environment.NewLine +
+                                 "\t</head>" + Environment.NewLine + "<body>");
+            if (File.Exists(outPathBase + "-summary.html"))
+                outstring.AppendLine("\t\t<a href=\"" + reportName + "-summary.html" +
+                                     "\" target=\"mainFrame\">Summary</a><br />");
+            if (File.Exists(outPathBase + "-analyses.html"))
+                outstring.AppendLine("\t\t<a href=\"" + reportName + "-analyses.html" +
+                                     "\" target=\"mainFrame\">Analysis Parameters</a><br />");
+            if (File.Exists(outPathBase + "-groups.html"))
+                outstring.AppendLine("\t\t<a href=\"" + reportName + "-groups.html" +
+                                     "\" target=\"mainFrame\">Index by source groups</a><br />");
+            if (File.Exists(outPathBase + "-protein.html"))
+                outstring.AppendLine("\t\t<a href=\"" + reportName + "-protein.html" +
+                                     "\" target=\"mainFrame\">Index by Protein</a><br />");
+            if (File.Exists(outPathBase + "-peptide.html"))
+                outstring.AppendLine("\t\t<a href=\"" + reportName + "-peptide.html" +
+                                     "\" target=\"mainFrame\">Index by Peptide</a><br />");
+            if (File.Exists(outPathBase + "-modificationTable.html"))
+                outstring.AppendLine("\t\t<a href=\"" + reportName + "-modificationTable.html" +
+                                     "\" target=\"mainFrame\">Modification Summary Table</a><br />");
+            if (File.Exists(outPathBase + "-modificationList.html"))
+                outstring.AppendLine("\t\t<a href=\"" + reportName + "-modificationList.html" +
+                                     "\" target=\"mainFrame\">Modification List</a><br />");
+            outstring.Append("\t\t<br /><script language=javascript>document.body." +
+                             "appendChild(makeTreeTable('nav'))</script>" + Environment.NewLine +
+                             "\t</body>" + Environment.NewLine + "</html>");
+
+            var outfile = new StreamWriter(outPathBase + "-nav.html");
+            outfile.Write(outstring.ToString());
+            outfile.Flush();
+            outfile.Close();
+        }
+
+        public static void CreateIndexPage(string outFolder, string reportName)
+        {
+            var outFile = new StreamWriter(Path.Combine(outFolder, "index.html"));
+            outFile.Write(string.Format("<html>{0}" +
+                                        "\t<title>{1} IDPicker Analysis</title>{0}" +
+                                        "\t<frameset cols=\"240,*\">{0}" +
+                                        "\t\t<frame src=\"{1}-nav.html\" />{0}" +
+                                        "\t\t<frame src=\"{1}-summary.html\" name=\"mainFrame\" />{0}" +
+                                        "\t</frameset>{0}</html>", Environment.NewLine, reportName));
+            outFile.Flush();
+            outFile.Close();
         }
     }
 }
