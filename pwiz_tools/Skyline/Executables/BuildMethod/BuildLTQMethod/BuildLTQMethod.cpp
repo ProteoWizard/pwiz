@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <math.h>
+#include <string.h>
 #include "StringUtil.h"
 #include "Verbosity.h"
 #include "MethodBuilder.h"
@@ -93,10 +94,12 @@ public:
 			"   -f               Collect full scan MS/MS, ignoring product m/z values\n"
 			"   -1               Collect full scan MS1 on each cycle\n"
 			"                    (NB: it's a \"one\", not an \"L\")\n"
+			//no way to set 'w' within Skyline yet
 			"   -w [min]-[max]   Use min and max as the m/z window for full scan MS1\n"
 			"                    [default range 400-1400]\n"
 			"   -i               Create an inclusion list method instead of a transition\n"
 			"                    list method\n"
+			//no way to set 't' within Skyline yet
 			"   -t [n]           When using an inclusion list, cycle through the top n most\n"
 			"                    intense precursors after the MS1 scan. Default is 5.\n"
 			"   -a [analyzer]    For MS1, use given mass analyzer (\"iontrap\" or \"ftms\")\n";
@@ -162,6 +165,16 @@ BuildLTQMethod::BuildLTQMethod()
     }
 }
 
+static int getAnalyzer(char* analyzer)
+{
+	if(strcmp(analyzer, "QIT") == 0)
+		return 0;
+	else if(strcmp(analyzer, "Orbitrap") == 0 || strcmp(argv[i], "FT-ICR") == 0)
+		return 1;
+	else
+		Verbosity::error((string("The LTQ instruments do not support ") + argv[i] + " mass analyzers.").c_str());
+}
+
 void BuildLTQMethod::parseCommandArgs(int argc, char* argv[])
 {
 	// Check for full scan flag
@@ -201,29 +214,13 @@ void BuildLTQMethod::parseCommandArgs(int argc, char* argv[])
 			break;
 		case 'a':
 			if(i >= argc) usage();
-			if(strcmp(argv[i], "iontrap") == 0)
-			{
-				_msAnalyzer = 0;
-			}
-			else if(strcmp(argv[i], "ftms") == 0)
-			{
-				_msAnalyzer = 1;
-			}
-			else { usage(); }
+			_msAnalyzer = getAnalyzer(argv[i]);
 			processed = 2;
 			i++;
 			break;
 		case 'b':
 			if(i >= argc) usage();
-			if(strcmp(argv[i], "iontrap") == 0)
-			{
-				_msmsAnalyzer = 0;
-			}
-			else if(strcmp(argv[i], "ftms") == 0)
-			{
-				_msmsAnalyzer = 1;
-			}
-			else { usage(); }
+			_msmsAnalyzer = getAnalyzer(argv[i]);
 			processed = 2;
 			i++;
 			break;
@@ -300,7 +297,8 @@ void BuildLTQMethod::buildInclusionListMethod(const vector<vector<string>>& tabl
 	//Creating an inclusion list consists of the following:
 	//1 calling put_NumMassTimeWindows to allocate space for inclusion list entries
 	//2 putting parent mz/start/stop entries in the list
-	//3 creating scan events for the top N precursors (see CLI parameters)
+	//2.5 creating a scan event for the MS1 scan
+	//3 creating scan events for the top precursors (either from the template or CLI parameter)
 	//4 making sure that the method's Acquire Time is greater than all the entry
 	//  stop times.
 
@@ -351,7 +349,32 @@ void BuildLTQMethod::buildInclusionListMethod(const vector<vector<string>>& tabl
 	_methodPtr->StartDelay = 0.0;
 	
 
-	//#3 (And first we setup an MS1 scan)
+	//#3 Determine whether this template matches an inclusion list. If so, we will
+	//write over it anyway, but remember how many scan events there were after the MS1 scan
+	bool ilTemplate = false;
+	if(_methodPtr->NumScanEvents > 0)
+	{
+		//check that the first scan is an MS1 scan
+		_methodPtr->CurrentScanEvent = 0;
+		if(_methodPtr->ScanType == 0)
+		{
+			ilTemplate = true;
+			for(int i = 1; i < _methodPtr->NumScanEvents; i++)
+			{
+				_methodPtr->CurrentScanEvent = i;
+				if(_methodPtr->DependentScan == 0)
+				{
+					ilTemplate = false;
+					break;
+				}
+			}
+		}
+	}
+	
+	if(ilTemplate)
+		_topNPrecursors = _methodPtr->NumScanEvents - 1;
+	
+
 	_methodPtr->NumScanEvents = 1;
 	_methodPtr->CurrentScanEvent = 0;
 	_methodPtr->ScanMode = 0;    // 0 = MS, ..., 9 = MS10
@@ -377,7 +400,7 @@ void BuildLTQMethod::buildInclusionListMethod(const vector<vector<string>>& tabl
 		_methodPtr->ScanType = 0;		//0 = full, 1 = SRM
 		_methodPtr->ScanMode = 1;		//0 = MS1 ... 9 = MS10
 		_methodPtr->DataDepMasterEvent = 0;
-		_methodPtr->DataDepMode = 0;	//1 = Nth most intense ion from inclusion list, 0 = Nth most intense overall
+		_methodPtr->DataDepMode = 1;	//1 = Nth most intense ion from inclusion list, 0 = Nth most intense overall
 		_methodPtr->DependentScan = 1;
 		_methodPtr->DataType = 0; //Centroid
 		_methodPtr->DataDepNthMostIntenseIon = i; //each scan Si should look for the (i-1)th most intense ion
@@ -386,6 +409,7 @@ void BuildLTQMethod::buildInclusionListMethod(const vector<vector<string>>& tabl
 	}
 	
 	//#1 Now use the grouped data. Number of precursors,
+	//(and is there a property for this? I would much rather use a property to keep the code uniform)
 	_methodPtr->put_NumMassTimeWindows(0, iList.size());
 
 	//#2 and the data for each one
@@ -446,6 +470,7 @@ void BuildLTQMethod::replaceTransitionList(const vector<vector<string>>& tableTr
 		_methodPtr->ScanType = 0;    // 0 = Full, 1 = SIM/SRM
 		_methodPtr->DataType = 1;    // 0 = Centroid, 1 = Profile
 		_methodPtr->NumReactions = 0;
+		_methodPtr->Analyzer = _msAnalyzer;
 
 		_methodPtr->NumMassRanges = 1;
 		_methodPtr->SetMassRange(0, _ms1MinMz, _ms1MaxMz);
@@ -471,6 +496,7 @@ void BuildLTQMethod::replaceTransitionList(const vector<vector<string>>& tableTr
 			_methodPtr->ScanType = (_fullScans ? 0 : 1);    // 0 = Full, 1 = SIM/SRM
 			_methodPtr->DataType = 0;    // 0 = Centroid, 1 = Profile
             _methodPtr->NumReactions = 1;
+			_methodPtr->Analyzer = _msmsAnalyzer;
 
             precursorMass = precursorMassList;
 
