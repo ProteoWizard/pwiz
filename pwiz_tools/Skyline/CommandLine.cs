@@ -192,8 +192,6 @@ namespace pwiz.Skyline
             }
         }
 
-        public bool FullScans { get; private set; }
-
         public string ExportPath { get; private set; }
 
         public ExportCommandProperties ExportCommandProperties
@@ -206,7 +204,6 @@ namespace pwiz.Skyline
                     AddEnergyRamp = AddEnergyRamp,
                     DwellTime = DwellTime,
                     ExportStrategy = ExportStrategy,
-                    FullScans = FullScans,
                     IgnoreProteins = IgnoreProteins,
                     MaxTransitions = MaxTransitionsPerInjection,
                     MethodType = ExportMethodType,
@@ -454,10 +451,6 @@ namespace pwiz.Skyline
                             MassListExporter.RUN_LENGTH_MIN, MassListExporter.RUN_LENGTH_MAX);
                         _out.WriteLine("Defaulting to {0}.", MassListExporter.RUN_LENGTH_DEFAULT);
                     }
-                }
-                else if(pair.Name.Equals("exp-full-scans"))
-                {
-                    FullScans = true;
                 }
             }
 
@@ -793,6 +786,15 @@ namespace pwiz.Skyline
             _exportProperties = args.ExportCommandProperties;
             _exportProperties.OptimizeStepSize = optimizeStepSize;
             _exportProperties.OptimizeStepCount = optimizeStepCount;
+
+            _exportProperties.FullScans = _doc.Settings.TransitionSettings.FullScan.IsEnabledMsMs;
+
+            _exportProperties.MsAnalyzer =
+                TransitionFullScan.MassAnalyzerToString(
+                    _doc.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer);
+            _exportProperties.MsMsAnalyzer =
+                TransitionFullScan.MassAnalyzerToString(
+                    _doc.Settings.TransitionSettings.FullScan.ProductMassAnalyzer);
 
             if(Equals(args.ExportMethodType, ExportMethodType.Scheduled))
             {

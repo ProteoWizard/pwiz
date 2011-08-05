@@ -115,14 +115,16 @@ namespace pwiz.Skyline.Model
             return Equals(type, Thermo_LTQ);
         }
 
-        public static bool CanScheduleInstrumentType(string type)
+        public static bool CanScheduleInstrumentType(string type, SrmDocument doc)
         {
-            return !Equals(type, Thermo_LTQ);
+            return !Equals(type, Thermo_LTQ) ||
+                (doc.Settings.TransitionSettings.FullScan.IsEnabledMs
+                && !doc.Settings.TransitionSettings.FullScan.IsEnabledMsMs);
         }
 
         public static bool CanSchedule(string instrumentType, SrmDocument doc)
         {
-            return CanScheduleInstrumentType(instrumentType) &&
+            return CanScheduleInstrumentType(instrumentType, doc) &&
                    doc.Settings.PeptideSettings.Prediction.CanSchedule(doc,
                                                                        IsSingleWindowInstrumentType(instrumentType));
         }
@@ -153,13 +155,22 @@ namespace pwiz.Skyline.Model
         public virtual double RunLength { get; set; }
         public virtual bool FullScans { get; set; }
 
+        public virtual bool Ms1Scan { get; set; }
+        public virtual bool InclusionList { get; set; }
+        public virtual string MsAnalyzer { get; set; }
+        public virtual string MsMsAnalyzer { get; set; }
+
         public TExp InitExporter<TExp>(TExp exporter)
             where TExp : MassListExporter
         {
             exporter.Strategy = ExportStrategy;
             exporter.IgnoreProteins = IgnoreProteins;
+            exporter.InclusionList = InclusionList;
             exporter.MaxTransitions = MaxTransitions;
             exporter.MethodType = MethodType;
+            exporter.Ms1Scan = Ms1Scan;
+            exporter.MsAnalyzer = MsAnalyzer;
+            exporter.MsMsAnalyzer = MsMsAnalyzer;
             exporter.OptimizeType = OptimizeType;
             exporter.OptimizeStepSize = OptimizeStepSize;
             exporter.OptimizeStepCount = OptimizeStepCount;
@@ -270,6 +281,7 @@ namespace pwiz.Skyline.Model
         {
             var exporter = InitExporter(new ThermoLtqMethodExporter(document));
             exporter.FullScans = FullScans;
+            exporter.RunLength = RunLength;
 
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
 
@@ -365,6 +377,10 @@ namespace pwiz.Skyline.Model
         public int? SchedulingReplicateIndex { get; set; }
         public ExportSchedulingAlgorithm SchedulingAlgorithm { get; set; }
 
+        public bool Ms1Scan { get; set; }
+        public bool InclusionList { get; set; }
+        public string MsAnalyzer { get; set; }
+        public string MsMsAnalyzer { get; set; }
 
         // CONSIDER: Should transition lists ever be exported with local culture
         //           CSV format?  This would allow them to be opened directly into
@@ -425,7 +441,7 @@ namespace pwiz.Skyline.Model
                 else
                     ExportNormal(fileIterator, single);
                 fileIterator.Commit();
-            }            
+            }
         }
 
         private void ExportNormal(FileIterator fileIterator, bool single)
@@ -465,7 +481,7 @@ namespace pwiz.Skyline.Model
 
                     foreach (TransitionGroupDocNode group in peptide.Children)
                     {
-                        // Skip percursors with too few transitions.
+                        // Skip precursors with too few transitions.
                         int groupTransitions = group.Children.Count;
                         if (groupTransitions < MinTransitions)
                             continue;
@@ -1117,7 +1133,7 @@ namespace pwiz.Skyline.Model
                         _writer = new StringWriter(sb);
                     }
                     _writeHeaders(_writer);
-                }                
+                }
             }
 
             public void Commit()
@@ -1401,6 +1417,14 @@ namespace pwiz.Skyline.Model
             var argv = new List<string>();
             if (FullScans)
                 argv.Add("-f");
+            if(MsAnalyzer != null)
+                argv.Add(String.Format("-a {0}", MsAnalyzer));
+            if(MsMsAnalyzer != null)
+                argv.Add(String.Format("-b {0}", MsMsAnalyzer));
+            if(InclusionList)
+                argv.Add("-i");
+            if(Ms1Scan)
+                argv.Add("-1");
             MethodExporter.ExportMethod(EXE_BUILD_LTQ_METHOD, argv,
                 fileName, templateName, MemoryOutput, progressMonitor);
         }

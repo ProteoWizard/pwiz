@@ -16,7 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
@@ -100,7 +99,7 @@ namespace pwiz.Common.SystemUtil
                 if (line != null)
                     sbError.AppendLine(line);
                 if (sbError.Length == 0)
-                    throw new Exception("Error occurred running process.");
+                    throw new IOException("Error occurred running process.");
                 throw new IOException(sbError.ToString());
             }
             // Make to complete the status, if the process succeeded, but never

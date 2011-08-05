@@ -31,6 +31,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.FileUI
 {
@@ -103,8 +104,16 @@ namespace pwiz.Skyline.FileUI
             {
                 // Look for the first instrument type with the same prefix as the CE name
                 string instrumentTypePrefix = instrumentTypeName.Split(' ')[0];
-                var listTypePrefixes = new List<string>(listTypes).ConvertAll(t => t.Split(' ')[0]);
-                int i = listTypePrefixes.IndexOf(instrumentTypePrefix);
+                int i = -1;
+                if (document.Settings.TransitionSettings.FullScan.IsEnabled)
+                {
+                    i = listTypes.IndexOf(typeName => typeName.StartsWith(instrumentTypePrefix) &&
+                        ExportInstrumentType.IsFullScanInstrumentType(typeName));
+                }
+                if (i == -1)
+                {
+                    i = listTypes.IndexOf(typeName => typeName.StartsWith(instrumentTypePrefix));
+                }
                 if (i != -1)
                     InstrumentType = listTypes[i];
             }
@@ -173,22 +182,27 @@ namespace pwiz.Skyline.FileUI
 
         public bool IsAlwaysScheduledInstrument
         {
-            get { return IsAlwaysScheduledInstrumentType(InstrumentType); }
-        }
+            get
+            {
+                var type = InstrumentType;
+                if (!ExportInstrumentType.CanScheduleInstrumentType(type, _document))
+                    return false;
 
-        private static bool IsAlwaysScheduledInstrumentType(string type)
-        {
-            return Equals(type, ExportInstrumentType.Thermo_TSQ) ||
-                   Equals(type, ExportInstrumentType.Waters) ||
-                   Equals(type, ExportInstrumentType.Waters_Xevo) ||
-                   Equals(type, ExportInstrumentType.Waters_Quattro_Premier);
+                return Equals(type, ExportInstrumentType.Thermo_TSQ) ||
+                       Equals(type, ExportInstrumentType.Waters) ||
+                       Equals(type, ExportInstrumentType.Waters_Xevo) ||
+                       Equals(type, ExportInstrumentType.Waters_Quattro_Premier) ||
+                       // LTQ can only schedule for inclusion lists, but then it always
+                       // requires start and stop times.
+                       Equals(type, ExportInstrumentType.Thermo_LTQ);
+            }
         }
 
         private bool CanSchedule
         {
             get
             {
-                return ExportInstrumentType.CanSchedule(InstrumentType, _document) && ExportInstrumentType.CanScheduleInstrumentType(InstrumentType);
+                return ExportInstrumentType.CanSchedule(InstrumentType, _document);
             }
         }
 
@@ -272,15 +286,6 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        public bool FullScans
-        {
-            get { return _exportProperties.FullScans; }
-            set
-            {
-                _exportProperties.FullScans = cbFullScan.Checked = value;
-            }
-        }
-
         public bool AddEnergyRamp
         {
             get { return _exportProperties.AddEnergyRamp; }
@@ -294,11 +299,6 @@ namespace pwiz.Skyline.FileUI
         {
             cbEnergyRamp.Visible = !standard &&
                 InstrumentType == ExportInstrumentType.Thermo;            
-        }
-
-        private void UpdateFullScan()
-        {
-            cbFullScan.Visible = IsFullScanInstrument;
         }
 
         private void UpdateMaxTransitions()
@@ -556,8 +556,21 @@ namespace pwiz.Skyline.FileUI
             // ReSharper restore ConvertIfStatementToConditionalTernaryExpression
 
             _exportProperties.IgnoreProteins = cbIgnoreProteins.Checked;
-            _exportProperties.FullScans = cbFullScan.Checked;
+            _exportProperties.FullScans = _document.Settings.TransitionSettings.FullScan.IsEnabledMsMs;
             _exportProperties.AddEnergyRamp = cbEnergyRamp.Visible && cbEnergyRamp.Checked;
+
+            _exportProperties.Ms1Scan = _document.Settings.TransitionSettings.FullScan.IsEnabledMs &&
+                                        _document.Settings.TransitionSettings.FullScan.IsEnabledMsMs;
+
+            _exportProperties.InclusionList = _document.Settings.TransitionSettings.FullScan.IsEnabledMs &&
+                                              !_document.Settings.TransitionSettings.FullScan.IsEnabledMsMs;
+
+            _exportProperties.MsAnalyzer =
+                TransitionFullScan.MassAnalyzerToString(
+                    _document.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer);
+            _exportProperties.MsMsAnalyzer =
+                TransitionFullScan.MassAnalyzerToString(
+                    _document.Settings.TransitionSettings.FullScan.ProductMassAnalyzer);
 
             _exportProperties.OptimizeType = comboOptimizing.SelectedItem == null ? ExportOptimize.NONE : comboOptimizing.SelectedItem.ToString();
             var prediction = _document.Settings.TransitionSettings.Prediction;
@@ -782,14 +795,13 @@ namespace pwiz.Skyline.FileUI
             bool standard = Equals(comboTargetType.SelectedItem.ToString(), ExportMethodType.Standard.ToString());
             if (!standard && !CanSchedule)
                 comboTargetType.SelectedItem = ExportMethodType.Standard.ToString();
-            comboTargetType.Enabled = ExportInstrumentType.CanScheduleInstrumentType(InstrumentType);
 
+            comboTargetType.Enabled = ExportInstrumentType.CanScheduleInstrumentType(InstrumentType, _document);
             comboOptimizing.Enabled = !Equals(_instrumentType, ExportInstrumentType.Thermo_LTQ);
 
             UpdateDwellControls(standard);
             UpdateEnergyRamp(standard);
             UpdateMaxLabel(standard);
-            UpdateFullScan();
             if (wasFullScanInstrument != IsFullScanInstrument)
                 UpdateMaxTransitions();
 
