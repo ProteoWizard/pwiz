@@ -96,6 +96,7 @@ lib pwiz_utility_vendor_reader_test_harness
     ;
 
 
+unit-test-if-exists ExceptionTest : ExceptionTest.cpp pwiz_utility_misc ;
 unit-test-if-exists almost_equal_test : almost_equal_test.cpp ;
 unit-test-if-exists endian_test : endian_test.cpp ;
 unit-test-if-exists Base64Test : Base64Test.cpp pwiz_utility_misc ;

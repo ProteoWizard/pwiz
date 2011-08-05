@@ -54,4 +54,15 @@ using boost::shared_ptr;
 using boost::weak_ptr;
 using boost::scoped_ptr;
 
+using std::exception;
+using std::runtime_error;
+using std::out_of_range;
+using std::domain_error;
+using std::invalid_argument;
+using std::length_error;
+using std::logic_error;
+using std::overflow_error;
+using std::range_error;
+using std::underflow_error;
+
 #endif // _STD_HPP_

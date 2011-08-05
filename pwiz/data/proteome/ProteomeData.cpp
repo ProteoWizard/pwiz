@@ -23,8 +23,7 @@
 
 
 #include "ProteomeData.hpp"
-#include "pwiz/utility/misc/String.hpp"
-#include "pwiz/utility/misc/Exception.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 
 
 namespace pwiz {

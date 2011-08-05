@@ -25,12 +25,9 @@
 
 #pragma unmanaged
 #include "T2D_Data.hpp"
-#include "pwiz/utility/misc/Exception.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/DateTime.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
-#include "pwiz/utility/misc/String.hpp"
-#include "pwiz/utility/misc/Stream.hpp"
-#include "pwiz/utility/misc/Container.hpp"
 #include "pwiz/utility/misc/automation_vector.h"
 #include <iostream>
 #include <comdef.h>

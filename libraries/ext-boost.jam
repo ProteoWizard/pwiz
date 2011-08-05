@@ -300,7 +300,6 @@ rule init ( version : location : options * )
             :
             :   <threading>multi
                 <link>shared:<define>BOOST_THREAD_DYN_LINK=1
-                <link>shared:<define>BOOST_THREAD_USE_DLL=1
                 <link>static:<define>BOOST_THREAD_USE_LIB=1
                 <define>BOOST_THREAD_NO_LIB=1
                 <library>date_time

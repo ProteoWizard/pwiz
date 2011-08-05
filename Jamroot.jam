@@ -156,8 +156,10 @@ project pwiz
         # use of boost::thread requires multithreaded runtime
         <threading>multi
 
-        # change boost debug assertions to exceptions
-        <variant>debug:<define>BOOST_ENABLE_ASSERT_HANDLER
+        # change boost debug assertions to exceptions by force including Exception.hpp
+        <variant>debug,<toolset>msvc:<cxxflags>/FIpwiz/utility/misc/Exception.hpp
+        <variant>debug,<toolset>gcc:<cxxflags>"-include pwiz/utility/misc/Exception.hpp"
+        <variant>debug,<toolset>darwin:<cxxflags>"-include pwiz/utility/misc/Exception.hpp"
 
         $(TEST_PRECOMMAND)
         $(TEST_POSTCOMMAND)

@@ -23,7 +23,7 @@
 
 
 #include "TraDataFile.hpp"
-#include "pwiz/utility/misc/Exception.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/random_access_compressed_ifstream.hpp"
 //#include "boost/system/error_code.hpp"
 #include <WinError.h>

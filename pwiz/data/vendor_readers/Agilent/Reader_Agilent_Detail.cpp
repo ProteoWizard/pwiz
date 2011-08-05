@@ -23,8 +23,7 @@
 #define PWIZ_SOURCE
 
 #include "Reader_Agilent_Detail.hpp"
-#include "pwiz/utility/misc/Container.hpp"
-#include "pwiz/utility/misc/Exception.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 
 
 namespace pwiz {

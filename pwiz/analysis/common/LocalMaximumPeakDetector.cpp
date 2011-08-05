@@ -23,8 +23,7 @@
 
 
 #include "LocalMaximumPeakDetector.hpp"
-#include "pwiz/utility/misc/Container.hpp"
-#include "pwiz/utility/misc/Exception.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "ZeroSampleFiller.hpp"
 
 

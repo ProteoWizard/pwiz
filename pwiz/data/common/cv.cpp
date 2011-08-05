@@ -26,9 +26,7 @@
 #define PWIZ_SOURCE
 
 #include "cv.hpp"
-#include "pwiz/utility/misc/String.hpp"
-#include "pwiz/utility/misc/Container.hpp"
-#include "pwiz/utility/misc/Exception.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/Singleton.hpp"
 
 namespace pwiz {

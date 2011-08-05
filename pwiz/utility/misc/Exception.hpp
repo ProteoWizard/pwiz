@@ -29,18 +29,6 @@
 #include <stdexcept>
 
 
-using std::exception;
-using std::runtime_error;
-using std::out_of_range;
-using std::domain_error;
-using std::invalid_argument;
-using std::length_error;
-using std::logic_error;
-using std::overflow_error;
-using std::range_error;
-using std::underflow_error;
-
-
 // make debug assertions throw exceptions in MSVC
 #ifdef _DEBUG
 struct PWIZ_API_DECL ReportHooker {ReportHooker(); ~ReportHooker();};
@@ -48,8 +36,9 @@ static ReportHooker reportHooker;
 #endif // _DEBUG
 
 
-// handle Boost assertions with a message to stderr
+// make Boost assertions throw exceptions
 #if !defined(NDEBUG)
+#define BOOST_ENABLE_ASSERT_HANDLER
 #include <sstream>
 namespace boost
 {

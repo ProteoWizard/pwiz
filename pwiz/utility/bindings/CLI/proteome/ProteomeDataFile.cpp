@@ -22,7 +22,7 @@
 //
 
 #include "ProteomeDataFile.hpp"
-#include "pwiz/utility/misc/Exception.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/data/proteome/DefaultReaderList.hpp"
 
 namespace b = pwiz::proteome;

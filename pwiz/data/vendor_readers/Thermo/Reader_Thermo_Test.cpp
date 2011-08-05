@@ -24,8 +24,7 @@
 #include "Reader_Thermo.hpp"
 #include "pwiz/utility/misc/VendorReaderTestHarness.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
-#include "pwiz/utility/misc/String.hpp"
-#include "pwiz/utility/misc/Stream.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/unit.hpp"
 
 #ifdef PWIZ_READER_THERMO
