@@ -22,9 +22,7 @@
 
 #include "pwiz/data/proteome/ProteomeDataFile.hpp"
 #include "pwiz/data/proteome/examples.hpp"
-#include "pwiz/utility/misc/Exception.hpp"
-#include "pwiz/utility/misc/String.hpp"
-#include "pwiz/utility/misc/Stream.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 
 
 using namespace pwiz::proteome;
