@@ -882,6 +882,13 @@ namespace pwiz.Skyline.Model
                     return new FindResult(findPredicate, bookmarkEnumerator, findMatch);
                 }
             }
+            // If we went through the entire document and did not find a match,
+            // check the last spot the user was sitting on to see if it matches.
+            var finalFindMatch = findPredicate.Match(bookmarkEnumerator);
+            if (finalFindMatch != null)
+            {
+                return new FindResult(findPredicate, bookmarkEnumerator, finalFindMatch);
+            }
             return null;
         }
 

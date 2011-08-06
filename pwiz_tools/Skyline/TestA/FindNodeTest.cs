@@ -106,13 +106,6 @@ namespace pwiz.SkylineTestA
             {
                 pathFoundNext = doc.SearchDocumentForString(pathFoundNext, searchText,
                     displaySettings, reverse, caseSensitive);
-                if (pathFoundNext == null)
-                {
-                    // If there is only one match in the document, then searching from that location
-                    // will result in null.  Otherwise, SearchDocument will wrap around.
-                    Assert.AreEqual(0, i);
-                    return 1;
-                }
                 i++;
             }
             while (!Equals(pathFound, pathFoundNext));
