@@ -19,10 +19,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 
 namespace pwiz.Common.DataBinding
@@ -45,17 +43,33 @@ namespace pwiz.Common.DataBinding
         private bool _isHandleCreated;
         private ViewInfo _viewInfo;
         private string[] _columnDisplayOrder;
-        private BindingListIndex _bindingListIndex;
+        private BindingListEventHandler _bindingListEventHandler;
 
         
         public BindingListView(ViewInfo viewInfo, IList innerList)
         {
             ViewInfo = viewInfo;
             InnerList = innerList;
-            foreach (var item in InnerList)
+            foreach (var item in innerList)
             {
-                Items.Add(item);
+                Add(item);
             }
+            
+//            var bindingList = innerList as IBindingList;
+            // The BindingListView can only monitor changes from the list if it's a
+            // IBindingList, and the row elements implement IDataRow
+//            if (bindingList != null && typeof(IEntity).IsAssignableFrom(viewInfo.ParentColumn.PropertyType))
+//            {
+//                InnerList = bindingList;
+//            }
+//            else
+//            {
+//                InnerList = innerList.Cast<object>().ToArray();
+//            }
+//            foreach (var item in InnerList)
+//            {
+//                Items.Add(item);
+//            }
         }
 
         public DataSchema DataSchema { get { return ViewInfo.DataSchema; } }
@@ -159,8 +173,7 @@ namespace pwiz.Common.DataBinding
         {
             get
             {
-                // TODO
-                return Items.ToArray();
+                return InnerList;
             }
         }
 
@@ -176,10 +189,17 @@ namespace pwiz.Common.DataBinding
             }
         }
 
-        public Func<object, bool> FilterPredicate { get
+        public void SetFilterPredicate(Func<object, bool> filterPredicate, IEnumerable<object> items)
         {
-            return _filterPredicate;
-        } 
+            
+        }
+
+        
+        public Func<object, bool> FilterPredicate { 
+            get
+            {
+                return _filterPredicate;
+            } 
             set
             {
                 if (Equals(_filterPredicate, value))
@@ -187,7 +207,7 @@ namespace pwiz.Common.DataBinding
                     return;
                 }
                 _filterPredicate = value;
-                throw new NotImplementedException();
+                ResetBindings();
             }
         }
 
@@ -314,60 +334,6 @@ namespace pwiz.Common.DataBinding
             }
         }
 
-        public virtual void StartTrackingChanges()
-        {
-            if (_bindingListIndex == null)
-            {
-                _bindingListIndex = new BindingListIndex {BindingListView = this};
-            }
-        }
-
-        public virtual void StopTrackingChanges()
-        {
-            if (_bindingListIndex != null)
-            {
-                _bindingListIndex.BindingListView = null;
-                _bindingListIndex = null;
-            }
-        }
-        public virtual void InnerList_ListChanged(object sender, ListChangedEventArgs e)
-        {
-            switch (e.ListChangedType)
-            {
-                case ListChangedType.ItemAdded:
-                    Insert(e.NewIndex, InnerList[e.NewIndex]);
-                    break;
-                case ListChangedType.ItemDeleted:
-                    RemoveAt(e.NewIndex);
-                    break;
-                case ListChangedType.ItemChanged:
-                    Items[e.NewIndex] = InnerList[e.NewIndex];
-                    break;
-                default:
-                    InnerList_Reset();
-                    break;
-            }
-        }
-
-        protected virtual void InnerList_Reset()
-        {
-            var oldRaiseListChangedEvents = RaiseListChangedEvents;
-            try
-            {
-                RaiseListChangedEvents = false;
-                Items.Clear();
-                foreach (var item in InnerList)
-                {
-                    Add(item);
-                }
-            }
-            finally
-            {
-                RaiseListChangedEvents = oldRaiseListChangedEvents;
-            }
-            ResetBindings();
-        }
-
         public string GetListName(PropertyDescriptor[] listAccessors)
         {
             return ViewInfo.ParentColumn.Name;
@@ -393,18 +359,44 @@ namespace pwiz.Common.DataBinding
             get; private set;
         }
 
+        private HashSet<ListChangedEventHandler> _listChangedEventHandlers = new HashSet<ListChangedEventHandler>();
+        event ListChangedEventHandler IBindingList.ListChanged
+        {
+            add
+            {
+                _listChangedEventHandlers.Add(value);
+                if (_listChangedEventHandlers.Count > 0 && _bindingListEventHandler == null)
+                {
+                    _bindingListEventHandler = new BindingListEventHandler(this);
+                }
+            }
+            remove
+            {
+                _listChangedEventHandlers.Remove(value);
+                if (_listChangedEventHandlers.Count == 0 && _bindingListEventHandler != null)
+                {
+                    _bindingListEventHandler.Dispose();
+                    _bindingListEventHandler = null;
+                }
+            }
+        }
 
-//        public class SimpleFilterPredicate : Func<T, bool>
-//        {
-//            public SimpleFilterPredicate(BindingListView<T> listView, string filterString)
-//            {
-//                
-//            }
-//
-//            public BindingListView<T> BindingListView
-//            {
-//                
-//            }
-//        }
+        protected override void OnListChanged(ListChangedEventArgs e)
+        {
+            foreach (var eventHandler in _listChangedEventHandlers.ToArray())
+            {
+                eventHandler.Invoke(this, e);
+            }
+        }
+
+        public void SetFilteredItems(IList<object> items)
+        {
+            Items.Clear();
+            foreach (var item in items)
+            {
+                Items.Add(item);
+            }
+            ResetBindings();
+        }
     }
 }

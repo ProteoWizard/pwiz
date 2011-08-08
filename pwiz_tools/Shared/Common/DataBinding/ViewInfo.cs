@@ -60,6 +60,7 @@ namespace pwiz.Common.DataBinding
         public IList<ColumnDescriptor> ColumnDescriptors { get; private set; }
         public IList<ColumnDescriptor> CrosstabColumns { get; private set; }
         public IList<ColumnDescriptor> UnboundColumns { get; private set; }
+        public IEnumerable<ColumnDescriptor> AllColumnDescriptors { get { return _columnDescriptors.Values.ToArray(); } }
         private ColumnDescriptor GetColumnDescriptor(IDictionary<IdentifierPath, ColumnSpec> columnSpecs, IdentifierPath idPath)
         {
             ColumnDescriptor columnDescriptor;

@@ -30,12 +30,13 @@ namespace pwiz.Common.DataBinding.Controls
     /// <summary>
     /// Extension to <see cref="BindingNavigator"/> which also includes a button to customize the view,
     /// and a button to export the data to a CSV/TSV.
-    /// TODO(nicksh): Add "find" button
     /// </summary>
     public partial class NavBar : UserControl
     {
         private BindingSource _bindingSource;
         private IViewContext _viewContext;
+        private ApplyRowFilterTask _applyRowFilterTask;
+        private string _filterText = "";
         public NavBar()
         {
             InitializeComponent();
@@ -106,8 +107,61 @@ namespace pwiz.Common.DataBinding.Controls
 
         void RefreshUi()
         {
+            InvalidateRowFilter();
             var bindingListView = GetBindingListView();
             navBarButtonViews.Enabled = navBarButtonExport.Enabled = (bindingListView != null && ViewContext != null);
+            if (bindingListView != null)
+            {
+                tbxFind.Enabled = true;
+                if (bindingListView.Count < bindingListView.InnerList.Count)
+                {
+                    lblFilterApplied.Text = string.Format("(Filtered from {0})", bindingListView.InnerList.Count);
+                    lblFilterApplied.Visible = true;
+                }
+                else if (_applyRowFilterTask != null)
+                {
+                    lblFilterApplied.Text = "(Filtering...)";
+                    lblFilterApplied.Visible = true;
+                }
+                else
+                {
+                    lblFilterApplied.Visible = false;
+                }
+            }
+            else
+            {
+                tbxFind.Enabled = false;
+            }
+        }
+
+        private void InvalidateRowFilter()
+        {
+            if (_applyRowFilterTask != null)
+            {
+                _applyRowFilterTask.Dispose();
+                _applyRowFilterTask = null;
+            }
+            var bindingListView = GetBindingListView();
+            if (bindingListView == null)
+            {
+                return;
+            }
+            if (_filterText != tbxFind.Text)
+            {
+                var unfilteredRows = bindingListView.UnfilteredItems.Cast<object>().ToArray();
+                if (string.IsNullOrEmpty(tbxFind.Text))
+                {
+                    bindingListView.SetFilteredItems(unfilteredRows);
+                    _filterText = "";
+                }
+                else
+                {
+                    _applyRowFilterTask = new ApplyRowFilterTask(this, unfilteredRows, 
+                        bindingListView.GetItemProperties(new PropertyDescriptor[0]).Cast<PropertyDescriptor>().ToArray(), 
+                        tbxFind.Text);
+                    new Action(_applyRowFilterTask.FilterBackground).BeginInvoke(null, null);
+                }
+            }
         }
 
         private void navBarButtonViews_DropDownOpening(object sender, EventArgs e)
@@ -195,6 +249,45 @@ namespace pwiz.Common.DataBinding.Controls
         void OnExport(object sender, EventArgs eventArgs)
         {
             ViewContext.Export(this, GetBindingListView());
+        }
+
+        private void findBox_TextChanged(object sender, EventArgs e)
+        {
+            RefreshUi();
+        }
+
+        internal void SetFilteredRows(ApplyRowFilterTask applyRowFilterTask, IList<object> rows)
+        {
+            try
+            {
+                BeginInvoke(new Action<ApplyRowFilterTask, IList<object>>(SetFilteredRowsNow), applyRowFilterTask, rows);
+            }
+            catch
+            {
+                // ignore
+            }
+        }
+
+        private void SetFilteredRowsNow(ApplyRowFilterTask applyRowFilterTask, IList<object> rows)
+        {
+            try
+            {
+                if (applyRowFilterTask != _applyRowFilterTask)
+                {
+                    return;
+                }
+                var bindingListView = GetBindingListView();
+                if (bindingListView == null)
+                {
+                    return;
+                }
+                bindingListView.SetFilteredItems(rows.ToArray());
+                _filterText = applyRowFilterTask.FilterText;
+            }
+            finally
+            {
+                applyRowFilterTask.Dispose();
+            }
         }
     }
 }

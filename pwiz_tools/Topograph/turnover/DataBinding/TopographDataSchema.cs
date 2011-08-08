@@ -49,12 +49,9 @@ namespace pwiz.Topograph.ui.DataBinding
             var dataRowsChangedEventArgs
                 = new DataRowsChangedEventArgs()
                       {
-                          Added = entitiesChangedEventArgs.GetNewEntities()
-                              .Select(e => e.GetRowIdentifier()).ToArray(),
-                          Deleted = entitiesChangedEventArgs.GetRemovedEntities()
-                              .Select(e => e.GetRowIdentifier()).ToArray(),
-                          Changed = entitiesChangedEventArgs.GetChangedEntities()
-                              .Select(e => e.GetRowIdentifier()).ToArray(),
+                          Added = entitiesChangedEventArgs.GetNewEntities().ToArray(),
+                          Deleted = entitiesChangedEventArgs.GetRemovedEntities().ToArray(),
+                          Changed = entitiesChangedEventArgs.GetChangedEntities().ToArray(),
                       };
             ICollection<DataRowsChangedEventHandler> eventHandlers;
             lock (_dataRowsChangedEvent)

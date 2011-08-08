@@ -29,16 +29,80 @@ namespace pwiz.Common.DataBinding
     /// Identifier for a property that is reached by getting a chain of
     /// properties by name from a root object.
     /// </summary>
-    public class IdentifierPath
+    public class IdentifierPath : IComparable<IdentifierPath>
     {
         public IdentifierPath(IdentifierPath parent, string name)
         {
             Parent = parent;
             Name = name;
+            Length = Parent == null ? 1 : 1 + Parent.Length;
         }
         public IdentifierPath Parent { get; private set; }
         public string Name { get; private set; }
-
+        public int Length { get; private set; }
+        public int CompareTo(IdentifierPath that)
+        {
+            if (that == null)
+            {
+                return 1;
+            }
+            int result;
+            if (Length > that.Length)
+            {
+                result = Parent.CompareTo(that);
+                if (result != 0)
+                {
+                    return result;
+                }
+                return 1;
+            }
+            if (Length < that.Length)
+            {
+                result = that.Parent.CompareTo(this);
+                if (result != 0)
+                {
+                    return result;
+                }
+                return -1;
+            }
+            if (Length > 1)
+            {
+                result = Parent.CompareTo(that.Parent);
+                if (result != 0)
+                {
+                    return result;
+                }
+            }
+            if (Name == null)
+            {
+                return that.Name == null ? 0 : -1;
+            }
+            return Name.CompareTo(that.Name);
+        }
+        public bool StartsWith(IdentifierPath that)
+        {
+            if (that == null)
+            {
+                return true;
+            }
+            if (Length < that.Length)
+            {
+                return false;
+            }
+            if (Length == that.Length)
+            {
+                return Equals(that);
+            }
+            return Parent.StartsWith(that);
+        }
+        public IdentifierPath RemoveHead(int length)
+        {
+            if (length >= Length)
+            {
+                return null;
+            }
+            return new IdentifierPath(Parent.RemoveHead(length), Name);
+        }
         public override string ToString()
         {
             if (Parent == null)

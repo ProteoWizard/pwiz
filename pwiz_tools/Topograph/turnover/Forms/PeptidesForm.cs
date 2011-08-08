@@ -17,38 +17,36 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
-using System.Data.Common;
-using System.Data.Odbc;
-using System.Data.OleDb;
-using System.Data.SQLite;
-using System.Drawing;
-using System.IO;
 using System.Linq;
-using System.Resources;
-using System.Text;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
-using NHibernate;
-using NHibernate.Criterion;
-using pwiz.Topograph.Data;
-using pwiz.Topograph.Enrichment;
+using pwiz.Common.DataBinding;
 using pwiz.Topograph.Model;
-using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.ui.Forms
 {
     public partial class PeptidesForm : WorkspaceForm
     {
-        private readonly Dictionary<Peptide, DataGridViewRow> peptideRows 
-            = new Dictionary<Peptide, DataGridViewRow>();
+        private TopographViewContext _viewContext;
+        private BindingList<Peptide> _peptides;
         public PeptidesForm(Workspace workspace) : base(workspace)
         {
             InitializeComponent();
             TabText = Name = "Peptides";
             btnAnalyzePeptides.Enabled = Workspace.Peptides.GetChildCount() > 0;
+            var defaultColumns = new[]
+                                     {
+                                         new ColumnSpec().SetName("Sequence"),
+                                         new ColumnSpec().SetName("ProteinName").SetCaption("Protein"),
+                                         new ColumnSpec().SetName("ProteinDescription"),
+                                         new ColumnSpec().SetName("MaxTracerCount").SetCaption("Max Tracers"),
+                                         new ColumnSpec().SetName("SearchResultCount").SetCaption("# Data Files"),
+                                     };
+            var defaultViewSpec = new ViewSpec()
+                .SetName("default")
+                .SetColumns(defaultColumns);
+            navBar1.ViewContext = _viewContext = new TopographViewContext(dataGridView, workspace, typeof(Peptide), new[] { defaultViewSpec });
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -59,88 +57,21 @@ namespace pwiz.Topograph.ui.Forms
 
         private void Requery()
         {
-            dataGridView.Rows.Clear();
-            peptideRows.Clear();
-            AddAndUpdateRows(Workspace.Peptides.ListChildren());
+            _peptides = new BindingList<Peptide>(Workspace.Peptides.ListChildren());
+            peptidesBindingSource.DataSource = new BindingListView(new ViewInfo(_viewContext.ParentColumn, _viewContext.BuiltInViewSpecs.First()), _peptides);
         }
 
         protected override void OnWorkspaceEntitiesChanged(EntitiesChangedEventArgs args)
         {
-            base.OnWorkspaceEntitiesChanged(args);
-            btnAnalyzePeptides.Enabled = Workspace.Peptides.GetChildCount() > 0;
-            var newPeptides = new List<Peptide>();
-            foreach (var peptide in args.GetEntities<Peptide>())
+            foreach (var peptide in args.GetNewEntities().OfType<Peptide>())
             {
-                DataGridViewRow row;
-                peptideRows.TryGetValue(peptide, out row);
-                if (args.IsRemoved(peptide))
-                {
-                    if (row != null)
-                    {
-                        dataGridView.Rows.Remove(row);
-                        peptideRows.Remove(peptide);
-                    }
-                }
-                else
-                {
-                    if (row == null)
-                    {
-                        newPeptides.Add(peptide);
-                        continue;
-                    }
-                    UpdateRow(row);
-                }
+                _peptides.Add(peptide);
             }
-
-            foreach (var row in AddRows(newPeptides))
-            {
-                UpdateRow(row);
-            }
-        }
-
-        private IList<DataGridViewRow> AddRows(IEnumerable<Peptide> peptides)
-        {
-            var rows = new List<DataGridViewRow>();
-            foreach (var peptide in Workspace.FilterPeptides(peptides))
-            {
-                if (peptideRows.ContainsKey(peptide))
-                {
-                    continue;
-                }
-                var row = new DataGridViewRow();
-                row.Tag = peptide;
-                rows.Add(row);
-                peptideRows.Add(peptide, row);
-            }
-            dataGridView.Rows.AddRange(rows.ToArray());
-            return rows;
-        }
-
-        private void AddAndUpdateRows(IEnumerable<Peptide> peptides)
-        {
-            foreach(var row in AddRows(peptides))
-            {
-                UpdateRow(row);
-            }
-        }
-
-        private void UpdateRow(DataGridViewRow row)
-        {
-            var peptide = (Peptide) row.Tag;
-            row.Cells[colSequence.Name].Value = peptide.FullSequence;
-            row.Cells[colProtein.Name].Value = peptide.GetProteinKey();
-            row.Cells[colProteinDescription.Name].Value = peptide.ProteinDescription;
-            row.Cells[colProteinDescription.Index].ToolTipText = peptide.ProteinDescription;
-            row.Cells[colMaxTracerCount.Name].Value = peptide.MaxTracerCount;
-            row.Cells[colSearchResultCount.Name].Value = peptide.SearchResultCount;
-            // TODO
-            //row.Cells[colValidationStatus.Name].
         }
 
         private void dataGridView_RowHeaderMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
         {
-            var row = dataGridView.Rows[e.RowIndex];
-            var peptide = (Peptide) row.Tag;
+            var peptide = (Peptide) _peptides[e.RowIndex];
             PeptideAnalysis peptideAnalysis = peptide.EnsurePeptideAnalysis();
             if (peptideAnalysis == null)
             {

@@ -1,4 +1,6 @@
-﻿namespace pwiz.Topograph.ui.Forms
+﻿using pwiz.Common.DataBinding;
+
+namespace pwiz.Topograph.ui.Forms
 {
     partial class PeptidesForm
     {
@@ -28,17 +30,15 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.dataGridView = new System.Windows.Forms.DataGridView();
-            this.colSequence = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colProtein = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colProteinDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colMaxTracerCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colSearchResultCount = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.components = new System.ComponentModel.Container();
+            this.dataGridView = new pwiz.Common.DataBinding.BoundDataGridView();
+            this.peptidesBindingSource = new System.Windows.Forms.BindingSource(this.components);
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.btnAnalyzePeptides = new System.Windows.Forms.Button();
             this.btnAddSearchResults = new System.Windows.Forms.Button();
-            this.recordNavBar1 = new pwiz.Common.Controls.RecordNavBar();
+            this.navBar1 = new pwiz.Common.DataBinding.Controls.NavBar();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.peptidesBindingSource)).BeginInit();
             this.tableLayoutPanel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -47,12 +47,7 @@
             this.dataGridView.AllowUserToAddRows = false;
             this.dataGridView.AllowUserToDeleteRows = false;
             this.dataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.colSequence,
-            this.colProtein,
-            this.colProteinDescription,
-            this.colMaxTracerCount,
-            this.colSearchResultCount});
+            this.dataGridView.DataSource = this.peptidesBindingSource;
             this.dataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView.Location = new System.Drawing.Point(0, 27);
             this.dataGridView.Name = "dataGridView";
@@ -60,40 +55,6 @@
             this.dataGridView.Size = new System.Drawing.Size(941, 535);
             this.dataGridView.TabIndex = 0;
             this.dataGridView.RowHeaderMouseDoubleClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView_RowHeaderMouseDoubleClick);
-            // 
-            // colSequence
-            // 
-            this.colSequence.HeaderText = "Sequence";
-            this.colSequence.Name = "colSequence";
-            this.colSequence.ReadOnly = true;
-            this.colSequence.Width = 150;
-            // 
-            // colProtein
-            // 
-            this.colProtein.HeaderText = "Protein";
-            this.colProtein.Name = "colProtein";
-            this.colProtein.ReadOnly = true;
-            // 
-            // colProteinDescription
-            // 
-            this.colProteinDescription.HeaderText = "Protein Description";
-            this.colProteinDescription.Name = "colProteinDescription";
-            this.colProteinDescription.ReadOnly = true;
-            this.colProteinDescription.Width = 150;
-            // 
-            // colMaxTracerCount
-            // 
-            this.colMaxTracerCount.HeaderText = "Max Tracers";
-            this.colMaxTracerCount.Name = "colMaxTracerCount";
-            this.colMaxTracerCount.ReadOnly = true;
-            this.colMaxTracerCount.Width = 90;
-            // 
-            // colSearchResultCount
-            // 
-            this.colSearchResultCount.HeaderText = "# Data Files";
-            this.colSearchResultCount.Name = "colSearchResultCount";
-            this.colSearchResultCount.ReadOnly = true;
-            this.colSearchResultCount.Width = 90;
             // 
             // tableLayoutPanel1
             // 
@@ -104,7 +65,7 @@
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
             this.tableLayoutPanel1.Controls.Add(this.btnAnalyzePeptides, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.btnAddSearchResults, 0, 0);
-            this.tableLayoutPanel1.Controls.Add(this.recordNavBar1, 2, 0);
+            this.tableLayoutPanel1.Controls.Add(this.navBar1, 2, 0);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -134,14 +95,16 @@
             this.btnAddSearchResults.UseVisualStyleBackColor = true;
             this.btnAddSearchResults.Click += new System.EventHandler(this.btnAddSearchResults_Click);
             // 
-            // recordNavBar1
+            // navBar1
             // 
-            this.recordNavBar1.DataGridView = this.dataGridView;
-            this.recordNavBar1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.recordNavBar1.Location = new System.Drawing.Point(279, 3);
-            this.recordNavBar1.Name = "recordNavBar1";
-            this.recordNavBar1.Size = new System.Drawing.Size(659, 24);
-            this.recordNavBar1.TabIndex = 7;
+            this.navBar1.AutoSize = true;
+            this.navBar1.BindingSource = this.peptidesBindingSource;
+            this.navBar1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.navBar1.Location = new System.Drawing.Point(279, 3);
+            this.navBar1.Name = "navBar1";
+            this.navBar1.Size = new System.Drawing.Size(659, 24);
+            this.navBar1.TabIndex = 7;
+            this.navBar1.ViewContext = null;
             // 
             // PeptidesForm
             // 
@@ -154,23 +117,21 @@
             this.TabText = "PeptidesForm";
             this.Text = "PeptidesForm";
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.peptidesBindingSource)).EndInit();
             this.tableLayoutPanel1.ResumeLayout(false);
+            this.tableLayoutPanel1.PerformLayout();
             this.ResumeLayout(false);
 
         }
 
         #endregion
 
-        private System.Windows.Forms.DataGridView dataGridView;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colSequence;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colProtein;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colProteinDescription;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colMaxTracerCount;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colSearchResultCount;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Button btnAnalyzePeptides;
         private System.Windows.Forms.Button btnAddSearchResults;
-        private pwiz.Common.Controls.RecordNavBar recordNavBar1;
+        private pwiz.Common.DataBinding.Controls.NavBar navBar1;
+        private System.Windows.Forms.BindingSource peptidesBindingSource;
+        private BoundDataGridView dataGridView;
 
     }
 }

@@ -30,7 +30,7 @@ using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.Model
 {
-    public class EntityModel : IDataRow
+    public class EntityModel : IEntity
     {
         private EntityModel _parent;
         protected EntityModel(Workspace workspace, long? id)
@@ -39,19 +39,12 @@ namespace pwiz.Topograph.Model
             Id = id;
         }
 
-        public object GetRowIdentifier()
-        {
-            if (!Id.HasValue)
-            {
-                return this;
-            }
-            return new KeyValuePair<Type, long>(ModelType, Id.Value);
-        }
-        
         [Browsable(false)]
         public Workspace Workspace { get; private set; }
         [Browsable(false)]
         public long? Id { get; private set; }
+        [Browsable(false)]
+        public string EntityName {get { return ModelType.Name;}}
         [Browsable(false)]
         public virtual Type ModelType { get { return GetType(); } }
         public virtual void SetId(long? id)

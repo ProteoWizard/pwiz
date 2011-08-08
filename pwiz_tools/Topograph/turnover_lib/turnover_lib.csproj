@@ -143,6 +143,7 @@
     <Compile Include="Model\PeakData.cs" />
     <Compile Include="Model\Peaks.cs" />
     <Compile Include="Model\AbstractSetting.cs" />
+    <Compile Include="Model\PeptideAnalysisStub.cs" />
     <Compile Include="Model\RetentionTimeAlignment.cs" />
     <Compile Include="Model\SettingCollection.cs" />
     <Compile Include="Model\SimpleChildCollection.cs" />
@@ -252,6 +253,7 @@
     <EmbeddedResource Include="Data\mapping.xml" />
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="DataBinding\" />
     <Folder Include="Fasta\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -46,7 +46,7 @@ namespace pwiz.Common.DataBinding
         {
             DataSchema = parent.DataSchema;
             Parent = parent;
-            Name = name;
+            IdPath = new IdentifierPath(parent.IdPath, name);
             PropertyDescriptor = propertyDescriptor;
             if (PropertyDescriptor != null)
             {
@@ -65,7 +65,7 @@ namespace pwiz.Common.DataBinding
         {
             DataSchema = columnDescriptor.DataSchema;
             Parent = columnDescriptor.Parent;
-            Name = columnDescriptor.Name;
+            IdPath = columnDescriptor.IdPath;
             PropertyType = columnDescriptor.PropertyType;
             CollectionInfo = columnDescriptor.CollectionInfo;
             BoundKey = columnDescriptor.BoundKey;
@@ -73,6 +73,19 @@ namespace pwiz.Common.DataBinding
             Visible = columnDescriptor.Visible;
             Caption = columnDescriptor.Caption;
             Crosstab = columnDescriptor.Crosstab;
+        }
+        public ColumnDescriptor RemoveAncestor(int depth)
+        {
+            int myDepth = IdPath.Length;
+            if (depth > myDepth)
+            {
+                return null;
+            }
+            if (depth == myDepth)
+            {
+                return new ColumnDescriptor(DataSchema, PropertyType);
+            }
+            return new ColumnDescriptor(Parent.RemoveAncestor(depth), Name, PropertyDescriptor);
         }
 
         public DataSchema DataSchema { get; private set; }
@@ -85,7 +98,7 @@ namespace pwiz.Common.DataBinding
             }
             return new ColumnDescriptor(this) {Parent = newParent};
         }
-        public String Name { get; private set; }
+        public String Name { get { return IdPath == null ? null : IdPath.Name;} }
         public CollectionInfo CollectionInfo { get; private set; }
         protected PropertyDescriptor PropertyDescriptor { get; private set; }
         public Type PropertyType { get; private set; }
@@ -129,16 +142,20 @@ namespace pwiz.Common.DataBinding
                 rowValue.RowKey.TryGetValue(IdPath, out component);
                 return component;
             }
-            component = Parent.GetPropertyValue(component);
-            if (component == null)
+            return GetPropertyValueFromParent(Parent.GetPropertyValue(component));
+        }
+
+        public object GetPropertyValueFromParent(object parentComponent)
+        {
+            if (parentComponent == null)
             {
                 return null;
             }
             if (PropertyDescriptor == null)
             {
-                return component;
+                return parentComponent;
             }
-            return PropertyDescriptor.GetValue(component);
+            return PropertyDescriptor.GetValue(parentComponent);
         }
 
         public bool Crosstab { get; private set; }
@@ -198,18 +215,7 @@ namespace pwiz.Common.DataBinding
 
         public IdentifierPath IdPath
         {
-            get
-            {
-                if (Parent == null)
-                {
-                    if (Name == null)
-                    {
-                        return null;
-                    }
-                    return new IdentifierPath(null, Name);
-                }
-                return new IdentifierPath(Parent.IdPath, Name);
-            }
+            get; private set;
         }
         public ColumnDescriptor ResolveChild(string name)
         {

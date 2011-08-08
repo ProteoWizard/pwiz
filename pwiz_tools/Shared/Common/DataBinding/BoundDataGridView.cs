@@ -35,8 +35,13 @@ namespace pwiz.Common.DataBinding
         protected override void OnDataBindingComplete(DataGridViewBindingCompleteEventArgs e)
         {
             AutoGenerateColumns = true;
+            var oldColumns = Columns.Cast<DataGridViewColumn>().ToArray();
             base.OnDataBindingComplete(e);
             if (DesignMode)
+            {
+                return;
+            }
+            if (oldColumns.SequenceEqual(Columns.Cast<DataGridViewColumn>()))
             {
                 return;
             }
@@ -114,15 +119,7 @@ namespace pwiz.Common.DataBinding
                 {
                     return;
                 }
-                if (BindingListView != null)
-                {
-                    BindingListView.StopTrackingChanges();
-                }
                 _bindingListView = value;
-                if (BindingListView != null)
-                {
-                    BindingListView.StartTrackingChanges();
-                }
             }
         }
 
