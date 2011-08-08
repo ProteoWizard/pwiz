@@ -2837,9 +2837,15 @@ namespace pwiz.Skyline
                     OwnedForms[index].Activate();
                 else
                 {
-                    var libraries = Document.Settings.PeptideSettings.Libraries.Libraries;
-                    var indexLib = libraries.IndexOf(library => library.IsLoaded);
-                    var libraryName = indexLib != -1 ? libraries[indexLib].Name : "";
+                    var libraries = Document.Settings.PeptideSettings.Libraries;
+                    string libraryName = "";
+                    for (int i = 0; i < libraries.Libraries.Count && string.IsNullOrEmpty(libraryName); i++)
+                    {
+                        if (libraries.Libraries[i] != null)
+                            libraryName = libraries.Libraries[i].Name;
+                        else if (libraries.LibrarySpecs[i] != null)
+                            libraryName = libraries.LibrarySpecs[i].Name;
+                    }
                     var viewLibraryDlg = new ViewLibraryDlg(_libraryManager, libraryName, this) { Owner = this };
                     viewLibraryDlg.Show();
                 }

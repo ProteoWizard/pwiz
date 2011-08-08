@@ -1914,13 +1914,17 @@ namespace pwiz.Skyline.Model
                 throw new IOException("Waters method creation software may not be installed correctly.");
             string buildSubdir = Path.GetDirectoryName(EXE_BUILD_WATERS_METHOD) ?? "";
             string exeDir = Path.Combine(Path.GetDirectoryName(skylinePath) ?? "", buildSubdir);
-            string libraryPath = Path.Combine(exeDir, PRIMARY_DEPENDENCY_LIBRARY);
-            if (File.Exists(libraryPath))
-                return;
-
             string dacServerPath = AdvApi.GetPathFromProgId("DACScanStats.DACScanStats");
             if (dacServerPath == null)
-                throw new IOException("Failed to find a valid MassLynx installation.");
+            {
+                // If all the necessary libraries exist, then continue even if MassLynx is gone.
+                foreach (var libraryName in DEPENDENCY_LIBRARIES)
+                {
+                    if (!File.Exists(Path.Combine(exeDir, libraryName)))
+                        throw new IOException("Failed to find a valid MassLynx installation.");
+                }
+                return;
+            }
 
             string massLynxDir = Path.GetDirectoryName(dacServerPath) ?? "";
             foreach (var library in DEPENDENCY_LIBRARIES)
@@ -1928,8 +1932,11 @@ namespace pwiz.Skyline.Model
                 string srcFile = Path.Combine(massLynxDir, library);
                 if (!File.Exists(srcFile))
                     throw new IOException(string.Format("MassLynx may not be installed correctly.  The library {0} could not be found.", library));
+                // If destination file does not exist or has a different modification time from
+                // the source, then copy the source file from the MassLynx installation.
                 string destFile = Path.Combine(exeDir, library);
-                File.Copy(srcFile, destFile, true);
+                if (!File.Exists(destFile) || !Equals(File.GetLastWriteTime(destFile), File.GetLastWriteTime(srcFile)))
+                    File.Copy(srcFile, destFile, true);
             }
         }
     }

@@ -219,12 +219,23 @@ namespace pwiz.Skyline.Controls.SeqNode
                 }
                 foreach (var annotation in annotations.ListAnnotations())
                 {
-                    KeyValuePair<string, string> annotation1 = annotation;
-                    var def = Document.Settings.DataSettings.AnnotationDefs.First(annotationDef => Equals(annotationDef.Name, annotation1.Key));
-                    var value = annotation1.Value;
-                    if (def.Type == AnnotationDef.AnnotationType.true_false)
-                        value = value != null ? "True" : "False";
-                    table.AddDetailRowLineWrap(g, annotation.Key, value, rt);
+                    string annotationName = annotation.Key;
+                    var annotationValue = annotation.Value;
+                    var def = Document.Settings.DataSettings.AnnotationDefs.FirstOrDefault(annotationDef => 
+                        Equals(annotationDef.Name, annotationName));
+                    if (def == null)
+                    {
+                        // This should not be possible, but it has happened.  Rather than cause an unhandled
+                        // exception, just guess that anything where the annotation name and value are equal
+                        // is a True/False type set to True, and display everything else as usual.
+                        if (Equals(annotationName, annotationValue))
+                            annotationValue = "True";
+                    }
+                    else if (def.Type == AnnotationDef.AnnotationType.true_false)
+                    {
+                        annotationValue = annotationValue != null ? "True" : "False";
+                    }
+                    table.AddDetailRowLineWrap(g, annotationName, annotationValue, rt);
                 }
                 SizeF size = table.CalcDimensions(g);
                 if (draw)

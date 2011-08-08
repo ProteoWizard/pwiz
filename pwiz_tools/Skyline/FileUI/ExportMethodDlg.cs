@@ -19,7 +19,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -426,8 +425,8 @@ namespace pwiz.Skyline.FileUI
                 else
                     dpNameDefault = null; // Ignored for all other types
 
-                if ((!ceInSynch && Settings.Default.CollisionEnergyList.ContainsKey(ceNameDefault)) ||
-                    (!dpInSynch && Settings.Default.DeclusterPotentialList.ContainsKey(dpNameDefault)))
+                if ((!ceInSynch && Settings.Default.CollisionEnergyList.Keys.Any(name => name.StartsWith(ceNameDefault)) ||
+                    (!dpInSynch && Settings.Default.DeclusterPotentialList.Keys.Any(name => name.StartsWith(dpNameDefault)))))
                 {
                     var sb =
                         new StringBuilder("The settings for this document do not match the instrument type ").Append(
@@ -728,10 +727,9 @@ namespace pwiz.Skyline.FileUI
             {
                 foreach (var ceDefault in ceList.GetDefaults())
                 {
-                    if (Equals(ceNameDefault, ceDefault.Name))
+                    if (ceDefault.Name.StartsWith(ceNameDefault))
                         ce = ceDefault;
                 }
-                Debug.Assert(ce != null);
             }
             var dpList = Settings.Default.DeclusterPotentialList;
             DeclusteringPotentialRegression dp = null;
@@ -739,14 +737,20 @@ namespace pwiz.Skyline.FileUI
             {
                 foreach (var dpDefault in dpList.GetDefaults())
                 {
-                    if (Equals(dpNameDefault, dpDefault.Name))
+                    if (dpDefault.Name.StartsWith(dpNameDefault))
                         dp = dpDefault;
                 }
-                Debug.Assert(dp != null);                
             }
 
             return document.ChangeSettings(document.Settings.ChangeTransitionPrediction(
-                predict => predict.ChangeCollisionEnergy(ce).ChangeDeclusteringPotential(dp)));
+                predict =>
+                    {
+                        if (ce != null)
+                            predict = predict.ChangeCollisionEnergy(ce);
+                        if (dp != null)
+                            predict = predict.ChangeDeclusteringPotential(dp);
+                        return predict;
+                    }));
         }
 
         private void btnOk_Click(object sender, EventArgs e)

@@ -22,6 +22,8 @@ using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Properties;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestFunctional
@@ -58,6 +60,11 @@ namespace pwiz.SkylineTestFunctional
             // Open 160109_Mix1_calcurve.sky under TestFunctional\ManageResultsTest.zip
             string documentPath = TestFilesDir.GetTestPath("160109_Mix1_calcurve.sky");
             RunUI(() => SkylineWindow.OpenFile(documentPath));
+
+            // Make sure collision energy equation matches with instrument type to be used
+            RunUI(() => SkylineWindow.ModifyDocument("Change settings", doc =>
+                doc.ChangeSettings(doc.Settings.ChangeTransitionPrediction(predict =>
+                    predict.ChangeCollisionEnergy(Settings.Default.GetCollisionEnergyByName("Waters Xevo"))))));
 
             var document = SkylineWindow.Document;
             int replicateCount0 = document.Settings.MeasuredResults.Chromatograms.Count;

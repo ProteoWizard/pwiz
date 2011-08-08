@@ -498,7 +498,7 @@ namespace pwiz.Skyline.SettingsUI
         private void UpdateListPeptide(int selectPeptideIndex)
         {
             var pepMatcher = new ViewLibraryPepMatching(Document,
-                _selectedLibrary, _selectedSpec, _lookupPool, _peptides.ToList());
+                _selectedLibrary, _selectedSpec, _lookupPool, _peptides);
             listPeptide.BeginUpdate();
             listPeptide.Items.Clear();
             if (_currentRange.Count > 0)
@@ -1111,7 +1111,7 @@ namespace pwiz.Skyline.SettingsUI
                                                         _selectedLibrary,
                                                         _selectedSpec,
                                                         _lookupPool,
-                                                        _peptides.ToList());
+                                                        _peptides);
 
             if (!EnsureBackgroundProteome(startingDocument, pepMatcher))
                 return;
@@ -1122,12 +1122,15 @@ namespace pwiz.Skyline.SettingsUI
                 MessageDlg.Show(this, "Modifications for this peptide do not match current document settings.");
                 return;
             }
-            var keyMatched = nodePepMatched.SequenceKey;
-            int chargeMatched = ((TransitionGroupDocNode) nodePepMatched.Children[0]).TransitionGroup.PrecursorCharge;
-            if (!cbAssociateProteins.Checked && Document.Peptides.Contains(nodePep => Equals(nodePep.SequenceKey, keyMatched) && nodePep.HasChildCharge(chargeMatched)))
+            if (nodePepMatched.Children.Count > 0)
             {
-                MessageDlg.Show(this, string.Format("The peptide {0} already exists with charge {1} in the current document.", nodePepMatched.Peptide, chargeMatched));
-                return;
+                var keyMatched = nodePepMatched.SequenceKey;
+                int chargeMatched = ((TransitionGroupDocNode)nodePepMatched.Children[0]).TransitionGroup.PrecursorCharge;
+                if (!cbAssociateProteins.Checked && Document.Peptides.Contains(nodePep => Equals(nodePep.SequenceKey, keyMatched) && nodePep.HasChildCharge(chargeMatched)))
+                {
+                    MessageDlg.Show(this, string.Format("The peptide {0} already exists with charge {1} in the current document.", nodePepMatched.Peptide, chargeMatched));
+                    return;
+                }
             }
 
             if (pepMatcher.EnsureDuplicateProteinFilter(this, true) == DialogResult.Cancel)
@@ -1205,7 +1208,7 @@ namespace pwiz.Skyline.SettingsUI
                                                         _selectedLibrary,
                                                         _selectedSpec,
                                                         _lookupPool,
-                                                        _peptides.ToList());
+                                                        _peptides);
 
             if (!EnsureBackgroundProteome(startingDocument, pepMatcher))
                 return;

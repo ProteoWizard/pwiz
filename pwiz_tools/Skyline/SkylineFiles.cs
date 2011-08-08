@@ -1041,7 +1041,14 @@ namespace pwiz.Skyline
             {
                 // If the chromatogram, is not in the current set, then delete the cache
                 // file to make sure it is not on disk before starting.
-                File.Delete(ChromatogramCache.FinalPathForName(DocumentFilePath, nameResult));
+                try
+                {
+                    File.Delete(ChromatogramCache.FinalPathForName(DocumentFilePath, nameResult));
+                }
+                catch (IOException)
+                {
+                    // Ignore failure
+                }
                 chrom = new ChromatogramSet(nameResult, dataSources, optimizationFunction);
 
                 if (results == null)

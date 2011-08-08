@@ -452,7 +452,8 @@ namespace pwiz.Skyline.Controls
         {
             SelectedNodes.Clear();
             AddSelectedNode(treeNodes, traversal);
-            SelectedNode = SelectedNodes.ToArray()[0];
+            if (SelectedNodes.Count > 0)
+                SelectedNode = SelectedNodes.First();
         }
 
         /// <summary>

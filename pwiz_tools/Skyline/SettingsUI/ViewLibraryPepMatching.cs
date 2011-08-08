@@ -43,7 +43,7 @@ namespace pwiz.Skyline.SettingsUI
         private readonly Library _selectedLibrary;
         private readonly LibrarySpec _selectedSpec;
         private readonly byte[] _lookupPool;
-        private readonly List<ViewLibraryPepInfo> _listPepInfos;
+        private readonly ViewLibraryPepInfo[] _libraryPepInfos;
         private SrmSettings[] _chargeSettingsMap;
         private BackgroundProteome _backgroundProteome;
         private Digestion _digestion;
@@ -62,13 +62,13 @@ namespace pwiz.Skyline.SettingsUI
                                       Library library,
                                       LibrarySpec spec,
                                       byte[] lookupPool,
-                                      List<ViewLibraryPepInfo> peptides)
+                                      ViewLibraryPepInfo[] peptides)
         {
             _document = document;
             _selectedLibrary = library;
             _selectedSpec = spec;
             _lookupPool = lookupPool;
-            _listPepInfos = peptides;
+            _libraryPepInfos = peptides;
             _chargeSettingsMap = new SrmSettings[128];
         }
 
@@ -144,9 +144,9 @@ namespace pwiz.Skyline.SettingsUI
             MatchedPeptideCount = 0;
 
             int peptides = 0;
-            int totalPeptides = _listPepInfos.Count();
+            int totalPeptides = _libraryPepInfos.Length;
 
-            foreach (ViewLibraryPepInfo pepInfo in _listPepInfos)
+            foreach (ViewLibraryPepInfo pepInfo in _libraryPepInfos)
             {
                 if (broker.IsCanceled)
                     return;
@@ -404,7 +404,7 @@ namespace pwiz.Skyline.SettingsUI
                         PeptideDocNode nodePepMatch = peptideMatch.NodePep;
                         PeptideDocNode nodePepSettings = null;
                         var newChildren = nodePep.Children.ToList();
-                        Identity nodeGroupChargeId = newChildren[0].Id; 
+                        Identity nodeGroupChargeId = newChildren.Count > 0 ? newChildren[0].Id : null; 
                         foreach (TransitionGroupDocNode nodeGroup in nodePepMatch.Children)
                         {
                             int chargeGroup = nodeGroup.TransitionGroup.PrecursorCharge;
@@ -433,7 +433,12 @@ namespace pwiz.Skyline.SettingsUI
                             nodePepAdd = nodePepAdd.ChangeAutoManageChildren(false);
                         // Change the selected path.
                         if (PeptideMatches.Count == 1)
-                            selectedPath = new IdentityPath(new[] { nodePepGroup.Id, nodePepAdd.Id, nodeGroupChargeId});
+                        {
+                            if (nodeGroupChargeId == null)
+                                selectedPath = new IdentityPath(new[] { nodePepGroup.Id, nodePepAdd.Id });
+                            else
+                                selectedPath = new IdentityPath(new[] { nodePepGroup.Id, nodePepAdd.Id, nodeGroupChargeId });                            
+                        }
                         nodePeps.Add(nodePepAdd);
                         // Remove this peptide from the list of peptides we need to add to the document
                         dictCopy.Remove(key);
