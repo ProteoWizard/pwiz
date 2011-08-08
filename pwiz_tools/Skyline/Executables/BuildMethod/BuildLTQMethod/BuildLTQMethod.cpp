@@ -169,10 +169,10 @@ static int getAnalyzer(char* analyzer)
 {
 	if(strcmp(analyzer, "QIT") == 0)
 		return 0;
-	else if(strcmp(analyzer, "Orbitrap") == 0 || strcmp(argv[i], "FT-ICR") == 0)
+	else if(strcmp(analyzer, "Orbitrap") == 0 || strcmp(analyzer, "FT-ICR") == 0)
 		return 1;
 	else
-		Verbosity::error((string("The LTQ instruments do not support ") + argv[i] + " mass analyzers.").c_str());
+		Verbosity::error((string("The LTQ instruments do not support ") + analyzer + " mass analyzers.").c_str());
 }
 
 void BuildLTQMethod::parseCommandArgs(int argc, char* argv[])
