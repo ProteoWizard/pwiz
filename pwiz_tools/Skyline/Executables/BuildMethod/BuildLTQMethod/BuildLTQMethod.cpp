@@ -281,7 +281,8 @@ void BuildLTQMethod::createMethod(string templateMethod, string outputMethod, co
 		
         // Save into existing to avoid losing information that Thermo
         // strips with SaveAs()
-        _methodPtr->Save();
+		_methodPtr->Save();
+
         _methodPtr->Close();
     }
     catch (_com_error& e)
@@ -432,6 +433,9 @@ void BuildLTQMethod::replaceTransitionList(const vector<vector<string>>& tableTr
     short scanType = _methodPtr->ScanType;
     short analyzerType = _methodPtr->Analyzer;
 
+	short ms1DataType = 0;
+	short ms2DataType = 0;
+
     double precursorMass = 0.0;
     short activationType = 0;
     double isolationWindow = 2.0;
@@ -441,8 +445,24 @@ void BuildLTQMethod::replaceTransitionList(const vector<vector<string>>& tableTr
     double productWindow = 2.0;
 
 	// Initialize some variables from the template, if possible
-    if (numScans > 0 && scanType == 1 && analyzerType == 0)
+    if (numScans > 0) //&& scanType == 1 && analyzerType == 0)
     {
+		if(_methodPtr->ScanType == 0) //MS1 scan
+		{
+			_methodPtr->CurrentScanEvent = 0;
+			ms1DataType = _methodPtr->DataType;
+			if(numScans > 1)
+			{
+				_methodPtr->CurrentScanEvent = 1;
+				ms2DataType = _methodPtr->DataType;
+				_methodPtr->CurrentScanEvent = 0;
+			}
+		}
+		else
+		{
+			ms2DataType = _methodPtr->DataType;
+		}
+
         if (_methodPtr->NumReactions > 0)
         {
             _methodPtr->GetReaction2(0, &precursorMass, &activationType, &isolationWindow,
@@ -475,7 +495,7 @@ void BuildLTQMethod::replaceTransitionList(const vector<vector<string>>& tableTr
 		_methodPtr->CurrentScanEvent = scanCount - 1;
 		_methodPtr->ScanMode = 0;    // 0 = MS, ..., 9 = MS10
 		_methodPtr->ScanType = 0;    // 0 = Full, 1 = SIM/SRM
-		_methodPtr->DataType = 1;    // 0 = Centroid, 1 = Profile
+		_methodPtr->DataType = ms1DataType;    // 0 = Centroid, 1 = Profile
 		_methodPtr->NumReactions = 0;
 		_methodPtr->Analyzer = _msAnalyzer;
 
@@ -501,14 +521,15 @@ void BuildLTQMethod::replaceTransitionList(const vector<vector<string>>& tableTr
             _methodPtr->CurrentScanEvent = scanCount - 1;
             _methodPtr->ScanMode = 1;    // 0 = MS, ..., 9 = MS10
 			_methodPtr->ScanType = (_fullScans ? 0 : 1);    // 0 = Full, 1 = SIM/SRM
-			_methodPtr->DataType = 0;    // 0 = Centroid, 1 = Profile
+			_methodPtr->DataType = ms2DataType;    // 0 = Centroid, 1 = Profile
             _methodPtr->NumReactions = 1;
 			_methodPtr->Analyzer = _msmsAnalyzer;
 
             precursorMass = precursorMassList;
-
+			//_methodPtr->SetReaction(0, precursorMass, isolationWindow, normalizedCE, activationQ, activationTime);
             _methodPtr->SetReaction2(0, precursorMass, activationType, isolationWindow,
                 normalizedCE, activationQ, activationTime);
+			_methodPtr->GetReaction2(0, &precursorMass, &activationType, &isolationWindow, &normalizedCE, &activationQ, &activationTime);
 
 			if (_fullScans)
 			{
