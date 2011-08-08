@@ -2,7 +2,7 @@
  * Original author: Shannon Joyner <sjoyner .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
- * Copyright 2009 University of Washington - Seattle, WA
+ * Copyright 2011 University of Washington - Seattle, WA
  * 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@
  */
 
 using System;
+using System.Deployment.Application;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Properties;
@@ -36,33 +37,88 @@ namespace pwiz.Skyline.Alerts
 
             tbErrorDescription.Text = e.Message;
 
-            tbSourceCodeLocation.Text = e.StackTrace;
+            tbSourceCodeLocation.Text = StackTraceText;
+
+            // If the user runs the daily version, they automatically
+            // agree to letting us send reports.
+            if (!Equals(Application.ProductName, "Skyline") || !ApplicationDeployment.IsNetworkDeployed)
+            {
+                btnOK.Visible = false;
+                btnOK.DialogResult = DialogResult.None;
+
+                btnCancel.Text = "Close";
+                if (ApplicationDeployment.IsNetworkDeployed)
+                    btnCancel.DialogResult = DialogResult.OK;
+                AcceptButton = btnCancel;
+
+                StringBuilder error = new StringBuilder("An unexpected error has occurred, as shown below.");
+                if (ApplicationDeployment.IsNetworkDeployed)
+                    error.AppendLine("An error report will be posted.");
+
+                lblReportError.Text = error.ToString();
+            }
         }
 
         public static Exception _exception;
 
-        public string MessageBody
+        public string StackTraceText
         {
             get
             {
-                StringBuilder sb = new StringBuilder();
-                if (!string.IsNullOrEmpty(tbEmail.Text))
-                    sb.Append("User Email Address: ").AppendLine(tbEmail.Text);
-                if (!string.IsNullOrEmpty(tbMessage.Text))
-                    sb.Append("User Comments:").AppendLine().AppendLine(tbMessage.Text).AppendLine();
-                sb.Append("Error Message: ").AppendLine(_exception.Message).AppendLine();
-                sb.AppendLine("Stack Trace:").AppendLine(_exception.StackTrace);
+                StringBuilder stackTrace = new StringBuilder("Stack trace:");
+
+                stackTrace.AppendLine().AppendLine(_exception.StackTrace).AppendLine();
 
                 for (var x = _exception.InnerException; x != null; x = x.InnerException)
                 {
                     if (ReferenceEquals(x, _exception.InnerException))
-                        sb.AppendLine("Inner Exceptions:");
+                        stackTrace.AppendLine("Inner exceptions:");
                     else
-                        sb.AppendLine("---------------------------------------------------------------");
-                    sb.AppendLine(x.Message).AppendLine(x.StackTrace);
+                        stackTrace.AppendLine("---------------------------------------------------------------");
+                    stackTrace.Append("Exception type: ").Append(x.GetType().FullName).AppendLine();
+                    stackTrace.Append("Error message: ").AppendLine(x.Message);
+                    stackTrace.AppendLine(x.Message).AppendLine(x.StackTrace);
                 }
+                return stackTrace.ToString();
+            }
+        }
+
+    
+        public string MessageBody
+        {
+            get
+            {
+                string guid = Settings.Default.InstallationId;
+                if (string.IsNullOrEmpty(guid))
+                    guid = Settings.Default.InstallationId = Guid.NewGuid().ToString();
+
+                string version = Application.ProductVersion;
+
+                StringBuilder sb = new StringBuilder();
+                if (!string.IsNullOrEmpty(tbEmail.Text))
+                    sb.Append("User email address: ").AppendLine(tbEmail.Text);
+                
+                if (!string.IsNullOrEmpty(tbMessage.Text))
+                    sb.Append("User comments:").AppendLine().AppendLine(tbMessage.Text).AppendLine();
+
+                sb.Append("Skyline version: ").Append(version).AppendLine();
+                sb.Append("Installation ID: ").AppendLine(guid);
+                sb.Append("Exception type: ").Append(ExceptionType).AppendLine();
+                sb.Append("Error message: ").AppendLine(_exception.Message).AppendLine();
+                
+                // Stack trace with any inner exceptions
+                sb.AppendLine(tbSourceCodeLocation.Text);
 
                 return sb.ToString();
+            }
+        }
+
+        public string ExceptionType
+        {
+            get
+            {
+                var type = _exception.GetType();
+                return type.FullName;
             }
         }
 
@@ -70,5 +126,7 @@ namespace pwiz.Skyline.Alerts
         {
             Clipboard.SetDataObject(MessageBody, true);
         }
+
+        
     }
 }

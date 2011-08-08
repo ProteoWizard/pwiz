@@ -104,12 +104,28 @@ namespace pwiz.Skyline
 
         public static void ThreadExceptionEventHandler(Object sender, ThreadExceptionEventArgs e)
         {
-            var reportForm = new ReportErrorDlg(e.Exception);
-            if (reportForm.ShowDialog(MainWindow) == DialogResult.OK)
-                SendErrorReport(reportForm.MessageBody);
+            List<string> stackTraceList = Settings.Default.StackTraceList;
+            if (!Equals(Settings.Default.StackTraceListVersion, Application.ProductVersion))
+            {
+                Settings.Default.StackTraceListVersion = Application.ProductVersion;
+                stackTraceList.Clear();                
+            }
+
+            using (var reportForm = new ReportErrorDlg(e.Exception))
+            {
+                if (reportForm.ShowDialog(MainWindow) == DialogResult.OK)
+                {
+                    string stackText = reportForm.StackTraceText;
+                    if (!stackTraceList.Contains(stackText))
+                    {
+                        stackTraceList.Add(stackText);
+                        SendErrorReport(reportForm.MessageBody, reportForm.ExceptionType);
+                    }
+                }
+            }         
         }
 
-        private static void SendErrorReport(string messageBody)
+        private static void SendErrorReport(string messageBody, string exceptionType)
         {
             WebClient webClient = new WebClient();
 
@@ -117,7 +133,7 @@ namespace pwiz.Skyline
 
             NameValueCollection form = new NameValueCollection
                                            {
-                                               { "title", "Unhandled Exception" },
+                                               { "title", "Unhandled " + exceptionType},
                                                { "body", messageBody },
                                                { "fromDiscussion", "false"},
                                                { "allowMultipleDiscussions", "false"},

@@ -78,6 +78,19 @@ namespace pwiz.Skyline.Properties
         }
 
         [System.Configuration.UserScopedSettingAttribute]
+        public List<string> StackTraceList
+        {
+            get
+            {
+                if (this["StackTraceList"] == null)
+                    StackTraceList = new List<string>();
+                return (List<string>) (this["StackTraceList"]);
+            }
+            set { this["StackTraceList"] = value; }
+        }
+
+
+        [System.Configuration.UserScopedSettingAttribute]
         public MethodTemplateList ExportMethodTemplateList
         {
             get

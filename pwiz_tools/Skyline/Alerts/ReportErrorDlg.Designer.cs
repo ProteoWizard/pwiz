@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.btnOK = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.tbMessage = new System.Windows.Forms.RichTextBox();
             this.lblCommentBox = new System.Windows.Forms.Label();
@@ -40,24 +39,14 @@
             this.lblEmail = new System.Windows.Forms.Label();
             this.tbEmail = new System.Windows.Forms.TextBox();
             this.tbErrorDescription = new System.Windows.Forms.TextBox();
+            this.btnOK = new System.Windows.Forms.Button();
             this.SuspendLayout();
-            // 
-            // btnOK
-            // 
-            this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOK.Location = new System.Drawing.Point(391, 373);
-            this.btnOK.Name = "btnOK";
-            this.btnOK.Size = new System.Drawing.Size(82, 24);
-            this.btnOK.TabIndex = 4;
-            this.btnOK.Text = "Report";
-            this.btnOK.UseVisualStyleBackColor = true;
             // 
             // btnCancel
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(479, 373);
+            this.btnCancel.Location = new System.Drawing.Point(483, 427);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(82, 24);
             this.btnCancel.TabIndex = 5;
@@ -68,7 +57,7 @@
             // 
             this.tbMessage.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbMessage.Location = new System.Drawing.Point(12, 250);
+            this.tbMessage.Location = new System.Drawing.Point(12, 304);
             this.tbMessage.Name = "tbMessage";
             this.tbMessage.Size = new System.Drawing.Size(549, 80);
             this.tbMessage.TabIndex = 1;
@@ -78,7 +67,7 @@
             // 
             this.lblCommentBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.lblCommentBox.AutoSize = true;
-            this.lblCommentBox.Location = new System.Drawing.Point(9, 234);
+            this.lblCommentBox.Location = new System.Drawing.Point(9, 288);
             this.lblCommentBox.Name = "lblCommentBox";
             this.lblCommentBox.Size = new System.Drawing.Size(259, 13);
             this.lblCommentBox.TabIndex = 0;
@@ -100,16 +89,16 @@
             this.lblReportError.Font = new System.Drawing.Font("Microsoft Sans Serif", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.lblReportError.Location = new System.Drawing.Point(9, 9);
             this.lblReportError.Name = "lblReportError";
-            this.lblReportError.Size = new System.Drawing.Size(385, 36);
+            this.lblReportError.Size = new System.Drawing.Size(350, 36);
             this.lblReportError.TabIndex = 7;
-            this.lblReportError.Text = "An unexpected error has occurred, as shown below.\r\nPlease click the Report button" +
-                " to help us improve Skyline.";
+            this.lblReportError.Text = "An unexpected error has occurred, as shown below.\r\nReport the error to help impro" +
+                "ve Skyline.";
             // 
             // label1
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(12, 109);
+            this.label1.Location = new System.Drawing.Point(12, 107);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(132, 13);
             this.label1.TabIndex = 10;
@@ -120,18 +109,19 @@
             this.tbSourceCodeLocation.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbSourceCodeLocation.Location = new System.Drawing.Point(12, 125);
+            this.tbSourceCodeLocation.Location = new System.Drawing.Point(12, 123);
             this.tbSourceCodeLocation.Multiline = true;
             this.tbSourceCodeLocation.Name = "tbSourceCodeLocation";
             this.tbSourceCodeLocation.ReadOnly = true;
             this.tbSourceCodeLocation.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.tbSourceCodeLocation.Size = new System.Drawing.Size(549, 103);
+            this.tbSourceCodeLocation.Size = new System.Drawing.Size(549, 159);
             this.tbSourceCodeLocation.TabIndex = 11;
+            this.tbSourceCodeLocation.TextChanged += new System.EventHandler(this.tbSourceCodeLocation_TextChanged);
             // 
             // btnClipboard
             // 
             this.btnClipboard.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.btnClipboard.Location = new System.Drawing.Point(12, 373);
+            this.btnClipboard.Location = new System.Drawing.Point(12, 427);
             this.btnClipboard.Name = "btnClipboard";
             this.btnClipboard.Size = new System.Drawing.Size(135, 23);
             this.btnClipboard.TabIndex = 6;
@@ -143,7 +133,7 @@
             // 
             this.lblEmail.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.lblEmail.AutoSize = true;
-            this.lblEmail.Location = new System.Drawing.Point(9, 340);
+            this.lblEmail.Location = new System.Drawing.Point(9, 394);
             this.lblEmail.Name = "lblEmail";
             this.lblEmail.Size = new System.Drawing.Size(123, 13);
             this.lblEmail.TabIndex = 2;
@@ -152,7 +142,7 @@
             // tbEmail
             // 
             this.tbEmail.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.tbEmail.Location = new System.Drawing.Point(132, 337);
+            this.tbEmail.Location = new System.Drawing.Point(132, 391);
             this.tbEmail.Name = "tbEmail";
             this.tbEmail.Size = new System.Drawing.Size(299, 20);
             this.tbEmail.TabIndex = 3;
@@ -166,8 +156,20 @@
             this.tbErrorDescription.Name = "tbErrorDescription";
             this.tbErrorDescription.ReadOnly = true;
             this.tbErrorDescription.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.tbErrorDescription.Size = new System.Drawing.Size(549, 34);
+            this.tbErrorDescription.Size = new System.Drawing.Size(549, 32);
             this.tbErrorDescription.TabIndex = 9;
+            this.tbErrorDescription.Text = "1\r\n2\r\n";
+            // 
+            // btnOK
+            // 
+            this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
+            this.btnOK.Location = new System.Drawing.Point(402, 428);
+            this.btnOK.Name = "btnOK";
+            this.btnOK.Size = new System.Drawing.Size(75, 23);
+            this.btnOK.TabIndex = 4;
+            this.btnOK.Text = "Report";
+            this.btnOK.UseVisualStyleBackColor = true;
             // 
             // ReportErrorDlg
             // 
@@ -175,7 +177,9 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(573, 405);
+            this.ClientSize = new System.Drawing.Size(573, 459);
+            this.ControlBox = false;
+            this.Controls.Add(this.btnOK);
             this.Controls.Add(this.tbErrorDescription);
             this.Controls.Add(this.tbEmail);
             this.Controls.Add(this.lblEmail);
@@ -187,11 +191,11 @@
             this.Controls.Add(this.lblCommentBox);
             this.Controls.Add(this.tbMessage);
             this.Controls.Add(this.btnCancel);
-            this.Controls.Add(this.btnOK);
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.Name = "ReportErrorDlg";
             this.ShowInTaskbar = false;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Unexpected Error";
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -200,7 +204,6 @@
 
         #endregion
 
-        private System.Windows.Forms.Button btnOK;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.RichTextBox tbMessage;
         private System.Windows.Forms.Label lblCommentBox;
@@ -212,5 +215,6 @@
         private System.Windows.Forms.Label lblEmail;
         private System.Windows.Forms.TextBox tbEmail;
         private System.Windows.Forms.TextBox tbErrorDescription;
+        private System.Windows.Forms.Button btnOK;
     }
 }
