@@ -116,7 +116,6 @@
             this.tbSourceCodeLocation.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.tbSourceCodeLocation.Size = new System.Drawing.Size(549, 159);
             this.tbSourceCodeLocation.TabIndex = 11;
-            this.tbSourceCodeLocation.TextChanged += new System.EventHandler(this.tbSourceCodeLocation_TextChanged);
             // 
             // btnClipboard
             // 
