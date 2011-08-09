@@ -43,7 +43,10 @@ try {
 	cout << "Desired output directory: " << configOptions.locOutput << endl;
 */
 	ofstream qout; // short for quameter output, save to same directory as input file
-	qout.open (	boost::filesystem::change_extension(sourceFilename, "-quameter_results.txt").string().c_str() );
+	if (configOptions.tabbedOutput)
+		qout.open (	boost::filesystem::change_extension(sourceFilename, "-quameter_results.tab").string().c_str() );
+	else
+		qout.open (	boost::filesystem::change_extension(sourceFilename, "-quameter_results.txt").string().c_str() );
 
 	MSDataFile msd(sourceFilename, & readers);
 	
@@ -345,41 +348,43 @@ try {
 		}
 	} // end of spectra searching. we now have Intensity/RT pairs to build chromatograms
 
-	// Make an MSData object and output some chromatograms for SeeMS to read
-	MSData chromData;
-	shared_ptr<ChromatogramListSimple> chromatogramListSimple(new ChromatogramListSimple);
-	chromData.run.chromatogramListPtr = chromatogramListSimple;
-	chromData.run.id = "this must be set";
+	// Optional: Make an MSData object and output some chromatograms for SeeMS to read
+	if (configOptions.chromatogramOutput) {
+		MSData chromData;
+		shared_ptr<ChromatogramListSimple> chromatogramListSimple(new ChromatogramListSimple);
+		chromData.run.chromatogramListPtr = chromatogramListSimple;
+		chromData.run.id = "this must be set";
+		
+		// Put unique identified peptide chromatograms first in the file
+		for (unsigned int iWin = 0; iWin < pepWindow.size(); iWin++) {
+			chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+			Chromatogram& c = *chromatogramListSimple->chromatograms.back();
+			c.index = iWin;
+			c.id = "unique identified peptide";
+			c.setTimeIntensityArrays(pepWindow[iWin].MS1RT, pepWindow[iWin].MS1Intensity, UO_second, MS_number_of_counts);
+		}
+		// next are chromatograms from identified MS2 scans
+		unsigned int iOffset = pepWindow.size();
+		for (unsigned int i = 0; i < identMS2Chrom.size(); i++) {
+			chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+			Chromatogram& c = *chromatogramListSimple->chromatograms.back();
+			c.index = i + iOffset;
+			c.id = "identified MS2 scan";
+			c.setTimeIntensityArrays(identMS2Chrom[i].MS1RT, identMS2Chrom[i].MS1Intensity, UO_second, MS_number_of_counts);
+		}
+		// last are chromatograms from
+		iOffset += identMS2Chrom.size();
+		for (unsigned int i = 0; i < unidentMS2Chrom.size(); i++) {
+			chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+			Chromatogram& c = *chromatogramListSimple->chromatograms.back();
+			c.index = i + iOffset;
+			c.id = "unidentified MS2 scan";
+			c.setTimeIntensityArrays(unidentMS2Chrom[i].MS1RT, unidentMS2Chrom[i].MS1Intensity, UO_second, MS_number_of_counts);
+		}
+		string chromFilename = boost::filesystem::change_extension(sourceFilename, "-quameter_chromatograms.mzML").string();
+		MSDataFile::write(chromData, chromFilename);
+	}
 	
-	// Put unique identified peptide chromatograms first in the file
-	for (unsigned int iWin = 0; iWin < pepWindow.size(); iWin++) {
-		chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
-		Chromatogram& c = *chromatogramListSimple->chromatograms.back();
-		c.index = iWin;
-		c.id = "unique identified peptide";
-		c.setTimeIntensityArrays(pepWindow[iWin].MS1RT, pepWindow[iWin].MS1Intensity, UO_second, MS_number_of_counts);
-	}
-	// next are chromatograms from identified MS2 scans
-	unsigned int iOffset = pepWindow.size();
-	for (unsigned int i = 0; i < identMS2Chrom.size(); i++) {
-		chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
-		Chromatogram& c = *chromatogramListSimple->chromatograms.back();
-		c.index = i + iOffset;
-		c.id = "identified MS2 scan";
-		c.setTimeIntensityArrays(identMS2Chrom[i].MS1RT, identMS2Chrom[i].MS1Intensity, UO_second, MS_number_of_counts);
-	}
-	// last are chromatograms from
-	iOffset += identMS2Chrom.size();
-	for (unsigned int i = 0; i < unidentMS2Chrom.size(); i++) {
-		chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
-		Chromatogram& c = *chromatogramListSimple->chromatograms.back();
-		c.index = i + iOffset;
-		c.id = "unidentified MS2 scan";
-		c.setTimeIntensityArrays(unidentMS2Chrom[i].MS1RT, unidentMS2Chrom[i].MS1Intensity, UO_second, MS_number_of_counts);
-	}
-	string chromFilename = boost::filesystem::change_extension(sourceFilename, "-quameter_chromatograms.mzML").string();
-	MSDataFile::write(chromData, chromFilename);
-
 	// Find peaks with Crawdad
 	using namespace SimpleCrawdad;
 	using namespace crawpeaks;
@@ -514,10 +519,10 @@ try {
 	int totalQ4 = idQ4+unidQ4;
 	
 	// Metric C-2A
-	double iqIDTime = (thirdQuartileIDTime - firstQuartileIDTime);	// iqIDTime stands for interquartile identification time (in seconds)
+	double iqIDTime = (thirdQuartileIDTime - firstQuartileIDTime)/60;	// iqIDTime stands for interquartile identification time (in seconds)
 
 	// Metric C-2B
-	double iqIDRate = (thirdQuartileIndex - firstQuartileIndex) *60 / iqIDTime;
+	double iqIDRate = (thirdQuartileIndex - firstQuartileIndex)  / iqIDTime;
 
 	// Metric C-4A: Median peak width for peptides in last decile sorted by RT
 	// Going slightly out of order (C-4A/B before C-3A/B) because the former use 'unsorted' identifiedPeptideFwhm (default is sorted by RT) while the C-3A/B then sort identifiedPeptideFwhm by width size
@@ -599,10 +604,10 @@ try {
         int theKey = (*m_it).first;
 		double peakIntensity = -1, maxMS1Time = -1;
         pair<mapIter, mapIter> keyRange = duplicatePeptides.equal_range(theKey);
-		
+
+		// Skip peptides that weren't repeat IDs
 		if ( (int)duplicatePeptides.count(theKey) < 2 ) {
 			numDuplicatePeptides--;
-//			cout << "Skipping peptide " << theKey << " because it's not a repeat ID\n";
 			s_it = keyRange.second;
 			continue;
 		}		
@@ -839,7 +844,7 @@ try {
 		qout << "--------\n";
 		qout << "C-1A: Chromatographic peak tailing: " << peakTailing << "/" << numDuplicatePeptides << " = " << peakTailingRatio << endl;
 		qout << "C-1B: Chromatographic bleeding: " << bleed << "/" << numDuplicatePeptides << " = " << bleedRatio << endl;
-		qout << "C-2A: Time period over which middle 50% of peptides were identified: " << thirdQuartileIDTime << " sec - " << firstQuartileIDTime << " sec = " << iqIDTime/60 << " minutes.\n";
+		qout << "C-2A: Time period over which middle 50% of peptides were identified: " << thirdQuartileIDTime << " sec - " << firstQuartileIDTime << " sec = " << iqIDTime << " minutes.\n";
 		qout << "C-2B: Peptide identification rate during the interquartile range: " << iqIDRate << " peptides/min.\n";
 		qout << "C-3A: Median peak width for identified peptides: " << medianFwhm << " seconds.\n";
 		qout << "C-3B: Interquartile peak width for identified peptides: " << fwhmQ3 << " - " << fwhmQ1 << " = "<< iqFwhm << " seconds.\n";
@@ -1598,6 +1603,7 @@ int main( int argc, char* argv[] ) {
 	// If there's no config file, the defaults in the struct runtimeOptions in quameter.h are used
 	ifstream configFile("quameter.cfg");
 	runtimeOptions configOptions = runtimeDefaults;
+	bool multithreading = true;
 	if (configFile) {
 		while ( configFile.good() ) {
 			string firstField;
@@ -1613,9 +1619,8 @@ int main( int argc, char* argv[] ) {
 			toLowerCase(data);
 			
 			// Check config file for output type (tabbed or delimited)
-			if ( firstField == "instrument" ) {
+			if ( firstField == "instrument" )
 				configOptions.instrument = data;
-			}
 			else if ( firstField == "tabbed_output" ) {
 				if (data == "1" || data == "true")
 					configOptions.tabbedOutput = true;
@@ -1628,11 +1633,21 @@ int main( int argc, char* argv[] ) {
 				else
 					configOptions.headerOn = false;
 			}
-			else if ( firstField == "locraw" ) {
+			else if ( firstField == "locraw" ) 
 				configOptions.locRAW = data;
-			}
-			else if ( firstField == "locoutput" ) {
+			else if ( firstField == "locoutput" )
 				configOptions.locOutput = data;
+			else if ( firstField == "multithreading" ) {
+				if ( data == "0" || data == "false" )
+					multithreading = false;
+				else
+					multithreading = true;
+			}
+			else if ( firstField == "chromatogram_output" ) {
+				if ( data == "1" || data == "true" )
+					configOptions.chromatogramOutput = true;
+				else
+					configOptions.chromatogramOutput = false;
 			}
 		}
 	}
@@ -1658,6 +1673,9 @@ int main( int argc, char* argv[] ) {
 	int current = 0;		
 	int maxThreads = boost::thread::hardware_concurrency(); 
 	if (maxThreads < 1) maxThreads = 1; // there must be at least one thread
+	
+	// User overload to use a single thread
+	if (!multithreading) maxThreads = 1;
 	
 	// Set up the reading	
 	FullReaderList readers;
