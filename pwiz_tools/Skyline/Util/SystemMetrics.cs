@@ -25,29 +25,6 @@ namespace pwiz.Skyline.Util
 {
     public static class SystemMetrics
     {
-        // ReSharper disable InconsistentNaming
-        enum SystemMetric
-        {
-            /// <summary>
-            /// Height of a horizontal scroll bar, in pixels.
-            /// </summary>
-            SM_CYHSCROLL = 3,
-            /// <summary>
-            /// Width of a vertical scroll bar, in pixels
-            /// </summary>
-            SM_CXVSCROLL = 2,
-        }
-        // ReSharper restore InconsistentNaming
-        [DllImport("user32.dll")]
-        static extern int GetSystemMetrics(SystemMetric smIndex);
-        public static int GetVerticalScrollBarWidth()
-        {
-            return GetSystemMetrics(SystemMetric.SM_CXVSCROLL);
-        }
-        public static int GetHorizontalScrollBarHeight()
-        {
-            return GetSystemMetrics(SystemMetric.SM_CYHSCROLL);
-        }
         // For some reason, TextRenderer.MeasureText does not return the actual width of the text.
         // We multiply by the "FUDGE_FACTOR" so that the ListBox is wide enough that it doesn't need a horizontal scroll bar.
         private const double FUDGE_FACTOR = 1;

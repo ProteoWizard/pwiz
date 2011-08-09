@@ -195,5 +195,41 @@ namespace pwiz.Skyline.Controls
                     break;
             }
         }
+
+        /// <summary>
+        /// When the ListView changes size, try to make the DisplayText column take up all of the available space
+        /// after the first two columns.
+        /// If there is no room for the DisplayText column, make the DisplayText column as wide as the ListView
+        /// itself and so the user will be able to scroll and see it.
+        /// </summary>
+        private void listView_Resize(object sender, EventArgs e)
+        {
+            if (listView.Items.Count == 0)
+            {
+                return;
+            }
+            BeginInvoke(new Action(ResizeListViewColumns));
+        }
+
+        private void ResizeListViewColumns()
+        {
+            int height = listView.Items[listView.Items.Count - 1].Bounds.Bottom;
+            int dxAvailable = listView.ClientRectangle.Width;
+            if (height > listView.ClientRectangle.Height)
+            {
+                dxAvailable -= SystemInformation.VerticalScrollBarWidth;
+            }
+            dxAvailable -= listView.Columns[0].Width + listView.Columns[1].Width;
+            const int minDisplayTextWidth = 10;
+            if (dxAvailable >= minDisplayTextWidth)
+            {
+                listView.Columns[2].Width = dxAvailable;
+            }
+            else
+            {
+                listView.Columns[2].Width = listView.ClientRectangle.Width -
+                                            SystemInformation.VerticalScrollBarWidth;
+            }
+        }
     }
 }

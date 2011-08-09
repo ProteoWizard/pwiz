@@ -95,7 +95,7 @@ namespace pwiz.Skyline.Controls
             int columnDelta = 0;
             if (dyRequired > dyAvailable || MaxDisplayItems < ListView.Items.Count)
             {
-                columnDelta = SystemMetrics.GetVerticalScrollBarWidth();
+                columnDelta = SystemInformation.VerticalScrollBarWidth;
                 dxRequired += columnDelta;
             }
             Size = new Size(Math.Min(dxRequired, dxAvailable), Math.Min(dyRequired, dyAvailable));

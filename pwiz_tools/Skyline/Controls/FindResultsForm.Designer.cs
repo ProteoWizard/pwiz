@@ -70,6 +70,7 @@ namespace pwiz.Skyline.Controls
             this.listView.View = System.Windows.Forms.View.Details;
             this.listView.DrawColumnHeader += new System.Windows.Forms.DrawListViewColumnHeaderEventHandler(this.listView_DrawColumnHeader);
             this.listView.ItemActivate += new System.EventHandler(this.listView_ItemActivate);
+            this.listView.Resize += new System.EventHandler(this.listView_Resize);
             this.listView.DrawSubItem += new System.Windows.Forms.DrawListViewSubItemEventHandler(this.listView_DrawSubItem);
             // 
             // colHdrLocation
