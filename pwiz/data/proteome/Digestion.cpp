@@ -485,9 +485,21 @@ class Digestion::Impl
         cleavageAgentRegex_ = mergedRegex;
     }
 
-    Impl(const Peptide& peptide, const boost::regex& cleavageAgentRegex, const Config& config)
-        :   peptide_(peptide), config_(config), cleavageAgentRegex_(cleavageAgentRegex)
+    Impl(const Peptide& peptide, const vector<boost::regex>& cleavageAgentRegexes, const Config& config)
+        :   peptide_(peptide), config_(config)
     {
+        if (cleavageAgentRegexes.size() == 1)
+        {
+            cleavageAgentRegex_ = cleavageAgentRegexes[0];
+            return;
+        }
+
+        string mergedRegex = "((" + cleavageAgentRegexes[0].str();
+        for (size_t i=1; i < cleavageAgentRegexes.size(); ++i)
+            mergedRegex += ")|(" + cleavageAgentRegexes[i].str();
+        mergedRegex += "))";
+
+        cleavageAgentRegex_ = mergedRegex;
     }
 
     Impl(const Peptide& peptide, const std::vector<ProteolyticEnzyme>& enzymes, const Config& config)
@@ -732,7 +744,15 @@ PWIZ_API_DECL
 Digestion::Digestion(const Peptide& peptide,
                      const boost::regex& cleavageAgentRegex,
                      const Config& config)
-:   impl_(new Impl(peptide, cleavageAgentRegex, config))
+:   impl_(new Impl(peptide, vector<boost::regex>(1, cleavageAgentRegex), config))
+{
+}
+
+PWIZ_API_DECL
+Digestion::Digestion(const Peptide& peptide,
+                     const vector<boost::regex>& cleavageAgentRegexes,
+                     const Config& config)
+:   impl_(new Impl(peptide, cleavageAgentRegexes, config))
 {
 }
 

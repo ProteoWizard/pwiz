@@ -193,6 +193,15 @@ class PWIZ_API_DECL Digestion
               const boost::regex& cleavageAgentRegex,
               const Config& config = Config());
 
+    /// specifies digestion occurs by a combination of user-specified, zero-width Perl regular expressions
+    /// example: "(?<=K)" means "cleaves after K"
+    /// example: "((?<=D))|((?=D))" means "cleaves before or after D"
+    /// example: "(?=[DE])" means "cleaves before D or E"
+    /// example: "(?<=[FYWLKR])(?!P)" means "cleaves after any single residue from FYWLKR except when it is followed by P"
+    Digestion(const Peptide& polypeptide,
+              const std::vector<boost::regex>& cleavageAgentRegexes,
+              const Config& config = Config());
+
     /// returns all instances of the given peptide in the polypeptide under digestion;
     /// note: the filters set in Digestion::Config are respected!
     std::vector<DigestedPeptide> find_all(const Peptide& peptide) const;
