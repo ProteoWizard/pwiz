@@ -65,9 +65,10 @@ struct runtimeOptions {
 	bool headerOn;
 	string locRAW;
 	string locOutput;
+	bool chromatogramOutput;
 };
 
-static const runtimeOptions runtimeDefaults = { "LTQ", true, true, "", ""};
+static const runtimeOptions runtimeDefaults = { "LTQ", true, true, "", "", false };
 
 struct ms_amalgam {
 	string MS2;
