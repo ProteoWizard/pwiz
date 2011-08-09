@@ -16,7 +16,11 @@
 #endif
 
 #include <sstream>
+#include <vector>
+#include <boost/foreach.hpp>
 #include <boost/operators.hpp>
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/classification.hpp>
 
 namespace boost {
 namespace detail {
@@ -295,19 +299,24 @@ namespace detail {
 		return os;
 	}
 
-	// TODO: this should be symmetrical to operator <<
-	//       it needs to be able to take a string like A|B and
-	//       return a value that represents A|B.
 	template <typename T>
 	std::istream& operator >> (std::istream& is, bitfield_base<T>& rhs)
 	{
 		std::string str;
 		is >> str;
-		BOOST_DEDUCED_TYPENAME T::optional ret = T::get_by_name(str.c_str());
-		if(ret)
-			rhs = *ret;
-		else
-			is.setstate(std::ios::badbit);
+        std::vector<std::string> tokens;
+        boost::algorithm::split(tokens, str, boost::is_any_of("|,"));
+        BOOST_FOREACH(const std::string& token, tokens)
+        {
+		    BOOST_DEDUCED_TYPENAME T::optional ret = T::get_by_name(token.c_str());
+		    if(ret)
+			    rhs.set(*ret);
+		    else
+            {
+			    is.setstate(std::ios::badbit);
+                break;
+            }
+        }
 		return is;
 	}
 
