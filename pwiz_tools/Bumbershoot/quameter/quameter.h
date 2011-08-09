@@ -19,10 +19,9 @@
 //
 // Copyright 2011 Vanderbilt University
 //
-// Contributor(s):
+// Contributor(s): Surendra Dasari
 //
 
-#include "stdafx.h"
 
 #include <iostream>
 #include <fstream>
@@ -33,25 +32,35 @@
 
 #include "sqlite/sqlite3pp.h"
 
-#include "crawdad/SimpleCrawdad.h"
+#include "pwiz/data/msdata/Version.hpp"
 #include "pwiz/data/msdata/MSDataFile.hpp"
+#include "pwiz/data/proteome/Version.hpp"
 #include "pwiz_tools/common/FullReaderList.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumListFactory.hpp"
 
-#include <boost/icl/interval_set.hpp>
-#include <boost/icl/continuous_interval.hpp>
+#include "crawdad/SimpleCrawdad.h"
+#include "quameterConfig.h"
+#include "quameterSharedTypes.h"
+#include "quameterSharedFuncs.h"
+#include "idpDBReader.h"
 
 #include <boost/timer.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/filesystem/operations.hpp>
+#include <boost/algorithm/string.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/compare.hpp>
+
+
+#define QUAMETER_LICENSE			COMMON_LICENSE
 
 using boost::shared_ptr;
-using namespace boost::filesystem;
-using namespace boost::icl;
+
 using namespace std;
 using namespace freicore;
 using namespace pwiz;
 using namespace pwiz::msdata;
+using namespace pwiz::proteome;
 using namespace pwiz::analysis;
 using namespace pwiz::util;
 using namespace SimpleCrawdad;
@@ -59,74 +68,44 @@ using namespace crawpeaks;
 
 namespace sqlite = sqlite3pp;
 
-struct runtimeOptions {
-	string instrument;
-	bool tabbedOutput;
-	bool headerOn;
-	string locRAW;
-	string locOutput;
-	bool chromatogramOutput;
+namespace freicore
+{
+namespace quameter
+{
+
+enum InputType { NISTMS, PEPITOME, SCANRANKER, NONE};
+
+struct QuameterInput 
+{
+
+    string      sourceID;
+	string      sourceFile;
+	string      idpDBFile;
+    string      pepXMLFile;
+    string      scanRankerFile;
+    InputType   type;
+
+    QuameterInput(string srcID, string srcFile, string idpDB, string pepXML, string scanRanker, InputType inpType)
+    {
+        type = inpType;
+        if(type == NISTMS)
+        {
+            sourceID = srcID;
+            sourceFile = srcFile;
+            idpDBFile= idpDB;
+        } else if(type == PEPITOME)
+        {
+            sourceFile = srcFile;
+            pepXMLFile = pepXML;
+        } else if(type == SCANRANKER)
+        {
+            sourceFile = srcFile;
+            scanRankerFile = scanRanker;
+        }
+    }
 };
 
-static const runtimeOptions runtimeDefaults = { "LTQ", true, true, "", "", false };
-
-struct ms_amalgam {
-	string MS2;
-	double MS2Retention;
-	string precursor;
-	double precursorMZ;
-	double precursorIntensity;
-	double precursorRetention;
-};
-
-struct preMZandRT {
-	double MS2Retention;
-	double precursorMZ;
-	double precursorRetention;
-};
-
-struct chromatogram {
-	vector<double> MS1Intensity;
-	vector<double> MS1RT;
-};
-
-struct fourInts {
-	int first;
-	int second;
-	int third;
-	int fourth;
-};
-
-struct ppmStruct {
-	double median;
-	double interquartileRange;
-};
-
-struct windowData {
-	int peptide;
-	double firstMS2RT;
-	interval_set<double> preMZ;
-	interval_set<double> preRT;
-	vector<double> MS1Intensity;
-	vector<double> MS1RT;
-};
-
-struct intensityPair {
-	double precursorIntensity;
-	double peakIntensity;
-};
-
-struct sourceFile {
-	string id;
-	string filename;
-	string dbFilename;
-};
-
-void MetricMaster(sourceFile, runtimeOptions, FullReaderList);
-
-double Q1(vector<double>); // First quartile function
-double Q2(vector<double>); // Second quartile (aka median) function
-double Q3(vector<double>); // Third quartile function
+void MetricMaster(QuameterInput, FullReaderList);
 
 void toLowerCase(std::string &str)
 {
@@ -136,29 +115,44 @@ void toLowerCase(std::string &str)
 		str[i] = std::tolower(str[i]);
 	}
 }
-bool compareByPeak(const intensityPair& pair1, const intensityPair& pair2) { return pair1.peakIntensity < pair2.peakIntensity; }
+bool compareByPeak(const IntensityPair& pair1, const IntensityPair& pair2) { return pair1.peakIntensity < pair2.peakIntensity; }
 
 vector<string> GetNativeId(const string&, const string&);
 
-vector<windowData> MZRTWindows(const string&, const string&, map<string, int>, vector<ms_amalgam>);
+vector<XICWindows> MZRTWindows(const string&, const string&, map<string, int>, vector<MS2ScanInfo>);
 
 multimap<int, string> GetDuplicateID(const string&, const string&);
 
-int PeptidesIdentifiedOnce(const string&, const string&);
-int PeptidesIdentifiedTwice(const string&, const string&);
-int PeptidesIdentifiedThrice(const string&, const string&);
+ /**
+    * Given an idpDB file, return its RAW/mzML/etc source files.
+    * Add: also accept filenames of interest (e.g. ignore all source files except -these-)
+    * Add: also accept an extension type (e.g. use the .RAW source file instead of .mzML)
+    */
+vector<QuameterInput> GetIDPickerSpectraSources(const string& dbFilename)
+{
+   
+    sqlite::database db(dbFilename);
+    string s = "select Id, Name from SpectrumSource";
+    sqlite::query qry(db, s.c_str() );
+    vector<QuameterInput> sources;
 
-double MedianPrecursorMZ(const string&, const string&);
+    for (sqlite::query::iterator i = qry.begin(); i != qry.end(); ++i) {
+        int intSrcId;
+        string srcFilename;
 
-double MedianRealPrecursorError(const string&, const string&);
-double GetMeanAbsolutePrecursorErrors(const string&, const string&);
-ppmStruct GetRealPrecursorErrorPPM(const string&, const string&);
+        (*i).getter() >> intSrcId >> srcFilename;
 
-double GetMedianIDScore(const string&, const string&);
+        string sourceId = boost::lexical_cast<string>(intSrcId);
+        bfs::path p = dbFilename;
+        bfs::path srcPath(p.parent_path() / (srcFilename + "."+g_rtConfig->RawDataExtension));
+        if(!bfs::exists(srcPath))
+            continue; // if this source file doesn't exist we can't do anything, so let's try for the next source file
+        
+        QuameterInput qip(sourceId,srcPath.string(),dbFilename,"","",NISTMS);
+        sources.push_back(qip);
+    }
+    return sources;	
+}
 
-int GetNumTrypticMS2Spectra(const string&, const string&);
-int GetNumTrypticPeptides(const string&, const string&);
-int GetNumUniqueTrypticPeptides(const string&, const string&);
-int GetNumUniqueSemiTrypticPeptides(const string&, const string&);
-
-vector<sourceFile> GetSpectraSources(const string& dbFilename);
+}
+}

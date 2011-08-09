@@ -281,14 +281,6 @@
 			RelativePath=".\ReadMe.txt"
 			>
 		</File>
-		<File
-			RelativePath=".\Submit.bat"
-			>
-		</File>
-		<File
-			RelativePath=".\Update.bat"
-			>
-		</File>
 	</Files>
 	<Globals>
 	</Globals>
