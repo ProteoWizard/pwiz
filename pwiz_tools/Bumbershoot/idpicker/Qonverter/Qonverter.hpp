@@ -24,13 +24,15 @@
 #ifndef _QONVERTER_HPP_
 #define _QONVERTER_HPP_
 
-
+#define NOMINMAX // wtf is this needed?
 #include <vector>
 #include <map>
 #include <utility>
 #include <string>
 #include <boost/enum.hpp>
 #include <boost/range.hpp>
+#include <boost/ref.hpp>
+#include <boost/ptr_container/ptr_vector.hpp>
 #include "../Lib/SQLite/sqlite3.h"
 
 
@@ -66,7 +68,9 @@ struct PeptideSpectrumMatch
 {
     sqlite_int64 id;
     sqlite_int64 spectrum;
-    //string nativeID;
+#ifdef QONVERTER_HAS_NATIVEID
+    string nativeID;
+#endif
 
     int originalRank;
     DecoyState::Type decoyState;
@@ -89,6 +93,8 @@ struct Qonverter
     BOOST_ENUM_VALUES(QonverterMethod, const char*,
         (StaticWeighted)("static-weighted")
         (SVM)("SVM-optimized")
+        //(PartitionedSVM)("SVM-optimized per partition")
+        //(SingleSVM)("SVM-optimized across partitions")
     );
 
     BOOST_ENUM_VALUES(Kernel, const char*,
@@ -98,16 +104,16 @@ struct Qonverter
         (Sigmoid)("sigmoid")
     );
 
-    BOOST_ENUM(ChargeStateHandling,
-        (Ignore)
-        (Partition)
-        (Feature) // SVM only
+    BOOST_BITFIELD(ChargeStateHandling,
+        (Ignore)(1<<0)
+        (Partition)(1<<1)
+        (Feature)(1<<2) // SVM only
     );
 
-    BOOST_ENUM(TerminalSpecificityHandling,
-        (Ignore)
-        (Partition)
-        (Feature) // SVM only
+    BOOST_BITFIELD(TerminalSpecificityHandling,
+        (Ignore)(1<<0)
+        (Partition)(1<<1)
+        (Feature)(1<<2) // SVM only
     );
 
     BOOST_ENUM(MissedCleavagesHandling,
@@ -247,11 +253,39 @@ struct ChargeAndSpecificityLessThan
 };
 
 
-typedef std::vector<PeptideSpectrumMatch>::iterator PSMIterator;
+typedef boost::ptr_vector<PeptideSpectrumMatch> PSMList;
+typedef PSMList::iterator PSMIterator;
 typedef boost::iterator_range<PSMIterator> PSMIteratorRange;
+
 
 /// partitions PSMs by charge and/or terminal specificity
 std::vector<PSMIteratorRange> partition(const Qonverter::Settings& settings, const PSMIteratorRange& psmRows);
+
+/// partitions PSMs by charge and/or terminal specificity
+std::vector<PSMIteratorRange> partition(const Qonverter::Settings& settings, PSMList& psmRows);
+
+
+// a convenience for storing the extrema of a value set; also provides linear scaling between -1 and 1
+template <typename T>
+struct MinMaxPair
+{
+    MinMaxPair() : min(std::numeric_limits<T>::max()), max(-std::numeric_limits<T>::max()) {}
+    MinMaxPair(const T& initialMin, const T& initialMax) : min(initialMin), max(initialMax) {}
+
+    void compare(const T& value) {min = std::min(min, value); max = std::max(max, value);}
+
+    T& scale(T& value) const {return (min == max ? value : (value = 2 * (value - min) / (max - min) - 1));}
+    T& unscale(T& value) const {return (min == max ? value : (value = (value + 1) / 2 * (max - min) + min));}
+
+    T scale_copy(const T& value) const {T copy = value; return scale(copy);}
+    T unscale_copy(const T& value) const {T copy = value; return unscale(copy);}
+
+    T min, max;
+};
+
+
+/// normalizes PSM scores within each partition (according to qonverterSettings)
+void normalize(const Qonverter::Settings& settings, PSMList& psmRows);
 
 
 END_IDPICKER_NAMESPACE

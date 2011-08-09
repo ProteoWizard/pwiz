@@ -352,7 +352,7 @@ namespace IDPicker
             string psmString = DataModel.ExtensionMethods.ToModifiedString(psm);
             var annotation = new PeptideFragmentationAnnotation(psmString, 1, Math.Max(1, psm.Charge - 1),
                                                                 PeptideFragmentationAnnotation.IonSeries.Auto,
-                                                                true, false, true);
+                                                                true, false, true, false);
 
             (manager.SpectrumAnnotationForm.Controls[0] as ToolStrip).Hide();
             (manager.SpectrumAnnotationForm.Controls[1] as SplitContainer).Panel1Collapsed = true;
@@ -717,9 +717,29 @@ namespace IDPicker
                     return;
                 }
 
-                //try to determine if merged filepath exists already
+                // warn if idpDBs already exist
+                bool warnOnce = false;
+                foreach (string filepath in xml_filepaths)
+                {
+                    string idpDB_filepath = Path.ChangeExtension(filepath, ".idpDB");
+                    if (File.Exists(idpDB_filepath))
+                    {
+                        if (!warnOnce && MessageBox.Show("Some of these files have already been converted. Do you want to reconvert them?",
+                                                         "Result already converted",
+                                                         MessageBoxButtons.YesNo,
+                                                         MessageBoxIcon.Exclamation,
+                                                         MessageBoxDefaultButton.Button2) != DialogResult.Yes)
+                            return;
+                        warnOnce = true;
+                        File.Delete(idpDB_filepath);
+                    }
+                }
+
+                // determine if merged filepath exists and that it's a valid idpDB
                 string commonFilename = Util.GetCommonFilename(filepaths);
-                
+                bool fileExists = File.Exists(commonFilename);
+                bool fileIsValid = fileExists && SessionFactoryFactory.IsValidFile(commonFilename);
+
                 if (!idpDB_filepaths.Contains(commonFilename) &&
                     File.Exists(commonFilename) &&
                     SessionFactoryFactory.IsValidFile(commonFilename))
@@ -733,52 +753,56 @@ namespace IDPicker
                     File.Delete(commonFilename);
                 }
 
-                //determine if merged filepath can exist, get new path if not
-                DirectoryInfo newDi = null;
-                var possibledirectory = Path.GetDirectoryName(commonFilename);
-                if (possibledirectory != null && Directory.Exists(possibledirectory))
-                    newDi = new DirectoryInfo(possibledirectory);
-                while (newDi == null || (newDi.Attributes == (newDi.Attributes | FileAttributes.ReadOnly)))
+                // determine if merged filepath can be written, get new path if not
+                while (true)
                 {
-                    if (newDi == null)
-                        MessageBox.Show("Automatic output folder cannot be found, " +
-                                        "please specify a new output name and location.");
+                    DirectoryInfo directoryInfo = null;
+                    var possibleDirectory = Path.GetDirectoryName(commonFilename);
+                    if (possibleDirectory != null && Directory.Exists(possibleDirectory))
+                        directoryInfo = new DirectoryInfo(possibleDirectory);
+
+                    if (directoryInfo == null)
+                        MessageBox.Show("Automatic output folder cannot be found, please specify a new output name and location.");
                     else
-                        MessageBox.Show("Output folder is readonly, " +
-                                        "please specify a new output name and location.");
-                    var sfd = new SaveFileDialog
-                                  {
-                                      AddExtension = true,
-                                      RestoreDirectory = true,
-                                      DefaultExt = "idpDB",
-                                      Filter = "IDPicker Database|*.idpDB"
-                                  };
-                    if (sfd.ShowDialog() != DialogResult.OK)
+                    {
+                        try
+                        {
+                            string randomTestFile = Path.GetRandomFileName();
+                            using (var tmp = File.Create(randomTestFile)) { }
+                            File.Delete(randomTestFile);
+                            break;
+                        }
+                        catch (Exception)
+                        {
+                            MessageBox.Show("Output folder is read-only, please specify a new output name and location.");
+                        }
+                    }
+
+                    bool cancel = false;
+                    Invoke(new MethodInvoker(() =>
+                    {
+                        var sfd = new SaveFileDialog
+                                   {
+                                       AddExtension = true,
+                                       RestoreDirectory = true,
+                                       DefaultExt = "idpDB",
+                                       Filter = "IDPicker Database|*.idpDB"
+                                   };
+                        if (sfd.ShowDialog() != DialogResult.OK)
+                        {
+                            cancel = true;
+                            return;
+                        }
+                        commonFilename = sfd.FileName;
+                    }));
+
+                    if (cancel)
                         return;
-                    commonFilename = sfd.FileName;
-                    possibledirectory = Path.GetDirectoryName(commonFilename);
-                    if (possibledirectory != null && Directory.Exists(possibledirectory))
-                        newDi = new DirectoryInfo(possibledirectory);
                 }
-                Environment.CurrentDirectory = possibledirectory ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+                //Environment.CurrentDirectory = possibleDirectory ?? Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
                 // set main window title
                 BeginInvoke(new MethodInvoker(() => Text = commonFilename));
-
-                
-                /*if (xml_filepaths.Count() > 0)
-                {
-                    using (Parser parser = new Parser(".", qonverterSettingsHandler, false, xml_filepaths.ToArray()))
-                    {
-                        toolStripStatusLabel.Text = "Initializing parser...";
-                        parser.DatabaseNotFound += databaseNotFoundHandler;
-                        parser.SourceNotFound += sourceNotFoundOnImportHandler;
-                        parser.ParsingProgress += progressMonitor.UpdateProgress;
-                        if (parser.Start())
-                            return;
-                    }
-                    idpDB_filepaths = idpDB_filepaths.Union(xml_filepaths.Select(o => Path.ChangeExtension(o, ".idpDB")));
-                }*/
 
                 if (xml_filepaths.Count() > 0)
                 {

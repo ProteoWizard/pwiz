@@ -100,13 +100,14 @@
 
 		<!-- We store these long text fields in separate tables so that joins against the Proteins table are faster -->
 		<property name="Description" formula="(SELECT pmd.Description FROM ProteinMetadata pmd WHERE Id=pmd.Id)"/>
-		<property name="Sequence" lazy="true" formula="(SELECT pd.Sequence FROM ProteinData pd WHERE Id=pd.Id)"/>
+		<property name="Sequence" lazy="true" formula="IFNULL((SELECT pd.Sequence FROM ProteinData pd WHERE Id=pd.Id), &quot;&quot;)"/>
 
 
 		<bag name="Peptides" inverse="true" batch-size="500" lazy="true">
 			<key column="Protein"/>
 			<one-to-many class="PeptideInstance"/>
 		</bag>
+		<property name="IsDecoy" access="nosetter.camelcase"/>
 		<property name="Cluster" access="nosetter.camelcase"/>
 		<property name="ProteinGroup" access="nosetter.camelcase"/>
 		<property name="Length" access="nosetter.camelcase"/>
@@ -126,15 +127,13 @@
 	<class name="Peptide">
 		<id name="Id"><generator class="native"/></id>
 		<property name="Sequence" access="nosetter.camelcase" 
-				  formula="(SELECT SUBSTR(pro.Sequence, pi.Offset+1, pi.Length)
+				  formula="(SELECT IFNULL(SUBSTR(pro.Sequence, pi.Offset+1, pi.Length), DecoySequence)
 							FROM PeptideInstance pi
-							JOIN ProteinData pro ON pi.Protein=pro.Id
-							WHERE pi.Protein=pro.Id AND
-							  pi.Id=(SELECT MIN(pi2.Id)
-									 FROM PeptideInstance pi2
-									 WHERE Id=pi2.Peptide))"/>
+							LEFT JOIN ProteinData pro ON pi.Protein=pro.Id
+							WHERE pi.Id=(SELECT pi2.Id FROM PeptideInstance pi2 WHERE Id=pi2.Peptide LIMIT 1))"/>
 		<property name="MonoisotopicMass"/>
 		<property name="MolecularWeight"/>
+		<property name="DecoySequence"/>
 		<bag name="Instances" inverse="true" batch-size="500" lazy="true">
 			<key column="Peptide"/>
 			<one-to-many class="PeptideInstance"/>

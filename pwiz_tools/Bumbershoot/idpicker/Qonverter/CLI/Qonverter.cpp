@@ -23,6 +23,7 @@
 
 #include "Qonverter.hpp"
 #include "../Qonverter.hpp"
+#include "pwiz/utility/misc/Std.hpp"
 
 
 namespace IDPicker {

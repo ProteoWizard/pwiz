@@ -67,7 +67,7 @@ struct StaticWeightedTotalScoreBetterThan
 BEGIN_IDPICKER_NAMESPACE
 
 
-void StaticWeightQonverter::Qonvert(vector<PeptideSpectrumMatch>& psmRows,
+void StaticWeightQonverter::Qonvert(PSMList& psmRows,
                                     const Qonverter::Settings& settings,
                                     const vector<double>& scoreWeights)
 {

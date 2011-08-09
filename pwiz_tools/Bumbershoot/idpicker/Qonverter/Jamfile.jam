@@ -20,16 +20,22 @@
 # Contributor(s): Surendra Dasaris
 #
 
+#project Qonverter : requirements <define>QONVERTER_HAS_NATIVEID ;
+
 lib Qonverter
     : # sources
         [ glob *Qonverter.cpp ]
     : # requirements
         <library>../Lib/SQLite//sqlite3pp
         <library>..//svm
+        <library>/ext/boost//thread
+        <library>/ext/boost//filesystem
     : # default-build
     : # usage-requirements
         <library>../Lib/SQLite//sqlite3pp
         <library>..//svm
+        <library>/ext/boost//thread
+        <library>/ext/boost//filesystem
     ;
 
 lib Parser

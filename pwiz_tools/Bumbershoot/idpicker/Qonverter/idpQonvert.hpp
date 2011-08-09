@@ -32,12 +32,14 @@
 #define IDPQONVERT_RUNTIME_CONFIG \
 	RTCONFIG_VARIABLE( string,			OutputSuffix,				""				) \
 	RTCONFIG_VARIABLE( bool,			WriteQonversionDetails,		false			) \
+    RTCONFIG_VARIABLE( bool,			OverwriteExistingFiles,		false			) \
 	RTCONFIG_VARIABLE( string,			ProteinDatabase,			""				) \
 	RTCONFIG_VARIABLE( string,			DecoyPrefix,				"rev_"			) \
-	RTCONFIG_VARIABLE( double,			MaxFDR,						0.25			) \
-	RTCONFIG_VARIABLE( int,				MaxResultRank,				1				) \
-    RTCONFIG_VARIABLE( string,			ScoreInfo,                  "1 off myrimatch:mvh; 1 off sequest:xcorr; 1 off mascot:score; -1 off x!tandem:expect" ) \
-    RTCONFIG_VARIABLE( Qonverter::QonverterMethod, QonverterMethod, "StaticWeighted" ) \
+	RTCONFIG_VARIABLE( double,			MaxFDR,						0.05			) \
+	RTCONFIG_VARIABLE( double,			MaxImportFDR,				0.25			) \
+	RTCONFIG_VARIABLE( int,				MaxResultRank,				3				) \
+    RTCONFIG_VARIABLE( string,			ScoreInfo,                  "1 off myrimatch:mvh; 1 off xcorr; 1 off sequest:xcorr; 1 off mascot:score; -1 off x!tandem:expect" ) \
+    RTCONFIG_VARIABLE( Qonverter::QonverterMethod, QonverterMethod, "SVM" ) \
     RTCONFIG_VARIABLE( Qonverter::Kernel, Kernel, "Linear" ) \
     RTCONFIG_VARIABLE( Qonverter::ChargeStateHandling, ChargeStateHandling, "Partition" ) \
     RTCONFIG_VARIABLE( Qonverter::TerminalSpecificityHandling, TerminalSpecificityHandling, "Partition" ) \
@@ -94,12 +96,12 @@ private:
             vector<string> tokens2;
             split(tokens2, tokens[i], boost::is_space());
 
-            if (tokens2.size() != 3)
+            if (tokens2.size() < 3)
                 throw runtime_error("invalid score info (must be a space-separated triplet of <weight> <off|quantile|linear> <name>)");
 
             const string& weight = tokens2[0];
             const string& normalization = tokens2[1];
-            const string& name = tokens2[2];
+            string name = bal::join(boost::make_iterator_range(tokens2.begin()+2, tokens2.end()), " ");
 
             Qonverter::Settings::ScoreInfo& scoreInfo = scoreInfoByName[name];
             scoreInfo.weight = lexical_cast<double>(weight);

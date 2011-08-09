@@ -146,6 +146,7 @@ namespace IDPicker.DataModel
         public virtual string Sequence { get { return pd.Sequence; } set { pd.Sequence = value; } }
         public virtual IList<PeptideInstance> Peptides { get; set; }
 
+        public virtual bool IsDecoy { get { return isDecoy; } }
         public virtual int Cluster { get { return cluster; } }
         public virtual string ProteinGroup { get { return proteinGroup; } }
         public virtual int Length { get { return length; } }
@@ -168,6 +169,7 @@ namespace IDPicker.DataModel
             this.length = sequence.Length;
         }
 
+        bool isDecoy = false;
         int cluster = 0;
         string proteinGroup = "";
         int length = 0;
@@ -200,6 +202,7 @@ namespace IDPicker.DataModel
         }
 
         private string sequence = null;
+        private string DecoySequence { get; set; }
         #endregion
     }
 

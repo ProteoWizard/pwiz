@@ -402,7 +402,7 @@ namespace IDPicker.DataModel
             if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering proteins...", 3, null)))
                 return;
             string filterProteinsSql =
-                @"CREATE TABLE FilteredProtein (Id INTEGER PRIMARY KEY, Accession TEXT, Cluster INT, ProteinGroup TEXT, Length INT);
+                @"CREATE TABLE FilteredProtein (Id INTEGER PRIMARY KEY, Accession TEXT, IsDecoy INT, Cluster INT, ProteinGroup TEXT, Length INT);
                   INSERT INTO FilteredProtein SELECT pro.*
                   FROM PeptideSpectrumMatch psm
                   JOIN PeptideInstance pi ON psm.Peptide = pi.Peptide
@@ -443,7 +443,7 @@ namespace IDPicker.DataModel
 
             if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering peptides...", 5, null)))
                 return;
-            session.CreateSQLQuery(@"CREATE TABLE FilteredPeptide (Id INTEGER PRIMARY KEY, MonoisotopicMass NUMERIC, MolecularWeight NUMERIC);
+            session.CreateSQLQuery(@"CREATE TABLE FilteredPeptide (Id INTEGER PRIMARY KEY, MonoisotopicMass NUMERIC, MolecularWeight NUMERIC, DecoySequence TEXT);
                                      INSERT INTO FilteredPeptide SELECT pep.*
                                      FROM FilteredPeptideSpectrumMatch psm
                                      JOIN Peptide pep ON psm.Peptide = pep.Id
@@ -460,7 +460,7 @@ namespace IDPicker.DataModel
                                      CREATE INDEX FilteredPeptideInstance_Protein ON FilteredPeptideInstance (Protein);
                                      CREATE INDEX FilteredPeptideInstance_Peptide ON FilteredPeptideInstance (Peptide);
                                      CREATE INDEX FilteredPeptideInstance_PeptideProtein ON FilteredPeptideInstance (Peptide, Protein);
-                                     CREATE UNIQUE INDEX FilteredPeptideInstance_ProteinOffsetLength ON FilteredPeptideInstance (Protein, Offset, Length);"
+                                     CREATE INDEX FilteredPeptideInstance_ProteinOffsetLength ON FilteredPeptideInstance (Protein, Offset, Length);"
                                   ).ExecuteUpdate();
             #endregion
 
@@ -508,7 +508,7 @@ namespace IDPicker.DataModel
                                      GROUP BY pi.Protein;
 
                                      CREATE TEMP TABLE TempProtein AS
-                                     SELECT pg.ProteinId, pro.Accession, pro.Cluster, pg2.ProteinGroupId, pro.Length
+                                     SELECT pg.ProteinId, pro.Accession, pro.IsDecoy, pro.Cluster, pg2.ProteinGroupId, pro.Length
                                      FROM ProteinGroups pg
                                      JOIN ( 
                                            SELECT pg.ProteinGroup, MIN(ProteinId) AS ProteinGroupId

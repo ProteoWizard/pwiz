@@ -410,8 +410,8 @@ namespace IDPicker.DataModel
 
 
         static string addNewProteinsSql =
-              @"INSERT INTO merged.Protein (Id, Accession, Length)
-                SELECT AfterMergeId, Accession, Length
+              @"INSERT INTO merged.Protein (Id, Accession, IsDecoy, Length)
+                SELECT AfterMergeId, Accession, IsDecoy, Length
                 FROM NewProteins
                 JOIN {0}.Protein newPro ON BeforeMergeId = newPro.Id;
 
@@ -441,7 +441,7 @@ namespace IDPicker.DataModel
 
         static string addNewPeptidesSql =
               @"INSERT INTO merged.Peptide
-                SELECT AfterMergePeptide, MonoisotopicMass, MolecularWeight
+                SELECT AfterMergePeptide, MonoisotopicMass, MolecularWeight, DecoySequence
                 FROM {0}.Peptide newPep
                 JOIN PeptideInstanceMergeMap ON newPep.Id = BeforeMergePeptide
                 WHERE AfterMergePeptide > {1}

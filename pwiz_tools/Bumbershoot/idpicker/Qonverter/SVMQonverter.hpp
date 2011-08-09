@@ -33,7 +33,10 @@ BEGIN_IDPICKER_NAMESPACE
 
 struct SVMQonverter
 {
-    static void Qonvert(const std::string& sourceName, std::vector<PeptideSpectrumMatch>& psmRows, const Qonverter::Settings& settings);
+    static void Qonvert(const std::string& sourceName,
+                        const std::vector<std::string>& scoreNames,
+                        PSMList& psmRows,
+                        const Qonverter::Settings& settings);
 };
 
 

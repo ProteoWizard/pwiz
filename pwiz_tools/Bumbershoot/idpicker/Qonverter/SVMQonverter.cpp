@@ -22,12 +22,14 @@
 
 
 #include "pwiz/utility/misc/Std.hpp"
+#include "pwiz/utility/misc/Once.hpp"
+#include "pwiz/utility/misc/Filesystem.hpp"
+#include "boost/bind.hpp"
 #include "svm.h"
 #include "SVMQonverter.hpp"
 #include "Qonverter.hpp"
 #include <climits>
 #include <cfloat>
-
 #include <iostream>
 
 
@@ -49,7 +51,6 @@ struct SingleScoreBetterThan
             return lhs.scores[scoreIndex] > rhs.scores[scoreIndex];
 
         // arbitrary tie-breaker when scores are equal
-        //return lhs.massError < rhs.massError;
         return lhs.spectrum < rhs.spectrum;
     }
 
@@ -67,7 +68,27 @@ struct TotalScoreBetterThan
             return lhs.totalScore > rhs.totalScore;
 
         // arbitrary tie-breaker when scores are equal
+        return lhs.spectrum < rhs.spectrum;
+    }
+};
+
+struct QValueLessThan
+{
+    bool operator() (const PeptideSpectrumMatch& lhs, const PeptideSpectrumMatch& rhs) const
+    {
+        if (lhs.qValue != rhs.qValue)
+            return lhs.qValue < rhs.qValue;
+
+        // arbitrary tie-breaker when scores are equal
         //return lhs.massError < rhs.massError;
+        return lhs.spectrum < rhs.spectrum;
+    }
+};
+
+struct SpectrumLessThan
+{
+    bool operator() (const PeptideSpectrumMatch& lhs, const PeptideSpectrumMatch& rhs) const
+    {
         return lhs.spectrum < rhs.spectrum;
     }
 };
@@ -89,10 +110,11 @@ void calculateBestSingleScoreDiscrimination(const PSMIteratorRange& psmRows, dou
 
     double targetToDecoyRatio = 1; // TODO: get the real ratio
 
+    //cout << "Charge: " << psmRows.front().chargeState << " NET: " << psmRows.front().bestSpecificity << endl;
+
     size_t scoresSize = psmRows.begin()->scores.size();
     for (size_t i=0; i < scoresSize; ++i)
     {
-        // TODO: either use list<PSM> or use shared_ptr<PSM> for efficiency
         sort(psmRows.begin(), psmRows.end(), SingleScoreBetterThan(i));
 
         int numTargets = 0;
@@ -165,7 +187,10 @@ void calculateBestSingleScoreDiscrimination(const PSMIteratorRange& psmRows, dou
             bestIndex = i;
             bestDiscrimination = currentDiscrimination;
         }
+
+        //cout << "Score: " << i << " Passing: " << currentDiscrimination << endl;
     }
+    //cout << endl;
 
     // return early if the last score was the best
     if (currentDiscrimination == bestDiscrimination)
@@ -310,42 +335,12 @@ void calculateProbabilityDiscrimination(const PSMIteratorRange& psmRows, int max
 
 } // discrimination functions
 
+
 // scaling functions
 namespace {
 
-// a convenience for storing the extrema of a value set; also provides linear scaling between -1 and 1
-template <typename T>
-struct MinMaxPair
-{
-    MinMaxPair(const T& initialMin, const T& initialMax) : min(initialMin), max(initialMax) {}
-
-    void compare(const T& value) {min = std::min(min, value); max = std::max(max, value);}
-
-    T& scale(T& value) const
-    {
-        return (min == max ? value : (value = 2 * (value - min) / (max - min) - 1));
-    }
-
-    T& unscale(T& value) const
-    {
-        return (min == max ? value : (value = (value + 1) / 2 * (max - min) + min));
-    }
-
-    T scale(const T& value) const {T copy = value; return scale(copy);}
-    T unscale(const T& value) const {T copy = value; return unscale(copy);}
-
-    T min, max;
-};
-
 struct NonScoreFeatureInfo
 {
-    NonScoreFeatureInfo()
-        : bestSpecificity(2, 0),
-          chargeState(FLT_MAX, 0),
-          missedCleavages(FLT_MAX, 0),
-          massError(DBL_MAX, 0)
-    {}
-
     MinMaxPair<float> bestSpecificity;
     MinMaxPair<float> chargeState;
     MinMaxPair<float> missedCleavages;
@@ -359,7 +354,7 @@ NonScoreFeatureInfo scaleNonScoreFeatures(const Qonverter::Settings& settings, c
     // first pass: calculate extrema
     // second pass: scale features linearly between -1 and 1
 
-    if (settings.chargeStateHandling == Qonverter::ChargeStateHandling::Feature)
+    if (settings.chargeStateHandling[Qonverter::ChargeStateHandling::Feature])
     {
         BOOST_FOREACH(PeptideSpectrumMatch& psm, range)
             result.chargeState.compare(psm.chargeState);
@@ -367,7 +362,7 @@ NonScoreFeatureInfo scaleNonScoreFeatures(const Qonverter::Settings& settings, c
             result.chargeState.scale(psm.chargeState);
     }
 
-    if (settings.terminalSpecificityHandling == Qonverter::TerminalSpecificityHandling::Feature)
+    if (settings.terminalSpecificityHandling[Qonverter::TerminalSpecificityHandling::Feature])
     {
         BOOST_FOREACH(PeptideSpectrumMatch& psm, range)
             result.bestSpecificity.compare(psm.bestSpecificity);
@@ -396,7 +391,7 @@ NonScoreFeatureInfo scaleNonScoreFeatures(const Qonverter::Settings& settings, c
 
 void scaleScoreFeatures(const PSMIteratorRange& range)
 {
-    vector<MinMaxPair<double> > scores(range.begin()->scores.size(), MinMaxPair<double>(DBL_MAX, -DBL_MAX));
+    vector<MinMaxPair<double> > scores(range.begin()->scores.size());
 
     // first pass: calculate extrema
     BOOST_FOREACH(const PeptideSpectrumMatch& psm, range)
@@ -411,6 +406,162 @@ void scaleScoreFeatures(const PSMIteratorRange& range)
 
 } // scaling functions
 
+
+// debugging functions
+namespace {
+
+map<string, pwiz::util::once_flag_proxy> deletedSources;
+void initFeatureDetails(const string& sourceName,
+                        const Qonverter::Settings& settings,
+                        const std::vector<std::string>& scoreNames)
+{
+    bfs::remove(sourceName + "-details.txt");
+    bfs::remove(sourceName + "-scaled-features.tsv");
+    
+    ofstream psmDetails((sourceName + "-details.txt").c_str(), std::ios::app);
+    ofstream psmFeatures((sourceName + "-scaled-features.tsv").c_str(), std::ios::app);
+
+    using std::left;
+    psmDetails  << setw(9) << left << "Ordinal"
+#ifdef QONVERTER_HAS_NATIVEID
+                << setw(50) << left << "NativeID"
+#else
+                << setw(9) << left << "Spectrum"
+#endif
+                << setw(8) << left << "Rank"
+	            << setw(8) << left << "Charge"
+                << setw(8) << left << "NET"
+                << setw(8) << left << "NMC"
+                << setw(12) << left << "MassError"
+			    << setw(8) << left << "Decoy"
+			    << setw(17) << left << "BestSingleScore"
+			    << setw(8) << left << "QValue"
+			    << endl;
+
+    int featureIndex = 0;
+    psmFeatures << "IsTrue";
+    if (settings.chargeStateHandling[Qonverter::ChargeStateHandling::Feature])
+        psmFeatures << '\t' << ++featureIndex << ":Charge";
+    if (settings.terminalSpecificityHandling[Qonverter::TerminalSpecificityHandling::Feature])
+        psmFeatures << '\t' << ++featureIndex << ":NET";
+    if (settings.missedCleavagesHandling == Qonverter::MissedCleavagesHandling::Feature)
+        psmFeatures << '\t' << ++featureIndex << ":NMC";
+    if (settings.massErrorHandling == Qonverter::MassErrorHandling::Feature)
+        psmFeatures << '\t' << ++featureIndex << ":MassError";
+    for (size_t j=0; j < scoreNames.size(); ++j)
+        psmFeatures << '\t' << ++featureIndex << ":" << scoreNames[j];
+    psmFeatures << endl;
+}
+
+void writePsmDetails(ostream& psmDetails, ostream& psmFeatures,
+                     int ordinal,
+                     const PeptideSpectrumMatch& psm,
+                     DecoyState::Type decoyState,
+                     bool truePositive,
+                     const Qonverter::Settings& settings,
+                     const NonScoreFeatureInfo& nonScoreFeatureInfo)
+{
+    using std::left;
+
+    float unscaledChargeState = psm.chargeState;
+    float unscaledBestSpecificity = psm.bestSpecificity;
+    float unscaledMissedCleavages = psm.missedCleavages;
+    double unscaledMassError = psm.massError;
+    if (settings.chargeStateHandling[Qonverter::ChargeStateHandling::Feature])
+        nonScoreFeatureInfo.chargeState.unscale(unscaledChargeState);
+    if (settings.terminalSpecificityHandling[Qonverter::TerminalSpecificityHandling::Feature])
+        nonScoreFeatureInfo.bestSpecificity.unscale(unscaledBestSpecificity);
+    if (settings.missedCleavagesHandling == Qonverter::MissedCleavagesHandling::Feature)
+        nonScoreFeatureInfo.missedCleavages.unscale(unscaledMissedCleavages);
+    if (settings.massErrorHandling == Qonverter::MassErrorHandling::Feature)
+        nonScoreFeatureInfo.massError.unscale(unscaledMassError);
+
+    psmDetails  << setw(9) << left << ordinal
+#ifdef QONVERTER_HAS_NATIVEID
+                << setw(50) << left << psm.nativeID
+#else
+                << setw(9) << left << psm.spectrum
+#endif
+                << setw(8) << left << psm.originalRank
+                << setw(8) << left << unscaledChargeState
+                << setw(8) << left << unscaledBestSpecificity
+                << setw(8) << left << unscaledMissedCleavages
+                << setw(12) << left << unscaledMassError
+                << setw(8) << left << DecoyState::Symbol[decoyState]
+		        << setw(17) << left << psm.totalScore
+		        << setw(8) << left << psm.qValue
+		        << "\n";
+
+    int featureIndex = 0;
+    psmFeatures << truePositive ? "+1" : "-1";
+    if (settings.chargeStateHandling[Qonverter::ChargeStateHandling::Feature])
+        psmFeatures << '\t' << ++featureIndex << ':' << psm.chargeState;
+    if (settings.terminalSpecificityHandling[Qonverter::TerminalSpecificityHandling::Feature])
+        psmFeatures << '\t' << ++featureIndex << ':' << psm.bestSpecificity;
+    if (settings.missedCleavagesHandling == Qonverter::MissedCleavagesHandling::Feature)
+        psmFeatures << '\t' << ++featureIndex << ':' << psm.missedCleavages;
+    if (settings.massErrorHandling == Qonverter::MassErrorHandling::Feature)
+        psmFeatures << '\t' << ++featureIndex << ':' << psm.massError;
+    for (size_t j=0; j < psm.scores.size(); ++j)
+        psmFeatures << '\t' << ++featureIndex << ':' << psm.scores[j];
+    psmFeatures << "\n";
+}
+
+void writeFeatureDetails(const string& sourceName,
+                         const std::vector<std::string>& scoreNames,
+                         const Qonverter::Settings& settings,
+                         PSMIteratorRange fullRange, PSMIteratorRange truePositives,
+                         const NonScoreFeatureInfo& nonScoreFeatureInfo)
+{
+    // HACK: delete each source file's feature details once (per process)
+    if (deletedSources.count(sourceName) == 0)
+        deletedSources[sourceName] = pwiz::util::init_once_flag_proxy;
+    boost::call_once(deletedSources[sourceName].flag, boost::bind(&initFeatureDetails, sourceName, settings, scoreNames));
+
+    ofstream psmDetails((sourceName + "-details.txt").c_str(), std::ios::app);
+    ofstream psmFeatures((sourceName + "-scaled-features.tsv").c_str(), std::ios::app);
+
+    map<const PeptideSpectrumMatch*, bool> truePositiveByPointer;
+    BOOST_FOREACH(const PeptideSpectrumMatch& psm, truePositives)
+        truePositiveByPointer[&psm] = true; 
+
+    sqlite3_int64 currentSpectrumId = fullRange.front().spectrum;
+    DecoyState::Type currentDecoyState = fullRange.front().decoyState;
+    vector<const PeptideSpectrumMatch*> currentPSMs(1, &fullRange.front());
+
+    int ordinal = 0;
+    psmDetails << setprecision(6);
+    psmFeatures << setprecision(6);
+    BOOST_FOREACH(const PeptideSpectrumMatch& psm, fullRange)
+    {
+        if (currentSpectrumId != psm.spectrum)
+        {
+            BOOST_FOREACH(const PeptideSpectrumMatch* psm2, currentPSMs)
+                writePsmDetails(psmDetails, psmFeatures,
+                                ++ordinal, *psm2, currentDecoyState, truePositiveByPointer[psm2],
+                                settings, nonScoreFeatureInfo);
+
+            // reset the current spectrum
+            currentSpectrumId = psm.spectrum;
+            currentDecoyState = psm.decoyState;
+            currentPSMs.assign(1, &psm);
+        }
+        else
+        {
+            currentDecoyState = static_cast<DecoyState::Type>(currentDecoyState | psm.decoyState);
+            currentPSMs.push_back(&psm);
+        }
+    }
+    
+    BOOST_FOREACH(const PeptideSpectrumMatch* psm2, currentPSMs)
+        writePsmDetails(psmDetails, psmFeatures,
+                        ++ordinal, *psm2, currentDecoyState, truePositiveByPointer[psm2],
+                        settings, nonScoreFeatureInfo);
+}
+
+} // debugging functions
+
+
 // training and prediction functions
 namespace {
 void set_node(svm_node* nodes, int index, double value)
@@ -421,8 +572,8 @@ void set_node(svm_node* nodes, int index, double value)
 
 int getNonScoreFeatureCount(const Qonverter::Settings& settings)
 {
-    return (settings.chargeStateHandling == Qonverter::ChargeStateHandling::Feature ? 1 : 0) +
-           (settings.terminalSpecificityHandling == Qonverter::TerminalSpecificityHandling::Feature ? 1 : 0) +
+    return (settings.chargeStateHandling[Qonverter::ChargeStateHandling::Feature] ? 1 : 0) +
+           (settings.terminalSpecificityHandling[Qonverter::TerminalSpecificityHandling::Feature] ? 1 : 0) +
            (settings.missedCleavagesHandling == Qonverter::MissedCleavagesHandling::Feature ? 1 : 0) +
            (settings.massErrorHandling == Qonverter::MassErrorHandling::Feature ? 1 : 0);
 }
@@ -432,10 +583,10 @@ int set_features(svm_node* nodes, const Qonverter::Settings& settings, const Pep
     int numFeatures = getNonScoreFeatureCount(settings) + psm.scores.size() + 1; // include -1 terminating node
     size_t featureIndex = 0;
 
-    if (settings.chargeStateHandling == Qonverter::ChargeStateHandling::Feature)
+    if (settings.chargeStateHandling[Qonverter::ChargeStateHandling::Feature])
         set_node(nodes, featureIndex++, psm.chargeState);
 
-    if (settings.terminalSpecificityHandling == Qonverter::TerminalSpecificityHandling::Feature)
+    if (settings.terminalSpecificityHandling[Qonverter::TerminalSpecificityHandling::Feature])
         set_node(nodes, featureIndex++, psm.bestSpecificity);
 
     if (settings.missedCleavagesHandling == Qonverter::MissedCleavagesHandling::Feature)
@@ -485,19 +636,26 @@ svm_model* trainModel(const Qonverter::Settings& settings,
     svm_parameter trainingParameters;
     trainingParameters.svm_type = C_SVC;
     trainingParameters.kernel_type = settings.kernel.index();
-    trainingParameters.cache_size = 100;
+    trainingParameters.cache_size = 1000;
 	trainingParameters.degree = 3;
 	trainingParameters.gamma = 1.0 / (numFeatures - 1);
 	trainingParameters.coef0 = 0;
 	trainingParameters.nu = 0.5;
-	trainingParameters.C = 1;
+	trainingParameters.C = 10;
 	trainingParameters.eps = 1e-3;
 	trainingParameters.p = 0.1;
-	trainingParameters.shrinking = 0;
+	trainingParameters.shrinking = 1;
 	trainingParameters.probability = 1;
 	trainingParameters.nr_weight = 0;
 	trainingParameters.weight_label = NULL;
 	trainingParameters.weight = NULL;
+
+    // weight the classes according to the relative size of the ranges (doesn't help)
+    /*int weightLabels[] = {-1, 1};
+    double weightValues[] = {1, (double) truePositiveRange.size() / falsePositiveRange.size()};
+	trainingParameters.nr_weight = 2;
+	trainingParameters.weight_label = &weightLabels[0];
+	trainingParameters.weight = &weightValues[0];*/
 
     svm_model* trainedModel = svm_train(&trainingData, &trainingParameters);
 
@@ -537,141 +695,15 @@ void testModel(const Qonverter::Settings& settings,
     }
 }
 
-} // training and prediction functions
-
-
-// debugging functions
-namespace {
-
-void writeFeatureDetails(const string& sourceName, const Qonverter::Settings& settings,
-                         PSMIteratorRange fullRange, PSMIteratorRange truePositives,
-                         const NonScoreFeatureInfo& nonScoreFeatureInfo)
+void qonvertRange(const Qonverter::Settings& settings,
+                  const string& sourceName,
+                  const std::vector<std::string>& scoreNames,
+                  const NonScoreFeatureInfo& nonScoreFeatureInfo,
+                  const PSMIteratorRange& range)
 {
-    ofstream psmDetails((sourceName + "-details.txt").c_str(), std::ios::app);
-    ofstream psmFeatures((sourceName + "-scaled-features.tsv").c_str(), std::ios::app);
-
-    using std::left;
-    psmDetails  << setw(9) << left << "Ordinal"
-                << setw(9) << left << "Spectrum"
-                //<< setw(50) << left << "NativeID"
-                << setw(8) << left << "Rank"
-	            << setw(8) << left << "Charge"
-                << setw(8) << left << "NET"
-                << setw(8) << left << "NMC"
-                << setw(12) << left << "MassError"
-			    << setw(8) << left << "Decoy"
-			    << setw(17) << left << "BestSingleScore"
-			    << setw(8) << left << "QValue"
-			    << endl;
-
-    int featureIndex = 0;
-    psmFeatures << "True";
-    if (settings.chargeStateHandling == Qonverter::ChargeStateHandling::Feature)
-        psmFeatures << '\t' << ++featureIndex << ":Charge";
-    if (settings.terminalSpecificityHandling == Qonverter::TerminalSpecificityHandling::Feature)
-        psmFeatures << '\t' << ++featureIndex << ":NET";
-    if (settings.missedCleavagesHandling == Qonverter::MissedCleavagesHandling::Feature)
-        psmFeatures << '\t' << ++featureIndex << ":NMC";
-    if (settings.massErrorHandling == Qonverter::MassErrorHandling::Feature)
-        psmFeatures << '\t' << ++featureIndex << ":MassError";
-    for (size_t j=0; j < fullRange.front().scores.size(); ++j)
-        psmFeatures << '\t' << ++featureIndex << ":score" << (j+1);
-    psmFeatures << endl;
-
-    map<const PeptideSpectrumMatch*, bool> truePositiveByPointer;
-    BOOST_FOREACH(const PeptideSpectrumMatch& psm, truePositives)
-        truePositiveByPointer[&psm] = true; 
-
-    int ordinal = 0;
-    psmDetails << setprecision(6);
-    psmFeatures << setprecision(6);
-    BOOST_FOREACH(const PeptideSpectrumMatch& psm, fullRange)
+    try
     {
-        double unscaledChargeState = psm.chargeState;
-        double unscaledBestSpecificity = psm.bestSpecificity;
-        double unscaledMissedCleavages = psm.missedCleavages;
-        double unscaledMassError = psm.massError;
-        if (settings.chargeStateHandling == Qonverter::ChargeStateHandling::Feature)
-            nonScoreFeatureInfo.chargeState.unscale(unscaledChargeState);
-        if (settings.terminalSpecificityHandling == Qonverter::TerminalSpecificityHandling::Feature)
-            nonScoreFeatureInfo.bestSpecificity.unscale(unscaledBestSpecificity);
-        if (settings.missedCleavagesHandling == Qonverter::MissedCleavagesHandling::Feature)
-            nonScoreFeatureInfo.missedCleavages.unscale(unscaledMissedCleavages);
-        if (settings.massErrorHandling == Qonverter::MassErrorHandling::Feature)
-            nonScoreFeatureInfo.massError.unscale(unscaledMassError);
-
-        psmDetails  << setw(9) << left << ++ordinal
-                    << setw(9) << left << psm.spectrum
-                    //<< setw(50) << left << psm.nativeID
-                    << setw(8) << left << psm.originalRank
-                    << setw(8) << left << unscaledChargeState
-                    << setw(8) << left << unscaledBestSpecificity
-                    << setw(8) << left << unscaledMissedCleavages
-                    << setw(12) << left << unscaledMassError
-                    << setw(8) << left << DecoyState::Symbol[psm.decoyState]
-			        << setw(17) << left << psm.totalScore
-			        << setw(8) << left << psm.qValue
-			        << "\n";
-
-        psmFeatures << truePositiveByPointer[&psm] ? 1 : -1;
-        int featureIndex = 0;
-        if (settings.chargeStateHandling == Qonverter::ChargeStateHandling::Feature)
-            psmFeatures << '\t' << psm.chargeState;
-        if (settings.terminalSpecificityHandling == Qonverter::TerminalSpecificityHandling::Feature)
-            psmFeatures << '\t' << psm.bestSpecificity;
-        if (settings.missedCleavagesHandling == Qonverter::MissedCleavagesHandling::Feature)
-            psmFeatures << '\t' << psm.missedCleavages;
-        if (settings.massErrorHandling == Qonverter::MassErrorHandling::Feature)
-            psmFeatures << '\t' << psm.massError;
-        for (size_t j=0; j < psm.scores.size(); ++j)
-            psmFeatures << '\t' << psm.scores[j];
-        psmFeatures << "\n";
-    }
-}
-
-} // debugging functions
-
-
-
-
-namespace IDPICKER_NAMESPACE
-{
-
-void SVMQonverter::Qonvert(const string& sourceName, vector<PeptideSpectrumMatch>& psmRows, const Qonverter::Settings& settings)
-{
-    PSMIteratorRange fullRange(psmRows.begin(), psmRows.end());
-
-    sort(fullRange.begin(), fullRange.end(), OriginalRankLessThan());
-
-    for (PSMIterator itr = fullRange.begin(); itr != fullRange.end(); ++itr)
-        if (itr->originalRank > 1)
-        {
-            fullRange = PSMIteratorRange(fullRange.begin(), itr);
-            break;
-        }
-
-    // partition the data by charge and/or terminal specificity (depending on qonverter settings)
-    vector<PSMIteratorRange> psmPartitionedRows = partition(settings, fullRange);
-
-    // for all partitions, scale the non-score features linearly between -1 and 1
-    NonScoreFeatureInfo nonScoreFeatureInfo = scaleNonScoreFeatures(settings, fullRange);
-
-    // for each partition, scale the scores linearly between -1 and 1
-    BOOST_FOREACH(const PSMIteratorRange& range, psmPartitionedRows)
-    {
-        // skip sparsely populated categories
-        if (range.size() < 10) 
-            continue;
-
-        scaleScoreFeatures(range);
-
-        fullRange = range;
-
-        // find the single score which provides the most discrimination under a given Q value
-        calculateBestSingleScoreDiscrimination(range, 0.01); // TODO: make threshold a variable
-
-        // sort PSMs by the SVM probability
-        //stable_sort(fullRange.begin(), fullRange.end(), TotalScoreBetterThan());
+        PSMIteratorRange fullRange(range);
 
         // HACK: we should be able to use default constructor here, but MSVC/boost bug triggers
         //       a debug assertion about incompatible iterators
@@ -694,10 +726,10 @@ void SVMQonverter::Qonvert(const string& sourceName, vector<PeptideSpectrumMatch
 
         PSMIteratorRange falsePositiveRange = PSMIteratorRange(truePositiveRange.end(), fullRange.end());
 
-        if (truePositiveRange.empty()) {/*cerr << "No true positives." << endl;*/ continue;}
-        if (falsePositiveRange.empty()) {/*cerr << "No false positives." << endl;*/ continue;}
+        if (truePositiveRange.empty()) {/*cerr << "No true positives." << endl;*/ return;}
+        if (falsePositiveRange.empty()) {/*cerr << "No false positives." << endl;*/ return;}
 
-        //writeFeatureDetails(sourceName, settings, fullRange, truePositiveRange, nonScoreFeatureInfo);
+        //writeFeatureDetails(sourceName, scoreNames, settings, fullRange, truePositiveRange, nonScoreFeatureInfo);
 
         // sort by rank
         sort(falsePositiveRange.begin(), falsePositiveRange.end(), OriginalRankLessThan());
@@ -714,9 +746,6 @@ void SVMQonverter::Qonvert(const string& sourceName, vector<PeptideSpectrumMatch
             }
         }
 
-        // make libsvm quiet
-        svm_set_print_string_function(&print_null);
-
         // train a model
         svm_model* trainedModel = trainModel(settings, truePositiveRange, falsePositiveRange);
 
@@ -730,27 +759,166 @@ void SVMQonverter::Qonvert(const string& sourceName, vector<PeptideSpectrumMatch
 
         // calculate new Q values for matches under a given rank
         calculateProbabilityDiscrimination(fullRange, 1); // TODO: make threshold a variable
+    }
+    catch (exception& e)
+    {
+        throw runtime_error(string("[SVMQonverter::qonvertRange] ") + e.what());
+    }
+}
 
-        //sort(fullRange.begin(), fullRange.end(), TotalScoreBetterThan());
+} // training and prediction functions
 
-        // HACK: we should be able to use default constructor here, but MSVC/boost bug triggers
-        //       a debug assertion about incompatible iterators
-        PSMIteratorRange svmTruePositiveRange(fullRange.end(), fullRange.end());
 
-        // search from the worst to best Q value to find the first one inside the threshold
-        for (boost::reverse_iterator<PSMIterator> itr = boost::rbegin(fullRange);
-             itr != boost::rend(fullRange);
-             ++itr)
-        {
-            BOOST_ASSERT(itr->originalRank == 1 || itr->qValue == 2);
-            if (itr->qValue <= 0.01)
+namespace IDPICKER_NAMESPACE
+{
+
+void SVMQonverter::Qonvert(const string& sourceName,
+                           const std::vector<std::string>& scoreNames,
+                           PSMList& psmRows,
+                           const Qonverter::Settings& settings)
+{
+    try
+    {
+        // make libsvm quiet
+        svm_set_print_string_function(&print_null);
+
+        PSMIteratorRange fullRange(psmRows.begin(), psmRows.end());
+
+        sort(fullRange.begin(), fullRange.end(), OriginalRankLessThan());
+
+        for (PSMIterator itr = fullRange.begin(); itr != fullRange.end(); ++itr)
+            if (itr->originalRank > 1)
             {
-                svmTruePositiveRange = PSMIteratorRange(fullRange.begin(), itr.base());
+                fullRange = PSMIteratorRange(fullRange.begin(), itr);
                 break;
+            }
+
+        // for all partitions, scale the non-score features linearly between -1 and 1
+        NonScoreFeatureInfo nonScoreFeatureInfo = scaleNonScoreFeatures(settings, fullRange);
+
+        // partition the data by charge and/or terminal specificity (depending on qonverter settings)
+        vector<PSMIteratorRange> psmPartitionedRows = partition(settings, fullRange);
+
+        bool chargePartition = settings.chargeStateHandling[Qonverter::ChargeStateHandling::Partition];
+        bool specificityPartition = settings.terminalSpecificityHandling[Qonverter::TerminalSpecificityHandling::Partition];
+
+        // mark PSMs in small partitions with 1, else 0
+        BOOST_FOREACH(const PSMIteratorRange& range, psmPartitionedRows)
+        {
+            /*if (range.size() < 10)
+            {
+                if (chargePartition && specificityPartition)
+                    cout << "Partition charge=" << range.front().chargeState
+                         << " specificity=" << range.front().bestSpecificity
+                         << ": " << range.size() << " spectra (too sparse, ignoring)" << endl;
+                else if (chargePartition)
+                    cout << "Partition charge=" << range.front().chargeState
+                         << ": " << range.size() << " spectra (too sparse, ignoring)" << endl;
+                else if (specificityPartition)
+                    cout << "Partition specificity=" << range.front().bestSpecificity
+                         << ": " << range.size() << " spectra (too sparse, ignoring)" << endl;
+            }*/
+
+            BOOST_FOREACH(PeptideSpectrumMatch& psm, range)
+                psm.totalScore = range.size() < 10 ? 1 : 0;
+        }
+
+        // remove sparsely populated partitions marked above
+        sort(fullRange.begin(), fullRange.end(), TotalScoreBetterThan());
+        for (PSMIterator itr = fullRange.begin(); itr != fullRange.end(); ++itr)
+            if (itr->totalScore == 0)
+            {
+                fullRange = PSMIteratorRange(itr, fullRange.end());
+                break;
+            }
+
+        // refresh the partitions
+        psmPartitionedRows = partition(settings, fullRange);
+
+        // for each partition, scale the scores linearly between -1 and 1
+        BOOST_FOREACH(const PSMIteratorRange& range, psmPartitionedRows)
+        {
+            /*if (chargePartition && specificityPartition)
+                cout << "Partition charge=" << range.front().chargeState
+                     << " specificity=" << range.front().bestSpecificity
+                     << ": " << range.size() << " spectra" << endl;
+            else if (chargePartition)
+                cout << "Partition charge=" << range.front().chargeState
+                     << ": " << range.size() << " spectra" << endl;
+            else if (specificityPartition)
+                cout << "Partition specificity=" << range.front().bestSpecificity
+                     << ": " << range.size() << " spectra" << endl;
+            else
+                cout << "No partitions: " << range.size() << " spectra" << endl;*/
+
+            scaleScoreFeatures(range);
+
+            // find the single score which provides the most discrimination under a given Q value
+            calculateBestSingleScoreDiscrimination(range, 0.01); // TODO: make threshold a variable
+
+            // for partitioned SVM, we normalize and qonvert each partition independently
+            //if (settings.qonverterMethod == Qonverter::QonverterMethod::PartitionedSVM)
+            if (settings.qonverterMethod == Qonverter::QonverterMethod::SVM)
+            {
+
+                for (int i=0; i < 1; ++i)
+                {
+                    qonvertRange(settings, sourceName + "-iteration" + lexical_cast<string>(i), scoreNames, nonScoreFeatureInfo, range);
+                    
+                    size_t truePositives = 0;
+                    for (boost::reverse_iterator<PSMIterator>
+                         itr = boost::rbegin(range),
+                         end = boost::rend(range);
+                         itr != end;
+                         ++itr)
+                    {
+                        BOOST_ASSERT(itr->originalRank == 1 || itr->qValue == 2);
+                        if (itr->qValue <= 0.01)
+                        {
+                            truePositives = PSMIteratorRange(range.begin(), itr.base()).size();
+                            break;
+                        }
+                    }
+                    //cout << "Iteration " << (i+1) << ": " << truePositives << endl;
+                }
             }
         }
 
-    } // for each partition
+        // for single SVM, we qonvert all partitions together after normalizing scores independently
+        /*if (settings.qonverterMethod == Qonverter::QonverterMethod::SingleSVM)
+        {
+            sort(fullRange.begin(), fullRange.end(), QValueLessThan());
+
+            for (int i=0; i < 1; ++i)
+            {
+                qonvertRange(settings, sourceName + "-iteration" + lexical_cast<string>(i), scoreNames, nonScoreFeatureInfo, fullRange);
+
+                size_t truePositives = 0;
+                for (boost::reverse_iterator<PSMIterator>
+                     itr = boost::rbegin(fullRange),
+                     end = boost::rend(fullRange);
+                     itr != end;
+                     ++itr)
+                {
+                    BOOST_ASSERT(itr->originalRank == 1 || itr->qValue == 2);
+                    if (itr->qValue <= 0.01)
+                    {
+                        truePositives = PSMIteratorRange(fullRange.begin(), itr.base()).size();
+                        break;
+                    }
+                }
+                cout << "Iteration " << (i+1) << ": " << truePositives << endl;
+            }
+        }*/
+    }
+    catch (runtime_error&)
+    {
+        throw;
+    }
+    catch (exception& e)
+    {
+        throw runtime_error(string("[SVMQonverter::Qonvert] ") + e.what());
+    }
 }
 
 } // namespace IDPicker

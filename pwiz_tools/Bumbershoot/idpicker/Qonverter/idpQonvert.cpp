@@ -27,6 +27,7 @@
 #include "../freicore/freicore.h"
 #include "boost/foreach_field.hpp"
 #include "boost/thread/mutex.hpp"
+#include "boost/range/algorithm/remove_if.hpp"
 
 #include "Parser.hpp"
 #include "idpQonvert.hpp"
@@ -241,6 +242,8 @@ struct ImportSettingsHandler : public Parser::ImportSettingsCallback
                                     " does not match " + bfs::path(analysis.importSettings.proteinDatabaseFilepath).filename());
 
             analysis.importSettings.proteinDatabaseFilepath = g_rtConfig->ProteinDatabase;
+            analysis.importSettings.maxQValue = g_rtConfig->MaxImportFDR;
+            analysis.importSettings.maxResultRank = g_rtConfig->MaxResultRank;
 
             Qonverter::Settings& settings = analysis.importSettings.qonverterSettings;
             settings.qonverterMethod = g_rtConfig->QonverterMethod;
@@ -309,7 +312,7 @@ struct UserFeedbackIterationListener : public IterationListener
         BOOST_FOREACH_FIELD((const string& filepath)(PersistentUpdateMessage& updateMessage), lastUpdateByFilepath)
         {
             // create a message for each file like "source (message: index/count)"
-            string source = bfs::path(filepath).replace_extension("").filename();
+            string source = Parser::sourceNameFromFilename(bfs::path(filepath).filename());
             int index = updateMessage.iterationIndex;
             int count = updateMessage.iterationCount;
             const string& message = originalMessage;
@@ -358,9 +361,12 @@ void summarizeQonversion(const string& filepath)
         boost::tie(source, spectra, peptides) = row.get_columns<string, int, int>(0, 1, 2);
         cout << left << setw(8) << spectra
              << left << setw(9) << peptides
-             << source << endl;
+             << filepath << ":" << source << endl;
     }
 }
+
+
+bool outputFilepathExists(const string& filepath) {return bfs::exists(Parser::outputFilepath(filepath));}
 
 
 int main( int argc, char* argv[] )
@@ -389,6 +395,22 @@ int main( int argc, char* argv[] )
             else
                 parserFilepaths.push_back(filepath);
 
+        // skip or erase existing files according to OverwriteExistingFiles
+        BOOST_FOREACH(const string& filepath, parserFilepaths)
+        {
+            bfs::path outputFilepath = Parser::outputFilepath(filepath);
+            if (!bfs::exists(outputFilepath))
+                continue;
+
+            if (g_rtConfig->OverwriteExistingFiles)
+                bfs::remove(outputFilepath);
+            else
+                cerr << "Skipping existing file \"" << outputFilepath << "\"" << endl;
+        }
+
+        if (!g_rtConfig->OverwriteExistingFiles) // don't parse paths that already exist
+            parserFilepaths.erase(boost::remove_if(parserFilepaths, &outputFilepathExists), parserFilepaths.end());
+
         Parser parser;
 
         // update on the first spectrum, the last spectrum, the 100th spectrum, the 200th spectrum, etc.
@@ -404,7 +426,7 @@ int main( int argc, char* argv[] )
                 "-------------------------\n";
 
         BOOST_FOREACH(const string& filepath, parserFilepaths)
-            summarizeQonversion(bfs::path(filepath).replace_extension(".idpDB").string());
+            summarizeQonversion(Parser::outputFilepath(filepath).string());
 
         BOOST_FOREACH(const string& filepath, idpDbFilepaths)
         {

@@ -33,7 +33,7 @@ BEGIN_IDPICKER_NAMESPACE
 
 struct StaticWeightQonverter
 {
-    static void Qonvert(std::vector<PeptideSpectrumMatch>& psmRows,
+    static void Qonvert(PSMList& psmRows,
                         const Qonverter::Settings& settings,
                         const std::vector<double>& scoreWeights);
 };

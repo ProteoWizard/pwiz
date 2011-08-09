@@ -37,10 +37,14 @@ lib NativeQonverter
    <link>static
    <library>../../Lib/SQLite//sqlite3pp
    <library>../..//svm
+   <library>/ext/boost//thread
+   <library>/ext/boost//filesystem
    <toolset>msvc:<using-clr>false
  :
  : <library>../../Lib/SQLite//sqlite3pp
    <library>../..//svm
+   <library>/ext/boost//thread
+   <library>/ext/boost//filesystem
  ;
  
 lib NativeParser

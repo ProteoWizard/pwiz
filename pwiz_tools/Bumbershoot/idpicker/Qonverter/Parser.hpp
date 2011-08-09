@@ -30,7 +30,9 @@
 #include <map>
 #include "Qonverter.hpp"
 #include "pwiz/utility/misc/IterationListener.hpp"
+#include "pwiz/data/identdata/IdentData.hpp"
 #include <boost/date_time.hpp>
+#include <boost/filesystem/path.hpp>
 
 
 #ifndef IDPICKER_NAMESPACE
@@ -65,12 +67,15 @@ struct Parser
         string softwareVersion;
         boost::local_time::local_date_time startTime;
         map<string, string> parameters;
+        pwiz::identdata::Enzymes enzymes;
         vector<string> filepaths;
 
         struct ImportSettings
         {
             string proteinDatabaseFilepath;
             Qonverter::Settings qonverterSettings;
+            double maxQValue; /// filter the database on Q-value before writing to disk
+            int maxResultRank; /// filter the database on PSM rank before writing to disk
         };
 
         mutable ImportSettings importSettings;
@@ -99,6 +104,10 @@ struct Parser
     void parse(const string& inputFilepath, int maxThreads = 8, pwiz::util::IterationListenerRegistry* ilr = 0) const;
 	
 	static string parseSource(const string& inputFilepath);
+    
+    static boost::filesystem::path outputFilepath(const string& inputFilepath);
+
+    static string sourceNameFromFilename(const string& filename);
 };
 
 
