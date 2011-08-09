@@ -1517,6 +1517,10 @@ struct HandlerSearchResults : public SAXParser::Handler
         }
         else if (name == "search_hit")
         {
+            // only add the SpectrumIdentificationResult if there is at least one SpectrumIdentificationItem
+            if (_sir->spectrumIdentificationItem.empty())
+                _sil->spectrumIdentificationResult.push_back(_sir);
+
             _sir->spectrumIdentificationItem.push_back(SpectrumIdentificationItemPtr(new SpectrumIdentificationItem(_sii)));
             SpectrumIdentificationItem& sii = *_sir->spectrumIdentificationItem.back();
             sii.id = "SII_" + lexical_cast<string>(++siiCount);
@@ -1568,8 +1572,7 @@ struct HandlerSearchResults : public SAXParser::Handler
                         spectrumNativeID = "scan=" + start_scan;
                 }
 
-                _sir = SpectrumIdentificationResultPtr(new SpectrumIdentificationResult);
-                _sil->spectrumIdentificationResult.push_back(_sir);
+                _sir.reset(new SpectrumIdentificationResult);
                 _sir->id = "SIR_" + lexical_cast<string>(_sil->spectrumIdentificationResult.size());
                 _sir->spectrumID = spectrumNativeID;
                 _sir->name = spectrumWithoutCharge;

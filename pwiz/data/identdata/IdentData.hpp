@@ -815,6 +815,12 @@ PWIZ_API_DECL proteome::Modification modification(const Modification& mod);
 /// returns a cleavage agent CVID for an identdata::Enzyme
 PWIZ_API_DECL CVID cleavageAgent(const Enzyme& ez);
 
+/// returns a regular expression for an identdata::Enzyme
+PWIZ_API_DECL boost::regex cleavageAgentRegex(const Enzyme& ez);
+
+/// returns a list of regular expressions for an identdata::Enzymes instance
+PWIZ_API_DECL std::vector<boost::regex> cleavageAgentRegexes(const Enzymes& enzymes);
+
 /// sets Unimod CV terms (if possible) for all SearchModifications and Modification elements
 PWIZ_API_DECL void snapModificationsToUnimod(const SpectrumIdentification& si);
 

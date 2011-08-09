@@ -946,24 +946,7 @@ PWIZ_API_DECL proteome::DigestedPeptide digestedPeptide(const SpectrumIdentifica
 
     const Peptide& peptide = *pe.peptidePtr;
 
-    vector<boost::regex> cleavageAgentRegexes;
-    BOOST_FOREACH(const EnzymePtr& enzymePtr, sip.enzymes.enzymes)
-    {
-        const Enzyme& enzyme = *enzymePtr;
-        string regex = enzyme.siteRegexp;
-        if (regex.empty())
-        {
-            CVParam enzymeTerm = enzyme.enzymeName.cvParamChild(MS_cleavage_agent_name);
-
-            if (enzymeTerm.empty())
-                enzymeTerm = CVParam(Digestion::getCleavageAgentByName(enzyme.enzymeName.userParams[0].name));
-
-            try {regex = Digestion::getCleavageAgentRegex(enzymeTerm.cvid);} catch (...) {}
-        }
-
-        if (!regex.empty())
-            cleavageAgentRegexes.push_back(boost::regex(regex));
-    }
+    vector<boost::regex> cleavageAgentRegexes = identdata::cleavageAgentRegexes(sip.enzymes);
 
     if (cleavageAgentRegexes.empty())
         throw runtime_error("[identdata::digestedPeptide] unknown cleavage agent");
@@ -1032,24 +1015,7 @@ PWIZ_API_DECL vector<proteome::DigestedPeptide> digestedPeptides(const SpectrumI
 
     const Peptide& peptide = *sii.peptidePtr;
 
-    vector<boost::regex> cleavageAgentRegexes;
-    BOOST_FOREACH(const EnzymePtr& enzymePtr, sip.enzymes.enzymes)
-    {
-        const Enzyme& enzyme = *enzymePtr;
-        string regex = enzyme.siteRegexp;
-        if (regex.empty())
-        {
-            CVParam enzymeTerm = enzyme.enzymeName.cvParamChild(MS_cleavage_agent_name);
-
-            if (enzymeTerm.empty())
-                enzymeTerm = CVParam(Digestion::getCleavageAgentByName(enzyme.enzymeName.userParams[0].name));
-
-            try {regex = Digestion::getCleavageAgentRegex(enzymeTerm.cvid);} catch (...) {}
-        }
-
-        if (!regex.empty())
-            cleavageAgentRegexes.push_back(boost::regex(regex));
-    }
+    vector<boost::regex> cleavageAgentRegexes = identdata::cleavageAgentRegexes(sip.enzymes);
 
     if (cleavageAgentRegexes.empty())
         throw runtime_error("[identdata::digestedPeptides] unknown cleavage agent");
@@ -1151,6 +1117,33 @@ PWIZ_API_DECL CVID cleavageAgent(const Enzyme& ez)
         result = proteome::Digestion::getCleavageAgentByName(ez.name);
     if (result == CVID_Unknown)
         result = proteome::Digestion::getCleavageAgentByRegex(ez.siteRegexp);
+    return result;
+}
+
+PWIZ_API_DECL boost::regex cleavageAgentRegex(const Enzyme& ez)
+{
+    using namespace proteome;
+
+    if (ez.siteRegexp.empty())
+    {
+        CVParam enzymeTerm = ez.enzymeName.cvParamChild(MS_cleavage_agent_name);
+
+        if (enzymeTerm.empty())
+            enzymeTerm = CVParam(Digestion::getCleavageAgentByName(ez.enzymeName.userParams[0].name));
+
+        try {return boost::regex(Digestion::getCleavageAgentRegex(enzymeTerm.cvid));} catch (exception&) {}
+    }
+    else
+        return boost::regex(ez.siteRegexp);
+
+    throw runtime_error("[identdata::cleavageAgentRegex] unable to determine a regular expression for enzyme");
+}
+
+PWIZ_API_DECL std::vector<boost::regex> cleavageAgentRegexes(const Enzymes& enzymes)
+{
+    vector<boost::regex> result;
+    BOOST_FOREACH(const EnzymePtr& enzymePtr, enzymes.enzymes)
+        try {result.push_back(cleavageAgentRegex(*enzymePtr));} catch (exception&) {}
     return result;
 }
 
