@@ -32,16 +32,16 @@ namespace pwiz.Common.DataBinding
     /// </summary>
     public class BoundDataGridView : DataGridView
     {
+        private DataGridViewColumn[] _oldColumns = new DataGridViewColumn[0];
         protected override void OnDataBindingComplete(DataGridViewBindingCompleteEventArgs e)
         {
             AutoGenerateColumns = true;
-            var oldColumns = Columns.Cast<DataGridViewColumn>().ToArray();
             base.OnDataBindingComplete(e);
             if (DesignMode)
             {
                 return;
             }
-            if (oldColumns.SequenceEqual(Columns.Cast<DataGridViewColumn>()))
+            if (_oldColumns.SequenceEqual(Columns.Cast<DataGridViewColumn>()))
             {
                 return;
             }
@@ -97,12 +97,12 @@ namespace pwiz.Common.DataBinding
                                          DisplayIndex = textBoxColumn.DisplayIndex,
                                          HeaderText = textBoxColumn.HeaderText,
                                          SortMode = textBoxColumn.SortMode,
-
                                      };
                 columnArray[iCol] = linkColumn;
             }
             Columns.Clear();
             Columns.AddRange(columnArray);
+            _oldColumns = Columns.Cast<DataGridViewColumn>().ToArray();
         }
 
         private BindingListView _bindingListView;

@@ -125,14 +125,19 @@ namespace pwiz.Common.DataBinding.Controls
                 focusedIndex++;
                 addedIds.Add(idPath);
             }
-            var helper = GetColumnListHelper();
             if (addedIds.Count > 0)
             {
                 ViewSpec = ViewSpec.SetColumns(columnSpecs);
-                helper.SelectKeys(addedIds);
-                return;
             }
-            helper.SelectKey(lastId);
+            var helper = GetColumnListHelper();
+            if (addedIds.Count > 0)
+            {
+                helper.SelectKeys(addedIds);
+            }
+            else
+            {
+                helper.SelectKey(lastId);
+            }
         }
         private void RemoveColumns(IEnumerable<IdentifierPath> identifierPaths)
         {
@@ -315,7 +320,7 @@ namespace pwiz.Common.DataBinding.Controls
 
         private void listViewColumns_SizeChanged(object sender, EventArgs e)
         {
-            listViewColumns.Columns[0].Width = listViewColumns.ClientSize.Width;
+            listViewColumns.Columns[0].Width = listViewColumns.ClientSize.Width - SystemInformation.VerticalScrollBarWidth;
         }
     }
 }
