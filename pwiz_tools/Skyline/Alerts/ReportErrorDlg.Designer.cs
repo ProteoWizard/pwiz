@@ -55,6 +55,7 @@
             // 
             // tbMessage
             // 
+            this.tbMessage.AcceptsTab = true;
             this.tbMessage.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.tbMessage.Location = new System.Drawing.Point(12, 304);
