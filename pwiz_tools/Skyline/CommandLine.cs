@@ -789,6 +789,20 @@ namespace pwiz.Skyline
 
             _exportProperties.FullScans = _doc.Settings.TransitionSettings.FullScan.IsEnabledMsMs;
 
+            _exportProperties.Ms1Scan = _doc.Settings.TransitionSettings.FullScan.IsEnabledMs &&
+                            _doc.Settings.TransitionSettings.FullScan.IsEnabledMsMs;
+
+            _exportProperties.InclusionList = _doc.Settings.TransitionSettings.FullScan.IsEnabledMs &&
+                                              !_doc.Settings.TransitionSettings.FullScan.IsEnabledMsMs;
+
+            _exportProperties.MsAnalyzer =
+                TransitionFullScan.MassAnalyzerToString(
+                    _doc.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer);
+            _exportProperties.MsMsAnalyzer =
+                TransitionFullScan.MassAnalyzerToString(
+                    _doc.Settings.TransitionSettings.FullScan.ProductMassAnalyzer);
+
+
             _exportProperties.MsAnalyzer =
                 TransitionFullScan.MassAnalyzerToString(
                     _doc.Settings.TransitionSettings.FullScan.PrecursorMassAnalyzer);
