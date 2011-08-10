@@ -465,7 +465,11 @@ namespace pwiz.Skyline.Controls
         private static IEnumerable<ChromInfo> GetChromInfos(Results<TransitionGroupChromInfo> results, RowIdentifier rowIdentifier, bool allOptimizationSteps)
 // ReSharper restore SuggestBaseTypeForParameter
         {
-            foreach (var chromInfo in results[rowIdentifier.ReplicateIndex])
+            var chromInfoList = results[rowIdentifier.ReplicateIndex];
+            if (chromInfoList == null)
+                yield break;
+
+            foreach (var chromInfo in chromInfoList)
             {
                 if (chromInfo.FileIndex == rowIdentifier.FileIndex 
                     && (allOptimizationSteps || chromInfo.OptimizationStep == rowIdentifier.OptimizationStep))
@@ -494,7 +498,11 @@ namespace pwiz.Skyline.Controls
         private static IEnumerable<ChromInfo> GetChromInfos(Results<TransitionChromInfo> results, RowIdentifier rowIdentifier, bool allOptimizationSteps)
 // ReSharper restore SuggestBaseTypeForParameter
         {
-            foreach (var chromInfo in results[rowIdentifier.ReplicateIndex])
+            var chromInfoList = results[rowIdentifier.ReplicateIndex];
+            if (chromInfoList == null)
+                yield break;
+
+            foreach (var chromInfo in chromInfoList)
             {
                 if (chromInfo.FileIndex == rowIdentifier.FileIndex 
                     && (allOptimizationSteps || chromInfo.OptimizationStep == rowIdentifier.OptimizationStep))
