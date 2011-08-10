@@ -212,10 +212,11 @@ namespace pwiz.Skyline.Controls.SeqNode
             var table = new TableDesc();
             using (RenderTools rt = new RenderTools())
             {
+                bool lastMultiLine = false;
                 var annotations = Model.Annotations;
                 if (!String.IsNullOrEmpty(annotations.Note))
                 {
-                    table.AddDetailRowLineWrap(g, "Note", annotations.Note, rt);
+                    lastMultiLine = table.AddDetailRowLineWrap(g, "Note", annotations.Note, rt);
                 }
                 foreach (var annotation in annotations.ListAnnotations())
                 {
@@ -235,18 +236,29 @@ namespace pwiz.Skyline.Controls.SeqNode
                     {
                         annotationValue = annotationValue != null ? "True" : "False";
                     }
-                    table.AddDetailRowLineWrap(g, annotationName, annotationValue, rt);
+                    // If the last row was multi-line, add a spacer line.
+                    if (lastMultiLine)
+                        table.AddDetailRow(" ", " ", rt);
+                    lastMultiLine = table.AddDetailRowLineWrap(g, annotationName, annotationValue, rt);
                 }
                 SizeF size = table.CalcDimensions(g);
                 if (draw)
                     table.Draw(g);
-                if (size.Height > 0)
+                // If not showing annotations only, separate any annotations from
+                // the rest of the tip by some space.
+                if (size.Height > 0 && !ShowAnnotationTipOnly)
                 {
                     size.Height += TableDesc.TABLE_SPACING;
                 }
                 var width = Math.Min(sizeMax.Width, size.Width);
                 var height = Math.Min(sizeMax.Height, size.Height);
-                return new Size((int) width, (int) height);
+                // Add 2 pixels extra padding in the annotations-only case.
+                if (ShowAnnotationTipOnly)
+                {
+                    width += 2;
+                    height += 2;
+                }
+                return new Size((int)Math.Round(width), (int)Math.Round(height));
             }
         }
 
@@ -1040,26 +1052,40 @@ namespace pwiz.Skyline.Controls.SeqNode
         private const string X80 =
         "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
 
-        public void AddDetailRowLineWrap(Graphics g, string name, string value, RenderTools rt)
+        /// <summary>
+        /// Adds a text column a with potential line wrap.
+        /// </summary>
+        /// <param name="g">The graphics object in which the text will be rendered</param>
+        /// <param name="name">Field name</param>
+        /// <param name="value">Field value text</param>
+        /// <param name="rt">Rendering tools used to render the text</param>
+        /// <returns>True if the text was multi-line</returns>
+        public bool AddDetailRowLineWrap(Graphics g, string name, string value, RenderTools rt)
         {
             SizeF sizeX80 = g.MeasureString(X80, rt.FontNormal);
             float widthLine = sizeX80.Width;
             var words = value.Split(' ');
             string line = "";
             bool firstRow = true;
-            for (int i = 0; i < words.Length; i++)
+            // This is a little bit strange, but it works.  Because the split call
+            // splits only on spaces, newlines are preserved, and MeasureString will
+            // account for them.  So, only when a line gets too long will it be wrapped
+            // by creating a new row.  This does mean, however, that firstRow is not
+            // a valid indicator on its own of whether the text is multi-line.
+            foreach (string word in words)
             {
-                if (g.MeasureString(line + words[i] + " ", rt.FontNormal).Width > widthLine)
+                if (g.MeasureString(line + word + " ", rt.FontNormal).Width > widthLine)
                 {
                     AddDetailRow(firstRow ? name : "", line, rt);
                     line = "";
                     firstRow = false;
                 }
-                line += words[i] + " ";
+                line += word + " ";
             }
             AddDetailRow(firstRow ? name : "", line, rt);
-            if(!firstRow)
-                AddDetailRow(" ", " ", rt);
+            // The text is multi-line if either it required wrapping to multiple rows,
+            // or it contains new-line characters.
+            return !firstRow || value.Contains('\n');
         }
 
         public SizeF CalcDimensions(Graphics g)

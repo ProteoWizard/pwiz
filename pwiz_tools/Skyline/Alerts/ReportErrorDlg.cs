@@ -27,7 +27,9 @@ namespace pwiz.Skyline.Alerts
 {
     public partial class ReportErrorDlg : Form
     {
-        public ReportErrorDlg(Exception e)
+        public enum ReportChoice { choice, always, never }
+
+        public ReportErrorDlg(Exception e, ReportChoice reportChoice)
         {
             _exception = e;
 
@@ -41,19 +43,19 @@ namespace pwiz.Skyline.Alerts
 
             // If the user runs the daily version, they automatically
             // agree to letting us send reports.
-            if (!Equals(Application.ProductName, "Skyline") || !ApplicationDeployment.IsNetworkDeployed)
+            if (reportChoice != ReportChoice.choice)
             {
                 btnOK.Visible = false;
                 btnOK.DialogResult = DialogResult.None;
 
                 btnCancel.Text = "Close";
-                if (ApplicationDeployment.IsNetworkDeployed)
+                if (reportChoice == ReportChoice.always)
                     btnCancel.DialogResult = DialogResult.OK;
                 AcceptButton = btnCancel;
 
                 StringBuilder error = new StringBuilder("An unexpected error has occurred, as shown below.");
-                if (ApplicationDeployment.IsNetworkDeployed)
-                    error.AppendLine("An error report will be posted.");
+                if (reportChoice == ReportChoice.always)
+                    error.AppendLine().Append("An error report will be posted.");
 
                 lblReportError.Text = error.ToString();
             }
@@ -88,22 +90,25 @@ namespace pwiz.Skyline.Alerts
         {
             get
             {
-                string guid = Settings.Default.InstallationId;
-                if (string.IsNullOrEmpty(guid))
-                    guid = Settings.Default.InstallationId = Guid.NewGuid().ToString();
-
-                string version = Application.ProductVersion;
-
                 StringBuilder sb = new StringBuilder();
                 if (!string.IsNullOrEmpty(tbEmail.Text))
                     sb.Append("User email address: ").AppendLine(tbEmail.Text);
                 
                 if (!string.IsNullOrEmpty(tbMessage.Text))
                     sb.Append("User comments:").AppendLine().AppendLine(tbMessage.Text).AppendLine();
+                
+                if (ApplicationDeployment.IsNetworkDeployed)
+                {
+                    string version = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
+                    sb.Append("Skyline version: ").AppendLine(version);
+                }
 
-                sb.Append("Skyline version: ").Append(version).AppendLine();
+                string guid = Settings.Default.InstallationId;
+                if (string.IsNullOrEmpty(guid))
+                    guid = Settings.Default.InstallationId = Guid.NewGuid().ToString();
                 sb.Append("Installation ID: ").AppendLine(guid);
-                sb.Append("Exception type: ").Append(ExceptionType).AppendLine();
+
+                sb.Append("Exception type: ").AppendLine(ExceptionType);
                 sb.Append("Error message: ").AppendLine(_exception.Message).AppendLine();
                 
                 // Stack trace with any inner exceptions

@@ -1126,6 +1126,7 @@ namespace pwiz.Skyline.Controls
                 }
             }
         }
+
         /// <summary>
         /// If the FindMatch requires showing a tooltip, displays the Tooltip
         /// for the currently selected node.
@@ -1133,6 +1134,7 @@ namespace pwiz.Skyline.Controls
         /// <param name="owner">If not null, the SequenceTree will continue to
         /// display the tooltip until owner loses focus.  If null, the SequenceTree
         /// sets focus to itself before displaying the tooltip.</param>
+        /// <param name="findMatch">The match to highlight</param>
         public void HighlightFindMatch(Control owner, FindMatch findMatch)
         {
             ToolTipOwner = null;
@@ -1151,15 +1153,15 @@ namespace pwiz.Skyline.Controls
             else
             {
                 Focus();
-                Console.Out.WriteLine(this.Focused);
             }
-            var selectedMsNode = SelectedNode as TreeNodeMS;
+            var selectedMsNode = SelectedNode as SrmTreeNode;
             var tipProvider = SelectedNode as ITipProvider;
             if (tipProvider == null || selectedMsNode == null)
             {
                 _nodeTip.HideTip();
                 return;
             }
+            selectedMsNode.ShowAnnotationTipOnly = true;
             _nodeTip.SetTipProvider(tipProvider, selectedMsNode.BoundsMS, PointToClient(Cursor.Position));
         }
         private void TooltipOwnerLostFocus(object sender, EventArgs eventArgs)

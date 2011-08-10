@@ -149,7 +149,7 @@ namespace pwiz.Skyline.Controls
                 Dispose();
 
                 if (x != null)
-                    throw new TargetInvocationException(x);
+                    throw new TargetInvocationException(x.Message, x);
             }
         }
 

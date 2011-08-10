@@ -501,8 +501,8 @@ namespace pwiz.Skyline.Controls.SeqNode
                     g.TranslateTransform(0, -sizeDetails.Height);
                 }
 
-                int width = (int) Math.Max(sizeDetails.Width, size.Width);
-                int height = (int) (sizeDetails.Height + size.Height);
+                int width = (int) Math.Round(Math.Max(sizeDetails.Width, size.Width));
+                int height = (int) Math.Round(sizeDetails.Height + size.Height);
                 return new Size(width + 2, height + 2);
             }
         }

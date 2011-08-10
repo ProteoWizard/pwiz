@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Deployment.Application;
 using System.IO;
 using System.IO.Pipes;
 using System.Net;
@@ -105,13 +106,29 @@ namespace pwiz.Skyline
         public static void ThreadExceptionEventHandler(Object sender, ThreadExceptionEventArgs e)
         {
             List<string> stackTraceList = Settings.Default.StackTraceList;
-            if (!Equals(Settings.Default.StackTraceListVersion, Application.ProductVersion))
+            var reportChoice = ReportErrorDlg.ReportChoice.choice;
+            // If it was not network deployed, then either it is just a developer build,
+            // or it was deployed in an environment where posting back to the web may not
+            // be allowed.  In either case, never post directly to the web site.
+            if (!ApplicationDeployment.IsNetworkDeployed)
+                reportChoice = ReportErrorDlg.ReportChoice.never;
+            else
             {
-                Settings.Default.StackTraceListVersion = Application.ProductVersion;
-                stackTraceList.Clear();                
+                string version = ApplicationDeployment.CurrentDeployment.CurrentVersion.ToString();
+                string[] versionParts = version.Split('.');
+                // Version #.#.0.# is used for release builds
+                // If it is not a release build, then always post error reports
+                if (versionParts.Length > 2 && !Equals(versionParts[2], "0"))
+                    reportChoice = ReportErrorDlg.ReportChoice.always;
+
+                if (!Equals(Settings.Default.StackTraceListVersion, version))
+                {
+                    Settings.Default.StackTraceListVersion = version;
+                    stackTraceList.Clear();
+                }
             }
 
-            using (var reportForm = new ReportErrorDlg(e.Exception))
+            using (var reportForm = new ReportErrorDlg(e.Exception, reportChoice))
             {
                 if (reportForm.ShowDialog(MainWindow) == DialogResult.OK)
                 {

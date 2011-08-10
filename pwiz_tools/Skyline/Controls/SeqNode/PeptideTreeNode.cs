@@ -633,7 +633,7 @@ namespace pwiz.Skyline.Controls.SeqNode
                     size.Height += sizeGroup.Height;
                 }
 
-                return new Size((int)size.Width + 2, (int)size.Height + 2);
+                return new Size((int)Math.Round(size.Width + 2), (int)Math.Round(size.Height + 2));
             }
         }
 

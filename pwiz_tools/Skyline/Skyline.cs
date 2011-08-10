@@ -1379,7 +1379,7 @@ namespace pwiz.Skyline
             var findPredicate = new FindPredicate(findOptions, sequenceTree.GetDisplaySettings(null));
             IList<FindResult> results = null;
             var longWaitDlg = new LongWaitDlg(this);
-            longWaitDlg.PerformWork(parent, 3000, lwb => results = FindAll(lwb, findPredicate).ToArray());
+            longWaitDlg.PerformWork(parent, 2000, lwb => results = FindAll(lwb, findPredicate).ToArray());
             if (results.Count() == 0)
             {
                 if (!longWaitDlg.IsCanceled)

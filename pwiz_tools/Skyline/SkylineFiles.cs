@@ -569,13 +569,9 @@ namespace pwiz.Skyline
                 var sharing = new SrmDocumentSharing(DocumentUI, DocumentFilePath, fileDest, completeSharing);
                 longWaitDlg.PerformWork(this, 1000, sharing.Share);
             }
-            catch (IOException x)
+            catch (Exception x)
             {
                 MessageDlg.Show(this, string.Format("Failed attempting to create sharing file {0}.\n{1}", fileDest, x.Message));
-            }
-            catch (Exception)
-            {
-                MessageDlg.Show(this, string.Format("Failed attempting to create sharing file {0}.", fileDest));
             }
         }
 
@@ -685,13 +681,13 @@ namespace pwiz.Skyline
             longWaitDlg.PerformWork(this, 1000, () =>
                        docNew = docCurrent.ImportFasta(reader, longWaitDlg, lineCount, matcher, to, out selectPath, out nextAdded));
 
-
             if (docNew == null)
                 return;
 
             if (longWaitDlg.IsDocumentChanged(docCurrent))
             {
                 MessageDlg.Show(this, "Unexpected document change during operation.");                
+                return;
             }
 
             // If importing the FASTA produced any childless proteins
@@ -825,7 +821,17 @@ namespace pwiz.Skyline
 
             if (dlg.ShowDialog(this) == DialogResult.OK)
             {
-                ImportFiles(dlg.FileNames);
+                try
+                {
+                    ImportFiles(dlg.FileNames);
+                }
+                catch (Exception x)
+                {
+                    string message = dlg.FileNames.Length == 1
+                        ? string.Format("Failed importing file {0}. {1}", dlg.FileNames[0], x.Message)
+                        : string.Format("Failed importing files:\n\n{0}\n\n{1}", string.Join("\n", dlg.FileNames), x.Message);
+                    MessageBox.Show(message);
+                }
             }
         }
 
@@ -863,7 +869,8 @@ namespace pwiz.Skyline
 
             if (longWaitDlg.IsDocumentChanged(docCurrent))
             {
-                MessageDlg.Show(this, "Unexpected document change during operation.");                
+                MessageDlg.Show(this, "Unexpected document change during operation.");
+                return;
             }
 
             ModifyDocument(description, doc =>
