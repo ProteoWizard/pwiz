@@ -471,7 +471,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public bool ShowYIons
         {
-            get { return Set.ShowAIons; }
+            get { return Set.ShowYIons; }
             set { ActAndUpdate(() => Set.ShowYIons = value); }
         }
 
