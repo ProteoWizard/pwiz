@@ -240,6 +240,7 @@
             this.FileTreeView.Size = new System.Drawing.Size(409, 404);
             this.FileTreeView.TabIndex = 0;
             this.FileTreeView.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.FileTreeView_AfterCheck);
+            this.FileTreeView.BeforeCheck += new System.Windows.Forms.TreeViewCancelEventHandler(this.FileTreeView_BeforeCheck);
             // 
             // TopSplit
             // 

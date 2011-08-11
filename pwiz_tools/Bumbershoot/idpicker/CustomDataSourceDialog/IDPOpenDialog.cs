@@ -752,9 +752,13 @@ namespace CustomDataSourceDialog
             else
                 regexConversion = new Regex("^" + SearchBox.Text.ToLower().Replace("+", "\\+")
                                                       .Replace(".", "\\.").Replace('?', '.').Replace("*", ".*") + "$");
-
+            var errorNode = (from TreeNode node in FileTreeView.Nodes
+                             where node.Name == "IDPDBErrorNode"
+                             select node).SingleOrDefault();
             FileTreeView.Nodes.Clear();
             FileTreeView.Nodes.Add(FilterNode(_unfilteredNode, regexConversion));
+            if (errorNode != null)
+                FileTreeView.Nodes.Add(errorNode);
             CorrectNamingScheme(FileTreeView.Nodes[0],string.Empty);
             FileTreeView.ExpandAll();
         }
@@ -838,8 +842,13 @@ namespace CustomDataSourceDialog
                 return;
 
             //remove filters
+            var errorNode = (from TreeNode node in FileTreeView.Nodes
+                             where node.Name == "IDPDBErrorNode"
+                             select node).SingleOrDefault();
             FileTreeView.Nodes.Clear();
             FileTreeView.Nodes.Add(_unfilteredNode);
+            if (errorNode != null)
+                FileTreeView.Nodes.Add(errorNode);
 
             //If folder is a sub-folder find location
             var closestRelative = FindClosestRelative(FileTreeView.Nodes[0], newNode.ToolTipText);
@@ -980,12 +989,48 @@ namespace CustomDataSourceDialog
                 sourceList.Add(Parser.ParseSource(file.FullName));
             else if (file.Extension.ToLower() == ".idpdb" && SessionFactoryFactory.IsValidFile(file.FullName))
             {
-                var sessionFactory = SessionFactoryFactory.CreateSessionFactory(file.FullName, false, true);
-                var session = sessionFactory.OpenSession();
-                var temp = session.QueryOver<SpectrumSource>().List();
-                sourceList.AddRange(temp.Select(item => item.Name));
-                session.Close();
-                sessionFactory.Close();
+                NHibernate.ISessionFactory sessionFactory = null;
+                NHibernate.ISession session = null;
+                try
+                {
+                    sessionFactory = SessionFactoryFactory.CreateSessionFactory(file.FullName, false, true);
+                    session = sessionFactory.OpenSession();
+                    var temp = session.QueryOver<SpectrumSource>().List();
+                    sourceList.AddRange(temp.Select(item => item.Name));
+                    session.Close();
+                    sessionFactory.Close();
+                }
+                catch (Exception e)
+                {
+                    if (session != null)
+                        session.Close();
+                    if (sessionFactory != null)
+                        sessionFactory.Close();
+                    var errorNode = (from TreeNode node in FileTreeView.Nodes
+                                     where node.Name == "IDPDBErrorNode"
+                                     select node).SingleOrDefault();
+                    if (errorNode == null)
+                    {
+                        errorNode = new TreeNode
+                                        {
+                                            Name = "IDPDBErrorNode",
+                                            Text = "Error",
+                                            Checked = false,
+                                            ForeColor = Color.DarkRed,
+                                            Tag = "Uncheckable"
+                                        };
+                        FileTreeView.Nodes.Add(errorNode);
+                    }
+                    var thisError = new TreeNode
+                                        {
+                                            Text = file.FullName,
+                                            ToolTipText = e.Message,
+                                            ForeColor = Color.DarkRed,
+                                            Tag = "Uncheckable"
+                                        };
+                    errorNode.Nodes.Add(thisError);
+                    return;
+                }
             }
 
             var mergedFile = sourceList.Count > 1;
@@ -1094,6 +1139,11 @@ namespace CustomDataSourceDialog
         {
             if (FileTreeView.SelectedNode == null)
                 return;
+            if ((string)FileTreeView.SelectedNode.Tag == "Uncheckable")
+            {
+                FileTreeView.SelectedNode.Remove();
+                return;
+            }
 
             if (DataSources.Contains(FileTreeView.SelectedNode.ToolTipText))
                 DataSources.Remove(FileTreeView.SelectedNode.ToolTipText);
@@ -1109,7 +1159,9 @@ namespace CustomDataSourceDialog
                 var path = FileTreeView.SelectedNode.ToolTipText;
                 var nodeToRemove = GetSpecificNode(_unfilteredNode, path);
                 nodeToRemove.Remove();
-                NavigateToFolder(path, null);
+                if (Directory.Exists(path))
+                    NavigateToFolder(path, null);
+                ApplyFilters();
             }
         }
 
@@ -1120,6 +1172,12 @@ namespace CustomDataSourceDialog
                 e.Handled = true;
                 AddNode_Click(sender,null);
             }
+        }
+
+        private void FileTreeView_BeforeCheck(object sender, TreeViewCancelEventArgs e)
+        {
+            if ((string)e.Node.Tag == "Uncheckable")
+                e.Cancel = true;
         }
     }
 }
