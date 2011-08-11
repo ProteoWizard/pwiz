@@ -745,7 +745,8 @@ struct ParserImpl
             "DELETE FROM ProteinData WHERE Id NOT IN (SELECT Protein FROM PeptideInstance);"
             "DELETE FROM ProteinMetadata WHERE Id NOT IN (SELECT Protein FROM PeptideInstance);";
 
-        idpDb.executef(sql, analysis.importSettings.maxQValue, analysis.importSettings.maxResultRank);
+        int maxResultRank = analysis.importSettings.maxResultRank > 0 ? analysis.importSettings.maxResultRank : 100;
+        idpDb.executef(sql, analysis.importSettings.maxQValue, maxResultRank);
 
         transaction.commit();
 
@@ -1428,7 +1429,11 @@ void executeTaskGroup(const ProteinDatabaseTaskGroup& taskGroup,
 } // namespace
 
 
-Parser::Analysis::Analysis() : startTime(bdt::not_a_date_time) {importSettings.maxQValue = 0.25;}
+Parser::Analysis::Analysis() : startTime(bdt::not_a_date_time)
+{
+    importSettings.maxQValue = 0.25;
+    importSettings.maxResultRank = 0;
+}
 
 
 void Parser::ImportSettingsCallback::operator() (const vector<ConstAnalysisPtr>& distinctAnalyses, bool& cancel) const

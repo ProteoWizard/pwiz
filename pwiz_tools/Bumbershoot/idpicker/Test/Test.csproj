@@ -39,10 +39,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Lib\NHibernate\Castle.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Castle.DynamicProxy2, Version=2.2.1.0, Culture=neutral, PublicKeyToken=407dd0808d44fbdc, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Lib\NHibernate\Castle.DynamicProxy2.dll</HintPath>
-    </Reference>
     <Reference Include="DigitalRune.Windows.Docking, Version=1.3.1.0, Culture=neutral, PublicKeyToken=83b2c390cd515404, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\freicore\pwiz_src\pwiz_tools\Shared\Lib\DigitalRune.Windows.Docking.dll</HintPath>
