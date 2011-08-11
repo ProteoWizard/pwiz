@@ -46,6 +46,7 @@
 
 #include <boost/timer.hpp>
 #include <boost/thread/thread.hpp>
+#include <boost/thread/mutex.hpp>
 #include <boost/filesystem/operations.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/predicate.hpp>
@@ -135,7 +136,7 @@ vector<QuameterInput> GetIDPickerSpectraSources(const string& dbFilename)
     string s = "select Id, Name from SpectrumSource";
     sqlite::query qry(db, s.c_str() );
     vector<QuameterInput> sources;
-
+	
     for (sqlite::query::iterator i = qry.begin(); i != qry.end(); ++i) {
         int intSrcId;
         string srcFilename;

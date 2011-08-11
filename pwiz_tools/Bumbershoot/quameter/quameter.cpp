@@ -30,6 +30,7 @@ namespace quameter
 {
 
     RunTimeConfig*              g_rtConfig;
+	boost::mutex msdMutex;
 
     int InitProcess( argList_t& args )
     {
@@ -184,11 +185,11 @@ namespace quameter
             for( fItr = g_inputFilenames.begin(); fItr != g_inputFilenames.end(); ++fItr )
             {
                 string inputFile = *fItr;
-                string rawFile = bfs::change_extension(inputFile, g_rtConfig->RawDataExtension).string();
+                string rawFile = bfs::change_extension(inputFile, "." + g_rtConfig->RawDataExtension).string();
                 bfs::path rawFilePath(rawFile);
                 if(!bfs::exists(rawFilePath))
                     continue;
-
+					
                 if(bal::iequals(g_rtConfig->MetricsType,"nistms") && bal::ends_with(inputFile,"idpDB") )
                 {
                    vector<QuameterInput> idpSrcs = GetIDPickerSpectraSources(inputFile);
@@ -204,11 +205,11 @@ namespace quameter
                    allSources.push_back(qip); 
                 }
             }
-            
+
             int numFiles = allSources.size();
             int current = 0;		
             int maxThreads = boost::thread::hardware_concurrency(); 
-            if (maxThreads < 1) maxThreads = 1; // there must be at least one thread
+            maxThreads = max(1, maxThreads); // there must be at least one thread
 
             // Set up the reading	
             FullReaderList readers;
@@ -216,9 +217,10 @@ namespace quameter
             for (int k = 0; k < max(1,( ((numFiles-1)/maxThreads)+1 )); k++) 
             { // at least go through this loop once.
                 boost::thread_group threadGroup;
+				cout << "maxThreads = " << maxThreads << " numFiles = " << numFiles << " currentFile = " << current+1 << endl;
                 for (int l = 0; (l < maxThreads) && (current < numFiles); l++)
                 {
-                    //cout << "current: " << current << "\tdb: " << allSources[current].dbFilename << "\tid: " << allSources[current].id << "\tfile: " << allSources[current].filename << endl;
+//					cout << "current: " << current << "\tdb: " << allSources[current].idpDBFile << "\tid: " << allSources[current].sourceID << "\tfile: " << allSources[current].sourceFile << endl;
                     threadGroup.add_thread(new boost::thread(MetricMaster, allSources[current], readers));
                     current++;
                 }
@@ -242,18 +244,15 @@ namespace quameter
                 const string& sourceId = currentFile.sourceID;
 
                 IDPDBReader idpReader(dbFilename);
-                /*	// Let's test the config file
-                cout << "Instrument type: " << configOptions.instrument << endl;
-                cout << "Tabbed output: " << configOptions.tabbedOutput << endl;
-                cout << "Tabbed output header: " << configOptions.headerOn << endl;
-                cout << "Location of RAW file: " << configOptions.locRAW << endl;
-                cout << "Desired output directory: " << configOptions.locOutput << endl;
-                */
-                ofstream qout; // short for quameter output, save to same directory as input file
+
+                ofstream qout; // short for quameter output, default is to save to same directory as input file
                 qout.open (	boost::filesystem::change_extension(sourceFilename, "-quameter_results.txt").string().c_str() );
 
+				boost::unique_lock<boost::mutex> guard(msdMutex,boost::defer_lock);
+				guard.lock();
                 MSDataFile msd(sourceFilename, & readers);
-
+				guard.unlock();
+			
                 int startSpectraIndex = 0;	
                 SpectrumList& spectrumList = *msd.run.spectrumListPtr;
                 string sourceName = GetFilenameWithoutExtension( GetFilenameFromFilepath( sourceFilename ) );
@@ -267,7 +266,6 @@ namespace quameter
 
                 vector<CVParam> scanTime;
                 vector<CVParam> scan2Time;
-                vector<double> retentionTime;
                 int iter = 0;
                 vector<string> nativeID = idpReader.GetNativeId(sourceId);
                 map<string, double> ticMap;
@@ -275,7 +273,6 @@ namespace quameter
                 vector<double> ionInjectionTimeMS2;
                 vector<int> MS2Peaks;
                 multimap<string, double> precursorRetentionMap;
-                map<string, double> retentionMap;
 
                 // scanInfo holds MS1 and MS2 data
                 vector<MS2ScanInfo> scanInfo;
@@ -292,12 +289,12 @@ namespace quameter
                     if( spectrum->cvParam(MS_MSn_spectrum).empty() && spectrum->cvParam(MS_MS1_spectrum).empty() )
                         continue;
 
-                    CVParam spectrumMsLevel = spectrum->cvParam(MS_ms_level);
-                    if( spectrumMsLevel == CVID_Unknown )
+                    CVParam spectrumMSLevel = spectrum->cvParam(MS_ms_level);
+                    if( spectrumMSLevel == CVID_Unknown )
                         continue;
 
                     // Check its MS level and increment the count
-                    int msLevel = spectrumMsLevel.valueAs<int>();
+                    int msLevel = spectrumMSLevel.valueAs<int>();
                     if( msLevel == 1 ) {
                         Scan& scan = spectrum->scanList.scans[0];
                         // The scan= number is 1+Spectrum, or 1+curIndex
@@ -337,9 +334,6 @@ namespace quameter
                         // Only look at retention times of peptides identified in .idpDB
                         // curIndex is the spectrum index, curIndex+1 is (usually) the scan number
                         if( iter < ((int)nativeID.size()) && (spectrum->id == nativeID[iter]) ) {
-                            retentionTime.push_back(scan.cvParam(MS_scan_start_time).timeInSeconds());
-                            retentionMap[spectrum->id] = scan.cvParam(MS_scan_start_time).timeInSeconds();
-
                             MS2ScanInfo amalgTemp;
                             amalgTemp.MS2 = spectrum->id;
                             amalgTemp.MS2Retention = scan.cvParam(MS_scan_start_time).timeInSeconds();
@@ -364,19 +358,19 @@ namespace quameter
 
                 } // finished cycling through all spectra
 
-                // Find the first RT quartile
+               // Find the first RT quartile
                 double firstQuartileIDTime = 0;
                 int firstQuartileIndex = 0;
-                int retentSize = (int)retentionTime.size();
+                int retentSize = (int)scanInfo.size();
                 if ( retentSize % 4 == 0 ) {
                     int index1 = (retentSize/4)-1;
                     int index2 = (retentSize/4);
-                    firstQuartileIDTime = (retentionTime[index1] + retentionTime[index2]) / 2;
+                    firstQuartileIDTime = (scanInfo[index1].MS2Retention + scanInfo[index2].MS2Retention) / 2;
                     firstQuartileIndex = (index1 + index2) / 2;
                 }
                 else {
                     int index1 = (retentSize)/4;
-                    firstQuartileIDTime = retentionTime[index1];
+                    firstQuartileIDTime = scanInfo[index1].MS2Retention;
                     firstQuartileIndex = index1;
                 }
 
@@ -386,12 +380,12 @@ namespace quameter
                 if ( (retentSize * 3) % 4 == 0 ) {
                     int index1 = (3*retentSize/4)-1;
                     int index2 = (3*retentSize/4);
-                    thirdQuartileIDTime = (retentionTime[index1] + retentionTime[index2]) / 2;
+                    thirdQuartileIDTime = (scanInfo[index1].MS2Retention + scanInfo[index2].MS2Retention) / 2;
                     thirdQuartileIndex = (index1 + index2) / 2;
                 }
                 else {
                     int index1 = ( (3*retentSize)/4 );
-                    thirdQuartileIDTime = retentionTime[index1];
+                    thirdQuartileIDTime = scanInfo[index1].MS2Retention;
                     thirdQuartileIndex = index1;
                 }
 
@@ -411,12 +405,12 @@ namespace quameter
                     if( spectrum->cvParam(MS_MSn_spectrum).empty() && spectrum->cvParam(MS_MS1_spectrum).empty() )
                         continue;
 
-                    CVParam spectrumMsLevel = spectrum->cvParam(MS_ms_level);
-                    if( spectrumMsLevel == CVID_Unknown )
+                    CVParam spectrumMSLevel = spectrum->cvParam(MS_ms_level);
+                    if( spectrumMSLevel == CVID_Unknown )
                         continue;
 
                     // this time around we're only looking for MS1 spectra
-                    int msLevel = spectrumMsLevel.valueAs<int>();
+                    int msLevel = spectrumMSLevel.valueAs<int>();
                     if( msLevel == 1 ) {
                         Scan& scan = spectrum->scanList.scans[0];	
 
@@ -552,46 +546,49 @@ namespace quameter
                     }
                 } // end of spectra searching. we now have Intensity/RT pairs to build chromatograms
 
-                // Make an MSData object and output some chromatograms for SeeMS to read
-                MSData chromData;
-                shared_ptr<ChromatogramListSimple> chromatogramListSimple(new ChromatogramListSimple);
-                chromData.run.chromatogramListPtr = chromatogramListSimple;
-                chromData.run.id = "this must be set";
+                // Optional: Make an MSData object and output some chromatograms for SeeMS to read
+				if (g_rtConfig->ChromatogramOutput) {
+					MSData chromData;
+					shared_ptr<ChromatogramListSimple> chromatogramListSimple(new ChromatogramListSimple);
+					chromData.run.chromatogramListPtr = chromatogramListSimple;
+					chromData.run.id = "this must be set";
 
-                // Put unique identified peptide chromatograms first in the file
-                for (unsigned int iWin = 0; iWin < pepWindow.size(); iWin++) {
-                    chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
-                    Chromatogram& c = *chromatogramListSimple->chromatograms.back();
-                    c.index = iWin;
-                    c.id = "unique identified peptide";
-                    c.setTimeIntensityArrays(pepWindow[iWin].MS1RT, pepWindow[iWin].MS1Intensity, UO_second, MS_number_of_counts);
-                }
-                // next are chromatograms from identified MS2 scans
-                unsigned int iOffset = pepWindow.size();
-                for (unsigned int i = 0; i < identMS2Chrom.size(); i++) {
-                    chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
-                    Chromatogram& c = *chromatogramListSimple->chromatograms.back();
-                    c.index = i + iOffset;
-                    c.id = "identified MS2 scan";
-                    c.setTimeIntensityArrays(identMS2Chrom[i].MS1RT, identMS2Chrom[i].MS1Intensity, UO_second, MS_number_of_counts);
-                }
-                // last are chromatograms from
-                iOffset += identMS2Chrom.size();
-                for (unsigned int i = 0; i < unidentMS2Chrom.size(); i++) {
-                    chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
-                    Chromatogram& c = *chromatogramListSimple->chromatograms.back();
-                    c.index = i + iOffset;
-                    c.id = "unidentified MS2 scan";
-                    c.setTimeIntensityArrays(unidentMS2Chrom[i].MS1RT, unidentMS2Chrom[i].MS1Intensity, UO_second, MS_number_of_counts);
-                }
-                string chromFilename = boost::filesystem::change_extension(sourceFilename, "-quameter_chromatograms.mzML").string();
-                MSDataFile::write(chromData, chromFilename);
+					// Put unique identified peptide chromatograms first in the file
+					for (unsigned int iWin = 0; iWin < pepWindow.size(); iWin++) {
+						chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+						Chromatogram& c = *chromatogramListSimple->chromatograms.back();
+						c.index = iWin;
+						c.id = "unique identified peptide";
+						c.setTimeIntensityArrays(pepWindow[iWin].MS1RT, pepWindow[iWin].MS1Intensity, UO_second, MS_number_of_counts);
+					}
+					// next are chromatograms from identified MS2 scans
+					unsigned int iOffset = pepWindow.size();
+					for (unsigned int i = 0; i < identMS2Chrom.size(); i++) {
+						chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+						Chromatogram& c = *chromatogramListSimple->chromatograms.back();
+						c.index = i + iOffset;
+						c.id = "identified MS2 scan";
+						c.setTimeIntensityArrays(identMS2Chrom[i].MS1RT, identMS2Chrom[i].MS1Intensity, UO_second, MS_number_of_counts);
+					}
+					// last are chromatograms from
+					iOffset += identMS2Chrom.size();
+					for (unsigned int i = 0; i < unidentMS2Chrom.size(); i++) {
+						chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+						Chromatogram& c = *chromatogramListSimple->chromatograms.back();
+						c.index = i + iOffset;
+						c.id = "unidentified MS2 scan";
+						c.setTimeIntensityArrays(unidentMS2Chrom[i].MS1RT, unidentMS2Chrom[i].MS1Intensity, UO_second, MS_number_of_counts);
+					}
+					string chromFilename = boost::filesystem::change_extension(sourceFilename, "-quameter_chromatograms.mzML").string();
+					MSDataFile::write(chromData, chromFilename);
+				}
 
                 // Find peaks with Crawdad
                 using namespace SimpleCrawdad;
                 using namespace crawpeaks;
                 typedef boost::shared_ptr<CrawdadPeak> CrawdadPeakPtr;
                 vector<IntensityPair> idMS2Intensities;
+				vector<double> idMS2RTV; // vector of the RTs of the chromatograph peaks; the order matches scanInfo's vector
                 vector<double> idMS2PeakV;
                 vector<double> unidMS2PeakV;
                 vector<double> allMS2Peaks;
@@ -652,6 +649,7 @@ namespace quameter
 
                     IntensityPair tmpIntensityPair(scanInfo[i].precursorIntensity,closestIntensity);
                     idMS2Intensities.push_back(tmpIntensityPair);
+					idMS2RTV.push_back(closestRT);
                     idMS2PeakV.push_back(closestIntensity);
                     allMS2Peaks.push_back(closestIntensity);
                 }
@@ -719,10 +717,10 @@ namespace quameter
                 int totalQ4 = idQ4+unidQ4;
 
                 // Metric C-2A
-                double iqIDTime = (thirdQuartileIDTime - firstQuartileIDTime);	// iqIDTime stands for interquartile identification time (in seconds)
+                double iqIDTime = (thirdQuartileIDTime - firstQuartileIDTime) / 60;	// iqIDTime stands for interquartile identification time (in seconds)
 
                 // Metric C-2B
-                double iqIDRate = (thirdQuartileIndex - firstQuartileIndex) *60 / iqIDTime;
+                double iqIDRate = (thirdQuartileIndex - firstQuartileIndex) / iqIDTime;
 
                 // Metric C-4A: Median peak width for peptides in last decile sorted by RT
                 // Going slightly out of order (C-4A/B before C-3A/B) because the former use 'unsorted' identifiedPeptideFwhm (default is sorted by RT) while the C-3A/B then sort identifiedPeptideFwhm by width size
@@ -805,31 +803,26 @@ namespace quameter
                     double peakIntensity = -1, maxMS1Time = -1;
                     pair<mapIter, mapIter> keyRange = duplicatePeptides.equal_range(theKey);
 
+					// Skip peptides that weren't repeat IDs
                     if ( (int)duplicatePeptides.count(theKey) < 2 ) {
                         numDuplicatePeptides--;
-                        //			cout << "Skipping peptide " << theKey << " because it's not a repeat ID\n";
-                        s_it = keyRange.second;
+                       s_it = keyRange.second;
                         continue;
                     }		
-
-                    for (s_it = keyRange.first;  s_it != keyRange.second;  ++s_it) {
-                        // get precursor intensity and time
-                        int temp = nativeToArrayMap.find((*s_it).second)->second;
-                        if (peakIntensity == -1 || (scanInfo[temp].precursorIntensity > peakIntensity))
-                        {
-                            peakIntensity = scanInfo[temp].precursorIntensity;
-                            maxMS1Time = scanInfo[temp].precursorRetention;
-                        }
-                    }
-
+					if (idMS2RTV.size() != scanInfo.size()) {
+						cerr << "identMS2Chrom[] and idMS2RTV[] sizes differ. Tailing/bleeding cannot be calculated.\n";
+						exit(1);
+					}
+					
                     for (s_it = keyRange.first;  s_it != keyRange.second;  ++s_it) {
                         // compare MS2 time to max MS1 time
                         int temp = nativeToArrayMap.find( (*s_it).second )->second;
-                        if ( (scanInfo[temp].MS2Retention - maxMS1Time) > 4) {
+                        if ( (scanInfo[temp].MS2Retention - idMS2RTV[temp]) > 240) { // 240 seconds
                             peakTailing++;
                         }
-                        else if ( (maxMS1Time - scanInfo[temp].MS2Retention) > 4)
-                            bleed++;			
+                        else if ( (idMS2RTV[temp] - scanInfo[temp].MS2Retention) > 240) { // 240 seconds
+                            bleed++;
+						}
                     }	
                 }
 
@@ -884,13 +877,11 @@ namespace quameter
                         // Is the current total ion current less than 1/0th of the last MS1 scan?
                         if ( (lastTIC != -1) && (10*(ticMap.find(nativeIter)->second) < lastTIC)) {
                             ticDrop++;
-                            //silent				cout << "NativeID: " << nativeIter << "\tPrevious TIC: " << lastTIC << "\tCurrent TIC: " << ticMap.find(nativeIter)->second << endl;
-                        }
+                       }
                         // Is the current total ion current more than 10 times the last MS1 scan?
                         else if ( (lastTIC != -1) && ((ticMap.find(nativeIter)->second) > (10*lastTIC)) ) {
                             ticJump++;
-                            //silent				cout << "NativeID: " << nativeIter << "\tPrevious TIC: " << lastTIC << "\tCurrent TIC: " << ticMap.find(nativeIter)->second << endl;
-                        }	
+                       }	
 
                         lastTIC = ticMap.find(nativeIter)->second;			
                     }
@@ -900,7 +891,6 @@ namespace quameter
                 double medianPrecursorMZ = idpReader.MedianPrecursorMZ(sourceId);
 
                 // Call PeptideCharge() for metrics IS-3A, IS3-B, IS3-C
-                fourInts PeptideCharge(const string&, const string&);
                 fourInts allCharges = idpReader.PeptideCharge(sourceId);
                 int charge1 = allCharges.first;
                 int charge2 = allCharges.second;
@@ -1045,7 +1035,7 @@ namespace quameter
                     qout << "--------\n";
                     qout << "C-1A: Chromatographic peak tailing: " << peakTailing << "/" << numDuplicatePeptides << " = " << peakTailingRatio << endl;
                     qout << "C-1B: Chromatographic bleeding: " << bleed << "/" << numDuplicatePeptides << " = " << bleedRatio << endl;
-                    qout << "C-2A: Time period over which middle 50% of peptides were identified: " << thirdQuartileIDTime << " sec - " << firstQuartileIDTime << " sec = " << iqIDTime/60 << " minutes.\n";
+                    qout << "C-2A: Time period over which middle 50% of peptides were identified: " << thirdQuartileIDTime/60 << " min - " << firstQuartileIDTime/60 << " min = " << iqIDTime << " minutes.\n";
                     qout << "C-2B: Peptide identification rate during the interquartile range: " << iqIDRate << " peptides/min.\n";
                     qout << "C-3A: Median peak width for identified peptides: " << medianFwhm << " seconds.\n";
                     qout << "C-3B: Interquartile peak width for identified peptides: " << fwhmQ3 << " - " << fwhmQ1 << " = "<< iqFwhm << " seconds.\n";
