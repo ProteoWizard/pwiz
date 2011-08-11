@@ -33,8 +33,10 @@ using namespace freicore;
 	RTCONFIG_VARIABLE( string,          OutputFormat,               "tsv"        ) \
     RTCONFIG_VARIABLE( string,          MetricsType,                "nistms"     ) \
     RTCONFIG_VARIABLE( string,          Instrument,                 "ltq"        ) \
-    RTCONFIG_VARIABLE( string,          RawDataExtension,           "mzXML"        ) \
-    RTCONFIG_VARIABLE( double,			ScoreCutoff,                0.05   		 )
+    RTCONFIG_VARIABLE( string,          RawDataExtension,           "RAW"        ) \
+    RTCONFIG_VARIABLE( double,			ScoreCutoff,                0.05   		 ) \
+	RTCONFIG_VARIABLE( bool,			ChromatogramOutput,         false   	 )
+
 
 
 namespace freicore
