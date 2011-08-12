@@ -25,9 +25,18 @@
 #include "sqlite/sqlite3pp.h"
 #include "quameterSharedTypes.h"
 #include "quameterSharedFuncs.h"
+#include "quameterConfig.h"
+
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/stats.hpp>
+#include <boost/accumulators/statistics/mean.hpp>
+#include <boost/accumulators/statistics/median.hpp>
+#include <boost/accumulators/framework/accumulator_set.hpp>
+
+using namespace std;
 
 namespace sqlite = sqlite3pp;
-using namespace std;
+namespace accs = boost::accumulators;
 
 namespace freicore
 {
@@ -43,22 +52,12 @@ struct IDPDBReader
         idpDBFile = file;
     }
 
-    // For metric MS1-5A: Find the median real value of precursor errors
-    double MedianRealPrecursorError(const string& spectrumSourceId);
-    // For metric MS1-5B: Find the mean of the absolute precursor errors
-    double GetMeanAbsolutePrecursorErrors(const string& spectrumSourceId);
-    // For metrics MS1-5C and MS1-5D: Find the median real value and interquartile distance of precursor errors (both in ppm)
-    PPMMassError GetRealPrecursorErrorPPM(const string& spectrumSourceId);
     // For metric P-1: Find the median peptide identification score for all peptides
     double GetMedianIDScore(const string& spectrumSourceId);
     // For metric P-2A: Find the number of MS2 spectra that identify tryptic peptide ions
     int GetNumTrypticMS2Spectra(const string& spectrumSourceId);
     // For metric P-2B: Find the number of tryptic peptide ions identified.
     int GetNumTrypticPeptides(const string& spectrumSourceId);
-    // For metric P-2C: Find the number of unique tryptic peptide sequences identified
-    int GetNumUniqueTrypticPeptides(const string& spectrumSourceId);
-    // For metric P-3: Find the ratio of semi- over fully-tryptic peptide IDs.
-    int GetNumUniqueSemiTrypticPeptides(const string& spectrumSourceId);
     // For metric DS-1A: Finds the number of peptides identified by one spectrum
     int PeptidesIdentifiedOnce(const string& spectrumSourceId);
     // For metrics DS-1A and DS-1B: Finds the number of peptides identified by two spectra
@@ -75,6 +74,13 @@ struct IDPDBReader
     fourInts PeptideCharge(const string& spectrumSourceId);
     // Used for peak finding of identified peptides
     vector<XICWindows> MZRTWindows(const string& spectrumSourceId, map<string, int> nativeToArrayMap, vector<MS2ScanInfo> scanInfo);
+    // For metric MS1-5A: Find the median real value of precursor errors
+    // For metric MS1-5B: Find the mean of the absolute precursor errors
+    // For metrics MS1-5C and MS1-5D: Find the median real value and interquartile distance of precursor errors (both in ppm)
+    MassErrorStats getPrecursorMassErrorStats(const string& spectrumSourceId);
+    // For metric P-2C: Find the number of unique tryptic peptide sequences identified
+    // For metric P-3: Find the ratio of semi- over fully-tryptic peptide IDs.
+    vector<size_t> getUniqueTrypticSemiTryptics(const string& spectrumSourceId);
 };
 
 }

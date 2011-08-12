@@ -28,111 +28,61 @@ namespace quameter
 
     /**
     * For metric MS1-5A: Find the median real value of precursor errors
-    *
+    * For metric MS1-5B: Find the mean of the absolute precursor errors
+    * For metrics MS1-5C and MS1-5D: Find the median real value and interquartile distance of precursor errors (both in ppm)
     * @code
-    * SELECT DISTINCT NativeID,Peptide,PrecursorMZ,MonoisotopicMassError,MolecularWeightError 
-    * FROM PeptideSpectrumMatch JOIN Spectrum 
-    * WHERE PeptideSpectrumMatch.QValue <= 0.05 
-    * AND PeptideSpectrumMatch.Spectrum=Spectrum.Id 
-    * AND Rank = 1 
-    * AND Charge=2 
-    * ORDER BY Spectrum
+    * SELECT DISTINCT NativeID, Peptide, PrecursorMZ, psm.MonoisotopicMass as PrecMonoMass, psm.MolecularWeight as PrecAvgMass, \
+            (SUM(MonoMassDelta)+Peptide.MonoIsotopicMass) as PepMonoMass, \
+            (SUM(MonoMassDelta)+Peptide.MolecularWeight) as PepAvgMass \
+        from PeptideSpectrumMatch psm JOIN Spectrum JOIN Peptide JOIN PeptideModification pm JOIN Modification mod \
+        where psm.Spectrum = Spectrum.Id and psm.Peptide = Peptide.Id \
+        and pm.PeptideSpectrumMatch=psm.Id and mod.Id=pm.Modification \
+        and Rank = 1 and Spectrum.Source = " + spectrumSourceId + "\
+        and Charge=2 \
+        group by psm.Id
     * @endcode
     */
-    double IDPDBReader::MedianRealPrecursorError(const string& spectrumSourceId) {
-
-        sqlite::database db(idpDBFile);
-        string s = "SELECT DISTINCT NativeID,Peptide,PrecursorMZ,MonoisotopicMassError,MolecularWeightError from PeptideSpectrumMatch JOIN Spectrum where PeptideSpectrumMatch.QValue <= 0.05 and PeptideSpectrumMatch.Spectrum=Spectrum.Id and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " and Charge=2 Order By Spectrum";
-        sqlite::query qry(db, s.c_str() );
-        vector<double> realPrecursorErrors;
-
-        for (sqlite::query::iterator i = qry.begin(); i != qry.end(); ++i) {
-            char const* nativeID;
-            int peptideTemp;
-            double precursorMZ, monoisotopicMassError, molecularWeightError;
-            (*i).getter() >> nativeID >> peptideTemp >> precursorMZ >> monoisotopicMassError >> molecularWeightError;
-            double massError = min(fabs(monoisotopicMassError),fabs(molecularWeightError));
-            if (fabs(massError) <= 0.45)
-                realPrecursorErrors.push_back(massError);
-        }
-
-        sort(realPrecursorErrors.begin(), realPrecursorErrors.end());
-        return Q2(realPrecursorErrors);
-    }
-    
-    /**
-        * For metric MS1-5B: Find the mean of the absolute precursor errors
-        *
-        * @code
-        * SELECT DISTINCT NativeID,Peptide,PrecursorMZ,MonoisotopicMassError,MolecularWeightError 
-        * FROM PeptideSpectrumMatch JOIN Spectrum 
-        * WHERE PeptideSpectrumMatch.QValue <= 0.05 
-        * AND PeptideSpectrumMatch.Spectrum=Spectrum.Id 
-        * AND Rank = 1 
-        * AND Charge=2 
-        * ORDER BY Spectrum
-        * @endcode
-        */
-        double IDPDBReader::GetMeanAbsolutePrecursorErrors(const string& spectrumSourceId) {
-
+        MassErrorStats IDPDBReader::getPrecursorMassErrorStats(const string& spectrumSourceId) 
+        {
             sqlite::database db(idpDBFile);
-            string s = "SELECT DISTINCT NativeID,Peptide,PrecursorMZ,MonoisotopicMassError,MolecularWeightError from PeptideSpectrumMatch JOIN Spectrum where PeptideSpectrumMatch.QValue <= 0.05 and PeptideSpectrumMatch.Spectrum=Spectrum.Id and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " and Charge=2 Order By Spectrum";
-            sqlite::query qry(db, s.c_str() );
-            vector<double> absolutePrecursorErrors;
-
-            for (sqlite::query::iterator i = qry.begin(); i != qry.end(); ++i) {
+            string query_sql = "SELECT DISTINCT NativeID, Peptide, PrecursorMZ, psm.MonoisotopicMass as PrecMonoMass, psm.MolecularWeight as PrecAvgMass, \
+                                (SUM(MonoMassDelta)+Peptide.MonoIsotopicMass) as PepMonoMass, \
+                                (SUM(MonoMassDelta)+Peptide.MolecularWeight) as PepAvgMass \
+                                from PeptideSpectrumMatch psm JOIN Spectrum JOIN Peptide JOIN PeptideModification pm JOIN Modification mod \
+                                where psm.Spectrum = Spectrum.Id and psm.Peptide = Peptide.Id \
+                                and pm.PeptideSpectrumMatch=psm.Id and mod.Id=pm.Modification \
+                                and Rank = 1 and Spectrum.Source = " + spectrumSourceId + "\
+                                and Charge=2 \
+                                group by psm.Id";
+            sqlite::query qry(db, query_sql.c_str() );
+            accs::accumulator_set<double, accs::stats<accs::tag::median, accs::tag::mean > > massErrors;
+            accs::accumulator_set<double, accs::stats<accs::tag::median, accs::tag::mean > > absMassErrors;
+            accs::accumulator_set<double, accs::stats<accs::tag::median, accs::tag::mean > > ppmErrors;
+            quartile<double> ppmErrorsForIQR;
+            for (sqlite::query::iterator qIter = qry.begin(); qIter != qry.end(); ++qIter) {
                 char const* nativeID;
-                int peptideTemp;
-                double precursorMZ, monoisotopicMassError, molecularWeightError;
-                (*i).getter() >> nativeID >> peptideTemp >> precursorMZ >> monoisotopicMassError >> molecularWeightError;
-                double massError = min(fabs(monoisotopicMassError),fabs(molecularWeightError));
-                if (fabs(massError) <= 0.45)
-                    absolutePrecursorErrors.push_back(fabs(massError));
-            }
-
-            sort(absolutePrecursorErrors.begin(), absolutePrecursorErrors.end());
-            return ( (absolutePrecursorErrors[0] + absolutePrecursorErrors[absolutePrecursorErrors.size()-1]) / 2 );
-        }
-
-        /**
-        * For metrics MS1-5C and MS1-5D: Find the median real value and interquartile distance of precursor errors (both in ppm)
-        *
-        * @code
-        * SELECT DISTINCT NativeID, Peptide, PrecursorMZ, 
-        * ((SUM(MonoMassDelta)+Peptide.MonoisotopicMass-psm.MonoisotopicMass)/(2*(SUM(MonoMassDelta)+Peptide.MonoisotopicMass)))*1000000 as PPMError 
-        * FROM PeptideSpectrumMatch psm JOIN Spectrum JOIN Peptide JOIN PeptideModification pm JOIN Modification mod 
-        * WHERE psm.Spectrum = Spectrum.Id 
-        * AND psm.Peptide = Peptide.Id 
-        * AND pm.PeptideSpectrumMatch=psm.Id 
-        * AND mod.Id=pm.Modification 
-        * AND Rank = 1 
-        * AND Charge=2 
-        * AND abs(MonoisotopicMassError) <= 0.45 
-        * GROUP BY psm.Id 
-        * ORDER BY PPMError
-        * @endcode
-        */
-        PPMMassError IDPDBReader::GetRealPrecursorErrorPPM(const string& spectrumSourceId) {
-
-            sqlite::database db(idpDBFile);
-            string s = "SELECT DISTINCT NativeID, Peptide, PrecursorMZ, ((SUM(MonoMassDelta)+Peptide.MonoisotopicMass-psm.MonoisotopicMass)/(2*(SUM(MonoMassDelta)+Peptide.MonoisotopicMass)))*1000000 as PPMError from PeptideSpectrumMatch psm JOIN Spectrum JOIN Peptide JOIN PeptideModification pm JOIN Modification mod where psm.Spectrum = Spectrum.Id and psm.Peptide = Peptide.Id and pm.PeptideSpectrumMatch=psm.Id and mod.Id=pm.Modification and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " and Charge=2 and abs(MonoisotopicMassError) <= 0.45 group by psm.Id order by PPMError";
-
-            sqlite::query qry(db, s.c_str() );
-            vector<double> realPrecursorErrorsPPM;
-
-            for (sqlite::query::iterator i = qry.begin(); i != qry.end(); ++i) {
-                char const* nativeID;
-                int peptideTemp;
-                double precursorMZ, ppmError;
-                (*i).getter() >> nativeID >> peptideTemp >> precursorMZ >> ppmError;
-                realPrecursorErrorsPPM.push_back(ppmError);
+                int peptideID;
+                double precursorMZ, precMono, precAvg, pepMono, pepAvg;
+                (*qIter).getter() >> nativeID >> peptideID >> precursorMZ >> precMono >> precAvg >> pepMono >> pepAvg;
+                double massError = precMono-pepMono;
+                double massErrorPPM = (massError/pepMono)*1e6;
+                if(bal::equals(g_rtConfig->Instrument,"ltq"))
+                {
+                    massError = precAvg-pepAvg;
+                    massErrorPPM = (massError/pepAvg)*1e6;
+                }
+                massErrors(massError);
+                absMassErrors(fabs(massError));
+                ppmErrors(massErrorPPM);
+                ppmErrorsForIQR(massErrorPPM);
             }
             
-            // Find the median for metric MS1-5C
-            double median = Q2(realPrecursorErrorsPPM);
-            // The interquartile range is the distance between Q1 and Q3
-            double interquartileRange = Q3(realPrecursorErrorsPPM) - Q1(realPrecursorErrorsPPM);
-            return PPMMassError(median,interquartileRange);
+            MassErrorStats massErrorStats;
+            massErrorStats.medianError = accs::extract::median(massErrors);
+            massErrorStats.meanAbsError = accs::extract::mean(absMassErrors);
+            massErrorStats.medianPPMError = accs::extract::median(ppmErrors);
+            massErrorStats.PPMErrorIQR = ppmErrorsForIQR.extract_IQR();
+            return massErrorStats;
         }
 
         /**
@@ -152,18 +102,18 @@ namespace quameter
         double IDPDBReader::GetMedianIDScore(const string& spectrumSourceId) {
 
             sqlite::database db(idpDBFile);
-            string s = "SELECT DISTINCT PeptideSpectrumMatch.Peptide, PeptideSpectrumMatchScore.Value from PeptideSpectrumMatch join PeptideSpectrumMatchScore join spectrum where PeptideSpectrumMatch.QValue <= 0.05 and PeptideSpectrumMatch.spectrum = spectrum.id and PeptideSpectrumMatch.id = PeptideSpectrumMatchScore.PsmId and PeptideSpectrumMatchScore.ScoreNameId = 3 and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " order by PeptideSpectrumMatchScore.Value";
-            sqlite::query qry(db, s.c_str() );
-            vector<double> idScore;
-            int peptideTemp;
-            double scoreTemp;
-
-            for (sqlite::query::iterator i = qry.begin(); i != qry.end(); ++i) {
-                (*i).getter() >> peptideTemp >> scoreTemp;
-                idScore.push_back(scoreTemp);
+            string query_sql = "SELECT DISTINCT PeptideSpectrumMatch.Peptide, PeptideSpectrumMatchScore.Value from PeptideSpectrumMatch join PeptideSpectrumMatchScore join spectrum where PeptideSpectrumMatch.QValue <= 0.05 and PeptideSpectrumMatch.spectrum = spectrum.id and PeptideSpectrumMatch.id = PeptideSpectrumMatchScore.PsmId and PeptideSpectrumMatchScore.ScoreNameId = 3 and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " order by PeptideSpectrumMatchScore.Value";
+            sqlite::query qry(db, query_sql.c_str() );
+            accs::accumulator_set<double, accs::stats<accs::tag::median> > scores;
+            
+            int peptideID;
+            double score;
+            for (sqlite::query::iterator qIter = qry.begin(); qIter != qry.end(); ++qIter) 
+            {
+                (*qIter).getter() >> peptideID >> score;
+                scores(score);
             }
-
-            return Q2(idScore);
+            return accs::extract::median(scores);
         }
 
         /**
@@ -226,60 +176,40 @@ namespace quameter
 
         /**
         * For metric P-2C: Find the number of unique tryptic peptide sequences identified
-        *
+        * For metric P-3: Find the ratio of semi- over fully-tryptic peptide IDs.
         * @code
-        * SELECT COUNT(DISTINCT PeptideInstance.Peptide) 
-        * FROM PeptideInstance JOIN Spectrum JOIN PeptideSpectrumMatch JOIN PeptideModification 
-        * WHERE PeptideSpectrumMatch.QValue <= 0.05 
-        * AND PeptideInstance.Peptide = PeptideSpectrumMatch.Peptide 
-        * AND PeptideModification.PeptideSpectrumMatch = PeptideSpectrumMatch.Id 
-        * AND Rank = 1 
-        * AND PeptideSpectrumMatch.Spectrum = Spectrum.Id 
-        * AND NTerminusIsSpecific = 1 
-        * AND CTerminusIsSpecific = 1
+        * select distinct PeptideInstance.Peptide, NTerminusIsSpecific, CTerminusIsSpecific 
+            from PeptideInstance join Spectrum join PeptideSpectrumMatch 
+            were PeptideSpectrumMatch.QValue <= 0.05 
+            and PeptideInstance.peptide = PeptideSpectrumMatch.peptide 
+            and Rank = 1 and PeptideSpectrumMatch.Spectrum = Spectrum.Id  
+            and Spectrum.Source = 1 
         * @endcode
         */
-        int IDPDBReader::GetNumUniqueTrypticPeptides(const string& spectrumSourceId)
+        vector<size_t> IDPDBReader::getUniqueTrypticSemiTryptics(const string& spectrumSourceId)
         {
 
             sqlite::database db(idpDBFile);
-            string s = "select count(distinct PeptideInstance.Peptide) from PeptideInstance join Spectrum join PeptideSpectrumMatch join PeptideModification where PeptideSpectrumMatch.QValue <= 0.05 and PeptideInstance.peptide = PeptideSpectrumMatch.peptide and PeptideModification.PeptideSpectrumMatch = PeptideSpectrumMatch.id and Rank = 1 and PeptideSpectrumMatch.Spectrum = Spectrum.Id and Spectrum.Source = " + spectrumSourceId + " and NTerminusIsSpecific = 1 and CTerminusIsSpecific = 1";
-            sqlite::query qry(db, s.c_str() );
-            int uniqueTrypticPeptides;
-
-            for (sqlite::query::iterator i = qry.begin(); i != qry.end(); ++i) {
-                (*i).getter() >> uniqueTrypticPeptides;
-            } 
-
-            return uniqueTrypticPeptides;
-        }
-
-        /**
-        * For metric P-3: Find the ratio of semi- over fully-tryptic peptide IDs.
-        *
-        * @code
-        * SELECT COUNT(DISTINCT PeptideInstance.Peptide) 
-        * FROM PeptideInstance JOIN Spectrum JOIN PeptideSpectrumMatch
-        * WHERE PeptideSpectrumMatch.QValue <= 0.05 
-        * AND PeptideInstance.Peptide = PeptideSpectrumMatch.Peptide 
-        * AND Rank = 1 
-        * AND PeptideSpectrumMatch.Spectrum = Spectrum.Id 
-        * AND ((NTerminusIsSpecific = 1 AND CTerminusIsSpecific = 0) 
-        *	OR (NTerminusIsSpecific = 0 AND CTerminusIsSpecific = 1))
-        * @endcode
-        */
-        int IDPDBReader::GetNumUniqueSemiTrypticPeptides(const string& spectrumSourceId) {
-
-            sqlite::database db(idpDBFile);
-            string s = "select count(distinct PeptideInstance.Peptide) from PeptideInstance join Spectrum join PeptideSpectrumMatch where PeptideSpectrumMatch.QValue <= 0.05 and PeptideInstance.peptide = PeptideSpectrumMatch.peptide and Rank = 1 and PeptideSpectrumMatch.Spectrum = Spectrum.Id and Spectrum.Source = " + spectrumSourceId + " and ((NTerminusIsSpecific = 1 and CTerminusIsSpecific = 0) or (NTerminusIsSpecific = 0 and CTerminusIsSpecific = 1))";
-            sqlite::query qry(db, s.c_str() );
-            int uniqueSemiTrypticPeptides;
-
-            for (sqlite::query::iterator i = qry.begin(); i != qry.end(); ++i) {
-                (*i).getter() >> uniqueSemiTrypticPeptides;
-            } 
-
-            return uniqueSemiTrypticPeptides;
+            string query_sql = "select distinct PeptideInstance.Peptide, NTerminusIsSpecific, CTerminusIsSpecific \
+                                from PeptideInstance join Spectrum join PeptideSpectrumMatch \
+                                where PeptideSpectrumMatch.QValue <= 0.05 \
+                                and PeptideInstance.peptide = PeptideSpectrumMatch.peptide \
+                                and Rank = 1 and PeptideSpectrumMatch.Spectrum = Spectrum.Id  \
+                                and Spectrum.Source = " + spectrumSourceId ;
+            sqlite::query qry(db, query_sql.c_str() );
+            map<size_t, map<size_t, set<size_t> > > peptideCounts;
+            int peptideID, nTerm, cTerm;
+            for (sqlite::query::iterator qIter = qry.begin(); qIter != qry.end(); ++qIter) 
+            {
+                (*qIter).getter() >> peptideID >> nTerm >> cTerm;
+                peptideCounts[nTerm][cTerm].insert(peptideID);
+            }
+            vector<size_t> counts(3);
+            std::fill(counts.begin(),counts.end(),0);
+            counts[NON_ENZYMATIC] = peptideCounts[0][0].size();
+            counts[SEMI_ENZYMATIC] = peptideCounts[0][1].size() + peptideCounts[1][0].size();
+            counts[FULLY_ENZYMATIC] = peptideCounts[1][1].size();
+            return counts;
         }
 
 /**

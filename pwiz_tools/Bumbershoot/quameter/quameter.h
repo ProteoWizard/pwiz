@@ -145,7 +145,7 @@ vector<QuameterInput> GetIDPickerSpectraSources(const string& dbFilename)
 
         string sourceId = boost::lexical_cast<string>(intSrcId);
         bfs::path p = dbFilename;
-        bfs::path srcPath(p.parent_path() / (srcFilename + "."+g_rtConfig->RawDataExtension));
+        bfs::path srcPath(p.parent_path() / (srcFilename + "."+g_rtConfig->RawDataFormat));
         if(!bfs::exists(srcPath))
             continue; // if this source file doesn't exist we can't do anything, so let's try for the next source file
         

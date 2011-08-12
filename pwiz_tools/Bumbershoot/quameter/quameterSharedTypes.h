@@ -35,6 +35,65 @@ namespace freicore
 namespace quameter
 {
 
+    enum EnzymaticStatus {NON_ENZYMATIC = 0, SEMI_ENZYMATIC, FULLY_ENZYMATIC};
+
+    template<typename Sample>
+    struct quartile
+    {
+        // for boost::result_of
+        typedef Sample result_type;
+
+        quartile() : buffer_(0), isSorted(false)
+        {
+        }
+
+        quartile(quartile const &that)
+            : buffer_(that.buffer_), isSorted(that.isSorted)
+        {
+        }
+
+        void operator ()(Sample &value) 
+        {
+            this->buffer_.push_back(value);
+            this->isSorted = false;
+        }
+
+        result_type extract_quartile(size_t numQuartile)
+        {
+            BOOST_ASSERT(this->buffer_.size() >= 4);
+            BOOST_ASSERT(numQuartile >= 1 );
+            BOOST_ASSERT(numQuartile < 4 );
+            if(!this->isSorted)
+            {
+                std::sort(this->buffer_.begin(),this->buffer_.end());
+                this->isSorted = true;
+            }
+            size_t quartileSize = (size_t) this->buffer_.size()/4;
+            if(numQuartile == 2)
+                return this->buffer_.at(quartileSize*2);
+            else if(numQuartile == 3)
+                return this->buffer_.at(quartileSize*3);
+            return this->buffer_.at(quartileSize);
+        }
+
+        result_type extract_IQR()
+        {
+            BOOST_ASSERT(this->buffer_.size() >= 4);
+            if(!this->isSorted)
+            {
+                std::sort(this->buffer_.begin(),this->buffer_.end());
+                this->isSorted = true;
+            }
+            size_t quartileSize = (size_t) this->buffer_.size()/4;
+            return this->buffer_.at(quartileSize*3) - this->buffer_.at(quartileSize);
+        }
+
+    private:
+        quartile &operator=(quartile const &);
+        std::vector<Sample> buffer_;
+        bool isSorted;
+    };
+
     struct MS2ScanInfo
     {
         string MS2;
@@ -73,18 +132,12 @@ namespace quameter
         int fourth;
     };
 
-    struct PPMMassError
+    struct MassErrorStats
     {
-        double median;
-        double interquartileRange;
-
-        //PPMMassError() : median(0.0), interquartileRange(0.0) {}
-
-        PPMMassError(double med, double iqr)
-        {
-            median = med;
-            interquartileRange = iqr;
-        }
+        double medianError;
+        double meanAbsError;
+        double medianPPMError;
+        double PPMErrorIQR;
     };
 
     struct XICWindows 

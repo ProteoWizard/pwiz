@@ -185,7 +185,7 @@ namespace quameter
             for( fItr = g_inputFilenames.begin(); fItr != g_inputFilenames.end(); ++fItr )
             {
                 string inputFile = *fItr;
-                string rawFile = bfs::change_extension(inputFile, "." + g_rtConfig->RawDataExtension).string();
+                string rawFile = bfs::change_extension(inputFile, "." + g_rtConfig->RawDataFormat).string();
                 bfs::path rawFilePath(rawFile);
                 if(!bfs::exists(rawFilePath))
                     continue;
@@ -269,9 +269,9 @@ namespace quameter
                 int iter = 0;
                 vector<string> nativeID = idpReader.GetNativeId(sourceId);
                 map<string, double> ticMap;
-                vector<double> ionInjectionTimeMS1;
-                vector<double> ionInjectionTimeMS2;
-                vector<int> MS2Peaks;
+                accs::accumulator_set<double, accs::stats<accs::tag::count, accs::tag::mean, accs::tag::median > > ionInjectionTimeMS1;
+                accs::accumulator_set<double, accs::stats<accs::tag::count, accs::tag::mean, accs::tag::median > > ionInjectionTimeMS2;
+                accs::accumulator_set<int, accs::stats<accs::tag::median > > MS2PeakCounts;
                 multimap<string, double> precursorRetentionMap;
 
                 // scanInfo holds MS1 and MS2 data
@@ -299,7 +299,8 @@ namespace quameter
                         Scan& scan = spectrum->scanList.scans[0];
                         // The scan= number is 1+Spectrum, or 1+curIndex
                         scanTime.push_back(scan.cvParam(MS_scan_start_time));
-                        if (!scan.hasCVParam(MS_scan_start_time)) cout << "No MS1 retention time found for " << spectrum->id << "!\n";
+                        if (!scan.hasCVParam(MS_scan_start_time)) 
+                            cout << "No MS1 retention time found for " << spectrum->id << "!\n";
                         precursorRetentionMap.insert(pair<string, double>(spectrum->id, scan.cvParam(MS_scan_start_time).timeInSeconds()));
                         ticMap[spectrum->id] = spectrum->cvParam(MS_total_ion_current).valueAs<double>();
                         arrayToNativeMap[MS1Count] = spectrum->id;
@@ -308,7 +309,7 @@ namespace quameter
                         //			vector<double> mzArray = spectrum->getMZArray()->data;
                         // For metric MS1-1 -- note, do not use for Waters raw files!
                         if (scan.hasCVParam(MS_ion_injection_time))
-                            ionInjectionTimeMS1.push_back(scan.cvParam(MS_ion_injection_time).valueAs<double>());
+                            ionInjectionTimeMS1(scan.cvParam(MS_ion_injection_time).valueAs<double>());
                         MS1Count++;
                     }
                     else if( msLevel == 2) {
@@ -321,8 +322,8 @@ namespace quameter
                         scan2Time.push_back(scan.cvParam(MS_scan_start_time)); // in seconds
                         // For metric MS2-1 -- do not use for Waters files
                         if (scan.hasCVParam(MS_ion_injection_time))
-                            ionInjectionTimeMS2.push_back(scan.cvParam(MS_ion_injection_time).valueAs<double>());
-                        MS2Peaks.push_back(spectrum->defaultArrayLength);		
+                            ionInjectionTimeMS2(scan.cvParam(MS_ion_injection_time).valueAs<double>());
+                        MS2PeakCounts(spectrum->defaultArrayLength);		
 
                         // If the scan is empty don't count it -- not used currently
                         // if (spectrum->defaultArrayLength == 0)
@@ -392,8 +393,8 @@ namespace quameter
                 // ------------------- start peak-finding code ------------------- //	
 
                 vector<XICWindows> pepWindow = idpReader.MZRTWindows(sourceId, nativeToArrayMap, scanInfo);
-                vector<double> sigNoisMS1;
-                vector<double> sigNoisMS2;
+                accs::accumulator_set<double, accs::stats<accs::tag::median> > sigNoisMS1;
+                accs::accumulator_set<double, accs::stats<accs::tag::median> > sigNoisMS2;
                 vector<LocalChromatogram> identMS2Chrom(scanInfo.size());
                 vector<LocalChromatogram> unidentMS2Chrom(unidentMS2.size());
                 iter = 0;
@@ -425,12 +426,10 @@ namespace quameter
 
                         // For Metric MS1-2A, signal to noise ratio of MS1, peaks/medians
                         if (curRT <= thirdQuartileIDTime) {
-                            vector<double> sortedIntens = intensV;
-                            sort(sortedIntens.begin(), sortedIntens.end());
-
-                            double medianIntens = Q2(sortedIntens);
-
-                            sigNoisMS1.push_back( (double)sortedIntens[arraySize-1] / medianIntens );
+                            accs::accumulator_set<double, accs::stats<accs::tag::median, accs::tag::max > > ms1Peaks;
+                            BOOST_FOREACH(const double& p, intensV)
+                                ms1Peaks(p);
+                            sigNoisMS1( accs::extract::max(ms1Peaks) / accs::extract::median(ms1Peaks));
                         }
 
                         for (unsigned int iWin = 0; iWin < pepWindow.size(); iWin++) {
@@ -445,12 +444,14 @@ namespace quameter
 
                             double sumIntensities = 0;
                             // now cycle through the mzV vector
-                            for (unsigned int iMZ = 0; iMZ < arraySize; iMZ++) {
+                            for (size_t iMZ = 0; iMZ < arraySize; ++iMZ) 
+                            {
                                 // if this m/z is in the window, record its intensity and retention time
                                 if (contains(pepWindow[iWin].preMZ, mzV[iMZ]))
                                     sumIntensities += intensV[iMZ];
                             }
-                            if (sumIntensities != 0) {
+                            if (sumIntensities != 0) 
+                            {
                                 pepWindow[iWin].MS1Intensity.push_back(sumIntensities);
                                 pepWindow[iWin].MS1RT.push_back(curRT);
                             }
@@ -481,20 +482,22 @@ namespace quameter
 
                             double sumIntensities = 0;
                             // now cycle through the mzV vector
-                            for (unsigned int iMZ = 0; iMZ < arraySize; iMZ++) {
+                            for (size_t iMZ = 0; iMZ < arraySize; ++iMZ) 
+                            {
                                 // if this m/z is in the window, record its intensity and retention time
                                 if (contains(mzWindow, mzV[iMZ]))
                                     sumIntensities += intensV[iMZ];
                             }
-                            if (sumIntensities != 0) {
+                            if (sumIntensities != 0) 
+                            {
                                 identMS2Chrom[idIter].MS1Intensity.push_back(sumIntensities);
                                 identMS2Chrom[idIter].MS1RT.push_back(curRT);
                             }			
                         } // done with identified MS2 scans
 
                         // loop through all unidentified MS2 scans
-                        for (int unidIter = 0, unidSize = unidentMS2.size(); unidIter < unidSize; unidIter++) {
-
+                        for (int unidIter = 0, unidSize = unidentMS2.size(); unidIter < unidSize; unidIter++) 
+                        {
                             double RTLower = unidentMS2[unidIter].precursorRetention - 300; // lower bound for RT interval
                             double RTUpper = unidentMS2[unidIter].precursorRetention + 300; // lower bound for RT interval	
                             continuous_interval<double> RTWindow = construct<continuous_interval<double> >(RTLower, RTUpper, interval_bounds::closed());
@@ -517,7 +520,8 @@ namespace quameter
 
                             double sumIntensities = 0;
                             // now cycle through the mzV vector
-                            for (unsigned int iMZ = 0; iMZ < arraySize; iMZ++) {
+                            for (size_t iMZ = 0; iMZ < arraySize; ++iMZ) 
+                            {
                                 // if this m/z is in the window, record its intensity and retention time
                                 if (contains(mzWindow, mzV[iMZ]))
                                     sumIntensities += intensV[iMZ];
@@ -529,32 +533,32 @@ namespace quameter
                         } // done with unidentified MS2 scans		
 
                     }
-                    else if ( msLevel == 2) {
-                        // For Metric MS2-2, signal to noise ratio of MS1, peaks/medians
+                    else if ( msLevel == 2) 
+                    {
+                        // For Metric MS2-2, signal to noise ratio of MS2, peaks/medians
                         // We're only looking at identified peptides here
-                        if( iter < ((int)nativeID.size()) && (spectrum->id == nativeID[iter]) ) {
-                            vector<double> intensV = spectrum->getIntensityArray()->data;
-                            int arraySize = intensV.size();
-                            sort(intensV.begin(), intensV.end());
-
-                            double medianIntens = Q2(intensV);
-
-                            sigNoisMS2.push_back( (double)intensV[arraySize-1] / medianIntens );
-                            iter++;
-
+                        if( iter < ((int)nativeID.size()) && (spectrum->id == nativeID[iter]) ) 
+                        {
+                            accs::accumulator_set<double, accs::stats<accs::tag::median, accs::tag::max > > ms2Peaks;
+                            BOOST_FOREACH(const double& p, spectrum->getIntensityArray()->data)
+                                ms2Peaks(p);
+                            sigNoisMS2( accs::extract::max(ms2Peaks) / accs::extract::median(ms2Peaks) );
+                            ++iter;
                         }
                     }
                 } // end of spectra searching. we now have Intensity/RT pairs to build chromatograms
 
                 // Optional: Make an MSData object and output some chromatograms for SeeMS to read
-				if (g_rtConfig->ChromatogramOutput) {
+				if (g_rtConfig->ChromatogramOutput) 
+                {
 					MSData chromData;
 					shared_ptr<ChromatogramListSimple> chromatogramListSimple(new ChromatogramListSimple);
 					chromData.run.chromatogramListPtr = chromatogramListSimple;
 					chromData.run.id = "this must be set";
 
 					// Put unique identified peptide chromatograms first in the file
-					for (unsigned int iWin = 0; iWin < pepWindow.size(); iWin++) {
+					for (size_t iWin = 0; iWin < pepWindow.size(); ++iWin) 
+                    {
 						chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
 						Chromatogram& c = *chromatogramListSimple->chromatograms.back();
 						c.index = iWin;
@@ -563,7 +567,8 @@ namespace quameter
 					}
 					// next are chromatograms from identified MS2 scans
 					unsigned int iOffset = pepWindow.size();
-					for (unsigned int i = 0; i < identMS2Chrom.size(); i++) {
+					for (size_t i = 0; i < identMS2Chrom.size(); ++i) 
+                    {
 						chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
 						Chromatogram& c = *chromatogramListSimple->chromatograms.back();
 						c.index = i + iOffset;
@@ -572,7 +577,8 @@ namespace quameter
 					}
 					// last are chromatograms from
 					iOffset += identMS2Chrom.size();
-					for (unsigned int i = 0; i < unidentMS2Chrom.size(); i++) {
+					for (size_t i = 0; i < unidentMS2Chrom.size(); ++i) 
+                    {
 						chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
 						Chromatogram& c = *chromatogramListSimple->chromatograms.back();
 						c.index = i + iOffset;
@@ -596,7 +602,8 @@ namespace quameter
                 vector<double> identifiedPeptidePeaks;
 
                 // cycle through all unique peptides, passing each one to crawdad
-                for (unsigned int iWin = 0; iWin < pepWindow.size(); iWin++) {
+                for (size_t iWin = 0; iWin < pepWindow.size(); ++iWin) 
+                {
                     CrawdadPeakFinder crawdadPeakFinder;
                     crawdadPeakFinder.SetChromatogram(pepWindow[iWin].MS1RT, pepWindow[iWin].MS1Intensity);
 
@@ -607,14 +614,17 @@ namespace quameter
                     double closestIntensity;
                     double closestFwhm;
 
-                    BOOST_FOREACH(CrawdadPeakPtr peakPtr, crawPeaks) {
+                    BOOST_FOREACH(CrawdadPeakPtr peakPtr, crawPeaks) 
+                    {
                         int rtIndex = (*peakPtr).getTimeIndex();
-                        if (closestRT == -1) {
+                        if (closestRT == -1) 
+                        {
                             closestRT = pepWindow[iWin].MS1RT[rtIndex];
                             closestIntensity = (*peakPtr).getHeight();
                             closestFwhm = (*peakPtr).getFwhm();
                         }
-                        else if (fabs(pepWindow[iWin].MS1RT[rtIndex] - pepWindow[iWin].firstMS2RT) < fabs(closestRT - pepWindow[iWin].firstMS2RT)) {
+                        else if (fabs(pepWindow[iWin].MS1RT[rtIndex] - pepWindow[iWin].firstMS2RT) < fabs(closestRT - pepWindow[iWin].firstMS2RT)) 
+                        {
                             closestRT = pepWindow[iWin].MS1RT[rtIndex];
                             closestIntensity = (*peakPtr).getHeight();
                             closestFwhm = (*peakPtr).getFwhm();
@@ -625,7 +635,8 @@ namespace quameter
                     identifiedPeptidePeaks.push_back(closestIntensity);
                 }
                 // cycle through all identifed MS2 scans, passing each one to crawdad
-                for (unsigned int i = 0; i < identMS2Chrom.size(); i++) {
+                for (size_t i = 0; i < identMS2Chrom.size(); ++i) 
+                {
                     CrawdadPeakFinder crawdadPeakFinder;
                     crawdadPeakFinder.SetChromatogram(identMS2Chrom[i].MS1RT, identMS2Chrom[i].MS1Intensity);
 
@@ -635,13 +646,16 @@ namespace quameter
                     double closestRT = -1;
                     double closestIntensity;
 
-                    BOOST_FOREACH(CrawdadPeakPtr peakPtr, crawPeaks) {
+                    BOOST_FOREACH(CrawdadPeakPtr peakPtr, crawPeaks) 
+                    {
                         int rtIndex = (*peakPtr).getTimeIndex();
-                        if (closestRT == -1) {
+                        if (closestRT == -1) 
+                        {
                             closestRT = identMS2Chrom[i].MS1RT[rtIndex];
                             closestIntensity = (*peakPtr).getHeight();
                         }
-                        else if (fabs(identMS2Chrom[i].MS1RT[rtIndex] - scanInfo[i].MS2Retention) < fabs(closestRT - scanInfo[i].MS2Retention)) {
+                        else if (fabs(identMS2Chrom[i].MS1RT[rtIndex] - scanInfo[i].MS2Retention) < fabs(closestRT - scanInfo[i].MS2Retention)) 
+                        {
                             closestRT = identMS2Chrom[i].MS1RT[rtIndex];
                             closestIntensity = (*peakPtr).getHeight();
                         }
@@ -649,12 +663,13 @@ namespace quameter
 
                     IntensityPair tmpIntensityPair(scanInfo[i].precursorIntensity,closestIntensity);
                     idMS2Intensities.push_back(tmpIntensityPair);
-					idMS2RTV.push_back(closestRT);
+                    idMS2RTV.push_back(closestRT);
                     idMS2PeakV.push_back(closestIntensity);
                     allMS2Peaks.push_back(closestIntensity);
                 }
                 // cycle through all unidentifed MS2 scans, passing each one to crawdad
-                for (unsigned int i = 0; i < unidentMS2Chrom.size(); i++) {
+                for (size_t i = 0; i < unidentMS2Chrom.size(); ++i) 
+                {
                     CrawdadPeakFinder crawdadPeakFinder;
                     crawdadPeakFinder.SetChromatogram(unidentMS2Chrom[i].MS1RT, unidentMS2Chrom[i].MS1Intensity);
                     vector<CrawdadPeakPtr> crawPeaks = crawdadPeakFinder.CalcPeaks();
@@ -664,13 +679,16 @@ namespace quameter
                     double closestRT = -1;
                     double closestIntensity;
 
-                    BOOST_FOREACH(CrawdadPeakPtr peakPtr, crawPeaks) {
+                    BOOST_FOREACH(CrawdadPeakPtr peakPtr, crawPeaks) 
+                    {
                         int rtIndex = (*peakPtr).getTimeIndex();
-                        if (closestRT == -1) {
+                        if (closestRT == -1) 
+                        {
                             closestRT = unidentMS2Chrom[i].MS1RT[rtIndex];
                             closestIntensity = (*peakPtr).getHeight();
                         }
-                        else if (fabs(unidentMS2Chrom[i].MS1RT[rtIndex] - unidentMS2[i].MS2Retention) < fabs(closestRT - unidentMS2[i].MS2Retention)) {
+                        else if (fabs(unidentMS2Chrom[i].MS1RT[rtIndex] - unidentMS2[i].MS2Retention) < fabs(closestRT - unidentMS2[i].MS2Retention)) 
+                        {
                             closestRT = unidentMS2Chrom[i].MS1RT[rtIndex];
                             closestIntensity = (*peakPtr).getHeight();
                         }
@@ -696,19 +714,29 @@ namespace quameter
                 double intensQ3 = Q3(allMS2Peaks);
 
                 int idQ1=0, idQ2=0, idQ3=0, idQ4=0;	// number of identified MS2s that have precursor max intensities in each quartile
-                for(unsigned int i=0, idSize=idMS2PeakV.size(); i < idSize; i++) {
-                    if (idMS2PeakV[i] <= intensQ1) idQ1++;
-                    else if (idMS2PeakV[i] <= intensQ2) idQ2++;
-                    else if (idMS2PeakV[i] <= intensQ3) idQ3++;
-                    else idQ4++;
+                for(size_t i=0, idSize=idMS2PeakV.size(); i < idSize; ++i) 
+                {
+                    if (idMS2PeakV[i] <= intensQ1)
+                        idQ1++;
+                    else if (idMS2PeakV[i] <= intensQ2) 
+                        idQ2++;
+                    else if (idMS2PeakV[i] <= intensQ3) 
+                        idQ3++;
+                    else 
+                        idQ4++;
                 }
 
                 int unidQ1=0, unidQ2=0, unidQ3=0, unidQ4=0;	// number of unidentified MS2s that have precursor max intensities in each quartile
-                for(unsigned int i=0, unidSize=unidMS2PeakV.size(); i < unidSize; i++) {
-                    if (unidMS2PeakV[i] <= intensQ1) unidQ1++;
-                    else if (unidMS2PeakV[i] <= intensQ2) unidQ2++;
-                    else if (unidMS2PeakV[i] <= intensQ3) unidQ3++;
-                    else unidQ4++;
+                for(size_t i=0, unidSize=unidMS2PeakV.size(); i < unidSize; ++i) 
+                {
+                    if (unidMS2PeakV[i] <= intensQ1) 
+                        unidQ1++;
+                    else if (unidMS2PeakV[i] <= intensQ2) 
+                        unidQ2++;
+                    else if (unidMS2PeakV[i] <= intensQ3) 
+                        unidQ3++;
+                    else 
+                        unidQ4++;
                 }
 
                 int totalQ1 = idQ1+unidQ1;
@@ -730,12 +758,14 @@ namespace quameter
                 int lastDecile = sizeFwhm - lastDecileStart;
                 if ( sizeFwhm < 10)	// If there aren't more than 10 items in this vector the last decile is meaningless
                     medianFwhmLastRTDecile = identifiedPeptideFwhm[sizeFwhm-1];
-                else if ( lastDecile % 2 == 0 ) {
+                else if ( lastDecile % 2 == 0 ) 
+                {
                     int index1 = (lastDecile/2)-1 + lastDecileStart;
                     int index2 = (lastDecile/2) + lastDecileStart;
                     medianFwhmLastRTDecile = (identifiedPeptideFwhm[index1] + identifiedPeptideFwhm[index2]) / 2;
                 }
-                else {
+                else 
+                {
                     int index1 = (lastDecile)/2 + lastDecileStart;
                     medianFwhmLastRTDecile = identifiedPeptideFwhm[index1];
                 }	
@@ -745,7 +775,8 @@ namespace quameter
                 int firstDecile = (sizeFwhm+1) / 10;
                 if ( sizeFwhm < 10)
                     medianFwhmFirstRTDecile = identifiedPeptideFwhm[0];
-                else if ( firstDecile % 2 == 0 ) {
+                else if ( firstDecile % 2 == 0 ) 
+                {
                     int index1 = (firstDecile/2)-1;
                     int index2 = (firstDecile/2);
                     medianFwhmFirstRTDecile = (identifiedPeptideFwhm[index1] + identifiedPeptideFwhm[index2]) / 2;
@@ -765,16 +796,15 @@ namespace quameter
                 // Metric C-3B
                 // First quartile
                 double fwhmQ1 = Q1(identifiedPeptideFwhm);
-
                 // Third quartile
                 double fwhmQ3 = Q3(identifiedPeptideFwhm);
-
                 // Interquartile fwhm
                 double iqFwhm = fwhmQ3 - fwhmQ1;
 
                 // Metric DS-2A - number of MS1 scans taken over C-2A
                 int iqMS1Scans = 0;
-                for(int i=0; i<(int)scanTime.size(); i++) {
+                for(size_t i=0; i<scanTime.size(); ++i) 
+                {
                     if (scanTime[i].timeInSeconds() >= firstQuartileIDTime && scanTime[i].timeInSeconds() <= thirdQuartileIDTime)
                         iqMS1Scans++;
                 }
@@ -782,7 +812,8 @@ namespace quameter
 
                 // Metric DS-2B - number of MS2 scans taken over C-2A
                 int iqMS2Scans = 0;
-                for(int i=0; i<(int)scan2Time.size(); i++) {
+                for(size_t i=0; i<scan2Time.size(); ++i) 
+                {
                     if (scan2Time[i].timeInSeconds() >= firstQuartileIDTime && scan2Time[i].timeInSeconds() <= thirdQuartileIDTime)
                         iqMS2Scans++;
                 }
@@ -798,29 +829,35 @@ namespace quameter
                 int numDuplicatePeptides = duplicatePeptides.size();
 
                 // Cycle through the duplicate peptides, listing every MS2 scan per peptide
-                for (m_it = duplicatePeptides.begin();  m_it != duplicatePeptides.end();  m_it = s_it) {
+                for (m_it = duplicatePeptides.begin();  m_it != duplicatePeptides.end();  m_it = s_it) 
+                {
                     int theKey = (*m_it).first;
                     double peakIntensity = -1, maxMS1Time = -1;
                     pair<mapIter, mapIter> keyRange = duplicatePeptides.equal_range(theKey);
 
 					// Skip peptides that weren't repeat IDs
-                    if ( (int)duplicatePeptides.count(theKey) < 2 ) {
+                    if ( (int)duplicatePeptides.count(theKey) < 2 ) 
+                    {
                         numDuplicatePeptides--;
                        s_it = keyRange.second;
                         continue;
                     }		
-					if (idMS2RTV.size() != scanInfo.size()) {
+					if (idMS2RTV.size() != scanInfo.size()) 
+                    {
 						cerr << "identMS2Chrom[] and idMS2RTV[] sizes differ. Tailing/bleeding cannot be calculated.\n";
 						exit(1);
 					}
 					
-                    for (s_it = keyRange.first;  s_it != keyRange.second;  ++s_it) {
+                    for (s_it = keyRange.first;  s_it != keyRange.second;  ++s_it) 
+                    {
                         // compare MS2 time to max MS1 time
                         int temp = nativeToArrayMap.find( (*s_it).second )->second;
-                        if ( (scanInfo[temp].MS2Retention - idMS2RTV[temp]) > 240) { // 240 seconds
+                        if ( (scanInfo[temp].MS2Retention - idMS2RTV[temp]) > 240) // 240 seconds
+                        {
                             peakTailing++;
                         }
-                        else if ( (idMS2RTV[temp] - scanInfo[temp].MS2Retention) > 240) { // 240 seconds
+                        else if ( (idMS2RTV[temp] - scanInfo[temp].MS2Retention) > 240) 
+                        { // 240 seconds
                             bleed++;
 						}
                     }	
@@ -828,7 +865,6 @@ namespace quameter
 
                 // Metric C-1A: Chromatographic bleeding
                 float peakTailingRatio = (float)peakTailing/duplicatePeptides.size();
-
                 // Metric C-1B: Chromatographic peak tailing
                 float bleedRatio = (float)bleed/duplicatePeptides.size();
 
@@ -845,24 +881,28 @@ namespace quameter
                 sort( idMS2Intensities.begin(), idMS2Intensities.end(), compareByPeak );
                 int idMS2Size = (int)idMS2Intensities.size();
                 double medianSamplingRatio = 0;
-                if ( idMS2Size % 2 == 0 ) {
+                if ( idMS2Size % 2 == 0 ) 
+                {
                     int index1 = (idMS2Size/2)-1;
                     int index2 = (idMS2Size/2);
                     medianSamplingRatio = ((idMS2Intensities[index1].peakIntensity / idMS2Intensities[index1].precursorIntensity) + (idMS2Intensities[index2].peakIntensity / idMS2Intensities[index2].precursorIntensity)) / 2;
                 }
-                else {
+                else 
+                {
                     int index1 = (idMS2Size)/2;
                     medianSamplingRatio = (idMS2Intensities[index1].peakIntensity / idMS2Intensities[index1].precursorIntensity);
                 }	
 
                 // For metric DS-3B: Same as DS-3A except only look at the bottom 50% of identified peptides sorted by max intensity
                 double bottomHalfSamplingRatio = 0;
-                if ( idMS2Size % 4 == 0 ) {
+                if ( idMS2Size % 4 == 0 ) 
+                {
                     int index1 = (idMS2Size/4)-1;
                     int index2 = (idMS2Size/4);
                     bottomHalfSamplingRatio = ((idMS2Intensities[index1].peakIntensity / idMS2Intensities[index1].precursorIntensity) + (idMS2Intensities[index2].peakIntensity / idMS2Intensities[index2].precursorIntensity)) / 2;
                 }
-                else {
+                else 
+                {
                     int index1 = (idMS2Size)/4;
                     bottomHalfSamplingRatio = (idMS2Intensities[index1].peakIntensity / idMS2Intensities[index1].precursorIntensity);
                 }
@@ -871,18 +911,21 @@ namespace quameter
                 double lastTIC = -1;
                 int ticDrop = 0;
                 int ticJump = 0;
-                for (iter = 0; iter < (int)ticMap.size(); iter++) {
+                for (iter = 0; iter < (int)ticMap.size(); ++iter) 
+                {
                     string nativeIter = arrayToNativeMap.find(iter)->second;
-                    if (precursorRetentionMap.find(nativeIter)->second <= thirdQuartileIDTime) {
+                    if (precursorRetentionMap.find(nativeIter)->second <= thirdQuartileIDTime) 
+                    {
                         // Is the current total ion current less than 1/0th of the last MS1 scan?
-                        if ( (lastTIC != -1) && (10*(ticMap.find(nativeIter)->second) < lastTIC)) {
+                        if ( (lastTIC != -1) && (10*(ticMap.find(nativeIter)->second) < lastTIC)) 
+                        {
                             ticDrop++;
                        }
                         // Is the current total ion current more than 10 times the last MS1 scan?
-                        else if ( (lastTIC != -1) && ((ticMap.find(nativeIter)->second) > (10*lastTIC)) ) {
+                        else if ( (lastTIC != -1) && ((ticMap.find(nativeIter)->second) > (10*lastTIC)) ) 
+                        {
                             ticJump++;
-                       }	
-
+                        }	
                         lastTIC = ticMap.find(nativeIter)->second;			
                     }
                 }
@@ -902,19 +945,11 @@ namespace quameter
                 float IS3C = (float)charge4/charge2;
 
                 // MS1-1: Median MS1 ion injection time
-                double medianInjectionTimeMS1 = 0;
-                if (!ionInjectionTimeMS1.empty()) {
-                    sort(ionInjectionTimeMS1.begin(), ionInjectionTimeMS1.end());
-                    medianInjectionTimeMS1 = Q2(ionInjectionTimeMS1);
-                }
-
+                double medianInjectionTimeMS1 = accs::extract::median(ionInjectionTimeMS1);;
                 // MS1-2A: Median signal-to-noise ratio (which is max peak/median peak) in MS1 spectra before C-2A
-
-                sort(sigNoisMS1.begin(), sigNoisMS1.end());
-                double medianSigNoisMS1 = Q2(sigNoisMS1);
+                double medianSigNoisMS1 = accs::extract::median(sigNoisMS1);
 
                 // MS1-2B: Median TIC value for identified peptides through the third quartile
-
                 vector<double> ticVector;
                 for (int iTic = 0; iTic < thirdQuartileIndex; iTic++)
                     ticVector.push_back(ticMap.find(scanInfo[iTic].precursor)->second);
@@ -934,35 +969,17 @@ namespace quameter
                 double medianMS1Peak = Q2(identifiedPeptidePeaks);
 
                 // MS1-5A: Median real value of precursor errors	
-                double medianRealPrecursorError = idpReader.MedianRealPrecursorError(sourceId);
-
                 // MS1-5B: Mean of the absolute precursor errors
-                double meanAbsolutePrecursorError = idpReader.GetMeanAbsolutePrecursorErrors(sourceId);
-
                 // MS1-5C: Median real value of precursor errors in ppm
-                PPMMassError realPrecursorErrorPPM = idpReader.GetRealPrecursorErrorPPM(sourceId);
-                double medianRealPrecursorErrorPPM = realPrecursorErrorPPM.median;
-
                 // MS1-5D: Interquartile range in ppm of the precursor errors
                 // Uses variables from MS1-5C above
-                double interquartileRealPrecursorErrorPPM = realPrecursorErrorPPM.interquartileRange;
-
+                MassErrorStats precMassErrorStats = idpReader.getPrecursorMassErrorStats(sourceId);
                 // MS2-1: Median MS2 ion injection time
-                double medianInjectionTimeMS2 = 0;
-                if (!ionInjectionTimeMS2.empty())
-                {
-                    sort(ionInjectionTimeMS2.begin(), ionInjectionTimeMS2.end());
-                    medianInjectionTimeMS2 = Q2(ionInjectionTimeMS2);
-                }
-
+                double medianInjectionTimeMS2 = accs::extract::median(ionInjectionTimeMS2);
                 // MS2-2: Median S/N ratio (max/median peak heights) for identified MS2 spectra
-                sort(sigNoisMS2.begin(), sigNoisMS2.end());
-                double medianSigNoisMS2 = Q2(sigNoisMS2);
-
+                double medianSigNoisMS2 = accs::extract::median(sigNoisMS2);
                 // MS2-3: Median number of peaks in an MS2 scan
-                sort(MS2Peaks.begin(), MS2Peaks.end());
-                int Q2(vector<int>);
-                int medianNumMS2Peaks = Q2(MS2Peaks);
+                int medianNumMS2Peaks = accs::extract::median(MS2PeakCounts);
 
                 // MS2-4A: Fraction of MS2 scans identified in the first quartile of peptides sorted by MS1 max intensity
                 double idRatioQ1 = (double)idQ1/totalQ1;
@@ -981,23 +998,21 @@ namespace quameter
 
                 // P-2A: Number of MS2 spectra identifying tryptic peptide ions
                 int numTrypticMS2Spectra = idpReader.GetNumTrypticMS2Spectra(sourceId);
-
                 // P-2B: Number of tryptic peptide ions identified
                 int numTrypticPeptides = idpReader.GetNumTrypticPeptides(sourceId);
 
                 // P-2C: Number of unique tryptic peptides
-                int numUniqueTrypticPeptides = idpReader.GetNumUniqueTrypticPeptides(sourceId);
-
                 // P-3: Ratio of semi to fully tryptic peptides
                 // uses variable from P-2C above
-                int numUniqueSemiTrypticPeptides = idpReader.GetNumUniqueSemiTrypticPeptides(sourceId);
-                float ratioSemiToFullyTryptic = (float)numUniqueSemiTrypticPeptides/numUniqueTrypticPeptides;
+                vector<size_t> uniqueEnzyPeptideCounts = idpReader.getUniqueTrypticSemiTryptics(sourceId);
+                float ratioSemiToFullyTryptic = (float)uniqueEnzyPeptideCounts[SEMI_ENZYMATIC]/uniqueEnzyPeptideCounts[FULLY_ENZYMATIC];
 
                 string emptyMetric = "NaN"; // NaN stands for Not a Number
 
                 // Output can either be tab delimited with all metrics in one row, or be more descriptive over 45-some lines of output
                 //if (configOptions.tabbedOutput && configOptions.headerOn) {
-                  if (true) {
+                  if (true) 
+                  {
                     // Tab delimited output header
                     qout << "Filename\tC-1A\tC-1B\tC-2A\tC-2B\tC-3A\tC-3B\tC-4A\tC-4B\tC-4C";
                     qout << "\tDS-1A\tDS-1B\tDS-2A\tDS-2B\tDS-3A\tDS-3B";
@@ -1013,23 +1028,24 @@ namespace quameter
                     qout << "\t" << DS1A << "\t" << DS1B << "\t" << iqMS1Scans << "\t" << iqMS2Scans;
                     qout << "\t" << medianSamplingRatio << "\t" << bottomHalfSamplingRatio;
                     qout << "\t" << ticDrop << "\t" << ticJump << "\t" << medianPrecursorMZ << "\t" << IS3A << "\t" << IS3B << "\t" << IS3C;
-                    if (ionInjectionTimeMS1.empty())
+                    if (accs::extract::count(ionInjectionTimeMS1)==0)
                         qout << "\t" << emptyMetric;
                     else
                         qout << "\t" << medianInjectionTimeMS1;
                     qout << "\t" << medianSigNoisMS1 << "\t" << medianTIC << "\t" << dynamicRangeOfPeptideSignals << "\t" << medianMS1Peak;
-                    qout << "\t" << medianRealPrecursorError << "\t" << meanAbsolutePrecursorError << "\t" << medianRealPrecursorErrorPPM << "\t" << interquartileRealPrecursorErrorPPM;
-                    if (ionInjectionTimeMS2.empty())
+                    qout << "\t" << precMassErrorStats.medianError << "\t" << precMassErrorStats.meanAbsError << "\t" << precMassErrorStats.medianPPMError << "\t" << precMassErrorStats.PPMErrorIQR;
+                    if (accs::extract::count(ionInjectionTimeMS2)==0)
                         qout << "\t" << emptyMetric;
                     else
                         qout << "\t" << medianInjectionTimeMS2;
                     qout << "\t" << medianSigNoisMS2 << "\t" << medianNumMS2Peaks;
                     qout << "\t" << idRatioQ1 << "\t" << idRatioQ2 << "\t" << idRatioQ3 << "\t" << idRatioQ4;
                     qout << "\t" << medianIDScore << "\t" << numTrypticMS2Spectra << "\t" << numTrypticPeptides;
-                    qout << "\t" << numUniqueTrypticPeptides << "\t" << ratioSemiToFullyTryptic << endl;
+                    qout << "\t" << uniqueEnzyPeptideCounts[FULLY_ENZYMATIC] << "\t" << ratioSemiToFullyTryptic << endl;
 
                 }
-                else {
+                else 
+                {
                     qout << sourceFilename << endl;
                     qout << "\nMetrics:\n";
                     qout << "--------\n";
@@ -1054,7 +1070,7 @@ namespace quameter
                     qout << "IS-3A: +1 charge / +2 charge: " << charge1 << "/" << charge2 << " = " << IS3A << endl;
                     qout << "IS-3B: +3 charge / +2 charge: " << charge3 << "/" << charge2 << " = " << IS3B << endl;
                     qout << "IS-3C: +4 charge / +2 charge: " << charge4 << "/" << charge2 << " = " << IS3C << endl;
-                    if (ionInjectionTimeMS1.empty())
+                    if (accs::extract::count(ionInjectionTimeMS1)==0)
                         qout << "MS1-1: Median MS1 ion injection time: " << emptyMetric << endl;
                     else
                         qout << "MS1-1: Median MS1 ion injection time: " << medianInjectionTimeMS1 << " ms\n";
@@ -1062,11 +1078,11 @@ namespace quameter
                     qout << "MS1-2B: Median TIC value of identified peptides before the third quartile: " << medianTIC << endl;
                     qout << "MS1-3A: Ratio of 95th over 5th percentile MS1 max intensities of identified peptides: " << ninetyfifthPercPeak << "/" << fifthPercPeak << " = " << dynamicRangeOfPeptideSignals << endl;
                     qout << "MS1-3B: Median maximum MS1 value for identified peptides: " << medianMS1Peak << endl;
-                    qout << "MS1-5A: Median real value of precursor errors: " << medianRealPrecursorError << endl;
-                    qout << "MS1-5B: Mean of the absolute precursor errors: " << meanAbsolutePrecursorError << endl;
-                    qout << "MS1-5C: Median real value of precursor errors in ppm: " << medianRealPrecursorErrorPPM << endl;
-                    qout << "MS1-5D: Interquartile range in ppm of the precursor errors: " << interquartileRealPrecursorErrorPPM << endl;
-                    if (ionInjectionTimeMS2.empty())
+                    qout << "MS1-5A: Median real value of precursor errors: " << precMassErrorStats.medianError << endl;
+                    qout << "MS1-5B: Mean of the absolute precursor errors: " << precMassErrorStats.meanAbsError << endl;
+                    qout << "MS1-5C: Median real value of precursor errors in ppm: " << precMassErrorStats.medianPPMError << endl;
+                    qout << "MS1-5D: Interquartile range in ppm of the precursor errors: " << precMassErrorStats.PPMErrorIQR << endl;
+                    if (accs::extract::count(ionInjectionTimeMS2)==0)
                         qout << "MS2-1: Median MS2 ion injection time: " << emptyMetric << endl;
                     else
                         qout << "MS2-1: Median MS2 ion injection time: " << medianInjectionTimeMS2 << " ms\n";
@@ -1079,14 +1095,14 @@ namespace quameter
                     qout << "P-1: Median peptide identification score: " << medianIDScore << endl;
                     qout << "P-2A: Number of MS2 spectra identifying tryptic peptide ions: " << numTrypticMS2Spectra << endl;
                     qout << "P-2B: Number of tryptic peptide ions identified: " << numTrypticPeptides << endl;
-                    qout << "P-2C: Number of unique tryptic peptide sequences identified: " << numUniqueTrypticPeptides << endl;
-                    qout << "P-3: Ratio of semi/fully tryptic peptides: " << numUniqueSemiTrypticPeptides << "/" << numUniqueTrypticPeptides << " = " << ratioSemiToFullyTryptic << endl;
+                    qout << "P-2C: Number of unique tryptic peptide sequences identified: " << uniqueEnzyPeptideCounts[FULLY_ENZYMATIC] << endl;
+                    qout << "P-3: Ratio of semi/fully tryptic peptides: " << uniqueEnzyPeptideCounts[SEMI_ENZYMATIC] << "/" << uniqueEnzyPeptideCounts[FULLY_ENZYMATIC] << " = " << ratioSemiToFullyTryptic << endl;
 
                     qout << "\nNot metrics:\n";
                     qout << "------------\n";
-                    if (!ionInjectionTimeMS1.empty() && !ionInjectionTimeMS2.empty()) {
-                        qout << "MS1 mean ion injection time: " << (ionInjectionTimeMS1[0] + ionInjectionTimeMS1[ionInjectionTimeMS1.size()-1])/2 << endl;
-                        qout << "MS2 mean ion injection time: " << (ionInjectionTimeMS2[0] + ionInjectionTimeMS2[ionInjectionTimeMS1.size()-1])/2 << endl;
+                    if (accs::extract::count(ionInjectionTimeMS1)>0 && accs::extract::count(ionInjectionTimeMS2)>0) {
+                        qout << "MS1 mean ion injection time: " << accs::extract::mean(ionInjectionTimeMS1) << endl;
+                        qout << "MS2 mean ion injection time: " << accs::extract::mean(ionInjectionTimeMS2) << endl;
                     }
                     qout << "Total number of MS1 scans: " << MS1Count << endl;
                     qout << "Total number of MS2 scans: " << MS2Count << endl << endl;
@@ -1095,10 +1111,12 @@ namespace quameter
                 qout.close();
                 cout << sourceFilename << " took " << t.elapsed() << " seconds to analyze.\n";
             }
-            catch (exception& e) {
+            catch (exception& e) 
+            {
                 cerr << "Exception in MetricMaster thread: " << e.what() << endl;
             }
-            catch (...) {
+            catch (...) 
+            {
                 cerr << "Unhandled exception in MetricMaster thread." << endl;
                 exit(1); // fear the unknown!
             }
@@ -1111,7 +1129,8 @@ namespace quameter
  * If multiple input files are given, creates a thread for each up to the computer's
  * thread limit and performs metrics on them.
  */
-int main( int argc, char* argv[] ) {
+int main( int argc, char* argv[] ) 
+{
 	
     char buf[256];
     GetHostname( buf, sizeof(buf) );
