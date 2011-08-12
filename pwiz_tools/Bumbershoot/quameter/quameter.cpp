@@ -868,13 +868,13 @@ namespace quameter
                 // Metric C-1B: Chromatographic peak tailing
                 float bleedRatio = (float)bleed/duplicatePeptides.size();
 
+                map<size_t,size_t> peptideSamplingRates = idpReader.getPeptideSamplingRates(sourceId);
+                int identifiedOnce = peptideSamplingRates[ONCE];
+                int identifiedTwice = peptideSamplingRates[TWICE];
+                int identifiedThrice = peptideSamplingRates[THRICE];
                 // Metric DS-1A: Estimates oversampling
-                int identifiedOnce = idpReader.PeptidesIdentifiedOnce(sourceId);
-                int identifiedTwice = idpReader.PeptidesIdentifiedTwice(sourceId);
                 float DS1A = (float)identifiedOnce/identifiedTwice;
-
                 // Metric DS-1B: Estimates oversampling
-                int identifiedThrice = idpReader.PeptidesIdentifiedThrice(sourceId);
                 float DS1B = (float)identifiedTwice/identifiedThrice;
 
                 // For metric DS-3A: Ratio of MS1 max intensity over sampled intensity for median identified peptides sorted by max intensity
@@ -931,18 +931,13 @@ namespace quameter
                 }
 
                 // Call MedianPrecursorMZ() for metric IS-2
-                double medianPrecursorMZ = idpReader.MedianPrecursorMZ(sourceId);
+                double medianPrecursorMZ = idpReader.getMedianPrecursorMZ(sourceId);
 
                 // Call PeptideCharge() for metrics IS-3A, IS3-B, IS3-C
-                fourInts allCharges = idpReader.PeptideCharge(sourceId);
-                int charge1 = allCharges.first;
-                int charge2 = allCharges.second;
-                int charge3 = allCharges.third;
-                int charge4 = allCharges.fourth;
-
-                float IS3A = (float)charge1/charge2;
-                float IS3B = (float)charge3/charge2;
-                float IS3C = (float)charge4/charge2;
+                map<size_t,size_t> allIDedPrecCharges = idpReader.getPeptideCharges(sourceId);
+                float IS3A = (float)allIDedPrecCharges[ONE]/allIDedPrecCharges[TWO];
+                float IS3B = (float)allIDedPrecCharges[THREE]/allIDedPrecCharges[TWO];
+                float IS3C = (float)allIDedPrecCharges[FOUR]/allIDedPrecCharges[TWO];
 
                 // MS1-1: Median MS1 ion injection time
                 double medianInjectionTimeMS1 = accs::extract::median(ionInjectionTimeMS1);;
@@ -950,12 +945,10 @@ namespace quameter
                 double medianSigNoisMS1 = accs::extract::median(sigNoisMS1);
 
                 // MS1-2B: Median TIC value for identified peptides through the third quartile
-                vector<double> ticVector;
+                accs::accumulator_set<double, accs::stats<accs::tag::median > > thirdQuartileTICs;
                 for (int iTic = 0; iTic < thirdQuartileIndex; iTic++)
-                    ticVector.push_back(ticMap.find(scanInfo[iTic].precursor)->second);
-
-                sort(ticVector.begin(), ticVector.end());
-                double medianTIC = Q2(ticVector)/1000;
+                    thirdQuartileTICs(ticMap.find(scanInfo[iTic].precursor)->second);
+                double medianTIC = accs::extract::median(thirdQuartileTICs)/1000;
 
                 // MS1-3A: Ratio of 95th over 5th percentile of MS1 max intensities of identified peptides
                 sort(identifiedPeptidePeaks.begin(), identifiedPeptidePeaks.end());
@@ -983,19 +976,15 @@ namespace quameter
 
                 // MS2-4A: Fraction of MS2 scans identified in the first quartile of peptides sorted by MS1 max intensity
                 double idRatioQ1 = (double)idQ1/totalQ1;
-
                 // MS2-4B: Fraction of MS2 scans identified in the second quartile of peptides sorted by MS1 max intensity
                 double idRatioQ2 = (double)idQ2/totalQ2;
-
                 // MS2-4C: Fraction of MS2 scans identified in the third quartile of peptides sorted by MS1 max intensity
                 double idRatioQ3 = (double)idQ3/totalQ3;
-
                 // MS2-4D: Fraction of MS2 scans identified in the fourth quartile of peptides sorted by MS1 max intensity
                 double idRatioQ4 = (double)idQ4/totalQ4;
 
                 // P-1: Median peptide ID score
                 double medianIDScore = idpReader.GetMedianIDScore(sourceId);
-
                 // P-2A: Number of MS2 spectra identifying tryptic peptide ions
                 int numTrypticMS2Spectra = idpReader.GetNumTrypticMS2Spectra(sourceId);
                 // P-2B: Number of tryptic peptide ions identified
@@ -1067,9 +1056,9 @@ namespace quameter
                     qout << "IS-1A: Number of big drops in total ion current value: " << ticDrop << endl; 
                     qout << "IS-1B: Number of big jumps in total ion current value: " << ticJump << endl;
                     qout << "IS-2: Median m/z value for all unique ions of identified peptides: " << medianPrecursorMZ << endl;
-                    qout << "IS-3A: +1 charge / +2 charge: " << charge1 << "/" << charge2 << " = " << IS3A << endl;
-                    qout << "IS-3B: +3 charge / +2 charge: " << charge3 << "/" << charge2 << " = " << IS3B << endl;
-                    qout << "IS-3C: +4 charge / +2 charge: " << charge4 << "/" << charge2 << " = " << IS3C << endl;
+                    qout << "IS-3A: +1 charge / +2 charge: " << allIDedPrecCharges[ONE] << "/" << allIDedPrecCharges[TWO] << " = " << IS3A << endl;
+                    qout << "IS-3B: +3 charge / +2 charge: " << allIDedPrecCharges[THREE] << "/" << allIDedPrecCharges[TWO] << " = " << IS3B << endl;
+                    qout << "IS-3C: +4 charge / +2 charge: " << allIDedPrecCharges[FOUR] << "/" << allIDedPrecCharges[TWO] << " = " << IS3C << endl;
                     if (accs::extract::count(ionInjectionTimeMS1)==0)
                         qout << "MS1-1: Median MS1 ion injection time: " << emptyMetric << endl;
                     else

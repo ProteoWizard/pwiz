@@ -36,6 +36,8 @@ namespace quameter
 {
 
     enum EnzymaticStatus {NON_ENZYMATIC = 0, SEMI_ENZYMATIC, FULLY_ENZYMATIC};
+    enum PrecursorCharges {ONE = 1, TWO = 2, THREE = 3, FOUR = 4};
+    enum PeptideSpCCategories { ONCE = 1, TWICE = 2, THRICE = 3, MORE_THAN_THRICE = 4 };
 
     template<typename Sample>
     struct quartile
