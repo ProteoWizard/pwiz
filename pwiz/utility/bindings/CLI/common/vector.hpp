@@ -26,6 +26,10 @@
 #define INTERNAL internal
 #endif
 
+#define RANGE_CHECK(index) \
+    if (index < 0 || index >= static_cast<int>(base_->size())) \
+        throw gcnew System::IndexOutOfRangeException(); 
+
 #define DEFINE_STD_VECTOR_WRAPPER(WrapperName, NativeType, CLIType, CLIHandle, NativeToCLI, CLIToNative) \
 ref class WrapperName : public System::Collections::Generic::IList<CLIHandle> \
 { \
@@ -52,8 +56,8 @@ ref class WrapperName : public System::Collections::Generic::IList<CLIHandle> \
 \
     property CLIHandle Item[int] \
     { \
-        virtual CLIHandle get(int index) {return NativeToCLI(NativeType, CLIType, (*base_)[(size_t) index]);} \
-        virtual void set(int index, CLIHandle value) {(*base_)[(size_t) index] = CLIToNative(NativeType, value);} \
+        virtual CLIHandle get(int index) {RANGE_CHECK(index) return NativeToCLI(NativeType, CLIType, (*base_)[(size_t) index]);} \
+        virtual void set(int index, CLIHandle value) {RANGE_CHECK(index) (*base_)[(size_t) index] = CLIToNative(NativeType, value);} \
     } \
 \
     virtual void Add(CLIHandle item) {base_->push_back(CLIToNative(NativeType, item));} \
@@ -63,7 +67,7 @@ ref class WrapperName : public System::Collections::Generic::IList<CLIHandle> \
     virtual bool Remove(CLIHandle item) {WrappedType::iterator itr = std::find(base_->begin(), base_->end(), CLIToNative(NativeType, item)); if(itr == base_->end()) return false; base_->erase(itr); return true;} \
     virtual int IndexOf(CLIHandle item) {return (int) (std::find(base_->begin(), base_->end(), CLIToNative(NativeType, item))-base_->begin());} \
     virtual void Insert(int index, CLIHandle item) {base_->insert(base_->begin() + index, CLIToNative(NativeType, item));} \
-    virtual void RemoveAt(int index) {base_->erase(base_->begin() + index);} \
+    virtual void RemoveAt(int index) {RANGE_CHECK(index) base_->erase(base_->begin() + index);} \
 \
     ref class Enumerator : System::Collections::Generic::IEnumerator<CLIHandle> \
     { \

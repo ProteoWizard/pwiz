@@ -119,6 +119,7 @@ SHELL "if not exist \"$(DOC_DATA_PATH)\\\" mkdir \"$(DOC_DATA_PATH)\"" ;
 
 obj ParamTypes        : common/ParamTypes.cpp        : $(bound_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/ParamTypes.xdc" ;
 obj IterationListener : common/IterationListener.cpp : $(bound_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/IterationListener.xdc" ;
+obj Unimod            : common/Unimod.cpp            : $(bound_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/Unimod.xdc" ;
 
 obj MSDataDiff       : msdata/Diff.cpp       : $(bound_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/MSDataDiff.xdc" ;
 obj MSData           : msdata/MSData.cpp     : $(bound_libs) <cxxflags>"/doc$(DOC_DATA_PATH)/MSData.xdc" ;
@@ -149,6 +150,7 @@ lib pwiz_bindings_cli
     : # sources
         ParamTypes
         IterationListener
+        Unimod
         MSDataDiff
         MSData
         MSDataFile
@@ -194,6 +196,7 @@ lib pwiz_data_cli
     : # usage-requirements
         $(data_libs)
     ;
+explicit pwiz_data_cli ;
 
 # merge XDC files to create XML documentation alongside the output assembly
 rule merge_xdc_files ( targets + : sources * : properties * )
@@ -233,7 +236,6 @@ actions merge_xdc_data_files
     IF "_%ProgramFiles%_" EQU "__" set ProgramFiles="C:\Program Files"
     IF EXIST "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 8\VC\vcvarsall.bat" x86 >nul
     IF EXIST "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" CALL "%ProgramFiles%\Microsoft Visual Studio 9.0\VC\vcvarsall.bat" x86 >nul
-    echo xdcmake.exe /nologo "$(DOC_DATA_PATH)/*.xdc" "/out:$(OUTPUT_PATH)\$(<[1]:D=)"
     xdcmake.exe /nologo "$(DOC_DATA_PATH)/*.xdc" "/out:$(OUTPUT_PATH)\$(<[1]:D=)"
 }
 
@@ -245,6 +247,7 @@ make pwiz_data_cli.xml
         @merge_xdc_data_files
     : # requirements
     ;
+explicit pwiz_data_cli ;
 
 
 rule unit-test-requirements ( properties * )

@@ -47,7 +47,18 @@ inline System::String^ unit_assert_message(const char* filename, int line, const
     return sb.ToString();
 }
 
-inline System::String^ unit_assert_equal_message(const char* filename, int line, double x, double y, double epsilon)
+inline System::String^ unit_assert_equal_message(const char* filename, int line, System::String^ x, System::String^ y, const char* expression)
+{
+    System::Text::StringBuilder sb;
+    sb.AppendFormat("[{0}:{1}] Assertion failed: expected \"{2}\" but got \"{3}\" ({4})",
+                    gcnew System::String(filename), line,
+                    gcnew System::String(x),
+                    gcnew System::String(y),
+                    gcnew System::String(expression));
+    return sb.ToString();
+}
+
+inline System::String^ unit_assert_numeric_equal_message(const char* filename, int line, double x, double y, double epsilon)
 {
     System::Text::StringBuilder sb;
     sb.AppendFormat("[{0}:{1}] Assertion failed: |{2} - {3}| < {4}", gcnew System::String(filename), line, x, y, epsilon);
@@ -66,8 +77,16 @@ inline System::String^ unit_assert_exception_message(const char* filename, int l
     (!(x) ? throw gcnew System::Exception(unit_assert_message(__FILE__, __LINE__, #x)) : 0) 
 
 
+#define unit_assert_operator_equal(expected, actual) \
+    (!(expected == actual) ? throw gcnew System::Exception(unit_assert_equal_message(__FILE__, __LINE__, (expected).ToString(), (actual).ToString(), #actual)) : 0)
+
+
+#define unit_assert_string_operator_equal(expected, actual) \
+    (!(expected == actual) ? throw gcnew System::Exception(unit_assert_equal_message(__FILE__, __LINE__, (expected), (actual), #actual)) : 0)
+
+
 #define unit_assert_equal(x, y, epsilon) \
-    (!(System::Math::Abs((x)-(y)) <= (epsilon)) ? throw gcnew System::Exception(unit_assert_equal_message(__FILE__, __LINE__, (x), (y), (epsilon))) : 0)
+    (!(System::Math::Abs((x)-(y)) <= (epsilon)) ? throw gcnew System::Exception(unit_assert_numeric_equal_message(__FILE__, __LINE__, (x), (y), (epsilon))) : 0)
 
 
 #define unit_assert_throws(x, exception) \
