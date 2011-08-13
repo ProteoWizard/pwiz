@@ -56,10 +56,10 @@ namespace pwiz.Skyline.Model
         public const string Waters_Xevo = "Waters Xevo";
         public const string Waters_Quattro_Premier = "Waters Quattro Premier";
 
-        private const string EXT_AB_SCIEX = ".dam";
-        private const string EXT_AGILENT = ".m";
-        private const string EXT_THERMO = ".meth";
-        private const string EXT_WATERS = ".m";
+        public const string EXT_AB_SCIEX = ".dam";
+        public const string EXT_AGILENT = ".m";
+        public const string EXT_THERMO = ".meth";
+        public const string EXT_WATERS = ".exp";
 
         public static readonly string[] METHOD_TYPES =
             {

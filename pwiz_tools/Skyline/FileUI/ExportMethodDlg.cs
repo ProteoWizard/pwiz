@@ -968,17 +968,20 @@ namespace pwiz.Skyline.FileUI
             var listFileTypes = new List<string>();
             if (Equals(InstrumentType, ExportInstrumentType.ABI_QTRAP))
             {
-                listFileTypes.Add(InstrumentType + " Method (*.dam)|*.dam");
+                listFileTypes.Add(string.Format("{0} Method (*{1})|*{1}",
+                                                InstrumentType, ExportInstrumentType.EXT_AB_SCIEX));
             }
             else if (Equals(InstrumentType, ExportInstrumentType.Thermo_TSQ) ||
                      Equals(InstrumentType, ExportInstrumentType.Thermo_LTQ))
             {
-                listFileTypes.Add(InstrumentType + " Method (*.meth)|*.meth");
+                listFileTypes.Add(string.Format("{0} Method (*{1})|*{1}",
+                                                InstrumentType, ExportInstrumentType.EXT_THERMO));
             }
             else if (Equals(InstrumentType, ExportInstrumentType.Waters_Xevo) ||
                      Equals(InstrumentType, ExportInstrumentType.Waters_Quattro_Premier))
             {
-                listFileTypes.Add(InstrumentType + " Method (*.exp)|*.exp");
+                listFileTypes.Add(string.Format("{0} Method (*{1})|*{1}",
+                                                InstrumentType, ExportInstrumentType.EXT_WATERS));
             }
             listFileTypes.Add("All Files (*.*)|*.*");
             openFileDialog.Filter = string.Join("|", listFileTypes.ToArray());
