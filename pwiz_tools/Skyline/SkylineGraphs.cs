@@ -726,9 +726,11 @@ namespace pwiz.Skyline
 
         private void spectrumPropsContextMenuItem_Click(object sender, EventArgs e)
         {
-            var dlg = new SpectrumChartPropertyDlg();
-            if (dlg.ShowDialog(this) == DialogResult.OK)
-                UpdateSpectrumGraph();
+            using (var dlg = new SpectrumChartPropertyDlg())
+            {
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                    UpdateSpectrumGraph();
+            }
         }
 
         private void zoomSpectrumContextMenuItem_Click(object sender, EventArgs e)
@@ -1125,16 +1127,18 @@ namespace pwiz.Skyline
 
         public void ShowRTThresholdDlg()
         {
-            var dlg = new ShowRTThresholdDlg();
-            double threshold = Settings.Default.ShowRetentionTimesThreshold;
-            if (threshold > 0)
-                dlg.Threshold = threshold;
-
-            if (dlg.ShowDialog(this) == DialogResult.OK)
+            using (var dlg = new ShowRTThresholdDlg())
             {
-                Settings.Default.ShowRetentionTimesThreshold = dlg.Threshold;
-                Settings.Default.ShowRetentionTimesEnum = ShowRTChrom.threshold.ToString();
-                UpdateChromGraphs();
+                double threshold = Settings.Default.ShowRetentionTimesThreshold;
+                if (threshold > 0)
+                    dlg.Threshold = threshold;
+
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    Settings.Default.ShowRetentionTimesThreshold = dlg.Threshold;
+                    Settings.Default.ShowRetentionTimesEnum = ShowRTChrom.threshold.ToString();
+                    UpdateChromGraphs();
+                }
             }
         }
 
@@ -1519,9 +1523,11 @@ namespace pwiz.Skyline
 
         private void chromPropsContextMenuItem_Click(object sender, EventArgs e)
         {
-            var dlg = new ChromChartPropertyDlg();
-            if (dlg.ShowDialog(this) == DialogResult.OK)
-                UpdateChromGraphs();
+            using (var dlg = new ChromChartPropertyDlg())
+            {
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                    UpdateChromGraphs();
+            }
         }
 
         private void ShowGraphChrom(string name, bool show)
@@ -2179,11 +2185,13 @@ namespace pwiz.Skyline
 
         private void setRTThresholdContextMenuItem_Click(object sender, EventArgs e)
         {
-            var dlg = new SetRTThresholdDlg {Threshold = Settings.Default.RTResidualRThreshold};
-            if (dlg.ShowDialog(this) == DialogResult.OK)
+            using (var dlg = new SetRTThresholdDlg { Threshold = Settings.Default.RTResidualRThreshold })
             {
-                Settings.Default.RTResidualRThreshold = dlg.Threshold;
-                UpdateRetentionTimeGraph();
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    Settings.Default.RTResidualRThreshold = dlg.Threshold;
+                    UpdateRetentionTimeGraph();
+                }
             }
         }
 
@@ -2210,16 +2218,20 @@ namespace pwiz.Skyline
             if (regression != null)
                 regression = (RetentionTimeRegression) regression.ChangeName(name);
 
-            var dlg = new EditRTDlg(listRegression) { Regression = regression };
-            dlg.ShowPeptides(true);
-            if (dlg.ShowDialog(this) == DialogResult.OK)
+            using (var dlg = new EditRTDlg(listRegression) { Regression = regression })
             {
-                regression = dlg.Regression;
-                listRegression.Add(regression);
+                dlg.ShowPeptides(true);
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    regression = dlg.Regression;
+                    listRegression.Add(regression);
 
-                ModifyDocument(string.Format("Set regression {0}", regression.Name),
-                    doc => doc.ChangeSettings(doc.Settings.ChangePeptidePrediction(p => p.ChangeRetentionTime(regression))));
-            }    
+                    ModifyDocument(string.Format("Set regression {0}", regression.Name),
+                                   doc =>
+                                   doc.ChangeSettings(
+                                       doc.Settings.ChangePeptidePrediction(p => p.ChangeRetentionTime(regression))));
+                }
+            }
         }
 
         private void removeRTOutliersContextMenuItem_Click(object sender, EventArgs e)
@@ -2276,10 +2288,12 @@ namespace pwiz.Skyline
 
         private void timePropsContextMenuItem_Click(object sender, EventArgs e)
         {
-            var dlg = new RTChartPropertyDlg();
-            if (dlg.ShowDialog(this) == DialogResult.OK)
+            using (var dlg = new RTChartPropertyDlg())
             {
-                UpdateSummaryGraphs();
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    UpdateSummaryGraphs();
+                }
             }
         }
 
@@ -2660,10 +2674,12 @@ namespace pwiz.Skyline
 
         private void areaPropsContextMenuItem_Click(object sender, EventArgs e)
         {
-            var dlg = new AreaChartPropertyDlg();
-            if (dlg.ShowDialog(this) == DialogResult.OK)
+            using (var dlg = new AreaChartPropertyDlg())
             {
-                UpdateSummaryGraphs();
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    UpdateSummaryGraphs();
+                }
             }
         }
 
@@ -2893,17 +2909,19 @@ namespace pwiz.Skyline
             bool reversed = Settings.Default.ArrangeGraphsReversed;
             var listGraphs = GetArrangeableGraphs(order, reversed);
 
-            var dlg = new ArrangeGraphsGroupedDlg(listGraphs.Count);
-            if (dlg.ShowDialog(this) == DialogResult.OK)
+            using (var dlg = new ArrangeGraphsGroupedDlg(listGraphs.Count))
             {
-                if (order != dlg.GroupOrder || reversed != dlg.Reversed)
-                    listGraphs = GetArrangeableGraphs(dlg.GroupOrder, dlg.Reversed);
-                if (listGraphs.Count < 2)
-                    return;
-
-                using (new DockPanelLayoutLock(dockPanel, true))
+                if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    ArrangeGraphsGrouped(listGraphs, dlg.Groups, dlg.GroupType);
+                    if (order != dlg.GroupOrder || reversed != dlg.Reversed)
+                        listGraphs = GetArrangeableGraphs(dlg.GroupOrder, dlg.Reversed);
+                    if (listGraphs.Count < 2)
+                        return;
+
+                    using (new DockPanelLayoutLock(dockPanel, true))
+                    {
+                        ArrangeGraphsGrouped(listGraphs, dlg.Groups, dlg.GroupType);
+                    }
                 }
             }
         }

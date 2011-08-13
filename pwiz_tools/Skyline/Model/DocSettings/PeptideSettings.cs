@@ -1630,16 +1630,18 @@ namespace pwiz.Skyline.Model.DocSettings
                 if (!File.Exists(pathLibrary))
                 {
                     // If it still can't be found, show a dialog to ask the user
-                    var dlg = new MissingLibraryDlg
+                    using (var dlg = new MissingLibraryDlg
                     {
                         LibraryName = libraryName,
                         LibraryFileNameHint = fileName
-                    };
-                    // If the user didn't give an answer, give up
-                    if (dlg.ShowDialog() != DialogResult.OK || dlg.LibraryPath == null)
-                        continue;
+                    })
+                    {
+                        // If the user didn't give an answer, give up
+                        if (dlg.ShowDialog() != DialogResult.OK || dlg.LibraryPath == null)
+                            continue;
 
-                    pathLibrary = dlg.LibraryPath;
+                        pathLibrary = dlg.LibraryPath;
+                    }
                 }
 
                 // Create a new library spec from the library, or change existing library

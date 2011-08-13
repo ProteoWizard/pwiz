@@ -278,12 +278,14 @@ namespace pwiz.Skyline.EditUI
             var strNameMatches = matcher.FoundMatches;
             if (!validating && !string.IsNullOrEmpty(strNameMatches))
             {
-                var dlg = new MultiButtonMsgDlg(
+                using (var dlg = new MultiButtonMsgDlg(
                     string.Format(
                         "Would you like to use the Unimod definitions for the following modifications?\n\n{0}",
-                        strNameMatches), "OK");
-                if (dlg.ShowDialog() == DialogResult.Cancel)
-                    return null;
+                        strNameMatches), "OK"))
+                {
+                    if (dlg.ShowDialog() == DialogResult.Cancel)
+                        return null;
+                }
             }
             var backgroundProteome = GetBackgroundProteome(document);
             for (int i = gridViewPeptides.Rows.Count - 1; i >= 0; i--)
@@ -1251,22 +1253,25 @@ namespace pwiz.Skyline.EditUI
             // the FilterMatchedPeptidesDlg.
             if (numUnmatched + numMultipleMatches + numFiltered == 0)
                 return;
-            var filterPeptidesDlg =
+            using (var filterPeptidesDlg =
                 new FilterMatchedPeptidesDlg(numMultipleMatches, numUnmatched, numFiltered,
-                                             dataGridView.RowCount - prevRowCount == 1);
-            var result = filterPeptidesDlg.ShowDialog(this);
-            // If the user is keeping all peptide matches, we don't need to redo the paste.
-            bool keepAllPeptides = ((FilterMultipleProteinMatches ==
-                        BackgroundProteome.DuplicateProteinsFilter.AddToAll || numMultipleMatches == 0)
-                        && (Settings.Default.LibraryPeptidesAddUnmatched || numUnmatched == 0)
-                        && (Settings.Default.LibraryPeptidesKeepFiltered || numFiltered == 0));
-            // If the user is filtering some peptides, or if the user clicked cancel, remove all rows added as
-            // a result of the paste.
-            if (result == DialogResult.Cancel || !keepAllPeptides)
-                RemoveLastRows(dataGridView, dataGridView.RowCount - prevRowCount);
-            // Redo the paste with the new filter settings.
-            if(result != DialogResult.Cancel && !keepAllPeptides)
-                Paste(dataGridView, text, enumerateProteins, !enumerateProteins, out numUnmatched, out numMultipleMatches, out numFiltered);
+                                             dataGridView.RowCount - prevRowCount == 1))
+            {
+                var result = filterPeptidesDlg.ShowDialog(this);
+                // If the user is keeping all peptide matches, we don't need to redo the paste.
+                bool keepAllPeptides = ((FilterMultipleProteinMatches ==
+                                         BackgroundProteome.DuplicateProteinsFilter.AddToAll || numMultipleMatches == 0)
+                                        && (Settings.Default.LibraryPeptidesAddUnmatched || numUnmatched == 0)
+                                        && (Settings.Default.LibraryPeptidesKeepFiltered || numFiltered == 0));
+                // If the user is filtering some peptides, or if the user clicked cancel, remove all rows added as
+                // a result of the paste.
+                if (result == DialogResult.Cancel || !keepAllPeptides)
+                    RemoveLastRows(dataGridView, dataGridView.RowCount - prevRowCount);
+                // Redo the paste with the new filter settings.
+                if (result != DialogResult.Cancel && !keepAllPeptides)
+                    Paste(dataGridView, text, enumerateProteins, !enumerateProteins, out numUnmatched,
+                          out numMultipleMatches, out numFiltered);
+            }
         }
 
         /// <summary>

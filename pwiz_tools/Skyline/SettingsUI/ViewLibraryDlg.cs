@@ -321,24 +321,26 @@ namespace pwiz.Skyline.SettingsUI
                 if (!_libraryListDoc.Contains(_selectedSpec))
                 {
                     Program.MainWindow.FocusDocument();
-                    var reloadExplorerMsg =
+                    using (var reloadExplorerMsg =
                         new MultiButtonMsgDlg(
-                            string.Format("The library {0} is no longer part of the document settings. Reload the library explorer?", 
+                            string.Format("The library {0} is no longer part of the document settings. Reload the library explorer?",
                             _selectedLibName),
-                            "Yes", "No");
-                    var result = reloadExplorerMsg.ShowDialog(this);
-                    if (result == DialogResult.Yes)
+                            "Yes", "No"))
                     {
-                        if (newSpectralLibraryList.Count == 0)
+                        var result = reloadExplorerMsg.ShowDialog(this);
+                        if (result == DialogResult.Yes)
                         {
-                            MessageDlg.Show(this, "There are no libraries in the current settings.");
-                            Close();
-                            return;
+                            if (newSpectralLibraryList.Count == 0)
+                            {
+                                MessageDlg.Show(this, "There are no libraries in the current settings.");
+                                Close();
+                                return;
+                            }
+                            _libraryListThis = _libraryListDoc;
+                            InitializeLibrariesComboBox();
+                            comboLibrary.SelectedIndex = 0;
+                            Activate();
                         }
-                        _libraryListThis = _libraryListDoc;
-                        InitializeLibrariesComboBox();
-                        comboLibrary.SelectedIndex = 0;
-                        Activate();
                     }
                 }
                 else
@@ -1036,9 +1038,11 @@ namespace pwiz.Skyline.SettingsUI
 
         private void spectrumPropsContextMenuItem_Click(object sender, EventArgs e)
         {
-            var dlg = new SpectrumChartPropertyDlg();
-            if (dlg.ShowDialog(this) == DialogResult.OK)
-                UpdateUI();
+            using (var dlg = new SpectrumChartPropertyDlg())
+            {
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                    UpdateUI();
+            }
         }
 
         private void zoomSpectrumContextMenuItem_Click(object sender, EventArgs e)
@@ -1172,19 +1176,28 @@ namespace pwiz.Skyline.SettingsUI
             var docLibraries = Document.Settings.PeptideSettings.Libraries;
             if (docLibraries.GetLibrary(_selectedLibName) == null)
             {
-                var libraryNotAddedMsgDlg =
+                using (var libraryNotAddedMsgDlg =
                     new MultiButtonMsgDlg(
                         string.Format(
                             "The library {0} is not currently added to your document.\nWould you like to add it?",
-                            _selectedLibName), "Yes", "No");
-                var result = libraryNotAddedMsgDlg.ShowDialog(this);
-                if (result == DialogResult.Cancel)
-                    return result;
-                if (result == DialogResult.Yes)
-                    Program.MainWindow.ModifyDocument("Add Library", doc =>
-                        doc.ChangeSettings(doc.Settings.ChangePeptideLibraries(pepLibraries =>
-                            pepLibraries.ChangeLibraries(new List<LibrarySpec>(docLibraries.LibrarySpecs) { _selectedSpec },
-                            new List<Library>(docLibraries.Libraries) { _selectedLibrary }))));
+                            _selectedLibName), "Yes", "No"))
+                {
+                    var result = libraryNotAddedMsgDlg.ShowDialog(this);
+                    if (result == DialogResult.Cancel)
+                        return result;
+                    if (result == DialogResult.Yes)
+                        Program.MainWindow.ModifyDocument("Add Library", doc =>
+                                                                         doc.ChangeSettings(
+                                                                             doc.Settings.ChangePeptideLibraries(
+                                                                                 pepLibraries =>
+                                                                                 pepLibraries.ChangeLibraries(
+                                                                                     new List<LibrarySpec>(
+                                                                                         docLibraries.LibrarySpecs)
+                                                                                         {_selectedSpec},
+                                                                                     new List<Library>(
+                                                                                         docLibraries.Libraries)
+                                                                                         {_selectedLibrary}))));
+                }
             }
             return DialogResult.OK;
         }
@@ -1262,10 +1275,11 @@ namespace pwiz.Skyline.SettingsUI
                     "{0}\n\n{1}{2} library entr{3} will be ignored.";
                 msg = string.Format(format, msg, duplicatePeptides, unmatchedPeptides, entrySuffix);
             }
-            var addLibraryPepsDlg = new MultiButtonMsgDlg(msg, "Add All") { Tag = numUnmatchedPeptides };
-            if(addLibraryPepsDlg.ShowDialog(this) == DialogResult.Cancel)
-                return;
-
+            using (var addLibraryPepsDlg = new MultiButtonMsgDlg(msg, "Add All") { Tag = numUnmatchedPeptides })
+            {
+                if (addLibraryPepsDlg.ShowDialog(this) == DialogResult.Cancel)
+                    return;
+            }
             // If the user chooses to continue with the operation, call AddPeptides again in case the document has changed.
             var toPath = Program.MainWindow.SelectedPath;
             Program.MainWindow.ModifyDocument(string.Format("Add all peptides from {0} library", SelectedLibraryName),

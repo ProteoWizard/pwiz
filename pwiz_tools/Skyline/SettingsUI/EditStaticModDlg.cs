@@ -375,16 +375,19 @@ namespace pwiz.Skyline.SettingsUI
             {
                 if(newMod.Equivalent(mod) && !(_editing && mod.Equals(_originalModification)))
                 {
-                    MultiButtonMsgDlg dlg = new MultiButtonMsgDlg(
+                    using (MultiButtonMsgDlg dlg = new MultiButtonMsgDlg(
                         string.Format("There is an existing modification with the same settings:\n'{0}'."
-                        + "\n\nContinue?", mod.Name), "OK");
-                    var result = dlg.ShowDialog(this);
-                    if(result == DialogResult.OK)
+                        + "\n\nContinue?", mod.Name), "OK"))
                     {
-                        Modification = newMod;
-                        DialogResult = DialogResult.OK;
+                        var result = dlg.ShowDialog(this);
+                        if (result == DialogResult.OK)
+                        {
+                            Modification = newMod;
+                            DialogResult = DialogResult.OK;
+                        }
+                        return;
                     }
-                    return;
+                    
                 }
             }
             
@@ -396,19 +399,21 @@ namespace pwiz.Skyline.SettingsUI
                 var matchingMod = UniMod.FindMatchingStaticMod(newMod, IsStructural);
                 if (matchingMod != null && ModNameAvailable(matchingMod.Name))
                 {
-                    MultiButtonMsgDlg dlg =
+                    using (MultiButtonMsgDlg dlg =
                         new MultiButtonMsgDlg(
                             string.Format(
                                 "There is a Unimod modification with the same settings."
                                 + "\n\nClick 'Unimod' to use the name '{0}'."
                                 + "\nClick 'Custom' to use the name '{1}'.",
                                 matchingMod.Name, name),
-                            "Unimod", "Custom");
-                    var result = dlg.ShowDialog(this);
-                    if (result == DialogResult.Yes)
-                        newMod = matchingMod;
-                    if (result == DialogResult.Cancel)
-                        return;
+                            "Unimod", "Custom"))
+                    {
+                        var result = dlg.ShowDialog(this);
+                        if (result == DialogResult.Yes)
+                            newMod = matchingMod;
+                        if (result == DialogResult.Cancel)
+                            return;
+                    }
                 }
             }
             else
@@ -421,14 +426,16 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     // Finally, if the modification name is found in Unimod, but the modification in Unimod does not 
                     // match the dialog modification, prompt the user to use the Unimod modification definition instead.
-                    MultiButtonMsgDlg dlg =
+                    using (MultiButtonMsgDlg dlg =
                         new MultiButtonMsgDlg(
                             string.Format("This modification does not match the Unimod specifications for\n'{0}'."
                             + "\n\nUse non-standard settings for this name?", name),
-                            "OK");
-                    var result = dlg.ShowDialog(this);
-                    if (result != DialogResult.OK)
-                        return;
+                            "OK"))
+                    {
+                        var result = dlg.ShowDialog(this);
+                        if (result != DialogResult.OK)
+                            return;
+                    }
                 }
             }
 
@@ -660,11 +667,13 @@ namespace pwiz.Skyline.SettingsUI
 
         public void AddLoss()
         {
-            var dlg = new EditFragmentLossDlg(Losses.ToArray());
-            if (dlg.ShowDialog(this) == DialogResult.OK)
+            using (var dlg = new EditFragmentLossDlg(Losses.ToArray()))
             {
-                Losses = new List<FragmentLoss>(Losses) {dlg.Loss};
-                listNeutralLosses.SelectedItem = dlg.Loss;
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    Losses = new List<FragmentLoss>(Losses) {dlg.Loss};
+                    listNeutralLosses.SelectedItem = dlg.Loss;
+                }
             }
         }
 
@@ -679,12 +688,14 @@ namespace pwiz.Skyline.SettingsUI
             var listLosses = new List<FragmentLoss>(Losses);
             listLosses.Remove(lossEdit);
 
-            var dlg = new EditFragmentLossDlg(listLosses) { Loss = lossEdit };
-            if (dlg.ShowDialog(this) == DialogResult.OK)
+            using (var dlg = new EditFragmentLossDlg(listLosses) { Loss = lossEdit })
             {
-                listLosses.Add(dlg.Loss);
-                Losses = listLosses;
-                listNeutralLosses.SelectedItem = dlg.Loss;
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    listLosses.Add(dlg.Loss);
+                    Losses = listLosses;
+                    listNeutralLosses.SelectedItem = dlg.Loss;
+                }
             }
         }
 

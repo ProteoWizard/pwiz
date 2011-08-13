@@ -375,13 +375,15 @@ namespace pwiz.Skyline.SettingsUI
 
         public void ShowBuildLibraryDlg()
         {
-            var dlg = new BuildLibraryDlg();
-            if (dlg.ShowDialog(this) == DialogResult.OK)
+            using (var dlg = new BuildLibraryDlg())
             {
-                _libraryManager.BuildLibrary(_parent, dlg.Builder, _parent.LibraryBuildCompleteCallback);
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    _libraryManager.BuildLibrary(_parent, dlg.Builder, _parent.LibraryBuildCompleteCallback);
 
-                Settings.Default.SpectralLibraryList.Add(dlg.Builder.LibrarySpec);
-                _driverLibrary.LoadList();
+                    Settings.Default.SpectralLibraryList.Add(dlg.Builder.LibrarySpec);
+                    _driverLibrary.LoadList();
+                }
             }
         }
 
@@ -635,13 +637,15 @@ namespace pwiz.Skyline.SettingsUI
 
         public void ShowBuildBackgroundProteomeDlg()
         {
-            var dlg = new BuildBackgroundProteomeDlg(_driverBackgroundProteome.List);
-            if (dlg.ShowDialog(this) == DialogResult.Cancel)
+            using (var dlg = new BuildBackgroundProteomeDlg(_driverBackgroundProteome.List))
             {
-                return;
+                if (dlg.ShowDialog(this) == DialogResult.Cancel)
+                {
+                    return;
+                }
+                Settings.Default.BackgroundProteomeList.Add(dlg.BackgroundProteomeSpec);
+                _driverBackgroundProteome.LoadList(dlg.BackgroundProteomeSpec.Name);
             }
-            Settings.Default.BackgroundProteomeList.Add(dlg.BackgroundProteomeSpec);
-            _driverBackgroundProteome.LoadList(dlg.BackgroundProteomeSpec.Name);
         }
 
         public void AddBackgroundProteome()
@@ -945,43 +949,45 @@ namespace pwiz.Skyline.SettingsUI
             public void EditList()
             {
                 var heavyMods = GetHeavyModifications();
-                var dlg = new EditLabelTypeListDlg
+                using (var dlg = new EditLabelTypeListDlg
                               {
                                   LabelTypes = from typedMods in heavyMods
                                                select typedMods.LabelType
-                              };
-                if (dlg.ShowDialog(Combo.TopLevelControl) == DialogResult.OK)
+                              })
                 {
-                    // Store existing values in dictionary by lowercase name.
-                    string selectedItemLast = SelectedModsLast.LabelType.Name;
-                    var internalStandardTypes = InternalStandardTypes;
-                    var dictHeavyMods = new Dictionary<string, TypedModifications>();
-                    foreach (var typedMods in heavyMods)
-                        dictHeavyMods.Add(typedMods.LabelType.Name.ToLower(), typedMods);
-
-                    Combo.Items.Clear();
-
-                    // Add new values based on the content of the dialog.
-                    // Names that already existed keep same modifications, and
-                    // names that have not changed order stay reference-equal.
-                    var listHeavyMods = new List<TypedModifications>();
-                    foreach (var labelType in dlg.LabelTypes)
+                    if (dlg.ShowDialog(Combo.TopLevelControl) == DialogResult.OK)
                     {
-                        TypedModifications typedMods;
-                        if (!dictHeavyMods.TryGetValue(labelType.Name.ToLower(), out typedMods))
-                            typedMods = new TypedModifications(labelType, new StaticMod[0]);
-                        else if (!Equals(labelType, typedMods.LabelType))
-                            typedMods = new TypedModifications(labelType, typedMods.Modifications);
-                        listHeavyMods.Add(typedMods);
-                    }
+                        // Store existing values in dictionary by lowercase name.
+                        string selectedItemLast = SelectedModsLast.LabelType.Name;
+                        var internalStandardTypes = InternalStandardTypes;
+                        var dictHeavyMods = new Dictionary<string, TypedModifications>();
+                        foreach (var typedMods in heavyMods)
+                            dictHeavyMods.Add(typedMods.LabelType.Name.ToLower(), typedMods);
 
-                    _selectedIndexLast = -1;
-                    LoadList(selectedItemLast, internalStandardTypes, listHeavyMods);
-                }
-                else
-                {
-                    // Reset the selected index before edit was chosen.
-                    Combo.SelectedIndex = _selectedIndexLast;
+                        Combo.Items.Clear();
+
+                        // Add new values based on the content of the dialog.
+                        // Names that already existed keep same modifications, and
+                        // names that have not changed order stay reference-equal.
+                        var listHeavyMods = new List<TypedModifications>();
+                        foreach (var labelType in dlg.LabelTypes)
+                        {
+                            TypedModifications typedMods;
+                            if (!dictHeavyMods.TryGetValue(labelType.Name.ToLower(), out typedMods))
+                                typedMods = new TypedModifications(labelType, new StaticMod[0]);
+                            else if (!Equals(labelType, typedMods.LabelType))
+                                typedMods = new TypedModifications(labelType, typedMods.Modifications);
+                            listHeavyMods.Add(typedMods);
+                        }
+
+                        _selectedIndexLast = -1;
+                        LoadList(selectedItemLast, internalStandardTypes, listHeavyMods);
+                    }
+                    else
+                    {
+                        // Reset the selected index before edit was chosen.
+                        Combo.SelectedIndex = _selectedIndexLast;
+                    }
                 }
             }
         }

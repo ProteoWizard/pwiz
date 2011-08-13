@@ -27,9 +27,12 @@ namespace pwiz.Skyline.Alerts
     /// </summary>
     public partial class MessageDlg : Form
     {
-        public static void Show(IWin32Window parent, string message)
+        public static DialogResult Show(IWin32Window parent, string message)
         {
-            new MessageDlg(message).ShowDialog(parent);
+            using (var dlg = new MessageDlg(message))
+            {
+                return dlg.ShowDialog(parent);
+            }
         }
 
         public MessageDlg(string message)

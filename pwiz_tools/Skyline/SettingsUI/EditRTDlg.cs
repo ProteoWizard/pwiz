@@ -411,8 +411,10 @@ namespace pwiz.Skyline.SettingsUI
         {
             if (_statistics != null)
             {
-                RTDetails dlg = new RTDetails(_statistics);
-                dlg.ShowDialog(this);
+                using (RTDetails dlg = new RTDetails(_statistics))
+                {
+                    dlg.ShowDialog(this);
+                }
             }
         }
     }

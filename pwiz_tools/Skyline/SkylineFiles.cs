@@ -290,14 +290,16 @@ namespace pwiz.Skyline
                             return library.CreateSpec(pathLibrary);
                     }
 
-                    var dlg = new MissingLibraryDlg
+                    using (var dlg = new MissingLibraryDlg
                                   {
                                       LibraryName = library.Name,
                                       LibraryFileNameHint = fileName
-                                  };
-                    if (dlg.ShowDialog(this) == DialogResult.OK)
+                                  })
                     {
-                        return library.CreateSpec(dlg.LibraryPath);
+                        if (dlg.ShowDialog(this) == DialogResult.OK)
+                        {
+                            return library.CreateSpec(dlg.LibraryPath);
+                        }
                     }
 
                     return null;
@@ -347,18 +349,20 @@ namespace pwiz.Skyline
             pathBackgroundProteome = Path.Combine(Settings.Default.ProteomeDbDirectory, fileName ?? "");
             if (File.Exists(pathBackgroundProteome))
                 return new BackgroundProteomeSpec(backgroundProteomeSpec.Name, pathBackgroundProteome);
-            var dlg = new MissingBackgroundProteomeDlg
+            using (var dlg = new MissingBackgroundProteomeDlg
             {
                 BackgroundProteomeHint = fileName,
                 BackgroundProteomeName = backgroundProteomeSpec.Name,
-            };
-            if (dlg.ShowDialog(this) == DialogResult.OK)
+            })
             {
-                if (dlg.BackgroundProteomePath == null)
+                if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    return BackgroundProteomeList.GetDefault();
+                    if (dlg.BackgroundProteomePath == null)
+                    {
+                        return BackgroundProteomeList.GetDefault();
+                    }
+                    return new BackgroundProteomeSpec(backgroundProteomeSpec.Name, dlg.BackgroundProteomePath);
                 }
-                return new BackgroundProteomeSpec(backgroundProteomeSpec.Name, dlg.BackgroundProteomePath);
             }
             return null;
         }
@@ -636,13 +640,15 @@ namespace pwiz.Skyline
             bool completeSharing = true;
             if (document.Settings.HasLibraries || document.Settings.HasBackgroundProteome)
             {
-                var dlgType = new ShareTypeDlg(document);
-                if (dlgType.ShowDialog(this) == DialogResult.Cancel)
-                    return;
-                completeSharing = dlgType.IsCompleteSharing;
+                using (var dlgType = new ShareTypeDlg(document))
+                {
+                    if (dlgType.ShowDialog(this) == DialogResult.Cancel)
+                        return;
+                    completeSharing = dlgType.IsCompleteSharing;
+                }
             }
 
-            var dlg = new SaveFileDialog
+            using (var dlg = new SaveFileDialog
             {
                 Title = "Share Document",
                 InitialDirectory = Path.GetDirectoryName(fileName),
@@ -654,27 +660,31 @@ namespace pwiz.Skyline
                         "Skyline Shared Documents (*." + SrmDocumentSharing.EXT + ")|*." + SrmDocumentSharing.EXT,
                         "All Files (*.*)|*.*"
                     })
-            };
+            })
+            {
+                if (dlg.ShowDialog(this) == DialogResult.Cancel)
+                    return;
 
-            if (dlg.ShowDialog(this) == DialogResult.Cancel)
-                return;
-            // Make sure the document is completely saved before sharing
-            if (!saved && !SaveDocument())
-                return;
+                // Make sure the document is completely saved before sharing
+                if (!saved && !SaveDocument())
+                    return;
 
-            ShareDocument(dlg.FileName, completeSharing);
+                ShareDocument(dlg.FileName, completeSharing);
+            }
         }
 
         public void ShareDocument(string fileDest, bool completeSharing)
         {
             try
             {
-                var longWaitDlg = new LongWaitDlg
+                using (var longWaitDlg = new LongWaitDlg
                 {
                     Text = "Compressing Files",
-                };
-                var sharing = new SrmDocumentSharing(DocumentUI, DocumentFilePath, fileDest, completeSharing);
-                longWaitDlg.PerformWork(this, 1000, sharing.Share);
+                })
+                {
+                    var sharing = new SrmDocumentSharing(DocumentUI, DocumentFilePath, fileDest, completeSharing);
+                    longWaitDlg.PerformWork(this, 1000, sharing.Share);
+                }
             }
             catch (Exception x)
             {
@@ -692,10 +702,12 @@ namespace pwiz.Skyline
             ShowExportMethodDialog(ExportFileType.Method);
         }
 
-        public void ShowExportMethodDialog(ExportFileType fileType)
+        public DialogResult ShowExportMethodDialog(ExportFileType fileType)
         {
-            ExportMethodDlg dlg = new ExportMethodDlg(DocumentUI, fileType);
-            dlg.ShowDialog(this);
+            using (ExportMethodDlg dlg = new ExportMethodDlg(DocumentUI, fileType))
+            {
+                return dlg.ShowDialog(this);
+            }
         }
 
         private void exportReportMenuItem_Click(object sender, EventArgs e)
@@ -705,8 +717,10 @@ namespace pwiz.Skyline
 
         public void ShowExportReportDialog()
         {
-            ExportReportDlg dlg = new ExportReportDlg(this);
-            dlg.ShowDialog(this);
+            using (ExportReportDlg dlg = new ExportReportDlg(this))
+            {
+                dlg.ShowDialog(this);
+            }
         }
 
         private void importFASTAMenuItem_Click(object sender, EventArgs e)
@@ -763,12 +777,14 @@ namespace pwiz.Skyline
                     var strNameMatches = matcher.FoundMatches;
                     if (!string.IsNullOrEmpty(strNameMatches))
                     {
-                        var dlg = new MultiButtonMsgDlg(
+                        using (var dlg = new MultiButtonMsgDlg(
                             string.Format(
                                 "Would you like to use the Unimod definitions for the following modifications?\n\n{0}",
-                                strNameMatches), "OK");
-                        if (dlg.ShowDialog() == DialogResult.Cancel)
-                            return;
+                                strNameMatches), "OK"))
+                        {
+                            if (dlg.ShowDialog() == DialogResult.Cancel)
+                                return;
+                        }
                     }
                 }
                 catch(FormatException x)
@@ -804,25 +820,28 @@ namespace pwiz.Skyline
                 int countEmptyCurrent = docCurrent.PeptideGroups.Count(nodePepGroup => nodePepGroup.Children.Count == 0);
                 if (countEmpty > countEmptyCurrent)
                 {
-                    var dlg = new EmptyProteinsDlg(countEmpty - countEmptyCurrent);
-                    if (dlg.ShowDialog(this) == DialogResult.Cancel)
-                        return;
-                    // Remove all empty proteins, if requested by the user.
-                    if (!dlg.IsKeepEmptyProteins)
+                    using (var dlg = new EmptyProteinsDlg(countEmpty - countEmptyCurrent))
                     {
-                        docNew = new RefinementSettings {MinPeptidesPerProtein = 1}.Refine(docNew);
-                        // This may result in no change from the original, if all proteins were empty
-                        if (Equals(docNew, docCurrent))
+                        if (dlg.ShowDialog(this) == DialogResult.Cancel)
                             return;
-
-                        selectPath = null;
-                        var enumGroupsCurrent = docCurrent.PeptideGroups.GetEnumerator();
-                        foreach (PeptideGroupDocNode nodePepGroup in docNew.PeptideGroups)
+                        // Remove all empty proteins, if requested by the user.
+                        if (!dlg.IsKeepEmptyProteins)
                         {
-                            if (enumGroupsCurrent.MoveNext() && !ReferenceEquals(nodePepGroup, enumGroupsCurrent.Current))
+                            docNew = new RefinementSettings {MinPeptidesPerProtein = 1}.Refine(docNew);
+                            // This may result in no change from the original, if all proteins were empty
+                            if (Equals(docNew, docCurrent))
+                                return;
+
+                            selectPath = null;
+                            var enumGroupsCurrent = docCurrent.PeptideGroups.GetEnumerator();
+                            foreach (PeptideGroupDocNode nodePepGroup in docNew.PeptideGroups)
                             {
-                                selectPath = new IdentityPath(nodePepGroup.Id);
-                                break;
+                                if (enumGroupsCurrent.MoveNext() &&
+                                    !ReferenceEquals(nodePepGroup, enumGroupsCurrent.Current))
+                                {
+                                    selectPath = new IdentityPath(nodePepGroup.Id);
+                                    break;
+                                }
                             }
                         }
                     }
@@ -947,10 +966,12 @@ namespace pwiz.Skyline
             var resultsAction = MeasuredResults.MergeAction.remove;
             if (HasResults(filePaths))
             {
-                var dlgResults = new ImportDocResultsDlg(!string.IsNullOrEmpty(DocumentFilePath));
-                if (dlgResults.ShowDialog(this) != DialogResult.OK)
-                    return;
-                resultsAction = dlgResults.Action;
+                using (var dlgResults = new ImportDocResultsDlg(!string.IsNullOrEmpty(DocumentFilePath)))
+                {
+                    if (dlgResults.ShowDialog(this) != DialogResult.OK)
+                        return;
+                    resultsAction = dlgResults.Action;
+                }
             }
             SrmTreeNode nodeSel = sequenceTree.SelectedNode as SrmTreeNode;
             IdentityPath selectPath = null;
@@ -1077,21 +1098,22 @@ namespace pwiz.Skyline
                     return;
             }
 
-            ImportResultsDlg dlg = new ImportResultsDlg(DocumentUI, DocumentFilePath);
-
-            if (dlg.ShowDialog(this) == DialogResult.OK)
+            using (ImportResultsDlg dlg = new ImportResultsDlg(DocumentUI, DocumentFilePath))
             {
-                var namedResults = dlg.NamedPathSets;
-                string description = "Import results";
-                if (namedResults.Length == 1)
-                    description = string.Format("Import {0}", namedResults[0].Key);
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    var namedResults = dlg.NamedPathSets;
+                    string description = "Import results";
+                    if (namedResults.Length == 1)
+                        description = string.Format("Import {0}", namedResults[0].Key);
 
-                ModifyDocument(description,
-                    doc => ImportResults(doc, namedResults, dlg.OptimizationName));
+                    ModifyDocument(description,
+                                   doc => ImportResults(doc, namedResults, dlg.OptimizationName));
 
-                // Select the first replicate to which results were added.
-                if (toolBarResults.Visible)
-                    comboResults.SelectedItem = dlg.NamedPathSets[0].Key;
+                    // Select the first replicate to which results were added.
+                    if (toolBarResults.Visible)
+                        comboResults.SelectedItem = dlg.NamedPathSets[0].Key;
+                }
             }
         }
 

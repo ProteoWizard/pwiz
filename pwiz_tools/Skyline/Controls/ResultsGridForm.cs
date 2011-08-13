@@ -72,24 +72,26 @@ namespace pwiz.Skyline.Controls
 
         public void ChooseColumns()
         {
-            var columnChooserForm = new ColumnChooser();
-            var columns = resultsGrid.GetAvailableColumns();
-            var columnLabels = new List<String>();
-            IList<bool> columnVisibles = new List<bool>();
-            foreach (var column in columns)
+            using (var columnChooserForm = new ColumnChooser())
             {
-                columnLabels.Add(column.HeaderText);
-                columnVisibles.Add(column.Visible);
-            }
-            columnChooserForm.SetColumns(columnLabels, columnVisibles);
-            if (columnChooserForm.ShowDialog(this) == DialogResult.Cancel)
-            {
-                return;
-            }
-            columnVisibles = columnChooserForm.GetCheckedList();
-            for (int i = 0; i < columns.Count; i++)
-            {
-                columns[i].Visible = columnVisibles[i];
+                var columns = resultsGrid.GetAvailableColumns();
+                var columnLabels = new List<String>();
+                IList<bool> columnVisibles = new List<bool>();
+                foreach (var column in columns)
+                {
+                    columnLabels.Add(column.HeaderText);
+                    columnVisibles.Add(column.Visible);
+                }
+                columnChooserForm.SetColumns(columnLabels, columnVisibles);
+                if (columnChooserForm.ShowDialog(this) == DialogResult.Cancel)
+                {
+                    return;
+                }
+                columnVisibles = columnChooserForm.GetCheckedList();
+                for (int i = 0; i < columns.Count; i++)
+                {
+                    columns[i].Visible = columnVisibles[i];
+                }
             }
         }
 

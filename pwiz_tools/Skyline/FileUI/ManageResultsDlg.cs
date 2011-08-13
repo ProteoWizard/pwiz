@@ -241,13 +241,14 @@ namespace pwiz.Skyline.FileUI
                                where !ReferenceEquals(chromSet, selected.Chromatograms)
                                select chromSet.Name;
 
-            var dlg = new RenameResultDlg(selected.Chromatograms.Name, listExistingNames);
-            if (dlg.ShowDialog(this) == DialogResult.OK)
+            using (var dlg = new RenameResultDlg(selected.Chromatograms.Name, listExistingNames))
             {
-                selected.Chromatograms = (ChromatogramSet) selected.Chromatograms.ChangeName(dlg.ReplicateName);
-                listResults.Items[iFirst] = selected;
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    selected.Chromatograms = (ChromatogramSet) selected.Chromatograms.ChangeName(dlg.ReplicateName);
+                    listResults.Items[iFirst] = selected;
+                }
             }
-
             listResults.Focus();
         }
 

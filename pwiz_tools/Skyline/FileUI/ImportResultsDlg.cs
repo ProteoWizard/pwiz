@@ -194,20 +194,22 @@ namespace pwiz.Skyline.FileUI
                 string prefix = GetCommonPrefix(Array.ConvertAll(NamedPathSets, ns => ns.Key));
                 if (prefix.Length > 2)
                 {
-                    var dlgName = new ImportResultsNameDlg(prefix);
-                    var result = dlgName.ShowDialog(this);
-                    if (result == DialogResult.Cancel)
+                    using (var dlgName = new ImportResultsNameDlg(prefix))
                     {
-                        return;
-                    }
-                    else if (result == DialogResult.Yes)
-                    {
-                        // Rename all the replicates to remove the specified prefix.
-                        for (int i = 0; i < NamedPathSets.Length; i++)
+                        var result = dlgName.ShowDialog(this);
+                        if (result == DialogResult.Cancel)
                         {
-                            var namedSet = NamedPathSets[i];
-                            NamedPathSets[i] = new KeyValuePair<string, string[]>(
-                                namedSet.Key.Substring(dlgName.Prefix.Length), namedSet.Value);
+                            return;
+                        }
+                        else if (result == DialogResult.Yes)
+                        {
+                            // Rename all the replicates to remove the specified prefix.
+                            for (int i = 0; i < NamedPathSets.Length; i++)
+                            {
+                                var namedSet = NamedPathSets[i];
+                                NamedPathSets[i] = new KeyValuePair<string, string[]>(
+                                    namedSet.Key.Substring(dlgName.Prefix.Length), namedSet.Value);
+                            }
                         }
                     }
                 }
@@ -381,10 +383,12 @@ namespace pwiz.Skyline.FileUI
 
         private IEnumerable<int> ChooseSamples(string dataSource, IEnumerable<string> sampleNames)
         {
-            var dlg = new ImportResultsSamplesDlg(dataSource, sampleNames);
-            if (dlg.ShowDialog(this) == DialogResult.OK)
-                return dlg.SampleIndices;
-            return null;
+            using (var dlg = new ImportResultsSamplesDlg(dataSource, sampleNames))
+            {
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                    return dlg.SampleIndices;
+                return null;
+            }
         }
 
         public void SetDataSourcePathsDir()

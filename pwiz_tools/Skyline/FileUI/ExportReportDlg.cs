@@ -307,12 +307,14 @@ namespace pwiz.Skyline.FileUI
 
         public void ShowShare()
         {
-            var dlg = new ShareListDlg<ReportSpecList, ReportSpec>(Settings.Default.ReportSpecList)
+            using (var dlg = new ShareListDlg<ReportSpecList, ReportSpec>(Settings.Default.ReportSpecList)
                           {
                               Label = "Report Definitions",
                               Filter = REPORT_DEFINITION_FILTER
-                          };
-            dlg.ShowDialog(this);
+                          })
+            {
+                dlg.ShowDialog(this);
+            }
         }
 
         private void btnImport_Click(object sender, EventArgs e)

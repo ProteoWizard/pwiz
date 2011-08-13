@@ -556,11 +556,13 @@ namespace pwiz.Skyline.Properties
 
         public override Enzyme EditItem(Control owner, Enzyme item, IEnumerable<Enzyme> existing, object tag)
         {
-            EditEnzymeDlg editEnzyme = new EditEnzymeDlg(existing ?? this) { Enzyme = item };
-            if (editEnzyme.ShowDialog(owner) == DialogResult.OK)
-                return editEnzyme.Enzyme;
+            using (EditEnzymeDlg editEnzyme = new EditEnzymeDlg(existing ?? this) { Enzyme = item })
+            {
+                if (editEnzyme.ShowDialog(owner) == DialogResult.OK)
+                    return editEnzyme.Enzyme;
 
-            return null;
+                return null;
+            }
         }
 
         public override Enzyme CopyItem(Enzyme item)
@@ -590,11 +592,13 @@ namespace pwiz.Skyline.Properties
         public override PeptideExcludeRegex EditItem(Control owner, PeptideExcludeRegex item,
             IEnumerable<PeptideExcludeRegex> existing, object tag)
         {
-            EditExclusionDlg editExclusion = new EditExclusionDlg(existing ?? this) { Exclusion = item };
-            if (editExclusion.ShowDialog(owner) == DialogResult.OK)
-                return editExclusion.Exclusion;
+            using (EditExclusionDlg editExclusion = new EditExclusionDlg(existing ?? this) { Exclusion = item })
+            {
+                if (editExclusion.ShowDialog(owner) == DialogResult.OK)
+                    return editExclusion.Exclusion;
 
-            return null;
+                return null;
+            }
         }
 
         public override PeptideExcludeRegex CopyItem(PeptideExcludeRegex item)
@@ -617,11 +621,13 @@ namespace pwiz.Skyline.Properties
         public override LibrarySpec EditItem(Control owner, LibrarySpec item,
             IEnumerable<LibrarySpec> existing, object tag)
         {
-            EditLibraryDlg editLibrary = new EditLibraryDlg(existing ?? this) { LibrarySpec = item };
-            if (editLibrary.ShowDialog(owner) == DialogResult.OK)
-                return editLibrary.LibrarySpec;
+            using (EditLibraryDlg editLibrary = new EditLibraryDlg(existing ?? this) { LibrarySpec = item })
+            {
+                if (editLibrary.ShowDialog(owner) == DialogResult.OK)
+                    return editLibrary.LibrarySpec;
 
-            return null;
+                return null;
+            }
         }
 
         public override LibrarySpec CopyItem(LibrarySpec item)
@@ -673,13 +679,14 @@ namespace pwiz.Skyline.Properties
         public override BackgroundProteomeSpec EditItem(Control owner, BackgroundProteomeSpec item,
             IEnumerable<BackgroundProteomeSpec> existing, object tag)
         {
-            var editBackgroundProteomeDlg = new BuildBackgroundProteomeDlg(existing ?? this)
-                                                                      {BackgroundProteomeSpec = item};
-            if (editBackgroundProteomeDlg.ShowDialog(owner) == DialogResult.OK)
+            using (var editBackgroundProteomeDlg = new BuildBackgroundProteomeDlg(existing ?? this) { BackgroundProteomeSpec = item })
             {
-                return editBackgroundProteomeDlg.BackgroundProteomeSpec;
+                if (editBackgroundProteomeDlg.ShowDialog(owner) == DialogResult.OK)
+                {
+                    return editBackgroundProteomeDlg.BackgroundProteomeSpec;
+                }
+                return null;
             }
-            return null;
         }
 
         public override BackgroundProteomeSpec CopyItem(BackgroundProteomeSpec item)
@@ -731,11 +738,13 @@ namespace pwiz.Skyline.Properties
         public override StaticMod EditItem(Control owner, StaticMod item,
             IEnumerable<StaticMod> existing, object tag)
         {
-            EditStaticModDlg editMod = new EditStaticModDlg(item, existing ?? this, false);
-            if (editMod.ShowDialog(owner) == DialogResult.OK)
-                return editMod.Modification;
+            using (EditStaticModDlg editMod = new EditStaticModDlg(item, existing ?? this, false))
+            {
+                if (editMod.ShowDialog(owner) == DialogResult.OK)
+                    return editMod.Modification;
 
-            return null;
+                return null;
+            }
         }
 
         public override StaticMod CopyItem(StaticMod item)
@@ -763,14 +772,16 @@ namespace pwiz.Skyline.Properties
         public override StaticMod EditItem(Control owner, StaticMod item,
             IEnumerable<StaticMod> existing, object tag)
         {
-            EditStaticModDlg editMod = new EditStaticModDlg(item, existing ?? this, true)
+            using (EditStaticModDlg editMod = new EditStaticModDlg(item, existing ?? this, true)
                                            {
                                                Text = "Edit Isotope Modification"
-                                           };
-            if (editMod.ShowDialog(owner) == DialogResult.OK)
-                return editMod.Modification;
+                                           })
+            {
+                if (editMod.ShowDialog(owner) == DialogResult.OK)
+                    return editMod.Modification;
 
-            return null;
+                return null;
+            }
         }
 
         public override StaticMod CopyItem(StaticMod item)
@@ -890,11 +901,13 @@ namespace pwiz.Skyline.Properties
         public override CollisionEnergyRegression EditItem(Control owner, CollisionEnergyRegression item,
             IEnumerable<CollisionEnergyRegression> existing, object tag)
         {
-            EditCEDlg editCE = new EditCEDlg(existing ?? this) { Regression = item };
-            if (editCE.ShowDialog(owner) == DialogResult.OK)
-                return editCE.Regression;
+            using (EditCEDlg editCE = new EditCEDlg(existing ?? this) { Regression = item })
+            {
+                if (editCE.ShowDialog(owner) == DialogResult.OK)
+                    return editCE.Regression;
 
-            return null;
+                return null;
+            }
         }
 
         public override CollisionEnergyRegression CopyItem(CollisionEnergyRegression item)
@@ -937,11 +950,13 @@ namespace pwiz.Skyline.Properties
         public override DeclusteringPotentialRegression EditItem(Control owner, DeclusteringPotentialRegression item,
             IEnumerable<DeclusteringPotentialRegression> existing, object tag)
         {
-            EditDPDlg editDP = new EditDPDlg(existing ?? this) { Regression = item };
-            if (editDP.ShowDialog(owner) == DialogResult.OK)
-                return editDP.Regression;
+            using (EditDPDlg editDP = new EditDPDlg(existing ?? this) { Regression = item })
+            {
+                if (editDP.ShowDialog(owner) == DialogResult.OK)
+                    return editDP.Regression;
 
-            return null;
+                return null;
+            }
         }
 
         public override DeclusteringPotentialRegression CopyItem(DeclusteringPotentialRegression item)
@@ -1247,25 +1262,29 @@ namespace pwiz.Skyline.Properties
         public override ReportSpec EditItem(Control owner, ReportSpec item,
             IEnumerable<ReportSpec> existing, object tag)
         {
-            PivotReportDlg editReport = new PivotReportDlg(existing ?? this);
-
-            try
+            using (PivotReportDlg editReport = new PivotReportDlg(existing ?? this))
             {
-                var databaseProvider = tag as IReportDatabaseProvider;
-                if (databaseProvider != null)
-                    editReport.SetDatabase(databaseProvider.GetDatabase(owner));
-                editReport.SetReportSpec(item);
-                if (editReport.ShowDialog(owner) == DialogResult.OK)
+                try
                 {
-                    return editReport.GetReportSpec();
+                    var databaseProvider = tag as IReportDatabaseProvider;
+                    if (databaseProvider != null)
+                        editReport.SetDatabase(databaseProvider.GetDatabase(owner));
+                    editReport.SetReportSpec(item);
+                    if (editReport.ShowDialog(owner) == DialogResult.OK)
+                    {
+                        return editReport.GetReportSpec();
+                    }
                 }
-            }
-            catch (Exception x)
-            {
-                MessageDlg.Show(owner, string.Format("An unexpected error occurred while analyzing the current document.\n{0}", x.Message));
-            }
+                catch (Exception x)
+                {
+                    MessageDlg.Show(owner,
+                                    string.Format(
+                                        "An unexpected error occurred while analyzing the current document.\n{0}",
+                                        x.Message));
+                }
 
-            return null;
+                return null;
+            }
         }
 
         public override ReportSpec CopyItem(ReportSpec item)
@@ -1300,14 +1319,16 @@ namespace pwiz.Skyline.Properties
         public override AnnotationDef EditItem(Control owner, AnnotationDef item,
             IEnumerable<AnnotationDef> existing, object tag)
         {
-            var dlg = new DefineAnnotationDlg(existing ?? this);
-            dlg.SetAnnotationDef(item);
-            if (dlg.ShowDialog(owner) == DialogResult.OK)
+            using (var dlg = new DefineAnnotationDlg(existing ?? this))
             {
-                return dlg.GetAnnotationDef();
-            }
+                dlg.SetAnnotationDef(item);
+                if (dlg.ShowDialog(owner) == DialogResult.OK)
+                {
+                    return dlg.GetAnnotationDef();
+                }
 
-            return null;
+                return null;
+            }
         }
 
         public override AnnotationDef CopyItem(AnnotationDef item)
@@ -1375,10 +1396,12 @@ namespace pwiz.Skyline.Properties
 
         public IEnumerable<TItem> EditList(Control owner, object tag)
         {
-            var dlg = new EditListDlg<SettingsListBase<TItem>, TItem>(this, tag);
-            if (dlg.ShowDialog(owner) == DialogResult.OK)
-                return dlg.GetAll();
-            return null;
+            using (var dlg = new EditListDlg<SettingsListBase<TItem>, TItem>(this, tag))
+            {
+                if (dlg.ShowDialog(owner) == DialogResult.OK)
+                    return dlg.GetAll();
+                return null;
+            }
         }
 
         #endregion

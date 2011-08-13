@@ -1019,10 +1019,12 @@ namespace pwiz.Skyline
                     // Probably a FASTA sequence, but ask if average line length is less than 40
                     else if (stats.Mean() < 40)
                     {
-                        PasteTypeDlg dlg = new PasteTypeDlg();
-                        if (dlg.ShowDialog(this) == DialogResult.Cancel)
-                            return;
-                        peptideList = dlg.PeptideList;
+                        using (PasteTypeDlg dlg = new PasteTypeDlg())
+                        {
+                            if (dlg.ShowDialog(this) == DialogResult.Cancel)
+                                return;
+                            peptideList = dlg.PeptideList;
+                        }
                     }
                 }
 
@@ -1091,15 +1093,17 @@ namespace pwiz.Skyline
             // If filtered peptides, ask the user whether to filter or keep.
             if (listFilterPeptides.Count > 0)
             {
-                var dlg = new PasteFilteredPeptidesDlg { Peptides = listFilterPeptides };
-                switch (dlg.ShowDialog(this))
+                using (var dlg = new PasteFilteredPeptidesDlg { Peptides = listFilterPeptides })
                 {
-                    case DialogResult.Cancel:
-                        return null;
-                    case DialogResult.Yes:
-                        if (listAcceptPeptides.Count == 0)
+                    switch (dlg.ShowDialog(this))
+                    {
+                        case DialogResult.Cancel:
                             return null;
-                        return string.Join("\n", listAcceptPeptides.ToArray());
+                        case DialogResult.Yes:
+                            if (listAcceptPeptides.Count == 0)
+                                return null;
+                            return string.Join("\n", listAcceptPeptides.ToArray());
+                    }
                 }
             }
             return string.Join("\n", listAllPeptides.ToArray());
@@ -1182,37 +1186,49 @@ namespace pwiz.Skyline
         public void EditNote()
         {
             IList<IdentityPath> selPaths = sequenceTree.SelectedPaths;
-            EditNoteDlg dlg = new EditNoteDlg
+            using (EditNoteDlg dlg = new EditNoteDlg
             {
                 Text = selPaths.Count > 1 ? "Edit Note" :
                     string.Format("Edit Note {0} {1}", ((SrmTreeNode)sequenceTree.SelectedNode).Heading, sequenceTree.SelectedNode.Text)
 
-            };
-            dlg.Init(((SrmTreeNode)sequenceTree.SelectedNode).Document, selPaths);
-
-            if (dlg.ShowDialog(this) == DialogResult.OK)
+            })
             {
-                bool clearAll = dlg.ClearAll;
-                var resultAnnotations = dlg.GetChangedAnnotations();
-                var resultColorIndex = dlg.ColorIndex;
-                string resultText = dlg.GetText();
-                if (resultColorIndex != -1)
-                    Settings.Default.AnnotationColor = dlg.ColorIndex;
-                ModifyDocument("Edit note", doc =>
+                dlg.Init(((SrmTreeNode) sequenceTree.SelectedNode).Document, selPaths);
+
+                if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    foreach (IdentityPath nodePath in selPaths)
-                    {
-                        if (Equals(nodePath.Child, SequenceTree.NODE_INSERT_ID))
-                            continue;
-                        var nodeInDoc = doc.FindNode(nodePath);
-                        var newAnnotations = clearAll ? 
-                            new Annotations(null, new KeyValuePair<string, string>[0], -1) :
-                            nodeInDoc.Annotations.MergeNewAnnotations(resultText, resultColorIndex, resultAnnotations);
-                        doc = (SrmDocument) doc.ReplaceChild(nodePath.Parent, 
-                            nodeInDoc.ChangeAnnotations(newAnnotations));
-                    }
-                    return doc;
-                });
+                    bool clearAll = dlg.ClearAll;
+                    var resultAnnotations = dlg.GetChangedAnnotations();
+                    var resultColorIndex = dlg.ColorIndex;
+                    string resultText = dlg.GetText();
+                    if (resultColorIndex != -1)
+                        Settings.Default.AnnotationColor = dlg.ColorIndex;
+                    ModifyDocument("Edit note", doc =>
+                                                    {
+                                                        foreach (IdentityPath nodePath in selPaths)
+                                                        {
+                                                            if (Equals(nodePath.Child, SequenceTree.NODE_INSERT_ID))
+                                                                continue;
+                                                            var nodeInDoc = doc.FindNode(nodePath);
+                                                            var newAnnotations = clearAll
+                                                                                     ? new Annotations(null,
+                                                                                                       new KeyValuePair
+                                                                                                           <string,
+                                                                                                           string>[0],
+                                                                                                       -1)
+                                                                                     : nodeInDoc.Annotations.
+                                                                                           MergeNewAnnotations(
+                                                                                               resultText,
+                                                                                               resultColorIndex,
+                                                                                               resultAnnotations);
+                                                            doc = (SrmDocument) doc.ReplaceChild(nodePath.Parent,
+                                                                                                 nodeInDoc.
+                                                                                                     ChangeAnnotations(
+                                                                                                         newAnnotations));
+                                                        }
+                                                        return doc;
+                                                    });
+                }
             }
         }
 
@@ -1456,15 +1472,20 @@ namespace pwiz.Skyline
             if (nodePeptideTree != null)
             {
                 PeptideDocNode nodePeptide = nodePeptideTree.DocNode;
-                EditPepModsDlg dlg = new EditPepModsDlg(DocumentUI.Settings, nodePeptide);
-                dlg.Height = Math.Min(dlg.Height, Screen.FromControl(this).WorkingArea.Height);
-                if (dlg.ShowDialog(this) == DialogResult.OK)
+                using (EditPepModsDlg dlg = new EditPepModsDlg(DocumentUI.Settings, nodePeptide))
                 {
-                    var listStaticMods = Settings.Default.StaticModList;
-                    var listHeavyMods = Settings.Default.HeavyModList;
-                    ModifyDocument("Modify " + nodePeptideTree.Text, doc =>
-                        doc.ChangePeptideMods(nodePeptideTree.Path, dlg.ExplicitMods,
-                            dlg.IsCreateCopy, listStaticMods, listHeavyMods));
+                    dlg.Height = Math.Min(dlg.Height, Screen.FromControl(this).WorkingArea.Height);
+                    if (dlg.ShowDialog(this) == DialogResult.OK)
+                    {
+                        var listStaticMods = Settings.Default.StaticModList;
+                        var listHeavyMods = Settings.Default.HeavyModList;
+                        ModifyDocument("Modify " + nodePeptideTree.Text, doc =>
+                                                                         doc.ChangePeptideMods(nodePeptideTree.Path,
+                                                                                               dlg.ExplicitMods,
+                                                                                               dlg.IsCreateCopy,
+                                                                                               listStaticMods,
+                                                                                               listHeavyMods));
+                    }
                 }
             }
         }
@@ -1492,22 +1513,26 @@ namespace pwiz.Skyline
             {
                 return;
             }
-            UniquePeptidesDlg uniquePeptidesDlg = new UniquePeptidesDlg(this)
+            using (UniquePeptidesDlg uniquePeptidesDlg = new UniquePeptidesDlg(this)
             {
                 PeptideGroupTreeNode = peptideGroupTreeNode
-            };
-            uniquePeptidesDlg.ShowDialog(this);
+            })
+            {
+                uniquePeptidesDlg.ShowDialog(this);
+            }
         }
 
         private void insertFASTAToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var pasteDlg = new PasteDlg(this)
+            using (var pasteDlg = new PasteDlg(this)
             {
                 SelectedPath = SelectedPath,
                 PasteFormat = PasteFormat.fasta
-            };
-            if (pasteDlg.ShowDialog(this) == DialogResult.OK)
-                SelectedPath = pasteDlg.SelectedPath;
+            })
+            {
+                if (pasteDlg.ShowDialog(this) == DialogResult.OK)
+                    SelectedPath = pasteDlg.SelectedPath;
+            }
         }
 
         private void insertPeptidesToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1517,13 +1542,15 @@ namespace pwiz.Skyline
 
        public void ShowPastePeptidesDlg()
        {
-           var pasteDlg = new PasteDlg(this)
+           using (var pasteDlg = new PasteDlg(this)
            {
                SelectedPath = SelectedPath,
                PasteFormat = PasteFormat.peptide_list
-           };
-           if (pasteDlg.ShowDialog(this) == DialogResult.OK)
-               SelectedPath = pasteDlg.SelectedPath;
+           })
+           {
+               if (pasteDlg.ShowDialog(this) == DialogResult.OK)
+                   SelectedPath = pasteDlg.SelectedPath;
+           }
        }
 
         private void insertProteinsToolStripMenuItem_Click(object sender, EventArgs e)
@@ -1533,13 +1560,15 @@ namespace pwiz.Skyline
 
         public void ShowPasteProteinsDlg()
         {
-            var pasteDlg = new PasteDlg(this)
+            using (var pasteDlg = new PasteDlg(this)
             {
                 SelectedPath = SelectedPath,
                 PasteFormat = PasteFormat.protein_list
-            };
-            if (pasteDlg.ShowDialog(this) == DialogResult.OK)
-                SelectedPath = pasteDlg.SelectedPath;
+            })
+            {
+                if (pasteDlg.ShowDialog(this) == DialogResult.OK)
+                    SelectedPath = pasteDlg.SelectedPath;
+            }
         }
 
         private void insertTransitionListMenuItem_Click(object sender, EventArgs e)
@@ -1549,13 +1578,15 @@ namespace pwiz.Skyline
        
         public void ShowPasteTransitionListDlg()
         {
-            var pasteDlg = new PasteDlg(this)
+            using (var pasteDlg = new PasteDlg(this)
             {
                 SelectedPath = SelectedPath,
                 PasteFormat = PasteFormat.transition_list
-            };
-            if (pasteDlg.ShowDialog(this) == DialogResult.OK)
-                SelectedPath = pasteDlg.SelectedPath;
+            })
+            {
+                if (pasteDlg.ShowDialog(this) == DialogResult.OK)
+                    SelectedPath = pasteDlg.SelectedPath;
+            }
         }
 
         private void refineMenuItem_Click(object sender, EventArgs e)
@@ -1565,10 +1596,12 @@ namespace pwiz.Skyline
 
         public void ShowRefineDlg()
         {
-            var refineDlg = new RefineDlg(DocumentUI);
-            if (refineDlg.ShowDialog(this) == DialogResult.OK)
+            using (var refineDlg = new RefineDlg(DocumentUI))
             {
-                ModifyDocument("Refine", doc => refineDlg.RefinementSettings.Refine(doc));
+                if (refineDlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    ModifyDocument("Refine", doc => refineDlg.RefinementSettings.Refine(doc));
+                }
             }
         }
 
@@ -1602,14 +1635,16 @@ namespace pwiz.Skyline
 
         private void acceptPeptidesMenuItem_Click(object sender, EventArgs e)
         {
-            var dlg = new RefineListDlg(DocumentUI);
-            if (dlg.ShowDialog(this) == DialogResult.OK)
+            using (var dlg = new RefineListDlg(DocumentUI))
             {
-                var refinementSettings = new RefinementSettings{ AcceptedPeptides = dlg.AcceptedPeptides };
-                if (dlg.RemoveEmptyProteins)
-                    refinementSettings.MinPeptidesPerProtein = 1;
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    var refinementSettings = new RefinementSettings {AcceptedPeptides = dlg.AcceptedPeptides};
+                    if (dlg.RemoveEmptyProteins)
+                        refinementSettings.MinPeptidesPerProtein = 1;
 
-                ModifyDocument("Accept peptides", refinementSettings.Refine);
+                    ModifyDocument("Accept peptides", refinementSettings.Refine);
+                }
             }
         }
 
@@ -1729,8 +1764,10 @@ namespace pwiz.Skyline
 
         private void shareSettingsMenuItem_Click(object sender, EventArgs e)
         {
-            var dlg = new ShareListDlg<SrmSettingsList, SrmSettings>(Settings.Default.SrmSettingsList);
-            dlg.ShowDialog(this);
+            using (var dlg = new ShareListDlg<SrmSettingsList, SrmSettings>(Settings.Default.SrmSettingsList))
+            {
+                dlg.ShowDialog(this);
+            }
         }
 
         private void importSettingsMenuItem1_Click(object sender, EventArgs e)
@@ -1751,11 +1788,13 @@ namespace pwiz.Skyline
 
         public void ShowPeptideSettingsUI(PeptideSettingsUI.TABS? tab)
         {
-            PeptideSettingsUI ps = new PeptideSettingsUI(this, _libraryManager) {TabControlSel = tab};
-            if (ps.ShowDialog(this) == DialogResult.OK)
+            using (PeptideSettingsUI ps = new PeptideSettingsUI(this, _libraryManager) { TabControlSel = tab })
             {
-                if (ps.IsShowLibraryExplorer)
-                    OwnedForms[OwnedForms.IndexOf(form => form is ViewLibraryDlg)].Activate();
+                if (ps.ShowDialog(this) == DialogResult.OK)
+                {
+                    if (ps.IsShowLibraryExplorer)
+                        OwnedForms[OwnedForms.IndexOf(form => form is ViewLibraryDlg)].Activate();
+                }
             }
 
             // In case user shows/hides things via the Spectral Library 
@@ -1770,10 +1809,12 @@ namespace pwiz.Skyline
 
         public void ShowTransitionSettingsUI()
         {
-            TransitionSettingsUI ts = new TransitionSettingsUI(this);
-            if (ts.ShowDialog(this) == DialogResult.OK)
+            using (TransitionSettingsUI ts = new TransitionSettingsUI(this))
             {
-                // At this point the dialog does everything by itself.
+                if (ts.ShowDialog(this) == DialogResult.OK)
+                {
+                    // At this point the dialog does everything by itself.
+                }
             }
         }
 
@@ -1824,22 +1865,24 @@ namespace pwiz.Skyline
 
         private bool SaveSettings()
         {
-            SaveSettingsDlg ss = new SaveSettingsDlg();
-            if (ss.ShowDialog(this) != DialogResult.OK)
-                return false;
+            using (SaveSettingsDlg ss = new SaveSettingsDlg())
+            {
+                if (ss.ShowDialog(this) != DialogResult.OK)
+                    return false;
 
-            SrmSettings settingsNew = null;
+                SrmSettings settingsNew = null;
 
-            ModifyDocument("Name settings", doc =>
-                {
-                    settingsNew = (SrmSettings)doc.Settings.ChangeName(ss.SaveName);
-                    return doc.ChangeSettings(settingsNew);
-                });
+                ModifyDocument("Name settings", doc =>
+                                                    {
+                                                        settingsNew = (SrmSettings) doc.Settings.ChangeName(ss.SaveName);
+                                                        return doc.ChangeSettings(settingsNew);
+                                                    });
 
-            if (settingsNew != null)
-                Settings.Default.SrmSettingsList.Add(settingsNew.MakeSavable(ss.SaveName));
+                if (settingsNew != null)
+                    Settings.Default.SrmSettingsList.Add(settingsNew.MakeSavable(ss.SaveName));
 
-            return true;
+                return true;
+            }
         }
 
         private class SelectSettingsHandler
@@ -1920,8 +1963,10 @@ namespace pwiz.Skyline
 
         public void ShowAnnotationsDialog()
         {
-            var dlg = new ChooseAnnotationsDlg(this);
-            dlg.ShowDialog(this);
+            using (var dlg = new ChooseAnnotationsDlg(this))
+            {
+                 dlg.ShowDialog(this);
+            }
         }
 
         private void integrateAllMenuItem_Click(object sender, EventArgs e)
@@ -1969,7 +2014,11 @@ namespace pwiz.Skyline
 
         private void aboutMenuItem_Click(object sender, EventArgs e)
         {
-            new AboutDlg().ShowDialog(this);
+            using (var about = new AboutDlg())
+            {
+                about.ShowDialog(this);
+            }
+            
         }
 
         #endregion
@@ -2207,15 +2256,17 @@ namespace pwiz.Skyline
                                            var strNameMatches = matcher.FoundMatches;
                                 if (!string.IsNullOrEmpty(strNameMatches))
                                 {
-                                    var dlg = new MultiButtonMsgDlg(
+                                    using (var dlg = new MultiButtonMsgDlg(
                                         string.Format(
                                             "Would you like to use the Unimod definitions for the following modifications?\n\n{0}",
-                                            strNameMatches), "OK");
-                                    if (dlg.ShowDialog() == DialogResult.Cancel)
+                                            strNameMatches), "OK"))
                                     {
-                                        e.Node.Text = EmptyNode.TEXT_EMPTY;
-                                        e.Node.EnsureVisible();
-                                        return;
+                                        if (dlg.ShowDialog() == DialogResult.Cancel)
+                                        {
+                                            e.Node.Text = EmptyNode.TEXT_EMPTY;
+                                            e.Node.EnsureVisible();
+                                            return;
+                                        }
                                     }
                                 }
                                 peptideDocNodes.Add(matcher.GetModifiedNode(labelText).ChangeSettings(settings, SrmSettingsDiff.ALL));

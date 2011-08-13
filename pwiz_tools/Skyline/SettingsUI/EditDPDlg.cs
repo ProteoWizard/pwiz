@@ -170,8 +170,10 @@ namespace pwiz.Skyline.SettingsUI
                                     RegressionLine = regressionData.RegressionLine,
                                     RegressionLineCurrent = regressionData.RegressionLineSetting
                                 };
-            var dlg = new GraphRegression(new[] { graphData });
-            dlg.ShowDialog(this);
+            using (var dlg = new GraphRegression(new[] { graphData }))
+            {
+                dlg.ShowDialog(this);
+            }
         }
 
         private DPRegressionData GetRegressionData()

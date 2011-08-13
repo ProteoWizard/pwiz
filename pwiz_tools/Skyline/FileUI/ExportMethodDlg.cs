@@ -657,12 +657,14 @@ namespace pwiz.Skyline.FileUI
                 }
                 else
                 {
-                    SchedulingOptionsDlg schedulingOptionsDlg = new SchedulingOptionsDlg(_document);
-                    if (schedulingOptionsDlg.ShowDialog(this) != DialogResult.OK)
-                        return false;
+                    using (SchedulingOptionsDlg schedulingOptionsDlg = new SchedulingOptionsDlg(_document))
+                    {
+                        if (schedulingOptionsDlg.ShowDialog(this) != DialogResult.OK)
+                            return false;
 
-                    SchedulingAlgorithm = schedulingOptionsDlg.Algorithm;
-                    SchedulingReplicateNum = schedulingOptionsDlg.ReplicateNum;
+                        SchedulingAlgorithm = schedulingOptionsDlg.Algorithm;
+                        SchedulingReplicateNum = schedulingOptionsDlg.ReplicateNum;
+                    }
                 }
             }
 

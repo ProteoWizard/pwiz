@@ -339,8 +339,10 @@ namespace pwiz.Skyline.SettingsUI
                                       });
             }
 
-            var dlg = new GraphRegression(listGraphData);
-            dlg.ShowDialog(this);
+            using (var dlg = new GraphRegression(listGraphData))
+            {
+                dlg.ShowDialog(this);
+            }
         }
 
         private CERegressionData[] GetRegressionDatas()
