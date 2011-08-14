@@ -43,6 +43,7 @@ namespace pwiz.Common.DataBinding.Controls
             tbxViewName.Text = viewSpec.Name;
             ExistingCustomViewSpec =
                 viewContext.CustomViewSpecs.FirstOrDefault(customViewSpec => viewSpec.Name == customViewSpec.Name);
+            listViewColumns.SmallImageList = AggregateFunctions.GetSmallIcons();
         }
 
         public ColumnDescriptor ParentColumn { get; private set; }
@@ -120,7 +121,6 @@ namespace pwiz.Common.DataBinding.Controls
                     continue;
                 }
                 var columnSpec = columnDescriptor.GetColumnSpec();
-                columnSpec = columnSpec.SetVisible(true);
                 columnSpecs.Insert(focusedIndex + 1, columnSpec);
                 focusedIndex++;
                 addedIds.Add(idPath);
@@ -151,15 +151,16 @@ namespace pwiz.Common.DataBinding.Controls
         }
         private ListViewItem MakeListViewItem(ColumnSpec columnSpec)
         {
-            var listViewItem = new ListViewItem(columnSpec.Caption ?? columnSpec.IdentifierPath.Name);
+            var listViewItem = new ListViewItem();
             var columnDescriptor = ParentColumn.ResolveDescendant(columnSpec.IdentifierPath);
             if (columnDescriptor == null)
             {
+                listViewItem.Text = columnSpec.Caption ?? columnSpec.IdentifierPath.Name;
                 listViewItem.Font = _strikeThroughFont;
             }
-            if (!columnSpec.Visible)
+            else
             {
-                listViewItem.ForeColor = Color.LightGray;
+                listViewItem.Text = columnDescriptor.DisplayName;
             }
             return listViewItem;
         }
@@ -226,28 +227,73 @@ namespace pwiz.Common.DataBinding.Controls
             if (selectedColumns.Length == 1)
             {
                 var selectedColumn = selectedColumns[0];
-                lblCaption.Visible = tbxCaption.Visible = true;
-                tbxCaption.Text = selectedColumn.Caption;
+                groupBoxCaption.Visible = true;
+                if (selectedColumn.Caption != null)
+                {
+                    tbxCaption.Text = selectedColumn.Caption;
+                    tbxCaption.Font = new Font(tbxCaption.Font, FontStyle.Bold);
+                }
+                else
+                {
+                    var columnDescriptor = ParentColumn.ResolveDescendant(selectedColumn.IdentifierPath);
+                    if (columnDescriptor != null)
+                    {
+                        tbxCaption.Text = columnDescriptor.DefaultCaption;
+                        tbxCaption.Font = new Font(tbxCaption.Font, FontStyle.Regular);
+                    }
+                    else
+                    {
+                        tbxCaption.Text = "";
+                    }
+                }
                 availableFieldsTreeColumns.SelectColumn(selectedColumn.IdentifierPath);
             }
             else
             {
-                lblCaption.Visible = tbxCaption.Visible = false;
-            }
-            if (selectedColumns.Length == 0)
-            {
-                cbxVisible.Visible = false;
-            }
-            else
-            {
-                cbxVisible.Visible = true;
-                cbxVisible.CheckState = selectedColumns.All(columnSpec => columnSpec.Visible) ? CheckState.Checked
-                    : selectedColumns.Any(columnSpec => columnSpec.Visible) ? CheckState.Indeterminate 
-                    : CheckState.Unchecked;
+                groupBoxCaption.Visible = false;
             }
             btnRemove.Enabled = selectedColumns.Length > 0;
             btnUp.Enabled = helper.IsMoveUpEnabled();
             btnDown.Enabled = helper.IsMoveDownEnabled();
+            listViewColumns_SizeChanged(listViewColumns, new EventArgs());
+            UpdateSublistCombo();
+        }
+
+        private void UpdateSublistCombo()
+        {
+            var availableSublists = new HashSet<IdentifierPath>();
+            availableSublists.Add(IdentifierPath.Root);
+            foreach (var columnSpec in ViewSpec.Columns)
+            {
+                for (IdentifierPath idPath = columnSpec.IdentifierPath; !idPath.IsRoot; idPath = idPath.Parent)
+                {
+                    if (idPath.Name == null)
+                    {
+                        if (!availableSublists.Add(idPath))
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+            if (availableSublists.Count == 0)
+            {
+                groupBoxSublist.Visible = false;
+                return;
+            }
+            groupBoxSublist.Visible = true;
+            var sublistIdArray = availableSublists.ToArray();
+            Array.Sort(sublistIdArray);
+            comboSublist.Items.Clear();
+            foreach (var idPath in sublistIdArray)
+            {
+                string label = idPath.IsRoot ? "<none>" : idPath.ToString();
+                comboSublist.Items.Add(new SublistItem(label, idPath));
+                if (Equals(idPath, ViewSpec.SublistId))
+                {
+                    comboSublist.SelectedIndex = comboSublist.Items.Count - 1;
+                }
+            }
         }
 
         private ListViewHelper<IdentifierPath, ColumnSpec> GetColumnListHelper()
@@ -263,35 +309,37 @@ namespace pwiz.Common.DataBinding.Controls
                 .Select(id=>ParentColumn.ResolveDescendant(id)));
         }
 
-        private void cbxVisible_CheckedChanged(object sender, EventArgs e)
-        {
-            if (_inChangeView)
-            {
-                return;
-            }
-            var newVisible = cbxVisible.Checked;
-            var newColumns = ViewSpec.Columns.Select((columnSpec, index)
-                =>listViewColumns.Items[index].Selected 
-                ? columnSpec.SetVisible(newVisible)
-                : columnSpec);
-            ViewSpec = ViewSpec.SetColumns(newColumns);
-        }
-
         private void tbxCaption_Leave(object sender, EventArgs e)
         {
             if (_inChangeView)
             {
                 return;
             }
-            var newCaption = tbxCaption.Text;
-            if (string.IsNullOrEmpty(newCaption))
+            var columnSpecs = GetSelectedColumns();
+            if (columnSpecs.Length != 1)
             {
-                newCaption = null;
+                return;
             }
-            var newColumns = ViewSpec.Columns.Select((columnSpec, index)
-                => listViewColumns.Items[index].Selected
-                ? columnSpec.SetCaption(newCaption)
-                : columnSpec);
+            string newValue = tbxCaption.Text;
+            if (Equals(newValue, columnSpecs[0].Caption))
+            {
+                return;
+            }
+            var columnDescriptor = ParentColumn.ResolveDescendant(columnSpecs[0].IdentifierPath);
+            if (columnDescriptor != null)
+            {
+                if (Equals(newValue, columnDescriptor.DefaultCaption))
+                {
+                    newValue = null;
+                }
+            }
+            if (Equals(newValue, columnSpecs[0].Caption))
+            {
+                return;
+            }
+            var newColumns = ViewSpec.Columns.ToArray();
+            newColumns[listViewColumns.SelectedIndices[0]] 
+                = columnSpecs[0].SetCaption(newValue);
             ViewSpec = ViewSpec.SetColumns(newColumns);
         }
 
@@ -321,6 +369,47 @@ namespace pwiz.Common.DataBinding.Controls
         private void listViewColumns_SizeChanged(object sender, EventArgs e)
         {
             listViewColumns.Columns[0].Width = listViewColumns.ClientSize.Width - SystemInformation.VerticalScrollBarWidth;
+        }
+        class AggregateItem
+        {
+            public AggregateItem(string displayName, IAggregateFunction function, Image image)
+            {
+                DisplayName = displayName;
+                Function = function;
+                Image = image;
+            }
+            public string DisplayName { get; set; }
+            public IAggregateFunction Function { get; set; }
+            public Image Image { get; set; }
+            public int ImageIndex { get; set; }
+            public override string ToString() { return DisplayName; }
+        }
+        class SublistItem
+        {
+            public SublistItem(string displayName, IdentifierPath identifierPath)
+            {
+                DisplayName = displayName;
+                IdentifierPath = identifierPath;
+            }
+            public string DisplayName { get; set; }
+            public override string ToString()
+            {
+                return DisplayName;
+            }
+            public IdentifierPath IdentifierPath { get; private set; }
+        }
+
+        private void comboSublist_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (_inChangeView)
+            {
+                return;
+            }
+            var sublistItem = comboSublist.SelectedItem as SublistItem;
+            if (sublistItem != null)
+            {
+                ViewSpec = _viewSpec.SetSublistId(sublistItem.IdentifierPath);
+            }
         }
     }
 }

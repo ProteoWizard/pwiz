@@ -20,27 +20,10 @@ using System;
 
 namespace pwiz.Common.DataBinding
 {
-    /// <summary>
-    /// An object which should be displayed as a hyperlink in a DataGridView.
-    /// </summary>
-    public interface ILinkValue
+    [AttributeUsage(AttributeTargets.Property|AttributeTargets.Class)]
+    public class MapAttribute : Attribute
     {
-        EventHandler ClickEventHandler { get; }
+        public string KeyName { get; set; }
+        public string ValueName { get; set; }
     }
-    public struct LinkValue<T> : ILinkValue
-    {
-        public LinkValue(T value, EventHandler clickEventHandler) : this()
-        {
-            Value = value;
-            ClickEventHandler = clickEventHandler;
-        }
-
-        public T Value { get; private set; }
-        public EventHandler ClickEventHandler { get; private set; }
-        public override string ToString()
-        {
-            return ReferenceEquals(null, Value) ? "" : Value.ToString();
-        }
-    }
-
 }

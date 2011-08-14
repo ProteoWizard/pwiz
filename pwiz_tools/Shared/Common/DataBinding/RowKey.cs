@@ -19,25 +19,38 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using pwiz.Common.Collections;
 
 namespace pwiz.Common.DataBinding
 {
     /// <summary>
     /// Holds a set of values for when a DataGridView has expanded a One-To-Many relationship.
     /// </summary>
-    public class RowKey : ImmutableDictionary<IdentifierPath, object>
+    public class RowKey
     {
-        private RowKey(IDictionary<IdentifierPath, object> dict) : base(dict)
+        public RowKey(RowKey parent, IdentifierPath identifierPath, object value)
         {
+            Parent = parent;
+            IdentifierPath = identifierPath;
+            Value = value;
         }
-        public RowKey Of(IEnumerable<KeyValuePair<IdentifierPath, object>> values)
+
+        public RowKey Parent { get; private set; }
+        public IdentifierPath IdentifierPath { get; private set; }
+        public object Value { get; private set; }
+
+        public object FindValue(IdentifierPath key)
         {
-            var dict = new Dictionary<IdentifierPath, object>();
-            dict.Union(values);
-            return new RowKey(dict);
+            if (IdentifierPath.Equals(key))
+            {
+                return Value;
+            }
+            if (Parent != null && key.Length < IdentifierPath.Length)
+            {
+                return Parent.FindValue(key);
+            }
+            return null;
         }
+        
         #region object overrides
 
         public bool Equals(RowKey other)
@@ -50,7 +63,7 @@ namespace pwiz.Common.DataBinding
             {
                 return true;
             }
-            return CollectionUtil.EqualsDeep(this, other);
+            return Equals(Parent, other.Parent) && Equals(IdentifierPath, other.IdentifierPath) && Equals(Value, other.Value);
         }
 
         public override bool Equals(object obj)
@@ -63,8 +76,62 @@ namespace pwiz.Common.DataBinding
 
         public override int GetHashCode()
         {
-            return CollectionUtil.GetHashCodeDeep(this);
+            unchecked
+            {
+                int result = 0;
+                if (Parent != null)
+                {
+                    result = result*397 ^ Parent.GetHashCode();
+                }
+                result = result*397 ^ IdentifierPath.GetHashCode();
+                result = result*397 ^ (ReferenceEquals(Value, null) ? 0 : Value.GetHashCode());
+                return result;
+            }
         }
         #endregion
+
+        public static Comparison<RowKey> GetComparison(DataSchema dataSchema, IEnumerable<IdentifierPath> keys)
+        {
+            var sortedKeys = keys.ToArray();
+            Array.Sort(sortedKeys);
+            return (rowKey1, rowKey2) =>
+                       {
+                           foreach (var key in sortedKeys)
+                           {
+                               var result = dataSchema.Compare(rowKey1.FindValue(key), rowKey2.FindValue(key));
+                               if (result != 0)
+                               {
+                                   return result;
+                               }
+                           }
+                           return 0;
+                       };
+        }
+        public static IdentifierPath QualifyIdentifierPath(RowKey rowKey, IdentifierPath identifierPath)
+        {
+            if (rowKey == null)
+            {
+                return identifierPath;
+            }
+            string[] parts = new string[identifierPath.Length];
+            while (identifierPath.Length > 0)
+            {
+                parts[identifierPath.Length - 1] = identifierPath.Name;
+                identifierPath = identifierPath.Parent;
+            }
+            while (rowKey != null)
+            {
+                if (rowKey.IdentifierPath.Length <= parts.Length)
+                {
+                    parts[rowKey.IdentifierPath.Length - 1] = rowKey.Value.ToString();
+                }
+                rowKey = rowKey.Parent;
+            }
+            foreach (var part in parts)
+            {
+                identifierPath = new IdentifierPath(identifierPath, part);
+            }
+            return identifierPath;
+        }
     }
 }

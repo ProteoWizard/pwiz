@@ -54,7 +54,6 @@ namespace pwiz.Topograph.ui.Forms
             this.dataGridView.ReadOnly = true;
             this.dataGridView.Size = new System.Drawing.Size(941, 535);
             this.dataGridView.TabIndex = 0;
-            this.dataGridView.RowHeaderMouseDoubleClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView_RowHeaderMouseDoubleClick);
             // 
             // tableLayoutPanel1
             // 

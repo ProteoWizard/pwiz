@@ -36,8 +36,8 @@ namespace pwiz.Topograph.ui
 {
     public class TopographViewContext : AbstractViewContext
     {
-        public TopographViewContext(DataGridView dataGridView, Workspace workspace, Type rowType, IEnumerable<ViewSpec> builtInViews) 
-            : base(new ColumnDescriptor(new TopographDataSchema(workspace), rowType), dataGridView)
+        public TopographViewContext(Workspace workspace, Type rowType, IEnumerable<ViewSpec> builtInViews) 
+            : base(new ColumnDescriptor(new TopographDataSchema(workspace), rowType))
         {
             Workspace = workspace;
             BuiltInViewSpecs = builtInViews;
@@ -45,6 +45,17 @@ namespace pwiz.Topograph.ui
 
         public Type RowType { get { return ParentColumn.PropertyType; } }
         public Workspace Workspace { get; private set; }
+        public new IEnumerable<ViewSpec> BuiltInViewSpecs 
+        {
+            get
+            {
+                return base.BuiltInViewSpecs;
+            }
+            set
+            {
+                base.BuiltInViewSpecs = value;
+            }
+        }
 
         public override string GetExportDirectory()
         {

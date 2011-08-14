@@ -45,22 +45,30 @@ namespace pwiz.Common.DataBinding
             DataSchema = parentColumn.DataSchema;
             Name = viewSpec.Name;
             var columnSpecs = viewSpec.Columns.ToDictionary(c => c.IdentifierPath, c => c);
-            ColumnDescriptors = new ReadOnlyCollection<ColumnDescriptor>(viewSpec.Columns
+            _columnDescriptors.Add(parentColumn.IdPath, parentColumn);
+            ColumnDescriptors = Array.AsReadOnly(viewSpec.Columns
                 .Select(c => GetColumnDescriptor(columnSpecs, c.IdentifierPath)).ToArray());
-            CrosstabColumns =
-                new ReadOnlyCollection<ColumnDescriptor>(ColumnDescriptors.Where(c => c.Crosstab).ToArray());
-            UnboundColumns =
-                new ReadOnlyCollection<ColumnDescriptor>(
-                    _columnDescriptors.Values.Where(c => c.IsUnbound() && c.Parent != null && !c.Parent.Crosstab).ToArray());
+            SublistId = viewSpec.SublistId;
         }
 
         public DataSchema DataSchema { get; private set; }
         public ColumnDescriptor ParentColumn { get; private set; }
         public string Name { get; private set; }
+        public IdentifierPath SublistId { get; private set; }
         public IList<ColumnDescriptor> ColumnDescriptors { get; private set; }
-        public IList<ColumnDescriptor> CrosstabColumns { get; private set; }
-        public IList<ColumnDescriptor> UnboundColumns { get; private set; }
         public IEnumerable<ColumnDescriptor> AllColumnDescriptors { get { return _columnDescriptors.Values.ToArray(); } }
+        public ICollection<ColumnDescriptor> GetCollectionColumns()
+        {
+            var unboundColumnSet = new HashSet<ColumnDescriptor>();
+            foreach (var columnDescriptor in ColumnDescriptors)
+            {
+                for (var unboundParent = columnDescriptor.FirstUnboundParent(); unboundParent != null; unboundParent = unboundParent.Parent.FirstUnboundParent())
+                {
+                    unboundColumnSet.Add(unboundParent);
+                }
+            }
+            return unboundColumnSet;
+        }
         private ColumnDescriptor GetColumnDescriptor(IDictionary<IdentifierPath, ColumnSpec> columnSpecs, IdentifierPath idPath)
         {
             ColumnDescriptor columnDescriptor;
@@ -68,11 +76,7 @@ namespace pwiz.Common.DataBinding
             {
                 return columnDescriptor;
             }
-            ColumnDescriptor parent = ParentColumn;
-            if (idPath.Parent != null)
-            {
-                parent = GetColumnDescriptor(columnSpecs, idPath.Parent);
-            }
+            var parent = GetColumnDescriptor(columnSpecs, idPath.Parent);
             if (parent == null)
             {
                 throw new InvalidOperationException("Could not resolve path " + idPath);

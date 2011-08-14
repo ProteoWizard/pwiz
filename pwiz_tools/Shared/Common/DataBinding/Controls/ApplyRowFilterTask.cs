@@ -19,70 +19,70 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using pwiz.Common.SystemUtil;
 
 namespace pwiz.Common.DataBinding.Controls
 {
-    internal class ApplyRowFilterTask : IDisposable
+    internal class ApplyRowFilterTask : MustDispose
     {
-        private bool _disposed;
-        private object[] _rows;
+        private RowItem[] _rows;
         private PropertyDescriptor[] _properties;
-        public ApplyRowFilterTask(NavBar owner, object[] rows, PropertyDescriptor[] properties, string filterText)
+        public ApplyRowFilterTask(RowItem[] rows, PropertyDescriptor[] properties, string filterText)
         {
-            Owner = owner;
             _rows = rows;
             _properties = properties;
             FilterText = filterText;
-        }
-        public NavBar Owner { get; private set; }
-        private bool Disposed
-        {
-            get
-            {
-                lock(this)
-                {
-                    return _disposed;
-                }
-            }
-            set
-            {
-                lock(this)
-                {
-                    _disposed = value;
-                }
-            }
-        }
-        public void Dispose()
-        {
-            Disposed = true;
         }
         public string FilterText
         { 
             get; private set;
         }
+        public RowItem[] FilteredRows { get; private set; }
         public void FilterBackground()
         {
-            var filteredRows = new List<object>();
+            var filteredRows = new List<RowItem>();
+            // toString on an enum is incredibly slow, so we cache the results in 
+            // in a dictionary.
+            var toStringCaches = new Dictionary<object, string>[_properties.Length];
+            for (int i = 0; i < _properties.Length; i++ )
+            {
+                if (_properties[i].PropertyType.IsEnum)
+                {
+                    toStringCaches[i] = new Dictionary<object, string>();
+                }
+            }
             foreach (var row in _rows)
             {
-                if (Disposed)
+                CheckDisposed();
+                for (int i = 0; i < _properties.Length; i++) 
                 {
-                    return;
-                }
-                foreach (var property in _properties)
-                {
+                    var property = _properties[i];
                     var value = property.GetValue(row);
                     if (value == null)
                     {
                         continue;
                     }
-                    if (value.ToString().IndexOf(FilterText) >= 0)
+                    var cache = toStringCaches[i];
+                    string strValue;
+                    if (cache == null)
+                    {
+                        strValue = value.ToString();
+                    }
+                    else
+                    {
+                        if (!cache.TryGetValue(value, out strValue))
+                        {
+                            strValue = value.ToString();
+                            cache.Add(value, strValue);
+                        }
+                    }
+                    if (strValue.IndexOf(FilterText) >= 0)
                     {
                         filteredRows.Add(row);
                     }
-                } 
+                }
             }
-            Owner.SetFilteredRows(this, filteredRows);
+            FilteredRows = filteredRows.ToArray();
         }
     }
 }

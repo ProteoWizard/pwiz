@@ -22,7 +22,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
-using System.Text;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
@@ -35,15 +34,14 @@ namespace pwiz.Common.DataBinding
     {
         public ColumnSpec()
         {
-            Visible = true;
         }
         public ColumnSpec(ColumnSpec that)
         {
             Name = that.Name;
             Caption = that.Caption;
             Format = that.Format;
-            Crosstab = that.Crosstab;
-            Visible = that.Visible;
+            Aggregate = that.Aggregate;
+            Hidden = that.Hidden;
         }
         public string Name { get; private set; }
         public ColumnSpec SetName(string value)
@@ -60,16 +58,15 @@ namespace pwiz.Common.DataBinding
         {
             return new ColumnSpec(this){Format = value};
         }
-        public bool Crosstab { get; private set; }
-        public ColumnSpec SetCrosstab(bool value)
+        public string Aggregate { get; private set; }
+        public ColumnSpec SetAggregate(string value)
         {
-            return new ColumnSpec(this){Crosstab = value};
+            return new ColumnSpec(this) {Aggregate = value};
         }
-        [DefaultValue(true)]
-        public bool Visible { get; private set; }
-        public ColumnSpec SetVisible(bool value)
+        public bool Hidden { get; private set; }
+        public ColumnSpec SetHidden(bool value)
         {
-            return new ColumnSpec(this){Visible = value};
+            return new ColumnSpec(this) {Hidden = value};
         }
         [XmlIgnore]
         public IdentifierPath IdentifierPath
@@ -86,8 +83,8 @@ namespace pwiz.Common.DataBinding
             columnSpec.Name = reader.GetAttribute("name");
             columnSpec.Caption = reader.GetAttribute("caption");
             columnSpec.Format = reader.GetAttribute("format");
-            columnSpec.Crosstab = Boolean.Parse(reader.GetAttribute("crosstab") ?? "false");
-            columnSpec.Visible = Boolean.Parse(reader.GetAttribute("visible") ?? "true");
+            columnSpec.Hidden = "true" == reader.GetAttribute("hidden");
+            
             bool empty = reader.IsEmptyElement;
             reader.ReadElementString("column");
             if (!empty)
@@ -111,13 +108,13 @@ namespace pwiz.Common.DataBinding
             {
                 writer.WriteAttributeString("format", Format);
             }
-            if (Crosstab)
+            if (Hidden)
             {
-                writer.WriteAttributeString("crosstab", Crosstab.ToString());
+                writer.WriteAttributeString("hidden", "true");
             }
-            if (!Visible)
+            if (Aggregate != null)
             {
-                writer.WriteAttributeString("visible", Visible.ToString());
+                writer.WriteAttributeString("aggregate", Aggregate);
             }
         }
 
@@ -127,9 +124,9 @@ namespace pwiz.Common.DataBinding
             if (ReferenceEquals(this, other)) return true;
             return Equals(other.Name, Name) 
                 && Equals(other.Caption, Caption) 
-                && Equals(other.Format, Format) 
-                && other.Crosstab.Equals(Crosstab) 
-                && other.Visible.Equals(Visible);
+                && Equals(other.Format, Format)
+                && Equals(other.Hidden, Hidden)
+                && Equals(other.Aggregate, Aggregate);
         }
 
         public override bool Equals(object obj)
@@ -147,8 +144,8 @@ namespace pwiz.Common.DataBinding
                 int result = Name.GetHashCode();
                 result = (result*397) ^ (Caption != null ? Caption.GetHashCode() : 0);
                 result = (result*397) ^ (Format != null ? Format.GetHashCode() : 0);
-                result = (result*397) ^ Crosstab.GetHashCode();
-                result = (result*397) ^ Visible.GetHashCode();
+                result = (result*397) ^ (Aggregate != null ? Aggregate.GetHashCode() : 0);
+                result = (result*397) ^ Hidden.GetHashCode();
                 return result;
             }
         }
@@ -225,6 +222,7 @@ namespace pwiz.Common.DataBinding
             }
         }
     }
+
     /// <summary>
     /// Models a user's customization of a view.
     /// A view has a list of columns to display.  It also can have a filter and sort to be applied (NYI).
@@ -241,6 +239,7 @@ namespace pwiz.Common.DataBinding
             Name = that.Name;
             Columns = that.Columns;
             Sorts = that.Sorts;
+            SublistName = that.SublistName;
         }
         public string Name { get; private set; }
         public ViewSpec SetName(string value)
@@ -252,7 +251,7 @@ namespace pwiz.Common.DataBinding
         {
             return new ViewSpec(this)
                        {
-                           Columns = new ReadOnlyCollection<ColumnSpec>(value.ToArray())
+                           Columns = Array.AsReadOnly(value.ToArray())
                        };
         }
         public IList<SortSpec> Sorts { get; private set; }
@@ -260,13 +259,24 @@ namespace pwiz.Common.DataBinding
         {
             return new ViewSpec(this)
                        {
-                           Sorts = new ReadOnlyCollection<SortSpec>(value.ToArray())
+                           Sorts = Array.AsReadOnly(value.ToArray())
                        };
+        }
+        public string SublistName { get; private set; }
+        public IdentifierPath SublistId
+        {
+            get { return IdentifierPath.Parse(SublistName); }
+            set { SublistName = value.ToString(); }
+        }
+        public ViewSpec SetSublistId(IdentifierPath sublistId)
+        {
+            return new ViewSpec(this){SublistId = sublistId};
         }
         public static ViewSpec ReadXml(XmlReader reader)
         {
             var viewSpec = new ViewSpec();
             viewSpec.Name = reader.GetAttribute("name");
+            viewSpec.SublistName = reader.GetAttribute("sublist");
             var columns = new List<ColumnSpec>();
             var sorts = new List<SortSpec>();
             if (reader.IsEmptyElement)
@@ -306,6 +316,10 @@ namespace pwiz.Common.DataBinding
             {
                 writer.WriteAttributeString("name", Name);
             }
+            if (SublistName != null)
+            {
+                writer.WriteAttributeString("sublist", SublistName);
+            }
             foreach (var column in Columns)
             {
                 writer.WriteStartElement("column");
@@ -324,8 +338,10 @@ namespace pwiz.Common.DataBinding
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Equals(other.Name, Name) &&
-                   Columns.SequenceEqual(other.Columns);
+            return Equals(other.Name, Name)
+                   && Columns.SequenceEqual(other.Columns)
+                   && Sorts.SequenceEqual(other.Sorts)
+                   && SublistId.Equals(other.SublistId);
         }
 
         public override bool Equals(object obj)
@@ -343,6 +359,7 @@ namespace pwiz.Common.DataBinding
                 int result = (Name != null ? Name.GetHashCode() : 0);
                 result = (result*397) ^ CollectionUtil.GetHashCodeDeep(Columns);
                 result = (result*397) ^ CollectionUtil.GetHashCodeDeep(Sorts);
+                result = (result*397) ^ SublistId.GetHashCode();
                 return result;
             }
         }

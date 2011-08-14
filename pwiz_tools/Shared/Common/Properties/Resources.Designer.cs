@@ -60,6 +60,62 @@ namespace pwiz.Common.Properties {
             }
         }
         
+        internal static System.Drawing.Bitmap agg_count {
+            get {
+                object obj = ResourceManager.GetObject("agg_count", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap agg_groupby {
+            get {
+                object obj = ResourceManager.GetObject("agg_groupby", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap agg_max {
+            get {
+                object obj = ResourceManager.GetObject("agg_max", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap agg_mean {
+            get {
+                object obj = ResourceManager.GetObject("agg_mean", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap agg_median {
+            get {
+                object obj = ResourceManager.GetObject("agg_median", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap agg_min {
+            get {
+                object obj = ResourceManager.GetObject("agg_min", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap agg_stddev {
+            get {
+                object obj = ResourceManager.GetObject("agg_stddev", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap agg_sum {
+            get {
+                object obj = ResourceManager.GetObject("agg_sum", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         internal static System.Drawing.Bitmap Delete {
             get {
                 object obj = ResourceManager.GetObject("Delete", resourceCulture);

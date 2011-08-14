@@ -17,11 +17,8 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
-using pwiz.Common.Collections;
 
 namespace pwiz.Common.DataBinding
 {
@@ -31,12 +28,20 @@ namespace pwiz.Common.DataBinding
     /// </summary>
     public class IdentifierPath : IComparable<IdentifierPath>
     {
+        public static readonly IdentifierPath Root = new IdentifierPath();
         public IdentifierPath(IdentifierPath parent, string name)
         {
             Parent = parent;
             Name = name;
-            Length = Parent == null ? 1 : 1 + Parent.Length;
+            Length = 1 + Parent.Length;
         }
+        private IdentifierPath()
+        {
+            Parent = null;
+            Name = null;
+            Length = 0;
+        }
+        public bool IsRoot { get { return ReferenceEquals(this, Root); } }
         public IdentifierPath Parent { get; private set; }
         public string Name { get; private set; }
         public int Length { get; private set; }
@@ -46,25 +51,16 @@ namespace pwiz.Common.DataBinding
             {
                 return 1;
             }
-            int result;
             if (Length > that.Length)
             {
-                result = Parent.CompareTo(that);
-                if (result != 0)
-                {
-                    return result;
-                }
-                return 1;
+                return -that.CompareTo(this);
             }
-            if (Length < that.Length)
+            int defResult = Length < that.Length ? -1 : 0;
+            while (Length < that.Length)
             {
-                result = that.Parent.CompareTo(this);
-                if (result != 0)
-                {
-                    return result;
-                }
-                return -1;
+                that = that.Parent;
             }
+            int result;
             if (Length > 1)
             {
                 result = Parent.CompareTo(that.Parent);
@@ -75,9 +71,14 @@ namespace pwiz.Common.DataBinding
             }
             if (Name == null)
             {
-                return that.Name == null ? 0 : -1;
+                return that.Name == null ? defResult : -1;
             }
-            return Name.CompareTo(that.Name);
+            result = Name.CompareTo(that.Name);
+            if (result != 0)
+            {
+                return result;
+            }
+            return defResult;
         }
         public bool StartsWith(IdentifierPath that)
         {
@@ -95,17 +96,13 @@ namespace pwiz.Common.DataBinding
             }
             return Parent.StartsWith(that);
         }
-        public IdentifierPath RemoveHead(int length)
-        {
-            if (length >= Length)
-            {
-                return null;
-            }
-            return new IdentifierPath(Parent.RemoveHead(length), Name);
-        }
         public override string ToString()
         {
-            if (Parent == null)
+            if (IsRoot)
+            {
+                return "";
+            }
+            if (Parent.IsRoot)
             {
                 return EscapeIfNeeded(Name);
             }
@@ -115,9 +112,9 @@ namespace pwiz.Common.DataBinding
         {
             if (string.IsNullOrEmpty(path))
             {
-                return null;
+                return Root;
             }
-            IdentifierPath current = null;
+            IdentifierPath current = Root;
             int lastIndex = 0;
             while (true)
             {
@@ -131,6 +128,7 @@ namespace pwiz.Common.DataBinding
                         {
                             throw new ArgumentException("Invalid character at " + lastIndex);
                         }
+                        lastIndex++;
                         name = null;
                         break;
                     case '"':
@@ -215,7 +213,7 @@ namespace pwiz.Common.DataBinding
         {
             unchecked
             {
-                return ((Parent != null ? Parent.GetHashCode() : 0)*397) ^ Name.GetHashCode();
+                return ((Parent != null ? Parent.GetHashCode() : 0)*397) ^ (Name == null ? 0 : Name.GetHashCode());
             }
         }
 
@@ -248,6 +246,7 @@ namespace pwiz.Common.DataBinding
                     result.Append(ch);
                 }
             }
+            result.Append("\"");
             return result.ToString();
         }
         public static string EscapeIfNeeded(string text)

@@ -21,7 +21,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 
 namespace pwiz.Common.DataBinding
@@ -45,8 +44,7 @@ namespace pwiz.Common.DataBinding
             {
                 return new PropertyDescriptor[0];
             }
-            return TypeDescriptor.GetProperties(type).Cast<PropertyDescriptor>()
-                .Where(pd=>pd.IsBrowsable);
+            return TypeDescriptor.GetProperties(type).Cast<PropertyDescriptor>().Where(IsBrowsable);
         }
         public PropertyDescriptor GetPropertyDescriptor(Type type, string name)
         {
@@ -55,6 +53,18 @@ namespace pwiz.Common.DataBinding
         public CollectionInfo GetCollectionInfo(Type type)
         {
             return CollectionInfo.ForType(type);
+        }
+        public virtual bool IsBrowsable(PropertyDescriptor propertyDescriptor)
+        {
+            if (!propertyDescriptor.IsBrowsable)
+            {
+                return false;
+            }
+            if (propertyDescriptor.PropertyType.IsGenericType && typeof(ICollection<>) == propertyDescriptor.PropertyType.GetGenericTypeDefinition())
+            {
+                return false;
+            }
+            return true;
         }
         protected bool IsScalar(Type type)
         {
@@ -76,6 +86,29 @@ namespace pwiz.Common.DataBinding
             }
             return null;
         }
+        public Type GetWrappedValueType(Type type)
+        {
+            var propertyDescriptor = GetChainedPropertyDescriptorParent(type);
+            if (propertyDescriptor == null)
+            {
+                return type;
+            }
+            return propertyDescriptor.PropertyType;
+        }
+        public object UnwrapValue(object value)
+        {
+            if (value == null)
+            {
+                return null;
+            }
+            var propertyDescriptor = GetChainedPropertyDescriptorParent(value.GetType());
+            if (propertyDescriptor != null)
+            {
+                return propertyDescriptor.GetValue(value);
+            }
+            return value;
+        }
+
         public virtual int Compare(object o1, object o2)
         {
             if (o1 == o2)
@@ -110,6 +143,19 @@ namespace pwiz.Common.DataBinding
                 lastCh = ch;
             }
             return result.ToString();
+        }
+        public virtual string CaptionFromType(Type type)
+        {
+            var pdChain = GetChainedPropertyDescriptorParent(type);
+            if (pdChain == null)
+            {
+                return CaptionFromName(type.Name);
+            }
+            return CaptionFromName(pdChain.PropertyType.Name);
+        }
+        public virtual bool IsRootTypeSelectable(Type type)
+        {
+            return typeof (ILinkValue).IsAssignableFrom(type);
         }
 
         public virtual event DataRowsChangedEventHandler DataRowsChanged;

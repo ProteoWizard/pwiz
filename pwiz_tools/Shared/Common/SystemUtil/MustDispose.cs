@@ -18,29 +18,31 @@
  */
 using System;
 
-namespace pwiz.Common.DataBinding
+namespace pwiz.Common.SystemUtil
 {
-    /// <summary>
-    /// An object which should be displayed as a hyperlink in a DataGridView.
-    /// </summary>
-    public interface ILinkValue
+    public class MustDispose : IDisposable
     {
-        EventHandler ClickEventHandler { get; }
-    }
-    public struct LinkValue<T> : ILinkValue
-    {
-        public LinkValue(T value, EventHandler clickEventHandler) : this()
+        private bool _disposed;
+        public bool IsDisposed()
         {
-            Value = value;
-            ClickEventHandler = clickEventHandler;
+            lock(this)
+            {
+                return _disposed;
+            }
         }
-
-        public T Value { get; private set; }
-        public EventHandler ClickEventHandler { get; private set; }
-        public override string ToString()
+        public virtual void Dispose()
         {
-            return ReferenceEquals(null, Value) ? "" : Value.ToString();
+            lock(this)
+            {
+                _disposed = true;
+            }
+        }
+        public void CheckDisposed()
+        {
+            if (IsDisposed())
+            {
+                throw new ObjectDisposedException(GetType().FullName);
+            }
         }
     }
-
 }

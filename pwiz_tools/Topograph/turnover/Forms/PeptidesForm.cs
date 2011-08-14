@@ -21,7 +21,9 @@ using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
+using NHibernate.Criterion;
 using pwiz.Common.DataBinding;
+using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
 
 namespace pwiz.Topograph.ui.Forms
@@ -29,7 +31,7 @@ namespace pwiz.Topograph.ui.Forms
     public partial class PeptidesForm : WorkspaceForm
     {
         private TopographViewContext _viewContext;
-        private BindingList<Peptide> _peptides;
+        private BindingList<LinkValue<Peptide>> _peptides;
         public PeptidesForm(Workspace workspace) : base(workspace)
         {
             InitializeComponent();
@@ -37,16 +39,16 @@ namespace pwiz.Topograph.ui.Forms
             btnAnalyzePeptides.Enabled = Workspace.Peptides.GetChildCount() > 0;
             var defaultColumns = new[]
                                      {
-                                         new ColumnSpec().SetName("Sequence"),
+                                         new ColumnSpec().SetIdentifierPath(IdentifierPath.Root),
                                          new ColumnSpec().SetName("ProteinName").SetCaption("Protein"),
                                          new ColumnSpec().SetName("ProteinDescription"),
-                                         new ColumnSpec().SetName("MaxTracerCount").SetCaption("Max Tracers"),
-                                         new ColumnSpec().SetName("SearchResultCount").SetCaption("# Data Files"),
+                                         new ColumnSpec().SetName("MaxTracerCount"),
+                                         new ColumnSpec().SetName("SearchResultCount"),
                                      };
             var defaultViewSpec = new ViewSpec()
                 .SetName("default")
                 .SetColumns(defaultColumns);
-            navBar1.ViewContext = _viewContext = new TopographViewContext(dataGridView, workspace, typeof(Peptide), new[] { defaultViewSpec });
+            navBar1.ViewContext = _viewContext = new TopographViewContext(workspace, typeof(LinkValue<Peptide>), new[] { defaultViewSpec });
         }
 
         protected override void OnHandleCreated(EventArgs e)
@@ -57,7 +59,7 @@ namespace pwiz.Topograph.ui.Forms
 
         private void Requery()
         {
-            _peptides = new BindingList<Peptide>(Workspace.Peptides.ListChildren());
+            _peptides = new BindingList<LinkValue<Peptide>>(Workspace.Peptides.ListChildren().Select(p=>MakeLinkValue(p)).ToList());
             peptidesBindingSource.DataSource = new BindingListView(new ViewInfo(_viewContext.ParentColumn, _viewContext.BuiltInViewSpecs.First()), _peptides);
         }
 
@@ -65,22 +67,69 @@ namespace pwiz.Topograph.ui.Forms
         {
             foreach (var peptide in args.GetNewEntities().OfType<Peptide>())
             {
-                _peptides.Add(peptide);
+                _peptides.Add(MakeLinkValue(peptide));
             }
         }
 
-        private void dataGridView_RowHeaderMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
+        private LinkValue<Peptide> MakeLinkValue(Peptide peptide)
         {
-            var peptide = (Peptide) _peptides[e.RowIndex];
-            PeptideAnalysis peptideAnalysis = peptide.EnsurePeptideAnalysis();
-            if (peptideAnalysis == null)
+            return new LinkValue<Peptide>(peptide, PeptideClickHandler(peptide));
+        }
+
+        private EventHandler PeptideClickHandler(Peptide peptide)
+        {
+            return (sender, args) => ShowPeptideAnalysis(peptide);
+        }
+
+        private void ShowPeptideAnalysis(Peptide peptide)
+        {
+            using (var session = Workspace.OpenSession())
             {
-                MessageBox.Show(
-                    "It is not possible to analyze this peptide because there are no search results for this peptide",
-                    Program.AppName);
-                return;
+                var dbPeptide = session.Load<DbPeptide>(peptide.Id);
+                var dbPeptideAnalysis = (DbPeptideAnalysis)session
+                    .CreateCriteria(typeof(DbPeptideAnalysis))
+                    .Add(Restrictions.Eq("Peptide", dbPeptide))
+                    .UniqueResult();
+                if (dbPeptideAnalysis == null)
+                {
+                    var searchResults = session
+                         .CreateCriteria(typeof(DbPeptideSearchResult))
+                         .Add(Restrictions.Eq("Peptide", dbPeptide))
+                         .List();
+                    if (searchResults.Count == 0)
+                    {
+                        MessageBox.Show(
+                            "This peptide cannot be analyzed because it has no search results.",
+                            Program.AppName);
+                        return;
+                    }
+                    if (MessageBox.Show("This peptide has not yet been analyzed.  Do you want to analyze it now?", Program.AppName, MessageBoxButtons.OKCancel) == DialogResult.Cancel)
+                    {
+                        return;
+                    }
+                    session.BeginTransaction();
+                    session.Save(dbPeptideAnalysis = Peptide.CreateDbPeptideAnalysis(session, dbPeptide));
+                    foreach (DbPeptideSearchResult dbPeptideSearchResult in searchResults)
+                    {
+                        var msDataFile = Workspace.MsDataFiles.GetMsDataFile(dbPeptideSearchResult.MsDataFile);
+                        if (!TurnoverForm.Instance.EnsureMsDataFile(msDataFile, true))
+                        {
+                            continue;
+                        }
+                        session.Save(PeptideFileAnalysis.CreatePeptideFileAnalysis(
+                            session, msDataFile, dbPeptideAnalysis, dbPeptideSearchResult, false));
+                        dbPeptideAnalysis.FileAnalysisCount++;
+                    }
+                    session.Update(dbPeptideAnalysis);
+                    session.Transaction.Commit();
+                }
+                var peptideAnalysis = TurnoverForm.Instance.LoadPeptideAnalysis(dbPeptideAnalysis.Id.Value);
+                if (peptideAnalysis == null)
+                {
+                    return;
+                }
+                PeptideAnalysisFrame.ShowPeptideAnalysis(peptideAnalysis);
             }
-            PeptideAnalysisFrame.ShowPeptideAnalysis(peptideAnalysis);
         }
 
         private void btnAnalyzePeptides_Click(object sender, EventArgs e)

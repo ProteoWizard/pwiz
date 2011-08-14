@@ -27,8 +27,8 @@ namespace pwiz.Common.DataBinding
     public class BindingListEventHandler : IDisposable
     {
         private BindingListView _bindingListView;
-        private TreeList<object> _bindingTreeList;
-        private IDictionary<object, EntityRow> _entityRows;
+        private TreeList<RowItem> _bindingTreeList;
+        private IDictionary<object, EntityRow> _entityRows; // Constains IEntity or RedBlackNode
         private IList<ColumnDescriptor> _entityIdColumns;
         private TreeList<object> _innerTreeList;
         
@@ -69,21 +69,13 @@ namespace pwiz.Common.DataBinding
                 if (BindingListView != null)
                 {
                     BindingListView.ListChanged += BindingListViewListChanged;
-                    BindingListView.DataSchema.DataRowsChanged += new DataRowsChangedEventHandler(DataSchema_DataRowsChanged);
-                    _bindingTreeList = new TreeList<object>(new RedBlackTree());
-                    foreach (var item in BindingListView)
-                    {
-                        _bindingTreeList.Add(item);
-                    }
+                    BindingListView.DataSchema.DataRowsChanged += DataSchema_DataRowsChanged;
+                    _bindingTreeList = new TreeList<RowItem>(BindingListView);
                     var innerBindingList = BindingListView.InnerList as IBindingList;
                     if (innerBindingList != null)
                     {
                         innerBindingList.ListChanged += InnerBindingList_ListChanged;
-                        _innerTreeList = new TreeList<object>(new RedBlackTree());
-                        foreach (var o in innerBindingList)
-                        {
-                            _innerTreeList.Add(o);
-                        }
+                        _innerTreeList = new TreeList<object>(innerBindingList.Cast<object>());
                     }
                     _entityIdColumns = GetIndexPropertyDescriptors(BindingListView.ViewInfo);
                     _entityRows = new Dictionary<object, EntityRow>();
@@ -93,7 +85,7 @@ namespace pwiz.Common.DataBinding
 
         void DataSchema_DataRowsChanged(object sender, DataRowsChangedEventArgs args)
         {
-            var changedRows = new HashSet<RedBlackNode>();
+            var changedRows = new HashSet<RedBlackTree<LongDecimal,RowItem>.Node>();
             foreach (var entity in args.Changed)
             {
                 EntityRow entityRow;
@@ -101,7 +93,7 @@ namespace pwiz.Common.DataBinding
                 {
                     foreach (var childEntry in entityRow.Children)
                     {
-                        changedRows.UnionWith(childEntry.Value.Select(row => (RedBlackNode) row.Data));
+                        changedRows.UnionWith(childEntry.Value.Select(row => (RedBlackTree<LongDecimal, RowItem>.Node)row.Data));
                     }
                 }
             }
@@ -152,26 +144,45 @@ namespace pwiz.Common.DataBinding
                 case ListChangedType.ItemAdded:
                     var newItem = BindingListView.InnerList[e.NewIndex];
                     _innerTreeList.Insert(e.NewIndex, newItem);
-                    if (BindingListView.FilterPredicate.Invoke(newItem))
+                    bool pivotValuesChanged = false;
+                    var rowItems =
+                        BindingListView.Pivoter.Pivot(BindingListView.Pivoter.Expand(new RowItem(null, newItem)), ref pivotValuesChanged);
+                    foreach (var rowItem in rowItems)
                     {
-                        BindingListView.Add(newItem);
+                        if (BindingListView.FilterPredicate.Invoke(rowItem))
+                        {
+                            BindingListView.Add(rowItem);
+                        }
+                    }
+                    if (pivotValuesChanged)
+                    {
+                        BindingListView.ResetBindings();
                     }
                     break;
                 case ListChangedType.ItemDeleted:
-                    var oldItem = _innerTreeList[e.NewIndex];
-                    _innerTreeList.RemoveAt(e.NewIndex);
-                    BindingListView.Remove(oldItem);
+                    InnerListReset();
+//                    var oldItem = _innerTreeList.Tree[e.NewIndex];
+//                    _innerTreeList.RemoveAt(e.NewIndex);
+//                    EntityRow entityRow;
+//                    if (_entityRows.TryGetValue(oldItem, out entityRow))
+//                    {
+//                        _entityRows.Remove(entityRow);
+//                        foreach (var )
+//                    }
+//                    BindingListView.Remove(oldItem);
                     break;
                 case ListChangedType.ItemChanged:
-                    var changedItem = _innerTreeList[e.NewIndex];
-                    var index = BindingListView.IndexOf(changedItem);
-                    if (index >= 0)
-                    {
-                        BindingListView.ResetItem(index);
-                    }
+                    InnerListReset();
+//                    var changedItem = _innerTreeList[e.NewIndex];
+//                    var index = BindingListView.IndexOf(changedItem);
+//                    if (index >= 0)
+//                    {
+//                        BindingListView.ResetItem(index);
+//                    }
                     break;
+                case ListChangedType.Reset:
                 case ListChangedType.ItemMoved:
-                    BindingListViewReset();
+                    InnerListReset();
                     break;
             }
         }
@@ -206,21 +217,48 @@ namespace pwiz.Common.DataBinding
         void BindingListViewReset()
         {
             _entityRows.Clear();
-            _bindingTreeList.Clear();
-            foreach (var item in BindingListView)
+            _bindingTreeList = new TreeList<RowItem>(BindingListView);
+            foreach (var node in _bindingTreeList.Tree)
             {
-                _bindingTreeList.Add(item);
-                AddNode(_bindingTreeList.Tree.Last);
+                AddNode(node);
+            }
+        }
+        void InnerListReset()
+        {
+            _entityRows.Clear();
+            _innerTreeList = new TreeList<object>(BindingListView.InnerList.Cast<object>());
+            BindingListView.UnfilteredItems =
+                _innerTreeList.Tree.Select(redBlackNode => new RowItem(redBlackNode, redBlackNode.Value)).ToArray();
+            _bindingTreeList = new TreeList<RowItem>(BindingListView);
+            foreach (var node in _bindingTreeList.Tree)
+            {
+                AddNode(node);
             }
         }
 
-        void AddNode(RedBlackNode redBlackNode)
+        void AddNode(RedBlackTree<LongDecimal,RowItem>.Node node)
         {
-            var entityRow = new EntityRow(redBlackNode);
-            _entityRows.Add(redBlackNode, entityRow);
+            var entityRow = EntityRow.FromBindingListViewNode(node);
+            _entityRows.Add(node, entityRow);
+            var rowItem = node.Value;
+            while (rowItem != null)
+            {
+                var innerTreeNode = rowItem.Key as RedBlackTree<LongDecimal, object>.Node;
+                if (innerTreeNode != null && ReferenceEquals(innerTreeNode, _innerTreeList.Tree))
+                {
+                    EntityRow innerListEntityRow;
+                    if (!_entityRows.TryGetValue(innerTreeNode, out innerListEntityRow))
+                    {
+                        innerListEntityRow = EntityRow.FromInnerListNode(innerTreeNode);
+                        _entityRows.Add(rowItem.Key, innerListEntityRow);
+                    }
+                    innerListEntityRow.AddChild(BindingListView.ViewInfo.ParentColumn, entityRow);
+                }
+                rowItem = rowItem.Parent;
+            }
             foreach (var columnDescriptor in _entityIdColumns)
             {
-                var value = columnDescriptor.GetPropertyValue(redBlackNode.Value);
+                var value = columnDescriptor.GetPropertyValue((RowItem) node.Value, null);
                 var entity = value as IEntity;
                 if (entity == null)
                 {
@@ -229,21 +267,14 @@ namespace pwiz.Common.DataBinding
                 EntityRow parentRow;
                 if (!_entityRows.TryGetValue(entity, out parentRow))
                 {
-                    parentRow = new EntityRow(entity);
+                    parentRow = EntityRow.FromEntity(entity);
                     _entityRows.Add(entity, parentRow);
                 }
-                entityRow.Parents.Add(columnDescriptor, parentRow);
-                ICollection<EntityRow> children;
-                if (!parentRow.Children.TryGetValue(columnDescriptor, out children))
-                {
-                    children = new HashSet<EntityRow>();
-                    parentRow.Children.Add(columnDescriptor, children);
-                }
-                children.Add(entityRow);
+                parentRow.AddChild(columnDescriptor, entityRow);
             }
         }
 
-        void RemoveNode(RedBlackNode node)
+        void RemoveNode(RedBlackTree<LongDecimal, RowItem>.Node node)
         {
             var entityRow = _entityRows[node];
             foreach (var parentEntry in entityRow.Parents)
@@ -267,15 +298,40 @@ namespace pwiz.Common.DataBinding
         }
         public class EntityRow
         {
-            public EntityRow(object value)
+            public static EntityRow FromBindingListViewNode(RedBlackTree<LongDecimal, RowItem>.Node bindingListViewNode)
+            {
+                return new EntityRow(bindingListViewNode);
+            }
+            public static EntityRow FromInnerListNode(RedBlackTree<LongDecimal, object>.Node innerListNode)
+            {
+                return new EntityRow(innerListNode);
+            }
+            public static EntityRow FromEntity(IEntity entity)
+            {
+                return new EntityRow(entity);
+            }
+            private EntityRow(object value)
             {
                 Data = value;
                 Parents = new Dictionary<ColumnDescriptor, EntityRow>();
-                Children = new Dictionary<ColumnDescriptor, ICollection<EntityRow>>();
+                Children = new Dictionary<ColumnDescriptor, HashSet<EntityRow>>();
             }
             public object Data { get; private set;}
             public IDictionary<ColumnDescriptor, EntityRow> Parents { get; private set; }
-            public IDictionary<ColumnDescriptor, ICollection<EntityRow>> Children { get; private set; }
+            public IDictionary<ColumnDescriptor, HashSet<EntityRow>> Children { get; private set; }
+            public void AddChild(ColumnDescriptor columnDescriptor, EntityRow child)
+            {
+                HashSet<EntityRow> children;
+                if (!Children.TryGetValue(columnDescriptor, out children))
+                {
+                    children = new HashSet<EntityRow>();
+                    Children.Add(columnDescriptor, children);
+                }
+                if (children.Add(child))
+                {
+                    child.Parents.Add(columnDescriptor, this);
+                }
+            }
         }
     }
 }

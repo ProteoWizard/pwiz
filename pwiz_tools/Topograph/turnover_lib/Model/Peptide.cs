@@ -90,6 +90,7 @@ namespace pwiz.Topograph.Model
                 OnChange();
             }
         }
+        [DisplayName("Max Tracers")]
         public int MaxTracerCount { 
             get
             {
@@ -152,6 +153,7 @@ namespace pwiz.Topograph.Model
             }
             return Workspace.Reconciler.LoadPeptideAnalysis(dbPeptideAnalysis.Id.Value);
         }
+        [DisplayName("# Data Files")]
         public int SearchResultCount
         {
             get

@@ -1,4 +1,6 @@
-﻿namespace pwiz.Topograph.ui.Forms
+﻿using pwiz.Common.DataBinding;
+
+namespace pwiz.Topograph.ui.Forms
 {
     partial class HalfLivesForm
     {
@@ -28,46 +30,38 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             this.cbxByProtein = new System.Windows.Forms.CheckBox();
             this.label1 = new System.Windows.Forms.Label();
             this.tbxMinScore = new System.Windows.Forms.TextBox();
-            this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            this.colPeptide = new System.Windows.Forms.DataGridViewLinkColumn();
-            this.colProteinKey = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colProteinDescription = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colProteinName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.btnRequery = new System.Windows.Forms.Button();
             this.tbxInitialTracerPercent = new System.Windows.Forms.TextBox();
             this.tbxFinalTracerPercent = new System.Windows.Forms.TextBox();
             this.label3 = new System.Windows.Forms.Label();
-            this.btnSave = new System.Windows.Forms.Button();
             this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.label2 = new System.Windows.Forms.Label();
             this.cbxFixYIntercept = new System.Windows.Forms.CheckBox();
-            this.label5 = new System.Windows.Forms.Label();
             this.comboCalculationType = new System.Windows.Forms.ComboBox();
             this.label6 = new System.Windows.Forms.Label();
-            this.cbxShowRateConstant = new System.Windows.Forms.CheckBox();
-            this.cbxShowRSquared = new System.Windows.Forms.CheckBox();
-            this.cbxShowRateConstantStdDev = new System.Windows.Forms.CheckBox();
-            this.cbxShowRateConstantCI = new System.Windows.Forms.CheckBox();
-            this.cbxShowHalfLife = new System.Windows.Forms.CheckBox();
-            this.cbxShowMinHalfLife = new System.Windows.Forms.CheckBox();
-            this.cbxShowMaxHalfLife = new System.Windows.Forms.CheckBox();
-            this.cbxShowNumDataPoints = new System.Windows.Forms.CheckBox();
             this.checkedListBoxTimePoints = new System.Windows.Forms.CheckedListBox();
             this.label7 = new System.Windows.Forms.Label();
-            this.recordNavBar1 = new pwiz.Common.Controls.RecordNavBar();
             this.cbxEvviesFilter = new System.Windows.Forms.CheckBox();
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
+            this.navBar1 = new pwiz.Common.DataBinding.Controls.NavBar();
+            this.bindingSource1 = new System.Windows.Forms.BindingSource(this.components);
+            this.dataGridView1 = new pwiz.Common.DataBinding.BoundDataGridView();
             this.tableLayoutPanel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.bindingSource1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.SuspendLayout();
             // 
             // cbxByProtein
             // 
             this.cbxByProtein.AutoSize = true;
             this.cbxByProtein.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.cbxByProtein.Location = new System.Drawing.Point(304, 3);
+            this.cbxByProtein.Location = new System.Drawing.Point(288, 3);
             this.cbxByProtein.Name = "cbxByProtein";
             this.cbxByProtein.Size = new System.Drawing.Size(94, 19);
             this.cbxByProtein.TabIndex = 0;
@@ -78,7 +72,7 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label1.Location = new System.Drawing.Point(304, 25);
+            this.label1.Location = new System.Drawing.Point(288, 25);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(94, 25);
             this.label1.TabIndex = 1;
@@ -88,64 +82,17 @@
             // tbxMinScore
             // 
             this.tbxMinScore.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tbxMinScore.Location = new System.Drawing.Point(404, 28);
+            this.tbxMinScore.Location = new System.Drawing.Point(388, 28);
             this.tbxMinScore.Name = "tbxMinScore";
-            this.tbxMinScore.Size = new System.Drawing.Size(226, 20);
+            this.tbxMinScore.Size = new System.Drawing.Size(208, 20);
             this.tbxMinScore.TabIndex = 2;
-            // 
-            // dataGridView1
-            // 
-            this.dataGridView1.AllowUserToAddRows = false;
-            this.dataGridView1.AllowUserToDeleteRows = false;
-            this.dataGridView1.AllowUserToOrderColumns = true;
-            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.colPeptide,
-            this.colProteinKey,
-            this.colProteinDescription,
-            this.colProteinName});
-            this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.dataGridView1.Location = new System.Drawing.Point(0, 200);
-            this.dataGridView1.Name = "dataGridView1";
-            this.dataGridView1.ReadOnly = true;
-            this.dataGridView1.Size = new System.Drawing.Size(760, 211);
-            this.dataGridView1.TabIndex = 3;
-            this.dataGridView1.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dataGridView1_CellContentClick);
-            // 
-            // colPeptide
-            // 
-            this.colPeptide.HeaderText = "Peptide";
-            this.colPeptide.Name = "colPeptide";
-            this.colPeptide.ReadOnly = true;
-            this.colPeptide.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
-            // 
-            // colProteinKey
-            // 
-            this.colProteinKey.HeaderText = "Protein";
-            this.colProteinKey.Name = "colProteinKey";
-            this.colProteinKey.ReadOnly = true;
-            this.colProteinKey.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            // 
-            // colProteinDescription
-            // 
-            this.colProteinDescription.HeaderText = "Protein Description";
-            this.colProteinDescription.Name = "colProteinDescription";
-            this.colProteinDescription.ReadOnly = true;
-            this.colProteinDescription.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            // 
-            // colProteinName
-            // 
-            this.colProteinName.HeaderText = "Protein Name";
-            this.colProteinName.Name = "colProteinName";
-            this.colProteinName.ReadOnly = true;
-            this.colProteinName.Visible = false;
             // 
             // btnRequery
             // 
             this.btnRequery.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.btnRequery.Location = new System.Drawing.Point(636, 3);
+            this.btnRequery.Location = new System.Drawing.Point(602, 3);
             this.btnRequery.Name = "btnRequery";
-            this.btnRequery.Size = new System.Drawing.Size(121, 19);
+            this.btnRequery.Size = new System.Drawing.Size(155, 19);
             this.btnRequery.TabIndex = 4;
             this.btnRequery.Text = "Recalculate";
             this.btnRequery.UseVisualStyleBackColor = true;
@@ -156,7 +103,7 @@
             this.tbxInitialTracerPercent.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tbxInitialTracerPercent.Location = new System.Drawing.Point(103, 3);
             this.tbxInitialTracerPercent.Name = "tbxInitialTracerPercent";
-            this.tbxInitialTracerPercent.Size = new System.Drawing.Size(195, 20);
+            this.tbxInitialTracerPercent.Size = new System.Drawing.Size(179, 20);
             this.tbxInitialTracerPercent.TabIndex = 5;
             // 
             // tbxFinalTracerPercent
@@ -164,7 +111,7 @@
             this.tbxFinalTracerPercent.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tbxFinalTracerPercent.Location = new System.Drawing.Point(103, 28);
             this.tbxFinalTracerPercent.Name = "tbxFinalTracerPercent";
-            this.tbxFinalTracerPercent.Size = new System.Drawing.Size(195, 20);
+            this.tbxFinalTracerPercent.Size = new System.Drawing.Size(179, 20);
             this.tbxFinalTracerPercent.TabIndex = 7;
             // 
             // label3
@@ -178,18 +125,6 @@
             this.label3.Text = "Final Tracer %";
             this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // btnSave
-            // 
-            this.btnSave.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.btnSave.Enabled = false;
-            this.btnSave.Location = new System.Drawing.Point(636, 28);
-            this.btnSave.Name = "btnSave";
-            this.btnSave.Size = new System.Drawing.Size(121, 19);
-            this.btnSave.TabIndex = 9;
-            this.btnSave.Text = "Save...";
-            this.btnSave.UseVisualStyleBackColor = true;
-            this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
-            // 
             // tableLayoutPanel1
             // 
             this.tableLayoutPanel1.ColumnCount = 5;
@@ -197,37 +132,26 @@
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 46.3964F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 100F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 53.6036F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 126F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 160F));
             this.tableLayoutPanel1.Controls.Add(this.label2, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.tbxInitialTracerPercent, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.label3, 0, 1);
-            this.tableLayoutPanel1.Controls.Add(this.btnSave, 4, 1);
             this.tableLayoutPanel1.Controls.Add(this.tbxFinalTracerPercent, 1, 1);
             this.tableLayoutPanel1.Controls.Add(this.btnRequery, 4, 0);
             this.tableLayoutPanel1.Controls.Add(this.cbxByProtein, 2, 0);
             this.tableLayoutPanel1.Controls.Add(this.label1, 2, 1);
             this.tableLayoutPanel1.Controls.Add(this.tbxMinScore, 3, 1);
             this.tableLayoutPanel1.Controls.Add(this.cbxFixYIntercept, 0, 2);
-            this.tableLayoutPanel1.Controls.Add(this.label5, 0, 4);
             this.tableLayoutPanel1.Controls.Add(this.comboCalculationType, 1, 3);
             this.tableLayoutPanel1.Controls.Add(this.label6, 0, 3);
-            this.tableLayoutPanel1.Controls.Add(this.cbxShowRateConstant, 0, 5);
-            this.tableLayoutPanel1.Controls.Add(this.cbxShowRSquared, 0, 6);
-            this.tableLayoutPanel1.Controls.Add(this.cbxShowRateConstantStdDev, 1, 5);
-            this.tableLayoutPanel1.Controls.Add(this.cbxShowRateConstantCI, 1, 6);
-            this.tableLayoutPanel1.Controls.Add(this.cbxShowHalfLife, 2, 5);
-            this.tableLayoutPanel1.Controls.Add(this.cbxShowMinHalfLife, 3, 5);
-            this.tableLayoutPanel1.Controls.Add(this.cbxShowMaxHalfLife, 4, 5);
-            this.tableLayoutPanel1.Controls.Add(this.cbxShowNumDataPoints, 1, 4);
             this.tableLayoutPanel1.Controls.Add(this.checkedListBoxTimePoints, 3, 2);
             this.tableLayoutPanel1.Controls.Add(this.label7, 2, 2);
-            this.tableLayoutPanel1.Controls.Add(this.recordNavBar1, 0, 7);
             this.tableLayoutPanel1.Controls.Add(this.cbxEvviesFilter, 3, 0);
+            this.tableLayoutPanel1.Controls.Add(this.navBar1, 0, 5);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 8;
-            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
+            this.tableLayoutPanel1.RowCount = 6;
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
@@ -235,7 +159,8 @@
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-            this.tableLayoutPanel1.Size = new System.Drawing.Size(760, 200);
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(760, 157);
             this.tableLayoutPanel1.TabIndex = 12;
             // 
             // label2
@@ -256,19 +181,10 @@
             this.cbxFixYIntercept.Dock = System.Windows.Forms.DockStyle.Fill;
             this.cbxFixYIntercept.Location = new System.Drawing.Point(3, 53);
             this.cbxFixYIntercept.Name = "cbxFixYIntercept";
-            this.cbxFixYIntercept.Size = new System.Drawing.Size(295, 19);
+            this.cbxFixYIntercept.Size = new System.Drawing.Size(279, 19);
             this.cbxFixYIntercept.TabIndex = 12;
             this.cbxFixYIntercept.Text = "Hold Initial Tracer % Constant";
             this.cbxFixYIntercept.UseVisualStyleBackColor = true;
-            // 
-            // label5
-            // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(3, 100);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(37, 13);
-            this.label5.TabIndex = 13;
-            this.label5.Text = "Show ";
             // 
             // comboCalculationType
             // 
@@ -282,7 +198,7 @@
             "Avg Precursor Pool (Old Way)"});
             this.comboCalculationType.Location = new System.Drawing.Point(103, 78);
             this.comboCalculationType.Name = "comboCalculationType";
-            this.comboCalculationType.Size = new System.Drawing.Size(195, 21);
+            this.comboCalculationType.Size = new System.Drawing.Size(179, 21);
             this.comboCalculationType.TabIndex = 21;
             this.comboCalculationType.SelectedIndexChanged += new System.EventHandler(this.comboCalculationType_SelectedIndexChanged);
             // 
@@ -295,134 +211,84 @@
             this.label6.TabIndex = 22;
             this.label6.Text = "Calculation Type";
             // 
-            // cbxShowRateConstant
-            // 
-            this.cbxShowRateConstant.AutoSize = true;
-            this.cbxShowRateConstant.Location = new System.Drawing.Point(3, 128);
-            this.cbxShowRateConstant.Name = "cbxShowRateConstant";
-            this.cbxShowRateConstant.Size = new System.Drawing.Size(94, 17);
-            this.cbxShowRateConstant.TabIndex = 23;
-            this.cbxShowRateConstant.Text = "Rate Constant";
-            this.cbxShowRateConstant.UseVisualStyleBackColor = true;
-            this.cbxShowRateConstant.CheckedChanged += new System.EventHandler(this.cbxShowColumn_CheckedChanged);
-            // 
-            // cbxShowRSquared
-            // 
-            this.cbxShowRSquared.AutoSize = true;
-            this.cbxShowRSquared.Location = new System.Drawing.Point(3, 153);
-            this.cbxShowRSquared.Name = "cbxShowRSquared";
-            this.cbxShowRSquared.Size = new System.Drawing.Size(75, 17);
-            this.cbxShowRSquared.TabIndex = 24;
-            this.cbxShowRSquared.Text = "R-squared";
-            this.cbxShowRSquared.UseVisualStyleBackColor = true;
-            this.cbxShowRSquared.CheckedChanged += new System.EventHandler(this.cbxShowColumn_CheckedChanged);
-            // 
-            // cbxShowRateConstantStdDev
-            // 
-            this.cbxShowRateConstantStdDev.AutoSize = true;
-            this.cbxShowRateConstantStdDev.Location = new System.Drawing.Point(103, 128);
-            this.cbxShowRateConstantStdDev.Name = "cbxShowRateConstantStdDev";
-            this.cbxShowRateConstantStdDev.Size = new System.Drawing.Size(136, 17);
-            this.cbxShowRateConstantStdDev.TabIndex = 25;
-            this.cbxShowRateConstantStdDev.Text = "Rate Constant Std Dev";
-            this.cbxShowRateConstantStdDev.UseVisualStyleBackColor = true;
-            this.cbxShowRateConstantStdDev.CheckedChanged += new System.EventHandler(this.cbxShowColumn_CheckedChanged);
-            // 
-            // cbxShowRateConstantCI
-            // 
-            this.cbxShowRateConstantCI.AutoSize = true;
-            this.cbxShowRateConstantCI.Location = new System.Drawing.Point(103, 153);
-            this.cbxShowRateConstantCI.Name = "cbxShowRateConstantCI";
-            this.cbxShowRateConstantCI.Size = new System.Drawing.Size(173, 17);
-            this.cbxShowRateConstantCI.TabIndex = 26;
-            this.cbxShowRateConstantCI.Text = "Rate Constant 95% confidence";
-            this.cbxShowRateConstantCI.UseVisualStyleBackColor = true;
-            this.cbxShowRateConstantCI.CheckedChanged += new System.EventHandler(this.cbxShowColumn_CheckedChanged);
-            // 
-            // cbxShowHalfLife
-            // 
-            this.cbxShowHalfLife.AutoSize = true;
-            this.cbxShowHalfLife.Checked = true;
-            this.cbxShowHalfLife.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.cbxShowHalfLife.Location = new System.Drawing.Point(304, 128);
-            this.cbxShowHalfLife.Name = "cbxShowHalfLife";
-            this.cbxShowHalfLife.Size = new System.Drawing.Size(65, 17);
-            this.cbxShowHalfLife.TabIndex = 14;
-            this.cbxShowHalfLife.Text = "Half Life";
-            this.cbxShowHalfLife.UseVisualStyleBackColor = true;
-            this.cbxShowHalfLife.CheckedChanged += new System.EventHandler(this.cbxShowColumn_CheckedChanged);
-            // 
-            // cbxShowMinHalfLife
-            // 
-            this.cbxShowMinHalfLife.AutoSize = true;
-            this.cbxShowMinHalfLife.Location = new System.Drawing.Point(404, 128);
-            this.cbxShowMinHalfLife.Name = "cbxShowMinHalfLife";
-            this.cbxShowMinHalfLife.Size = new System.Drawing.Size(85, 17);
-            this.cbxShowMinHalfLife.TabIndex = 15;
-            this.cbxShowMinHalfLife.Text = "Min Half Life";
-            this.cbxShowMinHalfLife.UseVisualStyleBackColor = true;
-            this.cbxShowMinHalfLife.CheckedChanged += new System.EventHandler(this.cbxShowColumn_CheckedChanged);
-            // 
-            // cbxShowMaxHalfLife
-            // 
-            this.cbxShowMaxHalfLife.AutoSize = true;
-            this.cbxShowMaxHalfLife.Location = new System.Drawing.Point(636, 128);
-            this.cbxShowMaxHalfLife.Name = "cbxShowMaxHalfLife";
-            this.cbxShowMaxHalfLife.Size = new System.Drawing.Size(88, 17);
-            this.cbxShowMaxHalfLife.TabIndex = 16;
-            this.cbxShowMaxHalfLife.Text = "Max Half Life";
-            this.cbxShowMaxHalfLife.UseVisualStyleBackColor = true;
-            this.cbxShowMaxHalfLife.CheckedChanged += new System.EventHandler(this.cbxShowColumn_CheckedChanged);
-            // 
-            // cbxShowNumDataPoints
-            // 
-            this.cbxShowNumDataPoints.AutoSize = true;
-            this.cbxShowNumDataPoints.Location = new System.Drawing.Point(103, 103);
-            this.cbxShowNumDataPoints.Name = "cbxShowNumDataPoints";
-            this.cbxShowNumDataPoints.Size = new System.Drawing.Size(91, 17);
-            this.cbxShowNumDataPoints.TabIndex = 17;
-            this.cbxShowNumDataPoints.Text = "# Data Points";
-            this.cbxShowNumDataPoints.UseVisualStyleBackColor = true;
-            this.cbxShowNumDataPoints.CheckedChanged += new System.EventHandler(this.cbxShowColumn_CheckedChanged);
-            // 
             // checkedListBoxTimePoints
             // 
             this.checkedListBoxTimePoints.Dock = System.Windows.Forms.DockStyle.Fill;
             this.checkedListBoxTimePoints.FormattingEnabled = true;
-            this.checkedListBoxTimePoints.Location = new System.Drawing.Point(404, 53);
+            this.checkedListBoxTimePoints.Location = new System.Drawing.Point(388, 53);
             this.checkedListBoxTimePoints.Name = "checkedListBoxTimePoints";
             this.tableLayoutPanel1.SetRowSpan(this.checkedListBoxTimePoints, 3);
-            this.checkedListBoxTimePoints.Size = new System.Drawing.Size(226, 64);
+            this.checkedListBoxTimePoints.Size = new System.Drawing.Size(208, 64);
             this.checkedListBoxTimePoints.TabIndex = 27;
             // 
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(304, 50);
+            this.label7.Location = new System.Drawing.Point(288, 50);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(82, 13);
             this.label7.TabIndex = 28;
             this.label7.Text = "Included Times:";
             // 
-            // recordNavBar1
-            // 
-            this.tableLayoutPanel1.SetColumnSpan(this.recordNavBar1, 5);
-            this.recordNavBar1.DataGridView = this.dataGridView1;
-            this.recordNavBar1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.recordNavBar1.Location = new System.Drawing.Point(3, 178);
-            this.recordNavBar1.Name = "recordNavBar1";
-            this.recordNavBar1.Size = new System.Drawing.Size(754, 19);
-            this.recordNavBar1.TabIndex = 29;
-            // 
             // cbxEvviesFilter
             // 
             this.cbxEvviesFilter.AutoSize = true;
-            this.cbxEvviesFilter.Location = new System.Drawing.Point(404, 3);
+            this.cbxEvviesFilter.Location = new System.Drawing.Point(388, 3);
             this.cbxEvviesFilter.Name = "cbxEvviesFilter";
             this.cbxEvviesFilter.Size = new System.Drawing.Size(114, 17);
             this.cbxEvviesFilter.TabIndex = 30;
             this.cbxEvviesFilter.Text = "Apply Evvie\'s Filter";
             this.cbxEvviesFilter.UseVisualStyleBackColor = true;
+            // 
+            // navBar1
+            // 
+            this.navBar1.AutoSize = true;
+            this.navBar1.BindingSource = this.bindingSource1;
+            this.tableLayoutPanel1.SetColumnSpan(this.navBar1, 5);
+            this.navBar1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.navBar1.Location = new System.Drawing.Point(3, 128);
+            this.navBar1.Name = "navBar1";
+            this.navBar1.Size = new System.Drawing.Size(754, 26);
+            this.navBar1.TabIndex = 31;
+            this.navBar1.ViewContext = null;
+            // 
+            // dataGridView1
+            // 
+            this.dataGridView1.AllowUserToAddRows = false;
+            this.dataGridView1.AllowUserToDeleteRows = false;
+            this.dataGridView1.AllowUserToOrderColumns = true;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridView1.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
+            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridView1.DataSource = this.bindingSource1;
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dataGridView1.DefaultCellStyle = dataGridViewCellStyle2;
+            this.dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dataGridView1.Location = new System.Drawing.Point(0, 157);
+            this.dataGridView1.Name = "dataGridView1";
+            this.dataGridView1.ReadOnly = true;
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle3.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridView1.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
+            this.dataGridView1.Size = new System.Drawing.Size(760, 254);
+            this.dataGridView1.TabIndex = 3;
             // 
             // HalfLivesForm
             // 
@@ -434,9 +300,10 @@
             this.Name = "HalfLivesForm";
             this.TabText = "HalfLivesForm";
             this.Text = "HalfLivesForm";
-            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.bindingSource1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -446,33 +313,20 @@
         private System.Windows.Forms.CheckBox cbxByProtein;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox tbxMinScore;
-        private System.Windows.Forms.DataGridView dataGridView1;
         private System.Windows.Forms.Button btnRequery;
         private System.Windows.Forms.TextBox tbxInitialTracerPercent;
         private System.Windows.Forms.TextBox tbxFinalTracerPercent;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Button btnSave;
         private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.CheckBox cbxFixYIntercept;
-        private System.Windows.Forms.DataGridViewLinkColumn colPeptide;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colProteinKey;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colProteinDescription;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colProteinName;
-        private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.CheckBox cbxShowHalfLife;
-        private System.Windows.Forms.CheckBox cbxShowMinHalfLife;
-        private System.Windows.Forms.CheckBox cbxShowMaxHalfLife;
-        private System.Windows.Forms.CheckBox cbxShowNumDataPoints;
         private System.Windows.Forms.ComboBox comboCalculationType;
         private System.Windows.Forms.Label label6;
-        private System.Windows.Forms.CheckBox cbxShowRateConstant;
-        private System.Windows.Forms.CheckBox cbxShowRSquared;
-        private System.Windows.Forms.CheckBox cbxShowRateConstantStdDev;
-        private System.Windows.Forms.CheckBox cbxShowRateConstantCI;
         private System.Windows.Forms.CheckedListBox checkedListBoxTimePoints;
         private System.Windows.Forms.Label label7;
-        private pwiz.Common.Controls.RecordNavBar recordNavBar1;
         private System.Windows.Forms.CheckBox cbxEvviesFilter;
+        private pwiz.Common.DataBinding.Controls.NavBar navBar1;
+        private BoundDataGridView dataGridView1;
+        private System.Windows.Forms.BindingSource bindingSource1;
     }
 }

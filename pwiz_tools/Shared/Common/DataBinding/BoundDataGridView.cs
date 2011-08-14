@@ -17,10 +17,8 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 
 namespace pwiz.Common.DataBinding
@@ -45,16 +43,7 @@ namespace pwiz.Common.DataBinding
             {
                 return;
             }
-            var bindingSource = DataSource as BindingSource;
-            if (bindingSource == null)
-            {
-                return;
-            }
-            var bindingListView = bindingSource.DataSource as BindingListView;
-            if (_handleCreated)
-            {
-                BindingListView = bindingListView;
-            }
+            var bindingListView = GetBindingListView();
             if (bindingListView == null)
             {
                 return;
@@ -105,42 +94,14 @@ namespace pwiz.Common.DataBinding
             _oldColumns = Columns.Cast<DataGridViewColumn>().ToArray();
         }
 
-        private BindingListView _bindingListView;
-        [Browsable(false)]
-        protected BindingListView BindingListView
+        public BindingListView GetBindingListView()
         {
-            get
-            {
-                return _bindingListView;
-            } 
-            set
-            {
-                if (_bindingListView == value)
-                {
-                    return;
-                }
-                _bindingListView = value;
-            }
-        }
-
-        private bool _handleCreated;
-        protected override void OnHandleCreated(EventArgs e)
-        {
-            base.OnHandleCreated(e);
-            _handleCreated = true;
             var bindingSource = DataSource as BindingSource;
             if (bindingSource == null)
             {
-                return;
+                return null;
             }
-            BindingListView = bindingSource.DataSource as BindingListView;
-        }
-
-        protected override void OnHandleDestroyed(EventArgs e)
-        {
-            base.OnHandleDestroyed(e);
-            _handleCreated = false;
-            BindingListView = null;
+            return bindingSource.DataSource as BindingListView;
         }
 
         protected override void OnCellContentClick(DataGridViewCellEventArgs e)
@@ -160,7 +121,7 @@ namespace pwiz.Common.DataBinding
         protected override void OnColumnDisplayIndexChanged(DataGridViewColumnEventArgs e)
         {
             base.OnColumnDisplayIndexChanged(e);
-            var bindingListView = BindingListView;
+            var bindingListView = GetBindingListView();
             if (bindingListView == null)
             {
                 return;
@@ -168,6 +129,11 @@ namespace pwiz.Common.DataBinding
             var columns = Columns.Cast<DataGridViewColumn>().ToArray();
             Array.Sort(columns, (c1,c2)=>c1.DisplayIndex.CompareTo(c2.DisplayIndex));
             bindingListView.SetColumnDisplayOrder(columns.Select(column => column.DataPropertyName));
+        }
+
+        protected override void OnDataError(bool displayErrorDialogIfNoHandler, DataGridViewDataErrorEventArgs e)
+        {
+            base.OnDataError(displayErrorDialogIfNoHandler, e);
         }
     }
 }

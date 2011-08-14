@@ -20,9 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.Data;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 
 namespace pwiz.Common.DataBinding.Controls
@@ -148,7 +146,7 @@ namespace pwiz.Common.DataBinding.Controls
             }
             if (_filterText != tbxFind.Text)
             {
-                var unfilteredRows = bindingListView.UnfilteredItems.Cast<object>().ToArray();
+                var unfilteredRows = bindingListView.UnfilteredItems.ToArray();
                 if (string.IsNullOrEmpty(tbxFind.Text))
                 {
                     bindingListView.SetFilteredItems(unfilteredRows);
@@ -156,12 +154,49 @@ namespace pwiz.Common.DataBinding.Controls
                 }
                 else
                 {
-                    _applyRowFilterTask = new ApplyRowFilterTask(this, unfilteredRows, 
+                    _applyRowFilterTask = new ApplyRowFilterTask(unfilteredRows, 
                         bindingListView.GetItemProperties(new PropertyDescriptor[0]).Cast<PropertyDescriptor>().ToArray(), 
                         tbxFind.Text);
-                    new Action(_applyRowFilterTask.FilterBackground).BeginInvoke(null, null);
+                    new Action(_applyRowFilterTask.FilterBackground).BeginInvoke(ApplyRowFilterTaskCallback, _applyRowFilterTask);
                 }
             }
+        }
+
+        private void ApplyRowFilterTaskCallback(IAsyncResult result)
+        {
+            if (!result.IsCompleted)
+            {
+                return;
+            }
+            if (!ReferenceEquals(_applyRowFilterTask, result.AsyncState))
+            {
+                return;
+            }
+            if (InvokeRequired)
+            {
+                BeginInvoke(new Action<IAsyncResult>(ApplyRowFilterTaskCallback), result);
+                return;
+            }
+            if (!ReferenceEquals(_applyRowFilterTask, result.AsyncState))
+            {
+                return;
+            }
+            try
+            {
+                var bindingListView = GetBindingListView();
+                if (bindingListView == null)
+                {
+                    return;
+                }
+                bindingListView.SetFilteredItems(_applyRowFilterTask.FilteredRows.ToArray());
+                _filterText = _applyRowFilterTask.FilterText;
+            }
+            finally
+            {
+                _applyRowFilterTask.Dispose();
+                _applyRowFilterTask = null;
+            }
+            RefreshUi();
         }
 
         private void navBarButtonViews_DropDownOpening(object sender, EventArgs e)
@@ -211,8 +246,7 @@ namespace pwiz.Common.DataBinding.Controls
             {
                 return;
             }
-            var newBindingListView = new BindingListView(new ViewInfo(ViewContext.ParentColumn, viewSpec),
-                                             bindingListView.UnfilteredItems);
+            var newBindingListView = new BindingListView(new ViewInfo(ViewContext.ParentColumn, viewSpec), bindingListView.InnerList);
             BindingSource.DataSource = newBindingListView;
         }
 
@@ -238,7 +272,7 @@ namespace pwiz.Common.DataBinding.Controls
             // columns.  Otherwise the DataGridView won't add the columns in the correct order.
             BindingSource.DataSource = new object[0];
             BindingSource.DataSource = new BindingListView(new ViewInfo(ViewContext.ParentColumn, newView),
-                                                           bindingListView.UnfilteredItems);
+                                                           bindingListView.InnerList);
         }
 
         void OnManageViews(object sender, EventArgs eventArgs)
@@ -256,33 +290,10 @@ namespace pwiz.Common.DataBinding.Controls
             RefreshUi();
         }
 
-        internal void SetFilteredRows(ApplyRowFilterTask applyRowFilterTask, IList<object> rows)
+        private void SetFilteredRowsNow(ApplyRowFilterTask applyRowFilterTask, IList<RowItem> rows)
         {
             try
             {
-                BeginInvoke(new Action<ApplyRowFilterTask, IList<object>>(SetFilteredRowsNow), applyRowFilterTask, rows);
-            }
-            catch
-            {
-                // ignore
-            }
-        }
-
-        private void SetFilteredRowsNow(ApplyRowFilterTask applyRowFilterTask, IList<object> rows)
-        {
-            try
-            {
-                if (applyRowFilterTask != _applyRowFilterTask)
-                {
-                    return;
-                }
-                var bindingListView = GetBindingListView();
-                if (bindingListView == null)
-                {
-                    return;
-                }
-                bindingListView.SetFilteredItems(rows.ToArray());
-                _filterText = applyRowFilterTask.FilterText;
             }
             finally
             {

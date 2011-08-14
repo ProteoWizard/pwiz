@@ -16,31 +16,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Common.DataBinding;
 
-namespace pwiz.Common.DataBinding
+namespace pwiz.Topograph.Test.DataBinding
 {
     /// <summary>
-    /// An object which should be displayed as a hyperlink in a DataGridView.
+    /// Summary description for IdentifierPathTest
     /// </summary>
-    public interface ILinkValue
+    [TestClass]
+    public class IdentifierPathTest
     {
-        EventHandler ClickEventHandler { get; }
-    }
-    public struct LinkValue<T> : ILinkValue
-    {
-        public LinkValue(T value, EventHandler clickEventHandler) : this()
+        [TestMethod]
+        public void TestCompareTo()
         {
-            Value = value;
-            ClickEventHandler = clickEventHandler;
-        }
-
-        public T Value { get; private set; }
-        public EventHandler ClickEventHandler { get; private set; }
-        public override string ToString()
-        {
-            return ReferenceEquals(null, Value) ? "" : Value.ToString();
+            var idPath = IdentifierPath.Parse("HalfLives.[]");
+            Assert.AreEqual(-1, IdentifierPath.Root.CompareTo(idPath));
+            Assert.AreEqual(1, idPath.CompareTo(IdentifierPath.Root));
+            Assert.AreEqual(-1, idPath.Parent.CompareTo(idPath));
+            Assert.AreEqual(1, idPath.CompareTo(idPath.Parent));
         }
     }
-
 }

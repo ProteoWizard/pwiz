@@ -93,6 +93,8 @@
     </Compile>
     <Compile Include="DataAnalysis\LoessInterpolator.cs" />
     <Compile Include="DataBinding\AbstractViewContext.cs" />
+    <Compile Include="DataBinding\AggregateFunction.cs" />
+    <Compile Include="DataBinding\AggregateFunctions.cs" />
     <Compile Include="DataBinding\BindingListEventHandler.cs" />
     <Compile Include="DataBinding\BindingListView.cs">
       <SubType>Code</SubType>
@@ -129,7 +131,8 @@
       <DependentUpon>NavBar.cs</DependentUpon>
     </Compile>
     <Compile Include="DataBinding\DataFormat.cs" />
-    <Compile Include="DataBinding\DataRowsChangedEventArgs.cs" />
+    <Compile Include="DataBinding\DataRowsChangedEventArgs.cs">
+    </Compile>
     <Compile Include="DataBinding\DataSchema.cs" />
     <Compile Include="DataBinding\EntitiesChangedEvent.cs" />
     <Compile Include="DataBinding\FilterPredicate.cs" />
@@ -137,8 +140,11 @@
     <Compile Include="DataBinding\IEntity.cs" />
     <Compile Include="DataBinding\IViewContext.cs" />
     <Compile Include="DataBinding\LongDecimal.cs" />
+    <Compile Include="DataBinding\MapAttribute.cs" />
+    <Compile Include="DataBinding\Pivoter.cs" />
+    <Compile Include="DataBinding\RowItem.cs" />
     <Compile Include="DataBinding\RowKey.cs" />
-    <Compile Include="DataBinding\RowValue.cs" />
+    <Compile Include="DataBinding\RowNode.cs" />
     <Compile Include="DataBinding\LinkValue.cs" />
     <Compile Include="DataBinding\TreeList.cs" />
     <Compile Include="DataBinding\ViewInfo.cs" />
@@ -149,6 +155,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="SystemUtil\IProgressMonitor.cs" />
+    <Compile Include="SystemUtil\MustDispose.cs" />
     <Compile Include="SystemUtil\PathEx.cs" />
     <Compile Include="SystemUtil\ProcessStreamReader.cs" />
     <Compile Include="SystemUtil\ProcessRunner.cs" />
@@ -185,6 +192,17 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\up-pro32.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Resources\agg_mean.bmp" />
+    <Content Include="Resources\agg_median.bmp" />
+    <Content Include="Resources\agg_sum.bmp" />
+    <Content Include="Resources\agg_count.bmp" />
+    <Content Include="Resources\agg_blank.bmp" />
+    <Content Include="Resources\agg_groupby.bmp" />
+    <Content Include="Resources\agg_min.bmp" />
+    <Content Include="Resources\agg_max.bmp" />
+    <Content Include="Resources\agg_stddev.bmp" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Collections\Internal\" />

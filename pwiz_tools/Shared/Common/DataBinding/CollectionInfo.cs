@@ -31,41 +31,44 @@ namespace pwiz.Common.DataBinding
     /// </summary>
     public class CollectionInfo
     {
-        public CollectionInfo(Type elementType, Type keyType, Type valueType)
+        private Func<object, IEnumerable> _fnGetKeys;
+        private Func<object, object, object> _fnLookupItemByKey;
+        
+        public CollectionInfo(Type elementType, Type keyType, Func<object, IEnumerable> fnGetKeys, Func<object, object, object> fnLookupItemByKey)
         {
             ElementType = elementType;
             KeyType = keyType;
-            ValueType = valueType;
+            _fnGetKeys = fnGetKeys;
+            _fnLookupItemByKey = fnLookupItemByKey;
         }
 
         public Type ElementType { get; private set; }
         public Type KeyType { get; private set; }
-        public Type ValueType { get; private set; }
-        public bool IsDictionary { get { return KeyType != null;} }
-
-        public object GetValueFromKey(object collection, object key)
+        public bool IsDictionary
         {
-            if (!IsDictionary)
+            get
             {
-                throw new InvalidOperationException("Not a dictionary");
+                return ElementType.IsGenericType
+                       && ElementType.GetGenericTypeDefinition() == typeof (KeyValuePair<,>)
+                       && ElementType.GetGenericArguments()[0] == KeyType;
             }
-            return ((IDictionary) collection)[key];
+        }
+
+        public object GetItemFromKey(object collection, object key)
+        {
+            if (collection == null || key == null)
+            {
+                return null;
+            }
+            return _fnLookupItemByKey(collection, key);
         }
         public IEnumerable GetKeys(object collection)
         {
-            if (!IsDictionary)
+            if (collection == null)
             {
-                throw new InvalidOperationException("Not a dictionary");
+                return new object[0];
             }
-            return ((IDictionary) collection).Keys;
-        }
-        public IEnumerable GetValues(object collection)
-        {
-            if (!IsDictionary)
-            {
-                throw new InvalidOperationException("Not a dictionary");
-            }
-            return ((IDictionary)collection).Values;
+            return _fnGetKeys(collection);
         }
         public IEnumerable GetItems(object collection)
         {
@@ -80,10 +83,27 @@ namespace pwiz.Common.DataBinding
                 switch (genericArguments.Length)
                 {
                     case 1:
-                        if (type.GetGenericTypeDefinition() == typeof(ICollection<>))
+                        if (type.GetGenericTypeDefinition() == typeof(IList<>))
                         {
                             var elementType = genericArguments[0];
-                            return new CollectionInfo(elementType, null, null);
+                            var countProperty = type.GetInterface(typeof(ICollection<>).Name).GetProperty("Count");
+                            var itemProperty = type.GetProperty("Item");
+                            var fnLookupItem = new Func<object,object,object>((list, key) =>
+                                                   {
+                                                       var index = key as int?;
+                                                       if (!index.HasValue || index < 0 ||
+                                                           index >= (int) countProperty.GetValue(list, null))
+                                                       {
+                                                           return null;
+                                                       }
+                                                       return itemProperty.GetValue(list, new[] {key});
+                                                   });
+
+                            return new CollectionInfo(
+                                elementType, typeof (int),
+                                list => Enumerable.Range(0, (int) countProperty.GetValue(list, null)),
+                                fnLookupItem
+                            );
                         }
                         break;
                     case 2:
@@ -92,7 +112,24 @@ namespace pwiz.Common.DataBinding
                             var keyType = genericArguments[0];
                             var valueType = genericArguments[1];
                             var elementType = typeof (KeyValuePair<,>).MakeGenericType(keyType, valueType);
-                            return new CollectionInfo(elementType, keyType, valueType);
+                            var elementConstructor = elementType.GetConstructor(new[] {keyType, valueType});
+                            var keysProperty = type.GetProperty("Keys");
+                            var tryGetValueMethod = type.GetMethod("TryGetValue");
+                            var fnLookupItem = new Func<object, object, object>(
+                                (dict, key) =>
+                                    {
+                                        var parameters = new[] {key, null};
+                                        if (!(bool) tryGetValueMethod.Invoke(dict, parameters))
+                                        {
+                                            return null;
+                                        }
+                                        return elementConstructor.Invoke(parameters);
+                                    });
+                            return new CollectionInfo(
+                                elementType, keyType,
+                                dict =>(IEnumerable)keysProperty.GetValue(dict, null),
+                                fnLookupItem
+                            );
                         }
                         break;
                 }

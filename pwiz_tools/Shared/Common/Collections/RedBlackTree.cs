@@ -32,6 +32,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
 
 namespace pwiz.Common.Collections
 {
@@ -43,20 +44,21 @@ namespace pwiz.Common.Collections
     ///3. Red nodes can only have black children (null's count as black)
     ///4. All paths from a node to its leaves contain the same number of black nodes.
     ///</summary>
-	public class RedBlackTree : IEnumerable<RedBlackNode>
+	public class RedBlackTree<TKey,TValue> : IEnumerable<RedBlackTree<TKey,TValue>.Node>
+        where TKey:IComparable
 	{
         // the tree
-		private RedBlackNode	root;
+		private Node root;
 
 		public RedBlackTree() 
         {
 		    root = null;
         }
-        public RedBlackTree(RedBlackTree other)
+        public RedBlackTree(RedBlackTree<TKey,TValue> other)
         {
             if (other.root != null)
             {
-                root = new RedBlackNode(other.root);
+                root = new Node(other.root) {Tree = this};
             }
         }
 
@@ -74,7 +76,7 @@ namespace pwiz.Common.Collections
             return true;
         }
 
-	    public RedBlackNode First
+	    public Node First
 	    {
 	        get
 	        {
@@ -91,7 +93,7 @@ namespace pwiz.Common.Collections
 	        }
 	    }
 
-	    public RedBlackNode Last
+	    public Node Last
 	    {
 	        get
 	        {
@@ -108,7 +110,7 @@ namespace pwiz.Common.Collections
 	        }
 	    }
 
-	    public RedBlackNode this[int index]
+	    public Node this[int index]
 	    {
 	        get
 	        {
@@ -143,7 +145,7 @@ namespace pwiz.Common.Collections
 		/// key is object that implements IComparable interface
 		/// performance tip: change to use use int type (such as the hashcode)
 		///</summary>
-		public RedBlackNode Add(IComparable key, object data)
+		public Node Add(TKey key, TValue data)
 		{
 			if(key == null)
 				throw(new ArgumentException("RedBlackNode key must not be null"));
@@ -151,8 +153,8 @@ namespace pwiz.Common.Collections
 			// traverse tree - find where node belongs
 			int result			=	0;
 			// create new node
-			RedBlackNode node	=	new RedBlackNode();
-			RedBlackNode temp	=	root;				// grab the rbTree node of the tree
+			Node node	=	new Node(this);
+			Node temp	=	root;				// grab the rbTree node of the tree
 
 			while(temp != null)
 			{	// find Parent
@@ -193,12 +195,12 @@ namespace pwiz.Common.Collections
         /// properties. Examine the tree and restore. Rotations are normally 
         /// required to restore it
         ///</summary>
-		private void RestoreAfterInsert(RedBlackNode x)
+		private void RestoreAfterInsert(Node x)
 		{   
             // x and y are used as variable names for brevity, in a more formal
             // implementation, you should probably change the names
 
-			RedBlackNode y;
+			Node y;
 
 			// maintain red-black tree properties after adding x
 			while(x != root && x.Parent.IsRed)
@@ -262,13 +264,13 @@ namespace pwiz.Common.Collections
 		/// RotateLeft
 		/// Rebalance the tree by rotating the nodes to the left
 		///</summary>
-		private void RotateLeft(RedBlackNode x)
+		private void RotateLeft(Node x)
 		{
 			// pushing node x down and to the Left to balance the tree. x's Right child (y)
 			// replaces x (since y > x), and y's Left child becomes x's Right child 
 			// (since it's < y but > x).
             
-			RedBlackNode y = x.Right;			// get x's Right node, this becomes y
+			Node y = x.Right;			// get x's Right node, this becomes y
 
 			// set x's Right link
             x.Right = y.Left;					// y's Left child's becomes x's Right child
@@ -295,13 +297,13 @@ namespace pwiz.Common.Collections
 		/// RotateRight
 		/// Rebalance the tree by rotating the nodes to the right
 		///</summary>
-		private void RotateRight(RedBlackNode x)
+		private void RotateRight(Node x)
 		{
 			// pushing node x down and to the Right to balance the tree. x's Left child (y)
 			// replaces x (since x < y), and y's Right child becomes x's Left child 
 			// (since it's < x but > y).
             
-			RedBlackNode y = x.Left;			// get x's Left node, this becomes y
+			Node y = x.Left;			// get x's Left node, this becomes y
 
 			// set x's Right link
 			x.Left = y.Right;					// y's Right child becomes x's Left child
@@ -331,7 +333,7 @@ namespace pwiz.Common.Collections
 		{
 		    return GetEnumerator();
 		}
-        IEnumerator<RedBlackNode> IEnumerable<RedBlackNode>.GetEnumerator()
+        IEnumerator<Node> IEnumerable<Node>.GetEnumerator()
         {
             return GetEnumerator();
         }
@@ -357,14 +359,14 @@ namespace pwiz.Common.Collections
 		/// Remove
 		/// removes the key and data object (delete)
 		///<summary>
-		public void RemoveKey(IComparable key)
+		public void RemoveKey(TKey key)
 		{
             if(key == null)
                 throw(new ArgumentException("RedBlackNode key is null"));
 		
 			// find node
 			int	result;
-			RedBlackNode node = root;
+			Node node = root;
 			while(node != null)
 			{
 				result = key.CompareTo(node.Key);
@@ -389,7 +391,7 @@ namespace pwiz.Common.Collections
 		/// Delete
 		/// Delete a node from the tree and restore red black properties
 		///</summary>
-		private void Delete(RedBlackNode nodeToBeDeleted)
+		private void Delete(Node nodeToBeDeleted)
 		{
 			// A node to be deleted will be: 
 			//		1. a leaf with no children
@@ -398,7 +400,7 @@ namespace pwiz.Common.Collections
 			// If the deleted node is red, the red black properties still hold.
 			// If the deleted node is black, the tree needs rebalancing
 
-			RedBlackNode nodeWithAtMostOneChild;					// work node 
+			Node nodeWithAtMostOneChild;					// work node 
 
 			// find the replacement node (the successor to x) - the node one with 
 			// at *most* one child. 
@@ -416,7 +418,7 @@ namespace pwiz.Common.Collections
             Swap(nodeWithAtMostOneChild, nodeToBeDeleted);
             var parentOfDeletedNode = nodeToBeDeleted.Parent;
             // x (y's only child) is the node that will be linked to y's old parent. 
-            RedBlackNode newChild = nodeToBeDeleted.Left ?? nodeToBeDeleted.Right;
+            Node newChild = nodeToBeDeleted.Left ?? nodeToBeDeleted.Right;
             if (parentOfDeletedNode == null)
             {
                 root = newChild; // make x the root node
@@ -453,7 +455,7 @@ namespace pwiz.Common.Collections
                     newChild.Parent.Right = newChild;
                 }
 			}
-
+		    nodeToBeDeleted.Tree = null;
             if (nodeToBeDeleted.IsRed)
             {
                 return;
@@ -472,7 +474,7 @@ namespace pwiz.Common.Collections
                     child.IsBlack = true;
                     return;
                 }
-                RedBlackNode sibling = wasLeftChild ? parentOfDeletedNode.Right : parentOfDeletedNode.Left;
+                Node sibling = wasLeftChild ? parentOfDeletedNode.Right : parentOfDeletedNode.Left;
                 if (sibling.IsRed)
                 {
                     sibling.IsBlack = true;
@@ -546,7 +548,7 @@ namespace pwiz.Common.Collections
             }
 		}
 
-        private void Swap(RedBlackNode node1, RedBlackNode node2)
+        private void Swap(Node node1, Node node2)
         {
             if (node1 == node2)
             {
@@ -660,11 +662,11 @@ namespace pwiz.Common.Collections
         /// properties. Examine the tree and restore. Rotations are normally 
         /// required to restore it
         ///</summary>
-		private void RestoreAfterDelete(RedBlackNode parent, bool wasLeftChild)
+		private void RestoreAfterDelete(Node parent, bool wasLeftChild)
 		{
 			// maintain Red-Black tree balance after deleting node 			
 
-			RedBlackNode y;
+			Node y;
 
 			while(parent != null) 
 			{
@@ -760,11 +762,11 @@ namespace pwiz.Common.Collections
 				}
 			}
 		}
-        private static bool IsBlack(RedBlackNode node)
+        private static bool IsBlack(Node node)
         {
             return node == null || node.IsBlack;
         }
-        private static bool IsRed(RedBlackNode node)
+        private static bool IsRed(Node node)
         {
             return node != null && node.IsRed;
         }
@@ -777,7 +779,7 @@ namespace pwiz.Common.Collections
 		{
 			root      = null;
 		}
-        public RedBlackNode Find(IComparable key)
+        public Node Find(IComparable key)
         {
             var node = root;
             while (node != null)
@@ -811,9 +813,9 @@ namespace pwiz.Common.Collections
         /// </summary>
         /// <param name="key"></param>
         /// <returns></returns>
-        public RedBlackNode Floor(IComparable key)
+        public Node Floor(IComparable key)
         {
-            RedBlackNode node = root;
+            Node node = root;
             while (node != null)
             {
                 int cmp = key.CompareTo(node.Key);
@@ -850,9 +852,9 @@ namespace pwiz.Common.Collections
             }
             return null;
         }
-        public RedBlackNode Lower(IComparable key)
+        public Node Lower(IComparable key)
         {
-            RedBlackNode node = root;
+            Node node = root;
             while (node != null)
             {
                 int cmp = key.CompareTo(node.Key);
@@ -886,7 +888,7 @@ namespace pwiz.Common.Collections
             return null;
         }
 
-	    public void CopyTo(RedBlackNode[] array, int arrayIndex)
+	    public void CopyTo(Node[] array, int arrayIndex)
 	    {
 	        foreach (var node in this)
 	        {
@@ -899,311 +901,374 @@ namespace pwiz.Common.Collections
             get { return root == null ? 0 : root.Weight; }
 	    }
 
-	    public IEnumerable<IComparable> Keys
+	    public IEnumerable<TKey> Keys
 	    {
 	        get {
 	            return this.Select(node => node.Key);
 	        }
 	    }
-	    public IEnumerable<object> Values
+	    public IEnumerable<TValue> Values
 	    {
 	        get {
 	            return this.Select(node => node.Value);
 	        }
 	    }
-	}
 
-    public class RedBlackNode
-    {
-        internal RedBlackNode(RedBlackNode other)
+        private Node MakeSubTree(int depth, IList<KeyValuePair<TKey, TValue>> entries, int start, int end)
         {
-            Key = other.Key;
-            IsRed = other.IsRed;
-            Value = other.Value;
-            Weight = 1;
-            if (other.Left != null)
+            if (end <= start)
             {
-                Left = new RedBlackNode(other.Left);
-                Left.Parent = this;
-            }
-            if (other.Right != null)
-            {
-                Right = new RedBlackNode(other.Right);
-                Right.Parent = this;
-            }
-        }
-        // left node 
-        private RedBlackNode rbnLeft;
-        // right node 
-        private RedBlackNode rbnRight;
-
-        ///<summary>
-        ///Key
-        ///</summary>
-        public IComparable Key
-        {
-            get; set;
-        }
-        ///<summary>
-        ///Data
-        ///</summary>
-        public object Value { get; set; }
-
-        ///<summary>
-        ///Color
-        ///</summary>
-        internal bool IsRed
-        {
-            get; set;
-        }
-        internal bool IsBlack
-        {
-            get { return !IsRed; } set { IsRed = !value;}
-        }
-        public int Weight
-        {
-            get;
-            internal set;
-        }
-        public int Index
-        {
-            get
-            {
-                int index = Left == null ? 0 : Left.Weight;
-                for (var node = this; ; node = node.Parent)
-                {
-                    if (node.Parent == null)
-                    {
-                        return index;
-                    }
-                    if (node == node.Parent.Right)
-                    {
-                        return index + node.Parent.Index + 1;
-                    }
-                }
-            }
-        }
-        private void UpdateWeight()
-        {
-            int newWeight = 1;
-            if (Left != null)
-            {
-                newWeight += Left.Weight;
-            }
-            if (Right != null)
-            {
-                newWeight += Right.Weight;
-            }
-            if (newWeight == Weight)
-            {
-                return;
-            }
-            Weight = newWeight;
-            if (Parent != null)
-            {
-                Parent.UpdateWeight();
-            }
-        }
-        ///<summary>
-        ///Left
-        ///</summary>
-        public RedBlackNode Left
-        {
-            get
-            {
-                return rbnLeft;
-            }
-
-            internal set
-            {
-                rbnLeft = value;
-                UpdateWeight();
-            }
-        }
-        ///<summary>
-        /// Right
-        ///</summary>
-        public RedBlackNode Right
-        {
-            get
-            {
-                return rbnRight;
-            }
-
-            internal set
-            {
-                rbnRight = value;
-                UpdateWeight();
-            }
-        }
-        public RedBlackNode Parent { get;set; }
-        
-        public RedBlackNode()
-        {
-            IsRed = true;
-        }
-        public RedBlackNode Next
-        {
-            get
-            {
-                RedBlackNode node;
-                if (Right != null)
-                {
-                    for (node = Right; node.Left != null; node = node.Left)
-                    {
-                        
-                    }
-                    return node;
-                }
-                for (node = this; node.Parent != null; node = node.Parent)
-                {
-                    if (node.Parent.Left == node)
-                    {
-                        return node.Parent;
-                    }
-                }
                 return null;
             }
-        }
-        public RedBlackNode Previous
-        {
-            get
+            int mid = (start + end)/2;
+            Node root = new Node(this) { Key = entries[mid].Key, Value = entries[mid].Value, Weight = 1, IsBlack = true};
+            if ((1 << depth) <= entries.Count && (1 << (depth + 1)) > entries.Count)
             {
-                RedBlackNode node;
+                root.IsRed = true;
+            }
+            Node left = MakeSubTree(depth + 1, entries, start, mid);
+            if (left != null)
+            {
+                root.Left = left;
+                left.Parent = root;
+            }
+            Node right = MakeSubTree(depth + 1, entries, mid + 1, end);
+            if (right != null)
+            {
+                root.Right = right;
+                right.Parent = root;
+            }
+            return root;
+        }
+        /// <summary>
+        /// Initializes a RedBlackTree from a list that is already sorted.
+        /// The tree is balanced as best as possible, and only nodes in the lowest row are red.
+        /// </summary>
+        public static RedBlackTree<TKey,TValue> FromSorted(IList<KeyValuePair<TKey, TValue>> entries)
+        {
+            var tree = new RedBlackTree<TKey,TValue>();
+            tree.root = tree.MakeSubTree(0, entries, 0, entries.Count);
+            if (tree.root != null)
+            {
+                tree.root.IsBlack = true;
+            }
+            return tree;
+        }
+        public class RedBlackEnumerator : IEnumerator<Node>
+        {
+            public RedBlackEnumerator(RedBlackTree<TKey, TValue> tree)
+            {
+                Tree = tree;
+                Forward = true;
+            }
+
+            public RedBlackTree<TKey, TValue> Tree
+            {
+                get;
+                private set;
+            }
+
+            object IEnumerator.Current
+            {
+                get
+                {
+                    return Current;
+                }
+            }
+
+            public Node Current
+            {
+                get;
+                set;
+            }
+
+            public bool Forward
+            {
+                get;
+                set;
+            }
+
+            public void Reset()
+            {
+                Current = Start;
+            }
+            public Node Start
+            {
+                get;
+                set;
+            }
+            public bool MoveNext()
+            {
+                if (Current == null)
+                {
+                    Current = Forward ? Tree.First : Tree.Last;
+                }
+                else
+                {
+                    Current = Forward ? Current.Next : Current.Previous;
+                }
+                return Current != Start;
+            }
+            public void Dispose()
+            {
+            }
+        }
+        public class Node
+        {
+            internal Node(Node other)
+            {
+                Key = other.Key;
+                IsRed = other.IsRed;
+                Value = other.Value;
+                Weight = 1;
+                if (other.Left != null)
+                {
+                    Left = new Node(other.Left);
+                    Left.Parent = this;
+                }
+                if (other.Right != null)
+                {
+                    Right = new Node(other.Right);
+                    Right.Parent = this;
+                }
+            }
+            // left node 
+            private Node rbnLeft;
+            // right node 
+            private Node rbnRight;
+
+            public RedBlackTree<TKey, TValue> Tree { get; internal set; }
+
+            ///<summary>
+            ///Key
+            ///</summary>
+            public TKey Key
+            {
+                get;
+                internal set;
+            }
+            ///<summary>
+            ///Data
+            ///</summary>
+            public TValue Value { get; set; }
+
+            ///<summary>
+            ///Color
+            ///</summary>
+            internal bool IsRed
+            {
+                get;
+                set;
+            }
+            internal bool IsBlack
+            {
+                get { return !IsRed; }
+                set { IsRed = !value; }
+            }
+            public int Weight
+            {
+                get;
+                internal set;
+            }
+            public int Index
+            {
+                get
+                {
+                    int index = Left == null ? 0 : Left.Weight;
+                    for (var node = this; ; node = node.Parent)
+                    {
+                        if (node.Parent == null)
+                        {
+                            return index;
+                        }
+                        if (node == node.Parent.Right)
+                        {
+                            return index + node.Parent.Index + 1;
+                        }
+                    }
+                }
+            }
+            private void UpdateWeight()
+            {
+                int newWeight = 1;
                 if (Left != null)
                 {
-                    for (node = Left; node.Right != null; node = node.Right)
-                    {
-                    }
-                    return node;
+                    newWeight += Left.Weight;
                 }
-                for (node = this; node.Parent != null; node = node.Parent)
+                if (Right != null)
                 {
-                    if (node == node.Parent.Right)
-                    {
-                        return node.Parent;
-                    }
+                    newWeight += Right.Weight;
                 }
-                return null;
+                if (newWeight == Weight)
+                {
+                    return;
+                }
+                Weight = newWeight;
+                if (Parent != null)
+                {
+                    Parent.UpdateWeight();
+                }
             }
-        }
-        ///1. The root is black. 
-        ///2. All leaves are black. 
-        ///3. Red nodes can only have black children (null's count as black)
-        ///4. All paths from a node to its leaves contain the same number of black nodes.
-        public int CheckValidAndCountBlackNodesToLeaves()
-        {
-            if (IsRed)
+            ///<summary>
+            ///Left
+            ///</summary>
+            public Node Left
             {
-                if (Parent == null)
+                get
                 {
-                    throw new InvalidDataException("Root cannot be black");
+                    return rbnLeft;
                 }
-                if (Parent.IsRed)
-                {
-                    throw new InvalidDataException("Red node cannot have red parent");
-                }
-            }
-            int weight = 1;
-            int leftResult;
-            if (Left != null)
-            {
-                if (Left.Parent != this)
-                {
-                    throw new InvalidDataException("Child has incorrect parent");
-                }
-                leftResult = Left.CheckValidAndCountBlackNodesToLeaves();
-                weight += Left.Weight;
-            }
-            else 
-            {
-                leftResult = 0;
-            }
 
-            int rightResult;            
-            if (Right != null)
-            {
-                if (Right.Parent != this)
+                internal set
                 {
-                    throw new InvalidDataException("Child has incorrect parent");
+                    rbnLeft = value;
+                    UpdateWeight();
                 }
-                rightResult = Right.CheckValidAndCountBlackNodesToLeaves();
-                weight += Right.Weight;
-            } 
-            else
-            {
-                rightResult = 0;
             }
-            
-            if (leftResult != rightResult)
+            ///<summary>
+            /// Right
+            ///</summary>
+            public Node Right
             {
-                throw new InvalidDataException("Left and right paths to leaves must contain same number of blacks");
+                get
+                {
+                    return rbnRight;
+                }
+
+                internal set
+                {
+                    rbnRight = value;
+                    UpdateWeight();
+                }
             }
-            if (weight != Weight)
+            public Node Parent { get; set; }
+
+            internal Node(RedBlackTree<TKey,TValue> tree)
             {
-                throw new InvalidDataException("Incorrect weight");
+                Tree = tree;
+                IsRed = true;
             }
-            return IsRed ? leftResult : leftResult + 1;
-        }
-        public override string ToString()
-        {
-            return Value == null ? "" : Value.ToString();
+            public Node Next
+            {
+                get
+                {
+                    Node node;
+                    if (Right != null)
+                    {
+                        for (node = Right; node.Left != null; node = node.Left)
+                        {
+
+                        }
+                        return node;
+                    }
+                    for (node = this; node.Parent != null; node = node.Parent)
+                    {
+                        if (node.Parent.Left == node)
+                        {
+                            return node.Parent;
+                        }
+                    }
+                    return null;
+                }
+            }
+            public Node Previous
+            {
+                get
+                {
+                    Node node;
+                    if (Left != null)
+                    {
+                        for (node = Left; node.Right != null; node = node.Right)
+                        {
+                        }
+                        return node;
+                    }
+                    for (node = this; node.Parent != null; node = node.Parent)
+                    {
+                        if (node == node.Parent.Right)
+                        {
+                            return node.Parent;
+                        }
+                    }
+                    return null;
+                }
+            }
+            ///1. The root is black. 
+            ///2. All leaves are black. 
+            ///3. Red nodes can only have black children (null's count as black)
+            ///4. All paths from a node to its leaves contain the same number of black nodes.
+            public int CheckValidAndCountBlackNodesToLeaves()
+            {
+                if (Tree == null)
+                {
+                    throw new InvalidDataException("Tree cannot be null");
+                }
+                if (IsRed)
+                {
+                    if (Parent == null)
+                    {
+                        throw new InvalidDataException("Root must be black");
+                    }
+                    if (Parent.IsRed)
+                    {
+                        throw new InvalidDataException("Red node cannot have red parent");
+                    }
+                }
+                int weight = 1;
+                int leftResult;
+                if (Left != null)
+                {
+                    if (Left.Parent != this)
+                    {
+                        throw new InvalidDataException("Child has incorrect parent");
+                    }
+                    if (!ReferenceEquals(Tree, Left.Tree))
+                    {
+                        throw new InvalidDataException("Child is in wrong tree");
+                    }
+                    leftResult = Left.CheckValidAndCountBlackNodesToLeaves();
+                    weight += Left.Weight;
+                }
+                else
+                {
+                    leftResult = 0;
+                }
+
+                int rightResult;
+                if (Right != null)
+                {
+                    if (Right.Parent != this)
+                    {
+                        throw new InvalidDataException("Child has incorrect parent");
+                    }
+                    if (!ReferenceEquals(Tree, Right.Tree))
+                    {
+                        throw new InvalidDataException("Child is in wrong tree");
+                    }
+                    rightResult = Right.CheckValidAndCountBlackNodesToLeaves();
+                    weight += Right.Weight;
+                }
+                else
+                {
+                    rightResult = 0;
+                }
+
+                if (leftResult != rightResult)
+                {
+                    throw new InvalidDataException("Left and right paths to leaves must contain same number of blacks");
+                }
+                if (weight != Weight)
+                {
+                    throw new InvalidDataException("Incorrect weight");
+                }
+                return IsRed ? leftResult : leftResult + 1;
+            }
+            public override string ToString()
+            {
+                return Value == null ? "" : Value.ToString();
+            }
         }
     }
 
-    public class RedBlackEnumerator : IEnumerator<RedBlackNode>
-    {
-        public RedBlackEnumerator(RedBlackTree tree)
-        {
-            Tree = tree;
-            Forward = true;
-        }
 
-        public RedBlackTree Tree
-        {
-            get; private set;
-        }
-
-        object IEnumerator.Current
-        {
-            get
-            {
-                return Current;
-            }
-        }
-
-        public RedBlackNode Current
-        {
-            get; set;
-        }
-
-        public bool Forward
-        {
-            get; set;
-        }
-
-        public void Reset()
-        {
-            Current = Start;
-        }
-        public RedBlackNode Start
-        {
-            get; set;
-        }
-        public bool MoveNext()
-        {
-            if (Current == null)
-            {
-                Current = Forward ? Tree.First : Tree.Last;
-            }
-            else
-            {
-                Current = Forward ? Current.Next : Current.Previous;
-            }
-            return Current != Start;
-        }
-        public void Dispose()
-        {
-        }
-    }
 }

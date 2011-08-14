@@ -20,8 +20,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
-using System.Windows.Forms;
 
 namespace pwiz.Common.DataBinding
 {
@@ -36,40 +36,23 @@ namespace pwiz.Common.DataBinding
     /// The BindingListView works best if the data is being displayed in a 
     /// <see cref="BoundDataGridView"/>.
     /// </summary>
-    public class BindingListView : BindingList<object>, IBindingListView, ITypedList
+    [DebuggerTypeProxy(typeof(object))]
+    public class BindingListView : BindingList<RowItem>, IBindingListView, ITypedList
     {
-        private Func<object, bool> _filterPredicate;
-        private Control _owner;
-        private bool _isHandleCreated;
+        private Func<RowItem, bool> _filterPredicate = (rowItem)=>true;
         private ViewInfo _viewInfo;
         private string[] _columnDisplayOrder;
         private BindingListEventHandler _bindingListEventHandler;
+        private Pivoter _pivoter;
+        private IList<RowItem> _unfilteredItems;
 
         
         public BindingListView(ViewInfo viewInfo, IList innerList)
         {
             ViewInfo = viewInfo;
             InnerList = innerList;
-            foreach (var item in innerList)
-            {
-                Add(item);
-            }
-            
-//            var bindingList = innerList as IBindingList;
-            // The BindingListView can only monitor changes from the list if it's a
-            // IBindingList, and the row elements implement IDataRow
-//            if (bindingList != null && typeof(IEntity).IsAssignableFrom(viewInfo.ParentColumn.PropertyType))
-//            {
-//                InnerList = bindingList;
-//            }
-//            else
-//            {
-//                InnerList = innerList.Cast<object>().ToArray();
-//            }
-//            foreach (var item in InnerList)
-//            {
-//                Items.Add(item);
-//            }
+            _pivoter = new Pivoter(viewInfo);
+            UnfilteredItems = _pivoter.ExpandAndPivot(innerList.Cast<object>().Select(o => new RowItem(null, o))).ToArray();
         }
 
         public DataSchema DataSchema { get { return ViewInfo.DataSchema; } }
@@ -80,7 +63,7 @@ namespace pwiz.Common.DataBinding
             {
                 return _viewInfo;
             }
-            set
+            private set
             {
                 _viewInfo = value;
             }
@@ -130,13 +113,13 @@ namespace pwiz.Common.DataBinding
             }
             return new ViewSpec()
                 .SetName(ViewInfo.Name)
-                .SetColumns(columnSpecs);
+                .SetColumns(columnSpecs)
+                .SetSublistId(ViewInfo.SublistId);
         }
 
         public void ApplySort(ListSortDescriptionCollection sorts)
         {
             DoSort(sorts);
-            SortDescriptions = sorts;
         }
 
         protected void DoSort(ListSortDescriptionCollection sorts)
@@ -150,8 +133,9 @@ namespace pwiz.Common.DataBinding
             Items.Clear();
             foreach (var row in sortRows)
             {
-                Items.Add((object) row.Item);
+                Items.Add(row.RowItem);
             }
+            SortDescriptions = sorts;
             ResetBindings();
         }
 
@@ -169,11 +153,20 @@ namespace pwiz.Common.DataBinding
 //            _unfilteredItems = null;
         }
 
-        public IList UnfilteredItems
+        public IList<RowItem> UnfilteredItems
         {
             get
             {
-                return InnerList;
+                return _unfilteredItems;
+            }
+            set
+            {
+                _unfilteredItems = value;
+                foreach (var rowItem in UnfilteredItems)
+                {
+                    Items.Add(rowItem);
+                }
+                ResetBindings();
             }
         }
 
@@ -195,7 +188,7 @@ namespace pwiz.Common.DataBinding
         }
 
         
-        public Func<object, bool> FilterPredicate { 
+        public Func<RowItem, bool> FilterPredicate { 
             get
             {
                 return _filterPredicate;
@@ -282,20 +275,20 @@ namespace pwiz.Common.DataBinding
         private class SortRow : IComparable<SortRow>
         {
             private object[] _keys;
-            public SortRow(DataSchema dataSchema, ListSortDescriptionCollection sorts, object item, int rowIndex)
+            public SortRow(DataSchema dataSchema, ListSortDescriptionCollection sorts, RowItem rowItem, int rowIndex)
             {
                 DataSchema = dataSchema;
                 Sorts = sorts;
-                Item = item;
+                RowItem = rowItem;
                 OriginalRowIndex = rowIndex;
                 _keys = new object[sorts.Count];
                 for (int i = 0; i < sorts.Count; i++)
                 {
-                    _keys[i] = sorts[i].PropertyDescriptor.GetValue(Item);
+                    _keys[i] = sorts[i].PropertyDescriptor.GetValue(RowItem);
                 }
             }
             public DataSchema DataSchema { get; private set; }
-            public object Item { get; private set; }
+            public RowItem RowItem { get; private set; }
             public int OriginalRowIndex { get; private set; }
             public ListSortDescriptionCollection Sorts { get; private set; }
             public int CompareTo(SortRow other)
@@ -316,23 +309,6 @@ namespace pwiz.Common.DataBinding
                 return OriginalRowIndex.CompareTo(other.OriginalRowIndex);
             }
         }
-        public Control Owner { 
-            get
-            {
-                return _owner;
-            }
-            set
-            {
-                if (_owner == value)
-                {
-                    return;
-                }
-                if (_isHandleCreated)
-                {
-                    
-                }
-            }
-        }
 
         public string GetListName(PropertyDescriptor[] listAccessors)
         {
@@ -341,12 +317,34 @@ namespace pwiz.Common.DataBinding
 
         public PropertyDescriptorCollection GetItemProperties(PropertyDescriptor[] listAccessors)
         {
-            return 
-                new PropertyDescriptorCollection(
-                    ViewInfo.ColumnDescriptors
-                    .Where(c=>c.Visible)
-                    .Select(c => new ColumnPropertyDescriptor(c))
-                    .ToArray());
+            var propertyDescriptors = new List<PropertyDescriptor>();
+            var pivotColumns = new Dictionary<RowKey, List<ColumnDescriptor>>();
+            foreach (var columnDescriptor in ViewInfo.ColumnDescriptors)
+            {
+                var pivotValues = _pivoter.GetPivotValues(columnDescriptor.IdPath);
+                if (pivotValues == null)
+                {
+                    propertyDescriptors.Add(new ColumnPropertyDescriptor(columnDescriptor, null));
+                    continue;
+                }
+                List<ColumnDescriptor> columns;
+                foreach (var value in pivotValues)
+                {
+                    if (!pivotColumns.TryGetValue(value, out columns))
+                    {
+                        columns = new List<ColumnDescriptor>();
+                        pivotColumns.Add(value, columns);
+                    }
+                    columns.Add(columnDescriptor);
+                }
+            }
+            var pivotKeys = pivotColumns.Keys.ToArray();
+            Array.Sort(pivotKeys, RowKey.GetComparison(DataSchema, pivotColumns.Keys.Select(rk=>rk.IdentifierPath)));
+            foreach (var pivotKey in pivotKeys)
+            {
+                propertyDescriptors.AddRange(pivotColumns[pivotKey].Select(cd=>new ColumnPropertyDescriptor(cd, pivotKey)).ToArray());
+            }
+            return new PropertyDescriptorCollection(propertyDescriptors.ToArray());
         }
 
         public void SetColumnDisplayOrder(IEnumerable<string> columnDisplayOrder)
@@ -389,7 +387,7 @@ namespace pwiz.Common.DataBinding
             }
         }
 
-        public void SetFilteredItems(IList<object> items)
+        public void SetFilteredItems(IList<RowItem> items)
         {
             Items.Clear();
             foreach (var item in items)
@@ -398,5 +396,7 @@ namespace pwiz.Common.DataBinding
             }
             ResetBindings();
         }
+
+        public Pivoter Pivoter { get { return _pivoter; } }
     }
 }

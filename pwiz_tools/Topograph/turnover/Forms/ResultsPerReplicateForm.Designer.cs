@@ -185,7 +185,6 @@ namespace pwiz.Topograph.ui.Forms
             this.dataGridViewResults.RowHeadersDefaultCellStyle = dataGridViewCellStyle24;
             this.dataGridViewResults.Size = new System.Drawing.Size(736, 440);
             this.dataGridViewResults.TabIndex = 0;
-            this.dataGridViewResults.RowHeaderMouseDoubleClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridView1_RowHeaderMouseDoubleClick);
             // 
             // ResultsPerReplicateForm
             // 

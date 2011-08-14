@@ -30,9 +30,15 @@ namespace pwiz.Common.DataBinding
     /// </summary>
     public class TreeList<T> : IList<T>
     {   
-        public TreeList(RedBlackTree tree)
+        public TreeList(RedBlackTree<LongDecimal,T> tree)
         {
             Tree = tree;
+        }
+        public TreeList(IEnumerable<T> items)
+        {
+            Tree = RedBlackTree<LongDecimal,T>.FromSorted(
+                items.Select((item, index) => new KeyValuePair<LongDecimal, T>(new LongDecimal(index), item))
+                .ToArray());
         }
 
         public IEnumerator GetEnumerator()
@@ -144,9 +150,9 @@ namespace pwiz.Common.DataBinding
 
         public T this[int index]
         {
-            get { return (T) Tree[index].Value; }
+            get { return Tree[index].Value; }
             set { Tree[index].Value = value; }
         }
-        public RedBlackTree Tree { get; set; }
+        public RedBlackTree<LongDecimal,T> Tree { get; set; }
     }
 }

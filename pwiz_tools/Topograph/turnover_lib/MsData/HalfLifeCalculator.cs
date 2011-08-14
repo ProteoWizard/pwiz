@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using NHibernate;
@@ -298,12 +299,12 @@ namespace pwiz.Topograph.MsData
                                 };
             if (!ByProtein)
             {
-                resultRow.PeptideSequence = first.Peptide.Sequence;
+                resultRow.Peptide = first.Peptide;
             }
             foreach (var cohort in Cohorts)
             {
                 var resultData = CalculateHalfLife(FilterCohort(rowDatas, cohort));
-                resultRow.ResultDatas.Add(cohort, resultData);
+                resultRow.HalfLives.Add(cohort, resultData);
             }
             return resultRow;
         }
@@ -664,23 +665,29 @@ namespace pwiz.Topograph.MsData
         {
             public ResultRow()
             {
-                ResultDatas = new Dictionary<string, ResultData>();
+                HalfLives = new Dictionary<string, ResultData>();
             }
-            public String PeptideSequence { get; set; }
+            public Peptide Peptide { get; set; }
             public String ProteinName { get; set; }
             public String ProteinDescription { get; set; }
-            public Dictionary<String, ResultData> ResultDatas { get; private set;}
+            public IDictionary<String, ResultData> HalfLives { get; private set;}
         }
 
         public class ResultData
         {
             public double YIntercept { get; set; }
+            public double XIntercept {get
+            {
+                return -YIntercept/RateConstant;
+            }}
             public double RateConstant { get; set; }
             public double RateConstantStdDev { get; set; }
             public double RateConstantError { get; set; }
             public double? RSquared { get; set; }
             public int PointCount { get; set; }
+            [Browsable(false)]
             public IList<RowData> RowDatas { get; set; }
+            [Browsable(false)]
             public IList<RowData> FilteredRowDatas { get; set; }
             public double HalfLife
             {
@@ -705,6 +712,10 @@ namespace pwiz.Topograph.MsData
             private static double HalfLifeFromRateConstant(double rateConstant)
             {
                 return Math.Log(.5)/rateConstant;
+            }
+            public override string ToString()
+            {
+                return HalfLife + " [" + MinHalfLife + "," + MaxHalfLife + "]";
             }
         }
 

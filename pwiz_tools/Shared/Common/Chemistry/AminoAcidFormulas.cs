@@ -46,7 +46,7 @@ namespace pwiz.Common.Chemistry
             {"Phe",'F'},
             {"Pro",'P'},
             {"Ser",'S'},
-            {"Thr",'R'},
+            {"Thr",'T'},
             {"Trp",'W'},
             {"Tyr",'Y'},
             {"Val",'V'}

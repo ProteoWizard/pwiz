@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
@@ -53,10 +54,21 @@ namespace pwiz.Common.DataBinding.Controls
                 }
                 _rootColumn = value;
                 Nodes.Clear();
-                Nodes.AddRange(MakeChildNodes(_rootColumn).ToArray());
-                foreach (TreeNode node in Nodes)
+                if (_rootColumn.IsSelectable)
                 {
-                    EnsureChildren(node);
+                    var rootNode = new TreeNode();
+                    SetColumnDescriptor(rootNode, _rootColumn);
+                    Nodes.Add(rootNode);
+                    EnsureChildren(rootNode);
+                    rootNode.Expand();
+                }
+                else
+                {
+                    Nodes.AddRange(MakeChildNodes(_rootColumn).ToArray());
+                    foreach (TreeNode node in Nodes)
+                    {
+                        EnsureChildren(node);
+                    }
                 }
             }
         }
@@ -111,17 +123,26 @@ namespace pwiz.Common.DataBinding.Controls
             return result;
         }
 
-        protected IList<ColumnDescriptor> ListChildren(ColumnDescriptor columnDescriptor)
+        protected IList<ColumnDescriptor> ListChildren(ColumnDescriptor parent)
         {
             var result = new List<ColumnDescriptor>();
-            result.AddRange(columnDescriptor.DataSchema
-                .GetPropertyDescriptors(columnDescriptor.PropertyType)
-                .Select(pd=>new ColumnDescriptor(columnDescriptor, pd)));
-            var collectionInfo = columnDescriptor.DataSchema.GetCollectionInfo(columnDescriptor.PropertyType);
-            if (collectionInfo != null)
+            if (parent.CollectionInfo != null && parent.CollectionInfo.IsDictionary)
             {
-                var collectionCd = new ColumnDescriptor(columnDescriptor, collectionInfo);
-                result.AddRange(columnDescriptor.DataSchema.GetPropertyDescriptors(collectionCd.PropertyType).Select(pd=>new ColumnDescriptor(collectionCd, pd)));
+                result.Add(new ColumnDescriptor(parent, "Key"));
+                result.AddRange(ListChildren(new ColumnDescriptor(parent, "Value")));
+                return result;
+            }
+            foreach (var child in parent.GetChildColumns())
+            {
+                var collectionInfo = parent.DataSchema.GetCollectionInfo(child.PropertyType);
+                if (collectionInfo != null)
+                {
+                    result.Add(new ColumnDescriptor(child, collectionInfo));
+                }
+                else
+                {
+                    result.Add(child);
+                }
             }
             return result;
         }
@@ -184,35 +205,38 @@ namespace pwiz.Common.DataBinding.Controls
                 var columnDescriptor = node.Tag as ColumnDescriptor;
                 if (columnDescriptor != null)
                 {
-                    if (columnDescriptor.Name == idPath.Name)
+                    if (idPath.StartsWith(columnDescriptor.IdPath))
                     {
-                        Debug.Assert(Equals(columnDescriptor.IdPath, idPath));
                         return node;
                     }
                 }
             }
             return null;
         }
-        protected TreeNode FindTreeNode(IdentifierPath idPath, bool create)
+        public TreeNode FindTreeNode(IdentifierPath idPath, bool create)
         {
             if (idPath == null)
             {
                 return null;
             }
-            if (idPath.Parent == null)
+            TreeNodeCollection nodes = Nodes;
+            while(true)
             {
-                return FindTreeNode(Nodes, idPath);
+                TreeNode node = FindTreeNode(nodes, idPath);
+                if (node == null)
+                {
+                    return null;
+                }
+                if (GetColumnDescriptor(node).IdPath.Equals(idPath))
+                {
+                    return node;
+                }
+                if (create)
+                {
+                    EnsureChildren(node);
+                }
+                nodes = node.Nodes;
             }
-            var parent = FindTreeNode(idPath.Parent, create);
-            if (parent == null)
-            {
-                return null;
-            }
-            if (create)
-            {
-                EnsureChildren(parent);
-            }
-            return FindTreeNode(parent.Nodes, idPath);
         }
     }
 }

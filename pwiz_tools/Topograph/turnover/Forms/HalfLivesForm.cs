@@ -1,25 +1,36 @@
-﻿using System;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2011 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Windows.Forms;
+using NHibernate.Criterion;
+using pwiz.Common.DataBinding;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.MsData;
-using pwiz.Topograph.ui.Properties;
-using pwiz.Topograph.ui.Util;
 using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.ui.Forms
 {
     public partial class HalfLivesForm : WorkspaceForm
     {
-        private readonly Dictionary<String, CohortColumns> _cohortColumns
-            = new Dictionary<string, CohortColumns>();
+        private IViewContext _viewContext;
         public HalfLivesForm(Workspace workspace) : base(workspace)
         {
             InitializeComponent();
@@ -29,6 +40,21 @@ namespace pwiz.Topograph.ui.Forms
             tbxMinScore.Text = workspace.GetAcceptMinDeconvolutionScore().ToString();
             comboCalculationType.SelectedIndex = 0;
             UpdateTimePoints();
+            _viewContext = new TopographViewContext(workspace, typeof (ResultRow), new[] {GetDefaultViewSpec(false)});
+            navBar1.ViewContext = _viewContext;
+        }
+
+        private ViewSpec GetDefaultViewSpec(bool byProtein)
+        {
+            List<ColumnSpec> columnSpecs = new List<ColumnSpec>();
+            if (!byProtein)
+            {
+                columnSpecs.Add(new ColumnSpec().SetName("Peptide"));
+            }
+            columnSpecs.Add(new ColumnSpec().SetName("ProteinName"));
+            columnSpecs.Add(new ColumnSpec().SetName("ProteinDescription"));
+            columnSpecs.Add(new ColumnSpec().SetName("HalfLives.[]"));
+            return new ViewSpec().SetName("default").SetColumns(columnSpecs);
         }
 
         public double MinScore
@@ -71,228 +97,17 @@ namespace pwiz.Topograph.ui.Forms
                     return;
                 }
             }
-            colPeptide.Visible = !calculator.ByProtein;
-            foreach (var entry in _cohortColumns.ToArray())
+            var bindingListView = bindingSource1.DataSource as BindingListView;
+            var rows = calculator.ResultRows.Select(row => new ResultRow(this, row)).ToArray();
+            if (bindingListView == null || "default" == bindingListView.ViewInfo.Name)
             {
-                if (!calculator.Cohorts.Contains(entry.Key))
-                {
-                    dataGridView1.Columns.Remove(entry.Value.HalfLifeColumn);
-                    dataGridView1.Columns.Remove(entry.Value.MinHalfLifeColumn);
-                    dataGridView1.Columns.Remove(entry.Value.MaxHalfLifeColumn);
-                    dataGridView1.Columns.Remove(entry.Value.NumDataPointsColumn);
-                    dataGridView1.Columns.Remove(entry.Value.RateConstantColumn);
-                    dataGridView1.Columns.Remove(entry.Value.RateConstantStdDevColumn);
-                    dataGridView1.Columns.Remove(entry.Value.RateConstantErrorColumn);
-                    dataGridView1.Columns.Remove(entry.Value.RSquaredColumn);
-                    _cohortColumns.Remove(entry.Key);
-                }
+                bindingListView = new BindingListView(new ViewInfo(_viewContext.ParentColumn, GetDefaultViewSpec(calculator.ByProtein)), rows);
             }
-            var cohorts = new List<String>(calculator.Cohorts);
-            cohorts.Sort();
-            foreach (var cohort in cohorts)
+            else
             {
-                CohortColumns cohortColumns;
-                if (!_cohortColumns.TryGetValue(cohort, out cohortColumns))
-                {
-                    cohortColumns = new CohortColumns
-                                        {
-                                            HalfLifeColumn = new DataGridViewLinkColumn
-                                                                 {
-                                                                     HeaderText = cohort + " half life",
-                                                                     DefaultCellStyle = {Format = "0.####"},
-                                                                     SortMode = DataGridViewColumnSortMode.Automatic,
-                                                                 },
-                                            MinHalfLifeColumn=  new DataGridViewTextBoxColumn
-                                                                      {
-                                                                          HeaderText = cohort + " min half life",
-                                                                          DefaultCellStyle = { Format = "0.####" },
-                                                                          SortMode = DataGridViewColumnSortMode.Automatic,
-                                                                      },
-                                            MaxHalfLifeColumn = new DataGridViewTextBoxColumn
-                                            {
-                                                HeaderText = cohort + " max half life",
-                                                DefaultCellStyle = { Format = "0.####" },
-                                                SortMode = DataGridViewColumnSortMode.Automatic,
-                                            },
-                                            NumDataPointsColumn = new DataGridViewTextBoxColumn()
-                                                                      {
-                                                                          HeaderText = cohort + " # points",
-                                                                          SortMode = DataGridViewColumnSortMode.Automatic,
-                                                                      },
-                                            RateConstantColumn = new DataGridViewLinkColumn()
-                                                                     {
-                                                                         HeaderText = cohort + " Rate Constant",
-                                                                         SortMode = DataGridViewColumnSortMode.Automatic,
-                                                                     },
-                                            RateConstantStdDevColumn = new DataGridViewTextBoxColumn()
-                                                                           {
-                                                                               HeaderText = cohort + " Rate Constant StdDev",
-                                                                         SortMode = DataGridViewColumnSortMode.Automatic,
-
-                                                                           },
-                                            RateConstantErrorColumn = new DataGridViewTextBoxColumn()
-                                                                          {
-                                                                              HeaderText = cohort + " Rate Constant Error",
-                                                                              SortMode = DataGridViewColumnSortMode.Automatic,
-                                                                          },
-                                            RSquaredColumn = new DataGridViewTextBoxColumn
-                                                                 {
-                                                                     HeaderText = cohort + " R Squared",
-                                                                     SortMode = DataGridViewColumnSortMode.Automatic,
-                                                                 },
-
-                                        };
-                    dataGridView1.Columns.Add(cohortColumns.HalfLifeColumn);
-                    dataGridView1.Columns.Add(cohortColumns.MinHalfLifeColumn);
-                    dataGridView1.Columns.Add(cohortColumns.MaxHalfLifeColumn);
-                    dataGridView1.Columns.Add(cohortColumns.NumDataPointsColumn);
-                    dataGridView1.Columns.Add(cohortColumns.RateConstantColumn);
-                    dataGridView1.Columns.Add(cohortColumns.RateConstantStdDevColumn);
-                    dataGridView1.Columns.Add(cohortColumns.RateConstantErrorColumn);
-                    dataGridView1.Columns.Add(cohortColumns.RSquaredColumn);
-                    _cohortColumns.Add(cohort, cohortColumns);
-                }
+                bindingListView = new BindingListView(bindingListView.ViewInfo, rows);
             }
-            // Filter out rows that have zero data points
-            var filteredResultRows =
-                new List<HalfLifeCalculator.ResultRow>(
-                    calculator.ResultRows.Where(r => r.ResultDatas.Select(rd => rd.Value.PointCount).Sum() > 0));
-            dataGridView1.Rows.Clear();
-            if (filteredResultRows.Count == 0)
-            {
-                MessageBox.Show(this, "No results.  The problem might be that you have not set the time point on any data files.", Program.AppName);
-                return;
-            }
-            dataGridView1.Rows.Add(filteredResultRows.Count);
-            for (int iRow = 0; iRow < filteredResultRows.Count; iRow++) 
-            {
-                var resultRow = filteredResultRows[iRow];
-                var row = dataGridView1.Rows[iRow];
-                row.Cells[colPeptide.Index].Value = resultRow.PeptideSequence;
-                row.Cells[colProteinName.Index].Value = resultRow.ProteinName;
-                row.Cells[colProteinKey.Index].Value = Workspace.GetProteinKey(resultRow.ProteinName, resultRow.ProteinDescription);
-                row.Cells[colProteinDescription.Index].Value = resultRow.ProteinDescription;
-                foreach (var cohort in cohorts)
-                {
-                    var cohortColumns = _cohortColumns[cohort];
-                    var resultData = resultRow.ResultDatas[cohort];
-                    row.Cells[cohortColumns.HalfLifeColumn.Index].Value = resultData.HalfLife;
-                    row.Cells[cohortColumns.MinHalfLifeColumn.Index].Value = resultData.MinHalfLife;
-                    row.Cells[cohortColumns.MaxHalfLifeColumn.Index].Value = resultData.MaxHalfLife;
-                    row.Cells[cohortColumns.NumDataPointsColumn.Index].Value = resultData.PointCount;
-                    row.Cells[cohortColumns.RateConstantColumn.Index].Value = resultData.RateConstant;
-                    row.Cells[cohortColumns.RateConstantStdDevColumn.Index].Value = resultData.RateConstantStdDev;
-                    row.Cells[cohortColumns.RateConstantErrorColumn.Index].Value = resultData.RateConstantError;
-                    row.Cells[cohortColumns.RSquaredColumn.Index].Value = resultData.RSquared;
-                }
-            }
-            UpdateColumnVisibility();
-            btnSave.Enabled = true;
-        }
-
-        private class CohortColumns
-        {
-            public DataGridViewColumn HalfLifeColumn { get; set; }
-            public DataGridViewColumn MinHalfLifeColumn { get; set; }
-            public DataGridViewColumn MaxHalfLifeColumn { get; set; }
-            public DataGridViewColumn NumDataPointsColumn { get; set; }
-            public DataGridViewColumn RateConstantColumn { get; set; }
-            public DataGridViewColumn RateConstantStdDevColumn { get; set; }
-            public DataGridViewColumn RateConstantErrorColumn { get; set; }
-            public DataGridViewColumn RSquaredColumn { get; set; }
-        }
-
-        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
-        {
-            if (e.ColumnIndex < 0 || e.RowIndex < 0)
-            {
-                return;
-            }
-            var row = dataGridView1.Rows[e.RowIndex];
-            if (e.ColumnIndex == colPeptide.Index)
-            {
-                var sequence = Convert.ToString(row.Cells[colPeptide.Index].Value);
-                DbPeptideAnalysis dbPeptideAnalysis;
-                using (Workspace.GetReadLock())
-                {
-                    using (var session = Workspace.OpenSession())
-                    {
-                        var query =
-                            session.CreateQuery("FROM " + typeof (DbPeptideAnalysis) +
-                                                " T WHERE T.Peptide.Sequence = :sequence")
-                                .SetParameter("sequence", sequence)
-                                .SetMaxResults(1);
-                        dbPeptideAnalysis = query.UniqueResult() as DbPeptideAnalysis;
-                        if (dbPeptideAnalysis == null)
-                        {
-                            return;
-                        }
-                    }
-                }
-                var peptideAnalysis = TurnoverForm.Instance.LoadPeptideAnalysis(dbPeptideAnalysis.Id.Value);
-                if (peptideAnalysis == null)
-                {
-                    return;
-                }
-                var form = Program.FindOpenEntityForm<PeptideAnalysisFrame>(peptideAnalysis);
-                if (form != null)
-                {
-                    form.Activate();
-                    return;
-                }
-                form = new PeptideAnalysisFrame(peptideAnalysis);
-                form.Show(DockPanel, DockState);
-                return;
-            }
-            foreach (var entry in _cohortColumns)
-            {
-                if (e.ColumnIndex == entry.Value.HalfLifeColumn.Index || e.ColumnIndex == entry.Value.RateConstantColumn.Index)
-                {
-                    var halfLifeForm = new HalfLifeForm(Workspace)
-                                           {
-                                               Peptide = Convert.ToString(row.Cells[colPeptide.Index].Value) ?? "",
-                                               ProteinName = Convert.ToString(row.Cells[colProteinName.Index].Value),
-                                               Cohort = entry.Key,
-                                               MinScore = MinScore,
-                                               InitialPercent = double.Parse(tbxInitialTracerPercent.Text),
-                                               FinalPercent = double.Parse(tbxFinalTracerPercent.Text),
-                                               FixedInitialPercent = cbxFixYIntercept.Checked,
-                                               HalfLifeCalculationType = HalfLifeCalculationType,
-                                               ApplyEvviesFilter = cbxEvviesFilter.Checked,
-                                           };
-                    for (int i = 0 ; i < checkedListBoxTimePoints.Items.Count; i++)
-                    {
-                        halfLifeForm.SetTimePointExcluded((double) checkedListBoxTimePoints.Items[i],
-                                                          !checkedListBoxTimePoints.GetItemChecked(i));
-                    }
-                    halfLifeForm.Show(DockPanel, DockState);
-                }
-            }
-        }
-
-        private void btnSave_Click(object sender, EventArgs e)
-        {
-            GridUtil.ExportResults(dataGridView1, "HalfLives");
-        }
-
-        private void cbxShowColumn_CheckedChanged(object sender, EventArgs e)
-        {
-            UpdateColumnVisibility();
-        }
-
-        public void UpdateColumnVisibility()
-        {
-            foreach (var cohortColumns in _cohortColumns.Values)
-            {
-                cohortColumns.HalfLifeColumn.Visible = cbxShowHalfLife.Checked;
-                cohortColumns.MinHalfLifeColumn.Visible = cbxShowMinHalfLife.Checked;
-                cohortColumns.MaxHalfLifeColumn.Visible = cbxShowMaxHalfLife.Checked;
-                cohortColumns.NumDataPointsColumn.Visible = cbxShowNumDataPoints.Checked;
-                cohortColumns.RateConstantColumn.Visible = cbxShowRateConstant.Checked;
-                cohortColumns.RateConstantStdDevColumn.Visible = cbxShowRateConstantStdDev.Checked;
-                cohortColumns.RateConstantErrorColumn.Visible = cbxShowRateConstantCI.Checked;
-                cohortColumns.RSquaredColumn.Visible = cbxShowRSquared.Checked;
-            }
+            bindingSource1.DataSource = bindingListView;
         }
 
         private void comboCalculationType_SelectedIndexChanged(object sender, EventArgs e)
@@ -347,6 +162,111 @@ namespace pwiz.Topograph.ui.Forms
             get
             {
                 return (HalfLifeCalculationType)comboCalculationType.SelectedIndex;
+            }
+        }
+
+        public class ResultRow
+        {
+            private HalfLivesForm _form;
+            private HalfLifeCalculator.ResultRow _halfLifeResultRow;
+            public ResultRow(HalfLivesForm form, HalfLifeCalculator.ResultRow halfLifeResultRow)
+            {
+                _form = form;
+                _halfLifeResultRow = halfLifeResultRow;
+                HalfLives = new Dictionary<string, LinkValue<HalfLifeCalculator.ResultData>>();
+                foreach (var resultDataEntry in _halfLifeResultRow.HalfLives)
+                {
+                    var cohort = resultDataEntry.Key;
+                    HalfLives.Add(resultDataEntry.Key, new LinkValue<HalfLifeCalculator.ResultData>(resultDataEntry.Value, 
+                        (sender, args)=>ShowHalfLifeForm(_halfLifeResultRow.Peptide, _halfLifeResultRow.ProteinName, cohort)
+                        ));
+                }
+            }
+            public LinkValue<Peptide> Peptide
+            {
+                get
+                {
+                    return new LinkValue<Peptide>(_halfLifeResultRow.Peptide, PeptideClickHandler);
+                }
+            }
+            public LinkValue<String> ProteinName
+            {
+                get
+                {
+                    return new LinkValue<string>(_halfLifeResultRow.ProteinName, ProteinClickHandler);
+                }
+            }
+            public string ProteinDescription
+            {
+                get
+                {
+                    return _halfLifeResultRow.ProteinDescription;
+                }
+            }
+            [Map(KeyName = "Cohort", ValueName = "Half Life")]
+            public IDictionary<string, LinkValue<HalfLifeCalculator.ResultData>> HalfLives
+            {
+                get; private set;
+            }
+
+            private void PeptideClickHandler(object sender, EventArgs eventArgs)
+            {
+                var peptide = _halfLifeResultRow.Peptide;
+                if (peptide == null)
+                {
+                    return;
+                }
+                DbPeptideAnalysis dbPeptideAnalysis;
+                using (var session = _form.Workspace.OpenSession())
+                {
+                    dbPeptideAnalysis = (DbPeptideAnalysis) session.CreateCriteria(typeof (DbPeptideAnalysis))
+                        .Add(Restrictions.Eq("Peptide", session.Load<DbPeptide>(peptide.Id)))
+                        .UniqueResult();
+                    if (dbPeptideAnalysis == null)
+                    {
+                        return;
+                    }
+                    var peptideAnalysis = TurnoverForm.Instance.LoadPeptideAnalysis(dbPeptideAnalysis.Id.Value);
+                    if (peptideAnalysis == null)
+                    {
+                        return;
+                    }
+                    var form = Program.FindOpenEntityForm<PeptideAnalysisFrame>(peptideAnalysis);
+                    if (form != null)
+                    {
+                        form.Activate();
+                        return;
+                    }
+                    form = new PeptideAnalysisFrame(peptideAnalysis);
+                    form.Show(_form.DockPanel, _form.DockState);
+                    return;
+                }
+            }
+            private void ProteinClickHandler(object sender, EventArgs eventArgs)
+            {
+                ShowHalfLifeForm(null, _halfLifeResultRow.ProteinName, "");
+            }
+
+            private void ShowHalfLifeForm(Peptide peptide, string proteinName, string cohort)
+            {
+                var halfLifeForm = new HalfLifeForm(_form.Workspace)
+                                       {
+                                           Peptide = peptide == null ? "" : peptide.Sequence,
+                                           ProteinName = proteinName,
+                                           Cohort = cohort,
+                                           MinScore = _form.MinScore,
+                                           InitialPercent = double.Parse(_form.tbxInitialTracerPercent.Text),
+                                           FinalPercent = double.Parse(_form.tbxFinalTracerPercent.Text),
+                                           FixedInitialPercent = _form.cbxFixYIntercept.Checked,
+                                           HalfLifeCalculationType = _form.HalfLifeCalculationType,
+                                           ApplyEvviesFilter = _form.cbxEvviesFilter.Checked,
+                                       };
+                for (int i = 0; i < _form.checkedListBoxTimePoints.Items.Count; i++)
+                {
+                    halfLifeForm.SetTimePointExcluded((double)_form.checkedListBoxTimePoints.Items[i],
+                                                      !_form.checkedListBoxTimePoints.GetItemChecked(i));
+                }
+                halfLifeForm.Show(_form.DockPanel, _form.DockState);
             }
         }
     }

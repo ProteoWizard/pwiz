@@ -32,10 +32,9 @@ namespace pwiz.Common.DataBinding
     /// </summary>
     public abstract class AbstractViewContext : IViewContext
     {
-        protected AbstractViewContext(ColumnDescriptor parentColumn, DataGridView dataGridView)
+        protected AbstractViewContext(ColumnDescriptor parentColumn)
         {
             ParentColumn = parentColumn;
-            DataGridView = dataGridView;
             BuiltInViewSpecs = new ViewSpec[0];
         }
 
@@ -49,7 +48,6 @@ namespace pwiz.Common.DataBinding
         }
         public abstract void RunLongJob(Control owner, Action<IProgressMonitor> job);
         public ColumnDescriptor ParentColumn { get; protected set; }
-        public DataGridView DataGridView { get; protected set; }
         public IEnumerable<ViewSpec> BuiltInViewSpecs
         {
             get; protected set;

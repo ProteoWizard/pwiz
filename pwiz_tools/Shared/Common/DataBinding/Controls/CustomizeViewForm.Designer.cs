@@ -33,23 +33,26 @@
             this.tabPageColumns = new System.Windows.Forms.TabPage();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.btnAddColumn = new System.Windows.Forms.Button();
-            this.availableFieldsTreeColumns = new pwiz.Common.DataBinding.Controls.AvailableFieldsTree();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
             this.listViewColumns = new System.Windows.Forms.ListView();
             this.toolStrip1 = new System.Windows.Forms.ToolStrip();
             this.btnRemove = new System.Windows.Forms.ToolStripButton();
             this.btnUp = new System.Windows.Forms.ToolStripButton();
             this.btnDown = new System.Windows.Forms.ToolStripButton();
-            this.cbxCrosstab = new System.Windows.Forms.CheckBox();
-            this.cbxVisible = new System.Windows.Forms.CheckBox();
+            this.cbxHidden = new System.Windows.Forms.CheckBox();
+            this.groupBoxAggregate = new System.Windows.Forms.GroupBox();
+            this.comboBoxAggregate = new System.Windows.Forms.ComboBox();
+            this.groupBoxCaption = new System.Windows.Forms.GroupBox();
             this.tbxCaption = new System.Windows.Forms.TextBox();
-            this.lblCaption = new System.Windows.Forms.Label();
             this.tabPageFilter = new System.Windows.Forms.TabPage();
             this.tabPageSort = new System.Windows.Forms.TabPage();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnOK = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.tbxViewName = new System.Windows.Forms.TextBox();
+            this.availableFieldsTreeColumns = new pwiz.Common.DataBinding.Controls.AvailableFieldsTree();
+            this.groupBoxSublist = new System.Windows.Forms.GroupBox();
+            this.comboSublist = new System.Windows.Forms.ComboBox();
             colHdrName = new System.Windows.Forms.ColumnHeader();
             this.tabControl1.SuspendLayout();
             this.tabPageColumns.SuspendLayout();
@@ -60,6 +63,9 @@
             this.splitContainer2.Panel2.SuspendLayout();
             this.splitContainer2.SuspendLayout();
             this.toolStrip1.SuspendLayout();
+            this.groupBoxAggregate.SuspendLayout();
+            this.groupBoxCaption.SuspendLayout();
+            this.groupBoxSublist.SuspendLayout();
             this.SuspendLayout();
             // 
             // colHdrName
@@ -77,7 +83,7 @@
             this.tabControl1.Location = new System.Drawing.Point(1, 29);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
-            this.tabControl1.Size = new System.Drawing.Size(885, 297);
+            this.tabControl1.Size = new System.Drawing.Size(885, 331);
             this.tabControl1.TabIndex = 0;
             // 
             // tabPageColumns
@@ -86,7 +92,7 @@
             this.tabPageColumns.Location = new System.Drawing.Point(4, 22);
             this.tabPageColumns.Name = "tabPageColumns";
             this.tabPageColumns.Padding = new System.Windows.Forms.Padding(3);
-            this.tabPageColumns.Size = new System.Drawing.Size(877, 271);
+            this.tabPageColumns.Size = new System.Drawing.Size(877, 305);
             this.tabPageColumns.TabIndex = 0;
             this.tabPageColumns.Text = "Columns";
             this.tabPageColumns.UseVisualStyleBackColor = true;
@@ -105,7 +111,7 @@
             // splitContainer1.Panel2
             // 
             this.splitContainer1.Panel2.Controls.Add(this.splitContainer2);
-            this.splitContainer1.Size = new System.Drawing.Size(871, 265);
+            this.splitContainer1.Size = new System.Drawing.Size(871, 299);
             this.splitContainer1.SplitterDistance = 364;
             this.splitContainer1.TabIndex = 1;
             // 
@@ -120,21 +126,6 @@
             this.btnAddColumn.UseVisualStyleBackColor = true;
             this.btnAddColumn.Click += new System.EventHandler(this.btnAddColumn_Click);
             // 
-            // availableFieldsTreeColumns
-            // 
-            this.availableFieldsTreeColumns.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.availableFieldsTreeColumns.CheckBoxes = true;
-            this.availableFieldsTreeColumns.CheckedColumns = new pwiz.Common.DataBinding.IdentifierPath[0];
-            this.availableFieldsTreeColumns.HideSelection = false;
-            this.availableFieldsTreeColumns.Location = new System.Drawing.Point(3, 3);
-            this.availableFieldsTreeColumns.Name = "availableFieldsTreeColumns";
-            this.availableFieldsTreeColumns.RootColumn = null;
-            this.availableFieldsTreeColumns.Size = new System.Drawing.Size(308, 259);
-            this.availableFieldsTreeColumns.TabIndex = 0;
-            this.availableFieldsTreeColumns.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.availableFieldsTreeColumns_AfterCheck);
-            // 
             // splitContainer2
             // 
             this.splitContainer2.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -148,11 +139,10 @@
             // 
             // splitContainer2.Panel2
             // 
-            this.splitContainer2.Panel2.Controls.Add(this.cbxCrosstab);
-            this.splitContainer2.Panel2.Controls.Add(this.cbxVisible);
-            this.splitContainer2.Panel2.Controls.Add(this.tbxCaption);
-            this.splitContainer2.Panel2.Controls.Add(this.lblCaption);
-            this.splitContainer2.Size = new System.Drawing.Size(503, 265);
+            this.splitContainer2.Panel2.Controls.Add(this.cbxHidden);
+            this.splitContainer2.Panel2.Controls.Add(this.groupBoxAggregate);
+            this.splitContainer2.Panel2.Controls.Add(this.groupBoxCaption);
+            this.splitContainer2.Size = new System.Drawing.Size(503, 299);
             this.splitContainer2.SplitterDistance = 285;
             this.splitContainer2.TabIndex = 4;
             // 
@@ -165,7 +155,7 @@
             this.listViewColumns.HideSelection = false;
             this.listViewColumns.Location = new System.Drawing.Point(0, 0);
             this.listViewColumns.Name = "listViewColumns";
-            this.listViewColumns.Size = new System.Drawing.Size(261, 265);
+            this.listViewColumns.Size = new System.Drawing.Size(261, 299);
             this.listViewColumns.TabIndex = 2;
             this.listViewColumns.UseCompatibleStateImageBehavior = false;
             this.listViewColumns.View = System.Windows.Forms.View.Details;
@@ -182,7 +172,7 @@
             this.toolStrip1.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.VerticalStackWithOverflow;
             this.toolStrip1.Location = new System.Drawing.Point(261, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(24, 265);
+            this.toolStrip1.Size = new System.Drawing.Size(24, 299);
             this.toolStrip1.TabIndex = 1;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -216,46 +206,54 @@
             this.btnDown.Text = "Down";
             this.btnDown.Click += new System.EventHandler(this.btnDown_Click);
             // 
-            // cbxCrosstab
+            // cbxHidden
             // 
-            this.cbxCrosstab.AutoSize = true;
-            this.cbxCrosstab.Location = new System.Drawing.Point(9, 101);
-            this.cbxCrosstab.Name = "cbxCrosstab";
-            this.cbxCrosstab.Size = new System.Drawing.Size(67, 17);
-            this.cbxCrosstab.TabIndex = 3;
-            this.cbxCrosstab.Text = "Crosstab";
-            this.cbxCrosstab.UseVisualStyleBackColor = true;
-            this.cbxCrosstab.Visible = false;
+            this.cbxHidden.AutoSize = true;
+            this.cbxHidden.Location = new System.Drawing.Point(11, 136);
+            this.cbxHidden.Name = "cbxHidden";
+            this.cbxHidden.Size = new System.Drawing.Size(92, 17);
+            this.cbxHidden.TabIndex = 5;
+            this.cbxHidden.Text = "Not Displayed";
+            this.cbxHidden.UseVisualStyleBackColor = true;
             // 
-            // cbxVisible
+            // groupBoxAggregate
             // 
-            this.cbxVisible.AutoSize = true;
-            this.cbxVisible.Location = new System.Drawing.Point(9, 78);
-            this.cbxVisible.Name = "cbxVisible";
-            this.cbxVisible.Size = new System.Drawing.Size(56, 17);
-            this.cbxVisible.TabIndex = 2;
-            this.cbxVisible.Text = "Visible";
-            this.cbxVisible.UseVisualStyleBackColor = true;
-            this.cbxVisible.CheckedChanged += new System.EventHandler(this.cbxVisible_CheckedChanged);
+            this.groupBoxAggregate.Controls.Add(this.comboBoxAggregate);
+            this.groupBoxAggregate.Location = new System.Drawing.Point(11, 55);
+            this.groupBoxAggregate.Name = "groupBoxAggregate";
+            this.groupBoxAggregate.Size = new System.Drawing.Size(200, 52);
+            this.groupBoxAggregate.TabIndex = 3;
+            this.groupBoxAggregate.TabStop = false;
+            this.groupBoxAggregate.Text = "Aggregate";
+            // 
+            // comboBoxAggregate
+            // 
+            this.comboBoxAggregate.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxAggregate.FormattingEnabled = true;
+            this.comboBoxAggregate.Location = new System.Drawing.Point(6, 19);
+            this.comboBoxAggregate.Name = "comboBoxAggregate";
+            this.comboBoxAggregate.Size = new System.Drawing.Size(182, 21);
+            this.comboBoxAggregate.TabIndex = 0;
+            // 
+            // groupBoxCaption
+            // 
+            this.groupBoxCaption.Controls.Add(this.tbxCaption);
+            this.groupBoxCaption.Location = new System.Drawing.Point(11, 3);
+            this.groupBoxCaption.Name = "groupBoxCaption";
+            this.groupBoxCaption.Size = new System.Drawing.Size(200, 46);
+            this.groupBoxCaption.TabIndex = 2;
+            this.groupBoxCaption.TabStop = false;
+            this.groupBoxCaption.Text = "Caption";
             // 
             // tbxCaption
             // 
             this.tbxCaption.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
-            this.tbxCaption.Location = new System.Drawing.Point(9, 50);
+            this.tbxCaption.Location = new System.Drawing.Point(6, 19);
             this.tbxCaption.Name = "tbxCaption";
-            this.tbxCaption.Size = new System.Drawing.Size(199, 20);
+            this.tbxCaption.Size = new System.Drawing.Size(182, 20);
             this.tbxCaption.TabIndex = 1;
             this.tbxCaption.Leave += new System.EventHandler(this.tbxCaption_Leave);
-            // 
-            // lblCaption
-            // 
-            this.lblCaption.AutoSize = true;
-            this.lblCaption.Location = new System.Drawing.Point(12, 30);
-            this.lblCaption.Name = "lblCaption";
-            this.lblCaption.Size = new System.Drawing.Size(46, 13);
-            this.lblCaption.TabIndex = 0;
-            this.lblCaption.Text = "Caption:";
             // 
             // tabPageFilter
             // 
@@ -281,7 +279,7 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(807, 333);
+            this.btnCancel.Location = new System.Drawing.Point(807, 367);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
             this.btnCancel.TabIndex = 1;
@@ -292,7 +290,7 @@
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnOK.DialogResult = System.Windows.Forms.DialogResult.OK;
-            this.btnOK.Location = new System.Drawing.Point(726, 333);
+            this.btnOK.Location = new System.Drawing.Point(726, 367);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(75, 23);
             this.btnOK.TabIndex = 2;
@@ -315,13 +313,49 @@
             this.tbxViewName.Size = new System.Drawing.Size(214, 20);
             this.tbxViewName.TabIndex = 4;
             // 
+            // availableFieldsTreeColumns
+            // 
+            this.availableFieldsTreeColumns.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.availableFieldsTreeColumns.CheckBoxes = true;
+            this.availableFieldsTreeColumns.CheckedColumns = new pwiz.Common.DataBinding.IdentifierPath[0];
+            this.availableFieldsTreeColumns.HideSelection = false;
+            this.availableFieldsTreeColumns.Location = new System.Drawing.Point(3, 3);
+            this.availableFieldsTreeColumns.Name = "availableFieldsTreeColumns";
+            this.availableFieldsTreeColumns.RootColumn = null;
+            this.availableFieldsTreeColumns.Size = new System.Drawing.Size(308, 293);
+            this.availableFieldsTreeColumns.TabIndex = 0;
+            this.availableFieldsTreeColumns.AfterCheck += new System.Windows.Forms.TreeViewEventHandler(this.availableFieldsTreeColumns_AfterCheck);
+            // 
+            // groupBoxSublist
+            // 
+            this.groupBoxSublist.Controls.Add(this.comboSublist);
+            this.groupBoxSublist.Location = new System.Drawing.Point(302, -1);
+            this.groupBoxSublist.Name = "groupBoxSublist";
+            this.groupBoxSublist.Size = new System.Drawing.Size(314, 46);
+            this.groupBoxSublist.TabIndex = 5;
+            this.groupBoxSublist.TabStop = false;
+            this.groupBoxSublist.Text = "Sublist";
+            // 
+            // comboSublist
+            // 
+            this.comboSublist.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboSublist.FormattingEnabled = true;
+            this.comboSublist.Location = new System.Drawing.Point(6, 19);
+            this.comboSublist.Name = "comboSublist";
+            this.comboSublist.Size = new System.Drawing.Size(297, 21);
+            this.comboSublist.TabIndex = 0;
+            this.comboSublist.SelectedIndexChanged += new System.EventHandler(this.comboSublist_SelectedIndexChanged);
+            // 
             // CustomizeViewForm
             // 
             this.AcceptButton = this.btnOK;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(885, 368);
+            this.ClientSize = new System.Drawing.Size(885, 402);
+            this.Controls.Add(this.groupBoxSublist);
             this.Controls.Add(this.tbxViewName);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.btnOK);
@@ -341,6 +375,10 @@
             this.splitContainer2.ResumeLayout(false);
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
+            this.groupBoxAggregate.ResumeLayout(false);
+            this.groupBoxCaption.ResumeLayout(false);
+            this.groupBoxCaption.PerformLayout();
+            this.groupBoxSublist.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -356,9 +394,6 @@
         private System.Windows.Forms.TabPage tabPageSort;
         private System.Windows.Forms.SplitContainer splitContainer2;
         private System.Windows.Forms.TextBox tbxCaption;
-        private System.Windows.Forms.Label lblCaption;
-        private System.Windows.Forms.CheckBox cbxVisible;
-        private System.Windows.Forms.CheckBox cbxCrosstab;
         private System.Windows.Forms.Button btnAddColumn;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnOK;
@@ -369,5 +404,11 @@
         private System.Windows.Forms.ToolStripButton btnUp;
         private System.Windows.Forms.ToolStripButton btnDown;
         private System.Windows.Forms.ListView listViewColumns;
+        private System.Windows.Forms.GroupBox groupBoxAggregate;
+        private System.Windows.Forms.GroupBox groupBoxCaption;
+        private System.Windows.Forms.CheckBox cbxHidden;
+        private System.Windows.Forms.ComboBox comboBoxAggregate;
+        private System.Windows.Forms.GroupBox groupBoxSublist;
+        private System.Windows.Forms.ComboBox comboSublist;
     }
 }

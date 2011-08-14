@@ -18,16 +18,11 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using pwiz.Common.DataBinding;
 using pwiz.Topograph.Data;
-using pwiz.Topograph.Enrichment;
 using pwiz.Topograph.Model;
 using pwiz.Topograph.MsData;
 using pwiz.Topograph.ui.Util;
@@ -46,34 +41,54 @@ namespace pwiz.Topograph.ui.Forms
             bool hasSamples = Workspace.MsDataFiles.ListChildren().Where(f=>f.Sample != null).Count() != 0;
             bool hasTracerDefs = Workspace.GetTracerDefs().Count != 0;
             bool hasOneTracerDef = Workspace.GetTracerDefs().Count == 1;
-            var defaultColumns = new[]
-                                         {
-                                             new ColumnSpec().SetName("Accept"),
-                                             new ColumnSpec().SetName("Peptide"),
-                                             new ColumnSpec().SetName("DataFile.Name").SetCaption("DataFile"),
-                                             new ColumnSpec().SetName("Area"),
-                                             new ColumnSpec().SetName("TracerPercent").SetVisible(hasTracerDefs),
-                                             new ColumnSpec().SetName("DeconvolutionScore"),
-                                             new ColumnSpec().SetName("DataFile.Cohort").SetVisible(hasCohorts),
-                                             new ColumnSpec().SetName("DataFile.TimePoint").SetVisible(hasTimePoints),
-                                             new ColumnSpec().SetName("DataFile.Sample").SetVisible(hasSamples),
-                                             new ColumnSpec().SetName("IndividualTurnover.PrecursorEnrichment").SetCaption("Ind Precursor Enrichment").SetVisible(hasTracerDefs),
-                                             new ColumnSpec().SetName("IndividualTurnover.Turnover").SetCaption("Ind Turnover").SetVisible(hasTracerDefs),
-                                             new ColumnSpec().SetName("IndividualTurnover.Score").SetCaption("Ind Turnover Score").SetVisible(hasTracerDefs),
-                                             new ColumnSpec().SetName("Peptide.ProteinName").SetCaption("Protein"),
+            var defaultColumns = new List<ColumnSpec>()
+                                     {
+                                         new ColumnSpec().SetName("Accept"),
+                                         new ColumnSpec().SetName("Peptide"),
+                                         new ColumnSpec().SetName("DataFile.Name").SetCaption("DataFile"),
+                                         new ColumnSpec().SetName("Area"),
+                                     };
+            if (hasTracerDefs)
+            {
+                defaultColumns.Add(new ColumnSpec().SetName("TracerPercent"));
+            }
+            defaultColumns.Add(new ColumnSpec().SetName("DeconvolutionScore"));
+            if (hasCohorts)
+            {
+                defaultColumns.Add(new ColumnSpec().SetName("DataFile.Cohort"));
+            }
+            if (hasTimePoints)
+            {
+                defaultColumns.Add(new ColumnSpec().SetName("DataFile.TimePoint"));
+            }
+            if (hasSamples)
+            {
+                defaultColumns.Add(new ColumnSpec().SetName("DataFile.Sample"));
+            }
+            if (hasTracerDefs)
+            {
+                defaultColumns.AddRange(new[]{new ColumnSpec().SetName("IndividualTurnover.PrecursorEnrichment").SetCaption("Ind Precursor Enrichment"),
+                                             new ColumnSpec().SetName("IndividualTurnover.Turnover").SetCaption("Ind Turnover"),
+                                             new ColumnSpec().SetName("IndividualTurnover.Score").SetCaption("Ind Turnover Score"),
+                });
+            }
+            defaultColumns.AddRange(new[]{new ColumnSpec().SetName("Peptide.ProteinName").SetCaption("Protein"),
                                              new ColumnSpec().SetName("Peptide.ProteinDescription"),
-                                             new ColumnSpec().SetName("AverageTurnover.PrecursorEnrichment").SetCaption("Avg Precursor Enrichment").SetVisible(hasOneTracerDef),
-                                             new ColumnSpec().SetName("AverageTurnover.Turnover").SetCaption("Avg Turnover").SetVisible(hasOneTracerDef),
-                                             new ColumnSpec().SetName("AverageTurnover.Score").SetCaption("Avg Turnover Score").SetVisible(hasOneTracerDef),
-                                             new ColumnSpec().SetName("Status"),
+                                             });
+            if (hasOneTracerDef)
+            {
+                defaultColumns.AddRange(new[]{new ColumnSpec().SetName("AverageTurnover.PrecursorEnrichment").SetCaption("Avg Precursor Enrichment"),
+                                             new ColumnSpec().SetName("AverageTurnover.Turnover").SetCaption("Avg Turnover"),
+                                             new ColumnSpec().SetName("AverageTurnover.Score").SetCaption("Avg Turnover Score"),
+            });
+            }
+            defaultColumns.AddRange(new[]{                                             new ColumnSpec().SetName("Status"),
                                              new ColumnSpec().SetName("PsmCount"),
-                                             new ColumnSpec().SetName("PeakIntegrationNote"),
-                                         };
-
+                                             new ColumnSpec().SetName("PeakIntegrationNote"),});
             var defaultViewSpec = new ViewSpec()
                 .SetName("default")
                 .SetColumns(defaultColumns);
-            navBar21.ViewContext = _viewContext = new TopographViewContext(dataGridViewResults, workspace, typeof (ResultRow), new[] {defaultViewSpec});
+            navBar21.ViewContext = _viewContext = new TopographViewContext(workspace, typeof (ResultRow), new[] {defaultViewSpec});
         }
 
         private void btnRequery_Click(object sender, EventArgs e)
@@ -114,14 +129,6 @@ namespace pwiz.Topograph.ui.Forms
             GridUtil.ExportResults(dataGridViewResults, Path.GetFileNameWithoutExtension(Workspace.DatabasePath) + "ResultsPerReplicate");
         }
 
-        private void dataGridView1_RowHeaderMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
-        {
-            if (e.RowIndex < 0)
-            {
-                return;
-            }
-            var row = dataGridViewResults.Rows[e.RowIndex];
-        }
         public int? MaxResults
         {
             get

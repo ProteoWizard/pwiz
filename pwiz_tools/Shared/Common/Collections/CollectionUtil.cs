@@ -64,5 +64,30 @@ namespace pwiz.Common.Collections
         {
             return Equals(null, item) ? 0 : item.GetHashCode();
         }
+        private class ListContentsEqualityComparer<T> : IEqualityComparer<IList<T>>
+        {
+            public bool Equals(IList<T> x, IList<T> y)
+            {
+                return x.SequenceEqual(y);
+            }
+
+            public int GetHashCode(IList<T> obj)
+            {
+                return GetHashCodeDeep(obj);
+            }
+        }
+        public static IEqualityComparer<IList<T>> GetListContentsEqualityComparer<T>()
+        {
+            return new ListContentsEqualityComparer<T>();
+        }
+        public static IDictionary<TKey,TValue> SingletonDictionary<TKey, TValue>(TKey key, TValue value)
+        {
+            // TODO: if performance becomes an issue, change this
+            return new ImmutableDictionary<TKey, TValue>(new Dictionary<TKey, TValue> {{key, value}});
+        }
+        public static IDictionary<TKey,TValue> EmptyDictionary<TKey,TValue>()
+        {
+            return new ImmutableDictionary<TKey, TValue>(new Dictionary<TKey, TValue>());
+        }
     }
 }

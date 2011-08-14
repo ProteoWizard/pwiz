@@ -1,5 +1,22 @@
-﻿using System;
-using System.Text;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2011 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -35,7 +52,7 @@ RedBlackTreeTest
                         intSet.Add(nextInt);
                         intList.Add(nextInt);
                     }
-                    var tree = new RedBlackTree();
+                    var tree = new RedBlackTree<IComparable,object>();
                     var sortedList = intSet.ToList();
                     sortedList.Sort();
                     foreach (var i in intList)
@@ -43,6 +60,11 @@ RedBlackTreeTest
                         tree.Add(i,i);
                         tree.Validate();
                     }
+                    var treeFromSorted =
+                        RedBlackTree<IComparable, object>.FromSorted(
+                            sortedList.Select(i => new KeyValuePair<IComparable, object>(i, i)).ToArray());
+                    treeFromSorted.Validate();
+                    Assert.IsTrue(sortedList.SequenceEqual(treeFromSorted.Keys.Cast<int>()));
                     string message = "[" + string.Join(",", intList.Select(i => i.ToString()).ToArray()) + "]";
                     Assert.IsNull(tree.Lower(int.MinValue), message);
                     Assert.IsTrue(sortedList.SequenceEqual(tree.Keys.Cast<int>()), message);
@@ -80,7 +102,7 @@ RedBlackTreeTest
                     while (sortedList.Count > 0)
                     {
                         int index = random.Next(sortedList.Count);
-                        var oldTree = new RedBlackTree(tree);
+                        var oldTree = new RedBlackTree<IComparable, object>(tree);
                         tree.RemoveKey(sortedList[index]);
                         try
                         {
@@ -89,7 +111,7 @@ RedBlackTreeTest
                         catch(Exception x)
                         {
                             Console.Out.WriteLine(x);
-                            tree = new RedBlackTree(oldTree);
+                            tree = new RedBlackTree<IComparable, object>(oldTree);
                             Assert.Fail(x.ToString());
                         }
                         sortedList.RemoveAt(index);

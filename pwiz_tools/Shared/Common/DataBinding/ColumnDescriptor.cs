@@ -34,6 +34,7 @@ namespace pwiz.Common.DataBinding
         {
             DataSchema = dataSchema;
             PropertyType = propertyType;
+            IdPath = IdentifierPath.Root;
         }
         public ColumnDescriptor(ColumnDescriptor parent, String name) : this(parent, name, parent.DataSchema.GetPropertyDescriptor(parent.PropertyType, name))
         {
@@ -51,15 +52,15 @@ namespace pwiz.Common.DataBinding
             if (PropertyDescriptor != null)
             {
                 PropertyType = PropertyDescriptor.PropertyType;
+                MapAttribute = PropertyDescriptor.Attributes.OfType<MapAttribute>().FirstOrDefault();
             }
         }
 
 
-        public ColumnDescriptor(ColumnDescriptor parent, CollectionInfo collectionInfo)
+        public ColumnDescriptor(ColumnDescriptor parent, CollectionInfo collectionInfo) : this(parent, null, null)
         {
-            DataSchema = parent.DataSchema;
             CollectionInfo = collectionInfo;
-            PropertyType = collectionInfo.IsDictionary ? collectionInfo.ValueType : collectionInfo.ElementType;
+            PropertyType = collectionInfo.ElementType;
         }
         public ColumnDescriptor(ColumnDescriptor columnDescriptor)
         {
@@ -68,26 +69,10 @@ namespace pwiz.Common.DataBinding
             IdPath = columnDescriptor.IdPath;
             PropertyType = columnDescriptor.PropertyType;
             CollectionInfo = columnDescriptor.CollectionInfo;
-            BoundKey = columnDescriptor.BoundKey;
             PropertyDescriptor = columnDescriptor.PropertyDescriptor;
-            Visible = columnDescriptor.Visible;
+            MapAttribute = columnDescriptor.MapAttribute;
             Caption = columnDescriptor.Caption;
-            Crosstab = columnDescriptor.Crosstab;
         }
-        public ColumnDescriptor RemoveAncestor(int depth)
-        {
-            int myDepth = IdPath.Length;
-            if (depth > myDepth)
-            {
-                return null;
-            }
-            if (depth == myDepth)
-            {
-                return new ColumnDescriptor(DataSchema, PropertyType);
-            }
-            return new ColumnDescriptor(Parent.RemoveAncestor(depth), Name, PropertyDescriptor);
-        }
-
         public DataSchema DataSchema { get; private set; }
         public ColumnDescriptor Parent { get; private set; }
         public ColumnDescriptor SetParent(ColumnDescriptor newParent)
@@ -96,56 +81,45 @@ namespace pwiz.Common.DataBinding
             {
                 return this;
             }
-            return new ColumnDescriptor(this) {Parent = newParent};
+            return new ColumnDescriptor(this) {Parent = newParent, IdPath = new IdentifierPath(newParent == null ? null : newParent.IdPath, Name)};
         }
-        public String Name { get { return IdPath == null ? null : IdPath.Name;} }
+        public String Name { get { return IdPath.Name;} }
         public CollectionInfo CollectionInfo { get; private set; }
         protected PropertyDescriptor PropertyDescriptor { get; private set; }
         public Type PropertyType { get; private set; }
-        public object BoundKey { get; private set; }
-        public ColumnDescriptor BindKey(object key)
+        public MapAttribute MapAttribute { get; private set; }
+        public object GetPropertyValue(RowItem rowItem, RowKey rowKey)
         {
-            return new ColumnDescriptor(this) {BoundKey = key};
+            while (!IdPath.StartsWith(rowItem.SublistId))
+            {
+                rowItem = rowItem.Parent;
+            }
+            if (IdPath.Equals(rowItem.SublistId))
+            {
+                return rowItem.Value;
+            }
+            var parentValue = Parent.GetPropertyValue(rowItem, rowKey);
+            if (parentValue == null)
+            {
+                return null;
+            }
+            return GetPropertyValueFromParent(parentValue, rowKey);
         }
-        public ColumnDescriptor Bind(RowKey rowKey)
+        public object GetPropertyValue(RowNode rowNode)
         {
-            var result = this;
-            if (Parent != null)
+            if (IdPath.Length == rowNode.IdentifierPath.Length)
             {
-                result = result.SetParent(Parent.Bind(rowKey));
+                return rowNode.RowItem.Value;
             }
-            object key;
-            if (rowKey.TryGetValue(IdPath, out key))
+            var parentValue = Parent.GetPropertyValue(rowNode);
+            if (parentValue == null)
             {
-                return result.BindKey(key);
+                return null;
             }
-            return result;
-        }
-        public object GetPropertyValue(object component)
-        {
-            if (Parent == null)
-            {
-                var rowValue = component as RowValue;
-                if (rowValue != null)
-                {
-                    return rowValue.RowData;
-                }
-                return component;
-            }
-            if (IsUnbound())
-            {
-                var rowValue = component as RowValue;
-                if (rowValue == null)
-                {
-                    return null;
-                }
-                rowValue.RowKey.TryGetValue(IdPath, out component);
-                return component;
-            }
-            return GetPropertyValueFromParent(Parent.GetPropertyValue(component));
+            return GetPropertyValueFromParent(parentValue, null);
         }
 
-        public object GetPropertyValueFromParent(object parentComponent)
+        public object GetPropertyValueFromParent(object parentComponent, RowKey rowKey)
         {
             if (parentComponent == null)
             {
@@ -153,21 +127,20 @@ namespace pwiz.Common.DataBinding
             }
             if (PropertyDescriptor == null)
             {
-                return parentComponent;
+                var collectionInfo = CollectionInfo;
+                if (collectionInfo == null)
+                {
+                    return null;
+                }
+                var key = rowKey.FindValue(IdPath);
+                if (key == null)
+                {
+                    return null;
+                }
+                return collectionInfo.GetItemFromKey(parentComponent, key);
             }
             return PropertyDescriptor.GetValue(parentComponent);
         }
-
-        public bool Crosstab { get; private set; }
-        public ColumnDescriptor SetCrosstab(bool value)
-        {
-            if (value == Crosstab)
-            {
-                return this;
-            }
-            return new ColumnDescriptor(this) {Crosstab = value};
-        }
-        public bool Visible { get; private set; }
 
         public string Caption { get; private set; } 
         public ColumnDescriptor SetCaption(string value)
@@ -178,10 +151,50 @@ namespace pwiz.Common.DataBinding
             }
             return new ColumnDescriptor(this){Caption = value};
         }
+        public string DefaultCaption
+        {
+            get
+            {
+                if (Parent != null && Parent.CollectionInfo != null && Parent.CollectionInfo.IsDictionary)
+                {
+                    var mapAttribute = Parent.Parent.MapAttribute;
+                    if (mapAttribute != null)
+                    {
+                        if (Name == "Key" && mapAttribute.KeyName != null)
+                        {
+                            return mapAttribute.KeyName;
+                        }
+                        if (Name == "Value" && mapAttribute.ValueName != null)
+                        {
+                            return mapAttribute.ValueName;
+                        }
+                    }
+                }
+                if (PropertyDescriptor != null)
+                {
+                    var displayNameAttr =
+                        PropertyDescriptor.Attributes[typeof(DisplayNameAttribute)] as DisplayNameAttribute;
+                    if (displayNameAttr != null && !displayNameAttr.IsDefaultAttribute())
+                    {
+                        return displayNameAttr.DisplayName;
+                    }
+                }
+                if (Name == null && Parent != null)
+                {
+                    return Parent.DefaultCaption;
+                }
+                if (Name == null && PropertyType != null)
+                {
+                    return DataSchema.CaptionFromType(PropertyType);
+                }
+                return DataSchema.CaptionFromName(Name);
+            }
+        }
+
         public string DisplayName {
             get
             {
-                return Caption ?? DataSchema.CaptionFromName(Name);
+                return Caption ?? DefaultCaption;
             }
         }
 
@@ -189,28 +202,60 @@ namespace pwiz.Common.DataBinding
         {
             return new ColumnSpec()
                 .SetIdentifierPath(IdPath)
-                .SetVisible(Visible)
-                .SetCrosstab(Crosstab)
-                .SetCaption(Caption);
+                .SetCaption(Caption)
+                .SetHidden(Hidden);
+        }
+        public bool Hidden { get; private set; }
+        public ColumnDescriptor SetHidden(bool value)
+        {
+            return Hidden == value ? this : new ColumnDescriptor(this){Hidden = value};
         }
         public ColumnDescriptor SetColumnSpec(ColumnSpec columnSpec)
         {
-            return SetVisible(columnSpec.Visible)
-                .SetCrosstab(columnSpec.Crosstab)
-                .SetCaption(columnSpec.Caption);
+            return SetCaption(columnSpec.Caption)
+                .SetHidden(columnSpec.Hidden);
         }
-        public ColumnDescriptor SetVisible(bool value)
+        public bool IsUnbound()
         {
-            if (value == Visible)
+            if (Parent == null)
+            {
+                return false;
+            }
+            if (Parent.IsUnbound())
+            {
+                return true;
+            }
+            return PropertyDescriptor == null;
+        }
+
+        public IList<ColumnDescriptor> ListUnboundColumns()
+        {            
+            if (Parent == null)
+            {
+                return new ColumnDescriptor[0];
+            }
+            var parentUnboundColumns = Parent.ListUnboundColumns();
+            if (PropertyDescriptor != null)
+            {
+                return parentUnboundColumns;
+            }
+            var result = new ColumnDescriptor[parentUnboundColumns.Count + 1];
+            parentUnboundColumns.CopyTo(result, 0);
+            result[result.Length - 1] = this;
+            return result;
+        }
+
+        public ColumnDescriptor FirstUnboundParent()
+        {
+            if (Parent == null)
+            {
+                return null;
+            }
+            if (PropertyDescriptor == null)
             {
                 return this;
             }
-            return new ColumnDescriptor(this) {Visible = value};
-        }
-
-        public bool IsUnbound()
-        {
-            return PropertyDescriptor == null && BoundKey == null;
+            return Parent.FirstUnboundParent();
         }
 
         public IdentifierPath IdPath
@@ -223,6 +268,14 @@ namespace pwiz.Common.DataBinding
             {
                 return null;
             }
+            if (name == null)
+            {
+                var collectionInfo = DataSchema.GetCollectionInfo(PropertyType);
+                if (collectionInfo != null)
+                {
+                    return new ColumnDescriptor(this, collectionInfo);
+                }
+            }
             var propertyDescriptor = DataSchema.GetPropertyDescriptor(PropertyType, name);
             if (propertyDescriptor == null)
             {
@@ -230,9 +283,13 @@ namespace pwiz.Common.DataBinding
             }
             return new ColumnDescriptor(this, propertyDescriptor);
         }
+        public IEnumerable<ColumnDescriptor> GetChildColumns()
+        {
+            return DataSchema.GetPropertyDescriptors(PropertyType).Select(pd => new ColumnDescriptor(this, pd));
+        }
         public ColumnDescriptor ResolveDescendant(IdentifierPath identifierPath)
         {
-            if (identifierPath == null)
+            if (identifierPath.IsRoot)
             {
                 return this;
             }
@@ -242,6 +299,17 @@ namespace pwiz.Common.DataBinding
                 return null;
             }
             return parent.ResolveChild(identifierPath.Name);
+        }
+        public bool IsSelectable
+        {
+            get
+            {
+                if (Parent != null)
+                {
+                    return true;
+                }
+                return DataSchema.IsRootTypeSelectable(PropertyType);
+            }
         }
     }
 }

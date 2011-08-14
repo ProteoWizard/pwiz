@@ -17,30 +17,19 @@
  * limitations under the License.
  */
 using System;
+using System.Collections.Generic;
+using System.Drawing;
 
 namespace pwiz.Common.DataBinding
 {
-    /// <summary>
-    /// An object which should be displayed as a hyperlink in a DataGridView.
-    /// </summary>
-    public interface ILinkValue
+    public interface IAggregateFunction
     {
-        EventHandler ClickEventHandler { get; }
+        string Name { get; }
+        string DisplayName { get; }
+        Type GetResultType(ColumnDescriptor columnDescriptor);
+        IDictionary<RowKey, IEnumerable<RowItem>> Group(ColumnDescriptor columnDescriptor, IDictionary<RowKey, IEnumerable<RowItem>> items);
+        object Aggregate(ColumnDescriptor columnDescriptor, KeyValuePair<RowKey, IEnumerable<RowItem>> items);
+        Image SmallIcon { get; }
+        string ToString();
     }
-    public struct LinkValue<T> : ILinkValue
-    {
-        public LinkValue(T value, EventHandler clickEventHandler) : this()
-        {
-            Value = value;
-            ClickEventHandler = clickEventHandler;
-        }
-
-        public T Value { get; private set; }
-        public EventHandler ClickEventHandler { get; private set; }
-        public override string ToString()
-        {
-            return ReferenceEquals(null, Value) ? "" : Value.ToString();
-        }
-    }
-
 }
