@@ -69,14 +69,11 @@ ref class WrapperName : public System::Collections::Generic::IList<CLIHandle> \
     virtual void Insert(int index, CLIHandle item) {base_->insert(base_->begin() + index, CLIToNative(NativeType, item));} \
     virtual void RemoveAt(int index) {RANGE_CHECK(index) base_->erase(base_->begin() + index);} \
 \
-    ref class Enumerator : System::Collections::Generic::IEnumerator<CLIHandle> \
+    ref struct Enumerator : System::Collections::Generic::IEnumerator<CLIHandle> \
     { \
-        public: Enumerator(WrappedType* base) : base_(base), itr_(new WrappedType::iterator), isReset_(true) {} \
-        internal: WrappedType* base_; \
-                  WrappedType::iterator* itr_; \
-                  bool isReset_; \
+        Enumerator(WrappedType* base) : base_(base), itr_(new WrappedType::iterator), owner_(nullptr), isReset_(true) {} \
+        Enumerator(WrappedType* base, System::Object^ owner) : base_(base), itr_(new WrappedType::iterator), owner_(owner), isReset_(true) {} \
 \
-        public: \
         property CLIHandle Current { virtual CLIHandle get() {return NativeToCLI(NativeType, CLIType, **itr_);} } \
         property System::Object^ Current2 { virtual System::Object^ get() sealed = System::Collections::IEnumerator::Current::get {return (System::Object^) NativeToCLI(NativeType, CLIType, **itr_);} } \
         virtual bool MoveNext() \
@@ -89,10 +86,16 @@ ref class WrapperName : public System::Collections::Generic::IList<CLIHandle> \
         } \
         virtual void Reset() {isReset_ = true; *itr_ = base_->end();} \
         ~Enumerator() {delete itr_;} \
+\
+        internal: \
+        WrappedType* base_; \
+        WrappedType::iterator* itr_; \
+        System::Object^ owner_; \
+        bool isReset_; \
     }; \
 \
-    virtual System::Collections::Generic::IEnumerator<CLIHandle>^ GetEnumerator() {return gcnew Enumerator(base_);} \
-    virtual System::Collections::IEnumerator^ GetEnumerator2() sealed = System::Collections::IEnumerable::GetEnumerator {return gcnew Enumerator(base_);} \
+    virtual System::Collections::Generic::IEnumerator<CLIHandle>^ GetEnumerator() {return gcnew Enumerator(base_, this);} \
+    virtual System::Collections::IEnumerator^ GetEnumerator2() sealed = System::Collections::IEnumerable::GetEnumerator {return gcnew Enumerator(base_, this);} \
 };
 
 #define DEFINE_STD_VECTOR_WRAPPER_FOR_REFERENCE_TYPE(WrapperName, NativeType, CLIType, NativeToCLI, CLIToNative) \

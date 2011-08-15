@@ -100,13 +100,10 @@ public ref class WrapperName : public System::Collections::Generic::IDictionary<
     virtual bool Remove(System::Collections::Generic::KeyValuePair<CLIKeyHandle, CLIValueHandle> kvp) {return base_->erase(CLIKeyToNative(NativeKeyType, kvp.Key)) != 0;} \
     virtual void CopyTo(array< System::Collections::Generic::KeyValuePair<CLIKeyHandle, CLIValueHandle> >^ arrayTarget, int arrayIndex) {throw gcnew System::Exception("method not implemented");} \
 \
-    ref class Enumerator : System::Collections::Generic::IEnumerator< System::Collections::Generic::KeyValuePair<CLIKeyHandle, CLIValueHandle> > \
+    ref struct Enumerator : System::Collections::Generic::IEnumerator< System::Collections::Generic::KeyValuePair<CLIKeyHandle, CLIValueHandle> > \
     { \
-        internal: WrappedType* base_; \
-                  WrappedType::iterator* itr_; \
-                  bool isReset_; \
-\
-        public: Enumerator(WrappedType* base) : base_(base), itr_(new WrappedType::iterator), isReset_(true) {} \
+        Enumerator(WrappedType* base) : base_(base), itr_(new WrappedType::iterator), isReset_(true) {} \
+        Enumerator(WrappedType* base, System::Object^ owner) : base_(base), itr_(new WrappedType::iterator), owner_(owner), isReset_(true) {} \
 \
         property System::Collections::Generic::KeyValuePair<CLIKeyHandle, CLIValueHandle> Current \
         { \
@@ -138,8 +135,14 @@ public ref class WrapperName : public System::Collections::Generic::IDictionary<
         } \
         virtual void Reset() {isReset_ = true; *itr_ = base_->end();} \
         ~Enumerator() {delete itr_;} \
+\
+        internal: \
+        WrappedType* base_; \
+        WrappedType::iterator* itr_; \
+        System::Object^ owner_; \
+        bool isReset_; \
     }; \
 \
-    virtual System::Collections::Generic::IEnumerator< System::Collections::Generic::KeyValuePair<CLIKeyHandle, CLIValueHandle> >^ GetEnumerator() {return gcnew Enumerator(base_);} \
-    virtual System::Collections::IEnumerator^ GetEnumerator2() sealed = System::Collections::IEnumerable::GetEnumerator {return gcnew Enumerator(base_);} \
+    virtual System::Collections::Generic::IEnumerator< System::Collections::Generic::KeyValuePair<CLIKeyHandle, CLIValueHandle> >^ GetEnumerator() {return gcnew Enumerator(base_, this);} \
+    virtual System::Collections::IEnumerator^ GetEnumerator2() sealed = System::Collections::IEnumerable::GetEnumerator {return gcnew Enumerator(base_, this);} \
 };
