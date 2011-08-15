@@ -43,6 +43,7 @@
 #include "quameterSharedTypes.h"
 #include "quameterSharedFuncs.h"
 #include "idpDBReader.h"
+#include "scanRankerReader.h"
 
 #include <boost/timer.hpp>
 #include <boost/thread/thread.hpp>

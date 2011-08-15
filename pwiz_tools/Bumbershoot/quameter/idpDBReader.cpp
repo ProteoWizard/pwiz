@@ -291,22 +291,22 @@ namespace quameter
         * ORDER BY Spectrum.Id
         * @endcode
         */
-        vector<string> IDPDBReader::GetNativeId(const string& spectrumSourceId) 
+        set<string> IDPDBReader::GetNativeId(const string& spectrumSourceId) 
         {
             sqlite::database db(idpDBFile);
             string s = "SELECT DISTINCT NativeID FROM PeptideSpectrumMatch JOIN Spectrum where PeptideSpectrumMatch.QValue <= 0.05 and PeptideSpectrumMatch.Spectrum=Spectrum.Id and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " ORDER BY Spectrum.Id";
             sqlite::query qry(db, s.c_str() );
-            vector<string> nativeIdV;
+            set<string> nativeIds;
 
             for (sqlite::query::iterator i = qry.begin(); i != qry.end(); ++i) 
             {
                 char const* nativeID;
                 (*i).getter() >> nativeID;
-                string idScanNumStr(nativeID);
-                nativeIdV.push_back( idScanNumStr );		
+                //string idScanNumStr(nativeID);
+                nativeIds.insert( boost::lexical_cast<string>(nativeID) );		
             }
 
-            return nativeIdV;
+            return nativeIds;
         }
 
         /**

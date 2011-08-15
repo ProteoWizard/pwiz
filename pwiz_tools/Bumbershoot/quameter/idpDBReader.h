@@ -65,7 +65,7 @@ struct IDPDBReader
     // For metric IS-2: Find the median precursor m/z of unique ions of id'd peptides
     double getMedianPrecursorMZ(const string& spectrumSourceId);
     // Query the idpDB and return with a list of MS2 native IDs for all identified peptides
-    vector<string> GetNativeId(const string& spectrumSourceId);
+    set<string> GetNativeId(const string& spectrumSourceId);
     // Finds duplicate peptide IDs. Used in metrics C-1A and C-1B.
     multimap<int, string> GetDuplicateID(const string& spectrumSourceId);
     // For metrics IS-3A, IS-3B and IS-3C: Return the number of peptides with a charge of +1, +2, +3 and +4 

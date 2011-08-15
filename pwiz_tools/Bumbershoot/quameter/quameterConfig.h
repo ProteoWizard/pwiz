@@ -56,7 +56,7 @@ namespace quameter
             if (!bal::iequals(OutputFormat, "tsv") && !bal::iequals(OutputFormat, "csv") && !bal::iequals(OutputFormat, "xml"))
                 throw runtime_error("invalid output format");
 
-            if (!bal::iequals(MetricsType, "nistms") && !bal::iequals(MetricsType, "pepitome") && !bal::iequals(MetricsType, "idfree"))
+            if (!bal::iequals(MetricsType, "nistms") && !bal::iequals(MetricsType, "pepitome") && !bal::iequals(MetricsType, "scanranker"))
                 throw runtime_error("invalid metrics requested");
 
 			string cwd;

@@ -195,7 +195,7 @@ namespace quameter
                    vector<QuameterInput> idpSrcs = GetIDPickerSpectraSources(inputFile);
                    allSources.insert(allSources.end(),idpSrcs.begin(),idpSrcs.end());
                 }
-                else if(bal::iequals(g_rtConfig->MetricsType,"scanranker") && bal::ends_with(inputFile,"sr.txt") )
+                else if(bal::iequals(g_rtConfig->MetricsType,"scanranker") && bal::ends_with(inputFile,".txt") )
                 {
                    QuameterInput qip("",rawFile,"","",inputFile,SCANRANKER);
                    allSources.push_back(qip);
@@ -229,12 +229,56 @@ namespace quameter
         }
     }
 
-/**
- * The primary function where all metrics are calculated.
- */
-        void MetricMaster(QuameterInput currentFile, FullReaderList readers) {
-            try {
-                if(currentFile.type != NISTMS)
+    void ScanRankerMetrics(QuameterInput currentFile, FullReaderList rawDataReaders)
+    {
+        try
+        {
+            boost::timer t;
+
+            string sourceFilename = currentFile.sourceFile;
+            const string& srFile = currentFile.scanRankerFile;
+            
+            ScanRankerReader reader(srFile);
+            reader.extractData();
+            accs::accumulator_set<double, accs::stats<accs::tag::mean, accs::tag::median > > bestTagScoreStats;
+            accs::accumulator_set<double, accs::stats<accs::tag::mean, accs::tag::median > > bestTagTICStats;
+            accs::accumulator_set<double, accs::stats<accs::tag::mean, accs::tag::median > > tagMZRangeStats;
+            typedef pair<string,ScanRankerMS2PrecInfo> TaggedSpectrum;
+            BOOST_FOREACH(const TaggedSpectrum& ts, reader.precursorInfos)
+            {
+                bestTagScoreStats(reader.bestTagScores[ts.second]);
+                bestTagTICStats(reader.bestTagTics[ts.second]);
+                tagMZRangeStats(reader.tagMzRanges[ts.second]);
+            }
+            stringstream ss;
+            ss << accs::extract::mean(bestTagScoreStats) << ",";
+            ss << accs::extract::median(bestTagScoreStats) << ",";
+            ss << accs::extract::mean(bestTagTICStats) << ",";
+            ss << accs::extract::median(bestTagTICStats) << ",";
+            ss << accs::extract::mean(tagMZRangeStats) << ",";
+            ss << accs::extract::median(tagMZRangeStats) << endl;
+
+            cout << sourceFilename << "," << ss.str();
+        } catch(exception& e)
+        {
+            cout << "Caught exception procesisng the scanranker metrics file" << endl;
+            exit(1);
+        }
+    }
+
+        /**
+         * The primary function where all metrics are calculated.
+         */
+        void MetricMaster(QuameterInput currentFile, FullReaderList readers) 
+        {
+            try 
+            {
+                if( currentFile.type == SCANRANKER )
+                {
+                    ScanRankerMetrics(currentFile, readers);
+                    return;
+                } 
+                else if(currentFile.type != NISTMS)
                     return;
 
                 boost::timer t;
@@ -243,11 +287,14 @@ namespace quameter
                 const string& dbFilename = currentFile.idpDBFile;
                 const string& sourceId = currentFile.sourceID;
 
+                // Initialize the idpicker reader. It supports idpDB's for now.
                 IDPDBReader idpReader(dbFilename);
-
-                ofstream qout; // short for quameter output, default is to save to same directory as input file
-                qout.open (	boost::filesystem::change_extension(sourceFilename, "-quameter_results.txt").string().c_str() );
-
+                
+                // File for quameter output, default is to save to same directory as input file
+                ofstream qout; 
+                qout.open (	boost::filesystem::change_extension(sourceFilename, ".qual.txt").string().c_str() );
+                
+                // Obtain the list of readers available
 				boost::unique_lock<boost::mutex> guard(msdMutex,boost::defer_lock);
 				guard.lock();
                 MSDataFile msd(sourceFilename, & readers);
@@ -267,7 +314,7 @@ namespace quameter
                 vector<CVParam> scanTime;
                 vector<CVParam> scan2Time;
                 int iter = 0;
-                vector<string> nativeID = idpReader.GetNativeId(sourceId);
+                set<string> psmNativeIDs = idpReader.GetNativeId(sourceId);
                 map<string, double> ticMap;
                 accs::accumulator_set<double, accs::stats<accs::tag::count, accs::tag::mean, accs::tag::median > > ionInjectionTimeMS1;
                 accs::accumulator_set<double, accs::stats<accs::tag::count, accs::tag::mean, accs::tag::median > > ionInjectionTimeMS2;
@@ -283,7 +330,8 @@ namespace quameter
                 map<int, string> arrayToNativeMap;
 
                 // For each spectrum
-                for( size_t curIndex = firstIndex; curIndex <= lastIndex; ++curIndex ) {
+                for( size_t curIndex = firstIndex; curIndex <= lastIndex; ++curIndex ) 
+                {
                     SpectrumPtr spectrum = spectrumList.spectrum(curIndex, true);
 
                     if( spectrum->cvParam(MS_MSn_spectrum).empty() && spectrum->cvParam(MS_MS1_spectrum).empty() )
@@ -295,7 +343,8 @@ namespace quameter
 
                     // Check its MS level and increment the count
                     int msLevel = spectrumMSLevel.valueAs<int>();
-                    if( msLevel == 1 ) {
+                    if( msLevel == 1 ) 
+                    {
                         Scan& scan = spectrum->scanList.scans[0];
                         // The scan= number is 1+Spectrum, or 1+curIndex
                         scanTime.push_back(scan.cvParam(MS_scan_start_time));
@@ -310,9 +359,10 @@ namespace quameter
                         // For metric MS1-1 -- note, do not use for Waters raw files!
                         if (scan.hasCVParam(MS_ion_injection_time))
                             ionInjectionTimeMS1(scan.cvParam(MS_ion_injection_time).valueAs<double>());
-                        MS1Count++;
+                        ++MS1Count;
                     }
-                    else if( msLevel == 2) {
+                    else if( msLevel == 2) 
+                    {
                         Precursor& precursor = spectrum->precursors[0];
                         const SelectedIon& si = precursor.selectedIons[0];
                         double precursorIntensity = si.cvParam(MS_peak_intensity).valueAs<double>();
@@ -327,14 +377,16 @@ namespace quameter
 
                         // If the scan is empty don't count it -- not used currently
                         // if (spectrum->defaultArrayLength == 0)
-                        MS2Count++;
+                        ++MS2Count;
 
                         double precursorMZ = si.cvParam(MS_selected_ion_m_z).valueAs<double>();
                         if( si.cvParam(MS_selected_ion_m_z).empty() ) precursorMZ = si.cvParam(MS_m_z).valueAs<double>();	
 
                         // Only look at retention times of peptides identified in .idpDB
                         // curIndex is the spectrum index, curIndex+1 is (usually) the scan number
-                        if( iter < ((int)nativeID.size()) && (spectrum->id == nativeID[iter]) ) {
+                        set<string>::iterator fIter = psmNativeIDs.find(spectrum->id);
+                        //if( iter < ((int)nativeID.size()) && (spectrum->id == nativeID[iter]) ) {
+                        if( fIter != psmNativeIDs.end()) {
                             MS2ScanInfo amalgTemp;
                             amalgTemp.MS2 = spectrum->id;
                             amalgTemp.MS2Retention = scan.cvParam(MS_scan_start_time).timeInSeconds();
@@ -348,7 +400,8 @@ namespace quameter
                             nativeToArrayMap[scanInfo[iii].MS2] = iii;
                             iter++;
                         }
-                        else { // this MS2 scan was not identified; we need this data for metrics MS2-4A/B/C/D
+                        else 
+                        { // this MS2 scan was not identified; we need this data for metrics MS2-4A/B/C/D
                             preMZandRT tmp;
                             tmp.MS2Retention = scan.cvParam(MS_scan_start_time).timeInSeconds();
                             tmp.precursorMZ = precursorMZ;
@@ -434,7 +487,7 @@ namespace quameter
 
                         for (unsigned int iWin = 0; iWin < pepWindow.size(); iWin++) {
                             // if the MS1 retention time is not in the RT window constructed for this peptide, go to the next peptide
-                            if (!contains(pepWindow[iWin].preRT, curRT)) continue;
+                            if (!boost::icl::contains(pepWindow[iWin].preRT, curRT)) continue;
 
                             double mzWindowMin = lower(*pepWindow[iWin].preMZ.begin());
                             double mzWindowMax = upper(*pepWindow[iWin].preMZ.rbegin());
@@ -447,7 +500,7 @@ namespace quameter
                             for (size_t iMZ = 0; iMZ < arraySize; ++iMZ) 
                             {
                                 // if this m/z is in the window, record its intensity and retention time
-                                if (contains(pepWindow[iWin].preMZ, mzV[iMZ]))
+                                if (boost::icl::contains(pepWindow[iWin].preMZ, mzV[iMZ]))
                                     sumIntensities += intensV[iMZ];
                             }
                             if (sumIntensities != 0) 
@@ -465,7 +518,7 @@ namespace quameter
                             double RTUpper = scanInfo[idIter].precursorRetention + 300; // lower bound for RT interval	
                             continuous_interval<double> RTWindow = construct<continuous_interval<double> >(RTLower, RTUpper, interval_bounds::closed());
 
-                            if (!contains(RTWindow, curRT)) continue;
+                            if (!boost::icl::contains(RTWindow, curRT)) continue;
 
                             double mzLower = scanInfo[idIter].precursorMZ - 0.5;
                             double mzUpper = scanInfo[idIter].precursorMZ + 1.0;
@@ -475,17 +528,15 @@ namespace quameter
                             double mzWindowMax = upper(*mzWindow.rbegin());
 
                             // if the m/z window is outside this MS1 spectrum's m/z range, go to the next peptide
-                            if (mzWindowMax < mzMin || mzWindowMin > mzMax) continue;
-
-                            // if the m/z window is outside this MS1 spectrum's m/z range, go to the next peptide
-                            if (mzWindowMax < mzMin || mzWindowMin > mzMax) continue;		
+                            if (mzWindowMax < mzMin || mzWindowMin > mzMax) 
+                                continue;		
 
                             double sumIntensities = 0;
                             // now cycle through the mzV vector
                             for (size_t iMZ = 0; iMZ < arraySize; ++iMZ) 
                             {
                                 // if this m/z is in the window, record its intensity and retention time
-                                if (contains(mzWindow, mzV[iMZ]))
+                                if (boost::icl::contains(mzWindow, mzV[iMZ]))
                                     sumIntensities += intensV[iMZ];
                             }
                             if (sumIntensities != 0) 
@@ -502,7 +553,7 @@ namespace quameter
                             double RTUpper = unidentMS2[unidIter].precursorRetention + 300; // lower bound for RT interval	
                             continuous_interval<double> RTWindow = construct<continuous_interval<double> >(RTLower, RTUpper, interval_bounds::closed());
 
-                            if (!contains(RTWindow, curRT)) continue;
+                            if (!boost::icl::contains(RTWindow, curRT)) continue;
 
                             double mzLower = unidentMS2[unidIter].precursorMZ - 0.5;
                             double mzUpper = unidentMS2[unidIter].precursorMZ + 1.0;
@@ -523,7 +574,7 @@ namespace quameter
                             for (size_t iMZ = 0; iMZ < arraySize; ++iMZ) 
                             {
                                 // if this m/z is in the window, record its intensity and retention time
-                                if (contains(mzWindow, mzV[iMZ]))
+                                if (boost::icl::contains(mzWindow, mzV[iMZ]))
                                     sumIntensities += intensV[iMZ];
                             }
                             if (sumIntensities != 0) {
@@ -537,7 +588,9 @@ namespace quameter
                     {
                         // For Metric MS2-2, signal to noise ratio of MS2, peaks/medians
                         // We're only looking at identified peptides here
-                        if( iter < ((int)nativeID.size()) && (spectrum->id == nativeID[iter]) ) 
+                        set<string>::iterator fIter = psmNativeIDs.find(spectrum->id);
+                        //if( iter < ((int)nativeID.size()) && (spectrum->id == nativeID[iter]) ) 
+                        if( fIter != psmNativeIDs.end() ) 
                         {
                             accs::accumulator_set<double, accs::stats<accs::tag::median, accs::tag::max > > ms2Peaks;
                             BOOST_FOREACH(const double& p, spectrum->getIntensityArray()->data)

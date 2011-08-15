@@ -262,7 +262,7 @@ rule gcc-install-dll-path ( properties * )
 
 exe $(application-name:L)
   : # sources
-      [ glob quameter*.cpp idpDBReader.cpp ]  
+      [ glob quameter*.cpp idpDBReader.cpp scanRankerReader.cpp ]  
   : # requirements
       <library>freicore
       <library>sqlite//sqlite3pp

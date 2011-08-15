@@ -24,6 +24,7 @@
 
 #include <boost/icl/interval_set.hpp>
 #include <boost/icl/continuous_interval.hpp>
+
 #include <vector>
 #include <map>
 
@@ -104,6 +105,53 @@ namespace quameter
         double precursorMZ;
         double precursorIntensity;
         double precursorRetention;
+    };
+
+    struct ScanRankerMS2PrecInfo
+    {
+        string nativeID;
+        double precursorMZ;
+        int charge;
+        double precursorMass;
+
+        ScanRankerMS2PrecInfo()
+        {
+        }
+
+        ScanRankerMS2PrecInfo(string nid, double precMz, int z, double precMass)
+        {
+            nativeID = nid;
+            precursorMZ = precMz;
+            charge = z;
+            precursorMass = precMass;
+        }
+
+        ScanRankerMS2PrecInfo(const ScanRankerMS2PrecInfo& that)
+        {
+            nativeID = that.nativeID;
+            precursorMZ = that.precursorMZ;
+            charge = that.charge;
+            precursorMass = that.precursorMass;
+        }
+
+        bool operator< ( const ScanRankerMS2PrecInfo& rhs ) const
+		{
+            if(nativeID.compare(rhs.nativeID)!=0)
+                return nativeID < rhs.nativeID;
+            if(charge != rhs.charge)
+                return charge < rhs.charge;
+            if(precursorMass != rhs.precursorMass)
+                return precursorMass < rhs.precursorMass;
+
+            return 0;
+		}
+
+		/// Operator to compare the equality of two search scores (MVH)
+		bool operator== ( const ScanRankerMS2PrecInfo& rhs ) const
+		{
+			return nativeID.compare(rhs.nativeID)==0 && charge == rhs.charge && precursorMass == rhs.precursorMass;
+		}
+
     };
 
     struct preMZandRT {
