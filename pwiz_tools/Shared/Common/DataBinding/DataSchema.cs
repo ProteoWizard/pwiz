@@ -22,6 +22,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Text;
+using System.Windows.Forms;
 
 namespace pwiz.Common.DataBinding
 {
@@ -166,6 +167,47 @@ namespace pwiz.Common.DataBinding
             {
                 dataRowsChanged.Invoke(this, args);
             }
+        }
+        public virtual bool UpdateGridColumns(BindingListView bindingListView, DataGridViewColumn[] columnArray)
+        {
+            bool changed = false;
+            var properties = bindingListView.GetItemProperties(new PropertyDescriptor[0])
+                .Cast<PropertyDescriptor>()
+                .ToDictionary(pd => pd.Name, pd => pd);
+            for (int iCol = 0; iCol < columnArray.Count(); iCol++)
+            {
+                var dataGridViewColumn = columnArray[iCol];
+                PropertyDescriptor pd;
+                if (!properties.TryGetValue(dataGridViewColumn.DataPropertyName, out pd))
+                {
+                    continue;
+                }
+                if (dataGridViewColumn.SortMode == DataGridViewColumnSortMode.NotSortable)
+                {
+                    dataGridViewColumn.SortMode = DataGridViewColumnSortMode.Automatic;
+                    changed = true;
+                }
+                if (!typeof(ILinkValue).IsAssignableFrom(pd.PropertyType))
+                {
+                    continue;
+                }
+                var textBoxColumn = dataGridViewColumn as DataGridViewTextBoxColumn;
+                if (textBoxColumn == null)
+                {
+                    continue;
+                }
+                var linkColumn = new DataGridViewLinkColumn
+                {
+                    Name = textBoxColumn.Name,
+                    DataPropertyName = textBoxColumn.DataPropertyName,
+                    DisplayIndex = textBoxColumn.DisplayIndex,
+                    HeaderText = textBoxColumn.HeaderText,
+                    SortMode = textBoxColumn.SortMode,
+                };
+                columnArray[iCol] = linkColumn;
+                changed = true;
+            }
+            return changed;
         }
     }
 }

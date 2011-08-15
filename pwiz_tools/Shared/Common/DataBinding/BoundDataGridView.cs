@@ -52,45 +52,13 @@ namespace pwiz.Common.DataBinding
             {
                 return;
             }
-            var properties =
-                bindingListView.GetItemProperties(new PropertyDescriptor[0])
-                .Cast<PropertyDescriptor>()
-                .ToDictionary(pd => pd.Name, pd => pd);
             var columnArray = new DataGridViewColumn[Columns.Count];
             Columns.CopyTo(columnArray, 0);
-            for (int iCol = 0; iCol < columnArray.Count(); iCol++)
+            if (bindingListView.DataSchema.UpdateGridColumns(bindingListView, columnArray))
             {
-                var dataGridViewColumn = columnArray[iCol];
-                PropertyDescriptor pd;
-                if (!properties.TryGetValue(dataGridViewColumn.DataPropertyName, out pd))
-                {
-                    continue;
-                }
-                if (dataGridViewColumn.SortMode == DataGridViewColumnSortMode.NotSortable)
-                {
-                    dataGridViewColumn.SortMode = DataGridViewColumnSortMode.Automatic;
-                }
-                if (!typeof(ILinkValue).IsAssignableFrom(pd.PropertyType))
-                {
-                    continue;
-                }
-                var textBoxColumn = dataGridViewColumn as DataGridViewTextBoxColumn;
-                if (textBoxColumn == null)
-                {
-                    continue;
-                }
-                var linkColumn = new DataGridViewLinkColumn
-                                     {
-                                         Name = textBoxColumn.Name,
-                                         DataPropertyName = textBoxColumn.DataPropertyName,
-                                         DisplayIndex = textBoxColumn.DisplayIndex,
-                                         HeaderText = textBoxColumn.HeaderText,
-                                         SortMode = textBoxColumn.SortMode,
-                                     };
-                columnArray[iCol] = linkColumn;
+                Columns.Clear();
+                Columns.AddRange(columnArray);
             }
-            Columns.Clear();
-            Columns.AddRange(columnArray);
             _oldColumns = Columns.Cast<DataGridViewColumn>().ToArray();
         }
 
