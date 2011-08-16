@@ -927,6 +927,26 @@
     </FileAssociation>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="..\..\pwiz_aux\msrc\utility\vendor_api\thermo\Microsoft.VC90.MFC\mfc90.dll">
+      <Link>Microsoft.VC90.MFC\mfc90.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\pwiz_aux\msrc\utility\vendor_api\thermo\Microsoft.VC90.MFC\mfc90u.dll">
+      <Link>Microsoft.VC90.MFC\mfc90u.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\pwiz_aux\msrc\utility\vendor_api\thermo\Microsoft.VC90.MFC\mfcm90.dll">
+      <Link>Microsoft.VC90.MFC\mfcm90.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\pwiz_aux\msrc\utility\vendor_api\thermo\Microsoft.VC90.MFC\mfcm90u.dll">
+      <Link>Microsoft.VC90.MFC\mfcm90u.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\pwiz_aux\msrc\utility\vendor_api\Waters\vc9_scl-0\MassLynxRaw.dll">
+      <Link>MassLynxRaw.dll</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="..\Shared\BiblioSpec\binaries\BlibBuild.exe">
       <Link>BlibBuild.exe</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -937,9 +957,6 @@
     </Content>
     <Content Include="..\Shared\BiblioSpec\binaries\msparser.dll">
       <Link>msparser.dll</Link>
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="MassLynxRaw.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Method\AbSciex\BuildQTRAPMethod.exe">
@@ -987,22 +1004,10 @@
     <Content Include="Method\Thermo\BuildTSQEZMethod.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Interop.EDAL.SxS.manifest">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="EULA.MHDAC">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="EULA.MSFileReader">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="Method\Waters\BuildWatersMethod.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Method\Waters\VerifyESkylineLibrary.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Microsoft.VC90.MFC\Microsoft.VC90.MFC.manifest">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <EmbeddedResource Include="Alerts\ImportDocResultsDlg.resx">
@@ -1263,18 +1268,6 @@
     <EmbeddedResource Include="Resources\PopupBtn.bmp" />
     <EmbeddedResource Include="Resources\Save.bmp" />
     <EmbeddedResource Include="Resources\up-pro32.bmp" />
-    <Content Include="Microsoft.VC90.MFC\mfc90.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Microsoft.VC90.MFC\mfc90u.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Microsoft.VC90.MFC\mfcm90.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="Microsoft.VC90.MFC\mfcm90u.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <EmbeddedResource Include="Model\Lib\BlibData\mapping.xml" />
     <EmbeddedResource Include="Resources\Fragment.bmp" />
     <EmbeddedResource Include="Resources\FragmentLib.bmp" />
@@ -1301,7 +1294,24 @@
     <Content Include="Method\AbSciex\BuildQTRAPMethod.exe.manifest">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Interop.HSREADWRITELib.SxS.manifest">
+    <Content Include="..\..\pwiz_aux\msrc\utility\vendor_api\Agilent\EULA.MHDAC">
+      <Link>EULA.MHDAC</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\pwiz_aux\msrc\utility\vendor_api\Bruker\Interop.EDAL.SxS.manifest">
+      <Link>Interop.EDAL.SxS.manifest</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\pwiz_aux\msrc\utility\vendor_api\Bruker\Interop.HSREADWRITELib.SxS.manifest">
+      <Link>Interop.HSREADWRITELib.SxS.manifest</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\pwiz_aux\msrc\utility\vendor_api\thermo\EULA.MSFileReader">
+      <Link>EULA.MSFileReader</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="..\..\pwiz_aux\msrc\utility\vendor_api\thermo\Microsoft.VC90.MFC\Microsoft.VC90.MFC.manifest">
+      <Link>Microsoft.VC90.MFC\Microsoft.VC90.MFC.manifest</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="MacCossLabUW.p12" />

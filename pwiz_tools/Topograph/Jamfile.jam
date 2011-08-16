@@ -107,12 +107,7 @@ if [ modules.peek : NT ]
             <conditional>@build-location
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli/<location>$(PWIZ_WRAPPER_PATH)/obj/x86
             <dependency>../../pwiz/utility/bindings/CLI//pwiz_data_cli.xml/<location>$(PWIZ_WRAPPER_PATH)/obj/x86
-            <dependency>../../pwiz_aux/msrc/utility/vendor_api/Agilent//install_pwiz_vendor_api_agilent_eula/<location>$(TOPOGRAPH_PATH)/turnover
-            <dependency>../../pwiz_aux/msrc/utility/vendor_api/Bruker//install_pwiz_vendor_api_bruker_stub/<location>$(TOPOGRAPH_PATH)/turnover
-            <dependency>../../pwiz_aux/msrc/utility/vendor_api/Bruker//install_pwiz_vendor_api_bruker_stub/<location>$(PWIZ_WRAPPER_PATH)
-            <dependency>../../pwiz_aux/msrc/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo_eula/<location>$(TOPOGRAPH_PATH)/turnover
-            <dependency>../../pwiz_aux/msrc/utility/vendor_api/thermo//install_pwiz_vendor_api_thermo_mfc/<location>$(TOPOGRAPH_PATH)/turnover/Microsoft.VC90.MFC
-            <dependency>../../pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters/<location>$(TOPOGRAPH_PATH)/turnover
+            <dependency>../../pwiz_aux/msrc/utility/vendor_api/Waters//install_pwiz_vendor_api_waters/<location>$(PWIZ_WRAPPER_PATH)/obj/x86
         ;
 #Test
     rule do_topograph_test ( targets + : sources * : properties * )
