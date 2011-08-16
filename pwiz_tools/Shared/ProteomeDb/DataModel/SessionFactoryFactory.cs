@@ -31,7 +31,6 @@ namespace pwiz.ProteomeDatabase.DataModel
             Configuration configuration = new Configuration()
                 //.SetProperty("show_sql", "true")
                 .SetProperty("dialect", typeof(NHibernate.Dialect.SQLiteDialect).AssemblyQualifiedName)
-                .SetProperty("proxyfactory.factory_class", typeof(NHibernate.ByteCode.Castle.ProxyFactoryFactory).AssemblyQualifiedName)
                 .SetProperty("connection.connection_string", new SQLiteConnectionStringBuilder
                 {
                     DataSource = path

@@ -19,6 +19,7 @@
 using System;
 using System.Collections;
 using System.Data;
+using System.Linq.Expressions;
 using System.Threading;
 using NHibernate;
 using NHibernate.Engine;
@@ -255,44 +256,14 @@ namespace pwiz.ProteomeDatabase.Util
             return _session.CreateQuery(query).List();
         }
 
-        public IList Find(string query, object value, IType type)
-        {
-            return _session.Find(query, value, type);
-        }
-
-        public IList Find(string query, object[] values, IType[] types)
-        {
-            return _session.Find(query, values, types);
-        }
-
         public IEnumerable Enumerable(string query)
         {
             return _session.CreateQuery(query).Enumerable();
         }
 
-        public IEnumerable Enumerable(string query, object value, IType type)
-        {
-            return _session.Enumerable(query, value, type);
-        }
-
-        public IEnumerable Enumerable(string query, object[] values, IType[] types)
-        {
-            return _session.Enumerable(query, values, types);
-        }
-
         public ICollection Filter(object collection, string filter)
         {
             return _session.CreateFilter(collection, filter).List();
-        }
-
-        public ICollection Filter(object collection, string filter, object value, IType type)
-        {
-            return _session.Filter(collection, filter, value, type);
-        }
-
-        public ICollection Filter(object collection, string filter, object[] values, IType[] types)
-        {
-            return _session.Filter(collection, filter, values, types);
         }
 
         public int Delete(string query)
@@ -378,11 +349,6 @@ namespace pwiz.ProteomeDatabase.Util
         public IQuery CreateSQLQuery(string sql, string returnAlias, Type returnClass)
         {
             return _session.CreateSQLQuery(sql).AddEntity(returnAlias, returnClass);
-        }
-
-        public IQuery CreateSQLQuery(string sql, string[] returnAliases, Type[] returnClasses)
-        {
-            return _session.CreateSQLQuery(sql, returnAliases, returnClasses);
         }
 
         public ISQLQuery CreateSQLQuery(string queryString)
@@ -545,6 +511,54 @@ namespace pwiz.ProteomeDatabase.Util
         public EntityMode ActiveEntityMode
         {
             get { return _session.ActiveEntityMode; }
+        }
+
+        public bool IsReadOnly(object entityOrProxy)
+        {
+            return _session.IsReadOnly(entityOrProxy);
+        }
+
+        public void SetReadOnly(object entityOrProxy, bool readOnly)
+        {
+            _session.SetReadOnly(entityOrProxy, readOnly);
+        }
+
+        public T Merge<T>(T entity) where T : class
+        {
+            EnsureWriteLock();
+            return _session.Merge(entity);
+        }
+
+        public T Merge<T>(string entityName, T entity) where T : class
+        {
+            EnsureWriteLock();
+            return _session.Merge(entityName, entity);
+        }
+
+        public IQueryOver<T, T> QueryOver<T>() where T : class
+        {
+            return _session.QueryOver<T>();
+        }
+
+        public IQueryOver<T, T> QueryOver<T>(Expression<Func<T>> alias) where T : class
+        {
+            return _session.QueryOver(alias);
+        }
+
+        public IQueryOver<T, T> QueryOver<T>(string entityName) where T : class
+        {
+            return _session.QueryOver<T>(entityName);
+        }
+
+        public IQueryOver<T, T> QueryOver<T>(string entityName, Expression<Func<T>> alias) where T : class
+        {
+            return _session.QueryOver(entityName, alias);
+        }
+
+        public bool DefaultReadOnly
+        {
+            get { return _session.DefaultReadOnly; }
+            set { _session.DefaultReadOnly = value; }
         }
     }
 }
