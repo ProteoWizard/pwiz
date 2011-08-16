@@ -3,6 +3,7 @@
   <Description>This is a default test run configuration for a local test run.</Description>
   <Deployment>
     <DeploymentItem filename="..\Shared\Lib\System.Data.SQLite.DLL" />
+    <DeploymentItem filename="..\Shared\ProteowizardWrapper\obj\x86\MassLynxRaw.dll" />
     <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Bruker\Interop.EDAL.SxS.manifest" />
     <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\Bruker\Interop.HSREADWRITELib.SxS.manifest" />
     <DeploymentItem filename="..\..\pwiz_aux\msrc\utility\vendor_api\thermo\MSFileReader.XRawfile2.SxS.manifest" />
