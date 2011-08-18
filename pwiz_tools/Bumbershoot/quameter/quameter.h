@@ -107,23 +107,15 @@ struct QuameterInput
     }
 };
 
-void MetricMaster(QuameterInput, FullReaderList);
-
-void toLowerCase(std::string &str)
-{
-	const int length = str.length();
-	for(int i=0; i < length; ++i)
-	{
-		str[i] = std::tolower(str[i]);
-	}
-}
-bool compareByPeak(const IntensityPair& pair1, const IntensityPair& pair2) { return pair1.peakIntensity < pair2.peakIntensity; }
-
+void NISTMSMetrics(QuameterInput, FullReaderList);
+void ScanRankerMetrics(QuameterInput, FullReaderList);
 vector<string> GetNativeId(const string&, const string&);
-
-vector<XICWindows> MZRTWindows(const string&, const string&, map<string, int>, vector<MS2ScanInfo>);
-
 multimap<int, string> GetDuplicateID(const string&, const string&);
+
+bool compareByPeak(const IntensityPair& pair1, const IntensityPair& pair2) 
+{ 
+    return pair1.peakIntensity < pair2.peakIntensity; 
+}
 
  /**
     * Given an idpDB file, return its RAW/mzML/etc source files.

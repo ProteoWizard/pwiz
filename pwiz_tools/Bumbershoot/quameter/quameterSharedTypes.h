@@ -99,12 +99,33 @@ namespace quameter
 
     struct MS2ScanInfo
     {
-        string MS2;
-        double MS2Retention;
-        string precursor;
+        string ms2NativeID;
+        double ms2Retention;
+        string precursorNativeID;
         double precursorMZ;
         double precursorIntensity;
         double precursorRetention;
+
+        bool operator< ( const MS2ScanInfo& rhs ) const
+		{
+            if(ms2Retention != rhs.ms2Retention)
+                return ms2Retention < rhs.ms2Retention;
+            else if(precursorMZ != rhs.precursorMZ)
+                return precursorMZ < rhs.precursorMZ;
+            else if(ms2NativeID.compare(rhs.ms2NativeID)!=0)
+                return ms2NativeID < rhs.ms2NativeID;
+            else if(precursorRetention != rhs.precursorRetention)
+                return precursorRetention < rhs.precursorRetention;
+            else 
+                return precursorNativeID < rhs.precursorNativeID;
+		}
+
+		/// Operator to compare the equality of two search scores (MVH)
+		bool operator== ( const MS2ScanInfo& rhs ) const
+		{
+            return ms2Retention == rhs.ms2Retention && ms2NativeID == rhs.ms2NativeID && precursorRetention == rhs.precursorRetention && precursorMZ == rhs.precursorMZ && precursorNativeID == rhs.precursorNativeID;
+		}
+
     };
 
     struct ScanRankerMS2PrecInfo

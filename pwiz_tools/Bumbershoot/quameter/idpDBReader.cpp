@@ -51,7 +51,7 @@ namespace quameter
                                 "from PeptideSpectrumMatch psm JOIN Spectrum JOIN Peptide JOIN PeptideModification pm JOIN Modification mod "
                                 "where psm.Spectrum = Spectrum.Id and psm.Peptide = Peptide.Id "
                                 "and pm.PeptideSpectrumMatch=psm.Id and mod.Id=pm.Modification "
-                                "and Rank = 1 and Spectrum.Source = " + spectrumSourceId + 
+                                "and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " "
                                 "and Charge=2 "
                                 "group by psm.Id";
             sqlite::query qry(db, query_sql.c_str() );
@@ -136,9 +136,8 @@ namespace quameter
             sqlite::query qry(db, s.c_str() );
             int trypticMS2Spectra;
 
-            for (sqlite::query::iterator i = qry.begin(); i != qry.end(); ++i) {
+            for (sqlite::query::iterator i = qry.begin(); i != qry.end(); ++i) 
                 (*i).getter() >> trypticMS2Spectra;
-            }
 
             return (int)trypticMS2Spectra;
         }
@@ -164,9 +163,8 @@ namespace quameter
             sqlite::query qry(db, s.c_str() );
             int trypticPeptides = 0;
 
-            for (sqlite::query::iterator i = qry.begin(); i != qry.end(); ++i) {
+            for (sqlite::query::iterator i = qry.begin(); i != qry.end(); ++i) 
                 trypticPeptides++;
-            } 
 
             return trypticPeptides;
         }
@@ -228,7 +226,7 @@ namespace quameter
                                 "FROM PeptideSpectrumMatch JOIN Spectrum "
                                 "WHERE PeptideSpectrumMatch.QValue <= 0.05 "
                                 "AND PeptideSpectrumMatch.Spectrum=Spectrum.Id "
-                                "AND Rank = 1 and Spectrum.Source = " + spectrumSourceId + 
+                                "AND Rank = 1 and Spectrum.Source = " + spectrumSourceId + " "
                                 "GROUP BY Peptide";
             sqlite::query qry(db, query_sql.c_str() );
             map<size_t,size_t> peptideIDRates;
@@ -259,11 +257,11 @@ namespace quameter
         {
             sqlite::database db(idpDBFile);
             string query_sql = "SELECT DISTINCT NativeID, precursorMZ "
-                                    "FROM PeptideSpectrumMatch JOIN Spectrum "
+                                "FROM PeptideSpectrumMatch JOIN Spectrum "
                                 "where PeptideSpectrumMatch.QValue <= 0.05 "
                                 "and PeptideSpectrumMatch.Spectrum=Spectrum.Id "
-                                "and Rank = 1 and Spectrum.Source = " + spectrumSourceId + 
-                                " ORDER BY PrecursorMZ";
+                                "and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " "
+                                "ORDER BY PrecursorMZ";
             sqlite::query qry(db, query_sql.c_str() );
             accs::accumulator_set<double, accs::stats<accs::tag::median> > precursorMZs;
 
@@ -364,12 +362,12 @@ namespace quameter
         map<size_t,size_t> IDPDBReader::getPeptideCharges(const string& spectrumSourceId) {
 
             sqlite::database db(idpDBFile);
-            string query_str = "select distinct Peptide,Charge"
-                                "from PeptideSpectrumMatch JOIN Spectrum "
-                                "where PeptideSpectrumMatch.QValue <= 0.05 "
-                                "and PeptideSpectrumMatch.Spectrum=Spectrum.Id "
-                                "and Rank = 1 and Spectrum.Source = " + spectrumSourceId + 
-                                " ORDER BY Peptide";
+            string query_str = "SELECT distinct Peptide,Charge "
+                                "FROM PeptideSpectrumMatch JOIN Spectrum "
+                                "WHERE PeptideSpectrumMatch.QValue <= 0.05 "
+                                "AND PeptideSpectrumMatch.Spectrum=Spectrum.Id "
+                                "AND Rank = 1 AND Spectrum.Source = " + spectrumSourceId + " "
+                                "ORDER BY Peptide";
             sqlite::query qry(db, query_str.c_str() );
             map<size_t, size_t> chargeStats;
             for (sqlite::query::iterator qIter = qry.begin(); qIter != qry.end(); ++qIter) 
@@ -416,16 +414,19 @@ namespace quameter
                 (*i).getter() >> peptide >> nativeID >> precursorMZ >> modif;
 
                 int amalgLoc = nativeToArrayMap.find(nativeID)->second; // location in ms_amalgam array
-                if (peptide != lastPeptide || modif.compare(lastModif) != 0) { // if either of these values change we make a new chromatogram
-                    if (lastPeptide != -876) pepWin.push_back(tmpWindow);
+                if (peptide != lastPeptide || modif.compare(lastModif) != 0) 
+                { // if either of these values change we make a new chromatogram
+                    if (lastPeptide != -876) 
+                        pepWin.push_back(tmpWindow);
                     lastPeptide = peptide;
                     tmpWindow.peptide = peptide;
-                    tmpWindow.firstMS2RT = scanInfo[amalgLoc].MS2Retention;
+                    tmpWindow.firstMS2RT = scanInfo[amalgLoc].ms2Retention;
                     tmpWindow.preMZ.clear();
                     tmpWindow.preRT.clear();			
                 }
 
-                if (scanInfo[amalgLoc].MS2Retention < tmpWindow.firstMS2RT) tmpWindow.firstMS2RT = scanInfo[amalgLoc].MS2Retention;
+                if (scanInfo[amalgLoc].ms2Retention < tmpWindow.firstMS2RT) 
+                    tmpWindow.firstMS2RT = scanInfo[amalgLoc].ms2Retention;
                 double mzLower = precursorMZ - 0.5;
                 double mzUpper = precursorMZ + 1.0;
                 //double mzLower = precursorMZ - (precursorMZ / 100000); // lower bound for m/z interval; 10ppm = 10/1,000,000 = 1/100,000
