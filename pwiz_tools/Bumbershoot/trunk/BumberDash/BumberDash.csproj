@@ -232,6 +232,9 @@
     <Content Include="lib\BumberIcon.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="lib\Bumbershoot\adjustScanRankerScoreByGroup.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="lib\Bumbershoot\agtsampleinforw.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -259,10 +262,40 @@
     <Content Include="lib\Bumbershoot\BDal.CXt.Lc.UntU2.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="lib\Bumbershoot\blosum62.fas">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\boost_date_time-vc80-mt-1_33_1-BDAL_20070424.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="lib\Bumbershoot\boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="lib\Bumbershoot\boost_thread-vc80-mt-1_33_1-BDAL_20070424.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Clearcore2.Data.AnalystDataProvider.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Clearcore2.Data.CommonInterfaces.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Clearcore2.Data.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Clearcore2.Data.WiffReader.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Clearcore2.InternalRawXYProcessing.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Clearcore2.ProjectUtilities.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Clearcore2.StructuredStorage.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Clearcore2.Utility.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="lib\Bumbershoot\CompassXtractMS.dll">
@@ -274,7 +307,16 @@
     <Content Include="lib\Bumbershoot\fileio.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="lib\Bumbershoot\FlexVariableTable.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="lib\Bumbershoot\fregistry.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\HSReadWrite.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\ICRVariableTable.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="lib\Bumbershoot\Interop.DataExplorer.dll">
@@ -283,10 +325,19 @@
     <Content Include="lib\Bumbershoot\Interop.EDAL.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="lib\Bumbershoot\Interop.EDAL.SxS.manifest">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Interop.HSREADWRITELib.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="lib\Bumbershoot\libfftw3-3.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="lib\Bumbershoot\libfftw3f-3.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MassLynxRaw.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="lib\Bumbershoot\MassSpecDataReader.dll">
@@ -295,10 +346,13 @@
     <Content Include="lib\Bumbershoot\MSFileReader.XRawfile2.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="lib\Bumbershoot\MSFileReader.XRawfile2.SxS.manifest">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="lib\Bumbershoot\myrimatch.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\NTB-vc80-mt-4_3_61.dll">
+    <Content Include="lib\Bumbershoot\NTB-vc80-mt-1_5_97.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="lib\Bumbershoot\tagrecon.exe">
@@ -328,19 +382,19 @@
     <EmbeddedResource Include="Model\DataModel.hbm.xml" />
     <Content Include="Resources\BumberIcon.ico">
     </Content>
-    <Content Include="lib\Bumbershoot\blosum62.fas">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="lib\Bumbershoot\Interop.EDAL.SxS.manifest">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="lib\Bumbershoot\MSFileReader.XRawfile2.SxS.manifest">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="lib\Bumbershoot.db">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="lib\BumberDash Help 2_files\themedata.thmx">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\EULA.MHDAC">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\EULA.MSFileReader">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Interop.HSREADWRITELib.SxS.manifest">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="Resources\SearchFolder.gif" />

@@ -345,9 +345,9 @@ namespace BumberDash.lib
             if (_barMode)
             {
                 var infoOnly = string.Empty;
-                var statRx = new Regex(@"\d+(?:.\d+)? elapsed, \d+(?:.\d+)? remaining");
+                var statRx = new Regex(@"\d+:\d+:\d+ elapsed, \d+:\d+:\d+ remaining");
 
-                if (recievedLine.Contains("has finished database search"))
+                if (recievedLine.Contains("Computing cross-correlations."))
                 {
                     _barMode = false;
                     _minPercentage = 0;
@@ -361,8 +361,14 @@ namespace BumberDash.lib
                     var explode = infoOnly.Split();
                     try
                     {
-                        var elapsedTime = double.Parse(explode[0]);
-                        var remainingTime = double.Parse(explode[2]);
+                        var elapsedArray = explode[0].Split(":".ToCharArray());
+                        var remainingArray = explode[2].Split(":".ToCharArray());
+                        var elapsedTime = (new TimeSpan(int.Parse(elapsedArray[0]),
+                                                        int.Parse(elapsedArray[1]),
+                                                        int.Parse(elapsedArray[2]))).TotalSeconds;
+                        var remainingTime = (new TimeSpan(int.Parse(remainingArray[0]),
+                                                          int.Parse(remainingArray[1]),
+                                                          int.Parse(remainingArray[2]))).TotalSeconds;
                         if (remainingTime > 0)
                         {
                             var totalTime = elapsedTime + remainingTime;
@@ -385,34 +391,30 @@ namespace BumberDash.lib
             {
                 SetRunStatus("Reading Database File", true);
             }
-            else if (recievedLine.Contains("is reading spectra"))
+            else if (recievedLine.Contains("Reading spectra from file"))
             {
                 _fileProcessing++;
-                SetRunStatus(String.Format("Reading File {0} of {1}", _fileProcessing, _filesToProcess), true);
-
-            }
-            else if (recievedLine.Contains("is preparing"))
-            {
                 SetRunStatus(String.Format("Preprocessing File {0} of {1}", _fileProcessing, _filesToProcess), true);
             }
-            else if (recievedLine.Contains("is commencing database search"))
+            else if (recievedLine.Contains("Commencing database search"))
             {
                 SetRunStatus(
                     String.Format("Searching File {0} of {1} ({2})", _fileProcessing, _filesToProcess,
                                   DataGridViewProgressCell.MessageSpecialValue.Percentage), false);
                 _barMode = true;
             }
-            else if (recievedLine.Contains("is writing search results to file"))
+            else if (recievedLine.Contains("Writing search results to file"))
             {
                 var delimiter = new string[1];
 
                 SetRunStatus("Writing Results", true);
 
-                delimiter[0] = "is writing search results to file \"";
+                delimiter[0] = "Writing search results to file \"";
                 var brokenLine = recievedLine.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
+                var lineEnd = brokenLine[brokenLine.Length - 1];
 
-                brokenLine[1] = brokenLine[1].Remove(brokenLine[1].Length - 2);
-                _completedFiles.Add(brokenLine[1]);
+                lineEnd = lineEnd.Remove(lineEnd.Length - 2);
+                _completedFiles.Add(lineEnd);
             }
             else if (!_versionCaught)
             {
@@ -435,9 +437,9 @@ namespace BumberDash.lib
             if (_barMode)
             {
                 var infoOnly = string.Empty;
-                var statRx = new Regex(@"\d+(?:.\d+)? elapsed, \d+(?:.\d+)? remaining");
+                var statRx = new Regex(@"\d+:\d+:\d+ elapsed, \d+:\d+:\d+ remaining");
 
-                if (recievedLine.Contains("is generating output of tags"))
+                if (recievedLine.Contains("Finished sequence tagging spectra"))
                 {
                     SetPercentage(100);
                     _barMode = false;
@@ -452,8 +454,14 @@ namespace BumberDash.lib
                     {
                         if (!string.IsNullOrEmpty(infoOnly))
                         {
-                            var elapsedTime = double.Parse(explode[0]);
-                            var remainingTime = double.Parse(explode[2]);
+                            var elapsedArray = explode[0].Split(":".ToCharArray());
+                            var remainingArray = explode[2].Split(":".ToCharArray());
+                            var elapsedTime = (new TimeSpan(int.Parse(elapsedArray[0]),
+                                                            int.Parse(elapsedArray[1]),
+                                                            int.Parse(elapsedArray[2]))).TotalSeconds;
+                            var remainingTime = (new TimeSpan(int.Parse(remainingArray[0]),
+                                                              int.Parse(remainingArray[1]),
+                                                              int.Parse(remainingArray[2]))).TotalSeconds;
                             if (remainingTime > 0)
                             {
                                 var totalTime = elapsedTime + remainingTime;
@@ -476,35 +484,36 @@ namespace BumberDash.lib
 
                 }
             }
-            else if (recievedLine.Contains("is reading spectra from file \""))
+            else if (recievedLine.Contains("Reading spectra from file \""))
             {
                 _fileProcessing++;
                 SetRunStatus(String.Format("Reading File {0} of {1}", _fileProcessing, _filesToProcess), true);
 
             }
-            else if (recievedLine.Contains("is trimming spectra"))
+            else if (recievedLine.Contains("Trimming spectra with"))
             {
                 SetRunStatus(String.Format("Preprocessing File {0} of {1}", _fileProcessing, _filesToProcess), true);
             }
-            else if (recievedLine.Contains("has sequence tagged"))
+            else if (recievedLine.Contains("Sequence tagged"))
             {
                 SetRunStatus(
                     String.Format("Searching File {0} of {1} ({2})", _fileProcessing, _filesToProcess,
                                   DataGridViewProgressCell.MessageSpecialValue.Percentage), false);
                 _barMode = true;
             }
-            else if (recievedLine.Contains("is writing tags to \""))
+            else if (recievedLine.Contains("Writing tags to \""))
             {
                 var delimiter = new string[1];
 
                 SetRunStatus("Writing Results", true);
                 SetPercentage(0);
 
-                delimiter[0] = "is writing tags to \"";
+                delimiter[0] = "Writing tags to \"";
                 var brokenLine = recievedLine.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
+                var lineEnd = brokenLine[brokenLine.Length - 1];
 
-                brokenLine[1] = brokenLine[1].Remove(brokenLine[1].Length - 2);
-                _completedFiles.Add(brokenLine[1]);
+                lineEnd = lineEnd.Remove(lineEnd.Length - 2);
+                _completedFiles.Add(lineEnd);
             }
             else if (!_versionCaught)
             {
@@ -528,9 +537,9 @@ namespace BumberDash.lib
             if (_barMode)
             {
                 var infoOnly = string.Empty;
-                var statRx = new Regex(@"\d+(?:.\d+)? elapsed, \d+(?:.\d+)? remaining");
+                var statRx = new Regex(@"\d+:\d+:\d+ elapsed, \d+:\d+:\d+ remaining");
 
-                if (recievedLine.Contains("has finished database search"))
+                if (recievedLine.Contains("Finished database search"))
                 {
                     SetRunStatus("Preparing cross-correlation", true);
                     SetPercentage(0);
@@ -545,8 +554,14 @@ namespace BumberDash.lib
 
                     try
                     {
-                        var elapsedTime = double.Parse(explode[0]);
-                        var remainingTime = double.Parse(explode[2]);
+                        var elapsedArray = explode[0].Split(":".ToCharArray());
+                        var remainingArray = explode[2].Split(":".ToCharArray());
+                        var elapsedTime = (new TimeSpan(int.Parse(elapsedArray[0]),
+                                                        int.Parse(elapsedArray[1]),
+                                                        int.Parse(elapsedArray[2]))).TotalSeconds;
+                        var remainingTime = (new TimeSpan(int.Parse(remainingArray[0]),
+                                                          int.Parse(remainingArray[1]),
+                                                          int.Parse(remainingArray[2]))).TotalSeconds;
                         if (remainingTime > 0)
                         {
                             var totalTime = elapsedTime + remainingTime;
@@ -572,32 +587,33 @@ namespace BumberDash.lib
 
                 SetRunStatus("Reading Database File", true);
             }
-            else if (recievedLine.Contains("is reading spectra"))
+            else if (recievedLine.Contains("Reading spectra"))
             {
                 _fileProcessing++;
                 SetRunStatus(String.Format("Reading Tag File {0} of {1}", _fileProcessing,_filesToProcess), true);
 
             }
-            else if (recievedLine.Contains("is parsing"))
+            else if (recievedLine.Contains("Parsing"))
             {
                 SetRunStatus(String.Format("Preprocessing Tag File {0} of {1}", _fileProcessing, _filesToProcess), true);
             }
-            else if (recievedLine.Contains("is commencing database search"))
+            else if (recievedLine.Contains("Commencing database search"))
             {
                 SetRunStatus(String.Format("Searching Tag File {0} of {1} ({2})", _fileProcessing, _filesToProcess, DataGridViewProgressCell.MessageSpecialValue.Percentage), false);
                 _barMode = true;
             }
-            else if (recievedLine.Contains("is writing search results to file"))
+            else if (recievedLine.Contains("Writing search results to file"))
             {
                 var delimiter = new string[1];
 
                 SetRunStatus("Writing Results", true);
 
-                delimiter[0] = "is writing search results to file \"";
+                delimiter[0] = "Writing search results to file \"";
                 var brokenLine = recievedLine.Split(delimiter, StringSplitOptions.RemoveEmptyEntries);
+                var lineEnd = brokenLine[brokenLine.Length - 1];
 
-                brokenLine[1] = brokenLine[1].Remove(brokenLine[1].Length - 2);
-                _completedFiles.Add(brokenLine[1]);
+                lineEnd = lineEnd.Remove(lineEnd.Length - 2);
+                _completedFiles.Add(lineEnd);
             }
             else if (!_versionCaught)
             {

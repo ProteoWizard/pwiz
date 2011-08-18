@@ -489,7 +489,7 @@ namespace BumberDash.Forms
             else
             {
                 InfoExpandButton.Text = string.Format("<{0}<{0}<", Environment.NewLine);
-                Width = 660;
+                Width = 700;
                 Location = new Point(Location.X - 110, Location.Y);
             }
         }

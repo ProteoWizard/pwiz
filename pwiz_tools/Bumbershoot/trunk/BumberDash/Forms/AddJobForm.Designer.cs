@@ -502,12 +502,14 @@
             // 
             // TagReconInfoBox
             // 
+            this.TagReconInfoBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.TagReconInfoBox.Location = new System.Drawing.Point(2, 221);
             this.TagReconInfoBox.Multiline = true;
             this.TagReconInfoBox.Name = "TagReconInfoBox";
             this.TagReconInfoBox.ReadOnly = true;
             this.TagReconInfoBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.TagReconInfoBox.Size = new System.Drawing.Size(199, 175);
+            this.TagReconInfoBox.Size = new System.Drawing.Size(239, 175);
             this.TagReconInfoBox.TabIndex = 5;
             this.TagReconInfoBox.WordWrap = false;
             // 
@@ -531,12 +533,14 @@
             // 
             // DirecTagInfoBox
             // 
+            this.DirecTagInfoBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
             this.DirecTagInfoBox.Location = new System.Drawing.Point(2, 22);
             this.DirecTagInfoBox.Multiline = true;
             this.DirecTagInfoBox.Name = "DirecTagInfoBox";
             this.DirecTagInfoBox.ReadOnly = true;
             this.DirecTagInfoBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.DirecTagInfoBox.Size = new System.Drawing.Size(199, 175);
+            this.DirecTagInfoBox.Size = new System.Drawing.Size(239, 175);
             this.DirecTagInfoBox.TabIndex = 7;
             this.DirecTagInfoBox.WordWrap = false;
             // 
@@ -548,7 +552,7 @@
             this.TagPanel.Controls.Add(this.TagReconInfoLabel);
             this.TagPanel.Location = new System.Drawing.Point(440, 3);
             this.TagPanel.Name = "TagPanel";
-            this.TagPanel.Size = new System.Drawing.Size(209, 403);
+            this.TagPanel.Size = new System.Drawing.Size(249, 403);
             this.TagPanel.TabIndex = 9;
             this.TagPanel.Visible = false;
             // 
@@ -558,7 +562,7 @@
             this.DatabasePanel.Controls.Add(this.MyriMatchInfoBox);
             this.DatabasePanel.Location = new System.Drawing.Point(436, 1);
             this.DatabasePanel.Name = "DatabasePanel";
-            this.DatabasePanel.Size = new System.Drawing.Size(215, 409);
+            this.DatabasePanel.Size = new System.Drawing.Size(255, 409);
             this.DatabasePanel.TabIndex = 33;
             this.DatabasePanel.Visible = false;
             // 
@@ -578,7 +582,7 @@
             this.MyriMatchInfoBox.Name = "MyriMatchInfoBox";
             this.MyriMatchInfoBox.ReadOnly = true;
             this.MyriMatchInfoBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.MyriMatchInfoBox.Size = new System.Drawing.Size(199, 374);
+            this.MyriMatchInfoBox.Size = new System.Drawing.Size(249, 374);
             this.MyriMatchInfoBox.TabIndex = 9;
             this.MyriMatchInfoBox.WordWrap = false;
             // 
@@ -586,7 +590,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(650, 411);
+            this.ClientSize = new System.Drawing.Size(690, 411);
             this.Controls.Add(this.TagPanel);
             this.Controls.Add(this.FolderPanel);
             this.Controls.Add(this.DatabasePanel);

@@ -243,26 +243,30 @@ namespace BumberDash.Forms
         /// </summary>
         private void SetInitialValues()
         {
-            MyriUseAvgMassOfSequencesBox.Text = "Mono-Isotopic";
-            MyriNumMinTerminiCleavagesBox.Text = "Fully-Specific";
-            MyriPrecursorMzToleranceUnitsBox.Text = "daltons";
-            MyriFragmentMzToleranceUnitsBox.Text = "daltons";
-            MyriDeisotopingModeBox.Text = "Off";
+            MyriPrecursorMzToleranceRuleBox.Text = "auto";
+            MyriMinTerminiCleavagesBox.Text = "Fully-Specific";
+            MyriAvgPrecursorMzToleranceUnitsList.Text = "mz";
+            MyriMonoPrecursorMzToleranceUnitsList.Text = "ppm";
+            MyriFragmentMzToleranceUnitsList.Text = "mz";
             MyriModTypeList.Text = "Static";
-            DTPrecursorMzToleranceUnitsList.Text = "daltons";
-            DTFragmentMzToleranceUnitsList.Text = "daltons";
-            DTNTerminusMassToleranceUnitsList.Text = "daltons";
-            DTCTerminusMassToleranceUnitsList.Text = "daltons";
+            MyriOutputFormatBox.Text = "pepXML";
+            DTPrecursorMzToleranceUnitsList.Text = "mz";
+            DTFragmentMzToleranceUnitsList.Text = "mz";
             DTDeisotopingModeBox.Text = "Precursor Adj Only";
             DTModTypeList.Text = "Static";
-            TRUseAvgMassOfSequencesBox.Text = "Mono-Isotopic";
-            TRNumMinTerminiCleavagesBox.Text = "Fully-Specific";
-            TRPrecursorMzToleranceUnitsList.Text = "daltons";
-            TRFragmentMzToleranceUnitsList.Text = "daltons";
-            TRNTerminusMzToleranceUnitsList.Text = "daltons";
-            TRCTerminusMzToleranceUnitsList.Text = "daltons";
-            TRDeisotopingModeBox.Text = "Off";
+            TRPrecursorMzToleranceRuleBox.Text = "mono";
+            TRMinTerminiCleavagesBox.Text = "Fully-Specific";
+            TRMonoPrecursorMzToleranceUnitsList.Text = "mz";
+            TRFragmentMzToleranceUnitsList.Text = "mz";
+            TRNTerminusMzToleranceUnitsList.Text = "mz";
+            TRCTerminusMzToleranceUnitsList.Text = "mz";
             TRModTypeList.Text = "Static";
+            TROutputFormatBox.Text = "pepXML";
+
+            MyriAvgPrecursorMzToleranceUnitsList.SelectedValueChanged += CheckDualDependenceChange;
+            MyriMonoPrecursorMzToleranceUnitsList.SelectedValueChanged += CheckDualDependenceChange;
+            MyriFragmentMzToleranceUnitsList.SelectedValueChanged += CheckDualDependenceChange;
+            MyriMonoisotopeAdjustmentSet2.ValueChanged += CheckDualDependenceChange;
         }
 
         /// <summary>
@@ -296,6 +300,8 @@ namespace BumberDash.Forms
 
             foreach (Control item in container.Controls)
             {
+                var isDual = GetDualDependenceValue(item);
+
                 //If control is container call functiontion recursively
                 if (item is GroupBox || item is Panel)
                     InitializePane(item);
@@ -313,13 +319,13 @@ namespace BumberDash.Forms
                         unclamedLabelList.Remove(label);
                         _labelAssociation.Add(item, label);
                         if (item is ComboBox)
-                            ((ComboBox) item).SelectedValueChanged += CheckForChange;
+                            ((ComboBox)item).SelectedValueChanged += CheckForChange;
                         else if (item is TextBox)
                             item.TextChanged += CheckForChange;
                         else if (item is NumericUpDown)
-                            ((NumericUpDown) item).ValueChanged += CheckForChange;
+                            ((NumericUpDown)item).ValueChanged += CheckForChange;
                         else if (item is CheckBox)
-                            ((CheckBox) item).CheckedChanged += CheckForChange;
+                            ((CheckBox)item).CheckedChanged += CheckForChange;
                     }
 
                     _itemList[program].Add(item);
@@ -338,13 +344,13 @@ namespace BumberDash.Forms
                         unclamedControlList.Remove(box);
                         _labelAssociation.Add(box, item);
                         if (box is ComboBox)
-                            ((ComboBox) box).SelectedValueChanged += CheckForChange;
+                            ((ComboBox)box).SelectedValueChanged += CheckForChange;
                         else if (box is TextBox)
                             box.TextChanged += CheckForChange;
                         else if (box is NumericUpDown)
-                            ((NumericUpDown) box).ValueChanged += CheckForChange;
+                            ((NumericUpDown)box).ValueChanged += CheckForChange;
                         else if (box is CheckBox)
-                            ((CheckBox) box).CheckedChanged += CheckForChange;
+                            ((CheckBox)box).CheckedChanged += CheckForChange;
                     }
                 }
                 else if (item.Name.EndsWith("Info"))
@@ -366,39 +372,11 @@ namespace BumberDash.Forms
             var item = (Control)sender;
             var value = GetControlValue(item).Trim('"');
             var isModBox = false;
-            var specialCaseItem = item;
-            var specialCaseValue = value;
 
             if (RootName(item.Name) == "AppliedMod" && value.Length > 0)
             {
                 isModBox = true;
                 value += "\"";
-            }
-
-            
-
-            //Handle special case
-            switch (item.Name)
-            {
-                case "MyriPrecursorMzToleranceUnitsBox":
-                    item = MyriPrecursorMzToleranceBox;
-                    value = GetControlValue(item).Trim('"');
-                    break;
-                case "MyriFragmentMzToleranceUnitsBox":
-                    item = MyriFragmentMzToleranceBox;
-                    value = GetControlValue(item).Trim('"');
-                    break;
-                case "MyriPrecursorMzToleranceBox":
-                    specialCaseItem = MyriPrecursorMzToleranceUnitsBox;
-                    specialCaseValue = GetControlValue(specialCaseItem).Trim('"');
-                    break;
-                case "MyriFragmentMzToleranceBox":
-                    specialCaseItem = MyriFragmentMzToleranceUnitsBox;
-                    specialCaseValue = GetControlValue(specialCaseItem).Trim('"');
-                    break;
-                default:
-                    specialCaseItem = null;
-                    break;
             }
 
             if (value == _defaults[item] || (isModBox && ModStringsEqual(value, _defaults[item])))
@@ -419,35 +397,6 @@ namespace BumberDash.Forms
                 else
                     _labelAssociation[item].ForeColor = Color.DarkViolet;
             }
-
-            //Handle dual dependence
-            if (specialCaseItem != null)
-            {
-                if ((_labelAssociation[item].ForeColor == Color.Blue
-                    || _labelAssociation[item].ForeColor == Color.Green)
-                    && (_templateDefaults.ContainsKey(specialCaseItem)
-                            && specialCaseValue != _templateDefaults[specialCaseItem]))
-                    _labelAssociation[item].ForeColor = Color.DarkViolet;
-                else if (_labelAssociation[item].ForeColor == DefaultForeColor)
-                {
-                    if (specialCaseValue == _defaults[specialCaseItem])
-                    {
-                        if (!_templateDefaults.ContainsKey(specialCaseItem)
-                            || specialCaseValue == _templateDefaults[specialCaseItem])
-                            _labelAssociation[item].ForeColor = DefaultForeColor;
-                        else
-                            _labelAssociation[item].ForeColor = Color.Blue;
-                    }
-                    else
-                    {
-                        if (!_templateDefaults.ContainsKey(specialCaseItem)
-                            || specialCaseValue == _templateDefaults[specialCaseItem])
-                            _labelAssociation[item].ForeColor = Color.Green;
-                        else
-                            _labelAssociation[item].ForeColor = Color.DarkViolet;
-                    }
-                }
-            }
         }
 
         /// <summary>
@@ -457,6 +406,8 @@ namespace BumberDash.Forms
         /// <param name="e"></param>
         void OpenHelpFile(object sender, EventArgs e)
         {
+            if (sender == DTIntensityScoreWeightInf2 || sender == DTIntensityScoreWeightInf3)
+                sender = DTIntensityScoreWeightInfo;
             var root = RootName(((Control)sender).Name);
             switch (ProgramModeBox.Text)
             {
@@ -503,10 +454,16 @@ namespace BumberDash.Forms
         /// <returns></returns>
         private string GetControlValue(Control item)
         {
+            var isDual = GetDualDependenceValue(item);
+            if (isDual != string.Empty)
+                return isDual;
+
             var root = RootName(item.Name);
 
             if (root == "AppliedMod")
                 return GetModString((DataGridView)item);
+            if (root == "MonoisotopeAdjustmentSet")
+                return GetDualDependenceValue(item);
             if (root == "UseAvgMassOfSequences")
                 return (((ComboBox)item).SelectedIndex == 1).ToString().ToLower();
             if (root ==  "NumMinTerminiCleavages")
@@ -531,6 +488,105 @@ namespace BumberDash.Forms
             if (item is CheckBox)
                 return ((CheckBox)item).Checked.ToString().ToLower();
             return "Error";
+        }
+
+        private string GetDualDependenceValue(Control item)
+        {
+            if (item == MyriMonoisotopeAdjustmentSetBox)
+            {
+                return string.Format("\"[{0},{1}]\"", MyriMonoisotopeAdjustmentSetBox.Value,
+                                     MyriMonoisotopeAdjustmentSet2.Value);
+            }
+            if (item == MyriAvgPrecursorMzToleranceBox)
+                return "\"" + item.Text + MyriAvgPrecursorMzToleranceUnitsList.Text + "\"";
+            if (item == MyriMonoPrecursorMzToleranceBox)
+                return "\"" + item.Text + MyriMonoPrecursorMzToleranceUnitsList.Text + "\"";
+            if (item == MyriFragmentMzToleranceBox)
+                return "\"" + item.Text + MyriFragmentMzToleranceUnitsList.Text + "\"";
+            if (item == TRMonoPrecursorMzToleranceBox)
+                return "\"" + item.Text + TRMonoPrecursorMzToleranceUnitsList.Text + "\"";
+            if (item == TRFragmentMzToleranceBox)
+                return "\"" + item.Text + TRFragmentMzToleranceUnitsList.Text + "\"";
+            return string.Empty;
+        }
+
+        private void SetDualDependenceValue(Control item, string value)
+        {
+            string[] splitValue;
+
+            if (item == MyriMonoisotopeAdjustmentSetBox)
+            {
+                int first;
+                int second;
+                splitValue = value.Trim('"').Trim('[').Trim(']').Split(',');
+                int.TryParse(splitValue[0], out first);
+                int.TryParse(splitValue[1], out second);
+                MyriMonoisotopeAdjustmentSetBox.Value = first;
+                MyriMonoisotopeAdjustmentSet2.Value = second;
+                return;
+            }
+
+            splitValue = GetSplitMZToleranceValue(value);
+            try
+            {
+                if (item == MyriAvgPrecursorMzToleranceBox)
+                {
+                    item.Text = splitValue[0];
+                    MyriAvgPrecursorMzToleranceUnitsList.Text = splitValue[1];
+                }
+                if (item == MyriMonoPrecursorMzToleranceBox)
+                {
+                    item.Text = splitValue[0];
+                    MyriMonoPrecursorMzToleranceUnitsList.Text = splitValue[1];
+                }
+                if (item == MyriFragmentMzToleranceBox)
+                {
+                    item.Text = splitValue[0];
+                    MyriFragmentMzToleranceUnitsList.Text = splitValue[1];
+                }
+                if (item == TRMonoPrecursorMzToleranceBox)
+                {
+                    item.Text = splitValue[0];
+                    TRMonoPrecursorMzToleranceUnitsList.Text = splitValue[1];
+                }
+                if (item == TRFragmentMzToleranceBox)
+                {
+                    item.Text = splitValue[0];
+                    TRFragmentMzToleranceUnitsList.Text = splitValue[1];
+                }
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show("There was an error loading one of the MZ Tolerance values: " + e.Message);
+            }
+        }
+
+        private void CheckDualDependenceChange(object sender, EventArgs e)
+        {
+            var item = (Control) sender;
+            if (item == MyriMonoisotopeAdjustmentSet2)
+                CheckForChange(MyriMonoisotopeAdjustmentSetBox, e);
+            else if (item == MyriAvgPrecursorMzToleranceUnitsList)
+                CheckForChange(MyriAvgPrecursorMzToleranceBox, e);
+            else if (item == MyriMonoPrecursorMzToleranceUnitsList)
+                CheckForChange(MyriMonoPrecursorMzToleranceBox, e);
+            else if (item == MyriFragmentMzToleranceUnitsList)
+                CheckForChange(MyriFragmentMzToleranceBox, e);
+            else if (item == TRMonoPrecursorMzToleranceUnitsList)
+                CheckForChange(TRMonoPrecursorMzToleranceBox, e);
+            else if (item == TRFragmentMzToleranceUnitsList)
+                CheckForChange(TRFragmentMzToleranceBox, e);
+        }
+
+        private string[] GetSplitMZToleranceValue(string value)
+        {
+            var value1 = "0";
+            var value1Match = Regex.Match(value, @"\d*\.?\d*");
+            if (value1Match != Match.Empty)
+                value1 = value1Match.ToString();
+            var value2 = value.Remove(0, value1.Length);
+            return new[] {value1, value2};
+
         }
 
         /// <summary>
@@ -568,13 +624,18 @@ namespace BumberDash.Forms
         {
             foreach (var control in _itemList[ProgramModeBox.Text])
             {
+
                 var root = RootName(control.Name);
                 var value = _templateDefaults.ContainsKey(control)
                                 ? _templateDefaults[control]
                                 : _defaults[control];
-                if (root == "AppliedMod")
+
+                var isDual = GetDualDependenceValue(control);
+                if (isDual != string.Empty)
+                    SetDualDependenceValue(control, value);
+                else if (root == "AppliedMod")
                     SetModString(value);
-                if (root == "UseAvgMassOfSequences")
+                else if (root == "UseAvgMassOfSequences")
                     ((ComboBox)control).SelectedIndex = (value == "true") ? 1 : 0;
                 else if (root == "NumMinTerminiCleavages" || root == "DeisotopingMode")
                     ((ComboBox)control).SelectedIndex = int.Parse(value);
@@ -606,7 +667,11 @@ namespace BumberDash.Forms
                 var value = configValues.ContainsKey(root)
                                 ? configValues[root]
                                 : kvp.Value;
-                if (root == "AppliedMod")
+
+                var isDual = GetDualDependenceValue(kvp.Key);
+                if (isDual != string.Empty)
+                    SetDualDependenceValue(kvp.Key, value);
+                else if (root == "AppliedMod")
                 {
                     var modString = string.Empty;
                     if (configValues.ContainsKey("StaticMods"))
@@ -776,20 +841,18 @@ namespace BumberDash.Forms
 
             var groupOrder = new List<string>
                                  {
+                                     "AvgPrecursorMzTolerance",
+                                     "MonoPrecursorMzTolerance",
                                      "PrecursorMzTolerance",
                                      "FragmentMzTolerance",
-                                     "PrecursorMzToleranceUnits",
-                                     "FragmentMzToleranceUnits",
-                                     "NTerminusMassTolerance",
-                                     "CTerminusMassTolerance",
                                      "NTerminusMzTolerance",
                                      "CTerminusMzTolerance",
                                      Environment.NewLine,
                                      "AdjustPrecursorMass",
                                      "MaxPrecursorAdjustment",
                                      "MinPrecursorAdjustment",
+                                     "MonoisotopeAdjustmentSet",
                                      "PrecursorAdjustmentStep",
-                                     "NumSearchBestAdjustments",
                                      Environment.NewLine,
                                      "DuplicateSpectra",
                                      "UseChargeStateFromMS",
@@ -798,14 +861,17 @@ namespace BumberDash.Forms
                                      "UseSmartPlusThreeModel",
                                      Environment.NewLine,
                                      "CleavageRules",
-                                     "NumMinTerminiCleavages",
-                                     "NumMaxMissedCleavages",
+                                     "MinTerminiCleavages",
+                                     "MaxMissedCleavages",
                                      "UseAvgMassOfSequences",
-                                     "MinCandidateLength",
+                                     "PrecursorMzToleranceRule",
+                                     "MinPeptideLength",
+                                     "MaxPeptideLength",
                                      Environment.NewLine,
                                      "AppliedMod",
                                      "MaxDynamicMods",
                                      "MaxNumPreferredDeltaMasses",
+                                     "MaxAmbResultsForBlindMods",
                                      Environment.NewLine,
                                      "ExplainUnknownMassShiftsAs",
                                      "MaxModificationMassPlus",
@@ -814,9 +880,9 @@ namespace BumberDash.Forms
                                      "Blosum",
                                      "BlosumThreshold",
                                      Environment.NewLine,
-                                     "MaxResults",
+                                     "MaxResultRank",
                                      Environment.NewLine,
-                                     "ProteinSampleSize",
+                                     "ProteinSamplingTime",
                                      Environment.NewLine,
                                      "NumIntensityClasses",
                                      "ClassSizeMultiplier",
@@ -825,17 +891,13 @@ namespace BumberDash.Forms
                                      "IsotopeMzTolerance",
                                      "ComplementMzTolerance",
                                      Environment.NewLine,
-                                     "MinSequenceMass",
-                                     "MaxSequenceMass",
-                                     Environment.NewLine,
-                                     "StartSpectraScanNum",
-                                     "EndSpectraScanNum",
-                                     "StartProteinIndex",
-                                     "EndProteinIndex",
+                                     "MinPeptideMass",
+                                     "MaxPeptideMass",
                                      Environment.NewLine,
                                      "ComputeXCorr",
                                      "UseNETAdjustment",
                                      "MassReconMode",
+                                     "OutputFormat",
                                      Environment.NewLine,
                                      "MaxPeakCount",
                                      "TagLength",
@@ -853,19 +915,17 @@ namespace BumberDash.Forms
             #region Redundant items
             var redundantItems = new List<string>
                                      {
+                                         "AvgPrecursorMzTolerance",
+                                         "MonoPrecursorMzTolerance",
                                          "PrecursorMzTolerance",
                                          "FragmentMzTolerance",
-                                         "PrecursorMzToleranceUnits",
-                                         "FragmentMzToleranceUnits",
                                          "UseChargeStateFromMS",
                                          "NumChargeStates",
                                          "TicCutoffPercentage",
                                          "CleavageRules",
-                                         "NumMinTerminiCleavages",
-                                         "NumMaxMissedCleavages",
+                                         "MinTerminiCleavages",
+                                         "MaxMissedCleavages",
                                          "MaxResults",
-                                         "NTerminusMassTolerance",
-                                         "CTerminusMassTolerance",
                                          "NTerminusMzTolerance",
                                          "CTerminusMzTolerance",
                                          "UnimodXML",
@@ -947,7 +1007,7 @@ namespace BumberDash.Forms
             switch (ProgramModeBox.Text)
             {
                 case "MyriMatch":
-                    Size = new Size(540, 590);
+                    Size = new Size(540, 620);
                     MyriGenPanel.Visible = true;
                     MyriAdvPanel.Visible = true;
                     break;
@@ -1034,37 +1094,9 @@ namespace BumberDash.Forms
         private void NumMaxMissedCleavagesBox_ValueChanged(object sender, EventArgs e)
         {
             if (ProgramModeBox.Text == "MyriMatch")
-                MyriNumMaxMissedCleavagesAuto.Visible = MyriNumMaxMissedCleavagesBox.Value == -1;
+                MyriMaxMissedCleavagesAuto.Visible = MyriMaxMissedCleavagesBox.Value == -1;
             else
-                TRNumMaxMissedCleavagesAuto.Visible = TRNumMaxMissedCleavagesBox.Value == -1;
-        }
-
-        /// <summary>
-        /// Displays label when values is -1
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void EndSpectraScanNumBox_ValueChanged(object sender, EventArgs e)
-        {
-            if (ProgramModeBox.Text == "MyriMatch")
-                MyriEndSpectraScanNumAuto.Visible = MyriEndSpectraScanNumBox.Value == -1;
-            else if (ProgramModeBox.Text == "DirecTag")
-                DTEndSpectraScanNumAuto.Visible = DTEndSpectraScanNumBox.Value == -1;
-            else
-                TREndSpectraScanNumAuto.Visible = TREndSpectraScanNumBox.Value == -1;
-        }
-
-        /// <summary>
-        /// Displays label when values is -1
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void EndProteinIndexBox_ValueChanged(object sender, EventArgs e)
-        {
-            if (ProgramModeBox.Text == "MyriMatch")
-                MyriEndProteinIndexAuto.Visible = MyriEndProteinIndexBox.Value == -1;
-            else
-                TREndProteinIndexAuto.Visible = TREndProteinIndexBox.Value == -1;
+                TRMaxMissedCleavagesAuto.Visible = TRMaxMissedCleavagesBox.Value == -1;
         }
 
         private void AppliedModAdd_Click(object sender, EventArgs e)
@@ -1192,58 +1224,54 @@ namespace BumberDash.Forms
             if (((CheckBox)sender).Checked)
             {
                 mainTabControl.TabPages.Add(AdvTab);
-                MyriPrecursorMzToleranceBox.Enabled = true;
-                MyriPrecursorMzToleranceUnitsBox.Enabled = true;
+                MyriAvgPrecursorMzToleranceBox.Enabled = true;
+                MyriAvgPrecursorMzToleranceUnitsList.Enabled = true;
+                MyriMonoPrecursorMzToleranceBox.Enabled = true;
+                MyriMonoPrecursorMzToleranceUnitsList.Enabled = true;
                 MyriFragmentMzToleranceBox.Enabled = true;
-                MyriFragmentMzToleranceUnitsBox.Enabled = true;
-                MyriNumMaxMissedCleavagesBox.Enabled = true;
-                MyriNumMaxMissedCleavagesAuto.Enabled = true;
+                MyriFragmentMzToleranceUnitsList.Enabled = true;
+                MyriMaxMissedCleavagesBox.Enabled = true;
+                MyriMaxMissedCleavagesAuto.Enabled = true;
                 DTPrecursorMzToleranceBox.Enabled = true;
                 DTPrecursorMzToleranceUnitsList.Enabled = true;
                 DTFragmentMzToleranceBox.Enabled = true;
                 DTFragmentMzToleranceUnitsList.Enabled = true;
-                DTNTerminusMassToleranceBox.Enabled = true;
-                DTNTerminusMassToleranceUnitsList.Enabled = true;
-                DTCTerminusMassToleranceBox.Enabled = true;
-                DTCTerminusMassToleranceUnitsList.Enabled = true;
-                TRPrecursorMzToleranceBox.Enabled = true;
-                TRPrecursorMzToleranceUnitsList.Enabled = true;
+                TRMonoPrecursorMzToleranceBox.Enabled = true;
+                TRMonoPrecursorMzToleranceUnitsList.Enabled = true;
                 TRFragmentMzToleranceBox.Enabled = true;
                 TRFragmentMzToleranceUnitsList.Enabled = true;
                 TRNTerminusMzToleranceBox.Enabled = true;
                 TRNTerminusMzToleranceUnitsList.Enabled = true;
                 TRCTerminusMzToleranceBox.Enabled = true;
                 TRCTerminusMzToleranceUnitsList.Enabled = true;
-                TRNumMaxMissedCleavagesBox.Enabled = true;
-                TRNumMaxMissedCleavagesAuto.Enabled = true;
+                TRMaxMissedCleavagesBox.Enabled = true;
+                TRMaxMissedCleavagesAuto.Enabled = true;
             }
             else
             {
                 mainTabControl.TabPages.Remove(AdvTab);
-                MyriPrecursorMzToleranceBox.Enabled = false;
-                MyriPrecursorMzToleranceUnitsBox.Enabled = false;
+                MyriAvgPrecursorMzToleranceBox.Enabled = false;
+                MyriAvgPrecursorMzToleranceUnitsList.Enabled = false;
+                MyriMonoPrecursorMzToleranceBox.Enabled = false;
+                MyriMonoPrecursorMzToleranceUnitsList.Enabled = false;
                 MyriFragmentMzToleranceBox.Enabled = false;
-                MyriFragmentMzToleranceUnitsBox.Enabled = false;
-                MyriNumMaxMissedCleavagesBox.Enabled = false;
-                MyriNumMaxMissedCleavagesAuto.Enabled = false;
+                MyriFragmentMzToleranceUnitsList.Enabled = false;
+                MyriMaxMissedCleavagesBox.Enabled = false;
+                MyriMaxMissedCleavagesAuto.Enabled = false;
                 DTPrecursorMzToleranceBox.Enabled = false;
                 DTPrecursorMzToleranceUnitsList.Enabled = false;
                 DTFragmentMzToleranceBox.Enabled = false;
                 DTFragmentMzToleranceUnitsList.Enabled = false;
-                DTNTerminusMassToleranceBox.Enabled = false;
-                DTNTerminusMassToleranceUnitsList.Enabled = false;
-                DTCTerminusMassToleranceBox.Enabled = false;
-                DTCTerminusMassToleranceUnitsList.Enabled = false;
-                TRPrecursorMzToleranceBox.Enabled = false;
-                TRPrecursorMzToleranceUnitsList.Enabled = false;
+                TRMonoPrecursorMzToleranceBox.Enabled = false;
+                TRMonoPrecursorMzToleranceUnitsList.Enabled = false;
                 TRFragmentMzToleranceBox.Enabled = false;
                 TRFragmentMzToleranceUnitsList.Enabled = false;
                 TRNTerminusMzToleranceBox.Enabled = false;
                 TRNTerminusMzToleranceUnitsList.Enabled = false;
                 TRCTerminusMzToleranceBox.Enabled = false;
                 TRCTerminusMzToleranceUnitsList.Enabled = false;
-                TRNumMaxMissedCleavagesBox.Enabled = false;
-                TRNumMaxMissedCleavagesAuto.Enabled = false;
+                TRMaxMissedCleavagesBox.Enabled = false;
+                TRMaxMissedCleavagesAuto.Enabled = false;
             }
         }
 
@@ -1464,28 +1492,6 @@ namespace BumberDash.Forms
                                                                       : "unknown",
                                                            ConfigAssociation = currentConfig
                                                        });
-
-                    //special cases
-                    if (kvp.Key.Name == "MyriPrecursorMzToleranceBox")
-                        currentConfig.PropertyList.Add(new ConfigProperty
-                        {
-                            Name = "PrecursorMzToleranceUnits",
-                            Value = GetControlValue(MyriPrecursorMzToleranceUnitsBox),
-                            Type = parameterType.ContainsKey("PrecursorMzToleranceUnits")
-                                       ? parameterType["PrecursorMzToleranceUnits"]
-                                       : "unknown",
-                            ConfigAssociation = currentConfig
-                        });
-                    else if (kvp.Key.Name == "MyriFragmentMzToleranceBox")
-                        currentConfig.PropertyList.Add(new ConfigProperty
-                        {
-                            Name = "FragmentMzToleranceUnits",
-                            Value = GetControlValue(MyriFragmentMzToleranceUnitsBox),
-                            Type = parameterType.ContainsKey("FragmentMzToleranceUnits")
-                                       ? parameterType["FragmentMzToleranceUnits"]
-                                       : "unknown",
-                            ConfigAssociation = currentConfig
-                        });
                 }
 
                 _session.SaveOrUpdate(currentConfig);
@@ -1728,86 +1734,14 @@ namespace BumberDash.Forms
             return double.TryParse(Mass, out x) ? "All Valid" : "Invalid Mod Mass";
         }
 
-        private void StartSpectraScanNumBox_Leave(object sender, EventArgs e)
-        {
-            var StartSpectraScanNumBox = (NumericUpDown) sender;
-            NumericUpDown EndSpectraScanNumBox;
-
-            if (ProgramModeBox.Text == "MyriMatch")
-                EndSpectraScanNumBox = MyriEndSpectraScanNumBox;
-            else if (ProgramModeBox.Text == "DirecTag")
-                EndSpectraScanNumBox = DTEndSpectraScanNumBox;
-            else
-                EndSpectraScanNumBox = TREndSpectraScanNumBox;
-
-            if (EndSpectraScanNumBox.Value != -1 && StartSpectraScanNumBox.Value > EndSpectraScanNumBox.Value)
-            {
-                MessageBox.Show("Must be less than End Spectra Scan Number if End Spectra Scan Number is not \"Auto\"");
-                StartSpectraScanNumBox.Value = EndSpectraScanNumBox.Value;
-            }
-
-            StartSpectraScanNumBox.Value = Math.Round(StartSpectraScanNumBox.Value);
-        }
-
-        private void EndSpectraScanNumBox_Leave(object sender, EventArgs e)
-        {
-            var EndSpectraScanNumBox = (NumericUpDown)sender;
-            NumericUpDown StartSpectraScanNumBox;
-
-            if (ProgramModeBox.Text == "MyriMatch")
-                StartSpectraScanNumBox = MyriStartSpectraScanNumBox;
-            else if (ProgramModeBox.Text == "DirecTag")
-                StartSpectraScanNumBox = DTStartSpectraScanNumBox;
-            else
-                StartSpectraScanNumBox = TRStartSpectraScanNumBox;
-
-            if (EndSpectraScanNumBox.Value != -1 && StartSpectraScanNumBox.Value > EndSpectraScanNumBox.Value)
-            {
-                MessageBox.Show("Must be either \"Auto\" or greater than Start Spectra Scan Number");
-                EndSpectraScanNumBox.Value = StartSpectraScanNumBox.Value;
-            }
-
-            EndSpectraScanNumBox.Value = Math.Round(EndSpectraScanNumBox.Value);
-        }
-
-        private void StartProteinIndexBox_Leave(object sender, EventArgs e)
-        {
-            var StartProteinIndexBox = (NumericUpDown)sender;
-
-            var EndProteinIndexBox = ProgramModeBox.Text == "MyriMatch" 
-                ? MyriEndProteinIndexBox : TREndProteinIndexBox;
-
-            if (EndProteinIndexBox.Value != -1 && StartProteinIndexBox.Value > EndProteinIndexBox.Value)
-            {
-                MessageBox.Show("Must be less than End Protein Index if End Protein Index is not \"Auto\"");
-                StartProteinIndexBox.Value = EndProteinIndexBox.Value;
-            }
-
-            StartProteinIndexBox.Value = Math.Round(StartProteinIndexBox.Value);
-        }
-
-        private void EndProteinIndexBox_Leave(object sender, EventArgs e)
-        {
-            var EndProteinIndexBox = (NumericUpDown)sender;
-
-            var StartProteinIndexBox = ProgramModeBox.Text == "MyriMatch"
-                ? MyriStartProteinIndexBox : TRStartProteinIndexBox;
-
-            if (EndProteinIndexBox.Value != -1 && StartProteinIndexBox.Value > EndProteinIndexBox.Value)
-            {
-                MessageBox.Show("Must be either \"Auto\" or greater than Start Protein Index");
-                EndProteinIndexBox.Value = StartProteinIndexBox.Value;
-            }
-
-            EndProteinIndexBox.Value = Math.Round(EndProteinIndexBox.Value);
-        }
+        
 
         private void MinSequenceMassBox_Leave(object sender, EventArgs e)
         {
             var MinSequenceMassBox = (NumericUpDown)sender;
 
             var MaxSequenceMassBox = ProgramModeBox.Text == "MyriMatch" 
-                ? MyriMaxSequenceMassBox : TRMaxSequenceMassBox;
+                ? MyriMaxPeptideMassBox : TRMaxPeptideMassBox;
 
             if (MinSequenceMassBox.Value > MaxSequenceMassBox.Value)
             {
@@ -1821,7 +1755,7 @@ namespace BumberDash.Forms
             var MaxSequenceMassBox = (NumericUpDown)sender;
 
             var MinSequenceMassBox = ProgramModeBox.Text == "MyriMatch"
-                ? MyriMinSequenceMassBox : TRMinSequenceMassBox;
+                ? MyriMinPeptideMassBox : TRMinPeptideMassBox;
 
             if (MaxSequenceMassBox.Value < MinSequenceMassBox.Value)
             {
