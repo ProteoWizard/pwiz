@@ -17,6 +17,7 @@
  * limitations under the License.
  */
 using System.Collections.Generic;
+using System.Drawing;
 using System.Windows.Forms;
 
 namespace pwiz.Common.DataBinding
@@ -35,5 +36,6 @@ namespace pwiz.Common.DataBinding
         ViewSpec SaveView(ViewSpec viewSpec);
         void DeleteViews(IEnumerable<ViewSpec> viewSpecs);
         DialogResult ShowMessageBox(Control owner, string messsage, MessageBoxButtons messageBoxButtons);
+        Icon ApplicationIcon { get; }
     }
 }

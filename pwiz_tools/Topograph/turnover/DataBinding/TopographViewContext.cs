@@ -41,6 +41,7 @@ namespace pwiz.Topograph.ui
         {
             Workspace = workspace;
             BuiltInViewSpecs = builtInViews;
+            ApplicationIcon = Resources.TopographIcon;
         }
 
         public Type RowType { get { return ParentColumn.PropertyType; } }

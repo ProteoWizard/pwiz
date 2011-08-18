@@ -37,6 +37,7 @@ namespace pwiz.Common.DataBinding.Controls
         {
             InitializeComponent();
             ViewContext = viewContext;
+            Icon = ViewContext.ApplicationIcon;
             RefreshUi(true);
         }
 
@@ -50,7 +51,7 @@ namespace pwiz.Common.DataBinding.Controls
                 helper.Items = _viewSpecs = ViewContext.CustomViewSpecs.ToArray();
             }
             var selectedItems = helper.GetSelectedItems();
-            btnEdit.Enabled = selectedItems.Length == 0;
+            btnEdit.Enabled = selectedItems.Length == 1;
             btnRemove.Enabled = selectedItems.Length > 0;
         }
 

@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -73,6 +74,8 @@ namespace pwiz.Common.DataBinding
         {
             return "default";
         }
+
+        public Icon ApplicationIcon { get; protected set; }
 
         protected virtual void WriteData(IProgressMonitor progressMonitor, TextWriter writer, BindingListView bindingListView, IDataFormat dataFormat)
         {

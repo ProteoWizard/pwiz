@@ -32,9 +32,11 @@ namespace pwiz.Common.DataBinding.Controls
         private ViewSpec _viewSpec = new ViewSpec();
         private Font _strikeThroughFont;
         private bool _inChangeView;
+        private readonly int _advancedPanelWidth;
         public CustomizeViewForm(IViewContext viewContext, ViewSpec viewSpec)
         {
             InitializeComponent();
+            _advancedPanelWidth = splitContainerAdvanced.Width - splitContainerAdvanced.SplitterDistance;
             ViewContext = viewContext;
             ParentColumn = viewContext.ParentColumn;
             _strikeThroughFont = new Font(listViewColumns.Font, FontStyle.Strikeout);
@@ -44,6 +46,8 @@ namespace pwiz.Common.DataBinding.Controls
             ExistingCustomViewSpec =
                 viewContext.CustomViewSpecs.FirstOrDefault(customViewSpec => viewSpec.Name == customViewSpec.Name);
             listViewColumns.SmallImageList = AggregateFunctions.GetSmallIcons();
+            AdvancedShowing = false;
+            Icon = ViewContext.ApplicationIcon;
         }
 
         public ColumnDescriptor ParentColumn { get; private set; }
@@ -78,6 +82,51 @@ namespace pwiz.Common.DataBinding.Controls
                 finally
                 {
                     _inChangeView = false;
+                }
+            }
+        }
+
+        public bool AdvancedShowing
+        {
+            get
+            {
+                return !splitContainerAdvanced.Panel2Collapsed;
+            }
+            set
+            {
+                if (AdvancedShowing == value)
+                {
+                    return;
+                }
+                splitContainerAdvanced.Panel2Collapsed = !value;
+                int newWidth;
+                if (AdvancedShowing)
+                {
+                    btnAdvanced.Text = "<< Hide &Advanced";
+                    newWidth = Width + _advancedPanelWidth;
+                }
+                else
+                {
+                    btnAdvanced.Text = "Show &Advanced >>";
+                    newWidth = Width - _advancedPanelWidth;
+                }
+                
+                if (IsHandleCreated)
+                {
+                    var screen = Screen.FromControl(this);
+                    if (AdvancedShowing)
+                    {
+                        newWidth = Math.Max(Width, Math.Min(newWidth, screen.WorkingArea.Width));
+                    }
+                    else
+                    {
+                        newWidth = Math.Min(Width, Math.Max(newWidth, 200));
+                    }
+                }
+                Width = newWidth;
+                if (AdvancedShowing)
+                {
+                    splitContainerAdvanced.SplitterDistance = splitContainerAdvanced.Width - _advancedPanelWidth;
                 }
             }
         }
@@ -368,7 +417,15 @@ namespace pwiz.Common.DataBinding.Controls
 
         private void listViewColumns_SizeChanged(object sender, EventArgs e)
         {
-            listViewColumns.Columns[0].Width = listViewColumns.ClientSize.Width - SystemInformation.VerticalScrollBarWidth;
+            if (IsHandleCreated)
+            {
+                BeginInvoke(new Action(AfterResizeListViewColumns));
+            }
+        }
+
+        private void AfterResizeListViewColumns()
+        {
+            listViewColumns.Columns[0].Width = listViewColumns.ClientSize.Width - SystemInformation.VerticalScrollBarWidth - 1;
         }
         class AggregateItem
         {
@@ -410,6 +467,11 @@ namespace pwiz.Common.DataBinding.Controls
             {
                 ViewSpec = _viewSpec.SetSublistId(sublistItem.IdentifierPath);
             }
+        }
+
+        private void btnAdvanced_Click(object sender, EventArgs e)
+        {
+            AdvancedShowing = !AdvancedShowing;
         }
     }
 }

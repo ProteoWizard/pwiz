@@ -129,7 +129,7 @@ namespace pwiz.Common.DataBinding
             {
                 return;
             }
-            if (typeof(IEntity).IsAssignableFrom(columnDescriptor.PropertyType))
+            if (typeof(IEntity).IsAssignableFrom(columnDescriptor.WrappedPropertyType))
             {
                 indexPropertyDescriptors.Add(columnDescriptor);
             }
@@ -227,8 +227,9 @@ namespace pwiz.Common.DataBinding
         {
             _entityRows.Clear();
             _innerTreeList = new TreeList<object>(BindingListView.InnerList.Cast<object>());
-            BindingListView.UnfilteredItems =
-                _innerTreeList.Tree.Select(redBlackNode => new RowItem(redBlackNode, redBlackNode.Value)).ToArray();
+            var pivoter = new Pivoter(BindingListView.ViewInfo);
+            var items = pivoter.ExpandAndPivot(_innerTreeList.Tree.Select(redBlackNode => new RowItem(redBlackNode, redBlackNode.Value))).ToArray();
+            BindingListView.SetUnfilteredItems(pivoter, items);
             _bindingTreeList = new TreeList<RowItem>(BindingListView);
             foreach (var node in _bindingTreeList.Tree)
             {
@@ -258,8 +259,8 @@ namespace pwiz.Common.DataBinding
             }
             foreach (var columnDescriptor in _entityIdColumns)
             {
-                var value = columnDescriptor.GetPropertyValue((RowItem) node.Value, null);
-                var entity = value as IEntity;
+                var value = columnDescriptor.GetUnwrappedPropertyValue(node.Value, null);
+                var entity = BindingListView.DataSchema.UnwrapValue(value) as IEntity;
                 if (entity == null)
                 {
                     continue;

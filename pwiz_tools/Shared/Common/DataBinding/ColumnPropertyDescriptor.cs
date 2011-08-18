@@ -75,7 +75,7 @@ namespace pwiz.Common.DataBinding
 
         public override void SetValue(object component, object value)
         {
-            throw new NotImplementedException();
+            ColumnDescriptor.SetValue(component as RowItem, RowKey, value);
         }
 
         public override bool ShouldSerializeValue(object component)
@@ -90,7 +90,7 @@ namespace pwiz.Common.DataBinding
 
         public override bool IsReadOnly
         {
-            get { return true; }
+            get { return ColumnDescriptor.IsReadOnly; }
         }
 
         public override Type PropertyType

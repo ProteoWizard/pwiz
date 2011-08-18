@@ -147,6 +147,11 @@ namespace pwiz.Common.DataBinding
                                 else
                                 {
                                     atDoubleQuote = true;
+                                    if (i == path.Length - 1)
+                                    {
+                                        lastIndex = path.Length;
+                                        break;
+                                    }
                                 }
                             }
                             else

@@ -45,14 +45,17 @@ namespace pwiz.Common.DataBinding
         private BindingListEventHandler _bindingListEventHandler;
         private Pivoter _pivoter;
         private IList<RowItem> _unfilteredItems;
+        private const int MAX_COLUMN_COUNT = 600;
 
         
         public BindingListView(ViewInfo viewInfo, IList innerList)
         {
             ViewInfo = viewInfo;
             InnerList = innerList;
-            _pivoter = new Pivoter(viewInfo);
-            UnfilteredItems = _pivoter.ExpandAndPivot(innerList.Cast<object>().Select(o => new RowItem(null, o))).ToArray();
+            var pivoter = new Pivoter(viewInfo);
+            SetUnfilteredItems(pivoter,
+                               pivoter.ExpandAndPivot(innerList.Cast<object>().Select(o => new RowItem(null, o))).
+                                   ToArray());
         }
 
         public DataSchema DataSchema { get { return ViewInfo.DataSchema; } }
@@ -159,15 +162,18 @@ namespace pwiz.Common.DataBinding
             {
                 return _unfilteredItems;
             }
-            set
+        }
+
+        public void SetUnfilteredItems(Pivoter pivoter, IList<RowItem> rowItems)
+        {
+            _pivoter = pivoter;
+            _unfilteredItems = rowItems;
+            Items.Clear();
+            foreach (var rowItem in UnfilteredItems)
             {
-                _unfilteredItems = value;
-                foreach (var rowItem in UnfilteredItems)
-                {
-                    Items.Add(rowItem);
-                }
-                ResetBindings();
+                Items.Add(rowItem);
             }
+            ResetBindings();
         }
 
         public string Filter
@@ -321,7 +327,7 @@ namespace pwiz.Common.DataBinding
             var pivotColumns = new Dictionary<RowKey, List<ColumnDescriptor>>();
             foreach (var columnDescriptor in ViewInfo.ColumnDescriptors)
             {
-                var pivotValues = _pivoter.GetPivotValues(columnDescriptor.IdPath);
+                ICollection<RowKey> pivotValues = _pivoter.GetPivotValues(columnDescriptor.IdPath);
                 if (pivotValues == null)
                 {
                     propertyDescriptors.Add(new ColumnPropertyDescriptor(columnDescriptor, null));
@@ -343,6 +349,10 @@ namespace pwiz.Common.DataBinding
             foreach (var pivotKey in pivotKeys)
             {
                 propertyDescriptors.AddRange(pivotColumns[pivotKey].Select(cd=>new ColumnPropertyDescriptor(cd, pivotKey)).ToArray());
+            }
+            if (propertyDescriptors.Count > MAX_COLUMN_COUNT)
+            {
+                propertyDescriptors.RemoveRange(MAX_COLUMN_COUNT, propertyDescriptors.Count - MAX_COLUMN_COUNT);
             }
             return new PropertyDescriptorCollection(propertyDescriptors.ToArray());
         }

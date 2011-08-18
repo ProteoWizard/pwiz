@@ -115,7 +115,7 @@ namespace pwiz.Common.DataBinding
         }
         private RowKey GetRowKey(RowItem rowItem)
         {
-            if (rowItem.SublistId.IsRoot)
+            if (ViewInfo.SublistId.StartsWith(rowItem.SublistId))
             {
                 return null;
             }

@@ -87,6 +87,7 @@ namespace pwiz.Common.DataBinding
         public CollectionInfo CollectionInfo { get; private set; }
         protected PropertyDescriptor PropertyDescriptor { get; private set; }
         public Type PropertyType { get; private set; }
+        public Type WrappedPropertyType { get { return DataSchema.GetWrappedValueType(PropertyType); } }
         public MapAttribute MapAttribute { get; private set; }
         public object GetPropertyValue(RowItem rowItem, RowKey rowKey)
         {
@@ -104,6 +105,10 @@ namespace pwiz.Common.DataBinding
                 return null;
             }
             return GetPropertyValueFromParent(parentValue, rowKey);
+        }
+        public object GetUnwrappedPropertyValue(RowItem rowItem, RowKey rowKey)
+        {
+            return DataSchema.UnwrapValue(GetPropertyValue(rowItem, rowKey));
         }
         public object GetPropertyValue(RowNode rowNode)
         {
@@ -127,6 +132,10 @@ namespace pwiz.Common.DataBinding
             }
             if (PropertyDescriptor == null)
             {
+                if (rowKey == null)
+                {
+                    return null;
+                }
                 var collectionInfo = CollectionInfo;
                 if (collectionInfo == null)
                 {
@@ -140,6 +149,30 @@ namespace pwiz.Common.DataBinding
                 return collectionInfo.GetItemFromKey(parentComponent, key);
             }
             return PropertyDescriptor.GetValue(parentComponent);
+        }
+        public bool IsReadOnly
+        {
+            get
+            {
+                if (Parent == null || PropertyDescriptor == null)
+                {
+                    return true;
+                }
+                return PropertyDescriptor.IsReadOnly;
+            }
+        }
+        public void SetValue(RowItem rowItem, RowKey rowKey, object value)
+        {
+            if (Parent == null || PropertyDescriptor == null)
+            {
+                return;
+            }
+            var parentComponent = Parent.GetPropertyValue(rowItem, rowKey);
+            if (parentComponent == null)
+            {
+                return;
+            }
+            PropertyDescriptor.SetValue(parentComponent, value);
         }
 
         public string Caption { get; private set; } 
@@ -172,8 +205,7 @@ namespace pwiz.Common.DataBinding
                 }
                 if (PropertyDescriptor != null)
                 {
-                    var displayNameAttr =
-                        PropertyDescriptor.Attributes[typeof(DisplayNameAttribute)] as DisplayNameAttribute;
+                    var displayNameAttr = PropertyDescriptor.Attributes[typeof(DisplayNameAttribute)] as DisplayNameAttribute;
                     if (displayNameAttr != null && !displayNameAttr.IsDefaultAttribute())
                     {
                         return displayNameAttr.DisplayName;
