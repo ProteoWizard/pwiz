@@ -109,6 +109,7 @@ struct QuameterInput
 
 void NISTMSMetrics(QuameterInput, FullReaderList);
 void ScanRankerMetrics(QuameterInput, FullReaderList);
+void ExecuteMetricsThread();
 vector<string> GetNativeId(const string&, const string&);
 multimap<int, string> GetDuplicateID(const string&, const string&);
 

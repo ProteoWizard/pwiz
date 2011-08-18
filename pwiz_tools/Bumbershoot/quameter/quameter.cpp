@@ -23,14 +23,17 @@
 //
 
 #include "quameter.h"
+#include "boost/lockfree/fifo.hpp"
 
 namespace freicore
 {
 namespace quameter
 {
 
-    RunTimeConfig*              g_rtConfig;
-	boost::mutex msdMutex;
+    RunTimeConfig*                  g_rtConfig;
+	boost::mutex                    msdMutex;
+    boost::lockfree::fifo<size_t>   metricsTasks;
+     vector<QuameterInput>          allSources;
 
     int InitProcess( argList_t& args )
     {
@@ -170,7 +173,7 @@ namespace quameter
 
         if( g_pid == 0 )
         {
-            vector<QuameterInput> allSources;
+            allSources.clear();
 
             for( size_t i=1; i < args.size(); ++i )
                 FindFilesByMask( args[i], g_inputFilenames );
@@ -206,36 +209,51 @@ namespace quameter
                 }
             }
 
-            int numFiles = allSources.size();
-            int current = 0;		
-            int maxThreads = boost::thread::hardware_concurrency(); 
-            maxThreads = max(1, maxThreads); // there must be at least one thread
+            size_t numProcessors = (size_t) g_numWorkers;
+            for(size_t taskID=0; taskID < allSources.size(); ++taskID)
+                metricsTasks.enqueue(taskID);
 
+            boost::thread_group workerThreadGroup;
+            vector<boost::thread*> workerThreads;
+            for (size_t i = 0; i < numProcessors; ++i)
+                workerThreads.push_back(workerThreadGroup.create_thread(&ExecuteMetricsThread));
+
+            workerThreadGroup.join_all();
+        }
+    }
+
+    void ExecuteMetricsThread()
+    {
+        try
+        {
+            size_t metricsTask;
             // Set up the reading	
             FullReaderList readers;
-
-            for (int k = 0; k < max(1,( ((numFiles-1)/maxThreads)+1 )); k++) 
-            { // at least go through this loop once.
-                boost::thread_group threadGroup;
-				//cout << "maxThreads = " << maxThreads << " numFiles = " << numFiles << " currentFile = " << current+1 << endl;
-                for (int l = 0; (l < maxThreads) && (current < numFiles); l++)
+            
+            while(true)
+            {
+                if(!metricsTasks.dequeue(&metricsTask))
+                    break;
+                const QuameterInput &metricsInput = allSources[metricsTask];
+                switch(metricsInput.type)
                 {
-                	//cout << "current: " << current << "\tdb: " << allSources[current].idpDBFile << "\tid: " << allSources[current].sourceID << "\tfile: " << allSources[current].sourceFile << endl;
-                    switch(allSources[current].type)
-                    {
-                        case NISTMS : 
-                            threadGroup.add_thread(new boost::thread(NISTMSMetrics, allSources[current], readers)); 
-                            break;
-                        case SCANRANKER :
-                            threadGroup.add_thread(new boost::thread(ScanRankerMetrics, allSources[current], readers)); 
-                            break;
-                        default: 
-                            break;
-                    }
-                    ++current;
+                    case NISTMS : 
+                        NISTMSMetrics(metricsInput, readers); 
+                        break;
+                    case SCANRANKER :
+                        ScanRankerMetrics(metricsInput, readers); 
+                        break;
+                    default: 
+                        break;
                 }
-                threadGroup.join_all();
             }
+            
+        }catch( std::exception& e )
+        {
+            cerr << " terminated with an error: " << e.what() << endl;
+        } catch(...)
+        {
+            cerr << " terminated with an unknown error." << endl;
         }
     }
 
