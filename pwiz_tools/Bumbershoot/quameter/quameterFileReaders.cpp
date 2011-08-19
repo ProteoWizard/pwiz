@@ -19,29 +19,29 @@
 // Contributor(s):
 //
 
-#include "idpDBReader.h"
+#include "quameterFileReaders.h"
 
 namespace freicore
 {
 namespace quameter
 {
 
-    /**
-    * For metric MS1-5A: Find the median real value of precursor errors
-    * For metric MS1-5B: Find the mean of the absolute precursor errors
-    * For metrics MS1-5C and MS1-5D: Find the median real value and interquartile distance of precursor errors (both in ppm)
-    * @code
-    * SELECT DISTINCT NativeID, Peptide, PrecursorMZ, psm.MonoisotopicMass as PrecMonoMass, psm.MolecularWeight as PrecAvgMass, \
-            (SUM(MonoMassDelta)+Peptide.MonoIsotopicMass) as PepMonoMass, \
-            (SUM(MonoMassDelta)+Peptide.MolecularWeight) as PepAvgMass \
-        from PeptideSpectrumMatch psm JOIN Spectrum JOIN Peptide JOIN PeptideModification pm JOIN Modification mod \
-        where psm.Spectrum = Spectrum.Id and psm.Peptide = Peptide.Id \
-        and pm.PeptideSpectrumMatch=psm.Id and mod.Id=pm.Modification \
-        and Rank = 1 and Spectrum.Source = " + spectrumSourceId + "\
-        and Charge=2 \
-        group by psm.Id
-    * @endcode
-    */
+        /**
+        * For metric MS1-5A: Find the median real value of precursor errors
+        * For metric MS1-5B: Find the mean of the absolute precursor errors
+        * For metrics MS1-5C and MS1-5D: Find the median real value and interquartile distance of precursor errors (both in ppm)
+        * @code
+        * SELECT DISTINCT NativeID, Peptide, PrecursorMZ, psm.MonoisotopicMass as PrecMonoMass, psm.MolecularWeight as PrecAvgMass, \
+                (SUM(MonoMassDelta)+Peptide.MonoIsotopicMass) as PepMonoMass, \
+                (SUM(MonoMassDelta)+Peptide.MolecularWeight) as PepAvgMass \
+            from PeptideSpectrumMatch psm JOIN Spectrum JOIN Peptide JOIN PeptideModification pm JOIN Modification mod \
+            where psm.Spectrum = Spectrum.Id and psm.Peptide = Peptide.Id \
+            and pm.PeptideSpectrumMatch=psm.Id and mod.Id=pm.Modification \
+            and Rank = 1 and Spectrum.Source = " + spectrumSourceId + "\
+            and Charge=2 \
+            group by psm.Id
+        * @endcode
+        */
         MassErrorStats IDPDBReader::getPrecursorMassErrorStats(const string& spectrumSourceId) 
         {
             sqlite::database db(idpDBFile);
@@ -141,7 +141,8 @@ namespace quameter
 
             return (int)trypticMS2Spectra;
         }
-/**
+        
+        /**
         * For metric P-2B: Find the number of tryptic peptide ions identified.
         * Ions with different charge states or modifications are counted separately.
         * @code
@@ -207,7 +208,7 @@ namespace quameter
             return counts;
         }
 
-/**
+        /**
         * For metric DS-1A: Finds the number of peptides identified by one spectrum
         *
         * @code
@@ -443,5 +444,52 @@ namespace quameter
             return pepWin;
         }
 
+        void ScanRankerReader::extractData()
+        {
+            ifstream reader(srTextFile.c_str());
+            
+            string input;
+            getline(reader,input);
+            while(boost::starts_with(input,"H"))
+                getline(reader,input);
+            do
+            {
+                if(!input.empty())
+                {
+                    tokenizer parser(input, tabDelim);
+                    tokenizer::iterator itr = parser.begin();
+                    // Parse the columns
+                    int spectrumIndex = boost::lexical_cast<int>(*(++itr));
+                    string nativeID = *(++itr);
+                    //cout << nativeID << ",";
+                    double precMZ = boost::lexical_cast<double>(*(++itr));
+                    //cout << precMZ << ",";
+                    int charge = boost::lexical_cast<int>(*(++itr));
+                    //cout << charge << ",";
+                    double precMass = boost::lexical_cast<double>(*(++itr));
+                    //cout << precMass << ",";
+                    double bestTagScore = boost::lexical_cast<double>(*(++itr));
+                    //cout << bestTagScore << ",";
+                    double bestTagTIC = boost::lexical_cast<double>(*(++itr));
+                    //cout << bestTagTIC << ",";
+                    double tagMzRange = boost::lexical_cast<double>(*(++itr));
+                    //cout << tagMzRange << ",";
+                    double srScore = boost::lexical_cast<double>(*(++itr));
+                    //cout << srScore << endl;
+                    
+                    ScanRankerMS2PrecInfo scanInfo;
+                    scanInfo.nativeID = nativeID;
+                    scanInfo.precursorMZ = precMZ;
+                    scanInfo.precursorMass = precMass;
+                    scanInfo.charge = charge;
+                    precursorInfos.insert(make_pair<string,ScanRankerMS2PrecInfo>(nativeID,scanInfo));
+                    bestTagScores.insert(make_pair<ScanRankerMS2PrecInfo,double>(scanInfo,bestTagScore));
+                    tagMzRanges.insert(make_pair<ScanRankerMS2PrecInfo,double>(scanInfo,tagMzRange));
+                    scanRankerScores.insert(make_pair<ScanRankerMS2PrecInfo,double>(scanInfo,srScore));
+                    bestTagTics.insert(make_pair<ScanRankerMS2PrecInfo,double>(scanInfo,bestTagTIC));
+                }
+
+            }while(getline(reader,input));
+        }
 }
 }
