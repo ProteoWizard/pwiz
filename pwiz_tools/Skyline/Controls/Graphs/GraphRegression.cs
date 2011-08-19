@@ -35,6 +35,8 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             InitializeComponent();
 
+            RegressionGraphDatas = regressionGraphDatas;
+
             Icon = Resources.Skyline;
 
             if (regressionGraphDatas.Count > 1)
@@ -59,6 +61,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 graphControl.AxisChange();
             }
         }
+
+        public ICollection<RegressionGraphData> RegressionGraphDatas { get; private set; }
 
         private void btnClose_Click(object sender, EventArgs e)
         {

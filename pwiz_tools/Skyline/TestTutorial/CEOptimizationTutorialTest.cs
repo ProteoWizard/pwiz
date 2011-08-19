@@ -17,7 +17,9 @@
  * limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -28,6 +30,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.Util;
 using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTestTutorial
@@ -59,9 +62,16 @@ namespace pwiz.SkylineTestTutorial
                 ShowDialog<EditListDlg<SettingsListBase<CollisionEnergyRegression>, CollisionEnergyRegression>>
                 (transitionSettingsUI.EditCEList);
             RunUI(() => editList.SelectItem("Thermo"));
-            RunDlg<EditCEDlg>(editList.EditItem, editCEDlg => editCEDlg.DialogResult = DialogResult.Cancel);
+            EditCEDlg editItem = ShowDialog<EditCEDlg>(editList.EditItem);
+
+            ChargeRegressionLine regressionLine2 = new ChargeRegressionLine(2, 0.034, 3.314); 
+            ChargeRegressionLine regressionLine3 = new ChargeRegressionLine(3, 0.044, 3.314);
+
+            CheckRegressionLines(new[] {regressionLine2, regressionLine3}, editItem.Regression.Conversions);
+
             RunUI(() =>
             {
+                editItem.DialogResult = DialogResult.OK;
                 editList.DialogResult = DialogResult.Cancel;
                 transitionSettingsUI.DialogResult = DialogResult.Cancel;
             });
@@ -76,6 +86,9 @@ namespace pwiz.SkylineTestTutorial
                 exportMethodDlg.MethodType = ExportMethodType.Standard;
                 exportMethodDlg.OkDialog(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_unscheduled.csv"));
             });
+
+            string filePathTemplate = TestFilesDir.GetTestPath("CE_Vantage_15mTorr_unscheduled.csv");
+            CheckTransitionList(filePathTemplate, 1, 6);
 
             const string unscheduledName = "Unscheduled";
             RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults, importResultsDlg =>
@@ -110,7 +123,13 @@ namespace pwiz.SkylineTestTutorial
                 exportMethodDlg.MethodType = ExportMethodType.Scheduled;
                 exportMethodDlg.OkDialog(TestFilesDir.GetTestPath(folderOptimizeCE + @"\CE_Vantage_15mTorr.csv"));
             });
-            
+
+            string filePathTemplate1 = TestFilesDir.GetTestPath(folderOptimizeCE + @"\CE_Vantage_15mTorr_000{0}.csv");
+            CheckTransitionList(filePathTemplate1, 5, 9);
+
+            var filePath = TestFilesDir.GetTestPath(folderOptimizeCE + @"\CE_Vantage_15mTorr_0001.csv");
+            CheckCEValues(filePath, 11);
+           
             // Analyze Optimization Data, p. 7
             RunDlg<ImportResultsDlg>(SkylineWindow.ImportResults, importResultsDlg =>
             {
@@ -132,23 +151,46 @@ namespace pwiz.SkylineTestTutorial
 
             });
             WaitForCondition(120*1000, () => SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
-            RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
-            {
-                findPeptideDlg.SearchString = "IDALNENK";
-                findPeptideDlg.FindNext();
-                findPeptideDlg.Close();
-            });
-            RunUI(() => SkylineWindow.NormalizeAreaGraphTo(AreaNormalizeToView.area_percent_view));
+
+            RemovePeptide("EGIHAQQK");
+            RemovePeptide("IDALNENK");
+            RemovePeptide("LICDNTHITK");
 
             // Creating a New Equation for CE, p. 9
             var transitionSettingsUI1 = ShowDialog<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI);
-            var editCEDlg1 = ShowDialog<EditCEDlg>(transitionSettingsUI1.AddToCEList);
+            var editCEDlg1 = ShowDialog<EditListDlg<SettingsListBase<CollisionEnergyRegression>, CollisionEnergyRegression>>(transitionSettingsUI1.EditCEList);
+            var addItem = ShowDialog<EditCEDlg>(editCEDlg1.AddItem);
             RunUI(() =>
             {
-                editCEDlg1.RegressionName = "Thermo Vantage Tutorial";
-                editCEDlg1.UseCurrentData();
+                addItem.RegressionName = "Thermo Vantage Tutorial";
+                addItem.UseCurrentData();
             });
-            RunDlg<GraphRegression>(editCEDlg1.ShowGraph, graphRegression => graphRegression.CloseDialog());
+
+            var graphRegression = ShowDialog<GraphRegression>(addItem.ShowGraph);
+
+            var graphDatas = graphRegression.RegressionGraphDatas.ToArray();
+            Assert.AreEqual(2, graphDatas.Length);
+
+            ChargeRegressionLine regressionLine21 = new ChargeRegressionLine(2, 0.0305, 2.5061);
+            ChargeRegressionLine regressionLine31 = new ChargeRegressionLine(3, 0.0397, 1.4217);
+            var expectedRegressions = new[] {regressionLine21, regressionLine31};
+
+            CheckRegressionLines(expectedRegressions, new[]
+                                                          {
+                                                              new ChargeRegressionLine(2, 
+                                                                  Math.Round(graphDatas[0].RegressionLine.Slope, 4),
+                                                                  Math.Round(graphDatas[0].RegressionLine.Intercept, 4)), 
+                                                              new ChargeRegressionLine(3,
+                                                                  Math.Round(graphDatas[1].RegressionLine.Slope, 4),
+                                                                  Math.Round(graphDatas[1].RegressionLine.Intercept, 4)), 
+                                                          });
+
+            CheckRegressionLines(expectedRegressions, addItem.Regression.Conversions);
+
+            RunUI(graphRegression.CloseDialog);
+            WaitForClosedForm(graphRegression);
+            RunUI(addItem.OkDialog);
+            WaitForClosedForm(addItem);
             RunUI(editCEDlg1.OkDialog);
             WaitForClosedForm(editCEDlg1);
             RunUI(transitionSettingsUI1.OkDialog);
@@ -166,6 +208,89 @@ namespace pwiz.SkylineTestTutorial
                 exportMethodDlg.ExportStrategy = ExportStrategy.Single;
                 exportMethodDlg.OkDialog(TestFilesDir.GetTestPath("CE_Vantage_15mTorr_optimized.csv"));
             });
+
+            var filePathTemplate2 = TestFilesDir.GetTestPath("CE_Vantage_15mTorr_optimized.csv");
+
+            CheckTransitionList(filePathTemplate2, 1, 9);
+        }
+
+        public static void CheckRegressionLines(ChargeRegressionLine[] lines1, ChargeRegressionLine[] lines2)
+        {
+            Assert.IsTrue(ArrayUtil.EqualsDeep(lines1, lines2));
+        }
+
+        public void CheckTransitionList(string templatePath, int transitionCount, int columnCount)
+        {
+            for (int i = 1; i <= transitionCount; i++)
+            {
+                string filePath = TestFilesDir.GetTestPath(string.Format(templatePath, i));
+                Assert.IsTrue(File.Exists(filePath));
+                string[] lines = File.ReadAllLines(filePath);
+                string[] line = lines[0].Split(',');
+                int count = line.Length;
+                // Comma at end to indicate start of column on a new row.
+                Assert.IsTrue(count - 1 == columnCount);
+            }
+            // If there are multiple file possibilities, make sure there are
+            // not more files than expected by checking count+1
+            if (templatePath.Contains("{0}"))
+                Assert.IsFalse(File.Exists(TestFilesDir.GetTestPath(string.Format(templatePath, transitionCount+1))));
+
+        }
+
+        public void CheckCEValues(string filePath, int ceCount)
+        {
+            List<string> ceValues = new List<string>();
+            string[] lines = File.ReadAllLines(filePath);
+
+            string precursor = lines[0].Split(',')[0];
+            foreach (var line in lines)
+            {
+                var columns = line.Split(',');
+                var ce = columns[2];
+                var secondPrecursor = columns[0];
+
+                // Different CE values for each precursor ion, repeated for each
+                // product ion of the precursor.
+                if (precursor != secondPrecursor)
+                {
+                    Assert.IsTrue(ceValues.Count == ceCount);
+                    ceValues.Clear();
+                    precursor = secondPrecursor;
+                }
+                // Only add once per precursor 
+                if (!ceValues.Contains(ce))
+                    ceValues.Add(ce);
+            }
+
+            // Check last precusor set.
+            Assert.IsTrue(ceValues.Count == ceCount);
+        }
+
+        public static void RemovePeptide(string peptideSequence)
+        {
+            var docStart = SkylineWindow.Document;
+            var nodePeptide = docStart.Peptides.FirstOrDefault(nodePep =>
+                Equals(peptideSequence, nodePep.Peptide.Sequence));
+
+            Assert.IsNotNull(nodePeptide);
+
+            RunDlg<FindNodeDlg>(SkylineWindow.ShowFindNodeDlg, findPeptideDlg =>
+                                                                   {
+                                                                       findPeptideDlg.SearchString = peptideSequence;
+                                                                       findPeptideDlg.FindNext();
+                                                                       findPeptideDlg.Close();
+                                                                   });
+
+            RunUI(SkylineWindow.EditDelete);
+
+            Assert.IsTrue(WaitForCondition(() => !SkylineWindow.Document.Peptides.Any(nodePep =>
+                Equals(peptideSequence, nodePep.Peptide.Sequence))));
+            AssertEx.IsDocumentState(SkylineWindow.Document, null,
+                                     docStart.PeptideGroupCount,
+                                     docStart.PeptideCount - 1,
+                                     docStart.TransitionGroupCount - nodePeptide.TransitionGroupCount,
+                                     docStart.TransitionCount - nodePeptide.TransitionCount);
         }
     }
 }
