@@ -19,6 +19,7 @@
 
 using System.IO;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
 using pwiz.Skyline.Alerts;
@@ -97,7 +98,7 @@ namespace pwiz.SkylineTestTutorial
                 return (backgroundProteome.GetDigestion(peptideSettings) != null);
             }));
 
-            // Pasting FASTA Sequences, p. 4
+            // Pasting FASTA Sequences, p. 5
             RunUI(() => SetClipboardFileText(@"MethodEdit\FASTA\fasta.txt"));
 
             // New in v0.7 : Skyline asks about removing empty proteins.
@@ -115,6 +116,9 @@ namespace pwiz.SkylineTestTutorial
                 SkylineWindow.SequenceTree.SelectedNode =
                     SkylineWindow.SequenceTree.SelectedNode.Nodes[0].Nodes[1];
             });
+
+            CheckTransitionCount("VDIIANDQGNR", 3);
+
             RunDlg<TransitionSettingsUI>(SkylineWindow.ShowTransitionSettingsUI, transitionSettingsUI =>
             {
                 transitionSettingsUI.PrecursorCharges = "2,3";
@@ -124,6 +128,8 @@ namespace pwiz.SkylineTestTutorial
                 transitionSettingsUI.OkDialog();
             });
             AssertEx.IsDocumentState(SkylineWindow.Document, null, 35, 28, 31, 155);
+
+            CheckTransitionCount("VDIIANDQGNR", 5);
 
             // Using a Public Spectral Library, p. 8
             peptideSettingsUI = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
@@ -337,5 +343,12 @@ namespace pwiz.SkylineTestTutorial
                             (StatementCompletionItem)statementCompletionForm.ListView.Items[index].Tag));
         }
 
+        private static void CheckTransitionCount(string peptideSequence, int count)
+        {
+            var doc = SkylineWindow.Document;
+            var nodePeptide = doc.Peptides.FirstOrDefault(nodePep =>
+                Equals(peptideSequence, nodePep.Peptide.Sequence));
+            Assert.IsTrue(nodePeptide.TransitionCount == count);
+        }
     }
 }
