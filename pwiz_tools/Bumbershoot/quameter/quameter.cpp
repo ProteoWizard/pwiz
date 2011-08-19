@@ -190,6 +190,11 @@ namespace quameter
                 string inputFile = *fItr;
                 string rawFile = bfs::change_extension(inputFile, "." + g_rtConfig->RawDataFormat).string();
                 bfs::path rawFilePath(rawFile);
+                if(!g_rtConfig->RawDataPath.empty())
+                {
+                    bfs::path newFilePath(g_rtConfig->RawDataPath + bfs::slash<bfs::path>::value + rawFilePath.leaf());
+                    rawFilePath = newFilePath;
+                }
                 if(!bfs::exists(rawFilePath))
                     continue;
 					
@@ -268,9 +273,17 @@ namespace quameter
             
             ScanRankerReader reader(srFile);
             reader.extractData();
-            accs::accumulator_set<double, accs::stats<accs::tag::mean, accs::tag::median > > bestTagScoreStats;
-            accs::accumulator_set<double, accs::stats<accs::tag::mean, accs::tag::median > > bestTagTICStats;
-            accs::accumulator_set<double, accs::stats<accs::tag::mean, accs::tag::median > > tagMZRangeStats;
+
+            accs::accumulator_set<double, accs::stats<accs::tag::mean, accs::tag::median,
+                                                      accs::tag::kurtosis, accs::tag::skewness,
+                                                      accs::tag::variance, accs::tag::error_of<accs::tag::mean > > > bestTagScoreStats;
+            accs::accumulator_set<double, accs::stats<accs::tag::mean, accs::tag::median,
+                                                      accs::tag::kurtosis, accs::tag::skewness,
+                                                      accs::tag::variance, accs::tag::error_of<accs::tag::mean > > > bestTagTICStats;
+            accs::accumulator_set<double, accs::stats<accs::tag::mean, accs::tag::median,
+                                                      accs::tag::kurtosis, accs::tag::skewness,
+                                                      accs::tag::variance, accs::tag::error_of<accs::tag::mean > > > tagMZRangeStats;
+
             typedef pair<string,ScanRankerMS2PrecInfo> TaggedSpectrum;
             BOOST_FOREACH(const TaggedSpectrum& ts, reader.precursorInfos)
             {
@@ -281,10 +294,22 @@ namespace quameter
             stringstream ss;
             ss << accs::extract::mean(bestTagScoreStats) << ",";
             ss << accs::extract::median(bestTagScoreStats) << ",";
+            ss << accs::extract::kurtosis(bestTagScoreStats) << ",";
+            ss << accs::extract::skewness(bestTagScoreStats) << ",";
+            ss << accs::extract::variance(bestTagScoreStats) << ",";
+            ss << accs::extract::error_of<accs::tag::mean>(bestTagScoreStats) << ",";
             ss << accs::extract::mean(bestTagTICStats) << ",";
             ss << accs::extract::median(bestTagTICStats) << ",";
+            ss << accs::extract::kurtosis(bestTagTICStats) << ",";
+            ss << accs::extract::skewness(bestTagTICStats) << ",";
+            ss << accs::extract::variance(bestTagTICStats) << ",";
+            ss << accs::extract::error_of<accs::tag::mean>(bestTagTICStats) << ",";
             ss << accs::extract::mean(tagMZRangeStats) << ",";
             ss << accs::extract::median(tagMZRangeStats) << endl;
+            ss << accs::extract::kurtosis(tagMZRangeStats) << ",";
+            ss << accs::extract::skewness(tagMZRangeStats) << ",";
+            ss << accs::extract::variance(tagMZRangeStats) << ",";
+            ss << accs::extract::error_of<accs::tag::mean>(tagMZRangeStats) << ",";
 
             //cout << sourceFilename << "," << ss.str();
         } catch(exception& e)
@@ -348,7 +373,7 @@ namespace quameter
                 // For each spectrum
                 for( size_t curIndex = 0; curIndex < spectrumList.size(); ++curIndex ) 
                 {
-                    SpectrumPtr spectrum = spectrumList.spectrum(curIndex, true);
+                    SpectrumPtr spectrum = spectrumList.spectrum(curIndex, false);
                     
                     if( spectrum->cvParam(MS_MSn_spectrum).empty() && spectrum->cvParam(MS_MS1_spectrum).empty() )
                         continue;

@@ -30,12 +30,13 @@ using namespace freicore;
 
 #define QUAMETER_RUNTIME_CONFIG \
 	COMMON_RTCONFIG MULTITHREAD_RTCONFIG \
-	RTCONFIG_VARIABLE( string,          OutputFormat,               "tsv"        ) \
-    RTCONFIG_VARIABLE( string,          MetricsType,                "nistms"     ) \
-    RTCONFIG_VARIABLE( string,          Instrument,                 "ltq"        ) \
-    RTCONFIG_VARIABLE( string,          RawDataFormat,             "RAW"        ) \
-    RTCONFIG_VARIABLE( double,			ScoreCutoff,                0.05   		 ) \
-	RTCONFIG_VARIABLE( bool,			ChromatogramOutput,         false   	 )
+	RTCONFIG_VARIABLE( string,          OutputFormat,                "tsv"        ) \
+    RTCONFIG_VARIABLE( string,          MetricsType,                 "nistms"     ) \
+    RTCONFIG_VARIABLE( string,          Instrument,                  "ltq"        ) \
+    RTCONFIG_VARIABLE( string,          RawDataFormat,               "RAW"        ) \
+    RTCONFIG_VARIABLE( string,          RawDataPath,                 ""           ) \
+    RTCONFIG_VARIABLE( double,			ScoreCutoff,                 0.05         ) \
+	RTCONFIG_VARIABLE( bool,			ChromatogramOutput,          false   	  )
 
 
 
