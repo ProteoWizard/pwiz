@@ -192,6 +192,7 @@ namespace quameter
                 bfs::path rawFilePath(rawFile);
                 if(!g_rtConfig->RawDataPath.empty())
                 {
+                    //bal::trim_right_if(g_rtConfig->RawDataPath,is_any_of(boost::lexical_cast<string>(bfs::slash<bfs::path>::value)));
                     bfs::path newFilePath(g_rtConfig->RawDataPath + bfs::slash<bfs::path>::value + rawFilePath.leaf());
                     rawFilePath = newFilePath;
                 }

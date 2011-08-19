@@ -59,6 +59,8 @@ namespace quameter
 
             if (!bal::iequals(MetricsType, "nistms") && !bal::iequals(MetricsType, "pepitome") && !bal::iequals(MetricsType, "scanranker"))
                 throw runtime_error("invalid metrics requested");
+            if(!RawDataPath.empty())
+                bal::trim_right_if(RawDataPath,is_any_of(boost::lexical_cast<string>(bfs::slash<bfs::path>::value)));
 
 			string cwd;
 			cwd.resize( MAX_PATH );
