@@ -503,7 +503,12 @@ namespace pwiz.Skyline
 
             if (commandArgs.ImportingResults)
             {
-                ImportResultsFile(commandArgs.ReplicateFile, commandArgs.ReplicateName, commandArgs.SkylineFile, commandArgs.ImportAppend);
+                // If expected results are not imported successfully, terminate
+                if (!ImportResultsFile(commandArgs.ReplicateFile,
+                                       commandArgs.ReplicateName,
+                                       commandArgs.SkylineFile,
+                                       commandArgs.ImportAppend))
+                    return;
             }
 
             if (commandArgs.Saving)
@@ -516,12 +521,14 @@ namespace pwiz.Skyline
                 ExportReport(commandArgs.ReportName, commandArgs.ReportFile, commandArgs.ReportColumnSeparator);
             }
 
-            if (!string.IsNullOrEmpty(commandArgs.TransListInstrumentType) && !string.IsNullOrEmpty(commandArgs.MethodInstrumentType))
+            if (!string.IsNullOrEmpty(commandArgs.TransListInstrumentType) &&
+                !string.IsNullOrEmpty(commandArgs.MethodInstrumentType))
             {
                 _out.WriteLine("Error: You cannot simultaneously export a transition list and a method.");
                 _out.WriteLine("Neither will be exported. Please change your command line parameters.");
                 return;
-            } else
+            }
+            else
             {
                 if (commandArgs.ExportingTransitionList)
                 {
@@ -564,7 +571,7 @@ namespace pwiz.Skyline
             return true;
         }
 
-        public void ImportResultsFile(string replicateFile, string replicateName, string skylineFile, bool append)
+        public bool ImportResultsFile(string replicateFile, string replicateName, string skylineFile, bool append)
         {
             if (string.IsNullOrEmpty(replicateName))
                 replicateName = Path.GetFileNameWithoutExtension(replicateFile);
@@ -573,25 +580,36 @@ namespace pwiz.Skyline
 
             if(_doc.Settings.HasResults && _doc.Settings.MeasuredResults.ContainsChromatogram(replicateName) && !append)
             {
+                // CONSIDER: Error? Check if the replicate contains the file?
+                //           It does not seem right to just continue on to export a report
+                //           or new method without the results added.
                 _out.WriteLine("Warning: The replicate {0} already exists", replicateName);
-                _out.WriteLine(("in the given document and the --import-append option is not specified."));
+                _out.WriteLine("in the given document and the --import-append option is not specified.");
                 _out.WriteLine("The replicate will not be added to the document.");
-                return;
+                return true;
             }
 
             //This function will also detect whether the replicate exists in the document
-            SrmDocument newDoc = ImportResults(_doc, skylineFile, replicateName, replicateFile);
+            ProgressStatus status;
+            SrmDocument newDoc = ImportResults(_doc, skylineFile, replicateName, replicateFile, out status);
+            status = status ?? new ProgressStatus("").Complete();
 
-            if (ReferenceEquals(_doc, newDoc))
+            if (status.IsError && status.ErrorException != null)
             {
-                _out.WriteLine("There was an error importing the results file {0}.", replicateFile);
-                return;
+                _out.WriteLine("Error: Failed importing the results file {0}.\n{1}", replicateFile, status.ErrorException.Message);
+                return false;
+            }
+            if (!status.IsComplete || ReferenceEquals(_doc, newDoc))
+            {
+                _out.WriteLine("Error: Failed importing the results file {0}.", replicateFile);
+                return false;
             }
 
             _doc = newDoc;
 
             _out.WriteLine("Results added from {0}.", Path.GetFileName(replicateFile));
             //the replicate was added successfully
+            return true;
         }
 
         public void SaveFile(string saveFile)
@@ -904,7 +922,7 @@ namespace pwiz.Skyline
         /// This function will add the given replicate, from dataFile, to the given document. If the replicate
         /// does not exist, it will be added. If it does exist, it will be appended to.
         /// </summary>
-        public static SrmDocument ImportResults(SrmDocument doc, string docPath, string replicate, string dataFile)
+        public static SrmDocument ImportResults(SrmDocument doc, string docPath, string replicate, string dataFile, out ProgressStatus status)
         {
             var docContainer = new ResultsMemoryDocumentContainer(doc, docPath);
 
@@ -934,6 +952,8 @@ namespace pwiz.Skyline
             var docAdded = doc.ChangeMeasuredResults(results);
 
             docContainer.SetDocument(docAdded, doc, true);
+
+            status = docContainer.LastProgress;
 
             return docContainer.Document;
         }
