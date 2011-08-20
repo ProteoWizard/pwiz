@@ -185,8 +185,6 @@ namespace pwiz.SkylineTestTutorial
                                                                   Math.Round(graphDatas[1].RegressionLine.Intercept, 4)), 
                                                           });
 
-            CheckRegressionLines(expectedRegressions, addItem.Regression.Conversions);
-
             RunUI(graphRegression.CloseDialog);
             WaitForClosedForm(graphRegression);
             RunUI(addItem.OkDialog);
