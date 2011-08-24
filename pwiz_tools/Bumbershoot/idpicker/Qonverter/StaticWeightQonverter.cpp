@@ -71,21 +71,34 @@ void StaticWeightQonverter::Qonvert(PSMList& psmRows,
                                     const Qonverter::Settings& settings,
                                     const vector<double>& scoreWeights)
 {
-    PSMIteratorRange fullRange(psmRows.begin(), psmRows.end());
+    PSMIteratorRange fullRange(psmRows.end(), psmRows.end());
 
-    sort(fullRange.begin(), fullRange.end(), OriginalRankLessThan());
+    if (!settings.rerankMatches)
+    {
+        sort(psmRows.begin(), psmRows.end(), OriginalRankLessThan());
 
-    for (PSMIterator itr = fullRange.begin(); itr != fullRange.end(); ++itr)
-        if (itr->originalRank > 1)
+        for (PSMIterator itr = psmRows.begin(); itr != psmRows.end(); ++itr)
         {
-            fullRange = PSMIteratorRange(fullRange.begin(), itr);
-            break;
+            if (itr->originalRank > 1)
+            {
+                if (fullRange.empty())
+                    fullRange = PSMIteratorRange(psmRows.begin(), itr);
+                itr->newRank = itr->originalRank;
+                itr->fdrScore = itr->qValue = 2;
+            }
+            else
+                itr->totalScore = 0;
         }
+    }
+    else
+        for (PSMIterator itr = psmRows.begin(); itr != psmRows.end(); ++itr)
+            itr->totalScore = 0;
+
+    if (fullRange.empty())
+        fullRange = PSMIteratorRange(psmRows.begin(), psmRows.end());
 
     // partition the data by charge and/or terminal specificity (depending on qonverter settings)
     vector<PSMIteratorRange> psmPartitionedRows = partition(settings, fullRange);
-
-    double targetToDecoyRatio = 1;
 
     BOOST_FOREACH(const PSMIteratorRange& range, psmPartitionedRows)
     {
@@ -94,77 +107,7 @@ void StaticWeightQonverter::Qonvert(PSMList& psmRows,
         // calculate and sort the PSMs by total score
         sort(range.begin(), range.end(), totalScoreBetterThan);
 
-        int numTargets = 0;
-        int numDecoys = 0;
-
-        sqlite3_int64 currentSpectrumId = psmRows.front().spectrum;
-        DecoyState::Type currentDecoyState = psmRows.front().decoyState;
-        vector<PeptideSpectrumMatch*> currentPSMs(1, &psmRows.front());
-
-        // calculate Q values with the current sort
-        BOOST_FOREACH(PeptideSpectrumMatch& psm, range)
-        {
-            /*if (maxRank > 0 && psm.originalRank > maxRank)
-            {
-                psm.qValue = 2;
-                continue;
-            }*/
-            if (psm.originalRank > 1)
-            {
-                psm.qValue = 2;
-                continue;
-            }
-
-            if (currentSpectrumId != psm.spectrum)
-            {
-                switch (currentDecoyState)
-                {
-                    case DecoyState::Target: ++numTargets; break;
-                    case DecoyState::Decoy: ++numDecoys; break;
-                    default: break;
-                }
-
-                BOOST_FOREACH(PeptideSpectrumMatch* psm, currentPSMs)
-                    psm->qValue = (numTargets + numDecoys > 0) ? min(1.0, max(0.0, (numDecoys * 2 * targetToDecoyRatio) / (numTargets + numDecoys))) : 0;
-
-                // reset the current spectrum
-                currentSpectrumId = psm.spectrum;
-                currentDecoyState = psm.decoyState;
-                currentPSMs.assign(1, &psm);
-            }
-            else
-            {
-                currentDecoyState = static_cast<DecoyState::Type>(currentDecoyState | psm.decoyState);
-                currentPSMs.push_back(&psm);
-            }
-        }
-
-        if (!currentPSMs.empty())
-        {
-            switch (currentDecoyState)
-            {
-                case DecoyState::Target: ++numTargets; break;
-                case DecoyState::Decoy: ++numDecoys; break;
-                default: break;
-            }
-
-            BOOST_FOREACH(PeptideSpectrumMatch* psm, currentPSMs)
-                psm->qValue = (numTargets + numDecoys > 0) ? min(1.0, max(0.0, (numDecoys * 2 * targetToDecoyRatio) / (numTargets + numDecoys))) : 0;
-        }
-
-        // with high scoring decoys, Q values can spike and gradually go down again;
-        // we squash these spikes such that Q value is monotonically increasing
-        for (int i = int(range.size())-2; i >= 0; --i)
-            if (range[i].qValue > range[i+1].qValue)
-            {
-                int j = i - 1;
-                while (j >= 0 && range[j].qValue == range[i].qValue)
-                {
-                    range[j].qValue = range[i+1].qValue;
-                    --j;
-                }
-                range[i].qValue = range[i+1].qValue;
-            }
+        discriminate(range);
     }
 }
 

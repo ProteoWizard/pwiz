@@ -82,8 +82,10 @@ struct PeptideSpectrumMatch
     double massError;
     vector<double> scores;
 
+    int newRank;
     double totalScore;
     double qValue;
+    double fdrScore;
 };
 
 
@@ -92,9 +94,17 @@ struct Qonverter
 {
     BOOST_ENUM_VALUES(QonverterMethod, const char*,
         (StaticWeighted)("static-weighted")
-        (SVM)("SVM-optimized")
-        //(PartitionedSVM)("SVM-optimized per partition")
-        //(SingleSVM)("SVM-optimized across partitions")
+        //(SVM)("SVM-optimized")
+        (PartitionedSVM)("SVM-optimized per partition")
+        (SingleSVM)("SVM-optimized across partitions")
+    );
+
+    BOOST_ENUM(SVMType,
+        (CSVC)
+        (NuSVC)
+        (OneClass)
+        (EpsilonSVR)
+        (NuSVR)
     );
 
     BOOST_ENUM_VALUES(Kernel, const char*,
@@ -164,11 +174,39 @@ struct Qonverter
         /// how should mass error be used during qonversion?
         MassErrorHandling massErrorHandling;
 
+        SVMType svmType;
+
         /// for SVM qonversion, what kind of kernel should be used?
         Kernel kernel;
 
+        /// for SVM qonversion, what Q-value threshold should be used for separating true and false positives?
+        double truePositiveThreshold;
+        int maxTrainingRank;
+        bool predictProbability;
+        double gamma;
+        double nu;
+        int degree;
+
         /// what score names are expected and how should they be weighted and normalized?
         map<string, ScoreInfo> scoreInfoByName;
+
+        Settings()
+        {
+            qonverterMethod = QonverterMethod::PartitionedSVM;
+            rerankMatches = false;
+            chargeStateHandling = ChargeStateHandling::Ignore;
+            terminalSpecificityHandling = TerminalSpecificityHandling::Ignore;
+            missedCleavagesHandling = MissedCleavagesHandling::Ignore;
+            massErrorHandling = MassErrorHandling::Ignore;
+            svmType = SVMType::CSVC;
+            kernel = Kernel::Linear;
+            truePositiveThreshold = 0.01;
+            maxTrainingRank = 1;
+            predictProbability = true;
+            gamma = 5;
+            nu = 0.5;
+            degree = 3;
+        }
     };
 
     /// configuration is on a per-analysis basis;
@@ -217,6 +255,18 @@ struct OriginalRankLessThan
     bool operator() (const PeptideSpectrumMatch& lhs, const PeptideSpectrumMatch& rhs) const
     {
         return lhs.originalRank < rhs.originalRank;
+    }
+};
+
+
+/// functor to sort PSMs by new rank
+struct NewRankLessThanOrTotalScoreBetterThan
+{
+    bool operator() (const PeptideSpectrumMatch& lhs, const PeptideSpectrumMatch& rhs) const
+    {
+        if (lhs.newRank == rhs.newRank)
+            return lhs.totalScore > rhs.totalScore;
+        return lhs.newRank < rhs.newRank;
     }
 };
 
@@ -286,6 +336,13 @@ struct MinMaxPair
 
 /// normalizes PSM scores within each partition (according to qonverterSettings)
 void normalize(const Qonverter::Settings& settings, PSMList& psmRows);
+
+
+/// calculate new ranks, Q-values and FDRScores based on the presorted PSMList (by descending discriminant score)
+void discriminate(const PSMIteratorRange& psmRows);
+
+/// calculate new ranks, Q-values and FDRScores based on the presorted PSMIteratorRange (by descending discriminant score)
+void discriminate(PSMList& psmRows);
 
 
 END_IDPICKER_NAMESPACE

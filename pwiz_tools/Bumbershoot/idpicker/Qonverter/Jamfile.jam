@@ -57,3 +57,6 @@ lib Parser
     ;
 
 exe idpQonvert : idpQonvert.cpp Parser ../freicore ;
+
+import testing ;
+unit-test QonverterTest : QonverterTest.cpp Qonverter ;

@@ -155,7 +155,7 @@ void validateSettings(const Qonverter::Settings& settings)
         if (settings.terminalSpecificityHandling[Qonverter::TerminalSpecificityHandling::Feature])
             throw runtime_error("[Qonverter::validateSettings] terminal specificity can only be used as a feature with the SVM qonverter");
         if (settings.missedCleavagesHandling == Qonverter::MissedCleavagesHandling::Feature)
-            throw runtime_error("[Qonverter::validateSettings] charge state can only be used as a feature with the SVM qonverter");
+            throw runtime_error("[Qonverter::validateSettings] missed cleavages can only be used as a feature with the SVM qonverter");
         if (settings.massErrorHandling == Qonverter::MassErrorHandling::Feature)
             throw runtime_error("[Qonverter::validateSettings] mass error can only be used as a feature with the SVM qonverter");
     }
@@ -165,20 +165,30 @@ void updatePsmRows(sqlite::database& db, bool logQonversionDetails, const PSMLis
 {
     sqlite::transaction transaction(db);
 
+#ifdef QONVERTER_HAS_NATIVEID
+#define SPECTRUM_ID nativeID
+#define SPECTRUM_ID_STR "NativeID"
+#else
+#define SPECTRUM_ID spectrum
+#define SPECTRUM_ID_STR "Spectrum"
+#endif
+
     if (logQonversionDetails)
     {
         sqlite::command(db, "DROP TABLE IF EXISTS QonversionDetails").execute();
-        sqlite::command(db, "CREATE TABLE QonversionDetails (PsmId, Spectrum, OriginalRank, Charge, BestSpecificity, TotalScore, QValue, DecoyState)").execute();
-        sqlite::command insertQonversionDetails(db, "INSERT INTO QonversionDetails VALUES (?,?,?,?,?,?,?,?)");
+        sqlite::command(db, "CREATE TABLE QonversionDetails (PsmId, "SPECTRUM_ID_STR", OriginalRank, NewRank, Charge, BestSpecificity, TotalScore, QValue, FDRScore, DecoyState)").execute();
+        sqlite::command insertQonversionDetails(db, "INSERT INTO QonversionDetails VALUES (?,?,?,?,?,?,?,?,?,?)");
         BOOST_FOREACH(const PeptideSpectrumMatch& row, psmRows)
         {
             insertQonversionDetails.binder() << row.id
-                                             << row.spectrum
+                                             << row.SPECTRUM_ID
                                              << row.originalRank
+                                             << row.newRank
                                              << row.chargeState
                                              << row.bestSpecificity
                                              << row.totalScore
                                              << row.qValue
+                                             << row.fdrScore
                                              << DecoyState::Symbol[row.decoyState];
             insertQonversionDetails.execute();
             insertQonversionDetails.reset();
@@ -189,7 +199,7 @@ void updatePsmRows(sqlite::database& db, bool logQonversionDetails, const PSMLis
     sqlite::command updatePSM(db, "UPDATE PeptideSpectrumMatch SET QValue = ? WHERE Id = ?");
     BOOST_FOREACH(const PeptideSpectrumMatch& row, psmRows)
     {
-        updatePSM.binder() << row.qValue << row.id;
+        updatePSM.binder() << row.fdrScore << row.id;
         updatePSM.execute();
         updatePSM.reset();
     }
@@ -417,9 +427,9 @@ void Qonverter::qonvert(sqlite3* dbPtr, const ProgressMonitor& progressMonitor)
             case Qonverter::QonverterMethod::StaticWeighted:
                 StaticWeightQonverter::Qonvert(psmRowReader.psmRows, qonverterSettings, scoreWeightsVector);
                 break;
-            //case Qonverter::QonverterMethod::PartitionedSVM:
-            //case Qonverter::QonverterMethod::SingleSVM:
-            case Qonverter::QonverterMethod::SVM:
+            case Qonverter::QonverterMethod::PartitionedSVM:
+            case Qonverter::QonverterMethod::SingleSVM:
+            //case Qonverter::QonverterMethod::SVM:
                 SVMQonverter::Qonvert(sourceName, scoreNamesInIdOrder, psmRowReader.psmRows, qonverterSettings);
                 break;
         }
@@ -552,11 +562,11 @@ vector<PSMIteratorRange> partition(const Qonverter::Settings& settings, const PS
     return psmPartitionedRows;
 }
 
-
 vector<PSMIteratorRange> partition(const Qonverter::Settings& settings, PSMList& psmRows)
 {
     return partition(settings, PSMIteratorRange(psmRows.begin(), psmRows.end()));
 }
+
 
 void normalize(const Qonverter::Settings& settings, PSMList& psmRows)
 {
@@ -601,6 +611,161 @@ void normalize(const Qonverter::Settings& settings, PSMList& psmRows)
     {
         throw runtime_error(string("[normalize] ") + e.what());
     }
+}
+
+
+void discriminate(const PSMIteratorRange& psmRows)
+{
+    double targetToDecoyRatio = 1; // TODO: get the real ratio
+
+    // calculate new ranks; adjacent PSMs from the same spectrum share the same rank
+    map<sqlite3_int64, int> psmRankBySpectrum;
+    sqlite3_int64 currentSpectrum = 0;
+    double currentScore = 0;
+    BOOST_FOREACH(PeptideSpectrumMatch& psm, psmRows)
+    {
+        if (currentSpectrum == psm.spectrum && currentScore == psm.totalScore)
+            psm.newRank = psmRankBySpectrum[psm.spectrum];
+        else
+        {
+            psm.newRank = ++ psmRankBySpectrum[psm.spectrum];
+            currentSpectrum = psm.spectrum;
+            currentScore = psm.totalScore;
+        }
+    }
+
+    // eliminate non-top-ranked PSMs
+    sort(psmRows.begin(), psmRows.end(), NewRankLessThanOrTotalScoreBetterThan());
+
+    int numTargets = 0;
+    int numDecoys = 0;
+
+    sqlite3_int64 currentSpectrumId = psmRows.front().spectrum;
+    double currentTotalScore = psmRows.front().totalScore;
+    DecoyState::Type currentDecoyState = psmRows.front().decoyState;
+    vector<PeptideSpectrumMatch*> currentPSMs(1, &psmRows.front());
+
+    // calculate Q values with the current sort
+    BOOST_FOREACH(PeptideSpectrumMatch& psm, psmRows)
+    {
+        if (psm.newRank > 1)
+        {
+            psm.fdrScore = psm.qValue = 2;
+            continue;
+        }
+
+        // all the PSMs for currentSpectrumId have been handled
+        if (currentSpectrumId != psm.spectrum)
+        {
+            switch (currentDecoyState)
+            {
+                case DecoyState::Target: ++numTargets; break;
+                case DecoyState::Decoy: ++numDecoys; break;
+                default: break;
+            }
+
+            if (currentTotalScore != psm.totalScore)
+            {
+                BOOST_FOREACH(PeptideSpectrumMatch* psm, currentPSMs)
+                    psm->qValue = (numTargets + numDecoys > 0) ? min(1.0, max(0.0, (numDecoys * 2 * targetToDecoyRatio) / (numTargets + numDecoys))) : 0;
+
+                // reset the current total score
+                currentTotalScore = psm.totalScore;
+                currentPSMs.assign(1, &psm);
+            }
+            else
+                // multiple spectra can share the same total score;
+                // their decoy states are NOT combined but they still share the same Q-values
+                currentPSMs.push_back(&psm);
+
+            // reset the current spectrum
+            currentSpectrumId = psm.spectrum;
+            currentDecoyState = psm.decoyState;
+        }
+        else
+        {
+            // multiple top-rank PSMs can belong to the same spectrum;
+            // their decoy states are combined and they share the same Q-values
+            currentDecoyState = static_cast<DecoyState::Type>(currentDecoyState | psm.decoyState);
+            currentPSMs.push_back(&psm);
+        }
+    }
+
+    if (!currentPSMs.empty())
+    {
+        switch (currentDecoyState)
+        {
+            case DecoyState::Target: ++numTargets; break;
+            case DecoyState::Decoy: ++numDecoys; break;
+            default: break;
+        }
+
+        BOOST_FOREACH(PeptideSpectrumMatch* psm, currentPSMs)
+            psm->qValue = (numTargets + numDecoys > 0) ? min(1.0, max(0.0, (numDecoys * 2 * targetToDecoyRatio) / (numTargets + numDecoys))) : 0;
+    }
+
+    // with high scoring decoys, Q values can spike and gradually go down again;
+    // we squash these spikes such that Q value is monotonically increasing
+    for (int i = int(psmRows.size())-2; i >= 0; --i)
+        if (psmRows[i].qValue > psmRows[i+1].qValue)
+        {
+            int j = i - 1;
+            while (j >= 0 && psmRows[j].qValue == psmRows[i].qValue)
+            {
+                psmRows[j].qValue = psmRows[i+1].qValue;
+                --j;
+            }
+            psmRows[i].qValue = psmRows[i+1].qValue;
+        }
+
+    typedef PSMIterator::difference_type size_t;
+
+    // Calculate "FDRScore" from AR Jones: "Improving sensitivity in proteome studies by analysis of false discovery rates for multiple search engines"
+    size_t stepStart = 0; // the index where the current step starts
+    for (size_t i=1; i < psmRows.size(); ++i)
+    {
+        PeptideSpectrumMatch& previousPSM = psmRows[i-1];
+        PeptideSpectrumMatch& currentPSM = psmRows[i];
+        PeptideSpectrumMatch& stepStartPSM = psmRows[stepStart];
+
+        // at each step point, do a linear regression from the start of the last step
+        if (previousPSM.qValue < currentPSM.qValue || i+1 == psmRows.size() || psmRows[i+1].newRank > 1)
+        {
+            size_t stepEnd = i;
+            double scoreDelta = currentPSM.totalScore - stepStartPSM.totalScore;
+            double qvalueDelta = currentPSM.qValue - stepStartPSM.qValue;
+            if (scoreDelta != 0 && qvalueDelta != 0)
+            {
+                double slope = qvalueDelta / scoreDelta;
+                /*if (slope >= 0)
+                {
+                    cout << "ERROR: slope is non-negative for step " << stepStart << " to " << stepEnd << endl;
+                    break;
+                }*/
+                double intercept = currentPSM.qValue - slope * currentPSM.totalScore;
+                for (size_t j=stepStart; j <= stepEnd; ++j)
+                    psmRows[j].fdrScore = slope * psmRows[j].totalScore + intercept;
+            }
+            else if (qvalueDelta == 0)
+            {
+                for (size_t j=stepStart; j <= stepEnd; ++j)
+                    psmRows[j].fdrScore = psmRows[j].qValue;
+            }
+            else
+                for (size_t j=stepStart; j <= stepEnd; ++j)
+                    psmRows[j].fdrScore = psmRows[j].qValue = 2;
+
+            if (i+1 == psmRows.size() || psmRows[i+1].newRank > 1)
+                break;
+
+            stepStart = stepEnd;
+        }
+    }
+}
+
+void discriminate(PSMList& psmRows)
+{
+    discriminate(PSMIteratorRange(psmRows.begin(), psmRows.end()));
 }
 
 

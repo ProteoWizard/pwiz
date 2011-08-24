@@ -236,6 +236,9 @@ struct ImportSettingsHandler : public Parser::ImportSettingsCallback
         {
             const Parser::Analysis& analysis = *analysisPtr;
 
+            // replace backslashes with forward slashes (will work with POSIX or Windows parsers)
+            bal::replace_all(analysis.importSettings.proteinDatabaseFilepath, "\\", "/");
+
             if (!bal::iequals(bfs::path(analysis.importSettings.proteinDatabaseFilepath).replace_extension("").filename(),
                               bfs::path(g_rtConfig->ProteinDatabase).replace_extension("").filename()))
                 throw runtime_error("ProteinDatabase " + bfs::path(g_rtConfig->ProteinDatabase).filename() +
@@ -244,16 +247,7 @@ struct ImportSettingsHandler : public Parser::ImportSettingsCallback
             analysis.importSettings.proteinDatabaseFilepath = g_rtConfig->ProteinDatabase;
             analysis.importSettings.maxQValue = g_rtConfig->MaxImportFDR;
             analysis.importSettings.maxResultRank = g_rtConfig->MaxResultRank;
-
-            Qonverter::Settings& settings = analysis.importSettings.qonverterSettings;
-            settings.qonverterMethod = g_rtConfig->QonverterMethod;
-            settings.kernel = g_rtConfig->Kernel;
-            settings.chargeStateHandling = g_rtConfig->ChargeStateHandling;
-            settings.terminalSpecificityHandling = g_rtConfig->TerminalSpecificityHandling;
-            settings.missedCleavagesHandling = g_rtConfig->MissedCleavagesHandling;
-            settings.massErrorHandling = g_rtConfig->MassErrorHandling;
-            settings.decoyPrefix = g_rtConfig->DecoyPrefix;
-            settings.scoreInfoByName = g_rtConfig->scoreInfoByName;
+            analysis.importSettings.qonverterSettings = g_rtConfig->getQonverterSettings();
         }
     }
 };
@@ -431,17 +425,8 @@ int main( int argc, char* argv[] )
         BOOST_FOREACH(const string& filepath, idpDbFilepaths)
         {
             Qonverter qonverter;
-            qonverter.logQonversionDetails = g_rtConfig->WriteQonversionDetails;
-                
-            Qonverter::Settings& settings = qonverter.settingsByAnalysis[0];
-            settings.qonverterMethod = g_rtConfig->QonverterMethod;
-            settings.kernel = g_rtConfig->Kernel;
-            settings.chargeStateHandling = g_rtConfig->ChargeStateHandling;
-            settings.terminalSpecificityHandling = g_rtConfig->TerminalSpecificityHandling;
-            settings.missedCleavagesHandling = g_rtConfig->MissedCleavagesHandling;
-            settings.massErrorHandling = g_rtConfig->MassErrorHandling;
-            settings.decoyPrefix = g_rtConfig->DecoyPrefix;
-            settings.scoreInfoByName = g_rtConfig->scoreInfoByName;
+            qonverter.logQonversionDetails = g_rtConfig->WriteQonversionDetails; 
+            qonverter.settingsByAnalysis[0] = g_rtConfig->getQonverterSettings();
 
             qonverter.reset(filepath);
             qonverter.qonvert(filepath);

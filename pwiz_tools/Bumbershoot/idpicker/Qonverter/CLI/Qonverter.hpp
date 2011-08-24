@@ -64,20 +64,23 @@ public ref struct Qonverter
         Sigmoid
     };
 
+    [System::FlagsAttribute]
     enum class ChargeStateHandling
     {
-        Ignore,
-        Partition,
-        Feature // SVM only
+        Ignore = (1<<0),
+        Partition = (1<<1),
+        Feature = (1<<2) // SVM only
     };
 
+    [System::FlagsAttribute]
     enum class TerminalSpecificityHandling
     {
-        Ignore,
-        Partition,
-        Feature // SVM only
+        Ignore = (1<<0),
+        Partition = (1<<1),
+        Feature = (1<<2) // SVM only
     };
 
+    [System::FlagsAttribute]
     enum class MissedCleavagesHandling
     {
         Ignore,
