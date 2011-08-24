@@ -416,11 +416,12 @@ ScanFilter::initialize()
     faimsOn_ = TriBool_Unknown;
 
     msLevel_ = 0;
-    cidParentMass_.clear();
-	cidEnergy_.clear();
+    precursorMZs_.clear();
+	precursorEnergies_.clear();
 	scanRangeMin_.clear();
 	scanRangeMax_.clear();
     compensationVoltage_ = 0.;
+    multiplePrecursorMode_ = false;
 }
 
 
@@ -436,17 +437,17 @@ ScanFilter::parse(string filterLine)
 	stringstream s(filterLine);
 	string w;
 
-	if (s.eof()) {
+	if (s.eof())
 		return; // ok, empty line
-	}
+
 	s >> w;
 
 	massAnalyzerType_ = parseMassAnalyzerType(w);
 	if (massAnalyzerType_ > ScanFilterMassAnalyzerType_Unknown) {
 		// "analyzer" field was present
-		if (s.eof()) {
+		if (s.eof())
 			return;
-		}
+
 		s >> w;
 	}
 
@@ -464,27 +465,27 @@ ScanFilter::parse(string filterLine)
 	polarityType_ = parsePolarityType(w);
 	if (polarityType_ > PolarityType_Unknown) {
 		// "polarity" field was present
-		if (s.eof()) {
+		if (s.eof())
 			return;
-		}
+
 		s >> w;
 	}
 
 	dataPointType_ = parseDataPointType(w);
 	if (dataPointType_ > DataPointType_Unknown) {
 		// "scan data type" field present
-		if (s.eof()) {
+		if (s.eof())
 			return;
-		}
+
 		s >> w;
 	}
 
 	ionizationType_ = parseIonizationType(w);
 	if (ionizationType_ > IonizationType_Unknown) {
 		// "ionization mode" field present
-		if (s.eof()) {
+		if (s.eof())
 			return;
-		}
+
 		s >> w;
 	}
 
@@ -500,9 +501,9 @@ ScanFilter::parse(string filterLine)
 		advance = true;
 	}
 	if (advance) {
-		if (s.eof()) {
+		if (s.eof())
 			return;
-		}
+
 		s >> w;
 		advance = false;
 	}
@@ -517,9 +518,9 @@ ScanFilter::parse(string filterLine)
 		advance = true;
 	}
 	if (advance) {
-		if (s.eof()) {
+		if (s.eof())
 			return;
-		}
+
 		s >> w;
 		advance = false;
 	}
@@ -534,9 +535,9 @@ ScanFilter::parse(string filterLine)
 		advance = true;
 	}
 	if (advance) {
-		if (s.eof()) {
+		if (s.eof())
 			return;
-		}
+
 		s >> w;
 		advance = false;
 	}
@@ -552,9 +553,9 @@ ScanFilter::parse(string filterLine)
 		advance = true;
 	}
 	if (advance) {
-		if (s.eof()) {
+		if (s.eof())
 			return;
-		}
+
 		s >> w;
 		advance = false;
 	}
@@ -570,9 +571,9 @@ ScanFilter::parse(string filterLine)
 		advance = true;
 	}
 	if (advance) {
-		if (s.eof()) {
+		if (s.eof())
 			return;
-		}
+
 		s >> w;
 		advance = false;
 	}
@@ -588,14 +589,14 @@ ScanFilter::parse(string filterLine)
 		advance = true;
 	}
 	if (advance) {
-		if (s.eof()) {
+		if (s.eof())
 			return;
-		}
+
 		s >> w;
 		advance = false;
 	}
 
-    faimsOn_ = parseCompensationVoltage(w, compensationVoltage_);
+    faimsOn_ = parseCompensationVoltage(w, compensationVoltage_) ? TriBool_True : TriBool_Unknown;
 
     if (faimsOn_ == TriBool_True)
         s >> w;
@@ -610,9 +611,9 @@ ScanFilter::parse(string filterLine)
 		advance = true;
 	}
 	if (advance) {
-		if (s.eof()) {
+		if (s.eof())
 			return;
-		}
+
 		s >> w;
 		advance = false;
 	}
@@ -627,9 +628,9 @@ ScanFilter::parse(string filterLine)
 		advance = true;
 	}
 	if (advance) {
-		if (s.eof()) {
+		if (s.eof())
 			return;
-		}
+
 		s >> w;
 		advance = false;
 	}
@@ -640,9 +641,9 @@ ScanFilter::parse(string filterLine)
         advance = true;
     }
     if (advance) {
-        if (s.eof()) {
+        if (s.eof())
             return;
-        }
+
         s >> w;
         advance = false;
     }
@@ -650,9 +651,9 @@ ScanFilter::parse(string filterLine)
 	accurateMassType_ = parseAccurateMassType(w);
 	if (accurateMassType_ > AccurateMass_Unknown) {
 		// "accurate mass" field present
-		if (s.eof()) {
+		if (s.eof())
 			return;
-		}
+
 		s >> w;
 	}
 
@@ -665,21 +666,32 @@ ScanFilter::parse(string filterLine)
         }
 
 		// "scan type" field present
-		if (s.eof()) {
+		if (s.eof())
 			return;
-		}
-		s >> w;
+
+        s >> w;
 	}
 
     if (w == "LOCK")
     {
         lockMassOn_ = TriBool_True;
 
-        if (s.eof()) {
+        if (s.eof())
             return;
-        }
+
         s >> w;
     }
+
+    if (w == "MSX")
+    {
+        multiplePrecursorMode_ = true;
+
+        if (s.eof())
+            return;
+
+        s >> w;
+    }
+
 
     // MS order or PR keyword
     if (w == "PR")
@@ -687,74 +699,86 @@ ScanFilter::parse(string filterLine)
         msLevel_ = -1; // special value in lieu of an extra boolean + msLevel=0
 
         if (s.eof())
-        {
             return;
-		}
+
         s >> w;
     }
-    else if ( (w.substr(0,2) == "MS") && (w.length() >= 2) )
+    else if (bal::starts_with(w, "MS"))
     {
         if (w.length() == 2) {
             msLevel_ = 1; // just "MS"
         } else {
             // MSn: extract int n
-            //cout << "len: " << w.length() << endl;
-            msLevel_ = lexical_cast<int>(w.substr(2)); // take number after "ms"
+            w.erase(0, 2);
+            msLevel_ = lexical_cast<int>(w); // take number after "ms"
         }
-        if (s.eof()) {
+        if (s.eof())
             return;
-        }
+
         s >> w;
     }
 
 
-	// CID info
-	// TODO: MSn for n > 2: comma-separated
-	// if msLevel >=2 there should be mass@energy pairs for each level >= 2
+	// for MS level > 1, expect one or more <isolation m/z>@<activation><energy> tuples
 	if (msLevel_ == -1 || msLevel_ > 1)
     {
-        int expectedPairs = msLevel_ == -1 ? 1 : msLevel_ - 1;
-		for (int i=0; i< expectedPairs; ++i) {
-			char c=w[0];
-			size_t markerPos = w.find('@',0);
-			// make sure this word starts with a numeric char, and the word contains "@"
-			if( ! ( (c >= '0') && (c <= '9') ) )
-				throw runtime_error("missing precursor m/z");
-            if (markerPos != string::npos)
+        // if the marker is found, expect a <isolation m/z>@<activation><energy> tuple
+		size_t markerPos = w.find('@');
+
+        if (markerPos == string::npos)
+        {
+            try
             {
-			    size_t energyPos = markerPos+1;
-			    c = w[energyPos];
-			    if ((c < '0' || c > '9') && c != '-' && c != '+')
+                precursorMZs_.push_back(lexical_cast<double>(w));
+                precursorEnergies_.push_back(0.0);
+
+		        if (s.eof())
+			        return;
+
+		        s >> w;
+            }
+            catch (bad_lexical_cast&)
+            {
+                throw runtime_error("don't know how to parse \"" + w + "\"");
+            }
+        }
+        else
+        {
+            do
+            {
+			    char c=w[0];
+			    if (!(c >= '0' && c <= '9'))
+				    throw runtime_error("don't know how to parse \"" + w + "\"");
+
+		        size_t energyPos = markerPos+1;
+		        c = w[energyPos];
+		        if ((c < '0' || c > '9') && c != '-' && c != '+')
                 {
-				    energyPos = w.find_first_of("0123456789-+", energyPos); // find first numeric character after the "@"
-				    if (energyPos != string::npos) {
-					    activationType_ = static_cast<ActivationType>(activationType_ | parseActivationType(w.substr(markerPos+1, energyPos-markerPos-1)));
+			        energyPos = w.find_first_of("0123456789-+", energyPos); // find first numeric character after the "@"
+			        if (energyPos != string::npos) {
+				        activationType_ = static_cast<ActivationType>(activationType_ | parseActivationType(w.substr(markerPos+1, energyPos-markerPos-1)));
                         if (supplementalCIDOn_ == TriBool_True)
                             activationType_ = static_cast<ActivationType>(activationType_ | ActivationType_CID);
-					    if (activationType_ == ActivationType_Unknown)
-						    throw runtime_error("failed to parse activation type");
-				    } else
-					    throw runtime_error("failed to find activation energy");
-			    }
+				        if (activationType_ == ActivationType_Unknown)
+					        throw runtime_error("failed to parse activation type");
+			        } else
+				        throw runtime_error("failed to find activation energy");
+		        }
 
-			    string mass = w.substr(0, markerPos);
-			    string energy = w.substr(energyPos);
-			    // cout << "got mass " << mass << " at " << energy << " energy using activation " << (int) activationMethod_ << " (from " << w << ")" << endl;
-			    cidParentMass_.push_back(lexical_cast<double>(mass));
-			    cidEnergy_.push_back(lexical_cast<double>(energy));
-            }
-            else
-            {
-                cidParentMass_.push_back(lexical_cast<double>(w));
-			    cidEnergy_.push_back(0.0);
-            }
+		        string mass = w.substr(0, markerPos);
+		        string energy = w.substr(energyPos);
+		        // cout << "got mass " << mass << " at " << energy << " energy using activation " << (int) activationMethod_ << " (from " << w << ")" << endl;
+		        precursorMZs_.push_back(lexical_cast<double>(mass));
+		        precursorEnergies_.push_back(lexical_cast<double>(energy));
 
-			// prematurely done?
-			if (s.eof()) {
-				throw runtime_error("missing expected activation m/z@energy pair");
-			}
-			s >> w;
-		}
+		        if (s.eof())
+			        return;
+
+		        s >> w;
+
+                markerPos = w.find('@');
+            } while (markerPos != string::npos);
+        }
 	}
 
 	// try to get activation type if not already set
@@ -762,9 +786,9 @@ ScanFilter::parse(string filterLine)
 		activationType_ = parseActivationType(w);
 		if (activationType_ > ActivationType_Unknown) {
 			// "activation type" field present
-			if (s.eof()) {
+			if (s.eof())
 				return;
-			}
+
 			s >> w;
 		}
 	}
@@ -790,10 +814,8 @@ ScanFilter::parse(string filterLine)
 		scanRangeMax_.push_back(lexical_cast<double>(rangeMinMaxStrs[1]));
 	}
 
-	if (s.eof()) {
-		// cout << "done parsing" << endl;
+	if (s.eof())
 		return;
-	}
 	else {
         ostringstream oss("unparsed scan filter elements: ");
 		do {

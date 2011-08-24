@@ -149,7 +149,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
 
             SetActivationType(activationType, result->precursor.activation);
             if (filterParser.activationType_ == ActivationType_CID)
-                result->precursor.activation.set(MS_collision_energy, filterParser.cidEnergy_[0]);
+                result->precursor.activation.set(MS_collision_energy, filterParser.precursorEnergies_[0]);
 
             result->product.isolationWindow.set(MS_isolation_window_target_m_z, ci.q3, MS_m_z);
             result->product.isolationWindow.set(MS_isolation_window_lower_offset, ci.q3Offset, MS_m_z);
@@ -162,7 +162,7 @@ PWIZ_API_DECL ChromatogramPtr ChromatogramList_Thermo::chromatogram(size_t index
                              ).str();
 
             ChromatogramDataPtr cd = rawfile_->getChromatogramData(
-                Type_BasePeak, Operator_None, Type_MassRange,
+                Type_MassRange, Operator_None, Type_MassRange,
                 "SRM ms2 " + q1, q3Range, "", 0,
                 0, rawfile_->rt(rawfile_->value(NumSpectra)),
                 Smoothing_None, 0);
@@ -268,7 +268,7 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                         {
                             case ScanType_SRM:
                             {
-                                string precursorMZ = (format("%.10g") % filterParser.cidParentMass_[0]).str();
+                                string precursorMZ = (format("%.10g") % filterParser.precursorMZs_[0]).str();
                                 /*index_.push_back(IndexEntry());
                                 IndexEntry& ci = index_.back();
                                 ci.controllerType = (ControllerType) controllerType;
@@ -276,7 +276,7 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                                 ci.filter = filterString;
                                 ci.index = index_.size()-1;
                                 ci.id = "SRM TIC " + precursorMZ;
-                                ci.q1 = filterParser.cidParentMass_[0];
+                                ci.q1 = filterParser.precursorMZs_[0];
                                 idMap_[ci.id] = ci.index;*/
 
                                 for (size_t j=0, jc=filterParser.scanRangeMin_.size(); j < jc; ++j)
@@ -288,7 +288,7 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                                     ci.controllerNumber = n;
                                     ci.filter = filterString;
                                     ci.index = index_.size()-1;
-                                    ci.q1 = filterParser.cidParentMass_[0];
+                                    ci.q1 = filterParser.precursorMZs_[0];
                                     ci.q3 = (filterParser.scanRangeMin_[j] + filterParser.scanRangeMax_[j]) / 2.0;
                                     ci.id = (format("SRM SIC %s,%.10g")
                                              % precursorMZ
@@ -325,7 +325,7 @@ PWIZ_API_DECL void ChromatogramList_Thermo::createIndex() const
                             default:
                             case ScanType_Full:
                             /*{
-                                string precursorMZ = lexical_cast<string>(filterParser.cidParentMass_[0]);
+                                string precursorMZ = lexical_cast<string>(filterParser.precursorMZs_[0]);
                                 index_.push_back(make_pair(ChromatogramIdentity(), filterString));
                                 ChromatogramIdentity& ci = index_.back().first;
                                 ci.index = index_.size()-1;

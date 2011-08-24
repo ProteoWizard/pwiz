@@ -810,6 +810,7 @@ class ScanInfoImpl : public ScanInfo
     PolarityType polarityType_;
     bool isEnhanced_;
     bool isDependent_;
+    bool hasMultiplePrecursors_; // true for "MSX" mode
     vector<double> precursorMZs_;
     vector<double> precursorActivationEnergies_;
     bool isProfileScan_;
@@ -980,8 +981,8 @@ void ScanInfoImpl::parseFilterString()
     activationType_ = filterParser.activationType_;
     isEnhanced_ = filterParser.enhancedOn_ == TriBool_True;
     isDependent_ = filterParser.dependentActive_ == TriBool_True;
-    precursorMZs_.insert(precursorMZs_.end(), filterParser.cidParentMass_.begin(), filterParser.cidParentMass_.end());
-    precursorActivationEnergies_.insert(precursorActivationEnergies_.end(), filterParser.cidEnergy_.begin(), filterParser.cidEnergy_.end());
+    precursorMZs_.insert(precursorMZs_.end(), filterParser.precursorMZs_.begin(), filterParser.precursorMZs_.end());
+    precursorActivationEnergies_.insert(precursorActivationEnergies_.end(), filterParser.precursorEnergies_.begin(), filterParser.precursorEnergies_.end());
     isProfileScan_ = filterParser.dataPointType_ == DataPointType_Profile;
     isCentroidScan_ = filterParser.dataPointType_ == DataPointType_Centroid;
 	faimsOn_ = filterParser.faimsOn_ == TriBool_True;

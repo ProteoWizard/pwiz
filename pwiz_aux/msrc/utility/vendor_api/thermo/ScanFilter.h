@@ -81,9 +81,10 @@ class PWIZ_API_DECL ScanFilter
 	int msLevel_; // n, in MSn: >0; msLevel == -1 for precursor ion scans
 	ActivationType activationType_;
     double compensationVoltage_;
+    bool multiplePrecursorMode_; // true for "MSX"
 
-	std::vector<double> cidParentMass_; // one entry per ms level for level >= 2
-	std::vector<double> cidEnergy_; // relative units; one entry per ms level for level >= 2
+	std::vector<double> precursorMZs_; // one entry per ms level for level >= 2
+	std::vector<double> precursorEnergies_; // relative units; one entry per ms level for level >= 2
 
 	std::vector<double> scanRangeMin_;
 	std::vector<double> scanRangeMax_;
