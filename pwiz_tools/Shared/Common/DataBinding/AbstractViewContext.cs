@@ -79,7 +79,7 @@ namespace pwiz.Common.DataBinding
 
         protected virtual void WriteData(IProgressMonitor progressMonitor, TextWriter writer, BindingListView bindingListView, IDataFormat dataFormat)
         {
-            var tempBindingListView = new BindingListView(new ViewInfo(ParentColumn, bindingListView.GetViewSpec()), bindingListView.ToArray());
+            var tempBindingListView = new BindingListView(new ViewInfo(ParentColumn, bindingListView.GetViewSpec()), bindingListView.InnerList.Cast<object>().ToArray());
             var tempDataGridView = new BoundDataGridView
                                        {
                                            DataSource = new BindingSource(tempBindingListView, ""),
