@@ -38,8 +38,8 @@
     <PublisherName>MacCoss Lab, UW</PublisherName>
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>index.html</WebPage>
-    <ApplicationRevision>2884</ApplicationRevision>
-    <ApplicationVersion>1.1.1.2884</ApplicationVersion>
+    <ApplicationRevision>2935</ApplicationRevision>
+    <ApplicationVersion>1.1.1.2935</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
     <BootstrapperEnabled>true</BootstrapperEnabled>
@@ -390,6 +390,7 @@
     <Compile Include="Model\Lib\BlibData\DbRefSpectra.cs" />
     <Compile Include="Model\Lib\BlibData\DbRefSpectraPeaks.cs" />
     <Compile Include="Model\Lib\BlibData\SessionFactoryFactory.cs" />
+    <Compile Include="Model\Lib\LibraryRankedSpectrumInfo.cs" />
     <Compile Include="Model\MemoryDocumentContainer.cs" />
     <Compile Include="Model\ModificationMatcher.cs" />
     <Compile Include="Model\PeptideDocNode.cs" />

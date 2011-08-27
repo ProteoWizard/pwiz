@@ -34,6 +34,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private static readonly Color COLOR_BEST_PEAK = Color.Black;
         private static readonly Color COLOR_RETENTION_TIME = Color.Gray;
+        private static readonly Color COLOR_MSMSID_TIME = Color.Navy;
         private static readonly Color COLOR_RETENTION_WINDOW = Color.LightGoldenrodYellow;
         private static readonly Color COLOR_BOUNDARIES = Color.Gray;
         private static readonly Color COLOR_BOUNDARIES_BEST = Color.Black;
@@ -141,6 +142,9 @@ namespace pwiz.Skyline.Controls.Graphs
         public double? RetentionPrediction { get; set; }
         public double RetentionWindow { get; set; }
 
+        public double[] RetentionMsMs { get; set; }
+        public double? SelectedRetentionMsMs { get; set; }
+
         public bool HideBest { get; set; }
 
         public PeakBoundsDragInfo DragInfo
@@ -226,44 +230,30 @@ namespace pwiz.Skyline.Controls.Graphs
             if (Chromatogram == null)
                 return;
 
+            // Calculate maximum y for potential retention time indicators
+            double xTemp, yMax;
+            PointF ptTop = new PointF(0, graphPane.Chart.Rect.Top);
+            graphPane.ReverseTransform(ptTop, out xTemp, out yMax);
+
+            if (GraphChromatogram.ShowRT != ShowRTChrom.none && RetentionMsMs != null)
+            {
+                foreach (double retentionTime in RetentionMsMs)
+                {
+                    Color color = Equals(retentionTime, SelectedRetentionMsMs) ? ColorSelected : COLOR_MSMSID_TIME;
+                    AddRetentionTimeAnnotation(graphPane, g, annotations, ptTop, "ID", color, retentionTime);
+                }
+            }
+
             // Draw retention time indicator, if set
             if (RetentionPrediction.HasValue)
             {
                 double time = RetentionPrediction.Value;
-                double xTemp, yMax;
-                PointF ptTop = new PointF(0, graphPane.Chart.Rect.Top);
-                graphPane.ReverseTransform(ptTop, out xTemp, out yMax);
 
                 // Create temporary label to calculate positions
-                string label = string.Format("Predicted\n{0:F01}", time);
-                FontSpec fontLabel = CreateFontSpec(COLOR_RETENTION_TIME, _fontSpec.Size);
-                SizeF sizeLabel = fontLabel.MeasureString(g, label, graphPane.CalcScaleFactor());
-                ptTop = new PointF(0, ptTop.Y + sizeLabel.Height + 10);
-
-                double intensity;
-                graphPane.ReverseTransform(ptTop, out xTemp, out intensity);
-
-                LineObj stick = new LineObj(COLOR_RETENTION_TIME, time, intensity, time, 0)
-                                    {
-                                        IsClippedToChartRect = true,
-                                        Location = {CoordinateFrame = CoordType.AxisXYScale},
-                                        ZOrder = ZOrder.B_BehindLegend,
-                                        Line = { Width = 1}
-                                    };
-                annotations.Add(stick);
-
                 if (GraphChromatogram.ShowRT != ShowRTChrom.none)
                 {
-                    ptTop = new PointF(0, ptTop.Y - 5);
-                    graphPane.ReverseTransform(ptTop, out xTemp, out intensity);
-                    TextObj text = new TextObj(label, time, intensity,
-                                               CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom)
-                                       {
-                                           IsClippedToChartRect = true,
-                                           ZOrder = ZOrder.B_BehindLegend,
-                                           FontSpec = CreateFontSpec(COLOR_RETENTION_TIME, _fontSpec.Size),
-                                       };
-                    annotations.Add(text);
+                    AddRetentionTimeAnnotation(graphPane, g, annotations,
+                        ptTop, "Predicted", COLOR_RETENTION_TIME, time);
                 }
 
                 // Draw background for retention time window
@@ -353,6 +343,39 @@ namespace pwiz.Skyline.Controls.Graphs
                 AddPeakBoundaries(graphPane, annotations, false,
                                   peak.StartTime, peak.EndTime, maxIntensity);
             }
+        }
+
+        private void AddRetentionTimeAnnotation(MSGraphPane graphPane, Graphics g, GraphObjList annotations,
+            PointF ptTop, string title, Color color, double time)
+        {
+            double xTemp;
+            string label = string.Format("{0}\n{1:F01}", title, time);
+            FontSpec fontLabel = CreateFontSpec(color, _fontSpec.Size);
+            SizeF sizeLabel = fontLabel.MeasureString(g, label, graphPane.CalcScaleFactor());
+            ptTop = new PointF(0, ptTop.Y + sizeLabel.Height + 10);
+
+            double intensity;
+            graphPane.ReverseTransform(ptTop, out xTemp, out intensity);
+
+            LineObj stick = new LineObj(color, time, intensity, time, 0)
+                                {
+                                    IsClippedToChartRect = true,
+                                    Location = { CoordinateFrame = CoordType.AxisXYScale },
+                                    ZOrder = ZOrder.B_BehindLegend,
+                                    Line = { Width = 1 }
+                                };
+            annotations.Add(stick);
+
+            ptTop = new PointF(0, ptTop.Y - 5);
+            graphPane.ReverseTransform(ptTop, out xTemp, out intensity);
+            TextObj text = new TextObj(label, time, intensity,
+                                       CoordType.AxisXYScale, AlignH.Center, AlignV.Bottom)
+                               {
+                                   IsClippedToChartRect = true,
+                                   ZOrder = ZOrder.B_BehindLegend,
+                                   FontSpec = CreateFontSpec(color, _fontSpec.Size),
+                               };
+            annotations.Add(text);
         }
 
         public double GetMaxIntensity(double startTime, double endTime)
@@ -465,13 +488,44 @@ namespace pwiz.Skyline.Controls.Graphs
                 if (double.TryParse(label.Text.Split('\n')[0], out time))
                 {
                     // Search for a time that corresponds with the label
-                    for (int i = 0; i < _arrayLabelIndexes.Length; i++)
+                    foreach (int iTime in _arrayLabelIndexes)
                     {
-                        int iTime = _arrayLabelIndexes[i];
                         if (iTime != -1 && Math.Abs(time - _times[iTime]) < 0.15)
                             return _times[iTime];
                     }
                 }                
+            }
+            return 0;
+        }
+
+        public double FindSpectrumRetentionTime(TextObj label)
+        {
+            if (label.FontSpec.FontColor == COLOR_MSMSID_TIME ||
+                (SelectedRetentionMsMs.HasValue && label.FontSpec.FontColor == ColorSelected))
+            {
+                double time = label.Location.X;
+                // Search for a time that corresponds with the label
+                foreach (double timeMsMs in RetentionMsMs)
+                {
+                    if (time == timeMsMs)
+                        return timeMsMs;
+                }
+            }
+            return 0;
+        }
+
+        public double FindSpectrumRetentionTime(LineObj line)
+        {
+            if (line.Line.Color == COLOR_MSMSID_TIME ||
+                (SelectedRetentionMsMs.HasValue && line.Line.Color == ColorSelected))
+            {
+                double time = line.Location.X;
+                // Search for a time that corresponds with the label
+                foreach (double timeMsMs in RetentionMsMs)
+                {
+                    if (time == timeMsMs)
+                        return timeMsMs;
+                }
             }
             return 0;
         }

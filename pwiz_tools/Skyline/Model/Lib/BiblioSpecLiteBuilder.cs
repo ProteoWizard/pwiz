@@ -68,9 +68,7 @@ namespace pwiz.Skyline.Model.Lib
             ProgressStatus status = new ProgressStatus(message);
 
             progress.UpdateProgress(status);
-            string outputDir = Path.GetDirectoryName(OutputPath);
-            string outputBaseName = Path.GetFileNameWithoutExtension(OutputPath);
-            string redundantLibrary = Path.Combine(outputDir ?? "", outputBaseName + BiblioSpecLiteSpec.EXT_REDUNDANT);
+            string redundantLibrary = BiblioSpecLiteSpec.GetRedundantName(OutputPath);
             var blibBuilder = new BlibBuild(redundantLibrary, InputFiles)
             {
                 Authority = Authority,

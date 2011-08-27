@@ -502,6 +502,25 @@ namespace pwiz.Skyline.Model.Lib
             return false;
         }
 
+        public override SpectrumPeaksInfo LoadSpectrum(object spectrumKey)
+        {
+            return new SpectrumPeaksInfo(ReadSpectrum(_dictLibrary[(LibKey)spectrumKey]));
+        }
+
+        public override bool TryGetRetentionTimes(LibKey key, string filePath, out double[] retentionTimes)
+        {
+            retentionTimes = null;
+            return false;
+        }
+
+        public override IEnumerable<SpectrumInfo> GetSpectra(LibKey key, IsotopeLabelType labelType, bool bestMatch)
+        {
+            // This base class only handles best match spectra
+            if (bestMatch && _dictLibrary.ContainsKey(key))
+                yield return new SpectrumInfo(this, labelType, key);
+        }
+
+
         public override int Count
         {
             get { return _dictLibrary == null ? 0 : _dictLibrary.Count; }

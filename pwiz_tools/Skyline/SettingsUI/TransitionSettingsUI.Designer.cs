@@ -96,6 +96,7 @@
             this.textMaxMz = new System.Windows.Forms.TextBox();
             this.textMinMz = new System.Windows.Forms.TextBox();
             this.tabFullScan = new System.Windows.Forms.TabPage();
+            this.cbFilterScheduling = new System.Windows.Forms.CheckBox();
             this.groupBoxMS1 = new System.Windows.Forms.GroupBox();
             this.comboEnrichments = new System.Windows.Forms.ComboBox();
             this.label29 = new System.Windows.Forms.Label();
@@ -125,7 +126,6 @@
             this.comboPrecursorFilterType = new System.Windows.Forms.ComboBox();
             this.label20 = new System.Windows.Forms.Label();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
-            this.cbFilterScheduling = new System.Windows.Forms.CheckBox();
             this.tabControl1.SuspendLayout();
             this.tabGeneral.SuspendLayout();
             this.tabFilter.SuspendLayout();
@@ -193,7 +193,7 @@
             this.tabGeneral.Location = new System.Drawing.Point(4, 22);
             this.tabGeneral.Name = "tabGeneral";
             this.tabGeneral.Padding = new System.Windows.Forms.Padding(3);
-            this.tabGeneral.Size = new System.Drawing.Size(363, 431);
+            this.tabGeneral.Size = new System.Drawing.Size(363, 456);
             this.tabGeneral.TabIndex = 0;
             this.tabGeneral.Text = "Prediction";
             this.tabGeneral.UseVisualStyleBackColor = true;
@@ -338,7 +338,7 @@
             this.tabFilter.Location = new System.Drawing.Point(4, 22);
             this.tabFilter.Name = "tabFilter";
             this.tabFilter.Padding = new System.Windows.Forms.Padding(3);
-            this.tabFilter.Size = new System.Drawing.Size(363, 431);
+            this.tabFilter.Size = new System.Drawing.Size(363, 456);
             this.tabFilter.TabIndex = 1;
             this.tabFilter.Text = "Filter";
             this.tabFilter.UseVisualStyleBackColor = true;
@@ -537,7 +537,7 @@
             this.tabLibrary.Location = new System.Drawing.Point(4, 22);
             this.tabLibrary.Name = "tabLibrary";
             this.tabLibrary.Padding = new System.Windows.Forms.Padding(3);
-            this.tabLibrary.Size = new System.Drawing.Size(363, 431);
+            this.tabLibrary.Size = new System.Drawing.Size(363, 456);
             this.tabLibrary.TabIndex = 3;
             this.tabLibrary.Text = "Library";
             this.tabLibrary.UseVisualStyleBackColor = true;
@@ -797,9 +797,9 @@
             this.label17.AutoSize = true;
             this.label17.Location = new System.Drawing.Point(187, 108);
             this.label17.Name = "label17";
-            this.label17.Size = new System.Drawing.Size(80, 13);
+            this.label17.Size = new System.Drawing.Size(117, 13);
             this.label17.TabIndex = 10;
-            this.label17.Text = "M&ax transitions:";
+            this.label17.Text = "&Firmware transition limit:";
             // 
             // textMzMatchTolerance
             // 
@@ -865,6 +865,17 @@
             this.tabFullScan.TabIndex = 4;
             this.tabFullScan.Text = "Full-Scan";
             this.tabFullScan.UseVisualStyleBackColor = true;
+            // 
+            // cbFilterScheduling
+            // 
+            this.cbFilterScheduling.AutoSize = true;
+            this.cbFilterScheduling.Location = new System.Drawing.Point(18, 423);
+            this.cbFilterScheduling.Name = "cbFilterScheduling";
+            this.cbFilterScheduling.Size = new System.Drawing.Size(234, 17);
+            this.cbFilterScheduling.TabIndex = 2;
+            this.cbFilterScheduling.Text = "Filter only retention time scheduling windows";
+            this.helpTip.SetToolTip(this.cbFilterScheduling, resources.GetString("cbFilterScheduling.ToolTip"));
+            this.cbFilterScheduling.UseVisualStyleBackColor = true;
             // 
             // groupBoxMS1
             // 
@@ -1150,17 +1161,6 @@
             this.label20.Size = new System.Drawing.Size(101, 13);
             this.label20.TabIndex = 0;
             this.label20.Text = "Pr&ecursor matching:";
-            // 
-            // cbFilterScheduling
-            // 
-            this.cbFilterScheduling.AutoSize = true;
-            this.cbFilterScheduling.Location = new System.Drawing.Point(18, 423);
-            this.cbFilterScheduling.Name = "cbFilterScheduling";
-            this.cbFilterScheduling.Size = new System.Drawing.Size(234, 17);
-            this.cbFilterScheduling.TabIndex = 2;
-            this.cbFilterScheduling.Text = "Filter only retention time scheduling windows";
-            this.helpTip.SetToolTip(this.cbFilterScheduling, resources.GetString("cbFilterScheduling.ToolTip"));
-            this.cbFilterScheduling.UseVisualStyleBackColor = true;
             // 
             // TransitionSettingsUI
             // 

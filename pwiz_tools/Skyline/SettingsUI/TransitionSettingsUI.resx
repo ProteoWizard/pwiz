@@ -120,15 +120,6 @@
   <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-  <data name="cbFilterScheduling.ToolTip" xml:space="preserve">
-    <value>Full-scan filtering will limit  chromatorgram time ranges to the windows
-it would use in scheduling acquisition, regardless of whether the data
-was acquired with a scheduled method.  This can save memory and disk
-space in some cases.</value>
-  </data>
-  <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <data name="comboDeclusterPotential.ToolTip" xml:space="preserve">
     <value>A linear equation used to predict the optimal declustering potential (CE)
 for each precursor from its mass-to-charge ratio.  Isotope labeled peptides
@@ -139,5 +130,11 @@ use the predicted CE for the unlabeled form.  (AB instruments only)</value>
 the selection of MS/MS peaks matching ions for ranking, but
 also add all product ions matching the full filter, if they are
 not found in the library</value>
+  </data>
+  <data name="cbFilterScheduling.ToolTip" xml:space="preserve">
+    <value>Full-scan filtering will limit  chromatorgram time ranges to the windows
+it would use in scheduling acquisition, regardless of whether the data
+was acquired with a scheduled method.  This can save memory and disk
+space in some cases.</value>
   </data>
 </root>

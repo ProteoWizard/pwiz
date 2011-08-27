@@ -22,7 +22,6 @@ using System.Data;
 using System.Data.Common;
 using System.Data.SQLite;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Xml;
@@ -39,6 +38,13 @@ namespace pwiz.Skyline.Model.Lib
     {
         public const string EXT = ".blib";
         public const string EXT_REDUNDANT = ".redundant.blib";
+
+        public static string GetRedundantName(string libraryPath)
+        {
+            string libraryDir = Path.GetDirectoryName(libraryPath);
+            string libraryBasename = Path.GetFileNameWithoutExtension(libraryPath);
+            return Path.Combine(libraryDir ?? "", libraryBasename + EXT_REDUNDANT);            
+        }
 
         private static readonly PeptideRankId[] RANK_IDS = new[] { PEP_RANK_COPIES, PEP_RANK_PICKED_INTENSITY };
 
@@ -84,6 +90,9 @@ namespace pwiz.Skyline.Model.Lib
         public const string EXT_CACHE = ".slc";
 
         private PooledSqliteConnection _sqliteConnection;
+        private PooledSqliteConnection _sqliteConnectionRedundant;
+
+        private BiblioLiteSourceInfo[] _librarySourceFiles;
 
         public static BiblioSpecLiteLibrary Load(BiblioSpecLiteSpec spec, ILoadMonitor loader)
         {
@@ -109,12 +118,12 @@ namespace pwiz.Skyline.Model.Lib
         /// <summary>
         /// Constructs library from its component parts.  For use with <see cref="BlibDb"/>.
         /// </summary>
-        public BiblioSpecLiteLibrary(LibrarySpec spec, string lsid, int minorVer, int majorVer,
+        public BiblioSpecLiteLibrary(LibrarySpec spec, string lsid, int dataRev, int schemaVer,
             BiblioLiteSpectrumInfo[] libraryEntries,IStreamManager streamManager)
             :this(spec)
         {
             Lsid = lsid;
-            SetRevision(minorVer, majorVer);
+            SetRevision(dataRev, schemaVer);
 
             _libraryEntries = libraryEntries;
             Array.Sort(_libraryEntries, CompareSpectrumInfo);
@@ -133,17 +142,22 @@ namespace pwiz.Skyline.Model.Lib
         /// <summary>
         /// A monotonically increasing revision number associated with this library.
         /// </summary>
-        public float Revision { get; private set; }
+        public int Revision { get; private set; }
+
+        /// <summary>
+        /// A monotonically increasing schema version number for this library.
+        /// </summary>
+        public int SchemaVersion { get; private set; }
 
         /// <summary>
         /// Sets the revision float value, given integer minor and major versions.
         /// </summary>
-        /// <param name="majorVer">Major version from database</param>
-        /// <param name="minorVer">Minor version from database</param>
-        private void SetRevision(int majorVer, int minorVer)
+        /// <param name="revision">Data revision from database</param>
+        /// <param name="schemaVer">Schema version from database</param>
+        private void SetRevision(int revision, int schemaVer)
         {
-            Revision = float.Parse(string.Format("{0}.{1}", majorVer, minorVer),
-                CultureInfo.InvariantCulture);            
+            Revision = revision;
+            SchemaVersion = schemaVer;
         }
 
         /// <summary>
@@ -153,16 +167,36 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         public string FilePath { get; private set; }
 
+        public string FilePathRedundant
+        {
+            get { return BiblioSpecLiteSpec.GetRedundantName(FilePath); }
+        }
+
         public override IPooledStream ReadStream
         {
             get { return _sqliteConnection; }
         }
 
-        private SQLiteConnection CreateConnection(IStreamManager streamManager)
+        public override IEnumerable<IPooledStream> ReadStreams
+        {
+            get
+            {
+                if (_sqliteConnection != null)
+                    yield return _sqliteConnection;
+                if (_sqliteConnectionRedundant != null)
+                    yield return _sqliteConnectionRedundant;
+            }
+        }
+
+        private void EnsureConnections(IStreamManager streamManager)
         {
             if (_sqliteConnection == null)
-                _sqliteConnection = new PooledSqliteConnection(streamManager.ConnectionPool, FilePath);
-            return _sqliteConnection.Connection;
+            {
+                var pool = streamManager.ConnectionPool;
+                _sqliteConnection = new PooledSqliteConnection(pool, FilePath);
+                if (File.Exists(FilePathRedundant))
+                    _sqliteConnectionRedundant = new PooledSqliteConnection(pool, FilePathRedundant);                
+            }
         }
 
         public override bool IsSameLibrary(Library library)
@@ -213,16 +247,39 @@ namespace pwiz.Skyline.Model.Lib
             peakIntensity
         }
 
+        private enum RetentionTimes
+        {
+            RefSpectraID,
+            RedundantRefSpectraID,
+            SpectrumSourceID,
+            retentionTime,
+            bestSpectrum
+        }
+
+        private enum SpectrumSourceFiles
+        {
+            id,
+            fileName,
+        }
+
         // Cache struct layouts
         private enum LibHeaders
         {
             lsid_byte_count,
-            major_ver,
-            minor_ver,
+            data_rev,
+            schema_ver,
             format_version,
             num_spectra,
-            location_headers_lo,
-            location_headers_hi,
+            location_sources_lo,
+            location_sources_hi,
+
+            count
+        }
+
+        private enum SourceHeader
+        {
+            id,
+            filename_length,
 
             count
         }
@@ -245,12 +302,12 @@ namespace pwiz.Skyline.Model.Lib
         private bool CreateCache(ILoadMonitor loader, ProgressStatus status, int percent)
         {
             var sm = loader.StreamManager;
-
-            using (SQLiteCommand select = new SQLiteCommand(CreateConnection(loader.StreamManager)))
+            EnsureConnections(sm);
+            using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
             {
                 int rows;
                 string lsid;
-                int majorVer, minorVer;
+                int dataRev, schemaVer;
 
                 // First get header information
                 select.CommandText = "SELECT * FROM [LibInfo]";
@@ -263,8 +320,8 @@ namespace pwiz.Skyline.Model.Lib
 
                     lsid = reader.GetString(LibInfo.libLSID);
 
-                    majorVer = reader.GetInt32(LibInfo.majorVersion);
-                    minorVer = reader.GetInt32(LibInfo.minorVersion);
+                    dataRev = reader.GetInt32(LibInfo.majorVersion);
+                    schemaVer = reader.GetInt32(LibInfo.minorVersion);
                 }
 
                 // Corrupted library without a valid row count, but try to compensate
@@ -286,8 +343,9 @@ namespace pwiz.Skyline.Model.Lib
 
                 var setSequences = new Dictionary<LibSeqKey, bool>(rows);
                 var libraryEntries = new BiblioLiteSpectrumInfo[rows];
-                select.CommandText = "SELECT * FROM [RefSpectra]";
+                var librarySourceFiles = new List<BiblioLiteSourceInfo>();
 
+                select.CommandText = "SELECT * FROM [RefSpectra]";
                 using (SQLiteDataReader reader = select.ExecuteReader())
                 {
                     int iId = reader.GetOrdinal(RefSpectra.id);
@@ -328,6 +386,24 @@ namespace pwiz.Skyline.Model.Lib
 
                 Array.Sort(libraryEntries, CompareSpectrumInfo);
 
+                if (schemaVer > 0)
+                {
+                    select.CommandText = "SELECT * FROM [SpectrumSourceFiles]";
+                    using (SQLiteDataReader reader = select.ExecuteReader())
+                    {
+                        int iId = reader.GetOrdinal(SpectrumSourceFiles.id);
+                        int iFilename = reader.GetOrdinal(SpectrumSourceFiles.fileName);
+
+                        while (reader.Read())
+                        {
+                            string filename = reader.GetString(iFilename);
+                            int id = reader.GetInt32(iId);
+                            librarySourceFiles.Add(new BiblioLiteSourceInfo(id, filename));
+                        }
+                    }
+
+                }
+
                 using (FileSaver fs = new FileSaver(CachePath, sm))
                 using (Stream outStream = sm.CreateStream(fs.SafeName, FileMode.Create, true))
                 {
@@ -347,19 +423,38 @@ namespace pwiz.Skyline.Model.Lib
                             setSequences.Add(seqKey, true);
                         }
                         outStream.Write(BitConverter.GetBytes(info.Key.Charge), 0, sizeof (int));
-                        outStream.Write(BitConverter.GetBytes(info.Copies), 0, sizeof (int));
-                        outStream.Write(BitConverter.GetBytes(info.NumPeaks), 0, sizeof (int));
+                        outStream.Write(BitConverter.GetBytes((int)info.Copies), 0, sizeof (int));
+                        outStream.Write(BitConverter.GetBytes((int)info.NumPeaks), 0, sizeof (int));
                         outStream.Write(BitConverter.GetBytes(info.Id), 0, sizeof (int));
                         info.Key.WriteSequence(outStream);
                     }
+
+                    long sourcePosition = 0;
+                    if (librarySourceFiles.Count > 0)
+                    {
+                        // Write all source files
+                        sourcePosition = outStream.Position;
+                        foreach (var librarySourceFile in librarySourceFiles)
+                        {
+                            outStream.Write(BitConverter.GetBytes(librarySourceFile.Id), 0, sizeof(int));
+                            outStream.Write(BitConverter.GetBytes(librarySourceFile.FilePath.Length), 0, sizeof(int));
+                            var librarySourceFileNameBytes = Encoding.UTF8.GetBytes(librarySourceFile.FilePath);
+                            outStream.Write(librarySourceFileNameBytes, 0, librarySourceFileNameBytes.Length);
+                        }
+                        // Terminate with zero ID and zero name length
+                        var zeroBytes = BitConverter.GetBytes(0);
+                        outStream.Write(zeroBytes, 0, sizeof(int));
+                        outStream.Write(zeroBytes, 0, sizeof(int));
+                    }
+
                     byte[] lsidBytes = Encoding.UTF8.GetBytes(lsid);
                     outStream.Write(lsidBytes, 0, lsidBytes.Length);
                     outStream.Write(BitConverter.GetBytes(lsidBytes.Length), 0, sizeof(int));
-                    outStream.Write(BitConverter.GetBytes(majorVer), 0, sizeof(int));
-                    outStream.Write(BitConverter.GetBytes(minorVer), 0, sizeof(int));
+                    outStream.Write(BitConverter.GetBytes(dataRev), 0, sizeof(int));
+                    outStream.Write(BitConverter.GetBytes(schemaVer), 0, sizeof(int));
                     outStream.Write(BitConverter.GetBytes(FORMAT_VERSION_CACHE), 0, sizeof(int));
                     outStream.Write(BitConverter.GetBytes(libraryEntries.Length), 0, sizeof (int));
-                    outStream.Write(BitConverter.GetBytes((long) 0), 0, sizeof (long));
+                    outStream.Write(BitConverter.GetBytes(sourcePosition), 0, sizeof (long));
 
                     sm.Finish(outStream);
                     fs.Commit();
@@ -437,19 +532,43 @@ namespace pwiz.Skyline.Model.Lib
                     int countLsidBytes = GetInt32(libHeader, (int) LibHeaders.lsid_byte_count);
                     stream.Seek(-countHeader-countLsidBytes, SeekOrigin.End);
                     Lsid = ReadString(stream, countLsidBytes);
-                    int majorVer = GetInt32(libHeader, (int)LibHeaders.major_ver);
-                    int minorVer = GetInt32(libHeader, (int) LibHeaders.minor_ver);
-                    SetRevision(majorVer, minorVer);
+                    int dataRev = GetInt32(libHeader, (int)LibHeaders.data_rev);
+                    int schemaVer = GetInt32(libHeader, (int) LibHeaders.schema_ver);
+                    SetRevision(dataRev, schemaVer);
 
                     int numSpectra = GetInt32(libHeader, (int) LibHeaders.num_spectra);
 
                     var setSequences = new Dictionary<LibSeqKey, bool>(numSpectra);
                     var libraryEntries = new BiblioLiteSpectrumInfo[numSpectra];
+                    var librarySourceFiles = new List<BiblioLiteSourceInfo>();
 
-                    // Seek to beginning of spectrum headers
-                    long locationHeaders = BitConverter.ToInt64(libHeader,
-                                                                ((int) LibHeaders.location_headers_lo)*sizeof (int));
-                    stream.Seek(locationHeaders, SeekOrigin.Begin);
+                    long locationSources = BitConverter.ToInt64(libHeader,
+                                                                ((int) LibHeaders.location_sources_lo)*sizeof (int));
+
+                    if (locationSources != 0)
+                    {
+                        stream.Seek(locationSources, SeekOrigin.Begin);
+                        const int countSourceBytes = (int)SourceHeader.count * sizeof(int);
+                        byte[] sourceHeader = new byte[countSourceBytes];
+                        for (;;)
+                        {
+                            ReadComplete(stream, sourceHeader, countSourceBytes);
+                            int sourceId = GetInt32(sourceHeader, (int)SourceHeader.id);
+                            int filenameLength = GetInt32(sourceHeader, (int)SourceHeader.filename_length);
+                            if (filenameLength == 0)
+                                break;
+                            byte[] filenameBytes = new byte[filenameLength];
+                            ReadComplete(stream, filenameBytes, filenameLength);
+                            librarySourceFiles.Add(new BiblioLiteSourceInfo(sourceId,
+                                Encoding.UTF8.GetString(filenameBytes)));
+                        }
+                    }
+
+                    _librarySourceFiles = librarySourceFiles.ToArray();
+
+                    // Seek to beginning of spectrum headers, which is the beginning of the
+                    // files, since spectra are not stored in the cache.
+                    stream.Seek(0, SeekOrigin.Begin);
 
                     byte[] specSequence = new byte[1024];
                     byte[] specHeader = new byte[1024];
@@ -506,12 +625,11 @@ namespace pwiz.Skyline.Model.Lib
                     loader.UpdateProgress(status.Complete());
 
                     // Create a connection to the database from which the spectra will be read
-                    CreateConnection(sm);
+                    EnsureConnections(sm);
                 }
 
                 return true;
             }
-
             catch (InvalidDataException x)
             {
                 if (!cached)
@@ -533,7 +651,15 @@ namespace pwiz.Skyline.Model.Lib
                 }
                 return false;
             }
+        }
 
+        public override SpectrumPeaksInfo LoadSpectrum(object spectrumKey)
+        {
+            var spectrumLiteKey = spectrumKey as SpectrumLiteKey;
+            if (spectrumLiteKey != null)
+                return new SpectrumPeaksInfo(ReadRedundantSpectrum(spectrumLiteKey.RedundantId));
+                
+            return base.LoadSpectrum(spectrumKey);
         }
 
         protected override SpectrumHeaderInfo CreateSpectrumHeaderInfo(BiblioLiteSpectrumInfo info)
@@ -546,37 +672,164 @@ namespace pwiz.Skyline.Model.Lib
             using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
             {
                 select.CommandText = "SELECT * FROM [RefSpectraPeaks] WHERE [RefSpectraID] = ?";
-                select.Parameters.Add(new SQLiteParameter(DbType.UInt64, info.Id));
+                select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long) info.Id));
 
                 using (SQLiteDataReader reader = select.ExecuteReader())
                 {
                     if (reader.Read())
                     {
-                        int numPeaks = info.NumPeaks;
-                        const int sizeMz = sizeof (double);
-                        const int sizeInten = sizeof (float);
-
-                        byte[] peakMzCompressed = reader.GetBytes(RefSpectraPeaks.peakMZ);
-                        byte[] peakMz = peakMzCompressed.Uncompress(numPeaks*sizeMz);
-
-                        byte[] peakIntensCompressed = reader.GetBytes(RefSpectraPeaks.peakIntensity);
-                        byte[] peakIntens = peakIntensCompressed.Uncompress(numPeaks*sizeInten);
-
-                        // Build the list
-                        var arrayMI = new SpectrumPeaksInfo.MI[numPeaks];
-
-                        for (int i = 0; i < numPeaks; i++)
-                        {
-                            arrayMI[i].Intensity = BitConverter.ToSingle(peakIntens, i*sizeInten);
-                            arrayMI[i].Mz = BitConverter.ToDouble(peakMz, i*sizeMz);
-                        }
-
-                        return arrayMI;
+                        short numPeaks = info.NumPeaks;
+                        return ReadPeaks(reader, numPeaks);
                     }
                 }
             }
 
             return null;
+        }
+
+        private SpectrumPeaksInfo.MI[] ReadRedundantSpectrum(int spectrumId)
+        {
+            if (_sqliteConnectionRedundant == null)
+                throw new IOException(string.Format("The redundant library {0} does not exist.", FilePathRedundant));
+
+            using (SQLiteCommand select = new SQLiteCommand(_sqliteConnectionRedundant.Connection))
+            {
+                select.CommandText =
+                    "SELECT * FROM " +
+                    "[RefSpectra] INNER JOIN [RefSpectraPeaks] ON [id] = [RefSpectraID] " +
+                    "WHERE [id] = ?";
+                select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)spectrumId));
+
+                using (SQLiteDataReader reader = select.ExecuteReader())
+                {
+                    if (reader.Read())
+                    {
+                        short numPeaks = reader.GetInt16(RefSpectra.numPeaks);
+                        return ReadPeaks(reader, numPeaks);
+                    }
+                }
+            }
+
+            return null;
+        }
+
+        private static SpectrumPeaksInfo.MI[] ReadPeaks(SQLiteDataReader reader, short numPeaks)
+        {
+            const int sizeMz = sizeof(double);
+            const int sizeInten = sizeof(float);
+
+            byte[] peakMzCompressed = reader.GetBytes(RefSpectraPeaks.peakMZ);
+            byte[] peakMz = peakMzCompressed.Uncompress(numPeaks * sizeMz);
+
+            byte[] peakIntensCompressed = reader.GetBytes(RefSpectraPeaks.peakIntensity);
+            byte[] peakIntens = peakIntensCompressed.Uncompress(numPeaks * sizeInten);
+
+            // Build the list
+            var arrayMI = new SpectrumPeaksInfo.MI[numPeaks];
+
+            for (int i = 0; i < numPeaks; i++)
+            {
+                arrayMI[i].Intensity = BitConverter.ToSingle(peakIntens, i * sizeInten);
+                arrayMI[i].Mz = BitConverter.ToDouble(peakMz, i * sizeMz);
+            }
+
+            return arrayMI;
+        }
+
+        public override bool TryGetRetentionTimes(LibKey key, string filePath, out double[] retentionTimes)
+        {
+            int i = FindEntry(key);
+            int j = FindSource(filePath);
+            if (i != -1 && j != -1)
+            {
+                retentionTimes = ReadRetentionTimes(_libraryEntries[i], _librarySourceFiles[j]);
+                return true;
+            }
+
+            return base.TryGetRetentionTimes(key, filePath, out retentionTimes);
+        }
+
+        public override IEnumerable<SpectrumInfo> GetSpectra(LibKey key, IsotopeLabelType labelType, bool bestMatch)
+        {
+            if (bestMatch)
+            {
+                return base.GetSpectra(key, labelType, true);
+            }
+            else if (SchemaVersion < 1)
+            {
+                return new SpectrumInfo[0];
+            }
+
+            return GetRedundantSpectra(key, labelType);
+        }
+
+        private IEnumerable<SpectrumInfo> GetRedundantSpectra(LibKey key, IsotopeLabelType labelType)
+        {
+            int i = FindEntry(key);
+            if (i == -1)
+                yield break;
+
+            var info = _libraryEntries[i];
+            using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
+            {
+                select.CommandText =
+                    "SELECT * " +
+                    "FROM [RetentionTimes] INNER JOIN [SpectrumSourceFiles] ON [SpectrumSourceID] = [id] " +
+                    "WHERE [RefSpectraID] = ?";
+                select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)info.Id));
+
+                using (SQLiteDataReader reader = select.ExecuteReader())
+                {
+                    int iFilePath = reader.GetOrdinal(SpectrumSourceFiles.fileName);
+                    int iRedundantId = reader.GetOrdinal(RetentionTimes.RedundantRefSpectraID);
+                    int iRetentionTime = reader.GetOrdinal(RetentionTimes.retentionTime);
+                    int iBestSpectrum = reader.GetOrdinal(RetentionTimes.bestSpectrum);
+
+                    while (reader.Read())
+                    {
+                        string filePath = reader.GetString(iFilePath);
+                        int redundantId = reader.GetInt32(iRedundantId);
+                        double retentionTime = reader.GetDouble(iRetentionTime);
+                        bool isBest = reader.GetInt16(iBestSpectrum) != 0;
+
+                        yield return new SpectrumInfo(this, labelType, filePath, retentionTime, isBest,
+                            new SpectrumLiteKey(redundantId));
+                    }
+                }
+            }
+        }
+
+        private int FindSource(string filePath)
+        {
+            // First look for an exact path match
+            int i = _librarySourceFiles.IndexOf(info => Equals(filePath, info.FilePath));
+            if (i == -1)
+            {
+                // Failing an exact path match, look for a basename match
+                string baseName = Path.GetFileNameWithoutExtension(filePath);
+                i = _librarySourceFiles.IndexOf(info =>
+                    Equals(baseName, Path.GetFileNameWithoutExtension(info.FilePath)));
+            }
+            return i;
+        }
+
+        private double[] ReadRetentionTimes(BiblioLiteSpectrumInfo info, BiblioLiteSourceInfo sourceInfo)
+        {
+            using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
+            {
+                select.CommandText = "SELECT retentionTime FROM [RetentionTimes] " +
+                    "WHERE [RefSpectraID] = ? AND [SpectrumSourceId] = ?";
+                select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long) info.Id));
+                select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long) sourceInfo.Id));
+
+                using (SQLiteDataReader reader = select.ExecuteReader())
+                {
+                    var listRetentionTimes = new List<double>();
+                    while (reader.Read())
+                        listRetentionTimes.Add(reader.GetDouble(0));
+                    return listRetentionTimes.ToArray();
+                }
+            }
         }
 
         #region Implementation of IXmlSerializable
@@ -604,7 +857,7 @@ namespace pwiz.Skyline.Model.Lib
             // Read tag attributes
             base.ReadXml(reader);
             Lsid = reader.GetAttribute(ATTR.lsid);
-            Revision = reader.GetFloatAttribute(ATTR.revision, 0);
+            Revision = (int) reader.GetFloatAttribute(ATTR.revision, 0);
             // Consume tag
             reader.Read();
         }
@@ -699,6 +952,28 @@ namespace pwiz.Skyline.Model.Lib
                 Disconnect();
             }
         }
+
+        private struct BiblioLiteSourceInfo
+        {
+            public BiblioLiteSourceInfo(int id, string filePath) : this()
+            {
+                Id = id;
+                FilePath = filePath;
+            }
+
+            public int Id { get; private set; }
+            public string FilePath { get; private set; }
+        }
+    }
+
+    public sealed class SpectrumLiteKey
+    {
+        public SpectrumLiteKey(int redundantId)
+        {
+            RedundantId = redundantId;
+        }
+
+        public int RedundantId { get; private set; }
     }
 
     public struct BiblioLiteSpectrumInfo : ICachedSpectrumInfo
@@ -717,8 +992,8 @@ namespace pwiz.Skyline.Model.Lib
         }
 
         public LibKey Key { get { return _key;  } }
-        public int Copies { get { return _copies; } }
-        public int NumPeaks { get { return _numPeaks; } }
-        public long Id { get { return _id; } }
+        public short Copies { get { return _copies; } }
+        public short NumPeaks { get { return _numPeaks; } }
+        public int Id { get { return _id; } }
     }
 }

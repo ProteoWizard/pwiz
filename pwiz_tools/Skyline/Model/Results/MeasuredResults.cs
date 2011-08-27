@@ -147,6 +147,34 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public ChromSetFileMatch FindMatchingMSDataFile(string filePathFind)
+        {
+            // First look for an exact match
+            int fileOrder = 0;
+            foreach (ChromatogramSet chromSet in Chromatograms)
+            {
+                foreach (string filePath in chromSet.MSDataFilePaths)
+                {
+                    if (Equals(filePath, filePathFind))
+                        return new ChromSetFileMatch(chromSet, filePath, fileOrder);
+                    fileOrder++;
+                }
+            }
+            // Then look for a basename match
+            fileOrder = 0;
+            foreach (ChromatogramSet chromSet in Chromatograms)
+            {
+                string fileBasename = Path.GetFileNameWithoutExtension(filePathFind);
+                foreach (string filePath in chromSet.MSDataFilePaths)
+                {
+                    if (Equals(Path.GetFileNameWithoutExtension(filePath), fileBasename))
+                        return new ChromSetFileMatch(chromSet, filePath, fileOrder);
+                    fileOrder++;
+                }
+            }
+            return null;
+        }
+
 // ReSharper disable MemberCanBeMadeStatic.Local
         private bool IsValidCache(ChromatogramCache cache, bool current)
         {
@@ -979,5 +1007,19 @@ namespace pwiz.Skyline.Model.Results
                 Complete(true);
             }
         }
+    }
+
+    public sealed class ChromSetFileMatch
+    {
+        public ChromSetFileMatch(ChromatogramSet chromatograms, string filePath, int fileOrder)
+        {
+            Chromatograms = chromatograms;
+            FilePath = filePath;
+            FileOrder = fileOrder;
+        }
+
+        public ChromatogramSet Chromatograms { get; private set; }
+        public string FilePath { get; private set; }
+        public int FileOrder { get; private set; }
     }
 }

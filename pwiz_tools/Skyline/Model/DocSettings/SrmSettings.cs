@@ -447,6 +447,32 @@ namespace pwiz.Skyline.Model.DocSettings
             return false;
         }
 
+        public bool TryGetRetentionTimes(string sequence, int charge, ExplicitMods mods, string filePath,
+            out IsotopeLabelType type, out double[] retentionTimes)
+        {
+            var libraries = PeptideSettings.Libraries;
+
+            type = IsotopeLabelType.light;
+
+            string sequenceMod = GetModifiedSequence(sequence, IsotopeLabelType.light, mods);
+            if (libraries.TryGetRetentionTimes(new LibKey(sequenceMod, charge), filePath, out retentionTimes))
+                return true;
+
+            foreach (var labelType in GetHeavyLabelTypes(mods))
+            {
+                // If light version not found, try heavy
+                sequenceMod = GetModifiedSequence(sequence, labelType, mods);
+                if (libraries.TryGetRetentionTimes(new LibKey(sequenceMod, charge), filePath, out retentionTimes))
+                {
+                    type = labelType;
+                    return true;
+                }
+            }
+
+            retentionTimes = null;
+            return false;
+        }
+
         public bool TryLoadSpectrum(string sequence, int charge, ExplicitMods mods,
             out IsotopeLabelType type, out SpectrumPeaksInfo spectrum)
         {
@@ -474,31 +500,43 @@ namespace pwiz.Skyline.Model.DocSettings
         }
 
         /// <summary>
-        /// Loads a list of all the spectra found in all loaded libraries 
+        /// Loads a list of all non-redundant spectra found in all loaded libraries 
         /// matching the criteria passed in.
         /// </summary>
         /// <param name="sequence"> The sequence to match. </param>
         /// <param name="charge"> The charge to match. </param>
         /// <param name="mods"> The modifications to match. </param>
-        /// <param name="spectra"> Used to return a list of the matching spectra. </param>
-        /// <returns> Returns true if at least one spectrum was found; false otherwise. </returns>
-        public bool TryLoadSpectra(string sequence, int charge, ExplicitMods mods,
-            out IList<SpectrumInfo> spectra)
+        /// <returns> Returns a list of the matching spectra. </returns>
+        public IEnumerable<SpectrumInfo> GetBestSpectra(string sequence, int charge, ExplicitMods mods)
         {
             var libraries = PeptideSettings.Libraries;
 
-            spectra = new List<SpectrumInfo>();
-
             string sequenceMod = GetModifiedSequence(sequence, IsotopeLabelType.light, mods);
-            libraries.AddSpectra(new LibKey(sequenceMod, charge), IsotopeLabelType.light, ref spectra);
+            foreach (var spectrumInfo in libraries.GetSpectra(new LibKey(sequenceMod, charge), IsotopeLabelType.light, true))
+                yield return spectrumInfo;
 
             foreach (var labelType in GetHeavyLabelTypes(mods))
             {
                 sequenceMod = GetModifiedSequence(sequence, labelType, mods);
-                libraries.AddSpectra(new LibKey(sequenceMod, charge), labelType, ref spectra);
+                foreach (var spectrumInfo in libraries.GetSpectra(new LibKey(sequenceMod, charge), labelType, true))
+                    yield return spectrumInfo;
             }
+        }
 
-            return spectra.Count > 0;
+        /// <summary>
+        /// Loads a list of all the spectra found in all loaded libraries 
+        /// matching the criteria passed in.
+        /// </summary>
+        /// <param name="sequence"> The sequence to match. </param>
+        /// <param name="charge"> The charge to match. </param>
+        /// <param name="labelType">The primary label type to match</param>
+        /// <param name="mods"> The modifications to match. </param>
+        /// <returns> Returns a list of the matching spectra. </returns>
+        public IEnumerable<SpectrumInfo> GetRedundantSpectra(string sequence, int charge, IsotopeLabelType labelType,
+                                                       ExplicitMods mods)
+        {
+            string sequenceMod = GetModifiedSequence(sequence, labelType, mods);
+            return PeptideSettings.Libraries.GetSpectra(new LibKey(sequenceMod, charge), labelType, false);
         }
 
         private IEnumerable<IsotopeLabelType> GetHeavyLabelTypes(ExplicitMods mods)

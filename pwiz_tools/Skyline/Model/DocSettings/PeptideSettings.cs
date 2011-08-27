@@ -1499,26 +1499,31 @@ namespace pwiz.Skyline.Model.DocSettings
             return false;
         }
 
-        /// <summary>
-        /// Loads all the spectra found in all the loaded libraries with the
-        /// given LibKey and IsotopeLabelType.
-        /// </summary>
-        /// <param name="key"> The LibKey to match on. </param>
-        /// <param name="labelType"> The IsotopeLabelType to match on. </param>
-        /// <param name="spectra"> List to which any matching spectra are added. </param>
-        public void AddSpectra(LibKey key, IsotopeLabelType labelType, 
-            ref IList<SpectrumInfo> spectra)
+        public bool TryGetRetentionTimes(LibKey key, string filePath, out double[] retentionTimes)
         {
             Debug.Assert(IsLoaded);
 
             foreach (Library lib in _libraries)
             {
-                SpectrumPeaksInfo spectrum;
-                if (lib != null && lib.TryLoadSpectrum(key, out spectrum))
-                {
-                    spectra.Add(new SpectrumInfo(spectrum, labelType, lib.Name));
-                }
+                if (lib != null && lib.TryGetRetentionTimes(key, filePath, out retentionTimes))
+                    return true;
             }
+            retentionTimes = null;
+            return false;
+        }
+
+        /// <summary>
+        /// Loads all the spectra found in all the loaded libraries with the
+        /// given LibKey and IsotopeLabelType.
+        /// </summary>
+        /// <param name="key">The LibKey to match on</param>
+        /// <param name="labelType">The IsotopeLabelType to match on</param>
+        /// <param name="bestMatch">True if only best-match spectra are included</param>
+        public IEnumerable<SpectrumInfo> GetSpectra(LibKey key, IsotopeLabelType labelType, bool bestMatch)
+        {
+            Debug.Assert(IsLoaded);
+
+            return _libraries.Where(lib => lib != null).SelectMany(lib => lib.GetSpectra(key, labelType, bestMatch));
         }
 
         #region Property change methods

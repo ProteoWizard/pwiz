@@ -17,9 +17,12 @@
  * limitations under the License.
  */
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.MSGraph;
@@ -68,6 +71,8 @@ namespace pwiz.Skyline.Controls.Graphs
         private readonly IDocumentUIContainer _documentContainer;
         private readonly IStateProvider _stateProvider;
         private TransitionGroupDocNode _nodeGroup;
+        private IList<SpectrumDisplayInfo> _spectra;
+        private bool _inToolbarUpdate;
 
         public GraphSpectrum(IDocumentUIContainer documentUIContainer)
         {
@@ -116,6 +121,19 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        [Browsable(true)]
+        public event EventHandler<SelectedSpectrumEventArgs> SelectedSpectrumChanged;
+
+        public void FireSelectedSpectrumChanged()
+        {
+            if (SelectedSpectrumChanged != null)
+            {
+                var spectrumInfo = SelectedSpectrum;
+                if (spectrumInfo.RetentionTime.HasValue)
+                    SelectedSpectrumChanged(this, new SelectedSpectrumEventArgs(spectrumInfo));                
+            }
+        }
+
         public void OnDocumentUIChanged(object sender, DocumentChangedEventArgs e)
         {
             // If document changed, update spectrum x scale to instrument
@@ -154,26 +172,19 @@ namespace pwiz.Skyline.Controls.Graphs
                    (!ReferenceEquals(_nodeGroup.Id, nodeGroup.Id));
         }
 
-        private void UpdateToolbar(IList<SpectrumInfo> spectra)
+        private void UpdateToolbar()
         {
-            if (spectra == null || spectra.Count < 2)
+            if (_spectra == null || _spectra.Count < 2)
             {
                 toolBar.Visible = false;
             }
             else
             {
                 // Check to see if the list of files has changed.
-                var listNames = new List<String>();
-                foreach (SpectrumInfo spectrum in spectra)
-                {
-                    listNames.Add(spectrum.Identity);
-                }
-
+                var listNames = _spectra.Select(spectrum => spectrum.Identity).ToArray();
                 var listExisting = new List<string>();
                 foreach (var item in comboSpectrum.Items)
-                {
                     listExisting.Add(item.ToString());
-                }
 
                 if (!ArrayUtil.EqualsDeep(listNames, listExisting))
                 {
@@ -183,6 +194,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     // in use by the precursor (zero), then try to stay viewing the in-use spectrum (zero)
                     int selectedIndex = comboSpectrum.SelectedIndex;
 
+                    _inToolbarUpdate = true;
                     comboSpectrum.Items.Clear();
                     foreach (string name in listNames)
                     {
@@ -198,10 +210,11 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         comboSpectrum.SelectedItem = selected;
                     }
+                    _inToolbarUpdate = false;
                     ComboHelper.AutoSizeDropDown(comboSpectrum);
                 }
 
-                // Show the toolbar after updating the files
+                // Show the toolbar after updating the spectra
                 if (!toolBar.Visible)
                 {
                     toolBar.Visible = true;
@@ -209,30 +222,29 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
-        /// <summary>
-        /// If more than one spectrum is found for the current node group, 
-        /// a toolbar with a drop-down combobox is shown, and one item is 
-        /// selected in the combobox. This method searches in the spectra
-        /// list passed in and finds the spectrum selected in the combobox,
-        /// and gets the spectra list index of that particular spectrum.
-        /// </summary>
-        /// <param name="spectra"> The spectra list to be searched. </param>
-        /// <returns> The index of the spectrum found in the spectra list. </returns>
-        private int GetSelectedSpectrumIndex(IList<SpectrumInfo> spectra)
+        public void SelectSpectrum(SpectrumIdentifier spectrumIdentifier)
         {
-            if (spectra.Count > 1 && comboSpectrum.SelectedItem != null)
+            if (_spectra != null && _spectra.Count > 1)
             {
-                string identity = comboSpectrum.SelectedItem.ToString();
-                for (int idx = 0; idx < spectra.Count; idx++)
-                {
-                    if (Equals(identity, spectra[idx].Identity))
-                    {
-                        return idx;
-                    }
-                }
-            }
+                // Selection by file name and retention time should not select best spectrum
+                int iSpectrum = _spectra.IndexOf(spectrumInfo => !spectrumInfo.IsBest &&
+                    Equals(spectrumInfo.FilePath, spectrumIdentifier.SourceFile) &&
+                    Equals(spectrumInfo.RetentionTime, spectrumIdentifier.RetentionTime));
 
-            return 0;
+                if (iSpectrum != -1)
+                    comboSpectrum.SelectedIndex = iSpectrum;
+            }
+        }
+
+        public SpectrumDisplayInfo SelectedSpectrum
+        {
+            get
+            {
+                if (toolBar.Visible)
+                    return _spectra[comboSpectrum.SelectedIndex];
+
+                return _spectra != null ? _spectra[0] : null;
+            }
         }
 
         public void UpdateUI()
@@ -267,6 +279,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         nodeGroup = listInfoGroups[0];
                     else if (listInfoGroups.Length > 1)
                     {
+                        toolBar.Visible = false;
                         AddGraphItem(graphPane, new NoDataMSGraphItem("Multiple charge states with library spectra"));
                         return;
                     }
@@ -276,7 +289,6 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 nodePepTree = nodeGroupTree.Parent as PeptideTreeNode;
             }
-            ExplicitMods mods = (nodePepTree != null ? nodePepTree.DocNode.ExplicitMods : null);
 
             // Check for appropriate spectrum to load
             bool available = false;
@@ -286,73 +298,79 @@ namespace pwiz.Skyline.Controls.Graphs
                 PeptideLibraries libraries = settings.PeptideSettings.Libraries;
                 TransitionGroup group = nodeGroup.TransitionGroup;
                 TransitionDocNode transition = (nodeTranTree == null ? null : nodeTranTree.DocNode);
+                ExplicitMods mods = (nodePepTree != null ? nodePepTree.DocNode.ExplicitMods : null);
                 try
                 {
                     // Try to load a list of spectra matching the criteria for
                     // the current node group.
-                    IList<SpectrumInfo> spectra;
-                    if (libraries.HasLibraries && libraries.IsLoaded &&
-                        settings.TryLoadSpectra(group.Peptide.Sequence, group.PrecursorCharge, 
-                                                    mods, out spectra))
+                    if (libraries.HasLibraries && libraries.IsLoaded)
                     {
                         if (NodeGroupChanged(nodeGroup))
-                        {   
-                            UpdateToolbar(spectra);
+                        {
+                            UpdateSpectra(group, mods);
+
+                            UpdateToolbar();
+
                             _nodeGroup = nodeGroup;
                             if (settings.TransitionSettings.Instrument.IsDynamicMin)
                                 ZoomSpectrumToSettings();
                         }
 
-                        int selectedIndex = GetSelectedSpectrumIndex(spectra);
-                        SpectrumPeaksInfo spectrumInfo = spectra[selectedIndex].SpectrumPeaksInfo;
-                        IsotopeLabelType typeInfo = spectra[selectedIndex].LabelType;
-                        var types = _stateProvider.ShowIonTypes;
-                        var charges = _stateProvider.ShowIonCharges;
-                        var rankTypes = settings.TransitionSettings.Filter.IonTypes;
-                        var rankCharges = settings.TransitionSettings.Filter.ProductCharges;
-                        // Make sure the types and charges in the settings are at the head
-                        // of these lists to give them top priority, and get rankings correct.
-                        int i = 0;
-                        foreach (IonType type in rankTypes)
+                        var spectrum = SelectedSpectrum;
+                        if (spectrum != null)
                         {
-                            if (types.Remove(type))
-                                types.Insert(i++, type);
-                        }
-                        i = 0;
-                        foreach (int charge in rankCharges)
-                        {
-                            if (charges.Remove(charge))
-                                charges.Insert(i++, charge);
-                        }
-                        var spectrumInfoR = new LibraryRankedSpectrumInfo(spectrumInfo,
-                                                                          typeInfo,
-                                                                          group,
-                                                                          settings,
-                                                                          mods,
-                                                                          charges,
-                                                                          types,
-                                                                          rankCharges,
-                                                                          rankTypes);
+                            SpectrumPeaksInfo spectrumInfo = spectrum.SpectrumPeaksInfo;
+                            IsotopeLabelType typeInfo = spectrum.LabelType;
+                            var types = _stateProvider.ShowIonTypes;
+                            var charges = _stateProvider.ShowIonCharges;
+                            var rankTypes = settings.TransitionSettings.Filter.IonTypes;
+                            var rankCharges = settings.TransitionSettings.Filter.ProductCharges;
+                            // Make sure the types and charges in the settings are at the head
+                            // of these lists to give them top priority, and get rankings correct.
+                            int i = 0;
+                            foreach (IonType type in rankTypes)
+                            {
+                                if (types.Remove(type))
+                                    types.Insert(i++, type);
+                            }
+                            i = 0;
+                            foreach (int charge in rankCharges)
+                            {
+                                if (charges.Remove(charge))
+                                    charges.Insert(i++, charge);
+                            }
+                            var spectrumInfoR = new LibraryRankedSpectrumInfo(spectrumInfo,
+                                                                              typeInfo,
+                                                                              group,
+                                                                              settings,
+                                                                              mods,
+                                                                              charges,
+                                                                              types,
+                                                                              rankCharges,
+                                                                              rankTypes);
 
-                        GraphItem = new SpectrumGraphItem(nodeGroup, transition, spectrumInfoR, spectra[selectedIndex].LibName)
-                                            {
-                                                ShowTypes = types,
-                                                ShowCharges = charges,
-                                                ShowRanks = Settings.Default.ShowRanks,
-                                                ShowMz = Settings.Default.ShowIonMz,
-                                                ShowObservedMz = Settings.Default.ShowObservedMz,
-                                                ShowDuplicates = Settings.Default.ShowDuplicateIons,
-                                                FontSize = Settings.Default.SpectrumFontSize,
-                                                LineWidth = Settings.Default.SpectrumLineWidth
-                                            };
-                        graphControl.IsEnableVPan = graphControl.IsEnableVZoom =
-                                                    !Settings.Default.LockYAxis;
-                        AddGraphItem(graphPane, GraphItem);
-                        available = true;
+                            GraphItem = new SpectrumGraphItem(nodeGroup, transition, spectrumInfoR, spectrum.LibName)
+                            {
+                                ShowTypes = types,
+                                ShowCharges = charges,
+                                ShowRanks = Settings.Default.ShowRanks,
+                                ShowMz = Settings.Default.ShowIonMz,
+                                ShowObservedMz = Settings.Default.ShowObservedMz,
+                                ShowDuplicates = Settings.Default.ShowDuplicateIons,
+                                FontSize = Settings.Default.SpectrumFontSize,
+                                LineWidth = Settings.Default.SpectrumLineWidth
+                            };
+                            graphControl.IsEnableVPan = graphControl.IsEnableVZoom =
+                                                        !Settings.Default.LockYAxis;
+                            AddGraphItem(graphPane, GraphItem);
+                            available = true;
+                        }
                     }
                 }
-                catch (IOException)
+                catch (Exception)
                 {
+                    _spectra = null;
+                    UpdateToolbar();
                     AddGraphItem(graphPane, new NoDataMSGraphItem("Failure loading spectrum. Library may be corrupted."));
                     return;
                 }
@@ -360,10 +378,81 @@ namespace pwiz.Skyline.Controls.Graphs
             // Show unavailable message, if no spectrum loaded
             if (!available)
             {
-                UpdateToolbar(null);
+                UpdateToolbar();
                 _nodeGroup = null;
                 AddGraphItem(graphPane, new UnavailableMSGraphItem());
             }
+        }
+
+        private void UpdateSpectra(TransitionGroup group, ExplicitMods mods)
+        {
+            _spectra = GetSpectra(group, mods);
+        }
+
+        private IList<SpectrumDisplayInfo> GetSpectra(TransitionGroup group, ExplicitMods mods)
+        {
+            var settings = DocumentUI.Settings;
+            string sequence = group.Peptide.Sequence;
+            int charge = group.PrecursorCharge;
+            var spectra = settings.GetBestSpectra(sequence, charge, mods).Select(s => new SpectrumDisplayInfo(s)).ToList();
+            // Showing redundant spectra is only supported for full-scan filtering when
+            // the document has results files imported.
+            if (!settings.TransitionSettings.FullScan.IsEnabled || !settings.HasResults)
+                return spectra;
+
+            var spectraRedundant = new List<SpectrumDisplayInfo>();
+            var dictReplicateNameFiles = new Dictionary<string, HashSet<string>>();
+            foreach (var spectrumInfo in settings.GetRedundantSpectra(sequence, charge, group.LabelType, mods))
+            {
+                var matchingFile = settings.MeasuredResults.FindMatchingMSDataFile(spectrumInfo.FilePath);
+                if (matchingFile == null)
+                    continue;
+
+                string replicateName = matchingFile.Chromatograms.Name;
+                spectraRedundant.Add(new SpectrumDisplayInfo(spectrumInfo,
+                                                             replicateName,
+                                                             matchingFile.FilePath,
+                                                             matchingFile.FileOrder,
+                                                             spectrumInfo.RetentionTime));
+
+                // Include the best spectrum twice, once displayed in the normal
+                // way and once displayed with its replicate and retetion time.
+                if (spectrumInfo.IsBest)
+                {
+                    string libName = spectrumInfo.LibName;
+                    var labelType = spectrumInfo.LabelType;
+                    int iBest = spectra.IndexOf(s => Equals(s.LibName, libName) &&
+                                                     Equals(s.LabelType, labelType));
+                    if (iBest != -1)
+                    {
+                        spectra[iBest] = new SpectrumDisplayInfo(spectra[iBest].SpectrumInfo,
+                                                                 replicateName,
+                                                                 matchingFile.FilePath,
+                                                                 0,
+                                                                 spectrumInfo.RetentionTime);
+                    }
+                }
+
+                HashSet<string> setFiles;
+                if (!dictReplicateNameFiles.TryGetValue(replicateName, out setFiles))
+                {
+                    setFiles = new HashSet<string>();
+                    dictReplicateNameFiles.Add(replicateName, setFiles);
+                }
+                setFiles.Add(spectrumInfo.FilePath);
+            }
+
+            // Determine if replicate name is sufficient to uniquely identify the file
+            foreach (var spectrumInfo in spectraRedundant)
+            {
+                string replicateName = spectrumInfo.ReplicateName;
+                if (replicateName != null && dictReplicateNameFiles[replicateName].Count < 2)
+                    spectrumInfo.IsReplicateUnique = true;
+            }
+
+            spectraRedundant.Sort();
+            spectra.AddRange(spectraRedundant);
+            return spectra;
         }
 
         public void LockYAxis(bool lockY)
@@ -377,6 +466,7 @@ namespace pwiz.Skyline.Controls.Graphs
             pane.Title.Text = item.Title;
             graphControl.AddGraphItem(pane, item);
             pane.CurveList[0].Label.IsVisible = false;
+            pane.Legend.IsVisible = false;
             graphControl.Refresh();
         }
 
@@ -422,6 +512,11 @@ namespace pwiz.Skyline.Controls.Graphs
         private void comboSpectrum_SelectedIndexChanged(object sender, EventArgs e)
         {
             UpdateUI();
+
+            if (!_inToolbarUpdate)
+            {
+                FireSelectedSpectrumChanged();
+            }
         }
     }
 
@@ -547,5 +642,92 @@ namespace pwiz.Skyline.Controls.Graphs
             if (add)
                 items.Add(item);
         }
+    }
+
+    public sealed class SpectrumDisplayInfo : IComparable<SpectrumDisplayInfo>
+    {
+        private readonly SpectrumInfo _spectrumInfo;
+
+        public SpectrumDisplayInfo(SpectrumInfo spectrumInfo)
+        {
+            _spectrumInfo = spectrumInfo;
+            IsBest = true;
+        }
+
+        public SpectrumDisplayInfo(SpectrumInfo spectrumInfo, string replicateName,
+            string filePath, int fileOrder, double? retentionTime)
+        {
+            _spectrumInfo = spectrumInfo;
+
+            ReplicateName = replicateName;
+            FilePath = filePath;
+            FileOrder = fileOrder;
+            RetentionTime = retentionTime;
+        }
+
+        public SpectrumInfo SpectrumInfo { get { return _spectrumInfo; } }
+        public string LibName { get { return _spectrumInfo.LibName; } }
+        public IsotopeLabelType LabelType { get { return _spectrumInfo.LabelType; } }
+        public string ReplicateName { get; private set; }
+        public bool IsReplicateUnique { get; set; }
+        public string FilePath { get; private set; }
+        public string FileName { get { return Path.GetFileName(FilePath); } }
+        public int FileOrder { get; private set; }
+        public double? RetentionTime { get; private set; }
+        public bool IsBest { get; private set; }
+
+        public string Identity { get { return ToString(); } }
+
+        public SpectrumPeaksInfo SpectrumPeaksInfo { get { return _spectrumInfo.SpectrumPeaksInfo; } }
+
+        public int CompareTo(SpectrumDisplayInfo other)
+        {
+            int i = Comparer.Default.Compare(FileOrder, other.FileOrder);
+            if (i == 0)
+            {
+                if (RetentionTime.HasValue && other.RetentionTime.HasValue)
+                    i = Comparer.Default.Compare(RetentionTime.Value, other.RetentionTime);
+                // No retention time is less than having a retention time
+                else if (RetentionTime.HasValue)
+                    i = 1;
+                else if (other.RetentionTime.HasValue)
+                    i = -1;
+                else
+                    i = 0;
+            }
+
+            return i;
+        }
+
+        public override string ToString()
+        {
+            if (IsBest)
+                return LabelType == IsotopeLabelType.light ? LibName : String.Format("{0} ({1})", LibName, LabelType);
+            if (IsReplicateUnique)
+                return string.Format("{0} ({1:F02} min)", ReplicateName, RetentionTime);
+            return string.Format("{0} - {1} ({2:F02} min)", ReplicateName, FileName, RetentionTime);
+        }
+    }
+
+    public sealed class SpectrumIdentifier
+    {
+        public SpectrumIdentifier(string sourceFile, double retentionTime)
+        {
+            SourceFile = sourceFile;
+            RetentionTime = retentionTime;
+        }
+
+        public string SourceFile { get; private set; }
+        public double RetentionTime { get; private set; }
+    }
+
+    public sealed class SelectedSpectrumEventArgs : EventArgs
+    {
+        public SelectedSpectrumEventArgs(SpectrumDisplayInfo spectrum)
+        {
+            Spectrum = spectrum;
+        }
+
+        public SpectrumDisplayInfo Spectrum { get; private set; }
     }
 }

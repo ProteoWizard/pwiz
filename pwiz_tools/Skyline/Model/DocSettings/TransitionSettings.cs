@@ -1225,7 +1225,8 @@ namespace pwiz.Skyline.Model.DocSettings
         public const double MIN_MZ_MATCH_TOLERANCE = 0.0001;
         public const double MAX_MZ_MATCH_TOLERANCE = 0.6;
         public const double DEFAULT_MZ_MATCH_TOLERANCE = 0.055;
-        public const int MIN_TRANSITION_MAX = 50;
+        public const int MIN_TRANSITION_MAX_ORIGINAL = 50;
+        public const int MIN_TRANSITION_MAX = 320;
         public const int MAX_TRANSITION_MAX = 10000;
         public const int MIN_TIME = 0;
         public const int MAX_TIME = 500;
@@ -1407,10 +1408,10 @@ namespace pwiz.Skyline.Model.DocSettings
                 throw new InvalidDataException(string.Format("The m/z match tolerance {0} must be between {1} and {2}.",
                     MzMatchTolerance, MIN_MZ_MATCH_TOLERANCE, MAX_MZ_MATCH_TOLERANCE));
             }
-            if (MIN_TRANSITION_MAX > MaxTransitions || MaxTransitions > MAX_TRANSITION_MAX)
+            if (MIN_TRANSITION_MAX_ORIGINAL > MaxTransitions || MaxTransitions > MAX_TRANSITION_MAX)
             {
                 throw new InvalidDataException(string.Format("The maximum number of transitions {0} must be between {1} and {2}.",
-                    MaxTransitions, MIN_TRANSITION_MAX, MAX_TRANSITION_MAX));
+                    MaxTransitions, MIN_TRANSITION_MAX_ORIGINAL, MAX_TRANSITION_MAX));
             }
             if (MinTime.HasValue && (MIN_TIME > MinTime || MinTime > MAX_TIME))
             {

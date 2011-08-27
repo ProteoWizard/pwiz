@@ -784,6 +784,7 @@ namespace pwiz.Skyline
             _graphSpectrum.UpdateUI();
             _graphSpectrum.FormClosed += graphSpectrum_FormClosed;
             _graphSpectrum.VisibleChanged += graphSpectrum_VisibleChanged;
+            _graphSpectrum.SelectedSpectrumChanged += graphSpectrum_SelectedSpectrumChanged;
             return _graphSpectrum;
         }
 
@@ -793,6 +794,7 @@ namespace pwiz.Skyline
             {
                 _graphSpectrum.FormClosed -= graphSpectrum_FormClosed;
                 _graphSpectrum.VisibleChanged -= graphSpectrum_VisibleChanged;
+                _graphSpectrum.SelectedSpectrumChanged -= graphSpectrum_SelectedSpectrumChanged;
                 _graphSpectrum.Close();
                 _graphSpectrum = null;
             }
@@ -814,6 +816,28 @@ namespace pwiz.Skyline
                     (dockPanel.Contents.Count == 1 && dockPanel.Contents[0] == _graphSpectrum))
                 splitMain.Panel2Collapsed = true;
             _graphSpectrum = null;
+        }
+
+        private void graphSpectrum_SelectedSpectrumChanged(object sender, SelectedSpectrumEventArgs e)
+        {
+            // Might need to update the selected MS/MS spectrum, if full-scan
+            // filtering was used.
+            if (DocumentUI.Settings.TransitionSettings.FullScan.IsEnabled &&
+                    DocumentUI.Settings.HasResults)
+            {
+                // Activate the selected replicate, if there is one associated with
+                // the selected spectrum.
+                string replicateName = e.Spectrum.ReplicateName;
+                if (!string.IsNullOrEmpty(replicateName))
+                {
+                    int resultsIndex = DocumentUI.Settings.MeasuredResults.Chromatograms.IndexOf(chrom =>
+                        Equals(replicateName, chrom.Name));
+                    if (resultsIndex != -1)
+                        SelectedResultsIndex = resultsIndex;
+                }
+
+                UpdateChromGraphs();
+            }
         }
 
         private void UpdateSpectrumGraph()
@@ -1596,6 +1620,7 @@ namespace pwiz.Skyline
             graphChrom.VisibleChanged += graphChromatogram_VisibleChanged;
             graphChrom.PickedPeak += graphChromatogram_PickedPeak;
             graphChrom.ChangedPeakBounds += graphChromatogram_ChangedPeakBounds;
+            graphChrom.PickedSpectrum += graphChromatogram_PickedSpectrum;
             graphChrom.ZoomAll += graphChromatogram_ZoomAll;
             _listGraphChrom.Add(graphChrom);
             return graphChrom;
@@ -1608,6 +1633,8 @@ namespace pwiz.Skyline
             graphChrom.VisibleChanged -= graphChromatogram_VisibleChanged;
             graphChrom.PickedPeak -= graphChromatogram_PickedPeak;
             graphChrom.ChangedPeakBounds -= graphChromatogram_ChangedPeakBounds;
+            graphChrom.PickedSpectrum -= graphChromatogram_PickedSpectrum;
+            graphChrom.ZoomAll -= graphChromatogram_ZoomAll;
             graphChrom.Close();
         }
 
@@ -1747,6 +1774,12 @@ namespace pwiz.Skyline
                 if (graphChrom != null)
                     graphChrom.UnlockZoom();
             }
+        }
+
+        private void graphChromatogram_PickedSpectrum(object sender, PickedSpectrumEventArgs e)
+        {
+            if (_graphSpectrum != null)
+                _graphSpectrum.SelectSpectrum(e.SpectrumId);
         }
 
         private void graphChromatogram_ZoomAll(object sender, ZoomEventArgs e)
@@ -1897,6 +1930,11 @@ namespace pwiz.Skyline
                         focusStart.Focus();
                 }
             }
+        }
+
+        public SpectrumDisplayInfo SelectedSpectrum
+        {
+            get { return _graphSpectrum != null ? _graphSpectrum.SelectedSpectrum : null; }
         }
 
         public void ActivateSpectrum()
