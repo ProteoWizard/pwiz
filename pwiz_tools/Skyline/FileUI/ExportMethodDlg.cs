@@ -1036,11 +1036,11 @@ namespace pwiz.Skyline.FileUI
             {
                 var status = longWait.PerformWork(_dialog, 800, performExport);
                 if (status.IsError)
-                    MessageBox.Show(_dialog, status.ErrorException.Message);
+                    MessageDlg.Show(_dialog, status.ErrorException.Message);
             }
             catch (Exception x)
             {
-                MessageBox.Show(_dialog, string.Format("An error occurred attempting to export.\n{0}", x.Message), Program.Name);
+                MessageDlg.Show(_dialog, string.Format("An error occurred attempting to export.\n{0}", x.Message));
             }
         }
 

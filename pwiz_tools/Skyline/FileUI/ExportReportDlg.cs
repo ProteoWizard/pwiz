@@ -22,6 +22,7 @@ using System.Globalization;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -212,7 +213,7 @@ namespace pwiz.Skyline.FileUI
             }
             catch (Exception x)
             {
-                MessageBox.Show(string.Format("Failed exporting to {0}.\n{1}", fileName, GetExceptionDisplayMessage(x)));
+                MessageDlg.Show(this, string.Format("Failed exporting to {0}.\n{1}", fileName, GetExceptionDisplayMessage(x)));
                 return false;
             }
         }

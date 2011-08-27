@@ -295,9 +295,10 @@ namespace pwiz.Skyline.SettingsUI
                                {
                                    ProgressValue = 0
                                };
-           
-            _longWaitDlg.PerformWork(this, 0,
-                () =>
+
+            try
+            {
+                _longWaitDlg.PerformWork(this, 0, () =>
                 {
                     if (!File.Exists(databasePath))
                     {
@@ -306,9 +307,14 @@ namespace pwiz.Skyline.SettingsUI
                     var proteomeDb = ProteomeDb.OpenProteomeDb(databasePath);
                     using (var reader = File.OpenText(fastaFilePath))
                     {
-                        proteomeDb.AddFastaFile(reader, UpdateProgress);                        
+                        proteomeDb.AddFastaFile(reader, UpdateProgress);
                     }
                 });
+            }
+            catch (Exception)
+            {
+                MessageDlg.Show(this, string.Format("An error occurred attempting to read sample information from the file {0}.  The file may be corrupted, missing, or the correct libraries may not be installed.\n{1}", filePath, x.Message), Program.Name);
+            }
             string path = Path.GetFileName(fastaFilePath);
             if (path != null)
                 listboxFasta.Items.Add(path);

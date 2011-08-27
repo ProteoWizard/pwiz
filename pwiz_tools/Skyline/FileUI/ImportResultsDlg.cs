@@ -22,6 +22,7 @@ using System.ComponentModel;
 using System.IO;
 using System.Windows.Forms;
 using pwiz.ProteowizardWrapper;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Results;
@@ -341,7 +342,7 @@ namespace pwiz.Skyline.FileUI
             }
             catch (Exception x)
             {
-                MessageBox.Show(this, string.Format("An error occurred attempting to read sample information from the file {0}.  The file may be corrupted, missing, or the correct libraries may not be installed.\n{1}", filePath, x.Message), Program.Name);
+                MessageDlg.Show(this, string.Format("An error occurred attempting to read sample information from the file {0}.\nThe file may be corrupted, missing, or the correct libraries may not be installed.\n{1}", filePath, x.Message));
             }
             if (dataIds == null)
                 return null;

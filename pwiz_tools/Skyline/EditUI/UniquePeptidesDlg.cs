@@ -149,7 +149,14 @@ namespace pwiz.Skyline.EditUI
                 Message =
                     "Looking for proteins with matching peptide sequences"
             };
-            longWaitDlg.PerformWork(this, 1000, QueryPeptideProteins);
+            try
+            {
+                longWaitDlg.PerformWork(this, 1000, QueryPeptideProteins);
+            }
+            catch (Exception x)
+            {
+                MessageDlg.Show(this, string.Format("Failed querying backgroung proteome {0}.\n{1}", BackgroundProteome.Name, x.Message));
+            }
             if (_peptideProteins == null)
             {
                 Close();
