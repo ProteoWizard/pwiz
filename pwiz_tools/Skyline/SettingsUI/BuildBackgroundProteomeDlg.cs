@@ -311,9 +311,10 @@ namespace pwiz.Skyline.SettingsUI
                     }
                 });
             }
-            catch (Exception)
+            catch (Exception x)
             {
-                MessageDlg.Show(this, string.Format("An error occurred attempting to read sample information from the file {0}.  The file may be corrupted, missing, or the correct libraries may not be installed.\n{1}", filePath, x.Message), Program.Name);
+                MessageDlg.Show(this, string.Format("An error occurred attempting to add the FASTA file {0}.\n{1}", fastaFilePath, x.Message));
+                return;
             }
             string path = Path.GetFileName(fastaFilePath);
             if (path != null)
