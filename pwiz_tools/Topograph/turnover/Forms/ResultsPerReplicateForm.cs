@@ -206,9 +206,21 @@ namespace pwiz.Topograph.ui.Forms
                                };
                 }
             }
-                public ValidationStatus Status {get { return _rowData.ValidationStatus;}}
-                public int PsmCount { get { return _rowData.PsmCount;}}
-                public IntegrationNote PeakIntegrationNote { get { return _rowData.IntegrationNote; }}
+            public ValidationStatus Status {get { return _rowData.ValidationStatus;}}
+            public int PsmCount { get { return _rowData.PsmCount;}}
+            public IntegrationNote PeakIntegrationNote { get { return _rowData.IntegrationNote; }}
+            public double? TotalIonCurrent
+            {
+                get
+                {
+                    if (!_rowData.StartTime.HasValue || !_rowData.EndTime.HasValue)
+                    {
+                        return null;
+                    }
+                    return _rowData.MsDataFile.MsDataFileData
+                        .GetTotalIonCurrent(_rowData.StartTime.Value, _rowData.EndTime.Value);
+                }
+            }
         }
     }
 }
