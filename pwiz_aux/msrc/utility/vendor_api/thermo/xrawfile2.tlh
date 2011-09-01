@@ -1,9 +1,9 @@
-﻿// Created by Microsoft (R) C/C++ Compiler Version 15.00.30729.01 (aaf570ae).
+// Created by Microsoft (R) C/C++ Compiler Version 15.00.30729.01 (89533066).
 //
-// c:\bumbershoot\src\pwiz-src\build\pwiz\utility\vendor_api\thermo\msvc-9.0\release\link-static\threading-multi\xrawfile2.tlh
+// c:\proj\pwiz_qx\build-nt-x86\pwiz_aux\msrc\utility\vendor_api\thermo\msvc-9.0\release\asynch-exceptions-on\link-static\optimization-space\secure-scl-off\threading-multi\msfilereader.xrawfile2.tlh
 //
-// C++ source equivalent of Win32 type library xdk/XRawFile2.dll
-// compiler-generated file created 04/29/09 at 04:58:37 - DO NOT EDIT!
+// C++ source equivalent of Win32 type library MSFileReader.XRawfile2.dll
+// compiler-generated file created 08/10/11 at 14:08:37 - DO NOT EDIT!
 
 #pragma once
 #pragma pack(push, 8)
@@ -36,6 +36,15 @@ enum MS_IonizationMode;
 enum MS_Corona;
 enum MS_Detector;
 enum MS_PrecursorEnergy;
+enum MS_Multiplex;
+enum MS_Param_A;
+enum MS_Param_B;
+enum MS_Param_F;
+enum MS_Param_K;
+enum MS_Param_R;
+enum MS_Param_V;
+enum MS_Activations;
+struct MS_FullMSOrderPrecursorInfo;
 struct MS_MassRange;
 struct MS_ScanEvent;
 struct MS_ScanIndex;
@@ -51,12 +60,14 @@ struct __declspec(uuid("19a00b1e-1559-42b1-9a46-08a5e599edee"))
 /* dual interface */ IXRawfile3;
 struct __declspec(uuid("e7cf6760-11cd-4260-b5b0-fce2ad97547b"))
 /* dual interface */ IXRawfile4;
-struct MS_ScanDataStruct;
+struct __declspec(uuid("06f53853-e43c-4f30-9e5f-d1b3668f0c3c"))
+/* dual interface */ IXRawfile5;
 struct __declspec(uuid("55ea38b7-5419-4be4-9198-3e4d78e64632"))
 /* dual interface */ IXVirMS;
 enum MS_DataTypes;
 struct __declspec(uuid("7ff032a3-fb2a-46ef-a579-039da67c0aaa"))
 /* dual interface */ IXVirMS64;
+struct MS_ScanDataStruct;
 struct __declspec(uuid("796cb3fe-c696-4afe-b719-18246f38a740"))
 /* dual interface */ IXVirUV;
 struct /* coclass */ MSFileReader_XRawfile;
@@ -71,6 +82,7 @@ _COM_SMARTPTR_TYPEDEF(IXRawfile, __uuidof(IXRawfile));
 _COM_SMARTPTR_TYPEDEF(IXRawfile2, __uuidof(IXRawfile2));
 _COM_SMARTPTR_TYPEDEF(IXRawfile3, __uuidof(IXRawfile3));
 _COM_SMARTPTR_TYPEDEF(IXRawfile4, __uuidof(IXRawfile4));
+_COM_SMARTPTR_TYPEDEF(IXRawfile5, __uuidof(IXRawfile5));
 _COM_SMARTPTR_TYPEDEF(IXVirMS, __uuidof(IXVirMS));
 _COM_SMARTPTR_TYPEDEF(IXVirMS64, __uuidof(IXVirMS64));
 _COM_SMARTPTR_TYPEDEF(IXVirUV, __uuidof(IXVirUV));
@@ -91,12 +103,12 @@ enum __MIDL___MIDL_itf_XRawfile2_0000_0000_0002
 
 enum __MIDL___MIDL_itf_XRawfile2_0000_0000_0003
 {
-    MS_MAX_NUM_MASS_RANGES = 50
+    MS_MAX_NUM_MASS_RANGES = 100
 };
 
 enum __MIDL___MIDL_itf_XRawfile2_0000_0000_0004
 {
-    MS_MAX_MS_ORDER = 10
+    MS_MAX_MS_ORDER = 100
 };
 
 enum MS_PacketTypes
@@ -180,7 +192,97 @@ enum MS_MSOrder
     MS_ms7 = 7,
     MS_ms8 = 8,
     MS_ms9 = 9,
-    MS_ms10 = 10
+    MS_ms10 = 10,
+    MS_ms11 = 11,
+    MS_ms12 = 12,
+    MS_ms13 = 13,
+    MS_ms14 = 14,
+    MS_ms15 = 15,
+    MS_ms16 = 16,
+    MS_ms17 = 17,
+    MS_ms18 = 18,
+    MS_ms19 = 19,
+    MS_ms20 = 20,
+    MS_ms21 = 21,
+    MS_ms22 = 22,
+    MS_ms23 = 23,
+    MS_ms24 = 24,
+    MS_ms25 = 25,
+    MS_ms26 = 26,
+    MS_ms27 = 27,
+    MS_ms28 = 28,
+    MS_ms29 = 29,
+    MS_ms30 = 30,
+    MS_ms31 = 31,
+    MS_ms32 = 32,
+    MS_ms33 = 33,
+    MS_ms34 = 34,
+    MS_ms35 = 35,
+    MS_ms36 = 36,
+    MS_ms37 = 37,
+    MS_ms38 = 38,
+    MS_ms39 = 39,
+    MS_ms40 = 40,
+    MS_ms41 = 41,
+    MS_ms42 = 42,
+    MS_ms43 = 43,
+    MS_ms44 = 44,
+    MS_ms45 = 45,
+    MS_ms46 = 46,
+    MS_ms47 = 47,
+    MS_ms48 = 48,
+    MS_ms49 = 49,
+    MS_ms50 = 50,
+    MS_ms51 = 51,
+    MS_ms52 = 52,
+    MS_ms53 = 53,
+    MS_ms54 = 54,
+    MS_ms55 = 55,
+    MS_ms56 = 56,
+    MS_ms57 = 57,
+    MS_ms58 = 58,
+    MS_ms59 = 59,
+    MS_ms60 = 60,
+    MS_ms61 = 61,
+    MS_ms62 = 62,
+    MS_ms63 = 63,
+    MS_ms64 = 64,
+    MS_ms65 = 65,
+    MS_ms66 = 66,
+    MS_ms67 = 67,
+    MS_ms68 = 68,
+    MS_ms69 = 69,
+    MS_ms70 = 70,
+    MS_ms71 = 71,
+    MS_ms72 = 72,
+    MS_ms73 = 73,
+    MS_ms74 = 74,
+    MS_ms75 = 75,
+    MS_ms76 = 76,
+    MS_ms77 = 77,
+    MS_ms78 = 78,
+    MS_ms79 = 79,
+    MS_ms80 = 80,
+    MS_ms81 = 81,
+    MS_ms82 = 82,
+    MS_ms83 = 83,
+    MS_ms84 = 84,
+    MS_ms85 = 85,
+    MS_ms86 = 86,
+    MS_ms87 = 87,
+    MS_ms88 = 88,
+    MS_ms89 = 89,
+    MS_ms90 = 90,
+    MS_ms91 = 91,
+    MS_ms92 = 92,
+    MS_ms93 = 93,
+    MS_ms94 = 94,
+    MS_ms95 = 95,
+    MS_ms96 = 96,
+    MS_ms97 = 97,
+    MS_ms98 = 98,
+    MS_ms99 = 99,
+    MS_ms100 = 100
 };
 
 enum MS_ScanType
@@ -236,6 +338,86 @@ enum MS_PrecursorEnergy
     MS_AcceptAnyPrecursorEnergy = 1
 };
 
+enum MS_Multiplex
+{
+    MS_MultiplexOff = 0,
+    MS_MultiplexOn = 1,
+    MS_AcceptAnyMultiplex = 2
+};
+
+enum MS_Param_A
+{
+    MS_Param_A_Off = 0,
+    MS_Param_A_On = 1,
+    MS_AcceptAnyParam_A = 2
+};
+
+enum MS_Param_B
+{
+    MS_Param_B_Off = 0,
+    MS_Param_B_On = 1,
+    MS_AcceptAnyParam_B = 2
+};
+
+enum MS_Param_F
+{
+    MS_Param_F_Off = 0,
+    MS_Param_F_On = 1,
+    MS_AcceptAnyParam_F = 2
+};
+
+enum MS_Param_K
+{
+    MS_Param_K_Off = 0,
+    MS_Param_K_On = 1,
+    MS_AcceptAnyParam_K = 2
+};
+
+enum MS_Param_R
+{
+    MS_Param_R_Off = 0,
+    MS_Param_R_On = 1,
+    MS_AcceptAnyParam_R = 2
+};
+
+enum MS_Param_V
+{
+    MS_Param_V_Off = 0,
+    MS_Param_V_On = 1,
+    MS_AcceptAnyParam_V = 2
+};
+
+enum MS_Activations
+{
+    MS_RCIDactivation = 0,
+    MS_RMPDactivation = 1,
+    MS_RECDactivation = 2,
+    MS_RPQDactivation = 3,
+    MS_RETDactivation = 4,
+    MS_RHCDactivation = 5,
+    MS_RAnyactivation = 6,
+    MS_RSAactivation = 7,
+    MS_RPTRactivation = 8,
+    MS_RNETDactivation = 9,
+    MS_RNPTRactivation = 10
+};
+
+#pragma pack(push, 8)
+
+struct MS_FullMSOrderPrecursorInfo
+{
+    double dPrecursorMass;
+    double dIsolationWidth;
+    double dCollisionEnergy;
+    long uiCollisionEnergyValid;
+    unsigned short bRangeIsValid;
+    double dFirstPrecursorMass;
+    double dLastPrecursorMass;
+    double dIsolationWidthOffset;
+};
+
+#pragma pack(pop)
+
 #pragma pack(push, 8)
 
 struct MS_MassRange
@@ -267,14 +449,14 @@ struct MS_ScanEvent
     enum MS_SourceCIDType eSourceCIDType;
     long nlScanTypeIndex;
     long nNumMassRanges;
-    struct MS_MassRange arrMassRanges[50];
+    struct MS_MassRange arrMassRanges[100];
     long nNumPrecursorMasses;
-    double arrPrecursorMasses[10];
-    double arrPrecursorEnergies[10];
-    long arrPrecursorEnergiesValid[10];
+    double arrPrecursorMasses[100];
+    double arrPrecursorEnergies[100];
+    long arrPrecursorEnergiesValid[100];
     long nNumSourceFragmentationEnergies;
-    double arrSourceFragmentationEnergies[50];
-    long arrSourceFragmentationEnergiesValid[50];
+    double arrSourceFragmentationEnergies[100];
+    long arrSourceFragmentationEnergiesValid[100];
 };
 
 #pragma pack(pop)
@@ -1352,8 +1534,9 @@ IXRawfile4 : IXRawfile3
         long nScanNumber,
         long * pnSegment,
         long * pnScanEvent );
-    SAFEARRAY * GetMassPrecisionEstimate (
+    HRESULT GetMassPrecisionEstimate (
         long lScanNumber,
+        VARIANT * pvarMassList,
         long * pnArraySize );
     HRESULT GetActivationTypeForScanNum (
         long nScan,
@@ -1418,9 +1601,9 @@ IXRawfile4 : IXRawfile3
         long * pnSegment,
         long * pnScanEvent ) = 0;
       virtual HRESULT __stdcall raw_GetMassPrecisionEstimate (
-        /*[in]*/ long lScanNumber,
-        long * pnArraySize,
-        /*[out,retval]*/ SAFEARRAY * * pvecScanData ) = 0;
+        long lScanNumber,
+        VARIANT * pvarMassList,
+        long * pnArraySize ) = 0;
       virtual HRESULT __stdcall raw_GetActivationTypeForScanNum (
         long nScan,
         long lMSOrder,
@@ -1474,19 +1657,233 @@ IXRawfile4 : IXRawfile3
         long * nBuildNumber ) = 0;
 };
 
-#pragma pack(push, 8)
-
-struct __declspec(uuid("bfec2952-90cb-40e5-93af-90c797d944a8"))
-MS_ScanDataStruct
+struct __declspec(uuid("06f53853-e43c-4f30-9e5f-d1b3668f0c3c"))
+IXRawfile5 : IXRawfile4
 {
-    double dMass;
-    double dMassAccyPPM;
-    double dMassAccyMMU;
-    double dIntensity;
-    double dResolution;
-};
+    //
+    // Wrapper methods for error-handling
+    //
 
-#pragma pack(pop)
+    HRESULT GetNumberOfMassRangesFromScanNum (
+        int nScanNumber,
+        long * pnNumMassRanges );
+    HRESULT GetFullMSOrderPrecursorDataFromScanNum (
+        int nScanNumber,
+        long nMSOrder,
+        VARIANT * pvarFullMSOrderPrecursorInfo );
+    HRESULT GetMassRangeFromScanNum (
+        long nScanNumber,
+        long nMassRangeIndex,
+        double * pdMassRangeLowValue,
+        double * pdMassRangeHighValue );
+    HRESULT GetCycleNumberFromScanNumber (
+        long nScanNumber,
+        long * pnCycleNumber );
+    HRESULT GetCompoundNameFromScanNum (
+        int nScanNumber,
+        BSTR * pbstrCompoundName );
+    HRESULT GetUniqueCompoundNames (
+        VARIANT * pvarCompoundNamesArray,
+        long * pnArraySize );
+    HRESULT GetChroByCompoundName (
+        long nChroType1,
+        long nChroOperator,
+        long nChroType2,
+        VARIANT * pCompoundNames,
+        _bstr_t bstrMassRanges1,
+        _bstr_t bstrMassRanges2,
+        double dDelay,
+        double * pdStartTime,
+        double * pdEndTime,
+        long nSmoothingType,
+        long nSmoothingValue,
+        VARIANT * pvarChroData,
+        VARIANT * pvarPeakFlags,
+        long * pnArraySize );
+    HRESULT GetMSXMultiplexValueFromScanNum (
+        long nScanNumber,
+        long * pnMSXValue );
+    HRESULT GetAValueFromScanNum (
+        long nScanNumber,
+        long * pnAValue );
+    HRESULT GetBValueFromScanNum (
+        long nScanNumber,
+        long * pnBValue );
+    HRESULT GetFValueFromScanNum (
+        long nScanNumber,
+        long * pnFValue );
+    HRESULT GetKValueFromScanNum (
+        long nScanNumber,
+        long * pnKValue );
+    HRESULT GetRValueFromScanNum (
+        long nScanNumber,
+        long * pnRValue );
+    HRESULT GetVValueFromScanNum (
+        long nScanNumber,
+        long * pnVValue );
+    HRESULT GetNumberOfMassCalibratorsFromScanNum (
+        int nScanNumber,
+        long * pnNumMassCalibrators );
+    HRESULT GetMassCalibrationValueFromScanNum (
+        long nScanNumber,
+        long nMassCalibrationndex,
+        double * pnMassCalibrationValue );
+    HRESULT GetMassTolerance (
+        long * bUserDefined,
+        double * dMassTolerance,
+        long * nUnits );
+    HRESULT GetNumberOfSourceFragmentsFromScanNum (
+        long nScanNumber,
+        long * pnNumSourceFragments );
+    HRESULT GetSourceFragmentValueFromScanNum (
+        long nScanNumber,
+        long nSourceFragmentIndex,
+        double * pdSourceFragmentValue );
+    HRESULT GetNumberOfSourceFragmentationMassRangesFromScanNum (
+        long nScanNumber,
+        long * pnNumSourceFragmentationMassRanges );
+    HRESULT GetSourceFragmentationMassRangeFromScanNum (
+        long nScanNumber,
+        long nSourceFragmentMassRangeIndex,
+        double * pdSourceFragmentRangeLowValue,
+        double * pdSourceFragmentRangeHighValue );
+    HRESULT GetNumberOfMSOrdersFromScanNum (
+        int nScanNumber,
+        long * pnNumMSOrders );
+    HRESULT GetIsolationWidthForScanNum (
+        long nScanNumber,
+        long nMSOrder,
+        double * pdIsolationWidth );
+    HRESULT GetCollisionEnergyForScanNum (
+        long nScanNumber,
+        long nMSOrder,
+        double * pdCollisionEnergy );
+    HRESULT GetPrecursorRangeForScanNum (
+        long nScanNumber,
+        long nMSOrder,
+        double * pdFirstPrecursorMass,
+        double * pdLastPrecursorMass,
+        long * pbIsValid );
+    HRESULT GetAllMSOrderData (
+        long nScanNumber,
+        VARIANT * pvarDoubleData,
+        VARIANT * pvarFlagsData,
+        long * pnNumberOfMSOrders );
+    HRESULT IsQExactive (
+        long * pVal );
+
+    //
+    // Raw methods provided by interface
+    //
+
+      virtual HRESULT __stdcall raw_GetNumberOfMassRangesFromScanNum (
+        int nScanNumber,
+        long * pnNumMassRanges ) = 0;
+      virtual HRESULT __stdcall raw_GetFullMSOrderPrecursorDataFromScanNum (
+        int nScanNumber,
+        long nMSOrder,
+        VARIANT * pvarFullMSOrderPrecursorInfo ) = 0;
+      virtual HRESULT __stdcall raw_GetMassRangeFromScanNum (
+        long nScanNumber,
+        long nMassRangeIndex,
+        double * pdMassRangeLowValue,
+        double * pdMassRangeHighValue ) = 0;
+      virtual HRESULT __stdcall raw_GetCycleNumberFromScanNumber (
+        long nScanNumber,
+        long * pnCycleNumber ) = 0;
+      virtual HRESULT __stdcall raw_GetCompoundNameFromScanNum (
+        int nScanNumber,
+        BSTR * pbstrCompoundName ) = 0;
+      virtual HRESULT __stdcall raw_GetUniqueCompoundNames (
+        VARIANT * pvarCompoundNamesArray,
+        long * pnArraySize ) = 0;
+      virtual HRESULT __stdcall raw_GetChroByCompoundName (
+        long nChroType1,
+        long nChroOperator,
+        long nChroType2,
+        VARIANT * pCompoundNames,
+        BSTR bstrMassRanges1,
+        BSTR bstrMassRanges2,
+        double dDelay,
+        double * pdStartTime,
+        double * pdEndTime,
+        long nSmoothingType,
+        long nSmoothingValue,
+        VARIANT * pvarChroData,
+        VARIANT * pvarPeakFlags,
+        long * pnArraySize ) = 0;
+      virtual HRESULT __stdcall raw_GetMSXMultiplexValueFromScanNum (
+        long nScanNumber,
+        long * pnMSXValue ) = 0;
+      virtual HRESULT __stdcall raw_GetAValueFromScanNum (
+        long nScanNumber,
+        long * pnAValue ) = 0;
+      virtual HRESULT __stdcall raw_GetBValueFromScanNum (
+        long nScanNumber,
+        long * pnBValue ) = 0;
+      virtual HRESULT __stdcall raw_GetFValueFromScanNum (
+        long nScanNumber,
+        long * pnFValue ) = 0;
+      virtual HRESULT __stdcall raw_GetKValueFromScanNum (
+        long nScanNumber,
+        long * pnKValue ) = 0;
+      virtual HRESULT __stdcall raw_GetRValueFromScanNum (
+        long nScanNumber,
+        long * pnRValue ) = 0;
+      virtual HRESULT __stdcall raw_GetVValueFromScanNum (
+        long nScanNumber,
+        long * pnVValue ) = 0;
+      virtual HRESULT __stdcall raw_GetNumberOfMassCalibratorsFromScanNum (
+        int nScanNumber,
+        long * pnNumMassCalibrators ) = 0;
+      virtual HRESULT __stdcall raw_GetMassCalibrationValueFromScanNum (
+        long nScanNumber,
+        long nMassCalibrationndex,
+        double * pnMassCalibrationValue ) = 0;
+      virtual HRESULT __stdcall raw_GetMassTolerance (
+        long * bUserDefined,
+        double * dMassTolerance,
+        long * nUnits ) = 0;
+      virtual HRESULT __stdcall raw_GetNumberOfSourceFragmentsFromScanNum (
+        long nScanNumber,
+        long * pnNumSourceFragments ) = 0;
+      virtual HRESULT __stdcall raw_GetSourceFragmentValueFromScanNum (
+        long nScanNumber,
+        long nSourceFragmentIndex,
+        double * pdSourceFragmentValue ) = 0;
+      virtual HRESULT __stdcall raw_GetNumberOfSourceFragmentationMassRangesFromScanNum (
+        long nScanNumber,
+        long * pnNumSourceFragmentationMassRanges ) = 0;
+      virtual HRESULT __stdcall raw_GetSourceFragmentationMassRangeFromScanNum (
+        long nScanNumber,
+        long nSourceFragmentMassRangeIndex,
+        double * pdSourceFragmentRangeLowValue,
+        double * pdSourceFragmentRangeHighValue ) = 0;
+      virtual HRESULT __stdcall raw_GetNumberOfMSOrdersFromScanNum (
+        int nScanNumber,
+        long * pnNumMSOrders ) = 0;
+      virtual HRESULT __stdcall raw_GetIsolationWidthForScanNum (
+        long nScanNumber,
+        long nMSOrder,
+        double * pdIsolationWidth ) = 0;
+      virtual HRESULT __stdcall raw_GetCollisionEnergyForScanNum (
+        long nScanNumber,
+        long nMSOrder,
+        double * pdCollisionEnergy ) = 0;
+      virtual HRESULT __stdcall raw_GetPrecursorRangeForScanNum (
+        long nScanNumber,
+        long nMSOrder,
+        double * pdFirstPrecursorMass,
+        double * pdLastPrecursorMass,
+        long * pbIsValid ) = 0;
+      virtual HRESULT __stdcall raw_GetAllMSOrderData (
+        long nScanNumber,
+        VARIANT * pvarDoubleData,
+        VARIANT * pvarFlagsData,
+        long * pnNumberOfMSOrders ) = 0;
+      virtual HRESULT __stdcall raw_IsQExactive (
+        long * pVal ) = 0;
+};
 
 enum MS_DataTypes
 {
@@ -1703,6 +2100,20 @@ IXVirMS64 : IDispatch
       virtual HRESULT __stdcall raw_WriteScanIndex2_64 (
         /*[in]*/ struct MS_ScanIndex64 * pScanIndex ) = 0;
 };
+
+#pragma pack(push, 8)
+
+struct __declspec(uuid("bfec2952-90cb-40e5-93af-90c797d944a8"))
+MS_ScanDataStruct
+{
+    double dMass;
+    double dMassAccyPPM;
+    double dMassAccyMMU;
+    double dIntensity;
+    double dResolution;
+};
+
+#pragma pack(pop)
 
 struct __declspec(uuid("796cb3fe-c696-4afe-b719-18246f38a740"))
 IXVirUV : IDispatch

@@ -1,9 +1,9 @@
-﻿// Created by Microsoft (R) C/C++ Compiler Version 15.00.30729.01 (aaf570ae).
+﻿// Created by Microsoft (R) C/C++ Compiler Version 15.00.30729.01 (89533066).
 //
-// c:\bumbershoot\src\pwiz-src\build\pwiz\utility\vendor_api\thermo\msvc-9.0\release\link-static\threading-multi\xrawfile2.tli
+// c:\proj\pwiz_qx\build-nt-x86\pwiz_aux\msrc\utility\vendor_api\thermo\msvc-9.0\release\asynch-exceptions-on\link-static\optimization-space\secure-scl-off\threading-multi\msfilereader.xrawfile2.tli
 //
-// Wrapper implementations for Win32 type library xdk/XRawFile2.dll
-// compiler-generated file created 04/29/09 at 04:58:37 - DO NOT EDIT!
+// Wrapper implementations for Win32 type library MSFileReader.XRawfile2.dll
+// compiler-generated file created 08/10/11 at 14:08:37 - DO NOT EDIT!
 
 #pragma once
 
@@ -815,11 +815,10 @@ inline HRESULT IXRawfile4::GetSegmentAndEventForScanNum ( long nScanNumber, long
     return _hr;
 }
 
-inline SAFEARRAY * IXRawfile4::GetMassPrecisionEstimate ( long lScanNumber, long * pnArraySize ) {
-    SAFEARRAY * _result = 0;
-    HRESULT _hr = raw_GetMassPrecisionEstimate(lScanNumber, pnArraySize, &_result);
+inline HRESULT IXRawfile4::GetMassPrecisionEstimate ( long lScanNumber, VARIANT * pvarMassList, long * pnArraySize ) {
+    HRESULT _hr = raw_GetMassPrecisionEstimate(lScanNumber, pvarMassList, pnArraySize);
     if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
-    return _result;
+    return _hr;
 }
 
 inline HRESULT IXRawfile4::GetActivationTypeForScanNum ( long nScan, long lMSOrder, long * pnActivationType ) {
@@ -884,6 +883,172 @@ inline HRESULT IXRawfile4::FindPrecursorMassInFullScan ( long nScan, long * pnMa
 
 inline HRESULT IXRawfile4::Version ( long * pnMajorVersion, long * pnMinorVersion, long * pnSubMinorVersion, long * nBuildNumber ) {
     HRESULT _hr = raw_Version(pnMajorVersion, pnMinorVersion, pnSubMinorVersion, nBuildNumber);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+//
+// interface IXRawfile5 wrapper method implementations
+//
+
+inline HRESULT IXRawfile5::GetNumberOfMassRangesFromScanNum ( int nScanNumber, long * pnNumMassRanges ) {
+    HRESULT _hr = raw_GetNumberOfMassRangesFromScanNum(nScanNumber, pnNumMassRanges);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile5::GetFullMSOrderPrecursorDataFromScanNum ( int nScanNumber, long nMSOrder, VARIANT * pvarFullMSOrderPrecursorInfo ) {
+    HRESULT _hr = raw_GetFullMSOrderPrecursorDataFromScanNum(nScanNumber, nMSOrder, pvarFullMSOrderPrecursorInfo);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile5::GetMassRangeFromScanNum ( long nScanNumber, long nMassRangeIndex, double * pdMassRangeLowValue, double * pdMassRangeHighValue ) {
+    HRESULT _hr = raw_GetMassRangeFromScanNum(nScanNumber, nMassRangeIndex, pdMassRangeLowValue, pdMassRangeHighValue);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile5::GetCycleNumberFromScanNumber ( long nScanNumber, long * pnCycleNumber ) {
+    HRESULT _hr = raw_GetCycleNumberFromScanNumber(nScanNumber, pnCycleNumber);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile5::GetCompoundNameFromScanNum ( int nScanNumber, BSTR * pbstrCompoundName ) {
+    HRESULT _hr = raw_GetCompoundNameFromScanNum(nScanNumber, pbstrCompoundName);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile5::GetUniqueCompoundNames ( VARIANT * pvarCompoundNamesArray, long * pnArraySize ) {
+    HRESULT _hr = raw_GetUniqueCompoundNames(pvarCompoundNamesArray, pnArraySize);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile5::GetChroByCompoundName ( long nChroType1, long nChroOperator, long nChroType2, VARIANT * pCompoundNames, _bstr_t bstrMassRanges1, _bstr_t bstrMassRanges2, double dDelay, double * pdStartTime, double * pdEndTime, long nSmoothingType, long nSmoothingValue, VARIANT * pvarChroData, VARIANT * pvarPeakFlags, long * pnArraySize ) {
+    HRESULT _hr = raw_GetChroByCompoundName(nChroType1, nChroOperator, nChroType2, pCompoundNames, bstrMassRanges1, bstrMassRanges2, dDelay, pdStartTime, pdEndTime, nSmoothingType, nSmoothingValue, pvarChroData, pvarPeakFlags, pnArraySize);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile5::GetMSXMultiplexValueFromScanNum ( long nScanNumber, long * pnMSXValue ) {
+    HRESULT _hr = raw_GetMSXMultiplexValueFromScanNum(nScanNumber, pnMSXValue);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile5::GetAValueFromScanNum ( long nScanNumber, long * pnAValue ) {
+    HRESULT _hr = raw_GetAValueFromScanNum(nScanNumber, pnAValue);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile5::GetBValueFromScanNum ( long nScanNumber, long * pnBValue ) {
+    HRESULT _hr = raw_GetBValueFromScanNum(nScanNumber, pnBValue);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile5::GetFValueFromScanNum ( long nScanNumber, long * pnFValue ) {
+    HRESULT _hr = raw_GetFValueFromScanNum(nScanNumber, pnFValue);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile5::GetKValueFromScanNum ( long nScanNumber, long * pnKValue ) {
+    HRESULT _hr = raw_GetKValueFromScanNum(nScanNumber, pnKValue);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile5::GetRValueFromScanNum ( long nScanNumber, long * pnRValue ) {
+    HRESULT _hr = raw_GetRValueFromScanNum(nScanNumber, pnRValue);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile5::GetVValueFromScanNum ( long nScanNumber, long * pnVValue ) {
+    HRESULT _hr = raw_GetVValueFromScanNum(nScanNumber, pnVValue);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile5::GetNumberOfMassCalibratorsFromScanNum ( int nScanNumber, long * pnNumMassCalibrators ) {
+    HRESULT _hr = raw_GetNumberOfMassCalibratorsFromScanNum(nScanNumber, pnNumMassCalibrators);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile5::GetMassCalibrationValueFromScanNum ( long nScanNumber, long nMassCalibrationndex, double * pnMassCalibrationValue ) {
+    HRESULT _hr = raw_GetMassCalibrationValueFromScanNum(nScanNumber, nMassCalibrationndex, pnMassCalibrationValue);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile5::GetMassTolerance ( long * bUserDefined, double * dMassTolerance, long * nUnits ) {
+    HRESULT _hr = raw_GetMassTolerance(bUserDefined, dMassTolerance, nUnits);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile5::GetNumberOfSourceFragmentsFromScanNum ( long nScanNumber, long * pnNumSourceFragments ) {
+    HRESULT _hr = raw_GetNumberOfSourceFragmentsFromScanNum(nScanNumber, pnNumSourceFragments);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile5::GetSourceFragmentValueFromScanNum ( long nScanNumber, long nSourceFragmentIndex, double * pdSourceFragmentValue ) {
+    HRESULT _hr = raw_GetSourceFragmentValueFromScanNum(nScanNumber, nSourceFragmentIndex, pdSourceFragmentValue);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile5::GetNumberOfSourceFragmentationMassRangesFromScanNum ( long nScanNumber, long * pnNumSourceFragmentationMassRanges ) {
+    HRESULT _hr = raw_GetNumberOfSourceFragmentationMassRangesFromScanNum(nScanNumber, pnNumSourceFragmentationMassRanges);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile5::GetSourceFragmentationMassRangeFromScanNum ( long nScanNumber, long nSourceFragmentMassRangeIndex, double * pdSourceFragmentRangeLowValue, double * pdSourceFragmentRangeHighValue ) {
+    HRESULT _hr = raw_GetSourceFragmentationMassRangeFromScanNum(nScanNumber, nSourceFragmentMassRangeIndex, pdSourceFragmentRangeLowValue, pdSourceFragmentRangeHighValue);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile5::GetNumberOfMSOrdersFromScanNum ( int nScanNumber, long * pnNumMSOrders ) {
+    HRESULT _hr = raw_GetNumberOfMSOrdersFromScanNum(nScanNumber, pnNumMSOrders);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile5::GetIsolationWidthForScanNum ( long nScanNumber, long nMSOrder, double * pdIsolationWidth ) {
+    HRESULT _hr = raw_GetIsolationWidthForScanNum(nScanNumber, nMSOrder, pdIsolationWidth);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile5::GetCollisionEnergyForScanNum ( long nScanNumber, long nMSOrder, double * pdCollisionEnergy ) {
+    HRESULT _hr = raw_GetCollisionEnergyForScanNum(nScanNumber, nMSOrder, pdCollisionEnergy);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile5::GetPrecursorRangeForScanNum ( long nScanNumber, long nMSOrder, double * pdFirstPrecursorMass, double * pdLastPrecursorMass, long * pbIsValid ) {
+    HRESULT _hr = raw_GetPrecursorRangeForScanNum(nScanNumber, nMSOrder, pdFirstPrecursorMass, pdLastPrecursorMass, pbIsValid);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile5::GetAllMSOrderData ( long nScanNumber, VARIANT * pvarDoubleData, VARIANT * pvarFlagsData, long * pnNumberOfMSOrders ) {
+    HRESULT _hr = raw_GetAllMSOrderData(nScanNumber, pvarDoubleData, pvarFlagsData, pnNumberOfMSOrders);
+    if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
+    return _hr;
+}
+
+inline HRESULT IXRawfile5::IsQExactive ( long * pVal ) {
+    HRESULT _hr = raw_IsQExactive(pVal);
     if (FAILED(_hr)) _com_issue_errorex(_hr, this, __uuidof(this));
     return _hr;
 }
