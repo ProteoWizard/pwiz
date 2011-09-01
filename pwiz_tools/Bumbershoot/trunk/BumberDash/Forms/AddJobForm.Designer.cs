@@ -30,6 +30,16 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AddJobForm));
             this.FolderPanel = new System.Windows.Forms.Panel();
+            this.PepPanel = new System.Windows.Forms.Panel();
+            this.SpecLibBox = new System.Windows.Forms.ComboBox();
+            this.SpecLibBrowse = new System.Windows.Forms.Button();
+            this.label6 = new System.Windows.Forms.Label();
+            this.PepConfigGB = new System.Windows.Forms.GroupBox();
+            this.PepConfigBox = new System.Windows.Forms.ComboBox();
+            this.PepEditButton = new System.Windows.Forms.Button();
+            this.PepConfigBrowse = new System.Windows.Forms.Button();
+            this.label8 = new System.Windows.Forms.Label();
+            this.SearchTypeBox = new System.Windows.Forms.ComboBox();
             this.newFolderBox = new System.Windows.Forms.CheckBox();
             this.InfoExpandButton = new System.Windows.Forms.Button();
             this.IntermediateBox = new System.Windows.Forms.CheckBox();
@@ -39,9 +49,7 @@
             this.NameBox = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.DatabaseLocBox = new System.Windows.Forms.ComboBox();
-            this.TagRadio = new System.Windows.Forms.RadioButton();
             this.OutputDirectoryBox = new System.Windows.Forms.ComboBox();
-            this.DatabaseRadio = new System.Windows.Forms.RadioButton();
             this.InputFilesBox = new System.Windows.Forms.ComboBox();
             this.label2 = new System.Windows.Forms.Label();
             this.DataFilesButton = new System.Windows.Forms.Button();
@@ -71,21 +79,29 @@
             this.TagReconInfoLabel = new System.Windows.Forms.Label();
             this.DirecTagInfoLabel = new System.Windows.Forms.Label();
             this.DirecTagInfoBox = new System.Windows.Forms.TextBox();
-            this.TagPanel = new System.Windows.Forms.Panel();
-            this.DatabasePanel = new System.Windows.Forms.Panel();
+            this.TagConfigInfoPanel = new System.Windows.Forms.Panel();
+            this.DatabaseConfigInfoPanel = new System.Windows.Forms.Panel();
             this.MyriMatchInfoLabel = new System.Windows.Forms.Label();
             this.MyriMatchInfoBox = new System.Windows.Forms.TextBox();
+            this.PepConfigInfoPanel = new System.Windows.Forms.Panel();
+            this.PepInfoLabel = new System.Windows.Forms.Label();
+            this.PepitomeInfoBox = new System.Windows.Forms.TextBox();
             this.FolderPanel.SuspendLayout();
+            this.PepPanel.SuspendLayout();
+            this.PepConfigGB.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.CPUsBox)).BeginInit();
             this.ConfigGB.SuspendLayout();
             this.ConfigDatabasePanel.SuspendLayout();
             this.ConfigTagPanel.SuspendLayout();
-            this.TagPanel.SuspendLayout();
-            this.DatabasePanel.SuspendLayout();
+            this.TagConfigInfoPanel.SuspendLayout();
+            this.DatabaseConfigInfoPanel.SuspendLayout();
+            this.PepConfigInfoPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // FolderPanel
             // 
+            this.FolderPanel.Controls.Add(this.PepPanel);
+            this.FolderPanel.Controls.Add(this.SearchTypeBox);
             this.FolderPanel.Controls.Add(this.newFolderBox);
             this.FolderPanel.Controls.Add(this.InfoExpandButton);
             this.FolderPanel.Controls.Add(this.IntermediateBox);
@@ -95,9 +111,7 @@
             this.FolderPanel.Controls.Add(this.NameBox);
             this.FolderPanel.Controls.Add(this.label1);
             this.FolderPanel.Controls.Add(this.DatabaseLocBox);
-            this.FolderPanel.Controls.Add(this.TagRadio);
             this.FolderPanel.Controls.Add(this.OutputDirectoryBox);
-            this.FolderPanel.Controls.Add(this.DatabaseRadio);
             this.FolderPanel.Controls.Add(this.InputFilesBox);
             this.FolderPanel.Controls.Add(this.label2);
             this.FolderPanel.Controls.Add(this.DataFilesButton);
@@ -113,6 +127,116 @@
             this.FolderPanel.Name = "FolderPanel";
             this.FolderPanel.Size = new System.Drawing.Size(435, 415);
             this.FolderPanel.TabIndex = 3;
+            // 
+            // PepPanel
+            // 
+            this.PepPanel.Controls.Add(this.SpecLibBox);
+            this.PepPanel.Controls.Add(this.SpecLibBrowse);
+            this.PepPanel.Controls.Add(this.label6);
+            this.PepPanel.Controls.Add(this.PepConfigGB);
+            this.PepPanel.Location = new System.Drawing.Point(9, 261);
+            this.PepPanel.Name = "PepPanel";
+            this.PepPanel.Size = new System.Drawing.Size(405, 118);
+            this.PepPanel.TabIndex = 36;
+            this.PepPanel.Visible = false;
+            // 
+            // SpecLibBox
+            // 
+            this.SpecLibBox.FormattingEnabled = true;
+            this.SpecLibBox.Location = new System.Drawing.Point(19, 21);
+            this.SpecLibBox.Name = "SpecLibBox";
+            this.SpecLibBox.Size = new System.Drawing.Size(306, 21);
+            this.SpecLibBox.TabIndex = 30;
+            // 
+            // SpecLibBrowse
+            // 
+            this.SpecLibBrowse.Location = new System.Drawing.Point(331, 20);
+            this.SpecLibBrowse.Name = "SpecLibBrowse";
+            this.SpecLibBrowse.Size = new System.Drawing.Size(55, 21);
+            this.SpecLibBrowse.TabIndex = 29;
+            this.SpecLibBrowse.Text = "Browse";
+            this.SpecLibBrowse.UseVisualStyleBackColor = true;
+            this.SpecLibBrowse.Click += new System.EventHandler(this.SpecLibBrowse_Click);
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label6.Location = new System.Drawing.Point(16, 1);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(114, 18);
+            this.label6.TabIndex = 28;
+            this.label6.Text = "Spectral Library:";
+            // 
+            // PepConfigGB
+            // 
+            this.PepConfigGB.Controls.Add(this.PepConfigBox);
+            this.PepConfigGB.Controls.Add(this.PepEditButton);
+            this.PepConfigGB.Controls.Add(this.PepConfigBrowse);
+            this.PepConfigGB.Controls.Add(this.label8);
+            this.PepConfigGB.Location = new System.Drawing.Point(3, 43);
+            this.PepConfigGB.Name = "PepConfigGB";
+            this.PepConfigGB.Size = new System.Drawing.Size(398, 70);
+            this.PepConfigGB.TabIndex = 27;
+            this.PepConfigGB.TabStop = false;
+            this.PepConfigGB.Text = "Configuration";
+            // 
+            // PepConfigBox
+            // 
+            this.PepConfigBox.FormattingEnabled = true;
+            this.PepConfigBox.Items.AddRange(new object[] {
+            ""});
+            this.PepConfigBox.Location = new System.Drawing.Point(9, 37);
+            this.PepConfigBox.Name = "PepConfigBox";
+            this.PepConfigBox.Size = new System.Drawing.Size(245, 21);
+            this.PepConfigBox.TabIndex = 32;
+            this.PepConfigBox.SelectedIndexChanged += new System.EventHandler(this.PepConfigBox_SelectedIndexChanged);
+            this.PepConfigBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ConfigBox_KeyPress);
+            this.PepConfigBox.TextChanged += new System.EventHandler(this.PepConfigBox_TextChanged);
+            // 
+            // PepEditButton
+            // 
+            this.PepEditButton.Location = new System.Drawing.Point(321, 36);
+            this.PepEditButton.Name = "PepEditButton";
+            this.PepEditButton.Size = new System.Drawing.Size(55, 21);
+            this.PepEditButton.TabIndex = 31;
+            this.PepEditButton.Text = "New";
+            this.PepEditButton.UseVisualStyleBackColor = true;
+            this.PepEditButton.Click += new System.EventHandler(this.PepEditButton_Click);
+            // 
+            // PepConfigBrowse
+            // 
+            this.PepConfigBrowse.Location = new System.Drawing.Point(260, 36);
+            this.PepConfigBrowse.Name = "PepConfigBrowse";
+            this.PepConfigBrowse.Size = new System.Drawing.Size(55, 21);
+            this.PepConfigBrowse.TabIndex = 30;
+            this.PepConfigBrowse.Text = "Browse";
+            this.PepConfigBrowse.UseVisualStyleBackColor = true;
+            this.PepConfigBrowse.Click += new System.EventHandler(this.PepConfigBrowse_Click);
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label8.Location = new System.Drawing.Point(6, 16);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(118, 18);
+            this.label8.TabIndex = 29;
+            this.label8.Text = "Pepitome Config:";
+            // 
+            // SearchTypeBox
+            // 
+            this.SearchTypeBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.SearchTypeBox.FormattingEnabled = true;
+            this.SearchTypeBox.Items.AddRange(new object[] {
+            "Database Search",
+            "Tag Sequencing",
+            "Spectral Library"});
+            this.SearchTypeBox.Location = new System.Drawing.Point(199, 45);
+            this.SearchTypeBox.Name = "SearchTypeBox";
+            this.SearchTypeBox.Size = new System.Drawing.Size(156, 21);
+            this.SearchTypeBox.TabIndex = 35;
+            this.SearchTypeBox.SelectedIndexChanged += new System.EventHandler(this.SearchTypeBox_SelectedIndexChanged);
             // 
             // newFolderBox
             // 
@@ -196,19 +320,6 @@
             this.DatabaseLocBox.Size = new System.Drawing.Size(306, 21);
             this.DatabaseLocBox.TabIndex = 25;
             // 
-            // TagRadio
-            // 
-            this.TagRadio.AutoSize = true;
-            this.TagRadio.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.TagRadio.Location = new System.Drawing.Point(203, 43);
-            this.TagRadio.Name = "TagRadio";
-            this.TagRadio.Size = new System.Drawing.Size(125, 22);
-            this.TagRadio.TabIndex = 3;
-            this.TagRadio.TabStop = true;
-            this.TagRadio.Text = "Tag Sequencing";
-            this.TagRadio.UseVisualStyleBackColor = true;
-            this.TagRadio.CheckedChanged += new System.EventHandler(this.DestinationRadio_CheckedChanged);
-            // 
             // OutputDirectoryBox
             // 
             this.OutputDirectoryBox.FormattingEnabled = true;
@@ -216,19 +327,6 @@
             this.OutputDirectoryBox.Name = "OutputDirectoryBox";
             this.OutputDirectoryBox.Size = new System.Drawing.Size(306, 21);
             this.OutputDirectoryBox.TabIndex = 24;
-            // 
-            // DatabaseRadio
-            // 
-            this.DatabaseRadio.AutoSize = true;
-            this.DatabaseRadio.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.DatabaseRadio.Location = new System.Drawing.Point(203, 15);
-            this.DatabaseRadio.Name = "DatabaseRadio";
-            this.DatabaseRadio.Size = new System.Drawing.Size(129, 22);
-            this.DatabaseRadio.TabIndex = 2;
-            this.DatabaseRadio.TabStop = true;
-            this.DatabaseRadio.Text = "Database Search";
-            this.DatabaseRadio.UseVisualStyleBackColor = true;
-            this.DatabaseRadio.CheckedChanged += new System.EventHandler(this.DestinationRadio_CheckedChanged);
             // 
             // InputFilesBox
             // 
@@ -242,7 +340,7 @@
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.Location = new System.Drawing.Point(92, 18);
+            this.label2.Location = new System.Drawing.Point(88, 46);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(105, 18);
             this.label2.TabIndex = 1;
@@ -313,7 +411,7 @@
             // 
             // InitialDirectoryButton
             // 
-            this.InitialDirectoryButton.Location = new System.Drawing.Point(338, 190);
+            this.InitialDirectoryButton.Location = new System.Drawing.Point(340, 191);
             this.InitialDirectoryButton.Name = "InitialDirectoryButton";
             this.InitialDirectoryButton.Size = new System.Drawing.Size(55, 21);
             this.InitialDirectoryButton.TabIndex = 4;
@@ -337,7 +435,7 @@
             this.ConfigGB.Controls.Add(this.ConfigTagPanel);
             this.ConfigGB.Location = new System.Drawing.Point(12, 262);
             this.ConfigGB.Name = "ConfigGB";
-            this.ConfigGB.Size = new System.Drawing.Size(398, 110);
+            this.ConfigGB.Size = new System.Drawing.Size(398, 112);
             this.ConfigGB.TabIndex = 26;
             this.ConfigGB.TabStop = false;
             this.ConfigGB.Text = "Configuration";
@@ -504,19 +602,19 @@
             // 
             this.TagReconInfoBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
-            this.TagReconInfoBox.Location = new System.Drawing.Point(2, 221);
+            this.TagReconInfoBox.Location = new System.Drawing.Point(6, 223);
             this.TagReconInfoBox.Multiline = true;
             this.TagReconInfoBox.Name = "TagReconInfoBox";
             this.TagReconInfoBox.ReadOnly = true;
             this.TagReconInfoBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.TagReconInfoBox.Size = new System.Drawing.Size(239, 175);
+            this.TagReconInfoBox.Size = new System.Drawing.Size(245, 175);
             this.TagReconInfoBox.TabIndex = 5;
             this.TagReconInfoBox.WordWrap = false;
             // 
             // TagReconInfoLabel
             // 
             this.TagReconInfoLabel.AutoSize = true;
-            this.TagReconInfoLabel.Location = new System.Drawing.Point(2, 205);
+            this.TagReconInfoLabel.Location = new System.Drawing.Point(6, 207);
             this.TagReconInfoLabel.Name = "TagReconInfoLabel";
             this.TagReconInfoLabel.Size = new System.Drawing.Size(123, 13);
             this.TagReconInfoLabel.TabIndex = 6;
@@ -525,7 +623,7 @@
             // DirecTagInfoLabel
             // 
             this.DirecTagInfoLabel.AutoSize = true;
-            this.DirecTagInfoLabel.Location = new System.Drawing.Point(2, 6);
+            this.DirecTagInfoLabel.Location = new System.Drawing.Point(6, 8);
             this.DirecTagInfoLabel.Name = "DirecTagInfoLabel";
             this.DirecTagInfoLabel.Size = new System.Drawing.Size(116, 13);
             this.DirecTagInfoLabel.TabIndex = 8;
@@ -535,36 +633,36 @@
             // 
             this.DirecTagInfoBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
-            this.DirecTagInfoBox.Location = new System.Drawing.Point(2, 22);
+            this.DirecTagInfoBox.Location = new System.Drawing.Point(6, 24);
             this.DirecTagInfoBox.Multiline = true;
             this.DirecTagInfoBox.Name = "DirecTagInfoBox";
             this.DirecTagInfoBox.ReadOnly = true;
             this.DirecTagInfoBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.DirecTagInfoBox.Size = new System.Drawing.Size(239, 175);
+            this.DirecTagInfoBox.Size = new System.Drawing.Size(245, 175);
             this.DirecTagInfoBox.TabIndex = 7;
             this.DirecTagInfoBox.WordWrap = false;
             // 
-            // TagPanel
+            // TagConfigInfoPanel
             // 
-            this.TagPanel.Controls.Add(this.DirecTagInfoLabel);
-            this.TagPanel.Controls.Add(this.DirecTagInfoBox);
-            this.TagPanel.Controls.Add(this.TagReconInfoBox);
-            this.TagPanel.Controls.Add(this.TagReconInfoLabel);
-            this.TagPanel.Location = new System.Drawing.Point(440, 3);
-            this.TagPanel.Name = "TagPanel";
-            this.TagPanel.Size = new System.Drawing.Size(249, 403);
-            this.TagPanel.TabIndex = 9;
-            this.TagPanel.Visible = false;
+            this.TagConfigInfoPanel.Controls.Add(this.DirecTagInfoLabel);
+            this.TagConfigInfoPanel.Controls.Add(this.DirecTagInfoBox);
+            this.TagConfigInfoPanel.Controls.Add(this.TagReconInfoBox);
+            this.TagConfigInfoPanel.Controls.Add(this.TagReconInfoLabel);
+            this.TagConfigInfoPanel.Location = new System.Drawing.Point(436, 1);
+            this.TagConfigInfoPanel.Name = "TagConfigInfoPanel";
+            this.TagConfigInfoPanel.Size = new System.Drawing.Size(255, 409);
+            this.TagConfigInfoPanel.TabIndex = 9;
+            this.TagConfigInfoPanel.Visible = false;
             // 
-            // DatabasePanel
+            // DatabaseConfigInfoPanel
             // 
-            this.DatabasePanel.Controls.Add(this.MyriMatchInfoLabel);
-            this.DatabasePanel.Controls.Add(this.MyriMatchInfoBox);
-            this.DatabasePanel.Location = new System.Drawing.Point(436, 1);
-            this.DatabasePanel.Name = "DatabasePanel";
-            this.DatabasePanel.Size = new System.Drawing.Size(255, 409);
-            this.DatabasePanel.TabIndex = 33;
-            this.DatabasePanel.Visible = false;
+            this.DatabaseConfigInfoPanel.Controls.Add(this.MyriMatchInfoLabel);
+            this.DatabaseConfigInfoPanel.Controls.Add(this.MyriMatchInfoBox);
+            this.DatabaseConfigInfoPanel.Location = new System.Drawing.Point(436, 1);
+            this.DatabaseConfigInfoPanel.Name = "DatabaseConfigInfoPanel";
+            this.DatabaseConfigInfoPanel.Size = new System.Drawing.Size(255, 409);
+            this.DatabaseConfigInfoPanel.TabIndex = 33;
+            this.DatabaseConfigInfoPanel.Visible = false;
             // 
             // MyriMatchInfoLabel
             // 
@@ -582,18 +680,49 @@
             this.MyriMatchInfoBox.Name = "MyriMatchInfoBox";
             this.MyriMatchInfoBox.ReadOnly = true;
             this.MyriMatchInfoBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.MyriMatchInfoBox.Size = new System.Drawing.Size(249, 374);
+            this.MyriMatchInfoBox.Size = new System.Drawing.Size(245, 374);
             this.MyriMatchInfoBox.TabIndex = 9;
             this.MyriMatchInfoBox.WordWrap = false;
+            // 
+            // PepConfigInfoPanel
+            // 
+            this.PepConfigInfoPanel.Controls.Add(this.PepInfoLabel);
+            this.PepConfigInfoPanel.Controls.Add(this.PepitomeInfoBox);
+            this.PepConfigInfoPanel.Location = new System.Drawing.Point(436, 1);
+            this.PepConfigInfoPanel.Name = "PepConfigInfoPanel";
+            this.PepConfigInfoPanel.Size = new System.Drawing.Size(255, 409);
+            this.PepConfigInfoPanel.TabIndex = 34;
+            this.PepConfigInfoPanel.Visible = false;
+            // 
+            // PepInfoLabel
+            // 
+            this.PepInfoLabel.AutoSize = true;
+            this.PepInfoLabel.Location = new System.Drawing.Point(6, 8);
+            this.PepInfoLabel.Name = "PepInfoLabel";
+            this.PepInfoLabel.Size = new System.Drawing.Size(116, 13);
+            this.PepInfoLabel.TabIndex = 12;
+            this.PepInfoLabel.Text = "Pepitome Configuration";
+            // 
+            // PepitomeInfoBox
+            // 
+            this.PepitomeInfoBox.Location = new System.Drawing.Point(6, 24);
+            this.PepitomeInfoBox.Multiline = true;
+            this.PepitomeInfoBox.Name = "PepitomeInfoBox";
+            this.PepitomeInfoBox.ReadOnly = true;
+            this.PepitomeInfoBox.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            this.PepitomeInfoBox.Size = new System.Drawing.Size(245, 374);
+            this.PepitomeInfoBox.TabIndex = 11;
+            this.PepitomeInfoBox.WordWrap = false;
             // 
             // AddJobForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(690, 411);
-            this.Controls.Add(this.TagPanel);
             this.Controls.Add(this.FolderPanel);
-            this.Controls.Add(this.DatabasePanel);
+            this.Controls.Add(this.PepConfigInfoPanel);
+            this.Controls.Add(this.DatabaseConfigInfoPanel);
+            this.Controls.Add(this.TagConfigInfoPanel);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Fixed3D;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "AddJobForm";
@@ -601,16 +730,22 @@
             this.Text = "Add Job";
             this.FolderPanel.ResumeLayout(false);
             this.FolderPanel.PerformLayout();
+            this.PepPanel.ResumeLayout(false);
+            this.PepPanel.PerformLayout();
+            this.PepConfigGB.ResumeLayout(false);
+            this.PepConfigGB.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.CPUsBox)).EndInit();
             this.ConfigGB.ResumeLayout(false);
             this.ConfigDatabasePanel.ResumeLayout(false);
             this.ConfigDatabasePanel.PerformLayout();
             this.ConfigTagPanel.ResumeLayout(false);
             this.ConfigTagPanel.PerformLayout();
-            this.TagPanel.ResumeLayout(false);
-            this.TagPanel.PerformLayout();
-            this.DatabasePanel.ResumeLayout(false);
-            this.DatabasePanel.PerformLayout();
+            this.TagConfigInfoPanel.ResumeLayout(false);
+            this.TagConfigInfoPanel.PerformLayout();
+            this.DatabaseConfigInfoPanel.ResumeLayout(false);
+            this.DatabaseConfigInfoPanel.PerformLayout();
+            this.PepConfigInfoPanel.ResumeLayout(false);
+            this.PepConfigInfoPanel.PerformLayout();
             this.ResumeLayout(false);
 
         }
@@ -636,13 +771,11 @@
         private System.Windows.Forms.CheckBox IntermediateBox;
         private System.Windows.Forms.Label TagReconInfoLabel;
         private System.Windows.Forms.Label DirecTagInfoLabel;
-        private System.Windows.Forms.Panel TagPanel;
-        private System.Windows.Forms.Panel DatabasePanel;
+        private System.Windows.Forms.Panel TagConfigInfoPanel;
+        private System.Windows.Forms.Panel DatabaseConfigInfoPanel;
         private System.Windows.Forms.Label MyriMatchInfoLabel;
         private System.Windows.Forms.Button InfoExpandButton;
         private System.Windows.Forms.ComboBox DatabaseLocBox;
-        private System.Windows.Forms.RadioButton TagRadio;
-        private System.Windows.Forms.RadioButton DatabaseRadio;
         private System.Windows.Forms.ComboBox InputFilesBox;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button DataFilesButton;
@@ -663,6 +796,19 @@
         internal System.Windows.Forms.TextBox TagReconInfoBox;
         internal System.Windows.Forms.TextBox DirecTagInfoBox;
         internal System.Windows.Forms.ComboBox OutputDirectoryBox;
+        private System.Windows.Forms.ComboBox SearchTypeBox;
+        private System.Windows.Forms.Panel PepPanel;
+        private System.Windows.Forms.GroupBox PepConfigGB;
+        private System.Windows.Forms.ComboBox SpecLibBox;
+        private System.Windows.Forms.Button SpecLibBrowse;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.ComboBox PepConfigBox;
+        private System.Windows.Forms.Button PepEditButton;
+        private System.Windows.Forms.Button PepConfigBrowse;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.Panel PepConfigInfoPanel;
+        private System.Windows.Forms.Label PepInfoLabel;
+        internal System.Windows.Forms.TextBox PepitomeInfoBox;
 
     }
 }

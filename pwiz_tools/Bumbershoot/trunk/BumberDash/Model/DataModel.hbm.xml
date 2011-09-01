@@ -46,7 +46,9 @@
     <property name ="RowNumber" not-null ="true" />
     <property name ="Cpus" not-null ="true" />
     <property name ="ProteinDatabase" not-null ="true" />
+    <property name ="SpectralLibrary" not-null ="false" />
     <property name ="JobName" not-null ="true" />
+    <property name ="JobType" not-null ="true" />
     <property name ="OutputDirectory" not-null ="true" />
     <property name ="StartTime" not-null ="false" />
     <property name ="EndTime" not-null ="false" />

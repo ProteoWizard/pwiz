@@ -116,7 +116,7 @@ namespace BumberDash.Forms
             this.ShowIcon = false;
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-            this.Text = "About IDPicker";
+            this.Text = "About BumberDash";
             this.ResumeLayout(false);
             this.PerformLayout();
 

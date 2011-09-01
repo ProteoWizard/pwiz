@@ -69,7 +69,7 @@ namespace BumberDash.Model
             var dataFile = Path.Combine(root, "Bumbershoot.db");
             var newfactory = CreateSessionFactory(dataFile, true);
             var session = newfactory.OpenSession();
-            if (session.QueryOver<ConfigFile>().List().Count<12)
+            if (session.QueryOver<ConfigFile>().List().Count<16)
             {
                 var baseRoot = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
                 if (baseRoot == null)

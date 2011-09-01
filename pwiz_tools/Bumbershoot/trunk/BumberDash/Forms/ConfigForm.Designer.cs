@@ -29,51 +29,67 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.ListViewItem listViewItem49 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem33 = new System.Windows.Forms.ListViewItem(new string[] {
             "Carboxymethylated Cysteine",
             "C",
             "57"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem50 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem34 = new System.Windows.Forms.ListViewItem(new string[] {
             "Oxidized Methione",
             "M",
             "15.995"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem51 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem35 = new System.Windows.Forms.ListViewItem(new string[] {
             "Phosphorylated Serine",
             "S",
             "79.966"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem52 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem36 = new System.Windows.Forms.ListViewItem(new string[] {
             "N terminal deamidation of glutamine",
             "(Q",
             "-17"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem53 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem37 = new System.Windows.Forms.ListViewItem(new string[] {
             "Carboxymethylated Cysteine",
             "C",
             "57"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem54 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem38 = new System.Windows.Forms.ListViewItem(new string[] {
             "Oxidized Methione",
             "M",
             "15.995"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem55 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem39 = new System.Windows.Forms.ListViewItem(new string[] {
             "Phosphorylated Serine",
             "S",
             "79.966"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem56 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem40 = new System.Windows.Forms.ListViewItem(new string[] {
             "N terminal deamidation of glutamine",
             "(Q",
             "-17"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem57 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem41 = new System.Windows.Forms.ListViewItem(new string[] {
+            "Carboxymethylated Cysteine",
+            "C",
+            "57"}, -1);
+            System.Windows.Forms.ListViewItem listViewItem42 = new System.Windows.Forms.ListViewItem(new string[] {
+            "Oxidized Methione",
+            "M",
+            "15.995"}, -1);
+            System.Windows.Forms.ListViewItem listViewItem43 = new System.Windows.Forms.ListViewItem(new string[] {
+            "Phosphorylated Serine",
+            "S",
+            "79.966"}, -1);
+            System.Windows.Forms.ListViewItem listViewItem44 = new System.Windows.Forms.ListViewItem(new string[] {
+            "N terminal deamidation of glutamine",
+            "(Q",
+            "-17"}, -1);
+            System.Windows.Forms.ListViewItem listViewItem45 = new System.Windows.Forms.ListViewItem(new string[] {
             "Carboxyamidomethylation of Cysteine",
             "C",
             "58.005"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem58 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem46 = new System.Windows.Forms.ListViewItem(new string[] {
             "Oxidized Methione",
             "M",
             "15.9949"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem59 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem47 = new System.Windows.Forms.ListViewItem(new string[] {
             "Phosphorylated Serine",
             "S",
             "79.966"}, -1);
-            System.Windows.Forms.ListViewItem listViewItem60 = new System.Windows.Forms.ListViewItem(new string[] {
+            System.Windows.Forms.ListViewItem listViewItem48 = new System.Windows.Forms.ListViewItem(new string[] {
             "N terminal deamidation of glutamine",
             "(Q",
             "-17.026549"}, -1);
@@ -83,6 +99,50 @@
             this.label3 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
+            this.PepGenPanel = new System.Windows.Forms.Panel();
+            this.PepModGB = new System.Windows.Forms.GroupBox();
+            this.PepAppliedModBox = new System.Windows.Forms.DataGridView();
+            this.dataGridViewTextBoxColumn5 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn6 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewComboBoxColumn3 = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.PepAppliedModLabel = new System.Windows.Forms.Label();
+            this.PepAppliedModRemove = new System.Windows.Forms.Button();
+            this.PepAppliedModAdd = new System.Windows.Forms.Button();
+            this.PepModTypeLabel = new System.Windows.Forms.Label();
+            this.PepModTypeList = new System.Windows.Forms.ComboBox();
+            this.PepModListLabelText = new System.Windows.Forms.Label();
+            this.PepResidueLabel = new System.Windows.Forms.Label();
+            this.PepModMassLabel = new System.Windows.Forms.Label();
+            this.PepModMassText = new System.Windows.Forms.TextBox();
+            this.PepMaxDynamicModsBox = new System.Windows.Forms.NumericUpDown();
+            this.PepResidueText = new System.Windows.Forms.TextBox();
+            this.PepModList = new System.Windows.Forms.ListView();
+            this.columnHeader3 = new System.Windows.Forms.ColumnHeader();
+            this.PepMaxDynamicModsLabel = new System.Windows.Forms.Label();
+            this.PepToleranceGB = new System.Windows.Forms.GroupBox();
+            this.PepMonoPrecursorMzToleranceBox = new System.Windows.Forms.TextBox();
+            this.PepMonoPrecursorMzToleranceUnitsList = new System.Windows.Forms.ComboBox();
+            this.PepMonoPrecursorMzToleranceLabel = new System.Windows.Forms.Label();
+            this.PepFragmentMzToleranceBox = new System.Windows.Forms.TextBox();
+            this.PepAvgPrecursorMzToleranceBox = new System.Windows.Forms.TextBox();
+            this.PepFragmentMzToleranceUnitsList = new System.Windows.Forms.ComboBox();
+            this.PepAvgPrecursorMzToleranceUnitsList = new System.Windows.Forms.ComboBox();
+            this.PepFragmentMzToleranceLabel = new System.Windows.Forms.Label();
+            this.PepAvgPrecursorMzToleranceLabel = new System.Windows.Forms.Label();
+            this.PepDigestionGB = new System.Windows.Forms.GroupBox();
+            this.PepMaxMissedCleavagesAuto = new System.Windows.Forms.Label();
+            this.PepMaxMissedCleavagesBox = new System.Windows.Forms.NumericUpDown();
+            this.PepMinTerminiCleavagesBox = new System.Windows.Forms.ComboBox();
+            this.PepCleavageRulesBox = new System.Windows.Forms.ComboBox();
+            this.PepCleavageRulesLabel = new System.Windows.Forms.Label();
+            this.PepMaxMissedCleavagesLabel = new System.Windows.Forms.Label();
+            this.PepMinTerminiCleavagesLabel = new System.Windows.Forms.Label();
+            this.PepInstrumentGB = new System.Windows.Forms.GroupBox();
+            this.PepInstrumentLoad = new System.Windows.Forms.Button();
+            this.PepInstrumentList = new System.Windows.Forms.ComboBox();
+            this.PepInstrumentLabel = new System.Windows.Forms.Label();
+            this.PepPrecursorMzToleranceRuleBox = new System.Windows.Forms.ComboBox();
+            this.PepPrecursorMzToleranceRuleLabel = new System.Windows.Forms.Label();
             this.MyriGenPanel = new System.Windows.Forms.Panel();
             this.MyriToleranceGB = new System.Windows.Forms.GroupBox();
             this.MyriMonoPrecursorMzToleranceBox = new System.Windows.Forms.TextBox();
@@ -226,12 +286,60 @@
             this.TRMaxDynamicModsInfo = new System.Windows.Forms.Label();
             this.TRMaxDynamicModsLabel = new System.Windows.Forms.Label();
             this.AdvTab = new System.Windows.Forms.TabPage();
+            this.PepAdvPanel = new System.Windows.Forms.Panel();
+            this.PepLibraryGB = new System.Windows.Forms.GroupBox();
+            this.PepLibMaxPeakCountBox = new System.Windows.Forms.NumericUpDown();
+            this.PepLibMaxPeakCountLabel = new System.Windows.Forms.Label();
+            this.PepLibTicCutoffPercentageBox = new System.Windows.Forms.NumericUpDown();
+            this.PepLibTicCutoffPercentageLabel = new System.Windows.Forms.Label();
+            this.PepRecalculateLibPepMassesBox = new System.Windows.Forms.CheckBox();
+            this.PepRecalculateLibPepMassesLabel = new System.Windows.Forms.Label();
+            this.PepFASTARefreshResultsBox = new System.Windows.Forms.CheckBox();
+            this.PepFASTARefreshResultsLabel = new System.Windows.Forms.Label();
+            this.PepCleanLibSpectraBox = new System.Windows.Forms.CheckBox();
+            this.PepCleanLibSpectraLabel = new System.Windows.Forms.Label();
+            this.PepMiscBox = new System.Windows.Forms.GroupBox();
+            this.PepFragmentationRuleBox = new System.Windows.Forms.ComboBox();
+            this.PepFragmentationRuleLabel = new System.Windows.Forms.Label();
+            this.PepOutputFormatBox = new System.Windows.Forms.ComboBox();
+            this.PepOutputFormatLabel = new System.Windows.Forms.Label();
+            this.PepNumChargeStatesBox = new System.Windows.Forms.NumericUpDown();
+            this.PepNumChargeStatesLabel = new System.Windows.Forms.Label();
+            this.PepDecoyPrefixLabel = new System.Windows.Forms.Label();
+            this.PepDecoyPrefixBox = new System.Windows.Forms.TextBox();
+            this.PepProteinSamplingTimeBox = new System.Windows.Forms.NumericUpDown();
+            this.PepMaxPeakCountBox = new System.Windows.Forms.NumericUpDown();
+            this.PepMaxPeakCountLabel = new System.Windows.Forms.Label();
+            this.PepTicCutoffPercentageBox = new System.Windows.Forms.NumericUpDown();
+            this.PepMaxResultRankBox = new System.Windows.Forms.NumericUpDown();
+            this.PepTicCutoffPercentageLabel = new System.Windows.Forms.Label();
+            this.PepProteinSamplingTimeLabel = new System.Windows.Forms.Label();
+            this.PepMaxResultRankLabel = new System.Windows.Forms.Label();
+            this.PepScoringGB = new System.Windows.Forms.GroupBox();
+            this.PepClassSizeMultiplierBox = new System.Windows.Forms.NumericUpDown();
+            this.PepNumIntensityClassesBox = new System.Windows.Forms.NumericUpDown();
+            this.PepNumIntensityClassesLabel = new System.Windows.Forms.Label();
+            this.PepClassSizeMultiplierLabel = new System.Windows.Forms.Label();
+            this.PepSequenceGB = new System.Windows.Forms.GroupBox();
+            this.PepMaxPeptideMassBox = new System.Windows.Forms.NumericUpDown();
+            this.PepMinPeptideMassBox = new System.Windows.Forms.NumericUpDown();
+            this.PepMaxPeptideMassLabel = new System.Windows.Forms.Label();
+            this.PepMinPeptideMassLabel = new System.Windows.Forms.Label();
+            this.PepMinPeptideLengthBox = new System.Windows.Forms.NumericUpDown();
+            this.PepMinPeptideLengthLabel = new System.Windows.Forms.Label();
+            this.PepAdjustmentGB = new System.Windows.Forms.GroupBox();
+            this.PepMonoisotopeAdjustmentSetLabel2 = new System.Windows.Forms.Label();
+            this.PepMonoisotopeAdjustmentSet2 = new System.Windows.Forms.NumericUpDown();
+            this.PepMonoisotopeAdjustmentSetBox = new System.Windows.Forms.NumericUpDown();
+            this.PepMonoisotopeAdjustmentSetLabel = new System.Windows.Forms.Label();
             this.MyriAdvPanel = new System.Windows.Forms.Panel();
             this.MyriMiscGB = new System.Windows.Forms.GroupBox();
             this.MyriOutputFormatBox = new System.Windows.Forms.ComboBox();
             this.MyriOutputFormatLabel = new System.Windows.Forms.Label();
             this.MyriNumChargeStatesBox = new System.Windows.Forms.NumericUpDown();
             this.MyriNumChargeStatesInfo = new System.Windows.Forms.Label();
+            this.MyriFragmentationRuleBox = new System.Windows.Forms.ComboBox();
+            this.MyriFragmentationRuleLabel = new System.Windows.Forms.Label();
             this.MyriNumChargeStatesLabel = new System.Windows.Forms.Label();
             this.MyriDecoyPrefixLabel = new System.Windows.Forms.Label();
             this.MyriDecoyPrefixBox = new System.Windows.Forms.TextBox();
@@ -333,6 +441,8 @@
             this.DTIsotopeMzToleranceLabel = new System.Windows.Forms.Label();
             this.TRAdvPanel = new System.Windows.Forms.Panel();
             this.TRMiscGB = new System.Windows.Forms.GroupBox();
+            this.TRFragmentationRuleBox = new System.Windows.Forms.ComboBox();
+            this.TRFragmentationRuleLabel = new System.Windows.Forms.Label();
             this.TROutputFormatBox = new System.Windows.Forms.ComboBox();
             this.TROutputFormatLabel = new System.Windows.Forms.Label();
             this.TRDecoyPrefixLabel = new System.Windows.Forms.Label();
@@ -417,6 +527,14 @@
             this.mainTabControl.SuspendLayout();
             this.Gentab.SuspendLayout();
             this.SlowFadePanel.SuspendLayout();
+            this.PepGenPanel.SuspendLayout();
+            this.PepModGB.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.PepAppliedModBox)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.PepMaxDynamicModsBox)).BeginInit();
+            this.PepToleranceGB.SuspendLayout();
+            this.PepDigestionGB.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.PepMaxMissedCleavagesBox)).BeginInit();
+            this.PepInstrumentGB.SuspendLayout();
             this.MyriGenPanel.SuspendLayout();
             this.MyriToleranceGB.SuspendLayout();
             this.MyriInstrumentGB.SuspendLayout();
@@ -441,6 +559,26 @@
             ((System.ComponentModel.ISupportInitialize)(this.TRAppliedModBox)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.TRMaxDynamicModsBox)).BeginInit();
             this.AdvTab.SuspendLayout();
+            this.PepAdvPanel.SuspendLayout();
+            this.PepLibraryGB.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.PepLibMaxPeakCountBox)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.PepLibTicCutoffPercentageBox)).BeginInit();
+            this.PepMiscBox.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.PepNumChargeStatesBox)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.PepProteinSamplingTimeBox)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.PepMaxPeakCountBox)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.PepTicCutoffPercentageBox)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.PepMaxResultRankBox)).BeginInit();
+            this.PepScoringGB.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.PepClassSizeMultiplierBox)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.PepNumIntensityClassesBox)).BeginInit();
+            this.PepSequenceGB.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.PepMaxPeptideMassBox)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.PepMinPeptideMassBox)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.PepMinPeptideLengthBox)).BeginInit();
+            this.PepAdjustmentGB.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.PepMonoisotopeAdjustmentSet2)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.PepMonoisotopeAdjustmentSetBox)).BeginInit();
             this.MyriAdvPanel.SuspendLayout();
             this.MyriMiscGB.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.MyriNumChargeStatesBox)).BeginInit();
@@ -519,9 +657,10 @@
             // Gentab
             // 
             this.Gentab.Controls.Add(this.SlowFadePanel);
-            this.Gentab.Controls.Add(this.TRGenPanel);
+            this.Gentab.Controls.Add(this.PepGenPanel);
             this.Gentab.Controls.Add(this.MyriGenPanel);
             this.Gentab.Controls.Add(this.DTGenPanel);
+            this.Gentab.Controls.Add(this.TRGenPanel);
             this.Gentab.Location = new System.Drawing.Point(4, 22);
             this.Gentab.Name = "Gentab";
             this.Gentab.Padding = new System.Windows.Forms.Padding(3);
@@ -574,6 +713,542 @@
             this.label1.Size = new System.Drawing.Size(94, 13);
             this.label1.TabIndex = 0;
             this.label1.Text = "Non-Default Value";
+            // 
+            // PepGenPanel
+            // 
+            this.PepGenPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.PepGenPanel.Controls.Add(this.PepModGB);
+            this.PepGenPanel.Controls.Add(this.PepToleranceGB);
+            this.PepGenPanel.Controls.Add(this.PepDigestionGB);
+            this.PepGenPanel.Controls.Add(this.PepInstrumentGB);
+            this.PepGenPanel.Location = new System.Drawing.Point(0, 0);
+            this.PepGenPanel.Name = "PepGenPanel";
+            this.PepGenPanel.Size = new System.Drawing.Size(538, 528);
+            this.PepGenPanel.TabIndex = 6;
+            // 
+            // PepModGB
+            // 
+            this.PepModGB.Controls.Add(this.PepAppliedModBox);
+            this.PepModGB.Controls.Add(this.PepAppliedModLabel);
+            this.PepModGB.Controls.Add(this.PepAppliedModRemove);
+            this.PepModGB.Controls.Add(this.PepAppliedModAdd);
+            this.PepModGB.Controls.Add(this.PepModTypeLabel);
+            this.PepModGB.Controls.Add(this.PepModTypeList);
+            this.PepModGB.Controls.Add(this.PepModListLabelText);
+            this.PepModGB.Controls.Add(this.PepResidueLabel);
+            this.PepModGB.Controls.Add(this.PepModMassLabel);
+            this.PepModGB.Controls.Add(this.PepModMassText);
+            this.PepModGB.Controls.Add(this.PepMaxDynamicModsBox);
+            this.PepModGB.Controls.Add(this.PepResidueText);
+            this.PepModGB.Controls.Add(this.PepModList);
+            this.PepModGB.Controls.Add(this.PepMaxDynamicModsLabel);
+            this.PepModGB.Location = new System.Drawing.Point(8, 205);
+            this.PepModGB.Name = "PepModGB";
+            this.PepModGB.Size = new System.Drawing.Size(514, 283);
+            this.PepModGB.TabIndex = 5;
+            this.PepModGB.TabStop = false;
+            this.PepModGB.Text = "Modifications";
+            // 
+            // PepAppliedModBox
+            // 
+            this.PepAppliedModBox.AllowUserToAddRows = false;
+            this.PepAppliedModBox.AllowUserToDeleteRows = false;
+            this.PepAppliedModBox.AllowUserToResizeColumns = false;
+            this.PepAppliedModBox.AllowUserToResizeRows = false;
+            this.PepAppliedModBox.BackgroundColor = System.Drawing.SystemColors.Window;
+            this.PepAppliedModBox.BorderStyle = System.Windows.Forms.BorderStyle.Fixed3D;
+            this.PepAppliedModBox.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.PepAppliedModBox.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.dataGridViewTextBoxColumn5,
+            this.dataGridViewTextBoxColumn6,
+            this.dataGridViewComboBoxColumn3});
+            this.PepAppliedModBox.EditMode = System.Windows.Forms.DataGridViewEditMode.EditOnEnter;
+            this.PepAppliedModBox.Location = new System.Drawing.Point(282, 32);
+            this.PepAppliedModBox.MultiSelect = false;
+            this.PepAppliedModBox.Name = "PepAppliedModBox";
+            this.PepAppliedModBox.RowHeadersVisible = false;
+            this.PepAppliedModBox.RowTemplate.Height = 24;
+            this.PepAppliedModBox.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.PepAppliedModBox.ShowCellErrors = false;
+            this.PepAppliedModBox.Size = new System.Drawing.Size(226, 199);
+            this.PepAppliedModBox.TabIndex = 6;
+            // 
+            // dataGridViewTextBoxColumn5
+            // 
+            this.dataGridViewTextBoxColumn5.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.dataGridViewTextBoxColumn5.HeaderText = "Motif";
+            this.dataGridViewTextBoxColumn5.Name = "dataGridViewTextBoxColumn5";
+            this.dataGridViewTextBoxColumn5.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            // 
+            // dataGridViewTextBoxColumn6
+            // 
+            this.dataGridViewTextBoxColumn6.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.dataGridViewTextBoxColumn6.HeaderText = "Mass";
+            this.dataGridViewTextBoxColumn6.Name = "dataGridViewTextBoxColumn6";
+            this.dataGridViewTextBoxColumn6.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            // 
+            // dataGridViewComboBoxColumn3
+            // 
+            this.dataGridViewComboBoxColumn3.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.dataGridViewComboBoxColumn3.FillWeight = 150F;
+            this.dataGridViewComboBoxColumn3.HeaderText = "Type";
+            this.dataGridViewComboBoxColumn3.Items.AddRange(new object[] {
+            "Static",
+            "Dynamic"});
+            this.dataGridViewComboBoxColumn3.Name = "dataGridViewComboBoxColumn3";
+            this.dataGridViewComboBoxColumn3.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridViewComboBoxColumn3.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            // 
+            // PepAppliedModLabel
+            // 
+            this.PepAppliedModLabel.AutoSize = true;
+            this.PepAppliedModLabel.Location = new System.Drawing.Point(279, 16);
+            this.PepAppliedModLabel.Name = "PepAppliedModLabel";
+            this.PepAppliedModLabel.Size = new System.Drawing.Size(88, 13);
+            this.PepAppliedModLabel.TabIndex = 91;
+            this.PepAppliedModLabel.Text = "Applied Mod List:";
+            // 
+            // PepAppliedModRemove
+            // 
+            this.PepAppliedModRemove.Location = new System.Drawing.Point(244, 138);
+            this.PepAppliedModRemove.Name = "PepAppliedModRemove";
+            this.PepAppliedModRemove.Size = new System.Drawing.Size(32, 23);
+            this.PepAppliedModRemove.TabIndex = 5;
+            this.PepAppliedModRemove.Text = "<";
+            this.PepAppliedModRemove.UseVisualStyleBackColor = true;
+            this.PepAppliedModRemove.Click += new System.EventHandler(this.AppliedModRemove_Click);
+            // 
+            // PepAppliedModAdd
+            // 
+            this.PepAppliedModAdd.Location = new System.Drawing.Point(244, 109);
+            this.PepAppliedModAdd.Name = "PepAppliedModAdd";
+            this.PepAppliedModAdd.Size = new System.Drawing.Size(32, 23);
+            this.PepAppliedModAdd.TabIndex = 4;
+            this.PepAppliedModAdd.Text = ">";
+            this.PepAppliedModAdd.UseVisualStyleBackColor = true;
+            this.PepAppliedModAdd.Click += new System.EventHandler(this.AppliedModAdd_Click);
+            // 
+            // PepModTypeLabel
+            // 
+            this.PepModTypeLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.PepModTypeLabel.AutoSize = true;
+            this.PepModTypeLabel.Location = new System.Drawing.Point(145, 239);
+            this.PepModTypeLabel.Name = "PepModTypeLabel";
+            this.PepModTypeLabel.Size = new System.Drawing.Size(58, 13);
+            this.PepModTypeLabel.TabIndex = 82;
+            this.PepModTypeLabel.Text = "Mod Type:";
+            // 
+            // PepModTypeList
+            // 
+            this.PepModTypeList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.PepModTypeList.FormattingEnabled = true;
+            this.PepModTypeList.Items.AddRange(new object[] {
+            "Static",
+            "Dynamic"});
+            this.PepModTypeList.Location = new System.Drawing.Point(148, 255);
+            this.PepModTypeList.Name = "PepModTypeList";
+            this.PepModTypeList.Size = new System.Drawing.Size(90, 21);
+            this.PepModTypeList.TabIndex = 3;
+            // 
+            // PepModListLabelText
+            // 
+            this.PepModListLabelText.AutoSize = true;
+            this.PepModListLabelText.Location = new System.Drawing.Point(6, 16);
+            this.PepModListLabelText.Name = "PepModListLabelText";
+            this.PepModListLabelText.Size = new System.Drawing.Size(50, 13);
+            this.PepModListLabelText.TabIndex = 54;
+            this.PepModListLabelText.Text = "Mod List:";
+            // 
+            // PepResidueLabel
+            // 
+            this.PepResidueLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.PepResidueLabel.AutoSize = true;
+            this.PepResidueLabel.Location = new System.Drawing.Point(4, 239);
+            this.PepResidueLabel.Name = "PepResidueLabel";
+            this.PepResidueLabel.Size = new System.Drawing.Size(76, 13);
+            this.PepResidueLabel.TabIndex = 57;
+            this.PepResidueLabel.Text = "Redidue Motif:";
+            // 
+            // PepModMassLabel
+            // 
+            this.PepModMassLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.PepModMassLabel.AutoSize = true;
+            this.PepModMassLabel.Location = new System.Drawing.Point(83, 239);
+            this.PepModMassLabel.Name = "PepModMassLabel";
+            this.PepModMassLabel.Size = new System.Drawing.Size(59, 13);
+            this.PepModMassLabel.TabIndex = 58;
+            this.PepModMassLabel.Text = "Mod Mass:";
+            // 
+            // PepModMassText
+            // 
+            this.PepModMassText.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.PepModMassText.Location = new System.Drawing.Point(86, 255);
+            this.PepModMassText.Name = "PepModMassText";
+            this.PepModMassText.Size = new System.Drawing.Size(56, 20);
+            this.PepModMassText.TabIndex = 2;
+            // 
+            // PepMaxDynamicModsBox
+            // 
+            this.PepMaxDynamicModsBox.Location = new System.Drawing.Point(463, 255);
+            this.PepMaxDynamicModsBox.Name = "PepMaxDynamicModsBox";
+            this.PepMaxDynamicModsBox.Size = new System.Drawing.Size(45, 20);
+            this.PepMaxDynamicModsBox.TabIndex = 7;
+            this.PepMaxDynamicModsBox.Tag = "";
+            this.PepMaxDynamicModsBox.Value = new decimal(new int[] {
+            2,
+            0,
+            0,
+            0});
+            // 
+            // PepResidueText
+            // 
+            this.PepResidueText.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.PepResidueText.Location = new System.Drawing.Point(7, 255);
+            this.PepResidueText.Name = "PepResidueText";
+            this.PepResidueText.Size = new System.Drawing.Size(73, 20);
+            this.PepResidueText.TabIndex = 1;
+            // 
+            // PepModList
+            // 
+            this.PepModList.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+                        | System.Windows.Forms.AnchorStyles.Left)));
+            this.PepModList.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeader3});
+            this.PepModList.FullRowSelect = true;
+            this.PepModList.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
+            listViewItem33,
+            listViewItem34,
+            listViewItem35,
+            listViewItem36});
+            this.PepModList.Location = new System.Drawing.Point(7, 32);
+            this.PepModList.MultiSelect = false;
+            this.PepModList.Name = "PepModList";
+            this.PepModList.Size = new System.Drawing.Size(231, 199);
+            this.PepModList.TabIndex = 0;
+            this.PepModList.UseCompatibleStateImageBehavior = false;
+            this.PepModList.View = System.Windows.Forms.View.Details;
+            this.PepModList.SelectedIndexChanged += new System.EventHandler(this.ModList_SelectedIndexChanged);
+            // 
+            // columnHeader3
+            // 
+            this.columnHeader3.Text = "Description";
+            this.columnHeader3.Width = 205;
+            // 
+            // PepMaxDynamicModsLabel
+            // 
+            this.PepMaxDynamicModsLabel.AutoSize = true;
+            this.PepMaxDynamicModsLabel.Location = new System.Drawing.Point(354, 257);
+            this.PepMaxDynamicModsLabel.Name = "PepMaxDynamicModsLabel";
+            this.PepMaxDynamicModsLabel.Size = new System.Drawing.Size(103, 13);
+            this.PepMaxDynamicModsLabel.TabIndex = 52;
+            this.PepMaxDynamicModsLabel.Text = "Max Dynamic Mods:";
+            // 
+            // PepToleranceGB
+            // 
+            this.PepToleranceGB.Controls.Add(this.PepMonoPrecursorMzToleranceBox);
+            this.PepToleranceGB.Controls.Add(this.PepMonoPrecursorMzToleranceUnitsList);
+            this.PepToleranceGB.Controls.Add(this.PepMonoPrecursorMzToleranceLabel);
+            this.PepToleranceGB.Controls.Add(this.PepFragmentMzToleranceBox);
+            this.PepToleranceGB.Controls.Add(this.PepAvgPrecursorMzToleranceBox);
+            this.PepToleranceGB.Controls.Add(this.PepFragmentMzToleranceUnitsList);
+            this.PepToleranceGB.Controls.Add(this.PepAvgPrecursorMzToleranceUnitsList);
+            this.PepToleranceGB.Controls.Add(this.PepFragmentMzToleranceLabel);
+            this.PepToleranceGB.Controls.Add(this.PepAvgPrecursorMzToleranceLabel);
+            this.PepToleranceGB.Location = new System.Drawing.Point(8, 129);
+            this.PepToleranceGB.Name = "PepToleranceGB";
+            this.PepToleranceGB.Size = new System.Drawing.Size(514, 70);
+            this.PepToleranceGB.TabIndex = 4;
+            this.PepToleranceGB.TabStop = false;
+            this.PepToleranceGB.Text = "m/z Tolerance";
+            // 
+            // PepMonoPrecursorMzToleranceBox
+            // 
+            this.PepMonoPrecursorMzToleranceBox.Enabled = false;
+            this.PepMonoPrecursorMzToleranceBox.Location = new System.Drawing.Point(394, 13);
+            this.PepMonoPrecursorMzToleranceBox.Name = "PepMonoPrecursorMzToleranceBox";
+            this.PepMonoPrecursorMzToleranceBox.Size = new System.Drawing.Size(54, 20);
+            this.PepMonoPrecursorMzToleranceBox.TabIndex = 75;
+            this.PepMonoPrecursorMzToleranceBox.Tag = "";
+            this.PepMonoPrecursorMzToleranceBox.Text = "10";
+            // 
+            // PepMonoPrecursorMzToleranceUnitsList
+            // 
+            this.PepMonoPrecursorMzToleranceUnitsList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.PepMonoPrecursorMzToleranceUnitsList.Enabled = false;
+            this.PepMonoPrecursorMzToleranceUnitsList.FormattingEnabled = true;
+            this.PepMonoPrecursorMzToleranceUnitsList.Items.AddRange(new object[] {
+            "mz",
+            "ppm"});
+            this.PepMonoPrecursorMzToleranceUnitsList.Location = new System.Drawing.Point(454, 13);
+            this.PepMonoPrecursorMzToleranceUnitsList.Name = "PepMonoPrecursorMzToleranceUnitsList";
+            this.PepMonoPrecursorMzToleranceUnitsList.Size = new System.Drawing.Size(45, 21);
+            this.PepMonoPrecursorMzToleranceUnitsList.TabIndex = 76;
+            this.PepMonoPrecursorMzToleranceUnitsList.Tag = "";
+            // 
+            // PepMonoPrecursorMzToleranceLabel
+            // 
+            this.PepMonoPrecursorMzToleranceLabel.AutoSize = true;
+            this.PepMonoPrecursorMzToleranceLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.PepMonoPrecursorMzToleranceLabel.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.PepMonoPrecursorMzToleranceLabel.Location = new System.Drawing.Point(256, 19);
+            this.PepMonoPrecursorMzToleranceLabel.Name = "PepMonoPrecursorMzToleranceLabel";
+            this.PepMonoPrecursorMzToleranceLabel.Size = new System.Drawing.Size(132, 13);
+            this.PepMonoPrecursorMzToleranceLabel.TabIndex = 74;
+            this.PepMonoPrecursorMzToleranceLabel.Text = "Mono Precursor tolerance:";
+            // 
+            // PepFragmentMzToleranceBox
+            // 
+            this.PepFragmentMzToleranceBox.Enabled = false;
+            this.PepFragmentMzToleranceBox.Location = new System.Drawing.Point(258, 42);
+            this.PepFragmentMzToleranceBox.Name = "PepFragmentMzToleranceBox";
+            this.PepFragmentMzToleranceBox.Size = new System.Drawing.Size(54, 20);
+            this.PepFragmentMzToleranceBox.TabIndex = 2;
+            this.PepFragmentMzToleranceBox.Tag = "";
+            this.PepFragmentMzToleranceBox.Text = "0.5";
+            // 
+            // PepAvgPrecursorMzToleranceBox
+            // 
+            this.PepAvgPrecursorMzToleranceBox.Enabled = false;
+            this.PepAvgPrecursorMzToleranceBox.Location = new System.Drawing.Point(145, 15);
+            this.PepAvgPrecursorMzToleranceBox.Name = "PepAvgPrecursorMzToleranceBox";
+            this.PepAvgPrecursorMzToleranceBox.Size = new System.Drawing.Size(54, 20);
+            this.PepAvgPrecursorMzToleranceBox.TabIndex = 0;
+            this.PepAvgPrecursorMzToleranceBox.Tag = "";
+            this.PepAvgPrecursorMzToleranceBox.Text = "1.5";
+            // 
+            // PepFragmentMzToleranceUnitsList
+            // 
+            this.PepFragmentMzToleranceUnitsList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.PepFragmentMzToleranceUnitsList.Enabled = false;
+            this.PepFragmentMzToleranceUnitsList.FormattingEnabled = true;
+            this.PepFragmentMzToleranceUnitsList.Items.AddRange(new object[] {
+            "mz",
+            "ppm"});
+            this.PepFragmentMzToleranceUnitsList.Location = new System.Drawing.Point(319, 42);
+            this.PepFragmentMzToleranceUnitsList.Name = "PepFragmentMzToleranceUnitsList";
+            this.PepFragmentMzToleranceUnitsList.Size = new System.Drawing.Size(45, 21);
+            this.PepFragmentMzToleranceUnitsList.TabIndex = 3;
+            this.PepFragmentMzToleranceUnitsList.Tag = "";
+            // 
+            // PepAvgPrecursorMzToleranceUnitsList
+            // 
+            this.PepAvgPrecursorMzToleranceUnitsList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.PepAvgPrecursorMzToleranceUnitsList.Enabled = false;
+            this.PepAvgPrecursorMzToleranceUnitsList.FormattingEnabled = true;
+            this.PepAvgPrecursorMzToleranceUnitsList.Items.AddRange(new object[] {
+            "mz",
+            "ppm"});
+            this.PepAvgPrecursorMzToleranceUnitsList.Location = new System.Drawing.Point(205, 15);
+            this.PepAvgPrecursorMzToleranceUnitsList.Name = "PepAvgPrecursorMzToleranceUnitsList";
+            this.PepAvgPrecursorMzToleranceUnitsList.Size = new System.Drawing.Size(45, 21);
+            this.PepAvgPrecursorMzToleranceUnitsList.TabIndex = 1;
+            this.PepAvgPrecursorMzToleranceUnitsList.Tag = "";
+            // 
+            // PepFragmentMzToleranceLabel
+            // 
+            this.PepFragmentMzToleranceLabel.AutoSize = true;
+            this.PepFragmentMzToleranceLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.PepFragmentMzToleranceLabel.Location = new System.Drawing.Point(151, 46);
+            this.PepFragmentMzToleranceLabel.Name = "PepFragmentMzToleranceLabel";
+            this.PepFragmentMzToleranceLabel.Size = new System.Drawing.Size(101, 13);
+            this.PepFragmentMzToleranceLabel.TabIndex = 5;
+            this.PepFragmentMzToleranceLabel.Text = "Fragment tolerance:";
+            // 
+            // PepAvgPrecursorMzToleranceLabel
+            // 
+            this.PepAvgPrecursorMzToleranceLabel.AutoSize = true;
+            this.PepAvgPrecursorMzToleranceLabel.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.PepAvgPrecursorMzToleranceLabel.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.PepAvgPrecursorMzToleranceLabel.Location = new System.Drawing.Point(15, 21);
+            this.PepAvgPrecursorMzToleranceLabel.Name = "PepAvgPrecursorMzToleranceLabel";
+            this.PepAvgPrecursorMzToleranceLabel.Size = new System.Drawing.Size(124, 13);
+            this.PepAvgPrecursorMzToleranceLabel.TabIndex = 0;
+            this.PepAvgPrecursorMzToleranceLabel.Text = "Avg Precursor tolerance:";
+            // 
+            // PepDigestionGB
+            // 
+            this.PepDigestionGB.Controls.Add(this.PepMaxMissedCleavagesAuto);
+            this.PepDigestionGB.Controls.Add(this.PepMaxMissedCleavagesBox);
+            this.PepDigestionGB.Controls.Add(this.PepMinTerminiCleavagesBox);
+            this.PepDigestionGB.Controls.Add(this.PepCleavageRulesBox);
+            this.PepDigestionGB.Controls.Add(this.PepCleavageRulesLabel);
+            this.PepDigestionGB.Controls.Add(this.PepMaxMissedCleavagesLabel);
+            this.PepDigestionGB.Controls.Add(this.PepMinTerminiCleavagesLabel);
+            this.PepDigestionGB.Location = new System.Drawing.Point(268, 6);
+            this.PepDigestionGB.Name = "PepDigestionGB";
+            this.PepDigestionGB.Size = new System.Drawing.Size(254, 117);
+            this.PepDigestionGB.TabIndex = 3;
+            this.PepDigestionGB.TabStop = false;
+            this.PepDigestionGB.Text = "Digestion";
+            // 
+            // PepMaxMissedCleavagesAuto
+            // 
+            this.PepMaxMissedCleavagesAuto.BackColor = System.Drawing.Color.White;
+            this.PepMaxMissedCleavagesAuto.Enabled = false;
+            this.PepMaxMissedCleavagesAuto.Font = new System.Drawing.Font("Calibri", 13F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.PepMaxMissedCleavagesAuto.Location = new System.Drawing.Point(183, 85);
+            this.PepMaxMissedCleavagesAuto.Name = "PepMaxMissedCleavagesAuto";
+            this.PepMaxMissedCleavagesAuto.Size = new System.Drawing.Size(23, 18);
+            this.PepMaxMissedCleavagesAuto.TabIndex = 2;
+            this.PepMaxMissedCleavagesAuto.Text = "∞";
+            // 
+            // PepMaxMissedCleavagesBox
+            // 
+            this.PepMaxMissedCleavagesBox.Enabled = false;
+            this.PepMaxMissedCleavagesBox.Location = new System.Drawing.Point(182, 84);
+            this.PepMaxMissedCleavagesBox.Maximum = new decimal(new int[] {
+            100000,
+            0,
+            0,
+            0});
+            this.PepMaxMissedCleavagesBox.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            -2147483648});
+            this.PepMaxMissedCleavagesBox.Name = "PepMaxMissedCleavagesBox";
+            this.PepMaxMissedCleavagesBox.Size = new System.Drawing.Size(40, 20);
+            this.PepMaxMissedCleavagesBox.TabIndex = 2;
+            this.PepMaxMissedCleavagesBox.Tag = "";
+            this.PepMaxMissedCleavagesBox.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            -2147483648});
+            this.PepMaxMissedCleavagesBox.ValueChanged += new System.EventHandler(this.NumMaxMissedCleavagesBox_ValueChanged);
+            // 
+            // PepMinTerminiCleavagesBox
+            // 
+            this.PepMinTerminiCleavagesBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.PepMinTerminiCleavagesBox.FormattingEnabled = true;
+            this.PepMinTerminiCleavagesBox.Items.AddRange(new object[] {
+            "Non-Specific",
+            "Semi-Specific",
+            "Fully-Specific"});
+            this.PepMinTerminiCleavagesBox.Location = new System.Drawing.Point(130, 51);
+            this.PepMinTerminiCleavagesBox.Name = "PepMinTerminiCleavagesBox";
+            this.PepMinTerminiCleavagesBox.Size = new System.Drawing.Size(92, 21);
+            this.PepMinTerminiCleavagesBox.TabIndex = 1;
+            this.PepMinTerminiCleavagesBox.Tag = "";
+            // 
+            // PepCleavageRulesBox
+            // 
+            this.PepCleavageRulesBox.FormattingEnabled = true;
+            this.PepCleavageRulesBox.Items.AddRange(new object[] {
+            "Trypsin",
+            "Trypsin/P",
+            "Chymotrypsin",
+            "TrypChymo",
+            "Lys-C",
+            "Lys-C/P",
+            "Asp-N",
+            "PepsinA",
+            "CNBr",
+            "Formic_acid"});
+            this.PepCleavageRulesBox.Location = new System.Drawing.Point(82, 19);
+            this.PepCleavageRulesBox.Name = "PepCleavageRulesBox";
+            this.PepCleavageRulesBox.Size = new System.Drawing.Size(140, 21);
+            this.PepCleavageRulesBox.TabIndex = 0;
+            this.PepCleavageRulesBox.Tag = "";
+            this.PepCleavageRulesBox.Text = "Trypsin/P";
+            // 
+            // PepCleavageRulesLabel
+            // 
+            this.PepCleavageRulesLabel.AutoSize = true;
+            this.PepCleavageRulesLabel.Location = new System.Drawing.Point(29, 22);
+            this.PepCleavageRulesLabel.Name = "PepCleavageRulesLabel";
+            this.PepCleavageRulesLabel.Size = new System.Drawing.Size(47, 13);
+            this.PepCleavageRulesLabel.TabIndex = 0;
+            this.PepCleavageRulesLabel.Text = "Enzyme:";
+            // 
+            // PepMaxMissedCleavagesLabel
+            // 
+            this.PepMaxMissedCleavagesLabel.AutoSize = true;
+            this.PepMaxMissedCleavagesLabel.Location = new System.Drawing.Point(57, 86);
+            this.PepMaxMissedCleavagesLabel.Name = "PepMaxMissedCleavagesLabel";
+            this.PepMaxMissedCleavagesLabel.Size = new System.Drawing.Size(119, 13);
+            this.PepMaxMissedCleavagesLabel.TabIndex = 6;
+            this.PepMaxMissedCleavagesLabel.Text = "Max Missed Cleavages:";
+            // 
+            // PepMinTerminiCleavagesLabel
+            // 
+            this.PepMinTerminiCleavagesLabel.AutoSize = true;
+            this.PepMinTerminiCleavagesLabel.Location = new System.Drawing.Point(66, 55);
+            this.PepMinTerminiCleavagesLabel.Name = "PepMinTerminiCleavagesLabel";
+            this.PepMinTerminiCleavagesLabel.Size = new System.Drawing.Size(58, 13);
+            this.PepMinTerminiCleavagesLabel.TabIndex = 1;
+            this.PepMinTerminiCleavagesLabel.Text = "Specificity:";
+            // 
+            // PepInstrumentGB
+            // 
+            this.PepInstrumentGB.Controls.Add(this.PepInstrumentLoad);
+            this.PepInstrumentGB.Controls.Add(this.PepInstrumentList);
+            this.PepInstrumentGB.Controls.Add(this.PepInstrumentLabel);
+            this.PepInstrumentGB.Controls.Add(this.PepPrecursorMzToleranceRuleBox);
+            this.PepInstrumentGB.Controls.Add(this.PepPrecursorMzToleranceRuleLabel);
+            this.PepInstrumentGB.Location = new System.Drawing.Point(8, 6);
+            this.PepInstrumentGB.Name = "PepInstrumentGB";
+            this.PepInstrumentGB.Size = new System.Drawing.Size(254, 117);
+            this.PepInstrumentGB.TabIndex = 2;
+            this.PepInstrumentGB.TabStop = false;
+            this.PepInstrumentGB.Text = "Instrument Specific";
+            // 
+            // PepInstrumentLoad
+            // 
+            this.PepInstrumentLoad.Location = new System.Drawing.Point(200, 32);
+            this.PepInstrumentLoad.Name = "PepInstrumentLoad";
+            this.PepInstrumentLoad.Size = new System.Drawing.Size(40, 23);
+            this.PepInstrumentLoad.TabIndex = 1;
+            this.PepInstrumentLoad.Text = "Load";
+            this.PepInstrumentLoad.UseVisualStyleBackColor = true;
+            this.PepInstrumentLoad.Click += new System.EventHandler(this.InstrumentButton_Click);
+            // 
+            // PepInstrumentList
+            // 
+            this.PepInstrumentList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.PepInstrumentList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.PepInstrumentList.FormattingEnabled = true;
+            this.PepInstrumentList.Location = new System.Drawing.Point(73, 32);
+            this.PepInstrumentList.Name = "PepInstrumentList";
+            this.PepInstrumentList.Size = new System.Drawing.Size(121, 21);
+            this.PepInstrumentList.TabIndex = 0;
+            this.PepInstrumentList.SelectedIndexChanged += new System.EventHandler(this.InstrumentList_SelectedIndexChanged);
+            // 
+            // PepInstrumentLabel
+            // 
+            this.PepInstrumentLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.PepInstrumentLabel.AutoSize = true;
+            this.PepInstrumentLabel.Location = new System.Drawing.Point(14, 35);
+            this.PepInstrumentLabel.Name = "PepInstrumentLabel";
+            this.PepInstrumentLabel.Size = new System.Drawing.Size(59, 13);
+            this.PepInstrumentLabel.TabIndex = 45;
+            this.PepInstrumentLabel.Text = "Instrument:";
+            // 
+            // PepPrecursorMzToleranceRuleBox
+            // 
+            this.PepPrecursorMzToleranceRuleBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.PepPrecursorMzToleranceRuleBox.FormattingEnabled = true;
+            this.PepPrecursorMzToleranceRuleBox.Items.AddRange(new object[] {
+            "auto",
+            "mono",
+            "avg"});
+            this.PepPrecursorMzToleranceRuleBox.Location = new System.Drawing.Point(126, 61);
+            this.PepPrecursorMzToleranceRuleBox.Name = "PepPrecursorMzToleranceRuleBox";
+            this.PepPrecursorMzToleranceRuleBox.Size = new System.Drawing.Size(92, 21);
+            this.PepPrecursorMzToleranceRuleBox.TabIndex = 2;
+            this.PepPrecursorMzToleranceRuleBox.Tag = "";
+            // 
+            // PepPrecursorMzToleranceRuleLabel
+            // 
+            this.PepPrecursorMzToleranceRuleLabel.AutoSize = true;
+            this.PepPrecursorMzToleranceRuleLabel.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.PepPrecursorMzToleranceRuleLabel.Location = new System.Drawing.Point(37, 64);
+            this.PepPrecursorMzToleranceRuleLabel.Name = "PepPrecursorMzToleranceRuleLabel";
+            this.PepPrecursorMzToleranceRuleLabel.Size = new System.Drawing.Size(83, 13);
+            this.PepPrecursorMzToleranceRuleLabel.TabIndex = 42;
+            this.PepPrecursorMzToleranceRuleLabel.Text = "Precursor Mass:";
             // 
             // MyriGenPanel
             // 
@@ -1137,10 +1812,10 @@
             this.Description});
             this.MyriModList.FullRowSelect = true;
             this.MyriModList.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
-            listViewItem49,
-            listViewItem50,
-            listViewItem51,
-            listViewItem52});
+            listViewItem37,
+            listViewItem38,
+            listViewItem39,
+            listViewItem40});
             this.MyriModList.Location = new System.Drawing.Point(7, 32);
             this.MyriModList.MultiSelect = false;
             this.MyriModList.Name = "MyriModList";
@@ -1535,10 +2210,10 @@
             this.columnHeader1});
             this.DTModList.FullRowSelect = true;
             this.DTModList.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
-            listViewItem53,
-            listViewItem54,
-            listViewItem55,
-            listViewItem56});
+            listViewItem41,
+            listViewItem42,
+            listViewItem43,
+            listViewItem44});
             this.DTModList.Location = new System.Drawing.Point(7, 32);
             this.DTModList.MultiSelect = false;
             this.DTModList.Name = "DTModList";
@@ -2285,10 +2960,10 @@
             this.columnHeader2});
             this.TRModList.FullRowSelect = true;
             this.TRModList.Items.AddRange(new System.Windows.Forms.ListViewItem[] {
-            listViewItem57,
-            listViewItem58,
-            listViewItem59,
-            listViewItem60});
+            listViewItem45,
+            listViewItem46,
+            listViewItem47,
+            listViewItem48});
             this.TRModList.Location = new System.Drawing.Point(7, 59);
             this.TRModList.MultiSelect = false;
             this.TRModList.Name = "TRModList";
@@ -2328,9 +3003,10 @@
             // 
             // AdvTab
             // 
-            this.AdvTab.Controls.Add(this.TRAdvPanel);
+            this.AdvTab.Controls.Add(this.PepAdvPanel);
             this.AdvTab.Controls.Add(this.MyriAdvPanel);
             this.AdvTab.Controls.Add(this.DTAdvPanel);
+            this.AdvTab.Controls.Add(this.TRAdvPanel);
             this.AdvTab.Location = new System.Drawing.Point(4, 22);
             this.AdvTab.Name = "AdvTab";
             this.AdvTab.Padding = new System.Windows.Forms.Padding(3);
@@ -2338,6 +3014,621 @@
             this.AdvTab.TabIndex = 1;
             this.AdvTab.Text = "Advanced";
             this.AdvTab.UseVisualStyleBackColor = true;
+            // 
+            // PepAdvPanel
+            // 
+            this.PepAdvPanel.Controls.Add(this.PepLibraryGB);
+            this.PepAdvPanel.Controls.Add(this.PepMiscBox);
+            this.PepAdvPanel.Controls.Add(this.PepScoringGB);
+            this.PepAdvPanel.Controls.Add(this.PepSequenceGB);
+            this.PepAdvPanel.Controls.Add(this.PepAdjustmentGB);
+            this.PepAdvPanel.Location = new System.Drawing.Point(0, 0);
+            this.PepAdvPanel.Name = "PepAdvPanel";
+            this.PepAdvPanel.Size = new System.Drawing.Size(538, 594);
+            this.PepAdvPanel.TabIndex = 7;
+            // 
+            // PepLibraryGB
+            // 
+            this.PepLibraryGB.Controls.Add(this.PepLibMaxPeakCountBox);
+            this.PepLibraryGB.Controls.Add(this.PepLibMaxPeakCountLabel);
+            this.PepLibraryGB.Controls.Add(this.PepLibTicCutoffPercentageBox);
+            this.PepLibraryGB.Controls.Add(this.PepLibTicCutoffPercentageLabel);
+            this.PepLibraryGB.Controls.Add(this.PepRecalculateLibPepMassesBox);
+            this.PepLibraryGB.Controls.Add(this.PepRecalculateLibPepMassesLabel);
+            this.PepLibraryGB.Controls.Add(this.PepFASTARefreshResultsBox);
+            this.PepLibraryGB.Controls.Add(this.PepFASTARefreshResultsLabel);
+            this.PepLibraryGB.Controls.Add(this.PepCleanLibSpectraBox);
+            this.PepLibraryGB.Controls.Add(this.PepCleanLibSpectraLabel);
+            this.PepLibraryGB.Location = new System.Drawing.Point(276, 6);
+            this.PepLibraryGB.Name = "PepLibraryGB";
+            this.PepLibraryGB.Size = new System.Drawing.Size(248, 133);
+            this.PepLibraryGB.TabIndex = 8;
+            this.PepLibraryGB.TabStop = false;
+            this.PepLibraryGB.Text = "Library Options";
+            // 
+            // PepLibMaxPeakCountBox
+            // 
+            this.PepLibMaxPeakCountBox.Location = new System.Drawing.Point(182, 79);
+            this.PepLibMaxPeakCountBox.Maximum = new decimal(new int[] {
+            10000,
+            0,
+            0,
+            0});
+            this.PepLibMaxPeakCountBox.Name = "PepLibMaxPeakCountBox";
+            this.PepLibMaxPeakCountBox.Size = new System.Drawing.Size(52, 20);
+            this.PepLibMaxPeakCountBox.TabIndex = 109;
+            this.PepLibMaxPeakCountBox.Tag = "";
+            this.PepLibMaxPeakCountBox.Value = new decimal(new int[] {
+            150,
+            0,
+            0,
+            0});
+            // 
+            // PepLibMaxPeakCountLabel
+            // 
+            this.PepLibMaxPeakCountLabel.AutoSize = true;
+            this.PepLibMaxPeakCountLabel.Location = new System.Drawing.Point(53, 82);
+            this.PepLibMaxPeakCountLabel.Name = "PepLibMaxPeakCountLabel";
+            this.PepLibMaxPeakCountLabel.Size = new System.Drawing.Size(123, 13);
+            this.PepLibMaxPeakCountLabel.TabIndex = 112;
+            this.PepLibMaxPeakCountLabel.Text = "Library Max Peak Count:";
+            // 
+            // PepLibTicCutoffPercentageBox
+            // 
+            this.PepLibTicCutoffPercentageBox.DecimalPlaces = 2;
+            this.PepLibTicCutoffPercentageBox.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            131072});
+            this.PepLibTicCutoffPercentageBox.Location = new System.Drawing.Point(189, 105);
+            this.PepLibTicCutoffPercentageBox.Maximum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.PepLibTicCutoffPercentageBox.Name = "PepLibTicCutoffPercentageBox";
+            this.PepLibTicCutoffPercentageBox.Size = new System.Drawing.Size(45, 20);
+            this.PepLibTicCutoffPercentageBox.TabIndex = 110;
+            this.PepLibTicCutoffPercentageBox.Tag = "";
+            this.PepLibTicCutoffPercentageBox.Value = new decimal(new int[] {
+            98,
+            0,
+            0,
+            131072});
+            // 
+            // PepLibTicCutoffPercentageLabel
+            // 
+            this.PepLibTicCutoffPercentageLabel.AutoSize = true;
+            this.PepLibTicCutoffPercentageLabel.Location = new System.Drawing.Point(33, 108);
+            this.PepLibTicCutoffPercentageLabel.Name = "PepLibTicCutoffPercentageLabel";
+            this.PepLibTicCutoffPercentageLabel.Size = new System.Drawing.Size(150, 13);
+            this.PepLibTicCutoffPercentageLabel.TabIndex = 111;
+            this.PepLibTicCutoffPercentageLabel.Text = "Library TIC Cutoff Percentage:";
+            // 
+            // PepRecalculateLibPepMassesBox
+            // 
+            this.PepRecalculateLibPepMassesBox.AutoSize = true;
+            this.PepRecalculateLibPepMassesBox.Checked = true;
+            this.PepRecalculateLibPepMassesBox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.PepRecalculateLibPepMassesBox.Location = new System.Drawing.Point(220, 59);
+            this.PepRecalculateLibPepMassesBox.Name = "PepRecalculateLibPepMassesBox";
+            this.PepRecalculateLibPepMassesBox.Size = new System.Drawing.Size(15, 14);
+            this.PepRecalculateLibPepMassesBox.TabIndex = 107;
+            this.PepRecalculateLibPepMassesBox.Tag = "";
+            this.PepRecalculateLibPepMassesBox.UseVisualStyleBackColor = true;
+            // 
+            // PepRecalculateLibPepMassesLabel
+            // 
+            this.PepRecalculateLibPepMassesLabel.AutoSize = true;
+            this.PepRecalculateLibPepMassesLabel.Location = new System.Drawing.Point(35, 59);
+            this.PepRecalculateLibPepMassesLabel.Name = "PepRecalculateLibPepMassesLabel";
+            this.PepRecalculateLibPepMassesLabel.Size = new System.Drawing.Size(179, 13);
+            this.PepRecalculateLibPepMassesLabel.TabIndex = 108;
+            this.PepRecalculateLibPepMassesLabel.Text = "Recalculate Library Peptide Masses:";
+            // 
+            // PepFASTARefreshResultsBox
+            // 
+            this.PepFASTARefreshResultsBox.AutoSize = true;
+            this.PepFASTARefreshResultsBox.Checked = true;
+            this.PepFASTARefreshResultsBox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.PepFASTARefreshResultsBox.Location = new System.Drawing.Point(220, 39);
+            this.PepFASTARefreshResultsBox.Name = "PepFASTARefreshResultsBox";
+            this.PepFASTARefreshResultsBox.Size = new System.Drawing.Size(15, 14);
+            this.PepFASTARefreshResultsBox.TabIndex = 105;
+            this.PepFASTARefreshResultsBox.Tag = "";
+            this.PepFASTARefreshResultsBox.UseVisualStyleBackColor = true;
+            // 
+            // PepFASTARefreshResultsLabel
+            // 
+            this.PepFASTARefreshResultsLabel.AutoSize = true;
+            this.PepFASTARefreshResultsLabel.Location = new System.Drawing.Point(92, 39);
+            this.PepFASTARefreshResultsLabel.Name = "PepFASTARefreshResultsLabel";
+            this.PepFASTARefreshResultsLabel.Size = new System.Drawing.Size(122, 13);
+            this.PepFASTARefreshResultsLabel.TabIndex = 106;
+            this.PepFASTARefreshResultsLabel.Text = "Refresh FASTA Results:";
+            // 
+            // PepCleanLibSpectraBox
+            // 
+            this.PepCleanLibSpectraBox.AutoSize = true;
+            this.PepCleanLibSpectraBox.Checked = true;
+            this.PepCleanLibSpectraBox.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.PepCleanLibSpectraBox.Location = new System.Drawing.Point(220, 19);
+            this.PepCleanLibSpectraBox.Name = "PepCleanLibSpectraBox";
+            this.PepCleanLibSpectraBox.Size = new System.Drawing.Size(15, 14);
+            this.PepCleanLibSpectraBox.TabIndex = 103;
+            this.PepCleanLibSpectraBox.Tag = "";
+            this.PepCleanLibSpectraBox.UseVisualStyleBackColor = true;
+            // 
+            // PepCleanLibSpectraLabel
+            // 
+            this.PepCleanLibSpectraLabel.AutoSize = true;
+            this.PepCleanLibSpectraLabel.Location = new System.Drawing.Point(106, 19);
+            this.PepCleanLibSpectraLabel.Name = "PepCleanLibSpectraLabel";
+            this.PepCleanLibSpectraLabel.Size = new System.Drawing.Size(111, 13);
+            this.PepCleanLibSpectraLabel.TabIndex = 104;
+            this.PepCleanLibSpectraLabel.Text = "Clean Library Spectra:";
+            // 
+            // PepMiscBox
+            // 
+            this.PepMiscBox.Controls.Add(this.PepFragmentationRuleBox);
+            this.PepMiscBox.Controls.Add(this.PepFragmentationRuleLabel);
+            this.PepMiscBox.Controls.Add(this.PepOutputFormatBox);
+            this.PepMiscBox.Controls.Add(this.PepOutputFormatLabel);
+            this.PepMiscBox.Controls.Add(this.PepNumChargeStatesBox);
+            this.PepMiscBox.Controls.Add(this.PepNumChargeStatesLabel);
+            this.PepMiscBox.Controls.Add(this.PepDecoyPrefixLabel);
+            this.PepMiscBox.Controls.Add(this.PepDecoyPrefixBox);
+            this.PepMiscBox.Controls.Add(this.PepProteinSamplingTimeBox);
+            this.PepMiscBox.Controls.Add(this.PepMaxPeakCountBox);
+            this.PepMiscBox.Controls.Add(this.PepMaxPeakCountLabel);
+            this.PepMiscBox.Controls.Add(this.PepTicCutoffPercentageBox);
+            this.PepMiscBox.Controls.Add(this.PepMaxResultRankBox);
+            this.PepMiscBox.Controls.Add(this.PepTicCutoffPercentageLabel);
+            this.PepMiscBox.Controls.Add(this.PepProteinSamplingTimeLabel);
+            this.PepMiscBox.Controls.Add(this.PepMaxResultRankLabel);
+            this.PepMiscBox.Location = new System.Drawing.Point(276, 148);
+            this.PepMiscBox.Name = "PepMiscBox";
+            this.PepMiscBox.Size = new System.Drawing.Size(247, 227);
+            this.PepMiscBox.TabIndex = 7;
+            this.PepMiscBox.TabStop = false;
+            this.PepMiscBox.Text = "Misc";
+            // 
+            // PepFragmentationRuleBox
+            // 
+            this.PepFragmentationRuleBox.FormattingEnabled = true;
+            this.PepFragmentationRuleBox.Items.AddRange(new object[] {
+            "cid",
+            "etd"});
+            this.PepFragmentationRuleBox.Location = new System.Drawing.Point(143, 173);
+            this.PepFragmentationRuleBox.Name = "PepFragmentationRuleBox";
+            this.PepFragmentationRuleBox.Size = new System.Drawing.Size(92, 21);
+            this.PepFragmentationRuleBox.TabIndex = 114;
+            this.PepFragmentationRuleBox.Tag = "";
+            this.PepFragmentationRuleBox.Text = "cid";
+            // 
+            // PepFragmentationRuleLabel
+            // 
+            this.PepFragmentationRuleLabel.AutoSize = true;
+            this.PepFragmentationRuleLabel.Location = new System.Drawing.Point(35, 177);
+            this.PepFragmentationRuleLabel.Name = "PepFragmentationRuleLabel";
+            this.PepFragmentationRuleLabel.Size = new System.Drawing.Size(102, 13);
+            this.PepFragmentationRuleLabel.TabIndex = 113;
+            this.PepFragmentationRuleLabel.Text = "Fragmentation Rule:";
+            // 
+            // PepOutputFormatBox
+            // 
+            this.PepOutputFormatBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.PepOutputFormatBox.FormattingEnabled = true;
+            this.PepOutputFormatBox.Items.AddRange(new object[] {
+            "pepXML",
+            "mzIdentML"});
+            this.PepOutputFormatBox.Location = new System.Drawing.Point(143, 200);
+            this.PepOutputFormatBox.Name = "PepOutputFormatBox";
+            this.PepOutputFormatBox.Size = new System.Drawing.Size(92, 21);
+            this.PepOutputFormatBox.TabIndex = 108;
+            this.PepOutputFormatBox.Tag = "";
+            // 
+            // PepOutputFormatLabel
+            // 
+            this.PepOutputFormatLabel.AutoSize = true;
+            this.PepOutputFormatLabel.Location = new System.Drawing.Point(60, 204);
+            this.PepOutputFormatLabel.Name = "PepOutputFormatLabel";
+            this.PepOutputFormatLabel.Size = new System.Drawing.Size(77, 13);
+            this.PepOutputFormatLabel.TabIndex = 107;
+            this.PepOutputFormatLabel.Text = "Output Format:";
+            // 
+            // PepNumChargeStatesBox
+            // 
+            this.PepNumChargeStatesBox.Location = new System.Drawing.Point(192, 15);
+            this.PepNumChargeStatesBox.Maximum = new decimal(new int[] {
+            8,
+            0,
+            0,
+            0});
+            this.PepNumChargeStatesBox.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.PepNumChargeStatesBox.Name = "PepNumChargeStatesBox";
+            this.PepNumChargeStatesBox.Size = new System.Drawing.Size(42, 20);
+            this.PepNumChargeStatesBox.TabIndex = 1;
+            this.PepNumChargeStatesBox.Tag = "";
+            this.PepNumChargeStatesBox.Value = new decimal(new int[] {
+            3,
+            0,
+            0,
+            0});
+            // 
+            // PepNumChargeStatesLabel
+            // 
+            this.PepNumChargeStatesLabel.AutoSize = true;
+            this.PepNumChargeStatesLabel.Location = new System.Drawing.Point(57, 17);
+            this.PepNumChargeStatesLabel.Name = "PepNumChargeStatesLabel";
+            this.PepNumChargeStatesLabel.Size = new System.Drawing.Size(129, 13);
+            this.PepNumChargeStatesLabel.TabIndex = 99;
+            this.PepNumChargeStatesLabel.Text = "Number of Charge States:";
+            // 
+            // PepDecoyPrefixLabel
+            // 
+            this.PepDecoyPrefixLabel.AutoSize = true;
+            this.PepDecoyPrefixLabel.Location = new System.Drawing.Point(66, 150);
+            this.PepDecoyPrefixLabel.Name = "PepDecoyPrefixLabel";
+            this.PepDecoyPrefixLabel.Size = new System.Drawing.Size(70, 13);
+            this.PepDecoyPrefixLabel.TabIndex = 104;
+            this.PepDecoyPrefixLabel.Text = "Decoy Prefix:";
+            // 
+            // PepDecoyPrefixBox
+            // 
+            this.PepDecoyPrefixBox.Location = new System.Drawing.Point(143, 147);
+            this.PepDecoyPrefixBox.Name = "PepDecoyPrefixBox";
+            this.PepDecoyPrefixBox.Size = new System.Drawing.Size(92, 20);
+            this.PepDecoyPrefixBox.TabIndex = 7;
+            this.PepDecoyPrefixBox.Text = "DECOY_";
+            // 
+            // PepProteinSamplingTimeBox
+            // 
+            this.PepProteinSamplingTimeBox.Location = new System.Drawing.Point(189, 121);
+            this.PepProteinSamplingTimeBox.Maximum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
+            this.PepProteinSamplingTimeBox.Name = "PepProteinSamplingTimeBox";
+            this.PepProteinSamplingTimeBox.Size = new System.Drawing.Size(45, 20);
+            this.PepProteinSamplingTimeBox.TabIndex = 5;
+            this.PepProteinSamplingTimeBox.Tag = "";
+            this.PepProteinSamplingTimeBox.Value = new decimal(new int[] {
+            15,
+            0,
+            0,
+            0});
+            // 
+            // PepMaxPeakCountBox
+            // 
+            this.PepMaxPeakCountBox.Location = new System.Drawing.Point(182, 67);
+            this.PepMaxPeakCountBox.Maximum = new decimal(new int[] {
+            10000,
+            0,
+            0,
+            0});
+            this.PepMaxPeakCountBox.Name = "PepMaxPeakCountBox";
+            this.PepMaxPeakCountBox.Size = new System.Drawing.Size(52, 20);
+            this.PepMaxPeakCountBox.TabIndex = 3;
+            this.PepMaxPeakCountBox.Tag = "";
+            this.PepMaxPeakCountBox.Value = new decimal(new int[] {
+            150,
+            0,
+            0,
+            0});
+            // 
+            // PepMaxPeakCountLabel
+            // 
+            this.PepMaxPeakCountLabel.AutoSize = true;
+            this.PepMaxPeakCountLabel.Location = new System.Drawing.Point(86, 69);
+            this.PepMaxPeakCountLabel.Name = "PepMaxPeakCountLabel";
+            this.PepMaxPeakCountLabel.Size = new System.Drawing.Size(89, 13);
+            this.PepMaxPeakCountLabel.TabIndex = 98;
+            this.PepMaxPeakCountLabel.Text = "Max Peak Count:";
+            // 
+            // PepTicCutoffPercentageBox
+            // 
+            this.PepTicCutoffPercentageBox.DecimalPlaces = 2;
+            this.PepTicCutoffPercentageBox.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            131072});
+            this.PepTicCutoffPercentageBox.Location = new System.Drawing.Point(189, 93);
+            this.PepTicCutoffPercentageBox.Maximum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.PepTicCutoffPercentageBox.Name = "PepTicCutoffPercentageBox";
+            this.PepTicCutoffPercentageBox.Size = new System.Drawing.Size(45, 20);
+            this.PepTicCutoffPercentageBox.TabIndex = 4;
+            this.PepTicCutoffPercentageBox.Tag = "";
+            this.PepTicCutoffPercentageBox.Value = new decimal(new int[] {
+            98,
+            0,
+            0,
+            131072});
+            // 
+            // PepMaxResultRankBox
+            // 
+            this.PepMaxResultRankBox.Location = new System.Drawing.Point(189, 41);
+            this.PepMaxResultRankBox.Name = "PepMaxResultRankBox";
+            this.PepMaxResultRankBox.Size = new System.Drawing.Size(45, 20);
+            this.PepMaxResultRankBox.TabIndex = 1;
+            this.PepMaxResultRankBox.Tag = "";
+            this.PepMaxResultRankBox.Value = new decimal(new int[] {
+            5,
+            0,
+            0,
+            0});
+            // 
+            // PepTicCutoffPercentageLabel
+            // 
+            this.PepTicCutoffPercentageLabel.AutoSize = true;
+            this.PepTicCutoffPercentageLabel.Location = new System.Drawing.Point(67, 95);
+            this.PepTicCutoffPercentageLabel.Name = "PepTicCutoffPercentageLabel";
+            this.PepTicCutoffPercentageLabel.Size = new System.Drawing.Size(116, 13);
+            this.PepTicCutoffPercentageLabel.TabIndex = 57;
+            this.PepTicCutoffPercentageLabel.Text = "TIC Cutoff Percentage:";
+            // 
+            // PepProteinSamplingTimeLabel
+            // 
+            this.PepProteinSamplingTimeLabel.AutoSize = true;
+            this.PepProteinSamplingTimeLabel.Location = new System.Drawing.Point(67, 123);
+            this.PepProteinSamplingTimeLabel.Name = "PepProteinSamplingTimeLabel";
+            this.PepProteinSamplingTimeLabel.Size = new System.Drawing.Size(115, 13);
+            this.PepProteinSamplingTimeLabel.TabIndex = 19;
+            this.PepProteinSamplingTimeLabel.Text = "Protein Sampling Time:";
+            // 
+            // PepMaxResultRankLabel
+            // 
+            this.PepMaxResultRankLabel.AutoSize = true;
+            this.PepMaxResultRankLabel.Location = new System.Drawing.Point(91, 43);
+            this.PepMaxResultRankLabel.Name = "PepMaxResultRankLabel";
+            this.PepMaxResultRankLabel.Size = new System.Drawing.Size(92, 13);
+            this.PepMaxResultRankLabel.TabIndex = 48;
+            this.PepMaxResultRankLabel.Text = "Max Result Rank:";
+            // 
+            // PepScoringGB
+            // 
+            this.PepScoringGB.Controls.Add(this.PepClassSizeMultiplierBox);
+            this.PepScoringGB.Controls.Add(this.PepNumIntensityClassesBox);
+            this.PepScoringGB.Controls.Add(this.PepNumIntensityClassesLabel);
+            this.PepScoringGB.Controls.Add(this.PepClassSizeMultiplierLabel);
+            this.PepScoringGB.Location = new System.Drawing.Point(8, 189);
+            this.PepScoringGB.Name = "PepScoringGB";
+            this.PepScoringGB.Size = new System.Drawing.Size(246, 72);
+            this.PepScoringGB.TabIndex = 4;
+            this.PepScoringGB.TabStop = false;
+            this.PepScoringGB.Text = "Scoring Options";
+            // 
+            // PepClassSizeMultiplierBox
+            // 
+            this.PepClassSizeMultiplierBox.Location = new System.Drawing.Point(159, 45);
+            this.PepClassSizeMultiplierBox.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.PepClassSizeMultiplierBox.Name = "PepClassSizeMultiplierBox";
+            this.PepClassSizeMultiplierBox.Size = new System.Drawing.Size(45, 20);
+            this.PepClassSizeMultiplierBox.TabIndex = 1;
+            this.PepClassSizeMultiplierBox.Tag = "";
+            this.PepClassSizeMultiplierBox.Value = new decimal(new int[] {
+            2,
+            0,
+            0,
+            0});
+            // 
+            // PepNumIntensityClassesBox
+            // 
+            this.PepNumIntensityClassesBox.Location = new System.Drawing.Point(159, 19);
+            this.PepNumIntensityClassesBox.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.PepNumIntensityClassesBox.Name = "PepNumIntensityClassesBox";
+            this.PepNumIntensityClassesBox.Size = new System.Drawing.Size(45, 20);
+            this.PepNumIntensityClassesBox.TabIndex = 0;
+            this.PepNumIntensityClassesBox.Tag = "";
+            this.PepNumIntensityClassesBox.Value = new decimal(new int[] {
+            3,
+            0,
+            0,
+            0});
+            // 
+            // PepNumIntensityClassesLabel
+            // 
+            this.PepNumIntensityClassesLabel.AutoSize = true;
+            this.PepNumIntensityClassesLabel.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.PepNumIntensityClassesLabel.Location = new System.Drawing.Point(43, 21);
+            this.PepNumIntensityClassesLabel.Name = "PepNumIntensityClassesLabel";
+            this.PepNumIntensityClassesLabel.Size = new System.Drawing.Size(110, 13);
+            this.PepNumIntensityClassesLabel.TabIndex = 8;
+            this.PepNumIntensityClassesLabel.Text = "# of Intensity Classes:";
+            // 
+            // PepClassSizeMultiplierLabel
+            // 
+            this.PepClassSizeMultiplierLabel.AutoSize = true;
+            this.PepClassSizeMultiplierLabel.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.PepClassSizeMultiplierLabel.Location = new System.Drawing.Point(51, 47);
+            this.PepClassSizeMultiplierLabel.Name = "PepClassSizeMultiplierLabel";
+            this.PepClassSizeMultiplierLabel.Size = new System.Drawing.Size(102, 13);
+            this.PepClassSizeMultiplierLabel.TabIndex = 11;
+            this.PepClassSizeMultiplierLabel.Text = "Class Size Multiplier:";
+            // 
+            // PepSequenceGB
+            // 
+            this.PepSequenceGB.Controls.Add(this.PepMaxPeptideMassBox);
+            this.PepSequenceGB.Controls.Add(this.PepMinPeptideMassBox);
+            this.PepSequenceGB.Controls.Add(this.PepMaxPeptideMassLabel);
+            this.PepSequenceGB.Controls.Add(this.PepMinPeptideMassLabel);
+            this.PepSequenceGB.Controls.Add(this.PepMinPeptideLengthBox);
+            this.PepSequenceGB.Controls.Add(this.PepMinPeptideLengthLabel);
+            this.PepSequenceGB.Location = new System.Drawing.Point(8, 83);
+            this.PepSequenceGB.Name = "PepSequenceGB";
+            this.PepSequenceGB.Size = new System.Drawing.Size(246, 100);
+            this.PepSequenceGB.TabIndex = 3;
+            this.PepSequenceGB.TabStop = false;
+            this.PepSequenceGB.Text = "Squence Adjustment";
+            // 
+            // PepMaxPeptideMassBox
+            // 
+            this.PepMaxPeptideMassBox.Location = new System.Drawing.Point(152, 43);
+            this.PepMaxPeptideMassBox.Maximum = new decimal(new int[] {
+            100000,
+            0,
+            0,
+            0});
+            this.PepMaxPeptideMassBox.Name = "PepMaxPeptideMassBox";
+            this.PepMaxPeptideMassBox.Size = new System.Drawing.Size(62, 20);
+            this.PepMaxPeptideMassBox.TabIndex = 2;
+            this.PepMaxPeptideMassBox.Tag = "";
+            this.PepMaxPeptideMassBox.Value = new decimal(new int[] {
+            10000,
+            0,
+            0,
+            0});
+            // 
+            // PepMinPeptideMassBox
+            // 
+            this.PepMinPeptideMassBox.Location = new System.Drawing.Point(152, 17);
+            this.PepMinPeptideMassBox.Maximum = new decimal(new int[] {
+            100000,
+            0,
+            0,
+            0});
+            this.PepMinPeptideMassBox.Name = "PepMinPeptideMassBox";
+            this.PepMinPeptideMassBox.Size = new System.Drawing.Size(62, 20);
+            this.PepMinPeptideMassBox.TabIndex = 1;
+            this.PepMinPeptideMassBox.Tag = "";
+            // 
+            // PepMaxPeptideMassLabel
+            // 
+            this.PepMaxPeptideMassLabel.AutoSize = true;
+            this.PepMaxPeptideMassLabel.Location = new System.Drawing.Point(49, 45);
+            this.PepMaxPeptideMassLabel.Name = "PepMaxPeptideMassLabel";
+            this.PepMaxPeptideMassLabel.Size = new System.Drawing.Size(97, 13);
+            this.PepMaxPeptideMassLabel.TabIndex = 7;
+            this.PepMaxPeptideMassLabel.Text = "Max Peptide Mass:";
+            // 
+            // PepMinPeptideMassLabel
+            // 
+            this.PepMinPeptideMassLabel.AutoSize = true;
+            this.PepMinPeptideMassLabel.Location = new System.Drawing.Point(52, 19);
+            this.PepMinPeptideMassLabel.Name = "PepMinPeptideMassLabel";
+            this.PepMinPeptideMassLabel.Size = new System.Drawing.Size(94, 13);
+            this.PepMinPeptideMassLabel.TabIndex = 4;
+            this.PepMinPeptideMassLabel.Text = "Min Peptide Mass:";
+            // 
+            // PepMinPeptideLengthBox
+            // 
+            this.PepMinPeptideLengthBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.PepMinPeptideLengthBox.Location = new System.Drawing.Point(151, 69);
+            this.PepMinPeptideLengthBox.Maximum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
+            this.PepMinPeptideLengthBox.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.PepMinPeptideLengthBox.Name = "PepMinPeptideLengthBox";
+            this.PepMinPeptideLengthBox.Size = new System.Drawing.Size(62, 20);
+            this.PepMinPeptideLengthBox.TabIndex = 3;
+            this.PepMinPeptideLengthBox.Tag = "";
+            this.PepMinPeptideLengthBox.Value = new decimal(new int[] {
+            5,
+            0,
+            0,
+            0});
+            // 
+            // PepMinPeptideLengthLabel
+            // 
+            this.PepMinPeptideLengthLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.PepMinPeptideLengthLabel.AutoSize = true;
+            this.PepMinPeptideLengthLabel.Location = new System.Drawing.Point(44, 71);
+            this.PepMinPeptideLengthLabel.Name = "PepMinPeptideLengthLabel";
+            this.PepMinPeptideLengthLabel.Size = new System.Drawing.Size(102, 13);
+            this.PepMinPeptideLengthLabel.TabIndex = 89;
+            this.PepMinPeptideLengthLabel.Text = "Min Peptide Length:";
+            // 
+            // PepAdjustmentGB
+            // 
+            this.PepAdjustmentGB.Controls.Add(this.PepMonoisotopeAdjustmentSetLabel2);
+            this.PepAdjustmentGB.Controls.Add(this.PepMonoisotopeAdjustmentSet2);
+            this.PepAdjustmentGB.Controls.Add(this.PepMonoisotopeAdjustmentSetBox);
+            this.PepAdjustmentGB.Controls.Add(this.PepMonoisotopeAdjustmentSetLabel);
+            this.PepAdjustmentGB.Location = new System.Drawing.Point(8, 6);
+            this.PepAdjustmentGB.Name = "PepAdjustmentGB";
+            this.PepAdjustmentGB.Size = new System.Drawing.Size(246, 71);
+            this.PepAdjustmentGB.TabIndex = 2;
+            this.PepAdjustmentGB.TabStop = false;
+            this.PepAdjustmentGB.Text = "Precursor Adjustment";
+            // 
+            // PepMonoisotopeAdjustmentSetLabel2
+            // 
+            this.PepMonoisotopeAdjustmentSetLabel2.AutoSize = true;
+            this.PepMonoisotopeAdjustmentSetLabel2.Location = new System.Drawing.Point(114, 40);
+            this.PepMonoisotopeAdjustmentSetLabel2.Name = "PepMonoisotopeAdjustmentSetLabel2";
+            this.PepMonoisotopeAdjustmentSetLabel2.Size = new System.Drawing.Size(16, 13);
+            this.PepMonoisotopeAdjustmentSetLabel2.TabIndex = 95;
+            this.PepMonoisotopeAdjustmentSetLabel2.Text = "to";
+            // 
+            // PepMonoisotopeAdjustmentSet2
+            // 
+            this.PepMonoisotopeAdjustmentSet2.Location = new System.Drawing.Point(136, 37);
+            this.PepMonoisotopeAdjustmentSet2.Name = "PepMonoisotopeAdjustmentSet2";
+            this.PepMonoisotopeAdjustmentSet2.Size = new System.Drawing.Size(75, 20);
+            this.PepMonoisotopeAdjustmentSet2.TabIndex = 4;
+            this.PepMonoisotopeAdjustmentSet2.Tag = "";
+            this.PepMonoisotopeAdjustmentSet2.Value = new decimal(new int[] {
+            2,
+            0,
+            0,
+            0});
+            // 
+            // PepMonoisotopeAdjustmentSetBox
+            // 
+            this.PepMonoisotopeAdjustmentSetBox.Location = new System.Drawing.Point(33, 37);
+            this.PepMonoisotopeAdjustmentSetBox.Maximum = new decimal(new int[] {
+            0,
+            0,
+            0,
+            0});
+            this.PepMonoisotopeAdjustmentSetBox.Minimum = new decimal(new int[] {
+            100,
+            0,
+            0,
+            -2147483648});
+            this.PepMonoisotopeAdjustmentSetBox.Name = "PepMonoisotopeAdjustmentSetBox";
+            this.PepMonoisotopeAdjustmentSetBox.Size = new System.Drawing.Size(75, 20);
+            this.PepMonoisotopeAdjustmentSetBox.TabIndex = 3;
+            this.PepMonoisotopeAdjustmentSetBox.Tag = "";
+            this.PepMonoisotopeAdjustmentSetBox.Value = new decimal(new int[] {
+            1,
+            0,
+            0,
+            -2147483648});
+            // 
+            // PepMonoisotopeAdjustmentSetLabel
+            // 
+            this.PepMonoisotopeAdjustmentSetLabel.AutoSize = true;
+            this.PepMonoisotopeAdjustmentSetLabel.Location = new System.Drawing.Point(39, 21);
+            this.PepMonoisotopeAdjustmentSetLabel.Name = "PepMonoisotopeAdjustmentSetLabel";
+            this.PepMonoisotopeAdjustmentSetLabel.Size = new System.Drawing.Size(166, 13);
+            this.PepMonoisotopeAdjustmentSetLabel.TabIndex = 10;
+            this.PepMonoisotopeAdjustmentSetLabel.Text = "Precursor Adjustment (in Daltons):";
             // 
             // MyriAdvPanel
             // 
@@ -2359,6 +3650,8 @@
             this.MyriMiscGB.Controls.Add(this.MyriOutputFormatLabel);
             this.MyriMiscGB.Controls.Add(this.MyriNumChargeStatesBox);
             this.MyriMiscGB.Controls.Add(this.MyriNumChargeStatesInfo);
+            this.MyriMiscGB.Controls.Add(this.MyriFragmentationRuleBox);
+            this.MyriMiscGB.Controls.Add(this.MyriFragmentationRuleLabel);
             this.MyriMiscGB.Controls.Add(this.MyriNumChargeStatesLabel);
             this.MyriMiscGB.Controls.Add(this.MyriDecoyPrefixLabel);
             this.MyriMiscGB.Controls.Add(this.MyriDecoyPrefixBox);
@@ -2378,7 +3671,7 @@
             this.MyriMiscGB.Controls.Add(this.MyriMaxResultRankLabel);
             this.MyriMiscGB.Location = new System.Drawing.Point(276, 6);
             this.MyriMiscGB.Name = "MyriMiscGB";
-            this.MyriMiscGB.Size = new System.Drawing.Size(247, 255);
+            this.MyriMiscGB.Size = new System.Drawing.Size(247, 278);
             this.MyriMiscGB.TabIndex = 6;
             this.MyriMiscGB.TabStop = false;
             this.MyriMiscGB.Text = "Misc";
@@ -2390,7 +3683,7 @@
             this.MyriOutputFormatBox.Items.AddRange(new object[] {
             "pepXML",
             "mzIdentML"});
-            this.MyriOutputFormatBox.Location = new System.Drawing.Point(142, 224);
+            this.MyriOutputFormatBox.Location = new System.Drawing.Point(143, 251);
             this.MyriOutputFormatBox.Name = "MyriOutputFormatBox";
             this.MyriOutputFormatBox.Size = new System.Drawing.Size(92, 21);
             this.MyriOutputFormatBox.TabIndex = 108;
@@ -2399,7 +3692,7 @@
             // MyriOutputFormatLabel
             // 
             this.MyriOutputFormatLabel.AutoSize = true;
-            this.MyriOutputFormatLabel.Location = new System.Drawing.Point(59, 228);
+            this.MyriOutputFormatLabel.Location = new System.Drawing.Point(60, 255);
             this.MyriOutputFormatLabel.Name = "MyriOutputFormatLabel";
             this.MyriOutputFormatLabel.Size = new System.Drawing.Size(77, 13);
             this.MyriOutputFormatLabel.TabIndex = 107;
@@ -2407,7 +3700,7 @@
             // 
             // MyriNumChargeStatesBox
             // 
-            this.MyriNumChargeStatesBox.Location = new System.Drawing.Point(192, 43);
+            this.MyriNumChargeStatesBox.Location = new System.Drawing.Point(189, 43);
             this.MyriNumChargeStatesBox.Maximum = new decimal(new int[] {
             8,
             0,
@@ -2419,7 +3712,7 @@
             0,
             0});
             this.MyriNumChargeStatesBox.Name = "MyriNumChargeStatesBox";
-            this.MyriNumChargeStatesBox.Size = new System.Drawing.Size(42, 20);
+            this.MyriNumChargeStatesBox.Size = new System.Drawing.Size(45, 20);
             this.MyriNumChargeStatesBox.TabIndex = 1;
             this.MyriNumChargeStatesBox.Tag = "";
             this.MyriNumChargeStatesBox.Value = new decimal(new int[] {
@@ -2435,16 +3728,38 @@
             this.MyriNumChargeStatesInfo.Cursor = System.Windows.Forms.Cursors.Hand;
             this.MyriNumChargeStatesInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.MyriNumChargeStatesInfo.ForeColor = System.Drawing.Color.MediumBlue;
-            this.MyriNumChargeStatesInfo.Location = new System.Drawing.Point(181, 37);
+            this.MyriNumChargeStatesInfo.Location = new System.Drawing.Point(178, 37);
             this.MyriNumChargeStatesInfo.Name = "MyriNumChargeStatesInfo";
             this.MyriNumChargeStatesInfo.Size = new System.Drawing.Size(13, 13);
             this.MyriNumChargeStatesInfo.TabIndex = 104;
             this.MyriNumChargeStatesInfo.Text = "?";
             // 
+            // MyriFragmentationRuleBox
+            // 
+            this.MyriFragmentationRuleBox.FormattingEnabled = true;
+            this.MyriFragmentationRuleBox.Items.AddRange(new object[] {
+            "cid",
+            "etd"});
+            this.MyriFragmentationRuleBox.Location = new System.Drawing.Point(143, 224);
+            this.MyriFragmentationRuleBox.Name = "MyriFragmentationRuleBox";
+            this.MyriFragmentationRuleBox.Size = new System.Drawing.Size(92, 21);
+            this.MyriFragmentationRuleBox.TabIndex = 110;
+            this.MyriFragmentationRuleBox.Tag = "";
+            this.MyriFragmentationRuleBox.Text = "cid";
+            // 
+            // MyriFragmentationRuleLabel
+            // 
+            this.MyriFragmentationRuleLabel.AutoSize = true;
+            this.MyriFragmentationRuleLabel.Location = new System.Drawing.Point(35, 228);
+            this.MyriFragmentationRuleLabel.Name = "MyriFragmentationRuleLabel";
+            this.MyriFragmentationRuleLabel.Size = new System.Drawing.Size(102, 13);
+            this.MyriFragmentationRuleLabel.TabIndex = 109;
+            this.MyriFragmentationRuleLabel.Text = "Fragmentation Rule:";
+            // 
             // MyriNumChargeStatesLabel
             // 
             this.MyriNumChargeStatesLabel.AutoSize = true;
-            this.MyriNumChargeStatesLabel.Location = new System.Drawing.Point(57, 45);
+            this.MyriNumChargeStatesLabel.Location = new System.Drawing.Point(54, 45);
             this.MyriNumChargeStatesLabel.Name = "MyriNumChargeStatesLabel";
             this.MyriNumChargeStatesLabel.Size = new System.Drawing.Size(129, 13);
             this.MyriNumChargeStatesLabel.TabIndex = 99;
@@ -2453,7 +3768,7 @@
             // MyriDecoyPrefixLabel
             // 
             this.MyriDecoyPrefixLabel.AutoSize = true;
-            this.MyriDecoyPrefixLabel.Location = new System.Drawing.Point(59, 201);
+            this.MyriDecoyPrefixLabel.Location = new System.Drawing.Point(66, 201);
             this.MyriDecoyPrefixLabel.Name = "MyriDecoyPrefixLabel";
             this.MyriDecoyPrefixLabel.Size = new System.Drawing.Size(70, 13);
             this.MyriDecoyPrefixLabel.TabIndex = 104;
@@ -2461,9 +3776,9 @@
             // 
             // MyriDecoyPrefixBox
             // 
-            this.MyriDecoyPrefixBox.Location = new System.Drawing.Point(135, 198);
+            this.MyriDecoyPrefixBox.Location = new System.Drawing.Point(142, 198);
             this.MyriDecoyPrefixBox.Name = "MyriDecoyPrefixBox";
-            this.MyriDecoyPrefixBox.Size = new System.Drawing.Size(100, 20);
+            this.MyriDecoyPrefixBox.Size = new System.Drawing.Size(93, 20);
             this.MyriDecoyPrefixBox.TabIndex = 7;
             this.MyriDecoyPrefixBox.Text = "rev_";
             // 
@@ -2509,14 +3824,14 @@
             // 
             // MyriMaxPeakCountBox
             // 
-            this.MyriMaxPeakCountBox.Location = new System.Drawing.Point(182, 95);
+            this.MyriMaxPeakCountBox.Location = new System.Drawing.Point(189, 95);
             this.MyriMaxPeakCountBox.Maximum = new decimal(new int[] {
             10000,
             0,
             0,
             0});
             this.MyriMaxPeakCountBox.Name = "MyriMaxPeakCountBox";
-            this.MyriMaxPeakCountBox.Size = new System.Drawing.Size(52, 20);
+            this.MyriMaxPeakCountBox.Size = new System.Drawing.Size(45, 20);
             this.MyriMaxPeakCountBox.TabIndex = 3;
             this.MyriMaxPeakCountBox.Tag = "";
             this.MyriMaxPeakCountBox.Value = new decimal(new int[] {
@@ -2529,7 +3844,7 @@
             // MyriMaxPeakCountLabel
             // 
             this.MyriMaxPeakCountLabel.AutoSize = true;
-            this.MyriMaxPeakCountLabel.Location = new System.Drawing.Point(86, 97);
+            this.MyriMaxPeakCountLabel.Location = new System.Drawing.Point(94, 97);
             this.MyriMaxPeakCountLabel.Name = "MyriMaxPeakCountLabel";
             this.MyriMaxPeakCountLabel.Size = new System.Drawing.Size(89, 13);
             this.MyriMaxPeakCountLabel.TabIndex = 98;
@@ -3830,6 +5145,8 @@
             // 
             // TRMiscGB
             // 
+            this.TRMiscGB.Controls.Add(this.TRFragmentationRuleBox);
+            this.TRMiscGB.Controls.Add(this.TRFragmentationRuleLabel);
             this.TRMiscGB.Controls.Add(this.TROutputFormatBox);
             this.TRMiscGB.Controls.Add(this.TROutputFormatLabel);
             this.TRMiscGB.Controls.Add(this.TRDecoyPrefixLabel);
@@ -3846,10 +5163,32 @@
             this.TRMiscGB.Controls.Add(this.TRMaxResultRankLabel);
             this.TRMiscGB.Location = new System.Drawing.Point(275, 190);
             this.TRMiscGB.Name = "TRMiscGB";
-            this.TRMiscGB.Size = new System.Drawing.Size(247, 173);
+            this.TRMiscGB.Size = new System.Drawing.Size(247, 197);
             this.TRMiscGB.TabIndex = 8;
             this.TRMiscGB.TabStop = false;
             this.TRMiscGB.Text = "Misc";
+            // 
+            // TRFragmentationRuleBox
+            // 
+            this.TRFragmentationRuleBox.FormattingEnabled = true;
+            this.TRFragmentationRuleBox.Items.AddRange(new object[] {
+            "cid",
+            "etd"});
+            this.TRFragmentationRuleBox.Location = new System.Drawing.Point(143, 143);
+            this.TRFragmentationRuleBox.Name = "TRFragmentationRuleBox";
+            this.TRFragmentationRuleBox.Size = new System.Drawing.Size(92, 21);
+            this.TRFragmentationRuleBox.TabIndex = 112;
+            this.TRFragmentationRuleBox.Tag = "";
+            this.TRFragmentationRuleBox.Text = "cid";
+            // 
+            // TRFragmentationRuleLabel
+            // 
+            this.TRFragmentationRuleLabel.AutoSize = true;
+            this.TRFragmentationRuleLabel.Location = new System.Drawing.Point(35, 147);
+            this.TRFragmentationRuleLabel.Name = "TRFragmentationRuleLabel";
+            this.TRFragmentationRuleLabel.Size = new System.Drawing.Size(102, 13);
+            this.TRFragmentationRuleLabel.TabIndex = 111;
+            this.TRFragmentationRuleLabel.Text = "Fragmentation Rule:";
             // 
             // TROutputFormatBox
             // 
@@ -3858,7 +5197,7 @@
             this.TROutputFormatBox.Items.AddRange(new object[] {
             "pepXML",
             "mzIdentML"});
-            this.TROutputFormatBox.Location = new System.Drawing.Point(143, 145);
+            this.TROutputFormatBox.Location = new System.Drawing.Point(143, 170);
             this.TROutputFormatBox.Name = "TROutputFormatBox";
             this.TROutputFormatBox.Size = new System.Drawing.Size(92, 21);
             this.TROutputFormatBox.TabIndex = 110;
@@ -3867,7 +5206,7 @@
             // TROutputFormatLabel
             // 
             this.TROutputFormatLabel.AutoSize = true;
-            this.TROutputFormatLabel.Location = new System.Drawing.Point(60, 149);
+            this.TROutputFormatLabel.Location = new System.Drawing.Point(60, 174);
             this.TROutputFormatLabel.Name = "TROutputFormatLabel";
             this.TROutputFormatLabel.Size = new System.Drawing.Size(77, 13);
             this.TROutputFormatLabel.TabIndex = 109;
@@ -3876,7 +5215,7 @@
             // TRDecoyPrefixLabel
             // 
             this.TRDecoyPrefixLabel.AutoSize = true;
-            this.TRDecoyPrefixLabel.Location = new System.Drawing.Point(59, 122);
+            this.TRDecoyPrefixLabel.Location = new System.Drawing.Point(67, 122);
             this.TRDecoyPrefixLabel.Name = "TRDecoyPrefixLabel";
             this.TRDecoyPrefixLabel.Size = new System.Drawing.Size(70, 13);
             this.TRDecoyPrefixLabel.TabIndex = 100;
@@ -3884,9 +5223,9 @@
             // 
             // TRDecoyPrefixBox
             // 
-            this.TRDecoyPrefixBox.Location = new System.Drawing.Point(135, 119);
+            this.TRDecoyPrefixBox.Location = new System.Drawing.Point(143, 119);
             this.TRDecoyPrefixBox.Name = "TRDecoyPrefixBox";
-            this.TRDecoyPrefixBox.Size = new System.Drawing.Size(100, 20);
+            this.TRDecoyPrefixBox.Size = new System.Drawing.Size(92, 20);
             this.TRDecoyPrefixBox.TabIndex = 5;
             this.TRDecoyPrefixBox.Text = "rev_";
             // 
@@ -4759,7 +6098,8 @@
             this.ProgramModeBox.Items.AddRange(new object[] {
             "MyriMatch",
             "DirecTag",
-            "TagRecon"});
+            "TagRecon",
+            "Pepitome"});
             this.ProgramModeBox.Location = new System.Drawing.Point(144, 9);
             this.ProgramModeBox.Name = "ProgramModeBox";
             this.ProgramModeBox.Size = new System.Drawing.Size(118, 21);
@@ -4845,8 +6185,8 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(542, 616);
             this.Controls.Add(this.mainTabControl);
-            this.Controls.Add(this.ConfigModePanel);
             this.Controls.Add(this.TemplateModePanel);
+            this.Controls.Add(this.ConfigModePanel);
             this.MinimumSize = new System.Drawing.Size(550, 540);
             this.Name = "ConfigForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
@@ -4856,6 +6196,18 @@
             this.Gentab.ResumeLayout(false);
             this.SlowFadePanel.ResumeLayout(false);
             this.SlowFadePanel.PerformLayout();
+            this.PepGenPanel.ResumeLayout(false);
+            this.PepModGB.ResumeLayout(false);
+            this.PepModGB.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.PepAppliedModBox)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.PepMaxDynamicModsBox)).EndInit();
+            this.PepToleranceGB.ResumeLayout(false);
+            this.PepToleranceGB.PerformLayout();
+            this.PepDigestionGB.ResumeLayout(false);
+            this.PepDigestionGB.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.PepMaxMissedCleavagesBox)).EndInit();
+            this.PepInstrumentGB.ResumeLayout(false);
+            this.PepInstrumentGB.PerformLayout();
             this.MyriGenPanel.ResumeLayout(false);
             this.MyriToleranceGB.ResumeLayout(false);
             this.MyriToleranceGB.PerformLayout();
@@ -4890,6 +6242,31 @@
             ((System.ComponentModel.ISupportInitialize)(this.TRAppliedModBox)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.TRMaxDynamicModsBox)).EndInit();
             this.AdvTab.ResumeLayout(false);
+            this.PepAdvPanel.ResumeLayout(false);
+            this.PepLibraryGB.ResumeLayout(false);
+            this.PepLibraryGB.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.PepLibMaxPeakCountBox)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.PepLibTicCutoffPercentageBox)).EndInit();
+            this.PepMiscBox.ResumeLayout(false);
+            this.PepMiscBox.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.PepNumChargeStatesBox)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.PepProteinSamplingTimeBox)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.PepMaxPeakCountBox)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.PepTicCutoffPercentageBox)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.PepMaxResultRankBox)).EndInit();
+            this.PepScoringGB.ResumeLayout(false);
+            this.PepScoringGB.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.PepClassSizeMultiplierBox)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.PepNumIntensityClassesBox)).EndInit();
+            this.PepSequenceGB.ResumeLayout(false);
+            this.PepSequenceGB.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.PepMaxPeptideMassBox)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.PepMinPeptideMassBox)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.PepMinPeptideLengthBox)).EndInit();
+            this.PepAdjustmentGB.ResumeLayout(false);
+            this.PepAdjustmentGB.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.PepMonoisotopeAdjustmentSet2)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.PepMonoisotopeAdjustmentSetBox)).EndInit();
             this.MyriAdvPanel.ResumeLayout(false);
             this.MyriMiscGB.ResumeLayout(false);
             this.MyriMiscGB.PerformLayout();
@@ -5309,5 +6686,99 @@
         private System.Windows.Forms.Label TROutputFormatLabel;
         private System.Windows.Forms.Label TRMaxAmbResultsForBlindModsLabel;
         private System.Windows.Forms.NumericUpDown TRMaxAmbResultsForBlindModsBox;
+        private System.Windows.Forms.Panel PepGenPanel;
+        private System.Windows.Forms.Panel PepAdvPanel;
+        private System.Windows.Forms.GroupBox PepInstrumentGB;
+        private System.Windows.Forms.Button PepInstrumentLoad;
+        private System.Windows.Forms.ComboBox PepInstrumentList;
+        private System.Windows.Forms.Label PepInstrumentLabel;
+        private System.Windows.Forms.ComboBox PepPrecursorMzToleranceRuleBox;
+        private System.Windows.Forms.Label PepPrecursorMzToleranceRuleLabel;
+        private System.Windows.Forms.GroupBox PepDigestionGB;
+        private System.Windows.Forms.Label PepMaxMissedCleavagesAuto;
+        private System.Windows.Forms.NumericUpDown PepMaxMissedCleavagesBox;
+        private System.Windows.Forms.ComboBox PepMinTerminiCleavagesBox;
+        private System.Windows.Forms.ComboBox PepCleavageRulesBox;
+        private System.Windows.Forms.Label PepCleavageRulesLabel;
+        private System.Windows.Forms.Label PepMaxMissedCleavagesLabel;
+        private System.Windows.Forms.Label PepMinTerminiCleavagesLabel;
+        private System.Windows.Forms.GroupBox PepToleranceGB;
+        private System.Windows.Forms.TextBox PepMonoPrecursorMzToleranceBox;
+        private System.Windows.Forms.ComboBox PepMonoPrecursorMzToleranceUnitsList;
+        private System.Windows.Forms.Label PepMonoPrecursorMzToleranceLabel;
+        private System.Windows.Forms.TextBox PepFragmentMzToleranceBox;
+        private System.Windows.Forms.TextBox PepAvgPrecursorMzToleranceBox;
+        private System.Windows.Forms.ComboBox PepFragmentMzToleranceUnitsList;
+        private System.Windows.Forms.ComboBox PepAvgPrecursorMzToleranceUnitsList;
+        private System.Windows.Forms.Label PepFragmentMzToleranceLabel;
+        private System.Windows.Forms.Label PepAvgPrecursorMzToleranceLabel;
+        private System.Windows.Forms.GroupBox PepModGB;
+        private System.Windows.Forms.DataGridView PepAppliedModBox;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn5;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn6;
+        private System.Windows.Forms.DataGridViewComboBoxColumn dataGridViewComboBoxColumn3;
+        private System.Windows.Forms.Label PepAppliedModLabel;
+        private System.Windows.Forms.Button PepAppliedModRemove;
+        private System.Windows.Forms.Button PepAppliedModAdd;
+        private System.Windows.Forms.Label PepModTypeLabel;
+        private System.Windows.Forms.ComboBox PepModTypeList;
+        private System.Windows.Forms.Label PepModListLabelText;
+        private System.Windows.Forms.Label PepResidueLabel;
+        private System.Windows.Forms.Label PepModMassLabel;
+        private System.Windows.Forms.TextBox PepModMassText;
+        private System.Windows.Forms.NumericUpDown PepMaxDynamicModsBox;
+        private System.Windows.Forms.TextBox PepResidueText;
+        private System.Windows.Forms.ListView PepModList;
+        private System.Windows.Forms.ColumnHeader columnHeader3;
+        private System.Windows.Forms.Label PepMaxDynamicModsLabel;
+        private System.Windows.Forms.GroupBox PepAdjustmentGB;
+        private System.Windows.Forms.Label PepMonoisotopeAdjustmentSetLabel2;
+        private System.Windows.Forms.NumericUpDown PepMonoisotopeAdjustmentSet2;
+        private System.Windows.Forms.NumericUpDown PepMonoisotopeAdjustmentSetBox;
+        private System.Windows.Forms.Label PepMonoisotopeAdjustmentSetLabel;
+        private System.Windows.Forms.GroupBox PepSequenceGB;
+        private System.Windows.Forms.NumericUpDown PepMaxPeptideMassBox;
+        private System.Windows.Forms.NumericUpDown PepMinPeptideMassBox;
+        private System.Windows.Forms.Label PepMaxPeptideMassLabel;
+        private System.Windows.Forms.Label PepMinPeptideMassLabel;
+        private System.Windows.Forms.NumericUpDown PepMinPeptideLengthBox;
+        private System.Windows.Forms.Label PepMinPeptideLengthLabel;
+        private System.Windows.Forms.GroupBox PepScoringGB;
+        private System.Windows.Forms.NumericUpDown PepClassSizeMultiplierBox;
+        private System.Windows.Forms.NumericUpDown PepNumIntensityClassesBox;
+        private System.Windows.Forms.Label PepNumIntensityClassesLabel;
+        private System.Windows.Forms.Label PepClassSizeMultiplierLabel;
+        private System.Windows.Forms.GroupBox PepMiscBox;
+        private System.Windows.Forms.ComboBox PepOutputFormatBox;
+        private System.Windows.Forms.Label PepOutputFormatLabel;
+        private System.Windows.Forms.NumericUpDown PepNumChargeStatesBox;
+        private System.Windows.Forms.Label PepNumChargeStatesLabel;
+        private System.Windows.Forms.Label PepDecoyPrefixLabel;
+        private System.Windows.Forms.TextBox PepDecoyPrefixBox;
+        private System.Windows.Forms.NumericUpDown PepProteinSamplingTimeBox;
+        private System.Windows.Forms.NumericUpDown PepMaxPeakCountBox;
+        private System.Windows.Forms.Label PepMaxPeakCountLabel;
+        private System.Windows.Forms.NumericUpDown PepTicCutoffPercentageBox;
+        private System.Windows.Forms.NumericUpDown PepMaxResultRankBox;
+        private System.Windows.Forms.Label PepTicCutoffPercentageLabel;
+        private System.Windows.Forms.Label PepProteinSamplingTimeLabel;
+        private System.Windows.Forms.Label PepMaxResultRankLabel;
+        private System.Windows.Forms.GroupBox PepLibraryGB;
+        private System.Windows.Forms.CheckBox PepCleanLibSpectraBox;
+        private System.Windows.Forms.Label PepCleanLibSpectraLabel;
+        private System.Windows.Forms.CheckBox PepRecalculateLibPepMassesBox;
+        private System.Windows.Forms.Label PepRecalculateLibPepMassesLabel;
+        private System.Windows.Forms.CheckBox PepFASTARefreshResultsBox;
+        private System.Windows.Forms.Label PepFASTARefreshResultsLabel;
+        private System.Windows.Forms.NumericUpDown PepLibMaxPeakCountBox;
+        private System.Windows.Forms.Label PepLibMaxPeakCountLabel;
+        private System.Windows.Forms.NumericUpDown PepLibTicCutoffPercentageBox;
+        private System.Windows.Forms.Label PepLibTicCutoffPercentageLabel;
+        private System.Windows.Forms.ComboBox MyriFragmentationRuleBox;
+        private System.Windows.Forms.Label MyriFragmentationRuleLabel;
+        private System.Windows.Forms.ComboBox TRFragmentationRuleBox;
+        private System.Windows.Forms.Label TRFragmentationRuleLabel;
+        private System.Windows.Forms.ComboBox PepFragmentationRuleBox;
+        private System.Windows.Forms.Label PepFragmentationRuleLabel;
     }
 }

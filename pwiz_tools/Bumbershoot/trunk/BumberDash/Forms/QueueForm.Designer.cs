@@ -409,7 +409,7 @@
             // 
             this.JQDatabaseFile.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
             this.JQDatabaseFile.FillWeight = 80F;
-            this.JQDatabaseFile.HeaderText = "Database File";
+            this.JQDatabaseFile.HeaderText = "Data File";
             this.JQDatabaseFile.MinimumWidth = 95;
             this.JQDatabaseFile.Name = "JQDatabaseFile";
             this.JQDatabaseFile.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Programmatic;
@@ -429,7 +429,8 @@
             this.JQScanType.HeaderText = "Search Type";
             this.JQScanType.Items.AddRange(new object[] {
             "Database Search",
-            "Sequence Tagging"});
+            "Sequence Tagging",
+            "Spectral Library"});
             this.JQScanType.MinimumWidth = 105;
             this.JQScanType.Name = "JQScanType";
             // 

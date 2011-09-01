@@ -55,6 +55,7 @@ namespace BumberDash.Forms
         private IList<ConfigFile> _myriTemplateList; //List of all templates user has specified for Myrimatch
         private IList<ConfigFile> _DTTemplateList; //List of all templates user has specified for Directag
         private IList<ConfigFile> _TRTemplateList; //List of all templates user has specified for Tagrecon
+        private IList<ConfigFile> _pepTemplateList; //List of all templates user has specified for Tagrecon
 
         /// <summary>
         /// Create ConfigForm in template mode
@@ -76,7 +77,8 @@ namespace BumberDash.Forms
                             {
                                 {"MyriMatch", new List<Control>()},
                                 {"DirecTag", new List<Control>()},
-                                {"TagRecon", new List<Control>()}
+                                {"TagRecon", new List<Control>()},
+                                {"Pepitome", new List<Control>()}
                             };
 
             SetInitialValues();
@@ -86,6 +88,8 @@ namespace BumberDash.Forms
             InitializePane(DTAdvPanel);
             InitializePane(TRGenPanel);
             InitializePane(TRAdvPanel);
+            InitializePane(PepGenPanel);
+            InitializePane(PepAdvPanel);
 
             mainTabControl.TabPages.Remove(AdvTab);
 
@@ -98,6 +102,7 @@ namespace BumberDash.Forms
         /// </summary>
         /// <param name="baseConfig"></param>
         /// <param name="baseDirectory"></param>
+        /// <param name="defaultName"></param>
         /// <param name="templates"></param>
         public ConfigForm(ConfigFile baseConfig, string baseDirectory, string defaultName, IEnumerable<ConfigFile> templates)
         {
@@ -147,6 +152,15 @@ namespace BumberDash.Forms
                         TRInstrumentList.Items.Add(item.Name);
                     TRInstrumentList.Text = "New";
                     break;
+                case "Pepitome":
+                    _pepTemplateList = templates.Where(x => x.DestinationProgram == "Pepitome").ToList();
+                    InitializePane(PepGenPanel);
+                    InitializePane(PepAdvPanel);
+                    PepInstrumentList.Items.Add("New");
+                    foreach (var item in _pepTemplateList)
+                        PepInstrumentList.Items.Add(item.Name);
+                    PepInstrumentList.Text = "New";
+                    break;
             }
 
             mainTabControl.TabPages.Remove(AdvTab);
@@ -158,6 +172,7 @@ namespace BumberDash.Forms
         /// </summary>
         /// <param name="configProgram"></param>
         /// <param name="baseDirectory"></param>
+        /// <param name="defaultName"></param>
         /// <param name="templates"></param>
         public ConfigForm(string configProgram, string baseDirectory, string defaultName, IEnumerable<ConfigFile> templates)
         {
@@ -206,6 +221,15 @@ namespace BumberDash.Forms
                         TRInstrumentList.Items.Add(item.Name);
                     TRInstrumentList.Text = "New";
                     break;
+                case "Pepitome":
+                    _pepTemplateList = templates.Where(x => x.DestinationProgram == "Pepitome").ToList();
+                    InitializePane(PepGenPanel);
+                    InitializePane(PepAdvPanel);
+                    PepInstrumentList.Items.Add("New");
+                    foreach (var item in _pepTemplateList)
+                        PepInstrumentList.Items.Add(item.Name);
+                    PepInstrumentList.Text = "New";
+                    break;
             }
             mainTabControl.TabPages.Remove(AdvTab);
         }
@@ -216,10 +240,12 @@ namespace BumberDash.Forms
             _myriTemplateList = templateList.Where(x => x.DestinationProgram == "MyriMatch").ToList();
             _DTTemplateList = templateList.Where(x => x.DestinationProgram == "DirecTag").ToList();
             _TRTemplateList = templateList.Where(x => x.DestinationProgram == "TagRecon").ToList();
+            _pepTemplateList = templateList.Where(x => x.DestinationProgram == "Pepitome").ToList();
 
             MyriInstrumentList.Items.Clear();
             DTInstrumentList.Items.Clear();
             TRInstrumentList.Items.Clear();
+            PepInstrumentList.Items.Clear();
 
             MyriInstrumentList.Items.Add("New");
             foreach (var item in _myriTemplateList)
@@ -233,6 +259,10 @@ namespace BumberDash.Forms
             foreach (var item in _TRTemplateList)
                 TRInstrumentList.Items.Add(item.Name);
             TRInstrumentList.Text = "New";
+            PepInstrumentList.Items.Add("New");
+            foreach (var item in _pepTemplateList)
+                PepInstrumentList.Items.Add(item.Name);
+            PepInstrumentList.Text = "New";
 
             foreach (var item in _itemList[ProgramModeBox.Text])
                 CheckForChange(item, null);
@@ -262,11 +292,22 @@ namespace BumberDash.Forms
             TRCTerminusMzToleranceUnitsList.Text = "mz";
             TRModTypeList.Text = "Static";
             TROutputFormatBox.Text = "pepXML";
+            PepPrecursorMzToleranceRuleBox.Text = "auto";
+            PepMinTerminiCleavagesBox.Text = "Fully-Specific";
+            PepAvgPrecursorMzToleranceUnitsList.Text = "mz";
+            PepMonoPrecursorMzToleranceUnitsList.Text = "ppm";
+            PepFragmentMzToleranceUnitsList.Text = "mz";
+            PepModTypeList.Text = "Static";
+            PepOutputFormatBox.Text = "pepXML";
 
             MyriAvgPrecursorMzToleranceUnitsList.SelectedValueChanged += CheckDualDependenceChange;
             MyriMonoPrecursorMzToleranceUnitsList.SelectedValueChanged += CheckDualDependenceChange;
             MyriFragmentMzToleranceUnitsList.SelectedValueChanged += CheckDualDependenceChange;
             MyriMonoisotopeAdjustmentSet2.ValueChanged += CheckDualDependenceChange;
+            PepAvgPrecursorMzToleranceUnitsList.SelectedValueChanged += CheckDualDependenceChange;
+            PepMonoPrecursorMzToleranceUnitsList.SelectedValueChanged += CheckDualDependenceChange;
+            PepFragmentMzToleranceUnitsList.SelectedValueChanged += CheckDualDependenceChange;
+            PepMonoisotopeAdjustmentSet2.ValueChanged += CheckDualDependenceChange;
         }
 
         /// <summary>
@@ -292,10 +333,15 @@ namespace BumberDash.Forms
                 prefix = "DT";
                 program = "DirecTag";
             }
-            else
+            else if(container.Name.StartsWith("TR"))
             {
                 prefix = "TR";
                 program = "TagRecon";
+            }
+            else
+            {
+                prefix = "Pep";
+                program = "Pepitome";
             }
 
             foreach (Control item in container.Controls)
@@ -492,6 +538,7 @@ namespace BumberDash.Forms
 
         private string GetDualDependenceValue(Control item)
         {
+            //MyriMatch
             if (item == MyriMonoisotopeAdjustmentSetBox)
             {
                 return string.Format("\"[{0},{1}]\"", MyriMonoisotopeAdjustmentSetBox.Value,
@@ -503,10 +550,25 @@ namespace BumberDash.Forms
                 return "\"" + item.Text + MyriMonoPrecursorMzToleranceUnitsList.Text + "\"";
             if (item == MyriFragmentMzToleranceBox)
                 return "\"" + item.Text + MyriFragmentMzToleranceUnitsList.Text + "\"";
+
+            //TagRecon
             if (item == TRMonoPrecursorMzToleranceBox)
                 return "\"" + item.Text + TRMonoPrecursorMzToleranceUnitsList.Text + "\"";
             if (item == TRFragmentMzToleranceBox)
                 return "\"" + item.Text + TRFragmentMzToleranceUnitsList.Text + "\"";
+
+            //Pepitome
+            if (item == PepMonoisotopeAdjustmentSetBox)
+            {
+                return string.Format("\"[{0},{1}]\"", PepMonoisotopeAdjustmentSetBox.Value,
+                                     PepMonoisotopeAdjustmentSet2.Value);
+            }
+            if (item == PepAvgPrecursorMzToleranceBox)
+                return "\"" + item.Text + PepAvgPrecursorMzToleranceUnitsList.Text + "\"";
+            if (item == PepMonoPrecursorMzToleranceBox)
+                return "\"" + item.Text + PepMonoPrecursorMzToleranceUnitsList.Text + "\"";
+            if (item == PepFragmentMzToleranceBox)
+                return "\"" + item.Text + PepFragmentMzToleranceUnitsList.Text + "\"";
             return string.Empty;
         }
 
@@ -514,21 +576,31 @@ namespace BumberDash.Forms
         {
             string[] splitValue;
 
-            if (item == MyriMonoisotopeAdjustmentSetBox)
+            if (item == MyriMonoisotopeAdjustmentSetBox ||
+                item == PepMonoisotopeAdjustmentSetBox)
             {
                 int first;
                 int second;
                 splitValue = value.Trim('"').Trim('[').Trim(']').Split(',');
                 int.TryParse(splitValue[0], out first);
                 int.TryParse(splitValue[1], out second);
-                MyriMonoisotopeAdjustmentSetBox.Value = first;
-                MyriMonoisotopeAdjustmentSet2.Value = second;
+                if (item == MyriMonoisotopeAdjustmentSetBox)
+                {
+                    MyriMonoisotopeAdjustmentSetBox.Value = first;
+                    MyriMonoisotopeAdjustmentSet2.Value = second;
+                }
+                else
+                {
+                    PepMonoisotopeAdjustmentSetBox.Value = first;
+                    PepMonoisotopeAdjustmentSet2.Value = second;
+                }
                 return;
             }
 
             splitValue = GetSplitMZToleranceValue(value);
             try
             {
+                //MyriMatch
                 if (item == MyriAvgPrecursorMzToleranceBox)
                 {
                     item.Text = splitValue[0];
@@ -544,6 +616,8 @@ namespace BumberDash.Forms
                     item.Text = splitValue[0];
                     MyriFragmentMzToleranceUnitsList.Text = splitValue[1];
                 }
+
+                //TagRecon
                 if (item == TRMonoPrecursorMzToleranceBox)
                 {
                     item.Text = splitValue[0];
@@ -553,6 +627,23 @@ namespace BumberDash.Forms
                 {
                     item.Text = splitValue[0];
                     TRFragmentMzToleranceUnitsList.Text = splitValue[1];
+                }
+
+                //Pepitome
+                if (item == PepAvgPrecursorMzToleranceBox)
+                {
+                    item.Text = splitValue[0];
+                    PepAvgPrecursorMzToleranceUnitsList.Text = splitValue[1];
+                }
+                if (item == PepMonoPrecursorMzToleranceBox)
+                {
+                    item.Text = splitValue[0];
+                    PepMonoPrecursorMzToleranceUnitsList.Text = splitValue[1];
+                }
+                if (item == PepFragmentMzToleranceBox)
+                {
+                    item.Text = splitValue[0];
+                    PepFragmentMzToleranceUnitsList.Text = splitValue[1];
                 }
             }
             catch (Exception e)
@@ -564,6 +655,8 @@ namespace BumberDash.Forms
         private void CheckDualDependenceChange(object sender, EventArgs e)
         {
             var item = (Control) sender;
+
+            //MyriMatch
             if (item == MyriMonoisotopeAdjustmentSet2)
                 CheckForChange(MyriMonoisotopeAdjustmentSetBox, e);
             else if (item == MyriAvgPrecursorMzToleranceUnitsList)
@@ -572,10 +665,22 @@ namespace BumberDash.Forms
                 CheckForChange(MyriMonoPrecursorMzToleranceBox, e);
             else if (item == MyriFragmentMzToleranceUnitsList)
                 CheckForChange(MyriFragmentMzToleranceBox, e);
+
+            //TagRecon
             else if (item == TRMonoPrecursorMzToleranceUnitsList)
                 CheckForChange(TRMonoPrecursorMzToleranceBox, e);
             else if (item == TRFragmentMzToleranceUnitsList)
                 CheckForChange(TRFragmentMzToleranceBox, e);
+
+            //Pepitome
+            else if (item == PepMonoisotopeAdjustmentSet2)
+                CheckForChange(PepMonoisotopeAdjustmentSetBox, e);
+            else if (item == PepAvgPrecursorMzToleranceUnitsList)
+                CheckForChange(PepAvgPrecursorMzToleranceBox, e);
+            else if (item == PepMonoPrecursorMzToleranceUnitsList)
+                CheckForChange(PepMonoPrecursorMzToleranceBox, e);
+            else if (item == PepFragmentMzToleranceUnitsList)
+                CheckForChange(PepFragmentMzToleranceBox, e);
         }
 
         private string[] GetSplitMZToleranceValue(string value)
@@ -715,6 +820,8 @@ namespace BumberDash.Forms
             DTAdvPanel.Visible = false;
             TRGenPanel.Visible = false;
             TRAdvPanel.Visible = false;
+            PepGenPanel.Visible = false;
+            PepAdvPanel.Visible = false;
         }
 
         /// <summary>
@@ -724,7 +831,11 @@ namespace BumberDash.Forms
         /// <returns></returns>
         private string RootName(string fullWord)
         {
-            fullWord = fullWord.Remove(0, fullWord.StartsWith("Myri") ? 4 : 2);
+            fullWord = fullWord.Remove(0, fullWord.StartsWith("Myri")
+                                              ? 4
+                                              : (fullWord.StartsWith("Pep")
+                                                     ? 3
+                                                     : 2));
 
             if (fullWord.EndsWith("Info") || fullWord.EndsWith("Auto"))
                 fullWord = fullWord.Remove(fullWord.Length - 4, 4);
@@ -770,8 +881,10 @@ namespace BumberDash.Forms
                 dgv = MyriAppliedModBox;
             else if (ProgramModeBox.Text == "DirecTag")
                 dgv = DTAppliedModBox;
-            else
+            else if (ProgramModeBox.Text == "TagRecon")
                 dgv = TRAppliedModBox;
+            else
+                dgv = PepAppliedModBox;
 
             var modList = ModStringToModList(newModString);
 
@@ -861,6 +974,7 @@ namespace BumberDash.Forms
                                      "UseSmartPlusThreeModel",
                                      Environment.NewLine,
                                      "CleavageRules",
+                                     "FragmentationRule",
                                      "MinTerminiCleavages",
                                      "MaxMissedCleavages",
                                      "UseAvgMassOfSequences",
@@ -907,6 +1021,12 @@ namespace BumberDash.Forms
                                      "MaxTagCount",
                                      "MaxTagScore",
                                      "DecoyPrefix",
+                                     Environment.NewLine,
+                                     "CleanLibSpectra",
+                                     "FASTARefreshResults",
+                                     "LibMaxPeakCount",
+                                     "LibTicCutoffPercentage",
+                                     "RecalculateLibPepMasses",
                                      Environment.NewLine
                                  };
 
@@ -1021,6 +1141,11 @@ namespace BumberDash.Forms
                     TRGenPanel.Visible = true;
                     TRAdvPanel.Visible = true;
                     break;
+                case "Pepitome":
+                    Size = new Size(540, 620);
+                    PepGenPanel.Visible = true;
+                    PepAdvPanel.Visible = true;
+                    break;
             }
         }
 
@@ -1095,8 +1220,10 @@ namespace BumberDash.Forms
         {
             if (ProgramModeBox.Text == "MyriMatch")
                 MyriMaxMissedCleavagesAuto.Visible = MyriMaxMissedCleavagesBox.Value == -1;
-            else
+            else if (ProgramModeBox.Text == "TagRecon")
                 TRMaxMissedCleavagesAuto.Visible = TRMaxMissedCleavagesBox.Value == -1;
+            else
+                PepMaxMissedCleavagesAuto.Visible = PepMaxMissedCleavagesBox.Value == -1;
         }
 
         private void AppliedModAdd_Click(object sender, EventArgs e)
@@ -1123,12 +1250,19 @@ namespace BumberDash.Forms
                 ModTypeBox = DTModTypeList;
                 AppliedModDGV = DTAppliedModBox;
             }
-            else
+            else if (ProgramModeBox.Text == "TagRecon")
             {
                 ResidueBox = TRResidueText;
                 ModMassBox = TRModMassText;
                 ModTypeBox = TRModTypeList;
                 AppliedModDGV = TRAppliedModBox;
+            }
+            else
+            {
+                ResidueBox = PepResidueText;
+                ModMassBox = PepModMassText;
+                ModTypeBox = PepModTypeList;
+                AppliedModDGV = PepAppliedModBox;
             }
             #endregion
 
@@ -1175,12 +1309,19 @@ namespace BumberDash.Forms
                 ModTypeBox = DTModTypeList;
                 AppliedModDGV = DTAppliedModBox;
             }
-            else
+            else if (ProgramModeBox.Text == "TagRecon")
             {
                 ResidueBox = TRResidueText;
                 ModMassBox = TRModMassText;
                 ModTypeBox = TRModTypeList;
                 AppliedModDGV = TRAppliedModBox;
+            }
+            else
+            {
+                ResidueBox = PepResidueText;
+                ModMassBox = PepModMassText;
+                ModTypeBox = PepModTypeList;
+                AppliedModDGV = PepAppliedModBox;
             }
             #endregion
 
@@ -1246,6 +1387,14 @@ namespace BumberDash.Forms
                 TRCTerminusMzToleranceUnitsList.Enabled = true;
                 TRMaxMissedCleavagesBox.Enabled = true;
                 TRMaxMissedCleavagesAuto.Enabled = true;
+                PepAvgPrecursorMzToleranceBox.Enabled = true;
+                PepAvgPrecursorMzToleranceUnitsList.Enabled = true;
+                PepMonoPrecursorMzToleranceBox.Enabled = true;
+                PepMonoPrecursorMzToleranceUnitsList.Enabled = true;
+                PepFragmentMzToleranceBox.Enabled = true;
+                PepFragmentMzToleranceUnitsList.Enabled = true;
+                PepMaxMissedCleavagesBox.Enabled = true;
+                PepMaxMissedCleavagesAuto.Enabled = true;
             }
             else
             {
@@ -1272,6 +1421,14 @@ namespace BumberDash.Forms
                 TRCTerminusMzToleranceUnitsList.Enabled = false;
                 TRMaxMissedCleavagesBox.Enabled = false;
                 TRMaxMissedCleavagesAuto.Enabled = false;
+                PepAvgPrecursorMzToleranceBox.Enabled = false;
+                PepAvgPrecursorMzToleranceUnitsList.Enabled = false;
+                PepMonoPrecursorMzToleranceBox.Enabled = false;
+                PepMonoPrecursorMzToleranceUnitsList.Enabled = false;
+                PepFragmentMzToleranceBox.Enabled = false;
+                PepFragmentMzToleranceUnitsList.Enabled = false;
+                PepMaxMissedCleavagesBox.Enabled = false;
+                PepMaxMissedCleavagesAuto.Enabled = false;
             }
         }
 
@@ -1359,11 +1516,17 @@ namespace BumberDash.Forms
                     ModMassBox = DTModMassText;
                     ModTypeBox = DTModTypeList;
                     break;
-                default:
+                case "TagRecon":
                     ModList = TRModList;
                     ResidueBox = TRResidueText;
                     ModMassBox = TRModMassText;
                     ModTypeBox = TRModTypeList;
+                    break;
+                default:
+                    ModList = PepModList;
+                    ResidueBox = PepResidueText;
+                    ModMassBox = PepModMassText;
+                    ModTypeBox = PepModTypeList;
                     break;
             }
 
@@ -1403,9 +1566,10 @@ namespace BumberDash.Forms
                 currentlist = _myriTemplateList;
             else if (ProgramModeBox.Text == "DirecTag")
                 currentlist = _DTTemplateList;
-            else
+            else if (ProgramModeBox.Text == "TagRecon")
                 currentlist = _TRTemplateList;
-
+            else
+                currentlist = _pepTemplateList;
             var index = ((ComboBox) sender).SelectedIndex - 1;
 
             SetTemplateDefaults(index >= 0
@@ -1416,6 +1580,7 @@ namespace BumberDash.Forms
         private void SaveTemplateButton_Click(object sender, EventArgs e)
         {
             var parameterType = lib.Util.parameterTypes;
+            string prefix;
 
             var newTemplate = false;
             try
@@ -1435,6 +1600,7 @@ namespace BumberDash.Forms
                                             };
                         newTemplate = true;
                     }
+                    prefix = "Myri";
                 }
                 else if (ProgramModeBox.Text == "DirecTag")
                 {
@@ -1450,8 +1616,9 @@ namespace BumberDash.Forms
                         };
                         newTemplate = true;
                     }
+                    prefix = "DT";
                 }
-                else
+                else if (ProgramModeBox.Text == "TagRecon")
                 {
                     if (TRInstrumentList.SelectedIndex > 0)
                         currentConfig = _TRTemplateList[TRInstrumentList.SelectedIndex-1];
@@ -1465,6 +1632,23 @@ namespace BumberDash.Forms
                         };
                         newTemplate = true;
                     }
+                    prefix = "TR";
+                }
+                else
+                {
+                    if (PepInstrumentList.SelectedIndex > 0)
+                        currentConfig = _pepTemplateList[PepInstrumentList.SelectedIndex - 1];
+                    else
+                    {
+                        currentConfig = new ConfigFile
+                        {
+                            DestinationProgram = "Pepitome",
+                            FilePath = "Template",
+                            PropertyList = new List<ConfigProperty>()
+                        };
+                        newTemplate = true;
+                    }
+                    prefix = "Pep";
                 }
 
                 if (newTemplate)
@@ -1477,12 +1661,11 @@ namespace BumberDash.Forms
                 }
 
                 currentConfig.PropertyList.Clear();
-                foreach (var kvp in _labelAssociation)
+                foreach (var kvp in _labelAssociation
+                    .Where(kvp => kvp.Key.Name.StartsWith(prefix))
+                    .Where(kvp => kvp.Value.ForeColor != DefaultForeColor
+                        && kvp.Value.ForeColor != Color.Blue))
                 {
-                    if (kvp.Value.ForeColor == DefaultForeColor 
-                        || kvp.Value.ForeColor == Color.Blue)
-                        continue;
-
                     currentConfig.PropertyList.Add(new ConfigProperty
                                                        {
                                                            Name = RootName(kvp.Key.Name),
@@ -1531,10 +1714,17 @@ namespace BumberDash.Forms
                     else
                         MessageBox.Show("Cannot rename 'New'");
                 }
-                else
+                else if (ProgramModeBox.Text == "TagRecon")
                 {
                     if (TRInstrumentList.SelectedIndex > 0)
                         currentConfig = _TRTemplateList[TRInstrumentList.SelectedIndex - 1];
+                    else
+                        MessageBox.Show("Cannot rename 'New'");
+                }
+                else
+                {
+                    if (PepInstrumentList.SelectedIndex > 0)
+                        currentConfig = _pepTemplateList[PepInstrumentList.SelectedIndex - 1];
                     else
                         MessageBox.Show("Cannot rename 'New'");
                 }
@@ -1575,10 +1765,17 @@ namespace BumberDash.Forms
                     else
                         MessageBox.Show("Cannot delete 'New'");
                 }
-                else
+                else if (ProgramModeBox.Text == "TagRecon")
                 {
                     if (TRInstrumentList.SelectedIndex > 0)
                         currentConfig = _TRTemplateList[TRInstrumentList.SelectedIndex - 1];
+                    else
+                        MessageBox.Show("Cannot delete'New'");
+                }
+                else
+                {
+                    if (PepInstrumentList.SelectedIndex > 0)
+                        currentConfig = _pepTemplateList[PepInstrumentList.SelectedIndex - 1];
                     else
                         MessageBox.Show("Cannot delete'New'");
                 }
@@ -1679,8 +1876,10 @@ namespace BumberDash.Forms
                 AppliedModDGV = MyriAppliedModBox;
             else if (ProgramModeBox.Text == "DirecTag")
                 AppliedModDGV = DTAppliedModBox;
-            else
+            else if (ProgramModeBox.Text == "TagRecon")
                 AppliedModDGV = TRAppliedModBox;
+            else
+                AppliedModDGV = PepAppliedModBox;
 
             if (Type == "Static")
             {
@@ -1740,8 +1939,11 @@ namespace BumberDash.Forms
         {
             var MinSequenceMassBox = (NumericUpDown)sender;
 
-            var MaxSequenceMassBox = ProgramModeBox.Text == "MyriMatch" 
-                ? MyriMaxPeptideMassBox : TRMaxPeptideMassBox;
+            var MaxSequenceMassBox = ProgramModeBox.Text == "MyriMatch"
+                                         ? MyriMaxPeptideMassBox
+                                         : (ProgramModeBox.Text == "TagRecon"
+                                                ? TRMaxPeptideMassBox
+                                                : PepMaxPeptideMassBox);
 
             if (MinSequenceMassBox.Value > MaxSequenceMassBox.Value)
             {
@@ -1755,7 +1957,10 @@ namespace BumberDash.Forms
             var MaxSequenceMassBox = (NumericUpDown)sender;
 
             var MinSequenceMassBox = ProgramModeBox.Text == "MyriMatch"
-                ? MyriMinPeptideMassBox : TRMinPeptideMassBox;
+                                         ? MyriMinPeptideMassBox
+                                         : (ProgramModeBox.Text == "TagRecon"
+                                                ? TRMinPeptideMassBox
+                                                : PepMinPeptideMassBox);
 
             if (MaxSequenceMassBox.Value < MinSequenceMassBox.Value)
             {

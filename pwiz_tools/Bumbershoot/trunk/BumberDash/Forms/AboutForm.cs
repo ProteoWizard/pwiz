@@ -43,6 +43,8 @@ namespace BumberDash.Forms
 
             componentListView.Items.Add("TagRecon").SubItems.Add(Properties.Settings.Default.TagReconVersion);
 
+            componentListView.Items.Add("Pepitome").SubItems.Add(Properties.Settings.Default.PepitomeVersion);
+
         }
     }
 }

@@ -214,7 +214,7 @@ namespace BumberDash.Forms
         #region DataGridView Events
 
         /// <summary>
-        /// Starts dargging DataGridView row if the mouse button is held down
+        /// Starts dragging DataGridView row if the mouse button is held down
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
@@ -891,6 +891,15 @@ namespace BumberDash.Forms
                 JobQueueDGV.Rows[row].Cells[2].Style.BackColor = Color.LightPink;
             }
 
+            // Validate Spectral Library if needed
+            if (hi.JobType != JobType.Library || File.Exists(hi.SpectralLibrary))
+                JobQueueDGV.Rows[row].Cells[2].Style.BackColor = Color.White;
+            else
+            {
+                allValid = false;
+                JobQueueDGV.Rows[row].Cells[2].Style.BackColor = Color.LightPink;
+            }
+
             if (!allValid)
             {
                 var progressCell = (DataGridViewProgressCell) JobQueueDGV[5, LastCompleted + 1];
@@ -1073,6 +1082,8 @@ namespace BumberDash.Forms
                             var fileOnly = Path.GetFileNameWithoutExtension(file.FilePath.Trim('"'));
                             DeleteFile(String.Format(@"{0}\{1}{2}.pepXML", hi.OutputDirectory, fileOnly,
                                                      firstConfig == null ? string.Empty : firstConfig.Value));
+                            DeleteFile(String.Format(@"{0}\{1}{2}.mzid", hi.OutputDirectory, fileOnly,
+                                                     firstConfig == null ? string.Empty : firstConfig.Value));
                         }
                     }
                     else
@@ -1083,9 +1094,12 @@ namespace BumberDash.Forms
                         {
                             var fileOnly = Path.GetFileNameWithoutExtension(file.FilePath.Trim('"'));
                             DeleteFile(String.Format(@"{0}\{1}{2}.tags", hi.OutputDirectory, fileOnly,
-                                                     firstConfig == null ? "-tags" : firstConfig.Value));
+                                                     firstConfig == null ? string.Empty : firstConfig.Value));
                             DeleteFile(String.Format(@"{0}\{1}{2}{3}.pepXML", hi.OutputDirectory, fileOnly,
-                                                     firstConfig == null ? "-tags" : firstConfig.Value,
+                                                     firstConfig == null ? string.Empty : firstConfig.Value,
+                                                     secondConfig == null ? string.Empty : secondConfig.Value));
+                            DeleteFile(String.Format(@"{0}\{1}{2}{3}.mzid", hi.OutputDirectory, fileOnly,
+                                                     firstConfig == null ? string.Empty : firstConfig.Value,
                                                      secondConfig == null ? string.Empty : secondConfig.Value));
                         }
                     }
@@ -1213,6 +1227,8 @@ namespace BumberDash.Forms
                             var fileOnly = Path.GetFileNameWithoutExtension(file.FilePath.Trim('"'));
                             DeleteFile(String.Format(@"{0}\{1}{2}.pepXML", hi.OutputDirectory.TrimEnd('*'), fileOnly,
                                                      firstConfig == null ? string.Empty : firstConfig.Value));
+                            DeleteFile(String.Format(@"{0}\{1}{2}.mzid", hi.OutputDirectory.TrimEnd('*'), fileOnly,
+                                                     firstConfig == null ? string.Empty : firstConfig.Value));
                         }
                     }
                     else
@@ -1224,9 +1240,12 @@ namespace BumberDash.Forms
                             if (!Directory.Exists(Path.Combine(new FileInfo(file.FilePath.Trim('"')).DirectoryName, hi.OutputDirectory.TrimEnd('*')))) continue;
                             var fileOnly = Path.GetFileNameWithoutExtension(file.FilePath.Trim('"'));
                             DeleteFile(String.Format(@"{0}\{1}{2}.tags", hi.OutputDirectory.TrimEnd('*'), fileOnly,
-                                                     firstConfig == null ? "-tags" : firstConfig.Value));
+                                                     firstConfig == null ? string.Empty : firstConfig.Value));
                             DeleteFile(String.Format(@"{0}\{1}{2}{3}.pepXML", hi.OutputDirectory.TrimEnd('*'), fileOnly,
-                                                     firstConfig == null ? "-tags" : firstConfig.Value,
+                                                     firstConfig == null ? string.Empty : firstConfig.Value,
+                                                     secondConfig == null ? string.Empty : secondConfig.Value));
+                            DeleteFile(String.Format(@"{0}\{1}{2}{3}.mzid", hi.OutputDirectory.TrimEnd('*'), fileOnly,
+                                                     firstConfig == null ? string.Empty : firstConfig.Value,
                                                      secondConfig == null ? string.Empty : secondConfig.Value));
                         }
                     }
@@ -1285,6 +1304,17 @@ namespace BumberDash.Forms
         /// <param name="row"></param>
         private void InsertRowFromHistoryItem(HistoryItem hi, int row)
         {
+            //Fill in job type if needed
+            if (hi.JobType == null)
+            {
+                hi.JobType = hi.TagConfigFile == null ? JobType.Database : JobType.Tag;
+                lock (_session)
+                {
+                    _session.Save(hi);
+                    _session.Flush();
+                }
+            }
+
             #region Check for duplicate config files
             //Check initial config file
             var oldConfigList = _session.QueryOver<ConfigFile>().
@@ -1376,17 +1406,23 @@ namespace BumberDash.Forms
             //fill values list with appropriate info
             values[0] = hi.JobName;
             values[1] = (new DirectoryInfo(hi.OutputDirectory.TrimEnd('+').TrimEnd('*'))).Name;
-            values[2] = Path.GetFileName(hi.ProteinDatabase);
+
+            if (hi.JobType == JobType.Library)
+                values[2] = string.Format("{0} / {1}", Path.GetFileName(hi.ProteinDatabase),
+                                          Path.GetFileName(hi.SpectralLibrary));
+            else
+                values[2] = Path.GetFileName(hi.ProteinDatabase);
+
             if (hi.TagConfigFile != null)
             {
-                values[3] = String.Format("{0}{1}{2}", hi.InitialConfigFile.Name ?? Path.GetFileNameWithoutExtension(hi.InitialConfigFile.FilePath), " / ",
+                values[3] = String.Format("{0} / {1}", hi.InitialConfigFile.Name ?? Path.GetFileNameWithoutExtension(hi.InitialConfigFile.FilePath),
                                           hi.TagConfigFile.Name ?? Path.GetFileNameWithoutExtension(hi.TagConfigFile.FilePath));
-                values[4] = "Sequence Tagging";
+                values[4] = JobType.Tag;
             }
             else
             {
                 values[3] = hi.InitialConfigFile.Name ?? Path.GetFileNameWithoutExtension(hi.InitialConfigFile.FilePath);
-                values[4] = "Database Search";
+                values[4] = hi.JobType;
             }
 
             if (hi.CurrentStatus == "Finished")
@@ -1419,7 +1455,10 @@ namespace BumberDash.Forms
             JobQueueDGV.Rows[row].Cells[1].ToolTipText = hi.OutputDirectory;
 
             //Database File Name
-            JobQueueDGV.Rows[row].Cells[2].ToolTipText = hi.ProteinDatabase;
+            JobQueueDGV.Rows[row].Cells[2].ToolTipText = hi.ProteinDatabase +
+                                                         (hi.SpectralLibrary == null
+                                                              ? string.Empty
+                                                              : Environment.NewLine + hi.SpectralLibrary);
 
             //Configs
             bool databaseCustom = hi.InitialConfigFile.FilePath == "--Custom--";
@@ -1434,7 +1473,7 @@ namespace BumberDash.Forms
                                   tagCustom ? CreatePropertyStringFromConfig(hi.TagConfigFile)
                                       : hi.TagConfigFile.FilePath);
             }
-            else if (databaseCustom)
+            else
                 JobQueueDGV.Rows[row].Cells[3].ToolTipText = databaseCustom
                                                                  ? CreatePropertyStringFromConfig(hi.InitialConfigFile)
                                                                  : hi.InitialConfigFile.FilePath;
@@ -1567,7 +1606,7 @@ namespace BumberDash.Forms
             {
                 if (File.Exists(config.FilePath))
                 {
-                    var parameterType = lib.Util.parameterTypes;
+                    var parameterType = Util.parameterTypes;
 
                     var fileIn = new StreamReader(config.FilePath);
                     var completeFile = fileIn.ReadToEnd();
