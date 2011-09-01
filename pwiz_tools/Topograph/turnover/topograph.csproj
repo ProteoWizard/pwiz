@@ -53,7 +53,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>186</ApplicationRevision>
+    <ApplicationRevision>188</ApplicationRevision>
     <ApplicationVersion>0.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -84,6 +84,10 @@
     <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\Shared\Lib\NHibernate\bin\net-2.0\log4net.dll</HintPath>
+    </Reference>
+    <Reference Include="MathNet.Iridium, Version=2008.8.16.470, Culture=neutral, PublicKeyToken=c061a3ec32cc0c6f, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\Shared\Lib\MathNet.Iridium.dll</HintPath>
     </Reference>
     <Reference Include="NHibernate, Version=2.0.1.4000, Culture=neutral, PublicKeyToken=aa95f207798dfdb4, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -326,6 +330,12 @@
     <Compile Include="Forms\PrecursorPoolForm.Designer.cs">
       <DependentUpon>PrecursorPoolForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Forms\PrecursorPoolSimulator.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\PrecursorPoolSimulator.Designer.cs">
+      <DependentUpon>PrecursorPoolSimulator.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\QueriesForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -540,6 +550,9 @@
     <EmbeddedResource Include="Forms\PrecursorPoolForm.resx">
       <DependentUpon>PrecursorPoolForm.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\PrecursorPoolSimulator.resx">
+      <DependentUpon>PrecursorPoolSimulator.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\QueriesForm.resx">
       <DependentUpon>QueriesForm.cs</DependentUpon>

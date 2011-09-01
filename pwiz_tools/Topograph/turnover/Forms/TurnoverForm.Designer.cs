@@ -63,6 +63,7 @@
             this.machineSettingsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.dataDirectoryToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.displayToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.acceptanceCriteriaToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.debuggingToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
             this.runningJobsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.databaseLocksToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -70,7 +71,7 @@
             this.recalculateResultsToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.databaseSizeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.debuggingToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.acceptanceCriteriaToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.precursorPoolSimulatorToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -364,6 +365,14 @@
             this.displayToolStripMenuItem.Text = "Display...";
             this.displayToolStripMenuItem.Click += new System.EventHandler(this.displayToolStripMenuItem_Click);
             // 
+            // acceptanceCriteriaToolStripMenuItem
+            // 
+            this.acceptanceCriteriaToolStripMenuItem.Enabled = false;
+            this.acceptanceCriteriaToolStripMenuItem.Name = "acceptanceCriteriaToolStripMenuItem";
+            this.acceptanceCriteriaToolStripMenuItem.Size = new System.Drawing.Size(202, 22);
+            this.acceptanceCriteriaToolStripMenuItem.Text = "Acceptance Criteria...";
+            this.acceptanceCriteriaToolStripMenuItem.Click += new System.EventHandler(this.acceptanceCriteriaToolStripMenuItem_Click);
+            // 
             // debuggingToolStripMenuItem1
             // 
             this.debuggingToolStripMenuItem1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
@@ -371,7 +380,8 @@
             this.databaseLocksToolStripMenuItem,
             this.errorsToolStripMenuItem1,
             this.recalculateResultsToolStripMenuItem,
-            this.databaseSizeToolStripMenuItem});
+            this.databaseSizeToolStripMenuItem,
+            this.precursorPoolSimulatorToolStripMenuItem});
             this.debuggingToolStripMenuItem1.Name = "debuggingToolStripMenuItem1";
             this.debuggingToolStripMenuItem1.Size = new System.Drawing.Size(78, 20);
             this.debuggingToolStripMenuItem1.Text = "Debugging";
@@ -380,7 +390,7 @@
             // 
             this.runningJobsToolStripMenuItem.Enabled = false;
             this.runningJobsToolStripMenuItem.Name = "runningJobsToolStripMenuItem";
-            this.runningJobsToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
+            this.runningJobsToolStripMenuItem.Size = new System.Drawing.Size(214, 22);
             this.runningJobsToolStripMenuItem.Text = "Running Jobs";
             this.runningJobsToolStripMenuItem.Click += new System.EventHandler(this.statusToolStripMenuItem_Click);
             // 
@@ -388,14 +398,14 @@
             // 
             this.databaseLocksToolStripMenuItem.Enabled = false;
             this.databaseLocksToolStripMenuItem.Name = "databaseLocksToolStripMenuItem";
-            this.databaseLocksToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
+            this.databaseLocksToolStripMenuItem.Size = new System.Drawing.Size(214, 22);
             this.databaseLocksToolStripMenuItem.Text = "Database Locks";
             this.databaseLocksToolStripMenuItem.Click += new System.EventHandler(this.locksToolStripMenuItem_Click);
             // 
             // errorsToolStripMenuItem1
             // 
             this.errorsToolStripMenuItem1.Name = "errorsToolStripMenuItem1";
-            this.errorsToolStripMenuItem1.Size = new System.Drawing.Size(183, 22);
+            this.errorsToolStripMenuItem1.Size = new System.Drawing.Size(214, 22);
             this.errorsToolStripMenuItem1.Text = "Errors";
             this.errorsToolStripMenuItem1.Click += new System.EventHandler(this.errorsToolStripMenuItem_Click);
             // 
@@ -403,7 +413,7 @@
             // 
             this.recalculateResultsToolStripMenuItem.Enabled = false;
             this.recalculateResultsToolStripMenuItem.Name = "recalculateResultsToolStripMenuItem";
-            this.recalculateResultsToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
+            this.recalculateResultsToolStripMenuItem.Size = new System.Drawing.Size(214, 22);
             this.recalculateResultsToolStripMenuItem.Text = "Recalculate Results...";
             this.recalculateResultsToolStripMenuItem.Click += new System.EventHandler(this.recalculateResultsToolStripMenuItem_Click);
             // 
@@ -411,7 +421,7 @@
             // 
             this.databaseSizeToolStripMenuItem.Enabled = false;
             this.databaseSizeToolStripMenuItem.Name = "databaseSizeToolStripMenuItem";
-            this.databaseSizeToolStripMenuItem.Size = new System.Drawing.Size(183, 22);
+            this.databaseSizeToolStripMenuItem.Size = new System.Drawing.Size(214, 22);
             this.databaseSizeToolStripMenuItem.Text = "Database Size...";
             this.databaseSizeToolStripMenuItem.Click += new System.EventHandler(this.databaseSizeToolStripMenuItem_Click);
             // 
@@ -421,13 +431,13 @@
             this.debuggingToolStripMenuItem.Size = new System.Drawing.Size(32, 19);
             this.debuggingToolStripMenuItem.Text = "Debugging";
             // 
-            // acceptanceCriteriaToolStripMenuItem
+            // precursorPoolSimulatorToolStripMenuItem
             // 
-            this.acceptanceCriteriaToolStripMenuItem.Enabled = false;
-            this.acceptanceCriteriaToolStripMenuItem.Name = "acceptanceCriteriaToolStripMenuItem";
-            this.acceptanceCriteriaToolStripMenuItem.Size = new System.Drawing.Size(202, 22);
-            this.acceptanceCriteriaToolStripMenuItem.Text = "Acceptance Criteria...";
-            this.acceptanceCriteriaToolStripMenuItem.Click += new System.EventHandler(this.acceptanceCriteriaToolStripMenuItem_Click);
+            this.precursorPoolSimulatorToolStripMenuItem.Enabled = false;
+            this.precursorPoolSimulatorToolStripMenuItem.Name = "precursorPoolSimulatorToolStripMenuItem";
+            this.precursorPoolSimulatorToolStripMenuItem.Size = new System.Drawing.Size(214, 22);
+            this.precursorPoolSimulatorToolStripMenuItem.Text = "Precursor Pool Simulator...";
+            this.precursorPoolSimulatorToolStripMenuItem.Click += new System.EventHandler(this.precursorPoolSimulatorToolStripMenuItem_Click);
             // 
             // TurnoverForm
             // 
@@ -491,5 +501,6 @@
         private System.Windows.Forms.ToolStripMenuItem alignmentToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem databaseSizeToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem acceptanceCriteriaToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem precursorPoolSimulatorToolStripMenuItem;
     }
 }

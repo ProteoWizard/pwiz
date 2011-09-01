@@ -120,6 +120,7 @@ namespace pwiz.Topograph.ui.Forms
                                resultsByReplicateToolStripMenuItem,
                                alignmentToolStripMenuItem,
                                acceptanceCriteriaToolStripMenuItem,
+                               precursorPoolSimulatorToolStripMenuItem,
                            };
             }
         }
@@ -1045,6 +1046,11 @@ namespace pwiz.Topograph.ui.Forms
             {
                 form.ShowDialog(this);
             }
+        }
+
+        private void precursorPoolSimulatorToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            new PrecursorPoolSimulator(Workspace).Show(this);
         }
     }
 }
