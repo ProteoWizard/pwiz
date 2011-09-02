@@ -292,7 +292,11 @@ namespace pwiz.Skyline.Controls.Graphs
 
             // Check for appropriate spectrum to load
             bool available = false;
-            if (nodeGroup != null && nodeGroup.HasLibInfo)
+            if (nodeGroup == null || !nodeGroup.HasLibInfo)
+            {
+                _spectra = null;
+            }
+            else
             {
                 SrmSettings settings = DocumentUI.Settings;
                 PeptideLibraries libraries = settings.PeptideSettings.Libraries;
