@@ -188,7 +188,11 @@ namespace pwiz.Skyline
                 bool refresh = false;
                 if (!ArrayUtil.EqualsDeep(filterNew.IonTypes, filterOld.IonTypes))
                 {
-                    CheckIonTypes(filterOld.IonTypes, false);
+                    // Only turn off old ion types, if new settings are not MS1-only full-scan
+                    var fullScan = settingsNew.TransitionSettings.FullScan;
+                    if (!fullScan.IsEnabled || fullScan.IsEnabledMsMs)
+                        CheckIonTypes(filterOld.IonTypes, false);
+
                     CheckIonTypes(filterNew.IonTypes, true);
                     refresh = true;
                 }
