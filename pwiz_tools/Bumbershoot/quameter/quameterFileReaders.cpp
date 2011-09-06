@@ -52,6 +52,7 @@ namespace quameter
                                 "where psm.Spectrum = Spectrum.Id and psm.Peptide = Peptide.Id "
                                 "and pm.PeptideSpectrumMatch=psm.Id and mod.Id=pm.Modification "
                                 "and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " "
+                                "and QValue <= " + lexical_cast<string>(g_rtConfig->ScoreCutoff) +" "
                                 "and Charge=2 "
                                 "group by psm.Id";
             sqlite::query qry(db, query_sql.c_str() );
