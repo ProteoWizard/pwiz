@@ -101,7 +101,7 @@ namespace quameter
         double IDPDBReader::GetMedianIDScore(const string& spectrumSourceId) {
 
             sqlite::database db(idpDBFile);
-            string query_sql = "SELECT DISTINCT PeptideSpectrumMatch.Peptide, PeptideSpectrumMatchScore.Value from PeptideSpectrumMatch join PeptideSpectrumMatchScore join spectrum where PeptideSpectrumMatch.QValue <= 0.05 and PeptideSpectrumMatch.spectrum = spectrum.id and PeptideSpectrumMatch.id = PeptideSpectrumMatchScore.PsmId and PeptideSpectrumMatchScore.ScoreNameId = 3 and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " order by PeptideSpectrumMatchScore.Value";
+            string query_sql = "SELECT DISTINCT PeptideSpectrumMatch.Peptide, PeptideSpectrumMatchScore.Value from PeptideSpectrumMatch join PeptideSpectrumMatchScore join spectrum where PeptideSpectrumMatch.QValue <= " + lexical_cast<string>(g_rtConfig->ScoreCutoff) + " and PeptideSpectrumMatch.spectrum = spectrum.id and PeptideSpectrumMatch.id = PeptideSpectrumMatchScore.PsmId and PeptideSpectrumMatchScore.ScoreNameId = 3 and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " order by PeptideSpectrumMatchScore.Value";
             sqlite::query qry(db, query_sql.c_str() );
             accs::accumulator_set<double, accs::stats<accs::tag::median> > scores;
             
@@ -132,7 +132,7 @@ namespace quameter
         int IDPDBReader::GetNumTrypticMS2Spectra(const string& spectrumSourceId) {
 
             sqlite::database db(idpDBFile);
-            string s = "SELECT COUNT(distinct nativeid) FROM PeptideInstance JOIN PeptideSpectrumMatch JOIN Spectrum WHERE PeptideInstance.peptide = PeptideSpectrumMatch.peptide AND PeptideSpectrumMatch.QValue <= 0.05 and peptidespectrummatch.spectrum = spectrum.id and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " and NTerminusIsSpecific = 1 and CTerminusIsSpecific = 1 order by spectrum.id";
+            string s = "SELECT COUNT(distinct nativeid) FROM PeptideInstance JOIN PeptideSpectrumMatch JOIN Spectrum WHERE PeptideInstance.peptide = PeptideSpectrumMatch.peptide AND PeptideSpectrumMatch.QValue <= " + lexical_cast<string>(g_rtConfig->ScoreCutoff)+ " and peptidespectrummatch.spectrum = spectrum.id and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " and NTerminusIsSpecific = 1 and CTerminusIsSpecific = 1 order by spectrum.id";
             sqlite::query qry(db, s.c_str() );
             int trypticMS2Spectra;
 
@@ -160,7 +160,7 @@ namespace quameter
         int IDPDBReader::GetNumTrypticPeptides(const string& spectrumSourceId) {
 
             sqlite::database db(idpDBFile);
-            string s = "select distinct PeptideInstance.Peptide, charge, modification from PeptideInstance join Spectrum join PeptideSpectrumMatch join PeptideModification where PeptideSpectrumMatch.QValue <= 0.05 and PeptideInstance.peptide = PeptideSpectrumMatch.peptide and PeptideModification.PeptideSpectrumMatch = PeptideSpectrumMatch.id and Rank = 1 and PeptideSpectrumMatch.Spectrum = Spectrum.Id and Spectrum.Source = " + spectrumSourceId + " and NTerminusIsSpecific = 1 and CTerminusIsSpecific = 1";
+            string s = "select distinct PeptideInstance.Peptide, charge, modification from PeptideInstance join Spectrum join PeptideSpectrumMatch join PeptideModification where PeptideSpectrumMatch.QValue <= " + lexical_cast<string>(g_rtConfig->ScoreCutoff) + " and PeptideInstance.peptide = PeptideSpectrumMatch.peptide and PeptideModification.PeptideSpectrumMatch = PeptideSpectrumMatch.id and Rank = 1 and PeptideSpectrumMatch.Spectrum = Spectrum.Id and Spectrum.Source = " + spectrumSourceId + " and NTerminusIsSpecific = 1 and CTerminusIsSpecific = 1";
             sqlite::query qry(db, s.c_str() );
             int trypticPeptides = 0;
 
@@ -188,7 +188,7 @@ namespace quameter
             sqlite::database db(idpDBFile);
             string query_sql = "select distinct PeptideInstance.Peptide, NTerminusIsSpecific, CTerminusIsSpecific "
                                     "from PeptideInstance join Spectrum join PeptideSpectrumMatch "
-                               "where PeptideSpectrumMatch.QValue <= 0.05 "
+                               "where PeptideSpectrumMatch.QValue <= " + lexical_cast<string>(g_rtConfig->ScoreCutoff) + " "
                                "and PeptideInstance.peptide = PeptideSpectrumMatch.peptide "
                                "and Rank = 1 and PeptideSpectrumMatch.Spectrum = Spectrum.Id  "
                                "and Spectrum.Source = " + spectrumSourceId ;
@@ -225,7 +225,7 @@ namespace quameter
             sqlite::database db(idpDBFile);
             string query_sql = "SELECT Peptide, COUNT(*) "
                                 "FROM PeptideSpectrumMatch JOIN Spectrum "
-                                "WHERE PeptideSpectrumMatch.QValue <= 0.05 "
+                                "WHERE PeptideSpectrumMatch.QValue <= " + lexical_cast<string>(g_rtConfig->ScoreCutoff) + " "
                                 "AND PeptideSpectrumMatch.Spectrum=Spectrum.Id "
                                 "AND Rank = 1 and Spectrum.Source = " + spectrumSourceId + " "
                                 "GROUP BY Peptide";
@@ -259,7 +259,7 @@ namespace quameter
             sqlite::database db(idpDBFile);
             string query_sql = "SELECT DISTINCT NativeID, precursorMZ "
                                 "FROM PeptideSpectrumMatch JOIN Spectrum "
-                                "where PeptideSpectrumMatch.QValue <= 0.05 "
+                                "where PeptideSpectrumMatch.QValue <= " + lexical_cast<string>(g_rtConfig->ScoreCutoff) + " "
                                 "and PeptideSpectrumMatch.Spectrum=Spectrum.Id "
                                 "and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " "
                                 "ORDER BY PrecursorMZ";
@@ -293,7 +293,7 @@ namespace quameter
         set<string> IDPDBReader::GetNativeId(const string& spectrumSourceId) 
         {
             sqlite::database db(idpDBFile);
-            string s = "SELECT DISTINCT NativeID FROM PeptideSpectrumMatch JOIN Spectrum where PeptideSpectrumMatch.QValue <= 0.05 and PeptideSpectrumMatch.Spectrum=Spectrum.Id and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " ORDER BY Spectrum.Id";
+            string s = "SELECT DISTINCT NativeID FROM PeptideSpectrumMatch JOIN Spectrum where PeptideSpectrumMatch.QValue <= " + lexical_cast<string>(g_rtConfig->ScoreCutoff) + " and PeptideSpectrumMatch.Spectrum=Spectrum.Id and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " ORDER BY Spectrum.Id";
             sqlite::query qry(db, s.c_str() );
             set<string> nativeIds;
 
@@ -333,7 +333,7 @@ namespace quameter
         {
 
             sqlite::database db(idpDBFile);
-            string s = "select distinct NativeID,Peptide from PeptideSpectrumMatch JOIN Spectrum where PeptideSpectrumMatch.QValue <= 0.05 and PeptideSpectrumMatch.Spectrum=Spectrum.Id and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " and Peptide IN (select Peptide from PeptideSpectrumMatch JOIN Spectrum where PeptideSpectrumMatch.QValue <= 0.05 and PeptideSpectrumMatch.Spectrum=Spectrum.Id and Rank = 1 GROUP BY Peptide HAVING COUNT(Peptide) > 1 ORDER BY NativeID) ORDER BY Peptide";
+            string s = "select distinct NativeID,Peptide from PeptideSpectrumMatch JOIN Spectrum where PeptideSpectrumMatch.QValue <= " + lexical_cast<string>(g_rtConfig->ScoreCutoff)+ " and PeptideSpectrumMatch.Spectrum=Spectrum.Id and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " and Peptide IN (select Peptide from PeptideSpectrumMatch JOIN Spectrum where PeptideSpectrumMatch.QValue <= 0.05 and PeptideSpectrumMatch.Spectrum=Spectrum.Id and Rank = 1 GROUP BY Peptide HAVING COUNT(Peptide) > 1 ORDER BY NativeID) ORDER BY Peptide";
             sqlite::query qry(db, s.c_str() );
             multimap<int, string> duplicatePeptides;
             for (sqlite::query::iterator i = qry.begin(); i != qry.end(); ++i) 
@@ -365,7 +365,7 @@ namespace quameter
             sqlite::database db(idpDBFile);
             string query_str = "SELECT distinct Peptide,Charge "
                                 "FROM PeptideSpectrumMatch JOIN Spectrum "
-                                "WHERE PeptideSpectrumMatch.QValue <= 0.05 "
+                                "WHERE PeptideSpectrumMatch.QValue <= " + lexical_cast<string>(g_rtConfig->ScoreCutoff) + " "
                                 "AND PeptideSpectrumMatch.Spectrum=Spectrum.Id "
                                 "AND Rank = 1 AND Spectrum.Source = " + spectrumSourceId + " "
                                 "ORDER BY Peptide";
@@ -398,7 +398,7 @@ namespace quameter
         vector<XICWindows> IDPDBReader::MZRTWindows( const string& spectrumSourceId, map<string, int> nativeToArrayMap, vector<MS2ScanInfo> scanInfo) {
 
             sqlite::database db(idpDBFile);
-            string s = "select distinct peptide, nativeID, precursorMZ, IFNULL(GROUP_CONCAT(modification || \"@\" || offset), '') from spectrum join peptidespectrummatch psm left join peptidemodification pm on pm.peptidespectrummatch = psm.id where psm.spectrum = Spectrum.Id and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " and qvalue < 0.05 group by psm.id order by peptide, modification, offset";
+            string s = "select distinct peptide, nativeID, precursorMZ, IFNULL(GROUP_CONCAT(modification || \"@\" || offset), '') from spectrum join peptidespectrummatch psm left join peptidemodification pm on pm.peptidespectrummatch = psm.id where psm.spectrum = Spectrum.Id and Rank = 1 and Spectrum.Source = " + spectrumSourceId + " and qvalue < " + lexical_cast<string>(g_rtConfig->ScoreCutoff) + " group by psm.id order by peptide, modification, offset";
             sqlite::query qry(db, s.c_str() );
 
             vector<XICWindows> pepWin;
