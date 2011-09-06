@@ -729,9 +729,9 @@ namespace myrimatch
                         if (childResults.bestNonSpecificDecoy().get()) rootResults.add(childResults.bestNonSpecificDecoy());
                     }
 
-					for(map<int,int>::iterator itr = childSpectrum->mvhScoreDistribution.begin(); itr != childSpectrum->mvhScoreDistribution.end(); ++itr)
+					for(flat_map<int,int>::iterator itr = childSpectrum->mvhScoreDistribution.begin(); itr != childSpectrum->mvhScoreDistribution.end(); ++itr)
 						rootSpectrum->mvhScoreDistribution[(*itr).first] += (*itr).second;
-					for(map<int,int>::iterator itr = childSpectrum->mzFidelityDistribution.begin(); itr != childSpectrum->mzFidelityDistribution.end(); ++itr)
+					for(flat_map<int,int>::iterator itr = childSpectrum->mzFidelityDistribution.begin(); itr != childSpectrum->mzFidelityDistribution.end(); ++itr)
 						rootSpectrum->mzFidelityDistribution[(*itr).first] += (*itr).second;
 					rootSpectrum->scoreHistogram += childSpectrum->scoreHistogram;
 					delete childSpectrum;

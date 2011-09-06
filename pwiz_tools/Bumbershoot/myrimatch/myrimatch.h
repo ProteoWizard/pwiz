@@ -108,7 +108,7 @@ namespace myrimatch
 		}
 	};
 
-	typedef multimap< double, pair<Spectrum*, PrecursorMassHypothesis> >   SpectraMassMap;
+	typedef flat_multimap< double, pair<Spectrum*, PrecursorMassHypothesis> >   SpectraMassMap;
 	typedef vector< SpectraMassMap >        SpectraMassMapList;
 
 

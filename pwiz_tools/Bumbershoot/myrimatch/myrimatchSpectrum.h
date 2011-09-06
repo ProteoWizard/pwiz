@@ -213,11 +213,11 @@ namespace myrimatch
 		vector<double>       newMZFidelityThresholds;
 
 		Histogram<double>    scoreHistogram;
-		map<double, int>     scores;
+		flat_map<double, int>     scores;
 
 		// Keep track of the score distributions
-		map<int, int> mvhScoreDistribution;
-		map<int, int> mzFidelityDistribution;
+		flat_map<int, int> mvhScoreDistribution;
+		flat_map<int, int> mzFidelityDistribution;
 
         boost::mutex mutex;
 	};

@@ -531,8 +531,8 @@ namespace myrimatch
                         //                                                       : avgCalculatedMass - p.mass;
 
 					    // Accumulate score distributions for the spectrum
-					    ++ spectrum->mvhScoreDistribution[ (int) (result.mvh+0.5) ];
-					    ++ spectrum->mzFidelityDistribution[ (int) (result.mzFidelity+0.5)];
+					    //++ spectrum->mvhScoreDistribution[ (int) (result.mvh+0.5) ];
+					    //++ spectrum->mzFidelityDistribution[ (int) (result.mzFidelity+0.5)];
 
 					    spectrum->resultsByCharge[z].add( resultPtr );         
 				    }

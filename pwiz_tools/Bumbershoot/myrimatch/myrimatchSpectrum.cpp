@@ -395,7 +395,7 @@ namespace myrimatch
 		double averageMVHValue = 0.0;
 		double totalComps = 0.0;
 		int maxValue = INT_MIN;
-		for(map<int,int>::iterator itr = mvhScoreDistribution.begin(); itr!= mvhScoreDistribution.end(); ++itr) {
+		for(flat_map<int,int>::iterator itr = mvhScoreDistribution.begin(); itr!= mvhScoreDistribution.end(); ++itr) {
 			if((*itr).first==0) {
 				continue;
 			}
@@ -410,7 +410,7 @@ namespace myrimatch
 
 		// Locate the most frequent mvh score
 		double mvhMode;
-		for(map<int,int>::iterator itr = mvhScoreDistribution.begin(); itr!= mvhScoreDistribution.end(); ++itr) {
+		for(flat_map<int,int>::iterator itr = mvhScoreDistribution.begin(); itr!= mvhScoreDistribution.end(); ++itr) {
 			if((*itr).second==maxValue) {
 				mvhMode = (double) (*itr).first;
 				break;
@@ -423,7 +423,7 @@ namespace myrimatch
 		double averageMZFidelity = 0.0;
 		totalComps = 0.0;
 		maxValue = INT_MIN;
-		for(map<int,int>::iterator itr = mzFidelityDistribution.begin(); itr!= mzFidelityDistribution.end(); ++itr) {
+		for(flat_map<int,int>::iterator itr = mzFidelityDistribution.begin(); itr!= mzFidelityDistribution.end(); ++itr) {
 			if((*itr).first==0) {
 				continue;
 			}
@@ -434,7 +434,7 @@ namespace myrimatch
 		averageMZFidelity /= totalComps;
 
 		double mzFidelityMode;
-		for(map<int,int>::iterator itr = mzFidelityDistribution.begin(); itr!= mzFidelityDistribution.end(); ++itr) {
+		for(flat_map<int,int>::iterator itr = mzFidelityDistribution.begin(); itr!= mzFidelityDistribution.end(); ++itr) {
 			if((*itr).second==maxValue) {
 				mzFidelityMode = (double) (*itr).first;
 				break;
@@ -575,6 +575,7 @@ namespace myrimatch
 		    // Find the fragment ion peak. Consider the fragment ion charge state while setting the
 		    // mass window for the fragment ion lookup.
 		    peakItr = peakData.findNear( seqIons[j], g_rtConfig->FragmentMzTolerance );
+            
 		    STOP_PROFILER(7);
 
 		    // If a peak was found, increment the sequenceInstance's ion correlation triplet
