@@ -344,7 +344,9 @@ namespace tagrecon
 
 		// Get the number of spectra
 		//size_t numSpectra = spectra.size();
-		spectraTagMapsByChargeState = SpectraTagMap(TagSetCompare(max(g_rtConfig->MaxModificationMassPlus,g_rtConfig->MaxModificationMassMinus)));
+        // Create a normal multiset
+        TagSetCompare tagComparator((max(g_rtConfig->MaxModificationMassPlus,g_rtConfig->MaxModificationMassMinus)));
+        TempSpectraTagMap tempSpectraTagMapsByZState(tagComparator);
 		/* Create a map of precursor masses to the spectrum indices and map of tags and spectra with the
 		   tag. while doing that we also create a map of precursor masses and spectra with the precursor 
 		   mass. Precursor mass map is used to rapidly find candidates peptide sequences that are with in
@@ -352,15 +354,20 @@ namespace tagrecon
 		   further filter out spectra that doesn't have any matching tags with the candidate peptide 
 		   sequences. 
 		*/
-		for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr ) {
+		for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr ) 
+        {
 			// Get the tags for the spectrum and put them in the tag map.
-			for( TagList::iterator tItr = (*sItr)->tagList.begin(); tItr != (*sItr)->tagList.end(); ++tItr ) {
+			for( TagList::iterator tItr = (*sItr)->tagList.begin(); tItr != (*sItr)->tagList.end(); ++tItr ) 
+            {
                 TagSetInfo  tagInfo(sItr, tItr->tag, tItr->nTerminusMass, tItr->cTerminusMass);
                 tagInfo.tagChargeState = tItr->chargeState;
 				//spectraTagMapsByChargeState.insert( SpectraTagMap::value_type(TagSetInfo( sItr, tItr->tag, tItr->nTerminusMass, tItr->cTerminusMass ) ) );
-                spectraTagMapsByChargeState.insert( SpectraTagMap::value_type( tagInfo ) );
+                //spectraTagMapsByChargeState.insert( SpectraTagMap::value_type( tagInfo ) );
+                tempSpectraTagMapsByZState.insert( TempSpectraTagMap::value_type( tagInfo) );
 			}
 		}
+        // Initialize a flat_multiset which is optimized for faster searches
+        spectraTagMapsByChargeState = SpectraTagMap(boost::container::ordered_range, tempSpectraTagMapsByZState.begin(), tempSpectraTagMapsByZState.end(), tagComparator);
 		
 		// Get minimum and maximum peptide masses observed in the dataset
 		// and determine the number of peak bins required. This 
@@ -1007,10 +1014,10 @@ namespace tagrecon
         GetTagsFromSequence( candidate, 3, neutralMass, candidateTags );
         
         // Store all tag matches and their modification specific attributes
-        set<TagMatchInfo> tagMatches;
-        map<TagMatchInfo,size_t> lowIndex;
-        map<TagMatchInfo,size_t> highIndex;
-        map<TagMatchInfo,float> substitutionLookupTolerance;
+        flat_set<TagMatchInfo> tagMatches;
+        flat_map<TagMatchInfo,size_t> lowIndex;
+        flat_map<TagMatchInfo,size_t> highIndex;
+        flat_map<TagMatchInfo,float> substitutionLookupTolerance;
         
         // For each of the generated tags
 		for( size_t i=0; i < candidateTags.size(); ++i )
@@ -1104,7 +1111,7 @@ namespace tagrecon
         }
 
         // For each unique tag match
-        for(set<TagMatchInfo>::const_iterator mItr = tagMatches.begin(); mItr != tagMatches.end(); ++mItr)
+        for(flat_set<TagMatchInfo>::const_iterator mItr = tagMatches.begin(); mItr != tagMatches.end(); ++mItr)
         {
             TagMatchInfo tagMatch = (*mItr);
 

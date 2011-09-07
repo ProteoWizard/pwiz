@@ -52,9 +52,9 @@ namespace tagrecon
 		bool hasCorrectTag;
 	} spectrumInfo_t;
 
-	typedef map< float, string >				modMap_t;
+	typedef flat_map< float, string >				                    modMap_t;
 
-	typedef multimap< float, SpectraList::iterator >					SpectraMassMap;
+	typedef flat_multimap< float, SpectraList::iterator >				SpectraMassMap;
 	typedef vector< SpectraMassMap >									SpectraMassMapList;
 
 	/**
@@ -165,7 +165,8 @@ namespace tagrecon
 	};
 
 	// A spectra to tag map (tag to spectrum) that sorts tags based on spectral similarity
-	typedef multiset< TagSetInfo, TagSetCompare >						SpectraTagMap;
+	typedef flat_multiset< TagSetInfo, TagSetCompare >					SpectraTagMap;
+    typedef multiset< TagSetInfo, TagSetCompare>                        TempSpectraTagMap;
 	//typedef multimap<pair <string, float>, TagMapInfo>				SpectraTagMap;
 	typedef vector< SpectraTagMap >										SpectraTagMapList;
 
