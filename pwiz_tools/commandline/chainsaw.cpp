@@ -1,8 +1,11 @@
 //
 // $Id$
 //
-/// chainsaw.cpp
+
+/// \file chainsaw.cpp
+/// \brief Contains the code for the chainsaw executable.
 ///
+/// Creates in silico digest of all proteins listed in a FASTA file.
 
 #include "pwiz/data/proteome/DefaultReaderList.hpp"
 #include "pwiz/data/proteome/ProteomeDataFile.hpp"
