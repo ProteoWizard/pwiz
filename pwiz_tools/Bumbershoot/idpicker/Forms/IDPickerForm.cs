@@ -249,22 +249,28 @@ namespace IDPicker
             }
             else
             {
-            var fileTypeList = new List<string>
-            {
-                "IDPicker Files|.idpDB;.idpXML;.pepXML;.pep.xml",
-                "PepXML Files|.pepXML;.pep.xml",
-                "IDPicker XML|.idpXML",
-                "IDPicker DB|.idpDB"
-            };
+                var fileTypeList = new List<string>
+                                       {
+                                           "IDPicker Files|.idpDB;.idpXML;.pepXML;.pep.xml",
+                                           "PepXML Files|.pepXML;.pep.xml",
+                                           "IDPicker XML|.idpXML",
+                                           "IDPicker DB|.idpDB"
+                                       };
 
-            var openFileDialog = new IDPOpenDialog(fileTypeList);
+                var openFileDialog = new IDPOpenDialog(fileTypeList);
 
-            if (openFileDialog.ShowDialog() == DialogResult.OK)
-            {
-                    fileNames = openFileDialog.GetFileNames();
+                if (openFileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    var tempFileNames = openFileDialog.GetFileNames();
                     treeStructure = openFileDialog.GetTreeStructure();
-                if (!fileNames.Any())
-                    return;
+                    if (!tempFileNames.Any())
+                        return;
+
+                    //remove duplicate file names
+                    var fileList = new HashSet<string>();
+                    foreach (var item in tempFileNames)
+                        fileList.Add(item);
+                    fileNames = fileList.ToList();
                 }
                 else return;
             }
@@ -293,7 +299,7 @@ namespace IDPicker
                 session = null;
             }
 
-            new Thread(() => { OpenFiles(fileNames, treeStructure); }).Start();
+            new Thread(() => OpenFiles(fileNames, treeStructure)).Start();
         }
 
         #region Handling of events for spectrum/protein visualization
@@ -737,20 +743,56 @@ namespace IDPicker
 
                 // determine if merged filepath exists and that it's a valid idpDB
                 string commonFilename = Util.GetCommonFilename(filepaths);
+                bool workToBeDone = filepaths.Count > 1 || (filepaths.Count > 0 && !filepaths[0].ToLower().EndsWith(".idpdb"));
                 bool fileExists = File.Exists(commonFilename);
                 bool fileIsValid = fileExists && SessionFactoryFactory.IsValidFile(commonFilename);
+                var potentialPaths = filepaths.Select(item =>
+                                                      Path.Combine(Path.GetDirectoryName(item) ?? string.Empty,
+                                                                   Path.GetFileNameWithoutExtension(item) ??
+                                                                   string.Empty) + ".idpDB").ToList();
 
-                if (!idpDB_filepaths.Contains(commonFilename) &&
-                    File.Exists(commonFilename) &&
-                    SessionFactoryFactory.IsValidFile(commonFilename))
+                if ((fileExists ||
+                    potentialPaths.Contains(commonFilename)) && workToBeDone)
                 {
-                    if (MessageBox.Show("The merged result \"" + commonFilename + "\" already exists. Do you want to overwrite it?",
-                                        "Merged result already exists",
-                                        MessageBoxButtons.YesNo,
-                                        MessageBoxIcon.Exclamation,
-                                        MessageBoxDefaultButton.Button2) != DialogResult.Yes)
-                        return;
-                    File.Delete(commonFilename);
+                    switch (MessageBox.Show(string.Format("The merged result \"{0}\" already exists, or will exist after processing files. " +
+                                                          "Do you want to overwrite it?{1}{1}" +
+                                                          "Click 'Yes' to overwrite file{1}" +
+                                                          "Click 'No' to merge to a different file{1}" +
+                                                          "Click 'Cancel' to abort"
+                                                          , commonFilename, Environment.NewLine),
+                                            "Merged result already exists",
+                                            MessageBoxButtons.YesNoCancel,
+                                            MessageBoxIcon.Exclamation,
+                                            MessageBoxDefaultButton.Button2))
+                    {
+                        case DialogResult.Yes:
+                            if (!potentialPaths.Contains(commonFilename) && fileExists)
+                                File.Delete(commonFilename);
+                            break;
+                        case DialogResult.No:
+                            bool cancel = false;
+                            Invoke(new MethodInvoker(() =>
+                            {
+                                var sfd = new SaveFileDialog
+                                {
+                                    AddExtension = true,
+                                    RestoreDirectory = true,
+                                    DefaultExt = "idpDB",
+                                    Filter = "IDPicker Database|*.idpDB"
+                                };
+                                if (sfd.ShowDialog() != DialogResult.OK)
+                                {
+                                    cancel = true;
+                                    return;
+                                }
+                                commonFilename = sfd.FileName;
+                            }));
+                            if (cancel)
+                                return;
+                            break;
+                        case DialogResult.Cancel:
+                            return;
+                    }
                 }
 
                 // determine if merged filepath can be written, get new path if not
@@ -869,7 +911,16 @@ namespace IDPicker
                     //set or save default layout
                     dockPanel.Visible = true;
                     LoadLayout(_layoutManager.GetCurrentDefault());
-                SetStructure(rootNode);
+                    var usedGroups = SetStructure(rootNode, new List<SpectrumSourceGroup>());
+                    if (usedGroups != null && usedGroups.Any())
+                    {
+                        var unusedGroups = session.QueryOver<SpectrumSourceGroup>().List();
+                        foreach (var item in usedGroups)
+                            unusedGroups.Remove(item);
+                        foreach (var item in unusedGroups)
+                            session.Delete(item);
+                    }
+                    session.Flush();
 
                     //breadCrumbControl.BreadCrumbs.Clear();
 
@@ -907,14 +958,20 @@ namespace IDPicker
             }
         }
 
-        private void SetStructure(TreeNode node)
+        private List<SpectrumSourceGroup> SetStructure(TreeNode node, List<SpectrumSourceGroup> groupList)
         {
             if (node == null)
-                return;
+                return groupList ?? new List<SpectrumSourceGroup>();
 
-            var ssg = new SpectrumSourceGroup {Name = node.Text};
-            if (node.Text != "/")
+            var ssg = session.QueryOver<SpectrumSourceGroup>().Where(x => x.Name == node.Text).SingleOrDefault();
+            if (ssg == null)
+            {
+                ssg = new SpectrumSourceGroup {Name = node.Text};
                 session.SaveOrUpdate(ssg);
+                session.Flush();
+            }
+            groupList.Add(ssg);
+            var allGroups = groupList;
 
             foreach (TreeNode childNode in node.Nodes)
             {
@@ -924,16 +981,29 @@ namespace IDPicker
                     var sources = session.QueryOver<SpectrumSource>().Where(x => x.Name == node1.Text).List();
                     foreach (var item in sources)
                     {
-                        var ssgl = new SpectrumSourceGroupLink { Group = ssg, Source = item };
+                        foreach (var link in item.Groups)
+                            session.Delete(link);
+                        session.Flush();
                         item.Group = ssg;
                         session.SaveOrUpdate(item);
-                        session.SaveOrUpdate(ssgl);
+                        foreach (var groupItem in groupList)
+                        {
+                            var ssgl = new SpectrumSourceGroupLink {Group = groupItem, Source = item};
+                            session.SaveOrUpdate(ssgl);
+                        }
                         session.Flush();
                     }
                 }
                 else
-                    SetStructure(childNode);
+                {
+                    var newGroups = SetStructure(childNode, groupList);
+                    foreach (var item in newGroups)
+                        if (!allGroups.Contains(item))
+                            allGroups.Add(item);
+                }
             }
+
+            return allGroups;
         }
 
         internal void LoadLayout(LayoutProperty userLayout)

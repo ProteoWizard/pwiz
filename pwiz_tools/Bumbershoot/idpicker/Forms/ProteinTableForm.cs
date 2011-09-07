@@ -79,7 +79,7 @@ namespace IDPicker.Forms
                 FirstProteinDescription = (string) queryRow[7];
                 ProteinCount = (long) queryRow[8];
                 Cluster = (int?) queryRow[9];
-                MeanProteinCoverage = (double) queryRow[10];
+                MeanProteinCoverage = (double) (queryRow[10] ?? 0.0);
             }
             #endregion
         }
