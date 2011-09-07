@@ -383,6 +383,15 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        public double? SelectedRetentionTimeMsMs
+        {
+            get
+            {
+                var graphItem = (ChromGraphItem) graphControl.GraphPane.CurveList.First().Tag;
+                return graphItem.SelectedRetentionMsMs;
+            }
+        }
+
         /// <summary>
         /// Returns the file path for the selected file of the groups.
         /// </summary>

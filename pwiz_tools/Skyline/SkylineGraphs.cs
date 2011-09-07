@@ -829,15 +829,18 @@ namespace pwiz.Skyline
             if (DocumentUI.Settings.TransitionSettings.FullScan.IsEnabled &&
                     DocumentUI.Settings.HasResults)
             {
-                // Activate the selected replicate, if there is one associated with
-                // the selected spectrum.
-                string replicateName = e.Spectrum.ReplicateName;
-                if (!string.IsNullOrEmpty(replicateName))
+                if (e.Spectrum != null && e.IsUserAction)
                 {
-                    int resultsIndex = DocumentUI.Settings.MeasuredResults.Chromatograms.IndexOf(chrom =>
-                        Equals(replicateName, chrom.Name));
-                    if (resultsIndex != -1)
-                        SelectedResultsIndex = resultsIndex;
+                    // Activate the selected replicate, if there is one associated with
+                    // the selected spectrum.
+                    string replicateName = e.Spectrum.ReplicateName;
+                    if (!string.IsNullOrEmpty(replicateName))
+                    {
+                        int resultsIndex = DocumentUI.Settings.MeasuredResults.Chromatograms.IndexOf(chrom =>
+                            Equals(replicateName, chrom.Name));
+                        if (resultsIndex != -1)
+                            SelectedResultsIndex = resultsIndex;
+                    }
                 }
 
                 UpdateChromGraphs();

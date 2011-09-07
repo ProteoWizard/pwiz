@@ -313,9 +313,11 @@ namespace pwiz.Skyline.SettingsUI
             
             if (!Properties.Settings.Default.LibraryPeptidesKeepFiltered)
             {
-                var dictValues = dictCopy.ToList();
-                dictValues.RemoveAll(match => !match.Value.MatchesFilterSettings);
-                dictCopy = dictValues.ToDictionary(match => match.Key, match => match.Value);
+                // TODO: This removes entire peptides where only a single
+                //       precursor does not match.  e.g. the library contains
+                //       a singly charged precursor match, but also doubly charged
+                dictCopy = dictCopy.Where(match => match.Value.MatchesFilterSettings)
+                                   .ToDictionary(match => match.Key, match => match.Value);
             }
             SrmDocument newDocument = UpdateExistingPeptides(document, dictCopy, toPath, out selectedPath);
             toPath = selectedPath;

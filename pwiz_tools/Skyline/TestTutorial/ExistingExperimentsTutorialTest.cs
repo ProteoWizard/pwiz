@@ -142,16 +142,7 @@ namespace pwiz.SkylineTestTutorial
 
             // Importing Data, p. 10.
             RunUI(() => SkylineWindow.SaveDocument(TestFilesDir.GetTestPath(@"ExistingQuant\MRMer\MRMer.sky")));
-            var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
-            RunDlg<OpenDataSourceDialog>(() => importResultsDlg.NamedPathSets = importResultsDlg.GetDataSourcePathsFile(null),
-               openDataSourceDialog =>
-               {
-                   openDataSourceDialog.SelectFile("silac_1_to_4.mzXML");
-                   openDataSourceDialog.Open();
-               });
-            RunUI(importResultsDlg.OkDialog);
-            WaitForCondition(30 * 1000,
-                () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);
+            ImportResultsFile("silac_1_to_4.mzXML");
             FindNode("ETFP");
             RunUI(() =>
             {

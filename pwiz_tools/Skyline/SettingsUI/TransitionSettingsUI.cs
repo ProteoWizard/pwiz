@@ -159,6 +159,16 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+        public FullScanMassAnalyzerType ProductMassAnalyzer
+        {
+            get
+            {
+                return TransitionFullScan.ParseMassAnalyzer((string) comboProductAnalyzerType.SelectedItem);
+            }
+
+            set { comboProductAnalyzerType.SelectedItem = TransitionFullScan.MassAnalyzerToString(value); }
+        }
+
         public FullScanPrecursorIsotopes PrecursorIsotopesCurrent
         {
             get
@@ -166,6 +176,18 @@ namespace pwiz.Skyline.SettingsUI
                 return Helpers.ParseEnum((string)comboPrecursorIsotopes.SelectedItem,
                     FullScanPrecursorIsotopes.None);
             }
+
+            set { comboPrecursorIsotopes.SelectedItem = value.ToString(); }
+        }
+
+        public FullScanMassAnalyzerType PrecursorMassAnalyzer
+        {
+            get
+            {
+                return TransitionFullScan.ParseMassAnalyzer((string) comboPrecursorAnalyzerType.SelectedItem);
+            }
+
+            set { comboPrecursorAnalyzerType.SelectedItem = TransitionFullScan.MassAnalyzerToString(value); }
         }
 
         protected override void OnShown(EventArgs e)
@@ -370,8 +392,7 @@ namespace pwiz.Skyline.SettingsUI
                     return;
                 precursorIsotopeFilter = precIsotopeFilt;
 
-                precursorAnalyzerType = TransitionFullScan.ParseMassAnalyzer(
-                    comboPrecursorAnalyzerType.SelectedItem.ToString());
+                precursorAnalyzerType = PrecursorMassAnalyzer;
                 if (precursorAnalyzerType == FullScanMassAnalyzerType.qit)
                 {
                     if (precursorIsotopes != FullScanPrecursorIsotopes.Count || precursorIsotopeFilter != 1)
@@ -418,8 +439,7 @@ namespace pwiz.Skyline.SettingsUI
                     precursorFilter = precFilt;
                 }
 
-                productAnalyzerType = TransitionFullScan.ParseMassAnalyzer(
-                    comboProductAnalyzerType.SelectedItem.ToString());
+                productAnalyzerType = ProductMassAnalyzer;
                 if (productAnalyzerType == FullScanMassAnalyzerType.qit)
                 {
                     minFilt = TransitionFullScan.MIN_LO_RES;
@@ -616,8 +636,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private void UpdateProductAnalyzerType()
         {
-            var productAnalyzerType = TransitionFullScan.ParseMassAnalyzer((string) comboProductAnalyzerType.SelectedItem);
-            SetAnalyzerType(productAnalyzerType,
+            SetAnalyzerType(ProductMassAnalyzer,
                             FullScan.ProductMassAnalyzer,
                             FullScan.ProductRes,
                             FullScan.ProductResMz,
@@ -663,7 +682,7 @@ namespace pwiz.Skyline.SettingsUI
                                                            ? TransitionFullScan.DEFAULT_ISOTOPE_PERCENT
                                                            : TransitionFullScan.DEFAULT_ISOTOPE_COUNT).ToString();
                     
-                    var precursorMassAnalyzer = TransitionFullScan.ParseMassAnalyzer((string)comboPrecursorAnalyzerType.SelectedItem);
+                    var precursorMassAnalyzer = PrecursorMassAnalyzer;
                     if (!comboPrecursorAnalyzerType.Enabled || (percentType && precursorMassAnalyzer == FullScanMassAnalyzerType.qit))
                     {
                         comboPrecursorAnalyzerType.SelectedItem = TransitionFullScan.MassAnalyzerToString(FullScanMassAnalyzerType.tof);
@@ -684,8 +703,8 @@ namespace pwiz.Skyline.SettingsUI
 
         private void UpdatePrecursorAnalyzerType()
         {
-            var precursorMassAnalyzer = TransitionFullScan.ParseMassAnalyzer((string)comboPrecursorAnalyzerType.SelectedItem);
-            SetAnalyzerType(precursorMassAnalyzer,
+            var precursorMassAnalyzer = PrecursorMassAnalyzer;
+            SetAnalyzerType(PrecursorMassAnalyzer,
                             FullScan.PrecursorMassAnalyzer,
                             FullScan.PrecursorRes,
                             FullScan.PrecursorResMz,
@@ -889,6 +908,13 @@ namespace pwiz.Skyline.SettingsUI
             get { return Convert.ToInt32(textIonCount.Text); }
             set { textIonCount.Text = value.ToString(); }
         }
+
+        public bool UseLibraryPick
+        {
+            get { return cbLibraryPick.Checked; }
+            set { cbLibraryPick.Checked = value; }
+        }
+
 
         #endregion
     }

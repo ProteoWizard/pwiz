@@ -119,14 +119,16 @@ namespace pwiz.SkylineTestTutorial
             
             // Settings > Peptides Settings
             var peptideSettingsUI1 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            var glnPyroGlu = new StaticMod("Gln->pyro-Glu", "Q", null, true, "-NH3", LabelAtoms.None,
+            const string glnPyroGluName = "Gln->pyro-Glu";
+            var glnPyroGlu = new StaticMod(glnPyroGluName, "Q", null, true, "-NH3", LabelAtoms.None,
                                           RelativeRT.Unknown, null, null, null);
             AddStaticMod(glnPyroGlu, peptideSettingsUI1);
-            RunUI(() => peptideSettingsUI1.PickedStaticMods = new[] {"Gln->pyro-Glu"});
-            var mod15N = new StaticMod("Label:15N", null, null, false, null, LabelAtoms.N15,
+            RunUI(() => peptideSettingsUI1.PickedStaticMods = new[] {glnPyroGluName});
+            const string label15NName = "Label:15N";
+            var mod15N = new StaticMod(label15NName, null, null, false, null, LabelAtoms.N15,
                               RelativeRT.Matching, null, null, null);
             AddHeavyMod(mod15N, peptideSettingsUI1);
-            RunUI(() => peptideSettingsUI1.PickedHeavyMods = new[] { "Label:15N" });
+            RunUI(() => peptideSettingsUI1.PickedHeavyMods = new[] { label15NName });
             OkDialog(peptideSettingsUI1, peptideSettingsUI1.OkDialog);
 
             Assert.IsTrue(WaitForCondition(() =>
@@ -211,15 +213,16 @@ namespace pwiz.SkylineTestTutorial
                       });
             var editListUI1 =
                 ShowDialog<EditListDlg<SettingsListBase<LibrarySpec>, LibrarySpec>>(settingsUI.EditLibraryList);
+            const string humanPhosphoLibName = "Human Phospho";
             RunDlg<EditLibraryDlg>(editListUI1.AddItem, editLibraryDlg =>
             {
                 editLibraryDlg.LibrarySpec =
-                    new BiblioSpecLibSpec("Human Phospho",
+                    new BiblioSpecLibSpec(humanPhosphoLibName,
                         TestFilesDir.GetTestPath(@"LibraryExplorer\phospho.blib"));
                 editLibraryDlg.OkDialog();
             });
             OkDialog(editListUI1, editListUI1.OkDialog);
-            RunUI(() => settingsUI.PickedLibraries = new[] { "Human Phospho" });
+            RunUI(() => settingsUI.PickedLibraries = new[] { humanPhosphoLibName });
             OkDialog(settingsUI, settingsUI.OkDialog);
 
             Assert.IsTrue(WaitForCondition(() =>

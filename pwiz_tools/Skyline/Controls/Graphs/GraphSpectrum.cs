@@ -124,13 +124,14 @@ namespace pwiz.Skyline.Controls.Graphs
         [Browsable(true)]
         public event EventHandler<SelectedSpectrumEventArgs> SelectedSpectrumChanged;
 
-        public void FireSelectedSpectrumChanged()
+        public void FireSelectedSpectrumChanged(bool isUserAction)
         {
             if (SelectedSpectrumChanged != null)
             {
                 var spectrumInfo = SelectedSpectrum;
-                if (spectrumInfo.RetentionTime.HasValue)
-                    SelectedSpectrumChanged(this, new SelectedSpectrumEventArgs(spectrumInfo));                
+                if (spectrumInfo != null && !spectrumInfo.RetentionTime.HasValue)
+                    spectrumInfo = null;
+                SelectedSpectrumChanged(this, new SelectedSpectrumEventArgs(spectrumInfo, isUserAction));
             }
         }
 
@@ -220,6 +221,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     toolBar.Visible = true;
                 }
             }
+            FireSelectedSpectrumChanged(false);
         }
 
         public void SelectSpectrum(SpectrumIdentifier spectrumIdentifier)
@@ -245,6 +247,11 @@ namespace pwiz.Skyline.Controls.Graphs
 
                 return _spectra != null ? _spectra[0] : null;
             }
+        }
+
+        public IEnumerable<SpectrumDisplayInfo> AvailableSpectra
+        {
+            get { return _spectra; }
         }
 
         public void UpdateUI()
@@ -417,7 +424,8 @@ namespace pwiz.Skyline.Controls.Graphs
                                                              replicateName,
                                                              matchingFile.FilePath,
                                                              matchingFile.FileOrder,
-                                                             spectrumInfo.RetentionTime));
+                                                             spectrumInfo.RetentionTime,
+                                                             false));
 
                 // Include the best spectrum twice, once displayed in the normal
                 // way and once displayed with its replicate and retetion time.
@@ -433,7 +441,8 @@ namespace pwiz.Skyline.Controls.Graphs
                                                                  replicateName,
                                                                  matchingFile.FilePath,
                                                                  0,
-                                                                 spectrumInfo.RetentionTime);
+                                                                 spectrumInfo.RetentionTime,
+                                                                 true);
                     }
                 }
 
@@ -519,7 +528,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
             if (!_inToolbarUpdate)
             {
-                FireSelectedSpectrumChanged();
+                FireSelectedSpectrumChanged(true);
             }
         }
     }
@@ -659,7 +668,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
 
         public SpectrumDisplayInfo(SpectrumInfo spectrumInfo, string replicateName,
-            string filePath, int fileOrder, double? retentionTime)
+            string filePath, int fileOrder, double? retentionTime, bool isBest)
         {
             _spectrumInfo = spectrumInfo;
 
@@ -667,6 +676,7 @@ namespace pwiz.Skyline.Controls.Graphs
             FilePath = filePath;
             FileOrder = fileOrder;
             RetentionTime = retentionTime;
+            IsBest = isBest;
         }
 
         public SpectrumInfo SpectrumInfo { get { return _spectrumInfo; } }
@@ -727,11 +737,13 @@ namespace pwiz.Skyline.Controls.Graphs
 
     public sealed class SelectedSpectrumEventArgs : EventArgs
     {
-        public SelectedSpectrumEventArgs(SpectrumDisplayInfo spectrum)
+        public SelectedSpectrumEventArgs(SpectrumDisplayInfo spectrum, bool isUserAction)
         {
             Spectrum = spectrum;
+            IsUserAction = isUserAction;
         }
 
         public SpectrumDisplayInfo Spectrum { get; private set; }
+        public bool IsUserAction { get; private set; }
     }
 }

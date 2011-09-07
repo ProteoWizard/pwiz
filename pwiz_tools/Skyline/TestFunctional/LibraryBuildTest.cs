@@ -121,7 +121,6 @@ namespace pwiz.SkylineTestFunctional
                     nodePepTree = sequenceTree.SelectedNode as PeptideTreeNode;
                 });
             Assert.IsNotNull(nodePepTree);
-            Debug.Assert(nodePepTree != null);
             Assert.AreEqual(heavyRPeptide, nodePepTree.DocNode.Peptide.Sequence);
             // Set the Heavy R modification explicitly
             var editPepModsDlg = ShowDialog<EditPepModsDlg>(SkylineWindow.ModifyPeptide);
@@ -404,7 +403,7 @@ namespace pwiz.SkylineTestFunctional
         private static void CheckLibraryExistence(string libPath, bool libExist)
         {
             // Wait for journal to be removed
-            string libJournalPath = libPath + BiblioSpec.BlibBuild.EXT_SQLITE_JOURNAL;
+            string libJournalPath = libPath + BlibBuild.EXT_SQLITE_JOURNAL;
             WaitForCondition(() => !File.Exists(libJournalPath));
             Assert.IsFalse(File.Exists(libJournalPath),
                 string.Format("Unexpected library journal {0} found", libJournalPath));            

@@ -26,6 +26,7 @@ using System.Threading;
 using System.Windows.Forms;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline;
+using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Properties;
@@ -410,6 +411,32 @@ namespace pwiz.SkylineTestUtil
             WaitForClosedForm(editModsDlg);
         }
 
+        public static void AddStaticMod(string uniModName, bool isVariable, PeptideSettingsUI peptideSettingsUI)
+        {
+            var editStaticModsDlg = ShowEditStaticModsDlg(peptideSettingsUI);
+            AddMod(uniModName, isVariable, editStaticModsDlg);
+        }
+
+        public static void AddHeavyMod(string uniModName, PeptideSettingsUI peptideSettingsUI)
+        {
+            var editStaticModsDlg = ShowEditHeavyModsDlg(peptideSettingsUI);
+            AddMod(uniModName, false, editStaticModsDlg);
+        }
+
+        private static void AddMod(string uniModName, bool isVariable, EditListDlg<SettingsListBase<StaticMod>, StaticMod> editModsDlg)
+        {
+            var addStaticModDlg = ShowAddModDlg(editModsDlg);
+            RunUI(() =>
+            {
+                addStaticModDlg.SetModification(uniModName, isVariable);
+                addStaticModDlg.OkDialog();
+            });
+            WaitForClosedForm(addStaticModDlg);
+
+            RunUI(editModsDlg.OkDialog);
+            WaitForClosedForm(editModsDlg);
+        }
+
         public static void SetStaticModifications(Func<IList<string>, IList<string>> changeMods)
         {
             RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, dlg =>
@@ -417,6 +444,24 @@ namespace pwiz.SkylineTestUtil
                 dlg.PickedStaticMods = changeMods(dlg.PickedStaticMods).ToArray();
                 dlg.OkDialog();
             });
+        }
+
+        #endregion
+
+        #region Results helpers
+
+        public void ImportResultsFile(string fileName)
+        {
+            var importResultsDlg = ShowDialog<ImportResultsDlg>(SkylineWindow.ImportResults);
+            RunDlg<OpenDataSourceDialog>(() => importResultsDlg.NamedPathSets = importResultsDlg.GetDataSourcePathsFile(null),
+               openDataSourceDialog =>
+               {
+                   openDataSourceDialog.SelectFile(fileName);
+                   openDataSourceDialog.Open();
+               });
+            RunUI(importResultsDlg.OkDialog);
+            WaitForCondition(30 * 1000,
+                () => SkylineWindow.Document.Settings.HasResults && SkylineWindow.Document.Settings.MeasuredResults.IsLoaded);            
         }
 
         #endregion

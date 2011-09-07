@@ -541,12 +541,14 @@ namespace pwiz.Skyline.SettingsUI
             }
         }
 
+// ReSharper disable MemberCanBeMadeStatic.Local
         private void textFormula_KeyPress(object sender, KeyPressEventArgs e)
         {
             // Force uppercase in this control.
             // Atoms have been added containing lower case chars
             // e.KeyChar = char.ToUpper(e.KeyChar);
         }
+// ReSharper restore MemberCanBeMadeStatic.Local
 
         private void btnLoss_Click(object sender, EventArgs e)
         {
@@ -621,6 +623,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private const char SEPARATOR_AA = ',';
 
+// ReSharper disable MemberCanBeMadeStatic.Local
         private void comboAA_KeyPress(object sender, KeyPressEventArgs e)
         {
             // Force uppercase in this control.
@@ -629,6 +632,7 @@ namespace pwiz.Skyline.SettingsUI
             if (!AminoAcid.IsAA(e.KeyChar) && " ,\b".IndexOf(e.KeyChar) == -1)
                 e.Handled = true;
         }
+// ReSharper restore MemberCanBeMadeStatic.Local
 
         private void comboAA_Leave(object sender, EventArgs e)
         {
@@ -758,7 +762,15 @@ namespace pwiz.Skyline.SettingsUI
 
         public void SetModification(string modName)
         {
+            SetModification(modName, false);
+        }
+
+        public void SetModification(string modName, bool isVariable)
+        {
             Modification = UniMod.GetModification(modName, IsStructural);
+
+            if (IsStructural && isVariable)
+                cbVariableMod.Checked = true;
         }
 
         private void comboMod_SelectedIndexChanged(object sender, EventArgs e)
