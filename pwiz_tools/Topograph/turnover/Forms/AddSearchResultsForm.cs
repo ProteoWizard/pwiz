@@ -419,6 +419,7 @@ namespace pwiz.Topograph.ui.Forms
                             {"LastTracerCount", dbPeptideSearchResult.LastTracerCount},
                             {"Version",1},
                             {"ValidationStatus", 0},
+                            {"PsmCount", dbPeptideSearchResult.PsmCount}
                         }));
                 }
                 foreach (var dbPeptideSearchResult in searchResultsToUpdate.Values)

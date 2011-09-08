@@ -263,6 +263,7 @@ namespace pwiz.Topograph.ui.Forms
                                     {"AutoFindPeak", 1},
                                     {"Version",1},
                                     {"PeakCount",0},
+                                    {"PsmCount", dbPeptideFileAnalysis.PsmCount},
                                     {"ValidationStatus",0},
                                 }
                             ));
