@@ -43,7 +43,7 @@ namespace {
 char* emptyString()
 {
     char* dest = new char[1];
-    dest[0] = 0;
+    dest[0] = '\0';
     return dest;
 }
 
@@ -51,7 +51,7 @@ char* c_string(const std::string& s)
 {
     char* ret = new char[s.length() + 1];
     s.copy(ret, std::string::npos);
-    ret[s.length()] = 0;
+    ret[s.length()] = '\0';
     return ret;
 }
 
@@ -62,7 +62,7 @@ char* strcpyi(const char* src)
         size_t srclen = strlen(src);
         char* dest = new char[srclen + 1];
         strcpy(dest, src);
-        dest[srclen] = 0;
+        dest[srclen] = '\0';
         return dest;
     }
     return emptyString();
@@ -1250,10 +1250,14 @@ ParamListsMZ5::~ParamListsMZ5()
 void ParamListsMZ5::init(const ParamListMZ5* list, const size_t len)
 {
     this->len = len;
-    this->lists = new ParamListMZ5[this->len];
-    for (unsigned long i = 0; i < this->len; ++i)
-    {
-        this->lists[i] = list[i];
+    if (this->len != 0) {
+        this->lists = new ParamListMZ5[this->len];
+        for (unsigned long i = 0; i < this->len; ++i)
+        {
+            this->lists[i] = list[i];
+        }
+    } else {
+        this->lists = 0;
     }
 }
 
@@ -1881,6 +1885,7 @@ ProcessingMethodListMZ5& ProcessingMethodListMZ5::operator=(
 {
     if (this != &rhs)
     {
+        delete[] list;
         init(rhs.list, rhs.len);
     }
     return *this;
@@ -1888,6 +1893,7 @@ ProcessingMethodListMZ5& ProcessingMethodListMZ5::operator=(
 
 ProcessingMethodListMZ5::~ProcessingMethodListMZ5()
 {
+    delete[] list;
 }
 
 void ProcessingMethodListMZ5::init(const ProcessingMethodMZ5* list,
@@ -2170,6 +2176,7 @@ PrecursorListMZ5& PrecursorListMZ5::operator=(const PrecursorListMZ5& rhs)
 {
     if (this != &rhs)
     {
+        delete[] list;
         init(rhs.list, rhs.len);
     }
     return *this;
@@ -2177,6 +2184,7 @@ PrecursorListMZ5& PrecursorListMZ5::operator=(const PrecursorListMZ5& rhs)
 
 PrecursorListMZ5::~PrecursorListMZ5()
 {
+    delete[] list;
 }
 
 void PrecursorListMZ5::init(const PrecursorMZ5* list, const size_t len)
@@ -2672,6 +2680,7 @@ ScanListMZ5& ScanListMZ5::operator=(const ScanListMZ5& rhs)
 {
     if (this != &rhs)
     {
+        delete[] list;
         init(rhs.list, rhs.len);
     }
     return *this;
@@ -2679,6 +2688,7 @@ ScanListMZ5& ScanListMZ5::operator=(const ScanListMZ5& rhs)
 
 ScanListMZ5::~ScanListMZ5()
 {
+    delete[] list;
 }
 
 void ScanListMZ5::init(const ScanMZ5* list, const size_t len)
@@ -2842,6 +2852,8 @@ RunMZ5& RunMZ5::operator=(const RunMZ5& rhs)
     {
         delete[] id;
         delete[] startTimeStamp;
+        delete[] fid;
+        delete[] facc;
         init(rhs.paramList, rhs.defaultSpectrumDataProcessingRefID,
                 rhs.defaultChromatogramDataProcessingRefID,
                 rhs.defaultInstrumentConfigurationRefID, rhs.sourceFileRefID,
@@ -2854,6 +2866,8 @@ RunMZ5::~RunMZ5()
 {
     delete[] id;
     delete[] startTimeStamp;
+    delete[] fid;
+    delete[] facc;
 }
 
 void RunMZ5::init(const ParamListMZ5& params, const RefMZ5& refSpectrumDP,
