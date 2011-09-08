@@ -105,6 +105,18 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
+        public bool BySample
+        {
+            get
+            {
+                return cbxBySample.Checked;
+            }
+            set
+            {
+                cbxBySample.Checked = value;
+                UpdateRows();
+            }
+        }
         public double MinScore
         {
             get
@@ -245,7 +257,7 @@ namespace pwiz.Topograph.ui.Forms
             var cohortSet = new HashSet<String> {""};
             foreach (var msDataFile in Workspace.MsDataFiles.ListChildren())
             {
-                cohortSet.Add(msDataFile.Cohort ?? "");
+                cohortSet.Add(HalfLifeCalculator.GetCohort(msDataFile, BySample));
             }
             var selectedCohort = (string) comboCohort.SelectedItem;
             var cohorts = new List<String>(cohortSet);
@@ -301,6 +313,7 @@ namespace pwiz.Topograph.ui.Forms
             {
                 return;
             }
+            colSample.Visible = BySample;
             using (Workspace.GetReadLock())
             {
                 var peptideFileAnalyses = new List<PeptideFileAnalysis>();
@@ -324,6 +337,7 @@ namespace pwiz.Topograph.ui.Forms
                     row.Cells[colTurnover.Index].Value = peptideFileAnalysis.Peaks.Turnover;
                     row.Cells[colPrecursorPool.Index].Value = peptideFileAnalysis.Peaks.PrecursorEnrichment;
                     row.Cells[colTurnoverScore.Index].Value = peptideFileAnalysis.Peaks.TurnoverScore;
+                    row.Cells[colSample.Index].Value = peptideFileAnalysis.MsDataFile.Sample;
                 }
                 HalfLifeCalculator.ResultData resultData;
                 var halfLifeCalculator = UpdateGraph(peptideFileAnalyses, out resultData);
@@ -375,6 +389,7 @@ namespace pwiz.Topograph.ui.Forms
                                                  FinalPercent = FinalPercent,
                                                  FixedInitialPercent = FixedInitialPercent,
                                                  ApplyEvviesFilter = cbxEvviesFilter.Checked,
+                                                 BySample = BySample,
                                             };
             var halfLife = resultData = halfLifeCalculator.CalculateHalfLife(peptideFileAnalyses);
             _zedGraphControl.GraphPane.CurveList.Clear();
@@ -535,7 +550,7 @@ namespace pwiz.Topograph.ui.Forms
         {
             if (!string.IsNullOrEmpty(Cohort))
             {
-                if (Cohort != peptideFileAnalysis.MsDataFile.Cohort)
+                if (Cohort != HalfLifeCalculator.GetCohort(peptideFileAnalysis.MsDataFile, BySample))
                 {
                     return false;
                 }
@@ -738,6 +753,11 @@ namespace pwiz.Topograph.ui.Forms
         private void cbxEvviesFilter_CheckedChanged(object sender, EventArgs e)
         {
             UpdateRows();
+        }
+
+        private void cbxBySample_CheckedChanged(object sender, EventArgs e)
+        {
+            Requery();
         }
     }
 }

@@ -281,7 +281,25 @@ namespace pwiz.Topograph.MsData
 
         private String GetCohort(RowData rowData)
         {
-            return rowData.MsDataFile.Cohort ?? "";
+            return GetCohort(rowData.MsDataFile, BySample);
+        }
+
+        public static string GetCohort(MsDataFile msDataFile, bool bySample)
+        {
+            var result = new StringBuilder();
+            if (msDataFile.Cohort != null)
+            {
+                result.Append(msDataFile.Cohort);
+            }
+            if (bySample && !string.IsNullOrEmpty(msDataFile.Sample))
+            {
+                if (result.Length > 0)
+                {
+                    result.Append(" ");
+                }
+                result.Append(msDataFile.Sample);
+            }
+            return result.ToString();
         }
 
         private double? GetTimePoint(RowData rowData)
@@ -589,6 +607,7 @@ namespace pwiz.Topograph.MsData
 
         public Workspace Workspace { get; private set; }
         public bool ByProtein { get; set; }
+        public bool BySample { get; set; }
         public double MinScore { get; set; }
         ISession Session { get; set; }
         public IList<ResultRow> ResultRows { get; private set; }

@@ -82,6 +82,7 @@ namespace pwiz.Topograph.ui.Forms
             var calculator = new HalfLifeCalculator(Workspace, HalfLifeCalculationType)
                                  {
                                      ByProtein = cbxByProtein.Checked,
+                                     BySample = cbxBySample.Checked,
                                      MinScore = minScore,
                                      InitialPercent = double.Parse(tbxInitialTracerPercent.Text),
                                      FinalPercent = double.Parse(tbxFinalTracerPercent.Text),
@@ -196,6 +197,13 @@ namespace pwiz.Topograph.ui.Forms
                     return new LinkValue<string>(_halfLifeResultRow.ProteinName, ProteinClickHandler);
                 }
             }
+            public string ProteinKey
+            {
+                get
+                {
+                    return _form.Workspace.GetProteinKey(_halfLifeResultRow.ProteinName, _halfLifeResultRow.ProteinDescription);
+                }
+            }
             public string ProteinDescription
             {
                 get
@@ -253,6 +261,7 @@ namespace pwiz.Topograph.ui.Forms
                                        {
                                            Peptide = peptide == null ? "" : peptide.Sequence,
                                            ProteinName = proteinName,
+                                           BySample = _form.cbxBySample.Checked,
                                            Cohort = cohort,
                                            MinScore = _form.MinScore,
                                            InitialPercent = double.Parse(_form.tbxInitialTracerPercent.Text),

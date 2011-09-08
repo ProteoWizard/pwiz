@@ -171,6 +171,14 @@ namespace pwiz.Topograph.Model
             return Workspace.GetProteinKey(ProteinName, ProteinDescription);
         }
 
+        public string ProteinKey
+        {
+            get
+            {
+                return Workspace.GetProteinKey(ProteinName, ProteinDescription);
+            }
+        }
+
         public override string ToString()
         {
             return FullSequence;
