@@ -42,7 +42,7 @@ using boost::logic::tribool;
 
 struct SpectrumList_Sorter::Impl
 {
-    const SpectrumListPtr& original;
+    const SpectrumListPtr original;
     std::vector<SpectrumIdentity> spectrumIdentities; // local cache, with fixed up index fields
     std::vector<size_t> indexMap; // maps index -> original index
 
@@ -59,20 +59,54 @@ namespace {
 struct SortPredicate
 {
     SortPredicate(const SpectrumListPtr& inner, const SpectrumList_Sorter::Predicate& predicate)
-    :   inner(inner), predicate(predicate)
+    :   inner(inner), predicate(predicate), detailLevel(DetailLevel_InstantMetadata)
     {
+        if (inner->size() < 2)
+            return;
+
+        using namespace boost::logic;
+
+        // determine the minimum detail level needed using the first two spectra
+
+        if (indeterminate(predicate.less(inner->spectrumIdentity(0), inner->spectrumIdentity(1))))
+        {
+            needDetails = true;
+
+            // not enough info -- we need to retrieve the Spectrum
+            do
+            {
+                SpectrumPtr spectrum0 = inner->spectrum(0, detailLevel);
+                SpectrumPtr spectrum1 = inner->spectrum(1, detailLevel);
+                tribool lessThan = predicate.less(*spectrum0, *spectrum1);
+
+                if (indeterminate(lessThan))
+                {
+                    if (detailLevel != DetailLevel_FullData)
+                        detailLevel = DetailLevel(int(detailLevel) + 1);
+                    else
+                        throw runtime_error("[SortPredicate::ctor] indeterminate result at full detail level");
+                }
+                else
+                    break;
+            }
+            while ((int) detailLevel <= (int) DetailLevel_FullData);
+        }
+        else
+            needDetails = false;
     }
 
     bool operator() (size_t lhs, size_t rhs)
     {
-        tribool result = predicate.less(inner->spectrumIdentity(lhs), inner->spectrumIdentity(rhs));
-        if (result.value == tribool::indeterminate_value)
-            return (bool) predicate.less(*inner->spectrum(lhs, false), *inner->spectrum(rhs, false));
-        return result;
+        if (needDetails)
+            return (bool) predicate.less(*inner->spectrum(lhs, detailLevel), *inner->spectrum(rhs, detailLevel));
+        else
+            return (bool) predicate.less(inner->spectrumIdentity(lhs), inner->spectrumIdentity(rhs));
     }
 
     const SpectrumListPtr& inner;
     const SpectrumList_Sorter::Predicate& predicate;
+    bool needDetails; // false iff spectrumIdentity is sufficient for sorting
+    DetailLevel detailLevel; // the detail level needed for a non-indeterminate result
 };
 
 } // namespace
@@ -136,6 +170,25 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Sorter::spectrum(size_t index, bool getBi
     newSpectrum->index = index;
 
     return newSpectrum;
+}
+
+
+//
+// SpectrumList_SorterPredicate_ScanStartTime
+//
+
+
+PWIZ_API_DECL
+tribool SpectrumList_SorterPredicate_ScanStartTime::less(const msdata::Spectrum& lhs,
+                                                         const msdata::Spectrum& rhs) const
+{
+    if (lhs.scanList.empty() || rhs.scanList.empty())
+        return boost::logic::indeterminate;
+    CVParam lhsTime = lhs.scanList.scans[0].cvParam(MS_scan_start_time);
+    CVParam rhsTime = rhs.scanList.scans[0].cvParam(MS_scan_start_time);
+    if (lhsTime.empty() || rhsTime.empty())
+        return boost::logic::indeterminate;
+    return lhsTime.timeInSeconds() < rhsTime.timeInSeconds();
 }
 
 

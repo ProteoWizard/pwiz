@@ -91,6 +91,26 @@ void testWrapScanTimeRange()
 }
 
 
+void testWrapSortScanTime()
+{
+    MSData msd;
+    examples::initializeTiny(msd);
+
+    SpectrumListPtr& sl = msd.run.spectrumListPtr;
+    unit_assert(sl.get());
+    unit_assert(sl->size() == 5);
+
+    sl->spectrum(0)->scanList.scans[0].set(MS_scan_start_time, 35, UO_second);
+    sl->spectrum(2)->scanList.scans[0].set(MS_scan_start_time, 0.5, UO_minute);
+
+    SpectrumListFactory::wrap(msd, "sortByScanTime");
+    unit_assert(sl->size() == 5);
+    unit_assert(sl->spectrumIdentity(0).id == "scan=21");
+    unit_assert(sl->spectrumIdentity(1).id == "scan=19");
+    unit_assert(sl->spectrumIdentity(2).id == "sample=1 period=1 cycle=23 experiment=1");
+}
+
+
 void testWrapMZWindow()
 {
     MSData msd;
@@ -379,6 +399,7 @@ void test()
     testUsage(); 
     testWrap();
     testWrapScanTimeRange();
+    testWrapSortScanTime();
     testWrapMZWindow();
     testWrapMSLevel();
     testWrapDefaultArrayLength();

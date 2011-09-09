@@ -50,13 +50,14 @@ class PWIZ_API_DECL SpectrumList_Sorter : public msdata::SpectrumListWrapper
         ///  indeterminate: need to see the full Spectrum object to decide
         virtual boost::logic::tribool less(const msdata::SpectrumIdentity& lhs,
                                            const msdata::SpectrumIdentity& rhs) const 
-        {return lhs.index < rhs.index;}
+        {return boost::logic::indeterminate;}
 
         /// return values:
         ///  true: lhs < rhs
         ///  false: lhs >= rhs
-        virtual bool less(const msdata::Spectrum& lhs,
-                          const msdata::Spectrum& rhs) const
+        ///  indeterminate: need a more detailed Spectrum object to decide
+        virtual boost::logic::tribool less(const msdata::Spectrum& lhs,
+                                           const msdata::Spectrum& rhs) const
         {return lhs.index < rhs.index;}
 
         virtual ~Predicate() {}
@@ -78,6 +79,14 @@ class PWIZ_API_DECL SpectrumList_Sorter : public msdata::SpectrumListWrapper
     boost::shared_ptr<Impl> impl_;
     SpectrumList_Sorter(SpectrumList_Sorter&);
     SpectrumList_Sorter& operator=(SpectrumList_Sorter&);
+};
+
+
+class PWIZ_API_DECL SpectrumList_SorterPredicate_ScanStartTime : public SpectrumList_Sorter::Predicate
+{
+    public:
+    virtual boost::logic::tribool less(const msdata::Spectrum& lhs,
+                                       const msdata::Spectrum& rhs) const;
 };
 
 

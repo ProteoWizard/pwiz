@@ -25,6 +25,7 @@
 
 #include "SpectrumListFactory.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Filter.hpp"
+#include "pwiz/analysis/spectrum_processing/SpectrumList_Sorter.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_PeakPicker.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_Smoother.hpp"
 #include "pwiz/analysis/spectrum_processing/SpectrumList_PeakFilter.hpp"
@@ -110,6 +111,13 @@ SpectrumListPtr filterCreator_scanTime(const MSData& msd, const string& arg)
     return SpectrumListPtr(new
         SpectrumList_Filter(msd.run.spectrumListPtr, 
                             SpectrumList_FilterPredicate_ScanTimeRange(scanTimeLow, scanTimeHigh)));
+}
+
+
+SpectrumListPtr filterCreator_sortScanTime(const MSData& msd, const string& arg)
+{
+    return SpectrumListPtr(new SpectrumList_Sorter(msd.run.spectrumListPtr,
+                                                   SpectrumList_SorterPredicate_ScanStartTime()));
 }
 
 
@@ -547,6 +555,7 @@ JumpTableEntry jumpTable_[] =
     {"scanNumber", "int_set", filterCreator_scanNumber},
     {"scanEvent", "int_set", filterCreator_scanEvent},
     {"scanTime", "[scanTimeLow,scanTimeHigh]", filterCreator_scanTime},
+    {"sortByScanTime", "(sort by ascending scan start time)", filterCreator_sortScanTime},
     {"stripIT", " (strip ion trap ms1 scans)", filterCreator_stripIT},
     {"metadataFixer", " (add/replace TIC/BPI metadata)", filterCreator_metadataFixer},
     {"titleMaker", " (add/replace spectrum title according to user-specified format string; the following keywords are recognized: <RunId> <Index> <Id> <ScanNumber> <ActivationType> <IsolationMz> <SelectedIonMz> <ChargeState> <PrecursorSpectrumId> <SpectrumType> <MsLevel> <ScanStartTimeInMinutes> <ScanStartTimeInSeconds> <BasePeakMz> <BasePeakIntensity> <TotalIonCurrent>", filterCreator_titleMaker},

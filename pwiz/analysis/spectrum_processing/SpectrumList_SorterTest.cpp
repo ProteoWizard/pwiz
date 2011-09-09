@@ -47,8 +47,8 @@ struct DefaultArrayLengthSorter : public SpectrumList_Sorter::Predicate
         return boost::logic::indeterminate;
     }
 
-    virtual bool less(const Spectrum& lhs,
-                      const Spectrum& rhs) const
+    virtual tribool less(const Spectrum& lhs,
+                         const Spectrum& rhs) const
     {
         return lhs.defaultArrayLength < rhs.defaultArrayLength;
     }
@@ -62,13 +62,13 @@ struct MSLevelSorter : public SpectrumList_Sorter::Predicate
         return boost::logic::indeterminate;
     }
 
-    virtual bool less(const Spectrum& lhs,
-                      const Spectrum& rhs) const
+    virtual tribool less(const Spectrum& lhs,
+                         const Spectrum& rhs) const
     {
         CVParam lhsMSLevel = lhs.cvParam(MS_ms_level);
         CVParam rhsMSLevel = rhs.cvParam(MS_ms_level);
         if (lhsMSLevel.empty() || rhsMSLevel.empty())
-            throw runtime_error("[MSLevelSorter::less()] Spectrum operands must be mass spectra");
+            return boost::logic::indeterminate;
         return lhsMSLevel.valueAs<int>() < rhsMSLevel.valueAs<int>();
     }
 };
