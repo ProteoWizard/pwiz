@@ -189,11 +189,11 @@ public ref class SpectrumList_Filter : public msdata::SpectrumList
     Impl^ impl_;
 };
 
-
+/*
 /// <summary>
 /// Delegate for comparing spectra in SpectrumList_Sorter
 /// </summary>
-public delegate bool SpectrumList_Sorter_LessThan(msdata::Spectrum^, msdata::Spectrum^);
+public delegate System::Nullable<bool> SpectrumList_Sorter_LessThan(msdata::Spectrum^, msdata::Spectrum^);
 
 
 /// <summary>
@@ -212,8 +212,8 @@ public ref class SpectrumList_Sorter : public msdata::SpectrumList
     private:
 
     SpectrumList_Sorter_LessThan^ managedPredicate;
-    bool marshal(const pwiz::msdata::Spectrum* lhs, const pwiz::msdata::Spectrum* rhs);
-};
+    System::Nullable<bool> marshal(const pwiz::msdata::Spectrum* lhs, const pwiz::msdata::Spectrum* rhs);
+};*/
 
 
 public ref class Smoother abstract

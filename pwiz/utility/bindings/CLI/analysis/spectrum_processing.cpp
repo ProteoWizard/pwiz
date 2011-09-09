@@ -222,15 +222,15 @@ SpectrumList_Filter::SpectrumList_Filter(msdata::SpectrumList^ inner,
 
 
 
-class SpectrumList_SorterPredicate : public b::SpectrumList_Sorter::Predicate
+/*class SpectrumList_SorterPredicate : public b::SpectrumList_Sorter::Predicate
 {
-    bool(*sorterDelegatePtr)(const pwiz::msdata::Spectrum*, const pwiz::msdata::Spectrum*);
+    (System::Nullable<bool>)(*sorterDelegatePtr)(const pwiz::msdata::Spectrum*, const pwiz::msdata::Spectrum*);
 
     public:
 
     SpectrumList_SorterPredicate(void* sorterDelegatePtr)
-    : sorterDelegatePtr((bool(*)(const pwiz::msdata::Spectrum*,
-                                 const pwiz::msdata::Spectrum*)) sorterDelegatePtr)
+    : sorterDelegatePtr((System::Nullable<bool>(*)(const pwiz::msdata::Spectrum*,
+                                                   const pwiz::msdata::Spectrum*)) sorterDelegatePtr)
     {}
 
     boost::logic::tribool SpectrumList_SorterPredicate::less(const pwiz::msdata::SpectrumIdentity& lhsIdentity,
@@ -239,17 +239,18 @@ class SpectrumList_SorterPredicate : public b::SpectrumList_Sorter::Predicate
         return boost::logic::indeterminate;
     }
 
-    bool SpectrumList_SorterPredicate::less(const pwiz::msdata::Spectrum& lhs,
-                                            const pwiz::msdata::Spectrum& rhs) const
+    boost::logic::tribool SpectrumList_SorterPredicate::less(const pwiz::msdata::Spectrum& lhs,
+                                                             const pwiz::msdata::Spectrum& rhs) const
     {
-        return sorterDelegatePtr(&lhs, &rhs);
+        System::Nullable<bool> result = sorterDelegatePtr(&lhs, &rhs);
+        return result.HasValue ? result.Value : boost::logic::indeterminate;
     }
 };
 
 
-private delegate bool SpectrumList_Sorter_LessThanWrapper(const pwiz::msdata::Spectrum*, const pwiz::msdata::Spectrum*);
+private delegate System::Nullable<bool> SpectrumList_Sorter_LessThanWrapper(const pwiz::msdata::Spectrum*, const pwiz::msdata::Spectrum*);
 
-bool SpectrumList_Sorter::marshal(const pwiz::msdata::Spectrum* lhs, const pwiz::msdata::Spectrum* rhs)
+System::Nullable<bool> SpectrumList_Sorter::marshal(const pwiz::msdata::Spectrum* lhs, const pwiz::msdata::Spectrum* rhs)
 {
     // assume the managed predicate won't change the spectrum
     // use null deallocator because this spectrum pointer comes from a const reference
@@ -268,7 +269,7 @@ SpectrumList_Sorter::SpectrumList_Sorter(msdata::SpectrumList^ inner,
     System::IntPtr predicatePtr = System::Runtime::InteropServices::Marshal::GetFunctionPointerForDelegate(wrapper);
     base_ = new b::SpectrumList_Sorter(*inner->base_, SpectrumList_SorterPredicate(predicatePtr.ToPointer()));
     msdata::SpectrumList::base_ = new boost::shared_ptr<pwiz::msdata::SpectrumList>(base_);
-}
+}*/
 
 
 
