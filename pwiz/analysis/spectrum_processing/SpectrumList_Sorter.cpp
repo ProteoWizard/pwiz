@@ -103,7 +103,7 @@ struct SortPredicate
             return (bool) predicate.less(inner->spectrumIdentity(lhs), inner->spectrumIdentity(rhs));
     }
 
-    const SpectrumListPtr& inner;
+    const SpectrumListPtr inner;
     const SpectrumList_Sorter::Predicate& predicate;
     bool needDetails; // false iff spectrumIdentity is sufficient for sorting
     DetailLevel detailLevel; // the detail level needed for a non-indeterminate result

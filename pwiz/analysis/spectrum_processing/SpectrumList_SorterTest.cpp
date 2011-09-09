@@ -50,6 +50,8 @@ struct DefaultArrayLengthSorter : public SpectrumList_Sorter::Predicate
     virtual tribool less(const Spectrum& lhs,
                          const Spectrum& rhs) const
     {
+        if (lhs.id.empty())
+            return boost::logic::indeterminate;
         return lhs.defaultArrayLength < rhs.defaultArrayLength;
     }
 };
@@ -133,102 +135,102 @@ void test()
         *os_ << endl;
     }
 
-    unit_assert(originalList->size() == defaultArrayLengthSortedList->size() &&
-                originalList->size() == msLevelUnstableSortedList->size() &&
-                originalList->size() == msLevelStableSortedList->size() &&
-                originalList->size() == sillySortedList->size());
+    unit_assert_operator_equal(originalList->size(), defaultArrayLengthSortedList->size());
+    unit_assert_operator_equal(originalList->size(), msLevelUnstableSortedList->size());
+    unit_assert_operator_equal(originalList->size(), msLevelStableSortedList->size());
+    unit_assert_operator_equal(originalList->size(), sillySortedList->size());
 
     SpectrumPtr s;
 
     // assert that the original list is unmodified
-    unit_assert(originalList->spectrumIdentity(0).id == "scan=19");
-    unit_assert(originalList->spectrumIdentity(0).index == 0);
-    unit_assert(originalList->spectrumIdentity(1).id == "scan=20");
-    unit_assert(originalList->spectrumIdentity(1).index == 1);
-    unit_assert(originalList->spectrumIdentity(2).id == "scan=21");
-    unit_assert(originalList->spectrumIdentity(2).index == 2);
-    unit_assert(originalList->spectrumIdentity(3).id == "scan=22");
-    unit_assert(originalList->spectrumIdentity(3).index == 3);
+    unit_assert_operator_equal("scan=19", originalList->spectrumIdentity(0).id);
+    unit_assert_operator_equal(0, originalList->spectrumIdentity(0).index);
+    unit_assert_operator_equal("scan=20", originalList->spectrumIdentity(1).id);
+    unit_assert_operator_equal(1, originalList->spectrumIdentity(1).index);
+    unit_assert_operator_equal("scan=21", originalList->spectrumIdentity(2).id);
+    unit_assert_operator_equal(2, originalList->spectrumIdentity(2).index);
+    unit_assert_operator_equal("scan=22", originalList->spectrumIdentity(3).id);
+    unit_assert_operator_equal(3, originalList->spectrumIdentity(3).index);
     s = originalList->spectrum(0);
-    unit_assert(s->id == "scan=19");
-    unit_assert(s->index == 0);
+    unit_assert_operator_equal("scan=19", s->id);
+    unit_assert_operator_equal(0, s->index);
 
     // validate the default array length sorted list (ascending order, scan=19 and scan=22 are interchangeable)
-    unit_assert(defaultArrayLengthSortedList->spectrumIdentity(0).id == "scan=21");
-    unit_assert(defaultArrayLengthSortedList->spectrumIdentity(0).index == 0);
-    unit_assert(defaultArrayLengthSortedList->spectrumIdentity(1).id == "scan=20");
-    unit_assert(defaultArrayLengthSortedList->spectrumIdentity(1).index == 1);
-    unit_assert(defaultArrayLengthSortedList->spectrumIdentity(2).index == 2);
-    unit_assert(defaultArrayLengthSortedList->spectrumIdentity(3).index == 3);
+    unit_assert_operator_equal("scan=21", defaultArrayLengthSortedList->spectrumIdentity(0).id);
+    unit_assert_operator_equal(0, defaultArrayLengthSortedList->spectrumIdentity(0).index);
+    unit_assert_operator_equal("scan=20", defaultArrayLengthSortedList->spectrumIdentity(1).id);
+    unit_assert_operator_equal(1, defaultArrayLengthSortedList->spectrumIdentity(1).index);
+    unit_assert_operator_equal(2, defaultArrayLengthSortedList->spectrumIdentity(2).index);
+    unit_assert_operator_equal(3, defaultArrayLengthSortedList->spectrumIdentity(3).index);
     s = defaultArrayLengthSortedList->spectrum(0);
-    unit_assert(s->id == "scan=21");
-    unit_assert(s->index == 0);
+    unit_assert_operator_equal("scan=21", s->id);
+    unit_assert_operator_equal(0, s->index);
     s = defaultArrayLengthSortedList->spectrum(1);
-    unit_assert(s->id == "scan=20");
-    unit_assert(s->index == 1);
+    unit_assert_operator_equal("scan=20", s->id);
+    unit_assert_operator_equal(1, s->index);
     s = defaultArrayLengthSortedList->spectrum(2);
-    unit_assert(s->index == 2);
+    unit_assert_operator_equal(2, s->index);
     s = defaultArrayLengthSortedList->spectrum(3);
-    unit_assert(s->index == 3);
+    unit_assert_operator_equal(3, s->index);
     for (size_t i=1, end=defaultArrayLengthSortedList->size(); i < end; ++i)
         unit_assert(defaultArrayLengthSortedList->spectrum(i)->defaultArrayLength >=
                     defaultArrayLengthSortedList->spectrum(i-1)->defaultArrayLength);
 
     // validate the MS level unstable sorted list (scan=19, scan=21, and scan=22 are interchangeable)
-    unit_assert(msLevelUnstableSortedList->spectrumIdentity(0).index == 0);
-    unit_assert(msLevelUnstableSortedList->spectrumIdentity(1).index == 1);
-    unit_assert(msLevelUnstableSortedList->spectrumIdentity(2).index == 2);
-    unit_assert(msLevelUnstableSortedList->spectrumIdentity(3).id == "scan=20");
-    unit_assert(msLevelUnstableSortedList->spectrumIdentity(3).index == 3);
+    unit_assert_operator_equal(0, msLevelUnstableSortedList->spectrumIdentity(0).index);
+    unit_assert_operator_equal(1, msLevelUnstableSortedList->spectrumIdentity(1).index);
+    unit_assert_operator_equal(2, msLevelUnstableSortedList->spectrumIdentity(2).index);
+    unit_assert_operator_equal("scan=20", msLevelUnstableSortedList->spectrumIdentity(3).id);
+    unit_assert_operator_equal(3, msLevelUnstableSortedList->spectrumIdentity(3).index);
     s = msLevelUnstableSortedList->spectrum(0);
-    unit_assert(s->index == 0);
+    unit_assert_operator_equal(0, s->index);
     s = msLevelUnstableSortedList->spectrum(1);
-    unit_assert(s->index == 1);
+    unit_assert_operator_equal(1, s->index);
     s = msLevelUnstableSortedList->spectrum(2);
-    unit_assert(s->index == 2);
+    unit_assert_operator_equal(2, s->index);
     s = msLevelUnstableSortedList->spectrum(3);
-    unit_assert(s->id == "scan=20");
-    unit_assert(s->index == 3);
+    unit_assert_operator_equal("scan=20", s->id);
+    unit_assert_operator_equal(3, s->index);
 
     // validate the MS level stable sorted list (scan=19, scan=21, and scan=22 should stay in order)
-    unit_assert(msLevelStableSortedList->spectrumIdentity(0).id == "scan=19");
-    unit_assert(msLevelStableSortedList->spectrumIdentity(0).index == 0);
-    unit_assert(msLevelStableSortedList->spectrumIdentity(1).id == "scan=21");
-    unit_assert(msLevelStableSortedList->spectrumIdentity(1).index == 1);
-    unit_assert(msLevelStableSortedList->spectrumIdentity(2).id == "sample=1 period=1 cycle=23 experiment=1");
-    unit_assert(msLevelStableSortedList->spectrumIdentity(2).index == 2);
-    unit_assert(msLevelStableSortedList->spectrumIdentity(3).id == "scan=20");
-    unit_assert(msLevelStableSortedList->spectrumIdentity(3).index == 3);
+    unit_assert_operator_equal("scan=19", msLevelStableSortedList->spectrumIdentity(0).id);
+    unit_assert_operator_equal(0, msLevelStableSortedList->spectrumIdentity(0).index);
+    unit_assert_operator_equal("scan=21", msLevelStableSortedList->spectrumIdentity(1).id);
+    unit_assert_operator_equal(1, msLevelStableSortedList->spectrumIdentity(1).index);
+    unit_assert_operator_equal("sample=1 period=1 cycle=23 experiment=1", msLevelStableSortedList->spectrumIdentity(2).id);
+    unit_assert_operator_equal(2, msLevelStableSortedList->spectrumIdentity(2).index);
+    unit_assert_operator_equal("scan=20", msLevelStableSortedList->spectrumIdentity(3).id);
+    unit_assert_operator_equal(3, msLevelStableSortedList->spectrumIdentity(3).index);
     s = msLevelStableSortedList->spectrum(0);
-    unit_assert(s->id == "scan=19");
-    unit_assert(s->index == 0);
+    unit_assert_operator_equal("scan=19", s->id);
+    unit_assert_operator_equal(0, s->index);
     s = msLevelStableSortedList->spectrum(1);
-    unit_assert(s->id == "scan=21");
-    unit_assert(s->index == 1);
+    unit_assert_operator_equal("scan=21", s->id);
+    unit_assert_operator_equal(1, s->index);
     s = msLevelStableSortedList->spectrum(2);
-    unit_assert(s->id == "sample=1 period=1 cycle=23 experiment=1");
-    unit_assert(s->index == 2);
+    unit_assert_operator_equal("sample=1 period=1 cycle=23 experiment=1", s->id);
+    unit_assert_operator_equal(2, s->index);
     s = msLevelStableSortedList->spectrum(3);
-    unit_assert(s->id == "scan=20");
-    unit_assert(s->index == 3);
+    unit_assert_operator_equal("scan=20", s->id);
+    unit_assert_operator_equal(3, s->index);
 
     // validate the silly (nested) sorted list
-    unit_assert(sillySortedList->spectrumIdentity(0).id == "scan=21");
-    unit_assert(sillySortedList->spectrumIdentity(0).index == 0);
-    unit_assert(sillySortedList->spectrumIdentity(1).id == "scan=20");
-    unit_assert(sillySortedList->spectrumIdentity(1).index == 1);
-    unit_assert(sillySortedList->spectrumIdentity(2).index == 2);
-    unit_assert(sillySortedList->spectrumIdentity(3).index == 3);
+    unit_assert_operator_equal("scan=21", sillySortedList->spectrumIdentity(0).id);
+    unit_assert_operator_equal(0, sillySortedList->spectrumIdentity(0).index);
+    unit_assert_operator_equal("scan=20", sillySortedList->spectrumIdentity(1).id);
+    unit_assert_operator_equal(1, sillySortedList->spectrumIdentity(1).index);
+    unit_assert_operator_equal(2, sillySortedList->spectrumIdentity(2).index);
+    unit_assert_operator_equal(3, sillySortedList->spectrumIdentity(3).index);
     s = sillySortedList->spectrum(0);
-    unit_assert(s->id == "scan=21");
-    unit_assert(s->index == 0);
+    unit_assert_operator_equal("scan=21", s->id);
+    unit_assert_operator_equal(0, s->index);
     s = sillySortedList->spectrum(1);
-    unit_assert(s->id == "scan=20");
-    unit_assert(s->index == 1);
+    unit_assert_operator_equal("scan=20", s->id);
+    unit_assert_operator_equal(1, s->index);
     s = sillySortedList->spectrum(2);
-    unit_assert(s->index == 2);
+    unit_assert_operator_equal(2, s->index);
     s = sillySortedList->spectrum(3);
-    unit_assert(s->index == 3);
+    unit_assert_operator_equal(3, s->index);
     for (size_t i=1, end=sillySortedList->size(); i < end; ++i)
         unit_assert(sillySortedList->spectrum(i)->defaultArrayLength >=
                     sillySortedList->spectrum(i-1)->defaultArrayLength);
