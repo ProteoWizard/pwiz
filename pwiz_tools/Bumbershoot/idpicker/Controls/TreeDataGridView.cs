@@ -66,6 +66,7 @@ namespace IDPicker.Controls
                 if (CellValueNeeded == null)
                     throw new InvalidOperationException("TreeDataGridView requires at least one handler for CellValueNeeded (before setting RootRowCount)");
 
+                //Discard old list and repopulate with new values
                 expandedRowList = null;
                 if (value > 0)
                 {
@@ -86,6 +87,11 @@ namespace IDPicker.Controls
         }
         private int rootRowCount;
 
+        /// <summary>
+        /// Class for storing a collection of lines to be drawn, 
+        /// capable of retrieving overall information about dimensions 
+        /// of combined lines.
+        /// </summary>
         public class Symbol
         {
             public struct Line
@@ -169,9 +175,19 @@ namespace IDPicker.Controls
         public new event TreeDataGridViewCellEventHandler CellContentClick;
         public new event TreeDataGridViewCellEventHandler CellDoubleClick;
         public new event TreeDataGridViewCellEventHandler CellContentDoubleClick;
+        /// <summary>
+        /// Sets row image. To use set e.Value to the desired image.
+        /// </summary>
+        public event TreeDataGridViewCellValueEventHandler CellIconNeeded;
 
+        /// <summary>
+        /// Get the actual row index of the indicated row
+        /// </summary>
+        /// <param name="rowIndexHierarchy">Row hierarchical location information</param>
+        /// <returns></returns>
         public int GetRowIndexForRowIndexHierarchy (IList<int> rowIndexHierarchy)
         {
+            //start at the top row of the top tier, 
             int flatRowIndex = rowIndexHierarchy[0];
             if (flatRowIndex < 0)
                 return -1;
@@ -204,6 +220,12 @@ namespace IDPicker.Controls
         }
 
         protected static IList<int> HeaderRowIndexHierarchy = new int[] { -1 };
+
+        /// <summary>
+        /// If Row index is known get the hierarchical identification of the row
+        /// </summary>
+        /// <param name="rowIndex"></param>
+        /// <returns></returns>
         public IList<int> GetRowHierarchyForRowIndex (int rowIndex)
         {
             if (rowIndex < 0)
@@ -223,9 +245,11 @@ namespace IDPicker.Controls
             set { base[columnIndex, GetRowIndexForRowIndexHierarchy(rowIndexHierarchy)] = value; }
         }
 
+        //Disallow editing just by column and row index, as the index of any given row changes
         private new DataGridViewCell this[int columnIndex, int rowIndex] { set { } }
 
         #region Expand/Collapse methods
+
         public void Expand (int index)
         {
             base.RowCount += expand(index, expandedRowList[index].RowIndexHierarchy.Count);
@@ -276,6 +300,9 @@ namespace IDPicker.Controls
         }
         #endregion
 
+        /// <summary>
+        /// Holds information on a specific row, including how to navigate to it through the information tiers
+        /// </summary>
         protected class ExpandedRowList
         {
             public ExpandedRowList (int rowIndex) : this(null, rowIndex) { }
@@ -292,12 +319,18 @@ namespace IDPicker.Controls
                 RowIndexHierarchy = rowIndexHierarchy;
             }
 
-            public int ChildRowCount { get; set; }
-            public bool HasChildRows { get { return ChildRowCount > 0; } }
-            public List<ExpandedRowList> ExpandedChildRows { get; set; }
-            public IList<int> RowIndexHierarchy { get; set; }
+            public int ChildRowCount { get; set; } //stores how many child rows are currently expanded
+            public bool HasChildRows { get { return ChildRowCount > 0; } } //quick test if row is expanded
+            public List<ExpandedRowList> ExpandedChildRows { get; set; } //info on sub-rows
+            public IList<int> RowIndexHierarchy { get; set; } //stores the exact position of the row in the tree hieracry
+            //Examples- Value of {0} indicates that it is the first row in the top tier
+            //          Value of {3} indicates that it is the fourth row in the top tier
+            //          Value of {1,3} indicates that it is the fourth sub-row of the second row in the top tier
+            //          Value of {0,4,2,3} would be accesssed by expanding the first row,
+            //                             then the fifth subrow, then the third sub row of that,
+            //                             and finally look to the third sub item of that expansion
 
-            public static List<ExpandedRowList> EmptyChildRows = new List<ExpandedRowList>();
+            public static List<ExpandedRowList> EmptyChildRows = new List<ExpandedRowList>(); //rows that are present even when there are no sub-rows
 
             public override string ToString ()
             {
@@ -305,7 +338,9 @@ namespace IDPicker.Controls
             }
         }
 
-        protected List<ExpandedRowList> expandedRowList;
+        protected List<ExpandedRowList> expandedRowList; //keeps track of all nodes shown in table
+
+        #region Overridden events
 
         protected override void OnCellValueNeeded (DataGridViewCellValueEventArgs e)
         {
@@ -316,6 +351,7 @@ namespace IDPicker.Controls
             if (expandedRowList == null || e.RowIndex >= expandedRowList.Count)
                 return;
 
+            //converts row number into hierarchy list, understandable by user-specified value-retrieval function
             var rowInfo = expandedRowList[e.RowIndex];
             var cellValueEventArgs = new TreeDataGridViewCellValueEventArgs(e.ColumnIndex, rowInfo.RowIndexHierarchy);
             CellValueNeeded(this, cellValueEventArgs);
@@ -366,6 +402,7 @@ namespace IDPicker.Controls
 
         protected override void OnKeyDown (KeyEventArgs e)
         {
+            //Expands row if right arrow is pressed
             if (e.KeyData == Keys.Right)
             {
                 int totalRowsAdded = 0;
@@ -373,6 +410,7 @@ namespace IDPicker.Controls
                     totalRowsAdded += expand(row.Index, expandedRowList[row.Index].RowIndexHierarchy.Count);
                 base.RowCount += totalRowsAdded;
             }
+            //Collapses row if left arrow is pressed
             else if (e.KeyData == Keys.Left)
             {
                 int totalRowsRemoved = 0;
@@ -392,12 +430,14 @@ namespace IDPicker.Controls
         {
             var hitTestInfo = HitTest(e.X, e.Y);
 
+            //Dont do anything special if click isn't in the first cell of the row
             if (hitTestInfo.ColumnIndex != 0 || hitTestInfo.RowIndex < 0)
             {
                 base.OnMouseClick(e);
                 return;
             }
 
+            //Dont do anything special if row has no children
             var rowInfo = expandedRowList[hitTestInfo.RowIndex];
             if (!rowInfo.HasChildRows)
             {
@@ -405,31 +445,31 @@ namespace IDPicker.Controls
                 return;
             }
 
+            //Find symbol location
             var cellBounds = GetCellDisplayRectangle(hitTestInfo.ColumnIndex, hitTestInfo.RowIndex, false);
             Point symbolPoint = GetSymbolPoint(cellBounds, rowInfo.RowIndexHierarchy.Count - 1);
 
+            //Dont do anything special if symbol isn't clicked
             if (e.X < symbolPoint.X || e.X > symbolPoint.X + SymbolWidth)
             {
                 base.OnMouseClick(e);
                 return;
             }
 
+            //Expand or collapse depending on what is needed
             if (rowInfo.ExpandedChildRows.Count > 0)
                 Collapse(hitTestInfo.RowIndex);
             else
                 Expand(hitTestInfo.RowIndex);
         }
 
-        protected Point GetSymbolPoint (Rectangle cellBounds, int nodeDepth)
+        /// <summary>
+        /// Create symbols and/or images
+        /// </summary>
+        /// <param name="e"></param>
+        protected override void OnCellPainting(DataGridViewCellPaintingEventArgs e)
         {
-            Point symbolPoint = cellBounds.Location;
-            symbolPoint.X += SymbolWidth / 2 + nodeDepth * (SymbolWidth + 2);
-            symbolPoint.Y += (cellBounds.Height - SymbolHeight) / 3;
-            return symbolPoint;
-        }
-
-        protected override void OnCellPainting (DataGridViewCellPaintingEventArgs e)
-        {
+            //Only paint in the first column of each info-containing row
             if (e.ColumnIndex < 0 || e.RowIndex < 0 || e.ColumnIndex != 0)
             {
                 base.OnCellPainting(e);
@@ -437,16 +477,17 @@ namespace IDPicker.Controls
             }
             e.Handled = true;
 
+            //Still show selection if row is selected
             bool isSelected = (e.State & DataGridViewElementStates.Selected) == DataGridViewElementStates.Selected;
             e.PaintBackground(e.CellBounds, isSelected);
 
             var rowInfo = expandedRowList[e.RowIndex];
             int nodeDepth = rowInfo.RowIndexHierarchy.Count - 1;
-            int symbolHeight = SymbolHeight;
-            int symbolWidth = SymbolWidth;
+            int iconWidth = 0;
 
             Point symbolPoint = GetSymbolPoint(e.CellBounds, nodeDepth);
 
+            //Draw symbol if row is not in bottom node
             if (rowInfo.HasChildRows)
             {
                 var symbol = rowInfo.ExpandedChildRows.Count > 0 ? ExpandedSymbol : CollapsedSymbol;
@@ -454,6 +495,7 @@ namespace IDPicker.Controls
                 var smoothingMode = e.Graphics.SmoothingMode;
                 e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
 
+                //Go through and actually draw the stored symbol
                 var brush = new SolidBrush(isSelected ? e.CellStyle.SelectionForeColor : e.CellStyle.ForeColor);
                 var pen = new Pen(brush);
                 foreach (Symbol.Line line in symbol.Lines)
@@ -466,11 +508,47 @@ namespace IDPicker.Controls
                 e.Graphics.SmoothingMode = smoothingMode;
             }
 
-            var indentPadding = new Padding(symbolPoint.X - e.CellBounds.X + SymbolWidth + 2, 0, 0, 0);
+            //Draw icon if one is selected
+            if (CellIconNeeded != null)
+            {
+                var cellValueEventArgs = new TreeDataGridViewCellValueEventArgs(0, rowInfo.RowIndexHierarchy);
+                CellIconNeeded(this, cellValueEventArgs);
+                if (cellValueEventArgs.Value != null)
+                {
+                    var icon = (Image)cellValueEventArgs.Value;
+                    e.Graphics.DrawImage(icon, symbolPoint.X + SymbolWidth + 5, symbolPoint.Y - 3, 15, 15);
+                    iconWidth = 20; //Indicates icon was drawn
+                }
+            }
+
+            //Paint cell info, taking previous images into account
+            var indentPadding = new Padding(symbolPoint.X - e.CellBounds.X + SymbolWidth + iconWidth + 2, 0, 0, 0);
             e.CellStyle.Padding = indentPadding;
             e.Paint(e.CellBounds, DataGridViewPaintParts.ContentForeground);
         }
 
+        #endregion
+
+        /// <summary>
+        /// Find location of symbol in relation to form
+        /// </summary>
+        /// <param name="cellBounds"></param>
+        /// <param name="nodeDepth"></param>
+        /// <returns></returns>
+        protected Point GetSymbolPoint (Rectangle cellBounds, int nodeDepth)
+        {
+            Point symbolPoint = cellBounds.Location;
+            symbolPoint.X += SymbolWidth / 2 + nodeDepth * (SymbolWidth + 2);
+            symbolPoint.Y += (cellBounds.Height - SymbolHeight) / 3;
+            return symbolPoint;
+        }
+
+        /// <summary>
+        /// Show child rows
+        /// </summary>
+        /// <param name="index">Which row to expand</param>
+        /// <param name="maxDepth">How far down to expand</param>
+        /// <returns></returns>
         protected int expand (int index, int maxDepth)
         {
             var rowInfo = expandedRowList[index];
@@ -484,17 +562,21 @@ namespace IDPicker.Controls
                 var childRowList = new List<ExpandedRowList>(rowInfo.ChildRowCount);
                 for (int j = 0; j < rowInfo.ChildRowCount; ++j)
                 {
+                    //get the content of the child row and add it to list to be inserted
                     var childRowInfo = new ExpandedRowList(rowInfo.RowIndexHierarchy, j);
                     var cellValueEventArgs = new TreeDataGridViewCellValueEventArgs(0, childRowInfo.RowIndexHierarchy);
                     CellValueNeeded(this, cellValueEventArgs);
                     childRowInfo.ChildRowCount = cellValueEventArgs.ChildRowCount;
                     childRowList.Add(childRowInfo);
                 }
+
+                //insert new rows into table
                 rowInfo.ExpandedChildRows = childRowList;
                 expandedRowList.InsertRange(index + 1, childRowList);
                 rowsAdded = childRowList.Count;
             }
 
+            //If more expansion is needed recurse back to the begining
             if (maxDepth > rowInfo.RowIndexHierarchy.Count)
                 for (int j = 0; j < rowInfo.ChildRowCount; ++j)
                     rowsAdded += expand(index + rowsAdded + 1 - rowInfo.ChildRowCount + j, maxDepth);
@@ -517,6 +599,8 @@ namespace IDPicker.Controls
                     if (expandedRowList[j].RowIndexHierarchy.Count <= rowInfo.RowIndexHierarchy.Count)
                         break;
                 rowsRemoved = j - index - 1;
+
+                //remove approprite rows and show that current row has no shown children
                 expandedRowList.RemoveRange(index + 1, rowsRemoved);
                 rowInfo.ExpandedChildRows = ExpandedRowList.EmptyChildRows;
             }
