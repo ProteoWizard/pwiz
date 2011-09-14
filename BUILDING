@@ -1,0 +1,8 @@
+BUILDING PROTEOWIZARD
+
+Run "quickbuild.sh" to build ProteoWizard. (Use "quickbuild.bat" for Windows.) 
+
+Use the "--help" switch for some useful hints on building ProteoWizard.  
+
+Open doc/index.html in a browser for more detailed info on ProteoWizard, known issues, etc.
+
