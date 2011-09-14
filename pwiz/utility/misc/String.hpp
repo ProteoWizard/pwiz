@@ -31,14 +31,18 @@
 #include "pwiz/utility/misc/optimized_lexical_cast.hpp"
 
 using std::string;
-using std::wstring;
 using std::getline;
 using std::stringstream;
 using std::istringstream;
 using std::ostringstream;
+
+#ifndef BOOST_NO_STD_WSTRING
+// these cause trouble on mingw gcc - libstdc++ widechar not fully there yet
+using std::wstring;
 using std::wstringstream;
 using std::wistringstream;
 using std::wostringstream;
+#endif
 
 namespace bal = boost::algorithm;
 using boost::lexical_cast;

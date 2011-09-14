@@ -45,9 +45,13 @@ using std::ofstream;
 using std::stringstream;
 using std::istringstream;
 using std::ostringstream;
+
+#ifndef BOOST_NO_STD_WSTRING
+// these cause trouble on mingw gcc - libstdc++ widechar not fully there yet
 using std::wstringstream;
 using std::wistringstream;
 using std::wostringstream;
+#endif
 
 using std::getline;
 
