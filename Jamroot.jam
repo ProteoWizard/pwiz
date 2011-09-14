@@ -36,6 +36,15 @@ ECHO
 #   --zlib-src=<DIR>        Find zlib source distribution here.
 #                           Default: "<libraries-path>/zlib-1.23.0"
 #
+#   --i-agree-to-the-vendor-licenses  For windows builds, indicates
+#                                     your willingness to comply with
+#                                     license terms of the vendor DLLs
+#                                     that enable reading of proprietary
+#                                     binary data formats.  Without this 
+#                                     switch your build will not include
+#                                     support for reading vendor binary 
+#                                     files.
+#
 #   If you just want to build a subset of pwiz, add a target to 
 # your command line.  For example to build just the msdata file 
 # read/write stuff, add:
