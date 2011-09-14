@@ -19,6 +19,36 @@
 # See the License for the specific language governing permissions and 
 # limitations under the License.
 
+if ( "--help" in [ modules.peek : ARGV ] ) 
+{      # slip our own help text in here
+ECHO 
+################################
+## Targets and Related Options #
+################################
+#   build                   Build ProteoWizard applications
+#   =====
+#   --libraries-path=<DIR>  Find libraries directory here.
+#                           Default: "./libraries"
+#
+#   --boost-src=<DIR>       Find Boost source distribution here.
+#                           Default: "<libraries-path>/boost_*"
+#
+#   --zlib-src=<DIR>        Find zlib source distribution here.
+#                           Default: "<libraries-path>/zlib-1.23.0"
+#
+#   If you just want to build a subset of pwiz, add a target to 
+# your command line.  For example to build just the msdata file 
+# read/write stuff, add:
+#
+# 	pwiz/data/msdata
+#
+#   Or to build a particular item of that subset, such as a test,
+# you could add (note the double slashes!) :
+#
+#   pwiz/data/msdata//MSDataFileTest
+#
+; # end of our own help text
+}
 
 .os = [ modules.peek : OS ] ; # NT, LINUX, MACOSX
 .platform = [ modules.peek : OSPLAT ] ; # X86, X86_64, POWERPC
@@ -80,20 +110,6 @@ if --teamcity-test-decoration in [ modules.peek : ARGV ]
     TEST_POSTCOMMAND = <testing.postcommand>$(TEST_POSTCOMMAND) ;
 }
 
-
-################################
-## Targets and Related Options #
-################################
-#   build                   Build ProteoWizard applications
-#   =====
-#   --libraries-path=<DIR>  Find libraries directory here.
-#                           Default: "./libraries"
-#
-#   --boost-src=<DIR>       Find Boost source distribution here.
-#                           Default: "<libraries-path>/boost_*"
-#
-#   --zlib-src=<DIR>        Find zlib source distribution here.
-#                           Default: "<libraries-path>/zlib-1.23.0"
 project pwiz 
     : requirements 
         <include>$(PWIZ_ROOT_PATH)
