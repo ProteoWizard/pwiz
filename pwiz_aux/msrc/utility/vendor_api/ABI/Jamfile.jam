@@ -81,7 +81,7 @@ lib pwiz_vendor_api_abi
 
         <toolset>msvc,<link>shared:<define>PWIZ_DYN_LINK
         <conditional>@vendor-api-requirements
-        <using-clr>true # requires hacked msvc.jam
+        <toolset>msvc:<using-clr>true # requires hacked msvc.jam
         <link>static # <using-clr>true and <link>shared don't mix
         <address-model>64:<build>no
     : # default-build
