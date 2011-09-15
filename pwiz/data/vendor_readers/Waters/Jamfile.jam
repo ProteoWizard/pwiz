@@ -60,7 +60,7 @@ rule vendor-api-requirements ( properties * )
        ! ( <address-model>64 in $(properties) ) &&
        <runtime-debugging>off in $(properties) &&
        [ project-exists $(API_PATH) ] &&
-       $(.hasDLLs)
+       $(.hasDLLs) && ! [ define-without-binary-msdata ]
     {
         result += <source>Reader_Waters_Detail.cpp ;
     }
@@ -76,7 +76,7 @@ rule vendor-api-usage-requirements ( properties * )
        ! ( <address-model>64 in $(properties) ) &&
        <runtime-debugging>off in $(properties) &&
        [ project-exists $(API_PATH) ] &&
-       $(.hasDLLs)
+       $(.hasDLLs)  && ! [ define-without-binary-msdata ]
     {
         result += <library>$(API_PATH)//pwiz_vendor_api_waters ;
         result += <define>PWIZ_READER_WATERS ;
@@ -84,7 +84,11 @@ rule vendor-api-usage-requirements ( properties * )
     else if ! $(.warn-once)
     {
         .warn-once = true ;
-        if ! <toolset>msvc in $(properties)
+        if  <without-binary-msdata>on in $(properties) 
+		{
+            echo "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME) can only identify files, not read them." ;
+		}
+        else if ! <toolset>msvc in $(properties)
         {
             echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME) can only identify files, not read them." ;
         }
@@ -144,6 +148,10 @@ rule test-requirements ( properties * )
             echo "[$(READER_PATH)] Missing test data." ;
             result += <build>no ;
         }
+        else if  <without-binary-msdata>on in $(properties) 
+		{
+            echo "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
+		}
         else if ! <toolset>msvc in $(properties)
         {
             echo "[$(READER_PATH)] Non-MSVC build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;

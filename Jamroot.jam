@@ -45,11 +45,18 @@ ECHO
 #                                     support for reading vendor binary 
 #                                     files.
 #
+#   --without-mz5           Build without mz5 support
+#
+#   --without-binary-msdata Build with support for mass spec text formats only
+#                           (mzML, mzXML, MGF, etc - no binary formats
+#                           like mz5 or vendor-specifics )
+#
+#
 #   If you just want to build a subset of pwiz, add a target to 
 # your command line.  For example to build just the msdata file 
 # read/write stuff, add:
 #
-# 	pwiz/data/msdata
+#   pwiz/data/msdata
 #
 #   Or to build a particular item of that subset, such as a test,
 # you could add (note the double slashes!) :
@@ -76,14 +83,33 @@ local default_zlib_src = "$(libraries_path)/zlib-1.2.3" ;
 local zlib_src = [ MATCH --zlib-src=(.*) : [ modules.peek : ARGV ] ] ;
 zlib_src ?= $(default_zlib_src) ; # set default path in absence of command-line path
 
+import feature ; # needed for install rules
+import property ; # needed for without-mz5 and without-binary-msdata conditional compile rules
+feature.feature mz5 : on off : incidental propagated ;
+feature.feature without-binary-msdata : on off : incidental propagated ;
+CUSTOM_BUILD_PATH_EXT = "" ;
+MZ5_SETTING = <mz5>on ;
+WITHOUT_BINARY_MSDATA_SETTING = <without-binary-msdata>off ;
+if ( "--without-binary-msdata" in  [ modules.peek : ARGV ] ) # support only text formats like mzML, mzXML, MGF etc
+{
+	MZ5_SETTING = <mz5>off ;
+	CUSTOM_BUILD_PATH_EXT = -without-binary-msdata ;
+	WITHOUT_BINARY_MSDATA_SETTING = <without-binary-msdata>on ;
+	ECHO "building without support for binary msdata formats as requested" ;
+}
+else if ( "--without-mz5" in  [ modules.peek : ARGV ] )
+{
+	MZ5_SETTING = <mz5>off ;
+	CUSTOM_BUILD_PATH_EXT = -without-mz5 ;
+	ECHO "building without mz5 support as requested" ;
+}
 
 path-constant PWIZ_ROOT_PATH : . ;
-path-constant PWIZ_BUILD_PATH : build-$(.os:L)-$(.platform:L) ;
+path-constant PWIZ_BUILD_PATH : build-$(.os:L)-$(.platform:L)$(CUSTOM_BUILD_PATH_EXT) ;
 path-constant PWIZ_LIBRARIES_PATH : $(libraries_path) ;
 
 
 import testing ; # needed to enable unit-test rule
-import feature ; # needed for install rules
 import package ; # needed for package install
 
 if --teamcity-test-decoration in [ modules.peek : ARGV ]
@@ -117,6 +143,53 @@ if --teamcity-test-decoration in [ modules.peek : ARGV ]
     # prepend commands with grist expected by testing.jam
     TEST_PRECOMMAND = <testing.precommand>$(TEST_PRECOMMAND) ;
     TEST_POSTCOMMAND = <testing.postcommand>$(TEST_POSTCOMMAND) ;
+}
+
+
+# conditionally compile out mz5 support on request
+rule define-without-mz5 ( properties * )
+{
+    if (  $(MZ5_SETTING) != <mz5>on  )
+    {
+        return <define>WITHOUT_MZ5 ;
+    }
+}
+
+# conditionally compile out binary format support on request
+rule define-without-binary-msdata ( properties * )
+{
+    if (  $(WITHOUT_BINARY_MSDATA_SETTING) != <without-binary-msdata>off  )
+    {
+        return <define>WITHOUT_BINARY_MSDATA ;
+    }
+}
+
+
+# return the itemname if textonly build is off (the default)
+rule binary-readers-build ( itemname )  
+{
+	if ( ! [ define-without-binary-msdata ] )
+	{
+		return $(itemname) ; # do build binary readers
+	}
+}
+
+
+# return the itemname if mz5 build is on (the default)
+rule mz5-build ( itemname )  
+{
+	if ( ! [ define-without-mz5 ] )
+	{
+		return $(itemname) ; # do build mz5
+	}
+}
+
+rule hdf5-build ( itemname )
+{
+	if ( ! [ define-without-mz5 ] ) # we only build hdf5 for mz5 use
+	{
+		return $(itemname) ; 
+	}
 }
 
 project pwiz 
@@ -166,6 +239,7 @@ project pwiz
         # linker "multiple definition" error on inclusion of boost-1.34.1 filesystem headers  
         <toolset>gcc-3.4.4:<linkflags>-Wl,--allow-multiple-definition
         <toolset>gcc-mingw-3.4.5:<linkflags>-Wl,--allow-multiple-definition
+		<toolset-gcc:flavor>mingw:<linkflags>-Wl,--allow-multiple-definition
 
         # allow "long long" even with -pedantic
         <toolset>gcc:<cxxflags>-Wno-long-long
@@ -173,6 +247,12 @@ project pwiz
 
         # any GCC executable that uses shared libraries must have all its code built with -fPIC
         <conditional>@static-with-fpic
+		
+		# mz5 support?
+		<conditional>@define-without-mz5 
+		
+		# msdata text only?
+		<conditional>@define-without-binary-msdata 
 
         # don't call 'strip' -- causes 'Bus error' in some cases
         #  e.g. find_if with inline predicate
@@ -199,6 +279,8 @@ project pwiz
         #<warnings-as-errors>on
         <warnings>all
         <threading>multi
+		$(MZ5_SETTING)
+		$(WITHOUT_BINARY_MSDATA_SETTING)
     ;
 
 
@@ -328,7 +410,7 @@ import tar os ;
 
 if [ os.on-windows ]
 {
-    using tar : bsdtar.exe ;
+    using tar : bsdtar ;
 }
 else if $(.os:L) = "macosx" || $(.os:L) = "darwin"
 {
@@ -341,7 +423,10 @@ else
 
 
 tar.extract $(PWIZ_LIBRARIES_PATH)/gd-2.0.33.tar.bz2 : *.h : <location>$(PWIZ_LIBRARIES_PATH) ;
-tar.extract $(PWIZ_LIBRARIES_PATH)/hdf5-1.8.7.tar.bz2 : * : <location>$(PWIZ_LIBRARIES_PATH) ;
+
+if [ hdf5-build enabled ] {
+  tar.extract $(PWIZ_LIBRARIES_PATH)/hdf5-1.8.7.tar.bz2 : * : <location>$(PWIZ_LIBRARIES_PATH) ;
+}
 
 path-constant BOOST_SOURCE : $(boost_src) ;
 path-constant ZLIB_SOURCE : $(zlib_src) ;
@@ -352,7 +437,7 @@ if [ modules.peek : NT ]
 {
     import path ;
     
-    if ! --incremental in [ modules.peek : ARGV ]
+    if ( ! --incremental in [ modules.peek : ARGV ] ) && ! [ define-without-binary-msdata ]
     {
         # extract the vendor APIs if the user agrees to the licenses
         if --i-agree-to-the-vendor-licenses in [ modules.peek : ARGV ]
@@ -461,7 +546,7 @@ rule install-vendor-api-dependencies ( properties * )
 {
     local location = [ install-location $(properties) ] ;
     local dependencies ;
-    if <toolset>msvc in $(properties) && <link>static in $(properties)
+    if <toolset>msvc in $(properties) && <link>static in $(properties) && ! [ define-without-binary-msdata ]
     {
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/ABI ] { dependencies += <dependency>pwiz_aux/msrc/utility/vendor_api/ABI//install_pwiz_vendor_api_abi/$(location) ; }
         if [ path.exists pwiz_aux/msrc/utility/vendor_api/ABI/T2D ] { dependencies += <dependency>pwiz_aux/msrc/utility/vendor_api/ABI/T2D//install_pwiz_vendor_api_abi_t2d/$(location) ; }
@@ -475,11 +560,14 @@ rule install-vendor-api-dependencies ( properties * )
 
 rule pwiz-bindings-dependency ( properties * )
 {
-    local variants = [ feature.get-values <variant> : $(properties) ] ;
-    local location = <location>$(PWIZ_BUILD_PATH)/obj/x86/$(variants[1]) ;
-    return <assembly>$(PWIZ_ROOT_PATH)/pwiz/utility/bindings/CLI//pwiz_bindings_cli
-           <dependency>$(PWIZ_ROOT_PATH)/pwiz/utility/bindings/CLI//pwiz_bindings_cli/$(location)
-           <dependency>$(PWIZ_ROOT_PATH)/pwiz/utility/bindings/CLI//pwiz_bindings_cli.xml/$(location) ;
+    if <toolset>msvc in $(properties)
+    {
+		local variants = [ feature.get-values <variant> : $(properties) ] ;
+		local location = <location>$(PWIZ_BUILD_PATH)/obj/x86/$(variants[1]) ;
+		return <assembly>$(PWIZ_ROOT_PATH)/pwiz/utility/bindings/CLI//pwiz_bindings_cli
+			   <dependency>$(PWIZ_ROOT_PATH)/pwiz/utility/bindings/CLI//pwiz_bindings_cli/$(location)
+			   <dependency>$(PWIZ_ROOT_PATH)/pwiz/utility/bindings/CLI//pwiz_bindings_cli.xml/$(location) ;
+	}
 }
 
 rule dotNET-dependencies ( properties * )
@@ -580,11 +668,11 @@ explicit install-boost-headers ;
 
 
 
-# any GCC executable that uses shared libraries must have all its code built with -fPIC
+# any non-windows GCC executable that uses shared libraries must have all its code built with -fPIC
 rule static-with-fpic ( properties * )
 {
     if ( <toolset>gcc in $(properties) || <toolset>darwin in $(properties) ) &&
-       <link>static in $(properties)
+       <link>static in $(properties) && ! [ modules.peek : NT ]
     {
         return <cflags>-fPIC <linkflags>-fPIC ;
     }
@@ -719,7 +807,7 @@ bcp.copy-boost-dependencies copy_boost_subset
     [ path.glob-tree $(PWIZ_ROOT_PATH)/pwiz_tools : *.cpp *.hpp ]
     [ path.glob-tree $(PWIZ_LIBRARIES_PATH)/boost_aux : *.cpp *.hpp ]
 
-    $(PWIZ_LIBRARIES_PATH)/hdf5-1.8.7/src/init_once_workaround.cpp
+    [ hdf5-build $(PWIZ_LIBRARIES_PATH)/hdf5-1.8.7/src/init_once_workaround.cpp ]
 
     # scan all targets and their dependencies
     $(PWIZ_ROOT_PATH)/pwiz_tools/commandline//mstools
@@ -808,7 +896,8 @@ This source tree is a subset of the full pwiz source tree.
     $(PWIZ_LIBRARIES_PATH)/boost-build
     $(PWIZ_LIBRARIES_PATH)/boost_aux
     $(PWIZ_LIBRARIES_PATH)/libsvm-3.0
-    [ path.glob $(PWIZ_LIBRARIES_PATH) : *.bat *.sh *.jam *.dll *.lib *.exe *.cpp gd*.tar.bz2 zlib*.tar.bz2 hdf5*.tar.bz2 ]
+    [ path.glob $(PWIZ_LIBRARIES_PATH) : *.bat *.sh *.jam *.dll *.lib *.exe *.cpp gd*.tar.bz2 zlib*.tar.bz2 ]
+    [ hdf5-build [ path.glob $(PWIZ_LIBRARIES_PATH) : hdf5*.tar.bz2 ] ]
 
     # include the bcp'd boost tarball as if it was really located at "libraries/boost_*.tar.bz2"
     path-anchor:$(BOOST_SUBSET_PATH)

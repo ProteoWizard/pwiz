@@ -29,7 +29,9 @@
 #include "Serializer_mzXML.hpp"
 #include "Serializer_MGF.hpp"
 #include "Serializer_MSn.hpp"
+#ifndef WITHOUT_MZ5
 #include "Serializer_mz5.hpp"
+#endif
 #include "DefaultReaderList.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
@@ -209,8 +211,12 @@ void MSDataFile::write(const MSData& msd,
     {
         case MSDataFile::Format_MZ5:
         {
+#ifdef WITHOUT_MZ5
+            throw runtime_error("[MSDataFile::write()] library was not built with mz5 support.");
+#else
             Serializer_mz5 serializer(config);
             serializer.write(filename, msd, iterationListenerRegistry);
+#endif
             break;
         }
         default:

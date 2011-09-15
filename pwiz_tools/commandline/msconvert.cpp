@@ -174,16 +174,22 @@ Config parseCommandLine(int argc, const char* argv[])
             ": configuration file (optionName=value)")
         ("ext,e",
             po::value<string>(&config.extension)->default_value(config.extension),
-            ": set extension for output files [mzML|mzXML|mgf|txt|mz5]")
+            ": set extension for output files [mzML|mzXML|mgf|txt"
+#ifndef WITHOUT_MZ5
+            "|mz5"
+#endif
+            "]")
         ("mzML",
             po::value<bool>(&format_mzML)->zero_tokens(),
             ": write mzML format [default]")
         ("mzXML",
             po::value<bool>(&format_mzXML)->zero_tokens(),
             ": write mzXML format")
+#ifndef WITHOUT_MZ5
         ("mz5",
             po::value<bool>(&format_mz5)->zero_tokens(),
             ": write mz5 format")
+#endif
         ("mgf",
             po::value<bool>(&format_MGF)->zero_tokens(),
             ": write Mascot generic format")
@@ -422,6 +428,9 @@ Config parseCommandLine(int argc, const char* argv[])
                 config.extension = ".cms2";
                 break;
             case MSDataFile::Format_MZ5:
+#ifdef WITHOUT_MZ5
+                throw user_error("[msconvert] Not built with mz5 support."); 
+#endif
                 config.extension = ".mz5";
                 break;
             default:

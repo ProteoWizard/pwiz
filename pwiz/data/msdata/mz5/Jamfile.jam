@@ -21,6 +21,9 @@
 # limitations under the License.
 #
 
+local threadlib =  [ mz5-build <library>/ext/boost//thread ]  ;
+local hdflib =  [ mz5-build <library>$(PWIZ_LIBRARIES_PATH)/hdf5-1.8.7//hdf5pp ] ;
+
 lib pwiz_data_msdata_mz5
     : # sources
         Configuration_mz5.cpp
@@ -30,12 +33,13 @@ lib pwiz_data_msdata_mz5
         ReferenceWrite_mz5.cpp
         Translator_mz5.cpp
     : # requirements
-        <link>static
-        <library>/ext/boost//thread
-        <library>$(PWIZ_LIBRARIES_PATH)/hdf5-1.8.7//hdf5pp
+        <mz5>on
+        [ mz5-build <link>static ]
+        $(threadlib)
+        $(hdflib)
     : # default-build
     : # usage-requirements
         <include>.
-        <library>/ext/boost//thread
-        <library>$(PWIZ_LIBRARIES_PATH)/hdf5-1.8.7//hdf5pp
+        $(threadlib)
+        $(hdflib)
     ;

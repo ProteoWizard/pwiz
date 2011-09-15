@@ -35,12 +35,15 @@
 #include "Serializer_mzXML.hpp"
 #include "Serializer_MGF.hpp"
 #include "Serializer_MSn.hpp"
+#ifndef WITHOUT_MZ5
 #include "Serializer_mz5.hpp"
+#endif
 #include "References.hpp"
 #include "ChromatogramListBase.hpp"
 #include "pwiz/data/msdata/Version.hpp"
+#ifndef WITHOUT_MZ5
 #include "mz5/Connection_mz5.hpp"
-
+#endif
 
 namespace pwiz {
 namespace msdata {
@@ -409,7 +412,9 @@ PWIZ_API_DECL std::string Reader_mz5::identify(const string& filename, const str
 
     try
     {
+#ifndef WITHOUT_MZ5
         mz5::Connection_mz5 c(filename, mz5::Connection_mz5::ReadOnly);
+#endif
         return getType();
     }
     catch (std::runtime_error&)
@@ -425,6 +430,9 @@ PWIZ_API_DECL void Reader_mz5::read(const string& filename,
                                     MSData& result,
                                     int runIndex) const
 {
+#ifdef WITHOUT_MZ5
+    throw ReaderFail("[Reader_mz5::read] library was not built with mz5 support.");
+#else
     if (runIndex != 0)
         throw ReaderFail("[Reader_mz5::read] multiple runs not supported, yet...");
 
@@ -436,6 +444,7 @@ PWIZ_API_DECL void Reader_mz5::read(const string& filename,
     // the file-level ids can't be empty
     if (result.id.empty() || result.run.id.empty())
         result.id = result.run.id = bfs::basename(filename);
+#endif
 }
 
 PWIZ_API_DECL void Reader_mz5::read(const std::string& filename,
