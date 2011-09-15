@@ -78,6 +78,9 @@ exe msbenchmark
 alias hello_examples : hello_msdata hello_ramp hello_analyzer hello_analyzer_2 ;
 explicit hello_examples ;
 
+alias msdata_examples : hello_msdata hello_ramp msbenchmark ;
+explicit msdata_examples ;
+
 
 #
 # tool for creating example files
