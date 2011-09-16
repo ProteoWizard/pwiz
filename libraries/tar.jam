@@ -18,8 +18,6 @@ import regex ;
 import modules ;
 import errors ;
 import sequence ;
-import string : words ;
-import string : join ;
 
 # use this feature instead of <source> in tar.create's requirements
 feature.feature tar-source : : free incidental ;
@@ -30,41 +28,24 @@ project tar ;
 
 rule init ( tar-binary-filepath ? )
 {
-	if [ os.on-windows ] &&  ( $(tar-binary-filepath) = bsdtar  ||  $(tar-binary-filepath) = bsdtar.exe ) 
+    if ! $(tar-binary-filepath)
     {
-		# make sure we use the bsdtar that comes
-		# with pwiz - older versions that may be
-		# on local system path may not work - bpratt
-		path-constant BSDTARPATH : . ;
-		# for some reason this comes out as c:\ProteoWizard_\pwiz\c:\ProteoWizard_\pwiz\libraries
-		# heavy sigh, workaround this weirdness
-		parts = [ words $(BSDTARPATH) : ":" ] ;
-		if $(parts[3])
-		{  # parts is something like c \ProteoWizard_\pwiz\c \ProteoWizard_\pwiz\libraries
-			BSDTARPATH = [ join $(parts[1]) $(parts[3]) : ":" ] ;
-		}
-		.tar-binary-filepath = $(BSDTARPATH:T)/bsdtar.exe ; # use the version we provide
-	}
-	else
-	{
-		if ! $(tar-binary-filepath)
-		{
-			if [ os.on-windows ]
-			{
-				errors.error "To use tar.jam on Windows you must provide the path to a tar program like bsdtar or GNU Win32 tar." ;
-			}
-			else
-			{
-				tar-binary-filepath = tar ;
-			}
-		}
-		else if ! [ path.exists $(tar-binary-filepath) ] &&
-				! [ path.glob [ path.programs-path ] : $(tar-binary-filepath:D=) ]
-		{
-			errors.error Filepath to tar binary \"$(tar-binary-filepath)\" not found. ;
-		}
-		.tar-binary-filepath = [ path.make $(tar-binary-filepath) ] ;
-	}
+        if [ os.on-windows ]
+        {
+            errors.error "To use tar.jam on Windows you must provide the path to a tar program like bsdtar or GNU Win32 tar." ;
+        }
+        else
+        {
+            tar-binary-filepath = tar ;
+        }
+    }
+    else if ! [ path.exists $(tar-binary-filepath) ] &&
+            ! [ path.glob [ path.programs-path ] : $(tar-binary-filepath:D=) ]
+    {
+        errors.error Filepath to tar binary \"$(tar-binary-filepath)\" not found. ;
+    }
+
+    .tar-binary-filepath = [ path.make $(tar-binary-filepath) ] ;
 }
 
 rule tar-binary-filepath { return $(.tar-binary-filepath) ; }
@@ -317,17 +298,6 @@ rule quote-string ( string )
     return \"$(string)\" ;
 }
 
-rule quote-string-if-has-spaces ( string )
-{
-    return \\\"$(string)\\\" ;
-    switch string 
-	{
-		case "[ ]" : # contains space(s)
-			return \\\"$(string)\\\" ;
-	}
-	return $(string) ;
-}
-
 rule extract ( tar-filepath : include-patterns * : tar-requirements * : tar-usage-requirements * : check-last-file-only ? )
 {
     if ! --incremental in [ modules.peek : ARGV ]
@@ -406,10 +376,8 @@ rule extract-really ( tar-filepath : include-patterns * : tar-requirements * : t
     }
 
     ECHO "tar.list $(tar-filepath:D=)" ;
-	local tarexec = [ quote-string-if-has-spaces $(tar-binary-filepath) ] ;
-	local filepath = [ quote-string-if-has-spaces $(tar-filepath) ] ;
-    local tar-list = [ SPLIT_BY_CHARACTERS [ SHELL "$(tarexec) -tf $(filepath) $(include-patterns)" ] : \n ] ;
-	
+    local tar-list = [ SPLIT_BY_CHARACTERS [ SHELL "\"$(tar-binary-filepath)\" -tf \"$(tar-filepath)\" $(include-patterns)" ] : \n ] ;
+
     local args = [ modules.peek : ARGV ] ;
     if --clean in $(args) && $(tar-filepath) in $(args) ||
        --clean-all in $(args)
