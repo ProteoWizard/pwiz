@@ -461,7 +461,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 ValidateCharges("Precursor charges", value,
                     TransitionGroup.MIN_PRECURSOR_CHARGE, TransitionGroup.MAX_PRECURSOR_CHARGE);
-                _precursorCharges = MakeReadOnly(value);
+                _precursorCharges = MakeChargeCollection(value);
             }
         }
 
@@ -472,8 +472,15 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 ValidateCharges("Product ion charges", value,
                     Transition.MIN_PRODUCT_CHARGE, Transition.MAX_PRODUCT_CHARGE);
-                _productCharges = MakeReadOnly(value);
+                _productCharges = MakeChargeCollection(value);
             }
+        }
+
+        private static ReadOnlyCollection<int> MakeChargeCollection(IList<int> charges)
+        {
+            var arrayCharges = charges.ToArrayStd();
+            Array.Sort(arrayCharges);
+            return MakeReadOnly(arrayCharges);
         }
 
         public IList<IonType> IonTypes
@@ -1554,7 +1561,7 @@ namespace pwiz.Skyline.Model.DocSettings
     public sealed class TransitionFullScan : Immutable, IValidating, IXmlSerializable
     {
         // Calculate precursor single filter window values by doubling match tolerance values
-        public const double MIN_PRECURSOR_MULTI_FILTER = 1.0;
+        public const double MIN_PRECURSOR_MULTI_FILTER = TransitionInstrument.MIN_MZ_MATCH_TOLERANCE*2;
         public const double MAX_PRECURSOR_MULTI_FILTER = 10*1000;
         public const double DEFAULT_PRECURSOR_MULTI_FILTER = 2.0;
         // Calculate product low accuracy filter window values by doubling ion match tolerance values
