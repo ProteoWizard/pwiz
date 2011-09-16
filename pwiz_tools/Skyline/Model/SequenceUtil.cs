@@ -530,6 +530,8 @@ namespace pwiz.Skyline.Model
         {
             var formula = new FormulaBuilder(_massCalc);
             var modMasses = GetModMasses(mods);
+            formula.Append(modMasses._massModCleaveNFormula, modMasses._massModCleaveNExtra);
+            formula.Append(modMasses._massModCleaveCFormula, modMasses._massModCleaveCExtra);
             for (int i = 0, len = seq.Length; i < len; i++)
             {
                 char c = seq[i];
@@ -540,10 +542,7 @@ namespace pwiz.Skyline.Model
                 if (i == 0)
                     formula.Append(modMasses._aminoNTermModFormulas[c], modMasses._aminoNTermModMassesExtra[c]);
                 else if (i == len - 1)
-                {
-                    formula.Append(modMasses._aminoCTermModFormulas[c],
-                                   modMasses._massModCleaveCExtra + modMasses._aminoCTermModMassesExtra[c]);
-                }
+                    formula.Append(modMasses._aminoCTermModFormulas[c], modMasses._aminoCTermModMassesExtra[c]);
             }
             if (mods != null)
             {
