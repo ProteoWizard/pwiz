@@ -396,6 +396,15 @@ namespace pwiz.Skyline.Model.Lib
         /// <returns>True if retention time information was retrieved successfully</returns>
         public abstract bool TryGetRetentionTimes(LibKey key, string filePath, out double[] retentionTimes);
 
+        /// <summary>
+        /// Attempts to get retention time information for all of the
+        /// (sequence, charge) pairs identified from a specific file.
+        /// </summary>
+        /// <param name="filePath">A file for which the retention time information is requested</param>
+        /// <param name="retentionTimes"></param>
+        /// <returns>True if retention time information was retrieved successfully</returns>
+        public abstract bool TryGetRetentionTimes(string filePath, out LibraryRetentionTimes retentionTimes);
+
 
         public abstract IEnumerable<SpectrumInfo> GetSpectra(LibKey key,
             IsotopeLabelType labelType, bool bestMatch);
@@ -587,6 +596,12 @@ namespace pwiz.Skyline.Model.Lib
             return false;
         }
 
+        public override bool TryGetRetentionTimes(string filePath, out LibraryRetentionTimes retentionTimes)
+        {
+            retentionTimes = null;
+            return false;
+        }
+
         public override IEnumerable<SpectrumInfo> GetSpectra(LibKey key, IsotopeLabelType labelType, bool bestMatch)
         {
             // This base class only handles best match spectra
@@ -611,6 +626,24 @@ namespace pwiz.Skyline.Model.Lib
                     foreach (var entry in _libraryEntries)
                         yield return entry.Key;
             }
+        }
+    }
+
+    public sealed class LibraryRetentionTimes
+    {
+        private readonly Dictionary<string, double[]> _dictPeptideRetentionTimes;
+
+        public LibraryRetentionTimes(Dictionary<string, double[]> dictPeptideRetentionTimes)
+        {
+            _dictPeptideRetentionTimes = dictPeptideRetentionTimes;
+        }
+
+        public double[] GetRetentionTimes(string sequence)
+        {
+            double[] retentionTimes;
+            if (_dictPeptideRetentionTimes.TryGetValue(sequence, out retentionTimes))
+                return retentionTimes;
+            return new double[0];
         }
     }
 

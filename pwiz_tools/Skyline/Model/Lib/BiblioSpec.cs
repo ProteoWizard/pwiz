@@ -513,6 +513,12 @@ namespace pwiz.Skyline.Model.Lib
             return false;
         }
 
+        public override bool TryGetRetentionTimes(string filePath, out LibraryRetentionTimes retentionTimes)
+        {
+            retentionTimes = null;
+            return false;
+        }
+
         public override IEnumerable<SpectrumInfo> GetSpectra(LibKey key, IsotopeLabelType labelType, bool bestMatch)
         {
             // This base class only handles best match spectra

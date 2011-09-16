@@ -589,8 +589,8 @@ namespace pwiz.SkylineTest
             {
                 var listCE = (CollisionEnergyList) ser.Deserialize(reader);
 
-                Assert.AreEqual(7, listCE.Count);
-                Assert.AreEqual(3, listCE.RevisionIndexCurrent);
+                Assert.AreEqual(8, listCE.Count);
+                Assert.AreEqual(4, listCE.RevisionIndexCurrent);
 
                 int i = 0;
                 foreach (var regressionCE in listCE.GetDefaults(1))

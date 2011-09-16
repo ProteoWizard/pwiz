@@ -33,13 +33,29 @@ namespace pwiz.Skyline.Model.Results
     {
         protected override bool StateChanged(SrmDocument document, SrmDocument previous)
         {
-            return previous == null ||
-                !ReferenceEquals(document.Settings.MeasuredResults, previous.Settings.MeasuredResults);
+            if (previous == null)
+                return true;
+            // If using full-scan filtering, then completion of library load
+            // is a state change event, since peak picking cannot occur until
+            // libraries are loaded.
+            if (document.Settings.TransitionSettings.FullScan.IsEnabled)
+            {
+                if (!previous.Settings.PeptideSettings.Libraries.IsLoaded &&
+                        document.Settings.PeptideSettings.Libraries.IsLoaded)
+                    return true;
+            }
+            return !ReferenceEquals(document.Settings.MeasuredResults, previous.Settings.MeasuredResults);
         }
 
         protected override bool IsLoaded(SrmDocument document)
         {
             SrmSettings settings = document.Settings;
+            
+            // If using full-scan filtering, then the chromatograms may not be loaded
+            // until the libraries are loaded, since they are used for peak picking.
+            if (settings.TransitionSettings.FullScan.IsEnabled && !settings.PeptideSettings.Libraries.IsLoaded)
+                return true;
+
             return !settings.HasResults || settings.MeasuredResults.IsLoaded;
         }
 

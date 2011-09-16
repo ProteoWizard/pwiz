@@ -252,7 +252,7 @@ namespace pwiz.Skyline
             }
             catch (Exception x)
             {
-                MessageBoxHelper.ShowXmlParsingError(this, string.Format("Failure opening {0}.", path), path, x);
+                new MessageBoxHelper(this).ShowXmlParsingError(string.Format("Failure opening {0}.", path), path, x);
                 return false;
             }
 

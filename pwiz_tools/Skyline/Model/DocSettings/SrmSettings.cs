@@ -425,51 +425,18 @@ namespace pwiz.Skyline.Model.DocSettings
             out IsotopeLabelType type, out SpectrumHeaderInfo libInfo)
         {
             var libraries = PeptideSettings.Libraries;
-
-            type = IsotopeLabelType.light;
-
-            string sequenceMod = GetModifiedSequence(sequence, IsotopeLabelType.light, mods);
-            if (libraries.TryGetLibInfo(new LibKey(sequenceMod, charge), out libInfo))
-                return true;
-
-            foreach (var labelType in GetHeavyLabelTypes(mods))
+            foreach (var typedSequence in GetTypedSequences(sequence, mods))
             {
-                // If light version not found, try heavy
-                sequenceMod = GetModifiedSequence(sequence, labelType, mods);
-                if (libraries.TryGetLibInfo(new LibKey(sequenceMod, charge), out libInfo))
+                var key = new LibKey(typedSequence.ModifiedSequence, charge);
+                if (libraries.TryGetLibInfo(key, out libInfo))
                 {
-                    type = labelType;
+                    type = typedSequence.LabelType;
                     return true;
                 }
             }
 
+            type = IsotopeLabelType.light;
             libInfo = null;
-            return false;
-        }
-
-        public bool TryGetRetentionTimes(string sequence, int charge, ExplicitMods mods, string filePath,
-            out IsotopeLabelType type, out double[] retentionTimes)
-        {
-            var libraries = PeptideSettings.Libraries;
-
-            type = IsotopeLabelType.light;
-
-            string sequenceMod = GetModifiedSequence(sequence, IsotopeLabelType.light, mods);
-            if (libraries.TryGetRetentionTimes(new LibKey(sequenceMod, charge), filePath, out retentionTimes))
-                return true;
-
-            foreach (var labelType in GetHeavyLabelTypes(mods))
-            {
-                // If light version not found, try heavy
-                sequenceMod = GetModifiedSequence(sequence, labelType, mods);
-                if (libraries.TryGetRetentionTimes(new LibKey(sequenceMod, charge), filePath, out retentionTimes))
-                {
-                    type = labelType;
-                    return true;
-                }
-            }
-
-            retentionTimes = null;
             return false;
         }
 
@@ -477,26 +444,81 @@ namespace pwiz.Skyline.Model.DocSettings
             out IsotopeLabelType type, out SpectrumPeaksInfo spectrum)
         {
             var libraries = PeptideSettings.Libraries;
-
-            type = IsotopeLabelType.light;
-
-            string sequenceMod = GetModifiedSequence(sequence, IsotopeLabelType.light, mods);
-            if (libraries.TryLoadSpectrum(new LibKey(sequenceMod, charge), out spectrum))
-                return true;
-
-            foreach (var labelType in GetHeavyLabelTypes(mods))
+            foreach (var typedSequence in GetTypedSequences(sequence, mods))
             {
-                // If light version not found, try heavy
-                sequenceMod = GetModifiedSequence(sequence, labelType, mods);
-                if (libraries.TryLoadSpectrum(new LibKey(sequenceMod, charge), out spectrum))
+                var key = new LibKey(typedSequence.ModifiedSequence, charge);
+                if (libraries.TryLoadSpectrum(key, out spectrum))
                 {
-                    type = labelType;
+                    type = typedSequence.LabelType;
                     return true;
                 }
             }
 
+            type = IsotopeLabelType.light;
             spectrum = null;
             return false;
+        }
+
+        public bool TryGetRetentionTimes(string sequence, int charge, ExplicitMods mods, string filePath,
+            out IsotopeLabelType type, out double[] retentionTimes)
+        {
+            var libraries = PeptideSettings.Libraries;
+            foreach (var typedSequence in GetTypedSequences(sequence, mods))
+            {
+                var key = new LibKey(typedSequence.ModifiedSequence, charge);
+                if (libraries.TryGetRetentionTimes(key, filePath, out retentionTimes))
+                {
+                    type = typedSequence.LabelType;
+                    return true;
+                }
+            }
+
+            type = IsotopeLabelType.light;
+            retentionTimes = null;
+            return false;
+        }
+
+        private IEnumerable<TypedSequence> GetTypedSequences(string sequence, ExplicitMods mods)
+        {
+            var labelType = IsotopeLabelType.light;
+            string modifiedSequence = GetModifiedSequence(sequence, labelType, mods);
+            yield return new TypedSequence(modifiedSequence, labelType);
+
+            foreach (var labelTypeHeavy in GetHeavyLabelTypes(mods))
+            {
+                modifiedSequence = GetModifiedSequence(sequence, labelTypeHeavy, mods);
+                yield return new TypedSequence(modifiedSequence, labelTypeHeavy);
+            }
+        }
+
+        private struct TypedSequence
+        {
+            public TypedSequence(string modifiedSequence, IsotopeLabelType labelType)
+                : this()
+            {
+                ModifiedSequence = modifiedSequence;
+                LabelType = labelType;
+            }
+
+            public string ModifiedSequence { get; private set; }
+            public IsotopeLabelType LabelType { get; private set; }
+        }
+
+        public LibraryRetentionTimes GetRetentionTimes(string filePath)
+        {
+            var libraries = PeptideSettings.Libraries;
+            LibraryRetentionTimes retentionTimes;
+            if (libraries.TryGetRetentionTimes(filePath, out retentionTimes))
+                return retentionTimes;
+            return null;
+        }
+
+        public double[] GetRetentionTimes(LibraryRetentionTimes retentionTimes, string sequence, ExplicitMods mods)
+        {
+            return (from typedSequence in GetTypedSequences(sequence, mods)
+                    from time in retentionTimes.GetRetentionTimes(typedSequence.ModifiedSequence)
+                    select time)
+                .ToArray();
         }
 
         /// <summary>
@@ -510,17 +532,10 @@ namespace pwiz.Skyline.Model.DocSettings
         public IEnumerable<SpectrumInfo> GetBestSpectra(string sequence, int charge, ExplicitMods mods)
         {
             var libraries = PeptideSettings.Libraries;
-
-            string sequenceMod = GetModifiedSequence(sequence, IsotopeLabelType.light, mods);
-            foreach (var spectrumInfo in libraries.GetSpectra(new LibKey(sequenceMod, charge), IsotopeLabelType.light, true))
-                yield return spectrumInfo;
-
-            foreach (var labelType in GetHeavyLabelTypes(mods))
-            {
-                sequenceMod = GetModifiedSequence(sequence, labelType, mods);
-                foreach (var spectrumInfo in libraries.GetSpectra(new LibKey(sequenceMod, charge), labelType, true))
-                    yield return spectrumInfo;
-            }
+            return from typedSequence in GetTypedSequences(sequence, mods)
+                   let key = new LibKey(typedSequence.ModifiedSequence, charge)
+                   from spectrumInfo in libraries.GetSpectra(key, typedSequence.LabelType, true)
+                   select spectrumInfo;
         }
 
         /// <summary>

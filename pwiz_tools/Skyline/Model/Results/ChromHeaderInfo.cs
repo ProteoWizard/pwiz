@@ -318,7 +318,8 @@ namespace pwiz.Skyline.Model.Results
             forced_integration =    0x02,
             time_normalized =       0x04,
             peak_truncation_known = 0x08,
-            peak_truncated =        0x10
+            peak_truncated =        0x10,
+            contains_id =           0x20
         }
 
 // ReSharper disable InconsistentNaming
@@ -392,6 +393,11 @@ namespace pwiz.Skyline.Model.Results
         public bool IsForcedIntegration
         {
             get { return (Flags & FlagValues.forced_integration) != 0; }
+        }
+
+        public bool IsIdentified
+        {
+            get { return (Flags & FlagValues.contains_id) != 0; }
         }
 
         public bool? IsTruncated

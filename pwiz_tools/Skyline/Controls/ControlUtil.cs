@@ -26,7 +26,7 @@ namespace pwiz.Skyline.Controls
     public class MessageBoxHelper
     {
         private readonly Form _parent;
-        private static bool _showMessages;
+        private readonly bool _showMessages;
 
         public MessageBoxHelper(Form parent)
             : this(parent, true)
@@ -247,16 +247,15 @@ namespace pwiz.Skyline.Controls
         /// line and column numbers are displayed in a sentence understandable by
         /// a normal user.</para>
         /// </summary>
-        /// <param name="parent">Parent for the message box</param>
         /// <param name="firstLine">First line of the message specific to the situation</param>
         /// <param name="path">Path to the XML file</param>
         /// <param name="x">An <see cref="Exception"/> thrown during XML parsing</param>
-        public static void ShowXmlParsingError(IWin32Window parent, string firstLine, string path, Exception x)
+        public void ShowXmlParsingError(string firstLine, string path, Exception x)
         {
             if(!_showMessages)
                 return;
             string messageException = XmlUtil.GetInvalidDataMessage(path, x);
-            MessageBox.Show(parent, firstLine + "\n" + messageException, Program.Name);
+            MessageBox.Show(_parent, firstLine + "\n" + messageException, Program.Name);
         }
 
     }

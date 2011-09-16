@@ -186,10 +186,10 @@ namespace Crawdad {
 
     List<CrawdadPeak^>^ CrawdadPeakFinder::CalcPeaks()
     {
-        return CalcPeaks(-1);
+        return CalcPeaks(-1, gcnew array<int>(0));
     }
 
-    List<CrawdadPeak^>^ CrawdadPeakFinder::CalcPeaks(int max)
+    List<CrawdadPeak^>^ CrawdadPeakFinder::CalcPeaks(int max, array<int>^ idIndices)
     {
         // Find peaks
         _pPeakFinder->call_peaks();
@@ -225,26 +225,33 @@ namespace Crawdad {
             itPeak++;
         }
 
-        // If max is not -1, then return the max most intense peaks
+        // If max is not -1, then return the max most intense peaks, plus any
+        // peaks that have been identified with MS/MS peptide search results
         if (max != -1)
         {
             // Shorten the list before performing the slow sort by intensity.
-            // The sort shows up a s bottleneck in a profiler.
+            // The sort shows up as bottleneck in a profiler.
             int lenResult = result->Count;
             float intensityCutoff = 0;
             FindIntensityCutoff(result, 0, (float)(totalArea/lenResult)*2, max, 1, intensityCutoff, lenResult);
 
-    	    List<CrawdadPeak^>^ resultFiltered = gcnew List<CrawdadPeak^>(lenResult);
-            for (int i = 0, lenOrig = result->Count; i < lenOrig ; i++)
+    	    List<KeyValuePair<CrawdadPeak^, bool>>^ resultFiltered =
+                gcnew List<KeyValuePair<CrawdadPeak^, bool>>(lenResult);
+            for (int i = 0, lenOrig = result->Count; i < lenOrig; i++)
             {
-                if (result[i]->Area >= intensityCutoff || intensityCutoff == 0)
-                    resultFiltered->Add(result[i]);
+                CrawdadPeak^ peak = result[i];
+                bool isIdentified = peak->IsIdentified(idIndices);
+                if (isIdentified || peak->Area >= intensityCutoff || intensityCutoff == 0)
+                    resultFiltered->Add(KeyValuePair<CrawdadPeak^, bool>(peak, isIdentified));
             }
 
-            resultFiltered->Sort(gcnew Comparison<CrawdadPeak^>(OrderAreaDesc));
+            resultFiltered->Sort(gcnew Comparison<KeyValuePair<CrawdadPeak^, bool>>(OrderIdAreaDesc));
             if (max < resultFiltered->Count)
                 resultFiltered->RemoveRange(max, resultFiltered->Count - max);
-            result = resultFiltered;
+
+            result = gcnew List<CrawdadPeak^>(resultFiltered->Count);
+            for each (KeyValuePair<CrawdadPeak^, bool> peakId in resultFiltered)
+                result->Add(peakId.Key);
         }
 
         return result;
@@ -280,9 +287,16 @@ namespace Crawdad {
         return nonNoise;
     }
 
-    int CrawdadPeakFinder::OrderAreaDesc(CrawdadPeak^ peak1, CrawdadPeak^ peak2)
+    int CrawdadPeakFinder::OrderIdAreaDesc(KeyValuePair<CrawdadPeak^, bool> peakId1,
+                                         KeyValuePair<CrawdadPeak^, bool> peakId2)
     {
-        float a1 = peak1->Area, a2 = peak2->Area;
+        // Identified peaks come first
+        bool id1 = peakId1.Value, id2 = peakId2.Value;
+        if (id1 != id2)
+            return id1 ? -1 : 1;
+
+        // Then area descending
+        float a1 = peakId1.Key->Area, a2 = peakId2.Key->Area;
         return (a1 > a2 ? -1 : (a1 < a2 ? 1 : 0));
     }
 }

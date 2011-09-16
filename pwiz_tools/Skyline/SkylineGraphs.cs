@@ -222,11 +222,19 @@ namespace pwiz.Skyline
                         DestroyGraphChrom(graphChrom);
                     _listGraphChrom.Clear();
                     // Deserialize from the file
-                    dockPanel.LoadFromXml(GetViewFile(DocumentFilePath), DeserializeForm);
-                    // Hide the graph panel, if nothing remains
-                    if (FirstDocumentPane == -1)
-                        splitMain.Panel2Collapsed = true;
-                    deserialized = true;
+                    string layoutFile = GetViewFile(DocumentFilePath);
+                    try
+                    {
+                        dockPanel.LoadFromXml(layoutFile, DeserializeForm);
+                        // Hide the graph panel, if nothing remains
+                        if (FirstDocumentPane == -1)
+                            splitMain.Panel2Collapsed = true;
+                        deserialized = true;
+                    }
+                    catch (Exception x)
+                    {
+                        throw new IOException(string.Format("Failure attempting to load the window layout file {0}.\nRename or delete this file to restore the default layout.\nSkyline may also need to be restarted.", layoutFile), x);
+                    }
                 }
 
                 bool enable = DocumentUI.Settings.PeptideSettings.Libraries.HasLibraries;

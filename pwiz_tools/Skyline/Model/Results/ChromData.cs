@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using pwiz.Crawdad;
 
 namespace pwiz.Skyline.Model.Results
@@ -58,7 +59,7 @@ namespace pwiz.Skyline.Model.Results
             RawIntensities = Intensities = intensities;
         }
 
-        public void FindPeaks()
+        public void FindPeaks(double[] retentionTimes)
         {
             Finder = new CrawdadPeakFinder();
             Finder.SetChromatogram(Times, Intensities);
@@ -68,10 +69,31 @@ namespace pwiz.Skyline.Model.Results
                 RawPeaks = new CrawdadPeak[0];
             else
             {
-                RawPeaks = Finder.CalcPeaks(MAX_PEAKS);
+                RawPeaks = Finder.CalcPeaks(MAX_PEAKS, TimesToIndices(retentionTimes));
                 // Calculate smoothing for later use in extending the Crawdad peaks
                 IntensitiesSmooth = ChromatogramInfo.SavitzkyGolaySmooth(Intensities);
             }
+        }
+
+        private int[] TimesToIndices(double[] retentionTimes)
+        {
+            var indices = new int[retentionTimes.Length];
+            for (int i = 0; i < retentionTimes.Length; i++)
+                indices[i] = TimeToIndex(retentionTimes[i]);
+            return indices;
+        }
+
+        private int TimeToIndex(double retentionTime)
+        {
+            var index = Array.BinarySearch(Times, (float) retentionTime);
+            if (index < 0)
+            {
+                index = ~index;
+                if (index > 0 && index < Times.Length &&
+                        retentionTime - Times[index - 1] < Times[index] - retentionTime)
+                    index--;
+            }
+            return index;
         }
 
         private CrawdadPeakFinder Finder { get; set; }
@@ -229,13 +251,22 @@ namespace pwiz.Skyline.Model.Results
         public override string ToString()
         {
             return Peak == null ? Data.Key.ToString() :
-                String.Format("{0} - area = {1:F0}, start = {2}, end = {3}",
-                    Data.Key, Peak.Area, Peak.StartIndex, Peak.EndIndex);
+                String.Format("{0} - area = {1:F0}, start = {2}, end = {3}, rt = {4}-{5}",
+                    Data.Key, Peak.Area, Peak.StartIndex, Peak.EndIndex,
+                    Data.Times[Peak.StartIndex], Data.Times[Peak.EndIndex]);
         }
 
         public ChromPeak CalcChromPeak(CrawdadPeak peakMax, ChromPeak.FlagValues flags)
         {
             return Data.CalcChromPeak(peakMax, flags);
+        }
+
+        public bool IsIdentified(double[] retentionTimes)
+        {
+            double startTime = Data.Times[Peak.StartIndex];
+            double endTime = Data.Times[Peak.EndIndex];
+
+            return retentionTimes.Any(time => startTime <= time && time <= endTime);
         }
     }
 
@@ -262,6 +293,12 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public bool IsForcedIntegration { get; set; }
 
+        /// <summary>
+        /// True if the peak contains a scan that has been identified as the
+        /// peptide of interest by a peptide search engine.
+        /// </summary>
+        public bool IsIdentified { get; set; }
+
         private int PeakCount { get; set; }
         public double TotalArea { get; private set; }
         public double ProductArea { get; private set; }
@@ -272,6 +309,11 @@ namespace pwiz.Skyline.Model.Results
         private const float FRACTION_FWHM_LEN = 0.5F;
         private const float DESCENT_TOL = 0.005f;
         private const float ASCENT_TOL = 0.50f;
+
+        public void SetIdentified(double[] retentionTimes)
+        {
+            IsIdentified = Count > 0 && this[0].IsIdentified(retentionTimes);
+        }
 
         public void Extend()
         {

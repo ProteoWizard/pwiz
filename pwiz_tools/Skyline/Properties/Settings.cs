@@ -796,7 +796,7 @@ namespace pwiz.Skyline.Properties
 
     public sealed class CollisionEnergyList : SettingsList<CollisionEnergyRegression>
     {
-        public override int RevisionIndexCurrent { get { return 3; } }
+        public override int RevisionIndexCurrent { get { return 4; } }
 
         public static CollisionEnergyRegression GetDefault()
         {
@@ -870,7 +870,7 @@ namespace pwiz.Skyline.Properties
                                 { new ChargeRegressionLine(2, 0.034, 3.314), }),
                         };
 
-                default:    // v1.1
+                case 3:    // v1.1
                     return new[]
                         {
                             GetDefault(), 
@@ -883,6 +883,36 @@ namespace pwiz.Skyline.Properties
                                 {
                                     new ChargeRegressionLine(2, 0.057, -4.265),
                                     new ChargeRegressionLine(3, 0.031, 7.082)
+                                }), 
+                            new CollisionEnergyRegression("Agilent 6460", new[]
+                                {
+                                    new ChargeRegressionLine(2, 0.051, -15.563),
+                                    new ChargeRegressionLine(3, 0.037, -9.784)
+                                }),
+                            new CollisionEnergyRegression("Waters Xevo", new[]
+                                {
+                                    new ChargeRegressionLine(2, 0.037, -1.066),
+                                    new ChargeRegressionLine(3, 0.036, -1.328)
+                                }),
+                        };
+                default:    // v1.2
+                    return new[]
+                        {
+                            GetDefault(), 
+                            new CollisionEnergyRegression("Thermo TSQ Ultra", new []
+                                {
+                                    new ChargeRegressionLine(2, 0.036, 0.954),
+                                    new ChargeRegressionLine(3, 0.037, 3.525)
+                                }), 
+                            new CollisionEnergyRegression("ABI 4000 QTrap", new []
+                                {
+                                    new ChargeRegressionLine(2, 0.057, -4.265),
+                                    new ChargeRegressionLine(3, 0.031, 7.082)
+                                }), 
+                            new CollisionEnergyRegression("ABI 5500 QTrap", new []
+                                {
+                                    new ChargeRegressionLine(2, 0.036, 8.857),
+                                    new ChargeRegressionLine(3, 0.0544, -2.4099)
                                 }), 
                             new CollisionEnergyRegression("Agilent 6460", new[]
                                 {

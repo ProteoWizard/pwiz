@@ -65,6 +65,8 @@ namespace pwiz.Skyline.Model.Results
 
         public abstract bool IsProcessedScans { get; }
 
+        public abstract bool IsSingleMzMatch { get; }
+
         public abstract void ReleaseMemory();
 
         public abstract void Dispose();
@@ -187,6 +189,11 @@ namespace pwiz.Skyline.Model.Results
             get { return false; }
         }
 
+        public override bool IsSingleMzMatch
+        {
+            get { return false; }
+        }
+
         public static bool HasChromatogramData(MsDataFileImpl dataFile)
         {
             int len = dataFile.ChromatogramCount;
@@ -225,6 +232,7 @@ namespace pwiz.Skyline.Model.Results
             new List<KeyValuePair<ChromKey, ChromCollected>>();
 
         private readonly bool _isProcessedScans;
+        private readonly bool _isSingleMzMatch;
 
         public SpectraChromDataProvider(MsDataFileImpl dataFile,
                                         SrmDocument document,
@@ -285,6 +293,12 @@ namespace pwiz.Skyline.Model.Results
                     }
                     else if (filter.EnabledMsMs || filter.EnabledMs)
                     {
+                        // Full-scan filtering should always match a single precursor
+                        // m/z value to a single precursor node in the document tree,
+                        // because that is the way the filters are constructed in the
+                        // first place.
+                        _isSingleMzMatch = true;
+
                         // If MS/MS filtering is not enabled, skip anything that is not a MS1 scan
                         if (!filter.EnabledMsMs && dataFile.GetMsLevel(i) != 1)
                             continue;
@@ -464,6 +478,11 @@ namespace pwiz.Skyline.Model.Results
         public override bool IsProcessedScans
         {
             get { return _isProcessedScans; }
+        }
+
+        public override bool IsSingleMzMatch
+        {
+            get { return _isSingleMzMatch; }
         }
 
         public override void ReleaseMemory()
@@ -775,9 +794,16 @@ namespace pwiz.Skyline.Model.Results
         {
             if (precursorFilterType == FullScanPrecursorFilterType.Multiple)
             {
+                // Use the user specified isolation width, unless it is larger than
+                // the acquisition isolation width.  In this case the chromatograms
+                // may be very confusing (spikey), because of incorrectly included
+                // data points.
+                double isolationWidthValue = _precursorFilterWindow;
+                if (isolationWidth.HasValue && isolationWidth.Value < _precursorFilterWindow)
+                    isolationWidthValue = isolationWidth.Value;
+
                 // For multiple case, find the first possible value, and iterate until
                 // no longer matching or the end of the array is encountered
-                double isolationWidthValue = isolationWidth ?? _precursorFilterWindow;
                 int iFilter = IndexOfFilter(isolationTargetMz, isolationWidthValue);
                 if (iFilter == -1)
                     yield break;

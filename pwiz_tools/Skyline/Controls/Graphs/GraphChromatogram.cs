@@ -551,7 +551,7 @@ namespace pwiz.Skyline.Controls.Graphs
                         listChromGraphs[0].RetentionWindow = window;
                     }
                     // Set any MS/MS IDs on the first graph item also
-                    if (settings.TransitionSettings.FullScan.IsEnabled)
+                    if (settings.TransitionSettings.FullScan.IsEnabled && settings.PeptideSettings.Libraries.IsLoaded)
                     {
                         var group = nodeGroups[0].TransitionGroup;
                         IsotopeLabelType labelType;

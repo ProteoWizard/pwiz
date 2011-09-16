@@ -1512,6 +1512,21 @@ namespace pwiz.Skyline.Model.DocSettings
             return false;
         }
 
+        public bool TryGetRetentionTimes(string filePath, out LibraryRetentionTimes retentionTimes)
+        {
+            Debug.Assert(IsLoaded);
+
+            foreach (Library lib in _libraries)
+            {
+                // Only one of the available libraries may claim ownership of the file
+                // in question.
+                if (lib != null && lib.TryGetRetentionTimes(filePath, out retentionTimes))
+                    return true;
+            }
+            retentionTimes = null;
+            return false;
+        }
+
         /// <summary>
         /// Loads all the spectra found in all the loaded libraries with the
         /// given LibKey and IsotopeLabelType.

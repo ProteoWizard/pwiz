@@ -73,6 +73,16 @@ namespace Crawdad {
         property float Fwhm { float get() { return _fwhm; } }
         property bool FwhmDegenerate { bool get() { return _fwhmDegenerate; } }
 
+        bool IsIdentified(array<int>^ idIndices)
+        {
+            for each (int idIndex in idIndices)
+            {
+                if (_startIndex <= idIndex && idIndex <= _endIndex)
+                    return true;
+            }
+            return false;
+        }
+
         virtual String^ ToString() override
         {
             return String::Format("a = {0}, bg = {1}, s = {2}, e = {3}, r = {4}",
@@ -129,7 +139,7 @@ namespace Crawdad {
 
         List<CrawdadPeak^>^ CalcPeaks();
 
-        List<CrawdadPeak^>^ CalcPeaks(int max);
+        List<CrawdadPeak^>^ CalcPeaks(int max, array<int>^ idIndices);
 
         CrawdadPeak^ GetPeak(int startIndex, int endIndex);
 
@@ -139,7 +149,8 @@ namespace Crawdad {
         static void FindIntensityCutoff(List<CrawdadPeak^>^ listPeaks, float left, float right,
             int minPeaks, int calls, float& cutoff, int& len);
         static int FilterPeaks(List<CrawdadPeak^>^ listPeaks, float intensityCutoff);
-        static int OrderAreaDesc(CrawdadPeak^ peak1, CrawdadPeak^ peak2);
+        static int OrderIdAreaDesc(KeyValuePair<CrawdadPeak^, bool> peakId1,
+                                 KeyValuePair<CrawdadPeak^, bool> peakId2);
         
     private:
 		// Padding data added before and after real data to ensure peaks

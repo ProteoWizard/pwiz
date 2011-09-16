@@ -27,6 +27,7 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
+using System.Collections;
 
 namespace pwiz.Skyline.Model.Results
 {
@@ -317,13 +318,26 @@ namespace pwiz.Skyline.Model.Results
                     }
                 }
             }
+
             // If more than one value was found, make a final pass to ensure that there
             // is only one precursor match per file.
-            for (int i = listChrom.Count - 1; i > 0; i--)
+            if (listChrom.Count > 1)
             {
-                var chromInfo = listChrom[i];
-                if (listChrom.IndexOf(info => ReferenceEquals(info.FilePath, chromInfo.FilePath)) < i)
-                    listChrom.RemoveAt(i);
+                double precursorMz = nodeGroup.PrecursorMz;
+                var listChromFinal = new List<ChromatogramGroupInfo>();
+                foreach (var chromInfo in listChrom)
+                {
+                    string filePath = chromInfo.FilePath;
+                    int fileIndex = listChromFinal.IndexOf(info => ReferenceEquals(filePath, info.FilePath));
+                    if (fileIndex == -1)
+                        listChromFinal.Add(chromInfo);
+                    // Use the entry with the m/z closest to the target
+                    else if (Math.Abs(precursorMz - chromInfo.PrecursorMz) <
+                             Math.Abs(precursorMz - listChromFinal[fileIndex].PrecursorMz))
+                    {
+                        listChromFinal[fileIndex] = chromInfo;
+                    }
+                }
             }
             infoSet = listChrom.ToArray();
             return infoSet.Length > 0;

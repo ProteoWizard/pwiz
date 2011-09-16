@@ -749,6 +749,93 @@ namespace pwiz.Skyline.Model.Lib
             return base.TryGetRetentionTimes(key, filePath, out retentionTimes);
         }
 
+        private double[] ReadRetentionTimes(BiblioLiteSpectrumInfo info, BiblioLiteSourceInfo sourceInfo)
+        {
+            using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
+            {
+                select.CommandText = "SELECT retentionTime FROM [RetentionTimes] " +
+                    "WHERE [RefSpectraID] = ? AND [SpectrumSourceId] = ?";
+                select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)info.Id));
+                select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)sourceInfo.Id));
+
+                using (SQLiteDataReader reader = select.ExecuteReader())
+                {
+                    var listRetentionTimes = new List<double>();
+                    while (reader.Read())
+                        listRetentionTimes.Add(reader.GetDouble(0));
+                    return listRetentionTimes.ToArray();
+                }
+            }
+        }
+
+        public override bool TryGetRetentionTimes(string filePath, out LibraryRetentionTimes retentionTimes)
+        {
+            int j = FindSource(filePath);
+            if (j != -1)
+            {
+                retentionTimes = new LibraryRetentionTimes(ReadRetentionTimes(_librarySourceFiles[j]));
+                return true;
+            }
+
+            return base.TryGetRetentionTimes(filePath, out retentionTimes);
+        }
+
+        /// <summary>
+        /// Reads all retention times for a specified source file into 
+        /// </summary>
+        /// <param name="sourceInfo"></param>
+        /// <returns></returns>
+        private Dictionary<string, double[]> ReadRetentionTimes(BiblioLiteSourceInfo sourceInfo)
+        {
+            using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
+            {
+                select.CommandText = "SELECT peptideModSeq, t.retentionTime " +
+                    "FROM [RefSpectra] INNER JOIN [RetentionTimes] as t ON [id] = [RefSpectraID] " +
+                    "WHERE [SpectrumSourceId] = ? " +
+                    "ORDER BY peptideModSeq";
+                select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)sourceInfo.Id));
+
+                using (SQLiteDataReader reader = select.ExecuteReader())
+                {
+                    var dictKeyTimes = new Dictionary<string, double[]>();
+                    string sequence = null;
+                    var listTimes = new List<double>();
+                    while (reader.Read())
+                    {
+                        int i = 0;
+                        string sequenceNext = reader.GetString(i++);
+                        double time = reader.GetDouble(i);
+                        if (!Equals(sequence, sequenceNext))
+                        {
+                            if (listTimes.Count > 0)
+                                dictKeyTimes.Add(sequence, listTimes.ToArray());
+
+                            sequence = sequenceNext;
+                            listTimes.Clear();                            
+                        }
+                        listTimes.Add(time);
+                    }
+                    if (listTimes.Count > 0)
+                        dictKeyTimes.Add(sequence, listTimes.ToArray());
+                    return dictKeyTimes;
+                }
+            }
+        }
+
+        private int FindSource(string filePath)
+        {
+            // First look for an exact path match
+            int i = _librarySourceFiles.IndexOf(info => Equals(filePath, info.FilePath));
+            if (i == -1)
+            {
+                // Failing an exact path match, look for a basename match
+                string baseName = Path.GetFileNameWithoutExtension(filePath);
+                i = _librarySourceFiles.IndexOf(info =>
+                    Equals(baseName, Path.GetFileNameWithoutExtension(info.FilePath)));
+            }
+            return i;
+        }
+
         public override IEnumerable<SpectrumInfo> GetSpectra(LibKey key, IsotopeLabelType labelType, bool bestMatch)
         {
             if (bestMatch)
@@ -795,39 +882,6 @@ namespace pwiz.Skyline.Model.Lib
                         yield return new SpectrumInfo(this, labelType, filePath, retentionTime, isBest,
                             new SpectrumLiteKey(redundantId));
                     }
-                }
-            }
-        }
-
-        private int FindSource(string filePath)
-        {
-            // First look for an exact path match
-            int i = _librarySourceFiles.IndexOf(info => Equals(filePath, info.FilePath));
-            if (i == -1)
-            {
-                // Failing an exact path match, look for a basename match
-                string baseName = Path.GetFileNameWithoutExtension(filePath);
-                i = _librarySourceFiles.IndexOf(info =>
-                    Equals(baseName, Path.GetFileNameWithoutExtension(info.FilePath)));
-            }
-            return i;
-        }
-
-        private double[] ReadRetentionTimes(BiblioLiteSpectrumInfo info, BiblioLiteSourceInfo sourceInfo)
-        {
-            using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
-            {
-                select.CommandText = "SELECT retentionTime FROM [RetentionTimes] " +
-                    "WHERE [RefSpectraID] = ? AND [SpectrumSourceId] = ?";
-                select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long) info.Id));
-                select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long) sourceInfo.Id));
-
-                using (SQLiteDataReader reader = select.ExecuteReader())
-                {
-                    var listRetentionTimes = new List<double>();
-                    while (reader.Read())
-                        listRetentionTimes.Add(reader.GetDouble(0));
-                    return listRetentionTimes.ToArray();
                 }
             }
         }

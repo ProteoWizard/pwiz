@@ -179,12 +179,12 @@ namespace pwiz.Skyline.FileUI
                 listboxListItems.SetItemChecked(i, checkAll);
         }
 
-        public static bool Import(IWin32Window parent, TList listDest)
+        public static bool Import(Form parent, TList listDest)
         {
             return ImportFile(parent, listDest, GetImportFileName(parent, SETTINGS_DEFINITION_FILTER));
         }
 
-        public static string GetImportFileName(IWin32Window parent, string filter)
+        public static string GetImportFileName(Form parent, string filter)
         {
             OpenFileDialog dialog = new OpenFileDialog
             {
@@ -197,7 +197,7 @@ namespace pwiz.Skyline.FileUI
             return dialog.FileName;
         }
 
-        public static bool ImportFile(IWin32Window parent, TList listDest, string fileName)
+        public static bool ImportFile(Form parent, TList listDest, string fileName)
         {
             if (string.IsNullOrEmpty(fileName))
                 return false;
@@ -213,9 +213,8 @@ namespace pwiz.Skyline.FileUI
             }
             catch (Exception exception)
             {
-                MessageBoxHelper.ShowXmlParsingError(parent,
-                                                     string.Format("Failure loading {0}.", fileName),
-                                                     fileName, exception);
+                new MessageBoxHelper(parent).ShowXmlParsingError(string.Format("Failure loading {0}.", fileName),
+                                                                 fileName, exception);
                 return false;
             }
 

@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
@@ -37,15 +36,17 @@ namespace pwiz.Skyline.Model.Results
 //        private const int MINIMUM_DELTAS_PER_CHROM = 4;
 
         private readonly List<ChromDataSet> _dataSets = new List<ChromDataSet>();
+        private readonly double[] _retentionTimes;
         private readonly bool _isProcessedScans;
 
-        public PeptideChromDataSets(bool isProcessedScans)
+        public PeptideChromDataSets(double[] retentionTimes, bool isProcessedScans)
         {
+            _retentionTimes = retentionTimes;
             _isProcessedScans = isProcessedScans;
         }
 
-        public PeptideChromDataSets(bool isProcessedScans, ChromDataSet chromDataSet)
-            : this(isProcessedScans)
+        public PeptideChromDataSets(double[] retentionTimes, bool isProcessedScans, ChromDataSet chromDataSet)
+            : this(retentionTimes, isProcessedScans)
         {
             DataSets.Add(chromDataSet);
         }
@@ -86,7 +87,7 @@ namespace pwiz.Skyline.Model.Results
             EvenlySpaceTimes();
 
             foreach (var chromDataSet in _dataSets)
-                chromDataSet.PickChromatogramPeaks();
+                chromDataSet.PickChromatogramPeaks(_retentionTimes);
 
             PickPeptidePeaks();
 
@@ -344,25 +345,32 @@ namespace pwiz.Skyline.Model.Results
             }
 
             // Sort descending by the peak picking score
-            listPeakSets.Sort((p1, p2) => Comparer.Default.Compare(p2.ProductArea, p1.ProductArea));
+            listPeakSets.Sort(ComparePeakLists);
 
             // Reset best picked peaks and reintegrate if necessary
             var peakSetBest = listPeakSets[0];
-            foreach (var chargePeakGroup in peakSetBest.ChargeGroups)
+            PeptideChromDataPeak peakBest = null;
+            foreach (var peak in peakSetBest.OrderedPeaks)
             {
-                PeptideChromDataPeak peakBest = null;
-                foreach (var peak in chargePeakGroup)
-                {
-                    // Ignore precursors with unknown relative RT. They do not participate
-                    // in peptide peak matching.
-                    if (peak.Data.DocNode.RelativeRT == RelativeRT.Unknown)
-                        continue;
+                // Ignore precursors with unknown relative RT. They do not participate
+                // in peptide peak matching.
+                if (peak.Data.DocNode.RelativeRT == RelativeRT.Unknown)
+                    continue;
 
-                    peak.Data.SetBestPeak(peak.PeakGroup, peakBest);
-                    if (peakBest == null)
-                        peakBest = peak;
-                }
+                peak.Data.SetBestPeak(peak.PeakGroup, peakBest);
+                if (peakBest == null)
+                    peakBest = peak;
             }
+        }
+
+        public int ComparePeakLists(PeptideChromDataPeakList p1, PeptideChromDataPeakList p2)
+        {
+            // All identified peaks come first
+            if (p1.IsIdentified != p2.IsIdentified)
+                return p1.IsIdentified ? -1 : 1;
+
+            // Then order by ProductArea descending
+            return Comparer<double>.Default.Compare(p2.ProductArea, p1.ProductArea);
         }
 
         private PeptideChromDataPeakList FindCoelutingPeptidePeaks(PeptideChromDataPeak dataPeakMax, IList<PeptideChromDataPeak> allPeakGroups)
@@ -526,8 +534,11 @@ namespace pwiz.Skyline.Model.Results
 
         private int PeakCount { get; set; }
         private double TotalArea { get; set; }
+        private int IdentifiedCount { get; set; }
 
         public double ProductArea { get; private set; }
+
+        public bool IsIdentified { get { return IdentifiedCount > 0; } }
 
         public IEnumerable<IGrouping<int, PeptideChromDataPeak>> ChargeGroups
         {
@@ -540,6 +551,16 @@ namespace pwiz.Skyline.Model.Results
             }
         }
 
+        public IEnumerable<PeptideChromDataPeak> OrderedPeaks
+        {
+            get
+            {
+                return from peak in this
+                       orderby peak.PeakGroup != null ? peak.PeakGroup.ProductArea : 0 descending
+                       select peak;
+            }
+        }
+
         private void AddPeak(PeptideChromDataPeak dataPeak)
         {
             if (dataPeak.PeakGroup != null)
@@ -549,6 +570,9 @@ namespace pwiz.Skyline.Model.Results
                 TotalArea += dataPeak.PeakGroup.ProductArea;
 
                 ProductArea = TotalArea * Math.Pow(10.0, PeakCount);
+
+                if (dataPeak.PeakGroup.IsIdentified)
+                    IdentifiedCount++;
             }
         }
 
@@ -564,6 +588,9 @@ namespace pwiz.Skyline.Model.Results
                     TotalArea -= dataPeak.PeakGroup.ProductArea;
 
                 ProductArea = TotalArea * Math.Pow(10.0, PeakCount);
+
+                if (dataPeak.PeakGroup.IsIdentified)
+                    IdentifiedCount--;
             }
         }
 

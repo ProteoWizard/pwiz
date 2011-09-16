@@ -262,7 +262,7 @@ namespace pwiz.Skyline.Model.Results
         /// Do initial grouping of and ranking of peaks using the Crawdad
         /// peak detector.
         /// </summary>
-        public void PickChromatogramPeaks()
+        public void PickChromatogramPeaks(double[] retentionTimes)
         {
             // Make sure chromatograms are in sorted order
             _listChromData.Sort((c1, c2) => c1.Key.CompareTo(c2.Key));
@@ -270,26 +270,33 @@ namespace pwiz.Skyline.Model.Results
             // Mark all optimization chromatograms
             MarkOptimizationData();
 
-            //                if (Math.Round(_listChromData[0].Key.Precursor) == 585)
-            //                    Console.WriteLine("Issue");
+//            if (Math.Round(_listChromData[0].Key.Precursor) == 585)
+//                Console.WriteLine("Issue");
 
             // First use Crawdad to find the peaks
-            _listChromData.ForEach(chromData => chromData.FindPeaks());
+            _listChromData.ForEach(chromData => chromData.FindPeaks(retentionTimes));
 
             // Merge sort all peaks into a single list
             IList<ChromDataPeak> allPeaks = MergePeaks();
 
             // Inspect 20 most intense peak regions
             var listRank = new List<double>();
-            for (int i = 0; i < 20; i++)
+            for (int i = 0; i < 20 || retentionTimes.Length > 0; i++)
             {
                 if (allPeaks.Count == 0)
                     break;
 
                 ChromDataPeak peak = allPeaks[0];
                 allPeaks.RemoveAt(0);
+
+                // If peptide ID retention times are present, allow
+                // peaks greater than 20, but only if they contain
+                // an ID retention time.
+                if (i >= 20 && !peak.IsIdentified(retentionTimes))
+                    continue;
+
                 ChromDataPeakList peakSet = FindCoelutingPeaks(peak, allPeaks);
-                //                    Console.WriteLine("peak {0}: {1:F01}", i + 1, peakSet.TotalArea / 1000);
+                peakSet.SetIdentified(retentionTimes);
 
                 _listPeakSets.Add(peakSet);
                 listRank.Add(i);
@@ -319,7 +326,6 @@ namespace pwiz.Skyline.Model.Results
                 if (Math.Abs(rvalue) > NOISE_CORRELATION_THRESHOLD)
                 {
                     iRemove = i + MINIMUM_PEAKS;
-                    RemoveNonOverlappingPeaks(_listPeakSets, iRemove);
                     break;
                 }
                 listRank.RemoveAt(0);
@@ -327,6 +333,20 @@ namespace pwiz.Skyline.Model.Results
             }
             if (iRemove == 0)
                 iRemove = _listPeakSets.Count;
+            else if (retentionTimes.Length > 0)
+            {
+                // Make sure no identified peaks are removed.
+                int identIndex = _listPeakSets.LastIndexOf(peakSet => peakSet.IsIdentified);
+                if (identIndex >= iRemove)
+                    iRemove = identIndex + 1;
+                // Or, if there were identifications, but no peaks
+                // peaks that appear to contain them, keep all peak sets
+                else if (identIndex != -1)
+                    iRemove = _listPeakSets.Count;
+            }
+
+            RemoveNonOverlappingPeaks(_listPeakSets, iRemove);
+
             // Add small peaks under the chosen peaks, to make adding them easier
             foreach (var peak in allPeaks)
             {
@@ -334,14 +354,36 @@ namespace pwiz.Skyline.Model.Results
                     _listPeakSets.Add(new ChromDataPeakList(peak, _listChromData));
             }
 
-            // Sort by product score
-            _listPeakSets.Sort((p1, p2) => Comparer<double>.Default.Compare(p2.ProductArea, p1.ProductArea));
+            // Backward compatibility: before peptide IDs were integrated
+            // this sorting happened before peaks were extended.
+            if (retentionTimes.Length == 0)
+                _listPeakSets.Sort(ComparePeakLists);
 
             // Since Crawdad can have a tendency to pick peaks too narrow,
             // use the peak group information to extend the peaks to make
             // them wider.
-            // This does not handle reintegration.  Peaks must be reintegrated below.
-            _listPeakSets = ExtendPeaks(_listPeakSets);
+            // This does not handle reintegration, because peaks get reintegrated
+            // before they are stored, taking the entire peptide into account.
+            _listPeakSets = ExtendPeaks(_listPeakSets, retentionTimes);
+
+            // Sort by whether a peak contains an ID and then product score
+            // This has to be done after peak extending, since extending may
+            // change the state of whether the peak contains an ID.
+            if (retentionTimes.Length > 0)
+                _listPeakSets.Sort(ComparePeakLists);
+
+//            if (retentionTimes.Length > 0 && !_listPeakSets[0].IsIdentified)
+//                Console.WriteLine("Idenifications outside peaks.");
+        }
+
+        public int ComparePeakLists(ChromDataPeakList p1, ChromDataPeakList p2)
+        {
+            // All identified peaks come first
+            if (p1.IsIdentified != p2.IsIdentified)
+                return p1.IsIdentified ? -1 : 1;
+
+            // Then order by ProductArea descending
+            return Comparer<double>.Default.Compare(p2.ProductArea, p1.ProductArea);
         }
 
         /// <summary>
@@ -401,28 +443,35 @@ namespace pwiz.Skyline.Model.Results
                     // Use correct time normalization flag (backward compatibility with v0.5)
                     if (_isTimeNormalArea)
                         flags |= ChromPeak.FlagValues.time_normalized;
+                    if (peakSet.IsIdentified)
+                        flags |= ChromPeak.FlagValues.contains_id;
                     peak.Data.Peaks.Add(peak.CalcChromPeak(peakMax, flags));
                 }
             }
         }
 
-        private static List<ChromDataPeakList> ExtendPeaks(IEnumerable<ChromDataPeakList> listPeakSets)
+        private static List<ChromDataPeakList> ExtendPeaks(IEnumerable<ChromDataPeakList> listPeakSets,
+                                                           double[] retentionTimes)
         {
             var listExtendedSets = new List<ChromDataPeakList>();
             foreach (var peakSet in listPeakSets)
             {
                 peakSet.Extend();
-                if (!PeaksOverlap(peakSet, listExtendedSets))
+                peakSet.SetIdentified(retentionTimes);
+                if (!PeaksRedundant(peakSet, listExtendedSets))
                     listExtendedSets.Add(peakSet);
             }
             return listExtendedSets;
         }
 
-        private static bool PeaksOverlap(IList<ChromDataPeak> peakSetTest, IEnumerable<ChromDataPeakList> peakSets)
+        private static bool PeaksRedundant(ChromDataPeakList peakSetTest, IEnumerable<ChromDataPeakList> peakSets)
         {
             foreach (var peakSet in peakSets)
             {
-                if (PeaksOverlap(peakSet[0].Peak, peakSetTest[0].Peak))
+                if (PeaksOverlap(peakSet[0].Peak, peakSetTest[0].Peak) &&
+                    // The peaks are not redundant, if they are identified and
+                    // the peaks they overlap with are not.
+                    (!peakSetTest.IsIdentified || peakSet.IsIdentified))
                 {
                     // Check peaks where their largest peaks overlap to make
                     // sure they have transitions with measured signal in common.
@@ -847,6 +896,11 @@ namespace pwiz.Skyline.Model.Results
         {
             return DocNode.RelativeRT == RelativeRT.Matching &&
                 chromDataSet.DocNode.RelativeRT == RelativeRT.Matching;
+        }
+
+        public override string ToString()
+        {
+            return Count > 0 ? _listChromData[0].ToString() : "empty";
         }
     }
 }

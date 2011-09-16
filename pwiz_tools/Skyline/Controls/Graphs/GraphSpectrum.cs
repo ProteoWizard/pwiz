@@ -411,61 +411,68 @@ namespace pwiz.Skyline.Controls.Graphs
             if (!settings.TransitionSettings.FullScan.IsEnabled || !settings.HasResults)
                 return spectra;
 
-            var spectraRedundant = new List<SpectrumDisplayInfo>();
-            var dictReplicateNameFiles = new Dictionary<string, HashSet<string>>();
-            foreach (var spectrumInfo in settings.GetRedundantSpectra(sequence, charge, group.LabelType, mods))
+            try
             {
-                var matchingFile = settings.MeasuredResults.FindMatchingMSDataFile(spectrumInfo.FilePath);
-                if (matchingFile == null)
-                    continue;
-
-                string replicateName = matchingFile.Chromatograms.Name;
-                spectraRedundant.Add(new SpectrumDisplayInfo(spectrumInfo,
-                                                             replicateName,
-                                                             matchingFile.FilePath,
-                                                             matchingFile.FileOrder,
-                                                             spectrumInfo.RetentionTime,
-                                                             false));
-
-                // Include the best spectrum twice, once displayed in the normal
-                // way and once displayed with its replicate and retetion time.
-                if (spectrumInfo.IsBest)
+                var spectraRedundant = new List<SpectrumDisplayInfo>();
+                var dictReplicateNameFiles = new Dictionary<string, HashSet<string>>();
+                foreach (var spectrumInfo in settings.GetRedundantSpectra(sequence, charge, group.LabelType, mods))
                 {
-                    string libName = spectrumInfo.LibName;
-                    var labelType = spectrumInfo.LabelType;
-                    int iBest = spectra.IndexOf(s => Equals(s.LibName, libName) &&
-                                                     Equals(s.LabelType, labelType));
-                    if (iBest != -1)
-                    {
-                        spectra[iBest] = new SpectrumDisplayInfo(spectra[iBest].SpectrumInfo,
+                    var matchingFile = settings.MeasuredResults.FindMatchingMSDataFile(spectrumInfo.FilePath);
+                    if (matchingFile == null)
+                        continue;
+
+                    string replicateName = matchingFile.Chromatograms.Name;
+                    spectraRedundant.Add(new SpectrumDisplayInfo(spectrumInfo,
                                                                  replicateName,
                                                                  matchingFile.FilePath,
-                                                                 0,
+                                                                 matchingFile.FileOrder,
                                                                  spectrumInfo.RetentionTime,
-                                                                 true);
+                                                                 false));
+
+                    // Include the best spectrum twice, once displayed in the normal
+                    // way and once displayed with its replicate and retetion time.
+                    if (spectrumInfo.IsBest)
+                    {
+                        string libName = spectrumInfo.LibName;
+                        var labelType = spectrumInfo.LabelType;
+                        int iBest = spectra.IndexOf(s => Equals(s.LibName, libName) &&
+                                                         Equals(s.LabelType, labelType));
+                        if (iBest != -1)
+                        {
+                            spectra[iBest] = new SpectrumDisplayInfo(spectra[iBest].SpectrumInfo,
+                                                                     replicateName,
+                                                                     matchingFile.FilePath,
+                                                                     0,
+                                                                     spectrumInfo.RetentionTime,
+                                                                     true);
+                        }
                     }
+
+                    HashSet<string> setFiles;
+                    if (!dictReplicateNameFiles.TryGetValue(replicateName, out setFiles))
+                    {
+                        setFiles = new HashSet<string>();
+                        dictReplicateNameFiles.Add(replicateName, setFiles);
+                    }
+                    setFiles.Add(spectrumInfo.FilePath);
                 }
 
-                HashSet<string> setFiles;
-                if (!dictReplicateNameFiles.TryGetValue(replicateName, out setFiles))
+                // Determine if replicate name is sufficient to uniquely identify the file
+                foreach (var spectrumInfo in spectraRedundant)
                 {
-                    setFiles = new HashSet<string>();
-                    dictReplicateNameFiles.Add(replicateName, setFiles);
+                    string replicateName = spectrumInfo.ReplicateName;
+                    if (replicateName != null && dictReplicateNameFiles[replicateName].Count < 2)
+                        spectrumInfo.IsReplicateUnique = true;
                 }
-                setFiles.Add(spectrumInfo.FilePath);
-            }
 
-            // Determine if replicate name is sufficient to uniquely identify the file
-            foreach (var spectrumInfo in spectraRedundant)
+                spectraRedundant.Sort();
+                spectra.AddRange(spectraRedundant);
+                return spectra;
+            }
+            catch (Exception)
             {
-                string replicateName = spectrumInfo.ReplicateName;
-                if (replicateName != null && dictReplicateNameFiles[replicateName].Count < 2)
-                    spectrumInfo.IsReplicateUnique = true;
+                return spectra;
             }
-
-            spectraRedundant.Sort();
-            spectra.AddRange(spectraRedundant);
-            return spectra;
         }
 
         public void LockYAxis(bool lockY)
