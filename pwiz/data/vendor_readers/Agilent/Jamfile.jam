@@ -61,7 +61,7 @@ rule vendor-api-usage-requirements ( properties * )
     if <toolset>msvc in $(properties) &&
        ! ( <address-model>64 in $(properties) ) &&
        [ project-exists $(API_PATH) ] &&
-       $(.hasDLLs) && ! [ define-without-binary-msdata ]
+       $(.hasDLLs) && ! [ without-binary-msdata ]
     {
         result += <library>$(API_PATH)//pwiz_vendor_api_agilent ;
         result += <define>PWIZ_READER_AGILENT ;
@@ -69,7 +69,7 @@ rule vendor-api-usage-requirements ( properties * )
     else if ! $(.warn-once)
     {
         .warn-once = true ;
-		if  <without-binary-msdata>on in $(properties) 
+		if  [ without-binary-msdata ] 
 		{
             echo "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME) can only identify files, not read them." ;
 		}
@@ -128,7 +128,7 @@ rule test-requirements ( properties * )
             echo "[$(READER_PATH)] Missing test data." ;
             result += <build>no ;
         }
-        else if  <without-binary-msdata>on in $(properties) 
+        else if  [ without-binary-msdata ] 
 		{
             echo "[$(READER_PATH)] without-binary-msdata build: $(READER_NAME)_Test is only testing that it can identify files, not read them." ;
 		}

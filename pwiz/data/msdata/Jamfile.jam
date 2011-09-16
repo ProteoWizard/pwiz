@@ -131,7 +131,7 @@ unit-test-if-exists SpectrumList_MGF_Test : SpectrumList_MGF_Test.cpp pwiz_data_
 unit-test-if-exists Serializer_MGF_Test : Serializer_MGF_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples ;
 unit-test-if-exists SpectrumList_MSn_Test : SpectrumList_MSn_Test.cpp pwiz_data_msdata ;
 unit-test-if-exists Serializer_MSn_Test : Serializer_MSn_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples ;
-if [ mz5-build enabled ] 
+if ! [ without-mz5 ] 
 {
 	unit-test-if-exists Serializer_mz5_Test : Serializer_mz5_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples /ext/boost//filesystem ;
 	unit-test-if-exists SpectrumList_mz5_Test : SpectrumList_mz5_Test.cpp pwiz_data_msdata pwiz_data_msdata_examples /ext/boost//filesystem ;
