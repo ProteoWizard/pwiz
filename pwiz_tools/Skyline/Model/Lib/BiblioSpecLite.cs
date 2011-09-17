@@ -852,6 +852,9 @@ namespace pwiz.Skyline.Model.Lib
 
         private IEnumerable<SpectrumInfo> GetRedundantSpectra(LibKey key, IsotopeLabelType labelType)
         {
+            // No redundant spectra before schema version 1
+            if (SchemaVersion == 0)
+                yield break;
             int i = FindEntry(key);
             if (i == -1)
                 yield break;
