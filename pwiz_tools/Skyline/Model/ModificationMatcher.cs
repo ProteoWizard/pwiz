@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using pwiz.Skyline.Model.DocSettings;
@@ -342,7 +343,7 @@ namespace pwiz.Skyline.Model
                         modTerminus = ModTerminus.N;
                     if (indexAA == aas.Length - 1)
                         modTerminus = ModTerminus.C;
-                    int decPlace = mod.IndexOf('.');
+                    int decPlace = mod.IndexOf(NumberFormatInfo.CurrentInfo.NumberDecimalSeparator);
                     string name = null;
                     var roundedTo = Math.Min(decPlace == -1 ? 0 : mod.Length - decPlace - 1, DEFAULT_ROUNDING_DIGITS);
                     double? mass = null;

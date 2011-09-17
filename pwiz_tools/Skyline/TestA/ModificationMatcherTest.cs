@@ -221,17 +221,10 @@ namespace pwiz.SkylineTestA
 
         private static readonly ModificationMatcher MATCHER = new ModificationMatcher();
 
-        private static readonly List<string> SEQS = new List<string> 
-        {
-            STR_NO_MODS, STR_MOD_BY_NAME, STR_CYS_AND_OXI, STR_HEAVY_15, STR_HEAVY_15_F, STR_HEAVY_15_NOT_ALL, STR_CYS_OXI_PHOS,
-            STR_MOD_BY_NAME_TERMINUS, STR_LIGHT_ONLY, STR_HEAVY_ONLY, STR_TERM_ONLY, STR_METOX_LONG_MASS,
-            STR_AMMONIA_LOSS
-        };
-
-        private const string STR_NO_MODS = "ALSIGFETCR"; 
-        private const string STR_HEAVY_15 = "A{+1}E{+1}I{+1}D{+1}M{+1}[+15.995]L{+1}D{+1}I{+1}R{+4}";
+        private const string STR_NO_MODS = "ALSIGFETCR";
+        private static readonly string STR_HEAVY_15 = "A{+1}E{+1}I{+1}D{+1}M{+1}[+" + 15.995 + "]L{+1}D{+1}I{+1}R{+4}";
         private const string STR_HEAVY_15_F = "VAILIPF{+1}R";
-        private const string STR_HEAVY_15_NOT_ALL = "A{+1}E{+1}I{+1}D{+1}M{+1}[+15.995]L{+1}D{+1}I{+1}R";
+        private static readonly string STR_HEAVY_15_NOT_ALL = "A{+1}E{+1}I{+1}D{+1}M{+1}[+" + 15.995 + "]L{+1}D{+1}I{+1}R";
         private const string STR_MOD_BY_NAME = "S[Phospho (ST)]LLYFVYVAPGIVNT[Phospho (ST)]YLFMMQAQGILIR";
         private const string STR_TERM_ONLY = "VAILIPFR{Label:13C(6) (C-term R)}";
         private const string STR_MOD_BY_NAME_TERMINUS = "SLLAALFFFSLSSSLLYFVYVAPGIVNT[Phospho (ST)]";
@@ -239,15 +232,22 @@ namespace pwiz.SkylineTestA
         private const string STR_LIGHT_ONLY = "A{+1}E{+1}I{+1}D{+1}M{+1}[+695]L{+1}D{+1}I{+1}R{+4}";
         private const string STR_CYS_AND_OXI = "AFC[+57]AVPWQGTM[+16]TLSK";
         private const string STR_CYS_OXI_PHOS = "AFC[+57]AVPWQGTM[+16]T[Phospho (ST)]LSK";
-        private const string STR_METOX_LONG_MASS = "AFCSFQIYAVPWQGTM[+15.9949151234567890]TLSK";
+        private static readonly string STR_METOX_LONG_MASS = "AFCSFQIYAVPWQGTM[+" + 15.99 + "49151234567890]TLSK";
         private const string STR_AMMONIA_LOSS = "C[-17]AVPWQGTMTLSK";
+
+        private static readonly List<string> SEQS = new List<string> 
+        {
+            STR_NO_MODS, STR_MOD_BY_NAME, STR_CYS_AND_OXI, STR_HEAVY_15, STR_HEAVY_15_F, STR_HEAVY_15_NOT_ALL, STR_CYS_OXI_PHOS,
+            STR_MOD_BY_NAME_TERMINUS, STR_LIGHT_ONLY, STR_HEAVY_ONLY, STR_TERM_ONLY, STR_METOX_LONG_MASS,
+            STR_AMMONIA_LOSS
+        };
 
         // Fails
         private const string STR_FAIL_MASS = "VAI{+42}LIPFR";
         private const string STR_FAIL_NAME = "VAILIP[Gibberish]FR";
         private const string STR_FAIL_EMPTY_MOD = "IHGF[]DLAAI[]NLQR";
         private const string STR_FAIL_EMPTY_MOD2 = "IHGF{}DLAAI{}NLQR";
-        private const string STR_FAIL_NOT_A_NUMBER = "IHGF[+5..0]DLAAINLQR";
+        private static readonly string STR_FAIL_NOT_A_NUMBER = "IHGF[+" + 5.1 + "" + 1.5 + "]DLAAINLQR";
         private const string STR_FAIL_DOUBLE_MOD = "V{+1}{+5}A{+1}I{+1}L{+1}I{+1}P{+1}F{+1}R{+4}{+1}";
         private const string STR_FAIL_OX_ON_D = "PEMGFD[Oxidation (M)]LER";
         private const string STR_FAIL_OX_TERM = "PEM[Oxidation (M) C-term]GFDLER";
