@@ -500,17 +500,17 @@ namespace pwiz.Skyline
         public bool SaveDocument(String fileName)
         {
             SrmDocument document = DocumentUI;
-            using (var saver = new FileSaver(fileName))
+            try
             {
-                if (!saver.CanSave(true))
-                    return false;
-                try
+                using (var saver = new FileSaver(fileName))
                 {
-                    using (var writer = new XmlTextWriter(saver.SafeName, Encoding.UTF8) {Formatting = Formatting.Indented})
+                    if (!saver.CanSave(true))
+                        return false;
+                    using (var writer = new XmlTextWriter(saver.SafeName, Encoding.UTF8) { Formatting = Formatting.Indented })
                     using (new LongOp(this))
                     {
 
-                        XmlSerializer ser = new XmlSerializer(typeof (SrmDocument));
+                        XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
                         ser.Serialize(writer, document);
 
                         writer.Flush();
@@ -523,11 +523,11 @@ namespace pwiz.Skyline
                         SetActiveFile(fileName);
                     }
                 }
-                catch (Exception x)
-                {
-                    MessageBox.Show(string.Format("Failed writing to {0}.\n{1}", fileName, x.Message));
-                    return false;
-                }
+            }
+            catch (Exception x)
+            {
+                MessageBox.Show(string.Format("Failed writing to {0}.\n{1}", fileName, x.Message));
+                return false;
             }
 
             try

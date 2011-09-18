@@ -166,7 +166,7 @@ namespace pwiz.Skyline.Controls
                                               int min, int max, out int[] val)
         {
             val = ArrayUtil.Parse(control.Text, Convert.ToInt32, ',', new int[0]);
-            if (val.Length > 0)
+            if (val.Length > 0 && !val.Contains(i => min > i || i > max))
                 return true;
 
             ShowTextBoxError(control,

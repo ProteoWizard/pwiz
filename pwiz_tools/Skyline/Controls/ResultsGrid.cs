@@ -461,24 +461,6 @@ namespace pwiz.Skyline.Controls
         }
 
 
-// ReSharper disable SuggestBaseTypeForParameter
-        private static IEnumerable<ChromInfo> GetChromInfos(Results<TransitionGroupChromInfo> results, RowIdentifier rowIdentifier, bool allOptimizationSteps)
-// ReSharper restore SuggestBaseTypeForParameter
-        {
-            var chromInfoList = results[rowIdentifier.ReplicateIndex];
-            if (chromInfoList == null)
-                yield break;
-
-            foreach (var chromInfo in chromInfoList)
-            {
-                if (chromInfo.FileIndex == rowIdentifier.FileIndex 
-                    && (allOptimizationSteps || chromInfo.OptimizationStep == rowIdentifier.OptimizationStep))
-                {
-                    yield return chromInfo;
-                }
-            }
-        }
-
         private static IEnumerable<ChromInfo> GetChromInfos(DocNode nodeDoc, AnnotationDef.AnnotationTarget annotationTarget, RowIdentifier rowIdentifier, bool allOptimizationSteps)
         {
             var transitionDocNode = nodeDoc as TransitionDocNode;
@@ -495,6 +477,24 @@ namespace pwiz.Skyline.Controls
         }
         
 // ReSharper disable SuggestBaseTypeForParameter
+        private static IEnumerable<ChromInfo> GetChromInfos(Results<TransitionGroupChromInfo> results, RowIdentifier rowIdentifier, bool allOptimizationSteps)
+// ReSharper restore SuggestBaseTypeForParameter
+        {
+            var chromInfoList = results[rowIdentifier.ReplicateIndex];
+            if (chromInfoList == null)
+                yield break;
+
+            foreach (var chromInfo in chromInfoList)
+            {
+                if (chromInfo != null && chromInfo.FileIndex == rowIdentifier.FileIndex 
+                    && (allOptimizationSteps || chromInfo.OptimizationStep == rowIdentifier.OptimizationStep))
+                {
+                    yield return chromInfo;
+                }
+            }
+        }
+
+// ReSharper disable SuggestBaseTypeForParameter
         private static IEnumerable<ChromInfo> GetChromInfos(Results<TransitionChromInfo> results, RowIdentifier rowIdentifier, bool allOptimizationSteps)
 // ReSharper restore SuggestBaseTypeForParameter
         {
@@ -504,7 +504,7 @@ namespace pwiz.Skyline.Controls
 
             foreach (var chromInfo in chromInfoList)
             {
-                if (chromInfo.FileIndex == rowIdentifier.FileIndex 
+                if (chromInfo != null && chromInfo.FileIndex == rowIdentifier.FileIndex 
                     && (allOptimizationSteps || chromInfo.OptimizationStep == rowIdentifier.OptimizationStep))
                 {
                     yield return chromInfo;

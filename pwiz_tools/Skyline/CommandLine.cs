@@ -649,38 +649,46 @@ namespace pwiz.Skyline
 
             _out.WriteLine("Exporting report {0}...", reportName);
 
-            using (var saver = new FileSaver(reportFile))
+            try
             {
-                if (!saver.CanSave(false))
+                using (var saver = new FileSaver(reportFile))
                 {
-                    _out.WriteLine("Error: The file {0} could not be saved.", reportFile);
-                    _out.WriteLine("Check to make sure it is not read-only.");
-                }
-
-                using (var writer = new StreamWriter(saver.SafeName))
-                {
-                    Report report = Report.Load(reportSpec);
-
-                    Database database = new Database(_doc.Settings)
+                    if (!saver.CanSave(false))
                     {
-                        LongWaitBroker = new CommandWaitBroker(_out),
-                        PercentOfWait = 100
-                    };
+                        _out.WriteLine("Error: The report {0} could not be saved to {1}.", reportName, reportFile);
+                        _out.WriteLine("Check to make sure it is not read-only.");
+                    }
 
-                    database.AddSrmDocument(_doc);
+                    using (var writer = new StreamWriter(saver.SafeName))
+                    {
+                        Report report = Report.Load(reportSpec);
 
-                    ResultSet resultSet = report.Execute(database);
-                    
-                    ResultSet.WriteReportHelper(resultSet, reportColSeparator, writer,
-                                                      CultureInfo.CurrentCulture);
+                        Database database = new Database(_doc.Settings)
+                        {
+                            LongWaitBroker = new CommandWaitBroker(_out),
+                            PercentOfWait = 100
+                        };
 
-                    writer.Flush();
+                        database.AddSrmDocument(_doc);
 
-                    writer.Close();
+                        ResultSet resultSet = report.Execute(database);
+
+                        ResultSet.WriteReportHelper(resultSet, reportColSeparator, writer,
+                                                          CultureInfo.CurrentCulture);
+
+                        writer.Flush();
+
+                        writer.Close();
+                    }
+
+                    saver.Commit();
+                    _out.WriteLine("Report {0} exported successfully.", reportName);
                 }
-
-                saver.Commit();
-                _out.WriteLine("Report {0} exported successfully.", reportName);
+            }
+            catch (Exception x)
+            {
+                _out.WriteLine("Error: Failure attempting to save {0} report to {1}.", reportName, reportFile);
+                _out.WriteLine(x.Message);
             }
         }
 

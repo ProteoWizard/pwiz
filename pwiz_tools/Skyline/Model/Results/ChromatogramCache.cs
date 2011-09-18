@@ -334,15 +334,29 @@ namespace pwiz.Skyline.Model.Results
             IList<string> listCachePaths, ProgressStatus status, ILoadMonitor loader,
             Action<ChromatogramCache, Exception> complete)
         {
-            var joiner = new ChromCacheJoiner(cachePath, streamDest, listCachePaths, loader, status, complete);
-            joiner.JoinParts();
+            try
+            {
+                var joiner = new ChromCacheJoiner(cachePath, streamDest, listCachePaths, loader, status, complete);
+                joiner.JoinParts();
+            }
+            catch (Exception x)
+            {
+                complete(null, x);
+            }
         }
 
         public static void Build(SrmDocument document, string cachePath, IList<string> listResultPaths,
             ProgressStatus status, ILoadMonitor loader, Action<ChromatogramCache, Exception> complete)
         {
-            var builder = new ChromCacheBuilder(document, cachePath, listResultPaths, loader, status, complete);
-            builder.BuildCache();
+            try
+            {
+                var builder = new ChromCacheBuilder(document, cachePath, listResultPaths, loader, status, complete);
+                builder.BuildCache();
+            }
+            catch (Exception x)
+            {
+                complete(null, x);
+            }
         }
 
         public static long LoadStructs(Stream stream,

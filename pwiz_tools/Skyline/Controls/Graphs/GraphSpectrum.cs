@@ -242,10 +242,17 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
-                if (toolBar.Visible)
-                    return _spectra[comboSpectrum.SelectedIndex];
+                if (_spectra == null)
+                    return null;
 
-                return _spectra != null ? _spectra[0] : null;
+                if (toolBar.Visible)
+                {
+                    return comboSpectrum.SelectedIndex != -1
+                               ? _spectra[comboSpectrum.SelectedIndex]
+                               : null;
+                }
+
+                return _spectra[0];
             }
         }
 

@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
 using System.Collections.Generic;
 using System.IO;
 using pwiz.Common.SystemUtil;
@@ -112,32 +113,39 @@ namespace pwiz.Skyline.Model.Proteome
                     return true;
                 }
 
-                using (FileSaver fs = new FileSaver(originalBackgroundProteome.DatabasePath, StreamManager))
+                string name = originalBackgroundProteome.Name;
+                ProgressStatus progressStatus = new ProgressStatus(string.Format("Digesting {0} proteome", name));
+                try
                 {
-                    string name = originalBackgroundProteome.Name;
-                    ProgressStatus progressStatus = new ProgressStatus(string.Format("Digesting {0} proteome", name));
-                    File.Copy(originalBackgroundProteome.DatabasePath, fs.SafeName, true);
-                    var digestHelper = new DigestHelper(this, container, docCurrent, name, fs.SafeName);
-                    var digestion = digestHelper.Digest(ref progressStatus);
-
-                    if (digestion == null)
+                    using (FileSaver fs = new FileSaver(originalBackgroundProteome.DatabasePath, StreamManager))
                     {
-                        // Processing was canceled
-                        EndProcessing(docCurrent);
-                        UpdateProgress(progressStatus.Cancel());
-                        return false;
-                    }
-                    if (!fs.Commit())
-                    {
-                        EndProcessing(docCurrent);
-                        string message = string.Format("Failed updating background proteome file {0}.", fs.RealName);
-                        UpdateProgress(progressStatus.ChangeErrorException(new IOException(message)));
-                        return false;
-                    }
+                        File.Copy(originalBackgroundProteome.DatabasePath, fs.SafeName, true);
+                        var digestHelper = new DigestHelper(this, container, docCurrent, name, fs.SafeName);
+                        var digestion = digestHelper.Digest(ref progressStatus);
 
-                    CompleteProcessing(container, new BackgroundProteome(originalBackgroundProteome, true));
-                    UpdateProgress(progressStatus.Complete());
-                    return true;
+                        if (digestion == null)
+                        {
+                            // Processing was canceled
+                            EndProcessing(docCurrent);
+                            UpdateProgress(progressStatus.Cancel());
+                            return false;
+                        }
+                        if (!fs.Commit())
+                        {
+                            EndProcessing(docCurrent);
+                            throw new IOException(string.Format("Unable to rename temporary file to {0}.", fs.RealName));
+                        }
+
+                        CompleteProcessing(container, new BackgroundProteome(originalBackgroundProteome, true));
+                        UpdateProgress(progressStatus.Complete());
+                        return true;
+                    }
+                }
+                catch (Exception x)
+                {
+                    string message = string.Format(string.Format("Failed updating background proteome {0}.\n{1}", name, x.Message));
+                    UpdateProgress(progressStatus.ChangeErrorException(new IOException(message, x)));
+                    return false;
                 }
             }
         }

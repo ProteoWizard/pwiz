@@ -637,6 +637,9 @@ namespace pwiz.Skyline.FileUI
 
         private void listView_ItemActivate( object sender, EventArgs e )
         {
+            if (listView.SelectedItems.Count == 0)
+                return;
+
             ListViewItem item = listView.SelectedItems[0];
             if( item.SubItems[1].Text == "File Folder" )
             {

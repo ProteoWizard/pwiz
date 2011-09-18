@@ -198,8 +198,11 @@ namespace pwiz.Skyline.EditUI
                 }
             }
             dataGridView1.EndEdit();
-            // Select the first peptide to populate the other controls in the dialog.
-            dataGridView1.CurrentCell = dataGridView1.Rows[0].Cells[1];
+            if (dataGridView1.RowCount > 0)
+            {
+                // Select the first peptide to populate the other controls in the dialog.
+                dataGridView1.CurrentCell = dataGridView1.Rows[0].Cells[1];
+            }
         }
 
         private void QueryPeptideProteins(ILongWaitBroker longWaitBroker)

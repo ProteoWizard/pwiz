@@ -627,11 +627,24 @@ namespace pwiz.Skyline.Util
 
         private readonly IStreamManager _streamManager;
 
+        /// <summary>
+        /// Construct an instance of <see cref="FileSaver"/> to manage saving to a temporary
+        /// file, and then renaming to the final destination.
+        /// </summary>
+        /// <param name="fileName">File path to the final destination</param>
+        /// <throws>IOException</throws>
 		public FileSaver(string fileName)
             : this(fileName, FileStreamManager.Default)
 		{
 		}
 
+        /// <summary>
+        /// Construct an instance of <see cref="FileSaver"/> to manage saving to a temporary
+        /// file, and then renaming to the final destination.
+        /// </summary>
+        /// <param name="fileName">File path to the final destination</param>
+        /// <param name="streamManager">A stream manager for either disk or memory access</param>
+        /// <throws>IOException</throws>
         public FileSaver(string fileName, IStreamManager streamManager)
         {
             _streamManager = streamManager;

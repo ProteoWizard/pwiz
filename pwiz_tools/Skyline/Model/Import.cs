@@ -183,11 +183,12 @@ namespace pwiz.Skyline.Model
             // Make sure all existing group names in the document are represented, and
             // existing FASTA sequences are used.
             var dictNameSeqAll = new Dictionary<string, FastaSequence>();
-            foreach (PeptideGroupDocNode nodePepGroup in Document.Children)
-            {
-                if (!dictNameSeqAll.ContainsKey(nodePepGroup.Name))
-                    dictNameSeqAll.Add(nodePepGroup.Name, nodePepGroup.PeptideGroup as FastaSequence);
-            }
+            // This caused problems
+//            foreach (PeptideGroupDocNode nodePepGroup in Document.Children)
+//            {
+//                if (!dictNameSeqAll.ContainsKey(nodePepGroup.Name))
+//                    dictNameSeqAll.Add(nodePepGroup.Name, nodePepGroup.PeptideGroup as FastaSequence);
+//            }
 
             try
             {

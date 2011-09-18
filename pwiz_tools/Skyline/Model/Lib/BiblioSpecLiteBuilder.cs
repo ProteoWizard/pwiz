@@ -97,10 +97,10 @@ namespace pwiz.Skyline.Model.Lib
             var blibFilter = new BlibFilter();
             status = status.ChangeMessage(message).ChangePercentComplete(0);
             progress.UpdateProgress(status);
-            // Write the non-redundant library to a temporary file first);)
-            using (var saver = new FileSaver(OutputPath))
+            // Write the non-redundant library to a temporary file first
+            try
             {
-                try
+                using (var saver = new FileSaver(OutputPath))
                 {
                     if (!blibFilter.Filter(redundantLibrary, saver.SafeName, progress, ref status))
                     {
@@ -108,21 +108,21 @@ namespace pwiz.Skyline.Model.Lib
                     }
                     saver.Commit();
                 }
-                catch (IOException x)
-                {
-                    progress.UpdateProgress(status.ChangeErrorException(x));
-                    return false;
-                }
-                catch
-                {
-                    progress.UpdateProgress(status.ChangeErrorException(new Exception(string.Format("Failed trying to build the library {0}.", OutputPath))));
-                    return false;
-                }
-                finally
-                {
-                    if (!KeepRedundant)
-                        File.Delete(redundantLibrary);
-                }
+            }
+            catch (IOException x)
+            {
+                progress.UpdateProgress(status.ChangeErrorException(x));
+                return false;
+            }
+            catch
+            {
+                progress.UpdateProgress(status.ChangeErrorException(new Exception(string.Format("Failed trying to build the library {0}.", OutputPath))));
+                return false;
+            }
+            finally
+            {
+                if (!KeepRedundant)
+                    File.Delete(redundantLibrary);
             }
 
             return true;

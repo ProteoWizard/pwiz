@@ -18,11 +18,8 @@
  */
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Linq;
-using System.Text;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.Skyline.Model;
@@ -180,10 +177,12 @@ namespace pwiz.Skyline.Controls
             }
         }
 
+// ReSharper disable MemberCanBeMadeStatic.Local
         private void listView_DrawColumnHeader(object sender, DrawListViewColumnHeaderEventArgs e)
         {
             e.DrawDefault = true;
         }
+// ReSharper restore MemberCanBeMadeStatic.Local
 
         private void FindResultsForm_KeyDown(object sender, KeyEventArgs e)
         {
@@ -204,7 +203,7 @@ namespace pwiz.Skyline.Controls
         /// </summary>
         private void listView_Resize(object sender, EventArgs e)
         {
-            if (listView.Items.Count == 0)
+            if (listView.Items.Count == 0 || !listView.IsHandleCreated)
             {
                 return;
             }
