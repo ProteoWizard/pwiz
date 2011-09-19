@@ -184,11 +184,6 @@ namespace Crawdad {
         return gcnew CrawdadPeak(peak);
     }
 
-    List<CrawdadPeak^>^ CrawdadPeakFinder::CalcPeaks()
-    {
-        return CalcPeaks(-1, gcnew array<int>(0));
-    }
-
     List<CrawdadPeak^>^ CrawdadPeakFinder::CalcPeaks(int max, array<int>^ idIndices)
     {
         // Find peaks

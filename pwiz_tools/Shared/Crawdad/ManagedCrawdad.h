@@ -137,8 +137,8 @@ namespace Crawdad {
         property List<float>^ Intensities2d { List<float>^ get(); }
         property List<float>^ Intensities1d { List<float>^ get(); }
 
-        List<CrawdadPeak^>^ CalcPeaks();
-
+        List<CrawdadPeak^>^ CalcPeaks() { return CalcPeaks(-1, gcnew array<int>(0)); }
+        List<CrawdadPeak^>^ CalcPeaks(int max) { return CalcPeaks(max, gcnew array<int>(0)); }
         List<CrawdadPeak^>^ CalcPeaks(int max, array<int>^ idIndices);
 
         CrawdadPeak^ GetPeak(int startIndex, int endIndex);
