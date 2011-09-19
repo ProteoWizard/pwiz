@@ -171,8 +171,8 @@ namespace pwiz.Skyline.Model
         public const double FORMAT_VERSION_0_2 = 0.2;
         public const double FORMAT_VERSION = 0.8;
 
-        public const int MAX_PEPTIDE_COUNT = 50000;
-        public const int MAX_TRANSITION_COUNT = 100000;
+        public const int MAX_PEPTIDE_COUNT = 100*1000;
+        public const int MAX_TRANSITION_COUNT = 2*MAX_PEPTIDE_COUNT;
 
         // Version of this document in deserialized XML
         private double _formatVersion;

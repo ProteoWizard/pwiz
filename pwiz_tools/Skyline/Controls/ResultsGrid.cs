@@ -1689,7 +1689,7 @@ namespace pwiz.Skyline.Controls
             return chromInfo.FileId;
         }
 
-        int FindReplicateIndex(DocNode docNode, ChromInfo chromInfo)
+        private static int FindReplicateIndex(DocNode docNode, ChromInfo chromInfo)
         {
             var peptideDocNode = docNode as PeptideDocNode;
             if (peptideDocNode != null)
@@ -1747,7 +1747,7 @@ namespace pwiz.Skyline.Controls
             return -1;
         }
 
-        int? GetOptStep(ChromInfo chromInfo)
+        private static int? GetOptStep(ChromInfo chromInfo)
         {
             var transitionGroupChromInfo = chromInfo as TransitionGroupChromInfo;
             if (transitionGroupChromInfo != null)

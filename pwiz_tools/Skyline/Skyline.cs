@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Deployment.Application;
@@ -431,6 +430,10 @@ namespace pwiz.Skyline
                 MessageBox.Show(this, "Failure attempting to modify the document.", Program.Name);
             }
             catch (InvalidDataException x)
+            {
+                MessageDlg.Show(this, string.Format("Failure attempting to modify the document.\n{0}", x.Message));
+            }
+            catch (IOException x)
             {
                 MessageDlg.Show(this, string.Format("Failure attempting to modify the document.\n{0}", x.Message));
             }
@@ -1441,6 +1444,7 @@ namespace pwiz.Skyline
         /// If owner is null, then the SequenceTree will set the focus to itself if a tooltip needs to 
         /// be displayed.
         /// </param>
+        /// <param name="findResult">The find result to display</param>
         public void DisplayFindResult(Control owner, FindResult findResult)
         {
             var bookmarkEnumerator = BookmarkEnumerator.TryGet(DocumentUI, findResult.Bookmark);
