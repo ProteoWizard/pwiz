@@ -51,24 +51,9 @@ class RAMPAdapter::Impl
         if (!msd_.run.spectrumListPtr.get())
             throw runtime_error("[RAMPAdapter] Null spectrumListPtr.");
 
-        // flag spectra not from the default source file
         size_ = msd_.run.spectrumListPtr->size();
-        nonDefaultSpectra_.resize(size_, false);
-        for (size_t i=0, end=size_; i < end; ++i)
-        {
-            SpectrumPtr s = msd_.run.spectrumListPtr->spectrum(i, false);
-            if (s->sourceFilePtr.get() && s->sourceFilePtr != msd_.run.defaultSourceFilePtr)
-            {
-                nonDefaultSpectra_[i] = true;
-                --size_;
-            }
-            else
-            {
-                if (firstIndex_ > lastIndex_)
-                    firstIndex_ = i;
-                lastIndex_ = i;
-            }
-        }
+        firstIndex_ = 0;
+        lastIndex_ = size_-1;
     }
 
     size_t scanCount() const
@@ -176,8 +161,8 @@ void RAMPAdapter::Impl::getScanHeader(size_t index, ScanHeaderStruct& result, bo
       filterLine = filterLine.substr(found+3);
       found = filterLine.find_first_of(" ");
       if (found!=string::npos) {
-	filterLine = filterLine.substr(0, found);
-	result.compensationVoltage = atof(filterLine.c_str());
+          filterLine = filterLine.substr(0, found);
+          result.compensationVoltage = atof(filterLine.c_str());
       }
     }
 
