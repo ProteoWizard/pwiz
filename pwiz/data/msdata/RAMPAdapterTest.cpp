@@ -252,30 +252,33 @@ static void test_mzML_1_0(const char *test_app_name) {
 	buildparent.resize(pos);
 	std::string example_data_dir = buildparent + "example_data/";
 	RAMPAdapter adapter_1_0(example_data_dir + "tiny.pwiz.1.0.mzML");
-	RAMPAdapter adapter_1_1(example_data_dir + "tiny.pwiz.1.1.mzML");
+    const char *testfiles[2] = {"tiny.pwiz.1.1.mzML","tiny.pwiz.mzXML"};
+    for (int tf=2;tf--;) { // test mzML 1.0 vs mzML 1.1 and mzXML
+	    RAMPAdapter adapter_1_1(example_data_dir + testfiles[tf]);
 
-    // tiny example has 4 spectra, the last of which is non-default source -- test scans 1,2,3 only
-	unit_assert(adapter_1_0.scanCount() == adapter_1_1.scanCount()); 
-	for (int scan=4;scan--;) {
-		ScanHeaderStruct header1_0, header1_1;
-		adapter_1_0.getScanHeader(scan, header1_0);
-		adapter_1_1.getScanHeader(scan, header1_1);
-		unit_assert(header1_0.seqNum == header1_1.seqNum );
-        if (scan < 3) {
-		    unit_assert(header1_0.acquisitionNum == header1_1.acquisitionNum );
-        }
-		unit_assert(header1_0.msLevel == header1_1.msLevel );
-		unit_assert(header1_0.peaksCount == header1_1.peaksCount );
-		const double epsilon = 1e-6;
-		unit_assert_equal(header1_0.totIonCurrent, header1_1.totIonCurrent, epsilon);
-		unit_assert_equal(header1_0.retentionTime, header1_1.retentionTime, epsilon);
-		unit_assert_equal(header1_0.basePeakMZ, header1_1.basePeakMZ, epsilon);
-		unit_assert_equal(header1_0.basePeakIntensity, header1_1.basePeakIntensity, epsilon);
-		unit_assert_equal(header1_0.collisionEnergy, header1_1.collisionEnergy, epsilon);
-		unit_assert_equal(header1_0.lowMZ, header1_1.lowMZ, epsilon);
-		unit_assert_equal(header1_0.highMZ, header1_1.highMZ, epsilon);
-		unit_assert(header1_0.precursorScanNum == header1_1.precursorScanNum );
-	}
+        // tiny example has 4 spectra, the last of which is non-default source -- test scans 1,2,3 only
+	    unit_assert(adapter_1_0.scanCount() == adapter_1_1.scanCount()); 
+	    for (int scan=4;scan--;) {
+		    ScanHeaderStruct header1_0, header1_1;
+		    adapter_1_0.getScanHeader(scan, header1_0);
+		    adapter_1_1.getScanHeader(scan, header1_1);
+		    unit_assert(header1_0.seqNum == header1_1.seqNum );
+            if (scan < 3) {
+		        unit_assert(header1_0.acquisitionNum == header1_1.acquisitionNum );
+            }
+		    unit_assert(header1_0.msLevel == header1_1.msLevel );
+		    unit_assert(header1_0.peaksCount == header1_1.peaksCount );
+		    const double epsilon = 1e-6;
+		    unit_assert_equal(header1_0.totIonCurrent, header1_1.totIonCurrent, epsilon);
+		    unit_assert_equal(header1_0.retentionTime, header1_1.retentionTime, epsilon);
+		    unit_assert_equal(header1_0.basePeakMZ, header1_1.basePeakMZ, epsilon);
+		    unit_assert_equal(header1_0.basePeakIntensity, header1_1.basePeakIntensity, epsilon);
+		    unit_assert_equal(header1_0.collisionEnergy, header1_1.collisionEnergy, epsilon);
+		    unit_assert_equal(header1_0.lowMZ, header1_1.lowMZ, epsilon);
+		    unit_assert_equal(header1_0.highMZ, header1_1.highMZ, epsilon);
+		    unit_assert(header1_0.precursorScanNum == header1_1.precursorScanNum );
+	    }
+    }
 }
 
 int main(int argc, char* argv[])
