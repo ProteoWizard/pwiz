@@ -45,6 +45,9 @@ ECHO
 #                                     support for reading vendor binary 
 #                                     files.
 #
+#   --incremental           Skip the checks for extracting external library
+#                           tarballs - useful after your initial build
+#
 #   --without-mz5           Build without mz5 support
 #
 #   --without-binary-msdata Build with support for mass spec text formats only
