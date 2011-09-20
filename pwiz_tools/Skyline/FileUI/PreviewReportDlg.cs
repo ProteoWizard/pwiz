@@ -60,6 +60,10 @@ namespace pwiz.Skyline.FileUI
                                                            HeaderText = columnInfo.Caption,
                                                            DefaultCellStyle = {Format = columnInfo.Format}
                                                        };
+                if (columnInfo.IsNumeric)
+                {
+                    column.DefaultCellStyle.NullValue = "#N/A";
+                }
                 dataGridView.Columns.Add(column);
             }
             for (int iRow = 0; iRow < resultSet.RowCount; iRow++ )
@@ -70,10 +74,7 @@ namespace pwiz.Skyline.FileUI
                     if (resultSet.ColumnInfos[iColumn].IsHidden)
                         continue;
 
-                    var value = resultSet.GetValue(iRow, iColumn);
-                    if (value == null)
-                        value = resultSet.GetNullValueString(iColumn, null);
-                    gridRow.Cells[iColumnGrid++].Value = value;
+                    gridRow.Cells[iColumnGrid++].Value = resultSet.GetValue(iRow, iColumn);
                 }
             }
         }
