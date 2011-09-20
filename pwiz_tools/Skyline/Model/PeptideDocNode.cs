@@ -561,6 +561,11 @@ namespace pwiz.Skyline.Model
 
         public TransitionDocNode[] GetMatchingTransitions(TransitionGroup tranGroup, SrmSettings settings, ExplicitMods explicitMods)
         {
+            // If no calculator for this type, then not possible to calculate transtions
+            var calc = settings.GetFragmentCalc(tranGroup.LabelType, explicitMods);
+            if (calc == null)
+                return null;
+
             int iMatch = Children.IndexOf(nodeGroup =>
                                           ((TransitionGroupDocNode)nodeGroup).TransitionGroup.PrecursorCharge == tranGroup.PrecursorCharge);
             if (iMatch == -1)
@@ -582,8 +587,7 @@ namespace pwiz.Skyline.Model
                                              transition.MassIndex,
                                              transition.Charge);
                 var isotopeDist = nodeGroupMatching.IsotopeDist;
-                double massH = settings.GetFragmentMass(tranGroup.LabelType, explicitMods,
-                    tranNew, isotopeDist);
+                double massH = calc.GetFragmentMass(tranNew, isotopeDist);
                 var isotopeDistInfo = TransitionDocNode.GetIsotopeDistInfo(tranNew, isotopeDist);
                 listTrans.Add(new TransitionDocNode(tranNew, losses, massH, isotopeDistInfo, null));
             }

@@ -362,6 +362,11 @@ namespace pwiz.Skyline.Model
                 get { return Settings.PeptideSettings.Modifications.HasHeavyImplicitModifications; }
             }
 
+            private bool IsHeavyTypeAllowed(IsotopeLabelType labelType)
+            {
+                return Settings.GetPrecursorCalc(labelType, null) != null;
+            }
+
             public void NextRow(string line, long lineNum)
             {
                 Fields = line.ParseDsvFields(Separator);
@@ -370,7 +375,7 @@ namespace pwiz.Skyline.Model
 
                 if (!FastaSequence.IsExSequence(info.PeptideSequence))
                     throw new LineColNumberedIoException(string.Format("Invalid peptide sequence {0} found", info.PeptideSequence), lineNum, PeptideColumn);
-                if (!info.DefaultLabelType.IsLight && !IsHeavyAllowed)
+                if (!info.DefaultLabelType.IsLight && !IsHeavyTypeAllowed(info.DefaultLabelType))
                     throw new LineColNumberedIoException("Isotope labeled entry found without matching settings", "Check the Modifications tab in Transition Settings.", lineNum, LabelTypeColumn);
 
                 info = CalcPrecursorExplanations(info, lineNum);
@@ -522,11 +527,14 @@ namespace pwiz.Skyline.Model
             {
                 transitionExps = new List<TransitionExp>();
                 int indexPrec = -1;
-
                 foreach (PeptideDocNode nodePep in Peptide.CreateAllDocNodes(settings, sequence))
                 {
                     var mods = nodePep.ExplicitMods;
-                    double precursorMassH = settings.GetPrecursorMass(labelType, sequence, nodePep.ExplicitMods);
+                    var calc = settings.GetPrecursorCalc(labelType, mods);
+                    if (calc == null)
+                        continue;
+
+                    double precursorMassH = calc.GetPrecursorMass(sequence);
 
                     for (int i = 0; i < fields.Length; i++)
                     {

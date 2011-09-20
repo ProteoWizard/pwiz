@@ -287,7 +287,9 @@ namespace pwiz.Skyline.Model
 
                 // If this precursor node is going to be added, check to see if it
                 // should be added with another matching isotope label type.
-                if (IsLabelTypeRequired(nodePep, nodeGroup, listGroups))
+                var explicitMods = nodePep.ExplicitMods;
+                if (IsLabelTypeRequired(nodePep, nodeGroup, listGroups) &&
+                        document.Settings.GetPrecursorCalc(RefineLabelType, explicitMods) != null)
                 {
                     // CONSIDER: This is a lot like some code in PeptideDocNode.ChangeSettings
                     Debug.Assert(RefineLabelType != null);  // Keep ReSharper from warning
@@ -295,7 +297,6 @@ namespace pwiz.Skyline.Model
                                                         RefineLabelType);
                     var settings = document.Settings;
 //                    string sequence = nodePep.Peptide.Sequence;
-                    var explicitMods = nodePep.ExplicitMods;
                     TransitionDocNode[] transitions = nodePep.GetMatchingTransitions(
                         tranGroup, settings, explicitMods);
 

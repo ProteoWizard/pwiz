@@ -18,7 +18,9 @@
  */
 using System;
 using System.ComponentModel;
+using System.Linq;
 using System.Windows.Forms;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
@@ -28,10 +30,12 @@ namespace pwiz.Skyline.EditUI
 {
     public partial class RefineDlg : Form
     {
+        private readonly SrmDocument _document;
         private readonly SrmSettings _settings;
 
         public RefineDlg(SrmDocument document)
         {
+            _document = document;
             _settings = document.Settings;
 
             InitializeComponent();
@@ -126,6 +130,14 @@ namespace pwiz.Skyline.EditUI
             }
 
             bool addLabelType = cbAdd.Checked;
+            // If adding, make sure there is something to add
+            if (addLabelType && refineLabelType != null && !CanAddLabelType(refineLabelType))
+            {
+                MessageDlg.Show(this, string.Format("The label type '{0}' cannot be added. There are no modifications for this type.", refineTypeName));
+                tabControl1.SelectedIndex = 0;
+                comboRefineLabelType.Focus();
+                return;
+            }
 
             double? minPeakFoundRatio = null, maxPeakFoundRatio = null;
             if (!string.IsNullOrEmpty(textMinPeakFoundRatio.Text))
@@ -203,6 +215,15 @@ namespace pwiz.Skyline.EditUI
 
             DialogResult = DialogResult.OK;
             Close();
+        }
+
+        private bool CanAddLabelType(IsotopeLabelType labelType)
+        {
+            if (_settings.GetPrecursorCalc(labelType, null) != null)
+                return true;
+
+            return _document.Peptides.Any(nodePep =>
+                _settings.GetPrecursorCalc(labelType, nodePep.ExplicitMods) != null);
         }
 
         private void btnOK_Click(object sender, EventArgs e)
