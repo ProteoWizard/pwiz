@@ -115,7 +115,7 @@ SpectrumPtr SpectrumList_mzMLImpl::spectrum(size_t index, bool getBinaryData) co
 /// - client may assume the underlying Spectrum* is valid 
 SpectrumPtr SpectrumList_mzMLImpl::spectrum(const SpectrumPtr &seed, bool getBinaryData) const {
     return spectrum(seed->index, getBinaryData ? IO::ReadBinaryDataOnly: IO::IgnoreBinaryData, &seed);
-};
+}
 
 SpectrumPtr SpectrumList_mzMLImpl::spectrum(size_t index, IO::BinaryDataFlag binaryDataFlag, const SpectrumPtr *defaults) const
 {
