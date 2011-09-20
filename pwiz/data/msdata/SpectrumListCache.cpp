@@ -104,14 +104,19 @@ PWIZ_API_DECL SpectrumPtr SpectrumListCache::spectrum(size_t index, bool getBina
                 return spectrumCache_.mru().second;
 
             case MemoryMRUCacheMode_MetaDataOnly:
-                original = inner_->spectrum(index, true);
 
                 // if insert returns true, spectrum was not in cache
                 if (spectrumCache_.insert(make_pair(index, SpectrumPtr())))
                 {
+                    original = inner_->spectrum(index, true);
                     copy.reset(new Spectrum(*original));
                     copy->binaryDataArrayPtrs.clear();
                     spectrumCache_.modify(spectrumCache_.begin(), modifyCachedSpectrumPtr(copy));
+                }
+                else {
+                    // we have cached metadata, hopefully this format knows how 
+                    // to jump to binary data without rescanning metadata
+                    original = inner_->spectrum(spectrumCache_.mru().second,true); // copy and add binary data
                 }
                 return original;
 

@@ -21,6 +21,7 @@
 
 
 #include "pwiz/utility/misc/unit.hpp"
+#include "MSDataFile.hpp"
 #include "MemoryMRUCache.hpp"
 #include "SpectrumListCache.hpp"
 #include "pwiz/utility/misc/Std.hpp"
@@ -115,7 +116,7 @@ bool spectrumHasMetadata(const Spectrum& s)
 
 bool spectrumHasBinaryData(const Spectrum& s)
 {
-    return !s.binaryDataArrayPtrs.empty();
+    return s.hasBinaryData();
 }
 
 void testModeOff()
@@ -395,6 +396,37 @@ void testModeMetaDataAndBinaryData()
     unit_assert(spectrumHasBinaryData(*cache.lru().second));
 }
 
+void testFileReads(const char *filename) {
+    std::string srcparent(__FILE__); // locate test data relative to this source file
+    // something like \ProteoWizard\pwiz\pwiz\data\msdata\SpectrumListCacheTest.cpp
+    size_t pos = srcparent.rfind("pwiz");
+    srcparent.resize(pos);
+    std::string example_data_dir = srcparent + "example_data/";
+    pwiz::msdata::MSDataFile msd1(example_data_dir + filename);
+    SpectrumListCache cache(msd1.run.spectrumListPtr, MemoryMRUCacheMode_MetaDataOnly, 2);
+    pwiz::msdata::MSDataFile msd2(example_data_dir + filename);
+    // test logic for efficient delayed read of binary data - 
+    // we try to avoid reparsing the header since we have that cached
+    // mzML and mzXML readers can do this, others could probably be made to
+    int index = 3;
+    SpectrumPtr s=msd2.run.spectrumListPtr->spectrum(index, false);
+    SpectrumPtr c=cache.spectrum(index, false);
+    unit_assert(*s==*c);
+    unit_assert(!s->hasBinaryData());
+    unit_assert(!c->hasBinaryData());
+    s=msd2.run.spectrumListPtr->spectrum(index, true);
+    c=cache.spectrum(index, true);
+    unit_assert(*s==*c);
+    unit_assert(s->hasBinaryData());
+    unit_assert(c->hasBinaryData());
+    unit_assert(s->binaryDataArrayPtrs[0]->data[0]==
+                c->binaryDataArrayPtrs[0]->data[0]);
+    unit_assert(!s->binaryDataArrayPtrs[1]->data.empty());
+    unit_assert(!c->binaryDataArrayPtrs[1]->data.empty());
+    unit_assert(s->binaryDataArrayPtrs[1]->data[0]==
+                c->binaryDataArrayPtrs[1]->data[0]);
+}
+
 
 void test()
 {
@@ -403,6 +435,11 @@ void test()
     testModeMetaDataOnly();
     testModeBinaryDataOnly();
     testModeMetaDataAndBinaryData();
+    // check the delayed-binary-read
+    // logic for mzML and mzXML readers
+    testFileReads("tiny.pwiz.mzXML");
+    testFileReads("tiny.pwiz.1.0.mzML");
+    testFileReads("tiny.pwiz.1.1.mzML");
 }
 
 

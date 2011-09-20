@@ -51,6 +51,8 @@ class SpectrumList_mzXMLImpl : public SpectrumList_mzXML
     virtual const SpectrumIdentity& spectrumIdentity(size_t index) const;
     virtual size_t find(const string& id) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
+    virtual SpectrumPtr spectrum(const SpectrumPtr &seed, bool getBinaryData) const;
+    virtual SpectrumPtr spectrum(size_t index, IO::BinaryDataFlag binaryDataFlag, const SpectrumPtr *defaults) const;
 
     private:
     shared_ptr<istream> is_;
@@ -141,16 +143,16 @@ struct HandlerPrecursor : public SAXParser::Handler
             if (!precursorCharge.empty())
                 precursor->selectedIons.back().set(MS_charge_state, precursorCharge);
 
-			if (!possibleCharges.empty())
-			{
-				vector<string> strCharges;
-				boost::algorithm::split(strCharges, possibleCharges, boost::is_any_of(","));
+            if (!possibleCharges.empty())
+            {
+                vector<string> strCharges;
+                boost::algorithm::split(strCharges, possibleCharges, boost::is_any_of(","));
 
-				BOOST_FOREACH(string& charge, strCharges)
-				{
-					precursor->selectedIons.back().set(MS_possible_charge_state, lexical_cast<int>(charge));
-				}
-			}
+                BOOST_FOREACH(string& charge, strCharges)
+                {
+                    precursor->selectedIons.back().set(MS_possible_charge_state, lexical_cast<int>(charge));
+                }
+            }
 
             return Status::Ok;
         }
@@ -177,8 +179,8 @@ class HandlerPeaks : public SAXParser::Handler
 
     unsigned int peaksCount;
 
-    HandlerPeaks(Spectrum& spectrum)
-    :   peaksCount(0), spectrum_(spectrum)
+    HandlerPeaks(Spectrum& spectrum,unsigned int peakscount)
+    :   peaksCount(peakscount), spectrum_(spectrum)
     {
         parseCharacters = true;
         autoUnescapeCharacters = false;
@@ -266,6 +268,10 @@ class HandlerPeaks : public SAXParser::Handler
         return Status::Ok;
     }
 
+    unsigned int getPeaksCount() const {
+        return peaksCount;
+    }
+
     private:
     Spectrum& spectrum_;
     BinaryDataEncoder::Config config_;
@@ -276,11 +282,11 @@ class HandlerScan : public SAXParser::Handler
 {
     public:
 
-    HandlerScan(const MSData& msd, Spectrum& spectrum, bool getBinaryData)
+    HandlerScan(const MSData& msd, Spectrum& spectrum, bool getBinaryData,size_t peakscount)
     :   msd_(msd),
         spectrum_(spectrum), 
         getBinaryData_(getBinaryData),
-        handlerPeaks_(spectrum),
+        handlerPeaks_(spectrum,peakscount),
         handlerPrecursor_(),
         nativeIdFormat_(id::getDefaultNativeIDFormat(msd))
     {
@@ -465,6 +471,11 @@ class HandlerScan : public SAXParser::Handler
         }
         else if (name == "peaks")
         {
+            // pretty likely to come right back here and read the
+            // binary data once the header info has been inspected, 
+            // so note position
+            spectrum_.sourceFilePositionForBinarySpectrumData = position; 
+
             if (!getBinaryData_ || handlerPeaks_.peaksCount == 0)
             {
                 spectrum_.setMZIntensityArrays(vector<double>(), vector<double>(), MS_number_of_counts);
@@ -502,6 +513,10 @@ class HandlerScan : public SAXParser::Handler
         throw runtime_error("[SpectrumList_mzXML::HandlerScan] Unexpected element name \"" + name + "\" in scan " + scanNumber_);
     }
 
+    unsigned int getPeaksCount() const {
+        return handlerPeaks_.getPeaksCount();
+    }
+
     private:
     const MSData& msd_;
     Spectrum& spectrum_;
@@ -517,6 +532,18 @@ class HandlerScan : public SAXParser::Handler
 
 SpectrumPtr SpectrumList_mzXMLImpl::spectrum(size_t index, bool getBinaryData) const
 {
+    return spectrum(index, getBinaryData ? IO::ReadBinaryData : IO::IgnoreBinaryData, NULL);
+}
+
+/// get a copy of the seed spectrum with its binary data populated
+/// this is useful for formats like mzXML that can delay loading of binary data
+/// - client may assume the underlying Spectrum* is valid 
+SpectrumPtr SpectrumList_mzXMLImpl::spectrum(const SpectrumPtr &seed, bool getBinaryData) const {
+    return spectrum(seed->index, getBinaryData ? IO::ReadBinaryDataOnly: IO::IgnoreBinaryData, &seed);
+};
+
+SpectrumPtr SpectrumList_mzXMLImpl::spectrum(size_t index, IO::BinaryDataFlag binaryDataFlag, const SpectrumPtr *defaults) const
+{
     if (index > index_.size())
         throw runtime_error("[SpectrumList_mzXML::spectrum()] Index out of bounds.");
 
@@ -525,15 +552,37 @@ SpectrumPtr SpectrumList_mzXMLImpl::spectrum(size_t index, bool getBinaryData) c
     SpectrumPtr result(new Spectrum);
     if (!result.get())
         throw runtime_error("[SpectrumList_mzXML::spectrum()] Out of memory.");
+    if (defaults) { // provide some context from previous parser runs
+        result = *defaults; // copy in anything we may have cached before
+    }
 
     result->index = index;
 
-    is_->seekg(offset_to_position(index_[index].sourceFilePosition));
+	// we may just be here to get binary data of otherwise previously read spectrum
+    const SpectrumIdentity &id = index_[index];
+	boost::iostreams::stream_offset seekto;
+    unsigned int peakscount;
+    if (binaryDataFlag==IO::ReadBinaryDataOnly &&
+        (id.sourceFilePositionForBinarySpectrumData != (boost::iostreams::stream_offset)-1)) {
+        // we're here to add binary data to an already parsed header
+        seekto = id.sourceFilePositionForBinarySpectrumData;
+        peakscount = id.peaksCount; // expecting this many peaks
+    } else {
+		seekto = id.sourceFilePosition; // read from start of scan
+        peakscount = 0; // don't know how many peaks to expect yet
+	}
+    is_->seekg(offset_to_position(seekto));
     if (!*is_)
         throw runtime_error("[SpectrumList_mzXML::spectrum()] Error seeking to <scan>.");
 
-    HandlerScan handler(msd_, *result, getBinaryData);
+    HandlerScan handler(msd_, *result, binaryDataFlag!=IO::IgnoreBinaryData, peakscount);
     SAXParser::parse(*is_, handler);
+
+    // note the binary data file position in case we come back around to read full data
+    if (result->sourceFilePositionForBinarySpectrumData != (boost::iostreams::stream_offset)-1) {
+        id.sourceFilePositionForBinarySpectrumData = result->sourceFilePositionForBinarySpectrumData;
+        id.peaksCount = handler.getPeaksCount();
+    }
 
     int msLevel = result->cvParam(MS_ms_level).valueAs<int>();
     scanMsLevelCache_[index] = msLevel;
@@ -793,13 +842,13 @@ string SpectrumList_mzXMLImpl::getPrecursorID(int precursorMsLevel, size_t index
 
     while (index > 0)
     {
-	    --index;
+        --index;
         int& cachedMsLevel = scanMsLevelCache_[index];
         if (cachedMsLevel == 0)
         {
             // populate the missing MS level
             SpectrumPtr s = spectrum(index-1, false);
-	        cachedMsLevel = s->cvParam(MS_ms_level).valueAs<int>();
+            cachedMsLevel = s->cvParam(MS_ms_level).valueAs<int>();
         }
         if (cachedMsLevel == precursorMsLevel)
             return lexical_cast<string>(index);

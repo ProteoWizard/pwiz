@@ -478,7 +478,12 @@ struct PWIZ_API_DECL SpectrumIdentity
     /// for file-based MSData implementations, this attribute may refer to the spectrum's position in the file
 	boost::iostreams::stream_offset sourceFilePosition;
 
-    SpectrumIdentity() : index(0), sourceFilePosition(-1) {}
+    /// for efficient read of peak lists after previous read of
+    /// scan header in mzML and mzXML - avoids reparsing the header
+    mutable boost::iostreams::stream_offset sourceFilePositionForBinarySpectrumData;
+    mutable unsigned int peaksCount; // used by mzXML reader
+
+    SpectrumIdentity() : index(0), sourceFilePosition((boost::iostreams::stream_offset)-1), sourceFilePositionForBinarySpectrumData((boost::iostreams::stream_offset)-1),peaksCount(0) {}
 };
 
 
@@ -527,6 +532,13 @@ struct PWIZ_API_DECL Spectrum : public SpectrumIdentity, public ParamContainer
 
     /// returns true iff the element contains no params and all members are empty or null
     bool empty() const;
+
+    /// returns true iff has nonnull and nonempty BinaryDataArrayPtr
+    bool hasBinaryData() const {
+        return binaryDataArrayPtrs.size() && 
+               binaryDataArrayPtrs[0] &&
+              !binaryDataArrayPtrs[0]->data.empty();
+    };
 
     /// copy binary data arrays into m/z-intensity pair array
     void getMZIntensityPairs(std::vector<MZIntensityPair>& output) const;
@@ -666,6 +678,13 @@ class PWIZ_API_DECL SpectrumList
     /// - binary data arrays will be provided if (getBinaryData == true);
     /// - client may assume the underlying Spectrum* is valid 
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData = false) const = 0;
+
+    /// get a copy of the seed spectrum, optionally with its binary data populated
+    /// this is useful for formats like mzML that can delay loading of binary data
+    /// - client may assume the underlying Spectrum* is valid 
+    virtual SpectrumPtr spectrum(const SpectrumPtr &seed, bool getBinaryData) const {
+        return spectrum(seed->index, getBinaryData); // default implementation
+    };
 
     /// retrieve a spectrum by index
     /// - detailLevel determines what fields are guaranteed present on the spectrum after the call

@@ -1972,6 +1972,10 @@ struct HandlerSpectrum : public HandlerParamContainer
         }
         else if (name == "binaryDataArrayList")
         {
+            // pretty likely to come right back here and read the
+            // binary data once the header info has been inspected, 
+            // so note position
+            spectrum->sourceFilePositionForBinarySpectrumData = position; 
             return Status::Ok;
         }
         else if (version == 1 && name == "spectrumDescription") // mzML 1.0

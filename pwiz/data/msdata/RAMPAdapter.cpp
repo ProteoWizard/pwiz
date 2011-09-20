@@ -218,11 +218,14 @@ void RAMPAdapter::Impl::getScanHeader(size_t index, ScanHeaderStruct& result, bo
 void RAMPAdapter::Impl::getScanPeaks(size_t index, std::vector<double>& result) const
 {
     // use previous spectrum if possible (it must have binary data)
-    if (!lastSpectrum.get() || lastSpectrum->index != index || lastSpectrum->binaryDataArrayPtrs.empty())
-        lastSpectrum = msd_.run.spectrumListPtr->spectrum(index, true);
+    if (!lastSpectrum.get() || lastSpectrum->index != index) {
+        lastSpectrum = msd_.run.spectrumListPtr->spectrum(index, true); // full read
+    } else if (!lastSpectrum->hasBinaryData()) {
+        // copy lastSpectrum header, avoids reread of header if format supports it
+        lastSpectrum = msd_.run.spectrumListPtr->spectrum(lastSpectrum, true);
+    }
 
     SpectrumPtr spectrum = lastSpectrum;
-
     result.clear();
     result.resize(spectrum->defaultArrayLength * 2);
     if (spectrum->defaultArrayLength == 0) return;

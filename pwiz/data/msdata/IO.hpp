@@ -145,8 +145,10 @@ void write(minimxml::XMLWriter& writer, const BinaryDataArray& binaryDataArray,
            const BinaryDataEncoder::Config& config = BinaryDataEncoder::Config());
 PWIZ_API_DECL void read(std::istream& is, BinaryDataArray& binaryDataArray, const MSData* msd = 0);
     
-
-enum PWIZ_API_DECL BinaryDataFlag {IgnoreBinaryData, ReadBinaryData};
+//
+// enum for preference in binary data read - ignore, read, read only binary if possible
+//
+enum PWIZ_API_DECL BinaryDataFlag {IgnoreBinaryData, ReadBinaryData, ReadBinaryDataOnly };
 
 
 PWIZ_API_DECL

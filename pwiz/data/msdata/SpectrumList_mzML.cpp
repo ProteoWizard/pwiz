@@ -55,7 +55,8 @@ class SpectrumList_mzMLImpl : public SpectrumList_mzML
     virtual size_t find(const std::string& id) const;
     virtual IndexList findSpotID(const std::string& spotID) const;
     virtual SpectrumPtr spectrum(size_t index, bool getBinaryData) const;
-
+    virtual SpectrumPtr spectrum(const SpectrumPtr &seed, bool getBinaryData) const;
+    virtual SpectrumPtr spectrum(size_t index, IO::BinaryDataFlag binaryDataFlag, const SpectrumPtr *defaults) const;
 
     private:
     shared_ptr<istream> is_;
@@ -106,6 +107,18 @@ IndexList SpectrumList_mzMLImpl::findSpotID(const string& spotID) const
 
 SpectrumPtr SpectrumList_mzMLImpl::spectrum(size_t index, bool getBinaryData) const
 {
+    return spectrum(index, getBinaryData ? IO::ReadBinaryData : IO::IgnoreBinaryData, NULL);
+}
+
+/// get a copy of the seed spectrum with its binary data populated
+/// this is useful for formats like mzML that can delay loading of binary data
+/// - client may assume the underlying Spectrum* is valid 
+SpectrumPtr SpectrumList_mzMLImpl::spectrum(const SpectrumPtr &seed, bool getBinaryData) const {
+    return spectrum(seed->index, getBinaryData ? IO::ReadBinaryDataOnly: IO::IgnoreBinaryData, &seed);
+};
+
+SpectrumPtr SpectrumList_mzMLImpl::spectrum(size_t index, IO::BinaryDataFlag binaryDataFlag, const SpectrumPtr *defaults) const
+{
     //boost::call_once(indexInitialized_.flag, boost::bind(&SpectrumList_mzMLImpl::createIndex, this));
     if (index >= index_->spectrumCount())
         throw runtime_error("[SpectrumList_mzML::spectrum()] Index out of bounds.");
@@ -115,12 +128,22 @@ SpectrumPtr SpectrumList_mzMLImpl::spectrum(size_t index, bool getBinaryData) co
     SpectrumPtr result(new Spectrum);
     if (!result.get())
         throw runtime_error("[SpectrumList_mzML::spectrum()] Out of memory.");
-
-    IO::BinaryDataFlag binaryDataFlag = getBinaryData ? IO::ReadBinaryData : IO::IgnoreBinaryData;
+    if (defaults) { // provide some context from previous parser runs
+        result = *defaults; // copy in anything we may have cached before
+    }
 
     try
     {
-        is_->seekg(offset_to_position(index_->spectrumIdentity(index).sourceFilePosition));
+        // we may just be here to get binary data of otherwise previously read spectrum
+        const SpectrumIdentity &id = index_->spectrumIdentity(index);
+        boost::iostreams::stream_offset seekto =
+            binaryDataFlag==IO::ReadBinaryDataOnly ? 
+            id.sourceFilePositionForBinarySpectrumData : // might be set, might be -1
+            (boost::iostreams::stream_offset)-1;
+        if (seekto == (boost::iostreams::stream_offset)-1) {
+            seekto = id.sourceFilePosition;
+        }
+        is_->seekg(offset_to_position(seekto));
         if (!*is_) 
             throw runtime_error("[SpectrumList_mzML::spectrum()] Error seeking to <spectrum>.");
 
@@ -129,6 +152,10 @@ SpectrumPtr SpectrumList_mzMLImpl::spectrum(size_t index, bool getBinaryData) co
         // test for reading the wrong spectrum
         if (result->index != index)
             throw runtime_error("[SpectrumList_mzML::spectrum()] Index entry points to the wrong spectrum.");
+        // note the binary data file position in case we come back around to read full data
+        if (result->sourceFilePositionForBinarySpectrumData != (boost::iostreams::stream_offset)-1) {
+            id.sourceFilePositionForBinarySpectrumData = result->sourceFilePositionForBinarySpectrumData;
+        }
     }
     catch (runtime_error&)
     {
