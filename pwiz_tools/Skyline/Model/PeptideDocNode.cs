@@ -156,6 +156,32 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public float? SchedulingTime
+        {
+            get { return AveragePeakCenterTime; }
+        }
+
+        public float? AveragePeakCenterTime
+        {
+            get
+            {
+                double totalTime = 0;
+                int countTime = 0;
+                foreach (TransitionGroupDocNode nodeGroup in Children)
+                {
+                    float? centerTime = nodeGroup.AveragePeakCenterTime;
+                    if (centerTime.HasValue)
+                    {
+                        totalTime += centerTime.Value;
+                        countTime++;
+                    }
+                }
+                if (countTime == 0)
+                    return null;
+                return (float) (totalTime/countTime);
+            }
+        }
+
         private float? GetAverageResultValue(Func<PeptideChromInfo, float?> getVal)
         {
             return HasResults ? Results.GetAverageValue(getVal) : null;

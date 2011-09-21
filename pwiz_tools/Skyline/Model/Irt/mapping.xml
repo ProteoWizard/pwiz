@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<hibernate-mapping xmlns="urn:nhibernate-mapping-2.2"
+    namespace="pwiz.Skyline.Model.Irt" assembly="Skyline">
+  <class name="DbIrtPeptide" table="IrtLibrary">
+    <id name="ID">
+      <column name="ID" not-null="true"/>
+      <generator class="native"/>
+    </id>
+    <property name="PeptideModSeq" column="PeptideModSeq" not-null="true"/>
+    <property name="Irt" column="iRT" not-null="true"/>
+    <property name="Standard" column="Standard" not-null="true"/>
+  </class>
+</hibernate-mapping>

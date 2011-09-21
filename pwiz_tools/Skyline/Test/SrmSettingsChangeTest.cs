@@ -84,8 +84,8 @@ namespace pwiz.SkylineTest
             var collisions = new CollisionEnergyList();
             collisions.AddDefaults();
             var ceRegress = collisions["ABI 4000 QTrap"];
-            var calcNames = RetentionTimeRegression.GetRetentionScoreCalcNames().ToArray();
-            var rtRegress = new RetentionTimeRegression("Test", calcNames[0], 3.5, 10.4, 12.8,
+            var calc = Settings.Default.RTScoreCalculatorList.GetDefaults().First();
+            var rtRegress = new RetentionTimeRegression("Test", calc, 3.5, 10.4, 12.8,
                 new MeasuredRetentionTime[0]);
 
             SrmSettings settings2 = settings.ChangePeptidePrediction(p => p.ChangeRetentionTime(rtRegress)).

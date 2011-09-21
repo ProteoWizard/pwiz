@@ -19,6 +19,7 @@
 using System;
 using System.Windows.Forms;
 using System.ComponentModel;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Controls
@@ -75,15 +76,15 @@ namespace pwiz.Skyline.Controls
         }
 
         public bool ValidateDecimalTextBox(CancelEventArgs e, TextBox control,
-                                           double min, double max, out double val)
+                                           double? min, double? max, out double val)
         {
             if (!ValidateDecimalTextBox(e, control, out val))
                 return false;
 
             bool valid = false;
-            if (val < min)
+            if (min.HasValue && val < min.Value)
                 ShowTextBoxError(control, "{0} must be greater than or equal to {1}.", null, min);
-            else if (val > max)
+            else if (max.HasValue && val > max.Value)
                 ShowTextBoxError(control, "{0} must be less than or equal to {1}.", null, max);
             else
                 valid = true;
@@ -92,7 +93,7 @@ namespace pwiz.Skyline.Controls
         }
 
         public bool ValidateDecimalTextBox(CancelEventArgs e, TabControl tabControl, int tabIndex,
-            TextBox control, double min, double max, out double val)
+            TextBox control, double? min, double? max, out double val)
         {
             bool valid = ValidateDecimalTextBox(e, control, min, max, out val);
             if (!valid && tabControl.SelectedIndex != tabIndex && _showMessages)
@@ -113,16 +114,16 @@ namespace pwiz.Skyline.Controls
         /// <param name="val">The integer value in the TextBox, if the function returns true</param>
         /// <returns>True if a valid integer was found</returns>
         public bool ValidateNumberTextBox(CancelEventArgs e, TextBox control,
-                                          int min, int max, out int val)
+                                          int? min, int? max, out int val)
         {
             bool valid = false;
-            val = min - 1;  // Invalid value in case of failure
+            val = -1;  // Invalid value in case of failure
             try
             {
                 int n = int.Parse(control.Text);
-                if (n < min)
+                if (min.HasValue && n < min.Value)
                     ShowTextBoxError(control, "{0} must be greater than or equal to {1}.", null, min);
-                else if (n > max)
+                else if (max.HasValue && n > max.Value)
                     ShowTextBoxError(control, "{0} must be less than or equal to {1}.", null, max);
                 else
                 {
@@ -139,7 +140,7 @@ namespace pwiz.Skyline.Controls
         }
 
         public bool ValidateNumberTextBox(CancelEventArgs e, TabControl tabControl, int tabIndex,
-            TextBox control, int min, int max, out int val)
+            TextBox control, int? min, int? max, out int val)
         {
             bool valid = ValidateNumberTextBox(e, control, min, max, out val);
             if (!valid && tabControl.SelectedIndex != tabIndex && _showMessages)
@@ -215,7 +216,7 @@ namespace pwiz.Skyline.Controls
                 return;
             if (vals.Length > 0 && vals[0] == null)
                 vals[0] = GetControlMessage(control);
-            MessageBox.Show(_parent, string.Format(message, vals), Program.Name);
+            MessageDlg.Show(_parent, string.Format(message, vals));
             control.Focus();
             var textBox = control as TextBox;
             if(textBox != null)

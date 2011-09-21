@@ -73,7 +73,8 @@ namespace pwiz.Skyline.SettingsUI
         private void ReloadList()
         {
             // Remove the default settings item before reloading.
-            if (_model.ExcludeDefault)
+            int countDefaults = _model.ExcludeDefaults ? _model.GetDefaults(_model.RevisionIndexCurrent).Count() : 0;
+            for (int i = 0; i < countDefaults; i++)
                 _list.RemoveAt(0);
 
             listBox.BeginUpdate();
@@ -86,7 +87,24 @@ namespace pwiz.Skyline.SettingsUI
             listBox.EndUpdate();
         }
 
+        /// <summary>
+        /// The following 2 functions had to be split up because _list does not include the defaults,
+        /// so the user can overwrite any of the defaults of a list. But _model does not include the
+        /// modified values, so just returning _model will never update the list.
+        /// </summary>
         public IEnumerable<TItem> GetAll()
+        {
+            if (_model.ExcludeDefaults)
+            {
+                foreach (var item in _model.GetDefaults(_model.RevisionIndexCurrent))
+                    yield return item;
+            }
+
+            foreach (var item in _list)
+                yield return item;
+        }
+
+        public IEnumerable<TItem> GetAllEdited()
         {
             return _list;
         }

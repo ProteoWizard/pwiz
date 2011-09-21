@@ -1507,5 +1507,20 @@ namespace pwiz.Skyline.Properties {
                 this["StackTraceListVersion"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string RTCalculatorName
+        {
+            get
+            {
+                return ((string)(this["RTCalculatorName"]));
+            }
+            set
+            {
+                this["RTCalculatorName"] = value;
+            }
+        }
     }
 }

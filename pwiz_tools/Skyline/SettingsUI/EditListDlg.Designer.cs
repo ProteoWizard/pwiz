@@ -157,6 +157,7 @@
             // 
             // btnCopy
             // 
+            this.btnCopy.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCopy.Enabled = false;
             this.btnCopy.Location = new System.Drawing.Point(199, 58);
             this.btnCopy.Name = "btnCopy";

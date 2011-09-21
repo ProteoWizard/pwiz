@@ -95,6 +95,7 @@
     <Compile Include="ExplicitVariableTest.cs" />
     <Compile Include="InsertModTest.cs" />
     <Compile Include="InsertTest.cs" />
+    <Compile Include="IrtTest.cs" />
     <Compile Include="LibraryExplorerTest.cs" />
     <Compile Include="ManageResultsTest.cs" />
     <Compile Include="MultiSelectTest.cs" />
@@ -148,6 +149,7 @@
     <None Include="FullScanIdTest.zip" />
     <None Include="ImportDocTest.zip" />
     <None Include="InsertTest.zip" />
+    <None Include="IrtTest.zip" />
     <None Include="LibraryBuildTest.zip" />
     <None Include="LibraryExplorerTest.zip" />
     <None Include="ManageResultsTest.zip" />

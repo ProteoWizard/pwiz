@@ -452,7 +452,7 @@ namespace pwiz.Skyline.Model
             }            
         }
 
-        private static double? GetCenterTime(TransitionGroupChromInfo chromInfo)
+        public static double? GetCenterTime(TransitionGroupChromInfo chromInfo)
         {
             if (chromInfo == null ||
 //                            chromInfo.PeakCountRatio < 0.5 || - caused problems
@@ -460,6 +460,11 @@ namespace pwiz.Skyline.Model
                     !chromInfo.EndRetentionTime.HasValue)
                 return null;
             return (chromInfo.StartRetentionTime.Value + chromInfo.EndRetentionTime.Value) / 2.0;            
+        }
+
+        public float? AveragePeakCenterTime
+        {
+            get { return GetAverageResultValue(info => (float?) GetCenterTime(info)); }
         }
 
         private float? GetAverageResultValue(Func<TransitionGroupChromInfo, float?> getVal)

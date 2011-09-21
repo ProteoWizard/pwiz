@@ -16,7 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
@@ -39,7 +38,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 gridStatistics.Rows.Add(statistics.Peptides[i],
                                         string.Format("{0:F02}", statistics.ListHydroScores[i]),
-                                        string.Format("{0:F02}", statistics.ListPredictions[i]),
+                                        string.Format("{0}", statistics.ListPredictions[i]),
                                         statistics.ListRetentionTimes[i]);
             }
         }

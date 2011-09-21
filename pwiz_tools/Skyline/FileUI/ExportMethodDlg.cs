@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using NHibernate;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
@@ -201,6 +202,10 @@ namespace pwiz.Skyline.FileUI
         {
             get
             {
+                var retentionTime = _document.Settings.PeptideSettings.Prediction.RetentionTime;
+                if (retentionTime != null && !retentionTime.Calculator.IsUsable)
+                    return false;
+
                 return ExportInstrumentType.CanSchedule(InstrumentType, _document);
             }
         }
@@ -836,6 +841,10 @@ namespace pwiz.Skyline.FileUI
                         MessageBox.Show(this, "To export a scheduled list, you must first choose " +
                                         "a retention time regression in Peptide Settings / Prediction.", Program.Name);                    
                 }
+                else if (!prediction.RetentionTime.Calculator.IsUsable)
+                {
+                    MessageDlg.Show(this, "Retention time prediction calculator is unable to score.\nCheck the calculator settings.");
+                }
                 else
                 {
                     MessageBox.Show(this, "To export a scheduled list, you must first " +
@@ -869,7 +878,7 @@ namespace pwiz.Skyline.FileUI
                     labelMaxTransitions.Text = "Ma&x concurrent transitions:";
             }
         }
-        
+
         private void CalcMethodCount()
         {
             var e = new CancelEventArgs();
@@ -883,6 +892,7 @@ namespace pwiz.Skyline.FileUI
 
             string instrument = comboInstrument.SelectedItem.ToString();
             MassListExporter exporter = null;
+
             try
             {
                 exporter = _exportProperties.ExportFile(instrument, _fileType, null, _document, null);
@@ -890,7 +900,10 @@ namespace pwiz.Skyline.FileUI
             catch (IOException)
             {
             }
-            
+            catch(ADOException)
+            {
+            }
+
             labelMethodNum.Text = exporter != null ? exporter.MemoryOutput.Count.ToString() : "";
         }
 
@@ -1010,6 +1023,26 @@ namespace pwiz.Skyline.FileUI
         {
             CalcMethodCount();
         }
+
+        #region Functional Test Support
+
+        public void SetInstrument(string instrument)
+        {
+            if(ExportInstrumentType.TRANSITION_LIST_TYPES.ToList().Find(inst => Equals(inst, instrument)) == default(string))
+                return;
+
+            comboInstrument.SelectedText = instrument;
+        }
+
+        public void SetMethodType(ExportMethodType type)
+        {
+            if (type == ExportMethodType.Standard)
+                comboTargetType.SelectedItem = "Standard";
+            else
+                comboTargetType.SelectedItem = "Scheduled";
+        }
+
+        #endregion
     }
 
     public class ExportDlgProperties : ExportProperties

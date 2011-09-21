@@ -323,9 +323,6 @@
     <Setting Name="LibraryPeptidesAddDuplicatesEnum" Type="System.String" Scope="User">
       <Value Profile="(Default)">AddToAll</Value>
     </Setting>
-    <Setting Name="TextZoom" Type="System.Double" Scope="User">
-      <Value Profile="(Default)">1.0</Value>
-    </Setting>
     <Setting Name="AnnotationColor" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
@@ -373,6 +370,12 @@
     </Setting>
     <Setting Name="StackTraceListVersion" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="RTCalculatorName" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="TextZoom" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">1</Value>
     </Setting>
   </Settings>
 </SettingsFile>

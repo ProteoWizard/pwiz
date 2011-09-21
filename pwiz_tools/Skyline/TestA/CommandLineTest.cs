@@ -424,6 +424,32 @@ namespace pwiz.SkylineTestA
             return consoleBuffer.ToString();
         }
 
+        // TODO: Test the case where the imported replicate has the wrong path without Lorenzo's data
+        //[TestMethod]
+        public void TestLorenzo()
+        {
+            var consoleBuffer = new StringBuilder();
+            var consoleOutput = new StringWriter(consoleBuffer);
+
+            var testFilesDir = new TestFilesDir(TestContext, COMMAND_FILE);
+
+            string docPath = testFilesDir.GetTestPath("VantageQCSkyline.sky");
+            string tsvPath = testFilesDir.GetTestPath("Exported_test_report.csv");
+            string dataPath = testFilesDir.GetTestPath("VantageQCSkyline.skyd");
+
+            var args = new[]
+                           {
+                               "--in=" + docPath,
+                               "--import-file=" + dataPath,
+                               "--report-name=TestQCReport",
+                               "--report-file=" + tsvPath,
+                               "--report-format=TSV"
+                           };
+
+            //There are no tests. This is for debugging.
+            CommandLineRunner.RunCommand(args, consoleOutput);
+        }
+
         //[TestMethod]
         public void CountInstancesTest()
         {

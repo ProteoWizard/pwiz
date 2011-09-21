@@ -137,13 +137,13 @@ namespace pwiz.SkylineTestTutorial
                 editReportListDlg0.SelectItem("Overview");
                 editReportListDlg0.MoveItemDown();
                 editReportListDlg0.MoveItemDown();
-                var listReportSpecs = new List<ReportSpec>(editReportListDlg0.GetAll());
+                var listReportSpecs = new List<ReportSpec>(editReportListDlg0.GetAllEdited());
                 Assert.AreEqual(listReportSpecs.Count - 1,
                               listReportSpecs.IndexOf(spec => spec.Name == "Overview"));
                 editReportListDlg0.MoveItemUp();
                 editReportListDlg0.MoveItemUp();
                 editReportListDlg0.MoveItemUp();
-                listReportSpecs = new List<ReportSpec>(editReportListDlg0.GetAll());
+                listReportSpecs = new List<ReportSpec>(editReportListDlg0.GetAllEdited());
                 Assert.AreEqual(0, listReportSpecs.IndexOf(spec => spec.Name == "Overview"));
                 editReportListDlg0.RemoveItem();
                 editReportListDlg0.OkDialog();

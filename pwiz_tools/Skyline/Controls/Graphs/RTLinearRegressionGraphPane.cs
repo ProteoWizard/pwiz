@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls.SeqNode;
@@ -174,6 +175,8 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             bool bestResults = (ShowReplicate == ReplicateDisplay.best);
             Data = new GraphData(document, Data, resultIndex, threshold, refine, bestResults);
+
+            XAxis.Title.Text = Data.Calculator.Name;
         }
 
         public bool IsRefined
@@ -270,7 +273,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     double threshold = RTGraphController.OutThreshold;
                     bool refine = Settings.Default.RTRefinePeptides;
                     bool bestResult = (ShowReplicate == ReplicateDisplay.best);
-
+                    
                     if (!IsValidFor(document, resultIndex, bestResult, threshold, refine))
                     {
                         Update(document, resultIndex, threshold, refine);
@@ -338,6 +341,10 @@ namespace pwiz.Skyline.Controls.Graphs
             private double[] _timesOutliers;
             private double[] _scoresOutliers;
 
+            private readonly RetentionScoreCalculatorSpec _calculator;
+
+            public RetentionScoreCalculatorSpec Calculator { get { return _calculator; } }
+
             private HashSet<int> _outlierIndexes;
 
             public GraphData(SrmDocument document, GraphData dataPrevious,
@@ -369,12 +376,49 @@ namespace pwiz.Skyline.Controls.Graphs
                     _peptidesTimes.Add(new MeasuredRetentionTime(nodePeptide.Peptide.Sequence, rt.Value));
                 }
 
-                _scoreCache = RetentionTimeRegression.CreateScoreCache(_peptidesTimes,
-                                                                       dataPrevious != null ? dataPrevious._scoreCache : null);
-                _regressionAll = RetentionTimeRegression.CalcRegression("graph", null,
-                                                                        _peptidesTimes, _scoreCache, out _statisticsAll);
+                //Before anything else involving calculators, try connecting all the RCalcIrts
+                Settings.Default.RTScoreCalculatorList.Initialize();
+
+                RetentionScoreCalculatorSpec calc = !string.IsNullOrEmpty(Settings.Default.RTCalculatorName)
+                                                        ? Settings.Default.GetCalculatorByName(Settings.Default.RTCalculatorName)
+                                                        : null;
+                if (calc == null)
+                {
+                    //This call will pick the best calculator, disqualifying any iRT Calcs that do not have
+                    //connected databases
+                    _regressionAll = RetentionTimeRegression.CalcRegression("graph",
+                                                                            Settings.Default.RTScoreCalculatorList,
+                                                                            _peptidesTimes, _scoreCache, true,
+                                                                            out _statisticsAll, out _calculator);
+                }
+                else
+                {
+                    _regressionAll = RetentionTimeRegression.CalcRegression("graph",
+                                                                            new[] {calc},
+                                                                            _peptidesTimes, _scoreCache, true,
+                                                                            out _statisticsAll, out _calculator);
+                    //If _regressionAll is null, it is safe to assume that the calculator is an iRT Calc with
+                    //its database disconnected.
+                    if(_regressionAll == null)
+                    {
+                        var tryIrtCalc = calc as RCalcIrt;
+                        //Only show an error message if the user specifically chooses this calculator.
+                        if (dataPrevious != null && !ReferenceEquals(calc, dataPrevious.Calculator) && tryIrtCalc != null)
+                        {
+                            throw new DatabaseNotConnectedException(tryIrtCalc);
+                        }
+                    }
+                }
+
+
                 if (_regressionAll != null)
                 {
+                    _scoreCache = new RetentionTimeScoreCache(new[] { _calculator }, _peptidesTimes,
+                                                              dataPrevious != null ? dataPrevious._scoreCache : null);
+
+                    if (dataPrevious != null && !ReferenceEquals(_calculator, dataPrevious._calculator))
+                        _scoreCache.RecalculateCalcCache(_calculator);
+
                     _scoresRefined = _statisticsAll.ListHydroScores.ToArray();
                     _timesRefined = _statisticsAll.ListRetentionTimes.ToArray();
                 }
@@ -382,10 +426,15 @@ namespace pwiz.Skyline.Controls.Graphs
                 _regressionPredict = document.Settings.PeptideSettings.Prediction.RetentionTime;
                 if (_regressionPredict != null)
                 {
-                    IDictionary<string, double> scoreCache = null;
-                    if (_regressionAll != null && ReferenceEquals(_regressionAll.Calculator, _regressionPredict.Calculator))
-                        scoreCache = _statisticsAll.ScoreCache;
-                    _statisticsPredict = _regressionPredict.CalcStatistics(_peptidesTimes, scoreCache);
+                    if (!Equals(_calculator, _regressionPredict.Calculator))
+                        _regressionPredict = null;
+                    else
+                    {
+                        IDictionary<string, double> scoreCache = null;
+                        if (_regressionAll != null && ReferenceEquals(_regressionAll.Calculator, _regressionPredict.Calculator))
+                            scoreCache = _statisticsAll.ScoreCache;
+                        _statisticsPredict = _regressionPredict.CalcStatistics(_peptidesTimes, scoreCache);
+                    }
                 }
 
                 // Only refine, if not already exceeding the threshold
@@ -403,8 +452,10 @@ namespace pwiz.Skyline.Controls.Graphs
                         _resultIndex == resultIndex &&
                         _bestResult == bestResult &&
                         _threshold == threshold &&
-                       // Valid if refine is true, and this data requires no further refining
-                       (_refine == refine || (refine && IsRefined()));
+                        // TODO: find a better way to force updating when calculator is auto? Or maybe this is good.
+                        ReferenceEquals(_calculator.Name, Settings.Default.RTCalculatorName) &&
+                        // Valid if refine is true, and this data requires no further refining
+                        (_refine == refine || (refine && IsRefined()));
             }
 
             public RetentionTimeRegression RegressionRefined
@@ -443,16 +494,44 @@ namespace pwiz.Skyline.Controls.Graphs
                         _outlierIndexes.Add(i);
                 }
 
-                _regressionRefined = (_regressionAll == null ? null :
-                    _regressionAll.FindThreshold(threshold,
-                                                 2,
-                                                 _peptidesTimes.Count,
-                                                 _peptidesTimes,
-                                                 _statisticsAll,
-                                                 _scoreCache,
-                                                 isCanceled,
-                                                 ref _statisticsRefined,
-                                                 ref _outlierIndexes));
+                // Now that we have added iRT calculators, RecalcRegression
+                // cannot go and mark as outliers peptides at will anymore. It must know which peptides, if any,
+                // are required by the calculator for a regression. With iRT calcs, the standard is required.
+                IEnumerable<string> requiredPeptidesNames;
+                if(!_calculator.IsUsable)
+                    return null;
+                    //requiredPeptidesNames = new List<string>();
+                else
+                    requiredPeptidesNames = _calculator.GetRequiredRegressionPeptides(_peptidesTimes.ConvertAll(pep => pep.PeptideSequence));
+
+                var requiredPeptides = new List<MeasuredRetentionTime>();
+                foreach (var pepName in requiredPeptidesNames)
+                {
+                    string name = pepName;
+                    requiredPeptides.Add(_peptidesTimes.Find(mrt => Equals(mrt.PeptideSequence, name)));
+                }
+
+                var variablePeptides = new List<MeasuredRetentionTime>();
+                foreach (var pep in _peptidesTimes)
+                {
+                    if (!requiredPeptidesNames.Contains(pep.PeptideSequence))
+                        variablePeptides.Add(pep);
+                }
+
+                //Throws DatabaseNotConnectedException
+                _regressionRefined = (_regressionAll == null
+                                          ? null
+                                          : _regressionAll.FindThreshold(threshold,
+                                                                         0,
+                                                                         variablePeptides.Count,
+                                                                         requiredPeptides,
+                                                                         variablePeptides,
+                                                                         _statisticsAll,
+                                                                         _calculator,
+                                                                         _scoreCache,
+                                                                         isCanceled,
+                                                                         ref _statisticsRefined,
+                                                                         ref _outlierIndexes));
 
                 if (ReferenceEquals(_regressionRefined, _regressionAll))
                     return null;

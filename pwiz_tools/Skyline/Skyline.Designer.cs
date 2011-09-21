@@ -311,6 +311,10 @@ namespace pwiz.Skyline
             this.setRTThresholdContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator22 = new System.Windows.Forms.ToolStripSeparator();
             this.createRTRegressionContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.chooseCalculatorContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.placeholderToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparatorCalculators = new System.Windows.Forms.ToolStripSeparator();
+            this.updateCalculatorContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator23 = new System.Windows.Forms.ToolStripSeparator();
             this.removeRTOutliersContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.removeRTContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -1076,7 +1080,7 @@ namespace pwiz.Skyline
             // 
             this.aMenuItem.CheckOnClick = true;
             this.aMenuItem.Name = "aMenuItem";
-            this.aMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.aMenuItem.Size = new System.Drawing.Size(124, 22);
             this.aMenuItem.Text = "&A";
             this.aMenuItem.Click += new System.EventHandler(this.aMenuItem_Click);
             // 
@@ -1084,7 +1088,7 @@ namespace pwiz.Skyline
             // 
             this.bMenuItem.CheckOnClick = true;
             this.bMenuItem.Name = "bMenuItem";
-            this.bMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.bMenuItem.Size = new System.Drawing.Size(124, 22);
             this.bMenuItem.Text = "&B";
             this.bMenuItem.Click += new System.EventHandler(this.bMenuItem_Click);
             // 
@@ -1092,7 +1096,7 @@ namespace pwiz.Skyline
             // 
             this.cMenuItem.CheckOnClick = true;
             this.cMenuItem.Name = "cMenuItem";
-            this.cMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.cMenuItem.Size = new System.Drawing.Size(124, 22);
             this.cMenuItem.Text = "&C";
             this.cMenuItem.Click += new System.EventHandler(this.cMenuItem_Click);
             // 
@@ -1100,7 +1104,7 @@ namespace pwiz.Skyline
             // 
             this.xMenuItem.CheckOnClick = true;
             this.xMenuItem.Name = "xMenuItem";
-            this.xMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.xMenuItem.Size = new System.Drawing.Size(124, 22);
             this.xMenuItem.Text = "&X";
             this.xMenuItem.Click += new System.EventHandler(this.xMenuItem_Click);
             // 
@@ -1110,7 +1114,7 @@ namespace pwiz.Skyline
             this.yMenuItem.CheckOnClick = true;
             this.yMenuItem.CheckState = System.Windows.Forms.CheckState.Checked;
             this.yMenuItem.Name = "yMenuItem";
-            this.yMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.yMenuItem.Size = new System.Drawing.Size(124, 22);
             this.yMenuItem.Text = "&Y";
             this.yMenuItem.Click += new System.EventHandler(this.yMenuItem_Click);
             // 
@@ -1118,14 +1122,14 @@ namespace pwiz.Skyline
             // 
             this.zMenuItem.CheckOnClick = true;
             this.zMenuItem.Name = "zMenuItem";
-            this.zMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.zMenuItem.Size = new System.Drawing.Size(124, 22);
             this.zMenuItem.Text = "&Z";
             this.zMenuItem.Click += new System.EventHandler(this.zMenuItem_Click);
             // 
             // precursorIonMenuItem
             // 
             this.precursorIonMenuItem.Name = "precursorIonMenuItem";
-            this.precursorIonMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.precursorIonMenuItem.Size = new System.Drawing.Size(124, 22);
             this.precursorIonMenuItem.Text = "&Precursor";
             this.precursorIonMenuItem.Click += new System.EventHandler(this.precursorIonMenuItem_Click);
             // 
@@ -1926,7 +1930,6 @@ namespace pwiz.Skyline
             this.dockPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
-            this.dockPanel.DefaultFloatingWindowSize = new System.Drawing.Size(300, 300);
             this.dockPanel.Location = new System.Drawing.Point(0, 0);
             this.dockPanel.Name = "dockPanel";
             this.dockPanel.Size = new System.Drawing.Size(461, 444);
@@ -2562,6 +2565,7 @@ namespace pwiz.Skyline
             this.setRTThresholdContextMenuItem,
             this.toolStripSeparator22,
             this.createRTRegressionContextMenuItem,
+            this.chooseCalculatorContextMenuItem,
             this.toolStripSeparator23,
             this.removeRTOutliersContextMenuItem,
             this.removeRTContextMenuItem,
@@ -2571,7 +2575,7 @@ namespace pwiz.Skyline
             this.zoomOutRTContextMenuItem,
             this.toolStripSeparator25});
             this.contextMenuRetentionTimes.Name = "contextMenuRetentionTimes";
-            this.contextMenuRetentionTimes.Size = new System.Drawing.Size(178, 320);
+            this.contextMenuRetentionTimes.Size = new System.Drawing.Size(178, 364);
             // 
             // timeGraphContextMenuItem
             // 
@@ -2736,6 +2740,35 @@ namespace pwiz.Skyline
             this.createRTRegressionContextMenuItem.Size = new System.Drawing.Size(177, 22);
             this.createRTRegressionContextMenuItem.Text = "Create Regression...";
             this.createRTRegressionContextMenuItem.Click += new System.EventHandler(this.createRTRegressionContextMenuItem_Click);
+            // 
+            // chooseCalculatorContextMenuItem
+            // 
+            this.chooseCalculatorContextMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.placeholderToolStripMenuItem1,
+            this.toolStripSeparatorCalculators,
+            this.updateCalculatorContextMenuItem});
+            this.chooseCalculatorContextMenuItem.Name = "chooseCalculatorContextMenuItem";
+            this.chooseCalculatorContextMenuItem.Size = new System.Drawing.Size(177, 22);
+            this.chooseCalculatorContextMenuItem.Text = "Calculator";
+            this.chooseCalculatorContextMenuItem.DropDownOpening += new System.EventHandler(this.chooseCalculatorContextMenuItem_DropDownOpening);
+            // 
+            // placeholderToolStripMenuItem1
+            // 
+            this.placeholderToolStripMenuItem1.Name = "placeholderToolStripMenuItem1";
+            this.placeholderToolStripMenuItem1.Size = new System.Drawing.Size(152, 22);
+            this.placeholderToolStripMenuItem1.Text = "<placeholder>";
+            // 
+            // toolStripSeparatorCalculators
+            // 
+            this.toolStripSeparatorCalculators.Name = "toolStripSeparatorCalculators";
+            this.toolStripSeparatorCalculators.Size = new System.Drawing.Size(149, 6);
+            // 
+            // updateCalculatorContextMenuItem
+            // 
+            this.updateCalculatorContextMenuItem.Name = "updateCalculatorContextMenuItem";
+            this.updateCalculatorContextMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.updateCalculatorContextMenuItem.Text = "Update...";
+            this.updateCalculatorContextMenuItem.Click += new System.EventHandler(this.updateCalculatorContextMenuItem_Click);
             // 
             // toolStripSeparator23
             // 
@@ -3346,6 +3379,10 @@ namespace pwiz.Skyline
         private System.Windows.Forms.ToolStripMenuItem productsTranMenuItem;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator45;
         private System.Windows.Forms.ToolStripMenuItem sortProteinsMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem chooseCalculatorContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem placeholderToolStripMenuItem1;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparatorCalculators;
+        private System.Windows.Forms.ToolStripMenuItem updateCalculatorContextMenuItem;
     }
 }
 

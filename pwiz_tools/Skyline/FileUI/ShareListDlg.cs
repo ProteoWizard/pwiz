@@ -29,7 +29,7 @@ using pwiz.Skyline.Util;
 namespace pwiz.Skyline.FileUI
 {
     public partial class ShareListDlg<TList, TItem> : Form
-        where TList : IList<TItem>, IListSerializer<TItem>, IListEditorSupport
+        where TList : IList<TItem>, IListSerializer<TItem>, IListDefaults<TItem>, IListEditorSupport
         where TItem : IKeyContainer<string>, IXmlSerializable
     {
         private const string SETTINGS_DEFINITION_FILTER = "Skyline Settings (*.skys)|*.skys|All Files|*.*";
@@ -85,16 +85,14 @@ namespace pwiz.Skyline.FileUI
         {
             ListBox.BeginUpdate();
             ListBox.Items.Clear();
-            bool first = true;
+            int index = 0;
+            int countDefaults = List.ExcludeDefaults ? List.GetDefaults(List.RevisionIndexCurrent).Count() : 0;
             foreach (TItem item in List)
             {
-                if (first)
-                {
-                    first = false;
-                    if (List.ExcludeDefault)
-                        continue;
-                }
-                ListBox.Items.Add(item.GetKey());                
+                if (index < countDefaults)
+                    continue;
+                ListBox.Items.Add(item.GetKey());
+                index++;
             }
             ListBox.EndUpdate();
         }

@@ -52,7 +52,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private readonly SettingsListComboDriver<Enzyme> _driverEnzyme;
         private readonly SettingsListComboDriver<RetentionTimeRegression> _driverRT;
-        private readonly SettingsListBoxDriver<PeptideExcludeRegex> _driverExlusion;
+        private readonly SettingsListBoxDriver<PeptideExcludeRegex> _driverExclusion;
         private readonly SettingsListBoxDriver<LibrarySpec> _driverLibrary;
         private readonly SettingsListComboDriver<BackgroundProteomeSpec> _driverBackgroundProteome;
         private readonly SettingsListBoxDriver<StaticMod> _driverStaticMod;
@@ -84,8 +84,8 @@ namespace pwiz.Skyline.SettingsUI
                 textMeasureRTWindow.Text = Prediction.MeasuredRTWindow.ToString();
 
             // Initialize filter settings
-            _driverExlusion = new SettingsListBoxDriver<PeptideExcludeRegex>(listboxExclusions, Settings.Default.PeptideExcludeList);
-            _driverExlusion.LoadList(null, Filter.Exclusions);
+            _driverExclusion = new SettingsListBoxDriver<PeptideExcludeRegex>(listboxExclusions, Settings.Default.PeptideExcludeList);
+            _driverExclusion.LoadList(null, Filter.Exclusions);
 
             textExcludeAAs.Text = Filter.ExcludeNTermAAs.ToString();
             textMaxLength.Text = Filter.MaxPeptideLength.ToString();
@@ -205,7 +205,7 @@ namespace pwiz.Skyline.SettingsUI
                     Math.Max(PeptideFilter.MIN_MAX_LENGTH, minPeptideLength), PeptideFilter.MAX_MAX_LENGTH, out maxPeptideLength))
                 return null;
 
-            PeptideExcludeRegex[] exclusions = _driverExlusion.Chosen;
+            PeptideExcludeRegex[] exclusions = _driverExclusion.Chosen;
 
             bool autoSelect = cbAutoSelect.Checked;
             PeptideFilter filter;
@@ -346,13 +346,13 @@ namespace pwiz.Skyline.SettingsUI
                         measuredRTWindow > PeptidePrediction.MAX_MEASURED_RT_WINDOW)
                 {
                     textMeasureRTWindow.Text = "";
-                }                
+                }
             }
         }
 
         private void btnEditExlusions_Click(object sender, EventArgs e)
         {
-            _driverExlusion.EditList();
+            _driverExclusion.EditList();
         }
 
         private void editLibraries_Click(object sender, EventArgs e)
@@ -635,22 +635,29 @@ namespace pwiz.Skyline.SettingsUI
 
         #region Functional testing support
 
-        public void ShowBuildBackgroundProteomeDlg()
+        public void ChooseRegression(string name)
         {
-            using (var dlg = new BuildBackgroundProteomeDlg(_driverBackgroundProteome.List))
-            {
-                if (dlg.ShowDialog(this) == DialogResult.Cancel)
-                {
-                    return;
-                }
-                Settings.Default.BackgroundProteomeList.Add(dlg.BackgroundProteomeSpec);
-                _driverBackgroundProteome.LoadList(dlg.BackgroundProteomeSpec.Name);
-            }
+            comboRetentionTime.SelectedItem = name;
         }
 
-        public void AddBackgroundProteome()
+        public void UseMeasuredRT(bool use)
         {
-            
+            cbUseMeasuredRT.Checked = use;
+        }
+
+        public void ShowBuildBackgroundProteomeDlg()
+        {
+            _driverBackgroundProteome.AddItem();
+        }
+
+        public void AddRTRegression()
+        {
+            _driverRT.AddItem();
+        }
+
+        public void EditRegressionList()
+        {
+            _driverRT.EditList();
         }
 
         public int MissedCleavages

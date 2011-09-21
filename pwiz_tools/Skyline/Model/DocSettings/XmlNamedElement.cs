@@ -126,13 +126,17 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != typeof(XmlNamedElement)) return false;
-            return Equals((XmlNamedElement)obj);
+            return Equals(obj as XmlNamedElement);
         }
 
         public override int GetHashCode()
         {
             return Name.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return Name;
         }
 
         #endregion

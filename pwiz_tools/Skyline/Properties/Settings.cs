@@ -89,7 +89,6 @@ namespace pwiz.Skyline.Properties
             set { this["StackTraceList"] = value; }
         }
 
-
         [System.Configuration.UserScopedSettingAttribute]
         public MethodTemplateList ExportMethodTemplateList
         {
@@ -384,6 +383,40 @@ namespace pwiz.Skyline.Properties
                 this[typeof(RetentionTimeList).Name] = value;
             }
         }
+
+        public RetentionScoreCalculatorSpec GetCalculatorByName(string name)
+        {
+            RetentionScoreCalculatorSpec calc;
+            if(!RTScoreCalculatorList.TryGetValue(name, out calc))
+                return null;
+            return calc;
+        }
+        
+        [System.Configuration.UserScopedSettingAttribute]
+        public RTScoreCalculatorList RTScoreCalculatorList
+        {
+            get
+            {
+                RTScoreCalculatorList list = (RTScoreCalculatorList)this[typeof(RTScoreCalculatorList).Name];
+
+                if (list == null)
+                {
+                    list = new RTScoreCalculatorList();
+                    list.AddDefaults();
+                    RTScoreCalculatorList = list;
+                }
+                else
+                {
+                    //list.EnsureDefault();
+                }
+                return list;
+            }
+            set
+            {
+                this[typeof(RTScoreCalculatorList).Name] = value;
+            }
+        }
+        
 
         public MeasuredIon GetMeasuredIonByName(string name)
         {
@@ -704,17 +737,13 @@ namespace pwiz.Skyline.Properties
 
         public BackgroundProteomeSpec GetBackgroundProteomeSpec(String name)
         {
-            foreach (var backgroundProteomeSpec in this)
-            {
-                if (backgroundProteomeSpec.Name == name)
-                {
-                    return backgroundProteomeSpec;
-                }
-            }
+            BackgroundProteomeSpec spec;
+            if (TryGetValue(name, out spec))
+                return spec;
             return null;
         }
 
-        public override bool ExcludeDefault
+        public override bool ExcludeDefaults
         {
             get { return true; }
         }
@@ -998,9 +1027,115 @@ namespace pwiz.Skyline.Properties
 
         public override string Label { get { return "&Declustering Potential Regressions:"; } }
 
-        public override bool ExcludeDefault { get { return true; } }
+        public override bool ExcludeDefaults { get { return true; } }
     }
+    
+    public sealed class RTScoreCalculatorList : SettingsList<RetentionScoreCalculatorSpec>
+    {
+        /// <summary>
+        /// <see cref="RetentionTimeRegression"/> objects depend on calculators. If a user deletes or changes a calculator,
+        /// the <see cref="RetentionTimeRegression"/> objects that depend on it may need to be removed.
+        /// </summary>
+        public override bool AcceptList(Control owner, IEnumerable<RetentionScoreCalculatorSpec> listNew)
+        {
+            var listMissingCalc = new List<RetentionTimeRegression>();
+            var listChangedCalc = new List<RetentionTimeRegression>();
+            foreach (var regression in Settings.Default.RetentionTimeList.ToArray())
+            {
+                var regressionInst = regression;
 
+                //There is a dummy regression called "None" with a null calculator
+                if (regressionInst.Calculator == null)
+                    continue;
+
+                if (listNew.Contains(calc => Equals(calc, regressionInst.Calculator)))
+                {
+                    var calcChanged = listNew.FirstOrDefault(calc =>
+                        Equals(calc, regressionInst.Calculator.ChangeName(calc.Name)));
+
+                    if (calcChanged == null)
+                        listMissingCalc.Add(regressionInst);
+                    else
+                        listChangedCalc.Add(regressionInst.ChangeCalculator(calcChanged));
+                }
+            }
+
+            if (listMissingCalc.Count > 0)
+            {
+                using (var dlg = new MultiButtonMsgDlg(String.Format("The regression(s):\n{0}\nwill be deleted because the calculators they depend on have changed. Do you want to continue?",
+                    String.Join("\n", listMissingCalc.Select(reg => reg.Name).ToArray())), "Yes", "No"))
+                {
+                    if(dlg.ShowDialog(owner) != DialogResult.Yes)
+                        return false;
+                }
+            }
+
+            foreach (var regression in listChangedCalc)
+            {
+                Settings.Default.RetentionTimeList.SetValue(regression);                
+            }
+
+            return true;
+        }
+
+        public override RetentionScoreCalculatorSpec EditItem(Control owner, RetentionScoreCalculatorSpec item,
+            IEnumerable<RetentionScoreCalculatorSpec> existing, object tag)
+        {
+            using (EditIrtCalcDlg editStandardDlg = new EditIrtCalcDlg(item, existing))
+            {
+                if (editStandardDlg.ShowDialog(owner) == DialogResult.OK)
+                {
+                    return editStandardDlg.Calculator;
+                }
+            }
+
+            return null;
+        }
+
+        public override RetentionScoreCalculatorSpec CopyItem(RetentionScoreCalculatorSpec item)
+        {
+            return (RetentionScoreCalculatorSpec) item.ChangeName(string.Empty);
+        }
+
+        public override IEnumerable<RetentionScoreCalculatorSpec> GetDefaults(int revisionIndex)
+        {
+            return new[]
+                       {
+                           new RetentionScoreCalculator(RetentionTimeRegression.SSRCALC_100_A),
+                           new RetentionScoreCalculator(RetentionTimeRegression.SSRCALC_300_A)
+                       };
+        }
+
+        protected override IXmlElementHelper<RetentionScoreCalculatorSpec>[] GetXmlElementHelpers()
+        {
+            return RetentionTimeRegression.CalculatorXmlHelpers;
+        }
+
+        public void Initialize()
+        {
+            foreach (var calc in this.ToArray())
+            {
+                if (calc != null)
+                {
+                    try
+                    {
+                        SetValue(calc.Initialize());
+                    }
+                    catch(CalculatorException)
+                    {
+                        //Consider: Should we really fail silently?
+                    }
+                }
+            }
+        }
+
+        public override string Title { get { return "Edit Retention Time Calculators"; } }
+
+        public override string Label { get { return "&Retention Time Calculators:"; } }
+
+        public override bool ExcludeDefaults { get { return true; } }
+    }
+    
     public sealed class RetentionTimeList : SettingsList<RetentionTimeRegression>
     {
         private static readonly RetentionTimeRegression NONE =
@@ -1043,7 +1178,7 @@ namespace pwiz.Skyline.Properties
 
         public override string Label { get { return "&Retention Time Regression:"; } }
 
-        public override bool ExcludeDefault { get { return true; } }
+        public override bool ExcludeDefaults { get { return true; } }
     }
 
     public sealed class MeasuredIonList : SettingsList<MeasuredIon>
@@ -1396,8 +1531,6 @@ namespace pwiz.Skyline.Properties
         #endregion
 
         public override bool AllowReset { get { return true; } }
-
-        public override bool ExcludeDefault { get { return false; } }
     }
 
     public abstract class SettingsListBase<TItem>
@@ -1429,10 +1562,21 @@ namespace pwiz.Skyline.Properties
             using (var dlg = new EditListDlg<SettingsListBase<TItem>, TItem>(this, tag))
             {
                 if (dlg.ShowDialog(owner) == DialogResult.OK)
-                    return dlg.GetAll();
+                {
+                    var listNew = dlg.GetAllEdited();
+                    if (AcceptList(owner, listNew))
+                        return listNew;
+                }
                 return null;
             }
         }
+
+        public virtual bool AcceptList(Control owner, IEnumerable<TItem> listNew)
+        {
+            return true;
+        }
+
+        public virtual bool ExcludeDefaults { get { return false; } }
 
         #endregion
 
@@ -1443,8 +1587,6 @@ namespace pwiz.Skyline.Properties
         public abstract string Label { get; }
 
         public virtual bool AllowReset { get { return false; } }
-
-        public virtual bool ExcludeDefault { get { return true; } }
 
         #endregion
 

@@ -28,6 +28,7 @@ using pwiz.Common.Chemistry;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Util;
 using pwiz.Skyline.Model.Lib;
 
@@ -744,6 +745,32 @@ namespace pwiz.Skyline.Model.DocSettings
             }
         }
 
+        public SrmSettings ConnectIrtDatabase(Func<RCalcIrt, RCalcIrt> findCalculatorSpec)
+        {
+            if(PeptideSettings.Prediction.RetentionTime == null)
+                return this;
+
+            var iRTCalc = PeptideSettings.Prediction.RetentionTime.Calculator as RCalcIrt;            
+            if(iRTCalc == null)
+                return this;
+
+            var iRTCalcNew = findCalculatorSpec(iRTCalc);
+            if (iRTCalcNew == null)
+            {
+                // cancel
+                return null;
+            }
+            if (iRTCalcNew.DatabasePath == iRTCalc.DatabasePath)
+            {
+                return this;
+            }
+
+            return this.ChangePeptidePrediction(predict =>
+                predict.ChangeRetentionTime(!iRTCalcNew.IsNone
+                    ? predict.RetentionTime.ChangeCalculator(iRTCalcNew)
+                    : null));
+        }
+
         public SrmSettings ConnectLibrarySpecs(Func<Library, LibrarySpec> findLibrarySpec)
         {
             var libraries = PeptideSettings.Libraries;
@@ -1009,7 +1036,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
     public interface IPrecursorMassCalc
     {
-        MassType MassType { get;}
+        MassType MassType { get; }
         double GetPrecursorMass(string seq);
         bool IsModified(string seq);
         string GetModifiedSequence(string seq, bool formatNarrow);

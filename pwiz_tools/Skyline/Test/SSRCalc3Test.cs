@@ -18,6 +18,7 @@
  */
 using System;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 
 namespace pwiz.SkylineTest
@@ -615,7 +616,7 @@ namespace pwiz.SkylineTest
         [TestMethod]
         public void ScoreSequence_300A_Test()
         {
-            SSRCalc3 calc = new SSRCalc3(SSRCalc3.Column.A300);
+            SSRCalc3 calc = new SSRCalc3(RetentionTimeRegression.SSRCALC_300_A, SSRCalc3.Column.A300);
 
             for (int i = 0; i < _peptides300A.GetLength(0); i++ )
             {
@@ -644,7 +645,7 @@ namespace pwiz.SkylineTest
         // [TestMethod]
         public void ScoreSequence_100A_Test()
         {
-            SSRCalc3 calc = new SSRCalc3(SSRCalc3.Column.A100);
+            SSRCalc3 calc = new SSRCalc3(RetentionTimeRegression.SSRCALC_100_A, SSRCalc3.Column.A100);
 
             for (int i = 0; i < _peptides100A.GetLength(0); i++)
             {

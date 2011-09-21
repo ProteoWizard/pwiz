@@ -72,8 +72,14 @@ namespace pwiz.Skyline.Util
 
         public void ReadXml(XmlReader reader)
         {
+            bool isEmpty = reader.IsEmptyElement;
+
             // Read past the property element
             reader.Read();
+
+            // For empty lists in Settings.Default
+            if (isEmpty)
+                return;
 
             if (reader.IsStartElement(EL.revision))
             {

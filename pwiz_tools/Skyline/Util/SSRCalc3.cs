@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 
 namespace pwiz.Skyline.Util
@@ -43,11 +44,6 @@ namespace pwiz.Skyline.Util
 
         public const String VERSION = "Krokhin,3.0";
 
-        public string Name
-        {
-            get { return VERSION; }
-        }
-
         private class AAParams
         {
             //Retention Factors
@@ -87,6 +83,21 @@ namespace pwiz.Skyline.Util
                 CT = ct; NT = nt; PK = pk;
                 H2BASCORE = h2bascore; H2CMULT = h2cmult;
             }
+        }
+
+        public IEnumerable<string> ChooseRegressionPeptides(IEnumerable<string> peptides)
+        {
+            return peptides;
+        }
+
+        public IEnumerable<string> GetRequiredRegressionPeptides(IEnumerable<string> peptides)
+        {
+            return new string[] {};
+        }
+
+        public RetentionScoreCalculatorSpec Initialize()
+        {
+            return null;
         }
 
         private static readonly CLUSTCOMB_List CLUSTCOMB = new CLUSTCOMB_List();
@@ -436,8 +447,10 @@ namespace pwiz.Skyline.Util
 
         private readonly AAParams[] AAPARAMS = new AAParams[128];
 
-        public SSRCalc3(Column column)
+        public SSRCalc3(string name, Column column)
         {
+            Name = name;
+
             AAParams NULLPARAM = new AAParams(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
             for (int i = 0; i < AAPARAMS.Length; i++)
                 AAPARAMS[i] = NULLPARAM;
@@ -452,6 +465,8 @@ namespace pwiz.Skyline.Util
                     break;
             }
         }
+
+        public string Name { get; private set; }
 
         private void A300Column()
         {
@@ -568,8 +583,19 @@ namespace pwiz.Skyline.Util
         // helix scaling factors
         private const double HELIX1SCALE = 1.6, HELIX2SCALE = 0.255;
 
+        /*
+        public override List<double> ScoreSequences(List<string> sequences)
+        {
+            List<double> scores = new List<double>();
+            foreach(var sequence in sequences)
+                scores.Add(ScoreSequence(sequence));
+            return scores;
+        }
+        */
+
         public double ScoreSequence(string seq)
         {
+            seq = FastaSequence.StripModifications(seq);
             double tsum3 = 0.0;
             int i;
 

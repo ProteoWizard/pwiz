@@ -24,12 +24,14 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
+using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Controls;
@@ -2013,6 +2015,16 @@ namespace pwiz.Skyline
                 menuStrip.Items.Insert(iInsert++, setRTThresholdContextMenuItem);
                 menuStrip.Items.Insert(iInsert++, toolStripSeparator22);
                 menuStrip.Items.Insert(iInsert++, createRTRegressionContextMenuItem);
+                menuStrip.Items.Insert(iInsert++, chooseCalculatorContextMenuItem);
+                if (chooseCalculatorContextMenuItem.DropDownItems.Count == 0)
+                {
+                    chooseCalculatorContextMenuItem.DropDownItems.AddRange(new ToolStripItem[]
+                    {
+                        placeholderToolStripMenuItem1,
+                        toolStripSeparatorCalculators,
+                        updateCalculatorContextMenuItem
+                    });
+                }
                 createRTRegressionContextMenuItem.Enabled = (RTGraphController.RegressionRefined != null);
                 bool showDelete = controller.ShowDelete(mousePt);
                 bool showDeleteOutliers = controller.ShowDeleteOutliers;
@@ -2287,6 +2299,45 @@ namespace pwiz.Skyline
             }
         }
 
+        private void chooseCalculatorContextMenuItem_DropDownOpening(object sender, EventArgs e)
+        {
+            SetupCalculatorChooser();
+        }
+
+        public void SetupCalculatorChooser()
+        {
+            while (!ReferenceEquals(chooseCalculatorContextMenuItem.DropDownItems[0], toolStripSeparatorCalculators))
+                chooseCalculatorContextMenuItem.DropDownItems.RemoveAt(0);
+
+            //If no calculator has been picked for use in the graph, get the best one.
+            var autoItem = new ToolStripMenuItem("Auto", null, delegate { ChooseCalculator(""); })
+                               {
+                                   Checked = string.IsNullOrEmpty(Settings.Default.RTCalculatorName)
+                               };
+            chooseCalculatorContextMenuItem.DropDownItems.Insert(0, autoItem);
+
+            foreach (var calculator in Settings.Default.RTScoreCalculatorList)
+            {
+                string calculatorName = calculator.Name;
+                var menuItem = new ToolStripMenuItem(calculatorName, null, delegate { ChooseCalculator(calculatorName);})
+                {
+                    Checked = Equals(calculatorName, Settings.Default.RTCalculatorName)
+                };
+                chooseCalculatorContextMenuItem.DropDownItems.Insert(0, menuItem);
+            }
+        }
+
+        public void ChooseCalculator(string calculatorName)
+        {
+            Settings.Default.RTCalculatorName = calculatorName;
+            UpdateRetentionTimeGraph();
+        }
+
+        private void updateCalculatorContextMenuItem_Click(object sender, EventArgs e)
+        {
+            //TODO: implement
+        }
+
         private void removeRTOutliersContextMenuItem_Click(object sender, EventArgs e)
         {
             if (_graphRetentionTime == null)
@@ -2353,7 +2404,17 @@ namespace pwiz.Skyline
         private void UpdateRetentionTimeGraph()
         {
             if (_graphRetentionTime != null)
-                _graphRetentionTime.UpdateUI();
+            {
+                try
+                {
+                    _graphRetentionTime.UpdateUI();
+                }
+                catch (CalculatorException e)
+                {
+                    MessageDlg.Show(this, e.Message);
+                    Settings.Default.RTCalculatorName = "";
+                }
+            }
         }
 
         #endregion

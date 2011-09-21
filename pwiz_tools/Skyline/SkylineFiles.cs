@@ -26,6 +26,7 @@ using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Serialization;
 using Ionic.Zip;
+using pwiz.ProteomeDatabase.API;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Controls.SeqNode;
@@ -33,6 +34,7 @@ using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
@@ -264,7 +266,11 @@ namespace pwiz.Skyline
         private SrmDocument ConnectDocument(SrmDocument document, string path)
         {
             document = ConnectLibrarySpecs(document, path);
-            return document != null ? ConnectBackgroundProteome(document, path) : null;
+            if (document != null)
+                document = ConnectBackgroundProteome(document, path);
+            if (document != null)
+                document = ConnectIrtDatabase(document, path);
+            return document;
         }
 
         private SrmDocument ConnectLibrarySpecs(SrmDocument document, string path)
@@ -290,15 +296,17 @@ namespace pwiz.Skyline
                             return library.CreateSpec(pathLibrary);
                     }
 
-                    using (var dlg = new MissingLibraryDlg
+                    using (var dlg = new MissingFileDlg
                                   {
-                                      LibraryName = library.Name,
-                                      LibraryFileNameHint = fileName
+                                      ItemName = library.Name,
+                                      ItemType = "Spectral Library",
+                                      FileHint = fileName,
+                                      Title = "Find Spectral Library"
                                   })
                     {
                         if (dlg.ShowDialog(this) == DialogResult.OK)
                         {
-                            return library.CreateSpec(dlg.LibraryPath);
+                            return library.CreateSpec(dlg.FilePath);
                         }
                     }
 
@@ -320,11 +328,85 @@ namespace pwiz.Skyline
             return document.ChangeSettings(settings);
         }
 
+        private SrmDocument ConnectIrtDatabase(SrmDocument document, string documentPath)
+        {
+            var settings = document.Settings.ConnectIrtDatabase(calc => FindIrtDatabase(documentPath, calc));
+            if (settings == null)
+            {
+                return null;
+            }
+            return document.ChangeSettings(settings);
+        }
+
+
+        private RCalcIrt FindIrtDatabase(string documentPath, RCalcIrt irtCalc)
+        {
+
+            RetentionScoreCalculatorSpec result;
+            if (Settings.Default.RTScoreCalculatorList.TryGetValue(irtCalc.Name, out result))
+                return result as RCalcIrt;
+            if (documentPath == null)
+                return null;
+
+            // First look for the file name in the document directory
+            string fileName = Path.GetFileName(irtCalc.DatabasePath);
+            string filePath = Path.Combine(Path.GetDirectoryName(documentPath), fileName);
+
+            if (File.Exists(filePath))
+            {
+                try
+                {
+                    return irtCalc.ChangeDatabasePath(filePath);
+                }
+                catch (CalculatorException)
+                {
+                    //Todo: should this fail silenty or raise another dialog box?
+                }
+            }
+
+            do
+            {
+                using (var dlg = new MissingFileDlg
+                         {
+                             ItemName = irtCalc.Name,
+                             ItemType = "iRT Calculator",
+                             Filter = string.Format("iRT Database|*{0}|All Files|*.*", IrtDb.EXT_IRTDB),
+                             FileHint = Path.GetFileName(irtCalc.DatabasePath),
+                             FileDlgInitialPath = Path.GetDirectoryName(documentPath),
+                             Title = "Find iRT Calculator"
+                         })
+                {
+                    if (dlg.ShowDialog(this) == DialogResult.OK)
+                    {
+                        if (dlg.FilePath == null)
+                        {
+                            return RCalcIrt.NONE;
+                        }
+                        else
+                        {
+                            try
+                            {
+                                return irtCalc.ChangeDatabasePath(dlg.FilePath);
+                            }
+                            catch (DatabaseOpeningException e)
+                            {
+                                MessageBox.Show(string.Format("The database file specified could not be opened:\n{0}", e.Message));
+                            }
+                        }
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+            }
+            while (true);
+        }
+
         private SrmDocument ConnectBackgroundProteome(SrmDocument document, string documentPath)
         {
-            var settings =
-                document.Settings.ConnectBackgroundProteome(
-                    backgroundProteomeSpec => FindBackgroundProteome(documentPath, backgroundProteomeSpec));
+            var settings = document.Settings.ConnectBackgroundProteome(backgroundProteomeSpec =>
+                FindBackgroundProteome(documentPath, backgroundProteomeSpec));
             if (settings == null)
             {
                 return null;
@@ -349,19 +431,27 @@ namespace pwiz.Skyline
             pathBackgroundProteome = Path.Combine(Settings.Default.ProteomeDbDirectory, fileName ?? "");
             if (File.Exists(pathBackgroundProteome))
                 return new BackgroundProteomeSpec(backgroundProteomeSpec.Name, pathBackgroundProteome);
-            using (var dlg = new MissingBackgroundProteomeDlg
-            {
-                BackgroundProteomeHint = fileName,
-                BackgroundProteomeName = backgroundProteomeSpec.Name,
-            })
+            using (var dlg = new MissingFileDlg
+                    {
+                        FileHint = fileName,
+                        ItemName = backgroundProteomeSpec.Name,
+                        ItemType = "Background Proteome",
+                        Filter = string.Format("Proteome File|*{0}|All Files|*.*", ProteomeDb.EXT_PROTDB),
+                        FileDlgInitialPath = Settings.Default.ProteomeDbDirectory,
+                        Title = "Find Background Proteome"
+                    })
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    if (dlg.BackgroundProteomePath == null)
+                    if (dlg.FilePath == null)
                     {
                         return BackgroundProteomeList.GetDefault();
                     }
-                    return new BackgroundProteomeSpec(backgroundProteomeSpec.Name, dlg.BackgroundProteomePath);
+                    else
+                    {
+                        Settings.Default.ProteomeDbDirectory = Path.GetDirectoryName(dlg.FilePath);
+                    }
+                    return new BackgroundProteomeSpec(backgroundProteomeSpec.Name, dlg.FilePath);
                 }
             }
             return null;
@@ -1322,5 +1412,14 @@ namespace pwiz.Skyline
                 _skyline.OpenFile(_path);
             }
         }
+
+        #region Functional Test Support
+
+        public void ShowExportTransitionListDlg()
+        {
+            ShowExportMethodDialog(ExportFileType.List);
+        }
+
+        #endregion
     }
 }

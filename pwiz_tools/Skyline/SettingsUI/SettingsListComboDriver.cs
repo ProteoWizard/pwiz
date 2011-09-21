@@ -18,6 +18,7 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
 using System.Xml.Serialization;
 using pwiz.Skyline.Properties;
@@ -40,11 +41,18 @@ namespace pwiz.Skyline.SettingsUI
         private int _selectedIndexLast;
 
         public SettingsListComboDriver(ComboBox combo, SettingsList<TItem> list)
+            : this(combo, list, true)
+        {            
+        }
+
+        public SettingsListComboDriver(ComboBox combo, SettingsList<TItem> list, bool isVisibleEditting)
         {
+            IsVisibleEditting = isVisibleEditting;
             Combo = combo;
             List = list;
         }
 
+        public bool IsVisibleEditting { get; private set; }
         public ComboBox Combo { get; private set; }
         public SettingsList<TItem> List { get; private set; }
 
@@ -54,7 +62,7 @@ namespace pwiz.Skyline.SettingsUI
             {
                 Combo.BeginUpdate();
                 Combo.Items.Clear();
-                foreach (TItem item in List)
+                foreach (TItem item in List.ToArrayStd())
                 {
                     string name = List.GetKey(item);
                     int i = Combo.Items.Add(name);
@@ -64,14 +72,28 @@ namespace pwiz.Skyline.SettingsUI
                 // If nothing was added, add a blank to avoid starting with "Add..." selected.
                 if (Combo.Items.Count == 0)
                     Combo.Items.Add("");
-                Combo.Items.Add(ADD_ITEM);
-                Combo.Items.Add(EDIT_LIST_ITEM);
+                if (IsVisibleEditting)
+                {
+                    Combo.Items.Add(ADD_ITEM);
+                    Combo.Items.Add(EDIT_LIST_ITEM);
+                }
                 if (Combo.SelectedIndex < 0)
                     Combo.SelectedIndex = 0;
             }
             finally
             {
                 Combo.EndUpdate();
+            }
+        }
+
+        public TItem SelectedItem
+        {
+            get
+            {
+                string selectedString = SelectedString;
+                if (!List.ContainsKey(selectedString))
+                    return default(TItem);
+                return List[selectedString];
             }
         }
 
@@ -90,17 +112,21 @@ namespace pwiz.Skyline.SettingsUI
             return Equals(EDIT_LIST_ITEM, SelectedString);
         }
 
-        public void SelectedIndexChangedEvent(object sender, EventArgs e)
+        public bool SelectedIndexChangedEvent(object sender, EventArgs e)
         {
+            bool handled = false;
             if (AddItemSelected())
             {
                 AddItem();
+                handled = true;
             }
             else if (EditListSelected())
             {
                 EditList();
+                handled = true;
             }
             _selectedIndexLast = Combo.SelectedIndex;
+            return handled;
         }
 
         public void AddItem()
@@ -123,16 +149,23 @@ namespace pwiz.Skyline.SettingsUI
             IEnumerable<TItem> listNew = List.EditList(Combo.TopLevelControl, null);
             if (listNew != null)
             {
-                string selectedItemLast = Combo.Items[_selectedIndexLast].ToString();
-                if (!List.ExcludeDefault)
+                string selectedItemLast;
+                if (_selectedIndexLast < 0 || _selectedIndexLast > Combo.Items.Count - 1)
+                    selectedItemLast = null;
+                else
+                    selectedItemLast = Combo.Items[_selectedIndexLast].ToString();
+                if (!List.ExcludeDefaults)
                     List.Clear();
                 else
                 {
-                    // If the default item was excluded from editing,
-                    // then make sure it is preserved as the first item.
-                    TItem itemDefault = List[0];
+                    // If default items were excluded from editing,
+                    // then make sure they are preserved as the first items.
+                    List<TItem> tmpList = new List<TItem>();
+                    int countDefaults = List.ExcludeDefaults ? List.GetDefaults(List.RevisionIndexCurrent).Count() : 0;
+                    for (int i = 0; i < countDefaults; i++)
+                        tmpList.Add(List[i]);
                     List.Clear();
-                    List.Add(itemDefault);
+                    List.AddRange(tmpList);
                 }
                 List.AddRange(listNew);
                 LoadList(selectedItemLast);

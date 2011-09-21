@@ -16,37 +16,53 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System.IO;
 using System.Windows.Forms;
-using pwiz.ProteomeDatabase.API;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Alerts
 {
-    public partial class MissingBackgroundProteomeDlg : Form
+    public partial class MissingFileDlg : Form
     {
-        private string _backgroundProteomeName;
-        public MissingBackgroundProteomeDlg()
+        private string _itemName;
+        private string _itemType;
+        public MissingFileDlg()
         {
             InitializeComponent();
             Text = Program.Name;
         }
 
-        public string BackgroundProteomeName
+        public const string TEXT = "This document requires the '{0}' {1}.\n" +
+                                    "Click the Browse button specify its location on your system.\n" +
+                                    "Click the Open button to open the document without the {1}.";
+
+        public string FileDlgInitialPath { get; set; }
+        public string FileHint { get; set; }
+        //File extension filter
+        public string Filter { get; set; }
+        //Title bar text
+        public string Title { get; set; }
+        //Text to put in the initial dialog: something like 'My Background Proteome'
+        public string ItemName
         {
-            get { return _backgroundProteomeName; }
+            get { return _itemName; }
             set 
             { 
-                _backgroundProteomeName = value;
-                labelMessage.Text = string.Format("This document requires the '{0}' background proteome.\n" +
-                    "Click the Browse button specify its location on your system.\n" +
-                    "Click the Open button to open the document without the background proteome.", _backgroundProteomeName);
+                _itemName = value;
+                labelMessage.Text = string.Format(TEXT, _itemName, ItemType);
             }
         }
-        
-        public string BackgroundProteomeHint { get; set; }
+        //The name of the type of thing that is missing: something like 'background proteome' or 'calculator database'
+        public string ItemType
+        {
+            get { return _itemType; }
+            set 
+            { 
+                _itemType = value;
+                labelMessage.Text = string.Format(TEXT, _itemName, _itemType);
+            }
+        }
 
-        public string BackgroundProteomePath { get; private set; }
+        public string FilePath { get; private set; }
+
         public void OkDialog()
         {
             DialogResult = DialogResult.OK;
@@ -60,23 +76,19 @@ namespace pwiz.Skyline.Alerts
 
         private void btnBrowse_Click(object sender, System.EventArgs e)
         {
-            string filterProtDb = string.Format("Proteome File|*" + ProteomeDb.EXT_PROTDB + "|All Files|*.*");
-
             var openFileDialog = new OpenFileDialog
             {
-                Filter = filterProtDb,
-                InitialDirectory = Settings.Default.ProteomeDbDirectory,
-                Title = "Open Background Protoeme",
+                Filter = Filter,
+                InitialDirectory = FileDlgInitialPath,
+                Title = Title,
                 CheckFileExists = true,
-                FileName = BackgroundProteomeHint
+                FileName = FileHint
             };
             if (openFileDialog.ShowDialog() == DialogResult.Cancel)
                 return;
 
-            BackgroundProteomePath = openFileDialog.FileName;
-            Settings.Default.ProteomeDbDirectory = Path.GetDirectoryName(BackgroundProteomePath);
+            FilePath = openFileDialog.FileName;
             OkDialog();
         }
-
     }
 }

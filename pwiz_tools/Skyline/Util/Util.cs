@@ -130,7 +130,7 @@ namespace pwiz.Skyline.Util
         /// the list.  Useful when the default item cannot be edited
         /// or removed from the list.
         /// </summary>
-        bool ExcludeDefault { get; }
+        bool ExcludeDefaults { get; }
     }
 
     /// <summary>
@@ -144,6 +144,11 @@ namespace pwiz.Skyline.Util
         /// </summary>
         /// <returns>The new list after editing, or null if the user cancelled</returns>
         IEnumerable<TItem> EditList(Control owner, object tag);
+
+        /// <summary>
+        /// Returns true, if a new list is accepted to replace the current list
+        /// </summary>
+        bool AcceptList(Control owner, IEnumerable<TItem> listNew);
     }
 
     /// <summary>

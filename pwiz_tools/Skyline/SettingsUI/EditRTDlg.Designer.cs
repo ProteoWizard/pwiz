@@ -259,6 +259,7 @@
             this.gridPeptides.Visible = global::pwiz.Skyline.Properties.Settings.Default.EditRTVisible;
             this.gridPeptides.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridPeptides_CellEndEdit);
             this.gridPeptides.KeyDown += new System.Windows.Forms.KeyEventHandler(this.gridPeptides_KeyDown);
+            this.gridPeptides.RowsRemoved += new System.Windows.Forms.DataGridViewRowsRemovedEventHandler(this.gridPeptides_RowsRemoved);
             // 
             // Sequence
             // 
