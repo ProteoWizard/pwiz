@@ -83,6 +83,15 @@ namespace pwiz.Skyline.Controls
             {
                 skylineWindow.ClipboardControlGotFocus(this);
             }
+            // Fix for Issue 85(nicksh): For some reason ContainerControl.UpdateFocusedControl can
+            // get into an infinite loop sometimes.
+            // Setting ActiveControl to this prevents the hang from happening, and seems like a safe
+            // thing to do here.
+            var form = FindForm();
+            if (form != null)
+            {
+                form.ActiveControl = this;
+            }
         }
 
         protected override void OnLeave(EventArgs e)
