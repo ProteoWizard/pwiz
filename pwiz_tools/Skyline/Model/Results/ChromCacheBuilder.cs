@@ -431,14 +431,15 @@ namespace pwiz.Skyline.Model.Results
 
                 // If this is single matching, as in full-scan filtering, return only nodes
                 // matching a single precursor m/z value.  The one closest to the data.
-                double? bestMz = null;
+                float? bestMz = null;
                 if (singleMatch)
                 {
-                    double matchMz = chromDataSet.PrecursorMz;
+                    float matchMz = chromDataSet.PrecursorMz;
                     foreach (var match in listMatchingGroups)
                     {
-                        if (!bestMz.HasValue || Math.Abs(matchMz - match.Key.PrecursorMz) < Math.Abs(matchMz - bestMz.Value))
-                            bestMz = match.Key.PrecursorMz;
+                        float currentMz = (float) match.Key.PrecursorMz;
+                        if (!bestMz.HasValue || Math.Abs(matchMz - currentMz) < Math.Abs(matchMz - bestMz.Value))
+                            bestMz = currentMz;
                     }
                 }
 
@@ -446,7 +447,7 @@ namespace pwiz.Skyline.Model.Results
                 // may end up processing it at the same time.
                 var setChromData = new HashSet<ChromData>();
                 foreach (var match in listMatchingGroups.Where(match =>
-                    !bestMz.HasValue || bestMz.Value == match.Key.PrecursorMz))
+                    !bestMz.HasValue || bestMz.Value == (float) match.Key.PrecursorMz))
                 {
                     var arrayChromData = match.Value.ToArray();
                     for (int j = 0; j < arrayChromData.Length; j++)
