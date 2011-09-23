@@ -968,8 +968,8 @@ namespace freicore
                         {
                             spectra.readPeaks( *fItr,
                                        0, -1,
-                                       2, // minMsLevel
-                                       g_rtConfig->SpectrumListFilters );
+                                                2, // minMsLevel
+                                                g_rtConfig->SpectrumListFilters );
                         } catch( std::exception& e )
                         {
                             cerr << "Encountered an error: " << e.what() << endl;
