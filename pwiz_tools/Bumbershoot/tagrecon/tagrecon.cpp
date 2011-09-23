@@ -1707,7 +1707,7 @@ namespace tagrecon
 								    cout << "Reading tags for " << spectra.size() << " prepared spectra." << endl;
 								    size_t totalTags = 0;
 								    // Read the tags in the input file
-								    spectra.readTags( *fItr, false );
+								    spectra.readTags( *fItr, true );
 								    // For each spectrum in the input file
 								    for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr )
 								    {
