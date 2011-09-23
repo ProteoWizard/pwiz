@@ -69,7 +69,7 @@
             this.JQOutputDirectory = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.JQDatabaseFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.JQConfigFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.JQScanType = new System.Windows.Forms.DataGridViewComboBoxColumn();
+            this.Column1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.JQProgress = new CustomProgressCell.DataGridViewProgressColumn();
             this.Kill = new System.Windows.Forms.DataGridViewButtonColumn();
             ((System.ComponentModel.ISupportInitialize)(this.JobQueueDGV)).BeginInit();
@@ -93,7 +93,7 @@
             this.JQOutputDirectory,
             this.JQDatabaseFile,
             this.JQConfigFile,
-            this.JQScanType,
+            this.Column1,
             this.JQProgress,
             this.Kill});
             this.JobQueueDGV.EditMode = System.Windows.Forms.DataGridViewEditMode.EditProgrammatically;
@@ -422,17 +422,10 @@
             this.JQConfigFile.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Programmatic;
             this.JQConfigFile.Width = 115;
             // 
-            // JQScanType
+            // Column1
             // 
-            this.JQScanType.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.JQScanType.FillWeight = 75F;
-            this.JQScanType.HeaderText = "Search Type";
-            this.JQScanType.Items.AddRange(new object[] {
-            "Database Search",
-            "Sequence Tagging",
-            "Spectral Library"});
-            this.JQScanType.MinimumWidth = 105;
-            this.JQScanType.Name = "JQScanType";
+            this.Column1.HeaderText = "Search Type";
+            this.Column1.Name = "Column1";
             // 
             // JQProgress
             // 
@@ -525,7 +518,7 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn JQOutputDirectory;
         private System.Windows.Forms.DataGridViewTextBoxColumn JQDatabaseFile;
         private System.Windows.Forms.DataGridViewTextBoxColumn JQConfigFile;
-        private System.Windows.Forms.DataGridViewComboBoxColumn JQScanType;
+        private System.Windows.Forms.DataGridViewTextBoxColumn Column1;
         private CustomProgressCell.DataGridViewProgressColumn JQProgress;
         private System.Windows.Forms.DataGridViewButtonColumn Kill;
     }
