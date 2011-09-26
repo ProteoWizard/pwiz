@@ -1,0 +1,6 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <StartWorkingDirectory>C:\proj\BuildMethod\BuildAnalystFullScanMethod\</StartWorkingDirectory>
+    <StartArguments>IDAT.dam -i 6 "Study 7 unsched.csv"</StartArguments>
+  </PropertyGroup>
+</Project>
