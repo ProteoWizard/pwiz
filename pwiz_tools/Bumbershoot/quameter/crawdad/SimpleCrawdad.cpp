@@ -116,6 +116,7 @@ void CrawdadPeakFinder::SetChromatogram(vector<float>& intensities, int maxInten
 
 	if (_widthDataWings > 0)
 	{
+        _wingData.assign(_widthDataWings, (float)baselineIntensity);
 		intensities.insert(intensities.begin(), _widthDataWings, (float)baselineIntensity);
 		intensities.insert(intensities.end(), _widthDataWings, (float)baselineIntensity);
 	}
@@ -124,7 +125,7 @@ void CrawdadPeakFinder::SetChromatogram(vector<float>& intensities, int maxInten
     _peakFinder.set_chrom(intensities, 0);
 }
 
-vector<float> CrawdadPeakFinder::getIntensities2d()
+const vector<float>& CrawdadPeakFinder::getSmoothed2ndDerivativeIntensities()
 {
     // Make sure the 2d chromatogram is populated
     if (_peakFinder.chrom_2d.size() != _peakFinder.chrom.size())
@@ -133,39 +134,31 @@ vector<float> CrawdadPeakFinder::getIntensities2d()
         _peakFinder.get_2d_chrom(_peakFinder.chrom, _peakFinder.chrom_2d);
     }
 
-    // Marshall 2nd derivative peaks back to managed list
-    vector<float> intensities2d(_peakFinder.chrom.size() - _widthDataWings*2);
-
-    vector<float>::iterator it = _peakFinder.chrom_2d.begin() + _widthDataWings;
-    vector<float>::iterator itEnd = _peakFinder.chrom_2d.end() - _widthDataWings;
-    while (it < itEnd)
-    {
-        intensities2d.push_back(*it);
-        it++;
-    }
-    return intensities2d;
+    return _peakFinder.chrom_2d;
 }
 
-vector<float> CrawdadPeakFinder::getIntensities1d()
+const vector<float>& CrawdadPeakFinder::getSmoothed1stDerivativeIntensities()
 {
-    // Make sure the 2d chromatogram is populated
+    // Make sure the 1d chromatogram is populated
     if (_peakFinder.chrom_1d.size() != _peakFinder.chrom.size())
     {
         _peakFinder.chrom_1d.resize(_peakFinder.chrom.size());
         _peakFinder.get_1d_chrom(_peakFinder.chrom, _peakFinder.chrom_1d);
     }
 
-    // Marshall 2nd derivative peaks back to managed list
-    vector<float> intensities1d(_peakFinder.chrom.size() - _widthDataWings*2);
+    return _peakFinder.chrom_1d;
+}
 
-    vector<float>::iterator it = _peakFinder.chrom_1d.begin() + _widthDataWings;
-    vector<float>::iterator itEnd = _peakFinder.chrom_1d.end() - _widthDataWings;
-    while (it < itEnd)
+const vector<float>& CrawdadPeakFinder::getSmoothedIntensities()
+{
+    // Make sure the 0d chromatogram is populated
+    if (_peakFinder.chrom_0d.size() != _peakFinder.chrom.size())
     {
-        intensities1d.push_back(*it);
-        it++;
+        _peakFinder.chrom_0d.resize(_peakFinder.chrom.size());
+        _peakFinder.get_0d_chrom(_peakFinder.chrom, _peakFinder.chrom_0d);
     }
-    return intensities1d;
+
+    return _peakFinder.chrom_0d;
 }
 
 struct OrderAreaDesc

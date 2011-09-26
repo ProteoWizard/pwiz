@@ -96,8 +96,10 @@ class CrawdadPeakFinder
     float getStdDev() { return _peakFinder.method.get_sd(); }
     void setStdDev(float sd) { _peakFinder.method.set_sd(sd); }
 
-    vector<float> getIntensities2d();
-    vector<float> getIntensities1d();
+    const vector<float>& getSmoothed2ndDerivativeIntensities();
+    const vector<float>& getSmoothed1stDerivativeIntensities();
+    const vector<float>& getSmoothedIntensities();
+    const vector<float>& getWingData() const {return _wingData;}
 
     vector<CrawdadPeakPtr> CalcPeaks();
 
@@ -113,6 +115,7 @@ class CrawdadPeakFinder
 	// Padding data added before and after real data to ensure peaks
 	// near the edges get detected.
 	int _widthDataWings;
+    vector<float> _wingData;
 
     StackCrawPeakFinder _peakFinder;
 };
