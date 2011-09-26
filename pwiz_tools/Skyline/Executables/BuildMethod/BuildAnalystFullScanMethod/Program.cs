@@ -135,7 +135,22 @@ namespace BuildAnalystFullScanMethod
             var experimentCount = ((Period)method.GetPeriod(0)).ExperimCount;
             var experimentType = msExperiment.ScanType;
             //Product ion scan is 9 in the new version of the software, 6 in the old. TOF MS is 8
-            if (!InclusionList)
+            if (InclusionList)
+            {
+                if (experimentType != 8)
+                    throw new IOException(string.Format("Invalid template method {0}. Experiment type must be TOF MS for an IDA experiment.",
+                                                    TemplateMethod));
+
+                if (experimentCount != 2)
+                    throw new IOException(string.Format("Invalid template method {0}. Template must have one TOF MS experiment and one Product Ion experiment.",
+                                                    TemplateMethod));
+
+                var experiment2Type = ((Experiment)((Period)method.GetPeriod(0)).GetExperiment(1)).ScanType;
+                if (experiment2Type != 9 && experiment2Type != 6)
+                    throw new IOException(string.Format("Invalid template method {0}. Second experiment type must be Product Ion Scan.",
+                                                     TemplateMethod));
+            }
+            else
             {
                 if (experimentType != 9 && experimentType != 6)
                     throw new IOException(string.Format("Invalid template method {0}. Experiment type must be Product Ion Scan.",
@@ -144,22 +159,6 @@ namespace BuildAnalystFullScanMethod
                 if (experimentCount != 1)
                     throw new IOException(string.Format("Invalid template method {0}. Template must have only one experiment.",
                                                     TemplateMethod));
-            }
-            else
-            {
-                if(experimentType != 8)
-                    throw new IOException(string.Format("Invalid template method {0}. Experiment type must be TOF MS for an IDA experiment.",
-                                                    TemplateMethod));
-
-                if (experimentCount != 2)
-                    throw new IOException(string.Format("Invalid template method {0}. Template must have one TOF MS experiment and one Product Ion experiment.",
-                                                    TemplateMethod));
-
-                var experiment2Type = ((Experiment) ((Period) method.GetPeriod(0)).GetExperiment(1)).ScanType;
-                if(experiment2Type != 9 && experiment2Type != 6)
-                    throw new IOException(string.Format("Invalid template method {0}. Second experiment type must be Product Ion Scan.",
-                                                     TemplateMethod));
-
             }
         }
 
