@@ -33,6 +33,10 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Interop.DDEMethodSvr, Version=1.0.0.0, Culture=neutral, PublicKeyToken=7dcb9a6ed1f0b664, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>references\Interop.DDEMethodSvr.dll</HintPath>
+    </Reference>
     <Reference Include="Interop.MSMethodSvrLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>obj\Debug\Interop.MSMethodSvrLib.dll</HintPath>

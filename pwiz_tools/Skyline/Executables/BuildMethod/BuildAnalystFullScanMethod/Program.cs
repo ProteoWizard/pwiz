@@ -21,15 +21,15 @@ using System.Collections.Generic;
 using System.IO;
 using AcqMethodSvrLib;
 using BuildAnalystMethod;
-using IDAMethodSvr;
 using MSMethodSvrLib;
 using ParameterSvrLib;
+using Interop.DDEMethodSvr;
 
 namespace BuildAnalystFullScanMethod
 {
     class Program
     {
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
             try
             {
@@ -55,8 +55,8 @@ namespace BuildAnalystFullScanMethod
                 Console.Error.WriteLine("ERROR: {0}", x.Message);
             }
 
-//            Console.WriteLine("Press any key to continue...");
-//            Console.In.ReadLine();
+            //            Console.WriteLine("Press any key to continue...");
+            //            Console.In.ReadLine();
         }
 
         static void Usage()
@@ -67,7 +67,7 @@ namespace BuildAnalystFullScanMethod
                 "   transition list as inputs, to generate a new method file\n" +
                 "   as output.\n" +
                 "   -1               Do an MS1 scan each cycle" +
-                "   -i N             Do data-dependent acquisition finding the top N precursors every scan" +
+                "   -i N             Do data-dependent acquisition for the top N precursors every scan" +
                 "   -w <RT window>   Retention time window for schedule [unscheduled otherwise]\n" +
                 "   -o <output file> New method is written to the specified output file\n" +
                 "   -s               Transition list is read from stdin.\n" +
@@ -107,12 +107,12 @@ namespace BuildAnalystFullScanMethod
                     case "i":
                         {
                             InclusionList = true;
-                            if(i+1 >= args.Count)
+                            if (i + 1 >= args.Count)
                                 throw new UsageException();
                             int topN;
-                            if(!int.TryParse(args[++i], out topN))
+                            if (!int.TryParse(args[++i], out topN))
                                 throw new UsageException();
-                            if(topN < 1)
+                            if (topN < 1)
                                 throw new UsageException();
                             TopNPrecursors = topN;
                         }
@@ -131,15 +131,36 @@ namespace BuildAnalystFullScanMethod
 
         public override void ValidateMethod(MassSpecMethod method)
         {
-            var msExperiment = (Experiment) ((Period) method.GetPeriod(0)).GetExperiment(0);
+            var msExperiment = (Experiment)((Period)method.GetPeriod(0)).GetExperiment(0);
+            var experimentCount = ((Period)method.GetPeriod(0)).ExperimCount;
             var experimentType = msExperiment.ScanType;
             //Product ion scan is 9 in the new version of the software, 6 in the old. TOF MS is 8
-            if (experimentType != 9 && experimentType != 6 && experimentType != 8)
+            if (!InclusionList)
             {
-                throw new IOException(string.Format("Invalid template method {0}.  Experiment type must be Product Ion Scan or TOF MS.",
+                if (experimentType != 9 && experimentType != 6)
+                    throw new IOException(string.Format("Invalid template method {0}. Experiment type must be Product Ion Scan.",
+                                                     TemplateMethod));
+
+                if (experimentCount != 1)
+                    throw new IOException(string.Format("Invalid template method {0}. Template must have only one experiment.",
                                                     TemplateMethod));
             }
-             
+            else
+            {
+                if(experimentType != 8)
+                    throw new IOException(string.Format("Invalid template method {0}. Experiment type must be TOF MS for an IDA experiment.",
+                                                    TemplateMethod));
+
+                if (experimentCount != 2)
+                    throw new IOException(string.Format("Invalid template method {0}. Template must have one TOF MS experiment and one Product Ion experiment.",
+                                                    TemplateMethod));
+
+                var experiment2Type = ((Experiment) ((Period) method.GetPeriod(0)).GetExperiment(1)).ScanType;
+                if(experiment2Type != 9 && experiment2Type != 6)
+                    throw new IOException(string.Format("Invalid template method {0}. Second experiment type must be Product Ion Scan.",
+                                                     TemplateMethod));
+
+            }
         }
 
         public override void WriteToTemplate(IAcqMethod acqMethod, MethodTransitions transitions)
@@ -147,13 +168,13 @@ namespace BuildAnalystFullScanMethod
 
             var method = ExtractMsMethod(acqMethod);
             var period = (Period)method.GetPeriod(0);
-            var mExperiment = (Experiment) period.GetExperiment(0);
+            var mExperiment = (Experiment)period.GetExperiment(0);
 
-            var tofPropertiesX = (ITOFProperties) mExperiment;
+            var tofPropertiesX = (ITOFProperties)mExperiment;
             var accumTime = tofPropertiesX.AccumTime;
 
             var precursors = new List<double>();
-            
+
             short s;
 
             var srcParamsTbl = (ParamDataColl)((Experiment)period.GetExperiment(0)).SourceParamsTbl;
@@ -174,74 +195,68 @@ namespace BuildAnalystFullScanMethod
                 ionSprayVoltage = ((ParameterData)srcParamsTbl.FindParameter(ionSprayVoltageParamName, out s)).startVal;
             }
 
-            int deleteTo;
-            //Clear out the period
-            if (InclusionList)
-                //Have to keep one Product Ion scan to keep IDA state
-                deleteTo = 2;
-            else
-                deleteTo = 0;
-            for (int i = period.ExperimCount - 1; i >= deleteTo; i--)
-            {
-                period.DeleteExperiment(i);
-            }
-
-            int j;
-
-            if (Ms1Scan || InclusionList)
-            {
-                var experiment = (Experiment)period.CreateExperiment(out j);
-                experiment.InitExperiment();
-                experiment.ScanType = 8; //Documentation doesn't even have an '8', but debugging a real method
-                //shows that this value should be 8 for a "TOF MS" scan
-            }
-
             if (InclusionList)
             {
-                object dataDepExper;
+                object idaServer;
+                ((IMassSpecMethod2)method).GetDataDependSvr(out idaServer);
+                ((IDDEMethodObj)idaServer).putUseIncludeList(1);
 
-                var anIda = (IIDA)period;
+                double minTOFMass = 0;
+                double maxTOFMass = 0;
+                ((IDDEMethodObj)idaServer).getUsersSurvTOFMasses(ref minTOFMass, ref maxTOFMass);
 
-                anIda.GetIDAServer(out dataDepExper);
-
-                var idaCriteria = (IIDACriteriaLevel1)dataDepExper;
-
-                idaCriteria.ClearIncludeExclude(1);
-
+                var addedEntries = new List<string>();
                 foreach (var transition in transitions.Transitions)
                 {
-                    //todo: What do the other arguments do??
-                    idaCriteria.AddIncludeIonEntry(transition.PrecursorMz, 0, 0, 0);
+                    double retentionTime = 0;
+                    string entryKey = transition.PrecursorMz + retentionTime.ToString();
+                    if (!addedEntries.Contains(entryKey)
+                        && transition.PrecursorMz > minTOFMass
+                        && transition.PrecursorMz < maxTOFMass)
+                    {
+                        ((IDDEMethodObj)idaServer).AddIonEntry(1, transition.PrecursorMz, retentionTime);
+                        addedEntries.Add(entryKey);
+                    }
                 }
 
-                //The strategy here is to install the correct number of IDA experiments on top of
-                //the one that was kept in order to keep IDA state in the method.
-                for(int i = 0; i < TopNPrecursors; i++)
+                int experimentIndex;
+                //TopN - 1 because the template comes with one product ion scan.
+                for (int i = 0; i < TopNPrecursors-1; i++)
+                {
+                    var experiment = (Experiment)period.CreateExperiment(out experimentIndex);
+                    experiment.InitExperiment();
+                    experiment.ScanType = Equals(ionSprayVoltageParamName, "IS") ? (short)6 : (short)9;
+                }
+            }
+            else
+            {
+                period.DeleteExperiment(0);
+
+                int j;
+
+                if (Ms1Scan)
                 {
                     var experiment = (Experiment)period.CreateExperiment(out j);
                     experiment.InitExperiment();
-                    experiment.ScanType = Equals(ionSprayVoltageParamName, "IS") ? (short)9 : (short)6;
+                    experiment.ScanType = 8; //Documentation doesn't even have an '8', but debugging a real method
+                    //shows that this value should be 8 for a "TOF MS" scan
                 }
 
-                //Then after installing all the experiments, delete the one left from the template.
-                period.DeleteExperiment(1);
-            }
-            else
-            {
                 foreach (var transition in transitions.Transitions)
                 {
                     if (precursors.Contains(transition.PrecursorMz))
                         continue;
 
                     precursors.Add(transition.PrecursorMz);
-                    var experiment = (Experiment) period.CreateExperiment(out j);
+
+                    var experiment = (Experiment)period.CreateExperiment(out j);
                     experiment.InitExperiment();
 
-                    experiment.ScanType = Equals(ionSprayVoltageParamName, "IS") ? (short) 9 : (short) 6;
+                    experiment.ScanType = Equals(ionSprayVoltageParamName, "IS") ? (short)6 : (short)9;
 
                     experiment.FixedMass = transition.PrecursorMz;
 
-                    var tofProperties = (ITOFProperties) experiment;
+                    var tofProperties = (ITOFProperties)experiment;
 
                     try
                     {
@@ -254,7 +269,7 @@ namespace BuildAnalystFullScanMethod
                     tofProperties.TOFMassMin = 400;
                     tofProperties.TOFMassMax = 1400;
 
-                    var srcParams = (ParamDataColl) experiment.SourceParamsTbl;
+                    var srcParams = (ParamDataColl)experiment.SourceParamsTbl;
                     srcParams.AddSetParameter("GS1", sourceGas1, sourceGas1, 0, out s);
                     srcParams.AddSetParameter("GS2", sourceGas2, sourceGas2, 0, out s);
                     srcParams.AddSetParameter("CUR", curtainGas, curtainGas, 0, out s);

@@ -1,6 +1,5 @@
 C:\proj\BuildMethod\BuildAnalystFullScanMethod\bin\Debug\BuildAnalystFullScanMethod.pdb
 C:\proj\BuildMethod\BuildAnalystFullScanMethod\bin\Debug\BuildAnalystMethod.dll
-C:\proj\BuildMethod\BuildAnalystFullScanMethod\bin\Debug\Interop.MSMethodSvrLib.dll
 C:\proj\BuildMethod\BuildAnalystFullScanMethod\bin\Debug\Interop.AcqMethodSvrLib.dll
 C:\proj\BuildMethod\BuildAnalystFullScanMethod\bin\Debug\Interop.Analyst.dll
 C:\proj\BuildMethod\BuildAnalystFullScanMethod\bin\Debug\Interop.StdType.dll
@@ -17,3 +16,4 @@ C:\proj\BuildMethod\BuildAnalystFullScanMethod\bin\Debug\BuildAnalystFullScanMet
 C:\proj\BuildMethod\BuildAnalystFullScanMethod\obj\Debug\BuildAnalystFullScanMethod.exe
 C:\proj\BuildMethod\BuildAnalystFullScanMethod\bin\Debug\Interop.IDAMethodSvr.dll
 C:\proj\BuildMethod\BuildAnalystFullScanMethod\obj\Debug\Interop.IDAMethodSvr.dll
+C:\proj\BuildMethod\BuildAnalystFullScanMethod\bin\Debug\Interop.DDEMethodSvr.dll
