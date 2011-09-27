@@ -34,6 +34,7 @@
 namespace pwiz {
 namespace msdata {
 
+struct SpectrumIdentityFromXML; // forward ref
 
 struct PWIZ_API_DECL Index_mzML
 {
@@ -42,7 +43,7 @@ struct PWIZ_API_DECL Index_mzML
     void recreate();
 
     size_t spectrumCount() const;
-    const SpectrumIdentity& spectrumIdentity(size_t index) const;
+    const SpectrumIdentityFromXML& spectrumIdentity(size_t index) const;
     size_t findSpectrumId(const std::string& id) const;
     IndexList findSpectrumBySpotID(const std::string& spotID) const;
     const std::map<std::string,std::string>& legacyIdRefToNativeId() const;

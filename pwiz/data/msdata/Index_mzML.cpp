@@ -25,7 +25,7 @@
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/minimxml/SAXParser.hpp"
 #include "boost/iostreams/positioning.hpp"
-
+#include "pwiz/data/msdata/IO.hpp"
 
 using namespace pwiz::util;
 using namespace pwiz::minimxml;
@@ -54,7 +54,7 @@ struct Index_mzML::Impl
     int schemaVersion_;
 
     mutable size_t spectrumCount_;
-    mutable vector<SpectrumIdentity> spectrumIndex_;
+    mutable vector<SpectrumIdentityFromXML> spectrumIndex_;
     mutable map<string,size_t> spectrumIdToIndex_;
     mutable map<string,IndexList> spotIDToIndexList_;
     mutable map<string,string> legacyIdRefToNativeId_;
@@ -178,7 +178,7 @@ class HandlerIndexList : public SAXParser::Handler
 
     HandlerIndexList(int schemaVersion_,
                      size_t& spectrumCount,
-                     vector<SpectrumIdentity>& spectrumIndex,
+                     vector<SpectrumIdentityFromXML>& spectrumIndex,
                      map<string,string>& legacyIdRefToNativeId,
                      size_t& chromatogramCount,
                      vector<ChromatogramIdentity>& chromatogramIndex)
@@ -217,7 +217,7 @@ class HandlerIndexList : public SAXParser::Handler
             if (inSpectrumIndex_)
             {
                 handlerOffset_.chromatogramIdentity = 0;
-                spectrumIndex_.push_back(SpectrumIdentity());
+                spectrumIndex_.push_back(SpectrumIdentityFromXML());
                 handlerOffset_.spectrumIdentity = &spectrumIndex_.back();
                 handlerOffset_.spectrumIdentity->index = spectrumCount_;
                 ++spectrumCount_;
@@ -238,7 +238,7 @@ class HandlerIndexList : public SAXParser::Handler
 
     private:
     size_t& spectrumCount_;
-    vector<SpectrumIdentity>& spectrumIndex_;
+    vector<SpectrumIdentityFromXML>& spectrumIndex_;
     size_t& chromatogramCount_;
     vector<ChromatogramIdentity>& chromatogramIndex_;
 
@@ -253,7 +253,7 @@ class HandlerIndexCreator : public SAXParser::Handler
 
     HandlerIndexCreator(int schemaVersion_,
                         size_t& spectrumCount,
-                        vector<SpectrumIdentity>& spectrumIndex,
+                        vector<SpectrumIdentityFromXML>& spectrumIndex,
                         map<string,string>& legacyIdRefToNativeId,
                         size_t& chromatogramCount,
                         vector<ChromatogramIdentity>& chromatogramIndex)
@@ -269,8 +269,8 @@ class HandlerIndexCreator : public SAXParser::Handler
     {
         if (name == "spectrum")
         {
-            SpectrumIdentity* si;
-            spectrumIndex_.push_back(SpectrumIdentity());
+            SpectrumIdentityFromXML* si;
+            spectrumIndex_.push_back(SpectrumIdentityFromXML());
             si = &spectrumIndex_.back();
 
             getAttribute(attributes, "id", si->id);
@@ -302,7 +302,7 @@ class HandlerIndexCreator : public SAXParser::Handler
 
     private:
     size_t& spectrumCount_;
-    vector<SpectrumIdentity>& spectrumIndex_;
+    vector<SpectrumIdentityFromXML>& spectrumIndex_;
     size_t& chromatogramCount_;
     vector<ChromatogramIdentity>& chromatogramIndex_;
 };
@@ -378,19 +378,10 @@ void Index_mzML::Impl::createIndex() const
 
 void Index_mzML::Impl::createMaps() const
 {
+    // actually just init - build when/if actually called for
     spectrumIdToIndex_.clear();
     spotIDToIndexList_.clear();
     chromatogramIdToIndex_.clear();
-
-    BOOST_FOREACH(const SpectrumIdentity& si, spectrumIndex_)
-    {
-        spectrumIdToIndex_[si.id] = si.index;
-        if (!si.spotID.empty())
-            spotIDToIndexList_[si.spotID].push_back(si.index);
-    }   
-
-    BOOST_FOREACH(const ChromatogramIdentity& ci, chromatogramIndex_)
-        chromatogramIdToIndex_[ci.id] = ci.index;
 }
 
 
@@ -401,7 +392,7 @@ PWIZ_API_DECL Index_mzML::Index_mzML(boost::shared_ptr<std::istream> is, const M
 PWIZ_API_DECL void Index_mzML::recreate() {impl_->createIndex();}
 
 PWIZ_API_DECL size_t Index_mzML::spectrumCount() const {return impl_->spectrumCount_;}
-PWIZ_API_DECL const SpectrumIdentity& Index_mzML::spectrumIdentity(size_t index) const {return impl_->spectrumIndex_[index];}
+PWIZ_API_DECL const SpectrumIdentityFromXML& Index_mzML::spectrumIdentity(size_t index) const {return impl_->spectrumIndex_[index];}
 PWIZ_API_DECL const map<std::string,std::string>& Index_mzML::legacyIdRefToNativeId() const {return impl_->legacyIdRefToNativeId_;}
 
 PWIZ_API_DECL size_t Index_mzML::chromatogramCount() const {return impl_->chromatogramCount_;}
@@ -409,18 +400,35 @@ PWIZ_API_DECL const ChromatogramIdentity& Index_mzML::chromatogramIdentity(size_
 
 PWIZ_API_DECL size_t Index_mzML::findSpectrumId(const std::string& id) const
 {
+    if (!impl_->spectrumIdToIndex_.size()) { // first use
+        BOOST_FOREACH(const SpectrumIdentityFromXML& si, impl_->spectrumIndex_)
+        {
+            impl_->spectrumIdToIndex_[si.id] = si.index;
+        }   
+    }
     map<string, size_t>::const_iterator itr = impl_->spectrumIdToIndex_.find(id);
     return itr == impl_->spectrumIdToIndex_.end() ? spectrumCount() : itr->second;
 }
 
 PWIZ_API_DECL IndexList Index_mzML::findSpectrumBySpotID(const std::string& spotID) const
 {
+    if (!impl_->spotIDToIndexList_.size()) { // first use
+        BOOST_FOREACH(const SpectrumIdentityFromXML& si, impl_->spectrumIndex_)
+        {
+            if (!si.spotID.empty())
+                impl_->spotIDToIndexList_[si.spotID].push_back(si.index);
+        }   
+    }
     map<string, IndexList>::const_iterator itr = impl_->spotIDToIndexList_.find(spotID);
     return itr == impl_->spotIDToIndexList_.end() ? IndexList() : itr->second;
 }
 
 PWIZ_API_DECL size_t Index_mzML::findChromatogramId(const std::string& id) const
 {
+    if (!impl_->chromatogramIdToIndex_.size()) { // first use
+        BOOST_FOREACH(const ChromatogramIdentity& ci, impl_->chromatogramIndex_)
+            impl_->chromatogramIdToIndex_[ci.id] = ci.index;
+    }
     map<string, size_t>::const_iterator itr = impl_->chromatogramIdToIndex_.find(id);
     return itr == impl_->chromatogramIdToIndex_.end() ? chromatogramCount() : itr->second;
 }

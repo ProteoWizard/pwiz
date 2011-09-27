@@ -135,7 +135,7 @@ SpectrumPtr SpectrumList_mzMLImpl::spectrum(size_t index, IO::BinaryDataFlag bin
     try
     {
         // we may just be here to get binary data of otherwise previously read spectrum
-        const SpectrumIdentity &id = index_->spectrumIdentity(index);
+        const SpectrumIdentityFromXML &id = index_->spectrumIdentity(index);
         boost::iostreams::stream_offset seekto =
             binaryDataFlag==IO::ReadBinaryDataOnly ? 
             id.sourceFilePositionForBinarySpectrumData : // might be set, might be -1
@@ -147,15 +147,11 @@ SpectrumPtr SpectrumList_mzMLImpl::spectrum(size_t index, IO::BinaryDataFlag bin
         if (!*is_) 
             throw runtime_error("[SpectrumList_mzML::spectrum()] Error seeking to <spectrum>.");
 
-        IO::read(*is_, *result, binaryDataFlag, schemaVersion_, &index_->legacyIdRefToNativeId(), &msd_);
+        IO::read(*is_, *result, id, binaryDataFlag, schemaVersion_, &index_->legacyIdRefToNativeId(), &msd_);
 
         // test for reading the wrong spectrum
         if (result->index != index)
             throw runtime_error("[SpectrumList_mzML::spectrum()] Index entry points to the wrong spectrum.");
-        // note the binary data file position in case we come back around to read full data
-        if (result->sourceFilePositionForBinarySpectrumData != (boost::iostreams::stream_offset)-1) {
-            id.sourceFilePositionForBinarySpectrumData = result->sourceFilePositionForBinarySpectrumData;
-        }
     }
     catch (runtime_error&)
     {
@@ -164,9 +160,9 @@ SpectrumPtr SpectrumList_mzMLImpl::spectrum(size_t index, IO::BinaryDataFlag bin
         // recreate index
         indexed_ = false;
         index_->recreate();
-
-        is_->seekg(offset_to_position(index_->spectrumIdentity(index).sourceFilePosition));
-        IO::read(*is_, *result, binaryDataFlag, schemaVersion_, &index_->legacyIdRefToNativeId(), &msd_);
+        const SpectrumIdentityFromXML &id = index_->spectrumIdentity(index);
+        is_->seekg(offset_to_position(id.sourceFilePosition));
+        IO::read(*is_, *result, id, binaryDataFlag, schemaVersion_, &index_->legacyIdRefToNativeId(), &msd_);
     }
 
     // resolve any references into the MSData object

@@ -1883,15 +1883,18 @@ struct HandlerSpectrum : public HandlerParamContainer
 {
     BinaryDataFlag binaryDataFlag;
     Spectrum* spectrum;
+    const SpectrumIdentityFromXML *spectrumID; 
     const map<string,string>* legacyIdRefToNativeId;
     const MSData* msd;
 
     HandlerSpectrum(BinaryDataFlag _binaryDataFlag,
                     Spectrum* _spectrum = 0,
                     const map<string,string>* legacyIdRefToNativeId = 0,
-                    const MSData* _msd = 0)
+                    const MSData* _msd = 0,
+                    const SpectrumIdentityFromXML *_spectrumID = 0)
     :   binaryDataFlag(_binaryDataFlag),
         spectrum(_spectrum),
+        spectrumID(_spectrumID),
         legacyIdRefToNativeId(legacyIdRefToNativeId),
         msd(_msd),
         handlerPrecursor_(0, legacyIdRefToNativeId)
@@ -1975,7 +1978,9 @@ struct HandlerSpectrum : public HandlerParamContainer
             // pretty likely to come right back here and read the
             // binary data once the header info has been inspected, 
             // so note position
-            spectrum->sourceFilePositionForBinarySpectrumData = position; 
+                if (spectrumID) {
+                    spectrumID->sourceFilePositionForBinarySpectrumData = position; 
+                }
             return Status::Ok;
         }
         else if (version == 1 && name == "spectrumDescription") // mzML 1.0
@@ -2005,12 +2010,13 @@ struct HandlerSpectrum : public HandlerParamContainer
 
 
 PWIZ_API_DECL void read(std::istream& is, Spectrum& spectrum,
+                        const SpectrumIdentityFromXML &id,
                         BinaryDataFlag binaryDataFlag,
                         int version,
                         const map<string,string>* legacyIdRefToNativeId,
                         const MSData* msd)
 {
-    HandlerSpectrum handler(binaryDataFlag, &spectrum, legacyIdRefToNativeId, msd);
+    HandlerSpectrum handler(binaryDataFlag, &spectrum, legacyIdRefToNativeId, msd, &id);
     handler.version = version;
     SAXParser::parse(is, handler);
 }

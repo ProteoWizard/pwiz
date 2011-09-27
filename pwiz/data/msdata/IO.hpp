@@ -37,6 +37,28 @@ namespace pwiz {
 namespace msdata {
 
 
+
+/// Identifying information for a spectrum
+/// subclassed to add private information for faster file IO in mzML and mzXML
+struct PWIZ_API_DECL SpectrumIdentityFromXML : SpectrumIdentity
+{
+    /// for efficient read of peak lists after previous read of
+    /// scan header in mzML and mzXML - avoids reparsing the header
+    mutable boost::iostreams::stream_offset sourceFilePositionForBinarySpectrumData;
+    SpectrumIdentityFromXML() : SpectrumIdentity(), sourceFilePositionForBinarySpectrumData((boost::iostreams::stream_offset)-1) {}
+};
+
+/// Identifying information for a spectrum as read from mzML or mzXML
+/// subclassed to add private information for faster file IO in mzXML
+struct PWIZ_API_DECL SpectrumIdentityFromMzXML : SpectrumIdentityFromXML
+{
+    /// for efficient read of peak lists after previous read of
+    /// scan header in mzXML - avoids reparsing the header
+    mutable unsigned int peaksCount;
+    SpectrumIdentityFromMzXML() : SpectrumIdentityFromXML(), peaksCount(0) {}
+};
+
+
 namespace IO {
 
 
@@ -156,6 +178,7 @@ void write(minimxml::XMLWriter& writer, const Spectrum& spectrum, const MSData& 
            const BinaryDataEncoder::Config& config = BinaryDataEncoder::Config());
 PWIZ_API_DECL
 void read(std::istream& is, Spectrum& spectrum, 
+          const SpectrumIdentityFromXML &id,
           BinaryDataFlag binaryDataFlag = IgnoreBinaryData,
           int version = 0,
           const std::map<std::string,std::string>* legacyIdRefToNativeId = 0,

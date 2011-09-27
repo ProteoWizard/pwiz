@@ -57,7 +57,7 @@ class SpectrumList_mzXMLImpl : public SpectrumList_mzXML
     private:
     shared_ptr<istream> is_;
     const MSData& msd_;
-    vector<SpectrumIdentity> index_;
+    vector<SpectrumIdentityFromMzXML> index_;
     map<string,size_t> idToIndex_;
 
     mutable vector<int> scanMsLevelCache_;
@@ -282,9 +282,10 @@ class HandlerScan : public SAXParser::Handler
 {
     public:
 
-    HandlerScan(const MSData& msd, Spectrum& spectrum, bool getBinaryData,size_t peakscount)
+    HandlerScan(const MSData& msd, Spectrum& spectrum, const SpectrumIdentityFromMzXML &spectrum_id, bool getBinaryData,size_t peakscount)
     :   msd_(msd),
         spectrum_(spectrum), 
+        spectrum_id_(spectrum_id),
         getBinaryData_(getBinaryData),
         handlerPeaks_(spectrum,peakscount),
         handlerPrecursor_(),
@@ -474,7 +475,7 @@ class HandlerScan : public SAXParser::Handler
             // pretty likely to come right back here and read the
             // binary data once the header info has been inspected, 
             // so note position
-            spectrum_.sourceFilePositionForBinarySpectrumData = position; 
+            spectrum_id_.sourceFilePositionForBinarySpectrumData = position; 
 
             if (!getBinaryData_ || handlerPeaks_.peaksCount == 0)
             {
@@ -520,6 +521,7 @@ class HandlerScan : public SAXParser::Handler
     private:
     const MSData& msd_;
     Spectrum& spectrum_;
+    const SpectrumIdentityFromMzXML& spectrum_id_; // for noting binary data position
     bool getBinaryData_;
     string scanNumber_;
     string collisionEnergy_;
@@ -559,7 +561,7 @@ SpectrumPtr SpectrumList_mzXMLImpl::spectrum(size_t index, IO::BinaryDataFlag bi
     result->index = index;
 
 	// we may just be here to get binary data of otherwise previously read spectrum
-    const SpectrumIdentity &id = index_[index];
+    const SpectrumIdentityFromMzXML &id = index_[index];
 	boost::iostreams::stream_offset seekto;
     unsigned int peakscount;
     if (binaryDataFlag==IO::ReadBinaryDataOnly &&
@@ -575,12 +577,11 @@ SpectrumPtr SpectrumList_mzXMLImpl::spectrum(size_t index, IO::BinaryDataFlag bi
     if (!*is_)
         throw runtime_error("[SpectrumList_mzXML::spectrum()] Error seeking to <scan>.");
 
-    HandlerScan handler(msd_, *result, binaryDataFlag!=IO::IgnoreBinaryData, peakscount);
+    HandlerScan handler(msd_, *result, id, binaryDataFlag!=IO::IgnoreBinaryData, peakscount);
     SAXParser::parse(*is_, handler);
 
-    // note the binary data file position in case we come back around to read full data
-    if (result->sourceFilePositionForBinarySpectrumData != (boost::iostreams::stream_offset)-1) {
-        id.sourceFilePositionForBinarySpectrumData = result->sourceFilePositionForBinarySpectrumData;
+    // note the binary data size in case we come back around to read full data
+    if (!id.peaksCount) {
         id.peaksCount = handler.getPeaksCount();
     }
 
@@ -644,7 +645,7 @@ class HandlerIndexOffset : public SAXParser::Handler
 
 struct HandlerOffset : public SAXParser::Handler
 {
-    SpectrumIdentity* spectrumIdentity;
+    SpectrumIdentityFromMzXML* spectrumIdentity;
     CVID nativeIdFormat;
 
     HandlerOffset(const MSData& msd)
@@ -691,7 +692,7 @@ class HandlerIndex : public SAXParser::Handler
 {
     public:
 
-    HandlerIndex(vector<SpectrumIdentity>& index, const MSData& msd)
+    HandlerIndex(vector<SpectrumIdentityFromMzXML>& index, const MSData& msd)
     :   index_(index), handlerOffset_(msd)
     {
         parseCharacters = true;
@@ -708,7 +709,7 @@ class HandlerIndex : public SAXParser::Handler
         }
         else if (name == "offset")
         {
-            index_.push_back(SpectrumIdentity());
+            index_.push_back(SpectrumIdentityFromMzXML());
             index_.back().index = index_.size()-1;
             handlerOffset_.spectrumIdentity = &index_.back();
             return Status(Status::Delegate, &handlerOffset_);
@@ -724,7 +725,7 @@ class HandlerIndex : public SAXParser::Handler
     }
 
     private:
-    vector<SpectrumIdentity>& index_;
+    vector<SpectrumIdentityFromMzXML>& index_;
     HandlerOffset handlerOffset_;
 };
 
@@ -779,7 +780,7 @@ class HandlerIndexCreator : public SAXParser::Handler
 {
     public:
 
-    HandlerIndexCreator(vector<SpectrumIdentity>& index, const MSData& msd)
+    HandlerIndexCreator(vector<SpectrumIdentityFromMzXML>& index, const MSData& msd)
     :   index_(index), nativeIdFormat_(id::getDefaultNativeIDFormat(msd))
     {}
 
@@ -792,7 +793,7 @@ class HandlerIndexCreator : public SAXParser::Handler
             string scanNumber;
             getAttribute(attributes, "num", scanNumber);
 
-            SpectrumIdentity si;
+            SpectrumIdentityFromMzXML si;
             si.index = index_.size();
             si.id = id::translateScanNumberToNativeID(nativeIdFormat_, scanNumber);
             if (si.id.empty())
@@ -815,7 +816,7 @@ class HandlerIndexCreator : public SAXParser::Handler
     }
 
     private:
-    vector<SpectrumIdentity>& index_;
+    vector<SpectrumIdentityFromMzXML>& index_;
     CVID nativeIdFormat_;
 };
 
@@ -830,7 +831,7 @@ void SpectrumList_mzXMLImpl::createIndex()
 
 void SpectrumList_mzXMLImpl::createMaps()
 {
-    vector<SpectrumIdentity>::const_iterator it=index_.begin();
+    vector<SpectrumIdentityFromMzXML>::const_iterator it=index_.begin();
     for (unsigned int i=0; i!=index_.size(); ++i, ++it)
         idToIndex_[it->id] = i;
 }

@@ -478,14 +478,9 @@ struct PWIZ_API_DECL SpectrumIdentity
     /// for file-based MSData implementations, this attribute may refer to the spectrum's position in the file
 	boost::iostreams::stream_offset sourceFilePosition;
 
-    /// for efficient read of peak lists after previous read of
-    /// scan header in mzML and mzXML - avoids reparsing the header
-    mutable boost::iostreams::stream_offset sourceFilePositionForBinarySpectrumData;
-    mutable unsigned int peaksCount; // used by mzXML reader
-
-    SpectrumIdentity() : index(0), sourceFilePosition((boost::iostreams::stream_offset)-1), sourceFilePositionForBinarySpectrumData((boost::iostreams::stream_offset)-1),peaksCount(0) {}
+ 
+    SpectrumIdentity() : index(0), sourceFilePosition((boost::iostreams::stream_offset)-1) {}
 };
-
 
 /// Identifying information for a chromatogram
 struct PWIZ_API_DECL ChromatogramIdentity
