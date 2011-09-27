@@ -16,12 +16,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System;
+using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Linq;
+using pwiz.Skyline.Properties;
+
 namespace pwiz.Skyline.Model.Find
 {
     public class FindOptions
     {
         public FindOptions()
         {
+            CustomFinders = new IFinder[0];
         }
 
         public FindOptions(FindOptions options)
@@ -29,27 +36,103 @@ namespace pwiz.Skyline.Model.Find
             Text = options.Text;
             CaseSensitive = options.CaseSensitive;
             Forward = options.Forward;
+            CustomFinders = options.CustomFinders;
+        }
+        public bool IsEmpty
+        {
+            get
+            {
+                return string.IsNullOrEmpty(Text) && CustomFinders.Count == 0;
+            }
         }
 
         public string Text { get; private set; }
         public FindOptions ChangeText(string value)
         {
-            return new FindOptions(this){Text = value};
+            return new FindOptions(this) { Text = value };
         }
         public bool CaseSensitive { get; private set; }
         public FindOptions ChangeCaseSensitive(bool value)
         {
-            return new FindOptions(this){CaseSensitive = value};
+            return new FindOptions(this) { CaseSensitive = value };
         }
         public bool Forward { get; private set; }
         public FindOptions ChangeForward(bool value)
         {
-            return new FindOptions(this){Forward = value};
+            return new FindOptions(this) { Forward = value };
         }
 
         public string GetDescription()
         {
-            return Text;
+            var strings = new List<string>();
+            if (!string.IsNullOrEmpty(Text))
+            {
+                strings.Add(Text);
+            }
+            strings.AddRange(CustomFinders.Select(finder => finder.DisplayName));
+            return string.Join(" ", strings.ToArray());
+        }
+
+        public string GetNotFoundMessage()
+        {
+            if (CustomFinders.Count == 0)
+            {
+                return string.Format("The text '{0}' could not be found.", Text);
+            }
+            if (CustomFinders.Count == 1)
+            {
+                return string.Format("Could not find {0}.", CustomFinders[0].DisplayName);
+            }
+            return string.Format("Could not find any of {0} items.", CustomFinders.Count);
+        }
+
+        public IList<IFinder> CustomFinders
+        {
+            get;
+            private set;
+        }
+        public FindOptions ChangeCustomFinders(IEnumerable<IFinder> finders)
+        {
+            return new FindOptions(this)
+            {
+                CustomFinders = finders == null
+                    ? (IList<IFinder>)new IFinder[0]
+                    : Array.AsReadOnly(finders.ToArray())
+            };
+        }
+
+        public void WriteToSettings(Settings settings, bool includeDirection)
+        {
+            settings.EditFindText = Text;
+            if (includeDirection)
+            {
+                settings.EditFindUp = !Forward;
+            }
+            settings.EditFindCase = CaseSensitive;
+            var customFinders = new StringCollection();
+            customFinders.AddRange(CustomFinders.Select(customFinder=>customFinder.Name).ToArray());
+            settings.CustomFinders = customFinders;
+        }
+
+        public static FindOptions ReadFromSettings(Settings settings)
+        {
+            var finders = new List<IFinder>();
+            if (settings.CustomFinders != null)
+            {
+                var finderNames = new HashSet<string>(settings.CustomFinders.Cast<string>());
+                foreach (var finder in Finders.ListAllFinders())
+                {
+                    if (finderNames.Contains(finder.Name))
+                    {
+                        finders.Add(finder);
+                    }
+                }
+            }
+            return new FindOptions()
+                .ChangeText(settings.EditFindText)
+                .ChangeForward(!settings.EditFindUp)
+                .ChangeCaseSensitive(settings.EditFindCase)
+                .ChangeCustomFinders(finders);
         }
     }
 }

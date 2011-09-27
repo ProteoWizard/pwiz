@@ -846,50 +846,31 @@ namespace pwiz.Skyline.Model
             return docResult.ChangeSettings(settings);
         }
 
-        public FindResult SearchDocumentForString(Bookmark startPath,
-            string searchString, DisplaySettings settings, bool reverse, bool caseSensitive)
+        public IdentityPath SearchDocumentForString(IdentityPath identityPath, string text, DisplaySettings settings, bool reverse, bool caseSensitive)
         {
-            if (!caseSensitive)
-                searchString = searchString.ToLower();
-            var bookmarkEnumerator = new BookmarkEnumerator(this, startPath);
-            bookmarkEnumerator.Forward = !reverse;
-            return SearchForString(bookmarkEnumerator, searchString, settings, caseSensitive);
-        }
-
-        public IdentityPath SearchDocumentForString(IdentityPath startPath,
-            string searchString, DisplaySettings settings, bool reverse, bool caseSensitive)
-        {
-            var result = SearchDocumentForString(new Bookmark(startPath), searchString, settings, reverse,
-                                                 caseSensitive);
-            if (result == null)
+            var findOptions = new FindOptions()
+                .ChangeText(text)
+                .ChangeForward(!reverse)
+                .ChangeCaseSensitive(caseSensitive);
+            var findResult = SearchDocument(new Bookmark(identityPath), findOptions, settings);
+            if (findResult == null)
             {
                 return null;
             }
-            return result.Bookmark.IdentityPath;
+            return findResult.Bookmark.IdentityPath;
         }
-        public FindResult SearchForString(BookmarkEnumerator bookmarkEnumerator, string searchString, DisplaySettings settings, bool caseSensitive)
+
+        public FindResult SearchDocument(Bookmark startPath, FindOptions findOptions, DisplaySettings settings)
         {
-            var findOptions = new FindOptions()
-                .ChangeText(searchString)
-                .ChangeCaseSensitive(caseSensitive)
-                .ChangeForward(bookmarkEnumerator.Forward);
+            var bookmarkEnumerator = new BookmarkEnumerator(this, startPath);
+            bookmarkEnumerator.Forward = findOptions.Forward;
+            return FindNext(bookmarkEnumerator, findOptions, settings);
+        }
+
+        private FindResult FindNext(BookmarkEnumerator bookmarkEnumerator, FindOptions findOptions, DisplaySettings settings)
+        {
             var findPredicate = new FindPredicate(findOptions, settings);
-            while (bookmarkEnumerator.MoveNext())
-            {
-                var findMatch = findPredicate.Match(bookmarkEnumerator);
-                if (findMatch != null)
-                {
-                    return new FindResult(findPredicate, bookmarkEnumerator, findMatch);
-                }
-            }
-            // If we went through the entire document and did not find a match,
-            // check the last spot the user was sitting on to see if it matches.
-            var finalFindMatch = findPredicate.Match(bookmarkEnumerator);
-            if (finalFindMatch != null)
-            {
-                return new FindResult(findPredicate, bookmarkEnumerator, finalFindMatch);
-            }
-            return null;
+            return findPredicate.FindNext(bookmarkEnumerator);
         }
 
         #region Implementation of IXmlSerializable

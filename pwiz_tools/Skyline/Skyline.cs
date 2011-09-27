@@ -1346,17 +1346,15 @@ namespace pwiz.Skyline
         {
             var dlg = new FindNodeDlg
             {
-                SearchString = Settings.Default.EditFindText,
-                SearchUp = Settings.Default.EditFindUp,
-                CaseSensitive = Settings.Default.EditFindCase
+                FindOptions = FindOptions.ReadFromSettings(Settings.Default)
             };
             dlg.Show(this);
         }
 
         public void FindNext(bool reverse)
         {
-            var searchString = Settings.Default.EditFindText;
-            Settings.Default.EditFindUp = reverse;
+            var findOptions = FindOptions.ReadFromSettings(Settings.Default);
+            findOptions = findOptions.ChangeForward(!reverse);
             var startPath = sequenceTree.SelectedPath;
             // If the insert node is selected, start from the root.
             if (sequenceTree.IsInsertPath(startPath))
@@ -1367,51 +1365,34 @@ namespace pwiz.Skyline
             {
                 bookmark = bookmark.ChangeChromFileInfoId(_resultsGridForm.ResultsGrid.GetCurrentChromFileInfoId());
             }            
-            var findResult = DocumentUI.SearchDocumentForString(bookmark,
-                searchString, displaySettings, reverse, Settings.Default.EditFindCase);
+            var findResult = DocumentUI.SearchDocument(bookmark,
+                findOptions, displaySettings);
 
             if (findResult == null)
-                MessageBox.Show(this, string.Format("The text '{0}' could not be found.", searchString));
+            {
+                MessageBox.Show(this, findOptions.GetNotFoundMessage());
+            }
             else
                 DisplayFindResult(null, findResult);
         }
 
         private IEnumerable<FindResult> FindAll(ILongWaitBroker longWaitBroker, FindPredicate findPredicate)
         {
-            var results = new List<FindResult>();
-            longWaitBroker.Message = "Found 0 matches";
-            var bookmarkEnumerator = new BookmarkEnumerator(Document);
-            while (bookmarkEnumerator.MoveNext())
-            {
-                if (longWaitBroker.IsCanceled)
-                {
-                    break;
-                }
-                var findMatch = findPredicate.Match(bookmarkEnumerator);
-                if (findMatch != null)
-                {
-                    results.Add(new FindResult(findPredicate, bookmarkEnumerator, findMatch));
-                    int matchCount = results.Count;
-                    longWaitBroker.Message = matchCount == 1 ? "Found 1 match" : "Found " + matchCount + " matches";
-                }
-            }
-            return results;
+            return findPredicate.FindAll(longWaitBroker, Document);
         }
 
         public void FindAll(Control parent)
         {
-            var findOptions = new FindOptions()
-                .ChangeText(Settings.Default.EditFindText)
-                .ChangeCaseSensitive(Settings.Default.EditFindCase);
+            var findOptions = FindOptions.ReadFromSettings(Settings.Default);
             var findPredicate = new FindPredicate(findOptions, sequenceTree.GetDisplaySettings(null));
             IList<FindResult> results = null;
             var longWaitDlg = new LongWaitDlg(this);
             longWaitDlg.PerformWork(parent, 2000, lwb => results = FindAll(lwb, findPredicate).ToArray());
-            if (results.Count() == 0)
+            if (results.Count == 0)
             {
                 if (!longWaitDlg.IsCanceled)
                 {
-                    MessageBox.Show(parent.TopLevelControl, string.Format("The text '{0}' could not be found.", findOptions.Text));
+                    MessageBox.Show(parent.TopLevelControl, findOptions.GetNotFoundMessage());
                 }
                 return;
             }
@@ -1447,22 +1428,29 @@ namespace pwiz.Skyline
         /// <param name="findResult">The find result to display</param>
         public void DisplayFindResult(Control owner, FindResult findResult)
         {
+            if (findResult.FindMatch == null)
+            {
+                return;
+            }
             var bookmarkEnumerator = BookmarkEnumerator.TryGet(DocumentUI, findResult.Bookmark);
             if (bookmarkEnumerator == null)
             {
                 return;
             }
             SequenceTree.SelectedPath = bookmarkEnumerator.IdentityPath;
-            if (bookmarkEnumerator.CurrentChromInfo != null)
+            int resultsIndex = bookmarkEnumerator.ResultsIndex;
+            if (resultsIndex >= 0)
+            {
+                comboResults.SelectedIndex = resultsIndex;
+            }
+            bool isAnnotationOrNote = findResult.FindMatch.AnnotationName != null || findResult.FindMatch.Note;
+            if (isAnnotationOrNote && bookmarkEnumerator.CurrentChromInfo != null)
             {
                 ShowResultsGrid(true);
                 _resultsGridForm.ResultsGrid.HighlightFindResult(findResult);
                 return;
             }
-            if (findResult.FindMatch != null)
-            {
-                SequenceTree.HighlightFindMatch(owner, findResult.FindMatch);
-            }
+            SequenceTree.HighlightFindMatch(owner, findResult.FindMatch);
         }
 
         private void modifyPeptideMenuItem_Click(object sender, EventArgs e)

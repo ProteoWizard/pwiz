@@ -46,6 +46,7 @@ namespace pwiz.Skyline.Controls
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FindResultsForm));
             this.listView = new pwiz.Common.Controls.DoubleBufferedListView();
             this.colHdrLocation = new System.Windows.Forms.ColumnHeader();
             this.colHdrType = new System.Windows.Forms.ColumnHeader();
@@ -55,6 +56,7 @@ namespace pwiz.Skyline.Controls
             // listView
             // 
             this.listView.Activation = System.Windows.Forms.ItemActivation.TwoClick;
+            this.listView.BorderStyle = System.Windows.Forms.BorderStyle.None;
             this.listView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.colHdrLocation,
             this.colHdrType,
@@ -94,6 +96,7 @@ namespace pwiz.Skyline.Controls
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(718, 262);
             this.Controls.Add(this.listView);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.KeyPreview = true;
             this.Name = "FindResultsForm";
             this.TabText = "Find Results";

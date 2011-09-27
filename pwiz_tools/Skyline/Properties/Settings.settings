@@ -371,6 +371,9 @@
     <Setting Name="StackTraceListVersion" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
+    <Setting Name="CustomFinders" Type="System.Collections.Specialized.StringCollection" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
     <Setting Name="RTCalculatorName" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>

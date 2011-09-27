@@ -37,6 +37,9 @@
             this.radioUp = new System.Windows.Forms.RadioButton();
             this.cbCaseSensitive = new System.Windows.Forms.CheckBox();
             this.btnFindAll = new System.Windows.Forms.Button();
+            this.btnShowHideAdvanced = new System.Windows.Forms.Button();
+            this.label2 = new System.Windows.Forms.Label();
+            this.checkedListBoxFinders = new System.Windows.Forms.CheckedListBox();
             this.groupBox1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -44,10 +47,10 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(293, 66);
+            this.btnCancel.Location = new System.Drawing.Point(293, 61);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 4;
+            this.btnCancel.TabIndex = 6;
             this.btnCancel.Text = "Close";
             this.btnCancel.UseVisualStyleBackColor = true;
             this.btnCancel.Click += new System.EventHandler(this.btnCancel_Click);
@@ -57,10 +60,10 @@
             this.btnFindNext.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnFindNext.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btnFindNext.Enabled = false;
-            this.btnFindNext.Location = new System.Drawing.Point(293, 12);
+            this.btnFindNext.Location = new System.Drawing.Point(293, 7);
             this.btnFindNext.Name = "btnFindNext";
             this.btnFindNext.Size = new System.Drawing.Size(75, 23);
-            this.btnFindNext.TabIndex = 3;
+            this.btnFindNext.TabIndex = 4;
             this.btnFindNext.Text = "&Find Next";
             this.btnFindNext.UseVisualStyleBackColor = true;
             this.btnFindNext.Click += new System.EventHandler(this.btnFindNext_Click);
@@ -122,7 +125,7 @@
             this.cbCaseSensitive.Location = new System.Drawing.Point(153, 84);
             this.cbCaseSensitive.Name = "cbCaseSensitive";
             this.cbCaseSensitive.Size = new System.Drawing.Size(83, 17);
-            this.cbCaseSensitive.TabIndex = 5;
+            this.cbCaseSensitive.TabIndex = 3;
             this.cbCaseSensitive.Text = "Match Case";
             this.cbCaseSensitive.UseVisualStyleBackColor = true;
             // 
@@ -131,13 +134,44 @@
             this.btnFindAll.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnFindAll.DialogResult = System.Windows.Forms.DialogResult.OK;
             this.btnFindAll.Enabled = false;
-            this.btnFindAll.Location = new System.Drawing.Point(293, 39);
+            this.btnFindAll.Location = new System.Drawing.Point(293, 34);
             this.btnFindAll.Name = "btnFindAll";
             this.btnFindAll.Size = new System.Drawing.Size(75, 23);
-            this.btnFindAll.TabIndex = 6;
+            this.btnFindAll.TabIndex = 5;
             this.btnFindAll.Text = "Find &All";
             this.btnFindAll.UseVisualStyleBackColor = true;
             this.btnFindAll.Click += new System.EventHandler(this.btnFindAll_Click);
+            // 
+            // btnShowHideAdvanced
+            // 
+            this.btnShowHideAdvanced.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnShowHideAdvanced.AutoSize = true;
+            this.btnShowHideAdvanced.Location = new System.Drawing.Point(252, 90);
+            this.btnShowHideAdvanced.Name = "btnShowHideAdvanced";
+            this.btnShowHideAdvanced.Size = new System.Drawing.Size(116, 23);
+            this.btnShowHideAdvanced.TabIndex = 7;
+            this.btnShowHideAdvanced.Text = "<< Hide Ad&vanced";
+            this.btnShowHideAdvanced.UseVisualStyleBackColor = true;
+            this.btnShowHideAdvanced.Click += new System.EventHandler(this.btnShowHideAdvanced_Click);
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(13, 130);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(80, 13);
+            this.label2.TabIndex = 8;
+            this.label2.Text = "Also search for:";
+            // 
+            // checkedListBoxFinders
+            // 
+            this.checkedListBoxFinders.CheckOnClick = true;
+            this.checkedListBoxFinders.FormattingEnabled = true;
+            this.checkedListBoxFinders.Location = new System.Drawing.Point(12, 146);
+            this.checkedListBoxFinders.Name = "checkedListBoxFinders";
+            this.checkedListBoxFinders.Size = new System.Drawing.Size(356, 109);
+            this.checkedListBoxFinders.TabIndex = 9;
+            this.checkedListBoxFinders.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.checkedListBoxOptions_ItemCheck);
             // 
             // FindNodeDlg
             // 
@@ -145,7 +179,8 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(380, 122);
+            this.ClientSize = new System.Drawing.Size(380, 263);
+            this.Controls.Add(this.btnShowHideAdvanced);
             this.Controls.Add(this.btnFindAll);
             this.Controls.Add(this.cbCaseSensitive);
             this.Controls.Add(this.groupBox1);
@@ -153,6 +188,8 @@
             this.Controls.Add(this.label1);
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.btnFindNext);
+            this.Controls.Add(this.label2);
+            this.Controls.Add(this.checkedListBoxFinders);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
@@ -178,5 +215,8 @@
         private System.Windows.Forms.RadioButton radioUp;
         private System.Windows.Forms.CheckBox cbCaseSensitive;
         private System.Windows.Forms.Button btnFindAll;
+        private System.Windows.Forms.Button btnShowHideAdvanced;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.CheckedListBox checkedListBoxFinders;
     }
 }

@@ -16,17 +16,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
-using System.IO;
 using System.Reflection;
-using System.Text;
 using System.Collections.Generic;
-using System.Linq;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Find;
-using pwiz.SkylineTestUtil;
 
 namespace pwiz.SkylineTest
 {
@@ -51,8 +46,11 @@ namespace pwiz.SkylineTest
             var backwardList = new List<Bookmark>(backwardEnumerator);
             Assert.AreNotEqual(0, forwardList.Count);
             Assert.AreEqual(forwardList.Count, backwardList.Count);
-            backwardList.Reverse();
-            AssertEx.AreEqualDeep(forwardList, backwardList);
+            
+            // The very last location is the same for both the forwards and backwards enumerators.
+            backwardList.Reverse(0, backwardList.Count - 1);
+            CollectionAssert.AreEqual(forwardList, backwardList);
+
             var forwardSet = new HashSet<Bookmark>(forwardList);
             Assert.AreEqual(forwardList.Count, forwardSet.Count);
             forwardSet.UnionWith(backwardList);

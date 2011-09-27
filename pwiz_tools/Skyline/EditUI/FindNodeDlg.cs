@@ -17,19 +17,55 @@
  * limitations under the License.
  */
 using System;
-using System.Runtime.InteropServices;
-using System.Windows.Forms;
 using System.Linq;
-using pwiz.Skyline.Controls.SeqNode;
+using System.Windows.Forms;
+using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.EditUI
 {
     public partial class FindNodeDlg : Form
     {
+        private bool _advancedVisible;
+        private int _fullHeight;
+        private int _collapsedHeight = 150;
+        private IFinder[] _finders;
         public FindNodeDlg()
         {
             InitializeComponent();
+            _fullHeight = Height;
+            AdvancedVisible = false;
+            _finders = Finders.ListAllFinders().ToArray();
+            checkedListBoxFinders.Items.AddRange(_finders.Select(finder=>finder.DisplayName).ToArray());
+        }
+
+        public FindOptions FindOptions
+        {
+            get
+            {
+                var findOptions = new FindOptions()
+                    .ChangeText(SearchString)
+                    .ChangeCaseSensitive(CaseSensitive)
+                    .ChangeForward(!SearchUp)
+                    .ChangeCustomFinders(checkedListBoxFinders.CheckedIndices.Cast<int>()
+                        .Select(index => _finders[index]));
+                return findOptions;
+            }
+            set
+            {
+                SearchString = value.Text;
+                CaseSensitive = value.CaseSensitive;
+                SearchUp = !value.Forward;
+                for (int i = 0; i < checkedListBoxFinders.Items.Count; i++ )
+                {
+                    checkedListBoxFinders.SetItemChecked(i, value.CustomFinders.Contains(_finders[i]));
+                }
+                if (FindOptions.CustomFinders.Count > 0)
+                {
+                    AdvancedVisible = true;
+                }
+                EnableDisableButtons();
+            }
         }
 
         public string SearchString
@@ -52,7 +88,12 @@ namespace pwiz.Skyline.EditUI
 
         private void textSequence_TextChanged(object sender, EventArgs e)
         {
-            btnFindAll.Enabled = btnFindNext.Enabled = !string.IsNullOrEmpty(SearchString);
+            EnableDisableButtons();
+        }
+
+        private void EnableDisableButtons()
+        {
+            btnFindAll.Enabled = btnFindNext.Enabled = !FindOptions.IsEmpty;
         }
 
         private void btnFindNext_Click(object sender, EventArgs e)
@@ -60,15 +101,14 @@ namespace pwiz.Skyline.EditUI
             FindNext();
         }
 
-        private void UpdateSettings()
+        private void WriteSettings()
         {
-            Settings.Default.EditFindText = SearchString;
-            Settings.Default.EditFindCase = CaseSensitive;
+            FindOptions.WriteToSettings(Settings.Default, false);
         }
 
         public void FindNext()
         {
-            UpdateSettings();
+            WriteSettings();
             ((SkylineWindow)Owner).FindNext(SearchUp);
             // Put the focus back on the Find Dialog since Skyline might have popped up a window to display the find result.
             // Don't steal the focus if it's on the SequenceTree, since the SequenceTree might be displaying a tooltip.
@@ -85,8 +125,45 @@ namespace pwiz.Skyline.EditUI
 
         private void btnFindAll_Click(object sender, EventArgs e)
         {
-            UpdateSettings();
+            WriteSettings();
             ((SkylineWindow) Owner).FindAll(this);
+        }
+
+        public bool AdvancedVisible
+        {
+            get
+            {
+                return _advancedVisible;
+            }
+            set
+            {
+                _advancedVisible = value;
+                if (_advancedVisible)
+                {
+                    Height = _fullHeight;
+                    btnShowHideAdvanced.Text = "<< Hide Ad&vanced";
+                }
+                else
+                {
+                    Height = _collapsedHeight;
+                    btnShowHideAdvanced.Text = "Show Ad&vanced >>";
+                }
+            }
+        }
+
+        private void btnShowHideAdvanced_Click(object sender, EventArgs e)
+        {
+            AdvancedVisible = !AdvancedVisible;
+        }
+
+        private void checkedListBoxOptions_ItemCheck(object sender, ItemCheckEventArgs e)
+        {
+            if (IsHandleCreated && !IsDisposed)
+            {
+                // Checked state doesn't update until after event has returned.
+                // Therefore update enabled state of buttons via BeginInvoke.
+                BeginInvoke(new Action(EnableDisableButtons));
+            }
         }
     }
 }

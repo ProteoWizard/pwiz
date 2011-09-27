@@ -31,7 +31,7 @@ namespace pwiz.Skyline.Model.Find
     /// Handles iterating through all possible locations in a Skyline Document.
     /// 
     /// </summary>
-    public class BookmarkEnumerator : IEnumerator<Bookmark>, IEnumerable<Bookmark>
+    public class BookmarkEnumerator : IEnumerable<Bookmark>
     {
         readonly List<int> _nodeIndexPath = new List<int>();
         readonly List<ChromInfo> _chromInfos = new List<ChromInfo>();
@@ -84,16 +84,11 @@ namespace pwiz.Skyline.Model.Find
             }
         }
 
-        public virtual void Dispose()
-        {
-        }
-
         /// <summary>
         /// Move to the next (or previous if !Forward) location in the document.
         /// Wraps around if moving beyond the end or beginning of the document.
         /// </summary>
-        /// <returns>Returns true unless the new position is the Start</returns>
-        public bool MoveNext()
+        public void MoveNext()
         {
             if (Forward)
             {
@@ -103,7 +98,6 @@ namespace pwiz.Skyline.Model.Find
             {
                 MoveBackward();
             }
-            return !AtStart;
         }
 
         /// <summary>
@@ -186,11 +180,6 @@ namespace pwiz.Skyline.Model.Find
         public void Reset()
         {
             Current = Start;
-        }
-
-        object IEnumerator.Current
-        {
-            get { return Current; }
         }
 
         public bool Forward { get; set; }
@@ -276,6 +265,29 @@ namespace pwiz.Skyline.Model.Find
                 return result;
             }
         }
+        public int ResultsIndex
+        {
+            get
+            {
+                var chromInfo = CurrentChromInfo;
+                if (chromInfo == null)
+                {
+                    return -1;
+                }
+                var chromatogramSets = Document.Settings.MeasuredResults.Chromatograms;
+                for (int resultsIndex = 0; resultsIndex < chromatogramSets.Count; resultsIndex++)
+                {
+                    var chromatogramSet = chromatogramSets[resultsIndex];
+                    var foundMsDataFileInfo = chromatogramSet.MSDataFileInfos.FirstOrDefault(
+                        msDataFileInfo => ReferenceEquals(chromInfo.FileId, msDataFileInfo.FileId));
+                    if (foundMsDataFileInfo != null)
+                    {
+                        return resultsIndex;
+                    }
+                }
+                return -1;
+            }
+        }
         IEnumerable<DocNode> NodePath
         {
             get
@@ -344,7 +356,16 @@ namespace pwiz.Skyline.Model.Find
         }
         public IEnumerator<Bookmark> GetEnumerator()
         {
-            return new BookmarkEnumerator(this);
+            var enumerator = new BookmarkEnumerator(this);
+            while(true)
+            {
+                enumerator.MoveNext();
+                yield return enumerator.Current;
+                if (enumerator.AtStart)
+                {
+                    break;
+                }
+            }
         }
         IEnumerator IEnumerable.GetEnumerator()
         {
@@ -353,20 +374,23 @@ namespace pwiz.Skyline.Model.Find
 
         public string GetLocationName(DisplaySettings displaySettings)
         {
-            if (_chromInfoIndex > 0)
+            if (_chromInfoIndex >= 0)
             {
-                var chromInfo = _chromInfos[_chromInfoIndex];
-                // TODO(nicksh): Is this the right way to be searching for the name of a chromInfo?
-                foreach (var chromatogramSet in Document.Settings.MeasuredResults.Chromatograms)
+                int resultsIndex = ResultsIndex;
+                var peptideDocNode = NodePath.FirstOrDefault(docNode => docNode is PeptideDocNode) as PeptideDocNode;
+                if (resultsIndex < 0)
                 {
-                    var foundMsDataFileInfo = chromatogramSet.MSDataFileInfos.FirstOrDefault(
-                        msDataFileInfo => chromInfo.FileId == msDataFileInfo.FileId);
-                    if (foundMsDataFileInfo != null)
-                    {
-                        return CurrentDocNode.GetDisplayText(displaySettings) + " (" + chromatogramSet.Name + ")";
-                    }
+                    return "<UnknownFile>";
                 }
-                return "<UnknownFile>";
+                if (peptideDocNode == null)
+                {
+                    return "<NoPeptide>";
+                }
+                var chromatogramSets = Document.Settings.MeasuredResults.Chromatograms;
+                var chromatogramSet = chromatogramSets[resultsIndex];
+                var resultDisplaySettings = new DisplaySettings(
+                    peptideDocNode, false, resultsIndex, displaySettings.RatioIndex);
+                return CurrentDocNode.GetDisplayText(resultDisplaySettings) + " (" + chromatogramSet.Name + ")";
             }
             return CurrentDocNode.GetDisplayText(displaySettings);
         }
