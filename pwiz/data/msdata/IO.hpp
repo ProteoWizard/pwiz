@@ -178,11 +178,11 @@ void write(minimxml::XMLWriter& writer, const Spectrum& spectrum, const MSData& 
            const BinaryDataEncoder::Config& config = BinaryDataEncoder::Config());
 PWIZ_API_DECL
 void read(std::istream& is, Spectrum& spectrum, 
-          const SpectrumIdentityFromXML &id,
           BinaryDataFlag binaryDataFlag = IgnoreBinaryData,
           int version = 0,
           const std::map<std::string,std::string>* legacyIdRefToNativeId = 0,
-          const MSData* msd = 0);
+          const MSData* msd = 0,
+          const SpectrumIdentityFromXML *id = 0);
 
 
 PWIZ_API_DECL

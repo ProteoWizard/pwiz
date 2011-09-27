@@ -147,7 +147,7 @@ SpectrumPtr SpectrumList_mzMLImpl::spectrum(size_t index, IO::BinaryDataFlag bin
         if (!*is_) 
             throw runtime_error("[SpectrumList_mzML::spectrum()] Error seeking to <spectrum>.");
 
-        IO::read(*is_, *result, id, binaryDataFlag, schemaVersion_, &index_->legacyIdRefToNativeId(), &msd_);
+        IO::read(*is_, *result, binaryDataFlag, schemaVersion_, &index_->legacyIdRefToNativeId(), &msd_, &id);
 
         // test for reading the wrong spectrum
         if (result->index != index)
@@ -162,7 +162,7 @@ SpectrumPtr SpectrumList_mzMLImpl::spectrum(size_t index, IO::BinaryDataFlag bin
         index_->recreate();
         const SpectrumIdentityFromXML &id = index_->spectrumIdentity(index);
         is_->seekg(offset_to_position(id.sourceFilePosition));
-        IO::read(*is_, *result, id, binaryDataFlag, schemaVersion_, &index_->legacyIdRefToNativeId(), &msd_);
+        IO::read(*is_, *result, binaryDataFlag, schemaVersion_, &index_->legacyIdRefToNativeId(), &msd_, &id);
     }
 
     // resolve any references into the MSData object

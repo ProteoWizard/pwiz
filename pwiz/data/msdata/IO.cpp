@@ -2010,13 +2010,13 @@ struct HandlerSpectrum : public HandlerParamContainer
 
 
 PWIZ_API_DECL void read(std::istream& is, Spectrum& spectrum,
-                        const SpectrumIdentityFromXML &id,
                         BinaryDataFlag binaryDataFlag,
                         int version,
                         const map<string,string>* legacyIdRefToNativeId,
-                        const MSData* msd)
+                        const MSData* msd,
+                        const SpectrumIdentityFromXML *id)
 {
-    HandlerSpectrum handler(binaryDataFlag, &spectrum, legacyIdRefToNativeId, msd, &id);
+    HandlerSpectrum handler(binaryDataFlag, &spectrum, legacyIdRefToNativeId, msd, id);
     handler.version = version;
     SAXParser::parse(is, handler);
 }
