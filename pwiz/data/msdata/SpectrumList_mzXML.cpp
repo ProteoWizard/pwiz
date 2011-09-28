@@ -127,13 +127,15 @@ struct HandlerPrecursor : public SAXParser::Handler
 
         if (name == "precursorMz")
         {
-            string precursorScanNum("0"), precursorIntensity, precursorCharge, possibleCharges;
+            string precursorScanNum, precursorIntensity, precursorCharge, possibleCharges;
             getAttribute(attributes, "precursorScanNum", precursorScanNum);
             getAttribute(attributes, "precursorIntensity", precursorIntensity);
             getAttribute(attributes, "precursorCharge", precursorCharge);
             getAttribute(attributes, "possibleCharges", possibleCharges);
 
+            if (!precursorScanNum.empty()) { // precursorScanNum is an optional element
             precursor->spectrumID = id::translateScanNumberToNativeID(nativeIdFormat, precursorScanNum);
+            }
 
             precursor->selectedIons.push_back(SelectedIon());
 
@@ -851,8 +853,10 @@ string SpectrumList_mzXMLImpl::getPrecursorID(int precursorMsLevel, size_t index
             SpectrumPtr s = spectrum(index-1, false);
             cachedMsLevel = s->cvParam(MS_ms_level).valueAs<int>();
         }
-        if (cachedMsLevel == precursorMsLevel)
-            return lexical_cast<string>(index);
+        if (cachedMsLevel == precursorMsLevel) {
+            SpectrumPtr s = spectrum(index,false);
+            return s ?  s->id : lexical_cast<string>(index);
+        }
     }
 
     return "";
