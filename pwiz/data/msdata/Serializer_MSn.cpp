@@ -160,7 +160,7 @@ namespace
         
         // Write the scan time, if available
         if( s->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds() )
-          os << "I\tRTime\t" << s->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds() << "\n";
+          os << "I\tRTime\t" << s->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds()/60 << "\n";
 
         // Collect charge and mass info
         vector<int> charges;
@@ -266,7 +266,7 @@ namespace
         double mz = si.cvParam(MS_selected_ion_m_z).valueAs<double>();
         os.write(reinterpret_cast<char *>(&mz), sizeDoubleMSn);
 
-        float rt = (float) s->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds();
+        float rt = (float) s->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds()/60;
         os.write(reinterpret_cast<char *>(&rt), sizeFloatMSn);
         
         if (version >= 2)

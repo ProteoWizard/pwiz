@@ -422,7 +422,7 @@ void test(SpectrumListPtr sl)
     unit_assert(s->sourceFilePosition != -1);
     unit_assert(s->cvParam(MS_ms_level).valueAs<int>() == 2);
     unit_assert(s->scanList.scans.size() == 1);
-    unit_assert_equal(s->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds(), 0.4575, 5e-4);
+    unit_assert_equal(s->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds(), 0.4573*60, 5e-4);
 
     unit_assert(s->precursors.size() == 1);
     Precursor& precursor1 = s->precursors[0];
@@ -553,7 +553,7 @@ void test_v3(SpectrumListPtr sl)
     unit_assert(s->sourceFilePosition != -1);
     unit_assert(s->cvParam(MS_ms_level).valueAs<int>() == 2);
     unit_assert(s->scanList.scans.size() == 1);
-    unit_assert_equal(s->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds(), 6.2752, 5e-4);
+    unit_assert_equal(s->scanList.scans[0].cvParam(MS_scan_start_time).timeInSeconds()/60, 6.2752, 5e-4);
 
     unit_assert(s->precursors.size() == 1);
     Precursor& precursor1 = s->precursors[0];

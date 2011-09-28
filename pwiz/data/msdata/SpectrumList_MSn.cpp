@@ -303,7 +303,7 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
 
                 double rt = lexical_cast<double>(lineStr.substr(last_space_pos + 1, len));
                 spectrum.scanList.scans.push_back(Scan());
-                spectrum.scanList.scans.back().set(MS_scan_start_time, rt, UO_second);
+                spectrum.scanList.scans.back().set(MS_scan_start_time, rt*60, UO_second);
             }
             else if (lineStr.find("EZ") != string::npos)
             {
@@ -493,7 +493,7 @@ class SpectrumList_MSnImpl : public SpectrumList_MSn
 
     // get retention time
     spectrum.scanList.scans.push_back(Scan());
-    spectrum.scanList.scans.back().set(MS_scan_start_time, scanInfo.rTime, UO_second);
+    spectrum.scanList.scans.back().set(MS_scan_start_time, scanInfo.rTime*60, UO_second);
 
     double* mzs = NULL;
     float* intensities = NULL;
