@@ -35,6 +35,7 @@ namespace pwiz.Skyline.Model.Lib
         public const string EXT_DAT = ".dat";
         public const string EXT_XTAN_XML = ".xtan.xml";
         public const string EXT_PILOT_XML = ".group.xml";
+        public const string EXT_PERCOLATOR = ".perc.xml";
         public const string EXT_PERCOLATOR_XML = "results.xml";
         public const string EXT_WATERS_MSE = "final_fragment.csv";
 
@@ -95,7 +96,7 @@ namespace pwiz.Skyline.Model.Lib
                 return false;
             }
             var blibFilter = new BlibFilter();
-            status = status.ChangeMessage(message).ChangePercentComplete(0);
+            status = new ProgressStatus(message);
             progress.UpdateProgress(status);
             // Write the non-redundant library to a temporary file first
             try

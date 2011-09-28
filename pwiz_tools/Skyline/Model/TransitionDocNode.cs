@@ -112,7 +112,7 @@ namespace pwiz.Skyline.Model
 
         public static TransitionIsotopeDistInfo GetIsotopeDistInfo(Transition transition, IsotopeDistInfo isotopeDist)
         {
-            if (isotopeDist == null)
+            if (isotopeDist == null || !transition.IsPrecursor())
                 return null;
             return new TransitionIsotopeDistInfo(isotopeDist.GetRankI(transition.MassIndex),
                 isotopeDist.GetProportionI(transition.MassIndex));

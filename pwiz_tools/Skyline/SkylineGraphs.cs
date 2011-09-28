@@ -231,6 +231,7 @@ namespace pwiz.Skyline
                         // Hide the graph panel, if nothing remains
                         if (FirstDocumentPane == -1)
                             splitMain.Panel2Collapsed = true;
+                        EnsureFloatingWindowsVisible();
                         deserialized = true;
                     }
                     catch (Exception x)
@@ -420,6 +421,24 @@ namespace pwiz.Skyline
             }
 
             UpdateGraphPanes(listUpdateGraphs);
+        }
+
+        private void EnsureFloatingWindowsVisible()
+        {
+            foreach (var floatingWindow in dockPanel.FloatingWindows)
+            {
+                var screen = Screen.FromControl(floatingWindow);
+                var rectScreen = screen.WorkingArea;
+                var rectWindow = floatingWindow.Bounds;
+                rectWindow.Width = Math.Min(rectWindow.Width, rectScreen.Width);
+                rectWindow.Height = Math.Min(rectWindow.Height, rectScreen.Height);
+                rectWindow.X = Math.Max(rectScreen.X,
+                    Math.Min(rectWindow.X, rectScreen.X + rectScreen.Width - rectWindow.Width));
+                rectWindow.Y = Math.Max(rectScreen.Y,
+                    Math.Min(rectWindow.Y, rectScreen.Y + rectScreen.Height - rectWindow.Height));
+                if (!Equals(rectWindow, floatingWindow.Bounds))
+                    floatingWindow.Bounds = rectWindow;
+            }
         }
 
         private IDockableForm DeserializeForm(string persistentString)

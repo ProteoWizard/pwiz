@@ -1120,7 +1120,7 @@ namespace pwiz.Skyline.Controls
                 }
             }
 
-            if (SelectedPeptideDocNode != null)
+            if (SelectedPeptideDocNode != null && SelectedPeptideDocNode.HasResults)
             {
                 for (int iReplicate = 0; iReplicate < SelectedPeptideDocNode.Results.Count; iReplicate++)
                 {

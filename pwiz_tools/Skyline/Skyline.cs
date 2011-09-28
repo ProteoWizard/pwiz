@@ -176,9 +176,14 @@ namespace pwiz.Skyline
                         throw new UriFormatException("The URI " + uri + " is not a file.");
 
                     string pathOpen = Uri.UnescapeDataString(uri.AbsolutePath);
-                    // If the file chosen was the cache file, open its associated document.
+
+                    // If the file chosen was the cache file, open its associated document.)
                     if (Equals(Path.GetExtension(pathOpen), ChromatogramCache.EXT))
                         pathOpen = Path.ChangeExtension(pathOpen, SrmDocument.EXT);
+                    // Handle direct open from UNC path names
+                    if (!string.IsNullOrEmpty(uri.Host))
+                        pathOpen = "//" + uri.Host + pathOpen;
+
                     newFile = !OpenFile(pathOpen);
                 }
                 catch (UriFormatException)
@@ -1980,29 +1985,41 @@ namespace pwiz.Skyline
 // ReSharper disable MemberCanBeMadeStatic.Local
         private void homeMenuItem_Click(object sender, EventArgs e)
         {
-            Process.Start("http://proteome.gs.washington.edu/software/skyline/");
+            ShowUrl("http://proteome.gs.washington.edu/software/skyline/");
         }
 
         private void videosMenuItem_Click(object sender, EventArgs e)
         {
-            Process.Start("http://proteome.gs.washington.edu/software/Skyline/videos.html");
+            ShowUrl("http://proteome.gs.washington.edu/software/Skyline/videos.html");
         }
 
         private void tutorialsMenuItem_Click(object sender, EventArgs e)
         {
-            Process.Start("http://proteome.gs.washington.edu/software/Skyline/tutorials.html");
+            ShowUrl("http://proteome.gs.washington.edu/software/Skyline/tutorials.html");
         }
 
         private void supportMenuItem_Click(object sender, EventArgs e)
         {
-            Process.Start("http://proteome.gs.washington.edu/software/Skyline/support.html");
+            ShowUrl("http://proteome.gs.washington.edu/software/Skyline/support.html");
         }
 
         private void issuesMenuItem_Click(object sender, EventArgs e)
         {
-            Process.Start("http://proteome.gs.washington.edu/software/Skyline/issues.html");
+            ShowUrl("http://proteome.gs.washington.edu/software/Skyline/issues.html");
         }
 // ReSharper restore MemberCanBeMadeStatic.Local
+
+        private void ShowUrl(string url)
+        {
+            try
+            {
+                Process.Start(url);
+            }
+            catch (Exception)
+            {
+                MessageDlg.Show(this, string.Format("Failure attempting to show a web browser for the URL\n{0}", url));
+            }            
+        }
 
         private void aboutMenuItem_Click(object sender, EventArgs e)
         {

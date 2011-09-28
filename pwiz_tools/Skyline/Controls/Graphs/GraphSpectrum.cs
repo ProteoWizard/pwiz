@@ -325,9 +325,17 @@ namespace pwiz.Skyline.Controls.Graphs
                     {
                         if (NodeGroupChanged(nodeGroup))
                         {
-                            UpdateSpectra(group, mods);
-
-                            UpdateToolbar();
+                            try
+                            {
+                                UpdateSpectra(group, mods);
+                                UpdateToolbar();
+                            }
+                            catch (Exception)
+                            {
+                                _spectra = null;
+                                UpdateToolbar();
+                                throw;
+                            }
 
                             _nodeGroup = nodeGroup;
                             if (settings.TransitionSettings.Instrument.IsDynamicMin)
@@ -387,8 +395,6 @@ namespace pwiz.Skyline.Controls.Graphs
                 }
                 catch (Exception)
                 {
-                    _spectra = null;
-                    UpdateToolbar();
                     AddGraphItem(graphPane, new NoDataMSGraphItem("Failure loading spectrum. Library may be corrupted."));
                     return;
                 }
