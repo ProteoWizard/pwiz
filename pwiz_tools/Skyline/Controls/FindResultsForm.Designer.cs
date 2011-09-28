@@ -78,7 +78,7 @@ namespace pwiz.Skyline.Controls
             // colHdrLocation
             // 
             this.colHdrLocation.Text = "Location";
-            this.colHdrLocation.Width = 97;
+            this.colHdrLocation.Width = 242;
             // 
             // colHdrType
             // 
@@ -96,6 +96,7 @@ namespace pwiz.Skyline.Controls
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(718, 262);
             this.Controls.Add(this.listView);
+            this.HideOnClose = true;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.KeyPreview = true;
             this.Name = "FindResultsForm";
