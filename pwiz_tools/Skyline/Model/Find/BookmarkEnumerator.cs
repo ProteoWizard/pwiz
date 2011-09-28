@@ -413,7 +413,7 @@ namespace pwiz.Skyline.Model.Find
             }
             if (docNode is TransitionGroupDocNode)
             {
-                return "Transition Group";
+                return "Precursor";
             }
             if (docNode is PeptideDocNode)
             {
@@ -423,7 +423,7 @@ namespace pwiz.Skyline.Model.Find
             {
                 return "Protein";
             }
-            return "UnknownNode";
+            return "Unknown";
         }
 
         public static BookmarkEnumerator TryGet(SrmDocument document, Bookmark bookmark)
