@@ -14116,26 +14116,27 @@ inline unsigned int stringToCVID(const std::string& str)
     return value;
 }
 
+PWIZ_API_DECL const CVTermInfo& cvTermInfo(const std::string& id) {
+    return cvTermInfo(id.c_str());
+}
 
-PWIZ_API_DECL const CVTermInfo& cvTermInfo(const string& id)
+PWIZ_API_DECL const CVTermInfo& cvTermInfo(const char *id)
 {
-    CVID cvid = CVID_Unknown;
-
-    vector<string> tokens;
-    tokens.reserve(2);
-    bal::split(tokens, id, bal::is_any_of(":"));
-    if (tokens.size() != 2)
-        throw invalid_argument("[cvTermInfo()] Error splitting id \"" + id + "\" into prefix and numeric components");
-    const string& prefix = tokens[0];
-    const string& cvidStr = tokens[1];
-
-    const char** it = find_if(oboPrefixes_, oboPrefixes_+oboPrefixesSize_,
-                              StringEquals(prefix.c_str()));
-
-    if (it != oboPrefixes_+oboPrefixesSize_)
-       cvid = (CVID)((it-oboPrefixes_)*enumBlockSize_ + stringToCVID(cvidStr));
-
-    return CVTermData::instance->infoMap().find(cvid)->second;
+    // called a LOT - rewritten as zero-copy for speed
+    if (id) {
+        for (int o=0;o<oboPrefixesSize_;o++) {
+            const char *ip = id;
+            const char *op = oboPrefixes_[o];
+            while (*op==*ip) {
+                op++; ip++;
+            }
+            if ( (!*op) && (*ip++==':') ) {
+                CVID cvid = (CVID)(o*enumBlockSize_ + strtoul(ip,NULL,10));
+                return CVTermData::instance->infoMap().find(cvid)->second;
+            }
+        }
+    }
+    return CVTermData::instance->infoMap().find(CVID_Unknown)->second;
 }
 
 

@@ -9217,6 +9217,7 @@ PWIZ_API_DECL const CVTermInfo& cvTermInfo(CVID cvid);
 
 
 /// returns CV term info for the specified id (accession number)
+PWIZ_API_DECL const CVTermInfo& cvTermInfo(const char *id);
 PWIZ_API_DECL const CVTermInfo& cvTermInfo(const std::string& id);
 
 
