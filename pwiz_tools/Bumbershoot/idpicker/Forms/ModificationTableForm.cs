@@ -446,61 +446,68 @@ namespace IDPicker.Forms
         internal List<TreeNode> getModificationTree(string reportName)
         {
             var groupNodes = new List<TreeNode>();
-            var sites = new List<char>();
-            var mods = new List<Modification>();
-            if (viewFilter.ModifiedSite != null)
-                sites.AddRange(viewFilter.ModifiedSite);
-            else
-            {
-                var siteList = session.CreateSQLQuery("select distinct site from peptidemodification").List<string>();
-                sites.AddRange(siteList.Select(site => site[0]));
-            }
 
-            mods.AddRange(viewFilter.Modifications
-                          ?? session.QueryOver<Modification>().List());
-            foreach (var site in sites)
+            var query = session.CreateQuery("SELECT pm.Site, pm.Modification, COUNT(DISTINCT psm.Spectrum) " +
+                                                dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
+                                                                                  DataFilter.PeptideSpectrumMatchToPeptideModification) +
+                                                "GROUP BY pm.Site, ROUND(pm.Modification.MonoMassDelta) " +
+                                                "ORDER BY ROUND(pm.Modification.MonoMassDelta)");
+
+            foreach (var tuple in query.List<object[]>())
             {
-                foreach (var mod in mods)
-                {
-                    var modFilter = new DataFilter(viewFilter)
-                                        {
-                                            Modifications = new List<Modification> {mod},
-                                            ModifiedSite = new List<char> {site}
-                                        };
-                    var peptideList = session.CreateQuery("SELECT psm, (psm.Peptide || ' ' || ROUND(psm.MonoisotopicMass)), COUNT(DISTINCT psm.Spectrum) " +
+                var mod = tuple[1] as DataModel.Modification;
+                var roundedMass = (int) Math.Round(mod.MonoMassDelta);
+                var site = (char) tuple[0];
+                var specCount = Convert.ToInt32(tuple[2]);
+
+                var modFilter = new DataFilter(viewFilter)
+                                    {
+                                        Modifications = session.CreateQuery(
+                                            "SELECT pm.Modification " +
+                                            "FROM PeptideSpectrumMatch psm JOIN psm.Modifications pm " +
+                                            " WHERE ROUND(pm.Modification.MonoMassDelta)=" +
+                                            roundedMass +
+                                            (" AND pm.Site='" + site + "'") +
+                                            " GROUP BY pm.Modification.id")
+                                            .List<DataModel.Modification>()
+                                    };
+
+                var peptideList = session.CreateQuery("SELECT psm, (psm.Peptide || ' ' || ROUND(psm.MonoisotopicMass)), COUNT(DISTINCT psm.Spectrum) " +
                                                  modFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
                                                  "GROUP BY (psm.Peptide || ' ' || ROUND(psm.MonoisotopicMass))")
                                     .List<object[]>().Select(o => new PeptideTableForm.PeptideSpectrumMatchRow(o));
-                    if (!peptideList.Any()) continue;
-                    var newNode = new TreeNode
-                                      {
-                                          Text = site + mod.AvgMassDelta.ToString(),
-                                          Tag = new[]
+                if (!peptideList.Any()) continue;
+
+
+                var newNode = new TreeNode
+                {
+                    Text = site + mod.AvgMassDelta.ToString(),
+                    Tag = new[]
                                                     {
                                                         "'" +site + "'", mod.AvgMassDelta.ToString(),
                                                         peptideList.Count().ToString(),
-                                                        peptideList.Sum(item => item.Spectra).ToString()
+                                                        specCount.ToString()
                                                     }
-                                      };
-                    foreach (var peptide in peptideList)
+                };
+                foreach (var peptide in peptideList)
+                {
+                    var cluster = peptide.PeptideSpectrumMatch.Peptide.Instances.First().Protein.Cluster;
+                    var subNode = new TreeNode
                     {
-                        var cluster = peptide.PeptideSpectrumMatch.Peptide.Instances.First().Protein.Cluster;
-                        var subNode = new TreeNode
-                                          {
-                                              Text = peptide.DistinctPeptide.Sequence,
-                                              Tag = new[]
+                        Text = peptide.DistinctPeptide.Sequence,
+                        Tag = new[]
                                                         {
                                                             "'" + peptide.DistinctPeptide.Sequence+"'",
                                                             string.Format("'<a href = \"{0}-cluster{1}.html\">{1}</a>'",
                                                                           reportName,cluster),
                                                             peptide.Spectra.ToString(),
                                                         }
-                                          };
-                        newNode.Nodes.Add(subNode);
-                    }
-                    groupNodes.Add(newNode);
+                    };
+                    newNode.Nodes.Add(subNode);
                 }
+                groupNodes.Add(newNode);
             }
+
             return groupNodes;
         }
 
