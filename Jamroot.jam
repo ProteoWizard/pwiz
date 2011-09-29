@@ -317,7 +317,7 @@ generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/data/msdata/Version.cpp : pwiz msdat
                 $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Bruker
                 $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/thermo
                 $(PWIZ_ROOT_PATH)/pwiz_aux/msrc/utility/vendor_api/Waters
-       : *.?pp Jamfile.jam : Version.cpp
+       : *.?pp *.h Jamfile.jam *.manifest* : Version.cpp
     ] ;
 
 generate-version.cpp $(PWIZ_ROOT_PATH)/pwiz/analysis/Version.cpp : pwiz analysis : $(PWIZ_MAJOR) : $(PWIZ_MINOR) :
@@ -359,7 +359,7 @@ local revision-info =
                              $(PWIZ_ROOT_PATH)/pwiz_tools/SeeMS
                              $(PWIZ_ROOT_PATH)/pwiz_tools/MSConvertGUI
                              $(PWIZ_ROOT_PATH)/pwiz_tools/sld
-                : *.?pp *.jam *.cs
+                : *.?pp *.h *.jam *.cs *.manifest*
                 : tar.excluded Version.cpp Resources.Designer.cs Settings.Designer.cs AssemblyInfo.cs
             ]
         : warn-on-missing

@@ -56,6 +56,7 @@ else
         echo [ SHELL "copy \"$(MSFileReader)\\XRawfile2.dll \" \"$(destination)\\MSFileReader.XRawfile2.dll" ] ;
         echo [ SHELL "copy \"$(MSFileReader)\\fileio.dll\" \"$(destination)\"" ] ;
         echo [ SHELL "copy \"$(MSFileReader)\\fregistry.dll\" \"$(destination)\"" ] ;
+        SHELL "copy \"$(API_PATH)\\MSFileReader.XRawfile2.SxS.manifest.real\" \"$(API_PATH)\\MSFileReader.XRawfile2.SxS.manifest\"" ;
         RESCAN ;
     }
 }

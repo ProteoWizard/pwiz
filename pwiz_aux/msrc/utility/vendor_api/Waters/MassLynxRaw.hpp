@@ -21,6 +21,7 @@
 
 
 #include "pwiz/utility/misc/Export.hpp"
+#include "pwiz/utility/misc/Exception.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Once.hpp"
 #include <boost/shared_ptr.hpp>
@@ -118,7 +119,7 @@ struct PWIZ_API_DECL RawData
     mutable vector<vector<MSScanStats>> scanStatsByFunction;
     mutable vector<ExtendedScanStatsByName> extendedScanStatsByFunction;
 
-    void initHeaderProps(string rawpath)
+    void initHeaderProps(const string& rawpath)
     {
         string headerTextPath = rawpath + "/_HEADER.TXT";
         ifstream in(headerTextPath.c_str());
@@ -135,48 +136,59 @@ struct PWIZ_API_DECL RawData
 
             string name = line.substr(3, c_pos - 3);
             string value = line.substr(c_pos + 2, line.size() - (c_pos + 2));
-            headerProps.insert(pair<string, string>(name, value));
-//            std::cout << name << " = " << value << std::endl;
+            headerProps[name] = value;
+            //std::cout << name << " = " << value << std::endl;
         }
-
-        in.close();
     }
 
 	void initScanStats() const
 	{
-        MassLynxRawScanStatsReader statsReader(Reader);
-
-        scanStatsByFunction.resize(FunctionCount());
-        extendedScanStatsByFunction.resize(FunctionCount());
-
-        BOOST_FOREACH(int function, functionIndexList)
+        try
         {
-            statsReader.readScanStats(function, scanStatsByFunction[function]);
+            MassLynxRawScanStatsReader statsReader(Reader);
 
-            ExtendedScanStatsByName& extendedScanStatsMap = extendedScanStatsByFunction[function];
+            scanStatsByFunction.resize(FunctionCount());
+            extendedScanStatsByFunction.resize(FunctionCount());
 
-            vector<ExtendedStatsType> extendedStatsTypes;
-            statsReader.getExtendedStatsTypes(function, extendedStatsTypes);
-            for (size_t i=0; i < extendedStatsTypes.size(); ++i)
+            BOOST_FOREACH(int function, functionIndexList)
             {
-                ExtendedStatsType& type = extendedStatsTypes[i];
-                if(type.name.empty())
-                    continue;
+                statsReader.readScanStats(function, scanStatsByFunction[function]);
 
-//				std::cout << extendedStatsTypes[i].name << " " << extendedStatsTypes[i].typeCode << std::endl;
-                switch (type.typeCode)
+                ExtendedScanStatsByName& extendedScanStatsMap = extendedScanStatsByFunction[function];
+
+                vector<ExtendedStatsType> extendedStatsTypes;
+                statsReader.getExtendedStatsTypes(function, extendedStatsTypes);
+                for (size_t i=0; i < extendedStatsTypes.size(); ++i)
                 {
-                    case CHAR: fillExtendedStatsByName<char>(statsReader, function, type, extendedScanStatsMap); break;
-                    case SHORT_INT: fillExtendedStatsByName<short>(statsReader, function, type, extendedScanStatsMap); break;
-                    case LONG_INT: fillExtendedStatsByName<int>(statsReader, function, type, extendedScanStatsMap); break;
-                    case SINGLE_FLOAT: fillExtendedStatsByName<float>(statsReader, function, type, extendedScanStatsMap); break;
-                    case DOUBLE_FLOAT: fillExtendedStatsByName<double>(statsReader, function, type, extendedScanStatsMap); break;
+                    ExtendedStatsType& type = extendedStatsTypes[i];
+                    if(type.name.empty())
+                        continue;
 
-                    case STRING:
-                    default:
-                        throw std::runtime_error("cannot handle string extended stats");
+                    //std::cout << extendedStatsTypes[i].name << " " << extendedStatsTypes[i].typeCode << std::endl;
+                    switch (type.typeCode)
+                    {
+                        case CHAR: fillExtendedStatsByName<char>(statsReader, function, type, extendedScanStatsMap); break;
+                        case SHORT_INT: fillExtendedStatsByName<short>(statsReader, function, type, extendedScanStatsMap); break;
+                        case LONG_INT: fillExtendedStatsByName<int>(statsReader, function, type, extendedScanStatsMap); break;
+                        case SINGLE_FLOAT: fillExtendedStatsByName<float>(statsReader, function, type, extendedScanStatsMap); break;
+                        case DOUBLE_FLOAT: fillExtendedStatsByName<double>(statsReader, function, type, extendedScanStatsMap); break;
+
+                        case STRING:
+                        default:
+                            throw std::runtime_error("cannot handle string extended stats");
+                    }
                 }
             }
+        }
+        catch (std::exception& e)
+        {
+            // TODO: log error (can't propogate from inside call_once)
+            std::cerr << "[MassLynxRaw::initScanStats] " << e.what() << std::endl;
+        }
+        catch (...)
+        {
+            // TODO: log error (can't propogate from inside call_once)
+            std::cerr << "[MassLynxRaw::initScanStats] caught unknown exception" << std::endl;
         }
     }
 
