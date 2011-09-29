@@ -28,8 +28,12 @@
 #include "stdafx.h"
 #include "freicore.h"
 #include "BaseRunTimeConfig.h"
+#include <boost/icl/interval_set.hpp>
+#include <boost/icl/continuous_interval.hpp>
 
 using namespace freicore;
+using boost::icl::interval_set;
+using boost::icl::continuous_interval;
 
 #define QUAMETER_RUNTIME_CONFIG \
 	COMMON_RTCONFIG MULTITHREAD_RTCONFIG \
@@ -39,6 +43,8 @@ using namespace freicore;
     RTCONFIG_VARIABLE( string,          RawDataFormat,               "RAW"        ) \
     RTCONFIG_VARIABLE( string,          RawDataPath,                 ""           ) \
     RTCONFIG_VARIABLE( double,			ScoreCutoff,                 0.05         ) \
+    RTCONFIG_VARIABLE( MZTolerance,     ChromatogramMzLowerOffset,   "0.5mz"      ) \
+    RTCONFIG_VARIABLE( MZTolerance,     ChromatogramMzUpperOffset,   "1.0mz"      ) \
 	RTCONFIG_VARIABLE( bool,			ChromatogramOutput,          false   	  )
 
 
@@ -53,23 +59,41 @@ namespace quameter
 	public:
 		RTCONFIG_DEFINE_MEMBERS( RunTimeConfig, QUAMETER_RUNTIME_CONFIG, "\r\n\t ", "quameter.cfg", "\r\n#" )
 
+        interval_set<double> chromatogramScanTimeWindow(double centerTime) const
+        {
+            return interval_set<double>(continuous_interval<double>::closed(centerTime-300, centerTime+300));
+        }
+
+        interval_set<double> chromatogramMzWindow(double centerMz, int charge) const
+        {
+            double mzLower = centerMz - MZTolerance(ChromatogramMzLowerOffset.value * charge, ChromatogramMzLowerOffset.units);
+            double mzUpper = centerMz + MZTolerance(ChromatogramMzUpperOffset.value * charge, ChromatogramMzLowerOffset.units);
+            return interval_set<double>(continuous_interval<double>::closed(mzLower, mzUpper));
+        }
+
+        bool useAvgMass;
 
 	private:
 		void finalize()
 		{
-            if (!bal::iequals(OutputFormat, "tsv") && !bal::iequals(OutputFormat, "csv") && !bal::iequals(OutputFormat, "xml"))
+            bal::to_lower(OutputFormat);
+            bal::to_lower(MetricsType);
+            bal::to_lower(Instrument);
+
+            useAvgMass = Instrument == "ltq";
+
+            if (OutputFormat != "tsv" && OutputFormat != "csv" && OutputFormat != "xml")
                 throw runtime_error("invalid output format");
 
-            if (!bal::iequals(MetricsType, "nistms") && !bal::iequals(MetricsType, "pepitome") && !bal::iequals(MetricsType, "scanranker"))
-                throw runtime_error("invalid metrics requested");
-            if(!RawDataPath.empty())
-                bal::trim_right_if(RawDataPath,is_any_of(boost::lexical_cast<string>(bfs::slash<bfs::path>::value)));
+            if (!bal::starts_with(MetricsType, "nistms") && MetricsType != "pepitome" && MetricsType != "scanranker")
+                throw runtime_error("invalid metrics type");
+
+            bal::trim_right_if(RawDataPath, is_any_of("/\\"));
 
 			string cwd;
 			cwd.resize( MAX_PATH );
 			getcwd( &cwd[0], MAX_PATH );
 			WorkingDirectory = cwd.c_str();
-
 		}
 	};
 

@@ -28,11 +28,38 @@
 #include <boost/icl/interval_set.hpp>
 #include <boost/icl/continuous_interval.hpp>
 
+#include "percentile.hpp"
+#include <boost/accumulators/accumulators.hpp>
+#include <boost/accumulators/statistics/stats.hpp>
+#include <boost/accumulators/statistics/mean.hpp>
+#include <boost/accumulators/statistics/min.hpp>
+#include <boost/accumulators/statistics/max.hpp>
+#include <boost/accumulators/statistics/error_of.hpp>
+#include <boost/accumulators/statistics/error_of_mean.hpp>
+#include <boost/accumulators/statistics/kurtosis.hpp>
+#include <boost/accumulators/statistics/skewness.hpp>
+#include <boost/accumulators/statistics/variance.hpp>
+#include <boost/accumulators/framework/accumulator_set.hpp>
+
+#include <boost/multi_index_container.hpp>
+#include <boost/multi_index/member.hpp>
+#include <boost/multi_index/ordered_index.hpp>
+
+#include <boost/optional.hpp>
+#include <boost/cstdint.hpp>
 #include <vector>
 #include <map>
+#include <iostream>
+
+#include "crawdad/SimpleCrawdad.h"
+using namespace pwiz::SimpleCrawdad;
+using namespace crawpeaks;
 
 using namespace boost::icl;
 using namespace std;
+namespace accs = boost::accumulators;
+namespace bmi = boost::multi_index;
+
 
 namespace freicore
 {
@@ -41,95 +68,82 @@ namespace quameter
 
     enum EnzymaticStatus {NON_ENZYMATIC = 0, SEMI_ENZYMATIC, FULLY_ENZYMATIC};
     enum PrecursorCharges {ONE = 1, TWO = 2, THREE = 3, FOUR = 4};
-    enum PeptideSpCCategories { ONCE = 1, TWICE = 2, THRICE = 3, MORE_THAN_THRICE = 4 };
+    enum PeptideSpCCategories {ONCE = 1, TWICE = 2, THRICE = 3, MORE_THAN_THRICE = 4};
 
-    template<typename Sample>
-    struct quartile
+    struct MS1ScanInfo
     {
-        // for boost::result_of
-        typedef Sample result_type;
-
-        quartile() : buffer_(0), isSorted(false)
-        {
-        }
-
-        quartile(quartile const &that)
-            : buffer_(that.buffer_), isSorted(that.isSorted)
-        {
-        }
-
-        void operator ()(Sample &value) 
-        {
-            this->buffer_.push_back(value);
-            this->isSorted = false;
-        }
-
-        result_type extract_quartile(size_t numQuartile)
-        {
-            BOOST_ASSERT(this->buffer_.size() >= 4);
-            BOOST_ASSERT(numQuartile >= 1 );
-            BOOST_ASSERT(numQuartile < 4 );
-            if(!this->isSorted)
-            {
-                std::sort(this->buffer_.begin(),this->buffer_.end());
-                this->isSorted = true;
-            }
-            size_t quartileSize = (size_t) this->buffer_.size()/4;
-            if(numQuartile == 2)
-                return this->buffer_.at(quartileSize*2);
-            else if(numQuartile == 3)
-                return this->buffer_.at(quartileSize*3);
-            return this->buffer_.at(quartileSize);
-        }
-
-        result_type extract_IQR()
-        {
-            BOOST_ASSERT(this->buffer_.size() >= 4);
-            if(!this->isSorted)
-            {
-                std::sort(this->buffer_.begin(),this->buffer_.end());
-                this->isSorted = true;
-            }
-            size_t quartileSize = (size_t) this->buffer_.size()/4;
-            return this->buffer_.at(quartileSize*3) - this->buffer_.at(quartileSize);
-        }
-
-    private:
-        quartile &operator=(quartile const &);
-        std::vector<Sample> buffer_;
-        bool isSorted;
+        string nativeID;
+        double scanStartTime;
+        double totalIonCurrent;
     };
 
     struct MS2ScanInfo
     {
-        string ms2NativeID;
-        double ms2Retention;
+        string nativeID;
+        double scanStartTime;
+        bool identified;
+        size_t distinctPeptideID;
         string precursorNativeID;
         double precursorMZ;
         double precursorIntensity;
-        double precursorRetention;
+        double precursorScanStartTime;
 
         bool operator< ( const MS2ScanInfo& rhs ) const
 		{
-            if(ms2Retention != rhs.ms2Retention)
-                return ms2Retention < rhs.ms2Retention;
-            else if(precursorMZ != rhs.precursorMZ)
-                return precursorMZ < rhs.precursorMZ;
-            else if(ms2NativeID.compare(rhs.ms2NativeID)!=0)
-                return ms2NativeID < rhs.ms2NativeID;
-            else if(precursorRetention != rhs.precursorRetention)
-                return precursorRetention < rhs.precursorRetention;
-            else 
-                return precursorNativeID < rhs.precursorNativeID;
+            return nativeID < rhs.nativeID;
 		}
 
-		/// Operator to compare the equality of two search scores (MVH)
 		bool operator== ( const MS2ScanInfo& rhs ) const
 		{
-            return ms2Retention == rhs.ms2Retention && ms2NativeID == rhs.ms2NativeID && precursorRetention == rhs.precursorRetention && precursorMZ == rhs.precursorMZ && precursorNativeID == rhs.precursorNativeID;
+            return scanStartTime == rhs.scanStartTime &&
+                   nativeID == rhs.nativeID &&
+                   distinctPeptideID == rhs.distinctPeptideID &&
+                   precursorScanStartTime == rhs.precursorScanStartTime &&
+                   precursorMZ == rhs.precursorMZ &&
+                   precursorNativeID == rhs.precursorNativeID;
 		}
 
     };
+
+    struct Peak
+    {
+        double startTime;
+        double endTime;
+        double peakTime;
+        double fwhm;
+        double intensity;
+
+        Peak(double startTime = 0, double endTime = 0, double peakTime = 0, double fwhm = 0, double intensity = 0)
+             : startTime(startTime), endTime(endTime), peakTime(peakTime), fwhm(fwhm), intensity(intensity)
+        {}
+    };
+
+    struct nativeID {};
+    struct time {};
+    struct identified {};
+    struct intensity {};
+
+    typedef bmi::multi_index_container<MS1ScanInfo,
+                                       bmi::indexed_by<
+                                           bmi::ordered_unique<bmi::tag<nativeID>, bmi::member<MS1ScanInfo, string, &MS1ScanInfo::nativeID> >,
+                                           bmi::ordered_unique<bmi::tag<time>, bmi::member<MS1ScanInfo, double, &MS1ScanInfo::scanStartTime> >
+                                       >
+                                      > MS1ScanMap;
+
+    typedef bmi::multi_index_container<MS2ScanInfo,
+                                       bmi::indexed_by<
+                                           bmi::ordered_unique<bmi::tag<nativeID>, bmi::member<MS2ScanInfo, string, &MS2ScanInfo::nativeID> >,
+                                           bmi::ordered_unique<bmi::tag<time>, bmi::member<MS2ScanInfo, double, &MS2ScanInfo::scanStartTime> >,
+                                           bmi::ordered_non_unique<bmi::tag<identified>, bmi::member<MS2ScanInfo, bool, &MS2ScanInfo::identified> >
+                                       >
+                                      > MS2ScanMap;
+
+    typedef bmi::multi_index_container<Peak,
+                                       bmi::indexed_by<
+                                           bmi::ordered_unique<bmi::tag<time>, bmi::member<Peak, double, &Peak::peakTime> >,
+                                           bmi::ordered_unique<bmi::tag<intensity>, bmi::member<Peak, double, &Peak::intensity> >
+                                       >
+                                      > PeakList;
 
     struct ScanRankerMS2PrecInfo
     {
@@ -178,32 +192,21 @@ namespace quameter
 
     };
 
-    struct preMZandRT {
-        double MS2Retention;
-        double precursorMZ;
-        double precursorRetention;
-    };
-
     struct LocalChromatogram
     {
+        string id;
         vector<double> MS1Intensity;
         vector<double> MS1RT;
+        PeakList peaks;
+        boost::optional<Peak> bestPeak;
 
         LocalChromatogram(){}
 
-        LocalChromatogram(vector<double> intens, vector<double> rt)
+        LocalChromatogram(const vector<double>& intens, const vector<double>& rt)
         {
             MS1Intensity = intens;
             MS1RT = rt;
         }
-
-    };
-
-    struct fourInts {
-        int first;
-        int second;
-        int third;
-        int fourth;
     };
 
     struct MassErrorStats
@@ -214,31 +217,47 @@ namespace quameter
         double PPMErrorIQR;
     };
 
-    struct XICWindows 
+    struct UnidentifiedPrecursorInfo
     {
-        int peptide;
+        const MS2ScanInfo* spectrum;
+        interval_set<double> scanTimeWindow;
+        interval_set<double> mzWindow;
+        LocalChromatogram chromatogram;
+    };
+
+    struct PeptideSpectrumMatch
+    {
+        boost::int64_t peptide;
+        const MS2ScanInfo* spectrum;
+        double exactMZ;
+        int charge;
+        double score;
+    };
+
+    struct XICWindow 
+    {
         double firstMS2RT;
-        interval_set<double> preMZ;
-        interval_set<double> preRT;
-        vector<double> MS1Intensity;
-        vector<double> MS1RT;
+        double lastMS2RT;
+        double meanMS2RT;
+        double maxScore;
+        double maxScoreScanStartTime;
+        string peptide;
+        vector<PeptideSpectrumMatch> PSMs; // sorted by ascending scan time
+
+        mutable interval_set<double> preMZ;
+        mutable interval_set<double> preRT;
+        mutable vector<double> MS1Intensity;
+        mutable vector<double> MS1RT;
+        mutable PeakList peaks;
+        mutable boost::optional<Peak> bestPeak;
     };
 
-
-    struct IntensityPair 
-    {
-        double precursorIntensity;
-        double peakIntensity;
-
-        IntensityPair(double precIntens, double peakIntens)
-        {
-            precursorIntensity = precIntens;
-            peakIntensity = peakIntens;
-        }
-    };
-
-}
-}
+    typedef bmi::multi_index_container<XICWindow,
+                                       bmi::indexed_by<
+                                           bmi::ordered_unique<bmi::tag<time>, bmi::member<XICWindow, double, &XICWindow::firstMS2RT> >
+                                       >
+                                      > XICWindowList;
+} // namespace quameter
+} // namespace freicore
 
 #endif
-
