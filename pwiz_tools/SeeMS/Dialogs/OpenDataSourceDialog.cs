@@ -115,6 +115,7 @@ namespace seems
 				"mzML",
 				//"mzData",
 				"mzXML",
+                "mz5",
 				"Thermo RAW",
                 "Waters RAW",
 				"ABSciex WIFF",
@@ -353,7 +354,7 @@ namespace seems
             public void populateFromMSData( MSData msInfo )
             {
                 hasDetails = true;
-                spectra = msInfo.run.spectrumList.size();
+                spectra = msInfo.run.spectrumList == null ? 0 : msInfo.run.spectrumList.size();
                 ionSource = analyzer = detector = "";
                 foreach( InstrumentConfiguration ic in msInfo.instrumentConfigurationList )
                 {

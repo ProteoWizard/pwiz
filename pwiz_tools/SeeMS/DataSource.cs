@@ -140,6 +140,10 @@ namespace seems
 			//msDataFile = new MSDataFile(filepath);
 			sourceFilepath = filepath;
 
+            // create dummy spectrum/chromatogram list to simplify logic
+            msDataFile.run.spectrumList = msDataFile.run.spectrumList ?? new SpectrumListSimple();
+            msDataFile.run.chromatogramList = msDataFile.run.chromatogramList ?? new ChromatogramListSimple();
+
 			setInputFileWaitHandle = new EventWaitHandle( false, EventResetMode.ManualReset );
 			/*setInputFileDelegate = new ParameterizedThreadStart( startSetInputFile );
 			Thread setInputFileThread = new Thread( setInputFileDelegate );

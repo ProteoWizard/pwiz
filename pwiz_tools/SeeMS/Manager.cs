@@ -70,7 +70,9 @@ namespace seems
             chromatogramListForm.TabText = source.Name + " chromatograms";
             chromatogramListForm.ShowIcon = false;
 
-            CVID nativeIdFormat = source.MSDataFile.fileDescription.sourceFiles[0].cvParamChild( CVID.MS_native_spectrum_identifier_format ).cvid;
+            CVID nativeIdFormat = CVID.MS_scan_number_only_nativeID_format;
+            if (source.MSDataFile.fileDescription.sourceFiles.Any())
+                nativeIdFormat = source.MSDataFile.fileDescription.sourceFiles[0].cvParamChild(CVID.MS_native_spectrum_identifier_format).cvid;
             spectrumListForm = new SpectrumListForm( nativeIdFormat );
             spectrumListForm.Text = source.Name + " spectra";
             spectrumListForm.TabText = source.Name + " spectra";
@@ -428,72 +430,101 @@ namespace seems
 				SpectrumList sl = msDataFile.run.spectrumList;
                 //sl = new SpectrumList_Filter( sl, new SpectrumList_FilterAcceptSpectrum( acceptSpectrum ) );
 
-				if( sl == null )
-					throw new Exception( "Error loading metadata: no spectrum list" );
+                if (sl.size()+cl.size() == 0)
+                    throw new Exception("Error loading metadata: no spectra or chromatograms");
 
-                int index = -1;
+                Type indexType = typeof(MassSpectrum);
+			    int index = -1;
                 if( idOrIndex is int )
                     index = (int) idOrIndex;
                 else if( idOrIndex is string )
                 {
-                    int findIndex = sl.find( idOrIndex as string );
-                    if( findIndex != sl.size() )
+                    int findIndex = sl.find(idOrIndex as string);
+                    if (findIndex != sl.size())
                         index = findIndex;
+
+                    if (index == -1)
+                    {
+                        indexType = typeof(Chromatogram);
+                        findIndex = cl.find(idOrIndex as string);
+                        if (findIndex != cl.size())
+                            index = findIndex;
+                    }
                 }
 
                 // conditionally load the spectrum at the specified index first
                 if( index > -1 )
                 {
-                    MassSpectrum spectrum = managedDataSource.GetMassSpectrum( index );
-                    if (spectrumListFilters.Length > 0)
-                        spectrum = managedDataSource.GetMassSpectrum(spectrum, spectrumListFilters);
-
-                    spectrum.AnnotationSettings = defaultScanAnnotationSettings;
-                    spectrumListForm.Add( spectrum );
-                    source.Spectra.Add( spectrum );
-
-                    firstSpectrumLoaded = true;
-
-                    if (ShowSpectrumListForNewSources)
+                    GraphItem item = null;
+                    if (indexType == typeof(MassSpectrum))
                     {
-                        spectrumListForm.Show(DockPanel, DockState.DockBottom);
-                        Application.DoEvents();
-                    }
+                        MassSpectrum spectrum = managedDataSource.GetMassSpectrum(index);
+                        if (spectrumListFilters.Length > 0)
+                            spectrum = managedDataSource.GetMassSpectrum(spectrum, spectrumListFilters);
 
-                    if( annotation != null )
-                        spectrum.AnnotationList.Add( annotation );
+                        spectrum.AnnotationSettings = defaultScanAnnotationSettings;
+                        spectrumListForm.Add(spectrum);
+                        source.Spectra.Add(spectrum);
+
+                        firstSpectrumLoaded = true;
+
+                        if (ShowSpectrumListForNewSources)
+                        {
+                            spectrumListForm.Show(DockPanel, DockState.DockBottom);
+                            Application.DoEvents();
+                        }
+
+                        if (annotation != null)
+                            spectrum.AnnotationList.Add(annotation);
+
+                        item = spectrum;
+                    }
+                    else
+                    {
+                        Chromatogram chromatogram = managedDataSource.GetChromatogram(index);
+
+                        chromatogram.AnnotationSettings = defaultChromatogramAnnotationSettings;
+                        chromatogramListForm.Add(chromatogram);
+                        source.Chromatograms.Add(chromatogram);
+
+                        firstChromatogramLoaded = true;
+
+                        if (ShowChromatogramListForNewSources)
+                        {
+                            chromatogramListForm.Show(DockPanel, DockState.DockBottom);
+                            Application.DoEvents();
+                        }
+
+                        item = chromatogram;
+                    }
 
                     firstGraph = OpenFileUsesCurrentGraphForm && CurrentGraphForm != null ? CurrentGraphForm
                                                                                           : OpenGraph(OpenFileGivesFocus);
 
-                    showData( firstGraph, spectrum );
+                    showData(firstGraph, item);
                     return;
                 }
 
-				int ticIndex = 0;
-				if( cl != null )
+				int ticIndex = cl.find( "TIC" );
+				if( ticIndex < cl.size() )
 				{
-					ticIndex = cl.find( "TIC" );
-					if( ticIndex < cl.size() )
-					{
-						pwiz.CLI.msdata.Chromatogram tic = cl.chromatogram( ticIndex );
-                        Chromatogram ticChromatogram = managedDataSource.GetChromatogram( ticIndex );
-                        ticChromatogram.AnnotationSettings = defaultChromatogramAnnotationSettings;
-						chromatogramListForm.Add( ticChromatogram );
-						source.Chromatograms.Add( ticChromatogram );
-                        if( !firstSpectrumLoaded )
-                        {
-                            firstGraph = OpenGraph( true );
-                            showData( firstGraph, ticChromatogram );
-                            firstChromatogramLoaded = true;
+					pwiz.CLI.msdata.Chromatogram tic = cl.chromatogram( ticIndex );
+                    Chromatogram ticChromatogram = managedDataSource.GetChromatogram( ticIndex );
+                    ticChromatogram.AnnotationSettings = defaultChromatogramAnnotationSettings;
+					chromatogramListForm.Add( ticChromatogram );
+					source.Chromatograms.Add( ticChromatogram );
+                    if( !firstSpectrumLoaded )
+                    {
+                        firstGraph = OpenGraph( true );
+                        showData( firstGraph, ticChromatogram );
+                        firstChromatogramLoaded = true;
 
-                            if (ShowChromatogramListForNewSources)
-                            {
-                                chromatogramListForm.Show(DockPanel, DockState.DockBottom);
-                                Application.DoEvents();
-                            }
+                        if (ShowChromatogramListForNewSources)
+                        {
+                            chromatogramListForm.Show(DockPanel, DockState.DockBottom);
+                            Application.DoEvents();
                         }
-					}
+                    }
 				}
 
                 // get spectrum type from fileContent if possible, otherwise from first spectrum
@@ -501,39 +532,36 @@ namespace seems
 				if( spectrumType.cvid == CVID.CVID_Unknown && sl.size() > 0 )
 					spectrumType = sl.spectrum( 0 ).cvParamChild( CVID.MS_spectrum_type );
 
-				if( cl != null )
+				// load the rest of the chromatograms
+				for( int i = 0; i < cl.size(); ++i )
 				{
-					// load the rest of the chromatograms
-					for( int i = 0; i < cl.size(); ++i )
+					if( i == ticIndex )
+						continue;
+
+                    Chromatogram chromatogram = managedDataSource.GetChromatogram( i );
+
+                    if (OnLoadDataSourceProgress(String.Format("Loading chromatograms from {0} ({1} of {2})...",
+                                                           managedDataSource.Source.Name, (i + 1), cl.size()),
+                                                 (i + 1) * 100 / cl.size()))
+                        return;
+
+                    chromatogram.AnnotationSettings = defaultChromatogramAnnotationSettings;
+					chromatogramListForm.Add( chromatogram );
+					source.Chromatograms.Add( chromatogram );
+					if( !firstSpectrumLoaded && !firstChromatogramLoaded )
 					{
-						if( i == ticIndex )
-							continue;
+						firstChromatogramLoaded = true;
+                        
+                        if (ShowChromatogramListForNewSources)
+                        {
+                            chromatogramListForm.Show(DockPanel, DockState.DockBottom);
+                            Application.DoEvents();
+                        }
 
-                        Chromatogram chromatogram = managedDataSource.GetChromatogram( i );
-
-                        if (OnLoadDataSourceProgress(String.Format("Loading chromatograms from {0} ({1} of {2})...",
-                                                               managedDataSource.Source.Name, (i + 1), cl.size()),
-                                                     (i + 1) * 100 / cl.size()))
-                            return;
-
-                        chromatogram.AnnotationSettings = defaultChromatogramAnnotationSettings;
-						chromatogramListForm.Add( chromatogram );
-						source.Chromatograms.Add( chromatogram );
-						if( !firstSpectrumLoaded && !firstChromatogramLoaded )
-						{
-							firstChromatogramLoaded = true;
-                            
-                            if (ShowChromatogramListForNewSources)
-                            {
-                                chromatogramListForm.Show(DockPanel, DockState.DockBottom);
-                                Application.DoEvents();
-                            }
-
-						    firstGraph = OpenGraph( true );
-                            showData(firstGraph, chromatogram );
-						}
-						Application.DoEvents();
+					    firstGraph = OpenGraph( true );
+                        showData(firstGraph, chromatogram );
 					}
+					Application.DoEvents();
 				}
 				
 				// get all scans by sequential access

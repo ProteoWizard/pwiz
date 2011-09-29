@@ -213,11 +213,12 @@ namespace seems
             {
                 gridView.Columns["Id"].Visible = false;
 
-                string[] nameValuePairs = spectrum.Id.Split( " ".ToCharArray() );
+                string[] nameValuePairs = spectrum.Id.Split(' ');
                 foreach( string nvp in nameValuePairs )
                 {
-                    string[] nameValuePair = nvp.Split( "=".ToCharArray() );
-                    row[nameValuePair[0]] = nameValuePair[1];
+                    string[] nameValuePair = nvp.Split('=');
+                    if (row.Table.Columns.Contains(nameValuePair[0]))
+                        row[nameValuePair[0]] = nameValuePair[1];
                 }
             }
 
