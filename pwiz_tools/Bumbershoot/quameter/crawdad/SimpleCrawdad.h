@@ -100,22 +100,24 @@ class CrawdadPeakFinder
     const vector<float>& getSmoothed1stDerivativeIntensities();
     const vector<float>& getSmoothedIntensities();
     const vector<float>& getWingData() const {return _wingData;}
+    float getBaselineIntensity() const {return _baselineIntensity;}
 
     vector<CrawdadPeakPtr> CalcPeaks();
 
     vector<CrawdadPeakPtr> CalcPeaks(int max);
 
     private:
-    void SetChromatogram(vector<float>& intensities, int maxIntensityIndex, double baselintIntensity);
+    void SetChromatogram(vector<float>& intensities, int maxIntensityIndex);
 
     static void FindIntensityCutoff(const vector<CrawdadPeakPtr>& listPeaks, float left, float right,
-        int minPeaks, int calls, float& cutoff, int& len);
+                                    int minPeaks, int calls, float& cutoff, int& len);
     static int FilterPeaks(const vector<CrawdadPeakPtr>& listPeaks, float intensityCutoff);
 
 	// Padding data added before and after real data to ensure peaks
 	// near the edges get detected.
 	int _widthDataWings;
     vector<float> _wingData;
+    float _baselineIntensity;
 
     StackCrawPeakFinder _peakFinder;
 };

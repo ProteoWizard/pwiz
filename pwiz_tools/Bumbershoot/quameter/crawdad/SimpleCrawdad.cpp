@@ -32,8 +32,8 @@ void CrawdadPeakFinder::SetChromatogram(const vector<double>& times, const vecto
     // Marshall intensities to vector for Crawdad
     int len = intensities.size();
     vector<float> intensitiesCrawdad(len);
-	double baselineIntensity = intensities[0];
-    double maxIntensity = 0;
+	_baselineIntensity = intensities[0];
+    float maxIntensity = 0;
     int maxIntensityIndex = -1;
     for (int i = 1; i < len; i++)
     {
@@ -46,11 +46,11 @@ void CrawdadPeakFinder::SetChromatogram(const vector<double>& times, const vecto
             maxIntensity = intensity;
             maxIntensityIndex = i;
         }
-		if (intensity < baselineIntensity)
-			baselineIntensity = intensity;
+		if (intensity < _baselineIntensity)
+			_baselineIntensity = intensity;
     }
 
-    SetChromatogram(intensitiesCrawdad, maxIntensityIndex, baselineIntensity);
+    SetChromatogram(intensitiesCrawdad, maxIntensityIndex);
 }
 
 void CrawdadPeakFinder::SetChromatogram(const vector<float>& times, const vector<float>& intensities)
@@ -60,8 +60,8 @@ void CrawdadPeakFinder::SetChromatogram(const vector<float>& times, const vector
     // Marshall intensities to vector for Crawdad
     int len = intensities.size();
     vector<float> intensitiesCrawdad(len);
-	double baselineIntensity = intensities[0];
-    double maxIntensity = 0;
+	_baselineIntensity = intensities[0];
+    float maxIntensity = 0;
     int maxIntensityIndex = -1;
     for (int i = 1; i < len; i++)
     {
@@ -74,21 +74,21 @@ void CrawdadPeakFinder::SetChromatogram(const vector<float>& times, const vector
             maxIntensity = intensity;
             maxIntensityIndex = i;
         }
-		if (intensity < baselineIntensity)
-			baselineIntensity = intensity;
+		if (intensity < _baselineIntensity)
+			_baselineIntensity = intensity;
     }
 
-    SetChromatogram(intensitiesCrawdad, maxIntensityIndex, baselineIntensity);
+    SetChromatogram(intensitiesCrawdad, maxIntensityIndex);
 }
 
-void CrawdadPeakFinder::SetChromatogram(vector<float>& intensities, int maxIntensityIndex, double baselineIntensity)
+void CrawdadPeakFinder::SetChromatogram(vector<float>& intensities, int maxIntensityIndex)
 {
     // Find the peak width of the maximum intensity point at
     // half its height.
     int fwhm = 6;
     if (maxIntensityIndex != -1)
     {
-        double halfHeight = (intensities[maxIntensityIndex] - baselineIntensity)/2 + baselineIntensity;
+        double halfHeight = (intensities[maxIntensityIndex] - _baselineIntensity)/2 + _baselineIntensity;
         int iStart = 0;
         for (int i = maxIntensityIndex - 1; i >= 0; i--)
         {
@@ -116,9 +116,9 @@ void CrawdadPeakFinder::SetChromatogram(vector<float>& intensities, int maxInten
 
 	if (_widthDataWings > 0)
 	{
-        _wingData.assign(_widthDataWings, (float)baselineIntensity);
-		intensities.insert(intensities.begin(), _widthDataWings, (float)baselineIntensity);
-		intensities.insert(intensities.end(), _widthDataWings, (float)baselineIntensity);
+        _wingData.assign(_widthDataWings, _baselineIntensity);
+		intensities.insert(intensities.begin(), _widthDataWings, _baselineIntensity);
+		intensities.insert(intensities.end(), _widthDataWings, _baselineIntensity);
 	}
 
 	_peakFinder.clear();
