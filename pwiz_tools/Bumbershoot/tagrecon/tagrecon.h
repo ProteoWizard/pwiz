@@ -30,12 +30,18 @@
 #include "tagreconSpectrum.h"
 #include <boost/atomic.hpp>
 #include <boost/cstdint.hpp>
+#include <boost/interprocess/containers/container/flat_map.hpp>
+#include <boost/interprocess/containers/container/flat_set.hpp>
 
 #define TAGRECON_LICENSE			COMMON_LICENSE
 
 //#define DEBUG 1
 
 using namespace freicore;
+using boost::container::flat_map;
+using boost::container::flat_multimap;
+using boost::container::flat_set;
+using boost::container::flat_multiset;
 
 namespace freicore
 {
