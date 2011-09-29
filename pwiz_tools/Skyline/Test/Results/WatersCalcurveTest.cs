@@ -80,7 +80,7 @@ namespace pwiz.SkylineTest.Results
                                           {
                                               testFilesDir.GetTestPath("160109_Mix1_calcurve_070.mzML"),
                                               testFilesDir.GetTestPath("160109_Mix1_calcurve_073.mzML"),
-                                              testFilesDir.GetTestPath("160109_Mix1_calcurve_075.mzML"),
+                                              testFilesDir.GetTestPath("160109_Mix1_calcurve_075.raw"),
                                               testFilesDir.GetTestPath("160109_Mix1_calcurve_078.mzML")
                                           };
             // Count peaks where higher concentration replicates show less area
@@ -167,7 +167,12 @@ namespace pwiz.SkylineTest.Results
 
             // Remove the original data
             foreach (string path in replicatePaths)
-                File.Delete(path);
+            {
+                if (File.Exists(path))
+                    File.Delete(path);
+                else
+                    Directory.Delete(path, true);
+            }
             File.Delete(docPath);
 
             // Save the document
@@ -278,7 +283,7 @@ namespace pwiz.SkylineTest.Results
                     }),
                 new ChromatogramSet("trouble", new[]
                     {
-                        testFilesDir.GetTestPath("160109_Mix1_calcurve_075.mzML"),                                                                        
+                        testFilesDir.GetTestPath("160109_Mix1_calcurve_075.raw"),                                                                        
                         testFilesDir.GetTestPath("160109_Mix1_calcurve_078.mzML")
                     })
             };
@@ -421,7 +426,7 @@ namespace pwiz.SkylineTest.Results
             var listChromatograms = new List<ChromatogramSet>(docCached.Settings.MeasuredResults.Chromatograms)
                 {
                     new ChromatogramSet("extra1",
-                                        new[] { testFilesDir.GetTestPath("160109_Mix1_calcurve_075.mzML") }),
+                                        new[] { testFilesDir.GetTestPath("160109_Mix1_calcurve_075.raw") }),
                     new ChromatogramSet("extra2",
                                         new[] { testFilesDir.GetTestPath("160109_Mix1_calcurve_078.mzML") })
                 };
@@ -443,7 +448,7 @@ namespace pwiz.SkylineTest.Results
                     new ChromatogramSet("double",
                         new[]
                             {
-                                testFilesDir.GetTestPath("160109_Mix1_calcurve_075.mzML"),
+                                testFilesDir.GetTestPath("160109_Mix1_calcurve_075.raw"),
                                 testFilesDir.GetTestPath("160109_Mix1_calcurve_078.mzML")
                             }));
 
