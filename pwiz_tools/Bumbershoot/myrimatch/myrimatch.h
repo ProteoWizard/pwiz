@@ -30,11 +30,13 @@
 #include "myrimatchSpectrum.h"
 #include <boost/atomic.hpp>
 #include <boost/cstdint.hpp>
+#include <boost/interprocess/containers/container/flat_map.hpp>
 
 
 #define MYRIMATCH_LICENSE			COMMON_LICENSE
 
 using namespace freicore;
+using boost::container::flat_multimap;
 
 namespace freicore
 {
