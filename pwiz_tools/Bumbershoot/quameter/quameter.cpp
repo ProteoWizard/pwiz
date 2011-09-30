@@ -535,9 +535,8 @@ namespace quameter
             MS1ScanMap ms1ScanMap;
             MS2ScanMap ms2ScanMap;
 
-            // HACK: NIST always uses the lowest charge
-            const map<string, boost::int64_t>& distinctPeptideByNativeID = idpReader.distinctPeptideByNativeID();
-            map<boost::int64_t, map<int, double> > firstScanTimeOfDistinctPeptideByCharge;
+            const map<string, size_t>& distinctModifiedPeptideByNativeID = idpReader.distinctModifiedPeptideByNativeID();
+            map<size_t, double> firstScanTimeOfDistinctModifiedPeptide;
 
             // Call MedianPrecursorMZ() for metric IS-2
             double medianPrecursorMZ = idpReader.getMedianPrecursorMZ();
@@ -630,18 +629,13 @@ namespace quameter
 
                     // Only look at retention times of peptides identified in .idpDB
                     // curIndex is the spectrum index, curIndex+1 is (usually) the scan number
-                    map<string, boost::int64_t>::const_iterator findItr = distinctPeptideByNativeID.find(spectrum->id);
-                    if (findItr != distinctPeptideByNativeID.end()) 
+                    map<string, size_t>::const_iterator findItr = distinctModifiedPeptideByNativeID.find(spectrum->id);
+                    if (findItr != distinctModifiedPeptideByNativeID.end()) 
                     {
-                        // use the lowest charge state
-                        int charge = idpReader.chargeStatesByNativeID().find(spectrum->id)->second.front();
-
                         scanInfo.identified = true;
-                        scanInfo.distinctPeptideID = findItr->second;
-                        map<boost::int64_t, map<int, double> >::iterator insertItr =
-                            firstScanTimeOfDistinctPeptideByCharge.insert(make_pair(scanInfo.distinctPeptideID, map<int, double>())).first;
-                        map<int, double>::iterator insertItr2 = insertItr->second.insert(make_pair(charge, scanInfo.scanStartTime)).first;
-                        insertItr2->second = min(insertItr2->second, scanInfo.scanStartTime);
+                        scanInfo.distinctModifiedPeptideID = findItr->second;
+                        map<size_t, double>::iterator insertItr = firstScanTimeOfDistinctModifiedPeptide.insert(make_pair(findItr->second, scanInfo.scanStartTime)).first;
+                        insertItr->second = min(insertItr->second, scanInfo.scanStartTime);
 
                         // assume the previous MS1 is the precursor scan
                         if (lastMS1IonInjectionTime > 0)
@@ -657,22 +651,18 @@ namespace quameter
                     else 
                     { // this MS2 scan was not identified; we need this data for metrics MS2-4A/B/C/D
                         scanInfo.identified = false;
-                        scanInfo.distinctPeptideID = 0;
+                        scanInfo.distinctModifiedPeptideID = 0;
                     }
                     ms2ScanMap.insert(scanInfo);
                 }
 
             } // finished cycling through all spectra
 
-            accs::accumulator_set<double, accs::stats<accs::tag::percentile> > firstScanTimeOfDistinctPeptides;
-            typedef map<int, double> IntToDoubleMap;
-            BOOST_FOREACH_FIELD((boost::int64_t id)(IntToDoubleMap& timeByCharge), firstScanTimeOfDistinctPeptideByCharge)
-            {
-                //cout << "\n" << id << "\t" << timeByCharge.begin()->second;
-                firstScanTimeOfDistinctPeptides(timeByCharge.begin()->second);
-            }
-            double firstQuartileIDTime = accs::percentile(firstScanTimeOfDistinctPeptides, accs::percentile_number = 25);
-            double thirdQuartileIDTime = accs::percentile(firstScanTimeOfDistinctPeptides, accs::percentile_number = 75);
+            accs::accumulator_set<double, accs::stats<accs::tag::percentile> > firstScanTimeOfDistinctModifiedPeptides;
+            BOOST_FOREACH_FIELD((size_t id)(double firstScanTime), firstScanTimeOfDistinctModifiedPeptide)
+                firstScanTimeOfDistinctModifiedPeptides(firstScanTime);
+            double firstQuartileIDTime = accs::percentile(firstScanTimeOfDistinctModifiedPeptides, accs::percentile_number = 25);
+            double thirdQuartileIDTime = accs::percentile(firstScanTimeOfDistinctModifiedPeptides, accs::percentile_number = 75);
             double ms1ScanTimeOfFirstQuartile = ms2ScanMap.get<time>().lower_bound(firstQuartileIDTime)->precursorScanStartTime;
 
             /*cout << endl << "Scan time deciles:";
@@ -696,7 +686,7 @@ namespace quameter
 
             // Metric DS-2B: number of MS2 scans taken over C-2A
             size_t iqMS2Scans = 0, iqMS2IDs = 0;
-            set<boost::int64_t> iqDistinctPeptides;
+            set<size_t> iqDistinctModifiedPeptides;
             {
                 MS2ScanMap::index<time>::type::const_iterator itr = ms2ScanMap.get<time>().lower_bound(ms1ScanTimeOfFirstQuartile);
                 while (itr != ms2ScanMap.get<time>().end() && itr->scanStartTime <= thirdQuartileIDTime)
@@ -705,14 +695,14 @@ namespace quameter
                     if (itr->identified)
                     {
                         ++iqMS2IDs;
-                        iqDistinctPeptides.insert(itr->distinctPeptideID);
+                        iqDistinctModifiedPeptides.insert(itr->distinctModifiedPeptideID);
                     }
                     ++itr;
                 }
             }
 
             // Metric C-2B: number of distinct peptides identified over C-2A
-            double iqIDRate = iqDistinctPeptides.size() / iqIDTime;
+            double iqIDRate = iqDistinctModifiedPeptides.size() / iqIDTime;
 
             // Metric IS-1A: number of times that MS1 TIC jumps by 10x in adjacent scans within C-2A
             // Metric IS-1B: number of times that MS1 TIC falls by 10x in adjacent scans within C-2A
@@ -916,7 +906,7 @@ namespace quameter
                     else if (msLevel == 2) 
                     {
                         // Metric MS2-2: SNR of identified MS2 spectra
-                        if (distinctPeptideByNativeID.count(spectrum->id) > 0) 
+                        if (distinctModifiedPeptideByNativeID.count(spectrum->id) > 0) 
                         {
                             accs::accumulator_set<double, accs::stats<accs::tag::percentile, accs::tag::max> > ms2Peaks;
                             BOOST_FOREACH(const double& p, spectrum->getIntensityArray()->data)
@@ -1151,21 +1141,27 @@ namespace quameter
                 accs::accumulator_set<double, accs::stats<accs::tag::percentile> > ms2_peakPrecursorIntensities;
                 BOOST_FOREACH(const XICWindow& distinctMatch, pepWindow)
                     if (distinctMatch.bestPeak)
-                        ms2_peakPrecursorIntensities(distinctMatch.bestPeak->intensity);
+                        for (size_t i=0; i < distinctMatch.PSMs.size(); ++i)
+                            ms2_peakPrecursorIntensities(distinctMatch.bestPeak->intensity);
                 BOOST_FOREACH(const UnidentifiedPrecursorInfo& info, unidentifiedPrecursors)
                     ms2_peakPrecursorIntensities(info.chromatogram.bestPeak->intensity);
                 double intensQ1 = accs::percentile(ms2_peakPrecursorIntensities, accs::percentile_number = 25);
                 double intensQ2 = accs::percentile(ms2_peakPrecursorIntensities, accs::percentile_number = 50);
                 double intensQ3 = accs::percentile(ms2_peakPrecursorIntensities, accs::percentile_number = 75);
 
+                /*cout << endl << "Peak precursor intensity quartiles: ";
+                for (int i=0; i <= 100; i += 25)
+                    cout << " " << accs::percentile(ms2_peakPrecursorIntensities, accs::percentile_number = i);
+                cout << endl;*/
+
                 // number of identified MS2s that have precursor max intensities in each quartile
                 BOOST_FOREACH(const XICWindow& window, pepWindow)
                 {
                     double x = window.bestPeak->intensity;
-                    if (x <= intensQ1) idQ1++;
-                    else if (x <= intensQ2) idQ2++;
-                    else if (x <= intensQ3) idQ3++;
-                    else idQ4++;
+                    if (x <= intensQ1) idQ1 += window.PSMs.size();
+                    else if (x <= intensQ2) idQ2 += window.PSMs.size();
+                    else if (x <= intensQ3) idQ3 += window.PSMs.size();
+                    else idQ4 += window.PSMs.size();
                 }
 
                 // number of unidentified MS2s that have precursor max intensities in each quartile
@@ -1173,11 +1169,16 @@ namespace quameter
                 BOOST_FOREACH(const UnidentifiedPrecursorInfo& info, unidentifiedPrecursors)
                 {
                     double x = info.chromatogram.bestPeak->intensity;
-                    if (x <= intensQ1) unidQ1++;
-                    else if (x <= intensQ2) unidQ2++;
-                    else if (x <= intensQ3) unidQ3++;
-                    else unidQ4++;
+                    if (x <= intensQ1) ++unidQ1;
+                    else if (x <= intensQ2) ++unidQ2;
+                    else if (x <= intensQ3) ++unidQ3;
+                    else ++unidQ4;
                 }
+
+                //cout << endl << "Identified/unidentified MS2s with 1st quartile peak precursor intensities: " << idQ1 << "/" << unidQ1;
+                //cout << endl << "Identified/unidentified MS2s with 2nd quartile peak precursor intensities: " << idQ2 << "/" << unidQ2;
+                //cout << endl << "Identified/unidentified MS2s with 3rd quartile peak precursor intensities: " << idQ3 << "/" << unidQ3;
+                //cout << endl << "Identified/unidentified MS2s with 4th quartile peak precursor intensities: " << idQ4 << "/" << unidQ4;
 
                 totalQ1 = idQ1+unidQ1;
                 totalQ2 = idQ2+unidQ2;

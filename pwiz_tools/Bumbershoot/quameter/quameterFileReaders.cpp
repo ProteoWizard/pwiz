@@ -151,21 +151,36 @@ IDPDBReader::IDPDBReader(const string& file, const string& spectrumSourceId)
         }
     }
 
-    // Returns a map of MS2 native IDs to distinct peptide id
+    // Returns a map of MS2 native IDs to distinct modified peptide
     {
-        string sql = "SELECT NativeID, Peptide "
+        string sql = "SELECT NativeID, Peptide, "
+                     "       IFNULL((SELECT GROUP_CONCAT(Modification || '@' || Offset) "
+                     "               FROM PeptideModification pm WHERE pm.PeptideSpectrumMatch=psm.Id), '') AS Mods "
                      "FROM PeptideSpectrumMatch psm "
                      "JOIN Spectrum s ON psm.Spectrum=s.Id "
                      "WHERE QValue <= ? AND Rank=1 AND Source=? "
-                     "GROUP BY s.Id";
+                     "GROUP BY s.Id "
+                     "ORDER BY Peptide, Mods ";
         sqlite::query q(db, sql.c_str());
         q.binder() << g_rtConfig->ScoreCutoff << spectrumSourceId;
 
+        char const* id;
+        sqlite_int64 peptide, lastPeptide = 0;
+        string mods, lastMods = "initial value";
+
+        size_t distinctModifiedPeptide = 0;
         BOOST_FOREACH(sqlite::query::rows row, q)
-            _distinctPeptideByNativeID[row.get<string>(0)] = row.get<sqlite_int64>(1);
+        {
+            row.getter() >> id >> peptide >> mods;
+            if (peptide != lastPeptide || mods != lastMods)
+                ++distinctModifiedPeptide;
+            _distinctModifiedPeptideByNativeID[id] = distinctModifiedPeptide;
+            lastPeptide = peptide;
+            lastMods = mods;
+        }
     }
 
-    // Returns a map of MS2 native IDs to distinct peptide id
+    // Returns a map of MS2 native IDs to charge state(s)
     {
         string sql = "SELECT NativeID, Charge "
                      "FROM PeptideSpectrumMatch psm "

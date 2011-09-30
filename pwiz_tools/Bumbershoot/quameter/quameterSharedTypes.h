@@ -82,7 +82,7 @@ namespace quameter
         string nativeID;
         double scanStartTime;
         bool identified;
-        size_t distinctPeptideID;
+        size_t distinctModifiedPeptideID;
         string precursorNativeID;
         double precursorMZ;
         double precursorIntensity;
@@ -97,7 +97,7 @@ namespace quameter
 		{
             return scanStartTime == rhs.scanStartTime &&
                    nativeID == rhs.nativeID &&
-                   distinctPeptideID == rhs.distinctPeptideID &&
+                   distinctModifiedPeptideID == rhs.distinctModifiedPeptideID &&
                    precursorScanStartTime == rhs.precursorScanStartTime &&
                    precursorMZ == rhs.precursorMZ &&
                    precursorNativeID == rhs.precursorNativeID;

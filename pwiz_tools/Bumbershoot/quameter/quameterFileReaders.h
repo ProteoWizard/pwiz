@@ -84,7 +84,7 @@ namespace quameter
         const vector<size_t>& peptideSamplingRates() const {return _peptideSamplingRates;}
 
         // Returns a map of MS2 native IDs to distinct peptide id
-        const map<string, boost::int64_t>& distinctPeptideByNativeID() const {return _distinctPeptideByNativeID;}
+        const map<string, size_t>& distinctModifiedPeptideByNativeID() const {return _distinctModifiedPeptideByNativeID;}
 
         // Returns a map of MS2 native IDs to charge states
         const map<string, vector<int> >& chargeStatesByNativeID() const {return _chargeStatesByNativeID;}
@@ -112,7 +112,7 @@ namespace quameter
 
         private:
         vector<size_t> _peptideSamplingRates;
-        map<string, boost::int64_t> _distinctPeptideByNativeID;
+        map<string, size_t> _distinctModifiedPeptideByNativeID;
         map<string, vector<int> > _chargeStatesByNativeID;
         vector<size_t> _distinctMatchCountByCharge;
         MassErrorStats _precursorMassErrorStats;
