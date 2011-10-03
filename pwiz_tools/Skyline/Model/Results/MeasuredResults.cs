@@ -27,7 +27,6 @@ using System.Xml.Schema;
 using System.Xml.Serialization;
 using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Util;
-using System.Collections;
 
 namespace pwiz.Skyline.Model.Results
 {

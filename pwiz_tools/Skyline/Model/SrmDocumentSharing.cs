@@ -1,5 +1,24 @@
+/*
+ * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2010-2011 University of Washington - Seattle, WA
+ * 
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
@@ -16,6 +35,11 @@ namespace pwiz.Skyline.Model
     {
         public const string EXT = "zip";
 
+        public SrmDocumentSharing(string sharedPath)
+        {
+            SharedPath = sharedPath;
+        }
+
         public SrmDocumentSharing(SrmDocument document, string documentPath, string sharedPath, bool completeSharing)
         {
             Document = document;
@@ -31,14 +55,108 @@ namespace pwiz.Skyline.Model
 
         private ILongWaitBroker WaitBroker { get; set; }
         private int CountEntries { get; set; }
+        private long ExpectedSize { get; set; }
+        private long ExtractedSize { get; set; }
 
         private string DefaultMessage
         {
             get
             {
-                return string.Format("Compressing files for sharing archive {0}",
+                return string.Format(Document != null
+                                         ? "Compressing files for sharing archive {0}"
+                                         : "Extracting files from sharing archive {0}",
                                      Path.GetFileName(SharedPath));
             }
+        }
+
+        public void Extract(ILongWaitBroker waitBroker)
+        {
+            WaitBroker = waitBroker;
+            WaitBroker.ProgressValue = 0;
+            WaitBroker.Message = DefaultMessage;
+
+            string extractDir = Path.GetFileNameWithoutExtension(SharedPath) ?? "";
+
+            using (ZipFile zip = ZipFile.Read(SharedPath))
+            {
+                CountEntries = zip.Entries.Count;
+                ExpectedSize = zip.Entries.Select(entry => entry.UncompressedSize).Sum();
+
+                zip.ExtractProgress += SrmDocumentSharing_ExtractProgress;
+
+                string documentName = FindSharedSkylineFile(zip);
+
+                string parentDir = Path.GetDirectoryName(SharedPath);
+                if (!string.IsNullOrEmpty(parentDir))
+                    extractDir = Path.Combine(parentDir, extractDir);
+                extractDir = GetNonExistantDir(extractDir);
+                DocumentPath = Path.Combine(extractDir, documentName);
+
+                foreach (var entry in zip.Entries)
+                {
+                    if (WaitBroker.IsCanceled)
+                        break;
+
+                    try
+                    {
+                        entry.Extract(extractDir);
+
+                        ExtractedSize += entry.UncompressedSize;
+                    }
+                    catch (Exception)
+                    {
+                        if (!WaitBroker.IsCanceled)
+                            throw;
+                    }
+                }
+            }
+
+            if (WaitBroker.IsCanceled)
+            {
+                DirectoryEx.DeleteIfPossible(extractDir);
+            }
+        }
+
+        private static string GetNonExistantDir(string dirPath)
+        {
+            int count = 1;
+            string dirResult = dirPath;
+
+            while (Directory.Exists(dirResult))
+            {
+                // If a directory with the given name already exists, add
+                // a suffix to create a unique folder name.
+                dirResult = dirPath + "(" + count + ")";
+                count++;
+            }
+            return dirResult;
+        }
+
+        private static string FindSharedSkylineFile(ZipFile zip)
+        {
+            string skylineFile = null;
+
+            foreach (var file in zip.EntryFileNames)
+            {
+                // Shared files should not have subfolders.
+                if (Path.GetFileName(file) != file)
+                {
+                    throw new IOException("The zip file is not a shared file.");
+                }
+                // Shared files must have exactly one Skyline Document(.sky).
+                if (file.EndsWith(SrmDocument.EXT))
+                {
+                    if (!string.IsNullOrEmpty(skylineFile))
+                        throw new IOException("The zip file is not a shared file. The file contains multiple Skyline documents.");
+                    skylineFile = file;
+                }
+            }
+
+            if (string.IsNullOrEmpty(skylineFile))
+            {
+                throw new IOException("The zip file is not a shared file. The file does not contain any Skyline documents.");
+            }
+            return skylineFile;
         }
 
         public void Share(ILongWaitBroker waitBroker)
@@ -145,10 +263,38 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        private void SrmDocumentSharing_ExtractProgress(object sender, ExtractProgressEventArgs e)
+        {
+            if (WaitBroker != null)
+            {
+                if (WaitBroker.IsCanceled)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+
+                int progressValue = (int)Math.Round((ExtractedSize + e.BytesTransferred) * 100.0 / ExpectedSize);
+
+                if (progressValue != WaitBroker.ProgressValue)
+                {
+                    WaitBroker.ProgressValue = progressValue;
+                    WaitBroker.Message = (e.CurrentEntry != null ?
+                        string.Format("Extracting {0}", e.CurrentEntry.FileName) : DefaultMessage);
+                }
+            }
+        }
+
         private void SrmDocumentSharing_SaveProgress(object sender, SaveProgressEventArgs e)
         {
             if (WaitBroker != null)
             {
+                if (WaitBroker.IsCanceled)
+                {
+                    e.Cancel = true;
+                    return;
+                }
+
+                // TODO: More accurate total byte progress
                 double percentCompressed = (e.TotalBytesToTransfer > 0 ?
                     1.0 * e.BytesTransferred / e.TotalBytesToTransfer : 0);
                 int progressValue = (int)Math.Round((e.EntriesSaved + percentCompressed) * 100 / CountEntries);

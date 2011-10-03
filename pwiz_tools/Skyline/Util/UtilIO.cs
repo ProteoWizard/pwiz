@@ -328,6 +328,8 @@ namespace pwiz.Skyline.Util
     /// </summary>
     public sealed class PooledFileStream : ConnectionId<Stream>, IPooledStream
     {
+        private const int MILLISECOND_TICKS = 10*1000;
+
         public PooledFileStream(IStreamManager streamManager, string filePath, bool buffered)
             : base(streamManager.ConnectionPool)
         {
@@ -364,7 +366,11 @@ namespace pwiz.Skyline.Util
             get
             {
                 // If it is still in the pool, then it can't have been modified
-                return !IsOpen && !Equals(FileTime, File.GetLastWriteTime(FilePath));
+                // Otherwise, if the modified time is less than a millisecond different
+                // from when it was opened, then it is considered unmodified.  This is
+                // because, differences of ~70 ticks (< 0.01 millisecond) where seen
+                // after ZIP file extraction of shared files to a network drive.
+                return !IsOpen && Math.Abs(FileTime.Ticks - File.GetLastWriteTime(FilePath).Ticks) > MILLISECOND_TICKS;
             }
         }
 
@@ -618,6 +624,15 @@ namespace pwiz.Skyline.Util
         {
             try { File.Delete(path); }
             catch(IOException) {}
+        }
+    }
+
+    public static class DirectoryEx
+    {
+        public static void DeleteIfPossible(string path)
+        {
+            try { Directory.Delete(path, true); }
+            catch (IOException) { }
         }
     }
 

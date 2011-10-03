@@ -135,28 +135,23 @@ namespace pwiz.Skyline
         {
             try
             {
-                ZipFile zipFiles = ZipFile.Read(zipPath);
+                var sharing = new SrmDocumentSharing(zipPath);
 
-                string sharedFile = FindSharedSkylineFile(zipFiles, zipPath);
-                
-                // Zip file does not contain a shared .sky file.
-                if (sharedFile == null)
-                    return;
-
-                string extractDir = Path.GetFileNameWithoutExtension(zipPath) ?? "";
-                string parentDir = Path.GetDirectoryName(zipPath);
-                if (!string.IsNullOrEmpty(parentDir))
-                    extractDir = Path.Combine(parentDir, extractDir);
-                extractDir = GetNonExistantDir(extractDir);
-
-                ExtractZipFile(zipFiles, extractDir);
+                using (var longWaitDlg = new LongWaitDlg
+                {
+                    Text = "Extracting Files",
+                })
+                {
+                    longWaitDlg.PerformWork(this, 1000, sharing.Extract);
+                    if (longWaitDlg.IsCanceled)
+                        return;
+                }
 
                 // Remember the directory containing the newly extracted file
                 // as the active directory for the next open command.
-                Settings.Default.ActiveDirectory = extractDir;
+                Settings.Default.ActiveDirectory = Path.GetDirectoryName(sharing.DocumentPath);
 
-                string filePath = Path.Combine(extractDir, sharedFile);
-                OpenFile(filePath);
+                OpenFile(sharing.DocumentPath);
             }
             catch (ZipException)
             {
@@ -164,71 +159,11 @@ namespace pwiz.Skyline
             }
             catch (Exception e)
             {
-                MessageBox.Show(this, string.Format("Failure extracting Skyline document from zip file {0}.\n{1}", 
+                MessageDlg.Show(this, string.Format("Failure extracting Skyline document from zip file {0}.\n{1}", 
                     zipPath, e.Message));
             }
         }
 
-        private static string GetNonExistantDir(string dirPath)
-        {
-            int count = 1;
-            string dirResult = dirPath;
-
-            while (Directory.Exists(dirResult))
-            {
-                // If a directory with the given name already exists, add
-                // appendage to create a unique folder name.
-                dirResult = dirPath + "(" + count + ")";
-                count++;
-            }
-            return dirResult;
-        }
-
-        public void ExtractZipFile(ZipFile zipFiles, string extractDir)
-        {
-            foreach (var file in zipFiles)
-                file.Extract(extractDir);
-        }
-
-        public string FindSharedSkylineFile(ZipFile zipFiles, string zipPath)
-        {
-            string skylineFile = null;
-
-            foreach (var file in zipFiles.EntryFileNames)
-            {
-                // Shared files should not have subfolders.
-                if (Path.GetFileName(file) != file)
-                {
-                    MessageDlg.Show(this,
-                    string.Format("The zip file {0} is not a shared file.", zipPath));
-                    return null;
-                }
-                // Shared files must have exactly one Skyline Document(.sky).
-                if (file.EndsWith(SrmDocument.EXT))
-                {
-                    if (string.IsNullOrEmpty(skylineFile))
-                        skylineFile = file;
-                    else
-                    {
-                        MessageDlg.Show(this,
-                                        string.Format(
-                                            "The zip file {0} is not a shared file. The file contains multiple Skyline documents.",
-                                            zipPath));
-                        return null;
-                    } 
-                }
-            }
-
-            if (string.IsNullOrEmpty(skylineFile))
-            {
-                MessageDlg.Show(this,
-                    string.Format("The zip file {0} is not a shared file. The file does not contain any Skyline documents.",
-                    zipPath));
-                return null;
-            }
-            return skylineFile;
-        }
-        
         public bool OpenFile(string path)
         {
             try
@@ -891,8 +826,8 @@ namespace pwiz.Skyline
             };
             SrmDocument docNew = null;
             IdentityPath nextAdded;
-            longWaitDlg.PerformWork(this, 1000, () =>
-                       docNew = docCurrent.ImportFasta(reader, longWaitDlg, lineCount, matcher, to, out selectPath, out nextAdded));
+            longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
+                       docNew = docCurrent.ImportFasta(reader, longWaitBroker, lineCount, matcher, to, out selectPath, out nextAdded));
 
             if (docNew == null)
                 return;
@@ -1074,9 +1009,9 @@ namespace pwiz.Skyline
                 Text = description,
             };
             SrmDocument docNew = null;
-            longWaitDlg.PerformWork(this, 1000, () =>
+            longWaitDlg.PerformWork(this, 1000, longWaitBroker =>
                 docNew = ImportFiles(docCurrent,
-                                     longWaitDlg,
+                                     longWaitBroker,
                                      filePaths,
                                      resultsAction,
                                      nodeSel != null ? nodeSel.Path : null,
