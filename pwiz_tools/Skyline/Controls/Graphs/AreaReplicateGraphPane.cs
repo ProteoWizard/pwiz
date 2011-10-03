@@ -542,7 +542,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 case AreaExpectedValue.library:
                 case AreaExpectedValue.isotope_dist:
-                    return GetDotProductText(nodeTran.GetIsotopeDotProduct(indexResult));
+                    return GetDotProductText(nodeTran.GetIsotopeDotProduct(IndexOfReplicate(indexResult)));
                 default:
                     return null;
             }
