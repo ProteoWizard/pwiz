@@ -262,6 +262,12 @@ struct double12_policy : boost::spirit::karma::real_policies<T>
 
 PWIZ_API_DECL void ParamContainer::set(CVID cvid, double value, CVID units)
 {
+    // HACK: karma has a stack overflow on subnormal values, so we clamp to normalized values
+    if (value > 0)
+        value = max(numeric_limits<double>::min(), value);
+    else if (value < 0)
+        value = min(-numeric_limits<double>::min(), value);
+
     using namespace boost::spirit::karma;
     typedef real_generator<double, double12_policy<double> > double12_type;
     static const double12_type double12 = double12_type();
