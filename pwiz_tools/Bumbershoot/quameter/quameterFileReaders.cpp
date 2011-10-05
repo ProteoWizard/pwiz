@@ -340,9 +340,9 @@ XICWindowList IDPDBReader::MZRTWindows(const MS2ScanMap& ms2ScanMap)
             if (!scanInfo.identified)
                 throw runtime_error("PSM is not identified (should never happen)");
 
-            if (!scanInfo.identified || !boost::icl::contains(tmpWindow.preMZ, scanInfo.precursorMZ))
+            if (!boost::icl::contains(tmpWindow.preMZ, scanInfo.precursorMZ))
             {
-                cerr << "Warning: PSM for spectrum \"" << scanInfo.nativeID << "\" with observed m/z " << scanInfo.precursorMZ << " is disjoint with the exact m/z " << tmpPSM.exactMZ << endl;
+                cerr << "\nWarning: PSM for spectrum \"" << scanInfo.nativeID << "\" with observed m/z " << scanInfo.precursorMZ << " is disjoint with the exact m/z " << tmpPSM.exactMZ << endl;
                 continue;
             }
         }

@@ -27,6 +27,7 @@
 #include <boost/lockfree/fifo.hpp>
 #include <boost/foreach_field.hpp>
 #include <boost/math/distributions/normal.hpp>
+#include "spline.hpp"
 
 
 namespace freicore
@@ -37,6 +38,38 @@ namespace quameter
 	boost::mutex                    msdMutex;
     boost::lockfree::fifo<size_t>   metricsTasks;
     vector<QuameterInput>           allSources;
+
+    // uses interpolation on piecewise cubic splines to make an f(x) function evenly spaced on the x axis
+    void interpolate(vector<double>& x, vector<double>& y)
+    {
+        size_t xSize = x.size();
+
+        if (xSize < 3)
+            return;
+
+        BOOST_ASSERT(xSize == y.size());
+
+        double minSampleSize = x[1] - x[0];
+        for (size_t i=2; i < xSize; ++i)
+            minSampleSize = min(minSampleSize, x[i] - x[i-1]);
+
+        double* ypp = spline_cubic_set((int) xSize, &x[0], &y[0], 0, 0, 0, 0);
+        double ypval, yppval;
+
+        vector<double> newX, newY;
+        newX.reserve(xSize);
+        newY.reserve(xSize);
+        newX.push_back(x[0]);
+        newY.push_back(y[0]);
+        for (size_t i=1; newX.back() < x.back(); ++i)
+        {
+            newX.push_back(newX.back() + minSampleSize);
+            newY.push_back(spline_cubic_val((int) xSize, &x[0], &y[0], ypp, newX.back(), &ypval, &yppval));
+        }
+        delete [] ypp;
+        swap(x, newX);
+        swap(y, newY);
+    }
 
     void simulateGaussianPeak(double peakStart, double peakEnd,
                               double peakHeight, double peakBaseline,
@@ -145,6 +178,7 @@ namespace quameter
             }
 
             // output only the best peak
+            if (window.bestPeak)
             {
 	            chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
 	            Chromatogram& c2 = *chromatogramListSimple->chromatograms.back();
@@ -546,6 +580,7 @@ namespace quameter
             const vector<size_t>& distinctPeptideCountBySpecificity = idpReader.distinctPeptideCountBySpecificity();
 
             double lastMS1IonInjectionTime = 0;
+            size_t missingPrecursorIntensities = 0;
 
             // For each spectrum
             for( size_t curIndex = 0; curIndex < spectrumList.size(); ++curIndex ) 
@@ -601,7 +636,9 @@ namespace quameter
 
                     scanInfo.precursorIntensity = si.cvParam(MS_peak_intensity).valueAs<double>();
                     if (scanInfo.precursorIntensity == 0)
-                        throw runtime_error("No precursor intensity for MS2 " + spectrum->id);
+                        //throw runtime_error("No precursor intensity for MS2 " + spectrum->id);
+                        //cerr << "\nNo precursor intensity for MS2 " + spectrum->id << endl;
+                        ++missingPrecursorIntensities;
 
                     if (precursor.spectrumID.empty())
                         throw runtime_error("No precursor spectrum ID for " + spectrum->id);
@@ -657,6 +694,9 @@ namespace quameter
                 }
 
             } // finished cycling through all spectra
+
+            if (missingPrecursorIntensities)
+                cerr << "\nWarning: " << missingPrecursorIntensities << " spectra are missing precursor trigger intensity." << endl;
 
             accs::accumulator_set<double, accs::stats<accs::tag::percentile> > firstScanTimeOfDistinctModifiedPeptides;
             BOOST_FOREACH_FIELD((size_t id)(double firstScanTime), firstScanTimeOfDistinctModifiedPeptide)
@@ -916,6 +956,12 @@ namespace quameter
                     }
                 } // end of spectra loop
 
+                // make chromatogram data points evenly spaced
+                BOOST_FOREACH(const XICWindow& window, pepWindow)
+                    interpolate(window.MS1RT, window.MS1Intensity);
+                BOOST_FOREACH(UnidentifiedPrecursorInfo& info, unidentifiedPrecursors)
+                    interpolate(info.chromatogram.MS1RT, info.chromatogram.MS1Intensity);
+
                 // MS1-2A: Median SNR of MS1 spectra within C-2A
                 medianSigNoisMS1 = accs::percentile(sigNoisMS1, accs::percentile_number = 50);
 
@@ -970,6 +1016,10 @@ namespace quameter
                         //double peakTime = window.MS1RT[crawPeak->getTimeIndex()];
                         double peakTime = startTime + (endTime-startTime)/2;
 
+                        // skip degenerate peaks
+                        if (peakTime == 0 || crawPeak->getFwhm() == 0)
+                            continue;
+
                         // Crawdad Fwhm is in index units; we have to translate it back to time units
                         double sampleRate = (endTime-startTime) / (crawPeak->getEndIndex()-crawPeak->getStartIndex());
                         Peak peak(startTime, endTime, peakTime, crawPeak->getFwhm() * sampleRate, crawPeak->getHeight());
@@ -1023,6 +1073,10 @@ namespace quameter
                         double endTime = lc.MS1RT[crawPeak->getEndIndex()];
                         //double peakTime = window.MS1RT[crawPeak->getTimeIndex()];
                         double peakTime = startTime + (endTime-startTime)/2;
+
+                        // skip degenerate peaks
+                        if (peakTime == 0 || crawPeak->getFwhm() == 0)
+                            continue;
 
                         // Crawdad Fwhm is in index units; we have to translate it back to time units
                         double sampleRate = (endTime-startTime) / (crawPeak->getEndIndex()-crawPeak->getStartIndex());
@@ -1117,7 +1171,7 @@ namespace quameter
                 {
                     accs::accumulator_set<double, accs::stats<accs::tag::percentile> > precursorPeakToTriggerIntensityRatios;
                     BOOST_FOREACH(const XICWindow& distinctMatch, pepWindow)
-                        if (distinctMatch.bestPeak)
+                        if (distinctMatch.bestPeak && distinctMatch.PSMs.front().spectrum->precursorIntensity > 0)
                             precursorPeakToTriggerIntensityRatios(distinctMatch.bestPeak->intensity / distinctMatch.PSMs.front().spectrum->precursorIntensity);
                     medianSamplingRatio = accs::percentile(precursorPeakToTriggerIntensityRatios, accs::percentile_number = 50);
                 }
@@ -1126,13 +1180,15 @@ namespace quameter
                 {
                     accs::accumulator_set<double, accs::stats<accs::tag::percentile> > precursorTriggerIntensities;
                     BOOST_FOREACH(const XICWindow& distinctMatch, pepWindow)
-                        if (distinctMatch.bestPeak)
+                        if (distinctMatch.bestPeak && distinctMatch.PSMs.front().spectrum->precursorIntensity > 0)
                             precursorTriggerIntensities(distinctMatch.PSMs.front().spectrum->precursorIntensity);
                     double medianTriggerIntensity = accs::percentile(precursorTriggerIntensities, accs::percentile_number = 50);
                     
                     accs::accumulator_set<double, accs::stats<accs::tag::percentile> > precursorPeakToTriggerIntensityRatios;
                     BOOST_FOREACH(const XICWindow& distinctMatch, pepWindow)
-                        if (distinctMatch.bestPeak && distinctMatch.PSMs.front().spectrum->precursorIntensity < medianTriggerIntensity)
+                        if (distinctMatch.bestPeak &&
+                            distinctMatch.PSMs.front().spectrum->precursorIntensity > 0 &&
+                            distinctMatch.PSMs.front().spectrum->precursorIntensity < medianTriggerIntensity)
                             precursorPeakToTriggerIntensityRatios(distinctMatch.bestPeak->intensity / distinctMatch.PSMs.front().spectrum->precursorIntensity);
                     bottomHalfSamplingRatio = accs::percentile(precursorPeakToTriggerIntensityRatios, accs::percentile_number = 50);
                 }
