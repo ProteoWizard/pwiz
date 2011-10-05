@@ -409,7 +409,10 @@ namespace pwiz.Skyline.Model.Results
                     listMatchingGroups.Add(new KeyValuePair<PeptidePrecursorMz, IList<ChromData>>(peptidePrecursorMz, groupData));
             }
 
-            FilterMatchingGroups(listMatchingGroups);
+            // Only use this method of finding potential matching groups, if multiple
+            // matches are allowed.  Otherwise, it may discard the right match.
+            if (!singleMatch)
+                FilterMatchingGroups(listMatchingGroups);
 
             if (listMatchingGroups.Count == 0)
             {

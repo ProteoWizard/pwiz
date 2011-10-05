@@ -1468,7 +1468,7 @@ namespace pwiz.Skyline.Controls.Graphs
                             continue;
                         foreach (var chromInfo in arrayChromInfo)
                         {
-                            if (Equals(listFiles[i], chromInfo.FilePath))
+                            if (arrayNew[j] == null && Equals(listFiles[i], chromInfo.FilePath))
                                 arrayNew[j] = chromInfo;
                         }
                     }

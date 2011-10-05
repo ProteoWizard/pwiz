@@ -800,7 +800,7 @@ namespace pwiz.Skyline.Model.Results
         }
 
         // ReSharper disable SuggestBaseTypeForParameter
-        public int MatchTransitions(TransitionGroupDocNode nodeGroup, float tolerance)
+        public int MatchTransitions(TransitionGroupDocNode nodeGroup, float tolerance, bool multiMatch)
         // ReSharper restore SuggestBaseTypeForParameter
         {
             int match = 0;
@@ -811,7 +811,11 @@ namespace pwiz.Skyline.Model.Results
                 for (int i = start; i < end; i++)
                 {
                     if (ChromKey.CompareTolerant((float)nodeTran.Mz, _allTransitions[i].Product, tolerance) == 0)
+                    {
                         match++;
+                        if (!multiMatch)
+                            break;  // only one match per transition
+                    }
                 }
             }
             return match;

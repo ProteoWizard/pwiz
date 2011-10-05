@@ -302,7 +302,11 @@ namespace pwiz.Skyline.Model.Results
                     if (!ContainsInfo(chromatogram, chromInfo))
                         continue;
 
-                    int tranMatch = chromInfo.MatchTransitions(nodeGroup, tolerance);
+                    // If the chromatogram set has an optimazation function than the number
+                    // of matching chromatograms per transition is a reflection of better
+                    // matching.  Otherwise, we only expect one match per transition.
+                    bool multiMatch = chromatogram.OptimizationFunction != null;
+                    int tranMatch = chromInfo.MatchTransitions(nodeGroup, tolerance, multiMatch);
                     if (tranMatch >= maxTranMatch)
                     {
                         // If new maximum, clear anything collected at the previous maximum
@@ -337,6 +341,7 @@ namespace pwiz.Skyline.Model.Results
                         listChromFinal[fileIndex] = chromInfo;
                     }
                 }
+                listChrom = listChromFinal;
             }
             infoSet = listChrom.ToArray();
             return infoSet.Length > 0;
