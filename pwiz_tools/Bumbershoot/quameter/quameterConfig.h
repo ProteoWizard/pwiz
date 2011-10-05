@@ -45,7 +45,8 @@ using boost::icl::continuous_interval;
     RTCONFIG_VARIABLE( double,			ScoreCutoff,                 0.05         ) \
     RTCONFIG_VARIABLE( MZTolerance,     ChromatogramMzLowerOffset,   "0.5mz"      ) \
     RTCONFIG_VARIABLE( MZTolerance,     ChromatogramMzUpperOffset,   "1.0mz"      ) \
-	RTCONFIG_VARIABLE( bool,			ChromatogramOutput,          false   	  )
+	RTCONFIG_VARIABLE( bool,			ChromatogramOutput,          false   	  ) \
+    RTCONFIG_VARIABLE( string,          SpectrumListFilters,         "peakPicking true 1-" )
 
 
 

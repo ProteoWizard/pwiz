@@ -557,6 +557,13 @@ namespace quameter
             cout << "Started processing file " << sourceFilename << endl;
             guard.unlock();
 
+            // apply spectrum list filters
+            vector<string> wrappers;
+            if (!g_rtConfig->SpectrumListFilters.empty())
+            	bal::split(wrappers, g_rtConfig->SpectrumListFilters, bal::is_any_of(";"));
+
+            SpectrumListFactory::wrap(msd, wrappers);
+
             SpectrumList& spectrumList = *msd.run.spectrumListPtr;
             string sourceName = GetFilenameWithoutExtension( GetFilenameFromFilepath( sourceFilename ) );
 
