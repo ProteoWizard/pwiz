@@ -41,6 +41,8 @@ using namespace pwiz::msdata;
 using namespace pwiz::analysis;
 using namespace pwiz::util;
 
+ostream* os_ = &cout;
+
 
 class usage_exception : public std::runtime_error
 {
@@ -343,13 +345,13 @@ Config parseCommandLine(int argc, const char* argv[])
 
         if (is)
         {
-            cout << "Reading configuration file " << configFilename << "\n\n";
+            *os_ << "Reading configuration file " << configFilename << "\n\n";
             po::store(parse_config_file(is, od_config), vm);
             po::notify(vm);
         }
         else
         {
-            cout << "Unable to read configuration file " << configFilename << "\n\n";
+            *os_ << "Unable to read configuration file " << configFilename << "\n\n";
         }
     }
 
@@ -366,7 +368,7 @@ Config parseCommandLine(int argc, const char* argv[])
             expand_pathmask(bfs::path(filename), globbedFilenames);
             if (!globbedFilenames.size())
             {
-                cout <<  "[msconvert] no files found matching \"" << filename << "\"" << endl;
+                *os_ <<  "[msconvert] no files found matching \"" << filename << "\"" << endl;
             }
         }
 
@@ -513,11 +515,11 @@ class UserFeedbackIterationListener : public IterationListener
     virtual Status update(const UpdateMessage& updateMessage)
     {
         // add tabs to erase all of the previous line
-        cout << updateMessage.iterationIndex+1 << "/" << updateMessage.iterationCount << "\t\t\t\r" << flush;
+        *os_ << updateMessage.iterationIndex+1 << "/" << updateMessage.iterationCount << "\t\t\t\r" << flush;
 
         // spectrum and chromatogram lists both iterate; put them on different lines
         if (updateMessage.iterationIndex+1 == updateMessage.iterationCount)
-            cout << endl;
+            *os_ << endl;
         return Status_Ok;
     }
 };
@@ -538,7 +540,7 @@ int mergeFiles(const vector<string>& filenames, const Config& config, const Read
     {
         try
         {
-            cout << "processing file: " << filename << endl;
+            *os_ << "processing file: " << filename << endl;
             readers.read(filename, msdList);
         }
         catch (exception& e)
@@ -560,7 +562,7 @@ int mergeFiles(const vector<string>& filenames, const Config& config, const Read
     {
         MSDataMerger msd(msdList);
 
-        cout << "calculating source file checksums" << endl;
+        *os_ << "calculating source file checksums" << endl;
         calculateSHA1Checksums(msd);
 
         if (!config.contactFilename.empty())
@@ -569,7 +571,7 @@ int mergeFiles(const vector<string>& filenames, const Config& config, const Read
         SpectrumListFactory::wrap(msd, config.filters);
 
         string outputFilename = config.outputFilename("merged-spectra", msd);
-        cout << "writing output file: " << outputFilename << endl;
+        *os_ << "writing output file: " << outputFilename << endl;
 
         if (config.outputPath == "-")
             MSDataFile::write(msd, cout, config.writeConfig);
@@ -590,7 +592,7 @@ void processFile(const string& filename, const Config& config, const ReaderList&
 {
     // read in data file
 
-    cout << "processing file: " << filename << endl;
+    *os_ << "processing file: " << filename << endl;
 
     vector<MSDataPtr> msdList;
     readers.read(filename, msdList);
@@ -620,10 +622,10 @@ void processFile(const string& filename, const Config& config, const ReaderList&
 
             // write out the new data file
             string outputFilename = config.outputFilename(filename, msd);
-            cout << "writing output file: " << outputFilename << endl;
+            *os_ << "writing output file: " << outputFilename << endl;
 
             if (config.outputPath == "-")
-                MSDataFile::write(msd, cout, config.writeConfig);
+                MSDataFile::write(msd, cout, config.writeConfig, pILR);
             else
                 MSDataFile::write(msd, outputFilename, config.writeConfig, pILR);
         }
@@ -632,13 +634,13 @@ void processFile(const string& filename, const Config& config, const ReaderList&
             cerr << "Error writing run " << (i+1) << " in " << bfs::path(filename).leaf() << ":\n" << e.what() << endl;
         }
     }
-    cout << endl;
+    *os_ << endl;
 }
 
 
 int go(const Config& config)
 {
-    cout << config;
+    *os_ << config;
 
     boost::filesystem::create_directories(config.outputPath);
 
@@ -661,8 +663,8 @@ int go(const Config& config)
             catch (exception& e)
             {
                 failedFileCount++;
-                cout << e.what() << endl;
-                cout << "Error processing file " << *it << "\n\n"; 
+                *os_ << e.what() << endl;
+                *os_ << "Error processing file " << *it << "\n\n"; 
             }
         }
     }
@@ -675,7 +677,12 @@ int main(int argc, const char* argv[])
 {
     try
     {
-        Config config = parseCommandLine(argc, argv);        
+        Config config = parseCommandLine(argc, argv);
+
+        // if redirecting conversion to cout, use cerr for all console output
+        if (config.outputPath == "-")
+            os_ = &cerr;
+
         return go(config);
     }
     catch (usage_exception& e)
