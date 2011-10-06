@@ -246,6 +246,7 @@ namespace pwiz.Skyline.FileUI
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
                     selected.Chromatograms = (ChromatogramSet) selected.Chromatograms.ChangeName(dlg.ReplicateName);
+                    listResults.Items[iFirst] = ManageResultsAction.EMPTY;  // Forces text update for case change
                     listResults.Items[iFirst] = selected;
                 }
             }
@@ -349,6 +350,8 @@ namespace pwiz.Skyline.FileUI
 
         private sealed class ManageResultsAction
         {
+            public static readonly ManageResultsAction EMPTY = new ManageResultsAction(null);
+
             public ManageResultsAction(ChromatogramSet chromatograms)
             {
                 Chromatograms = chromatograms;
@@ -359,6 +362,8 @@ namespace pwiz.Skyline.FileUI
 
             public override string ToString()
             {
+                if (Chromatograms == null)
+                    return "";
                 return (IsReimport ? "*" : "") + Chromatograms.Name;
             }
         }
