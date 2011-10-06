@@ -53,7 +53,7 @@ namespace quameter
         for (size_t i=2; i < xSize; ++i)
             minSampleSize = min(minSampleSize, x[i] - x[i-1]);
 
-        double* ypp = spline_cubic_set((int) xSize, &x[0], &y[0], 0, 0, 0, 0);
+        double* ypp = spline_cubic_set((int) xSize, &x[0], &y[0], 1, 0, 1, 0);
         double ypval, yppval;
 
         vector<double> newX, newY;
@@ -130,6 +130,22 @@ namespace quameter
 		    c.id = "Raw SIC for " + oss.str();
             c.set(MS_SIC_chromatogram);
 		    c.setTimeIntensityArrays(window.MS1RT, window.MS1Intensity, UO_second, MS_number_of_counts);
+
+            // interpolated raw
+            {
+                interpolate(window.MS1RT, window.MS1Intensity);
+                chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+		        Chromatogram& c = *chromatogramListSimple->chromatograms.back();
+		        c.index = chromatogramListSimple->size()-1;
+                ostringstream oss;
+                oss << "distinct match " << window.peptide
+                    << " (id: " << window.PSMs[0].peptide
+                    << "; m/z: " << window.preMZ
+                    << "; time: " << window.preRT << ")";
+		        c.id = "Raw interpolated SIC for " + oss.str();
+                c.set(MS_SIC_chromatogram);
+		        c.setTimeIntensityArrays(window.MS1RT, window.MS1Intensity, UO_second, MS_number_of_counts);
+            }
 
             double scaleForMS2Score = 1;
 
@@ -918,11 +934,8 @@ namespace quameter
                                     sumIntensities += intensV[iMZ];
                             }
 
-                            if (sumIntensities != 0) 
-                            {
-                                window.MS1Intensity.push_back(sumIntensities);
-                                window.MS1RT.push_back(curRT);
-                            }
+                            window.MS1Intensity.push_back(sumIntensities);
+                            window.MS1RT.push_back(curRT);
                         } // done searching through all unique peptide windows for this MS1 scan
 
                         // loop through all unidentified MS2 scans
@@ -943,11 +956,8 @@ namespace quameter
                                     sumIntensities += intensV[iMZ];
                             }
 
-                            if (sumIntensities != 0) 
-                            {
-                                info.chromatogram.MS1Intensity.push_back(sumIntensities);
-                                info.chromatogram.MS1RT.push_back(curRT);
-                            }
+                            info.chromatogram.MS1Intensity.push_back(sumIntensities);
+                            info.chromatogram.MS1RT.push_back(curRT);
                         } // done with unidentified MS2 scans
                     }
                     else if (msLevel == 2) 

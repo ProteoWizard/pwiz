@@ -314,11 +314,14 @@ XICWindowList IDPDBReader::MZRTWindows(const MS2ScanMap& ms2ScanMap)
         sqlite_int64 peptide;
         char const* id;
         string modif;
+        int charge;
+        double score, exactMZ;
+        string peptideSequence;
 
-        row.getter() >> peptide >> id >> tmpPSM.charge >> modif >> tmpPSM.score >> tmpPSM.exactMZ >> tmpWindow.peptide;
+        row.getter() >> peptide >> id >> charge >> modif >> score >> exactMZ >> peptideSequence;
 
         const MS2ScanInfo& scanInfo = *ms2ScanMap.get<nativeID>().find(id);
-        if (peptide != lastPeptide || tmpPSM.charge != lastCharge || modif != lastModif) 
+        if (peptide != lastPeptide || charge != lastCharge || modif != lastModif) 
         { // if any of these values change we make a new chromatogram
             if (lastPeptide > 0 && !tmpWindow.PSMs.empty()) 
             {
@@ -327,15 +330,24 @@ XICWindowList IDPDBReader::MZRTWindows(const MS2ScanMap& ms2ScanMap)
                 windows.insert(tmpWindow);
             }
             lastPeptide = peptide;
-            lastCharge = tmpPSM.charge;
+            lastCharge = tmpPSM.charge = charge;
             lastModif = modif;
+            tmpPSM.exactMZ = exactMZ;
+            tmpWindow.peptide = peptideSequence;
             tmpWindow.firstMS2RT = tmpWindow.lastMS2RT = tmpWindow.meanMS2RT = scanInfo.scanStartTime;
-            tmpWindow.maxScore = tmpPSM.score;
+            tmpWindow.maxScore = score;
             tmpWindow.maxScoreScanStartTime = scanInfo.scanStartTime;
             tmpWindow.PSMs.clear();
             tmpWindow.preRT.clear();
-            //tmpWindow.preMZ.clear();
-            tmpWindow.preMZ = g_rtConfig->chromatogramMzWindow(tmpPSM.exactMZ, tmpPSM.charge);
+            tmpWindow.preMZ.clear();
+            if (g_rtConfig->useAvgMass)
+                tmpWindow.preMZ = g_rtConfig->chromatogramMzWindow(tmpPSM.exactMZ, tmpPSM.charge);
+            else
+            {
+                IntegerSet::const_iterator itr = g_rtConfig->MonoisotopeAdjustmentSet.begin();
+                for (; itr != g_rtConfig->MonoisotopeAdjustmentSet.end(); ++itr)
+                    tmpWindow.preMZ += g_rtConfig->chromatogramMzWindow(tmpPSM.exactMZ + *itr * Neutron / tmpPSM.charge, tmpPSM.charge);
+            }
 
             if (!scanInfo.identified)
                 throw runtime_error("PSM is not identified (should never happen)");
@@ -349,6 +361,7 @@ XICWindowList IDPDBReader::MZRTWindows(const MS2ScanMap& ms2ScanMap)
 
         tmpPSM.peptide = peptide;
         tmpPSM.spectrum = &scanInfo;
+        tmpPSM.score = score;
         tmpWindow.PSMs.push_back(tmpPSM);
 
         tmpWindow.firstMS2RT = min(tmpWindow.firstMS2RT, scanInfo.scanStartTime);

@@ -40,12 +40,13 @@ using boost::icl::continuous_interval;
 	RTCONFIG_VARIABLE( string,          OutputFormat,                "tsv"        ) \
     RTCONFIG_VARIABLE( string,          MetricsType,                 "nistms"     ) \
     RTCONFIG_VARIABLE( string,          Instrument,                  "ltq"        ) \
+    RTCONFIG_VARIABLE( IntegerSet,      MonoisotopeAdjustmentSet,    string("[-1,2]")) \
     RTCONFIG_VARIABLE( string,          RawDataFormat,               "RAW"        ) \
     RTCONFIG_VARIABLE( string,          RawDataPath,                 ""           ) \
-    RTCONFIG_VARIABLE( double,			ScoreCutoff,                 0.05         ) \
+    RTCONFIG_VARIABLE( double,          ScoreCutoff,                 0.05         ) \
     RTCONFIG_VARIABLE( MZTolerance,     ChromatogramMzLowerOffset,   "0.5mz"      ) \
     RTCONFIG_VARIABLE( MZTolerance,     ChromatogramMzUpperOffset,   "1.0mz"      ) \
-	RTCONFIG_VARIABLE( bool,			ChromatogramOutput,          false   	  ) \
+	RTCONFIG_VARIABLE( bool,            ChromatogramOutput,          false        ) \
     RTCONFIG_VARIABLE( string,          SpectrumListFilters,         "peakPicking true 1-" )
 
 
