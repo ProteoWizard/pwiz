@@ -43,6 +43,11 @@ namespace pwiz.Topograph.ui.Forms
             colTurnover.DefaultCellStyle.Format = "#.##%";
             colPrecursorPool.DefaultCellStyle.Format = "#.##%";
             comboCalculationType.SelectedIndex = 0;
+            foreach (var evviesFilter in Enum.GetValues(typeof(EvviesFilterEnum)))
+            {
+                comboEvviesFilter.Items.Add(evviesFilter);
+            }
+            comboEvviesFilter.SelectedIndex = 0;
         }
 
         bool _zedGraphControl_MouseDownEvent(ZedGraphControl sender, MouseEventArgs e)
@@ -388,7 +393,7 @@ namespace pwiz.Topograph.ui.Forms
                                                  InitialPercent = InitialPercent,
                                                  FinalPercent = FinalPercent,
                                                  FixedInitialPercent = FixedInitialPercent,
-                                                 ApplyEvviesFilter = cbxEvviesFilter.Checked,
+                                                 EvviesFilter = EvviesFilter,
                                                  BySample = BySample,
                                             };
             var halfLife = resultData = halfLifeCalculator.CalculateHalfLife(peptideFileAnalyses);
@@ -695,15 +700,15 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
-        public bool ApplyEvviesFilter
+        public EvviesFilterEnum EvviesFilter
         {
             get
             {
-                return cbxEvviesFilter.Checked;
+                return (EvviesFilterEnum) comboEvviesFilter.SelectedIndex;
             }
             set
             {
-                cbxEvviesFilter.Checked = value;
+                comboEvviesFilter.SelectedIndex = (int) value;
             }
         }
 
@@ -750,14 +755,14 @@ namespace pwiz.Topograph.ui.Forms
             SetTimePointExcluded(time, excluded);
         }
 
-        private void cbxEvviesFilter_CheckedChanged(object sender, EventArgs e)
-        {
-            UpdateRows();
-        }
-
         private void cbxBySample_CheckedChanged(object sender, EventArgs e)
         {
             Requery();
+        }
+
+        private void comboEvviesFilter_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateRows();
         }
     }
 }

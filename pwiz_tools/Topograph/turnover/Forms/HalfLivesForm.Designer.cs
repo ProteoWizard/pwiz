@@ -48,11 +48,12 @@ namespace pwiz.Topograph.ui.Forms
             this.label6 = new System.Windows.Forms.Label();
             this.checkedListBoxTimePoints = new System.Windows.Forms.CheckedListBox();
             this.label7 = new System.Windows.Forms.Label();
-            this.cbxEvviesFilter = new System.Windows.Forms.CheckBox();
             this.navBar1 = new pwiz.Common.DataBinding.Controls.NavBar();
             this.bindingSource1 = new System.Windows.Forms.BindingSource(this.components);
-            this.dataGridView1 = new pwiz.Common.DataBinding.BoundDataGridView();
             this.cbxBySample = new System.Windows.Forms.CheckBox();
+            this.comboEvviesFilter = new System.Windows.Forms.ComboBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.dataGridView1 = new pwiz.Common.DataBinding.BoundDataGridView();
             this.tableLayoutPanel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSource1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
@@ -62,7 +63,7 @@ namespace pwiz.Topograph.ui.Forms
             // 
             this.cbxByProtein.AutoSize = true;
             this.cbxByProtein.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.cbxByProtein.Location = new System.Drawing.Point(288, 3);
+            this.cbxByProtein.Location = new System.Drawing.Point(285, 3);
             this.cbxByProtein.Name = "cbxByProtein";
             this.cbxByProtein.Size = new System.Drawing.Size(94, 19);
             this.cbxByProtein.TabIndex = 0;
@@ -73,7 +74,7 @@ namespace pwiz.Topograph.ui.Forms
             // 
             this.label1.AutoSize = true;
             this.label1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label1.Location = new System.Drawing.Point(288, 25);
+            this.label1.Location = new System.Drawing.Point(285, 25);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(94, 25);
             this.label1.TabIndex = 1;
@@ -83,17 +84,17 @@ namespace pwiz.Topograph.ui.Forms
             // tbxMinScore
             // 
             this.tbxMinScore.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tbxMinScore.Location = new System.Drawing.Point(388, 28);
+            this.tbxMinScore.Location = new System.Drawing.Point(385, 28);
             this.tbxMinScore.Name = "tbxMinScore";
-            this.tbxMinScore.Size = new System.Drawing.Size(207, 20);
+            this.tbxMinScore.Size = new System.Drawing.Size(205, 20);
             this.tbxMinScore.TabIndex = 2;
             // 
             // btnRequery
             // 
             this.btnRequery.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.btnRequery.Location = new System.Drawing.Point(601, 3);
+            this.btnRequery.Location = new System.Drawing.Point(596, 3);
             this.btnRequery.Name = "btnRequery";
-            this.btnRequery.Size = new System.Drawing.Size(156, 19);
+            this.btnRequery.Size = new System.Drawing.Size(161, 19);
             this.btnRequery.TabIndex = 4;
             this.btnRequery.Text = "Recalculate";
             this.btnRequery.UseVisualStyleBackColor = true;
@@ -104,7 +105,7 @@ namespace pwiz.Topograph.ui.Forms
             this.tbxInitialTracerPercent.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tbxInitialTracerPercent.Location = new System.Drawing.Point(103, 3);
             this.tbxInitialTracerPercent.Name = "tbxInitialTracerPercent";
-            this.tbxInitialTracerPercent.Size = new System.Drawing.Size(179, 20);
+            this.tbxInitialTracerPercent.Size = new System.Drawing.Size(176, 20);
             this.tbxInitialTracerPercent.TabIndex = 5;
             // 
             // tbxFinalTracerPercent
@@ -112,7 +113,7 @@ namespace pwiz.Topograph.ui.Forms
             this.tbxFinalTracerPercent.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tbxFinalTracerPercent.Location = new System.Drawing.Point(103, 28);
             this.tbxFinalTracerPercent.Name = "tbxFinalTracerPercent";
-            this.tbxFinalTracerPercent.Size = new System.Drawing.Size(179, 20);
+            this.tbxFinalTracerPercent.Size = new System.Drawing.Size(176, 20);
             this.tbxFinalTracerPercent.TabIndex = 7;
             // 
             // label3
@@ -133,7 +134,7 @@ namespace pwiz.Topograph.ui.Forms
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 46.3964F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 100F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 53.6036F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 161F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 166F));
             this.tableLayoutPanel1.Controls.Add(this.label2, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.tbxInitialTracerPercent, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.label3, 0, 1);
@@ -147,9 +148,10 @@ namespace pwiz.Topograph.ui.Forms
             this.tableLayoutPanel1.Controls.Add(this.label6, 0, 3);
             this.tableLayoutPanel1.Controls.Add(this.checkedListBoxTimePoints, 3, 2);
             this.tableLayoutPanel1.Controls.Add(this.label7, 2, 2);
-            this.tableLayoutPanel1.Controls.Add(this.cbxEvviesFilter, 3, 0);
             this.tableLayoutPanel1.Controls.Add(this.navBar1, 0, 5);
             this.tableLayoutPanel1.Controls.Add(this.cbxBySample, 4, 1);
+            this.tableLayoutPanel1.Controls.Add(this.comboEvviesFilter, 1, 4);
+            this.tableLayoutPanel1.Controls.Add(this.label4, 0, 4);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -183,7 +185,7 @@ namespace pwiz.Topograph.ui.Forms
             this.cbxFixYIntercept.Dock = System.Windows.Forms.DockStyle.Fill;
             this.cbxFixYIntercept.Location = new System.Drawing.Point(3, 53);
             this.cbxFixYIntercept.Name = "cbxFixYIntercept";
-            this.cbxFixYIntercept.Size = new System.Drawing.Size(279, 19);
+            this.cbxFixYIntercept.Size = new System.Drawing.Size(276, 19);
             this.cbxFixYIntercept.TabIndex = 12;
             this.cbxFixYIntercept.Text = "Hold Initial Tracer % Constant";
             this.cbxFixYIntercept.UseVisualStyleBackColor = true;
@@ -200,7 +202,7 @@ namespace pwiz.Topograph.ui.Forms
             "Avg Precursor Pool (Old Way)"});
             this.comboCalculationType.Location = new System.Drawing.Point(103, 78);
             this.comboCalculationType.Name = "comboCalculationType";
-            this.comboCalculationType.Size = new System.Drawing.Size(179, 21);
+            this.comboCalculationType.Size = new System.Drawing.Size(176, 21);
             this.comboCalculationType.TabIndex = 21;
             this.comboCalculationType.SelectedIndexChanged += new System.EventHandler(this.comboCalculationType_SelectedIndexChanged);
             // 
@@ -217,30 +219,20 @@ namespace pwiz.Topograph.ui.Forms
             // 
             this.checkedListBoxTimePoints.Dock = System.Windows.Forms.DockStyle.Fill;
             this.checkedListBoxTimePoints.FormattingEnabled = true;
-            this.checkedListBoxTimePoints.Location = new System.Drawing.Point(388, 53);
+            this.checkedListBoxTimePoints.Location = new System.Drawing.Point(385, 53);
             this.checkedListBoxTimePoints.Name = "checkedListBoxTimePoints";
             this.tableLayoutPanel1.SetRowSpan(this.checkedListBoxTimePoints, 3);
-            this.checkedListBoxTimePoints.Size = new System.Drawing.Size(207, 64);
+            this.checkedListBoxTimePoints.Size = new System.Drawing.Size(205, 64);
             this.checkedListBoxTimePoints.TabIndex = 27;
             // 
             // label7
             // 
             this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(288, 50);
+            this.label7.Location = new System.Drawing.Point(285, 50);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(82, 13);
             this.label7.TabIndex = 28;
             this.label7.Text = "Included Times:";
-            // 
-            // cbxEvviesFilter
-            // 
-            this.cbxEvviesFilter.AutoSize = true;
-            this.cbxEvviesFilter.Location = new System.Drawing.Point(388, 3);
-            this.cbxEvviesFilter.Name = "cbxEvviesFilter";
-            this.cbxEvviesFilter.Size = new System.Drawing.Size(114, 17);
-            this.cbxEvviesFilter.TabIndex = 30;
-            this.cbxEvviesFilter.Text = "Apply Evvie\'s Filter";
-            this.cbxEvviesFilter.UseVisualStyleBackColor = true;
             // 
             // navBar1
             // 
@@ -253,6 +245,37 @@ namespace pwiz.Topograph.ui.Forms
             this.navBar1.Size = new System.Drawing.Size(754, 26);
             this.navBar1.TabIndex = 31;
             this.navBar1.ViewContext = null;
+            // 
+            // cbxBySample
+            // 
+            this.cbxBySample.AutoSize = true;
+            this.cbxBySample.Location = new System.Drawing.Point(596, 28);
+            this.cbxBySample.Name = "cbxBySample";
+            this.cbxBySample.Size = new System.Drawing.Size(76, 17);
+            this.cbxBySample.TabIndex = 32;
+            this.cbxBySample.Text = "By Sample";
+            this.cbxBySample.UseVisualStyleBackColor = true;
+            // 
+            // comboEvviesFilter
+            // 
+            this.comboEvviesFilter.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.comboEvviesFilter.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboEvviesFilter.FormattingEnabled = true;
+            this.comboEvviesFilter.Location = new System.Drawing.Point(103, 103);
+            this.comboEvviesFilter.Name = "comboEvviesFilter";
+            this.comboEvviesFilter.Size = new System.Drawing.Size(176, 21);
+            this.comboEvviesFilter.TabIndex = 33;
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.label4.Location = new System.Drawing.Point(3, 100);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(94, 25);
+            this.label4.TabIndex = 34;
+            this.label4.Text = "Evvie\'s Filter";
+            this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // dataGridView1
             // 
@@ -292,16 +315,6 @@ namespace pwiz.Topograph.ui.Forms
             this.dataGridView1.Size = new System.Drawing.Size(760, 254);
             this.dataGridView1.TabIndex = 3;
             // 
-            // cbxBySample
-            // 
-            this.cbxBySample.AutoSize = true;
-            this.cbxBySample.Location = new System.Drawing.Point(601, 28);
-            this.cbxBySample.Name = "cbxBySample";
-            this.cbxBySample.Size = new System.Drawing.Size(76, 17);
-            this.cbxBySample.TabIndex = 32;
-            this.cbxBySample.Text = "By Sample";
-            this.cbxBySample.UseVisualStyleBackColor = true;
-            // 
             // HalfLivesForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -336,10 +349,11 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.CheckedListBox checkedListBoxTimePoints;
         private System.Windows.Forms.Label label7;
-        private System.Windows.Forms.CheckBox cbxEvviesFilter;
         private pwiz.Common.DataBinding.Controls.NavBar navBar1;
         private BoundDataGridView dataGridView1;
         private System.Windows.Forms.BindingSource bindingSource1;
         private System.Windows.Forms.CheckBox cbxBySample;
+        private System.Windows.Forms.ComboBox comboEvviesFilter;
+        private System.Windows.Forms.Label label4;
     }
 }

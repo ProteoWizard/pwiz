@@ -57,8 +57,13 @@ namespace pwiz.Topograph.MsData
         /// 2) Divide standard deviation by mean.
         /// 3) If the ratio is less than 0.3, set a cutoff of 2 standard deviations above or below the *median*--not the mean. If the ratio is 0.3 or greater, set a cutoff of 1 standard deviation.
         /// 4) Exclude any data point falling outside the cutoffs.
+        /// 
+        /// Also, for bug 91:
+        /// If EvviesFilter is EvviesFilterEnum.Oct2011:
+        /// 1.1) Exclude all points more than 3 standard deviations above or below the MEDIAN.
+        /// 1.2) Determine the *new* mean, median, and SD. 
         /// </summary>
-        public bool ApplyEvviesFilter
+        public EvviesFilterEnum EvviesFilter
         {
             get; set;
         }
@@ -330,7 +335,7 @@ namespace pwiz.Topograph.MsData
         private ResultData CalculateHalfLife(IEnumerable<RowData> rowDatas)
         {
             IEnumerable<RowData> filteredRowDatas;
-            if (ApplyEvviesFilter)
+            if (EvviesFilter != EvviesFilterEnum.None)
             {
                 var applicableRowDatas = new List<RowData>();
                 var values = new Dictionary<double, List<double>>();
@@ -360,6 +365,21 @@ namespace pwiz.Topograph.MsData
                     list.Add(value.Value);
                     applicableRowDatas.Add(rowData);
                 }
+                if (EvviesFilter == EvviesFilterEnum.Oct2011)
+                {
+                    foreach (var entry in values.ToArray())
+                    {
+                        var statistics = new Statistics(entry.Value.ToArray());
+                        var min = statistics.Median() - 3*statistics.StdDev();
+                        var max = statistics.Median() + 3*statistics.StdDev();
+                        var newValues = entry.Value.Where(v => v >= min && v <= max).ToList();
+                        if (newValues.Count != entry.Value.Count)
+                        {
+                            values[entry.Key] = newValues;
+                        }
+                    }
+                }
+
                 var cutoffs = new Dictionary<double, KeyValuePair<double, double>>();
                 foreach (var entry in values)
                 {
@@ -801,5 +821,12 @@ namespace pwiz.Topograph.MsData
         IndividualPrecursorPool,
         GroupPrecursorPool,
         OldGroupPrecursorPool,
+    }
+
+    public enum EvviesFilterEnum
+    {
+        None,
+        Jun2011,
+        Oct2011,
     }
 }

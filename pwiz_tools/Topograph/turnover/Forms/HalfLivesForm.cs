@@ -42,6 +42,11 @@ namespace pwiz.Topograph.ui.Forms
             UpdateTimePoints();
             _viewContext = new TopographViewContext(workspace, typeof (ResultRow), new[] {GetDefaultViewSpec(false)});
             navBar1.ViewContext = _viewContext;
+            foreach (var evviesFilter in Enum.GetValues(typeof(EvviesFilterEnum)))
+            {
+                comboEvviesFilter.Items.Add(evviesFilter);
+            }
+            comboEvviesFilter.SelectedIndex = 0;
         }
 
         private ViewSpec GetDefaultViewSpec(bool byProtein)
@@ -88,7 +93,7 @@ namespace pwiz.Topograph.ui.Forms
                                      FinalPercent = double.Parse(tbxFinalTracerPercent.Text),
                                      FixedInitialPercent = cbxFixYIntercept.Checked,
                                      ExcludedTimePoints = UpdateTimePoints(),
-                                     ApplyEvviesFilter = cbxEvviesFilter.Checked,
+                                     EvviesFilter = EvviesFilter,
                                  };
             using (var longWaitDialog = new LongWaitDialog(TopLevelControl, "Calculating Half Lives"))
             {
@@ -163,6 +168,18 @@ namespace pwiz.Topograph.ui.Forms
             get
             {
                 return (HalfLifeCalculationType)comboCalculationType.SelectedIndex;
+            }
+        }
+
+        public EvviesFilterEnum EvviesFilter
+        {
+            get
+            {
+                return (EvviesFilterEnum) comboEvviesFilter.SelectedIndex;
+            }
+            set
+            {
+                comboEvviesFilter.SelectedIndex = (int) value;
             }
         }
 
@@ -268,7 +285,7 @@ namespace pwiz.Topograph.ui.Forms
                                            FinalPercent = double.Parse(_form.tbxFinalTracerPercent.Text),
                                            FixedInitialPercent = _form.cbxFixYIntercept.Checked,
                                            HalfLifeCalculationType = _form.HalfLifeCalculationType,
-                                           ApplyEvviesFilter = _form.cbxEvviesFilter.Checked,
+                                           EvviesFilter = _form.EvviesFilter,
                                        };
                 for (int i = 0; i < _form.checkedListBoxTimePoints.Items.Count; i++)
                 {
