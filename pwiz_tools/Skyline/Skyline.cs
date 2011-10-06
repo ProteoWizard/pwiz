@@ -1219,11 +1219,7 @@ namespace pwiz.Skyline
                                                                 continue;
                                                             var nodeInDoc = doc.FindNode(nodePath);
                                                             var newAnnotations = clearAll
-                                                                                     ? new Annotations(null,
-                                                                                                       new KeyValuePair
-                                                                                                           <string,
-                                                                                                           string>[0],
-                                                                                                       -1)
+                                                                                     ? Annotations.EMPTY
                                                                                      : nodeInDoc.Annotations.
                                                                                            MergeNewAnnotations(
                                                                                                resultText,

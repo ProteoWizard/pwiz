@@ -2247,7 +2247,10 @@ namespace pwiz.Skyline.Model
 
         private static void WriteAnnotations(XmlWriter writer, Annotations annotations)
         {
-            if (annotations.Note != null || annotations.ColorIndex != 0)
+            if (annotations.IsEmpty)
+                return;
+
+            if (annotations.Note != null || annotations.ColorIndex > 0)
             {
                 if (annotations.ColorIndex == 0)
                     writer.WriteElementString(EL.note, annotations.Note);

@@ -21,7 +21,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.Model
 {
@@ -31,11 +30,18 @@ namespace pwiz.Skyline.Model
     /// </summary>
     public sealed class Annotations
     {
-        public static readonly List<Brush> COLOR_BRUSHES =
-                new List<Brush> { Brushes.OrangeRed, Brushes.Brown, /*Pink*/ new SolidBrush(Color.FromArgb(255, 128, 255)), 
-                    /*Dark Yellow*/ new SolidBrush(Color.FromArgb(206, 206, 0)), /*Bright Green*/ new SolidBrush(Color.FromArgb(0, 255, 0)), 
-                    Brushes.Green, /*Bright Blue*/ new SolidBrush(Color.FromArgb(3, 184, 252)), Brushes.Blue, Brushes.Black, 
-                    /*Purple*/ new SolidBrush(Color.FromArgb(128, 0, 255))};
+        public static readonly List<Brush> COLOR_BRUSHES = new List<Brush> {
+                    Brushes.OrangeRed,
+                    Brushes.Brown,
+                    /*Pink*/ new SolidBrush(Color.FromArgb(255, 128, 255)), 
+                    /*Dark Yellow*/ new SolidBrush(Color.FromArgb(206, 206, 0)),
+                    /*Bright Green*/ new SolidBrush(Color.FromArgb(0, 255, 0)), 
+                    Brushes.Green,
+                    /*Bright Blue*/ new SolidBrush(Color.FromArgb(3, 184, 252)),
+                    Brushes.Blue,
+                    Brushes.Black, 
+                    /*Purple*/ new SolidBrush(Color.FromArgb(128, 0, 255))
+        };
 
         public static readonly Annotations EMPTY = new Annotations(null, null, -1);
         private readonly IDictionary<string, string> _annotations;
