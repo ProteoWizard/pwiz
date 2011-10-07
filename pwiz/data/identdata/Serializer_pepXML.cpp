@@ -268,7 +268,12 @@ struct NativeIdTranslator : public boost::singleton<NativeIdTranslator>
 };
 
 
-Formula nTerm("H1"), cTerm("O1H1");
+// Formula nTerm("H1"), cTerm("O1H1");  danger!
+// global initialization order isn't predictable, if this inits  
+// before boost::singleton does you can get a double free on exit
+// (observed under MSVC8) - bpratt
+const char *Formula_nTerm="H1";
+const char *Formula_cTerm="O1H1"; 
 
 string base_name(const IdentData& mzid, const string& filepath)
 {
@@ -463,6 +468,9 @@ void write_search_summary(XMLWriter& xmlWriter, const IdentData& mzid, const str
         // find the minimum specificity
         int minSpecificity = *boost::range::min_element(sip.enzymes.enzymes | boost::adaptors::transformed(EnzymePtr_specificity()));
 
+        Formula nTerm(Formula_nTerm), cTerm(Formula_cTerm); 
+
+
         attributes.clear();
         attributes.add("enzyme", enzymeName);
         attributes.add("max_num_internal_cleavages", maxMissedCleavages);
@@ -537,6 +545,7 @@ void write_modification_info(XMLWriter& xmlWriter, const SpectrumIdentificationI
     const Peptide& peptide = *sii.peptidePtr;
     vector<ModificationPtr> aaMods;
     aaMods.reserve(peptide.modification.size());
+    Formula nTerm(Formula_nTerm), cTerm(Formula_cTerm); 
 
     BOOST_FOREACH(const ModificationPtr& modPtr, peptide.modification)
     {
