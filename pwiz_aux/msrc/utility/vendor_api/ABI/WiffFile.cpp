@@ -198,7 +198,10 @@ WiffFileImpl::WiffFileImpl(const string& wiffpath)
 
         provider = gcnew AnalystWiffDataProvider();
         batch = AnalystDataProviderFactory::CreateBatch(ToSystemString(wiffpath), provider);
-        setSample(1);
+        // This caused WIFF files where the first sample had been interrupted to
+        // throw before they could be successfully constructed, which made investigators
+        // unhappy when they were seeking access to later, successfully acquired samples.
+        // setSample(1);
     }
     CATCH_AND_FORWARD
 }
