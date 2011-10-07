@@ -731,11 +731,11 @@ namespace pwiz.Skyline.Model
         }
 
         public SrmDocument ChangePeak(IdentityPath groupPath, string nameSet, string filePath,
-            Transition transition, double startTime, double endTime)
+            Transition transition, double startTime, double endTime, bool identified)
         {
             return ChangePeak(groupPath, nameSet, filePath, true,
                 (node, info, tol, iSet, fileId, reg) =>
-                    node.ChangePeak(Settings, info, tol, iSet, fileId, reg, transition, startTime, endTime));
+                    node.ChangePeak(Settings, info, tol, iSet, fileId, reg, transition, startTime, endTime, identified));
         }
 
         private delegate DocNode ChangeNodePeak(TransitionGroupDocNode nodeGroup,
@@ -862,12 +862,11 @@ namespace pwiz.Skyline.Model
 
         public FindResult SearchDocument(Bookmark startPath, FindOptions findOptions, DisplaySettings settings)
         {
-            var bookmarkEnumerator = new BookmarkEnumerator(this, startPath);
-            bookmarkEnumerator.Forward = findOptions.Forward;
+            var bookmarkEnumerator = new BookmarkEnumerator(this, startPath) {Forward = findOptions.Forward};
             return FindNext(bookmarkEnumerator, findOptions, settings);
         }
 
-        private FindResult FindNext(BookmarkEnumerator bookmarkEnumerator, FindOptions findOptions, DisplaySettings settings)
+        private static FindResult FindNext(BookmarkEnumerator bookmarkEnumerator, FindOptions findOptions, DisplaySettings settings)
         {
             var findPredicate = new FindPredicate(findOptions, settings);
             return findPredicate.FindNext(bookmarkEnumerator);
@@ -964,6 +963,7 @@ namespace pwiz.Skyline.Model
             public const string fwhm = "fwhm";
             public const string fwhm_degenerate = "fwhm_degenerate";
             public const string truncated = "truncated";
+            public const string identified = "identified";
             public const string user_set = "user_set";
             public const string peak_count_ratio = "peak_count_ratio";
             public const string library_dotp = "library_dotp";
@@ -1503,6 +1503,7 @@ namespace pwiz.Skyline.Model
             float? area = reader.GetNullableFloatAttribute(ATTR.area);
             float? backgroundArea = reader.GetNullableFloatAttribute(ATTR.background);
             int? truncated = reader.GetNullableIntAttribute(ATTR.truncated);
+            bool identified = reader.GetBoolAttribute(ATTR.identified);
             float? libraryDotProduct = reader.GetNullableFloatAttribute(ATTR.library_dotp);
             float? isotopeDotProduct = reader.GetNullableFloatAttribute(ATTR.isotope_dotp);
             var annotations = Annotations.EMPTY;
@@ -1528,6 +1529,7 @@ namespace pwiz.Skyline.Model
                                                 new float?[countRatios],
                                                 new float?[countRatios],
                                                 truncated,
+                                                identified,
                                                 libraryDotProduct,
                                                 isotopeDotProduct,
                                                 annotations,
@@ -1798,6 +1800,7 @@ namespace pwiz.Skyline.Model
                 float fwhm = reader.GetFloatAttribute(ATTR.fwhm);
                 bool fwhmDegenerate = reader.GetBoolAttribute(ATTR.fwhm_degenerate);
                 bool? truncated = reader.GetNullableBoolAttribute(ATTR.truncated);
+                bool identified = reader.GetBoolAttribute(ATTR.identified);
                 bool userSet = reader.GetBoolAttribute(ATTR.user_set);
                 var annotations = Annotations.EMPTY;
                 if (!reader.IsEmptyElement)
@@ -1817,6 +1820,7 @@ namespace pwiz.Skyline.Model
                                                fwhm,
                                                fwhmDegenerate,
                                                truncated,
+                                               identified,
                                                new float?[countRatios],
                                                annotations,
                                                userSet);
@@ -2139,6 +2143,7 @@ namespace pwiz.Skyline.Model
             writer.WriteAttributeNullable(ATTR.area, chromInfo.Area);
             writer.WriteAttributeNullable(ATTR.background, chromInfo.BackgroundArea);
             writer.WriteAttributeNullable(ATTR.truncated, chromInfo.Truncated);
+            writer.WriteAttributeNullable(ATTR.identified, chromInfo.Identified);
             writer.WriteAttributeNullable(ATTR.library_dotp, chromInfo.LibraryDotProduct);
             writer.WriteAttributeNullable(ATTR.isotope_dotp, chromInfo.IsotopeDotProduct);
             WriteAnnotations(writer, chromInfo.Annotations);
@@ -2239,6 +2244,7 @@ namespace pwiz.Skyline.Model
                 writer.WriteAttribute(ATTR.fwhm, chromInfo.Fwhm);
                 writer.WriteAttribute(ATTR.fwhm_degenerate, chromInfo.IsFwhmDegenerate);
                 writer.WriteAttributeNullable(ATTR.truncated, chromInfo.IsTruncated);
+                writer.WriteAttribute(ATTR.identified, chromInfo.IsIdentified);
                 writer.WriteAttribute(ATTR.rank, chromInfo.Rank);
             }
             writer.WriteAttribute(ATTR.user_set, chromInfo.UserSet);

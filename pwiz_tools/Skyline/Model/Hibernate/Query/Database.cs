@@ -499,6 +499,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                             TotalAreaRatio = chromInfo.Ratios[0],
                             // StdevAreaRatio = chromInfo.RatioStdevs[0],
                             CountTruncated = chromInfo.Truncated,
+                            Identified = chromInfo.Identified,
                             LibraryDotProduct = chromInfo.LibraryDotProduct,
                             IsotopeDotProduct = chromInfo.IsotopeDotProduct,
                             // TotalSignalToNoise = SignalToNoise(chromInfo.Area, chromInfo.BackgroundArea),

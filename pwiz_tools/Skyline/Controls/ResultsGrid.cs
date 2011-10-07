@@ -212,6 +212,13 @@ namespace pwiz.Skyline.Controls
                           HeaderText = "Count Truncated",
                           ReadOnly = true
                       });
+            Columns.Add(IdentifiedColumn
+                = new DataGridViewTextBoxColumn
+                      {
+                          Name = "Identified",
+                          HeaderText = "Identified",
+                          ReadOnly = true
+                      });
             Columns.Add(UserSetTotalColumn
                 = new DataGridViewTextBoxColumn
                 {
@@ -617,6 +624,7 @@ namespace pwiz.Skyline.Controls
                                TotalBackgroundColumn,
                                TotalAreaRatioColumn,
                                CountTruncatedColumn,
+                               IdentifiedColumn,
                                UserSetTotalColumn,
                                LibraryDotProductColumn,
                                IsotopeDotProductColumn,
@@ -1241,6 +1249,7 @@ namespace pwiz.Skyline.Controls
                     row.Cells[LibraryDotProductColumn.Index].Value =
                     row.Cells[IsotopeDotProductColumn.Index].Value =
                     row.Cells[CountTruncatedColumn.Index].Value =
+                    row.Cells[IdentifiedColumn.Index].Value =
                     row.Cells[UserSetTotalColumn.Index].Value =
                     row.Cells[PrecursorNoteColumn.Index].Value =
                     row.Cells[OptCollisionEnergyColumn.Index].Value =
@@ -1257,6 +1266,7 @@ namespace pwiz.Skyline.Controls
                 row.Cells[TotalBackgroundColumn.Index].Value = chromInfo.BackgroundArea;
                 row.Cells[TotalAreaRatioColumn.Index].Value = chromInfo.Ratios[0];
                 row.Cells[CountTruncatedColumn.Index].Value = chromInfo.Truncated;
+                row.Cells[IdentifiedColumn.Index].Value = chromInfo.Identified;
                 row.Cells[UserSetTotalColumn.Index].Value = chromInfo.UserSet;
                 row.Cells[LibraryDotProductColumn.Index].Value = chromInfo.LibraryDotProduct;
                 row.Cells[IsotopeDotProductColumn.Index].Value = chromInfo.IsotopeDotProduct;
@@ -1502,6 +1512,7 @@ namespace pwiz.Skyline.Controls
                 result.UnionWith(from column in PrecursorColumns
                                      where !ReferenceEquals(column, IsotopeDotProductColumn) &&
                                            !ReferenceEquals(column, CountTruncatedColumn) &&
+                                           !ReferenceEquals(column, IdentifiedColumn) &&
                                            !ReferenceEquals(column, UserSetTotalColumn) &&
                                            !ReferenceEquals(column, OptCollisionEnergyColumn) &&
                                            !ReferenceEquals(column, OptDeclusteringPotentialColumn)
@@ -1787,6 +1798,7 @@ namespace pwiz.Skyline.Controls
         public DataGridViewTextBoxColumn TotalBackgroundColumn { get; private set; }
         public DataGridViewTextBoxColumn TotalAreaRatioColumn { get; private set; }
         public DataGridViewTextBoxColumn CountTruncatedColumn { get; private set; }
+        public DataGridViewTextBoxColumn IdentifiedColumn { get; private set; }
         public DataGridViewTextBoxColumn UserSetTotalColumn { get; private set; }
         public DataGridViewTextBoxColumn LibraryDotProductColumn { get; private set; }
         public DataGridViewTextBoxColumn IsotopeDotProductColumn { get; private set; }

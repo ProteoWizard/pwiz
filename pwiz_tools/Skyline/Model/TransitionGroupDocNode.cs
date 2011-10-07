@@ -1448,6 +1448,7 @@ namespace pwiz.Skyline.Model
             private float? Area { get; set; }
             private float? BackgroundArea { get; set; }
             private int? Truncated { get; set; }
+            private bool Identified { get; set; }
             private float? LibraryDotProduct { get; set; }
             private float? IsotopeDotProduct { get; set; }
             private IList<float?> Ratios { get; set; }
@@ -1493,7 +1494,9 @@ namespace pwiz.Skyline.Model
                             Truncated = 0;
                         if (info.IsTruncated.Value)
                             Truncated++;
-                    }                        
+                    }
+                    if (info.IsIdentified)
+                        Identified = true;
                 }
 
                 if (info.UserSet)
@@ -1538,6 +1541,7 @@ namespace pwiz.Skyline.Model
                                                     Ratios,
                                                     RatioStdevs,
                                                     Truncated,
+                                                    Identified,
                                                     LibraryDotProduct,
                                                     IsotopeDotProduct,
                                                     Annotations,
@@ -1686,7 +1690,8 @@ namespace pwiz.Skyline.Model
                                   OptimizableRegression regression,
                                   Transition transition,
                                   double startTime,
-                                  double endTime)
+                                  double endTime,
+                                  bool identified)
         {
             int ratioCount = settings.PeptideSettings.Modifications.InternalStandardTypes.Count;
 
@@ -1696,7 +1701,9 @@ namespace pwiz.Skyline.Model
             int endIndex = chromGroupInfo.IndexOfNearestTime((float)endTime);
             ChromPeak.FlagValues flags = 0;
             if (settings.MeasuredResults.IsTimeNormalArea)
-                flags = ChromPeak.FlagValues.time_normalized;
+                flags |= ChromPeak.FlagValues.time_normalized;
+            if (identified)
+                flags |= ChromPeak.FlagValues.contains_id;
             foreach (TransitionDocNode nodeTran in Children)
             {
                 if (transition != null && !ReferenceEquals(transition, nodeTran.Transition))

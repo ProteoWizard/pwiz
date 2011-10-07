@@ -105,6 +105,7 @@
     <!-- <property name="StdevAreaRatio" /> -->
     <property name="TotalAreaNormalized" />
     <property name="CountTruncated" />
+    <property name="Identified" />
     <property name="LibraryDotProduct" />
     <property name="IsotopeDotProduct" />
     <!-- <property name="TotalSignalToNoise" /> -->

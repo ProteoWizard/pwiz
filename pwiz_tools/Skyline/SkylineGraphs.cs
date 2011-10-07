@@ -31,7 +31,6 @@ using pwiz.Skyline.EditUI;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
-using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Controls;
@@ -1370,7 +1369,7 @@ namespace pwiz.Skyline
                 return;
 
             ModifyDocument(message,
-                doc => doc.ChangePeak(groupPath, name, filePath, transition, 0, 0));
+                doc => doc.ChangePeak(groupPath, name, filePath, transition, 0, 0, false));
             
         }
 
@@ -1788,8 +1787,8 @@ namespace pwiz.Skyline
                         message = string.Format("Change peak start to {0:F01}", e.StartTime);
                     else
                         message = string.Format("Change peak end to {0:F01}", e.EndTime);
-                    ModifyDocument(message,
-                        doc => doc.ChangePeak(e.GroupPath, e.NameSet, e.FilePath, e.Transition, e.StartTime, e.EndTime));                    
+                    ModifyDocument(message, doc => doc.ChangePeak(e.GroupPath, e.NameSet, e.FilePath, e.Transition,
+                                                                  e.StartTime, e.EndTime, e.IsIndentified));
                 }
                 else
                 {
@@ -1799,7 +1798,7 @@ namespace pwiz.Skyline
                                 foreach (var e in eMulti.Changes)
                                 {
                                     doc = doc.ChangePeak(e.GroupPath, e.NameSet, e.FilePath, e.Transition,
-                                        e.StartTime, e.EndTime);                                    
+                                        e.StartTime, e.EndTime, e.IsIndentified);                                    
                                 }
                                 return doc;
                             });
