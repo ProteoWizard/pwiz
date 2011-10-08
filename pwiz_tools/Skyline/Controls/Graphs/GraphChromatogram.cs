@@ -2030,6 +2030,9 @@ namespace pwiz.Skyline.Controls.Graphs
         {
             get
             {
+                if (RetentionTimesMsMs == null)
+                    return false;
+
                 double startTime = StartTime;
                 double endTime = EndTime;
                 return RetentionTimesMsMs.Any(time => startTime <= time && time <= endTime);
