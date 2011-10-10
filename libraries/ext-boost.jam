@@ -97,14 +97,6 @@ rule init ( version : location : options * )
         path-constant ZLIB_SOURCE : $(zlib-src-location[1]) ;
         using zlib : 1.2.3 : $(ZLIB_SOURCE) ;
 
-        local msvc-secure-scl = ;
-        if --without-secure-scl in [ modules.peek : ARGV ]
-        {
-            # TODO: change this from a <define> to a feature in msvc.jam
-            # disable checked iterators (on by default in VC8/9)
-            msvc-secure-scl = <toolset>msvc,<variant>release:<define>_SECURE_SCL=0 ;
-        }
-
         local requirements =
             [ extension.refine boost $(version) : <tag>@boost-tag $(options) ]
             $(options)
@@ -116,8 +108,6 @@ rule init ( version : location : options * )
             <link>static:<define>BOOST_ALL_STATIC_LINK=1
             <define>BOOST_ALL_NO_LIB=1
             <warnings>off
-
-            $(msvc-secure-scl)
 
             # checked iterators throw instead of crash  
             <toolset>msvc:<define>_SECURE_SCL_THROWS=1
