@@ -322,12 +322,45 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_Thermo::spectrum(size_t index, DetailLeve
         // validate that dependent scans have as many precursors as their ms level minus one
         if (msLevel != -1 &&
             scanInfo->isDependent() &&
+            !scanInfo->hasMultiplePrecursors() &&
             precursorCount != msLevel-1)
         {
             throw runtime_error("[SpectrumList_Thermo::spectrum()] Precursor count does not match ms level.");
         }
 
-        if (precursorCount > 0)
+        if (scanInfo->hasMultiplePrecursors())
+        {
+            vector<double> isolationWidths = rawfile_->getIsolationWidths(ie.scan);
+            if (precursorCount != (long) isolationWidths.size())
+            {
+                throw runtime_error("[SpectrumList_Thermo::spectrum()] Precursor count does not match isolation width count.");
+            }
+
+            Precursor precursor;
+            SelectedIon selectedIon;
+
+            for (long i = 0; i < precursorCount; i++)
+            {
+                double isolationMz = scanInfo->precursorMZ(i);
+                double isolationWidth = isolationWidths[i] / 2;
+                precursor.isolationWindow.set(MS_isolation_window_target_m_z, isolationMz, MS_m_z);
+                precursor.isolationWindow.set(MS_isolation_window_lower_offset, isolationWidth, MS_m_z);
+                precursor.isolationWindow.set(MS_isolation_window_upper_offset, isolationWidth, MS_m_z);
+
+                ActivationType activationType = scanInfo->activationType();
+                if (activationType == ActivationType_Unknown)
+                    activationType = ActivationType_CID; // assume CID
+                SetActivationType(activationType, precursor.activation);
+                if ((activationType & ActivationType_CID) || (activationType & ActivationType_HCD))
+                    precursor.activation.set(MS_collision_energy, scanInfo->precursorActivationEnergy(i), UO_electronvolt);
+
+                selectedIon.set(MS_selected_ion_m_z, isolationMz, MS_m_z);
+                precursor.selectedIons.clear();
+                precursor.selectedIons.push_back(selectedIon);
+                result->precursors.push_back(precursor);
+            }
+        }
+        else if (precursorCount > 0)
         {
             long i = precursorCount - 1; // the last precursor is the one for the current scan
 

@@ -131,6 +131,7 @@ class RawFileImpl : public RawFile
     virtual ScanType getScanType(long scanNumber);
     virtual ScanFilterMassAnalyzerType getMassAnalyzerType(long scanNumber);
     virtual ActivationType getActivationType(long scanNumber);
+    virtual vector<double> getIsolationWidths(long scanNumber);
     virtual double getIsolationWidth(int scanSegment, int scanEvent);
     virtual double getDefaultIsolationWidth(int scanSegment, int msLevel);
 
@@ -215,38 +216,48 @@ RawFileImpl::RawFileImpl(const string& filename)
     IXRawfile2Ptr raw2(NULL);
     IXRawfile3Ptr raw3(NULL);
     IXRawfile4Ptr raw4(NULL);
-    if (FAILED(raw4.CreateInstance("MSFileReader.XRawfile.1")))
+    IXRawfile5Ptr raw5(NULL);
+
+    if (FAILED(raw5.CreateInstance("MSFileReader.XRawfile.1")))
     {
-        if (FAILED(raw3.CreateInstance("MSFileReader.XRawfile.1")))
+        if (FAILED(raw4.CreateInstance("MSFileReader.XRawfile.1")))
         {
-            if (FAILED(raw2.CreateInstance("MSFileReader.XRawfile.1")))
+            if (FAILED(raw3.CreateInstance("MSFileReader.XRawfile.1")))
             {
-                if (FAILED(raw_.CreateInstance("MSFileReader.XRawfile.1")))
+                if (FAILED(raw2.CreateInstance("MSFileReader.XRawfile.1")))
                 {
-                    rawInterfaceVersion_ = 0;
-                    throw RawEgg("[RawFile::ctor] Unable to initialize XRawfile; is MSFileReader installed? Reading Thermo RAW files requires MSFileReader to be installed. It is available for download at:\nhttp://sjsupport.thermofinnigan.com/public/detail.asp?id=703");
+                    if (FAILED(raw_.CreateInstance("MSFileReader.XRawfile.1")))
+                    {
+                        rawInterfaceVersion_ = 0;
+                        throw RawEgg("[RawFile::ctor] Unable to initialize XRawfile; is MSFileReader installed? Reading Thermo RAW files requires MSFileReader to be installed. It is available for download at:\nhttp://sjsupport.thermofinnigan.com/public/detail.asp?id=703");
+                    }
+                    else
+                    {
+                        rawInterfaceVersion_ = 1;
+                    }
                 }
                 else
                 {
-                    rawInterfaceVersion_ = 1;
+                    raw_ = raw2;
+                    rawInterfaceVersion_ = 2;
                 }
             }
             else
             {
-                raw_ = raw2;
-                rawInterfaceVersion_ = 2;
+                raw_ = raw3;
+                rawInterfaceVersion_ = 3;
             }
         }
         else
         {
-            raw_ = raw3;
-            rawInterfaceVersion_ = 3;
+            raw_ = raw4;
+            rawInterfaceVersion_ = 4;
         }
     }
     else
     {
-        raw_ = raw4;
-        rawInterfaceVersion_ = 4;
+        raw_ = raw5;
+        rawInterfaceVersion_ = 5;
     }
 
     try
@@ -757,6 +768,7 @@ class ScanInfoImpl : public ScanInfo
     virtual PolarityType polarityType() const {return polarityType_;}
     virtual bool isEnhanced() const {return isEnhanced_;}
     virtual bool isDependent() const {return isDependent_;}
+    virtual bool hasMultiplePrecursors() const {return hasMultiplePrecursors_; }
 
     virtual std::vector<PrecursorInfo> precursorInfo() const;
     virtual long precursorCount() const {return precursorMZs_.size();}
@@ -859,6 +871,7 @@ ScanInfoImpl::ScanInfoImpl(long scanNumber, RawFileImpl* raw)
     polarityType_(PolarityType_Unknown),
     isEnhanced_(false),
     isDependent_(false),
+    hasMultiplePrecursors_(false),
     isProfileScan_(false),
     isCentroidScan_(false),
     packetCount_(0),
@@ -981,6 +994,7 @@ void ScanInfoImpl::parseFilterString()
     activationType_ = filterParser.activationType_;
     isEnhanced_ = filterParser.enhancedOn_ == TriBool_True;
     isDependent_ = filterParser.dependentActive_ == TriBool_True;
+    hasMultiplePrecursors_ = filterParser.multiplePrecursorMode_;
     precursorMZs_.insert(precursorMZs_.end(), filterParser.precursorMZs_.begin(), filterParser.precursorMZs_.end());
     precursorActivationEnergies_.insert(precursorActivationEnergies_.end(), filterParser.precursorEnergies_.begin(), filterParser.precursorEnergies_.end());
     isProfileScan_ = filterParser.dataPointType_ == DataPointType_Profile;
@@ -1246,6 +1260,24 @@ void RawFileImpl::parseInstrumentMethod()
     }
 }
 
+vector<double> RawFileImpl::getIsolationWidths(long scanNumber)
+{
+    if (rawInterfaceVersion_ < 5)
+        throw RawEgg("[RawFileImpl::getActivationType()] GetIsolationWidthForScanNum requires the IXRawfile5 interface.");
+
+    IXRawfile5Ptr raw5 = (IXRawfile5Ptr) raw_;
+
+    vector<double> isolationWidths;
+    long nNumMSOrders;
+    checkResult(raw5->GetNumberOfMSOrdersFromScanNum(scanNumber, &nNumMSOrders), "[RawFileImpl::GetNumberOfMSOrdersFromScanNum()] ");
+    for (long i = 0; i < nNumMSOrders; i++)
+    {
+        double dIsolationWidth;
+        checkResult(raw5->GetIsolationWidthForScanNum(scanNumber, i, &dIsolationWidth), "[RawFileImpl::GetIsolationWidthForScanNum()] ");
+        isolationWidths.push_back(dIsolationWidth);
+    }
+    return isolationWidths;
+}
 
 double RawFileImpl::getIsolationWidth(int scanSegment, int scanEvent)
 {

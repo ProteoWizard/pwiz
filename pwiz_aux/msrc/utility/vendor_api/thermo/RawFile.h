@@ -265,6 +265,7 @@ class PWIZ_API_DECL ScanInfo
     virtual PolarityType polarityType() const = 0;
     virtual bool isEnhanced() const = 0;
     virtual bool isDependent() const = 0;
+    virtual bool hasMultiplePrecursors() const = 0;
 
     virtual std::vector<PrecursorInfo> precursorInfo() const = 0;
     virtual long precursorCount() const = 0;
@@ -469,6 +470,7 @@ class PWIZ_API_DECL RawFile
     virtual ScanFilterMassAnalyzerType getMassAnalyzerType(long scanNumber) = 0;
     virtual ActivationType getActivationType(long scanNumber) = 0;
     // getDetectorType is obsolete?
+    virtual std::vector<double> getIsolationWidths(long scanNumber) = 0;
     virtual double getIsolationWidth(int scanSegment, int scanEvent) = 0;
     virtual double getDefaultIsolationWidth(int scanSegment, int msLevel) = 0;
 
