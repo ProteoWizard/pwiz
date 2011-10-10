@@ -646,6 +646,11 @@ namespace pwiz.Skyline.Model.Results
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
+            // TODO: This is not very strong equality, since all FileIds are equal
+            //       It would be better to check reference equality, but this would
+            //       break document equality tests across serialization/deserialization
+            //       At the momement, we rely on it being very unlikely that two
+            //       peaks from different files are exactly equal.
             return Equals(other.FileId, FileId);
         }
 
@@ -660,6 +665,11 @@ namespace pwiz.Skyline.Model.Results
         public override int GetHashCode()
         {
             return FileId.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return string.Format("FileId = {0}", FileId.GlobalIndex);
         }
 
         #endregion
