@@ -847,13 +847,14 @@ string SpectrumList_mzXMLImpl::getPrecursorID(int precursorMsLevel, size_t index
     {
         --index;
         int& cachedMsLevel = scanMsLevelCache_[index];
-        if (cachedMsLevel == 0)
+        if (index && (cachedMsLevel == 0))
         {
             // populate the missing MS level
             SpectrumPtr s = spectrum(index-1, false);
             cachedMsLevel = s->cvParam(MS_ms_level).valueAs<int>();
         }
-        if (cachedMsLevel == precursorMsLevel) {
+        if (cachedMsLevel == precursorMsLevel) 
+        {
             SpectrumPtr s = spectrum(index,false);
             return s ?  s->id : lexical_cast<string>(index);
         }
