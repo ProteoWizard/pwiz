@@ -48,15 +48,16 @@ Version 1.0  29 May 2005  Mark Adler */
 
 #include "random_access_compressed_ifstream.hpp"
 
-#if defined(_MSC_VER) || defined(__MINGW32__)  // MSVC or MinGW
-#include <winsock2.h>
 #include <sys/types.h>
 #include <fcntl.h>
 #include <io.h>
+#if defined(_MSC_VER) || defined(__MINGW32__)  // MSVC or MinGW
+#include <winsock2.h>
 #define lseek64 _lseeki64
 #else
 #include <stdint.h>
 #include <netinet/in.h>
+#include <unistd.h>
 #endif
 
 #include <sys/stat.h>
@@ -193,11 +194,11 @@ public:
 	boost::iostreams::stream_offset last_seek_pos; /* last requested seek position */
 #define N_INBUFS 3 // lookback, current, readahead
     struct {
-	    Byte     *readbuf; /* file read buffer */
+        Byte     *readbuf; /* file read buffer */
         size_t   maxbufsize; /* size of read buffer */
-	boost::iostreams::stream_offset readbuf_head_filepos; /* filepos for head of readbuf */
-	size_t	readbuf_len; /* length of readbuf last time we populated it */
-    size_t  chars_used; /* number of chars actually read out of buffer */
+        boost::iostreams::stream_offset readbuf_head_filepos; /* filepos for head of readbuf */
+        boost::iostreams::stream_offset readbuf_len; /* length of readbuf last time we populated it */
+        boost::iostreams::stream_offset chars_used; /* number of chars actually read out of buffer */
     } inbuf[N_INBUFS]; // read out of one while the other populates in another thread
     int current_inbuf;
     int readerThread_inbuf;
@@ -220,13 +221,13 @@ public:
     inline size_t &maxbufsize() { /* size of read buffer */
         return inbuf[current_inbuf].maxbufsize; /* size of read buffer */
     }
-	inline size_t &readbuf_len() { /* length of readbuf last time we populated it */
+	inline boost::iostreams::stream_offset &readbuf_len() { /* length of readbuf last time we populated it */
 	    return inbuf[current_inbuf].readbuf_len; /* length of readbuf last time we populated it */
     }
-	inline size_t &readbuf_len(int n) { /* length of readbuf last time we populated it */
+	inline boost::iostreams::stream_offset &readbuf_len(int n) { /* length of readbuf last time we populated it */
 	    return inbuf[n].readbuf_len; /* length of readbuf last time we populated it */
     }
-    inline size_t &chars_used() { /* number of chars actually read out of buffer */
+    inline boost::iostreams::stream_offset &chars_used() { /* number of chars actually read out of buffer */
         return inbuf[current_inbuf].chars_used; /* number of chars actually read out of buffer */
     }
 
@@ -983,7 +984,6 @@ void chunky_streambuf::close() { // for ifstream-ish-ness
 }
 
 chunky_streambuf::~chunky_streambuf() {
-	int err = Z_OK;
     this->close();
     for (this->current_inbuf=N_INBUFS;this->current_inbuf--;) {
 	    TRYFREE(this->readbuf());
