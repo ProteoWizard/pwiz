@@ -50,14 +50,12 @@ lib pwiz_utility_misc
         <toolset>msvc:<source>COMInitializer.cpp
         <toolset>msvc:<library>ole32
         <toolset>msvc:<library>oleaut32
-        <toolset>msvc:<library>/ext/boost//thread
-        <toolset>darwin:<library>/ext/boost//thread
+        <library>/ext/boost//thread
         <library>/ext/boost//filesystem
         <library>/ext/zlib//z
     : # default-build
     : # usage-requirements
-        <toolset>msvc:<library>/ext/boost//thread
-        <toolset>darwin:<library>/ext/boost//thread
+        <library>/ext/boost//thread
         <library>/ext/boost//filesystem
         <library>/ext/zlib//z
         <toolset>msvc:<library>ole32
