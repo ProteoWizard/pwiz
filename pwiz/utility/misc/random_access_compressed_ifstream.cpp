@@ -613,6 +613,7 @@ std::streampos random_access_compressed_streambuf::my_seekg(std::streampos offse
 	if (0==offset) {
 		if (whence == std::ios_base::cur) {
 			return get_next_read_pos(); // nothing to do
+		}
 		if ((whence == std::ios_base::beg) && // just a rewind
 			!this->index.size()) { // no index yet
 			// do we already have this decompressed?
