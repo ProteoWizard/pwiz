@@ -124,6 +124,7 @@ void test(const bfs::path& datadir)
     vector<string> filenames;
     filenames.push_back("10-spec.ms2");
     filenames.push_back("10-spec.bms2");
+    filenames.push_back("10-spec.bms2.gz");
     filenames.push_back("10-spec.cms2");
 
     // look up these spectrum indexes
@@ -201,6 +202,11 @@ int main(int argc, char* argv[])
 
         std::string buildparent(argv[0]);
         size_t pos = buildparent.find("build");
+        if (std::string::npos==pos)
+        { // alternate build system?
+            buildparent = __FILE__;
+            pos = buildparent.find("pwiz")+5;
+        }
         buildparent.resize(pos);
         bfs::path example_data_dir = buildparent + "example_data/";
         test(example_data_dir);

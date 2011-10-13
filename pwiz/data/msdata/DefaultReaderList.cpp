@@ -287,8 +287,13 @@ PWIZ_API_DECL void Reader_MGF::read(const std::string& filename,
 // Reader_MSn
 //
 
-PWIZ_API_DECL std::string Reader_MSn::identify(const string& filename, const string& head) const
+PWIZ_API_DECL std::string Reader_MSn::identify(const string& test_filename, const string& head) const
 {
+
+    string filename(test_filename);
+    if (bal::iends_with(filename, ".gz"))
+        filename.erase(filename.length()-3);
+
     bool isOK = bal::iends_with(filename, ".ms2") ||
                 bal::iends_with(filename, ".cms2") ||
                 bal::iends_with(filename, ".bms2");
@@ -304,12 +309,16 @@ PWIZ_API_DECL void Reader_MSn::read(const string& filename,
     if (runIndex != 0)
         throw ReaderFail("[Reader_MSn::read] multiple runs not supported");
 
+    string test_filename(filename);
+    if (bal::iends_with(test_filename, ".gz"))
+        test_filename.erase(test_filename.length()-3);
+
     MSn_Type filetype = MSn_Type_UNKNOWN;
-    if (bal::iends_with(filename, ".ms2"))
+    if (bal::iends_with(test_filename, ".ms2"))
         filetype = MSn_Type_MS2;
-    else if (bal::iends_with(filename, ".cms2"))
+    else if (bal::iends_with(test_filename, ".cms2"))
         filetype = MSn_Type_CMS2;
-    else if (bal::iends_with(filename, ".bms2"))
+    else if (bal::iends_with(test_filename, ".bms2"))
         filetype = MSn_Type_BMS2;
 
     shared_ptr<istream> is(new pwiz::util::random_access_compressed_ifstream(filename.c_str()));

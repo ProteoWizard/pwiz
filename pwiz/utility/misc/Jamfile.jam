@@ -51,11 +51,13 @@ lib pwiz_utility_misc
         <toolset>msvc:<library>ole32
         <toolset>msvc:<library>oleaut32
         <library>/ext/boost//thread
+        <library>/ext/boost//iostreams
         <library>/ext/boost//filesystem
         <library>/ext/zlib//z
     : # default-build
     : # usage-requirements
         <library>/ext/boost//thread
+        <library>/ext/boost//iostreams
         <library>/ext/boost//filesystem
         <library>/ext/zlib//z
         <toolset>msvc:<library>ole32
