@@ -1440,11 +1440,14 @@ namespace pwiz.Skyline.Controls
 
             EndEdit();
             if (_inCommitEdit || CurrentRow == null)
-            {
                 return;
-            }
+
+            var selectedRowId = (RowIdentifier) CurrentRow.Tag;
+            if (selectedRowId == null)
+                return;
+
+            int selectedResultRow = selectedRowId.ReplicateIndex;
             int selectedResult = StateProvider.SelectedResultsIndex;
-            int selectedResultRow = ((RowIdentifier)CurrentRow.Tag).ReplicateIndex;
 
             int selectedColumn = (SelectedCells.Count > 0 ? SelectedCells[0].ColumnIndex : 0);
             if (selectedResult != selectedResultRow)
@@ -1452,7 +1455,8 @@ namespace pwiz.Skyline.Controls
                 // For some reason GridView seems to store these in reverse order
                 for (int iRow = 0; iRow < Rows.Count; iRow++)
                 {
-                    if (((RowIdentifier)Rows[iRow].Tag).ReplicateIndex != selectedResult)
+                    var rowId = (RowIdentifier) Rows[iRow].Tag;
+                    if (rowId == null || rowId.ReplicateIndex != selectedResult)
                         continue;
 
                     ClearSelection();

@@ -222,7 +222,7 @@ namespace pwiz.SkylineTestA
             SrmSettings setThrow2 = settings;
             AssertEx.ThrowsException<InvalidDataException>(() => setThrow2.ChangePeptideLibraries(l => l.ChangePick(PeptidePick.filter)));
             AssertEx.ThrowsException<InvalidDataException>(() => setThrow2.ChangePeptideLibraries(l => l.ChangePick(PeptidePick.either)));
-            AssertEx.ThrowsException<InvalidDataException>(() => setThrow2.ChangePeptideLibraries(l => l.ChangeRankId(null)));
+            AssertEx.NoExceptionThrown<InvalidDataException>(() => setThrow2.ChangePeptideLibraries(l => l.ChangeRankId(null)));
 
             settings = settings.ChangePeptideLibraries(l => l.ChangePeptideCount(null));
 

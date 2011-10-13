@@ -222,7 +222,6 @@ namespace pwiz.Skyline.FileUI
                 EnsureUniqueNames();
             
             DialogResult = DialogResult.OK;
-            Close();
         }
 
         private bool CanCreateMultiInjectionMethods()

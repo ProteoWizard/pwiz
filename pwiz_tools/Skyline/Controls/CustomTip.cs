@@ -350,8 +350,11 @@ namespace pwiz.Skyline.Controls
         public virtual void Hide()
         {
             Capture = false;
-            User32.ShowWindow(Handle, 0);
-            ReleaseHandle();
+            if (Handle != IntPtr.Zero)
+            {
+                User32.ShowWindow(Handle, 0);
+                ReleaseHandle();
+            }
         }
 
         private void HideWindowWithAnimation()

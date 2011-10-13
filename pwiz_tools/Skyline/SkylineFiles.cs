@@ -1137,7 +1137,7 @@ namespace pwiz.Skyline
 
                     // Select the first replicate to which results were added.
                     if (toolBarResults.Visible)
-                        comboResults.SelectedItem = dlg.NamedPathSets[0].Key;
+                        comboResults.SelectedItem = namedResults[0].Key;
                 }
             }
         }

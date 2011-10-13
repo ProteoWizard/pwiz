@@ -334,7 +334,7 @@ namespace pwiz.Skyline.SettingsUI
             foreach (var nodePep in _activePeptides)
             {
                 MeasuredRetentionTime pep1 = nodePep;
-                if (usePeptides.Find(pep => Equals(pep, pep1.PeptideSequence)) == default(string))
+                if (usePeptides.Find(pep => Equals(pep, pep1.PeptideSequence)) == null)
                     continue;
 
                 tablePeptides.Add(nodePep);
@@ -356,6 +356,9 @@ namespace pwiz.Skyline.SettingsUI
 
         public void SetTablePeptides(List<MeasuredRetentionTime> tablePeps)
         {
+            if (ArrayUtil.EqualsDeep(_activePeptides, tablePeps))
+                return;
+
             var rowsNew = new List<string[]>();
 
             foreach (var pep in tablePeps)
@@ -376,13 +379,13 @@ namespace pwiz.Skyline.SettingsUI
             // Handle Ctrl + V for paste
             if (e.KeyCode == Keys.V && e.Control)
             {
-                gridPeptides.DoPaste(this, ValidatePeptideCellValues);
-                RecalcRegression(GetTablePeptides());
+                if (gridPeptides.DoPaste(this, ValidatePeptideCellValues))
+                    RecalcRegression(GetTablePeptides());
             }
             else if (e.KeyCode == Keys.Delete)
             {
-                gridPeptides.DoDelete();
-                RecalcRegression(GetTablePeptides());
+                if (gridPeptides.DoDelete())
+                    RecalcRegression(GetTablePeptides());
             }
         }
 
@@ -432,17 +435,18 @@ namespace pwiz.Skyline.SettingsUI
             return true;
         }
 
-        private void gridPeptides_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+
+        private void gridPeptides_RowValidating(object sender, DataGridViewCellCancelEventArgs e)
         {
             var newPeps = new List<MeasuredRetentionTime>();
-            if(!ValidatePeptides(new CancelEventArgs(), newPeps))
-                return;
+            if (ValidatePeptides(e, newPeps))
+                _activePeptides = newPeps;
+        }
 
-            _activePeptides = newPeps;
-
-            if (_activePeptides.Count < 1)
+        private void gridPeptides_CellEndEdit(object sender, DataGridViewCellEventArgs e)
+        {
+            if (_activePeptides == null || _activePeptides.Count < 1)
             {
-                MessageDlg.Show(this, "Add results before calculating a regression.");
                 return;
             }
 
@@ -451,11 +455,7 @@ namespace pwiz.Skyline.SettingsUI
                 var regressionPeps = UpdateCalculator(_driverCalculators.SelectedItem);
                 if (regressionPeps != null)
                     SetTablePeptides(regressionPeps);
-                RecalcRegression(newPeps);
-            }
-            catch (IncompleteStandardException)
-            {
-                comboCalculator.SelectedIndex = 0;
+                RecalcRegression(_activePeptides);
             }
             catch (Exception)
             {
@@ -493,11 +493,12 @@ namespace pwiz.Skyline.SettingsUI
         {
             var tryCalcs = Settings.Default.RTScoreCalculatorList.ToList();
             RetentionScoreCalculatorSpec calculator = null;
-            while (calculator == null)
+            while (calculator == null && tryCalcs.Count > 0)
             {
                 try
                 {
                     calculator = RecalcRegression(tryCalcs, peptides);
+                    break;
                 }
                 catch (IncompleteStandardException e)
                 {

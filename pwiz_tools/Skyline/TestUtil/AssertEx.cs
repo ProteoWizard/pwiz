@@ -62,6 +62,19 @@ namespace pwiz.SkylineTestUtil
             }            
         }
 
+        public static void NoExceptionThrown<TEx>(Func<object> throwEx)
+            where TEx : Exception
+        {
+            try
+            {
+                throwEx();
+            }
+            catch (TEx)
+            {
+                Assert.Fail("Unexception expected");
+            }
+        }
+
         public static void Contains(string value, params string[] parts)
         {
             Assert.IsNotNull(value, "No message found");

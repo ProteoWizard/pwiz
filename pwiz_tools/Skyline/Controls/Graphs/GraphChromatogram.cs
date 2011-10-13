@@ -539,34 +539,9 @@ namespace pwiz.Skyline.Controls.Graphs
                                            listChromGraphs, ref bestStartTime, ref bestEndTime);
                     }
 
-                    // Set predicted retention time on the first graph item to make
-                    // line, label and shading to show.
-                    var regression = settings.PeptideSettings.Prediction.RetentionTime;
-                    if (regression != null && Settings.Default.ShowRetentionTimePred && listChromGraphs.Count > 0)
+                    if (listChromGraphs.Count > 0)
                     {
-                        string sequence = nodeGroups[0].TransitionGroup.Peptide.Sequence;
-                        double predictedRT = regression.GetRetentionTime(sequence);
-                        double window = regression.TimeWindow;
-
-                        listChromGraphs[0].RetentionPrediction = predictedRT;
-                        listChromGraphs[0].RetentionWindow = window;
-                    }
-                    // Set any MS/MS IDs on the first graph item also
-                    if (settings.TransitionSettings.FullScan.IsEnabled && settings.PeptideSettings.Libraries.IsLoaded)
-                    {
-                        var group = nodeGroups[0].TransitionGroup;
-                        IsotopeLabelType labelType;
-                        double[] retentionTimes;
-                        if (settings.TryGetRetentionTimes(group.Peptide.Sequence, group.PrecursorCharge,
-                                mods, FilePath, out labelType, out retentionTimes))
-                        {
-                            listChromGraphs[0].RetentionMsMs = retentionTimes;
-                            var selectedSpectrum = _stateProvider.SelectedSpectrum;
-                            if (selectedSpectrum != null && Equals(FilePath, selectedSpectrum.FilePath))
-                            {
-                                listChromGraphs[0].SelectedRetentionMsMs = selectedSpectrum.RetentionTime;
-                            }
-                        }
+                        SetRetentionTimeIndicators(listChromGraphs[0], settings, nodeGroups, mods);
                     }
                 }
                 GraphPane.Legend.IsVisible = Settings.Default.ShowChromatogramLegend;
@@ -1192,6 +1167,40 @@ namespace pwiz.Skyline.Controls.Graphs
                                                        lineWidth);
                     listChromGraphs.Add(graphItem);
                     graphControl.AddGraphItem(GraphPane, graphItem, false);
+                }
+            }
+        }
+
+        private void SetRetentionTimeIndicators(ChromGraphItem chromGraphPrimary, SrmSettings settings,
+            TransitionGroupDocNode[] nodeGroups, ExplicitMods mods)
+        {
+            // Set predicted retention time on the first graph item to make
+            // line, label and shading to show.
+            var regression = settings.PeptideSettings.Prediction.RetentionTime;
+            if (regression != null && Settings.Default.ShowRetentionTimePred)
+            {
+                string sequence = nodeGroups[0].TransitionGroup.Peptide.Sequence;
+                double predictedRT = regression.GetRetentionTime(sequence);
+                double window = regression.TimeWindow;
+
+                chromGraphPrimary.RetentionPrediction = predictedRT;
+                chromGraphPrimary.RetentionWindow = window;
+            }
+            // Set any MS/MS IDs on the first graph item also
+            if (settings.TransitionSettings.FullScan.IsEnabled && settings.PeptideSettings.Libraries.IsLoaded)
+            {
+                var group = nodeGroups[0].TransitionGroup;
+                IsotopeLabelType labelType;
+                double[] retentionTimes;
+                if (settings.TryGetRetentionTimes(group.Peptide.Sequence, group.PrecursorCharge,
+                                                  mods, FilePath, out labelType, out retentionTimes))
+                {
+                    chromGraphPrimary.RetentionMsMs = retentionTimes;
+                    var selectedSpectrum = _stateProvider.SelectedSpectrum;
+                    if (selectedSpectrum != null && Equals(FilePath, selectedSpectrum.FilePath))
+                    {
+                        chromGraphPrimary.SelectedRetentionMsMs = selectedSpectrum.RetentionTime;
+                    }
                 }
             }
         }

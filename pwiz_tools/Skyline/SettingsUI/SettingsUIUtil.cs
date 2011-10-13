@@ -42,7 +42,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public delegate bool ValidateCellValues(string[] values);
 
-        public static void DoPaste(this DataGridView grid, IWin32Window parent, ValidateCellValues validate)
+        public static bool DoPaste(this DataGridView grid, IWin32Window parent, ValidateCellValues validate)
         {
             string textClip;
             try
@@ -52,8 +52,11 @@ namespace pwiz.Skyline.SettingsUI
             catch (ExternalException)
             {
                 MessageDlg.Show(parent, ClipboardHelper.GetOpenClipboardMessage("Failed getting data from the clipboard."));
-                return;
+                return false;
             }
+
+            if (!grid.EndEdit())
+                return false;
 
             grid.SuspendLayout();
 
@@ -86,19 +89,24 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             grid.ResumeLayout();
+            return true;
         }
 
-        public static void DoDelete(this DataGridView grid)
+        public static bool DoDelete(this DataGridView grid)
         {
+            if (!grid.EndEdit())
+                return false;
+
             grid.SuspendLayout();
 
             foreach (DataGridViewRow row in grid.Rows)
             {
-                if (row.SelectedCells())
+                if (!row.IsNewRow && row.SelectedCells())
                     grid.Rows.Remove(row);
             }
 
-            grid.ResumeLayout();            
+            grid.ResumeLayout();
+            return true;
         }
 
         public static bool SelectedCells(this DataGridViewRow row)

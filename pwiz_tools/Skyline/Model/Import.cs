@@ -300,11 +300,13 @@ namespace pwiz.Skyline.Model
                 if (seqBuilder != null)
                     AddPeptideGroup(peptideGroupsNew, seqBuilder);
                 FastaSequence fastaSeq;
-                if (dictNameSeq.TryGetValue(name, out fastaSeq) && fastaSeq != null)
+                if (name != null && dictNameSeq.TryGetValue(name, out fastaSeq) && fastaSeq != null)
                     seqBuilder = new PeptideGroupBuilder(fastaSeq, Document.Settings);
                 else
                 {
-                    string safeName = Helpers.GetUniqueName(name, dictNameSeq.Keys);
+                    string safeName = name != null ?
+                        Helpers.GetUniqueName(name, dictNameSeq.Keys) :
+                        Document.GetPeptideGroupId(true);
                     seqBuilder = new PeptideGroupBuilder(">>" + safeName, true, Document.Settings) {BaseName = name};
                 }
             }

@@ -247,7 +247,12 @@ namespace pwiz.Skyline.SettingsUI
             // match the current peptide.
             if (settings == null)
             {
-                settings = _document.Settings.ChangePeptideLibraries(lib =>
+                settings = _document.Settings;
+                var rankId = settings.PeptideSettings.Libraries.RankId;
+                if (rankId != null && !_selectedSpec.PeptideRankIds.Contains(rankId))
+                    settings = settings.ChangePeptideLibraries(lib => lib.ChangeRankId(null));
+
+                settings = settings.ChangePeptideLibraries(lib =>
                     lib.ChangeLibraries(new[] { _selectedSpec }, new[] { _selectedLibrary })
                     .ChangePick(PeptidePick.library))
                     .ChangeTransitionFilter(filter =>

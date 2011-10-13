@@ -40,6 +40,11 @@ namespace pwiz.Skyline.Util.Extensions
             return reader.GetDouble(reader.GetOrdinal(columnName));
         }
 
+        public static float GetFloat(this SQLiteDataReader reader, Enum columnName)
+        {
+            return reader.GetFloat(reader.GetOrdinal(columnName));
+        }
+
         public static short GetInt16(this SQLiteDataReader reader, Enum columnName)
         {
             return reader.GetInt16(reader.GetOrdinal(columnName));

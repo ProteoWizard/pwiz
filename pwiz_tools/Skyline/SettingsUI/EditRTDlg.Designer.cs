@@ -257,6 +257,7 @@
             this.helpTip.SetToolTip(this.gridPeptides, "Peptides and their measured retention times used to calculate the equation\r\nwith " +
                     "linear regression");
             this.gridPeptides.Visible = global::pwiz.Skyline.Properties.Settings.Default.EditRTVisible;
+            this.gridPeptides.RowValidating += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.gridPeptides_RowValidating);
             this.gridPeptides.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridPeptides_CellEndEdit);
             this.gridPeptides.KeyDown += new System.Windows.Forms.KeyEventHandler(this.gridPeptides_KeyDown);
             this.gridPeptides.RowsRemoved += new System.Windows.Forms.DataGridViewRowsRemovedEventHandler(this.gridPeptides_RowsRemoved);

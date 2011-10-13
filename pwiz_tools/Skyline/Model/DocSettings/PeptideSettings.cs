@@ -1550,7 +1550,12 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public PeptideLibraries ChangeRankId(PeptideRankId prop)
         {
-            return ChangeProp(ImClone(this), im => im.RankId = prop);
+            return ChangeProp(ImClone(this), im =>
+                                                 {
+                                                     im.RankId = prop;
+                                                     if (prop == null)
+                                                         im.PeptideCount = null;
+                                                 });
         }
 
         public PeptideLibraries ChangePeptideCount(int? prop)
