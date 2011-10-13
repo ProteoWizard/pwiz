@@ -1053,6 +1053,7 @@ chunky_streambuf::int_type chunky_streambuf::underflow() {
 
         if (!readahead_success) { // need an immediate blocking read
             int next_inbuf = (current_inbuf+1)%N_INBUFS; // rotate buffers
+            this->handle->seek(next_read_pos,std::ios_base::beg);
             nread = this->handle->read((char *)this->filereadbuf(next_inbuf), this->desired_readbuf_len);
             if (nread < 0) {
                 nread = 0; // eof
@@ -1066,6 +1067,7 @@ chunky_streambuf::int_type chunky_streambuf::underflow() {
             readerThread_inbuf=(current_inbuf+1)%N_INBUFS;
             readbuf_head_filepos(readerThread_inbuf) = readbuf_head_filepos()+nread;
             threadComplete = false;
+            this->handle->seek(readbuf_head_filepos(readerThread_inbuf),std::ios_base::beg);
             readerThread = new boost::thread(readAhead, this,readerThread_inbuf,this->desired_readbuf_len); 
         }
     }
