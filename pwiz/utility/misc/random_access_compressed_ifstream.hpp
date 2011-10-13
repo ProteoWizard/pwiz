@@ -11,16 +11,7 @@
 // every 1MB or so.  Further seeks are then quite efficient since they don't
 // have to begin at the head of the file.
 //
-// It also features threaded readahead with adaptive buffering - it will read 
-// increasingly larger chunks of the raw file as it perceives a sequential read 
-// in progress, and will launch a thread to grab the next probable chunk of the 
-// file while the previous chunk is being parsed.  This is especially helpful for
-// files being read across a slow network connection.
-// If lots of seeking is going on, and the buffer size proves excessive, the read 
-// buffer size decreases.  This is also true for the non-compressed case, so this 
-// is generally useful for file read speed optimization.
-//
-// Copyright (C) Insilicos LLC 2008,2011 All Rights Reserved.
+// Copyright (C) Insilicos LLC 2008, ALl Rights Reserved.
 //
 // draws heavily on example code from the zlib distro, so
 // for conditions of distribution and use, see copyright notice in zlib.h

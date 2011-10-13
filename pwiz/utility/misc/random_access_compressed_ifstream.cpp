@@ -11,19 +11,12 @@
 // every 1MB or so.  Further seeks are then quite efficient since they don't
 // have to begin at the head of the file.
 //
-// It also features threaded readahead with adaptive buffering - it will read 
-// increasingly larger chunks of the raw file as it perceives a sequential read 
-// in progress, and will launch a thread to grab the next probable chunk of the 
-// file while the previous chunk is being parsed.  This is especially helpful for
-// files being read across a slow network connection.
-// If lots of seeking is going on, and the buffer size proves excessive, the read 
-// buffer size decreases.  This is also true for the non-compressed case, so this 
-// is generally useful for file read speed optimization.
+// Copyright (C) Insilicos LLC 2008, ALl Rights Reserved.
 //
 // draws heavily on example code from the zlib distro, so
 // for conditions of distribution and use, see copyright notice in zlib.h
 //
-// Copyright (C) Insilicos LLC 2008,2011 ALl Rights Reserved.
+// Copyright (C) Insilicos LLC 2008, ALl Rights Reserved.
 // For conditions of distribution and use, see copyright notice in zlib.h
 //
 // based on:
@@ -50,20 +43,20 @@ Version 1.0  29 May 2005  Mark Adler */
 
 #if defined(_MSC_VER) || defined(__MINGW32__)  // MSVC or MinGW
 #include <winsock2.h>
+#include <sys/types.h>
+#include <fcntl.h>
+#include <io.h>
 #else
 #include <stdint.h>
 #include <netinet/in.h>
 #endif
-#include <boost/iostreams/device/file_descriptor.hpp>
+
 #include <sys/stat.h>
 #include <vector>
 #include <cassert>
 #include <cerrno>
 #include <iostream>
 #include <cstring>
-#include "pwiz/utility/misc/Std.hpp"
-#include <boost/thread.hpp>  
-
 
 namespace pwiz {
 namespace util {
@@ -77,8 +70,6 @@ namespace util {
 #endif
 
 #define DECOMPRESS_BUFSIZE 16384
-#define DEFAULT_CHUNKY_BUFSIZE 32768
-#define MAX_CHUNKY_BUFSIZE DEFAULT_CHUNKY_BUFSIZE*1024
 
 #define ALLOC(size) malloc(size)
 #define TRYFREE(p) {if (p) free(p); p=NULL;}
@@ -107,14 +98,14 @@ public:
 //
 // here's where the real customization of the stream happens
 //
-class chunky_streambuf; // forward ref
+
 class random_access_compressed_streambuf : public std::streambuf {
    friend class random_access_compressed_ifstream; // so we can modify some behaviors
 public:
-	random_access_compressed_streambuf(chunky_streambuf *rdbuf); // ctor
+	random_access_compressed_streambuf(const char *path, std::ios_base::openmode mode);
 	virtual ~random_access_compressed_streambuf();
 	bool is_open() const;
-	chunky_streambuf *close(); // close file and hand back readbuf
+	void close();
 protected:
     virtual pos_type seekoff(off_type off,
 		std::ios_base::seekdir way,
@@ -127,10 +118,11 @@ private:
 	z_stream stream;
 	int      z_err;   /* error code for last stream operation */
 	int      z_eof;   /* set if end of input file */
-    std::istream *infile;   /* raw .gz file we're reading */
+	std::ifstream *infile;   /* raw .gz file we're reading */
 	Byte     *inbuf;  /* input buffer */
 	Byte     *outbuf; /* output buffer */
 	uLong    crc;     /* crc32 of uncompressed data */
+	char     *path;   /* path name for debugging only */
 	random_access_compressed_ifstream_off_t  start;   /* start of compressed data in file (header skipped) */
 	random_access_compressed_ifstream_off_t  uncompressedLength; /* total length of uncompressed file */
 	std::streampos  last_seek_pos; /* last requested seek position (uncompressed) */
@@ -163,155 +155,50 @@ private:
 	}
 };
 
-class chunky_streambuf : public std::streambuf {
-public:
-	chunky_streambuf();
-	virtual ~chunky_streambuf();
-    bool open(const char *path);
-	bool is_open() const;
-	void close();
-
-    virtual pos_type seekoff(off_type off,
-		std::ios_base::seekdir way,
-        std::ios_base::openmode which = std::ios_base::in); // we don't do out
-    virtual pos_type seekpos(pos_type pos,
-		std::ios_base::openmode which = std::ios_base::in); // we don't do out
-	virtual int_type underflow(); // repopulate the input buffer
-
-	std::streampos my_seekg(boost::iostreams::stream_offset offset, std::ios_base::seekdir whence,std::ios_base::openmode Mode); // streampos not the same as streamoff, esp in win32
-    boost::iostreams::file_descriptor_source *handle;   /* handle of file we're reading */
-	char     *path;   /* path name for debugging only */
-    size_t   desired_readbuf_len; /* dynamic sizing of disk reads */
-	boost::iostreams::stream_offset last_seek_pos; /* last requested seek position */
-#define N_INBUFS 3 // lookback, current, readahead
-    struct {
-        Byte     *filereadbuf; /* file read buffer */
-        size_t   maxbufsize; /* size of read buffer */
-        boost::iostreams::stream_offset readbuf_head_filepos; /* filepos for head of readbuf */
-        std::streamsize readbuf_len; /* length of readbuf last time we populated it */
-        boost::iostreams::stream_offset chars_used; /* number of chars actually read out of buffer */
-    } inbuf[N_INBUFS]; // read out of one while the other populates in another thread
-    int current_inbuf;
-    int readerThread_inbuf;
-    boost::thread *readerThread;
-    bool threadComplete; // for tuning readahead size
-    boost::iostreams::stream_offset flen; /* unknown until first SEEK_END */
-
-    inline boost::iostreams::stream_offset &readbuf_head_filepos() {
-        return inbuf[current_inbuf].readbuf_head_filepos;
-    }
-    inline boost::iostreams::stream_offset &readbuf_head_filepos(int n) {
-        return inbuf[n].readbuf_head_filepos;
-    }
-    inline Byte* &filereadbuf() { /* file read buffer */
-	    return inbuf[current_inbuf].filereadbuf; /* file read buffer */
-    }
-    inline Byte* &filereadbuf(int n) { /* file read buffer */
-	    return inbuf[n].filereadbuf; /* file read buffer */
-    }
-    inline size_t &maxbufsize() { /* size of read buffer */
-        return inbuf[current_inbuf].maxbufsize; /* size of read buffer */
-    }
-	inline std::streamsize &readbuf_len() { /* length of readbuf last time we populated it */
-	    return inbuf[current_inbuf].readbuf_len; /* length of readbuf last time we populated it */
-    }
-	inline std::streamsize &readbuf_len(int n) { /* length of readbuf last time we populated it */
-	    return inbuf[n].readbuf_len; /* length of readbuf last time we populated it */
-    }
-    inline boost::iostreams::stream_offset &chars_used() { /* number of chars actually read out of buffer */
-        return inbuf[current_inbuf].chars_used; /* number of chars actually read out of buffer */
-    }
-
-    void set_inbuf(int bufnum,boost::iostreams::stream_offset headpos,
-           size_t readlen, 
-           boost::iostreams::stream_offset readpos) {
-        current_inbuf = bufnum;
-        update_istream_ptrs(headpos,readlen,readpos-headpos);
-    }
-
-	void update_istream_ptrs(boost::iostreams::stream_offset new_headpos,int new_buflen,int new_posoffset=0) {
-		readbuf_head_filepos() = new_headpos; // note the filepos corresponding to buf head
-		readbuf_len() = new_buflen; // how many bytes in the buffer?
-        if (new_buflen) { // not just a reset to provoke underflow
-            chars_used() = this->gptr()-this->eback(); // note usage of old buffer
-        }
-		// declare first, next, last for istream use
-		setg((char *)filereadbuf(),(char *)filereadbuf()+new_posoffset,(char *)filereadbuf() + new_buflen);
-	}
-	boost::iostreams::stream_offset get_next_read_pos() {
-		return readbuf_head_filepos()+(gptr()-(char *)filereadbuf());
-	}
-	bool pos_is_in_readbuf(boost::iostreams::stream_offset pos) {
-		return ((readbuf_head_filepos() <= pos) && 
-			(pos < (readbuf_head_filepos() + readbuf_len())));
-	}
-	int find_readbuf_for_pos(boost::iostreams::stream_offset pos) {
-        for (int n=N_INBUFS;n--;) {
-		  if (((!readerThread) || (n!=readerThread_inbuf)) && // don't mess with an active read
-              (readbuf_head_filepos(n) <= pos) && 
-              (pos < (readbuf_head_filepos(n) + readbuf_len(n)))) {
-              return n;
-          }
-        }
-        // didn't find it - maybe we're loading it?
-        if (readerThread) {
-            int n = readerThread_inbuf;
-            this->readerThread->join(); // wait for completion
-            delete this->readerThread;
-            this->readerThread = NULL;
-            if ((readbuf_head_filepos(n) <= pos) && 
-                (pos < (readbuf_head_filepos(n) + readbuf_len(n)))) {
-                return n;
-            }
-        }
-        return -1;
-	}
-
-};
-
-
-
 
 #define gzio_raw_readerror(s) (s->infile->bad())
 
 // default ctor
 PWIZ_API_DECL
 random_access_compressed_ifstream::random_access_compressed_ifstream() :
-std::istream(new chunky_streambuf()) {
+std::istream(new std::filebuf()) {
 	compressionType = NONE;
 }
 
 // constructor
 PWIZ_API_DECL
 random_access_compressed_ifstream::random_access_compressed_ifstream(const char *path) :
-std::istream(new chunky_streambuf()) 
+std::istream(new std::filebuf()) 
 {
 	open(path);
 }
 
 PWIZ_API_DECL
 void random_access_compressed_ifstream::open(const char *path) {
-	chunky_streambuf *fb = (chunky_streambuf *)rdbuf();
-	fb->open(path);
+	std::filebuf *fb = (std::filebuf *)rdbuf();
+	fb->open(path,std::ios::binary|std::ios::in);
 	bool gzipped = false;
-    compressionType = NONE;
 	if (fb->is_open()) {
 	   // check for gzip magic header
 		gzipped = ((fb->sbumpc() == gz_magic[0]) && (fb->sbumpc() == gz_magic[1])); 
 		fb->pubseekpos(0); // rewind
-		if (gzipped) { // replace streambuf with gzip handler (handing it current rdbuf)
-			rdbuf( new random_access_compressed_streambuf( (chunky_streambuf *)rdbuf() ));
-			compressionType = GZIP;
-		}
 	} else {
 		this->setstate(std::ios::failbit); // could not open, set the fail flag
+	}
+	if (gzipped) { // replace streambuf with gzip handler
+		fb->close();
+		rdbuf( new random_access_compressed_streambuf(path,std::ios_base::in|std::ios_base::binary));
+		delete fb;
+		compressionType = GZIP;
+	} else {
+		compressionType = NONE;
 	}
 }
 
 PWIZ_API_DECL
 bool random_access_compressed_ifstream::is_open() const { // for ease of use as ifstream replacement
 	if (NONE == compressionType) {
-		return ((chunky_streambuf *)rdbuf())->is_open();
+		return ((std::filebuf *)rdbuf())->is_open();
 	} else {
 		return ((random_access_compressed_streambuf *)rdbuf())->is_open();
 	}
@@ -320,26 +207,33 @@ bool random_access_compressed_ifstream::is_open() const { // for ease of use as 
 PWIZ_API_DECL
 void random_access_compressed_ifstream::close() {
 	if (rdbuf()) {
-        // cout << "close\n";
-	    if (NONE != compressionType) {
-            // retrieve rdbuf from gzip handler
-		    rdbuf(((random_access_compressed_streambuf *)rdbuf())->close());
-        }
-        ((chunky_streambuf *)rdbuf())->close();
+	if (NONE == compressionType) {
+		((std::filebuf *)rdbuf())->close();
+	} else {
+		((random_access_compressed_streambuf *)rdbuf())->close();
 			// in case object gets reused
+			delete rdbuf();
+			rdbuf(new std::filebuf()); 
 			compressionType = NONE;
 		}
+	}
 }
 
 PWIZ_API_DECL
 random_access_compressed_ifstream::~random_access_compressed_ifstream()
 {
-    close();
-    delete rdbuf(NULL);
+	delete rdbuf();
+	rdbuf(NULL); // so parent doesn't mess with it
 }
 
-random_access_compressed_streambuf::random_access_compressed_streambuf(chunky_streambuf *rawbuf) {
+random_access_compressed_streambuf::random_access_compressed_streambuf(const char *path, std::ios_base::openmode mode) {
     int err;
+	if (!path) {
+		return;
+	}
+	if (!(mode & std::ios::binary)) {
+		return;
+	}
 
 	this->stream.zalloc = (alloc_func)0;
 	this->stream.zfree = (free_func)0;
@@ -348,15 +242,18 @@ random_access_compressed_streambuf::random_access_compressed_streambuf(chunky_st
 	this->stream.next_out = this->outbuf = Z_NULL;
 	this->stream.avail_in = this->stream.avail_out = 0;
 	this->last_seek_pos = -1;
-	this->infile = new istream(rawbuf); // dynamic disk buffer size
+	this->infile = new std::ifstream(path,std::ios::in|std::ios::binary);
 	this->z_err = Z_OK;
 	this->z_eof = 0;
 	this->crc = crc32(0L, Z_NULL, 0);
 
-	if ((this->infile->fail())) {
+	this->path = strdup(path);
+	if ((this->path == NULL) || (this->infile->fail())) {
 		this->destroy();
 		return;
 	}
+
+	bool bOK;
 
 	this->stream.next_in  = this->inbuf = (Byte*)ALLOC(Z_BUFSIZE);
 	this->outbuf = (Byte*)ALLOC(DECOMPRESS_BUFSIZE);
@@ -375,7 +272,11 @@ random_access_compressed_streambuf::random_access_compressed_streambuf(chunky_st
 	this->stream.avail_out = DECOMPRESS_BUFSIZE;
 
 	errno = 0;
-
+	bOK = (this->infile != NULL) && (this->infile->is_open());
+	if (!bOK) {
+		this->destroy();
+		return;
+	}
 	this->check_header(); /* skip the .gz header */
    this->infile->clear(); // clear eof flag for short files
 	this->start = this->infile->tellg() - (std::streamoff)(this->stream.avail_in);
@@ -384,14 +285,11 @@ random_access_compressed_streambuf::random_access_compressed_streambuf(chunky_st
 
 
 bool random_access_compressed_streambuf::is_open() const { // for ifstream-ish-ness
-	return true; // only ever exist when file is open
+	return (this->infile && this->infile->is_open());
 }
 
-chunky_streambuf * random_access_compressed_streambuf::close() { // for ifstream-ish-ness
-    chunky_streambuf *rawbuf = (chunky_streambuf *) this->infile->rdbuf(); // preserve
-    this->infile->rdbuf(NULL);
+void random_access_compressed_streambuf::close() { // for ifstream-ish-ness
 	this->destroy();
-    return rawbuf; // hand it back to parent
 }
 
 random_access_compressed_streambuf::~random_access_compressed_streambuf() {
@@ -545,6 +443,7 @@ int random_access_compressed_streambuf::destroy ()
 
 	TRYFREE(this->inbuf);
 	TRYFREE(this->outbuf);
+	TRYFREE(this->path);
 	return err;
 }
 
@@ -554,6 +453,7 @@ int random_access_compressed_streambuf::destroy ()
 random_access_compressed_streambuf::int_type random_access_compressed_streambuf::underflow() {
 	int nread = 0;
 	int len = DECOMPRESS_BUFSIZE; // we'll try to read the next full chunk
+
 	if (this->last_seek_pos >= 0) { // we had a seek request
 
 		/* here's where we tear out the inefficient default seek behavior and replace
@@ -705,18 +605,14 @@ std::streampos random_access_compressed_streambuf::seekoff(std::streamoff offset
 }
 
 std::streampos random_access_compressed_streambuf::my_seekg(std::streampos offset, std::ios_base::seekdir whence,std::ios_base::openmode Mode) {
-	if (this->z_err == Z_ERRNO || this->z_err == Z_DATA_ERROR) {
+	if (!this->infile || !this->infile->is_open() || (!(Mode & std::ios_base::in)) ||
+		this->z_err == Z_ERRNO || this->z_err == Z_DATA_ERROR) {
 			return -1;
 	 }
 	// watch out for a simple rewind or tellg
 	if (0==offset) {
 		if (whence == std::ios_base::cur) {
-            if (this->last_seek_pos >= 0 ) {  // unsatisfied seek request
-                return last_seek_pos; // that's where we'd be if we'd actually seeked
-            } else {
-    			return get_next_read_pos(); // nothing to do
-            }
-		}
+			return get_next_read_pos(); // nothing to do
 		if ((whence == std::ios_base::beg) && // just a rewind
 			!this->index.size()) { // no index yet
 			// do we already have this decompressed?
@@ -742,16 +638,17 @@ std::streampos random_access_compressed_streambuf::my_seekg(std::streampos offse
 
 	this->z_err = Z_OK;
 	this->z_eof = 0;
+	if (!this->index.size()) { // first seek - build index
+		this->build_index();
+      update_istream_ptrs(0,0); // blow the cache
+	}
 	/* find where in stream to start */
 	/* compute absolute position */
 	std::streampos pos = offset;
 	if (whence == std::ios_base::cur) {
 		pos += this->get_next_read_pos();
 	} else if (whence == std::ios_base::end) {
-	    if (!this->index.size()) { // first seek - build index
-		    this->build_index(); // sets uncompressedLength
-        }
-        pos += boost::iostreams::offset_to_position(this->uncompressedLength);
+		pos += boost::iostreams::offset_to_position(this->uncompressedLength);
 	}
 
 	// do we already have this decompressed?
@@ -761,10 +658,7 @@ std::streampos random_access_compressed_streambuf::my_seekg(std::streampos offse
 	} else {
   	    // just note the request for now, actually seek at read time
 		this->last_seek_pos = pos;
-	    if (!this->index.size()) { // first seek - build index
-		    this->build_index();
-        }
-        update_istream_ptrs(outbuf_headpos,0); // blow the cache
+      update_istream_ptrs(outbuf_headpos,0); // blow the cache
 	}
    return pos;
 }
@@ -905,238 +799,6 @@ build_index_error:
 	delete[] window;
 	delete[] input;
 	return ret;
-}
-
-//
-// stuff for an ifstream with a really big buffer and smarter seek
-//
-//
-chunky_streambuf::chunky_streambuf() {
-    this->handle = NULL;
-    this->flen = 0;
-	this->path = NULL;
-    this->readerThread = NULL;
-    this->desired_readbuf_len = DEFAULT_CHUNKY_BUFSIZE;
-    this->last_seek_pos = -1;
-    for (this->current_inbuf=N_INBUFS;this->current_inbuf--;) {
-        this->chars_used() = 0;
-        this->filereadbuf() = NULL;
-    }
-    this->current_inbuf = 0;
-}
-
-bool chunky_streambuf::open(const char *path) {
-	if (!path) {
-		return false;
-	}
-
-    this->handle = new boost::iostreams::file_descriptor_source(path);
-    this->flen = 0;
-    // dynamic read buffer sizing - start small
-    this->desired_readbuf_len = DEFAULT_CHUNKY_BUFSIZE;
-    for (this->current_inbuf=N_INBUFS;this->current_inbuf--;) {
-        this->chars_used() = 0;
-        this->readbuf_len() = 0;
-        this->readbuf_head_filepos() = -1;
-
-        // allocate a big read buffer (we'll treat it as smaller if that makes
-        // sense for how the file is being read)
-        for (this->maxbufsize() = MAX_CHUNKY_BUFSIZE; 
-            this->maxbufsize() > DEFAULT_CHUNKY_BUFSIZE;
-            this->maxbufsize() /= 2) {
-            this->filereadbuf() = (Byte*)ALLOC(this->maxbufsize());
-            if (this->filereadbuf()) {
-                break;
-            }
-        }
-        if (!this->filereadbuf()) {
-            return false;
-        }
-    }
-	this->path = strdup(path);
-    if ((this->path == NULL) || !this->is_open()) {
-		return false;
-	}
-
-	this->set_inbuf(0,0,0,0); // we're pointed at head of file, but no read yet
-    return true;
-}
-
-
-bool chunky_streambuf::is_open() const { // for ifstream-ish-ness
-	return (this->handle && this->handle->is_open());
-}
-
-void chunky_streambuf::close() { // for ifstream-ish-ness
-    if (this->is_open()) {
-        if (this->readerThread) { // were we working on a readahead?
-            this->readerThread->join(); // wait for completion
-            delete this->readerThread;
-            this->readerThread = NULL;
-        }
-        delete this->handle; 
-	    this->handle = NULL;
-    }
-}
-
-chunky_streambuf::~chunky_streambuf() {
-    this->close();
-    for (this->current_inbuf=N_INBUFS;this->current_inbuf--;) {
-	    TRYFREE(this->filereadbuf());
-    }
-	TRYFREE(this->path);
-}
-
-// code for thread that reads the next chunk while we parse the current one
-void readAhead(chunky_streambuf *csb, int inbuf, size_t readlen) {
-    std::streamsize nread = csb->handle->read((char *)csb->filereadbuf(inbuf), readlen);
-    csb->readbuf_len(inbuf) = (nread<0)?0:nread;
-    csb->threadComplete = true;
-}
-
-//
-// this gets called each time ifstream uses up its input buffer
-//
-chunky_streambuf::int_type chunky_streambuf::underflow() {
-	std::streamsize nread = 0;
-	boost::iostreams::stream_offset next_read_pos;
-	if (this->last_seek_pos >= 0) { // we had a seek request
-        int bufnum = find_readbuf_for_pos(this->last_seek_pos); // will wait for readahead thread
-        if (bufnum>=0) { // found it already loaded
-            set_inbuf(bufnum,readbuf_head_filepos(bufnum),readbuf_len(bufnum),last_seek_pos);
-            std::streamsize offset = last_seek_pos-readbuf_head_filepos();
-            last_seek_pos = -1; // satisfied it
-            return filereadbuf()[offset];
-        } else { // actually need to read
-            // did we leave a lot of chars unread in current buffer?
-            if (chars_used() && (int)this->desired_readbuf_len > 2*chars_used()) {
-                // reduce the read size a bit
-                size_t newsize = DEFAULT_CHUNKY_BUFSIZE*(1+(chars_used()/DEFAULT_CHUNKY_BUFSIZE)); // ugh - why isn't min() portable
-                this->desired_readbuf_len = (newsize < DEFAULT_CHUNKY_BUFSIZE) ? DEFAULT_CHUNKY_BUFSIZE : newsize;
-                if (this->desired_readbuf_len > this->maxbufsize()) {
-                    this->desired_readbuf_len = this->maxbufsize();
-                }
-        }            
-		next_read_pos = this->last_seek_pos; // will be new outbuf head pos
-		this->last_seek_pos = -1; // satisfied it
-        this->handle->seek(next_read_pos,std::ios_base::beg);
-        int next_inbuf = (current_inbuf+1)%N_INBUFS;
-        nread = this->handle->read((char *)this->filereadbuf(next_inbuf), this->desired_readbuf_len);
-        if (nread < 0) {
-            nread = 0; // eof
-        }
-        set_inbuf(next_inbuf,next_read_pos,nread,next_read_pos); // rotate buffers
-        // cout << "s " << next_read_pos << " " << nread << " " << next_read_pos << "\n";
-        }
-    } else {
-        // we hit end of buffer - perhaps we should have read more?
-        next_read_pos = get_next_read_pos(); 
-        int last_inbuf = current_inbuf;
-        int bufnum = find_readbuf_for_pos(next_read_pos); // will wait for readahead thread
-        bool readahead_success = false;
-        if (bufnum >= 0) {
-            set_inbuf(bufnum,readbuf_head_filepos(bufnum),readbuf_len(bufnum),next_read_pos);
-            readahead_success = true;
-            // if (threadActive && (bufnum == readerThread_inbuf)) cout << "t " << readbuf_head_filepos() << " " << readbuf_len() << " " << next_read_pos << "\n";
-        }
-        bool streaming = (readbuf_head_filepos()==
-            readbuf_head_filepos(last_inbuf)+readbuf_len(last_inbuf))&&
-            (find_readbuf_for_pos(readbuf_head_filepos(last_inbuf)-1)>-1);
-        if (streaming) {
-            // we read all 3 sequentially - go big now
-            this->desired_readbuf_len = this->maxbufsize();
-            streaming = true;
-        } else {
-            size_t newsize = DEFAULT_CHUNKY_BUFSIZE;   
-            this->desired_readbuf_len = (newsize > this->maxbufsize()) ? this->maxbufsize() : newsize;
-        }
-
-        if (!readahead_success) { // need an immediate blocking read
-            int next_inbuf = (current_inbuf+1)%N_INBUFS; // rotate buffers
-            this->handle->seek(next_read_pos,std::ios_base::beg);
-            nread = this->handle->read((char *)this->filereadbuf(next_inbuf), this->desired_readbuf_len);
-            if (nread < 0) {
-                nread = 0; // eof
-            }
-            set_inbuf(next_inbuf,next_read_pos,nread,next_read_pos); 
-            // cout << "i " << readbuf_head_filepos() << " " << readbuf_len() << " " << next_read_pos << "\n";
-        }
-        nread = readbuf_len();
-        if (nread && !readerThread && streaming) { // not eof, not already reading, in sequential read mode
-            // read the next chunk asynchronously in hopes we'll want that next
-            readerThread_inbuf=(current_inbuf+1)%N_INBUFS;
-            readbuf_head_filepos(readerThread_inbuf) = readbuf_head_filepos()+nread;
-            threadComplete = false;
-            this->handle->seek(readbuf_head_filepos(readerThread_inbuf),std::ios_base::beg);
-            readerThread = new boost::thread(readAhead, this,readerThread_inbuf,this->desired_readbuf_len); 
-        }
-    }
-    if (!nread) {
-       update_istream_ptrs(next_read_pos,0);
-       return traits_type::eof();
-    } else {
-	   return filereadbuf()[get_next_read_pos()-readbuf_head_filepos()];
-    }
-}
-
-std::streampos chunky_streambuf::seekpos(std::streampos pos,std::ios_base::openmode Mode) {
-	return my_seekg(boost::iostreams::position_to_offset(pos),std::ios_base::beg,Mode);
-}
-
-std::streampos chunky_streambuf::seekoff(std::streamoff offset, std::ios_base::seekdir whence,std::ios_base::openmode Mode) {
-	return my_seekg(offset,whence,Mode);
-}
-
-std::streampos chunky_streambuf::my_seekg(boost::iostreams::stream_offset offset, std::ios_base::seekdir whence,std::ios_base::openmode Mode) {
-    if (!this->is_open()) {
-			return -1;
-	 }
-	// watch out for a simple rewind or tellg
-	if (0==offset) {
-		if (whence == std::ios_base::cur) {
-            if (this->last_seek_pos >= 0) {  // unsatisfied seek request
-                return last_seek_pos; // that's where we'd be if we'd actually seeked
-            } else {
-			    return get_next_read_pos(); // nothing to do
-            }
-		}
-		if (whence == std::ios_base::beg)  { // just a rewind
-			// do we already have this loaded?
-            int n = find_readbuf_for_pos(0);
-            if (n >= 0) {
-                set_inbuf(n,0,readbuf_len(n),0); 
-			} else  { // rewind 
-                this->handle->seek(0,std::ios_base::beg);
-				set_inbuf((current_inbuf+1)%N_INBUFS,0,0,0); // blow the cache
-			}
-			last_seek_pos = -1; // no need to seek
-			return 0; 
-      } // end just a rewind
-   } // end if offset==0
-
-	/* find where in stream to start */
-	/* compute absolute position */
-	boost::iostreams::stream_offset pos = offset;
-	if (whence == std::ios_base::cur) {
-		pos += this->get_next_read_pos();
-	} else if (whence == std::ios_base::end) {
-        if (!this->flen) { // length is unknown
-            this->flen = boost::iostreams::position_to_offset(this->handle->seek(0,std::ios_base::end));
-        }
-        pos = this->flen+pos;
-	}
-
-	// do we already have this loaded?
-    int n = find_readbuf_for_pos(pos); // will wait for readhead if any
-	if (n>=0) {
-		set_inbuf(n,readbuf_head_filepos(n),readbuf_len(n),pos);
-        this->last_seek_pos = -1; // no need to actually seek
-	} else {
-		// just note the request for now, actually seek at read time
-		this->last_seek_pos = pos;
-		set_inbuf((current_inbuf+1)%N_INBUFS,0,0,0); // blow the cache
-	}
-   return pos;
 }
 
 } // namespace util
