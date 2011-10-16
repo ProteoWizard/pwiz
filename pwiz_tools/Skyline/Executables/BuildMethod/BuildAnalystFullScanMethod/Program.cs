@@ -67,8 +67,8 @@ namespace BuildAnalystFullScanMethod
                 "   transition list as inputs, to generate a new method file\n" +
                 "   as output.\n" +
                 "   -1               Do an MS1 scan each cycle" +
-                "   -i N             Do data-dependent acquisition for the top N precursors every scan" +
-                "   -w <RT window>   Retention time window for schedule [unscheduled otherwise]\n" +
+                "   -i               Generate method for Information Dependent Acquisition (IDA)" +
+                "   -r               Add retention time information to inclusion list (requires -i)\n" +
                 "   -o <output file> New method is written to the specified output file\n" +
                 "   -s               Transition list is read from stdin.\n" +
                 "                    e.g. cat TranList.csv | BuildWatersMethod -s -o new.ext temp.ext\n" +
@@ -90,12 +90,10 @@ namespace BuildAnalystFullScanMethod
 
         protected bool InclusionList { get; set; }
 
-        protected int TopNPrecursors { get; set; }
+        protected bool ScheduledMethod { get; set; }
 
         public void ParseCommandArgs(List<string> args)
         {
-            TopNPrecursors = 5;
-
             var args2 = new List<string>();
             for (int i = 0; i < args.Count; i++)
             {
@@ -107,14 +105,11 @@ namespace BuildAnalystFullScanMethod
                     case "i":
                         {
                             InclusionList = true;
-                            if (i + 1 >= args.Count)
-                                throw new UsageException();
-                            int topN;
-                            if (!int.TryParse(args[++i], out topN))
-                                throw new UsageException();
-                            if (topN < 1)
-                                throw new UsageException();
-                            TopNPrecursors = topN;
+                        }
+                        break;
+                    case "r":
+                        {
+                            ScheduledMethod = true;
                         }
                         break;
                     case "1":
@@ -134,7 +129,7 @@ namespace BuildAnalystFullScanMethod
             var msExperiment = (Experiment)((Period)method.GetPeriod(0)).GetExperiment(0);
             var experimentCount = ((Period)method.GetPeriod(0)).ExperimCount;
             var experimentType = msExperiment.ScanType;
-            //Product ion scan is 9 in the new version of the software, 6 in the old. TOF MS is 8
+            //Product ion scan is 9 in TF 1.5, 6 in QS 2.0; TOF MS is 8
             if (InclusionList)
             {
                 if (experimentType != 8)
@@ -198,7 +193,9 @@ namespace BuildAnalystFullScanMethod
             {
                 object idaServer;
                 ((IMassSpecMethod2)method).GetDataDependSvr(out idaServer);
-                ((IDDEMethodObj)idaServer).putUseIncludeList(1);
+
+                ((IDDEMethodObj) idaServer).putUseIncludeList(1);
+                // ((IDDEMethodObj3) idaServer).putIncludeForSecs(RtWindow);
 
                 double minTOFMass = 0;
                 double maxTOFMass = 0;
@@ -207,7 +204,14 @@ namespace BuildAnalystFullScanMethod
                 var addedEntries = new List<string>();
                 foreach (var transition in transitions.Transitions)
                 {
+
                     double retentionTime = 0;
+                    
+                    // If the ScheduledMethod flag was set assume that the Dwell time column in the 
+                    // transition list file has retention time.
+                    if(ScheduledMethod) 
+                        retentionTime = transition.Dwell;
+
                     string entryKey = transition.PrecursorMz + retentionTime.ToString();
                     if (!addedEntries.Contains(entryKey)
                         && transition.PrecursorMz > minTOFMass
@@ -218,14 +222,6 @@ namespace BuildAnalystFullScanMethod
                     }
                 }
 
-                int experimentIndex;
-                //TopN - 1 because the template comes with one product ion scan.
-                for (int i = 0; i < TopNPrecursors-1; i++)
-                {
-                    var experiment = (Experiment)period.CreateExperiment(out experimentIndex);
-                    experiment.InitExperiment();
-                    experiment.ScanType = Equals(ionSprayVoltageParamName, "IS") ? (short)6 : (short)9;
-                }
             }
             else
             {
