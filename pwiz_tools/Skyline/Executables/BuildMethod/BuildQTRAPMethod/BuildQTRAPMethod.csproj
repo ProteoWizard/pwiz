@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>9.0.30729</ProductVersion>
+    <ProductVersion>9.0.21022</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{93130EBE-6FEF-456C-BCDB-B12E9780C051}</ProjectGuid>
     <OutputType>Exe</OutputType>
@@ -50,6 +50,50 @@
     <UseVSHostingProcess>false</UseVSHostingProcess>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Interop.AcqMethodSvrLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\AbSciex\Interop.AcqMethodSvrLib.dll</HintPath>
+    </Reference>
+    <Reference Include="Interop.Analyst, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\AbSciex\Interop.Analyst.dll</HintPath>
+    </Reference>
+    <Reference Include="Interop.AnalystService, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\AbSciex\Interop.AnalystService.dll</HintPath>
+    </Reference>
+    <Reference Include="Interop.CreateMRMTransitions, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\AbSciex\Interop.CreateMRMTransitions.dll</HintPath>
+    </Reference>
+    <Reference Include="Interop.CreateNewAcqMethod, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\AbSciex\Interop.CreateNewAcqMethod.dll</HintPath>
+    </Reference>
+    <Reference Include="Interop.MSMethodSvrLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\AbSciex\Interop.MSMethodSvrLib.dll</HintPath>
+    </Reference>
+    <Reference Include="Interop.ParameterSvrLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\AbSciex\Interop.ParameterSvrLib.dll</HintPath>
+    </Reference>
+    <Reference Include="Interop.QueueDispatcherLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\AbSciex\Interop.QueueDispatcherLib.dll</HintPath>
+    </Reference>
+    <Reference Include="Interop.ROTMANLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\AbSciex\Interop.ROTMANLib.dll</HintPath>
+    </Reference>
+    <Reference Include="Interop.StdType, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\Method\AbSciex\Interop.StdType.dll</HintPath>
+    </Reference>
+    <Reference Include="nunit.framework, Version=2.5.10.11092, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\BuildAnalystFullScanMethod\references\nunit.framework.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -67,88 +111,7 @@
     <Compile Include="Interop_AcqMethodDir.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <COMReference Include="AcqMethodSvrLib">
-      <Guid>{315829E4-86B1-11D1-9D5A-006097223085}</Guid>
-      <VersionMajor>1</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>False</Isolated>
-    </COMReference>
-    <COMReference Include="Analyst">
-      <Guid>{19521435-6A79-11D2-8D0D-00104BC5F89A}</Guid>
-      <VersionMajor>1</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>False</Isolated>
-    </COMReference>
-    <COMReference Include="AnalystService">
-      <Guid>{FD6CC320-98B9-11D1-950D-00805F298269}</Guid>
-      <VersionMajor>1</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>False</Isolated>
-    </COMReference>
-    <COMReference Include="CreateMRMTransitions">
-      <Guid>{B9F36136-F45B-49CC-9CEA-7D9D1A7D9158}</Guid>
-      <VersionMajor>1</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>False</Isolated>
-    </COMReference>
-    <COMReference Include="CreateNewAcqMethod">
-      <Guid>{07ABC510-9207-41DF-9370-41C4CF3D97D8}</Guid>
-      <VersionMajor>1</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>True</Isolated>
-    </COMReference>
-    <COMReference Include="MSMethodSvrLib">
-      <Guid>{81AA0690-77B7-11D1-9D57-006097223085}</Guid>
-      <VersionMajor>1</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>False</Isolated>
-    </COMReference>
-    <COMReference Include="ParameterSvrLib">
-      <Guid>{B7935271-7BA3-11D1-9D59-006097223085}</Guid>
-      <VersionMajor>1</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>False</Isolated>
-    </COMReference>
-    <COMReference Include="QueueDispatcherLib">
-      <Guid>{BF55C0E1-9CA8-11D1-950F-00805F298269}</Guid>
-      <VersionMajor>1</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>False</Isolated>
-    </COMReference>
-    <COMReference Include="ROTMANLib">
-      <Guid>{D4284310-950A-11D1-B316-0080C710F595}</Guid>
-      <VersionMajor>1</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>False</Isolated>
-    </COMReference>
-    <COMReference Include="StdType">
-      <Guid>{BEF6E001-A874-101A-8BBA-00AA00300CAB}</Guid>
-      <VersionMajor>2</VersionMajor>
-      <VersionMinor>0</VersionMinor>
-      <Lcid>0</Lcid>
-      <WrapperTool>tlbimp</WrapperTool>
-      <Isolated>False</Isolated>
-    </COMReference>
+    <Compile Include="Test\BuildMethodTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
@@ -181,6 +144,12 @@
       <ProductName>Windows Installer 3.1</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\BuildAnalystMethod\BuildAnalystMethod.csproj">
+      <Project>{830D1FA9-D37B-4A3A-8763-F5F3DCF7C155}</Project>
+      <Name>BuildAnalystMethod</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
