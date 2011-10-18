@@ -9,13 +9,16 @@ if [ ! -e $PWIZ_ROOT/quickbuild.sh ]; then
     exit 1
 fi
 
-PWIZ_BJAM=$PWIZ_ROOT/libraries/boost-build/jam_src/bin/bjam
+# per platform in case of multi OS shared volume (VMware etc)
+PWIZ_BJAM=$PWIZ_ROOT/libraries/boost-build/jam_src/bin/$(uname -s)/bjam
 
 # Build local copy of bjam
 if [ ! -e $PWIZ_BJAM ]; then
     echo "Building bjam..."
     cd $PWIZ_ROOT/libraries/boost-build/jam_src
     LOCATE_TARGET=bin sh build.sh
+    mkdir -p $PWIZ_ROOT/libraries/boost-build/jam_src/bin/$(uname -s)
+    cp -f $PWIZ_ROOT/libraries/boost-build/jam_src/bin/bjam $PWIZ_ROOT/libraries/boost-build/jam_src/bin/$(uname -s)/bjam
 fi
 
 if test $(uname -s) = "Darwin"; then
