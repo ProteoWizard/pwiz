@@ -90,7 +90,7 @@ void validateWriteRead(const MSDataFile::WriteConfig& writeConfig,
         // simulate CLI garbage collect behavior, wherein delayed deletes stress
         // memory and file handle usage
         {
-            std::vector<boost::shared_ptr<MSDataFile>> msds; 
+            std::vector< boost::shared_ptr< MSDataFile > > msds; 
             for (int i=0;i<100;i++) 
             {
                 boost::shared_ptr<MSDataFile> msd1(new MSDataFile(filename1));
