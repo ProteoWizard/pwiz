@@ -247,6 +247,7 @@ namespace pwiz.SkylineTestA
             targetDoc = targetDoc.ImportDocumentXml(new StringReader(stringWriter.ToString()),
                                                     null,
                                                     MeasuredResults.MergeAction.remove,
+                                                    false,
                                                     Settings.Default.StaticModList,
                                                     Settings.Default.HeavyModList,
                                                     to,

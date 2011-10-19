@@ -874,6 +874,7 @@ namespace pwiz.Skyline
                     doc.ImportDocumentXml(new StringReader(dataObjectSkyline.Substring(dataObjectSkyline.IndexOf('<'))),
                         null,
                         MeasuredResults.MergeAction.remove,
+                        false,
                         Settings.Default.StaticModList,
                         Settings.Default.HeavyModList,
                         nodePaste == null ? null : nodePaste.Path,

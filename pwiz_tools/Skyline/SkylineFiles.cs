@@ -103,7 +103,7 @@ namespace pwiz.Skyline
         {
             if (!CheckSaveDocument())
                 return;
-            OpenFileDialog dlg = new OpenFileDialog
+            using (OpenFileDialog dlg = new OpenFileDialog
             {
                 InitialDirectory = Settings.Default.ActiveDirectory,
                 CheckPathExists = true,
@@ -115,19 +115,21 @@ namespace pwiz.Skyline
                         "Shared Files (*." + SrmDocumentSharing.EXT + ")|*." + SrmDocumentSharing.EXT,                      
                         "All Files (*.*)|*.*"
                     })
-            };
-            if (dlg.ShowDialog() == DialogResult.OK)
+            })
             {
-                Settings.Default.ActiveDirectory = Path.GetDirectoryName(dlg.FileName);
+                if (dlg.ShowDialog() == DialogResult.OK)
+                {
+                    Settings.Default.ActiveDirectory = Path.GetDirectoryName(dlg.FileName);
 
-                if (dlg.FileName.EndsWith(SrmDocumentSharing.EXT))
-                {
-                    OpenSharedFile(dlg.FileName);
+                    if (dlg.FileName.EndsWith(SrmDocumentSharing.EXT))
+                    {
+                        OpenSharedFile(dlg.FileName);
+                    }
+                    else
+                    {
+                        OpenFile(dlg.FileName); // Sets ActiveDirectory
+                    }
                 }
-                else
-                {
-                    OpenFile(dlg.FileName); // Sets ActiveDirectory
-                }                
             }
         }
 
@@ -500,7 +502,7 @@ namespace pwiz.Skyline
                 return false;
             }
 
-            SaveFileDialog dlg = new SaveFileDialog
+            using (SaveFileDialog dlg = new SaveFileDialog
             {
                 InitialDirectory = Settings.Default.ActiveDirectory,
                 OverwritePrompt = true,
@@ -510,14 +512,16 @@ namespace pwiz.Skyline
                         "Skyline Documents (*." + SrmDocument.EXT + ")|*." + SrmDocument.EXT,
                         "All Files (*.*)|*.*"
                     })
-            };
-            if (!string.IsNullOrEmpty(DocumentFilePath))
-                dlg.FileName = Path.GetFileName(DocumentFilePath);
-
-            if (dlg.ShowDialog(this) == DialogResult.OK)
+            })
             {
-                if (SaveDocument(dlg.FileName))
-                    return true;
+                if (!string.IsNullOrEmpty(DocumentFilePath))
+                    dlg.FileName = Path.GetFileName(DocumentFilePath);
+
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    if (SaveDocument(dlg.FileName))
+                        return true;
+                }
             }
             return false;
         }
@@ -750,29 +754,30 @@ namespace pwiz.Skyline
 
         private void importFASTAMenuItem_Click(object sender, EventArgs e)
         {
-            OpenFileDialog dlg = new OpenFileDialog
+            using (OpenFileDialog dlg = new OpenFileDialog
             {
                 Title = "Import FASTA",
                 InitialDirectory = Settings.Default.FastaDirectory,
                 CheckPathExists = true
                 // FASTA files often have no extension as well as .fasta and others
-            };
-
-            if (dlg.ShowDialog(this) == DialogResult.OK)
+            })
             {
-                Settings.Default.FastaDirectory = Path.GetDirectoryName(dlg.FileName);
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    Settings.Default.FastaDirectory = Path.GetDirectoryName(dlg.FileName);
 
-                try
-                {
-                    long lineCount = Helpers.CountLinesInFile(dlg.FileName);
-                    using (var readerFasta = new StreamReader(dlg.FileName))
+                    try
                     {
-                        ImportFasta(readerFasta, lineCount, false, "Import FASTA");
+                        long lineCount = Helpers.CountLinesInFile(dlg.FileName);
+                        using (var readerFasta = new StreamReader(dlg.FileName))
+                        {
+                            ImportFasta(readerFasta, lineCount, false, "Import FASTA");
+                        }
                     }
-                }
-                catch (Exception x)
-                {
-                    MessageBox.Show(string.Format("Failed reading the file {0}. {1}", dlg.FileName, x.Message));
+                    catch (Exception x)
+                    {
+                        MessageBox.Show(string.Format("Failed reading the file {0}. {1}", dlg.FileName, x.Message));
+                    }
                 }
             }
         }
@@ -892,7 +897,7 @@ namespace pwiz.Skyline
 
         private void importMassListMenuItem_Click(object sender, EventArgs e)
         {
-            OpenFileDialog dlg = new OpenFileDialog
+            using (OpenFileDialog dlg = new OpenFileDialog
             {
                 Title = "Import Mass List",
                 InitialDirectory = Settings.Default.ActiveDirectory,    // TODO: Better value?
@@ -904,36 +909,37 @@ namespace pwiz.Skyline
                         "Mass List Text (*.csv,*.tsv)|*.csv;*.tsv",
                         "All Files (*.*)|*.*"
                     })
-            };
-
-            if (dlg.ShowDialog(this) == DialogResult.OK)
+            })
             {
-                Settings.Default.ActiveDirectory = Path.GetDirectoryName(dlg.FileName);
-
-                try
+                if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    using (new LongOp(this))
+                    Settings.Default.ActiveDirectory = Path.GetDirectoryName(dlg.FileName);
+
+                    try
                     {
-                        IFormatProvider provider;
-                        char sep;
-
-                        using (var readerLine = new StreamReader(dlg.FileName))
+                        using (new LongOp(this))
                         {
-                            Type[] columnTypes;
-                            string line = readerLine.ReadLine();
-                            if (!MassListImporter.IsColumnar(line, out provider, out sep, out columnTypes))
-                                throw new IOException("Data columns not found in first line.");
+                            IFormatProvider provider;
+                            char sep;
+
+                            using (var readerLine = new StreamReader(dlg.FileName))
+                            {
+                                Type[] columnTypes;
+                                string line = readerLine.ReadLine();
+                                if (!MassListImporter.IsColumnar(line, out provider, out sep, out columnTypes))
+                                    throw new IOException("Data columns not found in first line.");
+                            }
+
+                            using (var readerList = new StreamReader(dlg.FileName))
+                            {
+                                ImportMassList(readerList, provider, sep, "Import transition list");
+                            }
                         }
-
-                        using (var readerList = new StreamReader(dlg.FileName))
-                        {
-                            ImportMassList(readerList, provider, sep, "Import transition list");
-                        }                        
                     }
-                }
-                catch (Exception x)
-                {
-                    MessageBox.Show(string.Format("Failed reading the file {0}. {1}", dlg.FileName, x.Message));
+                    catch (Exception x)
+                    {
+                        MessageBox.Show(string.Format("Failed reading the file {0}. {1}", dlg.FileName, x.Message));
+                    }
                 }
             }
         }
@@ -954,10 +960,10 @@ namespace pwiz.Skyline
 
         private void importDocumentMenuItem_Click(object sender, EventArgs e)
         {
-            OpenFileDialog dlg = new OpenFileDialog
+            using (OpenFileDialog dlg = new OpenFileDialog
             {
                 Title = "Import Skyline Document",
-                
+
                 InitialDirectory = Settings.Default.ActiveDirectory,
                 CheckPathExists = true,
                 Multiselect = true,
@@ -968,20 +974,21 @@ namespace pwiz.Skyline
                         "Skyline Documents (*." + SrmDocument.EXT + ")|*." + SrmDocument.EXT,
                         "All Files (*.*)|*.*"
                     })
-            };
-
-            if (dlg.ShowDialog(this) == DialogResult.OK)
+            })
             {
-                try
+                if (dlg.ShowDialog(this) == DialogResult.OK)
                 {
-                    ImportFiles(dlg.FileNames);
-                }
-                catch (Exception x)
-                {
-                    string message = dlg.FileNames.Length == 1
-                        ? string.Format("Failed importing file {0}. {1}", dlg.FileNames[0], x.Message)
-                        : string.Format("Failed importing files:\n\n{0}\n\n{1}", string.Join("\n", dlg.FileNames), x.Message);
-                    MessageBox.Show(message);
+                    try
+                    {
+                        ImportFiles(dlg.FileNames);
+                    }
+                    catch (Exception x)
+                    {
+                        string message = dlg.FileNames.Length == 1
+                            ? string.Format("Failed importing file {0}. {1}", dlg.FileNames[0], x.Message)
+                            : string.Format("Failed importing files:\n\n{0}\n\n{1}", string.Join("\n", dlg.FileNames), x.Message);
+                        MessageBox.Show(message);
+                    }
                 }
             }
         }
@@ -989,6 +996,7 @@ namespace pwiz.Skyline
         public void ImportFiles(params string[] filePaths)
         {
             var resultsAction = MeasuredResults.MergeAction.remove;
+            var mergePeptides = false;
             if (HasResults(filePaths))
             {
                 using (var dlgResults = new ImportDocResultsDlg(!string.IsNullOrEmpty(DocumentFilePath)))
@@ -996,6 +1004,7 @@ namespace pwiz.Skyline
                     if (dlgResults.ShowDialog(this) != DialogResult.OK)
                         return;
                     resultsAction = dlgResults.Action;
+                    mergePeptides = dlgResults.IsMergePeptides;
                 }
             }
             SrmTreeNode nodeSel = sequenceTree.SelectedNode as SrmTreeNode;
@@ -1014,6 +1023,7 @@ namespace pwiz.Skyline
                                      longWaitBroker,
                                      filePaths,
                                      resultsAction,
+                                     mergePeptides,
                                      nodeSel != null ? nodeSel.Path : null,
                                      out selectPath));
 
@@ -1063,6 +1073,7 @@ namespace pwiz.Skyline
                                                ILongWaitBroker longWaitBroker,
                                                IList<string> filePaths,
                                                MeasuredResults.MergeAction resultsAction,
+                                               bool mergePeptides,
                                                IdentityPath to,
                                                out IdentityPath firstAdded)
         {
@@ -1089,6 +1100,7 @@ namespace pwiz.Skyline
                     docResult = docResult.ImportDocumentXml(reader,
                                                 filePath,
                                                 resultsAction,
+                                                mergePeptides,
                                                 Settings.Default.StaticModList,
                                                 Settings.Default.HeavyModList,
                                                 to,
@@ -1260,33 +1272,35 @@ namespace pwiz.Skyline
             if (!documentUI.Settings.HasResults)
                 return;
 
-            ManageResultsDlg dlg = new ManageResultsDlg(this);
-            if (dlg.ShowDialog() == DialogResult.OK)
+            using (ManageResultsDlg dlg = new ManageResultsDlg(this))
             {
-                // Remove from the cache chromatogram data to be reimported.  This done before changing
-                // anything else to avoid making other changes to the results cause cache changes before
-                // the document is saved.
-                try
+                if (dlg.ShowDialog() == DialogResult.OK)
                 {
-                    ReimportChromatograms(documentUI, dlg.ReimportChromatograms);
-                }
-                catch (Exception)
-                {
-                    MessageDlg.Show(this, "A failure occurred attempting to re-import results.");
-                }
+                    // Remove from the cache chromatogram data to be reimported.  This done before changing
+                    // anything else to avoid making other changes to the results cause cache changes before
+                    // the document is saved.
+                    try
+                    {
+                        ReimportChromatograms(documentUI, dlg.ReimportChromatograms);
+                    }
+                    catch (Exception)
+                    {
+                        MessageDlg.Show(this, "A failure occurred attempting to re-import results.");
+                    }
 
-                // And update the document to reflect real changes to the results structure
-                ModifyDocument("Manage results", doc =>
-                {
-                    var results = doc.Settings.MeasuredResults;
-                    if (results == null)
-                        return doc;
-                    var listChrom = new List<ChromatogramSet>(dlg.Chromatograms);
-                    if (ArrayUtil.ReferencesEqual(results.Chromatograms, listChrom))
-                        return doc;
-                    results = listChrom.Count > 0 ? results.ChangeChromatograms(listChrom.ToArray()) : null;
-                    return doc.ChangeMeasuredResults(results);
-                });
+                    // And update the document to reflect real changes to the results structure
+                    ModifyDocument("Manage results", doc =>
+                    {
+                        var results = doc.Settings.MeasuredResults;
+                        if (results == null)
+                            return doc;
+                        var listChrom = new List<ChromatogramSet>(dlg.Chromatograms);
+                        if (ArrayUtil.ReferencesEqual(results.Chromatograms, listChrom))
+                            return doc;
+                        results = listChrom.Count > 0 ? results.ChangeChromatograms(listChrom.ToArray()) : null;
+                        return doc.ChangeMeasuredResults(results);
+                    });
+                }
             }
         }
 

@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using pwiz.Skyline.Model.DocSettings;
 
@@ -168,6 +169,35 @@ namespace pwiz.Skyline.Model
             if (annotations.IsEmpty)
                 annotations.ColorIndex = -1;
             return annotations;
+        }
+
+        public Annotations Merge(Annotations annotations)
+        {
+            string note = Note;
+            if (string.IsNullOrEmpty(note))
+                note = annotations.Note;
+            else if (!string.IsNullOrEmpty(annotations.Note))
+                note = note + "\n\n" + annotations.Note;
+            var annotationsNew = _annotations;
+            if (annotationsNew == null)
+                annotationsNew = annotations._annotations;
+            else if (annotations._annotations != null)
+            {
+                annotationsNew = new Dictionary<string, string>(annotationsNew);
+                foreach (var annotation in annotations._annotations)
+                {
+                    if (annotationsNew.ContainsKey(annotation.Key))
+                        throw new InvalidDataException(string.Format("Annotation conflict for '{0}' found attempting to merge annotations.", annotation.Key));
+                    annotationsNew.Add(annotation);
+                }
+            }
+            int colorIndex = (ColorIndex != -1 ? ColorIndex : annotations.ColorIndex);
+            var merged = new Annotations(note, annotationsNew, colorIndex);
+            if (Equals(merged, this))
+                return this;
+            if (Equals(merged, annotations))
+                return annotations;
+            return merged;
         }
 
         public bool Equals(Annotations other)

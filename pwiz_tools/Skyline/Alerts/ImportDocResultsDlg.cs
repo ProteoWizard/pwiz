@@ -71,6 +71,11 @@ namespace pwiz.Skyline.Alerts
             }
         }
 
+        public bool IsMergePeptides
+        {
+            get { return cbMergePeptides.Checked; }
+        }
+
         public void OkDialog()
         {
             if (!CanImportResults && Action != MeasuredResults.MergeAction.remove)

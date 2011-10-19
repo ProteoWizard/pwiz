@@ -24,6 +24,7 @@ using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Results;
+using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
 {
@@ -231,6 +232,16 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public bool IsUserModified
+        {
+            get
+            {
+                if (!Annotations.IsEmpty)
+                    return true;
+                return HasResults && Results.SelectMany(r => r).Contains(chromInfo => chromInfo.IsUserModified);
+            }
+        }
+
         public int? GetPeakRank(int i)
         {
             // CONSIDER: Also specify the file index?
@@ -353,6 +364,63 @@ namespace pwiz.Skyline.Model
                 return this;
             return ChangeResults((Results<TransitionChromInfo>)
                                  Results.ChangeAt(indexSet, new ChromInfoList<TransitionChromInfo>(listChromInfoNew)));
+        }
+
+        public TransitionDocNode MergeUserInfo(SrmSettings settings, TransitionDocNode nodeTranMerge)
+        {
+            var result = this;
+            var annotations = Annotations.Merge(nodeTranMerge.Annotations);
+            if (!ReferenceEquals(annotations, Annotations))
+                result = (TransitionDocNode)result.ChangeAnnotations(annotations);
+            var resultsInfo = MergeResultsUserInfo(settings, nodeTranMerge.Results);
+            if (!ReferenceEquals(resultsInfo, Results))
+                result = result.ChangeResults(resultsInfo);
+            return result;
+        }
+
+
+        private Results<TransitionChromInfo> MergeResultsUserInfo(
+            SrmSettings settings, Results<TransitionChromInfo> results)
+        {
+            if (!HasResults)
+                return Results;
+
+            var dictFileIdToChromInfo = results.SelectMany(l => l)
+                                               .Where(i => i.IsUserModified)
+                                               .ToDictionary(i => i.FileIndex);
+
+            var listResults = new List<ChromInfoList<TransitionChromInfo>>();
+            for (int i = 0; i < results.Count; i++)
+            {
+                List<TransitionChromInfo> listChromInfo = null;
+                var chromSet = settings.MeasuredResults.Chromatograms[i];
+                var chromInfoList = Results[i];
+                foreach (var fileInfo in chromSet.MSDataFileInfos)
+                {
+                    TransitionChromInfo chromInfo;
+                    if (!dictFileIdToChromInfo.TryGetValue(fileInfo.FileIndex, out chromInfo))
+                        continue;
+                    if (listChromInfo == null)
+                    {
+                        listChromInfo = new List<TransitionChromInfo>();
+                        if (chromInfoList != null)
+                            listChromInfo.AddRange(chromInfoList);
+                    }
+                    int iExist = listChromInfo.IndexOf(chromInfoExist =>
+                                                       ReferenceEquals(chromInfoExist.FileId, chromInfo.FileId) &&
+                                                       chromInfoExist.OptimizationStep == chromInfo.OptimizationStep);
+                    if (iExist == -1)
+                        listChromInfo.Add(chromInfo);
+                    else
+                        listChromInfo[iExist] = chromInfo;
+                }
+                if (listChromInfo != null)
+                    chromInfoList = new ChromInfoList<TransitionChromInfo>(listChromInfo);
+                listResults.Add(chromInfoList);
+            }
+            if (ArrayUtil.ReferencesEqual(listResults, Results))
+                return Results;
+            return new Results<TransitionChromInfo>(listResults);
         }
 
         #endregion

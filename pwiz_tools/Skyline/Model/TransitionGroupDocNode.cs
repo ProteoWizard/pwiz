@@ -481,6 +481,18 @@ namespace pwiz.Skyline.Model
 
         public int TransitionCount { get { return GetCount((int)Level.Transitions); } }
 
+        public bool IsUserModified
+        {
+            get
+            {
+                if (!Annotations.IsEmpty)
+                    return true;
+                if (HasResults && Results.SelectMany(l => l).Contains(chromInfo => chromInfo.IsUserModified))
+                    return true;
+                return Children.Cast<TransitionDocNode>().Contains(nodeTran => nodeTran.IsUserModified);
+            }
+        }
+
         private double CalcPrecursorMZ(SrmSettings settings, ExplicitMods mods, out IsotopeDistInfo isotopeDist)
         {
             string seq = TransitionGroup.Peptide.Sequence;
@@ -1779,18 +1791,96 @@ namespace pwiz.Skyline.Model
         /// Merges the transitions of another <see cref="TransitionGroupDocNode"/> into this one,
         /// giving this node precedence when both nodes have matching transitions.
         /// </summary>
-        /// <param name="nodeGroup">The node from which transitions are merged</param>
+        /// <param name="nodeGroupMerge">The node from which transitions are merged</param>
         /// <returns>A new copy of this node with merged children, or this node if all children match</returns>
-        public TransitionGroupDocNode Merge(TransitionGroupDocNode nodeGroup)
+        public TransitionGroupDocNode Merge(TransitionGroupDocNode nodeGroupMerge)
         {
-            var childrenNew = new List<TransitionDocNode>(Children.Cast<TransitionDocNode>());
-            var setExisting = new HashSet<TransitionLossKey>(childrenNew.Select(n => n.Key));
             // CONSIDER: This code prefers existing doc nodes as long as the key is the same
             //           This works for the PasteDlg case for which it was written, but it is
             //           conceivable that a call would expect the merged doc node to take precedence.
-            childrenNew.AddRange(nodeGroup.Children.Cast<TransitionDocNode>().Where(n => !setExisting.Contains(n.Key)));
+            return Merge(nodeGroupMerge, null);
+        }
+
+        public TransitionGroupDocNode Merge(TransitionGroupDocNode nodeGroupMerge,
+            Func<TransitionDocNode, TransitionDocNode, TransitionDocNode> mergeMatch)
+        {
+            var childrenNew = Children.Cast<TransitionDocNode>().ToList();
+            // Remember where all the existing children are
+            var dictPepIndex = new Dictionary<TransitionLossKey, int>();
+            for (int i = 0; i < childrenNew.Count; i++)
+            {
+                var key = childrenNew[i].Key;
+                if (!dictPepIndex.ContainsKey(key))
+                    dictPepIndex[key] = i;
+            }
+            // Add the new children to the end, or merge when the node is already present
+            foreach (TransitionDocNode nodeTran in nodeGroupMerge.Children)
+            {
+                int i;
+                if (!dictPepIndex.TryGetValue(nodeTran.Key, out i))
+                    childrenNew.Add(nodeTran);
+                else if (mergeMatch != null)
+                    childrenNew[i] = mergeMatch(childrenNew[i], nodeTran);
+            }
             childrenNew.Sort(TransitionGroup.CompareTransitions);
             return (TransitionGroupDocNode)ChangeChildrenChecked(childrenNew.Cast<DocNode>().ToArray());
+        }
+
+        public TransitionGroupDocNode MergeUserInfo(TransitionGroupDocNode nodeGroupMerge,
+            SrmSettings settings, SrmSettingsDiff diff)
+        {
+            var result = Merge(nodeGroupMerge, (n, nMerge) => n.MergeUserInfo(settings, nMerge));
+            var annotations = Annotations.Merge(nodeGroupMerge.Annotations);
+            if (!ReferenceEquals(annotations, Annotations))
+                result = (TransitionGroupDocNode)result.ChangeAnnotations(annotations);
+            var resultsInfo = MergeResultsUserInfo(settings, nodeGroupMerge.Results);
+            if (!ReferenceEquals(resultsInfo, Results))
+                result = result.ChangeResults(resultsInfo);
+            return result.UpdateResults(settings, diff, this);
+        }
+
+        private Results<TransitionGroupChromInfo> MergeResultsUserInfo(
+            SrmSettings settings, Results<TransitionGroupChromInfo> results)
+        {
+            if (!HasResults)
+                return Results;
+
+            var dictFileIdToChromInfo = results.SelectMany(l => l)
+                                               .Where(i => i.IsUserModified)
+                                               .ToDictionary(i => i.FileIndex);
+
+            var listResults = new List<ChromInfoList<TransitionGroupChromInfo>>();
+            for (int i = 0; i < results.Count; i++)
+            {
+                List<TransitionGroupChromInfo> listChromInfo = null;
+                var chromSet = settings.MeasuredResults.Chromatograms[i];
+                var chromInfoList = Results[i];
+                foreach (var fileInfo in chromSet.MSDataFileInfos)
+                {
+                    TransitionGroupChromInfo chromInfo;
+                    if (!dictFileIdToChromInfo.TryGetValue(fileInfo.FileIndex, out chromInfo))
+                        continue;
+                    if (listChromInfo == null)
+                    {
+                        listChromInfo = new List<TransitionGroupChromInfo>();
+                        if (chromInfoList != null)
+                            listChromInfo.AddRange(chromInfoList);
+                    }
+                    int iExist = listChromInfo.IndexOf(chromInfoExist =>
+                                                       ReferenceEquals(chromInfoExist.FileId, chromInfo.FileId) &&
+                                                       chromInfoExist.OptimizationStep == chromInfo.OptimizationStep);
+                    if (iExist == -1)
+                        listChromInfo.Add(chromInfo);
+                    else
+                        listChromInfo[iExist] = chromInfo;
+                }
+                if (listChromInfo != null)
+                    chromInfoList = new ChromInfoList<TransitionGroupChromInfo>(listChromInfo);
+                listResults.Add(chromInfoList);
+            }
+            if (ArrayUtil.ReferencesEqual(listResults, Results))
+                return Results;
+            return new Results<TransitionGroupChromInfo>(listResults);
         }
 
         #endregion

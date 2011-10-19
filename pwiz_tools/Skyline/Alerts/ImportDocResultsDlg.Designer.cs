@@ -35,15 +35,16 @@
             this.radioMergeByName = new System.Windows.Forms.RadioButton();
             this.radioMergeByIndex = new System.Windows.Forms.RadioButton();
             this.radioAdd = new System.Windows.Forms.RadioButton();
+            this.cbMergePeptides = new System.Windows.Forms.CheckBox();
             this.SuspendLayout();
             // 
             // btnOK
             // 
             this.btnOK.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOK.Location = new System.Drawing.Point(205, 158);
+            this.btnOK.Location = new System.Drawing.Point(205, 176);
             this.btnOK.Name = "btnOK";
             this.btnOK.Size = new System.Drawing.Size(75, 23);
-            this.btnOK.TabIndex = 5;
+            this.btnOK.TabIndex = 6;
             this.btnOK.Text = "OK";
             this.btnOK.UseVisualStyleBackColor = true;
             this.btnOK.Click += new System.EventHandler(this.btnOK_Click);
@@ -52,10 +53,10 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(285, 158);
+            this.btnCancel.Location = new System.Drawing.Point(285, 176);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 6;
+            this.btnCancel.TabIndex = 7;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
@@ -110,13 +111,24 @@
             this.radioAdd.Text = "Add new replicates";
             this.radioAdd.UseVisualStyleBackColor = true;
             // 
+            // cbMergePeptides
+            // 
+            this.cbMergePeptides.AutoSize = true;
+            this.cbMergePeptides.Location = new System.Drawing.Point(16, 146);
+            this.cbMergePeptides.Name = "cbMergePeptides";
+            this.cbMergePeptides.Size = new System.Drawing.Size(145, 17);
+            this.cbMergePeptides.TabIndex = 5;
+            this.cbMergePeptides.Text = "Merge matching peptides";
+            this.cbMergePeptides.UseVisualStyleBackColor = true;
+            // 
             // ImportDocResultsDlg
             // 
             this.AcceptButton = this.btnOK;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(372, 193);
+            this.ClientSize = new System.Drawing.Size(372, 211);
+            this.Controls.Add(this.cbMergePeptides);
             this.Controls.Add(this.radioAdd);
             this.Controls.Add(this.radioMergeByIndex);
             this.Controls.Add(this.radioMergeByName);
@@ -144,5 +156,6 @@
         private System.Windows.Forms.RadioButton radioMergeByName;
         private System.Windows.Forms.RadioButton radioMergeByIndex;
         private System.Windows.Forms.RadioButton radioAdd;
+        private System.Windows.Forms.CheckBox cbMergePeptides;
     }
 }

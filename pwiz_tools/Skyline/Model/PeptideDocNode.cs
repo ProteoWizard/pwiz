@@ -295,9 +295,25 @@ namespace pwiz.Skyline.Model
             }
         }
 
-        public PeptideDocNode Merge(PeptideDocNode nodePep)
+        public bool IsUserModified
         {
-            var childrenNew = new List<TransitionGroupDocNode>(Children.Cast<TransitionGroupDocNode>());
+            get
+            {
+                if (!Annotations.IsEmpty)
+                    return true;
+                return Children.Cast<TransitionGroupDocNode>().Contains(nodeGroup => nodeGroup.IsUserModified);
+            }
+        }
+
+        public PeptideDocNode Merge(PeptideDocNode nodePepMerge)
+        {
+            return Merge(nodePepMerge, (n, nMerge) => n.Merge(nMerge));
+        }
+
+        public PeptideDocNode Merge(PeptideDocNode nodePepMerge,
+            Func<TransitionGroupDocNode, TransitionGroupDocNode, TransitionGroupDocNode> mergeMatch)
+        {
+            var childrenNew = Children.Cast<TransitionGroupDocNode>().ToList();
             // Remember where all the existing children are
             var dictPepIndex = new Dictionary<TransitionGroup, int>();
             for (int i = 0; i < childrenNew.Count; i++)
@@ -306,18 +322,26 @@ namespace pwiz.Skyline.Model
                 if (!dictPepIndex.ContainsKey(key))
                     dictPepIndex[key] = i;
             }
-            // Add the new children to the end, or merge when the peptide is already present
-            foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
+            // Add the new children to the end, or merge when the node is already present
+            foreach (TransitionGroupDocNode nodeGroup in nodePepMerge.Children)
             {
                 int i;
-                if (dictPepIndex.TryGetValue(nodeGroup.TransitionGroup, out i))
-                    childrenNew[i] = childrenNew[i].Merge(nodeGroup);
-                else
+                if (!dictPepIndex.TryGetValue(nodeGroup.TransitionGroup, out i))
                     childrenNew.Add(nodeGroup);
-
+                else if (mergeMatch != null)
+                    childrenNew[i] = mergeMatch(childrenNew[i], nodeGroup);
             }
             childrenNew.Sort(Peptide.CompareGroups);
             return (PeptideDocNode)ChangeChildrenChecked(childrenNew.Cast<DocNode>().ToArray());
+        }
+
+        public PeptideDocNode MergeUserInfo(PeptideDocNode nodePepMerge, SrmSettings settings, SrmSettingsDiff diff)
+        {
+            var result = Merge(nodePepMerge, (n, nMerge) => n.MergeUserInfo(nMerge, settings, diff));
+            var annotations = Annotations.Merge(nodePepMerge.Annotations);
+            if (!ReferenceEquals(annotations, Annotations))
+                result = (PeptideDocNode) result.ChangeAnnotations(annotations);
+            return result.UpdateResults(settings);
         }
 
         public PeptideDocNode ChangeSettings(SrmSettings settingsNew, SrmSettingsDiff diff)

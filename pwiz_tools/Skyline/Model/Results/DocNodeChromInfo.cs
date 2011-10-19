@@ -209,6 +209,8 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public bool UserSet { get; private set; }
 
+        public bool IsUserModified { get { return UserSet || !Annotations.IsEmpty; } }
+
         #region Property change methods
 
         public TransitionGroupChromInfo ChangeRatios(IList<float?> prop, IList<float?> stdev)
@@ -359,6 +361,8 @@ namespace pwiz.Skyline.Model.Results
         /// Set if user action has explicitly set these values
         /// </summary>
         public bool UserSet { get; private set; }
+
+        public bool IsUserModified { get { return UserSet || !Annotations.IsEmpty; } }
 
         public bool IsEmpty { get { return EndRetentionTime == 0; } }
 

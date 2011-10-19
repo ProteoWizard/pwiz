@@ -425,6 +425,7 @@ namespace pwiz.Skyline.Model
         public SrmDocument ImportDocumentXml(TextReader reader,
                                              string filePath,
                                              MeasuredResults.MergeAction resultsAction,
+                                             bool mergePeptides,
                                              MappedList<string, StaticMod> staticMods,
                                              MappedList<string, StaticMod> heavyMods,
                                              IdentityPath to,
@@ -499,6 +500,8 @@ namespace pwiz.Skyline.Model
                     nodePepGroupNew = nodePepGroupNew.ChangeSettings(docNew.Settings, settingsDiff);
                     peptideGroupsNew.Add(nodePepGroupNew);
                 }
+                if (mergePeptides)
+                    docNew = docNew.MergeMatchingPeptidesUserInfo(peptideGroupsNew);
                 docNew = docNew.AddPeptideGroups(peptideGroupsNew, pasteToPeptideList, to, out firstAdded, out nextAdd);
                 var modsNew = docNew.Settings.PeptideSettings.Modifications.DeclareExplicitMods(docNew,
                     staticMods, heavyMods);
@@ -510,6 +513,59 @@ namespace pwiz.Skyline.Model
             {
                 PeptideModifications.SetSerializationContext(null);
             }
+        }
+
+        private SrmDocument MergeMatchingPeptidesUserInfo(IList<PeptideGroupDocNode> peptideGroupsNew)
+        {
+            var setMerged = new HashSet<PeptideModKey>();
+            var dictPeptidesNew = new Dictionary<PeptideModKey, PeptideDocNode>();
+            foreach(var nodePep in peptideGroupsNew.SelectMany(nodePepGroup => nodePepGroup.Children)
+                                                   .Cast<PeptideDocNode>())
+            {
+                var key = nodePep.Key;
+                setMerged.Add(key);
+                if (!nodePep.IsUserModified)
+                    continue;
+                if (dictPeptidesNew.ContainsKey(key))
+                {
+                    throw new InvalidDataException(string.Format("The peptide {0} was found multiple times with user modifications.",
+                        Settings.GetPrecursorCalc(IsotopeLabelType.light, nodePep.ExplicitMods).GetModifiedSequence(nodePep.Peptide.Sequence, true)));
+                }
+                dictPeptidesNew.Add(key, nodePep);
+            }
+
+            var diff = new SrmSettingsDiff(Settings, true);
+            var listPeptideGroupsMerged = new List<DocNode>();
+            foreach (var nodePepGroup in PeptideGroups)
+            {
+                var listPeptidesMerged = new List<DocNode>();
+                foreach (PeptideDocNode nodePep in nodePepGroup.Children)
+                {
+                    PeptideDocNode nodePepMatch;
+                    if (!dictPeptidesNew.TryGetValue(nodePep.Key, out nodePepMatch))
+                        listPeptidesMerged.Add(nodePep);
+                    else
+                        listPeptidesMerged.Add(nodePep.MergeUserInfo(nodePepMatch, Settings, diff));
+                }
+                listPeptideGroupsMerged.Add(nodePepGroup.ChangeChildrenChecked(listPeptidesMerged));
+            }
+            foreach (var nodePepGroup in peptideGroupsNew.ToArray())
+            {
+                var listPeptidesUnmerged = new List<DocNode>();
+                foreach (PeptideDocNode nodePep in nodePepGroup.Children)
+                {
+                    if (!setMerged.Contains(nodePep.Key))
+                        listPeptidesUnmerged.Add(nodePep);
+                }
+                if (listPeptidesUnmerged.Count == 0)
+                    peptideGroupsNew.Remove(nodePepGroup);
+                else
+                {
+                    peptideGroupsNew[peptideGroupsNew.IndexOfReference(nodePepGroup)] =
+                        (PeptideGroupDocNode) nodePepGroup.ChangeChildrenChecked(listPeptidesUnmerged);
+                }
+            }
+            return (SrmDocument) ChangeChildrenChecked(listPeptideGroupsMerged);
         }
 
         public SrmDocument ImportFasta(TextReader reader, bool peptideList,
