@@ -87,6 +87,19 @@ void validateWriteRead(const MSDataFile::WriteConfig& writeConfig,
         // write to file #1 (static)
         MSDataFile::write(tiny, filename1, writeConfig);
 
+        // simulate CLI garbage collect behavior, wherein delayed deletes stress
+        // memory and file handle usage
+        {
+            std::vector<boost::shared_ptr<MSDataFile>> msds; 
+            for (int i=0;i<100;i++) 
+            {
+                boost::shared_ptr<MSDataFile> msd1(new MSDataFile(filename1));
+                msds.push_back(msd1);
+                hackInMemoryMSData(*msd1);
+                Diff<MSData, DiffConfig> diff(tiny, *msd1, diffConfig);
+            }
+        }
+
         // read back into an MSDataFile object
         MSDataFile msd1(filename1);
         hackInMemoryMSData(msd1);
