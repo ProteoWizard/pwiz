@@ -282,12 +282,12 @@ void parseHeaders(boost::shared_ptr<istream> is, vector<string> fields)
     // TODO add header parsing & field identification.
 }
 
-vector<TextRecord> fetchPeptideEvidence(const vector<PeptideEvidencePtr>& peps,
+vector<TextRecord> fetchPeptideEvidence(const SpectrumIdentificationItem& sii,
                                         const TextRecord& record)
 {
     vector<TextRecord> records;
 
-    BOOST_FOREACH(PeptideEvidencePtr pep, peps)
+    BOOST_FOREACH(PeptideEvidencePtr pep, sii.peptideEvidencePtr)
     {
         TextRecord tr(record);
 
@@ -295,6 +295,9 @@ vector<TextRecord> fetchPeptideEvidence(const vector<PeptideEvidencePtr>& peps,
         // reference.
         if (pep->dbSequencePtr.get())
             tr.peptide = pep->dbSequencePtr->seq;
+        else if (sii.peptidePtr.get())
+            tr.peptide = sii.peptidePtr->peptideSequence;
+            
         
         // Fetch the protein name by way of the "protein description"
         // CVParam
@@ -305,6 +308,7 @@ vector<TextRecord> fetchPeptideEvidence(const vector<PeptideEvidencePtr>& peps,
 
         records.push_back(tr);
     }
+
 
 
     return records;
@@ -334,7 +338,7 @@ vector<TextRecord> fetchSpectrumIdItem(
         tr.peptide = sii->peptidePtr->peptideSequence;
         
         vector<TextRecord> pepsRecords =
-            fetchPeptideEvidence(sii->peptideEvidencePtr, tr);
+            fetchPeptideEvidence(*sii, tr);
         BOOST_FOREACH(TextRecord t, pepsRecords)
         {
             records.push_back(t);
