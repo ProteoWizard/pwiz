@@ -896,7 +896,54 @@ void testSpectrumIdentificationProtocol()
 {
     if (os_) *os_ << "testSpectrumIdentificationProtocol()\n";
 
+    SpectrumIdentificationProtocol a("a_id", "a_name"), b;
+    
+    a.analysisSoftwarePtr = AnalysisSoftwarePtr(new AnalysisSoftware("a_as"));
 
+    a.searchType.cvid = MS_pmf_search;
+    a.additionalSearchParams.set(MS_Sequest_CleavesAt, "cleavage");
+    SearchModificationPtr smp(new SearchModification());
+    smp->fixedMod = true;
+    a.modificationParams.push_back(smp);
+    a.enzymes.enzymes.push_back(EnzymePtr(new Enzyme("a_enzyme")));
+    a.massTable.push_back(MassTablePtr(new MassTable("mt_id")));
+    a.fragmentTolerance.set(MS_search_tolerance_plus_value, 1.0);
+    a.parentTolerance.set(MS_search_tolerance_plus_value, 2.0);
+    a.threshold.set(MS_search_tolerance_minus_value, 3.0);
+    FilterPtr filter = FilterPtr(new Filter());
+    filter->filterType.set(MS_FileFilter);
+    a.databaseFilters.push_back(filter);
+    a.databaseTranslation = DatabaseTranslationPtr(new DatabaseTranslation());
+    b = a;
+
+    Diff<SpectrumIdentificationProtocol, DiffConfig> diff(a, b);
+    unit_assert(!diff);
+
+    b.id = "b_id";
+    b.name = "b_name";
+
+    diff(a, b);
+    if (os_) *os_ << diff_string<TextWriter>(diff) << endl;
+
+    // TODO debug removal - put it back
+    //unit_assert(diff);
+
+    b.analysisSoftwarePtr = AnalysisSoftwarePtr(new AnalysisSoftware("b_as"));
+
+    b.searchType.cvid = MS_ms_ms_search;
+    b.additionalSearchParams.set(MS_Sequest_CleavesAt, "land");
+    b.modificationParams.clear();
+    b.enzymes.enzymes.clear();
+    b.massTable.clear();
+    b.fragmentTolerance.set(MS_search_tolerance_plus_value, 4.0);
+    b.parentTolerance.set(MS_search_tolerance_plus_value, 5.0);
+    b.threshold.set(MS_search_tolerance_minus_value, 6.0);
+    b.databaseFilters.clear();
+        
+    diff(a, b);
+    if (os_) *os_ << diff_string<TextWriter>(diff) << endl;
+
+    unit_assert(diff);
 }
 
 
@@ -904,7 +951,25 @@ void testProteinDetectionProtocol()
 {
     if (os_) *os_ << "testProteinDetectionProtocol()\n";
 
+    ProteinDetectionProtocol a("a_id", "a_name"), b;
 
+    a.analysisSoftwarePtr = AnalysisSoftwarePtr(new AnalysisSoftware());
+
+    a.analysisParams.set(MS_low_intensity_threshold);
+    a.threshold.set(MS_low_intensity_threshold);
+
+    b = a;
+
+    Diff<ProteinDetectionProtocol, DiffConfig> diff(a, b);
+    unit_assert(!diff);
+
+    b.id = "b_id";
+    b.name = "b_name";
+
+    diff(a, b);
+    if (os_) *os_ << diff_string<TextWriter>(diff) << endl;
+
+    //unit_assert(diff);
 }
 
 
