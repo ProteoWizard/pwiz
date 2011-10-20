@@ -276,7 +276,7 @@ namespace pwiz.Skyline.Model.DocSettings
             double? predictedRT = null;
             windowRT = 0;
             // Use measurements, if set and available
-            bool useMeasured = (UseMeasuredRTs && MeasuredRTWindow.HasValue);
+            bool useMeasured = (UseMeasuredRTs && MeasuredRTWindow.HasValue && document.Settings.HasResults);
             if (useMeasured)
             {
                 var peakTime = nodeGroup.GetSchedulingPeakTimes(document, algorithm, replicateNum);
@@ -310,7 +310,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 // but only if not using measured results, or the instrument supports
                 // variable scheduling windows
-                if (!useMeasured || !singleWindow)
+                if (!useMeasured || !singleWindow || MeasuredRTWindow == RetentionTime.TimeWindow)
                 {
                     predictedRT = RetentionTime.GetRetentionTime(nodeGroup.TransitionGroup.Peptide.Sequence);
                     windowRT = RetentionTime.TimeWindow;
@@ -337,7 +337,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 // As long as the instrument is not limited to a single retention
                 // time window, or their is no option to use results information,
                 // then this document can be scheduled.
-                if (!singleWindow || !resultsAvailable)
+                if (!singleWindow || !resultsAvailable || MeasuredRTWindow == RetentionTime.TimeWindow)
                     return true;                
             }
             // If no results available (and no predictor), then no scheduling

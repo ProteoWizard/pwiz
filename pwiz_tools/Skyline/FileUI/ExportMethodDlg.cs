@@ -135,8 +135,6 @@ namespace pwiz.Skyline.FileUI
             if (document.Settings.TransitionSettings.Prediction.DeclusteringPotential != null)
                 comboOptimizing.Items.Add(ExportOptimize.DP);
             comboOptimizing.SelectedIndex = 0;
-
-            CalcMethodCount();
         }
 
         public string InstrumentType
@@ -879,8 +877,17 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
+        private enum RecalcMethodCountStatus { waiting, running, pending }
+        private RecalcMethodCountStatus _recalcMethodCountStatus = RecalcMethodCountStatus.waiting;
+
         private void CalcMethodCount()
         {
+            if (_recalcMethodCountStatus != RecalcMethodCountStatus.waiting)
+            {
+                _recalcMethodCountStatus = RecalcMethodCountStatus.pending;
+                return;
+            }
+
             var e = new CancelEventArgs();
             var helper = new MessageBoxHelper(this, false);
 
@@ -890,12 +897,25 @@ namespace pwiz.Skyline.FileUI
                 return;
             }
 
-            string instrument = comboInstrument.SelectedItem.ToString();
-            MassListExporter exporter = null;
+            labelMethodNum.Text = "...";
 
+            _recalcMethodCountStatus = RecalcMethodCountStatus.running;
+
+            var recalcMethodCount = new RecalcMethodCountCaller(RecalcMethodCount);
+            string instrument = comboInstrument.SelectedItem.ToString();
+            recalcMethodCount.BeginInvoke(_exportProperties, instrument, _fileType, _document, null, null);
+        }
+
+        private delegate void RecalcMethodCountCaller(ExportDlgProperties exportProperties,
+            string instrument, ExportFileType fileType, SrmDocument document);
+
+        private void RecalcMethodCount(ExportDlgProperties exportProperties,
+            string instrument, ExportFileType fileType, SrmDocument document)
+        {
+            MassListExporter exporter = null;
             try
             {
-                exporter = _exportProperties.ExportFile(instrument, _fileType, null, _document, null);
+                exporter = exportProperties.ExportFile(instrument, fileType, null, document, null);
             }
             catch (IOException)
             {
@@ -904,7 +924,21 @@ namespace pwiz.Skyline.FileUI
             {
             }
 
-            labelMethodNum.Text = exporter != null ? exporter.MemoryOutput.Count.ToString() : "";
+            int? methodCount = null;
+            if (exporter != null)
+                methodCount = exporter.MemoryOutput.Count;
+            // Switch back to the UI thread to update the form.
+            Invoke(new Action<int?>(UpdateMethodCount), methodCount);
+        }
+
+        private void UpdateMethodCount(int? methodCount)
+        {
+            labelMethodNum.Text = methodCount.HasValue ? methodCount.ToString() : "";
+
+            var recalcMethodCountStatus = _recalcMethodCountStatus;
+            _recalcMethodCountStatus = RecalcMethodCountStatus.waiting;
+            if (recalcMethodCountStatus == RecalcMethodCountStatus.pending)
+                CalcMethodCount();
         }
 
         private void UpdateDwellControls(bool standard)
