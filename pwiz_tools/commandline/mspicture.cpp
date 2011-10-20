@@ -78,7 +78,7 @@ string usage(const Config& config)
     ostringstream oss;
     
     oss << "Usage: mspicture [options] [input_filename]\n"
-        << "Mass Spec Picture - command line access to mass spec data files with optional peptide annotation\n"
+        << "Mass Spec Picture - command line accessgeneration of pseudo2D gels from mass spec data files with optional peptide annotation\n"
         << "\n"
         << "Options:\n" 
         << "\n"
@@ -114,6 +114,11 @@ Config parseCommandArgs(int argc, const char* argv[])
 
     string usageOptions;
 
+    po::options_description hidden("hidden stuff");
+    hidden.add_options()
+        ("gray",
+         ": use gray-scale gradient slightly grayer than the grey option");
+    
     po::options_description od_config("");
     od_config.add_options()
         ("outdir,o",
@@ -191,7 +196,10 @@ Config parseCommandArgs(int argc, const char* argv[])
     pod_args.add(label_args, -1);
    
     po::options_description od_parse;
-    od_parse.add(od_config).add(od_args);
+    od_parse.add(od_config).add(od_args).add(hidden);
+    
+    po::options_description od_visible;
+    od_visible.add(od_config).add(od_args);
     
     // parse command line
 
@@ -206,6 +214,9 @@ Config parseCommandArgs(int argc, const char* argv[])
         config.pseudo2dConfig.bry = true;
     
     if (vm.count("grey"))
+        config.pseudo2dConfig.grey = true;
+    
+    if (vm.count("gray"))
         config.pseudo2dConfig.grey = true;
     
     if (vm.count("binSum"))
@@ -233,7 +244,7 @@ Config parseCommandArgs(int argc, const char* argv[])
             shared_ptr<PeptideID>(
                 new PeptideID_pepXml(config.peptideFilename)
                 );
-        config.pseudo2dConfig.ms2 = true;
+        //config.pseudo2dConfig.ms2 = true;
     }
     else if (vm.count("flat"))
     {
@@ -243,7 +254,7 @@ Config parseCommandArgs(int argc, const char* argv[])
                 new PeptideID_flat(
                     config.peptideFilename, shared_ptr<FlatRecordBuilder>(
                         new FlatRecordBuilder())));
-        config.pseudo2dConfig.ms2 = true;
+        //config.pseudo2dConfig.ms2 = true;
     }
     else if (vm.count("msi"))
     {
@@ -253,7 +264,7 @@ Config parseCommandArgs(int argc, const char* argv[])
                 new PeptideID_flat(
                     config.peptideFilename, shared_ptr<FlatRecordBuilder>(
                         new MSInspectRecordBuilder())));
-        config.pseudo2dConfig.ms2 = true;
+        //config.pseudo2dConfig.ms2 = true;
     }
     
     if (vm.count("scan"))
@@ -267,8 +278,13 @@ Config parseCommandArgs(int argc, const char* argv[])
     else
         config.pseudo2dConfig.markupShape = Pseudo2DGel::circle;
     
-    config.pseudo2dConfig.positiveMs2Only = !vm.count("ms2locs") && ids;
+    //config.pseudo2dConfig.positiveMs2Only = !vm.count("ms2locs") && ids;
 
+    if (vm.count("commands"))
+    {
+        config.pseudo2dConfig.process(config.commands);
+    }
+    
     if (vm.count("config"))
     {
         ifstream is(config.configFilename.c_str());
