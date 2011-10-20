@@ -105,6 +105,15 @@ void fillInCommonMetadata(const string& filename, MSData& msd)
         msd.id = msd.run.id = bfs::basename(filename);
 }
 
+// return true if filename has form xxxx.ext or xxxx.ext.gz
+static bool has_extension(std::string const &test_filename,const char *ext)
+{
+    std::string filename(test_filename);
+    if (bal::iends_with(filename, ".gz"))
+        filename.erase(filename.length()-3);
+    return bal::iends_with(filename, ext);
+}
+
 } // namespace
 
 
@@ -289,9 +298,9 @@ PWIZ_API_DECL void Reader_MGF::read(const std::string& filename,
 
 PWIZ_API_DECL std::string Reader_MSn::identify(const string& filename, const string& head) const
 {
-    bool isOK = bal::iends_with(filename, ".ms2") ||
-                bal::iends_with(filename, ".cms2") ||
-                bal::iends_with(filename, ".bms2");
+    bool isOK = has_extension(filename, ".ms2") ||
+                has_extension(filename, ".cms2") ||
+                has_extension(filename, ".bms2");
 
     return std::string( isOK ? getType() : "" );
 }
@@ -305,11 +314,11 @@ PWIZ_API_DECL void Reader_MSn::read(const string& filename,
         throw ReaderFail("[Reader_MSn::read] multiple runs not supported");
 
     MSn_Type filetype = MSn_Type_UNKNOWN;
-    if (bal::iends_with(filename, ".ms2"))
+    if (has_extension(filename, ".ms2"))
         filetype = MSn_Type_MS2;
-    else if (bal::iends_with(filename, ".cms2"))
+    else if (has_extension(filename, ".cms2"))
         filetype = MSn_Type_CMS2;
-    else if (bal::iends_with(filename, ".bms2"))
+    else if (has_extension(filename, ".bms2"))
         filetype = MSn_Type_BMS2;
 
     shared_ptr<istream> is(new pwiz::util::random_access_compressed_ifstream(filename.c_str()));

@@ -124,6 +124,7 @@ void test(const bfs::path& datadir)
     vector<string> filenames;
     filenames.push_back("10-spec.ms2");
     filenames.push_back("10-spec.bms2");
+    filenames.push_back("10-spec.bms2.gz");
     filenames.push_back("10-spec.cms2");
 
     // look up these spectrum indexes
