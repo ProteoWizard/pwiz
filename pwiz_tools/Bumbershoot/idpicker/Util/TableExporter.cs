@@ -235,8 +235,9 @@ namespace IDPicker
 
                     foreach (var cell in row)
                     {
+                        var value = cell ?? String.Empty;
                         line.Append("<td" + (firstC ? " id=es1>" : ">") +
-                                    cell.Replace("     ", "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;") + "</td>");
+                                    value.Replace("     ", "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;") + "</td>");
                         firstC = false;
                     }
 

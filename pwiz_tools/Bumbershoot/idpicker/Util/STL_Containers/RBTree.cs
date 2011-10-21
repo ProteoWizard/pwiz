@@ -66,7 +66,14 @@ namespace System.Collections.Generic
 
 	internal delegate void RBTreeModifiedHandler();
 
-	/// <remarks>
+    public class ComparisonForwarder<T> : IComparer<T>
+    {
+        public ComparisonForwarder (Comparison<T> comparison) { Comparison = comparison; }
+        public Comparison<T> Comparison { get; private set; }
+        public int Compare (T x, T y) { return Comparison(x, y); }
+    }
+
+    /// <remarks>
 	/// RBTree is implemented using black-red binary trees. The
 	/// algorithms follows the indications given in the textbook
 	/// "Introduction to Algorithms" Thomas H. Cormen, Charles E. 
@@ -84,12 +91,12 @@ namespace System.Collections.Generic
 		/// </summary>
 		internal RBTreeNode<T> root;
 
-		/// <summary>
-		/// Store the IComparer that allows to compare the node keys.
-		/// </summary>
-		private IComparer<T> comparer;
+        /// <summary>
+        /// Store the IComparer that allows to compare the node keys.
+        /// </summary>
+        public IComparer<T> Comparer { get; protected set; }
 
-		/// <summary>
+        /// <summary>
 		/// Store the lock for multiple-reader access and single-writer access.
 		/// </summary>
 		//private ReaderWriterLock rwLock;
@@ -101,7 +108,7 @@ namespace System.Collections.Generic
 		/// </summary>
 		public RBTree()
 		{
-			comparer = System.Collections.Generic.Comparer<T>.Default;
+			Comparer = System.Collections.Generic.Comparer<T>.Default;
 			Initialize();
 		}
 
@@ -115,21 +122,30 @@ namespace System.Collections.Generic
 		/// </param>
 		public RBTree(IComparer<T> comp)
 		{
-			comparer = comp;
+			Comparer = comp;
 			Initialize();
-		}
+        }
 
-		public RBTree( RBTree<T> otherTree, IComparer<T> comp )
-		{
-			comparer = comp;
-			Initialize();
-			Copy( otherTree );
-		}
+        public RBTree (RBTree<T> otherTree, IComparer<T> comp)
+        {
+            Comparer = comp;
+            Initialize();
+            Copy(otherTree);
+        }
 
-		public RBTree( RBTree<T> otherTree )
+        public RBTree (Comparison<T> comp)
+        {
+            Comparer = new ComparisonForwarder<T>(comp);
+            Initialize();
+        }
+
+        public RBTree (RBTree<T> otherTree, Comparison<T> comp) : this(comp)
+        {
+            Copy(otherTree);
+        }
+
+        public RBTree( RBTree<T> otherTree ) : this()
 		{
-			comparer = otherTree.comparer;
-			Initialize();
 			Copy( otherTree );
 		}
 
@@ -351,7 +367,7 @@ namespace System.Collections.Generic
 					while( node1 != null )
 					{
 						node2 = node1;
-						compare = comparer.Compare( x, node1.Key );
+						compare = Comparer.Compare( x, node1.Key );
 						if( compare < 0 )
 						{
 							node1 = node1.Left;
@@ -499,7 +515,14 @@ namespace System.Collections.Generic
 
 			try
 			{
-				RecCopyTo( root, array, index );
+                int i = 0;
+                foreach (var itr in this)
+                    if (i >= array.Length)
+                        break;
+                    else if (i >= index)
+                        array[i++] = itr;
+                    else
+                        ++i;
 			} finally
 			{
 				//rwLock.ReleaseReaderLock();
@@ -816,7 +839,7 @@ namespace System.Collections.Generic
 		private RBTreeNode<T> FindNode( T x )
 		{
 			RBTreeNode<T> node = LowerBoundNode( x );
-			if( node == null || comparer.Compare( x, node.Key ) < 0 )
+			if( node == null || Comparer.Compare( x, node.Key ) < 0 )
 				node = null;
 			return node;
 		}
@@ -841,7 +864,7 @@ namespace System.Collections.Generic
 			int compare;
 			while( node != null )
 			{
-				compare = comparer.Compare( node.Key, x );
+				compare = Comparer.Compare( node.Key, x );
 				if( compare < 0 )
 					node = node.Right; // descend right subtree
 				else
@@ -862,7 +885,7 @@ namespace System.Collections.Generic
 
 			while( node != null )
 			{
-				if( comparer.Compare( x, node.Key ) < 0 )
+				if( Comparer.Compare( x, node.Key ) < 0 )
 				{
 					// node greater than x, remember it
 					upperBoundNode = node;
@@ -1115,7 +1138,7 @@ namespace System.Collections.Generic
 		{
 			if(node == null) return null;
 
-			int c = comparer.Compare(x, node.Key);
+			int c = Comparer.Compare(x, node.Key);
 
 			if(c == 0) return node;
 			if(c < 0) return RecContains(node.Left, x);
@@ -1143,9 +1166,9 @@ namespace System.Collections.Generic
 					throw new ArgumentException("RBTree : father and son are red.");
 			}
 
-			if(node.Left != null && comparer.Compare(node.Key, node.Left.Key) < 0) 
+			if(node.Left != null && Comparer.Compare(node.Key, node.Left.Key) < 0) 
 				throw new ArgumentException("RBTree : order not respected in tree.");
-			if(node.Right != null && comparer.Compare(node.Key, node.Right.Key) > 0)
+			if(node.Right != null && Comparer.Compare(node.Key, node.Right.Key) > 0)
 				throw new ArgumentException("RBTree : order not respected in tree.");
 
 			int a = RecConform(node.Left),

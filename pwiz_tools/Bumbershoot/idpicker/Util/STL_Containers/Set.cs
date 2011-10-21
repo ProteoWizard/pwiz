@@ -36,7 +36,7 @@ namespace System.Collections.Generic
 	/// <exception>
 	/// ?
 	/// </exception>
-	public class Set<T> : RBTree<T>, IComparable< Set<T> >, IEnumerable<T> where T: IComparable<T>
+	public class Set<T> : RBTree<T>, IComparable< Set<T> >, IEnumerable<T>
 	{
 		/// <summary>
 		/// Constructs an empty set using IComparable&lt;T&gt;
@@ -52,7 +52,15 @@ namespace System.Collections.Generic
 		public Set( IComparer<T> comparer )
 			: base( comparer )
 		{
-		}
+        }
+
+        /// <summary>
+        /// Constructs an empty set using the specified comparison
+        /// </summary>
+        public Set (Comparison<T> comparison)
+            : base(comparison)
+        {
+        }
 
 		/// <summary>
         /// Copies the other set using IComparable&lt;T&gt;
@@ -232,7 +240,7 @@ namespace System.Collections.Generic
 			IEnumerator<T> rhsItr = other.GetEnumerator(); rhsItr.MoveNext();
 			for( int i = 0; i < Count && compare == 0; ++i, lhsItr.MoveNext(), rhsItr.MoveNext() )
 			{
-				compare = lhsItr.Current.CompareTo( rhsItr.Current );
+				compare = Comparer.Compare(lhsItr.Current, rhsItr.Current);
 			}
 			return compare;
 		}

@@ -26,63 +26,40 @@ using System.Text;
 
 namespace System.Collections.Generic
 {
-	public class MutableKeyValuePair<TKey, TValue> : IComparable<MutableKeyValuePair<TKey, TValue>>
-		where TKey : IComparable<TKey>
+	public class MutableKeyValuePair<TKey, TValue>
 		where TValue : new()
 	{
-		private TKey m_key;
-		private TValue m_value;
-
 		public MutableKeyValuePair( TKey key, TValue value )
 		{
-			m_key = key;
-			m_value = value;
-		}
+			Key = key;
+			Value = value;
+        }
 
-		public TKey Key
-		{
-			get
-			{
-				return m_key;
-			}
-		}
-
-		public TValue Value
-		{
-			get
-			{
-				return m_value;
-			}
-
-			set
-			{
-				m_value = value;
-			}
-		}
-
-		public int CompareTo( MutableKeyValuePair<TKey, TValue> rhs )
-		{
-			return m_key.CompareTo( rhs.m_key );
-		}
+        public TKey Key { get; set; }
+        public TValue Value { get; set; }
 	}
 
 	public class Map<TKey, TValue> : RBTree<MutableKeyValuePair<TKey, TValue>>, IComparable<Map<TKey, TValue>>
-		where TKey : IComparable<TKey>
 		where TValue : new()
 	{
 		public class MapPair : MutableKeyValuePair<TKey, TValue>
 		{
-			public MapPair( TKey key, TValue value ) : base( key, value ) { }
+            public MapPair (TKey key, TValue value) : base(key, value) { }
 		}
 
 		public Map()
-			: base()
+			: base(new MapComparer(Comparer<TKey>.Default))
 		{
+            KeyComparer = Comparer<TKey>.Default;
 		}
 
-		public Map( IComparer<TKey> comparer )
+	    public IComparer<TKey> KeyComparer { get; protected set; }
+
+	    public Map( IComparer<TKey> comparer )
 			: base( new MapComparer(comparer) )
-		{ }
+		{
+            KeyComparer = comparer;
+        }
 
 		public Map( Map<TKey, TValue> otherMap )
 			: base( otherMap )
@@ -111,7 +88,7 @@ namespace System.Collections.Generic
 
 		public InsertResult Insert( TKey key, TValue value )
 		{
-			return Insert( new MapPair( key, value ) );
+            return Insert(new MapPair(key, value));
 		}
 
 		public void Add( TKey key, TValue value )
@@ -176,7 +153,7 @@ namespace System.Collections.Generic
 			Enumerator rhsItr = other.GetEnumerator(); rhsItr.MoveNext();
 			for( int i = 0; i < Count && compare == 0; ++i, lhsItr.MoveNext(), rhsItr.MoveNext() )
 			{
-				compare = lhsItr.Current.Key.CompareTo( rhsItr.Current.Key );
+                compare = Comparer.Compare(lhsItr.Current, rhsItr.Current);
 			}
 			return compare;
 		}
