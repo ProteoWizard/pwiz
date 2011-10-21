@@ -474,9 +474,9 @@ struct HandlerString : public SAXParser::Handler
         return Status::Ok;
     }
 
-    virtual Status characters(const string& text, stream_offset position)
+    virtual Status characters(const SAXParser::saxstring& text, stream_offset position)
     {
-        *str = text;
+        *str = text.c_str();
 
         return Status::Ok;
     }
@@ -709,11 +709,11 @@ struct HandlerDBSequence : public HandlerIdentifiableParamContainer
         return HandlerIdentifiableParamContainer::startElement(name, attributes, position);
     }
 
-    virtual Status characters(const string& text, 
+    virtual Status characters(const SAXParser::saxstring& text, 
                               stream_offset position)
     {
         if (inSeq)
-            ds->seq = text;
+            ds->seq = text.c_str();
         else
             throw runtime_error("[IO::HandlerDBSequence] Unexpected characters found");
 
@@ -943,11 +943,11 @@ struct HandlerPeptide : public HandlerIdentifiableParamContainer
         return HandlerIdentifiableParamContainer::startElement(name, attributes, position);
     }
 
-    virtual Status characters(const string& text, 
+    virtual Status characters(const SAXParser::saxstring& text, 
                               stream_offset position)
     {
         if (inPeptideSequence)
-            peptide->peptideSequence = text;
+            peptide->peptideSequence = text.c_str();
         else
             throw runtime_error("[IO::HandlerPeptide] Unexpected characters.");
 
@@ -2012,11 +2012,11 @@ struct HandlerEnzyme : public HandlerIdentifiable
         return Status::Ok;
     }
     
-    virtual Status characters(const string& text, 
+    virtual Status characters(const SAXParser::saxstring& text, 
                               stream_offset position)
     {
         if (inSiteRegexp)
-            ez->siteRegexp = text;
+            ez->siteRegexp = text.c_str();
         else
             throw runtime_error("[IO::HandlerEnzyme] Unexpected characters.");
 
@@ -3044,12 +3044,12 @@ struct HandlerSpectraData : public HandlerIdentifiable
         return Status::Ok;
     }
     
-    virtual Status characters(const string& text, 
+    virtual Status characters(const SAXParser::saxstring& text, 
                               stream_offset position)
     {
         if (inExternalFormatDocumentation)
         {
-            sd->externalFormatDocumentation.push_back(text);
+            sd->externalFormatDocumentation.push_back(text.c_str());
         }
         else
             throw runtime_error("[IO::HandlerSpectraData] Unexpected characters");
@@ -3245,12 +3245,12 @@ struct HandlerSourceFile : public HandlerIdentifiableParamContainer
         return HandlerIdentifiableParamContainer::startElement(name, attributes, position);
     }
 
-    virtual Status characters(const string& text, 
+    virtual Status characters(const SAXParser::saxstring& text, 
                               stream_offset position)
     {
         if (inExternalFormatDocumentation)
         {
-            sf->externalFormatDocumentation.push_back(text);
+            sf->externalFormatDocumentation.push_back(text.c_str());
         }
         else
             throw runtime_error("[IO::HandlerSourceFile] Unexpected characters.");

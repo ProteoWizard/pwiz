@@ -134,7 +134,7 @@ struct HandlerPrecursor : public SAXParser::Handler
             getAttribute(attributes, "possibleCharges", possibleCharges);
 
             if (!precursorScanNum.empty()) { // precursorScanNum is an optional element
-            precursor->spectrumID = id::translateScanNumberToNativeID(nativeIdFormat, precursorScanNum);
+                precursor->spectrumID = id::translateScanNumberToNativeID(nativeIdFormat, precursorScanNum);
             }
 
             precursor->selectedIons.push_back(SelectedIon());
@@ -162,7 +162,7 @@ struct HandlerPrecursor : public SAXParser::Handler
         throw runtime_error(("[SpectrumList_mzXML::HandlerPrecursor] Unexpected element name: " + name).c_str());
     }
 
-    virtual Status characters(const string& text,
+    virtual Status characters(const SAXParser::saxstring& text,
                               stream_offset position)
     {
         if (!precursor)
@@ -232,7 +232,7 @@ class HandlerPeaks : public SAXParser::Handler
         throw runtime_error(("[SpectrumList_mzXML::HandlerPeaks] Unexpected element name: " + name).c_str());
     }
 
-    virtual Status characters(const string& text,
+    virtual Status characters(const SAXParser::saxstring& text,
                               stream_offset position)
     {
         if (peaksCount == 0)
@@ -243,7 +243,7 @@ class HandlerPeaks : public SAXParser::Handler
 
         BinaryDataEncoder encoder(config_);
         vector<double> decoded;
-        encoder.decode(text, decoded);
+        encoder.decode(text.c_str(), text.length(), decoded);
 
         if (decoded.size()%2 != 0 || decoded.size()/2 != peaksCount) 
             throw runtime_error("[SpectrumList_mzXML::HandlerPeaks] Invalid peak count."); 
@@ -633,7 +633,7 @@ class HandlerIndexOffset : public SAXParser::Handler
         return Status::Ok;
     }
 
-    virtual Status characters(const string& text,
+    virtual Status characters(const SAXParser::saxstring& text,
                               stream_offset position)
     {
         indexOffset_ = lexical_cast<stream_offset>(text);
@@ -677,7 +677,7 @@ struct HandlerOffset : public SAXParser::Handler
         return Status::Ok;
     }
 
-    virtual Status characters(const string& text,
+    virtual Status characters(const SAXParser::saxstring& text,
                               stream_offset position)
     {
         if (!spectrumIdentity)
@@ -720,7 +720,7 @@ class HandlerIndex : public SAXParser::Handler
           throw SpectrumList_mzXML::index_not_found(("[SpectrumList_mzXML::HandlerIndex] Unexpected element name: " + name).c_str());
     }
 
-    virtual Status characters(const std::string& text,
+    virtual Status characters(const SAXParser::saxstring& text,
                               stream_offset position)
     {
         throw SpectrumList_mzXML::index_not_found("[SpectrumList_mzXML::HandlerIndex] <index> not found.");

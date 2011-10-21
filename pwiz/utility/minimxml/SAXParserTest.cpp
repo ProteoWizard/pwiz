@@ -35,7 +35,7 @@ using namespace pwiz::minimxml::SAXParser;
 
 ostream* os_;
 
-
+// note: this tests single-quoted double quotes
 const char* sampleXML = 
     "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
     "<RootElement param=\"value\">\n"
@@ -49,7 +49,7 @@ const char* sampleXML =
     "    <!--this is a comment-->\n"
     "    <empty_with_space />\n"
     "    </prefix:ThirdElement>\n"
-    "    <FifthElement leeloo=\">Leeloo > mul-ti-pass\">\n"
+    "    <FifthElement leeloo='>Leeloo > mul-\"tipass'>\n"
     "        You're a monster, Zorg.>I know.\n"
     "    </FifthElement>\n"
     "</RootElement>\n"
@@ -66,9 +66,9 @@ struct PrintAttribute
     PrintAttribute(ostream& os) : os_(os) {}
     ostream& os_;
 
-    void operator()(const pair<string,string>& attribute)
+    void operator()(const Handler::Attributes::attribute &attr)
     {
-        os_ << " (" << attribute.first << "," << attribute.second << ")";
+        os_ << " (" << attr.getName() << "," << attr.getValue() << ")";
     }
 };
 
@@ -105,7 +105,7 @@ class PrintEventHandler : public Handler
         return Status::Ok;
     }
 
-    virtual Status characters(const string& text, stream_offset position)
+    virtual Status characters(const SAXParser::saxstring& text, stream_offset position)
     {
         os_ << "[0x" << hex << position << "] text: " << text << endl;
         return Status::Ok;
@@ -182,9 +182,9 @@ void readAttribute(const Handler::Attributes& attributes,
                    const string& attributeName, 
                    string& result)
 {
-    Handler::Attributes::const_iterator it = attributes.find(attributeName);
+    Handler::Attributes::attribute_list::const_iterator it = attributes.find(attributeName);
     if (it != attributes.end())
-        result = it->second;
+        result = it->getValue();
 }
 
 
@@ -209,10 +209,10 @@ class FirstHandler : public Handler
         return Status::Ok;
     }
 
-    virtual Status characters(const string& text, stream_offset position)
+    virtual Status characters(const SAXParser::saxstring& text, stream_offset position)
     {
         unit_assert_operator_equal(0x8f, position);
-        object_.text = text;          
+        object_.text = text.c_str();          
         return Status::Ok;
     }
 
@@ -247,14 +247,21 @@ class SecondHandler : public Handler
         {
             readAttribute(attributes, "param2", object_.param2);
             readAttribute(attributes, "param3", object_.param3);
+            // long as we're here, verify copyability of Handler::Attributes
+            Handler::Attributes *copy1 = new Handler::Attributes(attributes);
+            Handler::Attributes copy2(*copy1);
+            delete copy1;
+            std::string str;
+            readAttribute(copy2, "param2", str);
+            unit_assert(str==object_.param2);
         }
            
         return Status::Ok;
     }
 
-    virtual Status characters(const string& text, stream_offset position)
+    virtual Status characters(const SAXParser::saxstring& text, stream_offset position)
     {
-        object_.text.push_back(text);          
+        object_.text.push_back(text.c_str());          
         return Status::Ok;
     }
 
@@ -287,9 +294,9 @@ class FifthHandler : public Handler
         return Status::Ok;
     }
 
-    virtual Status characters(const string& text, stream_offset position)
+    virtual Status characters(const SAXParser::saxstring& text, stream_offset position)
     {
-        object_.mr_zorg = text;
+        object_.mr_zorg = text.c_str();
         return Status::Ok;
     }
 
@@ -389,7 +396,7 @@ void test()
     unit_assert_operator_equal("Inlined text with", root.second.text[1]);
     unit_assert_operator_equal("<&\">", root.second.text[2]);
     unit_assert_operator_equal("Post-text.", root.second.text[3]);
-    unit_assert_operator_equal(">Leeloo > mul-ti-pass", root.fifth.leeloo);
+    unit_assert_operator_equal(">Leeloo > mul-\"tipass", root.fifth.leeloo);
     unit_assert_operator_equal("You're a monster, Zorg.>I know.", root.fifth.mr_zorg);
 }
 
@@ -548,6 +555,31 @@ void testDecoding()
     unit_assert_operator_equal("!!!", decode_xml_id(crazyId));
 }
 
+void testSaxParserString() 
+{
+    std::string str = " \t foo \n";
+    saxstring xstr = str;
+    unit_assert_operator_equal(xstr,str);
+    unit_assert_operator_equal(xstr,str.c_str());
+    unit_assert_operator_equal(str.length(),xstr.length());
+    xstr.trim_lead_ws();
+    unit_assert_operator_equal(xstr.length(),str.length()-3);
+    unit_assert_operator_equal(xstr,str.substr(3));
+    xstr.trim_trail_ws();
+    unit_assert_operator_equal(xstr.length(),str.length()-5);
+    unit_assert_operator_equal(xstr,str.substr(3,3));
+    unit_assert_operator_equal(xstr[1],'o');
+    xstr[1] = '0';
+    unit_assert_operator_equal(xstr[1],'0');
+    std::string str2(xstr.data());
+    unit_assert_operator_equal(str2,"f0o");
+    std::string str3(xstr.c_str());
+    unit_assert_operator_equal(str2,str3);
+    saxstring xstr2(xstr);
+    unit_assert_operator_equal(xstr2,xstr);
+    saxstring xstr3;
+    unit_assert_operator_equal(xstr3.c_str(),std::string());
+}
 
 int main(int argc, char* argv[])
 {
@@ -555,6 +587,7 @@ int main(int argc, char* argv[])
     {
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
         demo();
+        testSaxParserString();
         test();
         testNoAutoUnescape();
         testDone();

@@ -58,7 +58,10 @@ class BinaryDataEncoder::Impl
 
     void encode(const vector<double>& data, string& result, size_t* binaryByteCount);
     void encode(const double* data, size_t dataSize, std::string& result, size_t* binaryByteCount);
-    void decode(const string& encodedData, vector<double>& result);
+    void decode(const char *encodedData, size_t len, vector<double>& result);
+    void decode(const string& encodedData, vector<double>& result) {
+        decode(encodedData.c_str(),encodedData.length(),result);
+    }
 
     private:
     Config config_;
@@ -207,14 +210,14 @@ void copyBuffer(const void* byteBuffer, size_t byteCount, vector<double>& result
 }
 
 
-void BinaryDataEncoder::Impl::decode(const string& encodedData, vector<double>& result)
+void BinaryDataEncoder::Impl::decode(const char *encodedData, size_t length, vector<double>& result)
 {
-    if (encodedData.empty()) return;
+    if (!encodedData || !length) return;
 
     // Base64 decoding
 
-    vector<unsigned char> binary(Base64::textToBinarySize(encodedData.size()));
-    size_t binarySize = Base64::textToBinary(&encodedData[0], encodedData.size(), &binary[0]);
+    vector<unsigned char> binary(Base64::textToBinarySize(length));
+    size_t binarySize = Base64::textToBinary(encodedData, length, &binary[0]);
     binary.resize(binarySize);
 
     // buffer abstractions
@@ -294,9 +297,9 @@ PWIZ_API_DECL void BinaryDataEncoder::encode(const double* data, size_t dataSize
 }
 
 
-PWIZ_API_DECL void BinaryDataEncoder::decode(const std::string& encodedData, std::vector<double>& result) const
+PWIZ_API_DECL void BinaryDataEncoder::decode(const char * encodedData, size_t len, std::vector<double>& result) const
 {
-    impl_->decode(encodedData, result);
+    impl_->decode(encodedData, len, result);
 }
 
 

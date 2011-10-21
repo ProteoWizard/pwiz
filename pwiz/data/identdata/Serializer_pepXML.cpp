@@ -1601,8 +1601,9 @@ struct HandlerSearchResults : public SAXParser::Handler
         else if (name == "search_result")
         {
             // some engines write custom attributes here; we transcode them as UserParams
-            BOOST_FOREACH(const Attributes::value_type& attribute, attributes)
-                _sir->userParams.push_back(UserParam(attribute.first, attribute.second));
+            for (Attributes::attribute_list::const_iterator it = attributes.begin(); it!=attributes.end(); it++) {
+                _sir->userParams.push_back(UserParam(it->getName(), it->getValue()));
+            }
         }
         else if (strict)
             throw runtime_error("[HandlerSearchResults] Unexpected element "

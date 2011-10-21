@@ -72,6 +72,7 @@ struct HandlerCV : public SAXParser::Handler
         getAttribute(attributes, "URI", cv->URI);
         return Status::Ok;
     }
+
 };
 
 
@@ -179,16 +180,14 @@ struct HandlerCVParam : public SAXParser::Handler
         if (!cvParam)
             throw runtime_error("[IO::HandlerCVParam] Null cvParam."); 
 
-        string accession;
-        getAttribute(attributes, "accession", accession);
-        if (!accession.empty())
+        const char *accession = getAttribute(attributes, "accession",  NoXMLUnescape); 
+        if (accession)
             cvParam->cvid = cvTermInfo(accession).cvid;
 
         getAttribute(attributes, "value", cvParam->value);
 
-        string unitAccession;
-        getAttribute(attributes, "unitAccession", unitAccession);
-        if (!unitAccession.empty())
+        const char *unitAccession = getAttribute(attributes, "unitAccession", NoXMLUnescape); 
+        if (unitAccession)
             cvParam->units = cvTermInfo(unitAccession).cvid;
 
         return Status::Ok;
@@ -1457,66 +1456,69 @@ struct HandlerScan : public HandlerParamContainer
         if (!scan)
             throw runtime_error("[IO::HandlerScan] Null scan.");
 
-        if (name == "scan")
-        {
-            getAttribute(attributes, "spectrumRef", scan->spectrumID); // not an XML:IDREF
-            getAttribute(attributes, "externalSpectrumID", scan->externalSpectrumID);
-
-            // note: placeholder
-            string sourceFileRef;
-            decode_xml_id(getAttribute(attributes, "sourceFileRef", sourceFileRef));
-            if (!sourceFileRef.empty())
-                scan->sourceFilePtr = SourceFilePtr(new SourceFile(sourceFileRef));
-
-            // note: placeholder
-            string instrumentConfigurationRef;
-            decode_xml_id(getAttribute(attributes, "instrumentConfigurationRef", instrumentConfigurationRef));
-            if (!instrumentConfigurationRef.empty())
-                scan->instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration(instrumentConfigurationRef));
-            return Status::Ok;
-        }
-        else if (version == 1 && name == "acquisition")
-        {
-            // note: spectrumRef, externalNativeID, and externalSpectrumID are mutually exclusive
-            getAttribute(attributes, "spectrumRef", scan->spectrumID); // not an XML:IDREF
-            if (scan->spectrumID.empty())
+        if (name != "cvParam") 
+        { // most common, but not handled here
+            if (name == "scan")
             {
-                string externalNativeID;
-                getAttribute(attributes, "externalNativeID", externalNativeID);
-                if (externalNativeID.empty())
-                    getAttribute(attributes, "externalSpectrumID", scan->externalSpectrumID);
-                else
-                    try
-                    {
-                        lexical_cast<int>(externalNativeID);
-                        //cerr << "[IO::HandlerScan] Warning - mzML 1.0: <acquisition>::externalNativeID\n";
-                        scan->externalSpectrumID = "scan=" + externalNativeID;
-                    }
-                    catch(exception&)
-                    {
-                        //cerr << "[IO::HandlerScan] Warning - mzML 1.0: non-integral <acquisition>::externalNativeID; externalSpectrumID format unknown\n";
-                        scan->externalSpectrumID = externalNativeID;
-                    }
+                getAttribute(attributes, "spectrumRef", scan->spectrumID); // not an XML:IDREF
+                getAttribute(attributes, "externalSpectrumID", scan->externalSpectrumID);
+
+                // note: placeholder
+                string sourceFileRef;
+                decode_xml_id(getAttribute(attributes, "sourceFileRef", sourceFileRef));
+                if (!sourceFileRef.empty())
+                    scan->sourceFilePtr = SourceFilePtr(new SourceFile(sourceFileRef));
+
+                // note: placeholder
+                string instrumentConfigurationRef;
+                decode_xml_id(getAttribute(attributes, "instrumentConfigurationRef", instrumentConfigurationRef));
+                if (!instrumentConfigurationRef.empty())
+                    scan->instrumentConfigurationPtr = InstrumentConfigurationPtr(new InstrumentConfiguration(instrumentConfigurationRef));
+                return Status::Ok;
             }
+            else if (version == 1 && name == "acquisition")
+            {
+                // note: spectrumRef, externalNativeID, and externalSpectrumID are mutually exclusive
+                getAttribute(attributes, "spectrumRef", scan->spectrumID); // not an XML:IDREF
+                if (scan->spectrumID.empty())
+                {
+                    string externalNativeID;
+                    getAttribute(attributes, "externalNativeID", externalNativeID);
+                    if (externalNativeID.empty())
+                        getAttribute(attributes, "externalSpectrumID", scan->externalSpectrumID);
+                    else
+                        try
+                        {
+                            lexical_cast<int>(externalNativeID);
+                            //cerr << "[IO::HandlerScan] Warning - mzML 1.0: <acquisition>::externalNativeID\n";
+                            scan->externalSpectrumID = "scan=" + externalNativeID;
+                        }
+                        catch(exception&)
+                        {
+                            //cerr << "[IO::HandlerScan] Warning - mzML 1.0: non-integral <acquisition>::externalNativeID; externalSpectrumID format unknown\n";
+                            scan->externalSpectrumID = externalNativeID;
+                        }
+                }
 
-            // note: placeholder
-            string sourceFileRef;
-            decode_xml_id(getAttribute(attributes, "sourceFileRef", sourceFileRef));
-            if (!sourceFileRef.empty())
-                scan->sourceFilePtr = SourceFilePtr(new SourceFile(sourceFileRef));
+                // note: placeholder
+                string sourceFileRef;
+                decode_xml_id(getAttribute(attributes, "sourceFileRef", sourceFileRef));
+                if (!sourceFileRef.empty())
+                    scan->sourceFilePtr = SourceFilePtr(new SourceFile(sourceFileRef));
 
-            return Status::Ok;
-        }
-        else if (name == "scanWindowList")
-        {
-            return Status::Ok;
-        }
-        else if (name == "scanWindow")
-        {
-            scan->scanWindows.push_back(ScanWindow());
-            handlerScanWindow_.paramContainer = &scan->scanWindows.back();
-            return Status(Status::Delegate, &handlerScanWindow_);
-        }
+                return Status::Ok;
+            }
+            else if (name == "scanWindowList")
+            {
+                return Status::Ok;
+            }
+            else if (name == "scanWindow")
+            {
+                scan->scanWindows.push_back(ScanWindow());
+                handlerScanWindow_.paramContainer = &scan->scanWindows.back();
+                return Status(Status::Delegate, &handlerScanWindow_);
+            }
+        } // end if not cvParam
 
         HandlerParamContainer::paramContainer = scan;
         return HandlerParamContainer::startElement(name, attributes, position);
@@ -1682,44 +1684,47 @@ struct HandlerBinaryDataArray : public HandlerParamContainer
         if (!binaryDataArray)
             throw runtime_error("[IO::HandlerBinaryDataArray] Null binaryDataArray.");
 
-        if (name == "binaryDataArray")
-        {
-            // note: placeholder
-            string dataProcessingRef;
-            decode_xml_id(getAttribute(attributes, "dataProcessingRef", dataProcessingRef));
-            if (!dataProcessingRef.empty())
-                binaryDataArray->dataProcessingPtr = DataProcessingPtr(new DataProcessing(dataProcessingRef));
+        if (name != "cvParam") // most common, but not handled here
+        { 
+            if (name == "binaryDataArray")
+            {
+                // note: placeholder
+                string dataProcessingRef;
+                decode_xml_id(getAttribute(attributes, "dataProcessingRef", dataProcessingRef));
+                if (!dataProcessingRef.empty())
+                    binaryDataArray->dataProcessingPtr = DataProcessingPtr(new DataProcessing(dataProcessingRef));
 
-            getAttribute(attributes, "encodedLength", encodedLength_);
-            getAttribute(attributes, "arrayLength", arrayLength_, defaultArrayLength);
+                    getAttribute(attributes, "encodedLength", encodedLength_, NoXMLUnescape);
+                    getAttribute(attributes, "arrayLength", arrayLength_, NoXMLUnescape, defaultArrayLength);
 
-            return Status::Ok;
-        }
-        else if (name == "binary")
-        {
-            if (msd) References::resolve(*binaryDataArray, *msd);
-            config = getConfig();
-            return Status::Ok;
-        }
+                return Status::Ok;
+            }
+            else if (name == "binary")
+            {
+                if (msd) References::resolve(*binaryDataArray, *msd);
+                config = getConfig();
+                return Status::Ok;
+            }
+        } // end if not cvParam
 
         HandlerParamContainer::paramContainer = binaryDataArray;
         return HandlerParamContainer::startElement(name, attributes, position);
     }
 
 
-    virtual Status characters(const std::string& text,
+    virtual Status characters(const SAXParser::saxstring& text,
                               stream_offset position)
     {
         if (!binaryDataArray)
             throw runtime_error("[IO::HandlerBinaryDataArray] Null binaryDataArray."); 
 
         BinaryDataEncoder encoder(config);
-        encoder.decode(text, binaryDataArray->data); 
+        encoder.decode(text.c_str(), text.length(), binaryDataArray->data); 
 
         if (binaryDataArray->data.size() != arrayLength_)
             throw runtime_error("[IO::HandlerBinaryDataArray] Array lengths differ."); 
 
-        if (text.size() != encodedLength_)
+        if (text.length() != encodedLength_)
             throw runtime_error("[IO::HandlerBinaryDataArray] Encoded lengths differ."); 
 
         return Status::Ok;
@@ -1908,94 +1913,96 @@ struct HandlerSpectrum : public HandlerParamContainer
         if (!spectrum)
             throw runtime_error("[IO::HandlerSpectrum] Null spectrum.");
 
-        if (name == "spectrum")
-        {
-            spectrum->sourceFilePosition = position;
-
-            getAttribute(attributes, "index", spectrum->index);
-            getAttribute(attributes, "spotID", spectrum->spotID);
-            getAttribute(attributes, "defaultArrayLength", spectrum->defaultArrayLength);
-            getAttribute(attributes, "id", spectrum->id); // not an XML:ID
-
-            // mzML 1.0
-            if (version == 1 && legacyIdRefToNativeId)
+        if (name != "cvParam") // the most common, but not handled here
+        { 
+            if (name == "spectrum")
             {
-                map<string,string>::const_iterator itr = legacyIdRefToNativeId->find(spectrum->id);
-                if (itr != legacyIdRefToNativeId->end())
-                    spectrum->id = itr->second;
+                spectrum->sourceFilePosition = position;
+
+                getAttribute(attributes, "index", spectrum->index);
+                getAttribute(attributes, "spotID", spectrum->spotID);
+                getAttribute(attributes, "defaultArrayLength", spectrum->defaultArrayLength);
+                getAttribute(attributes, "id", spectrum->id); // not an XML:ID
+
+                // mzML 1.0
+                if (version == 1 && legacyIdRefToNativeId)
+                {
+                    map<string,string>::const_iterator itr = legacyIdRefToNativeId->find(spectrum->id);
+                    if (itr != legacyIdRefToNativeId->end())
+                        spectrum->id = itr->second;
+                }
+
+                // note: placeholder
+                string dataProcessingRef;
+                decode_xml_id(getAttribute(attributes, "dataProcessingRef", dataProcessingRef));
+                if (!dataProcessingRef.empty())
+                    spectrum->dataProcessingPtr = DataProcessingPtr(new DataProcessing(dataProcessingRef));
+
+                // note: placeholder
+                string sourceFileRef;
+                decode_xml_id(getAttribute(attributes, "sourceFileRef", sourceFileRef));
+                if (!sourceFileRef.empty())
+                    spectrum->sourceFilePtr = SourceFilePtr(new SourceFile(sourceFileRef));
+
+                return Status::Ok;
             }
+            else if (version == 1 && name == "acquisitionList" /* mzML 1.0 */ || name == "scanList")
+            {
+                handlerScanList_.scanList = &spectrum->scanList;
+                handlerScanList_.version = version;
+                return Status(Status::Delegate, &handlerScanList_);
+            }
+            else if (name == "precursorList" || name == "productList")
+            {
+                return Status::Ok;
+            }
+            else if (name == "precursor")
+            {
+                spectrum->precursors.push_back(Precursor());
+                handlerPrecursor_.precursor = &spectrum->precursors.back();
+                handlerPrecursor_.version = version;
+                return Status(Status::Delegate, &handlerPrecursor_);
+            }
+            else if (name == "product")
+            {
+                spectrum->products.push_back(Product());
+                handlerProduct_.product = &spectrum->products.back();
+                return Status(Status::Delegate, &handlerProduct_);
+            }
+            else if (name == "binaryDataArray")
+            {
+                if (binaryDataFlag == IgnoreBinaryData)
+                    return Status::Done;
 
-            // note: placeholder
-            string dataProcessingRef;
-            decode_xml_id(getAttribute(attributes, "dataProcessingRef", dataProcessingRef));
-            if (!dataProcessingRef.empty())
-                spectrum->dataProcessingPtr = DataProcessingPtr(new DataProcessing(dataProcessingRef));
-
-            // note: placeholder
-            string sourceFileRef;
-            decode_xml_id(getAttribute(attributes, "sourceFileRef", sourceFileRef));
-            if (!sourceFileRef.empty())
-                spectrum->sourceFilePtr = SourceFilePtr(new SourceFile(sourceFileRef));
-
-            return Status::Ok;
-        }
-        else if (version == 1 && name == "acquisitionList" /* mzML 1.0 */ || name == "scanList")
-        {
-            handlerScanList_.scanList = &spectrum->scanList;
-            handlerScanList_.version = version;
-            return Status(Status::Delegate, &handlerScanList_);
-        }
-        else if (name == "precursorList" || name == "productList")
-        {
-            return Status::Ok;
-        }
-        else if (name == "precursor")
-        {
-            spectrum->precursors.push_back(Precursor());
-            handlerPrecursor_.precursor = &spectrum->precursors.back();
-            handlerPrecursor_.version = version;
-            return Status(Status::Delegate, &handlerPrecursor_);
-        }
-        else if (name == "product")
-        {
-            spectrum->products.push_back(Product());
-            handlerProduct_.product = &spectrum->products.back();
-            return Status(Status::Delegate, &handlerProduct_);
-        }
-        else if (name == "binaryDataArray")
-        {
-            if (binaryDataFlag == IgnoreBinaryData)
-                return Status::Done;
-
-            spectrum->binaryDataArrayPtrs.push_back(BinaryDataArrayPtr(new BinaryDataArray()));
-            handlerBinaryDataArray_.binaryDataArray = spectrum->binaryDataArrayPtrs.back().get();
-            handlerBinaryDataArray_.defaultArrayLength = spectrum->defaultArrayLength;
-            handlerBinaryDataArray_.msd = msd;
-            return Status(Status::Delegate, &handlerBinaryDataArray_);
-        }
-        else if (name == "binaryDataArrayList")
-        {
-            // pretty likely to come right back here and read the
-            // binary data once the header info has been inspected, 
-            // so note position
+                spectrum->binaryDataArrayPtrs.push_back(BinaryDataArrayPtr(new BinaryDataArray()));
+                handlerBinaryDataArray_.binaryDataArray = spectrum->binaryDataArrayPtrs.back().get();
+                handlerBinaryDataArray_.defaultArrayLength = spectrum->defaultArrayLength;
+                handlerBinaryDataArray_.msd = msd;
+                return Status(Status::Delegate, &handlerBinaryDataArray_);
+            }
+            else if (name == "binaryDataArrayList")
+            {
+                // pretty likely to come right back here and read the
+                // binary data once the header info has been inspected, 
+                // so note position
                 if (spectrumID) {
                     spectrumID->sourceFilePositionForBinarySpectrumData = position; 
                 }
-            return Status::Ok;
-        }
-        else if (version == 1 && name == "spectrumDescription") // mzML 1.0
-        {
-            // read cvParams, userParams, and referenceableParamGroups in <spectrumDescription> into <spectrum>
-            return Status::Ok;
-        }
-        else if (version == 1 && name == "scan") // mzML 1.0
-        {
-            spectrum->scanList.scans.push_back(Scan());
-            handlerScan_.version = version;
-            handlerScan_.scan = &spectrum->scanList.scans.back();
-            return Status(Status::Delegate, &handlerScan_);
-        }
-
+                return Status::Ok;
+            }
+            else if (version == 1 && name == "spectrumDescription") // mzML 1.0
+            {
+                // read cvParams, userParams, and referenceableParamGroups in <spectrumDescription> into <spectrum>
+                return Status::Ok;
+            }
+            else if (version == 1 && name == "scan") // mzML 1.0
+            {
+                spectrum->scanList.scans.push_back(Scan());
+                handlerScan_.version = version;
+                handlerScan_.scan = &spectrum->scanList.scans.back();
+                return Status(Status::Delegate, &handlerScan_);
+            }
+        }  // end if name != cvParam
         HandlerParamContainer::paramContainer = spectrum;
         return HandlerParamContainer::startElement(name, attributes, position);
     }

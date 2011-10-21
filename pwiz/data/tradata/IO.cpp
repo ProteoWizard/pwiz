@@ -674,9 +674,9 @@ struct HandlerProtein : public HandlerParamContainer
         return HandlerParamContainer::startElement(name, attributes, position);
     }
 
-    virtual Status characters(const string& text, stream_offset position)
+    virtual Status characters(const SAXParser::saxstring& text, stream_offset position)
     {
-        protein->sequence = text;
+        protein->sequence = text.c_str();
         return Status::Ok;
     }
 };

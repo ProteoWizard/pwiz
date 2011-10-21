@@ -8,6 +8,8 @@
 //   Cedars Sinai Medical Center, Los Angeles, California  90048
 // Copyright 2008 Vanderbilt University - Nashville, TN 37232
 //
+// Additional performance work by Brian Pratt Insilicos LLC
+//
 // Licensed under the Apache License, Version 2.0 (the "License"); 
 // you may not use this file except in compliance with the License. 
 // You may obtain a copy of the License at 
@@ -28,6 +30,7 @@
 #include <cerrno>
 #include <boost/lexical_cast.hpp>
 #include <boost/logic/tribool.hpp>
+#include <string.h>
 
 
 // HACK: Darwin strtod isn't threadsafe so strtod_l must be used
@@ -47,13 +50,26 @@ class ThreadSafeCLocale : public boost::singleton<ThreadSafeCLocale>
 
 } // namespace
 #define STRTOD(x, y) strtod_l((x), (y), ThreadSafeCLocale::instance->c_locale)
+#define ATOF(x) STRTOD(x,NULL)
 
 #else // __APPLE__
 #define STRTOD(x, y) strtod((x), (y))
+#define ATOF(x) atof(x)
 #endif // __APPLE__
 
 
 // optimized string->numeric conversions
+//
+// two versions of each:
+// std::string conversion, has pedantic error checking w/ thrown exceptions
+// const char *conversion, has minimal error checking for best speed
+//
+// note: if your code depends on thrown exceptions to decide if something
+// is an integer or not (for example) you'll need to use the pedantic
+// formulation, but be aware that try/catch is actually pretty expensive
+// in a lot of implementations (due to setjmp/longjmp) and might not be the
+// best design after all.
+//
 namespace boost
 {
 	template<>
@@ -153,78 +169,63 @@ namespace boost
         return true;
     }
 
-	/*template<>
-	inline float lexical_cast( const char*& str )
+	inline void optimized_lexical_cast( const char* stringToConvert, float& value )
 	{
-		errno = 0;
-		const char* endOfConversion = str;
-		float value = (float) STRTOD( str, const_cast<char**>(&endOfConversion) );
-		if( ( value == 0.0f && str == endOfConversion ) || // error: conversion could not be performed
-			errno != 0 ) // error: overflow or underflow
-			throw bad_lexical_cast();//throw bad_lexical_cast( std::type_info( str ), std::type_info( value ) );
-		return value;
+		value = (float) ATOF( stringToConvert ) ;
 	}
 
-	template<>
-	inline double lexical_cast( const char*& str )
+	inline void optimized_lexical_cast( const char* stringToConvert, double& value )
 	{
-		errno = 0;
-		const char* endOfConversion = str;
-		double value = STRTOD( str, const_cast<char**>(&endOfConversion) );
-		if( ( value == 0.0 && str == endOfConversion ) || // error: conversion could not be performed
-			errno != 0 ) // error: overflow or underflow
-			throw bad_lexical_cast();//throw bad_lexical_cast( std::type_info( str ), std::type_info( value ) );
-		return value;
+		value = ATOF( stringToConvert );
 	}
 
-	template<>
-	inline int lexical_cast( const char*& str )
+	inline void optimized_lexical_cast( const char* stringToConvert, int& value )
 	{
-		errno = 0;
-		const char* endOfConversion = str;
-		int value = (int) strtol( str, const_cast<char**>(&endOfConversion), 0 );
-		if( ( value == 0 && str == endOfConversion ) || // error: conversion could not be performed
-			errno != 0 ) // error: overflow or underflow
-			throw bad_lexical_cast();//throw bad_lexical_cast( std::type_info( str ), std::type_info( value ) );
-		return value;
+        value = atoi(stringToConvert);
 	}
 
-	template<>
-	inline long lexical_cast( const char*& str )
+	inline void optimized_lexical_cast( const char* stringToConvert, char& value )
 	{
-		errno = 0;
-		const char* endOfConversion = str;
-		long value = strtol( str, const_cast<char**>(&endOfConversion), 0 );
-		if( ( value == 0l && str == endOfConversion ) || // error: conversion could not be performed
-			errno != 0 ) // error: overflow or underflow
-			throw bad_lexical_cast();//throw bad_lexical_cast( std::type_info( str ), std::type_info( value ) );
-		return value;
+		value = *stringToConvert;
 	}
 
-	template<>
-	inline unsigned int lexical_cast( const char*& str )
+	inline void optimized_lexical_cast( const char* stringToConvert, long& value )
 	{
-		errno = 0;
-		const char* endOfConversion = str;
-		unsigned int value = (unsigned int) strtoul( str, const_cast<char**>(&endOfConversion), 0 );
-		if( ( value == 0u && str == endOfConversion ) || // error: conversion could not be performed
-			errno != 0 ) // error: overflow or underflow
-			throw bad_lexical_cast();//throw bad_lexical_cast( std::type_info( str ), std::type_info( value ) );
-		return value;
+        value = atol(stringToConvert);
 	}
 
-	template<>
-	inline unsigned long lexical_cast( const char*& str )
+	inline void optimized_lexical_cast( const char* stringToConvert, unsigned int& value )
 	{
-		errno = 0;
-		const char* endOfConversion = str;
-		unsigned long value = strtoul( str, const_cast<char**>(&endOfConversion), 0 );
-		if( ( value == 0ul && stringToConvert == endOfConversion ) || // error: conversion could not be performed
-			errno != 0 ) // error: overflow or underflow
-			throw bad_lexical_cast();//throw bad_lexical_cast( std::type_info( str ), std::type_info( value ) );
-		return value;
+    value = (unsigned int) strtoul( stringToConvert,NULL, 10 );
 	}
-	*/
+
+	inline void optimized_lexical_cast( const char* stringToConvert, unsigned long& value )
+	{
+    value = strtoul( stringToConvert,NULL, 10 );
+	}
+
+    inline void optimized_lexical_cast( const char* stringToConvert, bool& value )
+    {
+        value = (strcmp(stringToConvert, "0") && strcmp(stringToConvert,"false"));
+    }
+
+    inline void optimized_lexical_cast( const char* stringToConvert, boost::logic::tribool& value )
+    {
+        using namespace boost::logic;
+        if (!*stringToConvert) {
+            value = tribool(indeterminate);
+        } else {
+            bool b;
+            optimized_lexical_cast(stringToConvert, b);
+            value = b;
+        }
+    }
+
+    inline void optimized_lexical_cast( const char* stringToConvert, std::string& value )
+    {
+        value = stringToConvert;
+    }
+
 } // boost
 
 #endif // _OPTIMIZED_LEXICAL_CAST_HPP_

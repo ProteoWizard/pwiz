@@ -197,18 +197,18 @@ SAXParser::Handler::Status HandlerPeak::startElement(const string& name,
 
     if (name == "peak")
     {
-        for (Attributes::const_iterator it=attributes.begin(); it!=attributes.end(); ++it)
+        for (Attributes::attribute_list::const_iterator it=attributes.begin(); it!=attributes.end(); ++it)
         {
-            if (it->first == "id") peak->id = lexical_cast<int>(it->second);
-            else if (it->first == "mz") peak->mz = lexical_cast<double>(it->second);
-            else if (it->first == "retentionTime") peak->retentionTime = lexical_cast<double>(it->second);
-            else if (it->first == "intensity") peak->intensity = lexical_cast<double>(it->second);
-            else if (it->first == "area") peak->area = lexical_cast<double>(it->second);
-            else if (it->first == "error") peak->error = lexical_cast<double>(it->second);
+            if (it->matchName("id")) peak->id = lexical_cast<int>(it->getValue());
+            else if (it->matchName("mz")) peak->mz = lexical_cast<double>(it->getValue(NoXMLUnescape)); 
+            else if (it->matchName("retentionTime")) peak->retentionTime = lexical_cast<double>(it->getValue(NoXMLUnescape));
+            else if (it->matchName("intensity")) peak->intensity = lexical_cast<double>(it->getValue(NoXMLUnescape));
+            else if (it->matchName("area")) peak->area = lexical_cast<double>(it->getValue(NoXMLUnescape));
+            else if (it->matchName("error")) peak->error = lexical_cast<double>(it->getValue(NoXMLUnescape));
             else
             {
-                Peak::Attribute a = stringToAttribute(it->first);
-                peak->attributes[a] = lexical_cast<double>(it->second);            
+                Peak::Attribute a = stringToAttribute(it->getName());
+                peak->attributes[a] = lexical_cast<double>(it->getValue(NoXMLUnescape)); 
             }
         }
 
@@ -223,14 +223,14 @@ SAXParser::Handler::Status HandlerPeak::startElement(const string& name,
 }
     
 
-SAXParser::Handler::Status HandlerPeak::characters(const std::string& text,
+SAXParser::Handler::Status HandlerPeak::characters(const SAXParser::saxstring& text,
                                                    stream_offset position)
 {
     if (!peak)
         throw runtime_error("[PeakData::HandlerPeak::characters()]  Null peak.");
 
     peak->data.clear();
-    istringstream iss(text);
+    istringstream iss(text.c_str());
     copy(istream_iterator<OrderedPair>(iss), istream_iterator<OrderedPair>(), back_inserter(peak->data));
     return Status::Ok;
 }

@@ -87,7 +87,7 @@ class HandlerIndexListOffset : public SAXParser::Handler
         return Status::Ok;
     }
 
-    virtual Status characters(const string& text,
+    virtual Status characters(const SAXParser::saxstring& text,
                               stream_offset position)
     {
         indexListOffset_ = lexical_cast<stream_offset>(text);
@@ -157,7 +157,7 @@ struct HandlerOffset : public SAXParser::Handler
         return Status::Ok;
     }
 
-    virtual Status characters(const string& text,
+    virtual Status characters(const SAXParser::saxstring& text,
                               stream_offset position)
     {
         if (spectrumIdentity)

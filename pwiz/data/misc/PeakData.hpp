@@ -99,7 +99,7 @@ struct HandlerPeak : public SAXParser::Handler
                                 const Attributes& attributes,
                                 stream_offset position);
 
-    virtual Status characters(const std::string& text,
+    virtual Status characters(const SAXParser::saxstring& text,
                               stream_offset position);
 };
 

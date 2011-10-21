@@ -7,6 +7,9 @@
 // Copyright 2007 Spielberg Family Center for Applied Proteomics
 //   Cedars-Sinai Medical Center, Los Angeles, California  90048
 //
+// Reworked for zero-copy performance by Brian Pratt, Insilicos LLC
+// those changes Copyright 2011 Insilicos LLC All Rights Reserved
+//
 // Licensed under the Apache License, Version 2.0 (the "License"); 
 // you may not use this file except in compliance with the License. 
 // You may obtain a copy of the License at 
@@ -29,25 +32,16 @@
 
 
 const string CDATA_begin("![CDATA["), CDATA_end("]]");
+const string comment_begin("!--"), comment_end("--");
 
-
-//#define PWIZ_USE_BOOST_REGEX 
-#ifdef PWIZ_USE_BOOST_REGEX 
-#define BOOST_REGEX_MATCH_EXTRA // use boost::regex with multiple matches for tag parsing
-#include "boost/regex.hpp"
-//
-// must link with boost::regex with BOOST_REGEX_MATCH_EXTRA
-// defined in boost/regex/user.hpp
-//
-// boost::regex quick ref:
-//   \w (alphanumeric)
-//   \s (whitespace)
-//   (...) marks a capture
-//   (?:...) marks a group with no capture
-//   what[0] stores the full matched expression
-//   what[n] stores capture n
-//
-#endif // PWIZ_USE_BOOST_REGEX
+#ifdef _DEBUG_READCOUNT 
+// in case you want to verify that you aren't doing excessive reads
+static boost::iostreams::stream_offset bytesin = 0;
+void note_read_count(size_t n) 
+{ // collect some stats
+    bytesin += n;
+}
+#endif
 
 
 namespace pwiz {
@@ -55,72 +49,60 @@ namespace minimxml {
 namespace SAXParser {
     
 
-namespace {
+const char* ws = " \n\r\t";
 
-
-size_t stripws(string& text)
-{
-    static const char* ws = "\n\r\t ";
-
-    string::size_type first = text.find_first_not_of(ws);
-    text.erase(0, first);
-
-    string::size_type second = text.find_last_not_of(ws);
-    if (second+1 < text.size()) text.erase(second+1);
-
-    return first; // return the whitespace stripped from beginning
+size_t count_trail_ws(const char *data,size_t len) 
+{ // remove trailing whitespace if any
+    size_t n=len;
+    while (n && strchr(ws,data[n-1])) {
+        n--;
+    }
+    return len-n;
 }
 
+namespace {
 
-#ifdef PWIZ_USE_BOOST_REGEX
-
-struct ProcessingInstruction 
+inline bool unbalanced_quotes(const saxstring & buffer) 
 {
-    string name;
-    string value; 
-
-    ProcessingInstruction(const string& buffer)
-    {
-        // ?name value?
-        static const boost::regex e("\\?(\\w+)\\s+([^?]+)\\?");
-
-        boost::smatch what; 
-        if (!regex_match(buffer,what,e,boost::match_extra) || what.size()!=3)
-            throw runtime_error(("[SAXParser::ProcessingInstruction()] Error parsing tag: " + buffer).c_str());
-
-        name = what[1];
-        value = what[2];
+    // find next single or double quote
+    for (const char *c=buffer.c_str();(c=strpbrk(c,"\"'"))!=NULL;c++) {
+        c = strchr(c+1,*c); // find matching quote
+        if (!c) {
+            return true; // unmatched quote
+        }
     }
-};
+    return false;
+}
 
-struct StartTag
+// returns number of ws chars it had to eat on front end
+// returns -1 if nothing read
+static int eat_whitespace(istream& is) 
 {
-    string name;
-    Handler::Attributes attributes;
-    bool end;
-
-    StartTag(const string& buffer)
-    {
-        // tagName (name="value")* '/'?
-        static const boost::regex e("([\\w:]+)(?:\\s*([\\w:]+)=\"([^\"]*)\")*\\s*(/)?");
-
-        boost::smatch what; 
-        if (!regex_match(buffer,what,e,boost::match_extra) || what.size()!=5)
-            throw runtime_error(("[SAXParser::StartTag()] Error parsing tag: " + buffer).c_str());
-
-        if (what.captures(2).size() != what.captures(3).size())
-            throw runtime_error("[SAXParser::StartTag()] Error parsing attributes.");
-
-        name = what[1];
-
-        for (unsigned int i=0; i<what.captures(2).size(); i++)
-            attributes[what.captures(2)[i]] = what.captures(3)[i];
-
-        end = (what[4]=='/'); 
+    char c;
+    int lead_ws=0;
+    while (is.good()) {    // loop while extraction from file is possible
+        c = is.get();       // get character from file
+        if (is.good()) {
+            if (strchr(ws,c)) {
+                lead_ws++; // eat the whitespace
+            } else {
+                is.unget();
+                break; // no more whitespace
+            }
+        } else {
+            break;
+        }
     }
-};
+#ifdef _DEBUG_READCOUNT
+    note_read_count(lead_ws); // collect some stats
+#endif
+    if (is.good()) {
+        return lead_ws;
+    } else {
+        return -1;
+    }
+}
 
-#else // parsing with std library
 
 struct ProcessingInstruction 
 {
@@ -133,123 +115,42 @@ struct ProcessingInstruction
         char questionMark = '\0';
         iss >> questionMark >> name;
         if (questionMark != '?') throw runtime_error("[SAXParser::ProcessingInstruction] Error.");
+        eat_whitespace(iss);
         getline(iss, value, '?');
-        stripws(value);
+        value.resize(value.length()-count_trail_ws(value.c_str(),value.length()));
     }
 };
 
+const char * quote_ = "\"\'";
 
-string& unescapeXML(string& str)
-{
-    for (size_t i=0, end=str.size(); i < end; ++i)
-    {
-        if (str[i] != '&')
-            continue;
-
-        // there must be at least three characters after '&' (&lt; or &gt;)
-        if (i+3 >= end)
-            throw runtime_error("[SAXParser::unescapeXML] Invalid escape sequence.");
-
-        if (str[i+1] == 'l' && str[i+2] == 't' && str[i+3] == ';')
-        {
-            str[i] = '<';
-            str.erase(i+1, 3);
-            end -= 3;
-        }
-        else if (str[i+1] == 'g' && str[i+2] == 't' && str[i+3] == ';')
-        {
-            str[i] = '>';
-            str.erase(i+1, 3);
-            end -= 3;
-        }
-        else if (i+4 < end && str[i+1] == 'a' && str[i+2] == 'm' && str[i+3] == 'p' && str[i+4] == ';')
-        {
-            str[i] = '&';
-            str.erase(i+1, 4);
-            end -= 4;
-        }
-        else if (i+5 < end && str[i+1] == 'q' && str[i+2] == 'u' && str[i+3] == 'o' && str[i+4] == 't' && str[i+5] == ';')
-        {
-            str[i] = '"';
-            str.erase(i+1, 5);
-            end -= 5;
-        }
-        else if (i+5 < end && str[i+1] == 'a' && str[i+2] == 'p' && str[i+3] == 'o' && str[i+4] == 's' && str[i+5] == ';')
-        {
-            str[i] = '\'';
-            str.erase(i+1, 5);
-            end -= 5;
-        }
-        else
-            throw runtime_error("[SAXParser::unescapeXML] Invalid escape sequence.");
-    }
-    return str;
-}
-
-
-const string whitespace_ = " \t\n\r";
-const string quote_ = "\"\'";
-
-
-void parseAttribute(const string& tag, string::size_type& index, Handler::Attributes& attributes, bool unescapeAttributes)
-{
-    string::size_type indexNameBegin = tag.find_first_not_of(whitespace_, index);
-    string::size_type indexNameEnd = tag.find_first_of(whitespace_ + '=', indexNameBegin+1);
-    string::size_type indexEquals = tag.find_first_of('=', indexNameEnd);
-    string::size_type indexQuoteOpen = tag.find_first_of(quote_, indexEquals+1);
-    char quoteChar = tag[indexQuoteOpen];
-    string::size_type indexQuoteClose = tag.find_first_of(quoteChar, indexQuoteOpen+1);
-
-    if (indexNameBegin == string::npos ||
-        indexNameEnd == string::npos ||
-        indexEquals == string::npos ||
-        indexQuoteOpen == string::npos ||
-        indexQuoteClose == string::npos)
-        throw runtime_error("[SAXParser::parseAttribute()] Error at index " 
-                            + lexical_cast<string>(index) + ":\n" + tag);
-
-    string name = tag.substr(indexNameBegin, indexNameEnd-indexNameBegin);
-    string value = tag.substr(indexQuoteOpen+1, indexQuoteClose-indexQuoteOpen-1);
-
-    if (unescapeAttributes)
-        unescapeXML(value);
-    attributes[name] = value;
-    index = tag.find_first_not_of(whitespace_, indexQuoteClose+1);
-}
-
-
+//
+// zero-copy StartTag - it hacks up the 
+// saxparser string into name-value pairs
+// instead of making lots of little std::strings
+// do that a few bazillion times and it makes
+// a big difference in performance - bpratt
+//
 struct StartTag
 {
-    string name;
-    Handler::Attributes attributes;
     bool end;
+    Handler::Attributes attributes;
 
-    StartTag(const string& buffer, bool unescapeAttributes)
-    :   end(false)
+    StartTag(saxstring &str, bool unescapeAttributes)
+    :   end(str.length() && str[str.length()-1]=='/'), // evaluate str before attributes hacks it up
+        attributes(str,unescapeAttributes)
     {
-        if (buffer[buffer.size()-1] == '/') end = true;
-
-        string::size_type indexNameBegin = buffer.find_first_not_of(whitespace_);
-        if (indexNameBegin == string::npos)
+        if (!str.length()) {
             throw runtime_error("[SAXParser::StartTag] Empty buffer.");
-
-        string::size_type indexNameEnd = buffer.find_first_of(whitespace_ + "/", indexNameBegin+1);
-        if (indexNameEnd == string::npos)
-        {
-            name = buffer.substr(indexNameBegin);
-            return;
         }
-
-        name = buffer.substr(indexNameBegin, indexNameEnd-indexNameBegin);
-
-        string::size_type index = indexNameEnd + 1;
-        string::size_type indexEnd = end ? buffer.size()-1 : buffer.size();
-        while (index < indexEnd)
-            parseAttribute(buffer, index, attributes, unescapeAttributes);
     }
+
+    const char *getName() {
+        return attributes.getTagName(); // reads from hacked-up input str
+    }
+
+
 };
 
-#endif // PWIZ_USE_BOOST_REGEX
 
 
 struct HandlerInfo
@@ -320,7 +221,6 @@ class HandlerWrangler : public SAXParser::Handler
         HandlerInfo& top = handlers_.top();
 
         // element start/end validation
-
         if (top.names.empty() || top.names.top()!=name) 
             throw runtime_error(("[SAXParser::ParserWrangler::elementEnd()] Illegal end tag: " + name).c_str()); 
 
@@ -342,7 +242,7 @@ class HandlerWrangler : public SAXParser::Handler
         return status;
     }
 
-    virtual Status characters(const string& text, stream_offset position)
+    virtual Status characters(const SAXParser::saxstring& text, stream_offset position)
     {
         Status status = topHandler().characters(text, position);
         verifyNoDelegate(status);
@@ -359,17 +259,149 @@ class HandlerWrangler : public SAXParser::Handler
 
 } // namespace
 
-
-bool unbalancedQuote(const string& buffer)
+void Handler::Attributes::parseAttributes(string::size_type& index) const
 {
-    size_t quoteCount = 0;
-    string::const_iterator pos = buffer.begin(), end = buffer.end();
+    if (!attrs.size()) { // first access
+        // avoid lots of reallocs
+        int n_equals=0;
+        for (const char *p=textbuff+index;(p=strchr(p,'='))!=NULL;p++) {
+            n_equals++;
+        }
+        attrs.resize(n_equals); // might be more than we need, but we'll correct
+        int nattrs = 0;
+        while (index < index_end) {
+            
+            string::size_type indexNameBegin = index;
+            string::size_type indexNameEnd = indexNameBegin;
+            string::size_type indexQuoteOpen;
+            string::size_type indexQuoteClose;
+            const char *eq=strchr(textbuff+indexNameBegin,'=');
+            if (eq) {
+                indexNameEnd = eq-textbuff;
+                const char *c=textbuff+indexNameEnd+1;
+                while (*c && !strchr(quote_,*c)) c++;
+                indexQuoteOpen = (c-textbuff);
+                char quoteChar = *c;
+                const char *q = strchr(textbuff+indexQuoteOpen+1,quoteChar);
+                indexQuoteClose = q?(q-textbuff):string::npos;
+            } else {
+                indexQuoteClose = string::npos;
+            }
+            if (indexQuoteClose == string::npos) { // this index can only be OK if the others are too
+                if ('/'==textbuff[indexNameBegin]) { // end of tag?
+                    index++; 
+                    break;
+                }
+                throw runtime_error("[SAXParser::parseAttribute()] Error at index "
+                + lexical_cast<string>(index) + ":\n" + textbuff);
+            }
+            while (strchr(ws,textbuff[indexNameEnd-1])) {
+                indexNameEnd--; // work back from = to end of name
+            }
+            textbuff[indexNameEnd]=0; // null terminate in-place
+            textbuff[indexQuoteClose]=0; // null terminate in-place
+            attrs[nattrs++].set(textbuff+indexNameBegin,textbuff+indexQuoteOpen+1,autoUnescape);
 
-    for (; pos != end; ++pos)
-        if (*pos == '"' || *pos == '\"')
-            ++quoteCount;
-    
-    return ((quoteCount%2)!=0); // need explicit bool operation to quiet some compilers
+            index = indexQuoteClose+1; // ready for next round
+            while (textbuff[index] && strchr(ws,textbuff[index])) { // eat whitespace
+                index++;
+            }
+        }
+        attrs.resize(nattrs);
+    }
+}
+
+
+void unescapeXML(std::string &str) 
+{
+    if (std::string::npos != str.find('&')) {
+        SAXParser::saxstring s(str);
+        s.unescapeXML();
+        str = s.c_str();
+    }
+}
+
+
+void unescapeXML(char *str)
+{
+    char *amp;
+    size_t end=strlen(str);
+    for (size_t i=0 ; (amp=strchr(str+i,'&'))!=NULL ; i++) {
+        i = (amp-str);
+
+        // there must be at least three characters after '&' (&lt; or &gt;)
+        if (i+3 >= end)
+            throw runtime_error("[SAXParser::unescapeXML] Invalid escape sequence.");
+
+        int adjustlen=0;
+
+        if (str[i+1] == 'l' && str[i+2] == 't' && str[i+3] == ';')
+        {
+            *amp = '<';
+            adjustlen=3;
+        }
+        else if (str[i+1] == 'g' && str[i+2] == 't' && str[i+3] == ';')
+        {
+            *amp = '>';
+            adjustlen = 3;
+        }
+        else if (i+4 < end && str[i+1] == 'a' && str[i+2] == 'm' && str[i+3] == 'p' && str[i+4] == ';')
+        {
+            *amp = '&';
+            adjustlen = 4;
+        }
+        else if (i+5 < end && str[i+1] == 'q' && str[i+2] == 'u' && str[i+3] == 'o' && str[i+4] == 't' && str[i+5] == ';')
+        {
+            *amp = '"';
+            adjustlen = 5;
+        }
+        else if (i+5 < end && str[i+1] == 'a' && str[i+2] == 'p' && str[i+3] == 'o' && str[i+4] == 's' && str[i+5] == ';')
+        {
+            *amp = '\'';
+            adjustlen = 5;
+        }
+        else
+            throw runtime_error("[SAXParser::unescapeXML] Invalid escape sequence.");
+        memmove(amp+1,amp+adjustlen+1,(end-(i+adjustlen)));
+        end -= adjustlen;
+    }
+}
+
+// (nearly)zero-copy getline
+static bool getline(istream& is, saxstring &vec, char delim, bool append = false) 
+{
+    const size_t minbuf = 1024;
+    size_t begin = append?vec.length():0;
+    size_t end = begin;
+    while (is.good()) {
+        if (vec.capacity() < minbuf + (begin+3)) {
+            size_t newsize = 2* ( vec.capacity() ? vec.capacity() : minbuf );
+            vec.resize(newsize);
+        }
+        char *buffer = &vec[0];
+        // always guarantee room for readahead and nullterm at end of buffer
+        is.get(buffer+begin, vec.capacity()-(begin+3), delim); // keeps delim if read
+        size_t nread = (size_t)is.gcount();
+        if (!nread && !is.eof()) { // empty line?
+            is.clear(); // clear the failbit
+        } 
+        end += nread;
+#ifdef _DEBUG_READCOUNT
+        note_read_count(nread+1); // collect some stats
+#endif
+        // did we stop reading because we hit delimiter?
+        char c=0;
+        is.get(c);
+        if (delim == c) { // full read
+            vec.resize(end); // so we don't copy more than we need
+            return true;
+        } else if (c) { // ran out of room
+            buffer[end++] = c;
+            buffer[end] = 0;
+            begin = end;
+        }
+    }
+    return false;
 }
 
 //
@@ -386,25 +418,27 @@ PWIZ_API_DECL void parse(istream& is, Handler& handler)
 
     HandlerWrangler wrangler(handler);
     Handler::stream_offset position = position_to_offset(is.tellg());
+    saxstring buffer(16384); // hopefully big enough to avoid realloc
 
     while (is)
     {
-        string buffer;
 
         // read text up to next tag (may be empty)
-
+        buffer.clear();
         if (!getline(is, buffer, '<')) break;
-
+        size_t lead_ws = buffer.trim_lead_ws(); 
+        // remove trailing ws
+        buffer.trim_trail_ws();
         // position == beginning of characters
 
-        position += stripws(buffer); 
+        position += lead_ws; 
 
         // TODO: is it possible to detect when Handler::characters() has been overridden?
         const Handler& topHandler = wrangler.topHandler();
-        if (!buffer.empty() && topHandler.parseCharacters)
+        if (buffer.length() && topHandler.parseCharacters)
         {
             if (topHandler.autoUnescapeCharacters)
-                unescapeXML(buffer);
+                buffer.unescapeXML();
             Handler::Status status = wrangler.characters(buffer, position);
             if (status.flag == Handler::Status::Done) return;
         }
@@ -416,30 +450,36 @@ PWIZ_API_DECL void parse(istream& is, Handler& handler)
 
         // read tag
 
-        string temp_buffer;
-        bool complete = false, inCDATA = false;
+        bool inCDATA;
         buffer.clear();
 
-        // If in CDATA, fetch more until the section is ended;
-        // else check for unbalanced quotes and fetch more until we have
-        // the complete tag.
-        do
+        while (true)
         {
-            if (!getline(is, temp_buffer, '>')) break;
-            buffer += temp_buffer;
+            bool firstpass = (!buffer.length());
+            if (!getline(is,buffer, '>',true)) { // append
+                break;
+            }
+            if (firstpass) {
+                buffer.trim_lead_ws();
+            }
+            inCDATA = buffer.starts_with(CDATA_begin.c_str());
 
-            inCDATA = inCDATA || bal::starts_with(buffer, CDATA_begin);
-
-            if (inCDATA && !bal::ends_with(buffer, CDATA_end) ||
-                !inCDATA && unbalancedQuote(buffer))
-                buffer += ">";
-            else
-                complete = true;
+            // If in CDATA, fetch more until the section is ended;
+            // else deal with the unlikely but still legal case
+            // <FifthElement leeloo='>Leeloo > mul"-ti-pass'>
+            //        You're a monster, Zorg.>I know.
+            //     </FifthElement>
+            if (inCDATA ? !buffer.ends_with(CDATA_end.c_str()) :
+                unbalanced_quotes(buffer)) {
+                buffer += ">"; // put back that char we ate, go for more
+            } else {
+                break;
+            }
         }
-        while(!complete);
         
-        stripws(buffer);
-        if (buffer.empty())
+        // remove trailing ws
+        buffer.trim_trail_ws();
+        if (!buffer.length())
             throw runtime_error("[SAXParser::parse()] Empty tag."); 
 
         // switch on tag type
@@ -448,14 +488,14 @@ PWIZ_API_DECL void parse(istream& is, Handler& handler)
         {
             case '?':
             {
-                ProcessingInstruction pi(buffer);
+                ProcessingInstruction pi(buffer.c_str());
                 Handler::Status status = wrangler.processingInstruction(pi.name, pi.value, position);
                 if (status.flag == Handler::Status::Done) return;
                 break; 
             }
             case '/':
             {
-                Handler::Status status = wrangler.endElement(buffer.substr(1), position);
+                Handler::Status status = wrangler.endElement(buffer.c_str()+1, position);
                 if (status.flag == Handler::Status::Done) return;
                 break;
             }
@@ -463,23 +503,24 @@ PWIZ_API_DECL void parse(istream& is, Handler& handler)
             {
                 if (inCDATA)
                 {
-                    Handler::Status status = wrangler.characters(buffer.substr(CDATA_begin.length(), buffer.size()-CDATA_begin.length()-CDATA_end.length()), position);
+                    std::string buf(buffer.c_str());
+                    Handler::Status status = wrangler.characters(buf.substr(CDATA_begin.length(), buffer.length()-CDATA_begin.length()-CDATA_end.length()), position);
                     if (status.flag == Handler::Status::Done) return;
                 }
-                else if (!bal::starts_with(buffer, "!--") || !bal::ends_with(buffer, "--"))
-                    throw runtime_error(("[SAXParser::parse()] Illegal comment: " + buffer).c_str());
+                else if (!buffer.starts_with( "!--") || !buffer.ends_with("--"))
+                    throw runtime_error(("[SAXParser::parse()] Illegal comment: " + std::string(buffer.c_str())).c_str());
                 break;
             }
             default: 
             {
                 StartTag tag(buffer, handler.autoUnescapeAttributes);
 
-                Handler::Status status = wrangler.startElement(tag.name, tag.attributes, position);
+                Handler::Status status = wrangler.startElement(tag.getName(), tag.attributes, position);
                 if (status.flag == Handler::Status::Done) return;
                 
                 if (tag.end) 
                 {
-                    status = wrangler.endElement(tag.name, position);
+                    status = wrangler.endElement(tag.getName(), position);
                     if (status.flag == Handler::Status::Done) return;
                 }
             }
@@ -518,6 +559,7 @@ string xml_root_element(istream& is)
 {
     char buf[513];
     is.read(buf, 512);
+    buf[512] = 0;
     return xml_root_element(buf);
 }
 
