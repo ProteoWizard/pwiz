@@ -87,10 +87,9 @@ namespace IDPicker.Controls
                     key += p;
 
                 //try to find valid protein database location
-                var databaseLoc = a.importSettings.proteinDatabaseFilepath;
-                if (!File.Exists(databaseLoc))
+                if (!File.Exists(a.importSettings.proteinDatabaseFilepath))
                 {
-                    var databaseName = Path.GetFileName(databaseLoc);
+                    var databaseName = Path.GetFileName(a.importSettings.proteinDatabaseFilepath);
                     if (databaseName != null)
                         foreach (var item in a.filepaths)
                         {
@@ -98,7 +97,7 @@ namespace IDPicker.Controls
                                                                 databaseName);
                             if (File.Exists(possibleLocation))
                             {
-                                databaseLoc = possibleLocation;
+                                a.importSettings.proteinDatabaseFilepath = possibleLocation;
                                 break;
                             }
                         }
@@ -106,7 +105,8 @@ namespace IDPicker.Controls
 
                 row.Tag = a;
                 row.Cells[0].Value = key;
-                row.Cells[1].Value = databaseLoc;
+                row.Cells[1].Value = a.importSettings.proteinDatabaseFilepath;
+                row.Cells[1].Style.BackColor = File.Exists(a.importSettings.proteinDatabaseFilepath) ? SystemColors.Window : Color.LightSalmon;
                 row.Cells[2].Value = Properties.Settings.Default.DecoyPrefix;
                 var comboBox = row.Cells[3] as DataGridViewComboBoxCell;
                 var firstSoftwarePreset = qonverterSettingsByName.Keys.FirstOrDefault(o => o.ToLower().Contains(a.softwareName.ToLower()));

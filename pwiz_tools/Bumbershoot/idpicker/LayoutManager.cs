@@ -326,10 +326,8 @@ namespace IDPicker
             {
                 lock (_session)
                 {
-                    if (layoutProperty.SettingsList.Count > 0)
-                        foreach (var item in layoutProperty.SettingsList)
-                            _session.Delete(item);
-
+                    foreach (var item in layoutProperty.SettingsList.Where(o => !customColumnList.Contains(o)))
+                        _session.Delete(item);
                     layoutProperty.SettingsList = customColumnList;
                     _session.Save(layoutProperty);
                     _session.Flush();
@@ -594,11 +592,11 @@ namespace IDPicker
                     setting.AppendFormat("{0}{1}", item.Locked, Environment.NewLine);
             }
 
-            var backColor = columnList.Where(x => x.Name == "BackColor").SingleOrDefault();
-            var textColor = columnList.Where(x => x.Name == "TextColor").SingleOrDefault();
+            int backColor = columnList.Where(x => x.Name == "BackColor").Select(o => o.ColorCode).SingleOrDefault();
+            int textColor = columnList.Where(x => x.Name == "TextColor").Select(o => o.ColorCode).SingleOrDefault();
 
-            setting.AppendFormat("{0}{1}", backColor.ColorCode, Environment.NewLine);
-            setting.AppendFormat("{0}{1}", textColor.ColorCode, Environment.NewLine);
+            setting.AppendFormat("{0}{1}", backColor, Environment.NewLine);
+            setting.AppendFormat("{0}{1}", textColor, Environment.NewLine);
 
             switch (targetForm)
             {

@@ -29,33 +29,6 @@ using NHibernate.Linq;
 
 namespace IDPicker.DataModel
 {
-    public class DistinctPeptideFormat
-    {
-        public string Expression { get; private set; } // e.g. (psm.Peptide || ' ' || psm.MonoisotopicMass)
-        public string Sequence { get; private set; } // e.g. "PEPT[-18]IDE"
-        public string Key { get; private set; } // e.g. "123 4567.8"
-
-        public DistinctPeptideFormat (string format, string sequence, string key)
-        {
-            Expression = format;
-            Sequence = sequence;
-            Key = key;
-        }
-
-        public override int GetHashCode ()
-        {
-            return Expression.GetHashCode() ^ Key.GetHashCode();
-        }
-
-        public override bool Equals (object obj)
-        {
-            var other = obj as DistinctPeptideFormat;
-            if (other == null)
-                return false;
-            return Expression == other.Expression && Key == other.Key;
-        }
-    }
-
     public class DataFilter : EventArgs
     {
         #region Events
@@ -68,7 +41,7 @@ namespace IDPicker.DataModel
             public FilteringProgressEventArgs(string stage, int completed, Exception ex)
             {
                 CompletedFilters = completed;
-                TotalFilters = 15;
+                TotalFilters = 16;
                 FilteringStage = stage;
                 FilteringException = ex;
             }
@@ -94,6 +67,14 @@ namespace IDPicker.DataModel
             MinimumDistinctPeptidesPerProtein = 2;
             MinimumSpectraPerProtein = 2;
             MinimumAdditionalPeptidesPerProtein = 1;
+
+            DistinctMatchFormat = new DistinctMatchFormat()
+            {
+                AreModificationsDistinct = true,
+                IsAnalysisDistinct = false,
+                IsChargeDistinct = true,
+                ModificationMassRoundToNearest = 1m
+            };
         }
 
         public DataFilter (DataFilter other)
@@ -102,10 +83,12 @@ namespace IDPicker.DataModel
             MinimumDistinctPeptidesPerProtein = other.MinimumDistinctPeptidesPerProtein;
             MinimumSpectraPerProtein = other.MinimumSpectraPerProtein;
             MinimumAdditionalPeptidesPerProtein = other.MinimumAdditionalPeptidesPerProtein;
-            Cluster = other.Cluster == null ? null : new List<long>(other.Cluster);
+            DistinctMatchFormat = other.DistinctMatchFormat;
+            Cluster = other.Cluster == null ? null : new List<int>(other.Cluster);
+            ProteinGroup = other.ProteinGroup == null ? null : new List<int>(other.ProteinGroup);
             Protein = other.Protein == null ? null : new List<Protein>(other.Protein);
             Peptide = other.Peptide == null ? null : new List<Peptide>(other.Peptide);
-            DistinctPeptideKey = other.DistinctPeptideKey == null ? null : new List<DistinctPeptideFormat>(other.DistinctPeptideKey);
+            DistinctMatchKey = other.DistinctMatchKey == null ? null : new List<DistinctMatchKey>(other.DistinctMatchKey);
             Modifications = other.Modifications == null ? null : new List<Modification>(other.Modifications);
             ModifiedSite = other.ModifiedSite == null ? null : new List<char>(other.ModifiedSite);
             Charge = other.Charge == null ? null : new List<int>(other.Charge);
@@ -120,10 +103,14 @@ namespace IDPicker.DataModel
         public int MinimumSpectraPerProtein { get; set; }
         public int MinimumAdditionalPeptidesPerProtein { get; set; }
 
-        public IList<long> Cluster { get; set; }
+        public DistinctMatchFormat DistinctMatchFormat { get; set; }
+
+        public IList<int> Cluster { get; set; }
+        public IList<int> ProteinGroup { get; set; }
+        public IList<int> PeptideGroup { get; set; }
         public IList<Protein> Protein { get; set; }
         public IList<Peptide> Peptide { get; set; }
-        public IList<DistinctPeptideFormat> DistinctPeptideKey { get; set; }
+        public IList<DistinctMatchKey> DistinctMatchKey { get; set; }
         public IList<Modification> Modifications { get; set; }
         public IList<char> ModifiedSite { get; set; }
         public IList<int> Charge { get; set; }
@@ -148,7 +135,8 @@ namespace IDPicker.DataModel
         {
             get
             {
-                return Cluster == null && Protein == null && Peptide == null && DistinctPeptideKey == null &&
+                return Cluster == null && ProteinGroup == null && Protein == null &&
+                       Peptide == null && DistinctMatchKey == null &&
                        Modifications == null && ModifiedSite == null && Charge == null &&
                        SpectrumSource == null && Spectrum == null && Analysis == null &&
                        String.IsNullOrEmpty(Composition);
@@ -198,9 +186,11 @@ namespace IDPicker.DataModel
                    MinimumSpectraPerProtein == other.MinimumSpectraPerProtein &&
                    MinimumAdditionalPeptidesPerProtein == other.MinimumAdditionalPeptidesPerProtein &&
                    NullSafeSequenceEqual(Cluster, other.Cluster) &&
+                   NullSafeSequenceEqual(ProteinGroup, other.ProteinGroup) &&
+                   NullSafeSequenceEqual(PeptideGroup, other.PeptideGroup) &&
                    NullSafeSequenceEqual(Protein, other.Protein) &&
                    NullSafeSequenceEqual(Peptide, other.Peptide) &&
-                   NullSafeSequenceEqual(DistinctPeptideKey, other.DistinctPeptideKey) &&
+                   NullSafeSequenceEqual(DistinctMatchKey, other.DistinctMatchKey) &&
                    NullSafeSequenceEqual(Modifications, other.Modifications) &&
                    NullSafeSequenceEqual(ModifiedSite, other.ModifiedSite) &&
                    NullSafeSequenceEqual(Charge, other.Charge) &&
@@ -215,9 +205,11 @@ namespace IDPicker.DataModel
         {
             var newFilter = new DataFilter(lhs);
             newFilter.Cluster = NullSafeSequenceUnion(newFilter.Cluster, rhs.Cluster);
+            newFilter.ProteinGroup = NullSafeSequenceUnion(newFilter.ProteinGroup, rhs.ProteinGroup);
+            newFilter.PeptideGroup = NullSafeSequenceUnion(newFilter.ProteinGroup, rhs.PeptideGroup);
             newFilter.Protein = NullSafeSequenceUnion(newFilter.Protein, rhs.Protein);
             newFilter.Peptide = NullSafeSequenceUnion(newFilter.Peptide, rhs.Peptide);
-            newFilter.DistinctPeptideKey = NullSafeSequenceUnion(newFilter.DistinctPeptideKey, rhs.DistinctPeptideKey);
+            newFilter.DistinctMatchKey = NullSafeSequenceUnion(newFilter.DistinctMatchKey, rhs.DistinctMatchKey);
             newFilter.Modifications = NullSafeSequenceUnion(newFilter.Modifications, rhs.Modifications);
             newFilter.ModifiedSite = NullSafeSequenceUnion(newFilter.ModifiedSite, rhs.ModifiedSite);
             newFilter.Charge = NullSafeSequenceUnion(newFilter.Charge, rhs.Charge);
@@ -236,12 +228,16 @@ namespace IDPicker.DataModel
         {
             if (Cluster != null)
                 return "Cluster (" + Cluster.Count + ")";
+            if (ProteinGroup != null)
+                return "Protein Group (" + ProteinGroup.Count + ")";
+            if (PeptideGroup != null)
+                return "Peptide Group (" + PeptideGroup.Count + ")";
             if (Protein != null)
                 return "Protein (" + Protein.Count + ")";
             if (Peptide != null)
                 return "Peptide (" + Peptide.Count + ")";
-            if (DistinctPeptideKey != null)
-                return "Interpretation (" + DistinctPeptideKey.Count + ")";
+            if (DistinctMatchKey != null)
+                return "Distinct Match (" + DistinctMatchKey.Count + ")";
             if (SpectrumSourceGroup != null)
                 return "Group (" + SpectrumSourceGroup.Count + ")";
             if (SpectrumSource != null)
@@ -393,21 +389,22 @@ namespace IDPicker.DataModel
             if (useScopedTransaction)
                 session.Transaction.Begin();
 
-            if (OnFilteringProgress(new FilteringProgressEventArgs("Dropping current filters...", 1, null)))
+            int stepsCompleted = 0;
+
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Dropping current filters...", ++stepsCompleted, null)))
                 return;
 
             DropFilters(session);
 
             #region Create Filtered* tables by applying the basic filters to the main tables
-            if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering proteins...", 3, null)))
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering proteins...", ++stepsCompleted, null)))
                 return;
             string filterProteinsSql =
-                @"CREATE TABLE FilteredProtein (Id INTEGER PRIMARY KEY, Accession TEXT, IsDecoy INT, Cluster INT, ProteinGroup TEXT, Length INT);
+                @"CREATE TABLE FilteredProtein (Id INTEGER PRIMARY KEY, Accession TEXT, IsDecoy INT, Cluster INT, ProteinGroup INT, Length INT);
                   INSERT INTO FilteredProtein SELECT pro.*
                   FROM PeptideSpectrumMatch psm
                   JOIN PeptideInstance pi ON psm.Peptide = pi.Peptide
                   JOIN Protein pro ON pi.Protein = pro.Id
-                  JOIN ProteinData pd ON pi.Protein = pd.Id
                   JOIN Spectrum s ON psm.Spectrum = s.Id
                   JOIN SpectrumSource ss ON s.Source = ss.Id
                   -- filter out ungrouped spectrum sources
@@ -421,7 +418,7 @@ namespace IDPicker.DataModel
                                                  MinimumDistinctPeptidesPerProtein,
                                                  MinimumSpectraPerProtein)).ExecuteUpdate();
 
-            if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering peptide spectrum matches...", 4, null)))
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering peptide spectrum matches...", ++stepsCompleted, null)))
                 return;
             session.CreateSQLQuery(@"CREATE TABLE FilteredPeptideSpectrumMatch (Id INTEGER PRIMARY KEY, Spectrum INT, Analysis INT, Peptide INT, QValue NUMERIC, MonoisotopicMass NUMERIC, MolecularWeight NUMERIC, MonoisotopicMassError NUMERIC, MolecularWeightError NUMERIC, Rank INT, Charge INT);
                                      INSERT INTO FilteredPeptideSpectrumMatch SELECT psm.*
@@ -441,16 +438,16 @@ namespace IDPicker.DataModel
                                     "
                                   ).ExecuteUpdate();
 
-            if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering peptides...", 5, null)))
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering peptides...", ++stepsCompleted, null)))
                 return;
-            session.CreateSQLQuery(@"CREATE TABLE FilteredPeptide (Id INTEGER PRIMARY KEY, MonoisotopicMass NUMERIC, MolecularWeight NUMERIC, DecoySequence TEXT);
+            session.CreateSQLQuery(@"CREATE TABLE FilteredPeptide (Id INTEGER PRIMARY KEY, MonoisotopicMass NUMERIC, MolecularWeight NUMERIC, DecoySequence TEXT, PeptideGroup INT);
                                      INSERT INTO FilteredPeptide SELECT pep.*
                                      FROM FilteredPeptideSpectrumMatch psm
                                      JOIN Peptide pep ON psm.Peptide = pep.Id
                                      GROUP BY pep.Id"
                                   ).ExecuteUpdate();
 
-            if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering peptide instances...", 6, null)))
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering peptide instances...", ++stepsCompleted, null)))
                 return;
             session.CreateSQLQuery(@"CREATE TABLE FilteredPeptideInstance (Id INTEGER PRIMARY KEY, Protein INT, Peptide INT, Offset INT, Length INT, NTerminusIsSpecific INT, CTerminusIsSpecific INT, MissedCleavages INT);
                                      INSERT INTO FilteredPeptideInstance SELECT pi.*
@@ -480,11 +477,16 @@ namespace IDPicker.DataModel
                                     ").ExecuteUpdate();
             #endregion
 
-            if (AssembleProteinGroups(session)) return;
-            if (ApplyAdditionalPeptidesFilter(session)) return;
-            if (AssembleClusters(session)) return;
-            if (AssembleProteinCoverage(session)) return;
-            if (AssembleDistinctMatches(session)) return;
+            if (AssembleProteinGroups(session, ref stepsCompleted)) return;
+            if (ApplyAdditionalPeptidesFilter(session, ref stepsCompleted)) return;
+            if (AssembleClusters(session, ref stepsCompleted)) return;
+            if (AssembleProteinCoverage(session, ref stepsCompleted)) return;
+            if (AssembleDistinctMatches(session, ref stepsCompleted)) return;
+
+            // assemble new protein groups after the additional peptides filter
+            session.CreateSQLQuery("DROP INDEX Protein_ProteinGroup").ExecuteUpdate();
+            if (AssembleProteinGroups(session, ref stepsCompleted)) return;
+            if (AssemblePeptideGroups(session, ref stepsCompleted)) return;
 
             SaveFilter(session);
 
@@ -494,11 +496,11 @@ namespace IDPicker.DataModel
 
         #region Implementation of basic filters
         /// <summary>
-        /// Set ProteinGroups column (the groups change depending on the basic filters applied)
+        /// Set ProteinGroup column (the groups change depending on the basic filters applied)
         /// </summary>
-        bool AssembleProteinGroups(NHibernate.ISession session)
+        bool AssembleProteinGroups(NHibernate.ISession session, ref int stepsCompleted)
         {
-            if (OnFilteringProgress(new FilteringProgressEventArgs("Assembling protein groups...", 7, null)))
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Assembling protein groups...", ++stepsCompleted, null)))
                 return true;
 
             session.CreateSQLQuery(@"CREATE TEMP TABLE ProteinGroups AS
@@ -507,11 +509,12 @@ namespace IDPicker.DataModel
                                      JOIN Protein pro ON pi.Protein = pro.Id
                                      GROUP BY pi.Protein;
 
+                                     -- ProteinGroup will be a continuous sequence starting at 1
                                      CREATE TEMP TABLE TempProtein AS
-                                     SELECT pg.ProteinId, pro.Accession, pro.IsDecoy, pro.Cluster, pg2.ProteinGroupId, pro.Length
+                                     SELECT ProteinId, Accession, IsDecoy, Cluster, pg2.rowid, Length
                                      FROM ProteinGroups pg
                                      JOIN ( 
-                                           SELECT pg.ProteinGroup, MIN(ProteinId) AS ProteinGroupId
+                                           SELECT pg.ProteinGroup
                                            FROM ProteinGroups pg
                                            GROUP BY pg.ProteinGroup
                                           ) pg2 ON pg.ProteinGroup = pg2.ProteinGroup
@@ -529,14 +532,50 @@ namespace IDPicker.DataModel
         }
 
         /// <summary>
+        /// Set PeptideGroup column (the groups change depending on the basic filters applied)
+        /// </summary>
+        bool AssemblePeptideGroups (NHibernate.ISession session, ref int stepsCompleted)
+        {
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Assembling peptide groups...", ++stepsCompleted, null)))
+                return true;
+
+            session.CreateSQLQuery(@"CREATE TEMP TABLE PeptideGroups AS
+                                     SELECT pep.Id AS PeptideId, GROUP_CONCAT(DISTINCT pi.Protein) AS PeptideGroup
+                                     FROM PeptideInstance pi
+                                     JOIN Peptide pep ON pi.Peptide=pep.Id
+                                     GROUP BY pi.Peptide;
+
+                                     -- PeptideGroup will be a continuous sequence starting at 1
+                                     CREATE TEMP TABLE TempPeptide AS
+                                     SELECT PeptideId, MonoisotopicMass, MolecularWeight, DecoySequence, pg2.rowid
+                                     FROM PeptideGroups pg
+                                     JOIN ( 
+                                           SELECT pg.PeptideGroup
+                                           FROM PeptideGroups pg
+                                           GROUP BY pg.PeptideGroup
+                                          ) pg2 ON pg.PeptideGroup = pg2.PeptideGroup
+                                     JOIN Peptide pro ON pg.PeptideId = pro.Id;
+
+                                     DELETE FROM Peptide;
+                                     INSERT INTO Peptide SELECT * FROM TempPeptide;
+                                     CREATE INDEX Peptide_PeptideGroup ON Peptide (PeptideGroup);
+                                     DROP TABLE PeptideGroups;
+                                     DROP TABLE TempPeptide;
+                                    ").ExecuteUpdate();
+            session.Clear();
+
+            return false;
+        }
+
+        /// <summary>
         /// Calculate additional peptides per protein and filter out proteins that don't meet the minimum
         /// </summary>
-        bool ApplyAdditionalPeptidesFilter(NHibernate.ISession session)
+        bool ApplyAdditionalPeptidesFilter (NHibernate.ISession session, ref int stepsCompleted)
         {
             if (MinimumAdditionalPeptidesPerProtein == 0)
                 return false;
 
-            if (OnFilteringProgress(new FilteringProgressEventArgs("Calculating additional peptide counts...", 8, null)))
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Calculating additional peptide counts...", ++stepsCompleted, null)))
                 return true;
 
             Map<long, long> additionalPeptidesByProteinId = CalculateAdditionalPeptides(session);
@@ -561,7 +600,7 @@ namespace IDPicker.DataModel
                 cmd.ExecuteNonQuery();
             }
 
-            if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering by additional peptide count...", 9, null)))
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering by additional peptide count...", ++stepsCompleted, null)))
                 return true;
 
             // delete proteins that don't meet the additional matches filter
@@ -586,14 +625,14 @@ namespace IDPicker.DataModel
         /// <summary>
         /// Calculate clusters (connected components) for proteins
         /// </summary>
-        bool AssembleClusters (NHibernate.ISession session)
+        bool AssembleClusters (NHibernate.ISession session, ref int stepsCompleted)
         {
-            if (OnFilteringProgress(new FilteringProgressEventArgs("Calculating protein clusters...", 10, null)))
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Calculating protein clusters...", ++stepsCompleted, null)))
                 return true;
 
             Map<long, long> clusterByProteinId = calculateProteinClusters(session);
 
-            if (OnFilteringProgress(new FilteringProgressEventArgs("Assigning proteins to clusters...", 11, null)))
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Assigning proteins to clusters...", ++stepsCompleted, null)))
                 return true;
 
             var cmd = session.Connection.CreateCommand();
@@ -619,9 +658,9 @@ namespace IDPicker.DataModel
         /// <summary>
         /// Calculate coverage and coverage masks for proteins
         /// </summary>
-        bool AssembleProteinCoverage (NHibernate.ISession session)
+        bool AssembleProteinCoverage (NHibernate.ISession session, ref int stepsCompleted)
         {
-            if (OnFilteringProgress(new FilteringProgressEventArgs("Calculating protein coverage...", 12, null)))
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Calculating protein coverage...", ++stepsCompleted, null)))
                 return true;
             
             session.CreateSQLQuery(@"DELETE FROM ProteinCoverage;
@@ -635,7 +674,7 @@ namespace IDPicker.DataModel
                                      GROUP BY pi.Protein;
                                     ").ExecuteUpdate();
 
-            if (OnFilteringProgress(new FilteringProgressEventArgs("Calculating protein coverage masks...", 13, null)))
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Calculating protein coverage masks...", ++stepsCompleted, null)))
                 return true;
 
             // get non-zero coverage depths at each protein offset
@@ -650,7 +689,7 @@ namespace IDPicker.DataModel
                                      ORDER BY pi.Protein, i.Value;
                                     ").List().OfType<object[]>();
 
-            if (OnFilteringProgress(new FilteringProgressEventArgs("Updating protein coverage masks...", 14, null)))
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Updating protein coverage masks...", ++stepsCompleted, null)))
                 return true;
 
             var cmd = session.Connection.CreateCommand();
@@ -704,20 +743,17 @@ namespace IDPicker.DataModel
             return false;
         }
 
-        bool AssembleDistinctMatches (NHibernate.ISession session)
+        bool AssembleDistinctMatches (NHibernate.ISession session, ref int stepsCompleted)
         {
-            if (OnFilteringProgress(new FilteringProgressEventArgs("Assembling distinct peptide matches...", 15, null)))
+            if (OnFilteringProgress(new FilteringProgressEventArgs("Assembling distinct matches...", ++stepsCompleted, null)))
                 return true;
-            
-            session.CreateSQLQuery(@"DROP TABLE IF EXISTS DistinctMatch;
-                                     CREATE TABLE DistinctMatch (PsmId INT, Modifications TEXT);
-                                     INSERT INTO DistinctMatch (PsmId, Modifications)
-                                     SELECT DISTINCT psm.Id, IFNULL((SELECT GROUP_CONCAT(pm.Modification || '@' || pm.Offset)
-                                                                     FROM PeptideModification pm
-                                                                     WHERE psm.Id=pm.PeptideSpectrumMatch), '')
-                                     FROM PeptideSpectrumMatch psm;
-                                     CREATE INDEX DistinctMatch_Peptide ON DistinctMatch (PsmId);
-                                    ").ExecuteUpdate();
+            string sql = String.Format(@"DROP TABLE IF EXISTS DistinctMatch;
+                                         CREATE TABLE DistinctMatch (PsmId INTEGER PRIMARY KEY, DistinctMatchKey TEXT);
+                                         INSERT INTO DistinctMatch (PsmId, DistinctMatchKey)
+                                         SELECT DISTINCT psm.Id, {0}
+                                         FROM PeptideSpectrumMatch psm;
+                                        ", DistinctMatchFormat.SqlExpression);
+            session.CreateSQLQuery(sql).ExecuteUpdate();
             return false;
         }
         #endregion
@@ -771,152 +807,129 @@ namespace IDPicker.DataModel
 
         public string GetFilteredQueryString (string fromTable, params string[] joinTables)
         {
-            var joins = new List<string>();
+            var joins = new Map<int, object>();
             foreach (var join in joinTables)
                 foreach (var branch in join.ToString().Split(';'))
-                    if (!joins.Contains(branch))
-                        joins.Add(branch);
+                    joins.Add(joins.Count, branch);
 
-            var conditions = new List<string>();
+            // these different condition sets are AND'd together, but within each set they are OR'd
+            var proteinConditions = new List<string>();
+            var peptideConditions = new List<string>();
+            var spectrumConditions = new List<string>();
+            var modConditions = new List<string>();
+            var otherConditions = new List<string>();
 
             if (fromTable == FromProtein)
             {
-                if (Cluster != null)
-                {
-                    var temp = Cluster.Select(item => String.Format("pro.Cluster = {0}", item.ToString())).ToArray();
-                    conditions.Add("(" + string.Join(" OR ", temp) + ")");
-                }
-
-                if (Protein != null)
-                {
-                    var temp = Protein.Select(item => String.Format("pro.id = {0}", item.Id)).ToArray();
-                    conditions.Add("(" + string.Join(" OR ", temp) + ")");
-                }
-
                 if (Peptide != null)
-                {
-                    var temp = Peptide.Select(item => String.Format("pi.Peptide.id = {0}", item.Id)).ToArray();
-                    conditions.Add("(" + string.Join(" OR ", temp) + ")");
                     foreach (var branch in ProteinToPeptideInstance.Split(';'))
-                        if (!joins.Contains(branch))
-                            joins.Add(branch);
-                }
+                        joins.Add(joins.Count, branch);
+
+                if (PeptideGroup != null)
+                    foreach (var branch in ProteinToPeptide.Split(';'))
+                        joins.Add(joins.Count, branch);
 
                 if (Modifications != null || ModifiedSite != null)
                     foreach (var branch in ProteinToPeptideModification.Split(';'))
-                        if (!joins.Contains(branch))
-                            joins.Add(branch);
+                        joins.Add(joins.Count, branch);
 
-                if (DistinctPeptideKey != null || Analysis != null || Spectrum != null)
+                if (DistinctMatchKey != null || Analysis != null || Spectrum != null)
                     foreach (var branch in ProteinToPeptideSpectrumMatch.Split(';'))
-                        if (!joins.Contains(branch))
-                            joins.Add(branch);
+                        joins.Add(joins.Count, branch);
 
                 if (SpectrumSource != null)
                     foreach (var branch in ProteinToSpectrumSource.Split(';'))
-                        if (!joins.Contains(branch))
-                            joins.Add(branch);
+                        joins.Add(joins.Count, branch);
 
                 if (SpectrumSourceGroup != null)
                     foreach (var branch in ProteinToSpectrumSourceGroupLink.Split(';'))
-                        if (!joins.Contains(branch))
-                            joins.Add(branch);
+                        joins.Add(joins.Count, branch);
             }
             else if (fromTable == FromPeptideSpectrumMatch)
             {
-                if (Cluster != null)
-                {
-                    var temp = Cluster.Select(item => String.Format("pro.Cluster = {0}", item.ToString())).ToArray();
-                    conditions.Add("(" + string.Join(" OR ", temp) + ")");
+                if (Cluster != null || ProteinGroup != null)
                     foreach (var branch in PeptideSpectrumMatchToProtein.Split(';'))
-                        if (!joins.Contains(branch))
-                            joins.Add(branch);
-                }
+                        joins.Add(joins.Count, branch);
 
                 if (Protein != null)
-                {
-                    var temp = Protein.Select(item => String.Format("pi.Protein.id = {0}", item.Id)).ToArray();
-                    conditions.Add("(" + string.Join(" OR ", temp) + ")");
                     foreach (var branch in PeptideSpectrumMatchToPeptideInstance.Split(';'))
-                        if (!joins.Contains(branch))
-                            joins.Add(branch);
-                }
+                        joins.Add(joins.Count, branch);
 
-                if (Peptide != null)
-                {
-                    var temp = Peptide.Select(item => String.Format("psm.Peptide.id = {0}", item.Id)).ToArray();
-                    conditions.Add("(" + string.Join(" OR ", temp) + ")");
-                }
+                if (PeptideGroup != null)
+                    foreach (var branch in PeptideSpectrumMatchToPeptide.Split(';'))
+                        joins.Add(joins.Count, branch);
 
                 if (Modifications != null || ModifiedSite != null)
                     foreach (var branch in PeptideSpectrumMatchToPeptideModification.Split(';'))
-                        if (!joins.Contains(branch))
-                            joins.Add(branch);
+                        joins.Add(joins.Count, branch);
 
                 if (SpectrumSource != null)
                     foreach (var branch in PeptideSpectrumMatchToSpectrumSource.Split(';'))
-                        if (!joins.Contains(branch))
-                            joins.Add(branch);
+                        joins.Add(joins.Count, branch);
 
                 if (SpectrumSourceGroup != null)
                     foreach (var branch in PeptideSpectrumMatchToSpectrumSourceGroupLink.Split(';'))
-                        if (!joins.Contains(branch))
-                            joins.Add(branch);
+                        joins.Add(joins.Count, branch);
             }
 
-            if (DistinctPeptideKey != null)
+            if (Cluster != null)
+                proteinConditions.Add(String.Format("pro.Cluster IN ({0})", String.Join(",", Cluster.Select(o => o.ToString()).ToArray())));
+
+            if (ProteinGroup != null)
+                proteinConditions.Add(String.Format("pro.ProteinGroup IN ({0})", String.Join(",", ProteinGroup.Select(o => o.ToString()).ToArray())));
+
+            if (Protein != null)
             {
-                var temp = DistinctPeptideKey.Select(item => String.Format("{0} = '{1}'", item.Expression, item.Key)).ToArray();
-                conditions.Add("(" + string.Join(" OR ", temp) + ")");
+                string column = joins.Count(o => ((string) o.Value).EndsWith(" pro")) > 0 ? "pro.id" : "pi.Protein.id";
+                proteinConditions.Add(String.Format("{0} IN ({1})", column, String.Join(",", Protein.Select(o => o.Id.ToString()).ToArray())));
             }
+
+            if (PeptideGroup != null)
+                peptideConditions.Add(String.Format("pep.PeptideGroup IN ({0})", String.Join(",", PeptideGroup.Select(o => o.ToString()).ToArray())));
+
+            if (Peptide != null)
+            {
+                string column = joins.Count(o => ((string) o.Value).EndsWith(" pi")) > 0 ? "pi.Peptide.id" : "psm.Peptide.id";
+                peptideConditions.Add(String.Format("{0} IN ({1})", column, String.Join(",", Peptide.Select(o => o.Id.ToString()).ToArray())));
+            }
+
+            if (DistinctMatchKey != null)
+                peptideConditions.Add(String.Format("psm.DistinctMatchKey IN ('{0}')", String.Join("','", DistinctMatchKey.Select(o=> o.Key).ToArray())));
 
             if (ModifiedSite != null)
-            {
-                var temp = ModifiedSite.Select(item => String.Format("pm.Site = '{0}'", item.ToString())).ToArray();
-                conditions.Add("(" + string.Join(" OR ", temp) + ")");
-            }
+                modConditions.Add(String.Format("pm.Site IN ('{0}')", String.Join("','", ModifiedSite.Select(o => o.ToString()).ToArray())));
 
             if (Modifications != null)
-                conditions.Add(String.Format("pm.Modification.id IN ({0})",
-                    String.Join(",", (from mod in Modifications
-                                      select mod.Id.ToString()).Distinct().ToArray())));
+                modConditions.Add(String.Format("pm.Modification.id IN ({0})", String.Join(",", Modifications.Select(o => o.Id.ToString()).ToArray())));
 
             if (Charge != null)
-            {
-                var temp = Charge.Select(item => String.Format("psm.Charge = {0}", item)).ToArray();
-                conditions.Add("(" + string.Join(" OR ", temp) + ")");
-            }
+                spectrumConditions.Add(String.Format("psm.Charge IN ({0})", String.Join(",", Charge.Select(o => o.ToString()).ToArray())));
 
             if (Analysis != null)
-            {
-                var temp = Analysis.Select(item => String.Format("psm.Analysis.id = {0}", item.Id)).ToArray();
-                conditions.Add("(" + string.Join(" OR ", temp) + ")");
-            }
+                otherConditions.Add(String.Format("psm.Analysis.id IN ({0})", String.Join(",", Analysis.Select(o => o.Id.ToString()).ToArray())));
 
             if (Spectrum != null)
-            {
-                var temp = Spectrum.Select(item => String.Format("psm.Spectrum.id = {0}", item.Id)).ToArray();
-                conditions.Add("(" + string.Join(" OR ", temp) + ")");
-            }
+                spectrumConditions.Add(String.Format("psm.Spectrum.id IN ({0})", String.Join(",", Spectrum.Select(o => o.Id.ToString()).ToArray())));
 
             if (SpectrumSource != null)
-            {
-                var temp = SpectrumSource.Select(item => String.Format("psm.Spectrum.Source.id = {0}", item.Id)).ToArray();
-                conditions.Add("(" + string.Join(" OR ", temp) + ")");
-            }
+                spectrumConditions.Add(String.Format("psm.Spectrum.Source.id IN ({0})", String.Join(",", SpectrumSource.Select(o => o.Id.ToString()).ToArray())));
 
             if (SpectrumSourceGroup != null)
-            {
-                var temp = SpectrumSourceGroup.Select(item => String.Format("ssgl.Group.id = {0}", item.Id)).ToArray();
-                conditions.Add("(" + string.Join(" OR ", temp) + ")");
-            }
+                spectrumConditions.Add(String.Format("ssgl.Group.id IN ({0})", String.Join(",", SpectrumSourceGroup.Select(o => o.Id.ToString()).ToArray())));
 
             var query = new StringBuilder();
 
             query.AppendFormat(" FROM {0} ", fromTable);
-            foreach (var join in joins)
+            foreach (var join in joins.Values.Distinct())
                 query.AppendFormat("{0} ", join);
             query.Append(" ");
+
+            var conditions = new List<string>();
+            if (proteinConditions.Count > 0) conditions.Add("(" + String.Join(" OR ", proteinConditions.ToArray()) + ")");
+            if (peptideConditions.Count > 0) conditions.Add("(" + String.Join(" OR ", peptideConditions.ToArray()) + ")");
+            if (spectrumConditions.Count > 0) conditions.Add("(" + String.Join(" OR ", spectrumConditions.ToArray()) + ")");
+            if (modConditions.Count > 0) conditions.Add("(" + String.Join(" OR ", modConditions.ToArray()) + ")");
+            if (otherConditions.Count > 0) conditions.Add("(" + String.Join(" OR ", otherConditions.ToArray()) + ")");
 
             if (conditions.Count > 0)
             {
@@ -950,9 +963,9 @@ namespace IDPicker.DataModel
                 conditions.Add("(" + string.Join(" OR ", temp) + ")");
             }
 
-            /*if (DistinctPeptideKey != null)
+            /*if (DistinctMatchKey != null)
             {
-                var temp = DistinctPeptideKey.Select(item => String.Format("{0} = '{1}'", item.Expression, item.Key)).ToArray();
+                var temp = DistinctMatchKey.Select(item => String.Format("{0} = '{1}'", item.Expression, item.Key)).ToArray();
                 conditions.Add("(" + string.Join(" OR ", temp) + ")");
             }*/
 
@@ -1014,8 +1027,8 @@ namespace IDPicker.DataModel
         static Map<long, long> CalculateAdditionalPeptides (NHibernate.ISession session)
         {
             var resultSetByProteinId = new Map<long, Set<Set<long>>>();
-            var proteinGroupByProteinId = new Dictionary<long, string>();
-            var proteinSetByProteinGroup = new Map<string, Set<long>>();
+            var proteinGroupByProteinId = new Dictionary<long, int>();
+            var proteinSetByProteinGroup = new Map<int, Set<long>>();
             var sharedResultsByProteinId = new Map<long, long>();
 
             session.CreateSQLQuery(@"DROP TABLE IF EXISTS SpectrumResults;
@@ -1054,7 +1067,7 @@ namespace IDPicker.DataModel
             foreach(var queryRow in queryByProtein.List<object[]>())
             {
                 long proteinId = (long) queryRow[0];
-                string proteinGroup = (string) queryRow[1];
+                int proteinGroup = (int) queryRow[1];
                 sharedResultsByProteinId[proteinId] = (long) queryRow[2];
 
                 proteinGroupByProteinId[proteinId] = proteinGroup;

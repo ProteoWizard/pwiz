@@ -620,7 +620,7 @@ namespace Test
                 Assert.AreEqual(testProteinSequences[i - 1], pro.Sequence);
 
                 // these haven't been set yet
-                Assert.IsTrue(String.IsNullOrEmpty(pro.ProteinGroup), pro.ProteinGroup);
+                Assert.AreEqual(0, pro.ProteinGroup);
                 Assert.AreEqual(0, pro.Cluster);
             }
         }

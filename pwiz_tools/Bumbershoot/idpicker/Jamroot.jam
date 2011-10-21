@@ -261,7 +261,7 @@ local revision-info = [ generate-AssemblyInfo.cs Properties\\AssemblyInfo.cs :
                          *.cs
                          #*.html
                          #*.vdproj
-      : freicore* build-*-* _Resharper.* ]
+      : freicore* build-*-* _Resharper.* Version.cpp Resources.Designer.cs Settings.Designer.cs AssemblyInfo.cs ]
     : warn-on-missing : : "IDPicker" "Filtering, assembling, and reporting of parsimonious protein identifications." $(COMPANY_AND_PRODUCT) ] ;
 
 # revision-info is a sequence: <max revision> <max year> <max month> <max day> <number of modified files in working copy>

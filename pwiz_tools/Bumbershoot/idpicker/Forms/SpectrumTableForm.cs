@@ -91,7 +91,7 @@ namespace IDPicker.Forms
             #endregion
         }
 
-        private TotalCounts totalCounts;
+        private TotalCounts totalCounts, basicTotalCounts;
 
         private IEnumerable<AggregateRow> aggregateRows;
         private Dictionary<GroupBy, IEnumerable<AggregateRow>> basicAggregateRowsByType;
@@ -391,6 +391,8 @@ namespace IDPicker.Forms
             treeListView.KeyPress += new KeyPressEventHandler(treeListView_KeyPress);
             treeListView.AfterExpanding += new EventHandler<AfterExpandingEventArgs>(treeListView_AfterExpanding);
             treeListView.AfterCollapsing += new EventHandler<AfterCollapsingEventArgs>(treeListView_AfterCollapsing);
+
+            base.OnLoad(e);
         }
 
         private void SetDefaults()
@@ -702,7 +704,8 @@ namespace IDPicker.Forms
             distinctAnalysesColumn.IsVisible = showAggregateColumns && deepestGroupingMode != GroupBy.Off && !GroupingSetupControl<GroupBy>.HasParentGrouping(checkedGroupings, deepestGroupingMode, GroupBy.Analysis);
             distinctChargesColumn.IsVisible = showAggregateColumns && deepestGroupingMode != GroupBy.Off && !GroupingSetupControl<GroupBy>.HasParentGrouping(checkedGroupings, deepestGroupingMode, GroupBy.Charge);
 
-            bool hasMultipleAnalyses = session.Query<Analysis>().Count() > 1;
+            bool hasMultipleAnalyses;
+            lock (session) hasMultipleAnalyses = session.Query<Analysis>().Count() > 1;
 
             analysisColumn.IsVisible = hasMultipleAnalyses && showPsmColumns && checkedGroupings.Count(o => o.Mode == GroupBy.Analysis) == 0;
             precursorMzColumn.IsVisible = showSpectrumColumns;
@@ -913,8 +916,7 @@ namespace IDPicker.Forms
             }
 
             var sources = session.CreateQuery(AggregateRow.Selection + ", psm.Spectrum.Source " +
-                                              parentFilter.GetFilteredQueryString(
-                                                  DataFilter.FromPeptideSpectrumMatch) +
+                                              parentFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
                                               "GROUP BY psm.Spectrum.Source.id")
                 .List<object[]>()
                 .Select(o => new SpectrumSourceRow(o, parentFilter));
@@ -1130,45 +1132,56 @@ namespace IDPicker.Forms
 
         void setData(object sender, DoWorkEventArgs e)
         {
-            var rootGrouping = checkedGroupings.Count > 0 ? checkedGroupings.First() : null;
-
-            if (dataFilter.IsBasicFilter)
+            try
             {
-                if (basicDataFilter == null || (userFilter.IsBasicFilter && dataFilter != basicDataFilter))
-                {
-                    basicDataFilter = dataFilter;
+                var rootGrouping = checkedGroupings.Count > 0 ? checkedGroupings.First() : null;
 
+                if (dataFilter.IsBasicFilter)
+                {
+                    if (basicDataFilter == null || (userFilter.IsBasicFilter && dataFilter != basicDataFilter))
+                    {
+                        basicDataFilter = dataFilter;
+
+                        lock (session)
+                        {
+                            basicTotalCounts = new TotalCounts(session, dataFilter);
+
+                            if (rootGrouping != null)
+                                basicAggregateRowsByType[rootGrouping.Mode] = getChildren(rootGrouping, dataFilter).Cast<AggregateRow>();
+                            else
+                                basicRowsByPSM = getPeptideSpectrumMatchRows(dataFilter);
+                        }
+                    }
+
+                    if (rootGrouping != null)
+                        aggregateRows = basicAggregateRowsByType[rootGrouping.Mode];
+                    totalCounts = basicTotalCounts;
+                    rowsByPSM = basicRowsByPSM;
+                }
+                else
+                {
                     lock (session)
                     {
                         totalCounts = new TotalCounts(session, dataFilter);
 
                         if (rootGrouping != null)
-                            basicAggregateRowsByType[rootGrouping.Mode] = getChildren(rootGrouping, dataFilter).Cast<AggregateRow>();
+                            aggregateRows = getChildren(rootGrouping, dataFilter).Cast<AggregateRow>();
                         else
-                            basicRowsByPSM = getPeptideSpectrumMatchRows(dataFilter);
+                            rowsByPSM = getPeptideSpectrumMatchRows(dataFilter);
                     }
                 }
-
-                if (rootGrouping != null)
-                    aggregateRows = basicAggregateRowsByType[rootGrouping.Mode];
-                rowsByPSM = basicRowsByPSM;
             }
-            else
+            catch (Exception ex)
             {
-                lock (session)
-                {
-                    totalCounts = new TotalCounts(session, dataFilter);
-
-                    if (rootGrouping != null)
-                        aggregateRows = getChildren(rootGrouping, dataFilter).Cast<AggregateRow>();
-                    else
-                        rowsByPSM = getPeptideSpectrumMatchRows(dataFilter);
-                }
+                e.Result = ex;
             }
         }
 
         void renderData(object sender, RunWorkerCompletedEventArgs e)
         {
+            if (e.Result is Exception)
+                Program.HandleException(e.Result as Exception);
+
             // show total counts in the form title
             Text = TabText = String.Format("Spectrum View: {0} groups, {1} sources, {2} spectra",
                                            totalCounts.Groups,

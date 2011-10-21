@@ -71,13 +71,23 @@ namespace IDPicker.Controls
         void objectListView_ItemChecked (object sender, ItemCheckedEventArgs e)
         {
             if (PivotChanged != null)
-                PivotChanged(this, EventArgs.Empty);
+                PivotChanged(this, new PivotChangedEventArgs<T>((e.Item as OLVListItem).RowObject as Pivot<T>));
         }
 
         /// <summary>
         /// Occurs when the user changes the checked state of a pivot.
         /// </summary>
-        public event EventHandler PivotChanged;
+        public event EventHandler<PivotChangedEventArgs<T>>  PivotChanged;
+
+        /// <summary>
+        /// Checks or unchecks the specified pivot mode.
+        /// </summary>
+        public void SetPivot(T pivotMode, bool checked_)
+        {
+            var pivot = Pivots.First(o => o.Mode.Equals(pivotMode));
+            if (checked_) objectListView.CheckObject(pivot);
+            else objectListView.UncheckObject(pivot);
+        }
 
         /// <summary>
         /// Returns a read-only list of all the available pivots.
@@ -125,5 +135,11 @@ namespace IDPicker.Controls
         /// A string describing this Pivot.
         /// </summary>
         public string Text { get; set; }
+    }
+
+    public class PivotChangedEventArgs<T> : EventArgs
+    {
+        public PivotChangedEventArgs (Pivot<T> pivot) { Pivot = pivot; }
+        public Pivot<T> Pivot { get; private set; }
     }
 }

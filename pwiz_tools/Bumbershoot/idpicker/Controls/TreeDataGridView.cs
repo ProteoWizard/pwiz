@@ -175,6 +175,8 @@ namespace IDPicker.Controls
         public new event TreeDataGridViewCellEventHandler CellContentClick;
         public new event TreeDataGridViewCellEventHandler CellDoubleClick;
         public new event TreeDataGridViewCellEventHandler CellContentDoubleClick;
+        public new event TreeDataGridViewCellMouseEventHandler CellMouseClick;
+
         /// <summary>
         /// Sets row image. To use set e.Value to the desired image.
         /// </summary>
@@ -400,6 +402,13 @@ namespace IDPicker.Controls
                 CellContentDoubleClick(this, new TreeDataGridViewCellEventArgs(e.ColumnIndex, GetRowHierarchyForRowIndex(e.RowIndex)));
         }
 
+        protected override void OnCellMouseClick (DataGridViewCellMouseEventArgs e)
+        {
+            base.OnCellMouseClick(e);
+            if (CellMouseClick != null)
+                CellMouseClick(this, new TreeDataGridViewCellMouseEventArgs(e.ColumnIndex, GetRowHierarchyForRowIndex(e.RowIndex), e.X, e.Y, e));
+        }
+
         protected override void OnKeyDown (KeyEventArgs e)
         {
             //Expands row if right arrow is pressed
@@ -470,7 +479,7 @@ namespace IDPicker.Controls
         protected override void OnCellPainting(DataGridViewCellPaintingEventArgs e)
         {
             //Only paint in the first column of each info-containing row
-            if (e.ColumnIndex < 0 || e.RowIndex < 0 || e.ColumnIndex != 0)
+            if (e.RowIndex < 0 || e.ColumnIndex != 0)
             {
                 base.OnCellPainting(e);
                 return;
@@ -650,7 +659,23 @@ namespace IDPicker.Controls
         public IList<int> RowIndexHierarchy { get; protected set; }
     }
 
+    public class TreeDataGridViewCellMouseEventArgs : DataGridViewCellMouseEventArgs
+    {
+        public TreeDataGridViewCellMouseEventArgs (int columnIndex, IList<int> rowIndexHierarchy,
+                                                   int localX, int localY, MouseEventArgs e)
+            : base(columnIndex, 0, localX, localY, e)
+        {
+            RowIndexHierarchy = rowIndexHierarchy;
+        }
+
+        // not accessible to clients
+        private new int RowIndex { get { return base.RowIndex; } }
+
+        public IList<int> RowIndexHierarchy { get; protected set; }
+    }
+
     public delegate void TreeDataGridViewCellValueEventHandler (object sender, TreeDataGridViewCellValueEventArgs e);
     public delegate void TreeDataGridViewCellFormattingEventHandler (object sender, TreeDataGridViewCellFormattingEventArgs e);
     public delegate void TreeDataGridViewCellEventHandler (object sender, TreeDataGridViewCellEventArgs e);
+    public delegate void TreeDataGridViewCellMouseEventHandler (object sender, TreeDataGridViewCellMouseEventArgs e);
 }

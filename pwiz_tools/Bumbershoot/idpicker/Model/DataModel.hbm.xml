@@ -98,9 +98,9 @@
 		<id name="Id"><generator class="native"/></id>
 		<property name="Accession" />
 
-		<!-- We store these long text fields in separate tables so that joins against the Proteins table are faster -->
-		<property name="Description" formula="(SELECT pmd.Description FROM ProteinMetadata pmd WHERE Id=pmd.Id)"/>
-		<property name="Sequence" lazy="true" formula="(SELECT pd.Sequence FROM ProteinData pd WHERE Id=pd.Id)"/>
+		<!-- We store these long text fields in separate tables so that joins against the Protein table are faster -->
+		<property name="Description" formula="IFNULL((SELECT pmd.Description FROM ProteinMetadata pmd WHERE Id=pmd.Id),'')"/>
+		<property name="Sequence" lazy="true" formula="IFNULL((SELECT pd.Sequence FROM ProteinData pd WHERE Id=pd.Id),'')"/>
 
 
 		<bag name="Peptides" inverse="true" batch-size="500" lazy="true">
@@ -133,6 +133,7 @@
 							WHERE pi.Id=(SELECT pi2.Id FROM PeptideInstance pi2 WHERE Id=pi2.Peptide LIMIT 1))"/>
 		<property name="MonoisotopicMass"/>
 		<property name="MolecularWeight"/>
+		<property name="PeptideGroup" access="nosetter.camelcase"/>
 		<property name="DecoySequence"/>
 		<bag name="Instances" inverse="true" batch-size="500" lazy="true">
 			<key column="Peptide"/>
@@ -205,8 +206,7 @@
 				DROP TABLE PsmScore
 			</sql-insert>-->
 		</map>
-		<property name="DistinctMatchKey" lazy="true" access="nosetter.camelcase" formula="(Peptide || ' ' || (SELECT dm.Modifications FROM DistinctMatch dm WHERE Id=dm.PsmId))"/>
-		<property name="DistinctMatchAndChargeKey" lazy="true" access="nosetter.camelcase" formula="(Peptide || ' ' || (SELECT dm.Modifications FROM DistinctMatch dm WHERE Id=dm.PsmId) || ' ' || Charge)"/>
+		<property name="DistinctMatchKey" lazy="true" access="nosetter.camelcase" formula="(SELECT dm.DistinctMatchKey FROM DistinctMatch dm WHERE Id=dm.PsmId)"/>
 	</class>
 
 	<class name="PeptideModification">

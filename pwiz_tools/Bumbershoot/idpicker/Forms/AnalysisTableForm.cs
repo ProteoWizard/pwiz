@@ -96,7 +96,7 @@ namespace IDPicker.Forms
             parameterCountColumn.AspectGetter += delegate(object x)
             {
                 if (x is AnalysisRow)
-                    return (x as AnalysisRow).Analysis.Parameters.Count;
+                    lock(session) return (x as AnalysisRow).Analysis.Parameters.Count;
                 return null;
             };
 

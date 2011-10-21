@@ -142,13 +142,13 @@ namespace IDPicker.DataModel
     public class Protein : Entity<Protein>
     {
         public virtual string Accession { get; set; }
-        public virtual string Description { get { return pmd.Description; } set { pmd.Description = value; } }
-        public virtual string Sequence { get { return pd.Sequence; } set { pd.Sequence = value; } }
+        public virtual string Description { get { return pmd == null ? String.Empty : pmd.Description; } set { pmd.Description = value; } }
+        public virtual string Sequence { get { return pd == null ? String.Empty : pd.Sequence; } set { pd.Sequence = value; } }
         public virtual IList<PeptideInstance> Peptides { get; set; }
 
         public virtual bool IsDecoy { get { return isDecoy; } }
         public virtual int Cluster { get { return cluster; } }
-        public virtual string ProteinGroup { get { return proteinGroup; } }
+        public virtual int ProteinGroup { get { return proteinGroup; } }
         public virtual int Length { get { return length; } }
 
         public virtual double Coverage { get { return pc == null ? 0 : pc.Coverage; } private set { } }
@@ -171,7 +171,7 @@ namespace IDPicker.DataModel
 
         bool isDecoy = false;
         int cluster = 0;
-        string proteinGroup = "";
+        int proteinGroup = 0;
         int length = 0;
 
         protected internal virtual ProteinMetadata pmd { get; set; }
@@ -193,6 +193,7 @@ namespace IDPicker.DataModel
 
         public virtual double MonoisotopicMass { get; set; }
         public virtual double MolecularWeight { get; set; }
+        public virtual int PeptideGroup { get { return peptideGroup; } }
 
         #region Transient instance members
         public Peptide () { }
@@ -201,8 +202,9 @@ namespace IDPicker.DataModel
             this.sequence = sequence;
         }
 
-        private string sequence = null;
-        private string DecoySequence { get; set; }
+        string sequence = null;
+        int peptideGroup = 0;
+        string DecoySequence { get; set; }
         #endregion
     }
 
@@ -249,7 +251,6 @@ namespace IDPicker.DataModel
         public virtual IDictionary<string, double> Scores { get; set; }
 
         public virtual string DistinctMatchKey { get { return distinctMatchKey; } }
-        public virtual string DistinctMatchAndChargeKey { get { return distinctMatchAndChargeKey; } }
 
         /// <summary>
         /// Valid Q values are always between 0 and 1;
@@ -278,7 +279,6 @@ namespace IDPicker.DataModel
         }
 
         private string distinctMatchKey = "";
-        private string distinctMatchAndChargeKey = "";
         #endregion
     }
 

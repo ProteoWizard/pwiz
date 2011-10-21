@@ -69,7 +69,7 @@ namespace IDPicker
         FragmentationStatisticsForm fragmentationStatisticsForm;
         PeakStatisticsForm peakStatisticsForm;
 
-        //LogForm logForm;
+        LogForm logForm = null;
         //SpyEventLogForm spyEventLogForm;
 
         NHibernate.ISession session;
@@ -152,7 +152,6 @@ namespace IDPicker
 
             //logForm = new LogForm();
             //Console.SetOut(logForm.LogWriter);
-            //logForm.Show(dockPanel, DockState.DockBottomAutoHide);
             Console.SetOut(TextWriter.Null);
 
             /*spyEventLogForm = new SpyEventLogForm();
@@ -250,27 +249,21 @@ namespace IDPicker
             else
             {
                 var fileTypeList = new List<string>
-                                       {
-                                           "IDPicker Files|.idpDB;.idpXML;.pepXML;.pep.xml",
-                                           "PepXML Files|.pepXML;.pep.xml",
-                                           "IDPicker XML|.idpXML",
-                                           "IDPicker DB|.idpDB"
-                                       };
+                {
+                    "IDPicker Files|.idpDB;.idpXML;.pepXML;.pep.xml",
+                    "PepXML Files|.pepXML;.pep.xml",
+                    "IDPicker XML|.idpXML",
+                    "IDPicker DB|.idpDB"
+                };
 
                 var openFileDialog = new IDPOpenDialog(fileTypeList);
 
                 if (openFileDialog.ShowDialog() == DialogResult.OK)
                 {
-                    var tempFileNames = openFileDialog.GetFileNames();
+                    fileNames = openFileDialog.GetFileNames().Distinct().ToList();
                     treeStructure = openFileDialog.GetTreeStructure();
-                    if (!tempFileNames.Any())
+                    if (!fileNames.Any())
                         return;
-
-                    //remove duplicate file names
-                    var fileList = new HashSet<string>();
-                    foreach (var item in tempFileNames)
-                        fileList.Add(item);
-                    fileNames = fileList.ToList();
                 }
                 else return;
             }
@@ -299,7 +292,7 @@ namespace IDPicker
                 session = null;
             }
 
-            new Thread(() => OpenFiles(fileNames, treeStructure)).Start();
+            new Thread(() => { OpenFiles(fileNames, treeStructure); }).Start();
         }
 
         #region Handling of events for spectrum/protein visualization
@@ -355,10 +348,13 @@ namespace IDPicker
             string spectrumListFilters = param == null ? String.Empty : param.Value;
             spectrumListFilters = spectrumListFilters.Replace("0 ", "false ");
 
+            var ionSeries = PeptideFragmentationAnnotation.IonSeries.Auto;
+            if (sourcePath.ToLower().EndsWith(".mgf"))
+                ionSeries = PeptideFragmentationAnnotation.IonSeries.b | PeptideFragmentationAnnotation.IonSeries.y;
+
             string psmString = DataModel.ExtensionMethods.ToModifiedString(psm);
             var annotation = new PeptideFragmentationAnnotation(psmString, 1, Math.Max(1, psm.Charge - 1),
-                                                                PeptideFragmentationAnnotation.IonSeries.Auto,
-                                                                true, false, true, false);
+                                                                ionSeries, true, false, true, false);
 
             (manager.SpectrumAnnotationForm.Controls[0] as ToolStrip).Hide();
             (manager.SpectrumAnnotationForm.Controls[1] as SplitContainer).Panel1Collapsed = true;
@@ -563,11 +559,11 @@ namespace IDPicker
             if (args != null && args.Length > 0 && args.All(o => File.Exists(o)))
             {
                 var grouping = CreateGroupingFromArgs(args);
-                new Thread(() => { OpenFiles(args,grouping); }).Start();
+                new Thread(() => { OpenFiles(args, grouping); }).Start();
             }
         }
 
-        private TreeNode CreateGroupingFromArgs(IEnumerable<string> sources)
+        private TreeNode CreateGroupingFromArgs (IEnumerable<string> sources)
         {
             var fileTypeList = new List<string>
             {
@@ -577,10 +573,10 @@ namespace IDPicker
                 "IDPicker DB|.idpDB"
             };
             var ofd = new IDPOpenDialog(fileTypeList)
-                          {
-                              ShowInTaskbar = false,
-                              WindowState = FormWindowState.Minimized
-                          };
+            {
+                ShowInTaskbar = false,
+                WindowState = FormWindowState.Minimized
+            };
             ofd.Show();
             var structure = ofd.GetTreeStructure(sources);
             ofd.Close();
@@ -922,6 +918,9 @@ namespace IDPicker
                     }
                     session.Flush();
 
+                    // set source grouping
+                    //SetStructure(rootNode);
+
                     //breadCrumbControl.BreadCrumbs.Clear();
 
                     basicFilter = DataFilter.LoadFilter(session);
@@ -950,6 +949,8 @@ namespace IDPicker
 
                         setData();
                     }
+
+                    if (logForm != null) logForm.Show(dockPanel, DockState.DockBottomAutoHide);
                 }));
             }
             catch (Exception ex)
@@ -1253,7 +1254,7 @@ namespace IDPicker
 
             if (modificationTableForm != null)
             {
-                var table = modificationTableForm.getFormTable();
+                var table = modificationTableForm.GetFormTable();
                 if (table.Count > 1)
                 {
                     reportDictionary.Add("Modification Table", table);
@@ -1261,7 +1262,7 @@ namespace IDPicker
             }
             if (proteinTableForm != null)
             {
-                var table = proteinTableForm.getFormTable();
+                var table = proteinTableForm.GetFormTable();
                 if (table.Count > 1)
                 {
                     reportDictionary.Add("Protein Table", table);
@@ -1269,7 +1270,7 @@ namespace IDPicker
             }
             if (peptideTableForm != null)
             {
-                var table = peptideTableForm.getFormTable();
+                var table = peptideTableForm.GetFormTable();
                 if (table.Count > 1)
                 {
                     reportDictionary.Add("Peptide Table", table);
@@ -1594,6 +1595,7 @@ namespace IDPicker
             var bg = new BackgroundWorker { WorkerReportsProgress = true };
             bg.DoWork += delegate { CreateHtmlReport(bg, outFolder); };
             bg.ProgressChanged += delegate { progressWindow.Close(); };
+            bg.RunWorkerCompleted += (x, y) => { if (y.Error != null) Program.HandleException(y.Error); };
             bg.RunWorkerAsync();
         }
 
@@ -1618,7 +1620,7 @@ namespace IDPicker
             //generate html Files););
             if (proteinTableForm != null)
             {
-                var alltables = new List<List<List<string>>> { proteinTableForm.getFormTable(true, reportName) };
+                var alltables = new List<List<List<string>>> { proteinTableForm.GetFormTable(true, reportName) };
                 ;
                 if (alltables.Count > 0 && (alltables.Count > 1 || alltables[0].Count > 1))
                     TableExporter.CreateHTMLTablePage(alltables, Path.Combine(outFolder, reportName + "-protein.html"), reportName + "- Proteins",
@@ -1626,14 +1628,14 @@ namespace IDPicker
             }
             if (peptideTableForm != null)
             {
-                var alltables = new List<List<List<string>>> { peptideTableForm.getFormTable() };
+                var alltables = new List<List<List<string>>> { peptideTableForm.GetFormTable() };
                 if (alltables.Count > 0 && (alltables.Count > 1 || alltables[0].Count > 1))
                     TableExporter.CreateHTMLTablePage(alltables, Path.Combine(outFolder, reportName + "-peptide.html"), reportName + "- Peptides",
                                                       true, false, false);
             }
             if (modificationTableForm != null)
             {
-                var alltables = new List<List<List<string>>> { modificationTableForm.getFormTable() };
+                var alltables = new List<List<List<string>>> { modificationTableForm.GetFormTable() };
                 if (alltables.Count > 0 && (alltables.Count > 1 || alltables[0].Count > 1))
                     TableExporter.CreateHTMLTablePage(alltables, Path.Combine(outFolder, reportName + "-modificationTable.html"),
                                                       reportName + "- Modification Summary Table",
@@ -1770,12 +1772,10 @@ namespace IDPicker
                                                "Description"
                                            }
                                    };
-            var clusterFilter = new DataFilter(viewFilter) {Cluster = new List<long> {cluster}};
+            var clusterFilter = new DataFilter(viewFilter) {Cluster = new List<int> {cluster}};
             var proteinGroupQuery = session.CreateQuery(
-                    "SELECT DISTINCT_GROUP_CONCAT(pro.Accession), " +
-                    "       COUNT(DISTINCT psm.Peptide.id), " +
-                    "       COUNT(DISTINCT psm.id), " +
-                    "       COUNT(DISTINCT psm.Spectrum.id), " +
+                    ProteinTableForm.AggregateRow.Selection + ", " +
+                    "       DISTINCT_GROUP_CONCAT(pro.Accession), " +
                     "       pro.ProteinGroup, " +
                     "       MIN(pro.Id), " +
                     "       MIN(pro.Length), " +
@@ -1789,7 +1789,7 @@ namespace IDPicker
                     "ORDER BY COUNT(DISTINCT psm.Peptide.id) DESC");//, COUNT(DISTINCT psm.id) DESC, COUNT(DISTINCT psm.Spectrum.id) DESC");
 
             proteinGroupQuery.SetReadOnly(true);
-            var proteinGroupList = proteinGroupQuery.List<object[]>().Select(o => new ProteinTableForm.ProteinGroupRow(o)).ToList();
+            var proteinGroupList = proteinGroupQuery.List<object[]>().Select(o => new ProteinTableForm.ProteinGroupRow(o, viewFilter)).ToList();
             ci.proteinGroupCount = proteinGroupList.Count;
 
             for (int x = 0; x < proteinGroupList.Count ;x++ )
@@ -1810,13 +1810,11 @@ namespace IDPicker
                 proteinGroup.Proteins.Replace(",", "','")))
                 .List<Protein>();
                 var proteinFilter = new DataFilter(clusterFilter) { Protein = allGroupedProteins };
-                var peptideQuery = session.CreateQuery("SELECT psm.Peptide, " +
-                                                       "       COUNT(DISTINCT psm.DistinctMatchKey), " +
-                                                       "       COUNT(DISTINCT psm.Spectrum) " +
+                var peptideQuery = session.CreateQuery(PeptideTableForm.AggregateRow.Selection + ", psm.Peptide " +
                                                        proteinFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
                                                        "GROUP BY psm.Peptide " +
                                                        "ORDER BY COUNT(DISTINCT psm.DistinctMatchKey) DESC, COUNT(DISTINCT psm.Spectrum) DESC");
-                var peptides = peptideQuery.List<object[]>().Select(o => new PeptideTableForm.PeptideRow(o)).ToList();
+                var peptides = peptideQuery.List<object[]>().Select(o => new PeptideTableForm.DistinctPeptideRow(o, proteinFilter)).ToList();
                 peptideQuery.SetReadOnly(true);
 
                 foreach (var peptide in peptides)

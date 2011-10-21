@@ -112,6 +112,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Lib\SQLite\System.Data.SQLite.DLL</HintPath>
     </Reference>
+    <Reference Include="System.DirectoryServices" />
     <Reference Include="System.Xml.Linq">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
@@ -134,6 +135,12 @@
     </Compile>
     <Compile Include="Forms\AnalysisTableForm.Designer.cs">
       <DependentUpon>AnalysisTableForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\BaseTableForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\BaseTableForm.Designer.cs">
+      <DependentUpon>BaseTableForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\ColumnControlForm.cs">
       <SubType>Form</SubType>
@@ -176,6 +183,12 @@
     </Compile>
     <Compile Include="Forms\QonverterSettingsManagerForm.Designer.cs">
       <DependentUpon>QonverterSettingsManagerForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Forms\ReportErrorDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\ReportErrorDlg.designer.cs">
+      <DependentUpon>ReportErrorDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\SequenceCoverageForm.cs">
       <SubType>Form</SubType>
@@ -292,6 +305,9 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Forms\BaseTableForm.resx">
+      <DependentUpon>BaseTableForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\ColumnControlForm.resx">
       <DependentUpon>ColumnControlForm.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -315,6 +331,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\QonverterSettingsManagerForm.resx">
       <DependentUpon>QonverterSettingsManagerForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Forms\ReportErrorDlg.resx">
+      <DependentUpon>ReportErrorDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\SequenceCoverageForm.resx">
       <DependentUpon>SequenceCoverageForm.cs</DependentUpon>

@@ -318,10 +318,10 @@ struct ParserImpl
                       "CREATE TABLE Analysis (Id INTEGER PRIMARY KEY, Name TEXT, SoftwareName TEXT, SoftwareVersion TEXT, Type INT, StartTime DATETIME);"
                       "CREATE TABLE AnalysisParameter (Id INTEGER PRIMARY KEY, Analysis INT, Name TEXT, Value TEXT);"
                       "CREATE TABLE Modification (Id INTEGER PRIMARY KEY, MonoMassDelta NUMERIC, AvgMassDelta NUMERIC, Formula TEXT, Name TEXT);"
-                      "CREATE TABLE Protein (Id INTEGER PRIMARY KEY, Accession TEXT, IsDecoy INT, Cluster INT, ProteinGroup TEXT, Length INT);"
+                      "CREATE TABLE Protein (Id INTEGER PRIMARY KEY, Accession TEXT, IsDecoy INT, Cluster INT, ProteinGroup INT, Length INT);"
                       "CREATE TABLE ProteinData (Id INTEGER PRIMARY KEY, Sequence TEXT);"
                       "CREATE TABLE ProteinMetadata (Id INTEGER PRIMARY KEY, Description TEXT);"
-                      "CREATE TABLE Peptide (Id INTEGER PRIMARY KEY, MonoisotopicMass NUMERIC, MolecularWeight NUMERIC, DecoySequence TEXT);"
+                      "CREATE TABLE Peptide (Id INTEGER PRIMARY KEY, MonoisotopicMass NUMERIC, MolecularWeight NUMERIC, PeptideGroup INT, DecoySequence TEXT);"
                       "CREATE TABLE PeptideInstance (Id INTEGER PRIMARY KEY, Protein INT, Peptide INT, Offset INT, Length INT, NTerminusIsSpecific INT, CTerminusIsSpecific INT, MissedCleavages INT);"
                       //"CREATE TABLE PeptideSequence (Id INTEGER PRIMARY KEY, Sequence TEXT);"
                       "CREATE TABLE PeptideSpectrumMatch (Id INTEGER PRIMARY KEY, Spectrum INT, Analysis INT, Peptide INT, QValue NUMERIC, MonoisotopicMass NUMERIC, MolecularWeight NUMERIC, MonoisotopicMassError NUMERIC, MolecularWeightError NUMERIC, Rank INT, Charge INT);"
@@ -426,7 +426,7 @@ struct ParserImpl
 
         // create commands for inserting results
         sqlite::command insertSpectrum(idpDb, "INSERT INTO Spectrum (Id, Source, Index_, NativeID, PrecursorMZ) VALUES (?,1,?,?,?)");
-        sqlite::command insertPeptide(idpDb, "INSERT INTO Peptide (Id, MonoisotopicMass, MolecularWeight, DecoySequence) VALUES (?,?,?,?)");
+        sqlite::command insertPeptide(idpDb, "INSERT INTO Peptide (Id, MonoisotopicMass, MolecularWeight, PeptideGroup, DecoySequence) VALUES (?,?,?,0,?)");
         //sqlite::command insertPeptideSequence(idpDb, "INSERT INTO PeptideSequence (Id, Sequence) VALUES (?,?)");
         sqlite::command insertPSM(idpDb, "INSERT INTO PeptideSpectrumMatch (Id, Spectrum, Analysis, Peptide, QValue, MonoisotopicMass, MolecularWeight, MonoisotopicMassError, MolecularWeightError, Rank, Charge) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
         sqlite::command insertPeptideModification(idpDb, "INSERT INTO PeptideModification (Id, PeptideSpectrumMatch, Modification, Offset, Site) VALUES (?,?,?,?,?)");

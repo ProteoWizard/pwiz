@@ -25,12 +25,16 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.Threading;
 using DigitalRune.Windows.Docking;
 using IDPicker.DataModel;
+using IDPicker.Controls;
+using pwiz.CLI.data;
+using proteome = pwiz.CLI.proteome;
 
 namespace IDPicker.Forms
 {
@@ -52,10 +56,100 @@ namespace IDPicker.Forms
 
             Text = TabText = "Modification View";
 
-            dataGridView.CellDoubleClick += new DataGridViewCellEventHandler(dataGridView_CellDoubleClick);
-            dataGridView.KeyDown += new KeyEventHandler(dataGridView_KeyDown);
+            dataGridView.PreviewCellClick += dataGridView_PreviewCellClick;
+            dataGridView.CellDoubleClick += dataGridView_CellDoubleClick;
+            dataGridView.KeyDown += dataGridView_KeyDown;
+            dataGridView.CellFormatting += dataGridView_CellFormatting;
+
+            dataGridView.ShowCellToolTips = true;
+            dataGridView.CellToolTipTextNeeded += dataGridView_CellToolTipTextNeeded;
+            dataGridView.CellPainting += new DataGridViewCellPaintingEventHandler(dataGridView_CellPainting);
+            brush = new SolidBrush(dataGridView.ForeColor);
         }
 
+        const string deltaMassColumnName = "ΔMass";
+
+        Brush brush;
+        void dataGridView_CellPainting (object sender, DataGridViewCellPaintingEventArgs e)
+        {
+            if (e.RowIndex >= 0 || e.ColumnIndex >= 0)
+                return;
+
+            e.Paint(e.CellBounds, e.PaintParts);
+            SizeF textSize = e.Graphics.MeasureString(deltaMassColumnName, dataGridView.Font);
+            Rectangle textBounds = e.CellBounds;
+            textBounds.Offset((int) Math.Round(textSize.Width / 2), (int) Math.Round(textSize.Height / 3));
+            e.Graphics.DrawString(deltaMassColumnName, dataGridView.Font, brush, textBounds);
+            e.Handled = true;
+        }
+
+        int rowSortColumnIndex = -1, columnSortRowIndex = -1;
+        SortOrder rowSortOrder = SortOrder.Descending, columnSortOrder = SortOrder.None;
+        void dataGridView_PreviewCellClick (object sender, DataGridViewPreviewCellClickEventArgs e)
+        {
+            // ignore double-clicks
+            if (e.Clicks > 1)
+                return;
+
+            // clicking on top-left cell sorts by delta mass;
+            // clicking on other column header sorts by count for the site
+            if (e.RowIndex < 0)
+            {
+                // initial sort is descending except for delta mass
+                SortOrder initialSortOrder = e.ColumnIndex < 0 ? SortOrder.Ascending : SortOrder.Descending;
+                if (rowSortColumnIndex != e.ColumnIndex)
+                    rowSortOrder = initialSortOrder;
+                else if (rowSortOrder == SortOrder.Ascending)
+                    rowSortOrder = SortOrder.Descending;
+                else
+                    rowSortOrder = SortOrder.Ascending;
+
+                rowSortColumnIndex = e.ColumnIndex;
+
+                var column = e.ColumnIndex < 0 ? dataGridView.Columns[0] : dataGridView.Columns[e.ColumnIndex];
+                dataGridView.Sort(column, rowSortOrder == SortOrder.Ascending ? ListSortDirection.Ascending
+                                                                              : ListSortDirection.Descending);
+
+                foreach (DataGridViewRow row in dataGridView.Rows)
+                    row.HeaderCell.Value = (row.DataBoundItem as DataRowView).Row[deltaMassColumnName].ToString();
+
+                e.Handled = true;
+            }
+            // clicking on row header sorts by count for the delta mass
+            else if (e.ColumnIndex < 0)
+            {
+                var row = dataGridView.Rows[e.RowIndex];
+
+                // build a map of columns by spectrum count (skip mass and total columns)
+                var columnsBySiteAndSpectrumCount = new Map<int, Map<string, DataGridViewColumn>>();
+                for (int i = 2; i < dataGridView.Columns.Count; ++i)
+                {
+                    var site = dataGridView.Columns[i].Name;
+                    var spectrumCount = row.Cells[i].Value is int ? (int) row.Cells[i].Value : 0;
+                    columnsBySiteAndSpectrumCount[spectrumCount][site] = dataGridView.Columns[i];
+                }
+
+                // initial sort is descending
+                if (columnSortRowIndex != e.RowIndex ||
+                    columnSortOrder == SortOrder.None ||
+                    columnSortOrder == SortOrder.Ascending)
+                    columnSortOrder = SortOrder.Descending;
+                else
+                    columnSortOrder = SortOrder.Ascending;
+
+                columnSortRowIndex = e.RowIndex;
+
+                var columns = columnSortOrder == SortOrder.Descending ? columnsBySiteAndSpectrumCount.Values.Reverse()
+                                                                      : columnsBySiteAndSpectrumCount.Values;
+
+                // assign display index in order of spectrum count (site is tie-breaker)
+                int displayIndex = 1; // start after mass and total columns
+                foreach (var itr in columns)
+                    foreach (var itr2 in itr)
+                        itr2.Value.DisplayIndex = ++displayIndex;
+                e.Handled = true;
+            }
+        }
 
         void dataGridView_CellDoubleClick (object sender, DataGridViewCellEventArgs e)
         {
@@ -63,12 +157,9 @@ namespace IDPicker.Forms
             if (ModificationViewFilter == null)
                 return;
 
-            // ignore top-left cell
-            if (e.ColumnIndex == 0 && e.RowIndex < 0)
+            // ignore header cells
+            if (e.ColumnIndex < 0 || e.RowIndex < 0)
                 return;
-
-            if (e.RowIndex < 0)
-                return; // TODO
 
             var cell = dataGridView[e.ColumnIndex, e.RowIndex];
 
@@ -83,21 +174,24 @@ namespace IDPicker.Forms
                 site = this.siteColumnNameToSite[cell.OwningColumn.HeaderText];
 
             if (site != null)
-                newDataFilter.ModifiedSite = new List<char> {site.Value};
+                newDataFilter.ModifiedSite = new List<char> { site.Value };
 
             newDataFilter.Modifications = session.CreateQuery(
                                                 "SELECT pm.Modification " +
                                                 "FROM PeptideSpectrumMatch psm JOIN psm.Modifications pm " +
-                                                " WHERE ROUND(pm.Modification.MonoMassDelta)=" + cell.OwningRow.Cells[0].Value.ToString() +
+                                                " WHERE ROUND(pm.Modification.MonoMassDelta)=" + cell.OwningRow.HeaderCell.Value.ToString() +
                                                 (site != null ? " AND pm.Site='" + site + "'" : "") +
                                                 " GROUP BY pm.Modification.id")
                                                .List<DataModel.Modification>();
+
+            if (newDataFilter.Modifications.Count == 0)
+                throw new InvalidDataException("no modifications found at the rounded mass");
 
             // send filter event
             ModificationViewFilter(this, newDataFilter);
         }
 
-        void dataGridView_KeyDown(object sender, KeyEventArgs e)
+        void dataGridView_KeyDown (object sender, KeyEventArgs e)
         {
             if (e.KeyCode != Keys.Enter) return;
             e.Handled = true;
@@ -114,6 +208,7 @@ namespace IDPicker.Forms
                 // if the clicked cell is blank, don't apply a filter
                 if (cell.Value == DBNull.Value)
                     continue;
+
                 // ignore top-left cell
                 if (cell.ColumnIndex == 0 && cell.RowIndex < 0)
                     continue;
@@ -158,8 +253,10 @@ namespace IDPicker.Forms
         private DataTable deltaMassTable, basicDeltaMassTable;
         private int totalModifications, basicTotalModifications;
 
+        private Map<string, Map<double, List<unimod.Modification>>> basicDeltaMassAnnotations;
+
         // TODO: support multiple selected cells
-        Pair<int, string> oldSelectedAddress = null;
+        Pair<double, string> oldSelectedAddress = null;
 
         public string GetSiteColumnName (char site)
         {
@@ -171,13 +268,11 @@ namespace IDPicker.Forms
                 return site.ToString();
         }
 
-        private DataTable createDeltaMassTableFromQuery(NHibernate.IQuery modificationQuery, out int totalModifications, out Map<string, char> siteColumnNameToSite)
+        private DataTable createDeltaMassTableFromQuery (IList<object[]> queryRows, out int totalModifications, out Map<string, char> siteColumnNameToSite)
         {
-            const string deltaMassColumnName = "ΔMass";
-
             DataTable deltaMassTable = new DataTable();
             deltaMassTable.BeginLoadData();
-            deltaMassTable.Columns.Add(new DataColumn() { ColumnName = deltaMassColumnName, DataType = typeof(int) });
+            deltaMassTable.Columns.Add(new DataColumn() { ColumnName = deltaMassColumnName, DataType = typeof(double) });
             deltaMassTable.PrimaryKey = new DataColumn[] { deltaMassTable.Columns[0] };
             deltaMassTable.DefaultView.Sort = deltaMassColumnName;
 
@@ -185,10 +280,13 @@ namespace IDPicker.Forms
 
             totalModifications = 0;
 
-            foreach (var tuple in modificationQuery.List<object[]>())
+            var totalColumn = new DataColumn() { ColumnName = "Total", DataType = typeof(int) };
+            deltaMassTable.Columns.Add(totalColumn);
+
+            foreach (var tuple in queryRows)
             {
                 var mod = tuple[1] as DataModel.Modification;
-                int roundedMass = (int) Math.Round(mod.MonoMassDelta);
+                double roundedMass = Math.Round(mod.MonoMassDelta);
                 char site = (char) tuple[0];
                 string siteColumnName = GetSiteColumnName(site);
 
@@ -203,18 +301,53 @@ namespace IDPicker.Forms
                 {
                     row = deltaMassTable.NewRow();
                     row[deltaMassColumnName] = roundedMass;
+                    row[totalColumn] = 0;
                     deltaMassTable.Rows.Add(row);
                 }
                 else
                     row = deltaMassTable.Rows.Find(roundedMass);
 
                 row[siteColumnName] = Convert.ToInt32(tuple[2]);
+                row[totalColumn] = (int) row[totalColumn] + (int) row[siteColumnName];
                 totalModifications += (int) row[siteColumnName];
             }
             deltaMassTable.AcceptChanges();
             deltaMassTable.EndLoadData();
 
             return deltaMassTable;
+        }
+
+        private void findDeltaMassAnnotations ()
+        {
+            basicDeltaMassAnnotations = new Map<string, Map<double, List<unimod.Modification>>>();
+
+            foreach (DataRow deltaMassRow in basicDeltaMassTable.Rows)
+                foreach (DataColumn siteColumn in basicDeltaMassTable.Columns)
+                {
+                    if (siteColumn.ColumnName == "Total")
+                        continue;
+
+                    double deltaMass = (double) deltaMassRow[deltaMassColumnName];
+
+                    char deltaMassSite;
+                    if (siteColumn.ColumnName == "N-term")
+                        deltaMassSite = 'n';
+                    else if (siteColumn.ColumnName == "C-term")
+                        deltaMassSite = 'c';
+                    else
+                        deltaMassSite = siteColumn.ColumnName[0];
+
+                    unimod.Filter filter = new unimod.Filter(deltaMass, 1) { site = unimod.site(deltaMassSite), approved = true };
+                    var possibleAnnotations = unimod.modifications(filter);
+                    if (possibleAnnotations.Count > 0)
+                    {
+                        var possibleAnnotationList = basicDeltaMassAnnotations[siteColumn.ColumnName][deltaMass];
+                        foreach (var annotation in possibleAnnotations)
+                            possibleAnnotationList.Add(annotation);
+                    }
+                }
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
         }
 
         public void SetData (NHibernate.ISession session, DataFilter dataFilter)
@@ -224,9 +357,9 @@ namespace IDPicker.Forms
             this.dataFilter = new DataFilter(dataFilter) { Modifications = null, ModifiedSite = null };
 
             if (dataGridView.SelectedCells.Count > 0)
-                oldSelectedAddress = new Pair<int, string>()
+                oldSelectedAddress = new Pair<double, string>()
                 {
-                    first = (int) dataGridView.SelectedCells[0].OwningRow.Cells[0].Value,
+                    first = (double) dataGridView.SelectedCells[0].OwningRow.Cells[0].Value,
                     second = dataGridView.SelectedCells[0].OwningColumn.Name
                 };
 
@@ -258,13 +391,16 @@ namespace IDPicker.Forms
         public void ClearData (bool clearBasicFilter)
         {
             if (clearBasicFilter)
+            {
                 basicDataFilter = null;
+                basicDeltaMassTable = null;
+                basicDeltaMassAnnotations = null;
+            }
             ClearData();
         }
 
         void setData (object sender, DoWorkEventArgs e)
         {
-            lock (session)
             try
             {
                 var query = session.CreateQuery("SELECT pm.Site, pm.Modification, COUNT(DISTINCT psm.Spectrum) " +
@@ -279,7 +415,9 @@ namespace IDPicker.Forms
                     if (basicDataFilter == null || (dataFilter.IsBasicFilter && dataFilter != basicDataFilter))
                     {
                         basicDataFilter = new DataFilter(dataFilter);
-                        basicDeltaMassTable = createDeltaMassTableFromQuery(query, out basicTotalModifications, out siteColumnNameToSite);
+                        IList<object[]> queryRows; lock (session) queryRows = query.List<object[]>();
+                        basicDeltaMassTable = createDeltaMassTableFromQuery(queryRows, out basicTotalModifications, out siteColumnNameToSite);
+                        findDeltaMassAnnotations();
                     }
 
                     deltaMassTable = basicDeltaMassTable;
@@ -288,20 +426,25 @@ namespace IDPicker.Forms
                 else
                 {
                     Map<string, char> dummy;
-                    deltaMassTable = createDeltaMassTableFromQuery(query, out totalModifications, out dummy);
+                    IList<object[]> queryRows; lock (session) queryRows = query.List<object[]>();
+                    deltaMassTable = createDeltaMassTableFromQuery(queryRows, out totalModifications, out dummy);
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                e.Result = ex;
             }
         }
 
         void renderData (object sender, RunWorkerCompletedEventArgs e)
         {
-            Text = TabText = String.Format("Modification View: {0} modifications", totalModifications);           
+            if (e.Result is Exception)
+                Program.HandleException(e.Result as Exception);
+
+            Text = TabText = String.Format("Modification View: {0} modifications", totalModifications);
 
             dataGridView.DataSource = deltaMassTable;
+            dataGridView.Columns[deltaMassColumnName].Visible = false;
 
             try
             {
@@ -325,6 +468,9 @@ namespace IDPicker.Forms
             }
 
             dataGridView.Refresh();
+
+            foreach (DataGridViewRow row in dataGridView.Rows)
+                row.HeaderCell.Value = (row.DataBoundItem as DataRowView).Row[deltaMassColumnName].ToString();
         }
 
         /// <summary>
@@ -333,33 +479,92 @@ namespace IDPicker.Forms
         /// </summary>
         private void dataGridView_CellFormatting (object sender, DataGridViewCellFormattingEventArgs e)
         {
-            if (e.Value != null && e.ColumnIndex > 0 && e.Value.ToString().Length > 0)
+            if (e.Value != null && e.ColumnIndex > 0 && e.Value is int)
             {
-                int val = Int32.Parse(e.Value.ToString());
+                bool hasAnnotations = false;
+                double deltaMass = (double) dataGridView.Rows[e.RowIndex].Cells[deltaMassColumnName].Value;
+                string deltaMassSite = dataGridView.Columns[e.ColumnIndex].Name;
+
+                bool isResidueMass = false;
+                if (deltaMassSite.Length == 1)
+                {
+                    double residueMass = proteome.AminoAcidInfo.record(deltaMassSite[0]).residueFormula.monoisotopicMass();
+                    isResidueMass = Math.Abs(Math.Abs(deltaMass) - residueMass) < 1;
+                }
+
+                int val = (int) e.Value;
                 if (val > 10 && val < 50)
                     e.CellStyle.BackColor = Color.PaleGreen;
                 else if (val >= 50 && val < 100)
                     e.CellStyle.BackColor = Color.DeepSkyBlue;
                 else if (val >= 100)
                     e.CellStyle.BackColor = Color.OrangeRed;
+
+                if (basicDeltaMassAnnotations != null)
+                {
+                    var itr = basicDeltaMassAnnotations.Find(deltaMassSite);
+                    if (itr.IsValid)
+                    {
+                        var itr2 = itr.Current.Value.Find(deltaMass);
+                        if (itr2.IsValid)
+                            hasAnnotations = true;
+                    }
+                }
+                var style = FontStyle.Regular;
+                if (hasAnnotations) style = FontStyle.Bold;
+                if (isResidueMass) style |= FontStyle.Italic;
+                e.CellStyle.Font = new Font(e.CellStyle.Font, style);
             }
         }
 
-        private void clipboardToolStripMenuItem_Click(object sender, EventArgs e)
+        void dataGridView_CellToolTipTextNeeded (object sender, DataGridViewCellToolTipTextNeededEventArgs e)
         {
-            var table = getFormTable();
+            if (e.ColumnIndex < 0 || e.RowIndex < 0)
+            {
+                if (e.ColumnIndex < 0 && e.RowIndex < 0)
+                    e.ToolTipText = "Left-click to sort by delta mass.";
+                else if (e.RowIndex < 0)
+                    e.ToolTipText = "Left-click to sort rows by this column.";
+                else
+                    e.ToolTipText = "Left-click to sort columns by this row.";
+                return;
+            }
+
+            if (basicDeltaMassAnnotations == null)
+                return;
+
+            var cell = dataGridView[e.ColumnIndex, e.RowIndex];
+            if (cell.Value == null || !(cell.Value is int))
+                return;
+
+            var annotation = new StringBuilder();
+            var itr = basicDeltaMassAnnotations.Find(dataGridView.Columns[e.ColumnIndex].Name);
+            if (itr.IsValid)
+            {
+                double deltaMass = (double) dataGridView.Rows[e.RowIndex].Cells[deltaMassColumnName].Value;
+                var itr2 = itr.Current.Value.Find(deltaMass);
+                if (itr2.IsValid)
+                    foreach (var mod in itr2.Current.Value)
+                        annotation.AppendFormat("{0} (monoisotopic Δmass={1})\r\n", mod.name, mod.deltaMonoisotopicMass);
+            }
+            e.ToolTipText = annotation.ToString();
+        }
+
+        private void clipboardToolStripMenuItem_Click (object sender, EventArgs e)
+        {
+            var table = GetFormTable();
 
             TableExporter.CopyToClipboard(table);
         }
 
-        private void fileToolStripMenuItem_Click(object sender, EventArgs e)
+        private void fileToolStripMenuItem_Click (object sender, EventArgs e)
         {
-            var table = getFormTable();
+            var table = GetFormTable();
 
             TableExporter.ExportToFile(table);
         }
 
-        private void exportButton_Click(object sender, EventArgs e)
+        private void exportButton_Click (object sender, EventArgs e)
         {
             if (dataGridView.SelectedCells.Count > 1)
             {
@@ -377,73 +582,54 @@ namespace IDPicker.Forms
             exportMenu.Show(Cursor.Position);
         }
 
-        internal List<List<string>> getFormTable()
+        public virtual List<List<string>> GetFormTable ()
         {
-            var table = new List<List<string>>();
-            var row = new List<string>();
+            var exportTable = new List<List<string>>();
+            IList<int> exportedRows, exportedColumns;
 
-            if (dataGridView.SelectedCells.Count > 1)
+            if (dataGridView.SelectedCells.Count > 0 && !dataGridView.AreAllCellsSelected(false))
             {
-                var rowList = new List<int>();
-                var columnList = new List<int>();
+                var selectedRows = new Set<int>();
+                var selectedColumns = new Map<int, int>(); // ordered by DisplayIndex
 
                 foreach (DataGridViewCell cell in dataGridView.SelectedCells)
                 {
-                    if (!rowList.Contains(cell.RowIndex))
-                        rowList.Add(cell.RowIndex);
-                    if (!columnList.Contains(cell.ColumnIndex))
-                        columnList.Add(cell.ColumnIndex);
+                    selectedRows.Add(cell.RowIndex);
+                    selectedColumns[cell.OwningColumn.DisplayIndex] = cell.ColumnIndex;
                 }
-                rowList.Sort();
-                columnList.Sort();
 
-                //get column names
-                for (int x = 0; x < columnList.Count; x++)
-                    row.Add(dataGridView.Columns[columnList[x]].HeaderText.EndsWith("Mass")
-                                ? "Delta Mass"
-                                : dataGridView.Columns[columnList[x]].HeaderText);
-
-                table.Add(row);
-                row = new List<string>();
-
-                //Retrieve all items
-                for (int tableRow = 0; tableRow < rowList.Count; tableRow++)
-                {
-                    //row.Add(dataGridView.Rows[tableRow].HeaderCell.Value.ToString());
-                    for (int x = 0; x < columnList.Count; x++)
-                        row.Add(dataGridView[columnList[x], rowList[tableRow]].Value.ToString());
-
-                    table.Add(row);
-                    row = new List<string>();
-                }
+                exportedRows = selectedRows.ToList();
+                exportedColumns = selectedColumns.Values;
             }
             else
             {
-                //get column names
-                for (int x = 0; x < dataGridView.Columns.Count; x++)
-                    row.Add(dataGridView.Columns[x].HeaderText.EndsWith("Mass")
-                                ? "Delta Mass"
-                                : dataGridView.Columns[x].HeaderText);
-
-                table.Add(row);
-                row = new List<string>();
-
-                //Retrieve all items
-                for (int tableRow = 0; tableRow < dataGridView.Rows.Count; tableRow++)
-                {
-                    //row.Add(dataGridView.Rows[tableRow].HeaderCell.Value.ToString());
-                    for (int x = 0; x < dataGridView.Columns.Count; x++)
-                        row.Add(dataGridView[x, tableRow].Value.ToString());
-
-                    table.Add(row);
-                    row = new List<string>();
-                }
+                exportedRows = dataGridView.Rows.Cast<DataGridViewRow>().Select(o => o.Index).ToList();
+                exportedColumns = dataGridView.GetVisibleColumnsInDisplayOrder().Select(o => o.Index).ToList();
             }
 
-            return table;
+            // add column headers
+            exportTable.Add(new List<string>());
+            exportTable.Last().Add(deltaMassColumnName.Replace("Δ", "Delta "));
+            foreach (var columnIndex in exportedColumns)
+                exportTable.Last().Add(dataGridView.Columns[columnIndex].HeaderText);
+
+            foreach (int rowIndex in exportedRows)
+            {
+                var rowText = new List<string>();
+                rowText.Add(dataGridView.Rows[rowIndex].HeaderCell.Value.ToString());
+                foreach (var columnIndex in exportedColumns)
+                {
+                    object value = dataGridView[columnIndex, rowIndex].Value ?? String.Empty;
+                    rowText.Add(value.ToString());
+                }
+
+                exportTable.Add(rowText);
+            }
+
+            return exportTable;
         }
 
-        internal List<TreeNode> getModificationTree(string reportName)
+        internal List<TreeNode> getModificationTree (string reportName)
         {
             var groupNodes = new List<TreeNode>();
 
@@ -472,10 +658,10 @@ namespace IDPicker.Forms
                                             .List<DataModel.Modification>()
                                     };
 
-                var peptideList = session.CreateQuery("SELECT psm, (psm.Peptide || ' ' || ROUND(psm.MonoisotopicMass)), COUNT(DISTINCT psm.Spectrum) " +
-                                                 modFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
-                                                 "GROUP BY (psm.Peptide || ' ' || ROUND(psm.MonoisotopicMass))")
-                                    .List<object[]>().Select(o => new PeptideTableForm.PeptideSpectrumMatchRow(o));
+                var peptideList = session.CreateQuery(PeptideTableForm.AggregateRow.Selection + ", psm.Peptide, psm, psm.DistinctMatchKey " +
+                                                      modFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
+                                                      "GROUP BY psm.DistinctMatchKey")
+                                    .List<object[]>().Select(o => new PeptideTableForm.DistinctMatchRow(o, dataFilter));
                 if (!peptideList.Any()) continue;
 
 
@@ -494,10 +680,10 @@ namespace IDPicker.Forms
                     var cluster = peptide.PeptideSpectrumMatch.Peptide.Instances.First().Protein.Cluster;
                     var subNode = new TreeNode
                     {
-                        Text = peptide.DistinctPeptide.Sequence,
+                        Text = peptide.DistinctMatch.ToString(),
                         Tag = new[]
                                                         {
-                                                            "'" + peptide.DistinctPeptide.Sequence+"'",
+                                                            "'" + Text + "'",
                                                             string.Format("'<a href = \"{0}-cluster{1}.html\">{1}</a>'",
                                                                           reportName,cluster),
                                                             peptide.Spectra.ToString(),
@@ -511,9 +697,9 @@ namespace IDPicker.Forms
             return groupNodes;
         }
 
-        private void showInExcelToolStripMenuItem_Click(object sender, EventArgs e)
+        private void showInExcelToolStripMenuItem_Click (object sender, EventArgs e)
         {
-            var table = getFormTable();
+            var table = GetFormTable();
 
             var exportWrapper = new Dictionary<string, List<List<string>>> { { this.Name, table } };
 

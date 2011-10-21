@@ -440,7 +440,7 @@ namespace IDPicker.DataModel
 
 
         static string addNewPeptidesSql =
-              @"INSERT INTO merged.Peptide
+              @"INSERT INTO merged.Peptide (Id, MonoisotopicMass, MolecularWeight, DecoySequence)
                 SELECT AfterMergePeptide, MonoisotopicMass, MolecularWeight, DecoySequence
                 FROM {0}.Peptide newPep
                 JOIN PeptideInstanceMergeMap ON newPep.Id = BeforeMergePeptide

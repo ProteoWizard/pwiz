@@ -22,14 +22,20 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Windows.Forms;
 using System.Threading;
+using System.Net;
+using System.Text.RegularExpressions;
+using IDPicker.Forms;
 
 namespace IDPicker
 {
     static class Program
     {
+        public static IDPickerForm MainWindow { get; private set; }
+
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
@@ -47,44 +53,69 @@ namespace IDPicker
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-
             // Add the event handler for handling non-UI thread exceptions to the event. 
             AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
+
+            // initialize webClient asynchronously
+            initializeWebClient();
 
             Application.Run(new IDPickerForm(args));
         }
 
+        public static void HandleException (Exception e)
+        {
+            using (var reportForm = new ReportErrorDlg(e, ReportErrorDlg.ReportChoice.choice))
+            {
+                if (reportForm.ShowDialog(MainWindow) == DialogResult.OK)
+                    SendErrorReport(reportForm.MessageBody, reportForm.ExceptionType, reportForm.Email);
+                if (reportForm.ForceClose)
+                    System.Diagnostics.Process.GetCurrentProcess().Kill();
+            }
+        }
+
         private static void UIThread_UnhandledException (object sender, ThreadExceptionEventArgs e)
         {
-            /*Process newSeems = new Process();
-            newSeems.StartInfo.FileName = Application.ExecutablePath;
-            if( MainForm.CurrentFilepath.Length > 0 )
-                newSeems.StartInfo.Arguments = "\"" + MainForm.CurrentFilepath + "\" " + MainForm.CurrentScanIndex;
-            newSeems.Start();
-            Process.GetCurrentProcess().Kill();*/
-
-            string message = e.Exception.ToString();
-            if (e.Exception.InnerException != null)
-                message += "\n\nAdditional information: " + e.Exception.InnerException.ToString();
-            MessageBox.Show(message,
-                            "Unhandled Exception",
-                            MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1,
-                            0, false);
+            HandleException(e.Exception);
         }
 
         private static void CurrentDomain_UnhandledException (object sender, UnhandledExceptionEventArgs e)
         {
-            /*Process newSeems = new Process();
-            newSeems.StartInfo.FileName = Application.ExecutablePath;
-            if( MainForm.CurrentGraphForm.CurrentSourceFilepath.Length > 0 )
-                newSeems.StartInfo.Arguments = "\"" + MainForm.CurrentGraphForm.CurrentSourceFilepath + "\" " + MainForm.CurrentGraphForm.CurrentGraphItemIndex;
-            newSeems.Start();
-            Process.GetCurrentProcess().Kill();*/
+            HandleException(e.ExceptionObject as Exception);
+        }
 
-            MessageBox.Show((e.ExceptionObject is Exception ? (e.ExceptionObject as Exception).Message : "Unknown error."),
-                            "Unhandled Exception",
-                            MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1,
-                            0, false);
+        private static WebClient webClient = new WebClient();
+        private static void initializeWebClient ()
+        {
+            lock (webClient)
+                new Thread(() => { webClient.DownloadString("http://www.google.com"); }).Start();
+        }
+
+        private static void SendErrorReport (string messageBody, string exceptionType, string email)
+        {
+            const string address = "http://forge.fenchurch.mc.vanderbilt.edu/tracker/index.php?func=add&group_id=10&atid=149";
+
+            lock (webClient)
+            {
+                string html = webClient.DownloadString(address);
+                Match m = Regex.Match(html, "name=\"form_key\" value=\"(?<key>\\S+)\"");
+                if (!m.Groups["key"].Success)
+                {
+                    MessageBox.Show("Unable to find form_key for exception tracker.", "Error submitting report",
+                                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+
+                NameValueCollection form = new NameValueCollection
+                                               {
+                                                   {"form_key", m.Groups["key"].Value},
+                                                   {"func", "postadd"},
+                                                   {"summary", "Unhandled " + exceptionType},
+                                                   {"details", messageBody},
+                                                   {"user_email", email},
+                                               };
+
+                webClient.UploadValues(address, form);
+            }
         }
     }
 }

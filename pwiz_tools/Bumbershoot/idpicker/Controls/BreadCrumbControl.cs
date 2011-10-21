@@ -35,35 +35,6 @@ namespace IDPicker.Controls
 {
     internal class BreadCrumbToolStrip : ToolStrip
     {
-        /*protected ContentAlignment RtlTranslateAlignment (ContentAlignment align)
-        {
-            return ContentAlignment.MiddleRight;
-        }
-
-        protected HorizontalAlignment RtlTranslateAlignment (HorizontalAlignment align)
-        {
-            return HorizontalAlignment.Right;
-        }
-
-        protected LeftRightAlignment RtlTranslateAlignment (LeftRightAlignment align)
-        {
-            return LeftRightAlignment.Right;
-        }
-
-        protected internal ContentAlignment RtlTranslateContent (ContentAlignment align)
-        {
-            return ContentAlignment.MiddleRight;
-        }
-
-        protected HorizontalAlignment RtlTranslateHorizontal (HorizontalAlignment align)
-        {
-            return HorizontalAlignment.Right;
-        }
-
-        protected LeftRightAlignment RtlTranslateLeftRight (LeftRightAlignment align)
-        {
-            return LeftRightAlignment.Right;
-        }*/
     }
 
     public class BreadCrumb
@@ -79,43 +50,48 @@ namespace IDPicker.Controls
 
         private string SingleToShown(string text)
         {
+            var filter = Tag as DataFilter;
+
             if (text.Contains("Modified site (1)"))
-                text = text.Replace("Modified site (1)", "Modified site: " + ((DataFilter) Tag).ModifiedSite.First());
+                text = text.Replace("Modified site (1)", "Modified site: " + filter.ModifiedSite.First());
             if (text.Contains("Mass shift (1)"))
-                text = text.Replace("Mass shift (1)", "Mass shift: " + Math.Round(((DataFilter)Tag).Modifications.First().MonoMassDelta));
+                text = text.Replace("Mass shift (1)", "Mass shift: " + Math.Round(filter.Modifications.First().MonoMassDelta));
             else if (text.Contains("Cluster (1)"))
-                text = text.Replace(" (1)", ": " + ((DataFilter)Tag).Cluster.First());
+                text = text.Replace(" (1)", ": " + filter.Cluster.First());
+            else if (text.Contains("Protein Group (1)"))
+                text = text.Replace(" (1)", ": " + filter.ProteinGroup.First());
             else if (text.Contains("Protein (1)"))
             {
-                var accession = ((DataFilter) Tag).Protein.First().Accession.Length > 8
-                                    ? ((DataFilter) Tag).Protein.First().Accession.Remove(8) + "..."
-                                    : ((DataFilter) Tag).Protein.First().Accession;
+                var accession = filter.Protein.First().Accession.Length > 8
+                                    ? filter.Protein.First().Accession.Remove(8) + "..."
+                                    : filter.Protein.First().Accession;
                 text = text.Replace(" (1)", ": " + accession);
             }
-            else if (text.Contains("Peptide (1)"))
+            else if (text.Contains("Peptide Group (1)"))
+                text = text.Replace(" (1)", ": " + filter.PeptideGroup.First());
+            else if (text.Contains("Distinct Peptide (1)"))
             {
-                var sequence = ((DataFilter) Tag).Peptide.First().Sequence.Length > 8
-                                   ? ((DataFilter) Tag).Peptide.First().Sequence.Remove(8) + "..."
-                                   : ((DataFilter) Tag).Peptide.First().Sequence;
+                var sequence = filter.Peptide.First().Sequence.Length > 8
+                                   ? filter.Peptide.First().Sequence.Remove(8) + "..."
+                                   : filter.Peptide.First().Sequence;
                 text = text.Replace(" (1)", ": " + sequence);
             }
-            else if (text.Contains("Interpretation (1)"))
+            else if (text.Contains("Distinct Match (1)"))
             {
-                var sequence = ((DataFilter) Tag).DistinctPeptideKey.First().Sequence.Length > 8
-                                   ? ((DataFilter) Tag).DistinctPeptideKey.First().Sequence.Remove(8) + "..."
-                                   : ((DataFilter) Tag).DistinctPeptideKey.First().Sequence;
+                var key = filter.DistinctMatchKey.First().ToString();
+                var sequence = key.Length > 8 ? key.Remove(8) + "..." : key;
                 text = text.Replace(" (1)", ": " + sequence);
             }
             else if (text.Contains("Group (1)"))
-                text = text.Replace(" (1)", ": " + ((DataFilter)Tag).SpectrumSourceGroup.First().Name);
+                text = text.Replace(" (1)", ": " + filter.SpectrumSourceGroup.First().Name);
             else if (text.Contains("Source (1)"))
-                text = text.Replace(" (1)", ": " + ((DataFilter)Tag).SpectrumSource.First().Name);
+                text = text.Replace(" (1)", ": " + filter.SpectrumSource.First().Name);
             else if (text.Contains("Spectrum (1)"))
-                text = text.Replace(" (1)", ": " + ((DataFilter)Tag).Spectrum.First().NativeID);
+                text = text.Replace(" (1)", ": " + filter.Spectrum.First().NativeID);
             else if (text.Contains("Analysis (1)"))
-                text = text.Replace(" (1)", ": " + ((DataFilter)Tag).Analysis.First().Name);
+                text = text.Replace(" (1)", ": " + filter.Analysis.First().Name);
             else if (text.Contains("Charge (1)"))
-                text = text.Replace(" (1)", ": " + ((DataFilter)Tag).Charge.First());
+                text = text.Replace(" (1)", ": " + filter.Charge.First());
 
             return text;
         }
@@ -264,8 +240,7 @@ namespace IDPicker.Controls
             }
             else if (((ToolStripStatusLabel) sender).Tag is DataFilter)
             {
-                breadCrumbToolStrip.Items[breadCrumbToolStrip.Items.IndexOf(sender as ToolStripStatusLabel) - 1].Text =
-                    "v";
+                breadCrumbToolStrip.Items[breadCrumbToolStrip.Items.IndexOf(sender as ToolStripStatusLabel) - 1].Text = "v";
 
                 var SubItemControl = new UserControl {AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink};
                 var ContainerBox = CreateContainerBox(breadCrumbToolStrip.Items[breadCrumbToolStrip.Items.IndexOf((ToolStripStatusLabel)sender)+1].Tag as BreadCrumb);
@@ -328,6 +303,34 @@ namespace IDPicker.Controls
                     tableLayoutPanel.Controls.Add(deleteLink, 2, x);
                 }
             }
+            else if (dataFilter.ProteinGroup != null)
+            {
+                for (var x = 0; x < dataFilter.ProteinGroup.Count; x++)
+                {
+                    var savedItem = dataFilter.ProteinGroup[x];
+                    var itemNumber = x;
+                    var arrow = new Label { Text = ">", AutoSize = true, Margin = new Padding(0, 5, 0, 5) };
+                    tableLayoutPanel.Controls.Add(arrow, 0, x);
+
+                    var description = new Label { Text = savedItem.ToString(), AutoSize = true, Margin = new Padding(5) };
+                    tableLayoutPanel.Controls.Add(description, 1, x);
+
+                    var deleteLink = new LinkLabel { Text = "(x)", AutoSize = true, Margin = new Padding(0, 5, 0, 5) };
+                    deleteLink.Click += delegate
+                    {
+                        dataFilter.ProteinGroup.RemoveAt(itemNumber);
+                        _subItemPopup.Close();
+                        if (dataFilter.ProteinGroup.Count == 0)
+                            BreadCrumbClicked(crumb, new BreadCrumbClickedEventArgs(crumb));
+                        else
+                        {
+                            BreadCrumbClicked(null, new BreadCrumbClickedEventArgs(null));
+                            breadCrumbs_ListChanged(null, null);
+                        }
+                    };
+                    tableLayoutPanel.Controls.Add(deleteLink, 2, x);
+                }
+            }
             else if (dataFilter.Protein != null)
             {
                 for (var x = 0; x < dataFilter.Protein.Count; x++)
@@ -384,24 +387,24 @@ namespace IDPicker.Controls
                     tableLayoutPanel.Controls.Add(deleteLink, 2, x);
                 }
             }
-            else if (dataFilter.DistinctPeptideKey != null)
+            else if (dataFilter.DistinctMatchKey != null)
             {
-                for (var x = 0; x < dataFilter.DistinctPeptideKey.Count; x++)
+                for (var x = 0; x < dataFilter.DistinctMatchKey.Count; x++)
                 {
-                    var savedItem = dataFilter.DistinctPeptideKey[x];
+                    var savedItem = dataFilter.DistinctMatchKey[x];
                     var itemNumber = x;
                     var arrow = new Label { Text = ">", AutoSize = true, Margin = new Padding(0, 5, 0, 5) };
                     tableLayoutPanel.Controls.Add(arrow, 0, x);
 
-                    var description = new Label { Text = savedItem.Sequence, AutoSize = true, Margin = new Padding(5) };
+                    var description = new Label { Text = savedItem.ToString(), AutoSize = true, Margin = new Padding(5) };
                     tableLayoutPanel.Controls.Add(description, 1, x);
 
                     var deleteLink = new LinkLabel { Text = "(x)", AutoSize = true, Margin = new Padding(0, 5, 0, 5) };
                     deleteLink.Click += delegate
                                             {
-                                                dataFilter.DistinctPeptideKey.RemoveAt(itemNumber);
+                                                dataFilter.DistinctMatchKey.RemoveAt(itemNumber);
                                                 _subItemPopup.Close();
-                                                if (dataFilter.DistinctPeptideKey.Count == 0)
+                                                if (dataFilter.DistinctMatchKey.Count == 0)
                                                     BreadCrumbClicked(crumb, new BreadCrumbClickedEventArgs(crumb));
                                                 else
                                                 {
@@ -647,28 +650,25 @@ namespace IDPicker.Controls
 
                 if (breadCrumbs[x].Text.Contains("Q-value"))
                     breadCrumbs.RemoveAt(x); //Sometimes bugs and gets extra-long breadcrumb
-                else if (item.Cluster != null || item.Protein != null)
+                else if (item.Cluster != null || item.ProteinGroup != null || item.Protein != null)
                 {
-                    if (overallData.Cluster != null || overallData.Protein != null)
+                    if (overallData.Cluster != null || overallData.ProteinGroup != null || overallData.Protein != null)
                         breadCrumbs.RemoveAt(x);
                     else
                     {
-                        if (overallData.Cluster == null)
-                            overallData.Cluster = item.Cluster;
-                        if (overallData.Protein == null)
-                            overallData.Protein = item.Protein;
+                        overallData.Cluster = overallData.Cluster ?? item.Cluster;
+                        overallData.ProteinGroup = overallData.ProteinGroup ?? item.ProteinGroup;
+                        overallData.Protein = overallData.Protein ?? item.Protein;
                     }
                 }
-                else if (item.Peptide != null || item.DistinctPeptideKey != null)
+                else if (item.Peptide != null || item.DistinctMatchKey != null)
                 {
-                    if (overallData.Peptide != null || overallData.DistinctPeptideKey != null)
+                    if (overallData.Peptide != null || overallData.DistinctMatchKey != null)
                         breadCrumbs.RemoveAt(x);
                     else
                     {
-                        if (overallData.Peptide == null)
-                            overallData.Peptide = item.Peptide;
-                        if (overallData.DistinctPeptideKey == null)
-                            overallData.DistinctPeptideKey = item.DistinctPeptideKey;
+                        overallData.Peptide = overallData.Peptide ?? item.Peptide;
+                        overallData.DistinctMatchKey = overallData.DistinctMatchKey ?? item.DistinctMatchKey;
                     }
                 }
                 else if (item.SpectrumSourceGroup != null || item.SpectrumSource != null || item.Spectrum != null)
@@ -677,12 +677,9 @@ namespace IDPicker.Controls
                         breadCrumbs.RemoveAt(x);
                     else
                     {
-                        if (overallData.SpectrumSourceGroup == null)
-                            overallData.SpectrumSourceGroup = item.SpectrumSourceGroup;
-                        if (overallData.SpectrumSource == null)
-                            overallData.SpectrumSource = item.SpectrumSource;
-                        if (overallData.Spectrum == null)
-                            overallData.Spectrum = item.Spectrum;
+                        overallData.SpectrumSourceGroup = overallData.SpectrumSourceGroup ?? item.SpectrumSourceGroup;
+                        overallData.SpectrumSource = overallData.SpectrumSource ?? item.SpectrumSource;
+                        overallData.Spectrum = overallData.Spectrum ?? item.Spectrum;
                     }
                 }
                 else if (item.Analysis != null)
@@ -705,10 +702,8 @@ namespace IDPicker.Controls
                         breadCrumbs.RemoveAt(x);
                     else
                     {
-                        if (overallData.ModifiedSite == null)
-                            overallData.ModifiedSite = item.ModifiedSite;
-                        if (overallData.Modifications == null)
-                            overallData.Modifications = item.Modifications;
+                        overallData.ModifiedSite = overallData.ModifiedSite ?? item.ModifiedSite;
+                        overallData.Modifications = overallData.Modifications ?? item.Modifications;
                     }
                 }
                 //else

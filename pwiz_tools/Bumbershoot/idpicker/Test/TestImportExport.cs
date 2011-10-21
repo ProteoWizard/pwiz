@@ -55,65 +55,65 @@ namespace Test
             TestModel.ClassInitialize(testContext);
         }
 
-        //[TestMethod]
-        //public void TestImportExportIdpXml ()
-        //{
-        //    var testModel = new TestModel();
+        [TestMethod]
+        public void TestImportExportIdpXml ()
+        {
+            var testModel = new TestModel();
 
-        //    using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testModel.idpDB", false, false))
-        //    using (var session = testModel.session = sessionFactory.OpenSession())
-        //    {
-        //        var distinctAnalyses = testModel.session.Query<Analysis>();
-        //        foreach (var analysis in distinctAnalyses)
-        //            session.Save(new AnalysisParameter()
-        //                             {
-        //                                 Analysis = analysis,
-        //                                 Name = "ProteinDatabase",
-        //                                 Value = "testImportExport.fasta"
-        //                             });
+            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testModel.idpDB", false, false))
+            using (var session = testModel.session = sessionFactory.OpenSession())
+            {
+                var distinctAnalyses = testModel.session.Query<Analysis>();
+                foreach (var analysis in distinctAnalyses)
+                    session.Save(new AnalysisParameter()
+                                     {
+                                         Analysis = analysis,
+                                         Name = "ProteinDatabase",
+                                         Value = "testImportExport.fasta"
+                                     });
 
-        //        IList<string> idpXmlPaths;
-        //        using (var exporter = new Exporter(session))
-        //        {
-        //            idpXmlPaths = exporter.WriteIdpXml(true, true);
-        //            exporter.WriteSpectra();
-        //            exporter.WriteProteins("testImportExport.fasta");
-        //        }
-        //        session.Close();
+                IList<string> idpXmlPaths;
+                using (var exporter = new Exporter(session))
+                {
+                    idpXmlPaths = exporter.WriteIdpXml(true, true);
+                    exporter.WriteSpectra();
+                    exporter.WriteProteins("testImportExport.fasta");
+                }
+                session.Close();
 
-        //        using (var parser = new Parser(".", qonverterSettingsHandler, false, idpXmlPaths.ToArray()))
-        //        {
-        //            // ReadXml should pick up mzML files in the same directory as the idpXMLs
-        //            parser.Start();
-        //        }
+                /*using (var parser = new Parser(".", qonverterSettingsHandler, false, idpXmlPaths.ToArray()))
+                {
+                    // ReadXml should pick up mzML files in the same directory as the idpXMLs
+                    parser.Start();
+                }*/
 
-        //        var merger = new Merger("testImportExport.idpDB", idpXmlPaths.Select(o => Path.ChangeExtension(o, ".idpDB")));
-        //        merger.Start();
-        //    }
+                var merger = new Merger("testImportExport.idpDB", idpXmlPaths.Select(o => Path.ChangeExtension(o, ".idpDB")));
+                merger.Start();
+            }
 
-        //    using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testImportExport.idpDB", false, false))
-        //    using (var session = testModel.session = sessionFactory.OpenSession())
-        //    {
-        //        foreach (var analysis in session.Query<Analysis>())
-        //            session.Delete(session.UniqueResult<AnalysisParameter>(o => o.Analysis.Id == analysis.Id &&
-        //                                                                        o.Name == "ProteinDatabase"));
-        //        session.Flush();
+            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testImportExport.idpDB", false, false))
+            using (var session = testModel.session = sessionFactory.OpenSession())
+            {
+                foreach (var analysis in session.Query<Analysis>())
+                    session.Delete(session.UniqueResult<AnalysisParameter>(o => o.Analysis.Id == analysis.Id &&
+                                                                                o.Name == "ProteinDatabase"));
+                session.Flush();
 
-        //        testModel.TestOverallCounts();
-        //        testModel.TestSanity();
-        //        testModel.TestProteins();
-        //        testModel.TestPeptides();
-        //        testModel.TestPeptideInstances();
-        //        testModel.TestSpectrumSourceGroups();
-        //        testModel.TestSpectrumSources();
-        //        testModel.TestSpectra();
-        //        testModel.TestAnalyses();
-        //        testModel.TestPeptideSpectrumMatches();
-        //        testModel.TestModifications();
-        //        // TODO: enable QonverterSettings round trip for idpXML?
-        //        //testModel.TestQonverterSettings();
-        //    }
-        //}
+                testModel.TestOverallCounts();
+                testModel.TestSanity();
+                testModel.TestProteins();
+                testModel.TestPeptides();
+                testModel.TestPeptideInstances();
+                testModel.TestSpectrumSourceGroups();
+                testModel.TestSpectrumSources();
+                testModel.TestSpectra();
+                testModel.TestAnalyses();
+                testModel.TestPeptideSpectrumMatches();
+                testModel.TestModifications();
+                // TODO: enable QonverterSettings round trip for idpXML?
+                //testModel.TestQonverterSettings();
+            }
+        }
 
         private IDictionary<Analysis, QonverterSettings> qonverterSettingsHandler (IList<Analysis> distinctAnalyses, out bool cancel)
         {

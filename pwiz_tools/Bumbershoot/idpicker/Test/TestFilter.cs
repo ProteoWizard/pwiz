@@ -286,13 +286,13 @@ namespace Test
             // clear session so objects are loaded from database
             session.Clear();
 
-            Assert.AreEqual("1", session.UniqueResult<Protein>(o => o.Sequence == "PEPTIDERPEPTIDEKPEPTIDE").ProteinGroup);
-            Assert.AreEqual("2", session.UniqueResult<Protein>(o => o.Sequence == "DERPEPTIDEKPEPTIDE").ProteinGroup);
-            Assert.AreEqual("2", session.UniqueResult<Protein>(o => o.Sequence == "TIDERPEPTIDEKPEP").ProteinGroup);
-            Assert.AreEqual("4", session.UniqueResult<Protein>(o => o.Sequence == "ELVISKLIVESRTHANKYAVERYMUCH").ProteinGroup);
-            Assert.AreEqual("5", session.UniqueResult<Protein>(o => o.Sequence == "ELVISISRCKNRLLKING").ProteinGroup);
+            Assert.AreEqual(1, session.UniqueResult<Protein>(o => o.Sequence == "PEPTIDERPEPTIDEKPEPTIDE").ProteinGroup);
+            Assert.AreEqual(2, session.UniqueResult<Protein>(o => o.Sequence == "DERPEPTIDEKPEPTIDE").ProteinGroup);
+            Assert.AreEqual(2, session.UniqueResult<Protein>(o => o.Sequence == "TIDERPEPTIDEKPEP").ProteinGroup);
+            Assert.AreEqual(4, session.UniqueResult<Protein>(o => o.Sequence == "ELVISKLIVESRTHANKYAVERYMUCH").ProteinGroup);
+            Assert.AreEqual(3, session.UniqueResult<Protein>(o => o.Sequence == "ELVISISRCKNRLLKING").ProteinGroup);
 
-            Assert.AreEqual(2, session.Query<Protein>().Where(o => o.ProteinGroup == "2").Count());
+            Assert.AreEqual(2, session.Query<Protein>().Where(o => o.ProteinGroup == 2).Count());
 
             session.Close();
         }
@@ -1346,10 +1346,10 @@ namespace Test
 
                 createSimpleProteinSequence("G", 20),
                 createSimpleProteinSequence("G", 21), // PRO10
-                
+
                 createSimpleProteinSequence("H", 20),
                 createSimpleProteinSequence("H", 21),
-                
+
                 createSimpleProteinSequence("AAAABBBBCCCC", 24),
                 createSimpleProteinSequence("AAAABBBB", 24),
                 createSimpleProteinSequence("BBBBCCCC", 24), // PRO15
@@ -1419,145 +1419,145 @@ namespace Test
 
                 List<SpectrumTuple> testPsmSummary = new List<SpectrumTuple>()
                 {
-                    // Columns:     Group  Source Spectrum Analysis Score Q List of Peptide@Charge/ScoreDivider
-                    
-                    // 1 protein (PRO1) to 1 peptide to 1 spectrum = 1 additional peptide
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("AAAAAAAAAA@{0}/1 BBBBBBBBBB@{0}/8", charge)),
+                     // Columns:     Group  Source Spectrum Analysis Score Q List of Peptide@Charge/ScoreDivider
 
-                    // 1 protein (PRO2) to 1 peptide to 2 spectra = 1 additional peptide
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBBBBBBBBB@{0}/1 AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBBBBBBBBB@{0}/1 CCCCCCCCCC@{0}/8", charge)),
+                     // 1 protein (PRO1) to 1 peptide to 1 spectrum = 1 additional peptide
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("AAAAAAAAAA@{0}/1 BBBBBBBBBB@{0}/8", charge)),
 
-                    // 1 protein (PRO3) to 2 peptides to 1 spectrum (each) = 2 additional peptides
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("CCCCCCCCCC@{0}/1 AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("CCCCCCCCC@{0}/1  BBBBBBBBBB@{0}/8", charge)),
+                     // 1 protein (PRO2) to 1 peptide to 2 spectra = 1 additional peptide
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBBBBBBBBB@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBBBBBBBBB@{0}/1 CCCCCCCCCC@{0}/8", charge)),
 
-                    // 1 protein (PRO4) to 2 peptides to 2 spectra (each) = 2 additional peptides
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("DDDDDDDDDD@{0}/1 AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("DDDDDDDDDD@{0}/1 BBBBBBBBBB@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("DDDDDDDDD@{0}/1  AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("DDDDDDDDD@{0}/1  BBBBBBBBBB@{0}/8", charge)),
+                     // 1 protein (PRO3) to 2 peptides to 1 spectrum (each) = 2 additional peptides
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("CCCCCCCCCC@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("CCCCCCCCC@{0}/1  BBBBBBBBBB@{0}/8", charge)),
 
-                    // 2 proteins (PRO5,6) to 1 peptide to 1 spectrum = 1 additional peptide (ambiguous protein group)
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("EEEEEEEEEE@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                     // 1 protein (PRO4) to 2 peptides to 2 spectra (each) = 2 additional peptides
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("DDDDDDDDDD@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("DDDDDDDDDD@{0}/1 BBBBBBBBBB@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("DDDDDDDDD@{0}/1  AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("DDDDDDDDD@{0}/1  BBBBBBBBBB@{0}/8", charge)),
 
-                    // 2 proteins (PRO7,8) to 1 peptide to 2 spectra = 1 additional peptide (ambiguous protein group)
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("FFFF[C1H2]FFFFFF@{0}/1 AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("FFFFFFFFFF@{0}/1 BBBBBBBBBB@{0}/8", charge)),
+                     // 2 proteins (PRO5,6) to 1 peptide to 1 spectrum = 1 additional peptide (ambiguous protein group)
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("EEEEEEEEEE@{0}/1 AAAAAAAAAA@{0}/8", charge)),
 
-                    // 2 proteins (PRO9,10) to 2 peptides to 1 spectrum (each) = 2 additional peptides (ambiguous protein group)
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("GGGGGGGGGG@{0}/1 AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("GGGGGGGGG@{0}/1  BBBBBBBBBB@{0}/8", charge)),
+                     // 2 proteins (PRO7,8) to 1 peptide to 2 spectra = 1 additional peptide (ambiguous protein group)
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("FFFF[C1H2]FFFFFF@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("FFFFFFFFFF@{0}/1 BBBBBBBBBB@{0}/8", charge)),
 
-                    // 2 proteins (PRO11,12) to 2 peptides to 2 spectra (each) = 2 additional peptides (ambiguous protein group)
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("HHHHH[O1]HHHHH@{0}/1 AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("HHHHHH[O1]HHHH@{0}/1 BBBBBBBBBB@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("[O1]HHHHHHHHH@{0}/1  AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("[O1]HHHHHHHHH@{0}/1  BBBBBBBBBB@{0}/8", charge)),
+                     // 2 proteins (PRO9,10) to 2 peptides to 1 spectrum (each) = 2 additional peptides (ambiguous protein group)
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("GGGGGGGGGG@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("GGGGGGGGG@{0}/1  BBBBBBBBBB@{0}/8", charge)),
 
-                    // 1 protein (PRO13) to 2 peptides = 2 additional peptide
-                    // 1 protein (PRO14) to 1 of the above peptides = 0 additional peptides (subsumed protein)
-                    // 1 protein (PRO15) to the other above peptide = 0 additional peptides (subsumed protein)
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("AAAABBBB@{0}/1 AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBBBCCCC@{0}/1 BBBBBBBBBB@{0}/8", charge)),
+                     // 2 proteins (PRO11,12) to 2 peptides to 2 spectra (each) = 2 additional peptides (ambiguous protein group)
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("HHHHH[O1]HHHHH@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("HHHHHH[O1]HHHH@{0}/1 BBBBBBBBBB@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("[O1]HHHHHHHHH@{0}/1  AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("[O1]HHHHHHHHH@{0}/1  BBBBBBBBBB@{0}/8", charge)),
 
-                    // 1 protein (PRO16) to 5 peptides = 5 additional peptides
-                    // 1 protein (PRO17) to 4 of the above peptides = 0 additional peptides
-                    // 1 protein (PRO18) to 3 of the above peptides and 1 extra peptides = 1 additional peptides
-                    // 1 protein (PRO19) to 2 of the above peptides and 2 extra peptides = 2 additional peptides
-                    // 1 protein (PRO20) to 1 of the above peptides and 3 extra peptides = 3 additional peptides
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBBBBDDDDD@{0}/1 AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBBBDDDD@{0}/1   BBBBBBBBBB@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBBBDDD@{0}/1    AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBBDD@{0}/1      BBBBBBBBBB@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBDD@{0}/1       AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("ZBBBBDDD@{0}/1   BBBBBBBBBB@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("YBBBDD@{0}/1     AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("YBBBDDD@{0}/1    BBBBBBBBBB@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("WBB@{0}/1        AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("WBBD@{0}/1       BBBBBBBBBB@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("WBBDD@{0}/1      AAAAAAAAAA@{0}/8", charge)),
+                     // 1 protein (PRO13) to 2 peptides = 2 additional peptide
+                     // 1 protein (PRO14) to 1 of the above peptides = 0 additional peptides (subsumed protein)
+                     // 1 protein (PRO15) to the other above peptide = 0 additional peptides (subsumed protein)
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("AAAABBBB@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBBBCCCC@{0}/1 BBBBBBBBBB@{0}/8", charge)),
 
-                    // 1 protein (PRO21) to 3 peptides, 1 of which is evidenced by an ambiguous spectrum = 3 additional peptides
-                    // 1 protein (PRO22) to 1 peptide evidenced by the ambiguous spectrum above and 1 extra peptide = 1 additional peptides
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("DDDDDFFFFF@{0}/1 AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("DDDDDFFFF@{0}/1  BBBBBBBBBB@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("DFFFFF@{0}/1 FFFFFH@{0}/1 AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("FFFFFHHHHH@{0}/1 BBBBBBBBBB@{0}/8", charge)),
-                    
-                    // 2 proteins (PRO23,24) to 3 peptides, 1 of which is evidenced by an ambiguous spectrum = 3 additional peptides
-                    // 1 protein (PRO25) to 1 peptide evidenced by the ambiguous spectrum above and 1 extra peptide = 1 additional peptides
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("HHHHHKKKKK@{0}/1 AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("HHHHHKKKK@{0}/1  BBBBBBBBBB@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("HKKKKK@{0}/1 KKKKKM@{0}/1 AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("KKKKKMMMMM@{0}/1 BBBBBBBBBB@{0}/8", charge)),
-                    
-                    // 1 protein (PRO26) to 3 peptides, 1 of which is evidenced by an ambiguous spectrum = 3 additional peptides
-                    // 2 proteins (PRO27,28) to 1 peptide evidenced by the ambiguous spectrum above and 1 extra peptide = 1 additional peptides
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("LLLLLNNNNN@{0}/1 AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("LLLLLNNNN@{0}/1  BBBBBBBBBB@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("LNNNNN@{0}/1 NNNNNQ@{0}/1 AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("NNNNNQQQQQ@{0}/1 BBBBBBBBBB@{0}/8", charge)),
-                    
-                    // 1 protein (PRO29) to 3 peptides, 2 of which are evidenced by ambiguous spectra = 3 additional peptides
-                    // 1 protein (PRO30) to 1 peptide evidenced by an ambiguous spectrum above and 1 extra peptide = 1 additional peptides
-                    // 1 protein (PRO31) to 1 peptide evidenced by the other ambiguous spectrum above and 1 extra peptide = 1 additional peptides
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("MMMMMPPPPP@{0}/1 AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("MPPPPP@{0}/1 PRRRRR@{0}/1 BBBBBBBBBB@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("PPPPPRRRRR@{0}/1 AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("MPPPP@{0}/1 PRRRRP@{0}/1 BBBBBBBBBB@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("PPPPRRRRP@{0}/1  AAAAAAAAAA@{0}/8", charge)),
+                     // 1 protein (PRO16) to 5 peptides = 5 additional peptides
+                     // 1 protein (PRO17) to 4 of the above peptides = 0 additional peptides
+                     // 1 protein (PRO18) to 3 of the above peptides and 1 extra peptides = 1 additional peptides
+                     // 1 protein (PRO19) to 2 of the above peptides and 2 extra peptides = 2 additional peptides
+                     // 1 protein (PRO20) to 1 of the above peptides and 3 extra peptides = 3 additional peptides
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBBBBDDDDD@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBBBDDDD@{0}/1   BBBBBBBBBB@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBBBDDD@{0}/1    AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBBDD@{0}/1      BBBBBBBBBB@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBDD@{0}/1       AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("ZBBBBDDD@{0}/1   BBBBBBBBBB@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("YBBBDD@{0}/1     AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("YBBBDDD@{0}/1    BBBBBBBBBB@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("WBB@{0}/1        AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("WBBD@{0}/1       BBBBBBBBBB@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("WBBDD@{0}/1      AAAAAAAAAA@{0}/8", charge)),
 
-                    // PRO32 -> QQQQSSSS, SSSSUUUU = 2 additional peptides
-                    // PRO33 -> UUUUYYYY, SSSSUUUU = 2 additional peptides
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("QQQQSSSS@{0}/1   AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("SSSSUUUU@{0}/1   BBBBBBBBBB@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("UUUUYYYY@{0}/1   AAAAAAAAAA@{0}/8", charge)),
+                     // 1 protein (PRO21) to 3 peptides, 1 of which is evidenced by an ambiguous spectrum = 3 additional peptides
+                     // 1 protein (PRO22) to 1 peptide evidenced by the ambiguous spectrum above and 1 extra peptide = 1 additional peptides
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("DDDDDFFFFF@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("DDDDDFFFF@{0}/1  BBBBBBBBBB@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("DFFFFF@{0}/1 FFFFFH@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("FFFFFHHHHH@{0}/1 BBBBBBBBBB@{0}/8", charge)),
 
-                    // PRO34 -> RRRRTTTT, WWWWZZZZ, TTTTWWWW = 3 additional peptides
-                    // PRO35 -> ZZZZBBBB, WWWWZZZZ, TTTTWWWW = 3 additional peptides
-                    // PRO36 -> RRRRTTTT, ZZZZBBBB, TTTTWWWW = 3 additional peptides
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("RRRRTTTT@{0}/1   AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("WWWWZZZZ@{0}/1   BBBBBBBBBB@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("TTTTWWWW@{0}/1   AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("ZZZZBBBB@{0}/1   BBBBBBBBBB@{0}/8", charge)),
+                     // 2 proteins (PRO23,24) to 3 peptides, 1 of which is evidenced by an ambiguous spectrum = 3 additional peptides
+                     // 1 protein (PRO25) to 1 peptide evidenced by the ambiguous spectrum above and 1 extra peptide = 1 additional peptides
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("HHHHHKKKKK@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("HHHHHKKKK@{0}/1  BBBBBBBBBB@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("HKKKKK@{0}/1 KKKKKM@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("KKKKKMMMMM@{0}/1 BBBBBBBBBB@{0}/8", charge)),
 
-                    // PRO37 -> AAAADDDD, DDDDGGGG, GGGGKKKK = 3 additional peptides
-                    // PRO38 -> DDDDGGGG, GGGGKKKK, KKKKNNNN = 3 additional peptides
-                    // PRO39 -> AAAADDDD, KKKKNNNN = 0 additional peptides
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("AAAADDDD@{0}/1   AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("DDDDGGGG@{0}/1   BBBBBBBBBB@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("GGGGKKKK@{0}/1   AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("KKKKNNNN@{0}/1   BBBBBBBBBB@{0}/8", charge)),
+                     // 1 protein (PRO26) to 3 peptides, 1 of which is evidenced by an ambiguous spectrum = 3 additional peptides
+                     // 2 proteins (PRO27,28) to 1 peptide evidenced by the ambiguous spectrum above and 1 extra peptide = 1 additional peptides
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("LLLLLNNNNN@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("LLLLLNNNN@{0}/1  BBBBBBBBBB@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("LNNNNN@{0}/1 NNNNNQ@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("NNNNNQQQQQ@{0}/1 BBBBBBBBBB@{0}/8", charge)),
 
-                    // PRO40 -> BBBBEEEE, EEEEHHHH = 2 additional peptides
-                    // PRO41 -> EEEEHHHH, HHHHLLLL = 0 additional peptides
-                    // PRO42 -> HHHHLLLL, LLLLPPPP = 2 additional peptides
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBBBEEEE@{0}/1   AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("EEEEHHHH@{0}/1   BBBBBBBBBB@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("HHHHLLLL@{0}/1   AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("LLLLPPPP@{0}/1   BBBBBBBBBB@{0}/8", charge)),
-                    
-                    // PRO43 -> CCCCFFFF, CFFFFI, FFFFIIII = 3 additional peptides
-                    // PRO44 -> FFFFIIII, FIIIIM, IIIIMMMM = 1 additional peptides
-                    // PRO45 -> IIIIMMMM, IMMMMQ, MMMMQQQQ = 3 additional peptides
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("CCCCFFFF@{0}/1   AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("CFFFFI@{0}/1     BBBBBBBBBB@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("FFFFIIII@{0}/1   AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("FIIIIM@{0}/1     BBBBBBBBBB@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("IIIIMMMM@{0}/1   AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("IMMMMQ@{0}/1     BBBBBBBBBB@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("MMMMQQQQ@{0}/1   AAAAAAAAAA@{0}/8", charge)),
-                    
-                    // PRO46 -> NNNNRRRR, RRRRUUUU, RRRRUUU = 3 additional peptides
-                    // PRO47 -> RRRRUUUU, RRRRUUU, UUUUZZZZ = 0 additional peptides
-                    // PRO48 -> UUUUZZZZ, UZZZZC, ZZZZCCCC = 3 additional peptides
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("NNNNRRRR@{0}/1   AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("RRRRUUUU@{0}/1   BBBBBBBBBB@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("RRRRUUU@{0}/1    AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("UUUUZZZZ@{0}/1   BBBBBBBBBB@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("UZZZZC@{0}/1     AAAAAAAAAA@{0}/8", charge)),
-                    new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("ZZZZCCCC@{0}/1   BBBBBBBBBB@{0}/8", charge)),
+                     // 1 protein (PRO29) to 3 peptides, 2 of which are evidenced by ambiguous spectra = 3 additional peptides
+                     // 1 protein (PRO30) to 1 peptide evidenced by an ambiguous spectrum above and 1 extra peptide = 1 additional peptides
+                     // 1 protein (PRO31) to 1 peptide evidenced by the other ambiguous spectrum above and 1 extra peptide = 1 additional peptides
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("MMMMMPPPPP@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("MPPPPP@{0}/1 PRRRRR@{0}/1 BBBBBBBBBB@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("PPPPPRRRRR@{0}/1 AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("MPPPP@{0}/1 PRRRRP@{0}/1 BBBBBBBBBB@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("PPPPRRRRP@{0}/1  AAAAAAAAAA@{0}/8", charge)),
+
+                     // PRO32 -> QQQQSSSS, SSSSUUUU = 2 additional peptides
+                     // PRO33 -> UUUUYYYY, SSSSUUUU = 2 additional peptides
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("QQQQSSSS@{0}/1   AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("SSSSUUUU@{0}/1   BBBBBBBBBB@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("UUUUYYYY@{0}/1   AAAAAAAAAA@{0}/8", charge)),
+
+                     // PRO34 -> RRRRTTTT, WWWWZZZZ, TTTTWWWW = 3 additional peptides
+                     // PRO35 -> ZZZZBBBB, WWWWZZZZ, TTTTWWWW = 3 additional peptides
+                     // PRO36 -> RRRRTTTT, ZZZZBBBB, TTTTWWWW = 3 additional peptides
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("RRRRTTTT@{0}/1   AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("WWWWZZZZ@{0}/1   BBBBBBBBBB@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("TTTTWWWW@{0}/1   AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("ZZZZBBBB@{0}/1   BBBBBBBBBB@{0}/8", charge)),
+
+                     // PRO37 -> AAAADDDD, DDDDGGGG, GGGGKKKK = 3 additional peptides
+                     // PRO38 -> DDDDGGGG, GGGGKKKK, KKKKNNNN = 3 additional peptides
+                     // PRO39 -> AAAADDDD, KKKKNNNN = 0 additional peptides
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("AAAADDDD@{0}/1   AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("DDDDGGGG@{0}/1   BBBBBBBBBB@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("GGGGKKKK@{0}/1   AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("KKKKNNNN@{0}/1   BBBBBBBBBB@{0}/8", charge)),
+
+                     // PRO40 -> BBBBEEEE, EEEEHHHH = 2 additional peptides
+                     // PRO41 -> EEEEHHHH, HHHHLLLL = 0 additional peptides
+                     // PRO42 -> HHHHLLLL, LLLLPPPP = 2 additional peptides
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("BBBBEEEE@{0}/1   AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("EEEEHHHH@{0}/1   BBBBBBBBBB@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("HHHHLLLL@{0}/1   AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("LLLLPPPP@{0}/1   BBBBBBBBBB@{0}/8", charge)),
+
+                     // PRO43 -> CCCCFFFF, CFFFFI, FFFFIIII = 3 additional peptides
+                     // PRO44 -> FFFFIIII, FIIIIM, IIIIMMMM = 1 additional peptides
+                     // PRO45 -> IIIIMMMM, IMMMMQ, MMMMQQQQ = 3 additional peptides
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("CCCCFFFF@{0}/1   AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("CFFFFI@{0}/1     BBBBBBBBBB@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("FFFFIIII@{0}/1   AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("FIIIIM@{0}/1     BBBBBBBBBB@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("IIIIMMMM@{0}/1   AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("IMMMMQ@{0}/1     BBBBBBBBBB@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("MMMMQQQQ@{0}/1   AAAAAAAAAA@{0}/8", charge)),
+
+                     // PRO46 -> NNNNRRRR, RRRRUUUU, RRRRUUU = 3 additional peptides
+                     // PRO47 -> RRRRUUUU, RRRRUUU, UUUUZZZZ = 0 additional peptides
+                     // PRO48 -> UUUUZZZZ, UZZZZC, ZZZZCCCC = 3 additional peptides
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("NNNNRRRR@{0}/1   AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("RRRRUUUU@{0}/1   BBBBBBBBBB@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("RRRRUUU@{0}/1    AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("UUUUZZZZ@{0}/1   BBBBBBBBBB@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("UZZZZC@{0}/1     AAAAAAAAAA@{0}/8", charge)),
+                     new SpectrumTuple("/", source, ++scan, analysis, 1, 1, String.Format("ZZZZCCCC@{0}/1   BBBBBBBBBB@{0}/8", charge)),
                 };
 
                 totalPSMs += scan;
@@ -1565,93 +1565,202 @@ namespace Test
             }
 
             var dataFilter = new DataFilter()
-            {
-                MaximumQValue = 1,
-                MinimumDistinctPeptidesPerProtein = 0,
-                MinimumSpectraPerProtein = 0,
-                MinimumAdditionalPeptidesPerProtein = 0
-            };
+                                 {
+                                     MaximumQValue = 1,
+                                     MinimumDistinctPeptidesPerProtein = 0,
+                                     MinimumSpectraPerProtein = 0,
+                                     MinimumAdditionalPeptidesPerProtein = 0
+                                 };
             dataFilter.ApplyBasicFilters(session);
 
             // clear session so objects are loaded from database
             session.Clear();
 
-            var peptideQuery = session.CreateQuery("SELECT psm.Peptide, " +
-                                                   "       COUNT(DISTINCT psm.DistinctMatchKey), " +
-                                                   "       COUNT(DISTINCT psm.Spectrum) " +
-                                                   dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
-                                                   "GROUP BY psm.Peptide");
-
-            /*var peptideQuery2 = from psm in dataFilter.GetFilteredPeptideSpectrumMatches(session)
-                                group psm by psm.Peptide into g
-                                let distinctMatches = (from psm in g select psm.DistinctMatchKey).Distinct().Count()
-                                let spectra = (from psm in g select psm.Spectrum).Distinct().Count()
-                                orderby distinctMatches descending, spectra descending 
-                                select new { Peptide = g.Key, DistinctMatches = distinctMatches, Spectra = spectra };
-
-            var foo = peptideQuery.List<object[]>();
-            var bar = peptideQuery2.ToList();
-            for (int i = 0; i < bar.Count; ++i)
+            // test with default DistinctMatchFormat (charge state and modifications distinct)
             {
-                Assert.AreEqual(foo[i][0] as Peptide, bar[i].Peptide);
-                Assert.AreEqual((long) foo[i][1], bar[i].DistinctMatches);
-                Assert.AreEqual((long) foo[i][2], bar[i].Spectra);
-            }*/
+                var peptideQuery = session.CreateQuery(IDPicker.Forms.PeptideTableForm.AggregateRow.Selection + ", psm.Peptide, psm, psm.DistinctMatchKey " +
+                                                       dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
+                                                       "GROUP BY psm.Peptide");
 
-            var queryRows = peptideQuery.List<object[]>();
-            var peptideRows = queryRows.Select(o => new IDPicker.Forms.PeptideTableForm.PeptideRow(o)).ToList();
-            int row = 0;
+                var queryRows = peptideQuery.List<object[]>();
+                var peptideRows = queryRows.Select(o => new IDPicker.Forms.PeptideTableForm.DistinctPeptideRow(o, dataFilter)).ToList();
+                int row = 0;
 
-            Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "AAAAAAAAAA"), peptideRows[row].Peptide);
-            Assert.AreEqual(1, peptideRows[row].DistinctMatchesWithRoundedMass);
-            Assert.AreEqual(1, peptideRows[row++].Spectra);
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "AAAAAAAAAA"), peptideRows[row].Peptide);
+                Assert.AreEqual(2, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(1, peptideRows[row++].Spectra);
 
-            Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "BBBBBBBBBB"), peptideRows[row].Peptide);
-            Assert.AreEqual(1, peptideRows[row].DistinctMatchesWithRoundedMass);
-            Assert.AreEqual(2, peptideRows[row++].Spectra);
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "BBBBBBBBBB"), peptideRows[row].Peptide);
+                Assert.AreEqual(2, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(2, peptideRows[row++].Spectra);
 
-            Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "CCCCCCCCCC"), peptideRows[row].Peptide);
-            Assert.AreEqual(1, peptideRows[row].DistinctMatchesWithRoundedMass);
-            Assert.AreEqual(1, peptideRows[row++].Spectra);
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "CCCCCCCCCC"), peptideRows[row].Peptide);
+                Assert.AreEqual(2, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(1, peptideRows[row++].Spectra);
 
-            Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "CCCCCCCCC"), peptideRows[row].Peptide);
-            Assert.AreEqual(1, peptideRows[row].DistinctMatchesWithRoundedMass);
-            Assert.AreEqual(1, peptideRows[row++].Spectra);
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "CCCCCCCCC"), peptideRows[row].Peptide);
+                Assert.AreEqual(2, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(1, peptideRows[row++].Spectra);
 
-            Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "DDDDDDDDDD"), peptideRows[row].Peptide);
-            Assert.AreEqual(1, peptideRows[row].DistinctMatchesWithRoundedMass);
-            Assert.AreEqual(2, peptideRows[row++].Spectra);
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "DDDDDDDDDD"), peptideRows[row].Peptide);
+                Assert.AreEqual(2, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(2, peptideRows[row++].Spectra);
 
-            Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "DDDDDDDDD"), peptideRows[row].Peptide);
-            Assert.AreEqual(1, peptideRows[row].DistinctMatchesWithRoundedMass);
-            Assert.AreEqual(2, peptideRows[row++].Spectra);
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "DDDDDDDDD"), peptideRows[row].Peptide);
+                Assert.AreEqual(2, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(2, peptideRows[row++].Spectra);
 
-            Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "EEEEEEEEEE"), peptideRows[row].Peptide);
-            Assert.AreEqual(1, peptideRows[row].DistinctMatchesWithRoundedMass);
-            Assert.AreEqual(1, peptideRows[row++].Spectra);
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "EEEEEEEEEE"), peptideRows[row].Peptide);
+                Assert.AreEqual(2, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(1, peptideRows[row++].Spectra);
 
-            Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "FFFFFFFFFF"), peptideRows[row].Peptide);
-            Assert.AreEqual(2, peptideRows[row].DistinctMatchesWithRoundedMass);
-            Assert.AreEqual(2, peptideRows[row++].Spectra);
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "FFFFFFFFFF"), peptideRows[row].Peptide);
+                Assert.AreEqual(4, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(2, peptideRows[row++].Spectra);
 
-            Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "GGGGGGGGGG"), peptideRows[row].Peptide);
-            Assert.AreEqual(1, peptideRows[row].DistinctMatchesWithRoundedMass);
-            Assert.AreEqual(1, peptideRows[row++].Spectra);
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "GGGGGGGGGG"), peptideRows[row].Peptide);
+                Assert.AreEqual(2, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(1, peptideRows[row++].Spectra);
 
-            Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "GGGGGGGGG"), peptideRows[row].Peptide);
-            Assert.AreEqual(1, peptideRows[row].DistinctMatchesWithRoundedMass);
-            Assert.AreEqual(1, peptideRows[row++].Spectra);
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "GGGGGGGGG"), peptideRows[row].Peptide);
+                Assert.AreEqual(2, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(1, peptideRows[row++].Spectra);
 
-            Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "HHHHHHHHHH"), peptideRows[row].Peptide);
-            Assert.AreEqual(2, peptideRows[row].DistinctMatchesWithRoundedMass);
-            Assert.AreEqual(2, peptideRows[row++].Spectra);
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "HHHHHHHHHH"), peptideRows[row].Peptide);
+                Assert.AreEqual(4, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(2, peptideRows[row++].Spectra);
 
-            Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "HHHHHHHHH"), peptideRows[row].Peptide);
-            Assert.AreEqual(1, peptideRows[row].DistinctMatchesWithRoundedMass);
-            Assert.AreEqual(2, peptideRows[row++].Spectra);
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "HHHHHHHHH"), peptideRows[row].Peptide);
+                Assert.AreEqual(2, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(2, peptideRows[row++].Spectra);
+            }
 
-            dataFilter.MinimumAdditionalPeptidesPerProtein = 1;
-            dataFilter.ApplyBasicFilters(session);
+            // test with charge state and analysis indistinct and modifications distinct
+            {
+                dataFilter.DistinctMatchFormat.IsChargeDistinct = false;
+                dataFilter.DistinctMatchFormat.IsAnalysisDistinct = false;
+                dataFilter.ApplyBasicFilters(session);
+
+                var peptideQuery = session.CreateQuery(IDPicker.Forms.PeptideTableForm.AggregateRow.Selection + ", psm.Peptide, psm, psm.DistinctMatchKey " +
+                                                       dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
+                                                       "GROUP BY psm.Peptide");
+
+                var queryRows = peptideQuery.List<object[]>();
+                var peptideRows = queryRows.Select(o => new IDPicker.Forms.PeptideTableForm.DistinctPeptideRow(o, dataFilter)).ToList();
+                int row = 0;
+
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "AAAAAAAAAA"), peptideRows[row].Peptide);
+                Assert.AreEqual(1, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(1, peptideRows[row++].Spectra);
+
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "BBBBBBBBBB"), peptideRows[row].Peptide);
+                Assert.AreEqual(1, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(2, peptideRows[row++].Spectra);
+
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "CCCCCCCCCC"), peptideRows[row].Peptide);
+                Assert.AreEqual(1, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(1, peptideRows[row++].Spectra);
+
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "CCCCCCCCC"), peptideRows[row].Peptide);
+                Assert.AreEqual(1, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(1, peptideRows[row++].Spectra);
+
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "DDDDDDDDDD"), peptideRows[row].Peptide);
+                Assert.AreEqual(1, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(2, peptideRows[row++].Spectra);
+
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "DDDDDDDDD"), peptideRows[row].Peptide);
+                Assert.AreEqual(1, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(2, peptideRows[row++].Spectra);
+
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "EEEEEEEEEE"), peptideRows[row].Peptide);
+                Assert.AreEqual(1, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(1, peptideRows[row++].Spectra);
+
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "FFFFFFFFFF"), peptideRows[row].Peptide);
+                Assert.AreEqual(2, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(2, peptideRows[row++].Spectra);
+
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "GGGGGGGGGG"), peptideRows[row].Peptide);
+                Assert.AreEqual(1, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(1, peptideRows[row++].Spectra);
+
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "GGGGGGGGG"), peptideRows[row].Peptide);
+                Assert.AreEqual(1, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(1, peptideRows[row++].Spectra);
+
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "HHHHHHHHHH"), peptideRows[row].Peptide);
+                Assert.AreEqual(2, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(2, peptideRows[row++].Spectra);
+
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "HHHHHHHHH"), peptideRows[row].Peptide);
+                Assert.AreEqual(1, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(2, peptideRows[row++].Spectra);
+            }
+
+            // test with charge state, analysis, and modifications indistinct
+            {
+                dataFilter.DistinctMatchFormat.IsChargeDistinct = false;
+                dataFilter.DistinctMatchFormat.IsAnalysisDistinct = false;
+                dataFilter.DistinctMatchFormat.AreModificationsDistinct = false;
+                dataFilter.ApplyBasicFilters(session);
+
+                var peptideQuery = session.CreateQuery(IDPicker.Forms.PeptideTableForm.AggregateRow.Selection + ", psm.Peptide, psm, psm.DistinctMatchKey " +
+                                                       dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
+                                                       "GROUP BY psm.Peptide");
+
+                var queryRows = peptideQuery.List<object[]>();
+                var peptideRows = queryRows.Select(o => new IDPicker.Forms.PeptideTableForm.DistinctPeptideRow(o, dataFilter)).ToList();
+                int row = 0;
+
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "AAAAAAAAAA"), peptideRows[row].Peptide);
+                Assert.AreEqual(1, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(1, peptideRows[row++].Spectra);
+
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "BBBBBBBBBB"), peptideRows[row].Peptide);
+                Assert.AreEqual(1, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(2, peptideRows[row++].Spectra);
+
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "CCCCCCCCCC"), peptideRows[row].Peptide);
+                Assert.AreEqual(1, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(1, peptideRows[row++].Spectra);
+
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "CCCCCCCCC"), peptideRows[row].Peptide);
+                Assert.AreEqual(1, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(1, peptideRows[row++].Spectra);
+
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "DDDDDDDDDD"), peptideRows[row].Peptide);
+                Assert.AreEqual(1, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(2, peptideRows[row++].Spectra);
+
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "DDDDDDDDD"), peptideRows[row].Peptide);
+                Assert.AreEqual(1, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(2, peptideRows[row++].Spectra);
+
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "EEEEEEEEEE"), peptideRows[row].Peptide);
+                Assert.AreEqual(1, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(1, peptideRows[row++].Spectra);
+
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "FFFFFFFFFF"), peptideRows[row].Peptide);
+                Assert.AreEqual(1, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(2, peptideRows[row++].Spectra);
+
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "GGGGGGGGGG"), peptideRows[row].Peptide);
+                Assert.AreEqual(1, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(1, peptideRows[row++].Spectra);
+
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "GGGGGGGGG"), peptideRows[row].Peptide);
+                Assert.AreEqual(1, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(1, peptideRows[row++].Spectra);
+
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "HHHHHHHHHH"), peptideRows[row].Peptide);
+                Assert.AreEqual(1, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(2, peptideRows[row++].Spectra);
+
+                Assert.AreEqual(session.UniqueResult<Peptide>(o => o.Sequence == "HHHHHHHHH"), peptideRows[row].Peptide);
+                Assert.AreEqual(1, peptideRows[row].DistinctMatches);
+                Assert.AreEqual(2, peptideRows[row++].Spectra);
+            }
 
             session.Close();
         }
