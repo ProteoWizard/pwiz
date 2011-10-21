@@ -54,9 +54,8 @@ const char* ws = " \n\r\t";
 size_t count_trail_ws(const char *data,size_t len) 
 { // remove trailing whitespace if any
     size_t n=len;
-    while (n && strchr(ws,data[n-1])) {
+    while (n && strchr(ws,data[n-1])) 
         n--;
-    }
     return len-n;
 }
 
@@ -65,11 +64,11 @@ namespace {
 inline bool unbalanced_quotes(const saxstring & buffer) 
 {
     // find next single or double quote
-    for (const char *c=buffer.c_str();(c=strpbrk(c,"\"'"))!=NULL;c++) {
+    for (const char *c=buffer.c_str();(c=strpbrk(c,"\"'"))!=NULL;c++) 
+    {
         c = strchr(c+1,*c); // find matching quote
-        if (!c) {
+        if (!c) 
             return true; // unmatched quote
-        }
     }
     return false;
 }
@@ -80,27 +79,29 @@ static int eat_whitespace(istream& is)
 {
     char c;
     int lead_ws=0;
-    while (is.good()) {    // loop while extraction from file is possible
+    while (is.good()) 
+    {    // loop while extraction from file is possible
         c = is.get();       // get character from file
-        if (is.good()) {
-            if (strchr(ws,c)) {
+        if (is.good()) 
+        {
+            if (strchr(ws,c)) 
                 lead_ws++; // eat the whitespace
-            } else {
+            else 
+            {
                 is.unget();
                 break; // no more whitespace
             }
-        } else {
+        } 
+        else 
             break;
-        }
     }
 #ifdef _DEBUG_READCOUNT
     note_read_count(lead_ws); // collect some stats
 #endif
-    if (is.good()) {
+    if (is.good()) 
         return lead_ws;
-    } else {
+    else 
         return -1;
-    }
 }
 
 
@@ -139,9 +140,8 @@ struct StartTag
     :   end(str.length() && str[str.length()-1]=='/'), // evaluate str before attributes hacks it up
         attributes(str,unescapeAttributes)
     {
-        if (!str.length()) {
+        if (!str.length()) 
             throw runtime_error("[SAXParser::StartTag] Empty buffer.");
-        }
     }
 
     const char *getName() {
@@ -261,22 +261,24 @@ class HandlerWrangler : public SAXParser::Handler
 
 void Handler::Attributes::parseAttributes(string::size_type& index) const
 {
-    if (!attrs.size()) { // first access
+    if (!attrs.size()) 
+    {   // first access
         // avoid lots of reallocs
         int n_equals=0;
-        for (const char *p=textbuff+index;(p=strchr(p,'='))!=NULL;p++) {
+        for (const char *p=textbuff+index;(p=strchr(p,'='))!=NULL;p++) 
             n_equals++;
-        }
         attrs.resize(n_equals); // might be more than we need, but we'll correct
         int nattrs = 0;
-        while (index < index_end) {
+        while (index < index_end) 
+        {
             
             string::size_type indexNameBegin = index;
             string::size_type indexNameEnd = indexNameBegin;
             string::size_type indexQuoteOpen;
             string::size_type indexQuoteClose;
             const char *eq=strchr(textbuff+indexNameBegin,'=');
-            if (eq) {
+            if (eq)
+            {
                 indexNameEnd = eq-textbuff;
                 const char *c=textbuff+indexNameEnd+1;
                 while (*c && !strchr(quote_,*c)) c++;
@@ -284,28 +286,28 @@ void Handler::Attributes::parseAttributes(string::size_type& index) const
                 char quoteChar = *c;
                 const char *q = strchr(textbuff+indexQuoteOpen+1,quoteChar);
                 indexQuoteClose = q?(q-textbuff):string::npos;
-            } else {
+            } 
+            else 
                 indexQuoteClose = string::npos;
-            }
-            if (indexQuoteClose == string::npos) { // this index can only be OK if the others are too
-                if ('/'==textbuff[indexNameBegin]) { // end of tag?
+            if (indexQuoteClose == string::npos) 
+            { // this index can only be OK if the others are too
+                if ('/'==textbuff[indexNameBegin]) 
+                { // end of tag
                     index++; 
                     break;
                 }
                 throw runtime_error("[SAXParser::parseAttribute()] Error at index "
                 + lexical_cast<string>(index) + ":\n" + textbuff);
             }
-            while (strchr(ws,textbuff[indexNameEnd-1])) {
+            while (strchr(ws,textbuff[indexNameEnd-1])) 
                 indexNameEnd--; // work back from = to end of name
-            }
             textbuff[indexNameEnd]=0; // null terminate in-place
             textbuff[indexQuoteClose]=0; // null terminate in-place
             attrs[nattrs++].set(textbuff+indexNameBegin,textbuff+indexQuoteOpen+1,autoUnescape);
 
             index = indexQuoteClose+1; // ready for next round
-            while (textbuff[index] && strchr(ws,textbuff[index])) { // eat whitespace
+            while (textbuff[index] && strchr(ws,textbuff[index]))  // eat whitespace
                 index++;
-            }
         }
         attrs.resize(nattrs);
     }
@@ -314,7 +316,8 @@ void Handler::Attributes::parseAttributes(string::size_type& index) const
 
 void unescapeXML(std::string &str) 
 {
-    if (std::string::npos != str.find('&')) {
+    if (std::string::npos != str.find('&')) 
+    {
         SAXParser::saxstring s(str);
         s.unescapeXML();
         str = s.c_str();
@@ -326,7 +329,8 @@ void unescapeXML(char *str)
 {
     char *amp;
     size_t end=strlen(str);
-    for (size_t i=0 ; (amp=strchr(str+i,'&'))!=NULL ; i++) {
+    for (size_t i=0 ; (amp=strchr(str+i,'&'))!=NULL ; i++) 
+    {
         i = (amp-str);
 
         // there must be at least three characters after '&' (&lt; or &gt;)
@@ -373,8 +377,10 @@ static bool getline(istream& is, saxstring &vec, char delim, bool append = false
     const size_t minbuf = 1024;
     size_t begin = append?vec.length():0;
     size_t end = begin;
-    while (is.good()) {
-        if (vec.capacity() < minbuf + (begin+3)) {
+    while (is.good()) 
+    {
+        if (vec.capacity() < minbuf + (begin+3)) 
+        {
             size_t newsize = 2* ( vec.capacity() ? vec.capacity() : minbuf );
             vec.resize(newsize);
         }
@@ -382,9 +388,8 @@ static bool getline(istream& is, saxstring &vec, char delim, bool append = false
         // always guarantee room for readahead and nullterm at end of buffer
         is.get(buffer+begin, vec.capacity()-(begin+3), delim); // keeps delim if read
         size_t nread = (size_t)is.gcount();
-        if (!nread && !is.eof()) { // empty line?
+        if (!nread && !is.eof()) // empty line?
             is.clear(); // clear the failbit
-        } 
         end += nread;
 #ifdef _DEBUG_READCOUNT
         note_read_count(nread+1); // collect some stats
@@ -392,10 +397,13 @@ static bool getline(istream& is, saxstring &vec, char delim, bool append = false
         // did we stop reading because we hit delimiter?
         char c=0;
         is.get(c);
-        if (delim == c) { // full read
+        if (delim == c) 
+        { // full read
             vec.resize(end); // so we don't copy more than we need
             return true;
-        } else if (c) { // ran out of room
+        } 
+        else if (c) 
+        { // ran out of room
             buffer[end++] = c;
             buffer[end] = 0;
             begin = end;
@@ -456,12 +464,10 @@ PWIZ_API_DECL void parse(istream& is, Handler& handler)
         while (true)
         {
             bool firstpass = (!buffer.length());
-            if (!getline(is,buffer, '>',true)) { // append
+            if (!getline(is,buffer, '>',true))  // append
                 break;
-            }
-            if (firstpass) {
+            if (firstpass) 
                 buffer.trim_lead_ws();
-            }
             inCDATA = buffer.starts_with(CDATA_begin.c_str());
 
             // If in CDATA, fetch more until the section is ended;
@@ -470,11 +476,10 @@ PWIZ_API_DECL void parse(istream& is, Handler& handler)
             //        You're a monster, Zorg.>I know.
             //     </FifthElement>
             if (inCDATA ? !buffer.ends_with(CDATA_end.c_str()) :
-                unbalanced_quotes(buffer)) {
+                   unbalanced_quotes(buffer)) 
                 buffer += ">"; // put back that char we ate, go for more
-            } else {
+             else 
                 break;
-            }
         }
         
         // remove trailing ws

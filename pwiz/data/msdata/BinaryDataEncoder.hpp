@@ -72,7 +72,8 @@ class PWIZ_API_DECL BinaryDataEncoder
 
     /// decode text-encoded data as binary 
     void decode(const char *encodedData, size_t len, std::vector<double>& result) const;
-    void decode(const std::string& encodedData, std::vector<double>& result) const {
+    void decode(const std::string& encodedData, std::vector<double>& result) const 
+    {
         decode(encodedData.c_str(),encodedData.length(),result);
     }
 

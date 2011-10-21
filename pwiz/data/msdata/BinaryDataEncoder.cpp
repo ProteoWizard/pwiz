@@ -59,7 +59,8 @@ class BinaryDataEncoder::Impl
     void encode(const vector<double>& data, string& result, size_t* binaryByteCount);
     void encode(const double* data, size_t dataSize, std::string& result, size_t* binaryByteCount);
     void decode(const char *encodedData, size_t len, vector<double>& result);
-    void decode(const string& encodedData, vector<double>& result) {
+    void decode(const string& encodedData, vector<double>& result) 
+    {
         decode(encodedData.c_str(),encodedData.length(),result);
     }
 
