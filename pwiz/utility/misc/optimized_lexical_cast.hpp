@@ -204,6 +204,13 @@ namespace boost
     value = strtoul( stringToConvert,NULL, 10 );
 	}
 
+#ifndef _SIZE_T_DEFINED // some compilers just use a #define for size_t
+    inline void optimized_lexical_cast( const char* stringToConvert, size_t& value )
+	{
+        value = (size_t)strtoul( stringToConvert,NULL, 10 );
+	}
+#endif
+
     inline void optimized_lexical_cast( const char* stringToConvert, bool& value )
     {
         value = (strcmp(stringToConvert, "0") && strcmp(stringToConvert,"false"));
