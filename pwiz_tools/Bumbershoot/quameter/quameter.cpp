@@ -27,7 +27,9 @@
 #include <boost/lockfree/fifo.hpp>
 #include <boost/foreach_field.hpp>
 #include <boost/math/distributions/normal.hpp>
-#include "spline.hpp"
+#include <boost/range/algorithm/lower_bound.hpp>
+#include <boost/range/algorithm/upper_bound.hpp>
+#include "Interpolator.hpp"
 
 
 namespace freicore
@@ -39,38 +41,6 @@ namespace quameter
     boost::lockfree::fifo<size_t>   metricsTasks;
     vector<QuameterInput>           allSources;
 
-    // uses interpolation on piecewise cubic splines to make an f(x) function evenly spaced on the x axis
-    void interpolate(vector<double>& x, vector<double>& y)
-    {
-        size_t xSize = x.size();
-
-        if (xSize < 3)
-            return;
-
-        BOOST_ASSERT(xSize == y.size());
-
-        double minSampleSize = x[1] - x[0];
-        for (size_t i=2; i < xSize; ++i)
-            minSampleSize = min(minSampleSize, x[i] - x[i-1]);
-
-        double* ypp = spline_cubic_set((int) xSize, &x[0], &y[0], 1, 0, 1, 0);
-        double ypval, yppval;
-
-        vector<double> newX, newY;
-        newX.reserve(xSize);
-        newY.reserve(xSize);
-        newX.push_back(x[0]);
-        newY.push_back(y[0]);
-        for (size_t i=1; newX.back() < x.back(); ++i)
-        {
-            newX.push_back(newX.back() + minSampleSize);
-            newY.push_back(spline_cubic_val((int) xSize, &x[0], &y[0], ypp, newX.back(), &ypval, &yppval));
-        }
-        delete [] ypp;
-        swap(x, newX);
-        swap(y, newY);
-    }
-
     void simulateGaussianPeak(double peakStart, double peakEnd,
                               double peakHeight, double peakBaseline,
                               double mean, double stddev,
@@ -80,9 +50,10 @@ namespace quameter
         using namespace boost::math;
         normal_distribution<double> peakDistribution(mean, stddev);
         x.push_back(peakStart); y.push_back(peakBaseline);
+        peakStart += numeric_limits<double>::epsilon();
         double sampleRate = (peakEnd - peakStart) / samples;
         double scale = peakHeight / pdf(peakDistribution, mean);
-        for (size_t i=1; i <= samples; ++i)
+        for (size_t i=0; i <= samples; ++i)
         {
             x.push_back(peakStart + sampleRate*i);
             y.push_back(peakBaseline + scale * pdf(peakDistribution, x.back()));
@@ -132,7 +103,7 @@ namespace quameter
 		    c.setTimeIntensityArrays(window.MS1RT, window.MS1Intensity, UO_second, MS_number_of_counts);
 
             // interpolated raw
-            {
+            /*{
                 interpolate(window.MS1RT, window.MS1Intensity);
                 chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
 		        Chromatogram& c = *chromatogramListSimple->chromatograms.back();
@@ -145,9 +116,7 @@ namespace quameter
 		        c.id = "Raw interpolated SIC for " + oss.str();
                 c.set(MS_SIC_chromatogram);
 		        c.setTimeIntensityArrays(window.MS1RT, window.MS1Intensity, UO_second, MS_number_of_counts);
-            }
-
-            double scaleForMS2Score = 1;
+            }*/
 
             CrawdadPeakFinder crawdadPeakFinder;
             crawdadPeakFinder.SetChromatogram(window.MS1RT, window.MS1Intensity);
@@ -170,6 +139,7 @@ namespace quameter
                 c3.setTimeIntensityArrays(newRT, vector<double>(tmp.begin(), tmp.end()), UO_second, MS_number_of_counts);
 
             float baselineIntensity = crawdadPeakFinder.getBaselineIntensity();
+            double scaleForMS2Score = baselineIntensity;
 
             // output all Crawdad peaks
             {
@@ -190,6 +160,8 @@ namespace quameter
                     if (peak.startTime < window.maxScoreScanStartTime && window.maxScoreScanStartTime < peak.endTime)
                         //scaleForMS2Score = (double) peak->getHeight();
                         scaleForMS2Score = ms2ScanMap.get<time>().find(window.maxScoreScanStartTime)->precursorIntensity;
+                    else if (window.bestPeak && peak.peakTime == window.bestPeak->peakTime)
+                        scaleForMS2Score = window.bestPeak->intensity;
                 }
             }
 
@@ -231,22 +203,63 @@ namespace quameter
             }
 
             // output MS2 times as chromatogram spikes
-	        chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
-	        Chromatogram& ms2Chromatogram = *chromatogramListSimple->chromatograms.back();
-	        ms2Chromatogram.index = chromatogramListSimple->size()-1;
-	        ms2Chromatogram.id = "Identified MS2s for " + oss.str();
-		    ms2Chromatogram.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_counts);
-            vector<double>& ms2Times = ms2Chromatogram.getTimeArray()->data;
-            vector<double>& ms2Intensities = ms2Chromatogram.getIntensityArray()->data;
-            double epsilon = 1e-14;
-            BOOST_FOREACH(const PeptideSpectrumMatch& psm, window.PSMs)
             {
-                double triggerTime = psm.spectrum->scanStartTime;
-                //double triggerIntensity = psm.spectrum->precursorIntensity;
-                ms2Times.push_back(triggerTime-epsilon); ms2Intensities.push_back(0);
-                //ms2Times.push_back(triggerTime); ms2Intensities.push_back(triggerIntensity);
-                ms2Times.push_back(triggerTime); ms2Intensities.push_back(baselineIntensity + scaleForMS2Score * psm.score / window.maxScore);
-                ms2Times.push_back(triggerTime+epsilon); ms2Intensities.push_back(0);
+	            chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+	            Chromatogram& ms2Chromatogram = *chromatogramListSimple->chromatograms.back();
+	            ms2Chromatogram.index = chromatogramListSimple->size()-1;
+	            ms2Chromatogram.id = "Identified MS2s for " + oss.str();
+		        ms2Chromatogram.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_counts);
+                vector<double>& ms2Times = ms2Chromatogram.getTimeArray()->data;
+                vector<double>& ms2Intensities = ms2Chromatogram.getIntensityArray()->data;
+                double epsilon = 1e-14;
+                BOOST_FOREACH(const PeptideSpectrumMatch& psm, window.PSMs)
+                {
+                    double triggerTime = psm.spectrum->scanStartTime;
+                    //double triggerIntensity = psm.spectrum->precursorIntensity;
+                    ms2Times.push_back(triggerTime-epsilon); ms2Intensities.push_back(0);
+                    //ms2Times.push_back(triggerTime); ms2Intensities.push_back(triggerIntensity);
+                    ms2Times.push_back(triggerTime); ms2Intensities.push_back(baselineIntensity + scaleForMS2Score * psm.score / window.maxScore);
+                    ms2Times.push_back(triggerTime+epsilon); ms2Intensities.push_back(0);
+                }
+            }
+
+            // output MS2 splines
+            if (window.PSMs.size() > 1)
+            {
+                vector<double> ms2Times, ms2Scores;
+
+                // calculate the minimum time gap between PSMs
+                double minDiff = window.PSMs[1].spectrum->scanStartTime - window.PSMs[0].spectrum->scanStartTime;
+                for (size_t i=2; i < window.PSMs.size(); ++i)
+                    minDiff = min(minDiff, window.PSMs[i].spectrum->scanStartTime - window.PSMs[i-1].spectrum->scanStartTime);
+
+                // add zero scores before and after the "curve" using the minimum time gap
+                ms2Times.push_back(window.PSMs.front().spectrum->scanStartTime - minDiff);
+                ms2Scores.push_back(0);
+                BOOST_FOREACH(const PeptideSpectrumMatch& psm, window.PSMs)
+                {
+                    ms2Times.push_back(psm.spectrum->scanStartTime);
+                    ms2Scores.push_back(baselineIntensity + scaleForMS2Score * psm.score / window.maxScore);
+                    //ms2Scores.push_back(psm.score);
+                }
+                ms2Times.push_back(window.PSMs.back().spectrum->scanStartTime + minDiff);
+                ms2Scores.push_back(0);
+
+                Interpolator ms2Interpolator(ms2Times, ms2Scores);
+                
+	            chromatogramListSimple->chromatograms.push_back(ChromatogramPtr(new Chromatogram));
+	            Chromatogram& ms2Chromatogram = *chromatogramListSimple->chromatograms.back();
+	            ms2Chromatogram.index = chromatogramListSimple->size()-1;
+	            ms2Chromatogram.id = "Interpolated MS2s for " + oss.str();
+		        ms2Chromatogram.setTimeIntensityArrays(vector<double>(), vector<double>(), UO_second, MS_number_of_counts);
+                vector<double>& ms2InterpolatedTimes = ms2Chromatogram.getTimeArray()->data;
+                vector<double>& ms2InterpolatedIntensities = ms2Chromatogram.getIntensityArray()->data;
+                double sampleRate = minDiff / 10;
+                for(double time=window.MS1RT.front(); time <= window.MS1RT.back(); time += sampleRate)
+                {
+                    ms2InterpolatedTimes.push_back(time);
+                    ms2InterpolatedIntensities.push_back(ms2Interpolator.interpolate(ms2Times, ms2Scores, time));
+                }
             }
 	    }
 
@@ -973,12 +986,6 @@ namespace quameter
                     }
                 } // end of spectra loop
 
-                // make chromatogram data points evenly spaced
-                BOOST_FOREACH(const XICWindow& window, pepWindow)
-                    interpolate(window.MS1RT, window.MS1Intensity);
-                BOOST_FOREACH(UnidentifiedPrecursorInfo& info, unidentifiedPrecursors)
-                    interpolate(info.chromatogram.MS1RT, info.chromatogram.MS1Intensity);
-
                 // MS1-2A: Median SNR of MS1 spectra within C-2A
                 medianSigNoisMS1 = accs::percentile(sigNoisMS1, accs::percentile_number = 50);
 
@@ -1005,54 +1012,107 @@ namespace quameter
                         continue;
                     }
 
-                    // check for time gaps
-                    for (size_t i=2; i < window.MS1RT.size(); ++i)
-                        if ((window.MS1RT[i] - window.MS1RT[i-1]) -
-                            (window.MS1RT[i-1] - window.MS1RT[i-2]) > 5)
-                        {
-                            cerr << "Warning: distinct match window for " << window.peptide
-                                 << " (id: " << window.PSMs[0].peptide
-                                 << "; m/z: " << window.preMZ
-                                 << "; time: " << window.preRT
-                                 << ") has sample rate delta greater than 5 seconds!" << endl;
-                            break;
-                        }
+                    // make chromatogram data points evenly spaced
+                    Interpolator interpolator(window.MS1RT, window.MS1Intensity);
+                    interpolator.resample(window.MS1RT, window.MS1Intensity);
+
+                    // eliminate negative signal
+                    BOOST_FOREACH(double& intensity, window.MS1Intensity)
+                        intensity = max(0.0, intensity);
 
                     CrawdadPeakFinder crawdadPeakFinder;
                     crawdadPeakFinder.SetChromatogram(window.MS1RT, window.MS1Intensity);
 
                     vector<CrawdadPeakPtr> crawPeaks = crawdadPeakFinder.CalcPeaks();
-                    if (crawPeaks.size() == 0) 
+                    if (crawPeaks.size() == 0)
                         continue;
 
-                    // find the peak coinciding with the maximum MS2 score
+                    // if there are more than 2 PSMs, we interpolate a curve from their time/score pairs and
+                    // use the dot product between it and the interpolated SIC to pick the peak
+                    boost::optional<Interpolator> ms2Interpolator;
+                    vector<double> ms2Times, ms2Scores;
+                    if (window.PSMs.size() > 1)
+                    {
+                        // calculate the minimum time gap between PSMs
+                        double minDiff = window.PSMs[1].spectrum->scanStartTime - window.PSMs[0].spectrum->scanStartTime;
+                        for (size_t i=2; i < window.PSMs.size(); ++i)
+                            minDiff = min(minDiff, window.PSMs[i].spectrum->scanStartTime - window.PSMs[i-1].spectrum->scanStartTime);
+
+                        // add zero scores before and after the "curve" using the minimum time gap
+                        ms2Times.push_back(window.PSMs.front().spectrum->scanStartTime - minDiff);
+                        ms2Scores.push_back(0);
+                        BOOST_FOREACH(const PeptideSpectrumMatch& psm, window.PSMs)
+                        {
+                            ms2Times.push_back(psm.spectrum->scanStartTime);
+                            ms2Scores.push_back(psm.score);
+                        }
+                        ms2Times.push_back(window.PSMs.back().spectrum->scanStartTime + minDiff);
+                        ms2Scores.push_back(0);
+
+                        ms2Interpolator = Interpolator(ms2Times, ms2Scores);
+                    }
+
+                    // find the peak with the highest sum of (PSM scores * interpolated SIC) within the peak;
+                    // if no IDs fall within peaks, find the peak closest to the best scoring id
+                    map<double, map<double, Peak> > peakByIntensityBySumOfProducts;
                     BOOST_FOREACH(const CrawdadPeakPtr& crawPeak, crawPeaks) 
                     {
                         double startTime = window.MS1RT[crawPeak->getStartIndex()];
                         double endTime = window.MS1RT[crawPeak->getEndIndex()];
-                        //double peakTime = window.MS1RT[crawPeak->getTimeIndex()];
-                        double peakTime = startTime + (endTime-startTime)/2;
+                        double peakTime = window.MS1RT[crawPeak->getTimeIndex()];
+                        //double peakTime = startTime + (endTime-startTime)/2;
 
                         // skip degenerate peaks
-                        if (peakTime == 0 || crawPeak->getFwhm() == 0)
+                        if (crawPeak->getFwhm() == 0 || startTime == peakTime || peakTime == endTime)
+                            continue;
+
+                        // skip peaks which don't follow the raw data
+                        double rawPeakIntensity = window.MS1Intensity[crawPeak->getTimeIndex()];
+                        if (rawPeakIntensity < window.MS1Intensity[crawPeak->getStartIndex()] ||
+                            rawPeakIntensity < window.MS1Intensity[crawPeak->getEndIndex()])
                             continue;
 
                         // Crawdad Fwhm is in index units; we have to translate it back to time units
                         double sampleRate = (endTime-startTime) / (crawPeak->getEndIndex()-crawPeak->getStartIndex());
                         Peak peak(startTime, endTime, peakTime, crawPeak->getFwhm() * sampleRate, crawPeak->getHeight());
                         window.peaks.insert(peak);
-                        if (startTime <= window.maxScoreScanStartTime && window.maxScoreScanStartTime <= endTime)
+
+                        if (!window.bestPeak || fabs(window.bestPeak->peakTime - window.maxScoreScanStartTime) >
+                                                fabs(peakTime - window.maxScoreScanStartTime))
                             window.bestPeak = peak;
+
+                        // calculate sum of products between PSM score and interpolated SIC over 4 standard deviations
+                        double wideStartTime = peakTime - peak.fwhm * 4 / 2.35482;
+                        double wideEndTime = peakTime + peak.fwhm * 4 / 2.35482;
+                        double sumOfProducts = 0;
+                        if (ms2Interpolator)
+                        {
+                            size_t wideStartIndex = boost::lower_bound(window.MS1RT, wideStartTime) - window.MS1RT.begin();
+                            size_t wideEndIndex = boost::upper_bound(window.MS1RT, wideEndTime) - window.MS1RT.begin();
+                            for (size_t i=wideStartIndex; i < wideEndIndex; ++i)
+                                sumOfProducts += window.MS1Intensity[i] * ms2Interpolator->interpolate(ms2Times, ms2Scores, window.MS1RT[i]);
+                        }
+                        else
+                        {
+                            BOOST_FOREACH(const PeptideSpectrumMatch& psm, window.PSMs)
+                                if (wideStartTime <= psm.spectrum->scanStartTime && psm.spectrum->scanStartTime <= wideEndTime)
+                                    sumOfProducts += psm.score * interpolator.interpolate(window.MS1RT, window.MS1Intensity, psm.spectrum->scanStartTime);
+                        }
+
+                        if (sumOfProducts > 0)
+                            peakByIntensityBySumOfProducts[sumOfProducts][peak.intensity] = peak;
                     }
+
+                    if (!peakByIntensityBySumOfProducts.empty())
+                        window.bestPeak = peakByIntensityBySumOfProducts.rbegin()->second.rbegin()->second;
 
                     if (!window.bestPeak)
                     {
-                        cerr << "Warning: max. MS2 score for distinct match " << window.peptide
+                        cerr << "Warning: unable to select the best Crawdad peak for distinct match! " << window.peptide
                              << " (id: " << window.PSMs[0].peptide
                              << "; m/z: " << window.preMZ
                              << "; time: " << window.preRT
-                             << ") does not coincide with a Crawdad peak!" << endl;
-                        continue;
+                             << ")" << endl;
                     }
                     //else
                         //cout << "\n" << firstMS2.nativeID << "\t" << window.peptide << "\t" << window.bestPeak->intensity << "\t" << window.bestPeak->peakTime << "\t" << firstMS2.precursorIntensity << "\t" << (window.bestPeak->intensity / firstMS2.precursorIntensity);
@@ -1077,6 +1137,13 @@ namespace quameter
                         continue;
                     }
 
+                    // make chromatogram data points evenly spaced
+                    Interpolator(info.chromatogram.MS1RT, info.chromatogram.MS1Intensity).resample(info.chromatogram.MS1RT, info.chromatogram.MS1Intensity);
+
+                    // eliminate negative signal
+                    BOOST_FOREACH(double& intensity, info.chromatogram.MS1Intensity)
+                        intensity = max(0.0, intensity);
+
                     CrawdadPeakFinder crawdadPeakFinder;
                     crawdadPeakFinder.SetChromatogram(lc.MS1RT, lc.MS1Intensity);
                     vector<CrawdadPeakPtr> crawPeaks = crawdadPeakFinder.CalcPeaks();
@@ -1088,11 +1155,17 @@ namespace quameter
                     {
                         double startTime = lc.MS1RT[crawPeak->getStartIndex()];
                         double endTime = lc.MS1RT[crawPeak->getEndIndex()];
-                        //double peakTime = window.MS1RT[crawPeak->getTimeIndex()];
-                        double peakTime = startTime + (endTime-startTime)/2;
+                        double peakTime = lc.MS1RT[crawPeak->getTimeIndex()];
+                        //double peakTime = startTime + (endTime-startTime)/2;
 
                         // skip degenerate peaks
-                        if (peakTime == 0 || crawPeak->getFwhm() == 0)
+                        if (crawPeak->getFwhm() == 0 || startTime == peakTime || peakTime == endTime)
+                            continue;
+
+                        // skip peaks which don't follow the raw data
+                        double rawPeakIntensity = lc.MS1Intensity[crawPeak->getTimeIndex()];
+                        if (rawPeakIntensity < lc.MS1Intensity[crawPeak->getStartIndex()] ||
+                            rawPeakIntensity < lc.MS1Intensity[crawPeak->getEndIndex()])
                             continue;
 
                         // Crawdad Fwhm is in index units; we have to translate it back to time units
@@ -1114,8 +1187,9 @@ namespace quameter
                 {
                     accs::accumulator_set<double, accs::stats<accs::tag::percentile> > identifiedPeakWidths;
                     BOOST_FOREACH(const XICWindow& distinctMatch, pepWindow)
-                        for (size_t i=0; i < distinctMatch.PSMs.size(); ++i) // the best peak is shared between all PSMs
-                            identifiedPeakWidths(distinctMatch.bestPeak->fwhm);
+                        if (distinctMatch.bestPeak)
+                            for (size_t i=0; i < distinctMatch.PSMs.size(); ++i) // the best peak is shared between all PSMs
+                                identifiedPeakWidths(distinctMatch.bestPeak->fwhm);
                     identifiedPeakWidthMedian = accs::percentile(identifiedPeakWidths, accs::percentile_number = 50);
                     identifiedPeakWidthIQR = accs::percentile(identifiedPeakWidths, accs::percentile_number = 75) -
                                              accs::percentile(identifiedPeakWidths, accs::percentile_number = 25);
@@ -1133,7 +1207,8 @@ namespace quameter
                         XICWindowList::index<time>::type::const_iterator itr = pepWindow.get<time>().lower_bound(startTime),
                                                                          end = pepWindow.get<time>().end();
                         for (; itr != end; ++itr)
-                            distinctMatchPeakWidths(itr->bestPeak->fwhm);
+                            if (itr->bestPeak)
+                                distinctMatchPeakWidths(itr->bestPeak->fwhm);
                         medianDistinctMatchPeakWidthOver9thScanTimeDecile = accs::percentile(distinctMatchPeakWidths, accs::percentile_number = 50);
                     }
 
@@ -1144,7 +1219,8 @@ namespace quameter
                         XICWindowList::index<time>::type::const_iterator itr = pepWindow.get<time>().begin(),
                                                                          end = pepWindow.get<time>().lower_bound(endTime);
                         for (; itr != end; ++itr)
-                            distinctMatchPeakWidths(itr->bestPeak->fwhm);
+                            if (itr->bestPeak)
+                                distinctMatchPeakWidths(itr->bestPeak->fwhm);
                         medianDistinctMatchPeakWidthOver1stScanTimeDecile = accs::percentile(distinctMatchPeakWidths, accs::percentile_number = 50);
                     }
 
@@ -1156,7 +1232,8 @@ namespace quameter
                         XICWindowList::index<time>::type::const_iterator itr = pepWindow.get<time>().lower_bound(startTime),
                                                                          end = pepWindow.get<time>().lower_bound(endTime);
                         for (; itr != end; ++itr)
-                            distinctMatchPeakWidths(itr->bestPeak->fwhm);
+                            if (itr->bestPeak)
+                                distinctMatchPeakWidths(itr->bestPeak->fwhm);
                         medianDistinctMatchPeakWidthOver5thScanTimeDecile = accs::percentile(distinctMatchPeakWidths, accs::percentile_number = 50);
                     }
                 }
@@ -1165,7 +1242,7 @@ namespace quameter
                 int duplicatePeptides = 0;
                 BOOST_FOREACH(const XICWindow& distinctMatch, pepWindow)
                 {
-                    if (distinctMatch.PSMs.size() == 1)
+                    if (distinctMatch.PSMs.size() == 1 || !distinctMatch.bestPeak)
                         continue;
                     duplicatePeptides += distinctMatch.PSMs.size() - 1;
                     BOOST_FOREACH(const PeptideSpectrumMatch& psm, distinctMatch.PSMs)
@@ -1217,7 +1294,8 @@ namespace quameter
                         for (size_t i=0; i < distinctMatch.PSMs.size(); ++i)
                             ms2_peakPrecursorIntensities(distinctMatch.bestPeak->intensity);
                 BOOST_FOREACH(const UnidentifiedPrecursorInfo& info, unidentifiedPrecursors)
-                    ms2_peakPrecursorIntensities(info.chromatogram.bestPeak->intensity);
+                    if (info.chromatogram.bestPeak)
+                        ms2_peakPrecursorIntensities(info.chromatogram.bestPeak->intensity);
                 double intensQ1 = accs::percentile(ms2_peakPrecursorIntensities, accs::percentile_number = 25);
                 double intensQ2 = accs::percentile(ms2_peakPrecursorIntensities, accs::percentile_number = 50);
                 double intensQ3 = accs::percentile(ms2_peakPrecursorIntensities, accs::percentile_number = 75);
@@ -1230,6 +1308,7 @@ namespace quameter
                 // number of identified MS2s that have precursor max intensities in each quartile
                 BOOST_FOREACH(const XICWindow& window, pepWindow)
                 {
+                    if (!window.bestPeak) continue;
                     double x = window.bestPeak->intensity;
                     if (x <= intensQ1) idQ1 += window.PSMs.size();
                     else if (x <= intensQ2) idQ2 += window.PSMs.size();
@@ -1241,6 +1320,7 @@ namespace quameter
                 int unidQ1=0, unidQ2=0, unidQ3=0, unidQ4=0;
                 BOOST_FOREACH(const UnidentifiedPrecursorInfo& info, unidentifiedPrecursors)
                 {
+                    if (!info.chromatogram.bestPeak) continue;
                     double x = info.chromatogram.bestPeak->intensity;
                     if (x <= intensQ1) ++unidQ1;
                     else if (x <= intensQ2) ++unidQ2;

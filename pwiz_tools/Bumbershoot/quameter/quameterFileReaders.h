@@ -107,8 +107,9 @@ namespace quameter
         // For metric P-3: Find the ratio of semi- over fully-tryptic peptide IDs.
         const vector<size_t>& distinctPeptideCountBySpecificity() const {return _distinctPeptideCountBySpecificity;}
 
-        // Used for peak finding of identified peptides
-        XICWindowList MZRTWindows(const MS2ScanMap& ms2ScanMap);
+        // Used for peak finding of identified peptides;
+        // precursorMZs for identified scans are reset based on the one from the idpDB (i.e. monoisotope corrected)
+        XICWindowList MZRTWindows(MS2ScanMap& ms2ScanMap);
 
         private:
         vector<size_t> _peptideSamplingRates;

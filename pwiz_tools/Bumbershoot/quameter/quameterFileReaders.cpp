@@ -274,13 +274,20 @@ struct SortByScanTime
     }
 };
 
+struct ModifyPrecursorMZ
+{
+    double newMZ;
+    ModifyPrecursorMZ(double newMZ) : newMZ(newMZ) {}
+    void operator() (MS2ScanInfo& info) const {info.precursorMZ = newMZ;}
+};
 
-XICWindowList IDPDBReader::MZRTWindows(const MS2ScanMap& ms2ScanMap)
+
+XICWindowList IDPDBReader::MZRTWindows(MS2ScanMap& ms2ScanMap)
 {
     sqlite::database db(idpDBFile);
     string deltaMassColumn = g_rtConfig->useAvgMass ? "AvgMassDelta" : "MonoMassDelta";
     string massColumn = g_rtConfig->useAvgMass ? "MolecularWeight" : "MonoisotopicMass";
-    string sql = "SELECT psm.Peptide, NativeID, Charge, IFNULL(Mods, '') AS Mods, psmScore.Value, "
+    string sql = "SELECT psm.Peptide, NativeID, PrecursorMZ, Charge, IFNULL(Mods, '') AS Mods, psmScore.Value, "
                  "       (IFNULL(TotalModMass,0)+pep."+massColumn+"+Charge*1.0076)/Charge AS ExactMZ, "
                  "       IFNULL(SUBSTR(Sequence, pi.Offset+1, pi.Length),DecoySequence) "
                  "FROM Spectrum s "
@@ -313,14 +320,18 @@ XICWindowList IDPDBReader::MZRTWindows(const MS2ScanMap& ms2ScanMap)
     {
         sqlite_int64 peptide;
         char const* id;
-        string modif;
+        double precursorMZ;
         int charge;
+        string modif;
         double score, exactMZ;
         string peptideSequence;
 
-        row.getter() >> peptide >> id >> charge >> modif >> score >> exactMZ >> peptideSequence;
+        row.getter() >> peptide >> id >> precursorMZ >> charge >> modif >> score >> exactMZ >> peptideSequence;
 
-        const MS2ScanInfo& scanInfo = *ms2ScanMap.get<nativeID>().find(id);
+        MS2ScanMap::index<nativeID>::type::const_iterator itr = ms2ScanMap.get<nativeID>().find(id);
+        ms2ScanMap.modify(itr, ModifyPrecursorMZ(precursorMZ)); // prefer corrected monoisotopic m/z
+        const MS2ScanInfo& scanInfo = *itr;
+
         if (peptide != lastPeptide || charge != lastCharge || modif != lastModif) 
         { // if any of these values change we make a new chromatogram
             if (lastPeptide > 0 && !tmpWindow.PSMs.empty()) 
