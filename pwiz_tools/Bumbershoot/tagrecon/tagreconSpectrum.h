@@ -196,7 +196,6 @@ namespace tagrecon
         void ComputeXCorrs();
         
 		void ScoreSequenceVsSpectrum( SearchResult& result,
-                                      const string& seq,
                                       const vector< double >& seqIons,
                                       int NTT );
 

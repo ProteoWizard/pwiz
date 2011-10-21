@@ -28,6 +28,7 @@
 #include "stdafx.h"
 #include "freicore.h"
 #include "tagreconSpectrum.h"
+#include "AhoCorasickTrie.hpp"
 #include <boost/atomic.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/interprocess/containers/container/flat_map.hpp>
@@ -67,16 +68,16 @@ namespace tagrecon
 		Structure TagSetInfo stores the spectrum, tag sequence, n-terminal and c-terminal
 		masses that sourround the tag.
 	*/
-	struct TagSetInfo
+	struct TagSpectrumInfo
 	{
-		TagSetInfo( const SpectraList::iterator& itr, string tag, float nT, float cT ) { 
+		TagSpectrumInfo( const SpectraList::iterator& itr, string tag, float nT, float cT ) { 
 			sItr = itr;
 			nTerminusMass = nT;
 			cTerminusMass = cT;
 			candidateTag = tag;
 		}
 
-		TagSetInfo(string tag, float nT, float cT) {
+		TagSpectrumInfo(string tag, float nT, float cT) {
 			candidateTag = tag;
 			nTerminusMass = nT;
 			cTerminusMass = cT;
@@ -128,53 +129,48 @@ namespace tagrecon
         TermMassMatch cTermMatch;
     };
 
-	/**
-		Class TagMapCompare sorts tag to spectrum map based on spectral similarity.
-		Two spectrum are said to be similar if the tag sequences match and also 
-		the total mass deviation between n-terminal and c-terminal masses that
-		sourround the tags is <= +/-maxDeviation. This comparator essentially 
-		sorts similar tags together. 
-	*/
-	class TagSetCompare {
+    struct AATagToSpectraMap
+    {
+        string aminoAcidTag;
+        vector<TagSpectrumInfo> tags;
 
-		// Maximum deviation observed between the terminal masses
-		// the sourround a tag match.
-		float maxDeviation;
+        AATagToSpectraMap()
+        {
+            aminoAcidTag = "";
+        }
 
-	public:
-		TagSetCompare(float maxDeviation = 300.0f) : maxDeviation(maxDeviation) {};
+        AATagToSpectraMap(const string& aaTag)
+        {
+            aminoAcidTag = aaTag;
+        }
 
-		/**
-			operator () sorts the tags based on tag sequence first. If two tag sequences
-			match then we cluster them based on their total terminal mass deviation from each
-			other. Spectra with tags that have total terminal deviations <= +/-maxDeviation
-			are kept together. If two tags don't satisfy this criterion then they are
-			sorted based on their n-terminal masses.
-		*/
-		bool operator ()(const TagSetInfo& lhs, const TagSetInfo& rhs) const {
-			if(lhs.candidateTag < rhs.candidateTag) {
-				return lhs.candidateTag < rhs.candidateTag;
-			} else if(lhs.candidateTag > rhs.candidateTag) {
-				return lhs.candidateTag < rhs.candidateTag;
-			} else {
-				float nTerminalAbsMassDiff = fabs(lhs.nTerminusMass-rhs.nTerminusMass);
-				float cTerminalAbsMassDiff =  fabs(lhs.cTerminusMass-rhs.cTerminusMass);
-				//if((nTerminalAbsMassDiff+cTerminalAbsMassDiff) > maxDeviation) {
-                if(nTerminalAbsMassDiff > maxDeviation && cTerminalAbsMassDiff > maxDeviation) {
-					return lhs.nTerminusMass < rhs.nTerminusMass;
-				} else {
-					return false;
-				}
-			}
-		}
-        
-	};
+        void addTag(const TagSpectrumInfo& tag)
+        {
+            tags.push_back(tag);
+        }
 
-	// A spectra to tag map (tag to spectrum) that sorts tags based on spectral similarity
-	typedef flat_multiset< TagSetInfo, TagSetCompare >					SpectraTagMap;
-    typedef multiset< TagSetInfo, TagSetCompare>                        TempSpectraTagMap;
-	//typedef multimap<pair <string, float>, TagMapInfo>				SpectraTagMap;
-	typedef vector< SpectraTagMap >										SpectraTagMapList;
+        bool operator < (const AATagToSpectraMap& rhs)
+        {
+            return rhs.aminoAcidTag < aminoAcidTag;
+        }
+
+        bool operator== (const AATagToSpectraMap& rhs)
+        {
+            return (aminoAcidTag.compare(rhs.aminoAcidTag)==0);
+        }  
+
+        operator const string&() const {return aminoAcidTag;}
+    };
+
+    struct AATagToSpectraMapCompare
+    {
+        bool operator() (const shared_ptr<AATagToSpectraMap>& lhs, const shared_ptr<AATagToSpectraMap>& rhs) const
+        {
+            return *lhs < *rhs;
+        }
+    };
+
+    typedef AhoCorasickTrie<ascii_translator, AATagToSpectraMap>         SpectraTagTrie;
 
 	struct SearchStatistics
 	{
@@ -257,7 +253,6 @@ namespace tagrecon
     extern SearchStatistics     searchStatistics;
 
 	extern SpectraList			spectra;
-	extern SpectraTagMap		spectraTagMapsByChargeState;
 }
 }
 

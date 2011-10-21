@@ -359,7 +359,6 @@ namespace tagrecon
     }
 
     void Spectrum::ScoreSequenceVsSpectrum( SearchResult& result,
-                                            const string& seq,
                                             const vector< double >& seqIons,
                                             int NTT )
     {
