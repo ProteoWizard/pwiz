@@ -204,7 +204,8 @@ namespace boost
     value = strtoul( stringToConvert,NULL, 10 );
 	}
 
-#ifndef _SIZE_T_DEFINED // some compilers just use a #define for size_t
+#if !defined(__APPLE__) && !defined(_SIZE_T_DEFINED) 
+    // some compilers just use a #define for size_t, which makes this redundant
     inline void optimized_lexical_cast( const char* stringToConvert, size_t& value )
 	{
         value = (size_t)strtoul( stringToConvert,NULL, 10 );
