@@ -111,14 +111,8 @@ struct PWIZ_API_DECL CVParam
     template<typename value_type>
     value_type valueAs() const
     {
-        // formerly:
-        // return !value.empty() ? boost::lexical_cast<value_type>(value) 
-        //                      : boost::lexical_cast<value_type>(0);
-        // not all value_type know how to cast from int 0, so
-        // let boost optimized lexical cast choose the action on empty items
-        value_type result;
-        boost::optimized_lexical_cast(value.c_str(),result);
-        return result;
+        return !value.empty() ? boost::lexical_cast<value_type>(value) 
+                             : boost::lexical_cast<value_type>(0);
     } 
 
     /// convenience function to return string for the cvid 

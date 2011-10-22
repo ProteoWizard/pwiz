@@ -219,6 +219,72 @@ inline std::ostream& operator<<(std::ostream& os, const saxstring& s)
     return os;
 }
 
+// fast string-to-value conversions
+template< typename Target > inline Target textToValue(const char *txt); // template prototype
+
+template<> inline float textToValue(const char *txt)
+{
+    return (float) ATOF( txt ) ;
+}
+
+template<> inline double textToValue(const char *txt)
+{
+    return ATOF( txt );
+}
+
+template<> inline int textToValue(const char *txt)
+{
+    return atoi(txt);
+}
+
+template<> inline char textToValue(const char *txt)
+{
+    return *(txt);
+}
+
+template<> inline long textToValue(const char *txt)
+{
+    return atol(txt);
+}
+
+template<> inline unsigned int textToValue(const char *txt)
+{
+    return (unsigned int) strtoul( txt, NULL, 10 );
+}
+
+template<> inline unsigned long textToValue(const char *txt)
+{
+    return strtoul( txt, NULL, 10 );
+}
+
+inline bool istrue(const char *t)
+{
+    return strcmp(t, "0") && strcmp(t,"false");
+}
+
+template<> inline bool textToValue(const char *txt)
+{
+    return istrue(txt);
+}
+
+template<> inline boost::logic::tribool textToValue(const char *txt)
+{
+    using namespace boost::logic;
+    if (!*txt)
+        return tribool(indeterminate);
+    else 
+    {
+        bool b = istrue(txt);
+        return tribool(b);
+    }
+}
+
+template<> inline std::string textToValue(const char *txt)
+{
+    return std::string( txt );
+}
+
+
 /// SAX event handler interface.
 class Handler
 {
@@ -361,6 +427,19 @@ class Handler
             std::string getValue(XMLUnescapeBehavior_t Unescape = XMLUnescapeDefault) const {
                 return std::string(getValuePtr(Unescape));
             }
+
+            // cast-to-type
+            template< typename T >
+            inline T valueAs( XMLUnescapeBehavior_t Unescape ) const
+            {
+                return textToValue<T>(getValuePtr(Unescape));
+            }
+
+            inline size_t valueAs( XMLUnescapeBehavior_t Unescape ) const
+            {
+                return (size_t)strtoul(getValuePtr(Unescape),NULL,10);
+            }
+
             friend class Attributes;
         protected:
             const char *name; // attribute name - a pointer into main text buffer
@@ -372,7 +451,7 @@ class Handler
                 value = _value;
                 needsUnescape = _needsUnescape;
             }
-        };
+        }; // class attribute
 
     public:
             typedef std::vector<attribute> attribute_list;
@@ -412,17 +491,26 @@ class Handler
             }
 
     public:
-            // return value for name if any, or NULL
-            const char *findValueByName(const char *name,XMLUnescapeBehavior_t Unescape = XMLUnescapeDefault) const 
+            const attribute *findAttributeByName(const char *name) const 
             {
                 access(); // parse the buffer if we haven't already
                 for (attribute_list::const_iterator it=attrs.begin();it!=attrs.end();it++) 
                 {
                     if (it->matchName(name)) 
-                        return it->getValuePtr(Unescape);
+                        return &(*it);
                 }
                 return NULL;
             }
+
+            // return value for name if any, or NULL
+            const char *findValueByName(const char *name,XMLUnescapeBehavior_t Unescape = XMLUnescapeDefault) const 
+            {
+                const attribute *attr = findAttributeByName(name);
+                if (attr) 
+                    return attr->getValuePtr(Unescape);
+                return NULL;
+            }
+
     };
     typedef boost::iostreams::stream_offset stream_offset; 
 
@@ -446,15 +534,15 @@ class Handler
     protected:
 
     template <typename T>
-    T& getAttribute(const Attributes& attributes,
+    inline T& getAttribute(const Attributes& attributes,
                     const char * name,
                     T& result,
                     XMLUnescapeBehavior_t Unescape,
-                    T defaultValue = T())
+                    T defaultValue = T()) const
     {
-        const char *val = attributes.findValueByName(name,Unescape);
-        if (val) 
-            boost::optimized_lexical_cast(val,result);
+        const Attributes::attribute *attr = attributes.findAttributeByName(name);
+        if (attr) 
+            result = attr->valueAs<T>(Unescape);
          else 
             result = defaultValue;
         return result;
@@ -463,7 +551,7 @@ class Handler
     const char *getAttribute(const Attributes& attributes,
                     const char * name,
                     XMLUnescapeBehavior_t Unescape,
-                    const char * defaultValue = NULL)
+                    const char * defaultValue = NULL) const
     {
         const char *val = attributes.findValueByName(name,Unescape);
         if (!val) 
@@ -474,27 +562,43 @@ class Handler
 
     // general case using default unescape behavior 
     template <typename T>
-    T& getAttribute(const Attributes& attributes,
+    inline T& getAttribute(const Attributes& attributes,
         const char *name,
-        T& result,
-        T defaultValue = T())
+        T& result) const
     {
-        const char *val = attributes.findValueByName(name);
-        if (val) 
-            boost::optimized_lexical_cast(val, result);
+        const Attributes::attribute *attr = attributes.findAttributeByName(name);
+        if (attr) 
+            result = attr->valueAs<T>(XMLUnescapeDefault);
         else 
-            result = defaultValue;
+            result = T();
+        return result;
+    }
+
+    inline std::string& getAttribute(const Attributes& attributes,
+        const char *name,
+        std::string& result) const
+    {
+        const Attributes::attribute *attr = attributes.findAttributeByName(name);
+        if (attr) 
+            result = attr->getValuePtr(XMLUnescapeDefault);
+        else 
+            result = "";
         return result;
     }
 
     // general case using default unescape behavior 
     template <typename T>
-    T& getAttribute(const Attributes& attributes,
+    inline T& getAttribute(const Attributes& attributes,
         const std::string &name,
         T& result,
-        T defaultValue = T())
+        T defaultValue = T()) const
     {
-        return getAttribute(attributes,name.c_str(),result,defaultValue);
+        const Attributes::attribute *attr = attributes.findAttributeByName(name.c_str());
+        if (attr) 
+            result = attr->valueAs<T>(XMLUnescapeDefault);
+        else 
+            result = defaultValue;
+        return result;    
     }
 };
 
