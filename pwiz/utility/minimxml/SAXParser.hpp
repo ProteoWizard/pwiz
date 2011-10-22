@@ -31,6 +31,7 @@
 #include "pwiz/utility/misc/optimized_lexical_cast.hpp"
 #include "pwiz/utility/misc/shared_map.hpp"
 #include "boost/iostreams/positioning.hpp"
+#include <string.h>
 #include <iosfwd>
 #include <string>
 #include <vector>
@@ -220,6 +221,8 @@ inline std::ostream& operator<<(std::ostream& os, const saxstring& s)
 }
 
 // fast string-to-value conversions
+// not very boost-y, or even very c++, but lexical_cast and istringstreams are
+// just too slow for our parsing performance needs.
 template< typename Target > inline Target textToValue(const char *txt); // template prototype
 
 template<> inline float textToValue(const char *txt)
@@ -257,9 +260,31 @@ template<> inline unsigned long textToValue(const char *txt)
     return strtoul( txt, NULL, 10 );
 }
 
+#if defined(BOOST_HAS_LONG_LONG)
+
+template<> inline long long textToValue(const char *txt)
+{
+#if defined(BOOST_HAS_MS_INT64)
+    return _atoi64(txt);
+#else
+    return atoll(txt);
+#endif
+}
+
+template<> inline unsigned long long textToValue(const char *txt)
+{
+#if defined(BOOST_HAS_MS_INT64)
+    return  _strtoui64(txt,NULL,10);
+#else
+    return strtoull( txt, NULL, 10 );
+#endif
+}
+
+#endif // has long long
+
 inline bool istrue(const char *t)
 {
-    return strcmp(t, "0") && strcmp(t,"false");
+    return strcmp(t, "0") && strcmp(t,"false"); // as in optimized_lexical_cast.h
 }
 
 template<> inline bool textToValue(const char *txt)
