@@ -53,8 +53,8 @@ namespace minimxml {
 namespace SAXParser {
 
 size_t count_trail_ws(const char *data,size_t len); // count whitespace chars at end of data
-void unescapeXML(char *str);
-void unescapeXML(std::string &str);
+PWIZ_API_DECL void unescapeXML(char *str);
+PWIZ_API_DECL void unescapeXML(std::string &str);
 
 class saxstring 
 { 
@@ -505,7 +505,7 @@ class Handler
             }
     protected:
 
-            void parseAttributes(std::string::size_type& index) const;
+            PWIZ_API_DECL void parseAttributes(std::string::size_type& index) const;
 
             void access() const 
             { // don't parse attributes until asked to
