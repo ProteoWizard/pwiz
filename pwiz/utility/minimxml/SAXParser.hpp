@@ -35,6 +35,7 @@
 #include <iosfwd>
 #include <string>
 #include <vector>
+#include <assert.h>
 #include <stdexcept>
 
 
@@ -354,7 +355,7 @@ class Handler
         // instead of a bunch of little std::string operations
     public:
         Attributes(const char * _source_text, size_t _source_text_len, bool _autoUnescape) :
-          index(0),index_end(0),autoUnescape(_autoUnescape),firstread(true) 
+          index(0),index_end(0),autoUnescape(_autoUnescape),firstread(true),attrs()
         {
               size=_source_text_len;
               textbuff = (char *)malloc(size+1);
@@ -362,42 +363,69 @@ class Handler
               memcpy(textbuff,_source_text,size);
               textbuff[size] = 0;
               setParserIndex(); // ready for eventual parsing
-          };
+              test_invariant(); // everything correct?
+        };
         Attributes(saxstring &str, bool _autoUnescape) :
-          index(0),index_end(0),autoUnescape(_autoUnescape),firstread(true) 
+          index(0),index_end(0),autoUnescape(_autoUnescape),firstread(true),attrs() 
         {
               textbuff = str.data();
               size=str.length();
               managemem = false; // we don't have to free this
               setParserIndex(); // ready for eventual parsing
-          };
-          ~Attributes() 
-          {
-              if (managemem) {
-                 free(textbuff);
-              }
-          }
+              test_invariant(); // everything correct?
+        };
+        ~Attributes() 
+        {
+             if (managemem) 
+                  free(textbuff);
+        }
         Attributes(const Attributes &rhs) 
         {
-            *this = rhs; // default copy
+            *this = rhs;
+        }
+        Attributes & operator = (const Attributes &rhs) {
+            size = rhs.size;
+            index = rhs.index;
+            index_end = rhs.index_end; // string bounds for attribute parsing
+            autoUnescape = rhs.autoUnescape; // do XML escape of attribute?
+            firstread = rhs.firstread; // may change during const access
             textbuff = (char *)malloc(size+1);
-            managemem = true;
+            managemem = true; // we need to free textbuff at dtor
             memcpy(textbuff,rhs.textbuff,size+1);
+            attrs.resize(rhs.attrs.size()); 
             // now fix up the char ptrs to point to our copy of attribute list
             for (size_t n=attrs.size();n--;) 
             {
-                char *t = textbuff;
-                attrs[n].name  = t+(rhs.attrs[n].getName()-rhs.getTextBuffer());
-                attrs[n].value = t+(rhs.attrs[n].getValuePtr()-rhs.getTextBuffer());
+                attrs[n].name  = ((char *)textbuff)+(rhs.attrs[n].getName()-rhs.getTextBuffer());
+                attrs[n].value = ((char *)textbuff)+(rhs.attrs[n].getValuePtr()-rhs.getTextBuffer());
             }
+            test_invariant(); // everything correct?
+            return *this;
         }
+
+        inline void test_invariant() const
+        {
+#ifdef _DEBUG
+            for (size_t n=attrs.size();n--;) 
+            {
+                assert(textbuff != NULL);
+                assert(attrs[n].name>textbuff);
+                assert(attrs[n].value>attrs[n].name);
+                assert(attrs[n].value<textbuff+size);
+                if (n) 
+                    assert(attrs[n].name>attrs[n-1].value);
+            }
+#endif
+         }
 
         const char *getTagName() const 
         { // work area contains tag name
+            test_invariant(); // everything correct?
             return textbuff+('/'==*textbuff);
         }
         const char *getTextBuffer() const 
         { // return pointer to our work area
+            test_invariant(); // everything correct?
             return textbuff;
         }
         size_t getSize() const 
@@ -422,6 +450,7 @@ class Handler
             textbuff[indexNameEnd] = 0; // nullterm the name
             index = c-textbuff; // should point to bar
             index_end = size;
+            test_invariant(); // everything correct?
         }
     public:
         class attribute 
@@ -509,10 +538,12 @@ class Handler
 
             void access() const 
             { // don't parse attributes until asked to
+                test_invariant(); // everything correct?
                 if (firstread) {
                     firstread = false;
                     parseAttributes(index);
                 }
+                test_invariant(); // everything correct?
             }
 
     public:
