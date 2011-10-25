@@ -36,6 +36,7 @@
 #include <boost/foreach.hpp>
 #include <boost/regex.hpp>
 #include <iostream>
+#include <algorithm>
 
 namespace {
 
@@ -197,10 +198,10 @@ public:
 
         // Once filled, each FragmentArray is put into the ionType's
         // fragmentArray vector.
-        mzFa->setValues(mzArray);
+        copy(mzArray.begin(), mzArray.end(), mzFa->values.begin());
         ionType->fragmentArray.push_back(mzFa);
 
-        intFa->setValues(intensityArray);
+        copy(intensityArray.begin(), intensityArray.end(), intFa->values.begin());
         ionType->fragmentArray.push_back(intFa);
 
         return true;
@@ -299,15 +300,16 @@ public:
     {
         PersonPtr user(new Person(owner_person_id));
         user->lastName = msp.getUSERNAME();
-        user->email = msp.getUSEREMAIL();
+        user->set(MS_contact_email,msp.getUSEREMAIL());
 
         mzid.auditCollection.push_back(user);
 
         mzid.provider.id = provider_id;
-        mzid.provider.contactRole.contactPtr = user;
+        mzid.provider.contactRolePtr = ContactRolePtr(new ContactRole());
+        mzid.provider.contactRolePtr->contactPtr = user;
 
         // TODO Is this right?
-        mzid.provider.contactRole.cvid = MS_researcher;
+        mzid.provider.contactRolePtr->cvid = MS_researcher;
     }
 
     void addMassTable(ms_searchparams& p, IdentData& mzid)
@@ -315,15 +317,16 @@ public:
         SpectrumIdentificationProtocolPtr sip =
             getSpectrumIdentificationProtocol(mzid);
 
-        sip->massTable.id = "MT";
+        MassTablePtr massTable(new MassTable("MT"));
 
         for (char ch='A'; ch <= 'Z'; ch++)
         {
             ResiduePtr residue(new Residue());
-            residue->Code = ch;
-            residue->Mass = p.getResidueMass(ch);
-            sip->massTable.residues.push_back(residue);
+            residue->code = ch;
+            residue->mass = p.getResidueMass(ch);
+            massTable->residues.push_back(residue);
         }
+        sip->massTable.push_back(massTable);
         
     }
 
@@ -694,7 +697,7 @@ public:
                                           indices.makeIndex("PEPTIDE_",
                                                             indices.peptide)));
                 pe->dbSequencePtr = dbseq;
-                pe->missedCleavages = pep->getMissedCleavages();
+                //pe->missedCleavages = pep->getMissedCleavages();
 
                 if (r.getTagStart(q,i,1)>0)
                 {
@@ -750,12 +753,13 @@ public:
             std::string accession = prot->getAccession();
             std::string description = results.
                 getProteinDescription(accession.c_str());
-            double mass = results.getProteinMass(accession.c_str());
+            // TODO Where do these go?
+            //double mass = results.getProteinMass(accession.c_str());
 
             //double score = prot->getScore();
-            int frame = prot->getFrame();
+            //int frame = prot->getFrame();
             //long coverage = prot->getCoverage();
-            int numdisplay = prot->getNumDisplayPeptides();
+            //int numdisplay = prot->getNumDisplayPeptides();
 
             createProtnPep (prot, results, searchparam,  mzid);
         }
