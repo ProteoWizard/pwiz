@@ -167,6 +167,9 @@ namespace pwiz.Skyline.Model
 
             using (var zip = new ZipFile())
             {
+                // Make sure large files don't cause this to fail.
+                zip.UseZip64WhenSaving = Zip64Option.AsNecessary;
+
                 if (CompleteSharing)
                     ShareComplete(zip);
                 else

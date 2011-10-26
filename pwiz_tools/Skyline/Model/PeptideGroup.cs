@@ -82,19 +82,19 @@ namespace pwiz.Skyline.Model
             int numPeptides = useLimit && peptideCount.HasValue && peptideCount.Value < listPeptides.Count
                               ? peptideCount.Value
                               : listPeptides.Count;
-            PeptideDocNode[] peptidesNew = new PeptideDocNode[numPeptides];
-            for (int i = 0; i < peptidesNew.Length; i++)
+            var peptidesNew = new List<PeptideDocNode>();
+            for (int i = 0; i < numPeptides; i++)
             {
                 // TODO: Remove any peptide groups without the correct rank value
                 if (useLimit && listRanks[i].Value == float.MinValue)
                     break;
-                peptidesNew[i] = listRanks[i].Key;
+                peptidesNew.Add(listRanks[i].Key);
             }
             
             // Re-sort by order in FASTA sequence
-            Array.Sort(peptidesNew, FastaSequence.ComparePeptides);
+            peptidesNew.Sort(FastaSequence.ComparePeptides);
 
-            return peptidesNew;
+            return peptidesNew.ToArray();
         }
     }
 
