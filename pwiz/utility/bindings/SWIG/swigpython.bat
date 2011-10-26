@@ -1,0 +1,2 @@
+REM run this to regenerate the python bindings file "RAMPAdapter_wrap_python.cxx" - but there's not really any need to, probably
+swig.exe -c++ -python -o RAMPAdapter_wrap_python.cxx pwiz_swigbindings.i
