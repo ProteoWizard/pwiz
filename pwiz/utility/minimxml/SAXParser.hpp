@@ -53,7 +53,7 @@ namespace minimxml {
 ///
 namespace SAXParser {
 
-size_t count_trail_ws(const char *data,size_t len); // count whitespace chars at end of data
+PWIZ_API_DECL size_t count_trail_ws(const char *data,size_t len); // count whitespace chars at end of data
 PWIZ_API_DECL void unescapeXML(char *str);
 PWIZ_API_DECL void unescapeXML(std::string &str);
 
