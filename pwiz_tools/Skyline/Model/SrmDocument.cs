@@ -517,38 +517,50 @@ namespace pwiz.Skyline.Model
 
         private SrmDocument MergeMatchingPeptidesUserInfo(IList<PeptideGroupDocNode> peptideGroupsNew)
         {
-            var setMerged = new HashSet<PeptideModKey>();
-            var dictPeptidesNew = new Dictionary<PeptideModKey, PeptideDocNode>();
+            var setMerge = new HashSet<PeptideModKey>();
+            var dictPeptidesModified = new Dictionary<PeptideModKey, PeptideDocNode>();
             foreach(var nodePep in peptideGroupsNew.SelectMany(nodePepGroup => nodePepGroup.Children)
                                                    .Cast<PeptideDocNode>())
             {
                 var key = nodePep.Key;
-                setMerged.Add(key);
+                setMerge.Add(key);
                 if (!nodePep.IsUserModified)
                     continue;
-                if (dictPeptidesNew.ContainsKey(key))
+                if (dictPeptidesModified.ContainsKey(key))
                 {
                     throw new InvalidDataException(string.Format("The peptide {0} was found multiple times with user modifications.",
                         Settings.GetPrecursorCalc(IsotopeLabelType.light, nodePep.ExplicitMods).GetModifiedSequence(nodePep.Peptide.Sequence, true)));
                 }
-                dictPeptidesNew.Add(key, nodePep);
+                dictPeptidesModified.Add(key, nodePep);
             }
 
             var diff = new SrmSettingsDiff(Settings, true);
+            var setMerged = new HashSet<PeptideModKey>();
             var listPeptideGroupsMerged = new List<DocNode>();
             foreach (var nodePepGroup in PeptideGroups)
             {
                 var listPeptidesMerged = new List<DocNode>();
                 foreach (PeptideDocNode nodePep in nodePepGroup.Children)
                 {
-                    PeptideDocNode nodePepMatch;
-                    if (!dictPeptidesNew.TryGetValue(nodePep.Key, out nodePepMatch))
+                    // If the peptide has no match in the set to be merged, then just add it.
+                    if (!setMerge.Contains(nodePep.Key))
                         listPeptidesMerged.Add(nodePep);
                     else
-                        listPeptidesMerged.Add(nodePep.MergeUserInfo(nodePepMatch, Settings, diff));
+                    {
+                        // Keep track of the matching peptides
+                        setMerged.Add(nodePep.Key);
+
+                        PeptideDocNode nodePepMatch;
+                        // If it is not modified, it doesn't really need to be merged.
+                        if (!dictPeptidesModified.TryGetValue(nodePep.Key, out nodePepMatch))
+                            listPeptidesMerged.Add(nodePep);
+                        else
+                            listPeptidesMerged.Add(nodePep.MergeUserInfo(nodePepMatch, Settings, diff));
+                    }
                 }
                 listPeptideGroupsMerged.Add(nodePepGroup.ChangeChildrenChecked(listPeptidesMerged));
             }
+            // Update the list of peptide groups to add based on what got merged
             foreach (var nodePepGroup in peptideGroupsNew.ToArray())
             {
                 var listPeptidesUnmerged = new List<DocNode>();
@@ -1728,7 +1740,10 @@ namespace pwiz.Skyline.Model
             {
                 annotations[reader.GetAttribute(ATTR.name)] = reader.ReadElementString();
             }
-            return new Annotations(note, annotations, color);
+
+            return note != null || annotations.Count > 0
+                ? new Annotations(note, annotations, color)
+                : Annotations.EMPTY;
         }
 
         /// <summary>

@@ -74,6 +74,7 @@ namespace pwiz.Skyline.Alerts
         public bool IsMergePeptides
         {
             get { return cbMergePeptides.Checked; }
+            set { cbMergePeptides.Checked = value; }
         }
 
         public void OkDialog()

@@ -16,6 +16,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -34,7 +35,7 @@ namespace pwiz.SkylineTestFunctional
     public class ImportDocTest : AbstractFunctionalTest
     {
         [TestMethod]
-        public void TestManageResults()
+        public void TestImportDoc()
         {
             TestFilesZip = @"TestFunctional\ImportDocTest.zip";
             RunFunctionalTest();
@@ -136,6 +137,12 @@ namespace pwiz.SkylineTestFunctional
             });
             var docAdd = WaitForDocumentChangeLoaded(docInitial);
             var docAdded = ResultsUtil.DeserializeDocument(documentPaths[0]);
+
+            // No peptide merging should have happened
+            AssertEx.IsDocumentState(docAdd, null,
+                docInitial.PeptideGroupCount + docAdded.PeptideGroupCount,
+                docInitial.PeptideCount + docAdded.PeptideCount,
+                docInitial.TransitionCount + docAdded.TransitionCount);
 
             Assert.AreEqual(3, docAdded.Settings.MeasuredResults.Chromatograms.Count);
             var chromatograms = docAdd.Settings.MeasuredResults.Chromatograms;
@@ -270,6 +277,13 @@ namespace pwiz.SkylineTestFunctional
             WaitForCondition(() => SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Count > 2);
             var docOrder2 = WaitForDocumentLoaded();
             var docAdded2 = ResultsUtil.DeserializeDocument(documentPaths[2]);
+
+            // No peptide merging should have happened
+            AssertEx.IsDocumentState(docOrder2, null,
+                docInitial.PeptideGroupCount + docAdded.PeptideGroupCount + docAdded2.PeptideGroupCount,
+                docInitial.PeptideCount + docAdded.PeptideCount + docAdded2.PeptideCount,
+                docInitial.TransitionCount + docAdded.TransitionCount + docAdded2.TransitionCount);
+
             chromatograms = docOrder2.Settings.MeasuredResults.Chromatograms;
             Assert.AreEqual(3, chromatograms.Count);
             Assert.AreEqual(chromatogramsInitial[0].Name, chromatograms[0].Name);
@@ -308,6 +322,44 @@ namespace pwiz.SkylineTestFunctional
                 Assert.AreEqual(docAdded2.Settings.MeasuredResults.Chromatograms[0].MSDataFileInfos[0].FilePath,
                     chromatograms[0].GetFileInfo(nodeGroup.Results[0][2].FileId).FilePath);
             }
+
+            // Now import allowing matching peptides to be merged
+            RunUI(SkylineWindow.Undo);
+            Assert.AreEqual(docInitial, SkylineWindow.Document);
+            RunDlg<ImportDocResultsDlg>(() => SkylineWindow.ImportFiles(documentPaths[0], documentPaths[2]), dlg =>
+            {
+                dlg.Action = MeasuredResults.MergeAction.add;
+                dlg.IsMergePeptides = true;
+                dlg.OkDialog();
+            });
+            WaitForCondition(() => SkylineWindow.Document.Settings.MeasuredResults.Chromatograms.Count > 2);
+            var docMerged = WaitForDocumentLoaded();
+
+            chromatograms = docMerged.Settings.MeasuredResults.Chromatograms;
+            Assert.AreEqual(6, chromatograms.Count);
+
+            var dictPeptides = docInitial.Peptides.ToDictionary(nodePep => nodePep.Key);
+            foreach(var nodePep in docAdded.Peptides.Where(p => !dictPeptides.ContainsKey(p.Key)))
+                dictPeptides.Add(nodePep.Key, nodePep);
+            foreach (var nodePep in docAdded2.Peptides.Where(p => !dictPeptides.ContainsKey(p.Key)))
+                dictPeptides.Add(nodePep.Key, nodePep);
+            AssertEx.IsDocumentState(docMerged, null, 3, dictPeptides.Count,
+                dictPeptides.Values.Sum(nodePep => nodePep.TransitionCount));
+
+            var stateMerged = new DocResultsState(docMerged);
+            Assert.AreEqual(stateMerged.NoteCount, stateAdd.NoteCount + stateAdded2.NoteCount);
+            Assert.AreEqual(stateMerged.AnnotationCount, stateAdd.AnnotationCount + stateAdded2.AnnotationCount);
+            Assert.AreEqual(stateMerged.UserSetCount, stateAdd.UserSetCount + stateAdded2.UserSetCount);
+
+            int iPeptide = 0;
+            var setColors = new HashSet<int>();
+            foreach (var nodePep in docMerged.Peptides)
+            {
+                if (iPeptide++ < 4)
+                    setColors.Add(nodePep.Annotations.ColorIndex);
+            }
+            Assert.AreEqual(4, setColors.Count);
+            Assert.IsFalse(setColors.Contains(-1));
 
             // TODO: Import optimization data
 

@@ -157,9 +157,13 @@ namespace pwiz.Skyline.EditUI
                 // Update annotation target to include this type of node.
                 annotationTarget = annotationTarget | nodeDoc.AnnotationTarget;
             }
-            colorIndex = matchingColors ? colorIndex : -1;
-            return new Annotations(matchingText ? text : "", dictMatchingAnnotations, 
-                allEmpty ? Settings.Default.AnnotationColor : colorIndex);
+            if (!matchingText)
+                text = "";
+            if (allEmpty)
+                colorIndex = Settings.Default.AnnotationColor;
+            else if (!matchingColors)
+                colorIndex = -1;
+            return new Annotations(text, dictMatchingAnnotations, colorIndex);
         }
 
 
