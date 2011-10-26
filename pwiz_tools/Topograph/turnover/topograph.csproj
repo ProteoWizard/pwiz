@@ -636,6 +636,9 @@
       <Link>Microsoft.VC90.MFC\Microsoft.VC90.MFC.manifest</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="..\..\Shared\BiblioSpec\binaries\unimod_2.xsd">
+      <Link>unimod_2.xsd</Link>
+    </None>
     <None Include="app.config" />
     <None Include="Properties\app.manifest" />
     <None Include="Properties\Settings.settings">
