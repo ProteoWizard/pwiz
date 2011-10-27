@@ -38,7 +38,7 @@ using IDPicker.Controls;
 
 namespace IDPicker.Forms
 {
-    public partial class BaseTableForm<GroupByType, PivotByType> : DockableForm
+    public partial class BaseTableForm : DockableForm
     {
         public BaseTableForm()
             : base()
@@ -46,8 +46,8 @@ namespace IDPicker.Forms
             InitializeComponent();
 
             sortColumns = new List<SortColumn>();
-            updateGroupings(new List<ColumnProperty>());
-            updatePivots(new List<ColumnProperty>());
+            updateGroupings(new FormProperty());
+            updatePivots(new FormProperty());
 
             treeDataGridView.DefaultCellStyleChanged += treeDataGridView_DefaultCellStyleChanged;
         }
@@ -62,12 +62,12 @@ namespace IDPicker.Forms
             get { return treeDataGridView.Columns.Cast<DataGridViewColumn>(); }
         }
 
-        public GroupingSetupControl<GroupByType> GroupingSetupControl
+        public GroupingSetupControl<GroupBy> GroupingSetupControl
         {
             get { return groupingSetupControl; }
         }
 
-        public PivotSetupControl<PivotByType> PivotSetupControl
+        public PivotSetupControl<PivotBy> PivotSetupControl
         {
             get { return pivotSetupControl; }
         }
@@ -76,9 +76,9 @@ namespace IDPicker.Forms
         public virtual void ClearData() { throw new NotImplementedException(); }
         public virtual void ClearData(bool clearBasicFilter) { throw new NotImplementedException(); }
 
-        protected void setGroupings(params Grouping<GroupByType>[] groupings)
+        protected void setGroupings(params Grouping<GroupBy>[] groupings)
         {
-            groupingSetupControl = new GroupingSetupControl<GroupByType>(groupings);
+            groupingSetupControl = new GroupingSetupControl<GroupBy>(groupings);
             groupingSetupControl.GroupingChanged += groupingSetupControl_GroupingChanged;
             groupingSetupPopup = new Popup(groupingSetupControl) {FocusOnOpen = true};
             groupingSetupPopup.Closed += groupingSetupPopup_Closed;
@@ -86,9 +86,9 @@ namespace IDPicker.Forms
             checkedGroupings = groupingSetupControl.CheckedGroupings;
         }
 
-        protected void setPivots(params Pivot<PivotByType>[] pivots)
+        protected void setPivots(params Pivot<PivotBy>[] pivots)
         {
-            pivotSetupControl = new PivotSetupControl<PivotByType>(pivots);
+            pivotSetupControl = new PivotSetupControl<PivotBy>(pivots);
             pivotSetupControl.PivotChanged += pivotSetupControl_PivotChanged;
             pivotSetupPopup = new Popup(pivotSetupControl) {FocusOnOpen = true};
             pivotSetupPopup.Closed += pivotSetupPopup_Closed;
@@ -122,15 +122,15 @@ namespace IDPicker.Forms
         protected List<SortColumn> sortColumns;
         protected Map<int, SortOrder> initialColumnSortOrders;
 
-        protected GroupingSetupControl<GroupByType> groupingSetupControl;
+        protected GroupingSetupControl<GroupBy> groupingSetupControl;
         protected Popup groupingSetupPopup;
         protected bool dirtyGroupings = false;
-        protected IList<Grouping<GroupByType>> checkedGroupings;
+        protected IList<Grouping<GroupBy>> checkedGroupings;
 
-        protected PivotSetupControl<PivotByType> pivotSetupControl;
+        protected PivotSetupControl<PivotBy> pivotSetupControl;
         protected Popup pivotSetupPopup;
         protected bool dirtyPivots = false;
-        protected IList<Pivot<PivotByType>> checkedPivots;
+        protected IList<Pivot<PivotBy>> checkedPivots;
 
         protected List<DataGridViewColumn> pivotColumns = new List<DataGridViewColumn>();
 
@@ -273,12 +273,58 @@ namespace IDPicker.Forms
             rows = rows.OrderBy(o => getCellValue(sortColumn.Index, o), sortColumn.Order).ToList();
         }
 
-        protected virtual bool updatePivots (IList<ColumnProperty> listOfSettings) { throw new NotImplementedException(); }
-        protected virtual bool updateGroupings (IList<ColumnProperty> listOfSettings) { throw new NotImplementedException(); }
-
-        public void LoadLayout (IList<ColumnProperty> listOfSettings)
+        protected virtual bool updatePivots (FormProperty formProperty)
         {
-            if (!listOfSettings.Any())
+            var oldCheckedPivots = new List<PivotBy>(checkedPivots.Select(o => o.Mode));
+
+            pivotSetupControl.Pivots.ForEach(o => pivotSetupControl.SetPivot(o.Mode, false));
+            foreach (var pivot in formProperty.PivotModes)
+                pivotSetupControl.SetPivot(pivot.Mode, true);
+
+            // determine if checked pivots changed
+            return !oldCheckedPivots.SequenceEqual(checkedPivots.Select(o => o.Mode));
+        }
+
+        protected virtual bool updateGroupings (FormProperty formProperty)
+        {
+            var oldCheckedGroupings = new List<GroupBy>(checkedGroupings.Select(o => o.Mode));
+
+            var groupings = new List<Grouping<GroupBy>>();
+            foreach (var grouping in formProperty.GroupingModes)
+                groupings.Add(new Grouping<GroupBy>(grouping.Enabled)
+                {
+                    Mode = grouping.Mode,
+                    Text = grouping.Name
+                });
+            setGroupings(groupings.ToArray());
+
+            // determine if checked groupings changed
+            return !oldCheckedGroupings.SequenceEqual(checkedGroupings.Select(o => o.Mode));
+        }
+
+        protected virtual void setColumnVisibility ()
+        {
+            // restore display index
+            foreach (var kvp in _columnSettings)
+            {
+                kvp.Key.DisplayIndex = kvp.Value.DisplayIndex;
+
+                // restore column size
+
+                // update number formats
+                if (kvp.Value.Type == typeof(float) && kvp.Value.Precision.HasValue)
+                    kvp.Key.DefaultCellStyle.Format = "f" + kvp.Value.Precision.Value.ToString();
+
+                // update link columns
+                var linkColumn = kvp.Key as DataGridViewLinkColumn;
+                if (linkColumn != null)
+                    linkColumn.ActiveLinkColor = linkColumn.LinkColor = treeDataGridView.ForeColor;
+            }
+        }
+
+        public void LoadLayout (FormProperty formProperty)
+        {
+            if (formProperty == null)
                 return;
 
             //_unusedPivotSettings = listOfSettings.Where(x => x.Type == "PivotColumn").ToList();
@@ -286,30 +332,18 @@ namespace IDPicker.Forms
             var columnlist = _columnSettings.Keys.ToList();
             var untouchedColumns = _columnSettings.Keys.ToList();
 
-            var backColor = listOfSettings.Where(x => x.Name == "BackColor").SingleOrDefault();
-            var textColor = listOfSettings.Where(x => x.Name == "TextColor").SingleOrDefault();
-
             foreach (var column in columnlist)
             {
-                var rowSettings = listOfSettings.Where(x => x.Name == column.Name).SingleOrDefault();
+                var columnProperty = formProperty.ColumnProperties.SingleOrDefault(x => x.Name == column.Name);
 
                 //if rowSettings is null it is likely an unsaved pivotColumn, keep defualt
-                if (rowSettings == null)
+                if (columnProperty == null)
                     continue;
 
                 //if (_unusedPivotSettings.Contains(rowSettings))
                 //    _unusedPivotSettings.Remove(rowSettings);
 
-                _columnSettings[column] = new ColumnProperty
-                                              {
-                                                  Scope = this.Name,
-                                                  Name = rowSettings.Name,
-                                                  Type = rowSettings.Type,
-                                                  DecimalPlaces = rowSettings.DecimalPlaces,
-                                                  ColorCode = rowSettings.ColorCode,
-                                                  Visible = rowSettings.Visible,
-                                                  Locked = rowSettings.Locked
-                                              };
+                _columnSettings[column] = columnProperty;
 
                 untouchedColumns.Remove(column);
             }
@@ -318,121 +352,63 @@ namespace IDPicker.Forms
             foreach (var column in untouchedColumns)
             {
                 _columnSettings[column].Visible = true;
-                _columnSettings[column].ColorCode = backColor.ColorCode;
+                _columnSettings[column].BackColor = formProperty.BackColor;
+                _columnSettings[column].ForeColor = formProperty.ForeColor;
             }
 
-            treeDataGridView.DefaultCellStyle.BackColor = Color.FromArgb(backColor.ColorCode);
-            treeDataGridView.DefaultCellStyle.ForeColor = Color.FromArgb(textColor.ColorCode);
+            treeDataGridView.ForeColor = treeDataGridView.DefaultCellStyle.ForeColor = formProperty.ForeColor ?? SystemColors.WindowText;
+            treeDataGridView.BackgroundColor = treeDataGridView.DefaultCellStyle.BackColor = formProperty.BackColor ?? SystemColors.Window;
 
-            var sortColumnSettings = listOfSettings.SingleOrDefault(o => o.Name == "SortColumnSettings");
-            if (sortColumnSettings != null && sortColumnSettings.Type.Length > 0)
+            var sortColumnSettings = formProperty.SortColumns;
+            if (formProperty.SortColumns != null && formProperty.SortColumns.Count > 0)
             {
                 var newSortColumns = new List<SortColumn>();
-                foreach (string sortColumnSetting in sortColumnSettings.Type.Split(';'))
-                {
-                    string[] tokens = sortColumnSetting.Split('§');
+                foreach (var sortColumn in formProperty.SortColumns)
                     newSortColumns.Add(new SortColumn()
                     {
-                        Index = Int32.Parse(tokens[0]),
-                        Order = (SortOrder) Enum.Parse(typeof(SortOrder), tokens[1])
+                        Index = sortColumn.Index,
+                        Order = sortColumn.Order
                     });
-                }
                 Sort(newSortColumns.First().Index);
                 sortColumns = newSortColumns;
             }
 
-            bool pivotsChanged = updatePivots(listOfSettings);
-            bool groupingChanged = updateGroupings(listOfSettings);
+            bool pivotsChanged = updatePivots(formProperty);
+            bool groupingChanged = updateGroupings(formProperty);
 
-            foreach (var kvp in _columnSettings)
-                kvp.Key.Visible = kvp.Value.Visible;
-            treeDataGridView.Refresh();
+            setColumnVisibility();
 
             if (pivotsChanged || groupingChanged)
                 resetData();
             else
                 applySort();
+
+            treeDataGridView.Refresh();
         }
 
-        public List<ColumnProperty> GetCurrentProperties (bool pivotToo)
+        public FormProperty GetCurrentProperties (bool pivotToo)
         {
-            var currentList = new List<ColumnProperty>();
-
-            foreach (var kvp in _columnSettings)
-                kvp.Value.Visible = false;
-            foreach (var column in treeDataGridView.Columns.Cast<DataGridViewColumn>().Where(o => o.Visible))
-                if (_columnSettings.ContainsKey(column))
-                    _columnSettings[column].Visible = true;
+            var result = new FormProperty()
+            {
+                Name = this.Name,
+                BackColor = treeDataGridView.DefaultCellStyle.BackColor,
+                ForeColor = treeDataGridView.DefaultCellStyle.ForeColor,
+                GroupingModes = groupingSetupControl.Groupings.Select(o => new DataModel.Grouping() { Enabled = o.Checked, Mode = o.Mode, Name = o.Text }).ToList(),
+                PivotModes = checkedPivots.Select(o => new DataModel.Pivot() { Mode = o.Mode, Name = o.Text }).ToList(),
+                SortColumns = sortColumns.Select(o => new DataModel.SortColumn() { Index = o.Index, Order = o.Order }).ToList(),
+                ColumnProperties = _columnSettings.Values.ToList()
+            };
 
             foreach (var kvp in _columnSettings)
             {
-                currentList.Add(new ColumnProperty
-                {
-                    Scope = this.Name,
-                    Name = kvp.Key.Name,
-                    Type = kvp.Value.Type,
-                    DecimalPlaces = kvp.Value.DecimalPlaces,
-                    ColorCode = kvp.Value.ColorCode,
-                    Visible = kvp.Value.Visible,
-                    Locked = null
-                });
+                kvp.Value.Index = kvp.Key.Index;
+                kvp.Value.DisplayIndex = kvp.Key.Index;
             }
 
             if (!pivotToo)
-                currentList.RemoveAll(x => x.Type == "PivotColumn");
+                result.ColumnProperties.RemoveAll(o => !initialColumnSortOrders.Contains(o.Index));
 
-            currentList.Add(new ColumnProperty
-            {
-                Scope = this.Name,
-                Name = "BackColor",
-                Type = "GlobalSetting",
-                DecimalPlaces = -1,
-                ColorCode = treeDataGridView.DefaultCellStyle.BackColor.ToArgb(),
-                Visible = false,
-                Locked = null
-            });
-            currentList.Add(new ColumnProperty
-            {
-                Scope = this.Name,
-                Name = "TextColor",
-                Type = "GlobalSetting",
-                DecimalPlaces = -1,
-                ColorCode = treeDataGridView.DefaultCellStyle.ForeColor.ToArgb(),
-                Visible = false,
-                Locked = null
-            });
-            currentList.Add(new ColumnProperty
-            {
-                Scope = this.Name,
-                Name = "SortColumnSettings",
-                Type = String.Join(";", sortColumns.Select(o => String.Format("{0}§{1}", o.Index, o.Order)).ToArray()),
-                DecimalPlaces = 0,
-                ColorCode = 0,
-                Visible = false,
-                Locked = null
-            });
-            currentList.Add(new ColumnProperty
-            {
-                Scope = this.Name,
-                Name = "PivotModes",
-                Type = String.Join(";", checkedPivots.Select(o => o.Mode.ToString()).ToArray()),
-                DecimalPlaces = 0,
-                ColorCode = 0,
-                Visible = false,
-                Locked = null
-            });
-            currentList.Add(new ColumnProperty
-            {
-                Scope = this.Name,
-                Name = "GroupingModes",
-                Type = String.Join(";", groupingSetupControl.Groupings.Select(o => String.Format("{0}§{1}§{2}", o.Checked, o.Mode.ToString(), o.Text)).ToArray()),
-                DecimalPlaces = 0,
-                ColorCode = 0,
-                Visible = false,
-                Locked = null
-            });
-
-            return currentList;
+            return result;
         }
 
         public virtual List<List<string>> GetFormTable ()
@@ -535,31 +511,30 @@ namespace IDPicker.Forms
 
         protected void displayOptionsButton_Click (object sender, EventArgs e)
         {
-            /*Color[] currentColors = { treeDataGridView.DefaultCellStyle.BackColor, treeDataGridView.DefaultCellStyle.ForeColor };
-
-            foreach (var kvp in _columnSettings)
-                kvp.Value.Visible = kvp.Key.Visible;
-
-            var ccf = new ColumnControlForm(_columnSettings, currentColors);
-
-            if (ccf.ShowDialog() == DialogResult.OK)
+            using (var ccf = new ColumnControlForm())
             {
-                _columnSettings = ccf.SavedSettings;
+                ccf.ColumnProperties = _columnSettings.ToDictionary(o => o.Key.HeaderText, o => o.Value);
 
-                foreach (var kvp in _columnSettings)
-                    kvp.Key.IsVisible = kvp.Value.Visible;
+                if (treeDataGridView.DefaultCellStyle.ForeColor.ToArgb() != SystemColors.WindowText.ToArgb())
+                    ccf.DefaultForeColor = treeDataGridView.DefaultCellStyle.ForeColor;
+                if (treeDataGridView.DefaultCellStyle.BackColor.ToArgb() != SystemColors.Window.ToArgb())
+                    ccf.DefaultBackColor = treeDataGridView.DefaultCellStyle.BackColor;
 
-                treeListView.BackColor = ccf.WindowBackColorBox.BackColor;
-                treeListView.ForeColor = ccf.WindowTextColorBox.BackColor;
-                treeListView.HyperlinkStyle.Normal.ForeColor = ccf.WindowTextColorBox.BackColor;
-                treeListView.HyperlinkStyle.Visited.ForeColor = ccf.WindowTextColorBox.BackColor;
+                if (ccf.ShowDialog() != DialogResult.OK)
+                    return;
 
-                SetColumnAspectGetters();
-                treeListView.RebuildColumns();
+                // update column properties
+                foreach (var kvp in ccf.ColumnProperties)
+                    _columnSettings[Columns.Single(o => o.HeaderText == kvp.Key)] = kvp.Value;
 
-                if (session != null)
-                    SetData(session, dataFilter);
-            }*/
+                setColumnVisibility();
+
+                // update default cell style
+                treeDataGridView.ForeColor = treeDataGridView.DefaultCellStyle.ForeColor = ccf.DefaultForeColor ?? SystemColors.WindowText;
+                treeDataGridView.BackgroundColor = treeDataGridView.DefaultCellStyle.BackColor = ccf.DefaultBackColor ?? SystemColors.Window;
+
+                treeDataGridView.Refresh();
+            }
         }
     }
 }

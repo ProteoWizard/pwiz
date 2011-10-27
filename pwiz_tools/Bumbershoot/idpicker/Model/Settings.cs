@@ -30,6 +30,9 @@ using System.Data;
 using NHibernate;
 using NHibernate.Linq;
 using Iesi.Collections.Generic;
+using Color = System.Drawing.Color;
+using XmlSerializer = System.Runtime.Serialization.NetDataContractSerializer;
+using SortOrder = System.Windows.Forms.SortOrder;
 
 namespace IDPicker.DataModel
 {
@@ -210,16 +213,93 @@ namespace IDPicker.DataModel
         #endregion
     }
 
-    public class ColumnProperty : Entity<ColumnProperty>
+    public enum GroupBy { Cluster, ProteinGroup, Peptide, PeptideGroup, Off }
+    public enum PivotBy { SpectraByGroup, SpectraBySource, MatchesByGroup, MatchesBySource, PeptidesByGroup, PeptidesBySource, Off }
+
+    [Serializable]
+    public class Grouping : IComparable<Grouping>
     {
-        public virtual string Scope { get; set; }
-        public virtual string Name { get; set; }
-        public virtual string Type { get; set; }
-        public virtual int DecimalPlaces { get; set; }
-        public virtual int ColorCode { get; set; }
-        public virtual bool Visible { get; set; }
-        public virtual bool? Locked { get; set; }
-        public virtual LayoutProperty Layout { get; set; }
+        public GroupBy Mode { get; set; }
+        public string Name { get; set; }
+        public bool Enabled { get; set; }
+        public int CompareTo (Grouping other) { return Mode.CompareTo(other.Mode); }
+    }
+
+    [Serializable]
+    public class Pivot : IComparable<Pivot>
+    {
+        public PivotBy Mode { get; set; }
+        public string Name { get; set; }
+        public int CompareTo (Pivot other) { return Mode.CompareTo(other.Mode); }
+    }
+    
+    [Serializable]
+    public class SortColumn : IComparable<SortColumn>
+    {
+        public int Index { get; set; }
+        public SortOrder Order { get; set; }
+        public int CompareTo (SortColumn other) { return Index.CompareTo(other.Index); }
+    }
+
+    [Serializable]
+    public class FormProperty : IComparable<FormProperty>
+    {
+        public string Name { get; set; }
+        public Color? ForeColor { get; set; }
+        public Color? BackColor { get; set; }
+        public List<Grouping> GroupingModes { get; set; }
+        public List<Pivot> PivotModes { get; set; }
+        public List<SortColumn> SortColumns { get; set; }
+        public List<ColumnProperty> ColumnProperties { get; set; }
+
+        public int CompareTo (FormProperty rhs)
+        {
+            int result = Name.CompareTo(rhs.Name);
+            if (result != 0) return result;
+            result = (ForeColor ?? Color.Black).ToArgb().CompareTo((rhs.ForeColor ?? Color.Black).ToArgb());
+            if (result != 0) return result;
+            result = (BackColor ?? Color.Black).ToArgb().CompareTo((rhs.BackColor ?? Color.Black).ToArgb());
+            if (result != 0) return result;
+            result = GroupingModes.SequenceCompareTo(rhs.GroupingModes);
+            if (result != 0) return result;
+            result = PivotModes.SequenceCompareTo(rhs.PivotModes);
+            if (result != 0) return result;
+            result = SortColumns.SequenceCompareTo(rhs.SortColumns);
+            if (result != 0) return result;
+            return ColumnProperties.SequenceCompareTo(rhs.ColumnProperties);
+        }
+    }
+
+    [Serializable]
+    public class ColumnProperty : IComparable<ColumnProperty>
+    {
+        public string Name { get; set; }
+        public int Index { get; set; }
+        public int DisplayIndex { get; set; }
+        public Type Type { get; set; }
+        public int? Precision { get; set; }
+        public bool? Visible { get; set; }
+        public Color? ForeColor { get; set; }
+        public Color? BackColor { get; set; }
+
+        public int CompareTo (ColumnProperty rhs)
+        {
+            int result = Name.CompareTo(rhs.Name); 
+            if (result != 0) return result;
+            result = Index.CompareTo(rhs.Index);
+            if (result != 0) return result;
+            result = DisplayIndex.CompareTo(rhs.DisplayIndex);
+            if (result != 0) return result;
+            result = Type.Name.CompareTo(rhs.Type.Name);
+            if (result != 0) return result;
+            result = (Precision ?? 0).CompareTo(rhs.Precision ?? 0);
+            if (result != 0) return result;
+            result = (Visible ?? false).CompareTo(rhs.Visible ?? false);
+            if (result != 0) return result;
+            result = (ForeColor ?? Color.Black).ToArgb().CompareTo((rhs.ForeColor ?? Color.Black).ToArgb());
+            if (result != 0) return result;
+            return (BackColor ?? Color.Black).ToArgb().CompareTo((rhs.BackColor ?? Color.Black).ToArgb());
+        }
     }
 
     public class LayoutProperty : Entity<LayoutProperty>
@@ -227,15 +307,13 @@ namespace IDPicker.DataModel
         public virtual string Name { get; set; }
         public virtual string PaneLocations { get; set; }
         public virtual bool HasCustomColumnSettings { get; set; }
-        public virtual IList<ColumnProperty> SettingsList { get; set; }
+        public virtual IDictionary<string, FormProperty> FormProperties { get; set; }
     }
 
     #region Implementation for custom types
 
     public class ScoreInfoUserType : NHibernate.UserTypes.IUserType
     {
-        #region IUserType Members
-
         public object Assemble (object cached, object owner)
         {
             if (cached == null)
@@ -333,8 +411,101 @@ namespace IDPicker.DataModel
             }
             return true;
         }
+    }
 
-        #endregion
+    public class FormPropertiesUserType : NHibernate.UserTypes.IUserType
+    {
+        public object Assemble (object cached, object owner)
+        {
+            if (cached == null)
+                return null;
+
+            if (cached == DBNull.Value)
+                return null;
+
+            if (!(cached is string))
+                throw new ArgumentException();
+
+            var serializedList = cached as string;
+            var formatter = new XmlSerializer();
+            return formatter.Deserialize(new MemoryStream(Encoding.UTF8.GetBytes(serializedList)));
+        }
+
+        public object DeepCopy (object value)
+        {
+            if (value == null)
+                return null;
+            return new Dictionary<string, FormProperty>(value as Dictionary<string, FormProperty>);
+        }
+
+        public object Disassemble (object value)
+        {
+            if (value == null)
+                return DBNull.Value;
+
+            if (value == DBNull.Value)
+                return DBNull.Value;
+
+            if (!(value is IDictionary<string, FormProperty>))
+                throw new ArgumentException();
+
+            using (var stream = new MemoryStream())
+            {
+                var formatter = new XmlSerializer();
+                formatter.Serialize(stream, value);
+                return Encoding.UTF8.GetString(stream.ToArray());
+            }
+        }
+
+        public int GetHashCode (object x)
+        {
+            return x.GetHashCode();
+        }
+
+        public object NullSafeGet (IDataReader rs, string[] names, object owner)
+        {
+            return Assemble(rs.GetValue(rs.GetOrdinal(names[0])), owner);
+        }
+
+        public void NullSafeSet (IDbCommand cmd, object value, int index)
+        {
+            (cmd.Parameters[index] as IDataParameter).Value = Disassemble(value);
+        }
+
+        public object Replace (object original, object target, object owner)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Type ReturnedType
+        {
+            get { return typeof(IDictionary<string, FormProperty>); }
+        }
+
+        public NHibernate.SqlTypes.SqlType[] SqlTypes
+        {
+            get { return new NHibernate.SqlTypes.SqlType[] { NHibernate.SqlTypes.SqlTypeFactory.GetString(0) }; }
+        }
+
+        public bool IsMutable
+        {
+            get { return true; }
+        }
+
+        bool NHibernate.UserTypes.IUserType.Equals (object x, object y)
+        {
+            if (x == null && y == null)
+                return true;
+            else if (x == null || y == null)
+                return false;
+            var a = x as IDictionary<string, FormProperty>;
+            var b = y as IDictionary<string, FormProperty>;
+
+            foreach (var kvp in a)
+                if (!b.ContainsKey(kvp.Key) || !(kvp.Value == b[kvp.Key]))
+                    return false;
+            return true;
+        }
     }
     #endregion
 }

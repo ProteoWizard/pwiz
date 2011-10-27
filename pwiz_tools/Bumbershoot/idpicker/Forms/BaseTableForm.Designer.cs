@@ -22,7 +22,7 @@
 
 namespace IDPicker.Forms
 {
-    partial class BaseTableForm<GroupByType, PivotByType>
+    partial class BaseTableForm
     {
         /// <summary>
         /// Required designer variable.

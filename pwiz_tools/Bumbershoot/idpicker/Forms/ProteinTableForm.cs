@@ -39,7 +39,7 @@ using IDPicker.Controls;
 
 namespace IDPicker.Forms
 {
-    public partial class ProteinTableForm : BaseProteinTableForm
+    public partial class ProteinTableForm : BaseTableForm
     {
         #region Wrapper classes for encapsulating query results
 
@@ -48,19 +48,26 @@ namespace IDPicker.Forms
             public int Spectra { get; private set; }
             public int DistinctMatches { get; private set; }
             public int DistinctPeptides { get; private set; }
+            public string PeptideSequences { get; private set; }
+            public string PeptideGroups { get; private set; }
 
-            public static int ColumnCount = 3;
+            public static int ColumnCount = 5;
             public static string Selection = "SELECT " +
                                              "COUNT(DISTINCT psm.Spectrum.id), " +
                                              "COUNT(DISTINCT psm.DistinctMatchKey), " +
-                                             "COUNT(DISTINCT psm.Peptide.id)";
+                                             "COUNT(DISTINCT psm.Peptide.id), " +
+                                             "DISTINCT_GROUP_CONCAT(pep.Sequence), " +
+                                             "DISTINCT_GROUP_CONCAT(pep.PeptideGroup)";
 
             #region Constructor
             public AggregateRow (object[] queryRow, DataFilter dataFilter)
             {
-                Spectra = (int) (long) queryRow[0];
-                DistinctMatches = (int) (long) queryRow[1];
-                DistinctPeptides = (int) (long) queryRow[2];
+                int column = -1;
+                Spectra = Convert.ToInt32(queryRow[++column]);
+                DistinctMatches = Convert.ToInt32(queryRow[++column]);
+                DistinctPeptides = Convert.ToInt32(queryRow[++column]);
+                PeptideSequences = Convert.ToString(queryRow[++column]);
+                PeptideGroups = Convert.ToString(queryRow[++column]);
                 DataFilter = dataFilter;
             }
             #endregion
@@ -77,9 +84,9 @@ namespace IDPicker.Forms
                 : base(queryRow, dataFilter)
             {
                 int column = AggregateRow.ColumnCount - 1;
-                ProteinGroupCount = (int) (long) queryRow[++column];
-                ProteinCount = (int) (long) queryRow[++column];
-                Cluster = (int) queryRow[++column];
+                ProteinGroupCount = Convert.ToInt32(queryRow[++column]);
+                ProteinCount = Convert.ToInt32(queryRow[++column]);
+                Cluster = Convert.ToInt32(queryRow[++column]);
             }
             #endregion
         }
@@ -101,12 +108,12 @@ namespace IDPicker.Forms
             {
                 int column = AggregateRow.ColumnCount - 1;
                 Proteins = (string) queryRow[++column];
-                ProteinGroup = (int) queryRow[++column];
-                FirstProteinId = (long) queryRow[++column];
+                ProteinGroup = Convert.ToInt32(queryRow[++column]);
+                FirstProteinId = Convert.ToInt64(queryRow[++column]);
                 Length = (int?) queryRow[++column];
                 FirstProteinDescription = String.IsNullOrEmpty((string) queryRow[++column]) ? null : (string) queryRow[column];
-                ProteinCount = (int) (long) queryRow[++column];
-                Cluster = (int) queryRow[++column];
+                ProteinCount = Convert.ToInt32(queryRow[++column]);
+                Cluster = Convert.ToInt32(queryRow[++column]);
                 MeanProteinCoverage = (double?) queryRow[++column];
             }
             #endregion
@@ -136,9 +143,9 @@ namespace IDPicker.Forms
             public PivotData () { }
             public PivotData (object[] queryRow)
             {
-                Spectra = (int) (long) queryRow[2];
-                DistinctMatches = (int) (long) queryRow[3];
-                DistinctPeptides = (int) (long) queryRow[4];
+                Spectra = Convert.ToInt32(queryRow[2]);
+                DistinctMatches = Convert.ToInt32(queryRow[3]);
+                DistinctPeptides = Convert.ToInt32(queryRow[4]);
             }
             #endregion
         }
@@ -227,15 +234,15 @@ namespace IDPicker.Forms
                           .ToList();
         }
 
-        IList<Row> getChildren (Grouping<GroupProteinsBy> grouping, DataFilter parentFilter)
+        IList<Row> getChildren (Grouping<GroupBy> grouping, DataFilter parentFilter)
         {
             if (grouping == null)
                 return getProteinRows(parentFilter);
 
             switch (grouping.Mode)
             {
-                case GroupProteinsBy.Cluster: return getClusterRows(parentFilter);
-                case GroupProteinsBy.ProteinGroup: return getProteinGroupRows(parentFilter);
+                case GroupBy.Cluster: return getClusterRows(parentFilter);
+                case GroupBy.ProteinGroup: return getProteinGroupRows(parentFilter);
                 default: throw new NotImplementedException();
             }
         }
@@ -250,7 +257,7 @@ namespace IDPicker.Forms
                 var row = parentRow as ClusterRow;
                 var parentFilter = row.DataFilter ?? dataFilter;
                 var childFilter = new DataFilter(parentFilter) { Cluster = new List<int>() { row.Cluster } };
-                var childGrouping = GroupingSetupControl<GroupProteinsBy>.GetChildGrouping(checkedGroupings, GroupProteinsBy.Cluster);
+                var childGrouping = GroupingSetupControl<GroupBy>.GetChildGrouping(checkedGroupings, GroupBy.Cluster);
                 parentRow.ChildRows = getChildren(childGrouping, childFilter);
             }
             else if (parentRow is ProteinGroupRow)
@@ -258,7 +265,7 @@ namespace IDPicker.Forms
                 var row = parentRow as ProteinGroupRow;
                 var parentFilter = row.DataFilter ?? dataFilter;
                 var childFilter = new DataFilter(parentFilter) { ProteinGroup = new List<int>() { row.ProteinGroup } };
-                var childGrouping = GroupingSetupControl<GroupProteinsBy>.GetChildGrouping(checkedGroupings, GroupProteinsBy.ProteinGroup);
+                var childGrouping = GroupingSetupControl<GroupBy>.GetChildGrouping(checkedGroupings, GroupBy.ProteinGroup);
                 parentRow.ChildRows = getChildren(childGrouping, childFilter);
             }
             else if (parentRow is AggregateRow)
@@ -279,10 +286,10 @@ namespace IDPicker.Forms
                                          GROUP BY {0}, {1}
                                          ORDER BY {0}
                                         ";
-        Map<long, Map<long, PivotData>> getPivotData (Grouping<GroupProteinsBy> group, Pivot<PivotProteinsBy> pivot, DataFilter parentFilter)
+        Map<long, Map<long, PivotData>> getPivotData (Grouping<GroupBy> group, Pivot<PivotBy> pivot, DataFilter parentFilter)
         {
             // ProteinGroup and Cluster are consecutive, 1-based series
-            var groupColumn = group != null && group.Mode == GroupProteinsBy.Cluster ? "pro.Cluster" : "pro.ProteinGroup";
+            var groupColumn = group != null && group.Mode == GroupBy.Cluster ? "pro.Cluster" : "pro.ProteinGroup";
             var pivotColumn = pivot.Text.Contains("Group") ? "ssgl.Group.id" : "s.Source.id";
 
             var pivotHql = String.Format(pivotHqlFormat,
@@ -316,7 +323,7 @@ namespace IDPicker.Forms
         // TODO: support multiple selected objects
         string[] oldSelectionPath = new string[] { };
 
-        public ProteinTableForm () : base()
+        public ProteinTableForm ()
         {
             InitializeComponent();
 
@@ -324,90 +331,12 @@ namespace IDPicker.Forms
 
             SetDefaults();
 
-            /*#region Column aspect getters
-            var allLayouts = new List<string>(Util.StringCollectionToStringArray(Properties.Settings.Default.ProteinTableFormSettings));
-            if (allLayouts.Count > 1)
-            {
-                //get User Defualt Layout
-                var retrievedList = allLayouts[1].Split(System.Environment.NewLine.ToCharArray()).ToList();
-
-                //Make sure layout has same number of columns as ObjectListView
-                if (retrievedList.Count == _columnSettings.Count + 3)
-                {
-                    //Go through each column and assign properties
-                    foreach (OLVColumn column in treeListView.Columns)
-                    {
-                        //Go through lines and find the one that matches current column
-                        for (var x = 0; x < retrievedList.Count - 1; x++)
-                        {
-                            var splitSetting = retrievedList[x].Split('|');
-
-                            if (splitSetting[0] == column.Text)
-                            {
-                                _columnSettings[column] =
-                                    new ColumnProperty
-                                    {
-                                        Scope = "ProteinTableForm",
-                                        Name = column.Text,
-                                        Type = splitSetting[1],
-                                        DecimalPlaces = int.Parse(splitSetting[2]),
-                                        ColorCode = int.Parse(splitSetting[3]),
-                                        Visible = bool.Parse(splitSetting[4]),
-                                        Locked = null
-                                    };
-                                break;
-                            }
-                        }
-                    }
-
-                    treeListView.BackColor = Color.FromArgb(int.Parse(retrievedList[retrievedList.Count - 2]));
-                    treeListView.ForeColor = Color.FromArgb(int.Parse(retrievedList[retrievedList.Count - 1]));
-                }
-            }
-
-            SetColumnAspectGetters();
-            #endregion*/
-        }
-
-        protected override void OnLoad (EventArgs e)
-        {
-            initialColumnSortOrders = new Map<int, SortOrder>()
-            {
-                {keyColumn.Index, SortOrder.Ascending},
-                {clusterColumn.Index, SortOrder.Ascending},
-                {countColumn.Index, SortOrder.Ascending},
-                {coverageColumn.Index, SortOrder.Descending},
-                {distinctPeptidesColumn.Index, SortOrder.Descending},
-                {distinctMatchesColumn.Index, SortOrder.Descending},
-                {filteredSpectraColumn.Index, SortOrder.Descending},
-                {descriptionColumn.Index, SortOrder.Ascending},
-            };
-
             treeDataGridView.CellValueNeeded += treeDataGridView_CellValueNeeded;
             treeDataGridView.CellFormatting += treeDataGridView_CellFormatting;
             treeDataGridView.CellMouseClick += treeDataGridView_CellMouseClick;
             treeDataGridView.CellContentClick += treeDataGridView_CellContentClick;
             treeDataGridView.CellDoubleClick += treeDataGridView_CellDoubleClick;
             treeDataGridView.PreviewKeyDown += treeDataGridView_PreviewKeyDown;
-
-            clusterColumn.LinkColor = clusterColumn.ActiveLinkColor = treeDataGridView.DefaultCellStyle.ForeColor;
-            coverageColumn.LinkColor = coverageColumn.ActiveLinkColor = treeDataGridView.DefaultCellStyle.ForeColor;
-
-            /*if (_columnSettings[coverageColumn].DecimalPlaces == -1)
-                coverageColumn.AspectToStringFormat = "{0:0%}";
-            else
-                coverageColumn.AspectToStringFormat = "{0:" + "p" + _columnSettings[coverageColumn].DecimalPlaces + "}";
-            coverageColumn.AspectGetter += delegate(object x)
-            {
-                // the AspectToStringFormat formatter multiplies by 100
-                if (x is ProteinGroupRow)
-                    return (x as ProteinGroupRow).MeanProteinCoverage / 100.0;
-                else if (x is ProteinRow)
-                    return (x as ProteinRow).Protein.Coverage / 100.0;
-                return null;
-            };*/
-
-            base.OnLoad(e);
         }
 
         private void treeDataGridView_CellValueNeeded (object sender, TreeDataGridViewCellValueEventArgs e)
@@ -430,10 +359,10 @@ namespace IDPicker.Forms
             if (baseRow is ClusterRow)
             {
                 var row = baseRow as ClusterRow;
-                var childGrouping = GroupingSetupControl<GroupProteinsBy>.GetChildGrouping(checkedGroupings, GroupProteinsBy.Cluster);
+                var childGrouping = GroupingSetupControl<GroupBy>.GetChildGrouping(checkedGroupings, GroupBy.Cluster);
                 if (childGrouping == null)
                     e.ChildRowCount = (int) row.ProteinCount;
-                else if (childGrouping.Mode == GroupProteinsBy.ProteinGroup)
+                else if (childGrouping.Mode == GroupBy.ProteinGroup)
                     e.ChildRowCount = (int) row.ProteinGroupCount;
             }
             else if (baseRow is ProteinGroupRow)
@@ -469,20 +398,20 @@ namespace IDPicker.Forms
                 {
                     if (treeDataGridView.Columns[columnIndex].HeaderText.EndsWith("/"))
                     {
-                        if (checkedPivots.Count(o => o.Mode == PivotProteinsBy.SpectraByGroup) > 0)
+                        if (checkedPivots.Count(o => o.Mode == PivotBy.SpectraByGroup) > 0)
                             return itr.Current.Value.Spectra;
-                        else if (checkedPivots.Count(o => o.Mode == PivotProteinsBy.MatchesByGroup) > 0)
+                        else if (checkedPivots.Count(o => o.Mode == PivotBy.MatchesByGroup) > 0)
                             return itr.Current.Value.DistinctMatches;
-                        else if (checkedPivots.Count(o => o.Mode == PivotProteinsBy.PeptidesByGroup) > 0)
+                        else if (checkedPivots.Count(o => o.Mode == PivotBy.PeptidesByGroup) > 0)
                             return itr.Current.Value.DistinctPeptides;
                     }
                     else
                     {
-                        if (checkedPivots.Count(o => o.Mode == PivotProteinsBy.SpectraBySource) > 0)
+                        if (checkedPivots.Count(o => o.Mode == PivotBy.SpectraBySource) > 0)
                             return itr.Current.Value.Spectra;
-                        else if (checkedPivots.Count(o => o.Mode == PivotProteinsBy.MatchesBySource) > 0)
+                        else if (checkedPivots.Count(o => o.Mode == PivotBy.MatchesBySource) > 0)
                             return itr.Current.Value.DistinctMatches;
-                        else if (checkedPivots.Count(o => o.Mode == PivotProteinsBy.PeptidesBySource) > 0)
+                        else if (checkedPivots.Count(o => o.Mode == PivotBy.PeptidesBySource) > 0)
                             return itr.Current.Value.DistinctPeptides;
                     }
                 }
@@ -495,31 +424,39 @@ namespace IDPicker.Forms
                 else if (columnIndex == distinctPeptidesColumn.Index) return row.DistinctPeptides;
                 else if (columnIndex == distinctMatchesColumn.Index) return row.DistinctMatches;
                 else if (columnIndex == filteredSpectraColumn.Index) return row.Spectra;
+                else if (columnIndex == peptideSequencesColumn.Index) return row.PeptideSequences;
+                else if (columnIndex == peptideGroupsColumn.Index) return row.PeptideGroups;
             }
             else if (baseRow is ProteinGroupRow)
             {
                 var row = baseRow as ProteinGroupRow;
-                if (columnIndex == keyColumn.Index) return String.Format("{0} ({1})", row.Proteins, row.ProteinGroup);
+                if (columnIndex == keyColumn.Index) return proteinGroupColumn.Visible ? row.Proteins : String.Format("{0} ({1})", row.ProteinGroup, row.Proteins);
                 else if (columnIndex == clusterColumn.Index) return row.Cluster;
                 else if (columnIndex == countColumn.Index) return row.ProteinCount;
                 else if (columnIndex == coverageColumn.Index) return row.MeanProteinCoverage;
+                else if (columnIndex == proteinGroupColumn.Index) return row.ProteinGroup;
                 else if (columnIndex == descriptionColumn.Index) return row.FirstProteinDescription;
                 else if (columnIndex == distinctPeptidesColumn.Index)return row.DistinctPeptides;
                 else if (columnIndex == distinctMatchesColumn.Index) return row.DistinctMatches;
                 else if (columnIndex == filteredSpectraColumn.Index) return row.Spectra;
+                else if (columnIndex == peptideSequencesColumn.Index) return row.PeptideSequences;
+                else if (columnIndex == peptideGroupsColumn.Index) return row.PeptideGroups;
             }
             else if (baseRow is ProteinRow)
             {
                 var row = baseRow as ProteinRow;
                 if (columnIndex == keyColumn.Index) return row.Protein.Accession;
                 else if (columnIndex == coverageColumn.Index && !row.Protein.IsDecoy) return row.Protein.Coverage;
+                else if (columnIndex == proteinGroupColumn.Index) return row.Protein.ProteinGroup;
                 else if (columnIndex == descriptionColumn.Index) return row.Protein.Description;
-                else if (checkedGroupings.Count == 0 && columnIndex == clusterColumn.Index) return row.Protein.Cluster;
-                else if (checkedGroupings.Count(o => o.Mode == GroupProteinsBy.ProteinGroup) == 0)
+                else if (checkedGroupings.Count(o => o.Mode == GroupBy.ProteinGroup) == 0)
                 {
-                    if (columnIndex == distinctPeptidesColumn.Index) return row.DistinctPeptides;
+                    if (columnIndex == clusterColumn.Index) return row.Protein.Cluster;
+                    else if (columnIndex == distinctPeptidesColumn.Index) return row.DistinctPeptides;
                     else if (columnIndex == distinctMatchesColumn.Index) return row.DistinctMatches;
                     else if (columnIndex == filteredSpectraColumn.Index) return row.Spectra;
+                    else if (columnIndex == peptideSequencesColumn.Index) return row.PeptideSequences;
+                    else if (columnIndex == peptideGroupsColumn.Index) return row.PeptideGroups;
                 }
             }
             return null;
@@ -553,10 +490,15 @@ namespace IDPicker.Forms
         private void treeDataGridView_CellFormatting (object sender, TreeDataGridViewCellFormattingEventArgs e)
         {
             var column = treeDataGridView.Columns[e.ColumnIndex];
-            if (_columnSettings.ContainsKey(column))
-                e.CellStyle.BackColor = Color.FromArgb(_columnSettings[column].ColorCode);
-            else
-                e.CellStyle.BackColor = e.CellStyle.BackColor;
+            ColumnProperty columnProperty;
+            if (_columnSettings.TryGetValue(column, out columnProperty))
+            {
+                if (columnProperty.ForeColor.HasValue)
+                    e.CellStyle.ForeColor = _columnSettings[column].ForeColor.Value;
+
+                if (columnProperty.BackColor.HasValue)
+                    e.CellStyle.BackColor = _columnSettings[column].BackColor.Value;
+            }
 
             if (viewFilter.Cluster == null && viewFilter.ProteinGroup == null && viewFilter.Protein == null)
                 return;
@@ -573,12 +515,6 @@ namespace IDPicker.Forms
                 case RowFilterState.Partial:
                     e.CellStyle.ForeColor = filteredPartialColor;
                     break;
-            }
-
-            if (column is DataGridViewLinkColumn)
-            {
-                var cell = treeDataGridView[e.ColumnIndex, e.RowIndexHierarchy] as DataGridViewLinkCell;
-                cell.LinkColor = cell.ActiveLinkColor = e.CellStyle.ForeColor;
             }
         }
 
@@ -616,6 +552,12 @@ namespace IDPicker.Forms
 
                 if (row is ProteinRow)
                     ProteinViewVisualize(this, new ProteinViewVisualizeEventArgs() { Protein = (row as ProteinRow).Protein });
+                else if (row is ProteinGroupRow)
+                {
+                    List<Protein> proteins; lock (session) proteins = session.Query<Protein>().Where(o => o.ProteinGroup == (row as ProteinGroupRow).ProteinGroup).ToList();
+                    foreach (var protein in proteins)
+                        ProteinViewVisualize(this, new ProteinViewVisualizeEventArgs() {Protein = protein});
+                }
             }
         }
 
@@ -704,7 +646,7 @@ namespace IDPicker.Forms
             checkedPivots = pivotSetupControl.CheckedPivots;
             checkedGroupings = groupingSetupControl.CheckedGroupings;
 
-            clusterColumn.Visible = groupingSetupControl.CheckedGroupings.Count(o => o.Mode == GroupProteinsBy.Cluster) == 0;
+            clusterColumn.Visible = groupingSetupControl.CheckedGroupings.Count(o => o.Mode == GroupBy.Cluster) == 0;
             countColumn.Visible = groupingSetupControl.CheckedGroupings.Count > 0;
 
             Text = TabText = "Loading protein view...";
@@ -751,12 +693,12 @@ namespace IDPicker.Forms
                         basicRows = getChildren(rootGrouping, dataFilter);
 
                         basicStatsBySpectrumSourceGroup = null;
-                        Pivot<PivotProteinsBy> pivotBySource = checkedPivots.FirstOrDefault(o => o.Mode.ToString().Contains("Source"));
+                        Pivot<PivotBy> pivotBySource = checkedPivots.FirstOrDefault(o => o.Mode.ToString().Contains("Source"));
                         if (pivotBySource != null)
                             basicStatsBySpectrumSource = getPivotData(rootGrouping, pivotBySource, dataFilter);
 
                         basicStatsBySpectrumSourceGroup = null;
-                        Pivot<PivotProteinsBy> pivotByGroup = checkedPivots.FirstOrDefault(o => o.Mode.ToString().Contains("Group"));
+                        Pivot<PivotBy> pivotByGroup = checkedPivots.FirstOrDefault(o => o.Mode.ToString().Contains("Group"));
                         if (pivotByGroup != null)
                             basicStatsBySpectrumSourceGroup = getPivotData(rootGrouping, pivotByGroup, dataFilter);
 
@@ -778,12 +720,12 @@ namespace IDPicker.Forms
                     rows = getChildren(rootGrouping, dataFilter);
 
                     statsBySpectrumSource = null;
-                    Pivot<PivotProteinsBy> pivotBySource = checkedPivots.FirstOrDefault(o => o.Mode.ToString().Contains("Source"));
+                    Pivot<PivotBy> pivotBySource = checkedPivots.FirstOrDefault(o => o.Mode.ToString().Contains("Source"));
                     if (pivotBySource != null)
                         statsBySpectrumSource = getPivotData(rootGrouping, pivotBySource, dataFilter);
 
                     statsBySpectrumSourceGroup = null;
-                    Pivot<PivotProteinsBy> pivotByGroup = checkedPivots.FirstOrDefault(o => o.Mode.ToString().Contains("Group"));
+                    Pivot<PivotBy> pivotByGroup = checkedPivots.FirstOrDefault(o => o.Mode.ToString().Contains("Group"));
                     if (pivotByGroup != null)
                         statsBySpectrumSourceGroup = getPivotData(rootGrouping, pivotByGroup, dataFilter);
                 }
@@ -863,40 +805,28 @@ namespace IDPicker.Forms
 
                 var newProperties = new ColumnProperty()
                                         {
-                                            Scope = "ProteinTableForm",
-                                            Type = "PivotColumn",
-                                            Name = column.HeaderText,
-                                            DecimalPlaces = -1,
-                                            ColorCode = treeDataGridView.DefaultCellStyle.BackColor.ToArgb(),
-                                            Visible = true,
-                                            Locked = null
+                                            Type = typeof(int),
+                                            Name = column.HeaderText
                                         };
 
-                var previousForm =
-                    _columnSettings.Where(x => x.Value.Name == column.HeaderText && x.Value.Type == "PivotColumn").ToList();
+                var previousForm = _columnSettings.SingleOrDefault(x => x.Value.Name == column.HeaderText);
 
-                if (previousForm.Count == 1)
+                if (previousForm.Key != null)
                 {
-                    _columnSettings.Remove(previousForm[0].Key);
-                    newProperties.ColorCode = previousForm[0].Value.ColorCode;
-                    newProperties.Visible = previousForm[0].Value.Visible;
-                    newProperties.Locked = previousForm[0].Value.Locked;
+                    _columnSettings.Remove(previousForm.Key);
+                    newProperties = previousForm.Value;
                 }
                 else
                 {
-                    var possibleSaved =
-                        _unusedPivotSettings.Where(x => x.Name == column.HeaderText).SingleOrDefault();
+                    var possibleSaved = _unusedPivotSettings.SingleOrDefault(x => x.Name == column.HeaderText);
                     if (possibleSaved != null)
-                    {
-                        newProperties.ColorCode = possibleSaved.ColorCode;
-                        newProperties.Visible = possibleSaved.Visible;
-                        newProperties.Locked = possibleSaved.Locked;
-                    }
+                        newProperties = possibleSaved;
                 }
 
-                column.Visible = newProperties.Visible;
+                if (newProperties.Visible.HasValue)
+                    column.Visible = newProperties.Visible.Value;
                 //_columnSettings.Add(column, newProperties);
-                if (newProperties.Visible)
+                if (column.Visible)
                     pivotColumns.Add(column);
             }
 
@@ -907,42 +837,29 @@ namespace IDPicker.Forms
                 column.Tag = statsBySpectrumSourceGroup[groupId];
 
                 var newProperties = new ColumnProperty()
-                                        {
-                                            Scope = "ProteinTableForm",
-                                            Type = "PivotColumn",
-                                            Name = column.HeaderText,
-                                            DecimalPlaces = -1,
-                                            ColorCode = treeDataGridView.DefaultCellStyle.BackColor.ToArgb(),
-                                            Visible = true,
-                                            Locked = null
-                                        };
-
-                var previousForm =
-                    _columnSettings.Where(x => x.Value.Name == column.HeaderText && x.Value.Type == "PivotColumn").ToList();
-
-                if (previousForm.Count == 1)
                 {
-                    _columnSettings.Remove(previousForm[0].Key);
-                    newProperties.ColorCode = previousForm[0].Value.ColorCode;
-                    newProperties.Visible = previousForm[0].Value.Visible;
-                    newProperties.Locked = previousForm[0].Value.Locked;
+                    Type = typeof(int),
+                    Name = column.HeaderText
+                };
+
+                var previousForm = _columnSettings.SingleOrDefault(x => x.Value.Name == column.HeaderText);
+
+                if (previousForm.Key != null)
+                {
+                    _columnSettings.Remove(previousForm.Key);
+                    newProperties = previousForm.Value;
                 }
                 else
                 {
-                    var possibleSaved =
-                        _unusedPivotSettings.Where(x => x.Name == column.HeaderText).SingleOrDefault();
+                    var possibleSaved = _unusedPivotSettings.SingleOrDefault(x => x.Name == column.HeaderText);
                     if (possibleSaved != null)
-                    {
-                        newProperties.ColorCode = possibleSaved.ColorCode;
-                        newProperties.Visible = possibleSaved.Visible;
-                        newProperties.Locked = possibleSaved.Locked;
-                    }
+                        newProperties = possibleSaved;
                 }
 
-
-                column.Visible = newProperties.Visible;
+                if (newProperties.Visible.HasValue)
+                    column.Visible = newProperties.Visible.Value;
                 //_columnSettings.Add(column, newProperties);
-                if (newProperties.Visible)
+                if (column.Visible)
                     pivotColumns.Add(column);
             }
 
@@ -955,59 +872,31 @@ namespace IDPicker.Forms
 
         List<ColumnProperty> _unusedPivotSettings = new List<ColumnProperty>();
 
-        protected override bool updatePivots (IList<ColumnProperty> listOfSettings)
+        protected override bool updatePivots (FormProperty formProperty)
         {
-            var pivotModes = listOfSettings.SingleOrDefault(o => o.Name == "PivotModes");
-            if (pivotSetupControl != null && pivotModes != null)
-            {
-                var oldCheckedPivots = new List<PivotProteinsBy>(checkedPivots.Select(o => o.Mode));
-
-                pivotSetupControl.Pivots.ForEach(o => pivotSetupControl.SetPivot(o.Mode, false));
-                foreach (string pivotMode in pivotModes.Type.Split(";".ToCharArray(), StringSplitOptions.RemoveEmptyEntries))
-                    pivotSetupControl.SetPivot((PivotProteinsBy) Enum.Parse(typeof (PivotProteinsBy), pivotMode), true);
-
-                // determine if checked pivots changed
-                return !oldCheckedPivots.SequenceEqual(checkedPivots.Select(o => o.Mode));
-            }
+            if (pivotSetupControl != null && formProperty.PivotModes != null)
+                return base.updatePivots(formProperty);
             else
             {
-                setPivots(new Pivot<PivotProteinsBy>() {Mode = PivotProteinsBy.SpectraByGroup, Text = "Spectra by Group"},
-                          new Pivot<PivotProteinsBy>() {Mode = PivotProteinsBy.SpectraBySource, Text = "Spectra by Source"},
-                          new Pivot<PivotProteinsBy>() {Mode = PivotProteinsBy.MatchesByGroup, Text = "Matches by Group"},
-                          new Pivot<PivotProteinsBy>() {Mode = PivotProteinsBy.MatchesBySource, Text = "Matches by Source"},
-                          new Pivot<PivotProteinsBy>() {Mode = PivotProteinsBy.PeptidesByGroup, Text = "Peptides by Group"},
-                          new Pivot<PivotProteinsBy>() {Mode = PivotProteinsBy.PeptidesBySource, Text = "Peptides by Source"});
+                setPivots(new Pivot<PivotBy>() {Mode = PivotBy.SpectraByGroup, Text = "Spectra by Group"},
+                          new Pivot<PivotBy>() {Mode = PivotBy.SpectraBySource, Text = "Spectra by Source"},
+                          new Pivot<PivotBy>() {Mode = PivotBy.MatchesByGroup, Text = "Matches by Group"},
+                          new Pivot<PivotBy>() {Mode = PivotBy.MatchesBySource, Text = "Matches by Source"},
+                          new Pivot<PivotBy>() {Mode = PivotBy.PeptidesByGroup, Text = "Peptides by Group"},
+                          new Pivot<PivotBy>() {Mode = PivotBy.PeptidesBySource, Text = "Peptides by Source"});
                 pivotSetupControl.PivotChanged += pivotSetupControl_PivotChanged;
                 return false;
             }
         }
 
-        protected override bool updateGroupings (IList<ColumnProperty> listOfSettings)
+        protected override bool updateGroupings (FormProperty formProperty)
         {
             bool groupingChanged = false;
-            var groupingTuples = listOfSettings.SingleOrDefault(o => o.Name == "GroupingModes");
-            if (groupingSetupControl != null && groupingTuples != null)
-            {
-                var oldCheckedGroupings = new List<GroupProteinsBy>(checkedGroupings.Select(o => o.Mode));
-
-                var groupings = new List<Grouping<GroupProteinsBy>>();
-                foreach (string groupingTuple in groupingTuples.Type.Split(";".ToCharArray(), StringSplitOptions.RemoveEmptyEntries))
-                {
-                    string[] tokens = groupingTuple.Split('§');
-                    groupings.Add(new Grouping<GroupProteinsBy>(Boolean.Parse(tokens[0]))
-                                      {
-                                          Mode = (GroupProteinsBy) Enum.Parse(typeof (GroupProteinsBy), tokens[1]),
-                                          Text = tokens[2]
-                                      });
-                }
-                setGroupings(groupings.ToArray());
-
-                // determine if checked groupings changed
-                groupingChanged = !oldCheckedGroupings.SequenceEqual(checkedGroupings.Select(o => o.Mode));
-            }
+            if (groupingSetupControl != null && formProperty.GroupingModes != null)
+                groupingChanged = base.updateGroupings(formProperty);
             else
-                setGroupings(new Grouping<GroupProteinsBy>() {Mode = GroupProteinsBy.Cluster, Text = "Cluster"},
-                             new Grouping<GroupProteinsBy>() {Mode = GroupProteinsBy.ProteinGroup, Text = "Protein Group"});
+                setGroupings(new Grouping<GroupBy>() {Mode = GroupBy.Cluster, Text = "Cluster"},
+                             new Grouping<GroupBy>() {Mode = GroupBy.ProteinGroup, Text = "Protein Group"});
 
             groupingSetupControl.GroupingChanging += groupingSetupControl_GroupingChanging;
             return groupingChanged;
@@ -1015,52 +904,83 @@ namespace IDPicker.Forms
 
         private void SetDefaults ()
         {
-            _columnSettings = new Dictionary<DataGridViewColumn, ColumnProperty>();
-            var columnType = new Dictionary<DataGridViewColumn, string>
-                                 {
-                                     {keyColumn, "Key"},
-                                     {clusterColumn, "Integer"},
-                                     {countColumn, "Integer"},
-                                     {coverageColumn, "Float"},
-                                     {distinctPeptidesColumn, "Integer"},
-                                     {distinctMatchesColumn, "Integer"},
-                                     {filteredSpectraColumn, "Integer"},
-                                     //{proteinLengthColumn, "Integer"},
-                                     {descriptionColumn, "String"}
-                                 };
-
-            foreach (var kvp in columnType)
+            _columnSettings = new Dictionary<DataGridViewColumn, ColumnProperty>()
             {
-                var tempColumnProperty = new ColumnProperty
-                {
-                    Scope = "ProteinTableForm",
-                    Type = kvp.Value,
-                    DecimalPlaces = -1,
-                    Visible = true,
-                    Locked = null,
-                    ColorCode = treeDataGridView.DefaultCellStyle.BackColor.ToArgb(),
-                    Name = kvp.Key.Name
-                };
+                { keyColumn, new ColumnProperty() {Type = typeof(string)}},
+                { clusterColumn, new ColumnProperty() {Type = typeof(int)}},
+                { countColumn, new ColumnProperty() {Type = typeof(int)}},
+                { coverageColumn, new ColumnProperty() {Type = typeof(float)}},
+                { proteinGroupColumn, new ColumnProperty() {Type = typeof(int)}},
+                { distinctPeptidesColumn, new ColumnProperty() {Type = typeof(int)}},
+                { distinctMatchesColumn, new ColumnProperty() {Type = typeof(int)}},
+                { filteredSpectraColumn, new ColumnProperty() {Type = typeof(int)}},
+                { descriptionColumn, new ColumnProperty() {Type = typeof(string)}},
+                { peptideGroupsColumn, new ColumnProperty() {Type = typeof(string), Visible = false}},
+                { peptideSequencesColumn, new ColumnProperty() {Type = typeof(string), Visible = false}},
+            };
 
-                _columnSettings.Add(kvp.Key, tempColumnProperty);
+            foreach (var kvp in _columnSettings)
+            {
+                kvp.Value.Name = kvp.Key.Name;
+                kvp.Value.Index = kvp.Key.Index;
+                kvp.Value.DisplayIndex = kvp.Key.DisplayIndex;
             }
+
+            initialColumnSortOrders = new Map<int, SortOrder>()
+            {
+                {keyColumn.Index, SortOrder.Ascending},
+                {clusterColumn.Index, SortOrder.Ascending},
+                {countColumn.Index, SortOrder.Ascending},
+                {coverageColumn.Index, SortOrder.Descending},
+                {proteinGroupColumn.Index, SortOrder.Ascending},
+                {distinctPeptidesColumn.Index, SortOrder.Descending},
+                {distinctMatchesColumn.Index, SortOrder.Descending},
+                {filteredSpectraColumn.Index, SortOrder.Descending},
+                {descriptionColumn.Index, SortOrder.Ascending},
+                {peptideSequencesColumn.Index, SortOrder.Ascending},
+                {peptideGroupsColumn.Index, SortOrder.Ascending},
+            };
         }
 
-        private void groupingSetupControl_GroupingChanging (object sender, GroupingChangingEventArgs<GroupProteinsBy> e)
+        private void groupingSetupControl_GroupingChanging (object sender, GroupingChangingEventArgs<GroupBy> e)
         {
-            // GroupProteinsBy.ProteinGroup cannot be before GroupProteinsBy.Cluster
+            // GroupBy.ProteinGroup cannot be before GroupBy.Cluster
 
-            if (e.Grouping.Mode != GroupProteinsBy.ProteinGroup && e.Grouping.Mode != GroupProteinsBy.Cluster)
+            if (e.Grouping.Mode != GroupBy.ProteinGroup && e.Grouping.Mode != GroupBy.Cluster)
                 return;
 
-            var newGroupings = new List<Grouping<GroupProteinsBy>>(groupingSetupControl.Groupings);
+            var newGroupings = new List<Grouping<GroupBy>>(groupingSetupControl.Groupings);
             newGroupings.Remove(e.Grouping);
             newGroupings.Insert(e.NewIndex, e.Grouping);
 
-            e.Cancel = GroupingSetupControl<GroupProteinsBy>.HasParentGrouping(newGroupings, GroupProteinsBy.Cluster, GroupProteinsBy.ProteinGroup);
+            e.Cancel = GroupingSetupControl<GroupBy>.HasParentGrouping(newGroupings, GroupBy.Cluster, GroupBy.ProteinGroup);
         }
 
-        private void pivotSetupControl_PivotChanged (object sender, PivotChangedEventArgs<PivotProteinsBy> e)
+        protected override void setColumnVisibility ()
+        {
+            var columnsIrrelevantForGrouping = new Set<DataGridViewColumn>(new Comparison<DataGridViewColumn>((x,y) => x.Name.CompareTo(y.Name)));
+            if (!checkedGroupings.Any())
+                columnsIrrelevantForGrouping.Add(countColumn);
+            else if (checkedGroupings.First().Mode == GroupBy.Cluster)
+                columnsIrrelevantForGrouping.Add(clusterColumn);
+            // the protein group column is kept since the keyColumn does not show it if the column is visible
+            //else if (checkedGroupings.First().Mode == GroupBy.ProteinGroup)
+            //    columnsIrrelevantForGrouping.Add(proteinGroupColumn);
+
+            // if visibility is not forced, use grouping mode to set automatic visibility
+            foreach (var kvp in _columnSettings)
+                kvp.Key.Visible = kvp.Value.Visible ?? !columnsIrrelevantForGrouping.Contains(kvp.Key);
+
+            base.setColumnVisibility();
+        }
+
+        protected override void OnGroupingChanged (object sender, EventArgs e)
+        {
+            setColumnVisibility();
+            base.OnGroupingChanged(sender, e);
+        }
+
+        private void pivotSetupControl_PivotChanged (object sender, PivotChangedEventArgs<PivotBy> e)
         {
             if (e.Pivot.Checked)
             {
@@ -1072,10 +992,6 @@ namespace IDPicker.Forms
             }
         }
     }
-
-    public enum GroupProteinsBy { Cluster, ProteinGroup, Off }
-    public enum PivotProteinsBy { SpectraByGroup, SpectraBySource, MatchesByGroup, MatchesBySource, PeptidesByGroup, PeptidesBySource, Off }
-    public class BaseProteinTableForm : BaseTableForm<GroupProteinsBy, PivotProteinsBy> { }
 
     public delegate void ProteinViewFilterEventHandler (ProteinTableForm sender, DataFilter proteinViewFilter);
 

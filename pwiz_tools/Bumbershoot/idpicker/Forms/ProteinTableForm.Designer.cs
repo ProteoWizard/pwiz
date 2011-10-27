@@ -54,10 +54,13 @@ namespace IDPicker.Forms
             this.clusterColumn = new System.Windows.Forms.DataGridViewLinkColumn();
             this.countColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.coverageColumn = new System.Windows.Forms.DataGridViewLinkColumn();
+            this.proteinGroupColumn = new System.Windows.Forms.DataGridViewLinkColumn();
             this.distinctPeptidesColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.distinctMatchesColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.filteredSpectraColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.descriptionColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.peptideSequencesColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.peptideGroupsColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.SuspendLayout();
             // 
             // keyColumn
@@ -73,8 +76,7 @@ namespace IDPicker.Forms
             this.clusterColumn.LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline;
             this.clusterColumn.Name = "clusterColumn";
             this.clusterColumn.ReadOnly = true;
-            this.clusterColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.clusterColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            this.clusterColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Programmatic;
             this.clusterColumn.TrackVisitedState = false;
             this.clusterColumn.Width = 64;
             // 
@@ -91,10 +93,19 @@ namespace IDPicker.Forms
             this.coverageColumn.LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline;
             this.coverageColumn.Name = "coverageColumn";
             this.coverageColumn.ReadOnly = true;
-            this.coverageColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            this.coverageColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            this.coverageColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Programmatic;
             this.coverageColumn.TrackVisitedState = false;
             this.coverageColumn.Width = 78;
+            // 
+            // proteinGroupColumn
+            // 
+            this.proteinGroupColumn.HeaderText = "Protein Group";
+            this.proteinGroupColumn.LinkBehavior = System.Windows.Forms.LinkBehavior.HoverUnderline;
+            this.proteinGroupColumn.Name = "proteinGroupColumn";
+            this.proteinGroupColumn.ReadOnly = true;
+            this.proteinGroupColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Programmatic;
+            this.proteinGroupColumn.TrackVisitedState = false;
+            this.proteinGroupColumn.Width = 80;
             // 
             // distinctPeptidesColumn
             // 
@@ -124,16 +135,33 @@ namespace IDPicker.Forms
             this.descriptionColumn.ReadOnly = true;
             this.descriptionColumn.Width = 85;
             // 
+            // peptideSequencesColumn
+            // 
+            this.peptideSequencesColumn.HeaderText = "Peptide Sequences";
+            this.peptideSequencesColumn.Name = "peptideSequencesColumn";
+            this.peptideSequencesColumn.ReadOnly = true;
+            this.peptideSequencesColumn.Width = 120;
+            // 
+            // peptideGroupsColumn
+            // 
+            this.peptideGroupsColumn.HeaderText = "Peptide Groups";
+            this.peptideGroupsColumn.Name = "peptideGroupsColumn";
+            this.peptideGroupsColumn.ReadOnly = true;
+            this.peptideGroupsColumn.Width = 100;
+            // 
             // treeDataGridView
             // 
             treeDataGridView.Columns.AddRange(keyColumn,
                                               clusterColumn,
                                               countColumn,
                                               coverageColumn,
+                                              proteinGroupColumn,
                                               distinctPeptidesColumn,
                                               distinctMatchesColumn,
                                               filteredSpectraColumn,
-                                              descriptionColumn);
+                                              descriptionColumn,
+                                              peptideSequencesColumn,
+                                              peptideGroupsColumn);
             // 
             // ProteinTableForm
             // 
@@ -157,10 +185,13 @@ namespace IDPicker.Forms
         private System.Windows.Forms.DataGridViewLinkColumn clusterColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn countColumn;
         private System.Windows.Forms.DataGridViewLinkColumn coverageColumn;
+        private System.Windows.Forms.DataGridViewLinkColumn proteinGroupColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn distinctPeptidesColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn distinctMatchesColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn filteredSpectraColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn descriptionColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn peptideSequencesColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn peptideGroupsColumn;
 
     }
 }

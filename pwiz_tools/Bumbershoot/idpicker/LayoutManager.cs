@@ -30,12 +30,25 @@ using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using IDPicker.DataModel;
 using IDPicker.Forms;
+using NHibernate.Linq;
 
 namespace IDPicker
 {
     class LayoutManager
     {
-        NHibernate.ISession _session;
+        public LayoutProperty CurrentLayout
+        {
+            get { return _currentLayout; }
+            set
+            {
+                if (_currentLayout == value) return;
+                _currentLayout = value;
+                mainForm.LoadLayout(value);
+            }
+        }
+
+        private LayoutProperty _currentLayout;
+        private NHibernate.ISession _session;
         private List<LayoutProperty> _userLayoutList;
         private IDPickerForm mainForm;
         private PeptideTableForm peptideTableForm;
@@ -51,9 +64,9 @@ namespace IDPicker
             this.spectrumTableForm = spectrumTableForm;
             this.dockPanel = dockPanel;
 
-            RefreshUserLayoutList();
+            refreshUserLayoutList();
 
-            TryResetUserLayoutSettings();
+            tryResetUserLayoutSettings();
         }
 
         /// <summary>
@@ -82,6 +95,7 @@ namespace IDPicker
 
             mainForm.Location = location;
             mainForm.Size = size;
+            mainForm.WindowState = Properties.Settings.Default.IDPickerFormWindowState;
         }
 
         /// <summary>
@@ -91,265 +105,36 @@ namespace IDPicker
         {
             Properties.Settings.Default.IDPickerFormLocation = mainForm.Location;
             Properties.Settings.Default.IDPickerFormSize = mainForm.Size;
+            Properties.Settings.Default.IDPickerFormWindowState = mainForm.WindowState;
             Properties.Settings.Default.Save();
         }
 
-        /// <summary>
-        /// Populates local list of user layouts with internally stored values. 
-        /// Default values are created if no values are stored.
-        /// </summary>
-        private void RefreshUserLayoutList()
-        {
-            var retrievedList = new List<string>(Util.StringCollectionToStringArray(Properties.Settings.Default.UserLayouts));
-            _userLayoutList = new List<LayoutProperty>();
-
-            //stick with an empty list if not in the correct format
-            if (retrievedList.Count == 0 || !retrievedList[0].StartsWith("System Default"))
-                return;
-
-            for (var x = 0; x < retrievedList.Count; x++)
-            {
-                var items = retrievedList[x].Split('|');
-                var customColumnList = new List<ColumnProperty>();
-                if (bool.Parse(items[2]))
-                {
-                    //ProteinForm
-                    customColumnList.AddRange(
-                        ColumnSettingStringToIdpColumnPropertyList(
-                        Util.StringCollectionToStringArray(Properties.Settings.Default.ProteinTableFormSettings),
-                        "ProteinTableForm", x)
-                        );
-
-                    //PeptideForm
-                    customColumnList.AddRange(
-                        ColumnSettingStringToIdpColumnPropertyList(
-                        Util.StringCollectionToStringArray(Properties.Settings.Default.PeptideTableFormSettings),
-                        "PeptideTableForm", x)
-                        );
-
-                    //SpectrumForm
-                    customColumnList.AddRange(
-                        ColumnSettingStringToIdpColumnPropertyList(
-                        Util.StringCollectionToStringArray(Properties.Settings.Default.SpectrumTableFormSettings),
-                        "SpectrumTableForm", x)
-                        );
-                }
-
-
-                var newLayout = new LayoutProperty
-                {
-                    Name = items[0],
-                    PaneLocations = items[1],
-                    HasCustomColumnSettings = bool.Parse(items[2]),
-                    SettingsList = customColumnList
-                };
-                foreach (var item in newLayout.SettingsList)
-                    item.Layout = newLayout;
-
-
-                _userLayoutList.Add(newLayout);
-            }
-        }
-
-        private void TryResetUserLayoutSettings()
-        {
-            if (_userLayoutList.Count < 2 || _userLayoutList[1].Name != "User Default")
-            {
-                _userLayoutList = new List<LayoutProperty>();
-                var customColumnList = new List<ColumnProperty>();
-                customColumnList.AddRange(proteinTableForm.GetCurrentProperties(false));
-                customColumnList.AddRange(peptideTableForm.GetCurrentProperties(false));
-                customColumnList.AddRange(spectrumTableForm.GetCurrentProperties());
-
-                SaveNewLayout("System Default", true, false, customColumnList);
-                SaveNewLayout("User Default", true, false, customColumnList);
-                RefreshUserLayoutList();
-            }
-        }
-
-        internal void SaveUserLayoutList()
+        public void SaveUserLayoutList ()
         {
             Properties.Settings.Default.UserLayouts.Clear();
-            Properties.Settings.Default.ProteinTableFormSettings.Clear();
-            Properties.Settings.Default.PeptideTableFormSettings.Clear();
-            Properties.Settings.Default.SpectrumTableFormSettings.Clear();
 
             //Layout properties will be in format:
-            //"(string)Name|(string)XML|(bool)CustomColumns"
+            //"(string)Name|(string)PaneLocationsXML|(string)FormPropertiesXML"
             for (var x = 0; x < _userLayoutList.Count; x++)
             {
                 //Save Layout
-                Properties.Settings.Default.UserLayouts.Add(string.Format("{0}|{1}|{2}{3}",
-                    _userLayoutList[x].Name, _userLayoutList[x].PaneLocations,
-                    _userLayoutList[x].HasCustomColumnSettings, Environment.NewLine));
-                Properties.Settings.Default.Save();
-
-                //Save column settings
+                string formProperties = String.Empty;
                 if (_userLayoutList[x].HasCustomColumnSettings)
                 {
-                    //Protein Form
-                    var columnSettings = _userLayoutList[x].SettingsList.Where(o => o.Scope == "ProteinTableForm");
-                    SaveUserColumnSettings(columnSettings.ToList(), x, "ProteinTableForm");
-
-                    //Peptide Form
-                    columnSettings = _userLayoutList[x].SettingsList.Where(o => o.Scope == "PeptideTableForm");
-                    SaveUserColumnSettings(columnSettings.ToList(), x, "PeptideTableForm");
-
-                    //Spectrum Form
-                    columnSettings = _userLayoutList[x].SettingsList.Where(o => o.Scope == "SpectrumTableForm");
-                    SaveUserColumnSettings(columnSettings.ToList(), x, "SpectrumTableForm");
+                    var userType = new FormPropertiesUserType();
+                    formProperties = (string) userType.Disassemble(_userLayoutList[x].FormProperties);
                 }
+
+                Properties.Settings.Default.UserLayouts.Add(String.Format("{0}|{1}|{2}{3}",
+                                                            _userLayoutList[x].Name,
+                                                            _userLayoutList[x].PaneLocations,
+                                                            formProperties,
+                                                            Environment.NewLine));
             }
+            Properties.Settings.Default.Save();
         }
 
-
-        private static IEnumerable<ColumnProperty> ColumnSettingStringToIdpColumnPropertyList(IEnumerable<string> settings, string associatedForm, int associatedLayout)
-        {
-            //User properties will be in format:
-            //"(int)LayoutIndex
-            //(string)Column1Name|(string)Type|(int)DecimalPlaces|(int)CellColorCode|(bool)Visible|(bool)Locked
-            //(string)Column2Name|(string)Type|(int)DecimalPlaces|(int)CellColorCode|(bool)Visible|(bool)Locked
-            //(string)Column3Name|(string)Type|(int)DecimalPlaces|(int)CellColorCode|(bool)Visible|(bool)Locked
-            //(string)Column4Name|(string)Type|(int)DecimalPlaces|(int)CellColorCode|(bool)Visible|(bool)Locked
-            //(int)BackColorCode
-            //(int)TextColorCode"
-
-            var columnList = new List<ColumnProperty>();
-
-            foreach (var setting in settings)
-            {
-                var lines = setting.Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-                if (int.Parse(lines[0]) == associatedLayout)
-                {
-                    for (var x = 1; x < lines.Count() - 2; x++)
-                    {
-                        var items = lines[x].Split('|');
-                        bool tempbool;
-                        var canParse = bool.TryParse(items[5], out tempbool);
-
-                        columnList.Add(new ColumnProperty
-                        {
-                            Name = items[0],
-                            Type = items[1],
-                            DecimalPlaces = int.Parse(items[2]),
-                            ColorCode = int.Parse(items[3]),
-                            Visible = bool.Parse(items[4]),
-                            Locked = canParse ? bool.Parse(items[5]) : (bool?)null,
-                            Scope = associatedForm
-                        });
-                    }
-
-                    columnList.Add(new ColumnProperty
-                    {
-                        Name = "BackColor",
-                        Type = "GlobalSetting",
-                        DecimalPlaces = -1,
-                        ColorCode = int.Parse(lines[lines.Count() - 2]),
-                        Visible = false,
-                        Locked = null,
-                        Scope = associatedForm
-                    });
-
-                    columnList.Add(new ColumnProperty
-                    {
-                        Name = "TextColor",
-                        Type = "GlobalSetting",
-                        DecimalPlaces = -1,
-                        ColorCode = int.Parse(lines[lines.Count() - 1]),
-                        Visible = false,
-                        Locked = null,
-                        Scope = associatedForm
-                    });
-
-                    break;
-                }
-            }
-            return columnList;
-        }
-
-        private LayoutProperty SaveNewLayout(string layoutName, bool saveColumns, bool isDatabase, IList<ColumnProperty> customColumnList)
-        {
-            //var customColumnList = new List<ColumnProperty>();
-            //if (saveColumns)
-            //{
-            //    customColumnList.AddRange(proteinTableForm.GetCurrentProperties());
-            //    customColumnList.AddRange(peptideTableForm.GetCurrentProperties());
-            //    customColumnList.AddRange(spectrumTableForm.GetCurrentProperties());
-            //}
-
-            var tempLayout = new LayoutProperty
-            {
-                Name = layoutName,
-                PaneLocations = GetPanelLocations(),
-                HasCustomColumnSettings = saveColumns,
-            };
-            foreach (var item in customColumnList)
-                item.Layout = tempLayout;
-
-            tempLayout.SettingsList = customColumnList;
-
-            if (isDatabase)
-            {
-                lock (_session)
-                {
-                    _session.Save(tempLayout);
-                    _session.Flush();
-                }
-            }
-            else
-            {
-                tempLayout.SettingsList = customColumnList;
-                _userLayoutList.Add(tempLayout);
-                SaveUserLayoutList();
-            }
-
-            return tempLayout;
-        }
-
-
-        private void UpdateLayout(LayoutProperty layoutProperty, bool saveColumns, bool isDatabase, IList<ColumnProperty> customColumnList)
-        {
-            //var customColumnList = new List<ColumnProperty>();
-            //if (saveColumns)
-            //{
-            //    customColumnList.AddRange(proteinTableForm.GetCurrentProperties());
-            //    customColumnList.AddRange(peptideTableForm.GetCurrentProperties());
-            //    customColumnList.AddRange(spectrumTableForm.GetCurrentProperties());
-            //}
-
-            layoutProperty.PaneLocations = GetPanelLocations();
-            layoutProperty.HasCustomColumnSettings = saveColumns;
-            foreach (var item in customColumnList)
-                item.Layout = layoutProperty;
-
-            if (isDatabase)
-            {
-                lock (_session)
-                {
-                    foreach (var item in layoutProperty.SettingsList.Where(o => !customColumnList.Contains(o)))
-                        _session.Delete(item);
-                    layoutProperty.SettingsList = customColumnList;
-                    _session.Save(layoutProperty);
-                    _session.Flush();
-                }
-            }
-            else
-            {
-                layoutProperty.SettingsList = customColumnList;
-                SaveUserLayoutList();
-            }
-        }
-
-        private string GetPanelLocations()
-        {
-            var tempFilepath = Path.GetTempFileName();
-            dockPanel.SaveAsXml(tempFilepath);
-            var locationXml = File.ReadAllText(tempFilepath);
-            File.Delete(tempFilepath);
-            return locationXml;
-        }
-
-        internal List<ToolStripItem> LoadLayoutMenu()
+        public List<ToolStripItem> LoadLayoutMenu ()
         {
             var noDatabase = _session == null;
             var currentMenuLevel = new List<ToolStripItem>();
@@ -363,8 +148,8 @@ namespace IDPicker
             foreach (var item in _userLayoutList)
             {
                 var tempItem = item;
-                var newOption = new ToolStripMenuItem { Text = item.Name };
-                newOption.Click += (s, e) => mainForm.LoadLayout(tempItem);
+                var newOption = new ToolStripMenuItem { Text = item.Name + (CurrentLayout.Name == item.Name ? " (current)" : "") };
+                newOption.Click += (s, e) => CurrentLayout = tempItem;
                 currentMenuLevel.Add(newOption);
             }
 
@@ -381,8 +166,8 @@ namespace IDPicker
                 foreach (var item in databaseLayouts)
                 {
                     var tempItem = item;
-                    var newOption = new ToolStripMenuItem { Text = item.Name };
-                    newOption.Click += (s, e) => mainForm.LoadLayout(tempItem);
+                    var newOption = new ToolStripMenuItem { Text = item.Name + (CurrentLayout.Name == item.Name ? " (current)" : "") };
+                    newOption.Click += (s, e) => CurrentLayout = tempItem;
                     currentMenuLevel.Add(newOption);
                 }
 
@@ -398,19 +183,19 @@ namespace IDPicker
             foreach (var item in _userLayoutList)
             {
                 var tempItem = item;
-                var newOption = new ToolStripMenuItem { Text = item.Name };
+                var newOption = new ToolStripMenuItem { Text = item.Name + (CurrentLayout.Name == item.Name ? " (current)" : "") };
                 newOption.Click += (s, e) =>
                 {
                     var saveColumns = false;
-                    var customColumnList = new List<ColumnProperty>();
+                    var formProperties = new Dictionary<string, FormProperty>();
                     if (MessageBox.Show("Save column settings as well?", "Save", MessageBoxButtons.YesNo) == DialogResult.Yes)
                     {
                         saveColumns = true;
-                        customColumnList.AddRange(proteinTableForm.GetCurrentProperties(false));
-                        customColumnList.AddRange(peptideTableForm.GetCurrentProperties(false));
-                        customColumnList.AddRange(spectrumTableForm.GetCurrentProperties());
+                        formProperties["ProteinTableForm"] = proteinTableForm.GetCurrentProperties(false);
+                        formProperties["PeptideTableForm"] = peptideTableForm.GetCurrentProperties(false);
+                        formProperties["SpectrumTableForm"] = spectrumTableForm.GetCurrentProperties();
                     }
-                    UpdateLayout(tempItem, saveColumns, false, customColumnList);
+                    updateLayout(tempItem, saveColumns, false, formProperties);
                 };
                 currentMenuLevel.Add(newOption);
             }
@@ -424,14 +209,14 @@ namespace IDPicker
                         var textInput = new TextInputPrompt("Layout Name", true, string.Empty);
                         if (textInput.ShowDialog() == DialogResult.OK)
                         {
-                            var customColumnList = new List<ColumnProperty>();
+                            var formProperties = new Dictionary<string, FormProperty>();
                             if (textInput.GetCheckState())
                             {
-                                customColumnList.AddRange(proteinTableForm.GetCurrentProperties(false));
-                                customColumnList.AddRange(peptideTableForm.GetCurrentProperties(false));
-                                customColumnList.AddRange(spectrumTableForm.GetCurrentProperties());
+                                formProperties["ProteinTableForm"] = proteinTableForm.GetCurrentProperties(false);
+                                formProperties["PeptideTableForm"] = peptideTableForm.GetCurrentProperties(false);
+                                formProperties["SpectrumTableForm"] = spectrumTableForm.GetCurrentProperties();
                             }
-                            SaveNewLayout(textInput.GetText(), textInput.GetCheckState(), false, customColumnList);
+                            saveNewLayout(textInput.GetText(), textInput.GetCheckState(), false, formProperties);
                         }
                     };
                 currentMenuLevel.RemoveAt(0);
@@ -452,20 +237,20 @@ namespace IDPicker
 
                 foreach (var item in databaseLayouts)
                 {
-                    var newOption = new ToolStripMenuItem { Text = item.Name };
+                    var newOption = new ToolStripMenuItem { Text = item.Name + (CurrentLayout.Name == item.Name ? " (current)" : "") };
                     LayoutProperty tempItem = item;
                     newOption.Click += (s, e) =>
                     {
                         var saveColumns = false;
-                        var customColumnList = new List<ColumnProperty>();
+                        var formProperties = new Dictionary<string, FormProperty>();
                         if (MessageBox.Show("Save column settings as well?", "Save", MessageBoxButtons.YesNo) == DialogResult.Yes)
                         {
                             saveColumns = true;
-                            customColumnList.AddRange(proteinTableForm.GetCurrentProperties(true));
-                            customColumnList.AddRange(peptideTableForm.GetCurrentProperties(true));
-                            customColumnList.AddRange(spectrumTableForm.GetCurrentProperties());
+                            formProperties["ProteinTableForm"] = proteinTableForm.GetCurrentProperties(false);
+                            formProperties["PeptideTableForm"] = peptideTableForm.GetCurrentProperties(false);
+                            formProperties["SpectrumTableForm"] = spectrumTableForm.GetCurrentProperties();
                         }
-                        UpdateLayout(tempItem, saveColumns, true, customColumnList);
+                        updateLayout(tempItem, saveColumns, true, formProperties);
                     };
                     currentDatabaseMenuLevel.Add(newOption);
                 }
@@ -479,14 +264,14 @@ namespace IDPicker
                             var textInput = new TextInputPrompt("Layout Name", true, string.Empty);
                             if (textInput.ShowDialog() == DialogResult.OK)
                             {
-                                var customColumnList = new List<ColumnProperty>();
+                                var formProperties = new Dictionary<string, FormProperty>();
                                 if (textInput.GetCheckState())
                                 {
-                                    customColumnList.AddRange(proteinTableForm.GetCurrentProperties(true));
-                                    customColumnList.AddRange(peptideTableForm.GetCurrentProperties(true));
-                                    customColumnList.AddRange(spectrumTableForm.GetCurrentProperties());
+                                    formProperties["ProteinTableForm"] = proteinTableForm.GetCurrentProperties(false);
+                                    formProperties["PeptideTableForm"] = peptideTableForm.GetCurrentProperties(false);
+                                    formProperties["SpectrumTableForm"] = spectrumTableForm.GetCurrentProperties();
                                 }
-                                SaveNewLayout(textInput.GetText(), textInput.GetCheckState(), true, customColumnList);
+                                saveNewLayout(textInput.GetText(), textInput.GetCheckState(), true, formProperties);
                             }
                         };
                     currentDatabaseMenuLevel.Insert(0, newLayout);
@@ -565,74 +350,143 @@ namespace IDPicker
             return menuList;
         }
 
-        private static void SaveUserColumnSettings(IEnumerable<ColumnProperty> columnList, int layoutIndex, string targetForm)
-        {
-            //User properties will be in format:
-            //"(int)LayoutIndex
-            //(string)Column1Name|(string)Type|(int)DecimalPlaces|(int)CellColorCode|(bool)Visible|(bool)Locked
-            //(string)Column2Name|(string)Type|(int)DecimalPlaces|(int)CellColorCode|(bool)Visible|(bool)Locked
-            //(string)Column3Name|(string)Type|(int)DecimalPlaces|(int)CellColorCode|(bool)Visible|(bool)Locked
-            //(string)Column4Name|(string)Type|(int)DecimalPlaces|(int)CellColorCode|(bool)Visible|(bool)Locked
-            //(int)BackColorCode
-            //(int)TextColorCode"
-
-            var setting = new StringBuilder(layoutIndex + Environment.NewLine);
-            foreach (var item in columnList)
-            {
-                if (item.Name == "BackColor" || item.Name == "TextColor")
-                    continue;
-                setting.AppendFormat("{0}|", item.Name);
-                setting.AppendFormat("{0}|", item.Type);
-                setting.AppendFormat("{0}|", item.DecimalPlaces);
-                setting.AppendFormat("{0}|", item.ColorCode);
-                setting.AppendFormat("{0}|", item.Visible);
-                if (item.Locked == null)
-                    setting.AppendFormat("{0}{1}", "null", Environment.NewLine);
-                else
-                    setting.AppendFormat("{0}{1}", item.Locked, Environment.NewLine);
-            }
-
-            int backColor = columnList.Where(x => x.Name == "BackColor").Select(o => o.ColorCode).SingleOrDefault();
-            int textColor = columnList.Where(x => x.Name == "TextColor").Select(o => o.ColorCode).SingleOrDefault();
-
-            setting.AppendFormat("{0}{1}", backColor, Environment.NewLine);
-            setting.AppendFormat("{0}{1}", textColor, Environment.NewLine);
-
-            switch (targetForm)
-            {
-                case "ProteinTableForm":
-                    Properties.Settings.Default.ProteinTableFormSettings.Add(setting.ToString());
-                    Properties.Settings.Default.Save();
-                    break;
-                case "PeptideTableForm":
-                    Properties.Settings.Default.PeptideTableFormSettings.Add(setting.ToString());
-                    Properties.Settings.Default.Save();
-                    break;
-                case "SpectrumTableForm":
-                    Properties.Settings.Default.SpectrumTableFormSettings.Add(setting.ToString());
-                    Properties.Settings.Default.Save();
-                    break;
-            }
-        }
-
-        internal LayoutProperty GetCurrentDefault()
+        public LayoutProperty GetCurrentDefault ()
         {
             if (_userLayoutList.Count < 2 || _userLayoutList[1].Name != "User Default")
                 return null;
             if (_session == null)
-                return _userLayoutList[1];
-            
-            var databaseDefault = _session.QueryOver<LayoutProperty>().Where(x => x.Name == "Database Default").SingleOrDefault();
-            if (databaseDefault == null)
             {
-                var customColumnList = new List<ColumnProperty>();
-                customColumnList.AddRange(proteinTableForm.GetCurrentProperties(true));
-                customColumnList.AddRange(peptideTableForm.GetCurrentProperties(true));
-                customColumnList.AddRange(spectrumTableForm.GetCurrentProperties());
-                databaseDefault = SaveNewLayout("Database Default", true, true, customColumnList);
+                var userDefault = _userLayoutList[1];
+                if (!userDefault.FormProperties.Any())
+                {
+                    var formProperties = new Dictionary<string, FormProperty>();
+                    formProperties["ProteinTableForm"] = proteinTableForm.GetCurrentProperties(false);
+                    formProperties["PeptideTableForm"] = peptideTableForm.GetCurrentProperties(false);
+                    formProperties["SpectrumTableForm"] = spectrumTableForm.GetCurrentProperties();
+                    updateLayout(userDefault, true, false, formProperties);
+                }
+
+                return userDefault;
+            }
+            else
+            {
+                var databaseDefault = _session.Query<LayoutProperty>().SingleOrDefault(x => x.Name == "Database Default");
+                if (databaseDefault == null || !databaseDefault.FormProperties.Any())
+                {
+                    var formProperties = new Dictionary<string, FormProperty>();
+                    formProperties["ProteinTableForm"] = proteinTableForm.GetCurrentProperties(false);
+                    formProperties["PeptideTableForm"] = peptideTableForm.GetCurrentProperties(false);
+                    formProperties["SpectrumTableForm"] = spectrumTableForm.GetCurrentProperties();
+                    databaseDefault = saveNewLayout("Database Default", true, true, formProperties);
+                }
+
+                return databaseDefault;
+            }
+        }
+
+        /// <summary>
+        /// Populates local list of user layouts with internally stored values. 
+        /// Default values are created if no values are stored.
+        /// </summary>
+        private void refreshUserLayoutList()
+        {
+            var retrievedList = new List<string>(Util.StringCollectionToStringArray(Properties.Settings.Default.UserLayouts));
+            _userLayoutList = new List<LayoutProperty>();
+
+            //stick with an empty list if not in the correct format
+            if (retrievedList.Count == 0 || !retrievedList[0].StartsWith("System Default"))
+                return;
+
+            for (var x = 0; x < retrievedList.Count; x++)
+            {
+                var items = retrievedList[x].Split('|');
+
+                var newLayout = new LayoutProperty
+                {
+                    Name = items[0],
+                    PaneLocations = items[1]
+                };
+
+                if (!String.IsNullOrEmpty(items[2]))
+                {
+                    var userType = new FormPropertiesUserType();
+                    newLayout.FormProperties = userType.Assemble(items[2], null) as Dictionary<string, FormProperty>;
+                    newLayout.HasCustomColumnSettings = true;
+                }
+
+                _userLayoutList.Add(newLayout);
+            }
+        }
+
+        private void tryResetUserLayoutSettings()
+        {
+            if (_userLayoutList.Count < 2 || _userLayoutList[1].Name != "User Default")
+            {
+                _userLayoutList = new List<LayoutProperty>();
+                var formProperties = new Dictionary<string, FormProperty>();
+                formProperties["ProteinTableForm"] = proteinTableForm.GetCurrentProperties(false);
+                formProperties["PeptideTableForm"] = peptideTableForm.GetCurrentProperties(false);
+                formProperties["SpectrumTableForm"] = spectrumTableForm.GetCurrentProperties();
+
+                saveNewLayout("System Default", true, false, formProperties);
+                saveNewLayout("User Default", true, false, formProperties);
+                refreshUserLayoutList();
+            }
+        }
+
+        private LayoutProperty saveNewLayout(string layoutName, bool saveColumns, bool isDatabase, IDictionary<string, FormProperty> formProperties)
+        {
+            var tempLayout = new LayoutProperty
+            {
+                Name = layoutName,
+                PaneLocations = getPaneLocationXML(),
+                HasCustomColumnSettings = saveColumns,
+            };
+
+            tempLayout.FormProperties = formProperties;
+
+            if (isDatabase)
+            {
+                lock (_session)
+                {
+                    _session.Save(tempLayout);
+                    _session.Flush();
+                }
+            }
+            else
+            {
+                _userLayoutList.Add(tempLayout);
+                SaveUserLayoutList();
             }
 
-            return databaseDefault;
+            return tempLayout;
+        }
+
+        private void updateLayout(LayoutProperty layoutProperty, bool saveColumns, bool isDatabase, IDictionary<string, FormProperty> formProperties)
+        {
+            layoutProperty.PaneLocations = getPaneLocationXML();
+            layoutProperty.HasCustomColumnSettings = saveColumns;
+            layoutProperty.FormProperties = formProperties;
+
+            if (isDatabase)
+            {
+                lock (_session)
+                {
+                    _session.Save(layoutProperty);
+                    _session.Flush();
+                }
+            }
+            else
+                SaveUserLayoutList();
+        }
+
+        private string getPaneLocationXML()
+        {
+            var tempFilepath = Path.GetTempFileName();
+            dockPanel.SaveAsXml(tempFilepath);
+            var locationXml = File.ReadAllText(tempFilepath);
+            File.Delete(tempFilepath);
+            return locationXml;
         }
     }
 }

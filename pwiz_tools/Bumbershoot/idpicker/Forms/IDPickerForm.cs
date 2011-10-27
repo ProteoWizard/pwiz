@@ -552,7 +552,7 @@ namespace IDPicker
             //return;
 
             //Get user layout profiles
-            LoadLayout(_layoutManager.GetCurrentDefault());
+            _layoutManager.CurrentLayout = _layoutManager.GetCurrentDefault();
 
             dockPanel.Visible = false;
 
@@ -906,7 +906,7 @@ namespace IDPicker
 
                     //set or save default layout
                     dockPanel.Visible = true;
-                    LoadLayout(_layoutManager.GetCurrentDefault());
+                    _layoutManager.CurrentLayout = _layoutManager.GetCurrentDefault();
                     var usedGroups = SetStructure(rootNode, new List<SpectrumSourceGroup>());
                     if (usedGroups != null && usedGroups.Any())
                     {
@@ -1026,14 +1026,9 @@ namespace IDPicker
                 peptideTableForm != null &&
                 spectrumTableForm != null)
             {
-                var columnList = userLayout.SettingsList.Where(o => o.Scope == "ProteinTableForm");
-                proteinTableForm.LoadLayout(columnList.ToList());
-
-                columnList = userLayout.SettingsList.Where(o => o.Scope == "PeptideTableForm");
-                peptideTableForm.LoadLayout(columnList.ToList());
-
-                columnList = userLayout.SettingsList.Where(o => o.Scope == "SpectrumTableForm");
-                spectrumTableForm.LoadLayout(columnList.ToList());
+                proteinTableForm.LoadLayout(userLayout.FormProperties["ProteinTableForm"]);
+                peptideTableForm.LoadLayout(userLayout.FormProperties["PeptideTableForm"]);
+                spectrumTableForm.LoadLayout(userLayout.FormProperties["SpectrumTableForm"]);
             }
         }
 
@@ -1108,25 +1103,25 @@ namespace IDPicker
                 OpenFiles(database, null);
         }
 
-        private void IDPickerForm_FormClosing(object sender, FormClosingEventArgs e)
+        private void IDPickerForm_FormClosing (object sender, FormClosingEventArgs e)
         {
             if (_layoutManager != null)
             {
-            _layoutManager.SaveMainFormSettings();
-            _layoutManager.SaveUserLayoutList();
-        }
+                _layoutManager.SaveMainFormSettings();
+                _layoutManager.SaveUserLayoutList();
+            }
         }
 
 
-        private void layoutButton_Click(object sender, EventArgs e)
+        private void layoutButton_Click (object sender, EventArgs e)
         {
             layoutToolStripMenuRoot.DropDownItems.Clear();
             if (dockPanel.Visible)
             {
-            var items = _layoutManager.LoadLayoutMenu();
-            foreach (var item in items)
+                var items = _layoutManager.LoadLayoutMenu();
+                foreach (var item in items)
                     layoutToolStripMenuRoot.DropDownItems.Add(item);
-        }
+            }
         }
 
         private void dataFilterButton_Click (object sender, EventArgs e)
@@ -1948,16 +1943,5 @@ namespace IDPicker
     public class SourceNotFoundEventArgs : EventArgs
     {
         public string SourcePath { get; set; }
-    }
-
-    public static class StopwatchExtensions
-    {
-        public static TimeSpan Restart (this System.Diagnostics.Stopwatch stopwatch)
-        {
-            TimeSpan timeSpan = stopwatch.Elapsed;
-            stopwatch.Reset();
-            stopwatch.Start();
-            return timeSpan;
-        }
     }
 }

@@ -71,6 +71,9 @@ namespace IDPicker.Forms
 
         private string trimStackTrace (string stackTrace)
         {
+            if (String.IsNullOrEmpty(stackTrace))
+                return "<no stack trace>";
+
             // remove directory path and System scope
             return Regex.Replace(stackTrace, @".\:\\(?:[^\\]+\\)*?([^\\]+\.cs\:)", "$1 ")
                         .Replace("System.", "");

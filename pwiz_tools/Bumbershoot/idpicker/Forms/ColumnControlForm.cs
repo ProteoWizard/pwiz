@@ -30,145 +30,163 @@ using System.Text;
 using System.Windows.Forms;
 using BrightIdeasSoftware;
 using IDPicker.DataModel;
+using IDPicker.Controls;
 
 namespace IDPicker.Forms
 {
     public partial class ColumnControlForm : Form
     {
-        public Dictionary<OLVColumn, ColumnProperty> SavedSettings;
-        ColorDialog ColorBox;
-        readonly Dictionary<string, bool> _visibilityValues;
+        public IDictionary<string, ColumnProperty> ColumnProperties { get; set; }
 
-        public ColumnControlForm(Dictionary<OLVColumn, ColumnProperty> columnList, IList<Color> windowColors)
+        public new Color? DefaultForeColor
+        {
+            get { Color color = defaultColorPreviewBox.ForeColor; return color.ToArgb() == SystemColors.WindowText.ToArgb() ? default(Color?) : color; }
+            set { defaultColorPreviewBox.ForeColor = value ?? SystemColors.WindowText; }
+        }
+
+        public new Color? DefaultBackColor
+        {
+            get { Color color = defaultColorPreviewBox.BackColor; return color.ToArgb() == SystemColors.Window.ToArgb() ? default(Color?) : color; }
+            set { defaultColorPreviewBox.BackColor = value ?? SystemColors.Window; }
+        }
+
+        public ColumnControlForm()
         {
             InitializeComponent();
-            SavedSettings = columnList;
-            ColorBox = new ColorDialog();
 
-            _visibilityValues = new Dictionary<string, bool>
+            _visibilityValues = new Dictionary<string, bool?>
                                     {
-                                        {"Yes", true},
-                                        {"No", false},
+                                        {"Auto", null},
                                         {"Always", true},
                                         {"Never", false}
                                     };
-
-            //check if values are of type object[4] or object[5]
-            //For some reason this.ParentForm, this.Parent, and this.Owner all return null at this point
-            foreach (var kvp in columnList)
-            {
-                if (kvp.Value.Locked == null)
-                {
-                    ((DataGridViewComboBoxColumn) columnOptionsDGV.Columns[4]).Items.Remove("Always");
-                    ((DataGridViewComboBoxColumn) columnOptionsDGV.Columns[4]).Items.Remove("Never");
-                }
-                break;
-            }
-           
-            foreach (var column in columnList)
-            {
-                //Name column, type column (hidden form user), decimal places or "Auto" if automatic (null if not a float), null for color, Current visibility
-                columnOptionsDGV.Rows.Add(new object[] { column.Key.Text, column.Value.Type,
-                    column.Value.DecimalPlaces >= 0 ? column.Value.DecimalPlaces.ToString() : column.Value.Type == "Float" ? "Auto" : null,
-                    null,(column.Value.Locked != null && column.Value.Locked == true) ? (column.Value.Visible ? "Always": "Never") : (column.Value.Visible ? "Yes": "No")});
-
-                columnOptionsDGV[0, columnOptionsDGV.RowCount - 1].Tag = column.Key;
-                if (columnOptionsDGV[2, columnOptionsDGV.RowCount - 1].Value == null)
-                    columnOptionsDGV[2, columnOptionsDGV.RowCount - 1].Style.BackColor = Color.LightGray;
-                columnOptionsDGV[3, columnOptionsDGV.RowCount - 1].Style.BackColor = Color.FromArgb(column.Value.ColorCode);
-            }
-            
-
-            WindowBackColorBox.BackColor = windowColors[0];
-            PreviewBox.BackColor = windowColors[0];
-            WindowTextColorBox.BackColor = windowColors[1];
-            PreviewBox.ForeColor = windowColors[1];
-            columnOptionsDGV.Columns[3].DefaultCellStyle.ForeColor = windowColors[1];
         }
+
+        protected override void OnLoad (EventArgs e)
+        {
+            if (ColumnProperties.IsNullOrEmpty())
+                throw new ArgumentException("ColumnProperties must be set and non-empty");
+
+            foreach (var column in ColumnProperties)
+            {
+                // column name, precision, preview color text, visibility, data type, forecolor, backcolor
+                int rowIndex = columnOptionsDGV.Rows.Add(new object[]
+                {
+                    column.Key,
+                    column.Value.Precision.HasValue ? column.Value.Precision.Value.ToString() : column.Value.Type == typeof(float) ? "Auto" : null,
+                    "Preview Text",
+                    _visibilityValues.SingleOrDefault(o => o.Value == column.Value.Visible).Key,
+                    column.Value.Type,
+                    column.Value.ForeColor,
+                    column.Value.BackColor
+                });
+            }
+
+            colorColumn.DefaultCellStyle.ForeColor = DefaultForeColor ?? SystemColors.WindowText;
+            colorColumn.DefaultCellStyle.BackColor = DefaultBackColor ?? SystemColors.Window;
+
+            base.OnLoad(e);
+        }
+
+        readonly Dictionary<string, bool?> _visibilityValues;
 
         private void ok_Button_Click(object sender, EventArgs e)
         {
             foreach (DataGridViewRow row in columnOptionsDGV.Rows)
             {
-                SavedSettings[(OLVColumn) row.Cells[0].Tag].DecimalPlaces = (row.Cells[2].Value == null ||
-                                                                             row.Cells[2].Value.ToString() == "Auto")
-                                                                                ? -1
-                                                                                : int.Parse(row.Cells[2].Value.ToString());
-                SavedSettings[(OLVColumn) row.Cells[0].Tag].ColorCode = row.Cells[3].Style.BackColor.ToArgb();
-                SavedSettings[(OLVColumn) row.Cells[0].Tag].Visible = _visibilityValues[row.Cells[4].Value.ToString()];
-                if (((DataGridViewComboBoxColumn) columnOptionsDGV.Columns[4]).Items.Count > 2)
-                    SavedSettings[(OLVColumn) row.Cells[0].Tag].Locked = (row.Cells[4].Value.ToString() == "Always" ||
-                                                                          row.Cells[4].Value.ToString() == "Never");
+                var columnProperty = ColumnProperties[(string) row.Cells[0].Value];
+                if (columnProperty.Type == typeof(float))
+                    columnProperty.Precision = row.Cells[decimalColumn.Index].Value.ToString() == "Auto"
+                                                    ? default(int?)
+                                                    : Int32.Parse(row.Cells[decimalColumn.Index].Value.ToString());
+                columnProperty.ForeColor = (Color?) row.Cells[foreColorColumn.Index].Value;
+                columnProperty.BackColor = (Color?) row.Cells[backColorColumn.Index].Value;
+                columnProperty.Visible = _visibilityValues[row.Cells[visibleColumn.Index].Value.ToString()];
             }
         }
 
         private void columnOptionsDGV_CellBeginEdit(object sender, DataGridViewCellCancelEventArgs e)
         {
-            if (e.ColumnIndex == 2 && (string)columnOptionsDGV[1, e.RowIndex].Value != "Float")
+            if (e.ColumnIndex == decimalColumn.Index && columnOptionsDGV[typeColumn.Index, e.RowIndex].Value != typeof(float))
                 e.Cancel = true;
-            else if (e.ColumnIndex == 3 && (string)columnOptionsDGV[1, e.RowIndex].Value == "Key")
+            else if (e.ColumnIndex == visibleColumn.Index && e.RowIndex == 0)
                 e.Cancel = true;
-            else if ((e.ColumnIndex == 4) && (string)columnOptionsDGV[1, e.RowIndex].Value == "Key")
-                e.Cancel = true;
-            
         }
 
-        private void WindowBackColorBox_Click(object sender, EventArgs e)
+        private void columnOptionsDGV_CellFormatting (object sender, DataGridViewCellFormattingEventArgs e)
         {
-            Color oldColor = WindowBackColorBox.BackColor;
-
-            ColorBox.AllowFullOpen = true;
-            ColorBox.AnyColor = true;
-            ColorBox.FullOpen = true;
-            ColorBox.Color = oldColor;
-            if (ColorBox.ShowDialog() == DialogResult.OK)
+            if (e.ColumnIndex == decimalColumn.Index && columnOptionsDGV[typeColumn.Index, e.RowIndex].Value != typeof(float))
+                e.CellStyle.BackColor = SystemColors.ControlDark;
+            else if (e.ColumnIndex == visibleColumn.Index && e.RowIndex == 0)
+                e.CellStyle.BackColor = SystemColors.ControlDark;
+            else if (e.ColumnIndex == colorColumn.Index)
             {
-                WindowBackColorBox.BackColor = ColorBox.Color;
-                PreviewBox.BackColor = ColorBox.Color;
-
-                foreach (DataGridViewRow row in columnOptionsDGV.Rows)
-                {
-                    if (row.Cells[3].Style.BackColor == oldColor)
-                        row.Cells[3].Style.BackColor = ColorBox.Color;
-                }
-            }
-        }
-
-        private void Unselectable(object sender, EventArgs e)
-        {
-            columnOptionsDGV.Select();
-        }
-
-        private void WindowTextColorBox_Click(object sender, EventArgs e)
-        {
-            ColorBox.AllowFullOpen = true;
-            ColorBox.AnyColor = true;
-            ColorBox.FullOpen = true;
-            ColorBox.Color = WindowTextColorBox.BackColor;
-            if (ColorBox.ShowDialog() == DialogResult.OK)
-            {
-                WindowTextColorBox.BackColor = ColorBox.Color;
-                PreviewBox.ForeColor = ColorBox.Color;
-                columnOptionsDGV.Columns[3].DefaultCellStyle.ForeColor = ColorBox.Color;
+                e.CellStyle.ForeColor = (Color?) columnOptionsDGV[foreColorColumn.Index, e.RowIndex].Value ?? DefaultForeColor ?? SystemColors.WindowText;
+                e.CellStyle.BackColor = (Color?) columnOptionsDGV[backColorColumn.Index, e.RowIndex].Value ?? DefaultBackColor ?? SystemColors.Window;
             }
         }
 
         private void columnOptionsDGV_CellClick(object sender, DataGridViewCellEventArgs e)
         {
-            if (e.ColumnIndex == 3)
+            if (e.ColumnIndex != colorColumn.Index)
+                return;
+
+            var foreColor = (Color?) columnOptionsDGV[foreColorColumn.Index, e.RowIndex].Value;
+            var backColor = (Color?) columnOptionsDGV[backColorColumn.Index, e.RowIndex].Value;
+            using (var colorControl = new ForeBackColorControl() {ForeColor = foreColor, BackColor = backColor})
             {
-                ColorBox.AllowFullOpen = true;
-                ColorBox.AnyColor = true;
-                ColorBox.FullOpen = true;
-                ColorBox.Color = columnOptionsDGV[e.ColumnIndex, e.RowIndex].Style.BackColor;
-                if (ColorBox.ShowDialog() == DialogResult.OK)
-                    columnOptionsDGV[e.ColumnIndex,e.RowIndex].Style.BackColor = ColorBox.Color;
+                string caption = "Set colors for " + (string) columnOptionsDGV[nameColumn.Index, e.RowIndex].Value;
+                if (UserDialog.Show(this, caption, colorControl, FormBorderStyle.FixedToolWindow) == DialogResult.OK)
+                {
+                    columnOptionsDGV[foreColorColumn.Index, e.RowIndex].Value = colorControl.ForeColor;
+                    columnOptionsDGV[backColorColumn.Index, e.RowIndex].Value = colorControl.BackColor;
+                    columnOptionsDGV.Refresh();
+                }
             }
         }
 
-        private void columnOptionsDGV_CellEnter(object sender, DataGridViewCellEventArgs e)
+        private void columnOptionsDGV_CellEnter (object sender, DataGridViewCellEventArgs e)
         {
             columnOptionsDGV[e.ColumnIndex, e.RowIndex].Selected = false;
+        }
+
+        private void columnOptionsDGV_CellMouseEnter (object sender, DataGridViewCellEventArgs e)
+        {
+            columnOptionsDGV.Cursor = e.RowIndex >= 0 && e.ColumnIndex == colorColumn.Index ? Cursors.Hand : Cursors.Default;
+        }
+
+        private void columnOptionsDGV_CellMouseLeave (object sender, DataGridViewCellEventArgs e)
+        {
+            columnOptionsDGV.Cursor = e.RowIndex >= 0 && e.ColumnIndex == colorColumn.Index ? Cursors.Hand : Cursors.Default;
+        }
+
+        private void columnOptionsDGV_ResetCursor (object sender, EventArgs e)
+        {
+            columnOptionsDGV.Cursor = Cursors.Default;
+        }
+
+        private void defaultColorPreviewBox_Click (object sender, EventArgs e)
+        {
+            using (var colorControl = new ForeBackColorControl() { ForeColor = DefaultForeColor, BackColor = DefaultBackColor })
+            {
+                if (UserDialog.Show(this, "Set default colors", colorControl, FormBorderStyle.FixedToolWindow) == DialogResult.OK)
+                {
+                    DefaultForeColor = colorControl.ForeColor;
+                    DefaultBackColor = colorControl.BackColor;
+                    columnOptionsDGV.Refresh();
+                }
+            }
+        }
+
+        private void columnOptionsDGV_DataError (object sender, DataGridViewDataErrorEventArgs e)
+        {
+            Program.HandleException(e.Exception);
+            e.ThrowException = false;
+        }
+
+        private void defaultColorPreviewBox_Enter (object sender, EventArgs e)
+        {
+            columnOptionsDGV.Select();
         }
     }
 }

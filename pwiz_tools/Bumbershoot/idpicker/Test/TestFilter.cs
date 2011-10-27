@@ -1579,7 +1579,7 @@ namespace Test
             // test with default DistinctMatchFormat (charge state and modifications distinct)
             {
                 var peptideQuery = session.CreateQuery(IDPicker.Forms.PeptideTableForm.AggregateRow.Selection + ", psm.Peptide, psm, psm.DistinctMatchKey " +
-                                                       dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
+                                                       dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch, DataFilter.PeptideSpectrumMatchToProtein) +
                                                        "GROUP BY psm.Peptide");
 
                 var queryRows = peptideQuery.List<object[]>();
@@ -1642,7 +1642,7 @@ namespace Test
                 dataFilter.ApplyBasicFilters(session);
 
                 var peptideQuery = session.CreateQuery(IDPicker.Forms.PeptideTableForm.AggregateRow.Selection + ", psm.Peptide, psm, psm.DistinctMatchKey " +
-                                                       dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
+                                                       dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch, DataFilter.PeptideSpectrumMatchToProtein) +
                                                        "GROUP BY psm.Peptide");
 
                 var queryRows = peptideQuery.List<object[]>();
@@ -1706,7 +1706,7 @@ namespace Test
                 dataFilter.ApplyBasicFilters(session);
 
                 var peptideQuery = session.CreateQuery(IDPicker.Forms.PeptideTableForm.AggregateRow.Selection + ", psm.Peptide, psm, psm.DistinctMatchKey " +
-                                                       dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch) +
+                                                       dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch, DataFilter.PeptideSpectrumMatchToProtein) +
                                                        "GROUP BY psm.Peptide");
 
                 var queryRows = peptideQuery.List<object[]>();

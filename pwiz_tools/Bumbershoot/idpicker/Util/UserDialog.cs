@@ -42,8 +42,7 @@ namespace IDPicker
         {
             InitializeComponent();
 
-            Width = content.Width;
-            Height = content.Height + buttonPanel.Height;
+            ClientSize = new System.Drawing.Size(content.Width, content.Height + buttonPanel.Height);
 
             contentPanel.Controls.Add(content);
             content.Dock = DockStyle.Fill;
@@ -71,6 +70,11 @@ namespace IDPicker
         public static DialogResult Show (IWin32Window owner, string caption, Control content)
         {
             return new UserDialog(owner, content) { Text = caption }.ShowDialog(owner);
+        }
+
+        public static DialogResult Show (IWin32Window owner, string caption, Control content, FormBorderStyle borderStyle)
+        {
+            return new UserDialog(owner, content) { Text = caption, FormBorderStyle = borderStyle }.ShowDialog(owner);
         }
     }
 }

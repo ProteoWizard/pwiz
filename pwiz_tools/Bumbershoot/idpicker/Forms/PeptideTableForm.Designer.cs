@@ -20,6 +20,8 @@
 // Contributor(s): Surendra Dasari
 //
 
+using System.Windows.Forms;
+
 namespace IDPicker.Forms
 {
     partial class PeptideTableForm
@@ -57,6 +59,10 @@ namespace IDPicker.Forms
             this.filteredSpectraColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.monoisotopicMassColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.molecularWeightColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.peptideGroupColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.proteinsColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.proteinAccessionsColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.proteinGroupsColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.SuspendLayout();
             // 
             // keyColumn
@@ -101,6 +107,34 @@ namespace IDPicker.Forms
             this.molecularWeightColumn.ReadOnly = true;
             this.molecularWeightColumn.Width = 85;
             // 
+            // peptideGroupColumn
+            // 
+            this.peptideGroupColumn.HeaderText = "Peptide Group";
+            this.peptideGroupColumn.Name = "peptideGroupColumn";
+            this.peptideGroupColumn.ReadOnly = true;
+            this.peptideGroupColumn.Width = 85;
+            // 
+            // proteinsColumn
+            // 
+            this.proteinsColumn.HeaderText = "Proteins";
+            this.proteinsColumn.Name = "proteinsColumn";
+            this.proteinsColumn.ReadOnly = true;
+            this.proteinsColumn.Width = 85;
+            // 
+            // proteinAccessionsColumn
+            // 
+            this.proteinAccessionsColumn.HeaderText = "Protein Accessions";
+            this.proteinAccessionsColumn.Name = "proteinAccessionsColumn";
+            this.proteinAccessionsColumn.ReadOnly = true;
+            this.proteinAccessionsColumn.Width = 130;
+            // 
+            // proteinGroupsColumn
+            // 
+            this.proteinGroupsColumn.HeaderText = "Protein Groups";
+            this.proteinGroupsColumn.Name = "proteinGroupsColumn";
+            this.proteinGroupsColumn.ReadOnly = true;
+            this.proteinGroupsColumn.Width = 100;
+            // 
             // treeDataGridView
             // 
             treeDataGridView.Columns.AddRange(keyColumn,
@@ -108,7 +142,11 @@ namespace IDPicker.Forms
                                               distinctMatchesColumn,
                                               filteredSpectraColumn,
                                               monoisotopicMassColumn,
-                                              molecularWeightColumn);
+                                              molecularWeightColumn,
+                                              peptideGroupColumn,
+                                              proteinsColumn,
+                                              proteinAccessionsColumn,
+                                              proteinGroupsColumn);
             // 
             // PeptideTableForm
             // 
@@ -133,5 +171,9 @@ namespace IDPicker.Forms
         private System.Windows.Forms.DataGridViewTextBoxColumn filteredSpectraColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn monoisotopicMassColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn molecularWeightColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn peptideGroupColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn proteinsColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn proteinAccessionsColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn proteinGroupsColumn;
     }
 }
