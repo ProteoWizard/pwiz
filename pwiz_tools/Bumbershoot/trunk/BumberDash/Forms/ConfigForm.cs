@@ -282,7 +282,10 @@ namespace BumberDash.Forms
             MyriOutputFormatBox.Text = "pepXML";
             DTPrecursorMzToleranceUnitsList.Text = "mz";
             DTFragmentMzToleranceUnitsList.Text = "mz";
-            DTDeisotopingModeBox.Text = "Precursor Adj Only";
+
+            //Hack: Value should be "Precursor Adj Only"
+            DTDeisotopingModeBox.Text = "Off";
+
             DTModTypeList.Text = "Static";
             TRPrecursorMzToleranceRuleBox.Text = "mono";
             TRMinTerminiCleavagesBox.Text = "Fully-Specific";

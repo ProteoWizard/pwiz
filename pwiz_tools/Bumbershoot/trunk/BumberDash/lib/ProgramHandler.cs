@@ -97,6 +97,10 @@ namespace BumberDash.lib
                                        ? PropertyListToOverrideString(hi.InitialConfigFile.PropertyList)
                                        : string.Format("-cfg \"{0}\" ", hi.InitialConfigFile.FilePath);
 
+                    //HACK: Remove when deisotoping is usable
+                    if (hi.InitialConfigFile.FilePath == "--Custom--")
+                        configString += string.Format("-{0} {1} ", "DeisotopingMode", "0");
+
                     //continue to set up argument string
                     argumentString.Append(configString);
 
@@ -215,8 +219,10 @@ namespace BumberDash.lib
         private static string PropertyListToOverrideString(IEnumerable<ConfigProperty> propList)
         {
             var tempstring = new StringBuilder();
+            //HACK: Remove constriant when deisotoping is usable
             foreach (var item in propList)
-                tempstring.AppendFormat("-{0} {1} ", item.Name, item.Value);
+                if (item.Name != "DeisotopingMode")
+                    tempstring.AppendFormat("-{0} {1} ", item.Name, item.Value);
 
             return tempstring.ToString();
         }
