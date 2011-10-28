@@ -440,7 +440,7 @@ namespace IDPicker.DataModel
 
             if (OnFilteringProgress(new FilteringProgressEventArgs("Filtering peptides...", ++stepsCompleted, null)))
                 return;
-            session.CreateSQLQuery(@"CREATE TABLE FilteredPeptide (Id INTEGER PRIMARY KEY, MonoisotopicMass NUMERIC, MolecularWeight NUMERIC, DecoySequence TEXT, PeptideGroup INT);
+            session.CreateSQLQuery(@"CREATE TABLE FilteredPeptide (Id INTEGER PRIMARY KEY, MonoisotopicMass NUMERIC, MolecularWeight NUMERIC, PeptideGroup INT, DecoySequence TEXT);
                                      INSERT INTO FilteredPeptide SELECT pep.*
                                      FROM FilteredPeptideSpectrumMatch psm
                                      JOIN Peptide pep ON psm.Peptide = pep.Id
@@ -547,7 +547,7 @@ namespace IDPicker.DataModel
 
                                      -- PeptideGroup will be a continuous sequence starting at 1
                                      CREATE TEMP TABLE TempPeptide AS
-                                     SELECT PeptideId, MonoisotopicMass, MolecularWeight, DecoySequence, pg2.rowid
+                                     SELECT PeptideId, MonoisotopicMass, MolecularWeight, pg2.rowid, DecoySequence
                                      FROM PeptideGroups pg
                                      JOIN ( 
                                            SELECT pg.PeptideGroup

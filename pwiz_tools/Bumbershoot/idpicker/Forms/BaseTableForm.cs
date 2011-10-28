@@ -50,6 +50,7 @@ namespace IDPicker.Forms
             updatePivots(new FormProperty());
 
             treeDataGridView.DefaultCellStyleChanged += treeDataGridView_DefaultCellStyleChanged;
+            treeDataGridView.DataError +=treeDataGridView_DataError;
         }
 
         public TreeDataGridView TreeDataGridView
@@ -535,6 +536,12 @@ namespace IDPicker.Forms
 
                 treeDataGridView.Refresh();
             }
+        }
+
+        protected void treeDataGridView_DataError (object sender, DataGridViewDataErrorEventArgs e)
+        {
+            Program.HandleException(e.Exception);
+            e.ThrowException = false;
         }
     }
 }

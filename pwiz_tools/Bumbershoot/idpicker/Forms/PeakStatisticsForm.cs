@@ -474,7 +474,7 @@ namespace IDPicker.Forms
             }
             catch (Exception ex)
             {
-                Invoke(new MethodInvoker(() => owner.HandleException(this, ex)));
+                Invoke(new MethodInvoker(() => Program.HandleException(ex)));
             }
         }
 

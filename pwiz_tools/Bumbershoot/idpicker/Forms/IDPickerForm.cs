@@ -493,8 +493,11 @@ namespace IDPicker
 
             workerThread.DoWork += applyBasicFilterAsync;
 
-            workerThread.RunWorkerCompleted += delegate
+            workerThread.RunWorkerCompleted += (s, e) =>
             {
+                if (e.Result is Exception)
+                    Program.HandleException(e.Result as Exception);
+
                 basicFilter.FilteringProgress -= progressMonitor.UpdateProgress;
 
                 // start with the basic filter
@@ -518,7 +521,7 @@ namespace IDPicker
             }
             catch (Exception ex)
             {
-                HandleException(Thread.CurrentThread, ex);
+                e.Result = ex;
             }
         }
 
@@ -955,7 +958,7 @@ namespace IDPicker
             }
             catch (Exception ex)
             {
-                HandleException(this, ex);
+                Program.HandleException(ex);
             }
         }
 
@@ -1073,24 +1076,6 @@ namespace IDPicker
         void showQonverterSettingsManager ()
         {
             new QonverterSettingsManagerForm().ShowDialog(this);
-        }
-
-        public void HandleException (object sender, Exception ex)
-        {
-            if (InvokeRequired)
-            {
-                Invoke((MethodInvoker) (() => HandleException(sender, ex)));
-                return;
-            }
-
-            string message = ex.ToString();
-            if (ex.InnerException != null)
-                message += "\n\nAdditional information: " + ex.InnerException.ToString();
-            MessageBox.Show(message,
-                            "Unhandled Exception",
-                            MessageBoxButtons.OK, MessageBoxIcon.Error, MessageBoxDefaultButton.Button1,
-                            0, false);
-            Application.Exit();
         }
 
         public void ReloadSession(NHibernate.ISession ses)

@@ -329,8 +329,7 @@ struct ParserImpl
                       "CREATE TABLE PeptideSpectrumMatchScore (PsmId INTEGER NOT NULL, Value NUMERIC, ScoreNameId INTEGER NOT NULL, primary key (PsmId, ScoreNameId));"
                       "CREATE TABLE PeptideSpectrumMatchScoreName (Id INTEGER PRIMARY KEY, Name TEXT UNIQUE NOT NULL);"
                       "CREATE TABLE IntegerSet (Value INTEGER PRIMARY KEY);"
-                      "CREATE TABLE LayoutProperty (Id INTEGER PRIMARY KEY, Name TEXT, PaneLocations TEXT, HasCustomColumnSettings INT);"
-                      "CREATE TABLE ColumnProperty (Id INTEGER PRIMARY KEY, Scope TEXT, Name TEXT, Type TEXT, DecimalPlaces INT, ColorCode INT, Visible INT, Locked INT, Layout INT);"
+                      "CREATE TABLE LayoutProperty (Id INTEGER PRIMARY KEY, Name TEXT, PaneLocations TEXT, HasCustomColumnSettings INT, FormProperties TEXT);"
                       "CREATE TABLE ProteinCoverage (Id INTEGER PRIMARY KEY, Coverage NUMERIC, CoverageMask BLOB);"
                      );
         transaction.commit();
@@ -489,20 +488,20 @@ struct ParserImpl
                 bool peptideInserted = distinctPeptideIdBySequence.insert(make_pair(sharedSequence, nextPeptideId)).second;
                 if (peptideInserted)
                 {
-                    bool hasTarget = false;
+                    bool hasDecoy = false;
                     vector<PeptideEvidencePtr> decoyPeptideEvidence;
                     BOOST_FOREACH(const PeptideEvidencePtr& pe, sii->peptideEvidencePtr)
                     {
                         bool isDecoy = bal::starts_with(pe->dbSequencePtr->accession, decoyPrefix);
-                        hasTarget = hasTarget || !isDecoy;
+                        hasDecoy |= isDecoy;
                         if (isDecoy)
                             decoyPeptideEvidence.push_back(pe);
                     }
 
                     insertPeptide.binder() << nextPeptideId << pwizPeptide.monoisotopicMass() << pwizPeptide.molecularWeight();
 
-                    // if the peptide comes from any non-decoy protein, leave the DecoySequence null
-                    if (hasTarget)
+                    // if the peptide comes from only target proteins, leave the DecoySequence null
+                    if (!hasDecoy)
                         insertPeptide.binder(4) << sqlite::ignore;
                     else
                         insertPeptide.binder(4) << *sharedSequence;

@@ -59,7 +59,8 @@ namespace IDPicker
             // initialize webClient asynchronously
             initializeWebClient();
 
-            Application.Run(new IDPickerForm(args));
+            MainWindow = new IDPickerForm(args);
+            Application.Run(MainWindow);
         }
 
         public static void HandleException (Exception e)
