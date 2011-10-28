@@ -217,7 +217,7 @@ void testDiscriminate()
     {
         const TestPSM testPSMs[] =
         {
-         //       orig                                          new        /--expected---\
+         //       orig                                          new        |--expected---|
          // id sp rank decoyState          z NET NMC ME scores  rank total qValue fdrScore
             {0, 1, 1,  DecoyState::Target, 1, 1,  0, 0, "",     1,   12,   0,     0},
             {0, 2, 1,  DecoyState::Target, 1, 1,  0, 0, "",     1,   10,   0,     0.125},
@@ -233,7 +233,7 @@ void testDiscriminate()
     {
         const TestPSM testPSMs[] =
         {
-         //       orig                                          new        /--expected---\
+         //       orig                                          new        |--expected---|
          // id sp rank decoyState          z NET NMC ME scores  rank total qValue fdrScore
             {0, 1, 1,  DecoyState::Target, 1, 1,  0, 0, "",     1,   12,   0,     0},
             {0, 1, 1,  DecoyState::Target, 1, 1,  0, 0, "",     1,   12,   0,     0},
@@ -254,7 +254,7 @@ void testDiscriminate()
     {
         const TestPSM testPSMs[] =
         {
-         //       orig                                          new        /--expected---\
+         //       orig                                          new        |--expected---|
          // id sp rank decoyState          z NET NMC ME scores  rank total qValue fdrScore
             {0, 1, 1,  DecoyState::Target, 1, 1,  0, 0, "",     1,   12,   0,     0},
             {0, 2, 1,  DecoyState::Target, 1, 1,  0, 0, "",     1,   10,   0,     0.125},
@@ -272,7 +272,7 @@ void testDiscriminate()
     {
         const TestPSM testPSMs[] =
         {
-         //       orig                                          new        /--expected---\
+         //       orig                                          new        |--expected---|
          // id sp rank decoyState          z NET NMC ME scores  rank total qValue fdrScore
             {0, 1, 1,  DecoyState::Target, 1, 1,  0, 0, "",     1,   12,   0,     0},
             {0, 2, 1,  DecoyState::Target, 1, 1,  0, 0, "",     1,   10,   0,     0.125},
@@ -294,7 +294,7 @@ void testDiscriminate()
     {
         const TestPSM testPSMs[] =
         {
-         //       orig                                          new        /--expected---\
+         //       orig                                          new        |--expected---|
          // id sp rank decoyState          z NET NMC ME scores  rank total qValue fdrScore
             {0, 1, 1,  DecoyState::Target, 1, 1,  0, 0, "",     1,   12,   0,     0},
             {0, 2, 1,  DecoyState::Target, 1, 1,  0, 0, "",     1,   12,   0,     0},
@@ -366,7 +366,7 @@ void testStaticWeightQonverter()
     {
         const TestPSM testPSMs[] =
         {
-         //       orig                                          new  /-----expected------\
+         //       orig                                          new  |-----expected------|
          // id sp rank decoyState          z NET NMC ME scores  rank total qValue fdrScore
             {0, 1, 1,  DecoyState::Target, 1, 2,  0, 0, "6 1",  1,   6,    0,     0},
             {0, 2, 1,  DecoyState::Target, 1, 2,  0, 0, "5 2",  1,   5,    0,     0.2},
@@ -385,7 +385,7 @@ void testStaticWeightQonverter()
     {
         const TestPSM testPSMs[] =
         {
-         //       orig                                          new  /-----expected------\
+         //       orig                                          new  |-----expected------|
          // id sp rank decoyState          z NET NMC ME scores  rank total qValue fdrScore
             {0, 1, 1,  DecoyState::Target, 1, 2,  0, 0, "6 1",  1,   -1,   0,     0},
             {0, 2, 1,  DecoyState::Target, 1, 2,  0, 0, "5 2",  1,   -2,   0,     0.2},
@@ -404,7 +404,7 @@ void testStaticWeightQonverter()
     {
         const TestPSM testPSMs[] =
         {
-         //       orig                                          new  /-----expected------\
+         //       orig                                          new  |-----expected------|
          // id sp rank decoyState          z NET NMC ME scores  rank total qValue fdrScore
             {0, 1, 1,  DecoyState::Target, 1, 2,  0, 0, "6 1",  1,   5,    0,     0},
             {0, 2, 1,  DecoyState::Target, 1, 2,  0, 0, "5 2",  1,   3,    0,     0.2},
@@ -423,7 +423,7 @@ void testStaticWeightQonverter()
     {
         const TestPSM testPSMs[] =
         {
-         //       orig                                          new  /-----expected------\
+         //       orig                                          new  |-----expected------|
          // id sp rank decoyState          z NET NMC ME scores  rank total qValue fdrScore
             {0, 1, 1,  DecoyState::Target, 1, 2,  0, 0, "6 1",  1,   5,    0,     0},
             {0, 1, 2,  DecoyState::Target, 1, 2,  0, 0, "5 1",  2,   4,    2,     2},
@@ -448,7 +448,7 @@ void testStaticWeightQonverter()
     {
         const TestPSM testPSMs[] =
         {
-         //       orig                                          new  /-----expected------\
+         //       orig                                          new  |-----expected------|
          // id sp rank decoyState          z NET NMC ME scores  rank total qValue fdrScore
             {0, 1, 1,  DecoyState::Target, 1, 2,  0, 0, "6 1",  1,   5,    0,     0},
             {0, 1, 2,  DecoyState::Target, 1, 2,  0, 0, "5 1",  2,   4,    2,     2},
@@ -477,7 +477,7 @@ void testStaticWeightQonverter()
     {
         const TestPSM testPSMs[] =
         {
-         //       orig                                          new  /-----expected------\
+         //       orig                                          new  |-----expected------|
          // id sp rank decoyState          z NET NMC ME scores  rank total qValue fdrScore
             {0, 1, 1,  DecoyState::Target, 1, 2,  0, 0, "6 1",  1,   5,    0,     0},
             {0, 1, 1,  DecoyState::Target, 2, 2,  0, 0, "6 1",  1,   5,    0,     0},
@@ -515,7 +515,7 @@ void testStaticWeightQonverter()
     {
         const TestPSM testPSMs[] =
         {
-         //       orig                                          new  /-----expected------\
+         //       orig                                          new  |-----expected------|
          // id sp rank decoyState          z NET NMC ME scores  rank total qValue fdrScore
             {0, 1, 1,  DecoyState::Target, 1, 1,  0, 0, "6 1",  1,   5,    0,     0},
             {0, 1, 1,  DecoyState::Target, 1, 2,  0, 0, "6 1",  1,   5,    0,     0},
@@ -580,7 +580,7 @@ void testSVMQonverter()
     {
         const TestPSM testPSMs[] =
         {
-         //       orig                                          new  /-----expected------\
+         //       orig                                          new  |-----expected------|
          // id sp rank decoyState          z NET NMC ME scores  rank total qValue fdrScore
             {0, 1, 1,  DecoyState::Target, 1, 2,  0, 0, "6",     1,   0.99,   0,     0},
             {0, 2, 1,  DecoyState::Target, 1, 2,  0, 0, "5",     1,   0.99,   0,     0},

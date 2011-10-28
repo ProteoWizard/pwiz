@@ -127,6 +127,9 @@ project bumbershoot
       <toolset>gcc:<cxxflags>-Wno-long-long
       <toolset>darwin:<cxxflags>-Wno-long-long
 
+      # any GCC executable that uses shared libraries must have all its code built with -fPIC
+      <conditional>@static-with-fpic
+
       # don't call 'strip' -- causes 'Bus error' in some cases
       #  e.g. find_if with inline predicate
       <toolset>darwin:<debug-symbols>on
@@ -331,6 +334,18 @@ rule pwiz-dependency ( properties * )
            <dependency>$(PWIZ_SOURCE)/pwiz/utility/bindings/CLI//pwiz_bindings_cli/$(location)
            <dependency>$(PWIZ_SOURCE)/pwiz/utility/bindings/CLI//pwiz_bindings_cli.xml/$(location) ;
 }
+
+
+# any GCC executable that uses shared libraries must have all its code built with -fPIC
+rule static-with-fpic ( properties * )
+{
+    if ( <toolset>gcc in $(properties) || <toolset>darwin in $(properties) ) &&
+       <link>static in $(properties)
+    {
+        return <cflags>-fPIC <linkflags>-fPIC ;
+    }
+}
+
 
 rule msbuild_IDPicker ( targets + : sources * : properties * )
 {
