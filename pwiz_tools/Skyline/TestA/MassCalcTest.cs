@@ -18,6 +18,7 @@
  */
 using System.Collections.Generic;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Util;
 
 namespace pwiz.SkylineTestA
@@ -91,6 +92,13 @@ namespace pwiz.SkylineTestA
                 Assert.AreEqual(massExpected, massActual,
                     string.Format("The mass for {0} was expected to be {1} but was found to be {2}", symbol, massExpected, massActual));
             }
+        }
+
+        [TestMethod]
+        public void SequenceMassCalcTest()
+        {
+            // Test case that caused unexpected exception when O- was not parsed correctly.
+            SequenceMassCalc.ParseModCounts(BioMassCalc.MONOISOTOPIC, "OO-HNHN", new Dictionary<string, int>());            
         }
     }
 }

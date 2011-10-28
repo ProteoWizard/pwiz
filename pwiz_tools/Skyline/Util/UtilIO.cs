@@ -416,10 +416,20 @@ namespace pwiz.Skyline.Util
         public Stream CreateStream(string path, FileMode mode, bool buffered)
         {
             Stream stream;
-            if (mode != FileMode.Open)
-                stream = new FileStream(path, mode);
-            else
-                stream = new FileStream(path, mode, FileAccess.Read, FileShare.Read);
+            try
+            {
+                if (mode != FileMode.Open)
+                    stream = new FileStream(path, mode);
+                else
+                    stream = new FileStream(path, mode, FileAccess.Read, FileShare.Read);
+            }
+            catch (Exception x)
+            {
+                // Make sure exceptions thrown from this method are only IOExceptions
+                if ((x is IOException))
+                    throw new IOException(string.Format("Unexpected error opening {0}", path), x);
+                throw;
+            }
 
             // If writing make sure the stream is buffered.
             if (buffered)
@@ -449,7 +459,17 @@ namespace pwiz.Skyline.Util
 
         public TextWriter CreateWriter(string path)
         {
-            return new StreamWriter(path);
+            try
+            {
+                return new StreamWriter(path);
+            }
+            catch (Exception x)
+            {
+                // Make sure exceptions thrown from this method are only IOExceptions
+                if ((x is IOException))
+                    throw new IOException(string.Format("Unexpected error opening {0}", path), x);
+                throw;
+            }
         }
 
         public void Finish(TextWriter writer)

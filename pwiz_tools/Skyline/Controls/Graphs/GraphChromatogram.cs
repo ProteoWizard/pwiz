@@ -201,7 +201,7 @@ namespace pwiz.Skyline.Controls.Graphs
         /// <param name="nodeGroup">The transition group for which the peak was picked</param>
         /// <param name="nodeTran">The transition no which the time was chosen</param>
         /// <param name="peakTime">The retention time at which the peak was picked</param>
-        public void FirePickedPeak(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, double peakTime)
+        private void FirePickedPeak(TransitionGroupDocNode nodeGroup, TransitionDocNode nodeTran, double peakTime)
         {
             if (PickedPeak != null)
             {
@@ -232,7 +232,8 @@ namespace pwiz.Skyline.Controls.Graphs
         /// Indicates a peak has been picked at a specified retention time
         /// for a specific replicate of a specific <see cref="TransitionGroupDocNode"/>.
         /// </summary>
-        public void FireChangedPeakBounds()
+        /// <param name="peakBoundDragInfos"></param>
+        private void FireChangedPeakBounds(IEnumerable<PeakBoundsDragInfo> peakBoundDragInfos)
         {
             if (ChangedPeakBounds != null)
             {
@@ -241,7 +242,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     return;
 
                 var listChanges = new List<ChangedPeakBoundsEventArgs>();
-                foreach (var dragInfo in _peakBoundDragInfos)
+                foreach (var dragInfo in peakBoundDragInfos)
                 {
                     TransitionGroupDocNode nodeGroup = dragInfo.GraphItem.TransitionGroupNode;
                     TransitionDocNode nodeTran = null;
@@ -515,7 +516,10 @@ namespace pwiz.Skyline.Controls.Graphs
                 {
                     // Update the file choice toolbar, if the set of groups has changed
                     if (changedGroups)
-                        UpdateToolbar(_arrayChromInfo);
+                    {
+                        UpdateToolbar(_arrayChromInfo);                        
+                        EndDrag(false);
+                    }
 
                     // If displaying multiple groups or the total of a single group
                     if (nodeGroups.Length > 1 || DisplayType == DisplayTypeChrom.total)
@@ -563,8 +567,11 @@ namespace pwiz.Skyline.Controls.Graphs
             // Show unavailable message, if no chromatogoram loaded
             if (listChromGraphs.Count == 0)
             {
-                if (changedGroups)
+                if (nodeGroups == null || changedGroups)
+                {
                     UpdateToolbar(null);
+                    EndDrag(false);
+                }
                 if (graphPane.CurveList.Count == 0)
                     graphControl.AddGraphItem(graphPane, new UnavailableChromGraphItem(), false);
             }
@@ -592,6 +599,7 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void DisplayFailureGraph(MSGraphPane graphPane, IEnumerable<TransitionGroupDocNode> nodeGroups, Exception x)
         {
+
             if (nodeGroups != null)
             {
                 foreach (var nodeGroup in nodeGroups)
@@ -1580,7 +1588,9 @@ namespace pwiz.Skyline.Controls.Graphs
 
             foreach (var curveCurr in GraphPane.CurveList)
             {
-                var graphItemCurr = (ChromGraphItem)curveCurr.Tag;
+                var graphItemCurr = curveCurr.Tag as ChromGraphItem;
+                if (graphItemCurr == null)
+                    continue;
                 double inten = graphItemCurr.GetMaxIntensity(startTime, endTime);
                 if (inten > maxInten)
                 {
@@ -1902,15 +1912,20 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void EndDrag(bool commit)
         {
-            if (commit && _peakBoundDragInfos.IndexOf(info => info.Moved) != -1)
-                FireChangedPeakBounds();
+            if (_peakBoundDragInfos == null)
+                return;
 
-            foreach (var dragInfo in _peakBoundDragInfos)
+            var peakBoundDragInfos = _peakBoundDragInfos;
+            _peakBoundDragInfos = null;
+
+            if (commit && peakBoundDragInfos.IndexOf(info => info.Moved) != -1)
+                FireChangedPeakBounds(peakBoundDragInfos);
+
+            foreach (var dragInfo in peakBoundDragInfos)
             {
                 dragInfo.GraphItemBest.HideBest = false;
                 dragInfo.GraphItem.DragInfo = null;                
             }
-            _peakBoundDragInfos = null;
             Refresh();            
         }
 
