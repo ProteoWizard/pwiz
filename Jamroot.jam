@@ -360,7 +360,7 @@ local revision-info =
                              $(PWIZ_ROOT_PATH)/pwiz_tools/MSConvertGUI
                              $(PWIZ_ROOT_PATH)/pwiz_tools/sld
                 : *.?pp *.h *.jam *.cs *.manifest*
-                : tar.excluded Version.cpp Resources.Designer.cs Settings.Designer.cs AssemblyInfo.cs
+                : tar.excluded Version.cpp Resources.Designer.cs Settings.Designer.cs *DataSet.Designer.cs AssemblyInfo.*
             ]
         : warn-on-missing
         #: print-revision-info
