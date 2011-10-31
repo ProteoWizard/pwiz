@@ -1543,7 +1543,8 @@ namespace pwiz.Skyline.Model
                 procAnalyst = Process.Start(Path.Combine(analystDir, ANALYST_EXE));
             // Wait for main window to be present.
             ProgressStatus status = null;
-            while (!progressMonitor.IsCanceled && !Equals(ANALYST_NAME, procAnalyst.MainWindowTitle))
+            while (!progressMonitor.IsCanceled &&
+                    !Equals(ANALYST_NAME, procAnalyst != null ? procAnalyst.MainWindowTitle : ""))
             {
                 if (status == null)
                 {
