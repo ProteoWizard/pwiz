@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using Interop.MSMethodSvr;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ParameterSvrLib;
@@ -88,17 +87,17 @@ namespace BuildAnalystFullScanMethod.Test
 
                 // first experiment should be a TOF experiment
                 var experiment = (Experiment)period.GetExperiment(0);
-                Assert.AreEqual(8, experiment.ScanType);
+                Assert.AreEqual(BuildAnalystFullScanMethod.TOF_MS_SCAN, experiment.ScanType);
 
                 if(templateTofMsExpt != null)
                 {
-                    CompareExperiments(templateTofMsExpt, experiment);
+                    CompareExperiments(templateTofMsExpt, experiment, IsQstarTemplate(templateFilePath));
                 }
                 
                 experiment = (Experiment)period.GetExperiment(1);
-                Assert.AreEqual(9, experiment.ScanType);
+                Assert.AreEqual(BuildAnalystFullScanMethod.PROD_ION_SCAN, experiment.ScanType);
 
-                CompareExperiments(templateProdIonExpt, experiment);
+                CompareExperiments(templateProdIonExpt, experiment, IsQstarTemplate(templateFilePath));
             }
             else
             {
@@ -106,15 +105,19 @@ namespace BuildAnalystFullScanMethod.Test
                 Assert.AreEqual(20, period.ExperimCount);
 
                 var experiment = (Experiment)period.GetExperiment(0);
-                Assert.AreEqual(9, experiment.ScanType);
+                Assert.AreEqual(BuildAnalystFullScanMethod.PROD_ION_SCAN, experiment.ScanType);
 
-                CompareExperiments(templateProdIonExpt, experiment);
+                CompareExperiments(templateProdIonExpt, experiment, IsQstarTemplate(templateFilePath));
             }
 
         }
 
+        private static bool IsQstarTemplate(string templateFile)
+        {
+            return templateFile.Contains("QSTAR");
+        }
 
-        private static void CompareExperiments(Experiment templateExpt, Experiment myExpt)
+        private static void CompareExperiments(Experiment templateExpt, Experiment myExpt, bool isQstar)
         {
 
             var tofProperties_template = (ITOFProperties)templateExpt;
@@ -126,7 +129,7 @@ namespace BuildAnalystFullScanMethod.Test
             // It looks like the accumulation time for an experiment is not updated if the value provided 
             // to the setter method is within a certain delta. So the accumulation time in the template
             // experiment may not be identical to the one that we generate.
-            Assert.AreEqual(tofProperties_template.AccumTime, tofProperties_mine.AccumTime, 0.025);
+            Assert.AreEqual(tofProperties_template.AccumTime, tofProperties_mine.AccumTime, 0.1);
 
 
             var srcParamsTbl_template = (ParamDataColl)templateExpt.SourceParamsTbl;
@@ -144,8 +147,11 @@ namespace BuildAnalystFullScanMethod.Test
             Assert.AreEqual(((ParameterData)srcParamsTbl_template.FindParameter("TEM", out s1)).startVal,
                              ((ParameterData)srcParamsTbl_mine.FindParameter("TEM", out s2)).startVal);
 
-            Assert.AreEqual(((ITOFProperties2)templateExpt).HighSensitivity, ((ITOFProperties2)myExpt).HighSensitivity);
-
+            if (!isQstar)
+            {
+                Assert.AreEqual(((ITOFProperties2)templateExpt).HighSensitivity, ((ITOFProperties2)myExpt).HighSensitivity);
+            }
+            
 
         }
 

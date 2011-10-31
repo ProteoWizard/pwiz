@@ -69,31 +69,31 @@
   <ItemGroup>
     <Reference Include="Interop.AcqMethodSvrLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Method\AbSciex\Interop.AcqMethodSvrLib.dll</HintPath>
+      <HintPath>..\..\..\Method\AbSciex\TOF\Interop.AcqMethodSvrLib.dll</HintPath>
     </Reference>
     <Reference Include="Interop.Analyst, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Method\AbSciex\Interop.Analyst.dll</HintPath>
+      <HintPath>..\..\..\Method\AbSciex\TOF\Interop.Analyst.dll</HintPath>
     </Reference>
     <Reference Include="Interop.DDEMethodSvr, Version=1.0.0.0, Culture=neutral, PublicKeyToken=7dcb9a6ed1f0b664, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Method\AbSciex\Interop.DDEMethodSvr.dll</HintPath>
+      <HintPath>..\..\..\Method\AbSciex\TOF\Interop.DDEMethodSvr.dll</HintPath>
     </Reference>
     <Reference Include="Interop.IDAMethodSvr, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Method\AbSciex\Interop.IDAMethodSvr.dll</HintPath>
+      <HintPath>..\..\..\Method\AbSciex\TOF\Interop.IDAMethodSvr.dll</HintPath>
     </Reference>
     <Reference Include="Interop.MSMethodSvr, Version=1.0.0.0, Culture=neutral, PublicKeyToken=7dcb9a6ed1f0b664, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Method\AbSciex\Interop.MSMethodSvr.dll</HintPath>
+      <HintPath>..\..\..\Method\AbSciex\TOF\Interop.MSMethodSvr.dll</HintPath>
     </Reference>
     <Reference Include="Interop.ParameterSvrLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Method\AbSciex\Interop.ParameterSvrLib.dll</HintPath>
+      <HintPath>..\..\..\Method\AbSciex\TOF\Interop.ParameterSvrLib.dll</HintPath>
     </Reference>
     <Reference Include="Interop.StdType, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Method\AbSciex\Interop.StdType.dll</HintPath>
+      <HintPath>..\..\..\Method\AbSciex\TOF\Interop.StdType.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="System" />

@@ -19,12 +19,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using AcqMethodSvrLib;
 using Analyst;
 using BuildAnalystMethod;
-using AcqMethodSvrLib;
-using ParameterSvrLib;
-using Interop.MSMethodSvr;
 using Interop.DDEMethodSvr;
+using Interop.MSMethodSvr;
+using ParameterSvrLib;
 
 namespace BuildAnalystFullScanMethod
 {
@@ -89,8 +89,8 @@ namespace BuildAnalystFullScanMethod
     {
         //Documentation doesn't even have an '8', but debugging a real method
         //shows that this value should be 8 for a "TOF MS" scan
-        private const short TOF_MS_SCAN = 8;
-        private const short PROD_ION_SCAN = 9;
+        public const short TOF_MS_SCAN = 8;
+        public const short PROD_ION_SCAN = 9;
     
         private bool Ms1Scan { get; set; }
 
@@ -134,12 +134,11 @@ namespace BuildAnalystFullScanMethod
         {
             MassSpecMethod templateMsMethod;
 
-            IAcqMethod templateAcqMethod = GetAcqMethod(TemplateMethod, out templateMsMethod);
-
+            GetAcqMethod(TemplateMethod, out templateMsMethod);
 
             ValidateMethod(templateMsMethod);
 
-
+            
             foreach (var methodTranList in MethodTrans)
             {
                 Console.Error.WriteLine(string.Format("MESSAGE: Exporting method {0}", Path.GetFileName(methodTranList.FinalMethod)));
@@ -148,7 +147,7 @@ namespace BuildAnalystFullScanMethod
 
                 try
                 {
-                    WriteToTemplate(templateAcqMethod, methodTranList);
+                    WriteToTemplate(TemplateMethod, methodTranList);
 
                 }
                 catch (Exception x)
@@ -439,8 +438,12 @@ namespace BuildAnalystFullScanMethod
                 tofProperties.TOFMassMax = tofPropertiesTemplate.TOFMassMax;
 
                 // High Sensitivity vs. High Resolution
-                ((ITOFProperties2) experiment).HighSensitivity = ((ITOFProperties2) prodIonExperiment).HighSensitivity;
-                
+                if(experiment is ITOFProperties2)
+                {
+                    ((ITOFProperties2) experiment).HighSensitivity =
+                        ((ITOFProperties2) prodIonExperiment).HighSensitivity;
+                }
+
 
                 var srcParams = (ParamDataColl)experiment.SourceParamsTbl;
                 
@@ -463,10 +466,14 @@ namespace BuildAnalystFullScanMethod
             }
         }
         
-        public void WriteToTemplate(IAcqMethod acqMethod, MethodTransitions transitions)
+        public void WriteToTemplate(String templateMethodFile, MethodTransitions transitions)
         {
 
-            var method = ExtractMsMethod(acqMethod);
+            MassSpecMethod templateMsMethod;
+
+            IAcqMethod templateAcqMethod = GetAcqMethod(TemplateMethod, out templateMsMethod);
+
+            var method = ExtractMsMethod(templateAcqMethod);
 
             if(InclusionList)
             {
@@ -477,8 +484,8 @@ namespace BuildAnalystFullScanMethod
             {
                WriteToTargetedMSMSTemplate(method, transitions); 
             }
-            
-            acqMethod.SaveAcqMethodToFile(transitions.OutputMethod, 1);
+
+            templateAcqMethod.SaveAcqMethodToFile(transitions.OutputMethod, 1);
         }
 
 

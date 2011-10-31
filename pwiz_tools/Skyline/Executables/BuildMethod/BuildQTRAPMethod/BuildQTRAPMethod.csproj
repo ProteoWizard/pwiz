@@ -52,43 +52,43 @@
   <ItemGroup>
     <Reference Include="Interop.AcqMethodSvrLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Method\AbSciex\Interop.AcqMethodSvrLib.dll</HintPath>
+      <HintPath>..\..\..\Method\AbSciex\TQ\Interop.AcqMethodSvrLib.dll</HintPath>
     </Reference>
     <Reference Include="Interop.Analyst, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Method\AbSciex\Interop.Analyst.dll</HintPath>
+      <HintPath>..\..\..\Method\AbSciex\TQ\Interop.Analyst.dll</HintPath>
     </Reference>
     <Reference Include="Interop.AnalystService, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Method\AbSciex\Interop.AnalystService.dll</HintPath>
+      <HintPath>..\..\..\Method\AbSciex\TQ\Interop.AnalystService.dll</HintPath>
     </Reference>
     <Reference Include="Interop.CreateMRMTransitions, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Method\AbSciex\Interop.CreateMRMTransitions.dll</HintPath>
+      <HintPath>..\..\..\Method\AbSciex\TQ\Interop.CreateMRMTransitions.dll</HintPath>
     </Reference>
     <Reference Include="Interop.CreateNewAcqMethod, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Method\AbSciex\Interop.CreateNewAcqMethod.dll</HintPath>
+      <HintPath>..\..\..\Method\AbSciex\TQ\Interop.CreateNewAcqMethod.dll</HintPath>
     </Reference>
     <Reference Include="Interop.MSMethodSvrLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Method\AbSciex\Interop.MSMethodSvrLib.dll</HintPath>
+      <HintPath>..\..\..\Method\AbSciex\TQ\Interop.MSMethodSvrLib.dll</HintPath>
     </Reference>
     <Reference Include="Interop.ParameterSvrLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Method\AbSciex\Interop.ParameterSvrLib.dll</HintPath>
+      <HintPath>..\..\..\Method\AbSciex\TQ\Interop.ParameterSvrLib.dll</HintPath>
     </Reference>
     <Reference Include="Interop.QueueDispatcherLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Method\AbSciex\Interop.QueueDispatcherLib.dll</HintPath>
+      <HintPath>..\..\..\Method\AbSciex\TQ\Interop.QueueDispatcherLib.dll</HintPath>
     </Reference>
     <Reference Include="Interop.ROTMANLib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Method\AbSciex\Interop.ROTMANLib.dll</HintPath>
+      <HintPath>..\..\..\Method\AbSciex\TQ\Interop.ROTMANLib.dll</HintPath>
     </Reference>
     <Reference Include="Interop.StdType, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Method\AbSciex\Interop.StdType.dll</HintPath>
+      <HintPath>..\..\..\Method\AbSciex\TQ\Interop.StdType.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework, Version=9.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL" />
     <Reference Include="System" />
