@@ -567,12 +567,18 @@ namespace myrimatch
                 Peptide protein(p.getSequence());
                 bool isDecoy = p.isDecoy();
 
+                // BXZ are allowed to be in the prefix/suffix but not in the peptide sequence
+                string validSequenceResidues("ACDEFGHIKLMNPQRSTUVWY");
+                string validResidues = validSequenceResidues + "BXZ";
+
                 Digestion digestion( protein, g_rtConfig->cleavageAgentRegex, g_rtConfig->digestionConfig );
                 for( Digestion::const_iterator itr = digestion.begin(); itr != digestion.end(); )
                 {
                     ++searchStatistics.numPeptidesGenerated;
 
-                    if (itr->sequence().find_first_of("BXZ") != string::npos)
+                    if (itr->sequence().find_first_not_of(validSequenceResidues) != string::npos ||
+                        itr->NTerminusPrefix().find_first_not_of(validResidues) != string::npos ||
+                        itr->CTerminusSuffix().find_first_not_of(validResidues) != string::npos)
                     {
                         ++itr;
                         continue;
