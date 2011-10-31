@@ -734,9 +734,10 @@ PWIZ_API_DECL BinaryDataArrayPtr Spectrum::getIntensityArray() const
 
 PWIZ_API_DECL void Spectrum::setMZIntensityPairs(const vector<MZIntensityPair>& input, CVID intensityUnits)
 {
-    // TODO: setting the arrays with an empty vector is a valid use case!
     if (!input.empty())    
         setMZIntensityPairs(&input[0], input.size(), intensityUnits);
+    else
+        setMZIntensityArrays(vector<double>(), vector<double>(), intensityUnits);
 }
 
 
