@@ -19,10 +19,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using AcqMethodSvrLib;
+using Analyst;
 using BuildAnalystMethod;
-using MSMethodSvrLib;
+using AcqMethodSvrLib;
 using ParameterSvrLib;
+using Interop.MSMethodSvr;
 using Interop.DDEMethodSvr;
 
 namespace BuildAnalystFullScanMethod
@@ -36,8 +37,7 @@ namespace BuildAnalystFullScanMethod
                 Environment.ExitCode = -1;  // Failure until success
 
                 var builder = new BuildAnalystFullScanMethod();
-                var listArgs = new List<string>(args);
-                builder.ParseCommandArgs(listArgs);
+                builder.ParseCommandArgs(args);
                 builder.build();
 
                 Environment.ExitCode = 0;
@@ -84,18 +84,24 @@ namespace BuildAnalystFullScanMethod
         }
     }
 
+    
     class BuildAnalystFullScanMethod : BuildAnalystMethod.BuildAnalystMethod
     {
-        protected bool Ms1Scan { get; set; }
+        //Documentation doesn't even have an '8', but debugging a real method
+        //shows that this value should be 8 for a "TOF MS" scan
+        private const short TOF_MS_SCAN = 8;
+        private const short PROD_ION_SCAN = 9;
+    
+        private bool Ms1Scan { get; set; }
 
-        protected bool InclusionList { get; set; }
+        private bool InclusionList { get; set; }
 
-        protected bool ScheduledMethod { get; set; }
+        private bool ScheduledMethod { get; set; }
 
-        public void ParseCommandArgs(List<string> args)
+        public override void ParseCommandArgs(string[] args)
         {
-            var args2 = new List<string>();
-            for (int i = 0; i < args.Count; i++)
+            var listArgs = new List<string>();
+            for (int i = 0; i < args.Length; i++)
             {
                 var arg = args[i];
                 if (arg.Length < 2)
@@ -116,69 +122,281 @@ namespace BuildAnalystFullScanMethod
                         Ms1Scan = true;
                         break;
                     default:
-                        args2.Add(arg);
+                        listArgs.Add(arg);
                         break;
                 }
             }
 
-            ParseCommandArgs(args2.ToArray());
+            base.ParseCommandArgs(listArgs.ToArray());
         }
 
-        public override void ValidateMethod(MassSpecMethod method)
+        public override void build()
         {
-            var msExperiment = (Experiment)((Period)method.GetPeriod(0)).GetExperiment(0);
-            var experimentCount = ((Period)method.GetPeriod(0)).ExperimCount;
-            var experimentType = msExperiment.ScanType;
-            //Product ion scan is 9 in TF 1.5, 6 in QS 2.0; TOF MS is 8
+            MassSpecMethod templateMsMethod;
+
+            IAcqMethod templateAcqMethod = GetAcqMethod(TemplateMethod, out templateMsMethod);
+
+
+            ValidateMethod(templateMsMethod);
+
+
+            foreach (var methodTranList in MethodTrans)
+            {
+                Console.Error.WriteLine(string.Format("MESSAGE: Exporting method {0}", Path.GetFileName(methodTranList.FinalMethod)));
+                if (string.IsNullOrEmpty(methodTranList.TransitionList))
+                    throw new IOException(string.Format("Failure creating method file {0}.  The transition list is empty.", methodTranList.FinalMethod));
+
+                try
+                {
+                    WriteToTemplate(templateAcqMethod, methodTranList);
+
+                }
+                catch (Exception x)
+                {
+                    throw new IOException(string.Format("Failure creating method file {0}.  {1}", methodTranList.FinalMethod, x.Message));
+                }
+
+                if (!File.Exists(methodTranList.OutputMethod))
+                    throw new IOException(string.Format("Failure creating method file {0}.", methodTranList.FinalMethod));
+
+                // Skyline uses a segmented progress status, which expects 100% for each
+                // segment, with one segment per file.
+                Console.Error.WriteLine("100%");
+            }
+        }
+
+        internal static IAcqMethod GetAcqMethod(string methodFilePath, out MassSpecMethod templateMsMethod)
+        {
+            ApplicationClass analyst = new ApplicationClass();
+
+            // Make sure that Analyst is fully started
+            IAcqMethodDirConfig acqMethodDir = (IAcqMethodDirConfig)analyst.Acquire();
+            if (acqMethodDir == null)
+                throw new IOException("Failed to initialize.  Analyst may need to be started.");
+
+            object acqMethodObj;
+            acqMethodDir.LoadNonUIMethod(methodFilePath, out acqMethodObj);
+            IAcqMethod templateAcqMethod = (IAcqMethod)acqMethodObj;
+
+            templateMsMethod = ExtractMsMethod(templateAcqMethod);
+            return templateAcqMethod;
+        }
+
+        internal static MassSpecMethod ExtractMsMethod(IAcqMethod dataAcqMethod)
+        {
+            if (dataAcqMethod == null)
+                return null;
+
+            const int kMsMethodDeviceType = 0; // device type for MassSpecMethod
+            int devType; // device type
+            EnumDeviceMethods enumMethod = (EnumDeviceMethods)dataAcqMethod;
+            enumMethod.Reset();
+            do
+            {
+                object devMethod; // one of the sub-methods
+                int devModel; // device model
+                int devInst; // device instrument type
+                enumMethod.Next(out devMethod, out devType, out devModel, out devInst);
+                if (devType == kMsMethodDeviceType)
+                    return (MassSpecMethod)devMethod;
+                if (devType == -1)
+                {
+                    //Call Err.Raise(1, "ExtractMSMethod", "No MS method found")
+                    return null;
+                }
+            }
+            while (devType == kMsMethodDeviceType);
+
+            return null;
+        }
+
+        private void ValidateMethod(MassSpecMethod method)
+        {
+
+            // Do some validation that happens regardless of instrument
+            if (method == null)
+                throw new IOException(string.Format("Failed to open template method {0}. " +
+                                "The given template may be invalid for the available version of Analyst.", TemplateMethod));
+            if (method.PeriodCount != 1)
+                throw new IOException(string.Format("Invalid template method {0}.  Expecting only one period.", TemplateMethod));
+
+
+
+            var period = (Period) method.GetPeriod(0);
+            var experimentCount = period.ExperimCount;
+
+            
+
             if (InclusionList)
             {
-                if (experimentType != 8)
-                    throw new IOException(string.Format("Invalid template method {0}. Experiment type must be TOF MS for an IDA experiment.",
+                if(!IsDataDependentMethod(method))
+                {
+                    throw new IOException(string.Format("Invalid template method for an IDA experiment {0}. Template does not support inclusion lists.",
+                                                    TemplateMethod));
+                }
+
+                // A valid IDA method will have at least one TOF MS scan and one Product Ion scan
+                // On the 5600 (Analyst TF1.5)we can have 1 or 2 TOF MS scans followed by 1 Product Ion scan
+                // On the QSTAR (Analyst 2.0) we should have 1 TOF MS scan followed by 1 or more Product Ion scans
+                if (experimentCount < 2)
+                    throw new IOException(string.Format("Invalid template method for an IDA experiment {0}. "+
+                                                        "Template must have one or two TOF MS experiments and at least one Product Ion experiment.",
                                                     TemplateMethod));
 
-                if (experimentCount != 2)
-                    throw new IOException(string.Format("Invalid template method {0}. Template must have one TOF MS experiment and one Product Ion experiment.",
+                // get the first experiment, it should be a TOF MS experiment
+                var msExperiment = (Experiment) period.GetExperiment(0);
+
+                if (!IsTofMsScan(msExperiment))
+                    throw new IOException(string.Format("Invalid template method for an IDA experiment {0}. First experiment type must be TOF MS.",
                                                     TemplateMethod));
 
-                var experiment2Type = ((Experiment)((Period)method.GetPeriod(0)).GetExperiment(1)).ScanType;
-                if (experiment2Type != 9 && experiment2Type != 6)
-                    throw new IOException(string.Format("Invalid template method {0}. Second experiment type must be Product Ion Scan.",
+                // get the last experiment, it should be a Product ion experiment
+                msExperiment = ((Experiment)period.GetExperiment(experimentCount -1));
+               
+                if (!IsProductIonScan(msExperiment))
+                    throw new IOException(string.Format("Invalid template method for and IDA experiment {0}. Last experiment type must be Product Ion Scan.",
                                                      TemplateMethod));
             }
             else
             {
-                if (experimentType != 9 && experimentType != 6)
-                    throw new IOException(string.Format("Invalid template method {0}. Experiment type must be Product Ion Scan.",
-                                                     TemplateMethod));
-
-                if (experimentCount != 1)
-                    throw new IOException(string.Format("Invalid template method {0}. Template must have only one experiment.",
+                if (IsDataDependentMethod(method))
+                {
+                    throw new IOException(string.Format("Invalid template method for a targeted MS/MS experiment {0}. The given template is for a data dependent experiment.",
                                                     TemplateMethod));
+                }
+
+                if (experimentCount != 1 && experimentCount != 2)
+                    throw new IOException(string.Format("Invalid template method for a targeted MS/MS experiment {0}. Template must have 1 or 2 experiments.",
+                                                    TemplateMethod));
+
+                // If the template has 1 experiment it should be a Product Ion experiment
+                if(experimentCount == 1)
+                {
+                    var msExperiment = (Experiment)period.GetExperiment(0);
+                    if (!IsProductIonScan(msExperiment))
+                        throw new IOException(string.Format("Invalid template method for a targeted MS/MS experiment {0}. " +
+                                                "Template does not have a Product Ion Scan.",
+                                                         TemplateMethod));
+                }
+
+                // If the template has 2 experiments require the first one to be a TOF MS and the second one to be a Product Ion
+                if(experimentCount == 2)
+                {
+                    var msExperiment = (Experiment)period.GetExperiment(0);
+                    if (!IsTofMsScan(msExperiment))
+                        throw new IOException(string.Format("Invalid template method for a targeted MS/MS experiment {0}. "+
+                                                "Template has 2 experiments. First experiment type must be TOF MS.",
+                                            TemplateMethod));
+
+                    msExperiment = (Experiment)period.GetExperiment(1);
+                    if (!IsProductIonScan(msExperiment))
+                        throw new IOException(string.Format("Invalid template method for a targeted MS/MS experiment {0}. "+
+                                                "Template has 2 experiments. Second experiment type must be Product Ion Scan.",
+                                                         TemplateMethod));
+
+                }
+
             }
         }
 
-        public override void WriteToTemplate(IAcqMethod acqMethod, MethodTransitions transitions)
+        private void WriteToIDATemplate(MassSpecMethod method, MethodTransitions transitions)
         {
 
-            var method = ExtractMsMethod(acqMethod);
+            object idaServer;
+            ((IMassSpecMethod2)method).GetDataDependSvr(out idaServer);
+
+            ((IDDEMethodObj)idaServer).putUseIncludeList(1);
+            // ((IDDEMethodObj3) idaServer).putIncludeForSecs(RtWindow);
+
+            double minTOFMass = 0;
+            double maxTOFMass = 0;
+            ((IDDEMethodObj)idaServer).getUsersSurvTOFMasses(ref minTOFMass, ref maxTOFMass);
+
+            var addedEntries = new List<string>();
+            foreach (var transition in transitions.Transitions)
+            {
+
+                double retentionTime = 0;
+
+                // If the ScheduledMethod flag was set assume that the Dwell time column in the 
+                // transition list file has retention time.
+                if (ScheduledMethod)
+                    retentionTime = transition.Dwell;
+
+                string entryKey = transition.PrecursorMz + retentionTime.ToString();
+                if (!addedEntries.Contains(entryKey)
+                    && transition.PrecursorMz > minTOFMass
+                    && transition.PrecursorMz < maxTOFMass)
+                {
+                    ((IDDEMethodObj)idaServer).AddIonEntry(1, transition.PrecursorMz, retentionTime);
+                    addedEntries.Add(entryKey);
+                }
+            }
+        }
+
+        private void WriteToTargetedMSMSTemplate(MassSpecMethod method, MethodTransitions transitions)
+        {
             var period = (Period)method.GetPeriod(0);
-            var mExperiment = (Experiment)period.GetExperiment(0);
 
-            var tofPropertiesX = (ITOFProperties)mExperiment;
-            var accumTime = tofPropertiesX.AccumTime;
 
-            var precursors = new List<double>();
+            Experiment tofExperiment = null;
+            Experiment prodIonExperiment = null; 
+           
+            switch (period.ExperimCount)
+            {
+                case 2:
+                    tofExperiment = (Experiment) period.GetExperiment(0);
+                    prodIonExperiment = (Experiment) period.GetExperiment(1);
 
+                    // delete the product ion experiment. We will be adding one for each precursor ion in the transition list.
+                    period.DeleteExperiment(1);
+
+                    break;
+
+                case 1:
+                    prodIonExperiment = (Experiment)period.GetExperiment(0);
+
+                    // delete the product ion experiment. We will be adding one for each precursor ion in the transition list.
+                    period.DeleteExperiment(0);
+
+                    break;
+            }
+            
+
+            int j;
+
+            if (Ms1Scan)
+            {
+                // If the template does not already have a TOF MS scan add one now.
+                if(tofExperiment == null)
+                {
+                    var experiment = (Experiment)period.CreateExperiment(out j);
+                    experiment.InitExperiment();
+                    experiment.ScanType = TOF_MS_SCAN; 
+                }
+            }
+
+
+            if(prodIonExperiment == null)
+            {
+                throw new IOException("Product Ion scan was not found in the method.");
+            }
+
+            // Get the TOF mass range from the template
+            var tofPropertiesTemplate = (ITOFProperties)prodIonExperiment;
+           
+            
             short s;
 
-            var srcParamsTbl = (ParamDataColl)((Experiment)period.GetExperiment(0)).SourceParamsTbl;
             //Get initial source parameters from the template
+            var srcParamsTbl = (ParamDataColl)prodIonExperiment.SourceParamsTbl;
             float sourceGas1 = ((ParameterData)srcParamsTbl.FindParameter("GS1", out s)).startVal;
             float sourceGas2 = ((ParameterData)srcParamsTbl.FindParameter("GS2", out s)).startVal;
             float curtainGas = ((ParameterData)srcParamsTbl.FindParameter("CUR", out s)).startVal;
             float temperature = ((ParameterData)srcParamsTbl.FindParameter("TEM", out s)).startVal;
             string ionSprayVoltageParamName = "ISVF"; // ISVF on 5600, IS on QSTAR
             float ionSprayVoltage;
+            
             try
             {
                 ionSprayVoltage = ((ParameterData)srcParamsTbl.FindParameter(ionSprayVoltageParamName, out s)).startVal;
@@ -187,93 +405,101 @@ namespace BuildAnalystFullScanMethod
             {
                 ionSprayVoltageParamName = "IS";
                 ionSprayVoltage = ((ParameterData)srcParamsTbl.FindParameter(ionSprayVoltageParamName, out s)).startVal;
-            }
+            } 
+           
 
-            if (InclusionList)
+            double minPrecursorMass = double.MaxValue;
+            double maxPrecursorMass = 0;
+
+            var precursors = new List<double>();
+
+            foreach (var transition in transitions.Transitions)
             {
-                object idaServer;
-                ((IMassSpecMethod2)method).GetDataDependSvr(out idaServer);
+                if (precursors.Contains(transition.PrecursorMz))
+                    continue;
 
-                ((IDDEMethodObj) idaServer).putUseIncludeList(1);
-                // ((IDDEMethodObj3) idaServer).putIncludeForSecs(RtWindow);
+                precursors.Add(transition.PrecursorMz);
 
-                double minTOFMass = 0;
-                double maxTOFMass = 0;
-                ((IDDEMethodObj)idaServer).getUsersSurvTOFMasses(ref minTOFMass, ref maxTOFMass);
+                var experiment = (Experiment) period.CreateExperiment(out j);
+                experiment.InitExperiment();
 
-                var addedEntries = new List<string>();
-                foreach (var transition in transitions.Transitions)
-                {
+                // Setting ScanType to 6 for QSTAR causes method export to fail. Setting it to 9 works for both AB 5600 and QSTAR
+                experiment.ScanType = PROD_ION_SCAN; //  Equals(ionSprayVoltageParamName, "IS") ? (short)6 : (short)9;
 
-                    double retentionTime = 0;
-                    
-                    // If the ScheduledMethod flag was set assume that the Dwell time column in the 
-                    // transition list file has retention time.
-                    if(ScheduledMethod) 
-                        retentionTime = transition.Dwell;
+                experiment.FixedMass = transition.PrecursorMz;
 
-                    string entryKey = transition.PrecursorMz + retentionTime.ToString();
-                    if (!addedEntries.Contains(entryKey)
-                        && transition.PrecursorMz > minTOFMass
-                        && transition.PrecursorMz < maxTOFMass)
-                    {
-                        ((IDDEMethodObj)idaServer).AddIonEntry(1, transition.PrecursorMz, retentionTime);
-                        addedEntries.Add(entryKey);
-                    }
-                }
+                minPrecursorMass = Math.Min(minPrecursorMass, transition.PrecursorMz);
+                maxPrecursorMass = Math.Max(maxPrecursorMass, transition.PrecursorMz);
+
+                var tofProperties = (ITOFProperties)experiment;
+
+              
+                tofProperties.AccumTime = tofPropertiesTemplate.AccumTime;
+                tofProperties.TOFMassMin = tofPropertiesTemplate.TOFMassMin;
+                tofProperties.TOFMassMax = tofPropertiesTemplate.TOFMassMax;
+
+                // High Sensitivity vs. High Resolution
+                ((ITOFProperties2) experiment).HighSensitivity = ((ITOFProperties2) prodIonExperiment).HighSensitivity;
+                
+
+                var srcParams = (ParamDataColl)experiment.SourceParamsTbl;
+                
+                srcParams.AddSetParameter("GS1", sourceGas1, sourceGas1, 0, out s);
+                srcParams.AddSetParameter("GS2", sourceGas2, sourceGas2, 0, out s);
+                srcParams.AddSetParameter("CUR", curtainGas, curtainGas, 0, out s);
+                srcParams.AddSetParameter("TEM", temperature, temperature, 0, out s);
+                srcParams.AddSetParameter(ionSprayVoltageParamName, ionSprayVoltage, ionSprayVoltage, 0, out s);
+               
+            }
+
+            // Expand the mass range for the TOF MS scan if the precursor mass of any of the MS/MS experiments
+            // was out of the range
+            if(Ms1Scan)
+            {
+                var ms1TofProperties = (ITOFProperties)(period.GetExperiment(0));
+                ms1TofProperties.TOFMassMin = Math.Min(ms1TofProperties.TOFMassMin, minPrecursorMass);
+                ms1TofProperties.TOFMassMax = Math.Max(ms1TofProperties.TOFMassMax, maxPrecursorMass);
 
             }
+        }
+        
+        public void WriteToTemplate(IAcqMethod acqMethod, MethodTransitions transitions)
+        {
+
+            var method = ExtractMsMethod(acqMethod);
+
+            if(InclusionList)
+            {
+                WriteToIDATemplate(method, transitions);
+            }
+
             else
             {
-                period.DeleteExperiment(0);
-
-                int j;
-
-                if (Ms1Scan)
-                {
-                    var experiment = (Experiment)period.CreateExperiment(out j);
-                    experiment.InitExperiment();
-                    experiment.ScanType = 8; //Documentation doesn't even have an '8', but debugging a real method
-                    //shows that this value should be 8 for a "TOF MS" scan
-                }
-
-                foreach (var transition in transitions.Transitions)
-                {
-                    if (precursors.Contains(transition.PrecursorMz))
-                        continue;
-
-                    precursors.Add(transition.PrecursorMz);
-
-                    var experiment = (Experiment)period.CreateExperiment(out j);
-                    experiment.InitExperiment();
-
-                    experiment.ScanType = Equals(ionSprayVoltageParamName, "IS") ? (short)6 : (short)9;
-
-                    experiment.FixedMass = transition.PrecursorMz;
-
-                    var tofProperties = (ITOFProperties)experiment;
-
-                    try
-                    {
-                        tofProperties.AccumTime = transition.Dwell;
-                    }
-                    catch (Exception)
-                    {
-                        tofProperties.AccumTime = accumTime;
-                    }
-                    tofProperties.TOFMassMin = 400;
-                    tofProperties.TOFMassMax = 1400;
-
-                    var srcParams = (ParamDataColl)experiment.SourceParamsTbl;
-                    srcParams.AddSetParameter("GS1", sourceGas1, sourceGas1, 0, out s);
-                    srcParams.AddSetParameter("GS2", sourceGas2, sourceGas2, 0, out s);
-                    srcParams.AddSetParameter("CUR", curtainGas, curtainGas, 0, out s);
-                    srcParams.AddSetParameter("TEM", temperature, temperature, 0, out s);
-                    srcParams.AddSetParameter(ionSprayVoltageParamName, ionSprayVoltage, ionSprayVoltage, 0, out s);
-                }
+               WriteToTargetedMSMSTemplate(method, transitions); 
             }
-
+            
             acqMethod.SaveAcqMethodToFile(transitions.OutputMethod, 1);
         }
+
+
+        private static bool IsDataDependentMethod(MassSpecMethod method)
+        {
+            return ((IMassSpecMethod2) method).DataDependent == 1;
+        }
+
+        // TOF MS is 8
+        private static bool IsTofMsScan(Experiment experiment)
+        {
+            return experiment.ScanType == TOF_MS_SCAN;
+        }
+
+        private static bool IsProductIonScan(Experiment experiment)
+        {
+            return experiment.ScanType == PROD_ION_SCAN;
+            // Previous comment about ScanType: Product ion scan is 9 in TF 1.5, 6 in QS 2.0
+            // However, I found the ScanType for a ProductIon to always be 9;
+            // return (experiment.ScanType == 6 || experiment.ScanType == 9);
+        }
+
     }
 }

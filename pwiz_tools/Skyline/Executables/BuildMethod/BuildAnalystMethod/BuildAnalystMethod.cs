@@ -23,9 +23,10 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using AcqMethodSvrLib;
-using Analyst;
-using MSMethodSvrLib;
+// using AcqMethodSvrLib;
+// using Analyst;
+// using Interop.MSMethodSvr;
+
 
 namespace BuildAnalystMethod
 {
@@ -95,12 +96,12 @@ namespace BuildAnalystMethod
 
         protected List<MethodTransitions> MethodTrans { get; set; }
 
-        public BuildAnalystMethod()
+        protected BuildAnalystMethod()
         {
             MethodTrans = new List<MethodTransitions>();
         }
 
-        public void ParseCommandArgs(string[] args)
+        public virtual void ParseCommandArgs(string[] args)
         {
             // Default to stdin for transition list input
             string outputMethod = null;
@@ -170,7 +171,7 @@ namespace BuildAnalystMethod
             }
         }
 
-        private static void Usage(string message)
+        protected static void Usage(string message)
         {
             Console.Error.WriteLine(message);
             Console.Error.WriteLine();
@@ -247,100 +248,12 @@ namespace BuildAnalystMethod
             }
         }
 
-        public virtual void ValidateMethod(MassSpecMethod method)
+        public virtual void build()
         {
         }
+        
 
-        public virtual void WriteToTemplate(IAcqMethod method, MethodTransitions transitions)
-        {
-        }
-
-        public void build()
-        {
-            ApplicationClass analyst = new ApplicationClass();
-
-            // Make sure that Analyst is fully started
-            IAcqMethodDirConfig acqMethodDir = (IAcqMethodDirConfig)analyst.Acquire();
-            if (acqMethodDir == null)
-                throw new IOException("Failed to initialize.  Analyst may need to be started.");
-
-            object acqMethodObj;
-            acqMethodDir.LoadNonUIMethod(TemplateMethod, out acqMethodObj);
-            IAcqMethod templateAcqMethod = (IAcqMethod)acqMethodObj;
-
-            MassSpecMethod templateMsMethod = ExtractMsMethod(templateAcqMethod);
-            
-            // Do some validation that happens regardless of instrument
-            if (templateMsMethod == null)
-                throw new IOException(string.Format("Failed to open template method {0}.  Analyst may need to be started.", TemplateMethod));
-            if (templateMsMethod.PeriodCount != 1)
-                throw new IOException(string.Format("Invalid template method {0}.  Expecting only one period.", TemplateMethod));
-            var msPeriod = (Period)templateMsMethod.GetPeriod(0);
-
-            /*
-             * Doesn't matter how many experiments there are because we're going to delete them all anyway, and for it to be
-             * an IDA experiment, there must be 2 experiments.
-             * 
-            if (msPeriod.ExperimCount != 1)
-                throw new IOException(string.Format("Invalid template method {0}.  Expecting only one experiment.", TemplateMethod));
-            */
-            ValidateMethod(templateMsMethod);
-
-
-            foreach (var methodTranList in MethodTrans)
-            {
-                Console.Error.WriteLine(string.Format("MESSAGE: Exporting method {0}", Path.GetFileName(methodTranList.FinalMethod)));
-                if (string.IsNullOrEmpty(methodTranList.TransitionList))
-                    throw new IOException(string.Format("Failure creating method file {0}.  The transition list is empty.", methodTranList.FinalMethod));
-
-                try
-                {
-                    WriteToTemplate(templateAcqMethod, methodTranList);
- 
-                    //Already done by WriteToTemplate
-                    //templateAcqMethod.SaveAcqMethodToFile(methodTranList.OutputMethod, 1);
-                }
-                catch (Exception x)
-                {
-                    throw new IOException(string.Format("Failure creating method file {0}.  {1}", methodTranList.FinalMethod, x.Message));
-                }
-
-                if (!File.Exists(methodTranList.OutputMethod))
-                    throw new IOException(string.Format("Failure creating method file {0}.", methodTranList.FinalMethod));
-
-                // Skyline uses a segmented progress status, which expects 100% for each
-                // segment, with one segment per file.
-                Console.Error.WriteLine("100%");
-            }
-        }
-
-        public MassSpecMethod ExtractMsMethod(IAcqMethod dataAcqMethod)
-        {
-            if (dataAcqMethod == null)
-                return null;
-
-            const int kMsMethodDeviceType = 0; // device type for MassSpecMethod
-            int devType; // device type
-            EnumDeviceMethods enumMethod = (EnumDeviceMethods)dataAcqMethod;
-            enumMethod.Reset();
-            do
-            {
-                object devMethod; // one of the sub-methods
-                int devModel; // device model
-                int devInst; // device instrument type
-                enumMethod.Next(out devMethod, out devType, out devModel, out devInst);
-                if (devType == kMsMethodDeviceType)
-                    return (MassSpecMethod)devMethod;
-                if (devType == -1)
-                {
-                    //Call Err.Raise(1, "ExtractMSMethod", "No MS method found")
-                    return null;
-                }
-            }
-            while (devType == kMsMethodDeviceType);
-
-            return null;
-        }
+        
     }
 
     internal sealed class TempFile : IDisposable

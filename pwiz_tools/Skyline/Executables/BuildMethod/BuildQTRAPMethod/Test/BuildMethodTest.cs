@@ -1,27 +1,27 @@
 ﻿using System.IO;
-using AcqMethodSvrLib;
-using Analyst;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using MSMethodSvrLib;
-using NUnit.Framework;
 
 
 
 namespace BuildQTRAPMethod.Test
 {
-    [TestFixture]
-    class BuildMethodTest
+    [TestClass]
+    public class BuildMethodTest
     {
         private const string METHOD_FILE = "bovine_std2.dam";
        
-        [Test]
+        [TestMethod]
         public void TestMRMMethod()
         {
             string projectDirectory = GetProjectDirectory();
 
-            var args = new[] { projectDirectory+METHOD_FILE, projectDirectory+"Study 7 sched.csv" };
-            Program.Main(args);
+            var args = new[] { projectDirectory+METHOD_FILE, projectDirectory+"Study 7 unsched.csv" };
+            var builder = new BuildQtrapMethod();
+            builder.ParseCommandArgs(args);
+            builder.build();
 
-            string methodFilePath = Path.GetFullPath(projectDirectory+"Study 7 sched.dam");
+            string methodFilePath = Path.GetFullPath(projectDirectory+"Study 7 unsched.dam");
 
             // read the updated method and make sure that the
             // transition list has been included
@@ -53,6 +53,8 @@ namespace BuildQTRAPMethod.Test
 
             msMassRange3 = (IMassRange3)massRange;
             Assert.AreEqual("CRP.GYSIFSYATK.y6.heavy", msMassRange3.CompoundID);
+
+            DeleteOutput(methodFilePath);
         }
 
         private static string GetProjectDirectory()
@@ -66,28 +68,30 @@ namespace BuildQTRAPMethod.Test
             return projectDirectory;
         }
 
-        private static MassSpecMethod GetMethod(string methodFilePath)
+        protected MassSpecMethod GetMethod(string methodFilePath)
         {
+            MassSpecMethod method;
 
-            var analyst = new ApplicationClass();
-
-            // Make sure that Analyst is fully started
-            var acqMethodDir = (IAcqMethodDirConfig)analyst.Acquire();
-            if (acqMethodDir == null)
-                throw new IOException("Failed to initialize.  Analyst may need to be started.");
-
-
-
-            object acqMethodObj;
-            acqMethodDir.LoadNonUIMethod(methodFilePath, out acqMethodObj);
-            var acqMethod = (IAcqMethod)acqMethodObj;
-
-
-            var builder = new BuildQtrapMethod();
-            var method = builder.ExtractMsMethod(acqMethod);
+            BuildQtrapMethod.GetAcqMethod(methodFilePath, out method);
 
             return method;
+
         }
 
+        private static void DeleteOutput(string methodFilePath)
+        {
+            try
+            {
+                File.Delete(methodFilePath);
+                if (File.Exists(methodFilePath))
+                {
+                    Assert.Fail("Could not delete file: " + methodFilePath);
+                }
+            }
+            catch (FileNotFoundException)
+            {
+                Assert.Fail(string.Format("Could not find file: {0}", methodFilePath));
+            }
+        }
     }
 }

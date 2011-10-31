@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace BuildQTRAPMethod
+namespace BuildAnalystFullScanMethod
 {
     [InterfaceTypeAttribute(ComInterfaceType.InterfaceIsIUnknown)]
     [GuidAttribute("5D48D880-36AA-11D2-82F5-00104B1F7094")]

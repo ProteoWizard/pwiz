@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using AcqMethodSvrLib;
+using Analyst;
 using BuildAnalystMethod;
 using MSMethodSvrLib;
 using ParameterSvrLib;
@@ -38,8 +39,7 @@ namespace BuildQTRAPMethod
                 Environment.ExitCode = -1;  // Failure until success
 
                 var builder = new BuildQtrapMethod();
-                var listArgs = new List<string>(args);
-                builder.ParseCommandArgs(listArgs);
+                builder.ParseCommandArgs(args);
                 builder.build();
 
                 Environment.ExitCode = 0;
@@ -90,10 +90,10 @@ namespace BuildQTRAPMethod
 
         private int? RTWindow { get; set; }
 
-        public void ParseCommandArgs(List<string> args)
+        public override void ParseCommandArgs(string[] args)
         {
-            var args2 = new List<string>();
-            for (int i = 0; i < args.Count; i++)
+            var listArgs = new List<string>();
+            for (int i = 0; i < args.Length; i++)
             {
                 var arg = args[i];
                 if (arg.Length < 2)
@@ -101,27 +101,122 @@ namespace BuildQTRAPMethod
                 switch (arg.Substring(1, arg.Length - 1))
                 {
                     case "w":
+                        i++;
+                        if (i < args.Length)
+                            arg = args[i];
+                        else
+                            Usage("Retention time expected after -w.");
+
                         try
                         {
-                            RTWindow = (int)Math.Round(double.Parse(args[i++], CultureInfo.InvariantCulture));
+                            RTWindow = (int)Math.Round(double.Parse(arg, CultureInfo.InvariantCulture));
                         }
                         catch (Exception)
                         {
-                            Usage(string.Format("The value {0} is not a retention time window.", args[i - 1]));
+                            Usage(string.Format("The value {0} is not a retention time window.", arg));
                         }
                         break;
                     default:
-                        args2.Add(arg);
+                        listArgs.Add(arg);
                         break;
                 }
             }
 
-            ParseCommandArgs(args2.ToArray());
+            base.ParseCommandArgs(listArgs.ToArray());
             
         }
 
-        public override void ValidateMethod(MassSpecMethod method)
+        public override void build()
         {
+            MassSpecMethod templateMsMethod;
+
+            IAcqMethod templateAcqMethod = GetAcqMethod(TemplateMethod, out templateMsMethod);
+
+
+            ValidateMethod(templateMsMethod);
+
+
+            foreach (var methodTranList in MethodTrans)
+            {
+                Console.Error.WriteLine(string.Format("MESSAGE: Exporting method {0}", Path.GetFileName(methodTranList.FinalMethod)));
+                if (string.IsNullOrEmpty(methodTranList.TransitionList))
+                    throw new IOException(string.Format("Failure creating method file {0}.  The transition list is empty.", methodTranList.FinalMethod));
+
+                try
+                {
+                    WriteToTemplate(templateAcqMethod, methodTranList);
+
+                }
+                catch (Exception x)
+                {
+                    throw new IOException(string.Format("Failure creating method file {0}.  {1}", methodTranList.FinalMethod, x.Message));
+                }
+
+                if (!File.Exists(methodTranList.OutputMethod))
+                    throw new IOException(string.Format("Failure creating method file {0}.", methodTranList.FinalMethod));
+
+                // Skyline uses a segmented progress status, which expects 100% for each
+                // segment, with one segment per file.
+                Console.Error.WriteLine("100%");
+            }
+        }
+
+        internal static IAcqMethod GetAcqMethod(string methodFilePath, out MassSpecMethod templateMsMethod)
+        {
+            ApplicationClass analyst = new ApplicationClass();
+
+            // Make sure that Analyst is fully started
+            IAcqMethodDirConfig acqMethodDir = (IAcqMethodDirConfig)analyst.Acquire();
+            if (acqMethodDir == null)
+                throw new IOException("Failed to initialize.  Analyst may need to be started.");
+
+            object acqMethodObj;
+            acqMethodDir.LoadNonUIMethod(methodFilePath, out acqMethodObj);
+            IAcqMethod templateAcqMethod = (IAcqMethod)acqMethodObj;
+
+            templateMsMethod = ExtractMsMethod(templateAcqMethod);
+            return templateAcqMethod;
+        }
+
+        internal static MassSpecMethod ExtractMsMethod(IAcqMethod dataAcqMethod)
+        {
+            if (dataAcqMethod == null)
+                return null;
+
+            const int kMsMethodDeviceType = 0; // device type for MassSpecMethod
+            int devType; // device type
+            EnumDeviceMethods enumMethod = (EnumDeviceMethods)dataAcqMethod;
+            enumMethod.Reset();
+            do
+            {
+                object devMethod; // one of the sub-methods
+                int devModel; // device model
+                int devInst; // device instrument type
+                enumMethod.Next(out devMethod, out devType, out devModel, out devInst);
+                if (devType == kMsMethodDeviceType)
+                    return (MassSpecMethod)devMethod;
+                if (devType == -1)
+                {
+                    //Call Err.Raise(1, "ExtractMSMethod", "No MS method found")
+                    return null;
+                }
+            }
+            while (devType == kMsMethodDeviceType);
+
+            return null;
+        }
+        private void ValidateMethod(MassSpecMethod method)
+        {
+
+            // Do some validation that happens regardless of instrument
+            if (method == null)
+                throw new IOException(string.Format("Failed to open template method {0}. " +
+                                "The given template may be invalid for the available version of Analyst.", TemplateMethod));
+            if (method.PeriodCount != 1)
+                throw new IOException(string.Format("Invalid template method {0}.  Expecting only one period.", TemplateMethod));
+
+
+
             var msPeriod = (Period)method.GetPeriod(0);
             if (msPeriod.ExperimCount != 1)
                 throw new IOException(string.Format("Invalid template method {0}.  Expecting only one experiment.", TemplateMethod));
@@ -144,7 +239,7 @@ namespace BuildQTRAPMethod
         }
 
 
-        public override void WriteToTemplate(IAcqMethod acqMethod, MethodTransitions transitions)
+        private void WriteToTemplate(IAcqMethod acqMethod, MethodTransitions transitions)
         {
          
             var method = ExtractMsMethod(acqMethod);
