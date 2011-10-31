@@ -104,7 +104,12 @@ class Reader_mzid : public Reader
     virtual std::string identify(const std::string& filename, const std::string& head) const
     {
         // mzIdentML 1.0 root is "mzIdentML", 1.1 root is "MzIdentML"
-        return string(bal::iequals(xml_root_element(head), "MzIdentML") ? getType() : "");
+        string result;
+        try {
+            result = string(bal::iequals(xml_root_element(head), "MzIdentML") ? getType() : "");
+        } catch(...) {
+        }
+        return result;
     }
 
     virtual void read(const std::string& filename, const std::string& head, IdentDataPtr& result, const Config& config) const
@@ -146,7 +151,12 @@ class Reader_pepXML : public Reader
 {
     virtual std::string identify(const std::string& filename, const std::string& head) const
     {
-        return string(xml_root_element(head) == "msms_pipeline_analysis" ? getType() : "");
+        string result;
+        try {
+            result = string(xml_root_element(head) == "msms_pipeline_analysis" ? getType() : "");
+        } catch(...) {
+        }
+        return result;
     }
 
     virtual void read(const std::string& filename, const std::string& head, IdentData& result, const Config& config) const
