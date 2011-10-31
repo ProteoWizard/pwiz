@@ -515,7 +515,7 @@ namespace BumberDash.Forms
                 return GetDualDependenceValue(item);
             if (root == "UseAvgMassOfSequences")
                 return (((ComboBox)item).SelectedIndex == 1).ToString().ToLower();
-            if (root ==  "NumMinTerminiCleavages")
+            if (root ==  "MinTerminiCleavages")
                 return ((ComboBox)item).SelectedIndex.ToString();
             if (root == "DeisotopingMode")
                 return ((ComboBox)item).SelectedIndex.ToString();
