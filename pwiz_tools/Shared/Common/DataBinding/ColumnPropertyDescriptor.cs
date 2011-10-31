@@ -95,7 +95,7 @@ namespace pwiz.Common.DataBinding
 
         public override Type PropertyType
         {
-            get { return ColumnDescriptor.PropertyType; }
+            get { return ColumnDescriptor.PropertyType ?? typeof(object); }
         }
 
         public override string DisplayName

@@ -935,7 +935,7 @@ namespace pwiz.Topograph.ui.Forms
 
         private void tracerAmountsToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            var tracerAmountsForm = new TracerAmountsByCohort(Workspace);
+            var tracerAmountsForm = new ResultsPerGroupForm(Workspace);
             tracerAmountsForm.Show(dockPanel, DockState.Document);
         }
 

@@ -74,6 +74,10 @@ namespace pwiz.Common.DataBinding
             {
                 result++;
             }
+            if (unboundColumn.CollectionInfo == null)
+            {
+                return result;
+            }
             object parentValue = GetValue(rowNode, unboundColumn.Parent);
             if (parentValue == null)
             {

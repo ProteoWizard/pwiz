@@ -85,6 +85,7 @@ namespace pwiz.Topograph.ui.Forms
             this.colTurnoverAvg = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTurnoverScoreAvg = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.splitContainer2 = new System.Windows.Forms.SplitContainer();
+            this.validationStatusColumn1 = new pwiz.Topograph.ui.Controls.ValidationStatusColumn();
             this.splitContainer1.Panel1.SuspendLayout();
             this.splitContainer1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
@@ -671,6 +672,14 @@ namespace pwiz.Topograph.ui.Forms
             this.splitContainer2.SplitterDistance = 395;
             this.splitContainer2.TabIndex = 1;
             // 
+            // validationStatusColumn1
+            // 
+            this.validationStatusColumn1.DisplayMember = "Display";
+            this.validationStatusColumn1.HeaderText = "Status";
+            this.validationStatusColumn1.Name = "validationStatusColumn1";
+            this.validationStatusColumn1.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
+            this.validationStatusColumn1.ValueMember = "Value";
+            // 
             // HalfLifeForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -744,5 +753,6 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.DataGridViewTextBoxColumn colTurnoverScoreAvg;
         private System.Windows.Forms.Label label11;
         private System.Windows.Forms.ComboBox comboEvviesFilter;
+        private ValidationStatusColumn validationStatusColumn1;
     }
 }

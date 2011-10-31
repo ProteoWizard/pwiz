@@ -61,7 +61,8 @@ namespace pwiz.Topograph.MsData
         /// Also, for bug 91:
         /// If EvviesFilter is EvviesFilterEnum.Oct2011:
         /// 1.1) Exclude all points more than 3 standard deviations above or below the MEDIAN.
-        /// 1.2) Determine the *new* mean, median, and SD. 
+        /// 1.2) Exclude all points that are 99% or 100% and are 2 standard deviations above the median.
+        /// 1.3) Determine the *new* mean, median, and SD. 
         /// </summary>
         public EvviesFilterEnum EvviesFilter
         {
@@ -372,6 +373,11 @@ namespace pwiz.Topograph.MsData
                         var statistics = new Statistics(entry.Value.ToArray());
                         var min = statistics.Median() - 3*statistics.StdDev();
                         var max = statistics.Median() + 3*statistics.StdDev();
+                        if (statistics.Median() + 2 * statistics.StdDev() >= 99)
+                        {
+                            // Throw away any values of 100% or 99% if they are more than 2 SD above the median.
+                            max = Math.Min(99, max);
+                        }
                         var newValues = entry.Value.Where(v => v >= min && v <= max).ToList();
                         if (newValues.Count != entry.Value.Count)
                         {

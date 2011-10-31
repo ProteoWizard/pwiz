@@ -53,7 +53,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>191</ApplicationRevision>
+    <ApplicationRevision>192</ApplicationRevision>
     <ApplicationVersion>0.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -384,11 +384,11 @@
     <Compile Include="Forms\TpgLinkForm.Designer.cs">
       <DependentUpon>TpgLinkForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Forms\TracerAmountsByCohort.cs">
+    <Compile Include="Forms\ResultsPerGroupForm.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Forms\TracerAmountsByCohort.Designer.cs">
-      <DependentUpon>TracerAmountsByCohort.cs</DependentUpon>
+    <Compile Include="Forms\ResultsPerGroupForm.Designer.cs">
+      <DependentUpon>ResultsPerGroupForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\PeptideFileAnalysisForm.cs">
       <SubType>Form</SubType>
@@ -590,8 +590,8 @@
       <DependentUpon>TpgLinkForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="Forms\TracerAmountsByCohort.resx">
-      <DependentUpon>TracerAmountsByCohort.cs</DependentUpon>
+    <EmbeddedResource Include="Forms\ResultsPerGroupForm.resx">
+      <DependentUpon>ResultsPerGroupForm.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Forms\TracerChromatogramForm.resx">

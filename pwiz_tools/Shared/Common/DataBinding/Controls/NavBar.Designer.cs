@@ -47,6 +47,7 @@
             this.toolStripLabel1 = new System.Windows.Forms.ToolStripLabel();
             this.tbxFind = new System.Windows.Forms.ToolStripTextBox();
             this.lblFilterApplied = new System.Windows.Forms.ToolStripLabel();
+            this.navBarButtonMatchCase = new System.Windows.Forms.ToolStripButton();
             ((System.ComponentModel.ISupportInitialize)(this.bindingNavigator1)).BeginInit();
             this.bindingNavigator1.SuspendLayout();
             this.SuspendLayout();
@@ -72,6 +73,7 @@
             this.navBarButtonExport,
             this.toolStripLabel1,
             this.tbxFind,
+            this.navBarButtonMatchCase,
             this.lblFilterApplied});
             this.bindingNavigator1.Location = new System.Drawing.Point(0, 0);
             this.bindingNavigator1.MoveFirstItem = this.bindingNavigatorMoveFirstItem;
@@ -80,7 +82,7 @@
             this.bindingNavigator1.MovePreviousItem = this.bindingNavigatorMovePreviousItem;
             this.bindingNavigator1.Name = "bindingNavigator1";
             this.bindingNavigator1.PositionItem = this.bindingNavigatorPositionItem;
-            this.bindingNavigator1.Size = new System.Drawing.Size(617, 25);
+            this.bindingNavigator1.Size = new System.Drawing.Size(740, 25);
             this.bindingNavigator1.TabIndex = 1;
             this.bindingNavigator1.Text = "bindingNavigator1";
             // 
@@ -208,6 +210,19 @@
             this.lblFilterApplied.Text = "(Filtered from XXXXXXX)";
             this.lblFilterApplied.Visible = false;
             // 
+            // navBarButtonMatchCase
+            // 
+            this.navBarButtonMatchCase.Checked = true;
+            this.navBarButtonMatchCase.CheckOnClick = true;
+            this.navBarButtonMatchCase.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.navBarButtonMatchCase.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.navBarButtonMatchCase.Image = global::pwiz.Common.Properties.Resources.MatchCase;
+            this.navBarButtonMatchCase.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.navBarButtonMatchCase.Name = "navBarButtonMatchCase";
+            this.navBarButtonMatchCase.Size = new System.Drawing.Size(23, 22);
+            this.navBarButtonMatchCase.Text = "Match Case";
+            this.navBarButtonMatchCase.CheckedChanged += new System.EventHandler(this.navBarButtonMatchCase_CheckedChanged);
+            // 
             // NavBar
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -215,7 +230,7 @@
             this.AutoSize = true;
             this.Controls.Add(this.bindingNavigator1);
             this.Name = "NavBar";
-            this.Size = new System.Drawing.Size(617, 25);
+            this.Size = new System.Drawing.Size(740, 25);
             ((System.ComponentModel.ISupportInitialize)(this.bindingNavigator1)).EndInit();
             this.bindingNavigator1.ResumeLayout(false);
             this.bindingNavigator1.PerformLayout();
@@ -243,6 +258,7 @@
         private System.Windows.Forms.ToolStripLabel toolStripLabel1;
         private System.Windows.Forms.ToolStripTextBox tbxFind;
         private System.Windows.Forms.ToolStripLabel lblFilterApplied;
+        private System.Windows.Forms.ToolStripButton navBarButtonMatchCase;
 
     }
 }

@@ -192,9 +192,9 @@ namespace pwiz.Topograph.ui.Forms
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(736, 515);
             this.Controls.Add(this.splitContainer1);
-            this.Name = "ResultsPerReplicateForm";
-            this.TabText = "ResultsPerReplicate";
-            this.Text = "ResultsPerReplicate";
+            this.Name = "Results Per Replicate";
+            this.TabText = "Results Per Replicate";
+            this.Text = "Results Per Replicate";
             this.splitContainer1.Panel1.ResumeLayout(false);
             this.splitContainer1.Panel2.ResumeLayout(false);
             this.splitContainer1.ResumeLayout(false);

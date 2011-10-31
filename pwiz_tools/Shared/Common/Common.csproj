@@ -203,6 +203,7 @@
     <Content Include="Resources\agg_min.bmp" />
     <Content Include="Resources\agg_max.bmp" />
     <Content Include="Resources\agg_stddev.bmp" />
+    <Content Include="Resources\MatchCase.bmp" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Collections\Internal\" />

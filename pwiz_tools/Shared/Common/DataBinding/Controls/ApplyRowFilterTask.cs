@@ -27,20 +27,27 @@ namespace pwiz.Common.DataBinding.Controls
     {
         private RowItem[] _rows;
         private PropertyDescriptor[] _properties;
-        public ApplyRowFilterTask(RowItem[] rows, PropertyDescriptor[] properties, string filterText)
+        public ApplyRowFilterTask(RowItem[] rows, PropertyDescriptor[] properties, string filterText, bool matchCase)
         {
             _rows = rows;
             _properties = properties;
             FilterText = filterText;
+            MatchCase = matchCase;
         }
         public string FilterText
         { 
+            get; private set;
+        }
+
+        public bool MatchCase
+        {
             get; private set;
         }
         public RowItem[] FilteredRows { get; private set; }
         public void FilterBackground()
         {
             var filteredRows = new List<RowItem>();
+            var normalizedFilterText = MatchCase ? FilterText : FilterText.ToLower();
             // toString on an enum is incredibly slow, so we cache the results in 
             // in a dictionary.
             var toStringCaches = new Dictionary<object, string>[_properties.Length];
@@ -76,9 +83,14 @@ namespace pwiz.Common.DataBinding.Controls
                             cache.Add(value, strValue);
                         }
                     }
-                    if (strValue.IndexOf(FilterText) >= 0)
+                    if (!MatchCase)
+                    {
+                        strValue = strValue.ToLower();
+                    }
+                    if (strValue.IndexOf(normalizedFilterText) >= 0)
                     {
                         filteredRows.Add(row);
+                        break;
                     }
                 }
             }

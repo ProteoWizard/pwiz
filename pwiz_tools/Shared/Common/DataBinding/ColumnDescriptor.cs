@@ -87,7 +87,13 @@ namespace pwiz.Common.DataBinding
         public CollectionInfo CollectionInfo { get; private set; }
         protected PropertyDescriptor PropertyDescriptor { get; private set; }
         public Type PropertyType { get; private set; }
-        public Type WrappedPropertyType { get { return DataSchema.GetWrappedValueType(PropertyType); } }
+        public Type WrappedPropertyType
+        {
+            get
+            {
+                return PropertyType == null ? null : DataSchema.GetWrappedValueType(PropertyType);
+            }
+        }
         public MapAttribute MapAttribute { get; private set; }
         public object GetPropertyValue(RowItem rowItem, RowKey rowKey)
         {

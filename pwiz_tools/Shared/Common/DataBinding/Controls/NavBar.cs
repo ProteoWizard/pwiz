@@ -17,7 +17,6 @@
  * limitations under the License.
  */
 using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
@@ -34,10 +33,13 @@ namespace pwiz.Common.DataBinding.Controls
         private BindingSource _bindingSource;
         private IViewContext _viewContext;
         private ApplyRowFilterTask _applyRowFilterTask;
-        private string _filterText = "";
+        private string _filterText;
+        private bool _matchCase;
         public NavBar()
         {
             InitializeComponent();
+            _filterText = tbxFind.Text;
+            _matchCase = navBarButtonMatchCase.Checked;
         }
         [TypeConverter(typeof(ReferenceConverter))]
         public BindingSource BindingSource
@@ -144,19 +146,20 @@ namespace pwiz.Common.DataBinding.Controls
             {
                 return;
             }
-            if (_filterText != tbxFind.Text)
+            if (_filterText != tbxFind.Text || _matchCase != navBarButtonMatchCase.Checked)
             {
                 var unfilteredRows = bindingListView.UnfilteredItems.ToArray();
                 if (string.IsNullOrEmpty(tbxFind.Text))
                 {
                     bindingListView.SetFilteredItems(unfilteredRows);
                     _filterText = "";
+                    _matchCase = navBarButtonMatchCase.Checked;
                 }
                 else
                 {
                     _applyRowFilterTask = new ApplyRowFilterTask(unfilteredRows, 
                         bindingListView.GetItemProperties(new PropertyDescriptor[0]).Cast<PropertyDescriptor>().ToArray(), 
-                        tbxFind.Text);
+                        tbxFind.Text, navBarButtonMatchCase.Checked);
                     new Action(_applyRowFilterTask.FilterBackground).BeginInvoke(ApplyRowFilterTaskCallback, _applyRowFilterTask);
                 }
             }
@@ -190,6 +193,7 @@ namespace pwiz.Common.DataBinding.Controls
                 }
                 bindingListView.SetFilteredItems(_applyRowFilterTask.FilteredRows.ToArray());
                 _filterText = _applyRowFilterTask.FilterText;
+                _matchCase = _applyRowFilterTask.MatchCase;
             }
             finally
             {
@@ -290,15 +294,9 @@ namespace pwiz.Common.DataBinding.Controls
             RefreshUi();
         }
 
-        private void SetFilteredRowsNow(ApplyRowFilterTask applyRowFilterTask, IList<RowItem> rows)
+        private void navBarButtonMatchCase_CheckedChanged(object sender, EventArgs e)
         {
-            try
-            {
-            }
-            finally
-            {
-                applyRowFilterTask.Dispose();
-            }
+            RefreshUi();
         }
     }
 }
