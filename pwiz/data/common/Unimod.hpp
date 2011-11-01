@@ -28,6 +28,7 @@
 #include "pwiz/utility/chemistry/Chemistry.hpp"
 #include "pwiz/utility/chemistry/MZTolerance.hpp"
 #include "cv.hpp"
+#include <cstring>
 #include <boost/enum.hpp>
 #include <boost/logic/tribool.hpp>
 
