@@ -20,6 +20,9 @@
 // limitations under the License.
 //
 
+/// \file idcat.cpp
+/// \brief Contains the code for the idcat executable.
+
 #include "pwiz/utility/misc/Std.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/data/identdata/DefaultReaderList.hpp"
@@ -138,6 +141,16 @@ ostream& operator<<(ostream& os, const Config& config)
     return os;
 }
 
+string getFields(const Config& config)
+{
+    namespace algo = boost::algorithm;
+
+    string fields = "\t";
+    fields += algo::join(config.fields, "\n\t");
+
+    return algo::join(config.fields, "\n\t");
+}
+
 // Returns the help string for this command.
 string usage(const Config& config)
 {    
@@ -146,8 +159,10 @@ string usage(const Config& config)
 
     oss << "Usage: idcat [options] [filemasks]\n"
         << "Dumps the contents of analysis files .\n"
-        << "Options:\n"
+        << "\nOptions:\n"
         << config.usageOptions
+        << "\nFields:\n\t"
+        << getFields(config)
         << "\n";
     return oss.str();
 }
