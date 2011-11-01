@@ -40,32 +40,30 @@ ostream& operator<<(ostream& os, const PeptideID::Record& rec)
     return os;
 }
 
-struct local_iterator : public PeptideID::Iterator
+struct local_iterator : public pwiz::peptideid::PeptideID::IteratorInternal
 {
-    local_iterator(map<string, PeptideID::Record>::const_iterator it,
-                   map<string, PeptideID::Record>::const_iterator end)
-        : it(it), end(end)
+    local_iterator(map<string, PeptideID::Record>::const_iterator it)
+        : it(it)
     {}
-    
-    virtual PeptideID::Record next()
+
+    void increment() { it++; }
+
+    bool equal(const shared_ptr<PeptideID::IteratorInternal>& impl) const
     {
-        PeptideID::Record record = (*it).second;
-        it++;
-        
-        return record;
-    }
-    
-    virtual bool hasNext()
-    {
-        map<string, PeptideID::Record>::const_iterator it2=it;
-        it2++;
-        
-        return it2 != end;
+        local_iterator* li = dynamic_cast<local_iterator*>(impl.get());
+        if (li)
+            return it == li->it;
+
+        return false;
     }
 
+    const PeptideID::Record& dereference() const { return it->second; }
+    
     map<string, PeptideID::Record>::const_iterator it;
-    map<string, PeptideID::Record>::const_iterator end;
 };
+
+
+typedef boost::shared_ptr<local_iterator> plocal_iterator;
 
 }
 
@@ -289,9 +287,14 @@ double_multimap::const_iterator PeptideID_pepXml::record(double retention_time_s
     return pimpl->record(retention_time_sec);
 }
 
-PWIZ_API_DECL shared_ptr<PeptideID::Iterator> PeptideID_pepXml::iterator() const
+PeptideID::Iterator PeptideID_pepXml::begin() const
 {
-    return shared_ptr<PeptideID::Iterator>(new local_iterator(pimpl->recordMap.begin(), pimpl->recordMap.end()));
+    return PeptideID::Iterator(plocal_iterator(new local_iterator(pimpl->recordMap.begin())));
+}
+
+PeptideID::Iterator PeptideID_pepXml::end() const
+{
+    return PeptideID::Iterator(plocal_iterator(new local_iterator(pimpl->recordMap.end())));
 }
 
 } // namespace peptideid

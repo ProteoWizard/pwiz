@@ -3,7 +3,7 @@
 //
 //
 // Original author: Darren Kessner <darren@proteowizard.org>
-// Modifieing author: Robert Burke <Robert.Burke@cshs.org>
+// Modifying author: Robert Burke <Robert.Burke@cshs.org>
 //
 // Copyright 2008 Spielberg Family Center for Applied Proteomics
 //   Cedars-Sinai Medical Center, Los Angeles, California  90048
@@ -28,8 +28,10 @@
 
 #include "pwiz/utility/misc/Export.hpp"
 #include <boost/shared_ptr.hpp>
+#include <boost/iterator/iterator_facade.hpp>
 #include <string>
-
+#include <vector>
+#include <iterator>
 
 namespace pwiz {
 namespace peptideid {
@@ -39,7 +41,7 @@ namespace peptideid {
 
 class PWIZ_API_DECL PeptideID
 {
-    public:
+public:
 
     struct PWIZ_API_DECL Location
     {
@@ -63,24 +65,65 @@ class PWIZ_API_DECL PeptideID
         double normalizedScore; // in [0,1] 
 
         Record() : normalizedScore(0) {}
+        Record(const Record& record)
+            : nativeID(record.nativeID),
+              sequence(record.sequence),
+              protein_descr(record.protein_descr),
+              mz(record.mz),
+              retentionTimeSec(record.retentionTimeSec),
+              normalizedScore(record.normalizedScore)
+        {
+        }
     };
 
-    class PWIZ_API_DECL Iterator
+    /**
+     * Interface for 
+     */
+    struct IteratorInternal {
+        virtual void increment() = 0;
+        virtual bool equal(const boost::shared_ptr<IteratorInternal>& li) const = 0;
+        virtual const PeptideID::Record& dereference() const = 0;
+    };
+
+    /**
+     * Iterator for 
+     */
+    class Iterator : public boost::iterator_facade<Iterator,
+        const PeptideID::Record,
+        boost::forward_traversal_tag>
     {
     public:
-        virtual ~Iterator() {}
-        
-        virtual Record next() = 0;
+        Iterator() {}
+        Iterator(const Iterator& it) : pimpl(it.pimpl) {}
+        Iterator(boost::shared_ptr<PeptideID::IteratorInternal> pimpl)
+            : pimpl(pimpl)
+        {}
 
-        virtual bool hasNext() = 0;        
+    protected:
+        friend class boost::iterator_core_access;
+        
+        void increment() { pimpl->increment(); }
+        
+        bool equal(const PeptideID::Iterator& li) const
+        {
+            return pimpl->equal(li.pimpl);
+        }
+        
+        const PeptideID::Record& dereference() const
+        {
+            return pimpl->dereference();
+        }
+        
+        boost::shared_ptr<PeptideID::IteratorInternal> pimpl;
     };
     
     virtual Record record(const Location& location) const = 0;
-
+    
     virtual ~PeptideID() {}
 
-    virtual boost::shared_ptr<Iterator> iterator() const = 0;
+    virtual Iterator begin() const = 0;
     
+    virtual Iterator end() const = 0;
 };
 
 struct nativeID_less

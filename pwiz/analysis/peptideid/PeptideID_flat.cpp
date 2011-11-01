@@ -33,6 +33,7 @@ namespace peptideid {
 
 using boost::tokenizer;
 using boost::char_separator;
+using namespace std;
 
 namespace {
 
@@ -56,28 +57,32 @@ struct redirect
     }
 };
 
-struct local_iterator : pwiz::peptideid::PeptideID::Iterator
+struct local_iterator : public pwiz::peptideid::PeptideID::IteratorInternal
 {
-    local_iterator(vector<PeptideID::Record>::const_iterator it,
-                   vector<PeptideID::Record>::const_iterator end)
-        : it(it), end(end)
+public:
+    local_iterator(vector<PeptideID::Record>::const_iterator it)
+        : it(it)
     {}
 
-    virtual pwiz::peptideid::PeptideID::Record next()
+
+    void increment() { it++; }
+
+    bool equal(const shared_ptr<PeptideID::IteratorInternal>& impl) const
     {
-        PeptideID::Record r = (*it);
-        it++;
-        return r;
+        local_iterator* li = dynamic_cast<local_iterator*>(impl.get());
+        if (li)
+            return it == li->it;
+
+        return false;
     }
 
-    virtual bool hasNext() 
-    {
-        return it == end;
-    }
+    const PeptideID::Record& dereference() const { return *it; }
 
+private:
     vector<PeptideID::Record>::const_iterator it;
-    vector<PeptideID::Record>::const_iterator end;
 };
+
+typedef boost::shared_ptr<local_iterator> plocal_iterator;
 
 }
 
@@ -116,10 +121,10 @@ public:
 
     PeptideID::Record record(const Location& location)
     {
-        PeptideID::Record loc;
-        loc.nativeID = location.nativeID;
-        loc.mz = location.mz;
-        loc.retentionTimeSec = location.retentionTimeSec;
+        //PeptideID::Record loc;
+        //loc.nativeID = location.nativeID;
+        //loc.mz = location.mz;
+        //loc.retentionTimeSec = location.retentionTimeSec;
 
         PeptideID::Record result;
 
@@ -232,9 +237,14 @@ PeptideID::Record PeptideID_flat::record(const Location& location) const
     return pimpl->record(location);
 }
 
-shared_ptr<PeptideID::Iterator> PeptideID_flat::iterator() const
+PeptideID::Iterator PeptideID_flat::begin() const
 {
-    return shared_ptr<PeptideID::Iterator>(new local_iterator(pimpl->records.begin(), pimpl->records.end()));
+    return PeptideID::Iterator(plocal_iterator(new local_iterator(pimpl->records.begin())));
+}
+
+PeptideID::Iterator PeptideID_flat::end() const
+{
+    return PeptideID::Iterator(plocal_iterator(new local_iterator(pimpl->records.end())));
 }
 
 ////////////////////////////////////////////////////////////////////////////

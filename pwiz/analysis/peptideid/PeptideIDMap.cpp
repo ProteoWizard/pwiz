@@ -30,30 +30,33 @@ using namespace pwiz::peptideid;
 
 namespace {
 
-struct local_iterator : public PeptideID::Iterator
+struct local_iterator : public PeptideID::IteratorInternal
 {
-    local_iterator(map<string, PeptideID::Record>::const_iterator it,
-                   map<string, PeptideID::Record>::const_iterator)
-        : it(it), end(end)
+    local_iterator(map<string, PeptideID::Record>::const_iterator it)
+        : it(it)
     {}
     
-    virtual PeptideID::Record next()
+
+private:
+    friend class boost::iterator_core_access;
+
+    virtual void increment() { it++; }
+
+    virtual bool equal(const boost::shared_ptr<PeptideID::IteratorInternal>& li) const
     {
-        PeptideID::Record record = (*it).second;
-        it++;
-        
-        return record;
+        local_iterator* lip = dynamic_cast<local_iterator*>(li.get());
+        if (lip)
+            return it == lip->it;
+
+        return false;
     }
-    
-    virtual bool hasNext()
-    {
-        return it != end;
-    }
+
+    virtual const PeptideID::Record& dereference() const { return it->second; }
 
     map<string, PeptideID::Record>::const_iterator it;
-    map<string, PeptideID::Record>::const_iterator end;
 };
 
+typedef boost::shared_ptr<local_iterator> plocal_iterator;
 }
 
 namespace pwiz {
@@ -63,13 +66,18 @@ namespace peptideid {
 PWIZ_API_DECL PeptideID::Record PeptideIDMap::record(const Location& location) const
 {
     map<string,PeptideID::Record>::const_iterator it = this->find(location.nativeID);
-    if (it != this->end()) return it->second;
+    if (it !=  map<string,PeptideID::Record>::end()) return it->second;
     return PeptideID::Record();
 }
 
-PWIZ_API_DECL shared_ptr<PeptideID::Iterator> PeptideIDMap::iterator() const
+PWIZ_API_DECL PeptideID::Iterator PeptideIDMap::begin() const
 {
-    return shared_ptr<PeptideID::Iterator>(new local_iterator(begin(), end()));
+    return PeptideID::Iterator(plocal_iterator(new local_iterator(map<string,PeptideID::Record>::begin())));
+}
+
+PWIZ_API_DECL PeptideID::Iterator PeptideIDMap::end() const
+{
+    return PeptideID::Iterator(plocal_iterator(new local_iterator(map<string,PeptideID::Record>::end())));
 }
 
 } // namespace peptideid

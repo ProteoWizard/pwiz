@@ -34,13 +34,16 @@ namespace pwiz {
 namespace peptideid {
 
 
-class PWIZ_API_DECL PeptideIDMap : public PeptideID, 
+class PWIZ_API_DECL PeptideIDMap : public PeptideID,
                                    public std::map<std::string, PeptideID::Record>
 {
     public:
+           
     virtual Record record(const pwiz::peptideid::PeptideID::Location& location) const;
 
-    virtual boost::shared_ptr<PeptideID::Iterator> iterator() const;
+    virtual PeptideID::Iterator begin() const;
+    
+    virtual PeptideID::Iterator end() const;
 };
 
 

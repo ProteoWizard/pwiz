@@ -96,7 +96,8 @@ public:
     /// a Record.
     virtual Record record(const Location& location) const;
 
-    virtual boost::shared_ptr<Iterator> iterator() const;
+    virtual Iterator begin() const;
+    virtual Iterator end() const;
 
 private:
     class Impl;

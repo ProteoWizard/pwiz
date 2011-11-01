@@ -49,6 +49,8 @@ struct Tally
     vector<string> proteins;
     vector<string> uniquePeptides;
     vector<string> uniqueProteins;
+
+    size_t size() const { return peptides.size(); }
 };
 
 string usage(const Config& config)
@@ -186,10 +188,10 @@ int main(int argc, const char* argv[])
 
         vector<PeptideID::Record> records;
 
-        shared_ptr<PeptideID::Iterator> j = config.peptide_id->iterator();
-        while(j->hasNext())
+        PeptideID::Iterator j = config.peptide_id->begin();
+        for (; j!=config.peptide_id->end(); j++)
         {
-            PeptideID::Record record = j->next();
+            PeptideID::Record record(*j);
             records.push_back(record);
         }
 
@@ -197,8 +199,18 @@ int main(int argc, const char* argv[])
         sort(records.begin(), records.end(), nil);
 
         Tally tally;
+
+        cout << "native ID" << "\t"
+             << "# peptides" << "\t"
+             << "# proteins" << "\t"
+             << "unique peptides" << "\t"
+             << "unique proteins" << "\t"
+             << "seq. count" << "\t"
+             << "sequence" << "\t"
+             << "# proteins" << "\t"
+             << "proteins" << "\n";
         
-        for (vector<PeptideID::Record>::iterator i=records.begin();
+        for (vector<PeptideID::Record>::const_iterator i=records.begin();
              i!=records.end(); i++)
         {
             tallyRecord((*i), tally);
