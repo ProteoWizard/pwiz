@@ -830,8 +830,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 // Failing an exact path match, look for a basename match
                 string baseName = Path.GetFileNameWithoutExtension(filePath);
-                i = _librarySourceFiles.IndexOf(info =>
-                    Equals(baseName, Path.GetFileNameWithoutExtension(info.FilePath)));
+                i = _librarySourceFiles.IndexOf(info => Equals(baseName, info.BaseName));
             }
             return i;
         }
@@ -1020,6 +1019,21 @@ namespace pwiz.Skyline.Model.Lib
 
             public int Id { get; private set; }
             public string FilePath { get; private set; }
+            
+            public string BaseName
+            {
+                get
+                {
+                    try
+                    {
+                        return Path.GetFileNameWithoutExtension(FilePath);
+                    }
+                    catch (Exception)
+                    {
+                        return null;
+                    }
+                }
+            }
         }
     }
 

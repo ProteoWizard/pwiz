@@ -103,7 +103,6 @@
             this.ClientSize = new System.Drawing.Size(473, 386);
             this.Controls.Add(this.GraphPanel);
             this.Controls.Add(this.toolBar);
-            this.DockAreas = DigitalRune.Windows.Docking.DockAreas.Document;
             this.HideOnClose = true;
             this.KeyPreview = true;
             this.Name = "GraphSpectrum";

@@ -342,6 +342,10 @@ namespace pwiz.Skyline.Controls.Graphs
                             nodeGroup.Children.Count != nodeGroupCurrent.Children.Count)
                             return false;
 
+                        // Protect against _chromIndex == -1, reported as an unexpected error
+                        if (_chromIndex < 0)
+                            continue;
+
                         // Need to compare the transition results, because it is possible
                         // for a transition result to change in a way that effects the charts
                         // without changing the group.
