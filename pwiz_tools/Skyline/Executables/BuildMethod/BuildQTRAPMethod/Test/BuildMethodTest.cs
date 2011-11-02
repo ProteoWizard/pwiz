@@ -50,20 +50,20 @@ namespace BuildQTRAPMethod.Test
             Assert.AreEqual(60, msExperiment.MassRangesCount);
 
             // Check the first one
-            // 744.839753,1087.49894,19.49,APR.AGLCQTFVYGGCR.y9.light,85.4,38.2
-            var massRange = (MassRange) msExperiment.GetMassRange(0);
-            Assert.AreEqual(19.49, massRange.DwellTime, 0.000001);
+            // 744.839753,1087.49894,20,APR.AGLCQTFVYGGCR.y9.light,85.4,38.2
+            var massRange = (MassRange)msExperiment.GetMassRange(0);
+            Assert.AreEqual(20, massRange.DwellTime);
             Assert.AreEqual(744.839753, massRange.QstartMass, 0.00005);
             Assert.AreEqual(0, massRange.QstopMass);
             Assert.AreEqual(1087.49894, massRange.QstepMass, 0.00005);
 
             var msMassRange3 = (IMassRange3)massRange;
             Assert.AreEqual("APR.AGLCQTFVYGGCR.y9.light", msMassRange3.CompoundID);
-          
+
             // Check the last one
-            // 572.791863,724.375566,20.48,CRP.GYSIFSYATK.y6.heavy,72.6,28.2
+            // 572.791863,724.375566,20,CRP.GYSIFSYATK.y6.heavy,72.6,28.2
             massRange = (MassRange)msExperiment.GetMassRange(59);
-            Assert.AreEqual(20.48, massRange.DwellTime, 0.000001);
+            Assert.AreEqual(20, massRange.DwellTime);
             Assert.AreEqual(572.791863, massRange.QstartMass, 0.00005);
             Assert.AreEqual(0, massRange.QstopMass);
             Assert.AreEqual(724.375566, massRange.QstepMass, 0.00005);

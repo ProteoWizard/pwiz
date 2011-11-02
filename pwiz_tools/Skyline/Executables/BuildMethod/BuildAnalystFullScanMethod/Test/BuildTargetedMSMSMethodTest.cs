@@ -60,7 +60,7 @@ namespace BuildAnalystFullScanMethod.Test
 
             TestTargetedMsmsCommon(templateFilePath, methodFilePath, false);
 
-            // DeleteOutput(methodFilePath);
+            DeleteOutput(methodFilePath);
         }
 
         private void TestTargetedMsmsTOFMs(string templateMethodFile)
