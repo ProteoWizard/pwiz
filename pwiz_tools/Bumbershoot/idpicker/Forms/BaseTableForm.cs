@@ -41,7 +41,6 @@ namespace IDPicker.Forms
     public partial class BaseTableForm : DockableForm
     {
         public BaseTableForm()
-            : base()
         {
             InitializeComponent();
 
@@ -153,6 +152,18 @@ namespace IDPicker.Forms
         protected IList<Row> rows, basicRows;
 
         protected virtual RowFilterState getRowFilterState(Row parentRow) { throw new NotImplementedException(); }
+        protected virtual IList<Row> getChildren (Row parentRow) { throw new NotImplementedException(); }
+
+        public virtual Row GetRowFromRowHierarchy(IList<int> rowIndexHierarchy)
+        {
+            Row row = rows[rowIndexHierarchy.First()];
+            for (int i = 1; i < rowIndexHierarchy.Count; ++i)
+            {
+                getChildren(row); // get child rows if necessary
+                row = row.ChildRows[rowIndexHierarchy[i]];
+            }
+            return row;
+        }
 
         protected override void OnLoad(EventArgs e)
         {
@@ -177,7 +188,7 @@ namespace IDPicker.Forms
             base.OnFormClosing(e);
         }
 
-        protected void pivotSetupButton_Click(object sender, EventArgs e) { pivotSetupPopup.Show(sender as Button); }
+        protected void pivotSetupButton_Click (object sender, EventArgs e) { pivotSetupPopup.Show(pivotSetupButton); }
 
         protected void pivotSetupControl_PivotChanged(object sender, EventArgs e)
         {
@@ -200,7 +211,7 @@ namespace IDPicker.Forms
             }
         }
 
-        protected void groupingSetupButton_Click(object sender, EventArgs e) { groupingSetupPopup.Show(sender as Button); }
+        protected void groupingSetupButton_Click (object sender, EventArgs e) { groupingSetupPopup.Show(groupingSetupButton); }
 
         protected void groupingSetupControl_GroupingChanged(object sender, EventArgs e) { dirtyGroupings = true; }
 

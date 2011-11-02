@@ -338,10 +338,10 @@ struct MinMaxPair
 void normalize(const Qonverter::Settings& settings, PSMList& psmRows);
 
 
-/// calculate new ranks, Q-values and FDRScores based on the presorted PSMList (by descending discriminant score)
+/// calculate new ranks, Q-values and FDRScores based on the presorted PSMIteratorRange (by descending discriminant score)
 void discriminate(const PSMIteratorRange& psmRows);
 
-/// calculate new ranks, Q-values and FDRScores based on the presorted PSMIteratorRange (by descending discriminant score)
+/// calculate new ranks, Q-values and FDRScores based on the presorted PSMList (by descending discriminant score)
 void discriminate(PSMList& psmRows);
 
 

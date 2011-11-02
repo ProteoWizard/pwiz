@@ -84,17 +84,8 @@ namespace IDPicker
         /// </summary>
         public void LoadMainFormSettings ()
         {
-            var location = Properties.Settings.Default.IDPickerFormLocation;
-            var size = Properties.Settings.Default.IDPickerFormSize;
-
-            if (size.IsEmpty)
-            {
-                size = SystemInformation.PrimaryMonitorMaximizedWindowSize;
-                size = new Size(size.Width - 8, size.Height - 8);
-            }
-
-            mainForm.Location = location;
-            mainForm.Size = size;
+            mainForm.Location = Properties.Settings.Default.IDPickerFormLocation;
+            mainForm.Size = Properties.Settings.Default.IDPickerFormSize;
             mainForm.WindowState = Properties.Settings.Default.IDPickerFormWindowState;
         }
 
@@ -103,8 +94,11 @@ namespace IDPicker
         /// </summary>
         public void SaveMainFormSettings ()
         {
-            Properties.Settings.Default.IDPickerFormLocation = mainForm.Location;
-            Properties.Settings.Default.IDPickerFormSize = mainForm.Size;
+            if (mainForm.WindowState == FormWindowState.Normal)
+            {
+                Properties.Settings.Default.IDPickerFormLocation = mainForm.Location;
+                Properties.Settings.Default.IDPickerFormSize = mainForm.Size;
+            }
             Properties.Settings.Default.IDPickerFormWindowState = mainForm.WindowState;
             Properties.Settings.Default.Save();
         }
@@ -193,7 +187,7 @@ namespace IDPicker
                         saveColumns = true;
                         formProperties["ProteinTableForm"] = proteinTableForm.GetCurrentProperties(false);
                         formProperties["PeptideTableForm"] = peptideTableForm.GetCurrentProperties(false);
-                        formProperties["SpectrumTableForm"] = spectrumTableForm.GetCurrentProperties();
+                        formProperties["SpectrumTableForm"] = spectrumTableForm.GetCurrentProperties(false);
                     }
                     updateLayout(tempItem, saveColumns, false, formProperties);
                 };
@@ -214,7 +208,7 @@ namespace IDPicker
                             {
                                 formProperties["ProteinTableForm"] = proteinTableForm.GetCurrentProperties(false);
                                 formProperties["PeptideTableForm"] = peptideTableForm.GetCurrentProperties(false);
-                                formProperties["SpectrumTableForm"] = spectrumTableForm.GetCurrentProperties();
+                                formProperties["SpectrumTableForm"] = spectrumTableForm.GetCurrentProperties(false);
                             }
                             saveNewLayout(textInput.GetText(), textInput.GetCheckState(), false, formProperties);
                         }
@@ -248,7 +242,7 @@ namespace IDPicker
                             saveColumns = true;
                             formProperties["ProteinTableForm"] = proteinTableForm.GetCurrentProperties(false);
                             formProperties["PeptideTableForm"] = peptideTableForm.GetCurrentProperties(false);
-                            formProperties["SpectrumTableForm"] = spectrumTableForm.GetCurrentProperties();
+                            formProperties["SpectrumTableForm"] = spectrumTableForm.GetCurrentProperties(false);
                         }
                         updateLayout(tempItem, saveColumns, true, formProperties);
                     };
@@ -269,7 +263,7 @@ namespace IDPicker
                                 {
                                     formProperties["ProteinTableForm"] = proteinTableForm.GetCurrentProperties(false);
                                     formProperties["PeptideTableForm"] = peptideTableForm.GetCurrentProperties(false);
-                                    formProperties["SpectrumTableForm"] = spectrumTableForm.GetCurrentProperties();
+                                    formProperties["SpectrumTableForm"] = spectrumTableForm.GetCurrentProperties(false);
                                 }
                                 saveNewLayout(textInput.GetText(), textInput.GetCheckState(), true, formProperties);
                             }
@@ -362,7 +356,7 @@ namespace IDPicker
                     var formProperties = new Dictionary<string, FormProperty>();
                     formProperties["ProteinTableForm"] = proteinTableForm.GetCurrentProperties(false);
                     formProperties["PeptideTableForm"] = peptideTableForm.GetCurrentProperties(false);
-                    formProperties["SpectrumTableForm"] = spectrumTableForm.GetCurrentProperties();
+                    formProperties["SpectrumTableForm"] = spectrumTableForm.GetCurrentProperties(false);
                     updateLayout(userDefault, true, false, formProperties);
                 }
 
@@ -376,7 +370,7 @@ namespace IDPicker
                     var formProperties = new Dictionary<string, FormProperty>();
                     formProperties["ProteinTableForm"] = proteinTableForm.GetCurrentProperties(false);
                     formProperties["PeptideTableForm"] = peptideTableForm.GetCurrentProperties(false);
-                    formProperties["SpectrumTableForm"] = spectrumTableForm.GetCurrentProperties();
+                    formProperties["SpectrumTableForm"] = spectrumTableForm.GetCurrentProperties(false);
                     databaseDefault = saveNewLayout("Database Default", true, true, formProperties);
                 }
 
@@ -426,7 +420,7 @@ namespace IDPicker
                 var formProperties = new Dictionary<string, FormProperty>();
                 formProperties["ProteinTableForm"] = proteinTableForm.GetCurrentProperties(false);
                 formProperties["PeptideTableForm"] = peptideTableForm.GetCurrentProperties(false);
-                formProperties["SpectrumTableForm"] = spectrumTableForm.GetCurrentProperties();
+                formProperties["SpectrumTableForm"] = spectrumTableForm.GetCurrentProperties(false);
 
                 saveNewLayout("System Default", true, false, formProperties);
                 saveNewLayout("User Default", true, false, formProperties);

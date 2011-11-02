@@ -76,7 +76,7 @@
       <Value Profile="(Default)">0, 0</Value>
     </Setting>
     <Setting Name="IDPickerFormSize" Type="System.Drawing.Size" Scope="User">
-      <Value Profile="(Default)">0, 0</Value>
+      <Value Profile="(Default)">800, 600</Value>
     </Setting>
     <Setting Name="DefaultQonverterSettings" Type="System.Collections.Specialized.StringCollection" Scope="Application">
       <Value Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;

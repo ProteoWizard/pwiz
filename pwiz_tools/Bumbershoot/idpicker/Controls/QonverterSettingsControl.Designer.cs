@@ -351,16 +351,16 @@ namespace IDPicker.Controls
         private System.Windows.Forms.DataGridViewTextBoxColumn scoreWeightColumn;
         private System.Windows.Forms.DataGridViewComboBoxColumn scoreOrderColumn;
         private System.Windows.Forms.DataGridViewComboBoxColumn scoreNormalizationColumn;
-        private System.Windows.Forms.ComboBox chargeStateHandlingComboBox;
-        private System.Windows.Forms.ComboBox terminalSpecificityHandlingComboBox;
         private System.Windows.Forms.ComboBox massErrorHandlingComboBox;
         private System.Windows.Forms.ComboBox missedCleavagesComboBox;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.ComboBox kernelComboBox;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.ComboBox terminalSpecificityHandlingComboBox;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.ComboBox chargeStateHandlingComboBox;
 
     }
 }

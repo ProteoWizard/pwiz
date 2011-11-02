@@ -372,28 +372,46 @@ namespace IDPicker
 
         void CurrentGraphForm_PreviewKeyDown (object sender, PreviewKeyDownEventArgs e)
         {
-            var tlv = spectrumTableForm.TreeListView;
+            var tlv = spectrumTableForm.TreeDataGridView;
 
-            if (tlv.SelectedItem == null)
+            if (tlv.SelectedCells.Count != 1)
                 return;
 
-            int rowIndex = tlv.SelectedIndex;
-            bool previousRowIsPSM = rowIndex > 0 && tlv.GetModelObject(rowIndex - 1) is SpectrumTableForm.PeptideSpectrumMatchRow;
-            bool nextRowIsPSM = rowIndex + 1 < tlv.GetItemCount() && tlv.GetModelObject(rowIndex + 1) is SpectrumTableForm.PeptideSpectrumMatchRow;
+            int rowIndex = tlv.SelectedCells[0].RowIndex;
+            int columnIndex = tlv.SelectedCells[0].ColumnIndex;
+
+            var rowIndexHierarchy = new List<int>(tlv.GetRowHierarchyForRowIndex(rowIndex));
+            if (!(spectrumTableForm.GetRowFromRowHierarchy(rowIndexHierarchy) is SpectrumTableForm.PeptideSpectrumMatchRow))
+                return;
+
+            var parentIndexHierachy = new List<int>(rowIndexHierarchy.Take(rowIndexHierarchy.Count-1));
+            int siblingCount = spectrumTableForm.GetRowFromRowHierarchy(parentIndexHierachy).ChildRows.Count;
+            bool previousRowIsPSM = rowIndexHierarchy.Last() > 0;
+            bool nextRowIsPSM = rowIndexHierarchy.Last() + 1 < siblingCount;
 
             int key = (int) e.KeyCode;
             if ((key == (int) Keys.Left || key == (int) Keys.Up) && previousRowIsPSM)
-                --tlv.SelectedIndex;
+            {
+                tlv.SelectedCells[0].Selected = false;
+                --rowIndexHierarchy[rowIndexHierarchy.Count - 1];
+            }
             else if ((key == (int) Keys.Right || key == (int) Keys.Down) && nextRowIsPSM)
-                ++tlv.SelectedIndex;
+            {
+                tlv.SelectedCells[0].Selected = false;
+                ++rowIndexHierarchy[rowIndexHierarchy.Count - 1];
+            }
             else
                 return;
 
+            tlv[columnIndex, rowIndexHierarchy].Selected = true;
+
             //tlv.EnsureVisible(tlv.SelectedIndex);
+
+            var psmRow = spectrumTableForm.GetRowFromRowHierarchy(rowIndexHierarchy) as SpectrumTableForm.PeptideSpectrumMatchRow;
 
             spectrumTableForm_SpectrumViewVisualize(this, new SpectrumViewVisualizeEventArgs()
             {
-                PeptideSpectrumMatch = (tlv.GetSelectedObject() as SpectrumTableForm.PeptideSpectrumMatchRow).PeptideSpectrumMatch
+                PeptideSpectrumMatch = psmRow.PeptideSpectrumMatch
             });
         }
 
@@ -1258,7 +1276,7 @@ namespace IDPicker
             }
             if (spectrumTableForm != null)
             {
-                var table = spectrumTableForm.getFormTable();
+                var table = spectrumTableForm.GetFormTable();
                 if (table.Count > 1)
                 {
                     reportDictionary.Add("Spectrum Table", table);
@@ -1664,8 +1682,8 @@ namespace IDPicker
             //generate Tree HTML Files
             if (spectrumTableForm != null)
             {
-                var sources = spectrumTableForm.getSourceContentsForHTML();
-                var groups = spectrumTableForm.getSpectrumSourceGroupTree();
+                //var sources = spectrumTableForm.getSourceContentsForHTML();
+                //var groups = spectrumTableForm.getSpectrumSourceGroupTree();
                 var firstRowHeaders = new List<string>
                                           {
                                               "'Name'",
@@ -1675,7 +1693,7 @@ namespace IDPicker
                                               "'Precursor m/z'"
                                           };
 
-                foreach (var kvp in sources)
+                /*foreach (var kvp in sources)
                 {
                     var name = kvp.Key[0];
                     var fileName = kvp.Key[1];
@@ -1683,7 +1701,7 @@ namespace IDPicker
                     if (kvp.Value.Any())
                         TableExporter.CreateHTMLTreePage(kvp.Value, Path.Combine(outFolder, fileName),
                                                          name, firstRowHeaders, secondHeaders);
-                }
+                }*/
                 var groupTreeHeaders = new List<string>
                                            {
                                                "'Name'",
@@ -1693,9 +1711,9 @@ namespace IDPicker
                                                "'Distinct Analyses'",
                                                "'Distinct Charges'"
                                            };
-                if (groups.Any())
-                    TableExporter.CreateHTMLTreePage(groups, Path.Combine(outFolder, reportName + "-groups.html"),
-                                                     reportName + "- SpectrumSourceGroups", groupTreeHeaders, groupTreeHeaders);
+                //if (groups.Any())
+                //    TableExporter.CreateHTMLTreePage(groups, Path.Combine(outFolder, reportName + "-groups.html"),
+                //                                    reportName + "- SpectrumSourceGroups", groupTreeHeaders, groupTreeHeaders);
             }
 
             //generate Sumamry Page

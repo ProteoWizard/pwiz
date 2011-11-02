@@ -213,14 +213,17 @@ namespace IDPicker.Forms
                 else
                     rowsByAnalysis = analysisQuery.List<object>().Select(o => new AnalysisRow(o)).ToList();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                throw;
+                e.Result = ex;
             }
         }
 
         void renderData (object sender, RunWorkerCompletedEventArgs e)
         {
+            if (e.Result is Exception)
+                Program.HandleException(e.Result as Exception);
+
             // show total counts in the form title
             Text = TabText = String.Format("Analysis View: {0} distinct analyses", rowsByAnalysis.Count());
 

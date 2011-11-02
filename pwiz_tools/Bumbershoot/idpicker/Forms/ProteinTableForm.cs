@@ -247,7 +247,7 @@ namespace IDPicker.Forms
             }
         }
 
-        IList<Row> getChildren (Row parentRow)
+        protected override IList<Row> getChildren (Row parentRow)
         {
             if (parentRow.ChildRows != null)
                 return parentRow.ChildRows;
@@ -337,6 +337,27 @@ namespace IDPicker.Forms
             treeDataGridView.CellContentClick += treeDataGridView_CellContentClick;
             treeDataGridView.CellDoubleClick += treeDataGridView_CellDoubleClick;
             treeDataGridView.PreviewKeyDown += treeDataGridView_PreviewKeyDown;
+            treeDataGridView.CellIconNeeded += treeDataGridView_CellIconNeeded;
+        }
+
+        void treeDataGridView_CellIconNeeded (object sender, TreeDataGridViewCellValueEventArgs e)
+        {
+            if (e.RowIndexHierarchy.First() >= rows.Count)
+            {
+                e.Value = null;
+                return;
+            }
+
+            Row baseRow = rows[e.RowIndexHierarchy.First()];
+            for (int i = 1; i < e.RowIndexHierarchy.Count; ++i)
+            {
+                getChildren(baseRow); // populate ChildRows if necessary
+                baseRow = baseRow.ChildRows[e.RowIndexHierarchy[i]];
+            }
+
+            if (baseRow is ClusterRow) e.Value = Properties.Resources.Cluster;
+            else if (baseRow is ProteinGroupRow) e.Value = (baseRow as ProteinGroupRow).ProteinCount > 1 ? Properties.Resources.ProteinGroup : Properties.Resources.Protein;
+            else if (baseRow is ProteinRow) e.Value = Properties.Resources.Protein;
         }
 
         private void treeDataGridView_CellValueNeeded (object sender, TreeDataGridViewCellValueEventArgs e)
@@ -959,7 +980,7 @@ namespace IDPicker.Forms
         protected override void setColumnVisibility ()
         {
             var columnsIrrelevantForGrouping = new Set<DataGridViewColumn>(new Comparison<DataGridViewColumn>((x,y) => x.Name.CompareTo(y.Name)));
-            if (!checkedGroupings.Any())
+            if (checkedGroupings.IsNullOrEmpty())
                 columnsIrrelevantForGrouping.Add(countColumn);
             else if (checkedGroupings.First().Mode == GroupBy.Cluster)
                 columnsIrrelevantForGrouping.Add(clusterColumn);

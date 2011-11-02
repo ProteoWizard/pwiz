@@ -80,7 +80,6 @@ public ref struct Qonverter
         Feature = (1<<2) // SVM only
     };
 
-    [System::FlagsAttribute]
     enum class MissedCleavagesHandling
     {
         Ignore,

@@ -833,7 +833,7 @@ namespace IDPicker.DataModel
                     foreach (var branch in ProteinToPeptideModification.Split(';'))
                         joins.Add(joins.Count, branch);
 
-                if (DistinctMatchKey != null || Analysis != null || Spectrum != null)
+                if (DistinctMatchKey != null || Analysis != null || Spectrum != null || Charge != null)
                     foreach (var branch in ProteinToPeptideSpectrumMatch.Split(';'))
                         joins.Add(joins.Count, branch);
 

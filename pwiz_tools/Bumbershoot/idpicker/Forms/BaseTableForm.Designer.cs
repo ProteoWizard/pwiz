@@ -51,19 +51,22 @@ namespace IDPicker.Forms
         private void InitializeComponent ()
         {
             this.components = new System.ComponentModel.Container();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(BaseTableForm));
             this.panel1 = new System.Windows.Forms.Panel();
-            this.groupingSetupButton = new System.Windows.Forms.Button();
-            this.pivotSetupButton = new System.Windows.Forms.Button();
-            this.displayOptionsButton = new System.Windows.Forms.Button();
-            this.exportButton = new System.Windows.Forms.Button();
+            this.treeDataGridView = new IDPicker.Controls.TreeDataGridView();
             this.exportMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.clipboardToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.showInExcelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.treeDataGridView = new IDPicker.Controls.TreeDataGridView();
+            this.toolStrip = new System.Windows.Forms.ToolStrip();
+            this.exportButton = new System.Windows.Forms.ToolStripButton();
+            this.displayOptionsButton = new System.Windows.Forms.ToolStripButton();
+            this.pivotSetupButton = new System.Windows.Forms.ToolStripButton();
+            this.groupingSetupButton = new System.Windows.Forms.ToolStripButton();
             this.panel1.SuspendLayout();
-            this.exportMenu.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize) (this.treeDataGridView)).BeginInit();
+            this.exportMenu.SuspendLayout();
+            this.toolStrip.SuspendLayout();
             this.SuspendLayout();
             // 
             // panel1
@@ -72,54 +75,25 @@ namespace IDPicker.Forms
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.panel1.Controls.Add(this.treeDataGridView);
-            this.panel1.Location = new System.Drawing.Point(0, 27);
+            this.panel1.Location = new System.Drawing.Point(0, 25);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(1064, 335);
+            this.panel1.Size = new System.Drawing.Size(1064, 337);
             this.panel1.TabIndex = 5;
             // 
-            // groupingSetupButton
+            // treeDataGridView
             // 
-            this.groupingSetupButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupingSetupButton.Location = new System.Drawing.Point(730, 2);
-            this.groupingSetupButton.Name = "groupingSetupButton";
-            this.groupingSetupButton.Size = new System.Drawing.Size(100, 23);
-            this.groupingSetupButton.TabIndex = 14;
-            this.groupingSetupButton.Text = "Tree Grouping";
-            this.groupingSetupButton.UseVisualStyleBackColor = true;
-            this.groupingSetupButton.Click += new System.EventHandler(this.groupingSetupButton_Click);
-            // 
-            // pivotSetupButton
-            // 
-            this.pivotSetupButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.pivotSetupButton.Location = new System.Drawing.Point(836, 2);
-            this.pivotSetupButton.Name = "pivotSetupButton";
-            this.pivotSetupButton.Size = new System.Drawing.Size(84, 23);
-            this.pivotSetupButton.TabIndex = 13;
-            this.pivotSetupButton.Text = "Pivot Options";
-            this.pivotSetupButton.UseVisualStyleBackColor = true;
-            this.pivotSetupButton.Click += new System.EventHandler(this.pivotSetupButton_Click);
-            // 
-            // displayOptionsButton
-            // 
-            this.displayOptionsButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.displayOptionsButton.Location = new System.Drawing.Point(926, 2);
-            this.displayOptionsButton.Name = "displayOptionsButton";
-            this.displayOptionsButton.Size = new System.Drawing.Size(96, 23);
-            this.displayOptionsButton.TabIndex = 12;
-            this.displayOptionsButton.Text = "Display Options";
-            this.displayOptionsButton.UseVisualStyleBackColor = true;
-            this.displayOptionsButton.Click += new System.EventHandler(this.displayOptionsButton_Click);
-            // 
-            // exportButton
-            // 
-            this.exportButton.Anchor = ((System.Windows.Forms.AnchorStyles) ((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.exportButton.Image = global::IDPicker.Properties.Resources.Export;
-            this.exportButton.Location = new System.Drawing.Point(1028, 2);
-            this.exportButton.Name = "exportButton";
-            this.exportButton.Size = new System.Drawing.Size(30, 23);
-            this.exportButton.TabIndex = 11;
-            this.exportButton.UseVisualStyleBackColor = true;
-            this.exportButton.Click += new System.EventHandler(this.exportButton_Click);
+            this.treeDataGridView.AllowUserToOrderColumns = true;
+            this.treeDataGridView.AllowUserToResizeRows = false;
+            this.treeDataGridView.BackgroundColor = System.Drawing.SystemColors.Window;
+            this.treeDataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.treeDataGridView.GridColor = System.Drawing.SystemColors.Window;
+            this.treeDataGridView.Location = new System.Drawing.Point(0, 0);
+            this.treeDataGridView.Name = "treeDataGridView";
+            this.treeDataGridView.ReadOnly = true;
+            this.treeDataGridView.RowHeadersVisible = false;
+            this.treeDataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
+            this.treeDataGridView.Size = new System.Drawing.Size(1064, 337);
+            this.treeDataGridView.TabIndex = 1;
             // 
             // exportMenu
             // 
@@ -151,38 +125,82 @@ namespace IDPicker.Forms
             this.showInExcelToolStripMenuItem.Text = "Show in Excel";
             this.showInExcelToolStripMenuItem.Click += new System.EventHandler(this.showInExcelToolStripMenuItem_Click);
             // 
-            // treeDataGridView
+            // toolStrip
             // 
-            this.treeDataGridView.AllowUserToOrderColumns = true;
-            this.treeDataGridView.AllowUserToResizeRows = false;
-            this.treeDataGridView.BackgroundColor = System.Drawing.SystemColors.Window;
-            this.treeDataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.treeDataGridView.GridColor = System.Drawing.SystemColors.Window;
-            this.treeDataGridView.Location = new System.Drawing.Point(0, 0);
-            this.treeDataGridView.Name = "treeDataGridView";
-            this.treeDataGridView.ReadOnly = true;
-            this.treeDataGridView.RowHeadersVisible = false;
-            this.treeDataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
-            this.treeDataGridView.Size = new System.Drawing.Size(1064, 335);
-            this.treeDataGridView.TabIndex = 1;
+            this.toolStrip.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            this.toolStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.exportButton,
+            this.displayOptionsButton,
+            this.pivotSetupButton,
+            this.groupingSetupButton});
+            this.toolStrip.Location = new System.Drawing.Point(0, 0);
+            this.toolStrip.Name = "toolStrip";
+            this.toolStrip.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
+            this.toolStrip.Size = new System.Drawing.Size(1064, 25);
+            this.toolStrip.TabIndex = 15;
+            this.toolStrip.Text = "Tools";
+            // 
+            // exportButton
+            // 
+            this.exportButton.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.exportButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Image;
+            this.exportButton.Image = global::IDPicker.Properties.Resources.Export;
+            this.exportButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.exportButton.Name = "exportButton";
+            this.exportButton.Size = new System.Drawing.Size(23, 22);
+            this.exportButton.Text = "Export Options";
+            this.exportButton.Click += new System.EventHandler(this.exportButton_Click);
+            // 
+            // displayOptionsButton
+            // 
+            this.displayOptionsButton.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.displayOptionsButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.displayOptionsButton.Image = ((System.Drawing.Image) (resources.GetObject("displayOptionsButton.Image")));
+            this.displayOptionsButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.displayOptionsButton.Name = "displayOptionsButton";
+            this.displayOptionsButton.Size = new System.Drawing.Size(94, 22);
+            this.displayOptionsButton.Text = "Display Options";
+            this.displayOptionsButton.Click += new System.EventHandler(this.displayOptionsButton_Click);
+            // 
+            // pivotSetupButton
+            // 
+            this.pivotSetupButton.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.pivotSetupButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.pivotSetupButton.Image = ((System.Drawing.Image) (resources.GetObject("pivotSetupButton.Image")));
+            this.pivotSetupButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.pivotSetupButton.Name = "pivotSetupButton";
+            this.pivotSetupButton.Size = new System.Drawing.Size(83, 22);
+            this.pivotSetupButton.Text = "Pivot Options";
+            this.pivotSetupButton.Click += new System.EventHandler(this.pivotSetupButton_Click);
+            // 
+            // groupingSetupButton
+            // 
+            this.groupingSetupButton.Alignment = System.Windows.Forms.ToolStripItemAlignment.Right;
+            this.groupingSetupButton.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            this.groupingSetupButton.Image = ((System.Drawing.Image) (resources.GetObject("groupingSetupButton.Image")));
+            this.groupingSetupButton.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.groupingSetupButton.Name = "groupingSetupButton";
+            this.groupingSetupButton.Size = new System.Drawing.Size(87, 22);
+            this.groupingSetupButton.Text = "Tree Grouping";
+            this.groupingSetupButton.Click += new System.EventHandler(this.groupingSetupButton_Click);
             // 
             // BaseTableForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1064, 362);
-            this.Controls.Add(this.groupingSetupButton);
+            this.Controls.Add(this.toolStrip);
             this.Controls.Add(this.panel1);
-            this.Controls.Add(this.pivotSetupButton);
-            this.Controls.Add(this.exportButton);
-            this.Controls.Add(this.displayOptionsButton);
             this.Name = "BaseTableForm";
             this.TabText = "BaseTableForm";
             this.Text = "BaseTableForm";
             this.panel1.ResumeLayout(false);
-            this.exportMenu.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize) (this.treeDataGridView)).EndInit();
+            this.exportMenu.ResumeLayout(false);
+            this.toolStrip.ResumeLayout(false);
+            this.toolStrip.PerformLayout();
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
@@ -190,13 +208,15 @@ namespace IDPicker.Forms
         protected System.Windows.Forms.Panel panel1;
 
         #endregion
-        private System.Windows.Forms.Button groupingSetupButton;
-        private System.Windows.Forms.Button pivotSetupButton;
-        private System.Windows.Forms.Button displayOptionsButton;
-        private System.Windows.Forms.Button exportButton;
+
         private System.Windows.Forms.ContextMenuStrip exportMenu;
         private System.Windows.Forms.ToolStripMenuItem clipboardToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem showInExcelToolStripMenuItem;
+        protected System.Windows.Forms.ToolStrip toolStrip;
+        protected System.Windows.Forms.ToolStripButton groupingSetupButton;
+        protected System.Windows.Forms.ToolStripButton displayOptionsButton;
+        protected System.Windows.Forms.ToolStripButton pivotSetupButton;
+        protected System.Windows.Forms.ToolStripButton exportButton;
     }
 }

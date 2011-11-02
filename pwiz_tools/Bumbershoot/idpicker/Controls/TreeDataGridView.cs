@@ -22,6 +22,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Drawing;
 using System.Data;
@@ -204,14 +205,14 @@ namespace IDPicker.Controls
                     {
                         compare = flatRow.RowIndexHierarchy[i].CompareTo(rowIndexHierarchy[i]);
                         if (compare > 0)
-                            throw new ArgumentOutOfRangeException("rowIndexHierarchy", "Row hierarchy not found.");
+                            throw new ArgumentOutOfRangeException("rowIndexHierarchy", String.Format("Row hierarchy {{{0}}} not found.", String.Join(",", rowIndexHierarchy.Select(o => o.ToString()).ToArray())));
                         if (compare == 0)
                             break;
                     }
                     ++flatRowIndex;
                 }
                 if (compare != 0)
-                    throw new ArgumentOutOfRangeException("rowIndexHierarchy", "Row hierarchy not found.");
+                    throw new ArgumentOutOfRangeException("rowIndexHierarchy", String.Format("Row hierarchy {{{0}}} not found.", String.Join(",", rowIndexHierarchy.Select(o => o.ToString()).ToArray())));
             }
             return flatRowIndex;
         }
@@ -221,18 +222,18 @@ namespace IDPicker.Controls
             return this.GetRowIndexForRowIndexHierarchy(rowIndexHierarchy as IList<int>);
         }
 
-        protected static IList<int> HeaderRowIndexHierarchy = new int[] { -1 };
+        protected static ReadOnlyCollection<int> HeaderRowIndexHierarchy = new ReadOnlyCollection<int>(new int[] { -1 });
 
         /// <summary>
         /// If Row index is known get the hierarchical identification of the row
         /// </summary>
         /// <param name="rowIndex"></param>
         /// <returns></returns>
-        public IList<int> GetRowHierarchyForRowIndex (int rowIndex)
+        public ReadOnlyCollection<int> GetRowHierarchyForRowIndex (int rowIndex)
         {
             if (rowIndex < 0)
                 return HeaderRowIndexHierarchy;
-            return expandedRowList[rowIndex].RowIndexHierarchy;
+            return new ReadOnlyCollection<int>(expandedRowList[rowIndex].RowIndexHierarchy);
         }
 
         public DataGridViewCell this[int columnIndex, params int[] rowIndexHierarchy]
@@ -288,6 +289,9 @@ namespace IDPicker.Controls
 
         public void CollapseAll ()
         {
+            if (expandedRowList == null)
+                return;
+
             // for each root row
             int totalRowsRemoved = 0;
             for (int i = 0; i < expandedRowList.Count; ++i)
@@ -321,10 +325,18 @@ namespace IDPicker.Controls
                 RowIndexHierarchy = rowIndexHierarchy;
             }
 
-            public int ChildRowCount { get; set; } //stores how many child rows are currently expanded
-            public bool HasChildRows { get { return ChildRowCount > 0; } } //quick test if row is expanded
-            public List<ExpandedRowList> ExpandedChildRows { get; set; } //info on sub-rows
-            public IList<int> RowIndexHierarchy { get; set; } //stores the exact position of the row in the tree hieracry
+            /// <summary>how many child rows are currently expanded</summary>
+            public int ChildRowCount { get; set; } 
+
+            /// <summary>quick test if row is expanded</summary>
+            public bool HasChildRows { get { return ChildRowCount > 0; } }
+
+            /// <summary>info on sub-rows</summary>
+            public List<ExpandedRowList> ExpandedChildRows { get; set; }
+
+            /// <summary>the exact position of the row in the tree hierarchy</summary>
+            public IList<int> RowIndexHierarchy { get; set; }
+
             //Examples- Value of {0} indicates that it is the first row in the top tier
             //          Value of {3} indicates that it is the fourth row in the top tier
             //          Value of {1,3} indicates that it is the fourth sub-row of the second row in the top tier
@@ -332,7 +344,8 @@ namespace IDPicker.Controls
             //                             then the fifth subrow, then the third sub row of that,
             //                             and finally look to the third sub item of that expansion
 
-            public static List<ExpandedRowList> EmptyChildRows = new List<ExpandedRowList>(); //rows that are present even when there are no sub-rows
+            /// <summary>rows that are present even when there are no sub-rows</summary>
+            public static List<ExpandedRowList> EmptyChildRows = new List<ExpandedRowList>();
 
             public override string ToString ()
             {

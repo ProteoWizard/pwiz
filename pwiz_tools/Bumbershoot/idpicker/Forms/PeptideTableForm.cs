@@ -233,7 +233,7 @@ namespace IDPicker.Forms
             }
         }
 
-        IList<Row> getChildren (Row parentRow)
+        protected override IList<Row> getChildren (Row parentRow)
         {
             if (parentRow.ChildRows != null)
                 return parentRow.ChildRows;
@@ -332,6 +332,27 @@ namespace IDPicker.Forms
             treeDataGridView.CellContentClick += treeDataGridView_CellContentClick;
             treeDataGridView.CellDoubleClick += treeDataGridView_CellDoubleClick;
             treeDataGridView.PreviewKeyDown += treeDataGridView_PreviewKeyDown;
+            treeDataGridView.CellIconNeeded += treeDataGridView_CellIconNeeded;
+        }
+
+        void treeDataGridView_CellIconNeeded (object sender, TreeDataGridViewCellValueEventArgs e)
+        {
+            if (e.RowIndexHierarchy.First() >= rows.Count)
+            {
+                e.Value = null;
+                return;
+            }
+
+            Row baseRow = rows[e.RowIndexHierarchy.First()];
+            for (int i = 1; i < e.RowIndexHierarchy.Count; ++i)
+            {
+                getChildren(baseRow); // populate ChildRows if necessary
+                baseRow = baseRow.ChildRows[e.RowIndexHierarchy[i]];
+            }
+
+            if (baseRow is PeptideGroupRow) e.Value = Properties.Resources.PeptideGroup;
+            else if (baseRow is DistinctPeptideRow) e.Value = Properties.Resources.Peptide;
+            else if (baseRow is DistinctMatchRow) e.Value = Properties.Resources.DistinctMatch;
         }
 
         private void treeDataGridView_CellValueNeeded (object sender, TreeDataGridViewCellValueEventArgs e)
@@ -943,7 +964,7 @@ namespace IDPicker.Forms
         protected override void setColumnVisibility ()
         {
             var columnsIrrelevantForGrouping = new Set<DataGridViewColumn>(new Comparison<DataGridViewColumn>((x, y) => x.Name.CompareTo(y.Name)));
-            if (!checkedGroupings.Any())
+            if (checkedGroupings.IsNullOrEmpty())
             {
                 columnsIrrelevantForGrouping.Add(distinctPeptidesColumn);
                 columnsIrrelevantForGrouping.Add(distinctMatchesColumn);

@@ -57,8 +57,8 @@ namespace IDPicker.Controls
                     return;
 
                 qonvertMethodComboBox.SelectedIndex = (int) value.QonverterMethod;
-                chargeStateHandlingComboBox.SelectedIndex = (int) value.ChargeStateHandling;
-                terminalSpecificityHandlingComboBox.SelectedIndex = (int) value.TerminalSpecificityHandling;
+                chargeStateHandlingComboBox.SelectedIndex = Math.Min(3, (int) value.ChargeStateHandling)-1;
+                terminalSpecificityHandlingComboBox.SelectedIndex = Math.Min(3, (int) value.TerminalSpecificityHandling)-1;
                 massErrorHandlingComboBox.SelectedIndex = (int) value.MassErrorHandling;
                 missedCleavagesComboBox.SelectedIndex = (int) value.MissedCleavagesHandling;
                 kernelComboBox.SelectedIndex = (int) value.Kernel;
@@ -82,8 +82,8 @@ namespace IDPicker.Controls
                 var qonverterSettings = new QonverterSettings()
                 {
                     QonverterMethod = (Qonverter.QonverterMethod) qonvertMethodComboBox.SelectedIndex,
-                    ChargeStateHandling = (Qonverter.ChargeStateHandling) chargeStateHandlingComboBox.SelectedIndex,
-                    TerminalSpecificityHandling = (Qonverter.TerminalSpecificityHandling) terminalSpecificityHandlingComboBox.SelectedIndex,
+                    ChargeStateHandling = (Qonverter.ChargeStateHandling) (chargeStateHandlingComboBox.SelectedIndex > 1 ? 2 : chargeStateHandlingComboBox.SelectedIndex+1),
+                    TerminalSpecificityHandling = (Qonverter.TerminalSpecificityHandling) (terminalSpecificityHandlingComboBox.SelectedIndex > 1 ? 2 : terminalSpecificityHandlingComboBox.SelectedIndex+1),
                     MassErrorHandling = (Qonverter.MassErrorHandling) massErrorHandlingComboBox.SelectedIndex,
                     MissedCleavagesHandling = (Qonverter.MissedCleavagesHandling) missedCleavagesComboBox.SelectedIndex,
                     Kernel = (Qonverter.Kernel) kernelComboBox.SelectedIndex,

@@ -969,12 +969,11 @@ namespace CustomDataSourceDialog
                             continue;
                     }
 
-                    HandleItemToAdd(ref newNode,file);
+                    HandleItemToAdd(ref newNode, file);
                 }
                 catch (Exception e)
                 {
-                    MessageBox.Show("Couldnt add folder-" + e.Message);
-                    continue;
+                    throw new Exception("Failed to add file \"" + file.Name + "\"", e);
                 }
             }
             foreach (var source in newNode.Nodes.Cast<TreeNode>()
