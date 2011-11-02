@@ -1,4 +1,22 @@
-﻿using System.IO;
+﻿/*
+ * Original author: Vagisha Sharma <vsharma .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2011 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System.IO;
 using AcqMethodSvrLib;
 using Analyst;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -17,6 +35,17 @@ namespace BuildAnalystFullScanMethod.Test
         protected const string METHOD_FILE_QSTAR_MS1_MS2 = "QSTAR_MS1MS2.dam";
         protected const string METHOD_FILE_QSTAR = "QSTAR.dam";
 
+        private const string TRANS_LIST_UNSCHED = "Study 7 unsched.csv";
+        private const string TRANS_LIST_SCHED = "Study 7 sched.csv";
+        private const string METHOD_UNSCHED = "Study 7 unsched.dam";
+        private const string METHOD_SCHED = "Study 7 sched.dam";
+
+        private readonly string PROJECT_DIR;
+
+        public BuildMethodTest()
+        {
+            PROJECT_DIR = GetProjectDirectory();
+        }
 
         [TestMethod]
         [ExpectedException(typeof(IOException))]
@@ -25,7 +54,9 @@ namespace BuildAnalystFullScanMethod.Test
             string projectDirectory = GetProjectDirectory();
 
             var template = IsQSTAR() ? METHOD_FILE_5600 : METHOD_FILE_QSTAR;
-            var args = new[] { projectDirectory + template, projectDirectory + "Study 7 unsched.csv" };
+            var args = new[] { Path.Combine(projectDirectory, template), 
+                               Path.Combine(projectDirectory, TRANS_LIST_UNSCHED) };
+
             var builder = new BuildAnalystFullScanMethod();
             builder.ParseCommandArgs(args);
 
@@ -41,13 +72,14 @@ namespace BuildAnalystFullScanMethod.Test
             string projectDirectory = GetProjectDirectory();
 
             var template = IsQSTAR() ? METHOD_FILE_QSTAR : METHOD_FILE_5600;
-            var args = new[] { "-i", projectDirectory + template, projectDirectory + "Study 7 unsched.csv" };
+            var args = new[] { "-i", Path.Combine(projectDirectory, template), 
+                                     Path.Combine(projectDirectory, TRANS_LIST_UNSCHED) };
+
             var builder = new BuildAnalystFullScanMethod();
             builder.ParseCommandArgs(args);
 
             // This should throw an exception
             builder.build();
-
         }
 
 
@@ -58,12 +90,19 @@ namespace BuildAnalystFullScanMethod.Test
             string projectDirectory = GetProjectDirectory();
 
             var template = IsQSTAR() ? METHOD_FILE_IDA_QSTAR : METHOD_FILE_IDA_5600;
-            var args = new[] { projectDirectory + template, projectDirectory + "Study 7 unsched.csv" };
+            var args = new[] { Path.Combine(projectDirectory, template),
+                               Path.Combine(projectDirectory, TRANS_LIST_UNSCHED) };
+
             var builder = new BuildAnalystFullScanMethod();
             builder.ParseCommandArgs(args);
 
             // This should throw an exception
             builder.build();
+        }
+
+        protected static bool IsQstarTemplate(string templateFile)
+        {
+            return templateFile.Contains("QSTAR");
         }
 
         protected bool IsQSTAR()
@@ -77,7 +116,7 @@ namespace BuildAnalystFullScanMethod.Test
                 throw new IOException("Failed to initialize.  Analyst may need to be started.");
 
 
-            string methodFilePath = Path.GetFullPath(GetProjectDirectory() + METHOD_FILE_IDA_QSTAR);
+            string methodFilePath = Path.GetFullPath(Path.Combine(GetProjectDirectory(), METHOD_FILE_IDA_QSTAR));
 
             object acqMethodObj;
             acqMethodDir.LoadNonUIMethod(methodFilePath, out acqMethodObj);
@@ -86,7 +125,7 @@ namespace BuildAnalystFullScanMethod.Test
 
             var method = BuildAnalystFullScanMethod.ExtractMsMethod(acqMethod);
 
-            // TODO there must be a better way to figure out which version of Analyst we have
+            // there must be a better way to figure out which version of Analyst we have
             return method != null;
         }
 
@@ -97,10 +136,39 @@ namespace BuildAnalystFullScanMethod.Test
             BuildAnalystFullScanMethod.GetAcqMethod(methodFilePath, out method);
 
             return method;
-
         }
 
-        protected string GetProjectDirectory()
+        protected string GetTemplateFilePath(string templateMethodFile)
+        {
+            return GetFullPath(templateMethodFile);
+        }
+
+        protected string GetMethodUnschedPath()
+        {
+            return GetFullPath(METHOD_UNSCHED);
+        }
+
+        protected string GetMethodSchedPath()
+        {
+            return GetFullPath(METHOD_SCHED);
+        }
+
+        protected string GetTransListUnschedPath()
+        {
+            return GetFullPath(TRANS_LIST_UNSCHED);
+        }
+
+        protected string GetTransListSchedPath()
+        {
+            return GetFullPath(TRANS_LIST_SCHED); 
+        }
+
+        private string GetFullPath(string fileName)
+        {
+            return Path.GetFullPath(Path.Combine(PROJECT_DIR, fileName));
+        }
+
+        private static string GetProjectDirectory()
         {
             string projectDirectory = Directory.GetCurrentDirectory();
             int idx = projectDirectory.IndexOf("bin");
@@ -118,14 +186,13 @@ namespace BuildAnalystFullScanMethod.Test
                 File.Delete(methodFilePath);
                 if (File.Exists(methodFilePath))
                 {
-                    Assert.Fail("Could not delete file: " + methodFilePath);
+                    Assert.Fail(string.Format("Could not delete file: {0}", methodFilePath));
                 }
             }
             catch (FileNotFoundException)
             {
                 Assert.Fail(string.Format("Could not find file: {0}", methodFilePath));
             }
-        }
-        
+        }       
     }
 }

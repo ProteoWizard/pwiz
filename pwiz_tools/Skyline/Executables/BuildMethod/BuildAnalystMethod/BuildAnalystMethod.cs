@@ -1,6 +1,6 @@
 ﻿/*
  * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
- *                  John Chilton <jchilton .at. uw.edu>
+ *                  Vagisha Sharma <vsharma .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2010-2011 University of Washington - Seattle, WA
@@ -23,10 +23,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-// using AcqMethodSvrLib;
-// using Analyst;
-// using Interop.MSMethodSvr;
-
 
 namespace BuildAnalystMethod
 {
@@ -88,13 +84,14 @@ namespace BuildAnalystMethod
         public double DP { get; private set; }
     }
 
-    public class BuildAnalystMethod
+    public abstract class BuildAnalystMethod
     {
-        private const string ANALYST_METHOD_EXT = ".dam";
 
         protected string TemplateMethod { get; set; }
 
         protected List<MethodTransitions> MethodTrans { get; set; }
+
+        protected abstract string FileExtension { get; }
 
         protected BuildAnalystMethod()
         {
@@ -187,7 +184,7 @@ namespace BuildAnalystMethod
         {
             if (!multiFile && string.IsNullOrEmpty(outputMethod))
             {
-                string methodFileName = Path.GetFileNameWithoutExtension(inputFile) + ANALYST_METHOD_EXT;
+                string methodFileName = Path.GetFileNameWithoutExtension(inputFile) + FileExtension;
                 string dirName = Path.GetDirectoryName(inputFile);
                 outputMethod = (dirName != null ? Path.Combine(dirName, methodFileName) : inputFile);
             }
@@ -248,12 +245,7 @@ namespace BuildAnalystMethod
             }
         }
 
-        public virtual void build()
-        {
-        }
-        
-
-        
+        public abstract void build();
     }
 
     internal sealed class TempFile : IDisposable

@@ -1,4 +1,21 @@
-﻿using System.IO;
+﻿/*
+ * Original author: Vagisha Sharma <vsharma .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2011 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 using Interop.DDEMethodSvr;
 using Interop.MSMethodSvr;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -7,9 +24,7 @@ namespace BuildAnalystFullScanMethod.Test
 {
     [TestClass]
     public class BuildIDAMethodTest : BuildMethodTest
-    {
-
-       
+    {       
         [TestMethod]
         public void TestIDAUnscheduled()
         {
@@ -24,41 +39,39 @@ namespace BuildAnalystFullScanMethod.Test
 
         private void TestIDAUnscheduled(string templateMethodFile)
         {
+            var args = new[] { 
+                                "-i", 
+                                GetTemplateFilePath(templateMethodFile),
+                                GetTransListUnschedPath()
+                             };
 
-            string projectDirectory = GetProjectDirectory();
-
-            var args = new[] { "-i", projectDirectory+templateMethodFile, projectDirectory+"Study 7 unsched.csv" };
             var builder = new BuildAnalystFullScanMethod();
             builder.ParseCommandArgs(args);
             builder.build();
 
-            string methodFilePath = Path.GetFullPath(projectDirectory+"Study 7 unsched.dam");
 
-            TestIDACommon(methodFilePath, false);
-            
+            TestIDACommon(GetMethodUnschedPath(), false);            
         }
 
         private void TestIDAScheduled(string templateMethodFile)
         {
+            var args = new[] {
+                                "-i", "-r",
+                                GetTemplateFilePath(templateMethodFile),
+                                GetTransListSchedPath()
+                             };
 
-            string projectDirectory = GetProjectDirectory();
-
-            var args = new[] {"-i", "-r", projectDirectory + templateMethodFile, projectDirectory + "Study 7 sched.csv"};
             var builder = new BuildAnalystFullScanMethod();
             builder.ParseCommandArgs(args);
             builder.build();
 
-            string methodFilePath = Path.GetFullPath(projectDirectory + "Study 7 sched.dam");
 
-
-            TestIDACommon(methodFilePath, true);
-
+            TestIDACommon(GetMethodSchedPath(), true);
         }
 
         // read the updated method and make sure that the inclusion list is in the method
         private void TestIDACommon(string methodFilePath, bool isScheduled)
         {
-
             MassSpecMethod myMethod = GetMethod(methodFilePath);
 
             // The method should have an inclusion list
@@ -86,7 +99,6 @@ namespace BuildAnalystFullScanMethod.Test
             // test retention time
             if (isScheduled)
             {
-
                 // Since this is an scheduled method, the retention time of each entry should be a non-zero value
                 double rt = -1;
                 ((IDDEMethodObj3)idaServer).GetIncludeRetTimeEntry(0, ref rt);
@@ -95,7 +107,6 @@ namespace BuildAnalystFullScanMethod.Test
 
                 ((IDDEMethodObj3)idaServer).GetIncludeRetTimeEntry(19, ref rt);
                 Assert.AreEqual(20.48, rt);
-
             }
             else
             {

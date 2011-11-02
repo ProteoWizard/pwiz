@@ -1,4 +1,21 @@
-﻿using System.IO;
+﻿/*
+ * Original author: Vagisha Sharma <vsharma .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2011 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 using Interop.MSMethodSvr;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using ParameterSvrLib;
@@ -29,32 +46,38 @@ namespace BuildAnalystFullScanMethod.Test
 
         private void TestTargetedMsmsNoTOFMs(string templateMethodFile)
         {
-            string projectDirectory = GetProjectDirectory();
+            var args = new[] { 
+                                GetTemplateFilePath(templateMethodFile), 
+                                GetTransListUnschedPath() 
+                              };
 
-            var args = new[] { projectDirectory + templateMethodFile, projectDirectory + "Study 7 sched.csv" };
             var builder = new BuildAnalystFullScanMethod();
             builder.ParseCommandArgs(args);
             builder.build();
 
-            string methodFilePath = Path.GetFullPath(projectDirectory + "Study 7 sched.dam");
-            string templateFilePath = Path.GetFullPath(projectDirectory + templateMethodFile);
+            string methodFilePath = GetMethodUnschedPath();
+            string templateFilePath = GetTemplateFilePath(templateMethodFile);
 
             TestTargetedMsmsCommon(templateFilePath, methodFilePath, false);
 
-            DeleteOutput(methodFilePath);
+            // DeleteOutput(methodFilePath);
         }
 
         private void TestTargetedMsmsTOFMs(string templateMethodFile)
         {
-            string projectDirectory = GetProjectDirectory();
+            var args = new[]
+                           {
+                               "-1", 
+                               GetTemplateFilePath(templateMethodFile),
+                               GetTransListUnschedPath()
+                           };
 
-            var args = new[] { "-1", projectDirectory + templateMethodFile, projectDirectory + "Study 7 sched.csv" };
             var builder = new BuildAnalystFullScanMethod();
             builder.ParseCommandArgs(args);
             builder.build();
 
-            string methodFilePath = Path.GetFullPath(projectDirectory + "Study 7 sched.dam");
-            string templateFilePath = Path.GetFullPath(projectDirectory + templateMethodFile);
+            string methodFilePath = GetMethodUnschedPath();
+            string templateFilePath = GetTemplateFilePath(templateMethodFile);
 
             TestTargetedMsmsCommon(templateFilePath, methodFilePath, true);
 
@@ -63,7 +86,6 @@ namespace BuildAnalystFullScanMethod.Test
 
         private void TestTargetedMsmsCommon(string templateFilePath, string methodFilePath, bool doTOFMs)
         {
-
             var method = GetMethod(methodFilePath);
             Assert.AreEqual(1, method.PeriodCount);
 
@@ -109,17 +131,10 @@ namespace BuildAnalystFullScanMethod.Test
 
                 CompareExperiments(templateProdIonExpt, experiment, IsQstarTemplate(templateFilePath));
             }
-
-        }
-
-        private static bool IsQstarTemplate(string templateFile)
-        {
-            return templateFile.Contains("QSTAR");
         }
 
         private static void CompareExperiments(Experiment templateExpt, Experiment myExpt, bool isQstar)
         {
-
             var tofProperties_template = (ITOFProperties)templateExpt;
             var tofProperties_mine = (ITOFProperties)myExpt;
          
@@ -151,9 +166,6 @@ namespace BuildAnalystFullScanMethod.Test
             {
                 Assert.AreEqual(((ITOFProperties2)templateExpt).HighSensitivity, ((ITOFProperties2)myExpt).HighSensitivity);
             }
-            
-
         }
-
     }
 }

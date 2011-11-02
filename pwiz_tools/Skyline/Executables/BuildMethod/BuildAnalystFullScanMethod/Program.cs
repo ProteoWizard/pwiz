@@ -1,8 +1,8 @@
 ﻿/*
- * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
+ * Original author: Vagisha Sharma <vsharma .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
- * Copyright 2010-2011 University of Washington - Seattle, WA
+ * Copyright 2011 University of Washington - Seattle, WA
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -98,6 +98,14 @@ namespace BuildAnalystFullScanMethod
 
         private bool ScheduledMethod { get; set; }
 
+        protected override string FileExtension
+        {
+            get
+            {
+                return ".dam"; 
+            }
+        }
+
         public override void ParseCommandArgs(string[] args)
         {
             var listArgs = new List<string>();
@@ -142,8 +150,12 @@ namespace BuildAnalystFullScanMethod
             foreach (var methodTranList in MethodTrans)
             {
                 Console.Error.WriteLine(string.Format("MESSAGE: Exporting method {0}", Path.GetFileName(methodTranList.FinalMethod)));
+
                 if (string.IsNullOrEmpty(methodTranList.TransitionList))
-                    throw new IOException(string.Format("Failure creating method file {0}.  The transition list is empty.", methodTranList.FinalMethod));
+                {
+                    throw new IOException(string.Format("Failure creating method file {0}.  The transition list is empty.",
+                                          methodTranList.FinalMethod));
+                }
 
                 try
                 {
@@ -156,7 +168,9 @@ namespace BuildAnalystFullScanMethod
                 }
 
                 if (!File.Exists(methodTranList.OutputMethod))
+                {
                     throw new IOException(string.Format("Failure creating method file {0}.", methodTranList.FinalMethod));
+                }
 
                 // Skyline uses a segmented progress status, which expects 100% for each
                 // segment, with one segment per file.
@@ -171,7 +185,9 @@ namespace BuildAnalystFullScanMethod
             // Make sure that Analyst is fully started
             IAcqMethodDirConfig acqMethodDir = (IAcqMethodDirConfig)analyst.Acquire();
             if (acqMethodDir == null)
+            {
                 throw new IOException("Failed to initialize.  Analyst may need to be started.");
+            }
 
             object acqMethodObj;
             acqMethodDir.LoadNonUIMethod(methodFilePath, out acqMethodObj);
@@ -211,14 +227,17 @@ namespace BuildAnalystFullScanMethod
 
         private void ValidateMethod(MassSpecMethod method)
         {
-
-            // Do some validation that happens regardless of instrument
             if (method == null)
+            {
                 throw new IOException(string.Format("Failed to open template method {0}. " +
-                                "The given template may be invalid for the available version of Analyst.", TemplateMethod));
+                                                    "The given template may be invalid for the available version of Analyst.",
+                                                    TemplateMethod));
+            }
             if (method.PeriodCount != 1)
-                throw new IOException(string.Format("Invalid template method {0}.  Expecting only one period.", TemplateMethod));
-
+            {
+                throw new IOException(string.Format("Invalid template method {0}.  Expecting only one period.",
+                                                    TemplateMethod));
+            }
 
 
             var period = (Period) method.GetPeriod(0);
@@ -230,8 +249,9 @@ namespace BuildAnalystFullScanMethod
             {
                 if(!IsDataDependentMethod(method))
                 {
-                    throw new IOException(string.Format("Invalid template method for an IDA experiment {0}. Template does not support inclusion lists.",
-                                                    TemplateMethod));
+                    throw new IOException(string.Format("Invalid template method for an IDA experiment {0}. "+
+                                                        "Template does not support inclusion lists.",
+                                                        TemplateMethod));
                 }
 
                 // A valid IDA method will have at least one TOF MS scan and one Product Ion scan
@@ -240,42 +260,48 @@ namespace BuildAnalystFullScanMethod
                 if (experimentCount < 2)
                     throw new IOException(string.Format("Invalid template method for an IDA experiment {0}. "+
                                                         "Template must have one or two TOF MS experiments and at least one Product Ion experiment.",
-                                                    TemplateMethod));
+                                                        TemplateMethod));
 
                 // get the first experiment, it should be a TOF MS experiment
                 var msExperiment = (Experiment) period.GetExperiment(0);
 
                 if (!IsTofMsScan(msExperiment))
-                    throw new IOException(string.Format("Invalid template method for an IDA experiment {0}. First experiment type must be TOF MS.",
-                                                    TemplateMethod));
+                    throw new IOException(string.Format("Invalid template method for an IDA experiment {0}. "+
+                                                        "First experiment type must be TOF MS.",
+                                                        TemplateMethod));
 
                 // get the last experiment, it should be a Product ion experiment
                 msExperiment = ((Experiment)period.GetExperiment(experimentCount -1));
                
                 if (!IsProductIonScan(msExperiment))
-                    throw new IOException(string.Format("Invalid template method for and IDA experiment {0}. Last experiment type must be Product Ion Scan.",
-                                                     TemplateMethod));
+                    throw new IOException(string.Format("Invalid template method for and IDA experiment {0}. "+
+                                                        "Last experiment type must be Product Ion Scan.",
+                                                        TemplateMethod));
             }
             else
             {
                 if (IsDataDependentMethod(method))
                 {
-                    throw new IOException(string.Format("Invalid template method for a targeted MS/MS experiment {0}. The given template is for a data dependent experiment.",
-                                                    TemplateMethod));
+                    throw new IOException(string.Format("Invalid template method for a targeted MS/MS experiment {0}. "+
+                                                        "The given template is for a data dependent experiment.",
+                                                        TemplateMethod));
                 }
 
                 if (experimentCount != 1 && experimentCount != 2)
-                    throw new IOException(string.Format("Invalid template method for a targeted MS/MS experiment {0}. Template must have 1 or 2 experiments.",
-                                                    TemplateMethod));
+                {
+                    throw new IOException(string.Format("Invalid template method for a targeted MS/MS experiment {0}. " +
+                                                        "Template must have 1 or 2 experiments.",
+                                                        TemplateMethod));
+                }
 
                 // If the template has 1 experiment it should be a Product Ion experiment
                 if(experimentCount == 1)
                 {
                     var msExperiment = (Experiment)period.GetExperiment(0);
                     if (!IsProductIonScan(msExperiment))
-                        throw new IOException(string.Format("Invalid template method for a targeted MS/MS experiment {0}. " +
-                                                "Template does not have a Product Ion Scan.",
-                                                         TemplateMethod));
+                        throw new IOException(string.Format("Invalid template method for a targeted MS/MS experiment {0}. "+
+                                                            "Template does not have a Product Ion Scan.",
+                                                            TemplateMethod));
                 }
 
                 // If the template has 2 experiments require the first one to be a TOF MS and the second one to be a Product Ion
@@ -284,17 +310,15 @@ namespace BuildAnalystFullScanMethod
                     var msExperiment = (Experiment)period.GetExperiment(0);
                     if (!IsTofMsScan(msExperiment))
                         throw new IOException(string.Format("Invalid template method for a targeted MS/MS experiment {0}. "+
-                                                "Template has 2 experiments. First experiment type must be TOF MS.",
-                                            TemplateMethod));
+                                                            "Template has 2 experiments. First experiment type must be TOF MS.",
+                                                            TemplateMethod));
 
                     msExperiment = (Experiment)period.GetExperiment(1);
                     if (!IsProductIonScan(msExperiment))
                         throw new IOException(string.Format("Invalid template method for a targeted MS/MS experiment {0}. "+
-                                                "Template has 2 experiments. Second experiment type must be Product Ion Scan.",
-                                                         TemplateMethod));
-
+                                                            "Template has 2 experiments. Second experiment type must be Product Ion Scan.",
+                                                            TemplateMethod));
                 }
-
             }
         }
 
@@ -305,7 +329,6 @@ namespace BuildAnalystFullScanMethod
             ((IMassSpecMethod2)method).GetDataDependSvr(out idaServer);
 
             ((IDDEMethodObj)idaServer).putUseIncludeList(1);
-            // ((IDDEMethodObj3) idaServer).putIncludeForSecs(RtWindow);
 
             double minTOFMass = 0;
             double maxTOFMass = 0;
@@ -314,7 +337,6 @@ namespace BuildAnalystFullScanMethod
             var addedEntries = new List<string>();
             foreach (var transition in transitions.Transitions)
             {
-
                 double retentionTime = 0;
 
                 // If the ScheduledMethod flag was set assume that the Dwell time column in the 
@@ -339,7 +361,7 @@ namespace BuildAnalystFullScanMethod
 
 
             Experiment tofExperiment = null;
-            Experiment prodIonExperiment = null; 
+            Experiment prodIonExperiment; 
            
             switch (period.ExperimCount)
             {
@@ -359,6 +381,9 @@ namespace BuildAnalystFullScanMethod
                     period.DeleteExperiment(0);
 
                     break;
+
+                default:
+                    throw new IOException(string.Format("Expected 1 or 2 experiments in the template. Found {0} experiments.", period.ExperimCount));
             }
             
 
@@ -423,7 +448,7 @@ namespace BuildAnalystFullScanMethod
                 experiment.InitExperiment();
 
                 // Setting ScanType to 6 for QSTAR causes method export to fail. Setting it to 9 works for both AB 5600 and QSTAR
-                experiment.ScanType = PROD_ION_SCAN; //  Equals(ionSprayVoltageParamName, "IS") ? (short)6 : (short)9;
+                experiment.ScanType = PROD_ION_SCAN;
 
                 experiment.FixedMass = transition.PrecursorMz;
 
@@ -438,12 +463,12 @@ namespace BuildAnalystFullScanMethod
                 tofProperties.TOFMassMax = tofPropertiesTemplate.TOFMassMax;
 
                 // High Sensitivity vs. High Resolution
-                if(experiment is ITOFProperties2)
+                var tofProperties2 = experiment as ITOFProperties2;
+                var templateTofProperties2 = prodIonExperiment as ITOFProperties2;
+                if (tofProperties2 != null && templateTofProperties2 != null)
                 {
-                    ((ITOFProperties2) experiment).HighSensitivity =
-                        ((ITOFProperties2) prodIonExperiment).HighSensitivity;
+                    tofProperties2.HighSensitivity = templateTofProperties2.HighSensitivity;
                 }
-
 
                 var srcParams = (ParamDataColl)experiment.SourceParamsTbl;
                 
@@ -451,8 +476,7 @@ namespace BuildAnalystFullScanMethod
                 srcParams.AddSetParameter("GS2", sourceGas2, sourceGas2, 0, out s);
                 srcParams.AddSetParameter("CUR", curtainGas, curtainGas, 0, out s);
                 srcParams.AddSetParameter("TEM", temperature, temperature, 0, out s);
-                srcParams.AddSetParameter(ionSprayVoltageParamName, ionSprayVoltage, ionSprayVoltage, 0, out s);
-               
+                srcParams.AddSetParameter(ionSprayVoltageParamName, ionSprayVoltage, ionSprayVoltage, 0, out s);             
             }
 
             // Expand the mass range for the TOF MS scan if the precursor mass of any of the MS/MS experiments
@@ -462,13 +486,11 @@ namespace BuildAnalystFullScanMethod
                 var ms1TofProperties = (ITOFProperties)(period.GetExperiment(0));
                 ms1TofProperties.TOFMassMin = Math.Min(ms1TofProperties.TOFMassMin, minPrecursorMass);
                 ms1TofProperties.TOFMassMax = Math.Max(ms1TofProperties.TOFMassMax, maxPrecursorMass);
-
             }
         }
         
         public void WriteToTemplate(String templateMethodFile, MethodTransitions transitions)
         {
-
             MassSpecMethod templateMsMethod;
 
             IAcqMethod templateAcqMethod = GetAcqMethod(TemplateMethod, out templateMsMethod);
@@ -494,7 +516,7 @@ namespace BuildAnalystFullScanMethod
             return ((IMassSpecMethod2) method).DataDependent == 1;
         }
 
-        // TOF MS is 8
+
         private static bool IsTofMsScan(Experiment experiment)
         {
             return experiment.ScanType == TOF_MS_SCAN;
@@ -503,10 +525,9 @@ namespace BuildAnalystFullScanMethod
         private static bool IsProductIonScan(Experiment experiment)
         {
             return experiment.ScanType == PROD_ION_SCAN;
-            // Previous comment about ScanType: Product ion scan is 9 in TF 1.5, 6 in QS 2.0
+            // Previous comment about ScanType was: Product ion scan is 9 in TF 1.5, 6 in QS 2.0
             // However, I found the ScanType for a ProductIon to always be 9;
             // return (experiment.ScanType == 6 || experiment.ScanType == 9);
         }
-
     }
 }

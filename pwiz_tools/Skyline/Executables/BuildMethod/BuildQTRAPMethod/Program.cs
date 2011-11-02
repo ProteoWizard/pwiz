@@ -90,6 +90,14 @@ namespace BuildQTRAPMethod
 
         private int? RTWindow { get; set; }
 
+        protected override string FileExtension
+        {
+            get
+            {
+                return ".dam";
+            }
+        }
+
         public override void ParseCommandArgs(string[] args)
         {
             var listArgs = new List<string>();
@@ -139,6 +147,7 @@ namespace BuildQTRAPMethod
             foreach (var methodTranList in MethodTrans)
             {
                 Console.Error.WriteLine(string.Format("MESSAGE: Exporting method {0}", Path.GetFileName(methodTranList.FinalMethod)));
+
                 if (string.IsNullOrEmpty(methodTranList.TransitionList))
                     throw new IOException(string.Format("Failure creating method file {0}.  The transition list is empty.", methodTranList.FinalMethod));
 
@@ -210,31 +219,50 @@ namespace BuildQTRAPMethod
 
             // Do some validation that happens regardless of instrument
             if (method == null)
+            {
                 throw new IOException(string.Format("Failed to open template method {0}. " +
-                                "The given template may be invalid for the available version of Analyst.", TemplateMethod));
+                                                    "The given template may be invalid for the available version of Analyst.",
+                                                    TemplateMethod));
+            }
+
             if (method.PeriodCount != 1)
-                throw new IOException(string.Format("Invalid template method {0}.  Expecting only one period.", TemplateMethod));
+            {
+                throw new IOException(string.Format("Invalid template method {0}.  Expecting only one period.",
+                                                    TemplateMethod));
 
-
+            }
 
             var msPeriod = (Period)method.GetPeriod(0);
             if (msPeriod.ExperimCount != 1)
-                throw new IOException(string.Format("Invalid template method {0}.  Expecting only one experiment.", TemplateMethod));
+            {
+                throw new IOException(string.Format("Invalid template method {0}.  Expecting only one experiment.",
+                                                    TemplateMethod));
+            }
+
             var msExperiment = (Experiment)msPeriod.GetExperiment(0);
             var experimentType = msExperiment.ScanType;
             if (experimentType != 4)
-                throw new IOException(string.Format("Invalid template method {0}.  Experiment type must be MRM.", TemplateMethod));
+            {
+                throw new IOException(string.Format("Invalid template method {0}.  Experiment type must be MRM.",
+                                                    TemplateMethod));
+            }
 
             var msExperiment7 = (IExperiment7)msExperiment;
             if (RTWindow.HasValue)
             {
                 if (msExperiment7.KnownRetentionTimes == 0)
-                    throw new IOException(string.Format("Invalid template method {0}.  Template does not support scheduled MRM.", TemplateMethod));
+                {
+                    throw new IOException(string.Format("Invalid template method {0}.  Template does not support scheduled MRM.",
+                                                        TemplateMethod));
+                }
             }
             else
             {
                 if (msExperiment7.KnownRetentionTimes != 0)
-                    throw new IOException(string.Format("Invalid template method {0}.  Template is for scheduled MRM.", TemplateMethod));
+                {
+                    throw new IOException(string.Format("Invalid template method {0}.  Template is for scheduled MRM.",
+                                                        TemplateMethod));
+                }
             }
         }
 
