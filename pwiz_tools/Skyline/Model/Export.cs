@@ -47,6 +47,7 @@ namespace pwiz.Skyline.Model
     {
         public const string ABI = "AB SCIEX";
         public const string ABI_QTRAP = "AB SCIEX QTRAP";
+        public const string ABI_TOF = "AB SCIEX TOF";
         public const string Agilent = "Agilent";
         public const string Agilent6400 = "Agilent 6400 Series";
         public const string Thermo = "Thermo";
@@ -64,6 +65,7 @@ namespace pwiz.Skyline.Model
         public static readonly string[] METHOD_TYPES =
             {
                 ABI_QTRAP,
+                ABI_TOF,
                 Agilent6400,
                 Thermo_TSQ,
                 Thermo_LTQ,
@@ -86,6 +88,7 @@ namespace pwiz.Skyline.Model
             MethodExtensions = new Dictionary<string, string>
                                    {
                                        {ABI_QTRAP, EXT_AB_SCIEX},
+                                       {ABI_TOF, EXT_AB_SCIEX},
                                        {Agilent6400, EXT_AGILENT},
                                        {Thermo_TSQ, EXT_THERMO},
                                        {Thermo_LTQ, EXT_THERMO},
@@ -107,19 +110,25 @@ namespace pwiz.Skyline.Model
 
         public static bool IsFullScanInstrumentType(string type)
         {
-            return Equals(type, Thermo_LTQ);
+            return Equals(type, Thermo_LTQ) ||
+                   Equals(type, ABI_TOF);
         }
 
         public static bool IsPrecursorOnlyInstrumentType(string type)
         {
-            return Equals(type, Thermo_LTQ);
+            return Equals(type, Thermo_LTQ) ||
+                   Equals(type, ABI_TOF);
         }
 
         public static bool CanScheduleInstrumentType(string type, SrmDocument doc)
         {
-            return !Equals(type, Thermo_LTQ) ||
-                (doc.Settings.TransitionSettings.FullScan.IsEnabledMs
-                && !doc.Settings.TransitionSettings.FullScan.IsEnabledMsMs);
+            return !(Equals(type, Thermo_LTQ) || Equals(type, ABI_TOF))|| IsInclusionListMethod(doc);
+        }
+
+        public static bool IsInclusionListMethod(SrmDocument doc)
+        {
+            return (doc.Settings.TransitionSettings.FullScan.IsEnabledMs &&
+                !doc.Settings.TransitionSettings.FullScan.IsEnabledMsMs);
         }
 
         public static bool CanSchedule(string instrumentType, SrmDocument doc)
@@ -132,6 +141,7 @@ namespace pwiz.Skyline.Model
         public static bool IsSingleWindowInstrumentType(string type)
         {
             return Equals(type, ABI) ||
+                   Equals(type, ABI_QTRAP) ||
                    Equals(type, Waters) ||
                    Equals(type, Waters_Xevo) ||
                    Equals(type, Waters_Quattro_Premier);
@@ -189,6 +199,9 @@ namespace pwiz.Skyline.Model
                         return ExportAbiCsv(doc, path);
                     else
                         return ExportAbiQtrapMethod(doc, path, template);
+                case ExportInstrumentType.ABI_TOF:
+                    OptimizeType = null;
+                    return ExportAbiTofMethod(doc, path, template);
                 case ExportInstrumentType.Agilent:
                 case ExportInstrumentType.Agilent6400:
                     if (type == ExportFileType.List)
@@ -213,7 +226,7 @@ namespace pwiz.Skyline.Model
                 case ExportInstrumentType.Waters_Quattro_Premier:
                     return ExportWatersQMethod(doc, path, template);
                 default:
-                    return null;
+                    throw new InvalidOperationException(string.Format("Unrecognized instrument type {0}.", instrumentType));
             }
         }
 
@@ -232,6 +245,17 @@ namespace pwiz.Skyline.Model
             var exporter = InitExporter(new AbiQtrapMethodExporter(document));
             if (MethodType == ExportMethodType.Standard)
                 exporter.DwellTime = DwellTime;
+            PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
+
+            return exporter;
+        }
+
+        public MassListExporter ExportAbiTofMethod(SrmDocument document, string fileName, string templateName)
+        {
+            var exporter = InitExporter(new AbiTofMethodExporter(document));
+
+            exporter.FullScans = true;
+            
             PerformLongExport(m => exporter.ExportMethod(fileName, templateName, m));
 
             return exporter;
@@ -1496,47 +1520,54 @@ namespace pwiz.Skyline.Model
         }
     }
 
-    public class AbiQtrapMethodExporter : AbiMassListExporter
+    public abstract class AbiMethodExporter : AbiMassListExporter
     {
-        public const string EXE_BUILD_QTRAP_METHOD = @"Method\AbSciex\BuildQTRAPMethod";
+
         private const string ANALYST_NAME = "Analyst";
         private const string ANALYST_EXE = ANALYST_NAME + ".exe";
 
-        public AbiQtrapMethodExporter(SrmDocument document)
+        protected AbiMethodExporter(SrmDocument document)
             : base(document)
         {
         }
 
+        protected abstract string GetRegQueryKey();
+
+        protected abstract string GetExeName();
+
+        protected abstract string GetAnalystVersions();
+
+        protected abstract List<string> getArgs();
+
         public void ExportMethod(string fileName, string templateName, IProgressMonitor progressMonitor)
         {
-            if(fileName != null)
+            if (fileName != null)
                 EnsureAnalyst(progressMonitor);
-            
+
             if (!InitExport(fileName, progressMonitor))
                 return;
 
-            var argv = new List<string>();
-            if (RTWindow.HasValue)
-            {
-                argv.Add("-w");
-                argv.Add(RTWindow.ToString());
-            }
-            MethodExporter.ExportMethod(EXE_BUILD_QTRAP_METHOD,
-                argv, fileName, templateName, MemoryOutput, progressMonitor);
+            MethodExporter.ExportMethod(GetExeName(),
+                getArgs(), fileName, templateName, MemoryOutput, progressMonitor);
         }
 
-        private static void EnsureAnalyst(IProgressMonitor progressMonitor)
+        private void EnsureAnalyst(IProgressMonitor progressMonitor)
         {
             string analystPath = AdvApi.GetPathFromProgId("Analyst.MassSpecMethod.1");
             string analystDir = (analystPath != null ? Path.GetDirectoryName(analystPath) : null);
+
             if (analystDir != null)
             {
-                string ver = AdvApi.RegQueryKeyValue(AdvApi.HKEY_LOCAL_MACHINE, @"SOFTWARE\PE SCIEX\Products\Analyst3Q", "Version");
-                if (!Equals(ver, "1.5.1"))
-                    analystDir = null;                
+                string ver = AdvApi.RegQueryKeyValue(AdvApi.HKEY_LOCAL_MACHINE, GetRegQueryKey(), "Version");
+                
+                if (string.IsNullOrEmpty(ver) || !GetAnalystVersions().Contains(ver))
+                    analystDir = null;
             }
             if (analystDir == null)
-                throw new IOException("Failed to find a valid Analyst 1.5.1 installation.");
+            {
+                throw new IOException(String.Format("Failed to find a valid Analyst {0} installation.", GetAnalystVersions()));
+            }
+
 
             var procAnalyst = AnalystProcess;
             if (procAnalyst == null)
@@ -1560,7 +1591,7 @@ namespace pwiz.Skyline.Model
                 // to make sure it is really completely started.
                 Thread.Sleep(1500);
                 progressMonitor.UpdateProgress(status.ChangeMessage("Working..."));
-            }
+            }    
         }
 
         private static Process AnalystProcess
@@ -1583,6 +1614,85 @@ namespace pwiz.Skyline.Model
             {
                 return null;
             }
+        }
+        
+    }
+    public class AbiQtrapMethodExporter : AbiMethodExporter
+    {
+        
+        public AbiQtrapMethodExporter(SrmDocument document)
+            : base(document)
+        {
+        }
+
+        protected override string GetRegQueryKey()
+        {
+            return @"SOFTWARE\PE SCIEX\Products\Analyst3Q";
+        }
+
+        protected override string GetExeName()
+        {
+            return @"Method\AbSciex\TQ\BuildQTRAPMethod";
+        }
+
+        protected override string GetAnalystVersions()
+        {
+            return "1.5.1";
+        }
+
+        protected override List<string> getArgs()
+        {
+            var argv = new List<string>();
+            if (RTWindow.HasValue)
+            {
+                argv.Add("-w");
+                argv.Add(RTWindow.ToString());
+            }
+            return argv;
+        }
+    }
+
+    public class AbiTofMethodExporter : AbiMethodExporter
+    {
+
+        public AbiTofMethodExporter(SrmDocument document)
+            : base(document)
+        {
+            IsPrecursorLimited = true;
+        }
+
+        protected override string GetRegQueryKey()
+        {
+            return @"SOFTWARE\PE SCIEX\Products\AnalystQS";
+        }
+
+        protected override string GetExeName()
+        {
+            return @"Method\AbSciex\TOF\BuildAnalystFullScanMethod";
+        }
+
+        protected override string GetAnalystVersions()
+        {
+            return "TF1.5 or 2.0";
+        }
+
+        protected override List<string> getArgs()
+        {
+            /*
+            *  These are the command-line options specific to ABI TOF method builders
+               "   -1               Do an MS1 scan each cycle" +
+               "   -i               Generate method for Information Dependent Acquisition (IDA)" +
+               "   -r               Add retention time information to inclusion list (requires -i)\n" +
+            */
+            var argv = new List<string>();
+            if (Ms1Scan)
+                argv.Add("-1");
+            if (InclusionList)
+                argv.Add("-i");
+            if (MethodType == ExportMethodType.Scheduled)
+                argv.Add("-r");
+
+            return argv;
         }
     }
 

@@ -37,6 +37,15 @@ namespace pwiz.Skyline.FileUI
 {
     public sealed partial class ExportMethodDlg : Form
     {
+        public const string TRANS_PER_SAMPLE_INJ_TXT = "Ma&x transitions per sample injection:";
+        public const string CONCUR_TRANS_TXT = "Ma&x concurrent transitions:";
+        public const string PREC_PER_SAMPLE_INJ_TXT = "Ma&x precursors per sample injection:";
+        public const string CONCUR_PREC_TXT = "Ma&x concurrent precursors:";
+        public const string RUN_DURATION_TXT = "Run &duration (min):";
+        public const string DWELL_TIME_TXT = "&Dwell time (ms):";
+
+        public const string SCHED_NOT_SUPPORTED_ERR_TXT = "Scheduled methods are not supported for the selected instrument.";
+
         private readonly SrmDocument _document;
         private readonly ExportFileType _fileType;
         private string _instrumentType;
@@ -137,6 +146,14 @@ namespace pwiz.Skyline.FileUI
             comboOptimizing.SelectedIndex = 0;
         }
 
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            _recalcMethodCountStatus = RecalcMethodCountStatus.waiting;
+            CalcMethodCount();
+
+            base.OnHandleCreated(e);
+        }
+
         public string InstrumentType
         {
             get { return _instrumentType; }
@@ -163,6 +180,11 @@ namespace pwiz.Skyline.FileUI
             get { return ExportInstrumentType.IsSingleWindowInstrumentType(InstrumentType); }
         }
 
+        public bool IsInclusionListMethod
+        {
+            get { return ExportInstrumentType.IsInclusionListMethod(_document); }
+        }
+
         public bool IsSingleDwellInstrument
         {
             get { return IsSingleDwellInstrumentType(InstrumentType); }
@@ -175,17 +197,21 @@ namespace pwiz.Skyline.FileUI
                    Equals(type, ExportInstrumentType.Thermo_LTQ) ||
                    Equals(type, ExportInstrumentType.Waters) ||
                    Equals(type, ExportInstrumentType.Waters_Xevo) ||
-                   Equals(type, ExportInstrumentType.Waters_Quattro_Premier);
+                   Equals(type, ExportInstrumentType.Waters_Quattro_Premier) ||
+                   // For AbSciex's TOF 5600 and QSTAR instruments, the dwell (accumulation) time
+                   // given in the template method is used. So we will not display the 
+                   // "Dwell Time" text box.
+                   Equals(type, ExportInstrumentType.ABI_TOF);
         }
 
         public bool IsAlwaysScheduledInstrument
         {
             get
             {
-                var type = InstrumentType;
-                if (!ExportInstrumentType.CanScheduleInstrumentType(type, _document))
+                if (!CanScheduleInstrumentType)
                     return false;
 
+                var type = InstrumentType;
                 return Equals(type, ExportInstrumentType.Thermo_TSQ) ||
                        Equals(type, ExportInstrumentType.Waters) ||
                        Equals(type, ExportInstrumentType.Waters_Xevo) ||
@@ -193,7 +219,16 @@ namespace pwiz.Skyline.FileUI
                        // LTQ can only schedule for inclusion lists, but then it always
                        // requires start and stop times.
                        Equals(type, ExportInstrumentType.Thermo_LTQ);
+                       // This will only happen for ABI TOF with inclusion lists, since
+                       // MRM-HR cannot yet be scheduled, and ABI TOF can either be scheduled
+                       // or unscheduled when exporting inclusion lists.
+//                       Equals(type, ExportInstrumentType.ABI_TOF); 
             }
+        }
+
+        private bool CanScheduleInstrumentType
+        {
+            get { return ExportInstrumentType.CanSchedule(InstrumentType, _document); }
         }
 
         private bool CanSchedule
@@ -204,7 +239,7 @@ namespace pwiz.Skyline.FileUI
                 if (retentionTime != null && !retentionTime.Calculator.IsUsable)
                     return false;
 
-                return ExportInstrumentType.CanSchedule(InstrumentType, _document);
+                return CanScheduleInstrumentType;
             }
         }
 
@@ -497,6 +532,10 @@ namespace pwiz.Skyline.FileUI
 
             Settings.Default.ExportDirectory = Path.GetDirectoryName(outputPath);
 
+            // Set ShowMessages property on ExportDlgProperties to true
+            // so that we see the progress dialog during the export process
+            var wasShowMessageValue = _exportProperties.ShowMessages;
+            _exportProperties.ShowMessages = true;
             try
             {
                 _exportProperties.ExportFile(_instrumentType, _fileType, outputPath, documentExport, templateName);
@@ -505,6 +544,7 @@ namespace pwiz.Skyline.FileUI
             {
                 MessageBox.Show(this, x.Message, Program.Name);
                 e.Cancel = true;
+                _exportProperties.ShowMessages = wasShowMessageValue;
                 return;
             }
 
@@ -564,8 +604,7 @@ namespace pwiz.Skyline.FileUI
             _exportProperties.Ms1Scan = _document.Settings.TransitionSettings.FullScan.IsEnabledMs &&
                                         _document.Settings.TransitionSettings.FullScan.IsEnabledMsMs;
 
-            _exportProperties.InclusionList = _document.Settings.TransitionSettings.FullScan.IsEnabledMs &&
-                                              !_document.Settings.TransitionSettings.FullScan.IsEnabledMsMs;
+            _exportProperties.InclusionList = IsInclusionListMethod;
 
             _exportProperties.MsAnalyzer =
                 TransitionFullScan.MassAnalyzerToString(
@@ -803,10 +842,16 @@ namespace pwiz.Skyline.FileUI
 
             bool standard = Equals(comboTargetType.SelectedItem.ToString(), ExportMethodType.Standard.ToString());
             if (!standard && !CanSchedule)
+            {
                 comboTargetType.SelectedItem = ExportMethodType.Standard.ToString();
+                return;
+            }                
 
-            comboTargetType.Enabled = ExportInstrumentType.CanScheduleInstrumentType(InstrumentType, _document);
-            comboOptimizing.Enabled = !Equals(_instrumentType, ExportInstrumentType.Thermo_LTQ);
+            // Always keep the comboTargetType (Method type) enabled. Throw and error if the 
+            // user selects "Scheduled" and it is not supported by the instrument.
+            // comboTargetType.Enabled = CanScheduleInstrumentType;
+            
+            comboOptimizing.Enabled = !IsFullScanInstrument;
 
             UpdateDwellControls(standard);
             UpdateEnergyRamp(standard);
@@ -829,15 +874,24 @@ namespace pwiz.Skyline.FileUI
             if (!standard && !CanSchedule)
             {
                 var prediction = _document.Settings.PeptideSettings.Prediction;
-                if (prediction.RetentionTime == null)
+
+                // The "Method type" combo box is always enabled.  Display error message if the user
+                // selects "Scheduled" for an instrument that does not support scheduled methods (e.g LTQ, ABI TOF)
+                // However, if we are exporting inclusion lists (MS1 filtering enabled AND MS2 filtering disabled) 
+                // the user should be able to select "Scheduled" for LTQ and ABI TOF instruments.
+                if(!CanScheduleInstrumentType)
+                {
+                    MessageDlg.Show(this, SCHED_NOT_SUPPORTED_ERR_TXT);    
+                }
+                else if (prediction.RetentionTime == null)
                 {
                     if (prediction.UseMeasuredRTs)
-                        MessageBox.Show(this, "To export a scheduled list, you must first choose " +
+                        MessageDlg.Show(this, "To export a scheduled list, you must first choose " +
                                         "a retention time regression in Peptide Settings / Prediction, or " +
-                                        "import results for all peptides in the document.", Program.Name);
+                                        "import results for all peptides in the document.");
                     else
-                        MessageBox.Show(this, "To export a scheduled list, you must first choose " +
-                                        "a retention time regression in Peptide Settings / Prediction.", Program.Name);                    
+                        MessageDlg.Show(this, "To export a scheduled list, you must first choose " +
+                                        "a retention time regression in Peptide Settings / Prediction.");                    
                 }
                 else if (!prediction.RetentionTime.Calculator.IsUsable)
                 {
@@ -845,8 +899,8 @@ namespace pwiz.Skyline.FileUI
                 }
                 else
                 {
-                    MessageBox.Show(this, "To export a scheduled list, you must first " +
-                                    "import results for all peptides in the document.", Program.Name);
+                    MessageDlg.Show(this, "To export a scheduled list, you must first " +
+                                    "import results for all peptides in the document.");
                 }
                 comboTargetType.SelectedItem = ExportMethodType.Standard.ToString();
                 return;
@@ -864,16 +918,16 @@ namespace pwiz.Skyline.FileUI
             if (standard)
             {
                 if (IsPrecursorOnlyInstrument)
-                    labelMaxTransitions.Text = "Ma&x precursors per sample injection:";
+                    labelMaxTransitions.Text = PREC_PER_SAMPLE_INJ_TXT;
                 else
-                    labelMaxTransitions.Text = "Ma&x transitions per sample injection:";
+                    labelMaxTransitions.Text = TRANS_PER_SAMPLE_INJ_TXT;
             }
             else
             {
                 if (IsPrecursorOnlyInstrument)
-                    labelMaxTransitions.Text = "Ma&x concurrent precursors:";
+                    labelMaxTransitions.Text = CONCUR_PREC_TXT;
                 else
-                    labelMaxTransitions.Text = "Ma&x concurrent transitions:";
+                    labelMaxTransitions.Text = CONCUR_TRANS_TXT;
             }
         }
 
@@ -882,7 +936,7 @@ namespace pwiz.Skyline.FileUI
 
         private void CalcMethodCount()
         {
-            if (_recalcMethodCountStatus != RecalcMethodCountStatus.waiting)
+            if (_recalcMethodCountStatus != RecalcMethodCountStatus.waiting || !IsHandleCreated)
             {
                 _recalcMethodCountStatus = RecalcMethodCountStatus.pending;
                 return;
@@ -949,12 +1003,12 @@ namespace pwiz.Skyline.FileUI
             {
                 if (!IsSingleDwellInstrument)
                 {
-                    labelDwellTime.Text = "&Dwell time (ms):";
+                    labelDwellTime.Text = DWELL_TIME_TXT;
                     showDwell = true;
                 }
                 else if (IsAlwaysScheduledInstrument)
                 {
-                    labelDwellTime.Text = "Run &duration (min):";
+                    labelDwellTime.Text = RUN_DURATION_TXT;
                     showRunLength = true;                    
                 }
             }
@@ -1074,6 +1128,36 @@ namespace pwiz.Skyline.FileUI
                 comboTargetType.SelectedItem = "Standard";
             else
                 comboTargetType.SelectedItem = "Scheduled";
+        }
+
+        public bool IsTargetTypeEnabled
+        {
+            get { return comboTargetType.Enabled; }
+        }
+
+        public bool IsOptimizeTypeEnabled
+        {
+            get {return comboOptimizing.Enabled;}
+        }
+
+        public string GetMaxLabelText
+        {
+           get { return labelMaxTransitions.Text; }
+        }
+
+        public string GetDwellTimeLabel
+        {
+            get { return labelDwellTime.Text; }
+        }
+
+        public bool IsDwellTimeVisible
+        {
+            get{ return textDwellTime.Visible;}
+        }
+
+        public bool IsRunLengthVisible
+        {
+            get{ return textRunLength.Visible; }
         }
 
         #endregion

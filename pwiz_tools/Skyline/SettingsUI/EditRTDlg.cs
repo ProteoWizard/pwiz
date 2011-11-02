@@ -638,6 +638,16 @@ namespace pwiz.Skyline.SettingsUI
                 SetTablePeptides(regressionPeps);
         }
 
+        public void SetSlope(string s)
+        {
+            textSlope.Text = s;
+        }
+
+        public void SetIntercept(string s)
+        {
+            textIntercept.Text = s;
+        }
+
         #endregion
     }
 }

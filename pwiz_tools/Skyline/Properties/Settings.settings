@@ -48,7 +48,7 @@
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="ExportMethodDwellTime" Type="System.Int32" Scope="User">
-      <Value Profile="(Default)">5</Value>
+      <Value Profile="(Default)">20</Value>
     </Setting>
     <Setting Name="MruLength" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">4</Value>

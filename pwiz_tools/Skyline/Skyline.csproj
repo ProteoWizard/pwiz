@@ -973,37 +973,67 @@
       <Link>msparser.dll</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Method\AbSciex\BuildQTRAPMethod.exe">
+    <Content Include="Method\AbSciex\TOF\BuildAnalystFullScanMethod.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Method\AbSciex\Interop.AcqMethodSvrLib.dll">
+    <Content Include="Method\AbSciex\TOF\BuildAnalystMethod.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Method\AbSciex\Interop.Analyst.dll">
+    <Content Include="Method\AbSciex\TOF\Interop.AcqMethodSvrLib.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Method\AbSciex\Interop.AnalystService.dll">
+    <Content Include="Method\AbSciex\TOF\Interop.Analyst.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Method\AbSciex\Interop.CreateMRMTransitions.dll">
+    <Content Include="Method\AbSciex\TOF\Interop.DDEMethodSvr.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Method\AbSciex\Interop.CreateNewAcqMethod.dll">
+    <Content Include="Method\AbSciex\TOF\Interop.IDAMethodSvr.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Method\AbSciex\Interop.MSMethodSvrLib.dll">
+    <Content Include="Method\AbSciex\TOF\Interop.MSMethodSvr.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Method\AbSciex\Interop.ParameterSvrLib.dll">
+    <Content Include="Method\AbSciex\TOF\Interop.ParameterSvrLib.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Method\AbSciex\Interop.QueueDispatcherLib.dll">
+    <Content Include="Method\AbSciex\TOF\Interop.StdType.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Method\AbSciex\Interop.ROTMANLib.dll">
+    <Content Include="Method\AbSciex\TQ\BuildAnalystMethod.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Method\AbSciex\Interop.StdType.dll">
+    <Content Include="Method\AbSciex\TQ\BuildQTRAPMethod.exe">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TQ\Interop.AcqMethodSvrLib.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TQ\Interop.Analyst.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TQ\Interop.AnalystService.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TQ\Interop.CreateMRMTransitions.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TQ\Interop.CreateNewAcqMethod.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TQ\Interop.MSMethodSvrLib.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TQ\Interop.ParameterSvrLib.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TQ\Interop.QueueDispatcherLib.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TQ\Interop.ROTMANLib.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TQ\Interop.StdType.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Method\Agilent\BuildAgilentMethod.exe">
@@ -1307,9 +1337,6 @@
     <EmbeddedResource Include="Resources\Ions_Z.bmp" />
     <EmbeddedResource Include="Resources\Print.bmp" />
     <EmbeddedResource Include="Resources\ProteoWizard.bmp" />
-    <Content Include="Method\AbSciex\BuildQTRAPMethod.exe.manifest">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="..\..\pwiz_aux\msrc\utility\vendor_api\Agilent\EULA.MHDAC">
       <Link>EULA.MHDAC</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
