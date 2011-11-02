@@ -261,12 +261,16 @@ enum XcaliburVersion
 {
     XcaliburVersion_1_4,
     XcaliburVersion_2_0,
-    XcaliburVersion_2_0_5
+    XcaliburVersion_2_0_5,
+    XcaliburVersion_2_5_5,
 };
 
 
 XcaliburVersion interpretVersion(short versionNumber)
 {
+    // TODO 
+    cout << hex << versionNumber << endl;
+    
     switch (versionNumber)
     {
         case 0x39:
@@ -275,6 +279,8 @@ XcaliburVersion interpretVersion(short versionNumber)
             return XcaliburVersion_2_0;
         case 0x3f:
             return XcaliburVersion_2_0_5;
+        case 0x40:
+            return XcaliburVersion_2_5_5;
         default:
             throw runtime_error("Invalid version number.  Tell Darren.");
     }
