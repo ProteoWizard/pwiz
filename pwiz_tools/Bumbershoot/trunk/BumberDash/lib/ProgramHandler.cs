@@ -98,7 +98,6 @@ namespace BumberDash.lib
                                        : string.Format("-cfg \"{0}\" ", hi.InitialConfigFile.FilePath);
 
                     //HACK: Remove when deisotoping is usable
-                    if (hi.InitialConfigFile.FilePath == "--Custom--")
                         configString += string.Format("-{0} {1} ", "DeisotopingMode", "0");
 
                     //continue to set up argument string

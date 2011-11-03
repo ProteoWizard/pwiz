@@ -82,7 +82,7 @@ namespace BumberDash.Forms
             {
                 InitialDirectory = OutputDirectoryBox.Text,
                 RestoreDirectory = true,
-                Filter = "Spectral library text files|*.sptxt",
+                Filter = "All files|*.*|Spectral library text files|*.sptxt",
                 SupportMultiDottedExtensions = true,
                 CheckFileExists = true,
                 CheckPathExists = true,
@@ -405,143 +405,64 @@ namespace BumberDash.Forms
             CPUsAutoLabel.Visible = CPUsBox.Value == 0;
         }
 
-        /// <summary>
-        /// Put correct description on edit button and possibly load info box
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void MyriConfigBox_TextChanged(object sender, EventArgs e)
+        private void ConfigBox_TextChanged(object sender, EventArgs e)
         {
-            if (MyriConfigBox.Tag == null)
+            var configBox = (Control)sender;
+            Control info;
+            Control button;
+            if (configBox == MyriConfigBox)
             {
-                if (string.IsNullOrEmpty(MyriConfigBox.Text))
-                {
-                    MyriMatchInfoBox.Text = string.Empty;
-                    MyriEditButton.Text = "New";
-                }
-                else if ((new FileInfo(MyriConfigBox.Text)).Extension.Equals(".cfg"))
-                {
-                    MyriEditButton.Text = "Edit";
-
-                    //preview file 
-                    var fileIn = new StreamReader(MyriConfigBox.Text);
-                    MyriMatchInfoBox.Text = fileIn.ReadToEnd();
-                    fileIn.Close();
-                    fileIn.Dispose();
-                }
-                else
-                    MyriMatchInfoBox.Text = "Invalid File";
+                info = MyriMatchInfoBox;
+                button = MyriEditButton;
             }
-            else if (((string)MyriConfigBox.Tag) == "--Custom--")
-                MyriEditButton.Text = "Edit";
+            else if (configBox == DTConfigBox)
+            {
+                info = DirecTagInfoBox;
+                button = DTEditButton;
+            }
+            else if (configBox == TRConfigBox)
+            {
+                info = TagReconInfoBox;
+                button = TREditButton;
+            }
             else
             {
-                MyriMatchInfoBox.Text = string.Empty;
-                MyriEditButton.Text = "New";
+                info = PepitomeInfoBox;
+                button = PepEditButton;
             }
-        }
+            
 
-        /// <summary>
-        /// Put correct description on edit button and possibly load info box
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void DTConfigBox_TextChanged(object sender, EventArgs e)
-        {
-            if (DTConfigBox.Tag == null)
+            if (configBox.Tag == null)
             {
-                if (string.IsNullOrEmpty(DTConfigBox.Text))
+                if (string.IsNullOrEmpty(configBox.Text))
                 {
-                    DirecTagInfoBox.Text = string.Empty;
-                    DTEditButton.Text = "New";
+                    info.Text = string.Empty;
+                    button.Text = "New";
                 }
-                else if ((new FileInfo(DTConfigBox.Text)).Extension.Equals(".cfg"))
+                else if ((new FileInfo(configBox.Text)).Extension.Equals(".cfg"))
                 {
-                    DTEditButton.Text = "Edit";
+                    button.Text = "Edit";
 
                     //preview file
-                    var fileIn = new StreamReader(DTConfigBox.Text);
-                    DirecTagInfoBox.Text = fileIn.ReadToEnd();
+                    var fileIn = new StreamReader(configBox.Text);
+                    var contents = fileIn.ReadToEnd();
+                    if (System.Text.RegularExpressions.Regex.IsMatch(contents.ToLower(), "deisotopingmode *= *[12]")
+                        && !System.Text.RegularExpressions.Regex.IsMatch(info.Text.ToLower(), "deisotopingmode *= *[12]"))
+                        MessageBox.Show(
+                            "Warning- Deisotoping mode is currently unstable. Use of this parameter may cause unexpected behavior.");
+                    info.Text = contents;
                     fileIn.Close();
                     fileIn.Dispose();
                 }
                 else
-                    DirecTagInfoBox.Text = "Invalid File";
+                    info.Text = "Invalid File";
             }
-            else if (((string)DTConfigBox.Tag) == "--Custom--")
-                DTEditButton.Text = "Edit";
+            else if (((string)configBox.Tag) == "--Custom--")
+                button.Text = "Edit";
             else
             {
-                DirecTagInfoBox.Text = string.Empty;
-                DTEditButton.Text = "New";
-            }
-
-        }
-
-        /// <summary>
-        /// Put correct description on edit button and possibly load info box
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void TRConfigBox_TextChanged(object sender, EventArgs e)
-        {
-            if (TRConfigBox.Tag == null)
-            {
-                if (string.IsNullOrEmpty(TRConfigBox.Text))
-                {
-                    TagReconInfoBox.Text = string.Empty;
-                    TREditButton.Text = "New";
-                }
-                else if ((new FileInfo(TRConfigBox.Text)).Extension.Equals(".cfg"))
-                {
-                    TREditButton.Text = "Edit";
-
-                    //preview file
-                    var fileIn = new StreamReader(TRConfigBox.Text);
-                    TagReconInfoBox.Text = fileIn.ReadToEnd();
-                    fileIn.Close();
-                    fileIn.Dispose();
-                }
-                else
-                    TagReconInfoBox.Text = "Invalid File";
-            }
-            else if (((string)TRConfigBox.Tag) == "--Custom--")
-                TREditButton.Text = "Edit";
-            else
-            {
-                TagReconInfoBox.Text = string.Empty;
-                TREditButton.Text = "New";
-            }
-        }
-
-        private void PepConfigBox_TextChanged(object sender, EventArgs e)
-        {
-            if (PepConfigBox.Tag == null)
-            {
-                if (string.IsNullOrEmpty(PepConfigBox.Text))
-                {
-                    PepitomeInfoBox.Text = string.Empty;
-                    PepEditButton.Text = "New";
-                }
-                else if ((new FileInfo(PepConfigBox.Text)).Extension.Equals(".cfg"))
-                {
-                   PepEditButton.Text = "Edit";
-
-                    //preview file
-                    var fileIn = new StreamReader(PepConfigBox.Text);
-                    PepitomeInfoBox.Text = fileIn.ReadToEnd();
-                    fileIn.Close();
-                    fileIn.Dispose();
-                }
-                else
-                    PepitomeInfoBox.Text = "Invalid File";
-            }
-            else if (((string)PepConfigBox.Tag) == "--Custom--")
-                PepEditButton.Text = "Edit";
-            else
-            {
-                PepitomeInfoBox.Text = string.Empty;
-                PepEditButton.Text = "New";
+                info.Text = string.Empty;
+                button.Text = "New";
             }
         }
 
@@ -576,7 +497,7 @@ namespace BumberDash.Forms
             MyriConfigBox.Tag = null;
             if (MyriConfigBox.SelectedIndex == 0)
             {
-                MyriConfigBox_TextChanged(MyriConfigBox, null);
+                ConfigBox_TextChanged(MyriConfigBox, null);
                 return;
             }
             if (!File.Exists(MyriConfigBox.Text) ||
@@ -589,7 +510,7 @@ namespace BumberDash.Forms
             }
             else if (File.Exists(MyriConfigBox.Text) && Path.GetExtension(MyriConfigBox.Text) == ".pepXML")
                 MyriConfigBox.Tag = "--Custom--";
-            MyriConfigBox_TextChanged(MyriConfigBox, null);
+            ConfigBox_TextChanged(MyriConfigBox, null);
         }
 
         /// <summary>
@@ -602,7 +523,7 @@ namespace BumberDash.Forms
             DTConfigBox.Tag = null;
             if (DTConfigBox.SelectedIndex == 0)
             {
-                DTConfigBox_TextChanged(DTConfigBox, null);
+                ConfigBox_TextChanged(DTConfigBox, null);
                 return;
             }
             if (!File.Exists(DTConfigBox.Text) 
@@ -615,7 +536,7 @@ namespace BumberDash.Forms
             }
             else if (File.Exists(DTConfigBox.Text) && Path.GetExtension(DTConfigBox.Text) == ".tags")
                 DTConfigBox.Tag = "--Custom--";
-            DTConfigBox_TextChanged(DTConfigBox, null);
+            ConfigBox_TextChanged(DTConfigBox, null);
         }
 
         /// <summary>
@@ -628,7 +549,7 @@ namespace BumberDash.Forms
             TRConfigBox.Tag = null;
             if (TRConfigBox.SelectedIndex == 0)
             {
-                TRConfigBox_TextChanged(TRConfigBox, null);
+                ConfigBox_TextChanged(TRConfigBox, null);
                 return;
             }
 
@@ -642,7 +563,7 @@ namespace BumberDash.Forms
             }
             else if (File.Exists(TRConfigBox.Text) && Path.GetExtension(TRConfigBox.Text) == ".pepXML")
                 TRConfigBox.Tag = "--Custom--";
-            TRConfigBox_TextChanged(TRConfigBox, null);
+            ConfigBox_TextChanged(TRConfigBox, null);
         }
 
         private void PepConfigBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -650,7 +571,7 @@ namespace BumberDash.Forms
             PepConfigBox.Tag = null;
             if (PepConfigBox.SelectedIndex == 0)
             {
-                PepConfigBox_TextChanged(PepConfigBox, null);
+                ConfigBox_TextChanged(PepConfigBox, null);
                 return;
             }
 
@@ -664,7 +585,7 @@ namespace BumberDash.Forms
             }
             else if (File.Exists(PepConfigBox.Text) && Path.GetExtension(PepConfigBox.Text) == ".pepXML")
                 PepConfigBox.Tag = "--Custom--";
-            PepConfigBox_TextChanged(PepConfigBox, null);
+            ConfigBox_TextChanged(PepConfigBox, null);
         }
 
         /// <summary>
@@ -761,8 +682,7 @@ namespace BumberDash.Forms
             //If library searching
             else if (SearchTypeBox.Text == JobType.Library)
             {
-                if (File.Exists(SpecLibBox.Text) &&
-                (Path.GetExtension(SpecLibBox.Text) ?? string.Empty).ToLower() == (".sptxt"))
+                if (File.Exists(SpecLibBox.Text))
                     SpecLibBox.BackColor = Color.White;
                 else
                 {
@@ -1097,7 +1017,7 @@ namespace BumberDash.Forms
                 //get the two meaningful values
                 entireLine[x] = entireLine[x].Replace("<parameter name=\"Config:", " ");
                 entireLine[x] = entireLine[x].Replace("\" value=", " ");
-                entireLine[x] = entireLine[x].Replace(" />", " ");
+                entireLine[x] = entireLine[x].Replace("/>", " ");
                 propertySplit = entireLine[x].Split(" ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
 
                 propertySplit[0] = propertySplit[0].Trim();

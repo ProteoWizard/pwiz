@@ -192,7 +192,7 @@
             this.PepConfigBox.TabIndex = 32;
             this.PepConfigBox.SelectedIndexChanged += new System.EventHandler(this.PepConfigBox_SelectedIndexChanged);
             this.PepConfigBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ConfigBox_KeyPress);
-            this.PepConfigBox.TextChanged += new System.EventHandler(this.PepConfigBox_TextChanged);
+            this.PepConfigBox.TextChanged += new System.EventHandler(this.ConfigBox_TextChanged);
             // 
             // PepEditButton
             // 
@@ -229,12 +229,12 @@
             this.SearchTypeBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.SearchTypeBox.FormattingEnabled = true;
             this.SearchTypeBox.Items.AddRange(new object[] {
-            "Database Search",
-            "Tag Sequencing",
-            "Spectral Library"});
-            this.SearchTypeBox.Location = new System.Drawing.Point(199, 45);
+            "Myrimatch- Database Searching",
+            "DirecTag / TagRecon- Sequence Tagging",
+            "Pepitome- Spectral Library"});
+            this.SearchTypeBox.Location = new System.Drawing.Point(167, 45);
             this.SearchTypeBox.Name = "SearchTypeBox";
-            this.SearchTypeBox.Size = new System.Drawing.Size(156, 21);
+            this.SearchTypeBox.Size = new System.Drawing.Size(211, 21);
             this.SearchTypeBox.TabIndex = 35;
             this.SearchTypeBox.SelectedIndexChanged += new System.EventHandler(this.SearchTypeBox_SelectedIndexChanged);
             // 
@@ -340,7 +340,7 @@
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.Location = new System.Drawing.Point(88, 46);
+            this.label2.Location = new System.Drawing.Point(56, 46);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(105, 18);
             this.label2.TabIndex = 1;
@@ -464,7 +464,7 @@
             this.MyriConfigBox.TabIndex = 26;
             this.MyriConfigBox.SelectedIndexChanged += new System.EventHandler(this.MyriConfigBox_SelectedIndexChanged);
             this.MyriConfigBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ConfigBox_KeyPress);
-            this.MyriConfigBox.TextChanged += new System.EventHandler(this.MyriConfigBox_TextChanged);
+            this.MyriConfigBox.TextChanged += new System.EventHandler(this.ConfigBox_TextChanged);
             // 
             // MyriEditButton
             // 
@@ -523,7 +523,7 @@
             this.DTConfigBox.TabIndex = 27;
             this.DTConfigBox.SelectedIndexChanged += new System.EventHandler(this.DTConfigBox_SelectedIndexChanged);
             this.DTConfigBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ConfigBox_KeyPress);
-            this.DTConfigBox.TextChanged += new System.EventHandler(this.DTConfigBox_TextChanged);
+            this.DTConfigBox.TextChanged += new System.EventHandler(this.ConfigBox_TextChanged);
             // 
             // TRConfigBox
             // 
@@ -536,7 +536,7 @@
             this.TRConfigBox.TabIndex = 28;
             this.TRConfigBox.SelectedIndexChanged += new System.EventHandler(this.TRConfigBox_SelectedIndexChanged);
             this.TRConfigBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ConfigBox_KeyPress);
-            this.TRConfigBox.TextChanged += new System.EventHandler(this.TRConfigBox_TextChanged);
+            this.TRConfigBox.TextChanged += new System.EventHandler(this.ConfigBox_TextChanged);
             // 
             // TREditButton
             // 

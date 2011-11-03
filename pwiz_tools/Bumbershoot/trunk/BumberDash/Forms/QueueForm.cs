@@ -375,17 +375,7 @@ namespace BumberDash.Forms
                                         e.CellBounds.Top - 1);
                 }
             }
-        }
-
-        /// <summary>
-        /// Bring up AddJobForm if user has clicked the "Add Job" row
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void JobQueueDGV_Click(object sender, EventArgs e)
-        {
-            if (JobQueueDGV.SelectedRows[0].Index == JobQueueDGV.Rows.Count - 1)
-                ShowAddBox();
+            
         }
 
         /// <summary>
@@ -411,30 +401,6 @@ namespace BumberDash.Forms
                 _programmaticallyPaused = false;
                 CheckForRunableJob();
             }
-        }
-
-        /// <summary>
-        /// Open output older if a job is double clicked
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void JobQueueDGV_DoubleClick(object sender, EventArgs e)
-        {
-            DataGridViewCell cell = JobQueueDGV.Rows[JobQueueDGV.SelectedRows[0].Index].Cells[1];
-
-            if (JobQueueDGV.SelectedRows[0].Index != JobQueueDGV.Rows.Count - 1)
-            {
-                try
-                {
-                    System.Diagnostics.Process.Start(cell.ToolTipText.TrimEnd('+').TrimEnd('*'));
-                }
-                catch
-                {
-                    MessageBox.Show("Cannot open folder");
-                }
-            }
-
-            CheckForRunableJob();
         }
 
         /// <summary>
@@ -1716,6 +1682,31 @@ namespace BumberDash.Forms
                 else
                     MessageBox.Show("Unable to find current version of IDPicker");
             }
+        }
+
+        private void JobQueueDGV_CellClick(object sender, DataGridViewCellEventArgs e)
+        {
+            if (e.RowIndex == JobQueueDGV.Rows.Count - 1)
+                ShowAddBox();
+        }
+
+        private void JobQueueDGV_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
+        {
+            DataGridViewCell cell = JobQueueDGV.Rows[e.RowIndex].Cells[1];
+
+            if (e.RowIndex != JobQueueDGV.Rows.Count - 1)
+            {
+                try
+                {
+                    System.Diagnostics.Process.Start(cell.ToolTipText.TrimEnd('+').TrimEnd('*'));
+                }
+                catch
+                {
+                    MessageBox.Show("Cannot open folder");
+                }
+            }
+
+            CheckForRunableJob();
         }
 
     }

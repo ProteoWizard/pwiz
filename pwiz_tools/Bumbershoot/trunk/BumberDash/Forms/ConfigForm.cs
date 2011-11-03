@@ -56,6 +56,7 @@ namespace BumberDash.Forms
         private IList<ConfigFile> _DTTemplateList; //List of all templates user has specified for Directag
         private IList<ConfigFile> _TRTemplateList; //List of all templates user has specified for Tagrecon
         private IList<ConfigFile> _pepTemplateList; //List of all templates user has specified for Tagrecon
+        private HashSet<Control> _nonTemplate;
 
         /// <summary>
         /// Create ConfigForm in template mode
@@ -80,6 +81,7 @@ namespace BumberDash.Forms
                                 {"TagRecon", new List<Control>()},
                                 {"Pepitome", new List<Control>()}
                             };
+            _nonTemplate = new HashSet<Control>();
 
             SetInitialValues();
             InitializePane(MyriGenPanel);
@@ -121,6 +123,7 @@ namespace BumberDash.Forms
             _defaultName = defaultName;
             if (!File.Exists(_filePath))
                 SaveOverOldButton.Visible = false;
+            _nonTemplate = new HashSet<Control>();
 
             SetInitialValues();
             switch (baseConfig.DestinationProgram)
@@ -190,6 +193,7 @@ namespace BumberDash.Forms
             _baseDirectory = baseDirectory;
             _defaultName = defaultName;
             SaveOverOldButton.Visible = false;
+            _nonTemplate = new HashSet<Control>();
             SetInitialValues();
             
             switch (configProgram)
@@ -445,6 +449,23 @@ namespace BumberDash.Forms
                     _labelAssociation[item].ForeColor = Color.Green;
                 else
                     _labelAssociation[item].ForeColor = Color.DarkViolet;
+            }
+
+            //Check for changes from template
+            if (!_templateDefaults.ContainsKey(item))
+            {
+                if (value == _defaults[item])
+                    _nonTemplate.Remove(item);
+                else
+                    _nonTemplate.Add(item);
+            }
+            else
+            {
+                if (value == _templateDefaults[item]
+                    || (isModBox && ModStringsEqual(value, _templateDefaults[item])))
+                    _nonTemplate.Remove(item);
+                else
+                    _nonTemplate.Add(item);
             }
         }
 
@@ -730,9 +751,9 @@ namespace BumberDash.Forms
         /// </summary>
         private void LoadTemplate()
         {
+            _nonTemplate = new HashSet<Control>();
             foreach (var control in _itemList[ProgramModeBox.Text])
             {
-
                 var root = RootName(control.Name);
                 var value = _templateDefaults.ContainsKey(control)
                                 ? _templateDefaults[control]
@@ -745,7 +766,7 @@ namespace BumberDash.Forms
                     SetModString(value);
                 else if (root == "UseAvgMassOfSequences")
                     ((ComboBox)control).SelectedIndex = (value == "true") ? 1 : 0;
-                else if (root == "NumMinTerminiCleavages" || root == "DeisotopingMode")
+                else if (root == "MinTerminiCleavages" || root == "DeisotopingMode")
                     ((ComboBox)control).SelectedIndex = int.Parse(value);
                 else if (control is ComboBox || control is TextBox)
                     control.Text = value;
@@ -1557,27 +1578,50 @@ namespace BumberDash.Forms
             NumericTextBox_KeyPress(sender, e);
         }
 
-        private void InstrumentButton_Click(object sender, EventArgs e)
-        {
-            LoadTemplate();
-        }
-
+        private int _currentInstrument = -1;
         private void InstrumentList_SelectedIndexChanged(object sender, EventArgs e)
         {
-            IList<ConfigFile> currentlist;
-            if (ProgramModeBox.Text == "MyriMatch")
-                currentlist = _myriTemplateList;
-            else if (ProgramModeBox.Text == "DirecTag")
-                currentlist = _DTTemplateList;
-            else if (ProgramModeBox.Text == "TagRecon")
-                currentlist = _TRTemplateList;
-            else
-                currentlist = _pepTemplateList;
-            var index = ((ComboBox) sender).SelectedIndex - 1;
+            if (_currentInstrument != ((ComboBox) sender).SelectedIndex - 1)
+            {
+                DialogResult result;
+                if (_nonTemplate.Any())
+                    result =
+                        MessageBox.Show(
+                            "Would you like to change the current instrument template?" +
+                            Environment.NewLine + Environment.NewLine +
+                            "Yes: Discard all changes and load template" +
+                            Environment.NewLine +
+                            "No: Keep changes and recolor lables according to selected template for sake of comparison" +
+                            Environment.NewLine +
+                            "Cancel: Keep changes and colors as they are", "Load template?",
+                            MessageBoxButtons.YesNoCancel);
+                else
+                    result = DialogResult.Yes;
 
-            SetTemplateDefaults(index >= 0
-                                    ? currentlist[index]
-                                    : new ConfigFile {PropertyList = new List<ConfigProperty>()});
+                if (result != DialogResult.Cancel)
+                {
+                    IList<ConfigFile> currentlist;
+                    if (ProgramModeBox.Text == "MyriMatch")
+                        currentlist = _myriTemplateList;
+                    else if (ProgramModeBox.Text == "DirecTag")
+                        currentlist = _DTTemplateList;
+                    else if (ProgramModeBox.Text == "TagRecon")
+                        currentlist = _TRTemplateList;
+                    else
+                        currentlist = _pepTemplateList;
+                    _currentInstrument = ((ComboBox) sender).SelectedIndex - 1;
+
+                    SetTemplateDefaults(_currentInstrument >= 0
+                                            ? currentlist[_currentInstrument]
+                                            : new ConfigFile {PropertyList = new List<ConfigProperty>()});
+                    if (result == DialogResult.Yes)
+                        LoadTemplate();
+                }
+                else
+                {
+                    ((ComboBox) sender).SelectedIndex = _currentInstrument + 1;
+                }
+            }
         }
 
         private void SaveTemplateButton_Click(object sender, EventArgs e)

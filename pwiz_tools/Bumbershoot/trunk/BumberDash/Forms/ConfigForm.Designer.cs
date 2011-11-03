@@ -138,7 +138,6 @@
             this.PepMaxMissedCleavagesLabel = new System.Windows.Forms.Label();
             this.PepMinTerminiCleavagesLabel = new System.Windows.Forms.Label();
             this.PepInstrumentGB = new System.Windows.Forms.GroupBox();
-            this.PepInstrumentLoad = new System.Windows.Forms.Button();
             this.PepInstrumentList = new System.Windows.Forms.ComboBox();
             this.PepInstrumentLabel = new System.Windows.Forms.Label();
             this.PepPrecursorMzToleranceRuleBox = new System.Windows.Forms.ComboBox();
@@ -156,7 +155,6 @@
             this.MyriFragmentMzToleranceLabel = new System.Windows.Forms.Label();
             this.MyriAvgPrecursorMzToleranceLabel = new System.Windows.Forms.Label();
             this.MyriInstrumentGB = new System.Windows.Forms.GroupBox();
-            this.MyriInstrumentButton = new System.Windows.Forms.Button();
             this.MyriInstrumentList = new System.Windows.Forms.ComboBox();
             this.MyriInstrumentLabel = new System.Windows.Forms.Label();
             this.MyriPrecursorMzToleranceRuleBox = new System.Windows.Forms.ComboBox();
@@ -193,7 +191,6 @@
             this.MyriMaxDynamicModsLabel = new System.Windows.Forms.Label();
             this.DTGenPanel = new System.Windows.Forms.Panel();
             this.DTInstrumentGB = new System.Windows.Forms.GroupBox();
-            this.DTInstrumentButton = new System.Windows.Forms.Button();
             this.DTFragmentMzToleranceBox = new System.Windows.Forms.TextBox();
             this.DTFragmentMzToleranceUnitsList = new System.Windows.Forms.ComboBox();
             this.DTPrecursorMzToleranceBox = new System.Windows.Forms.TextBox();
@@ -253,7 +250,6 @@
             this.TRMaxMissedCleavagesLabel = new System.Windows.Forms.Label();
             this.TRMinTerminiCleavagesLabel = new System.Windows.Forms.Label();
             this.TRInstrumentGB = new System.Windows.Forms.GroupBox();
-            this.TRInstrumentButton = new System.Windows.Forms.Button();
             this.TRInstrumentList = new System.Windows.Forms.ComboBox();
             this.TRInstrumentLabel = new System.Windows.Forms.Label();
             this.TRPrecursorMzToleranceRuleBox = new System.Windows.Forms.ComboBox();
@@ -331,9 +327,9 @@
             this.DTTicCutoffPercentageBox = new System.Windows.Forms.NumericUpDown();
             this.DTTicCutoffPercentageLabel = new System.Windows.Forms.Label();
             this.DTDeisotopingModeBox = new System.Windows.Forms.ComboBox();
+            this.DTDeisotopingModeInfo = new System.Windows.Forms.Label();
             this.DTComplementMzToleranceBox = new System.Windows.Forms.NumericUpDown();
             this.DTDeisotopingModeLabel = new System.Windows.Forms.Label();
-            this.DTDeisotopingModeInfo = new System.Windows.Forms.Label();
             this.DTTicCutoffPercentageInfo = new System.Windows.Forms.Label();
             this.DTMaxPeakCountBox = new System.Windows.Forms.NumericUpDown();
             this.DTMaxPeakCountInfo = new System.Windows.Forms.Label();
@@ -657,10 +653,10 @@
             // Gentab
             // 
             this.Gentab.Controls.Add(this.SlowFadePanel);
+            this.Gentab.Controls.Add(this.TRGenPanel);
             this.Gentab.Controls.Add(this.PepGenPanel);
             this.Gentab.Controls.Add(this.MyriGenPanel);
             this.Gentab.Controls.Add(this.DTGenPanel);
-            this.Gentab.Controls.Add(this.TRGenPanel);
             this.Gentab.Location = new System.Drawing.Point(4, 22);
             this.Gentab.Name = "Gentab";
             this.Gentab.Padding = new System.Windows.Forms.Padding(3);
@@ -1183,7 +1179,6 @@
             // 
             // PepInstrumentGB
             // 
-            this.PepInstrumentGB.Controls.Add(this.PepInstrumentLoad);
             this.PepInstrumentGB.Controls.Add(this.PepInstrumentList);
             this.PepInstrumentGB.Controls.Add(this.PepInstrumentLabel);
             this.PepInstrumentGB.Controls.Add(this.PepPrecursorMzToleranceRuleBox);
@@ -1195,24 +1190,14 @@
             this.PepInstrumentGB.TabStop = false;
             this.PepInstrumentGB.Text = "Instrument Specific";
             // 
-            // PepInstrumentLoad
-            // 
-            this.PepInstrumentLoad.Location = new System.Drawing.Point(200, 32);
-            this.PepInstrumentLoad.Name = "PepInstrumentLoad";
-            this.PepInstrumentLoad.Size = new System.Drawing.Size(40, 23);
-            this.PepInstrumentLoad.TabIndex = 1;
-            this.PepInstrumentLoad.Text = "Load";
-            this.PepInstrumentLoad.UseVisualStyleBackColor = true;
-            this.PepInstrumentLoad.Click += new System.EventHandler(this.InstrumentButton_Click);
-            // 
             // PepInstrumentList
             // 
             this.PepInstrumentList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.PepInstrumentList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.PepInstrumentList.FormattingEnabled = true;
-            this.PepInstrumentList.Location = new System.Drawing.Point(73, 32);
+            this.PepInstrumentList.Location = new System.Drawing.Point(102, 33);
             this.PepInstrumentList.Name = "PepInstrumentList";
-            this.PepInstrumentList.Size = new System.Drawing.Size(121, 21);
+            this.PepInstrumentList.Size = new System.Drawing.Size(116, 21);
             this.PepInstrumentList.TabIndex = 0;
             this.PepInstrumentList.SelectedIndexChanged += new System.EventHandler(this.InstrumentList_SelectedIndexChanged);
             // 
@@ -1220,7 +1205,7 @@
             // 
             this.PepInstrumentLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.PepInstrumentLabel.AutoSize = true;
-            this.PepInstrumentLabel.Location = new System.Drawing.Point(14, 35);
+            this.PepInstrumentLabel.Location = new System.Drawing.Point(37, 36);
             this.PepInstrumentLabel.Name = "PepInstrumentLabel";
             this.PepInstrumentLabel.Size = new System.Drawing.Size(59, 13);
             this.PepInstrumentLabel.TabIndex = 45;
@@ -1234,7 +1219,7 @@
             "auto",
             "mono",
             "avg"});
-            this.PepPrecursorMzToleranceRuleBox.Location = new System.Drawing.Point(126, 61);
+            this.PepPrecursorMzToleranceRuleBox.Location = new System.Drawing.Point(126, 62);
             this.PepPrecursorMzToleranceRuleBox.Name = "PepPrecursorMzToleranceRuleBox";
             this.PepPrecursorMzToleranceRuleBox.Size = new System.Drawing.Size(92, 21);
             this.PepPrecursorMzToleranceRuleBox.TabIndex = 2;
@@ -1244,7 +1229,7 @@
             // 
             this.PepPrecursorMzToleranceRuleLabel.AutoSize = true;
             this.PepPrecursorMzToleranceRuleLabel.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.PepPrecursorMzToleranceRuleLabel.Location = new System.Drawing.Point(37, 64);
+            this.PepPrecursorMzToleranceRuleLabel.Location = new System.Drawing.Point(37, 65);
             this.PepPrecursorMzToleranceRuleLabel.Name = "PepPrecursorMzToleranceRuleLabel";
             this.PepPrecursorMzToleranceRuleLabel.Size = new System.Drawing.Size(83, 13);
             this.PepPrecursorMzToleranceRuleLabel.TabIndex = 42;
@@ -1407,7 +1392,6 @@
             // 
             // MyriInstrumentGB
             // 
-            this.MyriInstrumentGB.Controls.Add(this.MyriInstrumentButton);
             this.MyriInstrumentGB.Controls.Add(this.MyriInstrumentList);
             this.MyriInstrumentGB.Controls.Add(this.MyriInstrumentLabel);
             this.MyriInstrumentGB.Controls.Add(this.MyriPrecursorMzToleranceRuleBox);
@@ -1419,24 +1403,14 @@
             this.MyriInstrumentGB.TabStop = false;
             this.MyriInstrumentGB.Text = "Instrument Specific";
             // 
-            // MyriInstrumentButton
-            // 
-            this.MyriInstrumentButton.Location = new System.Drawing.Point(200, 32);
-            this.MyriInstrumentButton.Name = "MyriInstrumentButton";
-            this.MyriInstrumentButton.Size = new System.Drawing.Size(40, 23);
-            this.MyriInstrumentButton.TabIndex = 1;
-            this.MyriInstrumentButton.Text = "Load";
-            this.MyriInstrumentButton.UseVisualStyleBackColor = true;
-            this.MyriInstrumentButton.Click += new System.EventHandler(this.InstrumentButton_Click);
-            // 
             // MyriInstrumentList
             // 
             this.MyriInstrumentList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.MyriInstrumentList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.MyriInstrumentList.FormattingEnabled = true;
-            this.MyriInstrumentList.Location = new System.Drawing.Point(73, 32);
+            this.MyriInstrumentList.Location = new System.Drawing.Point(102, 33);
             this.MyriInstrumentList.Name = "MyriInstrumentList";
-            this.MyriInstrumentList.Size = new System.Drawing.Size(121, 21);
+            this.MyriInstrumentList.Size = new System.Drawing.Size(116, 21);
             this.MyriInstrumentList.TabIndex = 0;
             this.MyriInstrumentList.SelectedIndexChanged += new System.EventHandler(this.InstrumentList_SelectedIndexChanged);
             // 
@@ -1444,7 +1418,7 @@
             // 
             this.MyriInstrumentLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.MyriInstrumentLabel.AutoSize = true;
-            this.MyriInstrumentLabel.Location = new System.Drawing.Point(14, 35);
+            this.MyriInstrumentLabel.Location = new System.Drawing.Point(37, 36);
             this.MyriInstrumentLabel.Name = "MyriInstrumentLabel";
             this.MyriInstrumentLabel.Size = new System.Drawing.Size(59, 13);
             this.MyriInstrumentLabel.TabIndex = 45;
@@ -1458,7 +1432,7 @@
             "auto",
             "mono",
             "avg"});
-            this.MyriPrecursorMzToleranceRuleBox.Location = new System.Drawing.Point(126, 61);
+            this.MyriPrecursorMzToleranceRuleBox.Location = new System.Drawing.Point(126, 62);
             this.MyriPrecursorMzToleranceRuleBox.Name = "MyriPrecursorMzToleranceRuleBox";
             this.MyriPrecursorMzToleranceRuleBox.Size = new System.Drawing.Size(92, 21);
             this.MyriPrecursorMzToleranceRuleBox.TabIndex = 2;
@@ -1468,7 +1442,7 @@
             // 
             this.MyriPrecursorMzToleranceRuleLabel.AutoSize = true;
             this.MyriPrecursorMzToleranceRuleLabel.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.MyriPrecursorMzToleranceRuleLabel.Location = new System.Drawing.Point(37, 64);
+            this.MyriPrecursorMzToleranceRuleLabel.Location = new System.Drawing.Point(37, 65);
             this.MyriPrecursorMzToleranceRuleLabel.Name = "MyriPrecursorMzToleranceRuleLabel";
             this.MyriPrecursorMzToleranceRuleLabel.Size = new System.Drawing.Size(83, 13);
             this.MyriPrecursorMzToleranceRuleLabel.TabIndex = 42;
@@ -1865,7 +1839,6 @@
             // 
             // DTInstrumentGB
             // 
-            this.DTInstrumentGB.Controls.Add(this.DTInstrumentButton);
             this.DTInstrumentGB.Controls.Add(this.DTFragmentMzToleranceBox);
             this.DTInstrumentGB.Controls.Add(this.DTFragmentMzToleranceUnitsList);
             this.DTInstrumentGB.Controls.Add(this.DTPrecursorMzToleranceBox);
@@ -1881,16 +1854,6 @@
             this.DTInstrumentGB.Size = new System.Drawing.Size(524, 117);
             this.DTInstrumentGB.TabIndex = 1;
             this.DTInstrumentGB.TabStop = false;
-            // 
-            // DTInstrumentButton
-            // 
-            this.DTInstrumentButton.Location = new System.Drawing.Point(335, 20);
-            this.DTInstrumentButton.Name = "DTInstrumentButton";
-            this.DTInstrumentButton.Size = new System.Drawing.Size(40, 23);
-            this.DTInstrumentButton.TabIndex = 1;
-            this.DTInstrumentButton.Text = "Load";
-            this.DTInstrumentButton.UseVisualStyleBackColor = true;
-            this.DTInstrumentButton.Click += new System.EventHandler(this.InstrumentButton_Click);
             // 
             // DTFragmentMzToleranceBox
             // 
@@ -1943,7 +1906,7 @@
             this.DTInstrumentList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.DTInstrumentList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.DTInstrumentList.FormattingEnabled = true;
-            this.DTInstrumentList.Location = new System.Drawing.Point(208, 22);
+            this.DTInstrumentList.Location = new System.Drawing.Point(231, 22);
             this.DTInstrumentList.Name = "DTInstrumentList";
             this.DTInstrumentList.Size = new System.Drawing.Size(121, 21);
             this.DTInstrumentList.TabIndex = 0;
@@ -1986,7 +1949,7 @@
             // 
             this.DTInstrumentLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.DTInstrumentLabel.AutoSize = true;
-            this.DTInstrumentLabel.Location = new System.Drawing.Point(149, 25);
+            this.DTInstrumentLabel.Location = new System.Drawing.Point(172, 25);
             this.DTInstrumentLabel.Name = "DTInstrumentLabel";
             this.DTInstrumentLabel.Size = new System.Drawing.Size(59, 13);
             this.DTInstrumentLabel.TabIndex = 0;
@@ -2599,7 +2562,6 @@
             // 
             // TRInstrumentGB
             // 
-            this.TRInstrumentGB.Controls.Add(this.TRInstrumentButton);
             this.TRInstrumentGB.Controls.Add(this.TRInstrumentList);
             this.TRInstrumentGB.Controls.Add(this.TRInstrumentLabel);
             this.TRInstrumentGB.Controls.Add(this.TRPrecursorMzToleranceRuleBox);
@@ -2611,24 +2573,14 @@
             this.TRInstrumentGB.TabStop = false;
             this.TRInstrumentGB.Text = "Instrument Specific";
             // 
-            // TRInstrumentButton
-            // 
-            this.TRInstrumentButton.Location = new System.Drawing.Point(200, 32);
-            this.TRInstrumentButton.Name = "TRInstrumentButton";
-            this.TRInstrumentButton.Size = new System.Drawing.Size(40, 23);
-            this.TRInstrumentButton.TabIndex = 1;
-            this.TRInstrumentButton.Text = "Load";
-            this.TRInstrumentButton.UseVisualStyleBackColor = true;
-            this.TRInstrumentButton.Click += new System.EventHandler(this.InstrumentButton_Click);
-            // 
             // TRInstrumentList
             // 
             this.TRInstrumentList.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.TRInstrumentList.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.TRInstrumentList.FormattingEnabled = true;
-            this.TRInstrumentList.Location = new System.Drawing.Point(73, 32);
+            this.TRInstrumentList.Location = new System.Drawing.Point(102, 33);
             this.TRInstrumentList.Name = "TRInstrumentList";
-            this.TRInstrumentList.Size = new System.Drawing.Size(121, 21);
+            this.TRInstrumentList.Size = new System.Drawing.Size(116, 21);
             this.TRInstrumentList.TabIndex = 0;
             this.TRInstrumentList.SelectedIndexChanged += new System.EventHandler(this.InstrumentList_SelectedIndexChanged);
             // 
@@ -2636,7 +2588,7 @@
             // 
             this.TRInstrumentLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.TRInstrumentLabel.AutoSize = true;
-            this.TRInstrumentLabel.Location = new System.Drawing.Point(14, 35);
+            this.TRInstrumentLabel.Location = new System.Drawing.Point(37, 36);
             this.TRInstrumentLabel.Name = "TRInstrumentLabel";
             this.TRInstrumentLabel.Size = new System.Drawing.Size(59, 13);
             this.TRInstrumentLabel.TabIndex = 45;
@@ -2650,7 +2602,7 @@
             "auto",
             "mono",
             "avg"});
-            this.TRPrecursorMzToleranceRuleBox.Location = new System.Drawing.Point(126, 61);
+            this.TRPrecursorMzToleranceRuleBox.Location = new System.Drawing.Point(126, 62);
             this.TRPrecursorMzToleranceRuleBox.Name = "TRPrecursorMzToleranceRuleBox";
             this.TRPrecursorMzToleranceRuleBox.Size = new System.Drawing.Size(92, 21);
             this.TRPrecursorMzToleranceRuleBox.TabIndex = 2;
@@ -2659,7 +2611,7 @@
             // 
             this.TRPrecursorMzToleranceRuleLabel.AutoSize = true;
             this.TRPrecursorMzToleranceRuleLabel.ForeColor = System.Drawing.SystemColors.ControlText;
-            this.TRPrecursorMzToleranceRuleLabel.Location = new System.Drawing.Point(37, 64);
+            this.TRPrecursorMzToleranceRuleLabel.Location = new System.Drawing.Point(37, 65);
             this.TRPrecursorMzToleranceRuleLabel.Name = "TRPrecursorMzToleranceRuleLabel";
             this.TRPrecursorMzToleranceRuleLabel.Size = new System.Drawing.Size(83, 13);
             this.TRPrecursorMzToleranceRuleLabel.TabIndex = 42;
@@ -3686,6 +3638,20 @@
             this.DTDeisotopingModeBox.TabIndex = 3;
             this.DTDeisotopingModeBox.Visible = false;
             // 
+            // DTDeisotopingModeInfo
+            // 
+            this.DTDeisotopingModeInfo.AutoSize = true;
+            this.DTDeisotopingModeInfo.Cursor = System.Windows.Forms.Cursors.Hand;
+            this.DTDeisotopingModeInfo.Enabled = false;
+            this.DTDeisotopingModeInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.DTDeisotopingModeInfo.ForeColor = System.Drawing.Color.MediumBlue;
+            this.DTDeisotopingModeInfo.Location = new System.Drawing.Point(103, 202);
+            this.DTDeisotopingModeInfo.Name = "DTDeisotopingModeInfo";
+            this.DTDeisotopingModeInfo.Size = new System.Drawing.Size(13, 13);
+            this.DTDeisotopingModeInfo.TabIndex = 96;
+            this.DTDeisotopingModeInfo.Text = "?";
+            this.DTDeisotopingModeInfo.Visible = false;
+            // 
             // DTComplementMzToleranceBox
             // 
             this.DTComplementMzToleranceBox.DecimalPlaces = 2;
@@ -3719,20 +3685,6 @@
             this.DTDeisotopingModeLabel.TabIndex = 94;
             this.DTDeisotopingModeLabel.Text = "Deisotoping Mode:";
             this.DTDeisotopingModeLabel.Visible = false;
-            // 
-            // DTDeisotopingModeInfo
-            // 
-            this.DTDeisotopingModeInfo.AutoSize = true;
-            this.DTDeisotopingModeInfo.Cursor = System.Windows.Forms.Cursors.Hand;
-            this.DTDeisotopingModeInfo.Enabled = false;
-            this.DTDeisotopingModeInfo.Font = new System.Drawing.Font("Microsoft Sans Serif", 7F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.DTDeisotopingModeInfo.ForeColor = System.Drawing.Color.MediumBlue;
-            this.DTDeisotopingModeInfo.Location = new System.Drawing.Point(103, 202);
-            this.DTDeisotopingModeInfo.Name = "DTDeisotopingModeInfo";
-            this.DTDeisotopingModeInfo.Size = new System.Drawing.Size(13, 13);
-            this.DTDeisotopingModeInfo.TabIndex = 96;
-            this.DTDeisotopingModeInfo.Text = "?";
-            this.DTDeisotopingModeInfo.Visible = false;
             // 
             // DTTicCutoffPercentageInfo
             // 
@@ -6643,9 +6595,6 @@
         private System.Windows.Forms.Label TRUseSmartPlusThreeModelInfo;
         private System.Windows.Forms.Label TRUseSmartPlusThreeModelLabel;
         private System.Windows.Forms.Label TRProteinSamplingTimeLabel;
-        private System.Windows.Forms.Button TRInstrumentButton;
-        private System.Windows.Forms.Button MyriInstrumentButton;
-        private System.Windows.Forms.Button DTInstrumentButton;
         private System.Windows.Forms.Button MoreButton;
         private System.Windows.Forms.NumericUpDown DTComplementMzToleranceBox;
         private System.Windows.Forms.NumericUpDown DTIsotopeMzToleranceBox;
@@ -6689,7 +6638,6 @@
         private System.Windows.Forms.Panel PepGenPanel;
         private System.Windows.Forms.Panel PepAdvPanel;
         private System.Windows.Forms.GroupBox PepInstrumentGB;
-        private System.Windows.Forms.Button PepInstrumentLoad;
         private System.Windows.Forms.ComboBox PepInstrumentList;
         private System.Windows.Forms.Label PepInstrumentLabel;
         private System.Windows.Forms.ComboBox PepPrecursorMzToleranceRuleBox;

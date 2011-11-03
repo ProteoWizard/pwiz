@@ -29,9 +29,16 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(QueueForm));
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(QueueForm));
             this.JobQueueDGV = new System.Windows.Forms.DataGridView();
+            this.JQName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.JQOutputDirectory = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.JQDatabaseFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.JQConfigFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Column1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.JQProgress = new CustomProgressCell.DataGridViewProgressColumn();
+            this.Kill = new System.Windows.Forms.DataGridViewButtonColumn();
             this.JQRowMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.lockToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.editToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -65,13 +72,6 @@
             this.dataGridViewImageColumn1 = new System.Windows.Forms.DataGridViewImageColumn();
             this.LogLabel = new System.Windows.Forms.Label();
             this.MiniLogBox = new System.Windows.Forms.TextBox();
-            this.JQName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.JQOutputDirectory = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.JQDatabaseFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.JQConfigFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Column1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.JQProgress = new CustomProgressCell.DataGridViewProgressColumn();
-            this.Kill = new System.Windows.Forms.DataGridViewButtonColumn();
             ((System.ComponentModel.ISupportInitialize)(this.JobQueueDGV)).BeginInit();
             this.JQRowMenu.SuspendLayout();
             this.menuStrip1.SuspendLayout();
@@ -106,14 +106,75 @@
             this.JobQueueDGV.TabIndex = 0;
             this.JobQueueDGV.MouseDown += new System.Windows.Forms.MouseEventHandler(this.JobQueueDGV_MouseDown);
             this.JobQueueDGV.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.JobQueueDGV_CellBeginEdit);
+            this.JobQueueDGV.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.JobQueueDGV_CellDoubleClick);
             this.JobQueueDGV.MouseMove += new System.Windows.Forms.MouseEventHandler(this.JobQueueDGV_MouseMove);
-            this.JobQueueDGV.DoubleClick += new System.EventHandler(this.JobQueueDGV_DoubleClick);
             this.JobQueueDGV.DragOver += new System.Windows.Forms.DragEventHandler(this.JobQueueDGV_DragOver);
             this.JobQueueDGV.MouseUp += new System.Windows.Forms.MouseEventHandler(this.JobQueueDGV_MouseUp);
             this.JobQueueDGV.CellPainting += new System.Windows.Forms.DataGridViewCellPaintingEventHandler(this.JobQueueDGV_CellPainting);
-            this.JobQueueDGV.Click += new System.EventHandler(this.JobQueueDGV_Click);
+            this.JobQueueDGV.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.JobQueueDGV_CellClick);
             this.JobQueueDGV.DragDrop += new System.Windows.Forms.DragEventHandler(this.JobQueueDGV_DragDrop);
             this.JobQueueDGV.CellContentClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.JobQueueDGV_CellContentClick);
+            // 
+            // JQName
+            // 
+            this.JQName.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.JQName.FillWeight = 80F;
+            this.JQName.HeaderText = "Name";
+            this.JQName.MinimumWidth = 45;
+            this.JQName.Name = "JQName";
+            this.JQName.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Programmatic;
+            // 
+            // JQOutputDirectory
+            // 
+            this.JQOutputDirectory.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.JQOutputDirectory.FillWeight = 70F;
+            this.JQOutputDirectory.HeaderText = "Output Directory";
+            this.JQOutputDirectory.MinimumWidth = 110;
+            this.JQOutputDirectory.Name = "JQOutputDirectory";
+            this.JQOutputDirectory.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Programmatic;
+            // 
+            // JQDatabaseFile
+            // 
+            this.JQDatabaseFile.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            this.JQDatabaseFile.FillWeight = 80F;
+            this.JQDatabaseFile.HeaderText = "Data File";
+            this.JQDatabaseFile.MinimumWidth = 95;
+            this.JQDatabaseFile.Name = "JQDatabaseFile";
+            this.JQDatabaseFile.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Programmatic;
+            // 
+            // JQConfigFile
+            // 
+            this.JQConfigFile.HeaderText = "Config File";
+            this.JQConfigFile.MinimumWidth = 80;
+            this.JQConfigFile.Name = "JQConfigFile";
+            this.JQConfigFile.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Programmatic;
+            this.JQConfigFile.Width = 115;
+            // 
+            // Column1
+            // 
+            this.Column1.HeaderText = "Search Type";
+            this.Column1.Name = "Column1";
+            // 
+            // JQProgress
+            // 
+            this.JQProgress.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            dataGridViewCellStyle1.ForeColor = System.Drawing.Color.Black;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.Color.Black;
+            this.JQProgress.DefaultCellStyle = dataGridViewCellStyle1;
+            this.JQProgress.FillWeight = 125F;
+            this.JQProgress.HeaderText = "Progress";
+            this.JQProgress.MinimumWidth = 50;
+            this.JQProgress.Name = "JQProgress";
+            this.JQProgress.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            // 
+            // Kill
+            // 
+            this.Kill.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.Kill.HeaderText = "";
+            this.Kill.MinimumWidth = 15;
+            this.Kill.Name = "Kill";
+            this.Kill.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+            this.Kill.Width = 25;
             // 
             // JQRowMenu
             // 
@@ -386,67 +447,6 @@
             this.MiniLogBox.Size = new System.Drawing.Size(765, 74);
             this.MiniLogBox.TabIndex = 6;
             this.MiniLogBox.WordWrap = false;
-            // 
-            // JQName
-            // 
-            this.JQName.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.JQName.FillWeight = 80F;
-            this.JQName.HeaderText = "Name";
-            this.JQName.MinimumWidth = 45;
-            this.JQName.Name = "JQName";
-            this.JQName.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Programmatic;
-            // 
-            // JQOutputDirectory
-            // 
-            this.JQOutputDirectory.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.JQOutputDirectory.FillWeight = 70F;
-            this.JQOutputDirectory.HeaderText = "Output Directory";
-            this.JQOutputDirectory.MinimumWidth = 110;
-            this.JQOutputDirectory.Name = "JQOutputDirectory";
-            this.JQOutputDirectory.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Programmatic;
-            // 
-            // JQDatabaseFile
-            // 
-            this.JQDatabaseFile.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.JQDatabaseFile.FillWeight = 80F;
-            this.JQDatabaseFile.HeaderText = "Data File";
-            this.JQDatabaseFile.MinimumWidth = 95;
-            this.JQDatabaseFile.Name = "JQDatabaseFile";
-            this.JQDatabaseFile.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Programmatic;
-            // 
-            // JQConfigFile
-            // 
-            this.JQConfigFile.HeaderText = "Config File";
-            this.JQConfigFile.MinimumWidth = 80;
-            this.JQConfigFile.Name = "JQConfigFile";
-            this.JQConfigFile.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Programmatic;
-            this.JQConfigFile.Width = 115;
-            // 
-            // Column1
-            // 
-            this.Column1.HeaderText = "Search Type";
-            this.Column1.Name = "Column1";
-            // 
-            // JQProgress
-            // 
-            this.JQProgress.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            dataGridViewCellStyle1.ForeColor = System.Drawing.Color.Black;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.Color.Black;
-            this.JQProgress.DefaultCellStyle = dataGridViewCellStyle1;
-            this.JQProgress.FillWeight = 125F;
-            this.JQProgress.HeaderText = "Progress";
-            this.JQProgress.MinimumWidth = 50;
-            this.JQProgress.Name = "JQProgress";
-            this.JQProgress.Resizable = System.Windows.Forms.DataGridViewTriState.True;
-            // 
-            // Kill
-            // 
-            this.Kill.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
-            this.Kill.HeaderText = "";
-            this.Kill.MinimumWidth = 15;
-            this.Kill.Name = "Kill";
-            this.Kill.Resizable = System.Windows.Forms.DataGridViewTriState.False;
-            this.Kill.Width = 25;
             // 
             // QueueForm
             // 
