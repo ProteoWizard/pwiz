@@ -262,7 +262,7 @@ enum XcaliburVersion
     XcaliburVersion_1_4,
     XcaliburVersion_2_0,
     XcaliburVersion_2_0_5,
-    XcaliburVersion_2_5_5,
+    XcaliburVersion_2_5_5
 };
 
 
