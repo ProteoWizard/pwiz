@@ -204,7 +204,7 @@ namespace pwiz.Skyline.FileUI
                    Equals(type, ExportInstrumentType.ABI_TOF);
         }
 
-        public bool IsAlwaysScheduledInstrument
+        private bool IsAlwaysScheduledInstrument
         {
             get
             {
@@ -228,19 +228,12 @@ namespace pwiz.Skyline.FileUI
 
         private bool CanScheduleInstrumentType
         {
-            get { return ExportInstrumentType.CanSchedule(InstrumentType, _document); }
+            get { return ExportInstrumentType.CanScheduleInstrumentType(InstrumentType, _document); }
         }
 
         private bool CanSchedule
         {
-            get
-            {
-                var retentionTime = _document.Settings.PeptideSettings.Prediction.RetentionTime;
-                if (retentionTime != null && !retentionTime.Calculator.IsUsable)
-                    return false;
-
-                return CanScheduleInstrumentType;
-            }
+            get { return ExportInstrumentType.CanSchedule(InstrumentType, _document); }
         }
 
         private ExportSchedulingAlgorithm SchedulingAlgorithm

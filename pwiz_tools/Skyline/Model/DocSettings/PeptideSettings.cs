@@ -306,7 +306,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
             // If no retention time yet, and there is a predictor, use the predictor
-            if (!predictedRT.HasValue && RetentionTime != null)
+            if (!predictedRT.HasValue && RetentionTime != null && RetentionTime.Calculator.IsUsable)
             {
                 // but only if not using measured results, or the instrument supports
                 // variable scheduling windows
@@ -331,8 +331,8 @@ namespace pwiz.Skyline.Model.DocSettings
             // Check if results information can be used for retention times
             bool resultsAvailable = (UseMeasuredRTs && document.Settings.HasResults);
 
-            //  If the user has assigned a retention time predictor
-            if (RetentionTime != null)
+            //  If the user has assigned a retention time predictor and the calculator is usable
+            if (RetentionTime != null && RetentionTime.Calculator.IsUsable)
             {
                 // As long as the instrument is not limited to a single retention
                 // time window, or their is no option to use results information,
