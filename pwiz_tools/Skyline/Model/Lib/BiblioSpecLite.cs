@@ -837,19 +837,15 @@ namespace pwiz.Skyline.Model.Lib
 
         public override IEnumerable<SpectrumInfo> GetSpectra(LibKey key, IsotopeLabelType labelType, bool bestMatch)
         {
-            if (bestMatch)
+            if (bestMatch && SchemaVersion < 1)
             {
+                // Retention time information is not available for schema (minor version) < 1
                 return base.GetSpectra(key, labelType, true);
             }
-            else if (SchemaVersion < 1)
-            {
-                return new SpectrumInfo[0];
-            }
-
-            return GetRedundantSpectra(key, labelType);
+            return GetRedundantSpectra(key, labelType, !bestMatch);
         }
 
-        private IEnumerable<SpectrumInfo> GetRedundantSpectra(LibKey key, IsotopeLabelType labelType)
+        private IEnumerable<SpectrumInfo> GetRedundantSpectra(LibKey key, IsotopeLabelType labelType, bool getAll)
         {
             // No redundant spectra before schema version 1
             if (SchemaVersion == 0)
@@ -865,6 +861,9 @@ namespace pwiz.Skyline.Model.Lib
                     "SELECT * " +
                     "FROM [RetentionTimes] INNER JOIN [SpectrumSourceFiles] ON [SpectrumSourceID] = [id] " +
                     "WHERE [RefSpectraID] = ?";
+                if (!getAll)
+                    select.CommandText += " AND [bestSpectrum] = 1";
+
                 select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)info.Id));
 
                 using (SQLiteDataReader reader = select.ExecuteReader())

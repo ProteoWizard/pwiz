@@ -530,6 +530,9 @@ namespace pwiz.Skyline.SettingsUI
             graphPane.CurveList.Clear();
             graphPane.GraphObjList.Clear();
 
+            labelRT.Text = "";
+            labelFilename.Text = "";
+
             // Check for appropriate spectrum to load
             bool available = false;
             try
@@ -556,6 +559,23 @@ namespace pwiz.Skyline.SettingsUI
                             mods = nodPep.ExplicitMods;
                             // Should always be just one child.  The child that matched this spectrum.
                             transitionGroup = ((TransitionGroupDocNode)nodPep.Children[0]).TransitionGroup;
+
+                            var bestSpectrum = _selectedLibrary.GetSpectra(_peptides[index].Key,
+                                IsotopeLabelType.light, true).FirstOrDefault();
+                            if (bestSpectrum != null)
+                            {
+                                double? rt = bestSpectrum.RetentionTime;
+                                string filename = bestSpectrum.FileName;
+                                
+                                if(!string.IsNullOrEmpty(filename))
+                                {
+                                    labelFilename.Text = string.Format("File: {0}", filename);
+                                }
+                                if(rt.HasValue)
+                                {
+                                    labelRT.Text = string.Format("RT: {0}", rt);
+                                }
+                            }
                         }
                         else
                         {

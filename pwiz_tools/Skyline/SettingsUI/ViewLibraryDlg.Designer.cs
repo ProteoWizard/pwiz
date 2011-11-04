@@ -92,6 +92,8 @@ namespace pwiz.Skyline.SettingsUI
             this.toolStripSeparator15 = new System.Windows.Forms.ToolStripSeparator();
             this.zoomSpectrumContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator27 = new System.Windows.Forms.ToolStripSeparator();
+            this.labelFilename = new System.Windows.Forms.Label();
+            this.labelRT = new System.Windows.Forms.Label();
             this.splitMain.Panel1.SuspendLayout();
             this.splitMain.Panel2.SuspendLayout();
             this.splitMain.SuspendLayout();
@@ -480,7 +482,9 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // panel2
             // 
+            this.panel2.Controls.Add(this.labelRT);
             this.panel2.Controls.Add(this.cbAssociateProteins);
+            this.panel2.Controls.Add(this.labelFilename);
             this.panel2.Controls.Add(this.btnAdd);
             this.panel2.Controls.Add(this.btnAddAll);
             this.panel2.Controls.Add(this.btnCancel);
@@ -758,6 +762,24 @@ namespace pwiz.Skyline.SettingsUI
             this.toolStripSeparator27.Name = "toolStripSeparator27";
             this.toolStripSeparator27.Size = new System.Drawing.Size(182, 6);
             // 
+            // labelFilename
+            // 
+            this.labelFilename.AutoSize = true;
+            this.labelFilename.Location = new System.Drawing.Point(3, 6);
+            this.labelFilename.Name = "labelFilename";
+            this.labelFilename.Size = new System.Drawing.Size(23, 13);
+            this.labelFilename.TabIndex = 3;
+            this.labelFilename.Text = "File";
+            // 
+            // labelRT
+            // 
+            this.labelRT.AutoSize = true;
+            this.labelRT.Location = new System.Drawing.Point(379, 6);
+            this.labelRT.Name = "labelRT";
+            this.labelRT.Size = new System.Drawing.Size(22, 13);
+            this.labelRT.TabIndex = 4;
+            this.labelRT.Text = "RT";
+            // 
             // ViewLibraryDlg
             // 
             this.AcceptButton = this.btnCancel;
@@ -869,6 +891,8 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.ToolStripMenuItem charge2ContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem charge3ContextMenuItem;
         private System.Windows.Forms.ToolStripMenuItem charge4ContextMenuItem;
+        private System.Windows.Forms.Label labelFilename;
+        private System.Windows.Forms.Label labelRT;
 
 
 
