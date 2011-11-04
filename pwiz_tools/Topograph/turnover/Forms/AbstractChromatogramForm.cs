@@ -229,8 +229,8 @@ namespace pwiz.Topograph.ui.Forms
             spectrumForm = new SpectrumForm(PeptideFileAnalysis.MsDataFile)
             {
                 ScanIndex = scanIndex,
-                PeptideAnalysis = PeptideAnalysis
             };
+            spectrumForm.SetPeptideAnalysis(PeptideAnalysis);
             spectrumForm.Show(TopLevelControl);
             double minMz = 2000;
             double maxMz = 0;
