@@ -38,6 +38,7 @@ namespace pwiz.Topograph.ui.Forms
             tbxInitialTracerPercent.Text = tracerDef.InitialApe.ToString();
             tbxFinalTracerPercent.Text = tracerDef.FinalApe.ToString();
             tbxMinScore.Text = workspace.GetAcceptMinDeconvolutionScore().ToString();
+            tbxMinAuc.Text = workspace.GetAcceptMinAreaUnderChromatogramCurve().ToString();
             comboCalculationType.SelectedIndex = 0;
             UpdateTimePoints();
             _viewContext = new TopographViewContext(workspace, typeof (ResultRow), new[] {GetDefaultViewSpec(false)});
@@ -81,14 +82,33 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
+        public double MinAuc
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(tbxMinAuc.Text))
+                {
+                    return 0;
+                }
+                try
+                {
+                    return double.Parse(tbxMinAuc.Text);
+                }
+                catch
+                {
+                    return 0;
+                }
+            }
+        }
+
         private void btnRequery_Click(object sender, EventArgs e)
         {
-            double minScore = MinScore;
             var calculator = new HalfLifeCalculator(Workspace, HalfLifeCalculationType)
                                  {
                                      ByProtein = cbxByProtein.Checked,
                                      BySample = cbxBySample.Checked,
-                                     MinScore = minScore,
+                                     MinScore = MinScore,
+                                     MinAuc = MinAuc,
                                      InitialPercent = double.Parse(tbxInitialTracerPercent.Text),
                                      FinalPercent = double.Parse(tbxFinalTracerPercent.Text),
                                      FixedInitialPercent = cbxFixYIntercept.Checked,

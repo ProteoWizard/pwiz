@@ -45,6 +45,8 @@ namespace pwiz.Topograph.ui.Forms
             this.btnRequery = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.comboEvviesFilter = new System.Windows.Forms.ComboBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.tbxMinAuc = new System.Windows.Forms.TextBox();
             this.dataGridView1 = new pwiz.Common.DataBinding.BoundDataGridView();
             this.bindingSource1 = new System.Windows.Forms.BindingSource(this.components);
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
@@ -84,6 +86,8 @@ namespace pwiz.Topograph.ui.Forms
             this.tableLayoutPanel1.Controls.Add(this.btnRequery, 4, 2);
             this.tableLayoutPanel1.Controls.Add(this.label2, 2, 0);
             this.tableLayoutPanel1.Controls.Add(this.comboEvviesFilter, 3, 0);
+            this.tableLayoutPanel1.Controls.Add(this.label3, 2, 1);
+            this.tableLayoutPanel1.Controls.Add(this.tbxMinAuc, 3, 1);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
@@ -199,6 +203,22 @@ namespace pwiz.Topograph.ui.Forms
             this.comboEvviesFilter.Name = "comboEvviesFilter";
             this.comboEvviesFilter.Size = new System.Drawing.Size(290, 21);
             this.comboEvviesFilter.TabIndex = 34;
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(399, 25);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(73, 13);
+            this.label3.TabIndex = 35;
+            this.label3.Text = "Minimum AUC";
+            // 
+            // tbxMinAuc
+            // 
+            this.tbxMinAuc.Location = new System.Drawing.Point(499, 28);
+            this.tbxMinAuc.Name = "tbxMinAuc";
+            this.tbxMinAuc.Size = new System.Drawing.Size(100, 20);
+            this.tbxMinAuc.TabIndex = 36;
             // 
             // dataGridView1
             // 
@@ -381,5 +401,7 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.DataGridViewTextBoxColumn colSummaryMeanStdErr;
         private System.Windows.Forms.DataGridViewTextBoxColumn colSummaryValueCount;
         private System.Windows.Forms.DataGridViewTextBoxColumn colSummaryStdDevStdErrCount;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.TextBox tbxMinAuc;
     }
 }

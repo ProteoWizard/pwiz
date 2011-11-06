@@ -742,6 +742,14 @@ namespace pwiz.Topograph.Model
             rtShift = statsY.Slope(statsX);
             residuals = Statistics.StdDevB(statsY, statsX);
         }
+
+        public double AreaUnderCurve
+        {
+            get
+            {
+                return ListChildren().Select(peak => peak.TotalArea).Sum();
+            }
+        }
     }
 
     public enum AdjustPeaksMode

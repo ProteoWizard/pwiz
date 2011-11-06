@@ -37,6 +37,7 @@ namespace pwiz.Topograph.ui.Forms
             checkedListBoxAcceptableIntegrationNotes.Items.AddRange(IntegrationNote.Values().ToArray());
             AcceptSamplesWithoutMs2Id = workspace.GetAcceptSamplesWithoutMs2Id();
             MinDeconvolutionScore = workspace.GetAcceptMinDeconvolutionScore();
+            MinAuc = workspace.GetAcceptMinAreaUnderChromatogramCurve();
             IntegrationNotes = workspace.GetAcceptIntegrationNotes();
         }
 
@@ -46,6 +47,7 @@ namespace pwiz.Topograph.ui.Forms
             {
                 Workspace.SetAcceptSamplesWithoutMs2Id(AcceptSamplesWithoutMs2Id);
                 Workspace.SetAcceptMinDeconvolutionScore(MinDeconvolutionScore);
+                Workspace.SetAcceptMinAreaUnderChromatogramCurve(MinAuc);
                 Workspace.SetAcceptIntegrationNotes(IntegrationNotes);
             }
         }
@@ -70,6 +72,21 @@ namespace pwiz.Topograph.ui.Forms
             set
             {
                 tbxMinDeconvolutionScore.Text = value.ToString();
+            }
+        }
+
+        public double MinAuc
+        {
+            get { double result;
+            if (Double.TryParse(tbxMinAuc.Text, out result))
+            {
+                return result;
+            }
+                return 0;
+            }
+            set
+            {
+                tbxMinAuc.Text = value.ToString();
             }
         }
 

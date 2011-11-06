@@ -172,6 +172,10 @@ namespace pwiz.Topograph.MsData
             {
                 return false;
             }
+            if (MinAuc > 0 && rowData.PeakAreas.Values.Sum() < MinAuc)
+            {
+                return false;
+            }
             if (!AcceptMissingMs2Id && rowData.PsmCount == 0)
             {
                 return false;
@@ -393,13 +397,20 @@ namespace pwiz.Topograph.MsData
                     var mean = statistics.Mean();
                     var stdDev = statistics.StdDev();
                     double cutoff;
-                    if (stdDev / mean < .3)
+                    if (EvviesFilter == EvviesFilterEnum.TwoStdDev)
                     {
-                        cutoff = 2 * stdDev;
+                        cutoff = 2*stdDev;
                     }
                     else
                     {
-                        cutoff = stdDev;
+                        if (stdDev / mean < .3)
+                        {
+                            cutoff = 2 * stdDev;
+                        }
+                        else
+                        {
+                            cutoff = stdDev;
+                        }
                     }
                     cutoffs.Add(entry.Key, new KeyValuePair<double, double>(mean - cutoff, mean + cutoff));
                 }
@@ -635,6 +646,7 @@ namespace pwiz.Topograph.MsData
         public bool ByProtein { get; set; }
         public bool BySample { get; set; }
         public double MinScore { get; set; }
+        public double MinAuc { get; set; }
         ISession Session { get; set; }
         public IList<ResultRow> ResultRows { get; private set; }
         public IList<RowData> RowDatas { get; private set; }
@@ -834,5 +846,6 @@ namespace pwiz.Topograph.MsData
         None,
         Jun2011,
         Oct2011,
+        TwoStdDev,
     }
 }

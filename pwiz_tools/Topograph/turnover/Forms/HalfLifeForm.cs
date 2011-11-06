@@ -40,6 +40,7 @@ namespace pwiz.Topograph.ui.Forms
             tbxInitialPercent.Text = tracerDef.InitialApe.ToString();
             tbxFinalPercent.Text = tracerDef.FinalApe.ToString();
             tbxMinScore.Text = workspace.GetAcceptMinDeconvolutionScore().ToString();
+            tbxMinAuc.Text = workspace.GetAcceptMinAreaUnderChromatogramCurve().ToString();
             colTurnover.DefaultCellStyle.Format = "#.##%";
             colPrecursorPool.DefaultCellStyle.Format = "#.##%";
             comboCalculationType.SelectedIndex = 0;
@@ -131,6 +132,15 @@ namespace pwiz.Topograph.ui.Forms
             set
             {
                 tbxMinScore.Text = value.ToString();
+                Requery();
+            }
+        }
+        public double MinAuc
+        {
+            get { return ParseDouble(tbxMinAuc.Text); }
+            set 
+            { 
+                tbxMinAuc.Text = value.ToString();
                 Requery();
             }
         }
@@ -343,6 +353,7 @@ namespace pwiz.Topograph.ui.Forms
                     row.Cells[colPrecursorPool.Index].Value = peptideFileAnalysis.Peaks.PrecursorEnrichment;
                     row.Cells[colTurnoverScore.Index].Value = peptideFileAnalysis.Peaks.TurnoverScore;
                     row.Cells[colSample.Index].Value = peptideFileAnalysis.MsDataFile.Sample;
+                    row.Cells[colAuc.Index].Value = peptideFileAnalysis.Peaks.AreaUnderCurve;
                 }
                 HalfLifeCalculator.ResultData resultData;
                 var halfLifeCalculator = UpdateGraph(peptideFileAnalyses, out resultData);
@@ -576,6 +587,10 @@ namespace pwiz.Topograph.ui.Forms
             {
                 return false;
             }
+            if (MinAuc > 0 && peptideFileAnalysis.Peaks.AreaUnderCurve < MinAuc)
+            {
+                return false;
+            }
             if (HalfLifeCalculationType == HalfLifeCalculationType.IndividualPrecursorPool)
             {
                 if (!peptideFileAnalysis.Peaks.Turnover.HasValue)
@@ -761,6 +776,11 @@ namespace pwiz.Topograph.ui.Forms
         }
 
         private void comboEvviesFilter_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            UpdateRows();
+        }
+
+        private void tbxMinAuc_TextChanged(object sender, EventArgs e)
         {
             UpdateRows();
         }

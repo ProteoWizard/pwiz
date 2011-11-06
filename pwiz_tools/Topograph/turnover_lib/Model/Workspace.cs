@@ -336,6 +336,14 @@ namespace pwiz.Topograph.Model
         {
             _settings.SetSetting(SettingEnum.accept_min_deconvolution_score, value);
         }
+        public double GetAcceptMinAreaUnderChromatogramCurve()
+        {
+            return _settings.GetSetting(SettingEnum.accept_min_auc, 0.0);
+        }
+        public void SetAcceptMinAreaUnderChromatogramCurve(double value)
+        {
+            _settings.SetSetting(SettingEnum.accept_min_auc, value);
+        }
         public IEnumerable<IntegrationNote> GetAcceptIntegrationNotes()
         {
             return IntegrationNote.ParseCollection(_settings.GetSetting(SettingEnum.accept_integration_notes, 

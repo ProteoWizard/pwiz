@@ -69,6 +69,8 @@ namespace pwiz.Topograph.ui.Forms
             this.cbxBySample = new System.Windows.Forms.CheckBox();
             this.label11 = new System.Windows.Forms.Label();
             this.comboEvviesFilter = new System.Windows.Forms.ComboBox();
+            this.tbxMinAuc = new System.Windows.Forms.TextBox();
+            this.label12 = new System.Windows.Forms.Label();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
             this.colPeptide = new System.Windows.Forms.DataGridViewLinkColumn();
             this.colFile = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -78,6 +80,7 @@ namespace pwiz.Topograph.ui.Forms
             this.colTracerPercent = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colSample = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colScore = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colAuc = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colPrecursorPool = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTurnover = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colTurnoverScore = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -125,26 +128,29 @@ namespace pwiz.Topograph.ui.Forms
             this.tableLayoutPanel1.Controls.Add(this.label4, 0, 2);
             this.tableLayoutPanel1.Controls.Add(this.label5, 0, 4);
             this.tableLayoutPanel1.Controls.Add(this.tbxMinScore, 1, 4);
-            this.tableLayoutPanel1.Controls.Add(this.label6, 0, 8);
-            this.tableLayoutPanel1.Controls.Add(this.label7, 0, 9);
-            this.tableLayoutPanel1.Controls.Add(this.tbxInitialPercent, 1, 8);
-            this.tableLayoutPanel1.Controls.Add(this.tbxFinalPercent, 1, 9);
-            this.tableLayoutPanel1.Controls.Add(this.label8, 0, 10);
-            this.tableLayoutPanel1.Controls.Add(this.label9, 0, 11);
-            this.tableLayoutPanel1.Controls.Add(this.tbxRateConstant, 1, 10);
-            this.tableLayoutPanel1.Controls.Add(this.tbxHalfLife, 1, 11);
-            this.tableLayoutPanel1.Controls.Add(this.cbxLogPlot, 0, 6);
-            this.tableLayoutPanel1.Controls.Add(this.comboCalculationType, 1, 7);
-            this.tableLayoutPanel1.Controls.Add(this.label10, 0, 7);
-            this.tableLayoutPanel1.Controls.Add(this.gridViewStats, 0, 13);
-            this.tableLayoutPanel1.Controls.Add(this.cbxFixedInitialPercent, 1, 12);
-            this.tableLayoutPanel1.Controls.Add(this.cbxBySample, 0, 12);
+            this.tableLayoutPanel1.Controls.Add(this.label6, 0, 9);
+            this.tableLayoutPanel1.Controls.Add(this.label7, 0, 10);
+            this.tableLayoutPanel1.Controls.Add(this.tbxInitialPercent, 1, 9);
+            this.tableLayoutPanel1.Controls.Add(this.tbxFinalPercent, 1, 10);
+            this.tableLayoutPanel1.Controls.Add(this.label8, 0, 11);
+            this.tableLayoutPanel1.Controls.Add(this.label9, 0, 12);
+            this.tableLayoutPanel1.Controls.Add(this.tbxRateConstant, 1, 11);
+            this.tableLayoutPanel1.Controls.Add(this.tbxHalfLife, 1, 12);
+            this.tableLayoutPanel1.Controls.Add(this.cbxLogPlot, 0, 7);
+            this.tableLayoutPanel1.Controls.Add(this.comboCalculationType, 1, 8);
+            this.tableLayoutPanel1.Controls.Add(this.label10, 0, 8);
+            this.tableLayoutPanel1.Controls.Add(this.gridViewStats, 0, 14);
+            this.tableLayoutPanel1.Controls.Add(this.cbxFixedInitialPercent, 1, 13);
+            this.tableLayoutPanel1.Controls.Add(this.cbxBySample, 0, 13);
             this.tableLayoutPanel1.Controls.Add(this.label11, 0, 5);
             this.tableLayoutPanel1.Controls.Add(this.comboEvviesFilter, 1, 5);
+            this.tableLayoutPanel1.Controls.Add(this.tbxMinAuc, 1, 6);
+            this.tableLayoutPanel1.Controls.Add(this.label12, 0, 6);
             this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-            this.tableLayoutPanel1.RowCount = 14;
+            this.tableLayoutPanel1.RowCount = 15;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
             this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 25F));
@@ -268,7 +274,7 @@ namespace pwiz.Topograph.ui.Forms
             // 
             this.label6.AutoSize = true;
             this.label6.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label6.Location = new System.Drawing.Point(3, 200);
+            this.label6.Location = new System.Drawing.Point(3, 225);
             this.label6.Name = "label6";
             this.label6.Size = new System.Drawing.Size(144, 25);
             this.label6.TabIndex = 13;
@@ -279,7 +285,7 @@ namespace pwiz.Topograph.ui.Forms
             // 
             this.label7.AutoSize = true;
             this.label7.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label7.Location = new System.Drawing.Point(3, 225);
+            this.label7.Location = new System.Drawing.Point(3, 250);
             this.label7.Name = "label7";
             this.label7.Size = new System.Drawing.Size(144, 25);
             this.label7.TabIndex = 15;
@@ -289,7 +295,7 @@ namespace pwiz.Topograph.ui.Forms
             // tbxInitialPercent
             // 
             this.tbxInitialPercent.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tbxInitialPercent.Location = new System.Drawing.Point(153, 203);
+            this.tbxInitialPercent.Location = new System.Drawing.Point(153, 228);
             this.tbxInitialPercent.Name = "tbxInitialPercent";
             this.tbxInitialPercent.Size = new System.Drawing.Size(299, 20);
             this.tbxInitialPercent.TabIndex = 14;
@@ -298,7 +304,7 @@ namespace pwiz.Topograph.ui.Forms
             // tbxFinalPercent
             // 
             this.tbxFinalPercent.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tbxFinalPercent.Location = new System.Drawing.Point(153, 228);
+            this.tbxFinalPercent.Location = new System.Drawing.Point(153, 253);
             this.tbxFinalPercent.Name = "tbxFinalPercent";
             this.tbxFinalPercent.Size = new System.Drawing.Size(299, 20);
             this.tbxFinalPercent.TabIndex = 16;
@@ -307,7 +313,7 @@ namespace pwiz.Topograph.ui.Forms
             // label8
             // 
             this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(3, 250);
+            this.label8.Location = new System.Drawing.Point(3, 275);
             this.label8.Name = "label8";
             this.label8.Size = new System.Drawing.Size(75, 13);
             this.label8.TabIndex = 17;
@@ -316,7 +322,7 @@ namespace pwiz.Topograph.ui.Forms
             // label9
             // 
             this.label9.AutoSize = true;
-            this.label9.Location = new System.Drawing.Point(3, 275);
+            this.label9.Location = new System.Drawing.Point(3, 300);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(46, 13);
             this.label9.TabIndex = 19;
@@ -325,7 +331,7 @@ namespace pwiz.Topograph.ui.Forms
             // tbxRateConstant
             // 
             this.tbxRateConstant.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tbxRateConstant.Location = new System.Drawing.Point(153, 253);
+            this.tbxRateConstant.Location = new System.Drawing.Point(153, 278);
             this.tbxRateConstant.Name = "tbxRateConstant";
             this.tbxRateConstant.ReadOnly = true;
             this.tbxRateConstant.Size = new System.Drawing.Size(299, 20);
@@ -334,7 +340,7 @@ namespace pwiz.Topograph.ui.Forms
             // tbxHalfLife
             // 
             this.tbxHalfLife.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.tbxHalfLife.Location = new System.Drawing.Point(153, 278);
+            this.tbxHalfLife.Location = new System.Drawing.Point(153, 303);
             this.tbxHalfLife.Name = "tbxHalfLife";
             this.tbxHalfLife.ReadOnly = true;
             this.tbxHalfLife.Size = new System.Drawing.Size(299, 20);
@@ -344,7 +350,7 @@ namespace pwiz.Topograph.ui.Forms
             // 
             this.cbxLogPlot.AutoSize = true;
             this.cbxLogPlot.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.cbxLogPlot.Location = new System.Drawing.Point(3, 153);
+            this.cbxLogPlot.Location = new System.Drawing.Point(3, 178);
             this.cbxLogPlot.Name = "cbxLogPlot";
             this.cbxLogPlot.Size = new System.Drawing.Size(144, 19);
             this.cbxLogPlot.TabIndex = 10;
@@ -362,7 +368,7 @@ namespace pwiz.Topograph.ui.Forms
             "Individual Precursor Pool",
             "Avg Precursor Pool",
             "Avg Precursor Pool (Old Way)"});
-            this.comboCalculationType.Location = new System.Drawing.Point(153, 178);
+            this.comboCalculationType.Location = new System.Drawing.Point(153, 203);
             this.comboCalculationType.Name = "comboCalculationType";
             this.comboCalculationType.Size = new System.Drawing.Size(299, 21);
             this.comboCalculationType.TabIndex = 12;
@@ -372,7 +378,7 @@ namespace pwiz.Topograph.ui.Forms
             // 
             this.label10.AutoSize = true;
             this.label10.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.label10.Location = new System.Drawing.Point(3, 175);
+            this.label10.Location = new System.Drawing.Point(3, 200);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(144, 25);
             this.label10.TabIndex = 11;
@@ -409,7 +415,7 @@ namespace pwiz.Topograph.ui.Forms
             dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
             this.gridViewStats.DefaultCellStyle = dataGridViewCellStyle2;
             this.gridViewStats.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.gridViewStats.Location = new System.Drawing.Point(3, 328);
+            this.gridViewStats.Location = new System.Drawing.Point(3, 353);
             this.gridViewStats.Name = "gridViewStats";
             dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control;
@@ -419,7 +425,7 @@ namespace pwiz.Topograph.ui.Forms
             dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
             this.gridViewStats.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
-            this.gridViewStats.Size = new System.Drawing.Size(449, 64);
+            this.gridViewStats.Size = new System.Drawing.Size(449, 39);
             this.gridViewStats.TabIndex = 22;
             this.gridViewStats.CellValueChanged += new System.Windows.Forms.DataGridViewCellEventHandler(this.gridViewStats_CellValueChanged);
             this.gridViewStats.CellBeginEdit += new System.Windows.Forms.DataGridViewCellCancelEventHandler(this.gridViewStats_CellBeginEdit);
@@ -467,7 +473,7 @@ namespace pwiz.Topograph.ui.Forms
             // cbxFixedInitialPercent
             // 
             this.cbxFixedInitialPercent.AutoSize = true;
-            this.cbxFixedInitialPercent.Location = new System.Drawing.Point(153, 303);
+            this.cbxFixedInitialPercent.Location = new System.Drawing.Point(153, 328);
             this.cbxFixedInitialPercent.Name = "cbxFixedInitialPercent";
             this.cbxFixedInitialPercent.Size = new System.Drawing.Size(160, 17);
             this.cbxFixedInitialPercent.TabIndex = 21;
@@ -478,7 +484,7 @@ namespace pwiz.Topograph.ui.Forms
             // cbxBySample
             // 
             this.cbxBySample.AutoSize = true;
-            this.cbxBySample.Location = new System.Drawing.Point(3, 303);
+            this.cbxBySample.Location = new System.Drawing.Point(3, 328);
             this.cbxBySample.Name = "cbxBySample";
             this.cbxBySample.Size = new System.Drawing.Size(76, 17);
             this.cbxBySample.TabIndex = 24;
@@ -508,6 +514,26 @@ namespace pwiz.Topograph.ui.Forms
             this.comboEvviesFilter.TabIndex = 26;
             this.comboEvviesFilter.SelectedIndexChanged += new System.EventHandler(this.comboEvviesFilter_SelectedIndexChanged);
             // 
+            // tbxMinAuc
+            // 
+            this.tbxMinAuc.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.tbxMinAuc.Location = new System.Drawing.Point(153, 153);
+            this.tbxMinAuc.Name = "tbxMinAuc";
+            this.tbxMinAuc.Size = new System.Drawing.Size(299, 20);
+            this.tbxMinAuc.TabIndex = 27;
+            this.tbxMinAuc.TextChanged += new System.EventHandler(this.tbxMinAuc_TextChanged);
+            // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.label12.Location = new System.Drawing.Point(3, 150);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(144, 25);
+            this.label12.TabIndex = 28;
+            this.label12.Text = "Minimum Area Under Curve";
+            this.label12.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
             // dataGridView1
             // 
             this.dataGridView1.AllowUserToAddRows = false;
@@ -531,6 +557,7 @@ namespace pwiz.Topograph.ui.Forms
             this.colTracerPercent,
             this.colSample,
             this.colScore,
+            this.colAuc,
             this.colPrecursorPool,
             this.colTurnover,
             this.colTurnoverScore,
@@ -613,6 +640,12 @@ namespace pwiz.Topograph.ui.Forms
             this.colScore.HeaderText = "Score";
             this.colScore.Name = "colScore";
             this.colScore.ReadOnly = true;
+            // 
+            // colAuc
+            // 
+            this.colAuc.HeaderText = "AUC";
+            this.colAuc.Name = "colAuc";
+            this.colAuc.ReadOnly = true;
             // 
             // colPrecursorPool
             // 
@@ -737,6 +770,9 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.DataGridViewTextBoxColumn colStatsMedian;
         private System.Windows.Forms.DataGridViewTextBoxColumn colStatsStdDev;
         private System.Windows.Forms.CheckBox cbxBySample;
+        private System.Windows.Forms.Label label11;
+        private System.Windows.Forms.ComboBox comboEvviesFilter;
+        private ValidationStatusColumn validationStatusColumn1;
         private System.Windows.Forms.DataGridViewLinkColumn colPeptide;
         private System.Windows.Forms.DataGridViewTextBoxColumn colFile;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTimePoint;
@@ -745,14 +781,14 @@ namespace pwiz.Topograph.ui.Forms
         private System.Windows.Forms.DataGridViewTextBoxColumn colTracerPercent;
         private System.Windows.Forms.DataGridViewTextBoxColumn colSample;
         private System.Windows.Forms.DataGridViewTextBoxColumn colScore;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colAuc;
         private System.Windows.Forms.DataGridViewTextBoxColumn colPrecursorPool;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTurnover;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTurnoverScore;
         private System.Windows.Forms.DataGridViewTextBoxColumn colPrecursorPoolAvg;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTurnoverAvg;
         private System.Windows.Forms.DataGridViewTextBoxColumn colTurnoverScoreAvg;
-        private System.Windows.Forms.Label label11;
-        private System.Windows.Forms.ComboBox comboEvviesFilter;
-        private ValidationStatusColumn validationStatusColumn1;
+        private System.Windows.Forms.TextBox tbxMinAuc;
+        private System.Windows.Forms.Label label12;
     }
 }

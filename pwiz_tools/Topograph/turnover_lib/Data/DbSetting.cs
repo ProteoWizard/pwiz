@@ -45,5 +45,6 @@ namespace pwiz.Topograph.Data
         accept_samples_without_ms2_id,
         accept_min_deconvolution_score,
         accept_integration_notes,
+        accept_min_auc,
     }
 }

@@ -644,7 +644,7 @@ namespace pwiz.Topograph.ui.Forms
             using (var openFileDialog = new OpenFileDialog
                                      {
                                          Filter =
-                                             "Percolator Combined Results (combined-results.xml)|combined-results.xml|All Files|*.*",
+                                             "Percolator Combined Results|combined-results.xml;combined-results.perc.xml|All Files|*.*",
                                          Multiselect = true,
                                          InitialDirectory = Settings.Default.SearchResultsDirectory
                                      })
