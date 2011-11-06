@@ -1050,6 +1050,10 @@ namespace pwiz.Skyline.Controls
 
                     foreach (var chromInfo in results)
                     {
+                        if (chromInfo == null)
+                        {
+                            continue;
+                        }
                         var row = EnsureRow(iReplicate, chromInfo.FileIndex, chromInfo.OptimizationStep, rowIds);
                         FillTransitionGroupRow(row, settings, optFunc, chromInfo);
                     }
