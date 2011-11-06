@@ -64,7 +64,7 @@ namespace pwiz.Topograph.ui.Forms
             // cbxByProtein
             // 
             this.cbxByProtein.AutoSize = true;
-            this.cbxByProtein.Location = new System.Drawing.Point(587, 28);
+            this.cbxByProtein.Location = new System.Drawing.Point(586, 28);
             this.cbxByProtein.Name = "cbxByProtein";
             this.cbxByProtein.Size = new System.Drawing.Size(74, 17);
             this.cbxByProtein.TabIndex = 0;
@@ -87,15 +87,15 @@ namespace pwiz.Topograph.ui.Forms
             this.tbxMinScore.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tbxMinScore.Location = new System.Drawing.Point(381, 28);
             this.tbxMinScore.Name = "tbxMinScore";
-            this.tbxMinScore.Size = new System.Drawing.Size(200, 20);
+            this.tbxMinScore.Size = new System.Drawing.Size(199, 20);
             this.tbxMinScore.TabIndex = 2;
             // 
             // btnRequery
             // 
             this.btnRequery.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.btnRequery.Location = new System.Drawing.Point(587, 3);
+            this.btnRequery.Location = new System.Drawing.Point(586, 3);
             this.btnRequery.Name = "btnRequery";
-            this.btnRequery.Size = new System.Drawing.Size(170, 19);
+            this.btnRequery.Size = new System.Drawing.Size(171, 19);
             this.btnRequery.TabIndex = 4;
             this.btnRequery.Text = "Recalculate";
             this.btnRequery.UseVisualStyleBackColor = true;
@@ -135,7 +135,7 @@ namespace pwiz.Topograph.ui.Forms
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 46.3964F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 100F));
             this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 53.6036F));
-            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 175F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 176F));
             this.tableLayoutPanel1.Controls.Add(this.label2, 0, 0);
             this.tableLayoutPanel1.Controls.Add(this.tbxInitialTracerPercent, 1, 0);
             this.tableLayoutPanel1.Controls.Add(this.label3, 0, 1);
@@ -225,7 +225,7 @@ namespace pwiz.Topograph.ui.Forms
             this.checkedListBoxTimePoints.Location = new System.Drawing.Point(381, 53);
             this.checkedListBoxTimePoints.Name = "checkedListBoxTimePoints";
             this.tableLayoutPanel1.SetRowSpan(this.checkedListBoxTimePoints, 3);
-            this.checkedListBoxTimePoints.Size = new System.Drawing.Size(200, 64);
+            this.checkedListBoxTimePoints.Size = new System.Drawing.Size(199, 64);
             this.checkedListBoxTimePoints.TabIndex = 27;
             // 
             // label7
@@ -273,7 +273,7 @@ namespace pwiz.Topograph.ui.Forms
             // cbxBySample
             // 
             this.cbxBySample.AutoSize = true;
-            this.cbxBySample.Location = new System.Drawing.Point(587, 53);
+            this.cbxBySample.Location = new System.Drawing.Point(586, 53);
             this.cbxBySample.Name = "cbxBySample";
             this.cbxBySample.Size = new System.Drawing.Size(76, 17);
             this.cbxBySample.TabIndex = 32;
@@ -294,7 +294,7 @@ namespace pwiz.Topograph.ui.Forms
             this.tbxMinAuc.Dock = System.Windows.Forms.DockStyle.Fill;
             this.tbxMinAuc.Location = new System.Drawing.Point(381, 3);
             this.tbxMinAuc.Name = "tbxMinAuc";
-            this.tbxMinAuc.Size = new System.Drawing.Size(200, 20);
+            this.tbxMinAuc.Size = new System.Drawing.Size(199, 20);
             this.tbxMinAuc.TabIndex = 36;
             // 
             // dataGridView1
