@@ -95,11 +95,8 @@ namespace IDPicker.Forms
         {
             public string Proteins { get; private set; }
             public int ProteinGroup { get; private set; }
-            public long FirstProteinId { get; private set; }
-            public int? Length { get; private set; }
-            public string FirstProteinDescription { get; set; }
+            public DataModel.Protein FirstProtein { get; set; }
             public int ProteinCount { get; private set; }
-            public int Cluster { get; private set; }
             public double? MeanProteinCoverage { get; private set; }
 
             #region Constructor
@@ -109,11 +106,8 @@ namespace IDPicker.Forms
                 int column = AggregateRow.ColumnCount - 1;
                 Proteins = (string) queryRow[++column];
                 ProteinGroup = Convert.ToInt32(queryRow[++column]);
-                FirstProteinId = Convert.ToInt64(queryRow[++column]);
-                Length = (int?) queryRow[++column];
-                FirstProteinDescription = String.IsNullOrEmpty((string) queryRow[++column]) ? null : (string) queryRow[column];
+                FirstProtein = (DataModel.Protein) queryRow[++column];
                 ProteinCount = Convert.ToInt32(queryRow[++column]);
-                Cluster = Convert.ToInt32(queryRow[++column]);
                 MeanProteinCoverage = (double?) queryRow[++column];
             }
             #endregion
@@ -206,11 +200,8 @@ namespace IDPicker.Forms
             return session.CreateQuery(AggregateRow.Selection + ", " +
                                        "       DISTINCT_GROUP_CONCAT(pro.Accession), " +
                                        "       pro.ProteinGroup, " +
-                                       "       MIN(pro.Id), " +
-                                       "       MIN(pro.Length), " +
-                                       "       MIN(pro.Description), " +
-                                       "       COUNT(DISTINCT pro.Id), " +
-                                       "       pro.Cluster, " +
+                                       "       pro, " +
+                                       "       COUNT(DISTINCT pro.id), " +
                                        "       AVG(pro.Coverage) " +
                                        parentFilter.GetFilteredQueryString(DataFilter.FromProtein,
                                                                            DataFilter.ProteinToPeptideSpectrumMatch) +
@@ -338,6 +329,94 @@ namespace IDPicker.Forms
             treeDataGridView.CellDoubleClick += treeDataGridView_CellDoubleClick;
             treeDataGridView.PreviewKeyDown += treeDataGridView_PreviewKeyDown;
             treeDataGridView.CellIconNeeded += treeDataGridView_CellIconNeeded;
+            treeDataGridView.CellPainting += treeDataGridView_CellPainting;
+        }
+
+        void treeDataGridView_CellPainting (object sender, TreeDataGridViewCellPaintingEventArgs e)
+        {
+            if (e.RowIndex < 0 || e.ColumnIndex != coverageColumn.Index)
+                return;
+
+            var baseRow = GetRowFromRowHierarchy(e.RowIndexHierarchy);
+
+            IList<ushort> coverageMask;
+            if (baseRow is ProteinRow)
+                coverageMask = (baseRow as ProteinRow).Protein.CoverageMask;
+            else if (baseRow is ProteinGroupRow && (baseRow as ProteinGroupRow).ProteinCount == 1)
+                coverageMask = (baseRow as ProteinGroupRow).FirstProtein.CoverageMask;
+            else
+                return;
+
+            if (coverageMask == null) // decoy protein
+                return;
+
+            var coverageBounds = new Rectangle(e.CellBounds.X + 2, e.CellBounds.Y + 4,
+                                               e.CellBounds.Width - 4, e.CellBounds.Height - 9);
+
+            bool isSelected = (e.State & DataGridViewElementStates.Selected) == DataGridViewElementStates.Selected;
+
+            using (var borderPen = new Pen(Color.Black))
+            using (var bgBrush = new SolidBrush(isSelected ? treeDataGridView.DefaultCellStyle.SelectionBackColor
+                                                           : treeDataGridView.DefaultCellStyle.BackColor))
+            using (var noCoverageBrush = new SolidBrush(Color.PapayaWhip))
+            using (var lowCoverageBrush = new SolidBrush(Color.Goldenrod))
+            using (var mediumCoverageBrush = new SolidBrush(Color.Peru))
+            using (var highCoverageBrush = new SolidBrush(Color.SaddleBrown))
+            {
+                // FIXME: NRE in .NET?!
+                //e.PaintBackground(e.ClipBounds, isSelected);
+
+                // draw background
+                e.Graphics.FillRectangle(bgBrush, e.CellBounds);
+
+                // draw border
+                e.Graphics.DrawRectangle(borderPen,
+                                         coverageBounds.X, coverageBounds.Y,
+                                         coverageBounds.Width, coverageBounds.Height);
+
+                // draw non-covered region
+                e.Graphics.FillRectangle(noCoverageBrush,
+                                         coverageBounds.X + 1, coverageBounds.Y + 1,
+                                         coverageBounds.Width - 1, coverageBounds.Height - 1);
+
+                int totalPixels = coverageBounds.Width - 3;
+                double[] pixelCoverage = new double[totalPixels];
+                pixelCoverage.Fill(0);
+                for (int i = 0; i < coverageMask.Count; ++i)
+                {
+                    // with a wide enough coverage column, there can be more pixels than protein residues;
+                    // in this case the inter-residue pixels are given the max. coverage of the adjacent residues
+                    double pixelIndex = ((double) i / coverageMask.Count) * totalPixels;
+                    int nextResiduePixelIndex = Math.Min(totalPixels - 1, (int) Math.Floor(((double) (i + 1)/coverageMask.Count)*totalPixels + 1));
+                    for (int j = (int) Math.Floor(pixelIndex); j <= nextResiduePixelIndex; ++j)
+                        pixelCoverage[j] = Math.Max(pixelCoverage[j], coverageMask[i]);
+                }
+
+                for (int i = 0; i < totalPixels; ++i)
+                {
+                    if (pixelCoverage[i] > 0)
+                    {
+                        // iterate until the depth of coverage changes
+                        int j = i + 1;
+                        while (j < totalPixels && pixelCoverage[j] == pixelCoverage[i]) { ++j; }
+
+                        Brush coverageBrush;
+                        if (pixelCoverage[i] > 2)
+                            coverageBrush = highCoverageBrush;
+                        else if (pixelCoverage[i] > 1)
+                            coverageBrush = mediumCoverageBrush;
+                        else
+                            coverageBrush = lowCoverageBrush;
+
+                        e.Graphics.FillRectangle(coverageBrush,
+                                                 coverageBounds.X + 1 + i, coverageBounds.Y + 1,
+                                                 j - i, coverageBounds.Height - 1);
+                        i = j - 1;
+                    }
+                }
+
+                e.Handled = true;
+            }
         }
 
         void treeDataGridView_CellIconNeeded (object sender, TreeDataGridViewCellValueEventArgs e)
@@ -348,12 +427,7 @@ namespace IDPicker.Forms
                 return;
             }
 
-            Row baseRow = rows[e.RowIndexHierarchy.First()];
-            for (int i = 1; i < e.RowIndexHierarchy.Count; ++i)
-            {
-                getChildren(baseRow); // populate ChildRows if necessary
-                baseRow = baseRow.ChildRows[e.RowIndexHierarchy[i]];
-            }
+            Row baseRow = GetRowFromRowHierarchy(e.RowIndexHierarchy);
 
             if (baseRow is ClusterRow) e.Value = Properties.Resources.Cluster;
             else if (baseRow is ProteinGroupRow) e.Value = (baseRow as ProteinGroupRow).ProteinCount > 1 ? Properties.Resources.ProteinGroup : Properties.Resources.Protein;
@@ -452,11 +526,11 @@ namespace IDPicker.Forms
             {
                 var row = baseRow as ProteinGroupRow;
                 if (columnIndex == keyColumn.Index) return proteinGroupColumn.Visible ? row.Proteins : String.Format("{0} ({1})", row.ProteinGroup, row.Proteins);
-                else if (columnIndex == clusterColumn.Index) return row.Cluster;
+                else if (columnIndex == clusterColumn.Index) return row.FirstProtein.Cluster;
                 else if (columnIndex == countColumn.Index) return row.ProteinCount;
                 else if (columnIndex == coverageColumn.Index) return row.MeanProteinCoverage;
                 else if (columnIndex == proteinGroupColumn.Index) return row.ProteinGroup;
-                else if (columnIndex == descriptionColumn.Index) return row.FirstProteinDescription;
+                else if (columnIndex == descriptionColumn.Index) return row.FirstProtein.Description;
                 else if (columnIndex == distinctPeptidesColumn.Index)return row.DistinctPeptides;
                 else if (columnIndex == distinctMatchesColumn.Index) return row.DistinctMatches;
                 else if (columnIndex == filteredSpectraColumn.Index) return row.Spectra;
@@ -468,11 +542,11 @@ namespace IDPicker.Forms
                 var row = baseRow as ProteinRow;
                 if (columnIndex == keyColumn.Index) return row.Protein.Accession;
                 else if (columnIndex == coverageColumn.Index && !row.Protein.IsDecoy) return row.Protein.Coverage;
-                else if (columnIndex == proteinGroupColumn.Index) return row.Protein.ProteinGroup;
                 else if (columnIndex == descriptionColumn.Index) return row.Protein.Description;
                 else if (checkedGroupings.Count(o => o.Mode == GroupBy.ProteinGroup) == 0)
                 {
                     if (columnIndex == clusterColumn.Index) return row.Protein.Cluster;
+                    else if (columnIndex == proteinGroupColumn.Index) return row.Protein.ProteinGroup;
                     else if (columnIndex == distinctPeptidesColumn.Index) return row.DistinctPeptides;
                     else if (columnIndex == distinctMatchesColumn.Index) return row.DistinctMatches;
                     else if (columnIndex == filteredSpectraColumn.Index) return row.Spectra;
@@ -493,7 +567,7 @@ namespace IDPicker.Forms
             else if (parentRow is ProteinGroupRow)
             {
                 if (viewFilter.ProteinGroup != null) result = viewFilter.ProteinGroup.Contains((parentRow as ProteinGroupRow).ProteinGroup);
-                if (!result && viewFilter.Cluster != null) result = viewFilter.Cluster.Contains((parentRow as ProteinGroupRow).Cluster);
+                if (!result && viewFilter.Cluster != null) result = viewFilter.Cluster.Contains((parentRow as ProteinGroupRow).FirstProtein.Cluster);
             }
             else if (parentRow is ProteinRow)
             {

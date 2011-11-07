@@ -1799,7 +1799,7 @@ namespace IDPicker
                                          proteinGroup.Proteins,
                                          proteinGroup.DistinctPeptides.ToString(),
                                          proteinGroup.Spectra.ToString(),
-                                         proteinGroup.FirstProteinDescription
+                                         proteinGroup.FirstProtein.Description
                                      });
 
                 //get peptides in protein

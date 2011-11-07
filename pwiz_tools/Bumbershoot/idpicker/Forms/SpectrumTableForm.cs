@@ -47,7 +47,6 @@ namespace IDPicker.Forms
         public class AggregateRow : Row
         {
             public int PeptideSpectrumMatches { get; private set; }
-            public int SpectrumSources { get; private set; }
             public int Spectra { get; private set; }
             public int DistinctMatches { get; private set; }
             public int DistinctPeptides { get; private set; }
@@ -55,10 +54,9 @@ namespace IDPicker.Forms
             public int DistinctCharges { get; private set; }
             public int DistinctProteins { get; private set; }
 
-            public static int ColumnCount = 8;
+            public static int ColumnCount = 7;
             public static string Selection = "SELECT " +
                                              "COUNT(DISTINCT psm.id), " +
-                                             "COUNT(DISTINCT psm.Spectrum.Source.id), " +
                                              "COUNT(DISTINCT psm.Spectrum.id), " +
                                              "COUNT(DISTINCT psm.DistinctMatchKey), " +
                                              "COUNT(DISTINCT psm.Peptide.id), " +
@@ -71,7 +69,6 @@ namespace IDPicker.Forms
             {
                 int column = -1;
                 PeptideSpectrumMatches = Convert.ToInt32(queryRow[++column]);
-                SpectrumSources = Convert.ToInt32(queryRow[++column]);
                 Spectra = Convert.ToInt32(queryRow[++column]);
                 DistinctMatches = Convert.ToInt32(queryRow[++column]);
                 DistinctPeptides = Convert.ToInt32(queryRow[++column]);
@@ -277,67 +274,49 @@ namespace IDPicker.Forms
         // returns both groups and sources
         IList<Row> getSpectrumSourceRows (DataFilter parentFilter)
         {
-            IList<SpectrumSourceGroupRow> groups = null;
-            var groupsFilter = new DataFilter(parentFilter) { SpectrumSourceGroup = null };
-            lock(session)
-            groups = session.CreateQuery(AggregateRow.Selection + ", ssgl " +
-                                         groupsFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
-                                                                             DataFilter.PeptideSpectrumMatchToPeptideInstance,
-                                                                             DataFilter.PeptideSpectrumMatchToSpectrumSourceGroupLink) +
-                                         "GROUP BY ssgl.Group.id")
-                .List<object[]>()
-                .Select(o => new SpectrumSourceGroupRow(o, parentFilter))
-                .ToList();
 
-            if (parentFilter != null)
-            {
-                if (parentFilter.SpectrumSourceGroup != null)
+            if (rowsBySource == null)
+                lock (session)
                 {
-                    var otherList = new List<SpectrumSourceGroupRow>();
-                    foreach (var item in parentFilter.SpectrumSourceGroup)
-                        otherList.AddRange(groups.Where(o => o.SpectrumSourceGroup.IsImmediateChildOf(item)));
-                    groups = otherList;
+                    var groupsFilter = new DataFilter(parentFilter) {SpectrumSourceGroup = null};
+                    var groups = session.CreateQuery(AggregateRow.Selection + ", ssgl " +
+                                                     groupsFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
+                                                                                         DataFilter.PeptideSpectrumMatchToPeptideInstance,
+                                                                                         DataFilter.PeptideSpectrumMatchToSpectrumSourceGroupLink) +
+                                                     "GROUP BY ssgl.Group.id")
+                        .List<object[]>()
+                        .Select(o => new SpectrumSourceGroupRow(o, parentFilter))
+                        .ToList();
+
+                    var sources = session.CreateQuery(AggregateRow.Selection + ", s.Source " +
+                                                      parentFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
+                                                                                          DataFilter.PeptideSpectrumMatchToPeptideInstance,
+                                                                                          DataFilter.PeptideSpectrumMatchToSpectrum) +
+                                                      "GROUP BY s.Source.id")
+                        .List<object[]>()
+                        .Select(o => new SpectrumSourceRow(o, parentFilter))
+                        .ToList();
+
+                    rowsBySource = groups.Cast<Row>().Concat(sources.Cast<Row>()).ToList();
                 }
-                else
-                    groups = groups.Where(o => o.SpectrumSourceGroup.Name == "/").ToList();
+
+            var ssgRows = rowsBySource.Where(o => o is SpectrumSourceGroupRow).Select(o => o as SpectrumSourceGroupRow);
+            var ssRows = rowsBySource.Where(o => o is SpectrumSourceRow).Select(o => o as SpectrumSourceRow);
+            var result = Enumerable.Empty<Row>();
+
+            if (parentFilter != null && parentFilter.SpectrumSourceGroup != null)
+                foreach (var item in parentFilter.SpectrumSourceGroup)
+                    result = result.Concat(ssgRows.Where(o => o.SpectrumSourceGroup.IsImmediateChildOf(item)).Cast<Row>());
+            else
+                result = ssgRows.Where(o => o.SpectrumSourceGroup.Name == "/").Cast<Row>();
+
+            if (parentFilter != null && parentFilter.SpectrumSourceGroup != null)
+            {
+                foreach (var item in parentFilter.SpectrumSourceGroup)
+                    result = result.Concat(ssRows.Where(o => o.SpectrumSource.Group.Id == item.Id).Cast<Row>());
             }
 
-            IList<SpectrumSourceRow> sources = null;
-            lock(session)
-            sources = session.CreateQuery(AggregateRow.Selection + ", s.Source " +
-                                          parentFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
-                                                                              DataFilter.PeptideSpectrumMatchToPeptideInstance,
-                                                                              DataFilter.PeptideSpectrumMatchToSpectrum) +
-                                          "GROUP BY s.Source.id")
-                .List<object[]>()
-                .Select(o => new SpectrumSourceRow(o, parentFilter))
-                .ToList();
-
-            if (parentFilter != null)
-            {
-                if (parentFilter.SpectrumSourceGroup != null)
-                {
-                    var otherList = new List<SpectrumSourceRow>();
-                    foreach (var item in parentFilter.SpectrumSourceGroup)
-                        otherList.AddRange(sources.Where(o => o.SpectrumSource.Group.Id == item.Id));
-                    sources = otherList;
-                }
-                else
-                    return groups.Cast<Row>().ToList();
-            }
-
-            return groups.Cast<Row>().Concat(sources.Cast<Row>()).ToList();
-            /*var parentGroup = x.SpectrumSourceGroup;
-
-                var childGroups = from r in aggregateRows.Where(o => o is SpectrumSourceGroupRow).Select(o => o as SpectrumSourceGroupRow)
-                                  where r.SpectrumSourceGroup.IsImmediateChildOf(parentGroup)
-                                  select r as object;
-
-                var childSources = from r in aggregateRows.Where(o => o is SpectrumSourceRow).Select(o => o as SpectrumSourceRow)
-                                   where r.SpectrumSource.Group.Id == parentGroup.Id
-                                   select r as object;
-
-                return childGroups.Concat(childSources);*/
+            return result.ToList();
         }
 
         IList<Row> getAnalysisRows (DataFilter parentFilter)
@@ -437,7 +416,6 @@ namespace IDPicker.Forms
                 var row = parentRow as SpectrumSourceGroupRow;
                 var parentFilter = row.DataFilter ?? dataFilter;
                 var childFilter = new DataFilter(parentFilter) { SpectrumSourceGroup = new List<SpectrumSourceGroup>() { row.SpectrumSourceGroup } };
-                //var childGrouping = GroupingSetupControl<GroupBy>.GetChildGrouping(checkedGroupings, GroupBy.Source);
                 parentRow.ChildRows = getSpectrumSourceRows(childFilter);
             }
             else if (parentRow is SpectrumSourceRow)
@@ -493,7 +471,8 @@ namespace IDPicker.Forms
         public event EventHandler<SpectrumViewVisualizeEventArgs> SpectrumViewVisualize;
 
         private TotalCounts totalCounts, basicTotalCounts;
-
+        private List<Row> rowsBySource, basicRowsBySource;
+        
         // TODO: support multiple selected objects
         List<string> oldSelectionPath = new List<string>();
 
@@ -597,7 +576,15 @@ namespace IDPicker.Forms
             if (baseRow is SpectrumSourceGroupRow)
             {
                 var row = baseRow as SpectrumSourceGroupRow;
-                e.ChildRowCount = row.SpectrumSources;
+                e.ChildRowCount = rowsBySource.Where(o => o is SpectrumSourceGroupRow)
+                                              .Select(o => o as SpectrumSourceGroupRow)
+                                              .Count(o => o.SpectrumSourceGroup.IsImmediateChildOf(row.SpectrumSourceGroup));
+                e.ChildRowCount += rowsBySource.Where(o => o is SpectrumSourceRow)
+                                               .Select(o => o as SpectrumSourceRow)
+                                               .Count(o => o.SpectrumSource.Group == row.SpectrumSourceGroup);
+
+                if (e.ChildRowCount == 0)
+                    throw new InvalidDataException("no child rows for source group");
             }
             else if (baseRow is SpectrumSourceRow)
                 childGrouping = GroupingSetupControl<GroupBy>.GetChildGrouping(checkedGroupings, GroupBy.Source);
@@ -1021,15 +1008,20 @@ namespace IDPicker.Forms
                     {
                         basicDataFilter = dataFilter;
                         basicTotalCounts = new TotalCounts(session, dataFilter);
+
+                        rowsBySource = null;
                         basicRows = getChildren(rootGrouping, dataFilter);
+                        basicRowsBySource = rowsBySource;
                     }
 
                     totalCounts = basicTotalCounts;
+                    rowsBySource = basicRowsBySource;
                     rows = basicRows;
                 }
                 else
                 {
                     totalCounts = new TotalCounts(session, dataFilter);
+                    rowsBySource = null;
                     rows = getChildren(rootGrouping, dataFilter);
                 }
 
@@ -1140,7 +1132,7 @@ namespace IDPicker.Forms
 
             var columnsIrrelevantForGrouping = new Set<DataGridViewColumn>(new Comparison<DataGridViewColumn>((x, y) => x.Name.CompareTo(y.Name)));
 
-            if (session != null)
+            if (session != null && session.IsOpen)
                 lock (session)
                     if (session.Query<Analysis>().Count() == 1)
                     {

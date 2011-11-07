@@ -183,6 +183,8 @@ namespace IDPicker.Controls
         /// </summary>
         public event TreeDataGridViewCellValueEventHandler CellIconNeeded;
 
+        public new event TreeDataGridViewCellPaintingEventHandler CellPainting;
+
         /// <summary>
         /// Get the actual row index of the indicated row
         /// </summary>
@@ -491,21 +493,52 @@ namespace IDPicker.Controls
         /// <param name="e"></param>
         protected override void OnCellPainting(DataGridViewCellPaintingEventArgs e)
         {
-            //Only paint in the first column of each info-containing row
-            if (e.RowIndex < 0 || e.ColumnIndex != 0)
+            if (expandedRowList == null)
             {
                 base.OnCellPainting(e);
                 return;
             }
+
+
+            //Only paint in the first column of each info-containing row
+            if (e.RowIndex < 0 || e.ColumnIndex != 0)
+            {
+                if (CellPainting != null)
+                {
+                    var rowIndexHierarchy = e.RowIndex < 0 ? HeaderRowIndexHierarchy : expandedRowList[e.RowIndex].RowIndexHierarchy;
+                    var e2 = new TreeDataGridViewCellPaintingEventArgs(this, e, rowIndexHierarchy);
+                    CellPainting(this, e2);
+                    if (e2.Handled)
+                    {
+                        e.Handled = true;
+                        return;
+                    }
+                }
+
+                base.OnCellPainting(e);
+                return;
+            }
+            
+            var rowInfo = expandedRowList[e.RowIndex];
+            int nodeDepth = rowInfo.RowIndexHierarchy.Count - 1;
+            int iconWidth = 0;
+
+            if (CellPainting != null)
+            {
+                var e2 = new TreeDataGridViewCellPaintingEventArgs(this, e, rowInfo.RowIndexHierarchy);
+                CellPainting(this, e2);
+                if (e2.Handled)
+                {
+                    e.Handled = true;
+                    return;
+                }
+            }
+
             e.Handled = true;
 
             //Still show selection if row is selected
             bool isSelected = (e.State & DataGridViewElementStates.Selected) == DataGridViewElementStates.Selected;
             e.PaintBackground(e.CellBounds, isSelected);
-
-            var rowInfo = expandedRowList[e.RowIndex];
-            int nodeDepth = rowInfo.RowIndexHierarchy.Count - 1;
-            int iconWidth = 0;
 
             Point symbolPoint = GetSymbolPoint(e.CellBounds, nodeDepth);
 
@@ -653,8 +686,18 @@ namespace IDPicker.Controls
             RowIndexHierarchy = rowIndexHierarchy;
         }
 
-        // not accessible to clients
-        private new int RowIndex { get { return base.RowIndex; } }
+        public IList<int> RowIndexHierarchy { get; protected set; }
+    }
+
+    public class TreeDataGridViewCellPaintingEventArgs : DataGridViewCellPaintingEventArgs
+    {
+        public TreeDataGridViewCellPaintingEventArgs (DataGridView dgv, DataGridViewCellPaintingEventArgs e, IList<int> rowIndexHierarchy)
+            : base(dgv, e.Graphics, e.ClipBounds, e.CellBounds,
+                   e.RowIndex, e.ColumnIndex, e.State, e.Value, e.FormattedValue,
+                   e.ErrorText, e.CellStyle, e.AdvancedBorderStyle, e.PaintParts)
+        {
+            RowIndexHierarchy = rowIndexHierarchy;
+        }
 
         public IList<int> RowIndexHierarchy { get; protected set; }
     }
@@ -681,14 +724,12 @@ namespace IDPicker.Controls
             RowIndexHierarchy = rowIndexHierarchy;
         }
 
-        // not accessible to clients
-        private new int RowIndex { get { return base.RowIndex; } }
-
         public IList<int> RowIndexHierarchy { get; protected set; }
     }
 
     public delegate void TreeDataGridViewCellValueEventHandler (object sender, TreeDataGridViewCellValueEventArgs e);
     public delegate void TreeDataGridViewCellFormattingEventHandler (object sender, TreeDataGridViewCellFormattingEventArgs e);
+    public delegate void TreeDataGridViewCellPaintingEventHandler (object sender, TreeDataGridViewCellPaintingEventArgs e);
     public delegate void TreeDataGridViewCellEventHandler (object sender, TreeDataGridViewCellEventArgs e);
     public delegate void TreeDataGridViewCellMouseEventHandler (object sender, TreeDataGridViewCellMouseEventArgs e);
 }

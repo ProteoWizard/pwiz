@@ -256,4 +256,16 @@ namespace IDPicker
             return timeSpan;
         }
     }
+
+    public static class ArrayExtensionMethods
+    {
+        public static void Fill<T> (this T[] array, T defaultValue)
+        {
+            if (array == null)
+                return;
+
+            for (int i = 0; i < array.Length; i++)
+                array[i] = defaultValue;
+        }
+    }
 }
