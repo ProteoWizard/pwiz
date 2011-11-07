@@ -3127,27 +3127,32 @@ namespace pwiz.Skyline
             // Rows first
             for (int i = 1; i < rows; i++)
             {
-                DockPane previousPane = FindPane(listTiles[i - 1][0][0]);
-                var groupForms = listTiles[i][0];
-                var dockableForm = groupForms[0];
-                dockableForm.Show(previousPane, DockPaneAlignment.Bottom,
-                    ((double)(rows - i)) / (rows - i + 1));
-                ArrangeGraphsTabbed(groupForms);
+                PlacePane(i, 0, rows, DockPaneAlignment.Bottom, listTiles);
             }
             // Then columns in the rows
             for (int i = 0; i < rows; i++)
             {
-                var rowTiles = listTiles[i];
-                for (int j = 1, columns = rowTiles.Count; j < columns; j++)
+                int columns = listTiles[i].Count;
+                for (int j = 1; j < columns; j++)
                 {
-                    DockPane previousPane = FindPane(rowTiles[j - 1][0]);
-                    var groupForms = rowTiles[j];
-                    var dockableForm = groupForms[0];
-                    dockableForm.Show(previousPane, DockPaneAlignment.Right,
-                        ((double)(columns - j)) / (columns - j + 1));
-                    ArrangeGraphsTabbed(groupForms);
+                    PlacePane(i, j, columns, DockPaneAlignment.Right, listTiles);
                 }
             }            
+        }
+
+        private void PlacePane(int row, int col, int count,
+            DockPaneAlignment alignment, IList<List<List<DockableForm>>> listTiles)
+        {
+            DockableForm previousForm = alignment == DockPaneAlignment.Bottom
+                                            ? listTiles[row - 1][col][0]
+                                            : listTiles[row][col - 1][0];
+            DockPane previousPane = FindPane(previousForm);
+            var groupForms = listTiles[row][col];
+            var dockableForm = groupForms[0];
+            int dim = alignment == DockPaneAlignment.Bottom ? row : col;
+            dockableForm.Show(previousPane, alignment,
+                              ((double)(count - dim)) / (count - dim + 1));
+            ArrangeGraphsTabbed(groupForms);
         }
 
         private void ArrangeGraphsTabbed(IList<DockableForm> groupForms)
