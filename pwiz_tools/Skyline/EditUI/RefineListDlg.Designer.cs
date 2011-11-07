@@ -63,6 +63,7 @@
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.textPeptides.Location = new System.Drawing.Point(13, 33);
+            this.textPeptides.MaxLength = 1000000;
             this.textPeptides.Multiline = true;
             this.textPeptides.Name = "textPeptides";
             this.textPeptides.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
