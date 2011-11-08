@@ -42,7 +42,9 @@ struct LibraryBabelFish
     {}
     
     void initializeDatabase();
+    void decoyLibrary();
     void indexLibrary();
+    void appendContaminants();
 };
 
 }

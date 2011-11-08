@@ -26,79 +26,222 @@
 
 namespace freicore
 {
-namespace pepitome
-{
-
-void LibraryBabelFish::initializeDatabase()
-{
-    // optimized for bulk insertion
-    libraryIndex.execute("PRAGMA journal_mode=OFF;"
-                      "PRAGMA synchronous=OFF;"
-                      "PRAGMA automatic_indexing=OFF;"
-                      "PRAGMA default_cache_size=500000;"
-                      "PRAGMA temp_store=MEMORY"
-                     );
-    // Create tables
-    sqlite::transaction transaction(libraryIndex);
-    libraryIndex.execute("CREATE TABLE LibMetaData ( Id TEXT PRIMARY KEY, Peptide TEXT, LibraryMass REAL, MonoMass REAL, AvgMass REAL, Charge INTEGER);"
-                         "CREATE TABLE LibSpectrumData (Id TEXT PRIMARY KEY, NumPeaks INTEGER, SpectrumData BLOB, FOREIGN KEY (Id) REFERENCES LibMetaData(Id));"
-                        );
-    transaction.commit();
-}
-
-void LibraryBabelFish::indexLibrary()
-{
-    // Get insertion commands
-    sqlite::command insertMetaData(libraryIndex, "INSERT INTO LibMetaData ( Id, Peptide, LibraryMass, MonoMass, AvgMass, Charge) VALUES (?,?,?,?,?,?)");
-    sqlite::command insertSpectrumData(libraryIndex, "INSERT INTO LibSpectrumData ( Id, NumPeaks, SpectrumData) VALUES (?,?,?)");
-    sqlite::transaction transaction(libraryIndex);
-
-    library.loadLibrary(libraryName);
-    size_t totalSpectra = library.size();
-    cout << "Indexing  " << totalSpectra << " found in the library." << endl;
-    for(sqlite3_int64 index = 0; index < totalSpectra; ++index)
+    namespace pepitome
     {
-        if(!(index % 1000)) 
-            cout << totalSpectra << ": " << index << '\r' << flush;
-        // Read the library spectrum metadata and insert it into the DB
-        library[index]->readSpectrumForIndexing();
-        insertMetaData.binder() << ("scan="+boost::lexical_cast<string>(index)) 
-                                << library[index]->matchedPeptide->sequence()
-                                << library[index]->libraryMass
-                                << library[index]->monoisotopicMass
-                                << library[index]->averageMass
-                                << library[index]->id.charge;
-        insertMetaData.execute();
-        insertMetaData.reset();
 
-        // Archive the peptide, peaks, and proteins data.
-        stringstream packStream(stringstream::binary|stringstream::in|stringstream::out);
-        // This library offer binary portability. boost::binary_oarchive is not protable
-        eos::portable_oarchive packArchive( packStream );
-        packArchive  & *library[index];
-        sqlite3_int64 numPeaks = library[index]->peakPreData.size();
-        // Insert the spectrum data into library
-        string tmpStr = packStream.str();
-        insertSpectrumData.bind(1, ("scan="+boost::lexical_cast<string>(index)) );
-        insertSpectrumData.bind(2, numPeaks);
-        insertSpectrumData.bind(3, static_cast<const void*>(tmpStr.data()), tmpStr.length());
-        insertSpectrumData.execute();
-        insertSpectrumData.reset();
-        /*if(index == 3)
+        void LibraryBabelFish::initializeDatabase()
         {
-            ofstream tmp("tmp.bin.in");
-            cout << "\n" << packStream.str().length() << endl;
-            tmp.write(packStream.str().data(), packStream.str().length());
-            tmp.close();
-            //transaction.commit(); 
-            //exit(1);
-        }*/
-        library[index]->clearSpectrum();
+            // optimized for bulk insertion
+            libraryIndex.execute("PRAGMA journal_mode=OFF;"
+                "PRAGMA synchronous=OFF;"
+                "PRAGMA automatic_indexing=OFF;"
+                "PRAGMA default_cache_size=500000;"
+                "PRAGMA temp_store=MEMORY"
+                );
+            // Create tables
+            sqlite::transaction transaction(libraryIndex);
+            libraryIndex.execute("CREATE TABLE LibMetaData ( Id TEXT PRIMARY KEY, Peptide TEXT, LibraryMass REAL, MonoMass REAL, AvgMass REAL, Charge INTEGER);"
+                "CREATE TABLE LibSpectrumData (Id TEXT PRIMARY KEY, NumPeaks INTEGER, SpectrumData BLOB, FOREIGN KEY (Id) REFERENCES LibMetaData(Id));"
+                );
+            transaction.commit();
+        }
+
+        inline bool checkForHomology(const string& firstPeptide, const string& secondPeptide, double threshold)
+        {
+            string::size_type m = firstPeptide.length();
+            string::size_type n = secondPeptide.length();
+
+            vector<string> aa1(m + 1);
+            vector<string> aa2(n + 1);
+
+            string::size_type shorter = m;
+            if (m > n) shorter = n;
+
+            // if the shorter sequence is a perfect sub-sequence of the longer one, its score is (shorter * 2 - 1).
+            // so we are calculating our threshold identity score by multiplying the specified threshold by this "perfect" score
+            double minIdentity = threshold * (shorter * 2 - 1);
+
+            int** alignedLength = new int*[m + 1];
+            int** identical = new int*[m + 1];
+
+            for (size_t i = 0; i <= m; ++i) 
+            {
+                alignedLength[i] = new int[n + 1];
+                identical[i] = new int[n + 1];
+
+                alignedLength[i][0] = 0;
+                if (i > 0)
+                    aa1[i] = firstPeptide[i - 1];
+
+                for (size_t j = 0; j <= n; ++j) 
+                    identical[i][j] = 0;
+            }  
+
+            for (size_t j = 0; j <= n; ++j) 
+            {
+                alignedLength[0][j] = 0;
+                if (j > 0) 
+                    aa2[j] = firstPeptide[j - 1];
+            }
+
+            for (size_t i = 1; i <= m; ++i) 
+            {
+                for (size_t j = 1; j <= n; ++j) 
+                {
+                    if (aa1[i] == aa2[j] ||
+                        (aa1[i] == "L" && aa2[j] == "I") || // we consider I and L the same, K and Q the same
+                        (aa1[i] == "I" && aa2[j] == "L") ||
+                        (aa1[i] == "K" && aa2[j] == "Q") ||
+                        (aa1[i] == "Q" && aa2[j] == "K")) 
+                    {
+                        alignedLength[i][j] = alignedLength[i - 1][j - 1] + 1 + identical[i - 1][j - 1];
+                        identical[i][j] = 1;
+                    } 
+                    else 
+                    {
+                        if (alignedLength[i - 1][j] > alignedLength[i][j - 1]) 
+                            alignedLength[i][j] = alignedLength[i - 1][j];
+                        else 
+                            alignedLength[i][j] = alignedLength[i][j - 1];
+                    }
+                }
+            }
+
+            //identity = alignedLength[m][n];
+            bool result = ((double)(alignedLength[m][n]) >= minIdentity);
+
+            for (unsigned int r = 0; r <= m; r++) 
+            {
+                delete[] alignedLength[r];
+                delete[] identical[r];
+            }
+            delete[] alignedLength;
+            delete[] identical;
+
+            return (result);
+        }
+
+        inline string shufflePeptideSequence(const DigestedPeptide& peptide)
+        {
+            // Amino acids containing modifications and also proline are not movable.
+            size_t peptideLength = peptide.sequence().length();
+            ModificationMap& mods = const_cast<ModificationMap&>(peptide.modifications());
+            int firstMovableAAIndex = 200;
+            int lastMovableAAIndex = -1;
+            vector<bool> immutable(peptideLength,false);
+            vector<char> movableAAs;
+            for(size_t position = 0; position < peptideLength -1; ++position)
+            {
+                if(peptide.sequence()[position] == 'P' || mods.find(position) != mods.end())
+                    immutable[position] = true;
+                else
+                {
+                    movableAAs.push_back(peptide.sequence()[position]);
+                    firstMovableAAIndex = firstMovableAAIndex > position ? position : firstMovableAAIndex;
+                    lastMovableAAIndex = lastMovableAAIndex < position ? position : lastMovableAAIndex;
+                }
+            }
+
+            size_t numAttempts = 0;
+            bool   foundDecoy = false;
+            string shuffledSequence;
+            while(numAttempts < 10 && !foundDecoy)
+            {
+                stringstream shuffledPeptide;    
+                std::random_shuffle(movableAAs.begin(),movableAAs.end());
+                size_t randomAAIndex = 0;
+                for(size_t position = 0; position < peptideLength-1; ++position)
+                {
+                    if(!immutable[position])
+                    {
+                        shuffledPeptide << movableAAs[randomAAIndex];
+                        ++randomAAIndex;
+                    } else
+                        shuffledPeptide << peptide.sequence()[position];
+                }
+                bool firstAAIsSame = shuffledPeptide.str()[firstMovableAAIndex] == peptide.sequence()[firstMovableAAIndex] ? true : false;
+                bool lastAAIsSame = shuffledPeptide.str()[lastMovableAAIndex] == peptide.sequence()[lastMovableAAIndex] ? true : false;
+                bool isHomolog = checkForHomology(peptide.sequence(), shuffledPeptide.str(), 0.6);
+                foundDecoy = (!firstAAIsSame && !lastAAIsSame && !isHomolog);
+                if(foundDecoy)
+                    shuffledSequence = shuffledPeptide.str();
+                ++numAttempts;
+            }
+            if(shuffledSequence.length() > 0)
+                return shuffledSequence;
+            return string();
+        }
+
+        void LibraryBabelFish::decoyLibrary()
+        {
+            library.loadLibrary(libraryName);
+            size_t totalSpectra = library.size();
+            cout << "Generating decoys for " << totalSpectra << " found in the library." << endl;
+            set<string> decoys;
+            for(size_t index = 0; index < totalSpectra; ++ index)
+            {
+                if(!(index % 1000)) 
+                    cout << totalSpectra << ": " << index << '\r' << flush;
+                library[index]->readSpectrumForIndexing();
+                string decoy = shufflePeptideSequence(*library[index]->matchedPeptide);
+                if(decoys.find(decoy) != decoys.end())
+                {
+                    DigestedPeptide decoyedPeptide(decoy.begin(),decoy.end(), 0, 
+                                                    library[index]->matchedPeptide->missedCleavages() , 
+                                                    library[index]->matchedPeptide->NTerminusIsSpecific(), 
+                                                    library[index]->matchedPeptide->CTerminusIsSpecific(), 
+                                                    library[index]->matchedPeptide->NTerminusPrefix(), 
+                                                    library[index]->matchedPeptide->CTerminusSuffix());
+                }
+
+                library[index]->clearSpectrum();
+            }
+        }
+
+        void LibraryBabelFish::indexLibrary()
+        {
+            // Get insertion commands
+            sqlite::command insertMetaData(libraryIndex, "INSERT INTO LibMetaData ( Id, Peptide, LibraryMass, MonoMass, AvgMass, Charge) VALUES (?,?,?,?,?,?)");
+            sqlite::command insertSpectrumData(libraryIndex, "INSERT INTO LibSpectrumData ( Id, NumPeaks, SpectrumData) VALUES (?,?,?)");
+            sqlite::transaction transaction(libraryIndex);
+
+            library.loadLibrary(libraryName);
+            size_t totalSpectra = library.size();
+            cout << "Indexing  " << totalSpectra << " found in the library." << endl;
+            for(sqlite3_int64 index = 0; index < totalSpectra; ++index)
+            {
+                if(!(index % 1000)) 
+                    cout << totalSpectra << ": " << index << '\r' << flush;
+                // Read the library spectrum metadata and insert it into the DB
+                library[index]->readSpectrumForIndexing();
+                insertMetaData.binder() << ("scan="+boost::lexical_cast<string>(index)) 
+                    << library[index]->matchedPeptide->sequence()
+                    << library[index]->libraryMass
+                    << library[index]->monoisotopicMass
+                    << library[index]->averageMass
+                    << library[index]->id.charge;
+                insertMetaData.execute();
+                insertMetaData.reset();
+
+                // Archive the peptide, peaks, and proteins data.
+                stringstream packStream(stringstream::binary|stringstream::in|stringstream::out);
+                // This library offer binary portability. boost::binary_oarchive is not protable
+                eos::portable_oarchive packArchive( packStream );
+                packArchive  & *library[index];
+                sqlite3_int64 numPeaks = library[index]->peakPreData.size();
+                // Insert the spectrum data into library
+                string tmpStr = packStream.str();
+                insertSpectrumData.bind(1, ("scan="+boost::lexical_cast<string>(index)) );
+                insertSpectrumData.bind(2, numPeaks);
+                insertSpectrumData.bind(3, static_cast<const void*>(tmpStr.data()), tmpStr.length());
+                insertSpectrumData.execute();
+                insertSpectrumData.reset();
+                library[index]->clearSpectrum();
+            }
+            transaction.commit();
+            libraryIndex.execute("VACUUM");   
+        }
     }
-    transaction.commit();
-    libraryIndex.execute("VACUUM");   
-}
-}
 }
 
 int main( int argc, char* argv[] )

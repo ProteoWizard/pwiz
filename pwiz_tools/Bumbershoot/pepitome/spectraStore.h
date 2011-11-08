@@ -254,15 +254,13 @@ namespace pepitome
             sqlite::database library(db);
             string queryStr = "SELECT NumPeaks, SpectrumData FROM LibSpectrumData WHERE Id = '" + (string) id.nativeID + "'";
             sqlite::query qry(library, queryStr.c_str() );
-            int numPeaks;
+            sqlite3_int64 numPeaks;
             string data;
             for (sqlite::query::iterator qItr = qry.begin(); qItr != qry.end(); ++qItr) 
             {
                 (*qItr).getter() >> numPeaks >> data;
-                stringstream encoded(data);
-                stringstream decoded;
-                bio::copy(bio::compose(bio::zlib_decompressor(), bio::compose(bio::base64_decoder(), encoded)), decoded);
-                text_iarchive packArchive( decoded );
+                stringstream dataStream(data);
+                eos::portable_iarchive packArchive( dataStream );
                 packArchive & *this;
             }
         }
@@ -414,8 +412,7 @@ namespace pepitome
                     {
                         PeakPreData::iterator begin = peakPreData.lower_bound(p.first);
                         PeakPreData::iterator end = peakPreData.upper_bound(p.first);
-                        while(begin != end)
-                            peakPreData.erase(begin++);
+                        peakPreData.erase(begin, end);
                     }
                 }
             }
@@ -432,8 +429,7 @@ namespace pepitome
             {
                 PeakPreData::iterator begin = peakPreData.lower_bound(parentIon - parentIonEraseWindow);
                 PeakPreData::iterator end = peakPreData.upper_bound(parentIon + parentIonEraseWindow);
-                while(begin != end)
-                    peakPreData.erase(begin++);
+                peakPreData.erase(begin, end);
             }    
 
             FilterByTIC(TICCutoff);
