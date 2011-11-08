@@ -276,122 +276,64 @@ namespace BumberDash.Forms
         }
 
         /// <summary>
-        /// Run OldConfigForm on MyriMatch config
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void MyriEditButton_Click(object sender, EventArgs e)
-        {
-            var defaultName = string.IsNullOrEmpty(MyriConfigBox.Text)
-                ? NameBox.Text ?? string.Empty
-                : MyriConfigBox.Text;
-
-            var testConfigForm = (MyriEditButton.Text == "Edit" || MyriEditButton.Text == "Convert")
-                                     ? new ConfigForm(GetConfigFile("MyriMatch"), OutputDirectoryBox.Text ?? string.Empty, defaultName, _templateList)
-                                     : new ConfigForm("MyriMatch", OutputDirectoryBox.Text ?? string.Empty, NameBox.Text ?? string.Empty, _templateList);
-
-
-            if (testConfigForm.ShowDialog(this) == DialogResult.OK)
-            {
-                var filepath = testConfigForm.GetFilePath();
-                if (filepath.StartsWith("--Custom--"))
-                {
-                    MyriConfigBox.Tag = "--Custom--";
-                    filepath = filepath.Remove(0, 10);
-                }
-                else
-                    MyriConfigBox.Tag = null;
-                MyriConfigBox.Text = filepath;
-                MyriMatchInfoBox.Text = testConfigForm.GetConfigString(((string)MyriConfigBox.Tag) != "--Custom--");
-            }
-        }
-
-        /// <summary>
         /// Run OldConfigForm on DirecTag config
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void DTEditButton_Click(object sender, EventArgs e)
+        private void ConfigEditButton_Click(object sender, EventArgs e)
         {
-            var defaultName = string.IsNullOrEmpty(DTConfigBox.Text)
-                ? NameBox.Text ?? string.Empty
-                : DTConfigBox.Text;
+            Control configBox;
+            Control editButton;
+            Control infoBox;
+            string destinationProgram;
 
-            var testConfigForm = (DTEditButton.Text == "Edit" || DTEditButton.Text == "Convert")
-                                     ? new ConfigForm(GetConfigFile("DirecTag"), OutputDirectoryBox.Text ?? string.Empty, defaultName, _templateList)
-                                     : new ConfigForm("DirecTag", OutputDirectoryBox.Text ?? string.Empty, NameBox.Text ?? string.Empty, _templateList);
-
-
-            if (testConfigForm.ShowDialog(this) == DialogResult.OK)
+            if (sender == MyriEditButton)
             {
-                var filepath = testConfigForm.GetFilePath();
-                if (filepath.StartsWith("--Custom--"))
-                {
-                    DTConfigBox.Tag = "--Custom--";
-                    filepath = filepath.Remove(0, 10);
-                }
-                else
-                    DTConfigBox.Tag = null;
-
-                DTConfigBox.Text = filepath;
-                DirecTagInfoBox.Text = testConfigForm.GetConfigString(((string)DTConfigBox.Tag) != "--Custom--");
+                configBox = MyriConfigBox;
+                editButton = MyriEditButton;
+                infoBox = MyriMatchInfoBox;
+                destinationProgram = "MyriMatch";
             }
-        }
-
-        /// <summary>
-        /// Run OldConfigForm on TagRecon config
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void TREditButton_Click(object sender, EventArgs e)
-        {
-            var defaultName = string.IsNullOrEmpty(TRConfigBox.Text)
-                ? NameBox.Text ?? string.Empty
-                : TRConfigBox.Text;
-
-            var testConfigForm = (TREditButton.Text == "Edit" || TREditButton.Text == "Convert")
-                                     ? new ConfigForm(GetConfigFile("TagRecon"), OutputDirectoryBox.Text ?? string.Empty, defaultName, _templateList)
-                                     : new ConfigForm("TagRecon", OutputDirectoryBox.Text ?? string.Empty, NameBox.Text ?? string.Empty, _templateList);
-
-
-            if (testConfigForm.ShowDialog(this) == DialogResult.OK)
+            else if (sender == DTEditButton)
             {
-                var filepath = testConfigForm.GetFilePath();
-                if (filepath.StartsWith("--Custom--"))
-                {
-                    TRConfigBox.Tag = "--Custom--";
-                    filepath = filepath.Remove(0, 10);
-                }
-                else
-                    TRConfigBox.Tag = null;
-                TRConfigBox.Text = filepath;
-                TagReconInfoBox.Text = testConfigForm.GetConfigString(((string)TRConfigBox.Tag) != "--Custom--");
+                configBox = DTConfigBox;
+                editButton = DTEditButton;
+                infoBox = DirecTagInfoBox;
+                destinationProgram = "DirecTag";
             }
-        }
+            else if (sender == TREditButton)
+            {
+                configBox = TRConfigBox;
+                editButton = TREditButton;
+                infoBox = TagReconInfoBox;
+                destinationProgram = "TagRecon";
+            }
+            else
+            {
+                configBox = PepConfigBox;
+                editButton = PepEditButton;
+                infoBox = PepitomeInfoBox;
+                destinationProgram = "Pepitome";
+            }
 
-        private void PepEditButton_Click(object sender, EventArgs e)
-        {
-            var defaultName = string.IsNullOrEmpty(PepConfigBox.Text)
+            var defaultName = string.IsNullOrEmpty(configBox.Text)
                 ? NameBox.Text ?? string.Empty
-                : PepConfigBox.Text;
+                : configBox.Text;
 
-            var testConfigForm = (PepEditButton.Text == "Edit" || PepEditButton.Text == "Convert")
-                                     ? new ConfigForm(GetConfigFile("Pepitome"), OutputDirectoryBox.Text ?? string.Empty, defaultName, _templateList)
-                                     : new ConfigForm("Pepitome", OutputDirectoryBox.Text ?? string.Empty, NameBox.Text ?? string.Empty, _templateList);
+            var testConfigForm = (editButton.Text == "Edit" || editButton.Text == "Convert")
+                                     ? new ConfigForm(GetConfigFile(destinationProgram), OutputDirectoryBox.Text ?? string.Empty, defaultName, _templateList)
+                                     : new ConfigForm(destinationProgram, OutputDirectoryBox.Text ?? string.Empty, NameBox.Text ?? string.Empty, _templateList);
 
 
             if (testConfigForm.ShowDialog(this) == DialogResult.OK)
             {
                 var filepath = testConfigForm.GetFilePath();
-                if (filepath.StartsWith("--Custom--"))
-                {
-                    PepConfigBox.Tag = "--Custom--";
-                    filepath = filepath.Remove(0, 10);
-                }
-                else
-                    PepConfigBox.Tag = null;
-                PepConfigBox.Text = filepath;
-                PepitomeInfoBox.Text = testConfigForm.GetConfigString(((string)PepConfigBox.Tag) != "--Custom--");
+                configBox.Tag = testConfigForm.IsTemporaryConfiguration()
+                                      ? "--Custom--"
+                                      : null;
+
+                configBox.Text = filepath;
+                infoBox.Text = testConfigForm.GetConfigString(!testConfigForm.IsTemporaryConfiguration());
             }
         }
 

@@ -51,6 +51,7 @@ namespace BumberDash.Forms
         private readonly string _baseDirectory; //Stores the assigned initial output directory
         private readonly string _defaultName; //Stores the assigned default configuration name
         private string _filePath; //Stores the assigned file path
+        private bool _isCustom = false; //stores whether configuration is temorary
         private Dictionary<Control, string> _templateDefaults; //Stores default values for current template
         private IList<ConfigFile> _myriTemplateList; //List of all templates user has specified for Myrimatch
         private IList<ConfigFile> _DTTemplateList; //List of all templates user has specified for Directag
@@ -1468,7 +1469,20 @@ namespace BumberDash.Forms
         {
             var text = new TextPromptBox("Custom Configuration", _defaultName);
             if (text.ShowDialog() == DialogResult.OK)
-                _filePath = "--Custom--" + text.GetText();
+            {
+                _isCustom = true;
+                _filePath = text.GetText();
+            }
+            else
+            {
+                _filePath = string.Empty;
+                DialogResult = DialogResult.None;
+            }
+        }
+
+        internal bool IsTemporaryConfiguration()
+        {
+            return _isCustom;
         }
 
         private void SaveAsNewButton_Click(object sender, EventArgs e)

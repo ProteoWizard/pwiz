@@ -100,7 +100,6 @@
             // 
             // FolderPanel
             // 
-            this.FolderPanel.Controls.Add(this.PepPanel);
             this.FolderPanel.Controls.Add(this.SearchTypeBox);
             this.FolderPanel.Controls.Add(this.newFolderBox);
             this.FolderPanel.Controls.Add(this.InfoExpandButton);
@@ -122,6 +121,7 @@
             this.FolderPanel.Controls.Add(this.label5);
             this.FolderPanel.Controls.Add(this.InitialDirectoryButton);
             this.FolderPanel.Controls.Add(this.label4);
+            this.FolderPanel.Controls.Add(this.PepPanel);
             this.FolderPanel.Controls.Add(this.ConfigGB);
             this.FolderPanel.Location = new System.Drawing.Point(0, 0);
             this.FolderPanel.Name = "FolderPanel";
@@ -202,7 +202,7 @@
             this.PepEditButton.TabIndex = 31;
             this.PepEditButton.Text = "New";
             this.PepEditButton.UseVisualStyleBackColor = true;
-            this.PepEditButton.Click += new System.EventHandler(this.PepEditButton_Click);
+            this.PepEditButton.Click += new System.EventHandler(this.ConfigEditButton_Click);
             // 
             // PepConfigBrowse
             // 
@@ -474,7 +474,7 @@
             this.MyriEditButton.TabIndex = 16;
             this.MyriEditButton.Text = "New";
             this.MyriEditButton.UseVisualStyleBackColor = true;
-            this.MyriEditButton.Click += new System.EventHandler(this.MyriEditButton_Click);
+            this.MyriEditButton.Click += new System.EventHandler(this.ConfigEditButton_Click);
             // 
             // MyriConfigButton
             // 
@@ -546,7 +546,7 @@
             this.TREditButton.TabIndex = 16;
             this.TREditButton.Text = "New";
             this.TREditButton.UseVisualStyleBackColor = true;
-            this.TREditButton.Click += new System.EventHandler(this.TREditButton_Click);
+            this.TREditButton.Click += new System.EventHandler(this.ConfigEditButton_Click);
             // 
             // TRConfigButton
             // 
@@ -576,7 +576,7 @@
             this.DTEditButton.TabIndex = 12;
             this.DTEditButton.Text = "New";
             this.DTEditButton.UseVisualStyleBackColor = true;
-            this.DTEditButton.Click += new System.EventHandler(this.DTEditButton_Click);
+            this.DTEditButton.Click += new System.EventHandler(this.ConfigEditButton_Click);
             // 
             // DTConfigButton
             // 
