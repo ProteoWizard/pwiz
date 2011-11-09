@@ -32,39 +32,19 @@ namespace BumberDash.Forms
         /// </summary>
         public QueueForm()
         {
-            var errorInt = 0;
             try
             {
                 InitializeComponent();
-                errorInt++;
                 var sessionFactory = SessionManager.CreateSessionFactory();
-                errorInt++;
                 _session = sessionFactory.OpenSession();
-                errorInt++;
             }
             catch (Exception error)
             {
-                string message;
-                switch (errorInt)
-                {
-                    case 0:
-                        message = "Couldn't even initilize component";
-                        break;
-                    case 1:
-                        message = "Seem to be having a hard time creating a session factory";
-                        break;
-                    case 2:
-                        message = "I have a factory, but it seems to be non-functional";
-                        break;
-                    default:
-                        message =
-                            "This error appears to be illogical. If you are seeing this make sure reality is still firmly in place";
-                        break;
-                }
-                MessageBox.Show(message + Environment.NewLine + error.Message);
+                MessageBox.Show("BumberDash could not initilize:" + error.Message + Environment.NewLine + error.StackTrace);
                 throw;
             }
         }
+
 
         /// <summary>
         /// Initialize the DataGridView with previous jobs and add row at bottom for easy job queuing
@@ -73,11 +53,9 @@ namespace BumberDash.Forms
         /// <param name="e"></param>
         private void QueueForm_Load(object sender, EventArgs e)
         {
-            var errorInt = 0;
             try
             {
                 _jobLog = new LogForm();
-                errorInt++;
 
                 #region Initialize program handler
                 JobProcess = new ProgramHandler
@@ -126,14 +104,11 @@ namespace BumberDash.Forms
                     }
                 };
                 #endregion
-                errorInt++;
 
                 //Load all jobs from database
                 var historyItemList = _session.QueryOver<HistoryItem>().OrderBy(x => x.RowNumber).Asc.List();
-                errorInt++;
                 foreach (var hi in historyItemList)
                     InsertRowFromHistoryItem(hi, JobQueueDGV.Rows.Count);
-                errorInt++;
 
                 //Add line at end for quick job creation
                 var values = new object[6];
@@ -145,8 +120,6 @@ namespace BumberDash.Forms
                 values[5] = 0;
                 JobQueueDGV.Rows.Add(values);
                 JobQueueDGV.Rows[JobQueueDGV.Rows.Count - 1].DefaultCellStyle.BackColor = Color.LightGray;
-                
-                errorInt++;
 
                 for (int x = JobQueueDGV.Rows.Count - 2; x >= 0; x--)
                 {
@@ -161,8 +134,6 @@ namespace BumberDash.Forms
                         progressCell.Message = "Locked";
                 }
 
-                errorInt++;
-
                 //Configure IDPicker Location
                 if (Properties.Settings.Default.IDPickerLocation == string.Empty
                     || !File.Exists(Properties.Settings.Default.IDPickerLocation))
@@ -170,44 +141,15 @@ namespace BumberDash.Forms
                     if (!DetectLatestIDPicker())
                         iDPickerToolStripMenuItem.Visible = false;
                 }
-                errorInt++;
             }
             catch (Exception error)
             {
-                string message;
-                switch (errorInt)
-                {
-                    case 0:
-                        message = "There seems to be a log in the way";
-                        break;
-                    case 1:
-                        message = "I'm trying to learn how to handle the situation, but I just cant do it";
-                        break;
-                    case 2:
-                        message = "There is much about history that is unknown. If it breaks here check your database.";
-                        break;
-                    case 3:
-                        message = "History that cant be applied might as well not be known";
-                        break;
-                    case 4:
-                        message = "I dont know how to deal with the future";
-                        break;
-                    case 5:
-                        message = "I cant figure out how to change my status";
-                        break;
-                    case 6:
-                        message = "What do you mean I have to have IDPicker? I refuse to work until I have my way.";
-                        break;
-                    default:
-                        message =
-                            "I did all that work and it breaks here of all places? Talk about bad luck...";
-                        break;
-                }
-                MessageBox.Show(message + Environment.NewLine + error.Message);
+                MessageBox.Show("BumberDash could not load: " + error.Message + Environment.NewLine + error.StackTrace);
                 throw;
             }
-            
+
         }
+
 
         #region Events
 
