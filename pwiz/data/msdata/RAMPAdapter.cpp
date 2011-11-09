@@ -166,6 +166,8 @@ void RAMPAdapter::Impl::getScanHeader(size_t index, ScanHeaderStruct& result, bo
       }
     }
 
+    result.filterLine = filterLine;
+
 
 
     if (!spectrum->precursors.empty())

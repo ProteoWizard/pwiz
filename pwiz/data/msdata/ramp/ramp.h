@@ -179,6 +179,7 @@ struct ScanHeaderStruct
    int mergedResultScanNum; /* scan number of the resultant merged scan */
    int mergedResultStartScanNum; /* smallest scan number of the scanOrigin for merged scan */
    int mergedResultEndScanNum; /* largest scan number of the scanOrigin for merged scan */
+   std::string filterLine;
    ramp_fileoffset_t filePosition; /* where in the file is this header? */
 };
 
