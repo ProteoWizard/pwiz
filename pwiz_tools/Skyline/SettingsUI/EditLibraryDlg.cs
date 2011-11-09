@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
@@ -120,6 +121,17 @@ namespace pwiz.Skyline.SettingsUI
                 return;
             }
 
+            // Display an error message if the user is trying to add a BiblioSpec library,
+            // and the library has the text "redundant" in the file name.
+            if (Equals(ext, BiblioSpecLiteSpec.EXT_REDUNDANT))
+            {  
+                MessageDlg.Show(this, string.Format("The file {0} appears to be a redundant library. Please choose a  non-redundant library.", path));
+                textPath.Focus();
+                return;
+                
+            }
+            
+
             _librarySpec = librarySpec;
             DialogResult = DialogResult.OK;
             Close();
@@ -170,6 +182,36 @@ namespace pwiz.Skyline.SettingsUI
 
             Settings.Default.LibraryDirectory = Path.GetDirectoryName(dlg.FileName);
             return dlg.FileName;
+        }
+
+        private void linkPeptideAtlas_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            SpecLibLinkClicked(linkPeptideAtlas, LibraryLink.PEPTIDEATLAS.Link);
+        }
+
+        private void linkNIST_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            SpecLibLinkClicked(linkNIST, LibraryLink.NIST.Link);
+        }
+
+        private void linkGPM_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            SpecLibLinkClicked(linkGPM, LibraryLink.GPM.Link);
+        }
+
+        private static void SpecLibLinkClicked(LinkLabel linkLabel, string link)
+        {
+            try
+            {
+                linkLabel.LinkVisited = true;
+                //Call the Process.Start method to open the default browser 
+                //with a URL:
+                Process.Start(link);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(string.Format("Unable to open link. Error was {0}", ex.Message));
+            }
         }
     }
 }

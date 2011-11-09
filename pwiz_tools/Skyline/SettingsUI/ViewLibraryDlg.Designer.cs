@@ -39,7 +39,9 @@ namespace pwiz.Skyline.SettingsUI
             this.NextLink = new System.Windows.Forms.LinkLabel();
             this.PreviousLink = new System.Windows.Forms.LinkLabel();
             this.PeptideEditPanel = new System.Windows.Forms.Panel();
+            this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
             this.comboLibrary = new System.Windows.Forms.ComboBox();
+            this.btnLibDetails = new System.Windows.Forms.Button();
             this.PeptideLabel = new System.Windows.Forms.Label();
             this.textPeptide = new System.Windows.Forms.TextBox();
             this.GraphPanel = new System.Windows.Forms.Panel();
@@ -60,7 +62,9 @@ namespace pwiz.Skyline.SettingsUI
             this.btnSave = new System.Windows.Forms.ToolStripButton();
             this.btnPrint = new System.Windows.Forms.ToolStripButton();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.labelRT = new System.Windows.Forms.Label();
             this.cbAssociateProteins = new System.Windows.Forms.CheckBox();
+            this.labelFilename = new System.Windows.Forms.Label();
             this.btnAdd = new System.Windows.Forms.Button();
             this.btnAddAll = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
@@ -92,8 +96,6 @@ namespace pwiz.Skyline.SettingsUI
             this.toolStripSeparator15 = new System.Windows.Forms.ToolStripSeparator();
             this.zoomSpectrumContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripSeparator27 = new System.Windows.Forms.ToolStripSeparator();
-            this.labelFilename = new System.Windows.Forms.Label();
-            this.labelRT = new System.Windows.Forms.Label();
             this.splitMain.Panel1.SuspendLayout();
             this.splitMain.Panel2.SuspendLayout();
             this.splitMain.SuspendLayout();
@@ -102,6 +104,7 @@ namespace pwiz.Skyline.SettingsUI
             this.splitPeptideList.SuspendLayout();
             this.PeptideListPanel.SuspendLayout();
             this.PeptideEditPanel.SuspendLayout();
+            this.tableLayoutPanel1.SuspendLayout();
             this.GraphPanel.SuspendLayout();
             this.toolStrip1.SuspendLayout();
             this.panel2.SuspendLayout();
@@ -153,7 +156,7 @@ namespace pwiz.Skyline.SettingsUI
             this.splitPeptideList.Panel2.Controls.Add(this.PreviousLink);
             this.splitPeptideList.Panel2MinSize = 50;
             this.splitPeptideList.Size = new System.Drawing.Size(258, 326);
-            this.splitPeptideList.SplitterDistance = 272;
+            this.splitPeptideList.SplitterDistance = 251;
             this.splitPeptideList.TabIndex = 2;
             // 
             // PeptideListPanel
@@ -163,7 +166,7 @@ namespace pwiz.Skyline.SettingsUI
             this.PeptideListPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.PeptideListPanel.Location = new System.Drawing.Point(0, 3);
             this.PeptideListPanel.Name = "PeptideListPanel";
-            this.PeptideListPanel.Size = new System.Drawing.Size(258, 269);
+            this.PeptideListPanel.Size = new System.Drawing.Size(258, 248);
             this.PeptideListPanel.TabIndex = 3;
             // 
             // listPeptide
@@ -174,7 +177,7 @@ namespace pwiz.Skyline.SettingsUI
             this.listPeptide.ItemHeight = 16;
             this.listPeptide.Location = new System.Drawing.Point(0, 0);
             this.listPeptide.Name = "listPeptide";
-            this.listPeptide.Size = new System.Drawing.Size(258, 244);
+            this.listPeptide.Size = new System.Drawing.Size(258, 228);
             this.listPeptide.TabIndex = 0;
             this.listPeptide.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.listPeptide_DrawItem);
             this.listPeptide.SelectedIndexChanged += new System.EventHandler(this.listPeptide_SelectedIndexChanged);
@@ -185,7 +188,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             this.cbShowModMasses.AutoSize = true;
             this.cbShowModMasses.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.cbShowModMasses.Location = new System.Drawing.Point(0, 252);
+            this.cbShowModMasses.Location = new System.Drawing.Point(0, 231);
             this.cbShowModMasses.Name = "cbShowModMasses";
             this.cbShowModMasses.Size = new System.Drawing.Size(258, 17);
             this.cbShowModMasses.TabIndex = 1;
@@ -241,7 +244,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // PeptideEditPanel
             // 
-            this.PeptideEditPanel.Controls.Add(this.comboLibrary);
+            this.PeptideEditPanel.Controls.Add(this.tableLayoutPanel1);
             this.PeptideEditPanel.Controls.Add(this.PeptideLabel);
             this.PeptideEditPanel.Controls.Add(this.textPeptide);
             this.PeptideEditPanel.Dock = System.Windows.Forms.DockStyle.Top;
@@ -250,16 +253,45 @@ namespace pwiz.Skyline.SettingsUI
             this.PeptideEditPanel.Size = new System.Drawing.Size(258, 63);
             this.PeptideEditPanel.TabIndex = 0;
             // 
+            // tableLayoutPanel1
+            // 
+            this.tableLayoutPanel1.ColumnCount = 2;
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 90.31007F));
+            this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 9.689922F));
+            this.tableLayoutPanel1.Controls.Add(this.comboLibrary, 0, 0);
+            this.tableLayoutPanel1.Controls.Add(this.btnLibDetails, 1, 0);
+            this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Top;
+            this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
+            this.tableLayoutPanel1.Margin = new System.Windows.Forms.Padding(0);
+            this.tableLayoutPanel1.Name = "tableLayoutPanel1";
+            this.tableLayoutPanel1.RowCount = 1;
+            this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.tableLayoutPanel1.Size = new System.Drawing.Size(258, 24);
+            this.tableLayoutPanel1.TabIndex = 3;
+            // 
             // comboLibrary
             // 
-            this.comboLibrary.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.comboLibrary.Dock = System.Windows.Forms.DockStyle.Top;
             this.comboLibrary.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboLibrary.FormattingEnabled = true;
             this.comboLibrary.Location = new System.Drawing.Point(0, 0);
+            this.comboLibrary.Margin = new System.Windows.Forms.Padding(0);
             this.comboLibrary.Name = "comboLibrary";
-            this.comboLibrary.Size = new System.Drawing.Size(258, 21);
+            this.comboLibrary.Size = new System.Drawing.Size(233, 21);
             this.comboLibrary.TabIndex = 0;
             this.comboLibrary.SelectedIndexChanged += new System.EventHandler(this.LibraryComboBox_SelectedIndexChanged);
+            // 
+            // btnLibDetails
+            // 
+            this.btnLibDetails.DialogResult = System.Windows.Forms.DialogResult.OK;
+            this.btnLibDetails.Location = new System.Drawing.Point(233, 0);
+            this.btnLibDetails.Margin = new System.Windows.Forms.Padding(0);
+            this.btnLibDetails.Name = "btnLibDetails";
+            this.btnLibDetails.Size = new System.Drawing.Size(24, 21);
+            this.btnLibDetails.TabIndex = 5;
+            this.btnLibDetails.Text = "...";
+            this.btnLibDetails.UseVisualStyleBackColor = true;
+            this.btnLibDetails.Click += new System.EventHandler(this.btnLibDetails_Click);
             // 
             // PeptideLabel
             // 
@@ -482,17 +514,27 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // panel2
             // 
-            this.panel2.Controls.Add(this.labelRT);
             this.panel2.Controls.Add(this.cbAssociateProteins);
             this.panel2.Controls.Add(this.labelFilename);
             this.panel2.Controls.Add(this.btnAdd);
             this.panel2.Controls.Add(this.btnAddAll);
             this.panel2.Controls.Add(this.btnCancel);
+            this.panel2.Controls.Add(this.labelRT);
             this.panel2.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.panel2.Location = new System.Drawing.Point(0, 333);
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(477, 56);
             this.panel2.TabIndex = 1;
+            // 
+            // labelRT
+            // 
+            this.labelRT.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.labelRT.Location = new System.Drawing.Point(72, 3);
+            this.labelRT.Name = "labelRT";
+            this.labelRT.Size = new System.Drawing.Size(403, 16);
+            this.labelRT.TabIndex = 4;
+            this.labelRT.Text = "RT";
+            this.labelRT.TextAlign = System.Drawing.ContentAlignment.TopRight;
             // 
             // cbAssociateProteins
             // 
@@ -503,6 +545,15 @@ namespace pwiz.Skyline.SettingsUI
             this.cbAssociateProteins.TabIndex = 3;
             this.cbAssociateProteins.Text = "Asso&ciate proteins";
             this.cbAssociateProteins.UseVisualStyleBackColor = true;
+            // 
+            // labelFilename
+            // 
+            this.labelFilename.AutoSize = true;
+            this.labelFilename.Location = new System.Drawing.Point(3, 6);
+            this.labelFilename.Name = "labelFilename";
+            this.labelFilename.Size = new System.Drawing.Size(23, 13);
+            this.labelFilename.TabIndex = 3;
+            this.labelFilename.Text = "File";
             // 
             // btnAdd
             // 
@@ -762,24 +813,6 @@ namespace pwiz.Skyline.SettingsUI
             this.toolStripSeparator27.Name = "toolStripSeparator27";
             this.toolStripSeparator27.Size = new System.Drawing.Size(182, 6);
             // 
-            // labelFilename
-            // 
-            this.labelFilename.AutoSize = true;
-            this.labelFilename.Location = new System.Drawing.Point(3, 6);
-            this.labelFilename.Name = "labelFilename";
-            this.labelFilename.Size = new System.Drawing.Size(23, 13);
-            this.labelFilename.TabIndex = 3;
-            this.labelFilename.Text = "File";
-            // 
-            // labelRT
-            // 
-            this.labelRT.AutoSize = true;
-            this.labelRT.Location = new System.Drawing.Point(379, 6);
-            this.labelRT.Name = "labelRT";
-            this.labelRT.Size = new System.Drawing.Size(22, 13);
-            this.labelRT.TabIndex = 4;
-            this.labelRT.Text = "RT";
-            // 
             // ViewLibraryDlg
             // 
             this.AcceptButton = this.btnCancel;
@@ -813,6 +846,7 @@ namespace pwiz.Skyline.SettingsUI
             this.PeptideListPanel.PerformLayout();
             this.PeptideEditPanel.ResumeLayout(false);
             this.PeptideEditPanel.PerformLayout();
+            this.tableLayoutPanel1.ResumeLayout(false);
             this.GraphPanel.ResumeLayout(false);
             this.GraphPanel.PerformLayout();
             this.toolStrip1.ResumeLayout(false);
@@ -893,6 +927,8 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.ToolStripMenuItem charge4ContextMenuItem;
         private System.Windows.Forms.Label labelFilename;
         private System.Windows.Forms.Label labelRT;
+        private System.Windows.Forms.Button btnLibDetails;
+        private System.Windows.Forms.TableLayoutPanel tableLayoutPanel1;
 
 
 

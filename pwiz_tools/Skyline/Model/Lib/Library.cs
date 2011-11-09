@@ -362,6 +362,14 @@ namespace pwiz.Skyline.Model.Lib
         public abstract bool ContainsAny(LibSeqKey key);
 
         /// <summary>
+        /// Some details for the library. 
+        /// This can be the library revision, program version, 
+		/// build date or a hyperlink to the library source 
+        /// (e.g. http://peptide.nist.gov/ for NIST libraries)
+        /// </summary>
+        public abstract LibraryDetails LibraryDetails { get; }
+
+        /// <summary>
         /// Attempts to get spectrum header information for a specific
         /// (sequence, charge) pair.
         /// </summary>
@@ -980,6 +988,64 @@ namespace pwiz.Skyline.Model.Lib
         public bool IsBest { get; private set; }
 
         public SpectrumPeaksInfo SpectrumPeaksInfo { get { return _library.LoadSpectrum(_spectrumKey); } }
+    }
+
+    /// <summary>
+    /// Links to spectral library sources
+    /// </summary>
+    public sealed class LibraryLink
+    {
+        public static readonly LibraryLink PEPTIDEATLAS = new LibraryLink("PeptideAtlas", "http://www.peptideatlas.org/speclib/");
+        public static readonly LibraryLink NIST = new LibraryLink("NIST", "http://peptide.nist.gov/");
+        public static readonly LibraryLink GPM = new LibraryLink("GPM", "ftp://ftp.thegpm.org/projects/xhunter/libs/");
+
+        private LibraryLink(string name, string href)
+        {
+            Name = name;
+            Link = href;
+        }
+
+        public string Name { get; private set; }
+
+        public string Link { get; private set; }
+    }
+
+    /// <summary>
+    /// Some spectrum library details that can be displayed in a dialog box.
+    /// This can be the format of the library (e.g. BiblioSpec, SpectraST etc.),
+    /// a library revision (when available), number of peptides etc.
+    /// Optionally, appropriate links to spectral library sources can also be included.
+    /// </summary>
+    public sealed class LibraryDetails
+    {
+        public LibraryDetails()
+        {
+            LibLinks = new List<LibraryLink>();
+        }
+        public void AddLink(LibraryLink link)
+        {
+            LibLinks.Add(link);
+        }
+
+        public string Id { get; set; }
+
+        // e.g. BiblioSpec, SpectraST etc.
+        public string Format { get; set; }
+
+        // library revision
+        public string Revision { get; set; }
+
+        // version of the program that generated the library
+        public string Version { get; set; }
+
+        public int PeptideCount { get; set; }
+
+        public int TotalPsmCount { get; set; }
+
+        public int DataFileCount { get; set; }
+
+        public List<LibraryLink> LibLinks { get; private set; }
+
     }
 
     /// <summary>

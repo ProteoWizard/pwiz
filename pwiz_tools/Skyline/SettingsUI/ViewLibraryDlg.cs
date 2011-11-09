@@ -489,7 +489,13 @@ namespace pwiz.Skyline.SettingsUI
                 showEnd = _pageInfo.EndIndex;
             }
 
-            PeptideCount.Text = string.Format("Peptides {0} through {1} of {2} total.", showStart, showEnd, _peptides.Length);
+            const string numFormat = "#,0";
+
+            PeptideCount.Text = string.Format("Peptides {0} through {1} of {2} total.", 
+                                                showStart.ToString(numFormat), 
+                                                showEnd.ToString(numFormat), 
+                                                _peptides.Length.ToString(numFormat));
+
             PageCount.Text = string.Format("Page {0} of {1}", _pageInfo.Page, _pageInfo.Pages);
         }
 
@@ -1340,6 +1346,17 @@ namespace pwiz.Skyline.SettingsUI
             UpdateStatusArea();
             UpdateUI();
             textPeptide.Focus();
+        }
+
+        private void btnLibDetails_Click(object sender, EventArgs e)
+        {
+            if (_selectedLibrary != null)
+            {
+                LibraryDetails libInfo = _selectedLibrary.LibraryDetails;
+                SpectrumLibraryInfoDlg dlg = new SpectrumLibraryInfoDlg(libInfo);
+                // dlg.SetLinks(links);
+                dlg.ShowDialog(this);
+            }
         }
 
         # endregion

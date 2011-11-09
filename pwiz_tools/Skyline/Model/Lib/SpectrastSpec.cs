@@ -16,7 +16,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-using System;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Skyline.Util;
@@ -118,6 +117,28 @@ namespace pwiz.Skyline.Model.Lib
         private SpectrastLibrary(LibrarySpec spec)
             : base(spec, EXT_CACHE)
         {
+        }
+
+        public override LibraryDetails LibraryDetails
+        {
+            get
+            {
+                LibraryDetails details = new LibraryDetails { Format = "SpectraST", PeptideCount = Count };
+
+                if (!string.IsNullOrEmpty(Id))
+                {
+                    details.Id = Id;
+                }
+                if (!string.IsNullOrEmpty(Revision))
+                {
+                    details.Revision = Revision;
+                }
+                
+                details.AddLink(LibraryLink.PEPTIDEATLAS);
+                details.AddLink(LibraryLink.NIST);
+
+                return details;
+            }
         }
 
         protected override SpectrumHeaderInfo CreateSpectrumHeaderInfo(NistSpectrumInfo info)

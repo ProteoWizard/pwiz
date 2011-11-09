@@ -186,7 +186,7 @@ namespace pwiz.Skyline.Model.Lib
 
         public const string EXT_CACHE = ".slc";
 
-        private static readonly Regex REGEX_HEADER = new Regex(@"HLF v=(\d+) s=([^ ]+) d=(\d\d\d\d\.\d\d.\d\d)");
+        private static readonly Regex REGEX_HEADER = new Regex(@"HLF v=(\d+) s=([^ ]+) d=(.*\d\d\d\d\.\d\d.\d\d)");
         private IPooledStream _readStream;
 
         public static XHunterLibrary Load(XHunterLibSpec spec, ILoadMonitor loader)
@@ -225,6 +225,27 @@ namespace pwiz.Skyline.Model.Lib
         /// The name assigned to this library by the X! Hunter library builder.
         /// </summary>
         public string Id { get; private set; }
+
+        public override LibraryDetails LibraryDetails
+        {
+            get
+            {
+                LibraryDetails details = new LibraryDetails { Format = "X!Hunter", PeptideCount = Count };
+
+                if (!string.IsNullOrEmpty(Id))
+                {
+                    details.Id = Id;
+                }
+                if (!string.IsNullOrEmpty(Revision))
+                {
+                    details.Revision = Revision;
+                }
+
+                details.AddLink(LibraryLink.GPM);
+
+                return details; 
+            }
+        }
 
         /// <summary>
         /// Path to the file on disk from which this library was loaded.  This value

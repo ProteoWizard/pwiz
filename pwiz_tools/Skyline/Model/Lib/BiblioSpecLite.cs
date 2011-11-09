@@ -160,6 +160,39 @@ namespace pwiz.Skyline.Model.Lib
             SchemaVersion = schemaVer;
         }
 
+        public override LibraryDetails LibraryDetails
+        {
+            get
+            {
+
+                LibraryDetails details = new LibraryDetails
+                                             {
+                                                 Format = "BiblioSpec",
+                                                 Revision = Revision.ToString(),
+                                                 Version = SchemaVersion.ToString(),
+                                                 PeptideCount = Count,
+                                                 DataFileCount = _librarySourceFiles.Length
+                                             };
+
+                // In Schema Version 1, the RefSpectra table contains 
+                // only the non-redundant, or the best spectrum for each peptide. 
+                // The RetentionTimes table, however, stores all the spectra,
+                // with the best spectra distinguished from the redundant ones by the 
+                // value in the "bestSpectrum" column. 
+                // If the total number of spectra in the library is more than the number
+                // of  non-redundant spectra, we will provide that information to the user.
+                int allSpecCount = RetentionTimesPsmCount();
+                int numBestSpectra = _libraryEntries.Length; // number of spectra read from the RefSpectra table
+                
+                if (numBestSpectra < allSpecCount)
+                {
+                    details.TotalPsmCount = allSpecCount;
+                }
+                
+                return details;
+            }
+        }
+
         /// <summary>
         /// Path to the file on disk from which this library was loaded.  This value
         /// may be null, if the library was deserialized from XML and has not yet
@@ -842,7 +875,16 @@ namespace pwiz.Skyline.Model.Lib
                 // Retention time information is not available for schema (minor version) < 1
                 return base.GetSpectra(key, labelType, true);
             }
-            return GetRedundantSpectra(key, labelType, !bestMatch);
+
+            try
+            {
+                return GetRedundantSpectra(key, labelType, !bestMatch);
+            }
+            // In case there is no retention times table
+            catch (SQLiteException)
+            {
+                return base.GetSpectra(key, labelType, true);
+            }
         }
 
         private IEnumerable<SpectrumInfo> GetRedundantSpectra(LibKey key, IsotopeLabelType labelType, bool getAll)
@@ -883,6 +925,44 @@ namespace pwiz.Skyline.Model.Lib
                         yield return new SpectrumInfo(this, labelType, filePath, retentionTime, isBest,
                             new SpectrumLiteKey(redundantId));
                     }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Query the RetentionTimes table for total PSM count.
+        /// </summary>
+        /// <returns>
+        /// 0 if schema version is 0
+        /// 0 if schema version > 0 and RetentionTimes table does not exist (e.g. redundant libraries)
+        /// number of entries in the RetentionTimes table, otherwise.
+        /// </returns> 
+        private int RetentionTimesPsmCount()
+        {
+            // No redundant spectra before schema version 1
+            if (SchemaVersion == 0)
+                return 0;
+
+            using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
+            {
+                select.CommandText = "SELECT count(*) FROM [RetentionTimes]";
+
+                // SchemaVersion 1 does not have RetentionTimes table for redundant libraries. 
+                // Querying a non-existent RetentionTimes table will throw an exception. 
+                try
+                {
+                    using (SQLiteDataReader reader = select.ExecuteReader())
+                    {
+                        if (!reader.Read())
+                            throw new InvalidDataException(
+                                string.Format("Unable to get a valid count of all spectra in the library {0}", FilePath));
+                        int rows = reader.GetInt32(0);
+                        return rows;
+                    }
+                }
+                catch (SQLiteException)
+                {
+                    return 0;
                 }
             }
         }

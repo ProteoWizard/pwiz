@@ -269,6 +269,26 @@ namespace pwiz.Skyline.Model.Lib
         {
         }
 
+        public override LibraryDetails LibraryDetails
+        {
+            get
+            {  
+                LibraryDetails details = new LibraryDetails {Format = "NIST", PeptideCount = Count};
+
+                if (!string.IsNullOrEmpty(Id))
+                {
+                    details.Id = Id;
+                }
+                if (!string.IsNullOrEmpty(Revision))
+                {
+                    details.Revision = Revision;
+                }
+
+                details.AddLink(LibraryLink.NIST);
+                return details;
+            }
+        }
+
         protected override SpectrumHeaderInfo CreateSpectrumHeaderInfo(NistSpectrumInfo info)
         {
             return new NistSpectrumHeaderInfo(Name, info.TFRatio, info.TotalIntensity, info.Copies);

@@ -197,6 +197,21 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         public float Revision { get; private set; }
 
+        public override LibraryDetails LibraryDetails
+        {
+            get
+            {
+                LibraryDetails details = new LibraryDetails
+                {
+                    Format = "BiblioSpec",
+                    Revision = Revision.ToString(),
+                    PeptideCount = Count
+                };
+
+                return details;
+            }
+        }
+
         /// <summary>
         /// Path to the file on disk from which this library was loaded.  This value
         /// may be null, if the library was deserialized from XML and has not yet
