@@ -51,7 +51,7 @@ using namespace pwiz::math;
     RTCONFIG_VARIABLE( MZTolerance,     FragmentMzTolerance,        string("0.5 mz")) \
     RTCONFIG_VARIABLE( string,          FragmentationRule,          "cid"           ) \
     RTCONFIG_VARIABLE( bool,            FragmentationAutoRule,      true            ) \
-	RTCONFIG_VARIABLE( int,				MaxResultRank,				5   			) \
+	RTCONFIG_VARIABLE( int,				MaxResultRank,				2   			) \
 	RTCONFIG_VARIABLE( int,				NumIntensityClasses,		3				) \
 	RTCONFIG_VARIABLE( int,				NumMzFidelityClasses,		3				) \
     RTCONFIG_VARIABLE( double,			ClassSizeMultiplier,		2.0			    ) \
@@ -63,7 +63,8 @@ using namespace pwiz::math;
 	RTCONFIG_VARIABLE( int,				NumBatches,					50				) \
 	RTCONFIG_VARIABLE( double,			TicCutoffPercentage,		0.98			) \
 	RTCONFIG_VARIABLE( double,			LibTicCutoffPercentage,		0.98			) \
-	RTCONFIG_VARIABLE( int,			    LibMaxPeakCount,    		150 			) \
+	RTCONFIG_VARIABLE( int,			    LibMaxPeakCount,    		100 			) \
+    RTCONFIG_VARIABLE( int,			    LibraryBatchSize,    		100 			) \
 	RTCONFIG_VARIABLE( bool,			CleanLibSpectra,    		true			) \
 	RTCONFIG_VARIABLE( bool,			PreferIntenseComplements,	true			) \
 	RTCONFIG_VARIABLE( int,				ProteinSamplingTime,		15				) \

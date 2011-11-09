@@ -238,10 +238,11 @@ namespace pepitome
         virtual ~BaseLibrarySpectrum() 
         {
             matchedPeptide.reset(); 
-            matchedProteins.clear(); 
-            peakPreData.clear();
-            peakData.clear();
-            peakAnns.clear();
+            deallocate(matchedProteins);
+            deallocate(peakData);
+            deallocate(peakAnns);
+            deallocate(peakPreData);
+            
         }
 
         virtual void readHeader(NativeFileReader& library) {}
@@ -310,23 +311,23 @@ namespace pepitome
         virtual void clearSpectrum()
         {
             matchedPeptide.reset();
-            matchedProteins.clear();
-            peakPreData.clear();
-            peakData.clear();
-            peakAnns.clear();
+            deallocate(matchedProteins);
+            deallocate(peakData);
+            deallocate(peakAnns);
+            deallocate(peakPreData);
         }
 
         virtual void clearHeader()
         {
             matchedPeptide.reset();
-            matchedProteins.clear();
+            deallocate(matchedProteins);
         }
 
         void clearPeaks()
         {
-            peakPreData.clear();
-            peakData.clear();
-            peakAnns.clear();
+            deallocate(peakData);
+            deallocate(peakAnns);
+            deallocate(peakPreData);
         }
 
         // Filters out the peaks with the lowest intensities until only <ticCutoffPercentage> of the total ion current remains
@@ -1161,7 +1162,7 @@ namespace pepitome
                             (*qItr).getter() >> index >> numPeaks;
                             shared_ptr<string> data(new string(static_cast<const char*>((*qItr).get<void const*>(2)), (*qItr).column_bytes(2)));
                             spectraData.insert(make_pair(index,data));
-                        }catch(exception&) { cout << "Spectral data reading error.";}
+                        }catch(exception& e) { cout << "Spectral data reading error."; cout << e.what(); }
                     }
                     STOP_PROFILER(0)
                     //cout << boost::this_thread::get_id() << "finished fetching data :" << spectraData.size() << endl;
@@ -1169,8 +1170,8 @@ namespace pepitome
                 }
 
                 START_PROFILER(1)
-                typedef pair<string, shared_ptr<string> > SpectrumData;
-                BOOST_FOREACH(const SpectrumData& sd, spectraData)
+                typedef pair<const string, shared_ptr<string> > SpectrumData;
+                BOOST_FOREACH(SpectrumData& sd, spectraData)
                 {
                     shared_ptr<BaseLibrarySpectrum> spectrum = at(libraryIndexToArrayIndex[sd.first]);
                     START_PROFILER(2)    
@@ -1178,7 +1179,9 @@ namespace pepitome
                     STOP_PROFILER(2)
                     eos::portable_iarchive packArchive( encoded );
                     packArchive & *spectrum;
+                    sd.second.reset();
                 }
+                deallocate(spectraData);
                 STOP_PROFILER(1)
             } else if(bal::ends_with(libraryName,".sptxt"))
             {

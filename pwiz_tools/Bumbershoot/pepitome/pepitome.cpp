@@ -508,25 +508,22 @@ namespace freicore
                 int z = librarySpectra[libSpectrumIndex]->id.charge-1;
                 BOOST_FOREACH(SpectraMassMap::iterator spectrumHypothesisPair, candidateHypotheses)
 			    {
+                    ++numComparisonsDone;
+                    if( estimateComparisonsOnly )
+                        continue;
+
                     Spectrum* spectrum = spectrumHypothesisPair->second.first;
                     PrecursorMassHypothesis& p = spectrumHypothesisPair->second.second;
                     
                     boost::shared_ptr<SearchResult> resultPtr(new SearchResult(*librarySpectra[libSpectrumIndex]->matchedPeptide));
                     SearchResult& result = *resultPtr;
                     START_PROFILER(5)
-                    if( !estimateComparisonsOnly )
-                    {
-                        spectrum->ScoreSpectrumVsSpectrum(result, librarySpectra[libSpectrumIndex]->peakData);
-                        if( result.mvh >= g_rtConfig->MinResultScore )
-                            BOOST_FOREACH(Protein p, librarySpectra[libSpectrumIndex]->matchedProteins)
-                                result.proteins.insert(p.first);
-                    }
+                    spectrum->ScoreSpectrumVsSpectrum(result, librarySpectra[libSpectrumIndex]->peakData);
+                    if( result.mvh >= g_rtConfig->MinResultScore )
+                        BOOST_FOREACH(Protein protein, librarySpectra[libSpectrumIndex]->matchedProteins)
+                            result.proteins.insert(protein.first);
                     STOP_PROFILER(5)
-                    ++numComparisonsDone;
-
-                    if( estimateComparisonsOnly )
-                        continue;
-
+                    
                     START_PROFILER(4);
                     {
                         boost::unique_lock<boost::mutex> guard(spectrum->mutex,boost::defer_lock);
@@ -546,10 +543,13 @@ namespace freicore
                     }
                     STOP_PROFILER(4);
                 }
-                // Clear the spectrum to keep memory in bounds.
-                librarySpectra[libSpectrumIndex]->clearSpectrum();
             }
-
+            // Clear the spectra to keep memory in bounds
+            BOOST_FOREACH(size_t index, libBatchValues[libBatchIndex])
+            {
+                librarySpectra[index]->clearSpectrum();
+                librarySpectra[index].reset();
+            }
             return numComparisonsDone;
         }
 
@@ -583,7 +583,6 @@ namespace freicore
         {
             size_t numProcessors = (size_t) g_numWorkers;
             boost::uint32_t numLibSpectra = (boost::uint32_t) librarySpectra.size();
-            
             // Clear any previous batches
             libBatchValues.clear();
 
@@ -595,7 +594,7 @@ namespace freicore
                 // Check the result size, if it exceeds the limit, then push back the
                 // current list into the vector and get a fresh list
                 ++currentBatchSize;
-                if(currentBatchSize>5000) 
+                if(currentBatchSize>g_rtConfig->LibraryBatchSize) 
                 {
                     libBatchValues.push_back(current);
                     current.clear();
@@ -607,7 +606,7 @@ namespace freicore
             if(current.size()>0)
                 libBatchValues.push_back(current);
             // Check to see if the last batch is not a tiny batch
-            if(libBatchValues.back().size()<1000 && libBatchValues.size()>1) 
+            if(libBatchValues.back().size()<(g_rtConfig->LibraryBatchSize/5) && libBatchValues.size()>1) 
             {
                 vector<size_t> last = libBatchValues.back(); libBatchValues.pop_back();
                 vector<size_t> penultimate = libBatchValues.back(); libBatchValues.pop_back();
