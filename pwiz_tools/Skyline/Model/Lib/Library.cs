@@ -639,9 +639,9 @@ namespace pwiz.Skyline.Model.Lib
 
     public sealed class LibraryRetentionTimes
     {
-        private readonly Dictionary<string, double[]> _dictPeptideRetentionTimes;
+        private readonly IDictionary<string, double[]> _dictPeptideRetentionTimes;
 
-        public LibraryRetentionTimes(Dictionary<string, double[]> dictPeptideRetentionTimes)
+        public LibraryRetentionTimes(IDictionary<string, double[]> dictPeptideRetentionTimes)
         {
             _dictPeptideRetentionTimes = dictPeptideRetentionTimes;
         }

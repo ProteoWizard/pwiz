@@ -181,7 +181,7 @@ namespace pwiz.Skyline.FileUI
             public string type;
             public int imageIndex;
             public UInt64 size;
-            public DateTime dateModified;
+            public DateTime? dateModified;
 // ReSharper restore InconsistentNaming
 
             public bool isFolder
@@ -196,27 +196,33 @@ namespace pwiz.Skyline.FileUI
 
             public string[] ToArray()
             {
-                if( type == FOLDER_TYPE )
+                return new[]
                 {
-                    return new[]
-                    {
-                        name,
-                        type,
-                        "",
-                        String.Format( "{0} {1}", dateModified.ToShortDateString(),
-                                                  dateModified.ToShortTimeString())
-                    };
+                    name,
+                    type,
+                    SizeLabel,
+                    DateModifiedLabel
+                };
+            }
+
+            private string DateModifiedLabel
+            {
+                get
+                {
+                    return dateModified.HasValue
+                               ? String.Format("{0} {1}", dateModified.Value.ToShortDateString(),
+                                                          dateModified.Value.ToShortTimeString())
+                               : "";
                 }
-                else
+            }
+
+            private string SizeLabel
+            {
+                get
                 {
-                    return new[]
-                    {
-                        name,
-                        type,
-                        String.Format( new FileSizeFormatProvider(), "{0:fs}", size ),
-                        String.Format( "{0} {1}", dateModified.ToShortDateString(),
-                                                  dateModified.ToShortTimeString() )
-                    };
+                    return type != FOLDER_TYPE
+                        ? string.Format(new FileSizeFormatProvider(), "{0:fs}", size)
+                        : "";
                 }
             }
         }
@@ -416,21 +422,21 @@ namespace pwiz.Skyline.FileUI
                     if (label != "")
                         name = string.Format("{0} ({1})", label, name);
 
+                    DateTime? dateModifiedDrive = null;                   
                     try
                     {
-                        listSourceInfo.Add(new SourceInfo
-                        {
-                            type = SourceInfo.FOLDER_TYPE,
-                            imageIndex = imageIndex,
-                            name = name,
-                            dateModified = driveInfo.RootDirectory.LastWriteTime
-                        });
+                        dateModifiedDrive = driveInfo.RootDirectory.LastWriteTime;
                     }
-                    catch (IOException)
+                    catch (IOException) {}
+                    catch (UnauthorizedAccessException) {}
+
+                    listSourceInfo.Add(new SourceInfo
                     {
-                        // Ignore IOException, which may occur if network drive not connected
-                        // CONSIDER: Show the drive with a discconnected icon as Explorer would?
-                    }
+                        type = SourceInfo.FOLDER_TYPE,
+                        imageIndex = imageIndex,
+                        name = name,
+                        dateModified = dateModifiedDrive
+                    });
                 }
             }
             else

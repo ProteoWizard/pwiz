@@ -775,8 +775,15 @@ namespace pwiz.Skyline.Model.Lib
             int j = FindSource(filePath);
             if (i != -1 && j != -1)
             {
-                retentionTimes = ReadRetentionTimes(_libraryEntries[i], _librarySourceFiles[j]);
-                return true;
+                try
+                {
+                    retentionTimes = ReadRetentionTimes(_libraryEntries[i], _librarySourceFiles[j]);
+                    return true;
+                }
+                catch (SQLiteException)
+                {
+                    // In case of missing RetentionTimes table
+                }
             }
 
             return base.TryGetRetentionTimes(key, filePath, out retentionTimes);
@@ -806,8 +813,15 @@ namespace pwiz.Skyline.Model.Lib
             int j = FindSource(filePath);
             if (j != -1)
             {
-                retentionTimes = new LibraryRetentionTimes(ReadRetentionTimes(_librarySourceFiles[j]));
-                return true;
+                try
+                {
+                    retentionTimes = new LibraryRetentionTimes(ReadRetentionTimes(_librarySourceFiles[j]));
+                    return true;
+                }
+                catch (SQLiteException)
+                {
+                    // In case of missing RetentionTimes table
+                }
             }
 
             return base.TryGetRetentionTimes(filePath, out retentionTimes);
@@ -818,7 +832,7 @@ namespace pwiz.Skyline.Model.Lib
         /// </summary>
         /// <param name="sourceInfo"></param>
         /// <returns></returns>
-        private Dictionary<string, double[]> ReadRetentionTimes(BiblioLiteSourceInfo sourceInfo)
+        private IDictionary<string, double[]> ReadRetentionTimes(BiblioLiteSourceInfo sourceInfo)
         {
             using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
             {
@@ -880,7 +894,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 return GetRedundantSpectra(key, labelType, !bestMatch);
             }
-            // In case there is no retention times table
+            // In case there is no RetentionTimes table
             catch (SQLiteException)
             {
                 return base.GetSpectra(key, labelType, true);
