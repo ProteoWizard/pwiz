@@ -764,6 +764,16 @@ namespace myrimatch
 		int numSpectra = 0;
 
 		INIT_PROFILERS(14)
+        #ifdef USE_MPI
+        // Collect the number of cpus available for the job.
+        int worldRank;
+        int totalNumCPUs = 0;
+        MPI_Allreduce(&g_numWorkers, &totalNumCPUs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+        // Adjust for the cpus on the head node
+        MPI_Comm_rank(MPI_COMM_WORLD, &worldRank);
+        if(worldRank == 0)
+            totalNumCPUs -= g_numWorkers;
+        #endif
 
         // If this is a parent process then read the input spectral data and 
         // protein database files
@@ -809,7 +819,8 @@ namespace myrimatch
 			#ifdef USE_MPI
 				if( g_numChildren > 0 )
 				{
-					g_rtConfig->ProteinBatchSize = (int) ceil( (float) proteins.size() / (float) g_numChildren / (float) g_rtConfig->NumBatches );
+                    g_rtConfig->ProteinBatchSize = (int) ceil( (float) proteins.size() / (float) totalNumCPUs / (float) g_rtConfig->NumBatches );
+					//g_rtConfig->ProteinBatchSize = (int) ceil( (float) proteins.size() / (float) g_numChildren / (float) g_rtConfig->NumBatches );
 					cout << "Dynamic protein batch size is " << g_rtConfig->ProteinBatchSize << endl;
 				}
 			#endif

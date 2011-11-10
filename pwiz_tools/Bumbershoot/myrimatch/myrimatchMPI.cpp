@@ -462,8 +462,18 @@ namespace myrimatch
 		int numChildrenFinished = 0;
 		while( numChildrenFinished < g_numChildren )
 		{
+            #ifdef MPI_DEBUG
+				cout << g_hostString << " is listening for a child process to offer to search some proteins." << endl;
+			#endif
+            // Listen for a process requesting proteins. 
+            // Extract the number of CPUs available on the process.
+            MPI_Recv( &sourceProcess,			1,		MPI_INT,	MPI_ANY_SOURCE,	0xFF, MPI_COMM_WORLD, &st );
+            int sourceCPUs = 0;
+            MPI_Recv( &sourceCPUs,			    1,		MPI_INT,	sourceProcess,	0xFF, MPI_COMM_WORLD, &st );
+            
 			int pOffset = i;
-			batchSize = min( numProteins-i, g_rtConfig->ProteinBatchSize );
+            // Scale the batchSize with the number of cpus in the requested process.
+			batchSize = min( numProteins-i, g_rtConfig->ProteinBatchSize*sourceCPUs );
 
 			stringstream packStream;
 			binary_oarchive packArchive( packStream );
@@ -483,15 +493,10 @@ namespace myrimatch
 				cerr << g_hostString << " had an error: " << e.what() << endl;
 				exit(1);
 			}
-
-			// For every batch, listen for a worker process that is ready to receive it
-
-			#ifdef MPI_DEBUG
-				cout << g_hostString << " is listening for a child process to offer to search some proteins." << endl;
-			#endif
-
-			MPI_Recv( &sourceProcess,			1,		MPI_INT,	MPI_ANY_SOURCE,	0xFF, MPI_COMM_WORLD, &st );
-
+            #ifdef MPI_DEBUG
+                cout << "Process #" << sourceProcess << " has " << sourceCPUs << " cpus. Sending " << batchSize << " proteins." << endl;
+            #endif
+			
 			if( i < numProteins )
 			{
 				MPI_Ssend( &batchSize,			1,		MPI_INT,	sourceProcess,	0x99, MPI_COMM_WORLD );
@@ -551,6 +556,7 @@ namespace myrimatch
 		int batchSize;
 
 		MPI_Ssend( &g_pid,			1,				MPI_INT,	0,	0xFF, MPI_COMM_WORLD );
+        MPI_Ssend( &g_numWorkers,	1,				MPI_INT,	0,	0xFF, MPI_COMM_WORLD );
 
 		MPI_Recv( &batchSize,		1,				MPI_INT,	0,	0x99, MPI_COMM_WORLD, &st );
 
