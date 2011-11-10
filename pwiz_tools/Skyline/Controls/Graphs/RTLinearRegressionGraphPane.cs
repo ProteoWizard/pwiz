@@ -25,13 +25,14 @@ using System.Windows.Forms;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 using ZedGraph;
 
 namespace pwiz.Skyline.Controls.Graphs
 {
-    internal sealed class RTLinearRegressionGraphPane : SummaryGraphPane
+    internal sealed class RTLinearRegressionGraphPane : SummaryGraphPane, IDisposable
     {
         public static ReplicateDisplay ShowReplicate
         {
@@ -49,6 +50,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private GraphData _data;
 
+        private bool _pendingUpdate;
+
         public RTLinearRegressionGraphPane(GraphSummary graphSummary)
             : base(graphSummary)
         {
@@ -56,6 +59,31 @@ namespace pwiz.Skyline.Controls.Graphs
             YAxis.Title.Text = "Measured Time";
             YAxis.Scale.MinAuto = false;
             YAxis.Scale.Min = 0;
+        }
+
+        public void Dispose()
+        {
+            Settings.Default.RTScoreCalculatorList.ListChanged -= RTScoreCalculatorList_ListChanged;
+        }
+
+        private void RTScoreCalculatorList_ListChanged(object sender, EventArgs e)
+        {
+            // Avoid updating on every minor change to the list.
+            if (_pendingUpdate)
+                return;
+
+            // Wait for the UI thread to become available again, and then update
+            if (GraphSummary.IsHandleCreated)
+            {
+                GraphSummary.BeginInvoke(new Action(DelayedUpdate));
+                _pendingUpdate = true;
+            }
+        }
+
+        private void DelayedUpdate()
+        {
+            UpdateGraph(true);
+            _pendingUpdate = false;
         }
 
         public override bool HandleMouseMoveEvent(ZedGraphControl sender, MouseEventArgs e)
@@ -373,11 +401,12 @@ namespace pwiz.Skyline.Controls.Graphs
                         rt = 0;
 
                     _peptidesIndexes.Add(new PeptideDocumentIndex(nodePeptide, index));
-                    _peptidesTimes.Add(new MeasuredRetentionTime(nodePeptide.Peptide.Sequence, rt.Value));
+                    string modSeq = _document.Settings.GetModifiedSequence(nodePeptide);
+                    _peptidesTimes.Add(new MeasuredRetentionTime(modSeq, rt.Value));
                 }
 
                 //Before anything else involving calculators, try connecting all the RCalcIrts
-                Settings.Default.RTScoreCalculatorList.Initialize();
+                Settings.Default.RTScoreCalculatorList.Initialize(null);
 
                 RetentionScoreCalculatorSpec calc = !string.IsNullOrEmpty(Settings.Default.RTCalculatorName)
                                                         ? Settings.Default.GetCalculatorByName(Settings.Default.RTCalculatorName)

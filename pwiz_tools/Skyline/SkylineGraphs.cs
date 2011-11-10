@@ -2043,7 +2043,10 @@ namespace pwiz.Skyline
                         updateCalculatorContextMenuItem
                     });
                 }
-                createRTRegressionContextMenuItem.Enabled = (RTGraphController.RegressionRefined != null);
+                var regressionRT = RTGraphController.RegressionRefined;
+                createRTRegressionContextMenuItem.Enabled = (regressionRT != null);
+                updateCalculatorContextMenuItem.Enabled = (regressionRT != null &&
+                    Settings.Default.RTScoreCalculatorList.CanEditItem(regressionRT.Calculator));
                 bool showDelete = controller.ShowDelete(mousePt);
                 bool showDeleteOutliers = controller.ShowDeleteOutliers;
                 if (showDelete || showDeleteOutliers)
@@ -2353,7 +2356,22 @@ namespace pwiz.Skyline
 
         private void updateCalculatorContextMenuItem_Click(object sender, EventArgs e)
         {
-            //TODO: implement
+            var list = Settings.Default.RTScoreCalculatorList;
+            var regressionRT = RTGraphController.RegressionRefined;
+            if (regressionRT != null && list.CanEditItem(regressionRT.Calculator))
+            {
+                var calcOld = regressionRT.Calculator;
+                var calcNew = list.EditItem(this, calcOld, list, null);
+                list.SetValue(calcNew);
+
+                var regressionRTDoc = DocumentUI.Settings.PeptideSettings.Prediction.RetentionTime;
+                if (Equals(calcOld.Name, regressionRTDoc.Calculator.Name))
+                {
+                    ModifyDocument(string.Format("Update {0} calculator", calcNew.Name), doc =>
+                        doc.ChangeSettings(doc.Settings.ChangePeptidePrediction(predict =>
+                            predict.ChangeRetentionTime(predict.RetentionTime.ChangeCalculator(calcNew)))));
+                }
+            }
         }
 
         private void removeRTOutliersContextMenuItem_Click(object sender, EventArgs e)

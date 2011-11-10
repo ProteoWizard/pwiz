@@ -41,6 +41,7 @@ using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.Skyline.Model.Find;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
@@ -76,6 +77,7 @@ namespace pwiz.Skyline
         private readonly LibraryBuildNotificationHandler _libraryBuildNotificationHandler;
         private readonly BackgroundProteomeManager _backgroundProteomeManager;
         private readonly ChromatogramManager _chromatogramManager;
+        private readonly IrtDbManager _irtDbManager;
 
         public event EventHandler<DocumentChangedEventArgs> DocumentChangedEvent;
         public event EventHandler<DocumentChangedEventArgs> DocumentUIChangedEvent;
@@ -112,10 +114,12 @@ namespace pwiz.Skyline
             _backgroundProteomeManager = new BackgroundProteomeManager();
             _backgroundProteomeManager.ProgressUpdateEvent += UpdateProgress;
             _backgroundProteomeManager.Register(this);
-
             _chromatogramManager = new ChromatogramManager();
             _chromatogramManager.ProgressUpdateEvent += UpdateProgress;
             _chromatogramManager.Register(this);
+            _irtDbManager = new IrtDbManager();
+            _irtDbManager.ProgressUpdateEvent += UpdateProgress;
+            _irtDbManager.Register(this);
 
             // Get placement values before changing anything.
             Point location = Settings.Default.MainWindowLocation;

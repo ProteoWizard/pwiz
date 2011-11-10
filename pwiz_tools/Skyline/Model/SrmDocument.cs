@@ -2090,7 +2090,8 @@ namespace pwiz.Skyline.Model
             RetentionTimeRegression regression = Settings.PeptideSettings.Prediction.RetentionTime;
             if (regression != null)
             {
-                double retentionTime = regression.GetRetentionTime(sequence);
+                string modSeq = Settings.GetModifiedSequence(node);
+                double retentionTime = regression.GetRetentionTime(modSeq);
                 writer.WriteAttribute(ATTR.predicted_retention_time, retentionTime);
             }
             // Write child elements

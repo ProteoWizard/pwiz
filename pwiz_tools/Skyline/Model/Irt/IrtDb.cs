@@ -20,11 +20,12 @@
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
+using System.Linq;
 using System.IO;
 using System.Threading;
 using NHibernate;
-using NHibernate.Cfg;
-using NHibernate.Criterion;
+using pwiz.Common.Collections;
+using pwiz.Common.SystemUtil;
 using pwiz.ProteomeDatabase.Util;
 using pwiz.Skyline.Model.DocSettings;
 
@@ -42,195 +43,270 @@ namespace pwiz.Skyline.Model.Irt
     {
         public const string EXT_IRTDB = ".irtdb";
 
-        private ISessionFactory SessionFactory { get; set; }
-        public ReaderWriterLock DatabaseLock { get; private set; }
-        public String FilePath { get; private set; }
+        public const int SCHEMA_VERSION_CURRENT = 1;
+
+//        private readonly string _path;
+        private readonly ISessionFactory _sessionFactory;
+        private readonly ReaderWriterLock _databaseLock;
+
+        private ImmutableDictionary<string, DbIrtPeptide> _dictStandards;
+        private ImmutableDictionary<string, DbIrtPeptide> _dictLibrary;
 
         private IrtDb(String path)
         {
-            FilePath = path;
-            SessionFactory = SessionFactoryFactory.CreateSessionFactory(path, false);
-            DatabaseLock = new ReaderWriterLock();
+//            _path = path;
+            _sessionFactory = SessionFactoryFactory.CreateSessionFactory(path, false);
+            _databaseLock = new ReaderWriterLock();
         }
 
-        public ISession OpenSession()
+        private IrtDb Load(IProgressMonitor loadMonitor, ProgressStatus status)
         {
-            return new SessionWithLock(SessionFactory.OpenSession(), DatabaseLock, false);
-        }
-
-        public ISession OpenWriteSession()
-        {
-            return new SessionWithLock(SessionFactory.OpenSession(), DatabaseLock, true);
-        }
-
-        public void ConfigureMappings(Configuration configuration)
-        {
-            SessionFactoryFactory.ConfigureMappings(configuration);
-        }
-
-        public static IrtDb OpenIrtDb(String path)
-        {
-            return new IrtDb(path);
-        }
-
-        public static IrtDb CreateIrtDb(String path)
-        {
-            using (SessionFactoryFactory.CreateSessionFactory(path, true))
+            using (var session = new SessionWithLock(_sessionFactory.OpenSession(), _databaseLock, false))
             {
-            }
-            return OpenIrtDb(path);
-        }
+                var dictStandards = new Dictionary<string, DbIrtPeptide>();
+                var dictLibrary = new Dictionary<string, DbIrtPeptide>();
 
-        public void AddPeptides(IEnumerable<DbIrtPeptide> peptides)
-        {
-            using (var session = OpenWriteSession())
-            {
-                session.BeginTransaction();
-                foreach (var peptide in peptides)
+                int totalRows = Convert.ToInt32(session.CreateSQLQuery("select count(*) from IrtLibrary").UniqueResult());
+                int currentRow = 0;
+                foreach (var pep in session.CreateCriteria(typeof(DbIrtPeptide)).List<DbIrtPeptide>())
                 {
-                    session.SaveOrUpdate(peptide);
+                    currentRow++;
+                    int percent = currentRow * 100 / totalRows;
+                    if (loadMonitor != null && status.PercentComplete != percent)
+                    {
+                        // Check for cancellation after each integer change in percent loaded.
+                        if (loadMonitor.IsCanceled)
+                        {
+                            loadMonitor.UpdateProgress(status.Cancel());
+                            return null;
+                        }
+
+                        // If not cancelled, update progress.
+                        loadMonitor.UpdateProgress(status = status.ChangePercentComplete(percent));
+                    }
+
+                    var dict = pep.Standard ? dictStandards : dictLibrary;
+                    dict.Add(pep.PeptideModSeq, pep);
                 }
-                session.Transaction.Commit();
+
+                DictStandards = dictStandards;
+                DictLibrary = dictLibrary;
             }
+            return this;
         }
 
-        public void UpdateStandard(IEnumerable<DbIrtPeptide> standard)
+        private IDictionary<string, DbIrtPeptide> DictStandards
         {
-            using (var session = OpenWriteSession())
-            {
-                session.BeginTransaction();
-                var peptides = new List<DbIrtPeptide>();
-                session.CreateCriteria(typeof (DbIrtPeptide))
-                    .Add(Restrictions.Eq("Standard", true))
-                    .List(peptides);
-                
-                foreach (var peptide in peptides)
-                {
-                    session.Delete(peptide);
-                }
-                session.Transaction.Commit();
-            }
-
-            AddPeptides(standard);
+            get { return _dictStandards; }
+            set { _dictStandards = new ImmutableDictionary<string, DbIrtPeptide>(value); }
         }
 
-        public List<DbIrtPeptide> GetStandard()
+        private IDictionary<string, DbIrtPeptide> DictLibrary
         {
-            using (var session = OpenSession())
-            {
-                var standard = new List<DbIrtPeptide>();
-                session.CreateCriteria(typeof(DbIrtPeptide))
-                     .Add(Restrictions.Eq("Standard", true)).List(standard);
-
-                return standard;
-            }
+            get { return _dictLibrary; }
+            set { _dictLibrary = new ImmutableDictionary<string, DbIrtPeptide>(value);}
         }
 
-        public List<DbIrtPeptide> GetLibrary()
+        private ISession OpenWriteSession()
         {
-            using (var session = OpenSession())
-            {
-                var standard = new List<DbIrtPeptide>();
-                session.CreateCriteria(typeof(DbIrtPeptide))
-                     .Add(Restrictions.Eq("Standard", false)).List(standard);
+            return new SessionWithLock(_sessionFactory.OpenSession(), _databaseLock, true);
+        }
 
-                return standard;
-            }
+        public IEnumerable<DbIrtPeptide> StandardPeptides
+        {
+            get { return DictStandards.Values; }
+        }
+
+        public int StandardPeptideCount
+        {
+            get { return DictStandards.Count; }
+        }
+
+        public IEnumerable<DbIrtPeptide> LibraryPeptides
+        {
+            get { return DictLibrary.Values; }
+        }
+
+        public int LibraryPeptideCount
+        {
+            get { return DictLibrary.Count; }
         }
 
         public DbIrtPeptide GetPeptide(string seq)
         {
-            using (var session = OpenSession())
-            {
-                var peps =
-                    session.CreateCriteria(typeof (DbIrtPeptide)).Add(Restrictions.Eq("PeptideModSeq", seq)).List<DbIrtPeptide>();
-                if(peps.Count < 1)
-                    return null;
-                return peps[0];
-            }
+            DbIrtPeptide pep;
+            if (DictStandards.TryGetValue(seq, out pep) || DictLibrary.TryGetValue(seq, out pep))
+                return pep;
+            return null;
         }
 
-        public List<DbIrtPeptide> GetPeptides(List<string> seqs)
+        #region Property change methods
+
+        public IrtDb AddPeptides(IEnumerable<DbIrtPeptide> peptides)
         {
-            List<DbIrtPeptide> peps = new List<DbIrtPeptide>();
-            using (var session = OpenSession())
-            {
-                foreach (var pep in seqs)
-                {
-                    //This will throw if the peptide is in the DB more than once
-                    var pep2 = session.CreateCriteria(typeof (DbIrtPeptide)).Add(Restrictions.Eq("PeptideModSeq", pep)).
-                        Add(Restrictions.Eq("Standard", false)).
-                        UniqueResult<DbIrtPeptide>();
+            var dictLibrary = new Dictionary<string, DbIrtPeptide>(_dictLibrary);
+            AddPeptides(peptides, dictLibrary);
 
-                    peps.Add(pep2); //Add a null entry if need be
-                }
-            }
+            return ChangeProp(ImClone(this), im => im.DictLibrary = dictLibrary);
 
-            return peps;
         }
 
-        public void DeletePeptide(string seq)
+        public IrtDb UpdateStandard(IEnumerable<DbIrtPeptide> standard)
+        {
+            if (standard.Any(peptide => !peptide.Standard))
+                throw new InvalidOperationException("Attempt to update standard with non-standard peptide.");
+
+            var dictStandard = standard.ToDictionary(peptide => peptide.PeptideModSeq);
+
+            using (var session = OpenWriteSession())
+            using (var transaction = session.BeginTransaction())
+            {
+                foreach (var peptide in StandardPeptides)
+                    session.Delete(peptide);
+                transaction.Commit();
+            }
+
+            AddPeptides(standard, null);
+
+            return ChangeProp(ImClone(this), im => im.DictStandards = dictStandard);
+        }
+
+        private void AddPeptides(IEnumerable<DbIrtPeptide> peptides, IDictionary<string, DbIrtPeptide> dictLibrary)
         {
             using (var session = OpenWriteSession())
+            using (var transaction = session.BeginTransaction())
             {
-                session.BeginTransaction();
-
-                var peps =
-                    session.CreateCriteria(typeof (DbIrtPeptide)).Add(Restrictions.Eq("PeptideModSeq", seq)).List
-                        <DbIrtPeptide>();
-                if (peps.Count < 1)
-                    return;
-
-                if (peps[0] != null)
-                    session.Delete(peps[0]);
-                
-                session.Transaction.Commit();
+                foreach (var peptide in peptides)
+                    session.SaveOrUpdate(peptide);
+                transaction.Commit();
             }
+
+            foreach (var peptide in peptides.Where(peptide => !peptide.Standard))
+            {
+                dictLibrary.Remove(peptide.PeptideModSeq);
+                dictLibrary.Add(peptide.PeptideModSeq, peptide);
+            }
+        }
+
+        public IrtDb DeletePeptides(IEnumerable<string> seqs)
+        {
+            IDictionary<string, DbIrtPeptide> dictStandards = _dictStandards;
+            IDictionary<string, DbIrtPeptide> dictLibrary = _dictLibrary;
+
+            using (var session = OpenWriteSession())
+            using (var transaction = session.BeginTransaction())
+            {
+                foreach (var seq in seqs)
+                    DeletePeptide(seq, session, ref dictStandards, ref dictLibrary);
+                transaction.Commit();
+            }
+
+            return ChangeProp(ImClone(this), im =>
+                                                 {
+                                                     if (!ReferenceEquals(dictStandards, _dictStandards))
+                                                         DictStandards = dictStandards;
+                                                     if (!ReferenceEquals(dictLibrary, _dictLibrary))
+                                                         DictLibrary = dictLibrary;
+                                                 });
+        }
+
+        private void DeletePeptide(string seq, ISession session,
+            ref IDictionary<string, DbIrtPeptide> dictStandards,
+            ref IDictionary<string, DbIrtPeptide> dictLibrary)
+        {
+            DbIrtPeptide pep;
+            IDictionary<string, DbIrtPeptide> dict;
+            if (dictStandards.TryGetValue(seq, out pep))
+                dict = CloneLibraryToChange(_dictStandards, ref dictStandards);
+            else if (_dictLibrary.TryGetValue(seq, out pep))
+                dict = CloneLibraryToChange(_dictLibrary, ref dictLibrary);
+            else
+                return;
+
+            session.Delete(pep);
+
+            dict.Remove(seq);
+        }
+
+        private static IDictionary<string, DbIrtPeptide> CloneLibraryToChange(
+                    IDictionary<string, DbIrtPeptide> dictOrig,
+                    ref IDictionary<string, DbIrtPeptide> dictNew)
+        {
+            if (ReferenceEquals(dictNew, dictOrig))
+                dictNew = new Dictionary<string, DbIrtPeptide>(dictOrig);
+            return dictNew;
+        }
+
+        #endregion
+
+        public static IrtDb CreateIrtDb(string path)
+        {
+            using (SessionFactoryFactory.CreateSessionFactory(path, true))
+            {
+            }
+            var irtDb = new IrtDb(path).Load(null, null);
+            using (var session = irtDb.OpenWriteSession())
+            using (var transaction = session.BeginTransaction())
+            {
+                session.Save(new DbVersionInfo {SchemaVersion = SCHEMA_VERSION_CURRENT});
+                transaction.Commit();
+            }
+            return irtDb;
         }
 
         //Throws DatabaseOpeningException
-        public static IrtDb GetIrtDb(string path)
+        public static IrtDb GetIrtDb(string path, IProgressMonitor loadMonitor)
         {
-            if (path == null)
-                throw new DatabaseOpeningException("Database path cannot be null");
-
-            string message;
-
-            if (!File.Exists(path))
-                throw new DatabaseOpeningException(String.Format("The file {0} does not exist.", path));
+            var status = new ProgressStatus(string.Format("Loading iRT database {0}", path));
+            if (loadMonitor != null)
+                loadMonitor.UpdateProgress(status);
 
             try
             {
-                //Check for a valid SQLite file and that it has our schema
-                var db = OpenIrtDb(path);
-                db.GetStandard();
+                if (path == null)
+                    throw new DatabaseOpeningException("Database path cannot be null");
 
-                return db;
-            }
-            catch (UnauthorizedAccessException)
-            {
-                message = String.Format("You do not have privileges to access the file {0}", path);
-            }
-            catch (DirectoryNotFoundException)
-            {
-                message = String.Format("The path containing {0} does not exist", path);
-            }
-            catch (FileNotFoundException)
-            {
-                message =
-                    String.Format("The file {0} could not be created. Perhaps you do not have sufficient privileges.",
-                                  path);
-            }
-            catch (SQLiteException)
-            {
-                message = String.Format("The file {0} is not a valid iRT database file.", path);
-            }
-            catch (Exception)
-            {
-                message = String.Format("The file {0} could not be opened.", path);
-            }
+                if (!File.Exists(path))
+                    throw new DatabaseOpeningException(String.Format("The file {0} does not exist.", path));
 
-            throw new DatabaseOpeningException(message);
+                string message;
+                try
+                {
+                    //Check for a valid SQLite file and that it has our schema
+                    return new IrtDb(path).Load(loadMonitor, status);
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    message = String.Format("You do not have privileges to access the file {0}", path);
+                }
+                catch (DirectoryNotFoundException)
+                {
+                    message = String.Format("The path containing {0} does not exist", path);
+                }
+                catch (FileNotFoundException)
+                {
+                    message =
+                        String.Format("The file {0} could not be created. Perhaps you do not have sufficient privileges.",
+                                      path);
+                }
+                catch (SQLiteException)
+                {
+                    message = String.Format("The file {0} is not a valid iRT database file.", path);
+                }
+                catch (Exception)
+                {
+                    message = String.Format("The file {0} could not be opened.", path);
+                }
+
+                throw new DatabaseOpeningException(message);
+            }
+            catch (DatabaseOpeningException x)
+            {
+                if (loadMonitor == null)
+                    throw;
+                loadMonitor.UpdateProgress(status.ChangeErrorException(x));
+                return null;
+            }
         }
     }
 }

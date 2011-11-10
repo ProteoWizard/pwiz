@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -181,64 +180,66 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             SrmDocumentRevisionIndex = srmDocument.RevisionIndex;
             _dataSettings = srmDocument.Settings.DataSettings;
             DocInfo docInfo = new DocInfo(srmDocument);
-            ITransaction transaction = _session.BeginTransaction();
-            SaveResults(_session, docInfo);
-
-            // Progress reporting numbers
-            int peptideCount = srmDocument.PeptideCount;
-            int peptideTotal = 0;
-
-            foreach (PeptideGroupDocNode nodeGroup in srmDocument.PeptideGroups)
+            using (var transaction = _session.BeginTransaction())
             {
-                PeptideGroup peptideGroup = nodeGroup.PeptideGroup;
-                DbProtein dbProtein = new DbProtein
-                                          {
-                                              Name = nodeGroup.Name,
-                                              Description = nodeGroup.Description,
-                                              Sequence = peptideGroup.Sequence,
-                                              Note = nodeGroup.Note
-                                          };
-                AddAnnotations(docInfo, dbProtein, nodeGroup.Annotations);
-                _session.Save(dbProtein);
-                Dictionary<DbResultFile, DbProteinResult> proteinResults = new Dictionary<DbResultFile, DbProteinResult>();
-                if (srmDocument.Settings.HasResults)
+                SaveResults(_session, docInfo);
+
+                // Progress reporting numbers
+                int peptideCount = srmDocument.PeptideCount;
+                int peptideTotal = 0;
+
+                foreach (PeptideGroupDocNode nodeGroup in srmDocument.PeptideGroups)
                 {
-                    foreach (var replicateFiles in docInfo.ReplicateResultFiles)
+                    PeptideGroup peptideGroup = nodeGroup.PeptideGroup;
+                    DbProtein dbProtein = new DbProtein
                     {
-                        foreach (var replicateFile in replicateFiles.Select(fi => fi.ResultFile))
+                        Name = nodeGroup.Name,
+                        Description = nodeGroup.Description,
+                        Sequence = peptideGroup.Sequence,
+                        Note = nodeGroup.Note
+                    };
+                    AddAnnotations(docInfo, dbProtein, nodeGroup.Annotations);
+                    _session.Save(dbProtein);
+                    Dictionary<DbResultFile, DbProteinResult> proteinResults = new Dictionary<DbResultFile, DbProteinResult>();
+                    if (srmDocument.Settings.HasResults)
+                    {
+                        foreach (var replicateFiles in docInfo.ReplicateResultFiles)
                         {
-                            DbProteinResult proteinResult = new DbProteinResult
-                                                                {
-                                                                    ResultFile = replicateFile,
-                                                                    Protein = dbProtein,
-                                                                    FileName = replicateFile.FileName,
-                                                                    SampleName = replicateFile.SampleName,
-                                                                    ModifiedTime = replicateFile.ModifiedTime,
-                                                                    AcquiredTime = replicateFile.AcquiredTime,
-                                                                    ReplicateName = replicateFile.Replicate.Replicate,
-                                                                    ReplicatePath = replicateFile.Replicate.ReplicatePath
-                                                                };
-                            _session.Save(proteinResult);
-                            proteinResults.Add(replicateFile, proteinResult);
+                            foreach (var replicateFile in replicateFiles.Select(fi => fi.ResultFile))
+                            {
+                                DbProteinResult proteinResult = new DbProteinResult
+                                {
+                                    ResultFile = replicateFile,
+                                    Protein = dbProtein,
+                                    FileName = replicateFile.FileName,
+                                    SampleName = replicateFile.SampleName,
+                                    ModifiedTime = replicateFile.ModifiedTime,
+                                    AcquiredTime = replicateFile.AcquiredTime,
+                                    ReplicateName = replicateFile.Replicate.Replicate,
+                                    ReplicatePath = replicateFile.Replicate.ReplicatePath
+                                };
+                                _session.Save(proteinResult);
+                                proteinResults.Add(replicateFile, proteinResult);
+                            }
                         }
                     }
-                }
-                docInfo.ProteinResults.Add(dbProtein, proteinResults);
-                foreach (PeptideDocNode nodePeptide in nodeGroup.Children)
-                {
-                    if (LongWaitBroker != null)
+                    docInfo.ProteinResults.Add(dbProtein, proteinResults);
+                    foreach (PeptideDocNode nodePeptide in nodeGroup.Children)
                     {
-                        if (LongWaitBroker.IsCanceled)
-                            return;
-                        LongWaitBroker.ProgressValue = ++peptideTotal*PercentOfWait/peptideCount;
-                    }
+                        if (LongWaitBroker != null)
+                        {
+                            if (LongWaitBroker.IsCanceled)
+                                return;
+                            LongWaitBroker.ProgressValue = ++peptideTotal * PercentOfWait / peptideCount;
+                        }
 
-                    SavePeptide(_session, docInfo, dbProtein, nodePeptide);
+                        SavePeptide(_session, docInfo, dbProtein, nodePeptide);
+                    }
+                    _session.Flush();
+                    _session.Clear();
                 }
-                _session.Flush();
-                _session.Clear();
+                transaction.Commit();
             }
-            transaction.Commit();
         }
 
         private static void AddAnnotations(DocInfo docInfo, DbEntity dbEntity, Annotations annotations)
@@ -301,7 +302,8 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             };
             if (docInfo.PeptidePrediction.RetentionTime != null)
             {
-                double rt = docInfo.PeptidePrediction.RetentionTime.GetRetentionTime(peptide.Sequence);                
+                string modSeq = docInfo.Settings.GetModifiedSequence(nodePeptide);
+                double rt = docInfo.PeptidePrediction.RetentionTime.GetRetentionTime(modSeq);                
                 dbPeptide.PredictedRetentionTime = rt;
             }
             AddAnnotations(docInfo, dbPeptide, nodePeptide.Annotations);
@@ -464,20 +466,15 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 // Values for summary statistics
                 var precursorSummaryValues = new PrecursorSummaryValues();
 
-                var enumReplicates = docInfo.ReplicateResultFiles.GetEnumerator();
                 for (int i = 0; i < nodeGroup.Results.Count; i++)
                 {
                     var results = nodeGroup.Results[i];
-                    var optFunction = docInfo.MeasuredResults.Chromatograms[i].OptimizationFunction;
-                    var replicateSummary = docInfo.ReplicateSummaries[i];
-
-                    bool success = enumReplicates.MoveNext();   // synch with loop
-                    Debug.Assert(success);
-
                     if (results == null)
                         continue;
 
-                    var resultFiles = enumReplicates.Current;
+                    var optFunction = docInfo.MeasuredResults.Chromatograms[i].OptimizationFunction;
+                    var replicateSummary = docInfo.ReplicateSummaries[i];
+                    var resultFiles = docInfo.ReplicateResultFiles[i];
 
                     foreach (var chromInfo in results)
                     {
@@ -617,21 +614,15 @@ namespace pwiz.Skyline.Model.Hibernate.Query
                 // Values for summary statistics
                 var transitionSummaryValues = new TransitionSummaryValues();
 
-                var enumReplicates = docInfo.ReplicateResultFiles.GetEnumerator();
                 for (int i = 0; i < nodeTran.Results.Count; i++)
                 {
                     var results = nodeTran.Results[i];
-                    var replicateSummary = docInfo.ReplicateSummaries[i];
-
-                    bool success = enumReplicates.MoveNext();   // synch with foreach
-                    Debug.Assert(success);
 
                     if (results == null)
                         continue;
 
-                    var resultFiles = enumReplicates.Current;
-                    if (resultFiles == null)    // ReSharper
-                        continue;
+                    var replicateSummary = docInfo.ReplicateSummaries[i];
+                    var resultFiles = docInfo.ReplicateResultFiles[i];
 
                     foreach (var chromInfo in results)
                     {

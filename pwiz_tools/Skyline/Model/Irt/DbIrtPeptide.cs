@@ -34,28 +34,29 @@ namespace pwiz.Skyline.Model.Irt
             ID id INTEGER PRIMARY KEY autoincrement not null,
             PeptideModSeq VARCHAR(200),
             iRT REAL,
-            Standard BIT
+            Standard BIT,
+            PeakTime BIT
         )
         */
         public virtual int? ID { get; set; }
         public virtual string PeptideModSeq { get; set; }
         public virtual double Irt { get; set; }
         public virtual bool Standard { get; set; }
+        public virtual bool PeakTime { get; set; }
 
-        public DbIrtPeptide()
-        {
+        /// <summary>
+        /// For NHibernate only
+        /// </summary>
+        protected DbIrtPeptide()
+        {            
         }
 
-        public DbIrtPeptide(string seq, double irt)
-            : this(seq, irt, false)
-        {
-        }
-
-        public DbIrtPeptide(string seq, double irt, bool standard)
+        public DbIrtPeptide(string seq, double irt, bool standard, bool peakTime)
         {
             PeptideModSeq = seq;
             Irt = irt;
             Standard = standard;
+            PeakTime = peakTime;
         }
     }
 

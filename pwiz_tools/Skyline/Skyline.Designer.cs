@@ -2767,7 +2767,7 @@ namespace pwiz.Skyline
             // 
             this.updateCalculatorContextMenuItem.Name = "updateCalculatorContextMenuItem";
             this.updateCalculatorContextMenuItem.Size = new System.Drawing.Size(152, 22);
-            this.updateCalculatorContextMenuItem.Text = "Update...";
+            this.updateCalculatorContextMenuItem.Text = "Edit...";
             this.updateCalculatorContextMenuItem.Click += new System.EventHandler(this.updateCalculatorContextMenuItem_Click);
             // 
             // toolStripSeparator23

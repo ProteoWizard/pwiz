@@ -69,6 +69,7 @@ namespace pwiz.Skyline.SettingsUI
             this.label1 = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
             this.tabPrediction = new System.Windows.Forms.TabPage();
+            this.btnUpdateCalculator = new System.Windows.Forms.Button();
             this.label14 = new System.Windows.Forms.Label();
             this.label13 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
@@ -249,7 +250,7 @@ namespace pwiz.Skyline.SettingsUI
             this.textMeasureRTWindow.Location = new System.Drawing.Point(28, 133);
             this.textMeasureRTWindow.Name = "textMeasureRTWindow";
             this.textMeasureRTWindow.Size = new System.Drawing.Size(100, 20);
-            this.textMeasureRTWindow.TabIndex = 14;
+            this.textMeasureRTWindow.TabIndex = 5;
             this.helpTip.SetToolTip(this.textMeasureRTWindow, "Time window in minutes around a measured peak center (i.e. (start + end)/2)\r\nused" +
                     " in scheduling future peptide measurements.");
             // 
@@ -259,7 +260,7 @@ namespace pwiz.Skyline.SettingsUI
             this.cbUseMeasuredRT.Location = new System.Drawing.Point(31, 86);
             this.cbUseMeasuredRT.Name = "cbUseMeasuredRT";
             this.cbUseMeasuredRT.Size = new System.Drawing.Size(232, 17);
-            this.cbUseMeasuredRT.TabIndex = 13;
+            this.cbUseMeasuredRT.TabIndex = 3;
             this.cbUseMeasuredRT.Text = "&Use measured retention times when present";
             this.helpTip.SetToolTip(this.cbUseMeasuredRT, "If checked, then previously measured retention times will be used\r\nto predict ret" +
                     "ention times for scheduling of future peptide measurements.");
@@ -273,7 +274,7 @@ namespace pwiz.Skyline.SettingsUI
             this.comboRetentionTime.Location = new System.Drawing.Point(28, 36);
             this.comboRetentionTime.Name = "comboRetentionTime";
             this.comboRetentionTime.Size = new System.Drawing.Size(169, 21);
-            this.comboRetentionTime.TabIndex = 11;
+            this.comboRetentionTime.TabIndex = 1;
             this.helpTip.SetToolTip(this.comboRetentionTime, "Specifies a linear equation that may be used to predict retention\r\ntimes from a p" +
                     "eptide specific hydrophobicity score.");
             this.comboRetentionTime.SelectedIndexChanged += new System.EventHandler(this.comboRetentionTime_SelectedIndexChanged);
@@ -506,6 +507,7 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // tabPrediction
             // 
+            this.tabPrediction.Controls.Add(this.btnUpdateCalculator);
             this.tabPrediction.Controls.Add(this.label14);
             this.tabPrediction.Controls.Add(this.textMeasureRTWindow);
             this.tabPrediction.Controls.Add(this.cbUseMeasuredRT);
@@ -519,13 +521,23 @@ namespace pwiz.Skyline.SettingsUI
             this.tabPrediction.Text = "Prediction";
             this.tabPrediction.UseVisualStyleBackColor = true;
             // 
+            // btnUpdateCalculator
+            // 
+            this.btnUpdateCalculator.Location = new System.Drawing.Point(211, 34);
+            this.btnUpdateCalculator.Name = "btnUpdateCalculator";
+            this.btnUpdateCalculator.Size = new System.Drawing.Size(104, 23);
+            this.btnUpdateCalculator.TabIndex = 2;
+            this.btnUpdateCalculator.Text = "Edit &Calculator...";
+            this.btnUpdateCalculator.UseVisualStyleBackColor = true;
+            this.btnUpdateCalculator.Click += new System.EventHandler(this.btnUpdateCalculator_Click);
+            // 
             // label14
             // 
             this.label14.AutoSize = true;
             this.label14.Location = new System.Drawing.Point(134, 136);
             this.label14.Name = "label14";
             this.label14.Size = new System.Drawing.Size(27, 13);
-            this.label14.TabIndex = 15;
+            this.label14.TabIndex = 6;
             this.label14.Text = "Min.";
             // 
             // label13
@@ -534,7 +546,7 @@ namespace pwiz.Skyline.SettingsUI
             this.label13.Location = new System.Drawing.Point(28, 116);
             this.label13.Name = "label13";
             this.label13.Size = new System.Drawing.Size(72, 13);
-            this.label13.TabIndex = 12;
+            this.label13.TabIndex = 4;
             this.label13.Text = "Time &window:";
             // 
             // label9
@@ -543,7 +555,7 @@ namespace pwiz.Skyline.SettingsUI
             this.label9.Location = new System.Drawing.Point(25, 20);
             this.label9.Name = "label9";
             this.label9.Size = new System.Drawing.Size(122, 13);
-            this.label9.TabIndex = 10;
+            this.label9.TabIndex = 0;
             this.label9.Text = "&Retention time equation:";
             // 
             // tabFilter
@@ -862,5 +874,6 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.TextBox textMaxNeutralLosses;
         private System.Windows.Forms.Label label17;
         private System.Windows.Forms.TextBox textMaxVariableMods;
+        private System.Windows.Forms.Button btnUpdateCalculator;
     }
 }

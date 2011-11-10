@@ -367,7 +367,6 @@
     <Compile Include="FileUI\SchedulingOptionsDlg.Designer.cs">
       <DependentUpon>SchedulingOptionsDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="Model\DocSettings\Irt.cs" />
     <Compile Include="Model\DocSettings\IsotopeEnrichments.cs" />
     <Compile Include="Model\DocSettings\Loss.cs" />
     <Compile Include="Model\DocSettings\MeasuredIon.cs" />
@@ -391,7 +390,10 @@
     <Compile Include="Model\Hibernate\DbTransitionResultSummary.cs" />
     <Compile Include="Model\Hibernate\RatioPropertyAccessor.cs" />
     <Compile Include="Model\Irt\DbIrtPeptide.cs" />
+    <Compile Include="Model\Irt\DbVersionInfo.cs" />
     <Compile Include="Model\Irt\IrtDb.cs" />
+    <Compile Include="Model\Irt\IrtDbManager.cs" />
+    <Compile Include="Model\Irt\RCalcIrt.cs" />
     <Compile Include="Model\Irt\SessionFactoryFactory.cs" />
     <Compile Include="Model\IsotopeLabelType.cs" />
     <Compile Include="Model\Lib\BlibData\BlibDb.cs" />

@@ -312,7 +312,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 // variable scheduling windows
                 if (!useMeasured || !singleWindow || MeasuredRTWindow == RetentionTime.TimeWindow)
                 {
-                    predictedRT = RetentionTime.GetRetentionTime(nodeGroup.TransitionGroup.Peptide.Sequence);
+                    predictedRT = RetentionTime.GetRetentionTime(document.Settings.GetModifiedSequence(nodePep));
                     windowRT = RetentionTime.TimeWindow;
                 }
             }

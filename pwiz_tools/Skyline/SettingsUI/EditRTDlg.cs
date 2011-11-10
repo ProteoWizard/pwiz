@@ -26,6 +26,7 @@ using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
@@ -281,16 +282,17 @@ namespace pwiz.Skyline.SettingsUI
                 return null;
 
             var peps = new List<MeasuredRetentionTime>();
-            foreach(var node in document.Peptides)
+            foreach(var nodePep in document.Peptides)
             {
-                if (node.AveragePeakCountRatio < 0.5)
+                if (nodePep.AveragePeakCountRatio < 0.5)
                     continue;
 
-                double? retentionTime = node.SchedulingTime;
+                double? retentionTime = nodePep.SchedulingTime;
                 if (!retentionTime.HasValue)
                     continue;
 
-                peps.Add(new MeasuredRetentionTime(node.Peptide.Sequence, retentionTime.Value));
+                string modSeq = document.Settings.GetModifiedSequence(nodePep);
+                peps.Add(new MeasuredRetentionTime(modSeq, retentionTime.Value));
             }
 
             return peps;
@@ -310,7 +312,7 @@ namespace pwiz.Skyline.SettingsUI
                 return null;
 
             //Try connecting all the calculators
-            Settings.Default.RTScoreCalculatorList.Initialize();
+            Settings.Default.RTScoreCalculatorList.Initialize(null);
 
             if (calculator == null)
             {
@@ -328,17 +330,11 @@ namespace pwiz.Skyline.SettingsUI
                 RecalcRegression(calculator, _activePeptides);
             }
 
-            var usePeptides = new List<string>(calculator.ChooseRegressionPeptides(_activePeptides.ConvertAll(pep => pep.PeptideSequence)));
+            var usePeptides = new HashSet<string>(calculator.ChooseRegressionPeptides(
+                _activePeptides.Select(pep => pep.PeptideSequence)));
             //now go back and get the MeasuredPeptides corresponding to the strings chosen by the calculator
-            var tablePeptides = new List<MeasuredRetentionTime>();
-            foreach (var nodePep in _activePeptides)
-            {
-                MeasuredRetentionTime pep1 = nodePep;
-                if (usePeptides.Find(pep => Equals(pep, pep1.PeptideSequence)) == null)
-                    continue;
-
-                tablePeptides.Add(nodePep);
-            }
+            var tablePeptides = _activePeptides.Where(measuredRT =>
+                usePeptides.Contains(measuredRT.PeptideSequence)).ToList();
 
             if (tablePeptides.Count == 0 && _activePeptides.Count != 0)
             {
@@ -361,8 +357,8 @@ namespace pwiz.Skyline.SettingsUI
 
             var rowsNew = new List<string[]>();
 
-            foreach (var pep in tablePeps)
-                rowsNew.Add(new[] { pep.PeptideSequence, pep.RetentionTime.ToString() });
+            foreach (var measuredRT in tablePeps)
+                rowsNew.Add(new[] { measuredRT.PeptideSequence, measuredRT.RetentionTime.ToString() });
                 //rowsNew.Add(new[] { pep.Sequence, string.Format("{0:F02}", pep.RetentionTimeOrIrt) });
 
             gridPeptides.SuspendLayout();
@@ -405,19 +401,18 @@ namespace pwiz.Skyline.SettingsUI
                 colError = 0;
                 return false;
             }
-/*            else
-            {
-                char cTerm = seq[seq.Length - 1];
-                if (cTerm != 'R' && cTerm != 'K')
-                {
-                    string message = string.Format("The sequence {0} does not end with R or K.  " +
-                                                   "The hydrophobicity calculator is only calibrated for tryptic cleavage.",
-                                                   seq);
-                    MessageBox.Show(message, Program.Name);
-                    return false;
-                }
-            }
- */
+//            else
+//            {
+//                char cTerm = seq[seq.Length - 1];
+//                if (cTerm != 'R' && cTerm != 'K')
+//                {
+//                    string message = string.Format("The sequence {0} does not end with R or K.  " +
+//                                                   "The hydrophobicity calculator is only calibrated for tryptic cleavage.",
+//                                                   seq);
+//                    MessageBox.Show(message, Program.Name);
+//                    return false;
+//                }
+//            }
 
             string rt = (values.Length < 2 ? "" : values[1].Trim());
             try
@@ -545,7 +540,7 @@ namespace pwiz.Skyline.SettingsUI
                 r = statistics.R;
             }
 
-            var pepCount = calculatorSpec.ChooseRegressionPeptides(peptidesTimes.ConvertAll(mrt => mrt.PeptideSequence)).Count();
+            var pepCount = calculatorSpec.ChooseRegressionPeptides(peptidesTimes.Select(mrt => mrt.PeptideSequence)).Count();
 
             labelRValue.Text = string.Format("({0} peptides, R = {1:F02})",
                 pepCount, r);

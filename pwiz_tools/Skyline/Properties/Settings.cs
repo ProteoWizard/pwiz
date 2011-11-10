@@ -20,6 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Serialization;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.FileUI;
 using pwiz.Skyline.Model;
@@ -1111,7 +1112,7 @@ namespace pwiz.Skyline.Properties
             return RetentionTimeRegression.CalculatorXmlHelpers;
         }
 
-        public void Initialize()
+        public void Initialize(IProgressMonitor loadMonitor)
         {
             foreach (var calc in this.ToArray())
             {
@@ -1119,7 +1120,7 @@ namespace pwiz.Skyline.Properties
                 {
                     try
                     {
-                        SetValue(calc.Initialize());
+                        SetValue(calc.Initialize(loadMonitor));
                     }
                     catch(CalculatorException)
                     {
@@ -1134,6 +1135,43 @@ namespace pwiz.Skyline.Properties
         public override string Label { get { return "&Retention Time Calculators:"; } }
 
         public override bool ExcludeDefaults { get { return true; } }
+
+        public bool CanEditItem(RetentionScoreCalculatorSpec item)
+        {
+            return item != null && !GetDefaults().Contains(item);
+        }
+
+        public event EventHandler<EventArgs> ListChanged;
+
+        private void FireListChanged()
+        {
+            if (ListChanged != null)
+                ListChanged(this, new EventArgs());
+        }
+
+        protected override void ClearItems()
+        {
+            base.ClearItems();
+            FireListChanged();
+        }
+
+        protected override void InsertItem(int index, RetentionScoreCalculatorSpec item)
+        {
+            base.InsertItem(index, item);
+            FireListChanged();
+        }
+
+        protected override void RemoveItem(int index)
+        {
+            base.RemoveItem(index);
+            FireListChanged();
+        }
+
+        protected override void SetItem(int index, RetentionScoreCalculatorSpec item)
+        {
+            base.SetItem(index, item);
+            FireListChanged();
+        }
     }
     
     public sealed class RetentionTimeList : SettingsList<RetentionTimeRegression>

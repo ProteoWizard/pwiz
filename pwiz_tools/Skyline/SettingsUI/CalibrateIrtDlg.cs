@@ -230,7 +230,7 @@ namespace pwiz.Skyline.SettingsUI
                 double measuredRT = pep.RetentionTimeOrIrt;
 
                 CalibrationPeptides.Add(new DbIrtPeptide(pep.Sequence,
-                    Map(measuredRT, minRt, maxRt, minIrt, maxIrt), true));
+                    Map(measuredRT, minRt, maxRt, minIrt, maxIrt), true, true));
             }
 
             DialogResult = DialogResult.OK;

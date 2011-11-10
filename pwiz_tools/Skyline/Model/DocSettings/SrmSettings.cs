@@ -25,6 +25,7 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using pwiz.Common.Chemistry;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Properties;
@@ -76,6 +77,8 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public bool HasLibraries { get { return PeptideSettings.Libraries.HasLibraries; } }
 
+        public bool HasRTPrediction { get { return PeptideSettings.Prediction.RetentionTime != null; } }
+
         public bool HasBackgroundProteome { get { return !PeptideSettings.BackgroundProteome.IsNone; } }
 
         public bool IsLoaded
@@ -83,7 +86,8 @@ namespace pwiz.Skyline.Model.DocSettings
             get
             {
                 return (!HasResults || MeasuredResults.IsLoaded) &&
-                       (!HasLibraries || PeptideSettings.Libraries.IsLoaded);
+                       (!HasLibraries || PeptideSettings.Libraries.IsLoaded) &&
+                       (!HasRTPrediction || PeptideSettings.Prediction.RetentionTime.Calculator.IsUsable);
                 // BackgroundProteome?
             }
         }
@@ -232,6 +236,16 @@ namespace pwiz.Skyline.Model.DocSettings
         public string GetModifiedSequence(string seq, IsotopeLabelType labelType, ExplicitMods mods)
         {
             return GetPrecursorCalc(labelType, mods).GetModifiedSequence(seq, false);
+        }
+
+        public string GetModifiedSequence(PeptideDocNode nodePep, IsotopeLabelType labelType)
+        {
+            return GetModifiedSequence(nodePep.Peptide.Sequence, labelType, nodePep.ExplicitMods);
+        }
+
+        public string GetModifiedSequence(PeptideDocNode nodePep)
+        {
+            return GetModifiedSequence(nodePep, IsotopeLabelType.light);
         }
 
         private static readonly SequenceMassCalc MONOISOTOPIC_MASS_CALC = new SequenceMassCalc(MassType.Monoisotopic);

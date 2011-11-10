@@ -18,7 +18,6 @@
  */
 using System;
 using System.Collections.Generic;
-using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -223,21 +222,10 @@ namespace pwiz.SkylineTestFunctional
              * Check that the database was created successfully
              * Check that it has the correct numbers of standard and library peptides
              */
-            try
-            {
-                IrtDb db = IrtDb.OpenIrtDb(databasePath);
+            IrtDb db = IrtDb.GetIrtDb(databasePath, null);
 
-                Assert.AreEqual(numStandardPeps, db.GetStandard().Count);
-                Assert.AreEqual(numLibraryPeps, db.GetLibrary().Count);
-            }
-            catch(SQLiteException)
-            {
-                Assert.Fail();
-            }
-            catch(Exception)
-            {
-                Assert.Fail();
-            }
+            Assert.AreEqual(numStandardPeps, db.StandardPeptideCount);
+            Assert.AreEqual(numLibraryPeps, db.LibraryPeptideCount);
 
             /*
              * Make sure that loading the database brings back up the right numbers of peptides
@@ -297,9 +285,10 @@ namespace pwiz.SkylineTestFunctional
             var docPeptides = new List<MeasuredRetentionTime>();
             RunUI(() =>
                       {
-                          foreach (var docPepNode in Program.ActiveDocumentUI.Peptides)
+                          var document = Program.ActiveDocumentUI;
+                          foreach (var docPepNode in document.Peptides)
                           {
-                              docPeptides.Add(new MeasuredRetentionTime(docPepNode.Peptide.Sequence,
+                              docPeptides.Add(new MeasuredRetentionTime(document.Settings.GetModifiedSequence(docPepNode),
                                                                         docPepNode.AverageMeasuredRetentionTime.HasValue
                                                                         ? docPepNode.AverageMeasuredRetentionTime.Value
                                                                         : 0));
@@ -457,16 +446,7 @@ namespace pwiz.SkylineTestFunctional
             Assert.IsNull(FindOpenForm<MessageDlg>());
 
             //Export the measurement-based transition list
-            var expMethodDlg = ShowDialog<ExportMethodDlg>(SkylineWindow.ShowExportTransitionListDlg);
-            ExportMethodDlg expMethodDlg1 = expMethodDlg;
-            RunUI(() =>
-                        {
-                            expMethodDlg1.SetInstrument(ExportInstrumentType.Thermo);
-                            expMethodDlg1.SetMethodType(ExportMethodType.Scheduled);
-                            expMethodDlg1.OkDialog(testFilesDir.GetTestPath("EmpiricalTL.csv"));
-                        });
-
-            WaitForClosedForm(expMethodDlg1);
+            ExportMethod(testFilesDir.GetTestPath("EmpiricalTL.csv"));
 
             //Turn on prediction for scheduling
             peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
@@ -479,22 +459,26 @@ namespace pwiz.SkylineTestFunctional
             WaitForClosedForm(peptideSettingsDlg);
 
             //Export the prediction-based transition list 
-            expMethodDlg = ShowDialog<ExportMethodDlg>(SkylineWindow.ShowExportTransitionListDlg);
-            RunUI(() =>
-            {
-                expMethodDlg.SetInstrument(ExportInstrumentType.Thermo);
-                expMethodDlg.SetMethodType(ExportMethodType.Scheduled);
-                expMethodDlg.OkDialog(testFilesDir.GetTestPath("PredictionTL.csv"));
-            });
-
-            WaitForClosedForm(expMethodDlg);
+            ExportMethod(testFilesDir.GetTestPath("PredictionTL.csv"));
 
             //Now open both files and compare
+            AssertEx.NoDiff(File.ReadAllText(testFilesDir.GetTestPath("EmpiricalTL.csv")),
+                            File.ReadAllText(testFilesDir.GetTestPath("PredictionTL.csv")));
 
-            var expected = File.ReadAllText(testFilesDir.GetTestPath("EmpiricalTL.csv"));
-            var actual = File.ReadAllText(testFilesDir.GetTestPath("PredictionTL.csv"));
+            // Close and re-open, and try again
+            RunUI(() =>
+                      {
+                          Assert.IsTrue(SkylineWindow.SaveDocument());
+                          SkylineWindow.NewDocument();
+                          Assert.IsTrue(SkylineWindow.OpenFile(documentPath));
+                      });
 
-            AssertEx.NoDiff(expected, actual);
+            WaitForDocumentLoaded();
+
+            ExportMethod(testFilesDir.GetTestPath("PredictionTL_reopen.csv"));
+
+            AssertEx.NoDiff(File.ReadAllText(testFilesDir.GetTestPath("EmpiricalTL.csv")),
+                            File.ReadAllText(testFilesDir.GetTestPath("PredictionTL_reopen.csv")));
             
             /*
              * Rename the database
@@ -508,6 +492,12 @@ namespace pwiz.SkylineTestFunctional
             File.Replace(databasePath, testFilesDir.GetTestPath("irt-c18-copy.irtdb"),
                          testFilesDir.GetTestPath("backup.irtdb"));
 
+            // The database renaming doesn't break usage anymore, since
+            // the iRT databases are loaded into memory during initialization.
+            // So, create a new calculator with a bogus path.
+            const string irtCalcMissing = "iRT-C18-missing";
+            Settings.Default.RTScoreCalculatorList.SetValue(new RCalcIrt(irtCalcMissing, testFilesDir.GetTestPath("irt-c18-missing.irtdb")));
+
             peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             editRT = ShowDialog<EditRTDlg>(peptideSettingsDlg.AddRTRegression);
 
@@ -515,7 +505,7 @@ namespace pwiz.SkylineTestFunctional
             RunDlg<MessageDlg>(() =>
                                    {
                                        editRT.AddResults();
-                                       editRT.ChooseCalculator(irtCalc);
+                                       editRT.ChooseCalculator(irtCalcMissing);
                                    },
                                    errorMessage => errorMessage.OkDialog());
 
@@ -566,14 +556,14 @@ namespace pwiz.SkylineTestFunctional
 
             var exportTransList = ShowDialog<ExportMethodDlg>(SkylineWindow.ShowExportTransitionListDlg);
 
-            RunDlg<MessageDlg>(() => exportTransList.SetMethodType(ExportMethodType.Scheduled),
-                               errorMessage => errorMessage.OkDialog());
+            // Used to cause a message box, but should work now, because iRT databases get loaded once
+            RunUI(() => exportTransList.SetMethodType(ExportMethodType.Scheduled));
 
             RunUI(() => exportTransList.CancelButton.PerformClick());
             WaitForClosedForm(exportTransList);
 
-            RunDlg<MessageDlg>(() => SkylineWindow.ChooseCalculator(irtCalc),
-                               errorMessage => errorMessage.OkDialog());
+            // Used to cause a message box, but should work now, because iRT databases get loaded once
+            RunUI(() => SkylineWindow.ChooseCalculator(irtCalc));
 
             /*
              * Now clean up by deleting all these calculators. If we don't, then the next functional test
@@ -585,6 +575,22 @@ namespace pwiz.SkylineTestFunctional
                                                                 peptideSettingsDlg3.ChooseRegression("None");
                                                                 peptideSettingsDlg3.OkDialog();
                                                             });
+
+            // Make sure no message boxes are left open
+            Assert.IsNull(FindOpenForm<MessageDlg>());
+        }
+
+        private static void ExportMethod(string exportPath)
+        {
+            var expMethodDlg = ShowDialog<ExportMethodDlg>(SkylineWindow.ShowExportTransitionListDlg);
+            RunUI(() =>
+                      {
+                          expMethodDlg.SetInstrument(ExportInstrumentType.Thermo);
+                          expMethodDlg.SetMethodType(ExportMethodType.Scheduled);
+                          expMethodDlg.OkDialog(exportPath);
+                      });
+
+            WaitForClosedForm(expMethodDlg);
         }
 
         public void EditIrtCalcDlgPepCountTest(EditIrtCalcDlg dlg, int numStandardPeps, int numLibraryPeps, string path, bool add)

@@ -227,6 +227,12 @@ namespace pwiz.Skyline.Controls.Graphs
 
             if (graphPaneCurrent != graphPane)
             {
+                // Release any necessary resources from the old pane
+                var disposable = graphPaneCurrent as IDisposable;
+                if (disposable != null)
+                    disposable.Dispose();
+
+                // Layout the new pane
                 using (Graphics g = CreateGraphics())
                 {
                     graphControl.MasterPane.DoLayout(g);

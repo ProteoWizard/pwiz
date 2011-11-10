@@ -24,6 +24,8 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
+using pwiz.Common.SystemUtil;
+using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model.DocSettings
@@ -42,8 +44,6 @@ namespace pwiz.Skyline.Model.DocSettings
         IEnumerable<string> ChooseRegressionPeptides(IEnumerable<string> peptides);
 
         IEnumerable<string> GetRequiredRegressionPeptides(IEnumerable<string> peptides);
-
-        RetentionScoreCalculatorSpec Initialize();
     }
 
     /// <summary>
@@ -681,15 +681,13 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public abstract double ScoreSequence(string sequence);
 
-        //public abstract List<double> ScoreSequences(List<string> sequences);
-
         public abstract IEnumerable<string> ChooseRegressionPeptides(IEnumerable<string> peptides);
 
         public abstract IEnumerable<string> GetRequiredRegressionPeptides(IEnumerable<string> peptides);
 
         public virtual bool IsUsable { get { return true; } }
 
-        public abstract RetentionScoreCalculatorSpec Initialize();
+        public abstract RetentionScoreCalculatorSpec Initialize(IProgressMonitor loadMonitor);
 
         #region Implementation of IXmlSerializable
 
@@ -719,19 +717,12 @@ namespace pwiz.Skyline.Model.DocSettings
             return _impl.ScoreSequence(sequence);
         }
 
-        /*
-        public override List<double> ScoreSequences(List<string> sequences)
-        {
-            return _impl.ScoreSequences(sequences);
-        }
-        */
-
         public override IEnumerable<string> GetRequiredRegressionPeptides(IEnumerable<string> peptides)
         {
             return _impl.GetRequiredRegressionPeptides(peptides);
         }
 
-        public override RetentionScoreCalculatorSpec Initialize()
+        public override RetentionScoreCalculatorSpec Initialize(IProgressMonitor loadMonitor)
         {
             return this;
         }

@@ -974,8 +974,15 @@ namespace pwiz.Skyline.FileUI
             int? methodCount = null;
             if (exporter != null)
                 methodCount = exporter.MemoryOutput.Count;
-            // Switch back to the UI thread to update the form.
-            Invoke(new Action<int?>(UpdateMethodCount), methodCount);
+            // Switch back to the UI thread to update the form
+            try
+            {
+                Invoke(new Action<int?>(UpdateMethodCount), methodCount);
+            }
+            catch (ObjectDisposedException)
+            {
+                // If disposed, then no need to update the UI
+            }
         }
 
         private void UpdateMethodCount(int? methodCount)

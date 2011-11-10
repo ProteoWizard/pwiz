@@ -72,62 +72,64 @@ namespace pwiz.ProteomeDatabase.API
                     if (protein.Id.HasValue)
                         proteinIds.Add(protein.Sequence, protein.Id.Value);
                 }
-                session.BeginTransaction();
-                FastaImporter fastaImporter = new FastaImporter();
                 int proteinCount = 0;
-                IDbCommand insertProtein = session.Connection.CreateCommand();
-                insertProtein.CommandText =
-                    "INSERT INTO ProteomeDbProtein (Version, Sequence) Values (1,?);select last_insert_rowid();";
-                insertProtein.Parameters.Add(new SQLiteParameter());
-                IDbCommand insertName = session.Connection.CreateCommand();
-                insertName.CommandText =
-                    "INSERT INTO ProteomeDbProteinName (Version, Protein, IsPrimary, Name, Description) Values(1,?,?,?,?)";
-                insertName.Parameters.Add(new SQLiteParameter());
-                insertName.Parameters.Add(new SQLiteParameter());
-                insertName.Parameters.Add(new SQLiteParameter());
-                insertName.Parameters.Add(new SQLiteParameter());
-
-                foreach (DbProtein protein in fastaImporter.Import(reader))
+                using (var transaction = session.BeginTransaction())
                 {
-                    int iProgress = (int)(reader.BaseStream.Position * 100 / (reader.BaseStream.Length + 1));
-                    if (!progressMonitor.Invoke("Added " + proteinCount + " proteins", iProgress))
+                    FastaImporter fastaImporter = new FastaImporter();
+                    IDbCommand insertProtein = session.Connection.CreateCommand();
+                    insertProtein.CommandText =
+                        "INSERT INTO ProteomeDbProtein (Version, Sequence) Values (1,?);select last_insert_rowid();";
+                    insertProtein.Parameters.Add(new SQLiteParameter());
+                    IDbCommand insertName = session.Connection.CreateCommand();
+                    insertName.CommandText =
+                        "INSERT INTO ProteomeDbProteinName (Version, Protein, IsPrimary, Name, Description) Values(1,?,?,?,?)";
+                    insertName.Parameters.Add(new SQLiteParameter());
+                    insertName.Parameters.Add(new SQLiteParameter());
+                    insertName.Parameters.Add(new SQLiteParameter());
+                    insertName.Parameters.Add(new SQLiteParameter());
+
+                    foreach (DbProtein protein in fastaImporter.Import(reader))
+                    {
+                        int iProgress = (int)(reader.BaseStream.Position * 100 / (reader.BaseStream.Length + 1));
+                        if (!progressMonitor.Invoke("Added " + proteinCount + " proteins", iProgress))
+                        {
+                            return;
+                        }
+                        bool existingProtein = false;
+                        long proteinId;
+                        if (proteinIds.TryGetValue(protein.Sequence, out proteinId))
+                        {
+                            existingProtein = true;
+                        }
+                        else
+                        {
+                            ((SQLiteParameter)insertProtein.Parameters[0]).Value = protein.Sequence;
+                            proteinId = Convert.ToInt64(insertProtein.ExecuteScalar());
+                            proteinIds.Add(protein.Sequence, proteinId);
+                            proteinCount++;
+                        }
+                        foreach (var proteinName in protein.Names)
+                        {
+                            try
+                            {
+                                ((SQLiteParameter)insertName.Parameters[0]).Value = proteinId;
+                                ((SQLiteParameter)insertName.Parameters[1]).Value = proteinName.IsPrimary && !existingProtein;
+                                ((SQLiteParameter)insertName.Parameters[2]).Value = proteinName.Name;
+                                ((SQLiteParameter)insertName.Parameters[3]).Value = proteinName.Description;
+                                insertName.ExecuteNonQuery();
+                            }
+                            catch (Exception exception)
+                            {
+                                Console.Out.WriteLine(exception);
+                            }
+                        }
+                    }
+                    if (!progressMonitor.Invoke("Committing transaction", 99))
                     {
                         return;
                     }
-                    bool existingProtein = false;
-                    long proteinId;
-                    if (proteinIds.TryGetValue(protein.Sequence, out proteinId))
-                    {
-                        existingProtein = true;
-                    }
-                    else
-                    {
-                        ((SQLiteParameter) insertProtein.Parameters[0]).Value = protein.Sequence;
-                        proteinId = Convert.ToInt64(insertProtein.ExecuteScalar());
-                        proteinIds.Add(protein.Sequence, proteinId);
-                        proteinCount++;
-                    }
-                    foreach (var proteinName in protein.Names)
-                    {
-                        try
-                        {
-                            ((SQLiteParameter)insertName.Parameters[0]).Value = proteinId;
-                            ((SQLiteParameter)insertName.Parameters[1]).Value = proteinName.IsPrimary && !existingProtein;
-                            ((SQLiteParameter)insertName.Parameters[2]).Value = proteinName.Name;
-                            ((SQLiteParameter)insertName.Parameters[3]).Value = proteinName.Description;
-                            insertName.ExecuteNonQuery();
-                        }
-                        catch (Exception exception)
-                        {
-                            Console.Out.WriteLine(exception);
-                        }
-                    }
+                    transaction.Commit();
                 }
-                if (!progressMonitor.Invoke("Committing transaction", 99))
-                {
-                    return;
-                }
-                session.Transaction.Commit();
                 AnalyzeDb(session);
                 progressMonitor.Invoke("Finished importing " + proteinCount + " proteins", 100);
             }
@@ -266,106 +268,108 @@ namespace pwiz.ProteomeDatabase.API
             {
                 dbDigestion = GetDbDigestion(protease.Name);
                 HashSet<string> existingSequences = new HashSet<string>();
-                session.BeginTransaction();
-                if (dbDigestion != null)
+                using (var transaction = session.BeginTransaction())
                 {
-                    if (dbDigestion.MaxSequenceLength >= MAX_SEQUENCE_LENGTH)
+                    if (dbDigestion != null)
                     {
-                        return new Digestion(this, dbDigestion);
+                        if (dbDigestion.MaxSequenceLength >= MAX_SEQUENCE_LENGTH)
+                        {
+                            return new Digestion(this, dbDigestion);
+                        }
+                        if (!progressMonitor.Invoke("Listing existing peptides", 0))
+                        {
+                            return null;
+                        }
+                        IQuery query = session.CreateQuery("SELECT P.Sequence FROM "
+                                                           + typeof(DbDigestedPeptide) + " P WHERE P.Digestion = :Digestion")
+                            .SetParameter("Digestion", dbDigestion);
+                        List<String> listSequences = new List<string>();
+                        query.List(listSequences);
+                        existingSequences.UnionWith(listSequences);
+                        dbDigestion.MaxSequenceLength = MAX_SEQUENCE_LENGTH;
+                        session.Update(dbDigestion);
                     }
-                    if (!progressMonitor.Invoke("Listing existing peptides", 0))
+                    else
                     {
-                        return null;
+                        dbDigestion = new DbDigestion
+                        {
+                            Name = protease.Name,
+                            MinSequenceLength = MIN_SEQUENCE_LENGTH,
+                            MaxSequenceLength = MAX_SEQUENCE_LENGTH,
+                        };
+                        session.Save(dbDigestion);
                     }
-                    IQuery query = session.CreateQuery("SELECT P.Sequence FROM "
-                                                       + typeof(DbDigestedPeptide) + " P WHERE P.Digestion = :Digestion")
-                        .SetParameter("Digestion", dbDigestion);
-                    List<String> listSequences = new List<string>();
-                    query.List(listSequences);
-                    existingSequences.UnionWith(listSequences);
-                    dbDigestion.MaxSequenceLength = MAX_SEQUENCE_LENGTH;
-                    session.Update(dbDigestion);
-                }
-                else
-                {
-                    dbDigestion = new DbDigestion
-                                      {
-                                          Name = protease.Name,
-                                          MinSequenceLength = MIN_SEQUENCE_LENGTH,
-                                          MaxSequenceLength= MAX_SEQUENCE_LENGTH,
-                    };
-                    session.Save(dbDigestion);
-                }
-                if (!progressMonitor.Invoke("Listing proteins", 0))
-                {
-                    return null;
-                }
-                proteins = new List<DbProtein>();
-                session.CreateCriteria(typeof (DbProtein)).List(proteins);
-                Dictionary<String, long> digestedPeptideIds
-                    = new Dictionary<string, long>();
-                const String sqlPeptide =
-                        "INSERT INTO ProteomeDbDigestedPeptide (Digestion, Sequence) VALUES(?,?);select last_insert_rowid();";
-                var commandPeptide = session.Connection.CreateCommand();
-                commandPeptide.CommandText = sqlPeptide;
-                commandPeptide.Parameters.Add(new SQLiteParameter());
-                commandPeptide.Parameters.Add(new SQLiteParameter());
-                const String sqlPeptideProtein =
-                    "INSERT INTO ProteomeDbDigestedPeptideProtein (Peptide, Protein) VALUES(?,?);";
-                var commandProtein = session.Connection.CreateCommand();
-                commandProtein.CommandText = sqlPeptideProtein;
-                commandProtein.Parameters.Add(new SQLiteParameter());
-                commandProtein.Parameters.Add(new SQLiteParameter());
-                commandProtein.Parameters.Add(new SQLiteParameter());
-                for (int i = 0; i < proteins.Count; i++)
-                {
-                    var proteinSequences = new HashSet<string>();
-                    if (!progressMonitor.Invoke("Digesting " + proteins.Count
-                        + " proteins", 100 * i / proteins.Count))
+                    if (!progressMonitor.Invoke("Listing proteins", 0))
                     {
                         return null;
                     }
-                    Protein protein = new Protein(this, proteins[i]);
+                    proteins = new List<DbProtein>();
+                    session.CreateCriteria(typeof(DbProtein)).List(proteins);
+                    Dictionary<String, long> digestedPeptideIds
+                        = new Dictionary<string, long>();
+                    const String sqlPeptide =
+                            "INSERT INTO ProteomeDbDigestedPeptide (Digestion, Sequence) VALUES(?,?);select last_insert_rowid();";
+                    var commandPeptide = session.Connection.CreateCommand();
+                    commandPeptide.CommandText = sqlPeptide;
+                    commandPeptide.Parameters.Add(new SQLiteParameter());
+                    commandPeptide.Parameters.Add(new SQLiteParameter());
+                    const String sqlPeptideProtein =
+                        "INSERT INTO ProteomeDbDigestedPeptideProtein (Peptide, Protein) VALUES(?,?);";
+                    var commandProtein = session.Connection.CreateCommand();
+                    commandProtein.CommandText = sqlPeptideProtein;
+                    commandProtein.Parameters.Add(new SQLiteParameter());
+                    commandProtein.Parameters.Add(new SQLiteParameter());
+                    commandProtein.Parameters.Add(new SQLiteParameter());
+                    for (int i = 0; i < proteins.Count; i++)
+                    {
+                        var proteinSequences = new HashSet<string>();
+                        if (!progressMonitor.Invoke("Digesting " + proteins.Count
+                            + " proteins", 100 * i / proteins.Count))
+                        {
+                            return null;
+                        }
+                        Protein protein = new Protein(this, proteins[i]);
 
-                    foreach (DigestedPeptide digestedPeptide in protease.Digest(protein))
-                    {
-                        if (digestedPeptide.Sequence.Length < dbDigestion.MinSequenceLength)
+                        foreach (DigestedPeptide digestedPeptide in protease.Digest(protein))
                         {
-                            continue;
+                            if (digestedPeptide.Sequence.Length < dbDigestion.MinSequenceLength)
+                            {
+                                continue;
+                            }
+                            String truncatedSequence = digestedPeptide.Sequence.Substring(
+                                0, Math.Min(digestedPeptide.Sequence.Length, dbDigestion.MaxSequenceLength));
+                            if (existingSequences.Contains(truncatedSequence))
+                            {
+                                continue;
+                            }
+                            if (proteinSequences.Contains(truncatedSequence))
+                            {
+                                continue;
+                            }
+                            proteinSequences.Add(truncatedSequence);
+                            long digestedPeptideId;
+                            if (!digestedPeptideIds.TryGetValue(truncatedSequence, out digestedPeptideId))
+                            {
+                                ((SQLiteParameter)commandPeptide.Parameters[0]).Value = dbDigestion.Id;
+                                ((SQLiteParameter)commandPeptide.Parameters[1]).Value = truncatedSequence;
+                                digestedPeptideId = Convert.ToInt64(commandPeptide.ExecuteScalar());
+                                digestedPeptideIds.Add(truncatedSequence, digestedPeptideId);
+                            }
+                            ((SQLiteParameter)commandProtein.Parameters[0]).Value = digestedPeptideId;
+                            ((SQLiteParameter)commandProtein.Parameters[1]).Value = protein.Id;
+                            commandProtein.ExecuteNonQuery();
                         }
-                        String truncatedSequence = digestedPeptide.Sequence.Substring(
-                            0, Math.Min(digestedPeptide.Sequence.Length, dbDigestion.MaxSequenceLength));
-                        if (existingSequences.Contains(truncatedSequence))
-                        {
-                            continue;
-                        }
-                        if (proteinSequences.Contains(truncatedSequence))
-                        {
-                            continue;
-                        }
-                        proteinSequences.Add(truncatedSequence);
-                        long digestedPeptideId;
-                        if (!digestedPeptideIds.TryGetValue(truncatedSequence, out digestedPeptideId))
-                        {
-                            ((SQLiteParameter)commandPeptide.Parameters[0]).Value = dbDigestion.Id;
-                            ((SQLiteParameter)commandPeptide.Parameters[1]).Value = truncatedSequence;
-                            digestedPeptideId = Convert.ToInt64(commandPeptide.ExecuteScalar());
-                            digestedPeptideIds.Add(truncatedSequence, digestedPeptideId);
-                        }
-                        ((SQLiteParameter)commandProtein.Parameters[0]).Value = digestedPeptideId;
-                        ((SQLiteParameter)commandProtein.Parameters[1]).Value = protein.Id;
-                        commandProtein.ExecuteNonQuery();
                     }
+                    if (!progressMonitor.Invoke("Committing transaction", 99))
+                    {
+                        return null;
+                    }
+                    transaction.Commit();
+
+                    AnalyzeDb(session);
+                    progressMonitor.Invoke(string.Format("Digested {0} proteins into {1} unique peptides", proteins.Count, digestedPeptideIds.Count),
+                        100);
                 }
-                if (!progressMonitor.Invoke("Committing transaction", 99))
-                {
-                    return null;
-                }
-                session.Transaction.Commit();
-                AnalyzeDb(session);
-                progressMonitor.Invoke(
-                    "Digested " + proteins.Count + " proteins into " + digestedPeptideIds.Count + " unique peptides",
-                    100);
                 return new Digestion(this, dbDigestion);
             }
         }

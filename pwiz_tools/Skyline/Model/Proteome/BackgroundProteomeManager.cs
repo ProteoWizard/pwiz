@@ -83,7 +83,7 @@ namespace pwiz.Skyline.Model.Proteome
 
         protected override IEnumerable<IPooledStream> GetOpenStreams(SrmDocument document)
         {
-            return new List<IPooledStream>();
+            yield break;
         }
 
         protected override bool IsCanceled(IDocumentContainer container, object tag)

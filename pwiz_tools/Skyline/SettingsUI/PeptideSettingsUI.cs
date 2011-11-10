@@ -176,6 +176,13 @@ namespace pwiz.Skyline.SettingsUI
             string nameRT = comboRetentionTime.SelectedItem.ToString();
             RetentionTimeRegression retentionTime =
                 Settings.Default.GetRetentionTimeByName(nameRT);
+            if (retentionTime != null && retentionTime.Calculator != null)
+            {
+                RetentionScoreCalculatorSpec retentionCalc =
+                    Settings.Default.GetCalculatorByName(retentionTime.Calculator.Name);
+                if (!ReferenceEquals(retentionCalc, retentionTime.Calculator))
+                    retentionTime = retentionTime.ChangeCalculator(retentionCalc);
+            }
             bool useMeasuredRT = cbUseMeasuredRT.Checked;
             double? measuredRTWindow = null;
             if (!string.IsNullOrEmpty(textMeasureRTWindow.Text))
@@ -324,8 +331,23 @@ namespace pwiz.Skyline.SettingsUI
 
         private void comboRetentionTime_SelectedIndexChanged(object sender, EventArgs e)
         {
+            // Enable Update Calculator button based on whether the selected calculator
+            // supports editing.
+            var regressionRT = _driverRT.SelectedItem;
+            btnUpdateCalculator.Enabled = regressionRT != null &&
+                Settings.Default.RTScoreCalculatorList.CanEditItem(regressionRT.Calculator);
+
             _driverRT.SelectedIndexChangedEvent(sender, e);
         }
+
+        private void btnUpdateCalculator_Click(object sender, EventArgs e)
+        {
+            var list = Settings.Default.RTScoreCalculatorList;
+            var calcNew = list.EditItem(this, _driverRT.SelectedItem.Calculator, list, null);
+            if (calcNew != null)
+                list.SetValue(calcNew);
+        }
+
         private void comboBackgroundProteome_SelectedIndexChanged(object sender, EventArgs e)
         {
             _driverBackgroundProteome.SelectedIndexChangedEvent(sender, e);

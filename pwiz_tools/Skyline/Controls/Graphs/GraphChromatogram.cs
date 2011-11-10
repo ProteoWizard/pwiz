@@ -1192,7 +1192,8 @@ namespace pwiz.Skyline.Controls.Graphs
             if (regression != null && Settings.Default.ShowRetentionTimePred)
             {
                 string sequence = nodeGroups[0].TransitionGroup.Peptide.Sequence;
-                double predictedRT = regression.GetRetentionTime(sequence);
+                string modSeq = settings.GetModifiedSequence(sequence, IsotopeLabelType.light, mods);
+                double predictedRT = regression.GetRetentionTime(modSeq);
                 double window = regression.TimeWindow;
 
                 chromGraphPrimary.RetentionPrediction = predictedRT;

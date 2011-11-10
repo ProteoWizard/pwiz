@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using pwiz.Common.SystemUtil;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 
@@ -95,7 +96,7 @@ namespace pwiz.Skyline.Util
             return new string[] {};
         }
 
-        public RetentionScoreCalculatorSpec Initialize()
+        public RetentionScoreCalculatorSpec Initialize(IProgressMonitor loadMonitor)
         {
             return null;
         }

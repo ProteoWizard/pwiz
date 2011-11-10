@@ -23,6 +23,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Properties;
@@ -107,10 +108,10 @@ namespace pwiz.Skyline.SettingsUI
 
             try
             {
-                IrtDb db = IrtDb.GetIrtDb(textDatabase.Text);
-                LoadStandard(db.GetStandard());
+                IrtDb db = IrtDb.GetIrtDb(textDatabase.Text, null); // CONSIDER: LongWaitDlg?
+                LoadStandard(db.StandardPeptides);
 
-                LoadLibrary(db.GetLibrary());
+                LoadLibrary(db.LibraryPeptides);
 
                 DisableEditStandard();
                 
@@ -145,7 +146,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     if (Equals(existingCalc.Name, textCalculatorName.Text) && !Equals(existingCalc.Name, _editingName))
                     {
-                        if (MessageBox.Show(String.Format("A calculator with the name {0} already exists. Do you want to overwrite it?", textCalculatorName.Text),
+                        if (MessageBox.Show(this, String.Format("A calculator with the name {0} already exists. Do you want to overwrite it?", textCalculatorName.Text),
                                             Program.Name, MessageBoxButtons.YesNo) != DialogResult.Yes)
                             return;
                     }
@@ -168,7 +169,7 @@ namespace pwiz.Skyline.SettingsUI
 
             if (standardTable.Count < CalibrateIrtDlg.MIN_SUGGESTED_STANDARD_PEPTIDES)
             {
-                DialogResult result = MessageBox.Show(string.Format("Using fewer than {0} standard peptides is not recommended. Are you sure you want to continue with only {1}?", CalibrateIrtDlg.MIN_SUGGESTED_STANDARD_PEPTIDES, standardTable.Count),
+                DialogResult result = MessageBox.Show(this, string.Format("Using fewer than {0} standard peptides is not recommended. Are you sure you want to continue with only {1}?", CalibrateIrtDlg.MIN_SUGGESTED_STANDARD_PEPTIDES, standardTable.Count),
                     Program.Name, MessageBoxButtons.YesNo);
                 if (result != DialogResult.Yes)
                     return;
@@ -176,11 +177,11 @@ namespace pwiz.Skyline.SettingsUI
 
             try
             {
-                Calculator = new RCalcIrt(textCalculatorName.Text, textDatabase.Text);
+                var calculator = new RCalcIrt(textCalculatorName.Text, textDatabase.Text);
 
                 IrtDb db;
                 if (File.Exists(textDatabase.Text))
-                    db = IrtDb.GetIrtDb(textDatabase.Text);
+                    db = IrtDb.GetIrtDb(textDatabase.Text, null);   // CONSIDER: LongWaitDlg?
                 else
                     db = IrtDb.CreateIrtDb(textDatabase.Text);
                 
@@ -191,23 +192,13 @@ namespace pwiz.Skyline.SettingsUI
                 }
 
                 if (DirtyStandardUpdate.Count > 0)
-                    db.UpdateStandard(ConvertFromMeasuredPeptide(DirtyStandardUpdate, true));
+                    db = db.UpdateStandard(ConvertFromMeasuredPeptide(DirtyStandardUpdate, true));
                 if (DirtyLibraryRemove.Count > 0)
-                {
-                    foreach (var pep in DirtyLibraryRemove)
-                        db.DeletePeptide(pep.Sequence);
-                }
-                List<DbIrtPeptide> newPeps = new List<DbIrtPeptide>();
+                    db = db.DeletePeptides(DirtyLibraryRemove.Select(pep => pep.Sequence));
                 if (DirtyLibraryAdd.Count > 0)
-                {
-                    foreach (var pep in DirtyLibraryAdd)
-                    {
-                        //if(!libraryTable.Contains(pep))
-                        newPeps.Add(new DbIrtPeptide(pep.Sequence, pep.RetentionTimeOrIrt));
-                    }
-                    db.AddPeptides(newPeps);
-                }
+                    db = db.AddPeptides(ConvertFromMeasuredPeptide(DirtyLibraryAdd, false));
 
+                Calculator = calculator.ChangeDatabase(db);
             }
             catch(DatabaseOpeningException x)
             {
@@ -218,9 +209,10 @@ namespace pwiz.Skyline.SettingsUI
             DialogResult = DialogResult.OK;
         }
 
-        private static bool ValidatePeptideTable(DataGridView table, string tableName, out List<MeasuredPeptide> tableData)
+        private bool ValidatePeptideTable(DataGridView table, string tableName, out List<MeasuredPeptide> tableData)
         {
             tableData = new List<MeasuredPeptide>();
+            var sequenceSet = new HashSet<string>();
             foreach(DataGridViewRow row in table.Rows)
             {
                 object pep = row.Cells[0].Value;
@@ -233,18 +225,18 @@ namespace pwiz.Skyline.SettingsUI
                         continue;
                     }
 
-                    MessageBox.Show(String.Format("Please ensure that each {0} entry has a peptide and a numerical iRT value.", tableName));
+                    MessageDlg.Show(this, string.Format("Please ensure that each {0} entry has a peptide and a numerical iRT value.", tableName));
                     return false;
                 }
-                try
+
+                string seqModified = pep.ToString();
+                if (sequenceSet.Contains(seqModified))
                 {
-                    tableData.Add(new MeasuredPeptide(pep.ToString(), double.Parse(iRT.ToString())));
-                }
-                catch (ArgumentException)
-                {
-                    MessageBox.Show(String.Format("The peptide {0} appears in the {1} table more than once.", pep.ToString(), tableName));
+                    MessageDlg.Show(this, string.Format("The peptide {0} appears in the {1} table more than once.", seqModified, tableName));
                     return false;
                 }
+
+                tableData.Add(new MeasuredPeptide(pep.ToString(), double.Parse(iRT.ToString())));
             }
 
             return true;
@@ -261,7 +253,7 @@ namespace pwiz.Skyline.SettingsUI
         }
         private static IEnumerable<DbIrtPeptide> ConvertFromMeasuredPeptide(IEnumerable<MeasuredPeptide> source, bool standard)
         {
-            return source.Select(mpep => new DbIrtPeptide(mpep.Sequence, mpep.RetentionTimeOrIrt, standard));
+            return source.Select(mpep => new DbIrtPeptide(mpep.Sequence, mpep.RetentionTimeOrIrt, standard, true));
         }
 
         public void btnCalibrate_Click(object sender, EventArgs e)
@@ -279,7 +271,7 @@ namespace pwiz.Skyline.SettingsUI
         private void LoadStandard(IEnumerable<DbIrtPeptide> standard)
         {
             gridViewStandard.Rows.Clear();
-            foreach (DbIrtPeptide pep in standard)
+            foreach (DbIrtPeptide pep in standard.OrderBy(pep => pep.Irt))
             {
                 int n = gridViewStandard.Rows.Add();
                 gridViewStandard.Rows[n].Cells[0].Value = pep.PeptideModSeq;
@@ -290,7 +282,7 @@ namespace pwiz.Skyline.SettingsUI
         private void LoadLibrary(IEnumerable<DbIrtPeptide> library)
         {
             gridViewLibrary.Rows.Clear();
-            foreach (DbIrtPeptide pep in library)
+            foreach (DbIrtPeptide pep in library.OrderBy(pep => pep.Irt))
             {
                 int n = gridViewLibrary.Rows.Add();
                 gridViewLibrary.Rows[n].Cells[0].Value = pep.PeptideModSeq;
@@ -552,13 +544,17 @@ namespace pwiz.Skyline.SettingsUI
 
         public void AddResults()
         {
+            var document = Program.ActiveDocumentUI;
+            var settings = document.Settings;
+
+            // Get all peptides with usable retention times
             var allDocPeptides = new List<MeasuredPeptide>();
-            foreach (var peptideDocNode in Program.ActiveDocumentUI.Peptides)
+            foreach (var nodePep in document.Peptides)
             {
-                if (peptideDocNode.SchedulingTime.HasValue)
+                if (nodePep.SchedulingTime.HasValue)
                 {
-                    allDocPeptides.Add(new MeasuredPeptide(peptideDocNode.Peptide.Sequence,
-                                                           peptideDocNode.SchedulingTime.Value));
+                    string modSeq = settings.GetModifiedSequence(nodePep, IsotopeLabelType.light);
+                    allDocPeptides.Add(new MeasuredPeptide(modSeq, nodePep.SchedulingTime.Value));
                 }
             }
 
@@ -567,8 +563,8 @@ namespace pwiz.Skyline.SettingsUI
             if(!ValidatePeptideTable(gridViewStandard, STANDARD_TABLE_NAME, out standard))
                 return;
 
-            List<MeasuredPeptide> docStandard;
-            int docStandardCount = GetStandardFromDocument(allDocPeptides, standard, out docStandard);
+            List<MeasuredPeptide> standardDocPeptides;
+            int docStandardCount = GetStandardFromDocument(allDocPeptides, standard, out standardDocPeptides);
             if (docStandardCount != standard.Count)
             {
                 MessageDlg.Show(this, String.Format(
@@ -580,19 +576,10 @@ namespace pwiz.Skyline.SettingsUI
             //These have to be sorted by sequence because they are K,V pairs and sequence is the key.
             //They have to be sorted in the first place to calculate the m and b for y=mx+b
             standard.Sort((one, two) => one.Sequence.CompareTo(two.Sequence));
-            docStandard.Sort((one, two) => one.Sequence.CompareTo(two.Sequence));
+            standardDocPeptides.Sort((one, two) => one.Sequence.CompareTo(two.Sequence));
 
-            List<double> standardIrts = new List<double>();
-            List<double> docStandardRts = new List<double>();
-
-            foreach (var pep in standard)
-                standardIrts.Add(pep.RetentionTimeOrIrt);
-
-            foreach (var pep in docStandard)
-                docStandardRts.Add(pep.RetentionTimeOrIrt);
-
-            Statistics iRtY = new Statistics(standardIrts);
-            Statistics rtX = new Statistics(docStandardRts);
+            Statistics iRtY = new Statistics(standard.Select(pep => pep.RetentionTimeOrIrt));
+            Statistics rtX = new Statistics(standardDocPeptides.Select(pep => pep.RetentionTimeOrIrt));
             double slope = Statistics.Slope(iRtY, rtX);
             double intercept = Statistics.Intercept(iRtY, rtX);
 
@@ -600,11 +587,11 @@ namespace pwiz.Skyline.SettingsUI
             foreach (var pep in allDocPeptides)
             {
                 //only calculate new iRTs for peptides not in the standard
-                MeasuredPeptide pep1 = pep;
-                if (docStandard.Find(mp => Equals(mp.Sequence, pep1.Sequence)) == default(MeasuredPeptide))
+                string sequence = pep.Sequence;
+                if (!standardDocPeptides.Any(pepStandard => Equals(sequence, pepStandard.Sequence)))
                 {
                     double newIrt = slope * pep.RetentionTimeOrIrt + intercept;
-                    libraryPeptides.Add(new MeasuredPeptide(pep.Sequence, newIrt));
+                    libraryPeptides.Add(new MeasuredPeptide(sequence, newIrt));
                 }
             }
 

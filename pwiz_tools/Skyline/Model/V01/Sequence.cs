@@ -253,8 +253,9 @@ namespace pwiz.Skyline.Model.V01
             double? rt = null;
             if (rtRegression != null)
             {
-                double score = rtRegression.Calculator.ScoreSequence(Sequence);
-                rt = rtRegression.Conversion.GetY(score);
+                double? score = rtRegression.Calculator.ScoreSequence(Sequence);
+                if (score.HasValue)
+                    rt = rtRegression.Conversion.GetY(score.Value);
             }
             PredictedRetentionTime = rt;
         }
