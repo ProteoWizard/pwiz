@@ -23,7 +23,7 @@
 #ifndef _ZEROSAMPLEFILLER_HPP_ 
 #define _ZEROSAMPLEFILLER_HPP_
 
-
+#include <stdlib.h>
 #include "pwiz/utility/misc/Export.hpp"
 #include <vector>
 #include <memory>
