@@ -49,7 +49,7 @@ namespace pwiz.Skyline.SettingsUI
             Icon = Resources.Skyline;
 
             _driverCalculators = new SettingsListComboDriver<RetentionScoreCalculatorSpec>(
-                comboCalculator, Settings.Default.RTScoreCalculatorList, true);
+                comboCalculator, Settings.Default.RTScoreCalculatorList, false);
             _driverCalculators.LoadList(null);
 
             ShowPeptides(Settings.Default.EditRTVisible);
