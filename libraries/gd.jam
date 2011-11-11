@@ -39,13 +39,13 @@ rule init ( version ? : location : options * )
             gd_crop.c
             gd_transform.c
             gd_security.c
-            gdpp.cxx
+            #gdpp.cxx
             gd_bmp.c
             gd_filter.c
             gd_gd.c
             gd_gd2.c
             gd_io.c
-            gd_io_stream.cxx
+            #gd_io_stream.cxx
             gd_io_dp.c
             gd_gif_in.c
             gd_gif_out.c
@@ -70,7 +70,7 @@ rule init ( version ? : location : options * )
             gdhelpers.c
             gdkanji.c
             gdtables.c
-            gdxpm.c
+            #gdxpm.c
             wbmp.c ;
 
         local png-src-location = [ feature.get-values <png-src-location> : $(options) ] ;
@@ -103,6 +103,7 @@ rule init ( version ? : location : options * )
 
                 <toolset>msvc:<define>_CRT_SECURE_NO_DEPRECATE
                 <toolset>msvc:<define>_SCL_SECURE_NO_DEPRECATE
+                <toolset>msvc,<link>shared:<define>BGDWIN32
                 <link>static:<define>NONDLL
                 <warnings>off
             :
@@ -113,6 +114,7 @@ rule init ( version ? : location : options * )
                 <define>HAVE_LIBFREETYPE
                 <define>HAVE_LIBZ
 
+                <toolset>msvc,<link>shared:<define>BGDWIN32
                 <link>static:<define>NONDLL
             ;
     }
