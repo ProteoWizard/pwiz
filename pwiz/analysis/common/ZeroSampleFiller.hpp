@@ -23,10 +23,10 @@
 #ifndef _ZEROSAMPLEFILLER_HPP_ 
 #define _ZEROSAMPLEFILLER_HPP_
 
-#include <stdlib.h>
 #include "pwiz/utility/misc/Export.hpp"
 #include <vector>
 #include <memory>
+#include <cstddef>
 
 
 namespace pwiz {
@@ -43,7 +43,7 @@ struct PWIZ_API_DECL ZeroSampleFiller
     /// - at least one zero sample on each side of every signal profile
     static void fill(const std::vector<double>& x, const std::vector<double>& y,
                      std::vector<double>& xFilled, std::vector<double>& yFilled,
-                     size_t zeroSampleCount);
+                     std::size_t zeroSampleCount);
 };
 
 
