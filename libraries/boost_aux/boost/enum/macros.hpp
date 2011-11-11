@@ -22,7 +22,7 @@
 	BOOST_PP_EQUAL(BOOST_PP_MOD(i, 2), k)
 
 #define BOOST_ENUM_GET_COLUMN_2(r, data, i, elem) \
-	BOOST_PP_IF(BOOST_ENUM_IS_COLUMN_2(i, data), (elem), BOOST_PP_EMPTY())
+	BOOST_PP_IF(BOOST_ENUM_IS_COLUMN_2(i, data), BOOST_PP_IDENTITY((elem)), BOOST_PP_EMPTY)()
 
 #define BOOST_ENUM_VISITOR1(_seq, _macro, _col) \
 	BOOST_PP_SEQ_FOR_EACH_I(_macro, _, _seq)
