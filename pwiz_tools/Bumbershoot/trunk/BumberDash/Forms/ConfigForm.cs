@@ -98,6 +98,9 @@ namespace BumberDash.Forms
 
             //Add templates to list
             ResetTemplateLists();
+
+            //Hack: Force Deisotoping to false
+            DTDeisotopingModeBox.Text = "Off";
         }
 
         /// <summary>
@@ -169,6 +172,9 @@ namespace BumberDash.Forms
 
             mainTabControl.TabPages.Remove(AdvTab);
             LoadConfig(baseConfig);
+
+            //Hack: Force Deisotoping mode to false
+            DTDeisotopingModeBox.Text = "Off";
         }
 
         /// <summary>
@@ -237,6 +243,14 @@ namespace BumberDash.Forms
                     break;
             }
             mainTabControl.TabPages.Remove(AdvTab);
+
+            //Hack: Force Deisotoping to false
+            DTDeisotopingModeBox.Text = "Off";
+
+            //HACK: Set MaxMissedCleavages to 2- has to occur after pane initilization
+            MyriMaxMissedCleavagesBox.Value = 2;
+            TRMaxMissedCleavagesBox.Value = 2;
+            PepMaxMissedCleavagesBox.Value = 2;
         }
 
         private void ResetTemplateLists()
@@ -289,7 +303,7 @@ namespace BumberDash.Forms
             DTFragmentMzToleranceUnitsList.Text = "mz";
 
             //Hack: Value should be "Precursor Adj Only"
-            DTDeisotopingModeBox.Text = "Off";
+            //DTDeisotopingModeBox.Text = "Off";
 
             DTModTypeList.Text = "Static";
             TRPrecursorMzToleranceRuleBox.Text = "mono";
@@ -742,6 +756,11 @@ namespace BumberDash.Forms
                 if (configValues.ContainsKey(root))
                     _templateDefaults.Add(item, configValues[root]);
             }
+
+            //HACK: Set MaxMissedCleavages to 2
+            MyriMaxMissedCleavagesBox.Value = 2;
+            TRMaxMissedCleavagesBox.Value = 2;
+            PepMaxMissedCleavagesBox.Value = 2;
 
             foreach (var item in _itemList[ProgramModeBox.Text])
                 CheckForChange(item, null);

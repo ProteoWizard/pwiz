@@ -30,18 +30,8 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(AddJobForm));
             this.FolderPanel = new System.Windows.Forms.Panel();
-            this.PepPanel = new System.Windows.Forms.Panel();
-            this.SpecLibBox = new System.Windows.Forms.ComboBox();
-            this.SpecLibBrowse = new System.Windows.Forms.Button();
-            this.label6 = new System.Windows.Forms.Label();
-            this.PepConfigGB = new System.Windows.Forms.GroupBox();
-            this.PepConfigBox = new System.Windows.Forms.ComboBox();
-            this.PepEditButton = new System.Windows.Forms.Button();
-            this.PepConfigBrowse = new System.Windows.Forms.Button();
-            this.label8 = new System.Windows.Forms.Label();
             this.SearchTypeBox = new System.Windows.Forms.ComboBox();
             this.newFolderBox = new System.Windows.Forms.CheckBox();
-            this.InfoExpandButton = new System.Windows.Forms.Button();
             this.IntermediateBox = new System.Windows.Forms.CheckBox();
             this.CPUsAutoLabel = new System.Windows.Forms.Label();
             this.CPUsBox = new System.Windows.Forms.NumericUpDown();
@@ -60,6 +50,15 @@
             this.label5 = new System.Windows.Forms.Label();
             this.InitialDirectoryButton = new System.Windows.Forms.Button();
             this.label4 = new System.Windows.Forms.Label();
+            this.PepPanel = new System.Windows.Forms.Panel();
+            this.SpecLibBox = new System.Windows.Forms.ComboBox();
+            this.SpecLibBrowse = new System.Windows.Forms.Button();
+            this.label6 = new System.Windows.Forms.Label();
+            this.PepConfigGB = new System.Windows.Forms.GroupBox();
+            this.PepConfigBox = new System.Windows.Forms.ComboBox();
+            this.PepEditButton = new System.Windows.Forms.Button();
+            this.PepConfigBrowse = new System.Windows.Forms.Button();
+            this.label8 = new System.Windows.Forms.Label();
             this.ConfigGB = new System.Windows.Forms.GroupBox();
             this.ConfigDatabasePanel = new System.Windows.Forms.Panel();
             this.MyriConfigBox = new System.Windows.Forms.ComboBox();
@@ -87,9 +86,9 @@
             this.PepInfoLabel = new System.Windows.Forms.Label();
             this.PepitomeInfoBox = new System.Windows.Forms.TextBox();
             this.FolderPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.CPUsBox)).BeginInit();
             this.PepPanel.SuspendLayout();
             this.PepConfigGB.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.CPUsBox)).BeginInit();
             this.ConfigGB.SuspendLayout();
             this.ConfigDatabasePanel.SuspendLayout();
             this.ConfigTagPanel.SuspendLayout();
@@ -102,7 +101,6 @@
             // 
             this.FolderPanel.Controls.Add(this.SearchTypeBox);
             this.FolderPanel.Controls.Add(this.newFolderBox);
-            this.FolderPanel.Controls.Add(this.InfoExpandButton);
             this.FolderPanel.Controls.Add(this.IntermediateBox);
             this.FolderPanel.Controls.Add(this.CPUsAutoLabel);
             this.FolderPanel.Controls.Add(this.CPUsBox);
@@ -128,102 +126,6 @@
             this.FolderPanel.Size = new System.Drawing.Size(435, 415);
             this.FolderPanel.TabIndex = 3;
             // 
-            // PepPanel
-            // 
-            this.PepPanel.Controls.Add(this.SpecLibBox);
-            this.PepPanel.Controls.Add(this.SpecLibBrowse);
-            this.PepPanel.Controls.Add(this.label6);
-            this.PepPanel.Controls.Add(this.PepConfigGB);
-            this.PepPanel.Location = new System.Drawing.Point(9, 261);
-            this.PepPanel.Name = "PepPanel";
-            this.PepPanel.Size = new System.Drawing.Size(405, 118);
-            this.PepPanel.TabIndex = 36;
-            this.PepPanel.Visible = false;
-            // 
-            // SpecLibBox
-            // 
-            this.SpecLibBox.FormattingEnabled = true;
-            this.SpecLibBox.Location = new System.Drawing.Point(19, 21);
-            this.SpecLibBox.Name = "SpecLibBox";
-            this.SpecLibBox.Size = new System.Drawing.Size(306, 21);
-            this.SpecLibBox.TabIndex = 30;
-            // 
-            // SpecLibBrowse
-            // 
-            this.SpecLibBrowse.Location = new System.Drawing.Point(331, 20);
-            this.SpecLibBrowse.Name = "SpecLibBrowse";
-            this.SpecLibBrowse.Size = new System.Drawing.Size(55, 21);
-            this.SpecLibBrowse.TabIndex = 29;
-            this.SpecLibBrowse.Text = "Browse";
-            this.SpecLibBrowse.UseVisualStyleBackColor = true;
-            this.SpecLibBrowse.Click += new System.EventHandler(this.SpecLibBrowse_Click);
-            // 
-            // label6
-            // 
-            this.label6.AutoSize = true;
-            this.label6.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label6.Location = new System.Drawing.Point(16, 1);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(114, 18);
-            this.label6.TabIndex = 28;
-            this.label6.Text = "Spectral Library:";
-            // 
-            // PepConfigGB
-            // 
-            this.PepConfigGB.Controls.Add(this.PepConfigBox);
-            this.PepConfigGB.Controls.Add(this.PepEditButton);
-            this.PepConfigGB.Controls.Add(this.PepConfigBrowse);
-            this.PepConfigGB.Controls.Add(this.label8);
-            this.PepConfigGB.Location = new System.Drawing.Point(3, 43);
-            this.PepConfigGB.Name = "PepConfigGB";
-            this.PepConfigGB.Size = new System.Drawing.Size(398, 70);
-            this.PepConfigGB.TabIndex = 27;
-            this.PepConfigGB.TabStop = false;
-            this.PepConfigGB.Text = "Configuration";
-            // 
-            // PepConfigBox
-            // 
-            this.PepConfigBox.FormattingEnabled = true;
-            this.PepConfigBox.Items.AddRange(new object[] {
-            ""});
-            this.PepConfigBox.Location = new System.Drawing.Point(9, 37);
-            this.PepConfigBox.Name = "PepConfigBox";
-            this.PepConfigBox.Size = new System.Drawing.Size(245, 21);
-            this.PepConfigBox.TabIndex = 32;
-            this.PepConfigBox.SelectedIndexChanged += new System.EventHandler(this.PepConfigBox_SelectedIndexChanged);
-            this.PepConfigBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ConfigBox_KeyPress);
-            this.PepConfigBox.TextChanged += new System.EventHandler(this.ConfigBox_TextChanged);
-            // 
-            // PepEditButton
-            // 
-            this.PepEditButton.Location = new System.Drawing.Point(321, 36);
-            this.PepEditButton.Name = "PepEditButton";
-            this.PepEditButton.Size = new System.Drawing.Size(55, 21);
-            this.PepEditButton.TabIndex = 31;
-            this.PepEditButton.Text = "New";
-            this.PepEditButton.UseVisualStyleBackColor = true;
-            this.PepEditButton.Click += new System.EventHandler(this.ConfigEditButton_Click);
-            // 
-            // PepConfigBrowse
-            // 
-            this.PepConfigBrowse.Location = new System.Drawing.Point(260, 36);
-            this.PepConfigBrowse.Name = "PepConfigBrowse";
-            this.PepConfigBrowse.Size = new System.Drawing.Size(55, 21);
-            this.PepConfigBrowse.TabIndex = 30;
-            this.PepConfigBrowse.Text = "Browse";
-            this.PepConfigBrowse.UseVisualStyleBackColor = true;
-            this.PepConfigBrowse.Click += new System.EventHandler(this.PepConfigBrowse_Click);
-            // 
-            // label8
-            // 
-            this.label8.AutoSize = true;
-            this.label8.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label8.Location = new System.Drawing.Point(6, 16);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(118, 18);
-            this.label8.TabIndex = 29;
-            this.label8.Text = "Pepitome Config:";
-            // 
             // SearchTypeBox
             // 
             this.SearchTypeBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
@@ -247,16 +149,6 @@
             this.newFolderBox.TabIndex = 34;
             this.newFolderBox.Text = "Create new folder in output directory";
             this.newFolderBox.UseVisualStyleBackColor = true;
-            // 
-            // InfoExpandButton
-            // 
-            this.InfoExpandButton.Location = new System.Drawing.Point(413, 291);
-            this.InfoExpandButton.Name = "InfoExpandButton";
-            this.InfoExpandButton.Size = new System.Drawing.Size(19, 61);
-            this.InfoExpandButton.TabIndex = 33;
-            this.InfoExpandButton.Text = "<\r\n<\r\n<";
-            this.InfoExpandButton.UseVisualStyleBackColor = true;
-            this.InfoExpandButton.Click += new System.EventHandler(this.InfoExpandButton_Click);
             // 
             // IntermediateBox
             // 
@@ -428,6 +320,102 @@
             this.label4.Size = new System.Drawing.Size(122, 18);
             this.label4.TabIndex = 2;
             this.label4.Text = "Output Directory:";
+            // 
+            // PepPanel
+            // 
+            this.PepPanel.Controls.Add(this.SpecLibBox);
+            this.PepPanel.Controls.Add(this.SpecLibBrowse);
+            this.PepPanel.Controls.Add(this.label6);
+            this.PepPanel.Controls.Add(this.PepConfigGB);
+            this.PepPanel.Location = new System.Drawing.Point(9, 261);
+            this.PepPanel.Name = "PepPanel";
+            this.PepPanel.Size = new System.Drawing.Size(405, 118);
+            this.PepPanel.TabIndex = 36;
+            this.PepPanel.Visible = false;
+            // 
+            // SpecLibBox
+            // 
+            this.SpecLibBox.FormattingEnabled = true;
+            this.SpecLibBox.Location = new System.Drawing.Point(19, 21);
+            this.SpecLibBox.Name = "SpecLibBox";
+            this.SpecLibBox.Size = new System.Drawing.Size(306, 21);
+            this.SpecLibBox.TabIndex = 30;
+            // 
+            // SpecLibBrowse
+            // 
+            this.SpecLibBrowse.Location = new System.Drawing.Point(331, 20);
+            this.SpecLibBrowse.Name = "SpecLibBrowse";
+            this.SpecLibBrowse.Size = new System.Drawing.Size(55, 21);
+            this.SpecLibBrowse.TabIndex = 29;
+            this.SpecLibBrowse.Text = "Browse";
+            this.SpecLibBrowse.UseVisualStyleBackColor = true;
+            this.SpecLibBrowse.Click += new System.EventHandler(this.SpecLibBrowse_Click);
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label6.Location = new System.Drawing.Point(16, 1);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(114, 18);
+            this.label6.TabIndex = 28;
+            this.label6.Text = "Spectral Library:";
+            // 
+            // PepConfigGB
+            // 
+            this.PepConfigGB.Controls.Add(this.PepConfigBox);
+            this.PepConfigGB.Controls.Add(this.PepEditButton);
+            this.PepConfigGB.Controls.Add(this.PepConfigBrowse);
+            this.PepConfigGB.Controls.Add(this.label8);
+            this.PepConfigGB.Location = new System.Drawing.Point(3, 43);
+            this.PepConfigGB.Name = "PepConfigGB";
+            this.PepConfigGB.Size = new System.Drawing.Size(398, 70);
+            this.PepConfigGB.TabIndex = 27;
+            this.PepConfigGB.TabStop = false;
+            this.PepConfigGB.Text = "Configuration";
+            // 
+            // PepConfigBox
+            // 
+            this.PepConfigBox.FormattingEnabled = true;
+            this.PepConfigBox.Items.AddRange(new object[] {
+            ""});
+            this.PepConfigBox.Location = new System.Drawing.Point(9, 37);
+            this.PepConfigBox.Name = "PepConfigBox";
+            this.PepConfigBox.Size = new System.Drawing.Size(245, 21);
+            this.PepConfigBox.TabIndex = 32;
+            this.PepConfigBox.SelectedIndexChanged += new System.EventHandler(this.PepConfigBox_SelectedIndexChanged);
+            this.PepConfigBox.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.ConfigBox_KeyPress);
+            this.PepConfigBox.TextChanged += new System.EventHandler(this.ConfigBox_TextChanged);
+            // 
+            // PepEditButton
+            // 
+            this.PepEditButton.Location = new System.Drawing.Point(321, 36);
+            this.PepEditButton.Name = "PepEditButton";
+            this.PepEditButton.Size = new System.Drawing.Size(55, 21);
+            this.PepEditButton.TabIndex = 31;
+            this.PepEditButton.Text = "New";
+            this.PepEditButton.UseVisualStyleBackColor = true;
+            this.PepEditButton.Click += new System.EventHandler(this.ConfigEditButton_Click);
+            // 
+            // PepConfigBrowse
+            // 
+            this.PepConfigBrowse.Location = new System.Drawing.Point(260, 36);
+            this.PepConfigBrowse.Name = "PepConfigBrowse";
+            this.PepConfigBrowse.Size = new System.Drawing.Size(55, 21);
+            this.PepConfigBrowse.TabIndex = 30;
+            this.PepConfigBrowse.Text = "Browse";
+            this.PepConfigBrowse.UseVisualStyleBackColor = true;
+            this.PepConfigBrowse.Click += new System.EventHandler(this.PepConfigBrowse_Click);
+            // 
+            // label8
+            // 
+            this.label8.AutoSize = true;
+            this.label8.Font = new System.Drawing.Font("Book Antiqua", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label8.Location = new System.Drawing.Point(6, 16);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(118, 18);
+            this.label8.TabIndex = 29;
+            this.label8.Text = "Pepitome Config:";
             // 
             // ConfigGB
             // 
@@ -730,11 +718,11 @@
             this.Text = "Add Job";
             this.FolderPanel.ResumeLayout(false);
             this.FolderPanel.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.CPUsBox)).EndInit();
             this.PepPanel.ResumeLayout(false);
             this.PepPanel.PerformLayout();
             this.PepConfigGB.ResumeLayout(false);
             this.PepConfigGB.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.CPUsBox)).EndInit();
             this.ConfigGB.ResumeLayout(false);
             this.ConfigDatabasePanel.ResumeLayout(false);
             this.ConfigDatabasePanel.PerformLayout();
@@ -774,7 +762,6 @@
         private System.Windows.Forms.Panel TagConfigInfoPanel;
         private System.Windows.Forms.Panel DatabaseConfigInfoPanel;
         private System.Windows.Forms.Label MyriMatchInfoLabel;
-        private System.Windows.Forms.Button InfoExpandButton;
         private System.Windows.Forms.ComboBox DatabaseLocBox;
         private System.Windows.Forms.ComboBox InputFilesBox;
         private System.Windows.Forms.Label label2;

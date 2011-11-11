@@ -409,27 +409,6 @@ namespace BumberDash.Forms
         }
 
         /// <summary>
-        /// Show configuration info boxes
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void InfoExpandButton_Click(object sender, EventArgs e)
-        {
-            if (Width > 442)
-            {
-                InfoExpandButton.Text = string.Format(">{0}>{0}>", Environment.NewLine);
-                Width = 442;
-                Location = new Point(Location.X + 110, Location.Y);
-            }
-            else
-            {
-                InfoExpandButton.Text = string.Format("<{0}<{0}<", Environment.NewLine);
-                Width = 700;
-                Location = new Point(Location.X - 110, Location.Y);
-            }
-        }
-
-        /// <summary>
         /// Load info box with selected config item's properties
         /// </summary>
         /// <param name="sender"></param>

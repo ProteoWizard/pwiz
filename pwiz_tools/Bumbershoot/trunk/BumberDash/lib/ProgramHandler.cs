@@ -600,7 +600,7 @@ namespace BumberDash.lib
                         if (remainingTime > 0)
                         {
                             var totalTime = elapsedTime + remainingTime;
-                            var percentage = 100 * (elapsedTime / totalTime) / _filesToProcess * _fileProcessing;
+                            var percentage = 100 * (elapsedTime / totalTime);
                             if (percentage > _minPercentage)
                             {
                                 _minPercentage = percentage;
