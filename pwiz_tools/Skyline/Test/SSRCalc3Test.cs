@@ -622,7 +622,7 @@ namespace pwiz.SkylineTest
             {
                 string peptide = (string) _peptides300A[i, 0];
                 double expected = (double) _peptides300A[i, 1];
-                double actual = calc.ScoreSequence(peptide);
+                double actual = calc.ScoreSequence(peptide) ?? 0;
 
                 // Round the returned value to match the values presented
                 // in the supporting information of the SSRCalc 3 publication.
@@ -651,7 +651,7 @@ namespace pwiz.SkylineTest
             {
                 string peptide = (string)_peptides100A[i, 0];
                 double expected = (double)_peptides100A[i, 1];
-                double actual = calc.ScoreSequence(peptide);
+                double actual = calc.ScoreSequence(peptide) ?? 0;
 
                 // Round the returned value to match the values presented
                 // in the supporting information of the SSRCalc 3 publication.

@@ -49,7 +49,7 @@ namespace pwiz.Skyline.SettingsUI
             Icon = Resources.Skyline;
 
             _driverCalculators = new SettingsListComboDriver<RetentionScoreCalculatorSpec>(
-                comboCalculator, Settings.Default.RTScoreCalculatorList, false);
+                comboCalculator, Settings.Default.RTScoreCalculatorList, true);
             _driverCalculators.LoadList(null);
 
             ShowPeptides(Settings.Default.EditRTVisible);
@@ -321,6 +321,10 @@ namespace pwiz.Skyline.SettingsUI
             }
             else
             {
+                var calcSettings = Settings.Default.GetCalculatorByName(calculator.Name);
+                if (calcSettings != null)
+                    calculator = calcSettings;
+
                 if (!calculator.IsUsable)
                 {
                     MessageDlg.Show(this, "The calculator cannot be used to score peptides. Please check its settings.");

@@ -303,7 +303,7 @@ namespace pwiz.Skyline.Model.Hibernate.Query
             if (docInfo.PeptidePrediction.RetentionTime != null)
             {
                 string modSeq = docInfo.Settings.GetModifiedSequence(nodePeptide);
-                double rt = docInfo.PeptidePrediction.RetentionTime.GetRetentionTime(modSeq);                
+                double? rt = docInfo.PeptidePrediction.RetentionTime.GetRetentionTime(modSeq);                
                 dbPeptide.PredictedRetentionTime = rt;
             }
             AddAnnotations(docInfo, dbPeptide, nodePeptide.Annotations);

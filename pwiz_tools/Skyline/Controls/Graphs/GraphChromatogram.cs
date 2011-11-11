@@ -1193,7 +1193,7 @@ namespace pwiz.Skyline.Controls.Graphs
             {
                 string sequence = nodeGroups[0].TransitionGroup.Peptide.Sequence;
                 string modSeq = settings.GetModifiedSequence(sequence, IsotopeLabelType.light, mods);
-                double predictedRT = regression.GetRetentionTime(modSeq);
+                double? predictedRT = regression.GetRetentionTime(modSeq);
                 double window = regression.TimeWindow;
 
                 chromGraphPrimary.RetentionPrediction = predictedRT;

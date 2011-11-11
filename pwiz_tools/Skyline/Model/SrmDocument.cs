@@ -2091,8 +2091,9 @@ namespace pwiz.Skyline.Model
             if (regression != null)
             {
                 string modSeq = Settings.GetModifiedSequence(node);
-                double retentionTime = regression.GetRetentionTime(modSeq);
-                writer.WriteAttribute(ATTR.predicted_retention_time, retentionTime);
+                double? retentionTime = regression.GetRetentionTime(modSeq);
+                if (retentionTime.HasValue)
+                    writer.WriteAttribute(ATTR.predicted_retention_time, retentionTime);
             }
             // Write child elements
             WriteAnnotations(writer, node.Annotations);

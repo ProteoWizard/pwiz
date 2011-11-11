@@ -2533,18 +2533,20 @@ namespace pwiz.Skyline
         private void comboResults_SelectedIndexChanged(object sender, EventArgs e)
         {
             string name = SelectedGraphChromName;
-            if (name != null && sequenceTree.ResultsIndex != comboResults.SelectedIndex)
+            if (name == null)
+                return;
+
+            // Update the summary graphs if necessary.
+            if (_graphRetentionTime != null && _graphRetentionTime.ResultsIndex != comboResults.SelectedIndex)
+                _graphRetentionTime.ResultsIndex = comboResults.SelectedIndex;
+            if (_graphPeakArea != null && _graphPeakArea.ResultsIndex != comboResults.SelectedIndex)
+                _graphPeakArea.ResultsIndex = comboResults.SelectedIndex;
+            if (_resultsGridForm != null && _resultsGridForm.ResultsIndex != comboResults.SelectedIndex)
+                _resultsGridForm.ResultsIndex = comboResults.SelectedIndex;
+            if (sequenceTree.ResultsIndex != comboResults.SelectedIndex)
             {
                 // Show the right result set in the tree view.
                 sequenceTree.ResultsIndex = comboResults.SelectedIndex;
-
-                // Update the retention time graph if necessary.
-                if (_graphRetentionTime != null)
-                    _graphRetentionTime.ResultsIndex = comboResults.SelectedIndex;
-                if (_graphPeakArea != null)
-                    _graphPeakArea.ResultsIndex = comboResults.SelectedIndex;
-                if (_resultsGridForm != null)
-                    _resultsGridForm.ResultsIndex = comboResults.SelectedIndex;
 
                 // Make sure the graphs for the result set are visible.
                 if (GetGraphChrom(name) != null)
@@ -2558,7 +2560,7 @@ namespace pwiz.Skyline
                         comboResults.Focus();
                 }
 
-                //                UpdateReplicateMenuItems(DocumentUI.Settings.HasResults);
+//                UpdateReplicateMenuItems(DocumentUI.Settings.HasResults);
             }
         }
 

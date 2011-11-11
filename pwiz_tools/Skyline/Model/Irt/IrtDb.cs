@@ -39,7 +39,7 @@ namespace pwiz.Skyline.Model.Irt
         }
     }
 
-    public class IrtDb : Immutable
+    public class IrtDb : Immutable, IValidating
     {
         public const string EXT_IRTDB = ".irtdb";
 
@@ -92,7 +92,39 @@ namespace pwiz.Skyline.Model.Irt
                 DictStandards = dictStandards;
                 DictLibrary = dictLibrary;
             }
+
+            Validate();
             return this;
+        }
+
+        public void Validate()
+        {
+            double min = double.MaxValue, minNext = double.MaxValue;
+            foreach (var score in Scores)
+            {
+                if (score < min)
+                {
+                    minNext = min;
+                    min = score;
+                }
+                else if (min < score && score < minNext)
+                {
+                    minNext = score;
+                }
+            }
+            if (min == double.MaxValue)
+                UnknownScore = 0;
+            else if (minNext == double.MaxValue)
+                UnknownScore = min - 5;
+            else
+                UnknownScore = min - (minNext - min)*2;
+        }
+
+        public double UnknownScore { get; private set; }
+
+        private IEnumerable<double> Scores
+        {
+            get { return new[] {StandardPeptides, LibraryPeptides}.SelectMany(peps => peps).Select(pep => pep.Irt); }
         }
 
         private IDictionary<string, DbIrtPeptide> DictStandards
@@ -132,11 +164,11 @@ namespace pwiz.Skyline.Model.Irt
             get { return DictLibrary.Count; }
         }
 
-        public DbIrtPeptide GetPeptide(string seq)
+        public double? ScoreSequence(string seq)
         {
             DbIrtPeptide pep;
             if (DictStandards.TryGetValue(seq, out pep) || DictLibrary.TryGetValue(seq, out pep))
-                return pep;
+                return pep.Irt;
             return null;
         }
 

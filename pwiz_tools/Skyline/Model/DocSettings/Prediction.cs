@@ -39,7 +39,9 @@ namespace pwiz.Skyline.Model.DocSettings
     {
         string Name { get; }
 
-        double ScoreSequence(string modifiedSequence);
+        double? ScoreSequence(string modifiedSequence);
+
+        double UnknownScore { get; }
 
         IEnumerable<string> ChooseRegressionPeptides(IEnumerable<string> peptides);
 
@@ -100,10 +102,12 @@ namespace pwiz.Skyline.Model.DocSettings
             return rtr;
         }
 
-        public double GetRetentionTime(string seq)
+        public double? GetRetentionTime(string seq)
         {
-            double score = Calculator.ScoreSequence(seq);
-            return GetRetentionTime(score);
+            double? score = Calculator.ScoreSequence(seq);
+            if (score.HasValue)
+                return GetRetentionTime(score.Value);
+            return null;
         }
 
         private double GetRetentionTime(double score)
@@ -127,10 +131,11 @@ namespace pwiz.Skyline.Model.DocSettings
             var listPredictions = new List<double>();
             var listRetentionTimes = new List<double>();
 
+            bool usableCalc = Calculator.IsUsable;
             foreach (var peptideTime in peptidesTimes)
             {
                 string seq = peptideTime.PeptideSequence;
-                double score = ScoreSequence(Calculator, scoreCache, seq);
+                double score = usableCalc ? ScoreSequence(Calculator, scoreCache, seq) : 0;
                 listPeptides.Add(seq);
                 listHydroScores.Add(score);
                 listPredictions.Add(GetRetentionTime(score));
@@ -432,7 +437,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             double score;
             if (scoreCache == null || !scoreCache.TryGetValue(sequence, out score))
-                score = calculator.ScoreSequence(sequence);
+                score = calculator.ScoreSequence(sequence) ?? calculator.UnknownScore;
             return score;
         }
 
@@ -659,7 +664,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             double score;
             if (cacheCalc == null || !cacheCalc.TryGetValue(peptide, out score))
-                score = calculator.ScoreSequence(peptide);
+                score = calculator.ScoreSequence(peptide) ?? calculator.UnknownScore;
             return score;
         }
     }
@@ -679,7 +684,9 @@ namespace pwiz.Skyline.Model.DocSettings
         {
         }
 
-        public abstract double ScoreSequence(string sequence);
+        public abstract double? ScoreSequence(string sequence);
+
+        public abstract double UnknownScore { get; }
 
         public abstract IEnumerable<string> ChooseRegressionPeptides(IEnumerable<string> peptides);
 
@@ -712,9 +719,14 @@ namespace pwiz.Skyline.Model.DocSettings
             Validate();
         }
 
-        public override double ScoreSequence(string sequence)
+        public override double? ScoreSequence(string sequence)
         {
             return _impl.ScoreSequence(sequence);
+        }
+
+        public override double UnknownScore
+        {
+            get { return _impl.UnknownScore; }
         }
 
         public override IEnumerable<string> GetRequiredRegressionPeptides(IEnumerable<string> peptides)

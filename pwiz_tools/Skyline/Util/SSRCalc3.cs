@@ -584,17 +584,16 @@ namespace pwiz.Skyline.Util
         // helix scaling factors
         private const double HELIX1SCALE = 1.6, HELIX2SCALE = 0.255;
 
-        /*
-        public override List<double> ScoreSequences(List<string> sequences)
+        /// <summary>
+        /// No such thing as an unkown score for this calculator.  ScoreSequence
+        /// always returns a value.
+        /// </summary>
+        public double UnknownScore
         {
-            List<double> scores = new List<double>();
-            foreach(var sequence in sequences)
-                scores.Add(ScoreSequence(sequence));
-            return scores;
+            get { return 0; }
         }
-        */
 
-        public double ScoreSequence(string seq)
+        public double? ScoreSequence(string seq)
         {
             seq = FastaSequence.StripModifications(seq);
             double tsum3 = 0.0;

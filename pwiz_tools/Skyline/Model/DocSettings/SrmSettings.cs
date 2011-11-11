@@ -696,9 +696,13 @@ namespace pwiz.Skyline.Model.DocSettings
                 defSet.EnzymeList.Add(PeptideSettings.Enzyme);
             // Extra null checks to avoid ReSharper warnings.
             if (PeptideSettings.Prediction != null &&
-                    PeptideSettings.Prediction.RetentionTime != null &&
-                    !defSet.RetentionTimeList.Contains(PeptideSettings.Prediction.RetentionTime))
-                defSet.RetentionTimeList.Add(PeptideSettings.Prediction.RetentionTime);
+                    PeptideSettings.Prediction.RetentionTime != null)
+            {
+                if (!defSet.RetentionTimeList.Contains(PeptideSettings.Prediction.RetentionTime))
+                    defSet.RetentionTimeList.Add(PeptideSettings.Prediction.RetentionTime);
+                if (!defSet.RTScoreCalculatorList.Contains(PeptideSettings.Prediction.RetentionTime.Calculator))
+                    defSet.RTScoreCalculatorList.Add(PeptideSettings.Prediction.RetentionTime.Calculator);
+            }
             if (PeptideSettings.Filter != null)
             {
                 foreach (PeptideExcludeRegex exclude in PeptideSettings.Filter.Exclusions)

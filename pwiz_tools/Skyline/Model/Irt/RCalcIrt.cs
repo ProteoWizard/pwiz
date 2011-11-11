@@ -42,22 +42,28 @@ namespace pwiz.Skyline.Model.Irt
 
         public string DatabasePath { get; private set; }
 
-        public override bool IsUsable
-        {
-            get { return _database != null; }
-        }
-
         public bool IsNone
         {
             get { return Name == NONE.Name; }
         }
 
-        /// <summary>
-        /// This function requires that Database not be null, that is, either OpenDatabase has been
-        /// successfully called (nothing thrown), or a valid IrtDb was passed to the constructor
-        /// </summary>
+        public override bool IsUsable
+        {
+            get { return _database != null; }
+        }
+
+        public override RetentionScoreCalculatorSpec Initialize(IProgressMonitor loadMonitor)
+        {
+            if (_database != null)
+                return this;
+
+            return ChangeDatabase(IrtDb.GetIrtDb(DatabasePath, loadMonitor));
+        }
+
         public override IEnumerable<string> ChooseRegressionPeptides(IEnumerable<string> peptides)
         {
+            RequireUsable();
+
             var dbStandard = _database.StandardPeptides;
             var returnStandard = (from peptide in peptides
                                   where dbStandard.Contains(dbPep => Equals(peptide, dbPep.PeptideModSeq))
@@ -69,30 +75,34 @@ namespace pwiz.Skyline.Model.Irt
             return returnStandard;
         }
 
-        /// <summary>
-        /// This function requires that Database not be null, that is, either OpenDatabase has been
-        /// successfully called (nothing thrown), or a valid IrtDb was passed to the constructor.
-        /// </summary>
         public override IEnumerable<string> GetRequiredRegressionPeptides(IEnumerable<string> peptides)
         {
+            RequireUsable();
+
             return ChooseRegressionPeptides(peptides);
         }
 
-        public override RetentionScoreCalculatorSpec Initialize(IProgressMonitor loadMonitor)
+        public override double? ScoreSequence(string seq)
         {
             if (_database != null)
-                return this;
-
-            return ChangeDatabase(IrtDb.GetIrtDb(DatabasePath, loadMonitor));
+                return _database.ScoreSequence(seq);
+            return null;
         }
 
-        public override double ScoreSequence(string seq)
+        public override double UnknownScore
         {
-            if (_database == null)
-                return 0;
+            get
+            {
+                RequireUsable();
 
-            DbIrtPeptide pep = _database.GetPeptide(seq);
-            return pep != null ? pep.Irt : 0;
+                return _database.UnknownScore;
+            }
+        }
+
+        private void RequireUsable()
+        {
+            if (!IsUsable)
+                throw new InvalidOperationException("Unexpected use of iRT calculator before successful initialization.");
         }
 
         #region Property change methods
