@@ -54,16 +54,6 @@ class ScopedData
 };
 
 
-class ScopedDataJpg : public ScopedData
-{
-    public:
-    ScopedDataJpg(gdImagePtr im)
-    {
-        data_ = gdImageJpegPtr(im, &size_, -1);
-    }
-};
-
-
 class ScopedDataPng : public ScopedData
 {
     public:
@@ -212,12 +202,6 @@ class ImageImpl : public Image
     void clip(const Point& point1, const Point& point2)
     {
         gdImageSetClip(im_, point1.x, point1.y, point2.x, point2.y);
-    }
-
-    virtual bool writeJpg(const char* filename) const
-    {
-        ScopedDataJpg imageData(im_);
-        return writeScopedData(filename, imageData);
     }
 
     virtual bool writePng(const char* filename) const

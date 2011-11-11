@@ -282,10 +282,6 @@ lib pthread
         <toolset>gcc:<linkflags>-pthread # sometimes segfault without this -- dk
     ;
 
-lib jpeg png z : : <threading>multi ;
-lib gd : jpeg png z : <name>gd <threading>multi ;
-lib gd : : <toolset>msvc <name>bgd <search>$(PWIZ_LIBRARIES_PATH) : : <include>$(PWIZ_LIBRARIES_PATH)/gd-2.0.33 ;
-
 lib fftw3 : : <threading>multi <search>$(PWIZ_LIBRARIES_PATH)/fftw-3.1.2/.libs : : <include>$(PWIZ_LIBRARIES_PATH)/fftw-3.1.2/api ;
 lib fftw3 : : <threading>multi <toolset>msvc <name>libfftw3-3 <search>$(PWIZ_LIBRARIES_PATH) : : <include>$(PWIZ_LIBRARIES_PATH)/fftw-3.1.2/api ;
 
@@ -391,32 +387,21 @@ make VERSION : : @make_VERSION : <location>$(PWIZ_BUILD_PATH) ;
 actions make_VERSION { @($(STDOUT):E=$(version-tag:J=.)) > "$(<)" }
 
 
-import tar os ;
+import tar ;
 
-if [ os.on-windows ]
+if ! [ without-mz5 ]
 {
-    using tar : bsdtar.exe ;
-}
-else if $(.os:L) = "macosx" || $(.os:L) = "darwin"
-{
-    using tar : gnutar ;
-}
-else
-{
-    using tar ;
-}
-
-
-tar.extract $(PWIZ_LIBRARIES_PATH)/gd-2.0.33.tar.bz2 : *.h : <location>$(PWIZ_LIBRARIES_PATH) ;
-
-if ! [ without-mz5 ] {
-  tar.extract $(PWIZ_LIBRARIES_PATH)/hdf5-1.8.7.tar.bz2 : * : <location>$(PWIZ_LIBRARIES_PATH) ;
+    tar.extract $(PWIZ_LIBRARIES_PATH)/hdf5-1.8.7.tar.bz2 : * : <location>$(PWIZ_LIBRARIES_PATH) ;
 }
 
 path-constant BOOST_SOURCE : $(boost_src) ;
 path-constant ZLIB_SOURCE : $(zlib_src) ;
+path-constant GD_SOURCE : $(PWIZ_LIBRARIES_PATH)/libgd-2.1.0alpha ;
+path-constant PNG_SOURCE : $(PWIZ_LIBRARIES_PATH)/libpng-1.5.6 ;
+path-constant FREETYPE_SOURCE : $(PWIZ_LIBRARIES_PATH)/freetype-2.4.7 ;
 
 using ext-boost : $(BOOST_VERSION:J=.) : $(BOOST_SOURCE) : <zlib-src-location>$(ZLIB_SOURCE) ;
+using gd : 2.1.0 : $(GD_SOURCE) : <zlib-src-location>$(ZLIB_SOURCE) <png-src-location>$(PNG_SOURCE) <freetype-src-location>$(FREETYPE_SOURCE) ;
 
 if [ modules.peek : NT ]
 {
@@ -574,14 +559,6 @@ rule gcc-install-dll-path ( properties * )
 }
 
 
-install bgddll
-    : libraries/bgd.dll
-    : <conditional>@install-location
-      <toolset>gcc:<build>no
-      <toolset>darwin:<build>no
-    ;
-
-
 install executables
     : pwiz_tools/commandline
       pwiz_tools/sld//sldout
@@ -592,7 +569,6 @@ install executables
       <conditional>@dotNET-dependencies
       <conditional>@gcc-install-dll-path
       <dependency>VERSION
-      <toolset>msvc:<dependency>bgddll
     ;
 
 

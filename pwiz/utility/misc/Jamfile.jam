@@ -70,12 +70,11 @@ lib pwiz_utility_image
         Image.cpp
     : # requirements
         <warnings>all
-        <library>../../..//gd
+        <library>/ext/gd//gd
         <library>pwiz_utility_misc
-        <toolset>msvc,<address-model>64:<build>no # TODO: build GD from source or get a substitute!
     : # default-build
     : # usage-requirements
-        <library>../../..//gd
+        <library>/ext/gd//gd
         <library>pwiz_utility_misc
     ;
 
@@ -93,6 +92,7 @@ lib pwiz_utility_vendor_reader_test_harness
         <library>pwiz_utility_misc
         <library>$(PWIZ_ROOT_PATH)/pwiz/data/msdata//pwiz_data_msdata
     ;
+explicit pwiz_utility_vendor_reader_test_harness ;
 
 
 unit-test-if-exists ExceptionTest : ExceptionTest.cpp pwiz_utility_misc ;

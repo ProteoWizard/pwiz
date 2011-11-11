@@ -28,19 +28,26 @@ project tar ;
 
 rule init ( tar-binary-filepath ? )
 {
+    # try some default tar binaries
     if ! $(tar-binary-filepath)
     {
+        local .os = [ modules.peek : OS ] ;
         if [ os.on-windows ]
         {
-            errors.error "To use tar.jam on Windows you must provide the path to a tar program like bsdtar or GNU Win32 tar." ;
+            tar-binary-filepath = bsdtar.exe ;
+        }
+        else if $(.os:L) = "macosx" || $(.os:L) = "darwin"
+        {
+            tar-binary-filepath = gnutar ;
         }
         else
         {
             tar-binary-filepath = tar ;
         }
     }
-    else if ! [ path.exists $(tar-binary-filepath) ] &&
-            ! [ path.glob [ path.programs-path ] : $(tar-binary-filepath:D=) ]
+
+    if ! [ path.exists $(tar-binary-filepath) ] &&
+       ! [ path.glob [ path.programs-path ] : $(tar-binary-filepath:D=) ]
     {
         errors.error Filepath to tar binary \"$(tar-binary-filepath)\" not found. ;
     }
@@ -302,6 +309,11 @@ rule extract ( tar-filepath : include-patterns * : tar-requirements * : tar-usag
 {
     if ! --incremental in [ modules.peek : ARGV ]
     {
+        if ! [ tar-binary-filepath ]
+        {
+            init ;
+        }
+
         local pwd = [ path.make [ path.pwd ] ] ;
         local caller-location = [ modules.binding [ CALLER_MODULE ] ] ;
         caller-location = $(caller-location:D) ;

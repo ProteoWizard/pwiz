@@ -60,7 +60,6 @@ exe msaccess
       ../../pwiz/utility/misc//pwiz_utility_image
       mstool-requirements
     : <include>../../..
-      <address-model>64:<build>no
     ;
 
 
@@ -71,7 +70,6 @@ exe mspicture
       ../../pwiz/utility/misc//pwiz_utility_image
       mstool-requirements
     : <include>../../..
-      <address-model>64:<build>no
     ;
 
 
@@ -81,7 +79,6 @@ exe pepsum
       ../../pwiz/utility/misc//pwiz_utility_image
       mstool-requirements
     : <include>../../..
-      <address-model>64:<build>no
     ;
 
 

@@ -92,9 +92,6 @@ class PWIZ_API_DECL Image
     /// set clipping rectangle 
     virtual void clip(const Point& point1, const Point& point2) = 0;
 
-    /// write jpeg file 
-    virtual bool writeJpg(const char* filename) const = 0;
-
     /// write png file
     virtual bool writePng(const char* filename) const = 0;
 

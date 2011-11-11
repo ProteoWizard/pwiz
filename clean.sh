@@ -10,6 +10,9 @@ if [ -d libraries/boost-build/jam_src/bin ]; then rm -fr libraries/boost-build/j
 if [ -d libraries/boost-build/jam_src/bootstrap ]; then rm -fr libraries/boost-build/jam_src/bootstrap; fi;
 if [ -d libraries/gd-2.0.33 ]; then rm -fr libraries/gd-2.0.33; fi;
 if [ -d libraries/zlib-1.2.3 ]; then rm -fr libraries/zlib-1.2.3; fi;
+if [ -d libraries/libgd-2.1.0alpha ]; then rm -fr libraries/libgd-2.1.0alpha; fi;
+if [ -d libraries/libpng-1.5.6 ]; then rm -fr libraries/libpng-1.5.6; fi;
+if [ -d libraries/freetype-2.4.7 ]; then rm -fr libraries/freetype-2.4.7; fi;
 if [ -d libraries/fftw-3.1.2 ]; then rm -fr libraries/fftw-3.1.2; fi;
 if [ -f libraries/libfftw3-3.def ]; then rm -f libraries/libfftw3-3.def; fi;
 if [ -f libraries/libfftw3-3.dll ]; then rm -f libraries/libfftw3-3.dll; fi;
