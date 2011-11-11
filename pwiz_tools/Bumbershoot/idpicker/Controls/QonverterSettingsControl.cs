@@ -48,6 +48,7 @@ namespace IDPicker.Controls
         }
 
         private QonverterSettings qonverterSettings = null;
+        private Map<string, int> savedSVNSettings;
         public QonverterSettings QonverterSettings
         {
             set
@@ -55,6 +56,8 @@ namespace IDPicker.Controls
                 qonverterSettings = value;
                 if(qonverterSettings == null)
                     return;
+
+                savedSVNSettings = new Map<string, int>();
 
                 qonvertMethodComboBox.SelectedIndex = (int) value.QonverterMethod;
                 chargeStateHandlingComboBox.SelectedIndex = Math.Min(3, (int) value.ChargeStateHandling)-1;
@@ -73,6 +76,11 @@ namespace IDPicker.Controls
             }
 
             get { return qonverterSettings; }
+        }
+
+        private void QonverterSettingsControl_Load(object sender, EventArgs e)
+        {
+            SaveSVNSettings(false, qonvertMethodComboBox.SelectedIndex == (int)Qonverter.QonverterMethod.StaticWeighted);
         }
 
         public QonverterSettings EditedQonverterSettings
@@ -153,16 +161,50 @@ namespace IDPicker.Controls
 
         private void flowLayoutPanel_Resize (object sender, EventArgs e)
         {
-            scoreGridView.Width = flowLayoutPanel.Width;
+            //scoreGridView.Width = flowLayoutPanel.Width;
         }
 
         private void qonvertMethodComboBox_SelectedIndexChanged (object sender, EventArgs e)
         {
             // hide kernel and non-score-feature options for StaticWeighted method
             bool showNonScoreOptions = qonvertMethodComboBox.SelectedIndex == (int) Qonverter.QonverterMethod.SVM;
-            kernelComboBox.Visible = label4.Visible = label5.Visible = label6.Visible =
-                massErrorHandlingComboBox.Visible =
-                    missedCleavagesComboBox.Visible = showNonScoreOptions;
+            //kernelComboBox.Visible = label4.Visible = label5.Visible = label6.Visible =
+            //    massErrorHandlingComboBox.Visible =
+            //        missedCleavagesComboBox.Visible = showNonScoreOptions;
+            svnPanel.Visible = showNonScoreOptions;
+            if (showNonScoreOptions)
+                LoadSVNSettings();
+            else
+                SaveSVNSettings(true, false);
+        }
+
+        private void LoadSVNSettings()
+        {
+            foreach (var ctrl in svnPanel.Controls)
+            {
+                if (ctrl is ComboBox)
+                {
+                    if (savedSVNSettings.Contains(((Control)ctrl).Name))
+                        ((ComboBox)ctrl).SelectedIndex = savedSVNSettings[((Control)ctrl).Name];
+                }
+            }
+        }
+
+        private void SaveSVNSettings(bool setAllIgnore, bool saveDefaults)
+        {
+            foreach (var ctrl in svnPanel.Controls)
+            {
+                if (ctrl is ComboBox)
+                {
+                    if (savedSVNSettings.Contains(((Control)ctrl).Name))
+                        savedSVNSettings[((Control)ctrl).Name] = saveDefaults ? 1 : ((ComboBox)ctrl).SelectedIndex;
+                    else
+                        savedSVNSettings.Add(((Control)ctrl).Name,
+                                             saveDefaults ? 1 : ((ComboBox) ctrl).SelectedIndex);
+                    if (setAllIgnore)
+                        ((ComboBox) ctrl).SelectedIndex = 0;
+                }
+            }
         }
     }
 }

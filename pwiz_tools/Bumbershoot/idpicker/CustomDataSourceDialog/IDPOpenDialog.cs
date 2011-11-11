@@ -268,26 +268,6 @@ namespace CustomDataSourceDialog
             return TrimmedTree(FileTreeView.Nodes[0]);
         }
 
-        public TreeNode GetTreeStructure(IEnumerable<string> sourceList)
-        {
-            foreach (var source in sourceList)
-            {
-                var path = Path.GetDirectoryName(source);
-                if (path != null)
-                {
-                    NavigateToFolder(path,null);
-                    AddNode_Click(null,null);
-                }
-            }
-            foreach (var source in sourceList)
-            {
-                var node = GetSpecificNode(FileTreeView.Nodes[0], source);
-                node.Checked = true;
-            }            
-
-            return TrimmedTree(FileTreeView.Nodes[0]);
-        }
-
         private TreeNode TrimmedTree(TreeNode currentNode)
         {
             var newNode = new TreeNode
@@ -981,7 +961,11 @@ namespace CustomDataSourceDialog
             {
                 foreach (TreeNode file in source.Nodes)
                 {
-                    if (file.Text.ToLower().EndsWith(".pepxml") 
+//idpXML functionality
+//                    if (file.Text.ToLower().EndsWith(".pepxml") 
+//                        || file.Text.ToLower().EndsWith(".pep.xml")
+//                        || file.Text.ToLower().EndsWith(".idpxml"))
+					if (file.Text.ToLower().EndsWith(".pepxml") 
                         || file.Text.ToLower().EndsWith(".pep.xml"))
                     {
                         var baseName = Path.GetFileNameWithoutExtension(file.Text);
@@ -1008,6 +992,8 @@ namespace CustomDataSourceDialog
             while (rootNode.Parent != null)
                 rootNode = rootNode.Parent;
 
+//idpXML functionality
+//            if (file.Extension.ToLower() == ".pepxml" || file.Name.EndsWith(".pep.xml") || file.Extension.ToLower() == ".idpxml")
             if (file.Extension.ToLower() == ".pepxml" || file.Name.EndsWith(".pep.xml"))
                 sourceList.Add(Parser.ParseSource(file.FullName));//Path.GetFileNameWithoutExtension(file.FullName));
             else if (file.Extension.ToLower() == ".idpdb" && SessionFactoryFactory.IsValidFile(file.FullName))

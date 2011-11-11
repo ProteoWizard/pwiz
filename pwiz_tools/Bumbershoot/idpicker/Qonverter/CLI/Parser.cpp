@@ -98,8 +98,8 @@ struct ImportSettingsForwarder : public NativeParser::ImportSettingsCallback
             nativeQonverterSettings.kernel = NativeQonverter::Kernel::get_by_index((size_t) qonverterSettings->Kernel).get();
             nativeQonverterSettings.massErrorHandling = NativeQonverter::MassErrorHandling::get_by_index((size_t) qonverterSettings->MassErrorHandling).get();
             nativeQonverterSettings.missedCleavagesHandling = NativeQonverter::MissedCleavagesHandling::get_by_index((size_t) qonverterSettings->MissedCleavagesHandling).get();
-            nativeQonverterSettings.terminalSpecificityHandling = NativeQonverter::TerminalSpecificityHandling::get_by_index((size_t) qonverterSettings->TerminalSpecificityHandling).get();
-            nativeQonverterSettings.chargeStateHandling = NativeQonverter::ChargeStateHandling::get_by_index((size_t) qonverterSettings->ChargeStateHandling).get();
+            nativeQonverterSettings.terminalSpecificityHandling = NativeQonverter::TerminalSpecificityHandling::get_by_value((size_t) qonverterSettings->TerminalSpecificityHandling).get();
+            nativeQonverterSettings.chargeStateHandling = NativeQonverter::ChargeStateHandling::get_by_value((size_t) qonverterSettings->ChargeStateHandling).get();
 
             for each (KeyValuePair<String^, Qonverter::Settings::ScoreInfo^> itr in qonverterSettings->ScoreInfoByName)
             {

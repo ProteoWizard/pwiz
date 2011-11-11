@@ -579,29 +579,8 @@ namespace IDPicker
 
             if (args != null && args.Length > 0 && args.All(o => File.Exists(o)))
             {
-                var grouping = CreateGroupingFromArgs(args);
-                new Thread(() => { OpenFiles(args, grouping); }).Start();
+                new Thread(() => { OpenFiles(args, null); }).Start();
             }
-        }
-
-        private TreeNode CreateGroupingFromArgs (IEnumerable<string> sources)
-        {
-            var fileTypeList = new List<string>
-            {
-                "IDPicker Files|.idpDB;.idpXML;.pepXML;.pep.xml",
-                "PepXML Files|.pepXML;.pep.xml",
-                "IDPicker XML|.idpXML",
-                "IDPicker DB|.idpDB"
-            };
-            var ofd = new IDPOpenDialog(fileTypeList)
-            {
-                ShowInTaskbar = false,
-                WindowState = FormWindowState.Minimized
-            };
-            ofd.Show();
-            var structure = ofd.GetTreeStructure(sources);
-            ofd.Close();
-            return structure;
         }
 
         /*void databaseNotFoundHandler (object sender, Parser.DatabaseNotFoundEventArgs e)
@@ -769,7 +748,7 @@ namespace IDPicker
                                                                    string.Empty) + ".idpDB").ToList();
 
                 if ((fileExists ||
-                    potentialPaths.Contains(commonFilename)) && workToBeDone)
+                    potentialPaths.Contains(commonFilename)) && filepaths.Count > 1 && workToBeDone)
                 {
                     switch (MessageBox.Show(string.Format("The merged result \"{0}\" already exists, or will exist after processing files. " +
                                                           "Do you want to overwrite it?{1}{1}" +
