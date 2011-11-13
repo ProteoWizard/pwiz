@@ -271,13 +271,21 @@ namespace pwiz.Skyline.FileUI
 
         private static string getSourceType(DirectoryInfo dirInfo)
         {
-            if( dirInfo.Name.EndsWith( ".raw" ) &&
-                    dirInfo.GetFiles( "_FUNC*.DAT" ).Length > 0 )
-                return TYPE_WATERS_RAW;
-            if( dirInfo.Name.EndsWith( ".d" ) &&
-                    dirInfo.GetDirectories( "AcqData" ).Length > 0 )
-                return TYPE_AGILENT;
-            return SourceInfo.FOLDER_TYPE;
+            try
+            {
+                if (dirInfo.Name.EndsWith(".raw") &&
+                        dirInfo.GetFiles("_FUNC*.DAT").Length > 0)
+                    return TYPE_WATERS_RAW;
+                if (dirInfo.Name.EndsWith(".d") &&
+                        dirInfo.GetDirectories("AcqData").Length > 0)
+                    return TYPE_AGILENT;
+                return SourceInfo.FOLDER_TYPE;
+            }
+            catch (Exception)
+            {
+                // TODO: Folder without access type
+                return SourceInfo.FOLDER_TYPE;
+            }
         }
 
         public static bool IsDataSource(DirectoryInfo dirInfo)

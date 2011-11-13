@@ -702,19 +702,26 @@ namespace pwiz.Skyline.Model.Lib
 
         protected override SpectrumPeaksInfo.MI[] ReadSpectrum(BiblioLiteSpectrumInfo info)
         {
-            using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
+            try
             {
-                select.CommandText = "SELECT * FROM [RefSpectraPeaks] WHERE [RefSpectraID] = ?";
-                select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long) info.Id));
-
-                using (SQLiteDataReader reader = select.ExecuteReader())
+                using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
                 {
-                    if (reader.Read())
+                    select.CommandText = "SELECT * FROM [RefSpectraPeaks] WHERE [RefSpectraID] = ?";
+                    select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)info.Id));
+
+                    using (SQLiteDataReader reader = select.ExecuteReader())
                     {
-                        short numPeaks = info.NumPeaks;
-                        return ReadPeaks(reader, numPeaks);
+                        if (reader.Read())
+                        {
+                            short numPeaks = info.NumPeaks;
+                            return ReadPeaks(reader, numPeaks);
+                        }
                     }
                 }
+            }
+            catch (SQLiteException x)
+            {                
+                throw new IOException(string.Format("Unexpected SQLite failure reading {0}.", FilePath), x);
             }
 
             return null;
@@ -725,22 +732,29 @@ namespace pwiz.Skyline.Model.Lib
             if (_sqliteConnectionRedundant == null)
                 throw new IOException(string.Format("The redundant library {0} does not exist.", FilePathRedundant));
 
-            using (SQLiteCommand select = new SQLiteCommand(_sqliteConnectionRedundant.Connection))
+            try
             {
-                select.CommandText =
-                    "SELECT * FROM " +
-                    "[RefSpectra] INNER JOIN [RefSpectraPeaks] ON [id] = [RefSpectraID] " +
-                    "WHERE [id] = ?";
-                select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)spectrumId));
-
-                using (SQLiteDataReader reader = select.ExecuteReader())
+                using (SQLiteCommand select = new SQLiteCommand(_sqliteConnectionRedundant.Connection))
                 {
-                    if (reader.Read())
+                    select.CommandText =
+                        "SELECT * FROM " +
+                        "[RefSpectra] INNER JOIN [RefSpectraPeaks] ON [id] = [RefSpectraID] " +
+                        "WHERE [id] = ?";
+                    select.Parameters.Add(new SQLiteParameter(DbType.UInt64, (long)spectrumId));
+
+                    using (SQLiteDataReader reader = select.ExecuteReader())
                     {
-                        short numPeaks = reader.GetInt16(RefSpectra.numPeaks);
-                        return ReadPeaks(reader, numPeaks);
+                        if (reader.Read())
+                        {
+                            short numPeaks = reader.GetInt16(RefSpectra.numPeaks);
+                            return ReadPeaks(reader, numPeaks);
+                        }
                     }
                 }
+            }
+            catch (SQLiteException x)
+            {
+                throw new IOException(string.Format("Unexpected SQLite failure reading {0}.", FilePathRedundant), x);
             }
 
             return null;
@@ -895,6 +909,7 @@ namespace pwiz.Skyline.Model.Lib
                 return GetRedundantSpectra(key, labelType, !bestMatch);
             }
             // In case there is no RetentionTimes table
+            // CONSIDER: Could also be a failure to read the SQLite file
             catch (SQLiteException)
             {
                 return base.GetSpectra(key, labelType, true);

@@ -122,6 +122,12 @@ namespace pwiz.Skyline.SettingsUI
                 conversions.Add(new ChargeRegressionLine(charge, slope, intercept));
             }
 
+            if (conversions.Count == 0)
+            {
+                MessageDlg.Show(this, "Collision energy regressions require at least one regression function.");
+                return;
+            }
+
             double stepSize;
             if (!helper.ValidateDecimalTextBox(e, textStepSize,
                     CollisionEnergyRegression.MIN_STEP_SIZE,
