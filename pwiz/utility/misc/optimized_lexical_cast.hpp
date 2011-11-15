@@ -65,8 +65,7 @@ namespace boost
 		const char* stringToConvert = str.c_str();
 		const char* endOfConversion = stringToConvert;
 		float value = (float) STRTOD( stringToConvert, const_cast<char**>(&endOfConversion) );
-		if( ( value == 0.0f && stringToConvert == endOfConversion ) || // error: conversion could not be performed
-			errno != 0 ) // error: overflow or underflow
+		if( value == 0.0f && stringToConvert == endOfConversion ) // error: conversion could not be performed
 			throw bad_lexical_cast();//throw bad_lexical_cast( std::type_info( str ), std::type_info( value ) );
 		return value;
 	}
@@ -78,8 +77,7 @@ namespace boost
 		const char* stringToConvert = str.c_str();
 		const char* endOfConversion = stringToConvert;
 		double value = STRTOD( stringToConvert, const_cast<char**>(&endOfConversion) );
-		if( ( value == 0.0 && stringToConvert == endOfConversion ) || // error: conversion could not be performed
-			errno != 0 ) // error: overflow or underflow
+		if( value == 0.0 && stringToConvert == endOfConversion ) // error: conversion could not be performed
 			throw bad_lexical_cast();//throw bad_lexical_cast( std::type_info( str ), std::type_info( value ) );
 		return value;
 	}
