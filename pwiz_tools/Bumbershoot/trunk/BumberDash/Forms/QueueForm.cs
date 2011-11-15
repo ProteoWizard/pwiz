@@ -37,6 +37,7 @@ namespace BumberDash.Forms
                 InitializeComponent();
                 var sessionFactory = SessionManager.CreateSessionFactory();
                 _session = sessionFactory.OpenSession();
+                CheckForMSFileReader();
             }
             catch (Exception error)
             {
@@ -90,6 +91,16 @@ namespace BumberDash.Forms
                         }
                         else
                             AddLogLine(x);
+                    },
+                    ErrorForward = x =>
+                    {
+                        if (InvokeRequired)
+                        {
+                            ProgramHandler.LogDelegate logdelegate = ShowError;
+                            Invoke(logdelegate, x);
+                        }
+                        else
+                            ShowError(x);
                     },
                     PercentageUpdate = x =>
                     {
@@ -149,7 +160,6 @@ namespace BumberDash.Forms
             }
 
         }
-
 
         #region Events
 
@@ -317,7 +327,6 @@ namespace BumberDash.Forms
                                         e.CellBounds.Top - 1);
                 }
             }
-            
         }
 
         /// <summary>
@@ -1175,7 +1184,7 @@ namespace BumberDash.Forms
                         }
                     }
 
-                    if (JobProcess != null && JobQueueDGV.Rows[row].Tag.ToString() == "Finished")
+                    //if (JobProcess != null && JobQueueDGV.Rows[row].Tag.ToString() == "Finished")
                     {
                         JobProcess.DeletedAbove();
                         LastCompleted--;
@@ -1186,7 +1195,7 @@ namespace BumberDash.Forms
                     break;
 
                 case DialogResult.No:
-                    if (JobProcess != null && JobQueueDGV.Rows[row].Tag.ToString() == "Finished")
+                    //if (JobProcess != null && JobQueueDGV.Rows[row].Tag.ToString() == "Finished")
                     {
                         JobProcess.DeletedAbove();
                         LastCompleted--;
@@ -1588,6 +1597,12 @@ namespace BumberDash.Forms
             }
         }
 
+        private void ShowError(string status)
+        {
+            MessageBox.Show(status);
+            AddLogLine(status);
+        }
+
         private bool DetectLatestIDPicker()
         {
             var basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Bumbershoot");
@@ -1651,5 +1666,38 @@ namespace BumberDash.Forms
             CheckForRunableJob();
         }
 
+        private void MSFileReaderDownloadLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            System.Diagnostics.Process.Start("\"http://sjsupport.thermofinnigan.com/public/detail.asp?id=703\"");
+        }
+
+        private void CheckForMSFileReader()
+        {
+            var softwareKey = Microsoft.Win32.Registry.LocalMachine.OpenSubKey("SOFTWARE");
+            if (softwareKey == null)
+                return; //and wonder what exactly the archetecture of this computer is
+
+            var thermoKey = softwareKey.OpenSubKey("Thermo Fisher Scientific");
+            if (thermoKey == null)
+                return; //and let the panel stay visible
+
+            var readerKey = thermoKey.OpenSubKey("Thermo MSFileReader");
+            if (readerKey == null)
+                return; //and let the panel stay visible
+
+            var versions = readerKey.GetSubKeyNames();
+            foreach(var name in versions)
+            {
+                int currentNumber;
+                var versionArray = name.Split(".".ToCharArray());
+                if (versionArray.Length > 2
+                    && int.TryParse(versionArray[0], out currentNumber)
+                    && currentNumber >= 2
+                    && int.TryParse(versionArray[1], out currentNumber)
+                    && currentNumber >= 2)
+                    MSFileReaderPanel.Visible = false;
+            }
+
+        }
     }
 }

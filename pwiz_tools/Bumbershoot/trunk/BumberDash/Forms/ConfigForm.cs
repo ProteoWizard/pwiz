@@ -246,15 +246,12 @@ namespace BumberDash.Forms
 
             //Hack: Force Deisotoping to false
             DTDeisotopingModeBox.Text = "Off";
-
-            //HACK: Set MaxMissedCleavages to 2- has to occur after pane initilization
-            MyriMaxMissedCleavagesBox.Value = 2;
-            TRMaxMissedCleavagesBox.Value = 2;
-            PepMaxMissedCleavagesBox.Value = 2;
         }
 
+        private bool _noPrompt = false;
         private void ResetTemplateLists()
         {
+            _noPrompt = true;
             var templateList = _session.QueryOver<ConfigFile>().Where(x => x.FilePath == "Template").List();
             _myriTemplateList = templateList.Where(x => x.DestinationProgram == "MyriMatch").ToList();
             _DTTemplateList = templateList.Where(x => x.DestinationProgram == "DirecTag").ToList();
@@ -285,6 +282,7 @@ namespace BumberDash.Forms
 
             foreach (var item in _itemList[ProgramModeBox.Text])
                 CheckForChange(item, null);
+            _noPrompt = false;
         }
 
         /// <summary>
@@ -482,6 +480,9 @@ namespace BumberDash.Forms
                 else
                     _nonTemplate.Add(item);
             }
+
+            //HACK: Deisotoping mode should not be counted until it is used
+            _nonTemplate.Remove(DTDeisotopingModeBox);
         }
 
         /// <summary>
@@ -757,11 +758,6 @@ namespace BumberDash.Forms
                     _templateDefaults.Add(item, configValues[root]);
             }
 
-            //HACK: Set MaxMissedCleavages to 2
-            MyriMaxMissedCleavagesBox.Value = 2;
-            TRMaxMissedCleavagesBox.Value = 2;
-            PepMaxMissedCleavagesBox.Value = 2;
-
             foreach (var item in _itemList[ProgramModeBox.Text])
                 CheckForChange(item, null);
         }
@@ -797,7 +793,6 @@ namespace BumberDash.Forms
 
                 CheckForChange(control, null);
             }
-
         }
 
         /// <summary>
@@ -1190,6 +1185,14 @@ namespace BumberDash.Forms
                     PepGenPanel.Visible = true;
                     PepAdvPanel.Visible = true;
                     break;
+            }
+
+            //If form has fully loaded update non-template list
+            if (_nonTemplate != null)
+            {
+                _nonTemplate = new HashSet<Control>();
+                foreach (var control in _itemList[ProgramModeBox.Text])
+                    CheckForChange(control, null);
             }
         }
 
@@ -1617,7 +1620,7 @@ namespace BumberDash.Forms
             if (_currentInstrument != ((ComboBox) sender).SelectedIndex - 1)
             {
                 DialogResult result;
-                if (_nonTemplate.Any())
+                if (_nonTemplate.Any() && !_noPrompt)
                     result =
                         MessageBox.Show(
                             "Would you like to change the current instrument template?" +

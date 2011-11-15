@@ -22,12 +22,14 @@ namespace BumberDash.lib
 
         public PercentageDelegate PercentageUpdate;
         public LogDelegate LogUpdate;
+        public LogDelegate ErrorForward;
         public StatusDelegate StatusUpdate;
         public ExitDelegate JobFinished;
 
         private bool _scanning; //Tells if ProgramHandler is active
         private bool _killed; //Indicates if a forced stop has been put into place
         private bool _barMode;
+        private bool _errorDetected;
         private bool _versionCaught; //Tells if version number has been found and updated yet
         private int _currentRow; //Row in main form current job comes from
         private int _fileProcessing; //Total number of files in the current job
@@ -57,6 +59,7 @@ namespace BumberDash.lib
             var argumentString = new StringBuilder();
             string configString;
 
+            _errorDetected = false;
             _killed = false;
             ProcessStartInfo psi;
 
@@ -197,6 +200,7 @@ namespace BumberDash.lib
 
             //Make sure window stays hidden
             psi.RedirectStandardOutput = true;
+            psi.RedirectStandardError = true;
             psi.UseShellExecute = false;
             psi.CreateNoWindow = true;
 
@@ -208,6 +212,32 @@ namespace BumberDash.lib
             _runningProgram.PriorityClass = ProcessPriorityClass.BelowNormal;
             _runningProgram.BeginOutputReadLine();
             _runningProgram.OutputDataReceived += DataReceived;
+            _runningProgram.BeginErrorReadLine();
+            _runningProgram.ErrorDataReceived += ErrorCaught;
+            _runningProgram.Exited += ProgramExited;
+        }
+
+        private void ProgramExited(object sender, EventArgs e)
+        {
+            if (_runningProgram == null || _errorDetected)
+                return;
+
+            _scanning = false;
+
+            if (!_killed && JobFinished != null)
+            {
+                if (_barMode)
+                    JobFinished(false, true);
+                if (_destinationProgram == "DirecTag")
+                    JobFinished(true, false);
+                else
+                {
+                    _destinationProgram = string.Empty;
+                    JobFinished(false, false);
+                }
+            }
+            else
+                _destinationProgram = string.Empty;
         }
 
         /// <summary>
@@ -324,51 +354,45 @@ namespace BumberDash.lib
         /// <param name="e"></param>
         private void DataReceived(object sender, DataReceivedEventArgs e)
         {
-
             if (_runningProgram == null || _runningProgram.HasExited)
             {
-                _scanning = false;
                 if (e.Data != null)
                     SendToLog(e.Data);
-
-                if (!_killed && _runningProgram != null && JobFinished != null)
-                {
-                    _runningProgram.Close();
-
-                    if (_barMode)
-                        JobFinished(false, true);
-                    else if (_destinationProgram == "DirecTag")
-                        JobFinished(true, false);
-                    else
-                    {
-                        _destinationProgram = string.Empty;
-                        JobFinished(false, false);
-                    }
-                }
-                else
-                    _destinationProgram = string.Empty;
-
+                return;
             }
-            else
+            
+            SendToLog(e.Data);
+
+            switch (_destinationProgram)
             {
-                SendToLog(e.Data);
-
-                switch (_destinationProgram)
-                {
-                    case "MyriMatch":
-                        HandleMyriLine(e.Data);
-                        break;
-                    case "DirecTag":
-                        HandleDTLine(e.Data);
-                        break;
-                    case "TagRecon":
-                        HandleTRLine(e.Data);
-                        break;
-                    case "Pepitome":
-                        HandlePepLine(e.Data);
-                        break;
-                }
+                case "MyriMatch":
+                    HandleMyriLine(e.Data);
+                    break;
+                case "DirecTag":
+                    HandleDTLine(e.Data);
+                    break;
+                case "TagRecon":
+                    HandleTRLine(e.Data);
+                    break;
+                case "Pepitome":
+                    HandlePepLine(e.Data);
+                    break;
             }
+        }
+
+        private void ErrorCaught(object sender, DataReceivedEventArgs e)
+        {
+            if (_errorDetected ||
+                e.Data.Contains("Could not find the default configuration file") ||
+                e.Data.Contains("Could not find the default residue masses file"))
+                return;
+
+            _errorDetected = true;
+            var data = e.Data;
+
+            if (ErrorForward != null)
+                ErrorForward(string.Format("[{0}] Error detected- {1}", _destinationProgram, data));
+            ForceKill();
         }
 
         /// <summary>
@@ -755,7 +779,7 @@ namespace BumberDash.lib
         }
 
         /// <summary>
-        /// Forces the Bumbershoot utility to close and aborts teh tread it is being run in
+        /// Forces the Bumbershoot utility to close and aborts the tread it is being run in
         /// </summary>
         internal void ForceKill()
         {
@@ -765,12 +789,16 @@ namespace BumberDash.lib
             if (_runningProgram != null && !_runningProgram.HasExited)
             {
                 _runningProgram.OutputDataReceived -= DataReceived;
+                _runningProgram.ErrorDataReceived -= ErrorCaught;
+                _runningProgram.Exited -= ProgramExited;
                 _runningProgram.Kill();
                 _runningProgram.Close();
                 _runningProgram = null;
             }
             if (_workThread != null)
                 _workThread.Abort();
+            if (_errorDetected)
+                JobFinished(false, true);
         }
 
         /// <summary>
