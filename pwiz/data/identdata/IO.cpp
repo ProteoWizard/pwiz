@@ -1133,7 +1133,7 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SequenceCollection& 
     }
 
     iterationIndex = 0;
-    iterationCount = sc.peptides.size();
+    iterationCount = sc.peptideEvidence.size();
     BOOST_FOREACH(const PeptideEvidencePtr& peptideEvidence, sc.peptideEvidence)
     {
         if (ilr && ilr->broadcastUpdateMessage(IterationListener::UpdateMessage(iterationIndex++, iterationCount, "writing peptide evidence")) == IterationListener::Status_Cancel)

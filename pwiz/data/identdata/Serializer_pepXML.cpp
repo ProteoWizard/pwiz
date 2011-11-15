@@ -1566,37 +1566,45 @@ struct HandlerSearchResults : public SAXParser::Handler
             else
                 spectrumWithoutCharge = spectrum;
 
-            // we assume that spectrum_query elements from the same spectrum are adjacent;
-            // so we add a new SpectrumIdentificationResult when the spectrumNativeID changes
-            if (!_sir.get() || _sir->name != spectrumWithoutCharge)
+            SpectrumIdentificationResultPtr& sir = _resultMap[spectrumWithoutCharge];
+            if (!sir.get())
             {
                 string spectrumNativeID;
                 getAttribute(attributes, "spectrumNativeID", spectrumNativeID);
                 if (spectrumNativeID.empty())
                 {
-                    string start_scan;
-                    getAttribute(attributes, "start_scan", start_scan);
-                    spectrumNativeID = msdata::id::translateScanNumberToNativeID(nativeIdFormat, start_scan);
-                    if (spectrumNativeID.empty())
-                        spectrumNativeID = "scan=" + start_scan;
+                    if (nativeIdFormat != MS_scan_number_only_nativeID_format)
+                        spectrumNativeID = spectrum;
+                    else
+                    {
+                        string start_scan;
+                        getAttribute(attributes, "start_scan", start_scan);
+                        spectrumNativeID = msdata::id::translateScanNumberToNativeID(nativeIdFormat, start_scan);
+                        if (spectrumNativeID.empty())
+                            spectrumNativeID = "scan=" + start_scan;
+                    }
                 }
 
-                _sir.reset(new SpectrumIdentificationResult);
-                _sir->id = "SIR_" + lexical_cast<string>(_sil->spectrumIdentificationResult.size());
-                _sir->spectrumID = spectrumNativeID;
-                _sir->name = spectrumWithoutCharge;
-                _sir->spectraDataPtr = _mzid->dataCollection.inputs.spectraData[0];
+                sir.reset(new SpectrumIdentificationResult);
+                sir->id = "SIR_" + lexical_cast<string>(_sil->spectrumIdentificationResult.size());
+                sir->spectrumID = spectrumNativeID;
+                sir->name = spectrumWithoutCharge;
+                sir->spectraDataPtr = _mzid->dataCollection.inputs.spectraData[0];
+
+                double retentionTimeSec;
+                getAttribute(attributes, "retention_time_sec", retentionTimeSec);
+                if (retentionTimeSec > 0)
+                    sir->set(MS_scan_start_time, retentionTimeSec, UO_second);
             }
+
+            _sir = sir;
+
 
             double precursorNeutralMass;
             getAttribute(attributes, "precursor_neutral_mass", precursorNeutralMass);
             getAttribute(attributes, "assumed_charge", _sii.chargeState);
             _sii.experimentalMassToCharge = Ion::mz(precursorNeutralMass, _sii.chargeState);
             _sii.passThreshold = true;
-
-            double retentionTimeSec;
-            getAttribute(attributes, "retention_time_sec", retentionTimeSec);
-            _sir->set(MS_scan_start_time, retentionTimeSec, UO_second);
         }
         else if (name == "search_result")
         {
@@ -1606,8 +1614,7 @@ struct HandlerSearchResults : public SAXParser::Handler
             }
         }
         else if (strict)
-            throw runtime_error("[HandlerSearchResults] Unexpected element "
-                                "name: " + name);
+            throw runtime_error("[HandlerSearchResults] Unexpected element name: " + name);
 
         return Status::Ok;
     }
@@ -1616,6 +1623,7 @@ struct HandlerSearchResults : public SAXParser::Handler
     SpectrumIdentificationResultPtr _sir;
     SpectrumIdentificationItem _sii;
     map<string, DBSequencePtr> _dbSequences;
+    map<string, SpectrumIdentificationResultPtr> _resultMap;
     PeptidePtr _currentPeptide;
     Formula _nTerm, _cTerm;
     boost::xpressive::sregex conventionalSpectrumIdRegex;
@@ -1761,6 +1769,8 @@ struct Handler_pepXML : public SAXParser::Handler
             // determine nativeID format from first spectrum_query
             string spectrumNativeID;
             getAttribute(attributes, "spectrumNativeID", spectrumNativeID);
+            if (spectrumNativeID.empty())
+                getAttribute(attributes, "spectrum", spectrumNativeID);
 
             CVID nativeIdFormat = NativeIdTranslator::instance->translate(spectrumNativeID);
             if (nativeIdFormat == CVID_Unknown)
