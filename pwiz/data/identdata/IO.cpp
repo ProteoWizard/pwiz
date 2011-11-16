@@ -25,6 +25,7 @@
 
 #include "IO.hpp"
 #include "References.hpp"
+#include "TextWriter.hpp"
 #include "pwiz/utility/minimxml/SAXParser.hpp"
 #include "pwiz/utility/misc/Filesystem.hpp"
 #include "pwiz/utility/misc/Std.hpp"
@@ -372,7 +373,7 @@ struct HandlerParamContainer : public SAXParser::Handler
     {
         if (!paramContainer)
             throw runtime_error("[IO::HandlerParamContainer] Null paramContainer.");
-
+       
         if (name == "cvParam")
         {
             paramContainer->cvParams.push_back(CVParam()); 
@@ -2619,12 +2620,14 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
         writer.endElement();
     }
 
-    if (!si.threshold.empty())
+    writer.startElement("Threshold");
+    if (si.threshold.empty())
     {
-        writer.startElement("Threshold");
+        CVParam noThreshold(MS_no_threshold);
+        write(writer, noThreshold);
+    } else 
         writeParamContainer(writer, si.threshold);
-        writer.endElement();
-    }
+    writer.endElement();
     
     writePtrList(writer, si.databaseFilters, "DatabaseFilters");
 
@@ -2634,6 +2637,49 @@ PWIZ_API_DECL void write(minimxml::XMLWriter& writer, const SpectrumIdentificati
     writer.endElement();
 }
 
+struct HandlerThreshold : public SAXParser::Handler
+{
+    HandlerThreshold(ParamContainer* paramContainer_ = 0)
+        :   paramContainer(paramContainer_)
+    {}
+
+    virtual Status startElement(const string& name, 
+                                const Attributes& attributes,
+                                stream_offset position)
+    {
+        if (name == "Threshold")
+            return Status::Ok;
+
+        if (!paramContainer)
+            throw runtime_error("[IO::HandlerThreshold] Null paramContainer."); 
+
+        if (name == "cvParam") {
+            CVParam cvParam;
+            
+            string accession;
+            getAttribute(attributes, "accession", accession);
+            if (!accession.empty())
+                cvParam.cvid = cvTermInfo(accession).cvid;
+
+            if (cvParam.cvid == MS_no_threshold)
+                return Status::Ok;
+            
+            getAttribute(attributes, "value",
+                         cvParam.value);
+
+            string unitAccession;
+            getAttribute(attributes, "unitAccession", unitAccession);
+            if (!unitAccession.empty())
+                cvParam.units = cvTermInfo(unitAccession).cvid;
+
+            paramContainer->cvParams.push_back(cvParam);
+        }
+
+    }
+
+    ParamContainer* paramContainer;
+};
+
 struct HandlerSpectrumIdentificationProtocol : public HandlerIdentifiable
 {
     SpectrumIdentificationProtocol* sip;
@@ -2641,8 +2687,7 @@ struct HandlerSpectrumIdentificationProtocol : public HandlerIdentifiable
         : sip(_sip), handlerSearchType_("SearchType"),
           handlerAdditionalSearchParams_("AdditionalSearchParams"),
           handlerFragmentTolerance_("FragmentTolerance"),
-          handlerParentTolerance_("ParentTolerance"),
-          handlerThreshold_("Threshold")
+          handlerParentTolerance_("ParentTolerance")
     {}
 
     virtual Status startElement(const string& name, 
@@ -2704,7 +2749,7 @@ struct HandlerSpectrumIdentificationProtocol : public HandlerIdentifiable
         }
         else if (name == "Threshold")
         {
-            handlerThreshold_.paramContainer = &sip->threshold;
+            handlerThreshold_.paramContainer = &sip->threshold; 
             return Status(Status::Delegate, &handlerThreshold_);
         }
         else if (name == "DatabaseFilters")
@@ -2737,7 +2782,8 @@ struct HandlerSpectrumIdentificationProtocol : public HandlerIdentifiable
     HandlerMassTable handlerMassTable_;
     HandlerNamedParamContainer handlerFragmentTolerance_;
     HandlerNamedParamContainer handlerParentTolerance_;
-    HandlerNamedParamContainer handlerThreshold_;
+    //HandlerNamedParamContainer handlerThreshold_;
+    HandlerThreshold handlerThreshold_;
     HandlerFilter handlerFilter_;
     HandlerDatabaseTranslation handlerDatabaseTranslation_;
 };
