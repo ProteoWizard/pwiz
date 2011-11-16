@@ -128,6 +128,8 @@ namespace pwiz.Skyline.SettingsUI
             // Update the precursor analyzer type in case the SelectedIndex is still -1
             UpdatePrecursorAnalyzerType();
 
+            UpdateIsolationWidths();
+
             comboPrecursorFilterType.Items.AddRange(
                 new[]
                     {
@@ -364,6 +366,7 @@ namespace pwiz.Skyline.SettingsUI
             // Validate and store full-scan settings
             FullScanPrecursorFilterType precursorFilterType = PrecursorFilterTypeCurrent;
             double? precursorFilter = null;
+            double? precursorRightFilter = null;
             FullScanMassAnalyzerType productAnalyzerType = FullScanMassAnalyzerType.none;
             double? productRes = null;
             double? productResMz = null;
@@ -430,13 +433,21 @@ namespace pwiz.Skyline.SettingsUI
                 double minFilt, maxFilt;
                 if (precursorFilterType == FullScanPrecursorFilterType.Multiple)
                 {
-                    minFilt = TransitionFullScan.MIN_PRECURSOR_MULTI_FILTER;
-                    maxFilt = TransitionFullScan.MAX_PRECURSOR_MULTI_FILTER;
+                    double filterFactor = cbAsymIsolation.Checked ? 0.5 : 1;
+                    minFilt = TransitionFullScan.MIN_PRECURSOR_MULTI_FILTER*filterFactor;
+                    maxFilt = TransitionFullScan.MAX_PRECURSOR_MULTI_FILTER*filterFactor;
                     double precFilt;
                     if (!helper.ValidateDecimalTextBox(e, tabControl1, (int) TABS.FullScan, textPrecursorFilterMz,
                                                        minFilt, maxFilt, out precFilt))
                         return;
                     precursorFilter = precFilt;
+                    if (cbAsymIsolation.Checked)
+                    {
+                        if (!helper.ValidateDecimalTextBox(e, tabControl1, (int)TABS.FullScan, textRightPrecursorFilterMz,
+                                                           minFilt, maxFilt, out precFilt))
+                            return;
+                        precursorRightFilter = precFilt;
+                    }
                 }
 
                 productAnalyzerType = ProductMassAnalyzer;
@@ -495,6 +506,7 @@ namespace pwiz.Skyline.SettingsUI
 
             var fullScan = new TransitionFullScan(precursorFilterType,
                                                   precursorFilter,
+                                                  precursorRightFilter,
                                                   productAnalyzerType,
                                                   productRes,
                                                   productResMz,
@@ -596,8 +608,7 @@ namespace pwiz.Skyline.SettingsUI
             var precursorFilterType = PrecursorFilterTypeCurrent;
             if (precursorFilterType == FullScanPrecursorFilterType.None)
             {
-                textPrecursorFilterMz.Text = "";
-                textPrecursorFilterMz.Enabled = false;
+                EnablePrecursorFilterMz(false, "", null);
                 // Selection change should set filter m/z textbox correctly
                 comboProductAnalyzerType.SelectedIndex = -1;
                 comboProductAnalyzerType.Enabled = false;
@@ -608,14 +619,16 @@ namespace pwiz.Skyline.SettingsUI
                 if (precursorFilterType == FullScan.PrecursorFilterType)
                 {
                     EnablePrecursorFilterMz(precursorFilterType == FullScanPrecursorFilterType.Multiple,
-                                            FullScan.PrecursorFilter.ToString());
+                                            FullScan.PrecursorFilter.ToString(),
+                                            FullScan.PrecursorRightFilter != null ? FullScan.PrecursorRightFilter.ToString() : null);
                     if (!comboProductAnalyzerType.Enabled)
                         comboProductAnalyzerType.SelectedItem = TransitionFullScan.MassAnalyzerToString(FullScan.ProductMassAnalyzer);
                 }
                 else
                 {
                     EnablePrecursorFilterMz(precursorFilterType == FullScanPrecursorFilterType.Multiple,
-                                            TransitionFullScan.DEFAULT_PRECURSOR_MULTI_FILTER.ToString());
+                                            TransitionFullScan.DEFAULT_PRECURSOR_MULTI_FILTER.ToString(),
+                                            null);
                     if (!comboProductAnalyzerType.Enabled)
                         comboProductAnalyzerType.SelectedItem = TransitionFullScan.MassAnalyzerToString(FullScanMassAnalyzerType.qit);
                 }
@@ -623,10 +636,52 @@ namespace pwiz.Skyline.SettingsUI
             }            
         }
 
-        private void EnablePrecursorFilterMz(bool enable, string text)
+        private void EnablePrecursorFilterMz(bool enable, string text, string textRight)
         {
+            cbAsymIsolation.Checked = enable && textRight != null;
+            cbAsymIsolation.Enabled = enable;
             textPrecursorFilterMz.Text = (enable ? text : "");
-            textPrecursorFilterMz.Enabled = enable;            
+            textPrecursorFilterMz.Enabled = enable;
+            if (cbAsymIsolation.Checked)
+                textRightPrecursorFilterMz.Text = textRight;
+        }
+
+        private void cbAsymIsolation_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateIsolationWidths();
+        }
+
+        private void UpdateIsolationWidths()
+        {
+            if (cbAsymIsolation.Checked)
+            {
+                labelIsolationWidth.Text = "Isolation &widths:";
+                textRightPrecursorFilterMz.Visible = true;
+                textPrecursorFilterMz.Width = textRightPrecursorFilterMz.Width;
+                double totalWidth;
+                double? halfWidth = null;
+                if (double.TryParse(textPrecursorFilterMz.Text, out totalWidth))
+                    halfWidth = totalWidth/2;
+                textPrecursorFilterMz.Text = textRightPrecursorFilterMz.Text =
+                                             halfWidth.HasValue ? halfWidth.ToString() : "";
+            }
+            else
+            {
+                labelIsolationWidth.Text = "Isolation &width:";
+                textRightPrecursorFilterMz.Visible = false;
+                textPrecursorFilterMz.Width = textRightPrecursorFilterMz.Right - textPrecursorFilterMz.Left;
+                double leftWidth;
+                double? totalWidth = null;
+                if (double.TryParse(textPrecursorFilterMz.Text, out leftWidth))
+                {
+                    double rightWidth;
+                    if (double.TryParse(textRightPrecursorFilterMz.Text, out rightWidth))
+                        totalWidth = leftWidth + rightWidth;
+                    else
+                        totalWidth = leftWidth*2;
+                }
+                textPrecursorFilterMz.Text = totalWidth.HasValue ? totalWidth.ToString() : "";
+            }
         }
 
         private void comboProductAnalyzerType_SelectedIndexChanged(object sender, EventArgs e)

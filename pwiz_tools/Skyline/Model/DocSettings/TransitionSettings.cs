@@ -156,6 +156,7 @@ namespace pwiz.Skyline.Model.DocSettings
                 {
                     FullScan = new TransitionFullScan(Instrument.PrecursorFilterType,
                                                       Instrument.PrecursorFilter,
+                                                      null,
                                                       FullScanMassAnalyzerType.qit,
                                                       Instrument.ProductFilter/TransitionFullScan.RES_PER_FILTER, null,
                                                       FullScanPrecursorIsotopes.None, null,
@@ -1604,6 +1605,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public TransitionFullScan(FullScanPrecursorFilterType precursorFilterType,
                                     double? precursorFilter,
+                                    double? precursorRightFilter,
                                     FullScanMassAnalyzerType productMassAnalyzer,
                                     double? productRes,
                                     double? productResMz,
@@ -1617,6 +1619,7 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             PrecursorFilterType = precursorFilterType;
             PrecursorFilter = precursorFilter;
+            PrecursorRightFilter = precursorRightFilter;
             ProductMassAnalyzer = productMassAnalyzer;
             ProductRes = productRes;
             ProductResMz = productResMz;
@@ -1638,6 +1641,10 @@ namespace pwiz.Skyline.Model.DocSettings
         public FullScanPrecursorFilterType PrecursorFilterType { get; private set; }
 
         public double? PrecursorFilter { get; private set; }
+
+        public double? PrecursorRightFilter { get; private set; }
+
+        public bool IsAsymPrecursorFilter { get { return PrecursorRightFilter.HasValue; } }
 
         public FullScanMassAnalyzerType ProductMassAnalyzer { get; private set; }
 
@@ -1784,10 +1791,16 @@ namespace pwiz.Skyline.Model.DocSettings
 
         public TransitionFullScan ChangePrecursorFilter(FullScanPrecursorFilterType typeProp, double? prop)
         {
+            return ChangePrecursorFilter(typeProp, prop, null);
+        }
+
+        public TransitionFullScan ChangePrecursorFilter(FullScanPrecursorFilterType typeProp, double? prop, double? propRight)
+        {
             return ChangeProp(ImClone(this), im =>
             {
                 im.PrecursorFilterType = typeProp;
                 im.PrecursorFilter = prop;
+                im.PrecursorRightFilter = propRight;
                 // Make sure the change results in a valid object, or an exception
                 // will be thrown.
                 if (im.PrecursorFilterType == FullScanPrecursorFilterType.None)
@@ -1878,6 +1891,8 @@ namespace pwiz.Skyline.Model.DocSettings
         {
             precursor_filter_type,
             precursor_filter,
+            precursor_left_filter,
+            precursor_right_filter,
             product_mass_analyzer,
             product_res,
             product_res_mz,
@@ -1942,6 +1957,8 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
                 else
                 {
+                    if (!PrecursorFilter.HasValue)
+                        throw new InvalidDataException("An isolation window width value is required when filtering MS/MS in multiple precursor mode.");
                     ValidateRange(PrecursorFilter, MIN_PRECURSOR_MULTI_FILTER, MAX_PRECURSOR_MULTI_FILTER,
                                   "The precursor m/z filter must be between {0} and {1}");
                 }
@@ -2005,7 +2022,17 @@ namespace pwiz.Skyline.Model.DocSettings
             if (PrecursorFilterType != FullScanPrecursorFilterType.None)
             {
                 if (PrecursorFilterType == FullScanPrecursorFilterType.Multiple)
-                    PrecursorFilter = reader.GetDoubleAttribute(ATTR.precursor_filter, DEFAULT_PRECURSOR_MULTI_FILTER);
+                {
+                    PrecursorFilter = reader.GetNullableDoubleAttribute(ATTR.precursor_filter);
+                    if (!PrecursorFilter.HasValue)
+                    {
+                        PrecursorFilter = reader.GetNullableDoubleAttribute(ATTR.precursor_left_filter);
+                        if (PrecursorFilter.HasValue)
+                            PrecursorRightFilter = reader.GetDoubleAttribute(ATTR.precursor_right_filter, PrecursorFilter.Value);
+                        else
+                            PrecursorFilter = DEFAULT_PRECURSOR_MULTI_FILTER;
+                    }
+                }
 
                 ProductMassAnalyzer = reader.GetEnumAttribute(ATTR.product_mass_analyzer, FullScanMassAnalyzerType.qit);
                 ProductRes = reader.GetDoubleAttribute(ATTR.product_res,
@@ -2065,7 +2092,13 @@ namespace pwiz.Skyline.Model.DocSettings
             if (PrecursorFilterType != FullScanPrecursorFilterType.None)
             {
                 writer.WriteAttribute(ATTR.precursor_filter_type, PrecursorFilterType);
-                writer.WriteAttributeNullable(ATTR.precursor_filter, PrecursorFilter);
+                if (!IsAsymPrecursorFilter)
+                    writer.WriteAttributeNullable(ATTR.precursor_filter, PrecursorFilter);
+                else
+                {
+                    writer.WriteAttributeNullable(ATTR.precursor_left_filter, PrecursorFilter);
+                    writer.WriteAttributeNullable(ATTR.precursor_right_filter, PrecursorRightFilter);
+                }
                 writer.WriteAttribute(ATTR.product_mass_analyzer, ProductMassAnalyzer);
                 writer.WriteAttributeNullable(ATTR.product_res, ProductRes);
                 writer.WriteAttributeNullable(ATTR.product_res_mz, ProductResMz);
@@ -2093,6 +2126,7 @@ namespace pwiz.Skyline.Model.DocSettings
             if (ReferenceEquals(this, other)) return true;
             return Equals(other.PrecursorFilterType, PrecursorFilterType) &&
                 other.PrecursorFilter.Equals(PrecursorFilter) &&
+                other.PrecursorRightFilter.Equals(PrecursorRightFilter) &&
                 Equals(other.ProductMassAnalyzer, ProductMassAnalyzer) &&
                 other.ProductRes.Equals(ProductRes) &&
                 other.ProductResMz.Equals(ProductResMz) &&
@@ -2119,6 +2153,7 @@ namespace pwiz.Skyline.Model.DocSettings
             {
                 int result = PrecursorFilterType.GetHashCode();
                 result = (result*397) ^ (PrecursorFilter.HasValue ? PrecursorFilter.Value.GetHashCode() : 0);
+                result = (result*397) ^ (PrecursorRightFilter.HasValue ? PrecursorRightFilter.Value.GetHashCode() : 0);
                 result = (result*397) ^ ProductMassAnalyzer.GetHashCode();
                 result = (result*397) ^ (ProductRes.HasValue ? ProductRes.Value.GetHashCode() : 0);
                 result = (result*397) ^ (ProductResMz.HasValue ? ProductResMz.Value.GetHashCode() : 0);

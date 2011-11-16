@@ -817,6 +817,9 @@ namespace pwiz.SkylineTest
                 FullScanPrecursorFilterType.Multiple + "\" precursor_filter=\"2\" product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.ft_icr + "\" product_res=\"" + validHiRes + "\" product_res_mz=\"" + validHiResMz + "\"/>");
             AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
+                FullScanPrecursorFilterType.Multiple + "\" precursor_left_filter=\"5\" precursor_right_filter=\"20\" product_mass_analyzer=\"" +
+                FullScanMassAnalyzerType.ft_icr + "\" product_res=\"" + validHiRes + "\" product_res_mz=\"" + validHiResMz + "\"/>");
+            AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
                 FullScanPrecursorFilterType.Multiple + "\" precursor_filter=\"2\" product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.ft_icr + "\" product_res=\"" + validHiRes + "\"/>");   // Use default res mz
             AssertEx.DeserializeNoError<TransitionFullScan>("<transition_full_scan precursor_mass_analyzer=\"" +
@@ -853,6 +856,9 @@ namespace pwiz.SkylineTest
             AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
                 FullScanPrecursorFilterType.Multiple + "\" precursor_filter=\"" + underMinMulti + "\" product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.qit + "\" product_resoltion=\"" + validLoRes + "\"/>");
+            AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
+                FullScanPrecursorFilterType.Multiple + "\" precursor_left_filter=\"5\" precursor_right_filter=\"fail\" product_mass_analyzer=\"" +
+                FullScanMassAnalyzerType.ft_icr + "\" product_res=\"" + validHiRes + "\" product_res_mz=\"" + validHiResMz + "\"/>");
             AssertEx.DeserializeError<TransitionFullScan>("<transition_full_scan precursor_filter_type=\"" +
                 FullScanPrecursorFilterType.Single + "\" product_mass_analyzer=\"" +
                 FullScanMassAnalyzerType.qit + "\" product_res=\"" + underMinLoRes + "\"/>");

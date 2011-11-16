@@ -613,6 +613,7 @@ namespace pwiz.Skyline.Model.Results
         private readonly TransitionInstrument _instrument;
         private readonly FullScanPrecursorFilterType _precursorFilterType;
         private readonly double _precursorFilterWindow;
+        private readonly double? _precursorRightFilterWindow;
         private readonly bool _isHighAccMsFilter;
         private readonly bool _isHighAccProductFilter;
         private readonly bool _isSharedTime;
@@ -635,6 +636,7 @@ namespace pwiz.Skyline.Model.Results
                 if (EnabledMsMs)
                 {
                     _precursorFilterWindow = _fullScan.PrecursorFilter ?? _instrument.MzMatchTolerance*2;
+                    _precursorRightFilterWindow = _fullScan.PrecursorRightFilter;
                     _isHighAccProductFilter = !Equals(_fullScan.ProductMassAnalyzer,
                                                       FullScanMassAnalyzerType.qit);
                 }
@@ -798,9 +800,14 @@ namespace pwiz.Skyline.Model.Results
                 // the acquisition isolation width.  In this case the chromatograms
                 // may be very confusing (spikey), because of incorrectly included
                 // data points.
-                double isolationWidthValue = _precursorFilterWindow;
+                double isolationWidthValue = _precursorFilterWindow + (_precursorRightFilterWindow ?? 0);
                 if (isolationWidth.HasValue && isolationWidth.Value < _precursorFilterWindow)
                     isolationWidthValue = isolationWidth.Value;
+
+                // Make sure the isolation target is centered in the desired window, even
+                // if the window was specified as being asymetric
+                if (_precursorRightFilterWindow.HasValue)
+                    isolationTargetMz += _precursorRightFilterWindow.Value - isolationWidthValue / 2;
 
                 // For multiple case, find the first possible value, and iterate until
                 // no longer matching or the end of the array is encountered

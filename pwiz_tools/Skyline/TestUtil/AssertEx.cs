@@ -163,6 +163,11 @@ namespace pwiz.SkylineTestUtil
             }
         }
 
+        public static void Serializable(SrmDocument doc)
+        {
+            Serializable(doc, DocumentCloned);
+        }
+
         public static void Serializable<TObj>(TObj target, Action<TObj, TObj> validate)
             where TObj : class
         {

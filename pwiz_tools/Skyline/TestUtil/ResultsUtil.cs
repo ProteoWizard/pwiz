@@ -107,6 +107,12 @@ namespace pwiz.SkylineTestUtil
         public SrmDocument ChangeMeasuredResults(MeasuredResults measuredResults,
             int peptides, int tranGroups, int transitions)
         {
+            return ChangeMeasuredResults(measuredResults, peptides, tranGroups, 0, transitions, 0);
+        }
+
+        public SrmDocument ChangeMeasuredResults(MeasuredResults measuredResults,
+            int peptides, int tranGroups, int tranGroupsHeavy, int transitions, int transitionsHeavy)
+        {
             var doc = Document;
             var docResults = doc.ChangeMeasuredResults(measuredResults);
             Assert.IsTrue(SetDocument(docResults, doc, true));
@@ -115,7 +121,8 @@ namespace pwiz.SkylineTestUtil
 
             // Check the result state of the most recently added chromatogram set.
             var chroms = measuredResults.Chromatograms;
-            AssertResult.IsDocumentResultsState(docResults, chroms[chroms.Count - 1].Name, peptides, tranGroups, 0, transitions, 0);
+            AssertResult.IsDocumentResultsState(docResults, chroms[chroms.Count - 1].Name,
+                peptides, tranGroups, tranGroupsHeavy, transitions, transitionsHeavy);
 
             return docResults;
         }
