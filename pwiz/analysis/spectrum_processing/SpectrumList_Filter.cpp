@@ -278,7 +278,15 @@ PWIZ_API_DECL SpectrumList_FilterPredicate_PrecursorMzSet::SpectrumList_FilterPr
 
 PWIZ_API_DECL boost::logic::tribool SpectrumList_FilterPredicate_PrecursorMzSet::accept(const msdata::Spectrum& spectrum) const
 {
-	double precursorMz = getPrecursorMz(spectrum);
+    double precursorMz = getPrecursorMz(spectrum);
+    if (precursorMz == 0)
+    {
+        CVParam param = spectrum.cvParam(MS_ms_level);
+        if (param.cvid == CVID_Unknown) return boost::logic::indeterminate;
+        int msLevel = param.valueAs<int>();
+        // If not level 1, then it should have a precursor, so request more meta data.
+        if (msLevel != 1) return boost::logic::indeterminate;
+    }
     bool result = precursorMzSet_.count(precursorMz)>0;
     return result;
 }
