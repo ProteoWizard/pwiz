@@ -911,7 +911,7 @@ int main(int argc, char* argv[])
 {
     try
     {
-        if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
+        if (1 || argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
         test();
         if (os_) *os_ << "ok\n";
         return 0;
