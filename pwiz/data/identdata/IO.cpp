@@ -2675,6 +2675,7 @@ struct HandlerThreshold : public SAXParser::Handler
             paramContainer->cvParams.push_back(cvParam);
         }
 
+        return Status::Ok;
     }
 
     ParamContainer* paramContainer;
