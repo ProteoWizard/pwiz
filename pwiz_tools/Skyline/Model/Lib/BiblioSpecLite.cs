@@ -951,8 +951,11 @@ namespace pwiz.Skyline.Model.Lib
                         double retentionTime = reader.GetDouble(iRetentionTime);
                         bool isBest = reader.GetInt16(iBestSpectrum) != 0;
 
-                        yield return new SpectrumInfo(this, labelType, filePath, retentionTime, isBest,
-                            new SpectrumLiteKey(redundantId));
+                        // Best spectra should be loaded in the usual way, not from the redundan library.
+                        object spectrumKey = i;
+                        if (!isBest)
+                            spectrumKey = new SpectrumLiteKey(redundantId);
+                        yield return new SpectrumInfo(this, labelType, filePath, retentionTime, isBest, spectrumKey);
                     }
                 }
             }

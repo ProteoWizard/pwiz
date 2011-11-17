@@ -397,7 +397,10 @@ namespace pwiz.Skyline.SettingsUI
 
         public void ShowBuildLibraryDlg()
         {
-            using (var dlg = new BuildLibraryDlg())
+            // Libraries built for full-scan filtering can have important retention time information,
+            // and the redundant libraries are more likely to be desirable for showing spectra.
+            bool isFullScanEnabled = _parent.DocumentUI.Settings.TransitionSettings.FullScan.IsEnabled;
+            using (var dlg = new BuildLibraryDlg {LibraryKeepRedundant = isFullScanEnabled})
             {
                 if (dlg.ShowDialog(this) == DialogResult.OK)
                 {

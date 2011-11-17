@@ -531,7 +531,16 @@ namespace pwiz.Skyline.Controls.Graphs
                     return null;
                     //requiredPeptidesNames = new List<string>();
                 else
-                    requiredPeptidesNames = _calculator.GetRequiredRegressionPeptides(_peptidesTimes.ConvertAll(pep => pep.PeptideSequence));
+                {
+                    try
+                    {
+                        requiredPeptidesNames = _calculator.GetRequiredRegressionPeptides(_peptidesTimes.ConvertAll(pep => pep.PeptideSequence));
+                    }
+                    catch (CalculatorException)
+                    {
+                        return null;
+                    }
+                }
 
                 var requiredPeptides = new List<MeasuredRetentionTime>();
                 foreach (var pepName in requiredPeptidesNames)
