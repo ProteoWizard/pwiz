@@ -1584,7 +1584,10 @@ namespace BumberDash.Forms
         /// <param name="line"></param>
         internal void AddLogLine(string line)
         {
-            var editedLine = line.Replace("<<JobName>>", ((HistoryItem)JobQueueDGV[0, LastCompleted + 1].Tag).JobName);
+            var jobName = JobQueueDGV[0, LastCompleted + 1].Tag != null
+                              ? ((HistoryItem) JobQueueDGV[0, LastCompleted + 1].Tag).JobName
+                              : string.Empty;
+            var editedLine = line.Replace("<<JobName>>", jobName);
             _jobLog.logText.AppendText(Environment.NewLine + editedLine);
             var lineList = _jobLog.logText.Text.Split(Environment.NewLine.ToCharArray(),StringSplitOptions.RemoveEmptyEntries);
             var buildingString = string.Empty;

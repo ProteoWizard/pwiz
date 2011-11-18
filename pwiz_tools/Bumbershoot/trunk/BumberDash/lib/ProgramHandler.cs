@@ -29,7 +29,6 @@ namespace BumberDash.lib
         private bool _scanning; //Tells if ProgramHandler is active
         private bool _killed; //Indicates if a forced stop has been put into place
         private bool _barMode;
-        private bool _errorDetected;
         private bool _versionCaught; //Tells if version number has been found and updated yet
         private int _currentRow; //Row in main form current job comes from
         private int _fileProcessing; //Total number of files in the current job
@@ -59,7 +58,6 @@ namespace BumberDash.lib
             var argumentString = new StringBuilder();
             string configString;
 
-            _errorDetected = false;
             _killed = false;
             ProcessStartInfo psi;
 
@@ -219,16 +217,19 @@ namespace BumberDash.lib
 
         private void ProgramExited(object sender, EventArgs e)
         {
-            if (_runningProgram == null || _errorDetected)
+            if (_runningProgram == null)
                 return;
+            _runningProgram.OutputDataReceived -= DataReceived;
+            _runningProgram.ErrorDataReceived -= ErrorCaught;
+            _runningProgram.Exited -= ProgramExited;
 
             _scanning = false;
 
             if (!_killed && JobFinished != null)
             {
-                if (_barMode)
+                if (_filesToProcess > _completedFiles.Count)
                     JobFinished(false, true);
-                if (_destinationProgram == "DirecTag")
+                else if (_destinationProgram == "DirecTag")
                     JobFinished(true, false);
                 else
                 {
@@ -382,17 +383,15 @@ namespace BumberDash.lib
 
         private void ErrorCaught(object sender, DataReceivedEventArgs e)
         {
-            if (_errorDetected ||
+            if (!_scanning || _filesToProcess == _completedFiles.Count || string.IsNullOrEmpty(e.Data) ||
                 e.Data.Contains("Could not find the default configuration file") ||
                 e.Data.Contains("Could not find the default residue masses file"))
                 return;
 
-            _errorDetected = true;
             var data = e.Data;
 
             if (ErrorForward != null)
                 ErrorForward(string.Format("[{0}] Error detected- {1}", _destinationProgram, data));
-            ForceKill();
         }
 
         /// <summary>
@@ -797,8 +796,6 @@ namespace BumberDash.lib
             }
             if (_workThread != null)
                 _workThread.Abort();
-            if (_errorDetected)
-                JobFinished(false, true);
         }
 
         /// <summary>
