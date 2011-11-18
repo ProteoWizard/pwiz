@@ -930,7 +930,7 @@ namespace pwiz.Skyline.Model.Lib
             {
                 select.CommandText =
                     "SELECT * " +
-                    "FROM [RetentionTimes] INNER JOIN [SpectrumSourceFiles] ON [SpectrumSourceID] = [id] " +
+                    "FROM [RetentionTimes] INNER JOIN [SpectrumSourceFiles] ON [SpectrumSourceID] = [SpectrumSourceFiles].[id] " +
                     "WHERE [RefSpectraID] = ?";
                 if (!getAll)
                     select.CommandText += " AND [bestSpectrum] = 1";
@@ -951,11 +951,20 @@ namespace pwiz.Skyline.Model.Lib
                         double retentionTime = reader.GetDouble(iRetentionTime);
                         bool isBest = reader.GetInt16(iBestSpectrum) != 0;
 
-                        // Best spectra should be loaded in the usual way, not from the redundan library.
+
+                        // If this is not a reference(best) spectrum, the spectrumKey should be of the 
+                        // type SpectrumLiteKey so that peaks for this spectrum are loaded from the
+                        // redundant library. Otherwise, for best spectra, the key should simply be 
+                        // the id of this spectrum in the cache.
+                        // Look at the LoadSpectrum method to see how spectrumKey is used.
                         object spectrumKey = i;
                         if (!isBest)
                             spectrumKey = new SpectrumLiteKey(redundantId);
-                        yield return new SpectrumInfo(this, labelType, filePath, retentionTime, isBest, spectrumKey);
+                        yield return new SpectrumInfo(this, labelType, filePath, retentionTime, isBest,
+                                                      spectrumKey)
+                        {
+                            SpectrumHeaderInfo = CreateSpectrumHeaderInfo(_libraryEntries[i])
+                        };
                     }
                 }
             }

@@ -402,7 +402,9 @@
     <Compile Include="Model\Lib\BlibData\DbModification.cs" />
     <Compile Include="Model\Lib\BlibData\DbRefSpectra.cs" />
     <Compile Include="Model\Lib\BlibData\DbRefSpectraPeaks.cs" />
+    <Compile Include="Model\Lib\BlibData\DbRetentionTimes.cs" />
     <Compile Include="Model\Lib\BlibData\SessionFactoryFactory.cs" />
+    <Compile Include="Model\Lib\BlibData\DbSpectrumSourceFiles.cs" />
     <Compile Include="Model\Lib\LibraryRankedSpectrumInfo.cs" />
     <Compile Include="Model\MemoryDocumentContainer.cs" />
     <Compile Include="Model\ModificationMatcher.cs" />
@@ -1379,6 +1381,7 @@
     <EmbeddedResource Include="Resources\PeptideLibStandard.bmp" />
     <EmbeddedResource Include="Resources\RedXTransparentBackground.bmp" />
     <EmbeddedResource Include="Model\Irt\mapping.xml" />
+    <EmbeddedResource Include="Model\Lib\BlibData\mapping_redundant.xml" />
     <Content Include="SkylineData.ico" />
     <Content Include="SkylineDoc.ico" />
   </ItemGroup>

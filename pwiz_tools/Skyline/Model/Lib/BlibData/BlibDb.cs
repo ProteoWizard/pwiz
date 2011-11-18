@@ -18,12 +18,12 @@
  */
 using System;
 using System.Collections.Generic;
+using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using NHibernate;
-using NHibernate.Cfg;
 using pwiz.Skyline.Model.DocSettings.Extensions;
 using pwiz.ProteomeDatabase.Util;
 using pwiz.Skyline.Util;
@@ -35,6 +35,8 @@ namespace pwiz.Skyline.Model.Lib.BlibData
     {
         private static readonly Regex REGEX_LSID =
             new Regex("urn:lsid:([^:]*):spectral_library:bibliospec:[^:]*:([^:]*)");
+
+        private ILongWaitBroker WaitBroker { get; set; }
 
         private BlibDb(String path)
         {
@@ -53,15 +55,26 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             return new SessionWithLock(SessionFactory.OpenSession(), DatabaseLock, true);
         }
 
-        public ReaderWriterLock DatabaseLock { get; private set; }
-        public String FilePath { get; private set; }
-
-        public void ConfigureMappings(Configuration configuration)
+        private void CreateSessionFactory_Redundant(string path)
         {
-            SessionFactoryFactory.ConfigureMappings(configuration);
+            SessionFactory_Redundant = SessionFactoryFactory.CreateSessionFactory_Redundant(path, true);
+            DatabaseLock_Redundant = new ReaderWriterLock();
         }
 
+        private ISession OpenWriteSession_Redundant()
+        {
+            return new SessionWithLock(SessionFactory_Redundant.OpenSession(), DatabaseLock_Redundant, true);
+        }
+
+
+        public ReaderWriterLock DatabaseLock { get; private set; }
+        private ReaderWriterLock DatabaseLock_Redundant { get; set;  }
+
+        public String FilePath { get; private set; }
+
         private ISessionFactory SessionFactory { get; set; }
+        private ISessionFactory SessionFactory_Redundant { get; set; }
+
         public static BlibDb OpenBlibDb(String path)
         {
             return new BlibDb(path);
@@ -95,14 +108,21 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         public BiblioSpecLiteLibrary MinimizeLibrary(BiblioSpecLiteSpec librarySpec,
             Library library, SrmDocument document)
         {
+            UpdateProgressMessage(string.Format("Minimizing library {0}", library.Name));
+
             string libAuthority = "unknown.org";
             string libId = library.Name;
             // CONSIDER: Use version numbers of the original library?
-            const int majorVer = 1;
-            const int minorVer = 0;
-            if (library is BiblioSpecLiteLibrary)
+            int majorVer = 1;
+            int minorVer = 0;
+
+            bool saveRetentionTimes = false;
+            bool saveRedundantLib = false;
+
+            var blibLib = library as BiblioSpecLiteLibrary;
+            if (blibLib != null)
             {
-                string libraryLsid = ((BiblioSpecLiteLibrary)library).Lsid;
+                string libraryLsid = blibLib.Lsid;
                 Match matchLsid = REGEX_LSID.Match(libraryLsid);
                 if (matchLsid.Success)
                 {
@@ -112,6 +132,24 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                 else
                 {
                     libAuthority = BiblioSpecLiteLibrary.DEFAULT_AUTHORITY;
+                }
+
+                // We will have a RetentionTimes table if schemaVersion if 1 or greater.
+                saveRetentionTimes = blibLib.SchemaVersion < 1 ? false : true;
+                majorVer = blibLib.Revision;
+                minorVer = blibLib.SchemaVersion;
+
+                // If the document has MS1 filtering enabled we will save a minimized version
+                // of the redundant library, if available.
+                if(document.Settings.TransitionSettings.FullScan.IsEnabledMs)
+                {
+                    String redundantLibPath = blibLib.FilePathRedundant;
+                    if(File.Exists(redundantLibPath))
+                    {
+                        string path = BiblioSpecLiteSpec.GetRedundantName(FilePath); 
+                        CreateSessionFactory_Redundant(path);
+                        saveRedundantLib = true;
+                    }
                 }
             }
             else if (library is BiblioSpecLibrary)
@@ -129,94 +167,353 @@ namespace pwiz.Skyline.Model.Lib.BlibData
 
             var dictLibrary = new Dictionary<LibKey, BiblioLiteSpectrumInfo>();
 
-            using (var session = OpenWriteSession())
-            using (var transaction = session.BeginTransaction())
+            // Hash table to store the database IDs of any source files in the library
+            // Source file information is available only in Bibliospec libraries, schema version >= 1
+            var dictFiles = new Dictionary<string, long>();
+
+            ISession redundantSession = null;
+            ITransaction redundantTransaction = null;
+            int redundantSpectraCount = 0;
+
+            try
             {
-                var settings = document.Settings;
-
-                foreach (var nodePep in document.Peptides)
+                using (ISession session = OpenWriteSession())
+                using (ITransaction transaction = session.BeginTransaction())
                 {
-                    var mods = nodePep.ExplicitMods;
+                    var settings = document.Settings;
 
-                    foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
+                    int peptideCount = document.PeptideCount;
+                    int savedCount = 0;
+
+                    foreach (var nodePep in document.Peptides)
                     {
-                        // Only get library info from precursors that use the desired library
-                        if (!nodeGroup.HasLibInfo || !Equals(nodeGroup.LibInfo.LibraryName, library.Name))
-                            continue;
+                        var mods = nodePep.ExplicitMods;
 
-                        TransitionGroup group = nodeGroup.TransitionGroup;
-                        string peptideSeq = group.Peptide.Sequence;
-                        int precursorCharge = group.PrecursorCharge;
-
-                        SpectrumHeaderInfo headerInfo;
-                        SpectrumPeaksInfo spectrumInfo;
-                        IsotopeLabelType typeInfo;
-                        if (settings.TryGetLibInfo(peptideSeq, precursorCharge, mods, out typeInfo, out headerInfo) &&
-                            settings.TryLoadSpectrum(peptideSeq, precursorCharge, mods, out typeInfo, out spectrumInfo) &&
-                            // Only if the library match is of the same type as the current group
-                            typeInfo == nodeGroup.TransitionGroup.LabelType)
+                        foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                         {
-                            var calcPre = settings.GetPrecursorCalc(typeInfo, mods);
+                            // Only get library info from precursors that use the desired library
+                            if (!nodeGroup.HasLibInfo || !Equals(nodeGroup.LibInfo.LibraryName, library.Name))
+                                continue;
+
+                            TransitionGroup group = nodeGroup.TransitionGroup;
+                            string peptideSeq = group.Peptide.Sequence;
+                            int precursorCharge = group.PrecursorCharge;
+                            IsotopeLabelType labelType = nodeGroup.TransitionGroup.LabelType;
+
+
+                            var calcPre = settings.GetPrecursorCalc(labelType, mods);
                             var peptideModSeq = calcPre.GetModifiedSequence(peptideSeq, false);
                             var libKey = new LibKey(peptideModSeq, precursorCharge);
+
                             if (dictLibrary.ContainsKey(libKey))
                                 continue;
 
-                            short copies = (short) headerInfo.GetRankValue(LibrarySpec.PEP_RANK_COPIES);
-                            DbRefSpectra refSpectra = new DbRefSpectra
-                                                          {
-                                                              PeptideSeq = peptideSeq,
-                                                              PrecursorMZ = nodeGroup.PrecursorMz,
-                                                              PrecursorCharge = precursorCharge,
-                                                              PeptideModSeq = peptideModSeq,
-//                                                              NextAA = null,
-//                                                              PrevAA = null,
-                                                              Copies = copies,
-                                                              NumPeaks = (short) spectrumInfo.Peaks.Length
-                                                          };
 
-                            refSpectra.Peaks = new DbRefSpectraPeaks
-                                                   {
-                                                       RefSpectra = refSpectra,
-                                                       PeakIntensity = IntensitiesToBytes(spectrumInfo.Peaks),
-                                                       PeakMZ = MZsToBytes(spectrumInfo.Peaks)
-                                                   };
+                            // saveRetentionTimes will be false unless this is a BiblioSpec(schemaVersion >=1) library.
+                            if (!saveRetentionTimes)
+                            {
+                                // get the best spectra
+                                foreach (var spectrumInfo in library.GetSpectra(libKey, labelType, true))
+                                {
+                                    DbRefSpectra refSpectra = MakeRefSpectrum(spectrumInfo,
+                                                                              peptideSeq,
+                                                                              peptideModSeq,
+                                                                              nodeGroup.PrecursorMz,
+                                                                              precursorCharge);
 
-                            ModsFromModifiedSequence(refSpectra);
+                                    session.Save(refSpectra);
 
-                            session.Save(refSpectra);
+                                    dictLibrary.Add(libKey,
+                                                    new BiblioLiteSpectrumInfo(libKey, refSpectra.Copies,
+                                                                               refSpectra.NumPeaks,
+                                                                               (int) (refSpectra.Id ?? 0)));
+                                }
 
-                            dictLibrary.Add(libKey,
-                                new BiblioLiteSpectrumInfo(libKey, copies, refSpectra.NumPeaks, (int) (refSpectra.Id ?? 0)));
+                                session.Flush();
+                                session.Clear();
+                            }
+                                // This is a BiblioSpec(schemaVersion >=1) library.
+                            else
+                            {
+                                // get all the spectra, including the redundant ones if this library has any
+                                IEnumerable<SpectrumInfo> spectra = library.GetSpectra(libKey, labelType, false);
 
-                            session.Flush();
-                            session.Clear();
+                                DbRefSpectra refSpectra = new DbRefSpectra
+                                                              {
+                                                                  PeptideSeq = peptideSeq,
+                                                                  PrecursorMZ = nodeGroup.PrecursorMz,
+                                                                  PrecursorCharge = precursorCharge,
+                                                                  PeptideModSeq = peptideModSeq
+                                                              };
+
+                                // Get all the information for this reference spectrum.
+                                // For BiblioSpec (schema ver >= 1), this can include retention time information 
+                                // for this spectrum as well as any redundant spectra for the peptide.
+                                // Ids of spectra in the redundant library, where available, are also returned.
+                                List<SpectrumLiteKey> redundantSpectraKeys = new List<SpectrumLiteKey>();
+                                BuildRefSpectra(document, session, refSpectra, spectra, dictFiles,
+                                                ref redundantSpectraKeys);
+
+
+                                session.Save(refSpectra);
+                                session.Flush();
+                                session.Clear();
+
+                                dictLibrary.Add(libKey,
+                                                new BiblioLiteSpectrumInfo(libKey, refSpectra.Copies,
+                                                                           refSpectra.NumPeaks,
+                                                                           (int) (refSpectra.Id ?? 0)));
+
+                                // Save entries in the redundant library.
+                                if (saveRedundantLib && redundantSpectraKeys.Count > 0)
+                                {
+                                    if (redundantSession == null)
+                                    {
+                                        redundantSession = OpenWriteSession_Redundant();
+                                        redundantTransaction = redundantSession.BeginTransaction();
+                                    }
+                                    SaveRedundantSpectra(redundantSession, redundantSpectraKeys, refSpectra, library);
+                                    redundantSpectraCount += redundantSpectraKeys.Count;
+                                }
+                            }
                         }
+
+                        savedCount++;
+                        UpdateProgress(peptideCount, savedCount);
+                    }
+
+                    // Simulate ctime(d), which is what BlibBuild uses.
+                    string createTime = string.Format("{0:ddd MMM dd HH:mm:ss yyyy}", DateTime.Now);
+                    DbLibInfo libInfo = new DbLibInfo
+                                            {
+                                                LibLSID = libLsid,
+                                                CreateTime = createTime,
+                                                NumSpecs = dictLibrary.Count,
+                                                MajorVersion = majorVer,
+                                                MinorVersion = minorVer
+                                            };
+
+                    session.Save(libInfo);
+                    session.Flush();
+                    session.Clear();
+
+                    transaction.Commit();
+
+                    if (redundantTransaction != null)
+                    {
+                        libInfo = new DbLibInfo
+                                      {
+                                          LibLSID = libLsid,
+                                          CreateTime = createTime,
+                                          NumSpecs = redundantSpectraCount,
+                                          MajorVersion = majorVer,
+                                          MinorVersion = minorVer
+                                      };
+                        redundantSession.Save(libInfo);
+                        redundantSession.Flush();
+                        redundantSession.Clear();
+
+                        redundantTransaction.Commit();
                     }
                 }
 
-                // Simulate ctime(d), which is what BlibBuild uses.
-                string createTime = string.Format("{0:ddd MMM dd HH:mm:ss yyyy}", DateTime.Now);
-                DbLibInfo libInfo = new DbLibInfo
-                                        {
-                                            LibLSID = libLsid,
-                                            CreateTime = createTime,
-                                            NumSpecs = dictLibrary.Count,
-                                            MajorVersion = majorVer,
-                                            MinorVersion = minorVer
-                                        };
-
-                session.Save(libInfo);
-                session.Flush();
-                session.Clear();
-
-                transaction.Commit();
+            }
+            finally
+            {
+                if(redundantTransaction != null)
+                {
+                    redundantTransaction.Dispose();
+                }
+                if (redundantSession != null)
+                {
+                    redundantSession.Dispose();
+                }
             }
 
             var libraryEntries = dictLibrary.Values.ToArray();
 
             return new BiblioSpecLiteLibrary(librarySpec, libLsid, majorVer, minorVer,
                 libraryEntries, FileStreamManager.Default);
+        }
+
+        private void UpdateProgressMessage(string message)
+        {
+            if (WaitBroker != null)
+            {
+                if (WaitBroker.IsCanceled)
+                {
+                    return;
+                }
+                WaitBroker.Message = message;
+            }
+        }
+
+        private void UpdateProgress(int totalPeptideCount, int doneCount)
+        {
+            if (WaitBroker != null)
+            {
+                if (WaitBroker.IsCanceled)
+                {
+                    return;
+                }
+                int progressValue = (doneCount) * 100 / totalPeptideCount;
+
+                if (progressValue != WaitBroker.ProgressValue)
+                {
+                    WaitBroker.ProgressValue = progressValue;
+                }
+            }
+        }
+
+        private static void SaveRedundantSpectra(ISession sessionRedundant, IEnumerable<SpectrumLiteKey> redundantSpectraIds, 
+                                          DbRefSpectra refSpectra, Library library)
+        {
+            foreach (SpectrumLiteKey specLiteKey in redundantSpectraIds)
+            {
+                // Get peaks for the redundant spectrum
+                var peaksInfo = library.LoadSpectrum(specLiteKey);
+                var redundantSpectra = new DbRefSpectra
+                                           {
+                                               Id = specLiteKey.RedundantId,
+                                               PeptideSeq = refSpectra.PeptideSeq,
+                                               PrecursorMZ = refSpectra.PrecursorMZ,
+                                               PrecursorCharge = refSpectra.PrecursorCharge,
+                                               PeptideModSeq = refSpectra.PeptideModSeq,
+                                               NumPeaks = (short) peaksInfo.Peaks.Count(),
+                                               Copies = refSpectra.Copies
+                                           };
+
+                var peaks = new DbRefSpectraPeaks
+                                {
+                                    RefSpectra = redundantSpectra,
+                                    PeakIntensity = IntensitiesToBytes(peaksInfo.Peaks),
+                                    PeakMZ = MZsToBytes(peaksInfo.Peaks)
+                                };
+                redundantSpectra.Peaks = peaks;
+
+                sessionRedundant.Save(redundantSpectra);
+            }
+
+            sessionRedundant.Flush();
+            sessionRedundant.Clear();
+        }
+
+        private void BuildRefSpectra(SrmDocument document,
+                                     ISession session,
+                                     DbRefSpectra refSpectra,
+                                     IEnumerable<SpectrumInfo> spectra,
+                                     Dictionary<string, long> dictFiles,
+                                     ref List<SpectrumLiteKey> redundantSpectraKeys)
+        {
+            bool foundBestSpectrum = false;
+
+            foreach(SpectrumInfo spectrum in spectra)
+            {
+                if(spectrum.IsBest)
+                {
+                    if(foundBestSpectrum)
+                    {
+                        throw new InvalidDataException(
+                                string.Format("Multiple reference spectra found for peptide {0} in the library {1}.", 
+                                              refSpectra.PeptideModSeq, 
+                                              FilePath
+                                              ));
+                    }
+                    else
+                    {
+                        foundBestSpectrum = true;
+                    }
+
+                    MakeRefSpectrum(spectrum, refSpectra);
+                }
+
+                
+                // Determine if this spectrum is from a file that is in the document.
+                // If it is not, do not save the retention time for this spectrum, and do not
+                // add it to the redundant library. However, if this is the reference (best) spectrum
+                // we must save its retention time. 
+                var matchingFile = document.Settings.MeasuredResults.FindMatchingMSDataFile(spectrum.FilePath);
+                if (!spectrum.IsBest && matchingFile == null)
+                    continue;
+
+                // If this source file has already been saved, get its database Id.
+                // Otherwise, save it.
+                long spectrumSourceId;
+                if (!dictFiles.TryGetValue(spectrum.FilePath, out spectrumSourceId))
+                {
+                    spectrumSourceId = SaveSourceFile(session, spectrum.FilePath);
+                    if (spectrumSourceId == 0)
+                    {
+                        throw new SQLiteException(String.Format("Error getting database Id for file {0}.", spectrum.FilePath));
+                    }
+
+                    dictFiles.Add(spectrum.FilePath, spectrumSourceId);
+                }
+
+                // spectrumKey in the SpectrumInfo is an integer for reference(best) spectra,
+                // or object of type SpectrumLiteKey for redundant spectra
+                object key = spectrum.SpectrumKey;
+                var specLiteKey = key as SpectrumLiteKey;
+
+                var dbRetentionTimes = new DbRetentionTimes
+                {
+                    RedundantRefSpectraId = specLiteKey != null ? specLiteKey.RedundantId : 0,
+                    RetentionTime = spectrum.RetentionTime,
+                    SpectrumSourceId = spectrumSourceId,
+                    BestSpectrum = spectrum.IsBest ? 1 : 0
+                };
+
+                if (refSpectra.RetentionTimes == null)
+                    refSpectra.RetentionTimes = new List<DbRetentionTimes>();
+
+                refSpectra.RetentionTimes.Add(dbRetentionTimes);
+
+               
+                if (specLiteKey != null)
+                {
+                    redundantSpectraKeys.Add(specLiteKey);
+                }
+            }
+        }
+
+        private static DbRefSpectra MakeRefSpectrum(SpectrumInfo spectrum, string peptideSeq, string modifiedPeptideSeq, double precMz, int precChg)
+        {
+            var refSpectra = new DbRefSpectra
+                                {
+                                    PeptideSeq = peptideSeq,
+                                    PrecursorMZ = precMz,
+                                    PrecursorCharge = precChg,
+                                    PeptideModSeq = modifiedPeptideSeq
+                                };
+
+            MakeRefSpectrum(spectrum, refSpectra);
+            
+            return refSpectra;
+        }
+
+        private static void MakeRefSpectrum(SpectrumInfo spectrum, DbRefSpectra refSpectra)
+        {
+            short copies = (short)spectrum.SpectrumHeaderInfo.GetRankValue(LibrarySpec.PEP_RANK_COPIES);
+            var peaksInfo = spectrum.SpectrumPeaksInfo;
+
+            refSpectra.Copies = copies;
+            refSpectra.NumPeaks = (short) peaksInfo.Peaks.Length;
+
+            refSpectra.Peaks = new DbRefSpectraPeaks
+                                   {
+                                       RefSpectra = refSpectra,
+                                       PeakIntensity = IntensitiesToBytes(peaksInfo.Peaks),
+                                       PeakMZ = MZsToBytes(peaksInfo.Peaks)
+                                   };
+
+            ModsFromModifiedSequence(refSpectra);
+        }
+
+        private static long SaveSourceFile(ISession session, string filePath)
+        {
+            var sourceFile = new DbSpectrumSourceFiles {FileName = filePath};
+            session.Save(sourceFile);
+            return sourceFile.Id.HasValue ? (long)sourceFile.Id : 0;
         }
 
         /// <summary>
@@ -290,9 +587,10 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         /// <param name="pathDirectory">Directory into which new minimized libraries are built</param>
         /// <param name="nameModifier">A name modifier to append to existing names for
         ///     full libraries to create new library names</param>
+        /// <param name="waitBroker">Broker to communicate status and progress</param>
         /// <returns>A new document instance with minimized libraries</returns>
         public static SrmDocument MinimizeLibraries(SrmDocument document,
-            string pathDirectory, string nameModifier)
+            string pathDirectory, string nameModifier, ILongWaitBroker waitBroker)
         {
             var settings = document.Settings;
             var pepLibraries = settings.PeptideSettings.Libraries;
@@ -330,6 +628,7 @@ namespace pwiz.Skyline.Model.Lib.BlibData
                     string baseName = Path.GetFileNameWithoutExtension(librarySpec.FilePath);
                     string fileName = GetUniqueName(baseName, usedNames) + BiblioSpecLiteSpec.EXT;
                     var blibDb = CreateBlibDb(Path.Combine(pathDirectory, fileName));
+                    blibDb.WaitBroker = waitBroker;
                     string nameMin = librarySpec.Name;
                     // Avoid adding the modifier a second time, if it has
                     // already been done once.

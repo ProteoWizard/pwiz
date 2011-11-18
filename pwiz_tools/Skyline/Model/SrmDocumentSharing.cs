@@ -23,6 +23,7 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using Ionic.Zip;
+using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Lib.BlibData;
 using pwiz.Skyline.Model.Results;
 using pwiz.Skyline.Model.DocSettings.Extensions;
@@ -184,7 +185,17 @@ namespace pwiz.Skyline.Model
             if (Document.Settings.HasBackgroundProteome)
                 zip.AddFile(pepSettings.BackgroundProteome.BackgroundProteomeSpec.DatabasePath, "");
             foreach (var librarySpec in pepSettings.Libraries.LibrarySpecs)
+            {
                 zip.AddFile(librarySpec.FilePath, "");
+
+                if (Document.Settings.TransitionSettings.FullScan.IsEnabledMs)
+                {
+                    // If there is a .redundant.blib file that corresponds 
+                    // to a .blib file, add that as well
+                    IncludeRedundantBlib(librarySpec, zip, librarySpec.FilePath);
+                }
+            }
+
             ShareDataAndView(zip);
             zip.AddFile(DocumentPath, "");
             Save(zip);
@@ -206,9 +217,18 @@ namespace pwiz.Skyline.Model
                 {
                     // Minimize all libraries in a temporary directory, and add them
                     tempDir = new TemporaryDirectory();
-                    Document = BlibDb.MinimizeLibraries(Document, tempDir.DirPath, Path.GetFileNameWithoutExtension(DocumentPath));
+                    Document = BlibDb.MinimizeLibraries(Document, tempDir.DirPath, 
+                                                        Path.GetFileNameWithoutExtension(DocumentPath),
+                                                        WaitBroker);
                     foreach (var librarySpec in Document.Settings.PeptideSettings.Libraries.LibrarySpecs)
-                        zip.AddFile(Path.Combine(tempDir.DirPath, Path.GetFileName(librarySpec.FilePath) ?? ""), "");
+                    {
+                        var tempLibPath = Path.Combine(tempDir.DirPath, Path.GetFileName(librarySpec.FilePath) ?? "");
+                        zip.AddFile(tempLibPath, "");
+
+                        // If there is a .redundant.blib file that corresponds to a .blib file
+                        // in the temp temporary directory, add that as well
+                        IncludeRedundantBlib(librarySpec, zip, tempLibPath);
+                    }
                 }
 
                 ShareDataAndView(zip);
@@ -239,6 +259,18 @@ namespace pwiz.Skyline.Model
                     {
                         throw new IOException(string.Format("Failure removing temporary directory {0}.\n{1}", tempDir.DirPath, x.Message));
                     }
+                }
+            }
+        }
+
+        private void IncludeRedundantBlib(LibrarySpec librarySpec, ZipFile zip, string blibPath)
+        {
+            if (librarySpec is BiblioSpecLiteSpec)
+            {
+                var redundantBlibPath = BiblioSpecLiteSpec.GetRedundantName(blibPath);
+                if (File.Exists(redundantBlibPath))
+                {
+                    zip.AddFile(redundantBlibPath, "");
                 }
             }
         }

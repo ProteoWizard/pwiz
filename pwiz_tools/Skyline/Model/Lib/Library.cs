@@ -617,7 +617,12 @@ namespace pwiz.Skyline.Model.Lib
             {
                 int i = FindEntry(key);
                 if (i != -1)
-                    yield return new SpectrumInfo(this, labelType, i);
+                {
+                    yield return new SpectrumInfo(this, labelType, i)
+                    {
+                        SpectrumHeaderInfo = CreateSpectrumHeaderInfo(_libraryEntries[i])
+                    };
+                }
             }
         }
 
@@ -961,7 +966,6 @@ namespace pwiz.Skyline.Model.Lib
     public sealed class SpectrumInfo
     {
         private readonly Library _library;
-        private readonly object _spectrumKey;
 
         public SpectrumInfo(Library library, IsotopeLabelType labelType, object spectrumKey)
             : this(library, labelType, null, null, true, spectrumKey)
@@ -972,7 +976,7 @@ namespace pwiz.Skyline.Model.Lib
             string filePath, double? retentionTime, bool isBest, object spectrumKey)
         {
             _library = library;
-            _spectrumKey = spectrumKey;
+            SpectrumKey = spectrumKey;
 
             LabelType = labelType;
             FilePath = filePath;
@@ -984,10 +988,13 @@ namespace pwiz.Skyline.Model.Lib
         public IsotopeLabelType LabelType { get; private set; }
         public string FilePath { get; private set; }
         public string FileName { get { return Path.GetFileName(FilePath); } }
-        public double? RetentionTime { get; set; }
+        public double? RetentionTime { get; private set; }
         public bool IsBest { get; private set; }
+        public object SpectrumKey { get; private set; }
 
-        public SpectrumPeaksInfo SpectrumPeaksInfo { get { return _library.LoadSpectrum(_spectrumKey); } }
+        public SpectrumHeaderInfo SpectrumHeaderInfo { get; set; }
+
+        public SpectrumPeaksInfo SpectrumPeaksInfo { get { return _library.LoadSpectrum(SpectrumKey); } }
     }
 
     /// <summary>

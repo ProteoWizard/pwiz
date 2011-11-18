@@ -37,5 +37,6 @@ namespace pwiz.Skyline.Model.Lib.BlibData
         public virtual short NumPeaks { get; set; }
         public virtual DbRefSpectraPeaks Peaks { get; set; }
         public virtual ICollection<DbModification> Modifications { get; set; }
+        public virtual ICollection<DbRetentionTimes> RetentionTimes { get; set; }
     }
 }

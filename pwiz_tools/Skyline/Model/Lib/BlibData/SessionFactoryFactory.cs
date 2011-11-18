@@ -28,6 +28,16 @@ namespace pwiz.Skyline.Model.Lib.BlibData
     {
         public static ISessionFactory CreateSessionFactory(String path, bool createSchema)
         {
+            return CreateSessionFactory(path, createSchema, "mapping.xml");
+        }
+
+        public static ISessionFactory CreateSessionFactory_Redundant(String path, bool createSchema)
+        {
+            return CreateSessionFactory(path, createSchema, "mapping_redundant.xml");
+        }
+
+        public static ISessionFactory CreateSessionFactory(String path, bool createSchema, string mappingFile)
+        {
             Configuration configuration = new Configuration()
                 //.SetProperty("show_sql", "true")
                 .SetProperty("dialect", typeof(NHibernate.Dialect.SQLiteDialect).AssemblyQualifiedName)
@@ -43,16 +53,16 @@ namespace pwiz.Skyline.Model.Lib.BlibData
             }
             configuration.SetProperty("connection.provider", 
                 typeof(NHibernate.Connection.DriverConnectionProvider).AssemblyQualifiedName);
-            ConfigureMappings(configuration);
+            ConfigureMappings(configuration, mappingFile);
             ISessionFactory sessionFactory = configuration.BuildSessionFactory();
             return sessionFactory;
         }
 
-        public static Configuration ConfigureMappings(Configuration configuration)
+        private static void ConfigureMappings(Configuration configuration, string mappingFile)
         {
             Assembly assembly = typeof(SessionFactoryFactory).Assembly;
-            return configuration.AddInputStream(
-                assembly.GetManifestResourceStream(typeof(SessionFactoryFactory).Namespace + ".mapping.xml"));
+            configuration.AddInputStream(
+                assembly.GetManifestResourceStream(typeof(SessionFactoryFactory).Namespace + "."+mappingFile));
         }
     }
 }
