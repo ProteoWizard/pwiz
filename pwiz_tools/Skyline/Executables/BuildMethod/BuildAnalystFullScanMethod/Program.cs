@@ -19,12 +19,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using AcqMethodSvrLib;
-using Analyst;
+using Interop.Analyst;
 using BuildAnalystMethod;
+using Interop.AcqMethodSvr;
 using Interop.DDEMethodSvr;
 using Interop.MSMethodSvr;
-using ParameterSvrLib;
+using Interop.ParameterSvr;
 
 namespace BuildAnalystFullScanMethod
 {
@@ -418,6 +418,7 @@ namespace BuildAnalystFullScanMethod
             float sourceGas2 = ((ParameterData)srcParamsTbl.FindParameter("GS2", out s)).startVal;
             float curtainGas = ((ParameterData)srcParamsTbl.FindParameter("CUR", out s)).startVal;
             float temperature = ((ParameterData)srcParamsTbl.FindParameter("TEM", out s)).startVal;
+
             string ionSprayVoltageParamName = "ISVF"; // ISVF on 5600, IS on QSTAR
             float ionSprayVoltage;
             

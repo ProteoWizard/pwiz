@@ -17,15 +17,17 @@
  * limitations under the License.
  */
 using System.IO;
+using Interop.MSMethodSvr;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using MSMethodSvrLib;
 
 namespace BuildQTRAPMethod.Test
 {
     [TestClass]
     public class BuildMethodTest
     {
-        private const string METHOD_FILE = "bovine_std2.dam";
+        private const string METHOD_FILE = @"Test\bovine_std2.dam";
+        private const string LIST_UNSCHED = @"Test\Study 7 unsched.csv";
+        private const string METHOD_UNSCHED = @"Test\Study 7 unsched.dam";
        
         [TestMethod]
         public void TestMRMMethod()
@@ -33,12 +35,12 @@ namespace BuildQTRAPMethod.Test
             string projectDirectory = GetProjectDirectory();
 
             var args = new[] { Path.Combine(projectDirectory, METHOD_FILE), 
-                               Path.Combine(projectDirectory, "Study 7 unsched.csv") };
+                               Path.Combine(projectDirectory, LIST_UNSCHED) };
             var builder = new BuildQtrapMethod();
             builder.ParseCommandArgs(args);
             builder.build();
 
-            string methodFilePath = Path.GetFullPath(Path.Combine(projectDirectory, "Study 7 unsched.dam"));
+            string methodFilePath = Path.GetFullPath(Path.Combine(projectDirectory, METHOD_UNSCHED));
 
             // read the updated method and make sure that the
             // transition list has been included

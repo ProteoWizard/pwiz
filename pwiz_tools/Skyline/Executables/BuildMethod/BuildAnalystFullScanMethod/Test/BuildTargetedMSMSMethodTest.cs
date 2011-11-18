@@ -17,8 +17,9 @@
  * limitations under the License.
  */
 using Interop.MSMethodSvr;
+using Interop.ParameterSvr;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ParameterSvrLib;
+
 
 namespace BuildAnalystFullScanMethod.Test
 {

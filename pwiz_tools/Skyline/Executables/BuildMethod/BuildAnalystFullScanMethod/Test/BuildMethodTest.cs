@@ -17,8 +17,8 @@
  * limitations under the License.
  */
 using System.IO;
-using AcqMethodSvrLib;
-using Analyst;
+using Interop.AcqMethodSvr;
+using Interop.Analyst;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Interop.MSMethodSvr;
 
@@ -28,17 +28,17 @@ namespace BuildAnalystFullScanMethod.Test
     [TestClass]
     public class BuildMethodTest
     {
-        protected const string METHOD_FILE_IDA_5600 = "IDA-5600.dam";
-        protected const string METHOD_FILE_IDA_QSTAR = "IDA-QSTAR.dam";
-        protected const string METHOD_FILE_5600 = "5600.dam";
-        protected const string METHOD_FILE_5600_MS1_MS2 = "5600_MS1MS2.dam";
-        protected const string METHOD_FILE_QSTAR_MS1_MS2 = "QSTAR_MS1MS2.dam";
-        protected const string METHOD_FILE_QSTAR = "QSTAR.dam";
+        protected const string METHOD_FILE_IDA_5600 = @"Test\IDA-5600.dam";
+        protected const string METHOD_FILE_IDA_QSTAR = @"Test\IDA-QSTAR.dam";
+        protected const string METHOD_FILE_5600 = @"Test\5600.dam";
+        protected const string METHOD_FILE_5600_MS1_MS2 = @"Test\5600_MS1MS2.dam";
+        protected const string METHOD_FILE_QSTAR_MS1_MS2 = @"Test\QSTAR_MS1MS2.dam";
+        protected const string METHOD_FILE_QSTAR = @"Test\QSTAR.dam";
 
-        private const string TRANS_LIST_UNSCHED = "Study 7 unsched.csv";
-        private const string TRANS_LIST_SCHED = "Study 7 sched.csv";
-        private const string METHOD_UNSCHED = "Study 7 unsched.dam";
-        private const string METHOD_SCHED = "Study 7 sched.dam";
+        private const string TRANS_LIST_UNSCHED = @"Test\Study 7 unsched.csv";
+        private const string TRANS_LIST_SCHED = @"Test\Study 7 sched.csv";
+        private const string METHOD_UNSCHED = @"Test\Study 7 unsched.dam";
+        private const string METHOD_SCHED = @"Test\Study 7 sched.dam";
 
         private readonly string PROJECT_DIR;
 

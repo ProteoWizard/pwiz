@@ -20,11 +20,11 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using AcqMethodSvrLib;
-using Analyst;
+using Interop.AcqMethodSvr;
+using Interop.Analyst;
 using BuildAnalystMethod;
-using MSMethodSvrLib;
-using ParameterSvrLib;
+using Interop.MSMethodSvr;
+using Interop.ParameterSvr;
 
 namespace BuildQTRAPMethod
 {
