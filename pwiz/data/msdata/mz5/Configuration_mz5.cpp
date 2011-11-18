@@ -43,7 +43,7 @@ Configuration_mz5::Configuration_mz5()
             = pwiz::msdata::BinaryDataEncoder::Precision_64;
     config_.binaryDataEncoderConfig.compression
             = pwiz::msdata::BinaryDataEncoder::Compression_Zlib;
-    init(true, true, true);
+    init(false, true, true);
 }
 
 Configuration_mz5::Configuration_mz5(const Configuration_mz5& config)
@@ -56,7 +56,7 @@ Configuration_mz5::Configuration_mz5(
         const pwiz::msdata::MSDataFile::WriteConfig& config)
 {
     config_ = config;
-    init(true, true, true);
+    init(false, true, true);
 }
 
 Configuration_mz5& Configuration_mz5::operator=(const Configuration_mz5& rhs)
