@@ -547,17 +547,23 @@ void write_modification_info(XMLWriter& xmlWriter, const SpectrumIdentificationI
     aaMods.reserve(peptide.modification.size());
     Formula nTerm(Formula_nTerm), cTerm(Formula_cTerm); 
 
+    double nTermModMass = 0, cTermModMass = 0;
     BOOST_FOREACH(const ModificationPtr& modPtr, peptide.modification)
     {
         const Modification& mod = *modPtr;
         double modMass = mod.monoisotopicMassDelta != 0 ? mod.monoisotopicMassDelta : mod.avgMassDelta;
         if (mod.location == 0)
-            attributes.add("mod_nterm_mass", nTerm.monoisotopicMass() + modMass);
+            nTermModMass += modMass;
         else if (mod.location == (int) peptide.peptideSequence.length() + 1)
-            attributes.add("mod_cterm_mass", cTerm.monoisotopicMass() + modMass);
+            cTermModMass += modMass;
         else
             aaMods.push_back(modPtr);
     }
+
+    if (nTermModMass != 0)
+        attributes.add("mod_nterm_mass", nTerm.monoisotopicMass() + nTermModMass);
+    if (cTermModMass != 0)
+        attributes.add("mod_cterm_mass", cTerm.monoisotopicMass() + cTermModMass);
 
     if (aaMods.empty())
         xmlWriter.startElement("modification_info", attributes, XMLWriter::EmptyElement);
@@ -1551,7 +1557,8 @@ struct HandlerSearchResults : public SAXParser::Handler
             _currentPeptide.reset(new Peptide);
             getAttribute(attributes, "peptide", _currentPeptide->peptideSequence);
 
-            _currentProteinAttributes.assign(1, attributes);
+            _currentProteinAttributes.clear();
+            _currentProteinAttributes.push_back(attributes);
         }
         else if (name == "spectrum_query")
         {
@@ -1609,9 +1616,8 @@ struct HandlerSearchResults : public SAXParser::Handler
         else if (name == "search_result")
         {
             // some engines write custom attributes here; we transcode them as UserParams
-            for (Attributes::attribute_list::const_iterator it = attributes.begin(); it!=attributes.end(); it++) {
+            for (Attributes::attribute_list::const_iterator it = attributes.begin(); it != attributes.end(); ++it)
                 _sir->userParams.push_back(UserParam(it->getName(), it->getValue()));
-            }
         }
         else if (strict)
             throw runtime_error("[HandlerSearchResults] Unexpected element name: " + name);
