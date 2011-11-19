@@ -989,10 +989,16 @@
     <Content Include="Method\AbSciex\TOF\BuildAnalystMethod.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Method\AbSciex\TOF\Interop.AcqMethodSvrLib.dll">
+    <Content Include="Method\AbSciex\TOF\Interop.AcqMethodDir.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TOF\Interop.AcqMethodSvr.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Method\AbSciex\TOF\Interop.Analyst.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TOF\Interop.AnalystService.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Method\AbSciex\TOF\Interop.DDEMethodSvr.dll">
@@ -1004,10 +1010,19 @@
     <Content Include="Method\AbSciex\TOF\Interop.MSMethodSvr.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Method\AbSciex\TOF\Interop.ParameterSvrLib.dll">
+    <Content Include="Method\AbSciex\TOF\Interop.ParameterSvr.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Method\AbSciex\TOF\Interop.StdType.dll">
+    <Content Include="Method\AbSciex\TOF\Interop.QueueDispatcher.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TOF\Interop.ROTMan.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TOF\ROTMANLib.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TOF\StdType.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Method\AbSciex\TQ\BuildAnalystMethod.dll">
@@ -1016,7 +1031,10 @@
     <Content Include="Method\AbSciex\TQ\BuildQTRAPMethod.exe">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Method\AbSciex\TQ\Interop.AcqMethodSvrLib.dll">
+    <Content Include="Method\AbSciex\TQ\Interop.AcqMethodDir.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TQ\Interop.AcqMethodSvr.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Method\AbSciex\TQ\Interop.Analyst.dll">
@@ -1025,25 +1043,31 @@
     <Content Include="Method\AbSciex\TQ\Interop.AnalystService.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Method\AbSciex\TQ\Interop.CreateMRMTransitions.dll">
+    <Content Include="Method\AbSciex\TQ\Interop.DDEMethodSvr.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Method\AbSciex\TQ\Interop.CreateNewAcqMethod.dll">
+    <Content Include="Method\AbSciex\TQ\Interop.IDAMethodSvr.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Method\AbSciex\TQ\Interop.MSMethodSvrLib.dll">
+    <Content Include="Method\AbSciex\TQ\Interop.MSMethodSvr.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Method\AbSciex\TQ\Interop.ParameterSvrLib.dll">
+    <Content Include="Method\AbSciex\TQ\Interop.ParameterSvr.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Method\AbSciex\TQ\Interop.QueueDispatcherLib.dll">
+    <Content Include="Method\AbSciex\TQ\Interop.QueueDispatcher.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Method\AbSciex\TQ\Interop.ROTMANLib.dll">
+    <Content Include="Method\AbSciex\TQ\Interop.ROTMan.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Method\AbSciex\TQ\Interop.StdType.dll">
+    <Content Include="Method\AbSciex\TQ\QueueDispatcherLib.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TQ\ROTMANLib.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Method\AbSciex\TQ\StdType.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Method\Agilent\BuildAgilentMethod.exe">

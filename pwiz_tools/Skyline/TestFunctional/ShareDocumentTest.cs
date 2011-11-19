@@ -133,11 +133,6 @@ namespace pwiz.SkylineTestFunctional
             var origFileSet2 = new Dictionary<string, ZipEntry>(newFileSet);
             Share(shareMinPath3, false, origFileSet, newFileSet, docName);
 
-            string extractDir1 = Path.Combine(Path.GetDirectoryName(shareMinPath2) ?? "",
-                                              Path.GetFileNameWithoutExtension(shareMinPath2) ?? "");
-            string extractDir2 = Path.Combine(Path.GetDirectoryName(shareMinPath3) ?? "",
-                                              Path.GetFileNameWithoutExtension(shareMinPath3) ?? "");
-
             string blibPath1 = GetPathToBlibFile(shareMinPath2, blibName);
             string blibPath2 = GetPathToBlibFile(shareMinPath3, blibName);
             Assert.AreNotSame(blibPath1, blibPath2);
@@ -147,7 +142,7 @@ namespace pwiz.SkylineTestFunctional
 
             Assert.IsTrue(origFileSet2[redundantBlibName].UncompressedSize >
                           newFileSet[redundantBlibName].UncompressedSize);
-            // This does now work.  Both the original and new files are the same size even though
+            // This does not work.  Both the original and new files are the same size even though
             // the number of entries in the RetentionTimes table is smaller in the new file.
 //            Assert.IsTrue(origFileSet2[blibName].UncompressedSize >
 //                          newFileSet[blibName].UncompressedSize);

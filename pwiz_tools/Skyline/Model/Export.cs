@@ -1637,7 +1637,7 @@ namespace pwiz.Skyline.Model
 
         protected override string GetAnalystVersions()
         {
-            return "1.5.1";
+            return "1.5.1 or 1.5.2";
         }
 
         protected override List<string> getArgs()
@@ -1673,7 +1673,7 @@ namespace pwiz.Skyline.Model
 
         protected override string GetAnalystVersions()
         {
-            return "TF1.5 or 2.0";
+            return "TF1.5 or TF1.5.1 or 2.0";
         }
 
         protected override List<string> getArgs()
