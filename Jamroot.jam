@@ -391,7 +391,7 @@ import tar ;
 
 if ! [ without-mz5 ]
 {
-    tar.extract $(PWIZ_LIBRARIES_PATH)/hdf5-1.8.7.tar.bz2 : *.c* *.h* *.settings : <location>$(PWIZ_LIBRARIES_PATH) ;
+    tar.extract $(PWIZ_LIBRARIES_PATH)/hdf5-1.8.7.tar.bz2 : *.c* *.h* *.jam *.settings : <location>$(PWIZ_LIBRARIES_PATH) ;
 }
 
 path-constant BOOST_SOURCE : $(boost_src) ;

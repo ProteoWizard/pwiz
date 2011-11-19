@@ -18,6 +18,7 @@ IF EXIST libraries\zlib-1.2.3 rmdir /s /q libraries\zlib-1.2.3
 IF EXIST libraries\libgd-2.1.0alpha rmdir /s /q libraries\libgd-2.1.0alpha
 IF EXIST libraries\libpng-1.5.6 rmdir /s /q libraries\libpng-1.5.6
 IF EXIST libraries\freetype-2.4.7 rmdir /s /q libraries\freetype-2.4.7
+IF EXIST libraries\hdf5-1.8.7 rmdir /s /q libraries\hdf5-1.8.7
 IF EXIST libraries\fftw-3.1.2 rmdir /s /q libraries\fftw-3.1.2
 
 del /q libraries\libfftw3-3.d* > nul 2>&1
