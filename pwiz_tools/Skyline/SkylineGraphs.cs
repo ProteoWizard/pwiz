@@ -81,7 +81,7 @@ namespace pwiz.Skyline
         private void dockPanel_ActiveDocumentChanged(object sender, EventArgs e)
         {
             var settings = DocumentUI.Settings;
-            if (comboResults.IsDisposed || _inGraphUpdate || !settings.HasResults ||
+            if (_closing || comboResults.IsDisposed || _inGraphUpdate || !settings.HasResults ||
                     settings.MeasuredResults.Chromatograms.Count < 2)
                 return;
 

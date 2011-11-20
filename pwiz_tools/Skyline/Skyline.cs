@@ -71,6 +71,7 @@ namespace pwiz.Skyline
         private SrmDocument _documentUI;
         private string _savedPath;      // Interlocked access only
         private int _savedVersion;
+        private bool _closing;
         private readonly UndoManager _undoManager;
         private readonly UndoRedoButtons _undoRedoButtons;
         private readonly LibraryManager _libraryManager;
@@ -645,6 +646,8 @@ namespace pwiz.Skyline
             {
                 MessageDlg.Show(this, "An unexpected error has prevented global settings changes from this session from being saved.");
             }
+
+            _closing = true;
 
             base.OnClosing(e);
         }

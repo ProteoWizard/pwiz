@@ -328,7 +328,7 @@ namespace pwiz.Skyline.FileUI
                 type = type,
                 imageIndex = (SourceInfo.isFolderType(type) ? 0 : 2),
                 name = dirInfo.Name,
-                dateModified = dirInfo.LastWriteTime
+                dateModified = GetSafeDateModified(dirInfo)
             };
 
             if(listView.View != View.Details ||
@@ -366,7 +366,7 @@ namespace pwiz.Skyline.FileUI
                          sourceTypeComboBox.SelectedItem.ToString() != sourceInfo.type))
                     return sourceInfo;
                 sourceInfo.size = (UInt64) fileInfo.Length;
-                sourceInfo.dateModified = fileInfo.LastWriteTime;
+                sourceInfo.dateModified = GetSafeDateModified(fileInfo);
                 return sourceInfo;
             }
             return null;
@@ -430,20 +430,12 @@ namespace pwiz.Skyline.FileUI
                     if (label != "")
                         name = string.Format("{0} ({1})", label, name);
 
-                    DateTime? dateModifiedDrive = null;                   
-                    try
-                    {
-                        dateModifiedDrive = driveInfo.RootDirectory.LastWriteTime;
-                    }
-                    catch (IOException) {}
-                    catch (UnauthorizedAccessException) {}
-
                     listSourceInfo.Add(new SourceInfo
                     {
                         type = SourceInfo.FOLDER_TYPE,
                         imageIndex = imageIndex,
                         name = name,
-                        dateModified = dateModifiedDrive
+                        dateModified = GetSafeDateModified(driveInfo.RootDirectory)
                     });
                 }
             }
@@ -519,6 +511,17 @@ namespace pwiz.Skyline.FileUI
             {
                 listView.EndUpdate();
             }
+        }
+
+        private static DateTime? GetSafeDateModified(FileSystemInfo dirInfo)
+        {
+            try
+            {
+                return dirInfo.LastWriteTime;
+            }
+            catch (IOException) {}
+            catch (UnauthorizedAccessException) {}
+            return null;
         }
 
         private void populateComboBoxFromDirectory( string directory )
