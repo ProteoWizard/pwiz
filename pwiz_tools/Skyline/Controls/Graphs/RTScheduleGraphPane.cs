@@ -70,14 +70,32 @@ namespace pwiz.Skyline.Controls.Graphs
             for (int i = 0; i < windows.Length; i++)
             {
                 double window = windows[i];
-                if (window == document.Settings.PeptideSettings.Prediction.MeasuredRTWindow)
+                // Do not show the window used by the current document twice.
+                if (window == GetSchedulingWindow(document))
                     continue;
-                SrmDocument docWindow = document.ChangeSettings(
-                    document.Settings.ChangePeptidePrediction(p => p.ChangeMeasuredRTWindow(window)));
+
+                var settings = document.Settings.ChangePeptidePrediction(p => p.ChangeMeasuredRTWindow(window));
+                if (!settings.HasResults || !settings.PeptideSettings.Prediction.UseMeasuredRTs)
+                {
+                    settings = settings.ChangePeptidePrediction(p =>
+                        p.ChangeRetentionTime(p.RetentionTime.ChangeTimeWindoow(window)));
+                }
+                var docWindow = document.ChangeSettings(settings);
+
                 AddCurve(docWindow, COLORS_WINDOW[(i+1)%COLORS_WINDOW.Length]);
             }
 
             AxisChange();
+        }
+
+        private static double? GetSchedulingWindow(SrmDocument document)
+        {
+            var predict = document.Settings.PeptideSettings.Prediction;
+            if (document.Settings.HasResults && predict.UseMeasuredRTs)
+                return predict.MeasuredRTWindow;
+            if (predict.RetentionTime != null)
+                return predict.RetentionTime.TimeWindow;
+            return null;
         }
 
         public int? SchedulingReplicateIndex { get; set; }
@@ -100,9 +118,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
                 {
                     double timeWindow;
-
-                    double? retentionTime = predict.PredictRetentionTime(document, nodePep, nodeGroup, SchedulingReplicateIndex,
-                        
+                    double? retentionTime = predict.PredictRetentionTime(document, nodePep, nodeGroup, SchedulingReplicateIndex,                        
                         SchedulingAlgorithm, singleWindow, out timeWindow);
 
                     if (retentionTime.HasValue)
@@ -113,7 +129,6 @@ namespace pwiz.Skyline.Controls.Graphs
                         xMax = Math.Max(xMax, schedule.EndTime);
                         listSchedules.Add(schedule);
                     }
-                    
                 }
             }
 
@@ -123,8 +138,7 @@ namespace pwiz.Skyline.Controls.Graphs
             for (double x = xMin; x < xMax; x += 0.1)
                 points.Add(x, PrecursorScheduleBase.GetOverlapCount(listSchedules, x));
 
-            string label = string.Format("{0} Minute Window",
-                                         document.Settings.PeptideSettings.Prediction.MeasuredRTWindow);
+            string label = string.Format("{0} Minute Window", GetSchedulingWindow(document));
             var curve = AddCurve(label, points, color);
             curve.Line.IsAntiAlias = true;
             curve.Line.IsOptimizedDraw = true;

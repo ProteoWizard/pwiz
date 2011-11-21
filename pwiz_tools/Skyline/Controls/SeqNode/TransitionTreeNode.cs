@@ -161,9 +161,9 @@ namespace pwiz.Skyline.Controls.SeqNode
             }
             else
             {
-                string rank = nodeTran.HasLibInfo
-                                  ? string.Format("rank {0}", nodeTran.LibInfo.Rank)
-                                  : string.Format("irank {0}", nodeTran.IsotopeDistInfo.Rank);
+                string rank = nodeTran.HasDistInfo
+                                  ? string.Format("irank {0}", nodeTran.IsotopeDistInfo.Rank)
+                                  : string.Format("rank {0}", nodeTran.LibInfo.Rank);
 
                 return string.Format("{0} - {1:F04}{2} ({3}){4}",
                                      labelPrefix,

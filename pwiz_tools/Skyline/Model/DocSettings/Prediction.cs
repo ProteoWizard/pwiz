@@ -96,11 +96,19 @@ namespace pwiz.Skyline.Model.DocSettings
             private set { _peptidesTimes = MakeReadOnly(value); }
         }
 
-        public RetentionTimeRegression ChangeCalculator(RetentionScoreCalculatorSpec calc)
+        #region Property change methods
+
+        public RetentionTimeRegression ChangeCalculator(RetentionScoreCalculatorSpec prop)
         {
-            RetentionTimeRegression rtr = ChangeProp(ImClone(this), (im, v) => im.Calculator = v, calc);
-            return rtr;
+            return ChangeProp(ImClone(this), im => im.Calculator = prop);
         }
+
+        public RetentionTimeRegression ChangeTimeWindoow(double prop)
+        {
+            return ChangeProp(ImClone(this), im => im.TimeWindow = prop);
+        }
+
+        #endregion
 
         public double? GetRetentionTime(string seq)
         {

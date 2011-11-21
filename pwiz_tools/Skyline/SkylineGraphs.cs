@@ -2252,12 +2252,16 @@ namespace pwiz.Skyline
         private void singleReplicateRTContextMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.ShowRegressionReplicateEnum = ReplicateDisplay.single.ToString();
+            // No CVs with single replicate data views
+            Settings.Default.ShowPeptideCV = false;
             UpdateSummaryGraphs();
         }
 
         private void bestReplicateRTContextMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.ShowRegressionReplicateEnum = ReplicateDisplay.best.ToString();
+            // No CVs with single replicate data views
+            Settings.Default.ShowPeptideCV = false;
             UpdateSummaryGraphs();
         }
 
@@ -2362,14 +2366,17 @@ namespace pwiz.Skyline
             {
                 var calcOld = regressionRT.Calculator;
                 var calcNew = list.EditItem(this, calcOld, list, null);
-                list.SetValue(calcNew);
-
-                var regressionRTDoc = DocumentUI.Settings.PeptideSettings.Prediction.RetentionTime;
-                if (Equals(calcOld.Name, regressionRTDoc.Calculator.Name))
+                if (calcNew != null && !Equals(calcNew, calcOld))
                 {
-                    ModifyDocument(string.Format("Update {0} calculator", calcNew.Name), doc =>
-                        doc.ChangeSettings(doc.Settings.ChangePeptidePrediction(predict =>
-                            predict.ChangeRetentionTime(predict.RetentionTime.ChangeCalculator(calcNew)))));
+                    list.SetValue(calcNew);
+
+                    var regressionRTDoc = DocumentUI.Settings.PeptideSettings.Prediction.RetentionTime;
+                    if (Equals(calcOld.Name, regressionRTDoc.Calculator.Name))
+                    {
+                        ModifyDocument(string.Format("Update {0} calculator", calcNew.Name), doc =>
+                            doc.ChangeSettings(doc.Settings.ChangePeptidePrediction(predict =>
+                                predict.ChangeRetentionTime(predict.RetentionTime.ChangeCalculator(calcNew)))));
+                    }
                 }
             }
         }
@@ -2405,6 +2412,8 @@ namespace pwiz.Skyline
         private void allRTValueContextMenuItem_Click(object sender, EventArgs e)
         {
             Settings.Default.RTPeptideValue = RTPeptideValue.All.ToString();
+            // No CVs with all retention time values showing
+            Settings.Default.ShowPeptideCV = false;
             UpdateRetentionTimeGraph();
         }
 
@@ -2819,6 +2828,11 @@ namespace pwiz.Skyline
         public void ShowCVValues()
         {
             Settings.Default.ShowPeptideCV = peptideCvsContextMenuItem.Checked;
+            // Showing CVs only makes sense for Replicates = All
+            Settings.Default.ShowRegressionReplicateEnum = ReplicateDisplay.all.ToString();
+            // Showing CVs does not make sense for All retention time values at once
+            if (RTPeptideGraphPane.RTValue == RTPeptideValue.All)
+                Settings.Default.RTPeptideValue = RTPeptideValue.Retention.ToString();
             UpdateSummaryGraphs();
         }
 

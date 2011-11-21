@@ -246,7 +246,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     var regressionPeps = UpdateCalculator(calc);
                     if (regressionPeps != null)
-                        SetTablePeptides(regressionPeps);
+                        SetTablePeptides(regressionPeps, false);
                 }
                 catch (CalculatorException e)
                 {
@@ -271,6 +271,14 @@ namespace pwiz.Skyline.SettingsUI
         private void btnUseCurrent_Click(object sender, EventArgs e)
         {
             AddResults();
+        }
+
+        public void AddResults()
+        {
+            _activePeptides = GetDocumentPeptides();
+            var regressionPeps = UpdateCalculator(null);
+            if (regressionPeps != null)
+                SetTablePeptides(regressionPeps, true);
         }
 
         public List<MeasuredRetentionTime> GetDocumentPeptides()
@@ -354,9 +362,9 @@ namespace pwiz.Skyline.SettingsUI
             return tablePeptides;
         }
 
-        public void SetTablePeptides(List<MeasuredRetentionTime> tablePeps)
+        public void SetTablePeptides(List<MeasuredRetentionTime> tablePeps, bool forceUpdate)
         {
-            if (ArrayUtil.EqualsDeep(_activePeptides, tablePeps))
+            if (!forceUpdate && ArrayUtil.EqualsDeep(_activePeptides, tablePeps))
                 return;
 
             var rowsNew = new List<string[]>();
@@ -453,39 +461,13 @@ namespace pwiz.Skyline.SettingsUI
             {
                 var regressionPeps = UpdateCalculator(_driverCalculators.SelectedItem);
                 if (regressionPeps != null)
-                    SetTablePeptides(regressionPeps);
+                    SetTablePeptides(regressionPeps, false);
                 RecalcRegression(_activePeptides);
             }
             catch (Exception)
             {
                 comboCalculator.SelectedIndex = 0;
             }
-        }
-
-        private void gridPeptides_RowsRemoved(object sender, DataGridViewRowsRemovedEventArgs e)
-        {
-            /*
-            var newPeps = new List<MeasuredRetentionTime>();
-            if (!ValidatePeptides(new CancelEventArgs(), newPeps))
-                return;
-
-            _activePeptides = newPeps;
-
-            if (_activePeptides.Count < 1)
-                return;
-            try
-            {
-                UpdateCalculator(_driverCalculators.SelectedItem);
-            }
-            catch (IncompleteStandardException f)
-            {
-                MessageDlg.Show(this,
-                    string.Format(
-                        "The table no longer lists the complete standard. The {0} calculator cannot be used.",
-                        f.Calculator));
-                comboCalculator.SelectedIndex = 0;
-            }
-             */
         }
 
         private RetentionScoreCalculatorSpec RecalcRegression(List<MeasuredRetentionTime> peptides)
@@ -627,14 +609,6 @@ namespace pwiz.Skyline.SettingsUI
         public void ChooseCalculator(string name)
         {
             comboCalculator.SelectedItem = name;
-        }
-
-        public void AddResults()
-        {
-            _activePeptides = GetDocumentPeptides();
-            var regressionPeps = UpdateCalculator(null);
-            if (regressionPeps != null)
-                SetTablePeptides(regressionPeps);
         }
 
         public void SetSlope(string s)

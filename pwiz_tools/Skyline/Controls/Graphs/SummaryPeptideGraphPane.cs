@@ -620,23 +620,25 @@ namespace pwiz.Skyline.Controls.Graphs
                 var times = new List<double>();
                 foreach (TransitionGroupDocNode nodePepChild in nodePep.Children)
                 {
-                    double meanArea, meanTime;
+                    double? meanArea, meanTime;
                     CalcStats(nodePepChild, out meanArea, out meanTime);
                     if (nodeGroup.TransitionGroup.PrecursorCharge != nodePepChild.TransitionGroup.PrecursorCharge)
                         continue;
-                    areas.Add(meanArea);
-                    times.Add(meanTime);
+                    if (meanArea.HasValue)
+                        areas.Add(meanArea.Value);
+                    if (meanTime.HasValue)
+                        times.Add(meanTime.Value);
                     if (ReferenceEquals(nodeGroup, nodePepChild))
                     {
-                        AreaGroup = meanArea;
-                        TimeGroup = meanTime;
+                        AreaGroup = meanArea ?? 0;
+                        TimeGroup = meanTime ?? 0;
                     }
                 }
                 AreaPepCharge = (areas.Count > 0 ? new Statistics(areas).Mean() : 0);
                 TimePepCharge = (times.Count > 0 ? new Statistics(times).Mean() : 0);
             }
 
-            private static void CalcStats(TransitionGroupDocNode nodeGroup, out double meanArea, out double meanTime)
+            private static void CalcStats(TransitionGroupDocNode nodeGroup, out double? meanArea, out double? meanTime)
             {
                 var areas = new List<double>();
                 var times = new List<double>();
@@ -647,8 +649,12 @@ namespace pwiz.Skyline.Controls.Graphs
                     if (chromInfo.RetentionTime.HasValue)
                         times.Add(chromInfo.RetentionTime.Value);
                 }
-                meanArea = (areas.Count > 0 ? new Statistics(areas).Mean() : 0);
-                meanTime = (times.Count > 0 ? new Statistics(times).Mean() : 0);
+                meanArea = null;
+                if (areas.Count > 0)
+                    new Statistics(areas).Mean();
+                meanTime = null;
+                if (times.Count > 0)
+                    meanTime = new Statistics(times).Mean();
             }
         }
     }

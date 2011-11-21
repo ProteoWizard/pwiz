@@ -1327,6 +1327,11 @@ namespace pwiz.Skyline.Model.DocSettings
                               (newTran.FullScan.PrecursorIsotopes != FullScanPrecursorIsotopes.None && enrichmentsChanged)
                               ;
 
+            // If the library loded state has changed, make sure the library properties are up to date,
+            // but avoid changing the chosen transitions.
+            if (!DiffTransitionGroupProps && libraryChange && newLib.IsLoaded && !oldLib.IsLoaded)
+                DiffTransitionGroupProps = true;
+
             // Any change in modifications or fragment mass-type forces a recalc
             // of transition m/z values, as
             DiffTransitionProps = diffStaticMods || diffHeavyMods ||

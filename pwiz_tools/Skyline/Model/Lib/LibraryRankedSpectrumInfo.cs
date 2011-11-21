@@ -76,7 +76,10 @@ namespace pwiz.Skyline.Model.Lib
                                     types = types ?? rankTypes,
                                     matchAll = matchAll,
                                     rankCharges = rankCharges,
-                                    rankTypes = rankTypes
+                                    rankTypes = rankTypes,
+                                    // Precursor isotopes will not be included in MS/MS, if they will be filtered
+                                    // from MS1
+                                    excludePrecursorIsotopes = settings.TransitionSettings.FullScan.IsEnabledMs
                                 };
 
             // Get necessary mass calculators and masses
@@ -308,6 +311,7 @@ namespace pwiz.Skyline.Model.Lib
             public IEnumerable<IonType> types { get; set; }
             public IEnumerable<int> rankCharges { get; set; }
             public IEnumerable<IonType> rankTypes { get; set; }
+            public bool excludePrecursorIsotopes { get; set; }
             public IList<IList<ExplicitLoss>> potentialLosses { get; set; }
             public IStartFragmentFinder startFinder { get; set; }
             public IEndFragmentFinder endFinder { get; set; }
@@ -493,8 +497,7 @@ namespace pwiz.Skyline.Model.Lib
 
                     int ordinal = Transition.OffsetToOrdinal(type, offset, len + 1);
                     // If this m/z aready matched a different ion, just remember the second ion.
-                    double predictedMass = !precursorMatch ?
-                                                               rp.massesPredict[(int)type, offset] : rp.massPrePredict;
+                    double predictedMass = !precursorMatch ? rp.massesPredict[(int)type, offset] : rp.massPrePredict;
                     if (losses != null)
                         predictedMass -= losses.Mass;
                     double predictedMz = SequenceMassCalc.GetMZ(predictedMass, charge);
@@ -515,11 +518,17 @@ namespace pwiz.Skyline.Model.Lib
                         {
                             rp.Seen(predictedMz);
 
-                            if (!filter || rp.filter.Accept(rp.sequence, rp.precursorMz, type, offset, ionMz, start, end, startMz))
+                             // Avoid ranking precursor ions without losses, if the precursor isotopes will
+                             // not be taken from product ions
+                            if (!rp.excludePrecursorIsotopes || type != IonType.precursor || losses != null)
                             {
-                                if (!rp.matchAll || (rp.minMz <= ionMz && ionMz <= rp.maxMz &&
-                                                     rp.rankTypes.Contains(type) && rp.rankCharges.Contains(charge)))
-                                    Rank = rp.RankNext();                                
+                                if (!filter || rp.filter.Accept(rp.sequence, rp.precursorMz, type, offset, ionMz, start, end, startMz))
+                                {
+                                    if (!rp.matchAll || (rp.minMz <= ionMz && ionMz <= rp.maxMz &&
+                                                         rp.rankTypes.Contains(type) &&
+                                                         (rp.rankCharges.Contains(charge) || type == IonType.precursor)))
+                                        Rank = rp.RankNext();
+                                }
                             }
                             IonType = type;
                             Charge = charge;

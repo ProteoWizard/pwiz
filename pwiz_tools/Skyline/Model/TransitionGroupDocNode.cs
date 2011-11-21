@@ -585,8 +585,8 @@ namespace pwiz.Skyline.Model
                             var annotations = nodeTranResult.Annotations;
                             var losses = nodeTranResult.Losses;
                             double massH = settingsNew.GetFragmentMass(TransitionGroup.LabelType, mods, tran, isotopeDist);
-                            var isotopeDistInfo = TransitionDocNode.GetIsotopeDistInfo(tran, isotopeDist);
-                            var info = TransitionDocNode.GetLibInfo(tran, Transition.CalcMass(massH, losses), transitionRanks);
+                            var isotopeDistInfo = losses == null ? TransitionDocNode.GetIsotopeDistInfo(tran, isotopeDist) : null;
+                            var info = isotopeDistInfo == null ? TransitionDocNode.GetLibInfo(tran, Transition.CalcMass(massH, losses), transitionRanks) : null;
                             Helpers.AssignIfEquals(ref info, nodeTranResult.LibInfo);
                             if (!ReferenceEquals(info, nodeTranResult.LibInfo))
                                 dotProductChange = true;
@@ -659,8 +659,8 @@ namespace pwiz.Skyline.Model
                         var annotations = nodeTransition.Annotations;   // Don't lose annotations
                         var results = nodeTransition.Results;           // Results changes happen later
                         double massH = settingsNew.GetFragmentMass(TransitionGroup.LabelType, mods, tran, isotopeDist);
-                        var isotopeDistInfo = TransitionDocNode.GetIsotopeDistInfo(tran, isotopeDist);
-                        var info = TransitionDocNode.GetLibInfo(tran, Transition.CalcMass(massH, losses), transitionRanks);
+                        var isotopeDistInfo = losses == null ? TransitionDocNode.GetIsotopeDistInfo(tran, isotopeDist) : null;
+                        var info = isotopeDistInfo == null ? TransitionDocNode.GetLibInfo(tran, Transition.CalcMass(massH, losses), transitionRanks) : null;
                         Helpers.AssignIfEquals(ref info, nodeTransition.LibInfo);
                         if (!ReferenceEquals(info, nodeTransition.LibInfo))
                             dotProductChange = true;

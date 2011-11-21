@@ -402,7 +402,7 @@ namespace pwiz.Skyline.Model
             TransitionLosses losses, IDictionary<double, LibraryRankedSpectrumInfo.RankedMI> transitionRanks)
         {
             Transition transition = new Transition(this, massIndex);
-            var info = TransitionDocNode.GetLibInfo(transition, Transition.CalcMass(precursorMassH, losses), transitionRanks);
+            var info = isotopeDistInfo == null ? TransitionDocNode.GetLibInfo(transition, Transition.CalcMass(precursorMassH, losses), transitionRanks) : null;
             return new TransitionDocNode(transition, losses, precursorMassH, isotopeDistInfo, info);
         }
 

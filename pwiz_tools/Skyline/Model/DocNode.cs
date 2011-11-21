@@ -23,7 +23,6 @@ using System.Diagnostics;
 using System.Linq;
 using pwiz.Skyline.Controls.SeqNode;
 using pwiz.Skyline.Model.DocSettings;
-using pwiz.Skyline.Model.Find;
 using pwiz.Skyline.Util;
 
 namespace pwiz.Skyline.Model
