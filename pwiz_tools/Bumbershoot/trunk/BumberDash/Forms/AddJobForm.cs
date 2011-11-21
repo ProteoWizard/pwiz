@@ -120,8 +120,15 @@ namespace BumberDash.Forms
             var fileLoc = new OpenFileDialog
                               {
                                   RestoreDirectory = true,
-                                  Filter =
-                                      "Bumbershoot compatable files|*.mzML;*.mzXML;*.wiff;*.raw;*.yep;*.mgf|mzML files (.mzML)|*.mzML|mzXML files (.mzXML)|*.mzXML|RAW files (.raw)|*.raw|WIFF files (.wiff)|*.wiff|YEP files (.yep)|*.yep|MGF files (.mgf)|*.mgf",
+                                  Filter = "Any supported format|*.mzML;*.mz5;*.mzXML;*.wiff;*.raw;*.yep;*.mgf|" +
+                                           "mzML files|*.mzML|" +
+                                           "mz5 files|*.mz5|" +
+                                           "mzXML files|*.mzXML|" +
+                                           "Thermo RAW files|*.raw|" +
+                                           "WIFF files|*.wiff|" +
+                                           "Bruker/Agilent YEP files|*.yep|" +
+                                           "MGF files|*.mgf|" +
+                                           "All files|*.*",
                                   CheckFileExists = true,
                                   CheckPathExists = true,
                                   SupportMultiDottedExtensions = true,
@@ -156,7 +163,7 @@ namespace BumberDash.Forms
                               {
                                   InitialDirectory = OutputDirectoryBox.Text,
                                   RestoreDirectory = true,
-                                  Filter = "Config Files (.cfg)|*.cfg|pepXML Files (.pepXML)|*.pepXML",
+                                  Filter = "Config Files|*.cfg|pepXML Files|*.pepXML|All files|*.*",
                                   CheckFileExists = true,
                                   CheckPathExists = true,
                                   Multiselect = false,
@@ -187,7 +194,7 @@ namespace BumberDash.Forms
                               {
                                   InitialDirectory = OutputDirectoryBox.Text,
                                   RestoreDirectory = true,
-                                  Filter = "Config Files (.cfg)|*.cfg|Tags Files (.tags)|*.tags",
+                                  Filter = "Config Files|*.cfg|Tags Files|*.tags|All files|*.*",
                                   CheckFileExists = true,
                                   CheckPathExists = true,
                                   Multiselect = false,
@@ -218,7 +225,7 @@ namespace BumberDash.Forms
                               {
                                   InitialDirectory = OutputDirectoryBox.Text,
                                   RestoreDirectory = true,
-                                  Filter = "Config Files (.cfg)|*.cfg|pepXML Files (.pepXML)|*.pepXML",
+                                  Filter = "Config Files|*.cfg|pepXML Files|*.pepXML|All files|*.*",
                                   CheckFileExists = true,
                                   CheckPathExists = true,
                                   Multiselect = false,
@@ -244,7 +251,7 @@ namespace BumberDash.Forms
             {
                 InitialDirectory = OutputDirectoryBox.Text,
                 RestoreDirectory = true,
-                Filter = "Config Files (.cfg)|*.cfg|pepXML Files (.pepXML)|*.pepXML",
+                Filter = "Config Files|*.cfg|pepXML Files|*.pepXML|All files|*.*",
                 CheckFileExists = true,
                 CheckPathExists = true,
                 Multiselect = false,
@@ -531,7 +538,7 @@ namespace BumberDash.Forms
             var extensionList = new List<string>
                                         {
                                             ".raw", ".wiff", ".yep",
-                                            ".mzml", ".mgf", ".mzxml"
+                                            ".mzml", ".mz5", ".mgf", ".mzxml"
                                         };
 
 
