@@ -389,7 +389,7 @@ actions make_VERSION { @($(STDOUT):E=$(version-tag:J=.)) > "$(<)" }
 
 import tar ;
 
-if ! ( [ without-mz5 ] ||  --no-tar in [ modules.peek : ARGV ] )
+if ! [ without-mz5 ]
 {
     tar.extract $(PWIZ_LIBRARIES_PATH)/hdf5-1.8.7.tar.bz2 : *.c* *.h* *.jam *.settings : <location>$(PWIZ_LIBRARIES_PATH) ;
 }
@@ -703,14 +703,12 @@ rule binary-tarball-requirements ( properties * )
     return $(result) ;
 }
 
-if ! --no-tar in [ modules.peek : ARGV ] {
-  tar.create pwiz-bin.tar.bz2
-    : # sources are handled by the conditional
+tar.create pwiz-bin.tar.bz2
+  : # sources are handled by the conditional
 
-    : # requirements
-      <conditional>@binary-tarball-requirements
-    ;
-}
+  : # requirements
+    <conditional>@binary-tarball-requirements
+  ;
 
 rule library-tarball-requirements ( properties * )
 {
@@ -743,16 +741,13 @@ rule library-tarball-requirements ( properties * )
     return $(result) ;
 }
 
-if ! --no-tar in [ modules.peek : ARGV ]
-{
-  tar.create pwiz-lib.tar.bz2
-    : # sources are handled by the conditional
+tar.create pwiz-lib.tar.bz2
+  : # sources are handled by the conditional
 
-    : # requirements
-      <conditional>@library-tarball-requirements
-    ;
-  explicit pwiz-lib.tar.bz2 ;
-}
+  : # requirements
+    <conditional>@library-tarball-requirements
+  ;
+explicit pwiz-lib.tar.bz2 ;
 
 # full source trees automatically build source tarballs
 
@@ -764,8 +759,6 @@ using bcp : $(BOOST_SOURCE) : $(.common-location)/bcp ;
 
 path-constant BOOST_SUBSET_PATH : $(.common-location)/boost-subset ;
 
-if ! --no-tar in [ modules.peek : ARGV ]
-{
 bcp.copy-boost-dependencies copy_boost_subset
   : # sources
 
@@ -795,7 +788,7 @@ tar.create boost_$(BOOST_VERSION:J=_).tar.bz2
     <location>$(BOOST_SUBSET_PATH)/libraries
     <dependency>copy_boost_subset
   ;
-}
+
 .exclusion-list =
     exclude:.svn
     exclude:*.bak
@@ -891,7 +884,6 @@ This source tree is a subset of the full pwiz source tree.
 .common-requirements = <location>$(.common-location) <dependency>boost_$(BOOST_VERSION:J=_).tar.bz2 <dependency>SUBSET <dependency>VERSION ;
 
 # l = without libraries, t = without tests, v = without vendor APIs
-if ! --no-tar in [ modules.peek : ARGV ] {
 tar.create pwiz-src.tar.bz2             : $(.common-sources) $(.l) : $(.common-requirements) <name>pwiz-src-$(version-tag:J=_).tar.bz2 ;
 tar.create pwiz-src-without-l.tar.bz2   : $(.common-sources) : $(.common-requirements) <name>pwiz-src-without-l-$(version-tag:J=_).tar.bz2 ;
 tar.create pwiz-src-without-lt.tar.bz2  : $(.no-t) $(.common-sources)  : $(.common-requirements) <name>pwiz-src-without-lt-$(version-tag:J=_).tar.bz2 ;
@@ -900,6 +892,5 @@ tar.create pwiz-src-without-lv.tar.bz2  : $(.no-v) $(.common-sources) : $(.commo
 tar.create pwiz-src-without-t.tar.bz2   : $(.no-t) $(.common-sources) $(.l) : $(.common-requirements) <name>pwiz-src-without-t-$(version-tag:J=_).tar.bz2 ;
 tar.create pwiz-src-without-tv.tar.bz2  : $(.no-t) $(.no-v) $(.common-sources) $(.l) : $(.common-requirements) <name>pwiz-src-without-tv-$(version-tag:J=_).tar.bz2 ;
 tar.create pwiz-src-without-v.tar.bz2   : $(.no-v) $(.common-sources) $(.l) : $(.common-requirements) <name>pwiz-src-without-v-$(version-tag:J=_).tar.bz2 ;
-}
 
 } # if SUBSET
