@@ -321,6 +321,18 @@ void testPepXMLSpecificity()
 }
 
 
+void testStripChargeFromConventionalSpectrumId()
+{
+    unit_assert_operator_equal("basename.123.123", stripChargeFromConventionalSpectrumId("basename.123.123.2"));
+    unit_assert_operator_equal("basename.ext.123.123", stripChargeFromConventionalSpectrumId("basename.ext.123.123.12"));
+    unit_assert_operator_equal("basename.123.123", stripChargeFromConventionalSpectrumId("basename.123.123"));
+    unit_assert_operator_equal("basename.ext.123.123", stripChargeFromConventionalSpectrumId("basename.ext.123.123"));
+    unit_assert_operator_equal("locus:1.1.1.123", stripChargeFromConventionalSpectrumId("locus:1.1.1.123.2"));
+    unit_assert_operator_equal("basename.123", stripChargeFromConventionalSpectrumId("basename.123"));
+    unit_assert_operator_equal("basename", stripChargeFromConventionalSpectrumId("basename"));
+}
+
+
 int main(int argc, char** argv)
 {
     try
@@ -328,6 +340,7 @@ int main(int argc, char** argv)
         if (argc>1 && !strcmp(argv[1],"-v")) os_ = &cout;
         testSerialize();
         testPepXMLSpecificity();
+        testStripChargeFromConventionalSpectrumId();
         return 0;
     }
     catch (exception& e)

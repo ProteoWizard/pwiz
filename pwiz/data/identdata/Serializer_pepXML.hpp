@@ -71,6 +71,11 @@ struct PWIZ_API_DECL PepXMLSpecificity
 PWIZ_API_DECL PepXMLSpecificity pepXMLSpecificity(const Enzyme& ez);
 
 
+/// strips charge state from known conventions of the pepXML spectrum attribute;
+/// used to find a unique identifier for a spectrum in order to merge charge states
+PWIZ_API_DECL std::string stripChargeFromConventionalSpectrumId(const std::string& id);
+
+
 } // namespace identdata
 } // namespace pwiz 
 

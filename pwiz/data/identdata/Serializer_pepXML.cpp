@@ -1369,8 +1369,6 @@ struct HandlerSearchResults : public SAXParser::Handler
         ilr(iterationListenerRegistry),
         strict(strict)
     {
-        // (basename.scanNumber.scanNumber).charge
-        conventionalSpectrumIdRegex = boost::xpressive::sregex::compile("([^.]*\\.\\d+\\.\\d+).*");
     }
 
     bool setDBSequenceParams(const string& accession,
@@ -1565,13 +1563,10 @@ struct HandlerSearchResults : public SAXParser::Handler
             if (ilr && ilr->broadcastUpdateMessage(IterationListener::UpdateMessage(_sil->spectrumIdentificationResult.size(), 0, "reading spectrum queries")) == IterationListener::Status_Cancel)
                 return Status::Done;
 
-            string spectrum, spectrumWithoutCharge;
+            string spectrum;
             getAttribute(attributes, "spectrum", spectrum);
 
-            if (boost::xpressive::regex_match(spectrum, what, conventionalSpectrumIdRegex))
-                spectrumWithoutCharge = what[1];
-            else
-                spectrumWithoutCharge = spectrum;
+            string spectrumWithoutCharge = stripChargeFromConventionalSpectrumId(spectrum);
 
             SpectrumIdentificationResultPtr& sir = _resultMap[spectrumWithoutCharge];
             if (!sir.get())
@@ -1632,7 +1627,6 @@ struct HandlerSearchResults : public SAXParser::Handler
     map<string, SpectrumIdentificationResultPtr> _resultMap;
     PeptidePtr _currentPeptide;
     Formula _nTerm, _cTerm;
-    boost::xpressive::sregex conventionalSpectrumIdRegex;
     boost::xpressive::smatch what;
     int siiCount, peptideCount;
     const CVTranslator& _cvTranslator;
@@ -1940,6 +1934,36 @@ PWIZ_API_DECL PepXMLSpecificity pepXMLSpecificity(const Enzyme& ez)
     }
 
     return result;
+}
+
+
+PWIZ_API_DECL string stripChargeFromConventionalSpectrumId(const string& id)
+{
+    // basename.123.123.2
+    // basename.123.123
+    // basename.ext.123.123.2
+    // basename.ext.123.123
+    // Locus:w.x.y.z.charge
+
+    size_t lastDot = id.find_last_of(".");
+    if (lastDot == string::npos)
+        return id;
+
+    // there is no repeating scan number, so assume there is a charge segment
+    if (bal::istarts_with(id, "Locus:"))
+        return id.substr(0, lastDot);
+
+    size_t nextToLastDot = id.find_last_of(".", lastDot-1);
+    if (nextToLastDot == string::npos)
+        return id;
+
+    // if the substring between the next to last and last dot is the same as after the last dot,
+    // the charge is probably already stripped
+    if (bal::equals(boost::make_iterator_range(id.begin()+nextToLastDot+1, id.begin()+lastDot),
+                    boost::make_iterator_range(id.begin()+lastDot+1, id.end())))
+        return id;
+
+    return id.substr(0, lastDot);
 }
 
 
