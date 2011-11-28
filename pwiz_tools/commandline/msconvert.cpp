@@ -61,6 +61,7 @@ struct Config
     vector<string> filters;
     string outputPath;
     string extension;
+    string outputFile;
     bool verbose;
     MSDataFile::WriteConfig writeConfig;
     string contactFilename;
@@ -79,6 +80,10 @@ string Config::outputFilename(const string& filename, const MSData& msd) const
     string runId = msd.run.id;
 
     // if necessary, adjust runId so it makes a suitable filename
+    if (!outputFile.empty())
+    {
+        runId = outputFile;
+    }
     if (runId.empty())
         runId = bfs::basename(filename);
     else
@@ -174,6 +179,9 @@ Config parseCommandLine(int argc, const char* argv[])
         ("config,c", 
             po::value<string>(&configFilename),
             ": configuration file (optionName=value)")
+        ("outfile",
+            po::value<string>(&config.outputFile)->default_value(config.outputFile),
+         ": Override the name of output file.")
         ("ext,e",
             po::value<string>(&config.extension)->default_value(config.extension),
             ": set extension for output files [mzML|mzXML|mgf|txt"
