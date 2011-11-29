@@ -63,25 +63,41 @@ namespace pwiz.Skyline.EditUI
             if (invalidLines.Count > 0)
             {
                 if (invalidLines.Count == 1)
-                    MessageBox.Show(string.Format("The sequence '{0}' is not a valid peptide.", invalidLines[0]));
+                    MessageBox.Show(this, string.Format("The sequence '{0}' is not a valid peptide.", invalidLines[0]), Program.Name);
                 else
-                    MessageBox.Show(string.Format("The following sequences are not valid peptides:\n\n{0}",
-                                                  string.Join("\n", invalidLines.ToArray())));
+                    MessageBox.Show(this, string.Format("The following sequences are not valid peptides:\n\n{0}",
+                                                  string.Join("\n", invalidLines.ToArray())), Program.Name);
+                return;
+            }
+            else if (acceptedPeptides.Count == 0)
+            {
+                MessageBox.Show(this, "None of the specified peptides are in the document.");
+                return;
             }
             else if (notFoundLines.Count > 0)
             {
+                string message;
                 if (notFoundLines.Count == 1)
-                    MessageBox.Show(string.Format("The peptide '{0}' is not in the document.", notFoundLines[0]));
+                {
+                    message = string.Format("The peptide '{0}' is not in the document. Do you want to continue?", notFoundLines[0]);
+                }
+                else if (notFoundLines.Count < 15)
+                {
+                    message = string.Format("The following peptides are not in the document:\n\n{0}\n\nDo you want to continue?",
+                                                  string.Join("\n", notFoundLines.ToArray()));
+                }
                 else
-                    MessageBox.Show(string.Format("The following peptides are not in the document:\n\n{0}",
-                                                  string.Join("\n", notFoundLines.ToArray())));
+                {
+                    message = string.Format("Of the specified {0} peptides {1} are not in the document.  Do you want to continue?",
+                        notFoundLines.Count + acceptedPeptides.Count, notFoundLines.Count);
+                }
+                if (MessageBox.Show(this, message, Program.Name, MessageBoxButtons.OKCancel) != DialogResult.OK)
+                    return;
             }
-            else
-            {
-                AcceptedPeptides = acceptedPeptides.ToArray();
-                DialogResult = DialogResult.OK;
-            }
+
+            AcceptedPeptides = acceptedPeptides.ToArray();
             RemoveEmptyProteins = cbRemoveProteins.Checked;
+            DialogResult = DialogResult.OK;
         }
 
         private void btnOk_Click(object sender, EventArgs e)
