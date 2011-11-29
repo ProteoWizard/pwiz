@@ -250,10 +250,12 @@ namespace IDPicker
             {
                 var fileTypeList = new List<string>
                 {
-                    "IDPicker Files|.idpDB;.idpXML;.pepXML;.pep.xml",
-                    "PepXML Files|.pepXML;.pep.xml",
-                    "IDPicker XML|.idpXML",
-                    "IDPicker DB|.idpDB"
+                    "IDPicker files|*.idpDB;*.mzid;*.pepXML;*.pep.xml;*.idpXML",
+                    "MzIdentML files|*.mzid",
+                    "PepXML files|*.pepXML;*.pep.xml",
+                    "IDPicker XML|*.idpXML",
+                    "IDPicker DB|*.idpDB",
+                    "All files|*.*"
                 };
 
                 var openFileDialog = new IDPOpenDialog(fileTypeList);
@@ -560,7 +562,7 @@ namespace IDPicker
             peptideTableForm.SetData(session, viewFilter);
             spectrumTableForm.SetData(session, viewFilter);
             modificationTableForm.SetData(session, viewFilter);
-            analysisTableForm.SetData(session, viewFilter);
+            analysisTableForm.SetData(session.SessionFactory, viewFilter);
             fragmentationStatisticsForm.SetData(session, viewFilter);
             peakStatisticsForm.SetData(session, viewFilter);
         }
@@ -708,14 +710,12 @@ namespace IDPicker
         {
             try
             {
-                var xml_filepaths = filepaths.Where(filepath => filepath.EndsWith(".idpXML") ||
-                                                                filepath.EndsWith(".pepXML") ||
-                                                                filepath.EndsWith(".pep.xml"));
+                var xml_filepaths = filepaths.Where(filepath => !filepath.EndsWith(".idpDB"));
                 var idpDB_filepaths = filepaths.Where(filepath => filepath.EndsWith(".idpDB"));
 
                 if (xml_filepaths.Count() + idpDB_filepaths.Count() == 0)
                 {
-                    MessageBox.Show("Select one or more idpXML, pepXML, or idpDB files to create an IDPicker report.", "No IDPicker files selected");
+                    MessageBox.Show("Select one or more idpDB, mzIdentML, pepXML, or idpXML files to create an IDPicker report.", "No IDPicker files selected");
                     return;
                 }
 

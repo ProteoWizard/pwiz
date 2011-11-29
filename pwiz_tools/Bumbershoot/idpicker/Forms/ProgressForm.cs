@@ -72,6 +72,16 @@ namespace IDPicker
             int index = updateMessage.iterationIndex;
             int count = updateMessage.iterationCount;
 
+            // if the update is not row-specific, update the window title
+            string[] parts2 = Text.Split(':');
+            if (String.IsNullOrEmpty(taskName))
+            {
+                Text = String.Format("{0}: {1} ({2}/{3})", parts2[0], message, index, count);
+                return IterationListener.Status.Ok;
+            }
+            else if (parts.Length > 1)
+                Text = parts2[0];
+
             var row = _rowByTaskName[taskName];
             var progressCell = _progressCellByTaskName[taskName];
 

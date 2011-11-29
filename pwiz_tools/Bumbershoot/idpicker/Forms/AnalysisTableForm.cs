@@ -96,7 +96,7 @@ namespace IDPicker.Forms
             parameterCountColumn.AspectGetter += delegate(object x)
             {
                 if (x is AnalysisRow)
-                    lock(session) return (x as AnalysisRow).Analysis.Parameters.Count;
+                    return (x as AnalysisRow).Analysis.Parameters.Count;
                 return null;
             };
 
@@ -147,9 +147,9 @@ namespace IDPicker.Forms
         // TODO: support multiple selected objects
         string[] oldSelectionPath = new string[] { };
 
-        public void SetData (NHibernate.ISession session, DataFilter dataFilter)
+        public void SetData (NHibernate.ISessionFactory sessionFactory, DataFilter dataFilter)
         {
-            this.session = session;
+            this.session = sessionFactory.OpenSession();
             this.dataFilter = new DataFilter(dataFilter);
 
             /*if (treeListView.SelectedObject is PeptideRow)

@@ -51,11 +51,11 @@ namespace IDPicker.Forms
         int _numberNewNodes;
         private tlvBranch _rootNode;
 
-        public GroupingControlForm(NHibernate.ISession session)
+        public GroupingControlForm(NHibernate.ISessionFactory sessionFactory)
         {
             InitializeComponent();
 
-            this.session = session;
+            this.session = sessionFactory.OpenSession();
 
             tlvGroupedFiles.CanExpandGetter += x => (((tlvBranch)x).Data is SpectrumSourceGroup && ((tlvBranch)x).Children.Any());
             tlvGroupedFiles.ChildrenGetter += getChildren;

@@ -227,11 +227,17 @@ void parseAnalysis(const IdentDataFile& mzid, Analysis& analysis)
 
 // an analysis is distinct if its name is unique and it has at least one distinct parameter
 typedef map<string, AnalysisPtr> DistinctAnalysisMap;
-void findDistinctAnalyses(const vector<string>& inputFilepaths, DistinctAnalysisMap& distinctAnalyses)
+void findDistinctAnalyses(const vector<string>& inputFilepaths,
+                          DistinctAnalysisMap& distinctAnalyses,
+                          const IterationListenerRegistry* ilr)
 {
     map<string, vector<AnalysisPtr> > sameNameAnalysesByName;
+    int iterationIndex = 0;
+    IterationListener::Status status;
     BOOST_FOREACH(const string& filepath, inputFilepaths)
     {
+        ITERATION_UPDATE(ilr, iterationIndex++, inputFilepaths.size(), "finding distinct analyses");
+
         // ignore SequenceCollection and AnalysisData
         IdentDataFile mzid(filepath, 0, 0, true);
 
@@ -304,33 +310,52 @@ struct ParserImpl
         idpDb.execute("PRAGMA journal_mode=OFF;"
                       "PRAGMA synchronous=OFF;"
                       "PRAGMA automatic_indexing=OFF;"
-                      "PRAGMA default_cache_size=500000;"
+                      "PRAGMA cache_size=50000;"
                       "PRAGMA temp_store=MEMORY"
                      );
 
         sqlite::transaction transaction(idpDb);
 
         // initialize the tables
-        idpDb.execute("CREATE TABLE SpectrumSource (Id INTEGER PRIMARY KEY, Name TEXT, URL TEXT, Group_ INT, MsDataBytes BLOB);"
-                      "CREATE TABLE SpectrumSourceGroup (Id INTEGER PRIMARY KEY, Name TEXT);"
-                      "CREATE TABLE SpectrumSourceGroupLink (Id INTEGER PRIMARY KEY, Source INT, Group_ INT);"
-                      "CREATE TABLE Spectrum (Id INTEGER PRIMARY KEY, Source INT, Index_ INT, NativeID TEXT, PrecursorMZ NUMERIC);"
-                      "CREATE TABLE Analysis (Id INTEGER PRIMARY KEY, Name TEXT, SoftwareName TEXT, SoftwareVersion TEXT, Type INT, StartTime DATETIME);"
-                      "CREATE TABLE AnalysisParameter (Id INTEGER PRIMARY KEY, Analysis INT, Name TEXT, Value TEXT);"
-                      "CREATE TABLE Modification (Id INTEGER PRIMARY KEY, MonoMassDelta NUMERIC, AvgMassDelta NUMERIC, Formula TEXT, Name TEXT);"
-                      "CREATE TABLE Protein (Id INTEGER PRIMARY KEY, Accession TEXT, IsDecoy INT, Cluster INT, ProteinGroup INT, Length INT);"
-                      "CREATE TABLE ProteinData (Id INTEGER PRIMARY KEY, Sequence TEXT);"
-                      "CREATE TABLE ProteinMetadata (Id INTEGER PRIMARY KEY, Description TEXT);"
-                      "CREATE TABLE Peptide (Id INTEGER PRIMARY KEY, MonoisotopicMass NUMERIC, MolecularWeight NUMERIC, PeptideGroup INT, DecoySequence TEXT);"
-                      "CREATE TABLE PeptideInstance (Id INTEGER PRIMARY KEY, Protein INT, Peptide INT, Offset INT, Length INT, NTerminusIsSpecific INT, CTerminusIsSpecific INT, MissedCleavages INT);"
-                      //"CREATE TABLE PeptideSequence (Id INTEGER PRIMARY KEY, Sequence TEXT);"
-                      "CREATE TABLE PeptideSpectrumMatch (Id INTEGER PRIMARY KEY, Spectrum INT, Analysis INT, Peptide INT, QValue NUMERIC, MonoisotopicMass NUMERIC, MolecularWeight NUMERIC, MonoisotopicMassError NUMERIC, MolecularWeightError NUMERIC, Rank INT, Charge INT);"
-                      "CREATE TABLE PeptideModification (Id INTEGER PRIMARY KEY, PeptideSpectrumMatch INT, Modification INT, Offset INT, Site TEXT);"
-                      "CREATE TABLE PeptideSpectrumMatchScore (PsmId INTEGER NOT NULL, Value NUMERIC, ScoreNameId INTEGER NOT NULL, primary key (PsmId, ScoreNameId));"
-                      "CREATE TABLE PeptideSpectrumMatchScoreName (Id INTEGER PRIMARY KEY, Name TEXT UNIQUE NOT NULL);"
-                      "CREATE TABLE IntegerSet (Value INTEGER PRIMARY KEY);"
-                      "CREATE TABLE LayoutProperty (Id INTEGER PRIMARY KEY, Name TEXT, PaneLocations TEXT, HasCustomColumnSettings INT, FormProperties TEXT);"
-                      "CREATE TABLE ProteinCoverage (Id INTEGER PRIMARY KEY, Coverage NUMERIC, CoverageMask BLOB);"
+        idpDb.execute("CREATE TABLE IF NOT EXISTS SpectrumSource (Id INTEGER PRIMARY KEY, Name TEXT, URL TEXT, Group_ INT, MsDataBytes BLOB);"
+                      "CREATE TABLE IF NOT EXISTS SpectrumSourceGroup (Id INTEGER PRIMARY KEY, Name TEXT);"
+                      "CREATE TABLE IF NOT EXISTS SpectrumSourceGroupLink (Id INTEGER PRIMARY KEY, Source INT, Group_ INT);"
+                      "CREATE TABLE IF NOT EXISTS Spectrum (Id INTEGER PRIMARY KEY, Source INT, Index_ INT, NativeID TEXT, PrecursorMZ NUMERIC);"
+                      "CREATE TABLE IF NOT EXISTS Analysis (Id INTEGER PRIMARY KEY, Name TEXT, SoftwareName TEXT, SoftwareVersion TEXT, Type INT, StartTime DATETIME);"
+                      "CREATE TABLE IF NOT EXISTS AnalysisParameter (Id INTEGER PRIMARY KEY, Analysis INT, Name TEXT, Value TEXT);"
+                      "CREATE TABLE IF NOT EXISTS Modification (Id INTEGER PRIMARY KEY, MonoMassDelta NUMERIC, AvgMassDelta NUMERIC, Formula TEXT, Name TEXT);"
+                      "CREATE TABLE IF NOT EXISTS Protein (Id INTEGER PRIMARY KEY, Accession TEXT, IsDecoy INT, Cluster INT, ProteinGroup INT, Length INT);"
+                      "CREATE TABLE IF NOT EXISTS ProteinData (Id INTEGER PRIMARY KEY, Sequence TEXT);"
+                      "CREATE TABLE IF NOT EXISTS ProteinMetadata (Id INTEGER PRIMARY KEY, Description TEXT);"
+                      "CREATE TABLE IF NOT EXISTS Peptide (Id INTEGER PRIMARY KEY, MonoisotopicMass NUMERIC, MolecularWeight NUMERIC, PeptideGroup INT, DecoySequence TEXT);"
+                      "CREATE TABLE IF NOT EXISTS PeptideInstance (Id INTEGER PRIMARY KEY, Protein INT, Peptide INT, Offset INT, Length INT, NTerminusIsSpecific INT, CTerminusIsSpecific INT, MissedCleavages INT);"
+                      "CREATE TABLE IF NOT EXISTS PeptideSpectrumMatch (Id INTEGER PRIMARY KEY, Spectrum INT, Analysis INT, Peptide INT, QValue NUMERIC, MonoisotopicMass NUMERIC, MolecularWeight NUMERIC, MonoisotopicMassError NUMERIC, MolecularWeightError NUMERIC, Rank INT, Charge INT);"
+                      "CREATE TABLE IF NOT EXISTS PeptideModification (Id INTEGER PRIMARY KEY, PeptideSpectrumMatch INT, Modification INT, Offset INT, Site TEXT);"
+                      "CREATE TABLE IF NOT EXISTS PeptideSpectrumMatchScore (PsmId INTEGER NOT NULL, Value NUMERIC, ScoreNameId INTEGER NOT NULL, primary key (PsmId, ScoreNameId));"
+                      "CREATE TABLE IF NOT EXISTS PeptideSpectrumMatchScoreName (Id INTEGER PRIMARY KEY, Name TEXT UNIQUE NOT NULL);"
+                      "CREATE TABLE IF NOT EXISTS IntegerSet (Value INTEGER PRIMARY KEY);"
+                      "CREATE TABLE IF NOT EXISTS LayoutProperty (Id INTEGER PRIMARY KEY, Name TEXT, PaneLocations TEXT, HasCustomColumnSettings INT, FormProperties TEXT);"
+                      "CREATE TABLE IF NOT EXISTS ProteinCoverage (Id INTEGER PRIMARY KEY, Coverage NUMERIC, CoverageMask BLOB);"
+
+                      "DELETE FROM SpectrumSource;"
+                      "DELETE FROM SpectrumSourceGroup;"
+                      "DELETE FROM SpectrumSourceGroupLink;"
+                      "DELETE FROM Spectrum;"
+                      "DELETE FROM Analysis;"
+                      "DELETE FROM AnalysisParameter;"
+                      "DELETE FROM Modification;"
+                      "DELETE FROM Protein;"
+                      "DELETE FROM ProteinData;"
+                      "DELETE FROM ProteinMetadata;"
+                      "DELETE FROM Peptide;"
+                      "DELETE FROM PeptideInstance;"
+                      "DELETE FROM PeptideSpectrumMatch;"
+                      "DELETE FROM PeptideModification;"
+                      "DELETE FROM PeptideSpectrumMatchScore;"
+                      "DELETE FROM PeptideSpectrumMatchScoreName;"
+                      "DELETE FROM IntegerSet;"
+                      "DELETE FROM LayoutProperty;"
+                      "DELETE FROM ProteinCoverage;"
                      );
         transaction.commit();
     }
@@ -426,7 +451,6 @@ struct ParserImpl
         // create commands for inserting results
         sqlite::command insertSpectrum(idpDb, "INSERT INTO Spectrum (Id, Source, Index_, NativeID, PrecursorMZ) VALUES (?,1,?,?,?)");
         sqlite::command insertPeptide(idpDb, "INSERT INTO Peptide (Id, MonoisotopicMass, MolecularWeight, PeptideGroup, DecoySequence) VALUES (?,?,?,0,?)");
-        //sqlite::command insertPeptideSequence(idpDb, "INSERT INTO PeptideSequence (Id, Sequence) VALUES (?,?)");
         sqlite::command insertPSM(idpDb, "INSERT INTO PeptideSpectrumMatch (Id, Spectrum, Analysis, Peptide, QValue, MonoisotopicMass, MolecularWeight, MonoisotopicMassError, MolecularWeightError, Rank, Charge) VALUES (?,?,?,?,?,?,?,?,?,?,?)");
         sqlite::command insertPeptideModification(idpDb, "INSERT INTO PeptideModification (Id, PeptideSpectrumMatch, Modification, Offset, Site) VALUES (?,?,?,?,?)");
         sqlite::command insertModification(idpDb, "INSERT INTO Modification (Id, MonoMassDelta, AvgMassDelta, Formula, Name) VALUES (?,?,?,?,?)");
@@ -543,10 +567,6 @@ struct ParserImpl
                         insertPeptideInstance.execute();
                         insertPeptideInstance.reset();
                     }
-
-                    /*insertPeptideSequence.binder() << nextPeptideId << sequence;
-                    insertPeptideSequence.execute();
-                    insertPeptideSequence.reset();*/
                 }
                 else
                     nextPeptideId = distinctPeptideIdBySequence[sharedSequence];
@@ -569,8 +589,8 @@ struct ParserImpl
                         insertModification.binder() << nextModId
                                                     << mod->monoisotopicMassDelta
                                                     << mod->avgMassDelta
-                                                    << "" // TODO: use Unimod
-                                                    << "";
+                                                    << sqlite::ignore // TODO: use Unimod
+                                                    << sqlite::ignore;
                         insertModification.execute();
                         insertModification.reset();
                     }
@@ -593,7 +613,7 @@ struct ParserImpl
                                                        << nextPSMId
                                                        << insertResult.first->second // mod id
                                                        << offset
-                                                       << string(1, site);
+                                                       << site;
                     insertPeptideModification.execute();
                     insertPeptideModification.reset();
 
@@ -610,8 +630,8 @@ struct ParserImpl
                                    << 2 // q value
                                    << precursorMass
                                    << precursorMass
-                                   << precursorMass - pwizPeptide.monoisotopicMass()
-                                   << precursorMass - pwizPeptide.molecularWeight()
+                                   << (precursorMass - pwizPeptide.monoisotopicMass())
+                                   << (precursorMass - pwizPeptide.molecularWeight())
                                    << sii->rank
                                    << sii->chargeState;
                 insertPSM.execute();
@@ -628,14 +648,14 @@ struct ParserImpl
 
                 sqlite3_int64 nextScoreId = 0;
 
-                BOOST_FOREACH(CVParam& cvParam, sii->cvParams)
+                BOOST_FOREACH(const CVParam& cvParam, sii->cvParams)
                 {
                     insertScore.binder() << nextPSMId << cvParam.value << ++nextScoreId;
                     insertScore.execute();
                     insertScore.reset();
                 }
 
-                BOOST_FOREACH(UserParam& userParam, sii->userParams)
+                BOOST_FOREACH(const UserParam& userParam, sii->userParams)
                 {
                     insertScore.binder() << nextPSMId << userParam.value << ++nextScoreId;
                     insertScore.execute();
@@ -650,21 +670,21 @@ struct ParserImpl
     void createIndexes()
     {
         sqlite::transaction transaction(idpDb);
-        idpDb.execute("CREATE UNIQUE INDEX Protein_Accession ON Protein (Accession);"
-                      "CREATE INDEX PeptideInstance_Peptide ON PeptideInstance (Peptide);"
-                      "CREATE INDEX PeptideInstance_Protein ON PeptideInstance (Protein);"
-                      "CREATE INDEX PeptideInstance_PeptideProtein ON PeptideInstance (Peptide, Protein);"
-                      "CREATE INDEX PeptideInstance_ProteinOffsetLength ON PeptideInstance (Protein, Offset, Length);"
-                      "CREATE UNIQUE INDEX SpectrumSourceGroupLink_SourceGroup ON SpectrumSourceGroupLink (Source, Group_);"
-                      "CREATE INDEX Spectrum_SourceIndex ON Spectrum (Source, Index_);"
-                      "CREATE UNIQUE INDEX Spectrum_SourceNativeID ON Spectrum (Source, NativeID);"
-                      "CREATE INDEX PeptideSpectrumMatch_Analysis ON PeptideSpectrumMatch (Analysis);"
-                      "CREATE INDEX PeptideSpectrumMatch_Peptide ON PeptideSpectrumMatch (Peptide);"
-                      "CREATE INDEX PeptideSpectrumMatch_Spectrum ON PeptideSpectrumMatch (Spectrum);"
-                      "CREATE INDEX PeptideSpectrumMatch_QValue ON PeptideSpectrumMatch (QValue);"
-                      "CREATE INDEX PeptideSpectrumMatch_Rank ON PeptideSpectrumMatch (Rank);"
-                      "CREATE INDEX PeptideModification_PeptideSpectrumMatch ON PeptideModification (PeptideSpectrumMatch);"
-                      "CREATE INDEX PeptideModification_Modification ON PeptideModification (Modification);"
+        idpDb.execute("CREATE UNIQUE INDEX IF NOT EXISTS Protein_Accession ON Protein (Accession);"
+                      "CREATE INDEX IF NOT EXISTS PeptideInstance_Peptide ON PeptideInstance (Peptide);"
+                      "CREATE INDEX IF NOT EXISTS PeptideInstance_Protein ON PeptideInstance (Protein);"
+                      "CREATE INDEX IF NOT EXISTS PeptideInstance_PeptideProtein ON PeptideInstance (Peptide, Protein);"
+                      "CREATE INDEX IF NOT EXISTS PeptideInstance_ProteinOffsetLength ON PeptideInstance (Protein, Offset, Length);"
+                      "CREATE UNIQUE INDEX IF NOT EXISTS SpectrumSourceGroupLink_SourceGroup ON SpectrumSourceGroupLink (Source, Group_);"
+                      "CREATE INDEX IF NOT EXISTS Spectrum_SourceIndex ON Spectrum (Source, Index_);"
+                      "CREATE UNIQUE INDEX IF NOT EXISTS Spectrum_SourceNativeID ON Spectrum (Source, NativeID);"
+                      "CREATE INDEX IF NOT EXISTS PeptideSpectrumMatch_Analysis ON PeptideSpectrumMatch (Analysis);"
+                      "CREATE INDEX IF NOT EXISTS PeptideSpectrumMatch_Peptide ON PeptideSpectrumMatch (Peptide);"
+                      "CREATE INDEX IF NOT EXISTS PeptideSpectrumMatch_Spectrum ON PeptideSpectrumMatch (Spectrum);"
+                      "CREATE INDEX IF NOT EXISTS PeptideSpectrumMatch_QValue ON PeptideSpectrumMatch (QValue);"
+                      "CREATE INDEX IF NOT EXISTS PeptideSpectrumMatch_Rank ON PeptideSpectrumMatch (Rank);"
+                      "CREATE INDEX IF NOT EXISTS PeptideModification_PeptideSpectrumMatch ON PeptideModification (PeptideSpectrumMatch);"
+                      "CREATE INDEX IF NOT EXISTS PeptideModification_Modification ON PeptideModification (Modification);"
                      );
         transaction.commit();
     }
@@ -687,7 +707,8 @@ struct ParserImpl
         }
         string scoreInfo = bal::join(scoreInfoStrings, ";");
 
-        idpDb.execute("CREATE TABLE QonverterSettings (Id INTEGER PRIMARY KEY,"
+        idpDb.execute("DROP TABLE IF EXISTS QonverterSettings;"
+                      "CREATE TABLE QonverterSettings (Id INTEGER PRIMARY KEY,"
                       "                                QonverterMethod INT,"
                       "                                DecoyPrefix TEXT,"
                       "                                RerankMatches INT,"
@@ -738,7 +759,6 @@ struct ParserImpl
             "DELETE FROM PeptideModification WHERE PeptideSpectrumMatch NOT IN (SELECT Id FROM PeptideSpectrumMatch);"
             "DELETE FROM Spectrum WHERE Id NOT IN (SELECT DISTINCT Spectrum FROM PeptideSpectrumMatch);"
             "DELETE FROM Peptide WHERE Id NOT IN (SELECT DISTINCT Peptide FROM PeptideSpectrumMatch);"
-            //"DELETE FROM PeptideSequence WHERE Id NOT IN (SELECT Id FROM Peptide);"
             "DELETE FROM PeptideInstance WHERE Peptide NOT IN (SELECT Id FROM Peptide);"
             "DELETE FROM Protein WHERE Id NOT IN (SELECT Protein FROM PeptideInstance);"
             "DELETE FROM ProteinData WHERE Id NOT IN (SELECT Protein FROM PeptideInstance);"
@@ -871,13 +891,10 @@ void executeParserTask(ParserTaskPtr parserTask, ThreadStatus& status)
 
     try
     {
-        // create an in-memory database
-        parserTask->idpDb.reset(new sqlite::database(":memory:", sqlite::no_mutex));
-
-        IterationListenerRegistry* threadILR;
+        boost::scoped_ptr<IterationListenerRegistry> threadILR;
         if (ilr)
         {
-            threadILR = new IterationListenerRegistry();
+            threadILR.reset(new IterationListenerRegistry);
             threadILR->addListener(IterationListenerPtr(new ParserForwardingIterationListener(*ilr, inputFilepath)), 10);
         }
 
@@ -885,7 +902,7 @@ void executeParserTask(ParserTaskPtr parserTask, ThreadStatus& status)
         ITERATION_UPDATE(ilr, 0, 0, inputFilepath + "*opening file");
         {
             //boost::mutex::scoped_lock ioLock(ioMutex);
-            parserTask->mzid.reset(new IdentDataFile(inputFilepath, 0, threadILR));
+            parserTask->mzid.reset(new IdentDataFile(inputFilepath, 0, threadILR.get()));
         }
 
         // create parser instance
@@ -893,7 +910,7 @@ void executeParserTask(ParserTaskPtr parserTask, ThreadStatus& status)
                                                 *parserTask->analysis,
                                                 *parserTask->idpDb,
                                                 *parserTask->mzid,
-                                                threadILR));
+                                                threadILR.get()));
 
         parserTask->parser->insertAnalysisMetadata();
 
@@ -902,13 +919,9 @@ void executeParserTask(ParserTaskPtr parserTask, ThreadStatus& status)
         if (tmpStatus == IterationListener::Status_Cancel)
         {
             status = tmpStatus;
+            parserTask->mzid.reset();
             return;
         }
-
-        //if (parserTask->parser->buildPeptideTrie() == IterationListener::Status_Cancel)
-        //    return IterationListener::Status_Cancel;
-
-        parserTask->mzid.reset();
 
         status = IterationListener::Status_Ok;
     }
@@ -920,6 +933,8 @@ void executeParserTask(ParserTaskPtr parserTask, ThreadStatus& status)
     {
         status = boost::copy_exception(runtime_error("[executeParserTask] unknown error parsing \"" + inputFilepath + "\""));
     }
+
+    parserTask->mzid.reset();
 }
 
 
@@ -1288,7 +1303,7 @@ void executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask, ThreadStat
             idpDbFile.execute("PRAGMA journal_mode=OFF;"
                               "PRAGMA synchronous=OFF;"
                               "PRAGMA automatic_indexing=OFF;"
-                              "PRAGMA default_cache_size=500000;"
+                              "PRAGMA cache_size=50000;"
                               "PRAGMA temp_store=MEMORY"
                              );
 
@@ -1332,6 +1347,7 @@ void executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask, ThreadStat
 
 void executeTaskGroup(const ProteinDatabaseTaskGroup& taskGroup,
                       const DistinctAnalysisMap& distinctAnalysisByFilepath,
+                      vector<shared_ptr<sqlite::database> > memoryDatabases,
                       IterationListenerRegistry* ilr)
 {
     using boost::thread;
@@ -1345,13 +1361,16 @@ void executeTaskGroup(const ProteinDatabaseTaskGroup& taskGroup,
         // use list so iterators and references stay valid
         list<pair<boost::shared_ptr<thread>, ThreadStatus> > threads;
 
-        BOOST_FOREACH(const string& inputFilepath, taskGroup.inputFilepaths)
+        for (size_t i=0; i < taskGroup.inputFilepaths.size(); ++i)
         {
+            const string& inputFilepath = taskGroup.inputFilepaths[i];
+
             if (distinctAnalysisByFilepath.count(inputFilepath) == 0)
                 throw runtime_error("[Parser::parse()] unable to find analysis for file \"" + inputFilepath + "\"");
 
             ParserTaskPtr parserTask(new ParserTask(inputFilepath));
             parserTask->analysis = distinctAnalysisByFilepath.find(inputFilepath)->second;
+            parserTask->idpDb = memoryDatabases[i];
             parserTask->ilr = ilr;
             parserTask->ioMutex = &ioMutex;
             parserTasks.push_back(parserTask);
@@ -1446,9 +1465,11 @@ void Parser::parse(const vector<string>& inputFilepaths, int maxThreads, Iterati
     if (inputFilepaths.empty())
         return;
 
+    sqlite::enable_shared_cache(false);
+
     // get the set of distinct analyses in the input files
     DistinctAnalysisMap distinctAnalysisByFilepath;
-    findDistinctAnalyses(inputFilepaths, distinctAnalysisByFilepath);
+    findDistinctAnalyses(inputFilepaths, distinctAnalysisByFilepath, ilr);
 
     vector<ConstAnalysisPtr> distinctAnalyses;
     BOOST_FOREACH(const DistinctAnalysisMap::value_type& nameAnalysisPair, distinctAnalysisByFilepath)
@@ -1505,8 +1526,13 @@ void Parser::parse(const vector<string>& inputFilepaths, int maxThreads, Iterati
                                                                                 proteinDatabaseByFilepath,
                                                                                 maxThreads);
 
+    // re-use the same in-memory databases because SQLite doesn't seem to let go of the memory after closing
+    vector<shared_ptr<sqlite::database> > memoryDatabases;
+    for (int i=0; i < maxThreads; ++i)
+        memoryDatabases.push_back(shared_ptr<sqlite::database>(new sqlite::database(":memory:", sqlite::no_mutex)));
+
     BOOST_FOREACH(const ProteinDatabaseTaskGroup& taskGroup, taskGroups)
-        executeTaskGroup(taskGroup, distinctAnalysisByFilepath, ilr);
+        executeTaskGroup(taskGroup, distinctAnalysisByFilepath, memoryDatabases, ilr);
 }
 
 

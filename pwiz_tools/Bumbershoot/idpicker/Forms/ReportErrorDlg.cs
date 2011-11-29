@@ -83,9 +83,10 @@ namespace IDPicker.Forms
         {
             get
             {
-                StringBuilder stackTrace = new StringBuilder("Stack trace:");
+                StringBuilder stackTrace = new StringBuilder();
 
-                stackTrace.AppendLine().AppendLine(trimStackTrace(_exception.StackTrace)).AppendLine();
+                stackTrace.Append("Exception type: ").AppendLine(ExceptionType);
+                stackTrace.AppendLine("Stack trace:").AppendLine(trimStackTrace(_exception.StackTrace)).AppendLine();
 
                 for (var x = _exception.InnerException; x != null; x = x.InnerException)
                 {
@@ -93,7 +94,7 @@ namespace IDPicker.Forms
                         stackTrace.AppendLine("Inner exceptions:");
                     else
                         stackTrace.AppendLine("---------------------------------------------------------------");
-                    stackTrace.Append("Exception type: ").Append(x.GetType().FullName).AppendLine();
+                    stackTrace.Append("Exception type: ").AppendLine(x.GetType().FullName);
                     stackTrace.Append("Error message: ").AppendLine(x.Message);
                     stackTrace.AppendLine(x.Message).AppendLine(trimStackTrace(x.StackTrace));
                 }

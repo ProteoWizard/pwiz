@@ -53,7 +53,7 @@ namespace IDPicker.Controls
             this.flowLayoutPanel = new System.Windows.Forms.FlowLayoutPanel();
             this.label1 = new System.Windows.Forms.Label();
             this.qonvertMethodComboBox = new System.Windows.Forms.ComboBox();
-            this.svnPanel = new System.Windows.Forms.Panel();
+            this.svmPanel = new System.Windows.Forms.Panel();
             this.terminalSpecificityHandlingComboBox = new System.Windows.Forms.ComboBox();
             this.kernelComboBox = new System.Windows.Forms.ComboBox();
             this.label6 = new System.Windows.Forms.Label();
@@ -72,7 +72,7 @@ namespace IDPicker.Controls
             this.scoreNormalizationColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.panel1 = new System.Windows.Forms.Panel();
             this.flowLayoutPanel.SuspendLayout();
-            this.svnPanel.SuspendLayout();
+            this.svmPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.scoreGridView)).BeginInit();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
@@ -85,7 +85,7 @@ namespace IDPicker.Controls
             this.flowLayoutPanel.Controls.Add(this.chargeStateHandlingComboBox);
             this.flowLayoutPanel.Controls.Add(this.label3);
             this.flowLayoutPanel.Controls.Add(this.terminalSpecificityHandlingComboBox);
-            this.flowLayoutPanel.Controls.Add(this.svnPanel);
+            this.flowLayoutPanel.Controls.Add(this.svmPanel);
             this.flowLayoutPanel.Controls.Add(this.panel1);
             this.flowLayoutPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel.Location = new System.Drawing.Point(0, 0);
@@ -121,18 +121,18 @@ namespace IDPicker.Controls
             this.qonvertMethodComboBox.TabIndex = 3;
             this.qonvertMethodComboBox.SelectedIndexChanged += new System.EventHandler(this.qonvertMethodComboBox_SelectedIndexChanged);
             // 
-            // svnPanel
+            // svmPanel
             // 
-            this.svnPanel.Controls.Add(this.kernelComboBox);
-            this.svnPanel.Controls.Add(this.label6);
-            this.svnPanel.Controls.Add(this.missedCleavagesComboBox);
-            this.svnPanel.Controls.Add(this.label5);
-            this.svnPanel.Controls.Add(this.massErrorHandlingComboBox);
-            this.svnPanel.Controls.Add(this.label4);
-            this.svnPanel.Location = new System.Drawing.Point(3, 75);
-            this.svnPanel.Name = "svnPanel";
-            this.svnPanel.Size = new System.Drawing.Size(318, 77);
-            this.svnPanel.TabIndex = 122;
+            this.svmPanel.Controls.Add(this.kernelComboBox);
+            this.svmPanel.Controls.Add(this.label6);
+            this.svmPanel.Controls.Add(this.missedCleavagesComboBox);
+            this.svmPanel.Controls.Add(this.label5);
+            this.svmPanel.Controls.Add(this.massErrorHandlingComboBox);
+            this.svmPanel.Controls.Add(this.label4);
+            this.svmPanel.Location = new System.Drawing.Point(3, 75);
+            this.svmPanel.Name = "svmPanel";
+            this.svmPanel.Size = new System.Drawing.Size(318, 77);
+            this.svmPanel.TabIndex = 122;
             // 
             // terminalSpecificityHandlingComboBox
             // 
@@ -347,11 +347,10 @@ namespace IDPicker.Controls
             this.Controls.Add(this.flowLayoutPanel);
             this.Name = "QonverterSettingsControl";
             this.Size = new System.Drawing.Size(321, 371);
-            this.Load += new System.EventHandler(this.QonverterSettingsControl_Load);
             this.flowLayoutPanel.ResumeLayout(false);
             this.flowLayoutPanel.PerformLayout();
-            this.svnPanel.ResumeLayout(false);
-            this.svnPanel.PerformLayout();
+            this.svmPanel.ResumeLayout(false);
+            this.svmPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.scoreGridView)).EndInit();
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
@@ -380,7 +379,7 @@ namespace IDPicker.Controls
         private System.Windows.Forms.ComboBox terminalSpecificityHandlingComboBox;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.ComboBox chargeStateHandlingComboBox;
-        private System.Windows.Forms.Panel svnPanel;
+        private System.Windows.Forms.Panel svmPanel;
         private System.Windows.Forms.Panel panel1;
 
     }

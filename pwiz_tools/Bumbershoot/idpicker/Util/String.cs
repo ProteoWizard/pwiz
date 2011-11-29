@@ -35,8 +35,11 @@ namespace IDPicker
     {
         public static string GetCommonFilename (IEnumerable<string> filepaths)
         {
+            // find longest common case-insensitive prefix, but then restore the real case
             string commonFilename = "";
-            LongestCommonPrefix(filepaths, out commonFilename);
+            LongestCommonPrefix(filepaths.Select(o => o.ToLower()), out commonFilename);
+            if (!String.IsNullOrEmpty(commonFilename))
+                commonFilename = filepaths.First().Substring(0, commonFilename.Length);
 
             // trim useless prefix and suffix characters
             commonFilename = commonFilename.Trim(' ', '_', '-');

@@ -639,6 +639,17 @@ namespace IDPicker.Forms
 
                 ProteinViewFilter(this, newDataFilter);
             }
+            else if (e.ColumnIndex == proteinGroupColumn.Index && ProteinViewFilter != null)
+            {
+                object value = treeDataGridView[e.ColumnIndex, e.RowIndexHierarchy].Value;
+                if (value == null)
+                    return;
+
+                var newDataFilter = new DataFilter(dataFilter) { FilterSource = this };
+                newDataFilter.ProteinGroup = new List<int> { (int) value };
+
+                ProteinViewFilter(this, newDataFilter);
+            }
             else if (e.ColumnIndex == coverageColumn.Index && ProteinViewVisualize != null)
             {
                 Row row = rows[e.RowIndexHierarchy.First()];

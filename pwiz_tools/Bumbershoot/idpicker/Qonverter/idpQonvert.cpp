@@ -276,6 +276,16 @@ struct UserFeedbackIterationListener : public IterationListener
 
     virtual Status update(const UpdateMessage& updateMessage)
     {
+        if (updateMessage.message == "finding distinct analyses")
+        {
+            
+            cout << "\r" << (boost::format("%1% (%2%/%3%)")
+                             % updateMessage.message
+                             % (updateMessage.iterationIndex+1)
+                             % updateMessage.iterationCount).str() << flush;
+            return Status_Ok;
+        }
+
         vector<string> parts;
         bal::split(parts, updateMessage.message, bal::is_any_of("*"));
 
@@ -335,8 +345,10 @@ struct UserFeedbackIterationListener : public IterationListener
 END_IDPICKER_NAMESPACE
 
 
-void summarizeQonversion(const string& filepath)
+pair<int, int> summarizeQonversion(const string& filepath)
 {
+    pair<int, int> result(0, 0);
+
     sqlite::database idpDb(filepath);
 
     string sql = "SELECT Name, COUNT(DISTINCT Spectrum), COUNT(DISTINCT Peptide)"
@@ -353,10 +365,21 @@ void summarizeQonversion(const string& filepath)
         string source;
         int spectra, peptides;
         boost::tie(source, spectra, peptides) = row.get_columns<string, int, int>(0, 1, 2);
+
+        string sourceTitle;
+        if (bfs::path(filepath).replace_extension("").filename() == source)
+            sourceTitle = source;
+        else
+            sourceTitle = filepath + ":" + source;
+
         cout << left << setw(8) << spectra
              << left << setw(9) << peptides
-             << filepath << ":" << source << endl;
+             << sourceTitle << endl;
+        result.first += spectra;
+        result.second += peptides;
     }
+
+    return result;
 }
 
 
@@ -419,8 +442,13 @@ int main( int argc, char* argv[] )
         cout << "\nSpectra Peptides Filepath\n"
                 "-------------------------\n";
 
+        int totalSpectra = 0, totalPeptides = 0;
         BOOST_FOREACH(const string& filepath, parserFilepaths)
-            summarizeQonversion(Parser::outputFilepath(filepath).string());
+        {
+            pair<int, int> spectraPeptidesPair = summarizeQonversion(Parser::outputFilepath(filepath).string());
+            totalSpectra += spectraPeptidesPair.first;
+            totalPeptides += spectraPeptidesPair.second;
+        }
 
         BOOST_FOREACH(const string& filepath, idpDbFilepaths)
         {
@@ -431,8 +459,17 @@ int main( int argc, char* argv[] )
             qonverter.reset(filepath);
             qonverter.qonvert(filepath);
 
-            summarizeQonversion(filepath);
+            pair<int, int> spectraPeptidesPair = summarizeQonversion(filepath);
+
+            totalSpectra += spectraPeptidesPair.first;
+            totalPeptides += spectraPeptidesPair.second;
         }
+
+        if (parserFilepaths.size() + idpDbFilepaths.size() > 1)
+            cout << "-------------------------\n"
+                 << left << setw(8) << totalSpectra
+                 << left << setw(9) << totalPeptides
+                 << "Total" << endl;
     }
     catch (exception& e)
     {

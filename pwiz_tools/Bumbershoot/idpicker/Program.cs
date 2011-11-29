@@ -65,6 +65,12 @@ namespace IDPicker
 
         public static void HandleException (Exception e)
         {
+            if (MainWindow.InvokeRequired)
+            {
+                MainWindow.Invoke(new MethodInvoker(() => HandleException(e)));
+                return;
+            }
+
             using (var reportForm = new ReportErrorDlg(e, ReportErrorDlg.ReportChoice.choice))
             {
                 if (reportForm.ShowDialog(MainWindow) == DialogResult.OK)

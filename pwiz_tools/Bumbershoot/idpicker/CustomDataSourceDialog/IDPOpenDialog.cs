@@ -76,9 +76,10 @@ namespace CustomDataSourceDialog
                 var twoSides = item.Split("|".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
                 if (twoSides.Length != 2)
                     continue;
-                sourceTypeComboBox.Items.Add(twoSides[0]);
-                var extensionList = twoSides[1].Split(";".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-                _extensionList.Add(twoSides[0],extensionList);
+                var key = String.Format("{0} ({1})", twoSides[0], twoSides[1]);
+                sourceTypeComboBox.Items.Add(key);
+                var extensionList = twoSides[1].Replace("*.", ".").Split(";".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+                _extensionList.Add(key, extensionList);
 
                 if (twoSides[0] == "IDPicker Files")
                     _allExtensions = extensionList;
@@ -95,24 +96,8 @@ namespace CustomDataSourceDialog
             _startLocation = BreadCrumbControl.GetMostRecentLocation();
         }
 
-        public IDPOpenDialog(IEnumerable<string> fileTypes, string initialLocation)
+        public IDPOpenDialog(IEnumerable<string> fileTypes, string initialLocation) : this(fileTypes)
         {
-            InitializeComponent();
-            _relatedNodes = new Dictionary<TreeNode, List<TreeNode>>();
-            _extensionList = new Dictionary<string, IEnumerable<string>>();
-            foreach (var item in fileTypes)
-            {
-                var twoSides = item.Split("|".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-                if (twoSides.Length != 2)
-                    continue;
-                sourceTypeComboBox.Items.Add(twoSides[0]);
-                var extensionList = twoSides[1].Split(";".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
-                _extensionList.Add(twoSides[0], extensionList);
-            }
-            FileTreeView.Nodes.Add(new TreeNode { Text = "/", Tag = "Root", Checked = true });
-            _unfilteredNode = FileTreeView.Nodes[0];
-            SetUpDialog();
-
             _startLocation = initialLocation;
         }
 
@@ -303,7 +288,7 @@ namespace CustomDataSourceDialog
         {
             foreach (TreeNode child in parent.Nodes)
             {
-                if (child.ToolTipText == target)
+                if (child.ToolTipText.ToLower() == target.ToLower())
                     return child;
                 if ((string)child.Tag == "File") continue;
                 var result = GetSpecificNode(child, target);
@@ -961,18 +946,12 @@ namespace CustomDataSourceDialog
             {
                 foreach (TreeNode file in source.Nodes)
                 {
-//idpXML functionality
-//                    if (file.Text.ToLower().EndsWith(".pepxml") 
-//                        || file.Text.ToLower().EndsWith(".pep.xml")
-//                        || file.Text.ToLower().EndsWith(".idpxml"))
-					if (file.Text.ToLower().EndsWith(".pepxml") 
-                        || file.Text.ToLower().EndsWith(".pep.xml"))
+					if (!file.Text.ToLower().EndsWith(".idpdb"))
                     {
                         var baseName = Path.GetFileNameWithoutExtension(file.Text);
                         var matchFound = source.Nodes.Cast<TreeNode>()
                             .Where(idpDB => idpDB.Text.ToLower().EndsWith(".idpdb"))
-                            .Any(idpDB => Path.GetFileNameWithoutExtension(idpDB.Text)
-                                          == baseName);
+                            .Any(idpDB => Path.GetFileNameWithoutExtension(idpDB.Text) == baseName);
                         if (matchFound)
                         {
                             file.ForeColor = SystemColors.GrayText;
@@ -992,11 +971,9 @@ namespace CustomDataSourceDialog
             while (rootNode.Parent != null)
                 rootNode = rootNode.Parent;
 
-//idpXML functionality
-//            if (file.Extension.ToLower() == ".pepxml" || file.Name.EndsWith(".pep.xml") || file.Extension.ToLower() == ".idpxml")
-            if (file.Extension.ToLower() == ".pepxml" || file.Name.EndsWith(".pep.xml"))
+            if (file.Extension.ToLower() != ".idpdb")
                 sourceList.Add(Parser.ParseSource(file.FullName));//Path.GetFileNameWithoutExtension(file.FullName));
-            else if (file.Extension.ToLower() == ".idpdb" && SessionFactoryFactory.IsValidFile(file.FullName))
+            else if (SessionFactoryFactory.IsValidFile(file.FullName))
             {
                 NHibernate.ISessionFactory sessionFactory = null;
                 NHibernate.ISession session = null;

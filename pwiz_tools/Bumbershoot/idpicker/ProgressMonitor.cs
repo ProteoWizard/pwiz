@@ -89,7 +89,7 @@ namespace IDPicker
         public void UpdateProgress (object sender, Merger.MergingProgressEventArgs e)
         {
             if (e.MergingException != null)
-                throw new InvalidOperationException("parsing error", e.MergingException);
+                Program.HandleException(e.MergingException);
 
             if (ProgressUpdate == null)
                 return;

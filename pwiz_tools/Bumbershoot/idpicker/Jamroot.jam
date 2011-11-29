@@ -349,8 +349,7 @@ rule static-with-fpic ( properties * )
 
 rule msbuild_IDPicker ( targets + : sources * : properties * )
 {
-    if <variant>debug in $(properties) ||
-       <debug-symbols>on in $(properties)
+    if <variant>debug in $(properties)
     {
         CONFIGURATION on $(<[1]) = "Debug" ;
     }
@@ -383,8 +382,7 @@ rule build-location ( properties * )
     # don't override the location when it's already set
     if ! <location> in $(properties:G)
     {
-        if <variant>debug in $(properties) ||
-           <debug-symbols>on in $(properties)
+        if <variant>debug in $(properties)
         {
             result = <location>$(BUILD_PATH)/bin/Debug ;
         }
