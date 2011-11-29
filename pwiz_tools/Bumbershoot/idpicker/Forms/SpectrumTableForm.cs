@@ -549,6 +549,8 @@ namespace IDPicker.Forms
         {
             if (childGrouping == null)
                 return row.PeptideSpectrumMatches;
+            else if (childGrouping.Mode == GroupBy.Source)
+                return 1; // the root group
             else if (childGrouping.Mode == GroupBy.Spectrum)
                 return row.Spectra;
             else if (childGrouping.Mode == GroupBy.Analysis)
@@ -915,7 +917,7 @@ namespace IDPicker.Forms
             if (groupingSetupControl != null && formProperty.GroupingModes != null)
                 groupingChanged = base.updateGroupings(formProperty);
             else
-                setGroupings(new Grouping<GroupBy>() { Mode = GroupBy.Source, Text = "Group/Source" },
+                setGroupings(new Grouping<GroupBy>(true) { Mode = GroupBy.Source, Text = "Group/Source" },
                              new Grouping<GroupBy>() { Mode = GroupBy.Spectrum, Text = "Spectrum" },
                              new Grouping<GroupBy>() { Mode = GroupBy.Analysis, Text = "Analysis" },
                              new Grouping<GroupBy>() { Mode = GroupBy.Charge, Text = "Charge" },
@@ -1095,7 +1097,7 @@ namespace IDPicker.Forms
         {
             if (session != null)
             {
-                var gcf = new GroupingControlForm(session);
+                var gcf = new GroupingControlForm(session.SessionFactory);
 
                 if (gcf.ShowDialog() == DialogResult.OK)
                     (this.ParentForm as IDPickerForm).ApplyBasicFilter();
