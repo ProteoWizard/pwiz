@@ -325,6 +325,8 @@ void testStripChargeFromConventionalSpectrumId()
 {
     unit_assert_operator_equal("basename.123.123", stripChargeFromConventionalSpectrumId("basename.123.123.2"));
     unit_assert_operator_equal("basename.ext.123.123", stripChargeFromConventionalSpectrumId("basename.ext.123.123.12"));
+    unit_assert_operator_equal("basename.2.2", stripChargeFromConventionalSpectrumId("basename.2.2.2"));
+    unit_assert_operator_equal("basename.ext.3.3", stripChargeFromConventionalSpectrumId("basename.ext.3.3.3"));
     unit_assert_operator_equal("basename.123.123", stripChargeFromConventionalSpectrumId("basename.123.123"));
     unit_assert_operator_equal("basename.ext.123.123", stripChargeFromConventionalSpectrumId("basename.ext.123.123"));
     unit_assert_operator_equal("locus:1.1.1.123", stripChargeFromConventionalSpectrumId("locus:1.1.1.123.2"));

@@ -1034,7 +1034,7 @@ struct HandlerPeptideEvidence : public HandlerIdentifiableParamContainer
     {
         if (!pep)
             throw runtime_error("[IO::HandlerPeptideEvidence] Null PeptideEvidence.");
-        
+
         if (name == "PeptideEvidence")
         {
             string value;
@@ -4215,7 +4215,7 @@ struct HandlerAnalysisData : public SAXParser::Handler
             throw runtime_error("[HandlerAnalysisData::startElement] NULL value for AnalysisData");
 
         if (analysisDataFlag == IgnoreAnalysisData)
-            return Status::Ok;
+            return Status::Done; // there's nothing after AnalysisData
 
         if (name == "AnalysisData")
         {

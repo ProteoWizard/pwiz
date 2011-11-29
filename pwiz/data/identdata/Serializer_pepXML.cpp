@@ -1364,7 +1364,7 @@ struct HandlerSearchResults : public SAXParser::Handler
                          bool strict)
     :   _nTerm("H1"),
         _cTerm("O1H1"),
-        siiCount(0), peptideCount(0),
+        siiCount(0), peptideCount(0), spectrumQueryCount(0),
         _cvTranslator(cvTranslator),
         ilr(iterationListenerRegistry),
         strict(strict)
@@ -1560,7 +1560,9 @@ struct HandlerSearchResults : public SAXParser::Handler
         }
         else if (name == "spectrum_query")
         {
-            if (ilr && ilr->broadcastUpdateMessage(IterationListener::UpdateMessage(_sil->spectrumIdentificationResult.size(), 0, "reading spectrum queries")) == IterationListener::Status_Cancel)
+            // only send the 0 count for the first spectrum_query
+            if ((++spectrumQueryCount == 1 || !_sil->spectrumIdentificationResult.empty()) &&
+                ilr && ilr->broadcastUpdateMessage(IterationListener::UpdateMessage(_sil->spectrumIdentificationResult.size(), 0, "reading spectrum queries")) == IterationListener::Status_Cancel)
                 return Status::Done;
 
             string spectrum;
@@ -1628,7 +1630,7 @@ struct HandlerSearchResults : public SAXParser::Handler
     PeptidePtr _currentPeptide;
     Formula _nTerm, _cTerm;
     boost::xpressive::smatch what;
-    int siiCount, peptideCount;
+    int siiCount, peptideCount, spectrumQueryCount;
     const CVTranslator& _cvTranslator;
     const IterationListenerRegistry* ilr;
     bool strict;
@@ -1943,6 +1945,8 @@ PWIZ_API_DECL string stripChargeFromConventionalSpectrumId(const string& id)
     // basename.123.123
     // basename.ext.123.123.2
     // basename.ext.123.123
+    // basename.2.2.2 (scan number same as charge state)
+    // basename.ext.3.3.3 (scan number same as charge state)
     // Locus:w.x.y.z.charge
 
     size_t lastDot = id.find_last_of(".");
@@ -1953,17 +1957,27 @@ PWIZ_API_DECL string stripChargeFromConventionalSpectrumId(const string& id)
     if (bal::istarts_with(id, "Locus:"))
         return id.substr(0, lastDot);
 
+    // with only one dot, it's not a conventional id
     size_t nextToLastDot = id.find_last_of(".", lastDot-1);
     if (nextToLastDot == string::npos)
         return id;
 
-    // if the substring between the next to last and last dot is the same as after the last dot,
-    // the charge is probably already stripped
-    if (bal::equals(boost::make_iterator_range(id.begin()+nextToLastDot+1, id.begin()+lastDot),
-                    boost::make_iterator_range(id.begin()+lastDot+1, id.end())))
+    // with only two dots (all cases return id unchanged):
+    // * charge either must already be stripped (basename.123.123)
+    // * it's a scan range (basename.123.125)
+    // * scan number doesn't repeat, so it's not a conventional id (basename.123.2)
+    size_t nextToNextToLastDot = id.find_last_of(".", nextToLastDot-1);
+    if (nextToNextToLastDot == string::npos)
         return id;
 
-    return id.substr(0, lastDot);
+    // with three dots, charge is probably not stripped, but it could be equal to the scan number
+    // if the substring between the next to next to last and the next to last dot is the same as after the next last dot,
+    // the charge is not stripped
+    if (bal::equals(boost::make_iterator_range(id.begin()+nextToNextToLastDot+1, id.begin()+nextToLastDot),
+                    boost::make_iterator_range(id.begin()+nextToLastDot+1, id.begin()+lastDot)))
+        return id.substr(0, lastDot);
+
+    return id;
 }
 
 
