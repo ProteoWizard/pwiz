@@ -274,11 +274,12 @@ namespace IDPicker.Forms
         // returns both groups and sources
         IList<Row> getSpectrumSourceRows (DataFilter parentFilter)
         {
+            var nonGroupParentFilterKey = new DataFilterKey(new DataFilter(parentFilter) { SpectrumSourceGroup = null });
 
-            if (rowsBySource == null)
+            if (!rowsBySource.ContainsKey(nonGroupParentFilterKey))
                 lock (session)
                 {
-                    var groupsFilter = new DataFilter(parentFilter) {SpectrumSourceGroup = null};
+                    var groupsFilter = new DataFilter(parentFilter) { SpectrumSourceGroup = null };
                     var groups = session.CreateQuery(AggregateRow.Selection + ", ssgl " +
                                                      groupsFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
                                                                                          DataFilter.PeptideSpectrumMatchToPeptideInstance,
@@ -297,11 +298,11 @@ namespace IDPicker.Forms
                         .Select(o => new SpectrumSourceRow(o, parentFilter))
                         .ToList();
 
-                    rowsBySource = groups.Cast<Row>().Concat(sources.Cast<Row>()).ToList();
+                    rowsBySource[nonGroupParentFilterKey] = groups.Cast<Row>().Concat(sources.Cast<Row>()).ToList();
                 }
 
-            var ssgRows = rowsBySource.Where(o => o is SpectrumSourceGroupRow).Select(o => o as SpectrumSourceGroupRow);
-            var ssRows = rowsBySource.Where(o => o is SpectrumSourceRow).Select(o => o as SpectrumSourceRow);
+            var ssgRows = rowsBySource[nonGroupParentFilterKey].Where(o => o is SpectrumSourceGroupRow).Select(o => o as SpectrumSourceGroupRow);
+            var ssRows = rowsBySource[nonGroupParentFilterKey].Where(o => o is SpectrumSourceRow).Select(o => o as SpectrumSourceRow);
             var result = Enumerable.Empty<Row>();
 
             if (parentFilter != null && parentFilter.SpectrumSourceGroup != null)
@@ -471,7 +472,7 @@ namespace IDPicker.Forms
         public event EventHandler<SpectrumViewVisualizeEventArgs> SpectrumViewVisualize;
 
         private TotalCounts totalCounts, basicTotalCounts;
-        private List<Row> rowsBySource, basicRowsBySource;
+        private Dictionary<DataFilterKey, List<Row>> rowsBySource, basicRowsBySource;
         
         // TODO: support multiple selected objects
         List<string> oldSelectionPath = new List<string>();
@@ -578,12 +579,15 @@ namespace IDPicker.Forms
             if (baseRow is SpectrumSourceGroupRow)
             {
                 var row = baseRow as SpectrumSourceGroupRow;
-                e.ChildRowCount = rowsBySource.Where(o => o is SpectrumSourceGroupRow)
-                                              .Select(o => o as SpectrumSourceGroupRow)
-                                              .Count(o => o.SpectrumSourceGroup.IsImmediateChildOf(row.SpectrumSourceGroup));
-                e.ChildRowCount += rowsBySource.Where(o => o is SpectrumSourceRow)
-                                               .Select(o => o as SpectrumSourceRow)
-                                               .Count(o => o.SpectrumSource.Group == row.SpectrumSourceGroup);
+                var nonGroupParentFilterKey = new DataFilterKey(new DataFilter(row.DataFilter) { SpectrumSourceGroup = null });
+
+                var cachedRowsBySource = rowsBySource[nonGroupParentFilterKey];
+                e.ChildRowCount = cachedRowsBySource.Where(o => o is SpectrumSourceGroupRow)
+                                                    .Select(o => o as SpectrumSourceGroupRow)
+                                                    .Count(o => o.SpectrumSourceGroup.IsImmediateChildOf(row.SpectrumSourceGroup));
+                e.ChildRowCount += cachedRowsBySource.Where(o => o is SpectrumSourceRow)
+                                                     .Select(o => o as SpectrumSourceRow)
+                                                     .Count(o => o.SpectrumSource.Group == row.SpectrumSourceGroup);
 
                 if (e.ChildRowCount == 0)
                     throw new InvalidDataException("no child rows for source group");
@@ -1011,7 +1015,7 @@ namespace IDPicker.Forms
                         basicDataFilter = dataFilter;
                         basicTotalCounts = new TotalCounts(session, dataFilter);
 
-                        rowsBySource = null;
+                        rowsBySource = new Dictionary<DataFilterKey, List<Row>>();
                         basicRows = getChildren(rootGrouping, dataFilter);
                         basicRowsBySource = rowsBySource;
                     }
@@ -1023,7 +1027,7 @@ namespace IDPicker.Forms
                 else
                 {
                     totalCounts = new TotalCounts(session, dataFilter);
-                    rowsBySource = null;
+                    rowsBySource = new Dictionary<DataFilterKey, List<Row>>();
                     rows = getChildren(rootGrouping, dataFilter);
                 }
 

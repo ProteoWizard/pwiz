@@ -143,14 +143,6 @@ namespace IDPicker.DataModel
             }
         }
 
-        public override int GetHashCode ()
-        {
-            return MaximumQValue.GetHashCode() ^
-                   MinimumDistinctPeptidesPerProtein.GetHashCode() ^
-                   MinimumSpectraPerProtein.GetHashCode() ^
-                   MinimumAdditionalPeptidesPerProtein.GetHashCode();
-        }
-
         private static bool NullSafeSequenceEqual<T> (IEnumerable<T> lhs, IEnumerable<T> rhs)
         {
             if (lhs == rhs)
@@ -175,11 +167,15 @@ namespace IDPicker.DataModel
                 return lhs.Union<T>(rhs).ToList();
         }
 
+        public override int GetHashCode () { return (this as object).GetHashCode(); }
+
         public override bool Equals (object obj)
         {
             var other = obj as DataFilter;
             if (other == null)
                 return false;
+            else if (object.ReferenceEquals(this, obj))
+                return true;
 
             return MaximumQValue == other.MaximumQValue &&
                    MinimumDistinctPeptidesPerProtein == other.MinimumDistinctPeptidesPerProtein &&
@@ -1247,6 +1243,57 @@ namespace IDPicker.DataModel
             }
 
             return clusterByProteinId;
+        }
+    }
+
+    /// <summary>
+    /// Read-only wrapper of DataFilter that is safe to use as a Dictionary or Hashtable key.
+    /// </summary>
+    public class DataFilterKey
+    {
+        private DataFilter DataFilter { get; set; }
+
+        public DataFilterKey (DataFilter dataFilter) { DataFilter = new DataFilter(dataFilter); }
+
+        public override bool Equals (object obj)
+        {
+            DataFilterKey other = obj as DataFilterKey;
+            if (other == null)
+                return false;
+            return DataFilter.Equals(other.DataFilter);
+        }
+
+        public override int GetHashCode ()
+        {
+            return DataFilter.MaximumQValue.GetHashCode() ^
+                   DataFilter.MinimumDistinctPeptidesPerProtein.GetHashCode() ^
+                   DataFilter.MinimumSpectraPerProtein.GetHashCode() ^
+                   DataFilter.MinimumAdditionalPeptidesPerProtein.GetHashCode() ^
+                   NullSafeHashCode(DataFilter.Cluster) ^
+                   NullSafeHashCode(DataFilter.ProteinGroup) ^
+                   NullSafeHashCode(DataFilter.PeptideGroup) ^
+                   NullSafeHashCode(DataFilter.Protein) ^
+                   NullSafeHashCode(DataFilter.Peptide) ^
+                   NullSafeHashCode(DataFilter.DistinctMatchKey) ^
+                   NullSafeHashCode(DataFilter.Modifications) ^
+                   NullSafeHashCode(DataFilter.ModifiedSite) ^
+                   NullSafeHashCode(DataFilter.Charge) ^
+                   NullSafeHashCode(DataFilter.Analysis) ^
+                   NullSafeHashCode(DataFilter.Spectrum) ^
+                   NullSafeHashCode(DataFilter.SpectrumSource) ^
+                   NullSafeHashCode(DataFilter.SpectrumSourceGroup) ^
+                   NullSafeHashCode(DataFilter.Composition);
+        }
+
+        private static int NullSafeHashCode<T> (IEnumerable<T> obj)
+        {
+            if (obj == null)
+                return 0;
+
+            int hash = 0;
+            foreach(T item in obj)
+                hash ^= item.GetHashCode();
+            return hash;
         }
     }
 }

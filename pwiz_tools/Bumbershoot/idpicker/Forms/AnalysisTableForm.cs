@@ -122,16 +122,12 @@ namespace IDPicker.Forms
             if (e.ClickCount < 2 || e.Item == null || e.Item.RowObject == null)
                 return;
 
-            var newDataFilter = new DataFilter()
+            var newDataFilter = new DataFilter
             {
                 MaximumQValue = dataFilter.MaximumQValue,
-                FilterSource = this
+                FilterSource = this,
+                Analysis = new List<Analysis>() {(e.Item.RowObject as AnalysisRow).Analysis}
             };
-
-            if (e.Item.RowObject is AnalysisRow)
-                if (newDataFilter.Analysis == null)
-                    newDataFilter.Analysis = new List<Analysis>();
-            newDataFilter.Analysis.Add((e.Item.RowObject as AnalysisRow).Analysis);
 
             //if (PeptideViewFilter != null)
             //    PeptideViewFilter(this, newDataFilter);

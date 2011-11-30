@@ -559,9 +559,9 @@ namespace IDPicker
         void setData ()
         {
             proteinTableForm.SetData(session, viewFilter);
-            peptideTableForm.SetData(session, viewFilter);
-            spectrumTableForm.SetData(session, viewFilter);
-            modificationTableForm.SetData(session, viewFilter);
+            peptideTableForm.SetData(session.SessionFactory.OpenSession(), viewFilter);
+            spectrumTableForm.SetData(session.SessionFactory.OpenSession(), viewFilter);
+            modificationTableForm.SetData(session.SessionFactory.OpenSession(), viewFilter);
             analysisTableForm.SetData(session.SessionFactory, viewFilter);
             fragmentationStatisticsForm.SetData(session, viewFilter);
             peakStatisticsForm.SetData(session, viewFilter);

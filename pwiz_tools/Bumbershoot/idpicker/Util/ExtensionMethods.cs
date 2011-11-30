@@ -24,6 +24,7 @@ using System;
 using System.Linq;
 using System.Data;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -195,6 +196,11 @@ namespace IDPicker
                 return nonGenericCollection.Count == 0;
 
             return !list.Any();
+        }
+
+        public static ReadOnlyCollection<TSource> AsReadOnly<TSource> (this IList<TSource> list)
+        {
+            return list == null ? null : new ReadOnlyCollection<TSource>(list);
         }
     }
 
