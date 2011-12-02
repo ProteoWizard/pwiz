@@ -73,6 +73,8 @@ struct ImportSettingsForwarder : public NativeParser::ImportSettingsCallback
 
             analysis->importSettings = gcnew Parser::Analysis::ImportSettings();
             analysis->importSettings->proteinDatabaseFilepath = ToSystemString(nativeAnalysis->importSettings.proteinDatabaseFilepath);
+            analysis->importSettings->maxQValue = 0.25;
+            analysis->importSettings->maxResultRank = 2;
 
             args->DistinctAnalyses->Add(analysis);
         }
@@ -89,6 +91,8 @@ struct ImportSettingsForwarder : public NativeParser::ImportSettingsCallback
             const NativeParser::Analysis& nativeAnalysis = *distinctAnalyses[i];
             Parser::Analysis^ analysis = args->DistinctAnalyses[i];
             nativeAnalysis.importSettings.proteinDatabaseFilepath = ToStdString(analysis->importSettings->proteinDatabaseFilepath);
+            nativeAnalysis.importSettings.maxQValue = analysis->importSettings->maxQValue;
+            nativeAnalysis.importSettings.maxResultRank = analysis->importSettings->maxResultRank;
 
             NativeQonverter::Settings& nativeQonverterSettings = nativeAnalysis.importSettings.qonverterSettings;
             Qonverter::Settings^ qonverterSettings = analysis->importSettings->qonverterSettings;
@@ -130,7 +134,7 @@ void Parser::marshal(Object^ sender, ImportSettingsEventArgs^ e)
 }
 
 
-void Parser::Parse(IEnumerable<String^>^ inputFilepaths, pwiz::CLI::util::IterationListenerRegistry^ ilr)
+void Parser::Parse(IEnumerable<String^>^ inputFilepaths, int maxThreads, pwiz::CLI::util::IterationListenerRegistry^ ilr)
 {
     vector<string> nativeInputFilepaths;
     for each (String^ filepath in inputFilepaths)
@@ -143,12 +147,16 @@ void Parser::Parse(IEnumerable<String^>^ inputFilepaths, pwiz::CLI::util::Iterat
 
     try
     {
-        parser.parse(nativeInputFilepaths, 8,
+        parser.parse(nativeInputFilepaths, maxThreads,
                      ilr == nullptr ? 0 : (pwiz::util::IterationListenerRegistry*) ilr->void_base().ToPointer());
     }
     CATCH_AND_FORWARD
 }
 
+void Parser::Parse(IEnumerable<String^>^ inputFilepaths, pwiz::CLI::util::IterationListenerRegistry^ ilr)
+{
+    Parse(inputFilepaths, 2, ilr);
+}
 
 void Parser::Parse(String^ inputFilepath, pwiz::CLI::util::IterationListenerRegistry^ ilr)
 {

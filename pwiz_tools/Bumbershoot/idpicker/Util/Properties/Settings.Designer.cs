@@ -299,8 +299,8 @@ namespace IDPicker.Properties {
   <string>Sequest XCorr;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off sequest:xcorr</string>
   <string>Mascot ionscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off mascot:score</string>
   <string>Mascot ionscore-identityscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off mascot:score;1 Descending Off mascot:identity threshold</string>
-  <string>X! Tandem expect;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Descending Off x!tandem:expect</string>
-  <string>X! Tandem hyperscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off x!tandem:hyperscore</string>
+  <string>X!Tandem expect;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Descending Off x!tandem:expect</string>
+  <string>X!Tandem hyperscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off x!tandem:hyperscore</string>
   <string>OMSSA expect;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Descending Off expect</string>
   <string>Phenyx zscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off zscore</string>
 </ArrayOfString>")]
@@ -319,6 +319,30 @@ namespace IDPicker.Properties {
             }
             set {
                 this["IDPickerFormWindowState"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("2")]
+        public int DefaultMaxRank {
+            get {
+                return ((int)(this["DefaultMaxRank"]));
+            }
+            set {
+                this["DefaultMaxRank"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0.25")]
+        public double DefaultMaxFDR {
+            get {
+                return ((double)(this["DefaultMaxFDR"]));
+            }
+            set {
+                this["DefaultMaxFDR"] = value;
             }
         }
     }

@@ -54,6 +54,8 @@ namespace IDPicker.Controls
             this.analysisNameColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.databaseColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.decoyPrefixColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.maxRankColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.maxFDRColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.qonverterSettingsColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
             ((System.ComponentModel.ISupportInitialize) (this.dataGridView)).BeginInit();
             this.SuspendLayout();
@@ -69,13 +71,15 @@ namespace IDPicker.Controls
             this.analysisNameColumn,
             this.databaseColumn,
             this.decoyPrefixColumn,
+            this.maxRankColumn,
+            this.maxFDRColumn,
             this.qonverterSettingsColumn});
             this.dataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dataGridView.EditMode = System.Windows.Forms.DataGridViewEditMode.EditOnEnter;
             this.dataGridView.Location = new System.Drawing.Point(0, 0);
             this.dataGridView.Name = "dataGridView";
             this.dataGridView.RowHeadersVisible = false;
-            this.dataGridView.Size = new System.Drawing.Size(709, 144);
+            this.dataGridView.Size = new System.Drawing.Size(977, 144);
             this.dataGridView.TabIndex = 0;
             // 
             // analysisNameColumn
@@ -96,6 +100,19 @@ namespace IDPicker.Controls
             this.decoyPrefixColumn.HeaderText = "Decoy Prefix";
             this.decoyPrefixColumn.Name = "decoyPrefixColumn";
             // 
+            // maxRankColumn
+            // 
+            this.maxRankColumn.HeaderText = "Max Rank";
+            this.maxRankColumn.Name = "maxRankColumn";
+            this.maxRankColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.maxRankColumn.Width = 80;
+            // 
+            // maxFDRColumn
+            // 
+            this.maxFDRColumn.HeaderText = "Max FDR";
+            this.maxFDRColumn.Name = "maxFDRColumn";
+            this.maxFDRColumn.Width = 80;
+            // 
             // qonverterSettingsColumn
             // 
             this.qonverterSettingsColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
@@ -103,11 +120,11 @@ namespace IDPicker.Controls
             this.qonverterSettingsColumn.HeaderText = "Qonverter Settings";
             this.qonverterSettingsColumn.Name = "qonverterSettingsColumn";
             // 
-            // QonverterSettingsByAnalysisControl
+            // ImportSettingsControl
             // 
             this.Controls.Add(this.dataGridView);
-            this.Name = "QonverterSettingsByAnalysisControl";
-            this.Size = new System.Drawing.Size(709, 144);
+            this.Name = "ImportSettingsControl";
+            this.Size = new System.Drawing.Size(977, 144);
             ((System.ComponentModel.ISupportInitialize) (this.dataGridView)).EndInit();
             this.ResumeLayout(false);
 
@@ -119,6 +136,8 @@ namespace IDPicker.Controls
         private System.Windows.Forms.DataGridViewTextBoxColumn analysisNameColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn databaseColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn decoyPrefixColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn maxRankColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn maxFDRColumn;
         private System.Windows.Forms.DataGridViewComboBoxColumn qonverterSettingsColumn;
     }
 }

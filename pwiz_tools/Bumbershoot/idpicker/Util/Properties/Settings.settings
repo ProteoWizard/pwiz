@@ -86,14 +86,20 @@
   &lt;string&gt;Sequest XCorr;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off sequest:xcorr&lt;/string&gt;
   &lt;string&gt;Mascot ionscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off mascot:score&lt;/string&gt;
   &lt;string&gt;Mascot ionscore-identityscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off mascot:score;1 Descending Off mascot:identity threshold&lt;/string&gt;
-  &lt;string&gt;X! Tandem expect;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Descending Off x!tandem:expect&lt;/string&gt;
-  &lt;string&gt;X! Tandem hyperscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off x!tandem:hyperscore&lt;/string&gt;
+  &lt;string&gt;X!Tandem expect;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Descending Off x!tandem:expect&lt;/string&gt;
+  &lt;string&gt;X!Tandem hyperscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off x!tandem:hyperscore&lt;/string&gt;
   &lt;string&gt;OMSSA expect;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Descending Off expect&lt;/string&gt;
   &lt;string&gt;Phenyx zscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off zscore&lt;/string&gt;
 &lt;/ArrayOfString&gt;</Value>
     </Setting>
     <Setting Name="IDPickerFormWindowState" Type="System.Windows.Forms.FormWindowState" Scope="User">
       <Value Profile="(Default)">Maximized</Value>
+    </Setting>
+    <Setting Name="DefaultMaxRank" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">2</Value>
+    </Setting>
+    <Setting Name="DefaultMaxFDR" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">0.25</Value>
     </Setting>
   </Settings>
 </SettingsFile>

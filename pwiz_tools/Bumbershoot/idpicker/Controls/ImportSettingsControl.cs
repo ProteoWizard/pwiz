@@ -104,11 +104,14 @@ namespace IDPicker.Controls
                 }
 
                 row.Tag = a;
-                row.Cells[0].Value = key;
-                row.Cells[1].Value = a.importSettings.proteinDatabaseFilepath;
-                row.Cells[1].Style.BackColor = File.Exists(a.importSettings.proteinDatabaseFilepath) ? SystemColors.Window : Color.LightSalmon;
-                row.Cells[2].Value = Properties.Settings.Default.DecoyPrefix;
-                var comboBox = row.Cells[3] as DataGridViewComboBoxCell;
+                row.Cells[analysisNameColumn.Index].Value = key;
+                row.Cells[databaseColumn.Index].Value = a.importSettings.proteinDatabaseFilepath;
+                row.Cells[databaseColumn.Index].Style.BackColor = File.Exists(a.importSettings.proteinDatabaseFilepath) ? SystemColors.Window : Color.LightSalmon;
+                row.Cells[decoyPrefixColumn.Index].Value = Properties.Settings.Default.DecoyPrefix;
+                row.Cells[maxRankColumn.Index].Value = Properties.Settings.Default.DefaultMaxRank;
+                row.Cells[maxFDRColumn.Index].Value = Properties.Settings.Default.DefaultMaxFDR;
+
+                var comboBox = row.Cells[qonverterSettingsColumn.Index] as DataGridViewComboBoxCell;
                 var firstSoftwarePreset = qonverterSettingsByName.Keys.FirstOrDefault(o => o.ToLower().Contains(a.softwareName.ToLower()));
                 comboBox.Value = firstSoftwarePreset == null ? qonverterSettingsByName.Keys.FirstOrDefault() : firstSoftwarePreset;
                 dataGridView.Rows.Add(row);
@@ -117,8 +120,10 @@ namespace IDPicker.Controls
             foreach (DataGridViewRow row in dataGridView.Rows)
             {
                 var analysis = row.Tag as Parser.Analysis;
-                analysis.importSettings.qonverterSettings = qonverterSettingsByName[(string) row.Cells[3].Value].ToQonverterSettings();
-                analysis.importSettings.qonverterSettings.DecoyPrefix = (string) row.Cells[2].Value;
+                analysis.importSettings.qonverterSettings = qonverterSettingsByName[(string) row.Cells[qonverterSettingsColumn.Index].Value].ToQonverterSettings();
+                analysis.importSettings.maxResultRank = Convert.ToInt32(row.Cells[maxRankColumn.Index].Value);
+                analysis.importSettings.maxQValue = Convert.ToDouble(row.Cells[maxFDRColumn.Index].Value);
+                analysis.importSettings.qonverterSettings.DecoyPrefix = (string) row.Cells[decoyPrefixColumn.Index].Value;
             }
 
             dataGridView.CellBeginEdit += dataGridView_CellBeginEdit;
@@ -127,21 +132,42 @@ namespace IDPicker.Controls
             dataGridView.EditingControlShowing += dataGridView_EditingControlShowing;
         }
 
-        string uneditedQonverterSettingsValue = null;
+        string uneditedValue = null;
         void dataGridView_CellBeginEdit (object sender, DataGridViewCellCancelEventArgs e)
         {
-            //throw new NotImplementedException();
-            uneditedQonverterSettingsValue = (string) dataGridView[e.ColumnIndex, e.RowIndex].Value;
+            uneditedValue = dataGridView[e.ColumnIndex, e.RowIndex].Value.ToString();
         }
 
         void dataGridView_CellEndEdit (object sender, DataGridViewCellEventArgs e)
         {
             var row = dataGridView.Rows[e.RowIndex];
             var analysis = row.Tag as Parser.Analysis;
-            analysis.importSettings.qonverterSettings = qonverterSettingsByName[(string) row.Cells[3].Value].ToQonverterSettings();
-            analysis.importSettings.qonverterSettings.DecoyPrefix = (string) row.Cells[2].Value;
-            analysis.importSettings.proteinDatabaseFilepath = (string) row.Cells[1].Value;
-            row.Cells[1].Style.BackColor = File.Exists((string)row.Cells[1].Value) ? SystemColors.Window : Color.LightSalmon;
+
+            if (e.ColumnIndex == databaseColumn.Index)
+            {
+                analysis.importSettings.proteinDatabaseFilepath = (string) row.Cells[databaseColumn.Index].Value;
+                row.Cells[databaseColumn.Index].Style.BackColor = File.Exists((string) row.Cells[databaseColumn.Index].Value) ? SystemColors.Window : Color.LightSalmon;
+
+                // also set all databases equal to the uneditedValue
+                foreach (DataGridViewRow row2 in dataGridView.Rows)
+                    if (row2.Cells[databaseColumn.Index].Value.ToString() == uneditedValue)
+                    {
+                        row2.Cells[databaseColumn.Index].Value = (row2.Tag as Parser.Analysis).importSettings.proteinDatabaseFilepath = analysis.importSettings.proteinDatabaseFilepath;
+                        row2.Cells[databaseColumn.Index].Style.BackColor = row.Cells[databaseColumn.Index].Style.BackColor;
+                    }
+            }
+            else if (e.ColumnIndex == decoyPrefixColumn.Index)
+                analysis.importSettings.qonverterSettings.DecoyPrefix = (string) row.Cells[decoyPrefixColumn.Index].Value;
+            else if (e.ColumnIndex == maxRankColumn.Index &&
+                     !Int32.TryParse(row.Cells[maxRankColumn.Index].Value.ToString(), out analysis.importSettings.maxResultRank) ||
+                     analysis.importSettings.maxResultRank < 1)
+                row.Cells[maxRankColumn.Index].Value = analysis.importSettings.maxResultRank = Convert.ToInt32(uneditedValue);
+            else if (e.ColumnIndex == maxFDRColumn.Index &&
+                     !Double.TryParse(row.Cells[maxFDRColumn.Index].Value.ToString(), out analysis.importSettings.maxQValue) ||
+                     analysis.importSettings.maxQValue < 0 || analysis.importSettings.maxQValue > 1)
+                row.Cells[maxFDRColumn.Index].Value = analysis.importSettings.maxQValue = Convert.ToDouble(uneditedValue);
+            else if (e.ColumnIndex == qonverterSettingsColumn.Index)
+                analysis.importSettings.qonverterSettings = qonverterSettingsByName[(string) row.Cells[qonverterSettingsColumn.Index].Value].ToQonverterSettings();
         }
 
         void dataGridView_CurrentCellDirtyStateChanged (object sender, EventArgs e)
@@ -158,7 +184,7 @@ namespace IDPicker.Controls
 
                 qonverterSettingsByName = QonverterSettings.LoadQonverterSettings();
 
-                cell.Value = uneditedQonverterSettingsValue;
+                cell.Value = uneditedValue;
                 dataGridView.RefreshEdit();
             }
         }

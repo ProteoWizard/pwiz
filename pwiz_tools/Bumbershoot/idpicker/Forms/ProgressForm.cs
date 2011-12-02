@@ -85,7 +85,7 @@ namespace IDPicker
             var row = _rowByTaskName[taskName];
             var progressCell = _progressCellByTaskName[taskName];
 
-            if (row.Index >= Environment.ProcessorCount)
+            if (row.Index >= 2)//Environment.ProcessorCount)
             {
                 JobDataView.Rows.Remove(row);
                 JobDataView.Rows.Insert(0, row);

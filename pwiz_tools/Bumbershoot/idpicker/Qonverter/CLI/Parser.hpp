@@ -52,6 +52,8 @@ public ref struct Parser
         {
             property String^ proteinDatabaseFilepath;
             property Qonverter::Settings^ qonverterSettings;
+            double maxQValue; /// filter the database on Q-value before writing to disk
+            int maxResultRank; /// filter the database on PSM rank before writing to disk
         };
 
         property ImportSettings^ importSettings;
@@ -71,6 +73,8 @@ public ref struct Parser
 
 
     void Parse(IEnumerable<String^>^ inputFilepaths, pwiz::CLI::util::IterationListenerRegistry^ ilr);
+
+    void Parse(IEnumerable<String^>^ inputFilepaths, int maxThreads, pwiz::CLI::util::IterationListenerRegistry^ ilr);
 
     void Parse(String^ inputFilepath, pwiz::CLI::util::IterationListenerRegistry^ ilr);
 	

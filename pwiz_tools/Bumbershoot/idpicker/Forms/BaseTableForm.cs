@@ -460,18 +460,26 @@ namespace IDPicker.Forms
 
             foreach (int rowIndex in exportedRows)
             {
+                /* TODO: how to handle non-root rows?
                 var row = rows[rowIndex];
-                var rowIndexHierarchy = treeDataGridView.GetRowHierarchyForRowIndex(rowIndex);
 
                 // skip non-root rows or filtered rows
                 if (rowIndexHierarchy.Count > 1 || getRowFilterState(row) == RowFilterState.Out)
-                    continue;
+                    continue;*/
+
+                var rowIndexHierarchy = treeDataGridView.GetRowHierarchyForRowIndex(rowIndex);
 
                 var rowText = new List<string>();
                 foreach (var columnIndex in exportedColumns)
                 {
                     object value = treeDataGridView[columnIndex, rowIndex].Value ?? String.Empty;
                     rowText.Add(value.ToString());
+
+                    if (columnIndex == 0 && rowIndexHierarchy.Count > 1)
+                    {
+                        int indent = (rowIndexHierarchy.Count - 1)*2;
+                        rowText[rowText.Count - 1] = new string(' ', indent) + rowText[rowText.Count - 1];
+                    }
                 }
 
                 exportTable.Add(rowText);

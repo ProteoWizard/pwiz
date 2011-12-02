@@ -250,10 +250,10 @@ namespace IDPicker
             {
                 var fileTypeList = new List<string>
                 {
-                    "IDPicker files|*.idpDB;*.mzid;*.pepXML;*.pep.xml;*.idpXML",
+                    "IDPicker files|*.idpDB;*.mzid;*.pepXML;*.pep.xml",
                     "MzIdentML files|*.mzid",
                     "PepXML files|*.pepXML;*.pep.xml",
-                    "IDPicker XML|*.idpXML",
+                    //"IDPicker XML|*.idpXML",
                     "IDPicker DB|*.idpDB",
                     "All files|*.*"
                 };

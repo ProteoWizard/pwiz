@@ -238,20 +238,18 @@ namespace IDPicker.Controls
             return new ReadOnlyCollection<int>(expandedRowList[rowIndex].RowIndexHierarchy);
         }
 
-        public DataGridViewCell this[int columnIndex, params int[] rowIndexHierarchy]
-        {
-            get { return base[columnIndex, GetRowIndexForRowIndexHierarchy(rowIndexHierarchy)]; }
-            set { base[columnIndex, GetRowIndexForRowIndexHierarchy(rowIndexHierarchy)] = value; }
-        }
-
         public DataGridViewCell this[int columnIndex, IList<int> rowIndexHierarchy]
         {
             get { return base[columnIndex, GetRowIndexForRowIndexHierarchy(rowIndexHierarchy)]; }
             set { base[columnIndex, GetRowIndexForRowIndexHierarchy(rowIndexHierarchy)] = value; }
         }
 
-        //Disallow editing just by column and row index, as the index of any given row changes
-        private new DataGridViewCell this[int columnIndex, int rowIndex] { set { } }
+        // Disallow editing just by column and row index, as the index of any given row changes
+        public new DataGridViewCell this[int columnIndex, int rowIndex]
+        {
+            get { return base[columnIndex, rowIndex]; }
+            set { }
+        }
 
         #region Expand/Collapse methods
 
