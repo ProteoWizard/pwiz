@@ -33,7 +33,7 @@ fi
 # Do full build of ProteoWizard, passing quickbuild's arguments to bjam
 echo "Building pwiz..."
 cd $PWIZ_ROOT
-if ! $PWIZ_BJAM "$@"; then
+if ! BOOST_BUILD_PATH=$BOOST_BUILD_PATH $PWIZ_BJAM "$@"; then
    echo "At least one pwiz target failed to build."
    exit 1
 fi
