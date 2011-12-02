@@ -468,7 +468,7 @@ namespace pwiz.Topograph.Model
             return bestPeak;
         }
 
-        private void GetFirstLastTimes(IEnumerable<Peaks> otherPeaks, out double firstDetectedTime, out double lastDetectedTime)
+        public void GetFirstLastTimes(IEnumerable<Peaks> otherPeaks, out double firstDetectedTime, out double lastDetectedTime)
         {
             var tracerChromatograms = GetTracerChromatograms();
 

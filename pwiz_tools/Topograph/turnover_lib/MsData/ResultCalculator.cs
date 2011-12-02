@@ -294,10 +294,10 @@ namespace pwiz.Topograph.MsData
                     {
                         peaks = new Peaks(peptideFileAnalysis);
                         peaks.CalcIntensities(peaksList);
-                        if (peaks.ChildCount != 0)
-                        {
-                            peaksList.Add(peaks);
-                        }
+                    }
+                    if (peaks.ChildCount != 0)
+                    {
+                        peaksList.Add(peaks);
                     }
                 }
             }

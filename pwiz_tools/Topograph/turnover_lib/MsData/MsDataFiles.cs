@@ -24,6 +24,7 @@ using System.Text;
 using pwiz.ProteowizardWrapper;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Model;
+using pwiz.Topograph.Util;
 
 namespace pwiz.Topograph.MsData
 {
@@ -110,7 +111,7 @@ namespace pwiz.Topograph.MsData
             }
             catch (Exception exception)
             {
-                Console.Out.Write(exception);
+                ErrorHandler.LogException("MsDataFiles", "Exception trying to open " + path, exception);
                 message =
                     "An exception occurred while trying to open the file.  Either the file is corrupted, or the necessary libraries to read this file type have not been installed.";
                 return false;

@@ -435,6 +435,28 @@ namespace pwiz.Topograph.ui.Forms
                                                                   });
                 }
             }
+            else
+            {
+                var otherPeaks = PeptideAnalysis.FileAnalyses.ListChildren().Select(f => f.Peaks);
+                double firstDetectedTime, lastDetectedTime;
+                PeptideFileAnalysis.Peaks.GetFirstLastTimes(otherPeaks, out firstDetectedTime, out lastDetectedTime);
+                msGraphControl.GraphPane.GraphObjList.Add(new LineObj(Color.Black, firstDetectedTime, 0,
+                                                                      firstDetectedTime, 1)
+                                                              {
+                                                                  Line = {Style = DashStyle.DashDotDot},
+                                                                  ZOrder = ZOrder.E_BehindCurves,
+                                                                  IsClippedToChartRect = true,
+                                                                  Location = { CoordinateFrame = CoordType.XScaleYChartFraction }
+                                                              });
+                msGraphControl.GraphPane.GraphObjList.Add(new LineObj(Color.Black, lastDetectedTime, 0,
+                                                                      lastDetectedTime, 1)
+                    {
+                        Line = { Style = DashStyle.DashDotDot },
+                        ZOrder = ZOrder.E_BehindCurves,
+                        IsClippedToChartRect = true,
+                        Location = { CoordinateFrame = CoordType.XScaleYChartFraction }
+                    });
+            }
 
             msGraphControl.AxisChange();
             msGraphControl.Invalidate();

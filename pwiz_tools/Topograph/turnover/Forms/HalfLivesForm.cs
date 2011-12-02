@@ -39,7 +39,7 @@ namespace pwiz.Topograph.ui.Forms
             tbxFinalTracerPercent.Text = tracerDef.FinalApe.ToString();
             tbxMinScore.Text = workspace.GetAcceptMinDeconvolutionScore().ToString();
             tbxMinAuc.Text = workspace.GetAcceptMinAreaUnderChromatogramCurve().ToString();
-            comboCalculationType.SelectedIndex = 0;
+            comboCalculationType.SelectedIndex = (int) HalfLifeCalculationType.GroupPrecursorPool;
             UpdateTimePoints();
             _viewContext = new TopographViewContext(workspace, typeof (ResultRow), new[] {GetDefaultViewSpec(false)});
             navBar1.ViewContext = _viewContext;
@@ -301,6 +301,7 @@ namespace pwiz.Topograph.ui.Forms
                                            BySample = _form.cbxBySample.Checked,
                                            Cohort = cohort,
                                            MinScore = _form.MinScore,
+                                           MinAuc = _form.MinAuc,
                                            InitialPercent = double.Parse(_form.tbxInitialTracerPercent.Text),
                                            FinalPercent = double.Parse(_form.tbxFinalTracerPercent.Text),
                                            FixedInitialPercent = _form.cbxFixYIntercept.Checked,

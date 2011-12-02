@@ -398,11 +398,11 @@ namespace pwiz.Topograph.ui.Forms
         }
         protected PeptideFileAnalysis UpdateDataFileCombo(ComboBox comboBox)
         {
-            var selectedItem = comboBox.SelectedItem as AlignmentForm.MsDataFileListItem;
-            MsDataFile selectedFile = null;
+            var selectedItem = comboBox.SelectedItem as OverlayFileAnalysisItem;
+            PeptideFileAnalysis selectedFileAnalysis = null;
             if (selectedItem != null)
             {
-                selectedFile = selectedItem.MsDataFile;
+                selectedFileAnalysis = selectedItem.PeptideFileAnalysis;
             }
             comboBox.Items.Clear();
             comboBox.Items.Add("");
@@ -413,8 +413,8 @@ namespace pwiz.Topograph.ui.Forms
                 {
                     continue;
                 }
-                comboBox.Items.Add(new AlignmentForm.MsDataFileListItem(peptideFileAnalysis.MsDataFile));
-                if (peptideFileAnalysis.MsDataFile.Equals(selectedFile))
+                comboBox.Items.Add(new OverlayFileAnalysisItem(peptideFileAnalysis));
+                if (peptideFileAnalysis.Equals(selectedFileAnalysis))
                 {
                     selectedPeptideFileAnalysis = peptideFileAnalysis;
                     comboBox.SelectedIndex = comboBox.Items.Count - 1;
@@ -423,6 +423,23 @@ namespace pwiz.Topograph.ui.Forms
             return selectedPeptideFileAnalysis;
         }
 
+        protected class OverlayFileAnalysisItem
+        {
+            public OverlayFileAnalysisItem(PeptideFileAnalysis peptideFileAnalysis)
+            {
+                PeptideFileAnalysis = peptideFileAnalysis;
+            }
+
+            public PeptideFileAnalysis PeptideFileAnalysis { get; private set; }
+            public override string ToString()
+            {
+                if (PeptideFileAnalysis.ValidationStatus == ValidationStatus.reject || !PeptideFileAnalysis.FirstDetectedScan.HasValue)
+                {
+                    return "(" + PeptideFileAnalysis.MsDataFile.Label + ")";
+                }
+                return PeptideFileAnalysis.MsDataFile.Label;
+            }
+        }
     }
 
     public class ChromatogramGraphItem : IMSGraphItemInfo

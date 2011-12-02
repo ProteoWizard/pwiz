@@ -53,7 +53,7 @@
     <CreateWebPageOnPublish>true</CreateWebPageOnPublish>
     <WebPage>publish.htm</WebPage>
     <OpenBrowserOnPublish>false</OpenBrowserOnPublish>
-    <ApplicationRevision>197</ApplicationRevision>
+    <ApplicationRevision>200</ApplicationRevision>
     <ApplicationVersion>0.0.0.%2a</ApplicationVersion>
     <UseApplicationTrust>false</UseApplicationTrust>
     <PublishWizardCompleted>true</PublishWizardCompleted>
@@ -251,12 +251,6 @@
     </Compile>
     <Compile Include="Forms\ErrorForm.Designer.cs">
       <DependentUpon>ErrorForm.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Forms\GridFilterForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Forms\GridFilterForm.Designer.cs">
-      <DependentUpon>GridFilterForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Forms\HalfLifeForm.cs">
       <SubType>Form</SubType>

@@ -35,17 +35,23 @@ namespace pwiz.Topograph.ui.Forms
 
         public struct GroupKey
         {
-            public GroupKey(String cohort, double? timePoint, string sample) : this()
+            public GroupKey(String cohort, double? timePoint, string sample, string file) : this()
             {
                 Cohort = cohort;
                 TimePoint = timePoint;
                 Sample = sample;
+                File = file;
             }
             public String Cohort { get; private set; }
             public double? TimePoint { get; private set; }
             public string Sample { get; private set; }
+            public string File { get; private set; }
             public override string ToString()
             {
+                if (File != null)
+                {
+                    return File;
+                }
                 var result = new StringBuilder();
                 if (!string.IsNullOrEmpty(Cohort))
                 {
@@ -240,6 +246,7 @@ namespace pwiz.Topograph.ui.Forms
                                              MinAuc =  double.Parse(tbxMinAuc.Text),
                                              ByProtein = cbxByProtein.Checked, 
                                              BySample = cbxGroupBySample.Checked,
+                                             ByFile = cbxGroupByFile.Checked,
                                          };
             using (var longWaitDialog = new LongWaitDialog(TopLevelControl, "Calculating Half Lives"))
             {
@@ -252,6 +259,7 @@ namespace pwiz.Topograph.ui.Forms
             bool byCohort = cbxGroupByCohort.Checked;
             bool byTimePoint = cbxGroupByTimePoint.Checked;
             bool bySample = cbxGroupBySample.Checked;
+            bool byFile = cbxGroupByFile.Checked;
             var displayRows = new List<DisplayRow>();
             foreach (var resultRow in halfLifeCalculator.ResultRows)
             {
@@ -265,10 +273,11 @@ namespace pwiz.Topograph.ui.Forms
                     }
                     foreach (var rowData in halfLife.Value.FilteredRowDatas)
                     {
-                        var cohortKey = new GroupKey(
+                        GroupKey cohortKey = new GroupKey(
                             byCohort ? rowData.MsDataFile.Cohort : null,
                             byTimePoint ? rowData.MsDataFile.TimePoint : null,
-                            bySample ? rowData.MsDataFile.Sample : null);
+                            bySample ? rowData.MsDataFile.Sample : null,
+                            byFile ? rowData.MsDataFile.Name : null);
                         List<HalfLifeCalculator.RowData> list;
                         if (!rowDatasByCohort.TryGetValue(cohortKey, out list))
                         {
@@ -361,6 +370,11 @@ namespace pwiz.Topograph.ui.Forms
         private static Statistics ToStatistics(IEnumerable<double?> values)
         {
             return new Statistics(values.Where(v=>v.HasValue && !double.IsNaN(v.Value)).Cast<double>().ToArray());
+        }
+
+        private void cbxGroupByFile_CheckedChanged(object sender, EventArgs e)
+        {
+            cbxGroupByCohort.Enabled = cbxGroupByTimePoint.Enabled = cbxGroupBySample.Enabled = !cbxGroupByFile.Checked;
         }
     }
 }

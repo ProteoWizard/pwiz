@@ -1,9 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
+﻿/*
+ * Original author: Nicholas Shulman <nicksh .at. u.washington.edu>,
+ *                  MacCoss Lab, Department of Genome Sciences, UW
+ *
+ * Copyright 2011 University of Washington - Seattle, WA
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+using System;
+using System.Collections;
 using System.Text;
 using System.Windows.Forms;
 using pwiz.Topograph.Util;
@@ -20,17 +34,8 @@ namespace pwiz.Topograph.ui.Forms
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
-            var errors = ErrorHandler.GetErrors();
+            bindingSource1.DataSource = ErrorHandler.GetErrors();
             ErrorHandler.ErrorAdded += ErrorHandler_ErrorAdded;
-            if (errors.Count == 0)
-            {
-                return;
-            }
-            dataGridView1.Rows.Add(errors.Count);
-            for (int i = 0; i < errors.Count; i++)
-            {
-                UpdateRow(dataGridView1.Rows[i], errors[i]);
-            }
         }
         protected override void OnHandleDestroyed(EventArgs e)
         {
@@ -45,11 +50,7 @@ namespace pwiz.Topograph.ui.Forms
             {
                 BeginInvoke(new Action(() =>
                                            {
-                                               while (dataGridView1.Rows.Count >= ErrorHandler.MaxErrorCount)
-                                               {
-                                                   dataGridView1.Rows.RemoveAt(0);
-                                               }
-                                               UpdateRow(dataGridView1.Rows[dataGridView1.Rows.Add()], error);
+                                               bindingSource1.DataSource = ErrorHandler.GetErrors();
                                            }));
             }
             catch
@@ -58,37 +59,38 @@ namespace pwiz.Topograph.ui.Forms
             }
         }
 
-        void UpdateRow(DataGridViewRow row, Error error)
-        {
-            row.Tag = error;
-            row.Cells[colTime.Index].Value = error.DateTime;
-            row.Cells[colMessage.Index].Value = error.Message;
-            row.Cells[colDetail.Index].Value = error.Detail;
-        }
-
         private void btnClear_Click(object sender, EventArgs e)
         {
-            dataGridView1.Rows.Clear();
+            bindingSource1.DataSource = new Error[0];
             ErrorHandler.ClearErrors();
         }
 
         private void btnCopy_Click(object sender, EventArgs e)
         {
             var str = new StringBuilder();
-            for (int irow = 0; irow < dataGridView1.Rows.Count; irow++)
+            foreach (Error error in (IEnumerable)bindingSource1.DataSource)
             {
-                var row = dataGridView1.Rows[irow];
-                var tab = "";
-                for (int icol = 0; icol < row.Cells.Count; icol++ )
-                {
-                    str.Append(tab);
-                    tab = "\t";
-                    var cell = row.Cells[icol];
-                    str.Append(cell.FormattedValue);
-                }
+                str.Append(error.DateTime);
+                str.Append("\t");
+                str.Append(error.Message);
+                str.Append("\t");
+                str.Append(error.Detail);
                 str.Append("\r\n");
             }
             Clipboard.SetText(str.ToString());
+        }
+
+        private void bindingSource1_CurrentChanged(object sender, EventArgs e)
+        {
+            var error = bindingSource1.Current as Error;
+            if (error == null)
+            {
+                tbxDetail.Text = "";
+            }
+            else
+            {
+                tbxDetail.Text = error.Detail;
+            }
         }
     }
 }

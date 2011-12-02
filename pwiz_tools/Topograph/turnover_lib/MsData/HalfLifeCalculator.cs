@@ -291,6 +291,10 @@ namespace pwiz.Topograph.MsData
 
         private String GetCohort(RowData rowData)
         {
+            if (ByFile)
+            {
+                return rowData.MsDataFile.Name;
+            }
             return GetCohort(rowData.MsDataFile, BySample);
         }
 
@@ -645,6 +649,7 @@ namespace pwiz.Topograph.MsData
         public Workspace Workspace { get; private set; }
         public bool ByProtein { get; set; }
         public bool BySample { get; set; }
+        public bool ByFile { get; set; }
         public double MinScore { get; set; }
         public double MinAuc { get; set; }
         ISession Session { get; set; }

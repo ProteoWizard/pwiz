@@ -28,15 +28,18 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ErrorForm));
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            this.colTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colMessage = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colDetail = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.btnClear = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.btnCopy = new System.Windows.Forms.Button();
+            this.bindingSource1 = new System.Windows.Forms.BindingSource(this.components);
+            this.tbxDetail = new System.Windows.Forms.TextBox();
+            this.colTime = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colMessage = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.bindingSource1)).BeginInit();
             this.SuspendLayout();
             // 
             // dataGridView1
@@ -46,36 +49,18 @@
             this.dataGridView1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
                         | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
+            this.dataGridView1.AutoGenerateColumns = false;
             this.dataGridView1.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colTime,
-            this.colMessage,
-            this.colDetail});
+            this.colMessage});
+            this.dataGridView1.DataSource = this.bindingSource1;
             this.dataGridView1.Location = new System.Drawing.Point(12, 63);
             this.dataGridView1.Name = "dataGridView1";
             this.dataGridView1.ReadOnly = true;
-            this.dataGridView1.Size = new System.Drawing.Size(727, 189);
+            this.dataGridView1.Size = new System.Drawing.Size(528, 142);
             this.dataGridView1.TabIndex = 0;
-            // 
-            // colTime
-            // 
-            this.colTime.HeaderText = "Time";
-            this.colTime.Name = "colTime";
-            this.colTime.ReadOnly = true;
-            // 
-            // colMessage
-            // 
-            this.colMessage.FillWeight = 200F;
-            this.colMessage.HeaderText = "Message";
-            this.colMessage.Name = "colMessage";
-            this.colMessage.ReadOnly = true;
-            // 
-            // colDetail
-            // 
-            this.colDetail.HeaderText = "Detail";
-            this.colDetail.Name = "colDetail";
-            this.colDetail.ReadOnly = true;
             // 
             // btnClear
             // 
@@ -106,11 +91,42 @@
             this.btnCopy.UseVisualStyleBackColor = true;
             this.btnCopy.Click += new System.EventHandler(this.btnCopy_Click);
             // 
+            // bindingSource1
+            // 
+            this.bindingSource1.CurrentChanged += new System.EventHandler(this.bindingSource1_CurrentChanged);
+            // 
+            // textBox1
+            // 
+            this.tbxDetail.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.tbxDetail.Location = new System.Drawing.Point(15, 211);
+            this.tbxDetail.Multiline = true;
+            this.tbxDetail.Name = "tbxDetail";
+            this.tbxDetail.ReadOnly = true;
+            this.tbxDetail.Size = new System.Drawing.Size(525, 177);
+            this.tbxDetail.TabIndex = 4;
+            // 
+            // colTime
+            // 
+            this.colTime.DataPropertyName = "DateTime";
+            this.colTime.HeaderText = "Time";
+            this.colTime.Name = "colTime";
+            this.colTime.ReadOnly = true;
+            // 
+            // colMessage
+            // 
+            this.colMessage.DataPropertyName = "Message";
+            this.colMessage.FillWeight = 200F;
+            this.colMessage.HeaderText = "Message";
+            this.colMessage.Name = "colMessage";
+            this.colMessage.ReadOnly = true;
+            // 
             // ErrorForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(751, 264);
+            this.ClientSize = new System.Drawing.Size(553, 400);
+            this.Controls.Add(this.tbxDetail);
             this.Controls.Add(this.btnCopy);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.btnClear);
@@ -120,6 +136,7 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Topograph Errors";
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.bindingSource1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -128,11 +145,12 @@
         #endregion
 
         private System.Windows.Forms.DataGridView dataGridView1;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colTime;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colMessage;
-        private System.Windows.Forms.DataGridViewTextBoxColumn colDetail;
         private System.Windows.Forms.Button btnClear;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnCopy;
+        private System.Windows.Forms.BindingSource bindingSource1;
+        private System.Windows.Forms.TextBox tbxDetail;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colTime;
+        private System.Windows.Forms.DataGridViewTextBoxColumn colMessage;
     }
 }
