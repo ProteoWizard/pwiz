@@ -112,12 +112,48 @@ rule evaluate-conditionals-in-context ( properties * : context * )
         # Separate condition and property.
         local s = [ MATCH (.*):(<.*) : $(p) ] ;
         # Split condition into individual properties.
-        local c = [ regex.split $(s[1]) "," ] ;
+        local condition = [ regex.split $(s[1]) "," ] ;
         # Evaluate condition.
-        if $(c) in $(context)
+        if ! [ MATCH (!).* : $(condition:G=) ]
         {
-            result += $(s[2]) ;
+            # Only positive checks
+            if $(condition) in $(context)
+            {
+                result += $(s[2]) ;
+            }
         }
+        else
+        {
+            # Have negative checks
+            local fail ;
+            while $(condition)
+            {
+                local c = $(condition[1]) ;
+                local m = [ MATCH !(.*) : $(c) ] ;
+                if $(m)
+                {
+                    local p = $(m:G=$(c:G)) ;
+                    if $(p) in $(context)
+                    {
+                        fail = true ;
+                        c = ;
+                    }                    
+                }    
+                else
+                {
+                    if ! $(c) in $(context)
+                    {
+                        fail = true ;
+                        c = ;
+                    }                    
+                }
+                condition = $(condition[2-]) ;
+            }
+            if ! $(fail)
+            {
+                result += $(s[2]) ;
+            }            
+        }                
     }
     return $(result) ;
 }

@@ -110,8 +110,8 @@ actions compile.c++
     $(CONFIG_COMMAND) -c -e5 --no_version --no_prelink_verbose --display_error_number --long_long --diag_suppress=9,21,161,748,940,962 --diag_error=461 -D__STL_LONG_LONG -U$(UNDEFS) -D$(DEFINES) $(WARN) $(CFLAGS) $(C++FLAGS) -I"$(HDRS)" -I"$(STDHDRS)" -I"$(SYSHDRS)" -o "$(<)" "$(>)"
 }
 
-actions updated together piecemeal archive
+actions archive
 {
-    $(CONFIG_COMMAND) --no_version --no_prelink_verbose --prelink_object "$(>)"
-    lib $(ARFLAGS) /nologo /out:"$(<:S=.lib)" "$(>)"
+    $(CONFIG_COMMAND) --no_version --no_prelink_verbose --prelink_object @"@($(<[1]:W).rsp:E=$(nl)"$(>)")"
+    lib $(ARFLAGS) /nologo /out:"$(<:S=.lib)" @"@($(<[1]:W).rsp:E=$(nl)"$(>)")"
 }

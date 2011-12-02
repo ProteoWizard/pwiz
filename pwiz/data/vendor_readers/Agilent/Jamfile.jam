@@ -24,6 +24,7 @@
 # - DLLs are .NET and thus MSVC only
 # - we can redistribute DLLs
 
+import path ;
 
 project
     : requirements 

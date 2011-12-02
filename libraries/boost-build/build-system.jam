@@ -26,6 +26,7 @@ import utility ;
 import version ;
 import virtual-target ;
 import generators ;
+import configure ;
 
 ################################################################################
 #
@@ -113,6 +114,15 @@ rule set-default-toolset ( toolset : version ? )
     .default-toolset-version = $(version) ;
 }
 
+rule set-pre-build-hook ( function )
+{
+    .pre-build-hook = $(function) ;
+}
+
+rule set-post-build-hook ( function )
+{
+    .post-build-hook = $(function) ;
+}
 
 ################################################################################
 #
@@ -205,9 +215,9 @@ local rule find-target ( target-id )
 
 # Initializes a new configuration module.
 #
-local rule initialize-config-module ( module-name )
+local rule initialize-config-module ( module-name : location ? )
 {
-    project.initialize $(module-name) ;
+    project.initialize $(module-name) : $(location) ;
     if USER_MODULE in [ RULENAMES ]
     {
         USER_MODULE $(module-name) ;
@@ -409,7 +419,7 @@ local rule load-configuration-files
     }
     if $(file)
     {
-        initialize-config-module project-config ;
+        initialize-config-module project-config : $(file:D) ;
         load-config project-config : project-config.jam : $(file:D) ;        
     }   
 }
@@ -533,14 +543,15 @@ local rule should-clean-project ( project )
 #
 ################################################################################
 
-{
+{    
     if --version in $(.argv)
     {
         version.print ;
         EXIT ;
     }
-
-
+    
+    version.verify-engine-version ;    
+    
     load-configuration-files ;
 
     local extra-properties ;
@@ -579,6 +590,10 @@ local rule should-clean-project ( project )
             {
                 default-toolset = msvc ;
             }
+            else if [ os.name ] = MACOSX
+            {
+                default-toolset = darwin ;
+            }                        
         }
 
         ECHO "warning: No toolsets are configured." ;
@@ -698,6 +713,17 @@ local rule should-clean-project ( project )
         generators.dump ;
     }
     
+    # We wish to put config.log in the build directory corresponding
+    # to Jamroot, so that the location does not differ depending on
+    # directory where we do build.  The amount of indirection necessary
+    # here is scary.
+    local first-project = [ $(targets[0]).project ] ;
+    local first-project-root-location = [ $(first-project).get project-root ] ;
+    local first-project-root-module = [ project.load $(first-project-root-location) ] ;
+    local first-project-root = [ project.target  $(first-project-root-module) ] ;
+    local first-build-build-dir = [ $(first-project-root).build-dir ] ;
+    configure.set-log-file $(first-build-build-dir)/config.log ;
+    
     # Now that we have a set of targets to build and a set of property sets to
     # build the targets with, we can start the main build process by using each
     # property set to generate virtual targets from all of our listed targets
@@ -746,7 +772,6 @@ local rule should-clean-project ( project )
             # Prepare valid XML header and footer with some basic info.
             local nl = "
 " ;
-            local jam       = [ version.jam ] ;
             local os        = [ modules.peek : OS OSPLAT JAMUNAME ] "" ;
             local timestamp = [ modules.peek : JAMDATE ] ;
             local cwd       = [ PWD ] ;
@@ -755,7 +780,6 @@ local rule should-clean-project ( project )
             .header on $(xml-file) =
                 "<?xml version=\"1.0\" encoding=\"utf-8\"?>"
                 "$(nl)<build format=\"1.0\" version=\"$(bb-version)\">"
-                "$(nl)  <jam version=\"$(jam:J=.)\" />"
                 "$(nl)  <os name=\"$(os[1])\" platform=\"$(os[2])\"><![CDATA[$(os[3-]:J= )]]></os>"
                 "$(nl)  <timestamp><![CDATA[$(timestamp)]]></timestamp>"
                 "$(nl)  <directory><![CDATA[$(cwd)]]></directory>"
@@ -896,6 +920,15 @@ local rule should-clean-project ( project )
             __ACTION_RULE__ = build-system.out-xml.collect
                 [ modules.peek build-system : .out-xml ] ;
         }
+        
+        IMPORT
+            build-system :
+            out-xml.collect
+            out-xml.generate-action
+            : :
+            build-system.out-xml.collect
+            build-system.out-xml.generate-action
+            ;
     }
 
     local j = [ option.get jobs ] ;
@@ -947,8 +980,29 @@ local rule should-clean-project ( project )
         UPDATE clean ;
     }
     else
-    {
+    {      
+        configure.print-configure-checks-summary ;        
+        
+        if $(.pre-build-hook)
+        {
+            $(.pre-build-hook) ;
+        }
+        
         DEPENDS all : $(actual-targets) ;
-        UPDATE all $(.out-xml) ;
+        if UPDATE_NOW in [ RULENAMES ]
+        {            
+            local ok = [ UPDATE_NOW all $(.out-xml) ] ;
+            if $(.post-build-hook)
+            {
+                $(.post-build-hook) $(ok) ;
+            }
+            # Prevent automatic update of the 'all' target, now that
+            # we have explicitly updated what we wanted.
+            UPDATE ;
+        }
+        else
+        {
+            UPDATE all $(.out-xml) ;
+        }            
     }
 }

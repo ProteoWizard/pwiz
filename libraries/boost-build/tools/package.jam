@@ -33,13 +33,17 @@
 import "class" : new ;
 import option ;
 import project ;
+import feature ;
 import property ;
 import stage ;
 import targets ;
 import modules ;
 
-rule install ( name : requirements * : binaries * : libraries * : headers * )
+feature.feature install-default-prefix : : free incidental ;
+
+rule install ( name package-name ? : requirements * : binaries * : libraries * : headers * )
 {
+    package-name ?= $(name) ;
     if [ MATCH --prefix=(.*) : [ modules.peek : ARGV ] ]
     {
         # If --prefix is explicitly specified on the command line,
@@ -67,17 +71,7 @@ rule install ( name : requirements * : binaries * : libraries * : headers * )
 
     # First, figure out all locations. Use the default if no prefix option
     # given.
-    local prefix = [ option.get prefix : [ property.select
-        <install-default-prefix> : $(requirements) ] ] ;
-    prefix = $(prefix:G=) ;
-    requirements = [ property.change $(requirements) : <install-default-prefix>
-        ] ;
-    # Or some likely defaults if neither is given.
-    if ! $(prefix)
-    {
-        if [ modules.peek : NT ] { prefix = C:\\$(name) ; }
-        else if [ modules.peek : UNIX ] { prefix = /usr/local ; }
-    }
+    local prefix = [ get-prefix $(name) : $(requirements) ] ;
 
     # Architecture dependent files.
     local exec-locate = [ option.get exec-prefix : $(prefix) ] ;
@@ -126,3 +120,46 @@ rule install ( name : requirements * : binaries * : libraries * : headers * )
           $(1)-lib-shared-universe $(1)-lib-shared-cygwin ;
     }
 }
+
+rule install-data ( target-name : package-name : data * : requirements * )
+{
+    package-name ?= target-name ;
+    if [ MATCH --prefix=(.*) : [ modules.peek : ARGV ] ]
+    {
+        # If --prefix is explicitly specified on the command line,
+        # then we need wipe away any settings of datarootdir
+        option.set datarootdir : ;
+    }   
+    
+    local prefix = [ get-prefix $(package-name) : $(requirements) ] ;
+    local datadir = [ option.get datarootdir : $(prefix)/share ] ;
+
+    stage.install $(target-name) 
+        : $(data)
+        : $(requirements) <location>$(datadir)/$(package-name)
+        ;
+    
+    local c = [ project.current ] ;
+    local project-module = [ $(c).project-module ] ;
+    module $(project-module)
+    {
+        explicit $(1) ;
+    }
+}
+
+local rule get-prefix ( package-name : requirements * )
+{
+    local prefix = [ option.get prefix : [ property.select
+        <install-default-prefix> : $(requirements) ] ] ;
+    prefix = $(prefix:G=) ;
+    requirements = [ property.change $(requirements) : <install-default-prefix>
+        ] ;
+    # Or some likely defaults if neither is given.
+    if ! $(prefix)
+    {
+        if [ modules.peek : NT ] { prefix = C:\\$(package-name) ; }
+        else if [ modules.peek : UNIX ] { prefix = /usr/local ; }        
+    }
+    return $(prefix) ;
+}           
+

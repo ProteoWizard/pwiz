@@ -23,12 +23,15 @@ import re
 import bjam
 
 from b2.tools import unix, common, rc, pch, builtin
-from b2.build import feature, type, toolset, generators
+from b2.build import feature, type, toolset, generators, property_set
+from b2.build.property import Property
 from b2.util.utility import os_name, on_windows
 from b2.manager import get_manager
 from b2.build.generators import Generator
 from b2.build.toolset import flags
 from b2.util.utility import to_seq
+
+
 
 __debug = None
 
@@ -222,12 +225,12 @@ class GccPchGenerator(pch.PchGenerator):
         # Find the header in sources. Ignore any CPP sources.
         header = None
         for s in sources:
-            if type.is_derived(s.type, 'H'):
+            if type.is_derived(s.type(), 'H'):
                 header = s
 
         # Error handling: Base header file name should be the same as the base
         # precompiled header name.
-        header_name = header.name
+        header_name = header.name()
         header_basename = os.path.basename(header_name).rsplit('.', 1)[0]
         if header_basename != name:
             location = project.project_module
@@ -239,14 +242,15 @@ class GccPchGenerator(pch.PchGenerator):
 
         # return result of base class and pch-file property as usage-requirements
         # FIXME: what about multiple results from generator.run?
-        return (property_set.create('<pch-file>' + pch_file[0], '<cflags>-Winvalid-pch'),
+        return (property_set.create([Property('pch-file', pch_file[0]),
+                                     Property('cflags', '-Winvalid-pch')]),
                 pch_file)
 
     # Calls the base version specifying source's name as the name of the created
     # target. As result, the PCH will be named whatever.hpp.gch, and not
     # whatever.gch.
     def generated_targets(self, sources, prop_set, project, name = None):
-        name = sources[0].name
+        name = sources[0].name()
         return Generator.generated_targets(self, sources,
             prop_set, project, name)
 
@@ -287,7 +291,6 @@ flags('gcc.compile', 'OPTIONS', ['<rtti>off'], ['-fno-rtti'])
 # In that case we'll just add another parameter to 'init' and move this login
 # inside 'init'.
 if not os_name () in ['CYGWIN', 'NT']:
-    print "osname:", os_name()
     # This logic will add -fPIC for all compilations:
     #
     # lib a : a.cpp b ;
@@ -379,7 +382,7 @@ class GccLinkingGenerator(unix.UnixLinkingGenerator):
         property while creating or using shared library, since it's not supported by
         gcc/libc.
     """
-    def run(self, project, name, prop_set, sources):
+    def run(self, project, name, ps, sources):
         # TODO: Replace this with the use of a target-os property.
 
         no_static_link = False
@@ -393,10 +396,9 @@ class GccLinkingGenerator(unix.UnixLinkingGenerator):
 ##            }
 ##        }
 
-        properties = prop_set.raw()
         reason = None
-        if no_static_link and '<runtime-link>static' in properties:
-            if '<link>shared' in properties:
+        if no_static_link and ps.get('runtime-link') == 'static':
+            if ps.get('link') == 'shared':
                 reason = "On gcc, DLL can't be build with '<runtime-link>static'."
             elif type.is_derived(self.target_types[0], 'EXE'):
                 for s in sources:
@@ -412,7 +414,7 @@ class GccLinkingGenerator(unix.UnixLinkingGenerator):
             return
         else:
             generated_targets = unix.UnixLinkingGenerator.run(self, project,
-                name, prop_set, sources)
+                name, ps, sources)
             return generated_targets
 
 if on_windows():
@@ -626,7 +628,7 @@ def gcc_archive(targets, sources, properties):
     engine.set_target_variable('LOCATE', clean, bjam.call('get-target-variable', targets, 'LOCATE'))
     engine.add_dependency(clean, sources)
     engine.add_dependency(targets, clean)
-    engine.set_update_action('common.RmTemps', clean, targets, None)
+    engine.set_update_action('common.RmTemps', clean, targets)
 
 # Declare action for creating static libraries.
 # The letter 'r' means to add files to the archive with replacement. Since we
@@ -643,6 +645,8 @@ def gcc_link_dll(targets, sources, properties):
     engine = get_manager().engine()
     engine.set_target_variable(targets, 'SPACE', ' ')
     engine.set_target_variable(targets, 'JAM_SEMAPHORE', '<s>gcc-link-semaphore')
+    engine.set_target_variable(targets, "HAVE_SONAME", HAVE_SONAME)
+    engine.set_target_variable(targets, "SONAME_OPTION", SONAME_OPTION)
 
 engine.register_action(
     'gcc.link.dll',

@@ -13,6 +13,10 @@ import feature ;
 import regex ;
 import sequence ;
 import common ;
+import os ;
+import modules ;
+import path ;
+import errors ;
 
 feature.feature xsl:param : : free ;
 feature.feature xsl:path : : free ;
@@ -24,18 +28,73 @@ feature.feature catalog : : free ;
 #
 rule init ( xsltproc ? )
 {
-    if ! $(xsltproc)
+    if $(xsltproc)
     {
-        xsltproc = [ modules.peek : XSLTPROC ] ;
-    }
-
-    if ! $(.initialized)
-    {
-        $(.initialized) = true ;
+        modify-config ;
         .xsltproc = $(xsltproc) ;
+        check-xsltproc ;
     }
 }
 
+rule freeze-config ( )
+{
+    if ! $(.config-frozen)
+    {
+        .config-frozen = true ;
+        .xsltproc ?= [ modules.peek : XSLTPROC ] ;
+        .xsltproc ?= xsltproc ;
+        check-xsltproc ;
+        .is-cygwin = [ .is-cygwin $(.xsltproc) ] ;
+    }
+}
+
+rule modify-config
+{
+    if $(.config-frozen)
+    {
+        errors.user-error "xsltproc: Cannot change xsltproc command after it has been used." ;
+    }
+}
+
+rule check-xsltproc ( )
+{
+    if $(.xsltproc)
+    {
+        local status = [ SHELL "\"$(.xsltproc)\" -V" : no-output : exit-status ] ;
+        if $(status[2]) != "0"
+        {
+            errors.user-error "xsltproc: Could not run \"$(.xsltproc)\" -V." ;
+        }
+    }
+}
+
+# Returns a non-empty string if a cygwin xsltproc binary was specified.
+rule is-cygwin ( )
+{
+    freeze-config ;
+    return $(.is-cygwin) ;
+}
+
+rule .is-cygwin ( xsltproc )
+{
+    if [ os.on-windows ]
+    {
+        local file = [ path.make [ modules.binding $(__name__) ] ] ;
+        local dir = [ path.native
+                      [ path.join [ path.parent $(file) ] xsltproc ] ] ;
+        if [ os.name ] = CYGWIN
+        {
+            dir = $(dir:W) ;
+        }
+        local command =
+            "\"$(xsltproc)\" \"$(dir)\\test.xsl\" \"$(dir)\\test.xml\" 2>&1" ;
+        local status = [ SHELL $(command) : no-output : exit-status ] ;
+        if $(status[2]) != "0"
+        {
+            return true ;
+        }
+    }
+}
 
 rule compute-xslt-flags ( target : properties * )
 {
@@ -72,7 +131,7 @@ rule compute-xslt-flags ( target : properties * )
 
     for local dir in $(implicit-target-directories)
     {
-        flags += --path \"$(dir)\" ;
+        flags += --path \"$(dir:T)\" ;
     }
 
     return $(flags) ;
@@ -81,13 +140,19 @@ rule compute-xslt-flags ( target : properties * )
 
 local rule .xsltproc ( target : source stylesheet : properties * : dirname ? : action )
 {
+    freeze-config ;
     STYLESHEET on $(target) = $(stylesheet) ;
     FLAGS on $(target) += [ compute-xslt-flags $(target) : $(properties) ] ;
     NAME on $(target) = $(.xsltproc) ;
 
     for local catalog in [ feature.get-values <catalog> : $(properties) ]
     {
-        CATALOG = [ common.variable-setting-command XML_CATALOG_FILES : $(catalog) ] ;
+        CATALOG = [ common.variable-setting-command XML_CATALOG_FILES : $(catalog:T) ] ;
+    }
+
+    if [ os.on-windows ] && ! [ is-cygwin ]
+    {
+        action = $(action).windows ;
     }
 
     $(action) $(target) : $(source) ;
@@ -105,14 +170,25 @@ rule xslt-dir ( target : source stylesheet : properties * : dirname )
     return [ .xsltproc $(target) : $(source) $(stylesheet) : $(properties) : $(dirname) : xslt-xsltproc-dir ] ;
 }
 
+actions xslt-xsltproc.windows
+{
+    $(CATALOG) "$(NAME:E=xsltproc)" $(FLAGS) --xinclude -o "$(<)" "$(STYLESHEET:W)" "$(>:W)"
+}
+
 
 actions xslt-xsltproc bind STYLESHEET
 {
-    $(CATALOG) "$(NAME:E=xsltproc)" $(FLAGS) --xinclude -o "$(<)" "$(STYLESHEET)" "$(>)"
+    $(CATALOG) "$(NAME:E=xsltproc)" $(FLAGS) --xinclude -o "$(<)" "$(STYLESHEET:T)" "$(>:T)"
+}
+
+
+actions xslt-xsltproc-dir.windows bind STYLESHEET
+{
+    $(CATALOG) "$(NAME:E=xsltproc)" $(FLAGS) --xinclude -o "$(<:D)/" "$(STYLESHEET:W)" "$(>:W)"
 }
 
 
 actions xslt-xsltproc-dir bind STYLESHEET
 {
-    $(CATALOG) "$(NAME:E=xsltproc)" $(FLAGS) --xinclude -o "$(<:D)/" "$(STYLESHEET)" "$(>)"
+    $(CATALOG) "$(NAME:E=xsltproc)" $(FLAGS) --xinclude -o "$(<:D)/" "$(STYLESHEET:T)" "$(>:T)"
 }

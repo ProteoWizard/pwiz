@@ -1,5 +1,5 @@
 # Status: being ported by Vladimir Prus
-# Base revision: 41557
+# Base revision: 48649
 # TODO: replace the logging with dout
 
 # Copyright Vladimir Prus 2002.
@@ -59,6 +59,7 @@ from b2.util import set
 from b2.util.sequence import unique
 import b2.util.sequence as sequence
 from b2.manager import get_manager
+import b2.build.type
 
 def reset ():
     """ Clear the module state. This is mainly for testing purposes.
@@ -66,6 +67,7 @@ def reset ():
     global __generators, __type_to_generators, __generators_for_toolset, __construct_stack
     global __overrides, __active_generators
     global __viable_generators_cache, __viable_source_types_cache
+    global __vstg_cached_generators, __vst_cached_types
 
     __generators = {}
     __type_to_generators = {}
@@ -77,6 +79,9 @@ def reset ():
     __viable_generators_cache = {}
     __viable_source_types_cache = {}
     __active_generators = []
+
+    __vstg_cached_generators = []
+    __vst_cached_types = []
 
 reset ()
 
@@ -101,17 +106,57 @@ def decrease_indent():
     global __indent
     __indent = __indent[0:-4]
 
+
+# Updated cached viable source target type information as needed after a new
+# derived target type gets added. This is needed because if a target type is a
+# viable source target type for some generator then all of the target type's
+# derived target types are automatically viable as source target types for the
+# same generator. Does nothing if a non-derived target type is passed to it.
+#
+def update_cached_information_with_a_new_type(type):
+
+    base_type = b2.build.type.base(type)
+
+    if base_type:
+        for g in __vstg_cached_generators:
+            if base_type in __viable_source_types_cache.get(g, []):
+                __viable_source_types_cache[g].append(type)
+
+        for t in __vst_cached_types:
+            if base_type in __viable_source_types_cache.get(t, []):
+                __viable_source_types_cache[t].append(type)
+
+# Clears cached viable source target type information except for target types
+# and generators with all source types listed as viable. Should be called when
+# something invalidates those cached values by possibly causing some new source
+# types to become viable.
+#
+def invalidate_extendable_viable_source_target_type_cache():
+
+    global __vstg_cached_generators
+    generators_with_cached_source_types = __vstg_cached_generators
+    __vstg_cached_generators = []
+
+    for g in generators_with_cached_source_types:
+        if __viable_source_types_cache.has_key(g):
+            if __viable_source_types_cache[g] == ["*"]:
+                __vstg_cached_generators.append(g)
+            else:
+                del __viable_source_types_cache[g]
+
+    global __vst_cached_types
+    types_with_cached_sources_types = __vst_cached_types
+    __vst_cached_types = []
+    for t in types_with_cached_sources_types:
+        if __viable_source_types_cache.has_key(t):
+            if __viable_source_types_cache[t] == ["*"]:
+                __vst_cached_types.append(t)
+            else:
+                del __viable_source_types_cache[t]
+ 
 def dout(message):
     if debug():
         print __indent + message
-
-def normalize_target_list (targets):
-    """ Takes a vector of 'virtual-target' instances and makes a normalized
-        representation, which is the same for given set of targets,
-        regardless of their order.
-    """
-    return (targets[0], targets[1].sort ())
-
 
 class Generator:
     """ Creates a generator.
@@ -138,7 +183,7 @@ class Generator:
             
             NOTE: all subclasses must have a similar signature for clone to work!
     """
-    def __init__ (self, id, composing, source_types, target_types_and_names, requirements):
+    def __init__ (self, id, composing, source_types, target_types_and_names, requirements = []):
         assert(not isinstance(source_types, str))
         assert(not isinstance(target_types_and_names, str))
         self.id_ = id
@@ -215,7 +260,7 @@ class Generator:
                               self.requirements_)
                               
 
-    def id (self):
+    def id(self):
         return self.id_
 
     def source_types (self):
@@ -238,7 +283,7 @@ class Generator:
         """
         return self.requirements_
 
-    def match_rank (self, property_set_to_match):
+    def match_rank (self, ps):
         """ Returns true if the generator can be run with the specified 
             properties.
         """
@@ -250,17 +295,18 @@ class Generator:
         
         property_requirements = []
         feature_requirements = []
+        # This uses strings because genenator requirements allow
+        # the '<feature>' syntax without value and regular validation
+        # is not happy about that.
         for r in all_requirements:
             if get_value (r):
                 property_requirements.append (r)
 
             else:
                 feature_requirements.append (r)
-
-        properties_to_match = property_set_to_match.raw ()
-        
-        return set.contains (property_requirements, properties_to_match) \
-            and set.contains (feature_requirements, get_grist (properties_to_match))
+                
+        return all(ps.get(get_grist(s)) == [get_value(s)] for s in property_requirements) \
+               and all(ps.get(get_grist(s)) for s in feature_requirements)
         
     def run (self, project, name, prop_set, sources):
         """ Tries to invoke this generator on the given sources. Returns a
@@ -348,6 +394,24 @@ class Generator:
 
         return result
 
+    def determine_target_name(self, fullname):
+        # Determine target name from fullname (maybe including path components)
+        # Place optional prefix and postfix around basename
+
+        dir = os.path.dirname(fullname)
+        name = os.path.basename(fullname)
+        idx = name.find(".")
+        if idx != -1:
+            name = name[:idx]
+
+        if dir and not ".." in dir and not os.path.isabs(dir):
+            # Relative path is always relative to the source
+            # directory. Retain it, so that users can have files
+            # with the same in two different subdirectories.
+            name = dir + "/" + name
+
+        return name
+
     def determine_output_name(self, sources):
         """Determine the name of the produced target from the
         names of the sources."""
@@ -370,8 +434,8 @@ class Generator:
                     "%s: source targets have different names: cannot determine target name"
                     % (self.id_))
                         
-        # Names of sources might include directory. We should strip it.        
-        return os.path.basename(name)
+        # Names of sources might include directory. We should strip it.
+        return self.determine_target_name(sources[0].name())
         
         
     def generated_targets (self, sources, prop_set, project, name):
@@ -400,19 +464,21 @@ class Generator:
             name = self.determine_output_name(sources)
         
         # Assign an action for each target
-        action = self.action_class()        
-        a = action (project.manager(), sources, self.id_, prop_set)
+        action = self.action_class()
+        a = action(project.manager(), sources, self.id_, prop_set)
                 
         # Create generated target for each target type.
         targets = []
         pre = self.name_prefix_
         post = self.name_postfix_
         for t in self.target_types_:
-            generated_name = pre[0] + name + post[0]
+            basename = os.path.basename(name)
+            generated_name = pre[0] + basename + post[0]
+            generated_name = os.path.join(os.path.dirname(name), generated_name)
             pre = pre[1:]
             post = post[1:]
             
-            targets.append(virtual_target.FileTarget(generated_name, False, t, project, a))
+            targets.append(virtual_target.FileTarget(generated_name, t, project, a))
         
         return [ project.manager().virtual_targets().register(t) for t in targets ]
 
@@ -515,20 +581,20 @@ class Generator:
         real_source_type = source.type ()
 
         # If there are no source types, we can consume anything
-        source_types = self.source_types
+        source_types = self.source_types()
         if not source_types:
-            source_types = [real_source_type]
+            source_types = [real_source_type]            
 
         consumed = []
         missing_types = []
-        for st in self.source_types_:
+        for st in source_types:
             # The 'source' if of right type already)
             if real_source_type == st or type.is_derived (real_source_type, st):
                 consumed.append (source)
 
             else:
                missing_types.append (st)
-       
+
         return (consumed, missing_types)
     
     def action_class (self):
@@ -546,7 +612,7 @@ def find (id):
 def register (g):
     """ Registers new generator instance 'g'.
     """
-    id = g.id ()
+    id = g.id()
 
     __generators [id] = g
 
@@ -575,6 +641,24 @@ def register (g):
     base = id.split ('.', 100) [0]
 
     __generators_for_toolset.setdefault(base, []).append(g)
+
+    # After adding a new generator that can construct new target types, we need
+    # to clear the related cached viable source target type information for
+    # constructing a specific target type or using a specific generator. Cached
+    # viable source target type lists affected by this are those containing any
+    # of the target types constructed by the new generator or any of their base
+    # target types.
+    #
+    # A more advanced alternative to clearing that cached viable source target
+    # type information would be to expand it with additional source types or
+    # even better - mark it as needing to be expanded on next use.
+    #
+    # For now we just clear all the cached viable source target type information
+    # that does not simply state 'all types' and may implement a more detailed
+    # algorithm later on if it becomes needed.
+
+    invalidate_extendable_viable_source_target_type_cache()
+
 
 def register_standard (id, source_types, target_types, requirements = []):
     """ Creates new instance of the 'generator' class and registers it.
@@ -608,7 +692,7 @@ def override (overrider_id, overridee_id):
     after computing the list of viable generators, before
     running any of them."""
     
-    __overrides.get(overrider_id, []).append(overridee_id)
+    __overrides.setdefault(overrider_id, []).append(overridee_id)
 
 def __viable_source_types_real (target_type):
     """ Returns a list of source type which can possibly be converted
@@ -619,11 +703,19 @@ def __viable_source_types_real (target_type):
         of calling itself recusrively on source types.
     """
     generators = []
-        
-    t = type.all_bases (target_type)
+
+    # 't0' is the initial list of target types we need to process to get a list
+    # of their viable source target types. New target types will not be added to
+    # this list.         
+    t0 = type.all_bases (target_type)
+
+
+    # 't' is the list of target types which have not yet been processed to get a
+    # list of their viable source target types. This list will get expanded as
+    # we locate more target types to process.
+    t = t0
     
     result = []
-    # 't' is the list of types which are not yet processed    
     while t:
         # Find all generators for current type. 
         # Unlike 'find_viable_generators' we don't care about prop_set.
@@ -645,19 +737,29 @@ def __viable_source_types_real (target_type):
                     all = type.all_derived (source_type)
                     for n in all:
                         if not n in result:
-                            t.append (n)
+
+                            # Here there is no point in adding target types to
+                            # the list of types to process in case they are or
+                            # have already been on that list. We optimize this
+                            # check by realizing that we only need to avoid the
+                            # original target type's base types. Other target
+                            # types that are or have been on the list of target
+                            # types to process have been added to the 'result'
+                            # list as well and have thus already been eliminated
+                            # by the previous if.
+                            if not n in t0:
+                                t.append (n)
                             result.append (n)
-        
-    result = unique (result)
-    
+           
     return result
 
 
 def viable_source_types (target_type):
     """ Helper rule, caches the result of '__viable_source_types_real'.
     """
-    if not __viable_source_types_cache.has_key (target_type):
-         __viable_source_types_cache [target_type] = __viable_source_types_real (target_type)
+    if not __viable_source_types_cache.has_key(target_type):
+        __vst_cached_types.append(target_type)
+        __viable_source_types_cache [target_type] = __viable_source_types_real (target_type)
     return __viable_source_types_cache [target_type]
 
 def viable_source_types_for_generator_real (generator):
@@ -678,20 +780,22 @@ def viable_source_types_for_generator_real (generator):
     else:
         result = []
         for s in source_types:
-            result += type.all_derived (s) + viable_source_types (s)            
-        result = unique (result)
-        if "*" in result:
-            result = ["*"]
-        return result
+            viable_sources = viable_source_types(s)
+            if viable_sources == "*":
+                result = ["*"]
+                break
+            else:
+                result.extend(type.all_derived(s) + viable_sources)
+        return unique(result)
 
 def viable_source_types_for_generator (generator):
     """ Caches the result of 'viable_source_types_for_generator'.
     """
-    key = str (generator)
-    if not __viable_source_types_cache.has_key (key):
-        __viable_source_types_cache [key] = viable_source_types_for_generator_real (generator)
+    if not __viable_source_types_cache.has_key(generator):
+        __vstg_cached_generators.append(generator)
+        __viable_source_types_cache[generator] = viable_source_types_for_generator_real (generator)
     
-    return __viable_source_types_cache [key]
+    return __viable_source_types_cache[generator]
 
 def try_one_generator_really (project, name, generator, target_type, properties, sources):
     """ Returns usage requirements + list of created targets.
@@ -784,7 +888,7 @@ def __ensure_type (targets):
     """
     for t in targets:
         if not t.type ():
-            raise BaseException ("target '%s' has no type" % str (t))
+            get_manager().errors()("target '%s' has no type" % str (t))
 
 def find_viable_generators_aux (target_type, prop_set):
     """ Returns generators which can be used to construct target of specified type
@@ -840,7 +944,7 @@ def find_viable_generators_aux (target_type, prop_set):
         m = g.match_rank(prop_set)
         if m:
             dout("  is viable")
-            viable_generators.append(g)
+            viable_generators.append(g)            
                             
     return viable_generators
 
@@ -848,6 +952,8 @@ def find_viable_generators (target_type, prop_set):
     key = target_type + '.' + str (prop_set)
 
     l = __viable_generators_cache.get (key, None)
+    if not l:
+        l = []
 
     if not l:
         l = find_viable_generators_aux (target_type, prop_set)
@@ -860,13 +966,15 @@ def find_viable_generators (target_type, prop_set):
         # TODO: is this really used?
         if not g in __active_generators:
             viable_generators.append (g)
+        else:
+            dout("      generator %s is active, discarding" % g.id())
 
     # Generators which override 'all'.
     all_overrides = []
     
     # Generators which are overriden
     overriden_ids = [] 
-       
+
     for g in viable_generators:
         id = g.id ()
         
@@ -880,12 +988,7 @@ def find_viable_generators (target_type, prop_set):
     if all_overrides:
         viable_generators = all_overrides
 
-    result = []
-    for g in viable_generators:
-        if not g.id () in overriden_ids:
-            result.append (g)
-        
-    return result
+    return [g for g in viable_generators if not g.id() in overriden_ids]
     
 def __construct_really (project, name, target_type, prop_set, sources):
     """ Attempts to construct target by finding viable generators, running them
@@ -894,8 +997,8 @@ def __construct_really (project, name, target_type, prop_set, sources):
     viable_generators = find_viable_generators (target_type, prop_set)
                     
     result = []
-    
-    project.manager ().logger ().log (__name__, "*** %d viable generators" % len (viable_generators))
+
+    dout("      *** %d viable generators" % len (viable_generators))
 
     generators_that_succeeded = []
     
@@ -928,7 +1031,7 @@ def __construct_really (project, name, target_type, prop_set, sources):
     return result;
 
 
-def construct (project, name, target_type, prop_set, sources):
+def construct (project, name, target_type, prop_set, sources, top_level=False):
     """ Attempts to create target of 'target-type' with 'properties'
         from 'sources'. The 'sources' are treated as a collection of
         *possible* ingridients -- i.e. it is not required to consume
@@ -938,11 +1041,21 @@ def construct (project, name, target_type, prop_set, sources):
         Returns a list of target. When this invocation is first instance of
         'construct' in stack, returns only targets of requested 'target-type',
         otherwise, returns also unused sources and additionally generated
-        targets.            
+        targets.
+        
+        If 'top-level' is set, does not suppress generators that are already
+        used in the stack. This may be useful in cases where a generator
+        has to build a metatarget -- for example a target corresponding to
+        built tool.        
     """
-    # TODO: Why is global needed here?
+
+    global __active_generators
+    if top_level:
+        saved_active = __active_generators
+        __active_generators = []
+
     global __construct_stack
-    if __construct_stack:
+    if not __construct_stack:
         __ensure_type (sources)
         
     __construct_stack.append (1)
@@ -963,5 +1076,22 @@ def construct (project, name, target_type, prop_set, sources):
         
     __construct_stack = __construct_stack [1:]
 
+    if top_level:
+        __active_generators = saved_active
+
     return result
-    
+
+def add_usage_requirements (result, raw_properties):
+    if result:
+        if isinstance (result[0], property_set.PropertySet):
+          return (result[0].add_raw(raw_properties), result[1])
+        else:
+          return (propery_set.create(raw-properties), result) 
+        #if [ class.is-a $(result[1]) : property-set ]
+        #{
+        #    return [ $(result[1]).add-raw $(raw-properties) ] $(result[2-]) ;
+        #}
+        #else
+        #{
+        #    return [ property-set.create $(raw-properties) ] $(result) ;
+        #}

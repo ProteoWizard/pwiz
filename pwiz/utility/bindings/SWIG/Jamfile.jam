@@ -52,10 +52,10 @@ lib pwiz_swigbindings
     : # default-build
 	: # usage-requirements
     ;
-
-
-} else {
-echo "note: JAVA_HOME not set or jni.h not found; pwiz_swigbindings not built.  This may be intentional." ;
+}
+else
+{
+    echo "note: JAVA_HOME not set or jni.h not found; pwiz_swigbindings will not be built. This may be intentional." ;
 }
 
 local PYTHON_INCLUDE = [ os.environ PYTHON_INCLUDE ] ;

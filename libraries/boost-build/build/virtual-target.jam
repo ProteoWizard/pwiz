@@ -760,7 +760,20 @@ class action
 
             DEPENDS $(actual-targets) : $(self.actual-sources)
                 $(self.dependency-only-sources) ;
-
+            
+            # This works around a bug with -j and actions that
+            # produce multiple target, where:
+            # - dependency on the first output is found, and
+            #   the action is started
+            # - dependency on the second output is found, and
+            #   bjam noticed that command is already running
+            # - instead of waiting for the command, dependents
+            #   of the second targets are immediately updated.
+            if $(actual-targets[2])
+            {                
+                INCLUDES $(actual-targets) : $(actual-targets) ;
+            }
+            
             # Action name can include additional argument to rule, which should
             # not be passed to 'set-target-variables'
             toolset.set-target-variables
@@ -1071,61 +1084,6 @@ rule register-actual-name ( actual-name : virtual-target )
     }
 }
 
-class traverser 
-{
-    rule __init__ ( )
-    {
-        self.result = ;
-    }
-    
-    rule add-to-result ( targets * )
-    {
-        for local t in $(targets)
-        {
-            if ! $($(t))
-            {
-                self.result += $(t) ;
-            }            
-        }        
-    }
-        
-    rule traverse ( target : include-roots ? : include-sources ? )
-    {
-        if [ $(target).action ]
-        {
-            local action = [ $(target).action ] ;              
-            # This includes the 'target' as well.
-            add-to-result [ $(action).targets ] ;
-
-            for local t in [ $(action).sources ]
-            {
-                if ! $($(t)-seen)
-                {
-                    $(t)-seen = 1 ;
-                    if ! [ $(t).root ]
-                    {
-                        traverse $(t) : $(include-roots) : $(include-sources) ;
-                    }
-                    else if $(include-roots)
-                    {
-                        add-to-result $(t) ;
-                    }                                        
-                }                
-            }
-        }
-        else if $(include-sources)
-        {
-            add-to-result $(target) ;
-        }
-    }
-    
-    rule result ( )
-    {
-        return $(self.result) ;
-    }    
-}
-
-
 
 # Traverses the dependency graph of 'target' and return all targets that will be
 # created before this one is created. If the root of some dependency graph is
@@ -1135,10 +1093,29 @@ class traverser
 #
 rule traverse ( target : include-roots ? : include-sources ? )
 {
-    local traverser = [ new traverser ] ;
-    $(traverser).traverse $(target) : $(include-roots) : $(include-sources) ;
-    local result = [ $(traverser).result ] ;
-    DELETE_MODULE $(traverser) ;
+    local result ;
+    if [ $(target).action ]
+    {
+        local action = [ $(target).action ] ;
+        # This includes the 'target' as well.
+        result += [ $(action).targets ] ;
+
+        for local t in [ $(action).sources ]
+        {
+            if ! [ $(t).root ]
+            {
+                result += [ traverse $(t) : $(include-roots) : $(include-sources) ] ;
+            }
+            else if $(include-roots)
+            {
+                result += $(t) ;
+            }
+        }
+    }
+    else if $(include-sources)
+    {
+        result = $(target) ;
+    }
     return $(result) ;
 }
 
@@ -1267,7 +1244,7 @@ class subvariant
             if ! [ $(theset).contains $(t) ]
             {
                 $(theset).add $(t) ;
-            r += [ $(t:G=).creating-subvariant ] ;
+                r += [ $(t:G=).creating-subvariant ] ;
             }            
         }
         r = [ sequence.unique $(r) ] ;

@@ -20,7 +20,7 @@ import traceback
 import sys
 
 def format(message, prefix=""):
-    parts = message.split("\n")
+    parts = str(message).split("\n")
     return "\n".join(prefix+p for p in parts)
     
 
@@ -58,9 +58,9 @@ class ExceptionWithUserContext(Exception):
         self.stack_ = stack
 
     def report(self):
-        print "error:", self.message
+        print "error:", self.args[0]
         if self.original_exception_:
-            print format(self.original_exception_.message, "    ")
+            print format(str(self.original_exception_), "    ")
         print
         print "    error context (most recent first):"
         for c in self.context_[::-1]:
@@ -94,6 +94,10 @@ class Errors:
 
     def __init__(self):
         self.contexts_ = []
+        self._count = 0
+
+    def count(self):
+        return self._count
 
     def push_user_context(self, message, nested=None):
         self.contexts_.append(Context(message, nested))
@@ -114,6 +118,7 @@ class Errors:
         raise ExceptionWithUserContext("unexpected exception", self.contexts_[:],
                                        e, sys.exc_info()[2])    
     def __call__(self, message):
+        self._count = self._count + 1
         raise ExceptionWithUserContext(message, self.contexts_[:], 
                                        stack=traceback.extract_stack())
 

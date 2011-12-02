@@ -28,6 +28,7 @@ feature.feature <so-version>           :        : free incidental ;
 # Unix builds only.
 feature.feature <install-no-version-symlinks> : on : optional incidental ;
 
+
 class install-target-class : basic-target
 {
     import feature ;
@@ -356,16 +357,36 @@ class installed-exe-generator : generator
 
     rule run ( project name ? : property-set : source : multiple ? )
     {
+        local need-relink ;
+        
         if [ $(property-set).get <os> ] in NT CYGWIN ||
             [ $(property-set).get <target-os> ] in windows cygwin
         {
-            # Relinking is never needed on NT.
-            return [ stage.copy-file $(project)
+        }
+        else
+        {
+            # See if the dll-path properties are not changed during
+            # install. If so, copy, don't relink.
+            local a = [ $(source).action ] ;
+            local p = [ $(a).properties ] ;
+            local original = [ $(p).get <dll-path> ] ;
+            local current = [ $(property-set).get <dll-path> ] ;
+            
+            if $(current) != $(original)
+            {
+                need-relink = true ;
+            }            
+        }
+        
+            
+        if $(need-relink)
+        {
+            return [ stage.relink-file $(project)
               : $(source) : $(property-set) ] ;
         }
         else
         {
-            return [ stage.relink-file $(project)
+            return [ stage.copy-file $(project)
               : $(source) : $(property-set) ] ;
         }
     }

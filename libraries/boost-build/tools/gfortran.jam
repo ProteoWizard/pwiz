@@ -36,4 +36,4 @@ actions compile.fortran
   gcc -Wall $(OPTIONS) -D$(DEFINES) -I$(INCLUDES) -c -o "$(<)" "$(>)" 
 }
 
-generators.register-fortran-compiler gfortran.compile.fortran : FORTRAN : OBJ ; 
+generators.register-fortran-compiler gfortran.compile.fortran : FORTRAN FORTRAN90 : OBJ ; 

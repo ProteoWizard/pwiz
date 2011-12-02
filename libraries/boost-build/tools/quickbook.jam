@@ -38,14 +38,14 @@
 #
 #       Quickbook can be found in Boost's repository, under the tools/quickbook
 #       directory it was added there on Jan 2005, some time after the release of
-#       Boost v1.32.0 and will hopefully be an integral part of the Boost
-#       distribution starting from v1.33.
+#       Boost v1.32.0 and has been an integral part of the Boost distribution
+#       since v1.33.
 #
-#       Here's a link to the CVS repository:
-#           http://cvs.sourceforge.net/viewcvs.py/boost/boost/tools/quickbook/
+#       Here's a link to the SVN repository:
+#           https://svn.boost.org/svn/boost/trunk/tools/quickbook
 #
-#       And to CVS version of QuickBook's QuickBook-generated docs:
-#           http://cvs.sourceforge.net/viewcvs.py/*checkout*/boost/boost/tools/quickbook/doc/html/index.html
+#       And to QuickBook's QuickBook-generated docs:
+#           http://www.boost.org/doc/libs/release/tools/quickbook/index.html
 #
 #
 #   How do I use QuickBook and this toolset in my projects ?
@@ -112,7 +112,10 @@ import type ;
 import scanner ;
 import project ;
 import targets ;
-
+import build-system ;
+import path ;
+import common ;
+import errors ;
 
 # The one and only QUICKBOOK type!
 type.register QUICKBOOK : qbk ;
@@ -121,6 +124,9 @@ type.register QUICKBOOK : qbk ;
 # <quickbook-binary-dependencies> targets to build QuickBook from sources.
 feature.feature <quickbook-binary> : : free ;
 feature.feature <quickbook-binary-dependencies> : : free dependency ;
+feature.feature <quickbook-define> : : free ;
+feature.feature <quickbook-indent> : : free ;
+feature.feature <quickbook-line-width> : : free ;
 
 
 # quickbook-binary-generator handles generation of the QuickBook executable, by
@@ -135,51 +141,23 @@ feature.feature <quickbook-binary-dependencies> : : free dependency ;
 #
 class quickbook-binary-generator : generator
 {
-    import common modules path targets build-system ;
+    import modules path targets quickbook ;
 
     rule run ( project name ? : property-set : sources * : multiple ? )
     {
+        quickbook.freeze-config ;
         # QuickBook invocation command and dependencies.
-        local quickbook-binary = [ modules.peek quickbook : .command ] ;
+        local quickbook-binary = [ modules.peek quickbook : .quickbook-binary ] ;
         local quickbook-binary-dependencies ;
 
-        if $(quickbook-binary)
+        if ! $(quickbook-binary)
         {
-            # Use user-supplied command.
-            quickbook-binary = [ common.get-invocation-command quickbook : quickbook : $(quickbook-binary) ] ;
-        }
-        else
-        {
-            # Search for QuickBook sources in sensible places, like
-            #   $(BOOST_ROOT)/tools/quickbook
-            #   $(BOOST_BUILD_PATH)/../../quickbook
-
-            # And build quickbook executable from sources.
-
-            local boost-root = [ modules.peek : BOOST_ROOT ] ;
-            local boost-build-path = [ build-system.location ] ;
-
-            local quickbook-dir ;
-
-            if $(boost-root)
-            {
-                quickbook-dir += [ path.join $(boost-root) tools ] ;
-            }
-
-            if $(boost-build-path)
-            {
-                quickbook-dir += $(boost-build-path)/../.. ;
-            }
-
-            quickbook-dir = [ path.glob $(quickbook-dir) : quickbook ] ;
-
             # If the QuickBook source directory was found, mark its main target
             # as a dependency for the current project. Otherwise, try to find
             # 'quickbook' in user's PATH
+            local quickbook-dir = [ modules.peek quickbook : .quickbook-dir ] ;
             if $(quickbook-dir)
             {
-                quickbook-dir = [ path.make $(quickbook-dir[1]) ] ;
-
                 # Get the main-target in QuickBook directory.
                 local quickbook-main-target = [ targets.resolve-reference $(quickbook-dir) : $(project) ] ;
 
@@ -187,7 +165,7 @@ class quickbook-binary-generator : generator
                 # properties found in target-id. We do not care about these
                 # since we have passed the id ourselves.
                 quickbook-main-target =
-                    [ $(quickbook-main-target[1]).main-target quickbook ] ;
+                    [ $(quickbook-main-target[1]).main-target quickbook-auto ] ;
 
                 quickbook-binary-dependencies =
                     [ $(quickbook-main-target).generate [ $(property-set).propagated ] ] ;
@@ -211,28 +189,6 @@ class quickbook-binary-generator : generator
                             ] ;
                     }
                 }
-            }
-            else
-            {
-                ECHO "QuickBook warning: The path to the quickbook executable was" ;
-                ECHO "  not provided. Additionally, couldn't find QuickBook" ;
-                ECHO "  sources searching in" ;
-                ECHO "    * BOOST_ROOT/tools/quickbook" ;
-                ECHO "    * BOOST_BUILD_PATH/../../quickbook" ;
-                ECHO "  Will now try to find a precompiled executable by searching" ;
-                ECHO "  the PATH for 'quickbook'." ;
-                ECHO "  To disable this warning in the future, or to completely" ;
-                ECHO "  avoid compilation of quickbook, you can explicitly set the" ;
-                ECHO "  path to a quickbook executable command in user-config.jam" ;
-                ECHO "  or site-config.jam with the call" ;
-                ECHO "    using quickbook : /path/to/quickbook ;" ;
-
-                # As a last resort, search for 'quickbook' command in path. Note
-                # that even if the 'quickbook' command is not found,
-                # get-invocation-command will still return 'quickbook' and might
-                # generate an error while generating the virtual-target.
-
-                quickbook-binary = [ common.get-invocation-command quickbook : quickbook ] ;
             }
         }
 
@@ -281,10 +237,84 @@ rule init (
         command ?   # path to the QuickBook executable.
     )
 {
-    if ! $(.initialized)
+    if $(command)
     {
-        .initialized = true ;
+        if $(.config-frozen)
+        {
+            errors.user-error "quickbook: configuration cannot be changed after it has been used." ;
+        }
         .command = $(command) ;
+    }
+}
+
+rule freeze-config ( )
+{
+    if ! $(.config-frozen)
+    {
+        .config-frozen = true ;
+
+        # QuickBook invocation command and dependencies.
+
+        .quickbook-binary = $(.command) ;
+
+        if $(.quickbook-binary)
+        {
+            # Use user-supplied command.
+            .quickbook-binary = [ common.get-invocation-command quickbook : quickbook : $(.quickbook-binary) ] ;
+        }
+        else
+        {
+            # Search for QuickBook sources in sensible places, like
+            #   $(BOOST_ROOT)/tools/quickbook
+            #   $(BOOST_BUILD_PATH)/../../quickbook
+
+            # And build quickbook executable from sources.
+
+            local boost-root = [ modules.peek : BOOST_ROOT ] ;
+            local boost-build-path = [ build-system.location ] ;
+
+            if $(boost-root)
+            {
+                .quickbook-dir += [ path.join $(boost-root) tools ] ;
+            }
+
+            if $(boost-build-path)
+            {
+                .quickbook-dir += $(boost-build-path)/../.. ;
+            }
+
+            .quickbook-dir = [ path.glob $(.quickbook-dir) : quickbook ] ;
+
+            # If the QuickBook source directory was found, mark its main target
+            # as a dependency for the current project. Otherwise, try to find
+            # 'quickbook' in user's PATH
+            if $(.quickbook-dir)
+            {
+                .quickbook-dir = [ path.make $(.quickbook-dir[1]) ] ;
+            }
+            else
+            {
+                ECHO "QuickBook warning: The path to the quickbook executable was" ;
+                ECHO "  not provided. Additionally, couldn't find QuickBook" ;
+                ECHO "  sources searching in" ;
+                ECHO "    * BOOST_ROOT/tools/quickbook" ;
+                ECHO "    * BOOST_BUILD_PATH/../../quickbook" ;
+                ECHO "  Will now try to find a precompiled executable by searching" ;
+                ECHO "  the PATH for 'quickbook'." ;
+                ECHO "  To disable this warning in the future, or to completely" ;
+                ECHO "  avoid compilation of quickbook, you can explicitly set the" ;
+                ECHO "  path to a quickbook executable command in user-config.jam" ;
+                ECHO "  or site-config.jam with the call" ;
+                ECHO "    using quickbook : /path/to/quickbook ;" ;
+
+                # As a last resort, search for 'quickbook' command in path. Note
+                # that even if the 'quickbook' command is not found,
+                # get-invocation-command will still return 'quickbook' and might
+                # generate an error while generating the virtual-target.
+
+                .quickbook-binary = [ common.get-invocation-command quickbook : quickbook ] ;
+            }
+        }
     }
 }
 
@@ -297,6 +327,9 @@ generators.register [ new quickbook-binary-generator quickbook.quickbook-to-boos
 toolset.flags quickbook.quickbook-to-boostbook QB-COMMAND      <quickbook-binary> ;
 toolset.flags quickbook.quickbook-to-boostbook QB-DEPENDENCIES <quickbook-binary-dependencies> ;
 toolset.flags quickbook.quickbook-to-boostbook INCLUDES        <include> ;
+toolset.flags quickbook.quickbook-to-boostbook QB-DEFINES      <quickbook-define> ;
+toolset.flags quickbook.quickbook-to-boostbook QB-INDENT       <quickbook-indent> ;
+toolset.flags quickbook.quickbook-to-boostbook QB-LINE-WIDTH   <quickbook-line-width> ;
 
 
 rule quickbook-to-boostbook ( target : source : properties * )
@@ -309,7 +342,7 @@ rule quickbook-to-boostbook ( target : source : properties * )
 
 actions quickbook-to-boostbook
 {
-    "$(QB-COMMAND)" -I"$(INCLUDES)" --output-file="$(1)" "$(2)"  
+    "$(QB-COMMAND)" -I"$(INCLUDES)" -D"$(QB-DEFINES)" --indent="$(QB-INDENT)" --linewidth="$(QB-LINE-WIDTH)" --output-file="$(1)" "$(2)"
 }
 
 

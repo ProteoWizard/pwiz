@@ -25,6 +25,7 @@
 # - we can redistribute DLLs with a Vanderbilt license, but it requires dependent
 #   projects to be non-commercial
 
+import path ;
 
 project
     : requirements 

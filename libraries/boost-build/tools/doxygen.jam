@@ -36,6 +36,9 @@ import toolset : flags ;
 import alias ;
 import common ;
 import modules ;
+import project ;
+import utility ;
+import errors ;
 
 
 # Use to specify extra configuration paramters. These get translated
@@ -60,6 +63,12 @@ feature.feature doxygen.doxproc.id : : free ;
 # The title for the resulting BoostBook reference section.
 feature.feature doxygen.doxproc.title : : free ;
 
+# Location for images when generating XML
+feature.feature doxygen:xml-imagedir : : free ;
+
+# Indicates whether the entire directory should be deleted
+feature.feature doxygen.rmdir : off on : optional incidental ;
+
 # Doxygen configuration input file.
 type.register DOXYFILE : doxyfile ;
 
@@ -75,6 +84,7 @@ type.register DOXYGEN_HTML_MULTIFILE : html-dir : HTML ;
 # Redirection HTML file to HTML multifile directory.
 type.register DOXYGEN_HTML : : HTML ;
 
+type.register DOXYGEN_XML_IMAGES : doxygen-xml-images ;
 
 # Initialize the Doxygen module. Parameters are:
 #   name: the name of the 'doxygen' executable. If not specified, the name
@@ -85,55 +95,6 @@ rule init ( name ? )
     if ! $(.initialized)
     {
         .initialized = true ;
-
-        if ! $(name)
-        {
-            local doxygen-path ;
-
-            if [ os.name ] = NT
-            {
-                local ProgramFiles = [ modules.peek : ProgramFiles ] ;
-                if $(ProgramFiles)
-                {
-                    ProgramFiles = "$(ProgramFiles:J= )" ;
-                }
-                else
-                {
-                    ProgramFiles = "C:\\Program Files" ;
-                }
-
-                doxygen-path =
-                    [ GLOB
-                        [ modules.peek : PATH ]
-                        "$(ProgramFiles)\\doxygen\\bin"
-                        : doxygen\.exe ] ;
-            }
-            else
-            {
-                doxygen-path =
-                    [ GLOB
-                        [ modules.peek : PATH ]
-                        : doxygen ] ;
-            }
-
-            doxygen-path = $(doxygen-path[1]) ;
-
-            if $(doxygen-path)
-            {
-                .doxygen = $(doxygen-path) ;
-            }
-
-            .doxygen ?= doxygen ;
-        }
-        else
-        {
-            .doxygen = $(name) ;
-        }
-
-        if --debug-configuration in [ modules.peek : ARGV ]
-        {
-            ECHO "notice:" using doxygen ":" $(.doxygen) ;
-        }
 
         .doxproc = [ modules.binding $(__name__) ] ;
         .doxproc = $(.doxproc:D)/doxproc.py ;
@@ -152,17 +113,95 @@ rule init ( name ? )
             : DOXYFILE : DOXYGEN_HTML_MULTIFILE ;
         generators.register-standard doxygen.html-redirect
             : DOXYGEN_HTML_MULTIFILE : DOXYGEN_HTML ;
+        generators.register-standard doxygen.copy-latex-pngs
+            : DOXYGEN_HTML : DOXYGEN_XML_IMAGES ;
 
         IMPORT $(__name__) : doxygen : : doxygen ;
     }
+
+    if $(name)
+    {
+        modify-config ;
+        .doxygen = $(name) ;
+        check-doxygen ;
+    }
+
+    if ! $(.doxygen)
+    {
+        check-doxygen ;
+    }
 }
 
+rule freeze-config ( )
+{
+    if ! $(.initialized)
+    {
+        errors.user-error "doxygen must be initialized before it can be used." ;
+    }
+    if ! $(.config-frozen)
+    {
+        .config-frozen = true ;
+
+        if [ .is-cygwin ]
+        {
+            .is-cygwin = true ;
+        }
+    }
+}
+
+rule modify-config ( )
+{
+    if $(.config-frozen)
+    {
+        errors.user-error "Cannot change doxygen after it has been used." ;
+    }
+}
+
+rule check-doxygen ( )
+{
+    if --debug-configuration in [ modules.peek : ARGV ]
+    {
+        ECHO "notice:" using doxygen ":" $(.doxygen) ;
+    }
+    local extra-paths ;
+    if [ os.name ] = NT
+    {
+        local ProgramFiles = [ modules.peek : ProgramFiles ] ;
+        if $(ProgramFiles)
+        {
+            extra-paths = "$(ProgramFiles:J= )" ;
+        }
+        else
+        {
+            extra-paths = "C:\\Program Files" ;
+        }
+    }
+    .doxygen = [ common.get-invocation-command doxygen :
+                 doxygen : $(.doxygen) : $(extra-paths) ] ;
+}
 
 rule name ( )
 {
+    freeze-config ;
     return $(.doxygen) ;
 }
 
+rule .is-cygwin ( )
+{
+    if [ os.on-windows ]
+    {
+        local file = [ path.make [ modules.binding $(__name__) ] ] ;
+        local dir = [ path.native
+                      [ path.join [ path.parent $(file) ] doxygen ] ] ;
+        local command =
+         "cd \"$(dir)\" && \"$(.doxygen)\" windows-paths-check.doxyfile 2>&1" ;
+        result = [ SHELL $(command) ] ;
+        if [ MATCH "(Parsing file /)" : $(result) ]
+        {
+            return true ;
+        }
+    }
+}
 
 # Runs Doxygen on the given Doxygen configuration file (the source) to generate
 # the Doxygen files. The output is dumped according to the settings in the
@@ -185,6 +224,49 @@ actions doxproc
 }
 
 
+rule translate-path ( path )
+{
+    freeze-config ;
+    if [ os.on-windows ]
+    {
+        if [ os.name ] = CYGWIN
+        {
+            if $(.is-cygwin)
+            {
+                return $(path) ;
+            }
+            else
+            {
+                return $(path:W) ;
+            }
+        }
+        else
+        {
+            if $(.is-cygwin)
+            {
+                match = [ MATCH ^(.):(.*) : $(path) ] ;
+                if $(match)
+                {
+                    return /cygdrive/$(match[1])$(match[2]:T) ;
+                }
+                else
+                {
+                    return $(path:T) ;
+                }
+            }
+            else
+            {
+                return $(path) ;
+            }
+        }
+    }
+    else
+    {
+        return $(path) ;
+    }
+}
+
+
 # Generates a doxygen configuration file (doxyfile) given a set of C++ sources
 # and a property list that may contain <doxygen:param> features.
 #
@@ -198,20 +280,30 @@ rule headers-to-doxyfile ( target : sources * : properties * )
     for local param in [ feature.get-values <doxygen:param> : $(properties) ]
     {
         local namevalue = [ regex.match ([^=]*)=(.*) : $(param) ] ;
-        text += "$(namevalue[1]) = $(namevalue[2])" ;
         if $(namevalue[1]) = OUTPUT_DIRECTORY
         {
-            output-dir = "$(namevalue[2])" ;
+            output-dir = [ translate-path
+                           [ utility.unquote $(namevalue[2]) ] ] ;
+            text += "OUTPUT_DIRECTORY = \"$(output-dir)\"" ;
+        }
+        else
+        {
+            text += "$(namevalue[1]) = $(namevalue[2])" ;
         }
     }
 
     if ! $(output-dir)
     {
-        output-dir = [ on $(target) return $(LOCATE) ] ;
+        output-dir = [ translate-path [ on $(target) return $(LOCATE) ] ] ;
         text += "OUTPUT_DIRECTORY = \"$(output-dir)\"" ;
     }
 
-    local headers = \"$(sources:G=)\" ;
+    local headers = ;
+    for local header in $(sources:G=)
+    {
+        header = [ translate-path $(header) ] ;
+        headers += \"$(header)\" ;
+    }
 
     # Doxygen generates LaTex by default. So disable it unconditionally, or at
     # least until someone needs, and hence writes support for, LaTex output.
@@ -227,6 +319,25 @@ rule headers-to-doxyfile ( target : sources * : properties * )
 #
 rule run ( target : source : properties * )
 {
+    freeze-config ;
+    if <doxygen.rmdir>on in $(properties)
+    {
+        local output-dir =
+            [ path.make
+                [ MATCH <doxygen:param>OUTPUT_DIRECTORY=\"?([^\"]*) :
+                  $(properties) ] ] ;
+        local html-dir =
+            [ path.make
+                [ MATCH <doxygen:param>HTML_OUTPUT=(.*) :
+                  $(properties) ] ] ;
+        if $(output-dir) && $(html-dir) &&
+            [ path.glob $(output-dir) : $(html-dir) ]
+        {
+            HTMLDIR on $(target) =
+                [ path.native [ path.join $(output-dir) $(html-dir) ] ] ;
+            rm-htmldir $(target) ;
+        }
+    }
     doxygen-action $(target) : $(source) ;
     NAME on $(target) = $(.doxygen) ;
     RM on $(target) = [ modules.peek common : RM ] ;
@@ -238,6 +349,19 @@ rule run ( target : source : properties * )
                 *.xml ] ] ;
 }
 
+if [ os.name ] = NT
+{
+    RMDIR = rmdir /s /q ;
+}
+else
+{
+    RMDIR = rm -rf ;
+}
+
+actions quietly rm-htmldir
+{
+    $(RMDIR) $(HTMLDIR)
+}
 
 # The rules below require Boost.Book stylesheets, so we need some code to check
 # that the boostbook module has actualy been initialized.
@@ -343,11 +467,151 @@ rule html-redirect ( target : source : properties * )
         : true ;
 }
 
+rule copy-latex-pngs ( target : source : requirements * )
+{
+    local directory = [ path.native
+                        [ feature.get-values <doxygen:xml-imagedir> :
+                          $(requirements) ] ] ;
+
+    local location = [ on $(target) return $(LOCATE) ] ;
+
+    local pdf-location =
+        [ path.native
+            [ path.join
+                [ path.make $(location) ]
+                [ path.make $(directory) ] ] ] ;
+    local html-location =
+        [ path.native
+            [ path.join
+                .
+                html
+                [ path.make $(directory) ] ] ] ;
+
+    common.MkDir $(pdf-location) ;
+    common.MkDir $(html-location) ;
+
+    DEPENDS $(target) : $(pdf-location) $(html-location) ;
+
+    if [ os.name ] = NT
+    {
+        CP on $(target) = copy /y ;
+        FROM on $(target) = \\*.png ;
+        TOHTML on $(target) = .\\html\\$(directory) ;
+        TOPDF on $(target) = \\$(directory) ;
+    }
+    else
+    {
+        CP on $(target) = cp ;
+        FROM on $(target) = /*.png ;
+        TOHTML on $(target) = ./html/$(directory) ;
+        TOPDF on $(target) = $(target:D)/$(directory) ;
+    }
+}
+
+actions copy-latex-pngs
+{
+    $(CP) $(>:S=)$(FROM) $(TOHTML)
+    $(CP) $(>:S=)$(FROM) $(<:D)$(TOPDF)
+    echo "Stamped" > "$(<)"
+}
+
+# building latex images for doxygen XML depends
+# on latex, dvips, and ps being in your PATH.
+# This is true for most Unix installs, but
+# not on Win32, where you will need to install
+# MkTex and Ghostscript and add these tools
+# to your path.
+
+actions check-latex
+{
+    latex -version >$(<)
+}
+
+actions check-dvips
+{
+    dvips -version >$(<)
+}
+
+if [ os.name ] = "NT"
+{
+   actions check-gs
+   {
+       gswin32c -version >$(<)
+   }
+}
+else
+{
+   actions check-gs
+   {
+       gs -version >$(<)
+   }
+}
+
+rule check-tools ( )
+{
+    if ! $(.check-tools-targets)
+    {
+        # Find the root project.
+        local root-project = [ project.current ] ;
+        root-project = [ $(root-project).project-module ] ;
+        while
+            [ project.attribute $(root-project) parent-module ] &&
+            [ project.attribute $(root-project) parent-module ] != user-config
+        {
+            root-project =
+                [ project.attribute $(root-project) parent-module ] ;
+        }
+
+        .latex.check = [ new file-target latex.check
+            :
+            : [ project.target $(root-project) ]
+            : [ new action : doxygen.check-latex ]
+            :
+            ] ;
+        .dvips.check = [ new file-target dvips.check
+            :
+            : [ project.target $(root-project) ]
+            : [ new action : doxygen.check-dvips ]
+            :
+            ] ;
+        .gs.check = [ new file-target gs.check
+            :
+            : [ project.target $(root-project) ]
+            : [ new action : doxygen.check-gs ]
+            :
+            ] ;
+        .check-tools-targets = $(.latex.check) $(.dvips.check) $(.gs.check) ;
+    }
+    return $(.check-tools-targets) ;
+}
+
+project.initialize $(__name__) ;
+project doxygen ;
+
+class doxygen-check-tools-target-class : basic-target
+{
+    import doxygen ;
+    rule construct ( name : sources * : property-set )
+    {
+        return [ property-set.empty ] [ doxygen.check-tools ] ;
+    }
+}
+
+local project = [ project.current ] ;
+
+targets.main-target-alternative
+    [ new doxygen-check-tools-target-class check-tools : $(project)
+        : [ targets.main-target-sources : check-tools : no-renaming ]
+        : [ targets.main-target-requirements : $(project) ]
+        : [ targets.main-target-default-build : $(project) ]
+        : [ targets.main-target-usage-requirements : $(project) ]
+    ] ;
 
 # User-level rule to generate BoostBook XML from a set of headers via Doxygen.
 #
 rule doxygen ( target : sources * : requirements * : default-build * : usage-requirements * )
 {
+    freeze-config ;
     local project = [ project.current ] ;
 
     if $(target:S) = .html
@@ -390,6 +654,8 @@ rule doxygen ( target : sources * : requirements * : default-build * : usage-req
             [ new typed-target $(target:S=.dir) : $(project) : DOXYGEN_HTML_MULTIFILE
                 : $(target:S=.tag)
                 : [ targets.main-target-requirements $(requirements)
+                    <doxygen:param>"OUTPUT_DIRECTORY=\"$(output-dir-native)\""
+                    <doxygen:param>HTML_OUTPUT=$(target:B)
                     : $(project) ]
                 : [ targets.main-target-default-build $(default-build) : $(project) ]
                 ] ;
@@ -411,6 +677,44 @@ rule doxygen ( target : sources * : requirements * : default-build * : usage-req
         local location-xml = [ feature.get-values <location> : $(requirements) ] ;
         requirements = [ property.change $(requirements) : <location> ] ;
         local target-xml = $(target:B=$(target:B)-xml) ;
+
+        # Check whether we need to build images
+        local images-location =
+            [ feature.get-values <doxygen:xml-imagedir> : $(requirements) ] ;
+        if $(images-location)
+        {
+            doxygen $(target).doxygen-xml-images.html : $(sources)
+                : $(requirements)
+                  <doxygen.rmdir>on
+                  <doxygen:param>QUIET=YES
+                  <doxygen:param>WARNINGS=NO
+                  <doxygen:param>WARN_IF_UNDOCUMENTED=NO
+                  <dependency>/doxygen//check-tools ;
+            $(project).mark-target-as-explicit
+                $(target).doxygen-xml-images.html ;
+
+            targets.main-target-alternative
+                [ new typed-target $(target).doxygen-xml-images
+                    : $(project) : DOXYGEN_XML_IMAGES
+                    : $(target).doxygen-xml-images.html
+                    : [ targets.main-target-requirements $(requirements)
+                        : $(project) ]
+                    : [ targets.main-target-default-build $(default-build)
+                        : $(project) ]
+                ] ;
+
+            $(project).mark-target-as-explicit
+                $(target).doxygen-xml-images ;
+
+            if ! [ regex.match "^(.*/)$" : $(images-location) ]
+            {
+                images-location = $(images-location)/ ;
+            }
+
+            requirements +=
+                <dependency>$(target).doxygen-xml-images
+                <xsl:param>boost.doxygen.formuladir=$(images-location) ;
+        }
 
         ## The doxygen configuration file.
         targets.main-target-alternative

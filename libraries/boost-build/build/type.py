@@ -14,6 +14,8 @@ import os.path
 from b2.util.utility import replace_grist, os_name
 from b2.exceptions import *
 from b2.build import feature, property, scanner
+from b2.util import bjam_signature
+
 
 __re_hyphen = re.compile ('-')
 
@@ -53,7 +55,7 @@ def reset ():
     
 reset ()
 
-
+@bjam_signature((["type"], ["suffixes", "*"], ["base_type", "?"]))
 def register (type, suffixes = [], base_type = None):
     """ Registers a target type, possibly derived from a 'base-type'. 
         If 'suffixes' are provided, they list all the suffixes that mean a file is of 'type'.
@@ -79,11 +81,11 @@ def register (type, suffixes = [], base_type = None):
     __types [type] = entry
     
     if base_type:
-        __types [base_type]['derived'].append (type)
+        __types.setdefault(base_type, {}).setdefault('derived', []).append(type)
 
     if len (suffixes) > 0:
         # Generated targets of 'type' will use the first of 'suffixes'
-        # (this may be overriden)            
+        # (this may be overriden)
         set_generated_target_suffix (type, [], suffixes [0])
         
         # Specify mapping from suffixes to type
@@ -97,9 +99,20 @@ def register (type, suffixes = [], base_type = None):
         feature.compose ('<target-type>' + type, replace_grist (base_type, '<base-target-type>'))
         feature.compose ('<base-target-type>' + type, '<base-target-type>' + base_type)
 
+    import b2.build.generators as generators
+    # Adding a new derived type affects generator selection so we need to
+    # make the generator selection module update any of its cached
+    # information related to a new derived type being defined.
+    generators.update_cached_information_with_a_new_type(type)
+
     # FIXME: resolving recursive dependency.
     from b2.manager import get_manager
     get_manager().projects().project_rules().add_rule_for_type(type)
+
+# FIXME: quick hack.
+def type_from_rule_name(rule_name):
+    return rule_name.upper().replace("-", "_")
+
 
 def register_suffixes (suffixes, type):
     """ Specifies that targets with suffix from 'suffixes' have the type 'type'. 
@@ -141,6 +154,12 @@ def get_scanner (type, prop_set):
             
     return None
 
+def base(type):
+    """Returns a base type for the given type or nothing in case the given type is
+    not derived."""
+
+    return __types[type]['base']
+
 def all_bases (type):
     """ Returns type and all of its bases, in the order of their distance from type.
     """
@@ -175,6 +194,7 @@ def is_subtype (type, base):
     # TODO: remove this method
     return is_derived (type, base)
 
+@bjam_signature((["type"], ["properties", "*"], ["suffix"]))
 def set_generated_target_suffix (type, properties, suffix):
     """ Sets a target suffix that should be used when generating target 
         of 'type' with the specified properties. Can be called with
@@ -209,6 +229,7 @@ def generated_target_suffix(type, properties):
 # should be used.
 #
 # Usage example: library names use the "lib" prefix on unix.
+@bjam_signature((["type"], ["properties", "*"], ["suffix"]))
 def set_generated_target_prefix(type, properties, prefix):
     set_generated_target_ps(0, type, properties, prefix)
 
@@ -243,7 +264,7 @@ def generated_target_ps_real(is_suffix, type, properties):
 
         # Note that if the string is empty (""), but not null, we consider
         # suffix found.  Setting prefix or suffix to empty string is fine.
-        if result:
+        if result is not None:
             found = True
 
         type = __types [type]['base']
@@ -257,8 +278,8 @@ def generated_target_ps(is_suffix, type, prop_set):
         with the specified properties. If not suffix were specified for
         'type', returns suffix for base type, if any.
     """
-    key = str(is_suffix) + type + str(prop_set)
-    v = __target_suffixes_cache.get (key, None)
+    key = (is_suffix, type, prop_set)
+    v = __target_suffixes_cache.get(key, None)
 
     if not v:
         v = generated_target_ps_real(is_suffix, type, prop_set.raw())

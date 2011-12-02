@@ -469,7 +469,9 @@ rule validate-value-string ( feature value-string )
 
         if $($(feature).subfeatures)
         {
-            if ! ( $(value-string) in $($(feature).subfeatures) ) {
+            if ! ( $(value-string) in $($(feature).values) )
+               && ! ( $(value-string) in $($(feature).subfeatures) ) 
+            {
                 values = [ regex.split $(value-string) - ] ;
             }
         }

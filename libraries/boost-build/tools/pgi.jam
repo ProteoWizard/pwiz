@@ -57,8 +57,8 @@ generators.register-fortran-compiler pgi.compile.fortran : FORTRAN : OBJ : <tool
 
 # Declare flags and actions for compilation
 flags pgi.compile OPTIONS : -Kieee ;
-flags pgi.compile OPTIONS <link>shared : -fpic ;
-flags pgi.compile OPTIONS <debug-symbols>on : -g ;
+flags pgi.compile OPTIONS <link>shared : -fpic -fPIC ;
+flags pgi.compile OPTIONS <debug-symbols>on : -gopt ;
 flags pgi.compile OPTIONS <profiling>on : -xprofile=tcov ;
 flags pgi.compile OPTIONS <optimization>speed : -fast -Mx,8,0x10000000 ;
 flags pgi.compile OPTIONS <optimization>space : -xO2 -xspace ;
@@ -92,12 +92,12 @@ actions compile.fortran
 }
 
 # Declare flags and actions for linking
-flags pgi.link OPTIONS <debug-symbols>on : -g ;
+flags pgi.link OPTIONS <debug-symbols>on : -gopt ;
 # Strip the binary when no debugging is needed
 flags pgi.link OPTIONS <debug-symbols>off : -s ;
 flags pgi.link OPTIONS <profiling>on : -xprofile=tcov ;
 flags pgi.link OPTIONS <linkflags> ;
-flags pgi.link OPTIONS <link>shared : -fpic ;
+flags pgi.link OPTIONS <link>shared : -fpic -fPIC ;
 flags pgi.link LINKPATH <library-path> ;
 flags pgi.link FINDLIBS-ST <find-static-library> ;
 flags pgi.link FINDLIBS-SA <find-shared-library> ;

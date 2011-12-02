@@ -131,7 +131,7 @@ local dont-build = [ option.process ] ;
 #
 if ! $(dont-build)
 {
-    if ! [ MATCH (--python) : $(ARGV) ]
+    if ! --python in $(ARGV)
     {
         # Allow users to override the build system file from the
         # command-line (mostly for testing)
@@ -187,11 +187,28 @@ if ! $(dont-build)
                 DEPENDS all : $(targets) ;
             }
             
+            rule call-in-module ( m : rulename : * )
+            {
+                module $(m)
+                {
+                    return [ $(2) $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ] ;
+                }                
+            }
+
+            
             rule set-update-action ( action : targets * : sources * : properties * )
             {
                 $(action) $(targets) : $(sources) : $(properties) ;
             }
             
+            rule set-update-action-in-module ( m : action : targets * : sources * : properties * )
+            {
+                module $(m)
+                {
+                    $(2) $(3) : $(4) : $(5) ;
+                }                
+            }
+                        
             rule set-target-variable ( targets + : variable : value * : append ? )
             {
                 if $(append)
@@ -204,19 +221,21 @@ if ! $(dont-build)
                 }        
             }        
 
-            rule get-target-variable ( target : variable )
+            rule get-target-variable ( targets + : variable )
             {
-                return [ on $(target) return $($(variable)) ] ;
+                return [ on $(targets) return $($(variable)) ] ;
             }
 
-            rule import-rules-from-parent ( parent-module : this-module : user-rules )
+            rule import-rules-from-parent ( parent-module : this-module : user-rules * )
             {
                 IMPORT $(parent-module) : $(user-rules) : $(this-module) : $(user-rules) ;
                 EXPORT $(this-module) : $(user-rules) ;
             }
 
             rule mark-included ( targets * : includes * ) {
-                INCLUDES $(targets) : $(INCLUDES) ;
+                NOCARE $(includes) ;
+                INCLUDES $(targets) : $(includes) ;
+                ISFILE $(includes) ;
             }
         }
 
@@ -225,7 +244,11 @@ if ! $(dont-build)
         
         module PyBB
         {
-            bootstrap $(root) ;
+            local ok = [ bootstrap $(root) ] ;
+            if ! $(ok)
+            {
+                EXIT ;
+            }            
         }
         
         

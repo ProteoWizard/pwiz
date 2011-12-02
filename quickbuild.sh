@@ -10,25 +10,30 @@ if [ ! -e $PWIZ_ROOT/quickbuild.sh ]; then
 fi
 
 # per platform in case of multi OS shared volume (VMware etc)
-PWIZ_BJAM=$PWIZ_ROOT/libraries/boost-build/jam_src/bin/$(uname -s)/bjam
+BOOST_BUILD_PATH=$PWIZ_ROOT/libraries/boost-build
+PWIZ_BJAM_PATH=$BOOST_BUILD_PATH/engine/bin/$(uname -s)
+PWIZ_BJAM=$PWIZ_BJAM_PATH/bjam
 
 # Build local copy of bjam
 if [ ! -e $PWIZ_BJAM ]; then
     echo "Building bjam..."
-    cd $PWIZ_ROOT/libraries/boost-build/jam_src
+    cd $BOOST_BUILD_PATH/engine
     LOCATE_TARGET=bin sh build.sh
-    mkdir -p $PWIZ_ROOT/libraries/boost-build/jam_src/bin/$(uname -s)
-    cp -f $PWIZ_ROOT/libraries/boost-build/jam_src/bin/bjam $PWIZ_ROOT/libraries/boost-build/jam_src/bin/$(uname -s)/bjam
+    mkdir -p $PWIZ_BJAM_PATH
+    cp -f $BOOST_BUILD_PATH/engine/bin/bjam $PWIZ_BJAM
 fi
 
-if test $(uname -s) = "Darwin"; then
-    DEFAULT_TOOLSET=toolset=darwin
-fi
-    
+#if $(hash setarch > /dev/null 2>&1); then
+#   ADDRESS_MODEL=$(expr "$*" : '.*address-model=\([36][24]\).*');
+#   if [ $ADDRESS_MODEL ]; then
+#      SETARCH="setarch linux$ADDRESS_MODEL";
+#   fi
+#fi
+
 # Do full build of ProteoWizard, passing quickbuild's arguments to bjam
 echo "Building pwiz..."
 cd $PWIZ_ROOT
-if ! BOOST_BUILD_PATH=$PWIZ_ROOT/libraries/boost-build $PWIZ_BJAM $DEFAULT_TOOLSET "$@"; then
-	  echo "At least one pwiz target failed to build."
-	  exit 1
+if ! $PWIZ_BJAM "$@"; then
+   echo "At least one pwiz target failed to build."
+   exit 1
 fi

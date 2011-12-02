@@ -58,8 +58,8 @@ class UnixSearchedLibGenerator (builtin.SearchedLibGenerator):
     def optional_properties (self):
         return self.requirements ()
               
-    def run (self, project, name, prop_set, sources, multiple):
-        result = SearchedLibGenerator.run (project, name, prop_set, sources, multiple)
+    def run (self, project, name, prop_set, sources):
+        result = SearchedLibGenerator.run (project, name, prop_set, sources)
         
         set_library_order (sources, prop_set, result)
         
@@ -69,10 +69,10 @@ class UnixPrebuiltLibGenerator (generators.Generator):
     def __init__ (self, id, composing, source_types, target_types_and_names, requirements):
         generators.Generator.__init__ (self, id, composing, source_types, target_types_and_names, requirements)
 
-    def run (self, project, name, prop_set, sources, multiple):
+    def run (self, project, name, prop_set, sources):
         f = prop_set.get ('<file>')
         set_library_order_aux (f, sources)
-        return (f, sources)
+        return f + sources
 
 ### # The derived toolset must specify their own rules and actions.
 # FIXME: restore?
@@ -129,9 +129,9 @@ def set_library_order_aux (from_libs, to_libs):
 def set_library_order (manager, sources, prop_set, result):
     used_libraries = []
     deps = prop_set.dependency ()
-    
-    [ sources.append (manager.get_object (get_value (x))) for x in deps ]
-    sources = sequence.unique (sources)
+
+    sources.extend(d.value() for d in deps)
+    sources = sequence.unique(sources)
 
     for l in sources:
         if l.type () and type.is_derived (l.type (), 'LIB'):

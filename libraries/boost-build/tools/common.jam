@@ -334,7 +334,7 @@ rule get-absolute-tool-path ( command )
 # first path found. Otherwise, returns an empty string. If 'path-last' is
 # specified, PATH is searched after 'additional-paths'.
 #
-local rule find-tool ( name : additional-paths * : path-last ? )
+rule find-tool ( name : additional-paths * : path-last ? )
 {
     local path = [ path.programs-path ] ;
     local match = [ path.glob $(path) : $(name) $(name).exe ] ;
@@ -825,6 +825,14 @@ local rule toolset-tag ( name : type ? : property-set )
     switch [ $(property-set).get <toolset> ]
     {
         case borland* : tag += bcb ;
+        case clang* :
+        {
+            switch [ $(property-set).get <toolset-clang:platform> ]
+            {
+               case darwin : tag += clang-darwin ;
+               case linux  : tag += clang ;
+            }
+        }
         case como* : tag += como ;
         case cw : tag += cw ;
         case darwin* : tag += xgcc ;

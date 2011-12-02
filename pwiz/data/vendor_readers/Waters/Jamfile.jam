@@ -30,6 +30,7 @@
 #           * PWIZ_READER_WATERS is defined for all other dependents
 #   * else: PWIZ_READER_WATERS is never defined
 
+import path ;
 
 project
     : requirements 

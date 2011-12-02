@@ -125,6 +125,9 @@ path-constant PWIZ_LIBRARIES_PATH : $(libraries_path) ;
 import testing ; # needed to enable unit-test rule
 import feature ; # needed for install rules
 import package ; # needed for package install
+import path ; # needed for glob, exists, etc.
+import project ; # needed for project.current
+
 
 if --teamcity-test-decoration in [ modules.peek : ARGV ]
 {
@@ -597,6 +600,8 @@ install idconvert
     ;
 explicit idconvert ;
 
+alias all-tests : pwiz pwiz_tools pwiz_aux ;
+
 
 # for copying all libraries and headers to one dir each
 alias libraries : install-pwiz-lib install-boost-headers ;
@@ -668,7 +673,6 @@ rule find-wiff-dlls ( api-path )
 
 # any source tree can build binary tarballs
 
-import path ;
 import common ;
 import property-set ;
 import sequence ;

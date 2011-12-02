@@ -95,6 +95,7 @@ actions do_cvgen
 }
 
 
+import path ;
 path-constant PWIZ_DATA_COMMON_PATH : . ;
 make cv.hpp : [ path.glob $(PWIZ_DATA_COMMON_PATH) : *.obo ] : do_cvgen : <dependency>install_cvgen ;
 explicit cv.hpp ;

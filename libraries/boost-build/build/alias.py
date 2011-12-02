@@ -29,6 +29,8 @@ import targets
 import property_set
 from b2.manager import get_manager
 
+from b2.util import metatarget
+
 class AliasTarget(targets.BasicTarget):
 
     def __init__(self, *args):
@@ -43,16 +45,15 @@ class AliasTarget(targets.BasicTarget):
         # look like 100% alias.
         return base.add(subvariant.sources_usage_requirements())
 
-def alias(name, sources, requirements=None, default_build=None, usage_requirements=None):
+@metatarget
+def alias(name, sources=[], requirements=[], default_build=[], usage_requirements=[]):
+
     project = get_manager().projects().current()
     targets = get_manager().targets()
 
-    if default_build:
-        default_build = default_build[0]
-
     targets.main_target_alternative(AliasTarget(
-        name[0], project,
-        targets.main_target_sources(sources, name),
+        name, project,
+        targets.main_target_sources(sources, name, no_renaming=True),
         targets.main_target_requirements(requirements or [], project),
         targets.main_target_default_build(default_build, project),
         targets.main_target_usage_requirements(usage_requirements or [], project)))

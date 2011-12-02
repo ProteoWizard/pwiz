@@ -22,6 +22,9 @@ import os.path
 from utility import to_seq
 from glob import glob as builtin_glob
 
+from b2.util import bjam_signature
+
+@bjam_signature((["path", "root"],))
 def root (path, root):
     """ If 'path' is relative, it is rooted at 'root'. Otherwise, it's unchanged.
     """
@@ -30,6 +33,7 @@ def root (path, root):
     else:
         return os.path.join (root, path)
 
+@bjam_signature((["native"],))
 def make (native):
     """ Converts the native path into normalized form.
     """
@@ -43,6 +47,7 @@ def make_UNIX (native):
 
     return os.path.normpath (native)
 
+@bjam_signature((["path"],))
 def native (path):
     """ Builds a native representation of the path.
     """
@@ -303,70 +308,47 @@ def glob (dirs, patterns):
             result.extend (glob.glob (p))
     return result
     
-#   #
-#   #    Returns true is the specified file exists.
-#   #
-#   rule exists ( file )
-#   {
-#       return [ path.glob $(file:D) : $(file:D=) ] ;
-#   }
-#   NATIVE_RULE path : exists ;
-#   
-#   
-#   
-#   #
-#   #   Find out the absolute name of path and returns the list of all the parents,
-#   #   starting with the immediate one. Parents are returned as relative names.
-#   #   If 'upper_limit' is specified, directories above it will be pruned.
-#   #
-#   rule all-parents ( path : upper_limit ? : cwd ? )
-#   {
-#       cwd ?= [ pwd ] ;
-#       local path_ele = [ regex.split [ root $(path) $(cwd) ] "/" ] ;
-#   
-#       if ! $(upper_limit) {
-#           upper_limit = / ;
-#       }
-#       local upper_ele = [ regex.split [ root $(upper_limit) $(cwd) ] "/" ] ;
-#   
-#       # Leave only elements in 'path_ele' below 'upper_ele'
-#       while $(path_ele) && $(upper_ele[1]) = $(path_ele[1]) {
-#           upper_ele = $(upper_ele[2-]) ;
-#           path_ele = $(path_ele[2-]) ;
-#       }
-#       
-#       # All upper elements removed ?
-#       if ! $(upper_ele) {
-#           # Create the relative paths to parents, number of elements in 'path_ele'
-#           local result ;
-#           for local i in $(path_ele) {
-#               path = [ parent $(path) ] ;
-#               result += $(path) ;
-#           }
-#           return $(result) ;
-#       }
-#       else {
-#           error "$(upper_limit) is not prefix of $(path)" ;
-#       }
-#   }
-#   
-#   
-#   #
-#   #  Search for 'pattern' in parent directories of 'dir', up till and including
-#   #  'upper_limit', if it is specified, or till the filesystem root otherwise.
-#   #
-#   rule glob-in-parents ( dir : patterns + : upper-limit ? )
-#   {
-#       local result ;
-#       local parent-dirs = [ all-parents $(dir) : $(upper-limit) ] ;
-#   
-#       while $(parent-dirs) && ! $(result)
-#       {
-#           result = [ glob $(parent-dirs[1]) : $(patterns) ] ;
-#           parent-dirs = $(parent-dirs[2-]) ;
-#       }
-#       return $(result) ;    
-#   }
+#
+#   Find out the absolute name of path and returns the list of all the parents,
+#   starting with the immediate one. Parents are returned as relative names.
+#   If 'upper_limit' is specified, directories above it will be pruned.
+#
+def all_parents(path, upper_limit=None, cwd=None):
+
+    if not cwd:
+        cwd = os.getcwd()
+
+    path_abs = os.path.join(cwd, path)
+
+    if upper_limit:
+        upper_limit = os.path.join(cwd, upper_limit)
+
+    result = []
+    while path_abs and path_abs != upper_limit:
+        (head, tail) = os.path.split(path)
+        path = os.path.join(path, "..")        
+        result.append(path)
+        path_abs = head
+
+    if upper_limit and path_abs != upper_limit:
+        raise BaseException("'%s' is not a prefix of '%s'" % (upper_limit, path))
+
+    return result
+    
+#  Search for 'pattern' in parent directories of 'dir', up till and including
+#  'upper_limit', if it is specified, or till the filesystem root otherwise.
+#
+def glob_in_parents(dir, patterns, upper_limit=None):
+
+    result = []
+    parent_dirs = all_parents(dir, upper_limit)
+
+    for p in parent_dirs:
+        result = glob(p, patterns)
+        if result: break
+
+    return result
+
 #   
 #   #
 #   # Assuming 'child' is a subdirectory of 'parent', return the relative
@@ -866,7 +848,7 @@ def glob_tree(roots, patterns, exclude_patterns=None):
         exclude_patterns = []
 
     result = glob(roots, patterns, exclude_patterns)
-    subdirs = [s for s in result if s != "." and s != ".." and os.path.isdir(s)]
+    subdirs = [s for s in glob(roots, ["*"]) if s != "." and s != ".." and os.path.isdir(s)]
     if subdirs:
         result.extend(glob_tree(subdirs, patterns, exclude_patterns))
         

@@ -30,7 +30,7 @@ class NullLogger:
         return False
 
     def on (self):
-        return False
+        return True
 
 class TextLogger (NullLogger):
     def __init__ (self):

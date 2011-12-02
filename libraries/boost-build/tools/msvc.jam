@@ -325,6 +325,14 @@ rule compile.c ( targets + : sources * : properties * )
 }
 
 
+rule compile.c.preprocess ( targets + : sources * : properties * )
+{
+    C++FLAGS on $(targets[1]) = ;
+    get-rspline $(targets) : -TC ;
+    preprocess-c-c++ $(<) : $(>) [ on $(<) return $(PCH_FILE) ] [ on $(<) return $(PCH_HEADER) ] ;
+}
+
+
 rule compile.c.pch ( targets + : sources * : properties * )
 {
     C++FLAGS on $(targets[1]) = ;
@@ -360,7 +368,12 @@ toolset.flags msvc YLOPTION : "-Yl" ;
 #
 actions compile-c-c++ bind PDB_NAME
 {
-    $(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -Fo"$(<[1]:W)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))" $(.CC.FILTER)"
+    $(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -Fo"$(<[1]:W)" $(PDB_CFLAG)"$(PDB_NAME)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))" $(.CC.FILTER)
+}
+
+actions preprocess-c-c++ bind PDB_NAME
+{
+    $(.CC) @"@($(<[1]:W).rsp:E="$(>[1]:W)" -E $(PDB_CFLAG)"$(PDB_NAME)" -Yu"$(>[3]:D=)" -Fp"$(>[2]:W)" $(CC_RSPLINE))" >"$(<[1]:W)"
 }
 
 actions compile-c++clr
@@ -375,6 +388,12 @@ rule compile-c-c++ ( targets + : sources * )
     PDB_NAME on $(<) = $(<:S=.pdb) ;
 }
 
+rule preprocess-c-c++ ( targets + : sources * )
+{
+    DEPENDS $(<[1]) : [ on $(<[1]) return $(PCH_HEADER) ] ;
+    DEPENDS $(<[1]) : [ on $(<[1]) return $(PCH_FILE) ] ;
+    PDB_NAME on $(<) = $(<:S=.pdb) ;
+}
 
 # Action for running the C/C++ compiler using precompiled headers. In addition
 # to whatever else it needs to compile, this action also adds a temporary source
@@ -403,6 +422,11 @@ rule compile.c++ ( targets + : sources * : properties * )
     compile-c-c++ $(<) : $(>) [ on $(<) return $(PCH_FILE) ] [ on $(<) return $(PCH_HEADER) ] ;
 }
 
+rule compile.c++.preprocess ( targets + : sources * : properties * )
+{
+    get-rspline $(targets) : -TP ;
+    preprocess-c-c++ $(<) : $(>) [ on $(<) return $(PCH_FILE) ] [ on $(<) return $(PCH_HEADER) ] ;
+}
 
 import sequence ;
 rule set-assemblies ( target : properties * )
@@ -1061,8 +1085,9 @@ local rule configure-really ( version ? : options * )
         mc-compiler = [ feature.get-values <mc-compiler> : $(options) ] ;
         mc-compiler ?= mc ;
 
-        manifest-tool = mt ;
-
+        manifest-tool = [ feature.get-values <manifest-tool> : $(options) ] ;
+        manifest-tool ?= mt ;
+        
         local cc-filter = [ feature.get-values <compiler-filter> : $(options) ] ;
 
         for local c in $(cpu)
@@ -1248,8 +1273,8 @@ local rule register-toolset-really ( )
 
     # Declare msvc toolset specific features.
     {
-        feature.feature debug-store         : object database       : propagated ;
-        feature.feature pch-source          :                       : dependency free ;
+        feature.feature debug-store : object database : propagated ;
+        feature.feature pch-source  :                 : dependency free ;
         feature.feature secure-scl          : on off                : propagated ;
         feature.feature assembly            :                       : free dependency ;
         feature.feature assembly-dependency :                       : free dependency ;
@@ -1277,6 +1302,8 @@ local rule register-toolset-really ( )
         generators.register-c-compiler msvc.compile.c++clr : CPP : OBJ : <toolset>msvc <using-clr>true ;
         generators.override msvc.compile.c++clr : msvc.compile.c++ ;
         generators.register-c-compiler msvc.compile.c : C : OBJ : <toolset>msvc ;
+        generators.register-c-compiler msvc.compile.c++.preprocess : CPP : PREPROCESSED_CPP : <toolset>msvc ;
+        generators.register-c-compiler msvc.compile.c.preprocess : C : PREPROCESSED_C : <toolset>msvc ;
 
         # Using 'register-c-compiler' adds the build directory to INCLUDES.
         generators.register-c-compiler msvc.compile.rc : RC : OBJ(%_res) : <toolset>msvc ;

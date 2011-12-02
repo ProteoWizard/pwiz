@@ -64,6 +64,7 @@ import property ;
 import testing ;
 import toolset ;
 import type ;
+import path ;
 
 # Make this module a project
 project.initialize $(__name__) ;
@@ -336,6 +337,65 @@ rule init ( mpicxx ? : options * : mpirun-with-options * )
       compile_flags = [ SHELL "$(command) -compile_info" ] ;
       link_flags = [ SHELL "$(command) -link_info" ] ;
     }
+    # Sun HPC and Ibm POE
+    else if [ SHELL "$(command) -v 2>/dev/null" ]
+    {
+      compile_flags = [ SHELL "$(command) -c -v -xtarget=native64 2>/dev/null" ] ;
+
+      local back = [ MATCH "--------------------(.*)" : $(compile_flags) ] ;
+      if $(back)
+      {
+        # Sun HPC
+        if $(.debug-configuration)
+        {
+          ECHO "Found Sun MPI wrapper compiler: $(command)" ;
+        }
+
+        compile_flags = [ MATCH "(.*)--------------------" : $(back) ] ;
+        compile_flags = [ MATCH "(.*)-v" :  $(compile_flags) ] ;
+        link_flags = [ SHELL "$(command) -v -xtarget=native64 2>/dev/null" ] ;
+        link_flags = [ MATCH "--------------------(.*)" : $(link_flags) ] ;
+        link_flags = [ MATCH "(.*)--------------------" : $(link_flags) ] ;
+
+        # strip out -v from compile options
+        local front = [ MATCH "(.*)-v" :  $(link_flags) ] ;
+        local back = [ MATCH "-v(.*)" :  $(link_flags) ] ;
+        link_flags = "$(front) $(back)" ;
+        front = [ MATCH "(.*)-xtarget=native64" :  $(link_flags) ] ;
+        back = [ MATCH "-xtarget=native64(.*)" :  $(link_flags) ] ;
+        link_flags = "$(front) $(back)" ;
+      }
+      else
+      {
+        # Ibm POE
+        if $(.debug-configuration)
+        {
+          ECHO "Found IBM MPI wrapper compiler: $(command)" ;
+        }
+
+        # 
+        compile_flags = [ SHELL "$(command) -c -v 2>/dev/null" ] ;
+        compile_flags = [ MATCH "(.*)exec: export.*" : $(compile_flags) ] ;
+        local front = [ MATCH "(.*)-v" :  $(compile_flags) ] ;
+        local back = [ MATCH "-v(.*)" :  $(compile_flags) ] ;
+        compile_flags = "$(front) $(back)" ;
+        front = [ MATCH "(.*)-c" :  $(compile_flags) ] ;
+        back = [ MATCH "-c(.*)" :  $(compile_flags) ] ;
+        compile_flags = "$(front) $(back)" ;
+        link_flags = $(compile_flags) ;
+
+        # get location of mpif.h from mpxlf
+        local f_flags = [ SHELL "mpxlf -v 2>/dev/null" ] ;
+        f_flags = [ MATCH "(.*)exec: export.*" : $(f_flags) ] ;
+        front = [ MATCH "(.*)-v" :  $(f_flags) ] ;
+        back = [ MATCH "-v(.*)" :  $(f_flags) ] ;
+        f_flags = "$(front) $(back)" ;
+        f_flags = [ MATCH "xlf_r(.*)" : $(f_flags) ] ;
+        f_flags = [ MATCH "-F:mpxlf_r(.*)" : $(f_flags) ] ;
+        compile_flags = [ strip-eol $(compile_flags) ] ;
+        compile_flags = "$(compile_flags) $(f_flags)" ;
+      }
+    }
 
     if $(result) || $(compile_flags) && $(link_flags)
     {
@@ -492,6 +552,9 @@ rule capture-output ( target : sources * : properties * )
     # Determine the number of processes we should run on.
     local num_processes = [ property.select <mpi:processes> : $(properties) ] ;
     num_processes = $(num_processes:G=) ;
+
+    # serialize the MPI tests to avoid overloading systems
+    JAM_SEMAPHORE on $(target) = <s>mpi-run-semaphore ;
 
     # We launch MPI processes using the "mpirun" equivalent specified by the user.
     LAUNCHER on $(target) =  

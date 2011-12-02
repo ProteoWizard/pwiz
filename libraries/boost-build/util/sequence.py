@@ -5,19 +5,17 @@
 
 import operator
 
-def unique (values):
-    # TODO: is this the most efficient way?
-    #       consider using a set from Python 2.4.
-    return list(set(values))
-#    cache = {}
-#    result = []
-#    for v in values:
-#        if not cache.has_key(v):
-#            cache[v] = None
-#            result.append(v)
-#    return result
-
-
+def unique (values, stable=False):
+    if stable:
+        s = set()
+        r = []
+        for v in values:
+            if not v in s:
+                r.append(v)
+                s.add(v)
+        return r
+    else:
+        return list(set(values))
 
 def max_element (elements, ordered = None):
     """ Returns the maximum number in 'elements'. Uses 'ordered' for comparisons,

@@ -465,6 +465,23 @@ rule programs-path ( )
     return $(result) ;
 }
 
+rule makedirs ( path )
+{
+    local result = true ;
+    local native = [ native $(path) ] ;
+    if ! [ exists $(native) ]
+    {
+        if [ makedirs [ parent $(path) ] ]
+        {            
+            if ! [ MAKEDIR $(native) ]
+            {
+                errors.error "Could not create directory '$(path)'" ;
+                result = ;
+            }
+        }        
+    }    
+    return $(result) ;
+}
 
 # Converts native Windows paths into our internal canonic path representation.
 # Supports 'invalid' paths containing multiple successive path separator

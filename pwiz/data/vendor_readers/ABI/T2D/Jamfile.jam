@@ -37,7 +37,7 @@ constant READER_PATH : "pwiz/data/vendor_readers/ABI/T2D" ;
 constant READER_NAME : "Reader_ABI_T2D" ;
 
 
-import os common ;
+import os common path ;
 local ProgramFiles = [ os.environ ProgramFiles ] ;
 ProgramFiles ?= "C:\\Program Files" ;
 local DataExplorer = "$(ProgramFiles)\\Applied Biosystems\\Data Explorer\\DataExp.exe" ;
@@ -47,7 +47,6 @@ if [ path.exists $(DataExplorer) ]
 }
 
 
-import path ;
 rule vendor-api-requirements ( properties * )
 {
     local result ;

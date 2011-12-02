@@ -25,12 +25,6 @@ generators.override builtin.lib-generator : qcc.prebuilt ;
 toolset.inherit-flags qcc : unix ;
 toolset.inherit-rules qcc : unix ;
 
-
-# Set typed target suffixes used by the qcc toolset.
-type.set-generated-target-suffix OBJ        : <toolset>qcc : o ;
-type.set-generated-target-suffix STATIC_LIB : <toolset>qcc : a ;
-
-
 # Initializes the qcc toolset for the given version. If necessary, command may
 # be used to specify where the compiler is located. The parameter 'options' is a
 # space-delimited list of options, each one being specified as

@@ -7,80 +7,85 @@
 #  all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
 
-import feature
-from b2.util import set
+import b2.build.feature
+feature = b2.build.feature
+
 from b2.util.utility import *
+import b2.build.property_set as property_set
 
 def expand_no_defaults (property_sets):
     """ Expand the given build request by combining all property_sets which don't
         specify conflicting non-free features.
     """
     # First make all features and subfeatures explicit
-    expanded_property_sets = [ __apply_to_property_set (feature.expand_subfeatures, x) for x in property_sets ]
+    expanded_property_sets = [ps.expand_subfeatures() for ps in property_sets]
     
     # Now combine all of the expanded property_sets
     product = __x_product (expanded_property_sets)
     
-    return product
-
-def __apply_to_property_set (f, property_set):
-    """ Transform property_set by applying f to each component property.
-    """
-    properties = feature.split (property_set)
-    return '/'.join (f (properties))
-
+    return [property_set.create(p) for p in product]
 
 
 def __x_product (property_sets):
     """ Return the cross-product of all elements of property_sets, less any
         that would contain conflicting values for single-valued features.
     """
-    x_product_seen = []
-    x_product_used = []
-    feature_space = []
-    return __x_product_aux (property_sets, x_product_seen, x_product_used, feature_space)
-    
-def __x_product_aux (property_sets, x_product_seen, x_product_used, feature_space):
-    """ Implementation of __x_product.
-    """
-    result = []
-    
-    if property_sets:
-        p = feature.split (property_sets [0])
-    else:
-        p = []
-        
-    f = set.difference (get_grist (p), feature.free_features ())
-    
-    seen = []
-    # No conflict with things used at a higher level?
-    if not set.intersection (f, x_product_used):
-        # don't mix in any conflicting features
-        local_x_product_used = x_product_used + f
-        local_x_product_seen = []
-        
-        if len (property_sets) > 1:
-            rest = __x_product_aux (property_sets [1:], local_x_product_seen, local_x_product_used, feature_space)
-            result = [ property_sets [0] + '/' + x for x in rest]
-        
-        if not result and property_sets:
-            result = [property_sets [0]]
-        
-        # If we didn't encounter a conflicting feature lower down,
-        # don't recurse again.
-        if not set.intersection (f, local_x_product_seen):
-            property_sets = []
-        
-        seen = local_x_product_seen
-    
-    if len (property_sets) > 1:
-        result.extend (__x_product_aux (property_sets [1:], x_product_seen, x_product_used, feature_space))
-    x_product_seen += f + seen
-    
-    # Note that we've seen these features so that higher levels will
-    # recurse again without them set.
+    x_product_seen = set()
+    return __x_product_aux (property_sets, x_product_seen)[0]
 
-    return result
+def __x_product_aux (property_sets, seen_features):
+    """Returns non-conflicting combinations of property sets.
+
+    property_sets is a list of PropertySet instances. seen_features is a set of Property
+    instances.
+
+    Returns a tuple of:
+    - list of lists of Property instances, such that within each list, no two Property instance
+    have the same feature, and no Property is for feature in seen_features.
+    - set of features we saw in property_sets      
+    """
+    if not property_sets:
+        return ([], set())
+
+    properties = property_sets[0].all()
+
+    these_features = set()
+    for p in property_sets[0].non_free():
+        these_features.add(p.feature())
+
+    # Note: the algorithm as implemented here, as in original Jam code, appears to
+    # detect conflicts based on features, not properties. For example, if command
+    # line build request say:
+    #
+    # <a>1/<b>1 c<1>/<b>1
+    #
+    # It will decide that those two property sets conflict, because they both specify
+    # a value for 'b' and will not try building "<a>1 <c1> <b1>", but rather two
+    # different property sets. This is a topic for future fixing, maybe.
+    if these_features & seen_features:
+
+        (inner_result, inner_seen) = __x_product_aux(property_sets[1:], seen_features)
+        return (inner_result, inner_seen | these_features)
+
+    else:
+
+        result = []
+        (inner_result, inner_seen) = __x_product_aux(property_sets[1:], seen_features | these_features)
+        if inner_result:
+            for inner in inner_result:
+                result.append(properties + inner)
+        else:
+            result.append(properties)
+        
+        if inner_seen & these_features:
+            # Some of elements in property_sets[1:] conflict with elements of property_sets[0],
+            # Try again, this time omitting elements of property_sets[0]
+            (inner_result2, inner_seen2) = __x_product_aux(property_sets[1:], seen_features)
+            result.extend(inner_result2)
+
+        return (result, inner_seen | these_features)
+
+    
 
 def looks_like_implicit_value(v):
     """Returns true if 'v' is either implicit value, or
@@ -142,7 +147,7 @@ def convert_command_line_element(e):
         else:
             result = [e1 + "/" + e2 for e1 in result for e2 in lresult]
 
-    return result
+    return [property_set.create(b2.build.feature.split(r)) for r in result]
 
 ### 
 ### rule __test__ ( )

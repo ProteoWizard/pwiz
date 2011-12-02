@@ -44,38 +44,10 @@ toolset.inherit-rules gcc : unix ;
 generators.override gcc.prebuilt : builtin.prebuilt ;
 generators.override gcc.searched-lib-generator : searched-lib-generator ;
 
-# Target naming is determined by types/lib.jam and the settings below this
-# comment.
-#
-# On *nix:
-#     libxxx.a     static library
-#     libxxx.so    shared library
-#
-# On windows (mingw):
-#     libxxx.lib   static library
-#     xxx.dll      DLL
-#     xxx.lib      import library
-#
-# On windows (cygwin) i.e. <target-os>cygwin
-#     libxxx.a     static library
-#     xxx.dll      DLL
-#     libxxx.dll.a import library
-#
-# Implementation notes:
-#   * User can always override this by using the <tag>@rule.
-#   * These settings have been chosen so that mingw is in line with msvc naming
-#     conventions.
-#   * For cygwin the cygwin naming convention has been chosen.
-
 # Make gcc toolset object files use the "o" suffix on all platforms.
 type.set-generated-target-suffix OBJ : <toolset>gcc : o ;
 type.set-generated-target-suffix OBJ : <toolset>gcc <target-os>windows : o ;
 type.set-generated-target-suffix OBJ : <toolset>gcc <target-os>cygwin : o ;
-
-type.set-generated-target-suffix STATIC_LIB : <toolset>gcc <target-os>cygwin : a ;
-type.set-generated-target-suffix IMPORT_LIB : <toolset>gcc <target-os>cygwin : dll.a ;
-type.set-generated-target-prefix IMPORT_LIB : <toolset>gcc <target-os>cygwin : lib ;
-
 
 # Initializes the gcc toolset for the given version. If necessary, command may
 # be used to specify where the compiler is located. The parameter 'options' is a
@@ -86,11 +58,83 @@ type.set-generated-target-prefix IMPORT_LIB : <toolset>gcc <target-os>cygwin : l
 # Example:
 #   using gcc : 3.4 : : <cxxflags>foo <linkflags>bar <linker-type>sun ;
 #
+# The compiler command to use is detected in a three step manner:
+# 1) If an explicit command is specified by the user, it will be used and must available.
+# 2) If only a certain version is specified, it is enforced:
+#    - either a command 'g++-VERSION' must be available
+#    - or the default command 'g++' must be available and match the exact version.
+# 3) Without user-provided restrictions use default 'g++'
 rule init ( version ? : command * : options * )
 {
+    #1): use user-provided command
+    local tool-command = ;
+    if $(command)
+    {
+       tool-command  =  [ common.get-invocation-command-nodefault gcc : g++ : $(command) ] ;
+       if ! $(tool-command)
+       {
+           errors.error "toolset gcc initialization:" :
+                        "provided command '$(command)' not found" :
+                        "initialized from" [ errors.nearest-user-location ] ;
+       }
+    }
+    #2): enforce user-provided version
+    else if $(version)
+    {
+        tool-command  =  [ common.get-invocation-command-nodefault gcc : "g++-$(version[1])" ] ;
+        
+        #2.1) fallback: check whether "g++" reports the requested version
+        if ! $(tool-command)
+        {
+            tool-command = [ common.get-invocation-command-nodefault gcc : g++ ] ;
+            if $(tool-command)
+            {
+                local tool-command-string = $(tool-command:J=" ") ;
+                local tool-version = [ MATCH "^([0-9.]+)" : [ SHELL "$(tool-command-string) -dumpversion" ] ] ;
+                if $(tool-version) != $(version)
+                {
+                    # Permit a match betwen two-digit version specified by the user
+                    # (e.g. 4.4) and 3-digit version reported by gcc.
+                    # Since only two digits are present in binary name anyway,
+                    # insisting that user specify 3-digit version when
+                    # configuring Boost.Build while it's not required on 
+                    # command like would be strange.
+                    local stripped = [ MATCH "^([0-9]+\.[0-9]+).*" : $(tool-version) ] ;
+                    if $(stripped) != $(version)
+                    {                                            
+                        errors.error "toolset gcc initialization:" :
+                          "version '$(version)' requested but 'g++-$(version)' not found and version '$(tool-version)' of default '$(tool-command)' does not match" :
+                            "initialized from" [ errors.nearest-user-location ] ;
+                        tool-command = ;
+                    }
+                    # Use full 3-digit version to be compatible with the 'using gcc ;' case
+                    version = $(tool-version) ;
+                }
+            }
+            else
+            {
+                errors.error "toolset gcc initialization:" :
+                             "version '$(version)' requested but neither 'g++-$(version)' nor default 'g++' found" :
+                             "initialized from" [ errors.nearest-user-location ] ;
+            }
+        }
+    }
+    #3) default: no command and no version specified, try using default command "g++"
+    else
+    {
+        tool-command = [ common.get-invocation-command-nodefault gcc : g++ ] ;
+        if ! $(tool-command)
+        {
+            errors.error "toolset gcc initialization:" :
+                         "no command provided, default command 'g++' not found" :
+                         "initialized from" [ errors.nearest-user-location ] ;
+        }
+    }
+    
+    
     # Information about the gcc command...
     #   The command.
-    local command = [ common.get-invocation-command gcc : g++ : $(command) ] ;
+    local command = $(tool-command) ;
     #   The root directory of the tool install.
     local root = [ feature.get-values <root> : $(options) ] ;
     #   The bin directory where to find the command to execute.
@@ -103,12 +147,12 @@ rule init ( version ? : command * : options * )
         bin ?= [ common.get-absolute-tool-path $(command[-1]) ] ;
         root ?= $(bin:D) ;
     }
+    # The 'command' variable can have multiple elements. When calling
+    # the SHELL builtin we need a single string.
+    local command-string = $(command:J=" ") ;
     #   Autodetect the version and flavor if not given.
     if $(command)
-    {
-        # The 'command' variable can have multiple elements. When calling
-        # the SHELL builtin we need a single string.
-        local command-string = $(command:J=" ") ;
+    {    
         local machine = [ MATCH "^([^ ]+)"
             : [ SHELL "$(command-string) -dumpmachine" ] ] ;
         version ?= [ MATCH "^([0-9.]+)"
@@ -185,16 +229,34 @@ rule init ( version ? : command * : options * )
     # If it's not a system gcc install we should adjust the various programs as
     # needed to prefer using the install specific versions. This is essential
     # for correct use of MinGW and for cross-compiling.
+    
+    local nl = "
+" ;
 
     # - The archive builder.
-    local archiver =
-        [ common.get-invocation-command gcc
-            : ar : [ feature.get-values <archiver> : $(options) ] : $(bin) : search-path ] ;
+    local archiver = [ common.get-invocation-command gcc
+            : [ NORMALIZE_PATH [ MATCH "(.*)[$(nl)]+" : [ SHELL "$(command-string) -print-prog-name=ar" ] ] ]
+            : [ feature.get-values <archiver> : $(options) ] 
+            : $(bin) 
+            : search-path ] ;
     toolset.flags gcc.archive .AR $(condition) : $(archiver[1]) ;
     if $(.debug-configuration)
     {
         ECHO notice: using gcc archiver :: $(condition) :: $(archiver[1]) ;
     }
+
+    # - Ranlib
+    local ranlib = [ common.get-invocation-command gcc
+            : [ NORMALIZE_PATH [ MATCH "(.*)[$(nl)]+" : [ SHELL "$(command-string) -print-prog-name=ranlib" ] ] ]
+            : [ feature.get-values <ranlib> : $(options) ] 
+            : $(bin) 
+            : search-path ] ;
+    toolset.flags gcc.archive .RANLIB $(condition) : $(ranlib[1]) ;
+    if $(.debug-configuration)
+    {
+        ECHO notice: using gcc ranlib :: $(condition) :: $(ranlib[1]) ;
+    }
+
 
     # - The resource compiler.
     local rc =
@@ -222,6 +284,8 @@ if [ os.name ] = NT
     JAMSHELL = % ;
 }
 
+generators.register-c-compiler gcc.compile.c++.preprocess : CPP : PREPROCESSED_CPP : <toolset>gcc ;
+generators.register-c-compiler gcc.compile.c.preprocess   : C   : PREPROCESSED_C   : <toolset>gcc ;
 generators.register-c-compiler gcc.compile.c++ : CPP : OBJ : <toolset>gcc ;
 generators.register-c-compiler gcc.compile.c   : C   : OBJ : <toolset>gcc ;
 generators.register-c-compiler gcc.compile.asm : ASM : OBJ : <toolset>gcc ;
@@ -369,6 +433,17 @@ rule setup-address-model ( targets * : sources * : properties * )
                 option = -maix64 ;
             }
         }
+        else if $(os) = hpux
+        {
+            if $(model) = 32
+            {
+                option = -milp32 ;
+            }
+            else
+            {
+                option = -mlp64 ;
+            }
+        }
         else
         {
             if $(model) = 32
@@ -434,6 +509,37 @@ actions compile.c.pch
     "$(CONFIG_COMMAND)" -x c-header $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
+rule compile.c++.preprocess ( targets * : sources * : properties * )
+{
+    setup-threading $(targets) : $(sources) : $(properties) ;
+    setup-fpic $(targets) : $(sources) : $(properties) ;
+    setup-address-model $(targets) : $(sources) : $(properties) ;
+    
+    # Some extensions are compiled as C++ by default. For others, we need to
+    # pass -x c++. We could always pass -x c++ but distcc does not work with it.
+    if ! $(>:S) in .cc .cp .cxx .cpp .c++ .C
+    {
+        LANG on $(<) = "-x c++" ;
+    }
+    DEPENDS $(<) : [ on $(<) return $(PCH_FILE) ] ;
+}
+
+rule compile.c.preprocess ( targets * : sources * : properties * )
+{
+    setup-threading $(targets) : $(sources) : $(properties) ;
+    setup-fpic $(targets) : $(sources) : $(properties) ;
+    setup-address-model $(targets) : $(sources) : $(properties) ;
+    
+    # If we use the name g++ then default file suffix -> language mapping does
+    # not work. So have to pass -x option. Maybe, we can work around this by
+    # allowing the user to specify both C and C++ compiler names.
+    #if $(>:S) != .c
+    #{
+        LANG on $(<) = "-x c" ;
+    #}
+    DEPENDS $(<) : [ on $(<) return $(PCH_FILE) ] ;
+}
+
 rule compile.c++ ( targets * : sources * : properties * )
 {
     setup-threading $(targets) : $(sources) : $(properties) ;
@@ -480,8 +586,11 @@ rule compile.c ( targets * : sources * : properties * )
     DEPENDS $(<) : [ on $(<) return $(PCH_FILE) ] ;
 }
 
-rule compile.fortran
+rule compile.fortran ( targets * : sources * : properties * )
 {
+    setup-threading $(targets) : $(sources) : $(properties) ;
+    setup-fpic $(targets) : $(sources) : $(properties) ;
+    setup-address-model $(targets) : $(sources) : $(properties) ;
 }
 
 actions compile.c++ bind PCH_FILE
@@ -494,13 +603,25 @@ actions compile.c bind PCH_FILE
     "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(PCH_FILE:D)" -I"$(INCLUDES)" -c -o "$(<)" "$(>)"
 }
 
+actions compile.c++.preprocess bind PCH_FILE
+{
+    "$(CONFIG_COMMAND)" $(LANG) -ftemplate-depth-$(TEMPLATE_DEPTH) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(PCH_FILE:D)" -I"$(INCLUDES)" "$(>:W)" -E >"$(<:W)"
+}
+
+actions compile.c.preprocess bind PCH_FILE
+{
+    "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(PCH_FILE:D)" -I"$(INCLUDES)" "$(>)" -E >$(<)
+}
+
 actions compile.fortran
 {
   "$(CONFIG_COMMAND)" $(LANG) $(OPTIONS) $(USER_OPTIONS) -D$(DEFINES) -I"$(PCH_FILE:D)" -I"$(INCLUDES)" -c -o "$(<)" "$(>)" 
 }
 
-rule compile.asm
+rule compile.asm ( targets * : sources * : properties * )
 {
+    setup-fpic $(targets) : $(sources) : $(properties) ;    
+    setup-address-model $(targets) : $(sources) : $(properties) ;
     LANG on $(<) = "-x assembler-with-cpp" ;
 }
 
@@ -839,6 +960,7 @@ actions link bind LIBRARIES
 # logic in intel-linux, but that's hardly worth the trouble as on Linux, 'ar' is
 # always available.
 .AR = ar ;
+.RANLIB = ranlib ;
 
 toolset.flags gcc.archive AROPTIONS <archiveflags> ;
 
@@ -879,8 +1001,8 @@ rule archive ( targets * : sources * : properties * )
 actions piecemeal archive
 {
     "$(.AR)" $(AROPTIONS) rc "$(<)" "$(>)"
+    "$(.RANLIB)" "$(<)"
 }
-
 
 rule link.dll ( targets * : sources * : properties * )
 {

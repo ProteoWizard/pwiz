@@ -8,12 +8,15 @@
 """ Defines standard features and rules.
 """
 
+import b2.build.targets as targets
+
 import sys
 from b2.build import feature, property, virtual_target, generators, type, property_set, scanner
 from b2.util.utility import *
-from b2.util import path, regex
+from b2.util import path, regex, bjam_signature
 import b2.tools.types
 from b2.manager import get_manager
+
 
 # Records explicit properties for a variant.
 # The key is the variant name.
@@ -26,6 +29,7 @@ def reset ():
 
     __variant_explicit_properties = {}
 
+@bjam_signature((["name"], ["parents_or_properties", "*"], ["explicit_properties", "*"]))
 def variant (name, parents_or_properties, explicit_properties = []):
     """ Declares a new variant.
         First determines explicit properties for this variant, by
@@ -47,39 +51,35 @@ def variant (name, parents_or_properties, explicit_properties = []):
     """
     parents = []
     if not explicit_properties:
-        if get_grist (parents_or_properties [0]):
-            explicit_properties = parents_or_properties
-
-        else:
-            parents = parents_or_properties
-
+        explicit_properties = parents_or_properties
     else:
         parents = parents_or_properties
-
-    # The problem is that we have to check for conflicts
-    # between base variants.
-    if len (parents) > 1:
-        raise BaseException ("Multiple base variants are not yet supported")
     
-    inherited = []
-    # Add explicitly specified properties for parents
-    for p in parents:
+    inherited = property_set.empty()
+    if parents:
+
+        # If we allow multiple parents, we'd have to to check for conflicts
+        # between base variants, and there was no demand for so to bother.
+        if len (parents) > 1:
+            raise BaseException ("Multiple base variants are not yet supported")
+        
+        p = parents[0]
         # TODO: the check may be stricter
         if not feature.is_implicit_value (p):
             raise BaseException ("Invalid base varaint '%s'" % p)
         
-        inherited += __variant_explicit_properties [p]
+        inherited = __variant_explicit_properties[p]
 
-    property.validate (explicit_properties)
-    explicit_properties = property.refine (inherited, explicit_properties)
+    explicit_properties = property_set.create_with_validation(explicit_properties)
+    explicit_properties = inherited.refine(explicit_properties)
     
     # Record explicitly specified properties for this variant
     # We do this after inheriting parents' properties, so that
     # they affect other variants, derived from this one.
-    __variant_explicit_properties [name] = explicit_properties
+    __variant_explicit_properties[name] = explicit_properties
            
     feature.extend('variant', [name])
-    feature.compose (replace_grist (name, '<variant>'), explicit_properties)
+    feature.compose ("<variant>" + name, explicit_properties.all())
 
 __os_names = """
     amiga aix bsd cygwin darwin dos emx freebsd hpux iphone linux netbsd
@@ -144,11 +144,20 @@ def register_globals ():
     feature.feature ('threading', ['single', 'multi'], ['propagated'])
     feature.feature ('rtti', ['on', 'off'], ['propagated'])
     feature.feature ('exception-handling', ['on', 'off'], ['propagated'])
+
+    # Whether there is support for asynchronous EH (e.g. catching SEGVs).
+    feature.feature ('asynch-exceptions', ['on', 'off'], ['propagated'])
+
+    # Whether all extern "C" functions are considered nothrow by default.
+    feature.feature ('extern-c-nothrow', ['off', 'on'], ['propagated'])
+
     feature.feature ('debug-symbols', ['on', 'off'], ['propagated'])
     feature.feature ('define', [], ['free'])
+    feature.feature ('undef', [], ['free'])
     feature.feature ('include', [], ['free', 'path']) #order-sensitive
     feature.feature ('cflags', [], ['free'])
     feature.feature ('cxxflags', [], ['free'])
+    feature.feature ('asmflags', [], ['free'])
     feature.feature ('linkflags', [], ['free'])
     feature.feature ('archiveflags', [], ['free'])
     feature.feature ('version', [], ['free'])
@@ -294,6 +303,11 @@ def register_globals ():
         'armv5t', 'armv5te', 'armv6', 'armv6j', 'iwmmxt', 'ep9312'],
 
         ['propagated', 'optional'])
+
+    feature.feature('conditional', [], ['incidental', 'free'])
+
+    # The value of 'no' prevents building of a target.
+    feature.feature('build', ['yes', 'no'], ['optional'])
     
     # Windows-specific features
     feature.feature ('user-interface', ['console', 'gui', 'wince', 'native', 'auto'], [])
@@ -304,10 +318,6 @@ def register_globals ():
     variant ('release', ['<optimization>speed', '<debug-symbols>off', '<inlining>full', 
                          '<runtime-debugging>off', '<define>NDEBUG'])
     variant ('profile', ['release'], ['<profiling>on', '<debug-symbols>on'])
-
-    type.register ('H', ['h'])
-    type.register ('HPP', ['hpp'], 'H')
-    type.register ('C', ['c'])
     
 
 reset ()
@@ -315,7 +325,7 @@ register_globals ()
 
 class SearchedLibTarget (virtual_target.AbstractFileTarget):
     def __init__ (self, name, project, shared, real_name, search, action):
-        virtual_target.AbstractFileTarget.__init__ (self, name, False, 'SEARCHED_LIB', project, action)
+        virtual_target.AbstractFileTarget.__init__ (self, name, 'SEARCHED_LIB', project, action)
         
         self.shared_ = shared
         self.real_name_ = real_name
@@ -333,7 +343,7 @@ class SearchedLibTarget (virtual_target.AbstractFileTarget):
         return self.search_
         
     def actualize_location (self, target):
-        project.manager ().engine ().add_not_file_target (target)
+        bjam.call("NOTFILE", target)
     
     def path (self):
         #FIXME: several functions rely on this not being None
@@ -343,8 +353,11 @@ class SearchedLibTarget (virtual_target.AbstractFileTarget):
 class CScanner (scanner.Scanner):
     def __init__ (self, includes):
         scanner.Scanner.__init__ (self)
-    
-        self.includes_ = includes
+
+        self.includes_ = []
+
+        for i in includes:
+            self.includes_.extend(i.split("&&"))              
 
     def pattern (self):
         return r'#[ \t]*include[ ]*(<(.*)>|"(.*)")'
@@ -376,8 +389,8 @@ class CScanner (scanner.Scanner):
         bjam.call("mark-included", target, all)
 
         engine = get_manager().engine()
-        engine.set_target_variable(angle, "SEARCH", self.includes_)
-        engine.set_target_variable(quoted, "SEARCH", self.includes_)
+        engine.set_target_variable(angle, "SEARCH", get_value(self.includes_))
+        engine.set_target_variable(quoted, "SEARCH", [b] + get_value(self.includes_))
         
         # Just propagate current scanner to includes, in a hope
         # that includes do not change scanners. 
@@ -385,6 +398,7 @@ class CScanner (scanner.Scanner):
         
 scanner.register (CScanner, 'include')
 type.set_scanner ('CPP', CScanner)
+type.set_scanner ('C', CScanner)
 
 # Ported to trunk@47077
 class LibGenerator (generators.Generator):
@@ -393,10 +407,11 @@ class LibGenerator (generators.Generator):
         SHARED_LIB.
     """
 
-    def __init__(self, id = 'LibGenerator', composing = True, source_types = [], target_types_and_names = ['LIB'], requirements = []):
+    def __init__(self, id, composing = True, source_types = [], target_types_and_names = ['LIB'], requirements = []):
         generators.Generator.__init__(self, id, composing, source_types, target_types_and_names, requirements)
     
     def run(self, project, name, prop_set, sources):
+
         # The lib generator is composing, and can be only invoked with
         # explicit name. This check is present in generator.run (and so in
         # builtin.LinkingGenerator), but duplicate it here to avoid doing
@@ -425,57 +440,42 @@ class LibGenerator (generators.Generator):
     def viable_source_types(self):
         return ['*']
 
-generators.register(LibGenerator())
+generators.register(LibGenerator("builtin.lib-generator"))
 
-### # The implementation of the 'lib' rule. Beyond standard syntax that rule allows
-### # simplified:
-### #    lib a b c ;
-### # so we need to write code to handle that syntax. 
-### rule lib ( names + : sources * : requirements * : default-build * 
-###     : usage-requirements * )
-### {
-###     local project = [ project.current ] ;
-###     
-###     # This is a circular module dependency, so it must be imported here
-###     import targets ;
-### 
-###     local result ;
-###     if ! $(sources) && ! $(requirements) 
-###       && ! $(default-build) && ! $(usage-requirements)
-###     {
-###         for local name in $(names)
-###         {    
-###             result += [ 
-###             targets.main-target-alternative
-###               [ new typed-target $(name) : $(project) : LIB 
-###                 : 
-###                 : [ targets.main-target-requirements $(requirements) <name>$(name)  :
-###                     $(project) ] 
-###                 : [ targets.main-target-default-build $(default-build) : $(project) ]
-###                 : [ targets.main-target-usage-requirements $(usage-requirements) : $(project) ]
-###              ] ] ;        
-###         }        
-###     }
-###     else
-###     {
-###         if $(names[2])
-###         {
-###             errors.user-error "When several names are given to the 'lib' rule" :
-###               "it's not allowed to specify sources or requirements. " ;
-###         }
-###                 
-###         local name = $(names[1]) ;
-###         result = [ targets.main-target-alternative
-###           [ new typed-target $(name) : $(project) : LIB
-###             : [ targets.main-target-sources $(sources) : $(name) ] 
-###             : [ targets.main-target-requirements $(requirements) : $(project) ] 
-###             : [ targets.main-target-default-build $(default-build) : $(project) ]
-###             : [ targets.main-target-usage-requirements $(usage-requirements) : $(project) ]
-###          ] ] ;
-###     }    
-###     return $(result) ;
-### }
-### IMPORT $(__name__) : lib : : lib ;
+generators.override("builtin.prebuilt", "builtin.lib-generator")
+
+def lib(names, sources=[], requirements=[], default_build=[], usage_requirements=[]):
+    """The implementation of the 'lib' rule. Beyond standard syntax that rule allows
+    simplified: 'lib a b c ;'."""
+
+    if len(names) > 1:
+        if any(r.startswith('<name>') for r in requirements):
+            get_manager().errors()("When several names are given to the 'lib' rule\n" +
+                                   "it is not allowed to specify the <name> feature.")
+
+        if sources:
+            get_manager().errors()("When several names are given to the 'lib' rule\n" +
+                                   "it is not allowed to specify sources.")
+
+    project = get_manager().projects().current()
+    result = []
+
+    for name in names:
+        r = requirements[:]
+
+        # Support " lib a ; " and " lib a b c ; " syntax.
+        if not sources and not any(r.startswith("<name>") for r in requirements) \
+           and not any(r.startswith("<file") for r in requirements):
+            r.append("<name>" + name)
+
+        result.append(targets.create_typed_metatarget(name, "LIB", sources,
+                                                      r,
+                                                      default_build,
+                                                      usage_requirements))
+    return result
+
+get_manager().projects().add_rule("lib", lib)
+
 
 # Updated to trunk@47077
 class SearchedLibGenerator (generators.Generator):
@@ -488,6 +488,7 @@ class SearchedLibGenerator (generators.Generator):
         generators.Generator.__init__ (self, id, composing, source_types, target_types_and_names, requirements)
     
     def run(self, project, name, prop_set, sources):
+
         if not name:
             return None
 
@@ -517,22 +518,19 @@ class SearchedLibGenerator (generators.Generator):
 
 generators.register (SearchedLibGenerator ())
 
-### class prebuilt-lib-generator : generator
-### {
-###     rule __init__ ( * : * )
-###     {
-###         generator.__init__ $(1) : $(2) : $(3) : $(4) : $(5) : $(6) : $(7) : $(8) : $(9) ;
-###     }
-### 
-###     rule run ( project name ? : prop_set : sources * : multiple ? )
-###     {
-###         local f = [ $(prop_set).get <file> ] ;
-###         return $(f) $(sources) ;
-###     }    
-### }
-### 
-### generators.register 
-###   [ new prebuilt-lib-generator builtin.prebuilt : : LIB : <file> ] ;
+class PrebuiltLibGenerator(generators.Generator):
+
+    def __init__(self, id, composing, source_types, target_types_and_names, requirements):
+        generators.Generator.__init__ (self, id, composing, source_types, target_types_and_names, requirements)        
+
+    def run(self, project, name, properties, sources):
+        f = properties.get("file")
+        return f + sources
+
+generators.register(PrebuiltLibGenerator("builtin.prebuilt", False, [],
+                                         ["LIB"], ["<file>"]))
+
+generators.override("builtin.prebuilt", "builtin.lib-generator")
 
 
 class CompileAction (virtual_target.Action):
@@ -574,47 +572,51 @@ class LinkingGenerator (generators.Generator):
         generators.Generator.__init__ (self, id, composing, source_types, target_types_and_names, requirements)
         
     def run (self, project, name, prop_set, sources):
-        lib_sources = prop_set.get('<library>')
-        [ sources.append (project.manager().get_object(x)) for x in lib_sources ]
+
+        sources.extend(prop_set.get('<library>'))
         
         # Add <library-path> properties for all searched libraries
         extra = []
         for s in sources:
             if s.type () == 'SEARCHED_LIB':
                 search = s.search()
-                extra.append(replace_grist(search, '<library-path>'))
+                extra.extend(property.Property('<library-path>', sp) for sp in search)
 
-        orig_xdll_path = []
-                   
-        if prop_set.get('<hardcode-dll-paths>') == ['true'] and type.is_derived(self.target_types_ [0], 'EXE'):
-            xdll_path = prop_set.get('<xdll-path>')
-            orig_xdll_path = [ replace_grist(x, '<dll-path>') for x in xdll_path ]
-            # It's possible that we have libraries in sources which did not came
-            # from 'lib' target. For example, libraries which are specified
-            # just as filenames as sources. We don't have xdll-path properties
-            # for such target, but still need to add proper dll-path properties.
-            for s in sources:
+        # It's possible that we have libraries in sources which did not came
+        # from 'lib' target. For example, libraries which are specified
+        # just as filenames as sources. We don't have xdll-path properties
+        # for such target, but still need to add proper dll-path properties.   
+        extra_xdll_path = []                            
+        for s in sources:
                 if type.is_derived (s.type (), 'SHARED_LIB') and not s.action ():
                     # Unfortunately, we don't have a good way to find the path
                     # to a file, so use this nasty approach.
                     p = s.project()
-                    location = path.root(s.name(), p.get('source-location'))
-                    xdll_path.append(path.parent(location))
-                          
-            extra += [ replace_grist(x, '<dll-path>') for x in xdll_path ]
+                    location = path.root(s.name(), p.get('source-location')[0])
+                    extra_xdll_path.append(os.path.dirname(location))
+
+        # Hardcode DLL paths only when linking executables.
+        # Pros: do not need to relink libraries when installing.
+        # Cons: "standalone" libraries (plugins, python extensions) can not
+        # hardcode paths to dependent libraries.            
+        if prop_set.get('<hardcode-dll-paths>') == ['true'] \
+              and type.is_derived(self.target_types_ [0], 'EXE'):
+                xdll_path = prop_set.get('<xdll-path>')
+                extra.extend(property.Property('<dll-path>', sp) \
+                     for sp in extra_xdll_path)
+                extra.extend(property.Property('<dll-path>', sp) \
+                     for sp in xdll_path)
         
         if extra:
-            prop_set = prop_set.add_raw (extra)
-                        
+            prop_set = prop_set.add_raw (extra)                
         result = generators.Generator.run(self, project, name, prop_set, sources)
-
+        
         if result:
             ur = self.extra_usage_requirements(result, prop_set)
-            ur = ur.add(property_set.create(orig_xdll_path))
+            ur = ur.add(property_set.create(['<xdll-path>' + p for p in extra_xdll_path]))
         else:
             return None
-        
-        return(ur, result)
+        return (ur, result)
     
     def extra_usage_requirements (self, created_targets, prop_set):
         
@@ -656,36 +658,33 @@ class LinkingGenerator (generators.Generator):
 
         # sources to pass to inherited rule
         sources2 = []
-        # properties to pass to inherited rule
-        properties2  = []
         # sources which are libraries
         libraries  = []
         
         # Searched libraries are not passed as argument to linker
         # but via some option. So, we pass them to the action
         # via property. 
-        properties2 = prop_set.raw()
         fsa = []
         fst = []
         for s in sources:
             if type.is_derived(s.type(), 'SEARCHED_LIB'):
-                name = s.real_name()
+                n = s.real_name()
                 if s.shared():
-                    fsa.append(name)
+                    fsa.append(n)
 
                 else:
-                    fst.append(name)
+                    fst.append(n)
 
             else:
                 sources2.append(s)
 
+        add = []
         if fsa:
-            properties2 += [replace_grist('&&'.join(fsa), '<find-shared-library>')]
+            add.append("<find-shared-library>" + '&&'.join(fsa))
         if fst:
-            properties2 += [replace_grist('&&'.join(fst), '<find-static-library>')]
-                
-        spawn = generators.Generator.generated_targets(self, sources2, property_set.create(properties2), project, name)
-        
+            add.append("<find-static-library>" + '&&'.join(fst))
+
+        spawn = generators.Generator.generated_targets(self, sources2, prop_set.add_raw(add), project, name)       
         return spawn
 
 
@@ -706,17 +705,21 @@ class ArchiveGenerator (generators.Generator):
              
         return result
 
-### rule register-archiver ( id composing ? : source_types + : target_types + :
-###                             requirements * )
-### {
-###     local g = [ new ArchiveGenerator $(id) $(composing) : $(source_types) 
-###                 : $(target_types) : $(requirements) ] ;
-###     generators.register $(g) ;
-### }
-### 
-### 
-### IMPORT $(__name__) : register-linker register-archiver 
-###   : : generators.register-linker generators.register-archiver ;
-### 
-### 
-### 
+
+def register_archiver(id, source_types, target_types, requirements):
+    g = ArchiveGenerator(id, True, source_types, target_types, requirements)
+    generators.register(g)
+
+class DummyGenerator(generators.Generator):
+     """Generator that accepts everything and produces nothing. Useful as a general
+     fallback for toolset-specific actions like PCH generation.
+     """
+     def run (self, project, name, prop_set, sources):
+       return (property_set.empty(), [])
+
+
+get_manager().projects().add_rule("variant", variant)
+
+import stage
+import symlink
+import message

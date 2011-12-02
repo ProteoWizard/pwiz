@@ -6,25 +6,43 @@
 import errors ;
 import numbers ;
 
+major = "2011" ;
+minor = "04" ;
 
 rule boost-build ( )
 {
-    return "V2 (Milestone 12)" ;
+    return "$(major).$(minor)-svn" ;
 }
-
-
-rule jam ( )
-{
-    local v = [ modules.peek : JAM_VERSION ] ;
-    return $(v:J=.) ;
-}
-
 
 rule print ( )
 {
-    ECHO "Boost.Build" [ boost-build ] ;
-    ECHO "Boost.Jam" [ jam ] ;
+    if [ verify-engine-version ]
+    {        
+        ECHO "Boost.Build" [ boost-build ] ;
+    }    
 }
+
+rule verify-engine-version ( )
+{
+    local v = [ modules.peek : JAM_VERSION ] ;
+    
+    if $(v[1]) != $(major) || $(v[2]) != $(minor)
+    {
+        local argv = [ modules.peek : ARGV ] ;
+        local e = $(argv[1]) ;
+        local l = [ modules.binding version ] ;
+        l = $(l:D) ;
+        l = $(l:D) ;
+        ECHO "warning: mismatched versions of Boost.Build engine and core" ;
+        ECHO "warning: Boost.Build engine ($(e)) is $(v:J=.)" ;
+        ECHO "warning: Boost.Build core (at $(l)) is" [ boost-build ] ;
+    }
+    else
+    {
+        return true ;
+    }    
+}
+
 
 
 # Utility rule for testing whether all elements in a sequence are equal to 0.

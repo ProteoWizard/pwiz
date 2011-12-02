@@ -21,6 +21,7 @@
 
 
 import modules ;
+import path ;
 
 if [ modules.peek : NT ] {
 
