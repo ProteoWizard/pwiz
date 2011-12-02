@@ -86,7 +86,11 @@ namespace IDPicker.Controls
                 foreach (var p in diffParameters)
                     key += p;
 
-                //try to find valid protein database location
+                // strip X! Tandem database extension
+                if (a.importSettings.proteinDatabaseFilepath.EndsWith(".pro"))
+                    a.importSettings.proteinDatabaseFilepath = a.importSettings.proteinDatabaseFilepath.Substring(0, a.importSettings.proteinDatabaseFilepath.Length - 4);
+
+                // try to find valid protein database location
                 if (!File.Exists(a.importSettings.proteinDatabaseFilepath))
                 {
                     var databaseName = Path.GetFileName(a.importSettings.proteinDatabaseFilepath);
