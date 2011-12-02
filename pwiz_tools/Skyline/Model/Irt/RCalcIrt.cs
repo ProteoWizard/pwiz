@@ -66,7 +66,7 @@ namespace pwiz.Skyline.Model.Irt
 
             var dbStandard = _database.StandardPeptides;
             var returnStandard = (from peptide in peptides
-                                  where dbStandard.Contains(dbPep => Equals(peptide, dbPep.PeptideModSeq))
+                                  where dbStandard.Contains(dbPep => Equals(peptide, dbPep))
                                   select peptide).ToList();
 
             if(returnStandard.Count() != dbStandard.Count())

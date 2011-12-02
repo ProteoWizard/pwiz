@@ -22,8 +22,10 @@ using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.DataBinding;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
+using pwiz.Skyline.Controls.Graphs;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
@@ -35,6 +37,7 @@ namespace pwiz.Skyline.SettingsUI
     public partial class EditRTDlg : Form
     {
         private readonly SettingsListComboDriver<RetentionScoreCalculatorSpec> _driverCalculators;
+        private readonly RetentionTimeGridViewDriver _gridViewDriver;
 
         private RetentionTimeRegression _regression;
         private readonly IEnumerable<RetentionTimeRegression> _existing;
@@ -51,6 +54,9 @@ namespace pwiz.Skyline.SettingsUI
             _driverCalculators = new SettingsListComboDriver<RetentionScoreCalculatorSpec>(
                 comboCalculator, Settings.Default.RTScoreCalculatorList, false);
             _driverCalculators.LoadList(null);
+
+            _gridViewDriver = new RetentionTimeGridViewDriver(gridPeptides, bindingPeptides,
+                                                            new SortableBindingList<MeasuredPeptide>());
 
             ShowPeptides(Settings.Default.EditRTVisible);
         }
@@ -76,10 +82,7 @@ namespace pwiz.Skyline.SettingsUI
                     {
                         ShowPeptides(true);
                         foreach (var pepTime in pepTimes)
-                        {
-                            gridPeptides.Rows.Add(pepTime.PeptideSequence,
-                                string.Format("{0:F02}", pepTime.RetentionTime));                            
-                        }
+                            Peptides.Add(new MeasuredPeptide(pepTime.PeptideSequence, pepTime.RetentionTime));
 
                         // Get statistics
                         RecalcRegression(_driverCalculators.SelectedItem, _regression.PeptideTimes.ToList());
@@ -146,41 +149,12 @@ namespace pwiz.Skyline.SettingsUI
 
             // Todo: replace this with code that gets the active calculator, then chooses regression peptides
             // Todo: from _activePeptides using that calculator
-            var listPeptides = new List<MeasuredRetentionTime>();
-            if (!ValidatePeptides(e, listPeptides))
-                return;
             RetentionTimeRegression regression =
-                new RetentionTimeRegression(name, calculator, slope, intercept, window, listPeptides);
+                new RetentionTimeRegression(name, calculator, slope, intercept, window, GetTablePeptides());
 
             _regression = regression;
 
             DialogResult = DialogResult.OK;
-        }
-
-        private bool ValidatePeptides(CancelEventArgs e, ICollection<MeasuredRetentionTime> listPeptides)
-        {
-            string[] fields = new string[2];
-            foreach (DataGridViewRow row in gridPeptides.Rows)
-            {
-                if (row.IsNewRow)
-                    continue;
-
-                object val = row.Cells[0].Value;
-                fields[0] = (val == null ? "" : val.ToString());
-                val = row.Cells[1].Value;
-                fields[1] = (val == null ? "" : val.ToString());
-                int colError;
-                if (!ValidatePeptideCellValues(fields, out colError))
-                {
-                    gridPeptides.ClearSelection();
-                    gridPeptides.CurrentCell = row.Cells[colError];
-                    gridPeptides.BeginEdit(true);
-                    e.Cancel = true;
-                    return false;                    
-                }
-                listPeptides.Add(new MeasuredRetentionTime(fields[0], double.Parse(fields[1])));
-            }
-            return true;
         }
 
         public void ShowPeptides(bool visible)
@@ -260,12 +234,55 @@ namespace pwiz.Skyline.SettingsUI
             ShowPeptides(!gridPeptides.Visible);
         }
 
-        private List<MeasuredRetentionTime> GetTablePeptides()
+        private class RetentionTimeGridViewDriver : PeptideGridViewDriver<MeasuredPeptide>
         {
-            var peptides = new List<MeasuredRetentionTime>();
-            ValidatePeptides(new CancelEventArgs(), peptides);
+            public RetentionTimeGridViewDriver(DataGridViewEx gridView,
+                                             BindingSource bindingSource,
+                                             SortableBindingList<MeasuredPeptide> items)
+                : base(gridView, bindingSource, items)
+            {
+            }
 
-            return peptides;
+            protected override void DoPaste()
+            {
+                var measuredPeptidesNew = new List<MeasuredPeptide>();
+                GridView.DoPaste(MessageParent, ValidateRow,
+                                          values =>
+                                          measuredPeptidesNew.Add(new MeasuredPeptide
+                                          {
+                                              Sequence = values[0],
+                                              RetentionTime = double.Parse(values[1])
+                                          }));
+
+                SetTablePeptides(measuredPeptidesNew);
+            }
+
+            public void SetTablePeptides(IEnumerable<MeasuredRetentionTime> tablePeps)
+            {
+                SetTablePeptides(tablePeps.Select(p => new MeasuredPeptide(p.PeptideSequence, p.RetentionTime)));
+            }
+
+            private void SetTablePeptides(IEnumerable<MeasuredPeptide> tablePeps)
+            {
+                string message = ValidateUniquePeptides(tablePeps.Select(p => p.Sequence), null, null);
+                if (message != null)
+                {
+                    MessageDlg.Show(MessageParent, message);
+                    return;
+                }
+
+                Items.Clear();
+                foreach (var measuredRT in tablePeps)
+                    Items.Add(measuredRT);
+            }
+        }
+
+        private SortableBindingList<MeasuredPeptide> Peptides { get { return _gridViewDriver.Items; } }
+
+        private IList<MeasuredRetentionTime> GetTablePeptides()
+        {
+            return Peptides.Select(p =>
+                new MeasuredRetentionTime(p.Sequence, p.RetentionTime)).ToArray();
         }
 
         private void btnUseCurrent_Click(object sender, EventArgs e)
@@ -281,6 +298,78 @@ namespace pwiz.Skyline.SettingsUI
                 SetTablePeptides(regressionPeps, true);
         }
 
+        public void SetTablePeptides(IList<MeasuredRetentionTime> tablePeps, bool forceUpdate)
+        {
+            if (!forceUpdate && ArrayUtil.EqualsDeep(_activePeptides, tablePeps))
+                return;
+
+            _gridViewDriver.SetTablePeptides(tablePeps);
+        }
+
+        private void btnShowGraph_Click(object sender, EventArgs e)
+        {
+            ShowGraph();
+        }
+
+        public void ShowGraph()
+        {
+            var calc = _driverCalculators.SelectedItem;
+            if (!calc.IsUsable)
+            {
+                try
+                {
+                    calc = calc.Initialize(null);
+                }
+                catch (CalculatorException f)
+                {
+                    MessageDlg.Show(this, f.Message);
+                    return;
+                }
+            }
+
+            var e = new CancelEventArgs();
+            var helper = new MessageBoxHelper(this);
+
+            double slope;
+            if (!helper.ValidateDecimalTextBox(e, textSlope, out slope))
+                return;
+
+            double intercept;
+            if (!helper.ValidateDecimalTextBox(e, textIntercept, out intercept))
+                return;
+
+            var scores = new List<double>();
+            var times = new List<double>();
+
+            foreach (var measuredPeptide in Peptides)
+            {
+                times.Add(measuredPeptide.RetentionTime);
+                double? score = calc.ScoreSequence(measuredPeptide.Sequence);
+                scores.Add(score ?? calc.UnknownScore);
+            }
+
+            var statScores = new Statistics(scores);
+            var statTimes = new Statistics(times);
+            double slopeRegress = statTimes.Slope(statScores);
+            double interceptRegress = statTimes.Intercept(statScores);
+
+            var regressionGraphData = new RegressionGraphData
+            {
+                Title = "Retention Times by Score",
+                LabelX = calc.Name,
+                LabelY = "Measured Time",
+                XValues = scores.ToArray(),
+                YValues = times.ToArray(),
+                RegressionLine = new RegressionLine(slopeRegress, interceptRegress),
+                RegressionLineCurrent = new RegressionLine(slope, intercept)
+            };
+
+            using (var dlg = new GraphRegression(new[] { regressionGraphData }))
+            {
+                dlg.ShowDialog(this);
+            }
+        }
+
         public List<MeasuredRetentionTime> GetDocumentPeptides()
         {
             var document = Program.ActiveDocumentUI;
@@ -290,8 +379,16 @@ namespace pwiz.Skyline.SettingsUI
                 return null;
 
             var peps = new List<MeasuredRetentionTime>();
+            var setPeps = new HashSet<string>();
             foreach(var nodePep in document.Peptides)
             {
+                string modSeq = document.Settings.GetModifiedSequence(nodePep);
+                // If a document contains the same peptide twice, make sure it
+                // only gets added once.
+                if (setPeps.Contains(modSeq))
+                    continue;
+                setPeps.Add(modSeq);
+
                 if (nodePep.AveragePeakCountRatio < 0.5)
                     continue;
 
@@ -299,7 +396,6 @@ namespace pwiz.Skyline.SettingsUI
                 if (!retentionTime.HasValue)
                     continue;
 
-                string modSeq = document.Settings.GetModifiedSequence(nodePep);
                 peps.Add(new MeasuredRetentionTime(modSeq, retentionTime.Value));
             }
 
@@ -312,7 +408,7 @@ namespace pwiz.Skyline.SettingsUI
 		/// Todo: split this function into one that chooses and returns the calculator and one that returns the peptides
 		/// todo: chosen by that calculator
         /// </summary>
-        private List<MeasuredRetentionTime> UpdateCalculator(RetentionScoreCalculatorSpec calculator)
+        private IList<MeasuredRetentionTime> UpdateCalculator(RetentionScoreCalculatorSpec calculator)
         {
             bool calcInitiallyNull = calculator == null;
 
@@ -360,114 +456,6 @@ namespace pwiz.Skyline.SettingsUI
                 comboCalculator.SelectedItem = calculator.Name;
 
             return tablePeptides;
-        }
-
-        public void SetTablePeptides(List<MeasuredRetentionTime> tablePeps, bool forceUpdate)
-        {
-            if (!forceUpdate && ArrayUtil.EqualsDeep(_activePeptides, tablePeps))
-                return;
-
-            var rowsNew = new List<string[]>();
-
-            foreach (var measuredRT in tablePeps)
-                rowsNew.Add(new[] { measuredRT.PeptideSequence, measuredRT.RetentionTime.ToString() });
-                //rowsNew.Add(new[] { pep.Sequence, string.Format("{0:F02}", pep.RetentionTimeOrIrt) });
-
-            gridPeptides.SuspendLayout();
-
-            gridPeptides.Rows.Clear();
-            foreach (var columns in rowsNew)
-                gridPeptides.Rows.Add(columns);
-
-            gridPeptides.ResumeLayout();
-        }
-
-        private void gridPeptides_KeyDown(object sender, KeyEventArgs e)
-        {
-            // Handle Ctrl + V for paste
-            if (e.KeyCode == Keys.V && e.Control)
-            {
-                if (gridPeptides.DoPaste(this, ValidatePeptideCellValues))
-                    RecalcRegression(GetTablePeptides());
-            }
-            else if (e.KeyCode == Keys.Delete)
-            {
-                if (gridPeptides.DoDelete())
-                    RecalcRegression(GetTablePeptides());
-            }
-        }
-
-        private bool ValidatePeptideCellValues(string[] values)
-        {
-            int colError;
-            return ValidatePeptideCellValues(values, out colError);
-        }
-
-        private bool ValidatePeptideCellValues(string[] values, out int colError)
-        {
-            string seq = values[0].Trim();
-            if (!FastaSequence.IsSequence(seq))
-            {
-                string message = string.Format("The sequence {0} is not a valid peptide.", seq);
-                MessageBox.Show(this, message, Program.Name);
-                colError = 0;
-                return false;
-            }
-//            else
-//            {
-//                char cTerm = seq[seq.Length - 1];
-//                if (cTerm != 'R' && cTerm != 'K')
-//                {
-//                    string message = string.Format("The sequence {0} does not end with R or K.  " +
-//                                                   "The hydrophobicity calculator is only calibrated for tryptic cleavage.",
-//                                                   seq);
-//                    MessageBox.Show(message, Program.Name);
-//                    return false;
-//                }
-//            }
-
-            string rt = (values.Length < 2 ? "" : values[1].Trim());
-            try
-            {
-                double.Parse(rt);
-            }
-            catch (FormatException)
-            {
-                string message = string.Format("The value {0} is not a valid retention time.", rt);
-                MessageBox.Show(this, message, Program.Name);
-                colError = 1;
-                return false;
-            }
-            colError = -1;
-            return true;
-        }
-
-
-        private void gridPeptides_RowValidating(object sender, DataGridViewCellCancelEventArgs e)
-        {
-            var newPeps = new List<MeasuredRetentionTime>();
-            if (ValidatePeptides(e, newPeps))
-                _activePeptides = newPeps;
-        }
-
-        private void gridPeptides_CellEndEdit(object sender, DataGridViewCellEventArgs e)
-        {
-            if (_activePeptides == null || _activePeptides.Count < 1)
-            {
-                return;
-            }
-
-            try
-            {
-                var regressionPeps = UpdateCalculator(_driverCalculators.SelectedItem);
-                if (regressionPeps != null)
-                    SetTablePeptides(regressionPeps, false);
-                RecalcRegression(_activePeptides);
-            }
-            catch (Exception)
-            {
-                comboCalculator.SelectedIndex = 0;
-            }
         }
 
         private RetentionScoreCalculatorSpec RecalcRegression(List<MeasuredRetentionTime> peptides)
@@ -622,5 +610,40 @@ namespace pwiz.Skyline.SettingsUI
         }
 
         #endregion
+    }
+
+    public class MeasuredPeptide : IPeptideData
+    {
+        public MeasuredPeptide()
+        {
+        }
+
+        public MeasuredPeptide(string seq, double rt)
+        {
+            Sequence = seq;
+            RetentionTime = rt;
+        }
+
+        public string Sequence { get; set; }
+        public double RetentionTime { get; set; }
+
+        public static string ValidateSequence(string sequence)
+        {
+            if (sequence == null)
+                return "A modified peptide sequence is required for each entry.";
+            else if (!FastaSequence.IsExSequence(sequence))
+                return string.Format("The sequence '{0}' is not a valid modified peptide sequence.", sequence);
+            return null;
+        }
+
+        public static string ValidateRetentionTime(string rtText, bool allowNegative)
+        {
+            double rtValue;
+            if (!double.TryParse(rtText, out rtValue))
+                return "Measured retention times must be valid decimal numbers.";
+            else if (!allowNegative && rtValue <= 0)
+                return "Measured retention times must be greater than zero.";
+            return null;
+        }
     }
 }

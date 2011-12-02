@@ -93,6 +93,10 @@ namespace pwiz.Skyline.SettingsUI
             this.label10 = new System.Windows.Forms.Label();
             this.btnEditStaticMods = new System.Windows.Forms.Button();
             this.label8 = new System.Windows.Forms.Label();
+            this.contextMenuCalculator = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.addCalculatorContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.editCalculatorCurrentContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.editCalculatorListContextMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.tabControl1.SuspendLayout();
             this.tabDigestion.SuspendLayout();
             this.tabPrediction.SuspendLayout();
@@ -100,6 +104,7 @@ namespace pwiz.Skyline.SettingsUI
             this.tabLibrary.SuspendLayout();
             this.panelPick.SuspendLayout();
             this.tabModifications.SuspendLayout();
+            this.contextMenuCalculator.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnOk
@@ -123,6 +128,12 @@ namespace pwiz.Skyline.SettingsUI
             this.btnCancel.TabIndex = 2;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
+            // 
+            // helpTip
+            // 
+            this.helpTip.AutoPopDelay = 15000;
+            this.helpTip.InitialDelay = 500;
+            this.helpTip.ReshowDelay = 100;
             // 
             // comboStandardType
             // 
@@ -523,12 +534,14 @@ namespace pwiz.Skyline.SettingsUI
             // 
             // btnUpdateCalculator
             // 
-            this.btnUpdateCalculator.Location = new System.Drawing.Point(211, 34);
+            this.btnUpdateCalculator.Image = global::pwiz.Skyline.Properties.Resources.Calculator;
+            this.btnUpdateCalculator.Location = new System.Drawing.Point(204, 34);
             this.btnUpdateCalculator.Name = "btnUpdateCalculator";
-            this.btnUpdateCalculator.Size = new System.Drawing.Size(104, 23);
+            this.btnUpdateCalculator.Size = new System.Drawing.Size(25, 24);
             this.btnUpdateCalculator.TabIndex = 2;
-            this.btnUpdateCalculator.Text = "Edit &Calculator...";
+            this.helpTip.SetToolTip(this.btnUpdateCalculator, "Retention time calculators");
             this.btnUpdateCalculator.UseVisualStyleBackColor = true;
+            this.btnUpdateCalculator.Visible = false;
             this.btnUpdateCalculator.Click += new System.EventHandler(this.btnUpdateCalculator_Click);
             // 
             // label14
@@ -778,6 +791,36 @@ namespace pwiz.Skyline.SettingsUI
             this.label8.TabIndex = 0;
             this.label8.Text = "&Structural modifications:";
             // 
+            // contextMenuCalculator
+            // 
+            this.contextMenuCalculator.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.addCalculatorContextMenuItem,
+            this.editCalculatorCurrentContextMenuItem,
+            this.editCalculatorListContextMenuItem});
+            this.contextMenuCalculator.Name = "contextMenuCalculator";
+            this.contextMenuCalculator.Size = new System.Drawing.Size(147, 70);
+            // 
+            // addCalculatorContextMenuItem
+            // 
+            this.addCalculatorContextMenuItem.Name = "addCalculatorContextMenuItem";
+            this.addCalculatorContextMenuItem.Size = new System.Drawing.Size(146, 22);
+            this.addCalculatorContextMenuItem.Text = "Add...";
+            this.addCalculatorContextMenuItem.Click += new System.EventHandler(this.addCalculatorContextMenuItem_Click);
+            // 
+            // editCalculatorCurrentContextMenuItem
+            // 
+            this.editCalculatorCurrentContextMenuItem.Name = "editCalculatorCurrentContextMenuItem";
+            this.editCalculatorCurrentContextMenuItem.Size = new System.Drawing.Size(146, 22);
+            this.editCalculatorCurrentContextMenuItem.Text = "Edit Current...";
+            this.editCalculatorCurrentContextMenuItem.Click += new System.EventHandler(this.editCalculatorCurrentContextMenuItem_Click);
+            // 
+            // editCalculatorListContextMenuItem
+            // 
+            this.editCalculatorListContextMenuItem.Name = "editCalculatorListContextMenuItem";
+            this.editCalculatorListContextMenuItem.Size = new System.Drawing.Size(146, 22);
+            this.editCalculatorListContextMenuItem.Text = "Edit List...";
+            this.editCalculatorListContextMenuItem.Click += new System.EventHandler(this.editCalculatorListContextMenuItem_Click);
+            // 
             // PeptideSettingsUI
             // 
             this.AcceptButton = this.btnOk;
@@ -808,6 +851,7 @@ namespace pwiz.Skyline.SettingsUI
             this.panelPick.PerformLayout();
             this.tabModifications.ResumeLayout(false);
             this.tabModifications.PerformLayout();
+            this.contextMenuCalculator.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -875,5 +919,9 @@ namespace pwiz.Skyline.SettingsUI
         private System.Windows.Forms.Label label17;
         private System.Windows.Forms.TextBox textMaxVariableMods;
         private System.Windows.Forms.Button btnUpdateCalculator;
+        private System.Windows.Forms.ContextMenuStrip contextMenuCalculator;
+        private System.Windows.Forms.ToolStripMenuItem addCalculatorContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem editCalculatorCurrentContextMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem editCalculatorListContextMenuItem;
     }
 }

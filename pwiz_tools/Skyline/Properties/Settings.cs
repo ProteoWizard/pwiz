@@ -408,7 +408,7 @@ namespace pwiz.Skyline.Properties
                 }
                 else
                 {
-                    //list.EnsureDefault();
+                    list.EnsureDefault();
                 }
                 return list;
             }
@@ -1033,6 +1033,13 @@ namespace pwiz.Skyline.Properties
     
     public sealed class RTScoreCalculatorList : SettingsList<RetentionScoreCalculatorSpec>
     {
+        private static readonly RetentionScoreCalculatorSpec[] DEFAULTS =
+            new[]
+                {
+                    new RetentionScoreCalculator(RetentionTimeRegression.SSRCALC_100_A),
+                    new RetentionScoreCalculator(RetentionTimeRegression.SSRCALC_300_A)
+                };
+
         /// <summary>
         /// <see cref="RetentionTimeRegression"/> objects depend on calculators. If a user deletes or changes a calculator,
         /// the <see cref="RetentionTimeRegression"/> objects that depend on it may need to be removed.
@@ -1100,11 +1107,21 @@ namespace pwiz.Skyline.Properties
 
         public override IEnumerable<RetentionScoreCalculatorSpec> GetDefaults(int revisionIndex)
         {
-            return new[]
-                       {
-                           new RetentionScoreCalculator(RetentionTimeRegression.SSRCALC_100_A),
-                           new RetentionScoreCalculator(RetentionTimeRegression.SSRCALC_300_A)
-                       };
+            return DEFAULTS;
+        }
+
+        public void EnsureDefault()
+        {
+            // Make sure the default calculators are present.
+            var defaultCalculators = GetDefaults().ToArray();
+            int len = defaultCalculators.Length;
+            if (Count < len || !ArrayUtil.ReferencesEqual(defaultCalculators, this.Take(len).ToArray()))
+            {
+                foreach (var calc in defaultCalculators)
+                    Remove(calc);
+                foreach (var calc in defaultCalculators.Reverse())
+                    Insert(0, calc);
+            }
         }
 
         protected override IXmlElementHelper<RetentionScoreCalculatorSpec>[] GetXmlElementHelpers()

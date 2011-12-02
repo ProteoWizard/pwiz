@@ -117,15 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="cbFilterScheduling.ToolTip" xml:space="preserve">
-    <value>Full-scan filtering will limit  chromatorgram time ranges to the windows
-it would use in scheduling acquisition, regardless of whether the data
-was acquired with a scheduled method.  This can save memory and disk
-space in some cases.</value>
-  </data>
-  <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>17, 17</value>
-  </metadata>
   <metadata name="helpTip.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
@@ -139,5 +130,11 @@ use the predicted CE for the unlabeled form.  (AB instruments only)</value>
 the selection of MS/MS peaks matching ions for ranking, but
 also add all product ions matching the full filter, if they are
 not found in the library</value>
+  </data>
+  <data name="cbFilterScheduling.ToolTip" xml:space="preserve">
+    <value>Full-scan filtering will limit  chromatorgram time ranges to the windows
+it would use in scheduling acquisition, regardless of whether the data
+was acquired with a scheduled method.  This can save memory and disk
+space in some cases.</value>
   </data>
 </root>

@@ -44,6 +44,11 @@ namespace pwiz.Skyline.SettingsUI
 
         public static bool DoPaste(this DataGridView grid, IWin32Window parent, ValidateCellValues validate)
         {
+            return grid.DoPaste(parent, validate, values => grid.Rows.Add(values));
+        }
+
+        public static bool DoPaste(this DataGridView grid, IWin32Window parent, ValidateCellValues validate, Action<string[]> addRow)
+        {
             string textClip;
             try
             {
@@ -85,7 +90,7 @@ namespace pwiz.Skyline.SettingsUI
                 if (!validate(columns))
                     break;
 
-                grid.Rows.Add(columns);
+                addRow(columns);
             }
 
             grid.ResumeLayout();

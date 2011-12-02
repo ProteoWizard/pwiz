@@ -182,6 +182,31 @@ namespace pwiz.Skyline.Model
             }
         }
 
+        public float? GetPeakCenterTime(ChromFileInfo fileInfo)
+        {
+            double totalTime = 0;
+            int countTime = 0;
+            foreach (TransitionGroupDocNode nodeGroup in Children)
+            {
+                if (!nodeGroup.HasResults)
+                    continue;
+
+                foreach (var chromInfo in nodeGroup.ChromInfos)
+                {
+                    if (fileInfo != null && !ReferenceEquals(fileInfo.Id, chromInfo.FileId))
+                        continue;
+                    if (!chromInfo.StartRetentionTime.HasValue || !chromInfo.EndRetentionTime.HasValue)
+                        continue;
+
+                    totalTime += (chromInfo.StartRetentionTime.Value + chromInfo.EndRetentionTime.Value)/2;
+                    countTime++;
+                }
+            }
+            if (countTime == 0)
+                return null;
+            return (float)(totalTime / countTime);
+        }
+
         private float? GetAverageResultValue(Func<PeptideChromInfo, float?> getVal)
         {
             return HasResults ? Results.GetAverageValue(getVal) : null;

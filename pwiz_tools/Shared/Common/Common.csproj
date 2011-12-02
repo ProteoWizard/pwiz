@@ -146,6 +146,7 @@
     <Compile Include="DataBinding\RowKey.cs" />
     <Compile Include="DataBinding\RowNode.cs" />
     <Compile Include="DataBinding\LinkValue.cs" />
+    <Compile Include="DataBinding\SortableBindingList.cs" />
     <Compile Include="DataBinding\TreeList.cs" />
     <Compile Include="DataBinding\ViewInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

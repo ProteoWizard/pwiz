@@ -1,5 +1,6 @@
 ﻿/*
  * Original author: John Chilton <jchilton .at. uw.edu>,
+ *                  Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2011 University of Washington - Seattle, WA
@@ -22,10 +23,12 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.DataBinding;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.Irt;
+using pwiz.Skyline.Properties;
 
 namespace pwiz.Skyline.SettingsUI
 {
@@ -35,140 +38,23 @@ namespace pwiz.Skyline.SettingsUI
         public const int MIN_STANDARD_PEPTIDES = 5;
         public const int MIN_SUGGESTED_STANDARD_PEPTIDES = 10;
 
-        private const int COL_CHECKBOX = 2;
-
-        public List<DbIrtPeptide> CalibrationPeptides { get; private set; }
-
-        public int BoxesChecked
-        {
-            get
-            {
-                int numChecked = 0;
-                foreach (DataGridViewRow row in gridViewCalibrate.Rows)
-                {
-                    if (row.Cells[COL_CHECKBOX].Value != null && (bool)row.Cells[COL_CHECKBOX].Value)
-                        numChecked++;
-                }
-                return numChecked;
-            }
-        }
+        private readonly CalibrationGridViewDriver _gridViewDriver;
 
         public CalibrateIrtDlg()
         {
             InitializeComponent();
 
-            var peps = Program.ActiveDocumentUI.Peptides.ToList();
-            var count = peps.Count(pep => pep.HasResults);
+            Icon = Resources.Skyline;
 
-            textPeptideCount.Text = Math.Min(count, MAX_DEFAULT_STANDARD_PEPTIDES).ToString();
+            _gridViewDriver = new CalibrationGridViewDriver(gridViewCalibrate, bindingSourceStandard,
+                                                            new SortableBindingList<StandardPeptide>());
         }
 
-        public List<MeasuredPeptide> Recalculate()
-        {
-            var document = Program.ActiveDocumentUI;
+        public IList<DbIrtPeptide> CalibrationPeptides { get; private set; }
 
-            if(!document.Settings.HasResults)
-            {
-                MessageDlg.Show(this, "The document must contain results to calibrate a standard.");
-                return null;
-            }
+        private SortableBindingList<StandardPeptide> StandardPeptideList { get { return _gridViewDriver.Items; } }
 
-            var helper = new MessageBoxHelper(this);
-            int peptideCount;
-            if (!helper.ValidateNumberTextBox(new CancelEventArgs(), textPeptideCount, MIN_STANDARD_PEPTIDES, null, out peptideCount))
-                return null;
-
-            var peps = FindEvenlySpacedPeptides(document, peptideCount);
-
-            gridViewCalibrate.SuspendLayout();
-            gridViewCalibrate.Rows.Clear();
-            for (int i = 0; i < peps.Count; i++)
-            {
-                var pep = peps[i];
-                int n = gridViewCalibrate.Rows.Add();
-
-                gridViewCalibrate.Rows[n].Cells[0].Value = pep.Sequence;
-                gridViewCalibrate.Rows[n].Cells[1].Value = string.Format("{0:F04}", pep.RetentionTimeOrIrt.ToString());
-                if (i == 0 || i == peps.Count - 1)
-                {
-                    gridViewCalibrate.Rows[n].Cells[2].Value = true;
-                }
-            }
-            gridViewCalibrate.ResumeLayout();
-
-            return peps;
-        }
-
-        /// <summary>
-        /// This algorithm will determine a number of evenly spaced retention times for the given document,
-        /// and then determine an optimal set of peptides from the document. That is, a set of peptides that
-        /// are as close as possible to the chosen retention times.
-        /// 
-        /// The returned list is guaranteed to be sorted by retention time.
-        /// </summary>
-        /// <param name="doc">An SrmDocument to get peptides from</param>
-        /// <param name="peptideCount">The number of peptides desired</param>
-        public List<MeasuredPeptide> FindEvenlySpacedPeptides(SrmDocument doc, int peptideCount)
-        {
-            double minRT = float.PositiveInfinity;
-            double maxRT = 0;
-            List<MeasuredPeptide> docPeptides = new List<MeasuredPeptide>();
-            foreach(var pep in doc.Peptides)
-            {
-                if (pep.SchedulingTime.HasValue)
-                {
-                    docPeptides.Add(new MeasuredPeptide(pep.Peptide.Sequence, pep.SchedulingTime.Value));
-
-                    if (pep.SchedulingTime.Value < minRT)
-                        minRT = pep.SchedulingTime.Value;
-                    if (pep.SchedulingTime.Value > maxRT)
-                        maxRT = pep.SchedulingTime.Value;
-                }
-            }
-
-            if (docPeptides.Count < peptideCount)
-            {
-                MessageDlg.Show(this,
-                    String.Format("The document only contains {0} measured peptides. All of them will be used.",
-                                  docPeptides.Count)); //*
-                textPeptideCount.Text = docPeptides.Count.ToString();
-            }
-
-            docPeptides.Sort((one, two) => one.RetentionTimeOrIrt.CompareTo(two.RetentionTimeOrIrt));
-
-            if (docPeptides.Count == peptideCount)
-                return docPeptides; //*
-
-            /*
-             * This algorithm will pick the closest peptide to each "target RT" as defined
-             * by the "length of the gradient" (Last peptide's RT - First peptide's RT) and
-             * the number of peptides asked for.
-             * 
-             * It does this by considering peptides 3 at a time: (prev, current, next) triplets.
-             * When the pointer has shifted so that the "current" peptide is closer than
-             * either of its neighbors, then that peptide is added to the standard and removed
-             * from the search list.
-             */
-            List<MeasuredPeptide> standardPeptides = new List<MeasuredPeptide>();
-            double gradientLength = maxRT - minRT;
-            for (int i = 0; i < peptideCount; i++)
-            {
-                double targetRT = minRT + i * (gradientLength / (peptideCount - 1));
-                for(int j = 0; j < docPeptides.Count; j++)
-                {
-                    if(j + 1 > docPeptides.Count-1 ||
-                       Math.Abs(docPeptides[j].RetentionTimeOrIrt - targetRT) < 
-                       Math.Abs(docPeptides[j+1].RetentionTimeOrIrt - targetRT))
-                    {
-                        standardPeptides.Add(docPeptides[j]);
-                        docPeptides.RemoveAt(j);
-                        break;
-                    }
-                }
-            }
-
-            return standardPeptides;
-        }
+        public int StandardPeptideCount { get { return StandardPeptideList.Count; } }
 
         public void OkDialog()
         {
@@ -182,61 +68,40 @@ namespace pwiz.Skyline.SettingsUI
             if (!helper.ValidateDecimalTextBox(e, textMaxIrt, minIrt, null, out maxIrt))
                 return;
 
-            List<MeasuredPeptide> peptides = new List<MeasuredPeptide>();
-            double? fixedPt1 = new double?();
-            double? fixedPt2 = new double?();
-            
-            foreach (DataGridViewRow row in gridViewCalibrate.Rows)
+            int iFixed1 = -1, iFixed2 = -1;
+            for (int i = 0; i < StandardPeptideList.Count; i++)
             {
-                if (row.IsNewRow)
+                if (!StandardPeptideList[i].FixedPoint)
                     continue;
-                if (row.Cells[0].Value == null || row.Cells[1].Value == null)
-                    continue;
-                if (!EditIrtCalcDlg.ValidateRow(new[] { row.Cells[0].Value.ToString(), row.Cells[1].Value.ToString() }))
-                {
-                    MessageDlg.Show(this,
-                        string.Format("There is an error with the standard peptides: cannot create a record from peptide {0} and measured RT {1}",
-                            row.Cells[0].Value.ToString(), row.Cells[1].Value.ToString()));
-                    return;
-                }
-
-                double iRT = double.Parse(row.Cells[1].Value.ToString());
-
-                if (row.Cells[2].Value != null && (bool)row.Cells[2].Value)
-                    if (!fixedPt1.HasValue)
-                        fixedPt1 = iRT;
-                    else if (!fixedPt2.HasValue)
-                        fixedPt2 = iRT;
-                    else
-                    {
-                        MessageDlg.Show(this, "The standard can only have two fixed points.");
-                        return;
-                    }
-
-                peptides.Add(new MeasuredPeptide(row.Cells[0].Value.ToString(), iRT));
+                if (iFixed1 == -1)
+                    iFixed1 = i;
+                else
+                    iFixed2 = i;
             }
 
-            if(!fixedPt1.HasValue || !fixedPt2.HasValue)
+            if(iFixed1 == -1 || iFixed2 == -1)
             {
                 MessageDlg.Show(this, "The standard must have two fixed points.");
                 return;
             }
 
-            double minRt = fixedPt1.Value < fixedPt2.Value ? fixedPt1.Value : fixedPt2.Value;
-            double maxRt = fixedPt1.Value < fixedPt2.Value ? fixedPt2.Value : fixedPt1.Value;
-            CalibrationPeptides = new List<DbIrtPeptide>();
-            foreach (var pep in peptides)
-            {
-                double measuredRT = pep.RetentionTimeOrIrt;
+            double fixedPt1 = StandardPeptideList[iFixed1].RetentionTime;
+            double fixedPt2 = StandardPeptideList[iFixed2].RetentionTime;
+            double minRt = Math.Min(fixedPt1, fixedPt2);
+            double maxRt = Math.Max(fixedPt1, fixedPt2);
 
-                CalibrationPeptides.Add(new DbIrtPeptide(pep.Sequence,
-                    Map(measuredRT, minRt, maxRt, minIrt, maxIrt), true, true));
+            CalibrationPeptides = new List<DbIrtPeptide>();
+            foreach (var peptide in StandardPeptideList)
+            {
+                double measuredRT = peptide.RetentionTime;
+                double iRT = Transform(measuredRT, minRt, maxRt, minIrt, maxIrt);
+                CalibrationPeptides.Add(new DbIrtPeptide(peptide.Sequence, iRT, true, TimeSource.peak));
             }
 
             DialogResult = DialogResult.OK;
         }
 
-        public static double Map(double value, double startFrom, double endFrom, double startTo, double endTo)
+        public static double Transform(double value, double startFrom, double endFrom, double startTo, double endTo)
         {
             return ((value - startFrom)/(endFrom - startFrom))*(endTo - startTo) + startTo;
         }
@@ -246,78 +111,231 @@ namespace pwiz.Skyline.SettingsUI
             OkDialog();
         }
 
-        private void btnRecalc_Click(object sender, EventArgs e)
+        private void btnUseCurrent_Click(object sender, EventArgs e)
         {
-            Recalculate();
+            UseResults();
         }
 
-        private void gridViewCalibrate_CurrentCellDirtyStateChanged(object sender, EventArgs e)
+        public void UseResults()
         {
-            if (gridViewCalibrate.IsCurrentCellDirty)
+            var document = Program.ActiveDocumentUI;
+
+            if(!document.Settings.HasResults)
             {
-                //It appears that the last condition should be non-inverted, but this event is fired before
-                //the checkbox is checked, so IF the value is false, THEN the user is trying to check the box.
-                var curCell = gridViewCalibrate.CurrentCell;
-                if (curCell.ColumnIndex == 2 && BoxesChecked >= 2 && (curCell.Value == null || !(bool)curCell.Value))
+                MessageDlg.Show(this, "The document must contain results to calibrate a standard.");
+                return;
+            }
+
+            int count = document.Peptides.Count(nodePep => nodePep.SchedulingTime.HasValue);
+            if (count > 20)
+            {
+                using (var dlg = new AddIrtStandardsDlg(count))
                 {
-                    //If two are checked, uncheck the closest checked cell and check the just-checked cell
-                    DataGridViewCell closestCell = null;
-                    foreach (DataGridViewRow row in gridViewCalibrate.Rows)
-                    {
-                        var cell = row.Cells[2];
-                        if(cell.RowIndex != curCell.RowIndex && cell.Value != null && (bool)cell.Value && (closestCell == null ||
-                                Math.Abs(cell.RowIndex - curCell.RowIndex) < Math.Abs(closestCell.RowIndex - curCell.RowIndex)))
-                            closestCell = cell;
-                    }
-                    if(closestCell != null)
-                        closestCell.Value = false;
+                    if (dlg.ShowDialog(this) != DialogResult.OK)
+                        return;
+
+                    count = dlg.StandardCount;
+                }
+            }
+
+            _gridViewDriver.Recalculate(document, count);
+        }
+
+        private class CalibrationGridViewDriver : PeptideGridViewDriver<StandardPeptide>
+        {
+            private const int COLUMN_FIXED = 2;
+
+            public CalibrationGridViewDriver(DataGridViewEx gridView,
+                                             BindingSource bindingSource,
+                                             SortableBindingList<StandardPeptide> items)
+                : base(gridView, bindingSource, items)
+            {
+                GridView.CurrentCellDirtyStateChanged += gridView_CurrentCellDirtyStateChanged;
+            }
+
+            private int FixedPointCount
+            {
+                get { return Items.Count(p => p.FixedPoint); }
+            }
+
+            protected override void DoPaste()
+            {
+                var standardPeptidesNew = new List<StandardPeptide>();
+                GridView.DoPaste(MessageParent, ValidateRow,
+                                          values =>
+                                          standardPeptidesNew.Add(new StandardPeptide
+                                          {
+                                              Sequence = values[0],
+                                              RetentionTime = double.Parse(values[1])
+                                          }));
+
+                string message = ValidateUniquePeptides(standardPeptidesNew.Select(p => p.Sequence), null, null);
+                if (message != null)
+                {
+                    MessageDlg.Show(MessageParent, message);
+                    return;
                 }
 
-                gridViewCalibrate.CommitEdit(DataGridViewDataErrorContexts.Commit);
+                Items.Clear();
+                foreach (var peptide in standardPeptidesNew)
+                    Items.Add(peptide);
+            }
+
+            protected override bool DoRowValidating(int rowIndex)
+            {
+                if (!base.DoRowValidating(rowIndex))
+                    return false;
+
+                if (FixedPointCount < 2)
+                    GridView.Rows[rowIndex].Cells[COLUMN_FIXED].Value = true;
+
+                return true;
+            }
+
+            private void gridView_CurrentCellDirtyStateChanged(object sender, EventArgs e)
+            {
+                if (GridView.IsCurrentCellDirty)
+                {
+                    //It appears that the last condition should be non-inverted, but this event is fired before
+                    //the checkbox is checked, so IF the value is false, THEN the user is trying to check the box.
+                    var curCell = GridView.CurrentCell;
+                    if (!curCell.OwningRow.IsNewRow &&
+                            curCell.ColumnIndex == COLUMN_FIXED &&
+                            FixedPointCount >= 2 &&
+                            (curCell.Value == null || !(bool)curCell.Value))
+                    {
+                        //If two are checked, uncheck the closest checked cell and check the just-checked cell
+                        DataGridViewCell closestCell = null;
+                        foreach (DataGridViewRow row in GridView.Rows)
+                        {
+                            var cell = row.Cells[COLUMN_FIXED];
+                            if (cell.RowIndex != curCell.RowIndex && cell.Value != null && (bool)cell.Value && (closestCell == null ||
+                                    Math.Abs(cell.RowIndex - curCell.RowIndex) < Math.Abs(closestCell.RowIndex - curCell.RowIndex)))
+                                closestCell = cell;
+                        }
+                        if (closestCell != null)
+                            closestCell.Value = false;
+
+                        GridView.CommitEdit(DataGridViewDataErrorContexts.Commit);
+                    }
+                }
+            }
+
+            public List<MeasuredPeptide> Recalculate(SrmDocument document, int peptideCount)
+            {
+                var peps = FindEvenlySpacedPeptides(document, peptideCount);
+
+                Items.RaiseListChangedEvents = false;
+                Items.Clear();
+                for (int i = 0; i < peps.Count; i++)
+                {
+                    var pep = peps[i];
+                    Items.Add(new StandardPeptide
+                    {
+                        Sequence = pep.Sequence,
+                        RetentionTime = pep.RetentionTime,
+                        FixedPoint = (i == 0 || i == peps.Count - 1)
+                    });
+                }
+                Items.RaiseListChangedEvents = true;
+                Items.ResetBindings();
+
+                return peps;
+            }
+
+            /// <summary>
+            /// This algorithm will determine a number of evenly spaced retention times for the given document,
+            /// and then determine an optimal set of peptides from the document. That is, a set of peptides that
+            /// are as close as possible to the chosen retention times.
+            /// 
+            /// The returned list is guaranteed to be sorted by retention time.
+            /// </summary>
+            /// <param name="doc">An SrmDocument to get peptides from</param>
+            /// <param name="peptideCount">The number of peptides desired</param>
+            private static List<MeasuredPeptide> FindEvenlySpacedPeptides(SrmDocument doc, int peptideCount)
+            {
+                double minRT = float.PositiveInfinity;
+                double maxRT = 0;
+                List<MeasuredPeptide> docPeptides = new List<MeasuredPeptide>();
+                foreach (var pep in doc.Peptides)
+                {
+                    if (pep.SchedulingTime.HasValue)
+                    {
+                        docPeptides.Add(new MeasuredPeptide(pep.Peptide.Sequence, pep.SchedulingTime.Value));
+
+                        if (pep.SchedulingTime.Value < minRT)
+                            minRT = pep.SchedulingTime.Value;
+                        if (pep.SchedulingTime.Value > maxRT)
+                            maxRT = pep.SchedulingTime.Value;
+                    }
+                }
+
+                docPeptides.Sort((one, two) => one.RetentionTime.CompareTo(two.RetentionTime));
+
+                if (docPeptides.Count == peptideCount)
+                    return docPeptides;
+
+                /*
+                 * This algorithm will pick the closest peptide to each "target RT" as defined
+                 * by the "length of the gradient" (Last peptide's RT - First peptide's RT) and
+                 * the number of peptides asked for.
+                 * 
+                 * It does this by considering peptides 3 at a time: (prev, current, next) triplets.
+                 * When the pointer has shifted so that the "current" peptide is closer than
+                 * either of its neighbors, then that peptide is added to the standard and removed
+                 * from the search list.
+                 */
+                List<MeasuredPeptide> standardPeptides = new List<MeasuredPeptide>();
+                double gradientLength = maxRT - minRT;
+                for (int i = 0; i < peptideCount; i++)
+                {
+                    double targetRT = minRT + i * (gradientLength / (peptideCount - 1));
+                    for (int j = 0; j < docPeptides.Count; j++)
+                    {
+                        if (j + 1 > docPeptides.Count - 1 ||
+                           Math.Abs(docPeptides[j].RetentionTime - targetRT) <
+                           Math.Abs(docPeptides[j + 1].RetentionTime - targetRT))
+                        {
+                            standardPeptides.Add(docPeptides[j]);
+                            docPeptides.RemoveAt(j);
+                            break;
+                        }
+                    }
+                }
+
+                return standardPeptides;
             }
         }
 
         #region Functional Test Support
 
-        public void SetNumPeptides(int count)
+        public List<MeasuredPeptide> Recalculate(SrmDocument document, int peptideCount)
         {
-            textPeptideCount.Text = count.ToString();
+            return _gridViewDriver.Recalculate(document, peptideCount);
         }
 
-        public void SetBoxesChecked(int one, int two)
+        public void SetFixedPoints(int one, int two)
         {
-            //Get indexes from these
-            one--;
-            two--;
-
-            //-2: one to get indices, one because of the "New Row"
-            if (one == two || one > gridViewCalibrate.RowCount - 2 || two > gridViewCalibrate.RowCount)
+            int count = StandardPeptideList.Count;
+            if (one >= two || two >= count)
                 return;
-            for (int i = 0; i < gridViewCalibrate.RowCount; i++)
-            {
-                gridViewCalibrate.Rows[i].Cells[2].Value = false;
-                if(i == one || i == two)
-                    gridViewCalibrate.Rows[i].Cells[2].Value = true;
+            for (int i = 0; i < count; i++)
+            {                
+                bool fixedPoint = (i == one || i == two);
+                var peptide = StandardPeptideList[i];
+                if (peptide.FixedPoint != fixedPoint)
+                {
+                    peptide.FixedPoint = fixedPoint;
+                    StandardPeptideList.ResetItem(i);
+                }
             }
         }
 
         #endregion
     }
 
-    public class StandardPeptide
+    public class StandardPeptide : MeasuredPeptide
     {
-        public MeasuredPeptide MeasuredPeptide { get; set; }
         public bool FixedPoint { get; set; }
-    }
-
-    public class MeasuredPeptide
-    {
-        public string Sequence { get; set; }
-        public double RetentionTimeOrIrt { get; set; }
-        public MeasuredPeptide(string seq, double rt)
-        {
-            Sequence = seq;
-            RetentionTimeOrIrt = rt;
-        }
     }
 }

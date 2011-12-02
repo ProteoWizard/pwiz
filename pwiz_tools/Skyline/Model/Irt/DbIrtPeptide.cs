@@ -22,7 +22,14 @@ using pwiz.Skyline.Model.Lib.BlibData;
 
 namespace pwiz.Skyline.Model.Irt
 {
-    public class DbIrtPeptide : DbEntity
+    public enum TimeSource { scan, peak }
+
+    public interface IPeptideData
+    {
+        string Sequence { get; }
+    }
+
+    public class DbIrtPeptide : DbEntity, IPeptideData
     {
         public override Type EntityClass
         {
@@ -31,33 +38,70 @@ namespace pwiz.Skyline.Model.Irt
 
         /*
         CREATE TABLE RetentionTimes (
-            ID id INTEGER PRIMARY KEY autoincrement not null,
+            Id id INTEGER PRIMARY KEY autoincrement not null,
             PeptideModSeq VARCHAR(200),
             iRT REAL,
             Standard BIT,
             PeakTime BIT
         )
         */
-        public virtual int? ID { get; set; }
+        // public virtual long? ID { get; set; } // in DbEntity
         public virtual string PeptideModSeq { get; set; }
         public virtual double Irt { get; set; }
         public virtual bool Standard { get; set; }
-        public virtual bool PeakTime { get; set; }
+        public virtual int? TimeSource { get; set; } // null = unknown, 0 = scan, 1 = peak
+
+        public virtual string Sequence { get { return PeptideModSeq; } }
 
         /// <summary>
         /// For NHibernate only
         /// </summary>
-        protected DbIrtPeptide()
+        public DbIrtPeptide()
         {            
         }
 
-        public DbIrtPeptide(string seq, double irt, bool standard, bool peakTime)
+        public DbIrtPeptide(string seq, double irt, bool standard, TimeSource timeSource)
         {
             PeptideModSeq = seq;
             Irt = irt;
             Standard = standard;
-            PeakTime = peakTime;
+            TimeSource = (int) timeSource;
         }
+
+        #region object overrides
+
+        public virtual bool Equals(DbIrtPeptide other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return base.Equals(other) &&
+                   Equals(other.PeptideModSeq, PeptideModSeq) &&
+                   other.Irt.Equals(Irt) &&
+                   other.Standard.Equals(Standard) &&
+                   other.TimeSource.Equals(TimeSource);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return Equals(obj as DbIrtPeptide);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                int result = base.GetHashCode();
+                result = (result*397) ^ (PeptideModSeq != null ? PeptideModSeq.GetHashCode() : 0);
+                result = (result*397) ^ Irt.GetHashCode();
+                result = (result*397) ^ Standard.GetHashCode();
+                result = (result*397) ^ (TimeSource.HasValue ? TimeSource.Value : 0);
+                return result;
+            }
+        }
+
+        #endregion
     }
 
     class PepIrtComparer : Comparer<DbIrtPeptide>

@@ -130,20 +130,28 @@ namespace pwiz.Skyline.Model.Results
         /// </summary>
         public IEnumerable<string> MSDataFilePaths
         {
+            get { return Chromatograms.SelectMany(chromSet => chromSet.MSDataFilePaths).Distinct(); }
+        }
+
+        public IEnumerable<ChromFileInfo> MSDataFileInfos
+        {
             get
             {
-                var seenPaths = new HashSet<string>();
-                foreach (ChromatogramSet chromSet in Chromatograms)
-                {
-                    foreach (string filePath in chromSet.MSDataFilePaths)
-                    {
-                        if (!seenPaths.Contains(filePath))
-                        {
-                            seenPaths.Add(filePath);
-                            yield return filePath;
-                        }
-                    }
-                }
+                return Chromatograms.SelectMany(chromSet =>
+                    chromSet.MSDataFileInfos).Distinct(new RefCompareChromFileInfo());
+            }
+        }
+
+        private class RefCompareChromFileInfo : IEqualityComparer<ChromFileInfo>
+        {
+            public bool Equals(ChromFileInfo x, ChromFileInfo y)
+            {
+                return ReferenceEquals(x, y);
+            }
+
+            public int GetHashCode(ChromFileInfo obj)
+            {
+                return obj.Id.GlobalIndex.GetHashCode();
             }
         }
 

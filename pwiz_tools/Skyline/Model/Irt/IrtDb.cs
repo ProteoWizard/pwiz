@@ -1,5 +1,5 @@
 ﻿/*
- * Original author: John Chilton <jchilton .at. u.washington.edu>,
+ * Original author: Brendan MacLean <brendanx .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2011 University of Washington - Seattle, WA
@@ -45,60 +45,33 @@ namespace pwiz.Skyline.Model.Irt
 
         public const int SCHEMA_VERSION_CURRENT = 1;
 
-//        private readonly string _path;
+        private readonly string _path;
         private readonly ISessionFactory _sessionFactory;
         private readonly ReaderWriterLock _databaseLock;
 
-        private ImmutableDictionary<string, DbIrtPeptide> _dictStandards;
-        private ImmutableDictionary<string, DbIrtPeptide> _dictLibrary;
+        private DateTime _modifiedTime;
+        private ImmutableDictionary<string, double> _dictStandards;
+        private ImmutableDictionary<string, double> _dictLibrary;
 
         private IrtDb(String path)
         {
-//            _path = path;
+            _path = path;
             _sessionFactory = SessionFactoryFactory.CreateSessionFactory(path, false);
             _databaseLock = new ReaderWriterLock();
         }
 
-        private IrtDb Load(IProgressMonitor loadMonitor, ProgressStatus status)
-        {
-            using (var session = new SessionWithLock(_sessionFactory.OpenSession(), _databaseLock, false))
-            {
-                var dictStandards = new Dictionary<string, DbIrtPeptide>();
-                var dictLibrary = new Dictionary<string, DbIrtPeptide>();
-
-                int totalRows = Convert.ToInt32(session.CreateSQLQuery("select count(*) from IrtLibrary").UniqueResult());
-                int currentRow = 0;
-                foreach (var pep in session.CreateCriteria(typeof(DbIrtPeptide)).List<DbIrtPeptide>())
-                {
-                    currentRow++;
-                    int percent = currentRow * 100 / totalRows;
-                    if (loadMonitor != null && status.PercentComplete != percent)
-                    {
-                        // Check for cancellation after each integer change in percent loaded.
-                        if (loadMonitor.IsCanceled)
-                        {
-                            loadMonitor.UpdateProgress(status.Cancel());
-                            return null;
-                        }
-
-                        // If not cancelled, update progress.
-                        loadMonitor.UpdateProgress(status = status.ChangePercentComplete(percent));
-                    }
-
-                    var dict = pep.Standard ? dictStandards : dictLibrary;
-                    dict.Add(pep.PeptideModSeq, pep);
-                }
-
-                DictStandards = dictStandards;
-                DictLibrary = dictLibrary;
-            }
-
-            Validate();
-            return this;
-        }
-
         public void Validate()
         {
+            // Set the modified time to the modified time for the database path
+            try
+            {
+                _modifiedTime = File.GetLastWriteTime(_path);
+            }
+            catch (Exception)
+            {
+                _modifiedTime = new DateTime();
+            }
+
             double min = double.MaxValue, minNext = double.MaxValue;
             foreach (var score in Scores)
             {
@@ -124,19 +97,19 @@ namespace pwiz.Skyline.Model.Irt
 
         private IEnumerable<double> Scores
         {
-            get { return new[] {StandardPeptides, LibraryPeptides}.SelectMany(peps => peps).Select(pep => pep.Irt); }
+            get { return new[] {DictStandards, DictLibrary}.SelectMany(dict => dict.Values); }
         }
 
-        private IDictionary<string, DbIrtPeptide> DictStandards
+        private IDictionary<string, double> DictStandards
         {
             get { return _dictStandards; }
-            set { _dictStandards = new ImmutableDictionary<string, DbIrtPeptide>(value); }
+            set { _dictStandards = new ImmutableDictionary<string, double>(value); }
         }
 
-        private IDictionary<string, DbIrtPeptide> DictLibrary
+        private IDictionary<string, double> DictLibrary
         {
             get { return _dictLibrary; }
-            set { _dictLibrary = new ImmutableDictionary<string, DbIrtPeptide>(value);}
+            set { _dictLibrary = new ImmutableDictionary<string, double>(value);}
         }
 
         private ISession OpenWriteSession()
@@ -144,9 +117,9 @@ namespace pwiz.Skyline.Model.Irt
             return new SessionWithLock(_sessionFactory.OpenSession(), _databaseLock, true);
         }
 
-        public IEnumerable<DbIrtPeptide> StandardPeptides
+        public IEnumerable<string> StandardPeptides
         {
-            get { return DictStandards.Values; }
+            get { return DictStandards.Keys; }
         }
 
         public int StandardPeptideCount
@@ -154,9 +127,9 @@ namespace pwiz.Skyline.Model.Irt
             get { return DictStandards.Count; }
         }
 
-        public IEnumerable<DbIrtPeptide> LibraryPeptides
+        public IEnumerable<string> LibraryPeptides
         {
-            get { return DictLibrary.Values; }
+            get { return DictLibrary.Keys; }
         }
 
         public int LibraryPeptideCount
@@ -166,107 +139,107 @@ namespace pwiz.Skyline.Model.Irt
 
         public double? ScoreSequence(string seq)
         {
-            DbIrtPeptide pep;
-            if (DictStandards.TryGetValue(seq, out pep) || DictLibrary.TryGetValue(seq, out pep))
-                return pep.Irt;
+            double irt;
+            if (DictStandards.TryGetValue(seq, out irt) || DictLibrary.TryGetValue(seq, out irt))
+                return irt;
             return null;
+        }
+
+        public IEnumerable<DbIrtPeptide> GetPeptides()
+        {
+            using (var session = new SessionWithLock(_sessionFactory.OpenSession(), _databaseLock, false))
+            {
+                return session.CreateCriteria(typeof (DbIrtPeptide)).List<DbIrtPeptide>();
+            }
         }
 
         #region Property change methods
 
-        public IrtDb AddPeptides(IEnumerable<DbIrtPeptide> peptides)
+        private IrtDb Load(IProgressMonitor loadMonitor, ProgressStatus status)
         {
-            var dictLibrary = new Dictionary<string, DbIrtPeptide>(_dictLibrary);
-            AddPeptides(peptides, dictLibrary);
-
-            return ChangeProp(ImClone(this), im => im.DictLibrary = dictLibrary);
-
+            var result = ChangeProp(ImClone(this), im => im.LoadPeptides(im.GetPeptides()));
+            // Not really possible to show progress, unless we switch to raw reading
+            if (loadMonitor != null)
+                loadMonitor.UpdateProgress(status.ChangePercentComplete(100));
+            return result;
         }
 
-        public IrtDb UpdateStandard(IEnumerable<DbIrtPeptide> standard)
+        public IrtDb UpdatePeptides(IEnumerable<DbIrtPeptide> newPeptides, IEnumerable<DbIrtPeptide> oldPeptides)
         {
-            if (standard.Any(peptide => !peptide.Standard))
-                throw new InvalidOperationException("Attempt to update standard with non-standard peptide.");
-
-            var dictStandard = standard.ToDictionary(peptide => peptide.PeptideModSeq);
+            var setNew = new HashSet<long>(newPeptides.Select(pep => pep.Id.HasValue ? pep.Id.Value : 0));
+            var dictOld = oldPeptides.ToDictionary(pep => pep.PeptideModSeq);
 
             using (var session = OpenWriteSession())
             using (var transaction = session.BeginTransaction())
             {
-                foreach (var peptide in StandardPeptides)
-                    session.Delete(peptide);
+                // Remove peptides that are no longer in the list
+                foreach (var peptideOld in oldPeptides)
+                {
+                    if (!peptideOld.Id.HasValue)
+                        continue;
+
+                    if (!setNew.Contains(peptideOld.Id.Value))
+                        session.Delete(peptideOld);
+                }
+
+                // Add or update peptides that have changed from the old list
+                foreach (var peptideNew in newPeptides)
+                {
+                    DbIrtPeptide peptideOld;
+                    if (dictOld.TryGetValue(peptideNew.PeptideModSeq, out peptideOld) &&
+                            Equals(peptideNew, peptideOld))
+                        continue;
+
+                    session.SaveOrUpdate(peptideNew);
+                }
+
                 transaction.Commit();
             }
 
-            AddPeptides(standard, null);
-
-            return ChangeProp(ImClone(this), im => im.DictStandards = dictStandard);
+            return ChangeProp(ImClone(this), im => im.LoadPeptides(newPeptides));
         }
 
-        private void AddPeptides(IEnumerable<DbIrtPeptide> peptides, IDictionary<string, DbIrtPeptide> dictLibrary)
+        private void LoadPeptides(IEnumerable<DbIrtPeptide> peptides)
         {
-            using (var session = OpenWriteSession())
-            using (var transaction = session.BeginTransaction())
+            var dictStandards = new Dictionary<string, double>();
+            var dictLibrary = new Dictionary<string, double>();
+
+            foreach (var pep in peptides)
             {
-                foreach (var peptide in peptides)
-                    session.SaveOrUpdate(peptide);
-                transaction.Commit();
+                var dict = pep.Standard ? dictStandards : dictLibrary;
+                dict.Add(pep.PeptideModSeq, pep.Irt);
             }
 
-            foreach (var peptide in peptides.Where(peptide => !peptide.Standard))
+            DictStandards = dictStandards;
+            DictLibrary = dictLibrary;
+        }
+
+        #endregion
+
+        #region object overrides
+
+        public bool Equals(IrtDb other)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Equals(other._path, _path) &&
+                other._modifiedTime.Equals(_modifiedTime);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != typeof (IrtDb)) return false;
+            return Equals((IrtDb) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
             {
-                dictLibrary.Remove(peptide.PeptideModSeq);
-                dictLibrary.Add(peptide.PeptideModSeq, peptide);
+                return (_path.GetHashCode()*397) ^ _modifiedTime.GetHashCode();
             }
-        }
-
-        public IrtDb DeletePeptides(IEnumerable<string> seqs)
-        {
-            IDictionary<string, DbIrtPeptide> dictStandards = _dictStandards;
-            IDictionary<string, DbIrtPeptide> dictLibrary = _dictLibrary;
-
-            using (var session = OpenWriteSession())
-            using (var transaction = session.BeginTransaction())
-            {
-                foreach (var seq in seqs)
-                    DeletePeptide(seq, session, ref dictStandards, ref dictLibrary);
-                transaction.Commit();
-            }
-
-            return ChangeProp(ImClone(this), im =>
-                                                 {
-                                                     if (!ReferenceEquals(dictStandards, _dictStandards))
-                                                         DictStandards = dictStandards;
-                                                     if (!ReferenceEquals(dictLibrary, _dictLibrary))
-                                                         DictLibrary = dictLibrary;
-                                                 });
-        }
-
-        private void DeletePeptide(string seq, ISession session,
-            ref IDictionary<string, DbIrtPeptide> dictStandards,
-            ref IDictionary<string, DbIrtPeptide> dictLibrary)
-        {
-            DbIrtPeptide pep;
-            IDictionary<string, DbIrtPeptide> dict;
-            if (dictStandards.TryGetValue(seq, out pep))
-                dict = CloneLibraryToChange(_dictStandards, ref dictStandards);
-            else if (_dictLibrary.TryGetValue(seq, out pep))
-                dict = CloneLibraryToChange(_dictLibrary, ref dictLibrary);
-            else
-                return;
-
-            session.Delete(pep);
-
-            dict.Remove(seq);
-        }
-
-        private static IDictionary<string, DbIrtPeptide> CloneLibraryToChange(
-                    IDictionary<string, DbIrtPeptide> dictOrig,
-                    ref IDictionary<string, DbIrtPeptide> dictNew)
-        {
-            if (ReferenceEquals(dictNew, dictOrig))
-                dictNew = new Dictionary<string, DbIrtPeptide>(dictOrig);
-            return dictNew;
         }
 
         #endregion

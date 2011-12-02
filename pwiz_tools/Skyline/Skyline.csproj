@@ -595,6 +595,18 @@
     <Compile Include="Controls\UndoRedoButtons.cs" />
     <Compile Include="Model\V01\Sequence.cs" />
     <Compile Include="Model\V01\XmlExport.cs" />
+    <Compile Include="SettingsUI\AddIrtPeptidesDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\AddIrtPeptidesDlg.Designer.cs">
+      <DependentUpon>AddIrtPeptidesDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\AddIrtStandardsDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\AddIrtStandardsDlg.Designer.cs">
+      <DependentUpon>AddIrtStandardsDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="SettingsUI\BuildLibraryDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -667,6 +679,8 @@
     <Compile Include="SettingsUI\EditIrtCalcDlg.Designer.cs">
       <DependentUpon>EditIrtCalcDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="SettingsUI\PeptideGridViewDriver.cs" />
+    <Compile Include="SettingsUI\SimpleGridViewDriver.cs" />
     <Compile Include="SettingsUI\ViewLibraryPepInfo.cs" />
     <Compile Include="SettingsUI\ViewLibraryPepMatching.cs" />
     <Compile Include="SettingsUI\SettingsListBoxDriver.cs" />
@@ -1284,6 +1298,12 @@
     <EmbeddedResource Include="Resources\Peak.bmp" />
     <EmbeddedResource Include="Resources\TransitionGroupLib.bmp" />
     <EmbeddedResource Include="Resources\PeptideLib.bmp" />
+    <EmbeddedResource Include="SettingsUI\AddIrtPeptidesDlg.resx">
+      <DependentUpon>AddIrtPeptidesDlg.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\AddIrtStandardsDlg.resx">
+      <DependentUpon>AddIrtStandardsDlg.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\BuildLibraryDlg.resx">
       <DependentUpon>BuildLibraryDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
@@ -1406,6 +1426,7 @@
     <EmbeddedResource Include="Resources\RedXTransparentBackground.bmp" />
     <EmbeddedResource Include="Model\Irt\mapping.xml" />
     <EmbeddedResource Include="Model\Lib\BlibData\mapping_redundant.xml" />
+    <Content Include="Resources\Calculator.bmp" />
     <Content Include="SkylineData.ico" />
     <Content Include="SkylineDoc.ico" />
   </ItemGroup>

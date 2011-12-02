@@ -331,21 +331,46 @@ namespace pwiz.Skyline.SettingsUI
 
         private void comboRetentionTime_SelectedIndexChanged(object sender, EventArgs e)
         {
-            // Enable Update Calculator button based on whether the selected calculator
-            // supports editing.
-            var regressionRT = _driverRT.SelectedItem;
-            btnUpdateCalculator.Enabled = regressionRT != null &&
-                Settings.Default.RTScoreCalculatorList.CanEditItem(regressionRT.Calculator);
-
             _driverRT.SelectedIndexChangedEvent(sender, e);
         }
 
         private void btnUpdateCalculator_Click(object sender, EventArgs e)
         {
+            // Enable Update Calculator button based on whether the selected calculator
+            // supports editing.
+            var regressionRT = _driverRT.SelectedItem;
+            editCalculatorCurrentContextMenuItem.Visible = regressionRT != null &&
+                Settings.Default.RTScoreCalculatorList.CanEditItem(regressionRT.Calculator);
+
+            contextMenuCalculator.Show(btnUpdateCalculator.Parent,
+                btnUpdateCalculator.Left, btnUpdateCalculator.Bottom + 1);
+        }
+
+        private void addCalculatorContextMenuItem_Click(object sender, EventArgs e)
+        {
+            var list = Settings.Default.RTScoreCalculatorList;
+            var calcNew = list.EditItem(this, null, list, null);
+            if (calcNew != null)
+                list.SetValue(calcNew);
+        }
+
+        private void editCalculatorCurrentContextMenuItem_Click(object sender, EventArgs e)
+        {
             var list = Settings.Default.RTScoreCalculatorList;
             var calcNew = list.EditItem(this, _driverRT.SelectedItem.Calculator, list, null);
             if (calcNew != null)
                 list.SetValue(calcNew);
+        }
+
+        private void editCalculatorListContextMenuItem_Click(object sender, EventArgs e)
+        {
+            var list = Settings.Default.RTScoreCalculatorList;
+            var listNew = list.EditList(this, null);
+            if (listNew != null)
+            {
+                list.Clear();
+                list.AddRange(listNew);
+            }
         }
 
         private void comboBackgroundProteome_SelectedIndexChanged(object sender, EventArgs e)

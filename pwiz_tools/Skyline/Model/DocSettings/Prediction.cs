@@ -373,7 +373,6 @@ namespace pwiz.Skyline.Model.DocSettings
                     listRTs[i].Add(docPeptide.RetentionTime);
                 }
             }
-            double r = double.MinValue;
             Statistics[] aStatValues = new Statistics[calcs];
             for (int i = 0; i < calcs; i++)
             {
@@ -382,6 +381,7 @@ namespace pwiz.Skyline.Model.DocSettings
 
                 aStatValues[i] = new Statistics(peptideScoresByCalc[i]);
             }
+            double r = double.MinValue;
             RetentionScoreCalculatorSpec calcBest = null;
             Statistics statBest = null;
             List<double> listBest = null;
@@ -395,6 +395,10 @@ namespace pwiz.Skyline.Model.DocSettings
                 Statistics statRT = new Statistics(listRTs[i]);
                 Statistics stat = aStatValues[i];
                 double rVal = statRT.R(stat);
+
+                // Make sure sets containing unknown scores have very low correlations to keep
+                // such scores from ending up in the final regression.
+                rVal = !peptideScoresByCalc[i].Contains(calculatorCandidates[i].UnknownScore) ? rVal : 0;
                 if (r < rVal)
                 {
                     bestCalcIndex = i;

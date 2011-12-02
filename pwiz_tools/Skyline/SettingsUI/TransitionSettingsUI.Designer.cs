@@ -113,6 +113,8 @@
             this.comboPrecursorAnalyzerType = new System.Windows.Forms.ComboBox();
             this.label32 = new System.Windows.Forms.Label();
             this.groupBoxMS2 = new System.Windows.Forms.GroupBox();
+            this.textRightPrecursorFilterMz = new System.Windows.Forms.TextBox();
+            this.cbAsymIsolation = new System.Windows.Forms.CheckBox();
             this.labelProductAt = new System.Windows.Forms.Label();
             this.textProductAt = new System.Windows.Forms.TextBox();
             this.labelProductTh = new System.Windows.Forms.Label();
@@ -126,8 +128,6 @@
             this.comboPrecursorFilterType = new System.Windows.Forms.ComboBox();
             this.label20 = new System.Windows.Forms.Label();
             this.helpTip = new System.Windows.Forms.ToolTip(this.components);
-            this.cbAsymIsolation = new System.Windows.Forms.CheckBox();
-            this.textRightPrecursorFilterMz = new System.Windows.Forms.TextBox();
             this.tabControl1.SuspendLayout();
             this.tabGeneral.SuspendLayout();
             this.tabFilter.SuspendLayout();
@@ -1053,6 +1053,26 @@
             this.groupBoxMS2.TabStop = false;
             this.groupBoxMS2.Text = "M&S/MS filtering";
             // 
+            // textRightPrecursorFilterMz
+            // 
+            this.textRightPrecursorFilterMz.Location = new System.Drawing.Point(60, 111);
+            this.textRightPrecursorFilterMz.Name = "textRightPrecursorFilterMz";
+            this.textRightPrecursorFilterMz.Size = new System.Drawing.Size(40, 20);
+            this.textRightPrecursorFilterMz.TabIndex = 4;
+            this.textRightPrecursorFilterMz.Visible = false;
+            // 
+            // cbAsymIsolation
+            // 
+            this.cbAsymIsolation.AutoSize = true;
+            this.cbAsymIsolation.Enabled = false;
+            this.cbAsymIsolation.Location = new System.Drawing.Point(14, 137);
+            this.cbAsymIsolation.Name = "cbAsymIsolation";
+            this.cbAsymIsolation.Size = new System.Drawing.Size(79, 17);
+            this.cbAsymIsolation.TabIndex = 6;
+            this.cbAsymIsolation.Text = "Asymmetric";
+            this.cbAsymIsolation.UseVisualStyleBackColor = true;
+            this.cbAsymIsolation.CheckedChanged += new System.EventHandler(this.cbAsymIsolation_CheckedChanged);
+            // 
             // labelProductAt
             // 
             this.labelProductAt.AutoSize = true;
@@ -1164,25 +1184,11 @@
             this.label20.TabIndex = 0;
             this.label20.Text = "Pr&ecursor matching:";
             // 
-            // cbAsymIsolation
+            // helpTip
             // 
-            this.cbAsymIsolation.AutoSize = true;
-            this.cbAsymIsolation.Enabled = false;
-            this.cbAsymIsolation.Location = new System.Drawing.Point(14, 137);
-            this.cbAsymIsolation.Name = "cbAsymIsolation";
-            this.cbAsymIsolation.Size = new System.Drawing.Size(79, 17);
-            this.cbAsymIsolation.TabIndex = 6;
-            this.cbAsymIsolation.Text = "Asymmetric";
-            this.cbAsymIsolation.UseVisualStyleBackColor = true;
-            this.cbAsymIsolation.CheckedChanged += new System.EventHandler(this.cbAsymIsolation_CheckedChanged);
-            // 
-            // textRightPrecursorFilterMz
-            // 
-            this.textRightPrecursorFilterMz.Location = new System.Drawing.Point(60, 111);
-            this.textRightPrecursorFilterMz.Name = "textRightPrecursorFilterMz";
-            this.textRightPrecursorFilterMz.Size = new System.Drawing.Size(40, 20);
-            this.textRightPrecursorFilterMz.TabIndex = 4;
-            this.textRightPrecursorFilterMz.Visible = false;
+            this.helpTip.AutoPopDelay = 15000;
+            this.helpTip.InitialDelay = 500;
+            this.helpTip.ReshowDelay = 100;
             // 
             // TransitionSettingsUI
             // 

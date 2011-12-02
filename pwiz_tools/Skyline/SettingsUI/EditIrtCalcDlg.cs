@@ -1,5 +1,6 @@
 ﻿/*
  * Original author: John Chilton <jchilton .at. uw.edu>,
+ *                  Brendan MacLean <brendanx .at. uw.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
  * Copyright 2011 University of Washington - Seattle, WA
@@ -18,11 +19,15 @@
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using pwiz.Common.DataBinding;
 using pwiz.Skyline.Alerts;
+using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
@@ -39,92 +44,175 @@ namespace pwiz.Skyline.SettingsUI
         private readonly IEnumerable<RetentionScoreCalculatorSpec> _existingCalcs;
 
         public RetentionScoreCalculatorSpec Calculator { get; private set; }
-        //These properties are for records that have been changed, but could not be persisted
-        //at the time of change. If any of them contain values, the user should be notified
-        //when the dialog closes.
-        public List<MeasuredPeptide> DirtyLibraryAdd { get; private set; }
-        public List<MeasuredPeptide> DirtyLibraryRemove { get; private set; }
-        public List<MeasuredPeptide> DirtyStandardUpdate { get; private set; }
+
+        private IEnumerable<DbIrtPeptide> _originalPeptides;
+        private readonly StandardGridViewDriver _gridViewStandardDriver;
+        private readonly LibraryGridViewDriver _gridViewLibraryDriver;
 
         private readonly string _databaseStartPath = "";
+        
         //Used to determine whether we are creating a new calculator, trying to overwrite
         //an old one, or editing an old one
         private readonly string _editingName = "";
 
         public EditIrtCalcDlg(RetentionScoreCalculatorSpec calc, IEnumerable<RetentionScoreCalculatorSpec> existingCalcs)
         {
-            InitializeComponent();
-
             _existingCalcs = existingCalcs;
 
-            DirtyLibraryAdd = new List<MeasuredPeptide>();
-            DirtyLibraryRemove = new List<MeasuredPeptide>();
-            DirtyStandardUpdate = new List<MeasuredPeptide>();
+            InitializeComponent();
+
+            Icon = Resources.Skyline;
+
+            _gridViewStandardDriver = new StandardGridViewDriver(gridViewStandard, bindingSourceStandard,
+                new SortableBindingList<DbIrtPeptide>());
+            _gridViewLibraryDriver = new LibraryGridViewDriver(gridViewLibrary, bindingSourceLibrary,
+                new SortableBindingList<DbIrtPeptide>());
+            _gridViewStandardDriver.LibraryPeptideList = _gridViewLibraryDriver.Items;
+            _gridViewLibraryDriver.StandardPeptideList = _gridViewStandardDriver.Items;
 
             if (calc != null)
             {
-                textCalculatorName.Text = calc.Name;
-                RCalcIrt c = (RCalcIrt) calc;
-                textDatabase.Text = c.DatabasePath;
+                textCalculatorName.Text = _editingName = calc.Name;
+                _databaseStartPath =((RCalcIrt) calc).DatabasePath;
 
-                _databaseStartPath = c.DatabasePath;
-                _editingName = calc.Name;
-
-                OpenDatabase(true);
+                OpenDatabase(_databaseStartPath);
             }
 
-            UpdateNumPeptides();
+            DatabaseChanged = false;
         }
 
-        public void DisableEditStandard()
+        private bool DatabaseChanged { get; set; }
+
+        private BindingList<DbIrtPeptide> StandardPeptideList { get { return _gridViewStandardDriver.Items; } }
+
+        private BindingList<DbIrtPeptide> LibraryPeptideList { get { return _gridViewLibraryDriver.Items; } }
+
+        public IEnumerable<DbIrtPeptide> StandardPeptides
         {
-            gridViewStandard.AllowUserToAddRows = false;
-            gridViewStandard.AllowUserToDeleteRows = false;
-            btnCalibrate.Enabled = false;
+            get { return StandardPeptideList; }
         }
 
-        /// <summary>
-        /// This function will open a database file and fill in the standard and library tables. If
-        /// initialOpening is true, it will not add the library to the remove buffer. This functionality
-        /// is needed because of the case when a user may open an existing database file and then add
-        /// peptides to the library.
-        /// 
-        /// If the database path is different from what it was when the dialog was opened, then everything
-        /// in both tables must be added to the new file. But if the path is different because a new file
-        /// was opened, the old peptides must be deleted first in order to avoid duplicates in the database.
-        /// 
-        /// initialOpening means that this function is getting called when the dialog is first opened with
-        /// an initial path. In that case, we do not want to delete all the peptides.
-        /// </summary>
-        /// <param name="initialOpening"></param>
-        private void OpenDatabase(bool initialOpening)
+        public IEnumerable<DbIrtPeptide> LibraryPeptides
         {
-            var file = textDatabase.Text;
-            if (!File.Exists(file))
+            get { return LibraryPeptideList; }
+        }
+
+        public IEnumerable<DbIrtPeptide> AllPeptides
+        {
+            get { return new[] {StandardPeptideList, LibraryPeptideList}.SelectMany(list => list); }
+        }
+
+        public int StandardPeptideCount { get { return StandardPeptideList.Count; } }
+        public int LibraryPeptideCount { get { return LibraryPeptideList.Count; } }
+
+        public void ClearStandardPeptides()
+        {
+            StandardPeptideList.Clear();
+        }
+
+        public void ClearLibraryPeptides()
+        {
+            LibraryPeptideList.Clear();
+        }
+
+        private void btnCreateDb_Click(object sender, EventArgs e)
+        {
+            using (SaveFileDialog dlg = new SaveFileDialog
             {
-                MessageDlg.Show(this, String.Format("The file {0} does not exist. Click the Create button to create a new database or the Browse button to find the missing file.", file));
+                Title = "Create iRT Database",
+                InitialDirectory = Settings.Default.ActiveDirectory,
+                OverwritePrompt = true,
+                DefaultExt = IrtDb.EXT_IRTDB,
+                Filter = string.Join("|", new[]
+                                {
+                                    "iRT Database Files (*" + IrtDb.EXT_IRTDB + ")|*" + IrtDb.EXT_IRTDB,
+                                    "All Files (*.*)|*.*"
+                                })
+            })
+            {
+                if (dlg.ShowDialog() == DialogResult.OK)
+                {
+                    Settings.Default.ActiveDirectory = Path.GetDirectoryName(dlg.FileName);
+
+                    CreateDatabase(dlg.FileName);
+                }
+            }
+        }
+
+        public void CreateDatabase(string path)
+        {
+            //The file that was just created does not have a schema, so SQLite won't touch it.
+            //The file must have a schema or not exist for use with SQLite, so we'll delete
+            //it and install a schema
+
+            //Create file, initialize db
+            try
+            {
+                File.Delete(path);
+                IrtDb.CreateIrtDb(path);
+
+                textDatabase.Text = path;
+            }
+            catch (DatabaseOpeningException x)
+            {
+                MessageDlg.Show(this, x.Message);
+            }
+            catch (Exception x)
+            {
+                MessageDlg.Show(this, String.Format("The file {0} could not be created.", path, x));
+            }
+        }
+
+        private void btnBrowseDb_Click(object sender, EventArgs e)
+        {
+            if (DatabaseChanged)
+            {
+                var result = MessageBox.Show(
+                    "Are you sure you want to open a new database file? Any changes to the current calculator will be lost.",
+                    Program.Name, MessageBoxButtons.YesNo);
+
+                if (result != DialogResult.Yes)
+                    return;
+            }
+
+            using (OpenFileDialog dlg = new OpenFileDialog
+            {
+                Title = "Browse for iRT Database",
+                InitialDirectory = Settings.Default.ActiveDirectory,
+                DefaultExt = IrtDb.EXT_IRTDB,
+                Filter = string.Join("|", new[]
+                                {
+                                    "iRT Database Files (*" + IrtDb.EXT_IRTDB + ")|*" + IrtDb.EXT_IRTDB,
+                                    "All Files (*.*)|*.*"
+                                })
+            })
+            {
+                if (dlg.ShowDialog() == DialogResult.OK)
+                {
+                    Settings.Default.ActiveDirectory = Path.GetDirectoryName(dlg.FileName);
+
+                    OpenDatabase(dlg.FileName);
+                }
+            }
+        }
+
+        public void OpenDatabase(string path)
+        {
+            if (!File.Exists(path))
+            {
+                MessageDlg.Show(this, String.Format("The file {0} does not exist. Click the Create button to create a new database or the Browse button to find the missing file.", path));
                 return;
             }
 
             try
             {
-                IrtDb db = IrtDb.GetIrtDb(textDatabase.Text, null); // CONSIDER: LongWaitDlg?
-                LoadStandard(db.StandardPeptides);
+                IrtDb db = IrtDb.GetIrtDb(path, null); // TODO: LongWaitDlg
+                _originalPeptides = db.GetPeptides();
 
-                LoadLibrary(db.LibraryPeptides);
+                LoadStandard(_originalPeptides);
+                LoadLibrary(_originalPeptides);
 
-                DisableEditStandard();
-                
-                List<MeasuredPeptide> libraryPeps;
-                if (!ValidatePeptideTable(gridViewLibrary, LIBRARY_TABLE_NAME, out libraryPeps))
-                {
-                    //This should never happen. It is such an edge case that it really should present
-                    //the uncaught exception dialog to the user.
-                    throw new InvalidDataException();
-                }
-
-                if(!initialOpening)
-                    DirtyLibraryRemove = libraryPeps;
+                textDatabase.Text = path;
             }
             catch (DatabaseOpeningException e)
             {
@@ -154,22 +242,20 @@ namespace pwiz.Skyline.SettingsUI
             }
 
             //This function MessageBox.Show's error messages
-            List<MeasuredPeptide> standardTable;
-            List<MeasuredPeptide> libraryTable;
-            if(!ValidatePeptideTable(gridViewStandard, STANDARD_TABLE_NAME, out standardTable))
+            if(!ValidatePeptideList(StandardPeptideList, STANDARD_TABLE_NAME))
                 return;
-            if(!ValidatePeptideTable(gridViewLibrary, LIBRARY_TABLE_NAME, out libraryTable))
+            if(!ValidatePeptideList(LibraryPeptideList, LIBRARY_TABLE_NAME))
                 return;
 
-            if (standardTable.Count < CalibrateIrtDlg.MIN_STANDARD_PEPTIDES)
+            if (StandardPeptideList.Count < CalibrateIrtDlg.MIN_STANDARD_PEPTIDES)
             {
                 MessageDlg.Show(this, string.Format("Please enter at least {0} peptides.", CalibrateIrtDlg.MIN_STANDARD_PEPTIDES));
                 return;
             }
 
-            if (standardTable.Count < CalibrateIrtDlg.MIN_SUGGESTED_STANDARD_PEPTIDES)
+            if (StandardPeptideList.Count < CalibrateIrtDlg.MIN_SUGGESTED_STANDARD_PEPTIDES)
             {
-                DialogResult result = MessageBox.Show(this, string.Format("Using fewer than {0} standard peptides is not recommended. Are you sure you want to continue with only {1}?", CalibrateIrtDlg.MIN_SUGGESTED_STANDARD_PEPTIDES, standardTable.Count),
+                DialogResult result = MessageBox.Show(this, string.Format("Using fewer than {0} standard peptides is not recommended. Are you sure you want to continue with only {1}?", CalibrateIrtDlg.MIN_SUGGESTED_STANDARD_PEPTIDES, StandardPeptideList.Count),
                     Program.Name, MessageBoxButtons.YesNo);
                 if (result != DialogResult.Yes)
                     return;
@@ -184,19 +270,8 @@ namespace pwiz.Skyline.SettingsUI
                     db = IrtDb.GetIrtDb(textDatabase.Text, null);   // CONSIDER: LongWaitDlg?
                 else
                     db = IrtDb.CreateIrtDb(textDatabase.Text);
-                
-                if(_databaseStartPath != textDatabase.Text)
-                {
-                    DirtyLibraryAdd = libraryTable;
-                    DirtyStandardUpdate = standardTable;
-                }
 
-                if (DirtyStandardUpdate.Count > 0)
-                    db = db.UpdateStandard(ConvertFromMeasuredPeptide(DirtyStandardUpdate, true));
-                if (DirtyLibraryRemove.Count > 0)
-                    db = db.DeletePeptides(DirtyLibraryRemove.Select(pep => pep.Sequence));
-                if (DirtyLibraryAdd.Count > 0)
-                    db = db.AddPeptides(ConvertFromMeasuredPeptide(DirtyLibraryAdd, false));
+                db = db.UpdatePeptides(AllPeptides, _originalPeptides ?? new DbIrtPeptide[0]);
 
                 Calculator = calculator.ChangeDatabase(db);
             }
@@ -209,34 +284,28 @@ namespace pwiz.Skyline.SettingsUI
             DialogResult = DialogResult.OK;
         }
 
-        private bool ValidatePeptideTable(DataGridView table, string tableName, out List<MeasuredPeptide> tableData)
+        /// <summary>
+        /// At this point a failure in this function probably means the iRT database was used
+        /// </summary>
+        private bool ValidatePeptideList(IEnumerable<DbIrtPeptide> peptideList, string tableName)
         {
-            tableData = new List<MeasuredPeptide>();
             var sequenceSet = new HashSet<string>();
-            foreach(DataGridViewRow row in table.Rows)
+            foreach(DbIrtPeptide peptide in peptideList)
             {
-                object pep = row.Cells[0].Value;
-                object iRT = row.Cells[1].Value;
-                if(!ValidateRow(new[] { pep, iRT }))
+                string seqModified = peptide.PeptideModSeq;
+                // CONSIDER: Select the peptide row
+                if (!FastaSequence.IsExSequence(seqModified))
                 {
-                    //Empty row
-                    if(pep == null && iRT == null)
-                    {
-                        continue;
-                    }
-
-                    MessageDlg.Show(this, string.Format("Please ensure that each {0} entry has a peptide and a numerical iRT value.", tableName));
+                    MessageDlg.Show(this, string.Format("The value {0} is not a valid modified peptide sequence.", seqModified, tableName));
                     return false;
                 }
 
-                string seqModified = pep.ToString();
                 if (sequenceSet.Contains(seqModified))
                 {
                     MessageDlg.Show(this, string.Format("The peptide {0} appears in the {1} table more than once.", seqModified, tableName));
                     return false;
                 }
-
-                tableData.Add(new MeasuredPeptide(pep.ToString(), double.Parse(iRT.ToString())));
+                sequenceSet.Add(seqModified);
             }
 
             return true;
@@ -247,254 +316,9 @@ namespace pwiz.Skyline.SettingsUI
             OkDialog();
         }
 
-        private static IEnumerable<MeasuredPeptide> ConvertFromDbIrtPeptide(IEnumerable<DbIrtPeptide> source)
-        {
-            return source.Select(dbpep => new MeasuredPeptide(dbpep.PeptideModSeq, dbpep.Irt)).ToList();
-        }
-        private static IEnumerable<DbIrtPeptide> ConvertFromMeasuredPeptide(IEnumerable<MeasuredPeptide> source, bool standard)
-        {
-            return source.Select(mpep => new DbIrtPeptide(mpep.Sequence, mpep.RetentionTimeOrIrt, standard, true));
-        }
-
         public void btnCalibrate_Click(object sender, EventArgs e)
         {
             Calibrate();
-        }
-
-        public int UpdateNumPeptides()
-        {
-            int count = gridViewLibrary.Rows.Count;
-            labelNumPeptides.Text = string.Format("{0} Peptides", count);
-            return count;
-        }
-        
-        private void LoadStandard(IEnumerable<DbIrtPeptide> standard)
-        {
-            gridViewStandard.Rows.Clear();
-            foreach (DbIrtPeptide pep in standard.OrderBy(pep => pep.Irt))
-            {
-                int n = gridViewStandard.Rows.Add();
-                gridViewStandard.Rows[n].Cells[0].Value = pep.PeptideModSeq;
-                gridViewStandard.Rows[n].Cells[1].Value = string.Format("{0:F04}", pep.Irt.ToString());
-            }
-        }
-
-        private void LoadLibrary(IEnumerable<DbIrtPeptide> library)
-        {
-            gridViewLibrary.Rows.Clear();
-            foreach (DbIrtPeptide pep in library.OrderBy(pep => pep.Irt))
-            {
-                int n = gridViewLibrary.Rows.Add();
-                gridViewLibrary.Rows[n].Cells[0].Value = pep.PeptideModSeq;
-                gridViewLibrary.Rows[n].Cells[1].Value = string.Format("{0:F04}", pep.Irt.ToString());
-            }
-
-            UpdateNumPeptides();
-        }
-
-        private void AddToAddBuffer(MeasuredPeptide pep)
-        {
-            foreach(var addPep in DirtyLibraryAdd)
-            {
-                if (Equals(pep.Sequence, addPep.Sequence))
-                {
-                    DirtyLibraryAdd.Remove(addPep);
-                    break;
-                }
-            }
-
-            DirtyLibraryAdd.Add(pep);
-        }
-
-        private void AddToLibrary(IEnumerable<MeasuredPeptide> peptides)
-        {
-            foreach (var pep in peptides)
-            {
-                bool inLibrary = false;
-                foreach (DataGridViewRow row in gridViewLibrary.Rows)
-                {
-                    if (row.Cells[0].Value != null && Equals(row.Cells[0].Value.ToString(), pep.Sequence))
-                    {
-                        gridViewLibrary.Rows.Remove(row);
-                        DirtyLibraryRemove.Add(pep);
-                        inLibrary = true;
-                        break;
-                    }
-                }
-
-                if(inLibrary)
-                    AddToAddBuffer(pep);
-                else //save the trouble of another foreach
-                    DirtyLibraryAdd.Add(pep);
-
-                int n = gridViewLibrary.Rows.Add();
-                gridViewLibrary.Rows[n].Cells[0].Value = pep.Sequence;
-                gridViewLibrary.Rows[n].Cells[1].Value = string.Format("{0:F04}", pep.RetentionTimeOrIrt);
-            }
-        }
-
-        /// <summary>
-        /// If the document contains the standard, this function does a regression of the document standard vs. the
-        /// calculator standard and calculates iRTs for all the non-standard peptides
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void btnAddResults_Click(object sender, EventArgs e)
-        {
-            AddResults();
-        }
-
-        /// <summary>
-        /// Gets and sets a list of MeasuredPeptides that are in a given list of MeasuredPeptides representing a standard.
-        /// Returns the number of matched peptides.
-        /// </summary>
-        private static int GetStandardFromDocument(List<MeasuredPeptide> docPeps, IEnumerable<MeasuredPeptide> standard, out List<MeasuredPeptide> docStandard)
-        {
-            docStandard = new List<MeasuredPeptide>();
-
-            int standardCount = 0;
-            int standardCopyCount = 0;
-            foreach(var pep in standard)
-            {
-                string pep1 = pep.Sequence;
-                MeasuredPeptide node = docPeps.Find(peptide => Equals(peptide.Sequence, pep1));
-
-                standardCount++;
-                if(node != default(MeasuredPeptide))
-                {
-                    standardCopyCount++;
-                    docStandard.Add(node);
-                }
-            }
-            if(standardCopyCount != standardCount)
-                docStandard = null;
-            return standardCopyCount;
-        }
-
-        private void gridViewStandard_KeyDown(object sender, KeyEventArgs e)
-        {
-            // Handle Ctrl + V for paste
-            if (e.KeyCode == Keys.V && e.Control)
-            {
-                DoPaste();
-            }
-            
-            //If we delete from the standard, the library is invalid
-            //else if (e.KeyCode == Keys.Delete)
-            //    gridViewStandard.DoDelete();
-        }
-
-        public static bool ValidateRow(object[] columns)
-        {
-            double x;
-            if(columns.Length != 2)
-                return false;
-            string seq = columns[0] as string;
-            string iRT = columns[0] as string;
-            return (!string.IsNullOrEmpty(seq) && !string.IsNullOrEmpty(iRT) && double.TryParse((string)columns[1], out x));
-        }
-
-        private void btnCreateDb_Click(object sender, EventArgs e)
-        {
-            using (SaveFileDialog dlg = new SaveFileDialog
-                        {
-                            Title = "Create iRT Database",
-                            InitialDirectory = Settings.Default.ActiveDirectory,
-                            OverwritePrompt = true,
-                            DefaultExt = IrtDb.EXT_IRTDB,
-                            Filter = string.Join("|", new[]
-                                {
-                                    "iRT Database Files (*" + IrtDb.EXT_IRTDB + ")|*" + IrtDb.EXT_IRTDB,
-                                    "All Files (*.*)|*.*"
-                                })
-                        })
-            {
-                if (dlg.ShowDialog() == DialogResult.OK)
-                {
-                    Settings.Default.ActiveDirectory = Path.GetDirectoryName(dlg.FileName);
-
-                    //The file that was just created does not have a schema, so SQLite won't touch it.
-                    //The file must have a schema or not exist for use with SQLite, so we'll delete
-                    //it and install a schema
-
-                    //Create file, initialize db
-                    try
-                    {
-                        File.Delete(dlg.FileName);
-                        IrtDb.CreateIrtDb(dlg.FileName);
-                    }
-                    catch (DatabaseOpeningException x)
-                    {
-                        MessageDlg.Show(this, x.Message);
-                    }
-                    catch (Exception)
-                    {
-                        MessageDlg.Show(this, String.Format("The file {0} could not be created.", dlg.FileName));
-                    }
-                    textDatabase.Text = dlg.FileName;
-                }
-            }
-        }
-
-        private void btnBrowseDb_Click(object sender, EventArgs e)
-        {
-            if (DirtyLibraryAdd.Count > 0 || DirtyStandardUpdate.Count > 0)
-            {
-                var result = MessageBox.Show(
-                    "Are you sure you want to open a new database file? Any changes to the current calculator will be lost.",
-                    Program.Name, MessageBoxButtons.YesNo);
-
-                if (result != DialogResult.Yes)
-                    return;
-            }
-
-            using (OpenFileDialog dlg = new OpenFileDialog
-                        {
-                            Title = "Browse for iRT Database",
-                            InitialDirectory = Settings.Default.ActiveDirectory,
-                            DefaultExt = IrtDb.EXT_IRTDB,
-                            Filter = string.Join("|", new[]
-                                {
-                                    "iRT Database Files (*" + IrtDb.EXT_IRTDB + ")|*" + IrtDb.EXT_IRTDB,
-                                    "All Files (*.*)|*.*"
-                                })
-                        })
-            {
-                if (dlg.ShowDialog() == DialogResult.OK)
-                {
-                    Settings.Default.ActiveDirectory = Path.GetDirectoryName(dlg.FileName);
-
-                    textDatabase.Text = dlg.FileName;
-
-                    OpenDatabase(false);
-                }
-            }
-        }
-
-        #region Functional Test Support
-
-        //This one is a little bit of a departure from most FT support because I couldn't think of
-        //a great way to do this based on the existing code. I think reusing this excerpt is
-        //appropriate, at least at the time of writing
-        public void CreateDatabase(string path)
-        {
-            IrtDb.CreateIrtDb(path);
-            textDatabase.Text = path;
-        }
-
-        public void OpenDatabase()
-        {
-            OpenDatabase(false);
-        }
-
-        public void SetDatabasePath(string path)
-        {
-            textDatabase.Text = path;
-        }
-
-        public void SetStandardName(string name)
-        {
-            textCalculatorName.Text = name;
         }
 
         public void Calibrate()
@@ -504,100 +328,291 @@ namespace pwiz.Skyline.SettingsUI
                 if (calibrateDlg.ShowDialog(this) == DialogResult.OK)
                 {
                     LoadStandard(calibrateDlg.CalibrationPeptides);
-
-                    //RecalculateLibrary(calibrateDlg.CalibrationPeptides);
-
-                    DirtyStandardUpdate = ConvertFromDbIrtPeptide(calibrateDlg.CalibrationPeptides).ToList();
                 }
             }
         }
 
-        public bool GetStandard(out List<MeasuredPeptide> tableData)
+        private void LoadStandard(IEnumerable<DbIrtPeptide> standard)
         {
-            return ValidatePeptideTable(gridViewStandard, STANDARD_TABLE_NAME, out tableData);
+            StandardPeptideList.Clear();
+            foreach (var peptide in standard.Where(pep => pep.Standard))
+                StandardPeptideList.Add(peptide);
         }
 
-        public void DoPaste()
+        private void LoadLibrary(IEnumerable<DbIrtPeptide> library)
         {
-            gridViewStandard.DoPaste(this, ValidateRow);
-
-            List<MeasuredPeptide> dirtyStandard;
-            ValidatePeptideTable(gridViewStandard, STANDARD_TABLE_NAME, out dirtyStandard);
-            DirtyStandardUpdate = dirtyStandard;
+            LibraryPeptideList.Clear();
+            foreach (var peptide in library.Where(pep => !pep.Standard))
+                LibraryPeptideList.Add(peptide);
         }
 
-        public void LoadStandard(List<MeasuredPeptide> standard)
+        /// <summary>
+        /// If the document contains the standard, this function does a regression of the document standard vs. the
+        /// calculator standard and calculates iRTs for all the non-standard peptides
+        /// </summary>
+        private void btnAddResults_Click(object sender, EventArgs e)
         {
-            LoadStandard(ConvertFromMeasuredPeptide(standard, true));
+            AddResults();
         }
 
-        public int GetNumStandardPeptides()
+        private class StandardGridViewDriver : PeptideGridViewDriver<DbIrtPeptide>
         {
-            //If the grid is editable, there is a "New Row" for new entries
-            return gridViewStandard.AllowUserToAddRows ? gridViewStandard.RowCount - 1 : gridViewStandard.RowCount;
+            public StandardGridViewDriver(DataGridViewEx gridView, BindingSource bindingSource,
+                    SortableBindingList<DbIrtPeptide> items)
+                : base(gridView, bindingSource, items)
+            {
+                AllowNegativeTime = true;
+            }
+
+            public BindingList<DbIrtPeptide> LibraryPeptideList { private get; set; }
+
+            protected override void DoPaste()
+            {
+                var standardPeptidesNew = new List<DbIrtPeptide>();
+                GridView.DoPaste(MessageParent, ValidateRow, values =>
+                    standardPeptidesNew.Add(new DbIrtPeptide(values[0], double.Parse(values[1]), true, TimeSource.peak)));
+
+                // Make sure the newly pasted peptides are not present in the library list
+                for (int i = 0; i < standardPeptidesNew.Count; i++)
+                {
+                    var peptide = standardPeptidesNew[i];
+                    string sequence = peptide.PeptideModSeq;
+                    int iLib = LibraryPeptideList.IndexOf(p => Equals(p.PeptideModSeq, sequence));
+                    if (iLib == -1)
+                        continue;
+                    // Keep the existing peptide, but use the new values
+                    var peptideExist = LibraryPeptideList[iLib];
+                    LibraryPeptideList.RemoveAt(i);
+                    peptideExist.Irt = peptide.Irt;
+                    peptideExist.TimeSource = peptide.TimeSource;
+                    peptideExist.Standard = true;
+                    standardPeptidesNew[i] = peptideExist;
+                }
+
+                // Add all standard peptides not included in the new list to the general library list
+                foreach (var peptide in from standardPeptide in Items
+                                        let sequence = standardPeptide.PeptideModSeq
+                                        where !standardPeptidesNew.Any(p => Equals(p.PeptideModSeq, sequence))
+                                        select standardPeptide)
+                {
+                    peptide.Standard = false;
+                    LibraryPeptideList.Add(peptide);
+                }
+
+                Items.Clear();
+                foreach (var peptide in standardPeptidesNew)
+                    Items.Add(peptide);
+            }
         }
 
-        public void Cancel()
+        private class LibraryGridViewDriver : PeptideGridViewDriver<DbIrtPeptide>
         {
-            DialogResult = DialogResult.Cancel;
+            public LibraryGridViewDriver(DataGridViewEx gridView, BindingSource bindingSource,
+                    SortableBindingList<DbIrtPeptide> items)
+                : base(gridView, bindingSource, items)
+            {
+                AllowNegativeTime = true;
+            }
+
+            public BindingList<DbIrtPeptide> StandardPeptideList { private get; set; }
+
+            protected override void DoPaste()
+            {
+                var libraryPeptidesNew = new List<DbIrtPeptide>();
+                GridView.DoPaste(MessageParent, ValidateRow, values =>
+                    libraryPeptidesNew.Add(new DbIrtPeptide(values[0], double.Parse(values[1]), false, TimeSource.peak)));
+
+                foreach (var peptide in libraryPeptidesNew)
+                {
+                    string sequence = peptide.PeptideModSeq;
+                    if (StandardPeptideList.Any(p => Equals(p.PeptideModSeq, sequence)))
+                    {
+                        MessageDlg.Show(MessageParent, string.Format("The peptide {0} is already present in the {1} table, and may not be pasted into the {2} table.",
+                                        sequence, STANDARD_TABLE_NAME, LIBRARY_TABLE_NAME));
+                        return;
+                    }
+                }
+
+                AddToLibrary(libraryPeptidesNew);
+            }
+
+            public void AddResults()
+            {
+                var document = Program.ActiveDocumentUI;
+                var settings = document.Settings;
+                if (!settings.HasResults)
+                {
+                    MessageDlg.Show(MessageParent, "The active document must contain results in order to add iRT values.");
+                    return;
+                }
+
+                // Get retention times for standard in each file in which they have times
+                var setStandard = new HashSet<string>(StandardPeptideList.Select(pep => pep.PeptideModSeq));
+                var dictStandardTimes = new Dictionary<int, List<MeasuredPeptide>>();
+                foreach (var fileInfo in settings.MeasuredResults.MSDataFileInfos)
+                {
+                    var docPeptides = new List<MeasuredPeptide>();
+                    foreach (var nodePep in document.Peptides)
+                    {
+                        string modSeq = settings.GetModifiedSequence(nodePep, IsotopeLabelType.light);
+                        if (!setStandard.Contains(modSeq))
+                            continue;
+                        float? centerTime = nodePep.GetPeakCenterTime(fileInfo);
+                        if (!centerTime.HasValue)
+                            break;
+                        docPeptides.Add(new MeasuredPeptide(modSeq, centerTime.Value));
+                    }
+                    if (docPeptides.Count == setStandard.Count)
+                    {
+                        docPeptides.Sort((p1, p2) => Comparer.Default.Compare(p1.Sequence, p2.Sequence));
+                        dictStandardTimes.Add(fileInfo.Id.GlobalIndex, docPeptides);
+                    }
+                }
+
+                if (dictStandardTimes.Count == 0)
+                {
+                    MessageDlg.Show(MessageParent, String.Format("The active document must contain the entire standard measured in at least one file in order to calculate iRT values."));
+                    return;
+                }
+
+                Statistics iRtY = new Statistics(StandardPeptideList.OrderBy(pep => pep.PeptideModSeq).Select(pep => pep.Irt));
+                var dictLinearEqs = new Dictionary<int, RegressionLine>();
+                foreach (var standardTimes in dictStandardTimes)
+                {
+                    Statistics rtX = new Statistics(standardTimes.Value.Select(pep => pep.RetentionTime));
+                    dictLinearEqs.Add(standardTimes.Key, new RegressionLine(iRtY.Slope(rtX), iRtY.Intercept(rtX)));
+                }
+
+                var libraryPeptidesNew = new List<DbIrtPeptide>();
+                foreach (var nodePep in document.Peptides)
+                {
+                    //only calculate new iRTs for peptides not in the standard
+                    string modSeq = settings.GetModifiedSequence(nodePep, IsotopeLabelType.light);
+                    if (setStandard.Contains(modSeq))
+                        continue;
+                    double totalIrt = 0;
+                    int countIrt = 0;
+                    foreach (var fileInfo in settings.MeasuredResults.MSDataFileInfos)
+                    {
+                        RegressionLine linearEq;
+                        if (!dictLinearEqs.TryGetValue(fileInfo.Id.GlobalIndex, out linearEq))
+                            continue;
+                        float? centerTime = nodePep.GetPeakCenterTime(fileInfo);
+                        if (!centerTime.HasValue)
+                            continue;
+
+                        totalIrt += linearEq.GetY(centerTime.Value);
+                        countIrt++;
+                    }
+
+                    if (countIrt > 0)
+                        libraryPeptidesNew.Add(new DbIrtPeptide(modSeq, totalIrt / countIrt, false, TimeSource.peak));
+                }
+
+                AddToLibrary(libraryPeptidesNew);
+            }
+
+            private void AddToLibrary(IEnumerable<DbIrtPeptide> libraryPeptidesNew)
+            {
+                var dictLibraryIndices = new Dictionary<string, int>();
+                for (int i = 0; i < Items.Count; i++)
+                    dictLibraryIndices.Add(Items[i].PeptideModSeq, i);
+
+                var listChangedPeptides = new List<string>();
+                var listOverwritePeptides = new List<string>();
+
+                // Check for existing matching peptides
+                foreach (var peptide in libraryPeptidesNew)
+                {
+                    int peptideIndex;
+                    if (!dictLibraryIndices.TryGetValue(peptide.PeptideModSeq, out peptideIndex))
+                        continue;
+                    var peptideExist = Items[peptideIndex];
+                    if (Equals(peptide, peptideExist))
+                        continue;
+
+                    if (peptide.TimeSource != peptideExist.TimeSource &&
+                            peptideExist.TimeSource.HasValue &&
+                            peptideExist.TimeSource.Value == (int)TimeSource.scan)
+                        listOverwritePeptides.Add(peptide.PeptideModSeq);
+                    else
+                        listChangedPeptides.Add(peptide.PeptideModSeq);
+                }
+
+                // If there were any matches, get user feedback
+                AddIrtPeptidesAction action = AddIrtPeptidesAction.skip;
+                if (listChangedPeptides.Count > 0 || listOverwritePeptides.Count > 0)
+                {
+                    using (var dlg = new AddIrtPeptidesDlg(listChangedPeptides, listOverwritePeptides))
+                    {
+                        if (dlg.ShowDialog(MessageParent) != DialogResult.OK)
+                            return;
+                        action = dlg.Action;
+                    }
+                }
+
+                // Add the new peptides to the library list
+                foreach (var peptide in libraryPeptidesNew)
+                {
+                    int peptideIndex;
+                    if (!dictLibraryIndices.TryGetValue(peptide.PeptideModSeq, out peptideIndex))
+                    {
+                        Items.Add(peptide);
+                        continue;
+                    }
+                    var peptideExist = Items[peptideIndex];
+                    if (action == AddIrtPeptidesAction.skip || Equals(peptide, peptideExist))
+                        continue;
+
+                    if (action == AddIrtPeptidesAction.replace ||
+                            (peptide.TimeSource != peptideExist.TimeSource &&
+                             peptideExist.TimeSource.HasValue &&
+                             peptideExist.TimeSource.Value == (int)TimeSource.scan))
+                    {
+                        peptideExist.Irt = peptide.Irt;
+                        peptideExist.TimeSource = peptide.TimeSource;
+                    }
+                    else // if (action == AddIrtPeptidesAction.average)
+                    {
+                        peptideExist.Irt = (peptide.Irt + peptideExist.Irt) / 2;
+                    }
+                    Items.ResetItem(peptideIndex);
+                }
+            }
+        }
+
+        private void gridViewLibrary_RowsAdded(object sender, DataGridViewRowsAddedEventArgs e)
+        {
+            UpdateNumPeptides();
+        }
+
+        private void gridViewLibrary_RowsRemoved(object sender, DataGridViewRowsRemovedEventArgs e)
+        {
+            UpdateNumPeptides();
+        }
+
+        private void UpdateNumPeptides()
+        {
+            btnCalibrate.Enabled = (LibraryPeptideList.Count == 0);
+
+            labelNumPeptides.Text = string.Format("{0} Peptides", LibraryPeptideList.Count);
+        }
+
+        #region Functional Test Support
+
+        public void SetCalcName(string name)
+        {
+            textCalculatorName.Text = name;
+        }
+
+        public void DoPasteStandard()
+        {
+            _gridViewStandardDriver.OnPaste();
         }
 
         public void AddResults()
         {
-            var document = Program.ActiveDocumentUI;
-            var settings = document.Settings;
-
-            // Get all peptides with usable retention times
-            var allDocPeptides = new List<MeasuredPeptide>();
-            foreach (var nodePep in document.Peptides)
-            {
-                if (nodePep.SchedulingTime.HasValue)
-                {
-                    string modSeq = settings.GetModifiedSequence(nodePep, IsotopeLabelType.light);
-                    allDocPeptides.Add(new MeasuredPeptide(modSeq, nodePep.SchedulingTime.Value));
-                }
-            }
-
-            List<MeasuredPeptide> standard;
-            //This function raises MessageDlgs
-            if(!ValidatePeptideTable(gridViewStandard, STANDARD_TABLE_NAME, out standard))
-                return;
-
-            List<MeasuredPeptide> standardDocPeptides;
-            int docStandardCount = GetStandardFromDocument(allDocPeptides, standard, out standardDocPeptides);
-            if (docStandardCount != standard.Count)
-            {
-                MessageDlg.Show(this, String.Format(
-                        "The active document must contain the entire standard in order to calculate iRT values. Of {0} there were {1}.",
-                        standard.Count, docStandardCount));
-                return;
-            }
-
-            //These have to be sorted by sequence because they are K,V pairs and sequence is the key.
-            //They have to be sorted in the first place to calculate the m and b for y=mx+b
-            standard.Sort((one, two) => one.Sequence.CompareTo(two.Sequence));
-            standardDocPeptides.Sort((one, two) => one.Sequence.CompareTo(two.Sequence));
-
-            Statistics iRtY = new Statistics(standard.Select(pep => pep.RetentionTimeOrIrt));
-            Statistics rtX = new Statistics(standardDocPeptides.Select(pep => pep.RetentionTimeOrIrt));
-            double slope = Statistics.Slope(iRtY, rtX);
-            double intercept = Statistics.Intercept(iRtY, rtX);
-
-            List<MeasuredPeptide> libraryPeptides = new List<MeasuredPeptide>();
-            foreach (var pep in allDocPeptides)
-            {
-                //only calculate new iRTs for peptides not in the standard
-                string sequence = pep.Sequence;
-                if (!standardDocPeptides.Any(pepStandard => Equals(sequence, pepStandard.Sequence)))
-                {
-                    double newIrt = slope * pep.RetentionTimeOrIrt + intercept;
-                    libraryPeptides.Add(new MeasuredPeptide(sequence, newIrt));
-                }
-            }
-
-            AddToLibrary(libraryPeptides);
-
-            UpdateNumPeptides();
+            _gridViewLibraryDriver.AddResults();
         }
 
         #endregion

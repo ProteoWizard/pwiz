@@ -80,17 +80,17 @@ namespace pwiz.SkylineTestFunctional
             string documentPath = testFilesDir.GetTestPath("iRT Test.sky");
             RunUI(() => SkylineWindow.OpenFile(documentPath));
 
-            var peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            var editRT = ShowDialog<EditRTDlg>(peptideSettingsDlg.AddRTRegression);
-            var irtDlg = ShowDialog<EditIrtCalcDlg>(editRT.AddCalculator);
-            EditIrtCalcDlg irtDlg1 = irtDlg;
+            var peptideSettingsDlg1 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            var editRT1 = ShowDialog<EditRTDlg>(peptideSettingsDlg1.AddRTRegression);
+            var irtDlg1 = ShowDialog<EditIrtCalcDlg>(editRT1.AddCalculator);
+            
             RunUI(() =>
                 {
-                    irtDlg1.SetStandardName(irtCalc);
-                    irtDlg1.SetDatabasePath(databasePath);
+                    irtDlg1.SetCalcName(irtCalc);
+                    irtDlg1.CreateDatabase(databasePath);
                 });
 
-            List<MeasuredPeptide> calibratePeptides = new List<MeasuredPeptide>();
+            var calibratePeptides = new List<MeasuredPeptide>();
 
             /*
              * Check several error handling cases
@@ -99,55 +99,60 @@ namespace pwiz.SkylineTestFunctional
              * Check the peptide linear transformation for sanity
              * Check that the peptides get passed back to EditIrtCalcDlg
              */
-            var calibrateDlg = ShowDialog<CalibrateIrtDlg>(irtDlg.Calibrate);
-
-            CalibrateIrtDlg calibrateDlg1 = calibrateDlg;
-            RunUI(() => calibrateDlg1.SetNumPeptides(1));
-            //Can't create a standard with < 1 peptide
-            RunDlg<MessageDlg>(() => calibrateDlg1.Recalculate(), messageDlg => messageDlg.OkDialog());
+            var calibrateDlg = ShowDialog<CalibrateIrtDlg>(irtDlg1.Calibrate);
 
             //Check the peptide choosing algorithm
-            int peptideCount = SkylineWindow.Document.Peptides.Count();
-            for (int i = peptideCount; i >= CalibrateIrtDlg.MIN_STANDARD_PEPTIDES; i--) //29 peptides in the document
+            int peptideCount = SkylineWindow.Document.PeptideCount; //29 peptides in the document
+
+            //Use the dialog box UI
+            var countDlg = ShowDialog<AddIrtStandardsDlg>(calibrateDlg.UseResults);
+            RunUI(() => countDlg.StandardCount = CalibrateIrtDlg.MIN_STANDARD_PEPTIDES - 1);
+            RunDlg<MessageDlg>(countDlg.OkDialog, messageDlg => messageDlg.OkDialog());
+            RunUI(() =>
+            {
+                countDlg.StandardCount = peptideCount;
+                countDlg.OkDialog();
+            });
+            WaitForClosedForm(countDlg);
+
+            Assert.AreEqual(peptideCount, calibrateDlg.StandardPeptideCount);
+
+            //Bypass the UI
+            foreach (int i in new[]
+                                  {
+                                      peptideCount,
+                                      peptideCount/2,
+                                      CalibrateIrtDlg.MIN_STANDARD_PEPTIDES*2,
+                                      CalibrateIrtDlg.MIN_STANDARD_PEPTIDES
+                                  })
             {
                 int j = i;
                 RunUI(() =>
                           {
-                              calibrateDlg1.SetNumPeptides(j);
-                              calibratePeptides = calibrateDlg1.Recalculate();
+                              calibratePeptides = calibrateDlg.Recalculate(SkylineWindow.Document, j);
                               Assert.AreEqual(calibratePeptides.Count, j);
+                              Assert.IsNull(FindOpenForm<MessageDlg>());
                           });
             }
 
-            RunUI(() => calibrateDlg1.SetNumPeptides(peptideCount + 1));
-
-            //Can't use more peptides than there are in the document
-            RunDlg<MessageDlg>(() => calibratePeptides = calibrateDlg1.Recalculate(),
-                messageDlg => messageDlg.OkDialog());
-
-            Assert.AreEqual(peptideCount, calibratePeptides.Count);
-
             RunUI(() =>
                       {
-                          calibrateDlg1.SetNumPeptides(11);
-                          calibrateDlg1.Recalculate();
+                          calibrateDlg.Recalculate(SkylineWindow.Document, 11);
                           //After closing this dialog, there should be 3 iRT values below 0
                           //and 3 above 100
-                          calibrateDlg1.SetBoxesChecked(4, 8);
+                          calibrateDlg.SetFixedPoints(3, 7);
 
-                          calibrateDlg1.OkDialog();
+                          calibrateDlg.OkDialog();
                       });
             WaitForClosedForm(calibrateDlg);
 
             //Now check that the peptides were passed to the EditIrtCalcDlg
-            EditIrtCalcDlg dlg = irtDlg;
             RunUI(() =>
                       {
-                          Assert.IsTrue(dlg.GetStandard(out calibratePeptides));
-                          Assert.AreEqual(numStandardPeps, calibratePeptides.Count);
+                          Assert.AreEqual(numStandardPeps, irtDlg1.StandardPeptideCount);
                           //And that there are 3 below 0 and 3 above 100
-                          Assert.AreEqual(3, calibratePeptides.FindAll(pep => pep.RetentionTimeOrIrt < 0).Count);
-                          Assert.AreEqual(3, calibratePeptides.FindAll(pep => pep.RetentionTimeOrIrt > 100).Count);
+                          Assert.AreEqual(3, irtDlg1.StandardPeptides.Count(pep => pep.Irt < 0));
+                          Assert.AreEqual(3, irtDlg1.StandardPeptides.Count(pep => pep.Irt > 100));
                       });
 
             /*
@@ -158,63 +163,49 @@ namespace pwiz.SkylineTestFunctional
              */
 
             //Now paste in iRT with each peptide truncated by one amino acid
-            string standard = new StringBuilder()
-                .Append("LGGNEQVT").Append('\t').Append(-24.92).AppendLine()
-                .Append("GAGSSEPVTGLDA").Append('\t').Append(0.00).AppendLine()
-                .Append("VEATFGVDESNA").Append('\t').Append(12.39).AppendLine()
-                .Append("YILAGVENS").Append('\t').Append(19.79).AppendLine()
-                .Append("TPVISGGPYEY").Append('\t').Append(28.71).AppendLine()
-                .Append("TPVITGAPYEY").Append('\t').Append(33.38).AppendLine()
-                .Append("DGLDAASYYAPV").Append('\t').Append(42.26).AppendLine()
-                .Append("ADVTPADFSEWS").Append('\t').Append(54.62).AppendLine()
-                .Append("GTFIIDPGGVI").Append('\t').Append(70.52).AppendLine()
-                .Append("GTFIIDPAAVI").Append('\t').Append(87.23).AppendLine()
-                .Append("LFLQFGAQGSPFL").Append('\t').Append(100.00).AppendLine()
-                .ToString();
+            var standard = new[]
+                               {
+                                   new MeasuredPeptide("LGGNEQVTR", -24.92),
+                                   new MeasuredPeptide("GAGSSEPVTGLDAK", 0.00),
+                                   new MeasuredPeptide("VEATFGVDESNAK", 12.39),
+                                   new MeasuredPeptide("YILAGVENSK", 19.79),
+                                   new MeasuredPeptide("TPVISGGPYEYR", 28.71),
+                                   new MeasuredPeptide("TPVITGAPYEYR", 33.38),
+                                   new MeasuredPeptide("DGLDAASYYAPVR", 42.26),
+                                   new MeasuredPeptide("ADVTPADFSEWSK", 54.62),
+                                   new MeasuredPeptide("GTFIIDPGGVIR", 70.52),
+                                   new MeasuredPeptide("GTFIIDPAAVIR", 87.23),
+                                   new MeasuredPeptide("LFLQFGAQGSPFLK", 100.00),
+                               };
 
-            string standard1 = standard;
-            EditIrtCalcDlg irtDlg2 = irtDlg;
             RunUI(() =>
                       {
-                          SetClipboardText(standard1);
-                          irtDlg2.DoPaste();
+                          string standardText = BuildStandardText(standard, seq => seq.Substring(0, seq.Length - 1));
+                          SetClipboardText(standardText);
+                          irtDlg1.DoPasteStandard();
                       });
 
             // Cannot add results because standard peptides are not in the document
-            RunDlg<MessageDlg>(irtDlg.AddResults, messageDlg => messageDlg.OkDialog());
+            RunDlg<MessageDlg>(irtDlg1.AddResults, messageDlg => messageDlg.OkDialog());
 
             // Paste Biognosys-provided values
-            standard = new StringBuilder()
-                .Append("LGGNEQVTR").Append('\t').Append(-24.92).AppendLine()
-                .Append("GAGSSEPVTGLDAK").Append('\t').Append(0.00).AppendLine()
-                .Append("VEATFGVDESNAK").Append('\t').Append(12.39).AppendLine()
-                .Append("YILAGVENSK").Append('\t').Append(19.79).AppendLine()
-                .Append("TPVISGGPYEYR").Append('\t').Append(28.71).AppendLine()
-                .Append("TPVITGAPYEYR").Append('\t').Append(33.38).AppendLine()
-                .Append("DGLDAASYYAPVR").Append('\t').Append(42.26).AppendLine()
-                .Append("ADVTPADFSEWSK").Append('\t').Append(54.62).AppendLine()
-                .Append("GTFIIDPGGVIR").Append('\t').Append(70.52).AppendLine()
-                .Append("GTFIIDPAAVIR").Append('\t').Append(87.23).AppendLine()
-                .Append("LFLQFGAQGSPFLK").Append('\t').Append(100.00).AppendLine()
-                .ToString();
-
-            EditIrtCalcDlg irtDlg3 = irtDlg;
             RunUI(() =>
             {
-                SetClipboardText(standard);
-                irtDlg3.DoPaste();
+                string standardText = BuildStandardText(standard, seq => seq);
+                SetClipboardText(standardText);
+                irtDlg1.DoPasteStandard();
 
                 //Check count
-                Assert.AreEqual(numStandardPeps, irtDlg3.GetNumStandardPeptides());
+                Assert.AreEqual(numStandardPeps, irtDlg1.StandardPeptideCount);
 
                 //Add results
-                irtDlg3.AddResults();
-                Assert.AreEqual(numLibraryPeps, irtDlg3.UpdateNumPeptides());
+                irtDlg1.AddResults();
+                Assert.AreEqual(numLibraryPeps, irtDlg1.LibraryPeptideCount);
 
-                irtDlg3.OkDialog();
+                irtDlg1.OkDialog();
             });
 
-            WaitForClosedForm(irtDlg3);
+            WaitForClosedForm(irtDlg1);
 
             Assert.IsNull(FindOpenForm<MessageDlg>());
 
@@ -232,22 +223,20 @@ namespace pwiz.SkylineTestFunctional
              */
 
             //Rather than rigging SettingsListComboDriver, just create a new one and load
-            irtDlg = ShowDialog<EditIrtCalcDlg>(editRT.AddCalculator);
+            var irtDlg1A = ShowDialog<EditIrtCalcDlg>(editRT1.AddCalculator);
 
-            var irtDlg4 = irtDlg;
-            RunUI(() => irtDlg4.SetDatabasePath(testFilesDir.GetTestPath("bogus.irtdb")));
+            RunDlg<MessageDlg>(() => irtDlg1A.OpenDatabase(testFilesDir.GetTestPath("bogus.irtdb")),
+                messageDlg => messageDlg.OkDialog());
 
-            RunDlg<MessageDlg>(irtDlg.OpenDatabase, messageDlg => messageDlg.OkDialog());
-
-            //There was a bu.g where opening a path and then clicking OK would save all the peptides
+            //There was a _bug_ where opening a path and then clicking OK would save all the peptides
             //twice, doubling the size of the database. So check that that is fixed.
-            EditIrtCalcDlgPepCountTest(irtDlg, numStandardPeps, numLibraryPeps, databasePath, false);
-            irtDlg = ShowDialog<EditIrtCalcDlg>(editRT.AddCalculator);
-            EditIrtCalcDlgPepCountTest(irtDlg, numStandardPeps, numLibraryPeps, databasePath, false);
-            irtDlg = ShowDialog<EditIrtCalcDlg>(editRT.AddCalculator);
-            EditIrtCalcDlgPepCountTest(irtDlg, numStandardPeps, numLibraryPeps, databasePath, true);
-            irtDlg = ShowDialog<EditIrtCalcDlg>(editRT.AddCalculator);
-            EditIrtCalcDlgPepCountTest(irtDlg, numStandardPeps, numLibraryPeps, databasePath, false);
+            EditIrtCalcDlgPepCountTest(irtDlg1A, numStandardPeps, numLibraryPeps, databasePath, false);
+            EditIrtCalcDlgPepCountTest(ShowDialog<EditIrtCalcDlg>(editRT1.AddCalculator),
+                numStandardPeps, numLibraryPeps, databasePath, false);
+            EditIrtCalcDlgPepCountTest(ShowDialog<EditIrtCalcDlg>(editRT1.AddCalculator),
+                numStandardPeps, numLibraryPeps, databasePath, true);
+            EditIrtCalcDlgPepCountTest(ShowDialog<EditIrtCalcDlg>(editRT1.AddCalculator),
+                numStandardPeps, numLibraryPeps, databasePath, false);
 
             /* 
              * Create a regression based on the new calculator
@@ -257,7 +246,6 @@ namespace pwiz.SkylineTestFunctional
              * Switch to SSRCalc, verify graph label changes
              */
 
-            EditRTDlg editRT1 = editRT;
             RunUI(() =>
                       {
                           editRT1.SetRegressionName("iRT Regression");
@@ -265,22 +253,21 @@ namespace pwiz.SkylineTestFunctional
                           editRT1.ChooseCalculator(irtCalc);
                           editRT1.OkDialog();
                       });
-            WaitForClosedForm(editRT);
+            WaitForClosedForm(editRT1);
 
-            editRT = ShowDialog<EditRTDlg>(peptideSettingsDlg.AddRTRegression);
+            var editRT1A = ShowDialog<EditRTDlg>(peptideSettingsDlg1.AddRTRegression);
 
-            EditRTDlg editRT2 = editRT;
             RunUI(() =>
                       {
-                          editRT2.SetRegressionName("SSRCalc Regression");
-                          editRT2.AddResults();
-                          editRT2.ChooseCalculator(ssrCalc);
-                          editRT2.OkDialog();
+                          editRT1A.SetRegressionName("SSRCalc Regression");
+                          editRT1A.AddResults();
+                          editRT1A.ChooseCalculator(ssrCalc);
+                          editRT1A.OkDialog();
                       });
 
-            WaitForClosedForm(editRT);
-            RunUI(peptideSettingsDlg.CancelButton.PerformClick);
-            WaitForClosedForm(peptideSettingsDlg);
+            WaitForClosedForm(editRT1A);
+            RunUI(peptideSettingsDlg1.CancelButton.PerformClick);
+            WaitForClosedForm(peptideSettingsDlg1);
 
             var docPeptides = new List<MeasuredRetentionTime>();
             RunUI(() =>
@@ -344,104 +331,97 @@ namespace pwiz.SkylineTestFunctional
                       });
 
             //Peptide settings dialog -> Add a regression
-            peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            editRT = ShowDialog<EditRTDlg>(peptideSettingsDlg.AddRTRegression);
+            var peptideSettingsDlg2 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            var editRT2 = ShowDialog<EditRTDlg>(peptideSettingsDlg1.AddRTRegression);
 
             //Set regression name
-            EditRTDlg editRT3 = editRT;
-            RunUI(() => editRT3.SetRegressionName("iRT Document Regression"));
+            RunUI(() => editRT2.SetRegressionName("iRT Document Regression"));
 
             //Regression dialog -> add a calculator
-            irtDlg = ShowDialog<EditIrtCalcDlg>(editRT.AddCalculator);
+            var irtDlg2 = ShowDialog<EditIrtCalcDlg>(editRT2.AddCalculator);
 
             //Set calc name, database
-            var irtDlg5 = irtDlg;
             RunUI(() =>
                       {
-                          irtDlg5.SetStandardName("iRT Document Calculator");
-                          irtDlg5.CreateDatabase(testFilesDir.GetTestPath("irt-doc.irtdb"));
+                          irtDlg2.SetCalcName("iRT Document Calculator");
+                          irtDlg2.CreateDatabase(testFilesDir.GetTestPath("irt-doc.irtdb"));
                       });
 
             //Calc dialog -> calibrate standard
-            calibrateDlg = ShowDialog<CalibrateIrtDlg>(irtDlg.Calibrate);
+            var calibrateDlg2 = ShowDialog<CalibrateIrtDlg>(irtDlg2.Calibrate);
 
             //Get 11 peptides from the document (all of them) and go back to calculator dialog
             RunUI(() =>
                       {
-                          calibrateDlg.SetNumPeptides(11);
-                          calibrateDlg.Recalculate();
-                          calibrateDlg.OkDialog();
+                          calibrateDlg2.Recalculate(SkylineWindow.Document, 11);
+                          calibrateDlg2.OkDialog();
                       });
-            WaitForClosedForm(calibrateDlg);
+            WaitForClosedForm(calibrateDlg2);
 
             //WaitForCondition(5000000, () => false);
 
             //Can't add results since the document doesn't have anything but the standard. Close dialogs to
             //get back to Skyline
-            RunUI(irtDlg5.OkDialog);
-            WaitForClosedForm(irtDlg5);
-            RunUI(editRT.CancelButton.PerformClick);
-            WaitForClosedForm(editRT);
-            RunUI(peptideSettingsDlg.CancelButton.PerformClick);
-            WaitForClosedForm(peptideSettingsDlg);
+            RunUI(irtDlg2.OkDialog);
+            WaitForClosedForm(irtDlg2);
+            RunUI(editRT2.CancelButton.PerformClick);
+            WaitForClosedForm(editRT2);
+            RunUI(peptideSettingsDlg2.CancelButton.PerformClick);
+            WaitForClosedForm(peptideSettingsDlg2);
 
             //Restore the document to contain all 29 peptides
             RunUI(SkylineWindow.Undo);
 
 
             //Open peptide settings
-            peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            var peptideSettingsDlg3 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
 
             //Add a new regression
-            editRT = ShowDialog<EditRTDlg>(peptideSettingsDlg.AddRTRegression);
+            var editRT3 = ShowDialog<EditRTDlg>(peptideSettingsDlg3.AddRTRegression);
 
-            EditRTDlg editRT5 = editRT;
-            RunUI(() => editRT5.SetRegressionName("iRT Document Regression"));
+            RunUI(() => editRT3.SetRegressionName("iRT Document Regression"));
 
             //Edit the calculator list
             var editCalculator =
                 ShowDialog<EditListDlg<SettingsListBase<RetentionScoreCalculatorSpec>, RetentionScoreCalculatorSpec>>(
-                    editRT.EditCalculatorList);
+                    editRT3.EditCalculatorList);
 
             RunUI(() => editCalculator.SelectItem("iRT Document Calculator"));
 
             //Edit the document-based calculator
-            irtDlg = ShowDialog<EditIrtCalcDlg>(editCalculator.EditItem);
+            var irtDlg3 = ShowDialog<EditIrtCalcDlg>(editCalculator.EditItem);
 
             //Add the 18 non-standard peptides to the calculator, then OkDialog back to Skyline
-            EditIrtCalcDlg irtDlg6 = irtDlg;
             RunUI(() =>
                       {
-                          irtDlg6.AddResults();
-                          Assert.AreEqual(18, irtDlg6.UpdateNumPeptides());
-                          irtDlg6.OkDialog();
+                          irtDlg3.AddResults();
+                          Assert.AreEqual(18, irtDlg3.LibraryPeptideCount);
+                          irtDlg3.OkDialog();
                       });
-            WaitForClosedForm(irtDlg6);
+            WaitForClosedForm(irtDlg3);
             
             RunUI(editCalculator.OkDialog);
             WaitForClosedForm(editCalculator);
 
-            EditRTDlg editRT4 = editRT;
             RunUI(() =>
                       {
-                          editRT4.AddResults();
-                          editRT4.ChooseCalculator("iRT Document Calculator");
-                          editRT4.SetTimeWindow(2.0);
-                          editRT4.OkDialog();
+                          editRT3.AddResults();
+                          editRT3.ChooseCalculator("iRT Document Calculator");
+                          editRT3.SetTimeWindow(2.0);
+                          editRT3.OkDialog();
                       });
-            WaitForClosedForm(editRT);
+            WaitForClosedForm(editRT3);
 
             //Then choose the new, document-based regression and turn off prediction
-            PeptideSettingsUI peptideSettingsDlg1 = peptideSettingsDlg;
             RunUI(() =>
                       {
-                          peptideSettingsDlg1.ChooseRegression("iRT Document Regression");
-                          peptideSettingsDlg1.UseMeasuredRT(true);
-                          peptideSettingsDlg1.OkDialog();
+                          peptideSettingsDlg3.ChooseRegression("iRT Document Regression");
+                          peptideSettingsDlg3.UseMeasuredRT(true);
+                          peptideSettingsDlg3.OkDialog();
 
                       });
             
-            WaitForClosedForm(peptideSettingsDlg);
+            WaitForClosedForm(peptideSettingsDlg3);
 
             Assert.IsNull(FindOpenForm<MessageDlg>());
 
@@ -449,14 +429,13 @@ namespace pwiz.SkylineTestFunctional
             ExportMethod(testFilesDir.GetTestPath("EmpiricalTL.csv"));
 
             //Turn on prediction for scheduling
-            peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            var peptideSettingsDlg2 = peptideSettingsDlg;
+            var peptideSettingsDlg4 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
             RunUI(() =>
                                           {
-                                              peptideSettingsDlg2.UseMeasuredRT(false);
-                                              peptideSettingsDlg2.OkDialog();
+                                              peptideSettingsDlg4.UseMeasuredRT(false);
+                                              peptideSettingsDlg4.OkDialog();
                                           });
-            WaitForClosedForm(peptideSettingsDlg);
+            WaitForClosedForm(peptideSettingsDlg4);
 
             //Export the prediction-based transition list 
             ExportMethod(testFilesDir.GetTestPath("PredictionTL.csv"));
@@ -498,29 +477,25 @@ namespace pwiz.SkylineTestFunctional
             const string irtCalcMissing = "iRT-C18-missing";
             Settings.Default.RTScoreCalculatorList.SetValue(new RCalcIrt(irtCalcMissing, testFilesDir.GetTestPath("irt-c18-missing.irtdb")));
 
-            peptideSettingsDlg = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
-            editRT = ShowDialog<EditRTDlg>(peptideSettingsDlg.AddRTRegression);
+            var peptideSettingsDlg5 = ShowDialog<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI);
+            var editRT5 = ShowDialog<EditRTDlg>(peptideSettingsDlg5.AddRTRegression);
 
             //Add results and switch to a calculator whose database is not connected: error
             RunDlg<MessageDlg>(() =>
                                    {
-                                       editRT.AddResults();
-                                       editRT.ChooseCalculator(irtCalcMissing);
+                                       editRT5.AddResults();
+                                       editRT5.ChooseCalculator(irtCalcMissing);
                                    },
                                    errorMessage => errorMessage.OkDialog());
 
             //Go to add a new calculator
-            irtDlg = ShowDialog<EditIrtCalcDlg>(editRT.AddCalculator);
+            var irtDlg5 = ShowDialog<EditIrtCalcDlg>(editRT5.AddCalculator);
 
             //Try to open a file that does not exist: error
-            RunDlg<MessageDlg>(() =>
-                                   {
-                                       irtDlg.SetDatabasePath(databasePath);
-                                       irtDlg.OpenDatabase();
-                                   }, messageDlg => messageDlg.OkDialog());
+            RunDlg<MessageDlg>(() => irtDlg5.OpenDatabase(databasePath), messageDlg => messageDlg.OkDialog());
 
-            RunUI(() => irtDlg.CancelButton.PerformClick());
-            WaitForClosedForm(irtDlg);
+            RunUI(() => irtDlg5.CancelButton.PerformClick());
+            WaitForClosedForm(irtDlg5);
 
             //In order to export a transition list, we have to set the RT regression to have the iRT Calc.
             //This means that the iRT calc must have its database connected - else the dialog will not let
@@ -533,20 +508,20 @@ namespace pwiz.SkylineTestFunctional
 
             RunUI(() =>
                       {
-                          editRT.SetRegressionName("iRT Test Regression");
-                          editRT.AddResults();
-                          editRT.ChooseCalculator(irtCalc);
-                          editRT.OkDialog();
+                          editRT5.SetRegressionName("iRT Test Regression");
+                          editRT5.AddResults();
+                          editRT5.ChooseCalculator(irtCalc);
+                          editRT5.OkDialog();
                       });
+            WaitForClosedForm(editRT5);
 
-            WaitForClosedForm(editRT);
             RunUI(() =>
                       {
-                          peptideSettingsDlg.ChooseRegression("iRT Test Regression");
-                          peptideSettingsDlg.UseMeasuredRT(false); //Use prediction
-                          peptideSettingsDlg.OkDialog();
+                          peptideSettingsDlg5.ChooseRegression("iRT Test Regression");
+                          peptideSettingsDlg5.UseMeasuredRT(false); //Use prediction
+                          peptideSettingsDlg5.OkDialog();
                       });
-            WaitForClosedForm(peptideSettingsDlg);
+            WaitForClosedForm(peptideSettingsDlg5);
 
             //Switch the file back to the copy, destroying the original
             stream = File.Create(testFilesDir.GetTestPath("irt-c18-copy.irtdb"));
@@ -570,14 +545,28 @@ namespace pwiz.SkylineTestFunctional
              * will fail because it will try to use a calculator from settings which will not have its
              * database.
              */
-            RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsDlg3 =>
+            RunDlg<PeptideSettingsUI>(SkylineWindow.ShowPeptideSettingsUI, peptideSettingsDlg6 =>
                                                             {
-                                                                peptideSettingsDlg3.ChooseRegression("None");
-                                                                peptideSettingsDlg3.OkDialog();
+                                                                peptideSettingsDlg6.ChooseRegression("None");
+                                                                peptideSettingsDlg6.OkDialog();
                                                             });
 
             // Make sure no message boxes are left open
             Assert.IsNull(FindOpenForm<MessageDlg>());
+        }
+
+        private static string BuildStandardText(IEnumerable<MeasuredPeptide> standard, Func<string, string> adjustSeq)
+        {
+            var standardBuilder = new StringBuilder();
+            foreach (var peptide in standard)
+            {
+                standardBuilder.Append(adjustSeq(peptide.Sequence))
+                    .Append('\t')
+                    .Append(peptide.RetentionTime)
+                    .AppendLine();
+            }
+
+            return standardBuilder.ToString();
         }
 
         private static void ExportMethod(string exportPath)
@@ -597,21 +586,26 @@ namespace pwiz.SkylineTestFunctional
         {
             RunUI(() =>
                       {
-                          Assert.AreEqual(0, dlg.GetNumStandardPeptides());
-                          Assert.AreEqual(0, dlg.UpdateNumPeptides());
-                          dlg.SetStandardName("Testing");
-                          dlg.SetDatabasePath(path);
-                          dlg.OpenDatabase();
+                          Assert.AreEqual(0, dlg.StandardPeptideCount);
+                          Assert.AreEqual(0, dlg.LibraryPeptideCount);
 
-                          Assert.AreEqual(numStandardPeps, dlg.GetNumStandardPeptides());
-                          Assert.AreEqual(numLibraryPeps, dlg.UpdateNumPeptides());
+                          dlg.SetCalcName("Testing");
+                          dlg.OpenDatabase(path);
 
-                          if(add)
-                              dlg.AddResults();
-                          
-                          dlg.OkDialog();
+                          Assert.AreEqual(numStandardPeps, dlg.StandardPeptideCount);
+                          Assert.AreEqual(numLibraryPeps, dlg.LibraryPeptideCount);
                       });
 
+            if(add)
+            {
+                RunDlg<AddIrtPeptidesDlg>(dlg.AddResults, addDlg =>
+                                                              {
+                                                                  addDlg.Action = AddIrtPeptidesAction.skip;
+                                                                  addDlg.OkDialog();
+                                                              });
+            }
+
+            RunUI(dlg.OkDialog);
             WaitForClosedForm(dlg);
         }
     }

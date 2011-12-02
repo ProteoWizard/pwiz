@@ -8,13 +8,12 @@
     </id>
   </class>
   <class name="DbIrtPeptide" table="IrtLibrary">
-    <id name="ID">
-      <column name="ID" not-null="true"/>
-      <generator class="native"/>
+    <id name="Id">
+      <generator class="native" />
     </id>
     <property name="PeptideModSeq" index="idxPeptide" not-null="true"/>
-    <property name="Irt" not-null="true"/>
-    <property name="Standard" not-null="true"/>
-    <property name="PeakTime" not-null="true"/>
+    <property name="Irt"/>
+    <property name="Standard"/>
+    <property name="TimeSource"/>
   </class>
 </hibernate-mapping>
