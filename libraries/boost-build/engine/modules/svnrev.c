@@ -13,7 +13,7 @@
  *  License
  *
  *  Copyright (c) 2005-2009, ITB CompuPhase (www.compuphase.com).
- *  Copyright 2009 Vanderbilt University - Nashville, TN 37232
+ *  Copyright 2011 Vanderbilt University - Nashville, TN 37232
  *
  *  This software is provided "as-is", without any express or implied warranty.
  *  In no event will the authors be held liable for any damages arising from
@@ -39,6 +39,7 @@
 #include <string.h>
 #include "../native.h"
 #include "../output.h"
+#include "../object.h"
 #include "../strings.h"
 #include "../newstr.h"
 
@@ -174,7 +175,7 @@ static void processfile(const char *name,
         printf("%d %4d-%02d-%02d %d %s\n", build, year, month, day, *ismodified, name);
 }
 
-LIST *svnrevinfo( PARSE *parse, FRAME *frame )
+LIST *svnrevinfo( FRAME *frame, int flags )
 {
     LIST* filepaths = lol_get( frame->args, 0 );
     LIST* revision_info;
@@ -195,7 +196,7 @@ LIST *svnrevinfo( PARSE *parse, FRAME *frame )
         /* phase 1: scan through all files and get the highest build number */
 
         filemodified = 0;
-        processfile(filepaths->string,
+        processfile(object_str(filepaths->value),
                     0, warnonmissing, printrevisioninfo, 
                     &max_build, &accum_build, &max_year, &max_month, &max_day,
                     &filemodified);

@@ -4,7 +4,7 @@
 
 #include "../native.h"
 #include "../timestamp.h"
-#include "../newstr.h"
+#include "../object.h"
 #include "../strings.h"
 #include "../regexp.h"
 #include "../compile.h"
@@ -25,7 +25,7 @@ rule transform ( list * : pattern : indices * )
     return $(result) ;
 }
 */
-LIST *regex_transform( PARSE *parse, FRAME *frame )
+LIST *regex_transform( FRAME *frame, int flags )
 {
     LIST* l = lol_get( frame->args, 0 );    
     LIST* pattern = lol_get( frame->args, 1 );    
@@ -44,7 +44,7 @@ LIST *regex_transform( PARSE *parse, FRAME *frame )
         indices = (int*)BJAM_MALLOC(size*sizeof(int));
         for(p = indices; indices_list; indices_list = indices_list->next)
         {
-            *p++ = atoi(indices_list->string);
+            *p++ = atoi(object_str(indices_list->value));
         }        
     }
     else 
@@ -56,11 +56,11 @@ LIST *regex_transform( PARSE *parse, FRAME *frame )
 
     {
         /* Result is cached and intentionally never freed */
-        regexp *re = regex_compile( pattern->string );
+        regexp *re = regex_compile( pattern->value );
 
         for(; l; l = l->next)
         {
-            if( regexec( re, l->string ) )
+            if( regexec( re, object_str( l->value ) ) )
             {
                 int i = 0;
                 for(; i < size; ++i)
@@ -73,7 +73,7 @@ LIST *regex_transform( PARSE *parse, FRAME *frame )
                     if (re->startp[index] != re->endp[index])
                     {
                         string_append_range( buf, re->startp[index], re->endp[index] );
-                        result = list_new( result, newstr( buf->value ) ); 
+                        result = list_new( result, object_new( buf->value ) ); 
                         string_truncate( buf, 0 );
                     }
                 }
@@ -90,7 +90,7 @@ LIST *regex_transform( PARSE *parse, FRAME *frame )
 void init_regex()
 {
     {
-        char* args[] = { "list", "*", ":", "pattern", ":", "indices", "*", 0 };
+        const char* args[] = { "list", "*", ":", "pattern", ":", "indices", "*", 0 };
         declare_native_rule("regex", "transform", args, regex_transform, 2);
     }
 }
