@@ -51,10 +51,10 @@ platform_fence_after_store(memory_order order)
 }
 
 static inline void
-platform_fence_after_load(memory_order)
+platform_fence_after_load(memory_order order)
 {
 	if (order == memory_order_seq_cst) {
-		x86_full_fence(void);
+		x86_full_fence();
 	}
 }
 
@@ -85,10 +85,10 @@ platform_cmpxchg64_strong(T & expected, T desired, volatile T * ptr)
 
 #define BOOST_ATOMIC_THREAD_FENCE 2
 inline void
-atomic_thread_fence(memory_order)
+atomic_thread_fence(memory_order order)
 {
 	if (order == memory_order_seq_cst) {
-		detail::atomic::x86_full_fence(void)
+		detail::atomic::x86_full_fence();
 	}
 }
 
