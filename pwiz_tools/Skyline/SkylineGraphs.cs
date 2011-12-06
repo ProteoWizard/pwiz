@@ -422,6 +422,11 @@ namespace pwiz.Skyline
             UpdateGraphPanes(listUpdateGraphs);
         }
 
+        public void InvalidateChromatogramGraphs()
+        {
+            _listGraphChrom.ForEach(graph => graph.IsCacheInvalidated = true);
+        }
+
         private void EnsureFloatingWindowsVisible()
         {
             foreach (var floatingWindow in dockPanel.FloatingWindows)

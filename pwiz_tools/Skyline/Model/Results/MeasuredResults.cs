@@ -196,6 +196,16 @@ namespace pwiz.Skyline.Model.Results
         }
 // ReSharper restore MemberCanBeMadeStatic.Local
 
+        public MeasuredResults CommitCacheFile(FileSaver fs)
+        {
+            if (!IsLoaded)
+                throw new InvalidOperationException("The chromatogram cache must be loaded before it can be changed.");
+
+            _cacheFinal.CommitCache(fs);
+            // Now the cach needs to be reloaded.
+            return ChangeProp(ImClone(this), im => im._cacheFinal = null);
+        }
+
         public MeasuredResults OptimizeCache(string documentPath, IStreamManager streamManager)
         {
             if (!IsLoaded)

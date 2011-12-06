@@ -321,10 +321,15 @@ namespace pwiz.Skyline.Controls.Graphs
             }
         }
 
+        public bool IsCacheInvalidated { get; set; }
+
         public bool IsCurrent
         {
             get
             {
+                if (IsCacheInvalidated)
+                    return false;
+
                 // Check if any of the charted transition groups have changed
                 if (_nodeGroups == null)
                     return true;
@@ -445,6 +450,8 @@ namespace pwiz.Skyline.Controls.Graphs
 
         public void UpdateUI(bool forceZoom)
         {
+            IsCacheInvalidated = false;
+
             // Only worry about updates, if the graph is visible
             // And make sure it is not disposed, since rendering happens on a timer
             if (!Visible || IsDisposed)

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -18,8 +18,8 @@
  */
 using System;
 using System.IO;
-using System.Text;
 using System.Linq;
+using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -39,23 +39,11 @@ namespace pwiz.SkylineTestA.Results
     {
         private const string ZIP_FILE = @"TestA\Results\FullScan.zip";
 
-        private TestContext testContextInstance;
-
         /// <summary>
         ///Gets or sets the test context which provides
         ///information about and functionality for the current test run.
         ///</summary>
-        public TestContext TestContext
-        {
-            get
-            {
-                return testContextInstance;
-            }
-            set
-            {
-                testContextInstance = value;
-            }
-        }
+        public TestContext TestContext { get; set; }
 
         /// <summary>
         /// Tests that calling <see cref="ChromCacheMinimizer.Minimize"/> statistics that are approximately correct.
@@ -70,46 +58,55 @@ namespace pwiz.SkylineTestA.Results
 
             // Import the first RAW file (or mzML for international)
             string rawPath = testFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +
-                ExtensionTestContext.ExtThermoRaw);
-            var measuredResults = new MeasuredResults(new[] { new ChromatogramSet("Single", new[] { rawPath }) });
+                                                      ExtensionTestContext.ExtThermoRaw);
+            var measuredResults = new MeasuredResults(new[] {new ChromatogramSet("Single", new[] {rawPath})});
 
             SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, 3, 3, 21);
 
-            var chromCacheMinimizer = docResults.Settings.MeasuredResults.GetChromCacheMinimizer(docResults);
-            var settings = new ChromCacheMinimizer.Settings().SetDiscardUnmatchedChromatograms(true);
+            ChromCacheMinimizer chromCacheMinimizer =
+                docResults.Settings.MeasuredResults.GetChromCacheMinimizer(docResults);
+            ChromCacheMinimizer.Settings settings =
+                new ChromCacheMinimizer.Settings().SetDiscardUnmatchedChromatograms(true);
             ChromCacheMinimizer.Statistics statistics = null;
-            chromCacheMinimizer.Minimize(settings, s=>statistics = s, null);
+            chromCacheMinimizer.Minimize(settings, s => statistics = s, null);
             Assert.AreEqual(100, statistics.PercentComplete);
             Assert.AreEqual(1.0, statistics.MinimizedRatio);
 
-            SrmDocument docMissingFirstPeptide = (SrmDocument)docResults.ReplaceChild(docResults.PeptideGroups.First().RemoveChild(docResults.PeptideGroups.First().Children[0]));
-            SrmDocument docWithOnlyFirstPeptide = (SrmDocument)docResults.ReplaceChild(docResults.PeptideGroups.First().ChangeChildren(new[] { docResults.PeptideGroups.First().Children[0]}));
+            var docMissingFirstPeptide =
+                (SrmDocument)
+                docResults.ReplaceChild(
+                    docResults.PeptideGroups.First().RemoveChild(docResults.PeptideGroups.First().Children[0]));
+            var docWithOnlyFirstPeptide =
+                (SrmDocument)
+                docResults.ReplaceChild(
+                    docResults.PeptideGroups.First().ChangeChildren(new[] {docResults.PeptideGroups.First().Children[0]}));
 
             ChromCacheMinimizer.Statistics statsMissingFirstProtein = null;
             ChromCacheMinimizer.Statistics statsWithOnlyFirstProtein = null;
 
             settings = settings.SetDiscardUnmatchedChromatograms(true);
-            var minimizerMissingFirstProtein =
+            ChromCacheMinimizer minimizerMissingFirstProtein =
                 docMissingFirstPeptide.Settings.MeasuredResults.GetChromCacheMinimizer(docMissingFirstPeptide);
-            var minimizerWithOnlyFirstProtein =
+            ChromCacheMinimizer minimizerWithOnlyFirstProtein =
                 docWithOnlyFirstPeptide.Settings.MeasuredResults.GetChromCacheMinimizer(docWithOnlyFirstPeptide);
-            minimizerMissingFirstProtein.Minimize(settings, s=>statsMissingFirstProtein = s, null);
-            minimizerWithOnlyFirstProtein.Minimize(settings, s=>statsWithOnlyFirstProtein=s, null);
+            minimizerMissingFirstProtein.Minimize(settings, s => statsMissingFirstProtein = s, null);
+            minimizerWithOnlyFirstProtein.Minimize(settings, s => statsWithOnlyFirstProtein = s, null);
             Assert.AreEqual(100, statsMissingFirstProtein.PercentComplete);
             Assert.AreEqual(100, statsWithOnlyFirstProtein.PercentComplete);
-            Assert.AreEqual(1.0, statsMissingFirstProtein.MinimizedRatio + statsWithOnlyFirstProtein.MinimizedRatio, .00001);
+            Assert.AreEqual(1.0, statsMissingFirstProtein.MinimizedRatio + statsWithOnlyFirstProtein.MinimizedRatio,
+                            .00001);
             settings = settings.SetDiscardUnmatchedChromatograms(false);
             ChromCacheMinimizer.Statistics statsMissingFirstProteinKeepAll = null;
             ChromCacheMinimizer.Statistics statsWithOnlyFirstProteinKeepAll = null;
-            minimizerMissingFirstProtein.Minimize(settings, s=>statsMissingFirstProteinKeepAll=s, null);
-            minimizerWithOnlyFirstProtein.Minimize(settings, s=>statsWithOnlyFirstProteinKeepAll=s, null);
+            minimizerMissingFirstProtein.Minimize(settings, s => statsMissingFirstProteinKeepAll = s, null);
+            minimizerWithOnlyFirstProtein.Minimize(settings, s => statsWithOnlyFirstProteinKeepAll = s, null);
             Assert.AreEqual(100, statsMissingFirstProteinKeepAll.PercentComplete);
             Assert.AreEqual(1.0, statsMissingFirstProteinKeepAll.MinimizedRatio);
             Assert.AreEqual(100, statsWithOnlyFirstProteinKeepAll.PercentComplete);
             Assert.AreEqual(1.0, statsWithOnlyFirstProteinKeepAll.MinimizedRatio);
             CloseDocumentContainer(docContainer);
         }
-        
+
         /// <summary>
         /// Tests that setting <see cref="ChromCacheMinimizer.Settings.NoiseTimeRange"/> results in cache files 
         /// that look correct.
@@ -124,28 +121,30 @@ namespace pwiz.SkylineTestA.Results
 
             // Import the first RAW file (or mzML for international)
             string rawPath = testFilesDir.GetTestPath("ah_20101011y_BSA_MS-MS_only_5-2" +
-                ExtensionTestContext.ExtThermoRaw);
-            var measuredResults = new MeasuredResults(new[] { new ChromatogramSet("Single", new[] { rawPath }) });
+                                                      ExtensionTestContext.ExtThermoRaw);
+            var measuredResults = new MeasuredResults(new[] {new ChromatogramSet("Single", new[] {rawPath})});
 
             SrmDocument docResults = docContainer.ChangeMeasuredResults(measuredResults, 3, 3, 21);
-            float tolerance = (float) docResults.Settings.TransitionSettings.Instrument.MzMatchTolerance;
+            var tolerance = (float) docResults.Settings.TransitionSettings.Instrument.MzMatchTolerance;
 
 
-            var settings = new ChromCacheMinimizer.Settings()
+            ChromCacheMinimizer.Settings settings = new ChromCacheMinimizer.Settings()
                 .SetDiscardUnmatchedChromatograms(false)
                 .SetNoiseTimeRange(1.0);
             string minimized1Path = testFilesDir.GetTestPath("NoiseTimeLimited1.sky");
             string minimized2Path = testFilesDir.GetTestPath("NoiseTimeLimited2.sky");
-            var docContainerMinimized1Min = MinimizeCacheFile(docResults, settings.SetNoiseTimeRange(1.0),
-                                                              minimized1Path);
-            var docContainerMinimized2Min = MinimizeCacheFile(docResults, settings.SetNoiseTimeRange(2.0),
-                                                              minimized2Path);
+            ResultsTestDocumentContainer docContainerMinimized1Min = MinimizeCacheFile(docResults,
+                                                                                       settings.SetNoiseTimeRange(1.0),
+                                                                                       minimized1Path);
+            ResultsTestDocumentContainer docContainerMinimized2Min = MinimizeCacheFile(docResults,
+                                                                                       settings.SetNoiseTimeRange(2.0),
+                                                                                       minimized2Path);
             SrmDocument docMinimized1Min = docContainerMinimized1Min.Document;
             SrmDocument docMinimized2Min = docContainerMinimized2Min.Document;
-            var chromSet1Min = docMinimized1Min.Settings.MeasuredResults.Chromatograms[0];
-            var chromSet2Min = docMinimized2Min.Settings.MeasuredResults.Chromatograms[0];
-            var chromSetOriginal = docResults.Settings.MeasuredResults.Chromatograms[0];
-            foreach (var precursor in docResults.TransitionGroups)
+            ChromatogramSet chromSet1Min = docMinimized1Min.Settings.MeasuredResults.Chromatograms[0];
+            ChromatogramSet chromSet2Min = docMinimized2Min.Settings.MeasuredResults.Chromatograms[0];
+            ChromatogramSet chromSetOriginal = docResults.Settings.MeasuredResults.Chromatograms[0];
+            foreach (TransitionGroupDocNode precursor in docResults.TransitionGroups)
             {
                 ChromatogramGroupInfo[] chromGroupsOriginal;
                 ChromatogramGroupInfo[] chromGroups1;
@@ -161,33 +160,37 @@ namespace pwiz.SkylineTestA.Results
                 Assert.AreEqual(chromGroups1.Length, chromGroupsOriginal.Length);
                 for (int iChromGroup = 0; iChromGroup < chromGroups1.Length; iChromGroup++)
                 {
-                    var chromGroup1 = chromGroups1[iChromGroup];
-                    var chromGroup2 = chromGroups2[iChromGroup];
-                    var chromGroupOriginal = chromGroupsOriginal[iChromGroup];
-                    var times = new[] 
-                    {
-                        chromGroupOriginal.Times[0], 
-                        chromGroup2.Times[0], 
-                        chromGroup1.Times[0],                                            
-                        chromGroup1.Times[chromGroup1.Times.Length - 1],
-                        chromGroup2.Times[chromGroup2.Times.Length - 1],
-                        chromGroupOriginal.Times[chromGroupOriginal.Times.Length - 1]
-                    };
+                    ChromatogramGroupInfo chromGroup1 = chromGroups1[iChromGroup];
+                    ChromatogramGroupInfo chromGroup2 = chromGroups2[iChromGroup];
+                    ChromatogramGroupInfo chromGroupOriginal = chromGroupsOriginal[iChromGroup];
+                    var times = new[]
+                                    {
+                                        chromGroupOriginal.Times[0],
+                                        chromGroup2.Times[0],
+                                        chromGroup1.Times[0],
+                                        chromGroup1.Times[chromGroup1.Times.Length - 1],
+                                        chromGroup2.Times[chromGroup2.Times.Length - 1],
+                                        chromGroupOriginal.Times[chromGroupOriginal.Times.Length - 1]
+                                    };
                     // The two minute window around the peak might overlap with either the start or end of the original chromatogram,
                     // but will never overlap with both.
-                    Assert.IsTrue(chromGroup2.Times[0] > chromGroupOriginal.Times[0] 
-                        || chromGroup2.Times[chromGroup2.Times.Length - 1] < chromGroupOriginal.Times[chromGroupOriginal.Times.Length - 1]);
+                    Assert.IsTrue(chromGroup2.Times[0] > chromGroupOriginal.Times[0]
+                                  ||
+                                  chromGroup2.Times[chromGroup2.Times.Length - 1] <
+                                  chromGroupOriginal.Times[chromGroupOriginal.Times.Length - 1]);
                     // If the two minute window does not overlap with the start/end of the original chromatogram, then the difference
                     // in time between the one minute window and the two minute window will be approximately 1 minute.
                     if (chromGroup2.Times[0] > chromGroupOriginal.Times[0])
                     {
                         Assert.AreEqual(chromGroup2.Times[0], chromGroup1.Times[0] - 1, .1);
                     }
-                    if (chromGroup2.Times[chromGroup2.Times.Length - 1] < chromGroupOriginal.Times[chromGroupOriginal.Times.Length - 1])
+                    if (chromGroup2.Times[chromGroup2.Times.Length - 1] <
+                        chromGroupOriginal.Times[chromGroupOriginal.Times.Length - 1])
                     {
-                        Assert.AreEqual(chromGroup2.Times[chromGroup2.Times.Length - 1], chromGroup1.Times[chromGroup1.Times.Length - 1] + 1, .1);
+                        Assert.AreEqual(chromGroup2.Times[chromGroup2.Times.Length - 1],
+                                        chromGroup1.Times[chromGroup1.Times.Length - 1] + 1, .1);
                     }
-                    var timesSorted = times.ToArray();
+                    float[] timesSorted = times.ToArray();
                     Array.Sort(timesSorted);
                     CollectionAssert.AreEqual(times, timesSorted);
                 }
@@ -197,21 +200,22 @@ namespace pwiz.SkylineTestA.Results
             CloseDocumentContainer(docContainerMinimized2Min);
         }
 
-        private ResultsTestDocumentContainer MinimizeCacheFile(SrmDocument document, ChromCacheMinimizer.Settings settings, string skyFilePath)
+        private static ResultsTestDocumentContainer MinimizeCacheFile(SrmDocument document,
+                ChromCacheMinimizer.Settings settings, string skyFilePath)
         {
-            var skydFilePath = Path.ChangeExtension(skyFilePath, "skyd");
-            var chromCacheMinimizer = document.Settings.MeasuredResults.GetChromCacheMinimizer(document);
+            string skydFilePath = Path.ChangeExtension(skyFilePath, "skyd");
+            ChromCacheMinimizer chromCacheMinimizer = document.Settings.MeasuredResults.GetChromCacheMinimizer(document);
             using (var fs = new FileSaver(skydFilePath))
             {
-                using (var stream = File.OpenWrite(fs.SafeName))
+                using (FileStream stream = File.OpenWrite(fs.SafeName))
                 {
                     chromCacheMinimizer.Minimize(settings, null, stream);
                 }
                 fs.Commit();
             }
-            using (var writer = new XmlTextWriter(skyFilePath, Encoding.UTF8) { Formatting = Formatting.Indented })
+            using (var writer = new XmlTextWriter(skyFilePath, Encoding.UTF8) {Formatting = Formatting.Indented})
             {
-                XmlSerializer ser = new XmlSerializer(typeof(SrmDocument));
+                var ser = new XmlSerializer(typeof (SrmDocument));
                 ser.Serialize(writer, document);
 
                 writer.Flush();
@@ -222,7 +226,7 @@ namespace pwiz.SkylineTestA.Results
             return container;
         }
 
-        private void CloseDocumentContainer(ResultsTestDocumentContainer container)
+        private static void CloseDocumentContainer(IDocumentContainer container)
         {
             container.SetDocument(new SrmDocument(SrmSettingsList.GetDefault()), container.Document);
         }

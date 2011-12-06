@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.FileUI
+namespace pwiz.Skyline.FileUI
 {
     partial class MinimizeResultsDlg
     {
@@ -29,13 +29,16 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle16 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle19 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle20 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle17 = new System.Windows.Forms.DataGridViewCellStyle();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle18 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             this.bindingSource1 = new System.Windows.Forms.BindingSource(this.components);
             this.dataGridViewSizes = new System.Windows.Forms.DataGridView();
+            this.colReplicateName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colCacheFileSize = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colMinimizedRatio = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.cbxDiscardUnmatchedChromatograms = new System.Windows.Forms.CheckBox();
             this.tbxNoiseTimeRange = new System.Windows.Forms.TextBox();
             this.cbxLimitNoiseTime = new System.Windows.Forms.CheckBox();
@@ -46,9 +49,6 @@
             this.lblCurrentCacheFileSize = new System.Windows.Forms.Label();
             this.lblSpaceSavings = new System.Windows.Forms.Label();
             this.btnMinimizeAs = new System.Windows.Forms.Button();
-            this.colReplicateName = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colCacheFileSize = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.colMinimizedRatio = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.flowLayoutPanel1 = new System.Windows.Forms.FlowLayoutPanel();
             ((System.ComponentModel.ISupportInitialize)(this.bindingSource1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewSizes)).BeginInit();
@@ -64,42 +64,69 @@
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.dataGridViewSizes.AutoGenerateColumns = false;
             this.dataGridViewSizes.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
-            dataGridViewCellStyle16.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle16.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle16.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle16.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle16.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle16.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle16.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dataGridViewSizes.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle16;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridViewSizes.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle1;
             this.dataGridViewSizes.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridViewSizes.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.colReplicateName,
             this.colCacheFileSize,
             this.colMinimizedRatio});
             this.dataGridViewSizes.DataSource = this.bindingSource1;
-            dataGridViewCellStyle19.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle19.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle19.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle19.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle19.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle19.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle19.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.dataGridViewSizes.DefaultCellStyle = dataGridViewCellStyle19;
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dataGridViewSizes.DefaultCellStyle = dataGridViewCellStyle4;
             this.dataGridViewSizes.Location = new System.Drawing.Point(12, 170);
             this.dataGridViewSizes.Name = "dataGridViewSizes";
             this.dataGridViewSizes.ReadOnly = true;
-            dataGridViewCellStyle20.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle20.BackColor = System.Drawing.SystemColors.Control;
-            dataGridViewCellStyle20.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle20.ForeColor = System.Drawing.SystemColors.WindowText;
-            dataGridViewCellStyle20.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle20.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle20.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.dataGridViewSizes.RowHeadersDefaultCellStyle = dataGridViewCellStyle20;
+            dataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle5.BackColor = System.Drawing.SystemColors.Control;
+            dataGridViewCellStyle5.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle5.ForeColor = System.Drawing.SystemColors.WindowText;
+            dataGridViewCellStyle5.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle5.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridViewSizes.RowHeadersDefaultCellStyle = dataGridViewCellStyle5;
             this.dataGridViewSizes.RowHeadersVisible = false;
             this.dataGridViewSizes.Size = new System.Drawing.Size(438, 176);
-            this.dataGridViewSizes.TabIndex = 0;
+            this.dataGridViewSizes.TabIndex = 5;
+            // 
+            // colReplicateName
+            // 
+            this.colReplicateName.DataPropertyName = "Name";
+            this.colReplicateName.HeaderText = "Replicate";
+            this.colReplicateName.Name = "colReplicateName";
+            this.colReplicateName.ReadOnly = true;
+            // 
+            // colCacheFileSize
+            // 
+            this.colCacheFileSize.DataPropertyName = "Size";
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
+            this.colCacheFileSize.DefaultCellStyle = dataGridViewCellStyle2;
+            this.colCacheFileSize.HeaderText = "Current Size";
+            this.colCacheFileSize.Name = "colCacheFileSize";
+            this.colCacheFileSize.ReadOnly = true;
+            // 
+            // colMinimizedRatio
+            // 
+            this.colMinimizedRatio.DataPropertyName = "MinimizedSize";
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
+            dataGridViewCellStyle3.Format = "0%";
+            dataGridViewCellStyle3.NullValue = null;
+            this.colMinimizedRatio.DefaultCellStyle = dataGridViewCellStyle3;
+            this.colMinimizedRatio.HeaderText = "Minimized Size";
+            this.colMinimizedRatio.Name = "colMinimizedRatio";
+            this.colMinimizedRatio.ReadOnly = true;
             // 
             // cbxDiscardUnmatchedChromatograms
             // 
@@ -117,7 +144,7 @@
             this.tbxNoiseTimeRange.Location = new System.Drawing.Point(99, 3);
             this.tbxNoiseTimeRange.Name = "tbxNoiseTimeRange";
             this.tbxNoiseTimeRange.Size = new System.Drawing.Size(100, 20);
-            this.tbxNoiseTimeRange.TabIndex = 3;
+            this.tbxNoiseTimeRange.TabIndex = 1;
             this.tbxNoiseTimeRange.Text = "1";
             this.tbxNoiseTimeRange.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             this.tbxNoiseTimeRange.Leave += new System.EventHandler(this.tbxNoiseTimeRange_Leave);
@@ -128,7 +155,7 @@
             this.cbxLimitNoiseTime.Location = new System.Drawing.Point(3, 3);
             this.cbxLimitNoiseTime.Name = "cbxLimitNoiseTime";
             this.cbxLimitNoiseTime.Size = new System.Drawing.Size(90, 17);
-            this.cbxLimitNoiseTime.TabIndex = 4;
+            this.cbxLimitNoiseTime.TabIndex = 0;
             this.cbxLimitNoiseTime.Text = "Limit noise to ";
             this.cbxLimitNoiseTime.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.cbxLimitNoiseTime.UseVisualStyleBackColor = true;
@@ -141,7 +168,7 @@
             this.btnCancel.Location = new System.Drawing.Point(371, 352);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 7;
+            this.btnCancel.TabIndex = 8;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
@@ -151,7 +178,7 @@
             this.btnMinimize.Location = new System.Drawing.Point(130, 352);
             this.btnMinimize.Name = "btnMinimize";
             this.btnMinimize.Size = new System.Drawing.Size(103, 23);
-            this.btnMinimize.TabIndex = 8;
+            this.btnMinimize.TabIndex = 6;
             this.btnMinimize.Text = "Minimize in place";
             this.btnMinimize.UseVisualStyleBackColor = true;
             this.btnMinimize.Click += new System.EventHandler(this.btnMinimize_Click);
@@ -161,7 +188,7 @@
             this.label2.Location = new System.Drawing.Point(12, 9);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(437, 59);
-            this.label2.TabIndex = 9;
+            this.label2.TabIndex = 0;
             this.label2.Text = "To reduce the size of the Skyline cache file (.skyd), you can discard chromatogra" +
                 "ms that are not used by this document, as well as limit the length of chromatogr" +
                 "ams.";
@@ -172,7 +199,7 @@
             this.label3.Margin = new System.Windows.Forms.Padding(3);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(221, 17);
-            this.label3.TabIndex = 10;
+            this.label3.TabIndex = 2;
             this.label3.Text = "minutes before and after chromatogram peak.";
             this.label3.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
@@ -182,7 +209,7 @@
             this.lblCurrentCacheFileSize.Location = new System.Drawing.Point(9, 123);
             this.lblCurrentCacheFileSize.Name = "lblCurrentCacheFileSize";
             this.lblCurrentCacheFileSize.Size = new System.Drawing.Size(209, 13);
-            this.lblCurrentCacheFileSize.TabIndex = 11;
+            this.lblCurrentCacheFileSize.TabIndex = 3;
             this.lblCurrentCacheFileSize.Text = "The current size of the cache file is xxx MB";
             // 
             // lblSpaceSavings
@@ -191,7 +218,7 @@
             this.lblSpaceSavings.Location = new System.Drawing.Point(12, 145);
             this.lblSpaceSavings.Name = "lblSpaceSavings";
             this.lblSpaceSavings.Size = new System.Drawing.Size(137, 13);
-            this.lblSpaceSavings.TabIndex = 12;
+            this.lblSpaceSavings.TabIndex = 4;
             this.lblSpaceSavings.Text = "Computing space savings...";
             // 
             // btnMinimizeAs
@@ -200,37 +227,10 @@
             this.btnMinimizeAs.Location = new System.Drawing.Point(239, 352);
             this.btnMinimizeAs.Name = "btnMinimizeAs";
             this.btnMinimizeAs.Size = new System.Drawing.Size(126, 23);
-            this.btnMinimizeAs.TabIndex = 13;
+            this.btnMinimizeAs.TabIndex = 7;
             this.btnMinimizeAs.Text = "Minimize and save as...";
             this.btnMinimizeAs.UseVisualStyleBackColor = true;
             this.btnMinimizeAs.Click += new System.EventHandler(this.btnMinimizeAs_Click);
-            // 
-            // colReplicateName
-            // 
-            this.colReplicateName.DataPropertyName = "Name";
-            this.colReplicateName.HeaderText = "Replicate";
-            this.colReplicateName.Name = "colReplicateName";
-            this.colReplicateName.ReadOnly = true;
-            // 
-            // colCacheFileSize
-            // 
-            this.colCacheFileSize.DataPropertyName = "Size";
-            dataGridViewCellStyle17.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
-            this.colCacheFileSize.DefaultCellStyle = dataGridViewCellStyle17;
-            this.colCacheFileSize.HeaderText = "Current Size";
-            this.colCacheFileSize.Name = "colCacheFileSize";
-            this.colCacheFileSize.ReadOnly = true;
-            // 
-            // colMinimizedRatio
-            // 
-            this.colMinimizedRatio.DataPropertyName = "MinimizedSize";
-            dataGridViewCellStyle18.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleRight;
-            dataGridViewCellStyle18.Format = "0%";
-            dataGridViewCellStyle18.NullValue = null;
-            this.colMinimizedRatio.DefaultCellStyle = dataGridViewCellStyle18;
-            this.colMinimizedRatio.HeaderText = "Minimized Size";
-            this.colMinimizedRatio.Name = "colMinimizedRatio";
-            this.colMinimizedRatio.ReadOnly = true;
             // 
             // flowLayoutPanel1
             // 
@@ -240,7 +240,7 @@
             this.flowLayoutPanel1.Location = new System.Drawing.Point(9, 94);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Size = new System.Drawing.Size(440, 26);
-            this.flowLayoutPanel1.TabIndex = 14;
+            this.flowLayoutPanel1.TabIndex = 2;
             // 
             // MinimizeResultsDlg
             // 
@@ -257,6 +257,8 @@
             this.Controls.Add(this.btnCancel);
             this.Controls.Add(this.cbxDiscardUnmatchedChromatograms);
             this.Controls.Add(this.dataGridViewSizes);
+            this.MaximizeBox = false;
+            this.MinimizeBox = false;
             this.Name = "MinimizeResultsDlg";
             this.ShowInTaskbar = false;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;

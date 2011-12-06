@@ -287,6 +287,23 @@ namespace pwiz.Skyline.FileUI
             listResults.Focus();
         }
 
+        private void btnMinimize_Click(object sender, EventArgs e)
+        {
+            MinimizeResults();
+        }
+
+        private void MinimizeResults()
+        {
+            using (var dlg = new MinimizeResultsDlg(DocumentUIContainer))
+            {
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    // If the MinimizeResultsDlg did work then cancel out of this dialog
+                    DialogResult = DialogResult.Cancel;
+                }
+            }
+        }
+
         private string[] FindMissingFiles(IEnumerable<ChromatogramSet> chromatogramSets)
         {
             string documentPath = DocumentUIContainer.DocumentFilePath;
@@ -326,7 +343,7 @@ namespace pwiz.Skyline.FileUI
             btnUp.Enabled = enable;
             btnDown.Enabled = enable;
             btnRename.Enabled = enable;
-            btnRemoveAll.Enabled = listResults.Items.Count > 0;            
+            btnRemoveAll.Enabled = btnMinimize.Enabled = listResults.Items.Count > 0;            
         }
 
         private sealed class UpdateList : IDisposable
@@ -365,18 +382,6 @@ namespace pwiz.Skyline.FileUI
                 if (Chromatograms == null)
                     return "";
                 return (IsReimport ? "*" : "") + Chromatograms.Name;
-            }
-        }
-
-        private void btnMinimize_Click(object sender, EventArgs e)
-        {
-            using (var dlg = new MinimizeResultsDlg(DocumentUIContainer))
-            {
-                if (dlg.ShowDialog(this) == DialogResult.OK)
-                {
-                    // If the MinimizeResultsDlg did work then cancel out of this dialog
-                    DialogResult = DialogResult.Cancel;
-                }
             }
         }
     }

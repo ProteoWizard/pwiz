@@ -693,10 +693,8 @@ namespace pwiz.Skyline.Model.Results
                 WriteStructs(outStream, listKeepCachedFiles, listKeepEntries, listKeepTransitions, listKeepPeaks);
 
                 outStream.Close();
-                // Close the read stream, in case the destination is the source, and
-                // overwrite is necessary.
-                ReadStream.CloseStream();
-                fs.Commit(ReadStream);
+
+                CommitCache(fs);
             }
 
             return new ChromatogramCache(cachePathOpt,
@@ -707,6 +705,14 @@ namespace pwiz.Skyline.Model.Results
                                          listKeepPeaks.ToArray(),
                                          // Create a new read stream, for the newly created file
                                          streamManager.CreatePooledStream(cachePathOpt, false));
+        }
+
+        public void CommitCache(FileSaver fs)
+        {
+            // Close the read stream, in case the destination is the source, and
+            // overwrite is necessary.
+            ReadStream.CloseStream();
+            fs.Commit(ReadStream);
         }
 
         public class PathEqualityComparer : IEqualityComparer<ChromatogramCache>

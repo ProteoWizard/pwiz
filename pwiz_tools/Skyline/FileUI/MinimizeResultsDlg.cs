@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Original author: Nick Shulman <nicksh .at. u.washington.edu>,
  *                  MacCoss Lab, Department of Genome Sciences, UW
  *
@@ -38,7 +38,7 @@ namespace pwiz.Skyline.FileUI
     /// </summary>
     public partial class MinimizeResultsDlg : Form
     {
-        private BindingList<GridRowItem> _rowItems;
+        private readonly BindingList<GridRowItem> _rowItems;
         private ChromCacheMinimizer.Settings _settings;
         private ChromCacheMinimizer _chromCacheMinimizer;
         private BackgroundWorker _statisticsCollector;
@@ -136,7 +136,8 @@ namespace pwiz.Skyline.FileUI
                 }
             }
         }
-        ChromCacheMinimizer ChromCacheMinimizer
+
+        private ChromCacheMinimizer ChromCacheMinimizer
         {
             get { return _chromCacheMinimizer; }
             set
@@ -164,7 +165,7 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        BackgroundWorker StatisticsCollector
+        private BackgroundWorker StatisticsCollector
         {
             get { return _statisticsCollector; }
             set
@@ -188,21 +189,36 @@ namespace pwiz.Skyline.FileUI
 
         private void cbxDiscardUnmatchedChromatograms_CheckedChanged(object sender, EventArgs e)
         {
-            Settings =
-                Settings.SetDiscardUnmatchedChromatograms(cbxDiscardUnmatchedChromatograms.Checked);
+            Settings = Settings.SetDiscardUnmatchedChromatograms(cbxDiscardUnmatchedChromatograms.Checked);
         }
 
         private void tbxNoiseTimeRange_Leave(object sender, EventArgs e)
         {
-            Settings = Settings.SetNoiseTimeRange(double.Parse(tbxNoiseTimeRange.Text));
+            if (DialogResult != DialogResult.None)
+                return;
+
+            double noiseTime;
+            string errorMessage = null;
+            if (!double.TryParse(tbxNoiseTimeRange.Text, out noiseTime))
+                errorMessage = "The noise time limit must be a valid decimal number.";
+            if (noiseTime < 0)
+                errorMessage = "The noise time limit must be a positive decimal number.";
+            if (errorMessage != null)
+            {
+                MessageDlg.Show(this, errorMessage);
+                tbxNoiseTimeRange.Focus();
+                tbxNoiseTimeRange.SelectAll();
+                return;
+            }
+
+            Settings = Settings.SetNoiseTimeRange(noiseTime);
         }
 
         private void cbxLimitNoiseTime_CheckedChanged(object sender, EventArgs e)
         {
             if (cbxLimitNoiseTime.Checked)
             {
-                Settings =
-                    Settings.SetNoiseTimeRange(double.Parse(tbxNoiseTimeRange.Text));
+                Settings = Settings.SetNoiseTimeRange(double.Parse(tbxNoiseTimeRange.Text));
             }
             else
             {
@@ -220,12 +236,12 @@ namespace pwiz.Skyline.FileUI
             Minimize(true);
         }
 
-        private void Minimize(bool asNewFile)
+        public void Minimize(bool asNewFile)
         {
             var document = DocumentUIContainer.DocumentUI;
             if (!document.Settings.MeasuredResults.IsLoaded)
             {
-                MessageDlg.Show(this, "All results must be completely imported before any can be re-imported.");
+                MessageDlg.Show(this, "All results must be completely imported before any can be minimized.");
                 return;
             }
             if (!Settings.DiscardUnmatchedChromatograms && !Settings.NoiseTimeRange.HasValue)
@@ -240,17 +256,18 @@ namespace pwiz.Skyline.FileUI
 
             if (asNewFile || string.IsNullOrEmpty(targetFile))
             {
-                using (var saveFileDialog = new SaveFileDialog
-                                                {
-                                                    InitialDirectory = Properties.Settings.Default.ActiveDirectory,
-                                                    OverwritePrompt = true,
-                DefaultExt = SrmDocument.EXT,
-                Filter = string.Join("|", new[]
+                using (var saveFileDialog =
+                    new SaveFileDialog
                     {
-                        "Skyline Documents (*." + SrmDocument.EXT + ")|*." + SrmDocument.EXT,
-                        "All Files (*.*)|*.*"
-                    }),
-                    FileName = Path.GetFileName(targetFile),
+                        InitialDirectory = Properties.Settings.Default.ActiveDirectory,
+                        OverwritePrompt = true,
+                        DefaultExt = SrmDocument.EXT,
+                        Filter = string.Join("|", new[]
+                        {
+                            "Skyline Documents (*." + SrmDocument.EXT + ")|*." + SrmDocument.EXT,
+                            "All Files (*.*)|*.*"
+                        }),
+                        FileName = Path.GetFileName(targetFile),
                     })
                 {
                     if (saveFileDialog.ShowDialog(this) != DialogResult.OK)
@@ -261,67 +278,60 @@ namespace pwiz.Skyline.FileUI
                 }
             }
             var targetSkydFile = ChromatogramCache.FinalPathForName(targetFile, null);
-            var skylineWindow = (SkylineWindow) DocumentUIContainer;
             using(var skydSaver = new FileSaver(targetSkydFile))
             {
                 using (var stream = File.OpenWrite(skydSaver.SafeName))
+                using (var longWaitDlg = new LongWaitDlg(DocumentUIContainer))
                 {
-                    using (var longWaitDlg = new LongWaitDlg(DocumentUIContainer))
-                    {
-                        longWaitDlg.PerformWork(
-                            this, 1000,
-                            longWaitBroker
-                            =>
-                                {
-                                    longWaitBroker.Message = "Saving new cache file";
-                                    try
-                                    {
-                                        using (
-                                            var backgroundWorker =
-                                                new BackgroundWorker(this,
-                                                                     longWaitBroker))
-                                        {
-                                            backgroundWorker.RunBackground(stream);
-                                        }
+                    longWaitDlg.PerformWork(this, 1000,
+                                            longWaitBroker =>
+                                                {
+                                                    longWaitBroker.Message = "Saving new cache file";
+                                                    try
+                                                    {
+                                                        using (var backgroundWorker =
+                                                            new BackgroundWorker(this, longWaitBroker))
+                                                        {
+                                                            backgroundWorker.RunBackground(stream);
+                                                        }
+                                                    }
+                                                    catch (ObjectDisposedException)
+                                                    {
+                                                        if (!longWaitBroker.IsCanceled)
+                                                        {
+                                                            throw;
+                                                        }
+                                                    }
+                                                });
 
-                                    }
-                                    catch (ObjectDisposedException)
-                                    {
-                                        if (!longWaitBroker.IsCanceled)
-                                        {
-                                            throw;
-                                        }
-                                    }
-                                });
-                        if (longWaitDlg.IsCanceled)
-                        {
-                            return;
-                        }
+                    if (longWaitDlg.IsCanceled)
+                    {
+                        return;
                     }
                 }
-                var originalDocument = skylineWindow.Document;
+
+                var skylineWindow = (SkylineWindow) DocumentUIContainer;
                 if (!skylineWindow.SaveDocument(targetFile, false))
-                {
-                    return;
-                }
-                var blankDocument = new SrmDocument(SrmSettingsList.GetDefault());
-                // Change the current document to be blank, so it releases any locks it has on the cache file.
-                if (!skylineWindow.SetDocument(blankDocument, originalDocument))
                 {
                     return;
                 }
                 try
                 {
-                    skydSaver.Commit();
+                    var measuredResults = DocumentUIContainer.Document.Settings.MeasuredResults.CommitCacheFile(skydSaver);
+                    SrmDocument docOrig, docNew;
+                    do
+                    {
+                        docOrig = DocumentUIContainer.Document;
+                        docNew = docOrig.ChangeMeasuredResults(measuredResults);
+                    }
+                    while (!DocumentUIContainer.SetDocument(docNew, docOrig));                    
                 }
                 catch (Exception x)
                 {
-                    MessageBox.Show(this, string.Format("An unexpected error occurred while saving the cache file.\n{0}", x.Message), Program.Name);
-                    skylineWindow.SetDocument(originalDocument, blankDocument);
+                    MessageDlg.Show(this, string.Format("An unexpected error occurred while saving the data cache file {0}.\n{1}", targetFile, x.Message));
                     return;
                 }
-                // Reopen the file to cause Chromatograms to be reloaded.
-                skylineWindow.OpenFile(targetFile);
+                skylineWindow.InvalidateChromatogramGraphs();
                 DialogResult = DialogResult.OK;
             }
             return;
@@ -333,7 +343,7 @@ namespace pwiz.Skyline.FileUI
         /// the file.
         /// The work that this class is doing can be cancelled by calling <see cref="IDisposable.Dispose"/>.
         /// </summary>
-        class BackgroundWorker : MustDispose
+        private class BackgroundWorker : MustDispose
         {
             private readonly MinimizeResultsDlg _dlg;
             private readonly ILongWaitBroker _longWaitBroker;
@@ -359,7 +369,14 @@ namespace pwiz.Skyline.FileUI
                         if (updateUi && !_updatePending)
                         {
                             //_updatePending = true;
-                            _dlg.BeginInvoke(new Action(UpdateStatistics));
+                            try
+                            {
+                                _dlg.BeginInvoke(new Action(UpdateStatistics));
+                            }
+                            catch (Exception x)
+                            {                                
+                                throw new ObjectDisposedException(_dlg.GetType().FullName, x);
+                            }
                         }
                     }
                 }
@@ -377,6 +394,7 @@ namespace pwiz.Skyline.FileUI
             {
                 _dlg.ChromCacheMinimizer.Minimize(_dlg.Settings, OnProgress, outputStream);
             }
+
             public void CollectStatistics()
             {
                 try
@@ -388,6 +406,7 @@ namespace pwiz.Skyline.FileUI
                     
                 }
             }
+
             private void UpdateStatistics()
             {
                 ChromCacheMinimizer.Statistics statistics;
@@ -435,6 +454,7 @@ namespace pwiz.Skyline.FileUI
                 }
             }
         }
+
         /// <summary>
         /// Data items which are displayed in the DataGridView.
         /// </summary>

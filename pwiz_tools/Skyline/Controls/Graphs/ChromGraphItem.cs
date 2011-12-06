@@ -577,7 +577,7 @@ namespace pwiz.Skyline.Controls.Graphs
         }
     }
 
-    public sealed class UnavailableChromGraphItem : NoDataMSGraphItem
+    public sealed class UnavailableChromGraphItem : NoDataChromGraphItem
     {
         public UnavailableChromGraphItem() : base("Chromatogram information unavailable")
         {

@@ -45,20 +45,20 @@
             // 
             this.btnCancel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-            this.btnCancel.Location = new System.Drawing.Point(283, 290);
+            this.btnCancel.Location = new System.Drawing.Point(283, 278);
             this.btnCancel.Name = "btnCancel";
             this.btnCancel.Size = new System.Drawing.Size(75, 23);
-            this.btnCancel.TabIndex = 8;
+            this.btnCancel.TabIndex = 10;
             this.btnCancel.Text = "Cancel";
             this.btnCancel.UseVisualStyleBackColor = true;
             // 
             // btnOk
             // 
             this.btnOk.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnOk.Location = new System.Drawing.Point(202, 290);
+            this.btnOk.Location = new System.Drawing.Point(202, 278);
             this.btnOk.Name = "btnOk";
             this.btnOk.Size = new System.Drawing.Size(75, 23);
-            this.btnOk.TabIndex = 7;
+            this.btnOk.TabIndex = 9;
             this.btnOk.Text = "OK";
             this.btnOk.UseVisualStyleBackColor = true;
             this.btnOk.Click += new System.EventHandler(this.btnOk_Click);
@@ -124,7 +124,7 @@
             // 
             this.btnRename.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnRename.Enabled = false;
-            this.btnRename.Location = new System.Drawing.Point(283, 181);
+            this.btnRename.Location = new System.Drawing.Point(283, 182);
             this.btnRename.Name = "btnRename";
             this.btnRename.Size = new System.Drawing.Size(75, 23);
             this.btnRename.TabIndex = 6;
@@ -141,7 +141,7 @@
             this.listResults.Location = new System.Drawing.Point(16, 29);
             this.listResults.Name = "listResults";
             this.listResults.SelectionMode = System.Windows.Forms.SelectionMode.MultiExtended;
-            this.listResults.Size = new System.Drawing.Size(261, 251);
+            this.listResults.Size = new System.Drawing.Size(261, 238);
             this.listResults.TabIndex = 1;
             this.listResults.SelectedIndexChanged += new System.EventHandler(this.listResults_SelectedIndexChanged);
             this.listResults.DoubleClick += new System.EventHandler(this.listResults_DoubleClick);
@@ -152,17 +152,18 @@
             this.btnReimport.Location = new System.Drawing.Point(283, 211);
             this.btnReimport.Name = "btnReimport";
             this.btnReimport.Size = new System.Drawing.Size(75, 23);
-            this.btnReimport.TabIndex = 9;
+            this.btnReimport.TabIndex = 7;
             this.btnReimport.Text = "Re-i&mport";
             this.btnReimport.UseVisualStyleBackColor = true;
             this.btnReimport.Click += new System.EventHandler(this.btnReimport_Click);
             // 
             // btnMinimize
             // 
-            this.btnMinimize.Location = new System.Drawing.Point(284, 237);
+            this.btnMinimize.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnMinimize.Location = new System.Drawing.Point(283, 240);
             this.btnMinimize.Name = "btnMinimize";
             this.btnMinimize.Size = new System.Drawing.Size(75, 23);
-            this.btnMinimize.TabIndex = 10;
+            this.btnMinimize.TabIndex = 8;
             this.btnMinimize.Text = "Minimi&ze...";
             this.btnMinimize.UseVisualStyleBackColor = true;
             this.btnMinimize.Click += new System.EventHandler(this.btnMinimize_Click);
@@ -173,7 +174,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
-            this.ClientSize = new System.Drawing.Size(370, 325);
+            this.ClientSize = new System.Drawing.Size(370, 313);
             this.Controls.Add(this.btnMinimize);
             this.Controls.Add(this.btnReimport);
             this.Controls.Add(this.listResults);
