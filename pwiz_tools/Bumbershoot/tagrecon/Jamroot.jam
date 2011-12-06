@@ -102,6 +102,7 @@ import package ;
 import errors : error ;
 import feature ;
 import mpi ;
+import path ;
 
 
 project bumbershoot
