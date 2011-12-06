@@ -207,19 +207,19 @@
 			>
 		</File>
 		<File
-			RelativePath=".\Parser.cpp"
-			>
-		</File>
-		<File
 			RelativePath=".\CLI\Parser.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\Parser.hpp"
+			RelativePath=".\Parser.cpp"
 			>
 		</File>
 		<File
 			RelativePath=".\CLI\Parser.hpp"
+			>
+		</File>
+		<File
+			RelativePath=".\Parser.hpp"
 			>
 		</File>
 		<File
@@ -231,11 +231,15 @@
 			>
 		</File>
 		<File
+			RelativePath=".\Qonverter.hpp"
+			>
+		</File>
+		<File
 			RelativePath=".\CLI\Qonverter.hpp"
 			>
 		</File>
 		<File
-			RelativePath=".\Qonverter.hpp"
+			RelativePath=".\QonverterTest.cpp"
 			>
 		</File>
 		<File
