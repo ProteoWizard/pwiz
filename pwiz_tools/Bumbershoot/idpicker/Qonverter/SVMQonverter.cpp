@@ -39,23 +39,6 @@ using namespace IDPICKER_NAMESPACE;
 // sorting functors
 namespace {
 
-struct SingleScoreBetterThan
-{
-    SingleScoreBetterThan(size_t scoreIndex) : scoreIndex(scoreIndex) {}
-
-    bool operator() (const PeptideSpectrumMatch& lhs, const PeptideSpectrumMatch& rhs) const
-    {
-        if (lhs.scores[scoreIndex] != rhs.scores[scoreIndex])
-            return lhs.scores[scoreIndex] > rhs.scores[scoreIndex];
-
-        // arbitrary tie-breaker when scores are equal
-        return lhs.spectrum < rhs.spectrum;
-    }
-
-    private:
-    size_t scoreIndex;
-};
-
 struct TotalScoreBetterThanIgnoringRank
 {
     bool operator() (const PeptideSpectrumMatch& lhs, const PeptideSpectrumMatch& rhs) const
@@ -105,7 +88,10 @@ void calculateBestSingleScoreDiscrimination(const Qonverter::Settings& settings,
                                             const std::vector<std::string>& scoreNames)
 {
     size_t bestIndex = 0;
+    Qonverter::Settings::Order bestOrder = Qonverter::Settings::Order::Ascending;
     size_t bestDiscrimination = 0;
+
+    Qonverter::Settings::Order currentOrder = Qonverter::Settings::Order::Ascending;
     size_t currentDiscrimination = 0;
 
     //cout << "Charge: " << psmRows.front().chargeState << " NET: " << psmRows.front().bestSpecificity << endl;
@@ -113,8 +99,12 @@ void calculateBestSingleScoreDiscrimination(const Qonverter::Settings& settings,
     size_t scoresSize = psmRows.begin()->scores.size();
     for (size_t i=0; i < scoresSize; ++i)
     {
-        BOOST_FOREACH(PeptideSpectrumMatch& psm, psmRows)
-            psm.totalScore = psm.scores[i];
+        if (currentOrder == Qonverter::Settings::Order::Ascending)
+            BOOST_FOREACH(PeptideSpectrumMatch& psm, psmRows)
+                psm.totalScore = psm.scores[i];
+        else
+            BOOST_FOREACH(PeptideSpectrumMatch& psm, psmRows)
+                psm.totalScore = -psm.scores[i];
 
         if (settings.rerankMatches)
             sort(psmRows.begin(), psmRows.end(), TotalScoreBetterThanIgnoringRank());
@@ -145,10 +135,20 @@ void calculateBestSingleScoreDiscrimination(const Qonverter::Settings& settings,
         if (currentDiscrimination > bestDiscrimination)
         {
             bestIndex = i;
+            bestOrder = currentOrder;
             bestDiscrimination = currentDiscrimination;
         }
 
-        //cout << "Score: " << scoreNames[i] << " Passing: " << currentDiscrimination << " of " << psmRows.size() << endl;
+        //cout << "Score: " << scoreNames[i] << " Order: " << currentOrder << " Passing: " << currentDiscrimination << " of " << psmRows.size() << endl;
+
+        // try this score index again in descending order
+        if (currentOrder == Qonverter::Settings::Order::Ascending)
+        {
+            currentOrder = Qonverter::Settings::Order::Descending;
+            --i;
+        }
+        else
+            currentOrder = Qonverter::Settings::Order::Ascending;
     }
     //cout << endl;
 
@@ -157,8 +157,12 @@ void calculateBestSingleScoreDiscrimination(const Qonverter::Settings& settings,
         return;
 
     // otherwise, finish by sorting by the most discriminating single score
-    BOOST_FOREACH(PeptideSpectrumMatch& psm, psmRows)
-        psm.totalScore = psm.scores[bestIndex];
+    if (bestOrder == Qonverter::Settings::Order::Ascending)
+        BOOST_FOREACH(PeptideSpectrumMatch& psm, psmRows)
+            psm.totalScore = psm.scores[bestIndex];
+    else
+        BOOST_FOREACH(PeptideSpectrumMatch& psm, psmRows)
+            psm.totalScore = -psm.scores[bestIndex];
 
     if (settings.rerankMatches)
         sort(psmRows.begin(), psmRows.end(), TotalScoreBetterThanIgnoringRank());

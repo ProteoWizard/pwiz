@@ -104,7 +104,7 @@ namespace IDPicker.DataModel
             lock(mutex)
                 sessionFactory = configuration.BuildSessionFactory();
 
-            sessionFactory.OpenStatelessSession().CreateSQLQuery(@"PRAGMA default_cache_size=500000;
+            sessionFactory.OpenStatelessSession().CreateSQLQuery(@"PRAGMA cache_size=500000;
                                                                    PRAGMA temp_store=MEMORY").ExecuteUpdate();
 
             if(createSchema)
@@ -150,7 +150,7 @@ namespace IDPicker.DataModel
             conn.ExecuteNonQuery(@"PRAGMA journal_mode=OFF;
                                    PRAGMA synchronous=OFF;
                                    PRAGMA automatic_indexing=OFF;
-                                   PRAGMA default_cache_size=500000;
+                                   PRAGMA cache_size=500000;
                                    PRAGMA temp_store=MEMORY");
 
             var transaction = conn.BeginTransaction();

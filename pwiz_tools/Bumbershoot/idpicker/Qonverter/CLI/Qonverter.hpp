@@ -53,7 +53,9 @@ public ref struct Qonverter
     enum class QonverterMethod
     {
         StaticWeighted,
-        SVM
+        SVM,
+        PartitionedSVM = SVM,
+        SingleSVM
     };
 
     enum class Kernel

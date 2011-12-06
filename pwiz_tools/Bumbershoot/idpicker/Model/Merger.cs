@@ -196,7 +196,6 @@ namespace IDPicker.DataModel
                         addNewProteins(conn);
                         addNewPeptideInstances(conn);
                         addNewPeptides(conn);
-                        addNewPeptideSequences(conn);
                         addNewModifications(conn);
                         addNewSpectrumSourceGroups(conn);
                         addNewSpectrumSources(conn);
@@ -212,11 +211,11 @@ namespace IDPicker.DataModel
 
                         conn.ExecuteNonQuery("INSERT INTO merged.MergedFiles VALUES ('" + mergeSourceFilepath.Replace("'", "''") + "')");
                     }
-                        /*catch(Exception ex)
-                {
-                    if(OnMergingProgress(ex, mergedFiles))
-                        break;
-                }*/
+                    catch(Exception ex)
+                    {
+                        if(OnMergingProgress(ex, mergedFiles))
+                            break;
+                    }
                     finally
                     {
                         transaction.Commit();
@@ -246,42 +245,41 @@ namespace IDPicker.DataModel
 
             using (IDbTransaction transaction = conn.BeginTransaction())
             {
-                // FIXME: when merging idpDBs with unpopulated peptide instances,
-                //        center it on Peptide/PeptideSequences, not Protein/PeptideInstance
-                mergeProteins(conn);
-                mergePeptideInstances(conn);
-                mergeSpectrumSourceGroups(conn);
-                mergeSpectrumSources(conn);
-                mergeSpectrumSourceGroupLinks(conn);
-                mergeSpectra(conn);
-                mergeModifications(conn);
-                mergePeptideSpectrumMatchScoreNames(conn);
-                mergeAnalyses(conn);
-                addNewProteins(conn);
-                addNewPeptideInstances(conn);
-                addNewPeptides(conn);
-                addNewPeptideSequences(conn);
-                addNewModifications(conn);
-                addNewSpectrumSourceGroups(conn);
-                addNewSpectrumSources(conn);
-                addNewSpectrumSourceGroupLinks(conn);
-                addNewSpectra(conn);
-                addNewPeptideSpectrumMatches(conn);
-                addNewPeptideSpectrumMatchScoreNames(conn);
-                addNewPeptideSpectrumMatchScores(conn);
-                addNewPeptideModifications(conn);
-                addNewAnalyses(conn);
-                addNewAnalysisParameters(conn);
-                addNewQonverterSettings(conn);
-                addIntegerSet(conn);
+                try
+                {
+                    mergeProteins(conn);
+                    mergePeptideInstances(conn);
+                    mergeSpectrumSourceGroups(conn);
+                    mergeSpectrumSources(conn);
+                    mergeSpectrumSourceGroupLinks(conn);
+                    mergeSpectra(conn);
+                    mergeModifications(conn);
+                    mergePeptideSpectrumMatchScoreNames(conn);
+                    mergeAnalyses(conn);
+                    addNewProteins(conn);
+                    addNewPeptideInstances(conn);
+                    addNewPeptides(conn);
+                    addNewModifications(conn);
+                    addNewSpectrumSourceGroups(conn);
+                    addNewSpectrumSources(conn);
+                    addNewSpectrumSourceGroupLinks(conn);
+                    addNewSpectra(conn);
+                    addNewPeptideSpectrumMatches(conn);
+                    addNewPeptideSpectrumMatchScoreNames(conn);
+                    addNewPeptideSpectrumMatchScores(conn);
+                    addNewPeptideModifications(conn);
+                    addNewAnalyses(conn);
+                    addNewAnalysisParameters(conn);
+                    addNewQonverterSettings(conn);
+                    addIntegerSet(conn);
 
-                transaction.Commit();
+                    transaction.Commit();
+                }
+                catch (Exception ex)
+                {
+                    OnMergingProgress(ex, 1);
+                }
             }
-            /*catch(Exception ex)
-            {
-                if(OnMergingProgress(ex, mergedFiles))
-                    break;
-            }*/
         }
 
         static string mergeProteinsSql =
@@ -305,13 +303,25 @@ namespace IDPicker.DataModel
         static string mergePeptideInstancesSql =
               @"DROP TABLE IF EXISTS PeptideInstanceMergeMap;
                 CREATE TABLE PeptideInstanceMergeMap (BeforeMergeId INTEGER PRIMARY KEY, AfterMergeId INTEGER, AfterMergeProtein INTEGER, BeforeMergePeptide INTEGER, AfterMergePeptide INTEGER);
+
                 INSERT INTO PeptideInstanceMergeMap
                 SELECT newInstance.Id, IFNULL(oldInstance.Id, newInstance.Id+{1}), IFNULL(oldInstance.Protein, proMerge.AfterMergeId), newInstance.Peptide, IFNULL(oldInstance.Peptide, newInstance.Peptide+{2})
                 FROM ProteinMergeMap proMerge
                 JOIN {0}.PeptideInstance newInstance ON proMerge.BeforeMergeId = newInstance.Protein
+                                                    AND newInstance.Offset IS NOT NULL
                 LEFT JOIN merged.PeptideInstance oldInstance ON proMerge.AfterMergeId = oldInstance.Protein
                                                             AND newInstance.Length = oldInstance.Length
                                                             AND newInstance.Offset = oldInstance.Offset;
+                INSERT INTO PeptideInstanceMergeMap
+                SELECT newInstance.Id, IFNULL(oldInstance.Id, newInstance.Id+{1}), IFNULL(oldInstance.Protein, proMerge.AfterMergeId), newInstance.Peptide, IFNULL(oldPeptide.Id, newInstance.Peptide+{2})
+                FROM ProteinMergeMap proMerge
+                JOIN {0}.PeptideInstance newInstance ON proMerge.BeforeMergeId = newInstance.Protein
+                                                    AND newInstance.Offset IS NULL
+                JOIN {0}.Peptide newPeptide ON newInstance.Peptide = newPeptide.Id
+                LEFT JOIN merged.Peptide oldPeptide ON newPeptide.DecoySequence = oldPeptide.DecoySequence
+                LEFT JOIN merged.PeptideInstance oldInstance ON oldPeptide.Id = oldInstance.Peptide
+                                                            AND proMerge.AfterMergeId = oldInstance.Protein;
+
                 CREATE UNIQUE INDEX PeptideInstanceMergeMap_Index2 ON PeptideInstanceMergeMap (AfterMergeId);
                 CREATE INDEX PeptideInstanceMergeMap_Index3 ON PeptideInstanceMergeMap (BeforeMergePeptide);
                 CREATE INDEX PeptideInstanceMergeMap_Index4 ON PeptideInstanceMergeMap (AfterMergePeptide);
@@ -448,18 +458,6 @@ namespace IDPicker.DataModel
                 GROUP BY AfterMergePeptide
                ";
         void addNewPeptides (IDbConnection conn) { conn.ExecuteNonQuery(String.Format(addNewPeptidesSql, mergeSourceDatabase, MaxPeptideId)); }
-
-
-        static string addNewPeptideSequencesSql =
-              @"CREATE TABLE IF NOT EXISTS merged.PeptideSequences (Id INTEGER PRIMARY KEY, Sequence TEXT UNIQUE);
-                INSERT OR IGNORE INTO merged.PeptideSequences
-                SELECT AfterMergePeptide, Sequence
-                FROM {0}.PeptideSequences newSequence
-                JOIN PeptideInstanceMergeMap ON newSequence.Id = BeforeMergePeptide
-                WHERE AfterMergePeptide > {1}
-                GROUP BY AfterMergePeptide
-               ";
-        void addNewPeptideSequences (IDbConnection conn) { try {conn.ExecuteNonQuery(String.Format(addNewPeptideSequencesSql, mergeSourceDatabase, MaxPeptideId));} catch {} }
 
 
         static string addNewSpectrumSourceGroupsSql =

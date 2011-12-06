@@ -292,18 +292,29 @@ namespace IDPicker.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute(@"<?xml version=""1.0"" encoding=""utf-16""?>
-<ArrayOfString xmlns:xsi=""http://www.w3.org/2001/XMLSchema-instance"" xmlns:xsd=""http://www.w3.org/2001/XMLSchema"">
-  <string>MyriMatch MVH;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off myrimatch:mvh</string>
-  <string>MyriMatch XCorr;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off xcorr</string>
-  <string>Sequest XCorr;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off sequest:xcorr</string>
-  <string>Mascot ionscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off mascot:score</string>
-  <string>Mascot ionscore-identityscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off mascot:score;1 Descending Off mascot:identity threshold</string>
-  <string>X!Tandem expect;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Descending Off x!tandem:expect</string>
-  <string>X!Tandem hyperscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off x!tandem:hyperscore</string>
-  <string>OMSSA expect;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Descending Off expect</string>
-  <string>Phenyx zscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off zscore</string>
-</ArrayOfString>")]
+        [global::System.Configuration.DefaultSettingValueAttribute("<?xml version=\"1.0\" encoding=\"utf-16\"?>\r\n<ArrayOfString xmlns:xsi=\"http://www.w3." +
+            "org/2001/XMLSchema-instance\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\">\r\n  <s" +
+            "tring>MyriMatch optimized;SVM;False;Linear;Ignore;Ignore;Partition;Partition;1 A" +
+            "scending Off myrimatch:mvh;1 Ascending Off xcorr</string>\r\n  <string>MyriMatch M" +
+            "VH;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off" +
+            " myrimatch:mvh</string>\r\n  <string>MyriMatch XCorr;StaticWeighted;False;Linear;I" +
+            "gnore;Ignore;Partition;Partition;1 Ascending Off xcorr</string>\r\n  <string>Seque" +
+            "st optimized;SVM;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off " +
+            "sequest:xcorr;1 Ascending Off sequest:deltacn</string>\r\n  <string>Sequest XCorr;" +
+            "StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Ascending Off se" +
+            "quest:xcorr</string>\r\n  <string>Mascot ionscore;StaticWeighted;False;Linear;Igno" +
+            "re;Ignore;Partition;Partition;1 Ascending Off mascot:score</string>\r\n  <string>M" +
+            "ascot ionscore-identityscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition" +
+            ";Partition;1 Ascending Off mascot:score;1 Descending Off mascot:identity thresho" +
+            "ld</string>\r\n  <string>X!Tandem optimized;SVM;False;Linear;Ignore;Ignore;Partiti" +
+            "on;Partition;1 Descending Off x!tandem:expect;1 Ascending Off x!tandem:hyperscor" +
+            "e</string>\r\n  <string>X!Tandem expect;StaticWeighted;False;Linear;Ignore;Ignore;" +
+            "Partition;Partition;1 Descending Off x!tandem:expect</string>\r\n  <string>X!Tande" +
+            "m hyperscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Partition;1 Asc" +
+            "ending Off x!tandem:hyperscore</string>\r\n  <string>OMSSA expect;StaticWeighted;F" +
+            "alse;Linear;Ignore;Ignore;Partition;Partition;1 Descending Off expect</string>\r\n" +
+            "  <string>Phenyx zscore;StaticWeighted;False;Linear;Ignore;Ignore;Partition;Part" +
+            "ition;1 Ascending Off zscore</string>\r\n</ArrayOfString>")]
         public global::System.Collections.Specialized.StringCollection DefaultQonverterSettings {
             get {
                 return ((global::System.Collections.Specialized.StringCollection)(this["DefaultQonverterSettings"]));

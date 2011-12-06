@@ -220,9 +220,9 @@ Qonverter::Qonverter()
 
 void Qonverter::qonvert(const string& idpDbFilepath, const ProgressMonitor& progressMonitor)
 {
-    sqlite::database db(idpDbFilepath);
+    sqlite::database db(idpDbFilepath, sqlite::no_mutex, sqlite::read_write);
 
-    db.execute("PRAGMA journal_mode=OFF; PRAGMA synchronous=OFF");
+    db.execute("PRAGMA journal_mode=OFF; PRAGMA synchronous=OFF; PRAGMA cache_size=50000");
 
     qonvert(db.connected(), progressMonitor);
 }
@@ -447,7 +447,7 @@ void Qonverter::qonvert(sqlite3* dbPtr, const ProgressMonitor& progressMonitor)
 
 void Qonverter::reset(const string& idpDbFilepath)
 {
-    sqlite::database db(idpDbFilepath);
+    sqlite::database db(idpDbFilepath, sqlite::no_mutex, sqlite::read_write);
 
     db.execute("PRAGMA journal_mode=OFF; PRAGMA synchronous=OFF");
 

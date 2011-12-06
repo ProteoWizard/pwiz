@@ -199,16 +199,21 @@ struct ImportSettingsHandler : public Parser::ImportSettingsCallback
         if (distinctAnalyses.size() > 1)
         {
             ostringstream error;
-            error << "Warning: multiple distinct analyses detected in the input files. IdpQonvert settings apply to every analysis." << endl;
+            error << "\nWarning: multiple distinct analyses detected in the input files. IdpQonvert settings apply to every analysis." << endl;
 
             for (size_t i=0; i < distinctAnalyses.size(); ++i)
             {
                 const Parser::Analysis& analysis = *distinctAnalyses[i];
                 error << "Analysis " << analysis.name << " (" << analysis.softwareName << " " << analysis.softwareVersion << ")" << endl;
                 error << "\tstartTime: " << analysis.startTime << endl;
-                error << "\tinputFilepaths:" << endl;
-                BOOST_FOREACH(const string& filepath, analysis.filepaths)
-                    error << "\t\t" << filepath << endl;
+                if (analysis.filepaths.size() > 1)
+                {
+                    error << "\tinputFilepaths:" << endl;
+                    BOOST_FOREACH(const string& filepath, analysis.filepaths)
+                        error << "\t\t" << filepath << endl;
+                }
+                else
+                    error << "\tinputFilepath: " << analysis.filepaths[0] << endl;
 
                 if (i == 0)
                 {
@@ -241,8 +246,8 @@ struct ImportSettingsHandler : public Parser::ImportSettingsCallback
 
             if (!bal::iequals(bfs::path(analysis.importSettings.proteinDatabaseFilepath).replace_extension("").filename(),
                               bfs::path(g_rtConfig->ProteinDatabase).replace_extension("").filename()))
-                throw runtime_error("ProteinDatabase " + bfs::path(g_rtConfig->ProteinDatabase).filename() +
-                                    " does not match " + bfs::path(analysis.importSettings.proteinDatabaseFilepath).filename());
+                cerr << "Warning: ProteinDatabase " << bfs::path(g_rtConfig->ProteinDatabase).filename()
+                     << " does not match " << bfs::path(analysis.importSettings.proteinDatabaseFilepath).filename();
 
             analysis.importSettings.proteinDatabaseFilepath = g_rtConfig->ProteinDatabase;
             analysis.importSettings.maxQValue = g_rtConfig->MaxImportFDR;

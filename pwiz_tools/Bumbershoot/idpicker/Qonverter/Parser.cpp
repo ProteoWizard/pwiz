@@ -92,7 +92,8 @@ struct IsNotAnalysisParameter
 {
     bool operator() (const pair<string, string>& parameter) const
     {
-        return bal::starts_with(parameter.first, "PeakCounts:") ||
+        return // Bumbershoot
+               bal::starts_with(parameter.first, "PeakCounts:") ||
                bal::starts_with(parameter.first, "SearchStats:") ||
                bal::starts_with(parameter.first, "SearchTime:") ||
                parameter.first == "Config: WorkingDirectory" ||
@@ -100,10 +101,21 @@ struct IsNotAnalysisParameter
                parameter.first == "Config: UseMultipleProcessors" ||
                bal::starts_with(parameter.first, "Config: MaxResult") ||
                parameter.first == "Config: OutputSuffix" ||
+
+               // Mascot
                parameter.first == "USEREMAIL" ||
                parameter.first == "USERNAME" ||
                parameter.first == "LICENSE" ||
-               parameter.first == "COM";
+               parameter.first == "COM" ||
+               parameter.first == "FILE" ||
+
+               // X!Tandem
+               bal::starts_with(parameter.first, "modelling, ") ||
+               bal::starts_with(parameter.first, "timing, ") ||
+               bal::starts_with(parameter.first, "output, ") ||
+               bal::starts_with(parameter.first, "process, start") ||
+               parameter.first == "quality values" ||
+               parameter.first == "spectrum, path";
     }
 };
 
@@ -130,6 +142,10 @@ void parseAnalysis(const IdentDataFile& mzid, Analysis& analysis)
     // determine search database used
     SearchDatabase& sd = *si.searchDatabase[0];
     analysis.importSettings.proteinDatabaseFilepath = sd.location;
+
+    // trim ".pro" extension often found in X!Tandem searches
+    if (bal::iends_with(analysis.importSettings.proteinDatabaseFilepath, ".pro"))
+        analysis.importSettings.proteinDatabaseFilepath.resize(analysis.importSettings.proteinDatabaseFilepath.size()-4);
 
     analysis.enzymes = sip.enzymes;
 
@@ -533,6 +549,9 @@ struct ParserImpl
                     insertPeptide.execute();
                     insertPeptide.reset();
 
+                    // some bogus files may repeat the same decoy peptide
+                    set<boost::shared_ptr<string> > decoyPeptides;
+
                     // decoy proteins and peptide instances are inserted immediately
                     BOOST_FOREACH(const PeptideEvidencePtr& pe, decoyPeptideEvidence)
                     {
@@ -554,18 +573,24 @@ struct ParserImpl
                             insertProtein.reset();
                         }
 
-                        sqlite3_int64 curProteinId = itr->second;
-                        proteome::DigestedPeptide peptide = digestedPeptide(sip, *pe);
+                        set<boost::shared_ptr<string> >::iterator itr2; bool wasInserted2;
+                        boost::tie(itr2, wasInserted2) = decoyPeptides.insert(sharedSequence);
 
-                        insertPeptideInstance.binder() << ++nextPeptideInstanceId
-                                                       << curProteinId
-                                                       << nextPeptideId
-                                                       << (int) peptide.sequence().length()
-                                                       << peptide.NTerminusIsSpecific()
-                                                       << peptide.CTerminusIsSpecific()
-                                                       << (int) peptide.missedCleavages();
-                        insertPeptideInstance.execute();
-                        insertPeptideInstance.reset();
+                        if (wasInserted2)
+                        {
+                            sqlite3_int64 curProteinId = itr->second;
+                            proteome::DigestedPeptide peptide = digestedPeptide(sip, *pe);
+
+                            insertPeptideInstance.binder() << ++nextPeptideInstanceId
+                                                           << curProteinId
+                                                           << nextPeptideId
+                                                           << (int) peptide.sequence().length()
+                                                           << peptide.NTerminusIsSpecific()
+                                                           << peptide.CTerminusIsSpecific()
+                                                           << (int) peptide.missedCleavages();
+                            insertPeptideInstance.execute();
+                            insertPeptideInstance.reset();
+                        }
                     }
                 }
                 else
