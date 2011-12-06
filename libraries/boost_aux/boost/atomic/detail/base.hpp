@@ -7,176 +7,503 @@
 //  See accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/atomic/detail/fallback.hpp>
-#include <boost/atomic/detail/builder.hpp>
-#include <boost/atomic/detail/valid_integral_types.hpp>
+// Base class definition and fallback implementation.
+// To be overridden (through partial specialization) by
+// platform implementations.
+
+#include <string.h>
+
+#include <boost/memory_order.hpp>
+#include <boost/smart_ptr/detail/spinlock_pool.hpp>
+
+#define BOOST_ATOMIC_DECLARE_BASE_OPERATORS \
+	operator value_type(void) volatile const \
+	{ \
+		return load(memory_order_seq_cst); \
+	} \
+	 \
+	this_type & \
+	operator=(value_type v) volatile \
+	{ \
+		store(v, memory_order_seq_cst); \
+		return *const_cast<this_type *>(this); \
+	} \
+	 \
+	bool \
+	compare_exchange_strong( \
+		value_type & expected, \
+		value_type desired, \
+		memory_order order = memory_order_seq_cst) volatile \
+	{ \
+		return compare_exchange_strong(expected, desired, order, calculate_failure_order(order)); \
+	} \
+	 \
+	bool \
+	compare_exchange_weak( \
+		value_type & expected, \
+		value_type desired, \
+		memory_order order = memory_order_seq_cst) volatile \
+	{ \
+		return compare_exchange_weak(expected, desired, order, calculate_failure_order(order)); \
+	} \
+	 \
+
+#define BOOST_ATOMIC_DECLARE_ADDITIVE_OPERATORS \
+	value_type \
+	operator++(int) volatile \
+	{ \
+		return fetch_add(1); \
+	} \
+	 \
+	value_type \
+	operator++(void) volatile \
+	{ \
+		return fetch_add(1) + 1; \
+	} \
+	 \
+	value_type \
+	operator--(int) volatile \
+	{ \
+		return fetch_sub(1); \
+	} \
+	 \
+	value_type \
+	operator--(void) volatile \
+	{ \
+		return fetch_sub(1) - 1; \
+	} \
+	 \
+	value_type \
+	operator+=(difference_type v) volatile \
+	{ \
+		return fetch_add(v) + v; \
+	} \
+	 \
+	value_type \
+	operator-=(difference_type v) volatile \
+	{ \
+		return fetch_sub(v) - v; \
+	} \
+
+#define BOOST_ATOMIC_DECLARE_BIT_OPERATORS \
+	value_type \
+	operator&=(difference_type v) volatile \
+	{ \
+		return fetch_and(v) & v; \
+	} \
+	 \
+	value_type \
+	operator|=(difference_type v) volatile \
+	{ \
+		return fetch_or(v) | v; \
+	} \
+	 \
+	value_type \
+	operator^=(difference_type v) volatile \
+	{ \
+		return fetch_xor(v) ^ v; \
+	} \
+
+#define BOOST_ATOMIC_DECLARE_POINTER_OPERATORS \
+	BOOST_ATOMIC_DECLARE_BASE_OPERATORS \
+	BOOST_ATOMIC_DECLARE_ADDITIVE_OPERATORS \
+
+#define BOOST_ATOMIC_DECLARE_INTEGRAL_OPERATORS \
+	BOOST_ATOMIC_DECLARE_BASE_OPERATORS \
+	BOOST_ATOMIC_DECLARE_ADDITIVE_OPERATORS \
+	BOOST_ATOMIC_DECLARE_BIT_OPERATORS \
 
 namespace boost {
 namespace detail {
 namespace atomic {
 
-static inline memory_order calculate_failure_order(memory_order order)
+static inline memory_order
+calculate_failure_order(memory_order order)
 {
 	switch(order) {
-		case memory_order_acq_rel: return memory_order_acquire;
-		case memory_order_release: return memory_order_relaxed;
-		default: return order;
+		case memory_order_acq_rel:
+			return memory_order_acquire;
+		case memory_order_release:
+			return memory_order_relaxed;
+		default:
+			return order;
 	}
 }
 
-template<typename T, unsigned short Size=sizeof(T)>
-class platform_atomic : public fallback_atomic<T> {
-public:
-	typedef fallback_atomic<T> super;
-	
-	explicit platform_atomic(T v) : super(v) {}
-	platform_atomic() {}
-protected:
-	typedef typename super::integral_type integral_type;
-};
-
-template<typename T, unsigned short Size=sizeof(T)>
-class platform_atomic_integral : public build_atomic_from_exchange<fallback_atomic<T> > {
-public:
-	typedef build_atomic_from_exchange<fallback_atomic<T> > super;
-	
-	explicit platform_atomic_integral(T v) : super(v) {}
-	platform_atomic_integral() {}
-protected:
-	typedef typename super::integral_type integral_type;
-};
-
-template<typename T>
-static inline void platform_atomic_thread_fence(T order)
-{
-	/* FIXME: this does not provide
-	sequential consistency, need one global
-	variable for that... */
-	platform_atomic<int> a;
-	a.exchange(0, order);
-}
-
-template<typename T, unsigned short Size=sizeof(T), typename Int=typename is_integral_type<T>::test>
-class internal_atomic;
-
-template<typename T, unsigned short Size>
-class internal_atomic<T, Size, void> : private detail::atomic::platform_atomic<T> {
-public:
-	typedef detail::atomic::platform_atomic<T> super;
-	
-	internal_atomic() {}
-	explicit internal_atomic(T v) : super(v) {}
-	
-	operator T(void) const volatile {return load();}
-	T operator=(T v) volatile {store(v); return v;}	
-	
-	using super::is_lock_free;
-	using super::load;
-	using super::store;
-	using super::exchange;
-	
-	bool compare_exchange_strong(
-		T &expected,
-		T desired,
-		memory_order order=memory_order_seq_cst) volatile
-	{
-		return super::compare_exchange_strong(expected, desired, order, calculate_failure_order(order));
-	}
-	bool compare_exchange_weak(
-		T &expected,
-		T desired,
-		memory_order order=memory_order_seq_cst) volatile
-	{
-		return super::compare_exchange_strong(expected, desired, order, calculate_failure_order(order));
-	}
-	bool compare_exchange_strong(
-		T &expected,
-		T desired,
-		memory_order success_order,
-		memory_order failure_order) volatile
-	{
-		return super::compare_exchange_strong(expected, desired, success_order, failure_order);
-	}
-	bool compare_exchange_weak(
-		T &expected,
-		T desired,
-		memory_order success_order,
-		memory_order failure_order) volatile
-	{
-		return super::compare_exchange_strong(expected, desired, success_order, failure_order);
-	}
+template<typename T, typename C , unsigned int Size, bool Sign>
+class base_atomic {
 private:
-	internal_atomic(const internal_atomic &);
-	void operator=(const internal_atomic &);
+	typedef base_atomic this_type;
+	typedef T value_type;
+	typedef detail::spinlock_pool<0>::scoped_lock guard_type;
+public:
+	base_atomic(void) {}
+	
+	explicit base_atomic(const value_type & v)
+	{
+		memcpy(&v_, &v, Size);
+	}
+	
+	void
+	store(value_type v, memory_order /*order*/ = memory_order_seq_cst) volatile
+	{
+		guard_type guard(const_cast<char *>(v_));
+		
+		memcpy(const_cast<char *>(v_), &v, Size);
+	}
+	
+	value_type
+	load(memory_order /*order*/ = memory_order_seq_cst) volatile const
+	{
+		guard_type guard(const_cast<const char *>(v_));
+		
+		value_type v;
+		memcpy(&v, const_cast<const char *>(v_), Size);
+		return v;
+	}
+	
+	bool
+	compare_exchange_strong(
+		value_type & expected,
+		value_type desired,
+		memory_order /*success_order*/,
+		memory_order /*failure_order*/) volatile
+	{
+		guard_type guard(const_cast<char *>(v_));
+		
+		if (memcmp(const_cast<char *>(v_), &expected, Size) == 0) {
+			memcpy(const_cast<char *>(v_), &desired, Size);
+			return true;
+		} else {
+			memcpy(&expected, const_cast<char *>(v_), Size);
+			return false;
+		}
+	}
+	
+	bool
+	compare_exchange_weak(
+		value_type & expected,
+		value_type desired,
+		memory_order success_order,
+		memory_order failure_order) volatile
+	{
+		return compare_exchange_strong(expected, desired, success_order, failure_order);
+	}
+	
+	value_type
+	exchange(value_type v, memory_order /*order*/=memory_order_seq_cst) volatile
+	{
+		guard_type guard(const_cast<char *>(v_));
+		
+		value_type tmp;
+		memcpy(&tmp, const_cast<char *>(v_), Size);
+		
+		memcpy(const_cast<char *>(v_), &v, Size);
+		return tmp;
+	}
+	
+	bool
+	is_lock_free(void) const volatile
+	{
+		return false;
+	}
+	
+	BOOST_ATOMIC_DECLARE_BASE_OPERATORS
+private:
+	base_atomic(const base_atomic &) /* = delete */ ;
+	void operator=(const base_atomic &) /* = delete */ ;
+	
+	char v_[Size];
 };
 
-template<typename T, unsigned short Size>
-class internal_atomic<T, Size, int> : private detail::atomic::platform_atomic_integral<T> {
-public:
-	typedef detail::atomic::platform_atomic_integral<T> super;
-	typedef typename super::integral_type integral_type;
-	
-	internal_atomic() {}
-	explicit internal_atomic(T v) : super(v) {}
-	
-	using super::is_lock_free;
-	using super::load;
-	using super::store;
-	using super::exchange;
-	using super::fetch_add;
-	using super::fetch_sub;
-	using super::fetch_and;
-	using super::fetch_or;
-	using super::fetch_xor;
-	
-	operator integral_type(void) const volatile {return load();}
-	integral_type operator=(integral_type v) volatile {store(v); return v;}	
-	
-	integral_type operator&=(integral_type c) volatile {return fetch_and(c)&c;}
-	integral_type operator|=(integral_type c) volatile {return fetch_or(c)|c;}
-	integral_type operator^=(integral_type c) volatile {return fetch_xor(c)^c;}
-	
-	integral_type operator+=(integral_type c) volatile {return fetch_add(c)+c;}
-	integral_type operator-=(integral_type c) volatile {return fetch_sub(c)-c;}
-	
-	integral_type operator++(void) volatile {return fetch_add(1)+1;}
-	integral_type operator++(int) volatile {return fetch_add(1);}
-	integral_type operator--(void) volatile {return fetch_sub(1)-1;}
-	integral_type operator--(int) volatile {return fetch_sub(1);}
-	
-	bool compare_exchange_strong(
-		integral_type &expected,
-		integral_type desired,
-		memory_order order=memory_order_seq_cst) volatile
-	{
-		return super::compare_exchange_strong(expected, desired, order, calculate_failure_order(order));
-	}
-	bool compare_exchange_weak(
-		integral_type &expected,
-		integral_type desired,
-		memory_order order=memory_order_seq_cst) volatile
-	{
-		return super::compare_exchange_strong(expected, desired, order, calculate_failure_order(order));
-	}
-	bool compare_exchange_strong(
-		integral_type &expected,
-		integral_type desired,
-		memory_order success_order,
-		memory_order failure_order) volatile
-	{
-		return super::compare_exchange_strong(expected, desired, success_order, failure_order);
-	}
-	bool compare_exchange_weak(
-		integral_type &expected,
-		integral_type desired,
-		memory_order success_order,
-		memory_order failure_order) volatile
-	{
-		return super::compare_exchange_strong(expected, desired, success_order, failure_order);
-	}
+template<typename T, unsigned int Size, bool Sign>
+class base_atomic<T, int, Size, Sign> {
 private:
-	internal_atomic(const internal_atomic &);
-	void operator=(const internal_atomic &);
+	typedef base_atomic this_type;
+	typedef T value_type;
+	typedef T difference_type;
+	typedef detail::spinlock_pool<0>::scoped_lock guard_type;
+public:
+	explicit base_atomic(value_type v) : v_(v) {}
+	base_atomic(void) {}
+	
+	void
+	store(value_type v, memory_order /*order*/ = memory_order_seq_cst) volatile
+	{
+		guard_type guard(const_cast<value_type *>(&v_));
+		
+		v_ = v;
+	}
+	
+	value_type
+	load(memory_order /*order*/ = memory_order_seq_cst) const volatile
+	{
+		guard_type guard(const_cast<value_type *>(&v_));
+		
+		value_type v = const_cast<const volatile value_type &>(v_);
+		return v;
+	}
+	
+	value_type
+	exchange(value_type v, memory_order /*order*/ = memory_order_seq_cst) volatile
+	{
+		guard_type guard(const_cast<value_type *>(&v_));
+		
+		value_type old = v_;
+		v_ = v;
+		return old;
+	}
+	
+	bool
+	compare_exchange_strong(value_type & expected, value_type desired,
+		memory_order /*success_order*/,
+		memory_order /*failure_order*/) volatile
+	{
+		guard_type guard(const_cast<value_type *>(&v_));
+		
+		if (v_ == expected) {
+			v_ = desired;
+			return true;
+		} else {
+			expected = v_;
+			return false;
+		}
+	}
+	
+	bool
+	compare_exchange_weak(value_type & expected, value_type desired,
+		memory_order success_order,
+		memory_order failure_order) volatile
+	{
+		return compare_exchange_strong(expected, desired, success_order, failure_order);
+	}
+	
+	value_type
+	fetch_add(difference_type v, memory_order /*order*/ = memory_order_seq_cst) volatile
+	{
+		guard_type guard(const_cast<value_type *>(&v_));
+		
+		value_type old = v_;
+		v_ += v;
+		return old;
+	}
+	
+	value_type
+	fetch_sub(difference_type v, memory_order /*order*/ = memory_order_seq_cst) volatile
+	{
+		guard_type guard(const_cast<value_type *>(&v_));
+		
+		value_type old = v_;
+		v_ -= v;
+		return old;
+	}
+	
+	value_type
+	fetch_and(value_type v, memory_order /*order*/ = memory_order_seq_cst) volatile
+	{
+		guard_type guard(const_cast<value_type *>(&v_));
+		
+		value_type old = v_;
+		v_ &= v;
+		return old;
+	}
+	
+	value_type
+	fetch_or(value_type v, memory_order /*order*/ = memory_order_seq_cst) volatile
+	{
+		guard_type guard(const_cast<value_type *>(&v_));
+		
+		value_type old = v_;
+		v_ |= v;
+		return old;
+	}
+	
+	value_type
+	fetch_xor(value_type v, memory_order /*order*/ = memory_order_seq_cst) volatile
+	{
+		guard_type guard(const_cast<value_type *>(&v_));
+		
+		value_type old = v_;
+		v_ ^= v;
+		return old;
+	}
+	
+	bool
+	is_lock_free(void) const volatile
+	{
+		return false;
+	}
+	
+	BOOST_ATOMIC_DECLARE_INTEGRAL_OPERATORS
+private:
+	base_atomic(const base_atomic &) /* = delete */ ;
+	void operator=(const base_atomic &) /* = delete */ ;
+	value_type v_;
+};
+
+template<typename T, unsigned int Size, bool Sign>
+class base_atomic<T *, void *, Size, Sign> {
+private:
+	typedef base_atomic this_type;
+	typedef T * value_type;
+	typedef ptrdiff_t difference_type;
+	typedef detail::spinlock_pool<0>::scoped_lock guard_type;
+public:
+	explicit base_atomic(value_type v) : v_(v) {}
+	base_atomic(void) {}
+	
+	void
+	store(value_type v, memory_order /*order*/ = memory_order_seq_cst) volatile
+	{
+		guard_type guard(const_cast<value_type *>(&v_));
+		v_ = v;
+	}
+	
+	value_type
+	load(memory_order /*order*/ = memory_order_seq_cst) const volatile
+	{
+		guard_type guard(const_cast<value_type *>(&v_));
+		
+		value_type v = const_cast<const volatile value_type &>(v_);
+		return v;
+	}
+	
+	value_type
+	exchange(value_type v, memory_order /*order*/ = memory_order_seq_cst) volatile
+	{
+		guard_type guard(const_cast<value_type *>(&v_));
+		
+		value_type old = v_;
+		v_ = v;
+		return old;
+	}
+	
+	bool
+	compare_exchange_strong(value_type & expected, value_type desired,
+		memory_order /*success_order*/,
+		memory_order /*failure_order*/) volatile
+	{
+		guard_type guard(const_cast<value_type *>(&v_));
+		
+		if (v_ == expected) {
+			v_ = desired;
+			return true;
+		} else {
+			expected = v_;
+			return false;
+		}
+	}
+	
+	bool
+	compare_exchange_weak(value_type & expected, value_type desired,
+		memory_order success_order,
+		memory_order failure_order) volatile
+	{
+		return compare_exchange_strong(expected, desired, success_order, failure_order);
+	}
+	
+	value_type fetch_add(difference_type v, memory_order /*order*/ = memory_order_seq_cst) volatile
+	{
+		guard_type guard(const_cast<value_type *>(&v_));
+		
+		value_type old = v_;
+		v_ += v;
+		return old;
+	}
+	
+	value_type fetch_sub(difference_type v, memory_order /*order*/ = memory_order_seq_cst) volatile
+	{
+		guard_type guard(const_cast<value_type *>(&v_));
+		
+		value_type old = v_;
+		v_ -= v;
+		return old;
+	}
+	
+	bool
+	is_lock_free(void) const volatile
+	{
+		return false;
+	}
+	
+	BOOST_ATOMIC_DECLARE_POINTER_OPERATORS
+private:
+	base_atomic(const base_atomic  &) /* = delete */ ;
+	void operator=(const base_atomic &) /* = delete */ ;
+	value_type v_;
+};
+
+template<unsigned int Size, bool Sign>
+class base_atomic<void *, void *, Size, Sign> {
+private:
+	typedef base_atomic this_type;
+	typedef void * value_type;
+	typedef detail::spinlock_pool<0>::scoped_lock guard_type;
+public:
+	explicit base_atomic(value_type v) : v_(v) {}
+	base_atomic(void) {}
+	
+	void
+	store(value_type v, memory_order /*order*/ = memory_order_seq_cst) volatile
+	{
+		guard_type guard(const_cast<value_type *>(&v_));
+		v_ = v;
+	}
+	
+	value_type
+	load(memory_order /*order*/ = memory_order_seq_cst) const volatile
+	{
+		guard_type guard(const_cast<value_type *>(&v_));
+		
+		value_type v = const_cast<const volatile value_type &>(v_);
+		return v;
+	}
+	
+	value_type
+	exchange(value_type v, memory_order /*order*/ = memory_order_seq_cst) volatile
+	{
+		guard_type guard(const_cast<value_type *>(&v_));
+		
+		value_type old = v_;
+		v_ = v;
+		return old;
+	}
+	
+	bool
+	compare_exchange_strong(value_type & expected, value_type desired,
+		memory_order /*success_order*/,
+		memory_order /*failure_order*/) volatile
+	{
+		guard_type guard(const_cast<value_type *>(&v_));
+		
+		if (v_ == expected) {
+			v_ = desired;
+			return true;
+		} else {
+			expected = v_;
+			return false;
+		}
+	}
+	
+	bool
+	compare_exchange_weak(value_type & expected, value_type desired,
+		memory_order success_order,
+		memory_order failure_order) volatile
+	{
+		return compare_exchange_strong(expected, desired, success_order, failure_order);
+	}
+	
+	bool
+	is_lock_free(void) const volatile
+	{
+		return false;
+	}
+	
+	BOOST_ATOMIC_DECLARE_BASE_OPERATORS
+private:
+	base_atomic(const base_atomic &) /* = delete */ ;
+	void operator=(const base_atomic &) /* = delete */ ;
+	value_type v_;
 };
 
 }
