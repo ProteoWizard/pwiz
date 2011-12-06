@@ -10,8 +10,8 @@ pushd %PWIZ_ROOT%
 echo Cleaning project...
 IF EXIST build-nt-x86 rmdir /s /q build-nt-x86
 IF EXIST build-nt-x86_64 rmdir /s /q build-nt-x86_64
-IF EXIST libraries\boost-build\jam_src\bin.ntx86 rmdir /s /q libraries\boost-build\jam_src\bin.ntx86
-IF EXIST libraries\boost-build\jam_src\bootstrap rmdir /s /q libraries\boost-build\jam_src\bootstrap
+IF EXIST libraries\boost-build\engine\bin.ntx86 rmdir /s /q libraries\boost-build\engine\bin.ntx86
+IF EXIST libraries\boost-build\engine\bootstrap rmdir /s /q libraries\boost-build\engine\bootstrap
 IF EXIST libraries\boost_1_43_0 rmdir /s /q libraries\boost_1_43_0
 IF EXIST libraries\gd-2.0.33 rmdir /s /q libraries\gd-2.0.33
 IF EXIST libraries\zlib-1.2.3 rmdir /s /q libraries\zlib-1.2.3
