@@ -59,6 +59,8 @@ namespace pwiz.Skyline.Controls.Graphs
             YAxis.Title.Text = "Measured Time";
             YAxis.Scale.MinAuto = false;
             YAxis.Scale.Min = 0;
+
+            Settings.Default.RTScoreCalculatorList.ListChanged += RTScoreCalculatorList_ListChanged;
         }
 
         public void Dispose()
@@ -82,6 +84,10 @@ namespace pwiz.Skyline.Controls.Graphs
 
         private void DelayedUpdate()
         {
+            // Any change to the calculator list requires a full data update when in auto mode.
+            if (string.IsNullOrEmpty(Settings.Default.RTCalculatorName))
+                Data = null;
+
             UpdateGraph(true);
             _pendingUpdate = false;
         }
@@ -368,6 +374,7 @@ namespace pwiz.Skyline.Controls.Graphs
             private double[] _scoresRefined;
             private double[] _timesOutliers;
             private double[] _scoresOutliers;
+            private string _calculatorName;
 
             private readonly RetentionScoreCalculatorSpec _calculator;
 
@@ -408,7 +415,8 @@ namespace pwiz.Skyline.Controls.Graphs
                 //Before anything else involving calculators, try connecting all the RCalcIrts
                 Settings.Default.RTScoreCalculatorList.Initialize(null);
 
-                RetentionScoreCalculatorSpec calc = !string.IsNullOrEmpty(Settings.Default.RTCalculatorName)
+                _calculatorName = Settings.Default.RTCalculatorName;
+                RetentionScoreCalculatorSpec calc = !string.IsNullOrEmpty(_calculatorName)
                                                         ? Settings.Default.GetCalculatorByName(Settings.Default.RTCalculatorName)
                                                         : null;
                 if (calc == null)
@@ -477,12 +485,15 @@ namespace pwiz.Skyline.Controls.Graphs
 
             public bool IsValidFor(SrmDocument document, int resultIndex, bool bestResult, double threshold, bool refine)
             {
+                string calculatorName = Settings.Default.RTCalculatorName;
+                if (string.IsNullOrEmpty(calculatorName))
+                    calculatorName = _calculator.Name;
                 return IsValidFor(document) &&
                         _resultIndex == resultIndex &&
                         _bestResult == bestResult &&
                         _threshold == threshold &&
-                        // TODO: find a better way to force updating when calculator is auto? Or maybe this is good.
-                        ReferenceEquals(_calculator.Name, Settings.Default.RTCalculatorName) &&
+                        _calculatorName == Settings.Default.RTCalculatorName &&
+                        ReferenceEquals(_calculator, Settings.Default.GetCalculatorByName(calculatorName)) &&
                         // Valid if refine is true, and this data requires no further refining
                         (_refine == refine || (refine && IsRefined()));
             }

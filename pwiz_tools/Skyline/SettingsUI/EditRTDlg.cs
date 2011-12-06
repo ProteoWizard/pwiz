@@ -182,8 +182,10 @@ namespace pwiz.Skyline.SettingsUI
             if (!visible)
             {
                 gridPeptides.Anchor &= ~AnchorStyles.Bottom;
-                btnUseCurrent.Anchor |= ~AnchorStyles.Top;
+                btnUseCurrent.Anchor |= AnchorStyles.Top;
                 btnUseCurrent.Anchor &= ~AnchorStyles.Bottom;
+                btnShowGraph.Anchor |= AnchorStyles.Top;
+                btnShowGraph.Anchor &= ~AnchorStyles.Bottom;
                 FormBorderStyle = FormBorderStyle.FixedDialog;
                 Height = ptCorner.Y - Top;
             }
@@ -192,6 +194,7 @@ namespace pwiz.Skyline.SettingsUI
             labelRValue.Visible = visible;
             btnUseCurrent.Visible = visible;
             btnUseCurrent.Enabled = hasResults;
+            btnShowGraph.Visible = visible;
             gridPeptides.Visible = visible;
 
             if (visible)
@@ -200,6 +203,8 @@ namespace pwiz.Skyline.SettingsUI
                 FormBorderStyle = FormBorderStyle.Sizable;
                 btnUseCurrent.Anchor |= AnchorStyles.Bottom;
                 btnUseCurrent.Anchor &= ~AnchorStyles.Top;
+                btnShowGraph.Anchor |= AnchorStyles.Bottom;
+                btnShowGraph.Anchor &= ~AnchorStyles.Top;
                 gridPeptides.Anchor |= AnchorStyles.Bottom;
             }
         }

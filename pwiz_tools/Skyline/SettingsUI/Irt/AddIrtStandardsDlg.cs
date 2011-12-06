@@ -21,7 +21,7 @@ using System.ComponentModel;
 using System.Windows.Forms;
 using pwiz.Skyline.Controls;
 
-namespace pwiz.Skyline.SettingsUI
+namespace pwiz.Skyline.SettingsUI.Irt
 {
     public partial class AddIrtStandardsDlg : Form
     {

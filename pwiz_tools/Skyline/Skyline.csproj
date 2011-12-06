@@ -595,16 +595,16 @@
     <Compile Include="Controls\UndoRedoButtons.cs" />
     <Compile Include="Model\V01\Sequence.cs" />
     <Compile Include="Model\V01\XmlExport.cs" />
-    <Compile Include="SettingsUI\AddIrtPeptidesDlg.cs">
+    <Compile Include="SettingsUI\Irt\AddIrtPeptidesDlg.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="SettingsUI\AddIrtPeptidesDlg.Designer.cs">
+    <Compile Include="SettingsUI\Irt\AddIrtPeptidesDlg.Designer.cs">
       <DependentUpon>AddIrtPeptidesDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="SettingsUI\AddIrtStandardsDlg.cs">
+    <Compile Include="SettingsUI\Irt\AddIrtStandardsDlg.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="SettingsUI\AddIrtStandardsDlg.Designer.cs">
+    <Compile Include="SettingsUI\Irt\AddIrtStandardsDlg.Designer.cs">
       <DependentUpon>AddIrtStandardsDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="SettingsUI\BuildLibraryDlg.cs">
@@ -619,10 +619,10 @@
     <Compile Include="SettingsUI\BuildBackgroundProteomeDlg.Designer.cs">
       <DependentUpon>BuildBackgroundProteomeDlg.cs</DependentUpon>
     </Compile>
-    <Compile Include="SettingsUI\CalibrateIrtDlg.cs">
+    <Compile Include="SettingsUI\Irt\CalibrateIrtDlg.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="SettingsUI\CalibrateIrtDlg.Designer.cs">
+    <Compile Include="SettingsUI\Irt\CalibrateIrtDlg.Designer.cs">
       <DependentUpon>CalibrateIrtDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="SettingsUI\ChooseAnnotationsDlg.cs">
@@ -673,10 +673,16 @@
     <Compile Include="SettingsUI\BuildLibraryNotification.Designer.cs">
       <DependentUpon>BuildLibraryNotification.cs</DependentUpon>
     </Compile>
-    <Compile Include="SettingsUI\EditIrtCalcDlg.cs">
+    <Compile Include="SettingsUI\Irt\RecalibrateIrtDlg.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="SettingsUI\EditIrtCalcDlg.Designer.cs">
+    <Compile Include="SettingsUI\Irt\RecalibrateIrtDlg.Designer.cs">
+      <DependentUpon>RecalibrateIrtDlg.cs</DependentUpon>
+    </Compile>
+    <Compile Include="SettingsUI\Irt\EditIrtCalcDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="SettingsUI\Irt\EditIrtCalcDlg.Designer.cs">
       <DependentUpon>EditIrtCalcDlg.cs</DependentUpon>
     </Compile>
     <Compile Include="SettingsUI\PeptideGridViewDriver.cs" />
@@ -1298,10 +1304,10 @@
     <EmbeddedResource Include="Resources\Peak.bmp" />
     <EmbeddedResource Include="Resources\TransitionGroupLib.bmp" />
     <EmbeddedResource Include="Resources\PeptideLib.bmp" />
-    <EmbeddedResource Include="SettingsUI\AddIrtPeptidesDlg.resx">
+    <EmbeddedResource Include="SettingsUI\Irt\AddIrtPeptidesDlg.resx">
       <DependentUpon>AddIrtPeptidesDlg.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\AddIrtStandardsDlg.resx">
+    <EmbeddedResource Include="SettingsUI\Irt\AddIrtStandardsDlg.resx">
       <DependentUpon>AddIrtStandardsDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\BuildLibraryDlg.resx">
@@ -1316,7 +1322,7 @@
       <DependentUpon>BuildLibraryNotification.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
-    <EmbeddedResource Include="SettingsUI\CalibrateIrtDlg.resx">
+    <EmbeddedResource Include="SettingsUI\Irt\CalibrateIrtDlg.resx">
       <DependentUpon>CalibrateIrtDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\ChooseAnnotationsDlg.resx">
@@ -1371,7 +1377,11 @@
     <EmbeddedResource Include="Model\Lib\BlibData\mapping.xml" />
     <EmbeddedResource Include="Resources\Fragment.bmp" />
     <EmbeddedResource Include="Resources\FragmentLib.bmp" />
-    <EmbeddedResource Include="SettingsUI\EditIrtCalcDlg.resx">
+    <EmbeddedResource Include="SettingsUI\Irt\RecalibrateIrtDlg.resx">
+      <DependentUpon>RecalibrateIrtDlg.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="SettingsUI\Irt\EditIrtCalcDlg.resx">
       <DependentUpon>EditIrtCalcDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="SettingsUI\ViewLibraryDlg.resx">

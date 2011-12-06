@@ -34,7 +34,7 @@ using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Properties;
 using pwiz.Skyline.Util;
 
-namespace pwiz.Skyline.SettingsUI
+namespace pwiz.Skyline.SettingsUI.Irt
 {
     public partial class EditIrtCalcDlg : Form
     {
@@ -45,7 +45,7 @@ namespace pwiz.Skyline.SettingsUI
 
         public RetentionScoreCalculatorSpec Calculator { get; private set; }
 
-        private IEnumerable<DbIrtPeptide> _originalPeptides;
+        private DbIrtPeptide[] _originalPeptides;
         private readonly StandardGridViewDriver _gridViewStandardDriver;
         private readonly LibraryGridViewDriver _gridViewLibraryDriver;
 
@@ -64,9 +64,9 @@ namespace pwiz.Skyline.SettingsUI
             Icon = Resources.Skyline;
 
             _gridViewStandardDriver = new StandardGridViewDriver(gridViewStandard, bindingSourceStandard,
-                new SortableBindingList<DbIrtPeptide>());
+                                                                 new SortableBindingList<DbIrtPeptide>());
             _gridViewLibraryDriver = new LibraryGridViewDriver(gridViewLibrary, bindingSourceLibrary,
-                new SortableBindingList<DbIrtPeptide>());
+                                                               new SortableBindingList<DbIrtPeptide>());
             _gridViewStandardDriver.LibraryPeptideList = _gridViewLibraryDriver.Items;
             _gridViewLibraryDriver.StandardPeptideList = _gridViewStandardDriver.Items;
 
@@ -207,10 +207,13 @@ namespace pwiz.Skyline.SettingsUI
             try
             {
                 IrtDb db = IrtDb.GetIrtDb(path, null); // TODO: LongWaitDlg
-                _originalPeptides = db.GetPeptides();
+                var dbPeptides = db.GetPeptides();
 
-                LoadStandard(_originalPeptides);
-                LoadLibrary(_originalPeptides);
+                LoadStandard(dbPeptides);
+                LoadLibrary(dbPeptides);
+
+                // Clone all of the peptides to use for comparison in OkDialog
+                _originalPeptides = dbPeptides.Select(p => new DbIrtPeptide(p)).ToArray();
 
                 textDatabase.Text = path;
             }
@@ -256,7 +259,7 @@ namespace pwiz.Skyline.SettingsUI
             if (StandardPeptideList.Count < CalibrateIrtDlg.MIN_SUGGESTED_STANDARD_PEPTIDES)
             {
                 DialogResult result = MessageBox.Show(this, string.Format("Using fewer than {0} standard peptides is not recommended. Are you sure you want to continue with only {1}?", CalibrateIrtDlg.MIN_SUGGESTED_STANDARD_PEPTIDES, StandardPeptideList.Count),
-                    Program.Name, MessageBoxButtons.YesNo);
+                                                      Program.Name, MessageBoxButtons.YesNo);
                 if (result != DialogResult.Yes)
                     return;
             }
@@ -318,7 +321,10 @@ namespace pwiz.Skyline.SettingsUI
 
         public void btnCalibrate_Click(object sender, EventArgs e)
         {
-            Calibrate();
+            if (LibraryPeptideList.Count == 0)
+                Calibrate();
+            else
+                Recalibrate();
         }
 
         public void Calibrate()
@@ -328,6 +334,18 @@ namespace pwiz.Skyline.SettingsUI
                 if (calibrateDlg.ShowDialog(this) == DialogResult.OK)
                 {
                     LoadStandard(calibrateDlg.CalibrationPeptides);
+                }
+            }
+        }
+
+        public void Recalibrate()
+        {
+            using (var recalibrateDlg = new RecalibrateIrtDlg(AllPeptides))
+            {
+                if (recalibrateDlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    StandardPeptideList.ResetBindings();
+                    LibraryPeptideList.ResetBindings();
                 }
             }
         }
@@ -358,7 +376,7 @@ namespace pwiz.Skyline.SettingsUI
         private class StandardGridViewDriver : PeptideGridViewDriver<DbIrtPeptide>
         {
             public StandardGridViewDriver(DataGridViewEx gridView, BindingSource bindingSource,
-                    SortableBindingList<DbIrtPeptide> items)
+                                          SortableBindingList<DbIrtPeptide> items)
                 : base(gridView, bindingSource, items)
             {
                 AllowNegativeTime = true;
@@ -408,7 +426,7 @@ namespace pwiz.Skyline.SettingsUI
         private class LibraryGridViewDriver : PeptideGridViewDriver<DbIrtPeptide>
         {
             public LibraryGridViewDriver(DataGridViewEx gridView, BindingSource bindingSource,
-                    SortableBindingList<DbIrtPeptide> items)
+                                         SortableBindingList<DbIrtPeptide> items)
                 : base(gridView, bindingSource, items)
             {
                 AllowNegativeTime = true;
@@ -428,7 +446,7 @@ namespace pwiz.Skyline.SettingsUI
                     if (StandardPeptideList.Any(p => Equals(p.PeptideModSeq, sequence)))
                     {
                         MessageDlg.Show(MessageParent, string.Format("The peptide {0} is already present in the {1} table, and may not be pasted into the {2} table.",
-                                        sequence, STANDARD_TABLE_NAME, LIBRARY_TABLE_NAME));
+                                                                     sequence, STANDARD_TABLE_NAME, LIBRARY_TABLE_NAME));
                         return;
                     }
                 }
@@ -593,7 +611,7 @@ namespace pwiz.Skyline.SettingsUI
 
         private void UpdateNumPeptides()
         {
-            btnCalibrate.Enabled = (LibraryPeptideList.Count == 0);
+            btnCalibrate.Text = (LibraryPeptideList.Count == 0 ? "Cali&brate..." : "Recali&brate...");
 
             labelNumPeptides.Text = string.Format("{0} Peptides", LibraryPeptideList.Count);
         }

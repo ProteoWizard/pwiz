@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.SettingsUI
+﻿namespace pwiz.Skyline.SettingsUI.Irt
 {
     partial class AddIrtPeptidesDlg
     {
@@ -43,7 +43,7 @@
             // listExisting
             // 
             this.listExisting.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+                                                                             | System.Windows.Forms.AnchorStyles.Right)));
             this.listExisting.FormattingEnabled = true;
             this.listExisting.Location = new System.Drawing.Point(12, 35);
             this.listExisting.Name = "listExisting";
@@ -53,7 +53,7 @@
             // listOverwrite
             // 
             this.listOverwrite.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+                                                                              | System.Windows.Forms.AnchorStyles.Right)));
             this.listOverwrite.FormattingEnabled = true;
             this.listOverwrite.Location = new System.Drawing.Point(12, 261);
             this.listOverwrite.Name = "listOverwrite";
@@ -118,7 +118,7 @@
             this.labelOverwrite.Size = new System.Drawing.Size(295, 26);
             this.labelOverwrite.TabIndex = 6;
             this.labelOverwrite.Text = "The following peptides have values based on MS/MS scans,\r\nwhich will be replaced " +
-                "with new values:";
+                                       "with new values:";
             // 
             // btnCancel
             // 

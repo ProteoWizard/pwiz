@@ -20,7 +20,7 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using pwiz.Skyline.Properties;
 
-namespace pwiz.Skyline.SettingsUI
+namespace pwiz.Skyline.SettingsUI.Irt
 {
     public enum AddIrtPeptidesAction { skip, replace, average }
 

@@ -2372,7 +2372,7 @@ namespace pwiz.Skyline
                     list.SetValue(calcNew);
 
                     var regressionRTDoc = DocumentUI.Settings.PeptideSettings.Prediction.RetentionTime;
-                    if (Equals(calcOld.Name, regressionRTDoc.Calculator.Name))
+                    if (regressionRTDoc != null && Equals(calcOld.Name, regressionRTDoc.Calculator.Name))
                     {
                         ModifyDocument(string.Format("Update {0} calculator", calcNew.Name), doc =>
                             doc.ChangeSettings(doc.Settings.ChangePeptidePrediction(predict =>

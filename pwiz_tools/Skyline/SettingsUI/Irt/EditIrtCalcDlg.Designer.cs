@@ -1,4 +1,4 @@
-﻿namespace pwiz.Skyline.SettingsUI
+﻿namespace pwiz.Skyline.SettingsUI.Irt
 {
     partial class EditIrtCalcDlg
     {
@@ -91,7 +91,7 @@
             // textDatabase
             // 
             this.textDatabase.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+                                                                             | System.Windows.Forms.AnchorStyles.Right)));
             this.textDatabase.Location = new System.Drawing.Point(12, 87);
             this.textDatabase.Name = "textDatabase";
             this.textDatabase.Size = new System.Drawing.Size(254, 20);
@@ -192,14 +192,14 @@
             // gridViewLibrary
             // 
             this.gridViewLibrary.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+                                                                                 | System.Windows.Forms.AnchorStyles.Left)
+                                                                                | System.Windows.Forms.AnchorStyles.Right)));
             this.gridViewLibrary.AutoGenerateColumns = false;
             this.gridViewLibrary.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             this.gridViewLibrary.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.gridViewLibrary.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.columnLibrarySequence,
-            this.columnLibraryIrt});
+                                                                                                    this.columnLibrarySequence,
+                                                                                                    this.columnLibraryIrt});
             this.gridViewLibrary.DataSource = this.bindingSourceLibrary;
             this.gridViewLibrary.Location = new System.Drawing.Point(12, 348);
             this.gridViewLibrary.Name = "gridViewLibrary";
@@ -231,7 +231,7 @@
             // gridViewStandard
             // 
             this.gridViewStandard.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+                                                                                 | System.Windows.Forms.AnchorStyles.Right)));
             this.gridViewStandard.AutoGenerateColumns = false;
             this.gridViewStandard.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
             dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
@@ -244,8 +244,8 @@
             this.gridViewStandard.ColumnHeadersDefaultCellStyle = dataGridViewCellStyle3;
             this.gridViewStandard.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.gridViewStandard.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.columnStandardSequence,
-            this.columnStandardIrt});
+                                                                                                     this.columnStandardSequence,
+                                                                                                     this.columnStandardIrt});
             this.gridViewStandard.DataSource = this.bindingSourceStandard;
             dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
             dataGridViewCellStyle6.BackColor = System.Drawing.SystemColors.Window;

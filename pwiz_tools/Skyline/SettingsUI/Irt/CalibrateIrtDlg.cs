@@ -27,10 +27,12 @@ using pwiz.Common.DataBinding;
 using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Controls;
 using pwiz.Skyline.Model;
+using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Model.Irt;
 using pwiz.Skyline.Properties;
+using pwiz.Skyline.Util;
 
-namespace pwiz.Skyline.SettingsUI
+namespace pwiz.Skyline.SettingsUI.Irt
 {
     public partial class CalibrateIrtDlg : Form
     {
@@ -87,14 +89,18 @@ namespace pwiz.Skyline.SettingsUI
 
             double fixedPt1 = StandardPeptideList[iFixed1].RetentionTime;
             double fixedPt2 = StandardPeptideList[iFixed2].RetentionTime;
+
             double minRt = Math.Min(fixedPt1, fixedPt2);
             double maxRt = Math.Max(fixedPt1, fixedPt2);
+
+            var statRt = new Statistics(minRt, maxRt);
+            var statIrt = new Statistics(minIrt, maxIrt);
+            var linearEquation = new RegressionLine(statIrt.Slope(statRt), statIrt.Intercept(statRt));
 
             CalibrationPeptides = new List<DbIrtPeptide>();
             foreach (var peptide in StandardPeptideList)
             {
-                double measuredRT = peptide.RetentionTime;
-                double iRT = Transform(measuredRT, minRt, maxRt, minIrt, maxIrt);
+                double iRT = linearEquation.GetY(peptide.RetentionTime);
                 CalibrationPeptides.Add(new DbIrtPeptide(peptide.Sequence, iRT, true, TimeSource.peak));
             }
 
@@ -293,8 +299,8 @@ namespace pwiz.Skyline.SettingsUI
                     for (int j = 0; j < docPeptides.Count; j++)
                     {
                         if (j + 1 > docPeptides.Count - 1 ||
-                           Math.Abs(docPeptides[j].RetentionTime - targetRT) <
-                           Math.Abs(docPeptides[j + 1].RetentionTime - targetRT))
+                                Math.Abs(docPeptides[j].RetentionTime - targetRT) <
+                                Math.Abs(docPeptides[j + 1].RetentionTime - targetRT))
                         {
                             standardPeptides.Add(docPeptides[j]);
                             docPeptides.RemoveAt(j);

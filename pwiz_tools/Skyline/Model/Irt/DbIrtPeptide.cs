@@ -60,12 +60,23 @@ namespace pwiz.Skyline.Model.Irt
         {            
         }
 
+        public DbIrtPeptide(DbIrtPeptide other)
+            : this(other.PeptideModSeq, other.Irt, other.Standard, other.TimeSource)
+        {
+            Id = other.Id;
+        }
+
         public DbIrtPeptide(string seq, double irt, bool standard, TimeSource timeSource)
+            : this(seq, irt, standard, (int) timeSource)
+        {            
+        }
+
+        private DbIrtPeptide(string seq, double irt, bool standard, int? timeSource)
         {
             PeptideModSeq = seq;
             Irt = irt;
             Standard = standard;
-            TimeSource = (int) timeSource;
+            TimeSource = timeSource;
         }
 
         #region object overrides

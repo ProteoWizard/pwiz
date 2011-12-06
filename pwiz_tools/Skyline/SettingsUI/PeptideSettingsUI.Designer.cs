@@ -63,13 +63,13 @@ namespace pwiz.Skyline.SettingsUI
             this.cbLimitPeptides = new System.Windows.Forms.CheckBox();
             this.editLibraries = new System.Windows.Forms.Button();
             this.listLibraries = new System.Windows.Forms.CheckedListBox();
+            this.btnUpdateCalculator = new System.Windows.Forms.Button();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabDigestion = new System.Windows.Forms.TabPage();
             this.label2 = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
             this.tabPrediction = new System.Windows.Forms.TabPage();
-            this.btnUpdateCalculator = new System.Windows.Forms.Button();
             this.label14 = new System.Windows.Forms.Label();
             this.label13 = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
@@ -456,6 +456,18 @@ namespace pwiz.Skyline.SettingsUI
             this.helpTip.SetToolTip(this.listLibraries, resources.GetString("listLibraries.ToolTip"));
             this.listLibraries.ItemCheck += new System.Windows.Forms.ItemCheckEventHandler(this.listLibraries_ItemCheck);
             // 
+            // btnUpdateCalculator
+            // 
+            this.btnUpdateCalculator.Image = global::pwiz.Skyline.Properties.Resources.Calculator;
+            this.btnUpdateCalculator.Location = new System.Drawing.Point(204, 34);
+            this.btnUpdateCalculator.Name = "btnUpdateCalculator";
+            this.btnUpdateCalculator.Size = new System.Drawing.Size(25, 24);
+            this.btnUpdateCalculator.TabIndex = 2;
+            this.helpTip.SetToolTip(this.btnUpdateCalculator, "Retention time calculators");
+            this.btnUpdateCalculator.UseVisualStyleBackColor = true;
+            this.btnUpdateCalculator.Visible = false;
+            this.btnUpdateCalculator.Click += new System.EventHandler(this.btnUpdateCalculator_Click);
+            // 
             // tabControl1
             // 
             this.tabControl1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
@@ -531,18 +543,6 @@ namespace pwiz.Skyline.SettingsUI
             this.tabPrediction.TabIndex = 3;
             this.tabPrediction.Text = "Prediction";
             this.tabPrediction.UseVisualStyleBackColor = true;
-            // 
-            // btnUpdateCalculator
-            // 
-            this.btnUpdateCalculator.Image = global::pwiz.Skyline.Properties.Resources.Calculator;
-            this.btnUpdateCalculator.Location = new System.Drawing.Point(204, 34);
-            this.btnUpdateCalculator.Name = "btnUpdateCalculator";
-            this.btnUpdateCalculator.Size = new System.Drawing.Size(25, 24);
-            this.btnUpdateCalculator.TabIndex = 2;
-            this.helpTip.SetToolTip(this.btnUpdateCalculator, "Retention time calculators");
-            this.btnUpdateCalculator.UseVisualStyleBackColor = true;
-            this.btnUpdateCalculator.Visible = false;
-            this.btnUpdateCalculator.Click += new System.EventHandler(this.btnUpdateCalculator_Click);
             // 
             // label14
             // 

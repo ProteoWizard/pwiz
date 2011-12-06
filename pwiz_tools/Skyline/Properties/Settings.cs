@@ -31,6 +31,7 @@ using pwiz.Skyline.Model.Hibernate.Query;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.SettingsUI;
+using pwiz.Skyline.SettingsUI.Irt;
 using pwiz.Skyline.Util;
 using System.Windows.Forms;
 
@@ -1137,7 +1138,9 @@ namespace pwiz.Skyline.Properties
                 {
                     try
                     {
-                        SetValue(calc.Initialize(loadMonitor));
+                        var calcInit = calc.Initialize(loadMonitor);
+                        if (!ReferenceEquals(calcInit, calc))
+                            SetValue(calcInit);
                     }
                     catch(CalculatorException)
                     {
