@@ -355,6 +355,12 @@
     <Compile Include="FileUI\ManageResultsDlg.Designer.cs">
       <DependentUpon>ManageResultsDlg.cs</DependentUpon>
     </Compile>
+    <Compile Include="FileUI\MinimizeResultsDlg.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="FileUI\MinimizeResultsDlg.Designer.cs">
+      <DependentUpon>MinimizeResultsDlg.cs</DependentUpon>
+    </Compile>
     <Compile Include="FileUI\RenameResultDlg.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -572,6 +578,7 @@
     <Compile Include="Model\Results\ChromatogramCache.cs" />
     <Compile Include="Model\Results\ChromCacheBuilder.cs" />
     <Compile Include="Model\Results\ChromCacheJoiner.cs" />
+    <Compile Include="Model\Results\ChromCacheMinimizer.cs" />
     <Compile Include="Model\Results\ChromCacheWriter.cs" />
     <Compile Include="Model\Results\ChromData.cs" />
     <Compile Include="Model\Results\ChromDataProvider.cs" />
@@ -884,6 +891,7 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Util\BioMassCalc.cs" />
+    <Compile Include="Util\FileSize.cs" />
     <Compile Include="Util\JetBrainsAnnotations.cs" />
     <Compile Include="Util\Extensions\Text.cs" />
     <Compile Include="Util\Extensions\UtilProcess.cs" />
@@ -1241,6 +1249,9 @@
     <EmbeddedResource Include="FileUI\ExportOptimizeDlg.resx">
       <DependentUpon>ExportOptimizeDlg.cs</DependentUpon>
       <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="FileUI\MinimizeResultsDlg.resx">
+      <DependentUpon>MinimizeResultsDlg.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="FileUI\RenameResultDlg.resx">
       <DependentUpon>RenameResultDlg.cs</DependentUpon>

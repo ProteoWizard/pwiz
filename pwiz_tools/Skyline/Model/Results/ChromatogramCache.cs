@@ -133,6 +133,16 @@ namespace pwiz.Skyline.Model.Results
             get { return CachedFiles.IndexOf(cachedFile => !cachedFile.IsCurrent) == -1; }
         }
 
+        public ChromTransition GetTransition(int index)
+        {
+            return _chromTransitions[index];
+        }
+
+        public ChromPeak GetPeak(int index)
+        {
+            return _chromatogramPeaks[index];
+        }
+
         /// <summary>
         /// Returns true if the cached file paths in this cache are completely covered
         /// by an existing set of caches.
@@ -172,10 +182,19 @@ namespace pwiz.Skyline.Model.Results
             infoSet = new ChromatogramGroupInfo[0];
             return false;            
         }
+        public ChromatogramGroupInfo LoadChromatogramInfo(ChromGroupHeaderInfo chromGroupHeaderInfo)
+        {
+            return new ChromatogramGroupInfo(chromGroupHeaderInfo, _cachedFiles, _chromTransitions, _chromatogramPeaks);
+        }
 
         public int Count
         {
             get { return _chromatogramEntries.Length; }
+        }
+
+        public IEnumerable<ChromGroupHeaderInfo> ChromGroupHeaderInfos
+        {
+            get { return Array.AsReadOnly(_chromatogramEntries); }
         }
 
         private ChromatogramCache ChangeCachePath(string prop)

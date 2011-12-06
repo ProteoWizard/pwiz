@@ -372,6 +372,15 @@ namespace pwiz.Skyline.Model.Results
             loader.Load();
         }
 
+        public ChromCacheMinimizer GetChromCacheMinimizer(SrmDocument document)
+        {
+            if (!IsLoaded)
+            {
+                return null;
+            }
+            return new ChromCacheMinimizer(document, _cacheFinal);
+        }
+
         #region Property change methods
 
         public MeasuredResults ChangeChromatograms(IList<ChromatogramSet> prop)

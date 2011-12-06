@@ -367,5 +367,17 @@ namespace pwiz.Skyline.FileUI
                 return (IsReimport ? "*" : "") + Chromatograms.Name;
             }
         }
+
+        private void btnMinimize_Click(object sender, EventArgs e)
+        {
+            using (var dlg = new MinimizeResultsDlg(DocumentUIContainer))
+            {
+                if (dlg.ShowDialog(this) == DialogResult.OK)
+                {
+                    // If the MinimizeResultsDlg did work then cancel out of this dialog
+                    DialogResult = DialogResult.Cancel;
+                }
+            }
+        }
     }
 }

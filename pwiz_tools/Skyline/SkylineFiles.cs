@@ -526,7 +526,12 @@ namespace pwiz.Skyline
             return false;
         }
 
-        public bool SaveDocument(String fileName)
+        public bool SaveDocument(string fileName)
+        {
+            return SaveDocument(fileName, true);
+        }
+
+        public bool SaveDocument(String fileName, bool includingCacheFile)
         {
             SrmDocument document = DocumentUI;
             try
@@ -561,7 +566,10 @@ namespace pwiz.Skyline
 
             try
             {
-                OptimizeCache(fileName);
+                if (includingCacheFile)
+                {
+                    OptimizeCache(fileName);
+                }
                 SaveLayout(fileName);
             }
             catch (IOException)

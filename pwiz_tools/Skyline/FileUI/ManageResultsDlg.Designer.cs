@@ -38,6 +38,7 @@
             this.btnRename = new System.Windows.Forms.Button();
             this.listResults = new System.Windows.Forms.ListBox();
             this.btnReimport = new System.Windows.Forms.Button();
+            this.btnMinimize = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // btnCancel
@@ -156,6 +157,16 @@
             this.btnReimport.UseVisualStyleBackColor = true;
             this.btnReimport.Click += new System.EventHandler(this.btnReimport_Click);
             // 
+            // btnMinimize
+            // 
+            this.btnMinimize.Location = new System.Drawing.Point(284, 237);
+            this.btnMinimize.Name = "btnMinimize";
+            this.btnMinimize.Size = new System.Drawing.Size(75, 23);
+            this.btnMinimize.TabIndex = 10;
+            this.btnMinimize.Text = "Minimi&ze...";
+            this.btnMinimize.UseVisualStyleBackColor = true;
+            this.btnMinimize.Click += new System.EventHandler(this.btnMinimize_Click);
+            // 
             // ManageResultsDlg
             // 
             this.AcceptButton = this.btnOk;
@@ -163,6 +174,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.CancelButton = this.btnCancel;
             this.ClientSize = new System.Drawing.Size(370, 325);
+            this.Controls.Add(this.btnMinimize);
             this.Controls.Add(this.btnReimport);
             this.Controls.Add(this.listResults);
             this.Controls.Add(this.btnRename);
@@ -196,5 +208,6 @@
         private System.Windows.Forms.Button btnRename;
         private System.Windows.Forms.ListBox listResults;
         private System.Windows.Forms.Button btnReimport;
+        private System.Windows.Forms.Button btnMinimize;
     }
 }

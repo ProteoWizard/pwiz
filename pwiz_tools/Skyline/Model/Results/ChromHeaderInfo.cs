@@ -693,6 +693,7 @@ namespace pwiz.Skyline.Model.Results
             _allPeaks = allPeaks;
         }
 
+        internal ChromGroupHeaderInfo Header { get { return _groupHeaderInfo; } }
         public double PrecursorMz { get { return _groupHeaderInfo.Precursor; } }
         public string FilePath { get { return _allFiles[_groupHeaderInfo.FileIndex].FilePath; } }
         public DateTime FileWriteTime { get { return _allFiles[_groupHeaderInfo.FileIndex].FileWriteTime; } }
@@ -824,14 +825,16 @@ namespace pwiz.Skyline.Model.Results
         public void ReadChromatogram(ChromatogramCache cache)
         {
             Stream stream = cache.ReadStream.Stream;
-
-            // Seek to stored location
-            stream.Seek(_groupHeaderInfo.LocationPoints, SeekOrigin.Begin);
-
-            // Single read to get all the points
             byte[] pointsCompressed = new byte[_groupHeaderInfo.CompressedSize];
-            if (stream.Read(pointsCompressed, 0, pointsCompressed.Length) < pointsCompressed.Length)
-                throw new IOException("Failure trying to read points");
+            lock(stream)
+            {
+                // Seek to stored location
+                stream.Seek(_groupHeaderInfo.LocationPoints, SeekOrigin.Begin);
+
+                // Single read to get all the points
+                if (stream.Read(pointsCompressed, 0, pointsCompressed.Length) < pointsCompressed.Length)
+                    throw new IOException("Failure trying to read points");
+            }
 
             int numPoints = _groupHeaderInfo.NumPoints;
             int numTrans = _groupHeaderInfo.NumTransitions;
