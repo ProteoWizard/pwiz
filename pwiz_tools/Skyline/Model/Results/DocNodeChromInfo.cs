@@ -295,11 +295,11 @@ namespace pwiz.Skyline.Model.Results
         private ReadOnlyCollection<float?> _ratios;
 
         public TransitionChromInfo(ChromFileInfoId fileId, int optimizationStep, ChromPeak peak,
-            IList<float?> ratios, bool userSet)
+            IList<float?> ratios, Annotations annotations, bool userSet)
             : this(fileId, optimizationStep, peak.RetentionTime, peak.StartTime, peak.EndTime,
                    peak.Area, peak.BackgroundArea, peak.Height, peak.Fwhm,
                    peak.IsFwhmDegenerate, peak.IsTruncated, peak.IsIdentified,
-                   ratios, Annotations.EMPTY, userSet)
+                   ratios, annotations, userSet)
         {            
         }
 

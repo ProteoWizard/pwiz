@@ -24,11 +24,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Windows.Forms;
 using System.Xml;
 using System.Xml.Schema;
 using System.Xml.Serialization;
-using pwiz.Skyline.Alerts;
 using pwiz.Skyline.Model.Lib;
 using pwiz.Skyline.Model.Proteome;
 using pwiz.Skyline.Properties;
@@ -1600,7 +1598,9 @@ namespace pwiz.Skyline.Model.DocSettings
             return libClone;
         }
 
-        public PeptideLibraries MergeLibrarySpecs(PeptideLibraries newPepLibraries)
+        public delegate string FindLibrary(string libraryName, string fileName);
+
+        public PeptideLibraries MergeLibrarySpecs(PeptideLibraries newPepLibraries, FindLibrary findLibrary)
         {
             IList<LibrarySpec> librarySpecs = LibrarySpecs.ToList();
 
@@ -1631,6 +1631,7 @@ namespace pwiz.Skyline.Model.DocSettings
                     continue;
 
                 // If the named spec is in the global settings, use it
+                // CONSIDER: Remove access to Settings from model?
                 LibrarySpec specSettings;
                 if (Settings.Default.SpectralLibraryList.TryGetValue(libraryName, out specSettings))
                 {
@@ -1652,23 +1653,11 @@ namespace pwiz.Skyline.Model.DocSettings
 
                 // Look for the library in the user's default library path
                 var pathLibrary = Path.Combine(Settings.Default.LibraryDirectory, fileName);
-                if (!File.Exists(pathLibrary))
+                if (!File.Exists(pathLibrary) && findLibrary != null)
                 {
-                    // If it still can't be found, show a dialog to ask the user
-                    using (var dlg = new MissingFileDlg
-                    {
-                        ItemName = libraryName,
-                        FileHint = fileName,
-                        ItemType = "Spectral Library",
-                        Title = "Find Spectral Library"
-                    })
-                    {
-                        // If the user didn't give an answer, give up
-                        if (dlg.ShowDialog() != DialogResult.OK || dlg.FilePath == null)
-                            continue;
-
-                        pathLibrary = dlg.FilePath;
-                    }
+                    pathLibrary = findLibrary(libraryName, fileName);
+                    if (pathLibrary == null)
+                        continue;
                 }
 
                 // Create a new library spec from the library, or change existing library

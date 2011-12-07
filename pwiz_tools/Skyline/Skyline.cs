@@ -882,6 +882,7 @@ namespace pwiz.Skyline
                         null,
                         MeasuredResults.MergeAction.remove,
                         false,
+                        FindSpectralLibrary,
                         Settings.Default.StaticModList,
                         Settings.Default.HeavyModList,
                         nodePaste == null ? null : nodePaste.Path,

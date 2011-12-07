@@ -1077,7 +1077,7 @@ namespace pwiz.Skyline
             return false;
         }
 
-        private static SrmDocument ImportFiles(SrmDocument docOrig,
+        private SrmDocument ImportFiles(SrmDocument docOrig,
                                                ILongWaitBroker longWaitBroker,
                                                IList<string> filePaths,
                                                MeasuredResults.MergeAction resultsAction,
@@ -1109,6 +1109,7 @@ namespace pwiz.Skyline
                                                 filePath,
                                                 resultsAction,
                                                 mergePeptides,
+                                                FindSpectralLibrary,
                                                 Settings.Default.StaticModList,
                                                 Settings.Default.HeavyModList,
                                                 to,
@@ -1126,6 +1127,26 @@ namespace pwiz.Skyline
             }
             firstAdded = first;
             return docResult;
+        }
+
+        private string FindSpectralLibrary(string libraryName, string fileName)
+        {
+            string result = null;
+            RunUIAction(() =>
+                            {
+                                using (var dlg = new MissingFileDlg
+                                {
+                                    ItemName = libraryName,
+                                    FileHint = fileName,
+                                    ItemType = "Spectral Library",
+                                    Title = "Find Spectral Library"
+                                })
+                                {
+                                    if (dlg.ShowDialog(this) == DialogResult.OK)
+                                        result = dlg.FilePath;
+                                }
+                            });
+            return result;
         }
 
         private void importResultsMenuItem_Click(object sender, EventArgs e)

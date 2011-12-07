@@ -426,6 +426,7 @@ namespace pwiz.Skyline.Model
                                              string filePath,
                                              MeasuredResults.MergeAction resultsAction,
                                              bool mergePeptides,
+                                             PeptideLibraries.FindLibrary findLibrary,
                                              MappedList<string, StaticMod> staticMods,
                                              MappedList<string, StaticMod> heavyMods,
                                              IdentityPath to,
@@ -459,7 +460,7 @@ namespace pwiz.Skyline.Model
 
                 // Merge library specs from import document with current document.
                 settingsNew = settingsNew.ChangePeptideLibraries(lib =>
-                    lib.MergeLibrarySpecs(docImport.Settings.PeptideSettings.Libraries));
+                    lib.MergeLibrarySpecs(docImport.Settings.PeptideSettings.Libraries, findLibrary));
 
                 if(!Equals(settingsNew, docNew.Settings))
                 {

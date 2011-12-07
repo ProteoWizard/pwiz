@@ -248,6 +248,7 @@ namespace pwiz.SkylineTestA
                                                     null,
                                                     MeasuredResults.MergeAction.remove,
                                                     false,
+                                                    null,
                                                     Settings.Default.StaticModList,
                                                     Settings.Default.HeavyModList,
                                                     to,

@@ -950,12 +950,8 @@ namespace pwiz.Skyline.Model
                                         // in use before.
                                         if (chromInfo == null || !chromInfo.Equivalent(fileId, step, peak))
                                         {
-                                            // Use the old ratio for now, and it will be corrected by the peptide,
-                                            // if it is incorrect.
-                                            IList<float?> ratios = (chromInfo != null ? chromInfo.Ratios :
-                                                new float?[settingsNew.PeptideSettings.Modifications.InternalStandardTypes.Count]);
-
-                                            chromInfo = new TransitionChromInfo(fileId, step, peak, ratios, userSet);
+                                            int ratioCount = settingsNew.PeptideSettings.Modifications.InternalStandardTypes.Count;
+                                            chromInfo = CreateTransionChromInfo(chromInfo, fileId, step, peak, ratioCount, userSet);
                                         }
                                     }
 
@@ -977,6 +973,17 @@ namespace pwiz.Skyline.Model
 
                 return resultsCalc.UpdateTransitionGroupNode(this);
             }
+        }
+
+        private static TransitionChromInfo CreateTransionChromInfo(TransitionChromInfo chromInfo, ChromFileInfoId fileId,
+                                                            int step, ChromPeak peak, int ratioCount, bool userSet)
+        {
+            // Use the old ratio for now, and it will be corrected by the peptide,
+            // if it is incorrect.
+            IList<float?> ratios = chromInfo != null ? chromInfo.Ratios : new float?[ratioCount];
+            Annotations annotations = chromInfo != null ? chromInfo.Annotations : Annotations.EMPTY;
+
+            return new TransitionChromInfo(fileId, step, peak, ratios, annotations, userSet);
         }
 
         /// <summary>
@@ -1846,7 +1853,10 @@ namespace pwiz.Skyline.Model
                 return Results;
 
             var dictFileIdToChromInfo = results.SelectMany(l => l)
-                                               .Where(i => i.IsUserModified)
+                                               // Merge everything that does not already exist (handled below),
+                                               // as merging only user modified causes loss of information in
+                                               // updates
+                                               //.Where(i => i.IsUserModified)
                                                .ToDictionary(i => i.FileIndex);
 
             var listResults = new List<ChromInfoList<TransitionGroupChromInfo>>();
@@ -1871,7 +1881,7 @@ namespace pwiz.Skyline.Model
                                                        chromInfoExist.OptimizationStep == chromInfo.OptimizationStep);
                     if (iExist == -1)
                         listChromInfo.Add(chromInfo);
-                    else
+                    else if (chromInfo.IsUserModified)
                         listChromInfo[iExist] = chromInfo;
                 }
                 if (listChromInfo != null)

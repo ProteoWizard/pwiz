@@ -310,7 +310,7 @@ namespace pwiz.Skyline.Model
             var listChromInfo = Results[indexSet];
             var listChromInfoNew = new List<TransitionChromInfo>();
             if (listChromInfo == null)
-                listChromInfoNew.Add(new TransitionChromInfo(fileId, step, peak, new float?[ratioCount], true));
+                listChromInfoNew.Add(CreateChromInfo(fileId, step, peak, ratioCount));
             else
             {
                 bool peakAdded = false;
@@ -332,7 +332,7 @@ namespace pwiz.Skyline.Model
                             chromInfo.FileIndex >= fileId.GlobalIndex &&
                             chromInfo.OptimizationStep > step)
                         {
-                            listChromInfoNew.Add(new TransitionChromInfo(fileId, step, peak, new float?[ratioCount], true));
+                            listChromInfoNew.Add(CreateChromInfo(fileId, step, peak, ratioCount));
                             peakAdded = true;
                         }
                         listChromInfoNew.Add(chromInfo);
@@ -340,11 +340,16 @@ namespace pwiz.Skyline.Model
                 }                
                 // Finally, make sure the peak is added
                 if (!peakAdded)
-                    listChromInfoNew.Add(new TransitionChromInfo(fileId, step, peak, new float?[ratioCount], true));
+                    listChromInfoNew.Add(CreateChromInfo(fileId, step, peak, ratioCount));
             }
 
             return ChangeResults((Results<TransitionChromInfo>)
                                  Results.ChangeAt(indexSet, new ChromInfoList<TransitionChromInfo>(listChromInfoNew)));
+        }
+
+        private static TransitionChromInfo CreateChromInfo(ChromFileInfoId fileId, int step, ChromPeak peak, int ratioCount)
+        {
+            return new TransitionChromInfo(fileId, step, peak, new float?[ratioCount], Annotations.EMPTY, true);
         }
 
         public DocNode RemovePeak(int indexSet, ChromFileInfoId fileId)
@@ -386,7 +391,10 @@ namespace pwiz.Skyline.Model
                 return Results;
 
             var dictFileIdToChromInfo = results.SelectMany(l => l)
-                                               .Where(i => i.IsUserModified)
+                                               // Merge everything that does not already exist (handled below),
+                                               // as merging only user modified causes loss of information in
+                                               // updates
+                                               //.Where(i => i.IsUserModified)
                                                .ToDictionary(i => i.FileIndex);
 
             var listResults = new List<ChromInfoList<TransitionChromInfo>>();
@@ -411,7 +419,7 @@ namespace pwiz.Skyline.Model
                                                        chromInfoExist.OptimizationStep == chromInfo.OptimizationStep);
                     if (iExist == -1)
                         listChromInfo.Add(chromInfo);
-                    else
+                    else if (chromInfo.IsUserModified)
                         listChromInfo[iExist] = chromInfo;
                 }
                 if (listChromInfo != null)
