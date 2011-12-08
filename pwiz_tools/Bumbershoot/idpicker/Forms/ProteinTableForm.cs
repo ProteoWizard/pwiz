@@ -855,7 +855,7 @@ namespace IDPicker.Forms
 
             // show total counts in the form title
             Text = TabText = String.Format("Protein View: {0} clusters, {1} protein groups, {2} proteins, {3:0.##%} protein FDR",
-                                           totalCounts.Clusters, totalCounts.ProteinGroups, totalCounts.Proteins, totalCounts.ProteinFDR);
+                                           totalCounts.Clusters, totalCounts.ProteinGroups, totalCounts.Proteins, totalCounts.ProteinFDR * 100);
 
             addPivotColumns();
 

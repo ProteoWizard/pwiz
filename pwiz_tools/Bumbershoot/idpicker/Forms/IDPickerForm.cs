@@ -1060,6 +1060,13 @@ namespace IDPicker
             }
 
             var result = UserDialog.Show(this, "Import Settings", new ImportSettingsControl(e.DistinctAnalyses, showQonverterSettingsManager));
+
+            if (e.DistinctAnalyses.Any(o => String.IsNullOrEmpty(o.importSettings.qonverterSettings.DecoyPrefix)))
+            {
+                MessageBox.Show("Decoy prefix cannot be empty.", "Error");
+                result = DialogResult.Cancel;
+            }
+
             importCancelled = e.Cancel = result == DialogResult.Cancel;
         }
 
