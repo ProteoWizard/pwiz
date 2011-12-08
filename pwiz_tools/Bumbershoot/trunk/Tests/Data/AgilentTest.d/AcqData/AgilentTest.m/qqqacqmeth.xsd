@@ -1,0 +1,206 @@
+<!-- edited with XMLSpy v2005 sp1 U (http://www.xmlspy.com) by Nora Gee (Agilent) -->
+<!-- edited with XMLSPY v2004 rel. 4 U (http://www.xmlspy.com) by Nora Gee (Agilent) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+	<xs:include schemaLocation="msgeneral.xsd"/>
+	<xs:include schemaLocation="msquad.xsd"/>
+	<xs:complexType name="MSAcqMethodType">
+		<xs:sequence>
+			<xs:element name="msInstrument" type="xs:string"/>
+			<xs:element name="ionSource" type="MSSourceType"/>
+			<xs:element name="tuneFile" type="xs:string"/>
+			<xs:element name="stopMode" type="MSStopMode"/>
+			<xs:element name="stopTime" type="xs:double"/>
+			<xs:element name="collisionGasOn" type="xs:boolean" minOccurs="0"/>
+			<xs:element name="isTimeFilterEnabled" type="xs:boolean" minOccurs="0"/>
+			<xs:element name="timeFilterPeakWidth" type="xs:double" minOccurs="0"/>
+			<xs:element name="useGain" type="xs:boolean" minOccurs="0"/>
+			<xs:element name="timeSegments">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="timeSegment" type="TimeSegmentType" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="instrumentCurves" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="samplingRate" type="xs:float"/>
+						<xs:element name="parameterID" type="MSParameterType" minOccurs="0" maxOccurs="unbounded"/>
+						<xs:element name="actualID" type="MSActualType" minOccurs="0" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="chromatograms">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="chromatogram" type="ChromatogramType" minOccurs="0" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="TimeSegmentType">
+		<xs:sequence>
+			<xs:element name="index" type="xs:integer"/>
+			<xs:element name="startTime" type="xs:float"/>
+			<xs:element name="diverterValveState" type="DiverterValveState"/>
+			<xs:element name="sourceParameters" type="SourceParameterTypeCol"/>
+			<xs:element name="isDataSaved" type="xs:boolean"/>
+			<xs:element name="scanSegments">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="scanSegment" type="ScanSegmentType" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="QQQScanType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="MS1Scan"/>
+			<xs:enumeration value="MS1SIM"/>
+			<xs:enumeration value="MS2Scan"/>
+			<xs:enumeration value="MS2SIM"/>
+			<xs:enumeration value="MRM"/>
+			<xs:enumeration value="ProductIon"/>
+			<xs:enumeration value="PrecursorIon"/>
+			<xs:enumeration value="NeutralLoss"/>
+			<xs:enumeration value="NeutralGain"/>
+			<xs:enumeration value="TotalIon"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="ScanSegmentType">
+		<xs:sequence>
+			<xs:element name="index" type="xs:integer"/>
+			<xs:element name="segmentName" type="xs:string" minOccurs="0"/>
+			<xs:element name="ionMode" type="MSIonMode" minOccurs="0"/>
+			<xs:element name="ionPolarity" type="MSPolarityFlags"/>
+			<xs:element name="scanType" type="QQQScanType"/>
+			<xs:element name="scanTime" type="xs:float" minOccurs="0"/>
+			<xs:element name="samples" type="xs:integer" minOccurs="0"/>
+			<xs:element name="averages" type="xs:integer" minOccurs="0"/>
+			<xs:element name="dataStorage" type="DataStorageMode" minOccurs="0"/>
+			<xs:element name="threshold" type="xs:integer" minOccurs="0"/>
+			<xs:element name="fragmentorMode" type="MSParameterMode" minOccurs="0"/>
+			<xs:element name="fragmentorRamp" type="FragmentorRampType" minOccurs="0"/>
+			<xs:element name="scanElements">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="scanElement" type="ScanElementType" maxOccurs="99"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ScanElementType">
+		<xs:sequence>
+			<xs:element name="index" type="xs:integer"/>
+			<xs:element name="compoundName" type="xs:string" minOccurs="0"/>
+			<xs:element name="isISTD" type="xs:boolean" minOccurs="0"/>
+			<xs:element name="ms1LowMz" type="xs:float" minOccurs="0"/>
+			<xs:element name="ms1HighMz" type="xs:float" minOccurs="0"/>
+			<xs:element name="ms1Stepsize" type="xs:float" minOccurs="0"/>
+			<xs:element name="ms1Res" type="QResolutionMode" minOccurs="0"/>
+			<xs:element name="ms2LowMz" type="xs:float" minOccurs="0"/>
+			<xs:element name="ms2HighMz" type="xs:float" minOccurs="0"/>
+			<xs:element name="ms2Stepsize" type="xs:float" minOccurs="0"/>
+			<xs:element name="ms2Res" type="QResolutionMode" minOccurs="0"/>
+			<xs:element name="dwell" type="xs:float" minOccurs="0"/>
+			<xs:element name="fragmentor" type="xs:float" minOccurs="0"/>
+			<xs:element name="collisionEnergy" type="xs:float" minOccurs="0"/>
+			<xs:element name="gain" type="xs:float" minOccurs="0"/>
+			<xs:element name="deltaEMV" type="xs:float" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="FragmentorRampType">
+		<xs:sequence>
+			<xs:element name="level" maxOccurs="6">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="mz" type="xs:float"/>
+						<xs:element name="value" type="xs:float"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="IonRangeType">
+		<xs:sequence>
+			<xs:element name="lowMz" type="xs:float"/>
+			<xs:element name="highMz" type="xs:float" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="ChromatogramType">
+		<xs:sequence>
+			<xs:element name="index" type="xs:integer"/>
+			<xs:element name="chromType" type="MSChromatogramType"/>
+			<xs:choice>
+				<xs:element name="tic"/>
+				<xs:element name="eic">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="extractionRange" type="IonRangeType"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="ms1eic">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="extractionRange" type="IonRangeType"/>
+							<xs:element name="ms2IonMz" type="xs:float"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="ms2eic">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="ms1IonMz" type="xs:float"/>
+							<xs:element name="extractionRange" type="IonRangeType"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="mrm">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="ms1IonMz" type="xs:float"/>
+							<xs:element name="ms2IonMz" type="xs:float"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="bpc">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="exclusionMz" type="IonRangeType" minOccurs="0" maxOccurs="unbounded"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="ms1bpc">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="exclusionMz" type="IonRangeType" minOccurs="0" maxOccurs="unbounded"/>
+							<xs:element name="ms2IonMz" type="xs:float"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="ms2bpc">
+					<xs:complexType>
+						<xs:sequence>
+							<xs:element name="ms1IonMz" type="xs:float"/>
+						</xs:sequence>
+					</xs:complexType>
+				</xs:element>
+				<xs:element name="instCurve">
+					<xs:complexType>
+						<xs:choice>
+							<xs:element name="parameterID" type="MSParameterType"/>
+							<xs:element name="actualID" type="MSActualType"/>
+						</xs:choice>
+					</xs:complexType>
+				</xs:element>
+			</xs:choice>
+			<xs:element name="label" type="xs:string"/>
+			<xs:element name="offset" type="xs:float"/>
+			<xs:element name="yRange" type="xs:float"/>
+		</xs:sequence>
+	</xs:complexType>
+</xs:schema>

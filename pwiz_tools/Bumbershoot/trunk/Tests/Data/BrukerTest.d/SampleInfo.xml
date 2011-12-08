@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<SampleTable>
+  <SampleTableHeader Version="2" CreationDate="08/29/08" CreationTime="12:14:32" Creator="Bob" CreationComputer="BRUKER-HCT" UpdateDate="08/29/08" UpdateTime="12:19:32" UpdateUser="Bob" UpdateComputer="BRUKER-HCT" Author="Bob" Company="Widget" Laboratory="unknown" Phone="" Fax="" EMail="" Description="" NumOfSamples="1" HyStarVersion="3.2.44.0" SampleTablePath="D:\trigger test.xml" />
+  <AnalysisHeader CreationDateTime="2008-08-29T12:19:32-05:00" FileName="D:\Sample_1-A,1_01_985.d" SampleID="Sample" Method="D:\trigger test.m" />
+  <Sample Line="1" CheckToRun="0" Status="2" Injections="1" Volume="5" Amount="0" Dilution="1" Weight="0" Position="1:A,1" InternalStandard="0" PreRunTime="0" SampleID="Sample" DataPath="" Operator="Bob" SampleType="0" ReferenceSampleNum="0" NumOnGel="0" ResultDatafile="D:\Sample_1-A,1_01_985.d" NumberInSequence="1" CalibAction="-" CalibLevel="" AcquisitionID="0" SaltConc="0" LastLineInGroup="0" InstrumentCalibration="0" RunDAScript="0" SuperMethod="D:\trigger test.m" />
+</SampleTable>

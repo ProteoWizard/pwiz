@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- edited with XMLSpy v2005 sp1 U (http://www.xmlspy.com) by Nora Gee (Agilent) -->
+<!-- edited with XMLSPY v2004 rel. 4 U (http://www.xmlspy.com) by Nora Gee (Agilent) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+	<xs:include schemaLocation="msgeneral.xsd"/>
+	<xs:complexType name="QSettings">
+		<xs:sequence>
+			<xs:element name="frequency" type="xs:float"/>
+			<xs:element name="resolutionMode" type="QResolutionMode"/>
+			<xs:element name="scanMode" type="QScanMode"/>
+			<xs:element name="scanMzLow" type="xs:float"/>
+			<xs:element name="scanMzHigh" type="xs:float"/>
+			<xs:element name="scanMzStep" type="xs:float"/>
+			<xs:element name="simMz" type="xs:float"/>
+			<xs:element name="posProfileMasses" type="ProfileMass" maxOccurs="6"/>
+			<xs:element name="negProfileMasses" type="ProfileMass" maxOccurs="6"/>
+			<xs:element name="ttiMzCutoff" type="xs:float"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="QResolutionMode">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Unit"/>
+			<xs:enumeration value="LowRes"/>
+			<xs:enumeration value="LowerRes"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="QScanMode">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Scan"/>
+			<xs:enumeration value="SIM"/>
+			<xs:enumeration value="Profile"/>
+			<xs:enumeration value="TTI"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="ProfileMass">
+		<xs:sequence>
+			<xs:element name="isActive" type="xs:boolean"/>
+			<xs:element name="mz" type="xs:float"/>
+			<xs:element name="window" type="xs:float"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="QScanSettings">
+		<xs:sequence>
+			<xs:element name="samples" type="xs:int"/>
+			<xs:element name="averages" type="xs:int"/>
+			<xs:element name="isPeakDetected" type="xs:boolean"/>
+			<xs:element name="threshold" type="xs:long"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="QProfileSettings">
+		<xs:sequence>
+			<xs:element name="samples" type="xs:int"/>
+			<xs:element name="averages" type="xs:int"/>
+			<xs:element name="mzStep" type="xs:float"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="QCalibration">
+		<xs:sequence>
+			<xs:element name="resolutionMode" type="QResolutionMode"/>
+			<xs:element name="peakWidth" type="xs:float"/>
+			<xs:element name="massGain" type="xs:float"/>
+			<xs:element name="massOffset" type="xs:float"/>
+			<xs:element name="widthGain" type="xs:float"/>
+			<xs:element name="widthOffset" type="xs:float"/>
+			<xs:element name="widthOffsetDynamicRamp" type="DynamicRampControl" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+</xs:schema>

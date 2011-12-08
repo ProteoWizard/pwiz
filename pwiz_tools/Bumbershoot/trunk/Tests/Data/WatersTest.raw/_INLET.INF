@@ -1,0 +1,86 @@
+
+ACE Experimental Record
+
+
+---------------------   Run method parameters   ----------------
+
+-- PUMP --
+
+Waters Acquity SDS
+ Run Time: 0.50 min
+ Comment:  
+ Solvent Selection A: A1 
+ Solvent Selection B: B1 
+ Low Pressure Limit: 0 psi
+ High Pressure Limit: 15000 psi
+ Solvent Name A: Water 
+ Solvent Name B: Acetonitrile 
+ Switch 1: No Change 
+ Switch 2: No Change 
+ Switch 3: No Change 
+ Seal Wash: 5.0 min
+ Chart Out 1: System Pressure 
+ Chart Out 2: %B 
+ System Pressure Data Channel: No 
+ Flow Rate Data Channel: No 
+ %A Data Channel: No 
+ %B Data Channel: No 
+ Primary A Pressure Data Channel: No 
+ Accumulator A Pressure Data Channel: No 
+ Primary B Pressure Data Channel: No 
+ Accumulator B Pressure Data Channel: No 
+ Degasser Pressure Data Channel: No 
+ [Gradient Table]
+  Time(min) Flow Rate %A %B Curve 
+ 1. Initial 0.350 100.0 0.0  
+ 2. 0.50 0.350 100.0 0.0 6 
+ Run Events: Yes 
+
+-- END PUMP --
+
+-- AUTOSAMPLER --
+
+Waters Acquity AutoSampler 
+ Run Time: 0.50 min
+ Comment:  
+ Load Ahead: Disabled 
+ Loop Option: Partial Loop 
+ LoopOffline: Disable 
+ Weak Wash Solvent Name: Mob Ph A 
+ Weak Wash Volume: 600 uL
+ Strong Wash Solvent Name: Mob Ph B 
+ Strong Wash Volume: 200 uL
+ Target Column Temperature: 55.0 C
+ Column Temperature Alarm Band: Disabled 
+ Target Sample Temperature: Off C
+ Sample Temperature Alarm Band: Disabled 
+ Full Loop Overfill Factor: Automatic 
+ Syringe Draw Rate: Automatic 
+ Needle Placement: Automatic 
+ Pre-Aspirate Air Gap: Automatic 
+ Post-Aspirate Air Gap: Automatic 
+ Column Temperature Data Channel: No 
+ Ambient Temperature Data Channel: No 
+ Sample Temperature Data Channel: No 
+ Sample Organizer Temperature Data Channel: No 
+ Sample Pressure Data Channel: No 
+ Switch 1: No Change 
+ Switch 2: No Change 
+ Switch 3: No Change 
+ Switch 4: No Change 
+ Chart Out: Sample Pressure 
+ Sample Temp Alarm: Disabled 
+ Column Temp Alarm: Disabled 
+ Run Events: Yes 
+ Needle Overfill Flush: Automatic 
+
+
+Sample Run Injection Parameter
+
+Injection Volume (ul)   -   2.00
+-- END AUTOSAMPLER --
+
+----------------------------  oOo  -----------------------------
+
+
+End of experimental record.

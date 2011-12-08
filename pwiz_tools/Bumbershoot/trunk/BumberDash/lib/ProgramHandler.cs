@@ -1,4 +1,25 @@
-﻿using System;
+﻿//
+// $Id: ProgramHandler.cs 48 2011-21-11 16:18:05Z holmanjd $
+//
+// The contents of this file are subject to the Mozilla Public License
+// Version 1.1 (the "License"); you may not use this file except in
+// compliance with the License. You may obtain a copy of the License at
+// http://www.mozilla.org/MPL/
+//
+// Software distributed under the License is distributed on an "AS IS"
+// basis, WITHOUT WARRANTY OF ANY KIND, either express or implied. See the
+// License for the specific language governing rights and limitations
+// under the License.
+//
+// The Original Code is the Bumberdash project.
+//
+// The Initial Developer of the Original Code is Jay Holman.
+//
+// Copyright 2010 Vanderbilt University
+//
+// Contributor(s): Surendra Dasari, Matt Chambers
+//
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -68,8 +89,8 @@ namespace BumberDash.lib
             {
                 case "MyriMatch":
                     //Set  location of the program
-                    psi = new ProcessStartInfo(String.Format(@"""{0}\lib\Bumbershoot\myrimatch.exe""",
-                                                             Application.StartupPath));
+                    psi = new ProcessStartInfo(String.Format(@"""{0}\lib\Bumbershoot\MyriMatch\myrimatch.exe""",
+                                                             AppDomain.CurrentDomain.BaseDirectory));
 
                     //determine configuration
                     configString = hi.InitialConfigFile.FilePath == "--Custom--"
@@ -90,8 +111,8 @@ namespace BumberDash.lib
                     break;
                 case "DirecTag":
                     //Set  location of the program
-                    psi = new ProcessStartInfo(String.Format(@"""{0}\lib\Bumbershoot\directag.exe""",
-                                                             Application.StartupPath));
+                    psi = new ProcessStartInfo(String.Format(@"""{0}\lib\Bumbershoot\DirecTag\directag.exe""",
+                                                             AppDomain.CurrentDomain.BaseDirectory));
 
                     //determine configuration
                     configString = hi.InitialConfigFile.FilePath == "--Custom--"
@@ -102,7 +123,7 @@ namespace BumberDash.lib
                         configString += string.Format("-{0} {1} ", "DeisotopingMode", "0");
 
                     //continue to set up argument string
-                    argumentString.Append(configString);
+                    argumentString.Append(configString.Trim());
 
                     //add files to scan to argument string
                     foreach (var file in hi.FileList)
@@ -113,8 +134,8 @@ namespace BumberDash.lib
                     break;
                 case "TagRecon":
                     //Set  location of the program
-                    psi = new ProcessStartInfo(String.Format(@"""{0}\lib\Bumbershoot\tagrecon.exe""",
-                                                             Application.StartupPath));
+                    psi = new ProcessStartInfo(String.Format(@"""{0}\lib\Bumbershoot\TagRecon\tagrecon.exe""",
+                                                             AppDomain.CurrentDomain.BaseDirectory));
 
                     //determine configuration
                     if (hi.TagConfigFile.FilePath == "--Custom--")
@@ -124,13 +145,13 @@ namespace BumberDash.lib
                         if (!configString.Contains("Blosum"))
                             configString += string.Format("-{0} \"{1}\" ", "Blosum",
                                                           Path.Combine(
-                                                              Application.StartupPath,
-                                                              @"lib\Bumbershoot\blosum62.fas"));
+                                                              AppDomain.CurrentDomain.BaseDirectory,
+                                                              @"lib\Bumbershoot\TagRecon\blosum62.fas"));
                         if (!configString.Contains("UnimodXML"))
                             configString += string.Format("-{0} \"{1}\" ", "UnimodXML",
                                                           Path.Combine(
-                                                              Application.StartupPath,
-                                                              @"lib\Bumbershoot\unimod.xml"));
+                                                              AppDomain.CurrentDomain.BaseDirectory,
+                                                              @"lib\Bumbershoot\TagRecon\unimod.xml"));
 
                     }
                     else
@@ -143,13 +164,13 @@ namespace BumberDash.lib
                         if (!entireFile.Contains("Blosum ="))
                             configString += string.Format("-{0} \"{1}\" ", "Blosum",
                                                           Path.Combine(
-                                                              Application.StartupPath,
-                                                              @"lib\Bumbershoot\blosum62.fas"));
+                                                              AppDomain.CurrentDomain.BaseDirectory,
+                                                              @"lib\Bumbershoot\TagRecon\blosum62.fas"));
                         if (!entireFile.Contains("UnimodXML ="))
                             configString += string.Format("-{0} \"{1}\" ", "UnimodXML",
                                                           Path.Combine(
-                                                              Application.StartupPath,
-                                                              @"lib\Bumbershoot\unimod.xml"));
+                                                              AppDomain.CurrentDomain.BaseDirectory,
+                                                              @"lib\Bumbershoot\TagRecon\unimod.xml"));
                     }
 
                     //continue to set up argument string
@@ -166,8 +187,8 @@ namespace BumberDash.lib
                     break;
                 case "Pepitome":
                     //Set  location of the program
-                    psi = new ProcessStartInfo(String.Format(@"""{0}\lib\Bumbershoot\pepitome.exe""",
-                                                             Application.StartupPath));
+                    psi = new ProcessStartInfo(String.Format(@"""{0}\lib\Bumbershoot\Pepitome\pepitome.exe""",
+                                                             AppDomain.CurrentDomain.BaseDirectory));
 
                     //determine configuration
                     configString = hi.InitialConfigFile.FilePath == "--Custom--"
@@ -193,7 +214,8 @@ namespace BumberDash.lib
 
             psi.WorkingDirectory = hi.OutputDirectory.TrimEnd('*');
             psi.Arguments = argumentString.ToString();
-            SendToLog(string.Format("Command given:{0}{1}>{2} {3}{0}{0}", Environment.NewLine, psi.WorkingDirectory, psi.FileName, psi.Arguments));
+            var commandGiven = (string.Format("Command given:{0}{1}>{2} {3}{0}{0}", Environment.NewLine, psi.WorkingDirectory, psi.FileName, psi.Arguments));
+            SendToLog(commandGiven);
 
 
             //Make sure window stays hidden

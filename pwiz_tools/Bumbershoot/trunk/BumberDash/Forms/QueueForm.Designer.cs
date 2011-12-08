@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(QueueForm));
             this.JobQueueDGV = new System.Windows.Forms.DataGridView();
             this.JQName = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -72,14 +72,10 @@
             this.dataGridViewImageColumn1 = new System.Windows.Forms.DataGridViewImageColumn();
             this.LogLabel = new System.Windows.Forms.Label();
             this.MiniLogBox = new System.Windows.Forms.TextBox();
-            this.MSFileReaderWarning = new System.Windows.Forms.Label();
-            this.MSFileReaderDownloadLink = new System.Windows.Forms.LinkLabel();
-            this.MSFileReaderPanel = new System.Windows.Forms.Panel();
             ((System.ComponentModel.ISupportInitialize)(this.JobQueueDGV)).BeginInit();
             this.JQRowMenu.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             this.TrayMenu.SuspendLayout();
-            this.MSFileReaderPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // JobQueueDGV
@@ -162,9 +158,9 @@
             // JQProgress
             // 
             this.JQProgress.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            dataGridViewCellStyle2.ForeColor = System.Drawing.Color.Black;
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.Color.Black;
-            this.JQProgress.DefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle1.ForeColor = System.Drawing.Color.Black;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.Color.Black;
+            this.JQProgress.DefaultCellStyle = dataGridViewCellStyle1;
             this.JQProgress.FillWeight = 125F;
             this.JQProgress.HeaderText = "Progress";
             this.JQProgress.MinimumWidth = 50;
@@ -265,7 +261,7 @@
             this.setIDPickerLocationToolStripMenuItem,
             this.resetIDPickerLocationToolStripMenuItem});
             this.runToolStripMenuItem.Name = "runToolStripMenuItem";
-            this.runToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.runToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
             this.runToolStripMenuItem.Text = "Run";
             // 
             // iDPickerToolStripMenuItem
@@ -304,19 +300,19 @@
             // newJobToolStripMenuItem
             // 
             this.newJobToolStripMenuItem.Name = "newJobToolStripMenuItem";
-            this.newJobToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.newJobToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
             this.newJobToolStripMenuItem.Text = "New Job";
             this.newJobToolStripMenuItem.Click += new System.EventHandler(this.newJobToolStripMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(149, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(123, 6);
             // 
             // exitToolStripMenuItem
             // 
             this.exitToolStripMenuItem.Name = "exitToolStripMenuItem";
-            this.exitToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.exitToolStripMenuItem.Size = new System.Drawing.Size(126, 22);
             this.exitToolStripMenuItem.Text = "Exit";
             this.exitToolStripMenuItem.Click += new System.EventHandler(this.exitToolStripMenuItem_Click);
             // 
@@ -452,43 +448,12 @@
             this.MiniLogBox.TabIndex = 6;
             this.MiniLogBox.WordWrap = false;
             // 
-            // MSFileReaderWarning
-            // 
-            this.MSFileReaderWarning.AutoSize = true;
-            this.MSFileReaderWarning.Location = new System.Drawing.Point(48, 5);
-            this.MSFileReaderWarning.Name = "MSFileReaderWarning";
-            this.MSFileReaderWarning.Size = new System.Drawing.Size(434, 13);
-            this.MSFileReaderWarning.TabIndex = 7;
-            this.MSFileReaderWarning.Text = "Warning: MSFileReader 2.2 not detected. This may cause trouble processing Thermo " +
-                "jobs.";
-            // 
-            // MSFileReaderDownloadLink
-            // 
-            this.MSFileReaderDownloadLink.AutoSize = true;
-            this.MSFileReaderDownloadLink.Location = new System.Drawing.Point(181, 20);
-            this.MSFileReaderDownloadLink.Name = "MSFileReaderDownloadLink";
-            this.MSFileReaderDownloadLink.Size = new System.Drawing.Size(168, 13);
-            this.MSFileReaderDownloadLink.TabIndex = 9;
-            this.MSFileReaderDownloadLink.TabStop = true;
-            this.MSFileReaderDownloadLink.Text = "Download the most recent version";
-            this.MSFileReaderDownloadLink.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.MSFileReaderDownloadLink_LinkClicked);
-            // 
-            // MSFileReaderPanel
-            // 
-            this.MSFileReaderPanel.Controls.Add(this.MSFileReaderWarning);
-            this.MSFileReaderPanel.Controls.Add(this.MSFileReaderDownloadLink);
-            this.MSFileReaderPanel.Location = new System.Drawing.Point(131, 318);
-            this.MSFileReaderPanel.Name = "MSFileReaderPanel";
-            this.MSFileReaderPanel.Size = new System.Drawing.Size(531, 39);
-            this.MSFileReaderPanel.TabIndex = 10;
-            // 
             // QueueForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ControlLight;
             this.ClientSize = new System.Drawing.Size(792, 446);
-            this.Controls.Add(this.MSFileReaderPanel);
             this.Controls.Add(this.MiniLogBox);
             this.Controls.Add(this.LogLabel);
             this.Controls.Add(this.LogButton);
@@ -508,8 +473,6 @@
             this.menuStrip1.ResumeLayout(false);
             this.menuStrip1.PerformLayout();
             this.TrayMenu.ResumeLayout(false);
-            this.MSFileReaderPanel.ResumeLayout(false);
-            this.MSFileReaderPanel.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -558,8 +521,5 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn Column1;
         private CustomProgressCell.DataGridViewProgressColumn JQProgress;
         private System.Windows.Forms.DataGridViewButtonColumn Kill;
-        private System.Windows.Forms.Label MSFileReaderWarning;
-        private System.Windows.Forms.LinkLabel MSFileReaderDownloadLink;
-        private System.Windows.Forms.Panel MSFileReaderPanel;
     }
 }

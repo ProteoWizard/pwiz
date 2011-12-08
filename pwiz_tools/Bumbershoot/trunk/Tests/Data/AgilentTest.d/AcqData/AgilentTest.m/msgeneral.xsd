@@ -1,0 +1,427 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- edited with XMLSpy v2005 sp1 U (http://www.xmlspy.com) by Nora Gee (Agilent) -->
+<!-- edited with XMLSPY v2004 rel. 4 U (http://www.xmlspy.com) by Nora Gee (Agilent) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+	<xs:simpleType name="MSAnalyzerType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="QQQ"/>
+			<xs:enumeration value="TOF"/>
+			<xs:enumeration value="QTOF"/>
+			<xs:enumeration value="Q"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="MSFunctionalArea">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="IonSource"/>
+			<xs:enumeration value="TransferOptics"/>
+			<xs:enumeration value="MS1"/>
+			<xs:enumeration value="CollisionCell"/>
+			<xs:enumeration value="MS2"/>
+			<xs:enumeration value="Detector"/>
+			<xs:enumeration value="General"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="MSSignType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="PerUser"/>
+			<xs:enumeration value="SamePolarity"/>
+			<xs:enumeration value="ReversePolarity"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="MSPolarityFlags">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Positive"/>
+			<xs:enumeration value="Negative"/>
+			<xs:enumeration value="Both"/>
+			<xs:enumeration value="None"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="MSParameterType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Fragmentor"/>
+			<xs:enumeration value="Skimmer1"/>
+			<xs:enumeration value="Octopole1DC"/>
+			<xs:enumeration value="OctopoleRFPeak"/>
+			<xs:enumeration value="OctopoleShroud"/>
+			<xs:enumeration value="Lens1DC"/>
+			<xs:enumeration value="Lens2DC"/>
+			<xs:enumeration value="Lens2RFEnable"/>
+			<xs:enumeration value="Lens2RFPeak"/>
+			<xs:enumeration value="Lens2RFPhase"/>
+			<xs:enumeration value="MS1DC"/>
+			<xs:enumeration value="MS1Shroud"/>
+			<xs:enumeration value="MS1PostFilterDC"/>
+			<xs:enumeration value="MS1MassOffset"/>
+			<xs:enumeration value="MS1MassGain"/>
+			<xs:enumeration value="MS1AMUOffset"/>
+			<xs:enumeration value="MS1AMUGain"/>
+			<xs:enumeration value="MS1Frequency"/>
+			<xs:enumeration value="MS1Heater"/>
+			<xs:enumeration value="MS2DC"/>
+			<xs:enumeration value="MS2Shroud"/>
+			<xs:enumeration value="MS2PreFilterDC"/>
+			<xs:enumeration value="MS2MassOffset"/>
+			<xs:enumeration value="MS2MassGain"/>
+			<xs:enumeration value="MS2AMUOffset"/>
+			<xs:enumeration value="MS2AMUGain"/>
+			<xs:enumeration value="MS2Frequency"/>
+			<xs:enumeration value="MS2Heater"/>
+			<xs:enumeration value="CCEntranceDC"/>
+			<xs:enumeration value="CCHexapoleDC"/>
+			<xs:enumeration value="CCHexapoleRFPeak"/>
+			<xs:enumeration value="CCHexapoleDeltaV"/>
+			<xs:enumeration value="CCExitDC"/>
+			<xs:enumeration value="CCShroud"/>
+			<xs:enumeration value="CCGasFlow"/>
+			<xs:enumeration value="CCGasOn"/>
+			<xs:enumeration value="CCHeater"/>
+			<xs:enumeration value="CCFlowControl"/>
+			<xs:enumeration value="Iris"/>
+			<xs:enumeration value="HED"/>
+			<xs:enumeration value="EMV"/>
+			<xs:enumeration value="DGasHeater"/>
+			<xs:enumeration value="DGasFlow"/>
+			<xs:enumeration value="NebulizerPressure"/>
+			<xs:enumeration value="VCap"/>
+			<xs:enumeration value="APCINeedle"/>
+			<xs:enumeration value="APCIHeater"/>
+			<xs:enumeration value="VCharging"/>
+			<xs:enumeration value="CollisionEnergy"/>
+			<xs:enumeration value="AnalogChannel"/>
+			<xs:enumeration value="APCINeedlePos"/>
+			<xs:enumeration value="APCINeedleNeg"/>
+			<xs:enumeration value="MSParameterCount"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="MSParameterMode">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Fixed"/>
+			<xs:enumeration value="DynRamped"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="MSActualType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="APCIHeater"/>
+			<xs:enumeration value="DGasHeater"/>
+			<xs:enumeration value="MS1Heater"/>
+			<xs:enumeration value="MS2Heater"/>
+			<xs:enumeration value="NebulizerPressure"/>
+			<xs:enumeration value="DGasFlow"/>
+			<xs:enumeration value="VCap"/>
+			<xs:enumeration value="APCINeedle"/>
+			<xs:enumeration value="ChamberCurrent"/>
+			<xs:enumeration value="CapillaryCurrent"/>
+			<xs:enumeration value="CCGasFlow"/>
+			<xs:enumeration value="FragmentorDrive"/>
+			<xs:enumeration value="Skimmer1Drive"/>
+			<xs:enumeration value="OctopoleShroudDrive"/>
+			<xs:enumeration value="Lens1DCDrive"/>
+			<xs:enumeration value="Lens2DCDrive"/>
+			<xs:enumeration value="MS1ShroudDrive"/>
+			<xs:enumeration value="IrisDrive"/>
+			<xs:enumeration value="VacuumPressure1"/>
+			<xs:enumeration value="VacuumPressure2"/>
+			<xs:enumeration value="TurboSpeed1"/>
+			<xs:enumeration value="TurboSpeed2"/>
+			<xs:enumeration value="TurboPower1"/>
+			<xs:enumeration value="TurboPower2"/>
+			<xs:enumeration value="EMVMonitor"/>
+			<xs:enumeration value="HEDMonitor"/>
+			<xs:enumeration value="RFDIP"/>
+			<xs:enumeration value="MFC"/>
+			<xs:enumeration value="ADMidRef1"/>
+			<xs:enumeration value="ADLowRef1"/>
+			<xs:enumeration value="ADHighRef2"/>
+			<xs:enumeration value="LensSupply"/>
+			<xs:enumeration value="Pump1Current"/>
+			<xs:enumeration value="Pump2Current"/>
+			<xs:enumeration value="OctopoleRFDrive"/>
+			<xs:enumeration value="ADMidRef2"/>
+			<xs:enumeration value="ADLowRef2"/>
+			<xs:enumeration value="DiffPumpTemperature"/>
+			<xs:enumeration value="VCharging"/>
+			<xs:enumeration value="MSActualCount"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="MSValveType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Diverter"/>
+			<xs:enumeration value="CDS"/>
+			<xs:enumeration value="CCGas"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="MSSourceType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="ESI"/>
+			<xs:enumeration value="APCI"/>
+			<xs:enumeration value="APPI"/>
+			<xs:enumeration value="Multimode"/>
+			<xs:enumeration value="NanoESI"/>
+			<xs:enumeration value="ChipQ"/>
+			<xs:enumeration value="MALDI"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="MSIonMode">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="ESI"/>
+			<xs:enumeration value="APCI"/>
+			<xs:enumeration value="APPI"/>
+			<xs:enumeration value="ESIandAPCI"/>
+			<xs:enumeration value="NanoESI"/>
+			<xs:enumeration value="ChipQ"/>
+			<xs:enumeration value="MALDI"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="CDSValveState">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Off"/>
+			<xs:enumeration value="A"/>
+			<xs:enumeration value="B"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="DiverterValveState">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="ToWaste"/>
+			<xs:enumeration value="ToMS"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="ControlState">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Off"/>
+			<xs:enumeration value="On"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="MSGroupParameterInformation">
+		<xs:sequence>
+			<xs:element name="groupID" type="MSParameterType"/>
+			<xs:element name="groupMembers">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="memberID" type="MSParameterType" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="MSParameterInformation">
+		<xs:sequence>
+			<xs:element name="parameterID" type="MSParameterType"/>
+			<xs:element name="functionalType" type="MSFunctionalArea"/>
+			<xs:element name="firmwareIndex" type="xs:long"/>
+			<xs:element name="signType" type="MSSignType"/>
+			<xs:element name="polarityFlags" type="MSPolarityFlags"/>
+			<xs:element name="lowLimit" type="xs:float"/>
+			<xs:element name="highLimit" type="xs:float"/>
+			<xs:element name="resolution" type="xs:float"/>
+			<xs:element name="defaultValue" type="xs:float"/>
+			<xs:element name="name" type="xs:string"/>
+			<xs:element name="vbFormat" type="xs:string"/>
+			<xs:element name="vcFormat" type="xs:string"/>
+			<xs:element name="units" type="xs:string"/>
+			<xs:element name="isRampable" type="xs:boolean"/>
+			<xs:element name="defaultRampStart" type="xs:float"/>
+			<xs:element name="defaultRampStop" type="xs:float"/>
+			<xs:element name="defaultRampStep" type="xs:float"/>
+			<xs:element name="defaultRampTime" type="xs:float"/>
+			<xs:element name="isDynamicRampable" type="xs:boolean"/>
+			<xs:element name="isLinearizable" type="xs:boolean"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="MSActualInformation">
+		<xs:sequence>
+			<xs:element name="actualID" type="MSActualType"/>
+			<xs:element name="functionalType" type="MSFunctionalArea"/>
+			<xs:element name="firmwareIndex" type="xs:long"/>
+			<xs:element name="signType" type="MSSignType"/>
+			<xs:element name="name" type="xs:string"/>
+			<xs:element name="vbFormat" type="xs:string"/>
+			<xs:element name="vcFormat" type="xs:string"/>
+			<xs:element name="units" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="MSSourceInformation">
+		<xs:sequence>
+			<xs:element name="sourceType" type="MSSourceType"/>
+			<xs:element name="name" type="xs:string"/>
+			<xs:element name="modes" type="MSIonModeInformation" maxOccurs="unbounded"/>
+			<xs:element name="defaultMode" type="MSIonMode"/>
+			<xs:element name="sourceParameters">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="sourceParameter" type="MSParameterInformation" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="sourceActuals">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="sourceActual" type="MSActualInformation" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="checkZones">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="checkZone" type="MSZoneInformation" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="MSIonModeInformation">
+		<xs:sequence>
+			<xs:element name="modeType" type="MSIonMode"/>
+			<xs:element name="name" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="MSZoneInformation">
+		<xs:sequence>
+			<xs:element name="parameterID" type="MSParameterType"/>
+			<xs:element name="actualID" type="MSActualType"/>
+			<xs:element name="tolerance" type="xs:float"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="CDSValveInformation">
+		<xs:sequence>
+			<xs:element name="valveID" type="MSValveType"/>
+			<xs:element name="name" type="xs:string"/>
+			<xs:element name="states" minOccurs="2" maxOccurs="3">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="stateID" type="CDSValveState"/>
+						<xs:element name="name" type="xs:string"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="defaultState" type="CDSValveState"/>
+			<xs:element name="deliveryTime" type="xs:long"/>
+			<xs:element name="purgeToMSTime" type="xs:long"/>
+			<xs:element name="purgeToWasteTime" type="xs:long"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DiverterValveInformation">
+		<xs:sequence>
+			<xs:element name="valveID" type="MSValveType"/>
+			<xs:element name="name" type="xs:string"/>
+			<xs:element name="states" minOccurs="2" maxOccurs="2">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="stateID" type="DiverterValveState"/>
+						<xs:element name="name" type="xs:string"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="defaultState" type="DiverterValveState"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="CCGasValveInformation">
+		<xs:sequence>
+			<xs:element name="valveID" type="MSValveType"/>
+			<xs:element name="name" type="xs:string"/>
+			<xs:element name="states" minOccurs="2" maxOccurs="2">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="stateID" type="ControlState"/>
+						<xs:element name="name" type="xs:string"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			<xs:element name="defaultState" type="ControlState"/>
+			<xs:element name="turnOnTime" type="xs:long"/>
+			<xs:element name="turnOffTime" type="xs:long"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="GaussianFilter">
+		<xs:sequence>
+			<xs:element name="width" type="xs:float"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SavitskyGolayFilter">
+		<xs:sequence>
+			<xs:element name="points" type="xs:long"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="TuneParameter">
+		<xs:sequence>
+			<xs:element name="id" type="MSParameterType"/>
+			<xs:element name="setting" type="xs:float"/>
+			<xs:element name="rampControl" type="RampControl" minOccurs="0"/>
+			<xs:element name="dynamicRampControl" type="DynamicRampControl" minOccurs="0"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DynamicRampControl">
+		<xs:sequence>
+			<xs:element name="isEnabled" type="xs:boolean"/>
+			<xs:element name="table" type="DynamicRampLevel" minOccurs="0" maxOccurs="6"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="DynamicRampLevel">
+		<xs:sequence>
+			<xs:element name="mz" type="xs:float"/>
+			<xs:element name="parameterSetting" type="xs:float"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="RampControl">
+		<xs:sequence>
+			<xs:element name="start" type="xs:float"/>
+			<xs:element name="stop" type="xs:float"/>
+			<xs:element name="step" type="xs:float"/>
+			<xs:element name="time" type="xs:float"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="TuneMass">
+		<xs:sequence>
+			<xs:element name="isActive" type="xs:boolean"/>
+			<xs:element name="mz" type="xs:float"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="TuneMasses">
+		<xs:sequence maxOccurs="6">
+			<xs:element name="mz" type="xs:float"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:simpleType name="DataStorageMode">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="Profile"/>
+			<xs:enumeration value="PeakDetected"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="MSChromatogramType">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="TIC"/>
+			<xs:enumeration value="EIC"/>
+			<xs:enumeration value="MS1EIC"/>
+			<xs:enumeration value="MS2EIC"/>
+			<xs:enumeration value="BPC"/>
+			<xs:enumeration value="MS1BPC"/>
+			<xs:enumeration value="MS2BPC"/>
+			<xs:enumeration value="MRM"/>
+			<xs:enumeration value="InstrumentCurve"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:simpleType name="MSStopMode">
+		<xs:restriction base="xs:string">
+			<xs:enumeration value="ByPumpTime"/>
+			<xs:enumeration value="ByStopTime"/>
+		</xs:restriction>
+	</xs:simpleType>
+	<xs:complexType name="SourceParameterType">
+		<xs:sequence>
+			<xs:element name="id" type="MSParameterType"/>
+			<xs:element name="posPolarityValue" type="xs:float"/>
+			<xs:element name="negPolarityValue" type="xs:float"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SourceParameterTypeCol">
+		<xs:sequence>
+			<xs:element name="sourceParameter" type="SourceParameterType" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="MSSerialNumbersType">
+		<xs:sequence>
+			<xs:element name="MB1_Serial_Number" type="xs:string"/>
+			<xs:element name="MB2_Serial_Number" type="xs:string"/>
+			<xs:element name="Instrument_Serial_Number" type="xs:string"/>
+		</xs:sequence>
+	</xs:complexType>
+</xs:schema>

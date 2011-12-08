@@ -15,6 +15,8 @@ namespace BumberDash.Forms
     {
         #region Globals
 
+        public delegate void JobDoneDelegate(string name, bool successful);
+
         private Rectangle _dragBoxFromMouseDown; //Created on valid mousedown
         internal ProgramHandler JobProcess; //eventual implememtation of program running
         private LogForm _jobLog;
@@ -37,7 +39,6 @@ namespace BumberDash.Forms
                 InitializeComponent();
                 var sessionFactory = SessionManager.CreateSessionFactory();
                 _session = sessionFactory.OpenSession();
-                CheckForMSFileReader();
             }
             catch (Exception error)
             {
@@ -1672,35 +1673,6 @@ namespace BumberDash.Forms
         private void MSFileReaderDownloadLink_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             System.Diagnostics.Process.Start("\"http://sjsupport.thermofinnigan.com/public/detail.asp?id=703\"");
-        }
-
-        private void CheckForMSFileReader()
-        {
-            var softwareKey = Microsoft.Win32.Registry.LocalMachine.OpenSubKey("SOFTWARE");
-            if (softwareKey == null)
-                return; //and wonder what exactly the archetecture of this computer is
-
-            var thermoKey = softwareKey.OpenSubKey("Thermo Fisher Scientific");
-            if (thermoKey == null)
-                return; //and let the panel stay visible
-
-            var readerKey = thermoKey.OpenSubKey("Thermo MSFileReader");
-            if (readerKey == null)
-                return; //and let the panel stay visible
-
-            var versions = readerKey.GetSubKeyNames();
-            foreach(var name in versions)
-            {
-                int currentNumber;
-                var versionArray = name.Split(".".ToCharArray());
-                if (versionArray.Length > 2
-                    && int.TryParse(versionArray[0], out currentNumber)
-                    && currentNumber >= 2
-                    && int.TryParse(versionArray[1], out currentNumber)
-                    && currentNumber >= 2)
-                    MSFileReaderPanel.Visible = false;
-            }
-
         }
     }
 }

@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<!-- edited with XML Spy v4.4 U (http://www.xmlspy.com) by Malini Srikantarajeurs (private) -->
+<Contents xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="X:\assembly\bin\Contents.xsd">
+	<Version>1</Version>
+	<!-- Acquisition Time should be of the US format YYYY-MM-DDTHH:MM:SS -->
+	<!-- example "2005-09-20T21:53:39" and "2005-11-20T5:53:39" -->
+	<AcquiredTime>2006-07-07T19:12:58</AcquiredTime>
+	<!--AcqStatus (0 = Init / 1 = Start / 2 = End)-->
+	<AcqStatus>2</AcqStatus>
+	<!--Name of the instrument-->
+	<InstrumentName>Instrument 1</InstrumentName>
+	<!--LockedMode (0 = False / -1 = True)-->
+	<LockedMode>0</LockedMode>
+</Contents>

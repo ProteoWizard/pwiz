@@ -1,0 +1,6 @@
+<!-- edited with XMLSpy v2005 sp1 U (http://www.xmlspy.com) by Nora Gee (Agilent) -->
+<!-- edited with XMLSPY v2004 rel. 4 U (http://www.xmlspy.com) by Nora Gee (Agilent) -->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+	<xs:include schemaLocation="qqqacqmeth.xsd"/>
+	<xs:element name="MSAcqMethod" type="MSAcqMethodType"/>
+</xs:schema>

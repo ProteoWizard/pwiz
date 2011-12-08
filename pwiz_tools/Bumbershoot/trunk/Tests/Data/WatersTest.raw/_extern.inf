@@ -1,0 +1,410 @@
+Parameters for E:\Hachey\Peptides.PRO\ACQUDB\091204 - Peptide Short Fast LCMSMS.EXP
+Created by Masslynx v4.1
+ 
+Lock Spray Configuration:
+Reference Scan Frequency(sec)		20.000
+Reference Cone Voltage(V)		20.000
+ 
+Temperature Correction:
+Temperature Correction			Disabled
+ 
+Instrument Configuration:
+Trigger Threshold				800
+Signal Threshold				35
+T0Constant				-50
+Lteff				1400.0
+Veff				5497.01
+Centroid Threshold				1
+Min Points in Peak				2
+Np Multiplier				0.700
+Resolution				9000
+EDC Delay Coefficient			1.4200
+EDC Delay Offset			0.4000
+Maldi Laser Firing Rate			1.0
+Maldi Plate Speed			1.0
+Maldi Laser Energy			250.0
+Maldi Pattern Filename			c:\Masslynx\Spiral_96.ptn
+Maldi Lock Mass Pattern File			c:\Masslynx\Spiral_96.ptn
+Tof Emulation Transfer Pulse Height (V)	0.1
+ 
+Experimental Instrument Parameters
+Instrument Parameter Filename		E:\Hachey\Peptides.PRO\ACQUDB\091204_DLH_PolyT_Vmode_Tune.IPR
+Polarity				ES+
+Analyser				V Mode
+Capillary (kV)	2.5
+Sampling Cone	20.0
+Extraction Cone	4.0
+Source Temperature (°C)	125
+Desolvation Temperature (°C)	350
+Cone Gas Flow (L/Hr)	30.0
+Desolvation Gas Flow (L/Hr)	850.0
+LM Resolution	4.7
+HM Resolution	15.0
+Aperture 1	0.0
+Pre-filter	2.0
+Ion Energy	1.0
+Trap Collision Energy	3.0
+Transfer Collision Energy	3.0
+Trap Gas Flow (mL/min)	1.50
+Source Gas Flow (mL/min)	0.00
+IMS Gas Flow (mL/min)	24.00
+Detector	1650
+Pusher Interval (µS)	64
+Pusher Width	4
+Acceleration1	70.0
+Acceleration2	200.0
+Aperture2	70.0
+Transport1	70.0
+Transport2	70.0
+Steering	0.0
+Tube Lens	75
+Pusher	915.0
+Pusher Offset	-2.70
+Puller	645.0
+Photo Multiplier	650
+Collector	60
+Collector Pulse	10.0
+Stopper	10
+Stopper Pulse	20.0
+Entrance	75
+Static Offset	120
+Puller Offset	0.00
+TOF (kV)	9.10
+Reflectron (kV)	2.16
+Pusher Interval (µS)	64
+Pusher Width	4
+Trap DC Entrance	5.0
+Trap DC Bias	4.0
+Trap DC Exit	5.0
+IMS DC Entrance	-20.0
+IMS DC Exit	20.0
+Transfer DC Entrance	5.0
+Transfer DC Exit	15.0
+Source Manual Control	OFF
+Source Wave Velocity (m/s)	300
+Source Wave Height (V)	0.2
+Trap Manual Control	OFF
+Trap Wave Velocity (m/s)	300
+Trap Wave Height (V)	0.5
+IMS Manual Control	OFF
+IMS Wave Velocity (m/s)	300
+IMS Wave Height (V)	0.5
+Transfer Manual Control	OFF
+Transfer Wave Velocity (m/s)	248
+Transfer Wave Height (V)	0.2
+Trapping Mode/Location	Trap
+Trap Manual Release Enabled	FALSE
+Trap Release Time (µs)	100
+Trap Trap Height (V)	10.0
+Trap Extract Height (V)	5.0
+IMS Manual Release Enabled	FALSE
+IMS Release Time (µs)	100
+IMS Trap Height (V)	10.0
+IMS Extract Height (V)	5.0
+EDC Enabled	FALSE
+EDC Mode	EDC
+EDC Mass	556.0
+HDC Table	
+Transfer Trap Height (V)	4.0
+Transfer Extract Height (V)	15.0
+Variable Wave Height Enabled	FALSE
+Wave Height Ramp Type	Linear
+Wave Height Start (V)	1.0
+Wave Height End (V)	1.0
+Wave Height Using Full IMS	TRUE
+Wave Height Ramp (%)	10.0
+Wave Height Look Up Table	
+Variable Wave Velocity Enabled	FALSE
+Wave Velocity Ramp Type	Linear
+Wave Velocity Start (m/s)	300.0
+Wave Velocity End (m/s)	600.0
+Wave Velocity Using Full IMS	TRUE
+Wave Velocity Ramp (%)	10.0
+Wave Velocity Look Up Table	
+IMS Bias Look Up Table Enabled	FALSE
+IMS Bias Look Up Table	
+Multiplier	650
+Collector	60
+CollectorPulse	10.0
+StopperBias	10
+StopperPulse	20.0
+Entrance	75
+CollisionCellStaticOffset	120
+Offset2	0.00
+TOF	9.10
+Reflectron	2.16
+Vacuum Lock	4.61e-4
+Backing	1.54e0
+Source	OFF
+Quadrupole	OFF
+Trap	8.60e-3
+IMS	4.61e-4
+TOF	9.41e-7
+SourceRFOffset	350
+SourceRFGain	0
+SourceRFLimit	450
+IMSRFOffset	350
+IMSRFGain	0
+IMSRFLimit	380
+TrapRFOffset	350
+TrapRFGain	0
+TrapRFLimit	380
+TransferRFOffset	350
+TransferRFGain	0
+TransferRFLimit	380
+MS Profile Type	Auto P
+MSProfileMass1	100
+MSProfileDwellTime1	20
+MSProfileRampTime1	20
+MSProfileMass2	3000
+MSProfileDwellTime2	20
+MSProfileRampTime2	40
+MSProfileMass3	5000
+ 
+ 
+Function Parameters - Function 1 - TOF SURVEY FUNCTION
+[ACQUISITION]
+Survey Start Time			0.00
+Survey End Time				0.50
+[MS SURVEY]
+Survey Start Mass			300.0000
+Survey End Mass				2000.0000
+Discard uninteresting scans		NO
+Switch to MS/MS when			Intensity rising above threshold
+Intensity Threshold			20.0
+Survey Scan Time			1.00
+Survey Interscan Time			0.02
+Survey Data Format			Centroid
+[MS/MS]
+MSMS Start Mass				300.0
+MSMS End Mass				2000.0
+Number of components			8
+Switchback threshold (counts/second)	10.0
+Use MSMS to MS Switch After Time	NO
+Use MSMS to MS Switch After 1 Scan	YES
+Use MSMS to MS Switch After N Scans	NO
+MSMS Switch After Scans		1.0
+MSMS Scan Time (sec)			0.50
+MSMS Interscan Time (sec)		0.02
+MSMS Data Format			Centroid
+Use MS/MS ipr File			NO
+[PEAK DETECTION]
+Use Intensity based Peak Detection	YES
+Peak Detection Window			3.0
+Deisotope Peak Selection		NO
+[COLLISION ENERGY]
+Collision Energy Ramp Start (eV)	35.0
+Collision Energy Ramp End (eV)		35.0
+[CONE VOLTAGE]
+Survey Use Tune Page CV			YES
+Use Tune Page Cone Voltage		YES
+[INCLUDE]
+Precursor Selection			Everything
+[EXCLUDE]
+Detected Precursor Inclusion		Using Real Time Exclusion
+Detected Precursor Inclusion		Automatic Exclusion
+Use Exclude Masses List			NO
+Use Exclude File Masses			NO
+Exclude Window +/- (mDa)		100.0
+[ADDUCTS]
+Use Adduct File Masses			NO
+[VARIABLE FLOW]
+Use Variable Flow			NO
+Lock Mass				637.3857
+Mass Window +/-				0.5
+Scans to Average			3.0
+Calibration				Dynamic 1
+ 
+Function Parameters - Function 2 - TOF SURVEY FUNCTION
+Scan Time (sec)				0.500
+Interscan Time (sec)			0.020
+Set Mass				0.0
+Start Mass				300.0
+MSMS End Mass				2000.0
+Start Time (mins)			0.00
+End Time (mins)				0.50
+Data Format				Centroid
+Use Tune Page Cone Voltage		YES
+Use Tune Page Collision Energy		NO
+Collision Energy Ramp Start (eV)	35.0
+Collision Energy Ramp End (eV)		35.0
+Use Tune Page Collision Energy2		YES
+Sensitivity				Normal
+Dynamic Range				Normal
+Save Collapsed Retention Time Data	No
+Use Rule File Filtering			No
+Lock Mass				0.0000
+Lock Mass Window			0.5
+Scans to Average			3.0
+Calibration				Dynamic 2
+ 
+Function Parameters - Function 3 - TOF SURVEY FUNCTION
+Scan Time (sec)				0.500
+Interscan Time (sec)			0.020
+Set Mass				0.0
+Start Mass				300.0
+MSMS End Mass				2000.0
+Start Time (mins)			0.00
+End Time (mins)				0.50
+Data Format				Centroid
+Use Tune Page Cone Voltage		YES
+Use Tune Page Collision Energy		NO
+Collision Energy Ramp Start (eV)	35.0
+Collision Energy Ramp End (eV)		35.0
+Use Tune Page Collision Energy2		YES
+Sensitivity				Normal
+Dynamic Range				Normal
+Save Collapsed Retention Time Data	No
+Use Rule File Filtering			No
+Lock Mass				0.0000
+Lock Mass Window			0.5
+Scans to Average			3.0
+Calibration				Dynamic 2
+ 
+Function Parameters - Function 4 - TOF SURVEY FUNCTION
+Scan Time (sec)				0.500
+Interscan Time (sec)			0.020
+Set Mass				0.0
+Start Mass				300.0
+MSMS End Mass				2000.0
+Start Time (mins)			0.00
+End Time (mins)				0.50
+Data Format				Centroid
+Use Tune Page Cone Voltage		YES
+Use Tune Page Collision Energy		NO
+Collision Energy Ramp Start (eV)	35.0
+Collision Energy Ramp End (eV)		35.0
+Use Tune Page Collision Energy2		YES
+Sensitivity				Normal
+Dynamic Range				Normal
+Save Collapsed Retention Time Data	No
+Use Rule File Filtering			No
+Lock Mass				0.0000
+Lock Mass Window			0.5
+Scans to Average			3.0
+Calibration				Dynamic 2
+ 
+Function Parameters - Function 5 - TOF SURVEY FUNCTION
+Scan Time (sec)				0.500
+Interscan Time (sec)			0.020
+Set Mass				0.0
+Start Mass				300.0
+MSMS End Mass				2000.0
+Start Time (mins)			0.00
+End Time (mins)				0.50
+Data Format				Centroid
+Use Tune Page Cone Voltage		YES
+Use Tune Page Collision Energy		NO
+Collision Energy Ramp Start (eV)	35.0
+Collision Energy Ramp End (eV)		35.0
+Use Tune Page Collision Energy2		YES
+Sensitivity				Normal
+Dynamic Range				Normal
+Save Collapsed Retention Time Data	No
+Use Rule File Filtering			No
+Lock Mass				0.0000
+Lock Mass Window			0.5
+Scans to Average			3.0
+Calibration				Dynamic 2
+ 
+Function Parameters - Function 6 - TOF SURVEY FUNCTION
+Scan Time (sec)				0.500
+Interscan Time (sec)			0.020
+Set Mass				0.0
+Start Mass				300.0
+MSMS End Mass				2000.0
+Start Time (mins)			0.00
+End Time (mins)				0.50
+Data Format				Centroid
+Use Tune Page Cone Voltage		YES
+Use Tune Page Collision Energy		NO
+Collision Energy Ramp Start (eV)	35.0
+Collision Energy Ramp End (eV)		35.0
+Use Tune Page Collision Energy2		YES
+Sensitivity				Normal
+Dynamic Range				Normal
+Save Collapsed Retention Time Data	No
+Use Rule File Filtering			No
+Lock Mass				0.0000
+Lock Mass Window			0.5
+Scans to Average			3.0
+Calibration				Dynamic 2
+ 
+Function Parameters - Function 7 - TOF SURVEY FUNCTION
+Scan Time (sec)				0.500
+Interscan Time (sec)			0.020
+Set Mass				0.0
+Start Mass				300.0
+MSMS End Mass				2000.0
+Start Time (mins)			0.00
+End Time (mins)				0.50
+Data Format				Centroid
+Use Tune Page Cone Voltage		YES
+Use Tune Page Collision Energy		NO
+Collision Energy Ramp Start (eV)	35.0
+Collision Energy Ramp End (eV)		35.0
+Use Tune Page Collision Energy2		YES
+Sensitivity				Normal
+Dynamic Range				Normal
+Save Collapsed Retention Time Data	No
+Use Rule File Filtering			No
+Lock Mass				0.0000
+Lock Mass Window			0.5
+Scans to Average			3.0
+Calibration				Dynamic 2
+ 
+Function Parameters - Function 8 - TOF SURVEY FUNCTION
+Scan Time (sec)				0.500
+Interscan Time (sec)			0.020
+Set Mass				0.0
+Start Mass				300.0
+MSMS End Mass				2000.0
+Start Time (mins)			0.00
+End Time (mins)				0.50
+Data Format				Centroid
+Use Tune Page Cone Voltage		YES
+Use Tune Page Collision Energy		NO
+Collision Energy Ramp Start (eV)	35.0
+Collision Energy Ramp End (eV)		35.0
+Use Tune Page Collision Energy2		YES
+Sensitivity				Normal
+Dynamic Range				Normal
+Save Collapsed Retention Time Data	No
+Use Rule File Filtering			No
+Lock Mass				0.0000
+Lock Mass Window			0.5
+Scans to Average			3.0
+Calibration				Dynamic 2
+ 
+Function Parameters - Function 9 - TOF SURVEY FUNCTION
+Scan Time (sec)				0.500
+Interscan Time (sec)			0.020
+Set Mass				0.0
+Start Mass				300.0
+MSMS End Mass				2000.0
+Start Time (mins)			0.00
+End Time (mins)				0.50
+Data Format				Centroid
+Use Tune Page Cone Voltage		YES
+Use Tune Page Collision Energy		NO
+Collision Energy Ramp Start (eV)	35.0
+Collision Energy Ramp End (eV)		35.0
+Use Tune Page Collision Energy2		YES
+Sensitivity				Normal
+Dynamic Range				Normal
+Save Collapsed Retention Time Data	No
+Use Rule File Filtering			No
+Lock Mass				0.0000
+Lock Mass Window			0.5
+Scans to Average			3.0
+Calibration				Dynamic 2
+ 
+Function Parameters - Function 10 - REFERENCE
+Scan Time (sec)				0.20
+Interval				20
+Reference Cone Voltage			20.0
+Collision Energy (eV)			10.0
+Lock Mass				637.3857
+Mass Window +/-				0.5
+Scans to Average			3.0
+Calibration				Dynamic 1

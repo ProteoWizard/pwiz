@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TimeSegments xmlns:xs="http://www.w3.org/2001/XMLSchema-instance">
+	<Version>1</Version>
+	<TimeSegment TimeSegmentID="1">
+		<StartTime>0.02388333333333</StartTime>
+		<EndTime>1.4843</EndTime>
+		<NumOfScans>63</NumOfScans>
+		<FixedCycleLength>false</FixedCycleLength>
+	</TimeSegment>
+	<TimeSegment TimeSegmentID="2">
+		<StartTime>1.508916666667</StartTime>
+		<EndTime>2.993116666667</EndTime>
+		<NumOfScans>60</NumOfScans>
+		<FixedCycleLength>false</FixedCycleLength>
+	</TimeSegment>
+	<TimeSegment TimeSegmentID="3">
+		<StartTime>3.019416666667</StartTime>
+		<EndTime>4.478466666667</EndTime>
+		<NumOfScans>59</NumOfScans>
+		<FixedCycleLength>false</FixedCycleLength>
+	</TimeSegment>
+	<TimeSegment TimeSegmentID="4">
+		<StartTime>4.50475</StartTime>
+		<EndTime>5.997483333333</EndTime>
+		<NumOfScans>428</NumOfScans>
+		<FixedCycleLength>false</FixedCycleLength>
+	</TimeSegment>
+</TimeSegments>

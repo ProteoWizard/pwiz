@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- edited with XMLSpy v2005 sp1 U (http://www.xmlspy.com) by Nora Gee (Agilent) -->
+<!-- edited with XML Spy v4.4 U (http://www.xmlspy.com) by Malini Srikantarajeurs (private) -->
+<!--Graphical Representation of the MSSCan.bin file format for document purpose-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:mstns="http://tempuri.org/XMLSchema.xsd" xmlns="http://tempuri.org/XMLSchema.xsd" targetNamespace="http://tempuri.org/XMLSchema.xsd" elementFormDefault="qualified" version="1.0">
+	<xs:element name="MSScanBin">
+		<xs:annotation>
+			<xs:documentation>MSScan binary file index record details</xs:documentation>
+		</xs:annotation>
+		<xs:complexType>
+			<xs:sequence>
+				<xs:element name="ScanRecord" type="ScanRecordType" minOccurs="0" maxOccurs="unbounded"/>
+			</xs:sequence>
+		</xs:complexType>
+	</xs:element>
+	<xs:complexType name="ScanRecordType">
+		<xs:sequence>
+			<xs:element name="ScanID" type="xs:int"/>
+			<xs:element name="ScanMethodID" type="xs:int"/>
+			<xs:element name="TimeSegmentID" type="xs:int"/>
+			<xs:element name="ScanTime" type="xs:double"/>
+			<xs:element name="MSLevel" type="xs:int"/>
+			<xs:element name="ScanType" type="xs:int"/>
+			<xs:element name="TIC" type="xs:double"/>
+			<xs:element name="BasePeakMZ" type="xs:double"/>
+			<xs:element name="BasePeakValue" type="xs:double"/>
+			<xs:element name="CycleNumber" type="xs:int" minOccurs="0"/>
+			<xs:element name="Status" type="xs:int" minOccurs="0"/>
+			<xs:element name="IonMode" type="xs:int" minOccurs="0"/>
+			<xs:element name="IonPolarity" type="xs:int" minOccurs="0"/>
+			<xs:element name="Fragmentor" type="xs:double" minOccurs="0"/>
+			<xs:element name="CollisionEnergy" type="xs:double" minOccurs="0"/>
+			<xs:element name="MzOfInterest" type="xs:double" minOccurs="0"/>
+			<!-- 			
+			<xs:element name="AbundanceLimit" type="xs:double" minOccurs="0"/>
+			-->
+			<xs:element name="SamplingPeriod" type="xs:double" minOccurs="0"/>
+			<xs:element name="MeasuredMassRangeMin" type="xs:double" minOccurs="0"/>
+			<xs:element name="MeasuredMassRangeMax" type="xs:double" minOccurs="0"/>
+			<xs:element name="Threshold" type="xs:double" minOccurs="0"/>
+			<!--	
+			<xs:element name="ChargeState" type="xs:int" minOccurs="0"/>
+			<xs:element name="FragmentationMode" type="xs:int" minOccurs="0"/>
+			-->
+			<xs:element name="IsFragmentorDynamic" type="xs:int" minOccurs="0"/>
+			<xs:element name="IsCollisionEnergyDynamic" type="xs:int" minOccurs="0"/>
+			<!--			
+			<xs:element name="MassCalOffset" type="xs:long" minOccurs="0"/>
+			<xs:element name="ActualsOffset" type="xs:long" minOccurs="0"/>
+			<xs:element name="NumOfAcutalsPerScan" type="xs:int" minOccurs="0"/>
+			<xs:element name="DataDependentScanParamType" type="DataDependentScanParamType" minOccurs="0"/>
+			-->
+			<xs:element name="SpectrumParamValues" type="SpectrumParamsType" maxOccurs="unbounded"/>
+			<!--			
+			<xs:element name="Padding" minOccurs="0">
+				<xs:complexType>
+					<xs:sequence>
+						<xs:element name="PadBytes" type="xs:byte" minOccurs="0" maxOccurs="unbounded"/>
+					</xs:sequence>
+				</xs:complexType>
+			</xs:element>
+			-->
+		</xs:sequence>
+	</xs:complexType>
+	<xs:complexType name="SpectrumParamsType">
+		<xs:sequence>
+			<xs:element name="SpectrumFormatID" type="xs:int"/>
+			<xs:element name="SpectrumOffset" type="xs:long"/>
+			<xs:element name="ByteCount" type="xs:int"/>
+			<xs:element name="PointCount" type="xs:int"/>
+			<!--
+			<xs:element name="UncompressedByteCount" type="xs:int" minOccurs="0"/>
+			-->
+			<xs:element name="MinY" type="xs:double"/>
+			<xs:element name="MaxY" type="xs:double"/>
+			<xs:element name="MinX" type="xs:double"/>
+			<xs:element name="MaxX" type="xs:double"/>
+			<!--
+			<xs:element name="MeasuredNoise" type="xs:double" minOccurs="0"/>		
+			-->
+		</xs:sequence>
+	</xs:complexType>
+	<!--	
+	<xs:complexType name="DataDependentScanParamType">
+		<xs:sequence>
+			<xs:element name="DDScanID" type="xs:int"/>
+			<xs:element name="DDScanParamMz" type="xs:double"/>
+			<xs:element name="DDScanParamN" type="xs:double" minOccurs="0" maxOccurs="unbounded"/>
+		</xs:sequence>
+	</xs:complexType>
+	-->
+</xs:schema>

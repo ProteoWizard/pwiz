@@ -75,6 +75,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>lib\Nhibernate\NHibernate.ByteCode.Castle.dll</HintPath>
     </Reference>
+    <Reference Include="Remotion.Data.Linq, Version=1.13.41.2, Culture=neutral, PublicKeyToken=cab60358ab4081ea, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>lib\Nhibernate\Remotion.Data.Linq.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -247,137 +251,443 @@
     <Content Include="lib\BumberIcon.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\adjustScanRankerScoreByGroup.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\adjustScanRankerScoreByGroup.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\agtsampleinforw.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\agtsampleinforw.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\BaseCommon.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\BaseCommon.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\BaseDataAccess.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\BaseDataAccess.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\BaseError.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\BaseError.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\BaseTof.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\BaseTof.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\BDal.CXt.Lc.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\BDal.CXt.Lc.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\BDal.CXt.Lc.Factory.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\BDal.CXt.Lc.Factory.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\BDal.CXt.Lc.Interfaces.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\BDal.CXt.Lc.Interfaces.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\BDal.CXt.Lc.UntU2.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\BDal.CXt.Lc.UntU2.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\blosum62.fas">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\boost_date_time-vc80-mt-1_33_1-BDAL_20070424.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\boost_date_time-vc80-mt-1_33_1-BDAL_20070424.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\boost_thread-vc80-mt-1_33_1-BDAL_20070424.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\boost_thread-vc80-mt-1_33_1-BDAL_20070424.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\Clearcore2.Data.AnalystDataProvider.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\Clearcore2.Data.AnalystDataProvider.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\Clearcore2.Data.CommonInterfaces.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\Clearcore2.Data.CommonInterfaces.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\Clearcore2.Data.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\Clearcore2.Data.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\Clearcore2.Data.WiffReader.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\Clearcore2.Data.WiffReader.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\Clearcore2.InternalRawXYProcessing.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\Clearcore2.InternalRawXYProcessing.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\Clearcore2.ProjectUtilities.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\Clearcore2.ProjectUtilities.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\Clearcore2.StructuredStorage.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\Clearcore2.StructuredStorage.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\Clearcore2.Utility.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\Clearcore2.Utility.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\CompassXtractMS.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\CompassXtractMS.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\directag.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\directag.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\fileio.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\fileio.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\FlexVariableTable.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\FlexVariableTable.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\fregistry.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\fregistry.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\HSReadWrite.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\HSReadWrite.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\ICRVariableTable.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\ICRVariableTable.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\Interop.DataExplorer.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\Interop.DataExplorer.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\Interop.EDAL.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\Interop.EDAL.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\Interop.HSREADWRITELib.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\Interop.EDAL.SxS.manifest">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\libfftw3-3.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\Interop.HSREADWRITELib.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\libfftw3f-3.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\libfftw3-3.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\MassLynxRaw.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\libfftw3f-3.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\MassSpecDataReader.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\MassLynxRaw.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\MSFileReader.XRawfile2.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\MassSpecDataReader.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\NTB-vc80-mt-1_5_97.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\MSFileReader.XRawfile2.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\MyriMatch\agtsampleinforw.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\MSFileReader.XRawfile2.SxS.manifest">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\MyriMatch\BaseCommon.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\myrimatch.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\MyriMatch\BaseDataAccess.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\NTB-vc80-mt-1_5_97.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\MyriMatch\BaseError.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\pepitome.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\MyriMatch\BaseTof.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\tagrecon.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\MyriMatch\BDal.CXt.Lc.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\unimod.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\MyriMatch\BDal.CXt.Lc.Factory.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\BDal.CXt.Lc.Interfaces.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\BDal.CXt.Lc.UntU2.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\boost_date_time-vc80-mt-1_33_1-BDAL_20070424.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\boost_thread-vc80-mt-1_33_1-BDAL_20070424.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\Clearcore2.Data.AnalystDataProvider.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\Clearcore2.Data.CommonInterfaces.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\Clearcore2.Data.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\Clearcore2.Data.WiffReader.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\Clearcore2.InternalRawXYProcessing.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\Clearcore2.ProjectUtilities.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\Clearcore2.StructuredStorage.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\Clearcore2.Utility.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\CompassXtractMS.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\fileio.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\FlexVariableTable.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\fregistry.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\HSReadWrite.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\ICRVariableTable.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\Interop.DataExplorer.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\Interop.EDAL.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\Interop.HSREADWRITELib.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\libfftw3-3.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\libfftw3f-3.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\MassLynxRaw.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\MassSpecDataReader.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\MSFileReader.XRawfile2.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\myrimatch.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\NTB-vc80-mt-1_5_97.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\agtsampleinforw.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\BaseCommon.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\BaseDataAccess.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\BaseError.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\BaseTof.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\BDal.CXt.Lc.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\BDal.CXt.Lc.Factory.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\BDal.CXt.Lc.Interfaces.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\BDal.CXt.Lc.UntU2.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\boost_date_time-vc80-mt-1_33_1-BDAL_20070424.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\boost_thread-vc80-mt-1_33_1-BDAL_20070424.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\Clearcore2.Data.AnalystDataProvider.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\Clearcore2.Data.CommonInterfaces.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\Clearcore2.Data.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\Clearcore2.Data.WiffReader.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\Clearcore2.InternalRawXYProcessing.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\Clearcore2.ProjectUtilities.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\Clearcore2.StructuredStorage.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\Clearcore2.Utility.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\CompassXtractMS.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\fileio.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\FlexVariableTable.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\fregistry.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\HSReadWrite.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\ICRVariableTable.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\Interop.DataExplorer.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\Interop.EDAL.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\Interop.HSREADWRITELib.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\libfftw3-3.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\libfftw3f-3.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\MassLynxRaw.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\MassSpecDataReader.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\MSFileReader.XRawfile2.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\NTB-vc80-mt-1_5_97.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\pepitome.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\agtsampleinforw.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\BaseCommon.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\BaseDataAccess.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\BaseError.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\BaseTof.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\BDal.CXt.Lc.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\BDal.CXt.Lc.Factory.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\BDal.CXt.Lc.Interfaces.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\BDal.CXt.Lc.UntU2.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\boost_date_time-vc80-mt-1_33_1-BDAL_20070424.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\boost_regex-vc80-mt-1_33_1-BDAL_20070424.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\boost_thread-vc80-mt-1_33_1-BDAL_20070424.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\Clearcore2.Data.AnalystDataProvider.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\Clearcore2.Data.CommonInterfaces.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\Clearcore2.Data.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\Clearcore2.Data.WiffReader.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\Clearcore2.InternalRawXYProcessing.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\Clearcore2.ProjectUtilities.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\Clearcore2.StructuredStorage.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\Clearcore2.Utility.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\CompassXtractMS.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\fileio.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\FlexVariableTable.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\fregistry.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\HSReadWrite.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\ICRVariableTable.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\Interop.DataExplorer.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\Interop.EDAL.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\Interop.HSREADWRITELib.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\libfftw3-3.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\libfftw3f-3.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\MassLynxRaw.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\MassSpecDataReader.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\MSFileReader.XRawfile2.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\NTB-vc80-mt-1_5_97.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\tagrecon.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\unimod.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="lib\DirecTag.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -409,14 +719,68 @@
     <Content Include="lib\BumberDash Help 2_files\themedata.thmx">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\EULA.MHDAC">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\EULA.MHDAC">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\EULA.MSFileReader">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\EULA.MSFileReader">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
-    <Content Include="lib\Bumbershoot\Interop.HSREADWRITELib.SxS.manifest">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="lib\Bumbershoot\DirecTag\Interop.EDAL.SxS.manifest">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\DirecTag\Interop.HSREADWRITELib.SxS.manifest">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\DirecTag\MSFileReader.XRawfile2.SxS.manifest">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\EULA.MHDAC">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\EULA.MSFileReader">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\Interop.EDAL.SxS.manifest">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\Interop.HSREADWRITELib.SxS.manifest">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\MyriMatch\MSFileReader.XRawfile2.SxS.manifest">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\EULA.MHDAC">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\EULA.MSFileReader">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\Interop.EDAL.SxS.manifest">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\Interop.HSREADWRITELib.SxS.manifest">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\Pepitome\MSFileReader.XRawfile2.SxS.manifest">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\blosum62.fas">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\EULA.MHDAC">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\EULA.MSFileReader">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\Interop.EDAL.SxS.manifest">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\Interop.HSREADWRITELib.SxS.manifest">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="lib\Bumbershoot\TagRecon\MSFileReader.XRawfile2.SxS.manifest">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <None Include="Resources\SearchFolder.gif" />
   </ItemGroup>

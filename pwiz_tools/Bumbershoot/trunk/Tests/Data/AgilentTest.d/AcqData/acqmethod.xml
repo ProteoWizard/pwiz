@@ -1,0 +1,531 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<AcqMethod>
+  <Version>1.0</Version>
+  <!--Method Properties-->
+  <MethodName>GF063006_4Scan_TimeSegs_1530V-1.m</MethodName>
+  <MethodPath>D:\MassHunter\data\Flanagan\GlufibB_cal_curve_063006\GFb_4Scan_TimeSegs_1530_100ng.d\AcqData\GF063006_4Scan_TimeSegs_1530V-1.m</MethodPath>
+  <MethodDescription>Prod Ion Method for Sparta ESI, coll V optimization</MethodDescription>
+  <!--List of Devices-->
+  <DeviceList>WPS</DeviceList>
+  <DeviceList>BinPump</DeviceList>
+  <DeviceList>TCC</DeviceList>
+  <DeviceList>MSQQQ</DeviceList>
+  <!--Device Specific Setpoints-->
+  <WPS>
+    <ComponentModel>G1367A</ComponentModel>
+    <ComponentOrdinal>1</ComponentOrdinal>
+    <ComponentOptions>THM</ComponentOptions>
+    <Version>1, 0, 0, 1; Base: 0.2.065.0</Version>
+    <HardwareGeneration>1</HardwareGeneration>
+    <ObjClass>1</ObjClass>
+    <Title />
+    <Is3DUVEnabled>1</Is3DUVEnabled>
+    <Stoptime>0</Stoptime>
+    <UseMasterTime>As Pump</UseMasterTime>
+    <Posttime>Off</Posttime>
+    <Delay>0</Delay>
+    <CONTACT_1>0</CONTACT_1>
+    <CONTACT_2>0</CONTACT_2>
+    <CONTACT_3>0</CONTACT_3>
+    <CONTACT_4>0</CONTACT_4>
+    <ContactsTimetable />
+    <Main>-2</Main>
+    <CosyList />
+    <Signals>
+      <SignalDesc>Temperature</SignalDesc>
+      <SignalId>A</SignalId>
+      <InstrumentCurve>1</InstrumentCurve>
+      <ObjectNumber>0</ObjectNumber>
+      <Store>No</Store>
+      <DetectorId>WPS1</DetectorId>
+      <RegisterId>G1367A1</RegisterId>
+    </Signals>
+    <EnableRinse>0</EnableRinse>
+    <RinseDrawSpeed>1000</RinseDrawSpeed>
+    <RinseEjectSpeed>1000</RinseEjectSpeed>
+    <RinseVolume>1.3</RinseVolume>
+    <RinseVolume2>2</RinseVolume2>
+    <ValveSwitchTime1>0</ValveSwitchTime1>
+    <ValveSwitchTime2>0</ValveSwitchTime2>
+    <ValveSwitchTime3>0</ValveSwitchTime3>
+    <ValveSwitchTime4>0</ValveSwitchTime4>
+    <ValveMovements>1</ValveMovements>
+    <NRdyTemperatureRange />
+    <ThermostatTemperature />
+    <DrawPositionDetection>1</DrawPositionDetection>
+    <DrawSpeed>200</DrawSpeed>
+    <EjectSpeed>200</EjectSpeed>
+    <InjVolume>1</InjVolume>
+    <DrawPosition>0</DrawPosition>
+    <InjectMode>Use Injector Program</InjectMode>
+    <WashVessel>Vial 1</WashVessel>
+    <Overlap>Disable Overlapped Injection</Overlap>
+    <OverlapTime>0</OverlapTime>
+    <FlushOutFactor>5</FlushOutFactor>
+    <EnableBypass>Yes</EnableBypass>
+    <WaitAfterDraw>0</WaitAfterDraw>
+    <WashLocation>Not Applicable</WashLocation>
+    <WashTime>3</WashTime>
+    <WashCycles>1</WashCycles>
+    <InjProgram>
+      <FunctionCode>9</FunctionCode>
+      <Param0>4</Param0>
+      <Param1 />
+      <Param3 />
+      <Param4 />
+      <Param5 />
+    </InjProgram>
+    <InjProgram>
+      <FunctionCode>5</FunctionCode>
+      <Param0>2</Param0>
+      <Param1>0</Param1>
+      <Param3 />
+      <Param4>10</Param4>
+      <Param5 />
+    </InjProgram>
+    <InjProgram>
+      <FunctionCode>0</FunctionCode>
+      <Param0>-0.01</Param0>
+      <Param1>0</Param1>
+      <Param3>0.6</Param3>
+      <Param4>-10.1</Param4>
+      <Param5 />
+    </InjProgram>
+    <InjProgram>
+      <FunctionCode>14</FunctionCode>
+      <Param0>0</Param0>
+      <Param1>1</Param1>
+      <Param3 />
+      <Param4>3</Param4>
+      <Param5 />
+    </InjProgram>
+    <InjProgram>
+      <FunctionCode>3</FunctionCode>
+      <Param0 />
+      <Param1 />
+      <Param3 />
+      <Param4 />
+      <Param5 />
+    </InjProgram>
+    <InjProgram>
+      <FunctionCode>5</FunctionCode>
+      <Param0>0</Param0>
+      <Param1>0</Param1>
+      <Param3 />
+      <Param4>10</Param4>
+      <Param5 />
+    </InjProgram>
+    <InjProgram>
+      <FunctionCode>4</FunctionCode>
+      <Param0>1.24</Param0>
+      <Param1 />
+      <Param3 />
+      <Param4 />
+      <Param5 />
+    </InjProgram>
+    <InjProgram>
+      <FunctionCode>10</FunctionCode>
+      <Param0 />
+      <Param1 />
+      <Param3 />
+      <Param4 />
+      <Param5 />
+    </InjProgram>
+  </WPS>
+  <BinPump>
+    <ComponentModel>G1312A</ComponentModel>
+    <ComponentOrdinal>1</ComponentOrdinal>
+    <ComponentOptions>SSV</ComponentOptions>
+    <Version>0.2.041.0; Base: 0.2.064.0</Version>
+    <HardwareGeneration>1</HardwareGeneration>
+    <ObjClass>1</ObjClass>
+    <Title />
+    <Is3DUVEnabled>1</Is3DUVEnabled>
+    <Stoptime>6</Stoptime>
+    <UseMasterTime>Not Applicable</UseMasterTime>
+    <Posttime>4</Posttime>
+    <Delay>0</Delay>
+    <CONTACT_1>0</CONTACT_1>
+    <CONTACT_2>0</CONTACT_2>
+    <CONTACT_3>0</CONTACT_3>
+    <CONTACT_4>0</CONTACT_4>
+    <ContactsTimetable />
+    <Main>-2</Main>
+    <CosyList />
+    <Signals>
+      <SignalDesc>Pressure</SignalDesc>
+      <SignalId>A</SignalId>
+      <InstrumentCurve>1</InstrumentCurve>
+      <ObjectNumber>0</ObjectNumber>
+      <Store>No</Store>
+      <DetectorId>HPGR1</DetectorId>
+      <RegisterId>G1312A1</RegisterId>
+    </Signals>
+    <Signals>
+      <SignalDesc>Flow</SignalDesc>
+      <SignalId>B</SignalId>
+      <InstrumentCurve>1</InstrumentCurve>
+      <ObjectNumber>0</ObjectNumber>
+      <Store>No</Store>
+      <DetectorId>HPGR1</DetectorId>
+      <RegisterId>G1312A1</RegisterId>
+    </Signals>
+    <Signals>
+      <SignalDesc>Solvent% A</SignalDesc>
+      <SignalId>C</SignalId>
+      <InstrumentCurve>1</InstrumentCurve>
+      <ObjectNumber>0</ObjectNumber>
+      <Store>No</Store>
+      <DetectorId>HPGR1</DetectorId>
+      <RegisterId>G1312A1</RegisterId>
+    </Signals>
+    <Signals>
+      <SignalDesc>Solvent% B</SignalDesc>
+      <SignalId>D</SignalId>
+      <InstrumentCurve>1</InstrumentCurve>
+      <ObjectNumber>0</ObjectNumber>
+      <Store>No</Store>
+      <DetectorId>HPGR1</DetectorId>
+      <RegisterId>G1312A1</RegisterId>
+    </Signals>
+    <Signals>
+      <SignalDesc>Direction of piston A</SignalDesc>
+      <SignalId>E</SignalId>
+      <InstrumentCurve>1</InstrumentCurve>
+      <ObjectNumber>0</ObjectNumber>
+      <Store>No</Store>
+      <DetectorId>HPGR1</DetectorId>
+      <RegisterId>G1312A1</RegisterId>
+    </Signals>
+    <Signals>
+      <SignalDesc>Direction of piston B</SignalDesc>
+      <SignalId>F</SignalId>
+      <InstrumentCurve>1</InstrumentCurve>
+      <ObjectNumber>0</ObjectNumber>
+      <Store>No</Store>
+      <DetectorId>HPGR1</DetectorId>
+      <RegisterId>G1312A1</RegisterId>
+    </Signals>
+    <UseSolvCalibration>1</UseSolvCalibration>
+    <SolvCalibrationNameA />
+    <SolvCalibrationNameB />
+    <SolvCalibrationNameC />
+    <SolvCalibrationNameD />
+    <SolvCalibrationIndexA>-2</SolvCalibrationIndexA>
+    <SolvCalibrationIndexB>-2</SolvCalibrationIndexB>
+    <SolvCalibrationIndexC>-2</SolvCalibrationIndexC>
+    <SolvCalibrationIndexD>-2</SolvCalibrationIndexD>
+    <PressureOperatingLimit>0</PressureOperatingLimit>
+    <StrokeA>Auto</StrokeA>
+    <Flow>0.5</Flow>
+    <SolvRatioA>50</SolvRatioA>
+    <SolvNameA>H2O w/ 0.1% formic</SolvNameA>
+    <PressureMin>0</PressureMin>
+    <PressureMax>400</PressureMax>
+    <FRamp>100</FRamp>
+    <FPTimetable />
+    <StrokeB>Auto</StrokeB>
+    <CompressA>50</CompressA>
+    <CompressB>115</CompressB>
+    <SolvRatioB>50</SolvRatioB>
+    <SolvNameB>95:5 ACN/H2O w/0.1% formic acid</SolvNameB>
+    <SolvNameC>H2O + 10 mM NH4OAc</SolvNameC>
+    <SolvNameD>95:5 ACN+10mM NH4OAc</SolvNameD>
+    <SSVA>0</SSVA>
+    <SSVB>0</SSVB>
+  </BinPump>
+  <TCC>
+    <ComponentModel>G1316A</ComponentModel>
+    <ComponentOrdinal>1</ComponentOrdinal>
+    <ComponentOptions>CSV</ComponentOptions>
+    <Version>0.2.040.0; Base: 0.2.064.0</Version>
+    <HardwareGeneration>0</HardwareGeneration>
+    <ObjClass>1</ObjClass>
+    <Title />
+    <Is3DUVEnabled>1</Is3DUVEnabled>
+    <Stoptime>0</Stoptime>
+    <UseMasterTime>As Pump</UseMasterTime>
+    <Posttime>Off</Posttime>
+    <Delay>0</Delay>
+    <CONTACT_1>0</CONTACT_1>
+    <CONTACT_2>0</CONTACT_2>
+    <CONTACT_3>0</CONTACT_3>
+    <CONTACT_4>0</CONTACT_4>
+    <ContactsTimetable />
+    <Main>1</Main>
+    <CosyList />
+    <Signals>
+      <SignalDesc>Temperature of left heat exchanger</SignalDesc>
+      <SignalId>A</SignalId>
+      <InstrumentCurve>1</InstrumentCurve>
+      <ObjectNumber>1</ObjectNumber>
+      <Store>Stored</Store>
+      <DetectorId>TCC1</DetectorId>
+      <RegisterId>G1316A1</RegisterId>
+    </Signals>
+    <Signals>
+      <SignalDesc>Temperature of right heat exchanger</SignalDesc>
+      <SignalId>B</SignalId>
+      <InstrumentCurve>1</InstrumentCurve>
+      <ObjectNumber>1</ObjectNumber>
+      <Store>Stored</Store>
+      <DetectorId>TCC1</DetectorId>
+      <RegisterId>G1316A1</RegisterId>
+    </Signals>
+    <LeftRemoteTemp>0</LeftRemoteTemp>
+    <RightRemoteTemp>0</RightRemoteTemp>
+    <ColumnPlumbing>0</ColumnPlumbing>
+    <LeftTemp>50</LeftTemp>
+    <RightTemp>Not Controlled</RightTemp>
+    <RightTempValue>-274</RightTempValue>
+    <LeftReady>With Any Temp</LeftReady>
+    <RightReady>0.8</RightReady>
+    <TwoTemperatures />
+    <ColumnValve>1</ColumnValve>
+    <TemperatureTimetable />
+  </TCC>
+  <MSAcqMethod>
+    <msInstrument>QqQ</msInstrument>
+    <ionSource>ESI</ionSource>
+    <tuneFile>D:\MassHunter\tune\QQQ\B18 ESI Tune_Q1pw1.0_Q2pw0.7_wLags-063006.TUNE.XML</tuneFile>
+    <stopMode>ByStopTime</stopMode>
+    <stopTime>6</stopTime>
+    <collisionGasOn>true</collisionGasOn>
+    <isTimeFilterEnabled>true</isTimeFilterEnabled>
+    <timeFilterPeakWidth>0.07</timeFilterPeakWidth>
+    <timeSegments>
+      <timeSegment>
+        <index>1</index>
+        <startTime>0</startTime>
+        <diverterValveState>ToMS</diverterValveState>
+        <sourceParameters>
+          <sourceParameter>
+            <id>DGasHeater</id>
+            <posPolarityValue>350</posPolarityValue>
+            <negPolarityValue>350</negPolarityValue>
+          </sourceParameter>
+          <sourceParameter>
+            <id>DGasFlow</id>
+            <posPolarityValue>12</posPolarityValue>
+            <negPolarityValue>12</negPolarityValue>
+          </sourceParameter>
+          <sourceParameter>
+            <id>NebulizerPressure</id>
+            <posPolarityValue>60</posPolarityValue>
+            <negPolarityValue>60</negPolarityValue>
+          </sourceParameter>
+          <sourceParameter>
+            <id>VCap</id>
+            <posPolarityValue>4000</posPolarityValue>
+            <negPolarityValue>0</negPolarityValue>
+          </sourceParameter>
+        </sourceParameters>
+        <isDataSaved>true</isDataSaved>
+        <scanSegments>
+          <scanSegment>
+            <index>1</index>
+            <segmentName>GF_MS2scan_profile</segmentName>
+            <ionMode>ESI</ionMode>
+            <ionPolarity>Positive</ionPolarity>
+            <scanType>MS2Scan</scanType>
+            <scanTime>1450</scanTime>
+            <dataStorage>Profile</dataStorage>
+            <threshold>0</threshold>
+            <scanElements>
+              <scanElement>
+                <index>1</index>
+                <ms2LowMz>150</ms2LowMz>
+                <ms2HighMz>1600</ms2HighMz>
+                <ms2Stepsize>0.1</ms2Stepsize>
+                <fragmentor>150</fragmentor>
+                <deltaEMV>280</deltaEMV>
+              </scanElement>
+            </scanElements>
+          </scanSegment>
+        </scanSegments>
+      </timeSegment>
+      <timeSegment>
+        <index>2</index>
+        <startTime>1.5</startTime>
+        <diverterValveState>ToMS</diverterValveState>
+        <sourceParameters>
+          <sourceParameter>
+            <id>DGasHeater</id>
+            <posPolarityValue>350</posPolarityValue>
+            <negPolarityValue>350</negPolarityValue>
+          </sourceParameter>
+          <sourceParameter>
+            <id>DGasFlow</id>
+            <posPolarityValue>12</posPolarityValue>
+            <negPolarityValue>12</negPolarityValue>
+          </sourceParameter>
+          <sourceParameter>
+            <id>NebulizerPressure</id>
+            <posPolarityValue>60</posPolarityValue>
+            <negPolarityValue>60</negPolarityValue>
+          </sourceParameter>
+          <sourceParameter>
+            <id>VCap</id>
+            <posPolarityValue>4000</posPolarityValue>
+            <negPolarityValue>0</negPolarityValue>
+          </sourceParameter>
+        </sourceParameters>
+        <isDataSaved>true</isDataSaved>
+        <scanSegments>
+          <scanSegment>
+            <index>1</index>
+            <segmentName>GF_PIscan_0ev_profile</segmentName>
+            <ionMode>ESI</ionMode>
+            <ionPolarity>Positive</ionPolarity>
+            <scanType>ProductIon</scanType>
+            <scanTime>1550</scanTime>
+            <dataStorage>Profile</dataStorage>
+            <threshold>0</threshold>
+            <scanElements>
+              <scanElement>
+                <index>1</index>
+                <ms1LowMz>785.84</ms1LowMz>
+                <ms2LowMz>50</ms2LowMz>
+                <ms2HighMz>1600</ms2HighMz>
+                <ms2Stepsize>0.1</ms2Stepsize>
+                <fragmentor>150</fragmentor>
+                <collisionEnergy>0</collisionEnergy>
+                <deltaEMV>280</deltaEMV>
+              </scanElement>
+            </scanElements>
+          </scanSegment>
+        </scanSegments>
+      </timeSegment>
+      <timeSegment>
+        <index>3</index>
+        <startTime>3</startTime>
+        <diverterValveState>ToMS</diverterValveState>
+        <sourceParameters>
+          <sourceParameter>
+            <id>DGasHeater</id>
+            <posPolarityValue>350</posPolarityValue>
+            <negPolarityValue>350</negPolarityValue>
+          </sourceParameter>
+          <sourceParameter>
+            <id>DGasFlow</id>
+            <posPolarityValue>12</posPolarityValue>
+            <negPolarityValue>12</negPolarityValue>
+          </sourceParameter>
+          <sourceParameter>
+            <id>NebulizerPressure</id>
+            <posPolarityValue>60</posPolarityValue>
+            <negPolarityValue>60</negPolarityValue>
+          </sourceParameter>
+          <sourceParameter>
+            <id>VCap</id>
+            <posPolarityValue>4000</posPolarityValue>
+            <negPolarityValue>0</negPolarityValue>
+          </sourceParameter>
+        </sourceParameters>
+        <isDataSaved>true</isDataSaved>
+        <scanSegments>
+          <scanSegment>
+            <index>1</index>
+            <segmentName>GF_PIscan_27ev_profile</segmentName>
+            <ionMode>ESI</ionMode>
+            <ionPolarity>Positive</ionPolarity>
+            <scanType>ProductIon</scanType>
+            <scanTime>1550</scanTime>
+            <dataStorage>Profile</dataStorage>
+            <threshold>0</threshold>
+            <scanElements>
+              <scanElement>
+                <index>1</index>
+                <ms1LowMz>785.84</ms1LowMz>
+                <ms2LowMz>50</ms2LowMz>
+                <ms2HighMz>1600</ms2HighMz>
+                <ms2Stepsize>0.1</ms2Stepsize>
+                <fragmentor>150</fragmentor>
+                <collisionEnergy>27</collisionEnergy>
+                <deltaEMV>280</deltaEMV>
+              </scanElement>
+            </scanElements>
+          </scanSegment>
+        </scanSegments>
+      </timeSegment>
+      <timeSegment>
+        <index>4</index>
+        <startTime>4.5</startTime>
+        <diverterValveState>ToMS</diverterValveState>
+        <sourceParameters>
+          <sourceParameter>
+            <id>DGasHeater</id>
+            <posPolarityValue>350</posPolarityValue>
+            <negPolarityValue>350</negPolarityValue>
+          </sourceParameter>
+          <sourceParameter>
+            <id>DGasFlow</id>
+            <posPolarityValue>12</posPolarityValue>
+            <negPolarityValue>12</negPolarityValue>
+          </sourceParameter>
+          <sourceParameter>
+            <id>NebulizerPressure</id>
+            <posPolarityValue>60</posPolarityValue>
+            <negPolarityValue>60</negPolarityValue>
+          </sourceParameter>
+          <sourceParameter>
+            <id>VCap</id>
+            <posPolarityValue>4000</posPolarityValue>
+            <negPolarityValue>0</negPolarityValue>
+          </sourceParameter>
+        </sourceParameters>
+        <isDataSaved>true</isDataSaved>
+        <scanSegments>
+          <scanSegment>
+            <index>1</index>
+            <ionMode>ESI</ionMode>
+            <ionPolarity>Positive</ionPolarity>
+            <scanType>MRM</scanType>
+            <scanElements>
+              <scanElement>
+                <index>1</index>
+                <compoundName>GF_2ng_MRM_y7_813.16</compoundName>
+                <isISTD>false</isISTD>
+                <ms1LowMz>785.84</ms1LowMz>
+                <ms1Res>Unit</ms1Res>
+                <ms2LowMz>813.16</ms2LowMz>
+                <ms2Res>Unit</ms2Res>
+                <dwell>100</dwell>
+                <fragmentor>150</fragmentor>
+                <collisionEnergy>27</collisionEnergy>
+                <deltaEMV>280</deltaEMV>
+              </scanElement>
+              <scanElement>
+                <index>2</index>
+                <compoundName>GF_2ng_MRM_y4_480.24</compoundName>
+                <isISTD>false</isISTD>
+                <ms1LowMz>785.84</ms1LowMz>
+                <ms1Res>Unit</ms1Res>
+                <ms2LowMz>480.24</ms2LowMz>
+                <ms2Res>Unit</ms2Res>
+                <dwell>100</dwell>
+                <fragmentor>150</fragmentor>
+                <collisionEnergy>27</collisionEnergy>
+                <deltaEMV>280</deltaEMV>
+              </scanElement>
+            </scanElements>
+          </scanSegment>
+        </scanSegments>
+      </timeSegment>
+    </timeSegments>
+    <instrumentCurves>
+      <samplingRate>5</samplingRate>
+      <actualID>MS1Heater</actualID>
+    </instrumentCurves>
+    <chromatograms>
+      <chromatogram>
+        <index>1</index>
+        <chromType>TIC</chromType>
+        <tic />
+        <label>TIC</label>
+        <offset>10</offset>
+        <yRange>2000000</yRange>
+      </chromatogram>
+    </chromatograms>
+  </MSAcqMethod>
+</AcqMethod>
