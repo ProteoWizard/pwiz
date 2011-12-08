@@ -1001,7 +1001,7 @@ void executeProteinReaderTask(ProteinReaderTaskPtr proteinReaderTask, ThreadStat
         const proteome::ProteomeData& pd = *proteinReaderTask->proteomeDataPtr;
         const proteome::ProteinList& pl = *pd.proteinListPtr;
 
-        const size_t batchSize = 100;
+        const size_t batchSize = 50;
         vector<proteome::ProteinPtr> proteinBatch(batchSize);
 
         boost::mutex::scoped_lock lock(proteinReaderTask->queueMutex, boost::defer_lock);
@@ -1041,8 +1041,8 @@ void executeProteinReaderTask(ProteinReaderTaskPtr proteinReaderTask, ThreadStat
                         maxQueueSize = max(maxQueueSize, task.get() ? task->proteinQueue.size() : 0);
                     }
 
-                    // keep at most 20 batches in the queue
-                    if (maxQueueSize > batchSize * 20)
+                    // keep at most 100 batches in the queue
+                    if (maxQueueSize > batchSize * 100)
                     {
                         lock.unlock();
                         boost::this_thread::sleep(bpt::milliseconds(100));
@@ -1173,7 +1173,7 @@ void executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask, ThreadStat
                     }
                 }
 
-                const size_t maxBatchSize = 100;
+                const size_t maxBatchSize = 50;
                 size_t proteinsRemaining = proteinReaderTask.proteinCount - proteinsDigested;
                 size_t batchSize = min(queueSize, min(proteinsRemaining, maxBatchSize));
 
@@ -1320,9 +1320,13 @@ void executePeptideFinderTask(PeptideFinderTaskPtr peptideFinderTask, ThreadStat
                 if (filteredProteinIds.count(id) > 0)
                     filteredProteinIndexes.push_back(index);
 
-            ITERATION_UPDATE(ilr, 0, 0, parserTask.inputFilepath + "*saving database");
-            boost::mutex::scoped_lock ioLock(ioMutex);
-            idpDb.save_to_file(idpDbFilepath.c_str());
+            {
+                ITERATION_UPDATE(ilr, 0, 0, parserTask.inputFilepath + "*waiting");
+                boost::mutex::scoped_lock ioLock(ioMutex);
+
+                ITERATION_UPDATE(ilr, 0, 0, parserTask.inputFilepath + "*saving database");
+                idpDb.save_to_file(idpDbFilepath.c_str());
+            }
 
             sqlite::database idpDbFile(idpDbFilepath, sqlite::no_mutex);
             
