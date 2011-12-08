@@ -44,7 +44,6 @@ namespace IDPicker
         [STAThread]
         static void Main (string[] args)
         {
-
             // Add the event handler for handling UI thread exceptions to the event.
             Application.ThreadException += new ThreadExceptionEventHandler(UIThread_UnhandledException);
 
@@ -52,21 +51,40 @@ namespace IDPicker
             // our handler.
             Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
 
-            Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);
-
             // Add the event handler for handling non-UI thread exceptions to the event. 
             AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(CurrentDomain_UnhandledException);
 
-            // initialize webClient asynchronously
-            initializeWebClient();
+            var singleInstanceHandler = new SingleInstanceHandler(Application.ExecutablePath) { Timeout = 200 };
+            singleInstanceHandler.Launching += (sender, e) =>
+            {
+                Application.EnableVisualStyles();
+                Application.SetCompatibleTextRenderingDefault(false);
 
-            MainWindow = new IDPickerForm(args);
-            Application.Run(MainWindow);
+                // initialize webClient asynchronously
+                initializeWebClient();
+
+                MainWindow = new IDPickerForm(e.Args);
+                Application.Run(MainWindow);
+            };
+
+            try
+            {
+                singleInstanceHandler.Connect(args);
+            }
+            catch (Exception e)
+            {
+                HandleException(e);
+            }
         }
 
         public static void HandleException (Exception e)
         {
+            if (MainWindow == null)
+            {
+                MessageBox.Show(e.ToString(), "Error");
+                return;
+            }
+
             if (MainWindow.InvokeRequired)
             {
                 MainWindow.Invoke(new MethodInvoker(() => HandleException(e)));

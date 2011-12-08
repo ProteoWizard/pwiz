@@ -189,22 +189,86 @@
                 {
                     "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_97B597E720D449E9A06F47B30D21C340"
                     {
-                    "Name" = "8:Software"
-                    "Condition" = "8:"
-                    "AlwaysCreate" = "11:FALSE"
-                    "DeleteAtUninstall" = "11:FALSE"
-                    "Transitive" = "11:FALSE"
+                        "Name" = "8:Software"
+                        "Condition" = "8:"
+                        "AlwaysCreate" = "11:FALSE"
+                        "DeleteAtUninstall" = "11:FALSE"
+                        "Transitive" = "11:FALSE"
                         "Keys"
                         {
                             "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_F25BA142D91B4E288BAA0AE1824323D1"
                             {
-                            "Name" = "8:[Manufacturer]"
-                            "Condition" = "8:"
-                            "AlwaysCreate" = "11:FALSE"
-                            "DeleteAtUninstall" = "11:FALSE"
-                            "Transitive" = "11:FALSE"
+                                "Name" = "8:[Manufacturer]"
+                                "Condition" = "8:"
+                                "AlwaysCreate" = "11:FALSE"
+                                "DeleteAtUninstall" = "11:FALSE"
+                                "Transitive" = "11:FALSE"
                                 "Keys"
                                 {
+                                }
+                                "Values"
+                                {
+                                }
+                            }
+                            "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_4E0889CC53BC4083B8648A4CE80CE825"
+                            {
+                                "Name" = "8:Microsoft"
+                                "Condition" = "8:"
+                                "AlwaysCreate" = "11:FALSE"
+                                "DeleteAtUninstall" = "11:FALSE"
+                                "Transitive" = "11:FALSE"
+                                "Keys"
+                                {
+                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_9800A00C9E624F99832B6691170B86A9"
+                                    {
+                                        "Name" = "8:Windows"
+                                        "Condition" = "8:"
+                                        "AlwaysCreate" = "11:FALSE"
+                                        "DeleteAtUninstall" = "11:FALSE"
+                                        "Transitive" = "11:FALSE"
+                                        "Keys"
+                                        {
+                                            "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_8926686674224893B274D45D656095EB"
+                                            {
+                                                "Name" = "8:CurrentVersion"
+                                                "Condition" = "8:"
+                                                "AlwaysCreate" = "11:FALSE"
+                                                "DeleteAtUninstall" = "11:FALSE"
+                                                "Transitive" = "11:FALSE"
+                                                "Keys"
+                                                {
+                                                    "{60EA8692-D2D5-43EB-80DC-7906BF13D6EF}:_4523A2FAFD684AEFBB2CD9EC2AAD8E82"
+                                                    {
+                                                        "Name" = "8:Explorer"
+                                                        "Condition" = "8:"
+                                                        "AlwaysCreate" = "11:FALSE"
+                                                        "DeleteAtUninstall" = "11:FALSE"
+                                                        "Transitive" = "11:FALSE"
+                                                        "Keys"
+                                                        {
+                                                        }
+                                                        "Values"
+                                                        {
+                                                            "{ADCFDA98-8FDD-45E4-90BC-E3D20B029870}:_DEE971A302F24EB9922F0911A615E505"
+                                                            {
+                                                            "Name" = "8:MultipleInvokePromptMinimum"
+                                                            "Condition" = "8:"
+                                                            "Transitive" = "11:FALSE"
+                                                            "ValueTypes" = "3:3"
+                                                            "Value" = "3:22"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                                "Values"
+                                                {
+                                                }
+                                            }
+                                        }
+                                        "Values"
+                                        {
+                                        }
+                                    }
                                 }
                                 "Values"
                                 {

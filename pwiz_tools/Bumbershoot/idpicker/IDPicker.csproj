@@ -264,6 +264,7 @@
     <Compile Include="Forms\ProteinTableForm.Designer.cs">
       <DependentUpon>ProteinTableForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="SingleInstanceHandler.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="Controls\Controls.csproj">
