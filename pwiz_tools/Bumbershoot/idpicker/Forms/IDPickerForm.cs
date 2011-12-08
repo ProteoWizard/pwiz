@@ -245,7 +245,18 @@ namespace IDPicker
                                   SupportMultiDottedExtensions = true
                               };
                 if (ofd.ShowDialog() == DialogResult.OK)
+                {
                     fileNames = ofd.FileNames.ToList();
+                    if (fileNames.Any())
+                    {
+                        var baseDirectory = Path.GetDirectoryName(fileNames[0]);
+                        foreach (var file in fileNames)
+                            if (Path.GetDirectoryName(file) != baseDirectory)
+                                baseDirectory = null;
+                        if (baseDirectory != null)
+                            FolderHistoryInterface.AddFolderToHistory(baseDirectory);
+                    }
+                }
                 else return;
             }
             else
@@ -1216,6 +1227,7 @@ namespace IDPicker
             viewFilter.ApplyBasicFilters(session);
 
             session.Close();
+            sessionFactory.Close();
 
             clearData();
             progressMonitor = new ProgressMonitor();
@@ -1919,6 +1931,18 @@ namespace IDPicker
 
             ci.clusterTables = allTables;
             return ci;
+        }
+
+        private void fileToolStripMenuRoot_DropDownOpening(object sender, EventArgs e)
+        {
+            newToolStripMenuItem.Visible = (session != null);
+            importToolStripMenuItem.Visible = (session != null);
+        }
+
+        private void importToToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            if (session == null)
+                openToolStripMenuItem_Click(newToolStripMenuItem, e);
         }
     }
 

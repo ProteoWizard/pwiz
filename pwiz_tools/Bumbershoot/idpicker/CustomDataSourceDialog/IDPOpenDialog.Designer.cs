@@ -147,9 +147,7 @@ namespace CustomDataSourceDialog
             // 
             // SearchBox
             // 
-            this.SearchBox.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
-                        | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.SearchBox.Dock = System.Windows.Forms.DockStyle.Fill;
             this.SearchBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.SearchBox.ForeColor = System.Drawing.SystemColors.GrayText;
             this.SearchBox.Location = new System.Drawing.Point(0, 0);
@@ -200,6 +198,7 @@ namespace CustomDataSourceDialog
             // 
             // SubfolderBox
             // 
+            this.SubfolderBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.SubfolderBox.AutoSize = true;
             this.SubfolderBox.Location = new System.Drawing.Point(614, 7);
             this.SubfolderBox.Name = "SubfolderBox";
@@ -232,6 +231,7 @@ namespace CustomDataSourceDialog
             // 
             // RemoveNode
             // 
+            this.RemoveNode.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.RemoveNode.Location = new System.Drawing.Point(6, 205);
             this.RemoveNode.Name = "RemoveNode";
             this.RemoveNode.Size = new System.Drawing.Size(30, 23);
@@ -242,6 +242,7 @@ namespace CustomDataSourceDialog
             // 
             // AddNode
             // 
+            this.AddNode.Anchor = System.Windows.Forms.AnchorStyles.Left;
             this.AddNode.Location = new System.Drawing.Point(6, 176);
             this.AddNode.Name = "AddNode";
             this.AddNode.Size = new System.Drawing.Size(30, 23);

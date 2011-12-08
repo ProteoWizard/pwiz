@@ -165,11 +165,13 @@ namespace IDPicker.Controls
             svmPanel.Visible = showNonScoreOptions;
             if (showNonScoreOptions)
             {
+                RankPanel.Location = new Point(3,145);
                 massErrorHandlingComboBox.SelectedIndex = (int) Qonverter.MassErrorHandling.Ignore;
                 missedCleavagesComboBox.SelectedIndex = (int) Qonverter.MissedCleavagesHandling.Feature;
             }
             else
             {
+                RankPanel.Location = new Point(3, 73);
                 massErrorHandlingComboBox.SelectedIndex = (int) Qonverter.MassErrorHandling.Ignore;
                 missedCleavagesComboBox.SelectedIndex = (int) Qonverter.MissedCleavagesHandling.Ignore;
             }

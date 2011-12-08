@@ -435,7 +435,7 @@ namespace IDPicker.Forms
             var exportTable = new List<List<string>>();
             IList<int> exportedRows, exportedColumns;
 
-            if (treeDataGridView.SelectedCells.Count > 0 && !treeDataGridView.AreAllCellsSelected(false))
+            if (treeDataGridView.SelectedCells.Count > 1 && !treeDataGridView.AreAllCellsSelected(false))
             {
                 var selectedRows = new Set<int>();
                 var selectedColumns = new Map<int, int>(); // ordered by DisplayIndex

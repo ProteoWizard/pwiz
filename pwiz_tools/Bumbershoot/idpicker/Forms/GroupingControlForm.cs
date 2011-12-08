@@ -312,7 +312,7 @@ namespace IDPicker.Forms
             if (treeNode.Data is SpectrumSourceGroup)
             {
                 (treeNode.Data as SpectrumSourceGroup).Name =
-                    (rootname + treeNode.Text)
+                    (rootname + "/"+ treeNode.Text)
                         .Replace("//", "/");
 
                 nodeList.Add(treeNode);

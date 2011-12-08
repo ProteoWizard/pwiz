@@ -116,6 +116,7 @@ namespace IDPicker.Forms
             // 
             // DeleteButton
             // 
+            this.DeleteButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.DeleteButton.Location = new System.Drawing.Point(224, 346);
             this.DeleteButton.Name = "DeleteButton";
             this.DeleteButton.Size = new System.Drawing.Size(104, 23);
@@ -126,6 +127,7 @@ namespace IDPicker.Forms
             // 
             // RenameButton
             // 
+            this.RenameButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.RenameButton.Location = new System.Drawing.Point(114, 346);
             this.RenameButton.Name = "RenameButton";
             this.RenameButton.Size = new System.Drawing.Size(104, 23);
@@ -136,6 +138,7 @@ namespace IDPicker.Forms
             // 
             // AddButton
             // 
+            this.AddButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.AddButton.Location = new System.Drawing.Point(4, 346);
             this.AddButton.Name = "AddButton";
             this.AddButton.Size = new System.Drawing.Size(104, 23);
@@ -146,6 +149,7 @@ namespace IDPicker.Forms
             // 
             // DecoyPrefixLabel
             // 
+            this.DecoyPrefixLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.DecoyPrefixLabel.AutoSize = true;
             this.DecoyPrefixLabel.Location = new System.Drawing.Point(3, 380);
             this.DecoyPrefixLabel.Name = "DecoyPrefixLabel";
@@ -155,6 +159,7 @@ namespace IDPicker.Forms
             // 
             // DecoyPrefixBox
             // 
+            this.DecoyPrefixBox.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.DecoyPrefixBox.Location = new System.Drawing.Point(74, 377);
             this.DecoyPrefixBox.Name = "DecoyPrefixBox";
             this.DecoyPrefixBox.Size = new System.Drawing.Size(92, 20);

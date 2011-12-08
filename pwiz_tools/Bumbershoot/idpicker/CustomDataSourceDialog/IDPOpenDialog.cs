@@ -381,7 +381,7 @@ namespace CustomDataSourceDialog
             {
                 foreach (TreeNode node in FileTree.Nodes)
                 {
-                    if (node.Text == dirList[0])
+                    if (node.Text.ToLower() == dirList[0].ToLower())
                     {
                         currentNode = node;
                         currentNode.Expand();
@@ -986,14 +986,22 @@ namespace CustomDataSourceDialog
                     var temp = session.QueryOver<SpectrumSource>().List();
                     sourceList.AddRange(temp.Select(item => item.Name));
                     session.Close();
+                    session.Dispose();
                     sessionFactory.Close();
+                    sessionFactory.Dispose();
                 }
                 catch (Exception e)
                 {
                     if (session != null)
+                    {
                         session.Close();
+                        session.Dispose();
+                    }
                     if (sessionFactory != null)
+                    {
                         sessionFactory.Close();
+                        sessionFactory.Dispose();
+                    }
                     var errorNode = (from TreeNode node in FileTreeView.Nodes
                                      where node.Name == "IDPDBErrorNode"
                                      select node).SingleOrDefault();

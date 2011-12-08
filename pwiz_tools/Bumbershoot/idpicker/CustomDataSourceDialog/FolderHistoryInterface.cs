@@ -29,14 +29,14 @@ using System.Text;
 
 namespace CustomDataSourceDialog
 {
-    static class FolderHistoryInterface
+    static public class FolderHistoryInterface
     {
-        static internal List<string> GetRecentFolders()
+        static public List<string> GetRecentFolders()
         {
             return Properties.Settings.Default.FolderHistory.Split("|".ToCharArray(),StringSplitOptions.RemoveEmptyEntries).ToList();
         }
 
-        static internal void AddFolderToHistory(string newFolder)
+        static public void AddFolderToHistory(string newFolder)
         {
             var currentList = GetRecentFolders();
             

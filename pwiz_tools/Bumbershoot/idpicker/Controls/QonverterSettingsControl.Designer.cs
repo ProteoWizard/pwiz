@@ -52,49 +52,32 @@ namespace IDPicker.Controls
         /// </summary>
         private void InitializeComponent ()
         {
-            this.flowLayoutPanel = new System.Windows.Forms.FlowLayoutPanel();
             this.label1 = new System.Windows.Forms.Label();
             this.qonvertMethodComboBox = new System.Windows.Forms.ComboBox();
-            this.svmPanel = new System.Windows.Forms.Panel();
+            this.label2 = new System.Windows.Forms.Label();
+            this.chargeStateHandlingComboBox = new System.Windows.Forms.ComboBox();
+            this.label3 = new System.Windows.Forms.Label();
             this.terminalSpecificityHandlingComboBox = new System.Windows.Forms.ComboBox();
+            this.svmPanel = new System.Windows.Forms.Panel();
             this.kernelComboBox = new System.Windows.Forms.ComboBox();
             this.label6 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
             this.missedCleavagesComboBox = new System.Windows.Forms.ComboBox();
             this.label5 = new System.Windows.Forms.Label();
-            this.label3 = new System.Windows.Forms.Label();
             this.massErrorHandlingComboBox = new System.Windows.Forms.ComboBox();
-            this.chargeStateHandlingComboBox = new System.Windows.Forms.ComboBox();
             this.label4 = new System.Windows.Forms.Label();
+            this.RankPanel = new System.Windows.Forms.Panel();
             this.rerankingCheckbox = new System.Windows.Forms.CheckBox();
             this.scoreGridView = new System.Windows.Forms.DataGridView();
             this.scoreNameColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.scoreWeightColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.scoreOrderColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
             this.scoreNormalizationColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            this.panel1 = new System.Windows.Forms.Panel();
-            this.flowLayoutPanel.SuspendLayout();
+            this.ProperLayoutPanel = new System.Windows.Forms.Panel();
             this.svmPanel.SuspendLayout();
+            this.RankPanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.scoreGridView)).BeginInit();
-            this.panel1.SuspendLayout();
+            this.ProperLayoutPanel.SuspendLayout();
             this.SuspendLayout();
-            // 
-            // flowLayoutPanel
-            // 
-            this.flowLayoutPanel.Controls.Add(this.label1);
-            this.flowLayoutPanel.Controls.Add(this.qonvertMethodComboBox);
-            this.flowLayoutPanel.Controls.Add(this.label2);
-            this.flowLayoutPanel.Controls.Add(this.chargeStateHandlingComboBox);
-            this.flowLayoutPanel.Controls.Add(this.label3);
-            this.flowLayoutPanel.Controls.Add(this.terminalSpecificityHandlingComboBox);
-            this.flowLayoutPanel.Controls.Add(this.svmPanel);
-            this.flowLayoutPanel.Controls.Add(this.panel1);
-            this.flowLayoutPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.flowLayoutPanel.Location = new System.Drawing.Point(0, 0);
-            this.flowLayoutPanel.Name = "flowLayoutPanel";
-            this.flowLayoutPanel.Size = new System.Drawing.Size(321, 371);
-            this.flowLayoutPanel.TabIndex = 5;
-            this.flowLayoutPanel.Resize += new System.EventHandler(this.flowLayoutPanel_Resize);
             // 
             // label1
             // 
@@ -111,7 +94,6 @@ namespace IDPicker.Controls
             this.qonvertMethodComboBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.qonvertMethodComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.flowLayoutPanel.SetFlowBreak(this.qonvertMethodComboBox, true);
             this.qonvertMethodComboBox.FormattingEnabled = true;
             this.qonvertMethodComboBox.Items.AddRange(new object[] {
             "Static Weights",
@@ -119,65 +101,9 @@ namespace IDPicker.Controls
             this.qonvertMethodComboBox.Location = new System.Drawing.Point(107, 3);
             this.qonvertMethodComboBox.Margin = new System.Windows.Forms.Padding(0, 3, 0, 0);
             this.qonvertMethodComboBox.Name = "qonvertMethodComboBox";
-            this.qonvertMethodComboBox.Size = new System.Drawing.Size(208, 21);
+            this.qonvertMethodComboBox.Size = new System.Drawing.Size(205, 21);
             this.qonvertMethodComboBox.TabIndex = 3;
             this.qonvertMethodComboBox.SelectedIndexChanged += new System.EventHandler(this.qonvertMethodComboBox_SelectedIndexChanged);
-            // 
-            // svmPanel
-            // 
-            this.svmPanel.Controls.Add(this.kernelComboBox);
-            this.svmPanel.Controls.Add(this.label6);
-            this.svmPanel.Controls.Add(this.missedCleavagesComboBox);
-            this.svmPanel.Controls.Add(this.label5);
-            this.svmPanel.Controls.Add(this.massErrorHandlingComboBox);
-            this.svmPanel.Controls.Add(this.label4);
-            this.svmPanel.Location = new System.Drawing.Point(3, 75);
-            this.svmPanel.Name = "svmPanel";
-            this.svmPanel.Size = new System.Drawing.Size(318, 77);
-            this.svmPanel.TabIndex = 122;
-            // 
-            // terminalSpecificityHandlingComboBox
-            // 
-            this.terminalSpecificityHandlingComboBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.terminalSpecificityHandlingComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.terminalSpecificityHandlingComboBox.FormattingEnabled = true;
-            this.terminalSpecificityHandlingComboBox.Items.AddRange(new object[] {
-            "Ignore",
-            "Partition",
-            "Feature (SVM)"});
-            this.terminalSpecificityHandlingComboBox.Location = new System.Drawing.Point(107, 51);
-            this.terminalSpecificityHandlingComboBox.Margin = new System.Windows.Forms.Padding(0, 3, 0, 0);
-            this.terminalSpecificityHandlingComboBox.Name = "terminalSpecificityHandlingComboBox";
-            this.terminalSpecificityHandlingComboBox.Size = new System.Drawing.Size(208, 21);
-            this.terminalSpecificityHandlingComboBox.TabIndex = 112;
-            // 
-            // kernelComboBox
-            // 
-            this.kernelComboBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.kernelComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.kernelComboBox.FormattingEnabled = true;
-            this.kernelComboBox.Items.AddRange(new object[] {
-            "Linear",
-            "Polynomial",
-            "RBF",
-            "Sigmoid"});
-            this.kernelComboBox.Location = new System.Drawing.Point(104, 51);
-            this.kernelComboBox.Margin = new System.Windows.Forms.Padding(0, 3, 0, 0);
-            this.kernelComboBox.Name = "kernelComboBox";
-            this.kernelComboBox.Size = new System.Drawing.Size(208, 21);
-            this.kernelComboBox.TabIndex = 115;
-            // 
-            // label6
-            // 
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(35, 56);
-            this.label6.Margin = new System.Windows.Forms.Padding(38, 8, 3, 0);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(66, 13);
-            this.label6.TabIndex = 120;
-            this.label6.Text = "SVM Kernel:";
             // 
             // label2
             // 
@@ -188,56 +114,6 @@ namespace IDPicker.Controls
             this.label2.Size = new System.Drawing.Size(72, 13);
             this.label2.TabIndex = 116;
             this.label2.Text = "Charge State:";
-            // 
-            // missedCleavagesComboBox
-            // 
-            this.missedCleavagesComboBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.missedCleavagesComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.missedCleavagesComboBox.FormattingEnabled = true;
-            this.missedCleavagesComboBox.Items.AddRange(new object[] {
-            "Ignore",
-            "Feature (SVM)"});
-            this.missedCleavagesComboBox.Location = new System.Drawing.Point(104, 27);
-            this.missedCleavagesComboBox.Margin = new System.Windows.Forms.Padding(0, 3, 0, 0);
-            this.missedCleavagesComboBox.Name = "missedCleavagesComboBox";
-            this.missedCleavagesComboBox.Size = new System.Drawing.Size(208, 21);
-            this.missedCleavagesComboBox.TabIndex = 114;
-            // 
-            // label5
-            // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(5, 32);
-            this.label5.Margin = new System.Windows.Forms.Padding(8, 8, 3, 0);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(96, 13);
-            this.label5.TabIndex = 119;
-            this.label5.Text = "Missed Cleavages:";
-            // 
-            // label3
-            // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(3, 56);
-            this.label3.Margin = new System.Windows.Forms.Padding(3, 8, 3, 0);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(101, 13);
-            this.label3.TabIndex = 117;
-            this.label3.Text = "Terminal Specificity:";
-            // 
-            // massErrorHandlingComboBox
-            // 
-            this.massErrorHandlingComboBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
-                        | System.Windows.Forms.AnchorStyles.Right)));
-            this.massErrorHandlingComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.massErrorHandlingComboBox.FormattingEnabled = true;
-            this.massErrorHandlingComboBox.Items.AddRange(new object[] {
-            "Ignore",
-            "Feature (SVM)"});
-            this.massErrorHandlingComboBox.Location = new System.Drawing.Point(104, 3);
-            this.massErrorHandlingComboBox.Margin = new System.Windows.Forms.Padding(0, 3, 0, 0);
-            this.massErrorHandlingComboBox.Name = "massErrorHandlingComboBox";
-            this.massErrorHandlingComboBox.Size = new System.Drawing.Size(208, 21);
-            this.massErrorHandlingComboBox.TabIndex = 113;
             // 
             // chargeStateHandlingComboBox
             // 
@@ -252,18 +128,137 @@ namespace IDPicker.Controls
             this.chargeStateHandlingComboBox.Location = new System.Drawing.Point(107, 27);
             this.chargeStateHandlingComboBox.Margin = new System.Windows.Forms.Padding(0, 3, 0, 0);
             this.chargeStateHandlingComboBox.Name = "chargeStateHandlingComboBox";
-            this.chargeStateHandlingComboBox.Size = new System.Drawing.Size(208, 21);
+            this.chargeStateHandlingComboBox.Size = new System.Drawing.Size(205, 21);
             this.chargeStateHandlingComboBox.TabIndex = 111;
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(3, 56);
+            this.label3.Margin = new System.Windows.Forms.Padding(3, 8, 3, 0);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(101, 13);
+            this.label3.TabIndex = 117;
+            this.label3.Text = "Terminal Specificity:";
+            // 
+            // terminalSpecificityHandlingComboBox
+            // 
+            this.terminalSpecificityHandlingComboBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.terminalSpecificityHandlingComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.terminalSpecificityHandlingComboBox.FormattingEnabled = true;
+            this.terminalSpecificityHandlingComboBox.Items.AddRange(new object[] {
+            "Ignore",
+            "Partition",
+            "Feature (SVM)"});
+            this.terminalSpecificityHandlingComboBox.Location = new System.Drawing.Point(107, 51);
+            this.terminalSpecificityHandlingComboBox.Margin = new System.Windows.Forms.Padding(0, 3, 0, 0);
+            this.terminalSpecificityHandlingComboBox.Name = "terminalSpecificityHandlingComboBox";
+            this.terminalSpecificityHandlingComboBox.Size = new System.Drawing.Size(205, 21);
+            this.terminalSpecificityHandlingComboBox.TabIndex = 112;
+            // 
+            // svmPanel
+            // 
+            this.svmPanel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.svmPanel.Controls.Add(this.kernelComboBox);
+            this.svmPanel.Controls.Add(this.label6);
+            this.svmPanel.Controls.Add(this.missedCleavagesComboBox);
+            this.svmPanel.Controls.Add(this.label5);
+            this.svmPanel.Controls.Add(this.massErrorHandlingComboBox);
+            this.svmPanel.Controls.Add(this.label4);
+            this.svmPanel.Location = new System.Drawing.Point(3, 73);
+            this.svmPanel.Name = "svmPanel";
+            this.svmPanel.Size = new System.Drawing.Size(315, 76);
+            this.svmPanel.TabIndex = 122;
+            // 
+            // kernelComboBox
+            // 
+            this.kernelComboBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.kernelComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.kernelComboBox.FormattingEnabled = true;
+            this.kernelComboBox.Items.AddRange(new object[] {
+            "Linear",
+            "Polynomial",
+            "RBF",
+            "Sigmoid"});
+            this.kernelComboBox.Location = new System.Drawing.Point(104, 50);
+            this.kernelComboBox.Margin = new System.Windows.Forms.Padding(0, 3, 0, 0);
+            this.kernelComboBox.Name = "kernelComboBox";
+            this.kernelComboBox.Size = new System.Drawing.Size(205, 21);
+            this.kernelComboBox.TabIndex = 115;
+            // 
+            // label6
+            // 
+            this.label6.AutoSize = true;
+            this.label6.Location = new System.Drawing.Point(35, 55);
+            this.label6.Margin = new System.Windows.Forms.Padding(38, 8, 3, 0);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(66, 13);
+            this.label6.TabIndex = 120;
+            this.label6.Text = "SVM Kernel:";
+            // 
+            // missedCleavagesComboBox
+            // 
+            this.missedCleavagesComboBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.missedCleavagesComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.missedCleavagesComboBox.FormattingEnabled = true;
+            this.missedCleavagesComboBox.Items.AddRange(new object[] {
+            "Ignore",
+            "Feature (SVM)"});
+            this.missedCleavagesComboBox.Location = new System.Drawing.Point(104, 26);
+            this.missedCleavagesComboBox.Margin = new System.Windows.Forms.Padding(0, 3, 0, 0);
+            this.missedCleavagesComboBox.Name = "missedCleavagesComboBox";
+            this.missedCleavagesComboBox.Size = new System.Drawing.Size(205, 21);
+            this.missedCleavagesComboBox.TabIndex = 114;
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(5, 31);
+            this.label5.Margin = new System.Windows.Forms.Padding(8, 8, 3, 0);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(96, 13);
+            this.label5.TabIndex = 119;
+            this.label5.Text = "Missed Cleavages:";
+            // 
+            // massErrorHandlingComboBox
+            // 
+            this.massErrorHandlingComboBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.massErrorHandlingComboBox.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.massErrorHandlingComboBox.FormattingEnabled = true;
+            this.massErrorHandlingComboBox.Items.AddRange(new object[] {
+            "Ignore",
+            "Feature (SVM)"});
+            this.massErrorHandlingComboBox.Location = new System.Drawing.Point(104, 2);
+            this.massErrorHandlingComboBox.Margin = new System.Windows.Forms.Padding(0, 3, 0, 0);
+            this.massErrorHandlingComboBox.Name = "massErrorHandlingComboBox";
+            this.massErrorHandlingComboBox.Size = new System.Drawing.Size(205, 21);
+            this.massErrorHandlingComboBox.TabIndex = 113;
             // 
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(41, 8);
+            this.label4.Location = new System.Drawing.Point(41, 7);
             this.label4.Margin = new System.Windows.Forms.Padding(44, 8, 3, 0);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(60, 13);
             this.label4.TabIndex = 118;
             this.label4.Text = "Mass Error:";
+            // 
+            // RankPanel
+            // 
+            this.RankPanel.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
+                        | System.Windows.Forms.AnchorStyles.Right)));
+            this.RankPanel.Controls.Add(this.rerankingCheckbox);
+            this.RankPanel.Controls.Add(this.scoreGridView);
+            this.RankPanel.Location = new System.Drawing.Point(3, 145);
+            this.RankPanel.Name = "RankPanel";
+            this.RankPanel.Size = new System.Drawing.Size(315, 158);
+            this.RankPanel.TabIndex = 123;
             // 
             // rerankingCheckbox
             // 
@@ -297,7 +292,7 @@ namespace IDPicker.Controls
             this.scoreGridView.RowHeadersVisible = false;
             this.scoreGridView.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
             this.scoreGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.scoreGridView.Size = new System.Drawing.Size(312, 118);
+            this.scoreGridView.Size = new System.Drawing.Size(309, 118);
             this.scoreGridView.TabIndex = 109;
             // 
             // scoreNameColumn
@@ -333,36 +328,42 @@ namespace IDPicker.Controls
             this.scoreNormalizationColumn.HeaderText = "Normalization";
             this.scoreNormalizationColumn.Name = "scoreNormalizationColumn";
             // 
-            // panel1
+            // ProperLayoutPanel
             // 
-            this.panel1.Controls.Add(this.rerankingCheckbox);
-            this.panel1.Controls.Add(this.scoreGridView);
-            this.panel1.Location = new System.Drawing.Point(3, 158);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(318, 158);
-            this.panel1.TabIndex = 123;
+            this.ProperLayoutPanel.Controls.Add(this.label1);
+            this.ProperLayoutPanel.Controls.Add(this.qonvertMethodComboBox);
+            this.ProperLayoutPanel.Controls.Add(this.RankPanel);
+            this.ProperLayoutPanel.Controls.Add(this.label2);
+            this.ProperLayoutPanel.Controls.Add(this.svmPanel);
+            this.ProperLayoutPanel.Controls.Add(this.chargeStateHandlingComboBox);
+            this.ProperLayoutPanel.Controls.Add(this.terminalSpecificityHandlingComboBox);
+            this.ProperLayoutPanel.Controls.Add(this.label3);
+            this.ProperLayoutPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.ProperLayoutPanel.Location = new System.Drawing.Point(0, 0);
+            this.ProperLayoutPanel.Name = "ProperLayoutPanel";
+            this.ProperLayoutPanel.Size = new System.Drawing.Size(321, 371);
+            this.ProperLayoutPanel.TabIndex = 124;
             // 
             // QonverterSettingsControl
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Controls.Add(this.flowLayoutPanel);
+            this.Controls.Add(this.ProperLayoutPanel);
             this.Name = "QonverterSettingsControl";
             this.Size = new System.Drawing.Size(321, 371);
-            this.flowLayoutPanel.ResumeLayout(false);
-            this.flowLayoutPanel.PerformLayout();
             this.svmPanel.ResumeLayout(false);
             this.svmPanel.PerformLayout();
+            this.RankPanel.ResumeLayout(false);
+            this.RankPanel.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.scoreGridView)).EndInit();
-            this.panel1.ResumeLayout(false);
-            this.panel1.PerformLayout();
+            this.ProperLayoutPanel.ResumeLayout(false);
+            this.ProperLayoutPanel.PerformLayout();
             this.ResumeLayout(false);
 
         }
 
         #endregion
 
-        private System.Windows.Forms.FlowLayoutPanel flowLayoutPanel;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ComboBox qonvertMethodComboBox;
         private System.Windows.Forms.CheckBox rerankingCheckbox;
@@ -382,7 +383,8 @@ namespace IDPicker.Controls
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.ComboBox chargeStateHandlingComboBox;
         private System.Windows.Forms.Panel svmPanel;
-        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.Panel RankPanel;
+        private System.Windows.Forms.Panel ProperLayoutPanel;
 
     }
 }

@@ -616,7 +616,11 @@ namespace IDPicker.Forms
             if (baseRow is SpectrumSourceGroupRow)
             {
                 var row = baseRow as SpectrumSourceGroupRow;
-                if (columnIndex == keyColumn.Index) return row.SpectrumSourceGroup.Name;
+                if (columnIndex == keyColumn.Index)
+                {
+                    var folderName = Path.GetFileName(row.SpectrumSourceGroup.Name);
+                    return !string.IsNullOrEmpty(folderName) ? folderName : "/";
+                }
             }
             else if (baseRow is SpectrumSourceRow)
             {
@@ -1107,6 +1111,7 @@ namespace IDPicker.Forms
 
                 if (gcf.ShowDialog() == DialogResult.OK)
                     (this.ParentForm as IDPickerForm).ApplyBasicFilter();
+                //TODO- Find a better way of doing this
             }
 
         }
