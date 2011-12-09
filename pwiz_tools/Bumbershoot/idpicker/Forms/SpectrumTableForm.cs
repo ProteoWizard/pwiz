@@ -49,6 +49,7 @@ namespace IDPicker.Forms
         public class AggregateRow : Row
         {
             public int PeptideSpectrumMatches { get; private set; }
+            public int Sources { get; private set; }
             public int Spectra { get; private set; }
             public int DistinctMatches { get; private set; }
             public int DistinctPeptides { get; private set; }
@@ -56,9 +57,10 @@ namespace IDPicker.Forms
             public int DistinctCharges { get; private set; }
             public int DistinctProteins { get; private set; }
 
-            public static int ColumnCount = 7;
+            public static int ColumnCount = 8;
             public static string Selection = "SELECT " +
                                              "COUNT(DISTINCT psm.id), " +
+                                             "COUNT(DISTINCT psm.Spectrum.Source.id), " +
                                              "COUNT(DISTINCT psm.Spectrum.id), " +
                                              "COUNT(DISTINCT psm.DistinctMatchKey), " +
                                              "COUNT(DISTINCT psm.Peptide.id), " +
@@ -71,6 +73,7 @@ namespace IDPicker.Forms
             {
                 int column = -1;
                 PeptideSpectrumMatches = Convert.ToInt32(queryRow[++column]);
+                Sources = Convert.ToInt32(queryRow[++column]);
                 Spectra = Convert.ToInt32(queryRow[++column]);
                 DistinctMatches = Convert.ToInt32(queryRow[++column]);
                 DistinctPeptides = Convert.ToInt32(queryRow[++column]);
@@ -400,7 +403,13 @@ namespace IDPicker.Forms
 
             switch (grouping.Mode)
             {
-                case GroupBy.Source: return getSpectrumSourceRows(parentFilter);
+                case GroupBy.Source:
+                    // if there is no parent grouping, show the root group, else skip it
+                    if (parentFilter == dataFilter)
+                        return getSpectrumSourceRows(parentFilter);
+                    else
+                        return getChildren(getSpectrumSourceRows(parentFilter)[0]);
+
                 case GroupBy.Spectrum: return getSpectrumRows(parentFilter);
                 case GroupBy.Analysis: return getAnalysisRows(parentFilter);
                 case GroupBy.Peptide: return getPeptideRows(parentFilter);
@@ -412,9 +421,10 @@ namespace IDPicker.Forms
         protected override IList<Row> getChildren (Row parentRow)
         {
             if (parentRow.ChildRows != null)
-                return parentRow.ChildRows;
-
-            if (parentRow is SpectrumSourceGroupRow)
+            {
+                // cached rows might be re-sorted below
+            }
+            else if (parentRow is SpectrumSourceGroupRow)
             {
                 var row = parentRow as SpectrumSourceGroupRow;
                 var parentFilter = row.DataFilter ?? dataFilter;
@@ -465,6 +475,12 @@ namespace IDPicker.Forms
                 throw new NotImplementedException();
             else // PeptideSpectrumMatchRow
                 parentRow.ChildRows = getChildren(parentRow as PeptideSpectrumMatchRow, dataFilter);
+
+            if (!sortColumns.IsNullOrEmpty())
+            {
+                var sortColumn = sortColumns.Last();
+                parentRow.ChildRows = parentRow.ChildRows.OrderBy(o => getCellValue(sortColumn.Index, o), sortColumn.Order).ToList();
+            }
 
             return parentRow.ChildRows;
         }
@@ -553,7 +569,17 @@ namespace IDPicker.Forms
             if (childGrouping == null)
                 return row.PeptideSpectrumMatches;
             else if (childGrouping.Mode == GroupBy.Source)
-                return 1; // the root group
+            {
+                var dataFilter = row.DataFilter;
+                if (dataFilter.SpectrumSourceGroup == null)
+                {
+                    // create a filter from the cached root group for this data filter
+                    var nonGroupParentFilterKey = new DataFilterKey(dataFilter);
+                    var rootGroup = (getSpectrumSourceRows(dataFilter)[0] as SpectrumSourceGroupRow).SpectrumSourceGroup;
+                    dataFilter = new DataFilter(row.DataFilter) { SpectrumSourceGroup = new List<SpectrumSourceGroup>() { rootGroup } };
+                }
+                return getSpectrumSourceRows(dataFilter).Count;
+            }
             else if (childGrouping.Mode == GroupBy.Spectrum)
                 return row.Spectra;
             else if (childGrouping.Mode == GroupBy.Analysis)
@@ -616,11 +642,7 @@ namespace IDPicker.Forms
             if (baseRow is SpectrumSourceGroupRow)
             {
                 var row = baseRow as SpectrumSourceGroupRow;
-                if (columnIndex == keyColumn.Index)
-                {
-                    var folderName = Path.GetFileName(row.SpectrumSourceGroup.Name);
-                    return !string.IsNullOrEmpty(folderName) ? folderName : "/";
-                }
+                if (columnIndex == keyColumn.Index) return Path.GetFileName(row.SpectrumSourceGroup.Name) ?? "/";
             }
             else if (baseRow is SpectrumSourceRow)
             {
@@ -769,7 +791,14 @@ namespace IDPicker.Forms
 
             // was column header clicked?
             if (e.RowIndexHierarchy.First() < 0)
+            {
                 Sort(e.ColumnIndex);
+
+                // expand the root group automatically
+                var rootGrouping = checkedGroupings.FirstOrDefault();
+                if (rootGrouping != null && rootGrouping.Mode == GroupBy.Source)
+                    treeDataGridView.Expand(0);
+            }
         }
 
         private void SetDefaults()
@@ -1012,7 +1041,7 @@ namespace IDPicker.Forms
         {
             try
             {
-                var rootGrouping = checkedGroupings.Count > 0 ? checkedGroupings.First() : null;
+                var rootGrouping = checkedGroupings.FirstOrDefault();
 
                 if (dataFilter.IsBasicFilter)
                 {
@@ -1061,7 +1090,12 @@ namespace IDPicker.Forms
             // try to (re)set selected item
             expandSelectionPath(oldSelectionPath);
 
-            treeDataGridView.Refresh();
+            // expand the root group automatically
+            var rootGrouping = checkedGroupings.FirstOrDefault();
+            if (rootGrouping != null && rootGrouping.Mode == GroupBy.Source)
+                treeDataGridView.Expand(0);
+            else
+                treeDataGridView.Refresh();
         }
 
         private List<string> getGroupTreePath(DataModel.SpectrumSourceGroup group)
