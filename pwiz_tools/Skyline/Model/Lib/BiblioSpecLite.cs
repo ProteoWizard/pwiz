@@ -164,14 +164,19 @@ namespace pwiz.Skyline.Model.Lib
         {
             get
             {
-
+                var dataFiles = new List<string>(_librarySourceFiles.Length);
+                foreach (var sourceFile in _librarySourceFiles)
+                {
+                    dataFiles.Add(sourceFile.BaseName);
+                }
+                
                 LibraryDetails details = new LibraryDetails
                                              {
                                                  Format = "BiblioSpec",
                                                  Revision = Revision.ToString(),
                                                  Version = SchemaVersion.ToString(),
                                                  PeptideCount = Count,
-                                                 DataFileCount = _librarySourceFiles.Length
+                                                 DataFiles = dataFiles
                                              };
 
                 // In Schema Version 1, the RefSpectra table contains 

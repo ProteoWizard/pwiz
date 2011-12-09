@@ -1025,13 +1025,16 @@ namespace pwiz.Skyline.Model.Lib
     /// </summary>
     public sealed class LibraryDetails
     {
+        private readonly IList<LibraryLink> _libLinks;
+        private IEnumerable<string> _dataFiles;
+        
         public LibraryDetails()
         {
-            LibLinks = new List<LibraryLink>();
+            _libLinks = new List<LibraryLink>();
         }
         public void AddLink(LibraryLink link)
         {
-            LibLinks.Add(link);
+            _libLinks.Add(link);
         }
 
         public string Id { get; set; }
@@ -1049,10 +1052,22 @@ namespace pwiz.Skyline.Model.Lib
 
         public int TotalPsmCount { get; set; }
 
-        public int DataFileCount { get; set; }
+		public IEnumerable<String> DataFiles { 
+            get
+            {
+                if(_dataFiles == null)
+                {
+                    _dataFiles = new List<string>(0);
+                }
+                return _dataFiles;
+            } 
+            set { _dataFiles = value; }
+        }
 
-        public List<LibraryLink> LibLinks { get; private set; }
-
+        public IEnumerable<LibraryLink> LibLinks
+        {
+            get { return _libLinks; }
+        }
     }
 
     /// <summary>

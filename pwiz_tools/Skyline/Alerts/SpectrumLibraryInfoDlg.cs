@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Text;
 using System.Windows.Forms;
 using pwiz.Skyline.Model.Lib;
+using System.Linq;
 
 namespace pwiz.Skyline.Alerts
 {
@@ -10,20 +12,29 @@ namespace pwiz.Skyline.Alerts
         {
             InitializeComponent();
 
+            // library details
+            SetDetailsText(libraryDetails);
+
+            // links to library source(s)
             SetLibraryLinks(libraryDetails);
 
-            int height = labelLibInfo.Height;
-            SetDetailsText(libraryDetails);
-            Height += Math.Max(0, labelLibInfo.Height - height*3);
+            // list of data files, if available
+            if(libraryDetails.DataFiles.Count() > 0)
+            {
+                SetDataFileList(libraryDetails);
+                textBoxDataFiles.Show();
+
+                Height += Math.Max(0, 100);  
+            } 
         }
 
         private void SetLibraryLinks(LibraryDetails libraryDetails)
         {
             linkSpecLibLinks.Text = "";
 
-            if(libraryDetails.LibLinks.Count > 0)
+            if(libraryDetails.LibLinks.Count() > 0)
             {
-                string labelStr = libraryDetails.LibLinks.Count == 1 ? "Library source: " : "Library sources: ";
+                string labelStr = libraryDetails.LibLinks.Count() == 1 ? "Library source: " : "Library sources: ";
 
                 foreach(LibraryLink link in libraryDetails.LibLinks)
                 {
@@ -33,6 +44,19 @@ namespace pwiz.Skyline.Alerts
                 
                 linkSpecLibLinks.Text = labelStr;
             }
+        }
+
+        private void SetDataFileList(LibraryDetails libraryDetails)
+        {
+            if(libraryDetails.DataFiles.Count() == 0)
+                return;
+
+            var fileList = new StringBuilder();
+            foreach (var filename in libraryDetails.DataFiles)
+            {
+                fileList.AppendLine(filename);
+            }
+            textBoxDataFiles.Text = fileList.ToString();
         }
 
         private void SetDetailsText(LibraryDetails libraryDetails)
@@ -54,12 +78,6 @@ namespace pwiz.Skyline.Alerts
             {
                 detailsText += string.Format(("Version: {0}\n"), libraryDetails.Version);
             }
-
-            if (libraryDetails.DataFileCount > 0)
-            {
-                detailsText += string.Format(("Data files: {0}\n"), libraryDetails.DataFileCount);
-            }
-
             detailsText += string.Format(("Unique peptides: {0}\n"), libraryDetails.PeptideCount.ToString(numFormat));
 
 
@@ -67,7 +85,10 @@ namespace pwiz.Skyline.Alerts
             {
                 detailsText += string.Format(("Matched spectra: {0}\n"), libraryDetails.TotalPsmCount.ToString(numFormat));
             }
-
+            if (libraryDetails.DataFiles.Count() > 0)
+            {
+                detailsText += string.Format(("Data files: {0}\n"), libraryDetails.DataFiles.Count());
+            }
             labelLibInfo.Text = detailsText;
         }
 
