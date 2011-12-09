@@ -1092,7 +1092,7 @@ namespace IDPicker.Forms
 
             // expand the root group automatically
             var rootGrouping = checkedGroupings.FirstOrDefault();
-            if (rootGrouping != null && rootGrouping.Mode == GroupBy.Source)
+            if (rootGrouping != null && rootGrouping.Mode == GroupBy.Source && rows.Count > 0)
                 treeDataGridView.Expand(0);
             else
                 treeDataGridView.Refresh();

@@ -243,9 +243,10 @@ namespace IDPicker.Forms
         protected override IList<Row> getChildren (Row parentRow)
         {
             if (parentRow.ChildRows != null)
-                return parentRow.ChildRows;
-
-            if (parentRow is ClusterRow)
+            {
+                // cached rows might be re-sorted below
+            }
+            else if (parentRow is ClusterRow)
             {
                 var row = parentRow as ClusterRow;
                 var parentFilter = row.DataFilter ?? dataFilter;
@@ -266,6 +267,12 @@ namespace IDPicker.Forms
             else if (parentRow == null)
             {
                 return getProteinRows(dataFilter);
+            }
+
+            if (!sortColumns.IsNullOrEmpty())
+            {
+                var sortColumn = sortColumns.Last();
+                parentRow.ChildRows = parentRow.ChildRows.OrderBy(o => getCellValue(sortColumn.Index, o), sortColumn.Order).ToList();
             }
 
             return parentRow.ChildRows;

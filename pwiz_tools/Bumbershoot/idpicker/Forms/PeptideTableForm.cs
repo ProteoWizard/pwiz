@@ -238,9 +238,10 @@ namespace IDPicker.Forms
         protected override IList<Row> getChildren (Row parentRow)
         {
             if (parentRow.ChildRows != null)
-                return parentRow.ChildRows;
-
-            if (parentRow is PeptideGroupRow)
+            {
+                // cached rows might be re-sorted below
+            }
+            else if (parentRow is PeptideGroupRow)
             {
                 var row = parentRow as PeptideGroupRow;
                 var parentFilter = row.DataFilter ?? dataFilter;
@@ -261,6 +262,12 @@ namespace IDPicker.Forms
             else if (parentRow == null)
             {
                 return getDistinctMatchRows(dataFilter);
+            }
+
+            if (!sortColumns.IsNullOrEmpty())
+            {
+                var sortColumn = sortColumns.Last();
+                parentRow.ChildRows = parentRow.ChildRows.OrderBy(o => getCellValue(sortColumn.Index, o), sortColumn.Order).ToList();
             }
 
             return parentRow.ChildRows;
