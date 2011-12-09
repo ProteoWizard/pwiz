@@ -52,28 +52,58 @@ namespace IDPicker.Forms
         /// </summary>
         private void InitializeComponent ()
         {
-            this.textBox1 = new System.Windows.Forms.TextBox();
+            this.dataGridView = new System.Windows.Forms.DataGridView();
+            this.timestampColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.entryColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            ((System.ComponentModel.ISupportInitialize) (this.dataGridView)).BeginInit();
             this.SuspendLayout();
             // 
-            // textBox1
+            // dataGridView
             // 
-            this.textBox1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.textBox1.Location = new System.Drawing.Point(0, 0);
-            this.textBox1.Multiline = true;
-            this.textBox1.Name = "textBox1";
-            this.textBox1.ReadOnly = true;
-            this.textBox1.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBox1.Size = new System.Drawing.Size(412, 369);
-            this.textBox1.TabIndex = 0;
-            this.textBox1.WordWrap = false;
+            this.dataGridView.AllowUserToAddRows = false;
+            this.dataGridView.AllowUserToDeleteRows = false;
+            this.dataGridView.AllowUserToResizeRows = false;
+            this.dataGridView.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.DisplayedCells;
+            this.dataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.timestampColumn,
+            this.entryColumn});
+            this.dataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dataGridView.Location = new System.Drawing.Point(0, 0);
+            this.dataGridView.Name = "dataGridView";
+            this.dataGridView.ReadOnly = true;
+            this.dataGridView.RowHeadersVisible = false;
+            this.dataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.CellSelect;
+            this.dataGridView.ShowEditingIcon = false;
+            this.dataGridView.Size = new System.Drawing.Size(412, 369);
+            this.dataGridView.TabIndex = 0;
+            this.dataGridView.VirtualMode = true;
+            this.dataGridView.CellValueNeeded += new System.Windows.Forms.DataGridViewCellValueEventHandler(this.dataGridView_CellValueNeeded);
+            // 
+            // timestampColumn
+            // 
+            this.timestampColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.None;
+            this.timestampColumn.HeaderText = "Timestamp";
+            this.timestampColumn.Name = "timestampColumn";
+            this.timestampColumn.ReadOnly = true;
+            this.timestampColumn.Resizable = System.Windows.Forms.DataGridViewTriState.False;
+            this.timestampColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            // 
+            // entryColumn
+            // 
+            this.entryColumn.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.DisplayedCells;
+            this.entryColumn.HeaderText = "Entry";
+            this.entryColumn.Name = "entryColumn";
+            this.entryColumn.ReadOnly = true;
+            this.entryColumn.Width = 56;
             // 
             // LogForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(412, 369);
-            this.Controls.Add(this.textBox1);
-            this.DockAreas = ((DigitalRune.Windows.Docking.DockAreas)(((((DigitalRune.Windows.Docking.DockAreas.Left | DigitalRune.Windows.Docking.DockAreas.Right)
+            this.Controls.Add(this.dataGridView);
+            this.DockAreas = ((DigitalRune.Windows.Docking.DockAreas) (((((DigitalRune.Windows.Docking.DockAreas.Left | DigitalRune.Windows.Docking.DockAreas.Right)
                         | DigitalRune.Windows.Docking.DockAreas.Top)
                         | DigitalRune.Windows.Docking.DockAreas.Bottom)
                         | DigitalRune.Windows.Docking.DockAreas.Document)));
@@ -81,13 +111,16 @@ namespace IDPicker.Forms
             this.Name = "LogForm";
             this.TabText = "LogForm";
             this.Text = "LogForm";
+            ((System.ComponentModel.ISupportInitialize) (this.dataGridView)).EndInit();
             this.ResumeLayout(false);
-            this.PerformLayout();
 
         }
 
         #endregion
 
-        private System.Windows.Forms.TextBox textBox1;
+        private System.Windows.Forms.DataGridView dataGridView;
+        private System.Windows.Forms.DataGridViewTextBoxColumn timestampColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn entryColumn;
+
     }
 }

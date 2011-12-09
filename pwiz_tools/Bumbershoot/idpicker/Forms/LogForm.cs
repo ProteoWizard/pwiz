@@ -37,45 +37,50 @@ namespace IDPicker.Forms
 {
     public partial class LogForm : DockableForm
     {
-        NotifyingStringWriter log;
+        DateTime logStart;
+        List<Pair<TimeSpan, string>> logTable;
+        NotifyingStringWriter logWriter;
 
-        public TextWriter LogWriter { get { return log; } }
+        public TextWriter LogWriter { get { return logWriter; } }
 
         public LogForm ()
         {
+            //HibernatingRhinos.Profiler.Appender.NHibernate.NHibernateProfiler.Initialize();
+ 
             InitializeComponent();
 
             HideOnClose = true;
-            buffer = new StringBuilder(2000);
 
-            log = new NotifyingStringWriter();
-            log.Wrote += new EventHandler<NotifyingStringWriter.WroteEventArgs>(log_Wrote);
+            logStart = DateTime.UtcNow;
+            logTable = new List<Pair<TimeSpan, string>>();
+            logWriter = new NotifyingStringWriter();
+            logWriter.Wrote += logWriter_Wrote;
         }
 
-        StringBuilder buffer;
-        void log_Wrote (object sender, NotifyingStringWriter.WroteEventArgs e)
+        private void logWriter_Wrote (object sender, NotifyingStringWriter.WroteEventArgs e)
         {
-            int size;
-            lock (buffer)
-            {
-                buffer.Append(e.Text);
-                size = buffer.Length;
-            }
-
-            if(size < 1000)
-                return;
-
             if (InvokeRequired)
             {
-                BeginInvoke((MethodInvoker) (() => log_Wrote(sender, e)));
+                BeginInvoke(new System.Windows.Forms.MethodInvoker(() => logWriter_Wrote(sender, e)));
                 return;
             }
 
-            lock (buffer)
+            logTable.Add(new Pair<TimeSpan, string>(DateTime.UtcNow - logStart, e.Text));
+            dataGridView.RowCount = logTable.Count;
+
+            if (dataGridView.DisplayRectangle.Height > 0)
             {
-                textBox1.AppendText(buffer.ToString());
-                buffer = new StringBuilder(2000);
+                dataGridView.FirstDisplayedScrollingRowIndex = Math.Max(0, logTable.Count - 4);
+                dataGridView.Refresh();
             }
+        }
+
+        private void dataGridView_CellValueNeeded (object sender, DataGridViewCellValueEventArgs e)
+        {
+            if (e.ColumnIndex == timestampColumn.Index)
+                e.Value = logTable[e.RowIndex].first.TotalSeconds;
+            else
+                e.Value = logTable[e.RowIndex].second;
         }
     }
 
