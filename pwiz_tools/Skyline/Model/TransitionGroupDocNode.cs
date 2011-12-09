@@ -1173,7 +1173,7 @@ namespace pwiz.Skyline.Model
             {
                 var listChromInfoLists = _arrayChromInfoSets[iTran];
                 var results = Results<TransitionChromInfo>.Merge(nodeTran.Results, listChromInfoLists);
-                if (Equals(results, nodeTran.Results))
+                if (Results<TransitionChromInfo>.EqualsDeep(nodeTran.Results, results))
                     return nodeTran;
                 return nodeTran.ChangeResults(results);
             }

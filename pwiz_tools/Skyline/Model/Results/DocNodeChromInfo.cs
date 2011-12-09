@@ -19,6 +19,8 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
+using System.Linq;
 using pwiz.Skyline.Model.DocSettings;
 using pwiz.Skyline.Util;
 
@@ -526,6 +528,22 @@ namespace pwiz.Skyline.Model.Results
             return new Results<TItem>(listInfo);
         }
 
+        public static bool EqualsDeep(Results<TItem> resultsOld, Results<TItem> results)
+        {
+            if (resultsOld == null && results == null)
+                return true;
+            if (resultsOld == null || results == null)
+                return false;
+            if (resultsOld.Count != results.Count)
+                return false;
+            for (int i = 0, len = results.Count; i < len; i++)
+            {
+                if (!EqualsDeep(resultsOld[i], results[i]))
+                    return false;
+            }
+            return true;
+        }
+
         private static bool EqualsDeep(IList<TItem> chromInfosOld, IList<TItem> chromInfos)
         {
             if (!ArrayUtil.EqualsDeep(chromInfosOld, chromInfos))
@@ -593,6 +611,26 @@ namespace pwiz.Skyline.Model.Results
             }
 
             return valBest;
+        }
+
+        public void Validate(SrmSettings settings)
+        {
+            var chromatogramSets = settings.MeasuredResults.Chromatograms;
+            if (chromatogramSets.Count != Count)
+                throw new InvalidDataException(string.Format("DocNode results count {0} does not match document results count {1}.", Count, chromatogramSets.Count));
+
+            for (int i = 0; i < chromatogramSets.Count; i++)
+            {
+                var chromList = this[i];
+                if (chromList == null)
+                    continue;
+
+                var chromatogramSet = chromatogramSets[i];
+                if (chromList.Any(chromInfo => chromatogramSet.IndexOfId(chromInfo.FileId) == -1))
+                {
+                    throw new InvalidDataException(string.Format("DocNode peak info found for file with no match in document results."));
+                }
+            }
         }
     }
 

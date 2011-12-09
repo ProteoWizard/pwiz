@@ -391,11 +391,6 @@ namespace pwiz.Skyline.FileUI
             }
         }
 
-        public void SetDataSourcePathsDir()
-        {
-            NamedPathSets = GetDataSourcePathsDir();
-        }
-
         public KeyValuePair<string, string[]>[] GetDataSourcePathsDir()
         {
             string initialDir = Path.GetDirectoryName(_documentSavedPath);

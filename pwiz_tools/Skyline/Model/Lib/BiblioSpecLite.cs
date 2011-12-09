@@ -920,10 +920,10 @@ namespace pwiz.Skyline.Model.Lib
         {
             // No redundant spectra before schema version 1
             if (SchemaVersion == 0)
-                yield break;
+                return new SpectrumInfo[0];
             int i = FindEntry(key);
             if (i == -1)
-                yield break;
+                return new SpectrumInfo[0];
 
             var info = _libraryEntries[i];
             using (SQLiteCommand select = new SQLiteCommand(_sqliteConnection.Connection))
@@ -944,6 +944,7 @@ namespace pwiz.Skyline.Model.Lib
                     int iRetentionTime = reader.GetOrdinal(RetentionTimes.retentionTime);
                     int iBestSpectrum = reader.GetOrdinal(RetentionTimes.bestSpectrum);
 
+                    var listSpectra = new List<SpectrumInfo>();
                     while (reader.Read())
                     {
                         string filePath = reader.GetString(iFilePath);
@@ -960,12 +961,13 @@ namespace pwiz.Skyline.Model.Lib
                         object spectrumKey = i;
                         if (!isBest)
                             spectrumKey = new SpectrumLiteKey(redundantId);
-                        yield return new SpectrumInfo(this, labelType, filePath, retentionTime, isBest,
-                                                      spectrumKey)
-                        {
-                            SpectrumHeaderInfo = CreateSpectrumHeaderInfo(_libraryEntries[i])
-                        };
+                        listSpectra.Add(new SpectrumInfo(this, labelType, filePath, retentionTime, isBest,
+                                                         spectrumKey)
+                                            {
+                                                SpectrumHeaderInfo = CreateSpectrumHeaderInfo(_libraryEntries[i])
+                                            });
                     }
+                    return listSpectra;
                 }
             }
         }

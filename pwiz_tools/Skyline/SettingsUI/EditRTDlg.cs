@@ -217,10 +217,10 @@ namespace pwiz.Skyline.SettingsUI
 
         private void CalculatorChanged()
         {
-            if (comboCalculator.SelectedItem != null)
+            var calc = _driverCalculators.SelectedItem;
+            btnShowGraph.Enabled = (calc != null);
+            if (calc != null)
             {
-                var calc = _driverCalculators.SelectedItem;
-
                 try
                 {
                     var regressionPeps = UpdateCalculator(calc);
@@ -319,6 +319,9 @@ namespace pwiz.Skyline.SettingsUI
         public void ShowGraph()
         {
             var calc = _driverCalculators.SelectedItem;
+            if (calc == null)
+                return;
+
             if (!calc.IsUsable)
             {
                 try
@@ -495,15 +498,19 @@ namespace pwiz.Skyline.SettingsUI
             RetentionTimeRegression regression = RetentionTimeRegression.CalcRegression("Recalc", calculators,
                                                                                         peptidesTimes, out statistics);
 
-            double r;
+            double r = 0;
             if (regression == null)
             {
-                textSlope.Text = "";
-                textIntercept.Text = "";
-                textTimeWindow.Text = "";
-                comboCalculator.SelectedIndex = -1;
+                if (calculators.Count() > 1)
+                {
+                    textSlope.Text = "";
+                    textIntercept.Text = "";
+                    textTimeWindow.Text = "";
+                    comboCalculator.SelectedIndex = -1;
 
-                return null;
+                    return null;
+                }
+                calculatorSpec = calculators.First();
             }
             else
             {
@@ -521,8 +528,7 @@ namespace pwiz.Skyline.SettingsUI
 
             var pepCount = calculatorSpec.ChooseRegressionPeptides(peptidesTimes.Select(mrt => mrt.PeptideSequence)).Count();
 
-            labelRValue.Text = string.Format("({0} peptides, R = {1:F02})",
-                pepCount, r);
+            labelRValue.Text = string.Format("({0} peptides, R = {1:F02})", pepCount, r);
             // Right align with the peptide grid.
             labelRValue.Left = gridPeptides.Right - labelRValue.Width;
 

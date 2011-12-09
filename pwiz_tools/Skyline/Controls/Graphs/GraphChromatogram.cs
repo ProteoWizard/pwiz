@@ -22,6 +22,7 @@ using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 using DigitalRune.Windows.Docking;
 using pwiz.MSGraph;
@@ -1715,7 +1716,7 @@ namespace pwiz.Skyline.Controls.Graphs
                 object nearest;
                 int index;
 
-                if (GraphPane.FindNearestObject(pt, g, out nearest, out index))
+                if (FindNearestObject(pt, g, out nearest, out index))
                 {
                     var label = nearest as TextObj;
                     if (label != null)
@@ -1771,7 +1772,7 @@ namespace pwiz.Skyline.Controls.Graphs
                     object nearest;
                     int index;
 
-                    if (GraphPane.FindNearestObject(pt, g, out nearest, out index))
+                    if (FindNearestObject(pt, g, out nearest, out index))
                     {
                         var label = nearest as TextObj;
                         if (label != null)
@@ -1939,6 +1940,24 @@ namespace pwiz.Skyline.Controls.Graphs
                 dragInfo.GraphItem.DragInfo = null;                
             }
             Refresh();            
+        }
+
+        private bool FindNearestObject(PointF pt, Graphics g, out object nearest, out int index)
+        {
+            try
+            {
+                return GraphPane.FindNearestObject(pt, g, out nearest, out index);
+            }
+            catch (ExternalException)
+            {
+                // Apparently GDI+ was throwing this exception on some systems.
+                // It was showing up occasionally in the undandled exceptions.
+                // Better to silently fail to find anything than to put up the
+                // nasty unexpected error form.
+                nearest = null;
+                index = -1;
+                return false;
+            }
         }
 
         #endregion

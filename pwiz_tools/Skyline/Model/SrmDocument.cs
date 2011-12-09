@@ -1055,6 +1055,37 @@ namespace pwiz.Skyline.Model
             return null;
         }
 
+        public void ValidateResults()
+        {
+            foreach (PeptideDocNode nodePep in Peptides)
+            {
+                ValidateChromInfo(Settings, nodePep.Results);
+                foreach (TransitionGroupDocNode nodeGroup in nodePep.Children)
+                {
+                    ValidateChromInfo(Settings, nodeGroup.Results);
+                    foreach (TransitionDocNode nodeTran in nodeGroup.Transitions)
+                    {
+                        ValidateChromInfo(Settings, nodeTran.Results);
+                    }
+                }
+            }
+        }
+
+        private static void ValidateChromInfo<TInfo>(SrmSettings settings, Results<TInfo> results)
+            where TInfo : ChromInfo
+        {
+            if (!settings.HasResults)
+            {
+                if (results != null)
+                    throw new InvalidDataException("Results found in document with no replicates.");
+                return;
+            }
+            if (results == null)
+                throw new InvalidDataException("DocNode missing results in document with replicates.");
+
+            results.Validate(settings);
+        }
+
         /// <summary>
         /// Deserializes document from XML.
         /// </summary>

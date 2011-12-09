@@ -1046,6 +1046,7 @@ namespace pwiz.Skyline
 
             ModifyDocument(description, doc =>
             {
+                docNew.ValidateResults();
                 if (doc != docCurrent)
                     throw new InvalidDataException("Unexpected document change during operation.");
                 return docNew;
@@ -1329,7 +1330,9 @@ namespace pwiz.Skyline
                         if (ArrayUtil.ReferencesEqual(results.Chromatograms, listChrom))
                             return doc;
                         results = listChrom.Count > 0 ? results.ChangeChromatograms(listChrom.ToArray()) : null;
-                        return doc.ChangeMeasuredResults(results);
+                        doc = doc.ChangeMeasuredResults(results);
+                        doc.ValidateResults();
+                        return doc;
                     });
                 }
             }
