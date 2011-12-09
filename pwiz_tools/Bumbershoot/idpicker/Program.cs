@@ -25,6 +25,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using System.Threading;
@@ -62,6 +63,8 @@ namespace IDPicker
 
                 // initialize webClient asynchronously
                 initializeWebClient();
+
+                automaticCheckForUpdates();
 
                 MainWindow = new IDPickerForm(e.Args);
                 Application.Run(MainWindow);
@@ -113,8 +116,77 @@ namespace IDPicker
         private static WebClient webClient = new WebClient();
         private static void initializeWebClient ()
         {
+            new Thread(() => { lock (webClient) webClient.DownloadString("http://www.google.com"); }).Start();
+        }
+
+        private static void automaticCheckForUpdates ()
+        {
+            if (!Properties.GUI.Settings.Default.AutomaticCheckForUpdates)
+                return;
+
+            var timeSinceLastCheckForUpdates = DateTime.UtcNow - Properties.GUI.Settings.Default.LastCheckForUpdates;
+            if (timeSinceLastCheckForUpdates.TotalDays < 1)
+                return;
+
+            // ignore development builds
+            if (Application.ExecutablePath.Contains("build-nt-x86"))
+                return;
+
+            new Thread(() => CheckForUpdates()).Start();
+        }
+
+        public static bool CheckForUpdates ()
+        {
+            Properties.GUI.Settings.Default.LastCheckForUpdates = DateTime.UtcNow;
+            Properties.GUI.Settings.Default.Save();
+
+            string teamcityURL = "http://teamcity.fenchurch.mc.vanderbilt.edu";
+            string buildsURL = teamcityURL + "/httpAuth/app/rest/buildTypes/id:bt31/builds?status=SUCCESS&count=1&guest=1";
+            string latestArtifactURL;
+            string versionArtifactFormatURL = teamcityURL + "/repository/download/bt31/{0}:id/VERSION?guest=1";
+
+            Version latestVersion;
+
             lock (webClient)
-                new Thread(() => { webClient.DownloadString("http://www.google.com"); }).Start();
+            {
+                string xml = webClient.DownloadString(buildsURL);
+                int startIndex = xml.IndexOf("id=");
+                if (startIndex < 0) throw new InvalidDataException("build id not found in:\r\n" + xml);
+                int endIndex = xml.IndexOfAny("\"'".ToCharArray(), startIndex + 4);
+                if (endIndex < 0) throw new InvalidDataException("not well formed xml:\r\n" + xml);
+                startIndex += 4; // skip the attribute name, equals, and opening quote
+                string buildId = xml.Substring(startIndex, endIndex - startIndex);
+
+                latestArtifactURL = String.Format("{0}/repository/download/bt31/{1}:id", teamcityURL, buildId);
+                latestVersion = new Version(webClient.DownloadString(latestArtifactURL + "/VERSION?guest=1"));
+            }
+
+            Version currentVersion = new Version(Util.Version);
+
+            if (currentVersion < latestVersion)
+            {
+                string updateMessage = String.Format("There is a newer version of {0} available.\r\n" +
+                                                     "You are using version {1}.\r\n" +
+                                                     "The latest version is {2}.\r\n" +
+                                                     "\r\n" +
+                                                     "Download it now?",
+                                                     Application.ProductName,
+                                                     currentVersion,
+                                                     latestVersion);
+
+                var result = MessageBox.Show(updateMessage, "Newer Version Available",
+                                             MessageBoxButtons.YesNo,
+                                             MessageBoxIcon.Information,
+                                             MessageBoxDefaultButton.Button2);
+
+                if (result == DialogResult.Yes)
+                {
+                    string installerURL = String.Format("{0}/IDPicker-{1}.msi?guest=1", latestArtifactURL, latestVersion);
+                    System.Diagnostics.Process.Start(installerURL);
+                }
+                return true;
+            }
+            return false;
         }
 
         private static void SendErrorReport (string messageBody, string exceptionType, string email)

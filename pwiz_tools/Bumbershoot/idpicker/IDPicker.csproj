@@ -264,6 +264,11 @@
     <Compile Include="Forms\ProteinTableForm.Designer.cs">
       <DependentUpon>ProteinTableForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
     <Compile Include="SingleInstanceHandler.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -453,6 +458,11 @@
     <None Include="Resources\Peptide.png" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+      <CustomToolNamespace>IDPicker.Properties.GUI</CustomToolNamespace>
+    </None>
     <None Include="Resources\PeptideGroup.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

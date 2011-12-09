@@ -172,66 +172,6 @@ namespace IDPicker.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("c:\\")]
-        public string DefaultFileOpenDirectory {
-            get {
-                return ((string)(this["DefaultFileOpenDirectory"]));
-            }
-            set {
-                this["DefaultFileOpenDirectory"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("c:\\")]
-        public string DefaultSpectrumSourceDirectory {
-            get {
-                return ((string)(this["DefaultSpectrumSourceDirectory"]));
-            }
-            set {
-                this["DefaultSpectrumSourceDirectory"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("c:\\")]
-        public string LastFileOpenDirectory {
-            get {
-                return ((string)(this["LastFileOpenDirectory"]));
-            }
-            set {
-                this["LastFileOpenDirectory"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("c:\\")]
-        public string LastSpectrumSourceDirectory {
-            get {
-                return ((string)(this["LastSpectrumSourceDirectory"]));
-            }
-            set {
-                this["LastSpectrumSourceDirectory"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("c:\\")]
-        public string LastProteinDatabaseDirectory {
-            get {
-                return ((string)(this["LastProteinDatabaseDirectory"]));
-            }
-            set {
-                this["LastProteinDatabaseDirectory"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool TopRankOnly {
             get {
@@ -266,30 +206,6 @@ namespace IDPicker.Properties {
             }
         }
         
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("0, 0")]
-        public global::System.Drawing.Point IDPickerFormLocation {
-            get {
-                return ((global::System.Drawing.Point)(this["IDPickerFormLocation"]));
-            }
-            set {
-                this["IDPickerFormLocation"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("800, 600")]
-        public global::System.Drawing.Size IDPickerFormSize {
-            get {
-                return ((global::System.Drawing.Size)(this["IDPickerFormSize"]));
-            }
-            set {
-                this["IDPickerFormSize"] = value;
-            }
-        }
-        
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("<?xml version=\"1.0\" encoding=\"utf-16\"?>\r\n<ArrayOfString xmlns:xsi=\"http://www.w3." +
@@ -318,18 +234,6 @@ namespace IDPicker.Properties {
         public global::System.Collections.Specialized.StringCollection DefaultQonverterSettings {
             get {
                 return ((global::System.Collections.Specialized.StringCollection)(this["DefaultQonverterSettings"]));
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Maximized")]
-        public global::System.Windows.Forms.FormWindowState IDPickerFormWindowState {
-            get {
-                return ((global::System.Windows.Forms.FormWindowState)(this["IDPickerFormWindowState"]));
-            }
-            set {
-                this["IDPickerFormWindowState"] = value;
             }
         }
         

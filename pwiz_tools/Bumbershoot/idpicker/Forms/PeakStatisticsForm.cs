@@ -499,7 +499,7 @@ namespace IDPicker.Forms
             {
                 try
                 {
-                    return Util.FindSourceInSearchPath(spectrumSourceName, Properties.Settings.Default.LastSpectrumSourceDirectory);
+                    return Util.FindSourceInSearchPath(spectrumSourceName, Properties.GUI.Settings.Default.LastSpectrumSourceDirectory);
                 }
                 catch
                 {
@@ -509,8 +509,8 @@ namespace IDPicker.Forms
                         SourceNotFound(this, eventArgs);
                         if (System.IO.File.Exists(eventArgs.SourcePath) || System.IO.Directory.Exists(eventArgs.SourcePath))
                         {
-                            Properties.Settings.Default.LastSpectrumSourceDirectory = System.IO.Path.GetDirectoryName(eventArgs.SourcePath);
-                            Properties.Settings.Default.Save();
+                            Properties.GUI.Settings.Default.LastSpectrumSourceDirectory = System.IO.Path.GetDirectoryName(eventArgs.SourcePath);
+                            Properties.GUI.Settings.Default.Save();
                             return eventArgs.SourcePath;
                         }
                     }

@@ -86,9 +86,9 @@ namespace IDPicker
         /// </summary>
         public void LoadMainFormSettings ()
         {
-            mainForm.Location = Properties.Settings.Default.IDPickerFormLocation;
-            mainForm.Size = Properties.Settings.Default.IDPickerFormSize;
-            mainForm.WindowState = Properties.Settings.Default.IDPickerFormWindowState;
+            mainForm.Location = Properties.GUI.Settings.Default.IDPickerFormLocation;
+            mainForm.Size = Properties.GUI.Settings.Default.IDPickerFormSize;
+            mainForm.WindowState = Properties.GUI.Settings.Default.IDPickerFormWindowState;
         }
 
         /// <summary>
@@ -98,11 +98,11 @@ namespace IDPicker
         {
             if (mainForm.WindowState == FormWindowState.Normal)
             {
-                Properties.Settings.Default.IDPickerFormLocation = mainForm.Location;
-                Properties.Settings.Default.IDPickerFormSize = mainForm.Size;
+                Properties.GUI.Settings.Default.IDPickerFormLocation = mainForm.Location;
+                Properties.GUI.Settings.Default.IDPickerFormSize = mainForm.Size;
             }
-            Properties.Settings.Default.IDPickerFormWindowState = mainForm.WindowState;
-            Properties.Settings.Default.Save();
+            Properties.GUI.Settings.Default.IDPickerFormWindowState = mainForm.WindowState;
+            Properties.GUI.Settings.Default.Save();
         }
 
         public void SaveUserLayoutList ()

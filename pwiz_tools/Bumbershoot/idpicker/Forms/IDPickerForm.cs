@@ -147,6 +147,9 @@ namespace IDPicker
             peptideTableForm.PeptideViewFilter += peptideTableForm_PeptideViewFilter;
             modificationTableForm.ModificationViewFilter += modificationTableForm_ModificationViewFilter;
 
+            // hide DockPanel before initializing layout manager
+            dockPanel.Visible = false;
+
             _layoutManager = new LayoutManager(this, peptideTableForm, proteinTableForm, spectrumTableForm, dockPanel);
 
             // load last or default location and size
@@ -336,7 +339,7 @@ namespace IDPicker
                     try
                     {
                         // try the last looked-in path
-                        sourcePath = Util.FindSourceInSearchPath(spectrum.Source.Name, Properties.Settings.Default.LastSpectrumSourceDirectory);
+                        sourcePath = Util.FindSourceInSearchPath(spectrum.Source.Name, Properties.GUI.Settings.Default.LastSpectrumSourceDirectory);
                     }
                     catch
                     {
@@ -349,8 +352,8 @@ namespace IDPicker
 
                         if (File.Exists(eventArgs.SourcePath) || Directory.Exists(eventArgs.SourcePath))
                         {
-                            Properties.Settings.Default.LastSpectrumSourceDirectory = Path.GetDirectoryName(eventArgs.SourcePath);
-                            Properties.Settings.Default.Save();
+                            Properties.GUI.Settings.Default.LastSpectrumSourceDirectory = Path.GetDirectoryName(eventArgs.SourcePath);
+                            Properties.GUI.Settings.Default.Save();
                             sourcePath = eventArgs.SourcePath;
                         }
                         else
@@ -587,10 +590,10 @@ namespace IDPicker
             //OpenFiles(filepaths);//.Take(10).Union(filepaths.Skip(200).Take(10)).Union(filepaths.Skip(400).Take(10)).ToList());
             //return;
 
+            checkForUpdatesAutomaticallyToolStripMenuItem.Checked = Properties.GUI.Settings.Default.AutomaticCheckForUpdates;
+
             //Get user layout profiles
             _layoutManager.CurrentLayout = _layoutManager.GetCurrentDefault();
-
-            dockPanel.Visible = false;
 
             if (args != null && args.Length > 0 && args.All(o => File.Exists(o)))
             {
@@ -663,7 +666,7 @@ namespace IDPicker
 
             var findDirectoryDialog = new FolderBrowserDialog()
             {
-                SelectedPath = Properties.Settings.Default.LastSpectrumSourceDirectory,
+                SelectedPath = Properties.GUI.Settings.Default.LastSpectrumSourceDirectory,
                 ShowNewFolderButton = false,
                 Description = "Locate the directory containing the source \"" + e.SourcePath + "\""
             };
@@ -673,8 +676,8 @@ namespace IDPicker
                 try
                 {
                     e.SourcePath = Util.FindSourceInSearchPath(e.SourcePath, findDirectoryDialog.SelectedPath);
-                    Properties.Settings.Default.LastSpectrumSourceDirectory = findDirectoryDialog.SelectedPath;
-                    Properties.Settings.Default.Save();
+                    Properties.GUI.Settings.Default.LastSpectrumSourceDirectory = findDirectoryDialog.SelectedPath;
+                    Properties.GUI.Settings.Default.Save();
                     promptToSkipSourceImport = false;
                     return;
                 }
@@ -698,7 +701,7 @@ namespace IDPicker
 
             var findDirectoryDialog = new FolderBrowserDialog()
             {
-                SelectedPath = Properties.Settings.Default.LastSpectrumSourceDirectory,
+                SelectedPath = Properties.GUI.Settings.Default.LastSpectrumSourceDirectory,
                 ShowNewFolderButton = false,
                 Description = "Locate the directory containing the source \"" + e.SourcePath + "\""
             };
@@ -708,8 +711,8 @@ namespace IDPicker
                 try
                 {
                     e.SourcePath = Util.FindSourceInSearchPath(e.SourcePath, findDirectoryDialog.SelectedPath);
-                    Properties.Settings.Default.LastSpectrumSourceDirectory = findDirectoryDialog.SelectedPath;
-                    Properties.Settings.Default.Save();
+                    Properties.GUI.Settings.Default.LastSpectrumSourceDirectory = findDirectoryDialog.SelectedPath;
+                    Properties.GUI.Settings.Default.Save();
                     return;
                 }
                 catch
@@ -1943,6 +1946,30 @@ namespace IDPicker
         {
             if (session == null)
                 openToolStripMenuItem_Click(newToolStripMenuItem, e);
+        }
+
+        private void checkForUpdatesAutomaticallyToolStripMenuItem_CheckedChanged (object sender, EventArgs e)
+        {
+            Properties.GUI.Settings.Default.AutomaticCheckForUpdates = checkForUpdatesAutomaticallyToolStripMenuItem.Checked;
+            Properties.GUI.Settings.Default.Save();
+        }
+
+        private void checkForUpdatesToolStripMenuItem_Click (object sender, EventArgs e)
+        {
+            Cursor = Cursors.WaitCursor;
+            if (!Program.CheckForUpdates())
+                MessageBox.Show("You are running the latest version.", "No Update Available");
+            Cursor = Cursors.Default;
+        }
+
+        private void aboutToolStripMenuItem_Click (object sender, EventArgs e)
+        {
+            MessageBox.Show(String.Format("IDPicker {0}\r\n" +
+                                          "Copyright 2011 Vanderbilt University\r\n" +
+                                          "Developers: Matt Chambers, Jay Holman, Surendra Dasari\r\n" +
+                                          "Thanks to: David Tabb",
+                                          Util.Version),
+                            "About IDPicker");
         }
     }
 
