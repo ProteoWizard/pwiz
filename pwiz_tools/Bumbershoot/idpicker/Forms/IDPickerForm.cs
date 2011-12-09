@@ -107,7 +107,7 @@ namespace IDPicker
             progressMonitor = new ProgressMonitor();
             progressMonitor.ProgressUpdate += progressMonitor_ProgressUpdate;
 
-            Shown += new EventHandler(IDPickerForm_Load);
+            Shown += IDPickerForm_Load;
 
             basicFilterControl = new BasicFilterControl();
             basicFilterControl.BasicFilterChanged += basicFilterControl_BasicFilterChanged;
@@ -120,10 +120,10 @@ namespace IDPicker
             breadCrumbPanel.Controls.Add(breadCrumbControl);
 
             fragmentationStatisticsForm = new FragmentationStatisticsForm(this);
-            fragmentationStatisticsForm.Show(dockPanel, DockState.Document);
+            fragmentationStatisticsForm.Show(dockPanel, DockState.DockBottomAutoHide);
 
             peakStatisticsForm = new PeakStatisticsForm(this);
-            peakStatisticsForm.Show(dockPanel, DockState.Document);
+            peakStatisticsForm.Show(dockPanel, DockState.DockBottomAutoHide);
 
             spectrumTableForm = new SpectrumTableForm();
             spectrumTableForm.Show(dockPanel, DockState.DockLeft);
