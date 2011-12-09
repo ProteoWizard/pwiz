@@ -491,6 +491,7 @@ install install
         <conditional>@dotNET-dependencies
         <conditional>@install-location
         <conditional>@install-vendor-api-dependencies
+        <dependency>VERSION   
     ;
 
 build-project Deploy ;
@@ -523,7 +524,7 @@ rule binary-tarball-requirements ( properties * )
     }
     local name = [ common.format-name <base> <property:target-os> <property:architecture> <toolset> <property:variant> -$(version-tag:J=_)
                                       : $(bin-tarball-basename) : TBZ2 : [ property-set.create $(properties) ] ] ;
-    result += <name>$(name) <dependency>install <location>$(BUILD_PATH) ;
+    result += <name>$(name) <dependency>install <location>$(BUILD_PATH) <dependency>VERSION ;
     return $(result) ;
 }
 
