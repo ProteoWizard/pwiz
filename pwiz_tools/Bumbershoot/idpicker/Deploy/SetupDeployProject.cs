@@ -40,6 +40,9 @@ namespace SetupDeployProject
             new IDPicker.Forms.NotifyingStringWriter(); // don't optimize away the IDPicker reference
 
             string version = Util.GetAssemblyVersion(Util.GetAssemblyByName("IDPicker"));
+            if (version.EndsWith(".0"))
+                version = version.Substring(0, version.Length - 2);
+
             string guid = Guid.NewGuid().ToString("B").ToUpper();
 
             var fileGuidMap = new Dictionary<string, string>();
@@ -156,6 +159,10 @@ namespace SetupDeployProject
                         else if (line.StartsWith("        \"ProductCode\" = \"8:"))
                         {
                             line = String.Format("        \"ProductCode\" = \"8:{0}\"", guid);
+                        }
+                        else if (line.StartsWith("        \"ProductVersion\" = \"8:"))
+                        {
+                            line = String.Format("        \"ProductVersion\" = \"8:{0}\"", version);
                         }
                         else if (line.StartsWith("        \"Title\" = \"8:IDPicker"))
                         {
