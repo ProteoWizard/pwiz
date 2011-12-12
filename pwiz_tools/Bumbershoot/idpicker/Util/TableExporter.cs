@@ -137,6 +137,7 @@ namespace IDPicker
                 //must be converted to array of objects for quick population
                 //and to avoid "numbers formatted as text" errors
                 var maxWidth = table.Max(x => x.Count);
+                var maxHeight = table.Count;
                 var genericList = new object[table.Count, maxWidth];
                 for (int row = 0; row < table.Count; row++)
                     for (int column = 0; column < maxWidth; column++)
@@ -176,7 +177,18 @@ namespace IDPicker
                         (Microsoft.Office.Interop.Excel.Range) newWorksheet.Columns.get_Item(x, Missing.Value);
                     var columnWidth = double.Parse(column.ColumnWidth.ToString());
                     if (columnWidth > 75)
+                    {
                         column.ColumnWidth = 75;
+                        //column.NumberFormat = "General";
+                        for (int row = 1;row <= maxHeight; row++)
+                        {
+                            var cellNumber = IntToColumn(x) + row;
+                            var cell = newWorksheet.get_Range(cellNumber, cellNumber);
+                            var text = (string)cell.Text;
+                            if (text.Length > 200)
+                                cell.NumberFormat = "General";
+                        }
+                    }
                 }
 
                 if (kvp.Key != "Summary")
@@ -319,23 +331,21 @@ namespace IDPicker
 
         public static string IntToColumn(int number)
         {
-            if (number < 1)
-                return "a";
+            //Alas, had an awesome calculation for this, but StackOverflow
+            //had a much simpler (and more powerful) method
+            int dividend = number;
+            string columnName = String.Empty;
+            int modulo;
 
-            char[] chars = new char[] { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z' };
-            string finalresult = string.Empty;
-            int remainder = number % 26;
-            int othernumber = number;
-            othernumber -= remainder;
-            if (othernumber > 0)
+            while (dividend > 0)
             {
-                othernumber /= 26;
-                finalresult += chars[othernumber - 1];
+                modulo = (dividend - 1) % 26;
+                columnName = Convert.ToChar(65 + modulo) + columnName;
+                dividend = (dividend - modulo) / 26;
             }
 
-            finalresult += chars[remainder - 1];
+            return columnName;
 
-            return finalresult;
         }
 
         public static void CreateNavigationPage(List<string[]> clusterList, string outFolder, string reportName)

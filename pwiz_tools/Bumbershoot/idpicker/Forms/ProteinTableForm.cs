@@ -196,7 +196,7 @@ namespace IDPicker.Forms
                           .ToList();
         }
 
-        IList<Row> getProteinGroupRows (DataFilter parentFilter)
+        public IList<Row> getProteinGroupRows (DataFilter parentFilter)
         {
             lock (session)
             return session.CreateQuery(AggregateRow.Selection + ", " +

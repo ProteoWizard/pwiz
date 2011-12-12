@@ -1685,8 +1685,8 @@ namespace IDPicker
             //generate Tree HTML Files
             if (spectrumTableForm != null)
             {
-                //var sources = spectrumTableForm.getSourceContentsForHTML();
-                //var groups = spectrumTableForm.getSpectrumSourceGroupTree();
+                var sources = spectrumTableForm.getSourceContentsForHTML();
+                var groups = spectrumTableForm.getSpectrumSourceGroupTree();
                 var firstRowHeaders = new List<string>
                                           {
                                               "'Name'",
@@ -1696,7 +1696,7 @@ namespace IDPicker
                                               "'Precursor m/z'"
                                           };
 
-                /*foreach (var kvp in sources)
+                foreach (var kvp in sources)
                 {
                     var name = kvp.Key[0];
                     var fileName = kvp.Key[1];
@@ -1704,7 +1704,7 @@ namespace IDPicker
                     if (kvp.Value.Any())
                         TableExporter.CreateHTMLTreePage(kvp.Value, Path.Combine(outFolder, fileName),
                                                          name, firstRowHeaders, secondHeaders);
-                }*/
+                }
                 var groupTreeHeaders = new List<string>
                                            {
                                                "'Name'",
@@ -1714,9 +1714,9 @@ namespace IDPicker
                                                "'Distinct Analyses'",
                                                "'Distinct Charges'"
                                            };
-                //if (groups.Any())
-                //    TableExporter.CreateHTMLTreePage(groups, Path.Combine(outFolder, reportName + "-groups.html"),
-                //                                    reportName + "- SpectrumSourceGroups", groupTreeHeaders, groupTreeHeaders);
+                if (groups.Any())
+                    TableExporter.CreateHTMLTreePage(groups, Path.Combine(outFolder, reportName + "-groups.html"),
+                                                    reportName + "- SpectrumSourceGroups", groupTreeHeaders, groupTreeHeaders);
             }
 
             //generate Sumamry Page
@@ -1774,23 +1774,25 @@ namespace IDPicker
                                            }
                                    };
             var clusterFilter = new DataFilter(viewFilter) {Cluster = new List<int> {cluster}};
-            var proteinGroupQuery = session.CreateQuery(
-                    ProteinTableForm.AggregateRow.Selection + ", " +
-                    "       DISTINCT_GROUP_CONCAT(pro.Accession), " +
-                    "       pro.ProteinGroup, " +
-                    "       MIN(pro.Id), " +
-                    "       MIN(pro.Length), " +
-                    "       MIN(pro.Description), " +
-                    "       COUNT(DISTINCT pro.Id), " +
-                    "       pro.Cluster, " +
-                    "       AVG(pro.Coverage) " +
-                    clusterFilter.GetFilteredQueryString(DataFilter.FromProtein,
-                                                      DataFilter.ProteinToPeptideSpectrumMatch) +
-                    "GROUP BY pro.ProteinGroup " +
-                    "ORDER BY COUNT(DISTINCT psm.Peptide.id) DESC");//, COUNT(DISTINCT psm.id) DESC, COUNT(DISTINCT psm.Spectrum.id) DESC");
+            //var proteinGroupQuery = session.CreateQuery(
+            //        ProteinTableForm.AggregateRow.Selection + ", " +
+            //        "       DISTINCT_GROUP_CONCAT(pro.Accession), " +
+            //        "       pro.ProteinGroup, " +
+            //        "       MIN(pro.Id), " +
+            //        "       MIN(pro.Length), " +
+            //        "       MIN(pro.Description), " +
+            //        "       COUNT(DISTINCT pro.Id), " +
+            //        "       pro.Cluster, " +
+            //        "       AVG(pro.Coverage) " +
+            //        clusterFilter.GetFilteredQueryString(DataFilter.FromProtein,
+            //                                          DataFilter.ProteinToPeptideSpectrumMatch) +
+            //        "GROUP BY pro.ProteinGroup " +
+            //        "ORDER BY COUNT(DISTINCT psm.Peptide.id) DESC");//, COUNT(DISTINCT psm.id) DESC, COUNT(DISTINCT psm.Spectrum.id) DESC");
 
-            proteinGroupQuery.SetReadOnly(true);
-            var proteinGroupList = proteinGroupQuery.List<object[]>().Select(o => new ProteinTableForm.ProteinGroupRow(o, viewFilter)).ToList();
+            //proteinGroupQuery.SetReadOnly(true);
+            //var proteinGroupList = proteinGroupQuery.List<object[]>().Select(o => new ProteinTableForm.ProteinGroupRow(o, viewFilter)).ToList();
+            var proteinGroupList = proteinTableForm.getProteinGroupRows(clusterFilter).Cast<ProteinTableForm.ProteinGroupRow>().ToList();
+            //var proteinGroupList = genericProteinGroupList.Cast<ProteinTableForm.ProteinGroupRow>().ToList();
             ci.proteinGroupCount = proteinGroupList.Count;
 
             for (int x = 0; x < proteinGroupList.Count ;x++ )

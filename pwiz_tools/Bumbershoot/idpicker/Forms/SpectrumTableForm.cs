@@ -1144,7 +1144,21 @@ namespace IDPicker.Forms
                 var gcf = new GroupingControlForm(session.SessionFactory);
 
                 if (gcf.ShowDialog() == DialogResult.OK)
-                    (this.ParentForm as IDPickerForm).ApplyBasicFilter();
+                {
+                    ClearData();
+                    session.Clear();
+
+                    //reload grouping
+                    var rootGrouping = checkedGroupings.Count > 0 ? checkedGroupings.First() : null;
+                    basicDataFilter = dataFilter;
+                    basicTotalCounts = new TotalCounts(session, dataFilter);
+                    rowsBySource = new Dictionary<DataFilterKey, List<Row>>();
+                    basicRows = getChildren(rootGrouping, dataFilter);
+                    basicRowsBySource = rowsBySource;
+
+                    SetData(session, viewFilter);
+                    //(this.ParentForm as IDPickerForm).ApplyBasicFilter();
+                }
                 //TODO- Find a better way of doing this
             }
 
@@ -1215,6 +1229,155 @@ namespace IDPicker.Forms
         {
             setColumnVisibility();
             base.OnGroupingChanged(sender, e);
+        }
+
+        internal Dictionary<string[], List<TreeNode>> getSourceContentsForHTML()
+        {
+            const int decimalPlaces = 4;
+            var allContents = new Dictionary<string[], List<TreeNode>>();
+            var sources = session.QueryOver<SpectrumSource>().List();
+            foreach (var source in sources)
+            {
+                var exportTable = new List<TreeNode>();
+                var scoreList = new HashSet<string>();
+                var sourceFilter = new DataFilter(dataFilter) { SpectrumSource = new List<SpectrumSource> { source } };
+                var spectraRows = getSpectrumRows(sourceFilter);
+
+                foreach (SpectrumRow spectra in spectraRows)
+                {
+                    var key = spectra.Spectrum.NativeID;
+                    try
+                    {
+                        key = pwiz.CLI.msdata.id.abbreviate(key);
+                    }
+                    catch
+                    {
+                    }
+                    var newBranch = new TreeNode
+                    {
+                        Text = key,
+                        Tag = new[]
+                                                      {
+                                                          "'" + key + "'", spectra.DistinctPeptides.ToString(),
+                                                          spectra.DistinctAnalyses.ToString(),
+                                                          spectra.DistinctCharges.ToString(),
+                                                          Math.Round(spectra.Spectrum.PrecursorMZ,decimalPlaces).ToString()
+                                                      }
+                    };
+                    foreach (var match in spectra.Spectrum.Matches)
+                    {
+                        var observedMass = match.Spectrum.PrecursorMZ * match.Charge -
+                                           match.Charge * pwiz.CLI.chemistry.Proton.Mass;
+                        var matchNode = new TreeNode { Text = match.Rank.ToString() };
+                        var tag = new List<string>
+                                      {
+                                          "'" + match.Rank + "'",
+                                          match.Charge.ToString(),
+                                          Math.Round(observedMass,decimalPlaces).ToString(),
+                                          Math.Round(match.MonoisotopicMass,decimalPlaces).ToString(),
+                                          Math.Round(match.MonoisotopicMassError,decimalPlaces).ToString(),
+                                          Math.Round(match.QValue,decimalPlaces).ToString(),
+                                          "'" + match.Peptide.Sequence + "'"
+                                      };
+                        foreach (var score in match.Scores)
+                            scoreList.Add("'" + score.Key + "'");
+                        foreach (var score in scoreList)
+                        {
+                            tag.Add(match.Scores.ContainsKey(score.Trim("'".ToCharArray()))
+                                        ? Math.Round(match.Scores[score.Trim("'".ToCharArray())], decimalPlaces).ToString()
+                                        : string.Empty);
+                        }
+                        matchNode.Tag = tag.ToArray();
+                        newBranch.Nodes.Add(matchNode);
+                    }
+                    exportTable.Add(newBranch);
+                }
+                var headers = new List<string>()
+                                  {
+                                      "'Rank'",
+                                      "'Charge'",
+                                      "'Observed Mass'",
+                                      "'Monoisotopic Mass'",
+                                      "'Mass Error'",
+                                      "'Q Value'",
+                                      "'Sequence'"
+                                  };
+                headers.AddRange(scoreList);
+                allContents.Add(
+                    new[]
+                        {
+                            source.Name, "source" + (source.Id == null
+                                                         ? string.Empty
+                                                         : source.Id.ToString())
+                                         + ".html",
+                            string.Join("|", headers.ToArray())
+                        }, exportTable);
+            }
+            return allContents;
+        }
+
+        internal List<TreeNode> getSpectrumSourceGroupTree()
+        {
+            var groupNodes = new List<TreeNode>();
+            var groups = session.CreateQuery(AggregateRow.Selection + ", ssgl " +
+                                                     dataFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
+                                                                                         DataFilter.PeptideSpectrumMatchToPeptideInstance,
+                                                                                         DataFilter.PeptideSpectrumMatchToSpectrumSourceGroupLink) +
+                                                     "GROUP BY ssgl.Group.id")
+                        .List<object[]>()
+                        .Select(o => new SpectrumSourceGroupRow(o, viewFilter));
+            foreach (var group in groups)
+            {
+                var newNode = new TreeNode
+                {
+                    Text = group.SpectrumSourceGroup.Name,
+                    Tag =
+                        new[]
+                                              {
+                                                  "'" + group.SpectrumSourceGroup.Name + "'", group.Spectra.ToString(),
+                                                  group.DistinctPeptides.ToString(), group.DistinctMatches.ToString(),
+                                                  group.DistinctAnalyses.ToString(), group.DistinctCharges.ToString()
+                                              }
+                };
+                var groupFilter = new DataFilter(viewFilter)
+                {
+                    SpectrumSourceGroup =
+                        new List<SpectrumSourceGroup> { group.SpectrumSourceGroup }
+                };
+                var sources = session.CreateQuery(AggregateRow.Selection + ", s.Source " +
+                                                      groupFilter.GetFilteredQueryString(DataFilter.FromPeptideSpectrumMatch,
+                                                                                          DataFilter.PeptideSpectrumMatchToPeptideInstance,
+                                                                                          DataFilter.PeptideSpectrumMatchToSpectrum) +
+                                                      "GROUP BY s.Source.id")
+                        .List<object[]>()
+                        .Select(o => new SpectrumSourceRow(o, groupFilter));
+                SpectrumSourceGroupRow ssgr = group;
+                sources = from SpectrumSourceRow s in sources
+                          where s.SpectrumSource.Group == ssgr.SpectrumSourceGroup
+                          select s;
+                foreach (var source in sources)
+                {
+                    var newSubNode = new TreeNode
+                    {
+                        Text = "source" + source.SpectrumSource.Id ?? string.Empty + ".html",
+                        Tag = new[]
+                                                       {
+                                                           "'<a href =\"source" + (source.SpectrumSource.Id != null
+                                                                                       ? source.SpectrumSource.Id.ToString()
+                                                                                       : string.Empty) + ".html\">" +
+                                                           source.SpectrumSource.Name + "</a>'",
+                                                           source.Spectra.ToString(),
+                                                           source.DistinctPeptides.ToString(),
+                                                           source.DistinctMatches.ToString(),
+                                                           source.DistinctAnalyses.ToString(),
+                                                           source.DistinctCharges.ToString()
+                                                       }
+                    };
+                    newNode.Nodes.Add(newSubNode);
+                }
+                groupNodes.Add(newNode);
+            }
+            return groupNodes;
         }
     }
 
