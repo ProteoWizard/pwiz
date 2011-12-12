@@ -98,11 +98,6 @@
 		<id name="Id"><generator class="native"/></id>
 		<property name="Accession" />
 
-		<!-- We store these long text fields in separate tables so that joins against the Protein table are faster -->
-		<property name="Description" formula="IFNULL((SELECT pmd.Description FROM ProteinMetadata pmd WHERE Id=pmd.Id),'')"/>
-		<property name="Sequence" lazy="true" formula="IFNULL((SELECT pd.Sequence FROM ProteinData pd WHERE Id=pd.Id),'')"/>
-
-
 		<bag name="Peptides" inverse="true" batch-size="500" lazy="true">
 			<key column="Protein"/>
 			<one-to-many class="PeptideInstance"/>
@@ -112,17 +107,16 @@
 		<property name="ProteinGroup" access="nosetter.camelcase"/>
 		<property name="Length" access="nosetter.camelcase"/>
 
-		<property name="Coverage" formula="(SELECT pc.Coverage FROM ProteinCoverage pc WHERE Id=pc.Id)"/>
-		<property name="CoverageMask" formula="(SELECT pc.CoverageMask FROM ProteinCoverage pc WHERE Id=pc.Id)" type="ProteinCoverageMaskUserType"/>
+		<!-- We store these long text fields in separate tables so that joins against the Protein table are faster -->
+		<join table="ProteinMetadata"><key column="Id"/><property name="Description"/></join>
+		<join optional="true" table="ProteinData"><key column="Id"/><property name="Sequence" lazy="true"/></join>
 
-		<one-to-one name="pmd"/>
-		<one-to-one name="pd"/>
-		<one-to-one name="pc"/>
+		<join optional="true" table="ProteinCoverage">
+			<key column="Id"/>
+			<property name="Coverage"/>
+			<property name="CoverageMask" type="ProteinCoverageMaskUserType"/>
+		</join>
 	</class>
-
-	<class name="ProteinMetadata"><id name="Id"><generator class="native"/></id><property name="Description"/></class>
-	<class name="ProteinData"><id name="Id"><generator class="native"/></id><property name="Sequence"/></class>
-	<class name="ProteinCoverage"><id name="Id"><generator class="native"/></id><property name="Coverage"/><property name="CoverageMask" type="ProteinCoverageMaskUserType"/></class>
 
 	<class name="Peptide">
 		<id name="Id"><generator class="native"/></id>

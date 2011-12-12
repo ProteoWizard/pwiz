@@ -144,8 +144,8 @@ namespace IDPicker.DataModel
     public class Protein : Entity<Protein>
     {
         public virtual string Accession { get; set; }
-        public virtual string Description { get { return pmd == null ? String.Empty : pmd.Description; } set { pmd.Description = value; } }
-        public virtual string Sequence { get { return pd == null ? String.Empty : pd.Sequence; } set { pd.Sequence = value; } }
+        public virtual string Description { get; set; }
+        public virtual string Sequence { get; set; }
         public virtual IList<PeptideInstance> Peptides { get; set; }
 
         public virtual bool IsDecoy { get { return isDecoy; } }
@@ -153,18 +153,12 @@ namespace IDPicker.DataModel
         public virtual int ProteinGroup { get { return proteinGroup; } }
         public virtual int Length { get { return length; } }
 
-        public virtual double Coverage { get { return pc == null ? 0 : pc.Coverage; } private set { } }
-        public virtual IList<ushort> CoverageMask { get { return pc == null ? null : pc.CoverageMask; } private set { } }
+        public virtual double Coverage { get; set; }
+        public virtual IList<ushort> CoverageMask { get; set; }
 
         #region Transient instance members
-        public Protein ()
-        {
-            pmd = new ProteinMetadata();
-            pd = new ProteinData();
-            pc = new ProteinCoverage();
-        }
-
-        public Protein (string description, string sequence) : this()
+        public Protein () { }
+        public Protein (string description, string sequence)
         {
             Description = description;
             Sequence = sequence;
@@ -176,15 +170,8 @@ namespace IDPicker.DataModel
         int proteinGroup = 0;
         int length = 0;
 
-        protected internal virtual ProteinMetadata pmd { get; set; }
-        protected internal virtual ProteinData pd { get; set; }
-        protected internal virtual ProteinCoverage pc { get; set; }
         #endregion
     }
-
-    public class ProteinMetadata : Entity<ProteinMetadata> { public virtual string Description { get; set; } }
-    public class ProteinData : Entity<ProteinData> { public virtual string Sequence { get; set; } }
-    public class ProteinCoverage : Entity<ProteinCoverage> { public virtual double Coverage { get; set; } public virtual IList<ushort> CoverageMask { get; set; } }
 
     public class Peptide : Entity<Peptide>
     {

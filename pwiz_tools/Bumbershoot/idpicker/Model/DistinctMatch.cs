@@ -72,7 +72,7 @@ namespace IDPicker.DataModel
         }
     }
 
-    public class DistinctMatchKey
+    public class DistinctMatchKey : IComparable<DistinctMatchKey>, IComparable
     {
         public Peptide Peptide { get; private set; }
         public string Key { get; private set; } // e.g. "<peptide> <charge?> <analysis?> <mods?>"
@@ -92,6 +92,37 @@ namespace IDPicker.DataModel
 
             if (format.IsAnalysisDistinct)
                 Analysis = psm.Analysis;
+        }
+
+        public int CompareTo (DistinctMatchKey other)
+        {
+            int compare = Peptide.Sequence.CompareTo(other.Peptide.Sequence);
+            if (compare != 0)
+                return compare;
+
+            if (Format.IsChargeDistinct)
+            {
+                compare = Charge.Value.CompareTo(other.Charge.Value);
+                if (compare != 0)
+                    return compare;
+            }
+
+            if (Format.IsAnalysisDistinct)
+            {
+                compare = Analysis.Name.CompareTo(other.Analysis.Name);
+                if (compare != 0)
+                    return compare;
+            }
+
+            return Key.CompareTo(other.Key);
+        }
+
+        public int CompareTo (object other)
+        {
+            var otherKey = other as DistinctMatchKey;
+            if (otherKey == null)
+                return 1;
+            return CompareTo(otherKey);
         }
 
         public override string ToString ()
