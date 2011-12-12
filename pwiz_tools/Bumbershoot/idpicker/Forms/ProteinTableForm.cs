@@ -807,7 +807,7 @@ namespace IDPicker.Forms
                         basicTotalCounts = new TotalCounts(session, dataFilter);
                         basicRows = getChildren(rootGrouping, dataFilter);
 
-                        basicStatsBySpectrumSourceGroup = null;
+                        basicStatsBySpectrumSource = null;
                         Pivot<PivotBy> pivotBySource = checkedPivots.FirstOrDefault(o => o.Mode.ToString().Contains("Source"));
                         if (pivotBySource != null)
                             basicStatsBySpectrumSource = getPivotData(rootGrouping, pivotBySource, dataFilter);
@@ -845,6 +845,7 @@ namespace IDPicker.Forms
                         statsBySpectrumSourceGroup = getPivotData(rootGrouping, pivotByGroup, dataFilter);
                 }
 
+                createPivotColumns();
                 applySort();
             }
             catch (Exception ex)
@@ -892,37 +893,29 @@ namespace IDPicker.Forms
             treeDataGridView.Refresh();
         }
 
-        private void addPivotColumns ()
+        private void createPivotColumns()
         {
-            treeDataGridView.SuspendLayout();
-            foreach (var pivotColumn in pivotColumns)
-                treeDataGridView.Columns.Remove(pivotColumn);
-
+            oldPivotColumns = pivotColumns;
             pivotColumns = new List<DataGridViewColumn>();
 
             if (checkedPivots.Count == 0)
-            {
-                treeDataGridView.ResumeLayout(true);
                 return;
-            }
 
             var sourceNames = sourceById.Select(o => o.Value.Name);
-            int visibleColumns = treeDataGridView.GetVisibleColumns().Count();
-            bool keepDescriptionLastColumn = descriptionColumn.DisplayIndex == visibleColumns - 1;
 
             if (statsBySpectrumSource != null)
             foreach (long sourceId in statsBySpectrumSource.Keys)
             {
                 string uniqueSubstring;
                 Util.UniqueSubstring(sourceById[sourceId].Name, sourceNames, out uniqueSubstring);
-                var column = new DataGridViewTextBoxColumn() { HeaderText = uniqueSubstring};
+                var column = new DataGridViewTextBoxColumn() { HeaderText = uniqueSubstring, FillWeight = 1 };
                 column.Tag = statsBySpectrumSource[sourceId];
 
                 var newProperties = new ColumnProperty()
-                                        {
-                                            Type = typeof(int),
-                                            Name = column.HeaderText
-                                        };
+                {
+                    Type = typeof(int),
+                    Name = column.HeaderText
+                };
 
                 var previousForm = _columnSettings.SingleOrDefault(x => x.Value.Name == column.HeaderText);
 
@@ -948,7 +941,7 @@ namespace IDPicker.Forms
             if (statsBySpectrumSourceGroup != null)
             foreach (long groupId in statsBySpectrumSourceGroup.Keys)
             {
-                var column = new DataGridViewTextBoxColumn() { HeaderText = groupById[groupId].Name.TrimEnd('/') + '/' };
+                var column = new DataGridViewTextBoxColumn() { HeaderText = groupById[groupId].Name.TrimEnd('/') + '/', FillWeight = 1 };
                 column.Tag = statsBySpectrumSourceGroup[groupId];
 
                 var newProperties = new ColumnProperty()
@@ -979,9 +972,31 @@ namespace IDPicker.Forms
             }
 
             pivotColumns.Sort((x, y) => x.HeaderText.CompareTo(y.HeaderText));
+        }
+
+        private void addPivotColumns ()
+        {
+            treeDataGridView.SuspendLayout();
+
+            if (oldPivotColumns != null)
+                foreach (var pivotColumn in oldPivotColumns)
+                    treeDataGridView.Columns.Remove(pivotColumn);
+
+            if (checkedPivots.Count == 0)
+            {
+                treeDataGridView.ResumeLayout(true);
+                return;
+            }
+
+            var sourceNames = sourceById.Select(o => o.Value.Name);
+            int visibleColumns = treeDataGridView.GetVisibleColumns().Count();
+            bool keepDescriptionLastColumn = descriptionColumn.DisplayIndex == visibleColumns - 1;
+
             treeDataGridView.Columns.AddRange(pivotColumns.ToArray());
+
             if (keepDescriptionLastColumn)
                 descriptionColumn.DisplayIndex = visibleColumns + pivotColumns.Count - 1;
+
             treeDataGridView.ResumeLayout(true);
         }
 

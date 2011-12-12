@@ -710,29 +710,22 @@ namespace IDPicker.Forms
             workerThread.RunWorkerAsync();
         }
 
-        private void addPivotColumns ()
+        private void createPivotColumns ()
         {
-            treeDataGridView.SuspendLayout();
-            foreach (var pivotColumn in pivotColumns)
-                treeDataGridView.Columns.Remove(pivotColumn);
-
+            oldPivotColumns = pivotColumns;
             pivotColumns = new List<DataGridViewColumn>();
 
             if (checkedPivots.Count == 0)
-            {
-                treeDataGridView.ResumeLayout(true);
                 return;
-            }
 
             var sourceNames = sourceById.Select(o => o.Value.Name);
-            int insertIndex = treeDataGridView.GetVisibleColumns().Count();
 
             if (statsBySpectrumSource != null)
                 foreach (long sourceId in statsBySpectrumSource.Keys)
                 {
                     string uniqueSubstring;
                     Util.UniqueSubstring(sourceById[sourceId].Name, sourceNames, out uniqueSubstring);
-                    var column = new DataGridViewTextBoxColumn() { HeaderText = uniqueSubstring };
+                    var column = new DataGridViewTextBoxColumn() { HeaderText = uniqueSubstring, FillWeight = 1 };
                     column.Tag = statsBySpectrumSource[sourceId];
 
                     var newProperties = new ColumnProperty()
@@ -765,7 +758,7 @@ namespace IDPicker.Forms
             if (statsBySpectrumSourceGroup != null)
                 foreach (long groupId in statsBySpectrumSourceGroup.Keys)
                 {
-                    var column = new DataGridViewTextBoxColumn() { HeaderText = groupById[groupId].Name.TrimEnd('/') + '/' };
+                    var column = new DataGridViewTextBoxColumn() { HeaderText = groupById[groupId].Name.TrimEnd('/') + '/', FillWeight = 1 };
                     column.Tag = statsBySpectrumSourceGroup[groupId];
 
                     var newProperties = new ColumnProperty()
@@ -796,7 +789,19 @@ namespace IDPicker.Forms
                 }
 
             pivotColumns.Sort((x, y) => x.HeaderText.CompareTo(y.HeaderText));
-            treeDataGridView.Columns.AddRange(pivotColumns.ToArray());
+        }
+
+        private void addPivotColumns ()
+        {
+            treeDataGridView.SuspendLayout();
+
+            if (oldPivotColumns != null)
+                foreach (var pivotColumn in oldPivotColumns)
+                    treeDataGridView.Columns.Remove(pivotColumn);
+
+            if (checkedPivots.Count > 0)
+                treeDataGridView.Columns.AddRange(pivotColumns.ToArray());
+
             treeDataGridView.ResumeLayout(true);
         }
 
@@ -866,7 +871,7 @@ namespace IDPicker.Forms
                         basicTotalCounts = new TotalCounts(session, dataFilter);
                         basicRows = getChildren(rootGrouping, dataFilter);
 
-                        basicStatsBySpectrumSourceGroup = null;
+                        basicStatsBySpectrumSource = null;
                         Pivot<PivotBy> pivotBySource = checkedPivots.FirstOrDefault(o => o.Mode.ToString().Contains("Source"));
                         if (pivotBySource != null)
                             basicStatsBySpectrumSource = getPivotData(rootGrouping, pivotBySource, dataFilter);
@@ -904,6 +909,7 @@ namespace IDPicker.Forms
                         statsBySpectrumSourceGroup = getPivotData(rootGrouping, pivotByGroup, dataFilter);
                 }
 
+                createPivotColumns();
                 applySort();
             }
             catch (Exception ex)

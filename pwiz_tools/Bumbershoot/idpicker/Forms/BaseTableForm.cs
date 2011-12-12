@@ -135,6 +135,7 @@ namespace IDPicker.Forms
         protected IList<Pivot<PivotBy>> checkedPivots;
 
         protected List<DataGridViewColumn> pivotColumns = new List<DataGridViewColumn>();
+        protected List<DataGridViewColumn> oldPivotColumns;
 
         [Flags]
         protected enum RowFilterState
