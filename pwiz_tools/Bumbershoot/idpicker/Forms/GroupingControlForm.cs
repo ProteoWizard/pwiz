@@ -232,7 +232,7 @@ namespace IDPicker.Forms
             try
             {
                 if (e.KeyCode == Keys.Delete)
-                    RemoveGroupNode(selNode);
+                    RemoveGroupNode(selNode, true);
             }
             catch (Exception exc)
             {
@@ -329,7 +329,7 @@ namespace IDPicker.Forms
             _numberNewNodes++;
 
             var ssg = new SpectrumSourceGroup();
-            ssg.Name = (string.Format("{0}/New tlvBranch({1})", selNode.Text, _numberNewNodes).Replace(@"//",@"/"));
+            ssg.Name = (string.Format("{0}/New Group({1})", selNode.Text, _numberNewNodes).Replace(@"//",@"/"));
 
             var newNode = new tlvBranch
                               {
@@ -360,10 +360,10 @@ namespace IDPicker.Forms
         private void removeGroupToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var selNode = (tlvBranch)tlvGroupedFiles.GetModelObject(_clickedItem.Index);
-            RemoveGroupNode(selNode);
+            RemoveGroupNode(selNode, true);
         }
 
-        private void RemoveGroupNode(tlvBranch selNode)
+        private void RemoveGroupNode(tlvBranch selNode, bool refresh)
         {
             var abandonedSpectraSources = new List<tlvBranch>();
             getListOfSprectrumSourcesRecursively(selNode, ref abandonedSpectraSources);
@@ -371,12 +371,14 @@ namespace IDPicker.Forms
             if (selNode.Parent.Text != null)
             {
                 selNode.Parent.Children.Remove(selNode);
-                tlvGroupedFiles.RefreshObject(selNode.Parent);
+                if (refresh)
+                    tlvGroupedFiles.RefreshObject(selNode.Parent);
             }
             else
             {
                 selNode.Children.Clear();
-                tlvGroupedFiles.RefreshObject(selNode);
+                if (refresh)
+                    tlvGroupedFiles.RefreshObject(selNode);
             }
 
             foreach (tlvBranch tn in abandonedSpectraSources)
@@ -386,10 +388,11 @@ namespace IDPicker.Forms
             }
         }
 
-        private void RemoveFileNode(tlvBranch selNode)
+        private void RemoveFileNode(tlvBranch selNode, bool refresh)
         {
             selNode.Parent.Children.Remove(selNode);
-            tlvGroupedFiles.RefreshObject(selNode.Parent);
+            if (refresh)
+                tlvGroupedFiles.RefreshObject(selNode.Parent);
 
             var lvi = new ListViewItem {Text = Path.GetFileName(selNode.Text), Tag = selNode};
             lvNonGroupedFiles.Items.Add(lvi);
@@ -398,7 +401,7 @@ namespace IDPicker.Forms
         private void removeFileNodeToolStripMenuItem_Click(object sender, EventArgs e)
         {
             var selNode = (tlvBranch)tlvGroupedFiles.GetModelObject(_clickedItem.Index);
-            RemoveFileNode(selNode);
+            RemoveFileNode(selNode, true);
         }
 
         private void lvNonGroupedFiles_ItemDrag(object sender, ItemDragEventArgs e)
@@ -417,11 +420,23 @@ namespace IDPicker.Forms
                 var remaining = from tlvBranch branch in tlvGroupedFiles.SelectedObjects
                                 where (branch.Data is SpectrumSourceGroup)
                                 select branch;
-                
+
+                lvNonGroupedFiles.BeginUpdate();
+                var toRefresh = new HashSet<tlvBranch>();
                 foreach (var item in dragSources)
-                    RemoveGroupNode(item);
+                {
+                    RemoveFileNode(item, false);
+                    toRefresh.Add(item.Parent);
+                }
                 foreach (var item in remaining)
-                    RemoveGroupNode(item);
+                {
+                    RemoveGroupNode(item, false);
+                    toRefresh.Add(item);
+                    toRefresh.Add(item.Parent);
+                }
+                lvNonGroupedFiles.EndUpdate();
+                foreach (var item in toRefresh)
+                    tlvGroupedFiles.RefreshObject(item);
                 
                 tlvGroupedFiles.Sort();
             }
@@ -446,8 +461,8 @@ namespace IDPicker.Forms
 
         private void miResetFiles_Click(object sender, EventArgs e)
         {
-            if (MessageBox.Show("Are you sure you want to remove all groups?","Remove All",MessageBoxButtons.YesNo) == DialogResult.Yes)
-                RemoveGroupNode((tlvBranch)tlvGroupedFiles.GetModelObject(0));
+            if (MessageBox.Show("Are you sure you want to remove all groups?", "Remove All", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                RemoveGroupNode((tlvBranch) tlvGroupedFiles.GetModelObject(0), true);
         }
 
         private void miExpandGroups_Click(object sender, EventArgs e)
@@ -489,6 +504,8 @@ namespace IDPicker.Forms
         {
             var target = (tlvBranch)e.DropTargetItem.RowObject;
             var index = -1;
+            var toRefresh = new HashSet<tlvBranch>();
+
             if (target.Data is SpectrumSource)
             {
                 index = target.Parent.Children.IndexOf(target);
@@ -508,7 +525,7 @@ namespace IDPicker.Forms
                     source.Parent = target;
                 }
 
-                tlvGroupedFiles.RefreshObject(target);
+                toRefresh.Add(target);
 
                 var usedItems = from ListViewItem item in lvNonGroupedFiles.SelectedItems
                                 select item;
@@ -533,7 +550,7 @@ namespace IDPicker.Forms
                     getListOfSprectrumSourcesRecursively(group, ref sourcesToIgnore);
 
                     group.Parent.Children.Remove(group);
-                    tlvGroupedFiles.RefreshObject(group.Parent);
+                    toRefresh.Add(group.Parent);
                     group.Parent = target;
                     if (target.Children.Any())
                         target.Children.Insert(0, group);
@@ -545,7 +562,7 @@ namespace IDPicker.Forms
                 foreach (var source in sources)
                 {
                     source.Parent.Children.Remove(source);
-                    tlvGroupedFiles.RefreshObject(source.Parent);
+                    toRefresh.Add(source.Parent);
                     source.Parent = target;
                     if (index >= 0)
                         target.Children.Insert(index, source);
@@ -553,9 +570,11 @@ namespace IDPicker.Forms
                         target.Children.Add(source);
                 }
 
-                tlvGroupedFiles.RefreshObject(target);
+                toRefresh.Add(target);
                 tlvGroupedFiles.Expand(target);
             }
+            foreach (var item in toRefresh)
+                tlvGroupedFiles.RefreshObject(item);
             OrganizeNode(target);
         }
 
