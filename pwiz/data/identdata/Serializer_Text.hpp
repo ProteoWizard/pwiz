@@ -50,7 +50,8 @@ public:
         ScoreType=6,
         Peptide=7,
         Protein=8,
-        Last=Protein
+        ProteinDescription=9,
+        Last=ProteinDescription
     };
 
     static const std::string* getIdFieldNames();

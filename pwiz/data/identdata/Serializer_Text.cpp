@@ -53,6 +53,7 @@ struct TextRecord
     string scoretype;
     string peptide;
     string protein;
+    string proteinDescription;
 
     TextRecord()
         : none(""), scan(""), rt(""), mz(-1), charge(-1),
@@ -112,7 +113,8 @@ ostream& operator<<(ostream& os, const TextRecord& tr)
        << "score: " << tr.score << "\n"
        << "scoretype: " << tr.scoretype << "\n"
        << "peptide: " << tr.peptide << "\n"
-       << "protein: " << tr.protein << "\n";
+       << "protein: " << tr.protein << "\n"
+       << "protein_description:" << tr.proteinDescription << "\n";
 
     return os;
 }
@@ -212,6 +214,10 @@ struct tr_eq
             result = left.protein == right.protein;
             break;
 
+        case Serializer_Text::ProteinDescription:
+            result = left.proteinDescription == right.proteinDescription;
+            break;
+
         default:
             break;
         }
@@ -266,6 +272,10 @@ struct tr_less
             return left.protein < right.protein;
             break;
 
+        case Serializer_Text::ProteinDescription:
+            return left.proteinDescription < right.proteinDescription;
+            break;
+
         default:
             break;
         }
@@ -293,18 +303,21 @@ vector<TextRecord> fetchPeptideEvidence(const SpectrumIdentificationItem& sii,
 
         // Fetch the peptide sequence by way of the DBSequence
         // reference.
-        if (pep->dbSequencePtr.get())
-            tr.peptide = pep->dbSequencePtr->seq;
-        else if (sii.peptidePtr.get())
-            tr.peptide = sii.peptidePtr->peptideSequence;
+        //if (pep->dbSequencePtr.get())
+        //    tr.peptide = pep->dbSequencePtr->seq;
+        //else if (sii.peptidePtr.get())
+        //    tr.peptide = sii.peptidePtr->peptideSequence;
             
         
         // Fetch the protein name by way of the "protein description"
         // CVParam
-        CVParam cvp = pep->dbSequencePtr->cvParam(MS_protein_description);
+        if (!pep->dbSequencePtr->accession.empty())
+            tr.protein = pep->dbSequencePtr->accession;
 
+        CVParam cvp = pep->dbSequencePtr->cvParam(MS_protein_description);
+            
         if (cvp.cvid != CVID_Unknown)
-            tr.protein = cvp.value;
+            tr.proteinDescription = cvp.value;
 
         records.push_back(tr);
     }
@@ -336,7 +349,7 @@ vector<TextRecord> fetchSpectrumIdItem(
         }
 
         tr.peptide = sii->peptidePtr->peptideSequence;
-        
+
         vector<TextRecord> pepsRecords =
             fetchPeptideEvidence(*sii, tr);
         BOOST_FOREACH(TextRecord t, pepsRecords)
@@ -351,7 +364,7 @@ vector<TextRecord> fetchSpectrumIdItem(
 vector<TextRecord> fetchSpectrumIdResults(
     const vector<SpectrumIdentificationResultPtr>& sirl)
 {
-    const string spectrumIDPattern = "[^=]*=([0-9\\.]+)";
+    const string spectrumIDPattern = ".*[ ]*scan=([0-9\\.]+).*";
     regex spectrumIDExp(spectrumIDPattern);
 
     vector<TextRecord> records;
@@ -381,7 +394,7 @@ vector<TextRecord> fetchSpectrumIdResults(
             tr.rt=oss.str();
         }
 
-        // Check for a keyword/numerical value match int he spectrumID
+        // Check for a keyword/numerical value match in the spectrumID
         cmatch what;
         if (regex_match(sir->spectrumID.c_str(), what, spectrumIDExp))
         {
@@ -471,6 +484,10 @@ void Serializer_Text::Impl::writeField(ostream& os, const TextRecord& tr,
         os << tr.protein;
         break;
 
+    case ProteinDescription:
+        os << tr.proteinDescription;
+        break;
+
     default:
         break;
     }
@@ -509,7 +526,7 @@ void Serializer_Text::Impl::write(ostream& os, const IdentData& mzid,
     if (config.headers)
         os << getHeaders() << config.recordDelim;
 
-    // Recrods are assembled in a depth first search of the mzIdentML
+    // Records are assembled in a depth first search of the mzIdentML
     // tree.
     vector<TextRecord> records = fetchRecords(mzid);
 
@@ -600,6 +617,7 @@ const std::string Serializer_Text::Impl::IdFieldNames[] =
     "scoretype",
     "peptide",
     "protein",
+    "protein_description",
     ""
 };
 
