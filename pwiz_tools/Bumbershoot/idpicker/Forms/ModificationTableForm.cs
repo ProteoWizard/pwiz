@@ -62,11 +62,16 @@ namespace IDPicker.Forms
             dataGridView.CellDoubleClick += dataGridView_CellDoubleClick;
             dataGridView.KeyDown += dataGridView_KeyDown;
             dataGridView.CellFormatting += dataGridView_CellFormatting;
+            dataGridView.DefaultCellStyleChanged += dataGridView_DefaultCellStyleChanged;
 
             dataGridView.ShowCellToolTips = true;
             dataGridView.CellToolTipTextNeeded += dataGridView_CellToolTipTextNeeded;
             dataGridView.CellPainting += new DataGridViewCellPaintingEventHandler(dataGridView_CellPainting);
             brush = new SolidBrush(dataGridView.ForeColor);
+
+            // TODO: add display settings dialog like other forms have
+            var style = dataGridView.DefaultCellStyle;
+            filteredOutColor = style.ForeColor.Interpolate(style.BackColor, 0.5f);
         }
 
         const string deltaMassColumnName = "ΔMass";
@@ -251,6 +256,8 @@ namespace IDPicker.Forms
         private DataFilter dataFilter; // how this view is filtered (i.e. never on its own rows)
         private DataFilter basicDataFilter; // the basic filter without the user filtering on rows
 
+        private Color filteredOutColor;
+
         private Map<string, char> siteColumnNameToSite;
         private DataTable deltaMassTable, basicDeltaMassTable;
         private int totalModifications, basicTotalModifications;
@@ -268,6 +275,16 @@ namespace IDPicker.Forms
                 return "C-term";
             else
                 return site.ToString();
+        }
+
+        public char GetSiteFromColumnName (string columnName)
+        {
+            if (columnName == "N-term")
+                return '(';
+            else if (columnName == "C-term")
+                return ')';
+            else
+                return columnName[0];
         }
 
         private DataTable createDeltaMassTableFromQuery (IList<object[]> queryRows, out int totalModifications, out Map<string, char> siteColumnNameToSite)
@@ -348,6 +365,8 @@ namespace IDPicker.Forms
                             possibleAnnotationList.Add(annotation);
                     }
                 }
+
+            // this seems to prevent some intermittent crashes with the pwiz interop
             GC.Collect();
             GC.WaitForPendingFinalizers();
         }
@@ -475,6 +494,10 @@ namespace IDPicker.Forms
                 row.HeaderCell.Value = (row.DataBoundItem as DataRowView).Row[deltaMassColumnName].ToString();
         }
 
+        private void dataGridView_DefaultCellStyleChanged (object sender, EventArgs e)
+        {
+        }
+
         /// <summary>
         /// Highlights cells with different colors based on their values. 
         /// TODO: User-configurable.
@@ -494,6 +517,7 @@ namespace IDPicker.Forms
                     isResidueMass = Math.Abs(Math.Abs(deltaMass) - residueMass) < 1;
                 }
 
+                // set background color based on mod prevalence
                 int val = (int) e.Value;
                 if (val > 10 && val < 50)
                     e.CellStyle.BackColor = Color.PaleGreen;
@@ -501,6 +525,17 @@ namespace IDPicker.Forms
                     e.CellStyle.BackColor = Color.DeepSkyBlue;
                 else if (val >= 100)
                     e.CellStyle.BackColor = Color.OrangeRed;
+
+                // set foreground color based on whether the cell is included in the current view filter
+                bool filterIncludesMod = true;
+                if (viewFilter.Modifications != null) filterIncludesMod = viewFilter.Modifications.Any(o => Math.Abs(Math.Abs(deltaMass) - Math.Abs(Math.Round(o.MonoMassDelta))) < 1);
+                if (viewFilter.ModifiedSite != null) filterIncludesMod = filterIncludesMod && viewFilter.ModifiedSite.Contains(GetSiteFromColumnName(deltaMassSite));
+
+                if (!filterIncludesMod)
+                {
+                    e.CellStyle.ForeColor = filteredOutColor;
+                    e.CellStyle.BackColor = e.CellStyle.BackColor.Interpolate(dataGridView.DefaultCellStyle.BackColor, 0.5f);
+                }
 
                 if (basicDeltaMassAnnotations != null)
                 {

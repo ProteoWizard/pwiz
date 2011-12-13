@@ -926,7 +926,7 @@ namespace IDPicker.DataModel
             if (proteinConditions.Count > 0) conditions.Add("(" + String.Join(" OR ", proteinConditions.ToArray()) + ")");
             if (peptideConditions.Count > 0) conditions.Add("(" + String.Join(" OR ", peptideConditions.ToArray()) + ")");
             if (spectrumConditions.Count > 0) conditions.Add("(" + String.Join(" OR ", spectrumConditions.ToArray()) + ")");
-            if (modConditions.Count > 0) conditions.Add("(" + String.Join(" OR ", modConditions.ToArray()) + ")");
+            if (modConditions.Count > 0) conditions.Add("(" + String.Join(" AND ", modConditions.ToArray()) + ")");
             if (otherConditions.Count > 0) conditions.Add("(" + String.Join(" OR ", otherConditions.ToArray()) + ")");
 
             if (conditions.Count > 0)

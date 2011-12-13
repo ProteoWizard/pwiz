@@ -901,6 +901,7 @@ namespace IDPicker
                 long ramBytesAvailable = (long) new System.Diagnostics.PerformanceCounter("Memory", "Available Bytes").NextValue();
                 if (ramBytesAvailable > new FileInfo(commonFilename).Length)
                 {
+                    toolStripStatusLabel.Text = "Precaching idpDB...";
                     using (var fs = new FileStream(commonFilename, FileMode.Open, FileSystemRights.ReadData, FileShare.ReadWrite, (1 << 15), FileOptions.SequentialScan))
                     {
                         var buffer = new byte[UInt16.MaxValue];
@@ -923,6 +924,8 @@ namespace IDPicker
                     //set or save default layout
                     dockPanel.Visible = true;
                     _layoutManager.CurrentLayout = _layoutManager.GetCurrentDefault();
+
+                    toolStripStatusLabel.Text = "Refreshing group structure...";
                     var usedGroups = SetStructure(rootNode, new List<SpectrumSourceGroup>());
                     if (usedGroups != null && usedGroups.Any())
                     {
@@ -965,6 +968,8 @@ namespace IDPicker
 
                         setData();
                     }
+
+                    toolStripStatusLabel.Text = "Ready";
 
                     if (logForm != null) logForm.Show(dockPanel, DockState.DockBottomAutoHide);
                 }));
