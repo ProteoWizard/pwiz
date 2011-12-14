@@ -32,6 +32,7 @@ using System.ComponentModel.Design;
 using System.Drawing;
 using System.Drawing.Text;
 using DigitalRune.Windows.Docking;
+using IDPicker.DataModel;
 using proteome = pwiz.CLI.proteome;
 
 namespace IDPicker
@@ -40,7 +41,9 @@ namespace IDPicker
     {
         SequenceCoverageControl control;
 
-        public SequenceCoverageForm (DataModel.Protein pro)
+        public event SequenceCoverageFilterEventHandler SequenceCoverageFilter;
+
+        public SequenceCoverageForm (NHibernate.ISession session, DataModel.Protein pro)
         {
             StartPosition = FormStartPosition.CenterParent;
             ShowIcon = false;
@@ -52,11 +55,13 @@ namespace IDPicker
 
             BackColor = SystemColors.Window;
 
-            control = new SequenceCoverageControl(pro)
+            control = new SequenceCoverageControl(session, pro)
             {
                 Dock = DockStyle.Fill,
                 BackColor = this.BackColor
             };
+
+            control.SequenceCoverageFilter += (s, e) => OnSequenceCoverageFilter(e);
 
             Controls.Add(control);
         }
@@ -74,7 +79,12 @@ namespace IDPicker
                         | DigitalRune.Windows.Docking.DockAreas.Document)));
             this.Name = "SequenceCoverageForm";
             this.ResumeLayout(false);
+        }
 
+        protected void OnSequenceCoverageFilter (DataModel.DataFilter sequenceCoverageFilter)
+        {
+            if (SequenceCoverageFilter != null)
+                SequenceCoverageFilter(control, sequenceCoverageFilter);
         }
     }
 
@@ -91,11 +101,7 @@ namespace IDPicker
         /// Gets or sets the number of residues to display before inserting a space.
         /// </summary>
         [Browsable(true)]
-        public int ResidueGroupSize
-        {
-            get { return residueGroupSize; }
-            set { residueGroupSize = value; }
-        }
+        public int ResidueGroupSize { get; set; }
 
         /// <summary>
         /// Gets or sets the line spacing between sequence lines. The minimum is 2 plus the number of groups to show coverage for.
@@ -111,92 +117,89 @@ namespace IDPicker
         /// Gets or sets the color used to display protein metadata in the first few lines of the control.
         /// </summary>
         [Browsable(true)]
-        public Color HeaderColor
-        {
-            get { return headerColor; }
-            set { headerColor = value; }
-        }
+        public Color HeaderColor { get; set; }
 
         /// <summary>
         /// Gets or sets the color used to display residue offsets in the left-hand of the control margin.
         /// </summary>
         [Browsable(true)]
-        public Color OffsetColor
-        {
-            get { return offsetColor; }
-            set { offsetColor = value; }
-        }
+        public Color OffsetColor { get; set; }
 
         /// <summary>
         /// Gets or sets the color used to display the portions of the protein that are covered.
         /// </summary>
         [Browsable(true)]
-        public Color CoveredSequenceColor
-        {
-            get { return coveredSequenceColor; }
-            set { coveredSequenceColor = value; }
-        }
+        public Color CoveredSequenceColor { get; set; }
 
         /// <summary>
         /// Gets or sets the color used to display the portions of the protein that are uncovered.
         /// </summary>
         [Browsable(true)]
-        public Color UncoveredSequenceColor
-        {
-            get { return uncoveredSequenceColor; }
-            set { uncoveredSequenceColor = value; }
-        }
+        public Color UncoveredSequenceColor { get; set; }
+
+        /// <summary>
+        /// Gets or sets the color used to display the portions of the protein under the mouse cursor.
+        /// </summary>
+        [Browsable(true)]
+        public Color HoverSequenceColor { get; set; }
+
+        /// <summary>
+        /// Gets or sets the color used to display the portions of the protein with modifications.
+        /// </summary>
+        [Browsable(true)]
+        public Color ModifiedSequenceColor { get; set; }
 
         /// <summary>
         /// Gets or sets the font used to display protein metadata in the first few lines of the control.
         /// </summary>
         [Browsable(true)]
-        public Font HeaderFont
-        {
-            get { return headerFont; }
-            set { headerFont = value; }
-        }
+        public Font HeaderFont { get; set; }
 
         /// <summary>
         /// Gets or sets the font used to display residue offsets in the left-hand of the control margin.
         /// </summary>
         [Browsable(true)]
-        public Font OffsetFont
-        {
-            get { return offsetFont; }
-            set { offsetFont = value; }
-        }
+        public Font OffsetFont { get; set; }
 
         /// <summary>
         /// Gets or sets the font used to display the amino acid sequence.
         /// </summary>
         [Browsable(true)]
-        public Font SequenceFont
-        {
-            get { return sequenceFont; }
-            set { sequenceFont = value; }
-        }
+        public Font SequenceFont { get; set; }
+
+        /// <summary>
+        /// Gets or sets the font used to display the portions of the protein under the mouse cursor.
+        /// </summary>
+        [Browsable(true)]
+        public Font HoverFont { get; set; }
         #endregion
 
-        int residueGroupSize = 10;
-        int lineSpacing = 3;
+        public event SequenceCoverageFilterEventHandler SequenceCoverageFilter;
 
-        Color headerColor = Color.FromKnownColor(KnownColor.WindowText);
-        Color offsetColor = Color.FromKnownColor(KnownColor.GrayText);
-        Color coveredSequenceColor = Color.FromKnownColor(KnownColor.WindowText);
-        Color uncoveredSequenceColor = Color.FromKnownColor(KnownColor.GrayText);
-
-        Font headerFont = new Font(new FontFamily(GenericFontFamilies.Monospace), 12);
-        Font offsetFont = new Font(new FontFamily(GenericFontFamilies.Monospace), 12);
-        Font sequenceFont = new Font(new FontFamily(GenericFontFamilies.Monospace), 12);
+        int lineSpacing;
 
         DataModel.Protein protein;
+        public Map<int, PeptideModification> Modifications { get; set; }
         public DataModel.Protein Protein
         {
             get { return protein; }
             set
             {
                 protein = value;
+
+                var query = session.CreateQuery("SELECT pi.Offset+pm.Offset, pm " +
+                                                "FROM PeptideInstance pi " +
+                                                "JOIN pi.Peptide pep " +
+                                                "JOIN pep.Matches psm " +
+                                                "JOIN psm.Modifications pm " +
+                                                "JOIN FETCH pm.Modification mod " +
+                                                "WHERE pi.Protein=" + protein.Id.ToString());
+
+                IList<object[]> queryRows; lock (session) queryRows = query.List<object[]>();
+
+                Modifications = new Map<int, PeptideModification>();
+                foreach (var queryRow in queryRows)
+                    Modifications[Convert.ToInt32(queryRow[0])] = queryRow[1] as PeptideModification;
 
                 Controls.Clear();
 
@@ -224,14 +227,33 @@ namespace IDPicker
 
         int scrollY;
         SequenceCoverageSurface surface;
+        NHibernate.ISession session;
 
-        public SequenceCoverageControl (DataModel.Protein pro)
+        public SequenceCoverageControl (NHibernate.ISession session, DataModel.Protein protein)
         {
             ResizeRedraw = true;
             DoubleBuffered = true;
             AutoScroll = true;
 
-            Protein = pro;
+            ResidueGroupSize = 10;
+            lineSpacing = 3;
+
+            HeaderColor = Color.FromKnownColor(KnownColor.WindowText);
+            OffsetColor = Color.FromKnownColor(KnownColor.GrayText);
+            CoveredSequenceColor = Color.FromKnownColor(KnownColor.WindowText);
+            UncoveredSequenceColor = Color.FromKnownColor(KnownColor.GrayText);
+            HoverSequenceColor = Color.FromKnownColor(KnownColor.HotTrack);
+            ModifiedSequenceColor = Color.Red;
+
+            HeaderFont = new Font(new FontFamily(GenericFontFamilies.Monospace), 12);
+            OffsetFont = new Font(new FontFamily(GenericFontFamilies.Monospace), 12);
+            SequenceFont = new Font(new FontFamily(GenericFontFamilies.Monospace), 12);
+            HoverFont = new Font(SequenceFont, FontStyle.Bold | FontStyle.Underline);
+
+            this.session = session;
+            Protein = protein;
+
+            surface.SequenceCoverageFilter += (s, e) => OnSequenceCoverageFilter(e);
         }
 
         protected override void OnMouseWheel (MouseEventArgs e)
@@ -267,6 +289,12 @@ namespace IDPicker
 
             surface.Refresh();
         }
+
+        protected void OnSequenceCoverageFilter (DataModel.DataFilter sequenceCoverageFilter)
+        {
+            if (SequenceCoverageFilter != null)
+                SequenceCoverageFilter(this, sequenceCoverageFilter);
+        }
     }
 
     class SequenceCoverageSurface : UserControl
@@ -277,7 +305,9 @@ namespace IDPicker
         //List<List<int>> groupCoverageMasks = null;
         SizeF residueBounds;
 
-        //ToolTip toolTip
+        public event SequenceCoverageFilterEventHandler SequenceCoverageFilter;
+
+        //ToolTip toolTip;
 
         public SequenceCoverageSurface (SequenceCoverageControl owner)
         {
@@ -294,7 +324,6 @@ namespace IDPicker
             AutoSizeMode = AutoSizeMode.GrowAndShrink;
 
             //toolTip = new ToolTip() { Active = true, ShowAlways = true, InitialDelay = 100, ReshowDelay = 100, AutoPopDelay = 0 };
-            //MouseMove += new MouseEventHandler( hover );
 
             calculateBoundingInfo();
         }
@@ -384,11 +413,25 @@ namespace IDPicker
             e.Graphics.FillRectangle(new SolidBrush(owner.BackColor), e.ClipRectangle);
             e.Graphics.DrawString(header, owner.HeaderFont, new SolidBrush(owner.HeaderColor), PointF.Empty);
 
+            var mouseLocation = PointToClient(MousePosition);
+            int lineNumberUnderMouse = getLineNumberAtPoint(mouseLocation);
+            bool onSequenceLine = lineNumberUnderMouse % owner.LineSpacing == 0;
+            int residueUnderMouse = onSequenceLine ? getResidueOffsetAtPoint(mouseLocation) : 0;
+
             Brush coveredBrush = new SolidBrush(owner.CoveredSequenceColor);
             Brush uncoveredBrush = new SolidBrush(owner.UncoveredSequenceColor);
+            Brush hoverBrush = new SolidBrush(owner.HoverSequenceColor);
+            Brush modifiedBrush = new SolidBrush(owner.ModifiedSequenceColor);
             foreach (var pair in residueIndexToLocation)
                 if (owner.Protein.CoverageMask[pair.Key] > 0)
-                    e.Graphics.DrawString(owner.Protein.Sequence[pair.Key].ToString(), owner.SequenceFont, coveredBrush, pair.Value);
+                {
+                    if (onSequenceLine && pair.Key == residueUnderMouse)
+                        e.Graphics.DrawString(owner.Protein.Sequence[pair.Key].ToString(), owner.HoverFont, hoverBrush, pair.Value);
+                    else if (owner.Modifications.Contains(pair.Key))
+                        e.Graphics.DrawString(owner.Protein.Sequence[pair.Key].ToString(), owner.SequenceFont, modifiedBrush, pair.Value);
+                    else
+                        e.Graphics.DrawString(owner.Protein.Sequence[pair.Key].ToString(), owner.SequenceFont, coveredBrush, pair.Value);
+                }
                 else
                     e.Graphics.DrawString(owner.Protein.Sequence[pair.Key].ToString(), owner.SequenceFont, uncoveredBrush, pair.Value);
 
@@ -433,15 +476,58 @@ namespace IDPicker
             //base.OnPaint(e);
         }
 
-        /*void hover( object sender, MouseEventArgs e )
+        int getLineNumberAtPoint (Point pt)
         {
-            Point pt = e.Location;
-            int lineNumber = (int) Math.Floor( ( pt.Y - sequenceLocation.Y ) / lineSpacing / residueBounds.Height );
-            float charOnLine = ( pt.X - sequenceLocation.X ) / residueBounds.Width;
-            int residueNumber = residuesPerLine * lineNumber + (int) Math.Floor( charOnLine - Math.Floor( charOnLine / residueGroupSize ) );
-            toolTip.Show( String.Format( "Row: {0}  Col: {1}", lineNumber, residueNumber ), this, 100 );
-        }*/
+            return (int) Math.Floor((pt.Y - sequenceLocation.Y) / residueBounds.Height);
+        }
+
+        int getResidueOffsetAtPoint (Point pt)
+        {
+            int lineNumber = (int) Math.Floor((float) getLineNumberAtPoint(pt) / owner.LineSpacing);
+            float charOnLine = (pt.X - sequenceLocation.X) / residueBounds.Width;
+            return residuesPerLine * lineNumber + (int) Math.Floor(charOnLine - Math.Floor(charOnLine / owner.ResidueGroupSize));
+        }
+
+        int lastLineNumber = -1, lastResidueOffset = -1;
+        protected override void OnMouseMove (MouseEventArgs e)
+        {
+            //int offset = getResidueOffsetAtPoint(e.Location);
+            //toolTip.Show(String.Format("Offset: {0}", offset), this, 100);
+
+            int currentLineNumber = getLineNumberAtPoint(e.Location);
+            int currentResidueOffset = getResidueOffsetAtPoint(e.Location);
+            if (lastLineNumber != currentLineNumber || currentResidueOffset != lastResidueOffset)
+            {
+                lastLineNumber = currentLineNumber;
+                lastResidueOffset = currentResidueOffset;
+                Refresh();
+            }
+        }
+
+        protected override void OnMouseDoubleClick (MouseEventArgs e)
+        {
+            if (SequenceCoverageFilter == null)
+                return;
+
+            int currentResidueOffset = getResidueOffsetAtPoint(e.Location);
+            if (currentResidueOffset < 0 || currentResidueOffset >= owner.Protein.Length)
+                return;
+
+            if (owner.Protein.CoverageMask[currentResidueOffset] == 0)
+                return;
+
+            var newDataFilter = new DataModel.DataFilter()
+            {
+                FilterSource = owner,
+                Protein = new List<Protein> { owner.Protein },
+                AminoAcidOffset = new List<int> { currentResidueOffset }
+            };
+
+            SequenceCoverageFilter(owner, newDataFilter);
+        }
     }
+
+    public delegate void SequenceCoverageFilterEventHandler (SequenceCoverageControl sender, DataModel.DataFilter sequenceCoverageFilter);
 }
 
 namespace System.Drawing

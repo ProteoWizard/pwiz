@@ -197,6 +197,10 @@ namespace IDPicker
             if (nonGenericCollection != null)
                 return nonGenericCollection.Count == 0;
 
+            var string_ = list as string;
+            if (string_ != null)
+                return String.IsNullOrEmpty(string_);
+
             return !list.Any();
         }
 

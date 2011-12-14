@@ -435,11 +435,11 @@ namespace IDPicker
 
         void proteinTableForm_ProteinViewVisualize (object sender, ProteinViewVisualizeEventArgs e)
         {
-            var form = new SequenceCoverageForm(e.Protein);
+            var formSession = session.SessionFactory.OpenSession();
+            var form = new SequenceCoverageForm(formSession, e.Protein);
             form.Show(modificationTableForm.Pane, null);
-            //spyEventLogForm.AddEventSpy(new EventSpy(e.Protein.Accession.Replace(":","_"), form));
-            //foreach(Control control in form.Controls)
-            //    spyEventLogForm.AddEventSpy(new EventSpy(e.Protein.Accession.Replace(":", "_") + control.GetType().Name, control));
+            form.SequenceCoverageFilter += sequenceCoverageForm_SequenceCoverageFilter;
+            form.FormClosed += (s, e2) => formSession.Dispose();
         }
         #endregion
 
@@ -489,6 +489,20 @@ namespace IDPicker
         void modificationTableForm_ModificationViewFilter (ModificationTableForm sender, DataFilter modificationViewFilter)
         {
             var newFilter = modificationViewFilter;
+
+            if (breadCrumbControl.BreadCrumbs.Count(o => (DataFilter) o.Tag == newFilter) > 0)
+                return;
+
+            breadCrumbControl.BreadCrumbs.Add(new BreadCrumb(newFilter.ToString(), newFilter));
+
+            // build a new DataFilter from the BreadCrumb list
+            viewFilter = basicFilter + breadCrumbControl.BreadCrumbs.Select(o => o.Tag as DataFilter).Aggregate((x, y) => x + y);
+            setData();
+        }
+
+        void sequenceCoverageForm_SequenceCoverageFilter (SequenceCoverageControl sender, DataFilter sequenceCoverageFilter)
+        {
+            var newFilter = sequenceCoverageFilter;
 
             if (breadCrumbControl.BreadCrumbs.Count(o => (DataFilter) o.Tag == newFilter) > 0)
                 return;
