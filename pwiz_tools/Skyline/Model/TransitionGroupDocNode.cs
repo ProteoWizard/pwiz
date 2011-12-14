@@ -785,13 +785,9 @@ namespace pwiz.Skyline.Model
                 
                 if (settingsOld != null && settingsOld.HasResults)
                 {
-                    // As long as integration strategy has not changed
-                    if (integrateAll == settingsOld.TransitionSettings.Integration.IsIntegrateAll)
-                    {
-                        int i = 0;
-                        foreach (var chromSet in settingsOld.MeasuredResults.Chromatograms)
-                            dictChromIdIndex.Add(chromSet.Id.GlobalIndex, i++);
-                    }
+                    int i = 0;
+                    foreach (var chromSet in settingsOld.MeasuredResults.Chromatograms)
+                        dictChromIdIndex.Add(chromSet.Id.GlobalIndex, i++);
                 }
 
                 // Store keys for previous children in a set, if the children have changed due
@@ -823,17 +819,20 @@ namespace pwiz.Skyline.Model
                         // If there is existing results information, and it was set
                         // by the user, then preserve it, and skip automatic peak picking
                         var resultOld = Results != null ? Results[iResultOld] : null;
-                        if (resultOld != null && (// Unfortunately, it is always possible that new results need
-                                                  // to be added from other files.  So this must be handled below.
-                                                  //(UserSetResults(resultOld) && setTranPrevious == null) ||
-                                                  // or this set of results is not yet loaded
-                                                  !chromatograms.IsLoaded ||
-                                                  // or not forcing a full recalc of all peaks, chromatograms have not
-                                                  // changed and the node has not otherwise changed yet.
-                                                  // (happens while loading results)
-                                                  (!diff.DiffResultsAll && settingsOld != null &&
-                                                   ReferenceEquals(chromatograms, settingsOld.MeasuredResults.Chromatograms[iResultOld]) &&
-                                                   Equals(this, nodePrevious))))
+                        if (resultOld != null &&
+                                // Do not reuse results, if integrate all has changed
+                                integrateAll == settingsOld.TransitionSettings.Integration.IsIntegrateAll &&
+                                (// Unfortunately, it is always possible that new results need
+                                 // to be added from other files.  So this must be handled below.
+                                 //(UserSetResults(resultOld) && setTranPrevious == null) ||
+                                 // or this set of results is not yet loaded
+                                 !chromatograms.IsLoaded ||
+                                 // or not forcing a full recalc of all peaks, chromatograms have not
+                                 // changed and the node has not otherwise changed yet.
+                                 // (happens while loading results)
+                                 (!diff.DiffResultsAll && settingsOld != null &&
+                                  ReferenceEquals(chromatograms, settingsOld.MeasuredResults.Chromatograms[iResultOld]) &&
+                                  Equals(this, nodePrevious))))
                         {
                             for (int iTran = 0; iTran < Children.Count; iTran++)
                             {
