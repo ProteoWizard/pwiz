@@ -127,6 +127,8 @@ namespace IDPicker.DataModel
 
         public override string ToString ()
         {
+            if (Key == null)
+                return string.Empty;
             string[] tokens = Key.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
             int analysisIndex = 1;
             int modsIndex = 1;

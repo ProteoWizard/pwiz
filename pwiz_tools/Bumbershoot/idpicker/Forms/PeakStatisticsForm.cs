@@ -653,5 +653,16 @@ namespace IDPicker.Forms
             workerThread.RunWorkerCompleted += new RunWorkerCompletedEventHandler(renderData);
             workerThread.RunWorkerAsync();
         }
+
+        public void ClearSession()
+        {
+            ClearData();
+            if (session != null && session.IsOpen)
+            {
+                session.Close();
+                session.Dispose();
+                session = null;
+            }
+        }
     }
 }

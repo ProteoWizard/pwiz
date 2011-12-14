@@ -589,42 +589,29 @@ namespace IDPicker.Forms
 
         private void clipboardToolStripMenuItem_Click (object sender, EventArgs e)
         {
-            var table = GetFormTable();
+            var table = GetFormTable(sender == copySelectedCellsToClipboardToolStripMenuItem);
 
             TableExporter.CopyToClipboard(table);
         }
 
         private void fileToolStripMenuItem_Click (object sender, EventArgs e)
         {
-            var table = GetFormTable();
+            var table = GetFormTable(sender == exportSelectedCellsToFileToolStripMenuItem);
 
             TableExporter.ExportToFile(table);
         }
 
         private void exportButton_Click (object sender, EventArgs e)
         {
-            if (dataGridView.SelectedCells.Count > 1)
-            {
-                exportMenu.Items[0].Text = "Copy Selected to Clipboard";
-                exportMenu.Items[1].Text = "Export Selected to File";
-                exportMenu.Items[2].Text = "Show Selected in Excel";
-            }
-            else
-            {
-                exportMenu.Items[0].Text = "Copy to Clipboard";
-                exportMenu.Items[1].Text = "Export to File";
-                exportMenu.Items[2].Text = "Show in Excel";
-            }
-
             exportMenu.Show(Cursor.Position);
         }
 
-        public virtual List<List<string>> GetFormTable ()
+        public virtual List<List<string>> GetFormTable (bool selected)
         {
             var exportTable = new List<List<string>>();
             IList<int> exportedRows, exportedColumns;
 
-            if (dataGridView.SelectedCells.Count > 0 && !dataGridView.AreAllCellsSelected(false))
+            if (selected && dataGridView.SelectedCells.Count > 0 && !dataGridView.AreAllCellsSelected(false))
             {
                 var selectedRows = new Set<int>();
                 var selectedColumns = new Map<int, int>(); // ordered by DisplayIndex
@@ -736,11 +723,22 @@ namespace IDPicker.Forms
 
         private void showInExcelToolStripMenuItem_Click (object sender, EventArgs e)
         {
-            var table = GetFormTable();
+            var table = GetFormTable(sender == showSelectedCellsInExcelToolStripMenuItem);
 
             var exportWrapper = new Dictionary<string, List<List<string>>> { { this.Name, table } };
 
             TableExporter.ShowInExcel(exportWrapper, false);
+        }
+
+        public void ClearSession()
+        {
+            ClearData();
+            if (session != null && session.IsOpen)
+            {
+                session.Close();
+                session.Dispose();
+                session = null;
+            }
         }
     }
 

@@ -331,6 +331,17 @@ namespace IDPicker.Forms
             return table;
 
         }
+
+        public void ClearSession()
+        {
+            ClearData();
+            if (session != null && session.IsOpen)
+            {
+                session.Close();
+                session.Dispose();
+                session = null;
+            }
+        }
     }
 
     //public delegate void PeptideViewFilterEventHandler (PeptideTableForm sender, DataFilter peptideViewFilter);

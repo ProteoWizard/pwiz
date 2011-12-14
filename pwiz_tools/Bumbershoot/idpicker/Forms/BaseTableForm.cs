@@ -426,17 +426,12 @@ namespace IDPicker.Forms
             return result;
         }
 
-        public virtual List<List<string>> GetFormTable ()
-        {
-            return GetFormTable(false, String.Empty);
-        }
-
-        public virtual List<List<string>> GetFormTable (bool htmlFormat, string reportName)
+        public virtual List<List<string>> GetFormTable (bool selected)
         {
             var exportTable = new List<List<string>>();
             IList<int> exportedRows, exportedColumns;
 
-            if (treeDataGridView.SelectedCells.Count > 1 && !treeDataGridView.AreAllCellsSelected(false))
+            if (selected && treeDataGridView.SelectedCells.Count > 0 && !treeDataGridView.AreAllCellsSelected(false))
             {
                 var selectedRows = new Set<int>();
                 var selectedColumns = new Map<int, int>(); // ordered by DisplayIndex
@@ -493,39 +488,26 @@ namespace IDPicker.Forms
 
         protected void clipboardToolStripMenuItem_Click (object sender, EventArgs e)
         {
-            var table = GetFormTable();
+            var table = GetFormTable(sender == copyToClipboardSelectedToolStripMenuItem);
 
             TableExporter.CopyToClipboard(table);
         }
 
         protected void fileToolStripMenuItem_Click (object sender, EventArgs e)
         {
-            var table = GetFormTable();
+            var table = GetFormTable(sender == exportSelectedCellsToFileToolStripMenuItem);
 
             TableExporter.ExportToFile(table);
         }
 
         protected void exportButton_Click (object sender, EventArgs e)
         {
-            if (treeDataGridView.SelectedRows.Count > 1)
-            {
-                exportMenu.Items[0].Text = "Copy Selected to Clipboard";
-                exportMenu.Items[1].Text = "Export Selected to File";
-                exportMenu.Items[2].Text = "Show Selected in Excel";
-            }
-            else
-            {
-                exportMenu.Items[0].Text = "Copy to Clipboard";
-                exportMenu.Items[1].Text = "Export to File";
-                exportMenu.Items[2].Text = "Show in Excel";
-            }
-
             exportMenu.Show(Cursor.Position);
         }
 
         protected void showInExcelToolStripMenuItem_Click (object sender, EventArgs e)
         {
-            var table = GetFormTable();
+            var table = GetFormTable(sender == showInExcelSelectToolStripMenuItem);
 
             var exportWrapper = new Dictionary<string, List<List<string>>> { { this.Name, table } };
 
@@ -564,6 +546,17 @@ namespace IDPicker.Forms
         {
             Program.HandleException(e.Exception);
             e.ThrowException = false;
+        }
+
+        public void ClearSession()
+        {
+            ClearData();
+            if (session != null && session.IsOpen)
+            {
+                session.Close();
+                session.Dispose();
+                session = null;
+            }
         }
     }
 }

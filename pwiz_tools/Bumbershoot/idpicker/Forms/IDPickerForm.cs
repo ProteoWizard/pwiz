@@ -302,13 +302,14 @@ namespace IDPicker
             {
                 if (sender == importToolStripMenuItem)
                 {
+                    //add current session to file list
                     var filenameMatch = Regex.Match(session.Connection.ConnectionString, @"Data Source=(?:\w|:|\\| |/|\.)+").ToString().Remove(0, 12);
                     if (!fileNames.Contains(filenameMatch))
                         fileNames.Add(filenameMatch);
                 }
-                session.Close();
-                session = null;
+                clearSession();
             }
+            //System.Data.SQLite.SQLiteConnection.ClearAllPools();
 
             new Thread(() => { OpenFiles(fileNames, treeStructure); }).Start();
         }
@@ -597,6 +598,32 @@ namespace IDPicker
             peakStatisticsForm.SetData(session, viewFilter);
         }
 
+        void clearSession()
+        {
+            proteinTableForm.ClearSession();
+            peptideTableForm.ClearSession();
+            spectrumTableForm.ClearSession();
+            modificationTableForm.ClearSession();
+            analysisTableForm.ClearSession();
+            fragmentationStatisticsForm.ClearSession();
+            peakStatisticsForm.ClearSession();
+            if (session != null)
+            {
+                var factory = session.SessionFactory;
+                if (session.IsOpen)
+                {
+                    session.Close();
+                    session.Dispose();
+                }
+                session = null;
+                if (!factory.IsClosed)
+                {
+                    factory.Close();
+                    factory.Dispose();
+                }
+            }
+        }
+
         void IDPickerForm_Load (object sender, EventArgs e)
         {
             //System.Data.SQLite.SQLiteConnection.SetConfigOption(SQLiteConnection.SQLITE_CONFIG.MULTITHREAD);
@@ -780,44 +807,75 @@ namespace IDPicker
                 if ((fileExists ||
                     potentialPaths.Contains(commonFilename)) && filepaths.Count > 1 && workToBeDone)
                 {
-                    switch (MessageBox.Show(string.Format("The merged result \"{0}\" already exists, or will exist after processing files. " +
-                                                          "Do you want to overwrite it?{1}{1}" +
-                                                          "Click 'Yes' to overwrite file{1}" +
-                                                          "Click 'No' to merge to a different file{1}" +
-                                                          "Click 'Cancel' to abort"
-                                                          , commonFilename, Environment.NewLine),
-                                            "Merged result already exists",
-                                            MessageBoxButtons.YesNoCancel,
-                                            MessageBoxIcon.Exclamation,
-                                            MessageBoxDefaultButton.Button2))
+                    if(filepaths.Contains(commonFilename))
                     {
-                        case DialogResult.Yes:
-                            if (!potentialPaths.Contains(commonFilename) && fileExists)
-                                File.Delete(commonFilename);
-                            break;
-                        case DialogResult.No:
-                            bool cancel = false;
-                            Invoke(new MethodInvoker(() =>
+                        bool cancel = false;
+                        MessageBox.Show("File list contains the default output name, please select a new name.");
+                        Invoke(new MethodInvoker(() =>
+                        {
+                            var sfd = new SaveFileDialog
                             {
-                                var sfd = new SaveFileDialog
-                                {
-                                    AddExtension = true,
-                                    RestoreDirectory = true,
-                                    DefaultExt = "idpDB",
-                                    Filter = "IDPicker Database|*.idpDB"
-                                };
-                                if (sfd.ShowDialog() != DialogResult.OK)
-                                {
-                                    cancel = true;
-                                    return;
-                                }
-                                commonFilename = sfd.FileName;
-                            }));
-                            if (cancel)
+                                AddExtension = true,
+                                RestoreDirectory = true,
+                                DefaultExt = "idpDB",
+                                Filter = "IDPicker Database|*.idpDB"
+                            };
+                            if (sfd.ShowDialog() != DialogResult.OK)
+                            {
+                                cancel = true;
                                 return;
-                            break;
-                        case DialogResult.Cancel:
+                            }
+                            commonFilename = sfd.FileName;
+                        }));
+                        if (cancel)
                             return;
+                    }
+                    else
+                    {
+                        switch (
+                            MessageBox.Show(
+                                string.Format(
+                                    "The merged result \"{0}\" already exists, or will exist after processing files. " +
+                                    "Do you want to overwrite it?{1}{1}" +
+                                    "Click 'Yes' to overwrite file{1}" +
+                                    "Click 'No' to merge to a different file{1}" +
+                                    "Click 'Cancel' to abort"
+                                    , commonFilename, Environment.NewLine),
+                                "Merged result already exists",
+                                MessageBoxButtons.YesNoCancel,
+                                MessageBoxIcon.Exclamation,
+                                MessageBoxDefaultButton.Button2))
+                        {
+                            case DialogResult.Yes:
+                                if (!potentialPaths.Contains(commonFilename) && fileExists)
+                                {
+                                        File.Delete(commonFilename);
+                                }
+                                break;
+                            case DialogResult.No:
+                                bool cancel = false;
+                                Invoke(new MethodInvoker(() =>
+                                                             {
+                                                                 var sfd = new SaveFileDialog
+                                                                               {
+                                                                                   AddExtension = true,
+                                                                                   RestoreDirectory = true,
+                                                                                   DefaultExt = "idpDB",
+                                                                                   Filter = "IDPicker Database|*.idpDB"
+                                                                               };
+                                                                 if (sfd.ShowDialog() != DialogResult.OK)
+                                                                 {
+                                                                     cancel = true;
+                                                                     return;
+                                                                 }
+                                                                 commonFilename = sfd.FileName;
+                                                             }));
+                                if (cancel)
+                                    return;
+                                break;
+                            case DialogResult.Cancel:
+                                return;
+                        }
                     }
                 }
 
@@ -1269,12 +1327,13 @@ namespace IDPicker
                 MessageBox.Show("No Report Loaded");
                 return;
             }
+            var selected = sender == toExcelSelectToolStripMenuItem;
 
             var reportDictionary = new Dictionary<string, List<List<string>>>();
 
             if (modificationTableForm != null)
             {
-                var table = modificationTableForm.GetFormTable();
+                var table = modificationTableForm.GetFormTable(selected);
                 if (table.Count > 1)
                 {
                     reportDictionary.Add("Modification Table", table);
@@ -1282,7 +1341,7 @@ namespace IDPicker
             }
             if (proteinTableForm != null)
             {
-                var table = proteinTableForm.GetFormTable();
+                var table = proteinTableForm.GetFormTable(selected);
                 if (table.Count > 1)
                 {
                     reportDictionary.Add("Protein Table", table);
@@ -1290,7 +1349,7 @@ namespace IDPicker
             }
             if (peptideTableForm != null)
             {
-                var table = peptideTableForm.GetFormTable();
+                var table = peptideTableForm.GetFormTable(selected);
                 if (table.Count > 1)
                 {
                     reportDictionary.Add("Peptide Table", table);
@@ -1298,7 +1357,7 @@ namespace IDPicker
             }
             if (spectrumTableForm != null)
             {
-                var table = spectrumTableForm.GetFormTable();
+                var table = spectrumTableForm.GetFormTable(selected);
                 if (table.Count > 1)
                 {
                     reportDictionary.Add("Spectrum Table", table);
@@ -1640,7 +1699,7 @@ namespace IDPicker
             //generate html Files););
             if (proteinTableForm != null)
             {
-                var alltables = new List<List<List<string>>> { proteinTableForm.GetFormTable(true, reportName) };
+                var alltables = new List<List<List<string>>> { proteinTableForm.GetFormTable(false) };
                 ;
                 if (alltables.Count > 0 && (alltables.Count > 1 || alltables[0].Count > 1))
                     TableExporter.CreateHTMLTablePage(alltables, Path.Combine(outFolder, reportName + "-protein.html"), reportName + "- Proteins",
@@ -1648,14 +1707,14 @@ namespace IDPicker
             }
             if (peptideTableForm != null)
             {
-                var alltables = new List<List<List<string>>> { peptideTableForm.GetFormTable() };
+                var alltables = new List<List<List<string>>> { peptideTableForm.GetFormTable(false) };
                 if (alltables.Count > 0 && (alltables.Count > 1 || alltables[0].Count > 1))
                     TableExporter.CreateHTMLTablePage(alltables, Path.Combine(outFolder, reportName + "-peptide.html"), reportName + "- Peptides",
                                                       true, false, false);
             }
             if (modificationTableForm != null)
             {
-                var alltables = new List<List<List<string>>> { modificationTableForm.GetFormTable() };
+                var alltables = new List<List<List<string>>> { modificationTableForm.GetFormTable(false) };
                 if (alltables.Count > 0 && (alltables.Count > 1 || alltables[0].Count > 1))
                     TableExporter.CreateHTMLTablePage(alltables, Path.Combine(outFolder, reportName + "-modificationTable.html"),
                                                       reportName + "- Modification Summary Table",

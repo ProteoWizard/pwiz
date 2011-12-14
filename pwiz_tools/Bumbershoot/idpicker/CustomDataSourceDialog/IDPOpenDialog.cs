@@ -968,66 +968,43 @@ namespace CustomDataSourceDialog
 
         private void HandleItemToAdd(ref TreeNode newNode, FileInfo file)
         {
-            var sourceList = new List<string>();
+            List<string> sourceList;
             var rootNode = newNode;
             while (rootNode.Parent != null)
                 rootNode = rootNode.Parent;
 
-            if (file.Extension.ToLower() != ".idpdb")
-                sourceList.Add(Parser.ParseSource(file.FullName));//Path.GetFileNameWithoutExtension(file.FullName));
-            else if (SessionFactoryFactory.IsValidFile(file.FullName))
+            try
             {
-                NHibernate.ISessionFactory sessionFactory = null;
-                NHibernate.ISession session = null;
-                try
-                {
-                    sessionFactory = SessionFactoryFactory.CreateSessionFactory(file.FullName, false, true);
-                    session = sessionFactory.OpenSession();
-                    var temp = session.QueryOver<SpectrumSource>().List();
-                    sourceList.AddRange(temp.Select(item => item.Name));
-                    session.Close();
-                    session.Dispose();
-                    sessionFactory.Close();
-                    sessionFactory.Dispose();
-                }
-                catch (Exception e)
-                {
-                    if (session != null)
-                    {
-                        session.Close();
-                        session.Dispose();
-                    }
-                    if (sessionFactory != null)
-                    {
-                        sessionFactory.Close();
-                        sessionFactory.Dispose();
-                    }
-                    var errorNode = (from TreeNode node in FileTreeView.Nodes
-                                     where node.Name == "IDPDBErrorNode"
-                                     select node).SingleOrDefault();
-                    if (errorNode == null)
-                    {
-                        errorNode = new TreeNode
-                                        {
-                                            Name = "IDPDBErrorNode",
-                                            Text = "Error",
-                                            Checked = false,
-                                            ForeColor = Color.DarkRed,
-                                            Tag = "Uncheckable"
-                                        };
-                        FileTreeView.Nodes.Add(errorNode);
-                    }
-                    var thisError = new TreeNode
-                                        {
-                                            Text = file.FullName,
-                                            ToolTipText = e.Message,
-                                            ForeColor = Color.DarkRed,
-                                            Tag = "Uncheckable"
-                                        };
-                    errorNode.Nodes.Add(thisError);
-                    return;
-                }
+                sourceList = GetSources(file);
             }
+            catch (Exception e)
+            {
+                var errorNode = (from TreeNode node in FileTreeView.Nodes
+                                 where node.Name == "IDPDBErrorNode"
+                                 select node).SingleOrDefault();
+                if (errorNode == null)
+                {
+                    errorNode = new TreeNode
+                    {
+                        Name = "IDPDBErrorNode",
+                        Text = "Error",
+                        Checked = false,
+                        ForeColor = Color.DarkRed,
+                        Tag = "Uncheckable"
+                    };
+                    FileTreeView.Nodes.Add(errorNode);
+                }
+                var thisError = new TreeNode
+                {
+                    Text = file.FullName,
+                    ToolTipText = e.Message,
+                    ForeColor = Color.DarkRed,
+                    Tag = "Uncheckable"
+                };
+                errorNode.Nodes.Add(thisError);
+                return;
+            }
+
 
             var mergedFile = sourceList.Count > 1;
             var relatedNodes = new List<TreeNode>();
@@ -1075,6 +1052,45 @@ namespace CustomDataSourceDialog
                         _relatedNodes[node].Add(neighbor);
                 node.Checked = false;
             }
+        }
+
+        public static List<string> GetSources(FileInfo file)
+        {
+            var sourceList = new List<string>();
+            if (file.Extension.ToLower() != ".idpdb")
+                sourceList.Add(Parser.ParseSource(file.FullName));//Path.GetFileNameWithoutExtension(file.FullName));
+            else if (SessionFactoryFactory.IsValidFile(file.FullName))
+            {
+                NHibernate.ISessionFactory sessionFactory = null;
+                NHibernate.ISession session = null;
+                try
+                {
+                    sessionFactory = SessionFactoryFactory.CreateSessionFactory(file.FullName, false, true);
+                    session = sessionFactory.OpenSession();
+                    var temp = session.QueryOver<SpectrumSource>().List();
+                    sourceList.AddRange(temp.Select(item => item.Name));
+                    session.Close();
+                    session.Dispose();
+                    sessionFactory.Close();
+                    sessionFactory.Dispose();
+                }
+                catch
+                {
+                    if (session != null)
+                    {
+                        session.Close();
+                        session.Dispose();
+                    }
+                    if (sessionFactory != null)
+                    {
+                        sessionFactory.Close();
+                        sessionFactory.Dispose();
+                    }
+                    throw;
+                }
+            }
+
+            return sourceList;
         }
 
         private TreeNode FindClosestRelative(TreeNode currentNode, string newPath)

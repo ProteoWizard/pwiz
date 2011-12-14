@@ -65,6 +65,10 @@ namespace IDPicker.Forms
             this.displayOptionsButton = new System.Windows.Forms.ToolStripButton();
             this.pivotSetupButton = new System.Windows.Forms.ToolStripButton();
             this.groupingSetupButton = new System.Windows.Forms.ToolStripButton();
+            this.showInExcelSelectToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.copyToClipboardSelectedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.exportSelectedCellsToFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize) (this.treeDataGridView)).BeginInit();
             this.exportMenu.SuspendLayout();
@@ -102,7 +106,11 @@ namespace IDPicker.Forms
             this.exportMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.clipboardToolStripMenuItem,
             this.fileToolStripMenuItem,
-            this.showInExcelToolStripMenuItem});
+            this.showInExcelToolStripMenuItem,
+            this.toolStripSeparator1,
+            this.copyToClipboardSelectedToolStripMenuItem,
+            this.exportSelectedCellsToFileToolStripMenuItem,
+            this.showInExcelSelectToolStripMenuItem});
             this.exportMenu.Name = "contextMenuStrip1";
             this.exportMenu.Size = new System.Drawing.Size(172, 70);
             // 
@@ -186,6 +194,32 @@ namespace IDPicker.Forms
             this.groupingSetupButton.Text = "Tree Grouping";
             this.groupingSetupButton.Click += new System.EventHandler(this.groupingSetupButton_Click);
             // 
+            // showInExcelSelectToolStripMenuItem
+            // 
+            this.showInExcelSelectToolStripMenuItem.Name = "showInExcelSelectToolStripMenuItem";
+            this.showInExcelSelectToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
+            this.showInExcelSelectToolStripMenuItem.Text = "Show Selected Cells in Excel";
+            this.showInExcelSelectToolStripMenuItem.Click += new System.EventHandler(this.showInExcelToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(237, 6);
+            // 
+            // copyToClipboardSelectedToolStripMenuItem
+            // 
+            this.copyToClipboardSelectedToolStripMenuItem.Name = "copyToClipboardSelectedToolStripMenuItem";
+            this.copyToClipboardSelectedToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
+            this.copyToClipboardSelectedToolStripMenuItem.Text = "Copy Selected Cells to Clipboard";
+            this.copyToClipboardSelectedToolStripMenuItem.Click += new System.EventHandler(this.clipboardToolStripMenuItem_Click);
+            // 
+            // exportSelectedCellsToFileToolStripMenuItem
+            // 
+            this.exportSelectedCellsToFileToolStripMenuItem.Name = "exportSelectedCellsToFileToolStripMenuItem";
+            this.exportSelectedCellsToFileToolStripMenuItem.Size = new System.Drawing.Size(240, 22);
+            this.exportSelectedCellsToFileToolStripMenuItem.Text = "Export Selected Cells to File";
+            this.exportSelectedCellsToFileToolStripMenuItem.Click += new System.EventHandler(this.fileToolStripMenuItem_Click);
+            // 
             // BaseTableForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -220,5 +254,9 @@ namespace IDPicker.Forms
         protected System.Windows.Forms.ToolStripButton displayOptionsButton;
         protected System.Windows.Forms.ToolStripButton pivotSetupButton;
         protected System.Windows.Forms.ToolStripButton exportButton;
+        private System.Windows.Forms.ToolStripMenuItem showInExcelSelectToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripMenuItem copyToClipboardSelectedToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem exportSelectedCellsToFileToolStripMenuItem;
     }
 }
