@@ -295,7 +295,7 @@ namespace pwiz.Skyline.Model.DocSettings
         #endregion
 
         public static RetentionTimeRegression CalcRegression(string name, IEnumerable<RetentionScoreCalculatorSpec> calculators,
-            List<MeasuredRetentionTime> measuredPeptides, out RetentionTimeStatistics statistics)
+            IList<MeasuredRetentionTime> measuredPeptides, out RetentionTimeStatistics statistics)
         {
             RetentionScoreCalculatorSpec s;
             return CalcRegression(name, calculators, measuredPeptides, null, false, out statistics, out s);
@@ -313,12 +313,11 @@ namespace pwiz.Skyline.Model.DocSettings
         /// <param name="calculatorSpec">The best calculator</param>
         /// <returns></returns>
         public static RetentionTimeRegression CalcRegression(string name, IEnumerable<RetentionScoreCalculatorSpec> calculators,
-            List<MeasuredRetentionTime> measuredPeptides, RetentionTimeScoreCache scoreCache, bool allPeptides,
+            IList<MeasuredRetentionTime> measuredPeptides, RetentionTimeScoreCache scoreCache, bool allPeptides,
             out RetentionTimeStatistics statistics, out RetentionScoreCalculatorSpec calculatorSpec)
         {
-
             // Get a list of peptide names for use by the calculators to choose their regression peptides
-            List<string> listPeptides = measuredPeptides.ConvertAll(pep => pep.PeptideSequence);
+            List<string> listPeptides = measuredPeptides.Select(pep => pep.PeptideSequence).ToList();
 
             // Set these now so that we can return null on some conditions
             calculatorSpec = calculators.ElementAt(0);

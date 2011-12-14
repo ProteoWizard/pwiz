@@ -51,12 +51,12 @@ namespace pwiz.Skyline.SettingsUI
 
             Icon = Resources.Skyline;
 
+            _gridViewDriver = new RetentionTimeGridViewDriver(gridPeptides, bindingPeptides,
+                                                            new SortableBindingList<MeasuredPeptide>());
+
             _driverCalculators = new SettingsListComboDriver<RetentionScoreCalculatorSpec>(
                 comboCalculator, Settings.Default.RTScoreCalculatorList, false);
             _driverCalculators.LoadList(null);
-
-            _gridViewDriver = new RetentionTimeGridViewDriver(gridPeptides, bindingPeptides,
-                                                            new SortableBindingList<MeasuredPeptide>());
 
             ShowPeptides(Settings.Default.EditRTVisible);
         }
@@ -76,7 +76,6 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     textName.Text = _regression.Name;
 
-                    _activePeptides = _regression.PeptideTimes.ToList();
                     var pepTimes = _regression.PeptideTimes;
                     if (pepTimes.Count > 0)
                     {
@@ -101,8 +100,6 @@ namespace pwiz.Skyline.SettingsUI
                 }
             }
         }
-
-        private List<MeasuredRetentionTime> _activePeptides;
 
         public void OkDialog()
         {
@@ -147,8 +144,6 @@ namespace pwiz.Skyline.SettingsUI
             }
             var calculator = _driverCalculators.SelectedItem;
 
-            // Todo: replace this with code that gets the active calculator, then chooses regression peptides
-            // Todo: from _activePeptides using that calculator
             RetentionTimeRegression regression =
                 new RetentionTimeRegression(name, calculator, slope, intercept, window, GetTablePeptides());
 
@@ -225,7 +220,7 @@ namespace pwiz.Skyline.SettingsUI
                 {
                     var regressionPeps = UpdateCalculator(calc);
                     if (regressionPeps != null)
-                        SetTablePeptides(regressionPeps, false);
+                        SetTablePeptides(regressionPeps);
                 }
                 catch (CalculatorException e)
                 {
@@ -297,15 +292,15 @@ namespace pwiz.Skyline.SettingsUI
 
         public void AddResults()
         {
-            _activePeptides = GetDocumentPeptides();
+            SetTablePeptides(GetDocumentPeptides());
             var regressionPeps = UpdateCalculator(null);
             if (regressionPeps != null)
-                SetTablePeptides(regressionPeps, true);
+                SetTablePeptides(regressionPeps);
         }
 
-        public void SetTablePeptides(IList<MeasuredRetentionTime> tablePeps, bool forceUpdate)
+        public void SetTablePeptides(IList<MeasuredRetentionTime> tablePeps)
         {
-            if (!forceUpdate && ArrayUtil.EqualsDeep(_activePeptides, tablePeps))
+            if (ArrayUtil.EqualsDeep(GetTablePeptides(), tablePeps))
                 return;
 
             _gridViewDriver.SetTablePeptides(tablePeps);
@@ -420,7 +415,8 @@ namespace pwiz.Skyline.SettingsUI
         {
             bool calcInitiallyNull = calculator == null;
 
-            if(_activePeptides == null)
+            var activePeptides = GetTablePeptides();
+            if (activePeptides.Count == 0)
                 return null;
 
             //Try connecting all the calculators
@@ -429,7 +425,7 @@ namespace pwiz.Skyline.SettingsUI
             if (calculator == null)
             {
                 //this will not update the calculator
-                calculator = RecalcRegression(_activePeptides);
+                calculator = RecalcRegression(activePeptides);
             }
             else
             {
@@ -440,19 +436,19 @@ namespace pwiz.Skyline.SettingsUI
                 if (!calculator.IsUsable)
                 {
                     MessageDlg.Show(this, "The calculator cannot be used to score peptides. Please check its settings.");
-                    return _activePeptides;
+                    return activePeptides;
                 }
 
-                RecalcRegression(calculator, _activePeptides);
+                RecalcRegression(calculator, activePeptides);
             }
 
             var usePeptides = new HashSet<string>(calculator.ChooseRegressionPeptides(
-                _activePeptides.Select(pep => pep.PeptideSequence)));
+                activePeptides.Select(pep => pep.PeptideSequence)));
             //now go back and get the MeasuredPeptides corresponding to the strings chosen by the calculator
-            var tablePeptides = _activePeptides.Where(measuredRT =>
+            var tablePeptides = activePeptides.Where(measuredRT =>
                 usePeptides.Contains(measuredRT.PeptideSequence)).ToList();
 
-            if (tablePeptides.Count == 0 && _activePeptides.Count != 0)
+            if (tablePeptides.Count == 0 && activePeptides.Count != 0)
             {
                 MessageDlg.Show(this, String.Format("The {0} calculator cannot score any of the peptides.", calculator.Name));
                 comboCalculator.SelectedIndex = 0;
@@ -466,7 +462,7 @@ namespace pwiz.Skyline.SettingsUI
             return tablePeptides;
         }
 
-        private RetentionScoreCalculatorSpec RecalcRegression(List<MeasuredRetentionTime> peptides)
+        private RetentionScoreCalculatorSpec RecalcRegression(IList<MeasuredRetentionTime> peptides)
         {
             var tryCalcs = Settings.Default.RTScoreCalculatorList.ToList();
             RetentionScoreCalculatorSpec calculator = null;
@@ -485,12 +481,12 @@ namespace pwiz.Skyline.SettingsUI
             return calculator;
         }
 
-        private void RecalcRegression(RetentionScoreCalculatorSpec calculator, List<MeasuredRetentionTime> peptides)
+        private void RecalcRegression(RetentionScoreCalculatorSpec calculator, IList<MeasuredRetentionTime> peptides)
         {
             RecalcRegression(new[] { calculator }, peptides);
         }
 
-        private RetentionScoreCalculatorSpec RecalcRegression(IEnumerable<RetentionScoreCalculatorSpec> calculators, List<MeasuredRetentionTime> peptidesTimes)
+        private RetentionScoreCalculatorSpec RecalcRegression(IEnumerable<RetentionScoreCalculatorSpec> calculators, IList<MeasuredRetentionTime> peptidesTimes)
         {
             RetentionScoreCalculatorSpec calculatorSpec;
             RetentionTimeStatistics statistics;
