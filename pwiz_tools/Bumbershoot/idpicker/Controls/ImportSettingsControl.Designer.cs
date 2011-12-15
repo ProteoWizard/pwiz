@@ -53,13 +53,18 @@ namespace IDPicker.Controls
         private void InitializeComponent ()
         {
             this.dataGridView = new System.Windows.Forms.DataGridView();
+            this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn4 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn5 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.analysisNameColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.databaseColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.databaseColumn = new CustomFileCell.DataGridViewFileBrowseColumn();
             this.decoyPrefixColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.maxRankColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.maxFDRColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.qonverterSettingsColumn = new System.Windows.Forms.DataGridViewComboBoxColumn();
-            ((System.ComponentModel.ISupportInitialize) (this.dataGridView)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).BeginInit();
             this.SuspendLayout();
             // 
             // dataGridView
@@ -84,6 +89,37 @@ namespace IDPicker.Controls
             this.dataGridView.Size = new System.Drawing.Size(977, 144);
             this.dataGridView.TabIndex = 0;
             // 
+            // dataGridViewTextBoxColumn1
+            // 
+            this.dataGridViewTextBoxColumn1.HeaderText = "Analysis";
+            this.dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
+            this.dataGridViewTextBoxColumn1.ReadOnly = true;
+            this.dataGridViewTextBoxColumn1.Width = 150;
+            // 
+            // dataGridViewTextBoxColumn2
+            // 
+            this.dataGridViewTextBoxColumn2.HeaderText = "Database";
+            this.dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
+            this.dataGridViewTextBoxColumn2.Width = 200;
+            // 
+            // dataGridViewTextBoxColumn3
+            // 
+            this.dataGridViewTextBoxColumn3.HeaderText = "Decoy Prefix";
+            this.dataGridViewTextBoxColumn3.Name = "dataGridViewTextBoxColumn3";
+            // 
+            // dataGridViewTextBoxColumn4
+            // 
+            this.dataGridViewTextBoxColumn4.HeaderText = "Max Rank";
+            this.dataGridViewTextBoxColumn4.Name = "dataGridViewTextBoxColumn4";
+            this.dataGridViewTextBoxColumn4.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.dataGridViewTextBoxColumn4.Width = 80;
+            // 
+            // dataGridViewTextBoxColumn5
+            // 
+            this.dataGridViewTextBoxColumn5.HeaderText = "Max FDR";
+            this.dataGridViewTextBoxColumn5.Name = "dataGridViewTextBoxColumn5";
+            this.dataGridViewTextBoxColumn5.Width = 80;
+            // 
             // analysisNameColumn
             // 
             this.analysisNameColumn.HeaderText = "Analysis";
@@ -95,6 +131,8 @@ namespace IDPicker.Controls
             // 
             this.databaseColumn.HeaderText = "Database";
             this.databaseColumn.Name = "databaseColumn";
+            this.databaseColumn.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.databaseColumn.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.Automatic;
             this.databaseColumn.Width = 200;
             // 
             // decoyPrefixColumn
@@ -127,7 +165,7 @@ namespace IDPicker.Controls
             this.Controls.Add(this.dataGridView);
             this.Name = "ImportSettingsControl";
             this.Size = new System.Drawing.Size(977, 144);
-            ((System.ComponentModel.ISupportInitialize) (this.dataGridView)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -136,10 +174,15 @@ namespace IDPicker.Controls
 
         private System.Windows.Forms.DataGridView dataGridView;
         private System.Windows.Forms.DataGridViewTextBoxColumn analysisNameColumn;
-        private System.Windows.Forms.DataGridViewTextBoxColumn databaseColumn;
+        private CustomFileCell.DataGridViewFileBrowseColumn databaseColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn decoyPrefixColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn maxRankColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn maxFDRColumn;
         private System.Windows.Forms.DataGridViewComboBoxColumn qonverterSettingsColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn3;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn4;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn5;
     }
 }

@@ -63,7 +63,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataGridViewProgressBar.cs" />
+    <Compile Include="DataGridViewCustomCells.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="ExtensionMethods.cs" />
     <Compile Include="MruDictionary.cs" />
     <Compile Include="Path.cs" />

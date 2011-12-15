@@ -131,7 +131,6 @@ namespace IDPicker.Controls
             dataGridView.CellBeginEdit += dataGridView_CellBeginEdit;
             dataGridView.CellEndEdit += dataGridView_CellEndEdit;
             dataGridView.CurrentCellDirtyStateChanged += dataGridView_CurrentCellDirtyStateChanged;
-            dataGridView.EditingControlShowing += dataGridView_EditingControlShowing;
         }
 
         string uneditedValue = null;
@@ -188,17 +187,6 @@ namespace IDPicker.Controls
 
                 cell.Value = uneditedValue;
                 dataGridView.RefreshEdit();
-            }
-        }
-
-        void dataGridView_EditingControlShowing (object sender, DataGridViewEditingControlShowingEventArgs e)
-        {
-            if (dataGridView.CurrentCell.OwningColumn == databaseColumn)
-            {
-                var textBox = e.Control as TextBox;
-                textBox.Multiline = false;
-                textBox.AutoCompleteMode = AutoCompleteMode.Suggest;
-                textBox.AutoCompleteSource = AutoCompleteSource.FileSystem;
             }
         }
     }
