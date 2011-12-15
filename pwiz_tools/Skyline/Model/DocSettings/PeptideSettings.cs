@@ -277,7 +277,8 @@ namespace pwiz.Skyline.Model.DocSettings
             bool useMeasured = (UseMeasuredRTs && MeasuredRTWindow.HasValue && document.Settings.HasResults);
             if (useMeasured)
             {
-                var peakTime = nodeGroup.GetSchedulingPeakTimes(document, algorithm, replicateNum);
+                var schedulingGroups = GetSchedulingGroups(nodePep, nodeGroup);
+                var peakTime = TransitionGroupDocNode.GetSchedulingPeakTimes(schedulingGroups, document, algorithm, replicateNum);
                 if (peakTime != null)
                     predictedRT = peakTime.CenterTime;
                 if (predictedRT.HasValue)
@@ -315,6 +316,21 @@ namespace pwiz.Skyline.Model.DocSettings
                 }
             }
             return predictedRT;
+        }
+
+        /// <summary>
+        /// Used to help make sure that all precursors with matching retention time for
+        /// a peptide get the same scheduling time when using measured results, which
+        /// may have had different retention time boundaries set by the user.
+        /// </summary>
+        private static IEnumerable<TransitionGroupDocNode> GetSchedulingGroups(PeptideDocNode nodePep,
+            TransitionGroupDocNode nodeGroup)
+        {
+            if (nodeGroup.RelativeRT != RelativeRT.Matching)
+                return new[] {nodeGroup};
+            return
+                nodePep.Children.Cast<TransitionGroupDocNode>().Where(
+                    nodeGroupChild => nodeGroupChild.RelativeRT == RelativeRT.Matching);
         }
 
         /// <summary>

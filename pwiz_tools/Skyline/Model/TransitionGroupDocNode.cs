@@ -337,6 +337,25 @@ namespace pwiz.Skyline.Model
             return scheduleTimes;
         }
 
+        /// <summary>
+        /// Ensures that all precursors with matching retention time get the same
+        /// scheduling peak times.
+        /// </summary>
+        public static ScheduleTimes GetSchedulingPeakTimes(IEnumerable<TransitionGroupDocNode> schedulingGroups,
+            SrmDocument document, ExportSchedulingAlgorithm algorithm, int? replicateNum)
+        {
+            var enumScheduleTimes = schedulingGroups.Select(nodeGroup =>
+                    nodeGroup.GetSchedulingPeakTimes(document, algorithm, replicateNum))
+                .Where(scheduleTimes => scheduleTimes != null);
+            if (enumScheduleTimes.Count() < 2)
+                return enumScheduleTimes.FirstOrDefault();
+
+            return new ScheduleTimes
+                       {
+                           CenterTime = enumScheduleTimes.Average(st => st.CenterTime)
+                       };
+        }
+
         public ScheduleTimes GetSchedulingPeakTimes(SrmDocument document, ExportSchedulingAlgorithm algorithm, int? replicateNum)
         {
             if (!HasResults)
