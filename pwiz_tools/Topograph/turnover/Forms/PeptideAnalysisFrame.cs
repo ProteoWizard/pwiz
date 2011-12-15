@@ -36,7 +36,7 @@ namespace pwiz.Topograph.ui.Forms
         public PeptideAnalysisFrame(PeptideAnalysis peptideAnalysis) : base(peptideAnalysis)
         {
             InitializeComponent();
-            _dockPanel = new DockPanelEx
+            _dockPanel = new DockPanel
                              {
                                  Dock = DockStyle.Fill
                              };

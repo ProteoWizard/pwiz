@@ -24,6 +24,7 @@ using System.Text;
 using System.Threading;
 using NHibernate;
 using NHibernate.Criterion;
+using pwiz.Common.SystemUtil;
 using pwiz.Topograph.Data;
 using pwiz.Topograph.Data.Snapshot;
 using pwiz.Topograph.Model;
@@ -266,7 +267,10 @@ namespace pwiz.Topograph.MsData
                 catch (Exception exception)
                 {
                     _eventWaitHandle.Reset();
-                    ErrorHandler.LogException("Result Calculator", "Exception", exception);
+                    if (_isRunning)
+                    {
+                        ErrorHandler.LogException("Result Calculator", "Exception", exception);
+                    }
                 }
             }
         }
@@ -338,10 +342,12 @@ namespace pwiz.Topograph.MsData
                     {
                         _session.Transaction.Commit();
                     }
+// ReSharper disable RedundantCatchClause
                     catch (Exception e)
                     {
-                        throw e;
+                        throw;
                     }
+// ReSharper restore RedundantCatchClause
                 }
             }
         }

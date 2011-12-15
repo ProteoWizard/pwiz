@@ -357,12 +357,18 @@ namespace pwiz.Topograph.MsData
                     }
                     catch (Exception exception)
                     {
-
-                        ErrorHandler.LogException("Chromatogram Generator", "Exception generating chromatograms", exception);
-                        if (exception is OutOfMemoryException && maxConcurrentAnalyses > 1)
+                        if (_workspace.SessionFactory != null)
                         {
-                            maxConcurrentAnalyses /= 2;
-                            maxConcurrentAnalyses = Math.Max(maxConcurrentAnalyses, 1);
+                            if (exception is OutOfMemoryException && maxConcurrentAnalyses > 1)
+                            {
+                                ErrorHandler.LogException("Chromatogram Generator", string.Format("Ran out of memory trying to generate {0} chromatograms at once, reducing that number by half.", maxConcurrentAnalyses), exception);
+                                maxConcurrentAnalyses /= 2;
+                                maxConcurrentAnalyses = Math.Max(maxConcurrentAnalyses, 1);
+                            }
+                            else
+                            {
+                                ErrorHandler.LogException("Chromatogram Generator", "Exception generating chromatograms", exception);
+                            }
                         }
                     }
                 }

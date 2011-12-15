@@ -218,6 +218,11 @@ namespace pwiz.Topograph.Model
                 }
                 catch (Exception exception)
                 {
+                    if (Workspace.SessionFactory == null)
+                    {
+                        // If the workspace has been closed, just let the exception propagate up to the highest level
+                        throw;
+                    }
                     ErrorHandler.LogException("Retention time alignment", "Error aligning " + Name + " with " + other.Name, exception);
                     alignments.Add(other.Id.Value, null);
                     return null;

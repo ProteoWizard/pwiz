@@ -43,7 +43,7 @@ namespace pwiz.Topograph.ui.Forms
         private PeptideFileAnalysisFrame(PeptideFileAnalysis peptideFileAnalysis) : base(peptideFileAnalysis)
         {
             InitializeComponent();
-            dockPanel = new DockPanelEx
+            dockPanel = new DockPanel
                             {
                                 Dock = DockStyle.Fill
                             };
