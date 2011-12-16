@@ -70,6 +70,14 @@ namespace IDPicker.DataModel
                 return expr.ToString();
             }
         }
+
+        public double Round (double mass)
+        {
+            if (!ModificationMassRoundToNearest.HasValue)
+                return mass;
+            double roundToNearest = (double) ModificationMassRoundToNearest.Value;
+            return Math.Round(mass / roundToNearest, 0) * roundToNearest;
+        }
     }
 
     public class DistinctMatchKey : IComparable<DistinctMatchKey>, IComparable

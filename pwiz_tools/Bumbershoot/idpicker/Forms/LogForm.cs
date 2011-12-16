@@ -45,8 +45,6 @@ namespace IDPicker.Forms
 
         public LogForm ()
         {
-            //HibernatingRhinos.Profiler.Appender.NHibernate.NHibernateProfiler.Initialize();
- 
             InitializeComponent();
 
             HideOnClose = true;

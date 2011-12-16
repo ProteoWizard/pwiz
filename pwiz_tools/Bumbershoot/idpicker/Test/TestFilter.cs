@@ -111,7 +111,7 @@ namespace Test
 
             string idpDbName = System.Reflection.MethodInfo.GetCurrentMethod().Name + ".idpDB";
             File.Delete(idpDbName);
-            sessionFactory = SessionFactoryFactory.CreateSessionFactory(idpDbName, true, false);
+            sessionFactory = SessionFactoryFactory.CreateSessionFactory(idpDbName, new SessionFactoryConfig { CreateSchema = true });
             var session = sessionFactory.OpenSession();
 
             TestModel.CreateTestProteins(session, testProteinSequences);
@@ -234,7 +234,7 @@ namespace Test
 
             string idpDbName = System.Reflection.MethodInfo.GetCurrentMethod().Name + ".idpDB";
             File.Delete(idpDbName);
-            sessionFactory = SessionFactoryFactory.CreateSessionFactory(idpDbName, true, true);
+            sessionFactory = SessionFactoryFactory.CreateSessionFactory(idpDbName, new SessionFactoryConfig { CreateSchema = true });
             var session = sessionFactory.OpenSession();
 
             TestModel.CreateTestProteins(session, testProteinSequences);
@@ -314,7 +314,7 @@ namespace Test
 
             string idpDbName = System.Reflection.MethodInfo.GetCurrentMethod().Name + ".idpDB";
             File.Delete(idpDbName);
-            sessionFactory = SessionFactoryFactory.CreateSessionFactory(idpDbName, true, true);
+            sessionFactory = SessionFactoryFactory.CreateSessionFactory(idpDbName, new SessionFactoryConfig { CreateSchema = true });
             var session = sessionFactory.OpenSession();
 
             TestModel.CreateTestProteins(session, testProteinSequences);
@@ -501,7 +501,7 @@ namespace Test
 
             string idpDbName = System.Reflection.MethodInfo.GetCurrentMethod().Name + ".idpDB";
             File.Delete(idpDbName);
-            sessionFactory = SessionFactoryFactory.CreateSessionFactory(idpDbName, true, false);
+            sessionFactory = SessionFactoryFactory.CreateSessionFactory(idpDbName, new SessionFactoryConfig { CreateSchema = true });
             var session = sessionFactory.OpenSession();
 
             TestModel.CreateTestProteins(session, testProteinSequences);
@@ -1080,7 +1080,7 @@ namespace Test
 
             string idpDbName = System.Reflection.MethodInfo.GetCurrentMethod().Name + ".idpDB";
             File.Delete(idpDbName);
-            sessionFactory = SessionFactoryFactory.CreateSessionFactory(idpDbName, true, false);
+            sessionFactory = SessionFactoryFactory.CreateSessionFactory(idpDbName, new SessionFactoryConfig { CreateSchema = true });
             var session = sessionFactory.OpenSession();
 
             TestModel.CreateTestProteins(session, testProteinSequences);
@@ -1296,7 +1296,7 @@ namespace Test
 
             string idpDbName = System.Reflection.MethodInfo.GetCurrentMethod().Name + ".idpDB";
             File.Delete(idpDbName);
-            sessionFactory = SessionFactoryFactory.CreateSessionFactory(idpDbName, true, false);
+            sessionFactory = SessionFactoryFactory.CreateSessionFactory(idpDbName, new SessionFactoryConfig { CreateSchema = true });
             var session = sessionFactory.OpenSession();
 
             TestModel.CreateTestProteins(session, testProteinSequences);
@@ -1490,7 +1490,7 @@ namespace Test
 
             string idpDbName = System.Reflection.MethodInfo.GetCurrentMethod().Name + ".idpDB";
             File.Delete(idpDbName);
-            sessionFactory = SessionFactoryFactory.CreateSessionFactory(idpDbName, true, false);
+            sessionFactory = SessionFactoryFactory.CreateSessionFactory(idpDbName, new SessionFactoryConfig { CreateSchema = true });
             var session = sessionFactory.OpenSession();
 
             TestModel.CreateTestProteins(session, testProteinSequences);

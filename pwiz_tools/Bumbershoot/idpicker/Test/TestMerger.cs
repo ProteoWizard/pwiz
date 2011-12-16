@@ -171,8 +171,8 @@ namespace Test
              };
 
             #endregion
-            
-            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testMergeSource1.idpDB", true, false))
+
+             using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testMergeSource1.idpDB", new SessionFactoryConfig { CreateSchema = true }))
             using (var session = sessionFactory.OpenSession())
             {
                 TestModel.CreateTestProteins(session, testProteinSequences);
@@ -184,7 +184,7 @@ namespace Test
                 session.Flush();
             }
 
-            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testMergeSource2.idpDB", true, false))
+             using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testMergeSource2.idpDB", new SessionFactoryConfig { CreateSchema = true }))
             using (var session = sessionFactory.OpenSession())
             {
                 TestModel.CreateTestProteins(session, testProteinSequences);
@@ -211,7 +211,7 @@ namespace Test
             var testModel = new TestModel();
 
             // test that testMerger.idpDB passes the TestModel tests
-            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testMerger.idpDB", false, false))
+            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testMerger.idpDB"))
             using (var session = testModel.session = sessionFactory.OpenSession())
             {
                 testModel.TestOverallCounts();
@@ -229,7 +229,7 @@ namespace Test
             }
 
             // create an in-memory representation of testMergeSource2
-            var memoryFactory = SessionFactoryFactory.CreateSessionFactory(":memory:", true, false);
+            var memoryFactory = SessionFactoryFactory.CreateSessionFactory(":memory:", new SessionFactoryConfig { CreateSchema = true });
             var memoryConnection = SessionFactoryFactory.CreateFile(":memory:");
             var memorySession = memoryFactory.OpenSession(memoryConnection);
             {
@@ -247,7 +247,7 @@ namespace Test
             merger.Start();
 
             // testMergeSource1.idpDB should pass just like testMerger.idpDB
-            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testMergeSource1.idpDB", false, false))
+            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testMergeSource1.idpDB"))
             using (var session = testModel.session = sessionFactory.OpenSession())
             {
                 testModel.TestOverallCounts();

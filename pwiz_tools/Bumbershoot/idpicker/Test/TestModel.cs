@@ -478,7 +478,7 @@ namespace Test
         {
             File.Delete("testModel.idpDB");
 
-            var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testModel.idpDB", true, false);
+            var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testModel.idpDB", new SessionFactoryConfig { CreateSchema = true });
             var session = sessionFactory.OpenSession();
 
             CreateTestProteins(session, testProteinSequences);
@@ -543,7 +543,7 @@ namespace Test
         [TestInitialize()]
         public void TestInitialize ()
         {
-            var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testModel.idpDB", false, false);
+            var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testModel.idpDB");
             session = sessionFactory.OpenSession();
         }
 

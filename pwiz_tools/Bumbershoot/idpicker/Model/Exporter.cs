@@ -48,7 +48,7 @@ namespace IDPicker.DataModel
 
         public Exporter (string idpDbFilepath)
         {
-            var sessionFactory = SessionFactoryFactory.CreateSessionFactory(idpDbFilepath, false, true);
+            var sessionFactory = SessionFactoryFactory.CreateSessionFactory(idpDbFilepath);
             this.session = sessionFactory.OpenSession();
         }
 

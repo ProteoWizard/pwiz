@@ -72,6 +72,19 @@ namespace IDPicker
                     ++retryCount;
                 }
         }
+
+        public static string GetDataSource (this IDbConnection conn)
+        {
+            const string dataSourceToken = "data source=";
+            int dataSourceIndex = conn.ConnectionString.ToLower().IndexOf(dataSourceToken);
+            if (dataSourceIndex < 0)
+                throw new ArgumentException("no data source in connection string: " + conn.ConnectionString);
+            dataSourceIndex += dataSourceToken.Length;
+            int delimiterIndex = conn.ConnectionString.IndexOf(";", dataSourceIndex);
+            if (delimiterIndex < 0)
+                return conn.ConnectionString.Substring(dataSourceIndex);
+            return conn.ConnectionString.Substring(dataSourceIndex, delimiterIndex - dataSourceIndex + 1);
+        }
     }
 
     public static class BitfieldExtensionMethods

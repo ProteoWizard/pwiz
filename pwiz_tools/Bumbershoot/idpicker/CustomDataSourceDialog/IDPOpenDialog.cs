@@ -973,37 +973,37 @@ namespace CustomDataSourceDialog
             while (rootNode.Parent != null)
                 rootNode = rootNode.Parent;
 
-            try
-            {
+                try
+                {
                 sourceList = GetSources(file);
-            }
-            catch (Exception e)
-            {
-                var errorNode = (from TreeNode node in FileTreeView.Nodes
-                                 where node.Name == "IDPDBErrorNode"
-                                 select node).SingleOrDefault();
-                if (errorNode == null)
-                {
-                    errorNode = new TreeNode
-                    {
-                        Name = "IDPDBErrorNode",
-                        Text = "Error",
-                        Checked = false,
-                        ForeColor = Color.DarkRed,
-                        Tag = "Uncheckable"
-                    };
-                    FileTreeView.Nodes.Add(errorNode);
                 }
-                var thisError = new TreeNode
+                catch (Exception e)
                 {
-                    Text = file.FullName,
-                    ToolTipText = e.Message,
-                    ForeColor = Color.DarkRed,
-                    Tag = "Uncheckable"
-                };
-                errorNode.Nodes.Add(thisError);
-                return;
-            }
+                    var errorNode = (from TreeNode node in FileTreeView.Nodes
+                                     where node.Name == "IDPDBErrorNode"
+                                     select node).SingleOrDefault();
+                    if (errorNode == null)
+                    {
+                        errorNode = new TreeNode
+                                        {
+                                            Name = "IDPDBErrorNode",
+                                            Text = "Error",
+                                            Checked = false,
+                                            ForeColor = Color.DarkRed,
+                                            Tag = "Uncheckable"
+                                        };
+                        FileTreeView.Nodes.Add(errorNode);
+                    }
+                    var thisError = new TreeNode
+                                        {
+                                            Text = file.FullName,
+                                            ToolTipText = e.Message,
+                                            ForeColor = Color.DarkRed,
+                                            Tag = "Uncheckable"
+                                        };
+                    errorNode.Nodes.Add(thisError);
+                    return;
+                }
 
 
             var mergedFile = sourceList.Count > 1;
@@ -1065,7 +1065,7 @@ namespace CustomDataSourceDialog
                 NHibernate.ISession session = null;
                 try
                 {
-                    sessionFactory = SessionFactoryFactory.CreateSessionFactory(file.FullName, false, true);
+                    sessionFactory = SessionFactoryFactory.CreateSessionFactory(file.FullName);
                     session = sessionFactory.OpenSession();
                     var temp = session.QueryOver<SpectrumSource>().List();
                     sourceList.AddRange(temp.Select(item => item.Name));

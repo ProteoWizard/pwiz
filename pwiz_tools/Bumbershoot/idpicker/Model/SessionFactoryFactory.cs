@@ -34,6 +34,20 @@ using NHibernate.Dialect.Function;
 
 namespace IDPicker.DataModel
 {
+    public class SessionFactoryConfig
+    {
+        public SessionFactoryConfig ()
+        {
+            CreateSchema = false;
+            UseUnfilteredTables = false;
+            WriteSqlToConsoleOut = false;
+        }
+
+        public bool CreateSchema { get; set; }
+        public bool UseUnfilteredTables { get; set; }
+        public bool WriteSqlToConsoleOut { get; set; }
+    }
+
     public static class SessionFactoryFactory
     {
         #region SQLite customizations
@@ -81,13 +95,15 @@ namespace IDPicker.DataModel
         }
         #endregion
 
+        public static ISessionFactory CreateSessionFactory (string path) { return SessionFactoryFactory.CreateSessionFactory(path, new SessionFactoryConfig()); }
+
         static object mutex = new object();
-        public static ISessionFactory CreateSessionFactory(string path, bool createSchema, bool showSQL)
+        public static ISessionFactory CreateSessionFactory (string path, SessionFactoryConfig config)
         {
             bool pooling = path == ":memory:";
 
-            Configuration configuration = new Configuration()
-                .SetProperty("show_sql", showSQL ? "true" : "false")
+            var configuration = new Configuration()
+                .SetProperty("show_sql", config.WriteSqlToConsoleOut ? "true" : "false")
                 .SetProperty("dialect", typeof(CustomSQLiteDialect).AssemblyQualifiedName)
                 .SetProperty("hibernate.cache.use_query_cache", "true")
                 .SetProperty("proxyfactory.factory_class", typeof(NHibernate.ByteCode.Castle.ProxyFactoryFactory).AssemblyQualifiedName)
@@ -100,6 +116,14 @@ namespace IDPicker.DataModel
 
             ConfigureMappings(configuration);
 
+            if (config.UseUnfilteredTables)
+            {
+                configuration.ClassMappings.Single(o => o.Table.Name == "Protein").Table.Name = "UnfilteredProtein";
+                configuration.ClassMappings.Single(o => o.Table.Name == "Peptide").Table.Name = "UnfilteredPeptide";
+                configuration.ClassMappings.Single(o => o.Table.Name == "PeptideInstance").Table.Name = "UnfilteredPeptideInstance";
+                configuration.ClassMappings.Single(o => o.Table.Name == "PeptideSpectrumMatch").Table.Name = "UnfilteredPeptideSpectrumMatch";
+            }
+
             ISessionFactory sessionFactory = null;
             lock(mutex)
                 sessionFactory = configuration.BuildSessionFactory();
@@ -107,7 +131,7 @@ namespace IDPicker.DataModel
             sessionFactory.OpenStatelessSession().CreateSQLQuery(@"PRAGMA cache_size=500000;
                                                                    PRAGMA temp_store=MEMORY").ExecuteUpdate();
 
-            if(createSchema)
+            if (config.CreateSchema)
                 CreateFile(path);
 
             return sessionFactory;

@@ -90,7 +90,7 @@ namespace IDPicker.DataModel
             }
             else
             {
-                using (var session = SessionFactoryFactory.CreateSessionFactory(mergeTargetFilepath, false, false).OpenSession())
+                using (var session = SessionFactoryFactory.CreateSessionFactory(mergeTargetFilepath).OpenSession())
                 {
                     DataFilter.DropFilters(session.Connection);
                 }

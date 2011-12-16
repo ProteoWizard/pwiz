@@ -924,7 +924,7 @@ namespace IDPicker.DataModel
                 modConditions.Add(String.Format("pm.Modification.id IN ({0})", String.Join(",", Modifications.Select(o => o.Id.ToString()).ToArray())));
 
             if (!Charge.IsNullOrEmpty())
-                spectrumConditions.Add(String.Format("psm.Charge IN ({0})", String.Join(",", Charge.Select(o => o.ToString()).ToArray())));
+                otherConditions.Add(String.Format("psm.Charge IN ({0})", String.Join(",", Charge.Select(o => o.ToString()).ToArray())));
 
             if (!Analysis.IsNullOrEmpty())
                 otherConditions.Add(String.Format("psm.Analysis.id IN ({0})", String.Join(",", Analysis.Select(o => o.Id.ToString()).ToArray())));
@@ -960,6 +960,89 @@ namespace IDPicker.DataModel
             foreach (var join in joins.Values.Distinct())
                 query.AppendFormat("{0} ", join);
             query.Append(" ");
+
+            var conditions = new List<string>();
+            if (proteinConditions.Count > 0) conditions.Add("(" + String.Join(" OR ", proteinConditions.ToArray()) + ")");
+            if (peptideConditions.Count > 0) conditions.Add("(" + String.Join(" OR ", peptideConditions.ToArray()) + ")");
+            if (spectrumConditions.Count > 0) conditions.Add("(" + String.Join(" OR ", spectrumConditions.ToArray()) + ")");
+            if (modConditions.Count > 0) conditions.Add("(" + String.Join(" AND ", modConditions.ToArray()) + ")");
+            if (otherConditions.Count > 0) conditions.Add("(" + String.Join(" AND ", otherConditions.ToArray()) + ")");
+
+            if (conditions.Count > 0)
+            {
+                query.Append(" WHERE ");
+                query.Append(String.Join(" AND ", conditions.ToArray()));
+                query.Append(" ");
+            }
+
+            return query.ToString();
+        }
+
+        public string GetFilteredSqlWhereClause ()
+        {
+            // these different condition sets are AND'd together, but within each set (except for mods) they are OR'd
+            var proteinConditions = new List<string>();
+            var peptideConditions = new List<string>();
+            var spectrumConditions = new List<string>();
+            var modConditions = new List<string>();
+            var otherConditions = new List<string>();
+
+            if (!Cluster.IsNullOrEmpty())
+                proteinConditions.Add(String.Format("pro.Cluster IN ({0})", String.Join(",", Cluster.Select(o => o.ToString()).ToArray())));
+
+            if (!ProteinGroup.IsNullOrEmpty())
+                proteinConditions.Add(String.Format("pro.ProteinGroup IN ({0})", String.Join(",", ProteinGroup.Select(o => o.ToString()).ToArray())));
+
+            if (!Protein.IsNullOrEmpty())
+                proteinConditions.Add(String.Format("pi.Protein IN ({0})", String.Join(",", Protein.Select(o => o.Id.ToString()).ToArray())));
+
+            if (!PeptideGroup.IsNullOrEmpty())
+                peptideConditions.Add(String.Format("pep.PeptideGroup IN ({0})", String.Join(",", PeptideGroup.Select(o => o.ToString()).ToArray())));
+
+            if (!Peptide.IsNullOrEmpty())
+                peptideConditions.Add(String.Format("pi.Peptide IN ({0})", String.Join(",", Peptide.Select(o => o.Id.ToString()).ToArray())));
+
+            if (!DistinctMatchKey.IsNullOrEmpty())
+                peptideConditions.Add(String.Format("dm.DistinctMatchKey IN ('{0}')", String.Join("','", DistinctMatchKey.Select(o => o.Key).ToArray())));
+
+            if (!ModifiedSite.IsNullOrEmpty())
+                modConditions.Add(String.Format("pm.Site IN ('{0}')", String.Join("','", ModifiedSite.Select(o => o.ToString()).ToArray())));
+
+            if (!Modifications.IsNullOrEmpty())
+                modConditions.Add(String.Format("pm.Modification IN ({0})", String.Join(",", Modifications.Select(o => o.Id.ToString()).ToArray())));
+
+            if (!Charge.IsNullOrEmpty())
+                otherConditions.Add(String.Format("psm.Charge IN ({0})", String.Join(",", Charge.Select(o => o.ToString()).ToArray())));
+
+            if (!Analysis.IsNullOrEmpty())
+                otherConditions.Add(String.Format("psm.Analysis IN ({0})", String.Join(",", Analysis.Select(o => o.Id.ToString()).ToArray())));
+
+            if (!Spectrum.IsNullOrEmpty())
+                spectrumConditions.Add(String.Format("psm.Spectrum IN ({0})", String.Join(",", Spectrum.Select(o => o.Id.ToString()).ToArray())));
+
+            if (!SpectrumSource.IsNullOrEmpty())
+                spectrumConditions.Add(String.Format("s.Source IN ({0})", String.Join(",", SpectrumSource.Select(o => o.Id.ToString()).ToArray())));
+
+            if (!SpectrumSourceGroup.IsNullOrEmpty())
+                spectrumConditions.Add(String.Format("ssgl.Group_ IN ({0})", String.Join(",", SpectrumSourceGroup.Select(o => o.Id.ToString()).ToArray())));
+
+            if (!AminoAcidOffset.IsNullOrEmpty())
+            {
+                var offsetConditions = new List<string>();
+                foreach (int offset in AminoAcidOffset)
+                {
+                    if (offset <= 0)
+                        offsetConditions.Add("pi.Offset = 0"); // protein N-terminus
+                    else if (offset == Int32.MaxValue)
+                        offsetConditions.Add("pi.Offset+pi.Length = pro.Length"); // protein C-terminus
+                    else
+                        offsetConditions.Add(String.Format("(pi.Offset <= {0} AND pi.Offset+pi.Length > {0})", offset));
+                }
+
+                otherConditions.Add("(" + String.Join(" OR ", offsetConditions.ToArray()) + ")");
+            }
+
+            var query = new StringBuilder();
 
             var conditions = new List<string>();
             if (proteinConditions.Count > 0) conditions.Add("(" + String.Join(" OR ", proteinConditions.ToArray()) + ")");

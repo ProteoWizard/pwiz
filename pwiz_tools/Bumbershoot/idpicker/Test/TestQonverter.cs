@@ -95,7 +95,7 @@ namespace Test
             const int sourceCount = 2;
             const int chargeCount = 2;
 
-            var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testStaticQonversion.idpDB", true, false);
+            var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testStaticQonversion.idpDB", new SessionFactoryConfig { CreateSchema = true });
             var session = sessionFactory.OpenSession();
 
             TestModel.CreateTestProteins(session, testProteinSequences);

@@ -318,37 +318,37 @@ namespace IDPicker
         Dictionary<GraphForm, bool> handlerIsAttached = new Dictionary<GraphForm, bool>();
         void spectrumTableForm_SpectrumViewVisualize (object sender, SpectrumViewVisualizeEventArgs e)
         {
-            var psm = e.PeptideSpectrumMatch;
-            var spectrum = psm.Spectrum;
+            var spectrum = e.Spectrum;
+            var source = e.SpectrumSource;
 
             string sourcePath;
-            if (spectrum.Source.Metadata != null)
+            if (source.Metadata != null)
             {
                 // accessing the Metadata property creates a temporary mzML file;
                 // here we access the path to that file
-                var tmpSourceFile = spectrum.Source.Metadata.fileDescription.sourceFiles.Last();
+                var tmpSourceFile = source.Metadata.fileDescription.sourceFiles.Last();
                 sourcePath = Path.Combine(new Uri(tmpSourceFile.location).LocalPath, tmpSourceFile.name);
             }
             else
             {
                 try
                 {
-                    sourcePath = Util.FindSourceInSearchPath(spectrum.Source.Name, ".");
+                    sourcePath = Util.FindSourceInSearchPath(source.Name, ".");
                 }
                 catch
                 {
                     try
                     {
                         // try the last looked-in path
-                        sourcePath = Util.FindSourceInSearchPath(spectrum.Source.Name, Properties.GUI.Settings.Default.LastSpectrumSourceDirectory);
+                        sourcePath = Util.FindSourceInSearchPath(source.Name, Properties.GUI.Settings.Default.LastSpectrumSourceDirectory);
                     }
                     catch
                     {
                         // prompt user to find the source
-                        var eventArgs = new SourceNotFoundEventArgs() { SourcePath = spectrum.Source.Name };
+                        var eventArgs = new SourceNotFoundEventArgs() { SourcePath = source.Name };
                         sourceNotFoundOnVisualizeHandler(this, eventArgs);
 
-                        if (eventArgs.SourcePath == spectrum.Source.Name)
+                        if (eventArgs.SourcePath == source.Name)
                             return; // user canceled
 
                         if (File.Exists(eventArgs.SourcePath) || Directory.Exists(eventArgs.SourcePath))
@@ -363,7 +363,7 @@ namespace IDPicker
                 }
             }
 
-            var param = psm.Analysis.Parameters.Where(o => o.Name == "SpectrumListFilters").SingleOrDefault();
+            var param = e.Analysis.Parameters.Where(o => o.Name == "SpectrumListFilters").SingleOrDefault();
             string spectrumListFilters = param == null ? String.Empty : param.Value;
             spectrumListFilters = spectrumListFilters.Replace("0 ", "false ");
 
@@ -371,8 +371,7 @@ namespace IDPicker
             if (sourcePath.ToLower().EndsWith(".mgf"))
                 ionSeries = PeptideFragmentationAnnotation.IonSeries.b | PeptideFragmentationAnnotation.IonSeries.y;
 
-            string psmString = DataModel.ExtensionMethods.ToModifiedString(psm);
-            var annotation = new PeptideFragmentationAnnotation(psmString, 1, Math.Max(1, psm.Charge - 1),
+            var annotation = new PeptideFragmentationAnnotation(e.ModifiedSequence, 1, Math.Max(1, e.Charge - 1),
                                                                 ionSeries, true, false, true, false);
 
             (manager.SpectrumAnnotationForm.Controls[0] as ToolStrip).Hide();
@@ -428,10 +427,7 @@ namespace IDPicker
 
             var psmRow = spectrumTableForm.GetRowFromRowHierarchy(rowIndexHierarchy) as SpectrumTableForm.PeptideSpectrumMatchRow;
 
-            spectrumTableForm_SpectrumViewVisualize(this, new SpectrumViewVisualizeEventArgs()
-            {
-                PeptideSpectrumMatch = psmRow.PeptideSpectrumMatch
-            });
+            spectrumTableForm_SpectrumViewVisualize(this, new SpectrumViewVisualizeEventArgs(psmRow));
         }
 
         void proteinTableForm_ProteinViewVisualize (object sender, ProteinViewVisualizeEventArgs e)
@@ -983,7 +979,7 @@ namespace IDPicker
 
                 BeginInvoke(new MethodInvoker(() =>
                 {
-                    var sessionFactory = DataModel.SessionFactoryFactory.CreateSessionFactory(commonFilename, false, true);
+                    var sessionFactory = DataModel.SessionFactoryFactory.CreateSessionFactory(commonFilename);
 
                     // reload qonverter settings because the ids may change after merging
                     session = sessionFactory.OpenSession();
@@ -1287,7 +1283,7 @@ namespace IDPicker
                 MessageBox.Show("Error: " + ex.Message, "Qonversion failed");
             }
 
-            var sessionFactory = DataModel.SessionFactoryFactory.CreateSessionFactory(Text, false, true);
+            var sessionFactory = DataModel.SessionFactoryFactory.CreateSessionFactory(Text);
             session = sessionFactory.OpenSession();
             //session.CreateSQLQuery("PRAGMA temp_store=MEMORY").ExecuteUpdate();
             _layoutManager.SetSession(session);

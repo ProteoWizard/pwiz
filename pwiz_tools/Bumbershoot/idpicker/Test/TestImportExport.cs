@@ -62,7 +62,7 @@ namespace Test
         {
             var testModel = new TestModel();
 
-            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testModel.idpDB", false, false))
+            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testModel.idpDB"))
             using (var session = testModel.session = sessionFactory.OpenSession())
             {
                 var distinctAnalyses = testModel.session.Query<Analysis>();
@@ -93,7 +93,7 @@ namespace Test
                 merger.Start();
             }
 
-            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testImportExport.idpDB", false, false))
+            using (var sessionFactory = SessionFactoryFactory.CreateSessionFactory("testImportExport.idpDB"))
             using (var session = testModel.session = sessionFactory.OpenSession())
             {
                 foreach (var analysis in session.Query<Analysis>())

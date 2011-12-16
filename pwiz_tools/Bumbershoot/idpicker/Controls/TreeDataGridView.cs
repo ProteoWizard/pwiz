@@ -83,6 +83,7 @@ namespace IDPicker.Controls
                         var cellValueEventArgs = new TreeDataGridViewCellValueEventArgs(0, rowInfo.RowIndexHierarchy);
                         CellValueNeeded(this, cellValueEventArgs);
                         rowInfo.ChildRowCount = cellValueEventArgs.ChildRowCount;
+                        rowInfo.HasChildRows = cellValueEventArgs.HasChildRows;
                     }
                 }
                 base.RowCount = rootRowCount = value;
@@ -179,6 +180,8 @@ namespace IDPicker.Controls
         public new event TreeDataGridViewCellEventHandler CellDoubleClick;
         public new event TreeDataGridViewCellEventHandler CellContentDoubleClick;
         public new event TreeDataGridViewCellMouseEventHandler CellMouseClick;
+
+        public event TreeDataGridViewChildRowCountNeededEventHandler ChildRowCountNeeded;
 
         /// <summary>
         /// Sets row image. To use set e.Value to the desired image.
@@ -316,7 +319,6 @@ namespace IDPicker.Controls
             public ExpandedRowList (int rowIndex) : this(null, rowIndex) { }
             public ExpandedRowList (IList<int> parentRowIndexHierarchy, int childRowIndex)
             {
-                ChildRowCount = 0;
                 ExpandedChildRows = EmptyChildRows;
 
                 int rowIndexHierarchySize = parentRowIndexHierarchy != null ? parentRowIndexHierarchy.Count+1 : 1;
@@ -328,10 +330,10 @@ namespace IDPicker.Controls
             }
 
             /// <summary>how many child rows are currently expanded</summary>
-            public int ChildRowCount { get; set; } 
+            public int? ChildRowCount { get; set; }
 
             /// <summary>quick test if row is expanded</summary>
-            public bool HasChildRows { get { return ChildRowCount > 0; } }
+            public bool HasChildRows { get; set; }
 
             /// <summary>info on sub-rows</summary>
             public List<ExpandedRowList> ExpandedChildRows { get; set; }
@@ -374,7 +376,10 @@ namespace IDPicker.Controls
             CellValueNeeded(this, cellValueEventArgs);
             e.Value = cellValueEventArgs.Value;
             if (e.ColumnIndex == 0)
+            {
                 rowInfo.ChildRowCount = cellValueEventArgs.ChildRowCount;
+                rowInfo.HasChildRows = cellValueEventArgs.HasChildRows;
+            }
         }
 
         protected override void OnCellFormatting (DataGridViewCellFormattingEventArgs e)
@@ -614,7 +619,14 @@ namespace IDPicker.Controls
             int rowsAdded = 0;
             if (rowInfo.ExpandedChildRows.Count == 0)
             {
-                var childRowList = new List<ExpandedRowList>(rowInfo.ChildRowCount);
+                if (!rowInfo.ChildRowCount.HasValue)
+                {
+                    var e = new TreeDataGridViewChildRowCountNeededEventArgs(rowInfo.RowIndexHierarchy);
+                    OnChildRowCountNeeded(e);
+                    rowInfo.ChildRowCount = e.ChildRowCount;
+                }
+
+                var childRowList = new List<ExpandedRowList>(rowInfo.ChildRowCount.Value);
                 for (int j = 0; j < rowInfo.ChildRowCount; ++j)
                 {
                     //get the content of the child row and add it to list to be inserted
@@ -622,6 +634,7 @@ namespace IDPicker.Controls
                     var cellValueEventArgs = new TreeDataGridViewCellValueEventArgs(0, childRowInfo.RowIndexHierarchy);
                     CellValueNeeded(this, cellValueEventArgs);
                     childRowInfo.ChildRowCount = cellValueEventArgs.ChildRowCount;
+                    childRowInfo.HasChildRows = cellValueEventArgs.HasChildRows;
                     childRowList.Add(childRowInfo);
                 }
 
@@ -634,7 +647,7 @@ namespace IDPicker.Controls
             //If more expansion is needed recurse back to the begining
             if (maxDepth > rowInfo.RowIndexHierarchy.Count)
                 for (int j = 0; j < rowInfo.ChildRowCount; ++j)
-                    rowsAdded += expand(index + rowsAdded + 1 - rowInfo.ChildRowCount + j, maxDepth);
+                    rowsAdded += expand(index + rowsAdded + 1 - rowInfo.ChildRowCount.Value + j, maxDepth);
 
             return rowsAdded;
         }
@@ -661,6 +674,14 @@ namespace IDPicker.Controls
             }
             return rowsRemoved;
         }
+
+        protected void OnChildRowCountNeeded(TreeDataGridViewChildRowCountNeededEventArgs e)
+        {
+            if (ChildRowCountNeeded == null)
+                throw new NullReferenceException("no handler for ChildRowCountNeeded event");
+
+            ChildRowCountNeeded(this, e);
+        }
     }
 
     public class TreeDataGridViewCellValueEventArgs : EventArgs
@@ -670,11 +691,31 @@ namespace IDPicker.Controls
         {
             ColumnIndex = columnIndex;
             RowIndexHierarchy = rowIndexHierarchy;
+            ChildRowCount = null;
         }
 
         public int ColumnIndex { get; protected set; }
         public IList<int> RowIndexHierarchy { get; protected set; }
         public object Value { get; set; }
+        public bool HasChildRows { get; set; }
+
+        int? childRowCount;
+        public int? ChildRowCount
+        {
+            get { return childRowCount; }
+            set { childRowCount = value; HasChildRows = childRowCount.GetValueOrDefault(0) > 0; }
+        }
+    }
+
+    public class TreeDataGridViewChildRowCountNeededEventArgs : EventArgs
+    {
+        public TreeDataGridViewChildRowCountNeededEventArgs (params int[] rowIndexHierarchy) : this(rowIndexHierarchy as IList<int>) { }
+        public TreeDataGridViewChildRowCountNeededEventArgs (IList<int> rowIndexHierarchy)
+        {
+            RowIndexHierarchy = rowIndexHierarchy;
+        }
+
+        public IList<int> RowIndexHierarchy { get; protected set; }
         public int ChildRowCount { get; set; }
     }
 
@@ -732,4 +773,5 @@ namespace IDPicker.Controls
     public delegate void TreeDataGridViewCellPaintingEventHandler (object sender, TreeDataGridViewCellPaintingEventArgs e);
     public delegate void TreeDataGridViewCellEventHandler (object sender, TreeDataGridViewCellEventArgs e);
     public delegate void TreeDataGridViewCellMouseEventHandler (object sender, TreeDataGridViewCellMouseEventArgs e);
+    public delegate void TreeDataGridViewChildRowCountNeededEventHandler (object sender, TreeDataGridViewChildRowCountNeededEventArgs e);
 }
