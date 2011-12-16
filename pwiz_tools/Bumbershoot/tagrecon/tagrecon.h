@@ -61,9 +61,6 @@ namespace tagrecon
 
 	typedef flat_map< float, string >				                    modMap_t;
 
-	typedef flat_multimap< float, SpectraList::iterator >				SpectraMassMap;
-	typedef vector< SpectraMassMap >									SpectraMassMapList;
-
 	/**
 		Structure TagSetInfo stores the spectrum, tag sequence, n-terminal and c-terminal
 		masses that sourround the tag.
@@ -232,6 +229,9 @@ namespace tagrecon
 		}
 	};
 
+    typedef flat_multimap< double, pair<Spectrum*, PrecursorMassHypothesis> >   SpectraMassMap;
+	typedef vector< SpectraMassMap >        SpectraMassMapList;
+
     #ifdef USE_MPI
 		void TransmitConfigsToChildProcesses();
 		void ReceiveConfigsFromRootProcess();
@@ -253,6 +253,8 @@ namespace tagrecon
     extern SearchStatistics     searchStatistics;
 
 	extern SpectraList			spectra;
+    // These lists hold precursor masses for "untagged" spectra.
+    extern SpectraMassMapList	untaggedSpectraByChargeState;
 }
 }
 

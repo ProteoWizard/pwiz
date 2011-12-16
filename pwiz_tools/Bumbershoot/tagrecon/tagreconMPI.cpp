@@ -584,9 +584,18 @@ namespace tagrecon
 		// While there are child processes to process the data
 		while( numChildrenFinished < g_numChildren )
 		{
-			// Compute the batch size to send over to all children
+			#ifdef MPI_DEBUG
+				cout << g_hostString << " is listening for a child process to offer to search some proteins." << endl;
+			#endif
+            // Listen for a process requesting proteins. 
+            // Extract the number of CPUs available on the process.
+            MPI_Recv( &sourceProcess,			1,		MPI_INT,	MPI_ANY_SOURCE,	0xFF, MPI_COMM_WORLD, &st );
+            int sourceCPUs = 0;
+            MPI_Recv( &sourceCPUs,			    1,		MPI_INT,	sourceProcess,	0xFF, MPI_COMM_WORLD, &st );
+            
 			int pOffset = i;
-			batchSize = min( numProteins-i, g_rtConfig->ProteinBatchSize );
+            // Scale the batchSize with the number of cpus in the requested process.
+			batchSize = min( numProteins-i, g_rtConfig->ProteinBatchSize*sourceCPUs );
 
 			// Pack the protein batch size and the protein sequences
 			// in a stream
@@ -608,15 +617,9 @@ namespace tagrecon
 				cerr << g_hostString << " had an error: " << e.what() << endl;
 				exit(1);
 			}
-
-			// For every batch, listen for a worker process that is ready to receive it
-
-			#ifdef MPI_DEBUG
-				cout << g_hostString << " is listening for a child process to offer to search some proteins." << endl;
-			#endif
-
-			// Get the process ID of the child process that requested the database chunk
-			MPI_Recv( &sourceProcess,			1,		MPI_INT,	MPI_ANY_SOURCE,	0xFF, MPI_COMM_WORLD, &st );
+		    #ifdef MPI_DEBUG
+                cout << "Process #" << sourceProcess << " has " << sourceCPUs << " cpus. Sending " << batchSize << " proteins." << endl;
+            #endif
 
 			if( i < numProteins )
 			{
@@ -677,6 +680,7 @@ namespace tagrecon
 		return 0;
 	}
 
+
 	/**!
 		ReceiveProteinBatchFromRootProcess sends out the number of queries done by a child process and
 		asks for a fresh batch of proteins for searching the spectra. The function using message-passing
@@ -688,6 +692,7 @@ namespace tagrecon
 
 		// Send the process id and the number of queries it has finished
 		MPI_Ssend( &g_pid,			1,				MPI_INT,	0,	0xFF, MPI_COMM_WORLD );
+        MPI_Ssend( &g_numWorkers,	1,				MPI_INT,	0,	0xFF, MPI_COMM_WORLD );
 
 		// Get the fresh batch of the proteins from the root process
 		MPI_Recv( &batchSize,		1,				MPI_INT,	0,	0x99, MPI_COMM_WORLD, &st );

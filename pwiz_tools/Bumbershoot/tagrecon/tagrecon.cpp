@@ -42,6 +42,8 @@ namespace tagrecon
 
     SpectraList			            spectra;
     SpectraTagTrie                  spectraTagTrie;
+    // These lists hold precursor masses for "untagged" spectra.
+    SpectraMassMapList				untaggedSpectraByChargeState;
 
     RunTimeConfig*                  g_rtConfig;
 
@@ -343,13 +345,22 @@ namespace tagrecon
    		// Locate all tags with same amino acid sequence to a single location.        
         typedef set< shared_ptr<AATagToSpectraMap>, AATagToSpectraMapCompare > UniqueTags;
         UniqueTags  uniqueTags;
+        // Process the untagged spectra
+        size_t untaggedPrecursorHypothesis = 0;
+        // Create a map of precursor masses to the spectrum indices
+        untaggedSpectraByChargeState.clear();
+		untaggedSpectraByChargeState.resize( g_rtConfig->maxChargeStateFromSpectra );
         for( SpectraList::iterator sItr = spectra.begin(); sItr != spectra.end(); ++sItr ) 
         {
+            size_t numHighQualityTags = 0;
 			for( TagList::iterator tItr = (*sItr)->tagList.begin(); tItr != (*sItr)->tagList.end(); ++tItr ) 
             {
                 // Generate the tag-spectrum structure
                 TagSpectrumInfo  tagInfo(sItr, tItr->tag, tItr->nTerminusMass, tItr->cTerminusMass);
                 tagInfo.tagChargeState = tItr->chargeState;
+                // Locate tagged spectra with low quality tags.
+                if(tItr->worstPeakRank <= 25.0)
+                    ++numHighQualityTags;
                 // Insert it into an empty map
                 shared_ptr<AATagToSpectraMap> tagMap(new AATagToSpectraMap);
                 tagMap->aminoAcidTag = tItr->tag;
@@ -358,11 +369,23 @@ namespace tagrecon
                 // Update the map
                 const_cast< shared_ptr<AATagToSpectraMap>&>((*ret.first))->addTag(tagInfo);
 			}
+            if(g_rtConfig->SearchUntaggedSpectra && (numHighQualityTags <= 1 || (*sItr)->tagList.size()==0))
+            {
+                ++untaggedPrecursorHypothesis;
+                // Generate a mass hypothesis for low-quality tagged spectrum.
+                PrecursorMassHypothesis p;
+                p.mass = (*sItr)->mOfPrecursor;
+                p.massType = g_rtConfig->UseAvgMassOfSequences ? MassType_Average : MassType_Monoisotopic;
+                p.charge = (*sItr)->id.charge;
+                untaggedSpectraByChargeState[p.charge-1].insert(make_pair(p.mass, make_pair((*sItr), p)));
+            }
 		}
         // Initialize a tag trie for rapid tag location of tags in the protein sequence.
         spectraTagTrie.clear();
         spectraTagTrie.insert(uniqueTags.begin(),uniqueTags.end());
         
+        if( !g_numChildren && g_rtConfig->SearchUntaggedSpectra )
+            cout << "Found " << untaggedPrecursorHypothesis << " spectra with low quality tags." << endl;
 		// Get minimum and maximum peptide masses observed in the dataset
 		// and determine the number of peak bins required. This 
 		double minPrecursorMass = spectra.front()->mOfPrecursor;
@@ -408,7 +431,6 @@ namespace tagrecon
                                                          curMaxPeptideLength,
                                                          specificity );
 
-		//cout << g_hostString << " is precaching factorials up to " << (int) maxPeakSpace << "." << endl;
 		
 		// Calculate the ln(x!) table where x= number of m/z spaces.
 		// This table is used in MVH scoring.
@@ -585,7 +607,6 @@ namespace tagrecon
 
 		if( g_numChildren == 0 )
 		{
-			// Throw some bones to the user to keep him occupied or disinterested.....
 			cout << "Finished preprocessing its spectra; " << timer.End() << " seconds elapsed." << endl;
 			cout << "Trimming spectra with less than " << g_rtConfig->minIntensityClassCount << " peaks." << endl;
 			cout << "Trimming spectra with precursors too small or large: " <<
@@ -664,8 +685,7 @@ namespace tagrecon
 	*/
 	inline boost::int64_t ScoreKnownModification(const DigestedPeptide& candidate, float mass, float modMass, 
 												size_t locStart, size_t locEnd, Spectrum* spectrum, 
-												const string& proteinId, vector<double>& sequenceIons,
-                                                float massTol, int NTT, bool isDecoy)
+												const string& proteinId, float massTol, int NTT, bool isDecoy)
     {
         typedef boost::shared_ptr<SearchResult> SearchResultPtr;
 
@@ -710,7 +730,7 @@ namespace tagrecon
             result.precursorMassHypothesis.mass = spectrum->mOfPrecursor;
             result.precursorMassHypothesis.massType = g_rtConfig->UseAvgMassOfSequences ? MassType_Average : MassType_Monoisotopic;
             result.precursorMassHypothesis.charge = spectrum->id.charge;
-
+            vector<double> sequenceIons;
             // Compute the predicted spectrum and score it against the experimental spectrum
             CalculateSequenceIons( variant, spectrum->id.charge, &sequenceIons, spectrum->fragmentTypes, g_rtConfig->UseSmartPlusThreeModel, 0, 0);
             spectrum->ScoreSequenceVsSpectrum( result, sequenceIons, NTT );
@@ -753,8 +773,7 @@ namespace tagrecon
 	*/
 	inline boost::int64_t ScoreUnknownModification(const DigestedPeptide& candidate, float mass, float modMass, 
 												size_t locStart, size_t locEnd, Spectrum* spectrum, 
-												const string& proteinId, vector<double>& sequenceIons,
-                                                int NTT, bool isDecoy)
+												const string& proteinId, int NTT, bool isDecoy)
     {
         typedef boost::shared_ptr<SearchResult> SearchResultPtr;
 
@@ -792,7 +811,7 @@ namespace tagrecon
             result.precursorMassHypothesis.mass = spectrum->mOfPrecursor;
             result.precursorMassHypothesis.massType = g_rtConfig->UseAvgMassOfSequences ? MassType_Average : MassType_Monoisotopic;
             result.precursorMassHypothesis.charge = spectrum->id.charge;
-
+            vector<double> sequenceIons;
 			// Compute the predicted spectru;m and score it against the experimental spectrum
             CalculateSequenceIons( variant, spectrum->id.charge, &sequenceIons, spectrum->fragmentTypes, g_rtConfig->UseSmartPlusThreeModel, 0, 0);
 			spectrum->ScoreSequenceVsSpectrum( result, sequenceIons, NTT );
@@ -817,33 +836,35 @@ namespace tagrecon
             ++ numComparisonsDone;
 		}
 
-        boost::mutex::scoped_lock lock(*spectrum->mutex);
-        if( isDecoy ) 
         {
-            spectrum->numDecoyComparisons += numComparisonsDone;
-            spectrum->detailedCompStats.numDecoyModComparisons += numComparisonsDone;
-        }
-        else
-        {
-            spectrum->numTargetComparisons += numComparisonsDone;
-            spectrum->detailedCompStats.numTargetModComparisons += numComparisonsDone;
-        }
-
-        // Update some search stats and add the best 
-        // localization result(s) to the spectrum
-        if(topMVHScore>0)
-        {
-            multimap<double,SearchResultPtr>::const_iterator begin = localizationPossibilities.lower_bound(topMVHScore);
-            multimap<double,SearchResultPtr>::const_iterator end = localizationPossibilities.upper_bound(topMVHScore);
-            
-            // By default we only keep track of top 2 results for each ambiguous peptide
-            int maxAmbResults = g_rtConfig->MaxAmbResultsForBlindMods;
-            while(begin != end && maxAmbResults > 0)
+            boost::mutex::scoped_lock lock(*spectrum->mutex);
+            if( isDecoy ) 
             {
-                spectrum->resultsByCharge[spectrum->id.charge-1].add(begin->second);
-                ++ numComparisonsDone;
-                ++ begin;
-                -- maxAmbResults;
+                spectrum->numDecoyComparisons += numComparisonsDone;
+                spectrum->detailedCompStats.numDecoyModComparisons += numComparisonsDone;
+            }
+            else
+            {
+                spectrum->numTargetComparisons += numComparisonsDone;
+                spectrum->detailedCompStats.numTargetModComparisons += numComparisonsDone;
+            }
+
+            // Update some search stats and add the best 
+            // localization result(s) to the spectrum
+            if(topMVHScore>0)
+            {
+                multimap<double,SearchResultPtr>::const_iterator begin = localizationPossibilities.lower_bound(topMVHScore);
+                multimap<double,SearchResultPtr>::const_iterator end = localizationPossibilities.upper_bound(topMVHScore);
+
+                // By default we only keep track of top 2 results for each ambiguous peptide
+                int maxAmbResults = g_rtConfig->MaxAmbResultsForBlindMods;
+                while(begin != end && maxAmbResults > 0)
+                {
+                    spectrum->resultsByCharge[spectrum->id.charge-1].add(begin->second);
+                    ++ numComparisonsDone;
+                    ++ begin;
+                    -- maxAmbResults;
+                }
             }
         }
         
@@ -890,8 +911,7 @@ namespace tagrecon
         double neutralMass = g_rtConfig->UseAvgMassOfSequences ? candidate.molecularWeight()
                                                                : candidate.monoisotopicMass();
 
-		vector< double > fragmentIonsByChargeState;
-        vector< double >& sequenceIons = fragmentIonsByChargeState;
+		vector< vector < double > > fragmentIonsByChargeState(g_rtConfig->maxChargeStateFromSpectra);
 
         // Number of enzymatic termini
         int NTT = candidate.specificTermini();
@@ -924,7 +944,7 @@ namespace tagrecon
                         numComparisonsDone +=
                             ScoreKnownModification(candidate, neutralMass, modMass,
                             0, aSequence.length(), spectrum,
-                            proteinId, sequenceIons,  
+                            proteinId,   
                             g_rtConfig->PrecursorMassTolerance[spectrum->id.charge-1],
                             NTT, isDecoy);
                     }
@@ -935,7 +955,7 @@ namespace tagrecon
                         numComparisonsDone +=
                             ScoreUnknownModification(candidate, neutralMass, modMass,
                             0, aSequence.length(), spectrum, 
-                            proteinId, sequenceIons, 
+                            proteinId,  
                             NTT, isDecoy);
                     }
                 }
@@ -953,9 +973,9 @@ namespace tagrecon
                 result.precursorMassHypothesis.mass = spectrum->mOfPrecursor;
                 result.precursorMassHypothesis.massType = g_rtConfig->UseAvgMassOfSequences ? MassType_Average : MassType_Monoisotopic;
                 result.precursorMassHypothesis.charge = spectrum->id.charge;
-
-                CalculateSequenceIons( candidate, spectrum->id.charge, &sequenceIons, spectrum->fragmentTypes, g_rtConfig->UseSmartPlusThreeModel, 0, 0);
-                spectrum->ScoreSequenceVsSpectrum( result, sequenceIons, NTT );
+                if(fragmentIonsByChargeState[spectrum->id.charge-1].empty())
+                    CalculateSequenceIons( candidate, spectrum->id.charge, &fragmentIonsByChargeState[spectrum->id.charge-1], spectrum->fragmentTypes, g_rtConfig->UseSmartPlusThreeModel, 0, 0);
+                spectrum->ScoreSequenceVsSpectrum( result, fragmentIonsByChargeState[spectrum->id.charge-1], NTT );
 
                 result.massError = spectrum->mOfPrecursor-neutralMass;
                 result.proteins.insert(proteinId);
@@ -963,19 +983,21 @@ namespace tagrecon
 
                 ++numComparisonsDone;
 
-                boost::mutex::scoped_lock lock(*spectrum->mutex);
+                {
+                    boost::mutex::scoped_lock lock(*spectrum->mutex);
 
-                if(candidate.modifications().size()>0)
-                    ++ spectrum->detailedCompStats.numDecoyModComparisons;
-                else
-                    ++ spectrum->detailedCompStats.numDecoyUnmodComparisons;
+                    if(candidate.modifications().size()>0)
+                        ++ spectrum->detailedCompStats.numDecoyModComparisons;
+                    else
+                        ++ spectrum->detailedCompStats.numDecoyUnmodComparisons;
 
-                if( isDecoy )
-                    ++ spectrum->numDecoyComparisons;
-                else
-                    ++ spectrum->numTargetComparisons;
+                    if( isDecoy )
+                        ++ spectrum->numDecoyComparisons;
+                    else
+                        ++ spectrum->numTargetComparisons;
 
-                spectrum->resultsByCharge[spectrum->id.charge-1].add( resultPtr );
+                    spectrum->resultsByCharge[spectrum->id.charge-1].add( resultPtr );
+                }
             }
         }
 
@@ -1051,8 +1073,6 @@ namespace tagrecon
         typedef boost::shared_ptr<SearchResult> SearchResultPtr;
 
         //bool debug = false;
-        //if(candidate.sequence() == "NDKSEEEQSSSSVK")
-        //    debug = true;
 		// Search stats
 		boost::int64_t numComparisonsDone = 0;
 		// Candidate peptide sequence and its mass
@@ -1060,12 +1080,12 @@ namespace tagrecon
         double neutralMass = g_rtConfig->UseAvgMassOfSequences ? candidate.molecularWeight()
                                                                : candidate.monoisotopicMass();
 
-		vector< double > fragmentIonsByChargeState;
-        vector< double >& sequenceIons = fragmentIonsByChargeState;
+        // Predicted spectrum by charge state vector.
+        // TODO: Cache the predicted spectrum by charge state and fragment types.
+		vector< vector< double > > fragmentIonsByChargeState(g_rtConfig->maxChargeStateFromSpectra);
 
         // Number of enzymatic termini
         int NTT = candidate.specificTermini();
-
 		// Get tags of length 3 from the candidate peptide sequence
 		vector< TagInfo > candidateTags;
         GetTagsFromSequence( candidate, 3, neutralMass, candidateTags );
@@ -1165,7 +1185,6 @@ namespace tagrecon
             {
                 // If there are no n-terminal and c-terminal delta mass differences then
                 // score the match as an unmodified sequence.
-                
                 SearchResultPtr resultPtr(new SearchResult(candidate));
                 SearchResult& result = *resultPtr;
                 result.numberOfBlindMods = 0;
@@ -1173,9 +1192,9 @@ namespace tagrecon
                 result.precursorMassHypothesis.mass = spectrum->mOfPrecursor;
                 result.precursorMassHypothesis.massType = g_rtConfig->UseAvgMassOfSequences ? MassType_Average : MassType_Monoisotopic;
                 result.precursorMassHypothesis.charge = spectrum->id.charge;
-
-                CalculateSequenceIons( candidate, spectrumCharge, &sequenceIons, spectrum->fragmentTypes, g_rtConfig->UseSmartPlusThreeModel, 0, 0);
-                spectrum->ScoreSequenceVsSpectrum( result, sequenceIons, NTT );
+                if(fragmentIonsByChargeState[spectrumCharge-1].empty())
+                    CalculateSequenceIons( candidate, spectrumCharge, &fragmentIonsByChargeState[spectrumCharge-1], spectrum->fragmentTypes, g_rtConfig->UseSmartPlusThreeModel, 0, 0);
+                spectrum->ScoreSequenceVsSpectrum( result, fragmentIonsByChargeState[spectrumCharge-1], NTT );
 
                 result.massError = spectrum->mOfPrecursor - neutralMass;
 				result.proteins.insert(proteinId);
@@ -1183,19 +1202,21 @@ namespace tagrecon
 
                 ++numComparisonsDone;
 
-                boost::mutex::scoped_lock lock(*spectrum->mutex);
+                {
+                    boost::mutex::scoped_lock lock(*spectrum->mutex);
 
-                if(candidate.modifications().size()>0)
-                    ++ spectrum->detailedCompStats.numDecoyModComparisons;
-                else
-                    ++ spectrum->detailedCompStats.numDecoyUnmodComparisons;
+                    if(candidate.modifications().size()>0)
+                        ++ spectrum->detailedCompStats.numDecoyModComparisons;
+                    else
+                        ++ spectrum->detailedCompStats.numDecoyUnmodComparisons;
 
-                if( isDecoy )
-                    ++ spectrum->numDecoyComparisons;
-                else
-                    ++ spectrum->numTargetComparisons;
+                    if( isDecoy )
+                        ++ spectrum->numDecoyComparisons;
+                    else
+                        ++ spectrum->numTargetComparisons;
 
-                spectrum->resultsByCharge[spectrum->id.charge-1].add( resultPtr );
+                    spectrum->resultsByCharge[spectrum->id.charge-1].add( resultPtr );
+                }
             } 
             else if(g_rtConfig->unknownMassShiftSearchMode !=  INACTIVE)
             {
@@ -1237,8 +1258,7 @@ namespace tagrecon
                         // Find the substitutions or PDMs that fit the mass, generate variants and score them.
                         numComparisonsDone += 
                             ScoreKnownModification(candidate, neutralMass, tagMatch.modificationMass, modLowIndex, 
-                                                   modHighIndex,spectrum, proteinId, sequenceIons, 
-                                                   lookupTol, NTT, isDecoy );
+                                                   modHighIndex,spectrum, proteinId, lookupTol, NTT, isDecoy );
                     }
 
                     // If the user wants us to find unknown modifications perform some sanity checks before scoring.
@@ -1256,13 +1276,61 @@ namespace tagrecon
                         modHighIndex = misMatchTerm == CTERM ? modHighIndex-1 : modHighIndex;
                         numComparisonsDone += 
                             ScoreUnknownModification(candidate,neutralMass, tagMatch.modificationMass, modLowIndex, 
-                                                     modHighIndex, spectrum, proteinId, sequenceIons,	
-                                                     NTT, isDecoy);
+                                                     modHighIndex, spectrum, proteinId, NTT, isDecoy);
                     }
                 } 
             }
         }
 
+        // Search the untagged spectra with precursor mass filter. 
+        // This is the modus operandi of all database search engines.
+        if(g_rtConfig->SearchUntaggedSpectra)
+        {
+            for(int z = 0; z < g_rtConfig->maxChargeStateFromSpectra; ++z)
+            {
+                // Look up the spectra that do not have tags but their precursor masses are
+                // with in the user defined mass error
+                vector<SpectraMassMap::iterator> candidateHypotheses;
+                SpectraMassMap::iterator cur, end;
+
+                end = untaggedSpectraByChargeState[z].upper_bound( neutralMass + g_rtConfig->PrecursorMassTolerance[z] );
+                for( cur = untaggedSpectraByChargeState[z].lower_bound( neutralMass - g_rtConfig->PrecursorMassTolerance[z] ); cur != end; ++cur )
+                    candidateHypotheses.push_back(cur);
+                // For each candidate spectrum
+                BOOST_FOREACH(SpectraMassMap::iterator spectrumHypothesisPair, candidateHypotheses)
+                {
+                    Spectrum* spectrum = spectrumHypothesisPair->second.first;
+                    PrecursorMassHypothesis& p = spectrumHypothesisPair->second.second;
+
+                    ++numComparisonsDone;
+                    if( estimateComparisonsOnly )
+                        continue;
+                    // Make the PSM and perform the comparison
+                    boost::shared_ptr<SearchResult> resultPtr(new SearchResult(candidate));
+                    SearchResult& result = *resultPtr;
+                    result.numberOfBlindMods = 0;
+                    result.numberOfOtherMods = candidate.modifications().size();
+                    result.precursorMassHypothesis = p;
+                    if(fragmentIonsByChargeState[z].empty())
+                        CalculateSequenceIons( candidate, z, &fragmentIonsByChargeState[z], spectrum->fragmentTypes, g_rtConfig->UseSmartPlusThreeModel, 0, 0);
+                    spectrum->ScoreSequenceVsSpectrum( result, fragmentIonsByChargeState[z], NTT );
+                    result.massError = spectrum->mOfPrecursor - neutralMass;
+                    result.proteins.insert(proteinId);
+                    result._isDecoy = isDecoy;
+                    // Insert the result.
+                    {
+                        boost::mutex::scoped_lock lock(*spectrum->mutex);
+                        if( isDecoy )
+                            ++ spectrum->numDecoyComparisons;
+                        else
+                            ++ spectrum->numTargetComparisons;
+
+                        if(result.mvh > g_rtConfig->MinResultScore)
+                            spectrum->resultsByCharge[z].add( resultPtr );         
+                    }
+                }
+            }
+        }
 		return numComparisonsDone;
 
     }
@@ -1558,6 +1626,17 @@ namespace tagrecon
 		int numSpectra = 0;
 
 		INIT_PROFILERS(13)
+        
+        #ifdef USE_MPI
+        // Collect the number of cpus available for the job.
+        int worldRank;
+        int totalNumCPUs = 0;
+        MPI_Allreduce(&g_numWorkers, &totalNumCPUs, 1, MPI_INT, MPI_SUM, MPI_COMM_WORLD);
+        // Adjust for the cpus on the head node
+        MPI_Comm_rank(MPI_COMM_WORLD, &worldRank);
+        if(worldRank == 0)
+            totalNumCPUs -= g_numWorkers;
+        #endif
 
 		//If the process is a master process
 		if( g_pid == 0 )
@@ -1599,8 +1678,8 @@ namespace tagrecon
 			#ifdef USE_MPI
 				if( g_numChildren > 0 )
 				{
-					g_rtConfig->ProteinBatchSize = (int) ceil( (float) proteins.size() / (float) g_numChildren / (float) g_rtConfig->NumBatches );
-                    cout << "Dynamic protein batch size is " << g_rtConfig->ProteinBatchSize << endl;
+                    g_rtConfig->ProteinBatchSize = (int) ceil( (float) proteins.size() / (float) totalNumCPUs / (float) g_rtConfig->NumBatches );
+					cout << "Dynamic protein batch size is " << g_rtConfig->ProteinBatchSize << endl;
 				}
 			#endif
 
@@ -1614,7 +1693,8 @@ namespace tagrecon
 
 				// Clear the spectra object
 				spectra.clear();
-
+                // Clear mass maps associated with untagged spectra.
+                untaggedSpectraByChargeState.clear();
                 searchStatistics = SearchStatistics();
 
 				cout << "Reading spectra from file \"" << *fItr << "\"" << endl;
@@ -1653,7 +1733,6 @@ namespace tagrecon
                         continue;
                     }
                 }
-
 
 				// Set the parameters for the search
 				g_rtConfig->setVariables( varsFromFile );
@@ -1765,9 +1844,12 @@ namespace tagrecon
 								    }
 								    cout << "Finished reading " << totalTags << " tags." << endl;
 
-								    cout << "Trimming spectra with no tags." << endl;
-								    int noTagsCount = spectra.trimByTagCount();
-								    cout << "Trimmed " << noTagsCount << " spectra." << endl;
+                                    if(!g_rtConfig->SearchUntaggedSpectra)
+                                    {
+								        cout << "Trimming spectra with no tags." << endl;
+								        int noTagsCount = spectra.trimByTagCount();
+								        cout << "Trimmed " << noTagsCount << " spectra." << endl;
+                                    }
                                 }
 								// Initialize few global data structures. See function documentation
 								// for details
@@ -1812,12 +1894,12 @@ namespace tagrecon
                                         MPI_Abort( MPI_COMM_WORLD, 1 );
                                     }
                                     // Transmit the proteins and start the search.
-                                    cout << "Commencing database search on " << numSpectra << " spectra" << batchString.str() << "." << endl;
+                                    cout << "Commencing sequence tag search on " << numSpectra << " spectra" << batchString.str() << "." << endl;
                                     try
                                     {
                                         Timer batchTimer(true); batchTimer.Begin();
                                         TransmitProteinsToChildProcesses();
-                                        cout << "Finished database search; " << batchTimer.End() << " seconds elapsed" << batchString.str() << "." << endl;
+                                        cout << "Finished sequence tag search; " << batchTimer.End() << " seconds elapsed" << batchString.str() << "." << endl;
                                     } catch( std::exception& e )
                                     {
                                         cout << g_hostString << " had an error transmitting protein batches: " << e.what() << endl;
@@ -1879,8 +1961,6 @@ namespace tagrecon
 						{
 							// If the data file has some spectra and if the process is being
 							// run on a single node then perform the search
-
-							// Some stats for the user!!
 							opcs = spectra.getOriginalPeakCountStatistics();
 							fpcs = spectra.getFilteredPeakCountStatistics();
 							cout << "Mean original (filtered) peak count: " << opcs[5] << " (" << fpcs[5] << ")" << endl;
@@ -1911,21 +1991,24 @@ namespace tagrecon
 							    }
 							    cout << "Finished reading " << totalTags << " tags." << endl;
 
-							    cout << "Trimming spectra with no tags." << endl;
-							    // Delete spectra that has no tags
-							    int noTagsCount = spectra.trimByTagCount();
-							    cout << "Trimmed " << noTagsCount << " spectra." << endl;
+                                if(!g_rtConfig->SearchUntaggedSpectra)
+                                {
+							        cout << "Trimming spectra with no tags." << endl;
+							        // Delete spectra that has no tags
+							        int noTagsCount = spectra.trimByTagCount();
+							        cout << "Trimmed " << noTagsCount << " spectra." << endl;
+                                }
                             }
 
 						    // Initialize global data structures.
                             // Must be done after spectra charge states are determined and tags are read
 						    InitWorkerGlobals();
 
-							cout << "Commencing database search on " << spectra.size() << " spectra." << endl;
+							cout << "Commencing sequence tag search on " << spectra.size() << " spectra." << endl;
 							startTime = GetTimeString(); startDate = GetDateString(); searchTime.Begin();
 							// Start the threads
 							ExecuteSearch();
-							cout << "Finished database search; " << searchTime.End() << " seconds elapsed." << endl;
+							cout << "Finished sequence tag search; " << searchTime.End() << " seconds elapsed." << endl;
 							cout << "Overall stats: " << (string) searchStatistics << endl;
 
 							// Free global variables
@@ -2039,6 +2122,7 @@ namespace tagrecon
 								// Clean up the variables.
 								DestroyWorkerGlobals();
 								spectra.clear();
+                                untaggedSpectraByChargeState.clear();
                                 spectraTagTrie.clear();
 							} while( !done );
 						}

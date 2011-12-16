@@ -88,15 +88,16 @@ using namespace pwiz;
     RTCONFIG_VARIABLE( bool,			UseNETAdjustment,           true  		    ) \
     RTCONFIG_VARIABLE( bool,			PenalizeUnknownMods,        false  		    ) \
     RTCONFIG_VARIABLE( string,          SpectrumListFilters,        "peakPicking true 2-"   ) \
-    RTCONFIG_VARIABLE( string,          ProteinListFilters,         ""                      ) \
-    RTCONFIG_VARIABLE( string,          StaticMods,                 ""                      ) \
-    RTCONFIG_VARIABLE( string,          DynamicMods,                ""                      ) \
-    RTCONFIG_VARIABLE( int,             MaxDynamicMods,             2                       ) \
+    RTCONFIG_VARIABLE( string,          ProteinListFilters,         ""              ) \
+    RTCONFIG_VARIABLE( string,          StaticMods,                 ""              ) \
+    RTCONFIG_VARIABLE( string,          DynamicMods,                ""              ) \
+    RTCONFIG_VARIABLE( int,             MaxDynamicMods,             2               ) \
 	RTCONFIG_VARIABLE( bool,			UseAvgMassOfSequences,		false			) \
     RTCONFIG_VARIABLE( int,             MaxPeptideVariants,         1000000         ) \
 	RTCONFIG_VARIABLE( bool,			DuplicateSpectra,			true			) \
 	RTCONFIG_VARIABLE( bool,			UseSmartPlusThreeModel,		true			) \
-	RTCONFIG_VARIABLE( bool,			UseChargeStateFromMS,		false			)
+	RTCONFIG_VARIABLE( bool,			UseChargeStateFromMS,		false			) \
+	RTCONFIG_VARIABLE( bool,			SearchUntaggedSpectra,		true			)
 
 
 namespace freicore
