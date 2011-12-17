@@ -390,7 +390,7 @@ namespace pwiz.Skyline.Model
             if (!HasResults)
                 return Results;
 
-            var dictFileIdToChromInfo = results.SelectMany(l => l)
+            var dictFileIdToChromInfo = results.Where(l => l != null).SelectMany(l => l)
                                                // Merge everything that does not already exist (handled below),
                                                // as merging only user modified causes loss of information in
                                                // updates
