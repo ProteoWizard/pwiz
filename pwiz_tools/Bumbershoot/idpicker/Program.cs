@@ -66,6 +66,8 @@ namespace IDPicker
 
                 automaticCheckForUpdates();
 
+                //HibernatingRhinos.Profiler.Appender.NHibernate.NHibernateProfiler.Initialize();
+
                 MainWindow = new IDPickerForm(e.Args);
                 Application.Run(MainWindow);
             };
@@ -116,7 +118,7 @@ namespace IDPicker
         private static WebClient webClient = new WebClient();
         private static void initializeWebClient ()
         {
-            new Thread(() => { lock (webClient) webClient.DownloadString("http://www.google.com"); }).Start();
+            new Thread(() => { try { lock (webClient) webClient.DownloadString("http://www.google.com"); } catch {/* TODO: log warning */} }).Start();
         }
 
         private static void automaticCheckForUpdates ()
@@ -132,7 +134,7 @@ namespace IDPicker
             if (Application.ExecutablePath.Contains("build-nt-x86"))
                 return;
 
-            new Thread(() => CheckForUpdates()).Start();
+            new Thread(() => { try { CheckForUpdates(); } catch {/* TODO: log warning */} }).Start();
         }
 
         public static bool CheckForUpdates ()
