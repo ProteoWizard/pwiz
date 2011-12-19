@@ -51,6 +51,10 @@ SpectrumList_Smoother::SpectrumList_Smoother(
     method.order = dp_->processingMethods.size();
     method.set(MS_smoothing);
     method.userParams.push_back(UserParam("Savitzky-Golay smoothing (9 point window)"));
+    
+    if (!dp_->processingMethods.empty())
+        method.softwarePtr = dp_->processingMethods[0].softwarePtr;
+
     dp_->processingMethods.push_back(method);
 }
 

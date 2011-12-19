@@ -42,6 +42,10 @@ SpectrumList_PeakFilter::SpectrumList_PeakFilter(const SpectrumListPtr& inner,
     ProcessingMethod method;
     method.order = dp_->processingMethods.size();
     filterFunctor_->describe(method);
+    
+    if (!dp_->processingMethods.empty())
+        method.softwarePtr = dp_->processingMethods[0].softwarePtr;
+
     dp_->processingMethods.push_back(method);
 }
 

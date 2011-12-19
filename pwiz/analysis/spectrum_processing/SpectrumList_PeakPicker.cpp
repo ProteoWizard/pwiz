@@ -89,6 +89,10 @@ SpectrumList_PeakPicker::SpectrumList_PeakPicker(
     ProcessingMethod method;
     method.order = dp_->processingMethods.size();
     method.set(MS_peak_picking);
+    
+    if (!dp_->processingMethods.empty())
+        method.softwarePtr = dp_->processingMethods[0].softwarePtr;
+
     if (mode_ == 1)
         method.userParams.push_back(UserParam("Thermo/Xcalibur peak picking"));
     else if (mode_ == 2)

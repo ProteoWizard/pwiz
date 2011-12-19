@@ -1186,14 +1186,6 @@ struct HasID
     }
 };
 
-string makeUniqueID(const vector<DataProcessingPtr>& dpList, const string& id)
-{
-    string result = id;
-    while (std::find_if(dpList.begin(), dpList.end(), HasID<DataProcessing>(result)) != dpList.end())
-        result = "more_" + result;
-    return result;
-}
-
 } // namespace
 
 
@@ -1205,40 +1197,16 @@ PWIZ_API_DECL vector<DataProcessingPtr> MSData::allDataProcessingPtrs() const
     {
         // if SpectrumList::dataProcessingPtr() is not in MSData::dataProcessingPtrs, add it
         const shared_ptr<const DataProcessing> sldp = run.spectrumListPtr->dataProcessingPtr();
-        if (sldp.get() && std::find(result.begin(), result.end(), sldp) == result.end())
-        {
-            string uniqueID = makeUniqueID(dataProcessingPtrs, sldp->id);
-            DataProcessingPtr addedDP;
-            if (uniqueID != sldp->id)
-            {
-                addedDP = DataProcessingPtr(new DataProcessing(*sldp));
-                addedDP->id = uniqueID;
-            }
-            else
-                addedDP = boost::const_pointer_cast<DataProcessing>(sldp);
-
-            result.push_back(addedDP);
-        }
+        if (sldp.get() && std::find_if(result.begin(), result.end(), HasID<DataProcessing>(sldp->id)) == result.end())
+            result.push_back(boost::const_pointer_cast<DataProcessing>(sldp));
     }
 
     if (run.chromatogramListPtr.get())
     {
         // if ChromatogramList::dataProcessingPtr() is not in MSData::dataProcessingPtrs, add it
         const shared_ptr<const DataProcessing> cldp = run.chromatogramListPtr->dataProcessingPtr();
-        if (cldp.get() && std::find(result.begin(), result.end(), cldp) == result.end())
-        {
-            string uniqueID = makeUniqueID(dataProcessingPtrs, cldp->id);
-            DataProcessingPtr addedDP;
-            if (uniqueID != cldp->id)
-            {
-                addedDP = DataProcessingPtr(new DataProcessing(*cldp));
-                addedDP->id = uniqueID;
-            }
-            else
-                addedDP = boost::const_pointer_cast<DataProcessing>(cldp);
-
-            result.push_back(addedDP);
-        }
+        if (cldp.get() && std::find_if(result.begin(), result.end(), HasID<DataProcessing>(cldp->id)) == result.end())
+            result.push_back(boost::const_pointer_cast<DataProcessing>(cldp));
     }
 
     return result;

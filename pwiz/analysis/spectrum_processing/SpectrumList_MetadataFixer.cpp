@@ -72,8 +72,13 @@ PWIZ_API_DECL SpectrumPtr SpectrumList_MetadataFixer::spectrum(size_t index, boo
     // always get binary data
     SpectrumPtr s = inner_->spectrum(index, true);
 
-    vector<double>& mzs = s->getMZArray()->data;
-    vector<double>& intensities = s->getIntensityArray()->data;
+    BinaryDataArrayPtr mzArray = s->getMZArray();
+    BinaryDataArrayPtr intensityArray = s->getIntensityArray();
+    if (!mzArray.get() || !intensityArray.get())
+        return s;
+
+    vector<double>& mzs = mzArray->data;
+    vector<double>& intensities = intensityArray->data;
 
     double tic = 0;
     if (!mzs.empty())

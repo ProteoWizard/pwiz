@@ -248,14 +248,17 @@ void testAllDataProcessing()
     MSData msd;
     SpectrumListSimplePtr sl(new SpectrumListSimple);
     msd.run.spectrumListPtr = sl;
-    sl->dp = DataProcessingPtr(new DataProcessing("dp"));
-    msd.dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing("dp")));
+
+    DataProcessingPtr realDeal(new DataProcessing("dp"));
+    DataProcessingPtr poser(new DataProcessing("dp"));
+
+    msd.dataProcessingPtrs.push_back(realDeal);
+    sl->dp = poser;
 
     // test allDataProcessingPtrs()
     vector<DataProcessingPtr> all = msd.allDataProcessingPtrs();
-    unit_assert(all.size() == 2 &&
-                all[0].get() && all[0]->id == "dp" &&
-                all[1].get() && all[1]->id == "more_dp");
+    unit_assert_operator_equal(1, all.size());
+    unit_assert_operator_equal(realDeal, all[0]);
 }
 
 

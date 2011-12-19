@@ -52,6 +52,10 @@ void testWrap()
     unit_assert(sl.get());
     unit_assert(sl->size() > 2);
 
+    // CompassXtract and pwiz data processing
+    unit_assert_operator_equal(2, msd.allDataProcessingPtrs().size());
+    unit_assert_operator_equal(1, msd.allDataProcessingPtrs()[1]->processingMethods.size());
+
     SpectrumListFactory::wrap(msd, "scanNumber [19,20]");
     unit_assert(sl->size() == 2);
 
@@ -64,11 +68,17 @@ void testWrap()
     unit_assert(profileData[0] == 0);
     unit_assert(profileData[9] == 18);
 
+    unit_assert_operator_equal(2, msd.allDataProcessingPtrs().size());
+    unit_assert_operator_equal(1, msd.allDataProcessingPtrs()[1]->processingMethods.size());
+
     SpectrumListFactory::wrap(msd, "peakPicking true [1,6]");
 
     vector<double> peakData(sl->spectrum(0)->getMZArray()->data);
     unit_assert(peakData.size() == 1);
     unit_assert(peakData[0] == 0);
+
+    unit_assert_operator_equal(2, msd.allDataProcessingPtrs().size());
+    unit_assert_operator_equal(2, msd.allDataProcessingPtrs()[1]->processingMethods.size());
 }
 
 

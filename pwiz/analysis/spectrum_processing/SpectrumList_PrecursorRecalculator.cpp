@@ -122,6 +122,10 @@ PWIZ_API_DECL SpectrumList_PrecursorRecalculator::SpectrumList_PrecursorRecalcul
     ProcessingMethod method;
     method.order = dp_->processingMethods.size();
     method.userParams.push_back(UserParam("precursor recalculation", "msPrefix defaults"));
+    
+    if (!dp_->processingMethods.empty())
+        method.softwarePtr = dp_->processingMethods[0].softwarePtr;
+
     dp_->processingMethods.push_back(method);
 }
 

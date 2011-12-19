@@ -98,8 +98,12 @@ PWIZ_API_DECL SpectrumList_PrecursorRefine::SpectrumList_PrecursorRefine(
 {
     // add processing methods to the copy of the inner SpectrumList's data processing
     ProcessingMethod method;
-    method.order = 1;
+    method.order = dp_->processingMethods.size();
     method.userParams.push_back(UserParam("precursor refinement", "msPrefix defaults"));
+    
+    if (!dp_->processingMethods.empty())
+        method.softwarePtr = dp_->processingMethods[0].softwarePtr;
+
     dp_->processingMethods.push_back(method);
 
     numRefined = 0;

@@ -948,36 +948,6 @@ void testMSData()
 }
 
 
-void testMSData_allDataProcessingPtrs()
-{
-    if (os_) *os_ << "testMSData_allDataProcessingPtrs()\n";
-
-    MSData a, b;
-   
-    a.id = "goober";
-    b.id = "goober";
-
-    SpectrumListSimplePtr sl1(new SpectrumListSimple), sl2(new SpectrumListSimple);
-
-    sl1->dp = DataProcessingPtr(new DataProcessing("dp"));
-    b.dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing("dp")));
-
-    a.run.spectrumListPtr = sl1;
-    b.run.spectrumListPtr = sl2;
-
-    Diff<MSData, DiffConfig> diff(a, b);
-    if (os_ && diff) *os_ << diff << endl;
-    unit_assert(!diff);
-
-    a.dataProcessingPtrs.push_back(DataProcessingPtr(new DataProcessing("dp")));
-
-    diff(a, b);
-    unit_assert(diff);
-    unit_assert(diff.a_b.dataProcessingPtrs.size() == 1 &&
-                diff.a_b.dataProcessingPtrs[0]->id == "more_dp");
-}
-
-
 void testBinaryDataOnly()
 {
     MSData tiny;
@@ -1361,7 +1331,6 @@ void test()
     testChromatogramList();
     testRun();
     testMSData();
-    testMSData_allDataProcessingPtrs();
     testBinaryDataOnly();
     testMaxPrecisionDiff();
     testMSDiffUpdate();
