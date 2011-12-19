@@ -456,4 +456,4 @@ tar.create $(application-name:L)-src.tar.bz2
 
 
 import testing ;
-unit-test InterpolatorTest : InterpolatorTest.cpp spline.cpp ;
+#unit-test InterpolatorTest : InterpolatorTest.cpp spline.cpp ;

@@ -672,9 +672,15 @@ namespace quameter
 
                     scanInfo.precursorIntensity = si.cvParam(MS_peak_intensity).valueAs<double>();
                     if (scanInfo.precursorIntensity == 0)
+                    {
                         //throw runtime_error("No precursor intensity for MS2 " + spectrum->id);
                         //cerr << "\nNo precursor intensity for MS2 " + spectrum->id << endl;
                         ++missingPrecursorIntensities;
+                        double estimatedPrecursorIntensity = 0.0;
+                        BOOST_FOREACH(const double& p, spectrum->getIntensityArray()->data)
+                            estimatedPrecursorIntensity += p;
+                        scanInfo.precursorIntensity = estimatedPrecursorIntensity;
+                    }
 
                     if (precursor.spectrumID.empty())
                         throw runtime_error("No precursor spectrum ID for " + spectrum->id);
@@ -733,6 +739,7 @@ namespace quameter
 
             if (missingPrecursorIntensities)
                 cerr << "\nWarning: " << missingPrecursorIntensities << " spectra are missing precursor trigger intensity." << endl;
+
 
             accs::accumulator_set<double, accs::stats<accs::tag::percentile> > firstScanTimeOfDistinctModifiedPeptides;
             BOOST_FOREACH_FIELD((size_t id)(double firstScanTime), firstScanTimeOfDistinctModifiedPeptide)
